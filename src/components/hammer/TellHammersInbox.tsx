@@ -1,441 +1,150 @@
-/**
- * TellHammersInbox — the one place to tell Hammer about schedule changes
- * (spec: docs/wic/adaptive-phases-and-schedule-v1.md §2). Eight big buttons,
- * three taps at most, no typing needed. "Ask Hammer" takes the same thing in
- * plain words or voice and asks before saving.
- */
-import { useMemo, useState } from "react";
+/** One athlete-owned entry surface for Today and both check-ins. */
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import {
-  CalendarDays, CalendarX2, CalendarCheck, Trophy, Flag, Dumbbell, HeartPulse, PauseCircle,
-  Star, Target, StickyNote, Plane, PlayCircle, Mic, Undo2, ArrowLeft, MessageCircle,
-} from "lucide-react";
+import { ArrowLeft, CalendarCheck, CalendarX2, ChevronDown, ChevronUp, Flag, HeartPulse, PauseCircle, Plane, PlayCircle, Star, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/hooks/useAuth";
 import { useScheduleTimeline } from "@/hooks/useScheduleTimeline";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
 import { getTodayDate, getLocalDateString } from "@/utils/dateUtils";
-import {
-  TIMELINE_TAGS, canUndo, describeEntry, isoShift,
-  type TimelineFilterTag, type TimelineTag,
-} from "../../../supabase/functions/_shared/wic/schedule/timeline";
-import { parseScheduleRequest, FACE_LABEL, type EntryDraft } from "@/lib/hammer/tellHammers/parse";
+import { canUndo, describeEntry, isoShift } from "../../../supabase/functions/_shared/wic/schedule/timeline";
+import { parseScheduleRequest, FACE_LABEL, extractDates, type EntryDraft } from "@/lib/hammer/tellHammers/parse";
 import { REPORT_INJURY_REGIONS } from "@/lib/hammer/injury/reportInjury";
 
-export const TAG_STYLE: Record<TimelineTag, { label: string; icon: typeof CalendarDays; tone: string }> = {
-  SEASON: { label: "Season", icon: Flag, tone: "bg-primary/15 text-primary border-primary/30" },
-  GAME: { label: "Game", icon: CalendarCheck, tone: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" },
-  TOURNAMENT: { label: "Tournament", icon: Trophy, tone: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30" },
-  PRACTICE: { label: "Practice", icon: Dumbbell, tone: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30" },
-  CANCELLED: { label: "Cancelled", icon: CalendarX2, tone: "bg-muted text-muted-foreground border-border" },
-  PAIN: { label: "Pain", icon: HeartPulse, tone: "bg-destructive/15 text-destructive border-destructive/30" },
-  HOLD: { label: "Break", icon: PauseCircle, tone: "bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30" },
-  EVENT: { label: "Big event", icon: Star, tone: "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30" },
-  GOAL: { label: "Goal", icon: Target, tone: "bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-500/30" },
-  NOTE: { label: "Note", icon: StickyNote, tone: "bg-secondary text-secondary-foreground border-border" },
-  RESUME: { label: "Back to normal", icon: PlayCircle, tone: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" },
-};
-
-type Flow = null | "games" | "season" | "cancelled" | "pain" | "break" | "event" | "travel" | "ask";
-
-const BUTTONS: Array<{ flow: Exclude<Flow, null | "ask"> | "resume"; label: string; icon: typeof CalendarDays; tag: TimelineTag }> = [
-  { flow: "games", label: "I have games", icon: CalendarCheck, tag: "GAME" },
-  { flow: "season", label: "My season starts / ends", icon: Flag, tag: "SEASON" },
-  { flow: "cancelled", label: "Games got cancelled", icon: CalendarX2, tag: "CANCELLED" },
-  { flow: "pain", label: "Something hurts", icon: HeartPulse, tag: "PAIN" },
-  { flow: "break", label: "I need a break", icon: PauseCircle, tag: "HOLD" },
-  { flow: "event", label: "Big event coming", icon: Star, tag: "EVENT" },
-  { flow: "travel", label: "I'm travelling", icon: Plane, tag: "HOLD" },
-  { flow: "resume", label: "Back to normal", icon: PlayCircle, tag: "RESUME" },
-];
-
-const FACES = [
-  { key: "little", emoji: "🙂" },
-  { key: "lot", emoji: "😣" },
-  { key: "cant", emoji: "😭" },
+type Flow = "games" | "season" | "cancelled" | "pain" | "break" | "event" | "travel" | "resume" | "ask";
+const BUTTONS = [
+  { flow: "games", label: "I have games", icon: CalendarCheck },
+  { flow: "season", label: "Season starts or ends", icon: Flag },
+  { flow: "cancelled", label: "Games cancelled", icon: CalendarX2 },
+  { flow: "pain", label: "Something hurts", icon: HeartPulse },
+  { flow: "break", label: "I need a break", icon: PauseCircle },
+  { flow: "event", label: "Big event", icon: Star },
+  { flow: "travel", label: "Travelling", icon: Plane },
+  { flow: "resume", label: "Back to normal", icon: PlayCircle },
 ] as const;
-
-function draft(tag: TimelineTag, start: string, end = start, payload: Record<string, unknown> = {}, dates: string[] | null = null): EntryDraft {
+const FACES = [{ key: "little", emoji: "🙂" }, { key: "lot", emoji: "😣" }, { key: "cant", emoji: "😭" }] as const;
+const RED_FLAG = /\b(numb(?:ness)?|tingl(?:e|es|ing)|popp?(?:ed|ing)?|can't move|cannot move|unable to move|can't straighten|cannot straighten|unable to straighten)\b/i;
+const NOTE_MESSAGE = "Saved your note — tap a choice or give me dates if you want the plan to change.";
+function draft(tag: EntryDraft["tag"], start: string, end = start, payload: Record<string, unknown> = {}, dates: string[] | null = null): EntryDraft {
   return { tag, start_date: start, end_date: end < start ? start : end, dates, payload };
 }
 
-export function TellHammersInbox() {
+export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolean; onDone?: () => void }) {
+  const { user } = useAuth();
   const tl = useScheduleTimeline();
   const { updateSeasonStatus } = useSeasonStatus();
   const today = getTodayDate();
-  const [flow, setFlow] = useState<Flow>(null);
+  const storageKey = `hammer:tell-open:${user?.id ?? "guest"}`;
+  const [open, setOpen] = useState(checkIn);
+  const [flow, setFlow] = useState<Flow | null>(null);
   const [busy, setBusy] = useState(false);
-  const [lastMessage, setLastMessage] = useState<{ id: string; text: string } | null>(null);
   const [picked, setPicked] = useState<Date[]>([]);
-  const [seasonWhich, setSeasonWhich] = useState<"starts" | "ends" | null>(null);
+  const [which, setWhich] = useState<"starts" | "ends" | null>(null);
   const [eventKind, setEventKind] = useState<string | null>(null);
-  const [region, setRegion] = useState<{ key: string; label: string } | null>(null);
-  const [filter, setFilter] = useState<TimelineFilterTag | null>(null);
-  const [askText, setAskText] = useState("");
-  const [askDraft, setAskDraft] = useState<EntryDraft | null>(null);
-  const [askError, setAskError] = useState<string | null>(null);
-  const [listening, setListening] = useState(false);
-
-  const reset = () => {
-    setFlow(null);
-    setPicked([]);
-    setSeasonWhich(null);
-    setEventKind(null);
-    setRegion(null);
-    setAskDraft(null);
-    setAskError(null);
+  const [region, setRegion] = useState<(typeof REPORT_INJURY_REGIONS)[number] | null>(null);
+  const [pending, setPending] = useState<EntryDraft | null>(null);
+  const [text, setText] = useState("");
+  const [confirm, setConfirm] = useState<EntryDraft | null>(null);
+  const [lastMessage, setLastMessage] = useState<string | null>(null);
+  const [sent, setSent] = useState<Array<{ id: string; label: string }>>([]);
+  useEffect(() => {
+    if (checkIn) return;
+    try { setOpen(localStorage.getItem(storageKey) === "true"); } catch { /* private browsing */ }
+  }, [storageKey, checkIn]);
+  const todayEntries = useMemo(() => tl.entries.filter(e => !e.undone_at && e.created_at?.slice(0, 10) === today), [tl.entries, today]);
+  if (!tl.enabled) return null;
+  const toggle = (value: boolean) => {
+    setOpen(value);
+    if (!value) reset();
+    try { localStorage.setItem(storageKey, String(value)); } catch { /* private browsing */ }
   };
-
-  async function commit(d: EntryDraft, source: "inbox" | "ask_hammer" = "inbox") {
+  function reset() {
+    setFlow(null); setPending(null); setPicked([]); setWhich(null); setEventKind(null); setRegion(null); setText(""); setConfirm(null);
+  }
+  function enter(next: Flow) { reset(); setLastMessage(null); setFlow(next); if (next === "resume") setPending(draft("RESUME", today)); }
+  async function commit(d: EntryDraft) {
     if (busy) return;
     setBusy(true);
     try {
-      if (d.tag === "SEASON") {
-        updateSeasonStatus(
-          d.payload.which === "ends"
-            ? ({ in_season_end_date: d.start_date } as any)
-            : ({ in_season_start_date: d.start_date } as any),
-        );
-      }
-      const res = await tl.save(d, source);
-      setLastMessage({ id: res.entry.id, text: res.message });
-      toast.success(res.merged ? "You already told me this — I updated it." : "Saved", { description: res.message });
+      const res = await tl.save(d, "inbox");
+      if (d.tag === "SEASON") updateSeasonStatus(d.payload.which === "ends" ? { in_season_end_date: d.start_date } as any : { in_season_start_date: d.start_date } as any);
+      setLastMessage(d.tag === "NOTE" && d.payload.kind === "free_text" ? NOTE_MESSAGE : res.message);
+      setSent(previous => [{ id: res.entry.id, label: describeEntry(res.entry) }, ...previous.filter(item => item.id !== res.entry.id)]);
+      if (d.tag === "PAIN" && RED_FLAG.test(String(d.payload.text ?? ""))) toast.error("Stop and get it checked by a trainer or doctor.");
       reset();
-      setAskText("");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't save that");
-    } finally {
-      setBusy(false);
-    }
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't save that"); }
+    finally { setBusy(false); }
   }
-
   async function undo(id: string) {
     try {
-      const ok = await tl.undo(id);
-      if (ok) {
-        toast.success("Undone");
-        if (lastMessage?.id === id) setLastMessage(null);
-      } else toast.error("That can only be undone within 24 hours.");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't undo");
-    }
+      if (await tl.undo(id)) { setSent(s => s.filter(e => e.id !== id)); toast.success("Undone"); }
+      else toast.error("That can only be undone within 24 hours.");
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't undo"); }
   }
-
-  function startVoice() {
-    const SR = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
-    if (!SR) {
-      toast.message("Voice isn't available on this device — type it instead.");
-      return;
+  function prepare() {
+    const words = text.trim();
+    if (!words && pending) { void commit(pending); return; }
+    if (!words) return;
+    // A structured choice stays authoritative unless the words actually contain a readable date/length.
+    const prefix: Partial<Record<Flow, string>> = { break: "break ", travel: "travel ", games: "games ", cancelled: "games cancelled ", season: `season ${which ?? "starts"} `, event: `${eventKind ?? "showcase"} ` };
+    const parsed = parseScheduleRequest(`${prefix[flow ?? "ask"] ?? ""}${words}`, today);
+    const hasTime = extractDates(words, today).length > 0 || /\b(\d+|one|two|three|four|a)\s*(days?|weeks?)\b/i.test(words);
+    if (flow === "pain" && pending) { void commit({ ...pending, payload: { ...pending.payload, text: words } }); return; }
+    if (hasTime && parsed.ok && parsed.draft.tag !== "NOTE" && parsed.draft.tag !== "GOAL") {
+      // Never let a different category in free text silently replace the selected option.
+      const expected: Partial<Record<Flow, EntryDraft["tag"]>> = { break: "HOLD", travel: "HOLD", games: "GAME", cancelled: "CANCELLED", season: "SEASON", event: "EVENT" };
+      if (!flow || flow === "ask" || parsed.draft.tag === expected[flow]) {
+        setConfirm({ ...parsed.draft, payload: { ...parsed.draft.payload, text: words } }); return;
+      }
     }
-    const rec = new SR();
-    rec.lang = "en-US";
-    rec.interimResults = false;
-    rec.onresult = (ev: any) => {
-      const said = ev.results?.[0]?.[0]?.transcript ?? "";
-      setAskText(said);
-      review(said);
-    };
-    rec.onend = () => setListening(false);
-    setListening(true);
-    rec.start();
+    if (pending) { void commit({ ...pending, payload: { ...pending.payload, text: words } }); return; }
+    void commit(draft("NOTE", today, today, { kind: "free_text", text: words }));
   }
-
-  function review(text = askText) {
-    const r = parseScheduleRequest(text, today);
-    if (r.ok) {
-      setAskDraft(r.draft);
-      setAskError(null);
-    } else {
-      setAskDraft(null);
-      setAskError("reason" in r ? r.reason : null);
-    }
-  }
-
-  const visible = useMemo(
-    () => tl.entries.filter((e) => !e.undone_at && (!filter || e.tag === filter || (filter === "HOLD" && e.tag === "RESUME"))),
-    [tl.entries, filter],
-  );
-
-  if (!tl.enabled) return null;
-
-  const dateStr = (d: Date) => getLocalDateString(d);
-  const cal = (mode: "single" | "multiple", onPick: (dates: Date[]) => void) => (
-    <Calendar
-      mode={mode as any}
-      selected={(mode === "single" ? picked[0] : picked) as any}
-      onSelect={(v: any) => {
-        const list = mode === "single" ? (v ? [v] : []) : (v ?? []);
-        setPicked(list);
-        onPick(list);
-      }}
-      className="rounded-md border mx-auto pointer-events-auto [&_button]:h-11 [&_button]:w-11 [&_button]:text-base"
-    />
-  );
-
-  const Big = ({ children, onClick, testId }: { children: React.ReactNode; onClick: () => void; testId?: string }) => (
-    <Button variant="outline" className="h-14 w-full text-base justify-start gap-3" onClick={onClick} disabled={busy} data-testid={testId}>
-      {children}
-    </Button>
-  );
-
-  return (
-    <section className="space-y-3 rounded-lg border border-primary/30 bg-card p-3" aria-label="Tell Hammer">
+  const pickCalendar = (multiple: boolean) => <Calendar mode={multiple ? "multiple" : "single"} selected={(multiple ? picked : picked[0]) as any}
+    onSelect={(value: any) => setPicked(multiple ? (value ?? []) : (value ? [value] : []))}
+    className="mx-auto rounded-md border pointer-events-auto [&_button]:h-11 [&_button]:w-11" />;
+  const choice = (label: string, value: EntryDraft, testId?: string) => <Button key={label} variant="outline" className="h-12 whitespace-normal" data-testid={testId} onClick={() => setPending(value)}>{label}</Button>;
+  return <section className="rounded-md border border-border bg-card p-3 space-y-3" aria-label={checkIn ? "Anything change?" : "Tell Hammer"}>
+    {checkIn ? <div className="flex items-center justify-between"><h3 className="font-semibold">Anything change?</h3>{flow && <Button variant="ghost" onClick={reset}><ArrowLeft className="mr-1 h-4 w-4" /> Back</Button>}</div> :
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-base font-semibold">Tell Hammer</h3>
-        {flow && (
-          <Button variant="ghost" size="sm" onClick={reset} className="h-9 gap-1">
-            <ArrowLeft className="h-4 w-4" /> Back
-          </Button>
-        )}
+        <Button variant="ghost" className="h-11 flex-1 justify-between px-1 font-semibold" aria-expanded={open} onClick={() => toggle(!open)}>
+          Tell Hammer {open ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+        </Button>
+        {open && <Button size="icon" variant="ghost" aria-label="Close Tell Hammer" onClick={() => toggle(false)}><X className="h-4 w-4" /></Button>}
+      </div>}
+    {(open || checkIn) && <div className="space-y-3">
+      {!checkIn && flow && <Button variant="ghost" onClick={reset}><ArrowLeft className="mr-1 h-4 w-4" /> Back</Button>}
+      {lastMessage && <div role="status" data-testid="tell-hammers-result" className="rounded-md border border-primary/30 bg-primary/10 p-3 text-sm"><strong>Got it — Hammer has it</strong><p>{lastMessage}</p></div>}
+      {!flow && <>
+        <div className="grid grid-cols-2 gap-2">{BUTTONS.map(({flow: f, label, icon: Icon}) => <Button key={f} variant="outline" className="h-20 flex-col gap-1 whitespace-normal text-center text-sm" data-testid={`tell-${f}`} onClick={() => enter(f)}><Icon className="h-5 w-5 shrink-0" />{label}</Button>)}</div>
+        <Button variant="outline" className="w-full" data-testid="tell-ask" onClick={() => enter("ask")}>Tell Hammer in your words</Button>
+        {checkIn && <Button className="w-full" data-testid="chip-nope" onClick={onDone}>Done</Button>}
+      </>}
+      {flow === "games" && <><p className="text-sm">Tap your game days.</p>{pickCalendar(true)}<Button disabled={!picked.length} onClick={() => { const days = picked.map(getLocalDateString).sort(); setPending(draft("GAME", days[0], days[days.length - 1], {}, days)); }}>Use these days</Button></>}
+      {flow === "season" && <>{!which ? <div className="grid grid-cols-2 gap-2"><Button variant="outline" onClick={() => setWhich("starts")}>Season starts</Button><Button variant="outline" onClick={() => setWhich("ends")}>Season ends</Button></div> : <><p className="text-sm">Tap the day your season {which}.</p>{pickCalendar(false)}<Button disabled={!picked.length} onClick={() => setPending(draft("SEASON", getLocalDateString(picked[0]), getLocalDateString(picked[0]), { which }))}>Use this day</Button></>}</>}
+      {flow === "cancelled" && <><div className="grid grid-cols-2 gap-2">{[1,7,14,28].map((n) => choice(n === 1 ? "Today" : n === 7 ? "This week" : n === 14 ? "Next 2 weeks" : "Next 4 weeks", draft("CANCELLED", today, isoShift(today,n - 1))))}</div><p className="text-sm">Or tap the days:</p>{pickCalendar(true)}<Button disabled={!picked.length} onClick={() => { const days = picked.map(getLocalDateString).sort(); setPending(draft("CANCELLED",days[0],days[days.length-1],{},days)); }}>Use these days</Button></>}
+      {flow === "pain" && <>{!region ? <><p className="text-sm">Where does it hurt?</p><div className="grid grid-cols-3 gap-2">{REPORT_INJURY_REGIONS.map(r => <Button key={r.key} variant="outline" className="h-12 text-xs" data-testid={`pain-${r.key}`} onClick={() => setRegion(r)}>{r.label}</Button>)}</div></> : <><p className="text-sm">How bad is your {region.label.toLowerCase()}?</p><div className="grid grid-cols-3 gap-2">{FACES.map(f => <Button key={f.key} variant="outline" className="h-20 flex-col" data-testid={`face-${f.key}`} onClick={() => setPending(draft("PAIN",today,today,{ region: region.key, regionLabel: region.label, face: f.key, faceLabel: FACE_LABEL[f.key] }))}><span className="text-2xl">{f.emoji}</span>{FACE_LABEL[f.key]}</Button>)}</div></> }</>}
+      {(flow === "break" || flow === "travel") && <><p className="text-sm">{flow === "travel" ? "How long are you away?" : "How long do you need?"}</p><div className="grid grid-cols-2 gap-2">{(flow === "break" ? [1,3,7] : [1,3,7,14]).map(n => choice(n === 1 ? "Just today" : n === 7 ? "1 week" : `${n} days`, draft("HOLD",today,isoShift(today,n-1),{reason: flow === "travel" ? "travel" : "break"}),`hold-${n}`))}</div></>}
+      {flow === "event" && <>{!eventKind ? <div className="grid grid-cols-2 gap-2">{["Combine","Showcase","Tryout","Camp"].map(k => <Button key={k} variant="outline" onClick={() => setEventKind(k)}>{k}</Button>)}</div> : <><p className="text-sm">Tap the day of the {eventKind.toLowerCase()}.</p>{pickCalendar(false)}<Button disabled={!picked.length} onClick={() => setPending(draft("EVENT",getLocalDateString(picked[0]),getLocalDateString(picked[0]),{label:eventKind,kind:eventKind.toLowerCase()}))}>Use this day</Button></>}</>}
+      {flow && <div className="space-y-2">
+        {pending && <p className="text-sm font-medium">{describeEntry(pending)}</p>}
+        <form onSubmit={e => { e.preventDefault(); prepare(); }} className="space-y-2">
+          <Textarea value={text} onChange={e => setText(e.target.value)} rows={2} data-testid="entry-text"
+            aria-label={flow === "pain" ? "Tell Hammer more — where exactly, when it started" : "Something else"}
+            placeholder={flow === "pain" ? "Tell Hammer more — where exactly, when it started" : flow === "ask" ? "e.g. Games cancelled Oct 5 to 19" : "Something else…"}
+            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); prepare(); } }} />
+          <Button type="submit" className="w-full" disabled={busy || (!pending && !text.trim())} data-testid="entry-send">Send</Button>
+        </form>
+        {confirm && <div className="rounded-md border p-3 space-y-2" data-testid="ask-confirm"><p>I'll save: <strong>{describeEntry(confirm)}</strong>. Is that right?</p><div className="flex gap-2"><Button data-testid="ask-yes" disabled={busy} onClick={() => void commit(confirm)}>Yes, save</Button><Button variant="outline" onClick={() => setConfirm(null)}>Back</Button></div></div>}
+        {flow === "pain" && RED_FLAG.test(text) && <p role="alert" className="text-sm text-destructive">Stop and get it checked by a trainer or doctor.</p>}
+      </div>}
+      <div className="border-t pt-3 space-y-2"><h4 className="text-sm font-semibold">Sent today</h4>
+        {[...sent, ...todayEntries.filter(e => !sent.some(s => s.id === e.id)).map(e => ({id:e.id,label:describeEntry(e)}))].map(e => <div key={e.id} className="flex items-center gap-2 text-sm"><span className="min-w-0 flex-1 break-words">{e.label}</span><Button size="sm" variant="ghost" aria-label={`Undo ${e.label}`} onClick={() => void undo(e.id)}><Undo2 className="h-4 w-4" /> Undo</Button></div>)}
       </div>
-
-      {lastMessage && (
-        <div className="rounded-md border border-primary/30 bg-primary/10 p-3 text-sm" role="status" data-testid="tell-hammers-result">
-          <p>{lastMessage.text}</p>
-          <Button size="sm" variant="outline" className="mt-2 h-10 gap-1" onClick={() => undo(lastMessage.id)}>
-            <Undo2 className="h-4 w-4" /> Undo
-          </Button>
-        </div>
-      )}
-
-      {flow === null && (
-        <>
-          <div className="grid grid-cols-2 gap-2">
-            {BUTTONS.map((b) => {
-              const Icon = b.icon;
-              return (
-                <Button
-                  key={b.flow}
-                  variant="outline"
-                  className="h-20 flex-col gap-1 whitespace-normal text-center text-sm leading-tight"
-                  disabled={busy}
-                  data-testid={`tell-${b.flow}`}
-                  onClick={() => (b.flow === "resume" ? commit(draft("RESUME", today)) : setFlow(b.flow))}
-                >
-                  <Icon className="h-6 w-6" />
-                  {b.label}
-                </Button>
-              );
-            })}
-          </div>
-          <Button variant="secondary" className="h-12 w-full gap-2 text-base" onClick={() => setFlow("ask")} data-testid="tell-ask">
-            <MessageCircle className="h-5 w-5" /> Ask Hammer — say it or type it
-          </Button>
-        </>
-      )}
-
-      {flow === "games" && (
-        <div className="space-y-2">
-          <p className="text-sm">Tap your game days.</p>
-          {cal("multiple", () => undefined)}
-          <Button
-            className="h-12 w-full text-base"
-            disabled={!picked.length || busy}
-            data-testid="tell-save"
-            onClick={() => {
-              const ds = picked.map(dateStr).sort();
-              commit(draft("GAME", ds[0], ds[ds.length - 1], {}, ds));
-            }}
-          >
-            Save {picked.length > 1 ? `${picked.length} games` : "game"}
-          </Button>
-        </div>
-      )}
-
-      {flow === "season" && !seasonWhich && (
-        <div className="grid grid-cols-2 gap-2">
-          <Big onClick={() => setSeasonWhich("starts")}>Season starts</Big>
-          <Big onClick={() => setSeasonWhich("ends")}>Season ends</Big>
-        </div>
-      )}
-      {flow === "season" && seasonWhich && (
-        <div className="space-y-2">
-          <p className="text-sm">Tap the day your season {seasonWhich === "ends" ? "ends" : "starts"}.</p>
-          {cal("single", (l) => l[0] && commit(draft("SEASON", dateStr(l[0]), dateStr(l[0]), { which: seasonWhich })))}
-        </div>
-      )}
-
-      {flow === "cancelled" && (
-        <div className="space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            <Big onClick={() => commit(draft("CANCELLED", today))}>Today</Big>
-            <Big onClick={() => commit(draft("CANCELLED", today, isoShift(today, 6)))}>This week</Big>
-            <Big onClick={() => commit(draft("CANCELLED", today, isoShift(today, 13)))}>Next 2 weeks</Big>
-            <Big onClick={() => commit(draft("CANCELLED", today, isoShift(today, 27)))}>Next 4 weeks</Big>
-          </div>
-          <p className="text-sm">Or tap the days:</p>
-          {cal("multiple", () => undefined)}
-          <Button
-            className="h-12 w-full text-base"
-            disabled={!picked.length || busy}
-            onClick={() => {
-              const ds = picked.map(dateStr).sort();
-              commit(draft("CANCELLED", ds[0], ds[ds.length - 1], {}, ds));
-            }}
-          >
-            Save
-          </Button>
-        </div>
-      )}
-
-      {flow === "pain" && !region && (
-        <div className="space-y-2">
-          <p className="text-sm">Where does it hurt?</p>
-          <div className="grid grid-cols-3 gap-2">
-            {REPORT_INJURY_REGIONS.map((r) => (
-              <Button key={r.key} variant="outline" className="h-12 text-sm" onClick={() => setRegion(r)} data-testid={`pain-${r.key}`}>
-                {r.label}
-              </Button>
-            ))}
-          </div>
-        </div>
-      )}
-      {flow === "pain" && region && (
-        <div className="space-y-2">
-          <p className="text-sm">How bad is your {region.label.toLowerCase()}?</p>
-          <div className="grid grid-cols-3 gap-2">
-            {FACES.map((f) => (
-              <Button
-                key={f.key}
-                variant="outline"
-                className="h-24 flex-col gap-1 text-sm"
-                disabled={busy}
-                data-testid={`face-${f.key}`}
-                onClick={() =>
-                  commit(draft("PAIN", today, today, { region: region.key, regionLabel: region.label, face: f.key, faceLabel: FACE_LABEL[f.key] }))
-                }
-              >
-                <span className="text-3xl" aria-hidden>{f.emoji}</span>
-                {FACE_LABEL[f.key]}
-              </Button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {(flow === "break" || flow === "travel") && (
-        <div className="space-y-2">
-          <p className="text-sm">{flow === "travel" ? "How long are you away?" : "How long do you need?"}</p>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { l: "Just today", n: 1 },
-              { l: "3 days", n: 3 },
-              { l: "1 week", n: 7 },
-              { l: "2 weeks", n: 14 },
-            ].map((o) => (
-              <Big
-                key={o.n}
-                testId={`hold-${o.n}`}
-                onClick={() => commit(draft("HOLD", today, isoShift(today, o.n - 1), { reason: flow === "travel" ? "travel" : "break" }))}
-              >
-                {o.l}
-              </Big>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {flow === "event" && !eventKind && (
-        <div className="grid grid-cols-2 gap-2">
-          {["Combine", "Showcase", "Tryout", "Camp"].map((k) => (
-            <Big key={k} onClick={() => setEventKind(k)}>{k}</Big>
-          ))}
-        </div>
-      )}
-      {flow === "event" && eventKind && (
-        <div className="space-y-2">
-          <p className="text-sm">Tap the day of the {eventKind.toLowerCase()}.</p>
-          {cal("single", (l) => l[0] && commit(draft("EVENT", dateStr(l[0]), dateStr(l[0]), { label: eventKind, kind: eventKind.toLowerCase() })))}
-        </div>
-      )}
-
-      {flow === "ask" && (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <Textarea
-              value={askText}
-              onChange={(e) => setAskText(e.target.value)}
-              rows={2}
-              className="text-base"
-              placeholder='e.g. "Games cancelled Oct 5 to 19"'
-              data-testid="ask-text"
-            />
-            <Button variant={listening ? "default" : "outline"} className="h-auto w-14" onClick={startVoice} aria-label="Say it">
-              <Mic className="h-5 w-5" />
-            </Button>
-          </div>
-          <Button className="h-12 w-full text-base" onClick={() => review()} disabled={!askText.trim()} data-testid="ask-review">
-            Check it
-          </Button>
-          {askError && <p className="text-sm text-muted-foreground">{askError}</p>}
-          {askDraft && (
-            <div className="rounded-md border p-3 space-y-2" data-testid="ask-confirm">
-              <p className="text-sm">I'll save: <strong>{describeEntry(askDraft)}</strong>. Is that right?</p>
-              <div className="grid grid-cols-2 gap-2">
-                <Button className="h-12" onClick={() => commit(askDraft, "ask_hammer")} disabled={busy} data-testid="ask-yes">Yes, save</Button>
-                <Button variant="outline" className="h-12" onClick={() => setAskDraft(null)}>No</Button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {flow === null && (
-        <div className="space-y-2">
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter">
-            <button
-              type="button"
-              onClick={() => setFilter(null)}
-              className={`rounded-full border px-3 py-1.5 text-xs ${filter === null ? "bg-foreground text-background" : ""}`}
-            >
-              All
-            </button>
-            {TIMELINE_TAGS.map((t) => {
-              const s = TAG_STYLE[t];
-              const Icon = s.icon;
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  data-testid={`chip-${t}`}
-                  onClick={() => setFilter(filter === t ? null : t)}
-                  className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs ${s.tone} ${filter === t ? "ring-2 ring-ring" : ""}`}
-                >
-                  <Icon className="h-3.5 w-3.5" /> {s.label}
-                </button>
-              );
-            })}
-          </div>
-          {visible.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nothing here yet.</p>
-          ) : (
-            <ul className="space-y-1.5">
-              {visible.slice(0, 20).map((e) => {
-                const s = TAG_STYLE[e.tag];
-                const Icon = s.icon;
-                return (
-                  <li key={e.id} className="flex items-center gap-2 rounded-md border p-2 text-sm">
-                    <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${s.tone}`}>
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0 flex-1">{describeEntry(e)}</span>
-                    {canUndo(e) && (
-                      <Button size="sm" variant="ghost" className="h-9 gap-1" onClick={() => undo(e.id)}>
-                        <Undo2 className="h-4 w-4" /> Undo
-                      </Button>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      )}
-    </section>
-  );
+    </div>}
+  </section>;
 }
-
 export default TellHammersInbox;
-// Exposed for tests.
 export { BUTTONS as TELL_HAMMERS_BUTTONS };
