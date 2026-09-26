@@ -12,6 +12,7 @@ import { SubscriptionGate } from "@/components/SubscriptionGate";
 // Re-export for backward compatibility with existing imports.
 export { isChunkLoadError, triggerChunkReload };
 import { Toaster } from "@/components/ui/toaster";
+import { FpsProbeReadout } from "@/components/debug/FpsProbeReadout"; // TEMPORARY — frame-rate device check
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -291,6 +292,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <PWAUpdatePrompt />
+          <FpsProbeReadout />
           <VideoMomentHost />
           <BrowserRouter>
             <QuickEditProfileProvider>
