@@ -153,7 +153,12 @@ serve(async (req) => {
       );
     }
 
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    // A native Capacitor build sends origin "capacitor://localhost". Safari
+    // cannot open that, so a paid buyer was stranded on Stripe's page. Only
+    // real web origins are trusted; anything else returns to the public site.
+    const rawOrigin = req.headers.get("origin") || "http://localhost:3000";
+    const origin = /^https?:\/\//i.test(rawOrigin) ? rawOrigin : "https://hammersmodality.org";
+    const isNativeOrigin = origin !== rawOrigin;
 
     const successParams = new URLSearchParams({ status: 'success' });
     if (simId) successParams.set('sim', String(simId));
