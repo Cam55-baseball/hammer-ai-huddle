@@ -99,7 +99,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
         setConfirm({ ...parsed.draft, payload: { ...parsed.draft.payload, text: words } }); return;
       }
     }
-    if (hasTime && !pending) { void commit(draft("NOTE", today, today, { kind: "free_text", text: words })); return; }
+    if (hasTime) { void commit(draft("NOTE", today, today, { kind: "free_text", text: words })); return; }
     // The explicit choice supplies the plan instruction; words without a date are only its context.
     if (pending) { void commit({ ...pending, payload: { ...pending.payload, text: words } }); return; }
     // With no explicit choice, an unrecognised sentence never authors a plan change.
