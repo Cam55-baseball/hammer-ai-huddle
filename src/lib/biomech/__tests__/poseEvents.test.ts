@@ -85,6 +85,7 @@ describe("pose-derived anchors", () => {
 
   it("D-RELEASE pose-only: ≥2 of 3 signals agree near the arm peak, labelled pose_only", () => {
     const r = detectReleasePoseOnly(pitch(), { throwing_side: "right" });
+    console.log(JSON.stringify(r));
     expect(r.missingness).toBeNull();
     expect(Math.abs(r.frame_index! - 70)).toBeLessThanOrEqual(2);
     expect(r.diagnostics.tier).toBe("pose_only");
