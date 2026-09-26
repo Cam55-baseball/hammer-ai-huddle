@@ -7,70 +7,69 @@ let enabled = true;
 vi.mock("@/hooks/useScheduleTimeline", () => ({
   useScheduleTimeline: () => ({ enabled, entries: [], save, undo, loading: false, switchOn: enabled }),
 }));
-vi.mock("@/hooks/useSeasonStatus", () => ({ useSeasonStatus: () => ({ updateSeasonStatus: vi.fn() }) }));
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn(), message: vi.fn() }) }));
 
 import { TellHammersInbox } from "@/components/hammer/TellHammersInbox";
 
 beforeEach(() => {
-  enabled = true;
-  save.mockReset();
-  save.mockResolvedValue({ merged: false, entry: { id: "x" }, message: "Got it — break. Hammer re-planned your week." });
+  localStorage.clear(); enabled = true; save.mockReset(); undo.mockReset();
+  save.mockImplementation(async (d) => ({ merged: false, entry: { ...d, id: String(save.mock.calls.length), created_at: new Date().toISOString() }, message: "Hammer re-planned your week." }));
 });
+const open = () => fireEvent.click(screen.getByRole("button", { name: /Tell Hammer/i }));
+const send = () => fireEvent.click(screen.getByTestId("entry-send"));
 
-describe("Tell Hammers — child-simple paths", () => {
-  it("shows the eight big buttons", () => {
+describe("Tell Hammer shared entry flow", () => {
+  it("starts closed; opens to exactly eight choices and no filter or example button", () => {
     render(<TellHammersInbox />);
-    for (const id of ["games", "season", "cancelled", "pain", "break", "event", "travel", "resume"]) {
-      expect(screen.getByTestId(`tell-${id}`)).toBeTruthy();
-    }
+    expect(screen.queryByTestId("tell-break")).toBeNull();
+    open();
+    for (const key of ["games", "season", "cancelled", "pain", "break", "event", "travel", "resume"]) expect(screen.getByTestId(`tell-${key}`)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "All" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Close Tell Hammer" }));
+    expect(screen.queryByTestId("tell-break")).toBeNull();
   });
-
-  it("'I need a break' saves in 2 taps, no typing", async () => {
-    render(<TellHammersInbox />);
-    fireEvent.click(screen.getByTestId("tell-break")); // tap 1
-    fireEvent.click(screen.getByTestId("hold-7")); // tap 2
+  it("sends two entries in a row and confirms each without closing", async () => {
+    render(<TellHammersInbox />); open();
+    fireEvent.click(screen.getByTestId("tell-break"));
+    fireEvent.click(screen.getByTestId("hold-7")); send();
     await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
-    expect(save.mock.calls[0][0]).toMatchObject({ tag: "HOLD", payload: { reason: "break" } });
+    expect(screen.getByTestId("tell-hammers-result").textContent).toMatch(/Got it — Hammer has it/);
+    fireEvent.click(screen.getByTestId("tell-resume")); send();
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
+    expect(screen.getByTestId("tell-hammers-result").textContent).toMatch(/Got it — Hammer has it/);
+    expect(screen.getByText("Sent today")).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: /^Undo / })).toHaveLength(2);
   });
-
-  it("'Something hurts' saves in 3 taps: where → face", async () => {
-    render(<TellHammersInbox />);
-    fireEvent.click(screen.getByTestId("tell-pain")); // 1
-    fireEvent.click(screen.getByTestId("pain-shoulder")); // 2
-    fireEvent.click(screen.getByTestId("face-lot")); // 3
-    await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
-    expect(save.mock.calls[0][0]).toMatchObject({ tag: "PAIN", payload: { region: "shoulder", face: "lot" } });
+  it("Back returns without saving", () => {
+    render(<TellHammersInbox />); open(); fireEvent.click(screen.getByTestId("tell-pain"));
+    fireEvent.click(screen.getByRole("button", { name: /Back/i }));
+    expect(screen.getByTestId("tell-break")).toBeTruthy(); expect(save).not.toHaveBeenCalled();
   });
-
-  it("'Back to normal' is one tap", async () => {
-    render(<TellHammersInbox />);
-    fireEvent.click(screen.getByTestId("tell-resume"));
-    await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
-    expect(save.mock.calls[0][0].tag).toBe("RESUME");
-  });
-
-  it("shows what changed with a one-tap Undo after saving", async () => {
-    render(<TellHammersInbox />);
-    fireEvent.click(screen.getByTestId("tell-resume"));
-    await waitFor(() => expect(screen.getByTestId("tell-hammers-result").textContent).toMatch(/re-planned/));
-  });
-
-  it("Ask Hammer asks before saving", async () => {
-    render(<TellHammersInbox />);
-    fireEvent.click(screen.getByTestId("tell-ask"));
-    fireEvent.change(screen.getByTestId("ask-text"), { target: { value: "games cancelled oct 5 to 19" } });
-    fireEvent.click(screen.getByTestId("ask-review"));
-    expect(save).not.toHaveBeenCalled();
-    expect(screen.getByTestId("ask-confirm").textContent).toMatch(/No games October 5 to October 19|No games October 5 to 19/);
+  it("dated text-only break asks before changing the plan", async () => {
+    render(<TellHammersInbox />); open(); fireEvent.click(screen.getByTestId("tell-break"));
+    fireEvent.change(screen.getByTestId("entry-text"), { target: { value: "off Thursday and Friday" } }); send();
+    expect(screen.getByTestId("ask-confirm")).toBeTruthy(); expect(save).not.toHaveBeenCalled();
     fireEvent.click(screen.getByTestId("ask-yes"));
     await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
-    expect(save.mock.calls[0][1]).toBe("ask_hammer");
+    expect(save.mock.calls[0][0].tag).toBe("HOLD");
   });
-
-  it("switch off → nothing renders (today's screen unchanged)", () => {
+  it("unreadable text is only a note", async () => {
+    render(<TellHammersInbox />); open(); fireEvent.click(screen.getByTestId("tell-break"));
+    fireEvent.change(screen.getByTestId("entry-text"), { target: { value: "I might need some time" } }); send();
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+    expect(save.mock.calls[0][0]).toMatchObject({ tag: "NOTE", payload: { kind: "free_text" } });
+    expect(screen.getByTestId("tell-hammers-result").textContent).toMatch(/Saved your note/);
+  });
+  it("pain text preserves region and face and shows safety warning", async () => {
+    render(<TellHammersInbox />); open(); fireEvent.click(screen.getByTestId("tell-pain"));
+    fireEvent.click(screen.getByTestId("pain-shoulder")); fireEvent.click(screen.getByTestId("face-lot"));
+    fireEvent.change(screen.getByTestId("entry-text"), { target: { value: "tingling in my shoulder" } });
+    expect(screen.getByRole("alert").textContent).toMatch(/Stop and get it checked/);
+    send(); await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+    expect(save.mock.calls[0][0]).toMatchObject({ tag: "PAIN", payload: { region: "shoulder", face: "lot", text: "tingling in my shoulder" } });
+  });
+  it("disabled timeline renders no entries", () => {
     enabled = false;
-    const { container } = render(<TellHammersInbox />);
-    expect(container.innerHTML).toBe("");
+    expect(render(<TellHammersInbox />).container.innerHTML).toBe("");
   });
 });
