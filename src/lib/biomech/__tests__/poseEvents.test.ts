@@ -62,11 +62,11 @@ function swing(fps = 60): LandmarkSeries {
 }
 
 describe("pose-derived anchors", () => {
-  it("each built anchor has its own real version; COIL and ball release stay stubbed", () => {
+  it("each built anchor has its own real version; ball release stays stubbed; D-COIL is a real proxy", () => {
     for (const id of ["D-STILL", "D-FIRST-MOVE", "D-RELEASE-POSE", "D-LOAD-APEX", "D-SWING-START", "D-P4", "D-FINISH"] as const) {
       expect(isDetectorStubbed(id)).toBe(false);
     }
-    expect(isDetectorStubbed("D-COIL")).toBe(true);
+    expect(isDetectorStubbed("D-COIL")).toBe(false);
     expect(isDetectorStubbed("D-RELEASE")).toBe(true);
     expect(DETECTOR_VERSIONS["D-BAT"]).toMatch(/-stub$/);
   });

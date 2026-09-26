@@ -61,8 +61,8 @@ export const DETECTOR_VERSIONS: Readonly<Record<DetectorId, string>> = {
   "D-BAT": "bat@0.0.0-stub",
   "D-CONTACT": "contact@0.0.0-stub",
   "D-BALL": "ball@0.0.0-stub",
-  // D-COIL awaits owner sign-off on the proxy (femoral rotation is not visible).
-  "D-COIL": "coil@0.0.0-stub",
+  // D-COIL is a PROXY (rear thigh angle) for socket rotation — not directly visible side-on.
+  "D-COIL": "coil@1.0.0-proxy-rear-thigh-angle-3deg",
 } as const;
 
 export function detectorVersion(id: DetectorId): string {
