@@ -81,7 +81,31 @@ export function getStorefrontCountry(): string | null {
   return raw.trim().toUpperCase();
 }
 
-export function getPurchaseAvailability(): PurchaseAvailability {
+/**
+ * US-ONLY APP STORE RELEASE — owner decision, 2026-09-26.
+ *
+ * The app's App Store availability is set to the United States ONLY in App
+ * Store Connect. A user can only install the app from a storefront where it is
+ * listed, so every installed copy necessarily has a US storefront. Linking out
+ * to external purchase is permitted in the US (Epic v. Apple), so for this
+ * release native purchase UI is shown as a link-out without detecting the
+ * storefront at runtime.
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │ IF APP STORE AVAILABILITY IS EVER EXPANDED BEYOND THE UNITED STATES,    │
+ * │ REAL STOREFRONT DETECTION BECOMES MANDATORY BEFORE THAT RELEASE SHIPS,  │
+ * │ OR THE APP VIOLATES ANTI-STEERING RULES IN EVERY ADDED COUNTRY.         │
+ * │ Set this to false in that release and supply __HAMMERS_STOREFRONT__.    │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * Guarded by src/lib/purchase/__tests__/purchaseGate.test.ts.
+ */
+export const US_ONLY_APP_STORE_RELEASE = true;
+
+export function getPurchaseAvailability(
+  opts: { usOnlyRelease?: boolean } = {},
+): PurchaseAvailability {
+  const usOnlyRelease = opts.usOnlyRelease ?? US_ONLY_APP_STORE_RELEASE;
   const native = isNativeShell();
 
   // 1. Plain web — unchanged behaviour, purchases allowed.
@@ -105,6 +129,18 @@ export function getPurchaseAvailability(): PurchaseAvailability {
       mode: "native-linkout",
       storefront,
       reason: "native build with US storefront: link-out purchase allowed",
+    };
+  }
+
+  // 2b. US-only App Store listing guarantees a US storefront. A storefront
+  //     reported as something else is still hidden (defensive).
+  if (usOnlyRelease && storefront === null) {
+    return {
+      canShowPurchaseUI: true,
+      isNative: true,
+      mode: "native-linkout",
+      storefront: null,
+      reason: "native build, US-only App Store release: link-out purchase allowed",
     };
   }
 
