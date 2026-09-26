@@ -42,7 +42,7 @@ describe("Tell Hammer shared entry flow", () => {
   });
   it("Back returns without saving", () => {
     render(<TellHammersInbox />); open(); fireEvent.click(screen.getByTestId("tell-pain"));
-    fireEvent.click(screen.getByRole("button", { name: /Back/i }));
+    fireEvent.click(screen.getAllByRole("button", { name: /^Back$/i })[0]);
     expect(screen.getByTestId("tell-break")).toBeTruthy(); expect(save).not.toHaveBeenCalled();
   });
   it("dated text-only break asks before changing the plan", async () => {
