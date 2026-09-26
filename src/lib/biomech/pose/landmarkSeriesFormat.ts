@@ -42,7 +42,9 @@ export interface LandmarkSeriesHeader {
   readonly landmark_model_version: string;
   readonly fps_true: number;
   /** How fps_true was established. Never "container" — containers lie. */
-  readonly fps_source: "measured_rvfc" | "measured_rvfc_fallback";
+  readonly fps_source: "measured_rvfc" | "measured_rvfc_fallback" | "container";
+  /** Render-rate cross-check recorded next to the encoded rate (never decisive). */
+  readonly fps_playback?: number | null;
   readonly width: number;
   readonly height: number;
   readonly orientation: "portrait" | "landscape" | "square";
@@ -117,7 +119,16 @@ export interface LandmarkSeriesFrame {
   readonly world: readonly number[];
   /** 33 per-landmark visibility in [0,1]. Empty when pose_detected is false. */
   readonly visibility: readonly number[];
+  /** People the pose model detected in this frame (all, not just the athlete).
+   *  Absent on series written before per-frame gap detail was recorded. */
+  readonly candidates_detected?: number;
+  /** Why an unobserved frame is unobserved. Absent on observed frames and on
+   *  older series. */
+  readonly gap_reason?: FrameGapReason;
 }
+
+export type FrameGapReason = "no_person" | "no_match" | "decode_failed" | "not_locked";
+const GAP_CODES: readonly FrameGapReason[] = ["no_person", "no_match", "decode_failed", "not_locked"];
 
 export interface LandmarkSeries {
   readonly header: LandmarkSeriesHeader;
@@ -139,16 +150,19 @@ export function encodeLandmarkSeriesText(series: LandmarkSeries): string {
   const lines: string[] = [JSON.stringify(series.header)];
   for (const f of series.frames) {
     // Positional row: [frame_index, t, detected(0|1), normalized[], world[], visibility[]]
-    lines.push(
-      JSON.stringify([
-        f.frame_index,
-        round(f.timestamp_seconds, DP_TIME),
-        f.pose_detected ? 1 : 0,
-        roundAll(f.normalized, DP_NORMALIZED),
-        roundAll(f.world, DP_WORLD),
-        roundAll(f.visibility, DP_VISIBILITY),
-      ]),
-    );
+    const row: unknown[] = [
+      f.frame_index,
+      round(f.timestamp_seconds, DP_TIME),
+      f.pose_detected ? 1 : 0,
+      roundAll(f.normalized, DP_NORMALIZED),
+      roundAll(f.world, DP_WORLD),
+      roundAll(f.visibility, DP_VISIBILITY),
+    ];
+    // Optional trailing fields: [candidates_detected, gap_code] (gap_code 0 = none).
+    if (f.candidates_detected !== undefined || f.gap_reason !== undefined) {
+      row.push(f.candidates_detected ?? -1, f.gap_reason ? GAP_CODES.indexOf(f.gap_reason) + 1 : 0);
+    }
+    lines.push(JSON.stringify(row));
   }
   return lines.join("\n") + "\n";
 }
@@ -159,15 +173,20 @@ export function decodeLandmarkSeriesText(text: string): LandmarkSeries {
   const header = JSON.parse(lines[0]) as LandmarkSeriesHeader;
   const frames: LandmarkSeriesFrame[] = [];
   for (let i = 1; i < lines.length; i++) {
-    const row = JSON.parse(lines[i]) as [number, number, number, number[], number[], number[]];
-    frames.push({
+    const row = JSON.parse(lines[i]) as [number, number, number, number[], number[], number[], number?, number?];
+    const frame: LandmarkSeriesFrame = {
       frame_index: row[0],
       timestamp_seconds: row[1],
       pose_detected: row[2] === 1,
       normalized: row[3],
       world: row[4],
       visibility: row[5],
-    });
+      ...(row.length > 6 && typeof row[6] === "number" && row[6] >= 0 ? { candidates_detected: row[6] } : {}),
+      ...(row.length > 7 && typeof row[7] === "number" && row[7] > 0 && GAP_CODES[row[7] - 1]
+        ? { gap_reason: GAP_CODES[row[7] - 1] }
+        : {}),
+    };
+    frames.push(frame);
   }
   return { header, frames };
 }
