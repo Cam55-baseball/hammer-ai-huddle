@@ -63,8 +63,14 @@ audit and is explicitly out-of-spec going forward.
 ### Canonical detector stack
 - **D-POSE** — MediaPipe Pose Landmarker (Blazepose Full, world
   landmarks + 2D normalized). Baseline for every metric.
-- **D-RELEASE** — pitcher-release event detector (small classifier over
-  pose + frame crops, or audio-assisted where mic-quality allows).
+- **D-RELEASE** — pitcher-release event detector. **Audio plays no part:
+  nothing audible happens at release** (corrected 2026-09-26; earlier text
+  said "audio-assisted", which was wrong). Two tiers:
+  - **Pose-only tier (built, `D-RELEASE-POSE`)** — fuses peak throwing-wrist
+    speed, maximum elbow extension and arm-braking onset; accepted when ≥2
+    of 3 agree within ±2 frames; reports `anchor_uncertainty_ms` from fps.
+  - **Ball-assisted tier (future, `D-RELEASE`, still stubbed)** — ball
+    separation from the hand / first ballistic frame; more precise.
 - **D-PLANT** — front-foot plant detector (ankle/heel y-velocity zero-
   crossing with vertical-load gate).
 - **D-BAT** — bat keypoint detector (knob, mid, barrel-tip) — a
@@ -132,7 +138,7 @@ guess).
 
 | Anchor | Detector | Permitted sources | Min conf. | Fallback |
 |---|---|---|---|---|
-| `pitcher_release_frame` | D-RELEASE | pose+crop, audio-assist | 0.7 | missing |
+| `pitcher_release_frame` | D-RELEASE | pose-only tier now; ball-assisted later (no audio) | 0.7 | missing |
 | `front_foot_first_contact` | D-PLANT | pose | 0.7 | missing |
 | `front_foot_full_plant` | D-PLANT | pose | 0.7 | missing |
 | `hand_load_apex` | D-POSE derivative | pose | 0.6 | missing |
@@ -291,8 +297,8 @@ Audit row references: S10 #1–18, S11.
   the deadband width.
 - **MediaPipe sufficient?** Partial — D-RELEASE is **not** part of
   MediaPipe and must be a separate detector.
-- **Additional vision systems:** D-RELEASE (pose+crop classifier or
-  audio-assist).
+- **Additional vision systems:** D-RELEASE (pose-only tier now; a
+  ball-assisted tier later — audio plays no part).
 - **Phone-only sufficient?** Conditional — pitcher must be in the same
   frame (typical for side-on hitter captures from behind the L-screen
   or net) and clearly visible; otherwise missing.
