@@ -308,6 +308,8 @@ export default function AnalyzeVideo() {
     setAnalysis(null);
     setAnalysisError(null);
     setNoMovement(null);
+    setFpsUnknown(false);
+    setTrackDiagnosis(null);
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
     setLandingTime(null);
@@ -473,6 +475,8 @@ export default function AnalyzeVideo() {
     }
 
     setUploading(true);
+    setFpsUnknown(false);
+    setTrackDiagnosis(null);
 
     // ===== PHASE 0/1 — Deterministic probe (sha256 + true fps + dimensions) =====
     // Probe FIRST so deterministic frame selection can use fps_true.
