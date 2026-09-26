@@ -604,6 +604,8 @@ export default function AnalyzeVideo() {
           height: probed.height,
           orientation: probed.orientation,
           landingTimeSec: landingTime ?? null,
+          fps_source: "container",
+          fps_playback: probed.fps_playback.status === "ok" ? probed.fps_playback.fps : null,
         });
         movementGate = evaluateMovementGate(denseRun.series);
         setTrackDiagnosis(diagnoseTrack(denseRun.series));

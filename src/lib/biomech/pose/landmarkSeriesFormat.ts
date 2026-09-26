@@ -41,7 +41,7 @@ export interface LandmarkSeriesHeader {
   readonly landmark_model_id: string;
   readonly landmark_model_version: string;
   readonly fps_true: number;
-  /** How fps_true was established. Never "container" — containers lie. */
+  /** How fps_true was established. "container" = encoded rate read from the file (v2); the rvfc values are legacy playback-timed series. */
   readonly fps_source: "measured_rvfc" | "measured_rvfc_fallback" | "container";
   /** Render-rate cross-check recorded next to the encoded rate (never decisive). */
   readonly fps_playback?: number | null;
