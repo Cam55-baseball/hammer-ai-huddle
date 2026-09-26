@@ -13,6 +13,7 @@ import type { PoseFrame } from "../anchors/peakLegLift";
 import type { PlantPoseFrame } from "../detectors/plantDetector";
 import { BLAZEPOSE_INDEX, type PoseFrameRow } from "./poseRunner";
 
+/** Visible landmark y (despite the name, any index). */
 function ankleY(row: PoseFrameRow, idx: number): number | null {
   if (!row.pose_detected) return null;
   const lm = row.landmarks[idx];
@@ -22,6 +23,15 @@ function ankleY(row: PoseFrameRow, idx: number): number | null {
   return lm.y;
 }
 
+/** Shoulder-mid → ankle-mid vertical distance (normalised y). null if not visible. */
+export function bodyHeightY(row: PoseFrameRow): number | null {
+  const ys = [11, 12, 27, 28].map((i) => ankleY(row, i));
+  if (ys.some((y) => y == null)) return null;
+  const [ls, rs, la, ra] = ys as number[];
+  const h = Math.abs((la + ra) / 2 - (ls + rs) / 2);
+  return h > 0 ? h : null;
+}
+
 export function toPeakLegLiftFrames(
   rows: readonly PoseFrameRow[],
   liftIndex: number = BLAZEPOSE_INDEX.LEFT_ANKLE,
@@ -29,6 +39,7 @@ export function toPeakLegLiftFrames(
   return rows.map((r) => ({
     frame_index: r.frame_index,
     lift_ankle_y: ankleY(r, liftIndex),
+    body_height_y: bodyHeightY(r),
   }));
 }
 
@@ -39,5 +50,6 @@ export function toPlantFrames(
   return rows.map((r) => ({
     frame_index: r.frame_index,
     front_ankle_y: ankleY(r, frontIndex),
+    body_height_y: bodyHeightY(r),
   }));
 }

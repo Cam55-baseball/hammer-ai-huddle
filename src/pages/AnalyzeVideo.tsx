@@ -615,6 +615,7 @@ export default function AnalyzeVideo() {
           frame_index: p.frame_index,
           lift_ankle_y: p.lift_ankle_y,
           front_ankle_y: plantFrames[i]?.front_ankle_y ?? null,
+          body_height_y: p.body_height_y ?? null,
         }));
 
         tempoRun = await runTempoPipeline({
