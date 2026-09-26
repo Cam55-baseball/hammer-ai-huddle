@@ -51,10 +51,10 @@ export const DETECTOR_VERSIONS: Readonly<Record<DetectorId, string>> = {
   // POSE-ONLY TIER of release: 2-of-3 fusion (wrist speed peak, elbow
   // extension max, arm braking onset). Uncertainty is reported, never hidden.
   "D-RELEASE-POSE": "release_pose@1.0.0-2of3-wrist-elbow-brake",
-  "D-LOAD-APEX": "load_apex@1.0.0-wrist-rear-extremum-sign-change",
-  "D-SWING-START": "swing_start@1.0.0-wrist-fwd-accel-2f",
+  "D-LOAD-APEX": "load_apex@1.1.0-wrist-rear-extremum-sign-change-noise-floor",
+  "D-SWING-START": "swing_start@1.0.1-wrist-fwd-accel-2f",
   "D-P4": "p4@1.0.0-plant-then-back-elbow-fwd-2f",
-  "D-FINISH": "finish@1.0.0-still-after-peak-rotation",
+  "D-FINISH": "finish@1.1.0-still-after-peak-rotation-requires-movement",
   // Everything below is still a skeleton and MUST keep short-circuiting.
   // D-RELEASE = the future BALL-ASSISTED release tier (ball leaves hand).
   "D-RELEASE": "release@0.0.0-stub",

@@ -24,7 +24,21 @@ export interface PoseFrame {
   readonly frame_index: number;
   /** Normalised lift-side ankle y-coordinate (0 = top of frame). null = not visible. */
   readonly lift_ankle_y: number | null;
+  /**
+   * Vertical body height in the same normalised-y units (shoulder-mid →
+   * ankle-mid). Needed to tell a real lift from landmark noise. null/absent
+   * = cannot judge → the anchor refuses.
+   */
+  readonly body_height_y?: number | null;
 }
+
+/**
+ * Noise gate. On the reference still clip (docs/landmark-noise-floors.md)
+ * each ankle's full vertical range was ≤ 0.047 body heights. A lift must
+ * raise the ankle ≥ 0.10 body heights above its standing baseline (median
+ * y) — ~2× the still-clip range. Below that the "peak" is noise.
+ */
+export const MIN_LIFT_RISE_BODY = 0.1;
 
 export interface PeakLegLiftResult {
   readonly frame_index: number | null;
@@ -59,6 +73,21 @@ export function findPeakLegLiftFrame(
         MISSINGNESS_REASONS.POSE_NOT_DETECTED,
         "D-POSE",
       ),
+      source_model: LANDMARK_MODEL_VERSION,
+    };
+  }
+
+  const heights = poseFrames
+    .map((f) => f.body_height_y)
+    .filter((h): h is number => h != null && Number.isFinite(h) && h > 0)
+    .sort((a, b) => a - b);
+  const ys = visible.map((f) => f.lift_ankle_y).sort((a, b) => a - b);
+  const baseline = ys[Math.floor((ys.length - 1) / 2)];
+  const bodyH = heights.length ? heights[Math.floor((heights.length - 1) / 2)] : null;
+  if (bodyH == null || (baseline - ys[0]) / bodyH < MIN_LIFT_RISE_BODY) {
+    return {
+      frame_index: null,
+      missingness: missingness(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, "D-ANCHOR"),
       source_model: LANDMARK_MODEL_VERSION,
     };
   }

@@ -9,7 +9,7 @@ describe("Phase 42B — front-foot strike anchor (real D-POSE bound)", () => {
 
   it("returns the maximum-y frame_index when pose frames are present", () => {
     const r = findFrontFootStrikeFrame([
-      { frame_index: 0, front_ankle_y: 0.2 },
+      { frame_index: 0, front_ankle_y: 0.2, body_height_y: 0.5 },
       { frame_index: 1, front_ankle_y: 0.9 },
       { frame_index: 2, front_ankle_y: 0.5 },
     ]);

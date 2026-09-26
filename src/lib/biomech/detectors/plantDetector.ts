@@ -21,7 +21,17 @@ export interface PlantPoseFrame {
   readonly frame_index: number;
   /** Normalised front-foot ankle y-coordinate. null = not visible. */
   readonly front_ankle_y: number | null;
+  /** Vertical body height in normalised-y units. null/absent → refuse. */
+  readonly body_height_y?: number | null;
 }
+
+/**
+ * Noise gate. Before the landing frame the front ankle must have been raised
+ * ≥ 0.10 body heights above where it lands (a stride). Still-clip ankle range
+ * was ≤ 0.047 body heights (docs/landmark-noise-floors.md), so anything
+ * smaller is noise, not a foot strike.
+ */
+export const MIN_STRIDE_RISE_BODY = 0.1;
 
 export interface PlantDetectionResult {
   readonly frame_index: number | null;
@@ -68,6 +78,22 @@ export function detectFrontFootStrike(
   for (let i = 1; i < visible.length; i++) {
     const f = visible[i];
     if (f.front_ankle_y > best.front_ankle_y) best = f;
+  }
+
+  const heights = poseFrames
+    .map((f) => f.body_height_y)
+    .filter((h): h is number => h != null && Number.isFinite(h) && h > 0)
+    .sort((a, b) => a - b);
+  const bodyH = heights.length ? heights[Math.floor((heights.length - 1) / 2)] : null;
+  const before = visible.filter((f) => f.frame_index < best.frame_index);
+  const preMin = before.length ? Math.min(...before.map((f) => f.front_ankle_y)) : null;
+  if (bodyH == null || preMin == null || (best.front_ankle_y - preMin) / bodyH < MIN_STRIDE_RISE_BODY) {
+    return {
+      frame_index: null,
+      missingness: missingness(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, "D-PLANT"),
+      source_detector: DETECTOR_VERSION,
+      source_model: LANDMARK_MODEL_VERSION,
+    };
   }
 
   return {

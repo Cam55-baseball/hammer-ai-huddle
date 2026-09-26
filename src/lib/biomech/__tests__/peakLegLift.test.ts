@@ -9,7 +9,7 @@ describe("Phase 42B — peak leg lift anchor (real D-POSE bound)", () => {
 
   it("returns the minimum-y frame_index when pose frames are present", () => {
     const r = findPeakLegLiftFrame([
-      { frame_index: 0, lift_ankle_y: 0.9 },
+      { frame_index: 0, lift_ankle_y: 0.9, body_height_y: 0.5 },
       { frame_index: 1, lift_ankle_y: 0.2 },
       { frame_index: 2, lift_ankle_y: 0.5 },
     ]);
