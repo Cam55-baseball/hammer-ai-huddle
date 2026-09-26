@@ -30,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
+import { blobSource, readContainerFps } from "@/lib/biomech/containerFps";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { useSideContext } from "@/contexts/SideContext";
 import {
@@ -416,9 +417,15 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         orientation: probed.orientation,
         capture_source: "delaycam",
         requested_fps: FPS_TARGET,
-        achieved_fps: capturedFpsRef.current ?? probed.fps_true,
-        capture_fps_tier: classifyFps(capturedFpsRef.current ?? probed.fps_true),
-        capture_fps_source: capturedFpsRef.current != null ? "track_settings" : "file_probe",
+        // The file's encoded rate wins; the camera's negotiated rate is the
+        // fallback; neither → unknown (null), never a guessed tier.
+        achieved_fps: probed.fps_true ?? capturedFpsRef.current ?? null,
+        capture_fps_tier: (probed.fps_true ?? capturedFpsRef.current) == null
+          ? null
+          : classifyFps(probed.fps_true ?? capturedFpsRef.current),
+        capture_fps_source: probed.fps_true != null
+          ? "file_container"
+          : capturedFpsRef.current != null ? "track_settings" : "unknown",
         variant: opts.variant,
         parent_video_id: opts.parentVideoId ?? null,
         ...sideStamp,
@@ -988,6 +995,10 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
         // preference is stored for audit only and is not passed to the pipeline.
         if (user) {
           const endedAt = new Date();
+          // Rep tracking indexes frames in the FILE, so use the file's encoded
+          // rate when it can be read; the camera's negotiated rate otherwise.
+          const enc = await readContainerFps(blobSource(fixed));
+          const fileFps = enc.status === "ok" ? enc.fps : null;
           void gatherSession(fixed, {
             user_id: user.id,
             sport: resolvedSport === "softball" ? "softball" : "baseball",
@@ -997,8 +1008,8 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
             ended_at: endedAt.toISOString(),
             duration_sec: Math.round(durationMs) / 1000,
             requested_fps: FPS_TARGET,
-            achieved_fps: capturedFpsRef.current,
-            fps_source: capturedFpsRef.current != null ? "track_settings" : null,
+            achieved_fps: fileFps ?? capturedFpsRef.current,
+            fps_source: fileFps != null ? "file_container" : capturedFpsRef.current != null ? "track_settings" : null,
             display_metrics_on: displayMetricsOnRef.current,
           });
         }

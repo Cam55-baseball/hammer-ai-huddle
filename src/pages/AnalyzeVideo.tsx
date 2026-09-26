@@ -53,6 +53,9 @@ import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { HighFpsCapture } from "@/components/analyze/HighFpsCapture";
 import { evaluateMovementGate, type MovementGateResult } from "@/lib/biomech/gates/movementGate";
 import { NoMovementCard } from "@/components/analyze/NoMovementCard";
+import { TrackDiagnosisCard, FpsUnknownCard } from "@/components/analyze/TrackDiagnosisCard";
+import { diagnoseTrack, type TrackDiagnosis } from "@/lib/biomech/pose/trackDiagnosis";
+import { fpsProvenance } from "@/lib/biomech/probeVideoMetadata";
 import { classifyFps } from "@/lib/capture/highFpsCapture";
 import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
 import { useSmartBack } from "@/hooks/useSmartBack";
@@ -161,6 +164,8 @@ export default function AnalyzeVideo() {
   // Owner ruling: Analysis is body mechanics only. Ball speed / reference
   // distance live in DelayCam (code kept in src/lib/cv + src/lib/capture).
   // Movement gate result — a refused clip produces no tiles, faults or drills.
+  const [fpsUnknown, setFpsUnknown] = useState(false);
+  const [trackDiagnosis, setTrackDiagnosis] = useState<TrackDiagnosis | null>(null);
   const [noMovement, setNoMovement] = useState<Extract<MovementGateResult, { status: "refused" }> | null>(null);
   const { saveDrill, savedDrills } = useVault();
 
@@ -303,6 +308,8 @@ export default function AnalyzeVideo() {
     setAnalysis(null);
     setAnalysisError(null);
     setNoMovement(null);
+    setFpsUnknown(false);
+    setTrackDiagnosis(null);
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
     setLandingTime(null);
@@ -468,6 +475,8 @@ export default function AnalyzeVideo() {
     }
 
     setUploading(true);
+    setFpsUnknown(false);
+    setTrackDiagnosis(null);
 
     // ===== PHASE 0/1 — Deterministic probe (sha256 + true fps + dimensions) =====
     // Probe FIRST so deterministic frame selection can use fps_true.
@@ -486,13 +495,13 @@ export default function AnalyzeVideo() {
     // users get a clear message instead of an opaque server rejection.
     // Mirrors thresholds in src/lib/biomech/videoAcceptance.ts.
     {
-      const { MIN_WIDTH, MIN_HEIGHT, MIN_FPS, MIN_DURATION_SEC, MAX_DURATION_SEC } = await import("@/lib/biomech/videoAcceptance");
+      const { MIN_WIDTH, MIN_HEIGHT, MIN_FPS, MIN_DURATION_SEC, MAX_DURATION_SEC, fpsFloorVerdict } = await import("@/lib/biomech/videoAcceptance");
       if (probed.width < MIN_WIDTH || probed.height < MIN_HEIGHT) {
         toast.error(UPLOAD_ERRORS.tooSmall);
         setUploading(false);
         return;
       }
-      if (probed.fps_true < MIN_FPS) {
+      if (fpsFloorVerdict(probed).reject) {
         toast.error(UPLOAD_ERRORS.lowFps);
         setUploading(false);
         return;
@@ -527,14 +536,20 @@ export default function AnalyzeVideo() {
     // any analysis output. No series (pose failed) = cannot confirm movement.
     let movementGate: MovementGateResult = evaluateMovementGate(null);
 
-    if (analysisEnabled) {
+    // Frame rate unknown (container unreadable): the clip is still accepted and
+    // saved with fps unknown, but every frame-indexed step needs a real rate,
+    // so frame-by-frame analysis cannot run. Never assume one.
+    const fpsTrue = probed.fps_true;
+    const runAnalysis = analysisEnabled && fpsTrue != null;
+    setFpsUnknown(analysisEnabled && fpsTrue == null);
+    if (analysisEnabled && fpsTrue != null) {
       try {
         setExtractingFrames(true);
         toast.info(t('videoAnalysis.extractingFrames', "Extracting key frames for analysis..."));
 
         const result = await extractKeyFramesDeterministic({
           videoFile,
-          fps_true: probed.fps_true,
+          fps_true: fpsTrue,
           duration_sec: probed.duration_sec,
           landingTime,
         });
@@ -555,7 +570,7 @@ export default function AnalyzeVideo() {
         if (landingTime != null) {
           landingFrameIndex = calculateLandingFrameIndex(
             landingTime,
-            probed.fps_true,
+            fpsTrue,
             result.frames.map((f) => f.frame_index),
           );
           console.log('[ANALYSIS] Using landing frame index:', landingFrameIndex);
@@ -583,21 +598,24 @@ export default function AnalyzeVideo() {
         denseRun = await captureDenseLandmarkSeries({
           videoFile,
           video_sha256_hex: probed.sha256_hex,
-          fps_true: probed.fps_true,
+          fps_true: fpsTrue,
           duration_sec: probed.duration_sec,
           width: probed.width,
           height: probed.height,
           orientation: probed.orientation,
           landingTimeSec: landingTime ?? null,
+          fps_source: "container",
+          fps_playback: probed.fps_playback.status === "ok" ? probed.fps_playback.fps : null,
         });
         movementGate = evaluateMovementGate(denseRun.series);
+        setTrackDiagnosis(diagnoseTrack(denseRun.series));
         console.log('[MOVEMENT-GATE]', movementGate);
         poseRows = denseRun.series.frames.map((f) =>
           densePoseRowToPoseFrameRow(f.frame_index, f.timestamp_seconds, f),
         );
         console.log('[D-POSE] dense capture complete', {
           producer: denseRun.series.header.landmark_model_version,
-          fps_true: probed.fps_true,
+          fps_true: fpsTrue,
           density_tier: denseRun.density_tier,
           window: denseRun.window,
           frames_processed: denseRun.frames_processed,
@@ -617,7 +635,7 @@ export default function AnalyzeVideo() {
 
         tempoRun = await runTempoPipeline({
           video_sha256_hex: probed.sha256_hex,
-          fps_true: probed.fps_true,
+          fps_true: fpsTrue,
           landing_time_sec: landingTime ?? null,
           direction_sign: 1,
           calibration_h_px: probed.height,
@@ -726,7 +744,7 @@ export default function AnalyzeVideo() {
           module: module as "hitting" | "pitching" | "throwing",
           video_url: publicUrl,
           thumbnail_url: thumbnailUrl,
-          status: analysisEnabled ? "uploading" : "completed",
+          status: runAnalysis ? "uploading" : "completed",
           sha256_hex: probed.sha256_hex,
           fps_true: probed.fps_true,
           duration_sec: probed.duration_sec,
@@ -737,8 +755,8 @@ export default function AnalyzeVideo() {
           // what the file already had. Stored so analysis can scope its claims.
           capture_source: "upload",
           achieved_fps: probed.fps_true,
-          capture_fps_tier: classifyFps(probed.fps_true),
-          capture_fps_source: "file_probe",
+          capture_fps_tier: probed.fps_true == null ? null : classifyFps(probed.fps_true),
+          capture_fps_source: probed.fps_source === "container" ? "file_container" : "unknown",
           ...(landingTime != null ? { landing_time_sec: landingTime } : {}),
 
           // Side stamp — only when picker is shown (switch hitter / ambidextrous thrower)
@@ -792,7 +810,7 @@ export default function AnalyzeVideo() {
               video_id: videoData.id,
               landmark_model_id: denseRun.series.header.landmark_model_id,
               landmark_model_version: denseRun.series.header.landmark_model_version,
-              fps_true: probed.fps_true,
+              fps_true: denseRun.series.header.fps_true,
               frame_count: denseRun.frames_processed,
               landmarks_storage_path: seriesWrite?.path ?? null,
               landmarks_sha256_hex:
@@ -800,6 +818,8 @@ export default function AnalyzeVideo() {
               mean_visibility: denseRun.mean_visibility,
               diagnostics: {
                 phase: "step1_dense_capture",
+                fps_provenance: fpsProvenance(probed),
+                track_diagnosis: diagnoseTrack(denseRun.series),
                 series_format: denseRun.series.header.format,
                 series_bucket: seriesWrite ? "pose-landmarks" : null,
                 series_bytes_stored: seriesWrite?.bytes_stored ?? null,
@@ -884,7 +904,7 @@ export default function AnalyzeVideo() {
                     landmark_model_version: denseRun.series.header.landmark_model_version,
                     detector_version: detectorVersion,
                     metric_engine_version: metricEngineVersion,
-                    fps_true: probed.fps_true,
+                    fps_true: denseRun.series.header.fps_true,
                     landmark_run_id: landmarkRow.id,
                     event_run_id: eventRow.id,
                     metric_run_id: metricRow.id,
@@ -915,9 +935,13 @@ export default function AnalyzeVideo() {
       }
       
       // Branch based on analysis toggle
-      if (!analysisEnabled) {
+      if (!runAnalysis) {
         // No analysis - just upload and prompt to save to library
-        toast.success(t('videoAnalysis.uploadSuccess', "Video uploaded successfully!"));
+        if (analysisEnabled) {
+          toast.info("Your clip is saved. We couldn't read its frame rate, so it can't be analysed frame by frame.");
+        } else {
+          toast.success(t('videoAnalysis.uploadSuccess', "Video uploaded successfully!"));
+        }
         setUploading(false);
         
         // Automatically open save to library dialog
@@ -1055,7 +1079,14 @@ export default function AnalyzeVideo() {
       setExtractingFrames(true);
       toast.info(t('videoAnalysis.extractingFrames', "Extracting key frames for analysis..."));
 
-      const probed = await probeVideoMetadata(videoFile);
+      const probedRetry = await probeVideoMetadata(videoFile);
+      if (probedRetry.fps_true == null) {
+        setExtractingFrames(false);
+        setAnalyzing(false);
+        setFpsUnknown(true);
+        return;
+      }
+      const probed = { ...probedRetry, fps_true: probedRetry.fps_true };
       const result = await extractKeyFramesDeterministic({
         videoFile,
         fps_true: probed.fps_true,
@@ -1428,6 +1459,14 @@ export default function AnalyzeVideo() {
 
                 <AnalysisResultSkeleton />
               </div>
+            )}
+
+            {fpsUnknown && !analyzing && !analysis && (
+              <FpsUnknownCard />
+            )}
+
+            {trackDiagnosis && trackDiagnosis.status !== "clean" && !analyzing && (
+              <TrackDiagnosisCard diagnosis={trackDiagnosis} />
             )}
 
             {noMovement && !analyzing && !analysis && (

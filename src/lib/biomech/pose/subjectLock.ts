@@ -104,6 +104,9 @@ export interface LockStep {
   readonly candidate_index: number | null;
   readonly event: LockEvent;
   readonly candidates_detected: number;
+  /** Why the frame is unobserved: nobody detected, or people detected but none
+   *  matched the locked athlete. Absent on observed frames. */
+  readonly lost_reason?: "no_person" | "no_match";
 }
 
 export interface SubjectLockStats {
@@ -268,7 +271,7 @@ export class SubjectTracker {
       if (this.everLocked) {
         this.framesLost += 1;
         this.framesSinceSeen += 1;
-        return { candidate_index: null, event: "lost", candidates_detected: 0 };
+        return { candidate_index: null, event: "lost", candidates_detected: 0, lost_reason: "no_person" };
       }
       return { candidate_index: null, event: "no_pose", candidates_detected: 0 };
     }
@@ -325,6 +328,7 @@ export class SubjectTracker {
         candidate_index: null,
         event: "lost",
         candidates_detected: candidates.length,
+        lost_reason: "no_match",
       };
     }
 

@@ -1,73 +1,61 @@
 /**
- * Phase 0 — Determinism Foundation
+ * Phase 0 — Determinism Foundation (v2: encoded frame rate)
  *
- * Deterministic client-side probe for a video File/Blob. Returns the inputs
- * required to build a replay-safe cache fingerprint:
+ * Deterministic client-side probe for a video File/Blob:
  *   - sha256_hex of the entire byte stream
- *   - fps_true  (median of inter-frame deltas via requestVideoFrameCallback)
+ *   - fps_true: the ENCODED frame rate read from the container
+ *     (see containerFps.ts), or null when it cannot be established
  *   - duration_sec, width, height, orientation
  *
- * No randomness, no time-based jitter — same bytes → same probe result.
+ * The old probe timed frames as the browser PAINTED them. That is the render
+ * rate, not the file's rate: mobile Safari throttles it (off-screen element,
+ * iframe, Low Power Mode, autoplay blocked) and good 59.94 fps clips read
+ * under 24. There was also a silent 30 fps fallback recorded as if measured.
+ * Both are gone:
+ *   - fps_true comes only from the container. Unknown stays null.
+ *   - Playback timing still runs, ON the page, visible, muted and playing,
+ *     but only as a recorded cross-check. It can never decide fps_true and can
+ *     never reject a clip.
  */
 
 import { sha256HexOfBlob } from "./fingerprint";
+import { blobSource, readContainerFps, type ContainerFpsResult } from "./containerFps";
+import { fpsFloorVerdict } from "./videoAcceptance";
+import { publishFpsProbe } from "./fpsProbeReadout";
+
+export type PlaybackFpsResult =
+  | {
+      readonly status: "ok";
+      readonly fps: number;
+      readonly frames_captured: number;
+      readonly autoplay_blocked: boolean;
+    }
+  | {
+      readonly status: "unavailable";
+      readonly reason: "rvfc_unsupported" | "autoplay_blocked" | "too_few_frames" | "not_in_browser";
+      readonly frames_captured: number;
+      readonly autoplay_blocked: boolean;
+    };
 
 export interface ProbedVideoMetadata {
   sha256_hex: string;
-  fps_true: number;
+  /** Encoded frame rate from the container, or null = unknown. Never assumed. */
+  fps_true: number | null;
+  fps_source: "container" | "unknown";
+  fps_encoded: ContainerFpsResult;
+  /** Render-rate cross-check. Recorded, never decisive. */
+  fps_playback: PlaybackFpsResult;
+  /** Playback fps / encoded fps when both exist; < 0.85 means the browser under-rendered. */
+  fps_playback_ratio: number | null;
   duration_sec: number;
+  duration_source: "container" | "element" | "unknown";
   width: number;
   height: number;
   orientation: "portrait" | "landscape" | "square";
 }
 
-const PROBE_SAMPLE_FRAMES = 60;        // sample budget
-const PROBE_TIMEOUT_MS = 8_000;        // hard ceiling so a stuck decoder can't hang the UI
-const FALLBACK_FPS = 30;               // last-resort if probe yields nothing usable
-
-/**
- * Drain N video-frame callbacks and return the median inter-frame delta (in seconds)
- * inverted to frames-per-second. Falls back to FALLBACK_FPS if rVFC is unavailable
- * or the clip is too short to sample.
- */
-async function probeFps(videoEl: HTMLVideoElement): Promise<number> {
-  const anyEl = videoEl as HTMLVideoElement & {
-    requestVideoFrameCallback?: (cb: (now: number, meta: { mediaTime: number }) => void) => number;
-  };
-  if (typeof anyEl.requestVideoFrameCallback !== "function") {
-    return FALLBACK_FPS;
-  }
-
-  return new Promise<number>((resolve) => {
-    const mediaTimes: number[] = [];
-    let resolved = false;
-    const finish = (fps: number) => {
-      if (resolved) return;
-      resolved = true;
-      try { videoEl.pause(); } catch { /* noop */ }
-      resolve(fps);
-    };
-
-    const timeout = setTimeout(() => {
-      finish(computeFpsFromMediaTimes(mediaTimes) ?? FALLBACK_FPS);
-    }, PROBE_TIMEOUT_MS);
-
-    const tick = (_now: number, meta: { mediaTime: number }) => {
-      mediaTimes.push(meta.mediaTime);
-      if (mediaTimes.length >= PROBE_SAMPLE_FRAMES) {
-        clearTimeout(timeout);
-        finish(computeFpsFromMediaTimes(mediaTimes) ?? FALLBACK_FPS);
-        return;
-      }
-      anyEl.requestVideoFrameCallback!(tick);
-    };
-
-    anyEl.requestVideoFrameCallback!(tick);
-    videoEl.play().catch(() => {
-      // Autoplay blocked — fall back to the timeout path with whatever we have.
-    });
-  });
-}
+const PLAYBACK_SAMPLE_FRAMES = 60;
+const PLAYBACK_TIMEOUT_MS = 4_000;
 
 function computeFpsFromMediaTimes(mediaTimes: number[]): number | null {
   if (mediaTimes.length < 4) return null;
@@ -81,22 +69,74 @@ function computeFpsFromMediaTimes(mediaTimes: number[]): number | null {
   const mid = Math.floor(deltas.length / 2);
   const median = deltas.length % 2 === 0 ? (deltas[mid - 1] + deltas[mid]) / 2 : deltas[mid];
   if (!Number.isFinite(median) || median <= 0) return null;
-  const fps = 1 / median;
-  // Snap to nearest standard rate when within 0.5 fps to keep the cache fingerprint stable.
-  for (const std of [23.976, 24, 25, 29.97, 30, 50, 59.94, 60, 120]) {
-    if (Math.abs(fps - std) < 0.5) return std;
+  return Math.round((1 / median) * 1000) / 1000;
+}
+
+/**
+ * Render-rate cross-check. The element is attached to the page, on-screen and
+ * visible (small, bottom corner), muted and playing, so Safari has no
+ * off-screen excuse to skip painting. Its answer is still a browser artefact.
+ */
+async function measurePlaybackFps(url: string): Promise<PlaybackFpsResult> {
+  if (typeof document === "undefined") {
+    return { status: "unavailable", reason: "not_in_browser", frames_captured: 0, autoplay_blocked: false };
   }
-  // Otherwise round to 3 decimals — toFixed(6) in fingerprint will lock it.
-  return Math.round(fps * 1000) / 1000;
+  const v = document.createElement("video");
+  v.muted = true;
+  v.playsInline = true;
+  v.preload = "auto";
+  v.setAttribute("aria-hidden", "true");
+  Object.assign(v.style, {
+    position: "fixed", right: "8px", bottom: "8px", width: "96px", height: "72px",
+    zIndex: "2147483646", pointerEvents: "none", opacity: "1", borderRadius: "6px",
+  } as CSSStyleDeclaration);
+  const anyEl = v as HTMLVideoElement & {
+    requestVideoFrameCallback?: (cb: (now: number, meta: { mediaTime: number }) => void) => number;
+  };
+  document.body.appendChild(v);
+  try {
+    if (typeof anyEl.requestVideoFrameCallback !== "function") {
+      return { status: "unavailable", reason: "rvfc_unsupported", frames_captured: 0, autoplay_blocked: false };
+    }
+    v.src = url;
+    const mediaTimes: number[] = [];
+    let autoplayBlocked = false;
+    await new Promise<void>((resolve) => {
+      let done = false;
+      const finish = () => { if (!done) { done = true; clearTimeout(timer); resolve(); } };
+      const timer = setTimeout(finish, PLAYBACK_TIMEOUT_MS);
+      const tick = (_n: number, meta: { mediaTime: number }) => {
+        mediaTimes.push(meta.mediaTime);
+        if (mediaTimes.length >= PLAYBACK_SAMPLE_FRAMES) return finish();
+        anyEl.requestVideoFrameCallback!(tick);
+      };
+      anyEl.requestVideoFrameCallback!(tick);
+      v.play().catch(() => { autoplayBlocked = true; finish(); });
+    });
+    const fps = computeFpsFromMediaTimes(mediaTimes);
+    if (fps == null) {
+      return {
+        status: "unavailable",
+        reason: autoplayBlocked ? "autoplay_blocked" : "too_few_frames",
+        frames_captured: mediaTimes.length,
+        autoplay_blocked: autoplayBlocked,
+      };
+    }
+    return { status: "ok", fps, frames_captured: mediaTimes.length, autoplay_blocked: autoplayBlocked };
+  } finally {
+    try { v.pause(); v.removeAttribute("src"); v.load(); } catch { /* noop */ }
+    v.remove();
+  }
 }
 
 export async function probeVideoMetadata(file: Blob): Promise<ProbedVideoMetadata> {
   const sha256_hex = await sha256HexOfBlob(file);
+  const fps_encoded = await readContainerFps(blobSource(file));
 
   const url = URL.createObjectURL(file);
   try {
     const videoEl = document.createElement("video");
-    videoEl.preload = "auto";
+    videoEl.preload = "metadata";
     videoEl.muted = true;
     videoEl.playsInline = true;
     videoEl.src = url;
@@ -114,14 +154,62 @@ export async function probeVideoMetadata(file: Blob): Promise<ProbedVideoMetadat
 
     const width = videoEl.videoWidth || 0;
     const height = videoEl.videoHeight || 0;
-    const duration_sec = Number.isFinite(videoEl.duration) ? videoEl.duration : 0;
+    const elementDuration = Number.isFinite(videoEl.duration) && videoEl.duration > 0 ? videoEl.duration : null;
+    try { videoEl.removeAttribute("src"); videoEl.load(); } catch { /* noop */ }
     const orientation: ProbedVideoMetadata["orientation"] =
       width === height ? "square" : width > height ? "landscape" : "portrait";
 
-    const fps_true = await probeFps(videoEl);
+    const fps_playback = await measurePlaybackFps(url);
 
-    return { sha256_hex, fps_true, duration_sec, width, height, orientation };
+    const fps_true = fps_encoded.status === "ok" ? fps_encoded.fps : null;
+    // Duration: the container's own sample total when it has one (a
+    // MediaRecorder blob can make the element report Infinity), else the
+    // element's reported duration, else unknown (0).
+    let duration_sec = 0;
+    let duration_source: ProbedVideoMetadata["duration_source"] = "unknown";
+    if (fps_encoded.status === "ok" && fps_encoded.duration_sec > 0) {
+      duration_sec = fps_encoded.duration_sec;
+      duration_source = "container";
+    } else if (elementDuration != null) {
+      duration_sec = elementDuration;
+      duration_source = "element";
+    }
+
+    const probe: ProbedVideoMetadata = {
+      sha256_hex,
+      fps_true,
+      fps_source: fps_true != null ? "container" : "unknown",
+      fps_encoded,
+      fps_playback,
+      fps_playback_ratio:
+        fps_true != null && fps_playback.status === "ok"
+          ? Math.round((fps_playback.fps / fps_true) * 1000) / 1000
+          : null,
+      duration_sec,
+      duration_source,
+      width,
+      height,
+      orientation,
+    };
+    const verdict = fpsFloorVerdict(probe);
+    publishFpsProbe(probe, verdict.decision);
+    console.info("[probe] frame rate", {
+      fps_true, fps_encoded, fps_playback, duration_sec, duration_source, decision: verdict.decision,
+    });
+    return probe;
   } finally {
     URL.revokeObjectURL(url);
   }
+}
+
+/** Compact audit record of how the frame rate was established. */
+export function fpsProvenance(p: ProbedVideoMetadata) {
+  return {
+    fps_true: p.fps_true,
+    fps_source: p.fps_source,
+    fps_encoded: p.fps_encoded,
+    fps_playback: p.fps_playback,
+    fps_playback_ratio: p.fps_playback_ratio,
+    duration_source: p.duration_source,
+  };
 }

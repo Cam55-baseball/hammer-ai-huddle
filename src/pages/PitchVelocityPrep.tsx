@@ -223,7 +223,9 @@ export default function PitchVelocityPrep() {
       setStage('extracting');
       const probed = await probeVideoMetadata(videoFile);
       if (!probed.fps_true || !probed.duration_sec) {
-        throw new Error('Could not read a reliable frame rate from this video.');
+        throw new Error(probed.fps_true == null
+          ? "This video's frame rate couldn't be read from the file, so speed can't be measured from it. Try exporting it as .mp4 or .mov."
+          : 'Could not read the length of this video.');
       }
 
       const extraction = await extractKeyFramesDeterministic({

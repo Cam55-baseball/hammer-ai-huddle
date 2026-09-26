@@ -24,9 +24,9 @@
  *   midpoint). It is no longer on the capture path and must not be used to
  *   choose a window for analysis.
  *
- * fps_true is never read from container metadata — it is passed in from
- * `probeVideoMetadata`, which measures inter-frame deltas with
- * requestVideoFrameCallback.
+ * fps_true is passed in from `probeVideoMetadata`, which reads the ENCODED
+ * rate from the container (containerFps.ts). Playback timing is a render-rate
+ * artefact and is never used here.
  *
  * DETERMINISM: frame indices come from integer arithmetic, each frame is
  * reached by an explicit seek to `index / fps_true`, and no wall-clock or
@@ -159,6 +159,10 @@ export interface DenseCaptureInput {
   readonly height: number;
   readonly orientation: "portrait" | "landscape" | "square";
   readonly landingTimeSec: number | null;
+  /** How fps_true was established (the encoded container rate). */
+  readonly fps_source?: "container";
+  /** Render-rate cross-check, recorded for comparison only. */
+  readonly fps_playback?: number | null;
   readonly budget?: number;
   /** STEP 4 — scout sample budget. Defaults to SCOUT_SAMPLE_BUDGET. */
   readonly scoutBudget?: number;
@@ -311,6 +315,8 @@ export async function captureDenseLandmarkSeries(
           normalized: d ? d.normalized : [],
           world: d ? d.world : [],
           visibility: d ? d.visibility : [],
+          candidates_detected: candidates.length,
+          ...(d ? {} : { gap_reason: step.lost_reason ?? "not_locked" }),
         });
       } catch {
         // A frame that could not be decoded is recorded as an undetected frame
@@ -325,6 +331,8 @@ export async function captureDenseLandmarkSeries(
           normalized: [],
           world: [],
           visibility: [],
+          candidates_detected: 0,
+          gap_reason: "decode_failed",
         });
       }
       input.onProgress?.(i + 1, total);
@@ -339,7 +347,8 @@ export async function captureDenseLandmarkSeries(
         landmark_model_id: LANDMARK_MODEL_ID,
         landmark_model_version: LANDMARK_MODEL_VERSION,
         fps_true: input.fps_true,
-        fps_source: "measured_rvfc",
+        fps_source: input.fps_source ?? "container",
+        fps_playback: input.fps_playback ?? null,
         width: srcW,
         height: srcH,
         orientation: input.orientation,
