@@ -19346,6 +19346,19 @@ export type Database = {
         Args: { p_after_date: string; p_block_id: string; p_days?: number }
         Returns: number
       }
+      staff_athlete_timeline: {
+        Args: { p_athlete: string; p_limit?: number }
+        Returns: {
+          created_at: string
+          dates: string[]
+          end_date: string
+          id: string
+          start_date: string
+          summary: string
+          tag: string
+          typed_text: string
+        }[]
+      }
       tell_hammers_save: {
         Args: {
           p_dates: string[]
