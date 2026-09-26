@@ -101,7 +101,7 @@ describe("tracking diagnosis", () => {
 
   it("athlete leaving at the right edge, with the time", () => {
     const fr = [];
-    for (let i = 0; i < 30; i++) fr.push({ pose_detected: true, candidates_detected: 1, ...standing(i * 0.014) });
+    for (let i = 0; i < 30; i++) fr.push({ pose_detected: true, candidates_detected: 1, ...standing(i * 0.0155) });
     for (let i = 0; i < 20; i++) fr.push({ pose_detected: false, candidates_detected: 0, gap_reason: "no_person" as const });
     const d = diagnoseTrack(makeSeries(fr));
     if (d.status === "clean") throw new Error("expected diagnosis");
