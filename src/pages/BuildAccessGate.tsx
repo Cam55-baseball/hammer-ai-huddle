@@ -51,7 +51,7 @@ export default function BuildAccessGate({ buildType }: Props) {
   }, [user?.id, buildId, authLoading, ownerLoading, isOwner]);
 
   const Wrap = ({ children }: { children: React.ReactNode }) => (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-center justify-center p-6 pt-[calc(1.5rem+var(--safe-top))] pb-[calc(1.5rem+var(--safe-bottom))]">
       <div className="max-w-md w-full text-center space-y-2">{children}</div>
     </div>
   );

@@ -93,7 +93,7 @@ export default function ScoutApplication() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4 pt-[calc(1rem+var(--safe-top))] pb-[calc(1rem+var(--safe-bottom))]">
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="text-3xl">{t('scoutApplicationPage.title')}</CardTitle>

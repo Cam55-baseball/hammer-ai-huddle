@@ -60,7 +60,7 @@ const CompleteProfileName = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 pt-safe pb-safe">
       <div className="w-full max-w-md bg-card border border-border rounded-xl p-8 shadow-lg">
         <h1 className="text-2xl font-bold mb-2">What should we call you?</h1>
         <p className="text-muted-foreground mb-6">

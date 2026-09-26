@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export default function AccountDeleted() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background pt-[calc(1rem+var(--safe-top))] pb-[calc(1rem+var(--safe-bottom))]">
       <Card className="max-w-md w-full p-8 text-center">
         <CheckCircle2 className="h-10 w-10 mx-auto mb-4 text-primary" />
         <h1 className="text-2xl font-bold mb-2">Your account has been deleted</h1>

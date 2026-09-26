@@ -152,7 +152,7 @@ export default function SharedActivity() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-background pt-safe pb-safe">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -160,7 +160,7 @@ export default function SharedActivity() {
 
   if (error || !sharedData) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 pt-[calc(1rem+var(--safe-top))] pb-[calc(1rem+var(--safe-bottom))]">
         <Card className="max-w-md w-full text-center">
           <CardContent className="pt-6">
             <p className="text-muted-foreground mb-4">{error || 'Template not found'}</p>
@@ -179,7 +179,7 @@ export default function SharedActivity() {
   const exercises = Array.isArray(template.exercises) ? template.exercises : [];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-safe pb-safe">
       <div className="max-w-2xl mx-auto p-4 sm:p-6">
         <div className="flex items-center gap-3 mb-6">
           <img src={branding.logo} alt={branding.appName} className="h-8 w-8" />
