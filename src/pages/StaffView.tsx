@@ -72,6 +72,8 @@ const tankWord = (v: unknown) => {
 };
 
 
+type TimelineRow = { id: string; tag: string; start_date: string; end_date: string; summary: string | null; typed_text: string | null; created_at: string };
+
 export default function StaffView() {
   const { user } = useAuth();
   const { isEnabled, loading: switchesLoading } = useFeatureSwitches();
@@ -84,6 +86,7 @@ export default function StaffView() {
   const [prescriptions, setPrescriptions] = useState<PrescriptionRow[]>([]);
   const [buckets, setBuckets] = useState<Record<string, string>>({});
   const [block, setBlock] = useState<string | null>(null);
+  const [timeline, setTimeline] = useState<TimelineRow[]>([]);
   const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<Array<{ id: string; full_name: string | null }>>([]);
@@ -191,6 +194,9 @@ export default function StaffView() {
     const to = new Date(today);
     to.setUTCDate(to.getUTCDate() + 13);
 
+    // Granted-staff-only read (security-definer function checks the grant and refuses scouts/recruiters).
+    const { data: tlRows } = await supabase.rpc("staff_athlete_timeline" as never, { p_athlete: athleteId, p_limit: 50 } as never);
+    setTimeline(((tlRows as unknown) as TimelineRow[] | null) ?? []);
     const [decRes, rxRes] = await Promise.all([
       supabase
         .from("wk_schedule_decisions")
@@ -404,6 +410,27 @@ export default function StaffView() {
             </Card>
 
             <StaffPhaseArc userId={openId} />
+
+            <Card data-testid="staff-tell-hammer">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">What they told Hammer</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {timeline.length === 0 && <p className="text-muted-foreground">Nothing entered yet.</p>}
+                {timeline.map((t) => (
+                  <div key={t.id} className="border-b pb-2 last:border-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline">{t.tag}</Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {t.start_date === t.end_date ? dayWord(t.start_date) : `${dayWord(t.start_date)} – ${dayWord(t.end_date)}`}
+                      </span>
+                    </div>
+                    {t.summary && <p>{t.summary}</p>}
+                    {t.typed_text && <p className="italic text-muted-foreground">“{t.typed_text}”</p>}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
 
 
             <Card>
