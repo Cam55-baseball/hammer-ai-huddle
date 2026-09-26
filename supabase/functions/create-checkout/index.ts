@@ -172,8 +172,10 @@ serve(async (req) => {
       client_reference_id: user.id,
       line_items: lineItems,
       mode: "subscription",
-      success_url: `${origin}/checkout?${successParams.toString()}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/checkout?status=cancel`,
+      success_url: isNativeOrigin
+        ? `${origin}/purchase-complete?session_id={CHECKOUT_SESSION_ID}`
+        : `${origin}/checkout?${successParams.toString()}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: isNativeOrigin ? `${origin}/purchase-complete?status=cancel` : `${origin}/checkout?status=cancel`,
       metadata: checkoutMetadata,
       subscription_data: { metadata: checkoutMetadata },
       billing_address_collection: "auto",
