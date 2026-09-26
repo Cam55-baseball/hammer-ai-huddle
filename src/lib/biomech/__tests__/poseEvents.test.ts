@@ -29,7 +29,7 @@ function pitch(fps = 60, hideFrom?: [number, number]): LandmarkSeries {
   for (let k = 0; k < 130; k++) {
     const d = k < 30 ? 0 : k < 90 ? 0.008 * (k - 30) : 0.008 * 60;
     const b = body(d, 0);
-    if (k >= 30) {
+    {
       const sx = b[12][0], sy = b[12][1];
       const wx = sx + 0.02 + 0.12 * Math.tanh((k - 70) / 3);
       const wy = sy + 0.05;
@@ -85,7 +85,6 @@ describe("pose-derived anchors", () => {
 
   it("D-RELEASE pose-only: ≥2 of 3 signals agree near the arm peak, labelled pose_only", () => {
     const r = detectReleasePoseOnly(pitch(), { throwing_side: "right" });
-    console.log(JSON.stringify(r));
     expect(r.missingness).toBeNull();
     expect(Math.abs(r.frame_index! - 70)).toBeLessThanOrEqual(2);
     expect(r.diagnostics.tier).toBe("pose_only");
