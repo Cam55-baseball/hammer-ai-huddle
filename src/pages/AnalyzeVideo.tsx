@@ -51,10 +51,8 @@ import { analysisFeedbackToTaxonomy } from "@/lib/analysisFeedbackToTaxonomy";
 import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { HighFpsCapture } from "@/components/analyze/HighFpsCapture";
-import { ReferenceDistanceStep } from "@/components/analyze/ReferenceDistanceStep";
-import { BallFlightPanel } from "@/components/analyze/BallFlightPanel";
-import { runBallFlight, type BallFlightResult } from "@/lib/cv/runBallFlight";
-import { DEFAULT_DISTANCE_FT } from "@/lib/capture/referenceDistance";
+import { evaluateMovementGate, type MovementGateResult } from "@/lib/biomech/gates/movementGate";
+import { NoMovementCard } from "@/components/analyze/NoMovementCard";
 import { classifyFps } from "@/lib/capture/highFpsCapture";
 import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
 import { useSmartBack } from "@/hooks/useSmartBack";
@@ -160,13 +158,10 @@ export default function AnalyzeVideo() {
   // DelayCam is NOT here — it is a delayed mirror for self-review with no
   // report card, so it has its own module at /delaycam.
   const [captureMode, setCaptureMode] = useState<"choose" | "upload" | "capture">("choose");
-  // Real-world reference distance for ball-flight math. Pre-filled with the
-  // sport standard, freely changeable, and skippable (null = mechanics only).
-  const [referenceDistanceFt, setReferenceDistanceFt] = useState<number | null>(
-    module === "pitching" ? DEFAULT_DISTANCE_FT[sport === "softball" ? "softball" : "baseball"] : null,
-  );
-  const [ballFlight, setBallFlight] = useState<BallFlightResult | null>(null);
-  const [ballFlightRunning, setBallFlightRunning] = useState(false);
+  // Owner ruling: Analysis is body mechanics only. Ball speed / reference
+  // distance live in DelayCam (code kept in src/lib/cv + src/lib/capture).
+  // Movement gate result — a refused clip produces no tiles, faults or drills.
+  const [noMovement, setNoMovement] = useState<Extract<MovementGateResult, { status: "refused" }> | null>(null);
   const { saveDrill, savedDrills } = useVault();
 
   // Side-aware analysis: hitting → hit discipline; pitching/throwing → throw.
@@ -307,6 +302,7 @@ export default function AnalyzeVideo() {
     setVideoPreview(null);
     setAnalysis(null);
     setAnalysisError(null);
+    setNoMovement(null);
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
     setLandingTime(null);
@@ -517,9 +513,6 @@ export default function AnalyzeVideo() {
     // ===== PHASE 1 — Deterministic frame extraction =====
     let frames: string[] = [];
     let frameExtractions: Array<{ frame_index: number; timestamp_seconds: number; sha256_hex: string; width: number; height: number }> = [];
-    // Full frame objects (data URL + geometry) kept for the ball-flight pass,
-    // which needs pixels, not just the audit record.
-    let extractedFrames: Awaited<ReturnType<typeof extractKeyFramesDeterministic>>["frames"] = [];
     let landingFrameIndex: number | null = null;
     // Phase 42B — D-POSE Build Authority. Real-landmark execution artifacts
     // captured here and persisted into `video_landmark_runs` after the video
@@ -530,6 +523,9 @@ export default function AnalyzeVideo() {
     let denseRun: Awaited<ReturnType<typeof captureDenseLandmarkSeries>> | null = null;
     let poseRows: PoseFrameRow[] = [];
     let tempoRun: Awaited<ReturnType<typeof runTempoPipeline>> | null = null;
+    // Movement gate — decided from the persisted-format landmark series before
+    // any analysis output. No series (pose failed) = cannot confirm movement.
+    let movementGate: MovementGateResult = evaluateMovementGate(null);
 
     if (analysisEnabled) {
       try {
@@ -543,7 +539,6 @@ export default function AnalyzeVideo() {
           landingTime,
         });
         frames = result.frames.map((f) => f.dataUrl);
-        extractedFrames = result.frames;
         frameExtractions = result.frames.map((f) => ({
           frame_index: f.frame_index,
           timestamp_seconds: f.timestamp_seconds,
@@ -595,6 +590,8 @@ export default function AnalyzeVideo() {
           orientation: probed.orientation,
           landingTimeSec: landingTime ?? null,
         });
+        movementGate = evaluateMovementGate(denseRun.series);
+        console.log('[MOVEMENT-GATE]', movementGate);
         poseRows = denseRun.series.frames.map((f) =>
           densePoseRowToPoseFrameRow(f.frame_index, f.timestamp_seconds, f),
         );
@@ -928,6 +925,15 @@ export default function AnalyzeVideo() {
         return;
       }
 
+      // ===== MOVEMENT GATE — refuse the whole analysis on a motionless clip =====
+      // No AI call, no tiles, no faults, no drills. The clip and its landmark
+      // series are still saved above so the refusal is auditable.
+      if (movementGate.status === "refused") {
+        setNoMovement(movementGate);
+        setUploading(false);
+        return;
+      }
+
       toast.success(t('videoAnalysis.uploadedStartingAnalysis', "Video uploaded! Starting analysis..."));
       setUploading(false);
       setAnalyzing(true);
@@ -995,23 +1001,6 @@ export default function AnalyzeVideo() {
       toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
       setAnalyzing(false);
 
-      // One recording, one report: ball-flight measurement rides the same
-      // pipeline as mechanics. Every honesty gate (frame rate, reference
-      // distance, account eligibility) returns a stated reason instead of a
-      // fabricated number, and mechanics output is never affected.
-      setBallFlightRunning(true);
-      try {
-        const flight = await runBallFlight({
-          videoId: videoData.id,
-          frames: extractedFrames,
-          referenceDistanceFt,
-          captureFps: probed?.fps_true ?? null,
-          measurementEnabled: Boolean(isOwner || isAdmin),
-        });
-        setBallFlight(flight);
-      } finally {
-        setBallFlightRunning(false);
-      }
     } catch (error: any) {
       console.error("Error:", error);
       setAnalysisError(error);
@@ -1207,7 +1196,7 @@ export default function AnalyzeVideo() {
                 <p className="text-xs sm:text-sm text-muted-foreground max-w-sm">
                   {t('videoAnalysis.uploadOnlyDescription', {
                     module,
-                    defaultValue: 'Choose one clip of your {{module}} from your phone or camera roll. Hammer analyzes it frame by frame for mechanics feedback and drills. Ball speed only works if the clip was filmed fast enough.',
+                    defaultValue: 'Choose one clip of your {{module}} from your phone or camera roll. Hammer analyzes it frame by frame for mechanics feedback and drills.',
                   })}
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -1363,14 +1352,6 @@ export default function AnalyzeVideo() {
               </Card>
             )}
 
-            {!analyzing && !analysis && analysisEnabled && (
-              <ReferenceDistanceStep
-                sport={sport === "softball" ? "softball" : "baseball"}
-                value={referenceDistanceFt}
-                onChange={setReferenceDistanceFt}
-              />
-            )}
-
             {!analyzing && !analysis && (
               <Button
                 onClick={handleUploadAndAnalyze}
@@ -1447,6 +1428,10 @@ export default function AnalyzeVideo() {
 
                 <AnalysisResultSkeleton />
               </div>
+            )}
+
+            {noMovement && !analyzing && !analysis && (
+              <NoMovementCard module={module || 'hitting'} sport={sport} reason={noMovement.reason} />
             )}
 
             {analysisError && !analyzing && (
@@ -1537,7 +1522,6 @@ export default function AnalyzeVideo() {
                 />
 
 
-                <BallFlightPanel running={ballFlightRunning} result={ballFlight} />
 
 
 
