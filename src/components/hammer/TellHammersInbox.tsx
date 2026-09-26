@@ -5,12 +5,11 @@ import { ArrowLeft, CalendarCheck, CalendarX2, ChevronDown, ChevronUp, Flag, Hea
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/hooks/useAuth";
+import { useOptionalAuth } from "@/hooks/useAuth";
 import { useScheduleTimeline } from "@/hooks/useScheduleTimeline";
-import { useSeasonStatus } from "@/hooks/useSeasonStatus";
 import { getTodayDate, getLocalDateString } from "@/utils/dateUtils";
-import { canUndo, describeEntry, isoShift } from "../../../supabase/functions/_shared/wic/schedule/timeline";
-import { parseScheduleRequest, FACE_LABEL, extractDates, type EntryDraft } from "@/lib/hammer/tellHammers/parse";
+import { describeEntry, isoShift } from "../../../supabase/functions/_shared/wic/schedule/timeline";
+import { parseScheduleRequest, FACE_LABEL, extractDates, NEXT_GAME_ANSWERS, nextGameDraft, type EntryDraft } from "@/lib/hammer/tellHammers/parse";
 import { REPORT_INJURY_REGIONS } from "@/lib/hammer/injury/reportInjury";
 
 type Flow = "games" | "season" | "cancelled" | "pain" | "break" | "event" | "travel" | "resume" | "ask";
@@ -32,9 +31,8 @@ function draft(tag: EntryDraft["tag"], start: string, end = start, payload: Reco
 }
 
 export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolean; onDone?: () => void }) {
-  const { user } = useAuth();
+  const { user } = useOptionalAuth();
   const tl = useScheduleTimeline();
-  const { updateSeasonStatus } = useSeasonStatus();
   const today = getTodayDate();
   const storageKey = `hammer:tell-open:${user?.id ?? "guest"}`;
   const [open, setOpen] = useState(checkIn);
@@ -49,6 +47,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
   const [confirm, setConfirm] = useState<EntryDraft | null>(null);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const [sent, setSent] = useState<Array<{ id: string; label: string }>>([]);
+  const [nextGameDone, setNextGameDone] = useState(false);
   useEffect(() => {
     if (checkIn) return;
     try { setOpen(localStorage.getItem(storageKey) === "true"); } catch { /* private browsing */ }
@@ -69,9 +68,9 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     setBusy(true);
     try {
       const res = await tl.save(d, "inbox");
-      if (d.tag === "SEASON") updateSeasonStatus(d.payload.which === "ends" ? { in_season_end_date: d.start_date } as any : { in_season_start_date: d.start_date } as any);
       setLastMessage(d.tag === "NOTE" && d.payload.kind === "free_text" ? NOTE_MESSAGE : res.message);
-      setSent(previous => [{ id: res.entry.id, label: describeEntry(res.entry) }, ...previous.filter(item => item.id !== res.entry.id)]);
+      setSent(previous => [{ id: res.entry.id, label: describeEntry({ ...d, ...res.entry, payload: res.entry.payload ?? d.payload }) }, ...previous.filter(item => item.id !== res.entry.id)]);
+      if (d.payload.kind === "next_game_answer") setNextGameDone(true);
       if (d.tag === "PAIN" && RED_FLAG.test(String(d.payload.text ?? ""))) toast.error("Stop and get it checked by a trainer or doctor.");
       reset();
     } catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't save that"); }
@@ -92,6 +91,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     const parsed = parseScheduleRequest(`${prefix[flow ?? "ask"] ?? ""}${words}`, today);
     const hasTime = extractDates(words, today).length > 0 || /\b(\d+|one|two|three|four|a)\s*(days?|weeks?)\b/i.test(words);
     if (flow === "pain" && pending) { void commit({ ...pending, payload: { ...pending.payload, text: words } }); return; }
+    if (flow === "resume" && pending) { void commit({ ...pending, payload: { ...pending.payload, text: words } }); return; }
     if (hasTime && parsed.ok && parsed.draft.tag !== "NOTE" && parsed.draft.tag !== "GOAL") {
       // Never let a different category in free text silently replace the selected option.
       const expected: Partial<Record<Flow, EntryDraft["tag"]>> = { break: "HOLD", travel: "HOLD", games: "GAME", cancelled: "CANCELLED", season: "SEASON", event: "EVENT" };
@@ -120,7 +120,10 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
       {!flow && <>
         <div className="grid grid-cols-2 gap-2">{BUTTONS.map(({flow: f, label, icon: Icon}) => <Button key={f} variant="outline" className="h-20 flex-col gap-1 whitespace-normal text-center text-sm" data-testid={`tell-${f}`} onClick={() => enter(f)}><Icon className="h-5 w-5 shrink-0" />{label}</Button>)}</div>
         <Button variant="outline" className="w-full" data-testid="tell-ask" onClick={() => enter("ask")}>Tell Hammer in your words</Button>
-        {checkIn && <Button className="w-full" data-testid="chip-nope" onClick={onDone}>Done</Button>}
+        {checkIn && <>
+          {!nextGameDone && !todayEntries.some(e => e.tag === "NOTE" && e.payload?.kind === "next_game_answer" && e.start_date === today) && <div className="border-t pt-3 space-y-2"><p className="text-sm font-semibold">When's your next game?</p><div className="grid grid-cols-2 gap-2">{NEXT_GAME_ANSWERS.map(a => <Button key={a.key} variant="outline" className="h-12 whitespace-normal" onClick={() => void commit(nextGameDraft(today, a.key))}>{a.label}</Button>)}</div></div>}
+          <Button className="w-full" data-testid="chip-nope" onClick={onDone}>Nope / Done</Button>
+        </>}
       </>}
       {flow === "games" && <><p className="text-sm">Tap your game days.</p>{pickCalendar(true)}<Button disabled={!picked.length} onClick={() => { const days = picked.map(getLocalDateString).sort(); setPending(draft("GAME", days[0], days[days.length - 1], {}, days)); }}>Use these days</Button></>}
       {flow === "season" && <>{!which ? <div className="grid grid-cols-2 gap-2"><Button variant="outline" onClick={() => setWhich("starts")}>Season starts</Button><Button variant="outline" onClick={() => setWhich("ends")}>Season ends</Button></div> : <><p className="text-sm">Tap the day your season {which}.</p>{pickCalendar(false)}<Button disabled={!picked.length} onClick={() => setPending(draft("SEASON", getLocalDateString(picked[0]), getLocalDateString(picked[0]), { which }))}>Use this day</Button></>}</>}
@@ -135,7 +138,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
             aria-label={flow === "pain" ? "Tell Hammer more — where exactly, when it started" : "Something else"}
             placeholder={flow === "pain" ? "Tell Hammer more — where exactly, when it started" : flow === "ask" ? "e.g. Games cancelled Oct 5 to 19" : "Something else…"}
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); prepare(); } }} />
-          <Button type="submit" className="w-full" disabled={busy || (!pending && !text.trim())} data-testid="entry-send">Send</Button>
+          <Button type="submit" className="w-full" disabled={busy || !!confirm || (!pending && !text.trim())} data-testid="entry-send">Send</Button>
         </form>
         {confirm && <div className="rounded-md border p-3 space-y-2" data-testid="ask-confirm"><p>I'll save: <strong>{describeEntry(confirm)}</strong>. Is that right?</p><div className="flex gap-2"><Button data-testid="ask-yes" disabled={busy} onClick={() => void commit(confirm)}>Yes, save</Button><Button variant="outline" onClick={() => setConfirm(null)}>Back</Button></div></div>}
         {flow === "pain" && RED_FLAG.test(text) && <p role="alert" className="text-sm text-destructive">Stop and get it checked by a trainer or doctor.</p>}
