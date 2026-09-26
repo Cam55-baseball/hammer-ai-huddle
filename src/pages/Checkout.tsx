@@ -16,6 +16,7 @@ import { conversionCopy } from "@/demo/prescriptions/conversionCopy";
 import { getDemoAbVariant, tierForVariant } from "@/lib/demoAbVariant";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
+import { setPendingPurchase } from "@/lib/purchase/pendingPurchase";
 
 const SIM_LABEL: Record<string, string> = {
   hitting: "hitting",
@@ -137,6 +138,9 @@ const Checkout = () => {
       );
 
       const stripeSessionId = searchParams.get("session_id");
+      // Hand off to the app-wide watcher: it shows "Confirming your purchase"
+      // until the webhook-written entitlement is visible, then opens the dashboard.
+      setPendingPurchase({ tier: selectedTier, sport: selectedSport, sessionId: stripeSessionId, startedAt: Date.now() });
       if (stripeSessionId) {
         void supabase
           .from("checkout_attempts")
@@ -259,6 +263,7 @@ const Checkout = () => {
           if (inserted) attemptIdRef.current = inserted.id;
         }
 
+        setPendingPurchase({ tier: selectedTier, sport: selectedSport, sessionId: data.sessionId ?? null, startedAt: Date.now() });
         setCheckoutUrl(data.url);
         if (!opts?.silent) {
           toast({ title: "Redirecting to Checkout", description: "You'll be redirected to complete your payment..." });

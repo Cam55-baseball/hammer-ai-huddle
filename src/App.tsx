@@ -61,6 +61,8 @@ const Index = lazyWithRetry(() => import("./pages/Index"));
 const Auth = lazyWithRetry(() => import("./pages/Auth"));
 const AccountDeleted = lazyWithRetry(() => import("./pages/AccountDeleted"));
 const Privacy = lazyWithRetry(() => import("./pages/Privacy"));
+const PurchaseComplete = lazyWithRetry(() => import("./pages/PurchaseComplete"));
+import { PurchaseConfirmationWatcher } from "@/components/purchase/PurchaseConfirmationWatcher";
 const Terms = lazyWithRetry(() => import("./pages/Terms"));
 const Support = lazyWithRetry(() => import("./pages/Support"));
 const AuthCallback = lazyWithRetry(() => import("./pages/AuthCallback"));
@@ -292,6 +294,7 @@ const App = () => {
           <VideoMomentHost />
           <BrowserRouter>
             <QuickEditProfileProvider>
+            <PurchaseConfirmationWatcher />
             <Suspense fallback={<PageLoadingSkeleton />}>
               <DemoGate>
               <Routes>
@@ -309,6 +312,7 @@ const App = () => {
               <Route path="/auth" element={<Auth />} />
               <Route path="/account-deleted" element={<AccountDeleted />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/purchase-complete" element={<PurchaseComplete />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/support" element={<Support />} />
               <Route path="/auth/callback" element={<AuthCallback />} />

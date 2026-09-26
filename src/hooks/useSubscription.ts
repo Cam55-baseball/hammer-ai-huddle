@@ -302,8 +302,20 @@ export const useSubscription = () => {
         .subscribe();
     });
 
+    // Capacitor apps RESUME after Safari/Stripe rather than remount, and iOS
+    // drops the realtime socket while backgrounded — re-read on every return.
+    const onResume = () => {
+      if (document.visibilityState === 'visible' && mounted) checkSubscription(true);
+    };
+    document.addEventListener('visibilitychange', onResume);
+    window.addEventListener('focus', onResume);
+    window.addEventListener('hammers:subscription-refresh', onResume);
+
     return () => {
       mounted = false;
+      document.removeEventListener('visibilitychange', onResume);
+      window.removeEventListener('focus', onResume);
+      window.removeEventListener('hammers:subscription-refresh', onResume);
       if (interval) clearInterval(interval);
       authSub.unsubscribe();
       if (realtimeChannel) supabase.removeChannel(realtimeChannel);
