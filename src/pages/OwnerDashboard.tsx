@@ -554,7 +554,7 @@ const OwnerDashboard = () => {
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="h-14 border-b bg-card px-4 flex items-center justify-between shrink-0">
+        <header className="min-h-14 border-b bg-card px-4 pt-safe flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             {isMobile && (
               <Button 

@@ -29,7 +29,7 @@ export const FullscreenTestWrapper = ({
   onConfirmCancel,
   onCancelConfirmationChange,
 }: FullscreenTestWrapperProps) => (
-  <div className="fixed inset-0 z-50 bg-black flex flex-col p-4 overflow-auto">
+  <div className="fixed inset-0 z-50 bg-black flex flex-col p-4 pt-[calc(1rem+var(--safe-top))] pb-[calc(1rem+var(--safe-bottom))] overflow-auto">
     {showCancel && (
       <div className="flex justify-end mb-4">
         <Button variant="destructive" size="sm" onClick={onCancelClick} className="flex items-center gap-2">

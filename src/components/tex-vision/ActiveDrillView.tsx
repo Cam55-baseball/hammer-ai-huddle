@@ -593,7 +593,7 @@ export default function ActiveDrillView({
     const userHasSeenDrill = hasSeenDrill.has(drillId);
     
     return (
-      <div className="fixed inset-0 z-50 bg-[hsl(var(--tex-vision-primary-dark))] flex flex-col items-center overflow-y-auto p-4 py-6">
+      <div className="fixed inset-0 z-50 bg-[hsl(var(--tex-vision-primary-dark))] flex flex-col items-center overflow-y-auto p-4 py-6 pt-[calc(1.5rem+var(--safe-top))] pb-[calc(1.5rem+var(--safe-bottom))]">
         {/* Top bar: Exit + Skip */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
           <button
@@ -767,7 +767,7 @@ export default function ActiveDrillView({
 
   // Playing phase - render the actual drill with difficulty level and pause support
   return (
-    <div className="fixed inset-0 z-50 bg-[hsl(var(--tex-vision-primary-dark))] overflow-auto">
+    <div className="fixed inset-0 z-50 bg-[hsl(var(--tex-vision-primary-dark))] overflow-auto pt-safe pb-safe">
       {/* Regular fatigue indicator overlay (non-modal) */}
       {fatigueLevel >= 60 && fatigueLevel < 80 && (
         <div className="absolute top-4 left-4 z-10 w-64">

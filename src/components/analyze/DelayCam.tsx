@@ -1264,7 +1264,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className={liveExpanded ? "fixed inset-0 z-[120] bg-black flex flex-col" : "space-y-1"}>
+        <div className={liveExpanded ? "fixed inset-0 z-[120] bg-black flex flex-col pt-safe pb-safe" : "space-y-1"}>
           <div
             className={
               liveExpanded
@@ -1322,7 +1322,7 @@ export function DelayCam({ module: moduleProp, sport: sportProp }: DelayCamProps
             )}
           </div>
         </div>
-        <div className={delayedExpanded ? "fixed inset-0 z-[120] bg-black flex flex-col" : "space-y-1"}>
+        <div className={delayedExpanded ? "fixed inset-0 z-[120] bg-black flex flex-col pt-safe pb-safe" : "space-y-1"}>
           <div
             className={
               delayedExpanded

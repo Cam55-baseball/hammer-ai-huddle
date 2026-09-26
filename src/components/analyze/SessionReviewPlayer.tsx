@@ -787,7 +787,7 @@ export function SessionReviewPlayer({
 
   if (expanded) {
     return (
-      <div className="fixed inset-0 z-[130] flex flex-col bg-black">
+      <div className="fixed inset-0 z-[130] flex flex-col bg-black pt-safe pb-safe">
         {stage}
         <div className="max-h-[55vh] space-y-2 overflow-y-auto bg-background p-3">
           {controls}
