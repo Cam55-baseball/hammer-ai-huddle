@@ -115,7 +115,7 @@ export function useScheduleTimeline(enabledOverride?: boolean) {
         const r = await recordPain({
           userId: user.id, region: draft.payload.region as any, severity: FACE_SEVERITY[face] ?? "sore",
           origin: source === "ask_hammer" ? "tell_hammers" : ((draft.payload.origin as any) ?? "tell_hammers"),
-          date: draft.start_date, note: "Reported through Tell Hammers", queryClient: qc,
+          date: draft.start_date, note: String(draft.payload.text ?? "Reported through Tell Hammers"), queryClient: qc,
         });
         const message = r.merged ? "You already told me this — I updated it." : "Saved to your pain log — tell a coach or parent too.";
         return { merged: r.merged, entry: { ...draft, id: r.entryId, source: "inbox", summary: message, created_at: new Date().toISOString(), undone_at: null } as TimelineEntry, message };
