@@ -35,7 +35,7 @@ export const RELEASE_SEARCH_SEC = 0.2;
 /** Braking onset = first frame reaching this fraction of peak deceleration. */
 export const BRAKE_FRACTION = 0.5;
 /** Load apex must sit at least this far (body-heights) behind stance hands. */
-export const LOAD_MIN_DISPLACEMENT = 0.02;
+export const LOAD_MIN_DISPLACEMENT = 0.1; // was 0.02 — below the still-clip wrist noise (0.064 body); see docs/landmark-noise-floors.md
 /** Swing start: forward hand acceleration threshold, body-heights/s². */
 export const SWING_ACCEL = 6;
 /** P4: back-elbow forward speed threshold, body-heights/s. */
