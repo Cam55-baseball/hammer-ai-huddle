@@ -495,7 +495,7 @@ export default function AnalyzeVideo() {
     // users get a clear message instead of an opaque server rejection.
     // Mirrors thresholds in src/lib/biomech/videoAcceptance.ts.
     {
-      const { MIN_WIDTH, MIN_HEIGHT, MIN_FPS, MIN_DURATION_SEC, MAX_DURATION_SEC } = await import("@/lib/biomech/videoAcceptance");
+      const { MIN_WIDTH, MIN_HEIGHT, MIN_FPS, MIN_DURATION_SEC, MAX_DURATION_SEC, fpsFloorVerdict } = await import("@/lib/biomech/videoAcceptance");
       if (probed.width < MIN_WIDTH || probed.height < MIN_HEIGHT) {
         toast.error(UPLOAD_ERRORS.tooSmall);
         setUploading(false);
