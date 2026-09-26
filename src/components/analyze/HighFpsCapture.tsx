@@ -366,19 +366,31 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
 
       // Achieved fps: the live count wins (WebM containers frequently report a
       // wrong nominal rate); the file probe is the fallback.
-      const achievedFps = clip.achievedFps ?? probed.fps_true;
-      const fpsSource: string = clip.achievedFps != null ? "measured" : "file_probe";
+      // Achieved fps: the rate encoded in the recorded file wins — it is what
+      // every frame index will be computed against. The camera's negotiated
+      // rate (with a painted-frame sanity count) is only used when the file's
+      // rate can't be read. Nothing is assumed when neither exists.
+      const achievedFps = probed.fps_true ?? clip.achievedFps ?? null;
+      const fpsSource: string = probed.fps_true != null
+        ? "file_container"
+        : clip.achievedFps != null ? "measured" : "unknown";
       const scope = analysisScopeForFps(achievedFps);
 
       // Pull analysis frames BEFORE uploading, so a clip that can't be
       // analyzed is rejected in seconds instead of after a full upload.
       let extraction: Awaited<ReturnType<typeof extractKeyFramesDeterministic>> | null = null;
-      if (opts.analyze) {
+      const fpsForFrames = probed.fps_true;
+      if (opts.analyze && fpsForFrames == null) {
+        toast.error("We couldn't read this recording's frame rate, so it can't be analysed frame by frame. Save it without analysis, or record again.", { id: toastId });
+        setSaving(null);
+        return;
+      }
+      if (opts.analyze && fpsForFrames != null) {
         toast.loading("Extracting frames…", { id: toastId });
         const tExtract = performance.now();
         extraction = await extractKeyFramesDeterministic({
           videoFile: file,
-          fps_true: probed.fps_true,
+          fps_true: fpsForFrames,
           duration_sec: probed.duration_sec,
           landingTime: null,
         });
