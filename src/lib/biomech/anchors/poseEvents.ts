@@ -313,7 +313,42 @@ export function detectFinish(series: LandmarkSeries): AnchorResult {
   return hit(series, A, ID, runs[0].start, 0.75 * tierFactor(p.fps), 1, { peak_rotation_frame: series.frames[pk].frame_index, peak_rotation_rad_s: round4(w[pk]!) });
 }
 
-/** Run every built anchor. D-COIL is deliberately absent (awaiting owner sign-off). */
+/* ================= D-COIL (P1) — PROXY ================= */
+/** Rear-thigh proxy must rise at least this far above its stance baseline. Same basis as the 3.0° hip deadband. */
+export const COIL_MIN_RISE_DEG = 3.0;
+
+/**
+ * P1 coil frame. PROXY, not a direct measurement: femoral rotation in the hip
+ * socket is not visible side-on. Signal = rear thigh angle toward the pitcher
+ * (poseKinematics.rearThighAngleDeg). P1 = the frame of maximum proxy between
+ * stance (first movement / stillness) and the hand-load apex (P2).
+ */
+export function detectCoil(series: LandmarkSeries, direction_sign: 1 | -1 | null, loadApex?: AnchorResult): AnchorResult {
+  const A = "d_coil", ID = "D-COIL" as const;
+  if (direction_sign !== 1 && direction_sign !== -1) return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "direction_sign_unknown" });
+  const apex = loadApex ?? detectLoadApex(series, direction_sign);
+  if (apex.frame_index == null) return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "hand_load_apex_missing", upstream: apex.missingness?.missing_reason });
+  const p = prep(series, A, ID);
+  if ("err" in p) return p.err!;
+  const rear = rearSide(series, direction_sign);
+  if (!rear) return miss(A, ID, R.LANDMARK_OCCLUDED, { reason: "hips_unobserved" });
+  const proxy = smooth(series.frames.map((f) => rearThighAngleDeg(series, f, rear, direction_sign)), 1);
+  const kA = series.frames.findIndex((f) => f.frame_index === apex.frame_index);
+  const still = detectStill(series);
+  const k0 = still.frame_index != null ? series.frames.findIndex((f) => f.frame_index === still.frame_index) : 0;
+  const base = median(proxy.slice(k0, k0 + framesFor(p.fps, STILL_MIN_SEC, 3)).filter((x): x is number => x != null));
+  if (base == null) return miss(A, ID, R.LANDMARK_OCCLUDED, { reason: "stance_rear_thigh_unobserved" });
+  let best = -1;
+  for (let k = k0; k <= kA; k++) if (proxy[k] != null && (best < 0 || proxy[k]! > proxy[best]!)) best = k;
+  if (best < 0) return miss(A, ID, R.LANDMARK_OCCLUDED, { reason: "rear_thigh_unobserved_before_p2" });
+  const rise = proxy[best]! - base;
+  const diag = { proxy: "rear thigh angle toward pitcher — proxy for rear hip-socket internal rotation, not a direct measurement", rear_side: rear, baseline_deg: round4(base), rise_deg: round4(rise) };
+  if (rise < COIL_MIN_RISE_DEG) return miss(A, ID, R.ANCHOR_NOT_DETECTED, { ...diag, reason: "rise_within_noise" });
+  const conf = Math.min(1, rise / (3 * COIL_MIN_RISE_DEG)) * 0.8 * tierFactor(p.fps) + 0.2;
+  return hit(series, A, ID, best, conf, 1, { ...diag, proxy_deg: round4(proxy[best]!) });
+}
+
+/** Run every built anchor. */
 export function detectAllPoseEvents(series: LandmarkSeries, o: { direction_sign: 1 | -1 | null; throwing_side: "left" | "right"; front_foot_full_plant_frame: number | null }) {
   const load = detectLoadApex(series, o.direction_sign);
   return {
@@ -321,5 +356,6 @@ export function detectAllPoseEvents(series: LandmarkSeries, o: { direction_sign:
     release_pose: detectReleasePoseOnly(series, { throwing_side: o.throwing_side }),
     load_apex: load, swing_start: detectSwingStart(series, o.direction_sign, load),
     p4: detectP4(series, o.direction_sign, o.front_foot_full_plant_frame), finish: detectFinish(series),
+    coil: detectCoil(series, o.direction_sign, load),
   };
 }
