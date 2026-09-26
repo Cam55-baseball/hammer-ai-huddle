@@ -4,6 +4,10 @@
  * Constitutional acceptance gates for video uploads. Pure functions: same
  * probe → same verdict across every invocation. Rejection reasons are
  * stable tags that flow into `video_analysis_runs.outcome_reason`.
+ *
+ * FRAME-RATE RULE: a clip is rejected for low fps ONLY when the encoded rate
+ * read from the container is below MIN_FPS. An unknown rate is never a
+ * rejection, and the playback (render-rate) cross-check can never reject.
  */
 
 import type { ProbedVideoMetadata } from "./probeVideoMetadata";
@@ -29,12 +33,28 @@ export type AcceptanceVerdict =
   | { ok: true }
   | { ok: false; reason: RejectionReason; detail: string };
 
-export function evaluateProbe(probe: ProbedVideoMetadata): AcceptanceVerdict {
-  if (!Number.isFinite(probe.fps_true) || probe.fps_true < MIN_FPS) {
+export type FpsFloorVerdict =
+  | { reject: false; decision: "accepted_encoded" | "accepted_fps_unknown" }
+  | { reject: true; decision: "rejected_encoded_below_floor" };
+
+type FpsProbe = Pick<ProbedVideoMetadata, "fps_true" | "fps_source">;
+
+export function fpsFloorVerdict(probe: FpsProbe): FpsFloorVerdict {
+  if (probe.fps_source !== "container" || probe.fps_true == null || !Number.isFinite(probe.fps_true)) {
+    return { reject: false, decision: "accepted_fps_unknown" };
+  }
+  if (probe.fps_true < MIN_FPS) return { reject: true, decision: "rejected_encoded_below_floor" };
+  return { reject: false, decision: "accepted_encoded" };
+}
+
+export function evaluateProbe(
+  probe: FpsProbe & Pick<ProbedVideoMetadata, "width" | "height" | "duration_sec">,
+): AcceptanceVerdict {
+  if (fpsFloorVerdict(probe).reject) {
     return {
       ok: false,
       reason: "reject_low_fps",
-      detail: `fps_true=${probe.fps_true} < MIN_FPS=${MIN_FPS}`,
+      detail: `encoded fps_true=${probe.fps_true} < MIN_FPS=${MIN_FPS}`,
     };
   }
   if (probe.width < MIN_WIDTH || probe.height < MIN_HEIGHT) {
