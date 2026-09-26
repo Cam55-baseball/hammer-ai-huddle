@@ -212,7 +212,10 @@ export function detectReleasePoseOnly(series: LandmarkSeries, opts: ReleaseOptio
   const k = median(best)!;
   const spread = Math.max(...best) - Math.min(...best);
   const conf = (best.length === 3 ? 0.85 : 0.6) * (1 - spread / (2 * RELEASE_AGREE_FRAMES + 1)) * tierFactor(p.fps);
-  return hit(series, A, ID, k, conf, Math.max(1, spread), { ...diag, agreeing: best.length, spread_frames: spread });
+  // Signals 1 and 3 are physically coupled (braking follows the speed peak),
+  // so a 1+3 agreement is weaker evidence than one that includes the elbow.
+  const elbow_confirmed = best.includes(s2);
+  return hit(series, A, ID, k, elbow_confirmed ? conf : conf * 0.8, Math.max(1, spread), { ...diag, agreeing: best.length, spread_frames: spread, elbow_confirmed });
 }
 
 /* ================= hitting helpers ================= */
