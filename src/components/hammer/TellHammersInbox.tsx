@@ -99,7 +99,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
         setConfirm({ ...parsed.draft, payload: { ...parsed.draft.payload, text: words } }); return;
       }
     }
-    if (hasTime) { void commit(draft("NOTE", today, today, { kind: "free_text", text: words })); return; }
+    if (hasTime && !pending) { void commit(draft("NOTE", today, today, { kind: "free_text", text: words })); return; }
     // The explicit choice supplies the plan instruction; words without a date are only its context.
     if (pending) { void commit({ ...pending, payload: { ...pending.payload, text: words } }); return; }
     // With no explicit choice, an unrecognised sentence never authors a plan change.
@@ -122,7 +122,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
       {lastMessage && <div role="status" data-testid="tell-hammers-result" className="rounded-md border border-primary/30 bg-primary/10 p-3 text-sm"><strong>Got it — Hammer has it</strong><p>{lastMessage}</p></div>}
       {!flow && <>
         <div className="grid grid-cols-2 gap-2">{BUTTONS.map(({flow: f, label, icon: Icon}) => <Button key={f} variant="outline" className="h-20 flex-col gap-1 whitespace-normal text-center text-sm" data-testid={`tell-${f}`} onClick={() => enter(f)}><Icon className="h-5 w-5 shrink-0" />{label}</Button>)}</div>
-        <Button variant="outline" className="w-full" data-testid="tell-ask" onClick={() => enter("ask")}>Tell Hammer in your words</Button>
+         <Button variant="outline" className="w-full" data-testid="tell-ask" onClick={() => enter("ask")}>Tell Hammer in your words</Button>
         {checkIn && <>
           {!nextGameDone && !todayEntries.some(e => e.tag === "NOTE" && e.payload?.kind === "next_game_answer" && e.start_date === today) && <div className="border-t pt-3 space-y-2"><p className="text-sm font-semibold">When's your next game?</p><div className="grid grid-cols-2 gap-2">{NEXT_GAME_ANSWERS.map(a => <Button key={a.key} variant="outline" className="h-12 whitespace-normal" onClick={() => void commit(nextGameDraft(today, a.key))}>{a.label}</Button>)}</div></div>}
           <Button className="w-full" data-testid="chip-nope" onClick={onDone}>Nope / Done</Button>
