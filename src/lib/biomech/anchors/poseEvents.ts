@@ -18,7 +18,7 @@ import { MISSINGNESS_REASONS as R, missingness, type MissingnessRecord, type Mis
 import { detectorVersion, type DetectorId } from "../detectorVersions";
 import {
   LM, FPS_FLOOR, FPS_T_MID, aggregateSpeed, angleDeg, bodyScale, derivative, framesFor,
-  median, mid, point, round4, round6, smooth, tierFactor, track, uncertaintyMs,
+  median, mid, point, rearSide, rearThighAngleDeg, round4, round6, smooth, tierFactor, track, uncertaintyMs,
 } from "./poseKinematics";
 
 /* ---------------- fixed constants (part of each version string) ---------------- */
