@@ -24,6 +24,16 @@ export const DETECTOR_IDS = [
   "D-BAT",
   "D-CONTACT",
   "D-BALL",
+  // Pose-derived event anchors (anchors/poseEvents.ts). Each carries its own
+  // real version; changing a constant in a detector means bumping its string.
+  "D-STILL",
+  "D-FIRST-MOVE",
+  "D-RELEASE-POSE",
+  "D-LOAD-APEX",
+  "D-SWING-START",
+  "D-P4",
+  "D-FINISH",
+  "D-COIL",
 ] as const;
 
 export type DetectorId = (typeof DETECTOR_IDS)[number];
@@ -34,11 +44,25 @@ export const DETECTOR_VERSIONS: Readonly<Record<DetectorId, string>> = {
   // D-PLANT is real as of STEP 2 — ankle/heel vertical-velocity zero-crossing
   // with a vertical-load gate, computed over the persisted landmark series.
   "D-PLANT": "plant@1.0.0-zero-crossing-load-gate",
+  // Pose-derived event anchors — real, but NOT yet validated on real clips.
+  // Real version = implemented; wiring into tiles is a separate approval.
+  "D-STILL": "still@1.0.0-agg-speed-run",
+  "D-FIRST-MOVE": "first_move@1.0.0-exit-still-2f",
+  // POSE-ONLY TIER of release: 2-of-3 fusion (wrist speed peak, elbow
+  // extension max, arm braking onset). Uncertainty is reported, never hidden.
+  "D-RELEASE-POSE": "release_pose@1.0.0-2of3-wrist-elbow-brake",
+  "D-LOAD-APEX": "load_apex@1.0.0-wrist-rear-extremum-sign-change",
+  "D-SWING-START": "swing_start@1.0.0-wrist-fwd-accel-2f",
+  "D-P4": "p4@1.0.0-plant-then-back-elbow-fwd-2f",
+  "D-FINISH": "finish@1.0.0-still-after-peak-rotation",
   // Everything below is still a skeleton and MUST keep short-circuiting.
+  // D-RELEASE = the future BALL-ASSISTED release tier (ball leaves hand).
   "D-RELEASE": "release@0.0.0-stub",
   "D-BAT": "bat@0.0.0-stub",
   "D-CONTACT": "contact@0.0.0-stub",
   "D-BALL": "ball@0.0.0-stub",
+  // D-COIL awaits owner sign-off on the proxy (femoral rotation is not visible).
+  "D-COIL": "coil@0.0.0-stub",
 } as const;
 
 export function detectorVersion(id: DetectorId): string {
