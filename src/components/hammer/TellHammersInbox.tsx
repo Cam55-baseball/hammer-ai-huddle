@@ -99,7 +99,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
         setConfirm({ ...parsed.draft, payload: { ...parsed.draft.payload, text: words } }); return;
       }
     }
-    if (pending) { void commit({ ...pending, payload: { ...pending.payload, text: words } }); return; }
+    // An unrecognised sentence must never silently author a plan change.
     void commit(draft("NOTE", today, today, { kind: "free_text", text: words }));
   }
   const pickCalendar = (multiple: boolean) => <Calendar mode={multiple ? "multiple" : "single"} selected={(multiple ? picked : picked[0]) as any}

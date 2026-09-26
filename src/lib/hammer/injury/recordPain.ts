@@ -93,6 +93,7 @@ export async function recordPain(args: {
     d.payload.face = severityToFace(priorSev);
     d.payload.faceLabel = FACE_LABEL[d.payload.face];
   }
+  if (args.note && args.note !== "Reported through Tell Hammers") (d.payload as Record<string, unknown>).text = args.note.trim();
 
   let linkedRef: string | null = null;
   if (worse) {
