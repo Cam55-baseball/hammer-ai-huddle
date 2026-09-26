@@ -64,3 +64,9 @@ Positive control (real movement, `edf45130`): max 1.61, median 1.02.
 | **Pelvis deadband (recommended, not in code)** | **3.0°** | ≥ full still range (2.90°), ≈ p99 frame-to-frame Δ (1.10°) × 2.7, ≈ 5 × SD |
 
 No tile, formula or threshold other than the four gate rows above was changed. The head floor and pelvis deadband are recommendations only.
+
+## Addendum 2026-09-26 — D-COIL proxy signal (rear thigh angle) on the still clip
+Tile 20 measures the rear-thigh angle (hip→knee vs vertical, toward the pitcher), not the hip-line angle the 3.0° deadband was sized on.
+- Left thigh: SD 0.48°, full range **2.53°** — inside 3.0°.
+- Right thigh: SD 0.70°, full range **3.35°** — **exceeds 3.0°**. On a right-side rear hip, noise alone can cross the deadband. Owner decision needed: keep 3.0°, or size a proxy-specific deadband (e.g. ≥3.4°, full observed range).
+- Label correction: 4.2 % is the p99 of head movement between **any two frames**, not frame-to-frame (frame-to-frame p99 is 0.49 % body).
