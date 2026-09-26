@@ -105,8 +105,11 @@ describe("tracking diagnosis", () => {
     for (let i = 0; i < 20; i++) fr.push({ pose_detected: false, candidates_detected: 0, gap_reason: "no_person" as const });
     const d = diagnoseTrack(makeSeries(fr));
     if (d.status === "clean") throw new Error("expected diagnosis");
-    expect(d.causes[0].kind).toBe("left_frame");
-    expect(d.messages[0].detail).toContain("at 1s off the right edge");
+    // A body sliding rigidly sideways is geometrically identical to a pan, so
+    // both may be reported; the exit and its time must be among them.
+    const i = d.causes.findIndex((c) => c.kind === "left_frame");
+    expect(i).toBeGreaterThanOrEqual(0);
+    expect(d.messages[i].detail).toContain("at 1s off the right edge");
   });
 
   it("feet cut off", () => {
