@@ -105,7 +105,12 @@ serve(async (req) => {
       if (customers.data.length > 0) customerId = customers.data[0].id;
     }
 
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    // A native Capacitor build sends origin "capacitor://localhost". Safari
+    // cannot open that, so a paid buyer was stranded on Stripe's page. Only
+    // real web origins are trusted; anything else returns to the public site.
+    const rawOrigin = req.headers.get("origin") || "http://localhost:3000";
+    const origin = /^https?:\/\//i.test(rawOrigin) ? rawOrigin : "https://hammersmodality.org";
+    const isNativeOrigin = origin !== rawOrigin;
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

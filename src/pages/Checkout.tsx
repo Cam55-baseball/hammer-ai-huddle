@@ -16,6 +16,7 @@ import { conversionCopy } from "@/demo/prescriptions/conversionCopy";
 import { getDemoAbVariant, tierForVariant } from "@/lib/demoAbVariant";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
+import { setPendingPurchase } from "@/lib/purchase/pendingPurchase";
 
 const SIM_LABEL: Record<string, string> = {
   hitting: "hitting",
@@ -137,6 +138,9 @@ const Checkout = () => {
       );
 
       const stripeSessionId = searchParams.get("session_id");
+      // Hand off to the app-wide watcher: it shows "Confirming your purchase"
+      // until the webhook-written entitlement is visible, then opens the dashboard.
+      setPendingPurchase({ tier: selectedTier, sport: selectedSport, sessionId: stripeSessionId, startedAt: Date.now() });
       if (stripeSessionId) {
         void supabase
           .from("checkout_attempts")
@@ -259,6 +263,7 @@ const Checkout = () => {
           if (inserted) attemptIdRef.current = inserted.id;
         }
 
+        setPendingPurchase({ tier: selectedTier, sport: selectedSport, sessionId: data.sessionId ?? null, startedAt: Date.now() });
         setCheckoutUrl(data.url);
         if (!opts?.silent) {
           toast({ title: "Redirecting to Checkout", description: "You'll be redirected to complete your payment..." });
@@ -307,7 +312,7 @@ const Checkout = () => {
 
   if (showSuccessState) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-b from-background to-muted/30">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-b from-background to-muted/30 pt-safe pb-safe">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-6" />
         <h2 className="text-xl font-semibold text-foreground mb-1">Your system is being built from your result</h2>
         <p className="text-sm text-muted-foreground mb-6">Hold tight — finalizing access.</p>
@@ -332,7 +337,7 @@ const Checkout = () => {
   // completes their activation flow.
   if (!canShowPurchaseUI) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-4 pt-safe pb-safe">
         <PurchaseUnavailable variant="full" />
       </div>
     );
@@ -340,7 +345,7 @@ const Checkout = () => {
 
   if (authLoading || subLoading || ownerLoading || adminLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center pt-safe pb-safe">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
@@ -348,7 +353,7 @@ const Checkout = () => {
 
   if (isOwner || isAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 pt-safe pb-safe">
         <Card className="p-8 text-center max-w-md">
           <h2 className="text-2xl font-bold mb-4">{isOwner ? t("subscriptionTiers.ownerAccess") : t("subscriptionTiers.adminAccess")}</h2>
           <p className="text-muted-foreground mb-6">{t("subscriptionTiers.unlimitedAccessMessage")}</p>
@@ -362,7 +367,7 @@ const Checkout = () => {
 
   if (!tierConfig) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 pt-safe pb-safe">
         <Card className="p-8 text-center max-w-md">
           <h2 className="text-2xl font-bold mb-4">{t("subscriptionTiers.noTierSelected")}</h2>
           <p className="text-muted-foreground mb-6">{t("subscriptionTiers.selectTierFromPricing")}</p>
@@ -377,7 +382,7 @@ const Checkout = () => {
   // Demo auto-redirect: render reservation state instead of plan picker
   if (isFromDemo && (checkoutLoading || checkoutUrl) && !showManualLink) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-b from-background to-muted/30">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-b from-background to-muted/30 pt-safe pb-safe">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-6" />
         <h2 className="text-xl font-bold">Reserving your system…</h2>
         <p className="text-sm text-muted-foreground mt-1">Securing your {simLabel} access.</p>
@@ -386,7 +391,7 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 py-8 pt-[calc(2rem+var(--safe-top))] pb-[calc(2rem+var(--safe-bottom))]">
       <div className="w-full max-w-2xl space-y-4">
         {/* Abandonment urgency banner */}
         {hasAbandoned && (

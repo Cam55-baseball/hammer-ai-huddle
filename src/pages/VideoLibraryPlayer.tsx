@@ -156,7 +156,7 @@ const VideoLibraryPlayer = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-safe pb-safe">
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         <Button variant="ghost" size="sm" onClick={() => navigate('/video-library')} className="gap-2">
           <ArrowLeft className="h-4 w-4" /> Back to Library

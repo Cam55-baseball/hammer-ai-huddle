@@ -226,7 +226,7 @@ export default function AnalysisResultsPreview() {
   const variant = searchParams.get("v") === "legacy" ? "legacy" : "new";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-safe pb-safe">
       <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
         <div className="rounded-md border border-dashed border-amber-500/50 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
           Internal design preview — fixture data only. Variant: <strong>{variant}</strong>. Use

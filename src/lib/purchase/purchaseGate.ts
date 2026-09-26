@@ -22,6 +22,7 @@
  * Web behaviour is unchanged: if we are not inside a native app shell, purchase
  * UI is allowed exactly as it has always been.
  */
+import { Capacitor } from "@capacitor/core";
 
 export type PurchaseMode = "web" | "native-linkout" | "hidden";
 
@@ -41,13 +42,26 @@ export interface PurchaseAvailability {
 /**
  * Native detection.
  *
- * Nothing native exists in this project yet (no Capacitor, by design). The
- * native layer will set `window.__HAMMERS_NATIVE__ = true` on boot. Until then
- * this is always false, so the web app behaves exactly as it does today.
+ * The iOS build is a Capacitor shell. Capacitor's native bridge injects
+ * `window.Capacitor` before the web bundle runs, so `isNativePlatform()` is the
+ * authoritative answer inside the WebView and false in any browser.
+ *
+ * Previously this only read `window.__HAMMERS_NATIVE__`, which nothing ever
+ * set — so the native app was treated as a web browser and purchase UI showed.
+ * The manual flag is still honoured (for a future native override).
  */
 export function isNativeShell(): boolean {
   if (typeof window === "undefined") return false;
-  return (window as unknown as { __HAMMERS_NATIVE__?: boolean }).__HAMMERS_NATIVE__ === true;
+  if ((window as unknown as { __HAMMERS_NATIVE__?: boolean }).__HAMMERS_NATIVE__ === true) return true;
+  try {
+    if (Capacitor.isNativePlatform()) return true;
+  } catch {
+    /* fall through */
+  }
+  const cap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
+  if (cap?.isNativePlatform?.()) return true;
+  // Capacitor serves the bundle from capacitor:// on iOS — no browser ever does.
+  return window.location.protocol === "capacitor:" || window.location.protocol === "ionic:";
 }
 
 /**

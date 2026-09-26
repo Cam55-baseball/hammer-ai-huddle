@@ -130,7 +130,7 @@ const AuthCallback = () => {
 
   if (failure) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-b from-background to-muted/30">
+      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-b from-background to-muted/30 pt-safe pb-safe">
         <div className="w-full max-w-md bg-card border border-border rounded-xl p-8 shadow-lg space-y-4">
           <Alert variant="destructive">
             <AlertDescription>{failure}</AlertDescription>
@@ -144,7 +144,7 @@ const AuthCallback = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/30">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/30 pt-safe pb-safe">
       <div className="text-center space-y-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
         <p className="text-muted-foreground">Signing you in…</p>

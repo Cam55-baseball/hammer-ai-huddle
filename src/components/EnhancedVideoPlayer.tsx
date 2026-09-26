@@ -961,7 +961,7 @@ export const EnhancedVideoPlayer = ({
 
       {/* Fullscreen Frame Viewer */}
       {fullscreenFrameIndex !== null && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 overflow-hidden">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 pt-[calc(0.5rem+var(--safe-top))] pb-[calc(0.5rem+var(--safe-bottom))] overflow-hidden">
           {/* Background overlay - ONLY this closes */}
           <div className="absolute inset-0 bg-black/95 pointer-events-none" />
 

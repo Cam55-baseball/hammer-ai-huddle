@@ -60,7 +60,7 @@ export default function StartHereRunner() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur pt-safe">
         <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 py-2">
           <Badge variant="secondary" className="gap-1"><Sparkles className="h-3 w-3" /> Start Here</Badge>
           <div className="flex-1 px-2">

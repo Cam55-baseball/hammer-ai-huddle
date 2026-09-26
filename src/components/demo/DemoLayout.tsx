@@ -47,7 +47,7 @@ export function DemoLayout({ children, showBack = true }: { children: ReactNode;
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      <header className="sticky top-0 z-40 pt-safe border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="mx-auto flex max-w-5xl items-center gap-2 px-3 py-2">
           {(() => {
             const path = typeof window !== 'undefined' ? window.location.pathname : '';

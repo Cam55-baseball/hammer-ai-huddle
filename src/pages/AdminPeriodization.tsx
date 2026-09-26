@@ -110,11 +110,11 @@ export default function AdminPeriodization() {
     setRows((m) => ({ ...m, [phase]: { ...m[phase], ...patch } }));
 
   if (ownerLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
+    return <div className="min-h-screen flex items-center justify-center pt-safe pb-safe"><Loader2 className="h-5 w-5 animate-spin" /></div>;
   }
   if (!isOwner) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3 p-6 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 p-6 text-center pt-[calc(1.5rem+var(--safe-top))] pb-[calc(1.5rem+var(--safe-bottom))]">
         <Lock className="h-6 w-6 text-muted-foreground" />
         <div className="text-sm font-medium">Owner access required</div>
         <p className="text-xs text-muted-foreground max-w-sm">
@@ -129,7 +129,7 @@ export default function AdminPeriodization() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-safe pb-safe">
       <div className="max-w-3xl mx-auto p-4 space-y-3">
         <Button variant="ghost" size="sm" className="gap-1 -ml-2" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4" /> Back

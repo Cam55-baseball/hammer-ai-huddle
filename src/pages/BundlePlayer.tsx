@@ -84,7 +84,7 @@ export default function BundlePlayer() {
 
   if (authLoading || ownerLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center pt-safe pb-safe">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -92,7 +92,7 @@ export default function BundlePlayer() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="min-h-screen flex items-center justify-center p-6 pt-[calc(1.5rem+var(--safe-top))] pb-[calc(1.5rem+var(--safe-bottom))]">
         <div className="max-w-md text-center space-y-3">
           <Lock className="h-8 w-8 mx-auto text-muted-foreground" />
           <h1 className="text-xl font-semibold">Sign in to watch</h1>
@@ -107,7 +107,7 @@ export default function BundlePlayer() {
 
   if (videos.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="min-h-screen flex items-center justify-center p-6 pt-[calc(1.5rem+var(--safe-top))] pb-[calc(1.5rem+var(--safe-bottom))]">
         <div className="max-w-md text-center space-y-3">
           <Lock className="h-8 w-8 mx-auto text-muted-foreground" />
           <h1 className="text-xl font-semibold">You don't have access yet</h1>
@@ -121,7 +121,7 @@ export default function BundlePlayer() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-safe pb-safe">
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-5">
         <Button variant="ghost" size="sm" className="-ml-2" onClick={goBack}>
           <ArrowLeft className="h-4 w-4 mr-1.5" />

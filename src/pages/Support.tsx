@@ -109,7 +109,7 @@ const faqs: { q: string; a: React.ReactNode }[] = [
 
 export default function Support() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-safe pb-safe">
       <main className="container mx-auto max-w-3xl px-4 py-12">
         <header className="space-y-3">
           <h1 className="text-3xl font-bold">Support</h1>

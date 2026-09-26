@@ -153,7 +153,12 @@ serve(async (req) => {
       );
     }
 
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    // A native Capacitor build sends origin "capacitor://localhost". Safari
+    // cannot open that, so a paid buyer was stranded on Stripe's page. Only
+    // real web origins are trusted; anything else returns to the public site.
+    const rawOrigin = req.headers.get("origin") || "http://localhost:3000";
+    const origin = /^https?:\/\//i.test(rawOrigin) ? rawOrigin : "https://hammersmodality.org";
+    const isNativeOrigin = origin !== rawOrigin;
 
     const successParams = new URLSearchParams({ status: 'success' });
     if (simId) successParams.set('sim', String(simId));
@@ -167,8 +172,10 @@ serve(async (req) => {
       client_reference_id: user.id,
       line_items: lineItems,
       mode: "subscription",
-      success_url: `${origin}/checkout?${successParams.toString()}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/checkout?status=cancel`,
+      success_url: isNativeOrigin
+        ? `${origin}/purchase-complete?session_id={CHECKOUT_SESSION_ID}`
+        : `${origin}/checkout?${successParams.toString()}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: isNativeOrigin ? `${origin}/purchase-complete?status=cancel` : `${origin}/checkout?status=cancel`,
       metadata: checkoutMetadata,
       subscription_data: { metadata: checkoutMetadata },
       billing_address_collection: "auto",

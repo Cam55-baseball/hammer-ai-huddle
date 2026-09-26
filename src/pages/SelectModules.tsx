@@ -90,7 +90,7 @@ const SelectModules = () => {
 
   if (authLoading || subscriptionLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center pt-safe pb-safe">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -99,14 +99,14 @@ const SelectModules = () => {
   // Purchase hidden: no tiers, no prices, no checkout entry point.
   if (!canShowPurchaseUI) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-4 pt-safe pb-safe">
         <PurchaseUnavailable variant="full" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 pt-safe pb-safe">
       <div className="w-full max-w-5xl">
         {momentumContext && momentumFrom === "demo" && (
           <MomentumBanner context={momentumContext} gap={momentumGap} />

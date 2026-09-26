@@ -81,7 +81,7 @@ export default function BundleStorefront() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center pt-safe pb-safe">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -89,7 +89,7 @@ export default function BundleStorefront() {
 
   if (!bundle) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="min-h-screen flex items-center justify-center p-6 pt-[calc(1.5rem+var(--safe-top))] pb-[calc(1.5rem+var(--safe-bottom))]">
         <div className="max-w-md text-center space-y-3">
           <h1 className="text-2xl font-bold">Bundle not available</h1>
           <p className="text-muted-foreground">
@@ -106,7 +106,7 @@ export default function BundleStorefront() {
   const finalCents = discount?.valid ? discount.final_cents : bundle.price_cents;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-safe pb-safe">
       <div className="max-w-3xl mx-auto px-4 py-10 space-y-8">
         <header className="space-y-4">
           {bundle.cover_url ? (
