@@ -15,9 +15,11 @@
  *                    that was recorded report this cause as "not assessed")
  *   low_light        torso landmark visibility below LOW_VIS on average
  *   camera_moving    head AND both feet drift the same way by ≥ CAMERA_SHIFT
- *                    body heights (smoothed). A planted back foot does not
- *                    travel during a swing; the whole picture moving together
- *                    is the camera (or the athlete walking — the copy says so).
+ *                    body heights (smoothed), while the gap between the ankles
+ *                    and the athlete's on-screen size stay constant — i.e. the
+ *                    body moved rigidly, as it does when the phone pans. A
+ *                    stride, a step or walking toward the lens changes the
+ *                    ankle gap or the size and does not count.
  *
  * Ordering: by severity (share of the clip the cause explains), dominant first.
  * If the track is unreliable and no cause has evidence, the answer is
@@ -37,6 +39,10 @@ const LOW_VIS = 0.6;
 const MIN_OBSERVED = 10;
 const CAMERA_SHIFT = 0.25;
 const SMOOTH = 15;
+/** Ankle-gap change allowed, as a share of the shift, for the feet to count as moving together. */
+const SEP_RIGID_SHARE = 0.3;
+/** On-screen size change (share of body height) allowed for a camera move. */
+const SIZE_TOLERANCE = 0.15;
 
 const NOSE = 0, L_SH = 11, R_SH = 12, L_HIP = 23, R_HIP = 24, L_ANK = 27, R_ANK = 28;
 
@@ -206,6 +212,19 @@ export function diagnoseTrack(series: LandmarkSeries): TrackDiagnosis {
       const sameSign = ds.every((d) => d > 0) || ds.every((d) => d < 0);
       if (!sameSign) continue;
       const shift = Math.min(...ds.map(Math.abs)) / bodyH;
+      // A moving camera carries both feet by the same amount: the gap between
+      // the ankles stays put. Walking (or a different body) changes it.
+      const sep = smoothedRange(frames.map((f) => {
+        const a = pt(f, L_ANK), b = pt(f, R_ANK);
+        return a && b && a.v >= VIS && b.v >= VIS ? a[axis] - b[axis] : null;
+      }));
+      if (!sep || Math.abs(sep.delta) / bodyH > SEP_RIGID_SHARE * shift) continue;
+      // Nor does the athlete's size on screen change (walking toward/away does).
+      const sz = smoothedRange(frames.map((f) => {
+        const n = pt(f, NOSE), a = pt(f, L_ANK), b = pt(f, R_ANK);
+        return n && a && b && n.v >= VIS && a.v >= VIS && b.v >= VIS ? (a.y + b.y) / 2 - n.y : null;
+      }));
+      if (!sz || Math.abs(sz.delta) / bodyH > SIZE_TOLERANCE) continue;
       best = Math.max(best, shift);
     }
     if (best >= CAMERA_SHIFT) causes.push({ kind: "camera_moving", severity: Math.min(1, best) * 0.6, shift_body: r3(best) });
