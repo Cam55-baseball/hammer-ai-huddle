@@ -31,10 +31,10 @@ describe("Tell Hammer shared entry flow", () => {
   it("sends two entries in a row and confirms each without closing", async () => {
     render(<TellHammersInbox />); open();
     fireEvent.click(screen.getByTestId("tell-break"));
-    fireEvent.click(screen.getByTestId("hold-7")); send();
+    fireEvent.click(screen.getByTestId("hold-7"));
     await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
     expect(screen.getByTestId("tell-hammers-result").textContent).toMatch(/Got it — Hammer has it/);
-    fireEvent.click(screen.getByTestId("tell-resume")); send();
+    fireEvent.click(screen.getByTestId("tell-resume")); fireEvent.click(screen.getByTestId("resume-today"));
     await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
     expect(screen.getByTestId("tell-hammers-result").textContent).toMatch(/Got it — Hammer has it/);
     expect(screen.getByText("Sent today")).toBeTruthy();
@@ -67,6 +67,46 @@ describe("Tell Hammer shared entry flow", () => {
     expect(screen.getByRole("alert").textContent).toMatch(/Stop and get it checked/);
     send(); await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
     expect(save.mock.calls[0][0]).toMatchObject({ tag: "PAIN", payload: { region: "shoulder", face: "lot", text: "tingling in my shoulder" } });
+  });
+  it("one tap on 3 days saves once with a confirmation — no Send needed", async () => {
+    render(<TellHammersInbox />); open(); fireEvent.click(screen.getByTestId("tell-break"));
+    fireEvent.click(screen.getByTestId("hold-3"));
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+    expect(save.mock.calls[0][0]).toMatchObject({ tag: "HOLD", payload: { reason: "break" } });
+    expect(screen.getByTestId("tell-hammers-result").textContent).toMatch(/Got it — Hammer has it/);
+    await new Promise(r => setTimeout(r, 20)); expect(save).toHaveBeenCalledTimes(1);
+  });
+  it("a tap clears typed text, and typing afterwards never carries the tap", async () => {
+    render(<TellHammersInbox />); open(); fireEvent.click(screen.getByTestId("tell-break"));
+    fireEvent.change(screen.getByTestId("entry-text"), { target: { value: "back for Saturday's game" } });
+    fireEvent.click(screen.getByTestId("hold-3"));
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+    expect(save.mock.calls[0][0].payload.text).toBeUndefined();
+    fireEvent.click(screen.getByTestId("tell-break"));
+    expect((screen.getByTestId("entry-text") as HTMLTextAreaElement).value).toBe("");
+    fireEvent.change(screen.getByTestId("entry-text"), { target: { value: "legs feel heavy" } }); send();
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
+    expect(save.mock.calls[1][0]).toMatchObject({ tag: "NOTE", payload: { kind: "free_text", text: "legs feel heavy" } });
+  });
+  it("pain Send is disabled until a face is chosen; chosen face is highlighted; face tap does not send", () => {
+    render(<TellHammersInbox />); open(); fireEvent.click(screen.getByTestId("tell-pain")); fireEvent.click(screen.getByTestId("pain-elbow"));
+    fireEvent.change(screen.getByTestId("entry-text"), { target: { value: "sore inside" } });
+    expect((screen.getByTestId("entry-send") as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByTestId("face-little"));
+    expect(screen.getByTestId("face-little").getAttribute("aria-pressed")).toBe("true");
+    expect(save).not.toHaveBeenCalled();
+    expect((screen.getByTestId("entry-send") as HTMLButtonElement).disabled).toBe(false);
+  });
+  it("Sent today is hidden when nothing was sent", () => {
+    render(<TellHammersInbox />); open();
+    expect(screen.queryByText("Sent today")).toBeNull();
+  });
+  it("check-in Nope collapses the section and submits nothing", () => {
+    const onDone = vi.fn();
+    render(<TellHammersInbox checkIn onDone={onDone} />);
+    fireEvent.click(screen.getByTestId("chip-nope"));
+    expect(screen.getByTestId("checkin-no-changes").textContent).toMatch(/No changes today/);
+    expect(save).not.toHaveBeenCalled();
   });
   it("disabled timeline still leaves the Tell Hammer row visible", () => {
     enabled = false;

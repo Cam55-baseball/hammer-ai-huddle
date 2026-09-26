@@ -823,7 +823,8 @@ export function VaultFocusQuizDialog({
 
         {/* Tips Section - NOW AT TOP */}
         <div className="space-y-3 mt-4">
-          {(quizType === 'morning' || quizType === 'night') && <CheckInLifeChips onDone={() => void handleSubmit()} />}
+          {/* "Nope" only collapses this section; the check-in's own finish button is the only submit. */}
+          {(quizType === 'morning' || quizType === 'night') && <CheckInLifeChips />}
           {/* Morning Quiz Tip */}
           {quizType === 'morning' && (
             <Alert className="bg-amber-500/10 border-amber-500/30">
