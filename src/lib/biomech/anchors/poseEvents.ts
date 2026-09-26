@@ -304,6 +304,9 @@ export function detectFinish(series: LandmarkSeries): AnchorResult {
   let pk = -1;
   w.forEach((v, k) => { if (v != null && (pk < 0 || v > w[pk]!)) pk = k; });
   if (pk < 0) return miss(A, ID, R.LANDMARK_OCCLUDED, { reason: "shoulders_unobserved" });
+  // A finish needs a movement to finish. If the body never left stillness
+  // (still-subject regression clip), the rotation "peak" is noise.
+  if (!p.speed.some((v) => v != null && v >= STILL_SPEED)) return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "no_movement_before_finish" });
   const minLen = framesFor(p.fps, STILL_MIN_SEC, 3);
   const runs = stillRuns(p.speed, minLen, pk + 1);
   if (runs.length === 0) return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "no_return_to_stillness", peak_rotation_frame: series.frames[pk].frame_index });
