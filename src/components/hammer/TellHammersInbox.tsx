@@ -53,7 +53,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     try { setOpen(localStorage.getItem(storageKey) === "true"); } catch { /* private browsing */ }
   }, [storageKey, checkIn]);
   const todayEntries = useMemo(() => tl.entries.filter(e => !e.undone_at && e.created_at?.slice(0, 10) === today), [tl.entries, today]);
-  if (!tl.enabled) return null;
+  if (!tl.enabled) return <section className="rounded-md border border-border bg-card p-3"><div className="font-semibold">Tell Hammer</div><p className="text-sm text-muted-foreground">Not available right now.</p></section>;
   const toggle = (value: boolean) => {
     setOpen(value);
     if (!value) reset();
@@ -99,7 +99,9 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
         setConfirm({ ...parsed.draft, payload: { ...parsed.draft.payload, text: words } }); return;
       }
     }
-    // An unrecognised sentence must never silently author a plan change.
+    // The explicit choice supplies the plan instruction; words are only its context.
+    if (pending) { void commit({ ...pending, payload: { ...pending.payload, text: words } }); return; }
+    // With no explicit choice, an unrecognised sentence never authors a plan change.
     void commit(draft("NOTE", today, today, { kind: "free_text", text: words }));
   }
   const pickCalendar = (multiple: boolean) => <Calendar mode={multiple ? "multiple" : "single"} selected={(multiple ? picked : picked[0]) as any}

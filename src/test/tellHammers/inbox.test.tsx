@@ -68,8 +68,10 @@ describe("Tell Hammer shared entry flow", () => {
     send(); await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
     expect(save.mock.calls[0][0]).toMatchObject({ tag: "PAIN", payload: { region: "shoulder", face: "lot", text: "tingling in my shoulder" } });
   });
-  it("disabled timeline renders no entries", () => {
+  it("disabled timeline still leaves the Tell Hammer row visible", () => {
     enabled = false;
-    expect(render(<TellHammersInbox />).container.innerHTML).toBe("");
+    render(<TellHammersInbox />);
+    expect(screen.getByText("Tell Hammer")).toBeTruthy();
+    expect(screen.queryByTestId("tell-break")).toBeNull();
   });
 });
