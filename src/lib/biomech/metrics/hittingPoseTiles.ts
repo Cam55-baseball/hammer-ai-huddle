@@ -26,10 +26,10 @@ import { detectCameraView, checkCameraRequirement, type CameraViewResult } from 
 
 export const HITTING_POSE_TILES_VERSION = "hitting_pose_tiles@1.0.0-hip-load-hands-outside-stride-direction";
 
-/** Still clip 15d75bc9, p99 of |median3 − lock median|, % of stature. */
-export const HIP_LOAD_NOISE_FLOOR_PCT = 0.6;
-/** Still clip 15d75bc9, p99 of |median3(rear wrist − rear shoulder) − lock median|, % of stature. */
-export const HANDS_OUTSIDE_NOISE_FLOOR_PCT = 0.9;
+/** Still clip 15d75bc9, p99 of |median3 − clip median|, % of stature (0.80). */
+export const HIP_LOAD_NOISE_FLOOR_PCT = 0.8;
+/** Still clip 15d75bc9, p99 of |median3(rear wrist − rear shoulder) − clip median|, % of stature; worst side (left wrist 2.28, right 0.96). */
+export const HANDS_OUTSIDE_NOISE_FLOOR_PCT = 2.3;
 
 export const HITTING_POSE_STANDARDS = {
   hip_load: { source: "none_supplied", note: "ungraded — owner number needed" },
