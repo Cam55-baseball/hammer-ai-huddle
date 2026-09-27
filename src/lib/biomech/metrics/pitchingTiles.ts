@@ -56,6 +56,13 @@ export const ENERGY_ANGLE_STABILITY_DEG = 5;
 /** shoulder→ankle is this fraction of stature (Drillis–Contini, same as tile 19). */
 export const SHOULDER_TO_ANKLE_OF_STATURE = 0.818 - 0.039;
 export const MIN_WINDOW_COVERAGE = 0.8;
+/**
+ * Physical bound, not an owner standard: front-foot contact → ball release is
+ * ~0.10–0.20 s in overhand pitching (published biomechanics). 0.35 s is a
+ * generous ceiling. A hand-speed peak seconds after the plant is not a release
+ * (hitting clip 9d2e117e read as a right-hander: plant 42, "release" 97 = 2.3 s).
+ */
+export const PLANT_TO_RELEASE_MAX_SEC = 0.35;
 
 const HEAD_IDX = [0, 2, 5, 7, 8] as const;
 const HEEL = { L: 29, R: 30 } as const;
@@ -117,6 +124,10 @@ export function findPitchingDelivery(series: LandmarkSeries, throwing_side: Hand
   if (release.frame_index == null) return fail(release.missingness ?? mr(R.PITCHER_RELEASE_FRAME_MISSING), `no_pitching_delivery:release_missing:${String(release.diagnostics.reason ?? "signals_disagree")}`);
   if (!(release.frame_index >= stride.plant.frame_index)) {
     return fail(missingness(R.PITCHER_RELEASE_FRAME_MISSING, "D-ANCHOR"), "no_pitching_delivery:release_before_plant");
+  }
+  const fps = series.header.fps_true;
+  if (Number.isFinite(fps) && fps > 0 && (release.frame_index - stride.plant.frame_index) / fps > PLANT_TO_RELEASE_MAX_SEC) {
+    return fail(missingness(R.PITCHER_RELEASE_FRAME_MISSING, "D-ANCHOR"), "no_pitching_delivery:release_too_long_after_plant");
   }
   const rk = posOf(series, release.frame_index);
   const S = throwing_side === "R" ? LM.R_SHOULDER : LM.L_SHOULDER;
