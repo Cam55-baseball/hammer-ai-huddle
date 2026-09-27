@@ -34,8 +34,9 @@ describe("hitting pose tiles", () => {
   });
   it("914cf54c Left — owner-confirmed clip reference values", () => {
     const r = runHittingPoseTiles(clipA, { side: "L" });
-    expect(r.hip_load.value).toBe(-12.1211);
-    expect(r.hip_load.verdict).toBeNull();
+    // Owner doctrine 2026-09-27: drift framing removed; refuses until the weight-distribution method is approved.
+    expect(r.hip_load.value).toBeNull();
+    expect(r.hip_load.lineage.reason).toBe("respec_pending:back_leg_weight_distribution_method_not_approved");
     expect(r.hands_outside_shoulders_at_landing.value).toBe(-2.3543);
     expect(r.hands_outside_shoulders_at_landing.verdict).toBe("pass");
     expect(r.stride_direction.lineage.reason).toBe("camera_view_mismatch:needs_two_view_pair");

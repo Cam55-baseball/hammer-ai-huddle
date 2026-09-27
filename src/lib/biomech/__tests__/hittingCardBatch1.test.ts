@@ -33,11 +33,14 @@ describe("D-SWING-PEAK (not contact)", () => {
 });
 
 describe("head discipline (tile 4, body only)", () => {
-  it("still refuses; 914cf54c Left = −6.4467% (head stayed back); Right refuses; 9d2e117e refuses", () => {
+  it("owner doctrine: still refuses; 914cf54c Left head passed com_at_p2 by 13.1342% → P1 fault; Right refuses; 9d2e117e refuses", () => {
     for (const side of ["L", "R"] as const) expect(runHittingPoseTiles(still, { side }).head_discipline.value).toBeNull();
     const h = runHittingPoseTiles(A, { side: "L" }).head_discipline;
-    expect(h.value).toBe(-6.4467);
-    expect(h.verdict).toBeNull();
+    expect(h.value).toBe(13.1342);
+    expect(h.verdict).toBe("fail");
+    expect(h.lineage.root_pattern_key).toBe("back_leg_did_not_hold_load");
+    expect(h.lineage.attributed_to).toBe("P1");
+    expect((h.lineage.late_head_pull_pct_ungraded as { value: number }).value).toBe(-6.4467);
     expect((h.lineage.head_turn_jerk_pct_s2 as { value: number }).value).toBe(175.9032);
     expect(runHittingPoseTiles(A, { side: "R" }).head_discipline.value).toBeNull();
     for (const side of ["L", "R"] as const) expect(runHittingPoseTiles(B, { side }).head_discipline.value).toBeNull();

@@ -683,3 +683,40 @@ repo*. That is no longer true: the rows marked **[owner-supplied 2026-09-15]** /
 them remains in-repo doctrine or derived constants with no owner attribution. The
 benchmark provenance guard (`scripts/check-benchmark-provenance.ts`) covers grading
 benchmarks, not these doctrine thresholds.
+
+## 10. Owner doctrine — tiles 1, 2, 4 re-specified `[owner-supplied 2026-09-27]`
+
+### Tile 1 — hip_load `[owner-supplied 2026-09-27]`
+> "P1 Hip load is an internal rotation of the hip socket. As long as the player is balanced on the back leg meaning that is the weight distribution then there is no too much. The hip load stability begins to rear its head during P2 & P3 if the user is having movement laterally which will show if the user drifts forward during P3 or is still drifting forward during P4 like we spoke about."
+
+- No maximum. The lateral-drift threshold framing is removed from the code.
+- P1 measures back-leg weight distribution. Instability is measured downstream (tiles 17, 19, 20), linked back through root pattern `back_leg_did_not_hold_load`, not duplicated here.
+- Status: tile refuses (`respec_pending`) until the method below is approved.
+
+**Proposed method (single side-on camera) — awaiting approval:**
+| Signal | Honest side-on? | Why |
+|---|---|---|
+| Whole-body COM x relative to back ankle / between the ankles | Yes (primary) | Forward-axis position is in the camera plane; the segment-weighted COM already exists (tile 19). Report as fraction of stance width: 0 = over back ankle, 1 = over front ankle. |
+| Pelvis midpoint position between the feet | Yes (second vote) | Also in-plane; independent-ish of arm/head mass. Agrees with COM → value; disagrees → missing. |
+| Back hip over back ankle (hip-to-ankle line) | Partly | Forward lean is visible; but a hitter can be balanced with a hip slightly inside the ankle — supporting evidence only. |
+| Back knee over back ankle | Partly | Visible, but knee position reflects flexion style as much as weight — evidence only, never decides. |
+| Actual force/pressure split | No | Needs force plates / insoles; pose cannot see load. The tile will say "position-based estimate", never "weight". |
+Pass rule proposal: at D-LOAD-APEX, COM and pelvis both on the back-leg side of the stance midpoint beyond their still-clip floors. Floors to be measured on the still clip before any threshold.
+
+### Tile 2 — hand_load `[owner-supplied 2026-09-27]`
+> "The hand load is described as loading the barrel behind your head in a bow and arrow action... Fascial law says hand load depth will vary user to user... The bat will move slowly and just has to be loading behind the head like in our formula."
+
+- No bat tracking: grip is rigid, hands behind head = barrel behind head.
+- Pass/fail: hands midpoint behind the head centroid on the forward axis at the load apex (floor = hand 1.35% + head 0.75%).
+- Depth: reported, ungraded — no universal number exists and none is invented.
+- Grip gate kept.
+
+### Tile 4 — head discipline `[owner-supplied 2026-09-27]`
+> "Head discipline is a result of single rear leg control. It's a measurement of balance distribution. The head moving forward in excess after P1 is a signal that P1 was done poorly rather than head discipline being its own function. Everything works in unity."
+
+- Threshold: `com_at_p2` (same function tile 19 uses). Beyond the athlete's own centre of mass toward the pitcher = weight has left the back leg — a physical definition, not a chosen percentage.
+- A fail is reported as a P1 back-leg control fault with the head movement as evidence (`root_pattern_key = back_leg_did_not_hold_load`, `attributed_to = P1`). Magnitude reported ungraded.
+
+### Unity `[owner-supplied 2026-09-27]`
+> "Everything works in unity."
+hip_load, head discipline, head path (19), back hip socket (20) and post-landing hip drift (17) share root pattern `back_leg_did_not_hold_load`.
