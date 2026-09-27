@@ -393,8 +393,10 @@ export function detectAllPoseEvents(series: LandmarkSeries, o: { direction_sign:
  * is used ONLY to bound mechanics windows. It is NEVER contact and must never
  * be labelled as contact — true contact is a ball event owned by DelayCam.
  *
- * Refuses when the peak is not above SWING_PEAK_MIN_RAD_S (measured still-clip
- * ceiling × 2, see docs/landmark-noise-floors.md) or when swing start is absent.
+ * Refuses when the peak is under SWING_PEAK_MIN_RAD_S or swing start is absent.
+ * Floor basis: still clip 15d75bc9 max 0.315 rad/s (p99 0.270) — the floor sits
+ * >12× above it; 4.0 rad/s ≈ half of a 90° shoulder turn in 0.2 s. Provisional,
+ * not fitted to any swing clip (914cf54c peak 7.06 rad/s).
  */
 export const SWING_PEAK_MIN_RAD_S = 4.0;
 /** Search horizon after swing start. */

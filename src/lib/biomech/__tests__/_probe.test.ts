@@ -1,14 +1,17 @@
 import { it } from "vitest";
 import { readFileSync } from "node:fs"; import { gunzipSync } from "node:zlib"; import { join } from "node:path";
 import { decodeLandmarkSeriesText } from "../pose/landmarkSeriesFormat";
-import { shoulderAngularRate, detectSwingPeak, detectSwingStart } from "../anchors/poseEvents";
-import { deriveDirectionSign } from "../side/strideSide";
+import { LM, pointPx, mid, median } from "../anchors/poseKinematics";
 const load = (n: string) => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "fixtures", n))).toString("utf8"));
 it("probe", () => {
-  for (const n of ["still-subject-15d75bc9.ndjson.gz","swing-24fps-914cf54c.ndjson.gz","swing-24fps-9d2e117e.ndjson.gz"]) {
-    const s = load(n); const w = shoulderAngularRate(s).filter((x): x is number => x != null).sort((a,b)=>a-b);
-    console.log("P", n, "max", w[w.length-1]?.toFixed(3), "p99", w[Math.floor(w.length*0.99)]?.toFixed(3));
-    for (const side of ["L","R"] as const) { const d = deriveDirectionSign(s, side); const ss = detectSwingStart(s, d); const sp = detectSwingPeak(s, d, ss);
-      console.log("P ", side, "start", ss.frame_index, "peak", sp.frame_index, sp.anchor_uncertainty_ms, JSON.stringify(sp.diagnostics).slice(0,110)); }
+  const s = load("still-subject-15d75bc9.ndjson.gz");
+  // stature proxy: shoulder->ankle / 0.779
+  const st = median(s.frames.map(f=>{const a=mid(pointPx(s,f,11),pointPx(s,f,12)), b=mid(pointPx(s,f,27),pointPx(s,f,28)); return a&&b? Math.abs(b.y-a.y)/0.779:null}).filter((x):x is number=>x!=null))!;
+  for (const [nm, g] of [["handsMid", (f:any)=>mid(pointPx(s,f,15),pointPx(s,f,16))], ["L", (f:any)=>pointPx(s,f,15)], ["R",(f:any)=>pointPx(s,f,16)]] as const) {
+    for (const ax of ["x","y"] as const) {
+    const xs = s.frames.map(f=>{const p=(g as any)(f); return p? p[ax]*100/st:null});
+    const m3 = xs.map((_,k)=>{const v=[xs[k-1],xs[k],xs[k+1]].filter((x):x is number=>x!=null); return v.length>=2?median(v):null}).filter((x):x is number=>x!=null);
+    const md = median(m3)!; const d = m3.map(x=>Math.abs(x-md)).sort((a,b)=>a-b);
+    console.log("P", nm, ax, "p99", d[Math.floor(d.length*0.99)].toFixed(3)); }
   }
 });
