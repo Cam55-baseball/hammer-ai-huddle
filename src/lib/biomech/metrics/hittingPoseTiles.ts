@@ -18,14 +18,17 @@ import type { LandmarkSeries, LandmarkSeriesFrame } from "../pose/landmarkSeries
 import { MISSINGNESS_REASONS as R, missingness, type MissingnessRecord, type MissingnessReason } from "./missingness";
 import { uncalibrated, missingConfidence, type ConfidenceRecord } from "./confidence";
 import { detectLoadApex, detectSwingStart, detectSwingPeak } from "../anchors/poseEvents";
-import { frontFootPlantFromSeries } from "./hittingOwnerTiles";
+import { frontFootPlantFromSeries, comAtP2 } from "./hittingOwnerTiles";
 import { deriveDirectionSign, type Handedness } from "../side/strideSide";
 import { LM, pointPx, median, mid, round4, type Pt } from "../anchors/poseKinematics";
 import { detectStanceLock, unroll, headCentroidPx, type StanceLock } from "../anchors/stanceLock";
 import { smooth } from "../anchors/poseKinematics";
 import { detectCameraView, checkCameraRequirement, type CameraViewResult } from "../camera/cameraView";
 
-export const HITTING_POSE_TILES_VERSION = "hitting_pose_tiles@1.2.0-grip-gate-head-discipline";
+export const HITTING_POSE_TILES_VERSION = "hitting_pose_tiles@1.3.0-owner-doctrine-2026-09-27";
+
+/** Root pattern shared by hip_load, head discipline, head path (19), back hip socket (20) and post-landing hip drift (17). Owner: "Everything works in unity." */
+export const BACK_LEG_ROOT_PATTERN = "back_leg_did_not_hold_load" as const;
 
 /**
  * Grip gate for hand_load. Both hands are on one bat handle, so the wrists sit
@@ -48,13 +51,13 @@ export const HANDS_OUTSIDE_NOISE_FLOOR_PCT = 2.3;
 export const HAND_LOAD_NOISE_FLOOR_PCT = 1.35;
 
 export const HITTING_POSE_STANDARDS = {
-  hand_load: { source: "none_supplied", note: "ungraded — owner number needed (rearward hand travel, % of stature)" },
+  hand_load: { pass: "hands loaded behind the head centroid at the load apex (forward axis)", depth: "ungraded — varies athlete to athlete (fascial structure); no universal number", source: "owner_doctrine_2026-09-27" },
   p2_timing: { pass: "hand load finished by pitcher peak knee lift", source: "owner_coaching_standard" },
   p3_timing: { target_ms: 0, note: "front foot fully down at pitcher release", source: "owner_coaching_standard" },
-  hip_load: { source: "none_supplied", note: "ungraded — owner number needed" },
+  hip_load: { measures: "back-leg weight distribution at P1 — no maximum while balanced on the back leg", status: "respec_pending_method_approval", source: "owner_doctrine_2026-09-27" },
   hands_outside_shoulders_at_landing: { pass: "rear wrist behind the rear shoulder (toward the catcher) at full plant", source: "owner_coaching_standard" },
   stride_direction: { target_deg: 15, reference: "square line to the pitcher", source: "owner_coaching_standard" },
-  head_discipline: { source: "none_supplied", note: "ungraded — body only: late head pull (primary) + head-turn smoothness; does not verify where the eyes look" },
+  head_discipline: { pass: "head centroid stays behind com_at_p2 (the tile-19 reference) from swing start to swing peak", attributed_to: "P1 back-leg control", magnitude: "ungraded", source: "owner_doctrine_2026-09-27" },
 } as const;
 
 type Key = keyof typeof HITTING_POSE_STANDARDS;
@@ -102,20 +105,15 @@ function lockMedian(series: LandmarkSeries, lock: StanceLock, g: (f: LandmarkSer
   return median(xs);
 }
 
-/* hip_load — hip-mid forward drift from Stance Lock to D-LOAD-APEX. − = drifted back (loaded into the rear hip). */
-function computeHipLoad(series: LandmarkSeries, side: Handedness, dir: 1 | -1, lock: StanceLock): HittingPoseTileResult {
-  const K: Key = "hip_load";
-  const apex = detectLoadApex(series, dir);
-  if (apex.frame_index == null) return refuse(K, apex.missingness ?? mr(R.ANCHOR_NOT_DETECTED), { reason: `load_apex_missing:${String(apex.diagnostics.reason ?? "")}` });
-  const k = series.frames.findIndex((f) => f.frame_index === apex.frame_index);
-  if (k <= lock.end_k!) return refuse(K, mr(R.ANCHOR_NOT_DETECTED), { reason: "load_apex_inside_stance_lock", apex_frame: apex.frame_index });
-  const g = (f: LandmarkSeriesFrame) => hipMidFwd(series, f, lock, dir);
-  const b = lockMedian(series, lock, g), a = med3(series, k, g);
-  if (b == null || a == null) return refuse(K, mr(R.LANDMARK_OCCLUDED), { reason: "hips_unobserved_in_lock_or_at_apex" });
-  const v = a - b;
-  if (Math.abs(v) < HIP_LOAD_NOISE_FLOOR_PCT) return refuse(K, mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: "below_still_clip_noise_floor", raw: round4(v), floor: HIP_LOAD_NOISE_FLOOR_PCT });
-  return { key: K, value: round4(v), unit: "percent_stature", uncertainty: HIP_LOAD_NOISE_FLOOR_PCT, verdict: null, missingness: null, confidence: uncalibrated(), standard: HITTING_POSE_STANDARDS[K],
-    lineage: { apex_frame: apex.frame_index, lock_frames: [lock.start_frame, lock.end_frame], note: "ungraded — no owner number" } };
+/* hip_load — OWNER DOCTRINE 2026-09-27: P1 hip load is internal rotation of the
+ * rear hip socket; while the weight is balanced on the back leg there is NO
+ * "too much". The old lateral-drift-vs-threshold framing is removed. What P1
+ * must measure is back-leg weight distribution; the method is proposed in
+ * docs/HITTING-PHILOSOPHY.md §10 and not yet approved, so the tile refuses
+ * honestly. Instability is measured DOWNSTREAM (tiles 17, 19, 20) and points
+ * back here through BACK_LEG_ROOT_PATTERN — never duplicated in this tile. */
+function computeHipLoad(): HittingPoseTileResult {
+  return refuse("hip_load", mr(R.ANCHOR_NOT_DETECTED), { reason: "respec_pending:back_leg_weight_distribution_method_not_approved", root_pattern_key: BACK_LEG_ROOT_PATTERN, downstream_evidence_tiles: ["post_landing_hip_drift", "head_path_through_stride", "back_hip_socket_hold"] });
 }
 
 /* hand_load — hands-mid forward travel, Stance Lock → D-LOAD-APEX. − = hands loaded back toward the catcher. */
@@ -140,12 +138,18 @@ function computeHandLoad(series: LandmarkSeries, dir: 1 | -1, lock: StanceLock):
   const sL = lockMedian(series, lock, sep), sA = med3(series, k, sep);
   if (sL == null || sA == null) return refuse(K, mr(R.HANDS_NOT_DETECTED), { reason: "wrists_unobserved_in_lock_or_at_apex" });
   if (sL > HAND_GRIP_MAX_SEP_PCT || sA > HAND_GRIP_MAX_SEP_PCT) return refuse(K, mr(R.HANDS_NOT_DETECTED), { reason: "hands_not_together_on_handle", wrist_sep_pct_lock: round4(sL), wrist_sep_pct_apex: round4(sA), max: HAND_GRIP_MAX_SEP_PCT, message: "The two wrists read too far apart to be one grip — the hand midpoint would move when the hands come together, not when they load." });
+  // PASS/FAIL (owner doctrine): hands behind the head at the apex. The grip is
+  // rigid, so hands behind the head = barrel behind the head — no bat tracking.
+  const rel = med3(series, k, (f) => { const h = handsMidFwd(series, f, lock, dir), c = fwd(series, headCentroidPx(series, f), lock, dir); return h == null || c == null ? null : h - c; });
+  if (rel == null) return refuse(K, mr(R.LANDMARK_OCCLUDED), { reason: "hands_or_head_unobserved_at_apex" });
+  // Floor: hand-mid floor + head-pull floor (independent errors, summed = conservative).
+  const relFloor = HAND_LOAD_NOISE_FLOOR_PCT + HEAD_PULL_NOISE_FLOOR_PCT;
+  if (Math.abs(rel) < relFloor) return refuse(K, mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: "hands_level_with_head_within_noise", raw: round4(rel), floor: relFloor });
+  // UNGRADED depth channel — never a verdict (fascial law: varies per athlete).
   const b = lockMedian(series, lock, g), a = med3(series, k, g);
-  if (b == null || a == null) return refuse(K, mr(R.HANDS_NOT_DETECTED), { reason: "wrists_unobserved_in_lock_or_at_apex" });
-  const v = a - b;
-  if (Math.abs(v) < HAND_LOAD_NOISE_FLOOR_PCT) return refuse(K, mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: "below_still_clip_noise_floor", raw: round4(v), floor: HAND_LOAD_NOISE_FLOOR_PCT });
-  return { key: K, value: round4(v), unit: "percent_stature", uncertainty: HAND_LOAD_NOISE_FLOOR_PCT, verdict: null, missingness: null, confidence: uncalibrated(), standard: HITTING_POSE_STANDARDS[K],
-    lineage: { apex_frame: apex.frame_index, lock_frames: [lock.start_frame, lock.end_frame], wrist_sep_pct_lock: round4(sL), wrist_sep_pct_apex: round4(sA), note: "ungraded — no owner number; UNVERIFIED until the owner checks it against the video" } };
+  const depth = b == null || a == null ? { value: null, reason: "wrists_unobserved_in_lock" } : Math.abs(a - b) < HAND_LOAD_NOISE_FLOOR_PCT ? { value: null, reason: "below_still_clip_noise_floor", raw: round4(a - b) } : { value: round4(a - b) };
+  return { key: K, value: round4(rel), unit: "percent_stature", uncertainty: relFloor, verdict: rel < 0 ? "pass" : "fail", missingness: null, confidence: uncalibrated(), standard: HITTING_POSE_STANDARDS[K],
+    lineage: { apex_frame: apex.frame_index, lock_frames: [lock.start_frame, lock.end_frame], wrist_sep_pct_lock: round4(sL), wrist_sep_pct_apex: round4(sA), sign: "value = hands-mid minus head centroid, forward; negative = behind the head", depth_pct_stature_ungraded: depth } };
 }
 
 /* head discipline (saved key eyes_tracking) — D-SWING-START → D-SWING-PEAK. Body only.
@@ -166,6 +170,15 @@ export function yawJerk(series: LandmarkSeries, k0: number, k1: number, lock: St
   for (let k = k0 + 1; k < k1; k++) { const a = y[k - 1], b = y[k], c = y[k + 1]; if (a != null && b != null && c != null) d.push(Math.abs(a - 2 * b + c) * fps * fps); }
   return d.length >= 3 ? median(d) : null;
 }
+/*
+ * OWNER DOCTRINE 2026-09-27: head discipline is a SYMPTOM of P1 back-leg control.
+ * Threshold = com_at_p2 (the same reference tile 19 uses — comAtP2, not a second
+ * build). Why it is principled, not arbitrary: if the head crosses beyond the
+ * athlete's own centre of mass toward the pitcher, the weight has transferred
+ * off the back leg — the physical definition of losing the back-leg balance.
+ * Behind the COM the back leg still holds the weight; beyond it, it does not.
+ * A fail is reported as a P1 fault (BACK_LEG_ROOT_PATTERN) with the head as evidence.
+ */
 function computeHeadDiscipline(series: LandmarkSeries, side: Handedness, dir: 1 | -1, lock: StanceLock): HittingPoseTileResult {
   const K: Key = "head_discipline";
   const ss = detectSwingStart(series, dir);
@@ -176,11 +189,24 @@ function computeHeadDiscipline(series: LandmarkSeries, side: Handedness, dir: 1 
   const g = (f: LandmarkSeriesFrame) => headVsRearShoulderFwd(series, f, lock, dir, side);
   const a = med3(series, k0, g), b = med3(series, k1, g);
   if (a == null || b == null) return refuse(K, mr(R.LANDMARK_OCCLUDED), { reason: "head_or_rear_shoulder_unobserved" });
+  const apex = detectLoadApex(series, dir);
+  if (apex.frame_index == null) return refuse(K, apex.missingness ?? mr(R.ANCHOR_NOT_DETECTED), { reason: `com_at_p2_unavailable:load_apex_missing` });
+  const kA = series.frames.findIndex((f) => f.frame_index === apex.frame_index);
+  const com = comAtP2(series, kA);
+  const comF = fwd(series, com, lock, dir);
+  if (comF == null) return refuse(K, mr(R.LANDMARK_OCCLUDED), { reason: "com_at_p2_unobserved" });
+  let past: number | null = null;
+  for (let j = k0; j <= k1; j++) { const h = med3(series, j, (f) => fwd(series, headCentroidPx(series, f), lock, dir)); if (h != null) past = past == null ? h - comF : Math.max(past, h - comF); }
+  if (past == null) return refuse(K, mr(R.LANDMARK_OCCLUDED), { reason: "head_unobserved_in_window" });
   const pull = b - a, jerk = yawJerk(series, k0, k1, lock, dir);
   const jerkOut = jerk == null ? { value: null, reason: "head_unobserved_in_window" } : jerk < HEAD_YAW_JERK_NOISE_FLOOR ? { value: null, reason: "below_still_clip_noise_floor", raw: round4(jerk) } : { value: round4(jerk) };
-  const lin = { swing_start_frame: ss.frame_index, swing_peak_frame_not_contact: pk.frame_index, head_turn_jerk_pct_s2: jerkOut, jerk_floor: HEAD_YAW_JERK_NOISE_FLOOR, pull_floor: HEAD_PULL_NOISE_FLOOR_PCT, sign: "+ = head moved toward the pitcher off the back shoulder", note: "ungraded — no owner number" };
-  if (Math.abs(pull) < HEAD_PULL_NOISE_FLOOR_PCT) return refuse(K, mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { ...lin, reason: "head_pull_within_still_clip_noise_floor", raw: round4(pull) });
-  return { key: K, value: round4(pull), unit: "percent_stature", uncertainty: HEAD_PULL_NOISE_FLOOR_PCT, verdict: null, missingness: null, confidence: uncalibrated(), standard: HITTING_POSE_STANDARDS[K], lineage: lin };
+  const lin = { swing_start_frame: ss.frame_index, swing_peak_frame_not_contact: pk.frame_index, com_at_p2_frame: apex.frame_index, sign: "value = max(head − com_at_p2), forward, % stature; + = head beyond the COM toward the pitcher",
+    late_head_pull_pct_ungraded: Math.abs(pull) < HEAD_PULL_NOISE_FLOOR_PCT ? { value: null, reason: "below_still_clip_noise_floor", raw: round4(pull) } : { value: round4(pull) },
+    head_turn_jerk_pct_s2: jerkOut, jerk_floor: HEAD_YAW_JERK_NOISE_FLOOR, pull_floor: HEAD_PULL_NOISE_FLOOR_PCT };
+  if (Math.abs(past) < HEAD_PULL_NOISE_FLOOR_PCT) return refuse(K, mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { ...lin, reason: "head_on_com_line_within_noise", raw: round4(past) });
+  const fail = past > 0;
+  return { key: K, value: round4(past), unit: "percent_stature", uncertainty: HEAD_PULL_NOISE_FLOOR_PCT, verdict: fail ? "fail" : "pass", missingness: null, confidence: uncalibrated(), standard: HITTING_POSE_STANDARDS[K],
+    lineage: fail ? { ...lin, root_pattern_key: BACK_LEG_ROOT_PATTERN, attributed_to: "P1", finding: "P1 back-leg control fault — evidence: head crossed beyond the centre of mass after P1" } : lin };
 }
 
 /**
@@ -224,5 +250,5 @@ export function runHittingPoseTiles(series: LandmarkSeries, o: { side: Handednes
   if (dir == null) return { ...base, ...all(mr(R.ANCHOR_NOT_DETECTED), { reason: "direction_sign_underivable" }) };
   const lock = detectStanceLock(series);
   if (!lock.ok || !lock.baseline?.stature_px) return { ...base, ...all(lock.missingness ?? mr(R.ANCHOR_NOT_DETECTED), { reason: lock.detail ?? "stance_lock_missing" }) };
-  return { ...base, hip_load: gate(computeHipLoad(series, o.side, dir, lock)), hand_load: gate(computeHandLoad(series, dir, lock)), head_discipline: gate(computeHeadDiscipline(series, o.side, dir, lock)), hands_outside_shoulders_at_landing: gate(computeHandsOutside(series, o.side, dir, lock)) };
+  return { ...base, hip_load: gate(computeHipLoad()), hand_load: gate(computeHandLoad(series, dir, lock)), head_discipline: gate(computeHeadDiscipline(series, o.side, dir, lock)), hands_outside_shoulders_at_landing: gate(computeHandsOutside(series, o.side, dir, lock)) };
 }

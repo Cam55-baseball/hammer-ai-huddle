@@ -155,6 +155,16 @@ export function centreOfMassPx(series: LandmarkSeries, f: LandmarkSeriesFrame): 
   return { x: x / w, y: y / w };
 }
 
+/**
+ * com_at_p2 — whole-body centre of mass at the hand-load apex (P2). The ONE
+ * reference for "has the weight left the back leg": tile 19 (head path) and
+ * head discipline both read it; never build a second one.
+ */
+export function comAtP2(series: LandmarkSeries, kApex: number): Pt | null {
+  const f = series.frames[kApex];
+  return f ? centreOfMassPx(series, f) : null;
+}
+
 function meanVis(f: LandmarkSeriesFrame, idx: readonly number[]): number {
   if (!f.pose_detected) return 0;
   return idx.reduce((s, i) => s + (f.visibility?.[i] ?? 0), 0) / idx.length;
@@ -226,7 +236,7 @@ export function computeHeadPathThroughStride(i: HeadPathInputs): HeadPathResult 
   };
   const g = factorGate(factors);
   if (g) return missAll(g, factors, { ...lineageBase, reason: "confidence_factor_below_0.5" });
-  const com = centreOfMassPx(series, fr[kS]);
+  const com = comAtP2(series, kS);
   const h0 = heads[0];
   if (!com || !h0) return missAll(R.LANDMARK_OCCLUDED, factors, { ...lineageBase, reason: !com ? "com_at_p2_unobserved" : "head_at_p2_unobserved" });
   let maxDisp = 0, maxFwd = 0, crossed = false;

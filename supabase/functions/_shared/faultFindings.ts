@@ -103,6 +103,12 @@ const ROOT_BY_FAULT: Record<string, string> = {
   shoulders_not_aligned: "direction_off_the_target_line",
   back_leg_not_facing_target: "direction_off_the_target_line",
   hands_pass_elbow_early: "hands_leak_forward_early",
+  // Owner doctrine 2026-09-27 — one root pattern, P1 is the cause, these are the evidence.
+  hip_load_back_leg_not_balanced: "back_leg_did_not_hold_load",
+  head_discipline_head_past_com: "back_leg_did_not_hold_load",
+  head_path_through_stride_fail: "back_leg_did_not_hold_load",
+  back_hip_socket_hold_fail: "back_leg_did_not_hold_load",
+  post_landing_hip_drift_fail: "back_leg_did_not_hold_load",
 };
 
 export interface FaultFindingRow {
