@@ -36,6 +36,13 @@ export const ROOT_PATTERNS: Record<string, RootPattern> = {
       "Your feet, back leg or shoulders finish pointing somewhere other than where the ball is meant to go.",
     why: "Direction is one habit. Correcting it shows up in every skill that has a target.",
   },
+  back_leg_did_not_hold_load: {
+    key: "back_leg_did_not_hold_load",
+    label: "Your back leg didn't hold the load",
+    plain:
+      "At P1 the weight should sit balanced on the back leg. When it doesn't, it shows up later: the head moves past your centre of mass, the back hip gives up its turn, or the hips keep drifting forward after the front foot lands.",
+    why: "Those are one problem, not three. Fix the back-leg load at P1 and all of them improve together.",
+  },
   hands_leak_forward_early: {
     key: "hands_leak_forward_early",
     label: "Your hands leave early",
@@ -50,6 +57,12 @@ const ROOT_BY_FAULT: Record<string, string> = {
   shoulders_not_aligned: "direction_off_the_target_line",
   back_leg_not_facing_target: "direction_off_the_target_line",
   hands_pass_elbow_early: "hands_leak_forward_early",
+  // Owner doctrine 2026-09-27 — one root pattern, P1 is the cause, these are the evidence.
+  hip_load_back_leg_not_balanced: "back_leg_did_not_hold_load",
+  head_discipline_head_past_com: "back_leg_did_not_hold_load",
+  head_path_through_stride_fail: "back_leg_did_not_hold_load",
+  back_hip_socket_hold_fail: "back_leg_did_not_hold_load",
+  post_landing_hip_drift_fail: "back_leg_did_not_hold_load",
 };
 
 export function rootPatternForFault(faultKey: string): RootPattern | null {
