@@ -40,9 +40,12 @@ export interface LandmarkSeriesHeader {
   readonly video_sha256_hex: string;
   readonly landmark_model_id: string;
   readonly landmark_model_version: string;
-  readonly fps_true: number;
-  /** How fps_true was established. "container" = encoded rate read from the file (v2); the rvfc values are legacy playback-timed series. */
-  readonly fps_source: "measured_rvfc" | "measured_rvfc_fallback" | "container";
+  /** Encoded rate, or null when the file's rate could not be read (never guessed). */
+  readonly fps_true: number | null;
+  /** How fps_true was established. "container" = encoded rate read from the file (v2); "unknown" = unreadable; the rvfc values are legacy playback-timed series. */
+  readonly fps_source: "measured_rvfc" | "measured_rvfc_fallback" | "container" | "unknown";
+  /** Only when fps_true is null: the time grid samples were taken on. NOT a frame rate. */
+  readonly sampling_grid_hz?: number | null;
   /** Render-rate cross-check recorded next to the encoded rate (never decisive). */
   readonly fps_playback?: number | null;
   readonly width: number;

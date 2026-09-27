@@ -66,7 +66,7 @@ export const INFERENCE_MAX_EDGE = 640;
 
 const SEEK_TIMEOUT_MS = 8_000;
 
-export type FrameDensityTier = "below_floor" | "t_low" | "t_mid" | "t_high";
+export type FrameDensityTier = "unknown" | "below_floor" | "t_low" | "t_mid" | "t_high";
 
 /**
  * Seek grid used ONLY when the file's frame rate is unknown. It places sample
