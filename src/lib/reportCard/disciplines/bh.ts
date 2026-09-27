@@ -369,6 +369,9 @@ const tiles: ReportCardTileSpec[] = [
  */
 import { RELEASE1_HITTING_SUPPRESSED } from "../release1";
 
+/** Full spec (unsuppressed) — for the naming-rule test. */
+export const BH_UPLOAD_TILES: readonly ReportCardTileSpec[] = tiles;
+
 export const bhReportCard: ReportCardSpec = {
   disciplineLabel: "Baseball Hitting",
   groupByPhase: true,
