@@ -262,3 +262,59 @@ export async function readContainerFps(src: ByteSource): Promise<ContainerFpsRes
     return { status: "unavailable", reason: "read_failed", detail: (e as Error)?.message };
   }
 }
+
+/* ---------------- Secondary route: Matroska / WebM ---------------- */
+
+export type MatroskaFpsResult =
+  | { readonly status: "ok"; readonly fps: number; readonly default_duration_ns: number }
+  | { readonly status: "unavailable"; readonly reason: "not_matroska" | "no_default_duration" | "implausible" | "read_failed"; readonly detail?: string };
+
+const MKV_SCAN_BYTES = 1024 * 1024;
+
+/** Reads an EBML variable-length integer at `o`. Returns [value, length] or null. */
+function ebmlVint(b: Uint8Array, o: number, keepMarker: boolean): [number, number] | null {
+  if (o >= b.length) return null;
+  const first = b[o];
+  let len = 1;
+  while (len <= 8 && !(first & (0x80 >> (len - 1)))) len++;
+  if (len > 8 || o + len > b.length) return null;
+  let v = keepMarker ? first : first & (0xff >> len);
+  for (let i = 1; i < len; i++) v = v * 256 + b[o + i];
+  return [v, len];
+}
+
+/**
+ * WebM/MKV files may declare a per-frame DefaultDuration (ns) on the video
+ * track (element 0x23E383). Declared, not measured — used only when the
+ * ISO-BMFF route has nothing. MediaRecorder output often omits it; then the
+ * route reports `no_default_duration` and the rate stays unknown.
+ */
+export async function readMatroskaDefaultDurationFps(src: ByteSource): Promise<MatroskaFpsResult> {
+  try {
+    const b = await src.read(0, Math.min(src.size, MKV_SCAN_BYTES));
+    if (!(b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3)) return { status: "unavailable", reason: "not_matroska" };
+    // Only accept a DefaultDuration inside a Video track: scan for TrackType=1
+    // (0x83 0x81 0x01) ahead of it inside the same TrackEntry (0xAE).
+    for (let i = 4; i + 3 < b.length; i++) {
+      if (b[i] !== 0x23 || b[i + 1] !== 0xe3 || b[i + 2] !== 0x83) continue;
+      const sz = ebmlVint(b, i + 3, false);
+      if (!sz || sz[0] < 1 || sz[0] > 8) continue;
+      const start = i + 3 + sz[1];
+      if (start + sz[0] > b.length) break;
+      let ns = 0;
+      for (let k = 0; k < sz[0]; k++) ns = ns * 256 + b[start + k];
+      let entry = -1;
+      for (let j = i; j > Math.max(0, i - 4096); j--) if (b[j] === 0xae) { entry = j; break; }
+      const seg = entry >= 0 ? b.subarray(entry, Math.min(b.length, i + 4096)) : b.subarray(0, 0);
+      let isVideo = false;
+      for (let j = 0; j + 2 < seg.length; j++) if (seg[j] === 0x83 && seg[j + 1] === 0x81 && seg[j + 2] === 0x01) { isVideo = true; break; }
+      if (!isVideo || ns <= 0) continue;
+      const fps = Math.round((1e9 / ns) * 1000) / 1000;
+      if (!(fps >= 1 && fps <= 1000)) return { status: "unavailable", reason: "implausible", detail: `fps=${fps}` };
+      return { status: "ok", fps, default_duration_ns: ns };
+    }
+    return { status: "unavailable", reason: "no_default_duration" };
+  } catch (e) {
+    return { status: "unavailable", reason: "read_failed", detail: (e as Error)?.message };
+  }
+}

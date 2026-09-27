@@ -19,7 +19,7 @@
  */
 
 import { sha256HexOfBlob } from "./fingerprint";
-import { blobSource, readContainerFps, type ContainerFpsResult } from "./containerFps";
+import { blobSource, readContainerFps, readMatroskaDefaultDurationFps, type ContainerFpsResult, type MatroskaFpsResult } from "./containerFps";
 import { fpsFloorVerdict } from "./videoAcceptance";
 import { publishFpsProbe } from "./fpsProbeReadout";
 
@@ -43,6 +43,10 @@ export interface ProbedVideoMetadata {
   fps_true: number | null;
   fps_source: "container" | "unknown";
   fps_encoded: ContainerFpsResult;
+  /** Secondary in-file route (WebM/MKV declared frame duration). Tried only when the MP4/MOV route fails. */
+  fps_matroska: MatroskaFpsResult | null;
+  /** Every route tried, in order, and why each failed — kept for diagnostics. */
+  fps_routes: ReadonlyArray<{ route: string; status: "ok" | "unavailable" | "evidence_only" | "not_tried"; reason?: string; fps?: number }>;
   /** Render-rate cross-check. Recorded, never decisive. */
   fps_playback: PlaybackFpsResult;
   /** Playback fps / encoded fps when both exist; < 0.85 means the browser under-rendered. */
@@ -161,7 +165,24 @@ export async function probeVideoMetadata(file: Blob): Promise<ProbedVideoMetadat
 
     const fps_playback = await measurePlaybackFps(url);
 
-    const fps_true = fps_encoded.status === "ok" ? fps_encoded.fps : null;
+    const fps_matroska = fps_encoded.status === "ok" ? null : await readMatroskaDefaultDurationFps(blobSource(file));
+    const fps_true =
+      fps_encoded.status === "ok" ? fps_encoded.fps
+      : fps_matroska?.status === "ok" ? fps_matroska.fps
+      : null;
+    const fps_routes: ProbedVideoMetadata["fps_routes"] = [
+      fps_encoded.status === "ok"
+        ? { route: "mp4_mov_sample_table", status: "ok", fps: fps_encoded.fps }
+        : { route: "mp4_mov_sample_table", status: "unavailable", reason: fps_encoded.reason + (fps_encoded.detail ? `:${fps_encoded.detail}` : "") },
+      fps_matroska == null
+        ? { route: "webm_default_duration", status: "not_tried", reason: "primary_route_succeeded" }
+        : fps_matroska.status === "ok"
+          ? { route: "webm_default_duration", status: "ok", fps: fps_matroska.fps }
+          : { route: "webm_default_duration", status: "unavailable", reason: fps_matroska.reason },
+      fps_playback.status === "ok"
+        ? { route: "playback_cross_check", status: "evidence_only", fps: fps_playback.fps, reason: "never_decisive" }
+        : { route: "playback_cross_check", status: "unavailable", reason: fps_playback.reason },
+    ];
     // Duration: the container's own sample total when it has one (a
     // MediaRecorder blob can make the element report Infinity), else the
     // element's reported duration, else unknown (0).
@@ -180,6 +201,8 @@ export async function probeVideoMetadata(file: Blob): Promise<ProbedVideoMetadat
       fps_true,
       fps_source: fps_true != null ? "container" : "unknown",
       fps_encoded,
+      fps_matroska,
+      fps_routes,
       fps_playback,
       fps_playback_ratio:
         fps_true != null && fps_playback.status === "ok"
@@ -208,6 +231,8 @@ export function fpsProvenance(p: ProbedVideoMetadata) {
     fps_true: p.fps_true,
     fps_source: p.fps_source,
     fps_encoded: p.fps_encoded,
+    fps_matroska: p.fps_matroska,
+    fps_routes: p.fps_routes,
     fps_playback: p.fps_playback,
     fps_playback_ratio: p.fps_playback_ratio,
     duration_source: p.duration_source,
