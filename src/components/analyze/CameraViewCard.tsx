@@ -17,7 +17,8 @@ const PITCHING = new Set(["energy_angle_deg", "lift_thrust", "head_vertical_move
 /** Which measurements this clip's camera position can and cannot produce. Shown before the result. */
 export function CameraViewCard({ result, module }: { result: CameraViewResult; module: string }) {
   const pitching = module === "pitching" || module === "throwing";
-  const tiles = Object.keys(TILE_CAMERA_REQUIREMENTS).filter((t) => (pitching ? PITCHING.has(t) : !PITCHING.has(t) || t === "tempo"));
+  const STAFF_ONLY = new Set(["head_path_through_stride", "back_hip_socket_hold"]);
+  const tiles = Object.keys(TILE_CAMERA_REQUIREMENTS).filter((t) => !STAFF_ONLY.has(t)).filter((t) => (pitching ? PITCHING.has(t) : !PITCHING.has(t) || t === "tempo"));
   const cannot = tiles.map((t) => ({ t, g: checkCameraRequirement(t, result.view) })).filter((x) => !x.g.ok);
   const viewText = result.view === "side_on" ? "side-on" : result.view === "on_line" ? "on the pitcher-to-plate line" : null;
   return (
