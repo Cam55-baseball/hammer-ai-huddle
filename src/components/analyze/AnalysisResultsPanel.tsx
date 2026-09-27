@@ -264,7 +264,7 @@ export function AnalysisResultsPanel({
                         { Icon: User, label: 'Full body in frame', body: 'Head to spikes visible the entire delivery; leave ~1 ft of headroom and foot-room.' },
                         { Icon: Play, label: 'Start before the leg lift', body: "Begin recording at the set position; don't trim the front of the clip." },
                         { Icon: Square, label: 'End after release', body: 'Keep filming through ball release and into follow-through.' },
-                        { Icon: Sun, label: 'Good lighting, low motion blur', body: 'Daylight or bright cage lighting; phone in 1080p/60fps if available; lock exposure on the pitcher.' },
+                        { Icon: Sun, label: 'Good lighting, low motion blur', body: 'Daylight or bright cage lighting; lock exposure on the pitcher.' },
                       ].map(({ Icon, label, body }) => (
                         <li key={label} className="flex items-start gap-2">
                           <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />

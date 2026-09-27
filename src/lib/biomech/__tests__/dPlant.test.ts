@@ -127,10 +127,9 @@ describe("STEP 2 — D-PLANT front-foot plant detector", () => {
     );
   });
 
-  it("emits insufficient_temporal_resolution below the fps floor", () => {
+  it("does not refuse on an ordinary 24 fps rate — uncertainty widens instead", () => {
     const r = detectFrontFootPlant(strideSeries(24));
-    expect(r.front_foot_first_contact).toBeNull();
-    expect(r.missingness?.missing_reason).toBe("insufficient_temporal_resolution");
+    expect(r.missingness?.missing_reason).not.toBe("insufficient_temporal_resolution");
   });
 
   it("emits landmark_occluded when the foot is mostly not visible", () => {

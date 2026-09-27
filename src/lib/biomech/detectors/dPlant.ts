@@ -303,7 +303,9 @@ export function detectFrontFootPlant(
     );
   }
 
-  if (!Number.isFinite(fps) || fps < FPS_FLOOR || frames.length < 5) {
+  // No frame-rate floor: an ordinary rate is not a reason to refuse. Only a
+  // missing time base (unreadable rate) or too few frames refuses.
+  if (fps == null || !Number.isFinite(fps) || fps <= 0 || frames.length < 5) {
     return fail(
       MISSINGNESS_REASONS.INSUFFICIENT_TEMPORAL_RESOLUTION,
       landmarkModelVersion,

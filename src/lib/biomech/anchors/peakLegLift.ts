@@ -18,12 +18,15 @@ import {
   missingness,
   type MissingnessRecord,
 } from "../metrics/missingness";
+import { inFrame, oneFrameMs } from "../detectors/plantDetector";
 
 /** Minimal pose-frame shape the anchor needs. */
 export interface PoseFrame {
   readonly frame_index: number;
   /** Normalised lift-side ankle y-coordinate (0 = top of frame). null = not visible. */
   readonly lift_ankle_y: number | null;
+  /** Normalised lift-side ankle x. Optional; a foot at the image edge is out of frame, not a lift. */
+  readonly lift_ankle_x?: number | null;
   /**
    * Vertical body height in the same normalised-y units (shoulder-mid →
    * ankle-mid). Needed to tell a real lift from landmark noise. null/absent
@@ -44,11 +47,25 @@ export interface PeakLegLiftResult {
   readonly frame_index: number | null;
   readonly missingness: MissingnessRecord | null;
   readonly source_model: string;
+  /** One frame interval in ms (the lift is located to ±1 frame). null when unknown or missing. */
+  readonly anchor_uncertainty_ms: number | null;
 }
 
+/**
+ * Never refuses on frame rate: `fps` only sets the reported uncertainty.
+ * The lift foot must be the athlete's FRONT foot (strideSide.frontAnkleIndex).
+ */
 export function findPeakLegLiftFrame(
   poseFrames: readonly PoseFrame[],
+  fps: number | null = null,
 ): PeakLegLiftResult {
+  const r = findPeakLegLiftFrameInner(poseFrames);
+  return { ...r, anchor_uncertainty_ms: r.frame_index == null ? null : oneFrameMs(fps) };
+}
+
+function findPeakLegLiftFrameInner(
+  poseFrames: readonly PoseFrame[],
+): Omit<PeakLegLiftResult, "anchor_uncertainty_ms"> {
   // D-POSE is stubbed → cannot trust ankle y-coordinates → canonical missingness.
   if (LANDMARK_MODEL_VERSION.endsWith("@0.0.0-stub")) {
     return {
@@ -63,7 +80,7 @@ export function findPeakLegLiftFrame(
 
   const visible = poseFrames.filter(
     (f): f is PoseFrame & { lift_ankle_y: number } =>
-      f.lift_ankle_y != null && Number.isFinite(f.lift_ankle_y),
+      f.lift_ankle_y != null && Number.isFinite(f.lift_ankle_y) && inFrame(f.lift_ankle_x),
   );
 
   if (visible.length === 0) {

@@ -18,7 +18,7 @@ import { join } from "node:path";
 import { decodeLandmarkSeriesText, type LandmarkSeries } from "../pose/landmarkSeriesFormat";
 import { evaluateMovementGate, movementScore, STILL_REFERENCE_MAX_BODY } from "../gates/movementGate";
 import { densePoseRowToPoseFrameRow } from "../pose/poseRunner";
-import { toPeakLegLiftFrames, toPlantFrames } from "../pose/toAnchorFrames";
+import { toPeakLegLiftFrames, toPlantFrames, toStrideFrames } from "../pose/toAnchorFrames";
 import { findPeakLegLiftFrame } from "../anchors/peakLegLift";
 import { findFrontFootStrikeFrame } from "../anchors/frontFootStrike";
 import { runTempoPipeline } from "../pipeline/tempoPipeline";
@@ -50,18 +50,19 @@ describe("still-subject clip — every answer is missingness", () => {
   });
 
   it("D-PEAK-LIFT refuses on both ankles", () => {
-    for (const idx of [27, 28]) {
-      const r = findPeakLegLiftFrame(toPeakLegLiftFrames(rows, idx));
+    for (const idx of [27, 28] as const) {
+      const r = findPeakLegLiftFrame(toPeakLegLiftFrames(rows, idx), 29.97);
       expect(r.frame_index).toBeNull();
       expect(r.missingness?.missing_reason).toBe("anchor_not_detected");
     }
   });
 
   it("D-PLANT (tempo front-foot strike) refuses on both ankles", () => {
-    for (const idx of [27, 28]) {
-      const r = findFrontFootStrikeFrame(toPlantFrames(rows, idx));
+    for (const idx of [27, 28] as const) {
+      const r = findFrontFootStrikeFrame(toPlantFrames(rows, idx), { fps: 29.97 });
       expect(r.frame_index).toBeNull();
       expect(r.missingness?.missing_reason).toBe("anchor_not_detected");
+      expect(r.detail).toBe("no_stride_movement_above_noise");
     }
   });
 
@@ -74,18 +75,19 @@ describe("still-subject clip — every answer is missingness", () => {
   });
 
   it("tempo tile is missing, never a number", async () => {
-    const peak = toPeakLegLiftFrames(rows);
-    const plant = toPlantFrames(rows);
-    const r = await runTempoPipeline({
-      video_sha256_hex: still.header.video_sha256_hex,
-      fps_true: still.header.fps_true,
-      landing_time_sec: null,
-      direction_sign: 1,
-      calibration_h_px: still.header.height,
-      pose_frames: peak.map((p, i) => ({ ...p, front_ankle_y: plant[i].front_ankle_y })),
-    });
-    expect(r.metric.value).toBeNull();
-    expect(r.metric.missingness).not.toBeNull();
+    for (const idx of [27, 28] as const) {
+      const r = await runTempoPipeline({
+        video_sha256_hex: still.header.video_sha256_hex,
+        fps_true: still.header.fps_true as number,
+        landing_time_sec: null,
+        direction_sign: 1,
+        calibration_h_px: still.header.height,
+        pose_frames: toStrideFrames(rows, idx),
+      });
+      expect(r.metric.value).toBeNull();
+      // The anchor's own reason survives — not a generic overwrite.
+      expect(r.metric.missingness?.missing_reason).toBe("anchor_not_detected");
+    }
   });
 
   it("every pose-derived event anchor returns missingness", () => {

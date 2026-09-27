@@ -37,6 +37,14 @@ interface SideContextValue {
    * rebuild the ternary, so the rule can never drift per screen.
    */
   sideStampFor: (discipline: Discipline) => Record<string, Side>;
+  /**
+   * What the athlete's PROFILE says: a single side, "S" (switch hitter /
+   * ambidextrous thrower) or null when nothing is recorded. Profile only —
+   * no last-used, no localStorage, no default.
+   */
+  profileSide: (discipline: Discipline) => Side | "S" | null;
+  /** Save a side to the profile so the athlete is never asked again. */
+  saveProfileSide: (discipline: Discipline, side: Side, sport: "baseball" | "softball") => Promise<boolean>;
   loading: boolean;
 }
 
@@ -199,7 +207,40 @@ export function SideContextProvider({ children }: { children: ReactNode }) {
   );
 
 
+  const profileSide = useCallback((d: Discipline): Side | "S" | null => {
+    if (!identity) return null;
+    if (d === "hit") {
+      if (identity.is_switch_hitter) return "S";
+      const p = identity.primary_batting_side;
+      return p === "L" || p === "R" ? p : null;
+    }
+    if (identity.is_ambidextrous_thrower) return "S";
+    const p = identity.primary_throwing_hand;
+    return p === "L" || p === "R" ? p : null;
+  }, [identity]);
+
+  const saveProfileSide = useCallback(async (d: Discipline, side: Side, sport: "baseball" | "softball") => {
+    if (!user) return false;
+    const patch = d === "hit" ? { primary_batting_side: side } : { primary_throwing_hand: side };
+    const { data, error } = await supabase
+      .from("athlete_mpi_settings")
+      .update(patch as never)
+      .eq("user_id", user.id)
+      .select("id");
+    if (error) return false;
+    if (!data || data.length === 0) {
+      const { error: insErr } = await supabase
+        .from("athlete_mpi_settings")
+        .insert({ user_id: user.id, sport, ...patch } as never);
+      if (insErr) return false;
+    }
+    await identityQuery.refetch();
+    return true;
+  }, [user, identityQuery]);
+
   const value: SideContextValue = {
+    profileSide,
+    saveProfileSide,
     isSwitchHitter,
     isAmbidextrousThrower,
     selectedSide,
@@ -226,6 +267,8 @@ export function useSideContext(): SideContextValue {
       // Outside a provider nothing is known, so nothing gets stamped.
       sideIsKnown: () => false,
       sideStampFor: () => ({}),
+      profileSide: () => null,
+      saveProfileSide: async () => false,
       loading: false,
     };
   }
