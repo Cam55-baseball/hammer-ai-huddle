@@ -45,8 +45,9 @@ import { detectStanceLock, headCentroidPx, lowerBodySpeed, unroll, type StanceLo
 import { solveSegment, horizontalAngleDeg } from "../rigid/segmentRotation";
 import { oneEuroZeroPhase, HEAD_ONE_EURO } from "../filters/oneEuro";
 import { detectCameraView, checkCameraRequirement, type CameraViewResult } from "../camera/cameraView";
+import { fuseShoulderOpen, SHOULDER_FUSION_VERSION, SHOULDER_FUSION_FLOORS, SHOULDER_FUSION_DETECTION_LIMIT_DEG } from "./shoulderOpenFusion";
 
-export const PITCHING_TILES_VERSION = "pitching_tiles@2.1.0-energy-back-ankle-camera-gate-stance-lock-rigid-shoulder-zero-phase-head-lift-thrust";
+export const PITCHING_TILES_VERSION = "pitching_tiles@2.2.0-energy-back-ankle-camera-gate-stance-lock-shoulder-fusion-zero-phase-head-lift-thrust";
 
 /** Owner-supplied coaching standards. NOT derived from data. */
 export const PITCHING_OWNER_STANDARDS = {
@@ -232,12 +233,14 @@ export function computePrematureShoulderOpen(series: LandmarkSeries, d: Pitching
     rel_pelvis_at_plant_deg: (() => { const v = horizontalAngleDeg(a1.s.h, a1.p.h); return v == null ? null : round4(v); })(),
     sign: "unsigned_length_cannot_resolve_crossing", noise_floor_deg: SHOULDER_ROTATION_NOISE_FLOOR_DEG,
   };
-  if (a0.s.tracking_failure || a1.s.tracking_failure) return refuse(K, mr(R.LANDMARK_OCCLUDED), { ...lineage, reason: "rigid_body_violated_at_lift_or_plant" });
-  if (n > 0 && fails / n > 0.2) return refuse(K, mr(R.LANDMARK_OCCLUDED), { ...lineage, reason: "rigid_body_violated_on_many_frames" });
-  if (a0.s.theta_deg == null || a1.s.theta_deg == null) return refuse(K, mr(R.LANDMARK_OCCLUDED), { ...lineage, reason: "shoulder_unobserved_at_lift_or_plant" });
-  const v = a1.s.theta_deg - a0.s.theta_deg;
-  if (Math.abs(v) <= SHOULDER_ROTATION_NOISE_FLOOR_DEG) return refuse(K, mr(R.ANCHOR_NOT_DETECTED), { ...lineage, reason: "rotation_within_noise_floor", raw_deg: round4(v) });
-  return { key: K, value: round4(v), unit: "degrees", uncertainty: SHOULDER_ROTATION_NOISE_FLOOR_DEG, verdict: v > 0 ? "fail" : "pass", elite: null, missingness: null, confidence: uncalibrated(), standard: PITCHING_OWNER_STANDARDS[K], lineage };
+  if (n > 0 && fails / n > 0.2) return refuse(K, mr(R.LANDMARK_OCCLUDED), { rigid: lineage, reason: "rigid_body_violated_on_many_frames" });
+  // v2.2: the rigid solve is kept as diagnostics only; the verdict comes from the five-signal fusion.
+  const fz = fuseShoulderOpen(series, l, d.plant_k!, d.direction_sign!, d.throwing_side!);
+  const full = { method: SHOULDER_FUSION_VERSION, fusion: fz, floors: SHOULDER_FUSION_FLOORS, detection_limit_deg: SHOULDER_FUSION_DETECTION_LIMIT_DEG, rigid: lineage };
+  if (fz.verdict == null) return refuse(K, mr(R.ANCHOR_NOT_DETECTED), { ...full, reason: fz.reason });
+  return { key: K, value: fz.value_deg, unit: "degrees", uncertainty: SHOULDER_FUSION_DETECTION_LIMIT_DEG, verdict: fz.verdict, elite: null, missingness: null,
+    confidence: uncalibrated(), standard: PITCHING_OWNER_STANDARDS[K],
+    lineage: { ...full, note: fz.verdict === "pass" ? `closed at plant to within the ${SHOULDER_FUSION_DETECTION_LIMIT_DEG}° detection limit — no signal moved beyond its still-clip floor` : `${fz.agreeing} of ${fz.available} independent signals agree the shoulders opened before plant` } };
 }
 
 /* head_vertical_movement_pct — head centroid, roll-corrected, rigid-rejected, zero-phase One Euro, p2–p98 range, first move → release. */

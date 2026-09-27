@@ -1,16 +1,8 @@
-# Roadmap — E2E completion (2026-09-25)
-- [x] Growth-adjusted pitching age, youth caps, fatigue stop, pitcher-catcher — live on pitching card
-- [x] Silent Signals live; arm ledger stop lines on both throwing panels
-- [x] UB plyo primer slot live; contact label from final dose; dose via doctrine module
-- [x] tell_hammers, adaptive_phases, phase_feedback → all (verified before/after)
-- [x] 17 undated benchmarks flagged as estimates, listed in parked-features.md
-- [x] 10 old criticals checked (causes fixed) and acknowledged with notes
-- [x] Preflight 13/13; full suite 199 files / 1,898 tests; matrix 1,296/1,296
-- [x] Coming-soon lines removed or parked; locked modules listed
-- [ ] Gate 1: three clean nights — 25 Sep had 4 criticals (primer rollout) → earliest pass after the 28 Sep nightly
-- [ ] Gate 2: rest_day_calculator → all — only after gate 1
-- [ ] Gate 5: youth pitching box on a real youth athlete's card — needs a youth test account
-- [ ] Gate 10: full 390px sweep of every screen (done: Today, pitching card, phase strip)
-- [x] OPUS review A–J landed 2026-09-25 (consent RLS + 9 functions, plyo row, real growth mode, additive arm total, season start, athlete copy, test pitcher).
-- [ ] K: investor demo has no demo athletes with a daily plan/phase strip/ramp/re-plan — needs owner decision (generation-path freeze until gate 1).
-- [ ] Gate 1 (3 clean nights from tonight), gate 2, gate 9 — calendar-blocked. FREEZE generation path until gate 1 passes.
+# Roadmap
+- [x] Shoulder opening five-signal fusion (side-on)
+- [ ] Hitting baseball: 10 remaining pose-only tiles
+- [ ] Hitting softball
+- [ ] Throwing baseball (shuffle vs crow-hop detection for energy angle)
+- [ ] Throwing softball
+- [ ] Pitching baseball (remaining tiles)
+- [ ] Pitching softball windmill — blocked: no written windmill doctrine

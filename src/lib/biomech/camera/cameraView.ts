@@ -76,7 +76,7 @@ export const TILE_CAMERA_REQUIREMENTS: Readonly<Record<string, CameraRequirement
   energy_angle_deg: "side_on",
   lift_thrust: "side_on",
   head_vertical_movement_pct: "either",
-  premature_shoulder_open_deg: "on_line",
+  premature_shoulder_open_deg: "side_on", // v2.2 fusion reads side-on 2-D signals
   // hitting owner tiles
   head_path_through_stride: "side_on",
   back_hip_socket_hold: "side_on",
