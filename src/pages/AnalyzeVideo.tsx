@@ -36,6 +36,8 @@ import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
 import { densePoseRowToPoseFrameRow, type PoseFrameRow } from "@/lib/biomech/pose/poseRunner";
+import { captureGuidanceFor, type CaptureGuidance, type GuidanceModule } from "@/lib/biomech/captureGuidance";
+import { CaptureGuidanceCard } from "@/components/analyze/CaptureGuidanceCard";
 import { captureDenseLandmarkSeries, WindowSelectionFailure, UNKNOWN_FPS_SAMPLING_GRID_HZ } from "@/lib/biomech/pose/denseLandmarkCapture";
 import { writeLandmarkSeries } from "@/lib/biomech/pose/landmarkSeriesStorage";
 import { toPeakLegLiftFrames, toPlantFrames } from "@/lib/biomech/pose/toAnchorFrames";
@@ -165,6 +167,8 @@ export default function AnalyzeVideo() {
   // distance live in DelayCam (code kept in src/lib/cv + src/lib/capture).
   // Movement gate result — a refused clip produces no tiles, faults or drills.
   const [fpsUnknown, setFpsUnknown] = useState(false);
+  const [captureGuidance, setCaptureGuidance] = useState<CaptureGuidance | null>(null);
+  const guidanceResolver = useRef<((proceed: boolean) => void) | null>(null);
   const [trackDiagnosis, setTrackDiagnosis] = useState<TrackDiagnosis | null>(null);
   const [noMovement, setNoMovement] = useState<Extract<MovementGateResult, { status: "refused" }> | null>(null);
   const { saveDrill, savedDrills } = useVault();
@@ -518,6 +522,24 @@ export default function AnalyzeVideo() {
       }
     }
 
+
+    // Capture guidance BEFORE the wait: if the file's rate limits what this
+    // module can measure, say so and let the user proceed or re-film.
+    if (analysisEnabled) {
+      const g = captureGuidanceFor(probed.fps_true, (module as GuidanceModule) || "hitting");
+      if (g) {
+        const proceed = await new Promise<boolean>((resolve) => {
+          guidanceResolver.current = resolve;
+          setCaptureGuidance(g);
+        });
+        guidanceResolver.current = null;
+        setCaptureGuidance(null);
+        if (!proceed) {
+          setUploading(false);
+          return;
+        }
+      }
+    }
 
     // ===== PHASE 1 — Deterministic frame extraction =====
     let frames: string[] = [];
@@ -1460,6 +1482,14 @@ export default function AnalyzeVideo() {
 
                 <AnalysisResultSkeleton />
               </div>
+            )}
+
+            {captureGuidance && (
+              <CaptureGuidanceCard
+                guidance={captureGuidance}
+                onContinue={() => guidanceResolver.current?.(true)}
+                onCancel={() => guidanceResolver.current?.(false)}
+              />
             )}
 
             {fpsUnknown && !analyzing && !analysis && (
