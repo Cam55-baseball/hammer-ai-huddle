@@ -539,17 +539,21 @@ export default function AnalyzeVideo() {
     // Frame rate unknown (container unreadable): the clip is still accepted and
     // saved with fps unknown, but every frame-indexed step needs a real rate,
     // so frame-by-frame analysis cannot run. Never assume one.
+    // Unknown rate: still analysed. Seeks use a fixed time grid (not a frame
+    // rate); fps stays null everywhere it is recorded, and every metric that
+    // needs a frame-density tier refuses on its own.
     const fpsTrue = probed.fps_true;
-    const runAnalysis = analysisEnabled && fpsTrue != null;
+    const seekHz = fpsTrue ?? UNKNOWN_FPS_SAMPLING_GRID_HZ;
+    const runAnalysis = analysisEnabled;
     setFpsUnknown(analysisEnabled && fpsTrue == null);
-    if (analysisEnabled && fpsTrue != null) {
+    if (analysisEnabled) {
       try {
         setExtractingFrames(true);
         toast.info(t('videoAnalysis.extractingFrames', "Extracting key frames for analysis..."));
 
         const result = await extractKeyFramesDeterministic({
           videoFile,
-          fps_true: fpsTrue,
+          fps_true: seekHz,
           duration_sec: probed.duration_sec,
           landingTime,
         });
@@ -570,7 +574,7 @@ export default function AnalyzeVideo() {
         if (landingTime != null) {
           landingFrameIndex = calculateLandingFrameIndex(
             landingTime,
-            fpsTrue,
+            seekHz,
             result.frames.map((f) => f.frame_index),
           );
           console.log('[ANALYSIS] Using landing frame index:', landingFrameIndex);
@@ -604,7 +608,7 @@ export default function AnalyzeVideo() {
           height: probed.height,
           orientation: probed.orientation,
           landingTimeSec: landingTime ?? null,
-          fps_source: "container",
+          fps_source: fpsTrue == null ? "unknown" : "container",
           fps_playback: probed.fps_playback.status === "ok" ? probed.fps_playback.fps : null,
         });
         movementGate = evaluateMovementGate(denseRun.series);
@@ -635,7 +639,8 @@ export default function AnalyzeVideo() {
 
         tempoRun = await runTempoPipeline({
           video_sha256_hex: probed.sha256_hex,
-          fps_true: fpsTrue,
+          // Unknown rate → tempo refuses (invalid fps) rather than guessing.
+          fps_true: fpsTrue ?? Number.NaN,
           landing_time_sec: landingTime ?? null,
           direction_sign: 1,
           calibration_h_px: probed.height,
@@ -1080,13 +1085,9 @@ export default function AnalyzeVideo() {
       toast.info(t('videoAnalysis.extractingFrames', "Extracting key frames for analysis..."));
 
       const probedRetry = await probeVideoMetadata(videoFile);
-      if (probedRetry.fps_true == null) {
-        setExtractingFrames(false);
-        setAnalyzing(false);
-        setFpsUnknown(true);
-        return;
-      }
-      const probed = { ...probedRetry, fps_true: probedRetry.fps_true };
+      setFpsUnknown(probedRetry.fps_true == null);
+      // Seek grid only — an unknown rate is never recorded as a rate.
+      const probed = { ...probedRetry, fps_true: probedRetry.fps_true ?? UNKNOWN_FPS_SAMPLING_GRID_HZ };
       const result = await extractKeyFramesDeterministic({
         videoFile,
         fps_true: probed.fps_true,
