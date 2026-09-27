@@ -35,14 +35,14 @@ export function TrackDiagnosisCard({ diagnosis }: { diagnosis: TrackDiagnosis })
   );
 }
 
-/** Shown when the file's frame rate couldn't be read. The clip is still saved. */
+/** Shown when the file's frame rate couldn't be read. The clip is still analysed. */
 export function FpsUnknownCard() {
   return (
     <Card className="border-warning/50 p-4 sm:p-6">
       <h3 className="mb-2 text-lg font-semibold">We couldn't read this clip's frame rate</h3>
       <p className="text-sm text-muted-foreground">
-        Your clip was kept, but every measurement here is timed frame by frame, so nothing was
-        analysed rather than guessing a rate.
+        Your clip was still analysed. Body-position feedback works without a frame rate; anything
+        timed frame by frame is shown as not measured rather than guessing a rate.
       </p>
       <p className="mt-2 text-sm">
         Upload the original .mp4 or .mov straight from your camera roll — those files record their

@@ -20,10 +20,12 @@ import type { PoseFrameRow } from "@/lib/biomech/pose/poseRunner";
 import type { SessionModule } from "./repSplitter";
 
 export const TIER_ORDER: readonly FrameDensityTier[] = ["below_floor", "t_low", "t_mid", "t_high"];
+// "unknown" (rate unreadable) is deliberately absent from TIER_ORDER, so it
+// meets no tier — every tier-requiring metric refuses.
 export function tierMeets(have: FrameDensityTier, need: FrameDensityTier): boolean {
   return TIER_ORDER.indexOf(have) >= TIER_ORDER.indexOf(need);
 }
-export const TIER_MIN_FPS: Record<FrameDensityTier, number> = { below_floor: 0, t_low: 30, t_mid: 60, t_high: 120 };
+export const TIER_MIN_FPS: Record<FrameDensityTier, number> = { unknown: Number.POSITIVE_INFINITY, below_floor: 0, t_low: 30, t_mid: 60, t_high: 120 };
 
 export type RepMetricValue =
   | { value: number; unit: string; confidence: number }
