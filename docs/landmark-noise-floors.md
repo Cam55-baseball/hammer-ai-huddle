@@ -117,3 +117,15 @@ Owner confirmed back ankle → front hip. Measured at the peak-lift frame (deliv
 | 914cf54c R (lift 214, walk-off) | 13.69° (5.44) | 16.52° (4.24) |
 | 9d2e117e R (lift 34) | 31.49° (1.03) | 29.00° (0.79) |
 The ankle reads ~2.2–2.5° higher; ±1-frame stability is slightly looser but well inside the 5° limit.
+
+## Shoulder opening — five-signal fusion (2026-09-27, provisional)
+Still clip 15d75bc9, |median3 − Stance Lock median|, % of stature unless noted. p99 / max.
+| Signal | p99 | max | Equivalent at closed | Used |
+|---|---|---|---|---|
+| S1 far-shoulder visibility | 0.0002 | 0.0003 | n/a | NO — visibility stays ≥0.996 through the whole 914cf54c swing; model does not report occlusion |
+| Width alone (reference) | 0.59 | 0.61 | ≈13.9° | width family |
+| S2 shoulder/hip ratio | 0.062 | 0.064 | ≈15.9° | width family |
+| S3 torso triangle area (%stature²) | 0.150 | 0.152 | ≈16.4° | width family |
+| S4 shoulder-mid vs hip-mid offset | 0.69 | 0.75 | not an angle (signed) | yes |
+| S5 glove wrist vs shoulder-mid | 0.96–2.05 | 1.26–2.28 | not an angle | yes (opening direction unconfirmed) |
+Fusion (≥2 independent votes agree): with p99 floors 2/326 still frames falsely read "opening"; with max floors 0/326. Pass resolution = 13.9°. No single signal clears the 0° standard in degrees.
