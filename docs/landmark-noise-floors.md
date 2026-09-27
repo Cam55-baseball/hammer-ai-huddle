@@ -103,3 +103,17 @@ Lower-body speed on the still clip: p99 0.143, max 0.190 body-heights/s → micr
 
 ### Rear-hip thrust onset
 Rear-hip horizontal speed on the still clip: max 0.124 body-heights/s (p99 0.092) → onset threshold 0.15, persisting ≥ 0.06 s.
+
+## Hitting pose tiles (2026-09-27, still clip 15d75bc9, PROVISIONAL)
+Statistic: p99 of |3-frame median − clip median|, stance-unrolled, % of stature.
+- hip_load (hip-mid fore–aft): p95 0.67, **p99 0.80**, max 0.87 → floor 0.8 %.
+- hands_outside (rear wrist − rear shoulder, fore–aft): left wrist p99 2.28, right 0.96 → floor 2.3 % (worst side).
+
+## Energy angle origin change (2026-09-27)
+Owner confirmed back ankle → front hip. Measured at the peak-lift frame (delivery gate bypassed; none of the fixtures is a pitch, so the tile itself still refuses on all):
+| Clip / side | back ankle (±1-frame Δ) | old mid-foot (±1-frame Δ) |
+|---|---|---|
+| 914cf54c L (lift 177) | 20.94° (0.31) | 18.75° (0.13) |
+| 914cf54c R (lift 214, walk-off) | 13.69° (5.44) | 16.52° (4.24) |
+| 9d2e117e R (lift 34) | 31.49° (1.03) | 29.00° (0.79) |
+The ankle reads ~2.2–2.5° higher; ±1-frame stability is slightly looser but well inside the 5° limit.
