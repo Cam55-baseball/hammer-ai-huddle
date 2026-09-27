@@ -37,6 +37,7 @@ import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
 import { densePoseRowToPoseFrameRow, type PoseFrameRow } from "@/lib/biomech/pose/poseRunner";
 import { resolveClipSide, frontAnkleIndex, deriveDirectionSign } from "@/lib/biomech/side/strideSide";
+import { checkDeclaredSide } from "@/lib/biomech/side/sideCheck";
 import { captureDenseLandmarkSeries, WindowSelectionFailure, UNKNOWN_FPS_SAMPLING_GRID_HZ } from "@/lib/biomech/pose/denseLandmarkCapture";
 import { writeLandmarkSeries } from "@/lib/biomech/pose/landmarkSeriesStorage";
 import { toStrideFrames } from "@/lib/biomech/pose/toAnchorFrames";
@@ -652,6 +653,11 @@ export default function AnalyzeVideo() {
         // established side (gate above guarantees it is known).
         const merged = toStrideFrames(poseRows, frontAnkleIndex(activeSide));
         const derivedDir = deriveDirectionSign(denseRun.series, activeSide);
+        // Side-mismatch check (diagnostics). No signal has passed validation yet,
+        // so it reports "inconclusive" and never blocks or switches the side.
+        const sideCheck = checkDeclaredSide(denseRun.series, activeSide);
+        console.log('[SIDE-CHECK]', sideCheck);
+        (window as unknown as { __SIDE_CHECK__?: unknown }).__SIDE_CHECK__ = sideCheck;
 
         tempoRun = await runTempoPipeline({
           video_sha256_hex: probed.sha256_hex,

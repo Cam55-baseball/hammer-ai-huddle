@@ -85,4 +85,24 @@ describe("24 fps real clips — ordinary phone rate is not a refusal", () => {
     const a = JSON.stringify(runHittingOwnerTiles(clipA, { side: "L", athlete_height_in: 70 }));
     expect(JSON.stringify(runHittingOwnerTiles(clipA, { side: "L", athlete_height_in: 70 }))).toBe(a);
   });
+  // REFERENCE RESULTS — owner confirmed both clips are LEFT-handed (2026-09-27).
+  it("clip 914cf54c Left: owner-confirmed reference values", () => {
+    const r = runHittingOwnerTiles(clipA, { side: "L", athlete_height_in: 70 });
+    expect(r.tile19.verdict).toBe("fail");
+    expect(r.tile19.channels.midline_crossed_19a.value).toBe(true);
+    expect(r.tile19.channels.forward_in_19b.value).toBeCloseTo(5.3228, 4);
+    expect(r.tile19.channels.forward_in_19b.ci_low_in).toBeCloseTo(4.3478, 4);
+    expect(r.tile19.channels.forward_in_19b.ci_high_in).toBeCloseTo(6.2978, 4);
+    expect(r.tile19.channels.angle_from_vertical_deg_19c.value).toBeCloseTo(37.5742, 4);
+    expect(r.tile20.verdict).toBe("fail");
+    expect(r.tile20.outputs.held_or_increased_20a.value).toBe(false);
+    expect(r.tile20.outputs.end_of_p3_vs_floor_deg_20b.value).toBeCloseTo(5.6301, 4);
+    expect(r.tile20.outputs.first_drop_20c.value).toEqual({ frame_index: 131, preceded_p4: true });
+    expect(r.tile20.lineage.floor_deg).toBeCloseTo(-4.7668, 4);
+  });
+  it("clip 9d2e117e Left: refuses tiles with its real reason (reference)", () => {
+    const r = runHittingOwnerTiles(clipB, { side: "L", athlete_height_in: 70 });
+    expect(r.tile19.verdict).toBeNull();
+    expect(r.tile20.verdict).toBeNull();
+  });
 });
