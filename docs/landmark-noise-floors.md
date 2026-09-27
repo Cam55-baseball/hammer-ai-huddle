@@ -70,3 +70,36 @@ Tile 20 measures the rear-thigh angle (hip→knee vs vertical, toward the pitche
 - Left thigh: SD 0.48°, full range **2.53°** — inside 3.0°.
 - Right thigh: SD 0.70°, full range **3.35°** — **exceeds 3.0°**. On a right-side rear hip, noise alone can cross the deadband. Owner decision needed: keep 3.0°, or size a proxy-specific deadband (e.g. ≥3.4°, full observed range).
 - Label correction: 4.2 % is the p99 of head movement between **any two frames**, not frame-to-frame (frame-to-frame p99 is 0.49 % body).
+
+## Pitching v2 — rigid-body shoulder, robust head, Stance Lock (2026-09-27)
+
+Source: still clip 15d75bc9 (29.97 fps, 328 frames, one subject, facing camera). PROVISIONAL — re-measure across more subjects, camera angles and, once the native camera plugin lands, higher frame rates.
+
+### Shoulder rotation (rigid-body length preservation)
+| Method | max−min | p2–p98 | tracking failures |
+|---|---|---|---|
+| Old: MediaPipe z line angle | 12.7° | — | — |
+| Rigid solve, L = median 3-D length in stance | **14.1°** | 10.9° | 0/328 |
+| Rigid solve, L = median 2-D width in stance | 14.7° | 13.1° | 0/328 |
+| Same, relative to pelvis (horizontal dot product) | 13.7° | 10.2° | — |
+
+Result: **no improvement.** The observed 2-D shoulder width itself varies 4.9 % (p2–p98) on a still subject, and θ = acos(d/L) is flattest at θ≈0 — exactly the closed position a side-on camera sees. A 1.5 % width error there is already ~10°. Sign cannot be resolved by continuity at θ≈0 (touching the image plane and crossing it look identical). Floor set to 14.1°; a pass is not measurable from a side-on camera. A camera on the rubber–plate line (behind the plate or centre field) puts closed shoulders along the depth axis, where d = L·sin θ is best-conditioned; untested, needs a clip.
+
+### Head vertical movement (% of stature, stance-lock stature, roll-corrected)
+| Step | whole clip max−min | whole p2–p98 | worst 1.5 s window max−min | worst 1.5 s p2–p98 |
+|---|---|---|---|---|
+| Old (max−min, 3-frame median) | 3.13 | — | 2.31 | — |
+| 2A robust range | — | 2.82 | — | 2.30 |
+| 2B zero-phase One Euro, gate closed | 2.79 | 2.75 | 2.03 | 1.97 |
+| 2B filter forced open (delivery-like) | 3.07 | 2.82 | 2.26 | 2.22 |
+| 2C rigid neck/ear rejection | 0/328 frames rejected — no change |
+| Jitter only (raw − <0.5 Hz trend) | 0.79 | 0.49 | **0.69** | 0.62 |
+| Slow trend only (<0.5 Hz) | 2.61 | 2.59 | 1.76 | 1.71 |
+
+Result: tracking **jitter** is 0.7 % — below the owner's 2 %, so a pass is measurable. The rest is a slow component (≤1.8 % per 1.5 s) that no filter can remove, because it is not jitter: it is either real postural sway or slow model drift, and this clip cannot separate the two. Floor set to 0.7 % (jitter); the slow component is stated, not hidden. The tile uses the p2–p98 statistic after all three fixes.
+
+### Stance Lock
+Lower-body speed on the still clip: p99 0.143, max 0.190 body-heights/s → micro-threshold 0.20, min 0.5 s. Camera pitch is not observable from one 2-D view (reported null). The still clip has no lock by default (nothing moves after it) — correct.
+
+### Rear-hip thrust onset
+Rear-hip horizontal speed on the still clip: max 0.124 body-heights/s (p99 0.092) → onset threshold 0.15, persisting ≥ 0.06 s.
