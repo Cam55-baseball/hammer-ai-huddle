@@ -384,3 +384,58 @@ export function detectAllPoseEvents(series: LandmarkSeries, o: { direction_sign:
     coil: detectCoil(series, o.direction_sign, load),
   };
 }
+
+/* ================= D-SWING-PEAK — NOT CONTACT ================= */
+/**
+ * Frame of maximum torso rotational angular velocity (shoulder-line angular
+ * rate, zero-phase smoothed) between D-SWING-START and the end of the clip.
+ * Pose-only: no ball, no bat. It sits within ~1–2 frames of true contact and
+ * is used ONLY to bound mechanics windows. It is NEVER contact and must never
+ * be labelled as contact — true contact is a ball event owned by DelayCam.
+ *
+ * Refuses when the peak is under SWING_PEAK_MIN_RAD_S or swing start is absent.
+ * Floor basis: still clip 15d75bc9 max 0.315 rad/s (p99 0.270) — the floor sits
+ * >12× above it; 4.0 rad/s ≈ half of a 90° shoulder turn in 0.2 s. Provisional,
+ * not fitted to any swing clip (914cf54c peak 7.06 rad/s).
+ */
+export const SWING_PEAK_MIN_RAD_S = 4.0;
+/** Search horizon after swing start. */
+export const SWING_PEAK_SEARCH_SEC = 1.0;
+/** Below this fraction of the stance-width shoulder segment the 2-D line is near edge-on and its angle is ill-conditioned — those frames are masked, never used. */
+export const SWING_PEAK_MIN_SEGMENT_FRAC = 0.35;
+/**
+ * Unwrapped shoulder-line angle rate (rad/s), centred ±2-frame smoothing
+ * (zero-phase; also absorbs duplicated pose frames seen on 24 fps phone clips).
+ * Frames whose 2-D shoulder length falls under SWING_PEAK_MIN_SEGMENT_FRAC of
+ * the clip median are null (edge-on → angle meaningless).
+ */
+export function shoulderAngularRate(series: LandmarkSeries): (number | null)[] {
+  const fps = series.header.fps_true ?? 0;
+  const W = series.header.width, H = series.header.height;
+  const seg = series.frames.map((f) => { const l = point(f, LM.L_SHOULDER), r = point(f, LM.R_SHOULDER); return l && r ? { a: Math.atan2((r.y - l.y) * H, (r.x - l.x) * W), d: Math.hypot((r.x - l.x) * W, (r.y - l.y) * H) } : null; });
+  const md = median(seg.filter((x): x is { a: number; d: number } => x != null).map((x) => x.d));
+  let prev: number | null = null, off = 0;
+  const ang = seg.map((x) => {
+    if (!x || md == null || x.d < SWING_PEAK_MIN_SEGMENT_FRAC * md) return null;
+    let a = x.a + off;
+    if (prev != null) { while (a - prev > Math.PI) { a -= 2 * Math.PI; off -= 2 * Math.PI; } while (a - prev < -Math.PI) { a += 2 * Math.PI; off += 2 * Math.PI; } }
+    prev = a; return a;
+  });
+  return smooth(derivative(series, ang).map((x) => (x == null || !(fps > 0) ? null : Math.abs(x))), 2);
+}
+export function detectSwingPeak(series: LandmarkSeries, direction_sign: 1 | -1 | null, swingStart?: AnchorResult): AnchorResult {
+  const A = "swing_peak_frame_not_contact", ID = "D-SWING-PEAK" as const;
+  const ss = swingStart ?? detectSwingStart(series, direction_sign);
+  if (ss.frame_index == null) return miss(A, ID, ss.missingness?.missing_reason ?? R.ANCHOR_NOT_DETECTED, { reason: "swing_start_missing", upstream_diagnostics: ss.diagnostics });
+  const p = prep(series, A, ID);
+  if ("err" in p) return p.err!;
+  const w = shoulderAngularRate(series);
+  const k0 = series.frames.findIndex((f) => f.frame_index === ss.frame_index);
+  const k1 = Math.min(series.frames.length - 1, k0 + framesFor(p.fps, SWING_PEAK_SEARCH_SEC, 3));
+  let pk = -1;
+  for (let k = k0; k <= k1; k++) if (w[k] != null && (pk < 0 || w[k]! > w[pk]!)) pk = k;
+  if (pk < 0) return miss(A, ID, R.LANDMARK_OCCLUDED, { reason: "shoulders_unobserved_or_edge_on_after_swing_start" });
+  if (w[pk]! < SWING_PEAK_MIN_RAD_S) return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "no_rotation_above_still_floor", peak_rad_s: round4(w[pk]!), floor: SWING_PEAK_MIN_RAD_S });
+  if (pk === k1 && k1 < series.frames.length - 1) return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "rotation_still_rising_at_search_end" });
+  return hit(series, A, ID, pk, 0.7 * tierFactor(p.fps), 1, { peak_rad_s: round4(w[pk]!), is_contact: false, note: "pose-only torso rotation peak — NOT contact" });
+}

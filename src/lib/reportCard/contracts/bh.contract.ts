@@ -98,49 +98,9 @@ export const bhContract: DisciplineContract = {
         "TRUE if sequence is: Load legs -> Load hands -> Pause -> Stride -> Pause -> Contact. FALSE if rushed or out of order.",
     },
     {
-      key: "bat_path_score_100",
-      tileKey: "bat_path",
-      label: "Bat Path In/Out of Zone (0-100)",
-      kind: "number",
-      unit: "score",
-      range: [0, 100],
-      prompt:
-        "Score 0-100 for elite bat path: enters behind ball, exits in front, long on-plane window. PASS at 65, ELITE at 88.",
-    },
-    {
-      key: "on_plane_pct",
-      tileKey: "on_plane",
-      label: "% of swing arc on the pitch plane",
-      kind: "number",
-      unit: "percent",
-      range: [0, 100],
-      prompt:
-        "Percentage of the swing arc that stays on the plane of the incoming pitch. PASS at 60%, ELITE at 85%. Worked example: barrel comes off plane immediately after contact → ~40%; long on-plane window through and past contact → ~85%.",
-    },
-    {
-      key: "time_to_contact_ms",
-      tileKey: "time_to_contact",
-      label: "Time from swing start to contact (ms)",
-      kind: "number",
-      unit: "ms",
-      range: [80, 400],
-      prompt:
-        "Milliseconds from the moment the bat first starts moving forward until ball-barrel contact. PASS ≤175 ms, ELITE ≤150 ms. Estimate from the visible frames using the displayed frame rate context.",
-    },
-    {
-      key: "bat_speed_contact_mph",
-      tileKey: "bat_speed_contact",
-      label: "Bat speed through contact (mph proxy)",
-      kind: "number",
-      unit: "mph",
-      range: [30, 110],
-      prompt:
-        "Estimated barrel speed AT contact in mph. PASS ≥65, ELITE ≥75. If no sensor data and motion blur is too high to estimate, set missing=true with reason 'Frame rate too low for bat speed estimate'.",
-    },
-    {
       key: "connection_barrel_delivery_score_100",
       tileKey: "back_elbow_contact",
-      label: "Connection & Barrel Delivery: P4 launch to contact (0-100)",
+      label: "Back-Elbow Slot & Connection: swing start to swing peak (0-100)",
       kind: "number",
       unit: "score",
       range: [0, 100],
@@ -215,3 +175,24 @@ export const bhContract: DisciplineContract = {
     },
   ],
 };
+
+/**
+ * OWNER RULING 2026-09-27 — Upload Analysis is BODY MECHANICS ONLY.
+ * "Bat tracking & contact detection will not be part of the original report
+ * card metrics as they belong in performance metrics that will be tracked by
+ * DelayCam at our 240fps. The upload analysis is body mechanical reports &
+ * not performance metrics."
+ *
+ * These keys were REMOVED from the upload card (not hidden, not deferred) and
+ * belong to the DelayCam performance spec. Never re-add them to bhContract or
+ * the bh discipline tiles — `bhScope.test.ts` fails the build if you do.
+ * The barrel channel of `sequencing` and the bat-delivery channel of
+ * connection moved with them.
+ */
+export const BH_UPLOAD_OUT_OF_SCOPE = {
+  moved_to: "delaycam_performance_spec",
+  ruling_date: "2026-09-27",
+  tile_keys: ["bat_path", "on_plane", "time_to_contact", "bat_speed_contact"],
+  metric_keys: ["bat_path_score_100", "on_plane_pct", "time_to_contact_ms", "bat_speed_contact_mph"],
+  channels: ["sequencing.barrel", "connection_barrel_delivery.bat_delivery"],
+} as const;
