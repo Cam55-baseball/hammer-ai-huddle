@@ -27,7 +27,7 @@ export const SIDE_ON_MIN_ANKLE_SPREAD = 0.15;
 export const ON_LINE_MAX_ANKLE_SPREAD = 0.08;
 
 export type CameraView = "side_on" | "on_line";
-export type CameraRequirement = CameraView | "either";
+export type CameraRequirement = CameraView | "either" | "two_view";
 export interface CameraViewResult {
   readonly view: CameraView | null;
   readonly reason: string | null;
@@ -83,9 +83,10 @@ export const TILE_CAMERA_REQUIREMENTS: Readonly<Record<string, CameraRequirement
   // pose-only hitting tiles
   hip_load: "side_on",
   hand_load: "side_on",
-  stride_direction: "on_line",
+  // ground-plane angle: side-on sees only the forward component, on-line only the lateral one.
+  stride_direction: "two_view",
   heel_plant: "side_on",
-  hands_outside_shoulders_at_landing: "on_line",
+  hands_outside_shoulders_at_landing: "side_on",
   shoulder_plane_steadiness: "side_on",
   finish_balance: "either",
   back_knee_flex_maintained: "side_on",
@@ -107,6 +108,10 @@ export interface CameraGate { readonly ok: boolean; readonly detail: string | nu
 export function checkCameraRequirement(tile: string, view: CameraView | null): CameraGate {
   const req = TILE_CAMERA_REQUIREMENTS[tile] ?? "either";
   if (req === "either") return { ok: true, detail: null, message: null };
+  if (req === "two_view") return {
+    ok: false, detail: "camera_view_mismatch:needs_two_view_pair",
+    message: "This measurement needs two clips of the same swing: one side-on and one on the pitcher-to-plate line. A single camera sees only half of the angle.",
+  };
   if (view == null) return { ok: true, detail: `camera_view_undetermined:needs_${req}`, message: null };
   if (view === req) return { ok: true, detail: null, message: null };
   return {
