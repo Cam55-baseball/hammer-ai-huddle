@@ -32,12 +32,27 @@ describe("D-SWING-PEAK (not contact)", () => {
   });
 });
 
+describe("head discipline (tile 4, body only)", () => {
+  it("still refuses; 914cf54c Left = −6.4467% (head stayed back); Right refuses; 9d2e117e refuses", () => {
+    for (const side of ["L", "R"] as const) expect(runHittingPoseTiles(still, { side }).head_discipline.value).toBeNull();
+    const h = runHittingPoseTiles(A, { side: "L" }).head_discipline;
+    expect(h.value).toBe(-6.4467);
+    expect(h.verdict).toBeNull();
+    expect((h.lineage.head_turn_jerk_pct_s2 as { value: number }).value).toBe(175.9032);
+    expect(runHittingPoseTiles(A, { side: "R" }).head_discipline.value).toBeNull();
+    for (const side of ["L", "R"] as const) expect(runHittingPoseTiles(B, { side }).head_discipline.value).toBeNull();
+  });
+});
+
 describe("hand_load, p2/p3", () => {
   it("still refuses everything", () => {
     for (const side of ["L", "R"] as const) { const r = runHittingPoseTiles(still, { side }); for (const t of [r.hand_load, r.p2_timing, r.p3_timing]) expect(t.value).toBeNull(); }
   });
   it("914cf54c Left reference; Right refuses (side is used)", () => {
-    expect(runHittingPoseTiles(A, { side: "L" }).hand_load.value).toBe(-39.7957);
+    // Former −39.8% was the wrists converging (50.5% of stature apart in the stance lock), not a load.
+    const h = runHittingPoseTiles(A, { side: "L" }).hand_load;
+    expect(h.value).toBeNull();
+    expect(h.lineage.reason).toBe("hands_not_together_on_handle");
     expect(runHittingPoseTiles(A, { side: "R" }).hand_load.value).toBeNull();
   });
   it("pitcher timing refuses honestly", () => {

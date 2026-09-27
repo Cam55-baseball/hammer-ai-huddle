@@ -36,8 +36,8 @@ export const HITTING_POSE_TILES_VERSION = "hitting_pose_tiles@1.2.0-grip-gate-he
  */
 export const HAND_GRIP_MAX_SEP_PCT = 15;
 /** Still clip 15d75bc9 — see docs/landmark-noise-floors.md (head discipline). */
-export const HEAD_PULL_NOISE_FLOOR_PCT = 1.0;
-export const HEAD_YAW_JERK_NOISE_FLOOR = 1.0;
+export const HEAD_PULL_NOISE_FLOOR_PCT = 0.75; // still max 0.733 (p99 0.52), 0.7 s windows, worst side
+export const HEAD_YAW_JERK_NOISE_FLOOR = 47; // %stature/s², still max 46.70 (p99 42.92)
 
 /** Still clip 15d75bc9, p99 of |median3 − clip median|, % of stature (0.80). */
 export const HIP_LOAD_NOISE_FLOOR_PCT = 0.8;

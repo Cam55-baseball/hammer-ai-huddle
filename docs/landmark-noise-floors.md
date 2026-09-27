@@ -133,3 +133,18 @@ Fusion (≥2 independent votes agree): with p99 floors 2/326 still frames falsel
 ## Hitting card batch 1 (2026-09-27, provisional)
 - D-SWING-PEAK (torso rotation peak — NOT contact): still clip 15d75bc9 unwrapped shoulder-line rate max 0.315 rad/s, p99 0.270. Floor 4.0 rad/s (≈ half a 90° turn in 0.2 s); frames with 2-D shoulder length < 35 % of clip median are masked (edge-on, ill-conditioned).
 - hand_load: hands-mid forward p99 1.35 % of stature (vertical 2.72 %). Floor 1.35 %. Ungraded — owner number needed.
+
+## 2026-09-27 — D-SWING-PEAK threshold (measured, provisional)
+Shoulder-line angular rate (rad/s, ±2-frame zero-phase smoothing, edge-on frames masked).
+- Still clip 15d75bc9: max 0.315, p99 0.258, median 0.098 — noise ceiling.
+- 914cf54c Left (confirmed swing): peak 7.056 at frame 188.
+- 9d2e117e Right: in-window max 0.744 — no confirmed swing peak; still refuses.
+- Threshold 1.5 rad/s = geometric midpoint (≈1.49): 4.8× above the still ceiling, 4.7× below the swing peak. Replaces the earlier reasoned 4.0. One confirmed swing only — re-measure as clips arrive.
+
+## 2026-09-27 — Head discipline (hitting tile 4, body only)
+Still clip, whole-clip stance baseline, 0.7 s windows, worst batting side.
+- Head-centroid minus rear-shoulder forward change: p99 0.52, max 0.733 % stature → floor 0.75.
+- Head-turn jerk (nose − ear-mid forward offset, 2nd diff × fps²): p99 42.92, max 46.70 %stature/s² → floor 47.
+
+## 2026-09-27 — Hand-load grip gate
+Wrist separation, still clip median 10.7% of stature (subject not gripping a bat). Gate 15% (reasoned: hands on one handle ≈5% + 2× the 2.3% wrist floor). 914cf54c Left reads 50.5% apart in the stance lock and 7.1% at the load apex — the earlier −39.8% "hand load" was the wrists coming together, not the hands loading. Hand load now refuses on that clip.
