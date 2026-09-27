@@ -58,6 +58,8 @@ import { evaluateMovementGate, type MovementGateResult } from "@/lib/biomech/gat
 import { NoMovementCard } from "@/components/analyze/NoMovementCard";
 import { TrackDiagnosisCard, FpsUnknownCard } from "@/components/analyze/TrackDiagnosisCard";
 import { diagnoseTrack, type TrackDiagnosis } from "@/lib/biomech/pose/trackDiagnosis";
+import { detectCameraView, type CameraViewResult } from "@/lib/biomech/camera/cameraView";
+import { CameraViewCard } from "@/components/analyze/CameraViewCard";
 import { fpsProvenance } from "@/lib/biomech/probeVideoMetadata";
 import { classifyFps } from "@/lib/capture/highFpsCapture";
 import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
@@ -171,6 +173,7 @@ export default function AnalyzeVideo() {
   // Movement gate result — a refused clip produces no tiles, faults or drills.
   const [fpsUnknown, setFpsUnknown] = useState(false);
   const [trackDiagnosis, setTrackDiagnosis] = useState<TrackDiagnosis | null>(null);
+  const [cameraView, setCameraView] = useState<CameraViewResult | null>(null);
   const [noMovement, setNoMovement] = useState<Extract<MovementGateResult, { status: "refused" }> | null>(null);
   const { saveDrill, savedDrills } = useVault();
 
@@ -334,6 +337,7 @@ export default function AnalyzeVideo() {
     setNoMovement(null);
     setFpsUnknown(false);
     setTrackDiagnosis(null);
+    setCameraView(null);
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
     setLandingTime(null);
@@ -501,6 +505,7 @@ export default function AnalyzeVideo() {
     setUploading(true);
     setFpsUnknown(false);
     setTrackDiagnosis(null);
+    setCameraView(null);
 
     // ===== PHASE 0/1 — Deterministic probe (sha256 + true fps + dimensions) =====
     // Probe FIRST so deterministic frame selection can use fps_true.
@@ -637,6 +642,7 @@ export default function AnalyzeVideo() {
         });
         movementGate = evaluateMovementGate(denseRun.series);
         setTrackDiagnosis(diagnoseTrack(denseRun.series));
+        setCameraView(detectCameraView(denseRun.series));
         console.log('[MOVEMENT-GATE]', movementGate);
         poseRows = denseRun.series.frames.map((f) =>
           densePoseRowToPoseFrameRow(f.frame_index, f.timestamp_seconds, f),
@@ -1514,6 +1520,10 @@ export default function AnalyzeVideo() {
 
             {fpsUnknown && !analyzing && !analysis && (
               <FpsUnknownCard />
+            )}
+
+            {cameraView && !noMovement && (
+              <CameraViewCard result={cameraView} module={module || 'hitting'} />
             )}
 
             {trackDiagnosis && trackDiagnosis.status !== "clean" && !analyzing && (
