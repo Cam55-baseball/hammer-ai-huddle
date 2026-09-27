@@ -83,6 +83,7 @@ export const TILE_CAMERA_REQUIREMENTS: Readonly<Record<string, CameraRequirement
   // pose-only hitting tiles
   hip_load: "side_on",
   hand_load: "side_on",
+  head_discipline: "side_on",
   // ground-plane angle: side-on sees only the forward component, on-line only the lateral one.
   stride_direction: "two_view",
   heel_plant: "side_on",
