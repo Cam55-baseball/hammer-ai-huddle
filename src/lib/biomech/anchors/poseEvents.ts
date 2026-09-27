@@ -101,12 +101,13 @@ function prep(series: LandmarkSeries, anchor: string, id: DetectorId) {
 /* ================= D-STILL ================= */
 export interface StillRun { readonly start: number; readonly end: number } // series positions, inclusive
 
-export function stillRuns(speed: readonly (number | null)[], minLen: number, from = 0): StillRun[] {
+/** Shared stillness run-finder — D-STILL, D-FIRST-MOVE and Stance Lock (anchors/stanceLock.ts) all use it. */
+export function stillRuns(speed: readonly (number | null)[], minLen: number, from = 0, threshold = STILL_SPEED): StillRun[] {
   const out: StillRun[] = [];
   let s = -1;
   for (let k = from; k <= speed.length; k++) {
     const v = k < speed.length ? speed[k] : null;
-    const still = v != null && v < STILL_SPEED;
+    const still = v != null && v < threshold;
     if (still && s < 0) s = k;
     if (!still && s >= 0) {
       if (k - s >= minLen) out.push({ start: s, end: k - 1 });
