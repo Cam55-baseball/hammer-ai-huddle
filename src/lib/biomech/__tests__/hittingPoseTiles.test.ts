@@ -19,7 +19,7 @@ describe("camera view", () => {
     expect(detectCameraView(clipB).view).toBeNull();
   });
   it("mismatch refuses with an actionable message; undetermined proceeds", () => {
-    expect(checkCameraRequirement("premature_shoulder_open_deg", "side_on").ok).toBe(false);
+    expect(checkCameraRequirement("premature_shoulder_open_deg", "on_line").ok).toBe(false);
     expect(checkCameraRequirement("premature_shoulder_open_deg", null).ok).toBe(true);
     expect(checkCameraRequirement("stride_direction", "on_line").detail).toBe("camera_view_mismatch:needs_two_view_pair");
   });
