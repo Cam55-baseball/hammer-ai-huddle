@@ -24,14 +24,20 @@ import { LM, pointPx, median, mid, round4, type Pt } from "../anchors/poseKinema
 import { detectStanceLock, unroll, type StanceLock } from "../anchors/stanceLock";
 import { detectCameraView, checkCameraRequirement, type CameraViewResult } from "../camera/cameraView";
 
-export const HITTING_POSE_TILES_VERSION = "hitting_pose_tiles@1.0.0-hip-load-hands-outside-stride-direction";
+export const HITTING_POSE_TILES_VERSION = "hitting_pose_tiles@1.1.0-hand-load-p2-p3-pitcher-refusal";
 
 /** Still clip 15d75bc9, p99 of |median3 − clip median|, % of stature (0.80). */
 export const HIP_LOAD_NOISE_FLOOR_PCT = 0.8;
 /** Still clip 15d75bc9, p99 of |median3(rear wrist − rear shoulder) − clip median|, % of stature; worst side (left wrist 2.28, right 0.96). */
 export const HANDS_OUTSIDE_NOISE_FLOOR_PCT = 2.3;
 
+/** Still clip 15d75bc9, p99 of |median3(hands-mid forward) − clip median|, % of stature (1.35; vertical 2.72). */
+export const HAND_LOAD_NOISE_FLOOR_PCT = 1.35;
+
 export const HITTING_POSE_STANDARDS = {
+  hand_load: { source: "none_supplied", note: "ungraded — owner number needed (rearward hand travel, % of stature)" },
+  p2_timing: { pass: "hand load finished by pitcher peak knee lift", source: "owner_coaching_standard" },
+  p3_timing: { target_ms: 0, note: "front foot fully down at pitcher release", source: "owner_coaching_standard" },
   hip_load: { source: "none_supplied", note: "ungraded — owner number needed" },
   hands_outside_shoulders_at_landing: { pass: "rear wrist behind the rear shoulder (toward the catcher) at full plant", source: "owner_coaching_standard" },
   stride_direction: { target_deg: 15, reference: "square line to the pitcher", source: "owner_coaching_standard" },
@@ -41,7 +47,7 @@ type Key = keyof typeof HITTING_POSE_STANDARDS;
 export interface HittingPoseTileResult {
   readonly key: Key;
   readonly value: number | null;
-  readonly unit: "percent_stature" | "degrees";
+  readonly unit: "percent_stature" | "degrees" | "ms" | "boolean";
   readonly uncertainty: number | null;
   readonly verdict: "pass" | "fail" | null;
   readonly missingness: MissingnessRecord | null;
@@ -49,7 +55,7 @@ export interface HittingPoseTileResult {
   readonly standard: (typeof HITTING_POSE_STANDARDS)[Key];
   readonly lineage: Readonly<Record<string, unknown>>;
 }
-const UNIT: Record<Key, HittingPoseTileResult["unit"]> = { hip_load: "percent_stature", hands_outside_shoulders_at_landing: "percent_stature", stride_direction: "degrees" };
+const UNIT: Record<Key, HittingPoseTileResult["unit"]> = { hand_load: "percent_stature", p2_timing: "boolean", p3_timing: "ms", hip_load: "percent_stature", hands_outside_shoulders_at_landing: "percent_stature", stride_direction: "degrees" };
 const mr = (r: MissingnessReason) => missingness(r, "D-METRIC");
 const refuse = (key: Key, rec: MissingnessRecord, lineage: Record<string, unknown>): HittingPoseTileResult =>
   ({ key, value: null, unit: UNIT[key], uncertainty: null, verdict: null, missingness: rec, confidence: missingConfidence(), standard: HITTING_POSE_STANDARDS[key], lineage });
@@ -98,6 +104,37 @@ function computeHipLoad(series: LandmarkSeries, side: Handedness, dir: 1 | -1, l
     lineage: { apex_frame: apex.frame_index, lock_frames: [lock.start_frame, lock.end_frame], note: "ungraded — no owner number" } };
 }
 
+/* hand_load — hands-mid forward travel, Stance Lock → D-LOAD-APEX. − = hands loaded back toward the catcher. */
+export function handsMidFwd(series: LandmarkSeries, f: LandmarkSeriesFrame, lock: StanceLock, dir: 1 | -1) {
+  return fwd(series, mid(pointPx(series, f, LM.L_WRIST), pointPx(series, f, LM.R_WRIST)), lock, dir);
+}
+function computeHandLoad(series: LandmarkSeries, dir: 1 | -1, lock: StanceLock): HittingPoseTileResult {
+  const K: Key = "hand_load";
+  const apex = detectLoadApex(series, dir);
+  if (apex.frame_index == null) return refuse(K, apex.missingness ?? mr(R.ANCHOR_NOT_DETECTED), { reason: `load_apex_missing:${String(apex.diagnostics.reason ?? "")}` });
+  const k = series.frames.findIndex((f) => f.frame_index === apex.frame_index);
+  if (k <= lock.end_k!) return refuse(K, mr(R.ANCHOR_NOT_DETECTED), { reason: "load_apex_inside_stance_lock", apex_frame: apex.frame_index });
+  const g = (f: LandmarkSeriesFrame) => handsMidFwd(series, f, lock, dir);
+  const b = lockMedian(series, lock, g), a = med3(series, k, g);
+  if (b == null || a == null) return refuse(K, mr(R.HANDS_NOT_DETECTED), { reason: "wrists_unobserved_in_lock_or_at_apex" });
+  const v = a - b;
+  if (Math.abs(v) < HAND_LOAD_NOISE_FLOOR_PCT) return refuse(K, mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: "below_still_clip_noise_floor", raw: round4(v), floor: HAND_LOAD_NOISE_FLOOR_PCT });
+  return { key: K, value: round4(v), unit: "percent_stature", uncertainty: HAND_LOAD_NOISE_FLOOR_PCT, verdict: null, missingness: null, confidence: uncalibrated(), standard: HITTING_POSE_STANDARDS[K],
+    lineage: { apex_frame: apex.frame_index, lock_frames: [lock.start_frame, lock.end_frame], note: "ungraded — no owner number" } };
+}
+
+/**
+ * p2_timing / p3_timing need the PITCHER's peak knee lift / release. The
+ * upload pose series tracks one subject (the hitter), so the pitcher is never
+ * in the measured track. Refuse honestly — never infer pitcher timing.
+ */
+function pitcherTimingRefusals() {
+  return {
+    p2_timing: refuse("p2_timing", mr(R.ANCHOR_NOT_DETECTED), { reason: "pitcher_not_in_frame:peak_knee_lift_unobservable", message: "Needs the pitcher in the same clip. This clip tracks only the hitter." }),
+    p3_timing: refuse("p3_timing", mr(R.PITCHER_RELEASE_FRAME_MISSING), { reason: "pitcher_not_in_frame:release_unobservable", message: "Needs the pitcher in the same clip. This clip tracks only the hitter." }),
+  };
+}
+
 /* hands_outside_shoulders_at_landing — rear wrist vs rear shoulder at full plant. */
 function computeHandsOutside(series: LandmarkSeries, side: Handedness, dir: 1 | -1, lock: StanceLock): HittingPoseTileResult {
   const K: Key = "hands_outside_shoulders_at_landing";
@@ -114,18 +151,18 @@ function computeHandsOutside(series: LandmarkSeries, side: Handedness, dir: 1 | 
 export function runHittingPoseTiles(series: LandmarkSeries, o: { side: Handedness | null }) {
   const cam = detectCameraView(series);
   const all = (rec: MissingnessRecord, l: Record<string, unknown>) =>
-    ({ hip_load: refuse("hip_load", rec, l), hands_outside_shoulders_at_landing: refuse("hands_outside_shoulders_at_landing", rec, l) });
+    ({ hip_load: refuse("hip_load", rec, l), hand_load: refuse("hand_load", rec, l), hands_outside_shoulders_at_landing: refuse("hands_outside_shoulders_at_landing", rec, l) });
   const gate = (r: HittingPoseTileResult) => {
     const g = checkCameraRequirement(r.key, cam.view);
     if (g.ok) return g.detail ? { ...r, lineage: { ...r.lineage, camera_view: g.detail } } : r;
     return refuse(r.key, mr(R.CALIBRATION_UNAVAILABLE), { reason: g.detail, message: g.message });
   };
   const stride = gate(refuse("stride_direction", mr(R.CALIBRATION_UNAVAILABLE), {}));
-  const base = { version: HITTING_POSE_TILES_VERSION, camera_view: cam as CameraViewResult, stride_direction: stride };
+  const base = { version: HITTING_POSE_TILES_VERSION, camera_view: cam as CameraViewResult, stride_direction: stride, ...pitcherTimingRefusals() };
   if (!o.side) return { ...base, ...all(mr(R.ANCHOR_NOT_DETECTED), { reason: "batting_side_unknown" }) };
   const dir = deriveDirectionSign(series, o.side);
   if (dir == null) return { ...base, ...all(mr(R.ANCHOR_NOT_DETECTED), { reason: "direction_sign_underivable" }) };
   const lock = detectStanceLock(series);
   if (!lock.ok || !lock.baseline?.stature_px) return { ...base, ...all(lock.missingness ?? mr(R.ANCHOR_NOT_DETECTED), { reason: lock.detail ?? "stance_lock_missing" }) };
-  return { ...base, hip_load: gate(computeHipLoad(series, o.side, dir, lock)), hands_outside_shoulders_at_landing: gate(computeHandsOutside(series, o.side, dir, lock)) };
+  return { ...base, hip_load: gate(computeHipLoad(series, o.side, dir, lock)), hand_load: gate(computeHandLoad(series, dir, lock)), hands_outside_shoulders_at_landing: gate(computeHandsOutside(series, o.side, dir, lock)) };
 }
