@@ -16,3 +16,6 @@
 - [x] 4 head discipline (pose build)
 - [ ] 5 stride_direction → 21, then 22 hitters_move → 21 pelvis_rotation_efficiency, then 22 hitters_move
 - [ ] Then: softball hitting, throwing BB/SB, pitching BB/SB
+- [x] Owner doctrine 2026-09-27: hand_load re-spec (behind head pass/fail + ungraded depth), head discipline vs com_at_p2 as P1 fault, root pattern back_leg_did_not_hold_load
+- [ ] hip_load back-leg weight distribution — BLOCKED: method proposal (HITTING-PHILOSOPHY §10) awaiting approval
+- [ ] Wire tile 17/19/20/head-discipline fails into analysis_fault_findings writer (keys mapped, no writer emits them yet)
