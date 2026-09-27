@@ -1,7 +1,7 @@
 import { it } from "vitest";
 import { readFileSync } from "node:fs"; import { gunzipSync } from "node:zlib";
 import { decodeLandmarkSeriesText } from "@/lib/biomech/pose/landmarkSeriesFormat";
-import { detectStanceLock } from "@/lib/biomech/anchors/stanceLock";
+import { detectStanceLock, stanceBaseline } from "@/lib/biomech/anchors/stanceLock";
 import { deriveDirectionSign } from "@/lib/biomech/side/strideSide";
 import { headVsRearShoulderFwd, yawJerk, wristSepPct, runHittingPoseTiles } from "@/lib/biomech/metrics/hittingPoseTiles";
 const F="/dev-server/src/lib/biomech/__tests__/fixtures/";
@@ -9,7 +9,7 @@ const load=(n:string)=>decodeLandmarkSeriesText(gunzipSync(readFileSync(F+n)).to
 const q=(a:number[],p:number)=>{const s=[...a].sort((x,y)=>x-y);return s[Math.floor(p*(s.length-1))]};
 const med=(a:number[])=>q(a,.5);
 it("m",()=>{
- const s=load("still-subject-15d75bc9.ndjson.gz"); const lock=detectStanceLock(s);
+ const s=load("still-subject-15d75bc9.ndjson.gz"); const lock:any={ok:true,start_k:0,end_k:s.frames.length-1,baseline:stanceBaseline(s,0,s.frames.length-1)};
  console.log("still lock",lock.ok,lock.start_frame,lock.end_frame);
  const n=Math.round(0.7*s.header.fps_true);
  for (const side of ["L","R"] as const){ const d=deriveDirectionSign(s,side)!;
