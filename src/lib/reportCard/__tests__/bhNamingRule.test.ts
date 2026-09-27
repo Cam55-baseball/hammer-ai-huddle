@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { BH_UPLOAD_TILES } from "../disciplines/bh";
 import { bhContract } from "../contracts/bh.contract";
-import { DELAYCAM_PERFORMANCE_SPEC, UPLOAD_FORBIDDEN_WORDS } from "../contracts/delaycamPerformance.spec";
+import { DELAYCAM_PERFORMANCE_SPEC, UPLOAD_FORBIDDEN_WORDS } from "../contracts/delaycamPerformance";
 
 // Rule: a tile's name and definition describe exactly what it measures.
 // Upload = body only, so no name/standard/label may promise contact, ball or bat.

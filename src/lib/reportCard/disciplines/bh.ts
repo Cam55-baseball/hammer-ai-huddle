@@ -12,7 +12,7 @@ import { readNumber, readBool, readScore100, missingState, scoreMeterState } fro
  * Upload card = BODY MECHANICS ONLY (owner ruling 2026-09-27). No name,
  * standard or label may promise contact, the ball or the bat. Window ends are
  * D-SWING-PEAK (peak torso rotation speed — a body event, NOT contact).
- * Bat/ball/contact metrics live in contracts/delaycamPerformance.spec.ts.
+ * Bat/ball/contact metrics live in contracts/delaycamPerformance.ts.
  * Saved keys (eyes_tracking, back_elbow_contact, *_to_contact) are legacy
  * storage identifiers kept so older results still read — never display text.
  */
