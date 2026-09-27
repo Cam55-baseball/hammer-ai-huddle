@@ -40,6 +40,7 @@ import { resolveClipSide, frontAnkleIndex, deriveDirectionSign } from "@/lib/bio
 import { checkDeclaredSide } from "@/lib/biomech/side/sideCheck";
 import { captureDenseLandmarkSeries, WindowSelectionFailure, UNKNOWN_FPS_SAMPLING_GRID_HZ } from "@/lib/biomech/pose/denseLandmarkCapture";
 import { writeLandmarkSeries } from "@/lib/biomech/pose/landmarkSeriesStorage";
+import { runPitchingTiles } from "@/lib/biomech/metrics/pitchingTiles";
 import { toStrideFrames } from "@/lib/biomech/pose/toAnchorFrames";
 import { runTempoPipeline } from "@/lib/biomech/pipeline/tempoPipeline";
 import { useVault } from "@/hooks/useVault";
@@ -141,6 +142,8 @@ export default function AnalyzeVideo() {
     | { value: number | null; missing_reason: string | null; evidence_sha256_hex: string }
     | null
   >(null);
+  // Rebuilt deterministic pitching tiles — the only source the report card reads for those four tiles.
+  const [pitchingTilesDet, setPitchingTilesDet] = useState<ReturnType<typeof runPitchingTiles> | null>(null);
   const [playbackRate, setPlaybackRate] = useState<string>(() => {
     return localStorage.getItem('videoPlaybackRate') || '1';
   });
@@ -817,6 +820,11 @@ export default function AnalyzeVideo() {
       // `video_metric_runs` after the upload completes. No fabrication:
       // if D-POSE produced no usable anchors, the canonical missingness
       // reason is what gets persisted and rendered.
+      setPitchingTilesDet(
+        denseRun && module === 'pitching' && sideResolution.status === 'known'
+          ? runPitchingTiles(denseRun.series, { throwing_side: sideResolution.side })
+          : null,
+      );
       if (denseRun && tempoRun) {
         // STEP 1 — persist the FULL landmark series before the lineage row, so
         // `landmarks_storage_path` records a real, readable object key. If the
@@ -1556,6 +1564,7 @@ export default function AnalyzeVideo() {
                       tempo_sec_deterministic: persistedTempo
                         ? { value: persistedTempo.value, missing_reason: persistedTempo.missing_reason }
                         : undefined,
+                      pitching_tiles_deterministic: pitchingTilesDet ?? undefined,
                     } as never}
                     showShare={false}
                   />

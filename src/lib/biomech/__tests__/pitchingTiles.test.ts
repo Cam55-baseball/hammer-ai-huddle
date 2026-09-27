@@ -5,13 +5,16 @@ import { join } from "node:path";
 import { decodeLandmarkSeriesText, type LandmarkSeries } from "../pose/landmarkSeriesFormat";
 import { runPitchingTiles, PITCHING_OWNER_STANDARDS, HEAD_VERTICAL_NOISE_FLOOR_PCT, SHOULDER_ROTATION_NOISE_FLOOR_DEG } from "../metrics/pitchingTiles";
 import { pointPx, bodyScalePx } from "../anchors/poseKinematics";
+import { detectStanceLock, headCentroidPx, unroll } from "../anchors/stanceLock";
+import { solveSegment } from "../rigid/segmentRotation";
+import { oneEuroZeroPhase, HEAD_ONE_EURO } from "../filters/oneEuro";
 import { ownerTileAudience, confirmedCount } from "../metrics/ownerTileVisibility";
 
 const load = (n: string): LandmarkSeries => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "fixtures", n))).toString("utf8"));
 const still = load("still-subject-15d75bc9.ndjson.gz");
 const clipA = load("swing-24fps-914cf54c.ndjson.gz");
 const clipB = load("swing-24fps-9d2e117e.ndjson.gz");
-const tiles = (r: ReturnType<typeof runPitchingTiles>) => [r.energy_angle_deg, r.premature_shoulder_open_deg, r.head_vertical_movement_pct];
+const tiles = (r: ReturnType<typeof runPitchingTiles>) => [r.energy_angle_deg, r.premature_shoulder_open_deg, r.head_vertical_movement_pct, r.lift_thrust];
 
 describe("pitching tiles — still clip refuses everything", () => {
   for (const side of ["L", "R", null] as const) {
@@ -47,17 +50,36 @@ describe("standards are owner-supplied, floors are measured", () => {
   it("labels every standard as an owner coaching standard", () => {
     for (const s of Object.values(PITCHING_OWNER_STANDARDS)) expect(s.source).toBe("owner_coaching_standard");
   });
-  it("head floor matches the still clip (centroid, 3-frame median, % of stature)", () => {
-    const H = [0, 2, 5, 7, 8];
-    const ys = still.frames.map((f) => { let y = 0; for (const i of H) { const p = pointPx(still, f, i); if (!p) return null; y += p.y; } return y / 5; }).filter((v): v is number => v != null);
-    const m3 = ys.map((v, i) => [ys[i - 1] ?? v, v, ys[i + 1] ?? v].sort((a, b) => a - b)[1]);
-    const pct = ((Math.max(...m3) - Math.min(...m3)) / (bodyScalePx(still)! / 0.779)) * 100;
-    expect(pct).toBeLessThanOrEqual(HEAD_VERTICAL_NOISE_FLOOR_PCT);
-    expect(pct).toBeGreaterThan(HEAD_VERTICAL_NOISE_FLOOR_PCT - 0.1);
+  it("head floor = worst 1.5 s window of tracking jitter (raw minus <0.5 Hz trend) on the still clip", () => {
+    const lock = detectStanceLock(still, { before_frame: 1e9 });
+    const st = lock.baseline!.stature_px!;
+    const y = still.frames.map((f) => { const h = headCentroidPx(still, f); return h ? unroll(h, lock.baseline!.roll_deg).y : null; });
+    const m3 = y.map((v, i) => (v == null ? null : [y[i - 1] ?? v, v, y[i + 1] ?? v].sort((a, b) => (a as number) - (b as number))[1]));
+    const trend = oneEuroZeroPhase(m3, m3.map(() => 0), still.header.fps_true, { min_cutoff_hz: 0.5, beta: 0, d_cutoff_hz: 1 });
+    const res = m3.map((v, k) => (v == null || trend[k] == null ? null : (v as number) - (trend[k] as number)));
+    const win = Math.round(1.5 * still.header.fps_true); let worst = 0;
+    for (let i = 0; i + win <= res.length; i++) { const a = res.slice(i, i + win).filter((v): v is number => v != null); worst = Math.max(worst, ((Math.max(...a) - Math.min(...a)) / st) * 100); }
+    expect(worst).toBeLessThanOrEqual(HEAD_VERTICAL_NOISE_FLOOR_PCT);
+    expect(worst).toBeGreaterThan(HEAD_VERTICAL_NOISE_FLOOR_PCT - 0.1);
   });
-  it("shoulder floor matches the still clip x–z line range", () => {
-    const a = still.frames.filter((f) => f.pose_detected).map((f) => { const N = f.normalized; return (Math.atan2((N[35] - N[38]), Math.abs(N[33] - N[36])) * 180) / Math.PI; });
-    expect(Math.max(...a) - Math.min(...a)).toBeLessThanOrEqual(SHOULDER_ROTATION_NOISE_FLOOR_DEG);
+  it("shoulder floor = rigid-solve angle range on the still clip, zero tracking failures", () => {
+    const lock = detectStanceLock(still, { before_frame: 1e9 });
+    const r = still.frames.map((f) => solveSegment(still, f, 11, 12, lock.baseline!.shoulder_len_px!));
+    expect(r.filter((x) => x.tracking_failure).length).toBe(0);
+    const th = r.map((x) => x.theta_deg).filter((v): v is number => v != null);
+    const range = Math.max(...th) - Math.min(...th);
+    expect(range).toBeLessThanOrEqual(SHOULDER_ROTATION_NOISE_FLOOR_DEG);
+    expect(range).toBeGreaterThan(SHOULDER_ROTATION_NOISE_FLOOR_DEG - 0.1);
+  });
+  it("still clip has no stance lock before movement (nothing moves afterwards)", () => {
+    expect(detectStanceLock(still).detail).toBe("no_settled_stance_before_movement");
+  });
+  it("zero-phase filter does not shift a step in time and is deterministic", () => {
+    const x = Array.from({ length: 60 }, (_, i) => (i < 30 ? 0 : 10));
+    const g = x.map(() => 0);
+    const a = oneEuroZeroPhase(x, g, 30, HEAD_ONE_EURO), b = oneEuroZeroPhase(x, g, 30, HEAD_ONE_EURO);
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+    expect(Math.abs((a[29] as number) + (a[30] as number) - 10)).toBeLessThan(1e-9); // symmetric about the step
   });
 });
 
