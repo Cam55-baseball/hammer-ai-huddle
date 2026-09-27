@@ -68,7 +68,15 @@ const SEEK_TIMEOUT_MS = 8_000;
 
 export type FrameDensityTier = "below_floor" | "t_low" | "t_mid" | "t_high";
 
-export function classifyDensityTier(fps: number): FrameDensityTier {
+/**
+ * Seek grid used ONLY when the file's frame rate is unknown. It places sample
+ * times evenly across the clip; it is not a frame rate and is never recorded
+ * as one (header.fps_true stays null, header.sampling_grid_hz records this).
+ */
+export const UNKNOWN_FPS_SAMPLING_GRID_HZ = 30;
+
+export function classifyDensityTier(fps: number | null): FrameDensityTier {
+  if (fps == null) return "unknown";
   if (!Number.isFinite(fps) || fps < 30) return "below_floor";
   if (fps >= 120) return "t_high";
   if (fps >= 60) return "t_mid";
@@ -153,14 +161,15 @@ export function selectDenseWindow(
 export interface DenseCaptureInput {
   readonly videoFile: Blob;
   readonly video_sha256_hex: string;
-  readonly fps_true: number;
+  /** Encoded rate from the file, or null when it could not be read. Never guessed. */
+  readonly fps_true: number | null;
   readonly duration_sec: number;
   readonly width: number;
   readonly height: number;
   readonly orientation: "portrait" | "landscape" | "square";
   readonly landingTimeSec: number | null;
   /** How fps_true was established (the encoded container rate). */
-  readonly fps_source?: "container";
+  readonly fps_source?: "container" | "unknown";
   /** Render-rate cross-check, recorded for comparison only. */
   readonly fps_playback?: number | null;
   readonly budget?: number;
@@ -214,6 +223,8 @@ export async function captureDenseLandmarkSeries(
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("dense capture: canvas 2D context unavailable");
 
+  // Unknown rate: sample on a fixed time grid; the header still says unknown.
+  const stepHz = input.fps_true ?? UNKNOWN_FPS_SAMPLING_GRID_HZ;
   try {
     await new Promise<void>((resolve, reject) => {
       const onLoaded = () => resolve();
@@ -234,16 +245,16 @@ export async function captureDenseLandmarkSeries(
 
     /* ---------------- PASS 1 — scout ---------------- */
     const scoutIndices = selectScoutFrameIndices(
-      input.fps_true,
+      stepHz,
       input.duration_sec,
       input.scoutBudget ?? SCOUT_SAMPLE_BUDGET,
     );
-    const scoutTracker = new SubjectTracker(input.fps_true);
+    const scoutTracker = new SubjectTracker(stepHz);
     const observations: ScoutObservation[] = [];
     let scoutFramesInferred = 0;
     for (let i = 0; i < scoutIndices.length; i++) {
       const frameIndex = scoutIndices[i];
-      const t = round6(frameIndex / input.fps_true);
+      const t = round6(frameIndex / stepHz);
       let candidates: ReturnType<typeof detectDensePoseCandidates> = [];
       try {
         await seekTo(video, t);
@@ -290,11 +301,11 @@ export async function captureDenseLandmarkSeries(
     let dropped = 0;
     let visSum = 0;
 
-    const tracker = new SubjectTracker(input.fps_true);
+    const tracker = new SubjectTracker(stepHz);
     const total = window.frame_count;
     for (let i = 0; i < total; i++) {
       const frameIndex = window.start_frame + i;
-      const t = round6(frameIndex / input.fps_true);
+      const t = round6(frameIndex / stepHz);
       try {
         await seekTo(video, t);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -347,7 +358,8 @@ export async function captureDenseLandmarkSeries(
         landmark_model_id: LANDMARK_MODEL_ID,
         landmark_model_version: LANDMARK_MODEL_VERSION,
         fps_true: input.fps_true,
-        fps_source: input.fps_source ?? "container",
+        fps_source: input.fps_true == null ? "unknown" : (input.fps_source ?? "container"),
+        sampling_grid_hz: input.fps_true == null ? UNKNOWN_FPS_SAMPLING_GRID_HZ : null,
         fps_playback: input.fps_playback ?? null,
         width: srcW,
         height: srcH,
