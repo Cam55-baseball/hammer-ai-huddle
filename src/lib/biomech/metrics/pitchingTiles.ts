@@ -44,8 +44,9 @@ import { LM, pointPx, point, median, mid, round4, bodyScale, smooth, framesFor, 
 import { detectStanceLock, headCentroidPx, lowerBodySpeed, unroll, type StanceLock } from "../anchors/stanceLock";
 import { solveSegment, horizontalAngleDeg } from "../rigid/segmentRotation";
 import { oneEuroZeroPhase, HEAD_ONE_EURO } from "../filters/oneEuro";
+import { detectCameraView, checkCameraRequirement, type CameraViewResult } from "../camera/cameraView";
 
-export const PITCHING_TILES_VERSION = "pitching_tiles@2.0.0-stance-lock-rigid-shoulder-zero-phase-head-lift-thrust";
+export const PITCHING_TILES_VERSION = "pitching_tiles@2.1.0-energy-back-ankle-camera-gate-stance-lock-rigid-shoulder-zero-phase-head-lift-thrust";
 
 /** Owner-supplied coaching standards. NOT derived from data. */
 export const PITCHING_OWNER_STANDARDS = {
@@ -324,16 +325,25 @@ export function computeLiftThrust(series: LandmarkSeries, d: PitchingDelivery, l
   };
 }
 
+/** Delivery gate first (more fundamental), then the per-tile camera requirement. */
+function cameraGated(r: PitchingTileResult, d: PitchingDelivery, cam: CameraViewResult): PitchingTileResult {
+  const g = checkCameraRequirement(r.key, cam.view);
+  if (!d.ok || g.ok) return g.detail ? { ...r, lineage: { ...r.lineage, camera_view: g.detail } } : r;
+  return refuse(r.key, mr(R.CALIBRATION_UNAVAILABLE), { reason: g.detail, message: g.message, camera: cam });
+}
+
 export function runPitchingTiles(series: LandmarkSeries, o: { throwing_side: Handedness | null }) {
   const d = findPitchingDelivery(series, o.throwing_side);
   const lock = d.ok ? lockFor(series, d) : undefined;
+  const cam = detectCameraView(series);
   return {
     version: PITCHING_TILES_VERSION,
+    camera_view: cam,
     delivery: { ok: d.ok, refusal: d.refusal, refusal_detail: d.refusal_detail, direction_sign: d.direction_sign },
     stance_lock: lock ? { ok: lock.ok, start_frame: lock.start_frame, end_frame: lock.end_frame, detail: lock.detail } : null,
-    energy_angle_deg: computeEnergyAngle(series, d),
-    premature_shoulder_open_deg: computePrematureShoulderOpen(series, d, lock),
-    head_vertical_movement_pct: computeHeadVerticalMovement(series, d, lock),
-    lift_thrust: computeLiftThrust(series, d, lock),
+    energy_angle_deg: cameraGated(computeEnergyAngle(series, d), d, cam),
+    premature_shoulder_open_deg: cameraGated(computePrematureShoulderOpen(series, d, lock), d, cam),
+    head_vertical_movement_pct: cameraGated(computeHeadVerticalMovement(series, d, lock), d, cam),
+    lift_thrust: cameraGated(computeLiftThrust(series, d, lock), d, cam),
   };
 }
