@@ -61,6 +61,22 @@ function computeDeterministicTempoTile(a: AnalysisLike): TileState {
 }
 
 
+/**
+ * Rebuilt pitching tiles (src/lib/biomech/metrics/pitchingTiles.ts) — the ONLY
+ * source for energy angle, shoulder opening, head stability and lift & thrust.
+ * The stored AI-vision numbers for these keys were proven fabricated and are
+ * never read. Absent the deterministic result → missing, honest reason.
+ */
+type DetTile = { value: number | null; verdict: "pass" | "fail" | null; uncertainty: number | null; missingness: { missing_reason: string } | null };
+function detPitchingTile(a: AnalysisLike, key: string, fmt: (v: number, u: number | null) => string): TileState {
+  const all = (a as unknown as Record<string, unknown>)["pitching_tiles_deterministic"] as Record<string, DetTile> | undefined;
+  const t = all?.[key];
+  if (!t) return { status: "missing", missing_reason: "deterministic_pitching_tiles_not_run" };
+  if (t.value == null || t.verdict == null) return { status: "missing", missing_reason: t.missingness?.missing_reason ?? "anchor_not_detected" };
+  return { status: t.verdict, value: fmt(t.value, t.uncertainty) };
+}
+const pm = (u: number | null, d: number, unit: string) => (u == null ? "" : ` ±${u.toFixed(d)}${unit}`);
+
 const tiles: ReportCardTileSpec[] = [
   {
     key: "energy_angle",
@@ -75,9 +91,7 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "The game is hard. Stack small wins — your delivery is a habit, not a moment.",
     },
     compute: (a) => {
-      const m = readNumber(a, "energy_angle_deg");
-      if (!m) return missingState(a, "energy_angle_deg");
-      return { status: m.value >= 18 ? "pass" : "fail", value: `${Math.round(m.value)}°`, confidence: m.confidence };
+      return detPitchingTile(a, "energy_angle_deg", (v) => `${Math.round(v)}°`);
     },
   },
   {
@@ -94,9 +108,7 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "Separation is earned through patient reps. Keep the front shoulder closed and the velo finds you.",
     },
     compute: (a) => {
-      const m = readNumber(a, "premature_shoulder_open_deg");
-      if (!m) return missingState(a, "premature_shoulder_open_deg");
-      return { status: m.value <= 0 ? "pass" : "fail", value: `${Math.round(m.value)}°`, confidence: m.confidence };
+      return detPitchingTile(a, "premature_shoulder_open_deg", (v, u) => `${Math.round(v)}°${pm(u, 0, "°")}`);
     },
   },
   {
@@ -152,9 +164,7 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "Quiet head, loud strikes. Hold the line.",
     },
     compute: (a) => {
-      const m = readNumber(a, "head_vertical_movement_pct");
-      if (!m) return missingState(a, "head_vertical_movement_pct");
-      return { status: m.value <= 2 ? "pass" : "fail", value: `${m.value.toFixed(1)}%`, confidence: m.confidence };
+      return detPitchingTile(a, "head_vertical_movement_pct", (v, u) => `${v.toFixed(1)}%${pm(u, 1, "%")}`);
     },
   },
   {
@@ -218,18 +228,16 @@ const tiles: ReportCardTileSpec[] = [
     key: "lift_thrust",
     name: "Lift & Thrust",
     mode: "raw_pass_fail",
-    standard: "18° OR MORE",
+    standard: "Hips drive forward the moment the knee lifts — no pause",
     explainer: {
       whatWhy:
-        "The combined lift-and-thrust angle off the rubber. 18° or more means you are using the ground to drive forward, not just lifting and falling.",
+        "Lift the front knee toward the back armpit while driving your rear end toward home plate at the same moment. Thrust that starts after the lift is a pause and leaks momentum.",
       howToImprove:
         "Med-ball drive drills. Single-leg RDLs. Slide-board push-offs to feel the back-leg load.",
       encouragement: "Push the earth backward. The ball will go forward.",
     },
     compute: (a) => {
-      const m = readNumber(a, "lift_thrust_deg");
-      if (!m) return missingState(a, "lift_thrust_deg");
-      return { status: m.value >= 18 ? "pass" : "fail", value: `${Math.round(m.value)}°`, confidence: m.confidence };
+      return detPitchingTile(a, "lift_thrust", (v, u) => `${v > 0 ? "+" : ""}${v.toFixed(2)}s${pm(u, 2, "s")}`);
     },
   },
 ];
