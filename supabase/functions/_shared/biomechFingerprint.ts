@@ -43,7 +43,8 @@ export async function sha256Hex(data: string | Uint8Array | ArrayBuffer): Promis
 
 export interface CacheFingerprintInputs {
   videoSha256Hex: string;
-  fpsTrue: number;
+  /** null = frame rate could not be read from the file. Never guessed. */
+  fpsTrue: number | null;
   landingTimeSec: number | null;
   directionSign: -1 | 0 | 1;
   calibrationHpx: number;
@@ -53,7 +54,9 @@ export interface CacheFingerprintInputs {
 }
 
 export async function buildCacheFingerprint(inputs: CacheFingerprintInputs): Promise<string> {
-  const fps = Number.isFinite(inputs.fpsTrue) ? inputs.fpsTrue.toFixed(6) : "NaN";
+  const fps = inputs.fpsTrue == null
+    ? "unknown"
+    : Number.isFinite(inputs.fpsTrue) ? inputs.fpsTrue.toFixed(6) : "NaN";
   const landing = inputs.landingTimeSec == null ? "null" : inputs.landingTimeSec.toFixed(6);
   const calib = Number.isFinite(inputs.calibrationHpx) ? inputs.calibrationHpx.toFixed(6) : "NaN";
   const parts = [

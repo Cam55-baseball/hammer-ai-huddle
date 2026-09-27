@@ -1793,23 +1793,12 @@ Deno.serve(async (req) => {
         { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
+    // Unknown frame rate (container timing unreadable): the clip is ACCEPTED
+    // and analysed. fps stays null — never guessed. Metrics that need a
+    // frame-density tier refuse on their own with canonical missingness;
+    // scale-free mechanics still run.
     if (fpsTrue == null || !Number.isFinite(fpsTrue)) {
-      await recordAnalysisRun(supabase, {
-        video_id: videoId,
-        requested_by: userId,
-        cache_fingerprint_hex: "rejected:missing_probe_metadata",
-        cache_hit: false,
-        video_sha256_hex: videoSha256Hex,
-        outcome: "rejected",
-        outcome_reason: "missing_probe_metadata",
-        landmark_model_version: LANDMARK_MODEL_VERSION,
-        detector_version: DETECTOR_VERSION,
-        metric_engine_version: METRIC_ENGINE_VERSION,
-      });
-      return new Response(
-        JSON.stringify({ error: "missing_probe_metadata", detail: "videos.fps_true must be populated before analysis (Phase 0 contract)." }),
-        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      console.log(`[ANALYZE-VIDEO] fps unknown for ${videoId} — analysing without a frame rate`);
     }
 
     // ===== PHASE 1 — Deterministic acceptance gates =====
@@ -1845,7 +1834,7 @@ Deno.serve(async (req) => {
       );
     };
 
-    if (fpsTrue < PHASE1_MIN_FPS) {
+    if (fpsTrue != null && Number.isFinite(fpsTrue) && fpsTrue < PHASE1_MIN_FPS) {
       return await writeReject("reject_low_fps", `fps_true=${fpsTrue} < ${PHASE1_MIN_FPS}`);
     }
     if (videoWidth == null || videoHeight == null || videoWidth < PHASE1_MIN_WIDTH || videoHeight < PHASE1_MIN_HEIGHT) {
@@ -1871,7 +1860,7 @@ Deno.serve(async (req) => {
 
     const cacheFingerprintHex = await buildCacheFingerprint({
       videoSha256Hex,
-      fpsTrue,
+      fpsTrue: fpsTrue != null && Number.isFinite(fpsTrue) ? fpsTrue : null,
       landingTimeSec,
       directionSign,
       calibrationHpx,
