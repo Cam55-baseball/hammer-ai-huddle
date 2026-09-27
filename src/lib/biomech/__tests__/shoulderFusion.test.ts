@@ -18,7 +18,7 @@ describe("shoulder fusion on the still clip", () => {
   it("floors match the measured p99 (width, offset)", () => {
     const w = still.frames.map((f) => shoulderSignals(still, f, lock, 1, "R").width).filter((v): v is number => v != null);
     const b = median(w)!; const d = w.map((v) => Math.abs(v - b)).sort((a, c) => a - c);
-    expect(d[Math.round(0.99 * (d.length - 1))]).toBeLessThanOrEqual(F.width_pct + 0.05);
+    expect(d[Math.round(0.99 * (d.length - 1))]).toBeLessThanOrEqual(F.width_pct);
   });
   it("far-shoulder visibility is saturated (excluded signal)", () => {
     const v = still.frames.filter((f) => f.pose_detected).map((f) => Math.min(f.visibility[11], f.visibility[12]));

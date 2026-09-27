@@ -22,7 +22,7 @@
  * Fusion: fail = ≥2 independent votes (width family, S4, S5) agree on opening
  * beyond their own floors. Pass = every signal within its floor at plant (closed
  * to within the width detection limit). Anything else = signals disagree →
- * missingness. Still clip: 0/328 frames with two agreeing votes either side.
+ * missingness. Still clip: with p99 floors 2/326 frames showed two agreeing votes; floors raised to the still-clip max → 0.
  */
 import type { LandmarkSeries, LandmarkSeriesFrame } from "../pose/landmarkSeriesFormat";
 import { LM, pointPx, mid, median, round4, type Pt } from "../anchors/poseKinematics";
@@ -32,10 +32,11 @@ import type { Handedness } from "../side/strideSide";
 export const SHOULDER_FUSION_VERSION = "shoulder_open_fusion@1.0.0-width-offset-glove";
 export const SHOULDER_FUSION_FLOORS = {
   s1_far_visibility: { floor: 0.0002, used: false, why: "visibility saturated at ~1.0 on still and swing clips — no occlusion information" },
-  width_pct: 0.59, s2_ratio: 0.062, s3_area: 0.15, s4_offset_pct: 0.69, s5_glove_pct: 2.05,
+  // Voting floors = still-clip MAXIMUM (p99 let two agreeing votes through on 2 of 326 frames).
+  width_pct: 0.61, s2_ratio: 0.065, s3_area: 0.152, s4_offset_pct: 0.75, s5_glove_pct: 2.28,
 } as const;
-/** Detection limit of the pass verdict, degrees (width family: acos(1 − 0.59/20.84)). */
-export const SHOULDER_FUSION_DETECTION_LIMIT_DEG = 13.7;
+/** Detection limit of the pass verdict, degrees (width family: acos(1 − 0.61/20.84)). */
+export const SHOULDER_FUSION_DETECTION_LIMIT_DEG = 13.9;
 
 type Sig = { width: number | null; ratio: number | null; area: number | null; s4: number | null; s5: number | null };
 
