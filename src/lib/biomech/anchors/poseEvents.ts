@@ -17,13 +17,15 @@ import type { LandmarkSeries } from "../pose/landmarkSeriesFormat";
 import { MISSINGNESS_REASONS as R, missingness, type MissingnessRecord, type MissingnessReason } from "../metrics/missingness";
 import { detectorVersion, type DetectorId } from "../detectorVersions";
 import {
-  LM, FPS_FLOOR, FPS_T_MID, aggregateSpeed, angleDeg, bodyScale, derivative, framesFor,
+  LM, aggregateSpeed, angleDeg, bodyScale, derivative, framesFor,
   median, mid, point, rearSide, rearThighAngleDeg, round4, round6, smooth, tierFactor, track, uncertaintyMs,
 } from "./poseKinematics";
 
 /* ---------------- fixed constants (part of each version string) ---------------- */
 /** Aggregate body speed under this (body-heights/s) is "still". */
 export const STILL_SPEED = 0.35;
+/** Body heights / s. Still clip peak wrist speed measured 1.15 (left) / 0.27 (right); 2.0 keeps a 1.7x margin over that noise. */
+export const RELEASE_MIN_WRIST_SPEED = 2.0;
 /** A still run must last at least this long. */
 export const STILL_MIN_SEC = 0.25;
 /** First movement must persist this many consecutive frames. */
@@ -40,6 +42,12 @@ export const LOAD_MIN_DISPLACEMENT = 0.1; // was 0.02 — below the still-clip w
 export const SWING_ACCEL = 6;
 /** P4: back-elbow forward speed threshold, body-heights/s. */
 export const P4_ELBOW_SPEED = 0.15;
+/**
+ * P4 lead must persist this long in REAL TIME (was a fixed 2 frames, which is
+ * 83 ms at 24 fps but 17 ms at 120 fps — a frame-count rule that silently
+ * refused ordinary phone video). 0.03 s = 1 frame at 24/30 fps, 2 at 60 fps.
+ */
+export const P4_PERSIST_SEC = 0.03;
 
 export interface AnchorResult {
   readonly anchor: string;
@@ -74,9 +82,14 @@ function hit(
 }
 
 /** Common preconditions: fps, pose presence, scale. */
-function prep(series: LandmarkSeries, anchor: string, id: DetectorId, minFps = FPS_FLOOR) {
+/**
+ * Anchors NEVER refuse on an ordinary frame rate (24/30 fps): they are located
+ * to ±N frames and report `anchor_uncertainty_ms`. Only a missing time base
+ * (rate unreadable) refuses, because every threshold here is per second.
+ */
+function prep(series: LandmarkSeries, anchor: string, id: DetectorId) {
   const fps = series.header.fps_true;
-  if (!Number.isFinite(fps) || fps < minFps) return { err: miss(anchor, id, R.INSUFFICIENT_TEMPORAL_RESOLUTION, { fps }) };
+  if (fps == null || !Number.isFinite(fps) || fps <= 0) return { err: miss(anchor, id, R.INSUFFICIENT_TEMPORAL_RESOLUTION, { fps, reason: "frame_rate_unknown_no_time_base" }) };
   if (series.header.subject_track_reliable === false) return { err: miss(anchor, id, R.POSE_NOT_DETECTED, { reason: "subject_track_unreliable" }) };
   if (!series.frames.some((f) => f.pose_detected)) return { err: miss(anchor, id, R.POSE_NOT_DETECTED) };
   const scale = bodyScale(series);
@@ -167,7 +180,7 @@ export interface ReleaseOptions { readonly throwing_side: "left" | "right" }
 
 export function detectReleasePoseOnly(series: LandmarkSeries, opts: ReleaseOptions): AnchorResult {
   const A = "pitcher_release_frame", ID = "D-RELEASE-POSE" as const;
-  const p = prep(series, A, ID, FPS_T_MID);
+  const p = prep(series, A, ID);
   if ("err" in p) return p.err!;
   const L = opts.throwing_side === "left";
   const [S, E, W] = L ? [LM.L_SHOULDER, LM.L_ELBOW, LM.L_WRIST] : [LM.R_SHOULDER, LM.R_ELBOW, LM.R_WRIST];
@@ -180,6 +193,12 @@ export function detectReleasePoseOnly(series: LandmarkSeries, opts: ReleaseOptio
   let s1 = -1;
   wSpeed.forEach((v, k) => { if (v != null && (s1 < 0 || v > wSpeed[s1]!)) s1 = k; });
   if (s1 < 0) return miss(A, ID, R.LANDMARK_OCCLUDED, { reason: "throwing_wrist_unobserved" });
+  // Signal gate (replaces the old 60 fps floor, which had been hiding this):
+  // a release needs a throwing-arm speed peak well above pose jitter. Without
+  // it the three signals can "agree" on noise — the still clip did exactly that.
+  if (wSpeed[s1]! < RELEASE_MIN_WRIST_SPEED) {
+    return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "no_arm_speed_above_noise", peak_wrist_speed: round4(wSpeed[s1]!) });
+  }
   const half = framesFor(p.fps, RELEASE_SEARCH_SEC, 3);
   const lo = Math.max(0, s1 - half), hi = Math.min(fr.length - 1, s1 + half);
   // Signal 2: max elbow extension in window.
@@ -255,7 +274,7 @@ export function detectLoadApex(series: LandmarkSeries, direction_sign: 1 | -1 | 
 export function detectSwingStart(series: LandmarkSeries, direction_sign: 1 | -1 | null, loadApex?: AnchorResult): AnchorResult {
   const A = "swing_start_frame", ID = "D-SWING-START" as const;
   const apex = loadApex ?? detectLoadApex(series, direction_sign);
-  if (apex.frame_index == null) return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "hand_load_apex_missing", upstream: apex.missingness?.missing_reason });
+  if (apex.frame_index == null) return miss(A, ID, apex.missingness?.missing_reason ?? R.ANCHOR_NOT_DETECTED, { reason: "hand_load_apex_missing", upstream: apex.missingness?.missing_reason, upstream_diagnostics: apex.diagnostics });
   const p = prep(series, A, ID);
   if ("err" in p) return p.err!;
   const fwd = smooth(handsForward(series, p.scale, direction_sign!), 1);
@@ -271,10 +290,14 @@ export function detectSwingStart(series: LandmarkSeries, direction_sign: 1 | -1 
 }
 
 /* ================= D-P4 ================= */
-export function detectP4(series: LandmarkSeries, direction_sign: 1 | -1 | null, front_foot_full_plant_frame: number | null): AnchorResult {
+export function detectP4(
+  series: LandmarkSeries, direction_sign: 1 | -1 | null, front_foot_full_plant_frame: number | null,
+  plantMissing?: { missingness: MissingnessRecord | null; detail?: string | null } | null,
+): AnchorResult {
   const A = "p4_start_frame", ID = "D-P4" as const;
   if (direction_sign !== 1 && direction_sign !== -1) return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "direction_sign_unknown" });
-  if (front_foot_full_plant_frame == null) return miss(A, ID, R.FRONT_FOOT_FULL_PLANT_MISSING);
+  // Preserve the plant detector's OWN reason — the generic one hid the cause.
+  if (front_foot_full_plant_frame == null) return miss(A, ID, plantMissing?.missingness?.missing_reason ?? R.FRONT_FOOT_FULL_PLANT_MISSING, { reason: "front_foot_plant_missing", upstream_detail: plantMissing?.detail ?? null });
   const p = prep(series, A, ID);
   if ("err" in p) return p.err!;
   // Back elbow = the elbow whose shoulder sits further from the pitcher at stance.
@@ -287,8 +310,9 @@ export function detectP4(series: LandmarkSeries, direction_sign: 1 | -1 | null, 
   const hv = derivative(series, smooth(handsForward(series, p.scale, direction_sign), 1));
   const k0 = series.frames.findIndex((f) => f.frame_index >= front_foot_full_plant_frame);
   if (k0 < 0) return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "plant_outside_series" });
-  for (let k = k0; k < series.frames.length - 1; k++) {
-    const ok = [k, k + 1].every((j) => ev[j] != null && ev[j]! > P4_ELBOW_SPEED && hv[j] != null && hv[j]! < ev[j]!);
+  const need = framesFor(p.fps, P4_PERSIST_SEC, 1);
+  for (let k = k0; k + need - 1 < series.frames.length; k++) {
+    const ok = Array.from({ length: need }, (_, j) => k + j).every((j) => ev[j] != null && ev[j]! > P4_ELBOW_SPEED && hv[j] != null && hv[j]! < ev[j]!);
     if (ok) return hit(series, A, ID, k, 0.7 * tierFactor(p.fps), 1, { back_elbow: backElbow === LM.L_ELBOW ? "left" : "right", elbow_fwd_speed: round4(ev[k]!) });
   }
   return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "back_elbow_never_led_hands_after_plant" });
@@ -327,7 +351,7 @@ export function detectCoil(series: LandmarkSeries, direction_sign: 1 | -1 | null
   const A = "d_coil", ID = "D-COIL" as const;
   if (direction_sign !== 1 && direction_sign !== -1) return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "direction_sign_unknown" });
   const apex = loadApex ?? detectLoadApex(series, direction_sign);
-  if (apex.frame_index == null) return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "hand_load_apex_missing", upstream: apex.missingness?.missing_reason });
+  if (apex.frame_index == null) return miss(A, ID, apex.missingness?.missing_reason ?? R.ANCHOR_NOT_DETECTED, { reason: "hand_load_apex_missing", upstream: apex.missingness?.missing_reason, upstream_diagnostics: apex.diagnostics });
   const p = prep(series, A, ID);
   if ("err" in p) return p.err!;
   const rear = rearSide(series, direction_sign);

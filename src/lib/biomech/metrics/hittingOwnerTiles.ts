@@ -23,11 +23,13 @@ import type { LandmarkSeries, LandmarkSeriesFrame } from "../pose/landmarkSeries
 import { MISSINGNESS_REASONS as R, missingness, type MissingnessRecord, type MissingnessReason } from "./missingness";
 import { uncalibrated, missingConfidence, type ConfidenceRecord } from "./confidence";
 import { detectLoadApex, detectP4, detectCoil, type AnchorResult } from "../anchors/poseEvents";
-import { detectFrontFootPlant } from "../detectors/dPlant";
-import { FPS_FLOOR, LM, MIN_VIS, bodyScalePx, mid, pointPx, rearSide, rearThighAngleDeg, round4, tierFactor, type Pt } from "../anchors/poseKinematics";
+import { findPeakLegLiftFrame } from "../anchors/peakLegLift";
+import { findFrontFootStrikeFrame } from "../anchors/frontFootStrike";
+import { deriveDirectionSign, frontAnkleIndex, type Handedness } from "../side/strideSide";
+import { LM, MIN_VIS, bodyScalePx, mid, pointPx, rearSide, rearThighAngleDeg, round4, tierFactor, type Pt } from "../anchors/poseKinematics";
 
-export const HEAD_PATH_TILE_VERSION = "head_path@1.0.0-com-p2-floor-4.2pct";
-export const BACK_HIP_TILE_VERSION = "back_hip_hold@1.0.0-coil-proxy-floor-3deg";
+export const HEAD_PATH_TILE_VERSION = "head_path@1.1.0-com-p2-floor-4.2pct-no-fps-floor";
+export const BACK_HIP_TILE_VERSION = "back_hip_hold@1.1.0-coil-proxy-floor-3deg-no-fps-floor";
 
 /** Head floor: 4.2 % body height. Basis: p99 head-centroid displacement between ANY two frames on the still clip (4.15 %). */
 export const HEAD_FLOOR_BODY = 0.042;
@@ -158,21 +160,22 @@ function meanVis(f: LandmarkSeriesFrame, idx: readonly number[]): number {
   return idx.reduce((s, i) => s + (f.visibility?.[i] ?? 0), 0) / idx.length;
 }
 
-type Pre = { err: MissingnessReason; diag: Record<string, unknown> } | { kS: number; kE: number; scale: number; temporal: number; anchors: number };
+type Pre = { err: MissingnessReason; diag: Record<string, unknown> } | { kS: number; kE: number; scale: number; temporal: number | null; anchors: number };
 
 function common(series: LandmarkSeries, dir: 1 | -1 | null, start: AnchorResult, end: AnchorResult): Pre {
   const fps = series.header.fps_true;
   if (dir !== 1 && dir !== -1) return { err: R.ANCHOR_NOT_DETECTED, diag: { reason: "direction_sign_unknown" } };
-  if (!Number.isFinite(fps) || fps < FPS_FLOOR) return { err: R.INSUFFICIENT_TEMPORAL_RESOLUTION, diag: { fps } };
+  // POSITION-BASED tile: no frame-rate floor. The anchors carry their own
+  // ±1-frame uncertainty; the window only has to exist.
   if (series.header.subject_track_reliable === false) return { err: R.POSE_NOT_DETECTED, diag: { reason: "subject_track_unreliable" } };
-  if (start.frame_index == null) return { err: R.ANCHOR_NOT_DETECTED, diag: { reason: `${start.anchor}_missing`, upstream: start.missingness?.missing_reason ?? null } };
-  if (end.frame_index == null) return { err: R.ANCHOR_NOT_DETECTED, diag: { reason: `${end.anchor}_missing`, upstream: end.missingness?.missing_reason ?? null } };
+  if (start.frame_index == null) return { err: start.missingness?.missing_reason ?? R.ANCHOR_NOT_DETECTED, diag: { reason: `${start.anchor}_missing`, upstream: start.missingness?.missing_reason ?? null, upstream_diagnostics: start.diagnostics } };
+  if (end.frame_index == null) return { err: end.missingness?.missing_reason ?? R.ANCHOR_NOT_DETECTED, diag: { reason: `${end.anchor}_missing`, upstream: end.missingness?.missing_reason ?? null, upstream_diagnostics: end.diagnostics } };
   const kS = series.frames.findIndex((f) => f.frame_index === start.frame_index);
   const kE = series.frames.findIndex((f) => f.frame_index === end.frame_index);
   if (kS < 0 || kE < 0 || kE <= kS) return { err: R.ANCHOR_NOT_DETECTED, diag: { reason: "window_invalid", start: start.frame_index, end: end.frame_index } };
   const scale = bodyScalePx(series);
   if (scale == null) return { err: R.LANDMARK_OCCLUDED, diag: { reason: "no_body_scale" } };
-  return { kS, kE, scale, temporal: tierFactor(fps), anchors: Math.min(start.confidence ?? 0, end.confidence ?? 0) };
+  return { kS, kE, scale, temporal: Number.isFinite(fps) ? tierFactor(fps) : null, anchors: Math.min(start.confidence ?? 0, end.confidence ?? 0) };
 }
 
 function factorGate(f: ConfidenceFactors): MissingnessReason | null {
@@ -328,15 +331,52 @@ export function computeBackHipSocketHold(i: BackHipInputs): BackHipResult {
 }
 
 /* ============================== runner ============================== */
-/** Computes the anchors from the persisted series and both tiles. Pure. */
-export function runHittingOwnerTiles(series: LandmarkSeries, o: { direction_sign: 1 | -1 | null; athlete_height_in: number | null }) {
-  const load = detectLoadApex(series, o.direction_sign);
-  const plant = detectFrontFootPlant(series, { front_side: "auto" });
-  const p4 = detectP4(series, o.direction_sign, plant.front_foot_full_plant?.frame_index ?? null);
-  const coil = detectCoil(series, o.direction_sign, load);
+/**
+ * Front-foot plant for the tiles, from the SAME D-PLANT the tempo path uses:
+ * front foot chosen from the athlete's side, plant searched after that foot's
+ * peak lift (or after stride onset when there is no vertical lift).
+ */
+export function frontFootPlantFromSeries(series: LandmarkSeries, side: Handedness) {
+  const idx = frontAnkleIndex(side);
+  const fps = Number.isFinite(series.header.fps_true) ? series.header.fps_true : null;
+  const rows = series.frames.map((f) => {
+    const ok = (i: number) => f.pose_detected && (f.visibility?.[i] ?? 0) >= MIN_VIS && Number.isFinite(f.normalized[i * 3 + 1]);
+    const y = (i: number) => (ok(i) ? f.normalized[i * 3 + 1] : null);
+    const ax = ok(idx) ? f.normalized[idx * 3] : null, ay = y(idx);
+    const ys = [LM.L_SHOULDER, LM.R_SHOULDER, LM.L_ANKLE, LM.R_ANKLE].map(y);
+    const h = ys.some((v) => v == null) ? null : Math.abs(((ys[2] as number) + (ys[3] as number)) / 2 - ((ys[0] as number) + (ys[1] as number)) / 2);
+    return { frame_index: f.frame_index, lift_ankle_y: ay, lift_ankle_x: ax, front_ankle_y: ay, front_ankle_x: ax, body_height_y: h && h > 0 ? h : null };
+  });
+  const lift = findPeakLegLiftFrame(rows, fps);
+  const plant = findFrontFootStrikeFrame(rows, { after_frame_index: lift.frame_index, fps });
+  return { lift, plant };
+}
+
+/**
+ * Computes the anchors from the persisted series and both tiles. Pure.
+ * `side` decides the front foot AND (unless given explicitly) direction_sign.
+ * An unknown side refuses — it is never defaulted.
+ */
+export function runHittingOwnerTiles(
+  series: LandmarkSeries,
+  o: { side: Handedness | null; athlete_height_in: number | null; direction_sign?: 1 | -1 | null },
+) {
+  const dir = o.direction_sign !== undefined ? o.direction_sign : o.side ? deriveDirectionSign(series, o.side) : null;
+  const load = detectLoadApex(series, dir);
+  const stride = o.side ? frontFootPlantFromSeries(series, o.side) : null;
+  const p4 = stride
+    ? detectP4(series, dir, stride.plant.frame_index, stride.plant)
+    : ({ ...detectP4(series, dir, null), diagnostics: { reason: "batting_side_unknown" } } as AnchorResult);
+  const coil = detectCoil(series, dir, load);
   return {
-    anchors: { hand_load_apex: load, p4_start: p4, d_coil: coil, front_foot_full_plant: plant.front_foot_full_plant?.frame_index ?? null },
-    tile19: computeHeadPathThroughStride({ series, direction_sign: o.direction_sign, athlete_height_in: o.athlete_height_in, hand_load_apex: load, p4_start: p4 }),
-    tile20: computeBackHipSocketHold({ series, direction_sign: o.direction_sign, d_coil: coil, p4_start: p4 }),
+    direction_sign: dir,
+    anchors: {
+      hand_load_apex: load, p4_start: p4, d_coil: coil,
+      peak_leg_lift: stride?.lift ?? null,
+      front_foot_plant: stride?.plant ?? null,
+      front_foot_full_plant: stride?.plant.frame_index ?? null,
+    },
+    tile19: computeHeadPathThroughStride({ series, direction_sign: dir, athlete_height_in: o.athlete_height_in, hand_load_apex: load, p4_start: p4 }),
+    tile20: computeBackHipSocketHold({ series, direction_sign: dir, d_coil: coil, p4_start: p4 }),
   };
 }

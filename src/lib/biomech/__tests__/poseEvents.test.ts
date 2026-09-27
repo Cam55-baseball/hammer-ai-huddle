@@ -91,8 +91,9 @@ describe("pose-derived anchors", () => {
     expect(r.anchor_uncertainty_ms).toBeGreaterThan(0);
   });
 
-  it("D-RELEASE refuses below 60 fps and when the arm is hidden", () => {
-    expect(detectReleasePoseOnly(pitch(30), { throwing_side: "right" }).missingness?.missing_reason).toBe("insufficient_temporal_resolution");
+  it("D-RELEASE never refuses on an ordinary 30 fps rate; refuses when the arm is hidden", () => {
+    const r30 = detectReleasePoseOnly(pitch(30), { throwing_side: "right" });
+    expect(r30.missingness?.missing_reason).not.toBe("insufficient_temporal_resolution");
     const hidden = detectReleasePoseOnly(pitch(60, [0, 129]), { throwing_side: "right" });
     expect(hidden.frame_index).toBeNull();
   });

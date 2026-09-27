@@ -9,17 +9,21 @@ import { rearThighAngleDeg } from "../anchors/poseKinematics";
 const load = (n: string): LandmarkSeries => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "fixtures", n))).toString("utf8"));
 const still = load("still-subject-15d75bc9.ndjson.gz");
 const swing = load("motion-hitting-edf45130.ndjson.gz");
+// Two real 24 fps owner uploads (2026-09-27 01:42:27 and 01:59:21), pose on every frame.
+const clipA = load("swing-24fps-914cf54c.ndjson.gz");
+const clipB = load("swing-24fps-9d2e117e.ndjson.gz");
 
 describe("tiles 19 + 20 — still clip must be missing", () => {
-  for (const direction_sign of [1, -1, null] as const) {
+  for (const side of ["L", "R", null] as const) {
     for (const athlete_height_in of [70, null]) {
-      it(`dir=${direction_sign} height=${athlete_height_in}`, () => {
-        const r = runHittingOwnerTiles(still, { direction_sign, athlete_height_in });
+      it(`side=${side} height=${athlete_height_in}`, () => {
+        const r = runHittingOwnerTiles(still, { side, athlete_height_in });
         expect(r.tile19.missingness).not.toBeNull();
         expect(r.tile19.verdict).toBeNull();
         expect(r.tile20.missingness).not.toBeNull();
         expect(r.tile20.verdict).toBeNull();
         expect(r.anchors.d_coil.frame_index).toBeNull();
+        expect(r.anchors.front_foot_plant?.frame_index ?? null).toBeNull();
       });
     }
   }
@@ -39,17 +43,46 @@ describe("tiles 19 + 20 — still clip must be missing", () => {
   });
 });
 
-describe("tiles 19 + 20 — swing clip", () => {
+describe("tiles 19 + 20 — unreliable-track swing clip", () => {
   it("is deterministic across three runs and refuses with a stated reason", () => {
-    for (const direction_sign of [1, -1] as const) {
-      const runs = [0, 1, 2].map(() => JSON.stringify(runHittingOwnerTiles(swing, { direction_sign, athlete_height_in: 70 })));
+    for (const side of ["L", "R"] as const) {
+      const runs = [0, 1, 2].map(() => JSON.stringify(runHittingOwnerTiles(swing, { side, athlete_height_in: 70 })));
       expect(new Set(runs).size).toBe(1);
-      const r = runHittingOwnerTiles(swing, { direction_sign, athlete_height_in: 70 });
+      const r = runHittingOwnerTiles(swing, { side, athlete_height_in: 70 });
       // Fixture header: subject_track_reliable=false (76 of 185 frames lost).
       for (const t of [r.tile19, r.tile20]) {
         expect(t.verdict).toBeNull();
-        expect(t.missingness?.missing_reason).toBe("pose_not_detected");
+        expect(t.missingness).not.toBeNull();
       }
     }
+  });
+});
+
+describe("24 fps real clips — ordinary phone rate is not a refusal", () => {
+  it("clip 914cf54c filed Left: plant found after the lift, both tiles return values", () => {
+    const r = runHittingOwnerTiles(clipA, { side: "L", athlete_height_in: 70 });
+    expect(r.direction_sign).toBe(-1);
+    expect(r.anchors.peak_leg_lift?.frame_index).toBe(177);
+    expect(r.anchors.front_foot_plant?.frame_index).toBe(184);
+    expect(r.anchors.front_foot_plant?.anchor_uncertainty_ms).toBeCloseTo(41.6667, 3);
+    expect(r.anchors.p4_start.frame_index).toBe(188);
+    expect(r.tile19.missingness).toBeNull();
+    expect(r.tile19.verdict).not.toBeNull();
+    expect(r.tile20.missingness).toBeNull();
+    expect(r.tile20.verdict).not.toBeNull();
+  });
+  it("a tile that still refuses keeps the anchor's real reason", () => {
+    const r = runHittingOwnerTiles(clipB, { side: "L", athlete_height_in: 70 });
+    expect(r.tile19.lineage.reason).toBe("hand_load_apex_missing");
+    expect((r.tile19.lineage.upstream_diagnostics as { reason: string }).reason).toBe("no_confirmed_rear_extremum");
+  });
+  it("unknown side never picks a foot", () => {
+    const r = runHittingOwnerTiles(clipA, { side: null, athlete_height_in: 70 });
+    expect(r.anchors.front_foot_plant).toBeNull();
+    expect(r.tile19.verdict).toBeNull();
+  });
+  it("is byte-identical across runs", () => {
+    const a = JSON.stringify(runHittingOwnerTiles(clipA, { side: "L", athlete_height_in: 70 }));
+    expect(JSON.stringify(runHittingOwnerTiles(clipA, { side: "L", athlete_height_in: 70 }))).toBe(a);
   });
 });

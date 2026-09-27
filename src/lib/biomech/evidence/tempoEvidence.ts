@@ -24,7 +24,7 @@ export interface TempoEvidenceInputs {
   readonly video_sha256_hex: string;
   readonly fps_true: number;
   readonly landing_time_sec: number | null;
-  readonly direction_sign: 1 | -1;
+  readonly direction_sign: 1 | -1 | 0;
   readonly calibration_h_px: number;
   readonly peak_leg_lift: PeakLegLiftResult;
   readonly front_foot_strike: FrontFootStrikeAnchor;
@@ -42,7 +42,7 @@ export interface TempoEvidenceArtifact {
     readonly video_sha256_hex: string;
     readonly fps_true: number;
     readonly landing_time_sec: number | null;
-    readonly direction_sign: 1 | -1;
+    readonly direction_sign: 1 | -1 | 0;
     readonly calibration_h_px: number;
   };
   readonly anchors: {

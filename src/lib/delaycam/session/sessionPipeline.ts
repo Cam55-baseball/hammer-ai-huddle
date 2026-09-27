@@ -43,6 +43,8 @@ export interface SessionPipelineInput {
   readonly duration_sec: number;
   readonly module: SessionModule;
   readonly sport: "baseball" | "softball";
+  /** Athlete side (from the session's side stamp). null → foot anchors refuse; never defaulted. */
+  readonly side?: "L" | "R" | null;
   readonly onProgress?: (stage: "sampling" | "reps", done: number, total: number) => void;
 }
 
@@ -161,7 +163,7 @@ export async function runSessionPipeline(input: SessionPipelineInput): Promise<S
         fps,
         tier,
         frames_decoded: rows.length,
-        metrics: computeRepMetrics(input.module, input.sport, { rows, fps, tier }),
+        metrics: computeRepMetrics(input.module, input.sport, { rows, fps, tier, side: input.side ?? null }),
       });
       input.onProgress?.("reps", r + 1, split.reps.length);
     }

@@ -19,8 +19,9 @@ describe("runTempoPipeline", () => {
   it("emits canonical pose missingness end-to-end when no pose frames are detected", async () => {
     const r = await runTempoPipeline(baseInputs);
     expect(r.metric.value).toBeNull();
+    // The anchor's own reason survives to the record (no generic overwrite).
     expect(r.metric.missingness?.missing_reason).toBe(
-      MISSINGNESS_REASONS.PEAK_LEG_LIFT_MISSING,
+      MISSINGNESS_REASONS.POSE_NOT_DETECTED,
     );
     expect(r.evidence.anchors.peak_leg_lift.missingness?.missing_reason).toBe(
       MISSINGNESS_REASONS.POSE_NOT_DETECTED,

@@ -3,6 +3,12 @@ import { runSessionPipeline } from "@/lib/delaycam/session/sessionPipeline";
 import { createSession, linkSessionVideo, markSessionFailed, saveSessionResults, type NewSessionInput } from "@/lib/delaycam/session/sessionStore";
 import type { SessionSummary } from "@/lib/delaycam/session/sessionSummary";
 
+/** Same source of truth as the session row: the SideContext stamp. Empty stamp → unknown. */
+function sideFromStamp(stamp: Record<string, unknown>): "L" | "R" | null {
+  const v = stamp.batting_side ?? stamp.throwing_hand;
+  return v === "L" || v === "R" ? v : null;
+}
+
 export type GatherStatus = "idle" | "sampling" | "reps" | "saving" | "done" | "failed";
 
 /**
@@ -47,6 +53,7 @@ export function useDelayCamSessionGathering() {
         duration_sec: meta.duration_sec ?? 0,
         module: meta.module,
         sport: meta.sport,
+        side: sideFromStamp(meta.side_stamp),
         onProgress: (stage, done, total) => {
           if (run !== runRef.current) return;
           setStatus(stage);

@@ -46,15 +46,15 @@ export const DETECTOR_VERSIONS: Readonly<Record<DetectorId, string>> = {
   "D-PLANT": "plant@1.0.0-zero-crossing-load-gate",
   // Pose-derived event anchors — real, but NOT yet validated on real clips.
   // Real version = implemented; wiring into tiles is a separate approval.
-  "D-STILL": "still@1.0.0-agg-speed-run",
-  "D-FIRST-MOVE": "first_move@1.0.0-exit-still-2f",
+  "D-STILL": "still@1.1.0-agg-speed-run-no-fps-floor",
+  "D-FIRST-MOVE": "first_move@1.1.0-exit-still-2f-no-fps-floor",
   // POSE-ONLY TIER of release: 2-of-3 fusion (wrist speed peak, elbow
   // extension max, arm braking onset). Uncertainty is reported, never hidden.
-  "D-RELEASE-POSE": "release_pose@1.0.0-2of3-wrist-elbow-brake",
-  "D-LOAD-APEX": "load_apex@1.1.0-wrist-rear-extremum-sign-change-noise-floor",
-  "D-SWING-START": "swing_start@1.0.1-wrist-fwd-accel-2f",
-  "D-P4": "p4@1.0.0-plant-then-back-elbow-fwd-2f",
-  "D-FINISH": "finish@1.1.0-still-after-peak-rotation-requires-movement",
+  "D-RELEASE-POSE": "release_pose@1.1.0-2of3-wrist-elbow-brake-no-fps-floor",
+  "D-LOAD-APEX": "load_apex@1.2.0-wrist-rear-extremum-noise-floor-no-fps-floor",
+  "D-SWING-START": "swing_start@1.1.0-wrist-fwd-accel-2f-no-fps-floor",
+  "D-P4": "p4@1.1.0-plant-then-back-elbow-fwd-30ms-no-fps-floor",
+  "D-FINISH": "finish@1.2.0-still-after-peak-rotation-no-fps-floor",
   // Everything below is still a skeleton and MUST keep short-circuiting.
   // D-RELEASE = the future BALL-ASSISTED release tier (ball leaves hand).
   "D-RELEASE": "release@0.0.0-stub",
@@ -62,7 +62,7 @@ export const DETECTOR_VERSIONS: Readonly<Record<DetectorId, string>> = {
   "D-CONTACT": "contact@0.0.0-stub",
   "D-BALL": "ball@0.0.0-stub",
   // D-COIL is a PROXY (rear thigh angle) for socket rotation — not directly visible side-on.
-  "D-COIL": "coil@1.0.0-proxy-rear-thigh-angle-3deg",
+  "D-COIL": "coil@1.1.0-proxy-rear-thigh-angle-3deg-no-fps-floor",
 } as const;
 
 export function detectorVersion(id: DetectorId): string {

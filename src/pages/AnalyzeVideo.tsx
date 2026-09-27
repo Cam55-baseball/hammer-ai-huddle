@@ -36,11 +36,10 @@ import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
 import { densePoseRowToPoseFrameRow, type PoseFrameRow } from "@/lib/biomech/pose/poseRunner";
-import { captureGuidanceFor, type CaptureGuidance, type GuidanceModule } from "@/lib/biomech/captureGuidance";
-import { CaptureGuidanceCard } from "@/components/analyze/CaptureGuidanceCard";
+import { resolveClipSide, frontAnkleIndex, deriveDirectionSign } from "@/lib/biomech/side/strideSide";
 import { captureDenseLandmarkSeries, WindowSelectionFailure, UNKNOWN_FPS_SAMPLING_GRID_HZ } from "@/lib/biomech/pose/denseLandmarkCapture";
 import { writeLandmarkSeries } from "@/lib/biomech/pose/landmarkSeriesStorage";
-import { toPeakLegLiftFrames, toPlantFrames } from "@/lib/biomech/pose/toAnchorFrames";
+import { toStrideFrames } from "@/lib/biomech/pose/toAnchorFrames";
 import { runTempoPipeline } from "@/lib/biomech/pipeline/tempoPipeline";
 import { useVault } from "@/hooks/useVault";
 import { AnalysisPrescriptionSection } from "@/components/analyze/AnalysisPrescriptionSection";
@@ -167,21 +166,38 @@ export default function AnalyzeVideo() {
   // distance live in DelayCam (code kept in src/lib/cv + src/lib/capture).
   // Movement gate result — a refused clip produces no tiles, faults or drills.
   const [fpsUnknown, setFpsUnknown] = useState(false);
-  const [captureGuidance, setCaptureGuidance] = useState<CaptureGuidance | null>(null);
-  const guidanceResolver = useRef<((proceed: boolean) => void) | null>(null);
   const [trackDiagnosis, setTrackDiagnosis] = useState<TrackDiagnosis | null>(null);
   const [noMovement, setNoMovement] = useState<Extract<MovementGateResult, { status: "refused" }> | null>(null);
   const { saveDrill, savedDrills } = useVault();
 
   // Side-aware analysis: hitting → hit discipline; pitching/throwing → throw.
   const sideDiscipline: 'hit' | 'throw' = module === 'hitting' ? 'hit' : 'throw';
-  const { selectedSide, shouldShowPicker, setSide } = useSideContext();
-  const activeSide = selectedSide[sideDiscipline];
-  // For declared switch/ambi athletes we require an explicit per-file side
-  // confirmation so the analysis, roadmap, and profile are filed under the
-  // correct side. Non-switch athletes bypass this entirely.
-  const [sideConfirmedForFile, setSideConfirmedForFile] = useState(false);
+  const { shouldShowPicker, profileSide, saveProfileSide, loading: sideLoading } = useSideContext();
+  // Owner rule (2026-09-27): the side decides which ankle is the front foot, so
+  // it must be ESTABLISHED before analysis — never assumed, never defaulted.
+  //   profile single side → used, overridable per clip
+  //   switch hitter / ambidextrous → per-clip choice required
+  //   nothing recorded → ask and save to the profile
+  const [clipSide, setClipSide] = useState<'L' | 'R' | null>(null);
+  const [savingProfileSide, setSavingProfileSide] = useState(false);
+  const [showSideOverride, setShowSideOverride] = useState(false);
+  const profileSideValue = profileSide(sideDiscipline);
+  const sideResolution = resolveClipSide(profileSideValue, clipSide);
+  const clipSideKnown = sideResolution.status === 'known';
+  const activeSide: 'L' | 'R' = sideResolution.status === 'known' ? sideResolution.side : 'R'; // display/filing only when known
   const requiresSideConfirmation = shouldShowPicker(sideDiscipline);
+  const sideWord = sideDiscipline === 'hit' ? 'batting' : 'throwing';
+  const chooseClipSide = async (s: 'L' | 'R') => {
+    if (profileSideValue == null) {
+      // Case 3 — save to the profile so the athlete is never asked again.
+      setSavingProfileSide(true);
+      const ok = await saveProfileSide(sideDiscipline, s, (sport === 'softball' ? 'softball' : 'baseball'));
+      setSavingProfileSide(false);
+      if (!ok) toast.error(`We couldn't save your ${sideWord} side to your profile. It's used for this clip only — try again later.`);
+    }
+    setClipSide(s);
+    setShowSideOverride(false);
+  };
 
   // Track which drills are already saved
   useEffect(() => {
@@ -408,22 +424,22 @@ export default function AnalyzeVideo() {
     setAnalysisError(null);
     setCurrentVideoId(null);
     setLandingTime(null);
-    // Reset per-file side confirmation whenever a new clip is loaded.
-    setSideConfirmedForFile(false);
+    // Per-clip side choice resets with every new clip (profile side persists).
+    setClipSide(null);
+    setShowSideOverride(false);
   };
 
   const handleUploadAndAnalyze = async () => {
     if (!videoFile || !user) return;
 
-    // Pre-upload side gate for declared switch hitters / ambidextrous throwers.
-    // The clip must be tagged L or R before it leaves the device so the
-    // resulting analysis, drills, and report card are filed under the
-    // correct side profile.
-    if (requiresSideConfirmation && !sideConfirmedForFile) {
+    // Side gate: analysis refuses honestly when the side is not established.
+    // It picks the front foot, so a guessed side invalidates the plant anchor
+    // and everything after it. Defaulting to right-handed caused that bug.
+    if (analysisEnabled && !clipSideKnown) {
       toast.error(
         sideDiscipline === 'hit'
-          ? 'Confirm the batting side used in this clip before analysis.'
-          : 'Confirm the throwing hand used in this clip before analysis.',
+          ? 'Choose which side you are batting from in this clip before analysis.'
+          : 'Choose which hand you are throwing with in this clip before analysis.',
       );
       return;
     }
@@ -522,24 +538,6 @@ export default function AnalyzeVideo() {
       }
     }
 
-
-    // Capture guidance BEFORE the wait: if the file's rate limits what this
-    // module can measure, say so and let the user proceed or re-film.
-    if (analysisEnabled) {
-      const g = captureGuidanceFor(probed.fps_true, (module as GuidanceModule) || "hitting");
-      if (g) {
-        const proceed = await new Promise<boolean>((resolve) => {
-          guidanceResolver.current = resolve;
-          setCaptureGuidance(g);
-        });
-        guidanceResolver.current = null;
-        setCaptureGuidance(null);
-        if (!proceed) {
-          setUploading(false);
-          return;
-        }
-      }
-    }
 
     // ===== PHASE 1 — Deterministic frame extraction =====
     let frames: string[] = [];
@@ -650,21 +648,18 @@ export default function AnalyzeVideo() {
           mean_visibility: denseRun.mean_visibility,
         });
 
-        const peakFrames = toPeakLegLiftFrames(poseRows);
-        const plantFrames = toPlantFrames(poseRows);
-        const merged = peakFrames.map((p, i) => ({
-          frame_index: p.frame_index,
-          lift_ankle_y: p.lift_ankle_y,
-          front_ankle_y: plantFrames[i]?.front_ankle_y ?? null,
-          body_height_y: p.body_height_y ?? null,
-        }));
+        // Lift and plant read the SAME foot — the front foot for this clip's
+        // established side (gate above guarantees it is known).
+        const merged = toStrideFrames(poseRows, frontAnkleIndex(activeSide));
+        const derivedDir = deriveDirectionSign(denseRun.series, activeSide);
 
         tempoRun = await runTempoPipeline({
           video_sha256_hex: probed.sha256_hex,
           // Unknown rate → tempo refuses (invalid fps) rather than guessing.
           fps_true: fpsTrue ?? Number.NaN,
           landing_time_sec: landingTime ?? null,
-          direction_sign: 1,
+          // Derived from side + ankle positions; 0 = could not be derived (never guessed).
+          direction_sign: derivedDir ?? 0,
           calibration_h_px: probed.height,
           pose_frames: merged,
         });
@@ -786,8 +781,9 @@ export default function AnalyzeVideo() {
           capture_fps_source: probed.fps_source === "container" ? "file_container" : "unknown",
           ...(landingTime != null ? { landing_time_sec: landingTime } : {}),
 
-          // Side stamp — only when picker is shown (switch hitter / ambidextrous thrower)
-          ...(shouldShowPicker(sideDiscipline)
+          // Side stamp — the established side for this clip (gate guarantees it
+          // when analysis runs). Library-only uploads with no side stay unstamped.
+          ...(clipSideKnown
             ? (sideDiscipline === 'hit'
                 ? { batting_side: activeSide }
                 : { throwing_hand: activeSide })
@@ -1374,33 +1370,50 @@ export default function AnalyzeVideo() {
               </div>
             </Card>
 
-            {requiresSideConfirmation && !analysis && !analyzing && (
+            {analysisEnabled && videoFile && !analysis && !analyzing && !sideLoading && (
               <Card className={cn(
                 "p-3 sm:p-4 border",
-                sideConfirmedForFile ? "border-primary/40 bg-primary/5" : "border-amber-500/60 bg-amber-500/5",
+                clipSideKnown ? "border-primary/40 bg-primary/5" : "border-warning/60 bg-warning/5",
               )}>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold">
-                      {sideConfirmedForFile
-                        ? `Filing this clip under ${activeSide === 'L' ? 'Left' : 'Right'} ${sideDiscipline === 'hit' ? 'batting' : 'throwing'}.`
-                        : `Which ${sideDiscipline === 'hit' ? 'batting side' : 'throwing hand'} was used in this clip?`}
+                      {sideResolution.status === 'known'
+                        ? `Filing this clip under ${activeSide === 'L' ? 'Left' : 'Right'} ${sideWord}${sideResolution.source === 'profile' ? ' — from your profile.' : ' for this clip.'}`
+                        : sideResolution.case === 'switch'
+                          ? (sideDiscipline === 'hit'
+                              ? 'Which side are you hitting from in this video?'
+                              : 'Which hand are you throwing with in this video?')
+                          : (sideDiscipline === 'hit'
+                              ? "We don't have your batting side yet. Which side do you hit from?"
+                              : "We don't have your throwing hand yet. Which hand do you throw with?")}
                     </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Analysis, drills, and roadmap will be filed under this side.
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      {sideResolution.status === 'known'
+                        ? 'This decides which foot is your front foot. If this video is from the other side, change it for this clip.'
+                        : sideResolution.case === 'switch'
+                          ? 'Required — it decides which foot is your front foot.'
+                          : "We'll save it to your profile so you're only asked once."}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {(['L','R'] as const).map(s => (
-                      <Button
-                        key={s}
-                        size="sm"
-                        variant={activeSide === s && sideConfirmedForFile ? 'default' : 'outline'}
-                        onClick={() => { setSide(sideDiscipline, s); setSideConfirmedForFile(true); }}
-                      >
-                        {s === 'L' ? 'Left' : 'Right'}
+                  <div className="flex shrink-0 items-center gap-2">
+                    {sideResolution.status === 'known' && !showSideOverride && sideResolution.source === 'profile' ? (
+                      <Button size="sm" variant="ghost" onClick={() => setShowSideOverride(true)}>
+                        Change for this clip
                       </Button>
-                    ))}
+                    ) : (
+                      (['L', 'R'] as const).map((sd) => (
+                        <Button
+                          key={sd}
+                          size="sm"
+                          disabled={savingProfileSide}
+                          variant={clipSideKnown && activeSide === sd ? 'default' : 'outline'}
+                          onClick={() => void chooseClipSide(sd)}
+                        >
+                          {sd === 'L' ? 'Left' : 'Right'}
+                        </Button>
+                      ))
+                    )}
                   </div>
                 </div>
               </Card>
@@ -1409,7 +1422,7 @@ export default function AnalyzeVideo() {
             {!analyzing && !analysis && (
               <Button
                 onClick={handleUploadAndAnalyze}
-                disabled={uploading || extractingFrames || (requiresSideConfirmation && !sideConfirmedForFile)}
+                disabled={uploading || extractingFrames || savingProfileSide || (analysisEnabled && !clipSideKnown)}
                 size="lg"
                 className="w-full"
               >
@@ -1484,13 +1497,6 @@ export default function AnalyzeVideo() {
               </div>
             )}
 
-            {captureGuidance && (
-              <CaptureGuidanceCard
-                guidance={captureGuidance}
-                onContinue={() => guidanceResolver.current?.(true)}
-                onCancel={() => guidanceResolver.current?.(false)}
-              />
-            )}
 
             {fpsUnknown && !analyzing && !analysis && (
               <FpsUnknownCard />

@@ -15,7 +15,8 @@ import type { FrameDensityTier } from "@/lib/biomech/pose/denseLandmarkCapture";
 import { findPeakLegLiftFrame } from "@/lib/biomech/anchors/peakLegLift";
 import { findFrontFootStrikeFrame } from "@/lib/biomech/anchors/frontFootStrike";
 import { computeTempoSec } from "@/lib/biomech/metrics/tempoSec";
-import { toPeakLegLiftFrames, toPlantFrames } from "@/lib/biomech/pose/toAnchorFrames";
+import { toStrideFrames } from "@/lib/biomech/pose/toAnchorFrames";
+import { frontAnkleIndex, type Handedness } from "@/lib/biomech/side/strideSide";
 import type { PoseFrameRow } from "@/lib/biomech/pose/poseRunner";
 import type { SessionModule } from "./repSplitter";
 
@@ -35,6 +36,8 @@ export interface RepContext {
   readonly rows: readonly PoseFrameRow[]; // dense per-rep frames at native fps
   readonly fps: number;
   readonly tier: FrameDensityTier;
+  /** Athlete side for this session (same SideContext stamp the session row stores). null → foot anchors refuse. */
+  readonly side?: Handedness | null;
 }
 
 export type ReleaseStatus = "released" | "staff_validation" | "not_released";
@@ -53,16 +56,23 @@ export interface SessionMetricDef {
 }
 
 function tempo(ctx: RepContext): RepMetricValue {
-  // Same anchor helpers the uploaded-clip report card uses — one method, not two.
-  const lift = findPeakLegLiftFrame(toPeakLegLiftFrames(ctx.rows));
-  const strike = findFrontFootStrikeFrame(toPlantFrames(ctx.rows));
+  // Same anchor helpers the uploaded-clip path uses — one method, not two.
+  // Front foot comes from the athlete's side; never defaulted.
+  if (ctx.side !== "L" && ctx.side !== "R") {
+    return { missing: true, missing_reason: MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, detail: "athlete side unknown — front foot cannot be chosen" };
+  }
+  const frames = toStrideFrames(ctx.rows, frontAnkleIndex(ctx.side));
+  const lift = findPeakLegLiftFrame(frames, ctx.fps);
+  const strike = findFrontFootStrikeFrame(frames, { after_frame_index: lift.frame_index, fps: ctx.fps });
   const m = computeTempoSec({
     peak_leg_lift_frame_index: lift.frame_index,
     front_foot_strike_frame_index: strike.frame_index,
     fps_true: ctx.fps,
+    peak_leg_lift_missingness: lift.missingness,
+    front_foot_strike_missingness: strike.missingness,
   });
   if (m.value == null) {
-    return { missing: true, missing_reason: m.missingness?.missing_reason ?? MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED };
+    return { missing: true, missing_reason: m.missingness?.missing_reason ?? MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, detail: strike.detail ?? m.lineage.refused_at };
   }
   return { value: m.value, unit: "s", confidence: m.confidence.value ?? 0 };
 }
@@ -74,7 +84,9 @@ export const SESSION_METRICS: readonly SessionMetricDef[] = [
     unit: "s",
     modules: ["pitching"],
     sports: ["baseball"],
-    minTier: "t_low",
+    // Timing-based, but tolerant: carries ±1 frame and decides for itself
+    // (tempoSec.MIN_DELTA_FRAMES). Any KNOWN rate qualifies; 24 fps is fine.
+    minTier: "below_floor",
     release: "staff_validation",
     releaseNote: "Being checked on real DelayCam sessions before athletes see it.",
     compute: tempo,

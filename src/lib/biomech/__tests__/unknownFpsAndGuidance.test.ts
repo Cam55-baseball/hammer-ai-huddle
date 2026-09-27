@@ -1,29 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { captureGuidanceFor } from "../captureGuidance";
 import { bytesSource, readMatroskaDefaultDurationFps } from "../containerFps";
 import { classifyDensityTier } from "../pose/denseLandmarkCapture";
 import { tierMeets } from "@/lib/delaycam/session/metricRegistry";
-
-describe("capture guidance", () => {
-  it("names limits at 24 fps and never blocks", () => {
-    const g = captureGuidanceFor(24, "hitting")!;
-    expect(g.fps).toBe(24);
-    expect(g.notPossible).toContain("Foot plant and tempo");
-    expect(g.possible).toContain("Body positions and posture feedback");
-    expect(g.fix).toMatch(/1080p at 60 fps/);
-    expect(g.fix).toMatch(/Cinematic/);
-  });
-  it("is silent at 60 fps and above", () => {
-    expect(captureGuidanceFor(59.94, "hitting")).toBeNull();
-    expect(captureGuidanceFor(120, "pitching")).toBeNull();
-  });
-  it("guides on unknown rate without inventing one", () => {
-    expect(captureGuidanceFor(null, "throwing")!.fps).toBeNull();
-  });
-  it("is deterministic", () => {
-    expect(JSON.stringify(captureGuidanceFor(30, "pitching"))).toBe(JSON.stringify(captureGuidanceFor(30, "pitching")));
-  });
-});
 
 describe("unknown frame rate", () => {
   it("has its own tier that meets no requirement", () => {

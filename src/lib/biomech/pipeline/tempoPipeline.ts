@@ -34,7 +34,7 @@ export interface TempoPipelineInputs {
   readonly video_sha256_hex: string;
   readonly fps_true: number;
   readonly landing_time_sec: number | null;
-  readonly direction_sign: 1 | -1;
+  readonly direction_sign: 1 | -1 | 0;
   readonly calibration_h_px: number;
   /** D-POSE output. While D-POSE is stubbed the anchors emit canonical missingness. */
   readonly pose_frames: readonly (PoseFrame & PlantPoseFrame)[];
@@ -48,13 +48,21 @@ export interface TempoPipelineResult {
 export async function runTempoPipeline(
   inputs: TempoPipelineInputs,
 ): Promise<TempoPipelineResult> {
-  const peak_leg_lift = findPeakLegLiftFrame(inputs.pose_frames);
-  const front_foot_strike = findFrontFootStrikeFrame(inputs.pose_frames);
+  // pose_frames must carry the athlete's FRONT foot for both lift and plant
+  // (strideSide.frontAnkleIndex). The plant is searched only after the lift.
+  const fps = Number.isFinite(inputs.fps_true) && inputs.fps_true > 0 ? inputs.fps_true : null;
+  const peak_leg_lift = findPeakLegLiftFrame(inputs.pose_frames, fps);
+  const front_foot_strike = findFrontFootStrikeFrame(inputs.pose_frames, {
+    after_frame_index: peak_leg_lift.frame_index,
+    fps,
+  });
 
   const metric = computeTempoSec({
     peak_leg_lift_frame_index: peak_leg_lift.frame_index,
     front_foot_strike_frame_index: front_foot_strike.frame_index,
     fps_true: inputs.fps_true,
+    peak_leg_lift_missingness: peak_leg_lift.missingness,
+    front_foot_strike_missingness: front_foot_strike.missingness,
   });
 
   const evidence = await buildTempoEvidence({
