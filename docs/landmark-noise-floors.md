@@ -129,3 +129,7 @@ Still clip 15d75bc9, |median3 − Stance Lock median|, % of stature unless noted
 | S4 shoulder-mid vs hip-mid offset | 0.69 | 0.75 | not an angle (signed) | yes |
 | S5 glove wrist vs shoulder-mid | 0.96–2.05 | 1.26–2.28 | not an angle | yes (opening direction unconfirmed) |
 Fusion (≥2 independent votes agree): with p99 floors 2/326 still frames falsely read "opening"; with max floors 0/326. Pass resolution = 13.9°. No single signal clears the 0° standard in degrees.
+
+## Hitting card batch 1 (2026-09-27, provisional)
+- D-SWING-PEAK (torso rotation peak — NOT contact): still clip 15d75bc9 unwrapped shoulder-line rate max 0.315 rad/s, p99 0.270. Floor 4.0 rad/s (≈ half a 90° turn in 0.2 s); frames with 2-D shoulder length < 35 % of clip median are masked (edge-on, ill-conditioned).
+- hand_load: hands-mid forward p99 1.35 % of stature (vertical 2.72 %). Floor 1.35 %. Ungraded — owner number needed.
