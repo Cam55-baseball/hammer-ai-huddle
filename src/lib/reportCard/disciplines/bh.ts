@@ -5,10 +5,16 @@ import { readNumber, readBool, readScore100, missingState, scoreMeterState } fro
  * Baseball Hitting — 17-tile contract mapped to the P1–P4 doctrine.
  *
  * P1 — Hip Load Stability (non-negotiable PASS gate)
- * P2 — Hand Load · P2 Timing to Knee Lift · Eyes / Head Tracking
+ * P2 — Hand Load · P2 Timing to Knee Lift · Head Discipline Through the Swing
  * P3 — Stride Direction · Heel Plant · P3 Timing to Release · Hands Outside Shoulders at Landing
- * P4 — Sequencing (NN) · Bat Path · On-Plane % · Time-to-Contact ·
- *      Bat Speed · Connection & Barrel Delivery · Hitter's Move (NN) · Shoulder Plane Steadiness · Finish & Balance
+ * P4 — Sequencing (NN) · Back-Elbow Connection · Hitter's Move (NN) · Shoulder Plane Steadiness · Finish & Balance
+ *
+ * Upload card = BODY MECHANICS ONLY (owner ruling 2026-09-27). No name,
+ * standard or label may promise contact, the ball or the bat. Window ends are
+ * D-SWING-PEAK (peak torso rotation speed — a body event, NOT contact).
+ * Bat/ball/contact metrics live in contracts/delaycamPerformance.spec.ts.
+ * Saved keys (eyes_tracking, back_elbow_contact, *_to_contact) are legacy
+ * storage identifiers kept so older results still read — never display text.
  */
 const tiles: ReportCardTileSpec[] = [
   // ============ P1 ============
@@ -74,16 +80,16 @@ const tiles: ReportCardTileSpec[] = [
   },
   {
     key: "eyes_tracking",
-    name: "Eyes / Head Tracking",
+    name: "Head Discipline Through the Swing",
     mode: "score_meter",
-    standard: "Eyes track the ball, head does not chase it",
+    standard: "Head turns smoothly and stays off the back shoulder — no late head pull (body only; does not verify where the eyes look)",
     thresholdChip: "Acceptable 70 · Elite 90",
     phase: "P2 Hand Load",
     explainer: {
       whatWhy:
-        "Lateral head movement toward the pitcher is a major contact disruptor. Eyes work; head stays. A loaded scap AFTER P1 is what locks the head still — the scap pulls the chin and eye line into a fixed post so the eyes can work without the head chasing them.",
+        "Measures head discipline, not eyesight: how smoothly the head turns through the swing and whether it pulls late (chin coming off the back shoulder early). A camera on the body cannot tell where the eyes are looking — that needs ball tracking and belongs to DelayCam. A loaded scap AFTER P1 gives the head a fixed post so it does not chase.",
       howToImprove:
-        "Load the scap immediately after P1 so the head has a fixed post to sit on. Most pros use the 'ball-on-the-load-spot' drill: place a ball where your head sits at peak load, take the swing, then check that your head has returned to that same reference point relative to the ball. Tee work with eyes-on-impact cue. Slow-mo side review of head path across the swing.",
+        "Load the scap immediately after P1 so the head has a fixed post to sit on. Mark where your head sits at peak load, swing, and check the head is still at that mark with the chin on the back shoulder. Slow-mo side review of head path across the swing.",
       encouragement: "Scap locks the post. Eyes do the work.",
     },
     compute: (a) => {
@@ -192,12 +198,12 @@ const tiles: ReportCardTileSpec[] = [
     key: "sequencing",
     name: "Sequencing",
     mode: "pass_fail",
-    standard: "Legs → Hands → Pause → Stride → Pause → Contact",
+    standard: "Body order from swing start to swing peak: hips → torso → lead shoulder → lead arm",
     phase: "P4 Hitter's Move",
     nonNegotiable: true,
     explainer: {
       whatWhy:
-        "Sequencing is the ORDER the kinetic chain fires in: back hip → torso/shoulders → back elbow → hands → barrel. Each segment loads the next; nothing fires until the segment behind it has done its job. Pass means the order held. Fail means a segment jumped the line — usually shoulders firing with the hips, or hands pushing before the elbow led — which steals power from everything downstream and shortens the contact window. A low score here is the single biggest leak you can have, because every later metric (bat path, on-plane, time to contact, bat speed) is downstream of it.",
+        "Sequencing is the ORDER the kinetic chain fires in: hips → torso → lead shoulder → lead arm, measured from the body only between swing start and swing peak (the moment the torso turns fastest — not contact). Each segment loads the next. Pass means the order held. Fail means a segment jumped the line — usually shoulders firing with the hips — which steals power from everything downstream. The barrel's place in the chain needs bat tracking and is measured in DelayCam, not here.",
       howToImprove:
         "Pause-pause tee rounds (load → pause → power step → pause → swing — the stride is a deliberate, coached move, timed to the pitcher's release). Load the back hip and let it UNLOAD when P4 fires — bigger early hip load = more swing power. Front-toss with a partner calling out the chain ('hip — shoulder — elbow — hand — barrel') so you feel the order, not just the swing.",
       encouragement: "Hip first. Barrel last. The order is the swing.",
@@ -210,17 +216,17 @@ const tiles: ReportCardTileSpec[] = [
   },
   {
     key: "back_elbow_contact",
-    name: "Connection & Barrel Delivery",
+    name: "Back-Elbow Connection",
     mode: "score_meter",
-    standard: "Connection quality across launch → barrel delivery → contact; minimize the pre-contact blind spot.",
+    standard: "Back-elbow slot and elbow-to-torso connection held from swing start to swing peak — no early flying open",
     thresholdChip: "Acceptable 70 · Elite 90",
     phase: "P4 Hitter's Move",
     explainer: {
       whatWhy:
-        "This is a window metric, not a contact-frame elbow snapshot. It evaluates the hitter's move from P4 launch through barrel delivery into contact: connection holds, shoulders stay as square as possible while the back hip works aggressively, the back elbow moves forward so the barrel begins turning without the hands losing position, and extension waits until after contact. The blind spot starts when extension starts; the shorter the time from extension-start to contact, the better.",
+        "Two body channels, swing start → swing peak: (1) the back-elbow slot angle at swing peak, and (2) the back elbow staying connected to the torso with no early flying open. It does not measure the bat — where the barrel goes needs bat tracking and belongs to DelayCam.",
       howToImprove:
-        "Launch-to-contact constraint work: keep the knob back as a fulcrum, let the back elbow drive forward linearly, keep the hands in position with the body, and make contact before releasing into extension. Use pause-at-launch tee reps, partner-holds-the-knob elbow-to-ball reps, and slow-motion review of when extension begins relative to contact.",
-      encouragement: "Stay connected. Elbow delivers the barrel. Contact before extension.",
+        "Pause-at-launch tee reps: let the back elbow drive forward into the slot while it stays connected to the torso. Towel-under-the-back-arm dry swings. Slow-motion side review of the elbow slot at the fastest point of the turn.",
+      encouragement: "Stay connected. Elbow into the slot.",
     },
     compute: (a) => {
       const m = readScore100(a, "connection_barrel_delivery_score_100");
@@ -232,7 +238,7 @@ const tiles: ReportCardTileSpec[] = [
     key: "hitters_move",
     name: "Hitter's Move Quality",
     mode: "score_meter",
-    standard: "Knob back · hips clear · elbow leads · hands in line · barrel last",
+    standard: "Aggregate of hip load, hand load, stride, heel plant, sequencing and back-elbow connection (body only)",
     thresholdChip: "Acceptable 70 · Elite 92",
     phase: "P4 Hitter's Move",
     nonNegotiable: true,
@@ -253,7 +259,7 @@ const tiles: ReportCardTileSpec[] = [
     key: "shoulder_plane_steadiness",
     name: "Shoulder Plane Steadiness",
     mode: "score_meter",
-    standard: "Once shoulders begin to rotate in P4, the plane holds steady through contact",
+    standard: "Once shoulders begin to rotate in P4, the plane holds steady through swing peak",
     thresholdChip: "Acceptable 70 · Elite 90",
     phase: "P4 Hitter's Move",
     explainer: {
@@ -273,7 +279,7 @@ const tiles: ReportCardTileSpec[] = [
     key: "finish_balance",
     name: "Finish & Balance",
     mode: "score_meter",
-    standard: "Stayed connected with two hands through contact and extension until the ball was gone",
+    standard: "Balanced finish from swing peak to the settled finish — no fall-off",
     thresholdChip: "Acceptable 65 · Elite 88",
     phase: "P4 Hitter's Move",
     explainer: {
@@ -293,7 +299,7 @@ const tiles: ReportCardTileSpec[] = [
     key: "shoulder_to_shoulder_hold",
     name: "Shoulder-to-Shoulder Hold",
     mode: "pass_fail",
-    standard: "Hands-to-back-shoulder spacing held ≥50% of landing → contact; elite = held all the way to contact",
+    standard: "Hands-to-back-shoulder spacing held ≥50% of plant → swing peak; elite = held all the way to swing peak",
     phase: "P4 Hitter's Move",
     nonNegotiable: true,
     explainer: {
@@ -314,8 +320,8 @@ const tiles: ReportCardTileSpec[] = [
         const leakPctM = readNumber(a, "front_shoulder_leak_pct_of_window");
         const where =
           leakPctM && Number.isFinite(leakPctM.value)
-            ? `at ~${Math.round(leakPctM.value)}% of the landing→contact window`
-            : "before contact";
+            ? `at ~${Math.round(leakPctM.value)}% of the plant→swing-peak window`
+            : "before swing peak";
         const heldNote =
           pctM && Number.isFinite(pctM.value)
             ? ` (spacing held ~${Math.round(pctM.value)}% — nullified)`

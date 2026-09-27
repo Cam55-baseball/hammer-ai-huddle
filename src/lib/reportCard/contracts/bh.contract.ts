@@ -28,7 +28,7 @@ export const bhContract: DisciplineContract = {
       unit: "score",
       range: [0, 100],
       prompt:
-        "Score 0-100 for the bat/scap/knob load behind the head AFTER P1 is stable. PASS at 65, ELITE at 88. Worked example: hands clearly loaded behind head with scap pinch and chest square → ~85; hands stay near front shoulder with no scap load → ~45.",
+        "Score 0-100 for the hands/scap load behind the head AFTER P1 is stable. PASS at 65, ELITE at 88. Worked example: hands clearly loaded behind head with scap pinch and chest square → ~85; hands stay near front shoulder with no scap load → ~45.",
     },
     {
       key: "p2_timing_pass",
@@ -41,12 +41,12 @@ export const bhContract: DisciplineContract = {
     {
       key: "eyes_track_score_100",
       tileKey: "eyes_tracking",
-      label: "Eyes / head tracking quality (0-100)",
+      label: "Head discipline through the swing (0-100) — body only",
       kind: "number",
       unit: "score",
       range: [0, 100],
       prompt:
-        "Score 0-100 for how steady the head/eyes stay. PASS at 70, ELITE at 90. Lateral head movement TOWARD the pitcher is the biggest deduction. Worked example: head moves >4% of body height laterally → ~50; rock-steady head with eyes tracking the ball → ~92.",
+        "Score 0-100 for HEAD DISCIPLINE, swing start → swing peak (D-SWING-PEAK = peak torso rotation speed, NOT contact). Two body channels only: (a) head-rotation smoothness over the window; (c) no late head pull — chin stays on the back shoulder until swing peak. PASS at 70, ELITE at 90. Do NOT judge where the eyes look or align the head to the ball — that channel needs ball tracking and lives in the DelayCam performance spec.",
     },
     // ============ P3 ============
     {
@@ -95,17 +95,17 @@ export const bhContract: DisciplineContract = {
       label: "Sequencing legal",
       kind: "boolean",
       prompt:
-        "TRUE if sequence is: Load legs -> Load hands -> Pause -> Stride -> Pause -> Contact. FALSE if rushed or out of order.",
+        "TRUE if, between swing start and swing peak (peak torso rotation speed, NOT contact), body segments fire in order: hips -> torso -> lead shoulder -> lead arm. FALSE if a segment fires out of order. Body only — the barrel segment is a DelayCam metric.",
     },
     {
       key: "connection_barrel_delivery_score_100",
       tileKey: "back_elbow_contact",
-      label: "Back-Elbow Slot & Connection: swing start to swing peak (0-100)",
+      label: "Back-elbow connection: swing start to swing peak (0-100)",
       kind: "number",
       unit: "score",
       range: [0, 100],
       prompt:
-        "Score 0-100 for connection and barrel delivery across the P4 launch → barrel-delivery → contact window, not a single contact-frame elbow angle. PASS at 70, ELITE at 90. Evaluate: connection holds through launch; shoulders stay as square as possible as long as possible while the back hip works aggressively; back elbow moves forward so the barrel begins turning forward without the hands losing position or compromising relative to the body; hands stay in a powerful position with the body; extension starts after contact or as close to contact as possible. Penalize a long blind spot: blind spot starts when extension starts, and the time from extension-start to contact should be minimized. If launch, extension-start, barrel-delivery, or contact cannot be identified, set missing=true with the specific missing anchor. Do not use the old 'back elbow past belly button at contact' formula.",
+        "Score 0-100, swing start → swing peak (peak torso rotation speed, NOT contact). Two body channels only: (a) back-elbow slot angle at swing peak; (b) back elbow stays connected to the torso with no early flying open. PASS at 70, ELITE at 90. Do NOT judge the barrel or its direction to the ball — that channel needs bat and ball tracking and lives in the DelayCam performance spec. If swing start or swing peak cannot be identified, set missing=true with the specific missing anchor.",
     },
     {
       key: "hitters_move_score_100",
@@ -115,7 +115,7 @@ export const bhContract: DisciplineContract = {
       unit: "score",
       range: [0, 100],
       prompt:
-        "Score 0-100: hands stay back, elbow leads, no casting/early barrel flip, chest stays square, contact made with the hands, barrel catapults last. PASS at 70, ELITE at 92.",
+        "Score 0-100, body only: hips load, hands load behind the head, stride within direction, full heel plant, hips-before-shoulders order, back elbow leads while connected. PASS at 70, ELITE at 92. Do not judge the bat or the ball.",
     },
     {
       key: "shoulder_plane_steadiness_score_100",
@@ -125,7 +125,7 @@ export const bhContract: DisciplineContract = {
       unit: "score",
       range: [0, 100],
       prompt:
-        "Score 0-100 for how steady the SHOULDER PLANE remains from the start of shoulder rotation through contact. PASS at 70, ELITE at 90. Worked example: shoulder line wobbles or re-tilts mid-rotation → ~50; same tilt held from rotation start through contact → ~88. Measure the angle of the line between the two shoulders across the rotation window; deduct for any change > a few degrees.",
+        "Score 0-100 for how steady the SHOULDER PLANE remains from the start of shoulder rotation through swing peak (peak torso rotation speed, NOT contact). PASS at 70, ELITE at 90. Worked example: shoulder line wobbles or re-tilts mid-rotation → ~50; same tilt held from rotation start through swing peak → ~88. Measure the angle of the line between the two shoulders across the rotation window; deduct for any change > a few degrees.",
     },
     {
       key: "finish_balance_score_100",
@@ -135,17 +135,17 @@ export const bhContract: DisciplineContract = {
       unit: "score",
       range: [0, 100],
       prompt:
-        "Score 0-100 for post-contact balance, no fall-off, two-hand finish. PASS at 65, ELITE at 88.",
+        "Score 0-100 for balance from swing peak to the settled finish, no fall-off. PASS at 65, ELITE at 88.",
     },
     {
       key: "shoulder_to_shoulder_hold_pct_to_contact",
       tileKey: "shoulder_to_shoulder_hold",
-      label: "Hands-to-back-shoulder spacing held: % of landing→contact window",
+      label: "Hands-to-back-shoulder spacing held: % of plant→swing-peak window",
       kind: "number",
       unit: "percent",
       range: [0, 100],
       prompt:
-        "Percentage of the LANDING→CONTACT window during which the spacing between the hand cluster and the back shoulder is HELD. Method: at the front-foot landing frame, measure the 2D distance between the hand cluster centroid and the back-shoulder joint (call this D0). For every frame from landing to contact, recompute that distance. The spacing is 'held' on a frame when distance ≥ 0.90 * D0. Return the % of frames in the landing→contact window where spacing was held. PASS at ≥50%, ELITE at ≥95% (held essentially all the way to contact). If hands or back shoulder are not trackable across the landing→contact window, set missing=true with the specific reason. NEVER guess.",
+        "Percentage of the PLANT→SWING-PEAK window (swing peak = D-SWING-PEAK, peak torso rotation speed, NOT contact) during which the spacing between the hand cluster and the back shoulder is HELD. Method: at the front-foot landing frame, measure the 2D distance between the hand cluster centroid and the back-shoulder joint (call this D0). For every frame from full plant to swing peak, recompute that distance. The spacing is 'held' on a frame when distance ≥ 0.90 * D0. Return the % of frames in the plant→swing-peak window where spacing was held. PASS at ≥50%, ELITE at ≥95% (held essentially all the way to swing peak). If hands or back shoulder are not trackable across the plant→swing-peak window, set missing=true with the specific reason. NEVER guess.",
     },
     {
       key: "shoulder_to_shoulder_hold_pass",
@@ -153,25 +153,25 @@ export const bhContract: DisciplineContract = {
       label: "Hands stayed back through P4 (boolean fallback)",
       kind: "boolean",
       prompt:
-        "TRUE only if the spacing between the hand cluster and the back shoulder remained at ≥90% of its landing-frame value across at least 50% of frames from landing to contact. Prefer emitting shoulder_to_shoulder_hold_pct_to_contact instead — only emit this boolean when you cannot estimate a percentage.",
+        "TRUE only if the spacing between the hand cluster and the back shoulder remained at ≥90% of its landing-frame value across at least 50% of frames from full plant to swing peak. Prefer emitting shoulder_to_shoulder_hold_pct_to_contact instead — only emit this boolean when you cannot estimate a percentage.",
     },
     {
       key: "front_shoulder_leak_before_contact",
       tileKey: "shoulder_to_shoulder_hold",
-      label: "Front shoulder flew open / leaked out of sequence before contact",
+      label: "Front shoulder flew open / leaked out of sequence before swing peak",
       kind: "boolean",
       prompt:
-        "TRUE if the front shoulder rotates open toward the pitcher BEFORE contact in a way that breaks the hip→shoulder sequence. Operational rule: measure the angle of the line between the two shoulders relative to the line from back shoulder to the pitcher. If that line rotates more than ~15° toward the pitcher before the contact frame (i.e. the front shoulder has flown open ahead of where the hips have rotated), set TRUE. This is the auto-FAIL trigger for the shoulder-to-shoulder hold tile — it nullifies the move regardless of spacing held.",
+        "TRUE if the front shoulder rotates open toward the pitcher BEFORE swing peak in a way that breaks the hip→shoulder sequence. Operational rule: measure the angle of the line between the two shoulders relative to the line from back shoulder to the pitcher. If that line rotates more than ~15° toward the pitcher before swing peak (i.e. the front shoulder has flown open ahead of where the hips have rotated), set TRUE. This is the auto-FAIL trigger for the shoulder-to-shoulder hold tile — it nullifies the move regardless of spacing held.",
     },
     {
       key: "front_shoulder_leak_pct_of_window",
       tileKey: "shoulder_to_shoulder_hold",
-      label: "At what % of the landing→contact window did the front shoulder leak (if it did)",
+      label: "At what % of the plant→swing-peak window did the front shoulder leak (if it did)",
       kind: "number",
       unit: "percent",
       range: [0, 100],
       prompt:
-        "If front_shoulder_leak_before_contact is TRUE, return the percentage of the landing→contact window at which the leak FIRST crossed the ~15° threshold (e.g. 35 means about a third of the way from landing to contact). If the leak never occurred, set missing=true with reason 'no_leak'.",
+        "If front_shoulder_leak_before_contact is TRUE, return the percentage of the plant→swing-peak window at which the leak FIRST crossed the ~15° threshold (e.g. 35 means about a third of the way from full plant to swing peak). If the leak never occurred, set missing=true with reason 'no_leak'.",
     },
   ],
 };
@@ -194,5 +194,5 @@ export const BH_UPLOAD_OUT_OF_SCOPE = {
   ruling_date: "2026-09-27",
   tile_keys: ["bat_path", "on_plane", "time_to_contact", "bat_speed_contact"],
   metric_keys: ["bat_path_score_100", "on_plane_pct", "time_to_contact_ms", "bat_speed_contact_mph"],
-  channels: ["sequencing.barrel", "connection_barrel_delivery.bat_delivery"],
+  channels: ["sequencing.barrel", "connection_barrel_delivery.bat_delivery", "eyes_tracking.head_ball_alignment"],
 } as const;
