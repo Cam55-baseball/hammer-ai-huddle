@@ -5,3 +5,5 @@
 - Movement gate (`src/lib/biomech/gates/movementGate.ts`) runs before any Analysis output; a refused clip gets no AI call, tiles, faults or drills. Why: a still clip produced a fabricated tempo and a full fault list.
 - The still-subject fixture (`__tests__/stillSubjectRegression.test.ts`) must return missingness for every anchor and tile. Why: it's the only asset whose correct answer is "nothing happened".
 - Tiles 19/20 (`src/lib/biomech/metrics/hittingOwnerTiles.ts`) are pass/fail against owner standards only, never 20-80 graded, hidden until the unhide decision; any confidence factor < 0.5 forces missingness. Why: no reference population exists and the D-COIL signal is a proxy.
+- Pitching tiles (`src/lib/biomech/metrics/pitchingTiles.ts`) refuse unless a delivery gate passes: lift → plant → pose release ≤0.35 s after plant, throwing wrist above shoulder; values under the still-clip noise floor are missing, never a score. Why: hitting clips and still clips produced pitching values.
+- Tiles 19/20 are staff-only until `ownerTileVisibility.ts` records ≥10 owner-confirmed clips across both batting sides. Why: n=1 is a signal, not validation.
