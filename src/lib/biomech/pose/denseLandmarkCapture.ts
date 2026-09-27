@@ -279,7 +279,7 @@ export async function captureDenseLandmarkSeries(
 
     const findings = deriveScoutFindings(observations);
     const placed = placeDenseWindowFromScout({
-      fps_true: input.fps_true,
+      fps_true: stepHz,
       duration_sec: input.duration_sec,
       budget: input.budget ?? MAX_DENSE_FRAMES,
       landingTimeSec: input.landingTimeSec,
