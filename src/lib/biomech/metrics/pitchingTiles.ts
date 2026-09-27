@@ -159,32 +159,50 @@ export function findPitchingDelivery(series: LandmarkSeries, throwing_side: Hand
 
 function frontHipIdx(side: Handedness) { return side === "R" ? LM.L_HIP : LM.R_HIP; }
 
-/* energy_angle_deg — angle from rear (support) foot centre to front hip at peak leg lift, + toward target. */
-function energyAt(series: LandmarkSeries, f: LandmarkSeriesFrame | undefined, side: Handedness, dir: 1 | -1): number | null {
+/**
+ * energy_angle_deg — angle from the BACK ANKLE (support foot) to the front hip
+ * at peak leg lift, + toward target.
+ * Definition change 2026-09-27 (owner-confirmed): origin moved from the
+ * heel–toe mid-foot point to the back-ankle landmark (BlazePose 27/28).
+ */
+export const ENERGY_ANGLE_ORIGIN = "back_ankle" as const;
+export const ENERGY_ANGLE_DEFINITION_HISTORY = [
+  { date: "2026-09-27", origin: "rear_midfoot_heel_toe", note: "v2 rebuild" },
+  { date: "2026-09-27", origin: "back_ankle", note: "owner confirmed back ankle → front hip at max leg lift" },
+] as const;
+const ANKLE = { L: 27, R: 28 } as const;
+
+export function energyAt(series: LandmarkSeries, f: LandmarkSeriesFrame | undefined, side: Handedness, dir: 1 | -1, origin: "back_ankle" | "rear_midfoot" = "back_ankle"): number | null {
   if (!f) return null;
   const rear: Handedness = side === "R" ? "R" : "L"; // support foot is the throwing-side foot
-  const heel = pointPx(series, f, HEEL[rear]), toe = pointPx(series, f, TOE[rear]), hip = pointPx(series, f, frontHipIdx(side));
-  if (!heel || !toe || !hip) return null;
-  const fx = (heel.x + toe.x) / 2, fy = (heel.y + toe.y) / 2;
-  const dy = fy - hip.y;
+  const hip = pointPx(series, f, frontHipIdx(side));
+  let o: Pt | null;
+  if (origin === "back_ankle") o = pointPx(series, f, ANKLE[rear]);
+  else {
+    const heel = pointPx(series, f, HEEL[rear]), toe = pointPx(series, f, TOE[rear]);
+    o = heel && toe ? { x: (heel.x + toe.x) / 2, y: (heel.y + toe.y) / 2 } as Pt : null;
+  }
+  if (!o || !hip) return null;
+  const dy = o.y - hip.y;
   if (dy <= 0) return null;
-  return (Math.atan2((hip.x - fx) * dir, dy) * 180) / Math.PI;
+  return (Math.atan2((hip.x - o.x) * dir, dy) * 180) / Math.PI;
 }
 
 export function computeEnergyAngle(series: LandmarkSeries, d: PitchingDelivery): PitchingTileResult {
   const K: Key = "energy_angle_deg";
-  if (!d.ok) return refuse(K, d.refusal!, { gate: d.refusal_detail });
+  if (!d.ok) return refuse(K, d.refusal!, { gate: d.refusal_detail, origin: ENERGY_ANGLE_ORIGIN });
   const side = d.throwing_side!, dir = d.direction_sign!, k = d.lift_k!;
   const v = energyAt(series, series.frames[k], side, dir);
-  if (v == null) return refuse(K, mr(R.LANDMARK_OCCLUDED), { reason: "foot_or_front_hip_unobserved_at_peak_lift" });
+  if (v == null) return refuse(K, mr(R.LANDMARK_OCCLUDED), { reason: "back_ankle_or_front_hip_unobserved_at_peak_lift", origin: ENERGY_ANGLE_ORIGIN });
   const nb = [energyAt(series, series.frames[k - 1], side, dir), energyAt(series, series.frames[k + 1], side, dir)].filter((x): x is number => x != null);
-  if (nb.length === 0) return refuse(K, mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: "no_observed_neighbour_frame", primary: round4(v) });
+  if (nb.length === 0) return refuse(K, mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: "no_observed_neighbour_frame", primary: round4(v), origin: ENERGY_ANGLE_ORIGIN });
   const u = Math.max(...nb.map((x) => Math.abs(x - v)));
-  if (u > ENERGY_ANGLE_STABILITY_DEG) return refuse(K, mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: "unstable_under_1_frame_shift", primary: round4(v), delta: round4(u) });
+  if (u > ENERGY_ANGLE_STABILITY_DEG) return refuse(K, mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: "unstable_under_1_frame_shift", primary: round4(v), delta: round4(u), origin: ENERGY_ANGLE_ORIGIN });
   const s = PITCHING_OWNER_STANDARDS.energy_angle_deg;
   return {
     key: K, value: round4(v), unit: "degrees", uncertainty: round4(u), verdict: v >= s.pass_min ? "pass" : "fail", elite: v >= s.elite_min,
-    missingness: null, confidence: uncalibrated(), standard: s, lineage: { frame_index: series.frames[k].frame_index, neighbour_delta_deg: round4(u) },
+    missingness: null, confidence: uncalibrated(), standard: s,
+    lineage: { frame_index: series.frames[k].frame_index, neighbour_delta_deg: round4(u), origin: ENERGY_ANGLE_ORIGIN, definition_changed: "2026-09-27 mid-foot → back ankle (owner)" },
   };
 }
 
