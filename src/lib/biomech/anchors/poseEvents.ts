@@ -394,11 +394,14 @@ export function detectAllPoseEvents(series: LandmarkSeries, o: { direction_sign:
  * be labelled as contact — true contact is a ball event owned by DelayCam.
  *
  * Refuses when the peak is under SWING_PEAK_MIN_RAD_S or swing start is absent.
- * Floor basis: still clip 15d75bc9 max 0.315 rad/s (p99 0.270) — the floor sits
- * >12× above it; 4.0 rad/s ≈ half of a 90° shoulder turn in 0.2 s. Provisional,
- * not fitted to any swing clip (914cf54c peak 7.06 rad/s).
+ * MEASURED detection threshold (not a coaching standard): still clip 15d75bc9
+ * whole-clip max 0.315 rad/s = noise ceiling; confirmed swing 914cf54c peak
+ * 7.056 rad/s = signal. Threshold = geometric midpoint ≈ 1.49 → 1.5 rad/s:
+ * 4.8× above the still ceiling, 4.7× below the swing peak. Provisional: one
+ * still subject, one confirmed swing (9d2e117e has no confirmed swing peak —
+ * its in-window max 0.744 is 2.4× the still ceiling and still refuses).
  */
-export const SWING_PEAK_MIN_RAD_S = 4.0;
+export const SWING_PEAK_MIN_RAD_S = 1.5;
 /** Search horizon after swing start. */
 export const SWING_PEAK_SEARCH_SEC = 1.0;
 /** Below this fraction of the stance-width shoulder segment the 2-D line is near edge-on and its angle is ill-conditioned — those frames are masked, never used. */

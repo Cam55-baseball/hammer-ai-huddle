@@ -56,7 +56,7 @@ export const DETECTOR_VERSIONS: Readonly<Record<DetectorId, string>> = {
   "D-SWING-START": "swing_start@1.1.0-wrist-fwd-accel-2f-no-fps-floor",
   "D-P4": "p4@1.1.0-plant-then-back-elbow-fwd-30ms-no-fps-floor",
   // NOT contact: torso rotation peak, bounds mechanics windows only.
-  "D-SWING-PEAK": "swing_peak@1.0.0-shoulder-rate-max-not-contact",
+  "D-SWING-PEAK": "swing_peak@1.1.0-shoulder-rate-max-1.5-measured-not-contact",
   "D-FINISH": "finish@1.2.0-still-after-peak-rotation-no-fps-floor",
   // Everything below is still a skeleton and MUST keep short-circuiting.
   // D-RELEASE = the future BALL-ASSISTED release tier (ball leaves hand).
