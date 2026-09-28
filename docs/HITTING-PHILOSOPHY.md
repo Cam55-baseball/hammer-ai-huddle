@@ -720,3 +720,9 @@ Pass rule proposal: at D-LOAD-APEX, COM and pelvis both on the back-leg side of 
 ### Unity `[owner-supplied 2026-09-27]`
 > "Everything works in unity."
 hip_load, head discipline, head path (19), back hip socket (20) and post-landing hip drift (17) share root pattern `back_leg_did_not_hold_load`.
+
+### §10a — hip_load method APPROVED [owner-approved 2026-09-28]
+Position-based estimate — a camera cannot see load; never called "weight". Primary: centre of mass between the ankles (fraction of stance width). Second vote: pelvis midpoint. Evidence only: back hip / back knee over back ankle. Pass at D-LOAD-APEX when both sit on the back-leg side of the midpoint beyond their still floors (0.065 each). No maximum. Disagreement or within-floor → missing.
+
+### §10b — 914cf54c grip finding (2026-09-28)
+Frames 54–67 (stance lock): left wrist x 0.74–0.81, right wrist x 0.28–0.33 (normalised), 48–52% of stature apart; both elbows sit anatomically between shoulder and wrist; separation falls smoothly 57% (f50) → 34% (f72) → 15% (f76) → 11% (f78) and stays 4–11% until the apex (f170). A lost wrist would jump; this converges steadily, so it is **window placement**: the lower body settled before the hands gripped up. MediaPipe visibility read 0.97–0.99 throughout and is not evidence either way. Fix: hand-load depth now uses the first ≥0.25 s gripped run (77–82) as its baseline; the grip gate is checked at the apex.
