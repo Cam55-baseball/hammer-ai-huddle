@@ -27,6 +27,8 @@ import { findPeakLegLiftFrame } from "../anchors/peakLegLift";
 import { findFrontFootStrikeFrame } from "../anchors/frontFootStrike";
 import { deriveDirectionSign, frontAnkleIndex, type Handedness } from "../side/strideSide";
 import { LM, MIN_VIS, bodyScalePx, mid, pointPx, rearSide, rearThighAngleDeg, round4, tierFactor, type Pt } from "../anchors/poseKinematics";
+import { detectStanceLock } from "../anchors/stanceLock";
+import { buildSegmentValidity, maskUntrusted } from "../validity/segmentValidity";
 
 export const HEAD_PATH_TILE_VERSION = "head_path@1.1.0-com-p2-floor-4.2pct-no-fps-floor";
 export const BACK_HIP_TILE_VERSION = "back_hip_hold@1.1.0-coil-proxy-floor-3deg-no-fps-floor";
