@@ -25,7 +25,7 @@ import { detectStanceLock, unroll, headCentroidPx, type StanceLock } from "../an
 import { smooth } from "../anchors/poseKinematics";
 import { lowerBodySpeed, STANCE_LOCK_SPEED } from "../anchors/stanceLock";
 import { bodyScale } from "../anchors/poseKinematics";
-import { buildSegmentValidity, type SegmentValidity } from "../validity/segmentValidity";
+import { maskUntrusted, buildSegmentValidity, type SegmentValidity } from "../validity/segmentValidity";
 import { detectCameraView, checkCameraRequirement, type CameraViewResult } from "../camera/cameraView";
 
 export const HITTING_POSE_TILES_VERSION = "hitting_pose_tiles@1.5.0-hands-set-lock-forearm-rigidity-2026-09-28";
@@ -321,5 +321,10 @@ export function runHittingPoseTiles(series: LandmarkSeries, o: { side: Handednes
   if (dir == null) return { ...base, ...all(mr(R.ANCHOR_NOT_DETECTED), { reason: "direction_sign_underivable" }) };
   const lock = detectStanceLock(series);
   if (!lock.ok || !lock.baseline?.stature_px) return { ...base, ...all(lock.missingness ?? mr(R.ANCHOR_NOT_DETECTED), { reason: lock.detail ?? "stance_lock_missing" }) };
-  return { ...base, hip_load: gate(computeHipLoad(series, o.side, dir, lock)), hand_load: gate(computeHandLoad(series, dir, lock, buildSegmentValidity(series, lock))), head_discipline: gate(computeHeadDiscipline(series, o.side, dir, lock)), hands_outside_shoulders_at_landing: gate(computeHandsOutside(series, o.side, dir, lock)) };
+  // Segment validity (2026-09-28 migration): hip_load, head discipline and hands-outside read the MASKED series —
+  // an over-length rigid segment makes its distal landmark missing in that frame. hand_load already uses v directly.
+  const v = buildSegmentValidity(series, lock), ms = maskUntrusted(series, v);
+  const sv = { segment_validity: v?.version ?? null };
+  const tag = (r: HittingPoseTileResult) => ({ ...r, lineage: { ...r.lineage, ...sv } });
+  return { ...base, hip_load: gate(tag(computeHipLoad(ms, o.side, dir, lock))), hand_load: gate(computeHandLoad(series, dir, lock, v)), head_discipline: gate(tag(computeHeadDiscipline(ms, o.side, dir, lock))), hands_outside_shoulders_at_landing: gate(tag(computeHandsOutside(ms, o.side, dir, lock))) };
 }

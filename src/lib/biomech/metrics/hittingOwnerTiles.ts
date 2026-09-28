@@ -378,6 +378,9 @@ export function runHittingOwnerTiles(
     ? detectP4(series, dir, stride.plant.frame_index, stride.plant)
     : ({ ...detectP4(series, dir, null), diagnostics: { reason: "batting_side_unknown" } } as AnchorResult);
   const coil = detectCoil(series, dir, load);
+  // Segment validity (2026-09-28): anchors from the raw series, tile values from the masked one.
+  const lock = detectStanceLock(series);
+  const ms = lock.ok ? maskUntrusted(series, buildSegmentValidity(series, lock)) : series;
   return {
     direction_sign: dir,
     anchors: {
@@ -386,7 +389,7 @@ export function runHittingOwnerTiles(
       front_foot_plant: stride?.plant ?? null,
       front_foot_full_plant: stride?.plant.frame_index ?? null,
     },
-    tile19: computeHeadPathThroughStride({ series, direction_sign: dir, athlete_height_in: o.athlete_height_in, hand_load_apex: load, p4_start: p4 }),
-    tile20: computeBackHipSocketHold({ series, direction_sign: dir, d_coil: coil, p4_start: p4 }),
+    tile19: computeHeadPathThroughStride({ series: ms, direction_sign: dir, athlete_height_in: o.athlete_height_in, hand_load_apex: load, p4_start: p4 }),
+    tile20: computeBackHipSocketHold({ series: ms, direction_sign: dir, d_coil: coil, p4_start: p4 }),
   };
 }
