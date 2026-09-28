@@ -32,16 +32,16 @@ export const HITTING_CARD_TILES_VERSION = "hitting_card_tiles@1.0.0-2026-09-28";
 
 /* ---------- floors: still clip 15d75bc9, measured by scripts before any threshold ---------- */
 export const CARD_FLOORS = {
-  heel_minus_toe_pct: 1.0,      // still max 0.93 (p99 0.78)
-  shoulder_tilt_spread_deg: 2.3, // still worst 0.7 s window p90−p10 2.21
-  finish_com_sway_pct: 0.9,     // still worst 0.25 s window p90−p10 0.84
-  knee_angle_deg: 3.0,          // still max |med3 − median| 2.93 (worst side)
-  hip_fwd_pct: 0.8,             // same as HIP_LOAD_NOISE_FLOOR_PCT (pelvis mid)
-  hand_height_pct: 2.8,         // still hand-point vertical max 2.72
-  elbow_angle_deg: 6.0,         // still max |med3 − median| 5.8 (worst side)
-  head_vertical_spread_pct: 0.6, // still worst 0.7 s window p90−p10 0.55
-  pelvis_rot_deg: 9.0,          // still hip rigid-solve θ max |med3 − median| 8.6 — ill-conditioned near closed
-  spacing_pct: 2.3,             // hand point minus rear shoulder: HANDS_OUTSIDE floor
+  heel_minus_toe_pct: 1.5,        // still max 1.415 (worst side R; p99 1.03)
+  shoulder_tilt_spread_deg: 1.7,  // still worst 0.7 s window p90−p10 1.647
+  finish_com_sway_pct: 0.5,       // still worst 0.25 s window p90−p10 of pelvis-mid forward 0.438
+  knee_angle_deg: 4.9,            // still max |med3 − median| 4.816 (worst side L)
+  hip_fwd_pct: 1.0,               // still pelvis-mid forward max 0.984
+  hand_height_pct: 3.2,           // still single-wrist height max 3.127 (hand point may be one wrist)
+  elbow_angle_deg: 3.0,           // still max 2.878 on the well-conditioned arm; arms <6% stature are refused (L forearm 4.4% gave 17.9)
+  head_vertical_spread_pct: 1.2,  // still worst 0.7 s window p90−p10 1.143
+  pelvis_rot_deg: 12.0,           // still hip rigid-solve θ max 11.9 — ill-conditioned near closed
+  spacing_pct: 2.3,               // hand point minus rear shoulder: HANDS_OUTSIDE floor
 } as const;
 
 export const CARD_TILE_OWNER_NUMBERS_NEEDED = [
@@ -107,8 +107,10 @@ function q(xs: number[], p: number) { const t = [...xs].sort((a, b) => a - b); r
 /** p90 − p10 — robust spread, never max − min. */
 export function robustSpread(xs: number[]) { return xs.length >= 3 ? q(xs, 0.9) - q(xs, 0.1) : null; }
 /** Interior angle at b (degrees), 2-D. */
-export function angleDeg(a: Pt | null, b: Pt | null, cc: Pt | null) {
+export function angleDeg(a: Pt | null, b: Pt | null, cc: Pt | null, minLenPx = 0) {
   if (!a || !b || !cc) return null;
+  // A limb pointing at the camera (either segment < minLen) makes the 2-D angle ill-conditioned: refuse, never guess.
+  if (Math.hypot(a.x - b.x, a.y - b.y) < minLenPx || Math.hypot(cc.x - b.x, cc.y - b.y) < minLenPx) return null;
   const u = { x: a.x - b.x, y: a.y - b.y }, w = { x: cc.x - b.x, y: cc.y - b.y };
   const nu = Math.hypot(u.x, u.y), nw = Math.hypot(w.x, w.y); if (!(nu > 0 && nw > 0)) return null;
   return (Math.acos(Math.max(-1, Math.min(1, (u.x * w.x + u.y * w.y) / (nu * nw)))) * 180) / Math.PI;
@@ -170,7 +172,7 @@ function sequencing(c: Ctx, ssK: number, pkK: number): CardTileResult {
 /* ================= 10 back-elbow connection ================= */
 function backElbow(c: Ctx, ssK: number, pkK: number): CardTileResult {
   const K: CardKey = "back_elbow_connection", u = "degrees";
-  const slot = m3(c, pkK, (j) => angleDeg(P(c, j, c.rear.sh), P(c, j, c.rear.el), P(c, j, c.rear.wr)));
+  const slot = m3(c, pkK, (j) => angleDeg(P(c, j, c.rear.sh), P(c, j, c.rear.el), P(c, j, c.rear.wr), 0.06 * c.st));
   const rise = m3(c, ssK, (j) => { const e = Up(c, P(c, j, c.rear.el)), s = Up(c, P(c, j, c.rear.sh)); return e == null || s == null ? null : e - s; });
   const gapAt = (j: number) => { const e = Fw(c, P(c, j, c.rear.el)), h = Fw(c, P(c, j, c.rear.hip)); return e == null || h == null ? null : e - h; };
   if (slot == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "back_arm_untrusted_at_swing_peak" });
@@ -285,7 +287,7 @@ function handsUp(c: Ctx, plantK: number): CardTileResult {
 /* ================= 19 lead elbow bend increasing ================= */
 function leadElbow(c: Ctx, ssK: number, pkK: number): CardTileResult {
   const K: CardKey = "lead_elbow_bend_increasing", u = "degrees";
-  const ang = (j: number) => angleDeg(P(c, j, c.lead.sh), P(c, j, c.lead.el), P(c, j, c.lead.wr));
+  const ang = (j: number) => angleDeg(P(c, j, c.lead.sh), P(c, j, c.lead.el), P(c, j, c.lead.wr), 0.06 * c.st);
   const a = m3(c, ssK, ang), b = m3(c, pkK, ang);
   if (a == null || b == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "lead_arm_untrusted_at_swing_start_or_peak" });
   const d = a - b;
