@@ -130,10 +130,10 @@ function stanceFrac(series: LandmarkSeries, f: LandmarkSeriesFrame, p: Pt | null
   if ((Math.abs(w) * 100) / lock.baseline.stature_px < HIP_LOAD_MIN_STANCE_PCT) return null;
   return (u(p) - u(ra)) / w;
 }
-function computeHipLoad(series: LandmarkSeries, side: Handedness, dir: 1 | -1, lock: StanceLock): HittingPoseTileResult {
+function computeHipLoad(series: LandmarkSeries, side: Handedness, dir: 1 | -1, lock: StanceLock, raw: LandmarkSeries = series): HittingPoseTileResult {
   const K: Key = "hip_load";
   const base = { method: "position_based_estimate", note: "Position-based estimate from body landmarks — a camera cannot measure load.", root_pattern_key: BACK_LEG_ROOT_PATTERN, downstream_evidence_tiles: ["post_landing_hip_drift", "head_path_through_stride", "back_hip_socket_hold", "head_discipline"] };
-  const apex = detectLoadApex(series, dir);
+  const apex = detectLoadApex(raw, dir);
   if (apex.frame_index == null) return refuse(K, apex.missingness ?? mr(R.ANCHOR_NOT_DETECTED), { ...base, reason: `load_apex_missing:${String(apex.diagnostics.reason ?? "")}` });
   const k = series.frames.findIndex((f) => f.frame_index === apex.frame_index);
   if (k <= lock.end_k!) return refuse(K, mr(R.ANCHOR_NOT_DETECTED), { ...base, reason: "load_apex_inside_stance_lock", apex_frame: apex.frame_index });
@@ -250,17 +250,17 @@ export function yawJerk(series: LandmarkSeries, k0: number, k1: number, lock: St
  * Behind the COM the back leg still holds the weight; beyond it, it does not.
  * A fail is reported as a P1 fault (BACK_LEG_ROOT_PATTERN) with the head as evidence.
  */
-function computeHeadDiscipline(series: LandmarkSeries, side: Handedness, dir: 1 | -1, lock: StanceLock): HittingPoseTileResult {
+function computeHeadDiscipline(series: LandmarkSeries, side: Handedness, dir: 1 | -1, lock: StanceLock, raw: LandmarkSeries = series): HittingPoseTileResult {
   const K: Key = "head_discipline";
-  const ss = detectSwingStart(series, dir);
+  const ss = detectSwingStart(raw, dir);
   if (ss.frame_index == null) return refuse(K, ss.missingness ?? mr(R.ANCHOR_NOT_DETECTED), { reason: "swing_start_missing" });
-  const pk = detectSwingPeak(series, dir, ss);
+  const pk = detectSwingPeak(raw, dir, ss);
   if (pk.frame_index == null) return refuse(K, pk.missingness ?? mr(R.ANCHOR_NOT_DETECTED), { reason: `swing_peak_missing:${String(pk.diagnostics.reason ?? "")}` });
   const k0 = series.frames.findIndex((f) => f.frame_index === ss.frame_index), k1 = series.frames.findIndex((f) => f.frame_index === pk.frame_index);
   const g = (f: LandmarkSeriesFrame) => headVsRearShoulderFwd(series, f, lock, dir, side);
   const a = med3(series, k0, g), b = med3(series, k1, g);
   if (a == null || b == null) return refuse(K, mr(R.LANDMARK_OCCLUDED), { reason: "head_or_rear_shoulder_unobserved" });
-  const apex = detectLoadApex(series, dir);
+  const apex = detectLoadApex(raw, dir);
   if (apex.frame_index == null) return refuse(K, apex.missingness ?? mr(R.ANCHOR_NOT_DETECTED), { reason: `com_at_p2_unavailable:load_apex_missing` });
   const kA = series.frames.findIndex((f) => f.frame_index === apex.frame_index);
   const com = comAtP2(series, kA);
@@ -293,9 +293,9 @@ function pitcherTimingRefusals() {
 }
 
 /* hands_outside_shoulders_at_landing — rear wrist vs rear shoulder at full plant. */
-function computeHandsOutside(series: LandmarkSeries, side: Handedness, dir: 1 | -1, lock: StanceLock): HittingPoseTileResult {
+function computeHandsOutside(series: LandmarkSeries, side: Handedness, dir: 1 | -1, lock: StanceLock, raw: LandmarkSeries = series): HittingPoseTileResult {
   const K: Key = "hands_outside_shoulders_at_landing";
-  const { plant } = frontFootPlantFromSeries(series, side);
+  const { plant } = frontFootPlantFromSeries(raw, side);
   if (plant.frame_index == null) return refuse(K, plant.missingness ?? mr(R.FRONT_FOOT_FULL_PLANT_MISSING), { reason: `plant_missing:${plant.detail ?? ""}` });
   const k = series.frames.findIndex((f) => f.frame_index === plant.frame_index);
   const v = med3(series, k, (f) => wristVsShoulderFwd(series, f, lock, dir, side));
@@ -326,5 +326,5 @@ export function runHittingPoseTiles(series: LandmarkSeries, o: { side: Handednes
   const v = buildSegmentValidity(series, lock), ms = maskUntrusted(series, v);
   const sv = { segment_validity: v?.version ?? null };
   const tag = (r: HittingPoseTileResult) => ({ ...r, lineage: { ...r.lineage, ...sv } });
-  return { ...base, hip_load: gate(tag(computeHipLoad(ms, o.side, dir, lock))), hand_load: gate(computeHandLoad(series, dir, lock, v)), head_discipline: gate(tag(computeHeadDiscipline(ms, o.side, dir, lock))), hands_outside_shoulders_at_landing: gate(tag(computeHandsOutside(ms, o.side, dir, lock))) };
+  return { ...base, hip_load: gate(tag(computeHipLoad(ms, o.side, dir, lock, series))), hand_load: gate(computeHandLoad(series, dir, lock, v)), head_discipline: gate(tag(computeHeadDiscipline(ms, o.side, dir, lock, series))), hands_outside_shoulders_at_landing: gate(tag(computeHandsOutside(ms, o.side, dir, lock, series))) };
 }
