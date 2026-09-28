@@ -21,7 +21,8 @@
 - [ ] Wire tile 17/19/20/head-discipline fails into analysis_fault_findings writer (keys mapped, no writer emits them yet)
 
 - [x] hip_load position-based estimate (approved 2026-09-28)
-- [x] hand_load grip baseline (914cf54c window-placement fix)
+- [x] hand_load grip baseline moved (914cf54c)
+- [ ] Grip fix proposal: hands-set Stance Lock + forearm rigid-body rejection (baseline 79–82 contaminated) — awaiting approval
 - [x] back-leg root pattern → one finding (pure builder, tested)
 - [ ] Wire pose tiles into the analysis pipeline so the finding is actually saved (tiles are not run server-side yet)
 - [ ] Tiles 6, 9–13, 16–21, then hitters_move

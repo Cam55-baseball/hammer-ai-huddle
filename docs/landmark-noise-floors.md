@@ -154,3 +154,11 @@ Still clip 15d75bc9, 328 frames, 3-frame median of the position as a fraction of
 - Centre of mass: p95 0.0466, p99 0.0543, max 0.0612 → floor **0.065**
 - Pelvis midpoint: p95 0.0425, p99 0.0551, max 0.0620 → floor **0.065**
 Floors set at the still-clip maximum rounded up, measured before the pass rule. Pass: both < 0.5 − floor at D-LOAD-APEX. No maximum. Re-measure with more subjects.
+
+## 2026-09-28 — Grip question on 914cf54c answered from the data (rigid-body forearm test)
+Forearm = elbow→wrist, % of stature. Stance-median ≈17.6 (L) / 17.5 (R).
+- Frames 44–68: both forearms 15.7–19.1, visibility ≥0.97, frame-to-frame wrist jumps ≤7%. Wrists 68% → 53% apart, shrinking smoothly. Both hands genuinely apart → **(b) window placement**: the stance lock (54–67) is the athlete standing before he grips up.
+- Frames 69–78: hands converge 46% → 11.6%, forearms still 14.6–20.6. Real movement.
+- Frames 79–89: **left wrist mis-tracked (a)** — left forearm collapses to 5.6–9.9 (a rigid segment cannot shorten by half), visibility 0.27–0.59, jumps up to 22.5%. Right forearm stays 18.3–20.1. The left hand is hidden behind the body/bat.
+- Consequence: the current grip baseline (77–82) is half contaminated — 79–82 use the mis-tracked left wrist. The −19.08% hand-load value is therefore not trustworthy yet.
+Proposed fix (not built, awaiting approval): (1) Stance Lock "hands set" condition — the settled window must also have wrist separation ≤ grip gate; (2) reject any frame where either forearm deviates >20% from its own stance median; (3) once the grip is established, take the hand point from the rigid-valid wrist only (hands are locked together on one handle), rather than refusing.
