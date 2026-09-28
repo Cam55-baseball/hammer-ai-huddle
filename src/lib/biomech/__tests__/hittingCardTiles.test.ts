@@ -14,7 +14,7 @@ describe("segment validity", () => {
   it("20% tolerance; 914cf54c left wrist rejected in the load (strict), hips never touched by a bad wrist", () => {
     expect(SEGMENT_TOL).toBe(0.2);
     const lock = detectStanceLock(A); const v = buildSegmentValidity(A, lock)!;
-    const k = A.frames.findIndex((f) => f.frame_index === 83);
+    const k = A.frames.findIndex((f) => f.frame_index === 79);
     expect(v.trustedStrict(k, 15)).toBe(false);
     expect(v.trusted(k, 23) && v.trusted(k, 24)).toBe(true);
   });
