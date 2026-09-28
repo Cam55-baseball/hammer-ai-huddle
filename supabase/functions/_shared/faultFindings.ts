@@ -169,3 +169,36 @@ export function buildFaultFindings(args: {
   }
   return rows;
 }
+
+/**
+ * Pose-tile failures → findings (2026-09-28). Owner doctrine: "Everything works
+ * in unity." hip_load (P1) is the cause; head discipline, head path (19), back
+ * hip socket (20) and post-landing hip drift (17) are where it shows. Any of
+ * them failing yields ONE row under the P1 cause key with every failing tile
+ * listed as evidence — never one complaint per tile. Pure and deterministic.
+ * Input is the tile verdicts computed server-side; never accept them from a client.
+ */
+const BACK_LEG_EVIDENCE: Record<string, string> = {
+  hip_load: "at the load, your centre of mass and pelvis sat toward your front leg (position-based estimate)",
+  head_discipline: "during the swing your head moved past your centre of mass",
+  head_path_through_stride: "your head drifted forward through the stride",
+  back_hip_socket_hold: "your back hip gave up its turn before the front foot landed",
+  post_landing_hip_drift: "your hips kept drifting forward after the front foot landed",
+};
+export const BACK_LEG_CAUSE_FAULT_KEY = "hip_load_back_leg_not_balanced";
+
+export function buildPoseTileFindings(args: {
+  userId: string; videoId: string; runId: string | null; sport: string | null | undefined;
+  verdicts: Record<string, "pass" | "fail" | null | undefined>; engineVersion?: string | null;
+}): FaultFindingRow[] {
+  const failing = Object.keys(BACK_LEG_EVIDENCE).filter((k) => args.verdicts[k] === "fail");
+  if (failing.length === 0) return [];
+  return [{
+    user_id: args.userId, video_id: args.videoId, video_analysis_run_id: args.runId,
+    skill_domain: "hitting", sport: args.sport ?? null,
+    fault_key: BACK_LEG_CAUSE_FAULT_KEY, movement_key: null, correction_key: null,
+    root_pattern_key: ROOT_BY_FAULT[BACK_LEG_CAUSE_FAULT_KEY],
+    evidence: `Your back leg didn't hold the load at P1. Evidence: ${failing.map((k) => BACK_LEG_EVIDENCE[k]).join("; ")}.`,
+    engine_version: args.engineVersion ?? null,
+  }];
+}

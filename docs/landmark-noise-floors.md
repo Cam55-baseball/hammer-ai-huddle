@@ -148,3 +148,9 @@ Still clip, whole-clip stance baseline, 0.7 s windows, worst batting side.
 
 ## 2026-09-27 — Hand-load grip gate
 Wrist separation, still clip median 10.7% of stature (subject not gripping a bat). Gate 15% (reasoned: hands on one handle ≈5% + 2× the 2.3% wrist floor). 914cf54c Left reads 50.5% apart in the stance lock and 7.1% at the load apex — the earlier −39.8% "hand load" was the wrists coming together, not the hands loading. Hand load now refuses on that clip.
+
+## hip_load — position-based estimate (2026-09-28, provisional)
+Still clip 15d75bc9, 328 frames, 3-frame median of the position as a fraction of stance width (0 = back ankle, 1 = front ankle), deviation from the clip median:
+- Centre of mass: p95 0.0466, p99 0.0543, max 0.0612 → floor **0.065**
+- Pelvis midpoint: p95 0.0425, p99 0.0551, max 0.0620 → floor **0.065**
+Floors set at the still-clip maximum rounded up, measured before the pass rule. Pass: both < 0.5 − floor at D-LOAD-APEX. No maximum. Re-measure with more subjects.

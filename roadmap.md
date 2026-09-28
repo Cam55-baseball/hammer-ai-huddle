@@ -19,3 +19,9 @@
 - [x] Owner doctrine 2026-09-27: hand_load re-spec (behind head pass/fail + ungraded depth), head discipline vs com_at_p2 as P1 fault, root pattern back_leg_did_not_hold_load
 - [ ] hip_load back-leg weight distribution — BLOCKED: method proposal (HITTING-PHILOSOPHY §10) awaiting approval
 - [ ] Wire tile 17/19/20/head-discipline fails into analysis_fault_findings writer (keys mapped, no writer emits them yet)
+
+- [x] hip_load position-based estimate (approved 2026-09-28)
+- [x] hand_load grip baseline (914cf54c window-placement fix)
+- [x] back-leg root pattern → one finding (pure builder, tested)
+- [ ] Wire pose tiles into the analysis pipeline so the finding is actually saved (tiles are not run server-side yet)
+- [ ] Tiles 6, 9–13, 16–21, then hitters_move
