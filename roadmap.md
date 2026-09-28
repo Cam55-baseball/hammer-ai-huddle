@@ -1,6 +1,6 @@
 # Roadmap
 - [x] Shoulder opening five-signal fusion (side-on)
-- [ ] Hitting baseball: 10 remaining pose-only tiles
+- [x] Hitting baseball: all 22 tiles built (several ungraded pending owner numbers)
 - [ ] Hitting softball
 - [ ] Throwing baseball (shuffle vs crow-hop detection for energy angle)
 - [ ] Throwing softball
