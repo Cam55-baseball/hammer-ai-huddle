@@ -55,9 +55,12 @@ describe("hand_load, p2/p3", () => {
     // Former −39.8% was the wrists converging (50.5% of stature apart in the stance lock), not a load.
     // 2026-09-28: stance lock (54–67) landed before the grip; baseline now the first gripped run (77–82).
     const h = runHittingPoseTiles(A, { side: "L" }).hand_load;
-    expect(h.value).toBe(-19.0842);
+    // 2026-09-28 grip fix: hands-set stance (lower body still + both rigid-valid wrists gripped) = 101–106;
+    // the left wrist fails forearm rigidity at the apex, so the right wrist is the hand point.
+    expect(h.value).toBe(-15.9164);
     expect(h.verdict).toBe("pass");
-    expect(h.lineage.grip_baseline_frames).toEqual([77, 82]);
+    expect(h.lineage.hands_set_frames).toEqual([101, 106]);
+    expect((h.lineage.depth_pct_stature_ungraded as { value: number }).value).toBe(-14.7939);
     expect(String(h.lineage.verification)).toContain("unverified");
     expect(runHittingPoseTiles(A, { side: "R" }).hand_load.value).toBeNull();
   });

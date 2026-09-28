@@ -181,7 +181,7 @@ function sequencing(c: Ctx, ssK: number, pkK: number): CardTileResult {
   // A later segment peaking earlier by more than the ±1-frame anchor uncertainty is out of order.
   const out: string[] = [];
   for (let i = 1; i < order.length; i++) if (order[i]! < order[i - 1]! - 1) out.push(`${chans[i][0]}_before_${chans[i - 1][0]}`);
-  const lin = { swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, peak_forward_speed_frames: peaks, frame_uncertainty: 1, out_of_order: out, rule: "a segment peaking earlier than the one before it by more than 1 frame is out of order; ties within 1 frame cannot be ordered at this frame rate and count as in order" };
+  const lin = { swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, peak_forward_speed_frames: peaks, hip_rotation_rate_peak_frame: rotPeak, frame_uncertainty: 1, out_of_order: out, rule: "a segment peaking earlier than the one before it by more than 1 frame is out of order; ties within 1 frame cannot be ordered at this frame rate and count as in order" };
   return ok(K, u, out.length === 0 ? 1 : 0, null, out.length === 0 ? "pass" : "fail", lin);
 }
 
