@@ -53,9 +53,12 @@ describe("hand_load, p2/p3", () => {
   });
   it("914cf54c Left reference; Right refuses (side is used)", () => {
     // Former −39.8% was the wrists converging (50.5% of stature apart in the stance lock), not a load.
+    // 2026-09-28: stance lock (54–67) landed before the grip; baseline now the first gripped run (77–82).
     const h = runHittingPoseTiles(A, { side: "L" }).hand_load;
-    expect(h.value).toBeNull();
-    expect(h.lineage.reason).toBe("hands_not_together_on_handle");
+    expect(h.value).toBe(-19.0842);
+    expect(h.verdict).toBe("pass");
+    expect(h.lineage.grip_baseline_frames).toEqual([77, 82]);
+    expect(String(h.lineage.verification)).toContain("unverified");
     expect(runHittingPoseTiles(A, { side: "R" }).hand_load.value).toBeNull();
   });
   it("pitcher timing refuses honestly", () => {

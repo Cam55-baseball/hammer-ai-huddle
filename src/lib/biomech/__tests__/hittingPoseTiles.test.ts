@@ -35,8 +35,12 @@ describe("hitting pose tiles", () => {
   it("914cf54c Left — owner-confirmed clip reference values", () => {
     const r = runHittingPoseTiles(clipA, { side: "L" });
     // Owner doctrine 2026-09-27: drift framing removed; refuses until the weight-distribution method is approved.
-    expect(r.hip_load.value).toBeNull();
-    expect(r.hip_load.lineage.reason).toBe("respec_pending:back_leg_weight_distribution_method_not_approved");
+    // Approved 2026-09-28: position-based estimate, COM + pelvis between the ankles.
+    expect(r.hip_load.value).toBe(0.3881);
+    expect(r.hip_load.verdict).toBe("pass");
+    expect(r.hip_load.lineage.pelvis_stance_frac).toBe(0.3634);
+    expect(r.hip_load.lineage.method).toBe("position_based_estimate");
+    expect(runHittingPoseTiles(clipA, { side: "R" }).hip_load.value).toBeNull();
     expect(r.hands_outside_shoulders_at_landing.value).toBe(-2.3543);
     expect(r.hands_outside_shoulders_at_landing.verdict).toBe("pass");
     expect(r.stride_direction.lineage.reason).toBe("camera_view_mismatch:needs_two_view_pair");
