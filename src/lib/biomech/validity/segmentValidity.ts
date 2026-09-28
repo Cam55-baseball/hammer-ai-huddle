@@ -2,8 +2,8 @@
  * SEGMENT VALIDITY — universal per-frame landmark trust gate (2026-09-28).
  *
  * Every segment below is a rigid body: its 3-D length cannot change. Each
- * segment's reference length is its median 2-D length over the Stance Lock
- * window (px, then % of stature). In a frame where a segment's 2-D length
+ * segment's reference length is max(Stance Lock median, clip-wide p90) of its
+ * 2-D length (px, then % of stature) — see the note in buildSegmentValidity. In a frame where a segment's 2-D length
  * deviates from that reference by more than SEGMENT_TOL, the landmarks that
  * segment depends on are UNTRUSTED in that frame — not the whole frame. A bad
  * left wrist never invalidates a hip.
@@ -20,7 +20,7 @@ import type { LandmarkSeries, LandmarkSeriesFrame } from "../pose/landmarkSeries
 import { LM, pointPx, median, mid, round4, type Pt } from "../anchors/poseKinematics";
 import { headCentroidPx, type StanceLock } from "../anchors/stanceLock";
 
-export const SEGMENT_VALIDITY_VERSION = "segment_validity@1.1.0-lock-median-tol-0.20-arm-shrink-strict-only";
+export const SEGMENT_VALIDITY_VERSION = "segment_validity@1.2.0-ref-max-lock-median-clip-p90-tol-0.20";
 /**
  * Owner-approved 20%. Still clip 15d75bc9 measured worst-segment p99 deviation
  * well under this (see docs/landmark-noise-floors.md, "Rigid-segment natural
@@ -94,7 +94,17 @@ export function buildSegmentValidity(series: LandmarkSeries, lock: StanceLock | 
   for (const s of SEGMENTS) {
     const xs: number[] = [];
     for (let k = lock.start_k; k <= lock.end_k; k++) { const L = segmentLengthPx(series, series.frames[k], s); if (L != null) xs.push(L); }
-    ref[s.key] = xs.length ? median(xs) : null;
+    // 2-D length ≤ true 3-D length, so a stance pose that points a segment at
+    // the camera gives a SHORT reference (914cf54c: front foot 8.4% in the lock,
+    // longer once it turned side-on at plant → every plant frame "over-length").
+    // Reference = max(lock median, clip-wide p90): the high quantile is the best
+    // estimate of the true length and is robust to <10% mis-tracked frames.
+    const all: number[] = [];
+    for (const f of series.frames) { const L = segmentLengthPx(series, f, s); if (L != null) all.push(L); }
+    all.sort((a, b) => a - b);
+    const p90 = all.length ? all[Math.min(all.length - 1, Math.round(0.9 * (all.length - 1)))] : null;
+    const lm = xs.length ? median(xs) : null;
+    ref[s.key] = lm == null ? null : p90 == null ? lm : Math.max(lm, p90);
   }
   const untrusted: Set<number>[] = [], strict: Set<number>[] = [], failures: Record<string, "over_length_tracking_failure" | "under_length_foreshortened_or_mistracked">[] = [];
   for (const f of series.frames) {

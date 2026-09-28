@@ -11,6 +11,9 @@
  *  - 3-frame medians at an anchor; robust spread = p90 − p10, never max − min.
  *  - Every floor measured on still clip 15d75bc9 (worst of p99/max, see
  *    docs/landmark-noise-floors.md "Hitting card tiles 2026-09-28").
+ *  - An ungraded value inside its floor is still reported, flagged
+ *    below_floor: true ("no change the camera can detect") — for a
+ *    "maintained/held" tile that is the informative answer, not missingness.
  *  - No owner number → value reported UNGRADED (verdict null), listed in
  *    CARD_TILE_OWNER_NUMBERS_NEEDED. Never invented.
  *  - D-SWING-PEAK is the fastest torso turn, NOT contact.
@@ -138,7 +141,7 @@ function heelPlant(c: Ctx, plantK: number, liftFrame: number | null): CardTileRe
   let firstK: number | null = null;
   if (toePlant != null && kLift >= 0) for (let j = kLift; j <= plantK; j++) { const t = m3(c, j, (x) => Up(c, P(c, x, c.frontToe))); if (t != null && t - toePlant <= CARD_FLOORS.heel_minus_toe_pct) { firstK = j; break; } }
   const touchMs = firstK == null ? { value: null, reason: kLift < 0 ? "no_peak_lift_anchor" : "toe_never_reached_plant_height" } : { value: round4(((plantK - firstK) * 1000) / c.fps), uncertainty_ms: round4(1000 / c.fps), first_touch_frame: c.s.frames[firstK].frame_index };
-  if (Math.abs(atPlant) < CARD_FLOORS.heel_minus_toe_pct) return ok(K, u, 0, CARD_FLOORS.heel_minus_toe_pct, null, { plant_frame: c.s.frames[plantK].frame_index, heel_level_with_toe_within_noise: true, raw: round4(atPlant), first_touch_to_full_plant_ms_ungraded: touchMs, sign: "heel minus toe height at full plant; + = heel above toe" });
+  if (Math.abs(atPlant) < CARD_FLOORS.heel_minus_toe_pct) return ok(K, u, atPlant, CARD_FLOORS.heel_minus_toe_pct, null, { plant_frame: c.s.frames[plantK].frame_index, below_floor: true, first_touch_to_full_plant_ms_ungraded: touchMs, sign: "heel minus toe height at full plant; + = heel above toe" });
   return ok(K, u, atPlant, CARD_FLOORS.heel_minus_toe_pct, null, { plant_frame: c.s.frames[plantK].frame_index, first_touch_to_full_plant_ms_ungraded: touchMs, sign: "heel minus toe height at full plant; + = heel above toe" });
 }
 
