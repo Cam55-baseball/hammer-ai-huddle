@@ -8,3 +8,4 @@
 - Pitching tiles (`src/lib/biomech/metrics/pitchingTiles.ts`) refuse unless a delivery gate passes: lift → plant → pose release ≤0.35 s after plant, throwing wrist above shoulder; values under the still-clip noise floor are missing, never a score. Why: hitting clips and still clips produced pitching values.
 - Tiles 19/20 are staff-only until `ownerTileVisibility.ts` records ≥10 owner-confirmed clips across both batting sides. Why: n=1 is a signal, not validation.
 - Every pose tile reads landmarks through `src/lib/biomech/validity/segmentValidity.ts` (rigid segment over-length = tracking failure; under-length only in strict mode). Why: one bad landmark must invalidate only what depends on it, never the whole frame.
+- Pose tiles run server-side only via the generated bundle `supabase/functions/_shared/poseTiles.bundle.js` (`scripts/build-pose-tile-bundle.sh`); never hand-port tile code to Deno. Why: one implementation; a parity test fails if the bundle is stale.

@@ -25,6 +25,8 @@
 - [x] Grip fix: hands-set stance + forearm rigidity + one-good-wrist hand point
 - [x] Universal segment-validity gate (validity/segmentValidity.ts)
 - [x] back-leg root pattern → one finding (pure builder, tested)
-- [ ] Wire pose tiles into the analysis pipeline so the finding is actually saved (tiles are not run server-side yet)
+- [x] Owner doctrine 2026-09-28: nine tiles re-specified (heel, back elbow, shoulder plane, back knee, hip drift, hands at heel landing, head rise, lead elbow P2 ref, pelvis square)
+- [x] Server runner + generated bundle + findings writer (poseTileFindingsServer.ts)
+- [ ] Call the server runner from analyze-video — blocked: needs owner OK to redeploy that function
 - [ ] Owner numbers for ungraded card tiles (CARD_TILE_OWNER_NUMBERS_NEEDED)
-- [ ] Move tiles 19/20/head path/hip_load onto segment validity (new card tiles already use it)
+- [x] Move tiles 19/20/hip_load/head discipline/hands-outside onto segment validity

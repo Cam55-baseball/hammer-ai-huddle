@@ -109,6 +109,9 @@ const ROOT_BY_FAULT: Record<string, string> = {
   head_path_through_stride_fail: "back_leg_did_not_hold_load",
   back_hip_socket_hold_fail: "back_leg_did_not_hold_load",
   post_landing_hip_drift_fail: "back_leg_did_not_hold_load",
+  back_knee_straightened_fail: "back_leg_did_not_hold_load",
+  // Owner 2026-09-28: hands low at P3 heel landing go with the front shoulder turning.
+  hands_below_back_elbow_at_heel_landing: "trunk_rotates_before_front_foot_plant",
 };
 
 export interface FaultFindingRow {
@@ -184,6 +187,7 @@ const BACK_LEG_EVIDENCE: Record<string, string> = {
   head_path_through_stride: "your head drifted forward through the stride",
   back_hip_socket_hold: "your back hip gave up its turn before the front foot landed",
   post_landing_hip_drift: "your hips kept drifting forward after the front foot landed",
+  back_knee_flex_maintained: "your back knee straightened between the end of P2 and landing",
 };
 export const BACK_LEG_CAUSE_FAULT_KEY = "hip_load_back_leg_not_balanced";
 
@@ -192,8 +196,17 @@ export function buildPoseTileFindings(args: {
   verdicts: Record<string, "pass" | "fail" | null | undefined>; engineVersion?: string | null;
 }): FaultFindingRow[] {
   const failing = Object.keys(BACK_LEG_EVIDENCE).filter((k) => args.verdicts[k] === "fail");
-  if (failing.length === 0) return [];
-  return [{
+  const rows: FaultFindingRow[] = [];
+  if (args.verdicts.hands_stay_up_at_plant === "fail") rows.push({
+    user_id: args.userId, video_id: args.videoId, video_analysis_run_id: args.runId,
+    skill_domain: "hitting", sport: args.sport ?? null,
+    fault_key: "hands_below_back_elbow_at_heel_landing", movement_key: null, correction_key: null,
+    root_pattern_key: ROOT_BY_FAULT.hands_below_back_elbow_at_heel_landing,
+    evidence: "At heel landing your hands were below your back elbow. Hands low at landing go with lost power and a front shoulder that turns early.",
+    engine_version: args.engineVersion ?? null,
+  });
+  if (failing.length === 0) return rows;
+  return [...rows, {
     user_id: args.userId, video_id: args.videoId, video_analysis_run_id: args.runId,
     skill_domain: "hitting", sport: args.sport ?? null,
     fault_key: BACK_LEG_CAUSE_FAULT_KEY, movement_key: null, correction_key: null,

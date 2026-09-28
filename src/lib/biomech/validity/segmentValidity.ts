@@ -142,3 +142,24 @@ export function trustedPointPx(series: LandmarkSeries, v: SegmentValidity | null
   if (v && !v.trusted(k, i)) return null;
   return pointPx(series, series.frames[k], i);
 }
+
+/**
+ * A copy of the series with every untrusted landmark's visibility set to 0, so
+ * `point()` reads it as missing. Lets older tiles adopt segment validity without
+ * a rewrite: they read the masked series, anchors stay on the raw series.
+ * `strict` also masks the ambiguous under-length arm/foot landmarks.
+ */
+export function maskUntrusted(series: LandmarkSeries, v: SegmentValidity | null, strict = false): LandmarkSeries {
+  if (!v) return series;
+  const sets = strict ? v.untrustedStrict : v.untrusted;
+  return {
+    ...series,
+    frames: series.frames.map((f, k) => {
+      const u = sets[k];
+      if (!u || u.size === 0 || !f.visibility?.length) return f;
+      const vis = f.visibility.slice();
+      for (const i of u) vis[i] = 0;
+      return { ...f, visibility: vis };
+    }),
+  };
+}

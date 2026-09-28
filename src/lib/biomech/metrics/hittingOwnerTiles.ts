@@ -27,6 +27,8 @@ import { findPeakLegLiftFrame } from "../anchors/peakLegLift";
 import { findFrontFootStrikeFrame } from "../anchors/frontFootStrike";
 import { deriveDirectionSign, frontAnkleIndex, type Handedness } from "../side/strideSide";
 import { LM, MIN_VIS, bodyScalePx, mid, pointPx, rearSide, rearThighAngleDeg, round4, tierFactor, type Pt } from "../anchors/poseKinematics";
+import { detectStanceLock } from "../anchors/stanceLock";
+import { buildSegmentValidity, maskUntrusted } from "../validity/segmentValidity";
 
 export const HEAD_PATH_TILE_VERSION = "head_path@1.1.0-com-p2-floor-4.2pct-no-fps-floor";
 export const BACK_HIP_TILE_VERSION = "back_hip_hold@1.1.0-coil-proxy-floor-3deg-no-fps-floor";
@@ -378,6 +380,9 @@ export function runHittingOwnerTiles(
     ? detectP4(series, dir, stride.plant.frame_index, stride.plant)
     : ({ ...detectP4(series, dir, null), diagnostics: { reason: "batting_side_unknown" } } as AnchorResult);
   const coil = detectCoil(series, dir, load);
+  // Segment validity (2026-09-28): anchors from the raw series, tile values from the masked one.
+  const lock = detectStanceLock(series);
+  const ms = lock.ok ? maskUntrusted(series, buildSegmentValidity(series, lock)) : series;
   return {
     direction_sign: dir,
     anchors: {
@@ -386,7 +391,7 @@ export function runHittingOwnerTiles(
       front_foot_plant: stride?.plant ?? null,
       front_foot_full_plant: stride?.plant.frame_index ?? null,
     },
-    tile19: computeHeadPathThroughStride({ series, direction_sign: dir, athlete_height_in: o.athlete_height_in, hand_load_apex: load, p4_start: p4 }),
-    tile20: computeBackHipSocketHold({ series, direction_sign: dir, d_coil: coil, p4_start: p4 }),
+    tile19: computeHeadPathThroughStride({ series: ms, direction_sign: dir, athlete_height_in: o.athlete_height_in, hand_load_apex: load, p4_start: p4 }),
+    tile20: computeBackHipSocketHold({ series: ms, direction_sign: dir, d_coil: coil, p4_start: p4 }),
   };
 }
