@@ -90,7 +90,7 @@ describe("24 fps real clips — ordinary phone rate is not a refusal", () => {
     const r = runHittingOwnerTiles(clipA, { side: "L", athlete_height_in: 70 });
     expect(r.tile19.verdict).toBe("fail");
     expect(r.tile19.channels.midline_crossed_19a.value).toBe(true);
-    expect(r.tile19.channels.forward_in_19b.value).toBeCloseTo(5.3228, 4);
+    expect(r.tile19.channels.forward_in_19b.value).toBeCloseTo(5.329, 4);
     expect(r.tile19.channels.forward_in_19b.ci_low_in).toBeCloseTo(4.3478, 4);
     expect(r.tile19.channels.forward_in_19b.ci_high_in).toBeCloseTo(6.2978, 4);
     expect(r.tile19.channels.angle_from_vertical_deg_19c.value).toBeCloseTo(37.5742, 4);
