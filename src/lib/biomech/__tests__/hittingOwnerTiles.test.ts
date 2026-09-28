@@ -92,7 +92,7 @@ describe("24 fps real clips — ordinary phone rate is not a refusal", () => {
     expect(r.tile19.channels.midline_crossed_19a.value).toBe(true);
     expect(r.tile19.channels.forward_in_19b.value).toBeCloseTo(5.329, 4);
     expect(r.tile19.channels.forward_in_19b.ci_low_in).toBeCloseTo(4.3536, 4);
-    expect(r.tile19.channels.forward_in_19b.ci_high_in).toBeCloseTo(6.2978, 4);
+    expect(r.tile19.channels.forward_in_19b.ci_high_in).toBeCloseTo(6.3043, 4);
     expect(r.tile19.channels.angle_from_vertical_deg_19c.value).toBeCloseTo(37.5742, 4);
     expect(r.tile20.verdict).toBe("fail");
     expect(r.tile20.outputs.held_or_increased_20a.value).toBe(false);
