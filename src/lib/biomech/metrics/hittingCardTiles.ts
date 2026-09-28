@@ -31,7 +31,7 @@ import { fuseShoulderOpen } from "./shoulderOpenFusion";
 import { detectCameraView, checkCameraRequirement } from "../camera/cameraView";
 import { handPointPx, runHittingPoseTiles } from "./hittingPoseTiles";
 
-export const HITTING_CARD_TILES_VERSION = "hitting_card_tiles@1.0.0-2026-09-28";
+export const HITTING_CARD_TILES_VERSION = "hitting_card_tiles@2.0.0-owner-doctrine-2026-09-28";
 
 /* ---------- floors: still clip 15d75bc9, measured by scripts before any threshold ---------- */
 export const CARD_FLOORS = {
@@ -47,19 +47,31 @@ export const CARD_FLOORS = {
   spacing_pct: 2.3,               // hand point minus rear shoulder: HANDS_OUTSIDE floor
 } as const;
 
+/**
+ * Owner doctrine 2026-09-28 replaced most thresholds with a rule (docs/HITTING-PHILOSOPHY.md §11).
+ * Resolved and NOT outstanding: hand_load depth (ungraded by the fascial-variation ruling),
+ * head_discipline (com_at_p2 line), hip_load (back-leg position method, no maximum), heel_plant,
+ * back elbow (hands-back/elbow-forward relationship), shoulder plane (score, not pass/fail),
+ * back knee, hip drift, hands at heel landing, head after landing, lead elbow (athlete's own P2).
+ */
 export const CARD_TILE_OWNER_NUMBERS_NEEDED = [
-  "heel_plant: heel-above-toe allowance at full plant, and a first-touch→full-plant time",
-  "sequencing: none needed for order; owner to confirm hips→torso→lead shoulder→lead arm is judged on peak forward speed",
-  "back_elbow_connection: back-elbow slot angle range at swing peak; allowed elbow rise above shoulder at swing start",
-  "shoulder_plane_steadiness: maximum shoulder-tilt spread (degrees) through the swing",
   "finish_balance: how far off the base (stance fraction) and how much sway is still 'balanced'",
-  "back_knee_flex_maintained: maximum back-knee extension (degrees) from stance to plant",
-  "post_landing_hip_drift: allowed pelvis forward travel plant → P4 (owner doctrine says drift is the fault; no number given)",
-  "hands_stay_up_at_plant: maximum hand drop (% stature) from hands-set to plant",
-  "lead_elbow_bend_increasing: minimum bend change (degrees)",
-  "head_vertical_movement_post_landing: maximum head vertical spread (% stature)",
-  "pelvis_rotation_efficiency: target pelvis rotation (degrees) plant → swing peak",
+  "pelvis_square_to_fair: how close to square counts as square (owner has no angle; measured only)",
+  "back_elbow_connection: elbow path direction toward square-to-fair — owner has no angle; measured only, and side-on cannot see it",
 ] as const;
+
+/** Coaching text in the owner's reasoning — athletes see WHY, not just a verdict. */
+export const CARD_COACHING: Record<string, string> = {
+  heel_plant: "Your back heel needs to be on the ground for the swing. Being planted gives your back bicep a better chance to create the right direction, the side-bend angle from P2 gives it an easier path to the ball without running into your body, and a stable base makes steady eyes more likely. Power from the P3 stretch does not depend on the heel — accuracy does.",
+  back_elbow_connection: "The back elbow (bicep) releases the swing out of the P3 stretch. The elbow gains ground forward while the hands stay back with the shoulder — that is what gives a linear move its rotation. The goal is an elbow that gets the bat square to fair territory.",
+  shoulder_plane_steadiness: "Higher is better. Holding your shoulder plane from the start of P4 shows you were not fooled. This is not pass/fail — you can have a poor shoulder plane and still hit the ball well.",
+  back_knee_flex_maintained: "From the end of P2 to landing, your back knee should not straighten. It is part of your back leg holding the weight.",
+  post_landing_hip_drift: "After landing your hips should turn, not slide. Any forward drift after landing causes problems, and hips that neither drift nor turn have still missed the point.",
+  hands_stay_up_at_plant: "Your hands can dip during P2 as long as they climb back above your back elbow by heel landing. Hands above the elbow at landing start P4; P4 then drops them to get behind the ball on plane. Hands low at landing go with lost power and a front shoulder that turns early.",
+  head_vertical_movement_post_landing: "Your head can sink after landing. Your head coming up before the ball is off the bat is too much.",
+  lead_elbow_bend_increasing: "Your lead elbow should not bend more than it was at the end of P2. Full extension is ideal, but your own P2 position is the honest measure of what your arm can do.",
+  pelvis_rotation_efficiency: "Because you stride to the pitcher, not the ball, your pelvis should be able to get square to fair (the front of home plate) by the end of P4, before you run.",
+};
 
 export type CardKey =
   | "heel_plant" | "sequencing" | "back_elbow_connection" | "shoulder_plane_steadiness" | "finish_balance"
@@ -79,7 +91,7 @@ const mr = (r: MissingnessReason) => missingness(r, "D-METRIC");
 const refuse = (key: CardKey, unit: string, rec: MissingnessRecord, lineage: Record<string, unknown>): CardTileResult =>
   ({ key, value: null, unit, uncertainty: null, verdict: null, missingness: rec, confidence: missingConfidence(), lineage });
 const ok = (key: CardKey, unit: string, value: number, unc: number | null, verdict: CardTileResult["verdict"], lineage: Record<string, unknown>): CardTileResult =>
-  ({ key, value: round4(value), unit, uncertainty: unc, verdict, missingness: null, confidence: uncalibrated(), lineage: verdict == null ? { ...lineage, graded: false, why_ungraded: "owner number not supplied" } : lineage });
+  ({ key, value: round4(value), unit, uncertainty: unc, verdict, missingness: null, confidence: uncalibrated(), lineage: verdict == null ? { graded: false, why_ungraded: "owner number not supplied", ...lineage } : lineage });
 
 /* ---------- context ---------- */
 interface Ctx {
@@ -129,20 +141,19 @@ export function shoulderTiltDeg(c: { s: LandmarkSeries; lock: StanceLock }, l: P
   return (Math.asin(Math.max(-1, Math.min(1, dy / w))) * 180) / Math.PI;
 }
 
-/* ================= 6 heel_plant — first touch → full plant ================= */
+/* ================= 6 heel_plant — BINARY, heel must touch (owner 2026-09-28) ================= */
 function heelPlant(c: Ctx, plantK: number, liftFrame: number | null): CardTileResult {
   const K: CardKey = "heel_plant", u = "percent_stature";
   const h = (j: number) => { const he = Up(c, P(c, j, c.frontHeel)), to = Up(c, P(c, j, c.frontToe)); return he == null || to == null ? null : he - to; };
   const atPlant = m3(c, plantK, h);
   if (atPlant == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "front_heel_or_toe_untrusted_at_plant" });
-  // First touch: first frame after peak lift where the front toe is within the floor of its plant height.
-  const toePlant = m3(c, plantK, (j) => Up(c, P(c, j, c.frontToe)));
-  const kLift = kOf(c.s, liftFrame);
-  let firstK: number | null = null;
-  if (toePlant != null && kLift >= 0) for (let j = kLift; j <= plantK; j++) { const t = m3(c, j, (x) => Up(c, P(c, x, c.frontToe))); if (t != null && t - toePlant <= CARD_FLOORS.heel_minus_toe_pct) { firstK = j; break; } }
-  const touchMs = firstK == null ? { value: null, reason: kLift < 0 ? "no_peak_lift_anchor" : "toe_never_reached_plant_height" } : { value: round4(((plantK - firstK) * 1000) / c.fps), uncertainty_ms: round4(1000 / c.fps), first_touch_frame: c.s.frames[firstK].frame_index };
-  if (Math.abs(atPlant) < CARD_FLOORS.heel_minus_toe_pct) return ok(K, u, atPlant, CARD_FLOORS.heel_minus_toe_pct, null, { plant_frame: c.s.frames[plantK].frame_index, below_floor: true, first_touch_to_full_plant_ms_ungraded: touchMs, sign: "heel minus toe height at full plant; + = heel above toe" });
-  return ok(K, u, atPlant, CARD_FLOORS.heel_minus_toe_pct, null, { plant_frame: c.s.frames[plantK].frame_index, first_touch_to_full_plant_ms_ungraded: touchMs, sign: "heel minus toe height at full plant; + = heel above toe" });
+  void liftFrame;
+  // Contact = heel no higher than the toe beyond the still-clip floor. No tolerance band beyond the floor.
+  const touching = atPlant <= CARD_FLOORS.heel_minus_toe_pct;
+  return ok(K, u, atPlant, CARD_FLOORS.heel_minus_toe_pct, touching ? "pass" : "fail", {
+    plant_frame: c.s.frames[plantK].frame_index, heel_touching: touching, rule: "owner 2026-09-28: heel in contact at full plant; pass/fail, tolerance = still-clip noise floor only",
+    sign: "heel minus toe height at full plant; + = heel above toe", coaching: CARD_COACHING.heel_plant,
+  });
 }
 
 /* ================= 9 sequencing — hips → torso → lead shoulder → lead arm ================= */
@@ -185,30 +196,47 @@ function sequencing(c: Ctx, ssK: number, pkK: number): CardTileResult {
   return ok(K, u, out.length === 0 ? 1 : 0, null, out.length === 0 ? "pass" : "fail", lin);
 }
 
-/* ================= 10 back-elbow connection ================= */
+/* ================= 10 back-elbow connection — a PATH, not an angle (owner 2026-09-28) ================= */
 function backElbow(c: Ctx, ssK: number, pkK: number): CardTileResult {
-  const K: CardKey = "back_elbow_connection", u = "degrees";
-  const slot = m3(c, pkK, (j) => angleDeg(P(c, j, c.rear.sh), P(c, j, c.rear.el), P(c, j, c.rear.wr), 0.06 * c.st));
-  const rise = m3(c, ssK, (j) => { const e = Up(c, P(c, j, c.rear.el)), s = Up(c, P(c, j, c.rear.sh)); return e == null || s == null ? null : e - s; });
-  const gapAt = (j: number) => { const e = Fw(c, P(c, j, c.rear.el)), h = Fw(c, P(c, j, c.rear.hip)); return e == null || h == null ? null : e - h; };
-  if (slot == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "back_arm_untrusted_at_swing_peak" });
-  return ok(K, u, slot, CARD_FLOORS.elbow_angle_deg, null, {
-    swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index,
-    slot_angle_deg_at_swing_peak: round4(slot),
-    elbow_above_shoulder_at_swing_start_pct: rise == null ? null : round4(rise),
-    elbow_ahead_of_rear_hip_pct: { at_swing_start: (() => { const g = m3(c, ssK, gapAt); return g == null ? null : round4(g); })(), at_swing_peak: (() => { const g = m3(c, pkK, gapAt); return g == null ? null : round4(g); })() },
-    channels_removed: "barrel-to-ball direction moved to DelayCam spec",
+  const K: CardKey = "back_elbow_connection", u = "percent_stature";
+  // Both relative to the back shoulder, forward axis: elbow should gain ground, hands should stay back.
+  const rel = (j: number, i: number | "hand") => { const s = Fw(c, P(c, j, c.rear.sh)); const x = i === "hand" ? Fw(c, handPointPx(c.s, j, c.v).p) : Fw(c, P(c, j, i)); return s == null || x == null ? null : x - s; };
+  // Window: swing start (release from the P3 stretch) → the frame the elbow's lead over the hands is largest, capped at swing peak.
+  const e0 = m3(c, ssK, (j) => rel(j, c.rear.el)), h0 = m3(c, ssK, (j) => rel(j, "hand"));
+  if (e0 == null || h0 == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "back_elbow_or_hands_untrusted_at_swing_start" });
+  let best: { k: number; lead: number; eg: number; hg: number } | null = null;
+  for (let j = ssK + 1; j <= pkK; j++) { const e = m3(c, j, (x) => rel(x, c.rear.el)), hh = m3(c, j, (x) => rel(x, "hand")); if (e == null || hh == null) continue; const eg = e - e0, hg = hh - h0, lead = eg - hg; if (!best || lead > best.lead) best = { k: j, lead, eg, hg }; }
+  if (!best) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "back_elbow_or_hands_untrusted_through_window" });
+  const F = CARD_FLOORS.spacing_pct;
+  const pass = best.eg > F && best.lead > F;
+  // Elbow path direction (square-to-fair): side-on sees only forward vs vertical, never the lateral component toward fair territory.
+  const eA = P(c, ssK, c.rear.el), eB = P(c, best.k, c.rear.el);
+  const pathDeg = eA && eB ? (() => { const a = U(c, eA)!, b = U(c, eB)!; return round4((Math.atan2(-(b.y - a.y), (b.x - a.x) * c.dir) * 180) / Math.PI); })() : null;
+  return ok(K, u, best.lead, F, pass ? "pass" : "fail", {
+    swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, measured_at_frame: c.s.frames[best.k].frame_index,
+    elbow_gain_vs_back_shoulder_pct: round4(best.eg), hands_gain_vs_back_shoulder_pct: round4(best.hg),
+    rule: "owner 2026-09-28: elbow gains ground forward while hands stay back with the shoulder. value = elbow gain − hands gain (% stature, best frame in swing start → swing peak); pass when elbow gain AND the lead both exceed the floor",
+    elbow_path_direction_deg_ungraded: { value: pathDeg, meaning: "image-plane angle of the elbow's move, 0 = straight at the pitcher, + = upward", why_ungraded: "owner has no square-to-fair angle; side-on cannot see the lateral component toward fair territory" },
+    slot_angle: "removed — owner has no slot-angle band", coaching: CARD_COACHING.back_elbow_connection,
   });
 }
 
-/* ================= 11 shoulder plane steadiness ================= */
-function shoulderPlane(c: Ctx, ssK: number, pkK: number): CardTileResult {
-  const K: CardKey = "shoulder_plane_steadiness", u = "degrees";
-  const xs: number[] = [];
-  for (let j = ssK; j <= pkK; j++) { const t = shoulderTiltDeg(c, P(c, j, LM.L_SHOULDER), P(c, j, LM.R_SHOULDER)); if (t != null) xs.push(t); }
-  const sp = robustSpread(xs);
-  if (sp == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "shoulders_untrusted_through_window", samples: xs.length });
-  return ok(K, u, sp, CARD_FLOORS.shoulder_tilt_spread_deg, null, { swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, samples: xs.length, statistic: "p90 − p10 of shoulder tilt (vertical gap over stance shoulder length)", below_floor: sp < CARD_FLOORS.shoulder_tilt_spread_deg });
+/* ================= 11 shoulder plane — a SCORE from P4 start, higher is better, never pass/fail ================= */
+function shoulderPlane(c: Ctx, p4K: number, pkK: number): CardTileResult {
+  const K: CardKey = "shoulder_plane_steadiness", u = "score_100";
+  const n = pkK - p4K;
+  if (n < 1) return refuse(K, u, mr(R.ANCHOR_NOT_DETECTED), { reason: "swing_peak_not_after_p4_start" });
+  const t0 = m3(c, p4K, (j) => shoulderTiltDeg(c, P(c, j, LM.L_SHOULDER), P(c, j, LM.R_SHOULDER)));
+  if (t0 == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "shoulders_untrusted_at_p4_start" });
+  let held = 0, broke: number | null = null, unobs = 0;
+  for (let j = p4K + 1; j <= pkK; j++) { const t = m3(c, j, (x) => shoulderTiltDeg(c, P(c, x, LM.L_SHOULDER), P(c, x, LM.R_SHOULDER))); if (t == null) { unobs++; continue; } if (Math.abs(t - t0) > CARD_FLOORS.shoulder_tilt_spread_deg) { broke = j; break; } held = j - p4K; }
+  if (unobs > n / 2) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "shoulders_unobserved_for_most_of_window", unobserved_frames: unobs, window_frames: n });
+  const score = broke == null ? 100 : (held / n) * 100;
+  return ok(K, u, score, round4(100 / n), null, {
+    p4_start_frame: c.s.frames[p4K].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, tilt_at_p4_start_deg: round4(t0), plane_broke_frame: broke == null ? null : c.s.frames[broke].frame_index,
+    graded: false, why_ungraded: "owner 2026-09-28: not a pass/fail test — higher is better; a poor score does not mean a poor outcome",
+    statistic: "% of P4 start → swing peak before shoulder tilt leaves its P4-start value by more than the still-clip floor; target 100", coaching: CARD_COACHING.shoulder_plane_steadiness,
+  });
 }
 
 /* ================= 12 finish balance ================= */
@@ -268,73 +296,89 @@ function shoulderToShoulder(c: Ctx, plantK: number, pkK: number): CardTileResult
   return ok(K, u, pct, round4(100 / n), pct >= 95 ? "elite" : pct >= 50 ? "pass" : "fail", lin);
 }
 
-/* ================= 16 back knee flex maintained — stance → plant ================= */
-function backKnee(c: Ctx, plantK: number): CardTileResult {
+/* ================= 16 back knee — end of P2 → P3 landing, zero straightening ================= */
+function backKnee(c: Ctx, apexK: number, plantK: number): CardTileResult {
   const K: CardKey = "back_knee_flex_maintained", u = "degrees";
   const ang = (j: number) => angleDeg(P(c, j, c.rear.hip), P(c, j, c.rear.knee), P(c, j, c.rear.ankle));
-  const b = lockMed(c, ang), a = m3(c, plantK, ang);
-  if (b == null || a == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "back_leg_untrusted_in_stance_or_at_plant" });
-  const d = a - b;
-  return ok(K, u, d, CARD_FLOORS.knee_angle_deg, null, { plant_frame: c.s.frames[plantK].frame_index, stance_knee_deg: round4(b), plant_knee_deg: round4(a), below_floor: Math.abs(d) < CARD_FLOORS.knee_angle_deg, sign: "+ = back knee straightened (lost flex)" });
+  const b = m3(c, apexK, ang), a = m3(c, plantK, ang);
+  if (b == null || a == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "back_leg_untrusted_at_end_of_p2_or_landing" });
+  const d = a - b, fail = d > CARD_FLOORS.knee_angle_deg;
+  return ok(K, u, d, CARD_FLOORS.knee_angle_deg, fail ? "fail" : "pass", { end_of_p2_frame: c.s.frames[apexK].frame_index, landing_frame: c.s.frames[plantK].frame_index, knee_deg_end_of_p2: round4(b), knee_deg_landing: round4(a), sign: "+ = back knee straightened", rule: "owner 2026-09-28: any straightening beyond the still-clip floor is a fault", reference: "athlete's own knee angle at end of P2", root_pattern_key: fail ? "back_leg_did_not_hold_load" : null, coaching: CARD_COACHING.back_knee_flex_maintained });
 }
 
-/* ================= 17 post-landing hip drift — plant → P4 ================= */
-function hipDrift(c: Ctx, plantK: number, p4K: number): CardTileResult {
+/* ================= 17 post-landing hip drift — zero tolerance, AND the hips must rotate ================= */
+function hipDrift(c: Ctx, plantK: number, p4K: number, pkK: number): CardTileResult {
   const K: CardKey = "post_landing_hip_drift", u = "percent_stature";
   const g = (j: number) => Fw(c, mid(P(c, j, LM.L_HIP), P(c, j, LM.R_HIP)));
   const a = m3(c, plantK, g), b = m3(c, p4K, g);
   if (a == null || b == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "pelvis_untrusted_at_plant_or_p4" });
-  const d = b - a;
-  return ok(K, u, d, CARD_FLOORS.hip_fwd_pct, null, { plant_frame: c.s.frames[plantK].frame_index, p4_frame: c.s.frames[p4K].frame_index, below_floor: Math.abs(d) < CARD_FLOORS.hip_fwd_pct, root_pattern_key: "back_leg_did_not_hold_load", sign: "+ = pelvis still moving toward the pitcher after landing" });
+  const d = b - a, drift = d > CARD_FLOORS.hip_fwd_pct;
+  // Rotation: rigid hip-length out-of-plane angle, plant → swing peak. Unsigned; floor 12° (ill-conditioned near closed).
+  const L = c.lock.baseline?.hip_len_px;
+  const th = (j: number) => { const x = P(c, j, LM.L_HIP), y = P(c, j, LM.R_HIP); if (!x || !y || !L) return null; const dd = Math.hypot(x.x - y.x, x.y - y.y); return dd > L * 1.03 ? null : (Math.acos(Math.min(1, dd / L)) * 180) / Math.PI; };
+  const r0 = m3(c, plantK, th), r1 = pkK > plantK ? m3(c, pkK, th) : null;
+  const rot = r0 == null || r1 == null ? null : Math.abs(r1 - r0);
+  const rotating = rot == null ? null : rot > CARD_FLOORS.pelvis_rot_deg ? true : null;
+  const lin = { plant_frame: c.s.frames[plantK].frame_index, p4_frame: c.s.frames[p4K].frame_index, drift_beyond_floor: drift, sign: "+ = pelvis still moving toward the pitcher after landing",
+    hips_rotating: rotating, hip_rotation_deg_plant_to_swing_peak: rot == null ? null : round4(rot), rotation_floor_deg: CARD_FLOORS.pelvis_rot_deg,
+    rotation_note: rotating === true ? "hips turned beyond the floor" : rot == null ? "hip rotation not observable (hips untrusted or over-length)" : "hip rotation within the side-on noise floor — cannot confirm the hips turned; the camera cannot confirm the owner's rotation standard here",
+    rule: "owner 2026-09-28: any forward drift after landing is a fault; the standard is rotation, so rotation is reported alongside", coaching: CARD_COACHING.post_landing_hip_drift };
+  return ok(K, u, d, CARD_FLOORS.hip_fwd_pct, drift ? "fail" : "pass", drift ? { ...lin, root_pattern_key: "back_leg_did_not_hold_load" } : lin);
 }
 
-/* ================= 18 hands stay up at plant ================= */
+/* ================= 18 hands above the back elbow at heel landing (replaces "hands stay up") ================= */
 function handsUp(c: Ctx, plantK: number): CardTileResult {
   const K: CardKey = "hands_stay_up_at_plant", u = "percent_stature";
-  const g = (j: number) => Up(c, handPointPx(c.s, j, c.v).p);
-  const apex = detectLoadApex(c.s, c.dir), kA = kOf(c.s, apex.frame_index);
-  if (kA < 0) return refuse(K, u, apex.missingness ?? mr(R.ANCHOR_NOT_DETECTED), { reason: "load_apex_missing" });
-  const b = m3(c, kA, g), a = m3(c, plantK, g);
-  if (a == null || b == null) return refuse(K, u, mr(R.HANDS_NOT_DETECTED), { reason: "no_rigid_valid_wrist_at_apex_or_plant" });
-  const d = b - a;
-  return ok(K, u, d, CARD_FLOORS.hand_height_pct, null, { reference: "hands at the load apex (hands set on the handle)", apex_frame: apex.frame_index, plant_frame: c.s.frames[plantK].frame_index, below_floor: Math.abs(d) < CARD_FLOORS.hand_height_pct, sign: "+ = hands dropped between load and plant" });
+  const g = (j: number) => { const h = Up(c, handPointPx(c.s, j, c.v).p), e = Up(c, P(c, j, c.rear.el)); return h == null || e == null ? null : h - e; };
+  const d = m3(c, plantK, g);
+  if (d == null) return refuse(K, u, mr(R.HANDS_NOT_DETECTED), { reason: "hands_or_back_elbow_untrusted_at_heel_landing" });
+  const F = CARD_FLOORS.hand_height_pct;
+  if (Math.abs(d) < F) return refuse(K, u, mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: "hands_level_with_back_elbow_within_noise", raw: round4(d), floor: F, heel_landing_frame: c.s.frames[plantK].frame_index });
+  const pass = d > 0;
+  return ok(K, u, d, F, pass ? "pass" : "fail", { heel_landing_frame: c.s.frames[plantK].frame_index, sign: "hands height minus back-elbow height at heel landing; + = hands above", rule: "owner 2026-09-28: only heel landing is graded; a P2 dip is allowed, a P4 drop is correct", linked_root_pattern: pass ? null : "trunk_rotates_before_front_foot_plant", coaching: CARD_COACHING.hands_stay_up_at_plant });
 }
 
-/* ================= 19 lead elbow bend increasing ================= */
-function leadElbow(c: Ctx, ssK: number, pkK: number): CardTileResult {
+/* ================= 19 lead elbow — ceiling is the athlete's own P2 ================= */
+function leadElbow(c: Ctx, apexK: number, pkK: number): CardTileResult {
   const K: CardKey = "lead_elbow_bend_increasing", u = "degrees";
   const ang = (j: number) => angleDeg(P(c, j, c.lead.sh), P(c, j, c.lead.el), P(c, j, c.lead.wr), 0.06 * c.st);
-  const a = m3(c, ssK, ang), b = m3(c, pkK, ang);
-  if (a == null || b == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "lead_arm_untrusted_or_pointing_at_camera_at_swing_start_or_peak" });
-  const d = a - b;
-  return ok(K, u, d, CARD_FLOORS.elbow_angle_deg, null, { swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, elbow_deg_start: round4(a), elbow_deg_peak: round4(b), below_floor: Math.abs(d) < CARD_FLOORS.elbow_angle_deg, sign: "+ = lead elbow bent MORE by swing peak", caveat: "2-D elbow angle; forearm foreshortening toward the camera changes it" });
+  const ref = m3(c, apexK, ang), b = m3(c, pkK, ang);
+  const base = { end_of_p2_frame: c.s.frames[apexK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, p2_reference_elbow_deg: ref == null ? null : round4(ref), reference: "athlete's own lead-elbow angle at end of P2 (per-athlete ceiling, not a universal number)", coaching: CARD_COACHING.lead_elbow_bend_increasing };
+  if (ref == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { ...base, reason: "lead_arm_untrusted_or_pointing_at_camera_at_end_of_p2" });
+  // Partial result: the P2 reference is recorded, but a verdict needs the swing-peak angle too — never a verdict from half the comparison.
+  if (b == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { ...base, reason: "lead_arm_pointing_at_camera_at_swing_peak", partial: "P2 reference measured; comparison impossible" });
+  const d = ref - b, fail = d > CARD_FLOORS.elbow_angle_deg;
+  return ok(K, u, d, CARD_FLOORS.elbow_angle_deg, fail ? "fail" : "pass", { ...base, elbow_deg_peak: round4(b), sign: "+ = lead elbow bent MORE than at end of P2", caveat: "2-D elbow angle; forearm foreshortening toward the camera changes it" });
 }
 
-/* ================= 20 head vertical movement post landing ================= */
+/* ================= 20 head after landing — the fault is RISING; sinking is allowed ================= */
 function headVertical(c: Ctx, plantK: number, pkK: number): CardTileResult {
   const K: CardKey = "head_vertical_movement_post_landing", u = "percent_stature";
-  const xs: number[] = [];
-  for (let j = plantK; j <= pkK; j++) { if (c.v && !c.v.trustedAll(j, [0, 2, 5, 7, 8])) continue; const h = Up(c, headCentroidPx(c.s, c.s.frames[j])); if (h != null) xs.push(h); }
-  const sp = robustSpread(xs);
-  if (sp == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "head_untrusted_through_window", samples: xs.length });
-  return ok(K, u, sp, CARD_FLOORS.head_vertical_spread_pct, null, { plant_frame: c.s.frames[plantK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, samples: xs.length, statistic: "p90 − p10 of head-centroid height", below_floor: sp < CARD_FLOORS.head_vertical_spread_pct });
+  const h = (j: number) => (c.v && !c.v.trustedAll(j, [0, 2, 5, 7, 8]) ? null : Up(c, headCentroidPx(c.s, c.s.frames[j])));
+  const h0 = m3(c, plantK, h);
+  if (h0 == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "head_untrusted_at_landing" });
+  let rise = -Infinity, sink = Infinity, n = 0;
+  for (let j = plantK + 1; j <= pkK; j++) { const x = m3(c, j, h); if (x == null) continue; n++; rise = Math.max(rise, x - h0); sink = Math.min(sink, x - h0); }
+  if (n < 2) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "head_untrusted_through_window", samples: n });
+  const r = Math.max(0, rise), fail = r > CARD_FLOORS.head_vertical_spread_pct;
+  return ok(K, u, r, CARD_FLOORS.head_vertical_spread_pct, fail ? "fail" : "pass", { landing_frame: c.s.frames[plantK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, max_rise_pct: round4(r), max_sink_pct_allowed: round4(Math.min(0, sink)), samples: n, sign: "value = highest the head rose above its landing height; sinking is never penalised", window_end_note: "the owner's rule is 'before the ball is off the bat'; ball departure is a DelayCam event, so D-SWING-PEAK (fastest torso turn) is used as a pose-only PROXY — it is not ball departure", coaching: CARD_COACHING.head_vertical_movement_post_landing });
 }
 
-/* ================= 21 pelvis rotation efficiency ================= */
-function pelvisRotation(c: Ctx, plantK: number, pkK: number): CardTileResult {
+/* ================= 21 pelvis square to fair at the end of P4 ================= */
+function pelvisSquare(c: Ctx, finK: number): CardTileResult {
   const K: CardKey = "pelvis_rotation_efficiency", u = "degrees";
   const L = c.lock.baseline?.hip_len_px;
   if (!L) return refuse(K, u, mr(R.CALIBRATION_UNAVAILABLE), { reason: "no_stance_hip_length" });
+  // Side-on: square to fair = hips face the pitcher = hip line along the camera axis = θ≈90°. acos is well-conditioned near 90°.
   const th = (j: number) => { const a = P(c, j, LM.L_HIP), b = P(c, j, LM.R_HIP); if (!a || !b) return null; const d = Math.hypot(a.x - b.x, a.y - b.y); if (d > L * 1.03) return null; return (Math.acos(Math.min(1, d / L)) * 180) / Math.PI; };
-  const a = m3(c, plantK, th), b = m3(c, pkK, th);
-  if (a == null || b == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "hips_untrusted_or_over_length_at_plant_or_peak" });
-  const d = b - a;
-  return ok(K, u, Math.abs(d), CARD_FLOORS.pelvis_rot_deg, null, { plant_frame: c.s.frames[plantK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, theta_plant_deg: round4(a), theta_peak_deg: round4(b), below_floor: Math.abs(d) < CARD_FLOORS.pelvis_rot_deg, method: "rigid hip-length solve, unsigned (sign unresolvable at θ≈0); ill-conditioned near closed — floor 9°", sign: "absolute change in out-of-plane pelvis angle" });
+  const t = m3(c, finK, th);
+  if (t == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "hips_untrusted_or_over_length_at_end_of_p4" });
+  return ok(K, u, 90 - t, null, null, { end_of_p4_frame: c.s.frames[finK].frame_index, pelvis_out_of_plane_deg: round4(t), sign: "degrees short of square to fair (0 = square)", why_ungraded: "owner has no 'close enough to square' angle; still clip is closed-stance so no noise floor near square exists yet", limitation: "unsigned rigid solve: over-rotating past square reads the same as under-rotating", reasoning: "we stride to the pitcher, not the ball — that is what makes square-to-fair reachable by the end of P4", coaching: CARD_COACHING.pelvis_rotation_efficiency });
 }
 
 /* ================= runner ================= */
 export function runHittingCardTiles(series: LandmarkSeries, o: { side: Handedness | null }) {
-  const units: Record<Exclude<CardKey, "hitters_move">, string> = { heel_plant: "percent_stature", sequencing: "boolean", back_elbow_connection: "degrees", shoulder_plane_steadiness: "degrees", finish_balance: "stance_fraction", shoulder_to_shoulder_hold: "percent_of_window", back_knee_flex_maintained: "degrees", post_landing_hip_drift: "percent_stature", hands_stay_up_at_plant: "percent_stature", lead_elbow_bend_increasing: "degrees", head_vertical_movement_post_landing: "percent_stature", pelvis_rotation_efficiency: "degrees" };
+  const units: Record<Exclude<CardKey, "hitters_move">, string> = { heel_plant: "percent_stature", sequencing: "boolean", back_elbow_connection: "percent_stature", shoulder_plane_steadiness: "score_100", finish_balance: "stance_fraction", shoulder_to_shoulder_hold: "percent_of_window", back_knee_flex_maintained: "degrees", post_landing_hip_drift: "percent_stature", hands_stay_up_at_plant: "percent_stature", lead_elbow_bend_increasing: "degrees", head_vertical_movement_post_landing: "percent_stature", pelvis_rotation_efficiency: "degrees" };
   const allRefuse = (rec: MissingnessRecord, l: Record<string, unknown>) => Object.fromEntries(Object.entries(units).map(([k, u]) => [k, refuse(k as CardKey, u, rec, l)])) as Record<keyof typeof units, CardTileResult>;
   const cam = detectCameraView(series);
   const gate = (r: CardTileResult) => { const g = checkCameraRequirement(r.key, cam.view); if (g.ok) return g.detail ? { ...r, lineage: { ...r.lineage, camera_view: g.detail } } : r; return refuse(r.key, r.unit, mr(R.CALIBRATION_UNAVAILABLE), { reason: g.detail, message: g.message }); };
@@ -368,20 +412,22 @@ export function runHittingCardTiles(series: LandmarkSeries, o: { side: Handednes
   const SS = [ssK, "swing_start_missing", ss.missingness] as [number, string, MissingnessRecord | null];
   const PK = [pkK, `swing_peak_missing:${String(pk?.diagnostics.reason ?? "no_swing_start")}`, pk?.missingness] as [number, string, MissingnessRecord | null | undefined];
   const FIN = [finK, `finish_missing:${String(fin.diagnostics.reason ?? "")}`, fin.missingness] as [number, string, MissingnessRecord | null];
+  const apex = detectLoadApex(series, dir), apexK = kOf(series, apex.frame_index);
+  const AP = [apexK, "end_of_p2_missing:load_apex", apex.missingness] as [number, string, MissingnessRecord | null];
   const P4 = [p4K, `p4_missing:${String(p4.diagnostics.reason ?? "")}`, p4.missingness] as [number, string, MissingnessRecord | null];
   return done({
     heel_plant: need("heel_plant", [P_], () => heelPlant(c, plantK, lift.frame_index)),
     sequencing: need("sequencing", [SS, PK], () => sequencing(c, ssK, pkK)),
     back_elbow_connection: need("back_elbow_connection", [SS, PK], () => backElbow(c, ssK, pkK)),
-    shoulder_plane_steadiness: need("shoulder_plane_steadiness", [SS, PK], () => shoulderPlane(c, ssK, pkK)),
+    shoulder_plane_steadiness: need("shoulder_plane_steadiness", [P4, PK], () => shoulderPlane(c, p4K, pkK)),
     finish_balance: need("finish_balance", [PK, FIN], () => (finK <= pkK ? refuse("finish_balance", units.finish_balance, mr(R.ANCHOR_NOT_DETECTED), { reason: "finish_not_after_swing_peak" }) : finishBalance(c, pkK, finK))),
     shoulder_to_shoulder_hold: need("shoulder_to_shoulder_hold", [P_, SS, PK], () => shoulderToShoulder(c, plantK, pkK)),
-    back_knee_flex_maintained: need("back_knee_flex_maintained", [P_], () => backKnee(c, plantK)),
-    post_landing_hip_drift: need("post_landing_hip_drift", [P_, P4], () => hipDrift(c, plantK, p4K)),
+    back_knee_flex_maintained: need("back_knee_flex_maintained", [AP, P_], () => backKnee(c, apexK, plantK)),
+    post_landing_hip_drift: need("post_landing_hip_drift", [P_, P4], () => hipDrift(c, plantK, p4K, pkK)),
     hands_stay_up_at_plant: need("hands_stay_up_at_plant", [P_], () => handsUp(c, plantK)),
-    lead_elbow_bend_increasing: need("lead_elbow_bend_increasing", [SS, PK], () => leadElbow(c, ssK, pkK)),
+    lead_elbow_bend_increasing: need("lead_elbow_bend_increasing", [AP, PK], () => leadElbow(c, apexK, pkK)),
     head_vertical_movement_post_landing: need("head_vertical_movement_post_landing", [P_, PK], () => (pkK <= plantK ? refuse("head_vertical_movement_post_landing", units.head_vertical_movement_post_landing, mr(R.ANCHOR_NOT_DETECTED), { reason: "swing_peak_not_after_plant" }) : headVertical(c, plantK, pkK))),
-    pelvis_rotation_efficiency: need("pelvis_rotation_efficiency", [P_, PK], () => (pkK <= plantK ? refuse("pelvis_rotation_efficiency", units.pelvis_rotation_efficiency, mr(R.ANCHOR_NOT_DETECTED), { reason: "swing_peak_not_after_plant" }) : pelvisRotation(c, plantK, pkK))),
+    pelvis_rotation_efficiency: need("pelvis_rotation_efficiency", [FIN], () => pelvisSquare(c, finK)),
   });
 }
 
