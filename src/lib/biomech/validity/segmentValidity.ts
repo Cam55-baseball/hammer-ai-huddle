@@ -20,7 +20,7 @@ import type { LandmarkSeries, LandmarkSeriesFrame } from "../pose/landmarkSeries
 import { LM, pointPx, median, mid, round4, type Pt } from "../anchors/poseKinematics";
 import { headCentroidPx, type StanceLock } from "../anchors/stanceLock";
 
-export const SEGMENT_VALIDITY_VERSION = "segment_validity@1.2.0-ref-max-lock-median-clip-p90-tol-0.20";
+export const SEGMENT_VALIDITY_VERSION = "segment_validity@1.3.0-over-length-hard-under-length-strict";
 /**
  * Owner-approved 20%. Still clip 15d75bc9 measured worst-segment p99 deviation
  * well under this (see docs/landmark-noise-floors.md, "Rigid-segment natural
@@ -61,7 +61,10 @@ const SHRINK_OK = new Set(["shoulder_width", "hip_width", "neck"]);
  * the image plane side-on (thigh fails 1–8 frames), so their under-length
  * always invalidates. Over-length always invalidates — 2-D cannot exceed 3-D.
  */
-const SHRINK_AMBIGUOUS = (key: string) => key.startsWith("upper_arm") || key.startsWith("forearm") || key.startsWith("foot");
+// 2026-09-28 update: the back SHIN also foreshortens past 20% at plant on
+// 914cf54c (knee driving toward the camera), so under-length is ambiguous for
+// every limb. It only invalidates in STRICT mode; over-length always does.
+const SHRINK_AMBIGUOUS = (_key: string) => true;
 
 function pt(series: LandmarkSeries, f: LandmarkSeriesFrame, i: number): Pt | null {
   if (i === HEAD) return headCentroidPx(series, f);
