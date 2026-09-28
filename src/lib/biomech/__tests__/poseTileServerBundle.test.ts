@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs"; import { gunzipSync } from "node:zlib"; import { join } from "node:path";
 import { runHittingTilesFromText } from "../server/poseTileServerEntry";
-// @ts-expect-error generated JS bundle
+// generated JS bundle
 import { runHittingTilesFromText as bundled } from "../../../../supabase/functions/_shared/poseTiles.bundle.js";
 import { buildPoseTileFindings } from "../../../../supabase/functions/_shared/faultFindings";
 
