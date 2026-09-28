@@ -95,6 +95,10 @@ export const TILE_CAMERA_REQUIREMENTS: Readonly<Record<string, CameraRequirement
   hands_stay_up_at_plant: "either",
   lead_elbow_bend_increasing: "side_on",
   head_vertical_movement_post_landing: "either",
+  sequencing: "side_on",
+  back_elbow_connection: "side_on",
+  shoulder_to_shoulder_hold: "side_on",
+  pelvis_rotation_efficiency: "side_on",
   tempo: "either",
 };
 

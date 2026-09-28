@@ -162,3 +162,26 @@ Forearm = elbow→wrist, % of stature. Stance-median ≈17.6 (L) / 17.5 (R).
 - Frames 79–89: **left wrist mis-tracked (a)** — left forearm collapses to 5.6–9.9 (a rigid segment cannot shorten by half), visibility 0.27–0.59, jumps up to 22.5%. Right forearm stays 18.3–20.1. The left hand is hidden behind the body/bat.
 - Consequence: the current grip baseline (77–82) is half contaminated — 79–82 use the mis-tracked left wrist. The −19.08% hand-load value is therefore not trustworthy yet.
 Proposed fix (not built, awaiting approval): (1) Stance Lock "hands set" condition — the settled window must also have wrist separation ≤ grip gate; (2) reject any frame where either forearm deviates >20% from its own stance median; (3) once the grip is established, take the hand point from the rigid-valid wrist only (hands are locked together on one handle), rather than refusing.
+
+## 2026-09-28 — Rigid-segment natural variation (still clip 15d75bc9, 328 frames)
+2-D length vs the clip median, % deviation. Reference length in % of stature.
+| segment | ref % stature | p50 | p99 | max |
+|---|---|---|---|---|
+| upper arm L | 18.1 | 1.07 | 3.77 | 4.37 |
+| upper arm R | 18.9 | 0.55 | 1.99 | 2.29 |
+| forearm L | 4.4 (pointing at camera) | 11.06 | 54.42 | 58.99 |
+| forearm R | 17.9 | 0.97 | 3.88 | 4.77 |
+| thigh L | 26.0 | 0.72 | 3.57 | 3.99 |
+| thigh R | 27.4 | 0.56 | 2.19 | 3.06 |
+| shin L | 17.9 | 1.06 | 4.75 | 5.70 |
+| shin R | 21.3 | 1.15 | 3.33 | 3.72 |
+| foot L | 10.5 | 1.44 | 5.03 | 6.21 |
+| foot R | 10.4 | 1.82 | 5.92 | 6.44 |
+| shoulder width | 22.4 | 0.79 | 2.83 | 3.27 |
+| hip width | 14.6 | 0.62 | 2.30 | 2.89 |
+| neck | 16.5 | 0.92 | 3.23 | 4.03 |
+Pose noise alone moves a well-conditioned rigid segment ≤6.5% (max). 20% is ~3× that — kept. A segment already foreshortened below 6% of stature (forearm L here) is ill-conditioned for a ratio test and is not judged.
+Measured on real swings: arms, feet AND the back shin foreshorten past 20% legitimately (914cf54c back shin 19.7 vs 25.7 at plant, knee driving toward the camera). So: **over-length is always a tracking failure** (2-D cannot exceed 3-D); **under-length only rejects in strict mode** (used by the grip). Reference = max(Stance Lock median, clip p90) because a stance pose pointing a segment at the camera gives a short reference (914cf54c front foot).
+
+## 2026-09-28 — Hitting card tile floors (still clip, before any threshold)
+heel − toe height 1.415 % (max, worst side) → 1.5 · shoulder tilt 0.7 s p90−p10 1.647° → 1.7 · head height 0.7 s p90−p10 1.143 % → 1.2 · pelvis-mid forward 0.25 s p90−p10 0.438 % → 0.5 (finish sway) · back-knee angle 4.816° → 4.9 · pelvis-mid forward 0.984 % → 1.0 · single-wrist height 3.127 % → 3.2 · elbow angle 2.878° (well-conditioned arm; the 4.4 % forearm gave 17.9°, so arms under 6 % of stature are refused) → 3.0 · pelvis rigid-solve angle 11.9° → 12 (ill-conditioned near closed).
