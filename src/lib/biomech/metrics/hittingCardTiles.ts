@@ -163,6 +163,19 @@ function sequencing(c: Ctx, ssK: number, pkK: number): CardTileResult {
     for (let j = k0; j <= k1; j++) { const a = x[j - 1], b = x[j + 1]; if (a == null || b == null) continue; const vel = ((b - a) * c.fps) / 2; if (vel > bv) { bv = vel; best = j; } }
     peaks[name] = best < 0 ? null : c.s.frames[best].frame_index;
   }
+  // Hips have two channels: pelvis FORWARD speed (translation — can be stride
+  // drift, not rotation) and the rigid hip-length out-of-plane angle rate
+  // (rotation, ill-conditioned near closed). Fused like the shoulders: the hip
+  // peak counts only when both agree within the ±1-frame uncertainty.
+  const L = c.lock.baseline?.hip_len_px;
+  let rotPeak: number | null = null;
+  if (L) {
+    const th = smooth(c.s.frames.map((_, j) => { const a = P(c, j, LM.L_HIP), b = P(c, j, LM.R_HIP); if (!a || !b) return null; const d = Math.hypot(a.x - b.x, a.y - b.y); return d > L * 1.03 ? null : (Math.acos(Math.min(1, d / L)) * 180) / Math.PI; }), 1);
+    let bv = -Infinity;
+    for (let j = k0; j <= k1; j++) { const a = th[j - 1], b = th[j + 1]; if (a == null || b == null) continue; const w = Math.abs(b - a); if (w > bv) { bv = w; rotPeak = c.s.frames[j].frame_index; } }
+  }
+  const hipAgree = peaks.hips != null && rotPeak != null && Math.abs(peaks.hips - rotPeak) <= 1;
+  if (!hipAgree) return refuse(K, u, mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: rotPeak == null ? "hip_rotation_channel_unobserved" : "hip_translation_and_rotation_peaks_disagree", hip_forward_speed_peak_frame: peaks.hips, hip_rotation_rate_peak_frame: rotPeak, other_peak_frames: peaks });
   const order = chans.map(([n]) => peaks[n]);
   if (order.some((x) => x == null)) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "segment_untrusted_through_window", peak_frames: peaks });
   // A later segment peaking earlier by more than the ±1-frame anchor uncertainty is out of order.
@@ -292,7 +305,7 @@ function leadElbow(c: Ctx, ssK: number, pkK: number): CardTileResult {
   const K: CardKey = "lead_elbow_bend_increasing", u = "degrees";
   const ang = (j: number) => angleDeg(P(c, j, c.lead.sh), P(c, j, c.lead.el), P(c, j, c.lead.wr), 0.06 * c.st);
   const a = m3(c, ssK, ang), b = m3(c, pkK, ang);
-  if (a == null || b == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "lead_arm_untrusted_at_swing_start_or_peak" });
+  if (a == null || b == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "lead_arm_untrusted_or_pointing_at_camera_at_swing_start_or_peak" });
   const d = a - b;
   return ok(K, u, d, CARD_FLOORS.elbow_angle_deg, null, { swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, elbow_deg_start: round4(a), elbow_deg_peak: round4(b), below_floor: Math.abs(d) < CARD_FLOORS.elbow_angle_deg, sign: "+ = lead elbow bent MORE by swing peak", caveat: "2-D elbow angle; forearm foreshortening toward the camera changes it" });
 }
