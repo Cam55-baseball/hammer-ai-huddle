@@ -18,14 +18,14 @@ import type { LandmarkSeries, LandmarkSeriesFrame } from "../pose/landmarkSeries
 import { MISSINGNESS_REASONS as R, missingness, type MissingnessRecord, type MissingnessReason } from "./missingness";
 import { uncalibrated, missingConfidence, type ConfidenceRecord } from "./confidence";
 import { detectLoadApex, detectSwingStart, detectSwingPeak } from "../anchors/poseEvents";
-import { frontFootPlantFromSeries, comAtP2 } from "./hittingOwnerTiles";
+import { frontFootPlantFromSeries, comAtP2, centreOfMassPx } from "./hittingOwnerTiles";
 import { deriveDirectionSign, type Handedness } from "../side/strideSide";
 import { LM, pointPx, median, mid, round4, type Pt } from "../anchors/poseKinematics";
 import { detectStanceLock, unroll, headCentroidPx, type StanceLock } from "../anchors/stanceLock";
 import { smooth } from "../anchors/poseKinematics";
 import { detectCameraView, checkCameraRequirement, type CameraViewResult } from "../camera/cameraView";
 
-export const HITTING_POSE_TILES_VERSION = "hitting_pose_tiles@1.3.0-owner-doctrine-2026-09-27";
+export const HITTING_POSE_TILES_VERSION = "hitting_pose_tiles@1.4.0-hip-load-position-estimate-grip-baseline-2026-09-28";
 
 /** Root pattern shared by hip_load, head discipline, head path (19), back hip socket (20) and post-landing hip drift (17). Owner: "Everything works in unity." */
 export const BACK_LEG_ROOT_PATTERN = "back_leg_did_not_hold_load" as const;
@@ -54,7 +54,7 @@ export const HITTING_POSE_STANDARDS = {
   hand_load: { pass: "hands loaded behind the head centroid at the load apex (forward axis)", depth: "ungraded — varies athlete to athlete (fascial structure); no universal number", source: "owner_doctrine_2026-09-27" },
   p2_timing: { pass: "hand load finished by pitcher peak knee lift", source: "owner_coaching_standard" },
   p3_timing: { target_ms: 0, note: "front foot fully down at pitcher release", source: "owner_coaching_standard" },
-  hip_load: { measures: "back-leg weight distribution at P1 — no maximum while balanced on the back leg", status: "respec_pending_method_approval", source: "owner_doctrine_2026-09-27" },
+  hip_load: { measures: "position-based estimate of back-leg balance at P1 (centre of mass and pelvis between the ankles) — a camera cannot measure load", pass: "centre of mass AND pelvis on the back-leg side of the stance midpoint at the load apex, beyond their still-clip floors", maximum: "none — more internal rotation is not a fault while balanced on the back leg", source: "owner_doctrine_2026-09-27_method_approved_2026-09-28" },
   hands_outside_shoulders_at_landing: { pass: "rear wrist behind the rear shoulder (toward the catcher) at full plant", source: "owner_coaching_standard" },
   stride_direction: { target_deg: 15, reference: "square line to the pitcher", source: "owner_coaching_standard" },
   head_discipline: { pass: "head centroid stays behind com_at_p2 (the tile-19 reference) from swing start to swing peak", attributed_to: "P1 back-leg control", magnitude: "ungraded", source: "owner_doctrine_2026-09-27" },
@@ -64,7 +64,7 @@ type Key = keyof typeof HITTING_POSE_STANDARDS;
 export interface HittingPoseTileResult {
   readonly key: Key;
   readonly value: number | null;
-  readonly unit: "percent_stature" | "degrees" | "ms" | "boolean";
+  readonly unit: "percent_stature" | "degrees" | "ms" | "boolean" | "stance_fraction";
   readonly uncertainty: number | null;
   readonly verdict: "pass" | "fail" | null;
   readonly missingness: MissingnessRecord | null;
@@ -72,7 +72,7 @@ export interface HittingPoseTileResult {
   readonly standard: (typeof HITTING_POSE_STANDARDS)[Key];
   readonly lineage: Readonly<Record<string, unknown>>;
 }
-const UNIT: Record<Key, HittingPoseTileResult["unit"]> = { hand_load: "percent_stature", p2_timing: "boolean", p3_timing: "ms", hip_load: "percent_stature", hands_outside_shoulders_at_landing: "percent_stature", stride_direction: "degrees", head_discipline: "percent_stature" };
+const UNIT: Record<Key, HittingPoseTileResult["unit"]> = { hand_load: "percent_stature", p2_timing: "boolean", p3_timing: "ms", hip_load: "stance_fraction", hands_outside_shoulders_at_landing: "percent_stature", stride_direction: "degrees", head_discipline: "percent_stature" };
 const mr = (r: MissingnessReason) => missingness(r, "D-METRIC");
 const refuse = (key: Key, rec: MissingnessRecord, lineage: Record<string, unknown>): HittingPoseTileResult =>
   ({ key, value: null, unit: UNIT[key], uncertainty: null, verdict: null, missingness: rec, confidence: missingConfidence(), standard: HITTING_POSE_STANDARDS[key], lineage });
@@ -284,5 +284,5 @@ export function runHittingPoseTiles(series: LandmarkSeries, o: { side: Handednes
   if (dir == null) return { ...base, ...all(mr(R.ANCHOR_NOT_DETECTED), { reason: "direction_sign_underivable" }) };
   const lock = detectStanceLock(series);
   if (!lock.ok || !lock.baseline?.stature_px) return { ...base, ...all(lock.missingness ?? mr(R.ANCHOR_NOT_DETECTED), { reason: lock.detail ?? "stance_lock_missing" }) };
-  return { ...base, hip_load: gate(computeHipLoad()), hand_load: gate(computeHandLoad(series, dir, lock)), head_discipline: gate(computeHeadDiscipline(series, o.side, dir, lock)), hands_outside_shoulders_at_landing: gate(computeHandsOutside(series, o.side, dir, lock)) };
+  return { ...base, hip_load: gate(computeHipLoad(series, o.side, dir, lock)), hand_load: gate(computeHandLoad(series, dir, lock)), head_discipline: gate(computeHeadDiscipline(series, o.side, dir, lock)), hands_outside_shoulders_at_landing: gate(computeHandsOutside(series, o.side, dir, lock)) };
 }
