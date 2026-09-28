@@ -726,3 +726,57 @@ Position-based estimate — a camera cannot see load; never called "weight". Pri
 
 ### §10b — 914cf54c grip finding (2026-09-28)
 Frames 54–67 (stance lock): left wrist x 0.74–0.81, right wrist x 0.28–0.33 (normalised), 48–52% of stature apart; both elbows sit anatomically between shoulder and wrist; separation falls smoothly 57% (f50) → 34% (f72) → 15% (f76) → 11% (f78) and stays 4–11% until the apex (f170). A lost wrist would jump; this converges steadily, so it is **window placement**: the lower body settled before the hands gripped up. MediaPipe visibility read 0.97–0.99 throughout and is not evidence either way. Fix: hand-load depth now uses the first ≥0.25 s gripped run (77–82) as its baseline; the grip gate is checked at the apex.
+
+## 11. Owner doctrine — nine tile specifications `[owner-supplied 2026-09-28]`
+
+Most of these REPLACE a threshold with a rule. The reasoning is recorded so the app understands hitting, not just numbers. Code: `src/lib/biomech/metrics/hittingCardTiles.ts` (`CARD_COACHING` carries the reasoning to athletes).
+
+### 11.1 Heel plant — binary, the heel must touch `[owner-supplied 2026-09-28]`
+> "Heel has to be touching the ground for the swing. It gives the hitter a better chance to create proper direction with the back bicep. The P3 power itself isn't contingent on touching the ground to get the full rubber band stretch for power but the accuracy from being stable on the floor and the side bend angle that touching the floor from the P2 position creates a better and easier path for the back bicep to attack the ball without hitting the side of the body. Touching the floor also creates a higher possibility for stable eyes."
+
+Spec: heel in contact at full plant; pass/fail; tolerance = still-clip floor only (1.5 % stature heel-above-toe).
+
+### 11.2 Back elbow — square to fair; a path, not an angle `[owner-supplied 2026-09-28]`
+> "The back elbow (or bicep) releases the swing from the P3 Power stretch position (X-Factor). The bicep (or elbow) gives the swing a rotation factor even though it is working in a linear fashion. The hands must stay back in the position in accordance to the shoulder but the elbow is gaining ground forward. You ideally want the elbow to get the bat square to the front of the plate which is square to fair territory & the pitcher. I'm not sure of an exact mathematical angle but I do know we want balls in fair territory but optimal is square to fair."
+
+Spec: graded = elbow gains ground forward while hands stay back, both relative to the back shoulder. Elbow path direction reported ungraded (no angle exists; side-on cannot see the lateral component). No slot-angle band.
+
+### 11.3 Shoulder plane — not pass/fail, higher is better `[owner-supplied 2026-09-28]`
+> "You want to be 100% from when P4 starts which proves that you did not get fooled. This is no pass/fail test. This is the higher the better. You can have bad shoulder plane and still hit a ball well."
+
+Spec: score 0–100 from P4 start; never a verdict.
+
+### 11.4 Back knee — end of P2 → P3 landing, zero straightening `[owner-supplied 2026-09-28]`
+> "From the ending of P2 to landing of P3 is when back leg knee straightening matters. It should not straighten. This is part of the back leg holding the weight formula."
+
+Spec: straightening beyond the floor (4.9°) = fault; linked to `back_leg_did_not_hold_load`.
+
+### 11.5 Post-landing hip drift — zero tolerance, and check for rotation `[owner-supplied 2026-09-28]`
+> "Post landing hip drift at all post landing is causing an issue. The hips should be rotational post landing"
+
+Spec: any forward drift beyond the floor = fault; hip rotation reported alongside (a "no drift, no rotation" result is flagged, not called clean).
+
+### 11.6 Hands above the back elbow at heel landing `[owner-supplied 2026-09-28]`
+> "Hands coming down associates with a loss of power and a turning of the front shoulder at P3 Landing. The hands can drop during P2 as long as they climb back up during P3 to be higher than the back elbow at the end of P3 which is the heel landing. You want the hands to be above the back elbow at P3 HEEL landing to start P4 & P4 will make the hands drop to get behind the ball on plane."
+
+Spec: only heel landing is graded — hands above back elbow = pass. P2 dip allowed; P4 drop correct. A fail is evidence for `trunk_rotates_before_front_foot_plant`.
+
+### 11.7 Head after landing — direction, not magnitude `[owner-supplied 2026-09-28]`
+> "The head can sink after landing but the head coming up before the ball is off of the bat is too much."
+
+Spec: signed; fault = head rising above landing height beyond the floor. Sinking never penalised. Window ends at D-SWING-PEAK as a pose-only PROXY for ball departure (a DelayCam event) — stated in the tile.
+
+### 11.8 Lead elbow — the athlete's own P2 is the reference `[owner-supplied 2026-09-28]`
+> "The lead elbow bending anymore than it was at the end of P2 is too much. Ideally you want the arm to be at the users full extensions. Some users arms do not have full extension so the can only extend so far and not to the full length of usually arms due to elbow issues. So the P2 hand load is the most accurate representation of how much elbow bend is allowed."
+
+Spec: lead-elbow angle at end of P2 = that athlete's ceiling; more bend after = fault. A universal number would fail athletes for anatomy, not mechanics.
+
+Other tiles where the athlete's own loaded position is (or should be) the reference: back knee (end-of-P2 angle), shoulder plane (P4-start tilt), head after landing (landing height), head discipline (own com_at_p2), hand_load depth (own stance). Candidate not yet converted: finish balance (own stance width).
+
+### 11.9 Pelvis — square to fair at the end of P4 `[owner-supplied 2026-09-28]`
+> "You want your pelvis to get square to fair or front of home plate at the end of P4 after the ball is hit and gone for a finish position before running. We are striding P3 to the pitcher and not the ball so we should be able to get square to fair by the end of P4"
+
+Spec: pelvis vs the plate line at end of P4. Side-on honesty: square = hips face the pitcher = hip line along the camera axis, where the rigid length solve is well-conditioned (θ≈90°), so side-on CAN read it — but unsigned (over-rotation reads like under-rotation) and ungraded (no "close enough" angle; no noise floor near square yet).
+
+### 11.10 Resolved, removed from the outstanding list `[owner-supplied 2026-09-28]`
+hand_load depth (ungraded by the fascial-variation ruling), head_discipline (com_at_p2 line from tile 19), hip_load (approved back-leg position method, no maximum).
