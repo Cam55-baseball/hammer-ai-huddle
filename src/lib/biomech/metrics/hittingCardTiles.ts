@@ -225,7 +225,7 @@ function backElbow(c: Ctx, ssK: number, pkK: number): CardTileResult {
 function shoulderPlane(c: Ctx, p4K: number, pkK: number): CardTileResult {
   const K: CardKey = "shoulder_plane_steadiness", u = "score_100";
   const n = pkK - p4K;
-  if (n < 1) return refuse(K, u, mr(R.ANCHOR_NOT_DETECTED), { reason: "swing_peak_not_after_p4_start" });
+  if (n < 1) return refuse(K, u, mr(R.ANCHOR_NOT_DETECTED), { reason: "swing_peak_not_after_p4_start", p4_start_frame: c.s.frames[p4K].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, note: "no P4 window to score: P4 start is on or after the fastest torso turn, and no end-of-P4 anchor (settled finish) was found" });
   const t0 = m3(c, p4K, (j) => shoulderTiltDeg(c, P(c, j, LM.L_SHOULDER), P(c, j, LM.R_SHOULDER)));
   if (t0 == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "shoulders_untrusted_at_p4_start" });
   let held = 0, broke: number | null = null, unobs = 0;
@@ -299,6 +299,7 @@ function shoulderToShoulder(c: Ctx, plantK: number, pkK: number): CardTileResult
 /* ================= 16 back knee — end of P2 → P3 landing, zero straightening ================= */
 function backKnee(c: Ctx, apexK: number, plantK: number): CardTileResult {
   const K: CardKey = "back_knee_flex_maintained", u = "degrees";
+  if (apexK >= plantK) return refuse(K, u, mr(R.ANCHOR_NOT_DETECTED), { reason: "end_of_p2_not_before_landing", end_of_p2_frame: c.s.frames[apexK].frame_index, landing_frame: c.s.frames[plantK].frame_index });
   const ang = (j: number) => angleDeg(P(c, j, c.rear.hip), P(c, j, c.rear.knee), P(c, j, c.rear.ankle));
   const b = m3(c, apexK, ang), a = m3(c, plantK, ang);
   if (b == null || a == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "back_leg_untrusted_at_end_of_p2_or_landing" });
@@ -341,6 +342,7 @@ function handsUp(c: Ctx, plantK: number): CardTileResult {
 /* ================= 19 lead elbow — ceiling is the athlete's own P2 ================= */
 function leadElbow(c: Ctx, apexK: number, pkK: number): CardTileResult {
   const K: CardKey = "lead_elbow_bend_increasing", u = "degrees";
+  if (apexK >= pkK) return refuse(K, u, mr(R.ANCHOR_NOT_DETECTED), { reason: "end_of_p2_not_before_swing_peak" });
   const ang = (j: number) => angleDeg(P(c, j, c.lead.sh), P(c, j, c.lead.el), P(c, j, c.lead.wr), 0.06 * c.st);
   const ref = m3(c, apexK, ang), b = m3(c, pkK, ang);
   const base = { end_of_p2_frame: c.s.frames[apexK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, p2_reference_elbow_deg: ref == null ? null : round4(ref), reference: "athlete's own lead-elbow angle at end of P2 (per-athlete ceiling, not a universal number)", coaching: CARD_COACHING.lead_elbow_bend_increasing };
