@@ -23,9 +23,12 @@ import { deriveDirectionSign, type Handedness } from "../side/strideSide";
 import { LM, pointPx, median, mid, round4, type Pt } from "../anchors/poseKinematics";
 import { detectStanceLock, unroll, headCentroidPx, type StanceLock } from "../anchors/stanceLock";
 import { smooth } from "../anchors/poseKinematics";
+import { lowerBodySpeed, STANCE_LOCK_SPEED } from "../anchors/stanceLock";
+import { bodyScale } from "../anchors/poseKinematics";
+import { buildSegmentValidity, type SegmentValidity } from "../validity/segmentValidity";
 import { detectCameraView, checkCameraRequirement, type CameraViewResult } from "../camera/cameraView";
 
-export const HITTING_POSE_TILES_VERSION = "hitting_pose_tiles@1.4.0-hip-load-position-estimate-grip-baseline-2026-09-28";
+export const HITTING_POSE_TILES_VERSION = "hitting_pose_tiles@1.5.0-hands-set-lock-forearm-rigidity-2026-09-28";
 
 /** Root pattern shared by hip_load, head discipline, head path (19), back hip socket (20) and post-landing hip drift (17). Owner: "Everything works in unity." */
 export const BACK_LEG_ROOT_PATTERN = "back_leg_did_not_hold_load" as const;
@@ -150,7 +153,24 @@ function computeHipLoad(series: LandmarkSeries, side: Handedness, dir: 1 | -1, l
     lineage: pass ? lin : { ...lin, attributed_to: "P1", finding: "P1 back-leg control fault — position-based estimate: centre of mass and pelvis sat on the front-leg side at the load" } };
 }
 
-/* hand_load — hands-mid forward travel, Stance Lock → D-LOAD-APEX. − = hands loaded back toward the catcher. */
+/* hand_load — GRIP FIX approved 2026-09-28.
+ * 1. The baseline is a HANDS-SET stance: lower body still (Stance Lock speed)
+ *    AND both wrists within the grip gate, sustained ≥0.25 s, before the apex.
+ *    The lower-body Stance Lock alone can land before the athlete grips up.
+ * 2. A wrist is rejected in any frame where its forearm deviates >20% from its
+ *    Stance Lock median (segment validity, STRICT mode).
+ * 3. Once the grip is established, the hands are locked on one handle: one
+ *    rigid-valid wrist IS the hand position. Both invalid → unobserved.
+ * − = hands loaded back toward the catcher. */
+export function handPointPx(series: LandmarkSeries, k: number, v: SegmentValidity | null): { p: Pt | null; source: "both" | "left_only" | "right_only" | "none" } {
+  const f = series.frames[k];
+  const l = !v || v.trustedStrict(k, LM.L_WRIST) ? pointPx(series, f, LM.L_WRIST) : null;
+  const r = !v || v.trustedStrict(k, LM.R_WRIST) ? pointPx(series, f, LM.R_WRIST) : null;
+  if (l && r) return { p: mid(l, r), source: "both" };
+  if (l) return { p: l, source: "left_only" };
+  if (r) return { p: r, source: "right_only" };
+  return { p: null, source: "none" };
+}
 export function handsMidFwd(series: LandmarkSeries, f: LandmarkSeriesFrame, lock: StanceLock, dir: 1 | -1) {
   return fwd(series, mid(pointPx(series, f, LM.L_WRIST), pointPx(series, f, LM.R_WRIST)), lock, dir);
 }
@@ -158,53 +178,49 @@ export function wristSepPct(series: LandmarkSeries, f: LandmarkSeriesFrame, lock
   const a = pointPx(series, f, LM.L_WRIST), b = pointPx(series, f, LM.R_WRIST), st = lock.baseline?.stature_px;
   return a && b && st ? (Math.hypot(a.x - b.x, a.y - b.y) * 100) / st : null;
 }
-/** First run of ≥0.25 s with wrist separation ≤ the grip gate, from lock start to just before the apex. [start_k, end_k] or null. */
 export const GRIP_RUN_MIN_SEC = 0.25;
-function gripRun(series: LandmarkSeries, lock: StanceLock, kApex: number, sep: (f: LandmarkSeriesFrame) => number | null): [number, number] | null {
+/** First hands-set run: lower body still AND both rigid-valid wrists within the grip gate, ≥0.25 s, before the apex. */
+function handsSetRun(series: LandmarkSeries, lock: StanceLock, kApex: number, v: SegmentValidity | null): [number, number] | null {
   const fps = series.header.fps_true ?? 0; const need = Math.max(3, Math.round(fps * GRIP_RUN_MIN_SEC));
+  const scale = bodyScale(series); const spd = scale ? lowerBodySpeed(series, scale) : [];
   let s = -1;
   for (let j = lock.start_k!; j < kApex - 1; j++) {
-    const v = sep(series.frames[j]);
-    const ok = v != null && v <= HAND_GRIP_MAX_SEP_PCT;
+    const both = !v || (v.trustedStrict(j, LM.L_WRIST) && v.trustedStrict(j, LM.R_WRIST));
+    const sep = both ? wristSepPct(series, series.frames[j], lock) : null;
+    const still = spd[j] != null && spd[j]! <= STANCE_LOCK_SPEED;
+    const ok = sep != null && sep <= HAND_GRIP_MAX_SEP_PCT && still;
     if (ok && s < 0) s = j;
-    if (!ok && v != null) s = -1; // unobserved frames neither break nor extend a run
+    if (!ok && (sep != null || spd[j] != null)) s = -1;
     if (s >= 0 && j - s + 1 >= need) return [s, j];
   }
   return null;
 }
-function computeHandLoad(series: LandmarkSeries, dir: 1 | -1, lock: StanceLock): HittingPoseTileResult {
+function computeHandLoad(series: LandmarkSeries, dir: 1 | -1, lock: StanceLock, v: SegmentValidity | null): HittingPoseTileResult {
   const K: Key = "hand_load";
   const apex = detectLoadApex(series, dir);
   if (apex.frame_index == null) return refuse(K, apex.missingness ?? mr(R.ANCHOR_NOT_DETECTED), { reason: `load_apex_missing:${String(apex.diagnostics.reason ?? "")}` });
   const k = series.frames.findIndex((f) => f.frame_index === apex.frame_index);
   if (k <= lock.end_k!) return refuse(K, mr(R.ANCHOR_NOT_DETECTED), { reason: "load_apex_inside_stance_lock", apex_frame: apex.frame_index });
-  const g = (f: LandmarkSeriesFrame) => handsMidFwd(series, f, lock, dir);
   const out = (f: LandmarkSeriesFrame) => [LM.L_WRIST, LM.R_WRIST].some((i) => { const x = f.normalized[i * 3], y = f.normalized[i * 3 + 1]; return !(x >= 0 && x <= 1 && y >= 0 && y <= 1); });
-  for (let j = lock.start_k!; j <= lock.end_k!; j++) if (out(series.frames[j])) return refuse(K, mr(R.OUT_OF_FRAME), { reason: "wrist_outside_image_in_stance_lock", frame: series.frames[j].frame_index });
   for (const j of [k - 1, k, k + 1]) if (series.frames[j] && out(series.frames[j])) return refuse(K, mr(R.OUT_OF_FRAME), { reason: "wrist_outside_image_at_apex", frame: series.frames[j].frame_index });
-  const sep = (f: LandmarkSeriesFrame) => wristSepPct(series, f, lock);
-  const sL = lockMedian(series, lock, sep), sA = med3(series, k, sep);
-  if (sA == null) return refuse(K, mr(R.HANDS_NOT_DETECTED), { reason: "wrists_unobserved_at_apex" });
-  if (sA > HAND_GRIP_MAX_SEP_PCT) return refuse(K, mr(R.HANDS_NOT_DETECTED), { reason: "hands_not_together_on_handle_at_apex", wrist_sep_pct_apex: round4(sA), max: HAND_GRIP_MAX_SEP_PCT, message: "The two wrists read too far apart to be one grip at the load." });
-  // Grip baseline (2026-09-28): the Stance Lock is LOWER-BODY stillness and can
-  // land before the athlete grips up (914cf54c: lock 54–67, wrists 48–52% of
-  // stature apart and converging smoothly; together from frame ~78). Depth is
-  // measured from the first sustained gripped run after the lock starts.
-  const grip = gripRun(series, lock, k, sep);
-  // PASS/FAIL (owner doctrine): hands behind the head at the apex. The grip is
-  // rigid, so hands behind the head = barrel behind the head — no bat tracking.
-  const rel = med3(series, k, (f) => { const h = handsMidFwd(series, f, lock, dir), c = fwd(series, headCentroidPx(series, f), lock, dir); return h == null || c == null ? null : h - c; });
-  if (rel == null) return refuse(K, mr(R.LANDMARK_OCCLUDED), { reason: "hands_or_head_unobserved_at_apex" });
-  // Floor: hand-mid floor + head-pull floor (independent errors, summed = conservative).
+  const set = handsSetRun(series, lock, k, v);
+  const fr = (j: number) => series.frames[j].frame_index;
+  if (!set) return refuse(K, mr(R.HANDS_NOT_DETECTED), { reason: "no_settled_stance_with_hands_set_before_apex", apex_frame: apex.frame_index, lock_frames: [lock.start_frame, lock.end_frame], message: "Never found a still stance with both hands together on the handle before the load." });
+  const hp = (j: number) => handPointPx(series, j, v);
+  const hf = (j: number) => fwd(series, hp(j).p, lock, dir);
+  const m3 = (g: (j: number) => number | null) => { const xs = [k - 1, k, k + 1].map((j) => (series.frames[j] ? g(j) : null)).filter((x): x is number => x != null); return xs.length >= 2 ? median(xs) : null; };
+  // PASS/FAIL (owner doctrine): hands behind the head at the apex. The grip is rigid, so hands behind the head = barrel behind the head.
+  const rel = m3((j) => { const h = hf(j), c = fwd(series, headCentroidPx(series, series.frames[j]), lock, dir); return h == null || c == null ? null : h - c; });
+  const sources = [k - 1, k, k + 1].filter((j) => series.frames[j]).map((j) => ({ frame: fr(j), wrist_source: hp(j).source }));
+  if (rel == null) return refuse(K, mr(R.LANDMARK_OCCLUDED), { reason: "no_rigid_valid_wrist_or_head_at_apex", apex_sources: sources });
   const relFloor = HAND_LOAD_NOISE_FLOOR_PCT + HEAD_PULL_NOISE_FLOOR_PCT;
   if (Math.abs(rel) < relFloor) return refuse(K, mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: "hands_level_with_head_within_noise", raw: round4(rel), floor: relFloor });
-  // UNGRADED depth channel — never a verdict (fascial law: varies per athlete).
-  let b: number | null = null;
-  if (grip) { const xs: number[] = []; for (let j = grip[0]; j <= grip[1]; j++) { const v = g(series.frames[j]); if (v != null) xs.push(v); } b = median(xs); }
-  const a = med3(series, k, g);
-  const depth = !grip ? { value: null, reason: "no_sustained_grip_before_apex" } : b == null || a == null ? { value: null, reason: "wrists_unobserved_in_grip_baseline" } : Math.abs(a - b) < HAND_LOAD_NOISE_FLOOR_PCT ? { value: null, reason: "below_still_clip_noise_floor", raw: round4(a - b) } : { value: round4(a - b) };
+  const xs: number[] = []; for (let j = set[0]; j <= set[1]; j++) { const x = hf(j); if (x != null) xs.push(x); }
+  const b = xs.length ? median(xs) : null, a = m3(hf);
+  const depth = b == null || a == null ? { value: null, reason: "hands_unobserved_in_baseline_or_apex" } : Math.abs(a - b) < HAND_LOAD_NOISE_FLOOR_PCT ? { value: null, reason: "below_still_clip_noise_floor", raw: round4(a - b) } : { value: round4(a - b) };
+  let rejected = 0; for (let j = set[0]; j <= k + 1 && j < series.frames.length; j++) if (v && (!v.trustedStrict(j, LM.L_WRIST) || !v.trustedStrict(j, LM.R_WRIST))) rejected++;
   return { key: K, value: round4(rel), unit: "percent_stature", uncertainty: relFloor, verdict: rel < 0 ? "pass" : "fail", missingness: null, confidence: uncalibrated(), standard: HITTING_POSE_STANDARDS[K],
-    lineage: { apex_frame: apex.frame_index, lock_frames: [lock.start_frame, lock.end_frame], grip_baseline_frames: grip ? [series.frames[grip[0]].frame_index, series.frames[grip[1]].frame_index] : null, wrist_sep_pct_lock: sL == null ? null : round4(sL), verification: "unverified — owner has not yet confirmed hand load against video", wrist_sep_pct_apex: round4(sA), sign: "value = hands-mid minus head centroid, forward; negative = behind the head", depth_pct_stature_ungraded: depth } };
+    lineage: { apex_frame: apex.frame_index, lock_frames: [lock.start_frame, lock.end_frame], hands_set_frames: [fr(set[0]), fr(set[1])], apex_sources: sources, wrist_frames_rejected_by_forearm_rigidity: rejected, forearm_ref_pct_stature: v ? { L: v.ref_pct_stature.forearm_L, R: v.ref_pct_stature.forearm_R } : null, verification: "unverified — owner has not yet confirmed hand load against video", sign: "value = hand point minus head centroid, forward; negative = behind the head", depth_pct_stature_ungraded: depth } };
 }
 
 /* head discipline (saved key eyes_tracking) — D-SWING-START → D-SWING-PEAK. Body only.
@@ -305,5 +321,5 @@ export function runHittingPoseTiles(series: LandmarkSeries, o: { side: Handednes
   if (dir == null) return { ...base, ...all(mr(R.ANCHOR_NOT_DETECTED), { reason: "direction_sign_underivable" }) };
   const lock = detectStanceLock(series);
   if (!lock.ok || !lock.baseline?.stature_px) return { ...base, ...all(lock.missingness ?? mr(R.ANCHOR_NOT_DETECTED), { reason: lock.detail ?? "stance_lock_missing" }) };
-  return { ...base, hip_load: gate(computeHipLoad(series, o.side, dir, lock)), hand_load: gate(computeHandLoad(series, dir, lock)), head_discipline: gate(computeHeadDiscipline(series, o.side, dir, lock)), hands_outside_shoulders_at_landing: gate(computeHandsOutside(series, o.side, dir, lock)) };
+  return { ...base, hip_load: gate(computeHipLoad(series, o.side, dir, lock)), hand_load: gate(computeHandLoad(series, dir, lock, buildSegmentValidity(series, lock))), head_discipline: gate(computeHeadDiscipline(series, o.side, dir, lock)), hands_outside_shoulders_at_landing: gate(computeHandsOutside(series, o.side, dir, lock)) };
 }

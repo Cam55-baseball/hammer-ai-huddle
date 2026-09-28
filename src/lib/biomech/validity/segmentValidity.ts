@@ -28,6 +28,12 @@ export const SEGMENT_VALIDITY_VERSION = "segment_validity@1.1.0-lock-median-tol-
  * mis-track (forearm at 32–68% of its reference).
  */
 export const SEGMENT_TOL = 0.2;
+/**
+ * A segment whose reference is already heavily foreshortened (e.g. still clip
+ * left forearm, 4.4% of stature, pointing at the camera) has relative noise of
+ * 54% p99 — the ratio test is ill-conditioned there, so it is not judged.
+ */
+export const SEGMENT_MIN_REF_PCT = 6;
 
 /** Pseudo-landmark for the head centroid (mean of nose, eyes, ears). */
 export const HEAD = -1;
@@ -95,7 +101,7 @@ export function buildSegmentValidity(series: LandmarkSeries, lock: StanceLock | 
     const u = new Set<number>(), us = new Set<number>(), fl: Record<string, "over_length_tracking_failure" | "under_length_foreshortened_or_mistracked"> = {};
     for (const s of SEGMENTS) {
       const R = ref[s.key], L = segmentLengthPx(series, f, s);
-      if (R == null || L == null || !(R > 0)) continue;
+      if (R == null || L == null || !(R > 0) || (R * 100) / st < SEGMENT_MIN_REF_PCT) continue;
       const d = L / R - 1;
       const bad = d > SEGMENT_TOL ? "over_length_tracking_failure" : d < -SEGMENT_TOL && !SHRINK_OK.has(s.key) ? "under_length_foreshortened_or_mistracked" : null;
       if (!bad) continue;
