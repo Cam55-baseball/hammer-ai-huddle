@@ -63,6 +63,8 @@ const ROOT_BY_FAULT: Record<string, string> = {
   head_path_through_stride_fail: "back_leg_did_not_hold_load",
   back_hip_socket_hold_fail: "back_leg_did_not_hold_load",
   post_landing_hip_drift_fail: "back_leg_did_not_hold_load",
+  back_knee_straightened_fail: "back_leg_did_not_hold_load",
+  hands_below_back_elbow_at_heel_landing: "trunk_rotates_before_front_foot_plant",
 };
 
 export function rootPatternForFault(faultKey: string): RootPattern | null {

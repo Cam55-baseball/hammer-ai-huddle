@@ -10,6 +10,11 @@ describe("back-leg root pattern reads as ONE finding", () => {
     expect(r[0].root_pattern_key).toBe("back_leg_did_not_hold_load");
     for (const w of ["past your centre of mass", "drifted forward through the stride", "back hip", "after the front foot landed"]) expect(r[0].evidence).toContain(w);
   });
+  it("back knee joins the back-leg row; hands low at heel landing is its own front-shoulder row", () => {
+    const r = buildPoseTileFindings({ ...a, verdicts: { back_knee_flex_maintained: "fail", hands_stay_up_at_plant: "fail" } });
+    expect(r.map((x) => x.root_pattern_key)).toEqual(["trunk_rotates_before_front_foot_plant", "back_leg_did_not_hold_load"]);
+    expect(r[1].evidence).toContain("back knee straightened");
+  });
   it("never says weight was measured", () => {
     const r = buildPoseTileFindings({ ...a, verdicts: { hip_load: "fail" } });
     expect(r[0].evidence).toContain("position-based estimate"); expect(r[0].evidence).not.toMatch(/\bweight\b/i);
