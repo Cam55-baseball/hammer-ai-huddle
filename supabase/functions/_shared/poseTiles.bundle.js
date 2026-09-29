@@ -23,7 +23,39 @@ function decodeLandmarkSeriesText(text) {
     };
     frames.push(frame);
   }
-  return { header, frames };
+  return { header, frames: repairDuplicateDecodes(frames) };
+}
+var sameLandmarks = (a, b) => a.pose_detected && b.pose_detected && a.normalized.length > 0 && a.normalized.length === b.normalized.length && a.normalized.every((x, i) => x === b.normalized[i]);
+function repairDuplicateDecodes(frames) {
+  const out = frames.slice();
+  let k = 1;
+  while (k < out.length) {
+    if (!sameLandmarks(frames[k - 1], frames[k]) || frames[k].frame_index - frames[k - 1].frame_index !== 1) {
+      k++;
+      continue;
+    }
+    const a = k - 1;
+    let b = k;
+    while (b < frames.length && sameLandmarks(frames[a], frames[b]) && frames[b].frame_index - frames[b - 1].frame_index === 1)
+      b++;
+    if (b >= frames.length || !frames[b].pose_detected || frames[b].frame_index - frames[b - 1].frame_index !== 1) {
+      k = b + 1;
+      continue;
+    }
+    const A = frames[a], B = frames[b], span = b - a;
+    for (let j = a + 1;j < b; j++) {
+      const t = (j - a) / span, lerp = (x, y) => x.map((v, i) => v + (y[i] - v) * t);
+      out[j] = {
+        ...frames[j],
+        normalized: lerp(A.normalized, B.normalized),
+        world: A.world.length === B.world.length ? lerp(A.world, B.world) : A.world,
+        visibility: A.visibility.map((v, i) => Math.min(v, B.visibility[i] ?? v)),
+        repaired_duplicate_decode: true
+      };
+    }
+    k = b + 1;
+  }
+  return out;
 }
 
 // src/lib/biomech/metrics/missingness.ts
@@ -531,6 +563,8 @@ function detectSwingPeak(series, direction_sign, swingStart) {
     return miss(A, ID, MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, { reason: "no_rotation_above_still_floor", peak_rad_s: round4(w[pk]), floor: SWING_PEAK_MIN_RAD_S });
   if (pk === k1 && k1 < series.frames.length - 1)
     return miss(A, ID, MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, { reason: "rotation_still_rising_at_search_end" });
+  if (pk === k0)
+    return miss(A, ID, MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, { reason: "no_rotation_above_still_floor", edge: "maximum_at_swing_start", peak_rad_s: round4(w[pk]), floor: SWING_PEAK_MIN_RAD_S });
   return hit(series, A, ID, pk, 0.7 * tierFactor(p.fps), 1, { peak_rad_s: round4(w[pk]), is_contact: false, note: "pose-only torso rotation peak — NOT contact" });
 }
 

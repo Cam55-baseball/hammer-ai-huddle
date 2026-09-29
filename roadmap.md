@@ -38,3 +38,10 @@
 - [x] Athlete-surface guard test (no digit + °/%) across upload copy, root patterns, 914cf54c finding, analyze/report-card components.
 - [ ] Pitching baseball card (next).
 - [ ] "Frame-rate check (temporary)" debug panel is visible to athletes — owner to confirm removal.
+
+## 2026-09-29
+- [x] Remove temporary frame-rate panel
+- [x] Same-clip determinism: duplicate-decode repair + frame-centre seeking (verdicts now match fixture vs live)
+- [x] Pitching baseball card: 11 tiles built, all refuse on the three fixtures — UNVALIDATED (no pitching clip)
+- [ ] Deploy analyze-video with the repaired series decoder — awaiting owner go-ahead
+- [ ] Owner: pitching clip, pitching reasoning in his words, balance-at-landing definition, release-extension band vs noise
