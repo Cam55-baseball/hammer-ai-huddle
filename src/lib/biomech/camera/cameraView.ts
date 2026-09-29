@@ -77,6 +77,18 @@ export const TILE_CAMERA_REQUIREMENTS: Readonly<Record<string, CameraRequirement
   lift_thrust: "side_on",
   head_vertical_movement_pct: "either",
   premature_shoulder_open_deg: "side_on", // v2.2 fusion reads side-on 2-D signals
+  // pitching card 2026-09-29: lines that face the target at release are edge-on to a side-on camera.
+  tempo_sec: "either",
+  shoulder_tilt_deg: "on_line",
+  stack_and_track: "on_line",
+  head_at_release_deg: "on_line",
+  glove_drift_outside_frame_in: "on_line",
+  stride_pct_of_height: "side_on",
+  drag_line: "side_on",
+  release_extension: "side_on",
+  eyes_on_target_at_peak_lift: "side_on",
+  balance_at_landing: "either",
+  glove_swivel: "either",
   // hitting owner tiles
   head_path_through_stride: "side_on",
   back_hip_socket_hold: "side_on",

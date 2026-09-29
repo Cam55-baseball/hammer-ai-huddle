@@ -21,7 +21,6 @@
 import { sha256HexOfBlob } from "./fingerprint";
 import { blobSource, readContainerFps, readMatroskaDefaultDurationFps, type ContainerFpsResult, type MatroskaFpsResult } from "./containerFps";
 import { fpsFloorVerdict } from "./videoAcceptance";
-import { publishFpsProbe } from "./fpsProbeReadout";
 
 export type PlaybackFpsResult =
   | {
