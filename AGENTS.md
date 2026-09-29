@@ -12,3 +12,6 @@
 <!-- LOVABLE:BEGIN -->
 - Throwing uses a separate conservative overhand gate and one pose runner for both sports, never mound or AI-vision values. Why: field throws lack a windup and batting clips can mimic a throw.
 <!-- LOVABLE:END -->
+
+- Decoded landmark series rebuild byte-identical repeated frames by interpolation (`repairDuplicateDecodes`) and capture seeks to frame centres. Why: which frames the browser repeats varied run to run and flipped verdicts on the same clip.
+- Pitching card tiles (`pitchingCardTiles.ts`) share the delivery gate in `pitchingTiles.ts`; lateral quantities (head to target line, glove drift) need an on-line view and refuse side-on. Why: a side-on camera sees them end-on.

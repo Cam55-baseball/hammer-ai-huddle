@@ -186,3 +186,9 @@ Measured on real swings: arms, feet AND the back shin foreshorten past 20% legit
 
 ## 2026-09-28 — Hitting card tile floors (still clip, before any threshold)
 heel − toe height 1.415 % (max, worst side) → 1.5 · shoulder tilt 0.7 s p90−p10 1.647° → 1.7 · head height 0.7 s p90−p10 1.143 % → 1.2 · pelvis-mid forward 0.25 s p90−p10 0.438 % → 0.5 (finish sway) · back-knee angle 4.816° → 4.9 · pelvis-mid forward 0.984 % → 1.0 · single-wrist height 3.127 % → 3.2 · elbow angle 2.878° (well-conditioned arm; the 4.4 % forearm gave 17.9°, so arms under 6 % of stature are refused) → 3.0 · pelvis rigid-solve angle 11.9° → 12 (ill-conditioned near closed).
+
+## Duplicate-decode repair (2026-09-29)
+Seeking to an exact frame boundary let the browser return the previous frame. Stored 914cf54c had 86 repeated frames; the live re-track of the same file had 63, only 25 in common — the root cause of head discipline reading FAIL on the fixture and REFUSING live (swing start moved one frame and then hit an occluded wrist). Fixed twice: capture now seeks to the frame centre, and every decoded series rebuilds byte-identical repeats by interpolating between true neighbours. After the repair both copies give identical verdicts on all eight server tiles; head discipline 12.85 (fixture) vs 11.90 (live) % stature against a 0.75 floor — nowhere near the threshold. Pitching head floor re-measured 0.535 % (constant set to 0.6).
+
+## Pitching card floors (still clip 15d75bc9, p2–p98, 2026-09-29)
+shoulder tilt 2.74° · eye tilt 5.00° · balance 1.69° · ankle x 2.0 % stature per ankle (stride ≈ 2.8 %) · nose-ahead-of-ears 0.077 ear-widths · wrist/toe ≈ 1.0–2.3 in each at 70 in (release extension ≈ 2.9 in combined — LARGER than half the owner's 8–12 in band) · bare-hand pinky→thumb direction 6.7–19.7°.
