@@ -1888,11 +1888,12 @@ Deno.serve(async (req) => {
         .select("landmarks_storage_path")
         .eq("video_id", videoId).order("created_at", { ascending: false }).limit(1).maybeSingle();
       if (movementRunError) throw movementRunError;
-      if (movementRun?.landmarks_storage_path) {
-        const movement = await checkStoredMovement(supabase, movementRun.landmarks_storage_path);
-        if (movement.status === "refused") {
-          return await writeReject("reject_no_movement", "No trustworthy movement detected in the stored clip");
-        }
+      if (!movementRun?.landmarks_storage_path) {
+        return await writeReject("reject_no_movement", "No stored body tracking available to verify movement");
+      }
+      const movement = await checkStoredMovement(supabase, movementRun.landmarks_storage_path);
+      if (movement.status === "refused") {
+        return await writeReject("reject_no_movement", "No trustworthy movement detected in the stored clip");
       }
     }
 
