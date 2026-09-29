@@ -307,5 +307,5 @@ const release1Tiles = tiles.filter((t) => {
 export const bpReportCard: ReportCardSpec = {
   disciplineLabel: "Baseball Pitching",
   groupByPhase: false,
-  tiles: release1Tiles,
+  tiles: [...release1Tiles, ...PITCHING_CARD_EXTRA],
 };
