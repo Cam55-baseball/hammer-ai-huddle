@@ -787,3 +787,9 @@ Spec: pelvis vs the plate line at end of P4. Side-on honesty: square = hips face
 
 ### 11.10 Resolved, removed from the outstanding list `[owner-supplied 2026-09-28]`
 hand_load depth (ungraded by the fascial-variation ruling), head_discipline (com_at_p2 line from tile 19), hip_load (approved back-leg position method, no maximum).
+
+## Ground-truth confirmation — back heel stays down until P4 [recorded 2026-09-29]
+- Clip 914cf54c (left-handed hitter). Owner stated the back heel came up as the front heel was landing (P3).
+- First run of the new back-heel tile: FAIL. Front-heel plant on the same clip: PASS.
+- The earlier 7.8% "heel above toe" reading was the back foot, filed under the wrong tile — not a miscalculation.
+- Status: owner-confirmed, n=1. A signal, not validation.
