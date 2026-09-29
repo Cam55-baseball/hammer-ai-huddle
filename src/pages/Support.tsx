@@ -62,7 +62,7 @@ const faqs: { q: string; a: React.ReactNode }[] = [
         <li>Keep the app open while it uploads.</li>
         <li>Try a shorter clip. Very long videos take much longer.</li>
         <li>Close and reopen the app, then try once more.</li>
-        <li>Still stuck? Email <a href="mailto:hammersmodality@gmail.com" className="text-primary underline underline-offset-4">hammersmodality@gmail.com</a> and tell us the date, the module, and your phone type.</li>
+        <li>Still stuck? Email <a href="mailto:hammersmodality@hammersmodality.org" className="text-primary underline underline-offset-4">hammersmodality@hammersmodality.org</a> and tell us the date, the module, and your phone type.</li>
       </ul>
     ),
   },
@@ -76,7 +76,7 @@ const faqs: { q: string; a: React.ReactNode }[] = [
         </p>
         <p>
           If it still looks wrong, email{" "}
-          <a href="mailto:hammersmodality@gmail.com" className="text-primary underline underline-offset-4">hammersmodality@gmail.com</a>{" "}
+          <a href="mailto:hammersmodality@hammersmodality.org" className="text-primary underline underline-offset-4">hammersmodality@hammersmodality.org</a>{" "}
           with the analysis date and what looks off, and a human will check it. Grades and
           measurements are estimates for training, not exact numbers.
         </p>
@@ -100,7 +100,7 @@ const faqs: { q: string; a: React.ReactNode }[] = [
         On the <Link to="/auth" className="text-primary underline underline-offset-4">sign-in page</Link>,
         choose the forgot-password option and enter your email. We send you a reset link. If it does
         not arrive, check spam, then email{" "}
-        <a href="mailto:hammersmodality@gmail.com" className="text-primary underline underline-offset-4">hammersmodality@gmail.com</a>.
+        <a href="mailto:hammersmodality@hammersmodality.org" className="text-primary underline underline-offset-4">hammersmodality@hammersmodality.org</a>.
       </p>
     ),
   },
@@ -123,7 +123,7 @@ export default function Support() {
           <h2 className="text-lg font-semibold">Get help</h2>
           <p className="text-muted-foreground">
             Email{" "}
-            <a href="mailto:hammersmodality@gmail.com" className="font-semibold text-primary underline underline-offset-4">hammersmodality@gmail.com</a>{" "}
+            <a href="mailto:hammersmodality@hammersmodality.org" className="font-semibold text-primary underline underline-offset-4">hammersmodality@hammersmodality.org</a>{" "}
             for anything, including privacy questions. We usually reply within{" "}
             <strong className="text-foreground">3 to 5 business days</strong>.
           </p>

@@ -14,7 +14,7 @@ const sections: LegalSection[] = [
         <BusinessAddressBlock className="text-foreground" />
         <p>
           For questions about privacy, or for general help, email{" "}
-          <a href="mailto:hammersmodality@gmail.com">hammersmodality@gmail.com</a>.
+          <a href="mailto:hammersmodality@hammersmodality.org">hammersmodality@hammersmodality.org</a>.
         </p>
         <p>This policy takes effect on <strong>June 28, 2025</strong>.</p>
       </>
@@ -234,7 +234,7 @@ const sections: LegalSection[] = [
         <p>
           A parent or guardian linked to the account can see the athlete's data, ask us to correct
           it, and ask us to delete it. To request deletion, email{" "}
-          <a href="mailto:hammersmodality@gmail.com">hammersmodality@gmail.com</a> from the address
+          <a href="mailto:hammersmodality@hammersmodality.org">hammersmodality@hammersmodality.org</a> from the address
           on file, or use the delete button on the <Link to="/profile">profile page</Link>.
         </p>
         <p>
@@ -280,7 +280,7 @@ const sections: LegalSection[] = [
           The fastest way to delete everything is the <strong>Delete my account</strong> button at
           the bottom of your <Link to="/profile">profile page</Link>.{" "}
           <strong>Deletion is permanent and cannot be undone.</strong> For anything else, email{" "}
-          <a href="mailto:hammersmodality@gmail.com">hammersmodality@gmail.com</a>.
+          <a href="mailto:hammersmodality@hammersmodality.org">hammersmodality@hammersmodality.org</a>.
         </p>
 
       </>
@@ -315,7 +315,7 @@ const sections: LegalSection[] = [
         <p>
           We do not sell personal information and we do not share it for cross-context behavioural
           advertising. To make a request, email{" "}
-          <a href="mailto:hammersmodality@gmail.com">hammersmodality@gmail.com</a>.
+          <a href="mailto:hammersmodality@hammersmodality.org">hammersmodality@hammersmodality.org</a>.
         </p>
 
       </>

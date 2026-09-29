@@ -37,7 +37,7 @@ const sections: LegalSection[] = [
         <li>Give us true information, and keep it up to date.</li>
         <li>Keep your password safe. Anything done with your login counts as done by you.</li>
         <li>One account per person. Do not share a login with a teammate.</li>
-        <li>Tell us at <a href="mailto:hammersmodality@gmail.com">hammersmodality@gmail.com</a> if you think someone else got into your account.</li>
+        <li>Tell us at <a href="mailto:hammersmodality@hammersmodality.org">hammersmodality@hammersmodality.org</a> if you think someone else got into your account.</li>
       </ul>
     ),
   },
@@ -57,7 +57,7 @@ const sections: LegalSection[] = [
           <li>
             We do not give refunds for time already paid for, unless the law where you live says we
             must. If something went wrong, email{" "}
-            <a href="mailto:hammersmodality@gmail.com">hammersmodality@gmail.com</a> and we will
+            <a href="mailto:hammersmodality@hammersmodality.org">hammersmodality@hammersmodality.org</a> and we will
             look at it.
           </li>
 
