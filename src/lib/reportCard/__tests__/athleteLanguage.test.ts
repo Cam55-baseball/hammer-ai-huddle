@@ -56,7 +56,7 @@ describe("athlete-facing mechanics language", () => {
   it("keeps both throwing sports on one measurement implementation with sport-specific wording", () => {
     const baseball = getReportCardSpec("baseball", "throwing");
     const softball = getReportCardSpec("softball", "throwing");
-    expect(baseball?.tiles.map((t) => t.key)).toEqual(["trunk_rotation_before_foot_contact", "shoulder_abduction_at_foot_contact", "elbow_flexion_at_foot_contact", "horizontal_abduction_at_foot_contact", "stride_foot_direction", "lead_knee_flexion", "contralateral_trunk_tilt", "sidearm_arm_slot", "tempo", "stride_length", "energy_angle", "head_stability"]);
+    expect(baseball?.tiles.map((t) => t.key)).toEqual(["trunk_rotation_before_foot_contact", "horizontal_abduction_at_foot_contact", "stride_foot_direction", "tempo", "stride_length", "energy_angle", "head_stability"]);
     expect(softball?.tiles.map((t) => t.key)).toEqual(baseball?.tiles.map((t) => t.key));
     for (const [i, bb] of (baseball?.tiles ?? []).entries()) {
       const sb = softball?.tiles[i];

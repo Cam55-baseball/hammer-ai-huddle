@@ -1,4 +1,4 @@
-/** Position-player overhand throwing measurements, never inferred from a hitting clip.
+/** Position-player throwing (any arm slot) measurements, never inferred from a hitting clip.
  * Shares pitching's calibrated measurement methods where their landmarks and windows
  * really match; a throwing move is not silently passed through a mound gate.
  */
@@ -97,7 +97,7 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
     return allMissing;
   const rk = series.frames.findIndex((f) => f.frame_index === releaseFrame), pk = series.frames.findIndex((f) => f.frame_index === plantFrame);
   const wrist = point(series.frames[rk], side === "R" ? LM.R_WRIST : LM.L_WRIST), shoulder = point(series.frames[rk], side === "R" ? LM.R_SHOULDER : LM.L_SHOULDER);
-  if (!wrist || !shoulder || wrist.y >= shoulder.y) return allMissing; // overhand only
+  if (!wrist || !shoulder) return allMissing; // any arm slot — owner 2026-09-29: sidearm throws must be allowed in
   const pattern = candidatePattern;
   const lk = series.frames.findIndex((f) => f.frame_index === liftFrame);
   const dir = deriveDirectionSign(series, side);
@@ -122,7 +122,7 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
   const head = computeHeadVerticalMovement(masked, d, lock);
   const adapt = (tile: { value: number | null; unit: string; verdict: "pass" | "fail" | null; missingness: { missing_reason: string } | null; lineage: Readonly<Record<string, unknown>> } | null, unit: string): ThrowingMeasurement =>
     tile?.value == null ? absent(unit, tile?.missingness?.missing_reason ?? R.CALIBRATION_UNAVAILABLE, { ...(tile?.lineage ?? {}) })
-      : { value: tile.value, unit, verdict: null, missing_reason: null, lineage: { ...tile.lineage, reused_window: "throw_first_move_to_overhand_release", standard: "ungraded_throwing_standard_unconfirmed" } };
+      : { value: tile.value, unit, verdict: null, missing_reason: null, lineage: { ...tile.lineage, reused_window: "throw_first_move_to_release", standard: "ungraded_throwing_standard_unconfirmed" } };
   const shoulderOpening = adapt(sh, "degrees");
   if (sh?.value != null) shoulderOpening.lineage = { ...shoulderOpening.lineage, injury_flag: "trunk_rotation_before_foot_contact" };
   return { ...allMissing, pattern: pattern.pattern, pattern_evidence: pattern, tempo, energy_angle: energy, shoulder_opening: shoulderOpening, head_stability: adapt(head, "percent"),
