@@ -216,7 +216,6 @@ export async function probeVideoMetadata(file: Blob): Promise<ProbedVideoMetadat
       orientation,
     };
     const verdict = fpsFloorVerdict(probe);
-    publishFpsProbe(probe, verdict.decision);
     console.info("[probe] frame rate", {
       fps_true, fps_encoded, fps_playback, duration_sec, duration_source, decision: verdict.decision,
     });
