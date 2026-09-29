@@ -2668,8 +2668,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         if (landmarkError) throw landmarkError;
         if (landmarkRun?.landmarks_storage_path) {
           const diagnosis = (landmarkRun.diagnostics as Record<string, unknown> | null)?.track_diagnosis as Record<string, unknown> | undefined;
-          // The preview's movement gate rejects still footage before calling
-          // this function; server refuses a known failed track as well.
+          // A known refused track never runs; the downloaded series also goes
+          // through the movement gate inside the writer before any tile runs.
           if (diagnosis?.status !== "refused") {
             const side = videoRow.batting_side === "L" || videoRow.batting_side === "R" ? videoRow.batting_side : null;
             const pose = await runAndWritePoseTileFindings(supabase, {

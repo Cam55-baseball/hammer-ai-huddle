@@ -9,8 +9,12 @@ import { runHittingPoseTiles } from "../metrics/hittingPoseTiles";
 import { runHittingCardTiles, HITTING_CARD_TILES_VERSION } from "../metrics/hittingCardTiles";
 import { runHittingOwnerTiles } from "../metrics/hittingOwnerTiles";
 import type { Handedness } from "../side/strideSide";
+import { evaluateMovementGate } from "../gates/movementGate";
 
 export type Verdict = "pass" | "fail" | null;
+export function checkStoredLandmarkMovement(ndjson: string) {
+  return evaluateMovementGate(decodeLandmarkSeriesText(ndjson));
+}
 export function runHittingTilesFromText(ndjson: string, side: Handedness | null, athleteHeightIn: number | null) {
   const s = decodeLandmarkSeriesText(ndjson);
   const pose = runHittingPoseTiles(s, { side });

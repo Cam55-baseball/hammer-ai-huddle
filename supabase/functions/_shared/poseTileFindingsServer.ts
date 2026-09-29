@@ -7,7 +7,7 @@
  * Called by analyze-video only for an owned hitting upload with saved landmarks.
  */
 // @ts-ignore generated bundle
-import { runHittingTilesFromText } from "./poseTiles.bundle.js";
+import { checkStoredLandmarkMovement, runHittingTilesFromText } from "./poseTiles.bundle.js";
 import { buildPoseTileFindings } from "./faultFindings.ts";
 
 async function gunzipIfNeeded(buf: Uint8Array): Promise<string> {
@@ -26,6 +26,8 @@ export async function runAndWritePoseTileFindings(admin: any, a: {
   const { data, error } = await admin.storage.from("pose-landmarks").download(a.landmarksPath);
   if (error || !data) return { ok: false, reason: `landmark_download_failed:${error?.message ?? "no data"}`, written: 0 };
   const text = await gunzipIfNeeded(new Uint8Array(await data.arrayBuffer()));
+  const movement = checkStoredLandmarkMovement(text);
+  if (movement.status === "refused") return { ok: true, written: 0, verdicts: {}, refused: movement.reason };
   const out = runHittingTilesFromText(text, a.side, a.athleteHeightIn);
   const rows = buildPoseTileFindings({ userId: a.userId, videoId: a.videoId, runId: a.runId, sport: a.sport, verdicts: out.verdicts, engineVersion: out.engine_version });
   if (rows.length) {
