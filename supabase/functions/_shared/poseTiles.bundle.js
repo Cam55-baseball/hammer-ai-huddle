@@ -2259,7 +2259,91 @@ function hittersMove(series, o, t) {
   return ok("hitters_move", "boolean", fails.length ? 0 : 1, null, fails.length ? "fail" : "pass", { constituents: status, failed: fails });
 }
 
+// src/lib/biomech/gates/movementGate.ts
+var MOVEMENT_GATE_VERSION = "movement_gate@1.0.0";
+var MOVEMENT_THRESHOLD_BODY = 0.2;
+var MIN_OBSERVED_FRAMES = 10;
+var MIN_LANDMARKS = 6;
+var MIN_POSE_FRACTION = 0.5;
+var BODY = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28];
+var VIS = 0.5;
+function pct(sorted, q2) {
+  return sorted[Math.floor((sorted.length - 1) * q2)];
+}
+function px(series, fi, i) {
+  const f = series.frames[fi];
+  if (!f.pose_detected)
+    return null;
+  const v = f.visibility?.[i];
+  if (v == null || !(v >= VIS))
+    return null;
+  const x = f.normalized[i * 3];
+  const y = f.normalized[i * 3 + 1];
+  if (!Number.isFinite(x) || !Number.isFinite(y))
+    return null;
+  return { x: x * series.header.width, y: y * series.header.height };
+}
+function bodyScalePx2(series) {
+  const d = [];
+  for (let k = 0;k < series.frames.length; k++) {
+    const ls = px(series, k, 11), rs = px(series, k, 12), la = px(series, k, 27), ra = px(series, k, 28);
+    if (!ls || !rs || !la || !ra)
+      continue;
+    d.push(Math.hypot((ls.x + rs.x) / 2 - (la.x + ra.x) / 2, (ls.y + rs.y) / 2 - (la.y + ra.y) / 2));
+  }
+  if (d.length === 0)
+    return null;
+  d.sort((a, b) => a - b);
+  const m2 = pct(d, 0.5);
+  return m2 > 0 ? m2 : null;
+}
+function movementScore(series) {
+  const scale = bodyScalePx2(series);
+  if (scale == null)
+    return null;
+  const ex = [];
+  for (const i of BODY) {
+    const xs = [];
+    const ys = [];
+    for (let k = 0;k < series.frames.length; k++) {
+      const p = px(series, k, i);
+      if (p) {
+        xs.push(p.x);
+        ys.push(p.y);
+      }
+    }
+    if (xs.length < MIN_OBSERVED_FRAMES)
+      continue;
+    xs.sort((a, b) => a - b);
+    ys.sort((a, b) => a - b);
+    ex.push(Math.hypot(pct(xs, 0.98) - pct(xs, 0.02), pct(ys, 0.98) - pct(ys, 0.02)) / scale);
+  }
+  if (ex.length < MIN_LANDMARKS)
+    return null;
+  return Math.round(Math.max(...ex) * 1e6) / 1e6;
+}
+function evaluateMovementGate(series) {
+  const base = { threshold: MOVEMENT_THRESHOLD_BODY, version: MOVEMENT_GATE_VERSION };
+  if (!series || series.frames.length === 0) {
+    return { status: "refused", reason: "body_not_tracked", movement_score: null, ...base };
+  }
+  const withPose = series.frames.filter((f) => f.pose_detected).length;
+  if (withPose / series.frames.length < MIN_POSE_FRACTION) {
+    return { status: "refused", reason: "body_not_tracked", movement_score: null, ...base };
+  }
+  const score = movementScore(series);
+  if (score == null)
+    return { status: "refused", reason: "body_not_tracked", movement_score: null, ...base };
+  if (score < MOVEMENT_THRESHOLD_BODY) {
+    return { status: "refused", reason: "no_movement_detected", movement_score: score, ...base };
+  }
+  return { status: "movement", movement_score: score, ...base };
+}
+
 // src/lib/biomech/server/poseTileServerEntry.ts
+function checkStoredLandmarkMovement(ndjson) {
+  return evaluateMovementGate(decodeLandmarkSeriesText(ndjson));
+}
 function runHittingTilesFromText(ndjson, side, athleteHeightIn) {
   const s = decodeLandmarkSeriesText(ndjson);
   const pose = runHittingPoseTiles(s, { side });
@@ -2278,5 +2362,6 @@ function runHittingTilesFromText(ndjson, side, athleteHeightIn) {
   return { engine_version: HITTING_CARD_TILES_VERSION, verdicts, pose, card, owner };
 }
 export {
-  runHittingTilesFromText
+  runHittingTilesFromText,
+  checkStoredLandmarkMovement
 };
