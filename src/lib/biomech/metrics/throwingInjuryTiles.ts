@@ -42,10 +42,13 @@ export interface InjuryMarker {
 
 /** Still clip 15d75bc9, p2–p98 range, measured before any threshold (see research doc). */
 export const THROWING_INJURY_FLOORS = {
-  wrist_over_elbow_forearms: 0.12,
-  elbow_over_shoulder_torsos: 0.03,
-  front_knee_deg: 4.0,
-  head_offset_head_widths: 0.15,
+  // worst side (L arm 0.537, R arm 0.131): the far arm side-on is noisy — a hand
+  // within about half a forearm of the elbow cannot be called either way.
+  wrist_over_elbow_forearms: 0.54,
+  elbow_over_shoulder_torsos: 0.04, // R 0.018, L 0.038
+  front_knee_deg: 5.4, // R 5.41, L 5.03
+  // 0.43 head widths against Oyama's 1-head-width criterion: only clear cases can be called.
+  head_offset_head_widths: 0.43,
 } as const;
 
 export const INJURY_META: Record<InjuryKey, { evidence: Evidence; sources: string[]; professional_note: boolean; camera: string }> = {

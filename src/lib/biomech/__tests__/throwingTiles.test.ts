@@ -29,3 +29,19 @@ describe("throwing cards refuse non-throws", () => {
     expect(new Set([0, 1, 2].map(() => JSON.stringify(runThrowingTiles(a, "L")))).size).toBe(1);
   });
 });
+describe("throwing injury markers", () => {
+  it("every marker refuses on every fixture and side, with a reason and a cited source", () => {
+    for (const s of [still, a, b]) for (const side of ["L", "R", null] as const) {
+      const r = runThrowingTiles(s, side);
+      for (const m of Object.values(r.injury)) {
+        expect(m.value).toBeNull(); expect(m.verdict).toBeNull(); expect(m.missing_reason).toBeTruthy();
+        expect(m.sources.length).toBeGreaterThan(0);
+      }
+    }
+  });
+  it("constant detector refuses everything", () => {
+    const f = still.frames[10];
+    const c = { header: still.header, frames: still.frames.map((x) => ({ ...f, frame_index: x.frame_index, timestamp_seconds: x.timestamp_seconds })) };
+    for (const side of ["L", "R"] as const) for (const m of Object.values(runThrowingTiles(c, side).injury)) expect(m.value).toBeNull();
+  });
+});
