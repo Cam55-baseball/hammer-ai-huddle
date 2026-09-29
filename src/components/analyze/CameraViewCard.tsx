@@ -31,7 +31,7 @@ export function CameraViewCard({ result, module }: { result: CameraViewResult; m
       </div>
       {!viewText && (
         <p className="text-sm text-muted-foreground">
-          All measurements will still run. If a result looks off, film side-on (90° to the pitcher-to-plate line) or straight down that line.
+          All measurements will still run. If a result looks off, film side-on (square to the line between the pitcher and the plate) or straight down that line.
         </p>
       )}
       {viewText && cannot.length === 0 && <p className="text-sm text-muted-foreground">Every measurement can be read from this angle.</p>}

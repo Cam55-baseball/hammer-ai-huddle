@@ -13,6 +13,8 @@
 import type { ProbedVideoMetadata } from "./probeVideoMetadata";
 
 export const MIN_FPS = 24;
+// NTSC phone rates (23.976 "24 fps") are ordinary phone video, never a rejection.
+export const FPS_FLOOR_TOLERANCE = 0.5;
 // 320px floor matches real-world phone exports (iMessage / WhatsApp /
 // social re-encodes commonly arrive at 320–360px wide). BlazePose Full
 // still lands reliable landmarks at this resolution; the previous 480px
@@ -43,7 +45,7 @@ export function fpsFloorVerdict(probe: FpsProbe): FpsFloorVerdict {
   if (probe.fps_source !== "container" || probe.fps_true == null || !Number.isFinite(probe.fps_true)) {
     return { reject: false, decision: "accepted_fps_unknown" };
   }
-  if (probe.fps_true < MIN_FPS) return { reject: true, decision: "rejected_encoded_below_floor" };
+  if (probe.fps_true < MIN_FPS - FPS_FLOOR_TOLERANCE) return { reject: true, decision: "rejected_encoded_below_floor" };
   return { reject: false, decision: "accepted_encoded" };
 }
 

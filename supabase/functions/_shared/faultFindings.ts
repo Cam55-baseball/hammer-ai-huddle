@@ -213,7 +213,7 @@ export function buildPoseTileFindings(args: {
     skill_domain: "hitting", sport: args.sport ?? null,
     fault_key: BACK_LEG_CAUSE_FAULT_KEY, movement_key: null, correction_key: null,
     root_pattern_key: ROOT_BY_FAULT[BACK_LEG_CAUSE_FAULT_KEY],
-    evidence: `Your back leg didn't hold the load at P1. Evidence: ${failing.map((k) => BACK_LEG_EVIDENCE[k]).join("; ")}.`,
+    evidence: `Your back leg didn't stay loaded as you got ready. Here's where it showed up: ${failing.map((k) => BACK_LEG_EVIDENCE[k]).join("; ")}.`,
     engine_version: args.engineVersion ?? null,
   }];
 }

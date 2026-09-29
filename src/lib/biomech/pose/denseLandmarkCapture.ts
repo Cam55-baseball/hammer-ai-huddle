@@ -231,6 +231,7 @@ export async function captureDenseLandmarkSeries(
       const onErr = () => reject(new Error("video metadata load failed"));
       video.addEventListener("loadedmetadata", onLoaded, { once: true });
       video.addEventListener("error", onErr, { once: true });
+      setTimeout(() => reject(new Error("video metadata load timeout")), 20000);
     });
 
     const srcW = video.videoWidth || input.width;
@@ -241,7 +242,10 @@ export async function captureDenseLandmarkSeries(
     canvas.width = Math.max(1, Math.round(srcW * scale));
     canvas.height = Math.max(1, Math.round(srcH * scale));
 
-    const landmarker = await getPoseLandmarkerForDenseCapture();
+    const landmarker = await Promise.race([
+      getPoseLandmarkerForDenseCapture(),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("pose model load timeout")), 60000)),
+    ]);
 
     /* ---------------- PASS 1 — scout ---------------- */
     const scoutIndices = selectScoutFrameIndices(

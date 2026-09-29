@@ -20,7 +20,7 @@ export function CameraAngleHelper({ module }: Props) {
             "Side-on (open side of the mound), full body in frame head to toe.",
             "Start recording BEFORE leg lift, stop AFTER release and finish.",
             "Steady tripod or phone propped — no panning, no zoom.",
-            "Athlete fills ~70% of vertical frame so plant foot & front hip are both visible.",
+            "Athlete fills most of the frame top to bottom so plant foot & front hip are both visible.",
           ],
         }
       : m === "hitting"

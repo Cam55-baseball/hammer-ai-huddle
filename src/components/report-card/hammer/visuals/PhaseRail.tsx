@@ -60,7 +60,8 @@ export function PhaseRail({ phases, activePhase, onSelect }: Props) {
                   : "hsl(var(--muted-foreground))";
           const isActive = activePhase === p.key;
           const isDim = activePhase !== null && !isActive;
-          const pctLabel = noData ? "—" : `${Math.round(p.passRate * 100)}%`;
+          // Athlete-facing: no percentages (owner ruling) — plain words instead.
+          const pctLabel = noData ? "—" : p.passRate >= 0.99 ? "All" : p.passRate >= 0.5 ? "Most" : p.passRate > 0 ? "Some" : "None";
           return (
             <button
               key={p.key}

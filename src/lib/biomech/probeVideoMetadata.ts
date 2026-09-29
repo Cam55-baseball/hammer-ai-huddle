@@ -154,6 +154,8 @@ export async function probeVideoMetadata(file: Blob): Promise<ProbedVideoMetadat
       };
       videoEl.addEventListener("loadedmetadata", onLoaded);
       videoEl.addEventListener("error", onErr);
+      // A codec the browser cannot decode never fires either event — fail visibly.
+      setTimeout(() => reject(new Error("video metadata load timeout")), 20000);
     });
 
     const width = videoEl.videoWidth || 0;

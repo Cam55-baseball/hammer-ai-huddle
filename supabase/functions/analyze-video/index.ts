@@ -1843,7 +1843,7 @@ Deno.serve(async (req) => {
       );
     };
 
-    if (fpsTrue != null && Number.isFinite(fpsTrue) && fpsTrue < PHASE1_MIN_FPS) {
+    if (fpsTrue != null && Number.isFinite(fpsTrue) && fpsTrue < PHASE1_MIN_FPS - 0.5) {
       return await writeReject("reject_low_fps", `fps_true=${fpsTrue} < ${PHASE1_MIN_FPS}`);
     }
     if (videoWidth == null || videoHeight == null || videoWidth < PHASE1_MIN_WIDTH || videoHeight < PHASE1_MIN_HEIGHT) {
