@@ -27,7 +27,9 @@ describe("hitting card tiles 6, 9–13, 16–21, 22", () => {
   it("914cf54c Left — owner-confirmed reference values", () => {
     const r = runHittingCardTiles(A, { side: "L" }) as unknown as Record<string, T>;
     // Owner doctrine 2026-09-28 re-spec.
-    expect(r.heel_plant.value).toBe(7.7709); expect(r.heel_plant.verdict).toBe("fail");
+    expect(r.heel_plant.value).toBeLessThanOrEqual(1.5); expect(r.heel_plant.verdict).toBe("pass");
+    expect(r.heel_plant.lineage.front_foot).toBe("right");
+    expect(r.heel_plant.lineage.front_heel_settle_frame).not.toBe(r.heel_plant.lineage.first_strike_frame);
     expect(r.sequencing.verdict).toBe("fail");
     expect(r.sequencing.lineage.out_of_order).toEqual(["torso_before_hips"]);
     expect(r.back_elbow_connection.value).toBe(17.8549); expect(r.back_elbow_connection.verdict).toBe("pass");

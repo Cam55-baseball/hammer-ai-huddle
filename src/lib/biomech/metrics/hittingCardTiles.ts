@@ -147,7 +147,7 @@ function heelPlant(c: Ctx, plantK: number, liftFrame: number | null): CardTileRe
   const h = (j: number) => { const he = Up(c, P(c, j, c.frontHeel)), to = Up(c, P(c, j, c.frontToe)); return he == null || to == null ? null : he - to; };
   // D-PLANT marks initial front-foot strike (the toe can land first). Follow
   // that SAME front foot until its heel settles; never inspect the back heel.
-  const end = Math.min(c.s.frames.length - 2, plantK + Math.ceil(c.fps * 0.25));
+  const end = Math.min(c.s.frames.length - 2, plantK + Math.ceil(c.fps * 0.5));
   const observed = Array.from({ length: end - plantK + 1 }, (_, i) => plantK + i)
     .map((k) => ({ k, height: m3(c, k, h) }))
     .filter((x): x is { k: number; height: number } => x.height != null);
