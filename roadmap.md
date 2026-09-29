@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Confirm idea-submission delivery to hammersmodality@hammersmodality.org after owner-authorized deployment: current function is not deployed, Resend key available here is invalid, and only inbox owner can confirm arrival.
 - [x] Shoulder opening five-signal fusion (side-on)
 - [x] Hitting baseball: all 23 tiles built (several ungraded pending owner numbers)
 - [x] Hitting softball: shared 23 body-mechanics measurements with softball-specific coaching copy; live upload verification pending. Pitch-release timing tiles refuse without a pitcher release in frame; no windmill release inferred.
