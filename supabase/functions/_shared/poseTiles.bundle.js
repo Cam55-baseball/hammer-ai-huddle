@@ -1325,6 +1325,7 @@ var TILE_CAMERA_REQUIREMENTS = {
   head_discipline: "side_on",
   stride_direction: "two_view",
   heel_plant: "side_on",
+  back_heel_early_rise: "side_on",
   hands_outside_shoulders_at_landing: "side_on",
   shoulder_plane_steadiness: "side_on",
   finish_balance: "either",
@@ -1749,9 +1750,10 @@ function fuseShoulderOpen(series, lock, plant_k, dir, side) {
 var r = (v) => v == null ? null : round4(v);
 
 // src/lib/biomech/metrics/hittingCardTiles.ts
-var HITTING_CARD_TILES_VERSION = "hitting_card_tiles@2.0.0-owner-doctrine-2026-09-28";
+var HITTING_CARD_TILES_VERSION = "hitting_card_tiles@2.1.0-back-heel-2026-09-29";
 var CARD_FLOORS = {
   heel_minus_toe_pct: 1.5,
+  back_heel_rise_pct: 1.2,
   shoulder_tilt_spread_deg: 1.7,
   finish_com_sway_pct: 0.5,
   knee_angle_deg: 4.9,
@@ -1763,7 +1765,8 @@ var CARD_FLOORS = {
   spacing_pct: 2.3
 };
 var CARD_COACHING = {
-  heel_plant: "Let your front heel settle on the ground as you land. That stable front side clears a path for your back elbow and helps your eyes stay steady. Your back heel can rise as your hips turn — it is not the heel we check.",
+  heel_plant: "Your front heel wasn't down when you landed. Getting it on the floor gives you a stable base, sets the side bend that clears a path for your back arm to the ball, and helps keep your eyes steady.",
+  back_heel_early_rise: "Your back heel came off the ground before your swing started. It should stay planted until the swing releases — when it lifts early, your back leg has already given up the weight.",
   back_elbow_connection: "The back elbow (bicep) releases the swing out of the P3 stretch. The elbow gains ground forward while the hands stay back with the shoulder — that is what gives a linear move its rotation. The goal is an elbow that gets the bat square to fair territory.",
   shoulder_plane_steadiness: "Higher is better. Holding your shoulder plane from the start of P4 shows you were not fooled. This is not pass/fail — you can have a poor shoulder plane and still hit the ball well.",
   back_knee_flex_maintained: "From the end of P2 to landing, your back knee should not straighten. It is part of your back leg holding the weight.",
@@ -1797,6 +1800,15 @@ var Up = (c, p) => {
 function m3(c, k, g) {
   const xs = [k - 1, k, k + 1].filter((j) => c.s.frames[j]).map(g).filter((x) => x != null);
   return xs.length >= 2 ? median(xs) : null;
+}
+function lockMed(c, g) {
+  const xs = [];
+  for (let j = c.lock.start_k;j <= c.lock.end_k; j++) {
+    const x = g(j);
+    if (x != null)
+      xs.push(x);
+  }
+  return xs.length ? median(xs) : null;
 }
 function q(xs, p) {
   const t = [...xs].sort((a, b) => a - b);
@@ -1844,9 +1856,38 @@ function heelPlant(c, plantK, liftFrame) {
     front_heel_settle_frame: c.s.frames[best.k].frame_index,
     front_foot: c.side === "L" ? "right" : "left",
     heel_touching: touching,
-    rule: "front heel settles after front-foot strike; back heel is excluded; still-clip noise floor only",
+    rule: "front heel settles after front-foot strike; back heel is separately graded until P4; still-clip noise floor only",
     sign: "front heel minus front toe height; + = heel above toe",
     coaching: CARD_COACHING.heel_plant
+  });
+}
+function backHeelEarlyRise(c, p4K) {
+  const K = "back_heel_early_rise", u = "percent_stature";
+  const h = (j) => {
+    const he = Up(c, P(c, j, c.backHeel)), to = Up(c, P(c, j, c.backToe));
+    return he == null || to == null ? null : he - to;
+  };
+  const base = lockMed(c, h);
+  if (base == null || p4K <= c.lock.end_k)
+    return refuse2(K, u, mr2(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "back_heel_stance_or_p4_unavailable" });
+  const observations = [];
+  for (let j = c.lock.end_k + 1;j < p4K; j++) {
+    const v = m3(c, j, h);
+    if (v != null)
+      observations.push({ k: j, rise: v - base });
+  }
+  if (observations.length < 2 || observations.length < (p4K - c.lock.end_k - 1) * 0.6)
+    return refuse2(K, u, mr2(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "back_heel_untrusted_through_pre_p4_window", observed: observations.length });
+  const peak = observations.reduce((a, b) => b.rise > a.rise ? b : a);
+  const rise = Math.max(0, peak.rise), fail = rise > CARD_FLOORS.back_heel_rise_pct;
+  return ok(K, u, rise, CARD_FLOORS.back_heel_rise_pct, fail ? "fail" : "pass", {
+    back_foot: c.side === "L" ? "left" : "right",
+    stance_baseline_heel_minus_toe_pct: round4(base),
+    peak_pre_p4_frame: c.s.frames[peak.k].frame_index,
+    p4_start_frame_excluded: c.s.frames[p4K].frame_index,
+    rule: "back heel-to-toe rise above measured still-clip floor before P4 is a fault; P4 itself is excluded",
+    root_pattern_key: fail ? "back_leg_did_not_hold_load" : null,
+    coaching: CARD_COACHING.back_heel_early_rise
   });
 }
 function sequencing(c, ssK, pkK) {
@@ -2172,7 +2213,7 @@ function pelvisSquare(c, finK) {
   return ok(K, u, 90 - t, null, null, { end_of_p4_frame: c.s.frames[finK].frame_index, pelvis_out_of_plane_deg: round4(t), sign: "degrees short of square to fair (0 = square)", why_ungraded: "owner has no 'close enough to square' angle; still clip is closed-stance so no noise floor near square exists yet", limitation: "unsigned rigid solve: over-rotating past square reads the same as under-rotating", reasoning: "we stride to the pitcher, not the ball — that is what makes square-to-fair reachable by the end of P4", coaching: CARD_COACHING.pelvis_rotation_efficiency });
 }
 function runHittingCardTiles(series, o) {
-  const units = { heel_plant: "percent_stature", sequencing: "boolean", back_elbow_connection: "percent_stature", shoulder_plane_steadiness: "score_100", finish_balance: "stance_fraction", shoulder_to_shoulder_hold: "percent_of_window", back_knee_flex_maintained: "degrees", post_landing_hip_drift: "percent_stature", hands_stay_up_at_plant: "percent_stature", lead_elbow_bend_increasing: "degrees", head_vertical_movement_post_landing: "percent_stature", pelvis_rotation_efficiency: "degrees" };
+  const units = { heel_plant: "percent_stature", back_heel_early_rise: "percent_stature", sequencing: "boolean", back_elbow_connection: "percent_stature", shoulder_plane_steadiness: "score_100", finish_balance: "stance_fraction", shoulder_to_shoulder_hold: "percent_of_window", back_knee_flex_maintained: "degrees", post_landing_hip_drift: "percent_stature", hands_stay_up_at_plant: "percent_stature", lead_elbow_bend_increasing: "degrees", head_vertical_movement_post_landing: "percent_stature", pelvis_rotation_efficiency: "degrees" };
   const allRefuse = (rec, l) => Object.fromEntries(Object.entries(units).map(([k, u]) => [k, refuse2(k, u, rec, l)]));
   const cam = detectCameraView(series);
   const gate = (r2) => {
@@ -2205,7 +2246,9 @@ function runHittingCardTiles(series, o) {
     lead: R_ ? { sh: LM.L_SHOULDER, el: LM.L_ELBOW, wr: LM.L_WRIST } : { sh: LM.R_SHOULDER, el: LM.R_ELBOW, wr: LM.R_WRIST },
     rear: R_ ? { sh: LM.R_SHOULDER, el: LM.R_ELBOW, wr: LM.R_WRIST, hip: LM.R_HIP, knee: LM.R_KNEE, ankle: LM.R_ANKLE } : { sh: LM.L_SHOULDER, el: LM.L_ELBOW, wr: LM.L_WRIST, hip: LM.L_HIP, knee: LM.L_KNEE, ankle: LM.L_ANKLE },
     frontHeel: R_ ? 29 : 30,
-    frontToe: R_ ? 31 : 32
+    frontToe: R_ ? 31 : 32,
+    backHeel: R_ ? 30 : 29,
+    backToe: R_ ? 32 : 31
   };
   const { lift, plant } = frontFootPlantFromSeries(series, side);
   const plantK = kOf(series, plant.frame_index);
@@ -2228,6 +2271,7 @@ function runHittingCardTiles(series, o) {
   const P4 = [p4K, `p4_missing:${String(p4.diagnostics.reason ?? "")}`, p4.missingness];
   return done({
     heel_plant: need("heel_plant", [P_], () => heelPlant(c, plantK, lift.frame_index)),
+    back_heel_early_rise: need("back_heel_early_rise", [P4], () => backHeelEarlyRise(c, p4K)),
     sequencing: need("sequencing", [SS, PK], () => sequencing(c, ssK, pkK)),
     back_elbow_connection: need("back_elbow_connection", [SS, PK], () => backElbow(c, ssK, pkK)),
     shoulder_plane_steadiness: need("shoulder_plane_steadiness", [P4, PK], () => shoulderPlane(c, p4K, pkK)),
@@ -2357,6 +2401,7 @@ function runHittingTilesFromText(ndjson, side, athleteHeightIn) {
     back_hip_socket_hold: v(owner.tile20),
     post_landing_hip_drift: v(card.post_landing_hip_drift),
     back_knee_flex_maintained: v(card.back_knee_flex_maintained),
+    back_heel_early_rise: v(card.back_heel_early_rise),
     hands_stay_up_at_plant: v(card.hands_stay_up_at_plant)
   };
   return { engine_version: HITTING_CARD_TILES_VERSION, verdicts, pose, card, owner };

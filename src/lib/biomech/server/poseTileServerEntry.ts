@@ -25,6 +25,7 @@ export function runHittingTilesFromText(ndjson: string, side: Handedness | null,
     hip_load: v(pose.hip_load), head_discipline: v(pose.head_discipline),
     head_path_through_stride: v(owner.tile19), back_hip_socket_hold: v(owner.tile20),
     post_landing_hip_drift: v(card.post_landing_hip_drift), back_knee_flex_maintained: v(card.back_knee_flex_maintained),
+    back_heel_early_rise: v(card.back_heel_early_rise),
     hands_stay_up_at_plant: v(card.hands_stay_up_at_plant),
   };
   return { engine_version: HITTING_CARD_TILES_VERSION, verdicts, pose, card, owner };

@@ -2,7 +2,7 @@ import type { ReportCardSpec, ReportCardTileSpec } from "../types";
 import { readNumber, readBool, readScore100, missingState, scoreMeterState } from "../metricReaders";
 
 /**
- * Baseball Hitting — 17-tile contract mapped to the P1–P4 doctrine.
+ * Baseball Hitting — legacy model-tile contract mapped to the P1–P4 doctrine.
  *
  * P1 — Hip Load Stability (non-negotiable PASS gate)
  * P2 — Hand Load · P2 Timing to Knee Lift · Head Discipline Through the Swing
@@ -120,7 +120,7 @@ const tiles: ReportCardTileSpec[] = [
   },
   {
     key: "heel_plant",
-    name: "Heel Plant / Landing",
+    name: "Front Heel Plant / Landing",
     mode: "score_meter",
     standard: "Full foot down sideways, both feet planted, hips do NOT turn shoulders",
     thresholdChip: "Acceptable 65 · Elite 88",
@@ -137,6 +137,19 @@ const tiles: ReportCardTileSpec[] = [
       if (!m) return missingState(a, "heel_plant_score_100");
       return scoreMeterState(m.value, m.confidence, 65, 88);
     },
+  },
+  {
+    key: "back_heel_early_rise",
+    name: "Back Heel Holds Through Landing",
+    mode: "pass_fail",
+    standard: "Back heel stays planted until the swing starts",
+    phase: "P3 Stride / Landing",
+    explainer: {
+      whatWhy: "The back heel lifting before the swing starts means the back leg has already let go of the load.",
+      howToImprove: "Hold your back heel down as you stride; release it when your swing begins.",
+      encouragement: "Keep the back side planted until you turn.",
+    },
+    compute: (a) => missingState(a, "back_heel_early_rise"),
   },
   {
     key: "p3_timing",

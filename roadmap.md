@@ -1,14 +1,14 @@
 # Roadmap
 - [x] Shoulder opening five-signal fusion (side-on)
-- [x] Hitting baseball: all 22 tiles built (several ungraded pending owner numbers)
-- [ ] Hitting softball
-- [ ] Front heel landing corrected; athlete-language audit and live pose-finding integration deployed, pending successful authenticated upload/readback
+- [x] Hitting baseball: all 23 tiles built (several ungraded pending owner numbers)
+- [x] Hitting softball: same body-mechanics checks with softball-specific coaching copy; live upload verification pending
+- [ ] Owner back-heel reversal: separate tile, root-pattern evidence, athlete-language checks and live function connected; authenticated upload/readback pending
 - [ ] Throwing baseball (shuffle vs crow-hop detection for energy angle)
 - [ ] Throwing softball
 - [ ] Pitching baseball (remaining tiles)
 - [ ] Pitching softball windmill — blocked: no written windmill doctrine
 
-## Hitting upload card — 22 tiles (owner ruling 2026-09-27: body mechanics only)
+## Hitting upload card — 23 tiles (owner ruling 2026-09-27: body mechanics only)
 - [x] Bat/contact metrics moved out of the upload card (BH_UPLOAD_OUT_OF_SCOPE)
 - [x] D-SWING-PEAK anchor (not contact)
 - [x] 1 hip_load, 2 hand_load (ungraded — owner numbers needed), 3 p2 / 7 p3 (refuse: pitcher not in frame)
