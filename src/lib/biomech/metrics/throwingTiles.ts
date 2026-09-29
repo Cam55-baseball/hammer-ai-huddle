@@ -1,4 +1,4 @@
-/** Position-player overhand throwing measurements, never inferred from a hitting clip.
+/** Position-player throwing (any arm slot) measurements, never inferred from a hitting clip.
  * Shares pitching's calibrated measurement methods where their landmarks and windows
  * really match; a throwing move is not silently passed through a mound gate.
  */
@@ -97,7 +97,15 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
     return allMissing;
   const rk = series.frames.findIndex((f) => f.frame_index === releaseFrame), pk = series.frames.findIndex((f) => f.frame_index === plantFrame);
   const wrist = point(series.frames[rk], side === "R" ? LM.R_WRIST : LM.L_WRIST), shoulder = point(series.frames[rk], side === "R" ? LM.R_SHOULDER : LM.L_SHOULDER);
-  if (!wrist || !shoulder || wrist.y >= shoulder.y) return allMissing; // overhand only
+  // Any arm slot — owner 2026-09-29: "sidearm throws must be allowed in". The old
+  // overhand check also kept swings out, so it is replaced by a slot-free test: at a
+  // throw's release the hands are apart; on a swing both hands are on the bat
+  // (measured 0.62 / 0.63 throwing-forearm lengths on both swing fixtures).
+  const glove = point(series.frames[rk], side === "R" ? LM.L_WRIST : LM.R_WRIST), elbow = point(series.frames[rk], side === "R" ? LM.R_ELBOW : LM.L_ELBOW);
+  if (!wrist || !shoulder || !glove || !elbow) return allMissing;
+  const forearm = Math.hypot((wrist.x - elbow.x) * series.header.width, (wrist.y - elbow.y) * series.header.height);
+  const handGap = forearm > 0 ? Math.hypot((wrist.x - glove.x) * series.header.width, (wrist.y - glove.y) * series.header.height) / forearm : 0;
+  if (handGap < HANDS_APART_MIN_FOREARMS) return { ...allMissing, pattern_evidence: { ...allMissing.pattern_evidence, detail: "hands_together_at_release_not_a_throw", hand_gap_forearms: round4(handGap) } };
   const pattern = candidatePattern;
   const lk = series.frames.findIndex((f) => f.frame_index === liftFrame);
   const dir = deriveDirectionSign(series, side);
@@ -122,7 +130,7 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
   const head = computeHeadVerticalMovement(masked, d, lock);
   const adapt = (tile: { value: number | null; unit: string; verdict: "pass" | "fail" | null; missingness: { missing_reason: string } | null; lineage: Readonly<Record<string, unknown>> } | null, unit: string): ThrowingMeasurement =>
     tile?.value == null ? absent(unit, tile?.missingness?.missing_reason ?? R.CALIBRATION_UNAVAILABLE, { ...(tile?.lineage ?? {}) })
-      : { value: tile.value, unit, verdict: null, missing_reason: null, lineage: { ...tile.lineage, reused_window: "throw_first_move_to_overhand_release", standard: "ungraded_throwing_standard_unconfirmed" } };
+      : { value: tile.value, unit, verdict: null, missing_reason: null, lineage: { ...tile.lineage, reused_window: "throw_first_move_to_release", standard: "ungraded_throwing_standard_unconfirmed" } };
   const shoulderOpening = adapt(sh, "degrees");
   if (sh?.value != null) shoulderOpening.lineage = { ...shoulderOpening.lineage, injury_flag: "trunk_rotation_before_foot_contact" };
   return { ...allMissing, pattern: pattern.pattern, pattern_evidence: pattern, tempo, energy_angle: energy, shoulder_opening: shoulderOpening, head_stability: adapt(head, "percent"),
@@ -136,6 +144,9 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
  * (still within the ankle noise floor). Stride = rear ankle there → front ankle
  * at front-foot strike, as a % of stance-lock stature. Same ≥90 % target as pitching.
  */
+/** Hands-apart floor at release, in throwing-forearm lengths. Swing fixtures read 0.62–0.63. Unvalidated on a real throw. */
+export const HANDS_APART_MIN_FOREARMS = 1.5;
+
 export function strideFromFinalStep(s: LandmarkSeries, lock: ReturnType<typeof detectStanceLock>, side: Handedness, dir: 1 | -1, liftK: number, plantK: number): ThrowingMeasurement {
   const st = lock.baseline?.stature_px;
   if (!st) return absent("percent_of_height", R.CALIBRATION_UNAVAILABLE, { reason: "stature_unobserved_in_stance" });

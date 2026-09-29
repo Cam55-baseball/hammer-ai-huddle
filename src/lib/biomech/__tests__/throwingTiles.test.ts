@@ -52,6 +52,12 @@ describe("throwing injury markers", () => {
       expect(r.stride_length.lineage.reason ?? r.stride_length.missing_reason).toBeTruthy();
     }
   });
+  it("only the three elite flags remain", () => {
+    expect(Object.keys(runThrowingTiles(still, "R").injury).sort()).toEqual(["horizontal_abduction_at_foot_contact", "stride_foot_direction", "trunk_rotation_before_foot_contact"]);
+  });
+  it("a swing whose hands stay together is refused without any overhand check", () => {
+    expect((runThrowingTiles(a, "L").pattern_evidence as any)?.detail).toBe("hands_together_at_release_not_a_throw");
+  });
   it("band flags never call inside the noise floor", () => {
     expect(bandFlag(50, 45, 55, 5.4)).toBeNull();
     expect(bandFlag(30, 45, 55, 5.4)).toBe("raised");

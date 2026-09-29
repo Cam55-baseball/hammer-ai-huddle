@@ -31,7 +31,7 @@ const flag = (key: string, name: string): ReportCardTileSpec => ({
   key, name, mode: "pass_fail", phase: ARM_CARE_GROUP, standard: "Arm-care flag — not graded.", explainer, compute: (a) => readFlag(a, key),
 });
 const check = (key: string, name: string): ReportCardTileSpec => ({
-  key, name, mode: "pass_fail", phase: MECHANICS_GROUP, standard: "Measured from a confirmed overhand throw.", explainer, compute: (a) => readMechanics(a, key),
+  key, name, mode: "pass_fail", phase: MECHANICS_GROUP, standard: "Measured from a confirmed throw, any arm slot.", explainer, compute: (a) => readMechanics(a, key),
 });
 
 /** Lift & Thrust is deliberately absent: the owner has not specified a crow-hop version. */
@@ -40,13 +40,8 @@ export const throwingReportCard: ReportCardSpec = {
   groupByPhase: true,
   tiles: [
     flag("trunk_rotation_before_foot_contact", "Shoulders Wait for Landing"),
-    flag("shoulder_abduction_at_foot_contact", "Elbow Height at Landing"),
-    flag("elbow_flexion_at_foot_contact", "Elbow Bend at Landing"),
     flag("horizontal_abduction_at_foot_contact", "Arm Stays in Its Lane"),
     flag("stride_foot_direction", "Front Foot Lands in Line"),
-    flag("lead_knee_flexion", "Front Leg Firms Up"),
-    flag("contralateral_trunk_tilt", "Upper Body Stays Tall"),
-    flag("sidearm_arm_slot", "Arm Slot"),
     check("tempo", "Throwing Tempo"),
     check("stride_length", "Stride From the Final Step"),
     check("energy_angle", "Shuffle Energy Angle"),
