@@ -646,6 +646,12 @@ export default function AnalyzeVideo() {
           landingTimeSec: landingTime ?? null,
           fps_source: fpsTrue == null ? "unknown" : "container",
           fps_playback: probed.fps_playback.status === "ok" ? probed.fps_playback.fps : null,
+          onScoutProgress: (d, n) => { if (d === n) setUploadStage('Tracking your movement…'); },
+          onProgress: (d, n) => {
+            const f = d / n;
+            if (d % 10 === 0) console.log('[D-POSE] dense progress', d, n);
+            setUploadStage(f < 0.33 ? 'Tracking your movement — just started…' : f < 0.66 ? 'Tracking your movement — about halfway…' : 'Tracking your movement — nearly done…');
+          },
         });
         movementGate = evaluateMovementGate(denseRun.series);
         setTrackDiagnosis(diagnoseTrack(denseRun.series));
