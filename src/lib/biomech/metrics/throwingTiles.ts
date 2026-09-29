@@ -15,8 +15,10 @@ import { computeTempoSec } from "./tempoSec";
 import { energyAt, computePrematureShoulderOpen, computeHeadVerticalMovement, type PitchingDelivery } from "./pitchingTiles";
 import { detectCameraView, checkCameraRequirement } from "../camera/cameraView";
 import { MISSINGNESS_REASONS as R } from "./missingness";
+import { computeThrowingInjuryMarkers, refusedInjuryMarkers } from "./throwingInjuryTiles";
+import { MIN_LIFT_RISE_BODY_THROWING } from "../anchors/peakLegLift";
 
-export const THROWING_TILES_VERSION = "throwing_tiles@1.0.0-conservative-shuffle-crow-hop";
+export const THROWING_TILES_VERSION = "throwing_tiles@1.1.0-injury-first";
 export type MovementPattern = "shuffle" | "crow_hop_or_walk_through" | "undetermined";
 export interface ThrowingMeasurement {
   value: number | null;
@@ -71,11 +73,12 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
   const missing = (reason: string) => ({
     tempo: absent("seconds", reason), energy_angle: absent("degrees", reason),
     shoulder_opening: absent("degrees", reason), head_stability: absent("percent", reason),
+    injury: refusedInjuryMarkers(reason),
   });
   const movement = evaluateMovementGate(series);
   const refusal = movement.status === "refused" ? "pose_not_detected" : !side ? "anchor_not_detected" : null;
   if (refusal || !side) return { version: THROWING_TILES_VERSION, pattern: "undetermined" as MovementPattern, pattern_evidence: null, ...missing(refusal ?? "anchor_not_detected") };
-  const anchors = frontFootPlantFromSeries(series, side);
+  const anchors = frontFootPlantFromSeries(series, side, MIN_LIFT_RISE_BODY_THROWING);
   const release = detectReleasePoseOnly(series, { throwing_side: side === "R" ? "right" : "left" });
   const candidatePattern = classifyThrowingPattern(series, side, anchors.lift.frame_index, anchors.plant.frame_index);
   const time = computeTempoSec({ peak_leg_lift_frame_index: anchors.lift.frame_index, front_foot_strike_frame_index: anchors.plant.frame_index,
@@ -84,7 +87,7 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
     : { value: time.value, unit: "seconds", verdict: null, missing_reason: null, lineage: { ...time.lineage, uncertainty_sec: time.uncertainty_sec, standard: "ungraded_no_throwing_threshold" } };
   const allMissing = { version: THROWING_TILES_VERSION, pattern: "undetermined" as MovementPattern, pattern_evidence: { ...candidatePattern, pattern: "undetermined", reason: "throwing_delivery_not_confirmed" }, tempo: absent("seconds", R.ANCHOR_NOT_DETECTED, { candidate: time.lineage, reason: "throwing_delivery_not_confirmed" }),
     energy_angle: absent("degrees", R.ANCHOR_NOT_DETECTED, { pattern: candidatePattern.reason }),
-    shoulder_opening: absent("degrees", R.ANCHOR_NOT_DETECTED), head_stability: absent("percent", R.ANCHOR_NOT_DETECTED) };
+    shoulder_opening: absent("degrees", R.ANCHOR_NOT_DETECTED), head_stability: absent("percent", R.ANCHOR_NOT_DETECTED), injury: refusedInjuryMarkers("throwing_delivery_not_confirmed") };
   const plantFrame = anchors.plant.frame_index, liftFrame = anchors.lift.frame_index, releaseFrame = release.frame_index;
   if (plantFrame == null || releaseFrame == null || releaseFrame < plantFrame || !series.header.fps_true || (releaseFrame - plantFrame) / series.header.fps_true > 0.35)
     return allMissing;
@@ -116,5 +119,5 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
   const adapt = (tile: { value: number | null; unit: string; verdict: "pass" | "fail" | null; missingness: { missing_reason: string } | null; lineage: Readonly<Record<string, unknown>> } | null, unit: string): ThrowingMeasurement =>
     tile?.value == null ? absent(unit, tile?.missingness?.missing_reason ?? R.CALIBRATION_UNAVAILABLE, { ...(tile?.lineage ?? {}) })
       : { value: tile.value, unit, verdict: null, missing_reason: null, lineage: { ...tile.lineage, reused_window: "throw_first_move_to_overhand_release", standard: "ungraded_throwing_standard_unconfirmed" } };
-  return { ...allMissing, pattern: pattern.pattern, pattern_evidence: pattern, tempo, energy_angle: energy, shoulder_opening: adapt(sh, "degrees"), head_stability: adapt(head, "percent") };
+  return { ...allMissing, pattern: pattern.pattern, pattern_evidence: pattern, tempo, energy_angle: energy, shoulder_opening: adapt(sh, "degrees"), head_stability: adapt(head, "percent"), injury: computeThrowingInjuryMarkers(masked, d, lock, side, view) };
 }

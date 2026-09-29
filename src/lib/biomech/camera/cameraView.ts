@@ -113,6 +113,10 @@ export const TILE_CAMERA_REQUIREMENTS: Readonly<Record<string, CameraRequirement
   shoulder_to_shoulder_hold: "side_on",
   pelvis_rotation_efficiency: "side_on",
   tempo: "either",
+  // throwing injury markers 2026-09-29
+  front_knee_after_landing: "side_on",
+  trunk_lateral_tilt_at_release: "on_line",
+  arm_late_at_foot_strike: "side_on",
 };
 
 const VIEW_TEXT: Record<CameraView, string> = {
