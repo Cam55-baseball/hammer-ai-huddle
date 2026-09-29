@@ -1,8 +1,11 @@
 import type { DisciplineContract } from "./shared";
-/** Throwing uses pose-only results; these are diagnostics, never AI vision requests. */
+import { bpContract } from "./bp.contract";
+
+/** Legacy AI metrics contract; the new pose-only throwing card never consumes it. */
+const EXCLUDED = new Set(["energy_angle_deg", "tempo_sec", "lift_thrust_deg"]);
 
 export const throwingContract: DisciplineContract = {
   id: "throwing",
   label: "Baseball Throwing",
-  metrics: [],
+  metrics: bpContract.metrics.filter((m) => !EXCLUDED.has(m.key)),
 };
