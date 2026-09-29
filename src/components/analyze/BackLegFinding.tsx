@@ -26,7 +26,7 @@ export function BackLegFinding({ videoId }: { videoId: string | null }) {
   return (
     <div className="border-l-2 border-primary pl-4 space-y-1" role="status">
       <h3 className="font-semibold">{pattern.label}</h3>
-      <p className="text-sm text-muted-foreground">{withoutMeasurementNotation(data.evidence)}</p>
+      <p className="text-sm text-muted-foreground">{withoutMeasurementNotation(data.evidence).replace(/\s*\(position-based estimate\)/g, "")}</p>
       <p className="text-sm text-muted-foreground">{withoutMeasurementNotation(pattern.why)}</p>
     </div>
   );
