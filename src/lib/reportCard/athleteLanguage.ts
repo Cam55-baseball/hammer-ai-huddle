@@ -28,13 +28,17 @@ export function athleteMissingness(reason?: string): string | undefined {
 
 /** Last-line safety: athlete copy never exposes degrees or percentages. */
 export function withoutMeasurementNotation(text: string): string {
-  return text
-    .replace(/\b(?:frame|frames)\s*#?\d+\b/gi, "that moment")
-    .replace(/\b\d+(?:\.\d+)?\s*(?:ms|milliseconds?|seconds?|secs?|mph|fps|degrees?|percent|inches|feet|ft)\b/gi, "a measured amount")
-    .replace(/[<>≤≥≈~±]?\s*[-+]?\d+(?:\.\d+)?\s*[°%]/g, "a measured amount")
-    .replace(/\b\d+(?:\.\d+)?\b/g, "a measured amount")
-    .replace(/\s{2,}/g, " ")
-    .trim();
+  const lines = text.split(/(?<=[.!?])\s+|\n+/).filter((part) => !/[<>≤≥≈~±]?\s*[-+]?\d+(?:\.\d+)?\s*(?:[°%]|ms\b|milliseconds?\b|fps\b|mph\b)/i.test(part));
+  const safe = lines.join(" ")
+    .replace(/\b(?:frames?)\s*#?\d+\b/gi, "that moment")
+    .replace(/\bP1\b/gi, "the load")
+    .replace(/\bP2\b/gi, "the hand load")
+    .replace(/\bP3\b/gi, "the stride")
+    .replace(/\bP4\b/gi, "the turn")
+    .replace(/\b\d+(?:\.\d+)?\s*(?:seconds?|secs?|inches|feet|ft)\b/gi, "")
+    .replace(/\b\d+(?:\.\d+)?\b/g, "")
+    .replace(/\s{2,}/g, " ").trim();
+  return safe || "We couldn't make a trustworthy coaching call on this from the clip.";
 }
 
 export function athleteResult(status: string): string {
