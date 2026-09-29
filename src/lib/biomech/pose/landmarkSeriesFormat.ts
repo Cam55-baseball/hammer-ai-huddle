@@ -125,6 +125,10 @@ export interface LandmarkSeriesFrame {
   /** People the pose model detected in this frame (all, not just the athlete).
    *  Absent on series written before per-frame gap detail was recorded. */
   readonly candidates_detected?: number;
+  /** True when the browser decoder returned the previous frame again (seek landed
+   *  on a frame boundary) and the landmarks were rebuilt by linear interpolation
+   *  between the true neighbouring frames. See repairDuplicateDecodes. */
+  readonly repaired_duplicate_decode?: true;
   /** Why an unobserved frame is unobserved. Absent on observed frames and on
    *  older series. */
   readonly gap_reason?: FrameGapReason;
@@ -191,7 +195,40 @@ export function decodeLandmarkSeriesText(text: string): LandmarkSeries {
     };
     frames.push(frame);
   }
-  return { header, frames };
+  return { header, frames: repairDuplicateDecodes(frames) };
+}
+
+const sameLandmarks = (a: LandmarkSeriesFrame, b: LandmarkSeriesFrame) =>
+  a.pose_detected && b.pose_detected && a.normalized.length > 0 && a.normalized.length === b.normalized.length &&
+  a.normalized.every((x, i) => x === b.normalized[i]);
+
+/**
+ * Determinism repair (2026-09-29). Seeking a video element to an exact frame
+ * boundary (i / fps) lets the decoder hand back the PREVIOUS frame; which frames
+ * repeat differs run to run and browser to browser (stored 914cf54c: 86 repeats,
+ * live re-track of the same file: 63, only 25 in common). A repeated frame is not
+ * a measurement — it zeroes velocity and shifts every rate-based anchor by a frame.
+ * A frame whose landmarks are byte-identical to the frame before it is rebuilt by
+ * linear interpolation between the last distinct frame and the next distinct one.
+ * Pure and deterministic. Trailing repeats with no later distinct frame are left.
+ */
+export function repairDuplicateDecodes(frames: LandmarkSeriesFrame[]): LandmarkSeriesFrame[] {
+  const out = frames.slice();
+  let k = 1;
+  while (k < out.length) {
+    if (!sameLandmarks(frames[k - 1], frames[k]) || frames[k].frame_index - frames[k - 1].frame_index !== 1) { k++; continue; }
+    const a = k - 1; let b = k;
+    while (b < frames.length && sameLandmarks(frames[a], frames[b]) && frames[b].frame_index - frames[b - 1].frame_index === 1) b++;
+    if (b >= frames.length || !frames[b].pose_detected || frames[b].frame_index - frames[b - 1].frame_index !== 1) { k = b + 1; continue; }
+    const A = frames[a], B = frames[b], span = b - a;
+    for (let j = a + 1; j < b; j++) {
+      const t = (j - a) / span, lerp = (x: readonly number[], y: readonly number[]) => x.map((v, i) => v + (y[i] - v) * t);
+      out[j] = { ...frames[j], normalized: lerp(A.normalized, B.normalized), world: A.world.length === B.world.length ? lerp(A.world, B.world) : A.world,
+        visibility: A.visibility.map((v, i) => Math.min(v, B.visibility[i] ?? v)), repaired_duplicate_decode: true };
+    }
+    k = b + 1;
+  }
+  return out;
 }
 
 const hasCompression = () =>

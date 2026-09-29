@@ -27,21 +27,21 @@ describe("D-SWING-PEAK (not contact)", () => {
     expect(p.anchor_uncertainty_ms).toBeCloseTo(41.6667, 3);
   });
   it("wrong side / no rotation refuse with a real reason", () => {
-    expect(peak(A, "R").diagnostics.reason).toBe("swing_start_missing");
+    expect(peak(A, "R").diagnostics.reason).toBe("no_rotation_above_still_floor");
     expect(peak(B, "R").diagnostics.reason).toBe("no_rotation_above_still_floor");
   });
 });
 
 describe("head discipline (tile 4, body only)", () => {
-  it("owner doctrine: still refuses; 914cf54c Left head passed com_at_p2 by 13.1342% → P1 fault; Right refuses; 9d2e117e refuses", () => {
+  it("owner doctrine: still refuses; 914cf54c Left head passed com_at_p2 by 12.8496% → P1 fault; Right refuses; 9d2e117e refuses", () => {
     for (const side of ["L", "R"] as const) expect(runHittingPoseTiles(still, { side }).head_discipline.value).toBeNull();
     const h = runHittingPoseTiles(A, { side: "L" }).head_discipline;
-    expect(h.value).toBe(13.1342);
+    expect(h.value).toBe(12.8496);
     expect(h.verdict).toBe("fail");
     expect(h.lineage.root_pattern_key).toBe("back_leg_did_not_hold_load");
     expect(h.lineage.attributed_to).toBe("P1");
-    expect((h.lineage.late_head_pull_pct_ungraded as { value: number }).value).toBe(-6.4467);
-    expect((h.lineage.head_turn_jerk_pct_s2 as { value: number }).value).toBe(175.9032);
+    expect((h.lineage.late_head_pull_pct_ungraded as { value: number }).value).toBe(-6.1804);
+    expect((h.lineage.head_turn_jerk_pct_s2 as { value: number }).value).toBe(156.1467);
     expect(runHittingPoseTiles(A, { side: "R" }).head_discipline.value).toBeNull();
     for (const side of ["L", "R"] as const) expect(runHittingPoseTiles(B, { side }).head_discipline.value).toBeNull();
   });
@@ -57,10 +57,10 @@ describe("hand_load, p2/p3", () => {
     const h = runHittingPoseTiles(A, { side: "L" }).hand_load;
     // 2026-09-28 grip fix: hands-set stance (lower body still + both rigid-valid wrists gripped) = 101–106;
     // the left wrist fails forearm rigidity at the apex, so the right wrist is the hand point.
-    expect(h.value).toBe(-15.9164);
+    expect(h.value).toBe(-14.9439);
     expect(h.verdict).toBe("pass");
     expect(h.lineage.hands_set_frames).toEqual([101, 106]);
-    expect((h.lineage.depth_pct_stature_ungraded as { value: number }).value).toBe(-14.7939);
+    expect((h.lineage.depth_pct_stature_ungraded as { value: number }).value).toBe(-13.7986);
     expect(String(h.lineage.verification)).toContain("unverified");
     expect(runHittingPoseTiles(A, { side: "R" }).hand_load.value).toBeNull();
   });

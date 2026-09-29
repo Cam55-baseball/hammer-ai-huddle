@@ -440,5 +440,7 @@ export function detectSwingPeak(series: LandmarkSeries, direction_sign: 1 | -1 |
   if (pk < 0) return miss(A, ID, R.LANDMARK_OCCLUDED, { reason: "shoulders_unobserved_or_edge_on_after_swing_start" });
   if (w[pk]! < SWING_PEAK_MIN_RAD_S) return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "no_rotation_above_still_floor", peak_rad_s: round4(w[pk]!), floor: SWING_PEAK_MIN_RAD_S });
   if (pk === k1 && k1 < series.frames.length - 1) return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "rotation_still_rising_at_search_end" });
+  // Symmetric edge rule (2026-09-29): a maximum ON the swing-start frame has no rise before it — not a confirmed peak.
+  if (pk === k0) return miss(A, ID, R.ANCHOR_NOT_DETECTED, { reason: "no_rotation_above_still_floor", edge: "maximum_at_swing_start", peak_rad_s: round4(w[pk]!), floor: SWING_PEAK_MIN_RAD_S });
   return hit(series, A, ID, pk, 0.7 * tierFactor(p.fps), 1, { peak_rad_s: round4(w[pk]!), is_contact: false, note: "pose-only torso rotation peak — NOT contact" });
 }

@@ -59,7 +59,7 @@ export const PITCHING_OWNER_STANDARDS = {
 } as const;
 
 /** Measured on the still clip (see header). Provisional. */
-export const HEAD_VERTICAL_NOISE_FLOOR_PCT = 0.7;
+export const HEAD_VERTICAL_NOISE_FLOOR_PCT = 0.6; // 0.535 measured after duplicate-decode repair (2026-09-29); was 0.7
 export const SHOULDER_ROTATION_NOISE_FLOOR_DEG = 14.1;
 /** Rear-hip forward speed, body-heights/s. Still clip max 0.124 (p99 0.092). */
 export const THRUST_ONSET_SPEED = 0.15;

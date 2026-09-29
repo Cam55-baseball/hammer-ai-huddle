@@ -259,9 +259,11 @@ export async function captureDenseLandmarkSeries(
     for (let i = 0; i < scoutIndices.length; i++) {
       const frameIndex = scoutIndices[i];
       const t = round6(frameIndex / stepHz);
+      // Seek to the frame CENTRE: an exact boundary lets the decoder return the previous frame (determinism fix 2026-09-29).
+      const seekT = round6((frameIndex + 0.5) / stepHz);
       let candidates: ReturnType<typeof detectDensePoseCandidates> = [];
       try {
-        await seekTo(video, t);
+        await seekTo(video, seekT);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         candidates = detectDensePoseCandidates(landmarker, canvas);
         scoutFramesInferred += 1;
@@ -310,8 +312,10 @@ export async function captureDenseLandmarkSeries(
     for (let i = 0; i < total; i++) {
       const frameIndex = window.start_frame + i;
       const t = round6(frameIndex / stepHz);
+      // Seek to the frame CENTRE: an exact boundary lets the decoder return the previous frame (determinism fix 2026-09-29).
+      const seekT = round6((frameIndex + 0.5) / stepHz);
       try {
-        await seekTo(video, t);
+        await seekTo(video, seekT);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         // STEP 3 — every person in frame, then the locked athlete only.
         const candidates = detectDensePoseCandidates(landmarker, canvas);
