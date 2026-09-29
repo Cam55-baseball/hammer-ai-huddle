@@ -7,7 +7,7 @@
  * Called by analyze-video only for an owned hitting upload with saved landmarks.
  */
 // @ts-ignore generated bundle
-import { checkStoredLandmarkMovement, runHittingTilesFromText } from "./poseTiles.bundle.js";
+import { checkStoredLandmarkMovement, runHittingTilesFromText, runThrowingTilesFromText, runPitchingFromText } from "./poseTiles.bundle.js";
 import { buildPoseTileFindings } from "./faultFindings.ts";
 
 async function gunzipIfNeeded(buf: Uint8Array): Promise<string> {
@@ -45,4 +45,20 @@ export async function runAndWritePoseTileFindings(admin: any, a: {
     if (e) return { ok: false, reason: `insert_failed:${e.message}`, written: 0, verdicts: out.verdicts };
   }
   return { ok: true, written: rows.length, verdicts: out.verdicts };
+}
+
+/**
+ * Throwing / baseball pitching cards from the stored series (2026-09-29, owner-approved wiring).
+ * Same bundle code as the tests. Movement gate first; a refused clip stores nothing.
+ */
+// deno-lint-ignore no-explicit-any
+export async function runStoredThrowPitchCards(admin: any, a: { module: string; landmarksPath: string; side: "L" | "R" | null; athleteHeightIn: number | null }) {
+  const { data, error } = await admin.storage.from("pose-landmarks").download(a.landmarksPath);
+  if (error || !data) return { ok: false as const, reason: `landmark_download_failed:${error?.message ?? "no data"}` };
+  const text = await gunzipIfNeeded(new Uint8Array(await data.arrayBuffer()));
+  const movement = checkStoredLandmarkMovement(text);
+  if (movement.status === "refused") return { ok: true as const, refused: movement.reason, fields: {} };
+  if (a.module === "throwing") return { ok: true as const, fields: { throwing_tiles_deterministic: runThrowingTilesFromText(text, a.side) } };
+  const p = runPitchingFromText(text, a.side, a.athleteHeightIn);
+  return { ok: true as const, fields: { pitching_tiles_deterministic: p.tiles, pitching_card_tiles_deterministic: p.card } };
 }

@@ -13,7 +13,7 @@ const still = load("still-subject-15d75bc9.ndjson.gz"), A = load("swing-24fps-91
 describe("pitching card — every fixture refuses, with the delivery gate's own reason", () => {
   const cases: [string, LandmarkSeries, "L" | "R" | null, string][] = [
     ["still", still, "L", "no_pitching_delivery:"], ["still", still, "R", "no_pitching_delivery:"], ["still", still, null, "throwing_side_unknown"],
-    ["914cf54c", A, "L", "no_pitching_delivery:throwing_wrist_below_shoulder_at_release"],
+    ["914cf54c", A, "L", "no_pitching_delivery:hands_together_at_release_not_a_pitch"],
     ["914cf54c", A, "R", "no_pitching_delivery:plant_missing:no_observed_frames_after_lift"],
     ["9d2e117e", B, "L", "no_pitching_delivery:peak_leg_lift_missing"],
     ["9d2e117e", B, "R", "no_pitching_delivery:release_too_long_after_plant"],

@@ -75,7 +75,33 @@ function detPitchingTile(a: AnalysisLike, key: string, fmt: (v: number, u: numbe
   if (t.value == null || t.verdict == null) return { status: "missing", missing_reason: t.missingness?.missing_reason ?? "anchor_not_detected" };
   return { status: t.verdict, value: fmt(t.value, t.uncertainty) };
 }
+
+/** Server-computed pitching card (pitchingCardTiles.ts, any arm slot). Present → it is the source; status only, no numbers. */
+type CardStored = { verdict: "pass" | "fail" | null; value: number | null; missingness: { missing_reason: string } | null };
+function cardTile(a: AnalysisLike, key: string): TileState | null {
+  const card = (a as unknown as Record<string, { tiles?: Record<string, CardStored> } | undefined>)["pitching_card_tiles_deterministic"];
+  const t = card?.tiles?.[key];
+  if (!t) return null;
+  if (t.verdict == null) return { status: "missing", missing_reason: t.missingness?.missing_reason ?? "anchor_not_detected" };
+  return { status: t.verdict };
+}
+const cardOnly = (key: string) => (a: AnalysisLike): TileState => cardTile(a, key) ?? { status: "missing", missing_reason: "deterministic_pitching_tiles_not_run" };
+
 const pm = (u: number | null, d: number, unit: string) => (u == null ? "" : ` ±${u.toFixed(d)}${unit}`);
+
+
+const PITCHING_CARD_EXTRA: ReportCardTileSpec[] = ([
+  ["drag_line", "Drag Line", "Short back-foot drag, straight to the plate", "The back foot's drag after landing shows how you finished your push. Direction needs a camera behind you."],
+  ["stack_and_track", "Stack and Track", "Shoulders and eyes level at release", "Level shoulders and eyes let your whole body throw on one line. Needs a camera behind or in front of you."],
+  ["balance_at_landing", "Balance at Landing", "Head over your base at landing", "Landing with your head over your legs keeps the delivery under control."],
+  ["eyes_on_target_at_peak_lift", "Eyes on Target", "Head faces the target at the top of the lift", "The camera cannot see your eyes. It reads which way your head faces at the top of your leg lift."],
+  ["glove_swivel", "Glove Swivel", "Glove turns over and tucks in", "The tracker cannot see your fingers inside the glove, so this check does not run yet."],
+  ["release_extension", "Release Extension", "Ball out in front of your front foot", "Only a release clearly outside the owner's range gets a call; close ones get no call."],
+] as const).map(([key, name, standard, whatWhy]) => ({
+  key, name, mode: "pass_fail" as const, standard,
+  explainer: { whatWhy, howToImprove: standard + ".", encouragement: "Stack small wins." },
+  compute: cardOnly(key),
+}));
 
 const tiles: ReportCardTileSpec[] = [
   {
@@ -129,7 +155,7 @@ const tiles: ReportCardTileSpec[] = [
     // frame-index anchors by `src/lib/biomech/metrics/tempoSec.ts`; when
     // those anchors are absent the tile reports canonical missingness
     // instead of a guess.
-    compute: (a) => computeDeterministicTempoTile(a),
+    compute: (a) => cardTile(a, "tempo_sec") ?? computeDeterministicTempoTile(a),
   },
 
   {
@@ -145,6 +171,7 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "Stretch the distance — your arm gets a free upgrade.",
     },
     compute: (a) => {
+      const c = cardTile(a, "stride_pct_of_height"); if (c) return c;
       const m = readNumber(a, "stride_pct_of_height");
       if (!m) return missingState(a, "stride_pct_of_height");
       return { status: m.value >= 90 ? "pass" : "fail", value: `${Math.round(m.value)}%`, confidence: m.confidence };
@@ -180,6 +207,7 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "Boring glove = elite command. Keep it inside the shoulders.",
     },
     compute: (a) => {
+      const c = cardTile(a, "glove_drift_outside_frame_in"); if (c) return c;
       const m = readNumber(a, "glove_drift_outside_frame_in");
       if (!m) return missingState(a, "glove_drift_outside_frame_in");
       const status = m.value <= 0 ? "pass" : "fail";
@@ -199,6 +227,7 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "Eyes on the mitt, ball to the mitt. Simple. Hard. Worth it.",
     },
     compute: (a) => {
+      const c = cardTile(a, "head_at_release_deg"); if (c) return c;
       const m = readNumber(a, "head_at_release_deg");
       if (!m) return missingState(a, "head_at_release_deg");
       const abs = Math.abs(m.value);
@@ -218,6 +247,7 @@ const tiles: ReportCardTileSpec[] = [
       encouragement: "Level eyes, level shoulders, level command.",
     },
     compute: (a) => {
+      const c = cardTile(a, "shoulder_tilt_deg"); if (c) return c;
       const m = readNumber(a, "shoulder_tilt_deg");
       if (!m) return missingState(a, "shoulder_tilt_deg");
       const abs = Math.abs(m.value);
@@ -277,5 +307,5 @@ const release1Tiles = tiles.filter((t) => {
 export const bpReportCard: ReportCardSpec = {
   disciplineLabel: "Baseball Pitching",
   groupByPhase: false,
-  tiles: release1Tiles,
+  tiles: [...release1Tiles, ...PITCHING_CARD_EXTRA],
 };

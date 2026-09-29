@@ -1594,7 +1594,7 @@ export default function AnalyzeVideo() {
                       tempo_sec_deterministic: persistedTempo
                         ? { value: persistedTempo.value, missing_reason: persistedTempo.missing_reason }
                         : undefined,
-                      pitching_tiles_deterministic: pitchingTilesDet ?? undefined,
+                      pitching_tiles_deterministic: pitchingTilesDet ?? (analysis as Record<string, unknown>).pitching_tiles_deterministic ?? undefined,
                     } as never}
                     showShare={false}
                   />

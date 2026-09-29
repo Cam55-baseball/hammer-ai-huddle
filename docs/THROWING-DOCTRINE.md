@@ -54,3 +54,7 @@ Only one flag is measurable from a side-on camera. That is the honest result.
 
 ## Validation state
 Still clip and both swing clips refuse every flag (swings now via the hands-apart check) and check with `throwing_delivery_not_confirmed` (swing clips) or pose/anchor reasons (still). Not yet connected to live analysis or the server bundle — needs owner go-ahead to wire and deploy.
+
+## 2026-09-29 owner decisions
+- Sidearm pitchers allowed ("We have to allow"): pitching now uses the same slot-free hands-apart gate as throwing (`gates/releaseHandsApart.ts`, one implementation).
+- Sidearm proposal approved ("Good"): arm slot is staff-only context (`metrics/armSlot.ts`, blind to trunk lateral tilt); a low slot moves shoulders-wait-for-landing and front-foot-in-line to the top and swaps in low-slot cues (`reportCard/slotEmphasis.ts`). Never "get on top" or "raise your elbow" (test-enforced).

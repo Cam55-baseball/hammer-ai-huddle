@@ -53,3 +53,11 @@
 - [ ] Throwing stride tile from final step — not yet built
 - [ ] Softball pitching — blocked: docs/SOFTBALL-PITCHING-DOCTRINE.md not in project
 - [ ] Owner: throwing clips (side-on + from behind)
+
+## 2026-09-29 owner decisions (sidearm / keep standards / slot proposal)
+- [x] Pitching: hand-below-shoulder gate removed; shared hands-apart gate (gates/releaseHandsApart.ts) used by throwing + pitching; both swings refuse with pitching reason
+- [x] Glove swivel permanent refusal; release extension clear-cases only (pass currently unresolvable); eyes-on-target proxy stated in lineage
+- [x] Arm slot context (armSlot.ts, staff-only), low-slot emphasis + cues (slotEmphasis.ts) on both cards
+- [x] Throwing + baseball pitching wired to live analysis and deployed (analyze-video, incl. repaired-series decoder)
+- [ ] Live signed-in throwing/pitching upload readback — needs a real throw/pitch clip from the owner
+- [ ] Softball windmill — blocked: docs/SOFTBALL-PITCHING-DOCTRINE.md still not in the repo

@@ -226,6 +226,16 @@ function track(series, pick, axis, scale) {
     return p ? p[axis] / scale : null;
   });
 }
+function angleDeg(a, b, c) {
+  if (!a || !b || !c)
+    return null;
+  const v1x = a.x - b.x, v1y = a.y - b.y, v2x = c.x - b.x, v2y = c.y - b.y;
+  const n = Math.hypot(v1x, v1y) * Math.hypot(v2x, v2y);
+  if (n === 0)
+    return null;
+  const cos = Math.max(-1, Math.min(1, (v1x * v2x + v1y * v2y) / n));
+  return Math.acos(cos) * 180 / Math.PI;
+}
 function framesFor(fps, sec, min) {
   return Math.max(min, Math.ceil(fps * sec));
 }
@@ -274,8 +284,12 @@ function rearThighAngleDeg(series, f, rear, direction_sign) {
 
 // src/lib/biomech/anchors/poseEvents.ts
 var STILL_SPEED = 0.35;
+var RELEASE_MIN_WRIST_SPEED = 2;
 var STILL_MIN_SEC = 0.25;
 var PERSIST_FRAMES = 2;
+var RELEASE_AGREE_FRAMES = 2;
+var RELEASE_SEARCH_SEC = 0.2;
+var BRAKE_FRACTION = 0.5;
 var LOAD_MIN_DISPLACEMENT = 0.1;
 var SWING_ACCEL = 6;
 var P4_ELBOW_SPEED = 0.15;
@@ -351,6 +365,106 @@ function detectStill(series) {
   const len = r.end - r.start + 1;
   const conf = Math.min(1, len / (2 * minLen)) * tierFactor(p.fps) * Math.min(1, observed / 0.8);
   return hit(series, A, ID, r.start, conf, 1, { run_len_frames: len, min_len: minLen, runs: runs.length, observed_fraction: round4(observed) });
+}
+function detectFirstMove(series) {
+  const A = "first_movement_frame", ID = "D-FIRST-MOVE";
+  const p = prep(series, A, ID);
+  if ("err" in p)
+    return p.err;
+  const minLen = framesFor(p.fps, STILL_MIN_SEC, 3);
+  const runs = stillRuns(p.speed, minLen);
+  if (runs.length === 0)
+    return miss(A, ID, MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, { reason: "no_prior_stillness" });
+  for (const r of runs) {
+    const k = r.end + 1;
+    let ok = true, gap = false;
+    for (let j = 0;j < PERSIST_FRAMES; j++) {
+      const v = p.speed[k + j];
+      if (v == null) {
+        gap = true;
+        ok = false;
+        break;
+      }
+      if (v < STILL_SPEED) {
+        ok = false;
+        break;
+      }
+    }
+    if (ok) {
+      const conf = 0.8 * tierFactor(p.fps) * Math.min(1, (r.end - r.start + 1) / (2 * minLen)) + 0.2;
+      return hit(series, A, ID, k, conf, 1, { still_run_len: r.end - r.start + 1 });
+    }
+    if (gap)
+      return miss(A, ID, MISSINGNESS_REASONS.LANDMARK_OCCLUDED, { at_frame: series.frames[k]?.frame_index ?? null });
+  }
+  return miss(A, ID, MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, { reason: "never_left_stillness" });
+}
+function detectReleasePoseOnly(series, opts) {
+  const A = "pitcher_release_frame", ID = "D-RELEASE-POSE";
+  const p = prep(series, A, ID);
+  if ("err" in p)
+    return p.err;
+  const L = opts.throwing_side === "left";
+  const [S, E, W] = L ? [LM.L_SHOULDER, LM.L_ELBOW, LM.L_WRIST] : [LM.R_SHOULDER, LM.R_ELBOW, LM.R_WRIST];
+  const fr = series.frames;
+  const wx = track(series, (f) => point(f, W), "x", p.scale);
+  const wy = track(series, (f) => point(f, W), "y", p.scale);
+  const vx = derivative(series, wx), vy = derivative(series, wy);
+  const wSpeed = smooth(vx.map((v, k2) => v != null && vy[k2] != null ? Math.hypot(v, vy[k2]) : null), 1);
+  let s1 = -1;
+  wSpeed.forEach((v, k2) => {
+    if (v != null && (s1 < 0 || v > wSpeed[s1]))
+      s1 = k2;
+  });
+  if (s1 < 0)
+    return miss(A, ID, MISSINGNESS_REASONS.LANDMARK_OCCLUDED, { reason: "throwing_wrist_unobserved" });
+  if (wSpeed[s1] < RELEASE_MIN_WRIST_SPEED) {
+    return miss(A, ID, MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, { reason: "no_arm_speed_above_noise", peak_wrist_speed: round4(wSpeed[s1]) });
+  }
+  const half = framesFor(p.fps, RELEASE_SEARCH_SEC, 3);
+  const lo = Math.max(0, s1 - half), hi = Math.min(fr.length - 1, s1 + half);
+  let s2 = -1, s2v = -1;
+  for (let k2 = lo;k2 <= hi; k2++) {
+    const a = angleDeg(point(fr[k2], S), point(fr[k2], E), point(fr[k2], W));
+    if (a != null && a > s2v) {
+      s2v = a;
+      s2 = k2;
+    }
+  }
+  const acc = derivative(series, wSpeed);
+  let minAcc = 0;
+  for (let k2 = s1 + 1;k2 <= hi; k2++)
+    if (acc[k2] != null && acc[k2] < minAcc)
+      minAcc = acc[k2];
+  let s3 = -1;
+  if (minAcc < 0) {
+    for (let k2 = s1 + 1;k2 <= hi; k2++)
+      if (acc[k2] != null && acc[k2] <= BRAKE_FRACTION * minAcc) {
+        s3 = k2;
+        break;
+      }
+  }
+  const sig = [s1, s2, s3].filter((k2) => k2 >= 0);
+  let best = [];
+  for (let i = 0;i < sig.length; i++) {
+    const grp = sig.filter((k2) => Math.abs(k2 - sig[i]) <= RELEASE_AGREE_FRAMES);
+    const spread2 = Math.max(...grp) - Math.min(...grp);
+    if (spread2 <= RELEASE_AGREE_FRAMES * 2 && (grp.length > best.length || grp.length === best.length && spread2 < Math.max(...best) - Math.min(...best)))
+      best = grp;
+  }
+  const diag = {
+    tier: "pose_only",
+    signal_frames: { wrist_speed_peak: fr[s1]?.frame_index ?? null, elbow_extension_max: s2 >= 0 ? fr[s2].frame_index : null, brake_onset: s3 >= 0 ? fr[s3].frame_index : null },
+    elbow_extension_deg: s2 >= 0 ? round4(s2v) : null,
+    note: "Pose-only tier. A ball-assisted tier (ball leaves hand) will be more precise; this does not claim that precision."
+  };
+  if (best.length < 2)
+    return miss(A, ID, MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, { ...diag, agreeing: best.length });
+  const k = median(best);
+  const spread = Math.max(...best) - Math.min(...best);
+  const conf = (best.length === 3 ? 0.85 : 0.6) * (1 - spread / (2 * RELEASE_AGREE_FRAMES + 1)) * tierFactor(p.fps);
+  const elbow_confirmed = best.includes(s2);
+  return hit(series, A, ID, k, elbow_confirmed ? conf : conf * 0.8, Math.max(1, spread), { ...diag, agreeing: best.length, spread_frames: spread, elbow_confirmed });
 }
 function handsForward(series, scale, dir) {
   return track(series, (f) => mid(point(f, LM.L_WRIST), point(f, LM.R_WRIST)), "x", scale).map((v) => v == null ? null : v * dir);
@@ -655,11 +769,12 @@ function detectFrontFootStrike(poseFrames, opts = {}) {
 
 // src/lib/biomech/anchors/peakLegLift.ts
 var MIN_LIFT_RISE_BODY = 0.1;
-function findPeakLegLiftFrame(poseFrames, fps = null) {
-  const r = findPeakLegLiftFrameInner(poseFrames);
+function findPeakLegLiftFrame(poseFrames, fps = null, minRise = MIN_LIFT_RISE_BODY) {
+  const r = findPeakLegLiftFrameInner(poseFrames, minRise);
   return { ...r, anchor_uncertainty_ms: r.frame_index == null ? null : oneFrameMs(fps) };
 }
-function findPeakLegLiftFrameInner(poseFrames) {
+var MIN_LIFT_RISE_BODY_THROWING = 0.07;
+function findPeakLegLiftFrameInner(poseFrames, minRise) {
   if (LANDMARK_MODEL_VERSION.endsWith("@0.0.0-stub")) {
     return {
       frame_index: null,
@@ -679,7 +794,7 @@ function findPeakLegLiftFrameInner(poseFrames) {
   const ys = visible.map((f) => f.lift_ankle_y).sort((a, b) => a - b);
   const baseline = ys[Math.floor((ys.length - 1) / 2)];
   const bodyH = heights.length ? heights[Math.floor((heights.length - 1) / 2)] : null;
-  if (bodyH == null || (baseline - ys[0]) / bodyH < MIN_LIFT_RISE_BODY) {
+  if (bodyH == null || (baseline - ys[0]) / bodyH < minRise) {
     return {
       frame_index: null,
       missingness: missingness(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, "D-ANCHOR"),
@@ -1260,7 +1375,7 @@ function computeBackHipSocketHold(i) {
     lineage: { ...lineage, floor_deg: round4(floor), peak_above_floor_deg: round4(peak - floor) }
   };
 }
-function frontFootPlantFromSeries(series, side) {
+function frontFootPlantFromSeries(series, side, minLiftRise) {
   const idx = frontAnkleIndex(side);
   const fps = Number.isFinite(series.header.fps_true) ? series.header.fps_true : null;
   const rows = series.frames.map((f) => {
@@ -1271,7 +1386,7 @@ function frontFootPlantFromSeries(series, side) {
     const h = ys.some((v) => v == null) ? null : Math.abs((ys[2] + ys[3]) / 2 - (ys[0] + ys[1]) / 2);
     return { frame_index: f.frame_index, lift_ankle_y: ay, lift_ankle_x: ax, front_ankle_y: ay, front_ankle_x: ax, body_height_y: h && h > 0 ? h : null };
   });
-  const lift = findPeakLegLiftFrame(rows, fps);
+  const lift = findPeakLegLiftFrame(rows, fps, minLiftRise);
   const plant = findFrontFootStrikeFrame(rows, { after_frame_index: lift.frame_index, fps });
   return { lift, plant };
 }
@@ -1352,6 +1467,17 @@ var TILE_CAMERA_REQUIREMENTS = {
   lift_thrust: "side_on",
   head_vertical_movement_pct: "either",
   premature_shoulder_open_deg: "side_on",
+  tempo_sec: "either",
+  shoulder_tilt_deg: "on_line",
+  stack_and_track: "on_line",
+  head_at_release_deg: "on_line",
+  glove_drift_outside_frame_in: "on_line",
+  stride_pct_of_height: "side_on",
+  drag_line: "side_on",
+  release_extension: "side_on",
+  eyes_on_target_at_peak_lift: "side_on",
+  balance_at_landing: "either",
+  glove_swivel: "either",
   head_path_through_stride: "side_on",
   back_hip_socket_hold: "side_on",
   hip_load: "side_on",
@@ -1372,7 +1498,10 @@ var TILE_CAMERA_REQUIREMENTS = {
   back_elbow_connection: "side_on",
   shoulder_to_shoulder_hold: "side_on",
   pelvis_rotation_efficiency: "side_on",
-  tempo: "either"
+  tempo: "either",
+  front_knee_after_landing: "side_on",
+  trunk_lateral_tilt_at_release: "on_line",
+  arm_late_at_foot_strike: "side_on"
 };
 var VIEW_TEXT = {
   side_on: "the camera side-on, 90° to the line from the pitcher to home plate",
@@ -1717,6 +1846,7 @@ function runHittingPoseTiles(series, o) {
 }
 
 // src/lib/biomech/metrics/shoulderOpenFusion.ts
+var SHOULDER_FUSION_VERSION = "shoulder_open_fusion@1.0.0-width-offset-glove";
 var SHOULDER_FUSION_FLOORS = {
   s1_far_visibility: { floor: 0.0002, used: false, why: "visibility saturated at ~1.0 on still and swing clips — no occlusion information" },
   width_pct: 0.61,
@@ -1725,6 +1855,7 @@ var SHOULDER_FUSION_FLOORS = {
   s4_offset_pct: 0.75,
   s5_glove_pct: 2.28
 };
+var SHOULDER_FUSION_DETECTION_LIMIT_DEG = 13.9;
 function shoulderSignals(series, f, lock, dir, side) {
   const st = lock.baseline.stature_px, roll = lock.baseline.roll_deg;
   const P = (i) => {
@@ -2418,6 +2549,893 @@ function evaluateMovementGate(series) {
   return { status: "movement", movement_score: score, ...base };
 }
 
+// src/lib/biomech/metrics/tempoSec.ts
+var MIN_DELTA_FRAMES = 2;
+function roundToSixDecimals(n) {
+  return Math.round(n * 1e6) / 1e6;
+}
+function computeTempoSec(inputs) {
+  const { peak_leg_lift_frame_index, front_foot_strike_frame_index, fps_true } = inputs;
+  const baseLineage = {
+    peak_leg_lift_frame_index,
+    front_foot_strike_frame_index,
+    fps_true,
+    delta_frames: null
+  };
+  const missing = (rec, refused_at, delta2 = null) => ({
+    value: null,
+    unit: "seconds",
+    missingness: rec,
+    confidence: { status: "missing", value: null, certificate_hash: null },
+    uncertainty_sec: null,
+    ci_low_sec: null,
+    ci_high_sec: null,
+    lineage: { ...baseLineage, delta_frames: delta2, refused_at }
+  });
+  if (peak_leg_lift_frame_index == null) {
+    return missing(inputs.peak_leg_lift_missingness ?? missingness(MISSINGNESS_REASONS.PEAK_LEG_LIFT_MISSING, "D-ANCHOR"), "peak_leg_lift");
+  }
+  if (front_foot_strike_frame_index == null) {
+    return missing(inputs.front_foot_strike_missingness ?? missingness(MISSINGNESS_REASONS.FRONT_FOOT_FIRST_CONTACT_MISSING, "D-ANCHOR"), "front_foot_strike");
+  }
+  if (!Number.isFinite(fps_true) || fps_true <= 0) {
+    return missing(missingness(MISSINGNESS_REASONS.INSUFFICIENT_TEMPORAL_RESOLUTION, "D-METRIC"), "fps_unknown");
+  }
+  const delta = front_foot_strike_frame_index - peak_leg_lift_frame_index;
+  if (!Number.isInteger(delta) || delta <= 0) {
+    return missing(missingness(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, "D-METRIC"), "strike_not_after_lift", delta);
+  }
+  if (delta < MIN_DELTA_FRAMES) {
+    return missing(missingness(MISSINGNESS_REASONS.INSUFFICIENT_TEMPORAL_RESOLUTION, "D-METRIC"), "uncertainty_exceeds_tolerance", delta);
+  }
+  const value = roundToSixDecimals(delta / fps_true);
+  const u = roundToSixDecimals(1 / fps_true);
+  return {
+    value,
+    unit: "seconds",
+    missingness: null,
+    confidence: uncalibrated(),
+    uncertainty_sec: u,
+    ci_low_sec: roundToSixDecimals(value - u),
+    ci_high_sec: roundToSixDecimals(value + u),
+    lineage: { ...baseLineage, delta_frames: delta }
+  };
+}
+
+// src/lib/biomech/rigid/segmentRotation.ts
+var RIGID_LENGTH_TOL = 0.03;
+function solveSegment(series, f, a, b, L) {
+  const p = point(f, a), q2 = point(f, b);
+  if (!p || !q2 || !(L > 0))
+    return { d_xy: null, theta_deg: null, tracking_failure: false, h: null };
+  const dx = (p.x - q2.x) * series.header.width, dy = (p.y - q2.y) * series.header.height;
+  const d = Math.hypot(dx, dy);
+  if (d > L * (1 + RIGID_LENGTH_TOL))
+    return { d_xy: d, theta_deg: null, tracking_failure: true, h: null };
+  const r2 = Math.min(1, d / L);
+  const dz = Math.sqrt(Math.max(0, L * L - Math.min(d, L) ** 2));
+  return { d_xy: d, theta_deg: Math.acos(r2) * 180 / Math.PI, tracking_failure: false, h: { x: dx, z: dz } };
+}
+function horizontalAngleDeg(u, v) {
+  if (!u || !v)
+    return null;
+  const nu = Math.hypot(u.x, u.z), nv = Math.hypot(v.x, v.z);
+  if (!(nu > 0 && nv > 0))
+    return null;
+  const c = Math.max(-1, Math.min(1, (u.x * v.x + u.z * v.z) / (nu * nv)));
+  return Math.acos(c) * 180 / Math.PI;
+}
+
+// src/lib/biomech/filters/oneEuro.ts
+var HEAD_ONE_EURO = { min_cutoff_hz: 0.3, beta: 8, d_cutoff_hz: 1 };
+var alpha = (cutoff, fps) => {
+  const tau = 1 / (2 * Math.PI * cutoff);
+  return 1 / (1 + tau * fps);
+};
+function oneEuroCausal(xs, gate, fps, p) {
+  const out = xs.map(() => null);
+  let prev = null;
+  for (let k = 0;k < xs.length; k++) {
+    const x = xs[k];
+    if (x == null || !Number.isFinite(x)) {
+      prev = null;
+      continue;
+    }
+    if (prev == null) {
+      prev = x;
+      out[k] = x;
+      continue;
+    }
+    const g = gate[k];
+    const cutoff = p.min_cutoff_hz + p.beta * (g != null && Number.isFinite(g) ? Math.max(0, g) : 0);
+    const a = alpha(cutoff, fps);
+    prev = prev + a * (x - prev);
+    out[k] = prev;
+  }
+  return out;
+}
+function oneEuroZeroPhase(xs, gate, fps, p) {
+  const f = oneEuroCausal(xs, gate, fps, p);
+  const b = oneEuroCausal([...xs].reverse(), [...gate].reverse(), fps, p).reverse();
+  return f.map((v, k) => v == null || b[k] == null ? null : (v + b[k]) / 2);
+}
+
+// src/lib/biomech/gates/releaseHandsApart.ts
+var HANDS_APART_MIN_FOREARMS = 1.5;
+function handsApartAtRelease(series, releaseK, side) {
+  const f = series.frames[releaseK];
+  const wrist = f && point(f, side === "R" ? LM.R_WRIST : LM.L_WRIST);
+  const glove = f && point(f, side === "R" ? LM.L_WRIST : LM.R_WRIST);
+  const elbow = f && point(f, side === "R" ? LM.R_ELBOW : LM.L_ELBOW);
+  if (!wrist || !glove || !elbow)
+    return { ok: false, hand_gap_forearms: null, reason: "throwing_arm_unobserved_at_release" };
+  const W = series.header.width, H = series.header.height;
+  const forearm = Math.hypot((wrist.x - elbow.x) * W, (wrist.y - elbow.y) * H);
+  const gap = forearm > 0 ? Math.hypot((wrist.x - glove.x) * W, (wrist.y - glove.y) * H) / forearm : 0;
+  return gap >= HANDS_APART_MIN_FOREARMS ? { ok: true, hand_gap_forearms: round4(gap), reason: null } : { ok: false, hand_gap_forearms: round4(gap), reason: "hands_together_at_release" };
+}
+
+// src/lib/biomech/metrics/pitchingTiles.ts
+var PITCHING_TILES_VERSION = "pitching_tiles@2.2.0-energy-back-ankle-camera-gate-stance-lock-shoulder-fusion-zero-phase-head-lift-thrust";
+var PITCHING_OWNER_STANDARDS = {
+  energy_angle_deg: { pass_min: 18, elite_min: 25, source: "owner_coaching_standard" },
+  premature_shoulder_open_deg: { pass_max: 0, source: "owner_coaching_standard" },
+  head_vertical_movement_pct: { pass_max: 2, source: "owner_coaching_standard" },
+  lift_thrust: { thrust_offset_max_sec: 0, source: "owner_coaching_standard" }
+};
+var HEAD_VERTICAL_NOISE_FLOOR_PCT = 0.6;
+var SHOULDER_ROTATION_NOISE_FLOOR_DEG = 14.1;
+var THRUST_ONSET_SPEED = 0.15;
+var NECK_TOL = 0.05;
+var EAR_TOL = 0.1;
+var ENERGY_ANGLE_STABILITY_DEG = 5;
+var SHOULDER_TO_ANKLE_OF_STATURE3 = 0.818 - 0.039;
+var MIN_WINDOW_COVERAGE = 0.8;
+var PLANT_TO_RELEASE_MAX_SEC = 0.35;
+var HEEL = { L: 29, R: 30 };
+var TOE = { L: 31, R: 32 };
+var UNIT2 = { energy_angle_deg: "degrees", premature_shoulder_open_deg: "degrees", head_vertical_movement_pct: "percent", lift_thrust: "seconds" };
+function refuse3(key, rec, lineage) {
+  return { key, value: null, unit: UNIT2[key], uncertainty: null, verdict: null, elite: null, missingness: rec, confidence: missingConfidence(), standard: PITCHING_OWNER_STANDARDS[key], lineage };
+}
+var mr3 = (r2) => missingness(r2, "D-METRIC");
+var posOf = (s, fi) => fi == null ? -1 : s.frames.findIndex((f) => f.frame_index === fi);
+function findPitchingDelivery(series, throwing_side) {
+  const base = { throwing_side, direction_sign: null, lift_k: null, plant_k: null, release_k: null, first_move: null };
+  if (throwing_side == null) {
+    return { ...base, ok: false, refusal: mr3(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED), refusal_detail: "throwing_side_unknown", anchors: {} };
+  }
+  const stride = frontFootPlantFromSeries(series, throwing_side);
+  const release = detectReleasePoseOnly(series, { throwing_side: throwing_side === "R" ? "right" : "left" });
+  const first_move = detectFirstMove(series);
+  const dir = deriveDirectionSign(series, throwing_side);
+  const anchors = { peak_leg_lift: stride.lift, front_foot_plant: stride.plant, release, first_move };
+  const fail = (rec, detail) => ({ ...base, direction_sign: dir, first_move, ok: false, refusal: rec ?? mr3(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED), refusal_detail: detail, anchors });
+  if (stride.lift.frame_index == null)
+    return fail(stride.lift.missingness, "no_pitching_delivery:peak_leg_lift_missing");
+  if (stride.plant.frame_index == null)
+    return fail(stride.plant.missingness, `no_pitching_delivery:plant_missing:${stride.plant.detail}`);
+  if (release.frame_index == null)
+    return fail(release.missingness ?? mr3(MISSINGNESS_REASONS.PITCHER_RELEASE_FRAME_MISSING), `no_pitching_delivery:release_missing:${String(release.diagnostics.reason ?? "signals_disagree")}`);
+  if (!(release.frame_index >= stride.plant.frame_index)) {
+    return fail(missingness(MISSINGNESS_REASONS.PITCHER_RELEASE_FRAME_MISSING, "D-ANCHOR"), "no_pitching_delivery:release_before_plant");
+  }
+  const fps = series.header.fps_true;
+  if (Number.isFinite(fps) && fps > 0 && (release.frame_index - stride.plant.frame_index) / fps > PLANT_TO_RELEASE_MAX_SEC) {
+    return fail(missingness(MISSINGNESS_REASONS.PITCHER_RELEASE_FRAME_MISSING, "D-ANCHOR"), "no_pitching_delivery:release_too_long_after_plant");
+  }
+  const rk = posOf(series, release.frame_index);
+  const hands = handsApartAtRelease(series, rk, throwing_side);
+  if (hands.reason === "throwing_arm_unobserved_at_release")
+    return fail(missingness(MISSINGNESS_REASONS.LANDMARK_OCCLUDED, "D-ANCHOR"), "no_pitching_delivery:throwing_arm_unobserved_at_release");
+  if (!hands.ok)
+    return fail(missingness(MISSINGNESS_REASONS.PITCHER_RELEASE_FRAME_MISSING, "D-ANCHOR"), `no_pitching_delivery:hands_together_at_release_not_a_pitch:${hands.hand_gap_forearms}`);
+  if (dir == null)
+    return fail(mr3(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED), "target_direction_underivable");
+  return {
+    ok: true,
+    throwing_side,
+    direction_sign: dir,
+    first_move,
+    lift_k: posOf(series, stride.lift.frame_index),
+    plant_k: posOf(series, stride.plant.frame_index),
+    release_k: rk,
+    refusal: null,
+    refusal_detail: null,
+    anchors
+  };
+}
+function frontHipIdx(side) {
+  return side === "R" ? LM.L_HIP : LM.R_HIP;
+}
+var ENERGY_ANGLE_ORIGIN = "back_ankle";
+var ANKLE = { L: 27, R: 28 };
+function energyAt(series, f, side, dir, origin = "back_ankle") {
+  if (!f)
+    return null;
+  const rear = side === "R" ? "R" : "L";
+  const hip = pointPx(series, f, frontHipIdx(side));
+  let o;
+  if (origin === "back_ankle")
+    o = pointPx(series, f, ANKLE[rear]);
+  else {
+    const heel = pointPx(series, f, HEEL[rear]), toe = pointPx(series, f, TOE[rear]);
+    o = heel && toe ? { x: (heel.x + toe.x) / 2, y: (heel.y + toe.y) / 2 } : null;
+  }
+  if (!o || !hip)
+    return null;
+  const dy = o.y - hip.y;
+  if (dy <= 0)
+    return null;
+  return Math.atan2((hip.x - o.x) * dir, dy) * 180 / Math.PI;
+}
+function computeEnergyAngle(series, d) {
+  const K = "energy_angle_deg";
+  if (!d.ok)
+    return refuse3(K, d.refusal, { gate: d.refusal_detail, origin: ENERGY_ANGLE_ORIGIN });
+  const { throwing_side: side, direction_sign: dir, lift_k: k } = d;
+  const v = energyAt(series, series.frames[k], side, dir);
+  if (v == null)
+    return refuse3(K, mr3(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "back_ankle_or_front_hip_unobserved_at_peak_lift", origin: ENERGY_ANGLE_ORIGIN });
+  const nb = [energyAt(series, series.frames[k - 1], side, dir), energyAt(series, series.frames[k + 1], side, dir)].filter((x) => x != null);
+  if (nb.length === 0)
+    return refuse3(K, mr3(MISSINGNESS_REASONS.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: "no_observed_neighbour_frame", primary: round4(v), origin: ENERGY_ANGLE_ORIGIN });
+  const u = Math.max(...nb.map((x) => Math.abs(x - v)));
+  if (u > ENERGY_ANGLE_STABILITY_DEG)
+    return refuse3(K, mr3(MISSINGNESS_REASONS.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: "unstable_under_1_frame_shift", primary: round4(v), delta: round4(u), origin: ENERGY_ANGLE_ORIGIN });
+  const s = PITCHING_OWNER_STANDARDS.energy_angle_deg;
+  return {
+    key: K,
+    value: round4(v),
+    unit: "degrees",
+    uncertainty: round4(u),
+    verdict: v >= s.pass_min ? "pass" : "fail",
+    elite: v >= s.elite_min,
+    missingness: null,
+    confidence: uncalibrated(),
+    standard: s,
+    lineage: { frame_index: series.frames[k].frame_index, neighbour_delta_deg: round4(u), origin: ENERGY_ANGLE_ORIGIN, definition_changed: "2026-09-27 mid-foot → back ankle (owner)" }
+  };
+}
+function lockFor(series, d) {
+  return detectStanceLock(series, { before_frame: series.frames[d.lift_k].frame_index });
+}
+var lockRefusal = (key, l) => refuse3(key, l.missingness ?? mr3(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED), { reason: l.detail ?? "stance_lock_missing", onset_frame: l.onset_frame });
+function computePrematureShoulderOpen(series, d, lock) {
+  const K = "premature_shoulder_open_deg";
+  if (!d.ok)
+    return refuse3(K, d.refusal, { gate: d.refusal_detail });
+  const l = lock ?? lockFor(series, d);
+  if (!l.ok)
+    return lockRefusal(K, l);
+  const Ls = l.baseline.shoulder_len_px, Lh = l.baseline.hip_len_px;
+  if (!Ls || !Lh)
+    return refuse3(K, mr3(MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE), { reason: "segment_length_unobserved_in_stance" });
+  let fails = 0, n = 0;
+  for (let k = l.start_k;k <= d.plant_k; k++) {
+    const r2 = solveSegment(series, series.frames[k], LM.L_SHOULDER, LM.R_SHOULDER, Ls);
+    if (r2.d_xy != null) {
+      n++;
+      if (r2.tracking_failure)
+        fails++;
+    }
+  }
+  const at = (k) => ({ s: solveSegment(series, series.frames[k], LM.L_SHOULDER, LM.R_SHOULDER, Ls), p: solveSegment(series, series.frames[k], LM.L_HIP, LM.R_HIP, Lh) });
+  const a0 = at(d.lift_k), a1 = at(d.plant_k);
+  const lineage = {
+    method: "rigid_length_preservation",
+    L_true_px: Ls,
+    pelvis_L_px: Lh,
+    tracking_failures: fails,
+    frames_checked: n,
+    at_lift_deg: a0.s.theta_deg == null ? null : round4(a0.s.theta_deg),
+    at_plant_deg: a1.s.theta_deg == null ? null : round4(a1.s.theta_deg),
+    rel_pelvis_at_lift_deg: (() => {
+      const v = horizontalAngleDeg(a0.s.h, a0.p.h);
+      return v == null ? null : round4(v);
+    })(),
+    rel_pelvis_at_plant_deg: (() => {
+      const v = horizontalAngleDeg(a1.s.h, a1.p.h);
+      return v == null ? null : round4(v);
+    })(),
+    sign: "unsigned_length_cannot_resolve_crossing",
+    noise_floor_deg: SHOULDER_ROTATION_NOISE_FLOOR_DEG
+  };
+  if (n > 0 && fails / n > 0.2)
+    return refuse3(K, mr3(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { rigid: lineage, reason: "rigid_body_violated_on_many_frames" });
+  const fz = fuseShoulderOpen(series, l, d.plant_k, d.direction_sign, d.throwing_side);
+  const full = { method: SHOULDER_FUSION_VERSION, fusion: fz, floors: SHOULDER_FUSION_FLOORS, detection_limit_deg: SHOULDER_FUSION_DETECTION_LIMIT_DEG, rigid: lineage };
+  if (fz.verdict == null)
+    return refuse3(K, mr3(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED), { ...full, reason: fz.reason });
+  return {
+    key: K,
+    value: fz.value_deg,
+    unit: "degrees",
+    uncertainty: SHOULDER_FUSION_DETECTION_LIMIT_DEG,
+    verdict: fz.verdict,
+    elite: null,
+    missingness: null,
+    confidence: uncalibrated(),
+    standard: PITCHING_OWNER_STANDARDS[K],
+    lineage: { ...full, note: fz.verdict === "pass" ? `closed at plant to within the ${SHOULDER_FUSION_DETECTION_LIMIT_DEG}° detection limit — no signal moved beyond its still-clip floor` : `${fz.agreeing} of ${fz.available} independent signals agree the shoulders opened before plant` }
+  };
+}
+var q2 = (a, p) => {
+  const b = [...a].sort((x, y) => x - y);
+  return b[Math.round(p * (b.length - 1))];
+};
+function computeHeadVerticalMovement(series, d, lock) {
+  const K = "head_vertical_movement_pct";
+  if (!d.ok)
+    return refuse3(K, d.refusal, { gate: d.refusal_detail });
+  const fm = d.first_move;
+  if (fm.frame_index == null)
+    return refuse3(K, fm.missingness ?? mr3(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED), { reason: "first_move_missing", upstream: fm.diagnostics });
+  const l = lock ?? lockFor(series, d);
+  if (!l.ok)
+    return lockRefusal(K, l);
+  const B = l.baseline;
+  if (!B.stature_px || !B.neck_len_px || !B.ear_width_px)
+    return refuse3(K, mr3(MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE), { reason: "stance_baseline_incomplete" });
+  const k0 = posOf(series, fm.frame_index), k1 = d.release_k;
+  if (!(k0 >= 0 && k0 < k1))
+    return refuse3(K, mr3(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED), { reason: "window_invalid" });
+  let rejected = 0;
+  const y = series.frames.map((f) => {
+    const h = headCentroidPx(series, f), sm = mid(pointPx(series, f, LM.L_SHOULDER), pointPx(series, f, LM.R_SHOULDER));
+    const e1 = pointPx(series, f, 7), e2 = pointPx(series, f, 8);
+    if (!h || !sm || !e1 || !e2)
+      return null;
+    if (Math.abs(Math.hypot(h.x - sm.x, h.y - sm.y) / B.neck_len_px - 1) > NECK_TOL || Math.abs(Math.hypot(e1.x - e2.x, e1.y - e2.y) / B.ear_width_px - 1) > EAR_TOL) {
+      rejected++;
+      return null;
+    }
+    return unroll(h, B.roll_deg).y;
+  });
+  const scale = bodyScale(series);
+  const gate = scale ? lowerBodySpeed(series, scale) : y.map(() => null);
+  const filt = oneEuroZeroPhase(y, gate, series.header.fps_true, HEAD_ONE_EURO);
+  const ys = [];
+  for (let k = k0;k <= k1; k++) {
+    const v = filt[k];
+    if (v != null)
+      ys.push(v);
+  }
+  const cov = ys.length / (k1 - k0 + 1);
+  const lineage = { window: [fm.frame_index, series.frames[k1].frame_index], coverage: round4(cov), stature_px: B.stature_px, roll_deg: B.roll_deg, rigid_rejected_frames: rejected, statistic: "p2_p98_range", filter: "one_euro_zero_phase_lowerbody_gate", noise_floor_pct: HEAD_VERTICAL_NOISE_FLOOR_PCT };
+  if (cov < MIN_WINDOW_COVERAGE)
+    return refuse3(K, mr3(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { ...lineage, reason: "head_coverage_low" });
+  const pct2 = (q2(ys, 0.98) - q2(ys, 0.02)) / B.stature_px * 100;
+  const maxmin = (Math.max(...ys) - Math.min(...ys)) / B.stature_px * 100;
+  if (pct2 > 100)
+    return refuse3(K, mr3(MISSINGNESS_REASONS.POSE_NOT_DETECTED), { ...lineage, reason: "physically_impossible", raw_pct: round4(pct2) });
+  return { key: K, value: round4(pct2), unit: "percent", uncertainty: HEAD_VERTICAL_NOISE_FLOOR_PCT, verdict: pct2 <= PITCHING_OWNER_STANDARDS[K].pass_max ? "pass" : "fail", elite: null, missingness: null, confidence: uncalibrated(), standard: PITCHING_OWNER_STANDARDS[K], lineage: { ...lineage, max_min_pct: round4(maxmin) } };
+}
+function computeLiftThrust(series, d, lock) {
+  const K = "lift_thrust";
+  if (!d.ok)
+    return refuse3(K, d.refusal, { gate: d.refusal_detail });
+  const l = lock ?? lockFor(series, d);
+  if (!l.ok)
+    return lockRefusal(K, l);
+  const { throwing_side: side, direction_sign: dir } = d, fps = series.header.fps_true;
+  const [FK, RH, RS] = side === "R" ? [LM.L_KNEE, LM.R_HIP, LM.R_SHOULDER] : [LM.R_KNEE, LM.L_HIP, LM.L_SHOULDER];
+  const roll = l.baseline.roll_deg;
+  const P2 = (f, i) => {
+    const p = pointPx(series, f, i);
+    return p ? unroll(p, roll) : null;
+  };
+  const trunk = (f) => {
+    const h = mid(P2(f, LM.L_HIP), P2(f, LM.R_HIP)), s = mid(P2(f, LM.L_SHOULDER), P2(f, LM.R_SHOULDER));
+    return h && s && h.y > s.y ? Math.atan2((s.x - h.x) * dir, h.y - s.y) * 180 / Math.PI : null;
+  };
+  let kPeak = -1, best = -Infinity;
+  for (let k = l.end_k + 1;k <= d.plant_k; k++) {
+    const f = series.frames[k], kn = P2(f, FK), rs = P2(f, RS), hm = mid(P2(f, LM.L_HIP), P2(f, LM.R_HIP));
+    if (!kn || !rs || !hm || !(hm.y > rs.y))
+      continue;
+    const r2 = (hm.y - kn.y) / (hm.y - rs.y);
+    if (r2 > best) {
+      best = r2;
+      kPeak = k;
+    }
+  }
+  if (kPeak < 0)
+    return refuse3(K, mr3(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "front_knee_or_rear_shoulder_unobserved" });
+  const tr0 = median(Array.from({ length: l.end_k - l.start_k + 1 }, (_, i) => trunk(series.frames[l.start_k + i])).filter((v2) => v2 != null));
+  const trP = trunk(series.frames[kPeak]);
+  const scale = bodyScale(series);
+  if (!scale)
+    return refuse3(K, mr3(MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE), { reason: "no_body_scale" });
+  const v = smooth(series.frames.map((f, k) => {
+    if (k === 0 || f.frame_index - series.frames[k - 1].frame_index !== 1)
+      return null;
+    const a = point(series.frames[k - 1], RH), b = point(f, RH);
+    return a && b ? (b.x - a.x) * dir / scale * fps : null;
+  }), 1);
+  const persist = framesFor(fps, 0.06, 2);
+  let onset = -1;
+  for (let k = l.end_k + 1;k <= d.plant_k; k++) {
+    let ok2 = true;
+    for (let j = 0;j < persist; j++) {
+      const x = v[k + j];
+      if (x == null || x < THRUST_ONSET_SPEED) {
+        ok2 = false;
+        break;
+      }
+    }
+    if (ok2) {
+      onset = k;
+      break;
+    }
+  }
+  const lift = { knee_peak_frame: series.frames[kPeak].frame_index, lift_ratio_to_armpit: round4(best), trunk_change_deg: tr0 != null && trP != null ? round4(trP - tr0) : null };
+  if (onset < 0)
+    return refuse3(K, mr3(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED), { reason: "no_rear_hip_thrust_above_noise_before_plant", lift, thrust_onset_speed: THRUST_ONSET_SPEED });
+  const off = (onset - kPeak) / fps;
+  return {
+    key: K,
+    value: round4(off),
+    unit: "seconds",
+    uncertainty: round4(2 / fps),
+    verdict: off <= PITCHING_OWNER_STANDARDS.lift_thrust.thrust_offset_max_sec ? "pass" : "fail",
+    elite: null,
+    missingness: null,
+    confidence: uncalibrated(),
+    standard: PITCHING_OWNER_STANDARDS[K],
+    lineage: { lift, thrust_onset_frame: series.frames[onset].frame_index, peak_rear_hip_speed: round4(Math.max(...v.slice(onset, d.plant_k + 1).filter((x) => x != null))), note: "lift height and posture are reported, not graded — the owner gave no numeric standard for them" }
+  };
+}
+function cameraGated(r2, d, cam) {
+  const g = checkCameraRequirement(r2.key, cam.view);
+  if (!d.ok || g.ok)
+    return g.detail ? { ...r2, lineage: { ...r2.lineage, camera_view: g.detail } } : r2;
+  return refuse3(r2.key, mr3(MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE), { reason: g.detail, message: g.message, camera: cam });
+}
+function runPitchingTiles(series, o) {
+  const d = findPitchingDelivery(series, o.throwing_side);
+  const lock = d.ok ? lockFor(series, d) : undefined;
+  const cam = detectCameraView(series);
+  return {
+    version: PITCHING_TILES_VERSION,
+    camera_view: cam,
+    delivery: { ok: d.ok, refusal: d.refusal, refusal_detail: d.refusal_detail, direction_sign: d.direction_sign },
+    stance_lock: lock ? { ok: lock.ok, start_frame: lock.start_frame, end_frame: lock.end_frame, detail: lock.detail } : null,
+    energy_angle_deg: cameraGated(computeEnergyAngle(series, d), d, cam),
+    premature_shoulder_open_deg: cameraGated(computePrematureShoulderOpen(series, d, lock), d, cam),
+    head_vertical_movement_pct: cameraGated(computeHeadVerticalMovement(series, d, lock), d, cam),
+    lift_thrust: cameraGated(computeLiftThrust(series, d, lock), d, cam)
+  };
+}
+
+// src/lib/biomech/metrics/throwingInjuryTiles.ts
+var INJURY_META = {
+  trunk_rotation_before_foot_contact: { evidence: "moderate", sources: ["Aguinaldo & Chambers 2009, Am J Sports Med", "Fleisig et al. (ASMI)"], camera: "side-on" },
+  horizontal_abduction_at_foot_contact: { evidence: "limited", sources: ["Takagi et al.", "Aguinaldo & Chambers 2009"], camera: "behind/overhead — depth axis side-on" },
+  stride_foot_direction: { evidence: "limited", sources: ["Movement System Dysfunction in throwers, PMC8720247"], camera: "behind/in front" }
+};
+var mk = (key, unit, value, flag, missing, lineage) => {
+  const m2 = INJURY_META[key];
+  return {
+    key,
+    unit,
+    value: value == null ? null : round4(value),
+    verdict: null,
+    flag,
+    grading_weight: 0,
+    missing_reason: value == null && flag == null ? missing ?? MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED : null,
+    evidence: m2.evidence,
+    sources: m2.sources,
+    camera: m2.camera,
+    lineage: { unvalidated: true, projection: "2d_image_plane", ...lineage }
+  };
+};
+var refuseAll = (reason) => Object.fromEntries(Object.keys(INJURY_META).map((k) => [k, mk(k, "", null, null, reason, { reason })]));
+var refusedInjuryMarkers = refuseAll;
+function computeThrowingInjuryMarkers(s, d, lock, side, view, shoulderOpen) {
+  if (!d.ok || d.plant_k == null || d.release_k == null || !lock.ok)
+    return refuseAll("throwing_delivery_not_confirmed");
+  const c = { s, lock };
+  const SH = side === "R" ? LM.R_SHOULDER : LM.L_SHOULDER, EL = side === "R" ? LM.R_ELBOW : LM.L_ELBOW, WR = side === "R" ? LM.R_WRIST : LM.L_WRIST;
+  const HP = side === "R" ? LM.R_HIP : LM.L_HIP;
+  const fa = frontAnkleIndex(side), fk = fa === 27 ? LM.L_KNEE : LM.R_KNEE, fh = fa === 27 ? LM.L_HIP : LM.R_HIP;
+  const sideOn = view === "side_on", onLine = view === "on_line";
+  const out = {};
+  out.trunk_rotation_before_foot_contact = !shoulderOpen || shoulderOpen.verdict == null ? mk("trunk_rotation_before_foot_contact", "degrees", null, null, MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, { reason: "shoulder_opening_fusion_refused", reused: "premature_shoulder_open_deg" }) : mk("trunk_rotation_before_foot_contact", "degrees", shoulderOpen.value, shoulderOpen.verdict === "fail" ? "raised" : "clear", null, { reused: "premature_shoulder_open_deg", fusion: shoulderOpen.lineage ?? null });
+  out.horizontal_abduction_at_foot_contact = mk("horizontal_abduction_at_foot_contact", "degrees", null, null, MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE, { reason: sideOn ? "camera_view_mismatch:arm_behind_trunk_is_along_camera_depth" : "not_built:no_behind_view_throwing_clip" });
+  out.stride_foot_direction = mk("stride_foot_direction", "degrees", null, null, MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE, { reason: sideOn ? "camera_view_mismatch:foot_yaw_and_lateral_offset_are_along_camera_depth" : "not_built:no_behind_view_throwing_clip" });
+  return out;
+}
+
+// src/lib/biomech/metrics/armSlot.ts
+var LOW_SLOT_MAX_DEG = 15;
+var HIGH_SLOT_MIN_DEG = 30;
+function measureArmSlot(series, releaseK, side) {
+  const base = { audience: "staff", graded: false };
+  if (releaseK == null || releaseK < 0 || !side)
+    return { ...base, slot: "undetermined", elevation_deg: null, lineage: { reason: "release_or_side_unavailable" } };
+  const W = series.header.width, H = series.header.height;
+  const S = side === "R" ? LM.R_SHOULDER : LM.L_SHOULDER, E = side === "R" ? LM.R_ELBOW : LM.L_ELBOW, Wr = side === "R" ? LM.R_WRIST : LM.L_WRIST;
+  const vals = [];
+  for (const k of [releaseK - 1, releaseK, releaseK + 1]) {
+    const f = series.frames[k];
+    if (!f)
+      continue;
+    const s = point(f, S), e = point(f, E), w = point(f, Wr);
+    if (!s || !e || !w)
+      continue;
+    const arm = Math.hypot((e.x - s.x) * W, (e.y - s.y) * H) + Math.hypot((w.x - e.x) * W, (w.y - e.y) * H);
+    if (arm <= 0)
+      continue;
+    const rise = Math.max(-1, Math.min(1, (s.y - w.y) * H / arm));
+    vals.push(Math.asin(rise) * 180 / Math.PI);
+  }
+  if (vals.length < 2)
+    return { ...base, slot: "undetermined", elevation_deg: null, lineage: { reason: "throwing_arm_unobserved_at_release" } };
+  vals.sort((a, b) => a - b);
+  const el = vals[Math.floor((vals.length - 1) / 2)];
+  const slot = el <= LOW_SLOT_MAX_DEG ? "low" : el >= HIGH_SLOT_MIN_DEG ? "high" : "undetermined";
+  return { ...base, slot, elevation_deg: round4(el), lineage: { method: "wrist_rise_over_arm_length_at_release_median3", low_max_deg: LOW_SLOT_MAX_DEG, high_min_deg: HIGH_SLOT_MIN_DEG, blind_to: "trunk lateral tilt", unvalidated: true } };
+}
+
+// src/lib/biomech/metrics/throwingTiles.ts
+var THROWING_TILES_VERSION = "throwing_tiles@2.0.0-injury-flags-final-step-stride";
+var THROWING_STRIDE_PASS_MIN_PCT = 90;
+var FINAL_STEP_STILL_PCT = 2;
+var absent = (unit, reason, lineage = {}) => ({ value: null, unit, verdict: null, missing_reason: reason, lineage });
+function classifyThrowingPattern(s, side, liftFrame, plantFrame) {
+  const base = { pattern: "undetermined", reason: "movement_anchors_unavailable", lineage: {} };
+  if (!side || liftFrame == null || plantFrame == null || liftFrame >= plantFrame)
+    return base;
+  const lock = detectStanceLock(s, { before_frame: liftFrame });
+  const scale = bodyScale(s), dir = deriveDirectionSign(s, side);
+  if (!lock.ok || scale == null || dir == null)
+    return { ...base, reason: "stance_or_target_direction_unavailable" };
+  const masked = maskUntrusted(s, buildSegmentValidity(s, lock));
+  const fi = frontAnkleIndex(side), ri = rearAnkleIndex(side);
+  const at = (k) => {
+    const f = masked.frames[k], rear = f && point(f, ri), front = f && point(f, fi);
+    return rear && front ? { rear: rear.x * dir / scale, front: front.x * dir / scale } : null;
+  };
+  const baseRear = median(Array.from({ length: (lock.end_k ?? 0) - (lock.start_k ?? 0) + 1 }, (_, i) => at((lock.start_k ?? 0) + i)?.rear ?? null).filter((n) => n != null));
+  const plantK = masked.frames.findIndex((f) => f.frame_index === plantFrame);
+  if (baseRear == null || plantK < 0)
+    return { ...base, reason: "feet_unobserved" };
+  const window = Array.from({ length: plantK - (lock.end_k ?? plantK) }, (_, i) => at((lock.end_k ?? plantK) + i + 1));
+  const observed = window.filter((p) => p != null);
+  if (observed.length < 3 || observed.length / Math.max(1, window.length) < 0.8)
+    return { ...base, reason: "foot_track_incomplete" };
+  const stillNoise = median(Array.from({ length: (lock.end_k ?? 0) - (lock.start_k ?? 0) + 1 }, (_, i) => at((lock.start_k ?? 0) + i)?.rear ?? null).filter((n) => n != null).map((v) => Math.abs(v - baseRear))) ?? 0;
+  const floor = Math.max(0.02 / scale, stillNoise * 3);
+  const rearTravel = (median(observed.slice(-3).map((v) => v.rear)) ?? baseRear) - baseRear;
+  const crossed = observed.some((v) => v.rear > v.front + floor);
+  const plant = observed[observed.length - 1];
+  const separation = plant.front - plant.rear;
+  const lineage = { rear_travel_body_scales: round4(rearTravel), separation_body_scales: round4(separation), uncertainty_floor_body_scales: round4(floor), crossed, coverage: round4(observed.length / window.length) };
+  if (crossed || rearTravel > floor * 3)
+    return { pattern: "crow_hop_or_walk_through", reason: "rear_foot_transferred_forward", lineage };
+  if (rearTravel <= floor && separation > floor * 2)
+    return { pattern: "shuffle", reason: "rear_foot_stayed_behind", lineage };
+  return { pattern: "undetermined", reason: "pattern_signals_ambiguous", lineage };
+}
+function runThrowingTiles(series, side) {
+  const missing = (reason) => ({
+    tempo: absent("seconds", reason),
+    energy_angle: absent("degrees", reason),
+    shoulder_opening: absent("degrees", reason),
+    head_stability: absent("percent", reason),
+    stride_length: absent("percent_of_height", reason),
+    injury: refusedInjuryMarkers(reason)
+  });
+  const movement = evaluateMovementGate(series);
+  const refusal = movement.status === "refused" ? "pose_not_detected" : !side ? "anchor_not_detected" : null;
+  if (refusal || !side)
+    return { version: THROWING_TILES_VERSION, pattern: "undetermined", pattern_evidence: null, ...missing(refusal ?? "anchor_not_detected") };
+  const anchors = frontFootPlantFromSeries(series, side, MIN_LIFT_RISE_BODY_THROWING);
+  const release = detectReleasePoseOnly(series, { throwing_side: side === "R" ? "right" : "left" });
+  const candidatePattern = classifyThrowingPattern(series, side, anchors.lift.frame_index, anchors.plant.frame_index);
+  const time = computeTempoSec({
+    peak_leg_lift_frame_index: anchors.lift.frame_index,
+    front_foot_strike_frame_index: anchors.plant.frame_index,
+    fps_true: series.header.fps_true ?? 0,
+    peak_leg_lift_missingness: anchors.lift.missingness,
+    front_foot_strike_missingness: anchors.plant.missingness
+  });
+  const tempo = time.value == null ? absent("seconds", time.missingness?.missing_reason ?? MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, { tempo: time.lineage }) : { value: time.value, unit: "seconds", verdict: null, missing_reason: null, lineage: { ...time.lineage, uncertainty_sec: time.uncertainty_sec, standard: "ungraded_no_throwing_threshold" } };
+  const allMissing = {
+    version: THROWING_TILES_VERSION,
+    pattern: "undetermined",
+    pattern_evidence: { ...candidatePattern, pattern: "undetermined", reason: "throwing_delivery_not_confirmed" },
+    tempo: absent("seconds", MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, { candidate: time.lineage, reason: "throwing_delivery_not_confirmed" }),
+    energy_angle: absent("degrees", MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, { pattern: candidatePattern.reason }),
+    shoulder_opening: absent("degrees", MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED),
+    head_stability: absent("percent", MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED),
+    stride_length: absent("percent_of_height", MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, { reason: "throwing_delivery_not_confirmed" }),
+    injury: refusedInjuryMarkers("throwing_delivery_not_confirmed")
+  };
+  const plantFrame = anchors.plant.frame_index, liftFrame = anchors.lift.frame_index, releaseFrame = release.frame_index;
+  if (plantFrame == null || releaseFrame == null || releaseFrame < plantFrame || !series.header.fps_true || (releaseFrame - plantFrame) / series.header.fps_true > 0.35)
+    return allMissing;
+  const rk = series.frames.findIndex((f) => f.frame_index === releaseFrame), pk = series.frames.findIndex((f) => f.frame_index === plantFrame);
+  const hands = handsApartAtRelease(series, rk, side);
+  if (hands.reason === "throwing_arm_unobserved_at_release")
+    return allMissing;
+  if (!hands.ok)
+    return { ...allMissing, pattern_evidence: { ...allMissing.pattern_evidence, detail: "hands_together_at_release_not_a_throw", hand_gap_forearms: hands.hand_gap_forearms } };
+  const arm_slot = measureArmSlot(series, rk, side);
+  const pattern = candidatePattern;
+  const lk = series.frames.findIndex((f) => f.frame_index === liftFrame);
+  const dir = deriveDirectionSign(series, side);
+  const lock = liftFrame == null ? null : detectStanceLock(series, { before_frame: liftFrame });
+  const view = detectCameraView(series).view;
+  let energy = allMissing.energy_angle;
+  if (pattern.pattern === "shuffle" && lk >= 0 && dir != null && checkCameraRequirement("energy_angle_deg", view).ok && lock?.ok) {
+    const valid = maskUntrusted(series, buildSegmentValidity(series, lock));
+    const val = energyAt(valid, valid.frames[lk], side, dir);
+    const neighbors = [energyAt(valid, valid.frames[lk - 1], side, dir), energyAt(valid, valid.frames[lk + 1], side, dir)].filter((v) => v != null);
+    if (val != null && neighbors.length === 2)
+      energy = { value: round4(val), unit: "degrees", verdict: null, missing_reason: null, lineage: { movement_pattern: pattern.pattern, ...pattern.lineage, uncertainty_deg: round4(Math.max(...neighbors.map((v) => Math.abs(v - val)))), standard: "ungraded_throwing_standard_unconfirmed" } };
+  }
+  if (pattern.pattern !== "shuffle")
+    energy = absent("degrees", MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE, { movement_pattern: pattern.pattern, reason: pattern.reason, ...pattern.lineage });
+  if (lk < 0 || !lock?.ok || dir == null || pk < 0)
+    return { ...allMissing, tempo, energy_angle: energy, arm_slot };
+  const masked = maskUntrusted(series, buildSegmentValidity(series, lock));
+  const d = {
+    ok: true,
+    throwing_side: side,
+    direction_sign: dir,
+    lift_k: lk,
+    plant_k: pk,
+    release_k: rk,
+    first_move: detectFirstMove(series),
+    refusal: null,
+    refusal_detail: null,
+    anchors: { lift: anchors.lift, plant: anchors.plant, release }
+  };
+  const sh = checkCameraRequirement("premature_shoulder_open_deg", view).ok ? computePrematureShoulderOpen(masked, d, lock) : null;
+  const head = computeHeadVerticalMovement(masked, d, lock);
+  const adapt = (tile, unit) => tile?.value == null ? absent(unit, tile?.missingness?.missing_reason ?? MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE, { ...tile?.lineage ?? {} }) : { value: tile.value, unit, verdict: null, missing_reason: null, lineage: { ...tile.lineage, reused_window: "throw_first_move_to_release", standard: "ungraded_throwing_standard_unconfirmed" } };
+  const shoulderOpening = adapt(sh, "degrees");
+  if (sh?.value != null)
+    shoulderOpening.lineage = { ...shoulderOpening.lineage, injury_flag: "trunk_rotation_before_foot_contact" };
+  return {
+    ...allMissing,
+    arm_slot,
+    pattern: pattern.pattern,
+    pattern_evidence: pattern,
+    tempo,
+    energy_angle: energy,
+    shoulder_opening: shoulderOpening,
+    head_stability: adapt(head, "percent"),
+    stride_length: strideFromFinalStep(masked, lock, side, dir, lk, pk),
+    injury: computeThrowingInjuryMarkers(masked, d, lock, side, view, sh ? { verdict: sh.verdict, value: sh.value, lineage: sh.lineage } : null)
+  };
+}
+function strideFromFinalStep(s, lock, side, dir, liftK, plantK) {
+  const st = lock.baseline?.stature_px;
+  if (!st)
+    return absent("percent_of_height", MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE, { reason: "stature_unobserved_in_stance" });
+  const ri = rearAnkleIndex(side), fi = frontAnkleIndex(side);
+  const px2 = (k, i) => {
+    const f = s.frames[k];
+    const p = f && point(f, i);
+    return p ? { x: p.x * s.header.width, y: p.y * s.header.height } : null;
+  };
+  const lim = FINAL_STEP_STILL_PCT / 100 * st;
+  let stepK = null;
+  for (let k = liftK;k >= Math.max(1, lock.end_k ?? 0); k--) {
+    const a = px2(k - 1, ri), b = px2(k + 1, ri), m2 = px2(k, ri);
+    if (a && b && m2 && Math.hypot(b.x - a.x, b.y - a.y) < lim) {
+      stepK = k;
+      break;
+    }
+  }
+  if (stepK == null)
+    return absent("percent_of_height", MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, { reason: "final_step_not_found_before_peak_lift" });
+  const rear = px2(stepK, ri), front = [plantK - 1, plantK, plantK + 1].map((k) => px2(k, fi)?.x ?? null).filter((v) => v != null).sort((a, b) => a - b);
+  if (!rear || front.length < 2)
+    return absent("percent_of_height", MISSINGNESS_REASONS.LANDMARK_OCCLUDED, { reason: "ankle_unobserved_at_final_step_or_plant" });
+  const pct2 = (front[Math.floor((front.length - 1) / 2)] - rear.x) * dir / st * 100;
+  return {
+    value: round4(pct2),
+    unit: "percent_of_height",
+    verdict: pct2 >= THROWING_STRIDE_PASS_MIN_PCT ? "pass" : "fail",
+    missing_reason: null,
+    lineage: { final_step_frame: s.frames[stepK].frame_index, rear_ankle: ri, front_ankle: fi, noise_floor_pct: 2.8, standard: "owner: same as pitching (>= 90 % of height)", unvalidated: true }
+  };
+}
+
+// src/lib/biomech/metrics/pitchingCardTiles.ts
+var PITCHING_CARD_TILES_VERSION = "pitching_card_tiles@1.1.0-2026-09-29-any-slot-unvalidated";
+var PITCHING_CARD_STANDARDS = {
+  tempo_sec: { pass_max: 1.05, source: "owner_coaching_standard" },
+  shoulder_tilt_deg: { pass_max: 10, source: "owner_coaching_standard" },
+  stride_pct_of_height: { pass_min: 90, source: "owner_coaching_standard" },
+  head_at_release_deg: { pass_max: 15, source: "owner_coaching_standard" },
+  drag_line: { length_max_foot_lengths: 2, direction: "straight to target", source: "owner_coaching_standard" },
+  stack_and_track: { pass_max: 10, elite: 0, source: "owner_coaching_standard" },
+  balance_at_landing: { pass_max_from_vertical_deg: 15, source: "owner_coaching_standard" },
+  eyes_on_target_at_peak_lift: { pass: "eyes on target before moving forward", source: "owner_coaching_standard" },
+  glove_swivel: { pass: "open → closed, pinky to body, inside the shoulder frame", source: "owner_coaching_standard" },
+  glove_drift_outside_frame_in: { pass_max: 0, source: "owner_coaching_standard" },
+  release_extension: { band_in: [8, 12], source: "owner_coaching_standard" }
+};
+var PITCHING_CARD_FLOORS = {
+  shoulder_tilt_deg: 2.74,
+  eye_tilt_deg: 5,
+  balance_deg: 1.69,
+  stride_pct: 2.8,
+  nose_ahead_ear_widths: 0.077,
+  release_extension_in: 2.9,
+  drag_foot_lengths: 0.2,
+  swivel_deg: 19.7
+};
+var MIN_LINE_VISIBLE_FRACTION = 0.5;
+var mr4 = (r2) => missingness(r2, "D-METRIC");
+var refuse4 = (key, unit, rec, lineage) => ({ key, value: null, unit, verdict: null, elite: null, graded: false, missingness: rec, confidence: missingConfidence(), standard: PITCHING_CARD_STANDARDS[key], lineage });
+var ok2 = (key, unit, value, verdict, lineage, elite = null) => ({ key, value: round4(value), unit, verdict, elite, graded: verdict != null, missingness: null, confidence: uncalibrated(), standard: PITCHING_CARD_STANDARDS[key], lineage });
+var P2 = (c, f, i) => {
+  if (!f)
+    return null;
+  const p = pointPx(c.s, f, i);
+  return p ? unroll(p, c.lock.baseline?.roll_deg ?? 0) : null;
+};
+var med32 = (c, k, g) => {
+  const v = [k - 1, k, k + 1].map((j) => c.s.frames[j] ? g(c.s.frames[j]) : null).filter((x) => x != null).sort((a, b) => a - b);
+  return v.length >= 2 ? v[Math.floor((v.length - 1) / 2)] : null;
+};
+var tiltDeg = (a, b) => Math.atan2(Math.abs(b.y - a.y), Math.abs(b.x - a.x)) * 180 / Math.PI;
+function tempo(c) {
+  const t = computeTempoSec({ peak_leg_lift_frame_index: c.s.frames[c.d.lift_k].frame_index, front_foot_strike_frame_index: c.s.frames[c.d.plant_k].frame_index, fps_true: c.s.header.fps_true });
+  if (t.value == null)
+    return refuse4("tempo_sec", "seconds", t.missingness ?? mr4(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED), { upstream: t.lineage });
+  return ok2("tempo_sec", "seconds", t.value, t.value <= PITCHING_CARD_STANDARDS.tempo_sec.pass_max ? "pass" : "fail", { ...t.lineage, note: "revalidate against a real pitching clip" });
+}
+function lineTilt(c, k, a, b, refLen) {
+  return med32(c, k, (f) => {
+    const p = P2(c, f, a), q3 = P2(c, f, b);
+    if (!p || !q3 || !refLen)
+      return null;
+    if (Math.abs(q3.x - p.x) < MIN_LINE_VISIBLE_FRACTION * refLen)
+      return null;
+    return tiltDeg(p, q3);
+  });
+}
+function shoulderTilt(c) {
+  const v = lineTilt(c, c.d.release_k, 11, 12, c.lock.baseline.shoulder_len_px);
+  if (v == null)
+    return refuse4("shoulder_tilt_deg", "degrees", mr4(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "shoulders_edge_on_to_camera_at_release", min_visible_fraction: MIN_LINE_VISIBLE_FRACTION });
+  return ok2("shoulder_tilt_deg", "degrees", v, v <= PITCHING_CARD_STANDARDS.shoulder_tilt_deg.pass_max ? "pass" : "fail", { release_frame: c.s.frames[c.d.release_k].frame_index, noise_floor_deg: PITCHING_CARD_FLOORS.shoulder_tilt_deg });
+}
+function stride(c) {
+  const st = c.lock.baseline.stature_px;
+  if (!st)
+    return refuse4("stride_pct_of_height", "percent_of_height", mr4(MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE), { reason: "stature_unobserved_in_stance" });
+  const back = med32(c, c.d.lift_k, (f) => P2(c, f, rearAnkleIndex(c.side))?.x ?? null);
+  const front = med32(c, c.d.plant_k, (f) => P2(c, f, frontAnkleIndex(c.side))?.x ?? null);
+  if (back == null || front == null)
+    return refuse4("stride_pct_of_height", "percent_of_height", mr4(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "ankle_unobserved_at_lift_or_plant" });
+  const pct2 = (front - back) * c.dir / st * 100;
+  return ok2("stride_pct_of_height", "percent_of_height", pct2, pct2 >= PITCHING_CARD_STANDARDS.stride_pct_of_height.pass_min ? "pass" : "fail", { back_ankle: rearAnkleIndex(c.side), front_ankle: frontAnkleIndex(c.side), noise_floor_pct: PITCHING_CARD_FLOORS.stride_pct, stature_source: "stance_lock_pixels" });
+}
+function lateralOnly(key, unit, cam, what) {
+  return refuse4(key, unit, mr4(MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE), {
+    reason: cam.view === "on_line" ? "not_built:no_on_line_pitching_fixture" : "camera_view_mismatch:needs_on_line_view",
+    message: `${what} runs across the target line; a side-on camera sees it end-on. Needs a clip filmed from behind or in front of the pitcher.`
+  });
+}
+function drag(c) {
+  const toe = c.side === "R" ? 32 : 31, heel = c.side === "R" ? 30 : 29;
+  const lk = c.lock;
+  const lens = [];
+  for (let k = lk.start_k;k <= lk.end_k; k++) {
+    const a = P2(c, c.s.frames[k], toe), b = P2(c, c.s.frames[k], heel);
+    if (a && b)
+      lens.push(Math.hypot(a.x - b.x, a.y - b.y));
+  }
+  lens.sort((a, b) => a - b);
+  const footLen = lens.length ? lens[Math.floor((lens.length - 1) / 2)] : null;
+  const x0 = med32(c, c.d.plant_k, (f) => P2(c, f, toe)?.x ?? null), x1 = med32(c, c.d.release_k, (f) => P2(c, f, toe)?.x ?? null);
+  if (!footLen || x0 == null || x1 == null)
+    return refuse4("drag_line", "foot_lengths", mr4(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "rear_foot_unobserved" });
+  const len = Math.max(0, (x1 - x0) * c.dir / footLen);
+  return ok2("drag_line", "foot_lengths", len, len <= PITCHING_CARD_STANDARDS.drag_line.length_max_foot_lengths ? "pass" : "fail", { window: "front-foot plant → release", foot_length_px: round4(footLen), direction: { value: null, reason: "camera_view_mismatch:needs_on_line_view" }, noise_floor_foot_lengths: PITCHING_CARD_FLOORS.drag_foot_lengths });
+}
+function stackTrack(c) {
+  const sh = lineTilt(c, c.d.release_k, 11, 12, c.lock.baseline.shoulder_len_px);
+  const ey = lineTilt(c, c.d.release_k, 2, 5, c.lock.baseline.ear_width_px);
+  if (sh == null || ey == null)
+    return refuse4("stack_and_track", "degrees", mr4(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: sh == null ? "shoulders_edge_on_to_camera_at_release" : "eyes_edge_on_to_camera_at_release", shoulders: sh, eyes: ey });
+  const v = Math.max(sh, ey);
+  return ok2("stack_and_track", "degrees", v, v <= PITCHING_CARD_STANDARDS.stack_and_track.pass_max ? "pass" : "fail", { shoulders_deg: round4(sh), eyes_deg: round4(ey), elite_note: `elite (0°) is only resolvable to the ${PITCHING_CARD_FLOORS.eye_tilt_deg}° eye-line floor`, root_pattern_key: POSTURE_ROOT }, v <= PITCHING_CARD_FLOORS.eye_tilt_deg);
+}
+function balance(c) {
+  const v = med32(c, c.d.plant_k, (f) => {
+    const a = P2(c, f, 27), b = P2(c, f, 28), e1 = P2(c, f, 2), e2 = P2(c, f, 5);
+    if (!a || !b || !e1 || !e2)
+      return null;
+    const bx = (a.x + b.x) / 2, by = (a.y + b.y) / 2, ex = (e1.x + e2.x) / 2, ey = (e1.y + e2.y) / 2;
+    return by > ey ? Math.abs(Math.atan2(ex - bx, by - ey) * 180 / Math.PI) : null;
+  });
+  if (v == null)
+    return refuse4("balance_at_landing", "degrees", mr4(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "eyes_or_ankles_unobserved_at_plant" });
+  return ok2("balance_at_landing", "degrees", v, v <= PITCHING_CARD_STANDARDS.balance_at_landing.pass_max_from_vertical_deg ? "pass" : "fail", { interpretation: "eye midpoint within 15° of vertical over the midpoint of the two ankles at front-foot strike — OWNER TO CONFIRM", noise_floor_deg: PITCHING_CARD_FLOORS.balance_deg, root_pattern_key: POSTURE_ROOT });
+}
+var EYES_PROXY = {
+  measures: "head direction (nose ahead of the ear line toward the target) at peak leg lift",
+  is_proxy_for: "eye direction",
+  cannot_see: "pupils, gaze, or whether the eyes are on the glove; a pitcher can face the target and look elsewhere"
+};
+function eyesOnTarget(c) {
+  const ew = c.lock.baseline.ear_width_px;
+  const v = med32(c, c.d.lift_k, (f) => {
+    const n = P2(c, f, 0), a = P2(c, f, 7), b = P2(c, f, 8);
+    return n && a && b && ew ? (n.x - (a.x + b.x) / 2) * c.dir / ew : null;
+  });
+  if (v == null)
+    return refuse4("eyes_on_target_at_peak_lift", "ear_widths", mr4(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "face_unobserved_at_peak_lift", proxy: EYES_PROXY });
+  if (Math.abs(v) < PITCHING_CARD_FLOORS.nose_ahead_ear_widths)
+    return refuse4("eyes_on_target_at_peak_lift", "ear_widths", mr4(MISSINGNESS_REASONS.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: "nose_on_ear_line_within_noise", raw: round4(v), proxy: EYES_PROXY });
+  return ok2("eyes_on_target_at_peak_lift", "ear_widths", v, v > 0 ? "pass" : "fail", { sign: "+ = nose ahead of the ears toward the target", noise_floor: PITCHING_CARD_FLOORS.nose_ahead_ear_widths, proxy: EYES_PROXY });
+}
+function releaseExtension(c) {
+  const W = c.side === "R" ? 16 : 15, toe = c.side === "R" ? 31 : 32;
+  const st = c.lock.baseline.stature_px;
+  const v = med32(c, c.d.release_k, (f) => {
+    const w = P2(c, f, W), t = P2(c, f, toe);
+    return w && t ? (w.x - t.x) * c.dir : null;
+  });
+  if (v == null)
+    return refuse4("release_extension", "inches", mr4(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "throwing_wrist_or_front_toe_unobserved_at_release" });
+  if (!c.heightIn || !st)
+    return refuse4("release_extension", "inches", mr4(MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE), { reason: "athlete_height_unavailable", raw_px: round4(v) });
+  const inch = v / st * c.heightIn, [lo, hi] = PITCHING_CARD_STANDARDS.release_extension.band_in, fl = PITCHING_CARD_FLOORS.release_extension_in;
+  const lin = { noise_floor_in: fl, note: "floor exceeds half the owner's band — only clear fails can be called; a pass is not resolvable" };
+  const passLo = lo + fl, passHi = hi - fl;
+  if (passLo <= passHi && inch >= passLo && inch <= passHi)
+    return ok2("release_extension", "inches", inch, "pass", lin);
+  if (inch < lo - fl || inch > hi + fl)
+    return ok2("release_extension", "inches", inch, "fail", lin);
+  return refuse4("release_extension", "inches", mr4(MISSINGNESS_REASONS.INSUFFICIENT_TEMPORAL_RESOLUTION), { ...lin, reason: "near_band_edge_within_noise_no_call", raw_in: round4(inch) });
+}
+var POSTURE_ROOT = "posture_did_not_stay_stacked";
+function runPitchingCardTiles(series, o) {
+  const d = findPitchingDelivery(series, o.throwing_side);
+  const cam = detectCameraView(series);
+  const U2 = { tempo_sec: "seconds", shoulder_tilt_deg: "degrees", stride_pct_of_height: "percent_of_height", head_at_release_deg: "degrees", drag_line: "foot_lengths", stack_and_track: "degrees", balance_at_landing: "degrees", eyes_on_target_at_peak_lift: "ear_widths", glove_swivel: "pattern", glove_drift_outside_frame_in: "inches", release_extension: "inches" };
+  const keys = Object.keys(U2);
+  const all = (rec, l) => Object.fromEntries(keys.map((k) => [k, refuse4(k, U2[k], rec, l)]));
+  const base = { version: PITCHING_CARD_TILES_VERSION, validated: false, camera_view: cam, delivery: { ok: d.ok, refusal_detail: d.refusal_detail } };
+  if (!d.ok)
+    return { ...base, tiles: all(d.refusal, { gate: d.refusal_detail }) };
+  const lock = detectStanceLock(series, { before_frame: series.frames[d.lift_k].frame_index });
+  const noBase = !lock.ok || !lock.baseline?.stature_px;
+  const c = { s: series, d, lock, side: d.throwing_side, dir: d.direction_sign, heightIn: o.athlete_height_in };
+  const gate = (t) => {
+    const g = checkCameraRequirement(t.key, cam.view);
+    return g.ok || t.missingness ? t : refuse4(t.key, t.unit, mr4(MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE), { reason: g.detail, message: g.message });
+  };
+  const lockRef = (k) => refuse4(k, U2[k], lock.missingness ?? mr4(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED), { reason: lock.detail ?? "stance_lock_missing" });
+  const needLock = (k, f) => noBase ? lockRef(k) : f();
+  const tiles = {
+    tempo_sec: tempo(c),
+    shoulder_tilt_deg: needLock("shoulder_tilt_deg", () => shoulderTilt(c)),
+    stride_pct_of_height: needLock("stride_pct_of_height", () => stride(c)),
+    head_at_release_deg: lateralOnly("head_at_release_deg", "degrees", cam, "The head's angle to the target line"),
+    drag_line: needLock("drag_line", () => drag(c)),
+    stack_and_track: needLock("stack_and_track", () => stackTrack(c)),
+    balance_at_landing: balance({ ...c }),
+    eyes_on_target_at_peak_lift: needLock("eyes_on_target_at_peak_lift", () => eyesOnTarget(c)),
+    glove_swivel: refuse4("glove_swivel", "pattern", mr4(MISSINGNESS_REASONS.HANDS_NOT_DETECTED), { reason: "glove_hides_hand_landmarks", permanent_until: "a detector that can see the glove hand", never_approximated_from: "wrist", still_bare_hand_floor_deg: PITCHING_CARD_FLOORS.swivel_deg, message: "The pose model's finger points are guesses under a glove; the open→closed turn cannot be read from them." }),
+    glove_drift_outside_frame_in: lateralOnly("glove_drift_outside_frame_in", "inches", cam, "Glove drift outside the shoulder frame"),
+    release_extension: needLock("release_extension", () => releaseExtension(c))
+  };
+  for (const k of keys)
+    tiles[k] = gate(tiles[k]);
+  return { ...base, arm_slot: measureArmSlot(series, d.release_k, d.throwing_side), stance_lock: { ok: lock.ok, detail: lock.detail }, tiles };
+}
+
 // src/lib/biomech/server/poseTileServerEntry.ts
 function checkStoredLandmarkMovement(ndjson) {
   return evaluateMovementGate(decodeLandmarkSeriesText(ndjson));
@@ -2440,7 +3458,16 @@ function runHittingTilesFromText(ndjson, side, athleteHeightIn) {
   };
   return { engine_version: HITTING_CARD_TILES_VERSION, verdicts, pose, card, owner };
 }
+function runThrowingTilesFromText(ndjson, side) {
+  return runThrowingTiles(decodeLandmarkSeriesText(ndjson), side);
+}
+function runPitchingFromText(ndjson, side, athleteHeightIn) {
+  const s = decodeLandmarkSeriesText(ndjson);
+  return { tiles: runPitchingTiles(s, { throwing_side: side }), card: runPitchingCardTiles(s, { throwing_side: side, athlete_height_in: athleteHeightIn }) };
+}
 export {
+  runThrowingTilesFromText,
+  runPitchingFromText,
   runHittingTilesFromText,
   checkStoredLandmarkMovement
 };

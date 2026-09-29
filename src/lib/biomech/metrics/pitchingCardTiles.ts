@@ -27,9 +27,10 @@ import { findPitchingDelivery, type PitchingDelivery } from "./pitchingTiles";
 import { detectStanceLock, unroll, type StanceLock } from "../anchors/stanceLock";
 import { pointPx, round4, type Pt } from "../anchors/poseKinematics";
 import { detectCameraView, checkCameraRequirement, type CameraViewResult } from "../camera/cameraView";
+import { measureArmSlot } from "./armSlot";
 import { frontAnkleIndex, rearAnkleIndex, type Handedness } from "../side/strideSide";
 
-export const PITCHING_CARD_TILES_VERSION = "pitching_card_tiles@1.0.0-2026-09-29-unvalidated";
+export const PITCHING_CARD_TILES_VERSION = "pitching_card_tiles@1.1.0-2026-09-29-any-slot-unvalidated";
 
 /** Owner coaching standards. NOT derived from data. */
 export const PITCHING_CARD_STANDARDS = {
@@ -160,12 +161,18 @@ function balance(c: Ctx): PitchingCardTile {
     { interpretation: "eye midpoint within 15° of vertical over the midpoint of the two ankles at front-foot strike — OWNER TO CONFIRM", noise_floor_deg: PITCHING_CARD_FLOORS.balance_deg, root_pattern_key: POSTURE_ROOT });
 }
 
+/** MediaPipe cannot see the eyes or where they look. */
+export const EYES_PROXY = {
+  measures: "head direction (nose ahead of the ear line toward the target) at peak leg lift",
+  is_proxy_for: "eye direction",
+  cannot_see: "pupils, gaze, or whether the eyes are on the glove; a pitcher can face the target and look elsewhere",
+} as const;
 function eyesOnTarget(c: Ctx): PitchingCardTile {
   const ew = c.lock.baseline!.ear_width_px;
   const v = med3(c, c.d.lift_k!, (f) => { const n = P(c, f, 0), a = P(c, f, 7), b = P(c, f, 8); return n && a && b && ew ? ((n.x - (a.x + b.x) / 2) * c.dir) / ew : null; });
-  if (v == null) return refuse("eyes_on_target_at_peak_lift", "ear_widths", mr(R.LANDMARK_OCCLUDED), { reason: "face_unobserved_at_peak_lift" });
-  if (Math.abs(v) < PITCHING_CARD_FLOORS.nose_ahead_ear_widths) return refuse("eyes_on_target_at_peak_lift", "ear_widths", mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: "nose_on_ear_line_within_noise", raw: round4(v) });
-  return ok("eyes_on_target_at_peak_lift", "ear_widths", v, v > 0 ? "pass" : "fail", { sign: "+ = nose ahead of the ears toward the target", noise_floor: PITCHING_CARD_FLOORS.nose_ahead_ear_widths });
+  if (v == null) return refuse("eyes_on_target_at_peak_lift", "ear_widths", mr(R.LANDMARK_OCCLUDED), { reason: "face_unobserved_at_peak_lift", proxy: EYES_PROXY });
+  if (Math.abs(v) < PITCHING_CARD_FLOORS.nose_ahead_ear_widths) return refuse("eyes_on_target_at_peak_lift", "ear_widths", mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: "nose_on_ear_line_within_noise", raw: round4(v), proxy: EYES_PROXY });
+  return ok("eyes_on_target_at_peak_lift", "ear_widths", v, v > 0 ? "pass" : "fail", { sign: "+ = nose ahead of the ears toward the target", noise_floor: PITCHING_CARD_FLOORS.nose_ahead_ear_widths, proxy: EYES_PROXY });
 }
 
 function releaseExtension(c: Ctx): PitchingCardTile {
@@ -175,10 +182,14 @@ function releaseExtension(c: Ctx): PitchingCardTile {
   if (v == null) return refuse("release_extension", "inches", mr(R.LANDMARK_OCCLUDED), { reason: "throwing_wrist_or_front_toe_unobserved_at_release" });
   if (!c.heightIn || !st) return refuse("release_extension", "inches", mr(R.CALIBRATION_UNAVAILABLE), { reason: "athlete_height_unavailable", raw_px: round4(v) });
   const inch = (v / st) * c.heightIn, [lo, hi] = PITCHING_CARD_STANDARDS.release_extension.band_in, fl = PITCHING_CARD_FLOORS.release_extension_in;
-  const lin = { noise_floor_in: fl, note: "floor exceeds half the owner's band — edges are not resolvable" };
-  if (inch >= lo && inch <= hi) return ok("release_extension", "inches", inch, "pass", lin);
+  // Owner 2026-09-29 "Keep" — but call only clear cases. A pass needs the value inside the band by more
+  // than the floor on BOTH sides; with a 2.9 in floor and a 4 in band that window is empty, so a pass
+  // can never be called honestly today. Only a release clearly outside the band (by > floor) fails.
+  const lin = { noise_floor_in: fl, note: "floor exceeds half the owner's band — only clear fails can be called; a pass is not resolvable" };
+  const passLo = lo + fl, passHi = hi - fl;
+  if (passLo <= passHi && inch >= passLo && inch <= passHi) return ok("release_extension", "inches", inch, "pass", lin);
   if (inch < lo - fl || inch > hi + fl) return ok("release_extension", "inches", inch, "fail", lin);
-  return refuse("release_extension", "inches", mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { ...lin, reason: "outside_band_within_noise", raw_in: round4(inch) });
+  return refuse("release_extension", "inches", mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { ...lin, reason: "near_band_edge_within_noise_no_call", raw_in: round4(inch) });
 }
 
 export const POSTURE_ROOT = "posture_did_not_stay_stacked" as const;
@@ -209,12 +220,12 @@ export function runPitchingCardTiles(series: LandmarkSeries, o: { throwing_side:
     stack_and_track: needLock("stack_and_track", () => stackTrack(c)),
     balance_at_landing: balance({ ...c }),
     eyes_on_target_at_peak_lift: needLock("eyes_on_target_at_peak_lift", () => eyesOnTarget(c)),
-    glove_swivel: refuse("glove_swivel", "pattern", mr(R.HANDS_NOT_DETECTED), { reason: "glove_hides_hand_landmarks", still_bare_hand_floor_deg: PITCHING_CARD_FLOORS.swivel_deg, message: "The pose model's finger points are guesses under a glove; the open→closed turn cannot be read from them." }),
+    glove_swivel: refuse("glove_swivel", "pattern", mr(R.HANDS_NOT_DETECTED), { reason: "glove_hides_hand_landmarks", permanent_until: "a detector that can see the glove hand", never_approximated_from: "wrist", still_bare_hand_floor_deg: PITCHING_CARD_FLOORS.swivel_deg, message: "The pose model's finger points are guesses under a glove; the open→closed turn cannot be read from them." }),
     glove_drift_outside_frame_in: lateralOnly("glove_drift_outside_frame_in", "inches", cam, "Glove drift outside the shoulder frame"),
     release_extension: needLock("release_extension", () => releaseExtension(c)),
   };
   for (const k of keys) tiles[k] = gate(tiles[k]);
-  return { ...base, stance_lock: { ok: lock.ok, detail: lock.detail }, tiles };
+  return { ...base, arm_slot: measureArmSlot(series, d.release_k, d.throwing_side), stance_lock: { ok: lock.ok, detail: lock.detail }, tiles };
 }
 
 /** Root pattern: shoulder tilt, stack & track and balance at landing read one fault — the body not staying stacked. One finding. */

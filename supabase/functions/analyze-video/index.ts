@@ -18,7 +18,7 @@ import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalys
 import { chatCompletion } from "../_shared/googleAi.ts";
 import { canSeeScoredGrading, stripScoredGrading } from "../_shared/scoredGradingGate.ts";
 import { buildFaultFindings } from "../_shared/faultFindings.ts";
-import { checkStoredMovement, runAndWritePoseTileFindings } from "../_shared/poseTileFindingsServer.ts";
+import { runStoredThrowPitchCards, checkStoredMovement, runAndWritePoseTileFindings } from "../_shared/poseTileFindingsServer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -2702,6 +2702,39 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       } catch (e) {
         const message = (e as Error)?.message ?? "pose finding write failed";
         console.error("[ANALYZE-VIDEO] pose finding stage failed:", message);
+        faultPersistence.error = message;
+      }
+    }
+
+    // Throwing (baseball + softball) and baseball pitching cards from the stored
+    // series — same generated bundle as hitting. Softball windmill is not built.
+    if (module === "throwing" || (module === "pitching" && sport === "baseball")) {
+      try {
+        const { data: landmarkRun, error: landmarkError } = await supabase.from("video_landmark_runs")
+          .select("landmarks_storage_path, diagnostics")
+          .eq("video_id", videoId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+        if (landmarkError) throw landmarkError;
+        const diagnosis = (landmarkRun?.diagnostics as Record<string, unknown> | null)?.track_diagnosis as Record<string, unknown> | undefined;
+        if (landmarkRun?.landmarks_storage_path && diagnosis?.status !== "refused") {
+          const [{ data: mpi }, { data: ctx }, { data: prof }] = await Promise.all([
+            supabase.from("athlete_mpi_settings").select("primary_throwing_hand").eq("user_id", userId).limit(1).maybeSingle(),
+            supabase.from("athlete_context").select("throws_hand").eq("user_id", userId).maybeSingle(),
+            supabase.from("profiles").select("height_inches").eq("id", userId).maybeSingle(),
+          ]);
+          // Never default a throwing side: unknown → the cards refuse honestly.
+          const hand = String(mpi?.primary_throwing_hand ?? ctx?.throws_hand ?? "").toUpperCase();
+          const side = hand.startsWith("R") ? "R" : hand.startsWith("L") ? "L" : null;
+          const heightIn = typeof prof?.height_inches === "number" ? prof.height_inches : null;
+          const cards = await runStoredThrowPitchCards(supabase, { module, landmarksPath: landmarkRun.landmarks_storage_path, side, athleteHeightIn: heightIn });
+          if (!cards.ok) throw new Error(cards.reason);
+          if (Object.keys(cards.fields).length) {
+            const { error: e } = await supabase.from("videos").update({ ai_analysis: { ...ai_analysis, ...cards.fields } }).eq("id", videoId);
+            if (e) throw e;
+          }
+        }
+      } catch (e) {
+        const message = (e as Error)?.message ?? "throw/pitch card stage failed";
+        console.error("[ANALYZE-VIDEO] throw/pitch card stage failed:", message);
         faultPersistence.error = message;
       }
     }

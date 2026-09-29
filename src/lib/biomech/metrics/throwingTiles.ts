@@ -17,6 +17,9 @@ import { detectCameraView, checkCameraRequirement } from "../camera/cameraView";
 import { MISSINGNESS_REASONS as R } from "./missingness";
 import { computeThrowingInjuryMarkers, refusedInjuryMarkers } from "./throwingInjuryTiles";
 import { MIN_LIFT_RISE_BODY_THROWING } from "../anchors/peakLegLift";
+import { handsApartAtRelease, HANDS_APART_MIN_FOREARMS } from "../gates/releaseHandsApart";
+import { measureArmSlot } from "./armSlot";
+export { HANDS_APART_MIN_FOREARMS };
 
 export const THROWING_TILES_VERSION = "throwing_tiles@2.0.0-injury-flags-final-step-stride";
 /** Owner: same stride target as pitching, measured from the final step. */
@@ -96,16 +99,12 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
   if (plantFrame == null || releaseFrame == null || releaseFrame < plantFrame || !series.header.fps_true || (releaseFrame - plantFrame) / series.header.fps_true > 0.35)
     return allMissing;
   const rk = series.frames.findIndex((f) => f.frame_index === releaseFrame), pk = series.frames.findIndex((f) => f.frame_index === plantFrame);
-  const wrist = point(series.frames[rk], side === "R" ? LM.R_WRIST : LM.L_WRIST), shoulder = point(series.frames[rk], side === "R" ? LM.R_SHOULDER : LM.L_SHOULDER);
-  // Any arm slot — owner 2026-09-29: "sidearm throws must be allowed in". The old
-  // overhand check also kept swings out, so it is replaced by a slot-free test: at a
-  // throw's release the hands are apart; on a swing both hands are on the bat
-  // (measured 0.62 / 0.63 throwing-forearm lengths on both swing fixtures).
-  const glove = point(series.frames[rk], side === "R" ? LM.L_WRIST : LM.R_WRIST), elbow = point(series.frames[rk], side === "R" ? LM.R_ELBOW : LM.L_ELBOW);
-  if (!wrist || !shoulder || !glove || !elbow) return allMissing;
-  const forearm = Math.hypot((wrist.x - elbow.x) * series.header.width, (wrist.y - elbow.y) * series.header.height);
-  const handGap = forearm > 0 ? Math.hypot((wrist.x - glove.x) * series.header.width, (wrist.y - glove.y) * series.header.height) / forearm : 0;
-  if (handGap < HANDS_APART_MIN_FOREARMS) return { ...allMissing, pattern_evidence: { ...allMissing.pattern_evidence, detail: "hands_together_at_release_not_a_throw", hand_gap_forearms: round4(handGap) } };
+  // Any arm slot — owner 2026-09-29: "sidearm throws must be allowed in". Shared
+  // slot-free gate (gates/releaseHandsApart.ts), same one the pitching card uses.
+  const hands = handsApartAtRelease(series, rk, side);
+  if (hands.reason === "throwing_arm_unobserved_at_release") return allMissing;
+  if (!hands.ok) return { ...allMissing, pattern_evidence: { ...allMissing.pattern_evidence, detail: "hands_together_at_release_not_a_throw", hand_gap_forearms: hands.hand_gap_forearms } };
+  const arm_slot = measureArmSlot(series, rk, side);
   const pattern = candidatePattern;
   const lk = series.frames.findIndex((f) => f.frame_index === liftFrame);
   const dir = deriveDirectionSign(series, side);
@@ -122,7 +121,7 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
   if (pattern.pattern !== "shuffle") energy = absent("degrees", R.CALIBRATION_UNAVAILABLE, { movement_pattern: pattern.pattern, reason: pattern.reason, ...pattern.lineage });
   // Reuse measured signal processing, not mound standards: position-player
   // reference positions need their own owner-reviewed interpretation.
-  if (lk < 0 || !lock?.ok || dir == null || pk < 0) return { ...allMissing, tempo, energy_angle: energy };
+  if (lk < 0 || !lock?.ok || dir == null || pk < 0) return { ...allMissing, tempo, energy_angle: energy, arm_slot };
   const masked = maskUntrusted(series, buildSegmentValidity(series, lock));
   const d: PitchingDelivery = { ok: true, throwing_side: side, direction_sign: dir, lift_k: lk, plant_k: pk, release_k: rk,
     first_move: detectFirstMove(series), refusal: null, refusal_detail: null, anchors: { lift: anchors.lift, plant: anchors.plant, release } };
@@ -133,7 +132,7 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
       : { value: tile.value, unit, verdict: null, missing_reason: null, lineage: { ...tile.lineage, reused_window: "throw_first_move_to_release", standard: "ungraded_throwing_standard_unconfirmed" } };
   const shoulderOpening = adapt(sh, "degrees");
   if (sh?.value != null) shoulderOpening.lineage = { ...shoulderOpening.lineage, injury_flag: "trunk_rotation_before_foot_contact" };
-  return { ...allMissing, pattern: pattern.pattern, pattern_evidence: pattern, tempo, energy_angle: energy, shoulder_opening: shoulderOpening, head_stability: adapt(head, "percent"),
+  return { ...allMissing, arm_slot, pattern: pattern.pattern, pattern_evidence: pattern, tempo, energy_angle: energy, shoulder_opening: shoulderOpening, head_stability: adapt(head, "percent"),
     stride_length: strideFromFinalStep(masked, lock, side, dir, lk, pk),
     injury: computeThrowingInjuryMarkers(masked, d, lock, side, view, sh ? { verdict: sh.verdict, value: sh.value, lineage: sh.lineage } : null) };
 }
@@ -144,8 +143,6 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
  * (still within the ankle noise floor). Stride = rear ankle there → front ankle
  * at front-foot strike, as a % of stance-lock stature. Same ≥90 % target as pitching.
  */
-/** Hands-apart floor at release, in throwing-forearm lengths. Swing fixtures read 0.62–0.63. Unvalidated on a real throw. */
-export const HANDS_APART_MIN_FOREARMS = 1.5;
 
 export function strideFromFinalStep(s: LandmarkSeries, lock: ReturnType<typeof detectStanceLock>, side: Handedness, dir: 1 | -1, liftK: number, plantK: number): ThrowingMeasurement {
   const st = lock.baseline?.stature_px;
