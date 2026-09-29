@@ -2,6 +2,8 @@
 
 as_of: 2026-09-29 · code: `src/lib/biomech/metrics/throwingInjuryTiles.ts` · status: **UNVALIDATED — no throwing clip yet**
 
+Superseded 2026-09-29 by `docs/THROWING-DOCTRINE.md` (flags reworked to the owner's eight-marker spec). Kept for history.
+
 Owner reframe: the throwing card is an arm-care card. Every marker is shown as "mechanics research links to higher arm load", never as a diagnosis or prediction.
 
 **Caveat on transfer:** almost all of this research is on *pitchers* on a mound. Fleisig et al. 2011 (JOSPT 41(5)) found flat-ground max-distance throws produce arm torques at least as high as pitching, so field throws are not low-load by default — but the specific markers have not been studied in fielders. No pitching number is carried across as a threshold.

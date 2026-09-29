@@ -18,7 +18,11 @@ import { MISSINGNESS_REASONS as R } from "./missingness";
 import { computeThrowingInjuryMarkers, refusedInjuryMarkers } from "./throwingInjuryTiles";
 import { MIN_LIFT_RISE_BODY_THROWING } from "../anchors/peakLegLift";
 
-export const THROWING_TILES_VERSION = "throwing_tiles@1.1.0-injury-first";
+export const THROWING_TILES_VERSION = "throwing_tiles@2.0.0-injury-flags-final-step-stride";
+/** Owner: same stride target as pitching, measured from the final step. */
+export const THROWING_STRIDE_PASS_MIN_PCT = 90;
+/** Rear ankle "planted" = moved less than this over k-1..k+1 (still-clip ankle floor 2.0 % stature). */
+export const FINAL_STEP_STILL_PCT = 2.0;
 export type MovementPattern = "shuffle" | "crow_hop_or_walk_through" | "undetermined";
 export interface ThrowingMeasurement {
   value: number | null;
@@ -73,7 +77,7 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
   const missing = (reason: string) => ({
     tempo: absent("seconds", reason), energy_angle: absent("degrees", reason),
     shoulder_opening: absent("degrees", reason), head_stability: absent("percent", reason),
-    injury: refusedInjuryMarkers(reason),
+    stride_length: absent("percent_of_height", reason), injury: refusedInjuryMarkers(reason),
   });
   const movement = evaluateMovementGate(series);
   const refusal = movement.status === "refused" ? "pose_not_detected" : !side ? "anchor_not_detected" : null;
@@ -87,7 +91,7 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
     : { value: time.value, unit: "seconds", verdict: null, missing_reason: null, lineage: { ...time.lineage, uncertainty_sec: time.uncertainty_sec, standard: "ungraded_no_throwing_threshold" } };
   const allMissing = { version: THROWING_TILES_VERSION, pattern: "undetermined" as MovementPattern, pattern_evidence: { ...candidatePattern, pattern: "undetermined", reason: "throwing_delivery_not_confirmed" }, tempo: absent("seconds", R.ANCHOR_NOT_DETECTED, { candidate: time.lineage, reason: "throwing_delivery_not_confirmed" }),
     energy_angle: absent("degrees", R.ANCHOR_NOT_DETECTED, { pattern: candidatePattern.reason }),
-    shoulder_opening: absent("degrees", R.ANCHOR_NOT_DETECTED), head_stability: absent("percent", R.ANCHOR_NOT_DETECTED), injury: refusedInjuryMarkers("throwing_delivery_not_confirmed") };
+    shoulder_opening: absent("degrees", R.ANCHOR_NOT_DETECTED), head_stability: absent("percent", R.ANCHOR_NOT_DETECTED), stride_length: absent("percent_of_height", R.ANCHOR_NOT_DETECTED, { reason: "throwing_delivery_not_confirmed" }), injury: refusedInjuryMarkers("throwing_delivery_not_confirmed") };
   const plantFrame = anchors.plant.frame_index, liftFrame = anchors.lift.frame_index, releaseFrame = release.frame_index;
   if (plantFrame == null || releaseFrame == null || releaseFrame < plantFrame || !series.header.fps_true || (releaseFrame - plantFrame) / series.header.fps_true > 0.35)
     return allMissing;
@@ -119,5 +123,34 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
   const adapt = (tile: { value: number | null; unit: string; verdict: "pass" | "fail" | null; missingness: { missing_reason: string } | null; lineage: Readonly<Record<string, unknown>> } | null, unit: string): ThrowingMeasurement =>
     tile?.value == null ? absent(unit, tile?.missingness?.missing_reason ?? R.CALIBRATION_UNAVAILABLE, { ...(tile?.lineage ?? {}) })
       : { value: tile.value, unit, verdict: null, missing_reason: null, lineage: { ...tile.lineage, reused_window: "throw_first_move_to_overhand_release", standard: "ungraded_throwing_standard_unconfirmed" } };
-  return { ...allMissing, pattern: pattern.pattern, pattern_evidence: pattern, tempo, energy_angle: energy, shoulder_opening: adapt(sh, "degrees"), head_stability: adapt(head, "percent"), injury: computeThrowingInjuryMarkers(masked, d, lock, side, view) };
+  const shoulderOpening = adapt(sh, "degrees");
+  if (sh?.value != null) shoulderOpening.lineage = { ...shoulderOpening.lineage, injury_flag: "trunk_rotation_before_foot_contact" };
+  return { ...allMissing, pattern: pattern.pattern, pattern_evidence: pattern, tempo, energy_angle: energy, shoulder_opening: shoulderOpening, head_stability: adapt(head, "percent"),
+    stride_length: strideFromFinalStep(masked, lock, side, dir, lk, pk),
+    injury: computeThrowingInjuryMarkers(masked, d, lock, side, view, sh ? { verdict: sh.verdict, value: sh.value, lineage: sh.lineage } : null) };
+}
+
+/**
+ * Owner 2026-09-29: "the final step of a throw is the starting point". The final
+ * step = the last frame at or before peak lift where the REAR foot is planted
+ * (still within the ankle noise floor). Stride = rear ankle there → front ankle
+ * at front-foot strike, as a % of stance-lock stature. Same ≥90 % target as pitching.
+ */
+export function strideFromFinalStep(s: LandmarkSeries, lock: ReturnType<typeof detectStanceLock>, side: Handedness, dir: 1 | -1, liftK: number, plantK: number): ThrowingMeasurement {
+  const st = lock.baseline?.stature_px;
+  if (!st) return absent("percent_of_height", R.CALIBRATION_UNAVAILABLE, { reason: "stature_unobserved_in_stance" });
+  const ri = rearAnkleIndex(side), fi = frontAnkleIndex(side);
+  const px = (k: number, i: number) => { const f = s.frames[k]; const p = f && point(f, i); return p ? { x: p.x * s.header.width, y: p.y * s.header.height } : null; };
+  const lim = (FINAL_STEP_STILL_PCT / 100) * st;
+  let stepK: number | null = null;
+  for (let k = liftK; k >= Math.max(1, (lock.end_k ?? 0)); k--) {
+    const a = px(k - 1, ri), b = px(k + 1, ri), m = px(k, ri);
+    if (a && b && m && Math.hypot(b.x - a.x, b.y - a.y) < lim) { stepK = k; break; }
+  }
+  if (stepK == null) return absent("percent_of_height", R.ANCHOR_NOT_DETECTED, { reason: "final_step_not_found_before_peak_lift" });
+  const rear = px(stepK, ri), front = [plantK - 1, plantK, plantK + 1].map((k) => px(k, fi)?.x ?? null).filter((v): v is number => v != null).sort((a, b) => a - b);
+  if (!rear || front.length < 2) return absent("percent_of_height", R.LANDMARK_OCCLUDED, { reason: "ankle_unobserved_at_final_step_or_plant" });
+  const pct = (((front[Math.floor((front.length - 1) / 2)] - rear.x) * dir) / st) * 100;
+  return { value: round4(pct), unit: "percent_of_height", verdict: pct >= THROWING_STRIDE_PASS_MIN_PCT ? "pass" : "fail", missing_reason: null,
+    lineage: { final_step_frame: s.frames[stepK].frame_index, rear_ankle: ri, front_ankle: fi, noise_floor_pct: 2.8, standard: "owner: same as pitching (>= 90 % of height)", unvalidated: true } };
 }
