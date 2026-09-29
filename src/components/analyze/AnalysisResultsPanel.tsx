@@ -34,6 +34,7 @@ import {
 } from "@/lib/gradeEngine";
 import { branding } from "@/branding";
 import { SCORED_GRADING_NOTICE } from "@/hooks/useScoredGradingAccess";
+import { withoutMeasurementNotation } from "@/lib/reportCard/athleteLanguage";
 
 export interface AnalysisDrill {
   title: string;
@@ -202,7 +203,7 @@ export function AnalysisResultsPanel({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
                   {t('videoAnalysis.topTakeaway', 'Top takeaway')}
                 </p>
-                <p className="mt-1 text-base font-medium leading-snug">{topTakeaway}</p>
+                 <p className="mt-1 text-base font-medium leading-snug">{withoutMeasurementNotation(topTakeaway)}</p>
               </div>
             )}
 
@@ -231,14 +232,9 @@ export function AnalysisResultsPanel({
                 <SectionHeading icon={<Timer className="h-3.5 w-3.5 text-primary" />}>
                   {t('videoAnalysis.tempoTitle', 'Tempo')}
                 </SectionHeading>
-                {persistedTempo.value != null ? (
-                  <p className="text-3xl font-black tabular-nums">
-                    {persistedTempo.value.toFixed(2)}
-                    <span className="ml-1 text-sm font-normal text-muted-foreground">
-                      {t('videoAnalysis.tempoUnit', 'sec')}
-                    </span>
-                  </p>
-                ) : (
+                 {persistedTempo.value != null ? (
+                   <p className="text-sm font-semibold">Your move from leg lift to landing was measured.</p>
+                 ) : (
                   <p className="text-sm text-muted-foreground">
                     {t('videoAnalysis.tempoUnreadable', 'Tempo could not be read from this clip.')}
                   </p>
@@ -260,8 +256,8 @@ export function AnalysisResultsPanel({
                     </p>
                     <ul className="space-y-2">
                       {[
-                        { Icon: Camera, label: 'Side-on camera', body: 'Film from the open side (3B side for RHP, 1B side for LHP), perpendicular to the rubber-to-plate line.' },
-                        { Icon: User, label: 'Full body in frame', body: 'Head to spikes visible the entire delivery; leave ~1 ft of headroom and foot-room.' },
+                         { Icon: Camera, label: 'Side-on camera', body: 'Film from the open side, perpendicular to the rubber-to-plate line.' },
+                         { Icon: User, label: 'Full body in frame', body: 'Keep your head and feet visible throughout the delivery.' },
                         { Icon: Play, label: 'Start before the leg lift', body: "Begin recording at the set position; don't trim the front of the clip." },
                         { Icon: Square, label: 'End after release', body: 'Keep filming through ball release and into follow-through.' },
                         { Icon: Sun, label: 'Good lighting, low motion blur', body: 'Daylight or bright cage lighting; lock exposure on the pitcher.' },
@@ -276,7 +272,7 @@ export function AnalysisResultsPanel({
                       ))}
                     </ul>
                     <p className="text-[11px] text-muted-foreground/80">
-                      If Tempo keeps failing to read with these conditions met, the lead leg may be occluded by the glove-side arm — try a slightly higher camera (chest height) and step back 2–3 ft.
+                       If Tempo keeps failing to read, the lead leg may be hidden by the glove-side arm. Try a camera at chest height and step back.
                     </p>
                   </div>
                 </CollapsibleContent>
