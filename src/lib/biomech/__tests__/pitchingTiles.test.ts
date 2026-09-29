@@ -27,7 +27,7 @@ describe("pitching tiles — still clip refuses everything", () => {
 
 describe("pitching tiles — hitting clips refuse with a no-delivery reason", () => {
   const cases: [LandmarkSeries, "L" | "R", string, string][] = [
-    [clipA, "L", "pitcher_release_frame_missing", "no_pitching_delivery:throwing_wrist_below_shoulder_at_release"],
+    [clipA, "L", "pitcher_release_frame_missing", "no_pitching_delivery:hands_together_at_release_not_a_pitch:0.4061"],
     [clipA, "R", "anchor_not_detected", "no_pitching_delivery:plant_missing:no_observed_frames_after_lift"],
     [clipB, "L", "anchor_not_detected", "no_pitching_delivery:peak_leg_lift_missing"],
     [clipB, "R", "pitcher_release_frame_missing", "no_pitching_delivery:release_too_long_after_plant"],
