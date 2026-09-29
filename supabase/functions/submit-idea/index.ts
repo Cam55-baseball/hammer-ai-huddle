@@ -35,7 +35,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: 'Hammers Modality <onboarding@resend.dev>',
-        to: ['HammersModality@gmail.com'],
+        to: ['hammersmodality@hammersmodality.org'],
         subject: `💡 New Idea Submission from Hammers Modality`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
