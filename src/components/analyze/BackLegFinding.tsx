@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { rootPattern } from "@/lib/analysis/rootPatterns";
+import { withoutMeasurementNotation } from "@/lib/reportCard/athleteLanguage";
 
 /** A single clip's server-verified back-leg finding; never inferred from AI prose. */
 export function BackLegFinding({ videoId }: { videoId: string | null }) {
@@ -25,8 +26,8 @@ export function BackLegFinding({ videoId }: { videoId: string | null }) {
   return (
     <div className="border-l-2 border-primary pl-4 space-y-1" role="status">
       <h3 className="font-semibold">{pattern.label}</h3>
-      <p className="text-sm text-muted-foreground">{data.evidence}</p>
-      <p className="text-sm text-muted-foreground">{pattern.why}</p>
+      <p className="text-sm text-muted-foreground">{withoutMeasurementNotation(data.evidence)}</p>
+      <p className="text-sm text-muted-foreground">{withoutMeasurementNotation(pattern.why)}</p>
     </div>
   );
 }

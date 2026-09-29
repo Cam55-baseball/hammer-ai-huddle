@@ -30,9 +30,9 @@ export function athleteMissingness(reason?: string): string | undefined {
 export function withoutMeasurementNotation(text: string): string {
   return text
     .replace(/\b(?:frame|frames)\s*#?\d+\b/gi, "that moment")
-    .replace(/\b\d+(?:\.\d+)?\s*(?:ms|milliseconds?)\b/gi, "briefly")
-    .replace(/[<>≤≥≈~±]?\s*\d+(?:\.\d+)?\s*°/g, "the coaching standard")
-    .replace(/[<>≤≥≈~±]?\s*\d+(?:\.\d+)?\s*%/g, "the coaching standard")
+    .replace(/\b\d+(?:\.\d+)?\s*(?:ms|milliseconds?|seconds?|secs?|mph|fps|degrees?|percent|inches|feet|ft)\b/gi, "a measured amount")
+    .replace(/[<>≤≥≈~±]?\s*[-+]?\d+(?:\.\d+)?\s*[°%]/g, "a measured amount")
+    .replace(/\b\d+(?:\.\d+)?\b/g, "a measured amount")
     .replace(/\s{2,}/g, " ")
     .trim();
 }

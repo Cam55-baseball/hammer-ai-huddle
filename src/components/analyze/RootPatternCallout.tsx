@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link2, CheckCircle2 } from "lucide-react";
 import { useCrossDomainFaults } from "@/hooks/useCrossDomainFaults";
 import { domainListSentence } from "@/lib/analysis/crossDomainFaults";
+import { withoutMeasurementNotation } from "@/lib/reportCard/athleteLanguage";
 
 export function RootPatternCallout({
   limit = 1,
@@ -42,10 +43,10 @@ export function RootPatternCallout({
             </div>
             <div className="min-w-0 flex-1 space-y-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
-                One problem, {g.domains.length} parts of your game
+                 One pattern across your game
               </p>
               <h3 className="text-base font-bold leading-snug">{g.pattern.label}</h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">{g.pattern.plain}</p>
+               <p className="text-sm leading-relaxed text-muted-foreground">{withoutMeasurementNotation(g.pattern.plain)}</p>
 
               <div className="flex flex-wrap gap-1.5">
                 {g.domains.map((d) => (
@@ -65,7 +66,7 @@ export function RootPatternCallout({
                   d.says ? (
                     <li key={d.domain}>
                       <span className="font-medium capitalize text-foreground">{d.domain}: </span>
-                      {d.says}
+                       {withoutMeasurementNotation(d.says)}
                     </li>
                   ) : null,
                 )}
