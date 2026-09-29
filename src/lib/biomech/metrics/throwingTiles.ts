@@ -77,29 +77,31 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
   if (refusal || !side) return { version: THROWING_TILES_VERSION, pattern: "undetermined" as MovementPattern, pattern_evidence: null, ...missing(refusal ?? "anchor_not_detected") };
   const anchors = frontFootPlantFromSeries(series, side);
   const release = detectReleasePoseOnly(series, { throwing_side: side === "R" ? "right" : "left" });
-  const pattern = classifyThrowingPattern(series, side, anchors.lift.frame_index, anchors.plant.frame_index);
+  const candidatePattern = classifyThrowingPattern(series, side, anchors.lift.frame_index, anchors.plant.frame_index);
   const time = computeTempoSec({ peak_leg_lift_frame_index: anchors.lift.frame_index, front_foot_strike_frame_index: anchors.plant.frame_index,
     fps_true: series.header.fps_true ?? 0, peak_leg_lift_missingness: anchors.lift.missingness, front_foot_strike_missingness: anchors.plant.missingness });
   const tempo: ThrowingMeasurement = time.value == null ? absent("seconds", time.missingness?.missing_reason ?? R.ANCHOR_NOT_DETECTED, { tempo: time.lineage })
     : { value: time.value, unit: "seconds", verdict: null, missing_reason: null, lineage: { ...time.lineage, uncertainty_sec: time.uncertainty_sec, standard: "ungraded_no_throwing_threshold" } };
-  const allMissing = { version: THROWING_TILES_VERSION, pattern: pattern.pattern, pattern_evidence: pattern, tempo: absent("seconds", R.ANCHOR_NOT_DETECTED, { candidate: time.lineage, reason: "throwing_delivery_not_confirmed" }),
-    energy_angle: absent("degrees", R.ANCHOR_NOT_DETECTED, { pattern: pattern.reason }),
+  const allMissing = { version: THROWING_TILES_VERSION, pattern: "undetermined" as MovementPattern, pattern_evidence: { ...candidatePattern, pattern: "undetermined", reason: "throwing_delivery_not_confirmed" }, tempo: absent("seconds", R.ANCHOR_NOT_DETECTED, { candidate: time.lineage, reason: "throwing_delivery_not_confirmed" }),
+    energy_angle: absent("degrees", R.ANCHOR_NOT_DETECTED, { pattern: candidatePattern.reason }),
     shoulder_opening: absent("degrees", R.ANCHOR_NOT_DETECTED), head_stability: absent("percent", R.ANCHOR_NOT_DETECTED) };
   const plantFrame = anchors.plant.frame_index, liftFrame = anchors.lift.frame_index, releaseFrame = release.frame_index;
   if (plantFrame == null || releaseFrame == null || releaseFrame < plantFrame || !series.header.fps_true || (releaseFrame - plantFrame) / series.header.fps_true > 0.35)
-    return { ...allMissing, energy_angle: absent("degrees", R.ANCHOR_NOT_DETECTED, { pattern: pattern.reason }), shoulder_opening: absent("degrees", R.ANCHOR_NOT_DETECTED), head_stability: absent("percent", R.ANCHOR_NOT_DETECTED) };
+    return allMissing;
   const rk = series.frames.findIndex((f) => f.frame_index === releaseFrame), pk = series.frames.findIndex((f) => f.frame_index === plantFrame);
   const wrist = point(series.frames[rk], side === "R" ? LM.R_WRIST : LM.L_WRIST), shoulder = point(series.frames[rk], side === "R" ? LM.R_SHOULDER : LM.L_SHOULDER);
   if (!wrist || !shoulder || wrist.y >= shoulder.y) return allMissing; // overhand only
+  const pattern = candidatePattern;
   const lk = series.frames.findIndex((f) => f.frame_index === liftFrame);
   const dir = deriveDirectionSign(series, side);
   const lock = liftFrame == null ? null : detectStanceLock(series, { before_frame: liftFrame });
   const view = detectCameraView(series).view;
   let energy = allMissing.energy_angle;
-  if (pattern.pattern === "shuffle" && lk >= 0 && dir != null && checkCameraRequirement("energy_angle_deg", view).ok) {
-    const val = energyAt(series, series.frames[lk], side, dir);
-    const neighbors = [energyAt(series, series.frames[lk - 1], side, dir), energyAt(series, series.frames[lk + 1], side, dir)].filter((v): v is number => v != null);
-    if (val != null && neighbors.length && Math.max(...neighbors.map((v) => Math.abs(v - val))) <= 5)
+  if (pattern.pattern === "shuffle" && lk >= 0 && dir != null && checkCameraRequirement("energy_angle_deg", view).ok && lock?.ok) {
+    const valid = maskUntrusted(series, buildSegmentValidity(series, lock));
+    const val = energyAt(valid, valid.frames[lk], side, dir);
+    const neighbors = [energyAt(valid, valid.frames[lk - 1], side, dir), energyAt(valid, valid.frames[lk + 1], side, dir)].filter((v): v is number => v != null);
+    if (val != null && neighbors.length === 2)
       energy = { value: round4(val), unit: "degrees", verdict: null, missing_reason: null, lineage: { movement_pattern: pattern.pattern, ...pattern.lineage, uncertainty_deg: round4(Math.max(...neighbors.map((v) => Math.abs(v - val)))), standard: "ungraded_throwing_standard_unconfirmed" } };
   }
   if (pattern.pattern !== "shuffle") energy = absent("degrees", R.CALIBRATION_UNAVAILABLE, { movement_pattern: pattern.pattern, reason: pattern.reason, ...pattern.lineage });
@@ -113,6 +115,6 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
   const head = computeHeadVerticalMovement(masked, d, lock);
   const adapt = (tile: { value: number | null; unit: string; verdict: "pass" | "fail" | null; missingness: { missing_reason: string } | null; lineage: Readonly<Record<string, unknown>> } | null, unit: string): ThrowingMeasurement =>
     tile?.value == null ? absent(unit, tile?.missingness?.missing_reason ?? R.CALIBRATION_UNAVAILABLE, { ...(tile?.lineage ?? {}) })
-      : { value: tile.value, unit, verdict: tile.verdict, missing_reason: null, lineage: { ...tile.lineage, reused_window: "throw_first_move_to_overhand_release" } };
-  return { ...allMissing, tempo, energy_angle: energy, shoulder_opening: adapt(sh, "degrees"), head_stability: adapt(head, "percent") };
+      : { value: tile.value, unit, verdict: null, missing_reason: null, lineage: { ...tile.lineage, reused_window: "throw_first_move_to_overhand_release", standard: "ungraded_throwing_standard_unconfirmed" } };
+  return { ...allMissing, pattern: pattern.pattern, pattern_evidence: pattern, tempo, energy_angle: energy, shoulder_opening: adapt(sh, "degrees"), head_stability: adapt(head, "percent") };
 }
