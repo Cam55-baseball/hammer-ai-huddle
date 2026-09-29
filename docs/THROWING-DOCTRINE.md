@@ -20,22 +20,29 @@ Supersedes the earlier throwing spec. Earlier research notes: `docs/THROWING-INJ
 - Flags carry **zero grading weight** (`grading_weight: 0`, `verdict: null`); a flag is `raised`, `clear`, or no call inside the noise floor.
 - Coach language, no numbers, no citations in athlete text (citations live here).
 
-## Arm-care flags
+4. "For throwing the arm will move with fascial selection from the user. I do not like that elbow height at landing metric as it may turn our throwers robotic. We need fluid throwers." `[owner-supplied 2026-09-29]`
+   → Elbow height at landing is **removed, not hidden**. Arm slot and elbow height belong to the thrower's structure. **Do not re-add it or any arm-slot/elbow-position flag.**
+5. "Yes, sidearm throws must be allowed in. There should be a good way to help them." `[owner-supplied 2026-09-29]`
+   → The overhand gate (wrist above shoulder at release) is removed. Swings are now kept out by a slot-free check: hands must be ≥ 1.5 throwing-forearm lengths apart at release (both swing fixtures read 0.62–0.63). The sidearm "caution" flag is removed — a slot is never a fault or a warning. How to serve sidearm throwers is a proposal awaiting the owner.
+6. **STANDING RULE, WHOLE PROJECT:** "Let's choose elite things and not knit pick and drive users into unathletic form" `[owner-supplied 2026-09-29]`
+   → A flag or tile earns its place only if (a) the injury/performance evidence is strong, not suggestive; (b) it is a genuine mechanical fault, not structure or style; (c) fixing it makes the athlete more athletic, not more mechanical; (d) it can be called clearly without guessing at edge cases.
 
-All angles are 2-D image projections, not true joint angles. Floors: still clip 15d75bc9, p2–p98, worst side (near arm in brackets), measured before any rule.
+## Arm-care flags (after the elite filter)
 
-| # | Flag | Research | Camera | Floor | Rule | Status |
-|---|---|---|---|---|---|---|
-| 1 | Trunk rotation before foot contact | Aguinaldo & Chambers 2009, AJSM: torso rotation before stride-foot contact → greater elbow valgus torque (p = .02). Fleisig et al. (ASMI): early pelvis/trunk rotation raises shoulder and elbow load | side-on | shoulder fusion (existing) | reuses `premature_shoulder_open_deg` five-signal fusion; fail → raised | built |
-| 2 | Shoulder abduction at foot contact | Near 90° at end of stride (Biomechanical Analysis of the Throwing Athlete, Physiopedia); markedly above/below raises elbow stress (Matsuo 2002) | side-on | 6.2° (3.4°) | raised outside 70–110° by more than the floor. **Band is ours — owner to confirm** | built |
-| 3 | Elbow flexion at foot contact | Aguinaldo & Chambers 2009: less elbow flexion → more valgus torque (p < .01); > 90° target | side-on, throwing arm on camera side | **26° far arm** (5.1° near) | raised below 90° by more than the floor | built; far arm only calls extreme cases |
-| 4 | Horizontal abduction / open shoulder at foot contact | Takagi et al.; open shoulder at foot contact → greater elbow valgus and shoulder IR moments | **not side-on** — arm behind trunk plane lies along camera depth | — | — | refuses side-on; behind/overhead view not built |
-| 5 | Stride foot direction + landing offset | PMC8720247 (movement system dysfunction): in line with pivot leg, slightly in; over-rotated foot / across-body landing stresses anterior shoulder and medial elbow | **not side-on** — yaw and lateral offset lie along depth | — | — | refuses side-on; needs behind view |
-| 6 | Lead knee flexion (contact + release) | ~45–55° at contact, extending through release; altered knee flexion at release among the most significant injury factors (Chalmers et al.) | side-on | **5.4° — exceeds half the 10° band** | raised outside 45–55° by more than the floor, or still bending by release | built; band edges unresolvable, clear cases only |
-| 7 | Contralateral trunk tilt | Systematic review PMC10043103; Oyama 2014 video criterion (> 1 head width); Solomito 2015 | **not side-on** — frontal plane at release | 0.43 head widths | Oyama criterion | built for behind/in-front view only, geometry unvalidated |
-| 8 | Arm slot — sidearm caution | PMC8720247: sidearm → medial elbow stress, UCL | **not side-on** — frontal plane at release | 11.9° (4.3°) | caution when > 70° from vertical beyond floor. **Angle is ours — owner to confirm**. Never a fault | built for behind view; the overhand gate refuses a wrist below the shoulder, so a true sidearm is refused upstream |
+| Flag | Evidence | Camera | Status |
+|---|---|---|---|
+| Shoulders turn before the front foot lands | moderate–strong (Aguinaldo & Chambers 2009; Fleisig/ASMI); owner's own doctrine | side-on | built (reuses shoulder-opening fusion) |
+| Arm drags behind the body at landing | limited (Takagi; Aguinaldo) — kept as a genuine fault | behind/overhead only | refuses until a behind-view throwing clip exists |
+| Front foot lands across the body / turned in | limited (PMC8720247; Davis 2009) — a fault, not structure | behind/in front only | refuses until a behind-view throwing clip exists |
 
-Honest summary: of the eight, **four are measurable side-on** (1, 2, 3, 6) and two of those have floors that limit calls (3 far arm, 6 band edges). **Four need a behind/in-front camera** (4, 5, 7, 8).
+**Cut, with reasons — do not re-add without a new owner ruling:**
+- Elbow height at landing — owner ruling 4 (structure, makes throwers robotic).
+- Sidearm arm slot — owner ruling 5 (a slot is not a fault).
+- Elbow bend at landing — fails (b) and (d): varies with structure and slot; far-arm jitter 26° side-on means only extreme cases could ever be called.
+- Front knee at landing/release — fails (a) and (d): injury link indirect (speed link only); jitter 5.4° exceeds half the 45–55° band.
+- Upper-body lean away from the arm — fails (a)–(c): Oyama 2014 also links it to more ball speed, so it is partly a performance strategy; jitter ~half the one-head-width criterion; frontal-only.
+
+Only one flag is measurable from a side-on camera. That is the honest result.
 
 ## Mechanics checks
 - Tempo — all three patterns (ruling 1). Ungraded until a throwing tempo standard exists.
@@ -46,4 +53,4 @@ Honest summary: of the eight, **four are measurable side-on** (1, 2, 3, 6) and t
 - Softball = same code, softball wording (`throwingCopy.ts`). Terminology says throwing, never pitching.
 
 ## Validation state
-Still clip and both swing clips refuse every flag and check with `throwing_delivery_not_confirmed` (swing clips) or pose/anchor reasons (still). Not yet connected to live analysis or the server bundle — needs owner go-ahead to wire and deploy.
+Still clip and both swing clips refuse every flag (swings now via the hands-apart check) and check with `throwing_delivery_not_confirmed` (swing clips) or pose/anchor reasons (still). Not yet connected to live analysis or the server bundle — needs owner go-ahead to wire and deploy.
