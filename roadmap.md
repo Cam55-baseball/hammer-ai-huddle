@@ -31,3 +31,10 @@
 - [x] Call the server runner from analyze-video — deployed with movement preflight before cached or fresh output
 - [ ] Owner numbers for ungraded card tiles (CARD_TILE_OWNER_NUMBERS_NEEDED)
 - [x] Move tiles 19/20/hip_load/head discipline/hands-outside onto segment validity
+
+## 2026-09-29 upload unblock
+- [x] Stuck "Uploading": 23.976 fps phone clips rejected silently (floor now 24 with 0.5 tolerance, client + server); clip reading and pose model load now time out with a plain message; button shows the live step and tracking progress.
+- [x] Verified signed-in upload end to end (clip a2dc8414): tracked, analysed, one back-leg finding written and rendered.
+- [x] Athlete-surface guard test (no digit + °/%) across upload copy, root patterns, 914cf54c finding, analyze/report-card components.
+- [ ] Pitching baseball card (next).
+- [ ] "Frame-rate check (temporary)" debug panel is visible to athletes — owner to confirm removal.
