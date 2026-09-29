@@ -95,6 +95,7 @@ export default function AnalyzeVideo() {
   const goBack = useSmartBack();
   const location = useLocation();
   const [uploading, setUploading] = useState(false);
+  const [uploadStage, setUploadStage] = useState<string | null>(null);
   // Report Card / Analysis tab. Report Card renders only Release-1 VISIBLE,
   // measurement-backed tiles; every unvalidated tile stays behind its
   // existing kill switch in src/lib/reportCard/release1.ts.
@@ -512,6 +513,7 @@ export default function AnalyzeVideo() {
 
     // ===== PHASE 0/1 — Deterministic probe (sha256 + true fps + dimensions) =====
     // Probe FIRST so deterministic frame selection can use fps_true.
+    setUploadStage('Reading your clip…');
     let probed: Awaited<ReturnType<typeof probeVideoMetadata>> | null = null;
     try {
       probed = await probeVideoMetadata(videoFile);
@@ -580,7 +582,8 @@ export default function AnalyzeVideo() {
     setFpsUnknown(analysisEnabled && fpsTrue == null);
     if (analysisEnabled) {
       try {
-        setExtractingFrames(true);
+        setUploadStage('Picking out key frames…');
+    setExtractingFrames(true);
         toast.info(t('videoAnalysis.extractingFrames', "Extracting key frames for analysis..."));
 
         const result = await extractKeyFramesDeterministic({
@@ -631,7 +634,8 @@ export default function AnalyzeVideo() {
       // visibility for every frame in the window. Feeds the existing
       // `runTempoPipeline` (D-3 → D-5 → D-6) untouched.
       try {
-        denseRun = await captureDenseLandmarkSeries({
+        setUploadStage('Finding your body in the clip…');
+    denseRun = await captureDenseLandmarkSeries({
           videoFile,
           video_sha256_hex: probed.sha256_hex,
           fps_true: fpsTrue,
@@ -725,7 +729,8 @@ export default function AnalyzeVideo() {
     try {
 
       // Upload video to storage
-      const fileExt = videoFile.name.split('.').pop();
+      setUploadStage('Uploading your clip…');
+    const fileExt = videoFile.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
@@ -1080,6 +1085,7 @@ export default function AnalyzeVideo() {
       setAnalyzing(false);
     } finally {
       setUploading(false);
+      setUploadStage(null);
       setExtractingFrames(false);
     }
   };
@@ -1456,7 +1462,7 @@ export default function AnalyzeVideo() {
                 {extractingFrames ? (
                   t('videoAnalysis.extractingFrames', "Extracting frames...")
                 ) : uploading ? (
-                  t('videoAnalysis.uploading')
+                  uploadStage ?? t('videoAnalysis.uploading')
                 ) : analysisEnabled ? (
                   <>
                     <Upload className="h-4 w-4 sm:mr-2" />
