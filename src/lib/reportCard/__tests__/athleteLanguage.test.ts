@@ -53,6 +53,20 @@ describe("athlete-facing mechanics language", () => {
       expect(softball.compute).toBe(source.compute);
     }
   });
+  it("keeps both throwing sports on one measurement implementation with sport-specific wording", () => {
+    const baseball = getReportCardSpec("baseball", "throwing");
+    const softball = getReportCardSpec("softball", "throwing");
+    expect(baseball?.tiles.map((t) => t.key)).toEqual(["tempo", "energy_angle", "shoulder_opening", "head_stability"]);
+    expect(softball?.tiles.map((t) => t.key)).toEqual(baseball?.tiles.map((t) => t.key));
+    for (const [i, bb] of (baseball?.tiles ?? []).entries()) {
+      const sb = softball?.tiles[i];
+      expect(sb?.compute).toBe(bb.compute);
+      expect(sb?.standard).not.toBe(bb.standard);
+      for (const tile of [bb, sb]) {
+        expect([tile?.name, tile?.standard, ...Object.values(tile?.explainer ?? {})].join(" ")).not.toMatch(/pitching|pitcher|mound|rubber|bullpen|\d\s*[°%]/i);
+      }
+    }
+  });
   it("does not show numeric measurements or robotic placeholder copy in the last-line guard", () => {
     const line = withoutMeasurementNotation("Your hips slid 6.8% forward. Turn the hips instead of drifting.");
     expect(line).toBe("Turn the hips instead of drifting.");

@@ -1,0 +1,17 @@
+# Position-player throwing card — provisional, owner review pending
+
+The baseball and softball field-throw cards share a pose-only measurement implementation. They do not inherit a pitching score or a mound delivery simply because a key has the same name. Softball copy is written for softball throwing; no windmill pitching claim is made. The owner has not supplied a throwing-specific numeric benchmark, so these observations remain ungraded. The current four-tile prototype is **not validated for release**: there is no real throwing landmark fixture, and its values are not yet stored by the live analysis function. Existing three fixtures are two hitting swings and a still subject, and all must refuse throwing values. No 20–80 grades are justified.
+
+| Pitching card tile | Honest for a field throw? | Decision / anchor |
+|---|---|---|
+| Energy Angle | Conditional | Only a positively identified sideways shuffle. Refuse a forward crow hop, walk-through, or ambiguous pattern. The current prototype checks whether the rear foot stays behind or transfers forward between stance and landing; this needs validation against actual throws and a final-shuffle reference, not a mound peak-lift substitution. |
+| Hip–Shoulder Separation | Conceptually yes, as an ungraded observation | A field throw may rotate hips before shoulders, but the mound-specific separation anchor is not transferable without a field-throw window and measured still floor. Not in the prototype. |
+| Tempo | Yes, with redefined anchors | Gather/peak leg lift to front-foot strike in a confirmed field throw; a crow-hop gathering step is not a windup. No throwing-specific owner threshold. Included in the prototype but refuses unconfirmed deliveries. |
+| Stride Length | Conditional | A final throw-side landing can be measured, but a crow hop has intermediate footfalls and a walk-through has a different beginning. No honest common start yet; not in the prototype. |
+| Head Stability | Yes, conditionally | First move through overhand pose release; stance lock, head segment rigidity, zero-phase filtering and still floor required. Prototype measurement is ungraded. |
+| Glove Control | Yes, conditionally | Glove-side action can be observed on a field throw, but requires a field-throw window and measured standard; not yet measured. |
+| Head at Release | Yes, conditionally | Needs validated pose-release and field-throw target reference, not the pitcher's mound target. Not yet measured. |
+| Shoulder Tilt at Release | Yes, conditionally | Can be observed at overhand release with calibrated camera and segment validity. Not yet measured. |
+| Lift & Thrust | No, as specified | A field throw may have no leg lift. The mound lift-height/thrust-timing rule cannot be reused; redesign for crow-hop loading before adding it. |
+
+Shoulder opening at landing is an additional prototype observation using the existing independent-signal fusion, but its pitching pass/fail standard **does not transfer** without owner review; it is ungraded here. Underhand/windmill deliveries refuse the current overhand gate. The still clip's stance-foot noise is not a validated shuffle classifier floor; do not release Energy Angle on real throws until still-foot variation and the final-shuffle reference have been measured against real throwing fixtures. All exact diagnostics belong in staff/stored results, never athlete-facing copy.
