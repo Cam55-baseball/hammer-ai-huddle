@@ -1,10 +1,10 @@
 # Roadmap
 - [x] Shoulder opening five-signal fusion (side-on)
 - [x] Hitting baseball: all 23 tiles built (several ungraded pending owner numbers)
-- [x] Hitting softball: shared 23 body-mechanics measurements with softball-specific coaching copy; live upload verification pending
+- [x] Hitting softball: shared 23 body-mechanics measurements with softball-specific coaching copy; live upload verification pending. Pitch-release timing tiles refuse without a pitcher release in frame; no windmill release inferred.
 - [ ] Owner back-heel reversal: separate tile, root-pattern evidence, athlete-language checks and live function connected; authenticated upload/readback pending
-- [ ] Throwing baseball (shuffle vs crow-hop detection for energy angle)
-- [ ] Throwing softball
+- [ ] Throwing baseball: conservative shuffle vs forward-transfer classifier, gated pose-only runner and four-tile card built; real overhand throw fixture, server storage/readback, final-shuffle anchoring and owner review of throwing standards still needed.
+- [ ] Throwing softball: shares pose-only runner and four-tile card with distinct softball coaching copy; same fixture and live-readback blockers.
 - [ ] Pitching baseball (remaining tiles)
 - [ ] Pitching softball windmill — blocked: no written windmill doctrine
 
