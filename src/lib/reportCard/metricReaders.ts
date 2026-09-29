@@ -1,6 +1,5 @@
 import type { AnalysisLike, TileState } from "./types";
 import type { MetricValue } from "./contracts/shared";
-import { athleteMissingness } from "./athleteLanguage";
 
 /** Read a metric and surface missingness — never fabricate. */
 export function readMetric(a: AnalysisLike, key: string): MetricValue | null {
@@ -53,7 +52,7 @@ export function missingState(a: AnalysisLike, key: string): TileState {
     m && "missing" in m && m.missing && typeof m.missing_reason === "string"
       ? m.missing_reason
       : undefined;
-  return { status: "missing", missing_reason: athleteMissingness(reason) };
+  return { status: "missing", missing_reason: reason };
 }
 
 /**

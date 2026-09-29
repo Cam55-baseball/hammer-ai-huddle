@@ -29,6 +29,8 @@ export function athleteMissingness(reason?: string): string | undefined {
 /** Last-line safety: athlete copy never exposes degrees or percentages. */
 export function withoutMeasurementNotation(text: string): string {
   return text
+    .replace(/\b(?:frame|frames)\s*#?\d+\b/gi, "that moment")
+    .replace(/\b\d+(?:\.\d+)?\s*(?:ms|milliseconds?)\b/gi, "briefly")
     .replace(/[<>≤≥≈~±]?\s*\d+(?:\.\d+)?\s*°/g, "the coaching standard")
     .replace(/[<>≤≥≈~±]?\s*\d+(?:\.\d+)?\s*%/g, "the coaching standard")
     .replace(/\s{2,}/g, " ")
