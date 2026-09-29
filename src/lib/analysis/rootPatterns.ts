@@ -40,8 +40,8 @@ export const ROOT_PATTERNS: Record<string, RootPattern> = {
     key: "back_leg_did_not_hold_load",
     label: "Your back leg didn't hold the load",
     plain:
-      "At P1 the weight should sit balanced on the back leg. When it doesn't, it shows up later: the head moves past your centre of mass, the back hip gives up its turn, or the hips keep drifting forward after the front foot lands.",
-    why: "Those are one problem, not three. Fix the back-leg load at P1 and all of them improve together.",
+      "As you load, your weight should sit balanced on your back leg. When it doesn't, it shows up later: the head moves past your centre of mass, the back hip gives up its turn, or the hips keep drifting forward after the front foot lands.",
+    why: "These all come from one thing, not separate problems. Get your weight settled on your back leg as you load and they all clean up together.",
   },
   hands_leak_forward_early: {
     key: "hands_leak_forward_early",
