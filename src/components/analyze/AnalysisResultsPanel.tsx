@@ -381,9 +381,7 @@ export function AnalysisResultsPanel({
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                      <span className="rounded-md bg-primary/10 px-2.5 py-1 font-semibold text-primary">
-                         {withoutMeasurementNotation(drill.reps_sets)}
-                      </span>
+                       <span className="rounded-md bg-primary/10 px-2.5 py-1 font-semibold text-primary">Practice drill</span>
                       <span className="rounded-md bg-secondary/60 px-2.5 py-1 text-secondary-foreground">
                          {withoutMeasurementNotation(drill.equipment)}
                       </span>
@@ -396,7 +394,7 @@ export function AnalysisResultsPanel({
                         <ChevronDown className="h-3.5 w-3.5 transition-transform data-[state=open]:rotate-180" />
                       </CollapsibleTrigger>
                       <CollapsibleContent className="mt-2">
-                        <ol className="list-inside list-decimal space-y-1.5 text-sm text-muted-foreground">
+                         <ol className="space-y-1.5 text-sm text-muted-foreground">
                           {drill.steps?.map((step, stepIndex) => (
                              <li key={stepIndex}>{withoutMeasurementNotation(step)}</li>
                           ))}
