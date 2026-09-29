@@ -174,11 +174,14 @@ const sections: LegalSection[] = [
       <>
         <p>We use a small number of companies to run the app:</p>
         <ul>
-          <li><strong>Hosting and database provider</strong> — stores your account, your data, and your files.</li>
-          <li><strong>Payment processor</strong> — handles subscriptions and card payments.</li>
-          <li><strong>Video-processing and AI analysis providers</strong> — help turn your video into measurements and feedback.</li>
-          <li><strong>Video-rendering provider</strong> — creates the marked-up clips you watch.</li>
-          <li><strong>Weather and place-lookup provider</strong> — receives the coordinates or place name you use on the Weather screen and returns the forecast.</li>
+          <li><strong>Supabase</strong> — our hosting, database, sign-in, and file storage provider. It stores your account, your data, and your videos.</li>
+          <li><strong>Stripe</strong> — our payment processor. It handles subscriptions and card payments. We never see your card number.</li>
+          <li><strong>Google (Gemini), with OpenAI as a backup</strong> — our AI analysis providers. They receive still pictures taken from your video and use them to write your coaching feedback, as described in the AI analysis section above.</li>
+          <li><strong>Roboflow</strong> — a ball-detection service used only on our staff-only pitch-velocity tool. It receives still frames from a video to find the ball. This feature is not currently available to app users.</li>
+          <li><strong>Resend</strong> — our email provider. It sends email on our behalf, including permission requests and updates to the parents or guardians of athletes under 18, plus recap and recruiting emails. It receives the recipient's email address and the message content.</li>
+          <li><strong>Remotion, running on Amazon Web Services (AWS Lambda)</strong> — our video-rendering provider. It creates the marked-up clips and promotional videos you watch, and receives the images and video needed to render them.</li>
+          <li><strong>Open-Meteo, the National Weather Service, OpenStreetMap's Nominatim, and Zippopotam.us</strong> — weather and place-lookup services. They receive the coordinates or place name you use on the Weather screen and return the forecast.</li>
+          <li><strong>Open Food Facts</strong> — a food database. When you scan a barcode, the barcode number is sent to it to look up the product. Nothing else about you is sent.</li>
 
         </ul>
         <p>
