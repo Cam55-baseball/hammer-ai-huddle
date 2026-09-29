@@ -99,7 +99,6 @@ export function computeThrowingInjuryMarkers(
   const fa = frontAnkleIndex(side), fk = fa === 27 ? LM.L_KNEE : LM.R_KNEE, fh = fa === 27 ? LM.L_HIP : LM.R_HIP;
   const sideOn = view === "side_on", onLine = view === "on_line";
   const out = {} as Record<InjuryKey, InjuryMarker>;
-  const F = THROWING_INJURY_FLOORS;
 
   // 1. Trunk rotation before foot contact — the SAME measurement as shoulder_opening (five-signal fusion).
   out.trunk_rotation_before_foot_contact = !shoulderOpen || shoulderOpen.verdict == null
