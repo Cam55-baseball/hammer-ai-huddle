@@ -7,7 +7,7 @@ import { throwingContract } from "./throwing.contract";
 export * from "./shared";
 export { bpContract, bhContract, spContract, throwingContract };
 
-/** Softball hitting mirrors BH until its sport-specific contract is ratified. */
+/** Same hitting mechanics in both sports; coaching wording is selected in reportCard/index.ts. */
 export const shContract: DisciplineContract = { ...bhContract, id: "sh", label: "Softball Hitting" };
 
 export function getContract(sport: string | undefined, module: string | undefined): DisciplineContract | null {
