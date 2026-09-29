@@ -46,6 +46,7 @@ import { solveSegment, horizontalAngleDeg } from "../rigid/segmentRotation";
 import { oneEuroZeroPhase, HEAD_ONE_EURO } from "../filters/oneEuro";
 import { detectCameraView, checkCameraRequirement, type CameraViewResult } from "../camera/cameraView";
 import { fuseShoulderOpen, SHOULDER_FUSION_VERSION, SHOULDER_FUSION_FLOORS, SHOULDER_FUSION_DETECTION_LIMIT_DEG } from "./shoulderOpenFusion";
+import { handsApartAtRelease } from "../gates/releaseHandsApart";
 
 export const PITCHING_TILES_VERSION = "pitching_tiles@2.2.0-energy-back-ankle-camera-gate-stance-lock-shoulder-fusion-zero-phase-head-lift-thrust";
 

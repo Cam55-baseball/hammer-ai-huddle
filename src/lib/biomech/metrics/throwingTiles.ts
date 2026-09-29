@@ -96,16 +96,12 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
   if (plantFrame == null || releaseFrame == null || releaseFrame < plantFrame || !series.header.fps_true || (releaseFrame - plantFrame) / series.header.fps_true > 0.35)
     return allMissing;
   const rk = series.frames.findIndex((f) => f.frame_index === releaseFrame), pk = series.frames.findIndex((f) => f.frame_index === plantFrame);
-  const wrist = point(series.frames[rk], side === "R" ? LM.R_WRIST : LM.L_WRIST), shoulder = point(series.frames[rk], side === "R" ? LM.R_SHOULDER : LM.L_SHOULDER);
-  // Any arm slot — owner 2026-09-29: "sidearm throws must be allowed in". The old
-  // overhand check also kept swings out, so it is replaced by a slot-free test: at a
-  // throw's release the hands are apart; on a swing both hands are on the bat
-  // (measured 0.62 / 0.63 throwing-forearm lengths on both swing fixtures).
-  const glove = point(series.frames[rk], side === "R" ? LM.L_WRIST : LM.R_WRIST), elbow = point(series.frames[rk], side === "R" ? LM.R_ELBOW : LM.L_ELBOW);
-  if (!wrist || !shoulder || !glove || !elbow) return allMissing;
-  const forearm = Math.hypot((wrist.x - elbow.x) * series.header.width, (wrist.y - elbow.y) * series.header.height);
-  const handGap = forearm > 0 ? Math.hypot((wrist.x - glove.x) * series.header.width, (wrist.y - glove.y) * series.header.height) / forearm : 0;
-  if (handGap < HANDS_APART_MIN_FOREARMS) return { ...allMissing, pattern_evidence: { ...allMissing.pattern_evidence, detail: "hands_together_at_release_not_a_throw", hand_gap_forearms: round4(handGap) } };
+  // Any arm slot — owner 2026-09-29: "sidearm throws must be allowed in". Shared
+  // slot-free gate (gates/releaseHandsApart.ts), same one the pitching card uses.
+  const hands = handsApartAtRelease(series, rk, side);
+  if (hands.reason === "throwing_arm_unobserved_at_release") return allMissing;
+  if (!hands.ok) return { ...allMissing, pattern_evidence: { ...allMissing.pattern_evidence, detail: "hands_together_at_release_not_a_throw", hand_gap_forearms: hands.hand_gap_forearms } };
+  const arm_slot = measureArmSlot(series, rk, side);
   const pattern = candidatePattern;
   const lk = series.frames.findIndex((f) => f.frame_index === liftFrame);
   const dir = deriveDirectionSign(series, side);
