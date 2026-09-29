@@ -4,7 +4,7 @@ import type { ReportCardTileSpec } from "./types";
 const COPY: Record<string, { baseball: [string, string, string]; softball: [string, string, string] }> = {
   tempo: {
     baseball: ["Move from your gather to the front-foot landing without rushing.", "The gather and landing show how your throw comes together. This is an observation, not a grade.", "Gather, then move into a settled front-foot landing before you throw."],
-    softball: ["Carry your gather into the front-foot landing on your softball throw.", "The move into landing matters whether you gather with a shuffle or crow hop. It is not a pitching windup.", "Gather smoothly and land ready to make the throw."],
+    softball: ["Carry your gather into the front-foot landing on your softball throw.", "The move into landing matters whether you gather with a shuffle or crow hop.", "Gather smoothly and land ready to make the throw."],
   },
   energy_angle: {
     baseball: ["This check applies only to a sideways shuffle.", "A crow hop or walk-through is a different move; an angle from a sideways shuffle cannot judge it.", "Stay sideways through your shuffle and land toward your throwing target."],
