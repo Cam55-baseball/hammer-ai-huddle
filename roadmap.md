@@ -45,3 +45,10 @@
 - [x] Pitching baseball card: 11 tiles built, all refuse on the three fixtures — UNVALIDATED (no pitching clip)
 - [ ] Deploy analyze-video with the repaired series decoder — awaiting owner go-ahead
 - [ ] Owner: pitching clip, pitching reasoning in his words, balance-at-landing definition, release-extension band vs noise
+
+## 2026-09-29 throwing reframe (owner)
+- [x] Throwing card injury-first: 8 research markers (docs/THROWING-INJURY-RESEARCH.md), both sports, all refuse on fixtures — UNVALIDATED
+- [x] Throwing lift floor 0.07 (throwing only)
+- [ ] Throwing stride tile from final step — not yet built
+- [ ] Softball pitching — blocked: docs/SOFTBALL-PITCHING-DOCTRINE.md not in project
+- [ ] Owner: throwing clips (side-on + from behind)
