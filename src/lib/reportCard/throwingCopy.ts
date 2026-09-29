@@ -20,7 +20,7 @@ const COPY: Record<string, { baseball: [string, string, string]; softball: [stri
   },
   // Injury-prevention markers. "Research links…" framing; never a diagnosis. Softball wording is its own text.
   arm_late_at_foot_strike: {
-    baseball: ["Have your throwing hand up and above your elbow when your front foot lands.", "A study of young baseball pitchers found that having the arm up in throwing position at landing went with less stress on the elbow and shoulder (Davis and colleagues). The evidence is moderate.", "Start your arm back early so it is up and ready as your front foot lands."],
+    baseball: ["Have your throwing hand up and above your elbow when your front foot lands.", "A study of young baseball throwers found that having the arm up in throwing position at landing went with less stress on the elbow and shoulder (Davis and colleagues). The evidence is moderate.", "Start your arm back early so it is up and ready as your front foot lands."],
     softball: ["Have your throwing hand up above your elbow when your front foot lands on your softball throw.", "Research on overhand throwers links an arm that is up and ready at landing with less elbow and shoulder stress. It comes from baseball studies, so treat it as a strong guide rather than proof for softball.", "Get the ball up early so your arm is ready when your front foot lands."],
   },
   trunk_lateral_tilt_at_release: {
