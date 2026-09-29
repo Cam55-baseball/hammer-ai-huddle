@@ -4,6 +4,7 @@ import { bhReportCard } from "./disciplines/bh";
 import { spReportCard } from "./disciplines/sp";
 import { throwingReportCard } from "./disciplines/throwing";
 import { coachFacingTile } from "./coachCopy";
+import { throwingFacingTile } from "./throwingCopy";
 
 /**
  * Resolve the report card spec for a given sport + module.
@@ -31,6 +32,7 @@ export function getReportCardSpec(
     return {
       ...throwingReportCard,
       disciplineLabel: s === "softball" ? "Softball Throwing" : "Baseball Throwing",
+      tiles: throwingReportCard.tiles.map((tile) => throwingFacingTile(tile, s)),
     };
   }
   return null;
