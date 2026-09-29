@@ -6,7 +6,7 @@
  *
  * DELIVERY GATE — every tile refuses unless the clip contains a pitching
  * delivery: peak leg lift → front-foot plant → pose-only release ≤0.35 s after
- * plant, throwing wrist above shoulder (sidearm/underhand not yet supported).
+ * plant, hands apart at release (gates/releaseHandsApart.ts — any arm slot, shared with throwing).
  *
  * STANCE LOCK (anchors/stanceLock.ts) — head, shoulder and lift & thrust take
  * their baselines from the settled stance immediately before peak leg lift.
@@ -144,13 +144,10 @@ export function findPitchingDelivery(series: LandmarkSeries, throwing_side: Hand
     return fail(missingness(R.PITCHER_RELEASE_FRAME_MISSING, "D-ANCHOR"), "no_pitching_delivery:release_too_long_after_plant");
   }
   const rk = posOf(series, release.frame_index);
-  const S = throwing_side === "R" ? LM.R_SHOULDER : LM.L_SHOULDER;
-  const W = throwing_side === "R" ? LM.R_WRIST : LM.L_WRIST;
-  const sh = point(series.frames[rk], S), wr = point(series.frames[rk], W);
-  if (!sh || !wr) return fail(missingness(R.LANDMARK_OCCLUDED, "D-ANCHOR"), "no_pitching_delivery:throwing_arm_unobserved_at_release");
-  if (!(wr.y < sh.y)) {
-    return fail(missingness(R.PITCHER_RELEASE_FRAME_MISSING, "D-ANCHOR"), "no_pitching_delivery:throwing_wrist_below_shoulder_at_release");
-  }
+  // Any arm slot (owner 2026-09-29: "We have to allow" sidearm). Shared slot-free gate.
+  const hands = handsApartAtRelease(series, rk, throwing_side);
+  if (hands.reason === "throwing_arm_unobserved_at_release") return fail(missingness(R.LANDMARK_OCCLUDED, "D-ANCHOR"), "no_pitching_delivery:throwing_arm_unobserved_at_release");
+  if (!hands.ok) return fail(missingness(R.PITCHER_RELEASE_FRAME_MISSING, "D-ANCHOR"), `no_pitching_delivery:hands_together_at_release_not_a_pitch:${hands.hand_gap_forearms}`);
   if (dir == null) return fail(mr(R.ANCHOR_NOT_DETECTED), "target_direction_underivable");
   return {
     ok: true, throwing_side, direction_sign: dir, first_move,
