@@ -15,3 +15,4 @@
 
 - Decoded landmark series rebuild byte-identical repeated frames by interpolation (`repairDuplicateDecodes`) and capture seeks to frame centres. Why: which frames the browser repeats varied run to run and flipped verdicts on the same clip.
 - Pitching card tiles (`pitchingCardTiles.ts`) share the delivery gate in `pitchingTiles.ts`; lateral quantities (head to target line, glove drift) need an on-line view and refuse side-on. Why: a side-on camera sees them end-on.
+- Throwing arm-care flags (`throwingInjuryTiles.ts`) carry grading_weight 0 and verdict null; raised/clear only beyond the still-clip floor. Why: owner rule — flags are surfaced separately from grades, never a diagnosis.
