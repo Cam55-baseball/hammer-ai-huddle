@@ -16,6 +16,7 @@ describe("throwing cards refuse non-throws", () => {
     for (const side of ["L", "R", null] as const) {
       it(`${label} / ${side ?? "unknown"}`, () => {
         const r = runThrowingTiles(series, side);
+        expect(r.pattern).toBe("undetermined");
         for (const t of measured(r)) {
           expect(t.value).toBeNull();
           expect(t.verdict).toBeNull();
