@@ -56,11 +56,24 @@ describe("athlete-facing mechanics language", () => {
   it("keeps both throwing sports on one measurement implementation with sport-specific wording", () => {
     const baseball = getReportCardSpec("baseball", "throwing");
     const softball = getReportCardSpec("softball", "throwing");
-    expect(baseball?.tiles.map((t) => t.key)).toEqual(["arm_late_at_foot_strike", "shoulder_opening", "trunk_lateral_tilt_at_release", "across_body_stride", "elbow_height_at_foot_strike", "elbow_height_at_release", "front_knee_after_landing", "arm_outside_body_frame", "deceleration_follow_through", "tempo", "energy_angle", "head_stability"]);
+    expect(baseball?.tiles.map((t) => t.key)).toEqual(["trunk_rotation_before_foot_contact", "shoulder_abduction_at_foot_contact", "elbow_flexion_at_foot_contact", "horizontal_abduction_at_foot_contact", "stride_foot_direction", "lead_knee_flexion", "contralateral_trunk_tilt", "sidearm_arm_slot", "tempo", "stride_length", "energy_angle", "head_stability"]);
     expect(softball?.tiles.map((t) => t.key)).toEqual(baseball?.tiles.map((t) => t.key));
     for (const [i, bb] of (baseball?.tiles ?? []).entries()) {
       const sb = softball?.tiles[i];
-      expect(sb?.compute).toBe(bb.compute);
+      // one measurement: same stored record gives the same status in both sports
+      for (const flag of ["raised", "clear", null]) {
+        const rec = { throwing_tiles_deterministic: { [bb.key]: { value: 1, verdict: "pass", missing_reason: null }, injury: { [bb.key]: { value: 1, verdict: null, flag, missing_reason: flag ? null : "x" } } } };
+        expect(sb?.compute(rec as never).status).toBe(bb.compute(rec as never).status);
+      }
+      if (bb.phase?.startsWith("Arm-care")) {
+        for (const tile of [bb, sb]) {
+          expect(tile?.explainer.whatWhy).toMatch(/coach or a qualified throwing or medical professional\.$/);
+          expect(tile?.explainer.whatWhy).not.toMatch(/et al|colleagues|study|injured|will get hurt|risk of/i);
+          const raised = tile?.compute({ throwing_tiles_deterministic: { injury: { [bb.key]: { value: 1, verdict: null, flag: "raised", missing_reason: null } } } } as never);
+          expect(raised?.status).toBe("warn");
+          expect(raised?.note).toMatch(/professional\.$/);
+        }
+      }
       expect(sb?.standard).not.toBe(bb.standard);
       for (const tile of [bb, sb]) {
         expect([tile?.name, tile?.standard, ...Object.values(tile?.explainer ?? {})].join(" ")).not.toMatch(/pitching|pitcher|mound|rubber|bullpen|\d\s*[°%]/i);
