@@ -1,5 +1,5 @@
 /** Position-player overhand throwing measurements, never inferred from a hitting clip.
- * Shares pitching's calibrated measurements where their landmarks and windows
+ * Shares pitching's calibrated measurement methods where their landmarks and windows
  * really match; a throwing move is not silently passed through a mound gate.
  */
 import type { LandmarkSeries } from "../pose/landmarkSeriesFormat";
@@ -105,8 +105,8 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
       energy = { value: round4(val), unit: "degrees", verdict: null, missing_reason: null, lineage: { movement_pattern: pattern.pattern, ...pattern.lineage, uncertainty_deg: round4(Math.max(...neighbors.map((v) => Math.abs(v - val)))), standard: "ungraded_throwing_standard_unconfirmed" } };
   }
   if (pattern.pattern !== "shuffle") energy = absent("degrees", R.CALIBRATION_UNAVAILABLE, { movement_pattern: pattern.pattern, reason: pattern.reason, ...pattern.lineage });
-  // Shared pitching measures only where the same first-move → landing →
-  // overhand-release window genuinely exists; no leg lift means no comparison.
+  // Reuse measured signal processing, not mound standards: position-player
+  // reference positions need their own owner-reviewed interpretation.
   if (lk < 0 || !lock?.ok || dir == null || pk < 0) return { ...allMissing, tempo, energy_angle: energy };
   const masked = maskUntrusted(series, buildSegmentValidity(series, lock));
   const d: PitchingDelivery = { ok: true, throwing_side: side, direction_sign: dir, lift_k: lk, plant_k: pk, release_k: rk,
