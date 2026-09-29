@@ -28,6 +28,10 @@ const sections: LegalSection[] = [
       <>
         <ul>
           <li><strong>Account details.</strong> Your name, email, sport, position, and age or birth year.</li>
+          <li>
+            <strong>A parent or guardian's email address.</strong> If you are under 18, we collect
+            your parent or guardian's email so we can get their permission and keep them informed.
+          </li>
           <li><strong>Profile and training inputs.</strong> Anything you type in, like goals, notes, and workout logs.</li>
           <li><strong>Video.</strong> Video you record in the app or upload from your device.</li>
           <li>
@@ -44,6 +48,10 @@ const sections: LegalSection[] = [
           <li>
             <strong>Camera, microphone, and photos.</strong> Only when you record or pick a video or
             photo yourself. Some recording tools capture sound with the video.
+          </li>
+          <li>
+            <strong>Barcode scans.</strong> If you scan a food barcode, we send the barcode number
+            to a food database to look up the product.
           </li>
           <li><strong>Usage data.</strong> Which pages you open, what you tap, and basic device info.</li>
           <li><strong>Payment status.</strong> Whether your subscription is active. We never see your card number.</li>
@@ -71,6 +79,31 @@ const sections: LegalSection[] = [
           <li>We do not sell it.</li>
           <li>We do not share it with advertisers.</li>
         </ul>
+      </>
+    ),
+  },
+  {
+    id: "ai-analysis",
+    title: "AI analysis",
+    body: (
+      <>
+        <p>
+          When you ask us to analyse a video, still pictures taken from that video are sent to{" "}
+          <strong>Google's Gemini service</strong>. Google uses them to write the coaching feedback
+          you read. If Google's service is unavailable, we use <strong>OpenAI</strong> instead.
+        </p>
+        <p>
+          <strong>Your video file itself is never sent to Google or OpenAI.</strong> It stays in
+          our own storage.
+        </p>
+        <p>
+          The body-position tracking that produces your measurements runs entirely on your own
+          phone or computer. No video or images leave your device for that part.
+        </p>
+        <p>
+          We also send the written feedback you get from our in-app assistant through the same
+          Google service.
+        </p>
       </>
     ),
   },
@@ -104,6 +137,14 @@ const sections: LegalSection[] = [
           you delete it.
         </p>
         <p>
+          To get the forecast and look up places, the coordinates or place name you use are sent to
+          these services: <strong>Open-Meteo</strong> (weather and air quality), the{" "}
+          <strong>National Weather Service</strong> (api.weather.gov, for US weather alerts),{" "}
+          <strong>OpenStreetMap's Nominatim</strong> (finding places by name), and{" "}
+          <strong>Zippopotam.us</strong> (looking up US zip codes). They receive the location you
+          ask about, and nothing else about you.
+        </p>
+        <p>
           We do not track you in the background, we do not build a history of where you have been,
           and we never use location for advertising.
         </p>
@@ -117,6 +158,7 @@ const sections: LegalSection[] = [
     body: (
       <ul>
         <li><strong>Account details</strong> — to create your account and show the right sport and drills.</li>
+        <li><strong>A parent or guardian's email</strong> — to get their permission for athletes under 18 and to send them updates.</li>
         <li><strong>Profile and training inputs</strong> — to build your plan and track your progress.</li>
         <li><strong>Video</strong> — to run your analysis and let you look back at old reps.</li>
         <li><strong>Measurements</strong> — to produce grades, feedback, and training suggestions.</li>
@@ -136,11 +178,14 @@ const sections: LegalSection[] = [
       <>
         <p>We use a small number of companies to run the app:</p>
         <ul>
-          <li><strong>Hosting and database provider</strong> — stores your account, your data, and your files.</li>
-          <li><strong>Payment processor</strong> — handles subscriptions and card payments.</li>
-          <li><strong>Video-processing and AI analysis providers</strong> — help turn your video into measurements and feedback.</li>
-          <li><strong>Video-rendering provider</strong> — creates the marked-up clips you watch.</li>
-          <li><strong>Weather and place-lookup provider</strong> — receives the coordinates or place name you use on the Weather screen and returns the forecast.</li>
+          <li><strong>Supabase</strong> — our hosting, database, sign-in, and file storage provider. It stores your account, your data, and your videos.</li>
+          <li><strong>Stripe</strong> — our payment processor. It handles subscriptions and card payments. We never see your card number.</li>
+          <li><strong>Google (Gemini), with OpenAI as a backup</strong> — our AI analysis providers. They receive still pictures taken from your video and use them to write your coaching feedback, as described in the AI analysis section above.</li>
+          <li><strong>Roboflow</strong> — a ball-detection service used only on our staff-only pitch-velocity tool. It receives still frames from a video to find the ball. This feature is not currently available to app users.</li>
+          <li><strong>Resend</strong> — our email provider. It sends email on our behalf, including permission requests and updates to the parents or guardians of athletes under 18, plus recap and recruiting emails. It receives the recipient's email address and the message content.</li>
+          <li><strong>Remotion, running on Amazon Web Services (AWS Lambda)</strong> — our video-rendering provider. It creates the marked-up clips and promotional videos you watch, and receives the images and video needed to render them.</li>
+          <li><strong>Open-Meteo, the National Weather Service, OpenStreetMap's Nominatim, and Zippopotam.us</strong> — weather and place-lookup services. They receive the coordinates or place name you use on the Weather screen and return the forecast.</li>
+          <li><strong>Open Food Facts</strong> — a food database. When you scan a barcode, the barcode number is sent to it to look up the product. Nothing else about you is sent.</li>
 
         </ul>
         <p>

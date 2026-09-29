@@ -126,6 +126,17 @@ const sections: LegalSection[] = [
     ),
   },
   {
+    id: "privacy",
+    title: "Your privacy",
+    body: (
+      <p>
+        How we collect, use, and share your data — including the services that help us run the
+        app — is explained in our <Link to="/privacy">Privacy Policy</Link>. It is part of these
+        terms.
+      </p>
+    ),
+  },
+  {
     id: "safety",
     title: "Important safety notice",
     body: (
