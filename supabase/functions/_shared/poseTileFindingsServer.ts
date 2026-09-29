@@ -18,6 +18,16 @@ async function gunzipIfNeeded(buf: Uint8Array): Promise<string> {
   return new TextDecoder().decode(buf);
 }
 
+// The same movement law runs before the AI request, not merely before the
+// findings writer. A still upload must not produce coaching of any kind.
+// deno-lint-ignore no-explicit-any
+export async function checkStoredMovement(admin: any, path: string) {
+  const { data, error } = await admin.storage.from("pose-landmarks").download(path);
+  if (error || !data) return { status: "refused" as const, reason: "body_not_tracked" as const };
+  const text = await gunzipIfNeeded(new Uint8Array(await data.arrayBuffer()));
+  return checkStoredLandmarkMovement(text);
+}
+
 // deno-lint-ignore no-explicit-any
 export async function runAndWritePoseTileFindings(admin: any, a: {
   userId: string; videoId: string; runId: string | null; sport: string | null;

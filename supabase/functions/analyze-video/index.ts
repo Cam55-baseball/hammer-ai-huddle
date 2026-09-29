@@ -18,7 +18,7 @@ import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalys
 import { chatCompletion } from "../_shared/googleAi.ts";
 import { canSeeScoredGrading, stripScoredGrading } from "../_shared/scoredGradingGate.ts";
 import { buildFaultFindings } from "../_shared/faultFindings.ts";
-import { runAndWritePoseTileFindings } from "../_shared/poseTileFindingsServer.ts";
+import { checkStoredMovement, runAndWritePoseTileFindings } from "../_shared/poseTileFindingsServer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1878,6 +1878,23 @@ Deno.serve(async (req) => {
     auditCtx.videoSha256Hex = videoSha256Hex;
     auditCtx.fpsTrue = fpsTrue;
     console.log(`[ANALYZE-VIDEO] cache_fingerprint_hex=${cacheFingerprintHex}`);
+
+    // Refuse a still clip before either the cached result or AI can author a
+    // report. The stored full-rate pose series, not caller-provided flags,
+    // determines whether this clip contains movement.
+    if (module === "hitting") {
+      const { data: movementRun, error: movementRunError } = await supabase
+        .from("video_landmark_runs")
+        .select("landmarks_storage_path")
+        .eq("video_id", videoId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (movementRunError) throw movementRunError;
+      if (movementRun?.landmarks_storage_path) {
+        const movement = await checkStoredMovement(supabase, movementRun.landmarks_storage_path);
+        if (movement.status === "refused") {
+          return await writeReject("reject_no_movement", "No trustworthy movement detected in the stored clip");
+        }
+      }
+    }
 
     // Cache lookup keyed strictly on cache_fingerprint_hex.
     try {
