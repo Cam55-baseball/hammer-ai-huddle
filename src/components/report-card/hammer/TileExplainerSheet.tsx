@@ -1,5 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import type { ReportCardTileSpec } from "@/lib/reportCard";
+import { withoutMeasurementNotation } from "@/lib/reportCard/athleteLanguage";
 
 interface Props {
   spec: ReportCardTileSpec | null;
@@ -16,15 +17,15 @@ export function TileExplainerSheet({ spec, open, onOpenChange }: Props) {
             <SheetHeader className="text-left">
               <SheetTitle className="text-2xl">{spec.name}</SheetTitle>
               <SheetDescription className="text-xs uppercase tracking-wider">
-                Standard: {spec.standard}
+                 {withoutMeasurementNotation(spec.standard)}
               </SheetDescription>
             </SheetHeader>
 
             <div className="mt-6 space-y-6">
-              <Section title="What it is &amp; why it matters" body={spec.explainer.whatWhy} />
-              <Section title="How to improve it" body={spec.explainer.howToImprove} />
+               <Section title="What it is &amp; why it matters" body={withoutMeasurementNotation(spec.explainer.whatWhy)} />
+               <Section title="How to improve it" body={withoutMeasurementNotation(spec.explainer.howToImprove)} />
               <Section title="Trend vs prior sessions" body="Your trend across recent submissions will appear here as you build history." muted />
-              <Section title="Keep going" body={spec.explainer.encouragement} accent />
+               <Section title="Keep going" body={withoutMeasurementNotation(spec.explainer.encouragement)} accent />
             </div>
           </>
         )}

@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import type { ReportCardTileSpec, TileState } from "@/lib/reportCard";
 import { cn } from "@/lib/utils";
 import { RadialMeter } from "./visuals/RadialMeter";
+import { athleteMissingness, athleteResult, withoutMeasurementNotation } from "@/lib/reportCard/athleteLanguage";
 
 interface Props {
   spec: ReportCardTileSpec;
@@ -75,22 +76,21 @@ export function ReportCardTile({ spec, state, onOpen, index = 0 }: Props) {
 
       <div className="flex flex-1 items-center justify-center py-3">
         {isMissing ? (
-          <MissingBody reason={state.missing_reason} />
+          <MissingBody reason={athleteMissingness(state.missing_reason)} />
         ) : spec.mode === "score_meter" ? (
           <RadialMeter
             fraction={Math.max(0, Math.min(1, (state.score100 ?? 0) / 100))}
             acceptable={(state.acceptable ?? 60) / 100}
             elite={state.elite !== undefined ? state.elite / 100 : undefined}
             status={isElite ? "elite" : isPass ? "pass" : isWarn ? "warn" : "fail"}
-            centerLabel={Math.round(state.score100 ?? 0).toString()}
-            centerSub="/ 100"
+            centerLabel={athleteResult(state.status)}
             animate={!reduce}
           />
         ) : spec.mode === "pass_fail" ? (
           <PassFailBadge pass={isPass} />
         ) : spec.mode === "raw_passed" || spec.mode === "raw_pass_fail" ? (
           <RawValueBody
-            value={state.value ?? "—"}
+            value={athleteResult(state.status)}
             pass={isPass}
             elite={isElite}
             big={spec.mode === "raw_passed"}
@@ -99,7 +99,7 @@ export function ReportCardTile({ spec, state, onOpen, index = 0 }: Props) {
       </div>
 
       <div className="mt-2 flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-        <span className="truncate">{spec.thresholdChip ?? spec.standard}</span>
+        <span className="line-clamp-2">{withoutMeasurementNotation(spec.standard)}</span>
         {!isMissing && typeof state.confidence === "number" && state.confidence < 0.5 && (
           <span
             title={`Low model-stated measurement confidence (${Math.round(state.confidence * 100)}%) — provisional. This is the model's self-reported confidence in the measurement, not a frame-coverage or pose-quality score.`}
@@ -121,7 +121,7 @@ export function ReportCardTile({ spec, state, onOpen, index = 0 }: Props) {
             color: "hsl(var(--meter-fail))",
           }}
         >
-          {state.note}
+          {withoutMeasurementNotation(state.note)}
         </div>
       )}
     </motion.button>
