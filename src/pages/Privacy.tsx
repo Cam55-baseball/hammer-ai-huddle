@@ -133,6 +133,14 @@ const sections: LegalSection[] = [
           you delete it.
         </p>
         <p>
+          To get the forecast and look up places, the coordinates or place name you use are sent to
+          these services: <strong>Open-Meteo</strong> (weather and air quality), the{" "}
+          <strong>National Weather Service</strong> (api.weather.gov, for US weather alerts),{" "}
+          <strong>OpenStreetMap's Nominatim</strong> (finding places by name), and{" "}
+          <strong>Zippopotam.us</strong> (looking up US zip codes). They receive the location you
+          ask about, and nothing else about you.
+        </p>
+        <p>
           We do not track you in the background, we do not build a history of where you have been,
           and we never use location for advertising.
         </p>
@@ -146,6 +154,7 @@ const sections: LegalSection[] = [
     body: (
       <ul>
         <li><strong>Account details</strong> — to create your account and show the right sport and drills.</li>
+        <li><strong>A parent or guardian's email</strong> — to get their permission for athletes under 18 and to send them updates.</li>
         <li><strong>Profile and training inputs</strong> — to build your plan and track your progress.</li>
         <li><strong>Video</strong> — to run your analysis and let you look back at old reps.</li>
         <li><strong>Measurements</strong> — to produce grades, feedback, and training suggestions.</li>
