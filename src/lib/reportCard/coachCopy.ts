@@ -18,12 +18,17 @@ const HITTING: Record<string, [string, string, string]> = {
   shoulder_to_shoulder_hold: ["Keep your hands back while the elbow leads.", "Holding the hands behind the back shoulder leaves room for the elbow to lead. If the front shoulder opens early, that space is lost.", "Pause at landing and keep the hands quiet while the back elbow starts forward."],
 };
 
+const SOFTBALL_HITTING: Partial<Record<string, [string, string, string]>> = {
+  p2_timing: ["Set your hands before the softball pitcher releases.", "The underhand delivery can bring the ball in quickly. Your hands should be set before release; being ready early is fine.", "Watch the pitching arm and finish your load before the ball leaves the hand."],
+  p3_timing: ["Get your front foot down as the softball pitch is released.", "A settled front foot lets you keep watching the pitch and turn without lunging. The pitcher's leg lift is not your timing cue here.", "Work from a live underhand toss and land in time to see the ball before your turn."],
+  stride_direction: ["Stride toward the softball pitcher.", "On the shorter softball field, striding toward the circle keeps your body on line and gives the hips room to turn.", "Land toward the pitching circle and let your hips turn around your front side."],
+  heel_plant: ["Settle your front heel at landing.", "A grounded front heel gives your back elbow room to come through and keeps your eyes quiet on the softball pitch. The back heel may rise as you turn.", "Land toward the circle and let the front heel settle; don't pin your back heel down."],
+};
+
 export function coachFacingTile(tile: ReportCardTileSpec, sport: string): ReportCardTileSpec {
-  const copy = HITTING[tile.key];
+  const copy = sport === "softball" ? SOFTBALL_HITTING[tile.key] ?? HITTING[tile.key] : HITTING[tile.key];
   if (!copy) return tile;
-  const softball = sport === "softball";
   const [standard, whatWhy, howToImprove] = copy;
-  const language = (text: string) => softball ? text.replace(/pitcher/g, "softball pitcher").replace(/pitch\b/g, "softball pitch") : text;
-  return { ...tile, standard: language(standard), thresholdChip: undefined,
-    explainer: { whatWhy: language(whatWhy), howToImprove: language(howToImprove), encouragement: language(howToImprove) } };
+  return { ...tile, standard, thresholdChip: undefined,
+    explainer: { whatWhy, howToImprove, encouragement: howToImprove } };
 }
