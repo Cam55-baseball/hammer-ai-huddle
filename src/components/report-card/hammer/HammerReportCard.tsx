@@ -6,6 +6,7 @@ import { FoilGradeCard } from "./visuals/FoilGradeCard";
 import { PhaseRail, type PhaseNode } from "./visuals/PhaseRail";
 import { ShareCardExport } from "./visuals/ShareCardExport";
 import { getReportCardSpec, type AnalysisLike, type ReportCardTileSpec } from "@/lib/reportCard";
+import { applySlotEmphasis, readArmSlot } from "@/lib/reportCard/slotEmphasis";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useScoredGradingAccess, SCORED_GRADING_NOTICE } from "@/hooks/useScoredGradingAccess";
@@ -29,7 +30,11 @@ export function HammerReportCard({
   showShare = true,
   athleteName,
 }: Props) {
-  const spec = useMemo(() => getReportCardSpec(sport, module), [sport, module]);
+  const slot = readArmSlot(analysis as AnalysisLike, module);
+  const spec = useMemo(() => {
+    const s = getReportCardSpec(sport, module);
+    return s ? applySlotEmphasis(s, slot, sport) : s;
+  }, [sport, module, slot]);
   const [openTile, setOpenTile] = useState<ReportCardTileSpec | null>(null);
   const [activePhase, setActivePhase] = useState<string | null>(null);
   const [tilesOpen, setTilesOpen] = useState(!compact);
