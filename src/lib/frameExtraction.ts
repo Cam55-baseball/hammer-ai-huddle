@@ -83,6 +83,8 @@ export const extractKeyFramesDeterministic = async (
       const onErr = () => { video.removeEventListener("loadedmetadata", onLoaded); reject(new Error("video metadata load failed")); };
       video.addEventListener("loadedmetadata", onLoaded, { once: true });
       video.addEventListener("error", onErr, { once: true });
+      // A codec the browser cannot decode never fires either event — fail visibly.
+      setTimeout(() => reject(new Error("video metadata load timeout")), 20000);
     });
 
     if (!video.videoWidth || !video.videoHeight) {
