@@ -18,6 +18,7 @@ import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalys
 import { chatCompletion } from "../_shared/googleAi.ts";
 import { canSeeScoredGrading, stripScoredGrading } from "../_shared/scoredGradingGate.ts";
 import { buildFaultFindings } from "../_shared/faultFindings.ts";
+import { runAndWritePoseTileFindings } from "../_shared/poseTileFindingsServer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1739,9 +1740,17 @@ Deno.serve(async (req) => {
 
     const { data: videoRow } = await supabase
       .from("videos")
-      .select("sha256_hex, fps_true, achieved_fps, duration_sec, width, height, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status")
+      .select("user_id, module, sport, batting_side, sha256_hex, fps_true, achieved_fps, duration_sec, width, height, landing_time_sec, direction_sign, calibration_h_px, ai_analysis, efficiency_score, status")
       .eq("id", videoId)
       .maybeSingle();
+
+    // Service-role reads and writes bypass row policies. Bind this request to
+    // the real caller and the persisted clip, never the body-provided user ID.
+    const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
+    const { data: caller, error: callerError } = token ? await supabase.auth.getUser(token) : { data: null, error: null };
+    if (callerError || !caller?.user || !videoRow || caller.user.id !== userId || videoRow.user_id !== userId || videoRow.module !== module || videoRow.sport !== sport) {
+      return new Response(JSON.stringify({ error: "Video access denied" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const videoSha256Hex = (videoRow?.sha256_hex as string | null) ?? null;
     const fpsTrue = videoRow?.fps_true == null ? null : Number(videoRow.fps_true);
@@ -2646,6 +2655,37 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       const message = (e as Error)?.message ?? "unknown coaching-stage failure";
       console.error("[ANALYZE-VIDEO] coaching stage failed:", message);
       faultPersistence = { persisted: 0, attempted: -1, error: message };
+    }
+
+    // Pose-derived findings come from the stored full-rate series, never from
+    // sparse AI frames or client-submitted verdicts. Missing series means no
+    // pose claim; existing AI findings are kept distinct and untouched.
+    if (module === "hitting") {
+      try {
+        const { data: landmarkRun, error: landmarkError } = await supabase.from("video_landmark_runs")
+          .select("landmarks_storage_path, diagnostics")
+          .eq("video_id", videoId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+        if (landmarkError) throw landmarkError;
+        if (landmarkRun?.landmarks_storage_path) {
+          const diagnosis = (landmarkRun.diagnostics as Record<string, unknown> | null)?.track_diagnosis as Record<string, unknown> | undefined;
+          // The preview's movement gate rejects still footage before calling
+          // this function; server refuses a known failed track as well.
+          if (diagnosis?.status !== "refused") {
+            const side = videoRow.batting_side === "L" || videoRow.batting_side === "R" ? videoRow.batting_side : null;
+            const pose = await runAndWritePoseTileFindings(supabase, {
+              userId, videoId, runId: okAudit.id ?? null, sport,
+              landmarksPath: landmarkRun.landmarks_storage_path, side, athleteHeightIn: null,
+            });
+            if (!pose.ok) throw new Error(pose.reason);
+            faultPersistence.persisted += pose.written;
+            faultPersistence.attempted += pose.written;
+          }
+        }
+      } catch (e) {
+        const message = (e as Error)?.message ?? "pose finding write failed";
+        console.error("[ANALYZE-VIDEO] pose finding stage failed:", message);
+        faultPersistence.error = message;
+      }
     }
 
     // Make a failed fault write visible on the audit trail, not just in logs.

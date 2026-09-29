@@ -4,8 +4,7 @@
  * video_landmark_runs.landmarks_storage_path), runs the SAME tile code as the
  * tests (generated bundle), and writes the root-pattern findings. Verdicts are
  * computed here from stored landmarks — never accepted from a client.
- * NOT YET CALLED from analyze-video: wiring it in redeploys that function, which
- * the owner has not authorised this round.
+ * Called by analyze-video only for an owned hitting upload with saved landmarks.
  */
 // @ts-ignore generated bundle
 import { runHittingTilesFromText } from "./poseTiles.bundle.js";
