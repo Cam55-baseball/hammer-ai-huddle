@@ -17,6 +17,9 @@ import { detectCameraView, checkCameraRequirement } from "../camera/cameraView";
 import { MISSINGNESS_REASONS as R } from "./missingness";
 import { computeThrowingInjuryMarkers, refusedInjuryMarkers } from "./throwingInjuryTiles";
 import { MIN_LIFT_RISE_BODY_THROWING } from "../anchors/peakLegLift";
+import { handsApartAtRelease, HANDS_APART_MIN_FOREARMS } from "../gates/releaseHandsApart";
+import { measureArmSlot } from "./armSlot";
+export { HANDS_APART_MIN_FOREARMS };
 
 export const THROWING_TILES_VERSION = "throwing_tiles@2.0.0-injury-flags-final-step-stride";
 /** Owner: same stride target as pitching, measured from the final step. */
@@ -118,7 +121,7 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
   if (pattern.pattern !== "shuffle") energy = absent("degrees", R.CALIBRATION_UNAVAILABLE, { movement_pattern: pattern.pattern, reason: pattern.reason, ...pattern.lineage });
   // Reuse measured signal processing, not mound standards: position-player
   // reference positions need their own owner-reviewed interpretation.
-  if (lk < 0 || !lock?.ok || dir == null || pk < 0) return { ...allMissing, tempo, energy_angle: energy };
+  if (lk < 0 || !lock?.ok || dir == null || pk < 0) return { ...allMissing, tempo, energy_angle: energy, arm_slot };
   const masked = maskUntrusted(series, buildSegmentValidity(series, lock));
   const d: PitchingDelivery = { ok: true, throwing_side: side, direction_sign: dir, lift_k: lk, plant_k: pk, release_k: rk,
     first_move: detectFirstMove(series), refusal: null, refusal_detail: null, anchors: { lift: anchors.lift, plant: anchors.plant, release } };
@@ -129,7 +132,7 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
       : { value: tile.value, unit, verdict: null, missing_reason: null, lineage: { ...tile.lineage, reused_window: "throw_first_move_to_release", standard: "ungraded_throwing_standard_unconfirmed" } };
   const shoulderOpening = adapt(sh, "degrees");
   if (sh?.value != null) shoulderOpening.lineage = { ...shoulderOpening.lineage, injury_flag: "trunk_rotation_before_foot_contact" };
-  return { ...allMissing, pattern: pattern.pattern, pattern_evidence: pattern, tempo, energy_angle: energy, shoulder_opening: shoulderOpening, head_stability: adapt(head, "percent"),
+  return { ...allMissing, arm_slot, pattern: pattern.pattern, pattern_evidence: pattern, tempo, energy_angle: energy, shoulder_opening: shoulderOpening, head_stability: adapt(head, "percent"),
     stride_length: strideFromFinalStep(masked, lock, side, dir, lk, pk),
     injury: computeThrowingInjuryMarkers(masked, d, lock, side, view, sh ? { verdict: sh.verdict, value: sh.value, lineage: sh.lineage } : null) };
 }
@@ -140,8 +143,6 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
  * (still within the ankle noise floor). Stride = rear ankle there → front ankle
  * at front-foot strike, as a % of stance-lock stature. Same ≥90 % target as pitching.
  */
-/** Hands-apart floor at release, in throwing-forearm lengths. Swing fixtures read 0.62–0.63. Unvalidated on a real throw. */
-export const HANDS_APART_MIN_FOREARMS = 1.5;
 
 export function strideFromFinalStep(s: LandmarkSeries, lock: ReturnType<typeof detectStanceLock>, side: Handedness, dir: 1 | -1, liftK: number, plantK: number): ThrowingMeasurement {
   const st = lock.baseline?.stature_px;
