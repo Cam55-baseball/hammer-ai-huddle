@@ -10,6 +10,9 @@ import { runHittingCardTiles, HITTING_CARD_TILES_VERSION } from "../metrics/hitt
 import { runHittingOwnerTiles } from "../metrics/hittingOwnerTiles";
 import type { Handedness } from "../side/strideSide";
 import { evaluateMovementGate } from "../gates/movementGate";
+import { runThrowingTiles } from "../metrics/throwingTiles";
+import { runPitchingTiles } from "../metrics/pitchingTiles";
+import { runPitchingCardTiles } from "../metrics/pitchingCardTiles";
 
 export type Verdict = "pass" | "fail" | null;
 export function checkStoredLandmarkMovement(ndjson: string) {
@@ -29,4 +32,14 @@ export function runHittingTilesFromText(ndjson: string, side: Handedness | null,
     hands_stay_up_at_plant: v(card.hands_stay_up_at_plant),
   };
   return { engine_version: HITTING_CARD_TILES_VERSION, verdicts, pose, card, owner };
+}
+
+/** Throwing card (baseball + softball, one implementation). Stored as ai_analysis.throwing_tiles_deterministic. */
+export function runThrowingTilesFromText(ndjson: string, side: Handedness | null) {
+  return runThrowingTiles(decodeLandmarkSeriesText(ndjson), side);
+}
+/** Baseball pitching: the four rebuilt tiles + the eleven card tiles. Any arm slot. */
+export function runPitchingFromText(ndjson: string, side: Handedness | null, athleteHeightIn: number | null) {
+  const s = decodeLandmarkSeriesText(ndjson);
+  return { tiles: runPitchingTiles(s, { throwing_side: side }), card: runPitchingCardTiles(s, { throwing_side: side, athlete_height_in: athleteHeightIn }) };
 }
