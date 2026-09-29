@@ -3,6 +3,7 @@ import { bpReportCard } from "./disciplines/bp";
 import { bhReportCard } from "./disciplines/bh";
 import { spReportCard } from "./disciplines/sp";
 import { throwingReportCard } from "./disciplines/throwing";
+import { coachFacingTile } from "./coachCopy";
 
 /**
  * Resolve the report card spec for a given sport + module.
@@ -20,9 +21,11 @@ export function getReportCardSpec(
     return s === "softball" ? spReportCard : bpReportCard;
   }
   if (m === "hitting") {
-    return s === "softball"
-      ? { ...bhReportCard, disciplineLabel: "Softball Hitting" }
-      : bhReportCard;
+    return {
+      ...bhReportCard,
+      disciplineLabel: s === "softball" ? "Softball Hitting" : "Baseball Hitting",
+      tiles: bhReportCard.tiles.map((tile) => coachFacingTile(tile, s)),
+    };
   }
   if (m === "throwing") {
     return {
