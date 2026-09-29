@@ -49,6 +49,10 @@ const sections: LegalSection[] = [
             <strong>Camera, microphone, and photos.</strong> Only when you record or pick a video or
             photo yourself. Some recording tools capture sound with the video.
           </li>
+          <li>
+            <strong>Barcode scans.</strong> If you scan a food barcode, we send the barcode number
+            to a food database to look up the product.
+          </li>
           <li><strong>Usage data.</strong> Which pages you open, what you tap, and basic device info.</li>
           <li><strong>Payment status.</strong> Whether your subscription is active. We never see your card number.</li>
 
