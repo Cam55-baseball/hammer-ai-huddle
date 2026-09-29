@@ -15,6 +15,12 @@ describe("back-leg root pattern reads as ONE finding", () => {
     expect(r.map((x) => x.root_pattern_key)).toEqual(["trunk_rotates_before_front_foot_plant", "back_leg_did_not_hold_load"]);
     expect(r[1].evidence).toContain("back knee straightened");
   });
+  it("early back-heel rise contributes evidence to the same back-leg finding, not a separate complaint", () => {
+    const r = buildPoseTileFindings({ ...a, verdicts: { back_heel_early_rise: "fail", back_knee_flex_maintained: "fail" } });
+    expect(r).toHaveLength(1);
+    expect(r[0].root_pattern_key).toBe("back_leg_did_not_hold_load");
+    expect(r[0].evidence).toContain("back heel lifted before the swing");
+  });
   it("never says weight was measured", () => {
     const r = buildPoseTileFindings({ ...a, verdicts: { hip_load: "fail" } });
     expect(r[0].evidence).toContain("position-based estimate"); expect(r[0].evidence).not.toMatch(/\bweight\b/i);

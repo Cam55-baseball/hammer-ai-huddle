@@ -13,6 +13,7 @@ describe("server pose-tile bundle", () => {
   });
   it("914cf54c Left surfaces the back-leg root pattern from stored landmarks", () => {
     const o = runHittingTilesFromText(txt("swing-24fps-914cf54c.ndjson.gz"), "L", null);
+    expect(o.verdicts.back_heel_early_rise).toBe("fail");
     const rows = buildPoseTileFindings({ userId: "u", videoId: "v", runId: null, sport: "baseball", verdicts: o.verdicts });
     expect(rows.map((r) => r.root_pattern_key)).toContain("back_leg_did_not_hold_load");
   });

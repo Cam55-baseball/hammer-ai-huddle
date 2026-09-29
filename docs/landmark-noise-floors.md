@@ -106,6 +106,7 @@ Rear-hip horizontal speed on the still clip: max 0.124 body-heights/s (p99 0.092
 
 ## Hitting pose tiles (2026-09-27, still clip 15d75bc9, PROVISIONAL)
 Statistic: p99 of |3-frame median − clip median|, stance-unrolled, % of stature.
+- Back heel stays down until P4 (2026-09-29): still clip has no true stance lock, so use its first 25 frames as a **noise reference only**, not a detected batting stance. Maximum positive heel-minus-toe change, relative to that reference: right 1.0499%, left 0.5964% of stature. Conservative floor 1.2%. The still clip itself refuses all tiles; no verdict is manufactured. On 914cf54c L, the left back heel rises 1.5853% above its stance-lock baseline before P4 and fails. The right front heel settles to 1.4971% above its toe within the 1.5% still floor and passes. Other swing 9d2e117e: back heel L 7.5602%, R 3.7909%; front heel L 1.3235%, R 0.6412%. These are measurements, not athlete-facing copy.
 - hip_load (hip-mid fore–aft): p95 0.67, **p99 0.80**, max 0.87 → floor 0.8 %.
 - hands_outside (rear wrist − rear shoulder, fore–aft): left wrist p99 2.28, right 0.96 → floor 2.3 % (worst side).
 

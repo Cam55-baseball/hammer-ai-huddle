@@ -1,7 +1,7 @@
 import type { DisciplineContract } from "./shared";
 
 /**
- * Baseball Hitting — 15-tile metric contract, /100 scored meters.
+ * Baseball Hitting — legacy model metric contract. Pose upload card has 23 tiles.
  * Stable keys persist on `videos.ai_analysis.metrics`.
  */
 export const bhContract: DisciplineContract = {
@@ -195,4 +195,10 @@ export const BH_UPLOAD_OUT_OF_SCOPE = {
   tile_keys: ["bat_path", "on_plane", "time_to_contact", "bat_speed_contact"],
   metric_keys: ["bat_path_score_100", "on_plane_pct", "time_to_contact_ms", "bat_speed_contact_mph"],
   channels: ["sequencing.barrel", "connection_barrel_delivery.bat_delivery", "eyes_tracking.head_ball_alignment"],
+} as const;
+
+/** Owner reversal 2026-09-29: two pose-only heel tiles; no model score authors their verdicts. */
+export const BH_POSE_HEEL_CONTRACT = {
+  front: { tileKey: "heel_plant", foot: "front_from_batting_side", window: "front_foot_strike_to_full_plant", rule: "heel touching within still noise floor" },
+  back: { tileKey: "back_heel_early_rise", foot: "back_from_batting_side", window: "stance_to_before_p4_start_frame", rule: "no rise beyond still noise floor", root_pattern_key: "back_leg_did_not_hold_load" },
 } as const;

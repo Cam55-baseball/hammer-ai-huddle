@@ -110,6 +110,7 @@ const ROOT_BY_FAULT: Record<string, string> = {
   back_hip_socket_hold_fail: "back_leg_did_not_hold_load",
   post_landing_hip_drift_fail: "back_leg_did_not_hold_load",
   back_knee_straightened_fail: "back_leg_did_not_hold_load",
+  back_heel_early_rise_fail: "back_leg_did_not_hold_load",
   // Owner 2026-09-28: hands low at P3 heel landing go with the front shoulder turning.
   hands_below_back_elbow_at_heel_landing: "trunk_rotates_before_front_foot_plant",
 };
@@ -188,6 +189,7 @@ const BACK_LEG_EVIDENCE: Record<string, string> = {
   back_hip_socket_hold: "your back hip gave up its turn before the front foot landed",
   post_landing_hip_drift: "your hips kept drifting forward after the front foot landed",
   back_knee_flex_maintained: "your back knee straightened between the end of P2 and landing",
+  back_heel_early_rise: "your back heel lifted before the swing started, while the back leg should still hold the load",
 };
 export const BACK_LEG_CAUSE_FAULT_KEY = "hip_load_back_leg_not_balanced";
 

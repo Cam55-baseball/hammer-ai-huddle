@@ -31,6 +31,28 @@ describe("athlete-facing mechanics language", () => {
       }
     }
   });
+  it("shows two separate heel standards and never repeats the superseded back-heel advice", () => {
+    for (const sport of ["baseball", "softball"]) {
+      const front = BH_UPLOAD_TILES.find((tile) => tile.key === "heel_plant");
+      const back = BH_UPLOAD_TILES.find((tile) => tile.key === "back_heel_early_rise");
+      expect(front).toBeDefined();
+      expect(back).toBeDefined();
+      if (!front || !back) continue;
+      const frontCopy = coachFacingTile(front, sport);
+      const backCopy = coachFacingTile(back, sport);
+      expect(frontCopy.standard).toContain("front heel");
+      expect(backCopy.standard).toContain("back heel");
+      expect([frontCopy, backCopy].flatMap((tile) => [tile.standard, ...Object.values(tile.explainer)]).join(" ")).not.toMatch(/back heel (?:may|can|is allowed to) rise|don't pin your back heel down|do not force the back heel down/i);
+    }
+  });
+  it("uses softball-specific hitting copy rather than a baseball card with its label swapped", () => {
+    for (const source of BH_UPLOAD_TILES) {
+      const softball = coachFacingTile(source, "softball");
+      expect([softball.standard, ...Object.values(softball.explainer)].join(" "), source.key)
+        .not.toMatch(/baseball|BP round|his knee peak|back heel (?:may|can) rise/i);
+      expect(softball.compute).toBe(source.compute);
+    }
+  });
   it("does not show numeric measurements or robotic placeholder copy in the last-line guard", () => {
     const line = withoutMeasurementNotation("Your hips slid 6.8% forward. Turn the hips instead of drifting.");
     expect(line).toBe("Turn the hips instead of drifting.");

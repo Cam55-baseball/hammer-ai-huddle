@@ -20,16 +20,21 @@ describe("segment validity", () => {
   });
 });
 
-describe("hitting card tiles 6, 9–13, 16–21, 22", () => {
+describe("hitting card tiles including separate front and back heels (23 total)", () => {
   it("still clip: every tile missing, both sides", () => {
     for (const side of ["L", "R"] as const) for (const [, t] of tiles(runHittingCardTiles(still, { side }))) expect(t.value).toBeNull();
   });
   it("914cf54c Left — owner-confirmed reference values", () => {
     const r = runHittingCardTiles(A, { side: "L" }) as unknown as Record<string, T>;
     // Owner doctrine 2026-09-28 re-spec.
-    expect(r.heel_plant.value).toBeLessThanOrEqual(1.5); expect(r.heel_plant.verdict).toBe("pass");
+    expect(r.heel_plant.value).toBe(1.4971); expect(r.heel_plant.verdict).toBe("pass");
     expect(r.heel_plant.lineage.front_foot).toBe("right");
     expect(r.heel_plant.lineage.front_heel_settle_frame).not.toBe(r.heel_plant.lineage.first_strike_frame);
+    expect(r.back_heel_early_rise.verdict).toBe("fail");
+    expect(r.back_heel_early_rise.lineage.back_foot).toBe("left");
+    expect(r.back_heel_early_rise.value).toBe(1.5853);
+    expect(Number(r.back_heel_early_rise.lineage.peak_pre_p4_frame)).toBeLessThan(Number(r.back_heel_early_rise.lineage.p4_start_frame_excluded));
+    expect(r.back_heel_early_rise.lineage.root_pattern_key).toBe("back_leg_did_not_hold_load");
     expect(r.sequencing.verdict).toBe("fail");
     expect(r.sequencing.lineage.out_of_order).toEqual(["torso_before_hips"]);
     expect(r.back_elbow_connection.value).toBe(17.8549); expect(r.back_elbow_connection.verdict).toBe("pass");
@@ -51,6 +56,16 @@ describe("hitting card tiles 6, 9–13, 16–21, 22", () => {
   it("wrong side changes the answer or refuses", () => {
     const l = runHittingCardTiles(A, { side: "L" }) as unknown as Record<string, T>, r = runHittingCardTiles(A, { side: "R" }) as unknown as Record<string, T>;
     for (const [k, t] of tiles(l)) if (t.value != null) expect(r[k].value).not.toBe(t.value);
+  });
+  it("the other swing selects heels from batting side rather than fixed left/right", () => {
+    const l = runHittingCardTiles(B, { side: "L" });
+    const r = runHittingCardTiles(B, { side: "R" });
+    expect(l.heel_plant.lineage.front_foot).toBe("right");
+    expect(l.back_heel_early_rise.lineage.back_foot).toBe("left");
+    expect(r.heel_plant.lineage.front_foot).toBe("left");
+    expect(r.back_heel_early_rise.lineage.back_foot).toBe("right");
+    expect(l.back_heel_early_rise.value).toBe(7.5602);
+    expect(r.back_heel_early_rise.value).toBe(3.7909);
   });
   it("no repeating value across clips/sides (constant-detector)", () => {
     const vals: Record<string, number[]> = {};

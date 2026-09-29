@@ -87,6 +87,7 @@ export const TILE_CAMERA_REQUIREMENTS: Readonly<Record<string, CameraRequirement
   // ground-plane angle: side-on sees only the forward component, on-line only the lateral one.
   stride_direction: "two_view",
   heel_plant: "side_on",
+  back_heel_early_rise: "side_on",
   hands_outside_shoulders_at_landing: "side_on",
   shoulder_plane_steadiness: "side_on",
   finish_balance: "either",
