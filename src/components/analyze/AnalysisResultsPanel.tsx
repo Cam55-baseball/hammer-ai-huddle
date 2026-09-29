@@ -34,6 +34,7 @@ import {
 } from "@/lib/gradeEngine";
 import { branding } from "@/branding";
 import { SCORED_GRADING_NOTICE } from "@/hooks/useScoredGradingAccess";
+import { withoutMeasurementNotation } from "@/lib/reportCard/athleteLanguage";
 
 export interface AnalysisDrill {
   title: string;
@@ -140,7 +141,7 @@ export function AnalysisResultsPanel({
     <div className="space-y-5">
       {/* ── 1 · SCORE ANCHOR ─────────────────────────────────────────── */}
       <RevealSection order={0}>
-        {showScore ? (
+        {false && showScore ? (
           <Card className={cn("overflow-hidden border-2", gradeSurface)}>
             <div className="flex items-center gap-5 p-5 sm:gap-8 sm:p-7">
               <div className="shrink-0">
@@ -202,7 +203,7 @@ export function AnalysisResultsPanel({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
                   {t('videoAnalysis.topTakeaway', 'Top takeaway')}
                 </p>
-                <p className="mt-1 text-base font-medium leading-snug">{topTakeaway}</p>
+                 <p className="mt-1 text-base font-medium leading-snug">{withoutMeasurementNotation(topTakeaway)}</p>
               </div>
             )}
 
@@ -210,10 +211,8 @@ export function AnalysisResultsPanel({
               <ol className="space-y-2.5">
                 {restFindings.map((point, index) => (
                   <li key={index} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold tabular-nums text-muted-foreground">
-                      {index + 2}
-                    </span>
-                    <span className="text-sm leading-relaxed">{point}</span>
+                     <Sparkles className="mt-1 h-4 w-4 shrink-0 text-primary" />
+                     <span className="text-sm leading-relaxed">{withoutMeasurementNotation(point)}</span>
                   </li>
                 ))}
               </ol>
@@ -231,14 +230,9 @@ export function AnalysisResultsPanel({
                 <SectionHeading icon={<Timer className="h-3.5 w-3.5 text-primary" />}>
                   {t('videoAnalysis.tempoTitle', 'Tempo')}
                 </SectionHeading>
-                {persistedTempo.value != null ? (
-                  <p className="text-3xl font-black tabular-nums">
-                    {persistedTempo.value.toFixed(2)}
-                    <span className="ml-1 text-sm font-normal text-muted-foreground">
-                      {t('videoAnalysis.tempoUnit', 'sec')}
-                    </span>
-                  </p>
-                ) : (
+                 {persistedTempo.value != null ? (
+                   <p className="text-sm font-semibold">Your move from leg lift to landing was measured.</p>
+                 ) : (
                   <p className="text-sm text-muted-foreground">
                     {t('videoAnalysis.tempoUnreadable', 'Tempo could not be read from this clip.')}
                   </p>
@@ -260,8 +254,8 @@ export function AnalysisResultsPanel({
                     </p>
                     <ul className="space-y-2">
                       {[
-                        { Icon: Camera, label: 'Side-on camera', body: 'Film from the open side (3B side for RHP, 1B side for LHP), perpendicular to the rubber-to-plate line.' },
-                        { Icon: User, label: 'Full body in frame', body: 'Head to spikes visible the entire delivery; leave ~1 ft of headroom and foot-room.' },
+                         { Icon: Camera, label: 'Side-on camera', body: 'Film from the open side, perpendicular to the rubber-to-plate line.' },
+                         { Icon: User, label: 'Full body in frame', body: 'Keep your head and feet visible throughout the delivery.' },
                         { Icon: Play, label: 'Start before the leg lift', body: "Begin recording at the set position; don't trim the front of the clip." },
                         { Icon: Square, label: 'End after release', body: 'Keep filming through ball release and into follow-through.' },
                         { Icon: Sun, label: 'Good lighting, low motion blur', body: 'Daylight or bright cage lighting; lock exposure on the pitcher.' },
@@ -276,7 +270,7 @@ export function AnalysisResultsPanel({
                       ))}
                     </ul>
                     <p className="text-[11px] text-muted-foreground/80">
-                      If Tempo keeps failing to read with these conditions met, the lead leg may be occluded by the glove-side arm — try a slightly higher camera (chest height) and step back 2–3 ft.
+                       If Tempo keeps failing to read, the lead leg may be hidden by the glove-side arm. Try a camera at chest height and step back.
                     </p>
                   </div>
                 </CollapsibleContent>
@@ -314,7 +308,7 @@ export function AnalysisResultsPanel({
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span className="text-sm leading-snug">{positive}</span>
+                   <span className="text-sm leading-snug">{withoutMeasurementNotation(positive)}</span>
                 </li>
               ))}
             </ul>
@@ -335,7 +329,7 @@ export function AnalysisResultsPanel({
                   key={index}
                   className="border-l-2 border-primary/30 pl-4 text-sm leading-relaxed text-muted-foreground"
                 >
-                  {paragraph}
+                   {withoutMeasurementNotation(paragraph)}
                 </p>
               ))}
             </div>
@@ -368,12 +362,10 @@ export function AnalysisResultsPanel({
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex min-w-0 items-start gap-3">
-                        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-black text-primary">
-                          {index + 1}
-                        </span>
+                         <ListChecks className="mt-1 h-5 w-5 shrink-0 text-primary" />
                         <div className="min-w-0">
-                          <h5 className="text-base font-semibold leading-snug">{drill.title}</h5>
-                          <p className="mt-1 text-sm text-muted-foreground">{drill.purpose}</p>
+                           <h5 className="text-base font-semibold leading-snug">{withoutMeasurementNotation(drill.title)}</h5>
+                           <p className="mt-1 text-sm text-muted-foreground">{withoutMeasurementNotation(drill.purpose)}</p>
                         </div>
                       </div>
                       <Button
@@ -390,10 +382,10 @@ export function AnalysisResultsPanel({
 
                     <div className="mt-3 flex flex-wrap gap-2 text-xs">
                       <span className="rounded-md bg-primary/10 px-2.5 py-1 font-semibold text-primary">
-                        {drill.reps_sets}
+                         {withoutMeasurementNotation(drill.reps_sets)}
                       </span>
                       <span className="rounded-md bg-secondary/60 px-2.5 py-1 text-secondary-foreground">
-                        {drill.equipment}
+                         {withoutMeasurementNotation(drill.equipment)}
                       </span>
                     </div>
 
@@ -406,7 +398,7 @@ export function AnalysisResultsPanel({
                       <CollapsibleContent className="mt-2">
                         <ol className="list-inside list-decimal space-y-1.5 text-sm text-muted-foreground">
                           {drill.steps?.map((step, stepIndex) => (
-                            <li key={stepIndex}>{step}</li>
+                             <li key={stepIndex}>{withoutMeasurementNotation(step)}</li>
                           ))}
                         </ol>
                         {drill.cues && drill.cues.length > 0 && (
@@ -418,7 +410,7 @@ export function AnalysisResultsPanel({
                                   key={cueIndex}
                                   className="rounded-md bg-background px-2 py-0.5 text-xs text-muted-foreground"
                                 >
-                                  {cue}
+                                   {withoutMeasurementNotation(cue)}
                                 </span>
                               ))}
                             </div>
@@ -447,10 +439,10 @@ export function AnalysisResultsPanel({
             module={moduleKey || 'hitting'}
             analysisContext={{
               // Phase 51 — no fabricated numeric biomechanical claim seeded.
-              feedback: analysis.feedback,
-              positives: analysis.positives,
-              drills: analysis.drills,
-              summary: analysis.summary,
+               feedback: withoutMeasurementNotation(analysis.feedback),
+               positives: analysis.positives?.map(withoutMeasurementNotation),
+               drills: analysis.drills.map((drill) => ({ ...drill, title: withoutMeasurementNotation(drill.title), purpose: withoutMeasurementNotation(drill.purpose), steps: drill.steps?.map(withoutMeasurementNotation), cues: drill.cues?.map(withoutMeasurementNotation) })),
+               summary: analysis.summary?.map(withoutMeasurementNotation),
             }}
           />
         </div>

@@ -49,6 +49,8 @@ import { AnalysisResultsPanel } from "@/components/analyze/AnalysisResultsPanel"
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
 import { AnalysisVideoRecommendations } from "@/components/analyze/AnalysisVideoRecommendations";
 import { RootPatternCallout } from "@/components/analyze/RootPatternCallout";
+import { BackLegFinding } from "@/components/analyze/BackLegFinding";
+import { useQueryClient } from "@tanstack/react-query";
 import { useScoredGradingAccess } from "@/hooks/useScoredGradingAccess";
 import { analysisFeedbackToTaxonomy } from "@/lib/analysisFeedbackToTaxonomy";
 import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
@@ -85,6 +87,7 @@ export default function AnalyzeVideo() {
   const [searchParams] = useSearchParams();
   const sport = searchParams.get("sport") || (localStorage.getItem('selectedSport') as string) || "baseball";
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
+  const queryClient = useQueryClient();
   const { modules: subscribedModules, loading: subLoading, initialized, refetch, hasAccessForSport } = useSubscription();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
@@ -1063,6 +1066,8 @@ export default function AnalyzeVideo() {
       const normalized = normalizeAnalysisResponse(analysisData);
       setAnalysis(normalized);
       setAnalysisError(null);
+      void queryClient.invalidateQueries({ queryKey: ["back-leg-finding", user?.id, videoData.id] });
+      void queryClient.invalidateQueries({ queryKey: ["cross-domain-faults", user?.id] });
       fireAnalysisVideoMoment(normalized);
 
       toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
@@ -1202,6 +1207,8 @@ export default function AnalyzeVideo() {
       const normalizedRetry = normalizeAnalysisResponse(analysisData);
       setAnalysis(normalizedRetry);
       setAnalysisError(null);
+      void queryClient.invalidateQueries({ queryKey: ["back-leg-finding", user?.id, currentVideoId] });
+      void queryClient.invalidateQueries({ queryKey: ["cross-domain-faults", user?.id] });
       fireAnalysisVideoMoment(normalizedRetry);
 
       toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
@@ -1558,6 +1565,7 @@ export default function AnalyzeVideo() {
 
             {analysis && (
               <div className="space-y-4">
+                 {module === "hitting" && <BackLegFinding videoId={currentVideoId} />}
                 {scoresAllowed && (
                   <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
                 )}

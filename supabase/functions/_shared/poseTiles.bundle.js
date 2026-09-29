@@ -1763,7 +1763,7 @@ var CARD_FLOORS = {
   spacing_pct: 2.3
 };
 var CARD_COACHING = {
-  heel_plant: "Your back heel needs to be on the ground for the swing. Being planted gives your back bicep a better chance to create the right direction, the side-bend angle from P2 gives it an easier path to the ball without running into your body, and a stable base makes steady eyes more likely. Power from the P3 stretch does not depend on the heel — accuracy does.",
+  heel_plant: "Let your front heel settle on the ground as you land. That stable front side clears a path for your back elbow and helps your eyes stay steady. Your back heel can rise as your hips turn — it is not the heel we check.",
   back_elbow_connection: "The back elbow (bicep) releases the swing out of the P3 stretch. The elbow gains ground forward while the hands stay back with the shoulder — that is what gives a linear move its rotation. The goal is an elbow that gets the bat square to fair territory.",
   shoulder_plane_steadiness: "Higher is better. Holding your shoulder plane from the start of P4 shows you were not fooled. This is not pass/fail — you can have a poor shoulder plane and still hit the ball well.",
   back_knee_flex_maintained: "From the end of P2 to landing, your back knee should not straighten. It is part of your back leg holding the weight.",
@@ -1832,15 +1832,20 @@ function heelPlant(c, plantK, liftFrame) {
     const he = Up(c, P(c, j, c.frontHeel)), to = Up(c, P(c, j, c.frontToe));
     return he == null || to == null ? null : he - to;
   };
-  const atPlant = m3(c, plantK, h);
-  if (atPlant == null)
-    return refuse2(K, u, mr2(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "front_heel_or_toe_untrusted_at_plant" });
-  const touching = atPlant <= CARD_FLOORS.heel_minus_toe_pct;
-  return ok(K, u, atPlant, CARD_FLOORS.heel_minus_toe_pct, touching ? "pass" : "fail", {
-    plant_frame: c.s.frames[plantK].frame_index,
+  const end = Math.min(c.s.frames.length - 2, plantK + Math.ceil(c.fps * 0.5));
+  const observed = Array.from({ length: end - plantK + 1 }, (_, i) => plantK + i).map((k) => ({ k, height: m3(c, k, h) })).filter((x) => x.height != null);
+  if (!observed.length)
+    return refuse2(K, u, mr2(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "front_heel_or_toe_untrusted_after_strike" });
+  const contact = observed.find((x) => x.height <= CARD_FLOORS.heel_minus_toe_pct);
+  const best = contact ?? observed.reduce((a, b) => b.height < a.height ? b : a);
+  const touching = !!contact;
+  return ok(K, u, best.height, CARD_FLOORS.heel_minus_toe_pct, touching ? "pass" : "fail", {
+    first_strike_frame: c.s.frames[plantK].frame_index,
+    front_heel_settle_frame: c.s.frames[best.k].frame_index,
+    front_foot: c.side === "L" ? "right" : "left",
     heel_touching: touching,
-    rule: "owner 2026-09-28: heel in contact at full plant; pass/fail, tolerance = still-clip noise floor only",
-    sign: "heel minus toe height at full plant; + = heel above toe",
+    rule: "front heel settles after front-foot strike; back heel is excluded; still-clip noise floor only",
+    sign: "front heel minus front toe height; + = heel above toe",
     coaching: CARD_COACHING.heel_plant
   });
 }
@@ -2254,7 +2259,91 @@ function hittersMove(series, o, t) {
   return ok("hitters_move", "boolean", fails.length ? 0 : 1, null, fails.length ? "fail" : "pass", { constituents: status, failed: fails });
 }
 
+// src/lib/biomech/gates/movementGate.ts
+var MOVEMENT_GATE_VERSION = "movement_gate@1.0.0";
+var MOVEMENT_THRESHOLD_BODY = 0.2;
+var MIN_OBSERVED_FRAMES = 10;
+var MIN_LANDMARKS = 6;
+var MIN_POSE_FRACTION = 0.5;
+var BODY = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28];
+var VIS = 0.5;
+function pct(sorted, q2) {
+  return sorted[Math.floor((sorted.length - 1) * q2)];
+}
+function px(series, fi, i) {
+  const f = series.frames[fi];
+  if (!f.pose_detected)
+    return null;
+  const v = f.visibility?.[i];
+  if (v == null || !(v >= VIS))
+    return null;
+  const x = f.normalized[i * 3];
+  const y = f.normalized[i * 3 + 1];
+  if (!Number.isFinite(x) || !Number.isFinite(y))
+    return null;
+  return { x: x * series.header.width, y: y * series.header.height };
+}
+function bodyScalePx2(series) {
+  const d = [];
+  for (let k = 0;k < series.frames.length; k++) {
+    const ls = px(series, k, 11), rs = px(series, k, 12), la = px(series, k, 27), ra = px(series, k, 28);
+    if (!ls || !rs || !la || !ra)
+      continue;
+    d.push(Math.hypot((ls.x + rs.x) / 2 - (la.x + ra.x) / 2, (ls.y + rs.y) / 2 - (la.y + ra.y) / 2));
+  }
+  if (d.length === 0)
+    return null;
+  d.sort((a, b) => a - b);
+  const m2 = pct(d, 0.5);
+  return m2 > 0 ? m2 : null;
+}
+function movementScore(series) {
+  const scale = bodyScalePx2(series);
+  if (scale == null)
+    return null;
+  const ex = [];
+  for (const i of BODY) {
+    const xs = [];
+    const ys = [];
+    for (let k = 0;k < series.frames.length; k++) {
+      const p = px(series, k, i);
+      if (p) {
+        xs.push(p.x);
+        ys.push(p.y);
+      }
+    }
+    if (xs.length < MIN_OBSERVED_FRAMES)
+      continue;
+    xs.sort((a, b) => a - b);
+    ys.sort((a, b) => a - b);
+    ex.push(Math.hypot(pct(xs, 0.98) - pct(xs, 0.02), pct(ys, 0.98) - pct(ys, 0.02)) / scale);
+  }
+  if (ex.length < MIN_LANDMARKS)
+    return null;
+  return Math.round(Math.max(...ex) * 1e6) / 1e6;
+}
+function evaluateMovementGate(series) {
+  const base = { threshold: MOVEMENT_THRESHOLD_BODY, version: MOVEMENT_GATE_VERSION };
+  if (!series || series.frames.length === 0) {
+    return { status: "refused", reason: "body_not_tracked", movement_score: null, ...base };
+  }
+  const withPose = series.frames.filter((f) => f.pose_detected).length;
+  if (withPose / series.frames.length < MIN_POSE_FRACTION) {
+    return { status: "refused", reason: "body_not_tracked", movement_score: null, ...base };
+  }
+  const score = movementScore(series);
+  if (score == null)
+    return { status: "refused", reason: "body_not_tracked", movement_score: null, ...base };
+  if (score < MOVEMENT_THRESHOLD_BODY) {
+    return { status: "refused", reason: "no_movement_detected", movement_score: score, ...base };
+  }
+  return { status: "movement", movement_score: score, ...base };
+}
+
 // src/lib/biomech/server/poseTileServerEntry.ts
+function checkStoredLandmarkMovement(ndjson) {
+  return evaluateMovementGate(decodeLandmarkSeriesText(ndjson));
+}
 function runHittingTilesFromText(ndjson, side, athleteHeightIn) {
   const s = decodeLandmarkSeriesText(ndjson);
   const pose = runHittingPoseTiles(s, { side });
@@ -2273,5 +2362,6 @@ function runHittingTilesFromText(ndjson, side, athleteHeightIn) {
   return { engine_version: HITTING_CARD_TILES_VERSION, verdicts, pose, card, owner };
 }
 export {
-  runHittingTilesFromText
+  runHittingTilesFromText,
+  checkStoredLandmarkMovement
 };

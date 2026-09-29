@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import type { ReportCardTileSpec, TileState } from "@/lib/reportCard";
 import { cn } from "@/lib/utils";
 import { RadialMeter } from "./visuals/RadialMeter";
+import { athleteMissingness, athleteResult, withoutMeasurementNotation } from "@/lib/reportCard/athleteLanguage";
 
 interface Props {
   spec: ReportCardTileSpec;
@@ -75,22 +76,21 @@ export function ReportCardTile({ spec, state, onOpen, index = 0 }: Props) {
 
       <div className="flex flex-1 items-center justify-center py-3">
         {isMissing ? (
-          <MissingBody reason={state.missing_reason} />
+          <MissingBody reason={athleteMissingness(state.missing_reason)} />
         ) : spec.mode === "score_meter" ? (
           <RadialMeter
             fraction={Math.max(0, Math.min(1, (state.score100 ?? 0) / 100))}
             acceptable={(state.acceptable ?? 60) / 100}
             elite={state.elite !== undefined ? state.elite / 100 : undefined}
             status={isElite ? "elite" : isPass ? "pass" : isWarn ? "warn" : "fail"}
-            centerLabel={Math.round(state.score100 ?? 0).toString()}
-            centerSub="/ 100"
+            centerLabel={athleteResult(state.status)}
             animate={!reduce}
           />
         ) : spec.mode === "pass_fail" ? (
           <PassFailBadge pass={isPass} />
         ) : spec.mode === "raw_passed" || spec.mode === "raw_pass_fail" ? (
           <RawValueBody
-            value={state.value ?? "—"}
+            value={athleteResult(state.status)}
             pass={isPass}
             elite={isElite}
             big={spec.mode === "raw_passed"}
@@ -99,11 +99,11 @@ export function ReportCardTile({ spec, state, onOpen, index = 0 }: Props) {
       </div>
 
       <div className="mt-2 flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-        <span className="truncate">{spec.thresholdChip ?? spec.standard}</span>
+        <span className="line-clamp-2">{withoutMeasurementNotation(spec.standard)}</span>
         {!isMissing && typeof state.confidence === "number" && state.confidence < 0.5 && (
           <span
-            title={`Low model-stated measurement confidence (${Math.round(state.confidence * 100)}%) — provisional. This is the model's self-reported confidence in the measurement, not a frame-coverage or pose-quality score.`}
-            aria-label={`Low model-stated measurement confidence ${Math.round(state.confidence * 100)} percent, provisional`}
+            title="This measurement is uncertain, so treat the result as provisional."
+            aria-label="Measurement uncertain; provisional result"
             className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
             style={{ background: "hsl(var(--meter-warn))" }}
           />
@@ -121,7 +121,7 @@ export function ReportCardTile({ spec, state, onOpen, index = 0 }: Props) {
             color: "hsl(var(--meter-fail))",
           }}
         >
-          {state.note}
+          {withoutMeasurementNotation(state.note)}
         </div>
       )}
     </motion.button>
@@ -132,7 +132,7 @@ function MissingBody({ reason }: { reason?: string }) {
   return (
     <div className="flex flex-col items-center gap-1 px-2 text-center text-muted-foreground">
       <AlertCircle className="h-6 w-6 opacity-50" />
-      <span className="text-xs font-bold uppercase tracking-wider">Not detected</span>
+      <span className="text-xs font-bold uppercase tracking-wider">Couldn't judge</span>
       {reason && <span className="text-[10px] opacity-75 line-clamp-2">{reason}</span>}
     </div>
   );
@@ -154,7 +154,7 @@ function PassFailBadge({ pass }: { pass: boolean }) {
       }}
     >
       {pass ? <Check className="h-5 w-5" strokeWidth={3.5} /> : <X className="h-5 w-5" strokeWidth={3.5} />}
-      <span>{pass ? "Pass" : "Fail"}</span>
+       <span>{pass ? "You held it" : "Needs work"}</span>
     </div>
   );
 }
@@ -198,7 +198,7 @@ function RawValueBody({
         ) : (
           <X className="h-3 w-3" strokeWidth={3.5} />
         )}
-        {elite ? "Elite" : pass ? "Pass" : "Missed"}
+         {elite ? "Excellent move" : pass ? "You held it" : "Needs work"}
       </span>
     </div>
   );
