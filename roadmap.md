@@ -2,6 +2,7 @@
 - [x] Shoulder opening five-signal fusion (side-on)
 - [x] Hitting baseball: all 22 tiles built (several ungraded pending owner numbers)
 - [ ] Hitting softball
+- [ ] Front heel landing correction, athlete-language audit, and live pose-finding integration (owner approved function redeployment)
 - [ ] Throwing baseball (shuffle vs crow-hop detection for energy angle)
 - [ ] Throwing softball
 - [ ] Pitching baseball (remaining tiles)
@@ -27,6 +28,6 @@
 - [x] back-leg root pattern → one finding (pure builder, tested)
 - [x] Owner doctrine 2026-09-28: nine tiles re-specified (heel, back elbow, shoulder plane, back knee, hip drift, hands at heel landing, head rise, lead elbow P2 ref, pelvis square)
 - [x] Server runner + generated bundle + findings writer (poseTileFindingsServer.ts)
-- [ ] Call the server runner from analyze-video — blocked: needs owner OK to redeploy that function
+- [ ] Call the server runner from analyze-video — owner approved function redeployment
 - [ ] Owner numbers for ungraded card tiles (CARD_TILE_OWNER_NUMBERS_NEEDED)
 - [x] Move tiles 19/20/hip_load/head discipline/hands-outside onto segment validity

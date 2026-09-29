@@ -62,7 +62,7 @@ export const CARD_TILE_OWNER_NUMBERS_NEEDED = [
 
 /** Coaching text in the owner's reasoning — athletes see WHY, not just a verdict. */
 export const CARD_COACHING: Record<string, string> = {
-  heel_plant: "Your back heel needs to be on the ground for the swing. Being planted gives your back bicep a better chance to create the right direction, the side-bend angle from P2 gives it an easier path to the ball without running into your body, and a stable base makes steady eyes more likely. Power from the P3 stretch does not depend on the heel — accuracy does.",
+  heel_plant: "Let your front heel settle on the ground as you land. That stable front side clears a path for your back elbow and helps your eyes stay steady. Your back heel can rise as your hips turn — it is not the heel we check.",
   back_elbow_connection: "The back elbow (bicep) releases the swing out of the P3 stretch. The elbow gains ground forward while the hands stay back with the shoulder — that is what gives a linear move its rotation. The goal is an elbow that gets the bat square to fair territory.",
   shoulder_plane_steadiness: "Higher is better. Holding your shoulder plane from the start of P4 shows you were not fooled. This is not pass/fail — you can have a poor shoulder plane and still hit the ball well.",
   back_knee_flex_maintained: "From the end of P2 to landing, your back knee should not straighten. It is part of your back leg holding the weight.",
@@ -145,14 +145,22 @@ export function shoulderTiltDeg(c: { s: LandmarkSeries; lock: StanceLock }, l: P
 function heelPlant(c: Ctx, plantK: number, liftFrame: number | null): CardTileResult {
   const K: CardKey = "heel_plant", u = "percent_stature";
   const h = (j: number) => { const he = Up(c, P(c, j, c.frontHeel)), to = Up(c, P(c, j, c.frontToe)); return he == null || to == null ? null : he - to; };
-  const atPlant = m3(c, plantK, h);
-  if (atPlant == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "front_heel_or_toe_untrusted_at_plant" });
+  // D-PLANT marks initial front-foot strike (the toe can land first). Follow
+  // that SAME front foot until its heel settles; never inspect the back heel.
+  const end = Math.min(c.s.frames.length - 2, plantK + Math.ceil(c.fps * 0.25));
+  const observed = Array.from({ length: end - plantK + 1 }, (_, i) => plantK + i)
+    .map((k) => ({ k, height: m3(c, k, h) }))
+    .filter((x): x is { k: number; height: number } => x.height != null);
+  if (!observed.length) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "front_heel_or_toe_untrusted_after_strike" });
+  const contact = observed.find((x) => x.height <= CARD_FLOORS.heel_minus_toe_pct);
+  const best = contact ?? observed.reduce((a, b) => b.height < a.height ? b : a);
   void liftFrame;
-  // Contact = heel no higher than the toe beyond the still-clip floor. No tolerance band beyond the floor.
-  const touching = atPlant <= CARD_FLOORS.heel_minus_toe_pct;
-  return ok(K, u, atPlant, CARD_FLOORS.heel_minus_toe_pct, touching ? "pass" : "fail", {
-    plant_frame: c.s.frames[plantK].frame_index, heel_touching: touching, rule: "owner 2026-09-28: heel in contact at full plant; pass/fail, tolerance = still-clip noise floor only",
-    sign: "heel minus toe height at full plant; + = heel above toe", coaching: CARD_COACHING.heel_plant,
+  const touching = !!contact;
+  return ok(K, u, best.height, CARD_FLOORS.heel_minus_toe_pct, touching ? "pass" : "fail", {
+    first_strike_frame: c.s.frames[plantK].frame_index, front_heel_settle_frame: c.s.frames[best.k].frame_index,
+    front_foot: c.side === "L" ? "right" : "left", heel_touching: touching,
+    rule: "front heel settles after front-foot strike; back heel is excluded; still-clip noise floor only",
+    sign: "front heel minus front toe height; + = heel above toe", coaching: CARD_COACHING.heel_plant,
   });
 }
 

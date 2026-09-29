@@ -736,6 +736,8 @@ Most of these REPLACE a threshold with a rule. The reasoning is recorded so the 
 
 Spec: heel in contact at full plant; pass/fail; tolerance = still-clip floor only (1.5 % stature heel-above-toe).
 
+Clarification `[owner-supplied 2026-09-29]`: This standard is for the **front heel**, not the back heel. For a left-handed hitter the front foot is the **right foot**. The first front-foot strike may be toe-first; check whether that same heel settles during landing, not only at the first strike instant. The back heel coming up slightly while the front heel lands is normal as weight transfers and hips turn. **Never grade back-heel lift as a heel-plant fault.** Back-heel lift is also **not part of the back-leg-holding-weight formula**: that formula concerns whether the back knee holds its bend and the back hip socket holds its rotation. Both can hold while the back heel is off the ground.
+
 ### 11.2 Back elbow — square to fair; a path, not an angle `[owner-supplied 2026-09-28]`
 > "The back elbow (or bicep) releases the swing from the P3 Power stretch position (X-Factor). The bicep (or elbow) gives the swing a rotation factor even though it is working in a linear fashion. The hands must stay back in the position in accordance to the shoulder but the elbow is gaining ground forward. You ideally want the elbow to get the bat square to the front of the plate which is square to fair territory & the pitcher. I'm not sure of an exact mathematical angle but I do know we want balls in fair territory but optimal is square to fair."
 
