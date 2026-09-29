@@ -348,7 +348,7 @@ export function computeBackHipSocketHold(i: BackHipInputs): BackHipResult {
  * front foot chosen from the athlete's side, plant searched after that foot's
  * peak lift (or after stride onset when there is no vertical lift).
  */
-export function frontFootPlantFromSeries(series: LandmarkSeries, side: Handedness) {
+export function frontFootPlantFromSeries(series: LandmarkSeries, side: Handedness, minLiftRise?: number) {
   const idx = frontAnkleIndex(side);
   const fps = Number.isFinite(series.header.fps_true) ? series.header.fps_true : null;
   const rows = series.frames.map((f) => {
@@ -359,7 +359,7 @@ export function frontFootPlantFromSeries(series: LandmarkSeries, side: Handednes
     const h = ys.some((v) => v == null) ? null : Math.abs(((ys[2] as number) + (ys[3] as number)) / 2 - ((ys[0] as number) + (ys[1] as number)) / 2);
     return { frame_index: f.frame_index, lift_ankle_y: ay, lift_ankle_x: ax, front_ankle_y: ay, front_ankle_x: ax, body_height_y: h && h > 0 ? h : null };
   });
-  const lift = findPeakLegLiftFrame(rows, fps);
+  const lift = findPeakLegLiftFrame(rows, fps, minLiftRise);
   const plant = findFrontFootStrikeFrame(rows, { after_frame_index: lift.frame_index, fps });
   return { lift, plant };
 }

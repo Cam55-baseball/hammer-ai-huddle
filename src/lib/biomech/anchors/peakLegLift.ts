@@ -58,13 +58,22 @@ export interface PeakLegLiftResult {
 export function findPeakLegLiftFrame(
   poseFrames: readonly PoseFrame[],
   fps: number | null = null,
+  minRise: number = MIN_LIFT_RISE_BODY,
 ): PeakLegLiftResult {
-  const r = findPeakLegLiftFrameInner(poseFrames);
+  const r = findPeakLegLiftFrameInner(poseFrames, minRise);
   return { ...r, anchor_uncertainty_ms: r.frame_index == null ? null : oneFrameMs(fps) };
 }
 
+/**
+ * Field-throw lift floor (owner 2026-09-29: "a fielder always has a slight leg
+ * lift"). 1.5× the still-clip ankle range (0.047) instead of 2×. Used ONLY by
+ * the throwing card; hitting and pitching keep MIN_LIFT_RISE_BODY.
+ */
+export const MIN_LIFT_RISE_BODY_THROWING = 0.07;
+
 function findPeakLegLiftFrameInner(
   poseFrames: readonly PoseFrame[],
+  minRise: number,
 ): Omit<PeakLegLiftResult, "anchor_uncertainty_ms"> {
   // D-POSE is stubbed → cannot trust ankle y-coordinates → canonical missingness.
   if (LANDMARK_MODEL_VERSION.endsWith("@0.0.0-stub")) {
@@ -101,7 +110,7 @@ function findPeakLegLiftFrameInner(
   const ys = visible.map((f) => f.lift_ankle_y).sort((a, b) => a - b);
   const baseline = ys[Math.floor((ys.length - 1) / 2)];
   const bodyH = heights.length ? heights[Math.floor((heights.length - 1) / 2)] : null;
-  if (bodyH == null || (baseline - ys[0]) / bodyH < MIN_LIFT_RISE_BODY) {
+  if (bodyH == null || (baseline - ys[0]) / bodyH < minRise) {
     return {
       frame_index: null,
       missingness: missingness(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, "D-ANCHOR"),
