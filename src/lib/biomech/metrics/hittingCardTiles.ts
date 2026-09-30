@@ -31,7 +31,7 @@ import { fuseShoulderOpen } from "./shoulderOpenFusion";
 import { detectCameraView, checkCameraRequirement } from "../camera/cameraView";
 import { handPointPx, runHittingPoseTiles } from "./hittingPoseTiles";
 
-export const HITTING_CARD_TILES_VERSION = "hitting_card_tiles@2.1.0-back-heel-2026-09-29";
+export const HITTING_CARD_TILES_VERSION = "hitting_card_tiles@2.2.0-hips-vs-shoulders-2026-09-30";
 
 /* ---------- floors: still clip 15d75bc9, measured by scripts before any threshold ---------- */
 export const CARD_FLOORS = {
@@ -191,72 +191,92 @@ function backHeelEarlyRise(c: Ctx, p4K: number): CardTileResult {
   });
 }
 
-/* ================= 9 sequencing — OWNER'S CHAIN (2026-09-30) =================
- * "…until the back bicep/elbow moves forward which turns the back knee … which
- *  begins the hip rotation which catapults shoulders (Rotationally) from their
- *  square position … which drives the barrel through the ball."
- * Order checked: back elbow → back knee → pelvis → shoulders. The barrel link
- * is bat tracking and belongs to DelayCam. Forward travel is the BUFFER that
- * loads the chain, not a link in it — no linear term enters (owner 2026-09-30).
- * Every segment is timed by its PEAK ANGULAR SPEED:
- *   back_elbow — back upper arm (shoulder → elbow) turning in the image plane
- *   back_knee  — back thigh (hip → knee) turning in the image plane (the knee turn that makes the triangles)
- *   pelvis     — hip line turning out of the image plane (rigid length: acos(width ÷ stance width))
- *   shoulders  — shoulder line turning out of the image plane (same solve)
- * Rigid solves are unsigned, so speed is |dθ/dt|. */
-const FORESHORTEN_MIN = 0.6;
-export const SEQUENCING_CHAIN = ["back_elbow", "back_knee", "pelvis", "shoulders"] as const;
-function sequencing(c: Ctx, ssK: number, pkK: number): CardTileResult {
+/* ================= 9 sequencing — HIPS BEFORE SHOULDERS (owner 2026-09-30, third ruling) =================
+ * "The true test by itself is hips before shoulders and the other tests give
+ *  signals for the rest of the sequencing to paint a whole picture."
+ * VERDICT: pelvis vs shoulders only — both rigid rotations out of the image plane,
+ * solved the same way (acos(width ÷ stance width)), timed by peak |dθ/dt|. Like
+ * for like; no mixed units. Forward travel never enters (it is the buffer).
+ * SUPPORTING SIGNALS (reported, NEVER gating):
+ *   elbow_onset — first frame the back elbow moves BOTH down AND toward the pitcher,
+ *                 sustained ≥ 2 frames, above the still floor. An ONSET, not a peak;
+ *                 no distance or speed threshold (fascial variation, owner).
+ *   knee_chain  — "knee leads hips leads shoulders leads hands": back-thigh in-plane
+ *                 turn peak → pelvis → shoulders → hands forward-speed peak. The hands
+ *                 link is a speed peak (different units) and is supporting only.
+ * FRAME RATE: the verdict needs the two peaks at least SEQ_MIN_GAP_FRAMES apart and
+ * fps ≥ SEQ_MIN_FPS. Published pelvis→torso peak lags in hitting are roughly
+ * 30–60 ms; peak timing carries ±1 frame, so ordering needs ≥ 2 frames between
+ * peaks → a frame interval ≤ ~20 ms → 60 fps. Below that the tile is routed to
+ * DelayCam mechanics (standing rule 2026-09-30) and its readings stay staff lineage. */
+export const SEQUENCING_CHAIN = ["pelvis", "shoulders"] as const;
+export const SEQ_MIN_FPS = 60;
+export const SEQ_MIN_GAP_FRAMES = 2;
+/** Still clip 15d75bc9, measured 2026-09-30 before use: worst 2-frame elbow displacement, % stature (smoothed, either side/direction). */
+export const ELBOW_ONSET_FLOOR = { forward_pct: 0.95, down_pct: 0.81 } as const;
+function sequencing(c: Ctx, ssK: number, pkK: number, apexK: number): CardTileResult {
   const K: CardKey = "sequencing", u = "boolean", n = c.s.frames.length;
   const dist = (j: number, a: number, b: number) => { const p = P(c, j, a), q = P(c, j, b); return p && q ? Math.hypot(p.x - q.x, p.y - q.y) : null; };
   const plantEnd = Math.min(n - 1, pkK);
   const stanceWidth = (a: number, b: number) => { let w = 0; for (let j = c.lock.start_k!; j <= plantEnd; j++) { const x = m3(c, j, (i) => dist(i, a, b)); if (x != null && x > w) w = x; } return w > 0 ? w : null; };
   const Lh = stanceWidth(LM.L_HIP, LM.R_HIP), Ls = stanceWidth(LM.L_SHOULDER, LM.R_SHOULDER);
   const rigid = (a: number, b: number, L: number | null) => (j: number) => { if (!L) return null; const d = dist(j, a, b); return d == null ? null : (Math.acos(Math.min(1, d / L)) * 180) / Math.PI; };
-  // Foreshortening guard: an in-plane angle is only readable while the upper arm shows ≥ FORESHORTEN_MIN of its stance length.
-  const armRef = lockMed(c, (j) => dist(j, c.rear.sh, c.rear.el));
   const inPlane = (a: number, b: number) => (j: number) => { const p = P(c, j, a), q = P(c, j, b); return p && q ? (Math.atan2(q.y - p.y, q.x - p.x) * 180) / Math.PI : null; };
-  const chans: [string, (j: number) => number | null, boolean][] = [
-    ["back_elbow", (j) => { const L = armRef, d = dist(j, c.rear.sh, c.rear.el); return L && d != null && d >= L * FORESHORTEN_MIN ? inPlane(c.rear.sh, c.rear.el)(j) : null; }, true],
-    ["back_knee", inPlane(c.rear.hip, c.rear.knee), true],
-    ["pelvis", rigid(LM.L_HIP, LM.R_HIP, Lh), false],
-    ["shoulders", rigid(LM.L_SHOULDER, LM.R_SHOULDER, Ls), false],
-  ];
-  // Window: swing start → a little past D-SWING-PEAK (fastest torso turn), so a segment peaking after the shoulders is not cut off.
   const k0 = Math.max(1, ssK - 1), k1 = Math.min(n - 2, pkK + Math.ceil(c.fps * 0.125));
-  const peaks: Record<string, { frame: number | null; deg_per_s: number | null; coverage: number }> = {};
-  for (const [name, g, wrap] of chans) {
+  const peakOf = (g: (j: number) => number | null, wrap: boolean, signed = false) => {
     let raw = c.s.frames.map((_, j) => g(j));
     if (wrap) { let off = 0; raw = raw.map((x, j) => { if (x == null) return null; const prev = raw.slice(0, j).reverse().find((y) => y != null); if (prev != null) { const d = x + off - (prev as number); if (d > 180) off -= 360; else if (d < -180) off += 360; } return x + off; }); }
     const x = smooth(raw, 1);
     let best = -1, bv = -Infinity, seen = 0;
-    for (let j = k0; j <= k1; j++) { const a = x[j - 1], b = x[j + 1]; if (a == null || b == null) continue; seen++; const w = Math.abs(((b - a) * c.fps) / 2); if (w > bv) { bv = w; best = j; } }
-    peaks[name] = { frame: best < 0 ? null : c.s.frames[best].frame_index, deg_per_s: best < 0 ? null : round4(bv), coverage: round4(seen / (k1 - k0 + 1)) };
+    for (let j = k0; j <= k1; j++) { const a = x[j - 1], b = x[j + 1]; if (a == null || b == null) continue; seen++; const w = ((b - a) * c.fps) / 2; const m = signed ? w : Math.abs(w); if (m > bv) { bv = m; best = j; } }
+    const coverage = round4(seen / (k1 - k0 + 1));
+    return { k: best, frame: best < 0 ? null : c.s.frames[best].frame_index, speed: best < 0 ? null : round4(bv), coverage, ok: best >= 0 && coverage >= 0.6 };
+  };
+  const pel = peakOf(rigid(LM.L_HIP, LM.R_HIP, Lh), false), sho = peakOf(rigid(LM.L_SHOULDER, LM.R_SHOULDER, Ls), false);
+  const knee = peakOf(inPlane(c.rear.hip, c.rear.knee), true);
+  const hands = peakOf((j) => Fw(c, handPointPx(c.s, j, c.v).p), false, true);
+
+  // ---- supporting: elbow ONSET (down AND toward the pitcher, ≥2 frames, above still floor) ----
+  const eFw = smooth(c.s.frames.map((_, j) => Fw(c, P(c, j, c.rear.el))), 1);
+  const eUp = smooth(c.s.frames.map((_, j) => Up(c, P(c, j, c.rear.el))), 1);
+  const oStart = Math.max(1, apexK), oEnd = Math.min(n - 1, k1);
+  let onsetK = -1;
+  for (let j = oStart; j + 2 <= oEnd && onsetK < 0; j++) {
+    const f = [eFw[j], eFw[j + 1], eFw[j + 2]], v = [eUp[j], eUp[j + 1], eUp[j + 2]];
+    if (f.some((x) => x == null) || v.some((x) => x == null)) continue;
+    const [f0, f1, f2] = f as number[], [u0, u1, u2] = v as number[];
+    const stepsOk = f1 > f0 && f2 > f1 && u1 < u0 && u2 < u1; // two consecutive frames, both directions
+    if (stepsOk && f2 - f0 > ELBOW_ONSET_FLOOR.forward_pct && u0 - u2 > ELBOW_ONSET_FLOOR.down_pct) onsetK = j;
   }
-  const base = { method: "peak_angular_speed_every_segment", chain: "owner_2026-09-30: back elbow → back knee → pelvis → shoulders → barrel", barrel_link: "DelayCam (bat tracking) — not checked on the upload card", linear_terms: "none", linear_terms_why: "forward travel is the buffer that loads the chain, not a link in it", swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, window_end_frame: c.s.frames[k1].frame_index, stance_width_px: { pelvis: Lh && round4(Lh), shoulders: Ls && round4(Ls) }, per_segment: peaks, frame_uncertainty: 1, coaching: CARD_COACHING.sequencing };
-  // Back elbow fallback: side-on the back upper arm points at the camera through most of the swing, so its
-  // turning angle is unreadable. The owner's words for the trigger are "the back bicep/elbow MOVES FORWARD";
-  // the elbow's own forward speed RELATIVE TO THE BACK SHOULDER is the arm's motion, not body travel, and is
-  // used as a labelled proxy for the elbow link only. Body travel still never enters the chain.
-  let elbowSource = "angular";
-  if (peaks.back_elbow.frame == null || peaks.back_elbow.coverage < 0.6) {
-    const rel = smooth(c.s.frames.map((_, j) => { const e = Fw(c, P(c, j, c.rear.el)), sh = Fw(c, P(c, j, c.rear.sh)); return e == null || sh == null ? null : e - sh; }), 1);
-    let best = -1, bv = -Infinity, seen = 0;
-    for (let j = k0; j <= k1; j++) { const a = rel[j - 1], b = rel[j + 1]; if (a == null || b == null) continue; seen++; const w = ((b - a) * c.fps) / 2; if (w > bv) { bv = w; best = j; } }
-    const cov = seen / (k1 - k0 + 1);
-    if (best >= 0 && cov >= 0.6) { peaks.back_elbow = { frame: c.s.frames[best].frame_index, deg_per_s: null, coverage: round4(cov) }; (peaks.back_elbow as Record<string, unknown>).pct_stature_per_s = round4(bv); elbowSource = "forward_speed_relative_to_back_shoulder_proxy"; }
-  }
-  (base as Record<string, unknown>).back_elbow_source = elbowSource;
-  if (elbowSource !== "angular") (base as Record<string, unknown>).back_elbow_proxy_why = "back upper arm points at the camera side-on (image length below 60% of stance length for most of the window), so its turning angle cannot be read; the elbow's forward move relative to the back shoulder — the owner's own description of the trigger — times the link instead";
-  const thin = chans.filter(([nm]) => peaks[nm].frame == null || peaks[nm].coverage < 0.6).map(([nm]) => nm);
-  if (thin.length) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { ...base, reason: `segment_unobserved_for_most_of_window:${thin.join(",")}` });
-  const order = chans.map(([nm]) => peaks[nm].frame!);
-  const out: string[] = [];
-  // Every link is checked against every link before it, so "shoulders before elbow" is caught even if a middle link ties.
-  for (let i = 1; i < order.length; i++) for (let h = 0; h < i; h++) if (order[i] < order[h] - 1) out.push(`${chans[i][0]}_before_${chans[h][0]}`);
-  const ties: string[] = [];
-  for (let i = 1; i < order.length; i++) if (order[i] <= order[i - 1] && order[i] >= order[i - 1] - 1) ties.push(`${chans[i - 1][0]}~${chans[i][0]}`);
-  return ok(K, u, out.length === 0 ? 1 : 0, null, out.length === 0 ? "pass" : "fail", { ...base, out_of_order: out, unresolved_ties: ties, pass_means: "no link provably out of order at this frame rate — ties are not confirmation of the order", rule: "a link reaching its fastest turn more than 1 frame before any earlier link in the owner's chain is out of order; within 1 frame cannot be ordered at this frame rate" });
+  const elbow_onset = onsetK < 0
+    ? { frame: null, reason: "no_sustained_down_and_forward_elbow_move_above_still_floor", window: { from: c.s.frames[oStart]?.frame_index ?? null, to: c.s.frames[oEnd]?.frame_index ?? null } }
+    : { frame: c.s.frames[onsetK].frame_index, reason: null, window: { from: c.s.frames[oStart].frame_index, to: c.s.frames[oEnd].frame_index } };
+
+  // ---- supporting: knee chain order ----
+  const chain = [["back_knee", knee], ["pelvis", pel], ["shoulders", sho], ["hands", hands]] as const;
+  const seen = chain.filter(([, x]) => x.ok);
+  const links: string[] = [];
+  for (let i = 1; i < seen.length; i++) { const [an, a] = seen[i - 1], [bn, b] = seen[i]; const d = b.k - a.k; links.push(d >= SEQ_MIN_GAP_FRAMES ? `${an}<${bn}` : d <= -SEQ_MIN_GAP_FRAMES ? `${bn}<${an}` : `${an}~${bn}`); }
+  const knee_chain = { order_checked: "back_knee → pelvis → shoulders → hands", links, unread: chain.filter(([, x]) => !x.ok).map(([nm]) => nm), hands_units: "forward speed (% stature/s) — supporting only, never compared for the verdict" };
+  const elbowVsKnee = onsetK >= 0 && knee.ok ? (onsetK <= knee.k - SEQ_MIN_GAP_FRAMES ? "elbow_onset_before_knee" : onsetK >= knee.k + SEQ_MIN_GAP_FRAMES ? "knee_before_elbow_onset" : "tie") : "cannot_tell";
+
+  const gap = pel.ok && sho.ok ? sho.k - pel.k : null;
+  const base = {
+    method: "hips_vs_shoulders_peak_angular_speed", verdict_rule: "owner 2026-09-30: the true test by itself is hips before shoulders",
+    chain_doctrine: "elbow begins the hitter's move → knee → hips → shoulders → hands; barrel link is DelayCam",
+    linear_terms: "none", swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, window_end_frame: c.s.frames[k1].frame_index,
+    stance_width_px: { pelvis: Lh && round4(Lh), shoulders: Ls && round4(Ls) }, fps: c.fps,
+    per_segment: { pelvis: { frame: pel.frame, deg_per_s: pel.speed, coverage: pel.coverage }, shoulders: { frame: sho.frame, deg_per_s: sho.speed, coverage: sho.coverage }, back_knee: { frame: knee.frame, deg_per_s: knee.speed, coverage: knee.coverage }, hands: { frame: hands.frame, pct_stature_per_s: hands.speed, coverage: hands.coverage } },
+    hips_to_shoulders_gap_frames: gap, hips_to_shoulders_gap_ms: gap == null ? null : round4((gap * 1000) / c.fps),
+    supporting: { elbow_onset, elbow_onset_floor: ELBOW_ONSET_FLOOR, knee_chain, elbow_vs_knee: elbowVsKnee, gating: false },
+    resolution: { min_fps: SEQ_MIN_FPS, min_gap_frames: SEQ_MIN_GAP_FRAMES, why: "pelvis→torso peak lags are ~30–60 ms; peak timing is ±1 frame; ordering needs ≥2 frames between peaks" },
+    coaching: CARD_COACHING.sequencing,
+  };
+  if (!pel.ok || !sho.ok) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { ...base, reason: `segment_unobserved_for_most_of_window:${[!pel.ok && "pelvis", !sho.ok && "shoulders"].filter(Boolean).join(",")}` });
+  if (c.fps < SEQ_MIN_FPS) return refuse(K, u, mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { ...base, reason: `routed_to_delaycam:frame_rate_${Math.round(c.fps)}_below_${SEQ_MIN_FPS}`, routed_to: "delaycam_mechanics" });
+  if (Math.abs(gap!) < SEQ_MIN_GAP_FRAMES) return refuse(K, u, mr(R.INSUFFICIENT_TEMPORAL_RESOLUTION), { ...base, reason: "hips_and_shoulders_peak_too_close_to_order" });
+  const pass = gap! > 0;
+  return ok(K, u, pass ? 1 : 0, null, pass ? "pass" : "fail", { ...base, order: pass ? "hips_before_shoulders" : "shoulders_before_hips" });
 }
 
 /* ================= 10 back-elbow connection — a PATH, not an angle (owner 2026-09-28) ================= */
@@ -516,7 +536,7 @@ export function runHittingCardTiles(series: LandmarkSeries, o: { side: Handednes
   return done({
     heel_plant: need("heel_plant", [P_], () => heelPlant(c, plantK, lift.frame_index)),
     back_heel_early_rise: need("back_heel_early_rise", [P4], () => backHeelEarlyRise(c, p4K)),
-    sequencing: need("sequencing", [SS, PK], () => sequencing(c, ssK, pkK)),
+    sequencing: need("sequencing", [SS, PK, AP], () => sequencing(c, ssK, pkK, apexK)),
     back_elbow_connection: need("back_elbow_connection", [SS, PK], () => backElbow(c, ssK, pkK)),
     shoulder_plane_steadiness: need("shoulder_plane_steadiness", [P4, PK], () => shoulderPlane(c, p4K, pkK)),
     finish_balance: need("finish_balance", [PK, FIN], () => (finK <= pkK ? refuse("finish_balance", units.finish_balance, mr(R.ANCHOR_NOT_DETECTED), { reason: "finish_not_after_swing_peak" }) : finishBalance(c, pkK, finK))),
