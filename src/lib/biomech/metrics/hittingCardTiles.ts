@@ -575,6 +575,7 @@ export function runHittingCardTiles(series: LandmarkSeries, o: { side: Handednes
   const PK = [pkK, `swing_peak_missing:${String(pk?.diagnostics.reason ?? "no_swing_start")}`, pk?.missingness] as [number, string, MissingnessRecord | null | undefined];
   const FIN = [finK, `finish_missing:${String(fin.diagnostics.reason ?? "")}`, fin.missingness] as [number, string, MissingnessRecord | null];
   const apex = detectLoadApex(series, dir), apexK = kOf(series, apex.frame_index);
+  sepMag = separationMagnitude(c, apexK, pkK);
   const AP = [apexK, "end_of_p2_missing:load_apex", apex.missingness] as [number, string, MissingnessRecord | null];
   const P4 = [p4K, `p4_missing:${String(p4.diagnostics.reason ?? "")}`, p4.missingness] as [number, string, MissingnessRecord | null];
   return done({
