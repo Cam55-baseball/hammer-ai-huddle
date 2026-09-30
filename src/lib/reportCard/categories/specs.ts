@@ -23,13 +23,17 @@ const gatherPresent = (raw: unknown): TileReading => {
   return { kind: "record", value: g.value };
 };
 
+/** P3 coil readings (owner 2026-09-30): record-only, 0 points — evidence for the back-leg root, not separate findings. */
+const coilAt = (k: string) => (raw: unknown): TileReading => {
+  const r = at(raw, `coil.${k}`) as { value?: number | null; pattern?: string | null; missing_reason?: string | null } | undefined;
+  if (typeof r?.value === "number" && Number.isFinite(r.value)) return { kind: "record", value: r.value };
+  if (r?.pattern === "no_stride") return { kind: "not_applicable", reason: "no_stride_above_noise" };
+  return { kind: "missing", reason: r?.missing_reason ?? "not_measured" };
+};
+
 export const HITTING_CATEGORIES: CardCategorySpec = {
   card: "hitting",
-  sections: [{
-    key: "rhythm", title: "Rhythm: load, pause, stride, pause, swing",
-    note: "Recorded, not graded. It tracks the two short pauses: after the load and before the stride, and after landing and before the swing. The standard will come from your own history.",
-    tiles: [{ key: "micro_pauses", name: "Pause after landing, before the swing", read: recordAt("rhythm.pauses") }],
-  }],
+  sections: [],
   scaleTo: 100,
   showTotal: true,
   cardNotes: [
@@ -49,6 +53,10 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
       { key: "back_hip_socket_hold", name: "Back hip socket holds or increases", points: 3, nonNegotiable: true, staffOnly: hipLoadStaff, read: verdictAt("owner.tile20") },
       { key: "head_path_through_stride", name: "Head path through the stride", points: 2, staffOnly: headPathStaff, read: verdictAt("owner.tile19") },
       { key: "active_stride", name: "Stride driven by the back hip, not a fall", points: 2, recordOnly: true, baselineKey: "hitting_rhythm.active_stride", read: recordAt("rhythm.active") },
+      { key: "stride_foot_vs_body", name: "Foot goes forward, body stays back", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.foot_vs_body", read: coilAt("foot_vs_body") },
+      { key: "stride_hands_opposite", name: "Hands go back as the foot goes forward", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.hands_opposite", read: coilAt("hands_opposite") },
+      { key: "stride_side_bend", name: "Side bend builds through the stride", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.side_bend", read: coilAt("side_bend") },
+      { key: "stride_sink", name: "Sinking into the back leg, not falling forward", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.sink", read: coilAt("sink") },
       { key: "head_discipline", name: "Head discipline", points: 2, read: verdictAt("pose.head_discipline") },
       { key: "back_heel_early_rise", name: "Back heel stays down until P4", points: 2, read: verdictAt("card.back_heel_early_rise") },
       { key: "stride_direction", name: "Stride direction to the pitcher", points: 2, read: verdictAt("pose.stride_direction") },
@@ -138,11 +146,11 @@ export const THROWING_CATEGORIES: CardCategorySpec = {
   showTotal: true,
   cardNotes: ["The mechanics section is small today and will grow as more throwing checks are validated."],
   categories: [
-    { key: "mechanics", title: "Throwing Mechanics", points: 110, tiles: [
-      { key: "tempo", name: "Throwing tempo", points: 25, read: verdictAt("tempo") },
-      { key: "stride_length", name: "Stride from the final step", points: 25, read: verdictAt("stride_length") },
-      { key: "energy_angle", name: "Shuffle energy angle", points: 25, read: (raw) => { const na = notShuffle(raw); return na ? { kind: "not_applicable", reason: na } : verdictAt("energy_angle")(raw); } },
-      { key: "head_stability", name: "Head and balance through the throw", points: 25, read: verdictAt("head_stability") },
+    { key: "mechanics", title: "Throwing Mechanics", points: 100, tiles: [
+      { key: "tempo", name: "Throwing tempo", points: 23, read: verdictAt("tempo") },
+      { key: "stride_length", name: "Stride from the final step", points: 23, read: verdictAt("stride_length") },
+      { key: "energy_angle", name: "Shuffle energy angle", points: 22, read: (raw) => { const na = notShuffle(raw); return na ? { kind: "not_applicable", reason: na } : verdictAt("energy_angle")(raw); } },
+      { key: "head_stability", name: "Head and balance through the throw", points: 22, read: verdictAt("head_stability") },
       { key: "front_knee_at_landing", name: "Front knee at landing", points: 10, recordOnly: true, baselineKey: "throwing_tiles_deterministic.front_knee_at_landing", read: recordAt("front_knee_at_landing") },
     ] },
   ],
@@ -156,9 +164,10 @@ const spVerdict = (key: string) => (raw: unknown): TileReading => {
   if (t?.verdict === "fail") return { kind: "verdict", pass: false };
   return { kind: "missing", reason: t?.missing_reason ?? "not_measured" };
 };
-const spRecord = (key: string) => (raw: unknown): TileReading => {
+/** Reads ONE named value — never "the first finite one", which silently picked the wrong signal on multi-value tiles. */
+const spRecord = (key: string, field: string) => (raw: unknown): TileReading => {
   const t = at(raw, `tiles.${key}`) as { values?: Record<string, number | null>; missing_reason?: string | null } | undefined;
-  const v = t?.values ? Object.values(t.values).find((x) => typeof x === "number" && Number.isFinite(x)) : undefined;
+  const v = t?.values?.[field];
   return typeof v === "number" ? { kind: "record", value: v } : { kind: "missing", reason: t?.missing_reason ?? "not_measured" };
 };
 const spFlag = (key: string) => (raw: unknown): TileReading => {
@@ -183,20 +192,22 @@ export const WINDMILL_CATEGORIES: CardCategorySpec = {
   ],
   categories: [
     { key: "windup", title: "Wind-up", points: 20, note: "Measurements without a published standard; your standard comes from your own history.", tiles: [
-      { key: "windup_trunk_tibia", name: "Trunk and drive shin together", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_trunk_tibia", read: spRecord("windup_trunk_tibia") },
-      { key: "windup_hip_square", name: "Hips facing the plate", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_hip_square", read: spRecord("windup_hip_square") },
+      { key: "windup_trunk_tibia", name: "Trunk and drive shin together", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_trunk_tibia", read: spRecord("windup_trunk_tibia", "angle_deg") },
+      { key: "windup_hip_square", name: "Hips facing the plate", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_hip_square", read: spRecord("windup_hip_square", "off_square_deg") },
       { key: "windup_knee_over_foot", name: "Drive knee over the foot", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_knee_over_foot", read: spRecord("windup_knee_over_foot") },
       { key: "windup_foot_power_line", name: "Drive foot on the power line", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_foot_power_line", read: spRecord("windup_foot_power_line") },
     ] },
     { key: "stride", title: "Stride", points: 40, tiles: [
       { key: "stride_triple_extension", name: "Drive-leg push", points: 22, read: spVerdict("stride_triple_extension") },
       { key: "sfc_foot_angle", name: "Stride foot at landing", points: 18, read: spVerdict("sfc_foot_angle") },
-      { key: "stride_profile", name: "Stride length", points: 0, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.stride_profile", read: spRecord("stride_profile") },
-      { key: "sfc_separation", name: "Separation at landing", points: 0, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.sfc_separation", read: spRecord("sfc_separation") },
+      { key: "stride_profile_sfc", name: "Stride length at landing", points: 0, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.stride_profile.sfc", read: spRecord("stride_profile", "sfc") },
+      { key: "stride_profile_release", name: "Stride length at release", points: 0, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.stride_profile.release", read: spRecord("stride_profile", "release") },
+      { key: "sfc_separation", name: "Separation at landing", points: 0, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.sfc_separation.separation_at_sfc_deg", read: spRecord("sfc_separation", "separation_at_sfc_deg") },
+      { key: "pelvic_counter_rotation", name: "Hips turning back before landing", points: 0, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.sfc_separation.peak_pelvic_counter_rotation_dps", read: spRecord("sfc_separation", "peak_pelvic_counter_rotation_dps") },
     ] },
     { key: "acceleration", title: "Acceleration", points: 30, tiles: [
       { key: "arm_path", name: "Arm path close to the body", points: 30, read: spVerdict("arm_path") },
-      { key: "trunk_flexion", name: "Forward lean", points: 0, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.trunk_flexion", read: spRecord("trunk_flexion") },
+      { key: "trunk_flexion", name: "Forward lean", points: 0, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.trunk_flexion", read: spRecord("trunk_flexion", "sfc") },
     ] },
     { key: "follow_through", title: "Follow-through", points: 10, note: "A measurement without a published standard; your standard comes from your own history.", tiles: [
       { key: "ft_knee_ankle", name: "Stride knee over the ankle", points: 10, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.ft_knee_ankle", read: spRecord("ft_knee_ankle") },
