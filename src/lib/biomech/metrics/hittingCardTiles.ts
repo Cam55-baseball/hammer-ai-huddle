@@ -372,7 +372,7 @@ function chinLeak(c: Ctx, apexK: number, endK: number) {
  * P2 → plant. + = chin ahead of the front shoulder toward the pitcher. Record-only, never
  * grades (owner: "theoretically"). Same fault as the leak, seen as position.
  * Floor: still clip 15d75bc9, max |med3 − median| across both sides. */
-export const CHIN_POSITION_FLOOR_PCT = 0.9;
+export const CHIN_POSITION_FLOOR_PCT = 0.8; // still 15d75bc9: L 0.80, R 0.49
 function chinPosition(c: Ctx, apexK: number, plantK: number) {
   if (apexK < 0 || plantK <= apexK) return { measured: false as const, reason: "end_of_p2_not_before_landing" };
   const d = (j: number) => { const n = Fw(c, P(c, j, 0)), s = Fw(c, P(c, j, c.lead.sh)); return n == null || s == null ? null : n - s; };
