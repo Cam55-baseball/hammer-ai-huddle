@@ -306,15 +306,40 @@ function finishBalance(c: Ctx, pkK: number, finK: number): CardTileResult {
   return ok(K, u, f, null, null, { swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, finish_frame: c.s.frames[finK].frame_index, com_stance_frac_at_finish: round4(f), inside_base: f >= 0 && f <= 1, com_sway_pct_ungraded: sw == null ? null : sw < CARD_FLOORS.finish_com_sway_pct ? { value: null, reason: "below_still_clip_noise_floor", raw: round4(sw) } : round4(sw), sign: "0 = over back ankle, 1 = over front ankle; position-based estimate" });
 }
 
-/* ================= 13 shoulder-to-shoulder hold — four outputs ================= */
-function shoulderToShoulder(c: Ctx, plantK: number, pkK: number): CardTileResult {
+/* ================= 13 chin-to-shoulder — LEAK channel + HOLD channel (owner 2026-09-30) =================
+ * "Perfect that the chin & shoulder tuck. This unlocks biomechanical ease & being able to see the ball well."
+ * LEAK (side-on measurable): image-plane angle of the head (nose) → front shoulder line,
+ *   end of P2 → the frame before P4 starts. Any change beyond the still-clip floor = the
+ *   front shoulder moved off the chin before the swing = leak (owner: leak is an auto-fail).
+ *   Floor: still clip 15d75bc9, max |med3 − median| 3.15° (worst side L), 1.56° (R) → 3.2°.
+ *   PROXY: unsigned, image plane only; a head move also changes the angle.
+ * HOLD (the gap itself): lives partly in depth; reported only when visible. If HOLD refuses
+ *   but LEAK measures, the tile reports the leak and refuses the gap — partial honest output. */
+export const CHIN_LEAK_FLOOR_DEG = 3.2;
+function chinLeak(c: Ctx, apexK: number, endK: number) {
+  const ang = (j: number) => { const a = P(c, j, 0), b = P(c, j, c.lead.sh); return a && b ? (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI : null; };
+  if (apexK < 0 || endK <= apexK) return { ok: false as const, reason: "end_of_p2_not_before_p4_start" };
+  const a0 = m3(c, apexK, ang); if (a0 == null) return { ok: false as const, reason: "head_or_front_shoulder_untrusted_at_end_of_p2" };
+  let exc = 0, at = -1, seen = 0;
+  for (let j = apexK + 1; j <= endK; j++) { const x = m3(c, j, ang); if (x == null) continue; seen++; let d = x - a0; if (d > 180) d -= 360; if (d < -180) d += 360; if (Math.abs(d) > Math.abs(exc)) { exc = d; at = j; } }
+  const frames = endK - apexK;
+  if (seen < Math.max(2, frames / 2)) return { ok: false as const, reason: "head_or_front_shoulder_unobserved_for_most_of_window" };
+  return { ok: true as const, deg: Math.abs(exc), leaked: Math.abs(exc) > CHIN_LEAK_FLOOR_DEG, at_frame: at < 0 ? null : c.s.frames[at].frame_index,
+    window: { end_of_p2_frame: c.s.frames[apexK].frame_index, last_frame_before_p4: c.s.frames[endK].frame_index }, samples: seen, frames };
+}
+function shoulderToShoulder(c: Ctx, plantK: number, pkK: number, apexK: number, p4K: number): CardTileResult {
   const K: CardKey = "shoulder_to_shoulder_hold", u = "percent_of_window";
+  const lk = chinLeak(c, apexK, (p4K >= 0 ? p4K : plantK) - 1);
+  const leakLin = lk.ok ? { measured: true, change_deg: round4(lk.deg), floor_deg: CHIN_LEAK_FLOOR_DEG, leaked_before_swing: lk.leaked, largest_change_frame: lk.at_frame, window: lk.window, method: "head_to_front_shoulder_angle_image_plane", proxy: "unsigned, image plane only; a head move also changes the angle" } : { measured: false, reason: lk.reason };
+  const leakOnly = (holdReason: string, extra: Record<string, unknown> = {}): CardTileResult => {
+    if (!lk.ok) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: holdReason, leak: leakLin, ...extra });
+    return ok(K, "degrees", lk.deg, CHIN_LEAK_FLOOR_DEG, lk.leaked ? "fail" : "pass", { reported_channel: "leak_only", leak: leakLin, hold: { measured: false, reason: holdReason, why: "the chin-to-shoulder gap lives partly in depth and is not visible from the side for most of the window" }, ...extra, verdict_basis: "owner standard: the front shoulder must not leak open before the swing; leak = auto-fail. Hold refused, so no elite grade is possible", coaching: CARD_COACHING.shoulder_to_shoulder_hold });
+  };
   const sp = (j: number) => { const h = Fw(c, handPointPx(c.s, j, c.v).p), s = Fw(c, P(c, j, c.rear.sh)); return h == null || s == null ? null : h - s; };
   const s0 = m3(c, plantK, sp);
-  if (s0 == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "hands_or_back_shoulder_untrusted_at_plant" });
+  if (s0 == null) return leakOnly("hands_or_back_shoulder_untrusted_at_plant");
   const n = pkK - plantK;
-  if (n < 1) return refuse(K, u, mr(R.ANCHOR_NOT_DETECTED), { reason: "swing_peak_not_after_plant" });
-  // Held while the spacing has not closed (hands moved forward relative to the back shoulder) beyond the floor.
+  if (n < 1) return leakOnly("swing_peak_not_after_plant");
   let held = 0, broke: number | null = null, unobs = 0;
   for (let j = plantK + 1; j <= pkK; j++) {
     const x = m3(c, j, sp);
@@ -322,21 +347,21 @@ function shoulderToShoulder(c: Ctx, plantK: number, pkK: number): CardTileResult
     if (x - s0 > CARD_FLOORS.spacing_pct) { broke = j; break; }
     held = j - plantK;
   }
-  if (unobs > n / 2) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "spacing_unobserved_for_most_of_window", unobserved_frames: unobs, window_frames: n });
+  if (unobs > n / 2) return leakOnly("spacing_unobserved_for_most_of_window", { unobserved_frames: unobs, window_frames: n });
   const pct = broke == null ? 100 : (held / n) * 100;
-  const leak = fuseShoulderOpen(c.s, c.lock, plantK, c.dir, c.side);
-  const leakBool = leak.verdict === "fail" ? true : leak.verdict === "pass" ? false : null;
+  const fused = fuseShoulderOpen(c.s, c.lock, plantK, c.dir, c.side);
+  const leakBool = lk.ok ? lk.leaked : fused.verdict === "fail" ? true : fused.verdict === "pass" ? false : null;
   const lin = {
-    plant_frame: c.s.frames[plantK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index,
+    plant_frame: c.s.frames[plantK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, reported_channel: "hold_and_leak", leak: leakLin,
     outputs: {
       spacing_held_pct_of_window: round4(pct),
       hold_ended_frame: broke == null ? null : c.s.frames[broke].frame_index,
-      front_shoulder_leak_before_swing_peak: leakBool, front_shoulder_leak_reason: leak.reason,
+      front_shoulder_leak_before_swing: leakBool, fused_shoulder_open_reason: fused.reason,
       verdict_basis: "owner standard: held ≥50% of plant → swing peak = pass, ≥95% = elite; front-shoulder leak = auto-fail",
     },
-    spacing_at_plant_pct: round4(s0), frame_uncertainty_pct: round4(100 / n), unobserved_frames: unobs,
+    spacing_at_plant_pct: round4(s0), frame_uncertainty_pct: round4(100 / n), unobserved_frames: unobs, coaching: CARD_COACHING.shoulder_to_shoulder_hold,
   };
-  if (leakBool === true) return ok(K, u, pct, round4(100 / n), "fail", { ...lin, auto_fail: "front shoulder opened by landing — nullifies the hold" });
+  if (leakBool === true) return ok(K, u, pct, round4(100 / n), "fail", { ...lin, auto_fail: "front shoulder leaked off the chin before the swing — nullifies the hold" });
   return ok(K, u, pct, round4(100 / n), pct >= 95 ? "elite" : pct >= 50 ? "pass" : "fail", lin);
 }
 
