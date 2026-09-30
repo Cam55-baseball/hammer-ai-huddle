@@ -22,3 +22,4 @@
 
 - Field camera pose (`src/lib/biomech/camera/fieldPnP.ts`) and the 3D constraint stage (`src/lib/biomech/lift3d/constraintStage.ts`) are model-agnostic; any 3D estimate passes through the constraint stage, and frames needing large correction become missing. Why: the lifting model is swappable pending a commercially clean licence (see docs/3d-licence-and-geometry.md).
 - Ledger triggers swallow their own errors (RAISE WARNING). Why: a recording failure must never cost an athlete their clip.
+- Category scoring for all report cards lives in `src/lib/reportCard/categories/` (one engine `scoring.ts` + per-card `specs.ts`); category scores are computed in the browser from the saved landmark series with the same tile code. Why: one engine, one weighting table, no deploy needed to rescore.
