@@ -254,7 +254,9 @@ function sequencing(c: Ctx, ssK: number, pkK: number): CardTileResult {
   const out: string[] = [];
   // Every link is checked against every link before it, so "shoulders before elbow" is caught even if a middle link ties.
   for (let i = 1; i < order.length; i++) for (let h = 0; h < i; h++) if (order[i] < order[h] - 1) out.push(`${chans[i][0]}_before_${chans[h][0]}`);
-  return ok(K, u, out.length === 0 ? 1 : 0, null, out.length === 0 ? "pass" : "fail", { ...base, out_of_order: out, rule: "a link reaching its fastest turn more than 1 frame before any earlier link in the owner's chain is out of order; within 1 frame cannot be ordered at this frame rate" });
+  const ties: string[] = [];
+  for (let i = 1; i < order.length; i++) if (order[i] <= order[i - 1] && order[i] >= order[i - 1] - 1) ties.push(`${chans[i - 1][0]}~${chans[i][0]}`);
+  return ok(K, u, out.length === 0 ? 1 : 0, null, out.length === 0 ? "pass" : "fail", { ...base, out_of_order: out, unresolved_ties: ties, pass_means: "no link provably out of order at this frame rate — ties are not confirmation of the order", rule: "a link reaching its fastest turn more than 1 frame before any earlier link in the owner's chain is out of order; within 1 frame cannot be ordered at this frame rate" });
 }
 
 /* ================= 10 back-elbow connection — a PATH, not an angle (owner 2026-09-28) ================= */
