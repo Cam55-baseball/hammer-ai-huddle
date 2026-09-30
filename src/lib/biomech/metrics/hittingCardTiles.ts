@@ -231,7 +231,7 @@ function separationMagnitude(c: Ctx, apexK: number, pkK: number) {
   let best = -1, bk = -1, seen = 0; const series: (number | null)[] = [];
   for (let j = apexK; j <= pkK; j++) { const a = m3(c, j, tp), b = m3(c, j, ts); const x = a == null || b == null ? null : Math.abs(a - b); series.push(x == null ? null : round4(x)); if (x == null) continue; seen++; if (x > best) { best = x; bk = j; } }
   if (seen < Math.max(3, Math.ceil((pkK - apexK + 1) * 0.6))) return { key: "separation_magnitude", value: null, missing_reason: "hips_or_shoulders_unobserved_through_window" };
-  return { key: "separation_magnitude", value: round4(best), unit: "degrees", missing_reason: null, peak_frame: c.s.frames[bk].frame_index, floor_deg: SEPARATION_FLOOR_DEG,
+  return { key: "separation_magnitude", value: round4(best), unit: "degrees", missing_reason: null, peak_frame: c.s.frames[bk].frame_index, floor_deg: SEPARATION_FLOOR_DEG, margin_over_floor_deg: round4(best - SEPARATION_FLOOR_DEG), pattern: best > SEPARATION_FLOOR_DEG ? "separation_above_still_floor" : "no_separation_above_still_floor",
     window: { end_of_p2_frame: c.s.frames[apexK].frame_index, swing_peak_frame: c.s.frames[pkK].frame_index }, per_frame_deg: series,
     record_only: true, graded: false, owner_standard: "not_supplied", frame_rate_dependence: "none — an angle at every frame",
     proxy: "unsigned; side-on rigid-width solve under-reads small turns near square to camera" };

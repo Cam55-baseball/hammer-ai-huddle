@@ -96,3 +96,12 @@ describe("chin position channel (record-only, owner 2026-09-30)", () => {
     expect(pos.measured).toBe(true); expect(pos.graded).toBe(false); expect(pos.floor_pct).toBe(0.8); expect(pos.chin_minus_front_shoulder_max_pct).toBe(-2.2143); expect(pos.pattern).toBe("chin_at_or_behind_front_shoulder");
   });
 });
+
+describe("separation magnitude (record-only angle, owner 2026-09-30)", () => {
+  it("914cf54c reads barely above the still floor; ungraded", () => {
+    const L = (n: string) => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "fixtures", n))).toString("utf8"));
+    const r = (rhct(L("swing-24fps-914cf54c.ndjson.gz"), { side: "L" }) as unknown as { separation_magnitude: Record<string, unknown> }).separation_magnitude;
+    expect(r.value).toBe(14.4789); expect(r.floor_deg).toBe(13.9); expect(r.graded).toBe(false);
+    for (const side of ["L", "R"] as const) expect((rhct(L("still-subject-15d75bc9.ndjson.gz"), { side }) as unknown as { separation_magnitude: { value: unknown } }).separation_magnitude.value).toBeNull();
+  });
+});
