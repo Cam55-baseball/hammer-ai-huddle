@@ -86,13 +86,13 @@ describe("hitting card tiles including separate front and back heels (23 total)"
   });
 });
 
-import { runShinVsFrontShoulder, SHIN_SHOULDER_FLOOR_PCT } from "../metrics/strideRhythm";
-describe("shin vs front shoulder (record-only, owner 2026-09-30)", () => {
-  it("still clip refuses; 914cf54c reads the knee ahead, ungraded", () => {
-    const load2 = (n: string) => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "fixtures", n))).toString("utf8"));
-    for (const side of ["L", "R"] as const) expect(runShinVsFrontShoulder(load2("still-subject-15d75bc9.ndjson.gz"), { side }).value).toBeNull();
-    const r = runShinVsFrontShoulder(load2("swing-24fps-914cf54c.ndjson.gz"), { side: "L" });
-    expect(r.pattern).toBe("shin_got_ahead"); expect(r.value).toBe(4.0695); expect(r.lineage.graded).toBe(false);
-    expect(SHIN_SHOULDER_FLOOR_PCT).toBe(1.4);
+
+import { runHittingCardTiles as rhct } from "../metrics/hittingCardTiles";
+describe("chin position channel (record-only, owner 2026-09-30)", () => {
+  it("still refuses; 914cf54c reports the chin position ungraded inside the chin-to-shoulder tile", () => {
+    const L = (n: string) => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "fixtures", n))).toString("utf8"));
+    for (const side of ["L", "R"] as const) expect(rhct(L("still-subject-15d75bc9.ndjson.gz"), { side }).shoulder_to_shoulder_hold.value).toBeNull();
+    const pos = (rhct(L("swing-24fps-914cf54c.ndjson.gz"), { side: "L" }).shoulder_to_shoulder_hold.lineage.leak as { position: Record<string, unknown> }).position;
+    expect(pos.measured).toBe(true); expect(pos.graded).toBe(false); expect(pos.floor_pct).toBe(0.8); expect(pos.chin_minus_front_shoulder_max_pct).toBe(-2.2143); expect(pos.pattern).toBe("chin_at_or_behind_front_shoulder");
   });
 });

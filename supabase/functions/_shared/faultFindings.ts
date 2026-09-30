@@ -116,7 +116,6 @@ const ROOT_BY_FAULT: Record<string, string> = {
   stride_hands_went_with_foot: "back_leg_did_not_hold_load",
   stride_side_bend_lost: "back_leg_did_not_hold_load",
   stride_fell_forward: "back_leg_did_not_hold_load",
-  stride_shin_ahead_of_front_shoulder: "back_leg_did_not_hold_load",
   back_heel_early_rise_fail: "back_leg_did_not_hold_load",
   // Owner 2026-09-28: hands low at P3 heel landing go with the front shoulder turning.
   hands_below_back_elbow_at_heel_landing: "trunk_rotates_before_front_foot_plant",

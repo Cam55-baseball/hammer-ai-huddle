@@ -1941,7 +1941,7 @@ var CARD_COACHING = {
   lead_elbow_bend_increasing: "Your lead elbow should not bend more than it was at the end of P2. Full extension is ideal, but your own P2 position is the honest measure of what your arm can do.",
   pelvis_rotation_efficiency: "Because you stride to the pitcher, not the ball, your pelvis should be able to get square to fair (the front of home plate) by the end of P4, before you run.",
   sequencing: "Your hitter's move starts when your back elbow begins moving down and toward the pitcher. It does not have to move far or fast, it just has to start the move that releases your loaded stride. From there your back knee turns, your hips turn, then your shoulders, then your hands. The true test is simple: your hips turn before your shoulders. Shoulders that fire first spend the load before it can be used.",
-  shoulder_to_shoulder_hold: "Keep your chin and front shoulder tucked together until the swing goes. The tuck makes the move easier on your body and keeps both eyes on the ball. A front shoulder that pulls away from your chin before the swing is a leak: it opens you early and costs you the look at the pitch."
+  shoulder_to_shoulder_hold: "Keep your chin and front shoulder tucked together until the swing goes. The tuck makes the move easier on your body and keeps both eyes on the ball. A front shoulder that pulls away from your chin before the swing is a leak: it opens you early and costs you the look at the pitch. Through the stride, keep your chin over or behind your front shoulder until your foot lands. If your chin gets out in front, the front shoulder gets yanked out and the swing goes out of order."
 };
 var mr2 = (r2) => missingness(r2, "D-METRIC");
 var refuse2 = (key, unit, rec, lineage) => ({ key, value: null, unit, uncertainty: null, verdict: null, missingness: rec, confidence: missingConfidence(), lineage });
@@ -2164,6 +2164,8 @@ function sequencing(c, ssK, pkK, apexK) {
     per_segment: { pelvis: { frame: pel.frame, deg_per_s: pel.speed, coverage: pel.coverage }, shoulders: { frame: sho.frame, deg_per_s: sho.speed, coverage: sho.coverage }, back_knee: { frame: knee.frame, deg_per_s: knee.speed, coverage: knee.coverage }, hands: { frame: hands.frame, pct_stature_per_s: hands.speed, coverage: hands.coverage } },
     hips_to_shoulders_gap_frames: gap,
     hips_to_shoulders_gap_ms: gap == null ? null : round4(gap * 1000 / c.fps),
+    gap_uncertainty_ms: round4(1000 / c.fps),
+    separation_sufficiency: { owner_doctrine: "no separation = insufficient separation (a fault); unreadable = DelayCam", sufficient_gap_ms: null, why_null: "owner has not supplied a time figure for sufficient separation; none invented", tie_meaning: "a gap under two frames cannot tell 'none' from 'small' — it is not read as a pass" },
     supporting: { elbow_onset, elbow_onset_floor: ELBOW_ONSET_FLOOR, knee_chain, elbow_vs_knee: elbowVsKnee, gating: false },
     resolution: { min_fps: SEQ_MIN_FPS, min_gap_frames: SEQ_MIN_GAP_FRAMES, why: "pelvis→torso peak lags are ~30–60 ms; peak timing is ±1 frame; ordering needs ≥2 frames between peaks" },
     coaching: CARD_COACHING.sequencing
@@ -2320,10 +2322,48 @@ function chinLeak(c, apexK, endK) {
     frames
   };
 }
+var CHIN_POSITION_FLOOR_PCT = 0.8;
+function chinPosition(c, apexK, plantK) {
+  if (apexK < 0 || plantK <= apexK)
+    return { measured: false, reason: "end_of_p2_not_before_landing" };
+  const d = (j) => {
+    const n = Fw(c, P(c, j, 0)), s = Fw(c, P(c, j, c.lead.sh));
+    return n == null || s == null ? null : n - s;
+  };
+  let worst = -Infinity, wk = -1, seen = 0;
+  for (let j = apexK;j <= plantK; j++) {
+    const x = m3(c, j, d);
+    if (x == null)
+      continue;
+    seen++;
+    if (x > worst) {
+      worst = x;
+      wk = j;
+    }
+  }
+  if (seen < Math.max(3, Math.ceil((plantK - apexK + 1) * 0.6)))
+    return { measured: false, reason: "head_or_front_shoulder_unobserved_through_p3", samples: seen };
+  const F = CHIN_POSITION_FLOOR_PCT;
+  return {
+    measured: true,
+    chin_minus_front_shoulder_max_pct: round4(worst),
+    worst_frame: c.s.frames[wk].frame_index,
+    floor_pct: F,
+    pattern: worst > F ? "chin_got_ahead_of_front_shoulder" : "chin_at_or_behind_front_shoulder",
+    window: { end_of_p2_frame: c.s.frames[apexK].frame_index, landing_frame: c.s.frames[plantK].frame_index },
+    samples: seen,
+    sign: "+ = chin (nose) ahead of the front shoulder toward the pitcher",
+    record_only: true,
+    graded: false,
+    owner_standard: "not_supplied (owner: 'theoretically')",
+    linked_to: "leak"
+  };
+}
 function shoulderToShoulder(c, plantK, pkK, apexK, p4K) {
   const K = "shoulder_to_shoulder_hold", u = "percent_of_window";
   const lk = chinLeak(c, apexK, (p4K >= 0 ? p4K : plantK) - 1);
-  const leakLin = lk.ok ? { measured: true, change_deg: round4(lk.deg), floor_deg: CHIN_LEAK_FLOOR_DEG, leaked_before_swing: lk.leaked, largest_change_frame: lk.at_frame, window: lk.window, method: "head_to_front_shoulder_angle_image_plane", proxy: "unsigned, image plane only; a head move also changes the angle" } : { measured: false, reason: lk.reason };
+  const position = chinPosition(c, apexK, plantK);
+  const leakLin = lk.ok ? { measured: true, change_deg: round4(lk.deg), floor_deg: CHIN_LEAK_FLOOR_DEG, leaked_before_swing: lk.leaked, largest_change_frame: lk.at_frame, window: lk.window, method: "head_to_front_shoulder_angle_image_plane", proxy: "unsigned, image plane only; a head move also changes the angle", position } : { measured: false, reason: lk.reason, position };
   const leakOnly = (holdReason, extra = {}) => {
     if (!lk.ok)
       return refuse2(K, u, mr2(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: holdReason, leak: leakLin, ...extra });

@@ -58,7 +58,6 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
       { key: "stride_foot_vs_body", name: "Foot goes forward, body stays back", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.foot_vs_body", read: coilAt("foot_vs_body") },
       { key: "stride_hands_opposite", name: "Hands go back as the foot goes forward", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.hands_opposite", read: coilAt("hands_opposite") },
       { key: "stride_side_bend", name: "Side bend builds through the stride", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.side_bend", read: coilAt("side_bend") },
-      { key: "shin_vs_front_shoulder", name: "Front shin stays with or behind the front shoulder until landing", points: 0, recordOnly: true, baselineKey: "hitting_rhythm.shin_vs_front_shoulder", read: recordAt("rhythm.shin") },
       { key: "stride_sink", name: "Sinking into the back leg, not falling forward", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.sink", read: coilAt("sink") },
       { key: "head_discipline", name: "Head discipline", points: 2, read: verdictAt("pose.head_discipline") },
       { key: "back_heel_early_rise", name: "Back heel stays down until P4", points: 2, read: verdictAt("card.back_heel_early_rise") },
