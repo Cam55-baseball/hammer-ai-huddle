@@ -80,7 +80,7 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
   const missing = (reason: string) => ({
     tempo: absent("seconds", reason), energy_angle: absent("degrees", reason),
     shoulder_opening: absent("degrees", reason), head_stability: absent("percent", reason),
-    stride_length: absent("percent_of_height", reason), injury: refusedInjuryMarkers(reason),
+    stride_length: absent("percent_of_height", reason), front_knee_at_landing: absent("degrees", reason), injury: refusedInjuryMarkers(reason),
   });
   const movement = evaluateMovementGate(series);
   const refusal = movement.status === "refused" ? "pose_not_detected" : !side ? "anchor_not_detected" : null;
