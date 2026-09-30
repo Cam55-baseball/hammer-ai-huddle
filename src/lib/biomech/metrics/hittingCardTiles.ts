@@ -411,7 +411,15 @@ function pelvisSquare(c: Ctx, finK: number): CardTileResult {
   const th = (j: number) => { const a = P(c, j, LM.L_HIP), b = P(c, j, LM.R_HIP); if (!a || !b) return null; const d = Math.hypot(a.x - b.x, a.y - b.y); if (d > L * 1.03) return null; return (Math.acos(Math.min(1, d / L)) * 180) / Math.PI; };
   const t = m3(c, finK, th);
   if (t == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "hips_untrusted_or_over_length_at_end_of_p4" });
-  return ok(K, u, 90 - t, null, null, { end_of_p4_frame: c.s.frames[finK].frame_index, pelvis_out_of_plane_deg: round4(t), sign: "degrees short of square to fair (0 = square)", why_ungraded: "owner has no 'close enough to square' angle; still clip is closed-stance so no noise floor near square exists yet", limitation: "unsigned rigid solve: over-rotating past square reads the same as under-rotating", reasoning: "we stride to the pitcher, not the ball — that is what makes square-to-fair reachable by the end of P4", coaching: CARD_COACHING.pelvis_rotation_efficiency });
+  return ok(K, u, 90 - t, null, null, { end_of_p4_frame: c.s.frames[finK].frame_index, end_of_p4_rule: "most-turned hip moment within half a second of the fastest torso turn; does not need the hitter to settle", pelvis_out_of_plane_deg: round4(t), sign: "degrees short of square to fair (0 = square)", why_ungraded: "owner has no 'close enough to square' angle; still clip is closed-stance so no noise floor near square exists yet", limitation: "unsigned rigid solve: over-rotating past square reads the same as under-rotating", reasoning: "we stride to the pitcher, not the ball — that is what makes square-to-fair reachable by the end of P4", coaching: CARD_COACHING.pelvis_rotation_efficiency });
+}
+
+function endOfP4Turn(c: Ctx, pkK: number): number {
+  const L = c.lock.baseline?.hip_len_px; if (!L) return -1;
+  const end = Math.min(c.s.frames.length - 2, pkK + Math.ceil(c.fps * 0.5));
+  let best = -1, bw = Infinity;
+  for (let k = pkK; k <= end; k++) { const w = m3(c, k, (j) => { const a = P(c, j, LM.L_HIP), b = P(c, j, LM.R_HIP); return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : null; }); if (w != null && w < bw) { bw = w; best = k; } }
+  return best;
 }
 
 /* ================= runner ================= */
@@ -466,7 +474,8 @@ export function runHittingCardTiles(series: LandmarkSeries, o: { side: Handednes
     hands_stay_up_at_plant: need("hands_stay_up_at_plant", [P_], () => handsUp(c, plantK)),
     lead_elbow_bend_increasing: need("lead_elbow_bend_increasing", [AP, PK], () => leadElbow(c, apexK, pkK)),
     head_vertical_movement_post_landing: need("head_vertical_movement_post_landing", [P_, PK], () => (pkK <= plantK ? refuse("head_vertical_movement_post_landing", units.head_vertical_movement_post_landing, mr(R.ANCHOR_NOT_DETECTED), { reason: "swing_peak_not_after_plant" }) : headVertical(c, plantK, pkK))),
-    pelvis_rotation_efficiency: need("pelvis_rotation_efficiency", [FIN], () => pelvisSquare(c, finK)),
+    // End of P4 = the hips' most-turned moment in the half second after D-SWING-PEAK. It does not wait for the hitter to settle (ruling 2026-09-30).
+    pelvis_rotation_efficiency: need("pelvis_rotation_efficiency", [PK], () => { const k = endOfP4Turn(c, pkK); return k < 0 ? refuse("pelvis_rotation_efficiency", units.pelvis_rotation_efficiency, mr(R.LANDMARK_OCCLUDED), { reason: "hips_unobserved_after_swing_peak" }) : pelvisSquare(c, k); }),
   });
 }
 
