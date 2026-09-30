@@ -261,3 +261,58 @@ export function runStrideCoil(series: LandmarkSeries, o: { side: Handedness | nu
   }
   return { key: "stride_coil", version: STRIDE_COIL_VERSION, foot_vs_body, hands_opposite, side_bend, sink, missing_reason: null };
 }
+
+/* ================= P3 SHIN vs FRONT SHOULDER — owner 2026-09-30 =================
+ * "Theoretically we want that shin over/in line with/or beyond the front shoulder
+ *  toward the back until landing (P3 is over) & P4 begins."
+ * Window: stride start (front foot's rearmost point after stance, same as the coil
+ * readings) → front-foot plant. The shin is read at its top — the front KNEE —
+ * because the ankle must reach forward to land and cannot be what the owner means.
+ * Value = the most the knee got AHEAD of the front shoulder toward the pitcher,
+ * % stature (+ = ahead = the fault direction; ≤ 0 = over/in line/behind for the
+ * whole window). The owner said "theoretically": NO threshold, never graded,
+ * record-only, 0 points. Position-based and in-plane → frame-rate independent.
+ * Maps to back_leg_did_not_hold_load (body getting out front); not emitted while
+ * ROOT_EVIDENCE_ENABLED is false.
+ * Floor — still clip 15d75bc9, measured 2026-09-30 before use, max |med3 − median|
+ * of knee-minus-front-shoulder forward: 1.337 % (worst side); shin midpoint 1.834 %. */
+export const SHIN_SHOULDER_VERSION = "shin_vs_front_shoulder@1.0.0-2026-09-30-record-only";
+export const SHIN_SHOULDER_FLOOR_PCT = 1.4;
+export interface ShinShoulderResult {
+  readonly key: "shin_vs_front_shoulder";
+  readonly version: string;
+  readonly pattern: "shin_stayed_back" | "shin_got_ahead" | "within_noise" | null;
+  readonly value: number | null;
+  readonly unit: "percent_stature";
+  readonly missing_reason: string | null;
+  readonly root_evidence: { fault_key: string; raised: boolean; emitted: false } | null;
+  readonly lineage: Readonly<Record<string, unknown>>;
+}
+export function runShinVsFrontShoulder(series: LandmarkSeries, o: { side: Handedness | null }): ShinShoulderResult {
+  const refuse = (r: string, l: Record<string, unknown> = {}): ShinShoulderResult => ({ key: "shin_vs_front_shoulder", version: SHIN_SHOULDER_VERSION, pattern: null, value: null, unit: "percent_stature", missing_reason: r, root_evidence: null, lineage: { reason: r, ...l } });
+  if (!o.side) return refuse("batting_side_unknown");
+  const c = context(series, o.side);
+  if (!c) return refuse("stance_lock_or_direction_missing");
+  if (c.plantK < 0) return refuse("front_foot_plant_missing");
+  const R_ = o.side === "R";
+  const fAnk = R_ ? LM.L_ANKLE : LM.R_ANKLE, fKnee = R_ ? LM.L_KNEE : LM.R_KNEE, fSh = R_ ? LM.L_SHOULDER : LM.R_SHOULDER;
+  const fwd = (i: number) => (k: number) => { const p = c.P(k, i); return p ? (p.x * c.dir * 100) / c.st : null; };
+  const b = c.plantK, lockEnd = c.lock.end_k as number;
+  let a = -1, rear = Infinity;
+  for (let k = lockEnd; k < b; k++) { const x = c.m3(k, fwd(fAnk)); if (x != null && x < rear) { rear = x; a = k; } }
+  if (a < 0) return refuse("front_ankle_unobserved_before_plant");
+  if (b - a < 3) return refuse("stride_window_too_short");
+  const diff = (k: number) => { const kn = c.P(k, fKnee), sh = c.P(k, fSh); return kn && sh ? ((kn.x - sh.x) * c.dir * 100) / c.st : null; };
+  const mid_ = (k: number) => { const kn = c.P(k, fKnee), an = c.P(k, fAnk), sh = c.P(k, fSh); return kn && an && sh ? (((kn.x + an.x) / 2 - sh.x) * c.dir * 100) / c.st : null; };
+  let worst = -Infinity, wk = -1, n = 0, worstMid = -Infinity;
+  for (let k = a; k <= b; k++) { const x = c.m3(k, diff); if (x == null) continue; n++; if (x > worst) { worst = x; wk = k; } const y = c.m3(k, mid_); if (y != null && y > worstMid) worstMid = y; }
+  const win = { start_frame: series.frames[a].frame_index, plant_frame: series.frames[b].frame_index };
+  if (n < Math.max(3, Math.ceil((b - a + 1) * 0.6))) return refuse("front_knee_or_shoulder_unobserved_through_stride", { window: win, samples: n });
+  const F = SHIN_SHOULDER_FLOOR_PCT;
+  const pattern = worst > F ? "shin_got_ahead" : worst < -F ? "shin_stayed_back" : "within_noise";
+  return { key: "shin_vs_front_shoulder", version: SHIN_SHOULDER_VERSION, pattern, value: round4(worst), unit: "percent_stature", missing_reason: null,
+    root_evidence: { fault_key: "stride_shin_ahead_of_front_shoulder", raised: pattern === "shin_got_ahead", emitted: false },
+    lineage: { window: win, worst_frame: series.frames[wk].frame_index, knee_minus_front_shoulder_max_pct: round4(worst), shin_midpoint_minus_front_shoulder_max_pct: worstMid === -Infinity ? null : round4(worstMid),
+      floor_pct: F, samples: n, sign: "+ = knee ahead of the front shoulder toward the pitcher", shin_point: "front knee (top of the shin); owner to confirm", record_only: true, graded: false, owner_standard: "not_supplied (owner: 'theoretically')",
+      root_pattern: "back_leg_did_not_hold_load", root_evidence_enabled: ROOT_EVIDENCE_ENABLED, frame_rate_dependence: "none — position at every frame, in the image plane" } };
+}

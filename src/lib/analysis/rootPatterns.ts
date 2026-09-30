@@ -70,6 +70,7 @@ const ROOT_BY_FAULT: Record<string, string> = {
   stride_hands_went_with_foot: "back_leg_did_not_hold_load",
   stride_side_bend_lost: "back_leg_did_not_hold_load",
   stride_fell_forward: "back_leg_did_not_hold_load",
+  stride_shin_ahead_of_front_shoulder: "back_leg_did_not_hold_load",
   hands_below_back_elbow_at_heel_landing: "trunk_rotates_before_front_foot_plant",
 };
 

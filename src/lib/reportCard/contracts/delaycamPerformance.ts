@@ -33,6 +33,7 @@ export const DELAYCAM_PERFORMANCE_SPEC: readonly DelayCamPerformanceEntry[] = [
   { key: "connection.barrel_to_ball_direction", moved_from: "bh back_elbow_contact channel (c)", definition: "Barrel-to-ball delivery direction.", requires: ["D-BAT", "D-BALL"], blocked_on: BLOCKED },
   { key: "contact_frame", moved_from: "all upload windows that ended at contact (now D-SWING-PEAK)", definition: "True contact frame: ball trajectory reversal plus audio onset.", requires: ["D-BALL", "audio_onset"], blocked_on: BLOCKED },
   { key: "micro_pauses", moved_from: "bh upload tile micro_pauses (owner ruling 2026-09-30: route to DelayCam if 24–30 fps cannot resolve it)", definition: "The two pauses in P1-P2-pause-P3-pause-P4: after the load, and after landing before the swing. Body-speed dip between anchors.", requires: [], blocked_on: ["native_swift_camera_plugin_240fps"], side: "mechanics" },
+  { key: "sequencing.hips_vs_shoulders", moved_from: "bh upload tile sequencing (owner ruling 2026-09-30: verdict = hips before shoulders; routed when below 60 fps)", definition: "Pelvis reaches its fastest turn before the shoulders do. Both are rigid rotations; ordering needs the peaks at least two frames apart, which needs about 60 fps. The upload card still grades it on 60 fps uploads.", requires: [], blocked_on: ["native_swift_camera_plugin_240fps"], side: "mechanics" },
 ];
 
 /** Words that promise a performance measurement. Upload-card display text may not use them. */

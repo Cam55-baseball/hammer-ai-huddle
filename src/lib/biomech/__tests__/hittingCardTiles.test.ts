@@ -37,10 +37,11 @@ describe("hitting card tiles including separate front and back heels (23 total)"
     expect(r.back_heel_early_rise.lineage.root_pattern_key).toBe("back_leg_did_not_hold_load");
     // 2026-09-30 owner chain: back elbow 186 (proxy), back knee 185, pelvis 187, shoulders 188 — nothing provably out of order at 24 fps.
     expect(r.sequencing.lineage.linear_terms).toBe("none");
-    expect(r.sequencing.lineage.back_elbow_source).toBe("forward_speed_relative_to_back_shoulder_proxy");
-    expect(r.sequencing.verdict).toBe("pass");
-    expect(r.sequencing.lineage.out_of_order).toEqual([]);
-    expect(r.sequencing.lineage.unresolved_ties).toEqual(["back_elbow~back_knee"]);
+    // Owner 2026-09-30: verdict = hips vs shoulders; 24 fps cannot order a 1-frame gap → DelayCam.
+    expect(r.sequencing.verdict).toBeNull();
+    expect(r.sequencing.lineage.reason).toBe("routed_to_delaycam:frame_rate_24_below_60");
+    expect(r.sequencing.lineage.hips_to_shoulders_gap_frames).toBe(1);
+    expect((r.sequencing.lineage.supporting as { elbow_onset: { frame: number } }).elbow_onset.frame).toBe(184);
     expect(r.pelvis_rotation_efficiency.value).not.toBeNull();
     expect(r.back_elbow_connection.value).toBe(8.6633); expect(r.back_elbow_connection.verdict).toBe("pass");
     expect(r.shoulder_plane_steadiness.value).toBeNull();
@@ -82,5 +83,16 @@ describe("hitting card tiles including separate front and back heels (23 total)"
   it("deterministic ×3", () => {
     const s = [0, 1, 2].map(() => JSON.stringify(runHittingCardTiles(A, { side: "L" })));
     expect(new Set(s).size).toBe(1);
+  });
+});
+
+import { runShinVsFrontShoulder, SHIN_SHOULDER_FLOOR_PCT } from "../metrics/strideRhythm";
+describe("shin vs front shoulder (record-only, owner 2026-09-30)", () => {
+  it("still clip refuses; 914cf54c reads the knee ahead, ungraded", () => {
+    const load2 = (n: string) => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "fixtures", n))).toString("utf8"));
+    for (const side of ["L", "R"] as const) expect(runShinVsFrontShoulder(load2("still-subject-15d75bc9.ndjson.gz"), { side }).value).toBeNull();
+    const r = runShinVsFrontShoulder(load2("swing-24fps-914cf54c.ndjson.gz"), { side: "L" });
+    expect(r.pattern).toBe("shin_got_ahead"); expect(r.value).toBe(4.0695); expect(r.lineage.graded).toBe(false);
+    expect(SHIN_SHOULDER_FLOOR_PCT).toBe(1.4);
   });
 });
