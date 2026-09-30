@@ -67,7 +67,7 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
       { key: "hands_stay_up_at_plant", name: "Hands above the back elbow at heel landing", points: 1, read: verdictAt("card.hands_stay_up_at_plant") },
     ] },
     { key: "p4", title: "P4: Hitter's Move", points: 40, note: "This meter is the Hitter's Move composite.", tiles: [
-      { key: "sequencing", name: "Sequence: hips, torso, lead shoulder, lead arm", points: 9, nonNegotiable: true, read: verdictAt("card.sequencing") },
+      { key: "sequencing", name: "Sequence: back elbow, back knee, hips, shoulders", points: 9, nonNegotiable: true, read: verdictAt("card.sequencing") },
       { key: "shoulder_to_shoulder_hold", name: "Chin-to-shoulder hold and front-shoulder leak", points: 9, nonNegotiable: true, read: verdictAt("card.shoulder_to_shoulder_hold") },
       { key: "back_elbow_connection", name: "Hands stay back while the elbow gains ground", points: 5, read: verdictAt("card.back_elbow_connection") },
       { key: "shoulder_plane_steadiness", name: "Shoulder plane steadiness", points: 5, read: scoreAt("card.shoulder_plane_steadiness") },

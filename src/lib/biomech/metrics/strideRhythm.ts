@@ -9,6 +9,9 @@
  * baseline, no owner duration or threshold invented:
  *
  *  A. ACTIVE STRIDE — back-hip ROTATION only (ruling 2026-09-30), P2 position →
+ *     plant. Owner 2026-09-30: during P3 the hip COILS further, it does not open;
+ *     opening before P4 is a fault. Unsigned, so never read as "correct".
+ *    
  *     plant. Body travel is measured by foot_vs_body, never here, so the two can
  *     no longer contradict. Refuses when the turn is inside the still-clip floor.
  *
@@ -96,6 +99,7 @@ export function runActiveStride(series: LandmarkSeries, o: { side: Handedness | 
   const t0 = th(startK); if (t0 == null) return refuse("hips_unobserved_at_p2");
   let exc = 0, n = 0; for (let k = startK + 1; k <= c.plantK; k++) { const t = th(k); if (t == null) continue; n++; if (Math.abs(t - t0) > Math.abs(exc)) exc = t - t0; }
   const lin = { window: { start_frame: series.frames[startK].frame_index, plant_frame: series.frames[c.plantK].frame_index }, pelvis_turn_excursion_deg: round4(exc), floor_deg: ACTIVE_STRIDE_TURN_FLOOR_DEG, samples: n, record_only: true, graded: false,
+    doctrine: "owner 2026-09-30: hip turning is sequencing AFTER P3. During the stride the glute drives forward and the load converts it into MORE COIL; any opening turn before P4 is early (a fault, same as the back-hip socket hold). This reading is unsigned, so a turn beyond the floor cannot say coil vs open and is never read as correct",
     limitation: "side-on, the hip line is near edge-on to the camera at stance; the length solve is unsigned and ill-conditioned there, so a turn smaller than the still-clip floor cannot be told apart from noise" };
   if (n < 3) return refuse("hips_unobserved_through_stride", lin);
   if (Math.abs(exc) <= ACTIVE_STRIDE_TURN_FLOOR_DEG) return refuse("back_hip_turn_within_still_noise_side_on", lin);

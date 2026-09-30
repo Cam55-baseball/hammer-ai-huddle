@@ -73,6 +73,8 @@ export const CARD_COACHING: Record<string, string> = {
   head_vertical_movement_post_landing: "Your head can sink after landing. Your head coming up before the ball is off the bat is too much.",
   lead_elbow_bend_increasing: "Your lead elbow should not bend more than it was at the end of P2. Full extension is ideal, but your own P2 position is the honest measure of what your arm can do.",
   pelvis_rotation_efficiency: "Because you stride to the pitcher, not the ball, your pelvis should be able to get square to fair (the front of home plate) by the end of P4, before you run.",
+  sequencing: "Your swing is a chain you load, then release. In P3 your glute drives forward, but a proper P1 and P2 load keeps your body from travelling, so that drive turns into more coil instead. The coil keeps building until your back elbow moves forward. The elbow turns your back knee and makes the triangles. The knee starts your hips turning. The hips catapult your shoulders out of the square position they held for separation, and the shoulders drive the barrel through the ball. Your hips turning early, or your shoulders firing before your hips, spends the load before the elbow can release it.",
+  shoulder_to_shoulder_hold: "Keep your chin and front shoulder tucked together until the swing goes. The tuck makes the move easier on your body and keeps both eyes on the ball. A front shoulder that pulls away from your chin before the swing is a leak: it opens you early and costs you the look at the pitch.",
 };
 
 export type CardKey =
@@ -189,15 +191,21 @@ function backHeelEarlyRise(c: Ctx, p4K: number): CardTileResult {
   });
 }
 
-/* ================= 9 sequencing — hips → torso → lead shoulder → lead arm =================
- * ROTATIONAL chain only (owner ruling 2026-09-30): every segment is timed by its
- * PEAK ANGULAR SPEED. No linear (forward-travel) term enters the order check.
- *   pelvis        — hip line turning out of the image plane (rigid length: acos(width ÷ stance width))
- *   torso         — shoulder line turning out of the image plane (same solve)
- *   lead_shoulder — angle at the lead shoulder between the shoulder line and the lead upper arm
- *   lead_arm      — lead arm (shoulder → wrist) turning in the image plane
- * Rigid solves are unsigned, so speed is |dθ/dt|. Stance width = widest the
- * segment appears between stance and plant (the most side-on it gets on this clip). */
+/* ================= 9 sequencing — OWNER'S CHAIN (2026-09-30) =================
+ * "…until the back bicep/elbow moves forward which turns the back knee … which
+ *  begins the hip rotation which catapults shoulders (Rotationally) from their
+ *  square position … which drives the barrel through the ball."
+ * Order checked: back elbow → back knee → pelvis → shoulders. The barrel link
+ * is bat tracking and belongs to DelayCam. Forward travel is the BUFFER that
+ * loads the chain, not a link in it — no linear term enters (owner 2026-09-30).
+ * Every segment is timed by its PEAK ANGULAR SPEED:
+ *   back_elbow — back upper arm (shoulder → elbow) turning in the image plane
+ *   back_knee  — back thigh (hip → knee) turning in the image plane (the knee turn that makes the triangles)
+ *   pelvis     — hip line turning out of the image plane (rigid length: acos(width ÷ stance width))
+ *   shoulders  — shoulder line turning out of the image plane (same solve)
+ * Rigid solves are unsigned, so speed is |dθ/dt|. */
+const FORESHORTEN_MIN = 0.6;
+export const SEQUENCING_CHAIN = ["back_elbow", "back_knee", "pelvis", "shoulders"] as const;
 function sequencing(c: Ctx, ssK: number, pkK: number): CardTileResult {
   const K: CardKey = "sequencing", u = "boolean", n = c.s.frames.length;
   const dist = (j: number, a: number, b: number) => { const p = P(c, j, a), q = P(c, j, b); return p && q ? Math.hypot(p.x - q.x, p.y - q.y) : null; };
@@ -205,14 +213,16 @@ function sequencing(c: Ctx, ssK: number, pkK: number): CardTileResult {
   const stanceWidth = (a: number, b: number) => { let w = 0; for (let j = c.lock.start_k!; j <= plantEnd; j++) { const x = m3(c, j, (i) => dist(i, a, b)); if (x != null && x > w) w = x; } return w > 0 ? w : null; };
   const Lh = stanceWidth(LM.L_HIP, LM.R_HIP), Ls = stanceWidth(LM.L_SHOULDER, LM.R_SHOULDER);
   const rigid = (a: number, b: number, L: number | null) => (j: number) => { if (!L) return null; const d = dist(j, a, b); return d == null ? null : (Math.acos(Math.min(1, d / L)) * 180) / Math.PI; };
-  const rear = c.rear.sh;
+  // Foreshortening guard: an in-plane angle is only readable while the upper arm shows ≥ FORESHORTEN_MIN of its stance length.
+  const armRef = lockMed(c, (j) => dist(j, c.rear.sh, c.rear.el));
+  const inPlane = (a: number, b: number) => (j: number) => { const p = P(c, j, a), q = P(c, j, b); return p && q ? (Math.atan2(q.y - p.y, q.x - p.x) * 180) / Math.PI : null; };
   const chans: [string, (j: number) => number | null, boolean][] = [
+    ["back_elbow", (j) => { const L = armRef, d = dist(j, c.rear.sh, c.rear.el); return L && d != null && d >= L * FORESHORTEN_MIN ? inPlane(c.rear.sh, c.rear.el)(j) : null; }, true],
+    ["back_knee", inPlane(c.rear.hip, c.rear.knee), true],
     ["pelvis", rigid(LM.L_HIP, LM.R_HIP, Lh), false],
-    ["torso", rigid(LM.L_SHOULDER, LM.R_SHOULDER, Ls), false],
-    ["lead_shoulder", (j) => angleDeg(P(c, j, rear), P(c, j, c.lead.sh), P(c, j, c.lead.el)), false],
-    ["lead_arm", (j) => { const a = P(c, j, c.lead.sh), b = P(c, j, c.lead.wr); return a && b ? (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI : null; }, true],
+    ["shoulders", rigid(LM.L_SHOULDER, LM.R_SHOULDER, Ls), false],
   ];
-  // Window: swing start → a little past D-SWING-PEAK (fastest torso turn), so a segment peaking AFTER the torso is not cut off.
+  // Window: swing start → a little past D-SWING-PEAK (fastest torso turn), so a segment peaking after the shoulders is not cut off.
   const k0 = Math.max(1, ssK - 1), k1 = Math.min(n - 2, pkK + Math.ceil(c.fps * 0.125));
   const peaks: Record<string, { frame: number | null; deg_per_s: number | null; coverage: number }> = {};
   for (const [name, g, wrap] of chans) {
@@ -223,13 +233,30 @@ function sequencing(c: Ctx, ssK: number, pkK: number): CardTileResult {
     for (let j = k0; j <= k1; j++) { const a = x[j - 1], b = x[j + 1]; if (a == null || b == null) continue; seen++; const w = Math.abs(((b - a) * c.fps) / 2); if (w > bv) { bv = w; best = j; } }
     peaks[name] = { frame: best < 0 ? null : c.s.frames[best].frame_index, deg_per_s: best < 0 ? null : round4(bv), coverage: round4(seen / (k1 - k0 + 1)) };
   }
-  const base = { method: "peak_angular_speed_every_segment", linear_terms: "none", swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, window_end_frame: c.s.frames[k1].frame_index, stance_width_px: { pelvis: Lh && round4(Lh), torso: Ls && round4(Ls) }, per_segment: peaks, frame_uncertainty: 1 };
+  const base = { method: "peak_angular_speed_every_segment", chain: "owner_2026-09-30: back elbow → back knee → pelvis → shoulders → barrel", barrel_link: "DelayCam (bat tracking) — not checked on the upload card", linear_terms: "none", linear_terms_why: "forward travel is the buffer that loads the chain, not a link in it", swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, window_end_frame: c.s.frames[k1].frame_index, stance_width_px: { pelvis: Lh && round4(Lh), shoulders: Ls && round4(Ls) }, per_segment: peaks, frame_uncertainty: 1, coaching: CARD_COACHING.sequencing };
+  // Back elbow fallback: side-on the back upper arm points at the camera through most of the swing, so its
+  // turning angle is unreadable. The owner's words for the trigger are "the back bicep/elbow MOVES FORWARD";
+  // the elbow's own forward speed RELATIVE TO THE BACK SHOULDER is the arm's motion, not body travel, and is
+  // used as a labelled proxy for the elbow link only. Body travel still never enters the chain.
+  let elbowSource = "angular";
+  if (peaks.back_elbow.frame == null || peaks.back_elbow.coverage < 0.6) {
+    const rel = smooth(c.s.frames.map((_, j) => { const e = Fw(c, P(c, j, c.rear.el)), sh = Fw(c, P(c, j, c.rear.sh)); return e == null || sh == null ? null : e - sh; }), 1);
+    let best = -1, bv = -Infinity, seen = 0;
+    for (let j = k0; j <= k1; j++) { const a = rel[j - 1], b = rel[j + 1]; if (a == null || b == null) continue; seen++; const w = ((b - a) * c.fps) / 2; if (w > bv) { bv = w; best = j; } }
+    const cov = seen / (k1 - k0 + 1);
+    if (best >= 0 && cov >= 0.6) { peaks.back_elbow = { frame: c.s.frames[best].frame_index, deg_per_s: null, coverage: round4(cov) }; (peaks.back_elbow as Record<string, unknown>).pct_stature_per_s = round4(bv); elbowSource = "forward_speed_relative_to_back_shoulder_proxy"; }
+  }
+  (base as Record<string, unknown>).back_elbow_source = elbowSource;
+  if (elbowSource !== "angular") (base as Record<string, unknown>).back_elbow_proxy_why = "back upper arm points at the camera side-on (image length below 60% of stance length for most of the window), so its turning angle cannot be read; the elbow's forward move relative to the back shoulder — the owner's own description of the trigger — times the link instead";
   const thin = chans.filter(([nm]) => peaks[nm].frame == null || peaks[nm].coverage < 0.6).map(([nm]) => nm);
   if (thin.length) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { ...base, reason: `segment_unobserved_for_most_of_window:${thin.join(",")}` });
   const order = chans.map(([nm]) => peaks[nm].frame!);
   const out: string[] = [];
-  for (let i = 1; i < order.length; i++) if (order[i] < order[i - 1] - 1) out.push(`${chans[i][0]}_before_${chans[i - 1][0]}`);
-  return ok(K, u, out.length === 0 ? 1 : 0, null, out.length === 0 ? "pass" : "fail", { ...base, out_of_order: out, rule: "a segment reaching its fastest turn more than 1 frame before the segment below it is out of order; within 1 frame cannot be ordered at this frame rate" });
+  // Every link is checked against every link before it, so "shoulders before elbow" is caught even if a middle link ties.
+  for (let i = 1; i < order.length; i++) for (let h = 0; h < i; h++) if (order[i] < order[h] - 1) out.push(`${chans[i][0]}_before_${chans[h][0]}`);
+  const ties: string[] = [];
+  for (let i = 1; i < order.length; i++) if (order[i] <= order[i - 1] && order[i] >= order[i - 1] - 1) ties.push(`${chans[i - 1][0]}~${chans[i][0]}`);
+  return ok(K, u, out.length === 0 ? 1 : 0, null, out.length === 0 ? "pass" : "fail", { ...base, out_of_order: out, unresolved_ties: ties, pass_means: "no link provably out of order at this frame rate — ties are not confirmation of the order", rule: "a link reaching its fastest turn more than 1 frame before any earlier link in the owner's chain is out of order; within 1 frame cannot be ordered at this frame rate" });
 }
 
 /* ================= 10 back-elbow connection — a PATH, not an angle (owner 2026-09-28) ================= */
@@ -298,15 +325,40 @@ function finishBalance(c: Ctx, pkK: number, finK: number): CardTileResult {
   return ok(K, u, f, null, null, { swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, finish_frame: c.s.frames[finK].frame_index, com_stance_frac_at_finish: round4(f), inside_base: f >= 0 && f <= 1, com_sway_pct_ungraded: sw == null ? null : sw < CARD_FLOORS.finish_com_sway_pct ? { value: null, reason: "below_still_clip_noise_floor", raw: round4(sw) } : round4(sw), sign: "0 = over back ankle, 1 = over front ankle; position-based estimate" });
 }
 
-/* ================= 13 shoulder-to-shoulder hold — four outputs ================= */
-function shoulderToShoulder(c: Ctx, plantK: number, pkK: number): CardTileResult {
+/* ================= 13 chin-to-shoulder — LEAK channel + HOLD channel (owner 2026-09-30) =================
+ * "Perfect that the chin & shoulder tuck. This unlocks biomechanical ease & being able to see the ball well."
+ * LEAK (side-on measurable): image-plane angle of the head (nose) → front shoulder line,
+ *   end of P2 → the frame before P4 starts. Any change beyond the still-clip floor = the
+ *   front shoulder moved off the chin before the swing = leak (owner: leak is an auto-fail).
+ *   Floor: still clip 15d75bc9, max |med3 − median| 3.15° (worst side L), 1.56° (R) → 3.2°.
+ *   PROXY: unsigned, image plane only; a head move also changes the angle.
+ * HOLD (the gap itself): lives partly in depth; reported only when visible. If HOLD refuses
+ *   but LEAK measures, the tile reports the leak and refuses the gap — partial honest output. */
+export const CHIN_LEAK_FLOOR_DEG = 3.2;
+function chinLeak(c: Ctx, apexK: number, endK: number) {
+  const ang = (j: number) => { const a = P(c, j, 0), b = P(c, j, c.lead.sh); return a && b ? (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI : null; };
+  if (apexK < 0 || endK <= apexK) return { ok: false as const, reason: "end_of_p2_not_before_p4_start" };
+  const a0 = m3(c, apexK, ang); if (a0 == null) return { ok: false as const, reason: "head_or_front_shoulder_untrusted_at_end_of_p2" };
+  let exc = 0, at = -1, seen = 0;
+  for (let j = apexK + 1; j <= endK; j++) { const x = m3(c, j, ang); if (x == null) continue; seen++; let d = x - a0; if (d > 180) d -= 360; if (d < -180) d += 360; if (Math.abs(d) > Math.abs(exc)) { exc = d; at = j; } }
+  const frames = endK - apexK;
+  if (seen < Math.max(2, frames / 2)) return { ok: false as const, reason: "head_or_front_shoulder_unobserved_for_most_of_window" };
+  return { ok: true as const, deg: Math.abs(exc), leaked: Math.abs(exc) > CHIN_LEAK_FLOOR_DEG, at_frame: at < 0 ? null : c.s.frames[at].frame_index,
+    window: { end_of_p2_frame: c.s.frames[apexK].frame_index, last_frame_before_p4: c.s.frames[endK].frame_index }, samples: seen, frames };
+}
+function shoulderToShoulder(c: Ctx, plantK: number, pkK: number, apexK: number, p4K: number): CardTileResult {
   const K: CardKey = "shoulder_to_shoulder_hold", u = "percent_of_window";
+  const lk = chinLeak(c, apexK, (p4K >= 0 ? p4K : plantK) - 1);
+  const leakLin = lk.ok ? { measured: true, change_deg: round4(lk.deg), floor_deg: CHIN_LEAK_FLOOR_DEG, leaked_before_swing: lk.leaked, largest_change_frame: lk.at_frame, window: lk.window, method: "head_to_front_shoulder_angle_image_plane", proxy: "unsigned, image plane only; a head move also changes the angle" } : { measured: false, reason: lk.reason };
+  const leakOnly = (holdReason: string, extra: Record<string, unknown> = {}): CardTileResult => {
+    if (!lk.ok) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: holdReason, leak: leakLin, ...extra });
+    return ok(K, "degrees", lk.deg, CHIN_LEAK_FLOOR_DEG, lk.leaked ? "fail" : "pass", { reported_channel: "leak_only", leak: leakLin, hold: { measured: false, reason: holdReason, why: "the chin-to-shoulder gap lives partly in depth and is not visible from the side for most of the window" }, ...extra, verdict_basis: "owner standard: the front shoulder must not leak open before the swing; leak = auto-fail. Hold refused, so no elite grade is possible", coaching: CARD_COACHING.shoulder_to_shoulder_hold });
+  };
   const sp = (j: number) => { const h = Fw(c, handPointPx(c.s, j, c.v).p), s = Fw(c, P(c, j, c.rear.sh)); return h == null || s == null ? null : h - s; };
   const s0 = m3(c, plantK, sp);
-  if (s0 == null) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "hands_or_back_shoulder_untrusted_at_plant" });
+  if (s0 == null) return leakOnly("hands_or_back_shoulder_untrusted_at_plant");
   const n = pkK - plantK;
-  if (n < 1) return refuse(K, u, mr(R.ANCHOR_NOT_DETECTED), { reason: "swing_peak_not_after_plant" });
-  // Held while the spacing has not closed (hands moved forward relative to the back shoulder) beyond the floor.
+  if (n < 1) return leakOnly("swing_peak_not_after_plant");
   let held = 0, broke: number | null = null, unobs = 0;
   for (let j = plantK + 1; j <= pkK; j++) {
     const x = m3(c, j, sp);
@@ -314,21 +366,21 @@ function shoulderToShoulder(c: Ctx, plantK: number, pkK: number): CardTileResult
     if (x - s0 > CARD_FLOORS.spacing_pct) { broke = j; break; }
     held = j - plantK;
   }
-  if (unobs > n / 2) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: "spacing_unobserved_for_most_of_window", unobserved_frames: unobs, window_frames: n });
+  if (unobs > n / 2) return leakOnly("spacing_unobserved_for_most_of_window", { unobserved_frames: unobs, window_frames: n });
   const pct = broke == null ? 100 : (held / n) * 100;
-  const leak = fuseShoulderOpen(c.s, c.lock, plantK, c.dir, c.side);
-  const leakBool = leak.verdict === "fail" ? true : leak.verdict === "pass" ? false : null;
+  const fused = fuseShoulderOpen(c.s, c.lock, plantK, c.dir, c.side);
+  const leakBool = lk.ok ? lk.leaked : fused.verdict === "fail" ? true : fused.verdict === "pass" ? false : null;
   const lin = {
-    plant_frame: c.s.frames[plantK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index,
+    plant_frame: c.s.frames[plantK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, reported_channel: "hold_and_leak", leak: leakLin,
     outputs: {
       spacing_held_pct_of_window: round4(pct),
       hold_ended_frame: broke == null ? null : c.s.frames[broke].frame_index,
-      front_shoulder_leak_before_swing_peak: leakBool, front_shoulder_leak_reason: leak.reason,
+      front_shoulder_leak_before_swing: leakBool, fused_shoulder_open_reason: fused.reason,
       verdict_basis: "owner standard: held ≥50% of plant → swing peak = pass, ≥95% = elite; front-shoulder leak = auto-fail",
     },
-    spacing_at_plant_pct: round4(s0), frame_uncertainty_pct: round4(100 / n), unobserved_frames: unobs,
+    spacing_at_plant_pct: round4(s0), frame_uncertainty_pct: round4(100 / n), unobserved_frames: unobs, coaching: CARD_COACHING.shoulder_to_shoulder_hold,
   };
-  if (leakBool === true) return ok(K, u, pct, round4(100 / n), "fail", { ...lin, auto_fail: "front shoulder opened by landing — nullifies the hold" });
+  if (leakBool === true) return ok(K, u, pct, round4(100 / n), "fail", { ...lin, auto_fail: "front shoulder leaked off the chin before the swing — nullifies the hold" });
   return ok(K, u, pct, round4(100 / n), pct >= 95 ? "elite" : pct >= 50 ? "pass" : "fail", lin);
 }
 
@@ -468,7 +520,7 @@ export function runHittingCardTiles(series: LandmarkSeries, o: { side: Handednes
     back_elbow_connection: need("back_elbow_connection", [SS, PK], () => backElbow(c, ssK, pkK)),
     shoulder_plane_steadiness: need("shoulder_plane_steadiness", [P4, PK], () => shoulderPlane(c, p4K, pkK)),
     finish_balance: need("finish_balance", [PK, FIN], () => (finK <= pkK ? refuse("finish_balance", units.finish_balance, mr(R.ANCHOR_NOT_DETECTED), { reason: "finish_not_after_swing_peak" }) : finishBalance(c, pkK, finK))),
-    shoulder_to_shoulder_hold: need("shoulder_to_shoulder_hold", [P_, SS, PK], () => shoulderToShoulder(c, plantK, pkK)),
+    shoulder_to_shoulder_hold: need("shoulder_to_shoulder_hold", [P_, SS, PK, AP], () => shoulderToShoulder(c, plantK, pkK, apexK, p4K)),
     back_knee_flex_maintained: need("back_knee_flex_maintained", [AP, P_], () => backKnee(c, apexK, plantK)),
     post_landing_hip_drift: need("post_landing_hip_drift", [P_, P4], () => hipDrift(c, plantK, p4K, pkK)),
     hands_stay_up_at_plant: need("hands_stay_up_at_plant", [P_], () => handsUp(c, plantK)),
