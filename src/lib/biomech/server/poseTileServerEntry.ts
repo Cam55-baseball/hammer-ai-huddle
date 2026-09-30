@@ -13,6 +13,7 @@ import { evaluateMovementGate } from "../gates/movementGate";
 import { runThrowingTiles } from "../metrics/throwingTiles";
 import { runPitchingTiles } from "../metrics/pitchingTiles";
 import { runPitchingCardTiles } from "../metrics/pitchingCardTiles";
+import { runSoftballPitchingTiles } from "../metrics/softballPitchingTiles";
 
 export type Verdict = "pass" | "fail" | null;
 export function checkStoredLandmarkMovement(ndjson: string) {
@@ -42,4 +43,10 @@ export function runThrowingTilesFromText(ndjson: string, side: Handedness | null
 export function runPitchingFromText(ndjson: string, side: Handedness | null, athleteHeightIn: number | null) {
   const s = decodeLandmarkSeriesText(ndjson);
   return { tiles: runPitchingTiles(s, { throwing_side: side }), card: runPitchingCardTiles(s, { throwing_side: side, athlete_height_in: athleteHeightIn }) };
+}
+
+/** Softball windmill card (unvalidated). Stored as ai_analysis.softball_pitching_tiles_deterministic
+ * so separation starts recording into the athlete ledger (owner ruling 2026-09-30). */
+export function runSoftballPitchingFromText(ndjson: string, side: Handedness | null, pitchType: string | null) {
+  return runSoftballPitchingTiles(decodeLandmarkSeriesText(ndjson), { throwing_side: side, pitch_type: pitchType });
 }
