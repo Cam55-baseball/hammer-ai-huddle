@@ -46,7 +46,7 @@ export function CategoryScoreCard({ videoId, sport, module, side }: { videoId: s
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.18em] text-muted-foreground">Category scores</p>
           <p className="text-2xl font-black text-foreground">
-            {card.total != null ? <>{card.total}<span className="text-sm font-semibold text-muted-foreground"> / 100</span></> : <span className="text-base font-semibold text-muted-foreground">{card.totalReason === "no_total_for_this_card" ? "No total for this card" : "Total not available — some categories incomplete"}</span>}
+            {card.total != null ? <>{card.total}<span className="text-sm font-semibold text-muted-foreground"> / 100</span></> : <span className="text-base font-semibold text-muted-foreground">{card.totalReason === "no_total_for_this_card" ? "No total for this card" : "No total yet: some categories weren't fully measured"}</span>}
           </p>
         </div>
         <div className="flex gap-1">
@@ -70,9 +70,11 @@ export function CategoryScoreCard({ videoId, sport, module, side }: { videoId: s
         <div key={c.key} className="space-y-2">
           <div className="flex items-baseline justify-between">
             <p className="text-sm font-bold text-foreground">{c.title}</p>
-            <p className="text-sm font-semibold text-foreground">{c.score != null ? `${c.score} / ${c.points}` : <span className="text-muted-foreground">Incomplete</span>}</p>
+            <p className="text-sm font-semibold text-foreground">{c.score != null ? `${c.score} / ${c.points}` : c.measuredScore ? <span className="text-muted-foreground">Limited evidence</span> : <span className="text-muted-foreground">Incomplete</span>}</p>
           </div>
           <Progress value={c.score != null && c.points > 0 ? (c.score / c.points) * 100 : 0} />
+          {!c.additive && <p className="text-xs font-semibold text-foreground">{c.coverage.scoredTiles} of {c.coverage.totalTiles} checks measured{c.coverage.waitingOnBaseline ? ` · ${c.coverage.waitingOnBaseline} recorded, waiting on this athlete's own range` : ""}{c.coverage.notApplicable ? ` · ${c.coverage.notApplicable} need the pitcher in frame or don't apply` : ""}</p>}
+          {c.status === "limited_evidence" && c.measuredScore && <p className="text-xs text-muted-foreground">Too little of this category was measured to give it a score. Of what was measured: {c.measuredScore.earned} of {c.measuredScore.outOf} points. This is not a full score.</p>}
           {c.status === "incomplete" && <p className="text-xs text-muted-foreground">{why(c.incompleteReason)}</p>}
           {c.notApplicable.length > 0 && <p className="text-xs text-muted-foreground">Not counted here (needs the pitcher in frame or doesn't apply to this clip): {c.notApplicable.join(", ")}.</p>}
           <ul className="space-y-1">
