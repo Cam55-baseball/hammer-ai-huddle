@@ -1344,6 +1344,42 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_metric_observations: {
+        Row: {
+          created_at: string
+          engine_version: string
+          id: string
+          metric_key: string
+          recorded_at: string
+          source: string
+          user_id: string
+          value: number
+          video_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          engine_version: string
+          id?: string
+          metric_key: string
+          recorded_at?: string
+          source: string
+          user_id: string
+          value: number
+          video_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          engine_version?: string
+          id?: string
+          metric_key?: string
+          recorded_at?: string
+          source?: string
+          user_id?: string
+          value?: number
+          video_id?: string | null
+        }
+        Relationships: []
+      }
       athlete_mpi_settings: {
         Row: {
           admin_probability_frozen: boolean | null
