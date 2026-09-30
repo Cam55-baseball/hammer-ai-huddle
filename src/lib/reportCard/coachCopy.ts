@@ -38,8 +38,8 @@ const SOFTBALL_HITTING: Partial<Record<string, [string, string, string]>> = {
 };
 
 /** Owner doctrine 2026-09-30 — carried into every P3 tile. No numbers. */
-export const P3_ACTIVE_STRIDE_LINE = "Your stride is something you do, not something that happens to you. The back hip drives you toward the pitcher and takes you all the way to the ground from your load. It is never a fall. Load, pause, stride, pause, then swing.";
-export const P3_ACTIVE_STRIDE_LINE_SOFTBALL = "Your stride is something you do, not something that happens to you. The back hip drives you toward the circle and takes you all the way to the ground from your load. It is never a fall. Load, pause, stride, pause, then swing.";
+export const P3_ACTIVE_STRIDE_LINE = "Your stride is something you do, not something that happens to you. The back hip drives you toward the pitcher and takes you all the way to the ground from your load. It is never a fall. As the front foot goes forward, your hands go back, your chest tips toward the plate like you are carrying a suitcase, and you sink into the back leg. Your body does not gain ground. The stride makes you more coiled, not less, and that coil is what the back hip holding its turn shows.";
+export const P3_ACTIVE_STRIDE_LINE_SOFTBALL = "Your stride is something you do, not something that happens to you. The back hip drives you toward the circle and takes you all the way to the ground from your load. It is never a fall. As the front foot goes forward, your hands go back, your chest tips toward the plate like you are carrying a suitcase, and you sink into the back leg. Your body does not gain ground. The stride makes you more coiled, not less, and that coil is what the back hip holding its turn shows.";
 
 export function coachFacingTile(tile: ReportCardTileSpec, sport: string): ReportCardTileSpec {
   const copy = sport === "softball" ? SOFTBALL_HITTING[tile.key] ?? HITTING[tile.key] : HITTING[tile.key];

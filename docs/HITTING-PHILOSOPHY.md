@@ -807,3 +807,24 @@ Carried into the athlete-facing text of every P3 tile (`coachCopy.ts`, `P3_ACTIV
 - **Active stride vs falling** — end of stance → front-foot plant. Back-hip forward travel toward the pitcher vs pelvis drop. Pattern from still floors only (back hip 1.3 %, pelvis drop 2.8 % of shoulder-to-ankle height, still 15d75bc9): active / falling / mixed / no travel. Sits in **P3: Load by Stride** as a record-only tile (2 points once the athlete has 8 in-context clips). Falling is mapped to the back-leg root pattern (`active_stride_falling`) as evidence, **not emitted** until the owner rules (`ROOT_EVIDENCE_ENABLED = false`).
 - **Micro-pauses** — body speed between end of P2 (load apex) and plant, and between plant and swing start. Records the deepest slowing (min ÷ peak) and time spent near it. Own reading ("Rhythm"), unscored: it spans P2–P4, and putting it inside the double-weighted P4 meter would let an unvalidated timing reading move the most important score.
 - **Frame rate:** speed uses a two-frame difference plus a three-frame median, so a pause must fill ≥ 5 frames between the anchors to be resolved: ≥ 0.17 s at 30 fps, ≥ 0.21 s at 24 fps. Shorter pauses are smeared out and refuse (`insufficient_temporal_resolution`). 60 fps halves that. The owner has given no pause duration, so none is assumed.
+
+## P3 — the full picture `[owner-supplied 2026-09-30]`
+
+"When speaking about the P3 the stride often ends up looking like the front foot moving forward and the hands moving back while the body from a side profile begins to create an angle of side bend with the chest moving toward the plate in a suit casing type of manor & sinking on the back leg as that front foot moves looks to move forward to the ground. This look is due to P1 & P2 load creating a balance point to keep the body back as the glute attempts to stride forward but should not actually gain ground but become more coiled as 'forward move' P3 stride happens. This ties into info I have given before. It is not a gravity move but a controlled voluntary movement."
+
+Built from it (all record-only, zero points, no owner numbers; `runStrideCoil` in `strideRhythm.ts`). Window: the front foot's rearmost point between stance and plant (after any gather) → front-foot plant. Floors measured on still clip 15d75bc9 before use.
+
+- **A. Foot forward, body stays back** — front-ankle forward travel ÷ pelvis forward travel. Floors: front ankle 1.5 %, pelvis 0.9 % of stature.
+- **B. Hands back as the foot goes forward** — hand-centroid travel against the foot. Floor 1.4 %. Starts at the foot, not the load apex: after the hand extremum the hands can only come forward.
+- **C. Side bend builds** — change in in-plane trunk tilt away from the pitcher. Floor 1.2°. The "chest toward the plate" part is depth and is not visible side-on; this is the in-plane proxy. Linked to the front-heel plant (owner: touching the floor from P2 creates the side bend that clears the back arm's path).
+- **D. Sinking, not falling** — pelvis drop, plus where the pelvis sits between the feet at plant. Sink = drop beyond floor, pelvis over the back half, no forward travel beyond floor. Fall = drop with forward travel and pelvis over the front half. Floor 2.8 %.
+- **E. More coiled** — already evidenced by tile 20 (back hip socket holds or increases). Coil is the mechanism; the hip holding its turn is the evidence. In the P3 coaching text.
+- **F. Voluntary, never gravity** — in the P3 coaching text on every P3 tile.
+
+Placement: all four sit in P3: Load by Stride at zero points and map to `back_leg_did_not_hold_load` (`stride_body_gained_ground`, `stride_hands_went_with_foot`, `stride_side_bend_lost`, `stride_fell_forward`). Mapped, not emitted, until the owner rules (`ROOT_EVIDENCE_ENABLED = false`).
+
+Open for the owner: the earlier active-stride tile counts back-hip forward travel as "active". This quote says the glute drives forward but the body "should not actually gain ground". On 914cf54c the back hip and pelvis both travelled forward well beyond their floors — active stride calls that active, reading A calls it the body going with the foot. The two readings need reconciling before either is ever graded.
+
+## Micro-pauses — routed to DelayCam `[owner ruling 2026-09-30]`
+
+"If the micropauses cannot be measured in 24-30fps then we should push them to the delaycam project in the mechanics toggle side where it is measurable." Tested: the smallest dip the speed trace can show spans five frames (≈0.21 s at 24 fps, ≈0.17 s at 30 fps). On all three fixtures the landing and swing-start anchors could not be put in order at 24 fps, so the pause before the swing was never resolved on any real clip. Moved to the DelayCam mechanics spec; not on the upload card.

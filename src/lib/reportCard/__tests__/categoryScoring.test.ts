@@ -5,19 +5,20 @@ import { runHittingPoseTiles } from "@/lib/biomech/metrics/hittingPoseTiles";
 import { runHittingCardTiles } from "@/lib/biomech/metrics/hittingCardTiles";
 import { runHittingOwnerTiles } from "@/lib/biomech/metrics/hittingOwnerTiles";
 import { runFrontLegGather } from "@/lib/biomech/metrics/frontLegGather";
-import { runActiveStride, runMicroPauses } from "@/lib/biomech/metrics/strideRhythm";
+import { runActiveStride, runMicroPauses, runStrideCoil, ROUTED_TO_DELAYCAM } from "@/lib/biomech/metrics/strideRhythm";
 import { HIP_LOAD_ATHLETE_UNLOCKED } from "@/lib/biomech/metrics/hipLoadVisibility";
 import { runPitchingTiles } from "@/lib/biomech/metrics/pitchingTiles";
 import { runPitchingCardTiles } from "@/lib/biomech/metrics/pitchingCardTiles";
 import { runThrowingTiles } from "@/lib/biomech/metrics/throwingTiles";
 import { runSoftballPitchingTiles } from "@/lib/biomech/metrics/softballPitchingTiles";
 import { scoreCard, bandProximity, INCOMPLETE_MIN_SHARE } from "../categories/scoring";
+import { DELAYCAM_PERFORMANCE_SPEC } from "../contracts/delaycamPerformance";
 import { HITTING_CATEGORIES, PITCHING_CATEGORIES, THROWING_CATEGORIES, WINDMILL_CATEGORIES } from "../categories/specs";
 
 const load = (n: string) => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "../../biomech/__tests__/fixtures", n))).toString("utf8"));
 const still = load("still-subject-15d75bc9.ndjson.gz"), A = load("swing-24fps-914cf54c.ndjson.gz"), B = load("swing-24fps-9d2e117e.ndjson.gz");
 type S = ReturnType<typeof load>;
-const hitting = (s: S, side: "L" | "R") => ({ pose: runHittingPoseTiles(s, { side }), card: runHittingCardTiles(s, { side }), owner: runHittingOwnerTiles(s, { side, athlete_height_in: null }), gather: runFrontLegGather(s, { side }), rhythm: { active: runActiveStride(s, { side }), pauses: runMicroPauses(s, { side }) } });
+const hitting = (s: S, side: "L" | "R") => ({ pose: runHittingPoseTiles(s, { side }), card: runHittingCardTiles(s, { side }), owner: runHittingOwnerTiles(s, { side, athlete_height_in: null }), gather: runFrontLegGather(s, { side }), rhythm: { active: runActiveStride(s, { side }) }, coil: runStrideCoil(s, { side }) });
 const pitching = (s: S) => ({ tiles: runPitchingTiles(s, { throwing_side: "R" }), card: runPitchingCardTiles(s, { throwing_side: "R", athlete_height_in: null }) });
 const summary = (c: ReturnType<typeof scoreCard>) => ({ total: c.total, totalReason: c.totalReason, cats: c.categories.map((x) => [x.key, x.status, x.score, x.points, x.incompleteReason, x.measuredShare]) });
 
@@ -26,6 +27,7 @@ describe("category scoring", () => {
     for (const spec of [HITTING_CATEGORIES, PITCHING_CATEGORIES, THROWING_CATEGORIES, WINDMILL_CATEGORIES])
       for (const c of spec.categories) expect(c.tiles.reduce((a, t) => a + t.points, 0)).toBe(c.points);
     expect(HITTING_CATEGORIES.categories.filter((c) => !c.additive).reduce((a, c) => a + c.points, 0)).toBe(99);
+    expect(THROWING_CATEGORIES.categories.reduce((a, c) => a + c.points, 0)).toBe(100);
     expect(PITCHING_CATEGORIES.categories.reduce((a, c) => a + c.points, 0)).toBe(100);
     expect(INCOMPLETE_MIN_SHARE).toBe(0.6);
   });
@@ -98,6 +100,11 @@ describe("category scoring", () => {
       expect(runMicroPauses(still, { side }).value).toBeNull();
     }
     const a = runActiveStride(A, { side: "L" }), p = runMicroPauses(A, { side: "L" });
+    // Owner ruling: micro-pauses cannot be resolved at 24–30 fps → DelayCam, not the upload card.
+    expect(ROUTED_TO_DELAYCAM).toContain("micro_pauses");
+    expect(DELAYCAM_PERFORMANCE_SPEC.some((e) => e.key === "micro_pauses" && e.side === "mechanics")).toBe(true);
+    expect(JSON.stringify(HITTING_CATEGORIES)).not.toContain("micro_pauses");
+    expect(p.p3_to_p4.missing_reason).not.toBeNull();
     console.log("RHYTHM 914 L", JSON.stringify({ a: { pattern: a.pattern, value: a.value, why: a.missing_reason, l: a.lineage }, p }));
     expect(a.root_evidence?.emitted ?? false).toBe(false);
     expect(JSON.stringify(runMicroPauses(A, { side: "L" }))).toBe(JSON.stringify(p));
@@ -107,5 +114,17 @@ describe("category scoring", () => {
     const keys = WINDMILL_CATEGORIES.categories.map((c) => c.key);
     expect(keys).toEqual(["windup", "stride", "acceleration", "follow_through"]);
     for (const c of WINDMILL_CATEGORIES.categories.filter((c) => c.key === "windup" || c.key === "follow_through")) for (const t of c.tiles) expect(t.recordOnly).toBe(true);
+  });
+
+  it("P3 coil (A–D): still refuses all four; swings record, zero points, root evidence never emitted", () => {
+    for (const side of ["L", "R", null] as const) {
+      const r = runStrideCoil(still, { side });
+      for (const k of ["foot_vs_body", "hands_opposite", "side_bend", "sink"] as const) { expect(r[k].value).toBeNull(); expect(r[k].pattern).toBeNull(); }
+    }
+    const r = runStrideCoil(A, { side: "L" });
+    console.log("COIL 914 L", JSON.stringify(r));
+    for (const k of ["foot_vs_body", "hands_opposite", "side_bend", "sink"] as const) expect(r[k].root_evidence?.emitted ?? false).toBe(false);
+    expect(JSON.stringify(runStrideCoil(A, { side: "L" }))).toBe(JSON.stringify(r));
+    for (const t of HITTING_CATEGORIES.categories.find((c) => c.key === "p3")!.tiles.filter((t) => ["stride_foot_vs_body","stride_hands_opposite","stride_side_bend","stride_sink"].includes(t.key))) { expect(t.points).toBe(0); expect(t.recordOnly).toBe(true); }
   });
 });

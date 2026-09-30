@@ -35,6 +35,7 @@ import { frontFootPlantFromSeries } from "./hittingOwnerTiles";
 import { detectLoadApex, detectSwingStart } from "../anchors/poseEvents";
 
 export const STRIDE_RHYTHM_VERSION = "stride_rhythm@1.0.0-2026-09-30-record-only";
+export const ROUTED_TO_DELAYCAM = ["micro_pauses"] as const;
 export const STRIDE_RHYTHM_FLOORS = { pelvis_drop_pct: 2.8, back_hip_drive_pct: 1.3, body_speed_pct_s: 6.5 } as const;
 /** A central difference + 3-frame median spans ~4 frames; a dip must fill more than that to be seen at all. */
 export const MIN_PAUSE_WINDOW_FRAMES = 5;
@@ -150,4 +151,114 @@ export function runMicroPauses(series: LandmarkSeries, o: { side: Handedness | n
     lineage: { fps, min_window_frames: MIN_PAUSE_WINDOW_FRAMES, shortest_resolvable_sec: round4(MIN_PAUSE_WINDOW_FRAMES / fps), floors: STRIDE_RHYTHM_FLOORS,
       anchors: { load_apex: apex.frame_index, plant: series.frames[c.plantK].frame_index, swing_start: swing.frame_index }, record_only: true, graded: false, owner_duration: "not_supplied" },
   };
+}
+
+/* ================= P3 COIL — owner doctrine 2026-09-30 (second quote) =================
+ * "…should not actually gain ground but become more coiled as 'forward move' P3
+ *  stride happens… It is not a gravity move but a controlled voluntary movement."
+ *
+ * Four RECORD-ONLY readings over P3: the front foot's rearmost point between
+ * stance and plant (after any gather) → front-foot plant. No owner numbers exist; nothing is graded. Classification
+ * uses only still-clip floors. All four map to back_leg_did_not_hold_load but are
+ * NOT emitted while ROOT_EVIDENCE_ENABLED is false.
+ *
+ *  A foot_vs_body   — front-ankle forward travel ÷ pelvis forward travel.
+ *  B hands_opposite — hand-centroid travel against the front foot (rearward = correct).
+ *  C side_bend      — change in the in-plane trunk tilt away from the pitcher. The
+ *                     "chest toward the plate" part is depth and is not visible from
+ *                     a side view; this is the in-plane proxy. Linked to heel_plant.
+ *  D sink           — pelvis drop, with where the pelvis sits between the feet at plant
+ *                     (0 = over the back ankle, 1 = over the front ankle).
+ *
+ * Floors — still clip 15d75bc9, measured 2026-09-30 before use, max |med3 − median|:
+ *   front ankle x 1.415 % (worst side) · pelvis x 0.828 % · hands x 1.396 % ·
+ *   trunk tilt 1.104° · shoulder line 1.775° · pelvis vertical 2.727 %.
+ */
+export const STRIDE_COIL_VERSION = "stride_coil@1.0.0-2026-09-30-record-only";
+export const STRIDE_COIL_FLOORS = { foot_forward_pct: 1.5, pelvis_forward_pct: 0.9, hands_pct: 1.4, trunk_tilt_deg: 1.2, shoulder_line_deg: 1.8, pelvis_drop_pct: 2.8 } as const;
+
+export interface CoilReading<P extends string> {
+  readonly pattern: P | null;
+  readonly value: number | null;
+  readonly missing_reason: string | null;
+  readonly root_evidence: { fault_key: string; raised: boolean; emitted: false } | null;
+  readonly lineage: Readonly<Record<string, unknown>>;
+}
+export interface StrideCoilResult {
+  readonly key: "stride_coil";
+  readonly version: string;
+  readonly foot_vs_body: CoilReading<"body_stayed_back" | "body_went_with_foot" | "no_stride">;
+  readonly hands_opposite: CoilReading<"hands_went_back" | "hands_went_with_foot" | "hands_held">;
+  readonly side_bend: CoilReading<"side_bend_increased" | "side_bend_decreased" | "held">;
+  readonly sink: CoilReading<"sank_over_back_leg" | "fell_forward" | "no_sink" | "mixed">;
+  readonly missing_reason: string | null;
+}
+
+export function runStrideCoil(series: LandmarkSeries, o: { side: Handedness | null }): StrideCoilResult {
+  const miss = <P extends string>(r: string): CoilReading<P> => ({ pattern: null, value: null, missing_reason: r, root_evidence: null, lineage: { reason: r } });
+  const refuse = (r: string): StrideCoilResult => ({ key: "stride_coil", version: STRIDE_COIL_VERSION, foot_vs_body: miss(r), hands_opposite: miss(r), side_bend: miss(r), sink: miss(r), missing_reason: r });
+  if (!o.side) return refuse("batting_side_unknown");
+  const c = context(series, o.side);
+  if (!c) return refuse("stance_lock_or_direction_missing");
+  if (c.plantK < 0) return refuse("front_foot_plant_missing");
+  const F = STRIDE_COIL_FLOORS, dir = c.dir, st = c.st;
+  const front = o.side === "R" ? LM.L_ANKLE : LM.R_ANKLE, back = o.side === "R" ? LM.R_ANKLE : LM.L_ANKLE;
+  const fwd = (i: number) => (k: number) => { const p = c.P(k, i); return p ? (p.x * dir * 100) / st : null; };
+  // P3 window starts when the FRONT FOOT starts toward the pitcher: its rearmost
+  // point between stance and plant (after any gather). Not the hand extremum —
+  // after the load apex the hands can only come forward, which would fake finding B.
+  const b = c.plantK, lockEnd = c.lock.end_k as number;
+  let a = -1, rear = Infinity;
+  for (let k = lockEnd; k < b; k++) { const x = c.m3(k, fwd(front)); if (x != null && x < rear) { rear = x; a = k; } }
+  if (a < 0) return refuse("front_ankle_unobserved_before_plant");
+  if (b - a < 3) return refuse("stride_window_too_short");
+  const pel = (k: number) => mid(c.P(k, LM.L_HIP), c.P(k, LM.R_HIP));
+  const pelFw = (k: number) => { const p = pel(k); return p ? (p.x * dir * 100) / st : null; };
+  const pelDn = (k: number) => { const p = pel(k); return p ? (p.y * 100) / st : null; };
+  const hands = (k: number) => { const p = mid(c.P(k, LM.L_WRIST), c.P(k, LM.R_WRIST)); return p ? (p.x * dir * 100) / st : null; };
+  const tilt = (k: number) => { const h = pel(k), s = mid(c.P(k, LM.L_SHOULDER), c.P(k, LM.R_SHOULDER)); return h && s ? (-Math.atan2((s.x - h.x) * dir, h.y - s.y) * 180) / Math.PI : null; };
+  const d = (g: (k: number) => number | null) => { const x0 = c.m3(a, g), x1 = c.m3(b, g); return x0 == null || x1 == null ? null : x1 - x0; };
+  const win = { start_frame: series.frames[a].frame_index, plant_frame: series.frames[b].frame_index };
+  const ev = (key: string, raised: boolean) => ({ fault_key: key, raised, emitted: false as const });
+  const base = { window: win, floors: F, record_only: true, graded: false, root_pattern: "back_leg_did_not_hold_load", root_evidence_enabled: ROOT_EVIDENCE_ENABLED };
+
+  const footD = d(fwd(front)), pelD = d(pelFw), handD = d(hands), tiltD = d(tilt), dropD = d(pelDn);
+
+  let foot_vs_body: StrideCoilResult["foot_vs_body"];
+  if (footD == null || pelD == null) foot_vs_body = miss("front_ankle_or_pelvis_unobserved");
+  else if (footD <= F.foot_forward_pct) foot_vs_body = { pattern: "no_stride", value: null, missing_reason: null, root_evidence: null, lineage: { ...base, foot_forward_pct: round4(footD), pelvis_forward_pct: round4(pelD) } };
+  else {
+    const went = pelD > F.pelvis_forward_pct;
+    foot_vs_body = { pattern: went ? "body_went_with_foot" : "body_stayed_back", value: round4(footD / Math.max(Math.abs(pelD), F.pelvis_forward_pct)), missing_reason: null,
+      root_evidence: ev("stride_body_gained_ground", went), lineage: { ...base, foot_forward_pct: round4(footD), pelvis_forward_pct: round4(pelD), ratio_note: "pelvis travel floored at its noise floor so a still body never divides by zero" } };
+  }
+
+  let hands_opposite: StrideCoilResult["hands_opposite"];
+  if (handD == null || footD == null) hands_opposite = miss("hands_or_front_ankle_unobserved");
+  else if (footD <= F.foot_forward_pct) hands_opposite = miss("no_stride_above_floor");
+  else {
+    const p = handD < -F.hands_pct ? "hands_went_back" : handD > F.hands_pct ? "hands_went_with_foot" : "hands_held";
+    hands_opposite = { pattern: p, value: round4(-handD), missing_reason: null, root_evidence: ev("stride_hands_went_with_foot", p === "hands_went_with_foot"), lineage: { ...base, hands_rearward_pct: round4(-handD), foot_forward_pct: round4(footD) } };
+  }
+
+  let side_bend: StrideCoilResult["side_bend"];
+  if (tiltD == null) side_bend = miss("trunk_unobserved");
+  else {
+    const p = tiltD > F.trunk_tilt_deg ? "side_bend_increased" : tiltD < -F.trunk_tilt_deg ? "side_bend_decreased" : "held";
+    side_bend = { pattern: p, value: round4(tiltD), missing_reason: null, root_evidence: ev("stride_side_bend_lost", p === "side_bend_decreased"),
+      lineage: { ...base, trunk_tilt_change_deg: round4(tiltD), proxy: "in_plane_tilt_away_from_pitcher", depth_component: "not_visible_side_on", linked_tile: "heel_plant" } };
+  }
+
+  let sink: StrideCoilResult["sink"];
+  const pb = pel(b), fa = c.P(b, front), ba = c.P(b, back);
+  if (dropD == null || pelD == null || !pb || !fa || !ba) sink = miss("pelvis_or_ankles_unobserved_at_plant");
+  else {
+    const span = (fa.x - ba.x) * dir;
+    const frac = Math.abs(span) > 1e-6 ? ((pb.x - ba.x) * dir) / span : null;
+    const dropped = dropD > F.pelvis_drop_pct, forward = pelD > F.pelvis_forward_pct, overBack = frac != null && frac < 0.5;
+    const p = !dropped ? "no_sink" : overBack && !forward ? "sank_over_back_leg" : !overBack && forward ? "fell_forward" : "mixed";
+    sink = { pattern: p, value: round4(dropD), missing_reason: null, root_evidence: ev("stride_fell_forward", p === "fell_forward"),
+      lineage: { ...base, pelvis_drop_pct: round4(dropD), pelvis_forward_pct: round4(pelD), pelvis_between_feet_at_plant: frac == null ? null : round4(frac) } };
+  }
+  return { key: "stride_coil", version: STRIDE_COIL_VERSION, foot_vs_body, hands_opposite, side_bend, sink, missing_reason: null };
 }

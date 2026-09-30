@@ -21,3 +21,11 @@ Every entry is **blocked**, in order, on (1) the native Swift camera plugin for
 
 Upload windows that used to end at contact now end at **D-SWING-PEAK** — peak
 torso rotation speed, a body event. It is NOT contact and no tile may call it contact.
+
+## Mechanics side (body only, needs frame rate, no detectors)
+
+| Metric | Moved from | Requires |
+|---|---|---|
+| micro_pauses (P2→pause→P3→pause→P4) | upload hitting card | native camera plugin high frame rate only |
+
+Owner ruling 2026-09-30: anything the upload path cannot honestly resolve moves here rather than shipping a weak version. Evidence for micro-pauses: the smallest dip the smoothing can see spans five frames — about a fifth of a second at 24 fps and a sixth at 30 fps. On all three fixtures the landing and swing-start anchors could not be separated in order at 24 fps (swing start detected before landing on 914cf54c; missing or out of order on 9d2e117e), so the pause before the swing — the one the owner names — was never resolved. The code (`runMicroPauses`) is kept, unwired, for the DelayCam path.

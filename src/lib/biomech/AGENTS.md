@@ -11,3 +11,4 @@
 - Baselines (`baseline/athleteBaseline.ts`): median+IQR, ≥8 in-context clips, floor-bounded, both directions. Why: individual measures are compared to the athlete, never cut.
 - `camera/fieldPnP.ts` and `lift3d/constraintStage.ts` are model-agnostic; any 3D estimate passes the constraint stage, large corrections → missing. Why: lifting model pending a clean licence.
 - Elite filter removes invented thresholds and nitpicks, never measurements: a measurement with no defensible number becomes record-only (per-athlete baseline). Why: owner ruling 2026-09-30; unrecorded data can never grow a standard.
+- Anything the upload path cannot honestly resolve at 24–30 fps (e.g. micro-pauses) moves to `reportCard/contracts/delaycamPerformance.ts` (mechanics side); never ship a degraded version. Why: owner ruling 2026-09-30.

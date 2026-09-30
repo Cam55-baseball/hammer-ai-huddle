@@ -23,6 +23,6 @@ describe("upload hitting card naming rule", () => {
   it("moved channels are recorded in the DelayCam spec with blockers", () => {
     const keys = DELAYCAM_PERFORMANCE_SPEC.map((e) => e.key);
     for (const k of ["bat_path", "on_plane_pct", "time_to_contact_ms", "bat_speed_contact_mph", "sequencing.barrel", "eyes_tracking.head_ball_alignment", "connection.barrel_to_ball_direction", "contact_frame"]) expect(keys).toContain(k);
-    for (const e of DELAYCAM_PERFORMANCE_SPEC) expect(e.blocked_on).toEqual(["native_swift_camera_plugin_240fps", "roboflow_detectors"]);
+    for (const e of DELAYCAM_PERFORMANCE_SPEC) expect(e.blocked_on).toEqual(e.side === "mechanics" ? ["native_swift_camera_plugin_240fps"] : ["native_swift_camera_plugin_240fps", "roboflow_detectors"]);
   });
 });
