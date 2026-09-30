@@ -2707,7 +2707,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     }
 
     // Throwing (baseball + softball) and baseball pitching cards from the stored
-    // series — same generated bundle as hitting. Softball windmill is not built.
+    // series — same generated bundle as hitting. Softball windmill (unvalidated) is stored so separation records into the athlete ledger.
     if (module === "throwing" || module === "pitching") {
       try {
         const { data: landmarkRun, error: landmarkError } = await supabase.from("video_landmark_runs")
