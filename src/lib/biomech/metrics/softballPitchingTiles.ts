@@ -18,23 +18,35 @@ import { detectWindmillAnchors, WINDMILL_FLOORS, type WindmillAnchors } from "..
 import { detectCameraView, type CameraView } from "../camera/cameraView";
 import { frontAnkleIndex, rearAnkleIndex, type Handedness } from "../side/strideSide";
 
-export const SOFTBALL_PITCHING_TILES_VERSION = "softball_pitching_tiles@1.0.0-2026-09-30-elite-filter-unvalidated";
+export const SOFTBALL_PITCHING_TILES_VERSION = "softball_pitching_tiles@1.1.0-2026-09-30-separation-baseline-stride-sfc-release-unvalidated";
 
-export type SpBasis = "SOURCED" | "PROPOSED" | "SOURCED_BAND" | "SOURCED_CORRELATION";
-export type SpKey = "stride_profile" | "stride_triple_extension" | "trunk_flexion" | "sfc_foot_angle" | "arm_path" | "windup_knee_valgus_flag" | "sfc_knee_valgus_flag";
+export type SpBasis = "SOURCED" | "PROPOSED" | "SOURCED_BAND" | "SOURCED_CORRELATION" | "SOURCED_MIXED";
+export type SpKey = "stride_profile" | "stride_triple_extension" | "trunk_flexion" | "sfc_separation" | "sfc_foot_angle" | "arm_path" | "windup_knee_valgus_flag" | "sfc_knee_valgus_flag";
+
+/**
+ * Separation noise floors — still clip 15d75bc9, measured BEFORE use, from
+ * MediaPipe world landmarks (hip line vs shoulder line in the ground plane).
+ * Separation: full still range 6.0° (−5.1..0.9). Pelvis rotation speed after a
+ * 5-frame smooth + central difference: ±24.5°/s. Values inside these are missing.
+ */
+export const SEPARATION_FLOORS = { separation_deg: 6.0, pelvis_speed_dps: 25 } as const;
 
 /** Standards. basis stays attached to every tile result and every label. */
 export const SP_STANDARDS = {
-  stride_profile: { basis: "SOURCED" as SpBasis, bands: { youth: [98, 89, 68], collegiate: [93, 89, 73] }, tolerance_pp: 10, tolerance_basis: "PROPOSED", camera: "side_on" },
+  // Owner ruling 2026-09-30: top of backswing is NOT measured (phase order unresolved); SFC + release only, never graded.
+  stride_profile: { basis: "SOURCED" as SpBasis, moments: ["sfc", "release"], never_graded_until: "phase_order_resolved", reference_pct: { youth: { sfc: 89, release: 68 }, collegiate: { sfc: 89, release: 73 } }, camera: "side_on" },
   stride_triple_extension: { basis: "SOURCED" as SpBasis, pass_fail_basis: "PROPOSED", camera: "two_view" },
   trunk_flexion: { basis: "SOURCED_CORRELATION" as SpBasis, never_graded: true, camera: "side_on", source: "PubMed 30038835 (youth, r 0.42–0.48)" },
+  // Owner ruling 2026-09-30: record-only, per-athlete baseline. Never a population threshold.
+  sfc_separation: { basis: "SOURCED_MIXED" as SpBasis, never_graded: true, per_athlete_baseline: true, camera: "any_single_3d_estimate", source: "Jump et al. 2026 (counter-rotation ↔ velocity); PMC8358524 (no angle ↔ speed)" },
   sfc_foot_angle: { basis: "SOURCED_BAND" as SpBasis, band_deg_arm_side: [0, 45], camera: "plate_line", do_not_alter: true },
   arm_path: { basis: "SOURCED" as SpBasis, threshold_basis: "PROPOSED", camera: "plate_line" },
   windup_knee_valgus_flag: { basis: "SOURCED" as SpBasis, grading_weight: 0, camera: "plate_line", source: "PubMed 34250163" },
   sfc_knee_valgus_flag: { basis: "SOURCED" as SpBasis, grading_weight: 0, camera: "plate_line", source: "PubMed 34250163" },
 } as const;
 
-export const SP_CUT_BY_ELITE_FILTER = ["windup_trunk_tibia", "windup_hip_square", "windup_foot_power_line", "sfc_hip_shoulder_rotation", "ft_knee_ankle", "accel_arm_path"] as const;
+/** sfc_hip_shoulder_rotation was cut as a GRADED tile; it returns as record-only `sfc_separation`. */
+export const SP_CUT_BY_ELITE_FILTER = ["windup_trunk_tibia", "windup_hip_square", "windup_foot_power_line", "ft_knee_ankle", "accel_arm_path"] as const;
 
 export interface SpTile {
   readonly key: SpKey;
@@ -57,7 +69,7 @@ export interface SoftballPitchingResult {
 
 const KEYS = Object.keys(SP_STANDARDS) as SpKey[];
 const base = (key: SpKey): Omit<SpTile, "values" | "verdict" | "graded" | "missing_reason" | "lineage" | "flag"> =>
-  ({ key, basis: SP_STANDARDS[key].basis, grading_weight: key.endsWith("_flag") || key === "trunk_flexion" ? 0 : 1 });
+  ({ key, basis: SP_STANDARDS[key].basis, grading_weight: key.endsWith("_flag") || key === "trunk_flexion" || key === "sfc_separation" || key === "stride_profile" ? 0 : 1 });
 const refuse = (key: SpKey, reason: string, lineage: Record<string, unknown> = {}): SpTile =>
   ({ ...base(key), values: {}, verdict: null, graded: false, flag: null, missing_reason: reason, lineage: { unvalidated: true, reason, ...lineage } });
 
@@ -87,18 +99,15 @@ export function runSoftballPitchingTiles(s: LandmarkSeries, o: SpOptions): Softb
 
   const sideOnOnly = view === "on_line" ? "camera_view_mismatch:needs_side_on_view" : null;
 
-  // Stride profile — ankle-to-ankle horizontal distance as % of stature at top of backswing / SFC / release.
+  // Stride — ankle-to-ankle horizontal distance as % of stature at SFC and release ONLY (owner ruling 2026-09-30).
+  // Top of backswing is not measured: the published profile's phase order is unresolved. Never graded.
   const pct = (k: number | null) => { const f = P(k, fa), r = P(k, ra); return f && r ? round4(Math.abs(f.x - r.x) / st * 100) : null; };
   if (sideOnOnly) tiles.stride_profile = refuse("stride_profile", sideOnOnly);
   else {
-    const v = { top: pct(A.top_of_backswing.k), sfc: pct(A.sfc.k), release: pct(A.release.k) };
-    const complete = v.top != null && v.sfc != null && v.release != null;
-    const band = o.age_band ? SP_STANDARDS.stride_profile.bands[o.age_band] : null;
-    const gradable = complete && band && o.pitch_type === "fastball_windmill";
-    const verdict = gradable ? ([v.top, v.sfc, v.release] as number[]).every((x, i) => Math.abs(x - band![i]) <= SP_STANDARDS.stride_profile.tolerance_pp) ? "pass" : "fail" : null;
-    tiles.stride_profile = { ...base("stride_profile"), values: v, verdict, graded: verdict != null, flag: null,
+    const v = { sfc: pct(A.sfc.k), release: pct(A.release.k) };
+    tiles.stride_profile = { ...base("stride_profile"), values: v, verdict: null, graded: false, flag: null,
       missing_reason: v.sfc == null ? "stride_foot_unobserved" : null,
-      lineage: { unvalidated: true, floor_pct: WINDMILL_FLOORS.ankle_x_pct, ungraded_reason: gradable ? null : !complete ? "top_of_backswing_or_moment_missing" : !band ? "age_band_unknown" : "pitch_type_not_fastball_or_unknown:stride_is_pitch_type_dependent", age_band: o.age_band ?? null, pitch_type: o.pitch_type ?? null } };
+      lineage: { unvalidated: true, floor_pct: WINDMILL_FLOORS.ankle_x_pct, top_of_backswing: "not_measured:phase_order_unresolved", ungraded_reason: "phase_order_unresolved:see_doctrine_open_question", age_band: o.age_band ?? null, pitch_type: o.pitch_type ?? null } };
   }
 
   // Trunk flexion toward the plate — RECORD ONLY. More flexion correlates with MORE velocity; never a fault.
@@ -128,5 +137,43 @@ export function runSoftballPitchingTiles(s: LandmarkSeries, o: SpOptions): Softb
       verdict: null, graded: false, flag: null, missing_reason: chA == null ? "drive_leg_unobserved" : null,
       lineage: { unvalidated: true, channel_a: chA, channel_b: "needs_plate_line_view", channel_c: chC, ungraded_reason: "channel_b_needs_plate_line:two_view_capture_required" } };
   }
+  tiles.sfc_separation = measureSeparation(s, A.sfc.k, A.stride_start.k ?? A.wu_end.k, side);
   return { version: SOFTBALL_PITCHING_TILES_VERSION, validated: false, anchors: an, view, tiles };
+}
+
+
+/**
+ * Separation — RECORD ONLY, per-athlete baseline (owner ruling). Read from
+ * MediaPipe world landmarks: yaw of the hip line and shoulder line in the
+ * ground plane. This is ONE 3-D estimate (no second estimate yet), so it is
+ * marked unconfirmed. Values inside the still-clip floor are missing.
+ */
+function measureSeparation(s: LandmarkSeries, sfc: number | null, from: number | null, side: Handedness): SpTile {
+  const yaw = (k: number, a: number, b: number) => { const w = s.frames[k]?.world as number[] | undefined; if (!w || w.length < 99) return null; return (Math.atan2(w[b * 3 + 2] - w[a * 3 + 2], w[b * 3] - w[a * 3]) * 180) / Math.PI; };
+  const wrap = (d: number) => ((d + 540) % 360) - 180;
+  if (sfc == null) return refuse("sfc_separation", "sfc_missing");
+  const ph = yaw(sfc, LM.L_HIP, LM.R_HIP), sh = yaw(sfc, LM.L_SHOULDER, LM.R_SHOULDER);
+  const raw = ph != null && sh != null ? wrap(sh - ph) : null;
+  const sep = raw == null || Math.abs(raw) < SEPARATION_FLOORS.separation_deg ? null : round4(Math.abs(raw));
+  // Pelvis rotation speed before SFC: unwrap, 5-frame smooth, central difference.
+  let peak: number | null = null;
+  if (from != null && from < sfc) {
+    const t: number[] = [], y: number[] = [];
+    for (let k = Math.max(0, from - 2); k <= Math.min(s.frames.length - 1, sfc + 2); k++) {
+      const v = yaw(k, LM.L_HIP, LM.R_HIP); if (v == null) continue;
+      y.push(v); t.push(s.frames[k].timestamp_seconds);
+    }
+    // re-unwrap cleanly
+    for (let i = 1; i < y.length; i++) y[i] = y[i - 1] + wrap(y[i] - y[i - 1]);
+    const sm = y.map((_, i) => { const w = y.slice(Math.max(0, i - 2), i + 3); return w.reduce((a, b) => a + b, 0) / w.length; });
+    const sign = side === "R" ? 1 : -1; // toward the throwing-arm side; convention UNVERIFIED on a real clip
+    for (let i = 1; i < sm.length - 1; i++) {
+      const dt = t[i + 1] - t[i - 1]; if (!(dt > 0)) continue;
+      const v = ((sm[i + 1] - sm[i - 1]) / dt) * sign;
+      if (v > SEPARATION_FLOORS.pelvis_speed_dps && (peak == null || v > peak)) peak = round4(v);
+    }
+  }
+  return { ...base("sfc_separation"), values: { separation_at_sfc_deg: sep, peak_pelvic_counter_rotation_dps: peak }, verdict: null, graded: false, flag: null,
+    missing_reason: sep == null && peak == null ? (raw == null ? "world_landmarks_unavailable_at_sfc" : "within_still_clip_noise") : null,
+    lineage: { unvalidated: true, never_graded: "per_athlete_baseline_only", source_3d: "mediapipe_world_single_estimate_unconfirmed", direction_convention: "unverified_no_softball_clip", floors: SEPARATION_FLOORS, evidence: "mixed" } };
 }

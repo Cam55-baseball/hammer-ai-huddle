@@ -120,3 +120,23 @@ Side-on today can produce at most three items: stride profile, drive-leg push (r
 
 ### Fixture results
 Still 15d75bc9 — every anchor and tile missing (`no_windmill_delivery:wu_first_move:…`; `throwing_side_unknown` with no side). Swings 914cf54c and 9d2e117e, both sides — `no_windmill_delivery:sfc:no_stride_foot_contact` (a hitter's stride never reaches a windmill stride).
+
+---
+
+## OWNER RULINGS — 2026-09-30
+
+### Separation restored as RECORD-ONLY, per-athlete baseline
+Owner: "Fascial law says each user is different… set an optimal number for each user." Cutting it was wrong — if it is never recorded, our own distribution never exists.
+- **Tile `sfc_separation`** (weight 0, never graded) records two values: separation angle at SFC, and peak pelvic counter-rotation speed toward the throwing-arm side before SFC.
+- **Evidence is mixed — that is why it is recorded, not graded.** Jump, Zappa, Friesen, Talmage, Fava, Oliver (2026), *Impact of the Lower Body on Softball Pitching Velocity*: pitchers counter-rotate the pelvis toward the throwing-arm side just before SFC; greater peak negative pelvic rotational velocity was significantly associated with higher pitch velocity. A separate windmill study (PMC8358524) found **no** correlation between ball speed and pelvic or trunk rotation angles.
+- Measured from MediaPipe world landmarks (hip line vs shoulder line in the ground plane) — a single 3-D estimate, marked unconfirmed until a second estimate agrees (see 3-D report). Still-clip floors, measured first: separation 6.0°, pelvis speed ±25°/s. Direction sign unverified — no softball clip exists.
+- **No universal optimum is ever stated.** The athlete's optimum is discovered from their own clips.
+- Baseline: `src/lib/biomech/baseline/athleteBaseline.ts` — median + MAD of the athlete's last 20 clips, **minimum 8 clips** (below that one odd clip moves the spread by more than a third), band never narrower than the noise floor, flags below AND above. Athlete copy is coach language with no numbers.
+- Correlation store: table `athlete_metric_observations` (every recorded value, per clip, per engine version) + `metricCorrelation.ts`. Nothing is concluded below five paired clips; exploratory and staff-only.
+
+### Stride — OPEN QUESTION, measured at SFC and release only
+Published: ≈98 % (top of backswing), ≈89 % (SFC), ≈68/73 % (release). A stride with a planted foot cannot grow once planted.
+- (a) Fixed origin (rubber): the stride foot is planted from SFC to release, so a rubber-origin stride cannot shrink 89 → 68. **(a) is contradicted by the figures.**
+- (b) Top of backswing after SFC: after SFC the stride foot is fixed and the drive foot only drags forward, so the gap can only close. Anything measured after SFC is ≤ 89 %, never 98 %. **(b) is also contradicted.**
+- What the geometry does support: ankle-to-ankle with the drive foot dragging forward explains 89 → 68 exactly. The 98 % most plausibly comes from the stride leg reaching further while airborne (foot extended ahead, then the knee flexes and the foot settles at landing) or from a different landmark (heel/toe) at that moment. Unresolved until the primary Werner 2005 table and its landmark definition are read.
+- Until resolved: **stride recorded at SFC and release only, never graded; top of backswing not measured.**

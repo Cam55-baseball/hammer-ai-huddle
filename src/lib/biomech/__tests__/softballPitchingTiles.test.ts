@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import { join } from "node:path";
 import { decodeLandmarkSeriesText, type LandmarkSeries } from "../pose/landmarkSeriesFormat";
-import { runSoftballPitchingTiles, SP_STANDARDS, SP_CUT_BY_ELITE_FILTER } from "../metrics/softballPitchingTiles";
+import { runSoftballPitchingTiles, SP_STANDARDS, SP_CUT_BY_ELITE_FILTER, SEPARATION_FLOORS } from "../metrics/softballPitchingTiles";
 import { SOFTBALL_PITCHING_COPY, SP_BASIS_LABEL, SP_PRO_LINE, SP_CARD_INTRO } from "../../reportCard/softballPitchingCopy";
 
 const load = (n: string): LandmarkSeries => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "fixtures", n))).toString("utf8"));
@@ -40,7 +40,9 @@ it("doctrine rules: flexion never graded, valgus weight 0, 0–45° band untouch
   expect(SP_STANDARDS.windup_knee_valgus_flag.grading_weight).toBe(0);
   expect(SP_STANDARDS.sfc_knee_valgus_flag.grading_weight).toBe(0);
   expect(SP_STANDARDS.sfc_foot_angle.band_deg_arm_side).toEqual([0, 45]);
-  expect(SP_CUT_BY_ELITE_FILTER).toContain("sfc_hip_shoulder_rotation");
+  expect(SP_CUT_BY_ELITE_FILTER).not.toContain("sfc_hip_shoulder_rotation");
+  expect(SP_STANDARDS.sfc_separation.never_graded).toBe(true);
+  expect(SP_STANDARDS.stride_profile.moments).toEqual(["sfc", "release"]);
 });
 
 it("athlete copy: no numbers with ° or %, no baseball terms, basis labels shown, flags send to a professional", () => {
@@ -52,4 +54,11 @@ it("athlete copy: no numbers with ° or %, no baseball terms, basis labels shown
   expect(SOFTBALL_PITCHING_COPY.sfc_knee_valgus_flag.coach.endsWith(SP_PRO_LINE)).toBe(true);
   expect(SOFTBALL_PITCHING_COPY.trunk_flexion.standard).toMatch(/never graded/i);
   expect(SP_BASIS_LABEL.PROPOSED).toMatch(/Proposed/);
+});
+
+it("separation is record-only, weight 0, and floors were measured before use", () => {
+  const r = runSoftballPitchingTiles(A, { throwing_side: "R" });
+  expect(r.tiles.sfc_separation.grading_weight).toBe(0);
+  expect(r.tiles.stride_profile.grading_weight).toBe(0);
+  expect(SEPARATION_FLOORS.separation_deg).toBeGreaterThan(0);
 });
