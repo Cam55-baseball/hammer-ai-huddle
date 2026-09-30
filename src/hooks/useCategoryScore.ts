@@ -6,7 +6,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { readLandmarkSeries } from "@/lib/biomech/pose/landmarkSeriesStorage";
-import { checkLandmarkMovement } from "@/lib/biomech/gates/movementGate";
+import { evaluateMovementGate } from "@/lib/biomech/gates/movementGate";
 import { runHittingPoseTiles } from "@/lib/biomech/metrics/hittingPoseTiles";
 import { runHittingCardTiles } from "@/lib/biomech/metrics/hittingCardTiles";
 import { runHittingOwnerTiles } from "@/lib/biomech/metrics/hittingOwnerTiles";
@@ -34,7 +34,7 @@ export function useCategoryInputs(videoId: string | null, sport: string | undefi
         const path = (run as { landmarks_storage_path?: string } | null)?.landmarks_storage_path;
         if (!path) { if (!cancelled) setState({ loading: false, data: { refused: "no_saved_body_tracking" } }); return; }
         const s = await readLandmarkSeries(path);
-        const mv = checkLandmarkMovement(s) as { status: string; reason?: string };
+        const mv = evaluateMovementGate(s) as { status: string; reason?: string };
         if (mv.status === "refused") { if (!cancelled) setState({ loading: false, data: { refused: mv.reason ?? "no_movement" } }); return; }
         const m = (module ?? "").toLowerCase();
         const raw = m === "hitting"
