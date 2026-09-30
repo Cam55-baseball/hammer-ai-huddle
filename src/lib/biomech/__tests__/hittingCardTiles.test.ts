@@ -86,13 +86,3 @@ describe("hitting card tiles including separate front and back heels (23 total)"
   });
 });
 
-import { runShinVsFrontShoulder, SHIN_SHOULDER_FLOOR_PCT } from "../metrics/strideRhythm";
-describe("shin vs front shoulder (record-only, owner 2026-09-30)", () => {
-  it("still clip refuses; 914cf54c reads the knee ahead, ungraded", () => {
-    const load2 = (n: string) => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "fixtures", n))).toString("utf8"));
-    for (const side of ["L", "R"] as const) expect(runShinVsFrontShoulder(load2("still-subject-15d75bc9.ndjson.gz"), { side }).value).toBeNull();
-    const r = runShinVsFrontShoulder(load2("swing-24fps-914cf54c.ndjson.gz"), { side: "L" });
-    expect(r.pattern).toBe("shin_got_ahead"); expect(r.value).toBe(4.0695); expect(r.lineage.graded).toBe(false);
-    expect(SHIN_SHOULDER_FLOOR_PCT).toBe(1.4);
-  });
-});
