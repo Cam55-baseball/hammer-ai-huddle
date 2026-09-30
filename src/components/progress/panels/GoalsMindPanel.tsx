@@ -8,6 +8,7 @@ import { CorrelationExplorer } from "@/components/progress/correlations/Correlat
 import { buildTopicVariables } from "@/lib/progress/topicVariables";
 import { pearson, type NumericPoint } from "@/lib/progress/correlations";
 import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
+import { BaselineAlertsCard } from "@/components/progress/BaselineAlertsCard";
 
 export function GoalsMindPanel() {
   const { data: rows = [] } = useAthleteCommandRows({ days: 60, limit: 800 });
@@ -39,6 +40,7 @@ export function GoalsMindPanel() {
 
   return (
     <div className="space-y-4">
+      <BaselineAlertsCard />
       <CategoryGoalsCard />
       <AutoCorrelationCards items={auto} />
       <CorrelationExplorer variables={vars} />

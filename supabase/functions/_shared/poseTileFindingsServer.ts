@@ -7,7 +7,7 @@
  * Called by analyze-video only for an owned hitting upload with saved landmarks.
  */
 // @ts-ignore generated bundle
-import { checkStoredLandmarkMovement, runHittingTilesFromText, runThrowingTilesFromText, runPitchingFromText } from "./poseTiles.bundle.js";
+import { checkStoredLandmarkMovement, runHittingTilesFromText, runThrowingTilesFromText, runPitchingFromText, runSoftballPitchingFromText } from "./poseTiles.bundle.js";
 import { buildPoseTileFindings } from "./faultFindings.ts";
 
 async function gunzipIfNeeded(buf: Uint8Array): Promise<string> {
@@ -39,6 +39,11 @@ export async function runAndWritePoseTileFindings(admin: any, a: {
   const movement = checkStoredLandmarkMovement(text);
   if (movement.status === "refused") return { ok: true, written: 0, verdicts: {}, refused: movement.reason };
   const out = runHittingTilesFromText(text, a.side, a.athleteHeightIn);
+  // Athlete ledger: pose + card tile values. Owner tiles 19/20 are staff-only and never recorded here.
+  for (const [field, tiles] of [["hitting_pose_tiles_deterministic", out.pose], ["hitting_card_tiles_deterministic", out.card]] as const) {
+    const { error: le } = await admin.rpc("ledger_record_tiles", { p_video: a.videoId, p_field: field, p_tiles: { ...tiles, version: out.engine_version } });
+    if (le) console.error("[ledger] hitting tiles not recorded:", le.message);
+  }
   const rows = buildPoseTileFindings({ userId: a.userId, videoId: a.videoId, runId: a.runId, sport: a.sport, verdicts: out.verdicts, engineVersion: out.engine_version });
   if (rows.length) {
     const { error: e } = await admin.from("analysis_fault_findings").insert(rows);
@@ -52,13 +57,14 @@ export async function runAndWritePoseTileFindings(admin: any, a: {
  * Same bundle code as the tests. Movement gate first; a refused clip stores nothing.
  */
 // deno-lint-ignore no-explicit-any
-export async function runStoredThrowPitchCards(admin: any, a: { module: string; landmarksPath: string; side: "L" | "R" | null; athleteHeightIn: number | null }) {
+export async function runStoredThrowPitchCards(admin: any, a: { module: string; sport?: string | null; pitchType?: string | null; landmarksPath: string; side: "L" | "R" | null; athleteHeightIn: number | null }) {
   const { data, error } = await admin.storage.from("pose-landmarks").download(a.landmarksPath);
   if (error || !data) return { ok: false as const, reason: `landmark_download_failed:${error?.message ?? "no data"}` };
   const text = await gunzipIfNeeded(new Uint8Array(await data.arrayBuffer()));
   const movement = checkStoredLandmarkMovement(text);
   if (movement.status === "refused") return { ok: true as const, refused: movement.reason, fields: {} };
   if (a.module === "throwing") return { ok: true as const, fields: { throwing_tiles_deterministic: runThrowingTilesFromText(text, a.side) } };
+  if (a.sport === "softball") return { ok: true as const, fields: { softball_pitching_tiles_deterministic: runSoftballPitchingFromText(text, a.side, a.pitchType ?? null) } };
   const p = runPitchingFromText(text, a.side, a.athleteHeightIn);
   return { ok: true as const, fields: { pitching_tiles_deterministic: p.tiles, pitching_card_tiles_deterministic: p.card } };
 }

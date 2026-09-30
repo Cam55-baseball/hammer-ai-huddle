@@ -2707,8 +2707,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     }
 
     // Throwing (baseball + softball) and baseball pitching cards from the stored
-    // series — same generated bundle as hitting. Softball windmill is not built.
-    if (module === "throwing" || (module === "pitching" && sport === "baseball")) {
+    // series — same generated bundle as hitting. Softball windmill (unvalidated) is stored so separation records into the athlete ledger.
+    if (module === "throwing" || module === "pitching") {
       try {
         const { data: landmarkRun, error: landmarkError } = await supabase.from("video_landmark_runs")
           .select("landmarks_storage_path, diagnostics")
@@ -2725,7 +2725,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
           const hand = String(mpi?.primary_throwing_hand ?? ctx?.throws_hand ?? "").toUpperCase();
           const side = hand.startsWith("R") ? "R" : hand.startsWith("L") ? "L" : null;
           const heightIn = typeof prof?.height_inches === "number" ? prof.height_inches : null;
-          const cards = await runStoredThrowPitchCards(supabase, { module, landmarksPath: landmarkRun.landmarks_storage_path, side, athleteHeightIn: heightIn });
+          const cards = await runStoredThrowPitchCards(supabase, { module, sport, landmarksPath: landmarkRun.landmarks_storage_path, side, athleteHeightIn: heightIn });
           if (!cards.ok) throw new Error(cards.reason);
           if (Object.keys(cards.fields).length) {
             const { error: e } = await supabase.from("videos").update({ ai_analysis: { ...ai_analysis, ...cards.fields } }).eq("id", videoId);

@@ -3436,6 +3436,342 @@ function runPitchingCardTiles(series, o) {
   return { ...base, arm_slot: measureArmSlot(series, d.release_k, d.throwing_side), stance_lock: { ok: lock.ok, detail: lock.detail }, tiles };
 }
 
+// src/lib/biomech/anchors/windmillAnchors.ts
+var WINDMILL_ANCHORS_VERSION = "windmill_anchors@1.0.0-2026-09-30-unvalidated";
+var WINDMILL_FLOORS = { knee_deg: 5.4, hip_deg: 2.5, trunk_deg: 2, wrist_y_pct: 3.9, ankle_x_pct: 0.9 };
+var SFC_MIN_STRIDE_PCT = 20;
+var SFC_SETTLE_SPEED = 0.5;
+var HEEL_OFF_PCT = 1.5;
+var RELEASE_AFTER_SFC_SEC = 0.35;
+var RELEASE_NEAR_HIP_PCT = 15;
+var KEYS = ["wu_first_move", "wu_end", "stride_start", "top_of_backswing", "arm_12_oclock", "sfc", "release", "ft_end"];
+function detectWindmillAnchors(s, side) {
+  const fps = s.header.fps_true;
+  const u = uncertaintyMs(fps > 0 ? fps : 30);
+  const a = {};
+  const hit2 = (key, k) => {
+    a[key] = { key, k, frame: s.frames[k].frame_index, uncertainty_ms: u, missing_reason: null };
+  };
+  const miss2 = (key, reason) => {
+    a[key] = { key, k: null, frame: null, uncertainty_ms: null, missing_reason: reason };
+  };
+  let refusal = null;
+  const fail = (key, reason) => {
+    miss2(key, reason);
+    if (!refusal)
+      refusal = `no_windmill_delivery:${key}:${reason}`;
+  };
+  const done = (dir2, st2) => {
+    for (const k of KEYS)
+      if (!a[k])
+        miss2(k, refusal ? "upstream_anchor_missing" : "not_detected");
+    const core = a.sfc.k != null && a.arm_12_oclock.k != null && a.release.k != null;
+    return { version: WINDMILL_ANCHORS_VERSION, ok: core && refusal == null, refusal_detail: core ? refusal : refusal ?? "no_windmill_delivery", side, direction_sign: dir2, stature_px: st2, anchors: a };
+  };
+  if (!side) {
+    refusal = "throwing_side_unknown";
+    return done(null, null);
+  }
+  const scalePx = bodyScalePx(s), scale = bodyScale(s);
+  if (!(fps > 0) || scalePx == null || scale == null) {
+    fail("wu_first_move", "no_time_base_or_body_scale");
+    return done(null, null);
+  }
+  const st = scalePx / SHOULDER_TO_ANKLE_OF_STATURE;
+  const dir = deriveDirectionSign(s, side);
+  const fm = detectFirstMove(s);
+  if (fm.frame_index == null) {
+    fail("wu_first_move", `${fm.missingness?.missing_reason ?? "anchor_not_detected"}:${String(fm.diagnostics.reason ?? "")}`);
+    return done(dir, st);
+  }
+  const k0 = s.frames.findIndex((f) => f.frame_index === fm.frame_index);
+  hit2("wu_first_move", k0);
+  if (dir == null) {
+    fail("sfc", "stride_direction_unknown");
+    return done(dir, st);
+  }
+  const F = s.frames, P3 = (f, i) => f ? pointPx(s, f, i) : null;
+  const fa = frontAnkleIndex(side), ra = rearAnkleIndex(side);
+  const rk = ra === 27 ? LM.L_KNEE : LM.R_KNEE, rh = ra === 27 ? LM.L_HIP : LM.R_HIP, rheel = ra === 27 ? 29 : 30;
+  const SH = side === "R" ? LM.R_SHOULDER : LM.L_SHOULDER, EL = side === "R" ? LM.R_ELBOW : LM.L_ELBOW, WR = side === "R" ? LM.R_WRIST : LM.L_WRIST, HP = side === "R" ? LM.R_HIP : LM.L_HIP;
+  const fx0 = P3(F[k0], fa)?.x ?? null;
+  if (fx0 == null) {
+    fail("sfc", "stride_foot_unobserved_at_first_move");
+    return done(dir, st);
+  }
+  let sfc = null;
+  for (let k = k0 + 1;k < F.length - 2 && sfc == null; k++) {
+    const p = P3(F[k], fa);
+    if (!p)
+      continue;
+    if ((p.x - fx0) * dir / st * 100 < SFC_MIN_STRIDE_PCT)
+      continue;
+    let settled = true;
+    for (let j = 0;j < 2; j++) {
+      const q0 = P3(F[k + j], fa), q1 = P3(F[k + j + 1], fa);
+      if (!q0 || !q1 || F[k + j + 1].frame_index - F[k + j].frame_index !== 1) {
+        settled = false;
+        break;
+      }
+      if (Math.abs(q1.x - q0.x) / st * fps > SFC_SETTLE_SPEED || Math.abs(q1.y - q0.y) / st * fps > SFC_SETTLE_SPEED) {
+        settled = false;
+        break;
+      }
+    }
+    if (settled)
+      sfc = k;
+  }
+  if (sfc == null) {
+    fail("sfc", "no_stride_foot_contact");
+    return done(dir, st);
+  }
+  hit2("sfc", sfc);
+  const knee = (k) => angleDeg(P3(F[k], rh), P3(F[k], rk), P3(F[k], ra));
+  const stanceKnee = knee(k0);
+  let kMin = null, vMin = Infinity;
+  for (let k = k0;k < sfc; k++) {
+    const v = knee(k);
+    if (v != null && v < vMin) {
+      vMin = v;
+      kMin = k;
+    }
+  }
+  const heel0 = P3(F[k0], rheel)?.y ?? null;
+  if (kMin == null || stanceKnee == null)
+    miss2("wu_end", "drive_knee_unobserved");
+  else if (stanceKnee - vMin <= WINDMILL_FLOORS.knee_deg)
+    miss2("wu_end", "no_drive_knee_flexion_above_floor");
+  else {
+    const h = P3(F[kMin], rheel)?.y ?? null;
+    if (h == null || heel0 == null)
+      miss2("wu_end", "back_heel_unobserved");
+    else if ((heel0 - h) / st * 100 <= HEEL_OFF_PCT)
+      miss2("wu_end", "back_heel_not_off_ground");
+    else
+      hit2("wu_end", kMin);
+  }
+  if (a.wu_end?.k != null) {
+    let ss = null;
+    for (let k = a.wu_end.k + 1;k < sfc && ss == null; k++) {
+      const v0 = knee(k), v1 = knee(k + 1);
+      if (v0 != null && v1 != null && v0 >= vMin + WINDMILL_FLOORS.knee_deg && v1 >= vMin + WINDMILL_FLOORS.knee_deg)
+        ss = k;
+    }
+    if (ss == null)
+      miss2("stride_start", "no_drive_leg_extension_above_floor");
+    else
+      hit2("stride_start", ss);
+  } else
+    miss2("stride_start", "wu_end_missing");
+  let k12 = null, best = Infinity;
+  for (let k = k0;k <= sfc; k++) {
+    const w = P3(F[k], WR), sh = P3(F[k], SH), el = P3(F[k], EL);
+    if (!w || !sh || !el)
+      continue;
+    const fore = Math.hypot(w.x - el.x, w.y - el.y) || 1;
+    if ((sh.y - w.y) / st * 100 <= WINDMILL_FLOORS.wrist_y_pct)
+      continue;
+    const dx = Math.abs(w.x - sh.x);
+    if (dx < 0.5 * fore && dx < best) {
+      best = dx;
+      k12 = k;
+    }
+  }
+  if (k12 == null) {
+    fail("arm_12_oclock", "throwing_wrist_never_above_shoulder_before_sfc");
+    return done(dir, st);
+  }
+  hit2("arm_12_oclock", k12);
+  let kb = null, yb = Infinity;
+  for (let k = k0;k < k12; k++) {
+    const w = P3(F[k], WR), sh = P3(F[k], SH), el = P3(F[k], EL);
+    if (!w || !sh || !el)
+      continue;
+    const fore = Math.hypot(w.x - el.x, w.y - el.y) || 1;
+    if ((w.x - sh.x) * dir < -0.5 * fore && w.y < yb) {
+      yb = w.y;
+      kb = k;
+    }
+  }
+  if (kb == null)
+    miss2("top_of_backswing", "no_backswing_behind_body");
+  else
+    hit2("top_of_backswing", kb);
+  const win = framesFor(fps, RELEASE_AFTER_SFC_SEC, 2);
+  let kr = null, yr = -Infinity;
+  for (let k = sfc;k <= Math.min(F.length - 1, sfc + win); k++) {
+    const w = P3(F[k], WR), hp = P3(F[k], HP);
+    if (!w || !hp)
+      continue;
+    if (Math.abs(w.y - hp.y) / st * 100 > RELEASE_NEAR_HIP_PCT)
+      continue;
+    if (w.y > yr) {
+      yr = w.y;
+      kr = k;
+    }
+  }
+  if (kr == null) {
+    fail("release", "throwing_wrist_never_reached_hip_after_sfc");
+    return done(dir, st);
+  }
+  const gate = handsApartAtRelease(s, kr, side);
+  if (!gate.ok) {
+    fail("release", String(gate.reason));
+    return done(dir, st);
+  }
+  hit2("release", kr);
+  const ag = smooth(aggregateSpeed(s, scale), 1);
+  const runs = stillRuns(ag, framesFor(fps, STILL_MIN_SEC, 3), kr + 1, STILL_SPEED);
+  if (runs.length === 0)
+    miss2("ft_end", "no_return_to_stillness");
+  else
+    hit2("ft_end", runs[0].start);
+  return done(dir, st);
+}
+
+// src/lib/biomech/metrics/softballPitchingTiles.ts
+var SOFTBALL_PITCHING_TILES_VERSION = "softball_pitching_tiles@1.1.0-2026-09-30-separation-baseline-stride-sfc-release-unvalidated";
+var SEPARATION_FLOORS = { separation_deg: 6, pelvis_speed_dps: 25 };
+var SP_STANDARDS = {
+  stride_profile: { basis: "SOURCED", moments: ["sfc", "release"], never_graded_until: "phase_order_resolved", reference_pct: { youth: { sfc: 89, release: 68 }, collegiate: { sfc: 89, release: 73 } }, camera: "side_on" },
+  stride_triple_extension: { basis: "SOURCED", pass_fail_basis: "PROPOSED", camera: "two_view" },
+  trunk_flexion: { basis: "SOURCED_CORRELATION", never_graded: true, camera: "side_on", source: "PubMed 30038835 (youth, r 0.42–0.48)" },
+  sfc_separation: { basis: "SOURCED_MIXED", never_graded: true, per_athlete_baseline: true, camera: "any_single_3d_estimate", source: "Jump et al. 2026 (counter-rotation ↔ velocity); PMC8358524 (no angle ↔ speed)" },
+  sfc_foot_angle: { basis: "SOURCED_BAND", band_deg_arm_side: [0, 45], camera: "plate_line", do_not_alter: true },
+  arm_path: { basis: "SOURCED", threshold_basis: "PROPOSED", camera: "plate_line" },
+  windup_knee_valgus_flag: { basis: "SOURCED", grading_weight: 0, camera: "plate_line", source: "PubMed 34250163" },
+  sfc_knee_valgus_flag: { basis: "SOURCED", grading_weight: 0, camera: "plate_line", source: "PubMed 34250163" }
+};
+var KEYS2 = Object.keys(SP_STANDARDS);
+var base = (key) => ({ key, basis: SP_STANDARDS[key].basis, grading_weight: key.endsWith("_flag") || key === "trunk_flexion" || key === "sfc_separation" || key === "stride_profile" ? 0 : 1 });
+var refuse5 = (key, reason, lineage = {}) => ({ ...base(key), values: {}, verdict: null, graded: false, flag: null, missing_reason: reason, lineage: { unvalidated: true, reason, ...lineage } });
+function runSoftballPitchingTiles(s, o) {
+  const an = detectWindmillAnchors(s, o.throwing_side);
+  const view = detectCameraView(s).view;
+  const tiles = {};
+  if (!an.ok || !o.throwing_side || an.stature_px == null || an.direction_sign == null) {
+    const why = an.refusal_detail ?? "no_windmill_delivery";
+    for (const k of KEYS2)
+      tiles[k] = refuse5(k, why, { gate: why });
+    return { version: SOFTBALL_PITCHING_TILES_VERSION, validated: false, anchors: an, view, tiles };
+  }
+  const side = o.throwing_side, st = an.stature_px, dir = an.direction_sign, A = an.anchors;
+  const F = s.frames, P3 = (k, i) => k == null ? null : pointPx(s, F[k], i);
+  const fa = frontAnkleIndex(side), ra = rearAnkleIndex(side);
+  const plate = (k) => refuse5(k, view === "side_on" ? "camera_view_mismatch:needs_plate_line_view" : "not_built:no_plate_line_softball_clip", { camera: "plate_line" });
+  for (const k of ["sfc_foot_angle", "arm_path", "windup_knee_valgus_flag", "sfc_knee_valgus_flag"])
+    tiles[k] = plate(k);
+  const sideOnOnly = view === "on_line" ? "camera_view_mismatch:needs_side_on_view" : null;
+  const pct2 = (k) => {
+    const f = P3(k, fa), r2 = P3(k, ra);
+    return f && r2 ? round4(Math.abs(f.x - r2.x) / st * 100) : null;
+  };
+  if (sideOnOnly)
+    tiles.stride_profile = refuse5("stride_profile", sideOnOnly);
+  else {
+    const v = { sfc: pct2(A.sfc.k), release: pct2(A.release.k) };
+    tiles.stride_profile = {
+      ...base("stride_profile"),
+      values: v,
+      verdict: null,
+      graded: false,
+      flag: null,
+      missing_reason: v.sfc == null ? "stride_foot_unobserved" : null,
+      lineage: { unvalidated: true, floor_pct: WINDMILL_FLOORS.ankle_x_pct, top_of_backswing: "not_measured:phase_order_unresolved", ungraded_reason: "phase_order_unresolved:see_doctrine_open_question", age_band: o.age_band ?? null, pitch_type: o.pitch_type ?? null }
+    };
+  }
+  const trunk = (k) => {
+    const S = mid(P3(k, LM.L_SHOULDER), P3(k, LM.R_SHOULDER)), H = mid(P3(k, LM.L_HIP), P3(k, LM.R_HIP));
+    return S && H && H.y > S.y ? round4(Math.atan2((S.x - H.x) * dir, H.y - S.y) * 180 / Math.PI) : null;
+  };
+  const tv = { top: trunk(A.top_of_backswing.k), sfc: trunk(A.sfc.k), release: trunk(A.release.k) };
+  tiles.trunk_flexion = sideOnOnly ? refuse5("trunk_flexion", sideOnOnly) : {
+    ...base("trunk_flexion"),
+    values: tv,
+    verdict: null,
+    graded: false,
+    flag: null,
+    missing_reason: tv.sfc == null ? "trunk_unobserved_at_sfc" : null,
+    lineage: { unvalidated: true, never_graded: "more_flexion_correlates_with_more_velocity", floor_deg: WINDMILL_FLOORS.trunk_deg }
+  };
+  const rk = ra === 27 ? LM.L_KNEE : LM.R_KNEE, rh = ra === 27 ? LM.L_HIP : LM.R_HIP, rs = ra === 27 ? LM.L_SHOULDER : LM.R_SHOULDER;
+  const ang = (k, a, b, c) => {
+    const p = P3(k, a), q3 = P3(k, b), r2 = P3(k, c);
+    if (!p || !q3 || !r2)
+      return null;
+    const u = { x: p.x - q3.x, y: p.y - q3.y }, w = { x: r2.x - q3.x, y: r2.y - q3.y };
+    return Math.acos(Math.max(-1, Math.min(1, (u.x * w.x + u.y * w.y) / (Math.hypot(u.x, u.y) * Math.hypot(w.x, w.y) || 1)))) * 180 / Math.PI;
+  };
+  if (sideOnOnly || A.stride_start.k == null)
+    tiles.stride_triple_extension = refuse5("stride_triple_extension", sideOnOnly ?? `stride_start_missing:${A.stride_start.missing_reason}`);
+  else {
+    const kneeD = (ang(A.sfc.k, rh, rk, ra) ?? NaN) - (ang(A.stride_start.k, rh, rk, ra) ?? NaN);
+    const hipD = (ang(A.sfc.k, rs, rh, rk) ?? NaN) - (ang(A.stride_start.k, rs, rh, rk) ?? NaN);
+    const chA = Number.isFinite(kneeD) && Number.isFinite(hipD) ? kneeD > WINDMILL_FLOORS.knee_deg && hipD > WINDMILL_FLOORS.hip_deg : null;
+    const chC = tv.sfc == null ? null : tv.sfc > WINDMILL_FLOORS.trunk_deg;
+    tiles.stride_triple_extension = {
+      ...base("stride_triple_extension"),
+      values: { knee_extension_deg: Number.isFinite(kneeD) ? round4(kneeD) : null, hip_extension_deg: Number.isFinite(hipD) ? round4(hipD) : null, trunk_toward_plate_deg: tv.sfc },
+      verdict: null,
+      graded: false,
+      flag: null,
+      missing_reason: chA == null ? "drive_leg_unobserved" : null,
+      lineage: { unvalidated: true, channel_a: chA, channel_b: "needs_plate_line_view", channel_c: chC, ungraded_reason: "channel_b_needs_plate_line:two_view_capture_required" }
+    };
+  }
+  tiles.sfc_separation = measureSeparation(s, A.sfc.k, A.stride_start.k ?? A.wu_end.k, side);
+  return { version: SOFTBALL_PITCHING_TILES_VERSION, validated: false, anchors: an, view, tiles };
+}
+function measureSeparation(s, sfc, from, side) {
+  const yaw = (k, a, b) => {
+    const w = s.frames[k]?.world;
+    if (!w || w.length < 99)
+      return null;
+    return Math.atan2(w[b * 3 + 2] - w[a * 3 + 2], w[b * 3] - w[a * 3]) * 180 / Math.PI;
+  };
+  const wrap = (d) => (d + 540) % 360 - 180;
+  if (sfc == null)
+    return refuse5("sfc_separation", "sfc_missing");
+  const ph = yaw(sfc, LM.L_HIP, LM.R_HIP), sh = yaw(sfc, LM.L_SHOULDER, LM.R_SHOULDER);
+  const raw = ph != null && sh != null ? wrap(sh - ph) : null;
+  const sep = raw == null || Math.abs(raw) < SEPARATION_FLOORS.separation_deg ? null : round4(Math.abs(raw));
+  let peak = null;
+  if (from != null && from < sfc) {
+    const t = [], y = [];
+    for (let k = Math.max(0, from - 2);k <= Math.min(s.frames.length - 1, sfc + 2); k++) {
+      const v = yaw(k, LM.L_HIP, LM.R_HIP);
+      if (v == null)
+        continue;
+      y.push(v);
+      t.push(s.frames[k].timestamp_seconds);
+    }
+    for (let i = 1;i < y.length; i++)
+      y[i] = y[i - 1] + wrap(y[i] - y[i - 1]);
+    const sm = y.map((_, i) => {
+      const w = y.slice(Math.max(0, i - 2), i + 3);
+      return w.reduce((a, b) => a + b, 0) / w.length;
+    });
+    const sign = side === "R" ? 1 : -1;
+    for (let i = 1;i < sm.length - 1; i++) {
+      const dt = t[i + 1] - t[i - 1];
+      if (!(dt > 0))
+        continue;
+      const v = (sm[i + 1] - sm[i - 1]) / dt * sign;
+      if (v > SEPARATION_FLOORS.pelvis_speed_dps && (peak == null || v > peak))
+        peak = round4(v);
+    }
+  }
+  return {
+    ...base("sfc_separation"),
+    values: { separation_at_sfc_deg: sep, peak_pelvic_counter_rotation_dps: peak },
+    verdict: null,
+    graded: false,
+    flag: null,
+    missing_reason: sep == null && peak == null ? raw == null ? "world_landmarks_unavailable_at_sfc" : "within_still_clip_noise" : null,
+    lineage: { unvalidated: true, never_graded: "per_athlete_baseline_only", source_3d: "mediapipe_world_single_estimate_unconfirmed", direction_convention: "unverified_no_softball_clip", floors: SEPARATION_FLOORS, evidence: "mixed" }
+  };
+}
+
 // src/lib/biomech/server/poseTileServerEntry.ts
 function checkStoredLandmarkMovement(ndjson) {
   return evaluateMovementGate(decodeLandmarkSeriesText(ndjson));
@@ -3465,8 +3801,12 @@ function runPitchingFromText(ndjson, side, athleteHeightIn) {
   const s = decodeLandmarkSeriesText(ndjson);
   return { tiles: runPitchingTiles(s, { throwing_side: side }), card: runPitchingCardTiles(s, { throwing_side: side, athlete_height_in: athleteHeightIn }) };
 }
+function runSoftballPitchingFromText(ndjson, side, pitchType) {
+  return runSoftballPitchingTiles(decodeLandmarkSeriesText(ndjson), { throwing_side: side, pitch_type: pitchType });
+}
 export {
   runThrowingTilesFromText,
+  runSoftballPitchingFromText,
   runPitchingFromText,
   runHittingTilesFromText,
   checkStoredLandmarkMovement
