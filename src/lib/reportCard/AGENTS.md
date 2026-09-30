@@ -1,0 +1,1 @@
+- Category scoring for every report card lives in `categories/` (engine `scoring.ts` + per-card `specs.ts`), computed in the browser from the saved landmark series with the same tile code. Why: one engine, one weighting table, rescoring needs no deploy.
