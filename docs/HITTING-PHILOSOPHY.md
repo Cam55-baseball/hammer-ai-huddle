@@ -868,3 +868,12 @@ Chin-to-shoulder now has three channels: POSITION (nose vs front shoulder on the
 ## Separation = magnitude + order (2026-09-30)
 - MAGNITUDE (upload card, record-only): |pelvis turn − shoulder turn| per frame, end of P2 → swing peak. An angle, frame-rate independent. Side-on still floor 13.9° — the rigid-width solve is noisy near square-to-camera. No owner figure for "sufficient".
 - ORDER (DelayCam mechanics below 60 fps): which peaked first.
+
+
+## Chin on the side-to-side angle `[owner-supplied 2026-09-30]`
+
+"I meant CHIN & not shin at all when talking about chin position over the front shoulder on the side to side angle to see the ball and not yank the front shoulder out and move out of sequence. We want that head forward and eventually the eyes will move toward to plate while the hips rotate the shoulders the opposite way which does not need to be measured right now"
+
+Three reasons for the tuck: ease of movement, seeing the ball, staying in sequence (links chin-to-shoulder to sequencing). FUTURE WORK, not measured: eyes moving toward the plate while the hips turn the shoulders the other way.
+
+Sequencing verdict logic (2026-09-30): gap ≤ one frame = insufficient separation (fail); ≥ two frames, hips first = pass; shoulders first = fail. Graded only at ≥60 fps; below, the would-be verdict is recorded and the tile routes to DelayCam.
