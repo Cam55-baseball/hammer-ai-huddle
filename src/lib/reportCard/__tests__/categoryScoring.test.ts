@@ -5,7 +5,7 @@ import { runHittingPoseTiles } from "@/lib/biomech/metrics/hittingPoseTiles";
 import { runHittingCardTiles } from "@/lib/biomech/metrics/hittingCardTiles";
 import { runHittingOwnerTiles } from "@/lib/biomech/metrics/hittingOwnerTiles";
 import { runFrontLegGather } from "@/lib/biomech/metrics/frontLegGather";
-import { runActiveStride, runMicroPauses } from "@/lib/biomech/metrics/strideRhythm";
+import { runActiveStride, runStrideCoil } from "@/lib/biomech/metrics/strideRhythm";
 import { HIP_LOAD_ATHLETE_UNLOCKED } from "@/lib/biomech/metrics/hipLoadVisibility";
 import { runPitchingTiles } from "@/lib/biomech/metrics/pitchingTiles";
 import { runPitchingCardTiles } from "@/lib/biomech/metrics/pitchingCardTiles";
@@ -17,7 +17,7 @@ import { HITTING_CATEGORIES, PITCHING_CATEGORIES, THROWING_CATEGORIES, WINDMILL_
 const load = (n: string) => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "../../biomech/__tests__/fixtures", n))).toString("utf8"));
 const still = load("still-subject-15d75bc9.ndjson.gz"), A = load("swing-24fps-914cf54c.ndjson.gz"), B = load("swing-24fps-9d2e117e.ndjson.gz");
 type S = ReturnType<typeof load>;
-const hitting = (s: S, side: "L" | "R") => ({ pose: runHittingPoseTiles(s, { side }), card: runHittingCardTiles(s, { side }), owner: runHittingOwnerTiles(s, { side, athlete_height_in: null }), gather: runFrontLegGather(s, { side }), rhythm: { active: runActiveStride(s, { side }), pauses: runMicroPauses(s, { side }) } });
+const hitting = (s: S, side: "L" | "R") => ({ pose: runHittingPoseTiles(s, { side }), card: runHittingCardTiles(s, { side }), owner: runHittingOwnerTiles(s, { side, athlete_height_in: null }), gather: runFrontLegGather(s, { side }), rhythm: { active: runActiveStride(s, { side }) }, coil: runStrideCoil(s, { side }) });
 const pitching = (s: S) => ({ tiles: runPitchingTiles(s, { throwing_side: "R" }), card: runPitchingCardTiles(s, { throwing_side: "R", athlete_height_in: null }) });
 const summary = (c: ReturnType<typeof scoreCard>) => ({ total: c.total, totalReason: c.totalReason, cats: c.categories.map((x) => [x.key, x.status, x.score, x.points, x.incompleteReason, x.measuredShare]) });
 

@@ -112,6 +112,10 @@ const ROOT_BY_FAULT: Record<string, string> = {
   back_knee_straightened_fail: "back_leg_did_not_hold_load",
   // Owner doctrine 2026-09-30: a stride that falls instead of being driven by the back hip is the same root. Mapped; not emitted until the owner rules (strideRhythm ROOT_EVIDENCE_ENABLED).
   active_stride_falling: "back_leg_did_not_hold_load",
+  stride_body_gained_ground: "back_leg_did_not_hold_load",
+  stride_hands_went_with_foot: "back_leg_did_not_hold_load",
+  stride_side_bend_lost: "back_leg_did_not_hold_load",
+  stride_fell_forward: "back_leg_did_not_hold_load",
   back_heel_early_rise_fail: "back_leg_did_not_hold_load",
   // Owner 2026-09-28: hands low at P3 heel landing go with the front shoulder turning.
   hands_below_back_elbow_at_heel_landing: "trunk_rotates_before_front_foot_plant",

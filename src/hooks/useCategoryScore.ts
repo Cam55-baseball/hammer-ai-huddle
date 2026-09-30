@@ -11,7 +11,7 @@ import { runHittingPoseTiles } from "@/lib/biomech/metrics/hittingPoseTiles";
 import { runHittingCardTiles } from "@/lib/biomech/metrics/hittingCardTiles";
 import { runHittingOwnerTiles } from "@/lib/biomech/metrics/hittingOwnerTiles";
 import { runFrontLegGather } from "@/lib/biomech/metrics/frontLegGather";
-import { runActiveStride, runMicroPauses } from "@/lib/biomech/metrics/strideRhythm";
+import { runActiveStride, runStrideCoil } from "@/lib/biomech/metrics/strideRhythm";
 import { runPitchingTiles } from "@/lib/biomech/metrics/pitchingTiles";
 import { runPitchingCardTiles } from "@/lib/biomech/metrics/pitchingCardTiles";
 import { runThrowingTiles } from "@/lib/biomech/metrics/throwingTiles";
@@ -39,7 +39,7 @@ export function useCategoryInputs(videoId: string | null, sport: string | undefi
         if (mv.status === "refused") { if (!cancelled) setState({ loading: false, data: { refused: mv.reason ?? "no_movement" } }); return; }
         const m = (module ?? "").toLowerCase();
         const raw = m === "hitting"
-          ? { pose: runHittingPoseTiles(s, { side }), card: runHittingCardTiles(s, { side }), owner: runHittingOwnerTiles(s, { side, athlete_height_in: null }), gather: runFrontLegGather(s, { side }), rhythm: { active: runActiveStride(s, { side }), pauses: runMicroPauses(s, { side }) } }
+          ? { pose: runHittingPoseTiles(s, { side }), card: runHittingCardTiles(s, { side }), owner: runHittingOwnerTiles(s, { side, athlete_height_in: null }), gather: runFrontLegGather(s, { side }), rhythm: { active: runActiveStride(s, { side }) }, coil: runStrideCoil(s, { side }) }
           : m === "throwing" ? runThrowingTiles(s, side)
           : (sport ?? "").toLowerCase() === "softball" ? runSoftballPitchingTiles(s, { throwing_side: side } as never)
           : { tiles: runPitchingTiles(s, { throwing_side: side }), card: runPitchingCardTiles(s, { throwing_side: side, athlete_height_in: null }) };

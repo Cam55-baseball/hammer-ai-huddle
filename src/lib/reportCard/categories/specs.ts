@@ -194,8 +194,8 @@ export const WINDMILL_CATEGORIES: CardCategorySpec = {
     { key: "windup", title: "Wind-up", points: 20, note: "Measurements without a published standard; your standard comes from your own history.", tiles: [
       { key: "windup_trunk_tibia", name: "Trunk and drive shin together", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_trunk_tibia", read: spRecord("windup_trunk_tibia", "angle_deg") },
       { key: "windup_hip_square", name: "Hips facing the plate", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_hip_square", read: spRecord("windup_hip_square", "off_square_deg") },
-      { key: "windup_knee_over_foot", name: "Drive knee over the foot", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_knee_over_foot", read: spRecord("windup_knee_over_foot") },
-      { key: "windup_foot_power_line", name: "Drive foot on the power line", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_foot_power_line", read: spRecord("windup_foot_power_line") },
+      { key: "windup_knee_over_foot", name: "Drive knee over the foot", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_knee_over_foot", read: spRecord("windup_knee_over_foot", "value") },
+      { key: "windup_foot_power_line", name: "Drive foot on the power line", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_foot_power_line", read: spRecord("windup_foot_power_line", "value") },
     ] },
     { key: "stride", title: "Stride", points: 40, tiles: [
       { key: "stride_triple_extension", name: "Drive-leg push", points: 22, read: spVerdict("stride_triple_extension") },
@@ -210,7 +210,7 @@ export const WINDMILL_CATEGORIES: CardCategorySpec = {
       { key: "trunk_flexion", name: "Forward lean", points: 0, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.trunk_flexion", read: spRecord("trunk_flexion", "sfc") },
     ] },
     { key: "follow_through", title: "Follow-through", points: 10, note: "A measurement without a published standard; your standard comes from your own history.", tiles: [
-      { key: "ft_knee_ankle", name: "Stride knee over the ankle", points: 10, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.ft_knee_ankle", read: spRecord("ft_knee_ankle") },
+      { key: "ft_knee_ankle", name: "Stride knee over the ankle", points: 10, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.ft_knee_ankle", read: spRecord("ft_knee_ankle", "value") },
     ] },
   ],
 };
