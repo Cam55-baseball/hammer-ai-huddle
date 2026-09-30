@@ -128,3 +128,25 @@ describe("category scoring", () => {
     for (const t of HITTING_CATEGORIES.categories.find((c) => c.key === "p3")!.tiles.filter((t) => ["stride_foot_vs_body","stride_hands_opposite","stride_side_bend","stride_sink"].includes(t.key))) { expect(t.points).toBe(0); expect(t.recordOnly).toBe(true); }
   });
 });
+
+import { readFileSync as rf } from "node:fs"; import { gunzipSync as gz } from "node:zlib"; import { join as jn } from "node:path";
+import { decodeLandmarkSeriesText as dec } from "../../biomech/pose/landmarkSeriesFormat";
+import { runHittingPoseTiles as rp } from "../../biomech/metrics/hittingPoseTiles";
+import { runHittingCardTiles as rc } from "../../biomech/metrics/hittingCardTiles";
+import { runHittingOwnerTiles as ro } from "../../biomech/metrics/hittingOwnerTiles";
+import { runFrontLegGather as rg } from "../../biomech/metrics/frontLegGather";
+import { runActiveStride as ra, runStrideCoil as rs } from "../../biomech/metrics/strideRhythm";
+import { categorySpecFor as csf } from "../categories/specs"; import { scoreCard as sc } from "../categories/scoring";
+describe("evidence rule — a thin category never shows full marks (2026-09-30)", () => {
+  it("914cf54c staff: P1 and P2 are limited evidence off one tile; P4 limited; only P3 full", () => {
+    const s = dec(gz(rf(jn(__dirname, "../../biomech/__tests__/fixtures/swing-24fps-914cf54c.ndjson.gz"))).toString("utf8")); const side = "L" as const;
+    const raw = { pose: rp(s, { side }), card: rc(s, { side }), owner: ro(s, { side, athlete_height_in: null }), gather: rg(s, { side }), rhythm: { active: ra(s, { side }) }, coil: rs(s, { side }) };
+    const r = sc(csf("baseball", "hitting")!, raw, { audience: "staff" });
+    const by = Object.fromEntries(r.categories.map((c) => [c.key, c]));
+    expect(by.p1.status).toBe("limited_evidence"); expect(by.p1.score).toBeNull(); expect(by.p1.coverage.scoredTiles).toBe(1);
+    expect(by.p2.status).toBe("limited_evidence"); expect(by.p2.measuredScore).toEqual({ earned: 5.1, outOf: 5.1 });
+    expect(by.p3.status).toBe("complete"); expect(by.p3.score).toBe(5.9);
+    expect(by.p4.status).toBe("limited_evidence"); expect(by.p4.measuredScore).toEqual({ earned: 9.1, outOf: 22.2 });
+    expect(r.total).toBeNull();
+  });
+});

@@ -17,7 +17,13 @@
 import { BASELINE_MIN_CLIPS } from "@/lib/biomech/baseline/athleteBaseline";
 
 export const INCOMPLETE_MIN_SHARE = 0.6;
-export const CATEGORY_SCORING_VERSION = "category_scoring@1.0.0-2026-09-30";
+/** Evidence rule (2026-09-30, owner caught P2 showing full marks off one tile):
+ * a category shows a full score only when ≥ MIN_SCORING_TILES tiles produced a verdict
+ * AND those tiles hold ≥ INCOMPLETE_MIN_SHARE of the category's FULL points — record-only
+ * and not-applicable tiles stay in this denominator. Otherwise it is "limited evidence":
+ * the score is shown only against the points actually measured, never scaled up. */
+export const MIN_SCORING_TILES = 2;
+export const CATEGORY_SCORING_VERSION = "category_scoring@1.1.0-evidence-2026-09-30";
 
 export type Audience = "athlete" | "staff";
 
@@ -79,7 +85,11 @@ export type TileOutcome =
 
 export interface CategoryResult {
   key: string; title: string; points: number; additive: boolean;
-  status: "complete" | "incomplete";
+  status: "complete" | "limited_evidence" | "incomplete";
+  /** How much of the category was actually measured. */
+  coverage: { scoredTiles: number; totalTiles: number; measuredPoints: number; fullPoints: number; waitingOnBaseline: number; notApplicable: number; notMeasured: number; evidence: "full" | "limited" | "none" };
+  /** Limited evidence only: earned vs the points actually measured (category scale), never scaled up. */
+  measuredScore: { earned: number; outOf: number } | null;
   /** Category score in its own points, 1 dp. null when incomplete. */
   score: number | null;
   incompleteReason: string | null;
@@ -142,24 +152,36 @@ export function scoreCard(spec: CardCategorySpec, raw: unknown, o: { audience: A
     const notApplicable = tiles.filter((t) => t.outcome.status === "not_applicable").map((t) => t.name);
     const catPts = c.additive ? c.points : c.points * scale;
     let reason: string | null = null;
+    const fullPts = tiles.reduce((a, t) => a + t.points, 0);
+    const fullShare = fullPts > 0 ? mPts / fullPts : 0;
+    const cov = {
+      scoredTiles: measured.length, totalTiles: tiles.length, measuredPoints: mPts, fullPoints: fullPts,
+      waitingOnBaseline: tiles.filter((t) => t.outcome.status === "waiting_on_baseline").length,
+      notApplicable: tiles.filter((t) => t.outcome.status === "not_applicable").length,
+      notMeasured: tiles.filter((t) => t.outcome.status === "missing" || t.outcome.status === "ungraded").length,
+      evidence: (measured.length === 0 ? "none" : measured.length >= MIN_SCORING_TILES && fullShare >= INCOMPLETE_MIN_SHARE ? "full" : "limited") as "full" | "limited" | "none",
+    };
     if (c.additive) {
       // Never incomplete in a way that costs anything: bonus is 0 until earned.
       const earned = measured.reduce((a, t) => a + (t.outcome as { earned: number }).earned, 0);
       const full = tiles.reduce((a, t) => a + t.points, 0) || 1;
-      return { key: c.key, title: c.title, points: c.points, additive: true, status: "complete", score: r1((earned / full) * c.points), incompleteReason: null, measuredShare: share, tiles, notApplicable };
+      return { key: c.key, title: c.title, points: c.points, additive: true, status: "complete", score: r1((earned / full) * c.points), incompleteReason: null, measuredShare: share, coverage: cov, measuredScore: null, tiles, notApplicable };
     }
     if (applicable === 0) reason = measured.length === 0 && tiles.some((t) => t.outcome.status === "waiting_on_baseline") ? "waiting_on_athlete_baseline" : "nothing_measurable_in_this_clip";
     else if (nnMissing.length) reason = `non_negotiable_not_measured:${nnMissing.map((t) => t.key).join(",")}`;
     else if (share < INCOMPLETE_MIN_SHARE) reason = "too_many_tiles_not_measured";
-    const score = reason ? null : r1((measured.reduce((a, t) => a + (t.outcome as { earned: number }).earned, 0) / mPts) * catPts);
-    return { key: c.key, title: c.title, points: r1(catPts), additive: false, status: reason ? "incomplete" : "complete", score, incompleteReason: reason, measuredShare: Math.round(share * 1000) / 1000, tiles, notApplicable };
+    const earnedRaw = measured.reduce((a, t) => a + (t.outcome as { earned: number }).earned, 0);
+    const limited = !reason && cov.evidence !== "full";
+    const score = reason || limited ? null : r1((earnedRaw / mPts) * catPts);
+    const measuredScore = limited ? { earned: r1(earnedRaw * scale), outOf: r1(mPts * scale) } : null;
+    return { key: c.key, title: c.title, points: r1(catPts), additive: false, status: reason ? "incomplete" : limited ? "limited_evidence" : "complete", score, incompleteReason: reason ?? (limited ? `limited_evidence:${measured.length}_of_${tiles.length}_checks_scored` : null), measuredShare: Math.round(share * 1000) / 1000, coverage: cov, measuredScore, tiles, notApplicable };
   });
 
   const scoredRes = categories.filter((c) => !c.additive);
   const done = scoredRes.filter((c) => c.status === "complete").length;
   let total: number | null = null, totalReason: string | null = null;
   if (!spec.showTotal) totalReason = "no_total_for_this_card";
-  else if (done < scoredRes.length) totalReason = `incomplete:${done}_of_${scoredRes.length}_categories_measured`;
+  else if (done < scoredRes.length) totalReason = `incomplete:${done}_of_${scoredRes.length}_categories_fully_measured`;
   else {
     const bonus = categories.filter((c) => c.additive).reduce((a, c) => a + (c.score ?? 0), 0);
     total = r1(Math.min(spec.scaleTo, scoredRes.reduce((a, c) => a + (c.score ?? 0), 0) + bonus));
