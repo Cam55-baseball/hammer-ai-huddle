@@ -2060,6 +2060,64 @@ function backHeelEarlyRise(c, p4K) {
 var SEQ_MIN_FPS = 60;
 var SEQ_MIN_GAP_FRAMES = 2;
 var ELBOW_ONSET_FLOOR = { forward_pct: 0.95, down_pct: 0.81 };
+var SEPARATION_FLOOR_DEG = 13.9;
+function separationMagnitude(c, apexK, pkK) {
+  const n = c.s.frames.length;
+  if (apexK < 0 || pkK <= apexK)
+    return { key: "separation_magnitude", value: null, missing_reason: "end_of_p2_not_before_swing_peak" };
+  const dist = (j, a, b) => {
+    const p = P(c, j, a), q2 = P(c, j, b);
+    return p && q2 ? Math.hypot(p.x - q2.x, p.y - q2.y) : null;
+  };
+  const wmax = (a, b) => {
+    let w = 0;
+    for (let j = c.lock.start_k ?? 0;j <= Math.min(n - 1, pkK); j++) {
+      const x = m3(c, j, (i) => dist(i, a, b));
+      if (x != null && x > w)
+        w = x;
+    }
+    return w || null;
+  };
+  const Lh = wmax(LM.L_HIP, LM.R_HIP), Ls = wmax(LM.L_SHOULDER, LM.R_SHOULDER);
+  const th = (a, b, L) => (j) => {
+    const d = dist(j, a, b);
+    return d == null || !L ? null : Math.acos(Math.min(1, d / L)) * 180 / Math.PI;
+  };
+  const tp = th(LM.L_HIP, LM.R_HIP, Lh), ts = th(LM.L_SHOULDER, LM.R_SHOULDER, Ls);
+  let best = -1, bk = -1, seen = 0;
+  const series = [];
+  for (let j = apexK;j <= pkK; j++) {
+    const a = m3(c, j, tp), b = m3(c, j, ts);
+    const x = a == null || b == null ? null : Math.abs(a - b);
+    series.push(x == null ? null : round4(x));
+    if (x == null)
+      continue;
+    seen++;
+    if (x > best) {
+      best = x;
+      bk = j;
+    }
+  }
+  if (seen < Math.max(3, Math.ceil((pkK - apexK + 1) * 0.6)))
+    return { key: "separation_magnitude", value: null, missing_reason: "hips_or_shoulders_unobserved_through_window" };
+  return {
+    key: "separation_magnitude",
+    value: round4(best),
+    unit: "degrees",
+    missing_reason: null,
+    peak_frame: c.s.frames[bk].frame_index,
+    floor_deg: SEPARATION_FLOOR_DEG,
+    margin_over_floor_deg: round4(best - SEPARATION_FLOOR_DEG),
+    pattern: best > SEPARATION_FLOOR_DEG ? "separation_above_still_floor" : "no_separation_above_still_floor",
+    window: { end_of_p2_frame: c.s.frames[apexK].frame_index, swing_peak_frame: c.s.frames[pkK].frame_index },
+    per_frame_deg: series,
+    record_only: true,
+    graded: false,
+    owner_standard: "not_supplied",
+    frame_rate_dependence: "none — an angle at every frame",
+    proxy: "unsigned; side-on rigid-width solve under-reads small turns near square to camera"
+  };
+}
 function sequencing(c, ssK, pkK, apexK) {
   const K = "sequencing", u = "boolean", n = c.s.frames.length;
   const dist = (j, a, b) => {
@@ -2557,9 +2615,10 @@ function runHittingCardTiles(series, o) {
       return g.detail ? { ...r2, lineage: { ...r2.lineage, camera_view: g.detail } } : r2;
     return refuse2(r2.key, r2.unit, mr2(MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE), { reason: g.detail, message: g.message });
   };
+  let sepMag = { key: "separation_magnitude", value: null, missing_reason: "not_computed" };
   const done = (t) => {
     const g = Object.fromEntries(Object.entries(t).map(([k, r2]) => [k, gate(r2)]));
-    return { version: HITTING_CARD_TILES_VERSION, ...g, hitters_move: hittersMove(series, o, g) };
+    return { version: HITTING_CARD_TILES_VERSION, ...g, hitters_move: hittersMove(series, o, g), separation_magnitude: sepMag };
   };
   if (!o.side)
     return done(allRefuse(mr2(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED), { reason: "batting_side_unknown" }));
@@ -2602,6 +2661,7 @@ function runHittingCardTiles(series, o) {
   const PK = [pkK, `swing_peak_missing:${String(pk?.diagnostics.reason ?? "no_swing_start")}`, pk?.missingness];
   const FIN = [finK, `finish_missing:${String(fin.diagnostics.reason ?? "")}`, fin.missingness];
   const apex = detectLoadApex(series, dir), apexK = kOf(series, apex.frame_index);
+  sepMag = separationMagnitude(c, apexK, pkK);
   const AP = [apexK, "end_of_p2_missing:load_apex", apex.missingness];
   const P4 = [p4K, `p4_missing:${String(p4.diagnostics.reason ?? "")}`, p4.missingness];
   return done({

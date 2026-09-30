@@ -30,3 +30,5 @@ torso rotation speed, a body event. It is NOT contact and no tile may call it co
 
 Owner ruling 2026-09-30: anything the upload path cannot honestly resolve moves here rather than shipping a weak version. Evidence for micro-pauses: the smallest dip the smoothing can see spans five frames — about a fifth of a second at 24 fps and a sixth at 30 fps. On all three fixtures the landing and swing-start anchors could not be separated in order at 24 fps (swing start detected before landing on 914cf54c; missing or out of order on 9d2e117e), so the pause before the swing — the one the owner names — was never resolved. The code (`runMicroPauses`) is kept, unwired, for the DelayCam path.
 | sequencing.hips_vs_shoulders | upload hitting card (below 60 fps) | ~60 fps: pelvis→torso peak lag is ~30–60 ms and needs ≥2 frames between peaks |
+
+Owner ruling 2026-09-30: separation splits. The ORDER (which peaked first) is here; the MAGNITUDE (angle) stays on the upload card, record-only. Elbow onset stays on the upload card; the knee-chain order is timing and is a hint only below 60 fps.

@@ -857,3 +857,14 @@ Context: "when talking about chin position over the front shoulder to see the ba
 ## Separation — a tie is a finding `[owner-supplied 2026-09-30]`
 
 "In the separation we have to know which started first because of the power chain and if there is no separation that means it's insufficient and if it's unreadable then we need to move it to delaycam. I believe I did not have sufficient separation in that video."
+
+
+## Chin forward, eyes later `[owner-supplied 2026-09-30]`
+
+"chin position over the front shoulder to see the ball and not yank the front shoulder out and move out of sequence. We want that head forward and eventually the eyes will move toward to plate while the hips rotate the shoulders the opposite way which does not need to be measured right now"
+
+Chin-to-shoulder now has three channels: POSITION (nose vs front shoulder on the forward axis, end of P2 → landing, still floor 0.8% stature, record-only), LEAK (head-to-front-shoulder angle, floor 3.2°, auto-fail), GAP (depth; refuses side-on). The eyes turning toward the plate while the hips turn the shoulders the other way: doctrine only, not measured.
+
+## Separation = magnitude + order (2026-09-30)
+- MAGNITUDE (upload card, record-only): |pelvis turn − shoulder turn| per frame, end of P2 → swing peak. An angle, frame-rate independent. Side-on still floor 13.9° — the rigid-width solve is noisy near square-to-camera. No owner figure for "sufficient".
+- ORDER (DelayCam mechanics below 60 fps): which peaked first.
