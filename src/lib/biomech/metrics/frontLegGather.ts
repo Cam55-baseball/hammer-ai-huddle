@@ -21,8 +21,9 @@ import { frontFootPlantFromSeries } from "./hittingOwnerTiles";
 
 export const FRONT_LEG_GATHER_VERSION = "front_leg_gather@1.0.0-2026-09-30-additive-record-only";
 
-/** Still clip 15d75bc9, % stature. Measured by src/lib/biomech/__tests__/frontLegGather.test.ts ("still floors"). */
-export const GATHER_FLOORS = { knee_up_pct: 1.2, knee_back_pct: 1.2, ankle_up_pct: 1.2 } as const;
+/** Still clip 15d75bc9, % stature. Measured 2026-09-30 before any threshold was set. */
+// Still 15d75bc9, max |med3 − series median| % stature, worst side: knee up 2.317 (L), knee back 1.144 (L), ankle up 2.618 (L).
+export const GATHER_FLOORS = { knee_up_pct: 2.4, knee_back_pct: 1.2, ankle_up_pct: 2.7 } as const;
 
 export type GatherPattern = "leg_kick" | "toe_tap" | "float" | "knee_turn" | "none";
 export interface FrontLegGatherResult {
