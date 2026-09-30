@@ -138,7 +138,7 @@ export function scoreCard(spec: CardCategorySpec, raw: unknown, o: { audience: A
     const measured = inCheck.filter((t) => t.outcome.status === "scored");
     const mPts = measured.reduce((a, t) => a + t.points, 0);
     const share = applicable > 0 ? mPts / applicable : 0;
-    const nnMissing = tiles.filter((t) => t.nonNegotiable && t.outcome.status !== "scored");
+    const nnMissing = tiles.filter((t) => t.nonNegotiable && t.outcome.status !== "scored" && t.outcome.status !== "not_applicable");
     const notApplicable = tiles.filter((t) => t.outcome.status === "not_applicable").map((t) => t.name);
     const catPts = c.additive ? c.points : c.points * scale;
     let reason: string | null = null;
