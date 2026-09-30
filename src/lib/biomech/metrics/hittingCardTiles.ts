@@ -214,6 +214,28 @@ export const SEQ_MIN_FPS = 60;
 export const SEQ_MIN_GAP_FRAMES = 2;
 /** Still clip 15d75bc9, measured 2026-09-30 before use: worst 2-frame elbow displacement, % stature (smoothed, either side/direction). */
 export const ELBOW_ONSET_FLOOR = { forward_pct: 0.95, down_pct: 0.81 } as const;
+/* ===== Separation MAGNITUDE (owner 2026-09-30: "if there is no separation that means it's insufficient") =====
+ * An ANGLE, not a timing: per frame, |pelvis turn − shoulder turn|, each solved the same
+ * rigid way as sequencing (acos(width ÷ widest width)). Window end of P2 → swing peak.
+ * Record-only; the owner has not supplied a sufficient-separation figure. Unsigned side-on
+ * proxy: acos is insensitive near square-to-camera, so small angles are under-read there. */
+export const SEPARATION_FLOOR_DEG = 0; // set below from the still clip
+function separationMagnitude(c: Ctx, apexK: number, pkK: number) {
+  const n = c.s.frames.length;
+  if (apexK < 0 || pkK <= apexK) return { key: "separation_magnitude", value: null, missing_reason: "end_of_p2_not_before_swing_peak" };
+  const dist = (j: number, a: number, b: number) => { const p = P(c, j, a), q = P(c, j, b); return p && q ? Math.hypot(p.x - q.x, p.y - q.y) : null; };
+  const wmax = (a: number, b: number) => { let w = 0; for (let j = c.lock.start_k ?? 0; j <= Math.min(n - 1, pkK); j++) { const x = m3(c, j, (i) => dist(i, a, b)); if (x != null && x > w) w = x; } return w || null; };
+  const Lh = wmax(LM.L_HIP, LM.R_HIP), Ls = wmax(LM.L_SHOULDER, LM.R_SHOULDER);
+  const th = (a: number, b: number, L: number | null) => (j: number) => { const d = dist(j, a, b); return d == null || !L ? null : (Math.acos(Math.min(1, d / L)) * 180) / Math.PI; };
+  const tp = th(LM.L_HIP, LM.R_HIP, Lh), ts = th(LM.L_SHOULDER, LM.R_SHOULDER, Ls);
+  let best = -1, bk = -1, seen = 0; const series: (number | null)[] = [];
+  for (let j = apexK; j <= pkK; j++) { const a = m3(c, j, tp), b = m3(c, j, ts); const x = a == null || b == null ? null : Math.abs(a - b); series.push(x == null ? null : round4(x)); if (x == null) continue; seen++; if (x > best) { best = x; bk = j; } }
+  if (seen < Math.max(3, Math.ceil((pkK - apexK + 1) * 0.6))) return { key: "separation_magnitude", value: null, missing_reason: "hips_or_shoulders_unobserved_through_window" };
+  return { key: "separation_magnitude", value: round4(best), unit: "degrees", missing_reason: null, peak_frame: c.s.frames[bk].frame_index, floor_deg: SEPARATION_FLOOR_DEG,
+    window: { end_of_p2_frame: c.s.frames[apexK].frame_index, swing_peak_frame: c.s.frames[pkK].frame_index }, per_frame_deg: series,
+    record_only: true, graded: false, owner_standard: "not_supplied", frame_rate_dependence: "none — an angle at every frame",
+    proxy: "unsigned; side-on rigid-width solve under-reads small turns near square to camera" };
+}
 function sequencing(c: Ctx, ssK: number, pkK: number, apexK: number): CardTileResult {
   const K: CardKey = "sequencing", u = "boolean", n = c.s.frames.length;
   const dist = (j: number, a: number, b: number) => { const p = P(c, j, a), q = P(c, j, b); return p && q ? Math.hypot(p.x - q.x, p.y - q.y) : null; };
@@ -521,9 +543,10 @@ export function runHittingCardTiles(series: LandmarkSeries, o: { side: Handednes
   const allRefuse = (rec: MissingnessRecord, l: Record<string, unknown>) => Object.fromEntries(Object.entries(units).map(([k, u]) => [k, refuse(k as CardKey, u, rec, l)])) as Record<keyof typeof units, CardTileResult>;
   const cam = detectCameraView(series);
   const gate = (r: CardTileResult) => { const g = checkCameraRequirement(r.key, cam.view); if (g.ok) return g.detail ? { ...r, lineage: { ...r.lineage, camera_view: g.detail } } : r; return refuse(r.key, r.unit, mr(R.CALIBRATION_UNAVAILABLE), { reason: g.detail, message: g.message }); };
+  let sepMag: Record<string, unknown> = { key: "separation_magnitude", value: null, missing_reason: "not_computed" };
   const done = (t: Record<keyof typeof units, CardTileResult>) => {
     const g = Object.fromEntries(Object.entries(t).map(([k, r]) => [k, gate(r)])) as Record<keyof typeof units, CardTileResult>;
-    return { version: HITTING_CARD_TILES_VERSION, ...g, hitters_move: hittersMove(series, o, g) };
+    return { version: HITTING_CARD_TILES_VERSION, ...g, hitters_move: hittersMove(series, o, g), separation_magnitude: sepMag };
   };
   if (!o.side) return done(allRefuse(mr(R.ANCHOR_NOT_DETECTED), { reason: "batting_side_unknown" }));
   const dir = deriveDirectionSign(series, o.side);
