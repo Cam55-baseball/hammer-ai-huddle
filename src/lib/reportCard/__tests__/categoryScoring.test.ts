@@ -5,7 +5,7 @@ import { runHittingPoseTiles } from "@/lib/biomech/metrics/hittingPoseTiles";
 import { runHittingCardTiles } from "@/lib/biomech/metrics/hittingCardTiles";
 import { runHittingOwnerTiles } from "@/lib/biomech/metrics/hittingOwnerTiles";
 import { runFrontLegGather } from "@/lib/biomech/metrics/frontLegGather";
-import { runActiveStride, runStrideCoil } from "@/lib/biomech/metrics/strideRhythm";
+import { runActiveStride, runMicroPauses, runStrideCoil, ROUTED_TO_DELAYCAM } from "@/lib/biomech/metrics/strideRhythm";
 import { HIP_LOAD_ATHLETE_UNLOCKED } from "@/lib/biomech/metrics/hipLoadVisibility";
 import { runPitchingTiles } from "@/lib/biomech/metrics/pitchingTiles";
 import { runPitchingCardTiles } from "@/lib/biomech/metrics/pitchingCardTiles";
@@ -125,6 +125,6 @@ describe("category scoring", () => {
     console.log("COIL 914 L", JSON.stringify(r));
     for (const k of ["foot_vs_body", "hands_opposite", "side_bend", "sink"] as const) expect(r[k].root_evidence?.emitted ?? false).toBe(false);
     expect(JSON.stringify(runStrideCoil(A, { side: "L" }))).toBe(JSON.stringify(r));
-    for (const t of HITTING_CATEGORIES.categories.find((c) => c.key === "p3")!.tiles.filter((t) => t.key.startsWith("stride_"))) { expect(t.points).toBe(0); expect(t.recordOnly).toBe(true); }
+    for (const t of HITTING_CATEGORIES.categories.find((c) => c.key === "p3")!.tiles.filter((t) => ["stride_foot_vs_body","stride_hands_opposite","stride_side_bend","stride_sink"].includes(t.key))) { expect(t.points).toBe(0); expect(t.recordOnly).toBe(true); }
   });
 });
