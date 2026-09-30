@@ -74,7 +74,7 @@ export const CARD_COACHING: Record<string, string> = {
   lead_elbow_bend_increasing: "Your lead elbow should not bend more than it was at the end of P2. Full extension is ideal, but your own P2 position is the honest measure of what your arm can do.",
   pelvis_rotation_efficiency: "Because you stride to the pitcher, not the ball, your pelvis should be able to get square to fair (the front of home plate) by the end of P4, before you run.",
   sequencing: "Your hitter's move starts when your back elbow begins moving down and toward the pitcher. It does not have to move far or fast, it just has to start the move that releases your loaded stride. From there your back knee turns, your hips turn, then your shoulders, then your hands. The true test is simple: your hips turn before your shoulders. Shoulders that fire first spend the load before it can be used.",
-  shoulder_to_shoulder_hold: "Keep your chin and front shoulder tucked together until the swing goes. The tuck makes the move easier on your body and keeps both eyes on the ball. A front shoulder that pulls away from your chin before the swing is a leak: it opens you early and costs you the look at the pitch.",
+  shoulder_to_shoulder_hold: "Keep your chin and front shoulder tucked together until the swing goes. The tuck makes the move easier on your body and keeps both eyes on the ball. A front shoulder that pulls away from your chin before the swing is a leak: it opens you early and costs you the look at the pitch. Through the stride, keep your chin over or behind your front shoulder until your foot lands. If your chin gets out in front, the front shoulder gets yanked out and the swing goes out of order.",
 };
 
 export type CardKey =

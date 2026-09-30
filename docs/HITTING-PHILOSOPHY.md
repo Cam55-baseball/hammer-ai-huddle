@@ -848,4 +848,12 @@ What it establishes (built 2026-09-30, `metrics/hittingCardTiles.ts`):
 
 "The knee leads hips leads shoulders leads hands is the same sequence in a different way to see it but we know the hitters move starts it. We should be able to see if it is happening. That is bottom of the barrel inference. The true test by itself is hips before shoulders and the other tests give signals for the rest of the sequencing to paint a whole picture if we cannot see it. Depending on a users fascial system the back elbow/bicep may not have to begin moving far forward at all before activating the chain & it does not have to move completely forward, it just has to begin the forward move to release our loaded power step. Elbow begins the hitters move responsible for getting the barrel to the ball in a timely manner. The elbow does not have to be fast at all, it is about the sequence of the matter. The elbow moving down and toward the pitcher is what we are looking for."
 
-"Theoretically we want that shin over/in line with/or beyond the front shoulder toward the back until landing (P3 is over) & P4 begins."
+"Theoretically we want that chin over/in line with/or beyond the front shoulder toward the back until landing (P3 is over) & P4 begins."
+
+Context: "when talking about chin position over the front shoulder to see the ball and not yank the front shoulder out and move out of sequence."
+
+(Correction 2026-09-30: an earlier copy of this quote read "shin" — an autocorrect. The shin tile built on it was removed.) Built as the POSITION channel of `shoulder_to_shoulder_hold`: nose minus front shoulder on the forward axis, image plane, end of P2 → landing. Still floor 0.8% of stature. Record-only, never graded, linked to the front-shoulder leak.
+
+## Separation — a tie is a finding `[owner-supplied 2026-09-30]`
+
+"In the separation we have to know which started first because of the power chain and if there is no separation that means it's insufficient and if it's unreadable then we need to move it to delaycam. I believe I did not have sufficient separation in that video."
