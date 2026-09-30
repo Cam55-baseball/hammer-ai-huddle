@@ -39,7 +39,7 @@ Supersedes the earlier throwing spec. Earlier research notes: `docs/THROWING-INJ
 - Elbow height at landing — owner ruling 4 (structure, makes throwers robotic).
 - Sidearm arm slot — owner ruling 5 (a slot is not a fault).
 - Elbow bend at landing — fails (b) and (d): varies with structure and slot; far-arm jitter 26° side-on means only extreme cases could ever be called.
-- Front knee at landing/release — fails (a) and (d): injury link indirect (speed link only); jitter 5.4° exceeds half the 45–55° band.
+- Front knee at landing/release — **reinstated record-only 2026-09-30** (`front_knee_at_landing`): the cut removed a band our noise couldn't resolve; a per-athlete baseline needs no band. Still never a flag.
 - Upper-body lean away from the arm — fails (a)–(c): Oyama 2014 also links it to more ball speed, so it is partly a performance strategy; jitter ~half the one-head-width criterion; frontal-only.
 
 Only one flag is measurable from a side-on camera. That is the honest result.
