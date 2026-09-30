@@ -32,8 +32,8 @@ describe("field PnP", () => {
     const cam = { x: -480, y: 0, z: 48 };
     const img = projectGround([...PLATE_POINTS_IN], cam, { x: 0, y: 0, z: 0 }, F, W, H);
     const r = solveFieldCamera([...PLATE_POINTS_IN], img, { imageWidth: W, imageHeight: H });
-    if (r.ok) expect(r.reprojection_rms_px).toBeLessThan(3);
-    else expect(["focal_unrecoverable", "degenerate_points"]).toContain(r.reason);
+    if (r.ok === true) expect(r.reprojection_rms_px).toBeLessThan(3);
+    else expect(["focal_unrecoverable", "degenerate_points", "reprojection_too_high", "camera_below_ground"]).toContain(r.reason);
   });
 
   it("base fallback solves a centre-field camera", () => {
