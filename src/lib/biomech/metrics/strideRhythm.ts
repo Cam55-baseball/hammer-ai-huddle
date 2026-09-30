@@ -8,8 +8,8 @@
  * Two readings, neither graded, neither worth points until the athlete has a
  * baseline, no owner duration or threshold invented:
  *
- *  A. ACTIVE STRIDE vs FALLING — window: end of stance (Stance Lock) → front-foot
- *     plant. Back-hip forward travel toward the pitcher vs the pelvis (centre-of-
+ *  A. ACTIVE STRIDE vs FALLING — window: the P2 position (load apex) → front-foot
+ *     plant ("from our P2 position"). Back-hip forward travel toward the pitcher vs the pelvis (centre-of-
  *     mass proxy) dropping. Classification uses ONLY the still-clip floors:
  *       active  = back hip drove beyond its floor, pelvis did not drop beyond its floor
  *       falling = pelvis dropped beyond its floor, back hip did not drive beyond its floor
@@ -85,8 +85,10 @@ export function runActiveStride(series: LandmarkSeries, o: { side: Handedness | 
   const c = context(series, o.side);
   if (!c) return refuse("stance_lock_or_direction_missing");
   if (c.plantK < 0) return refuse("front_foot_plant_missing");
-  const startK = c.lock.end_k! + 1;
-  if (c.plantK - startK < 3) return refuse("stride_window_too_short");
+  const apex = detectLoadApex(series, c.dir);
+  const startK = apex.frame_index == null ? -1 : series.frames.findIndex((f) => f.frame_index === apex.frame_index);
+  if (startK < 0) return refuse("p2_position_missing:load_apex_not_detected");
+  if (c.plantK - startK < 3) return refuse("stride_window_too_short", { load_apex_frame: apex.frame_index, plant_frame: series.frames[c.plantK].frame_index });
   const backHip = o.side === "R" ? LM.R_HIP : LM.L_HIP;
   const fw = (k: number) => { const p = c.P(k, backHip); return p ? (p.x * c.dir * 100) / c.st : null; };
   const down = (k: number) => { const p = mid(c.P(k, LM.L_HIP), c.P(k, LM.R_HIP)); return p ? (p.y * 100) / c.st : null; };
