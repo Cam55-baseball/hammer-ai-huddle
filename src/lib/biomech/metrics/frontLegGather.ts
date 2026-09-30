@@ -39,9 +39,9 @@ const refuse = (reason: string, lineage: Record<string, unknown> = {}): FrontLeg
   ({ key: "front_leg_gather", version: FRONT_LEG_GATHER_VERSION, pattern: null, value: null, unit: "percent_stature", missing_reason: reason, lineage: { reason, ...lineage } });
 
 /** Raw per-frame signals relative to the stance median (exported so the still floor can be measured). */
-export function gatherSignals(series: LandmarkSeries, side: Handedness) {
+export function gatherSignals(series: LandmarkSeries, side: Handedness, o: { before_frame?: number } = {}) {
   const dir = deriveDirectionSign(series, side);
-  const lock = detectStanceLock(series);
+  const lock = detectStanceLock(series, o);
   if (dir == null || !lock.ok || !lock.baseline?.stature_px || lock.start_k == null || lock.end_k == null) return null;
   const v = buildSegmentValidity(series, lock);
   const st = lock.baseline.stature_px, roll = lock.baseline.roll_deg;
