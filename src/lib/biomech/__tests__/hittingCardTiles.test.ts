@@ -93,7 +93,6 @@ describe("chin position channel (record-only, owner 2026-09-30)", () => {
     const L = (n: string) => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "fixtures", n))).toString("utf8"));
     for (const side of ["L", "R"] as const) expect(rhct(L("still-subject-15d75bc9.ndjson.gz"), { side }).shoulder_to_shoulder_hold.value).toBeNull();
     const pos = (rhct(L("swing-24fps-914cf54c.ndjson.gz"), { side: "L" }).shoulder_to_shoulder_hold.lineage.leak as { position: Record<string, unknown> }).position;
-    console.log("CHINPOS", JSON.stringify(pos));
-    expect(pos.measured).toBe(true); expect(pos.graded).toBe(false); expect(pos.floor_pct).toBe(0.8);
+    expect(pos.measured).toBe(true); expect(pos.graded).toBe(false); expect(pos.floor_pct).toBe(0.8); expect(pos.chin_minus_front_shoulder_max_pct).toBe(-2.2143); expect(pos.pattern).toBe("chin_at_or_behind_front_shoulder");
   });
 });
