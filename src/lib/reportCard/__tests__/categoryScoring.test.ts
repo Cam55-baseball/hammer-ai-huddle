@@ -106,7 +106,7 @@ describe("category scoring", () => {
     expect(JSON.stringify(HITTING_CATEGORIES)).not.toContain("micro_pauses");
     expect(p.p3_to_p4.missing_reason).not.toBeNull();
     console.log("RHYTHM 914 L", JSON.stringify({ a: { pattern: a.pattern, value: a.value, why: a.missing_reason, l: a.lineage }, p }));
-    expect(a.root_evidence?.emitted ?? false).toBe(false);
+    expect(a.root_evidence).toBeNull();
     expect(JSON.stringify(runMicroPauses(A, { side: "L" }))).toBe(JSON.stringify(p));
   });
 
