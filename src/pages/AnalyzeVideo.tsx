@@ -1584,6 +1584,7 @@ export default function AnalyzeVideo() {
 
                 {scoresAllowed && analysisView === "report_card" ? (
                   <>
+                  <CategoryScoreCard videoId={currentVideoId} sport={sport} module={module} side={sideResolution.status === 'known' ? sideResolution.side : null} />
                   <HammerReportCard
                     sport={sport}
                     module={module}
