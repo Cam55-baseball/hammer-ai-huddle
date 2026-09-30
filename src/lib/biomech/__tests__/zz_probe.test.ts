@@ -15,8 +15,8 @@ it("probe", () => {
     const lead = side === "R" ? LM.L_SHOULDER : LM.R_SHOULDER, rear = side==="R"?LM.R_SHOULDER:LM.L_SHOULDER;
     const st = lock.baseline?.stature_px ?? s.header.height*0.8;
     // candidates: nose->lead shoulder angle; nose->lead shoulder horizontal dist %stature
-    const ang = (k: number) => { const a = P(k, LM.NOSE), b = P(k, lead); return a&&b ? Math.atan2(b.y-a.y, b.x-a.x)*180/Math.PI : null; };
-    const dx = (k: number) => { const a = P(k, LM.NOSE), b = P(k, lead); return a&&b ? (b.x-a.x)*100/st : null; };
+    const ang = (k: number) => { const a = P(k, 0), b = P(k, lead); return a&&b ? Math.atan2(b.y-a.y, b.x-a.x)*180/Math.PI : null; };
+    const dx = (k: number) => { const a = P(k, 0), b = P(k, lead); return a&&b ? (b.x-a.x)*100/st : null; };
     const med = (xs: number[]) => { const t=[...xs].sort((a,b)=>a-b); return t[Math.floor(t.length/2)]; };
     const m3 = (k: number, g: (j:number)=>number|null) => { const xs=[k-1,k,k+1].filter(j=>s.frames[j]).map(g).filter((x):x is number=>x!=null); return xs.length>=2?med(xs):null; };
     const dev = (g: (j:number)=>number|null) => { const xs=s.frames.map((_,k)=>m3(k,g)).filter((x):x is number=>x!=null); const m=med(xs); return Math.max(...xs.map(x=>Math.abs(x-m))); };
