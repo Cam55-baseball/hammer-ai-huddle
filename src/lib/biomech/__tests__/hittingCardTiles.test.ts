@@ -54,7 +54,7 @@ describe("hitting card tiles including separate front and back heels (23 total)"
     expect(r.lead_elbow_bend_increasing.value).toBeNull();
     expect(r.lead_elbow_bend_increasing.lineage.p2_reference_elbow_deg).not.toBeNull();
     expect(r.head_vertical_movement_post_landing.value).toBe(0); expect(r.head_vertical_movement_post_landing.verdict).toBe("pass");
-    expect(r.pelvis_rotation_efficiency.value).toBeNull();
+    expect(r.pelvis_rotation_efficiency.value).toBe(2.444); expect(r.pelvis_rotation_efficiency.verdict).toBeNull();
     expect(String(r.hitters_move.lineage.reason)).toBe("constituents_not_all_graded");
   });
   it("wrong side changes the answer or refuses", () => {
