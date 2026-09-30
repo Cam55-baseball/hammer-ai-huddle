@@ -2056,64 +2056,83 @@ function backHeelEarlyRise(c, p4K) {
   });
 }
 function sequencing(c, ssK, pkK) {
-  const K = "sequencing", u = "boolean";
+  const K = "sequencing", u = "boolean", n = c.s.frames.length;
+  const dist = (j, a, b) => {
+    const p = P(c, j, a), q2 = P(c, j, b);
+    return p && q2 ? Math.hypot(p.x - q2.x, p.y - q2.y) : null;
+  };
+  const plantEnd = Math.min(n - 1, pkK);
+  const stanceWidth = (a, b) => {
+    let w = 0;
+    for (let j = c.lock.start_k;j <= plantEnd; j++) {
+      const x = m3(c, j, (i) => dist(i, a, b));
+      if (x != null && x > w)
+        w = x;
+    }
+    return w > 0 ? w : null;
+  };
+  const Lh = stanceWidth(LM.L_HIP, LM.R_HIP), Ls = stanceWidth(LM.L_SHOULDER, LM.R_SHOULDER);
+  const rigid = (a, b, L) => (j) => {
+    if (!L)
+      return null;
+    const d = dist(j, a, b);
+    return d == null ? null : Math.acos(Math.min(1, d / L)) * 180 / Math.PI;
+  };
+  const rear = c.rear.sh;
   const chans = [
-    ["hips", (j) => mid(P(c, j, LM.L_HIP), P(c, j, LM.R_HIP))],
-    ["torso", (j) => mid(P(c, j, LM.L_SHOULDER), P(c, j, LM.R_SHOULDER))],
-    ["lead_shoulder", (j) => P(c, j, c.lead.sh)],
-    ["lead_arm", (j) => P(c, j, c.lead.el)]
+    ["pelvis", rigid(LM.L_HIP, LM.R_HIP, Lh), false],
+    ["torso", rigid(LM.L_SHOULDER, LM.R_SHOULDER, Ls), false],
+    ["lead_shoulder", (j) => angleDeg2(P(c, j, rear), P(c, j, c.lead.sh), P(c, j, c.lead.el)), false],
+    ["lead_arm", (j) => {
+      const a = P(c, j, c.lead.sh), b = P(c, j, c.lead.wr);
+      return a && b ? Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI : null;
+    }, true]
   ];
-  const k0 = Math.max(1, ssK - 1), k1 = Math.min(c.s.frames.length - 2, pkK + 1);
+  const k0 = Math.max(1, ssK - 1), k1 = Math.min(n - 2, pkK + Math.ceil(c.fps * 0.125));
   const peaks = {};
-  for (const [name, g] of chans) {
-    const x = smooth(c.s.frames.map((_, j) => Fw(c, g(j))), 1);
-    let best = -1, bv = -Infinity;
+  for (const [name, g, wrap] of chans) {
+    let raw = c.s.frames.map((_, j) => g(j));
+    if (wrap) {
+      let off = 0;
+      raw = raw.map((x2, j) => {
+        if (x2 == null)
+          return null;
+        const prev = raw.slice(0, j).reverse().find((y) => y != null);
+        if (prev != null) {
+          const d = x2 + off - prev;
+          if (d > 180)
+            off -= 360;
+          else if (d < -180)
+            off += 360;
+        }
+        return x2 + off;
+      });
+    }
+    const x = smooth(raw, 1);
+    let best = -1, bv = -Infinity, seen = 0;
     for (let j = k0;j <= k1; j++) {
       const a = x[j - 1], b = x[j + 1];
       if (a == null || b == null)
         continue;
-      const vel = (b - a) * c.fps / 2;
-      if (vel > bv) {
-        bv = vel;
+      seen++;
+      const w = Math.abs((b - a) * c.fps / 2);
+      if (w > bv) {
+        bv = w;
         best = j;
       }
     }
-    peaks[name] = best < 0 ? null : c.s.frames[best].frame_index;
+    peaks[name] = { frame: best < 0 ? null : c.s.frames[best].frame_index, deg_per_s: best < 0 ? null : round4(bv), coverage: round4(seen / (k1 - k0 + 1)) };
   }
-  const L = c.lock.baseline?.hip_len_px;
-  let rotPeak = null;
-  if (L) {
-    const th = smooth(c.s.frames.map((_, j) => {
-      const a = P(c, j, LM.L_HIP), b = P(c, j, LM.R_HIP);
-      if (!a || !b)
-        return null;
-      const d = Math.hypot(a.x - b.x, a.y - b.y);
-      return d > L * 1.03 ? null : Math.acos(Math.min(1, d / L)) * 180 / Math.PI;
-    }), 1);
-    let bv = -Infinity;
-    for (let j = k0;j <= k1; j++) {
-      const a = th[j - 1], b = th[j + 1];
-      if (a == null || b == null)
-        continue;
-      const w = Math.abs(b - a);
-      if (w > bv) {
-        bv = w;
-        rotPeak = c.s.frames[j].frame_index;
-      }
-    }
-  }
-  const hipAgree = peaks.hips != null && rotPeak != null && Math.abs(peaks.hips - rotPeak) <= 1;
-  if (!hipAgree)
-    return refuse2(K, u, mr2(MISSINGNESS_REASONS.INSUFFICIENT_TEMPORAL_RESOLUTION), { reason: rotPeak == null ? "hip_rotation_channel_unobserved" : "hip_translation_and_rotation_peaks_disagree", hip_forward_speed_peak_frame: peaks.hips, hip_rotation_rate_peak_frame: rotPeak, other_peak_frames: peaks });
-  const order = chans.map(([n]) => peaks[n]);
-  if (order.some((x) => x == null))
-    return refuse2(K, u, mr2(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "segment_untrusted_through_window", peak_frames: peaks });
+  const base = { method: "peak_angular_speed_every_segment", linear_terms: "none", swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, window_end_frame: c.s.frames[k1].frame_index, stance_width_px: { pelvis: Lh && round4(Lh), torso: Ls && round4(Ls) }, per_segment: peaks, frame_uncertainty: 1 };
+  const thin = chans.filter(([nm]) => peaks[nm].frame == null || peaks[nm].coverage < 0.6).map(([nm]) => nm);
+  if (thin.length)
+    return refuse2(K, u, mr2(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { ...base, reason: `segment_unobserved_for_most_of_window:${thin.join(",")}` });
+  const order = chans.map(([nm]) => peaks[nm].frame);
   const out = [];
   for (let i = 1;i < order.length; i++)
     if (order[i] < order[i - 1] - 1)
       out.push(`${chans[i][0]}_before_${chans[i - 1][0]}`);
-  const lin = { swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, peak_forward_speed_frames: peaks, hip_rotation_rate_peak_frame: rotPeak, frame_uncertainty: 1, out_of_order: out, rule: "a segment peaking earlier than the one before it by more than 1 frame is out of order; ties within 1 frame cannot be ordered at this frame rate and count as in order" };
-  return ok(K, u, out.length === 0 ? 1 : 0, null, out.length === 0 ? "pass" : "fail", lin);
+  return ok(K, u, out.length === 0 ? 1 : 0, null, out.length === 0 ? "pass" : "fail", { ...base, out_of_order: out, rule: "a segment reaching its fastest turn more than 1 frame before the segment below it is out of order; within 1 frame cannot be ordered at this frame rate" });
 }
 function backElbow(c, ssK, pkK) {
   const K = "back_elbow_connection", u = "percent_stature";
@@ -2375,7 +2394,25 @@ function pelvisSquare(c, finK) {
   const t = m3(c, finK, th);
   if (t == null)
     return refuse2(K, u, mr2(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "hips_untrusted_or_over_length_at_end_of_p4" });
-  return ok(K, u, 90 - t, null, null, { end_of_p4_frame: c.s.frames[finK].frame_index, pelvis_out_of_plane_deg: round4(t), sign: "degrees short of square to fair (0 = square)", why_ungraded: "owner has no 'close enough to square' angle; still clip is closed-stance so no noise floor near square exists yet", limitation: "unsigned rigid solve: over-rotating past square reads the same as under-rotating", reasoning: "we stride to the pitcher, not the ball — that is what makes square-to-fair reachable by the end of P4", coaching: CARD_COACHING.pelvis_rotation_efficiency });
+  return ok(K, u, 90 - t, null, null, { end_of_p4_frame: c.s.frames[finK].frame_index, end_of_p4_rule: "most-turned hip moment within half a second of the fastest torso turn; does not need the hitter to settle", pelvis_out_of_plane_deg: round4(t), sign: "degrees short of square to fair (0 = square)", why_ungraded: "owner has no 'close enough to square' angle; still clip is closed-stance so no noise floor near square exists yet", limitation: "unsigned rigid solve: over-rotating past square reads the same as under-rotating", reasoning: "we stride to the pitcher, not the ball — that is what makes square-to-fair reachable by the end of P4", coaching: CARD_COACHING.pelvis_rotation_efficiency });
+}
+function endOfP4Turn(c, pkK) {
+  const L = c.lock.baseline?.hip_len_px;
+  if (!L)
+    return -1;
+  const end = Math.min(c.s.frames.length - 2, pkK + Math.ceil(c.fps * 0.5));
+  let best = -1, bw = Infinity;
+  for (let k = pkK;k <= end; k++) {
+    const w = m3(c, k, (j) => {
+      const a = P(c, j, LM.L_HIP), b = P(c, j, LM.R_HIP);
+      return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : null;
+    });
+    if (w != null && w < bw) {
+      bw = w;
+      best = k;
+    }
+  }
+  return best;
 }
 function runHittingCardTiles(series, o) {
   const units = { heel_plant: "percent_stature", back_heel_early_rise: "percent_stature", sequencing: "boolean", back_elbow_connection: "percent_stature", shoulder_plane_steadiness: "score_100", finish_balance: "stance_fraction", shoulder_to_shoulder_hold: "percent_of_window", back_knee_flex_maintained: "degrees", post_landing_hip_drift: "percent_stature", hands_stay_up_at_plant: "percent_stature", lead_elbow_bend_increasing: "degrees", head_vertical_movement_post_landing: "percent_stature", pelvis_rotation_efficiency: "degrees" };
@@ -2447,7 +2484,10 @@ function runHittingCardTiles(series, o) {
     hands_stay_up_at_plant: need("hands_stay_up_at_plant", [P_], () => handsUp(c, plantK)),
     lead_elbow_bend_increasing: need("lead_elbow_bend_increasing", [AP, PK], () => leadElbow(c, apexK, pkK)),
     head_vertical_movement_post_landing: need("head_vertical_movement_post_landing", [P_, PK], () => pkK <= plantK ? refuse2("head_vertical_movement_post_landing", units.head_vertical_movement_post_landing, mr2(MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED), { reason: "swing_peak_not_after_plant" }) : headVertical(c, plantK, pkK)),
-    pelvis_rotation_efficiency: need("pelvis_rotation_efficiency", [FIN], () => pelvisSquare(c, finK))
+    pelvis_rotation_efficiency: need("pelvis_rotation_efficiency", [PK], () => {
+      const k = endOfP4Turn(c, pkK);
+      return k < 0 ? refuse2("pelvis_rotation_efficiency", units.pelvis_rotation_efficiency, mr2(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "hips_unobserved_after_swing_peak" }) : pelvisSquare(c, k);
+    })
   });
 }
 function hittersMove(series, o, t) {
