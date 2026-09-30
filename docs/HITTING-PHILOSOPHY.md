@@ -828,3 +828,18 @@ Open for the owner: the earlier active-stride tile counts back-hip forward trave
 ## Micro-pauses — routed to DelayCam `[owner ruling 2026-09-30]`
 
 "If the micropauses cannot be measured in 24-30fps then we should push them to the delaycam project in the mechanics toggle side where it is measurable." Tested: the smallest dip the speed trace can show spans five frames (≈0.21 s at 24 fps, ≈0.17 s at 30 fps). On all three fixtures the landing and swing-start anchors could not be put in order at 24 fps, so the pause before the swing was never resolved on any real clip. Moved to the DelayCam mechanics spec; not on the upload card.
+
+## The sequence chain — owner's order, not the conventional kinetic chain `[owner-supplied 2026-09-30]`
+
+"Hip turning is sequencing mapping after P3. Forward movement toward the pitcher is a buffer or sequence beginning."
+
+"The P3 glute drives but due to proper loading style of P1&P2 as explained earlier anatomy further coils the hip as the glute attempts to move forward until the back bicep/elbow moves forward which turns the back knee (Turning/creating the triangles) which begins the hip rotation which catapults shoulders (Rotationally) from their square position (that held for separation), which drives the barrel through the ball."
+
+"Perfect that the chin & shoulder tuck. This unlocks biomechanical ease & being able to see the ball well."
+
+What it establishes (built 2026-09-30, `metrics/hittingCardTiles.ts`):
+- **Chain:** back elbow → back knee → pelvis → shoulders → barrel. The elbow initiates. The barrel link is bat tracking and belongs to DelayCam; the upload card checks the first four.
+- **No hip rotation in P3.** The glute's forward drive becomes more coil because P1/P2 load stops the body travelling. Opening before P4 is early — same fault tile 20 (back-hip socket hold) measures. Active stride is unsigned and is never read as "correct".
+- **Forward movement is the buffer**, not a link. No translation term enters the order check.
+- **Measurement:** peak angular speed per link. Side-on the back upper arm points at the camera for most of the swing (image length under 60% of stance length), so the elbow link falls back to a labelled proxy: the elbow's forward speed relative to the back shoulder — the owner's own words for the trigger, and the arm's motion, not body travel.
+- **Chin-to-shoulder tuck** is confirmed doctrine with two benefits: ease of movement and seeing the ball. The leak (head-to-front-shoulder angle, end of P2 → P4 start, still floor 3.2°) is measured side-on; the gap itself is reported only when visible.
