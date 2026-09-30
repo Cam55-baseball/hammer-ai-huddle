@@ -18,23 +18,35 @@ import { detectWindmillAnchors, WINDMILL_FLOORS, type WindmillAnchors } from "..
 import { detectCameraView, type CameraView } from "../camera/cameraView";
 import { frontAnkleIndex, rearAnkleIndex, type Handedness } from "../side/strideSide";
 
-export const SOFTBALL_PITCHING_TILES_VERSION = "softball_pitching_tiles@1.0.0-2026-09-30-elite-filter-unvalidated";
+export const SOFTBALL_PITCHING_TILES_VERSION = "softball_pitching_tiles@1.1.0-2026-09-30-separation-baseline-stride-sfc-release-unvalidated";
 
-export type SpBasis = "SOURCED" | "PROPOSED" | "SOURCED_BAND" | "SOURCED_CORRELATION";
-export type SpKey = "stride_profile" | "stride_triple_extension" | "trunk_flexion" | "sfc_foot_angle" | "arm_path" | "windup_knee_valgus_flag" | "sfc_knee_valgus_flag";
+export type SpBasis = "SOURCED" | "PROPOSED" | "SOURCED_BAND" | "SOURCED_CORRELATION" | "SOURCED_MIXED";
+export type SpKey = "stride_profile" | "stride_triple_extension" | "trunk_flexion" | "sfc_separation" | "sfc_foot_angle" | "arm_path" | "windup_knee_valgus_flag" | "sfc_knee_valgus_flag";
+
+/**
+ * Separation noise floors — still clip 15d75bc9, measured BEFORE use, from
+ * MediaPipe world landmarks (hip line vs shoulder line in the ground plane).
+ * Separation: full still range 6.0° (−5.1..0.9). Pelvis rotation speed after a
+ * 5-frame smooth + central difference: ±24.5°/s. Values inside these are missing.
+ */
+export const SEPARATION_FLOORS = { separation_deg: 6.0, pelvis_speed_dps: 25 } as const;
 
 /** Standards. basis stays attached to every tile result and every label. */
 export const SP_STANDARDS = {
-  stride_profile: { basis: "SOURCED" as SpBasis, bands: { youth: [98, 89, 68], collegiate: [93, 89, 73] }, tolerance_pp: 10, tolerance_basis: "PROPOSED", camera: "side_on" },
+  // Owner ruling 2026-09-30: top of backswing is NOT measured (phase order unresolved); SFC + release only, never graded.
+  stride_profile: { basis: "SOURCED" as SpBasis, moments: ["sfc", "release"], never_graded_until: "phase_order_resolved", reference_pct: { youth: { sfc: 89, release: 68 }, collegiate: { sfc: 89, release: 73 } }, camera: "side_on" },
   stride_triple_extension: { basis: "SOURCED" as SpBasis, pass_fail_basis: "PROPOSED", camera: "two_view" },
   trunk_flexion: { basis: "SOURCED_CORRELATION" as SpBasis, never_graded: true, camera: "side_on", source: "PubMed 30038835 (youth, r 0.42–0.48)" },
+  // Owner ruling 2026-09-30: record-only, per-athlete baseline. Never a population threshold.
+  sfc_separation: { basis: "SOURCED_MIXED" as SpBasis, never_graded: true, per_athlete_baseline: true, camera: "any_single_3d_estimate", source: "Jump et al. 2026 (counter-rotation ↔ velocity); PMC8358524 (no angle ↔ speed)" },
   sfc_foot_angle: { basis: "SOURCED_BAND" as SpBasis, band_deg_arm_side: [0, 45], camera: "plate_line", do_not_alter: true },
   arm_path: { basis: "SOURCED" as SpBasis, threshold_basis: "PROPOSED", camera: "plate_line" },
   windup_knee_valgus_flag: { basis: "SOURCED" as SpBasis, grading_weight: 0, camera: "plate_line", source: "PubMed 34250163" },
   sfc_knee_valgus_flag: { basis: "SOURCED" as SpBasis, grading_weight: 0, camera: "plate_line", source: "PubMed 34250163" },
 } as const;
 
-export const SP_CUT_BY_ELITE_FILTER = ["windup_trunk_tibia", "windup_hip_square", "windup_foot_power_line", "sfc_hip_shoulder_rotation", "ft_knee_ankle", "accel_arm_path"] as const;
+/** sfc_hip_shoulder_rotation was cut as a GRADED tile; it returns as record-only `sfc_separation`. */
+export const SP_CUT_BY_ELITE_FILTER = ["windup_trunk_tibia", "windup_hip_square", "windup_foot_power_line", "ft_knee_ankle", "accel_arm_path"] as const;
 
 export interface SpTile {
   readonly key: SpKey;
