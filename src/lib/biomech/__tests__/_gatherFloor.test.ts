@@ -1,12 +1,19 @@
 import { it } from "vitest";
 import { readFileSync } from "node:fs"; import { gunzipSync } from "node:zlib"; import { join } from "node:path";
 import { decodeLandmarkSeriesText } from "../pose/landmarkSeriesFormat";
-import { gatherSignals, runFrontLegGather } from "../metrics/frontLegGather";
+import { detectStanceLock } from "../anchors/stanceLock";
+import { deriveDirectionSign } from "../side/strideSide";
 const load = (n: string) => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "fixtures", n))).toString("utf8"));
 it("floor", () => {
   const s = load("still-subject-15d75bc9.ndjson.gz");
-  for (const side of ["L","R"] as const) { const g = gatherSignals(s, side, { before_frame: s.frames[s.frames.length-1].frame_index }); if (!g) { console.log(side,"null", s.header.fps_true); continue; }
-    const mx = (k: "knee_up"|"knee_back"|"ankle_up") => Math.max(...g.rows.map(r => Math.abs(r[k] ?? 0)));
-    console.log("STILL", side, mx("knee_up"), mx("knee_back"), mx("ankle_up")); }
-  for (const f of ["swing-24fps-914cf54c.ndjson.gz","swing-24fps-9d2e117e.ndjson.gz"]) for (const side of ["L","R"] as const) console.log(f, side, JSON.stringify(runFrontLegGather(load(f), { side })));
+  const lock = detectStanceLock(s); console.log("LOCK", lock.ok, lock.detail, deriveDirectionSign(s,"L"), deriveDirectionSign(s,"R"));
+  const W=s.header.width,H=s.header.height;
+  const pt=(f:any,i:number)=> (f.pose_detected && (f.visibility?.[i]??0)>=0.5)?{x:f.normalized[i*3]*W,y:f.normalized[i*3+1]*H}:null;
+  const st = (()=>{const xs=s.frames.map(f=>{const a=pt(f,11),b=pt(f,12),c=pt(f,27),d=pt(f,28); return a&&b&&c&&d? ((c.y+d.y)-(a.y+b.y))/2:null}).filter(Boolean) as number[]; xs.sort((a,b)=>a-b); return xs[xs.length>>1]/0.779;})();
+  const med=(xs:number[])=>{const t=[...xs].sort((a,b)=>a-b);return t[t.length>>1]};
+  for (const [name,i] of [["Lknee",25],["Rknee",26],["Lankle",27],["Rankle",28]] as const) for (const ax of ["x","y"] as const){
+    const raw=s.frames.map(f=>pt(f,i)?.[ax]??null);
+    const m3=raw.map((_,k)=>{const xs=[raw[k-1],raw[k],raw[k+1]].filter((v):v is number=>v!=null);return xs.length>=2?med(xs):null}).filter((v):v is number=>v!=null);
+    const c=med(m3); console.log("STILL",name,ax,(Math.max(...m3.map(v=>Math.abs(v-c)))*100/st).toFixed(3));
+  }
 });
