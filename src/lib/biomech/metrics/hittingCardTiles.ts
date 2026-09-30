@@ -234,6 +234,20 @@ function sequencing(c: Ctx, ssK: number, pkK: number): CardTileResult {
     peaks[name] = { frame: best < 0 ? null : c.s.frames[best].frame_index, deg_per_s: best < 0 ? null : round4(bv), coverage: round4(seen / (k1 - k0 + 1)) };
   }
   const base = { method: "peak_angular_speed_every_segment", chain: "owner_2026-09-30: back elbow → back knee → pelvis → shoulders → barrel", barrel_link: "DelayCam (bat tracking) — not checked on the upload card", linear_terms: "none", linear_terms_why: "forward travel is the buffer that loads the chain, not a link in it", swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, window_end_frame: c.s.frames[k1].frame_index, stance_width_px: { pelvis: Lh && round4(Lh), shoulders: Ls && round4(Ls) }, per_segment: peaks, frame_uncertainty: 1, coaching: CARD_COACHING.sequencing };
+  // Back elbow fallback: side-on the back upper arm points at the camera through most of the swing, so its
+  // turning angle is unreadable. The owner's words for the trigger are "the back bicep/elbow MOVES FORWARD";
+  // the elbow's own forward speed RELATIVE TO THE BACK SHOULDER is the arm's motion, not body travel, and is
+  // used as a labelled proxy for the elbow link only. Body travel still never enters the chain.
+  let elbowSource = "angular";
+  if (peaks.back_elbow.frame == null || peaks.back_elbow.coverage < 0.6) {
+    const rel = smooth(c.s.frames.map((_, j) => { const e = Fw(c, P(c, j, c.rear.el)), sh = Fw(c, P(c, j, c.rear.sh)); return e == null || sh == null ? null : e - sh; }), 1);
+    let best = -1, bv = -Infinity, seen = 0;
+    for (let j = k0; j <= k1; j++) { const a = rel[j - 1], b = rel[j + 1]; if (a == null || b == null) continue; seen++; const w = ((b - a) * c.fps) / 2; if (w > bv) { bv = w; best = j; } }
+    const cov = seen / (k1 - k0 + 1);
+    if (best >= 0 && cov >= 0.6) { peaks.back_elbow = { frame: c.s.frames[best].frame_index, deg_per_s: null, coverage: round4(cov) }; (peaks.back_elbow as Record<string, unknown>).pct_stature_per_s = round4(bv); elbowSource = "forward_speed_relative_to_back_shoulder_proxy"; }
+  }
+  (base as Record<string, unknown>).back_elbow_source = elbowSource;
+  if (elbowSource !== "angular") (base as Record<string, unknown>).back_elbow_proxy_why = "back upper arm points at the camera side-on (image length below 60% of stance length for most of the window), so its turning angle cannot be read; the elbow's forward move relative to the back shoulder — the owner's own description of the trigger — times the link instead";
   const thin = chans.filter(([nm]) => peaks[nm].frame == null || peaks[nm].coverage < 0.6).map(([nm]) => nm);
   if (thin.length) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { ...base, reason: `segment_unobserved_for_most_of_window:${thin.join(",")}` });
   const order = chans.map(([nm]) => peaks[nm].frame!);
