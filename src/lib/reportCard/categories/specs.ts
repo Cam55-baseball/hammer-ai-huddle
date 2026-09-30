@@ -7,6 +7,11 @@ import {
   verdictAt, scoreAt, recordAt, missingTile, pitcherAbsent, at,
   type CardCategorySpec, type TileReading,
 } from "./scoring";
+import { hipLoadIsStaffOnly } from "@/lib/biomech/metrics/hipLoadVisibility";
+import { ownerTileAudience } from "@/lib/biomech/metrics/ownerTileVisibility";
+
+const hipLoadStaff = () => hipLoadIsStaffOnly();
+const headPathStaff = () => ownerTileAudience("head_path_through_stride") === "staff";
 
 /* ============================ HITTING ============================ */
 /** raw = { pose, card, owner, gather } from runHittingTilesFromText (+ gather). */
@@ -20,7 +25,11 @@ const gatherPresent = (raw: unknown): TileReading => {
 
 export const HITTING_CATEGORIES: CardCategorySpec = {
   card: "hitting",
-  sections: [],
+  sections: [{
+    key: "rhythm", title: "Rhythm: load, pause, stride, pause, swing",
+    note: "Recorded, not graded. It tracks the two short pauses: after the load and before the stride, and after landing and before the swing. The standard will come from your own history.",
+    tiles: [{ key: "micro_pauses", name: "Pause after landing, before the swing", read: recordAt("rhythm.pauses") }],
+  }],
   scaleTo: 100,
   showTotal: true,
   cardNotes: [
@@ -28,7 +37,7 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
   ],
   categories: [
     { key: "p1", title: "P1: Create Balance", points: 20, tiles: [
-      { key: "hip_load", name: "Back hip socket rotation reached at P1", points: 13, nonNegotiable: true, read: verdictAt("pose.hip_load") },
+      { key: "hip_load", name: "Back hip socket rotation reached at P1", points: 13, nonNegotiable: true, staffOnly: hipLoadStaff, read: verdictAt("pose.hip_load") },
       { key: "back_leg_balance_at_load", name: "Back-leg balance at load", points: 7, read: missingTile("no_separate_detector_yet") },
     ] },
     { key: "p2", title: "P2: Gather", points: 13, tiles: [
@@ -36,9 +45,10 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
       { key: "hand_load_depth", name: "Hand load depth", points: 4, recordOnly: true, baselineKey: "hitting_pose_tiles_deterministic.hand_load", read: recordAt("pose.hand_load") },
       { key: "p2_timing", name: "Hand load timing vs the pitcher", points: 4, read: verdictAt("pose.p2_timing", naPitcher) },
     ] },
-    { key: "p3", title: "P3: Load by Stride", points: 17, tiles: [
-      { key: "back_hip_socket_hold", name: "Back hip socket holds or increases", points: 3, nonNegotiable: true, staffOnly: true, read: verdictAt("owner.tile20") },
-      { key: "head_path_through_stride", name: "Head path through the stride", points: 2, staffOnly: true, read: verdictAt("owner.tile19") },
+    { key: "p3", title: "P3: Load by Stride", points: 19, tiles: [
+      { key: "back_hip_socket_hold", name: "Back hip socket holds or increases", points: 3, nonNegotiable: true, staffOnly: hipLoadStaff, read: verdictAt("owner.tile20") },
+      { key: "head_path_through_stride", name: "Head path through the stride", points: 2, staffOnly: headPathStaff, read: verdictAt("owner.tile19") },
+      { key: "active_stride", name: "Stride driven by the back hip, not a fall", points: 2, recordOnly: true, baselineKey: "hitting_rhythm.active_stride", read: recordAt("rhythm.active") },
       { key: "head_discipline", name: "Head discipline", points: 2, read: verdictAt("pose.head_discipline") },
       { key: "back_heel_early_rise", name: "Back heel stays down until P4", points: 2, read: verdictAt("card.back_heel_early_rise") },
       { key: "stride_direction", name: "Stride direction to the pitcher", points: 2, read: verdictAt("pose.stride_direction") },
@@ -128,17 +138,18 @@ export const THROWING_CATEGORIES: CardCategorySpec = {
   showTotal: true,
   cardNotes: ["The mechanics section is small today and will grow as more throwing checks are validated."],
   categories: [
-    { key: "mechanics", title: "Throwing Mechanics", points: 100, tiles: [
+    { key: "mechanics", title: "Throwing Mechanics", points: 110, tiles: [
       { key: "tempo", name: "Throwing tempo", points: 25, read: verdictAt("tempo") },
       { key: "stride_length", name: "Stride from the final step", points: 25, read: verdictAt("stride_length") },
       { key: "energy_angle", name: "Shuffle energy angle", points: 25, read: (raw) => { const na = notShuffle(raw); return na ? { kind: "not_applicable", reason: na } : verdictAt("energy_angle")(raw); } },
       { key: "head_stability", name: "Head and balance through the throw", points: 25, read: verdictAt("head_stability") },
+      { key: "front_knee_at_landing", name: "Front knee at landing", points: 10, recordOnly: true, baselineKey: "throwing_tiles_deterministic.front_knee_at_landing", read: recordAt("front_knee_at_landing") },
     ] },
   ],
 };
 
 /* ======================= SOFTBALL WINDMILL ======================= */
-/** raw = runSoftballPitchingTiles result. Wind-up and Follow-through dropped (no tiles). No total. */
+/** raw = runSoftballPitchingTiles result. Four phases (owner 2026-09-30: Wind-up and Follow-through restored with record-only tiles). No total. Phase weights PROPOSED. */
 const spVerdict = (key: string) => (raw: unknown): TileReading => {
   const t = at(raw, `tiles.${key}`) as { verdict?: string | null; missing_reason?: string | null } | undefined;
   if (t?.verdict === "pass") return { kind: "verdict", pass: true };
@@ -166,17 +177,29 @@ export const WINDMILL_CATEGORIES: CardCategorySpec = {
   }],
   scaleTo: 100,
   showTotal: false,
-  cardNotes: ["Two phases, the wind-up and the follow-through, can't be measured yet, so this card shows no total."],
+  cardNotes: [
+    "Wind-up and Follow-through are measurements without a published standard. They are recorded on every clip and start to count once there are enough of your own clips to set your range.",
+    "This card shows no total until it has been checked on real windmill clips.",
+  ],
   categories: [
-    { key: "stride", title: "Stride", points: 55, tiles: [
-      { key: "stride_triple_extension", name: "Drive-leg push", points: 30, read: spVerdict("stride_triple_extension") },
-      { key: "sfc_foot_angle", name: "Stride foot at landing", points: 25, read: spVerdict("sfc_foot_angle") },
+    { key: "windup", title: "Wind-up", points: 20, note: "Measurements without a published standard; your standard comes from your own history.", tiles: [
+      { key: "windup_trunk_tibia", name: "Trunk and drive shin together", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_trunk_tibia", read: spRecord("windup_trunk_tibia") },
+      { key: "windup_hip_square", name: "Hips facing the plate", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_hip_square", read: spRecord("windup_hip_square") },
+      { key: "windup_knee_over_foot", name: "Drive knee over the foot", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_knee_over_foot", read: spRecord("windup_knee_over_foot") },
+      { key: "windup_foot_power_line", name: "Drive foot on the power line", points: 5, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.windup_foot_power_line", read: spRecord("windup_foot_power_line") },
+    ] },
+    { key: "stride", title: "Stride", points: 40, tiles: [
+      { key: "stride_triple_extension", name: "Drive-leg push", points: 22, read: spVerdict("stride_triple_extension") },
+      { key: "sfc_foot_angle", name: "Stride foot at landing", points: 18, read: spVerdict("sfc_foot_angle") },
       { key: "stride_profile", name: "Stride length", points: 0, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.stride_profile", read: spRecord("stride_profile") },
       { key: "sfc_separation", name: "Separation at landing", points: 0, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.sfc_separation", read: spRecord("sfc_separation") },
     ] },
-    { key: "acceleration", title: "Acceleration", points: 45, tiles: [
-      { key: "arm_path", name: "Arm path close to the body", points: 45, read: spVerdict("arm_path") },
+    { key: "acceleration", title: "Acceleration", points: 30, tiles: [
+      { key: "arm_path", name: "Arm path close to the body", points: 30, read: spVerdict("arm_path") },
       { key: "trunk_flexion", name: "Forward lean", points: 0, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.trunk_flexion", read: spRecord("trunk_flexion") },
+    ] },
+    { key: "follow_through", title: "Follow-through", points: 10, note: "A measurement without a published standard; your standard comes from your own history.", tiles: [
+      { key: "ft_knee_ankle", name: "Stride knee over the ankle", points: 10, recordOnly: true, baselineKey: "softball_pitching_tiles_deterministic.ft_knee_ankle", read: spRecord("ft_knee_ankle") },
     ] },
   ],
 };

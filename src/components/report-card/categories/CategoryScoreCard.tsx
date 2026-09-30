@@ -28,7 +28,7 @@ const outcomeLabel = (o: TileOutcome) => {
     default: return o.reason === "staff_only_until_validated" ? "Staff only" : "Not measured";
   }
 };
-const flagLabel = (r: TileReading) => (r.kind === "verdict" ? (r.pass ? "Clear" : "Raised") : "Not checked");
+const flagLabel = (r: TileReading) => (r.kind === "verdict" ? (r.pass ? "Clear" : "Raised") : r.kind === "record" ? "Recorded" : "Not checked");
 
 export function CategoryScoreCard({ videoId, sport, module, side }: { videoId: string | null; sport?: string; module?: string; side: "L" | "R" | null }) {
   const { loading, data } = useCategoryInputs(videoId, sport, module, side);

@@ -1,7 +1,7 @@
 - Pose anchors live in `anchors/poseEvents.ts` over `poseKinematics.ts`, each versioned in `detectorVersions.ts`; `D-RELEASE-POSE` is the pose-only release tier, `D-RELEASE` stays stubbed. Why: unbuilt detectors short-circuit honestly.
 - Movement gate (`gates/movementGate.ts`) runs before any output; a refused clip gets no AI call, tiles, faults or drills. Why: a still clip produced fabricated results.
 - The still fixture (`__tests__/stillSubjectRegression.test.ts`) must return missingness for every anchor and tile. Why: its correct answer is "nothing happened".
-- Tiles 19/20 (`metrics/hittingOwnerTiles.ts`): pass/fail vs owner standards only, never 20-80; any confidence factor < 0.5 → missing; staff-only until `ownerTileVisibility.ts` has ≥10 owner-confirmed clips across both sides. Why: no reference population; n=1 isn't validation.
+- Tiles 19/20 (`metrics/hittingOwnerTiles.ts`): pass/fail vs owner standards only, never 20-80; any confidence factor < 0.5 → missing; staff-only until `ownerTileVisibility.ts` has ≥10 owner-confirmed clips across both sides — except hip load (P1 `hip_load` + tile 20), which unlocks only via the single owner switch `hipLoadVisibility.ts`. Why: no reference population; n=1 isn't validation.
 - Pitching tiles (`metrics/pitchingTiles.ts`, shared by `pitchingCardTiles.ts`) refuse unless the delivery gate passes (lift → plant → pose release ≤0.35 s, wrist above shoulder); sub-floor values are missing; lateral quantities refuse side-on. Why: hitting/still clips produced pitching values.
 - Every pose tile reads landmarks through `validity/segmentValidity.ts`. Why: one bad landmark invalidates only what depends on it.
 - Server runs tiles only via generated `supabase/functions/_shared/poseTiles.bundle.js` (`scripts/build-pose-tile-bundle.sh`); never hand-port. Why: one implementation; parity test catches staleness.
@@ -10,3 +10,4 @@
 - Windmill anchors in `anchors/windmillAnchors.ts`, card in `metrics/softballPitchingTiles.ts`; every standard carries SOURCED/PROPOSED. Why: baseball anchors don't transfer.
 - Baselines (`baseline/athleteBaseline.ts`): median+IQR, ≥8 in-context clips, floor-bounded, both directions. Why: individual measures are compared to the athlete, never cut.
 - `camera/fieldPnP.ts` and `lift3d/constraintStage.ts` are model-agnostic; any 3D estimate passes the constraint stage, large corrections → missing. Why: lifting model pending a clean licence.
+- Elite filter removes invented thresholds and nitpicks, never measurements: a measurement with no defensible number becomes record-only (per-athlete baseline). Why: owner ruling 2026-09-30; unrecorded data can never grow a standard.

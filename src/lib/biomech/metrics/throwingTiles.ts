@@ -80,7 +80,7 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
   const missing = (reason: string) => ({
     tempo: absent("seconds", reason), energy_angle: absent("degrees", reason),
     shoulder_opening: absent("degrees", reason), head_stability: absent("percent", reason),
-    stride_length: absent("percent_of_height", reason), injury: refusedInjuryMarkers(reason),
+    stride_length: absent("percent_of_height", reason), front_knee_at_landing: absent("degrees", reason), injury: refusedInjuryMarkers(reason),
   });
   const movement = evaluateMovementGate(series);
   const refusal = movement.status === "refused" ? "pose_not_detected" : !side ? "anchor_not_detected" : null;
@@ -94,7 +94,7 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
     : { value: time.value, unit: "seconds", verdict: null, missing_reason: null, lineage: { ...time.lineage, uncertainty_sec: time.uncertainty_sec, standard: "ungraded_no_throwing_threshold" } };
   const allMissing = { version: THROWING_TILES_VERSION, pattern: "undetermined" as MovementPattern, pattern_evidence: { ...candidatePattern, pattern: "undetermined", reason: "throwing_delivery_not_confirmed" }, tempo: absent("seconds", R.ANCHOR_NOT_DETECTED, { candidate: time.lineage, reason: "throwing_delivery_not_confirmed" }),
     energy_angle: absent("degrees", R.ANCHOR_NOT_DETECTED, { pattern: candidatePattern.reason }),
-    shoulder_opening: absent("degrees", R.ANCHOR_NOT_DETECTED), head_stability: absent("percent", R.ANCHOR_NOT_DETECTED), stride_length: absent("percent_of_height", R.ANCHOR_NOT_DETECTED, { reason: "throwing_delivery_not_confirmed" }), injury: refusedInjuryMarkers("throwing_delivery_not_confirmed") };
+    shoulder_opening: absent("degrees", R.ANCHOR_NOT_DETECTED), head_stability: absent("percent", R.ANCHOR_NOT_DETECTED), stride_length: absent("percent_of_height", R.ANCHOR_NOT_DETECTED, { reason: "throwing_delivery_not_confirmed" }), front_knee_at_landing: absent("degrees", R.ANCHOR_NOT_DETECTED, { reason: "throwing_delivery_not_confirmed" }), injury: refusedInjuryMarkers("throwing_delivery_not_confirmed") };
   const plantFrame = anchors.plant.frame_index, liftFrame = anchors.lift.frame_index, releaseFrame = release.frame_index;
   if (plantFrame == null || releaseFrame == null || releaseFrame < plantFrame || !series.header.fps_true || (releaseFrame - plantFrame) / series.header.fps_true > 0.35)
     return allMissing;
@@ -134,6 +134,7 @@ export function runThrowingTiles(series: LandmarkSeries, side: Handedness | null
   if (sh?.value != null) shoulderOpening.lineage = { ...shoulderOpening.lineage, injury_flag: "trunk_rotation_before_foot_contact" };
   return { ...allMissing, arm_slot, pattern: pattern.pattern, pattern_evidence: pattern, tempo, energy_angle: energy, shoulder_opening: shoulderOpening, head_stability: adapt(head, "percent"),
     stride_length: strideFromFinalStep(masked, lock, side, dir, lk, pk),
+    front_knee_at_landing: frontKneeAtLanding(masked, side, pk),
     injury: computeThrowingInjuryMarkers(masked, d, lock, side, view, sh ? { verdict: sh.verdict, value: sh.value, lineage: sh.lineage } : null) };
 }
 
@@ -161,4 +162,22 @@ export function strideFromFinalStep(s: LandmarkSeries, lock: ReturnType<typeof d
   const pct = (((front[Math.floor((front.length - 1) / 2)] - rear.x) * dir) / st) * 100;
   return { value: round4(pct), unit: "percent_of_height", verdict: pct >= THROWING_STRIDE_PASS_MIN_PCT ? "pass" : "fail", missing_reason: null,
     lineage: { final_step_frame: s.frames[stepK].frame_index, rear_ankle: ri, front_ankle: fi, noise_floor_pct: 2.8, standard: "owner: same as pitching (>= 90 % of height)", unvalidated: true } };
+}
+
+/**
+ * Front knee at landing — RECORD ONLY (owner ruling 2026-09-30: the elite filter
+ * removes invented thresholds, not measurements). Cut earlier because its noise
+ * (still 5.4°) was more than half a 45–55° band; a per-athlete baseline needs no
+ * band. Hip–knee–ankle angle of the front leg, median of plant−1..plant+1. Never graded.
+ */
+export const FRONT_KNEE_FLOOR_DEG = 5.4;
+export function frontKneeAtLanding(s: LandmarkSeries, side: Handedness, plantK: number): ThrowingMeasurement {
+  const [h, k, a] = side === "R" ? [LM.L_HIP, LM.L_KNEE, LM.L_ANKLE] : [LM.R_HIP, LM.R_KNEE, LM.R_ANKLE];
+  const px = (j: number, i: number) => { const f = s.frames[j]; const p = f && point(f, i); return p ? { x: p.x * s.header.width, y: p.y * s.header.height } : null; };
+  const ang = (j: number) => { const p = px(j, h), q = px(j, k), r = px(j, a); if (!p || !q || !r) return null;
+    const u = { x: p.x - q.x, y: p.y - q.y }, w = { x: r.x - q.x, y: r.y - q.y }; const n = Math.hypot(u.x, u.y) * Math.hypot(w.x, w.y); return n > 0 ? (Math.acos(Math.max(-1, Math.min(1, (u.x * w.x + u.y * w.y) / n))) * 180) / Math.PI : null; };
+  const xs = [plantK - 1, plantK, plantK + 1].map(ang).filter((v): v is number => v != null);
+  if (xs.length < 2) return absent("degrees", R.LANDMARK_OCCLUDED, { reason: "front_leg_unobserved_at_landing" });
+  return { value: round4(median(xs)!), unit: "degrees", verdict: null, missing_reason: null,
+    lineage: { record_only: true, never_graded: "per_athlete_baseline_only", floor_deg: FRONT_KNEE_FLOOR_DEG, plant_frame: s.frames[plantK]?.frame_index ?? null, unvalidated: true } };
 }

@@ -37,10 +37,15 @@ const SOFTBALL_HITTING: Partial<Record<string, [string, string, string]>> = {
   shoulder_to_shoulder_hold: ["Keep your hands back while the back elbow leads.", "Holding space behind the back shoulder gives the elbow room to lead the softball swing.", "Pause at landing toward the circle and keep your hands quiet while the back elbow starts forward."],
 };
 
+/** Owner doctrine 2026-09-30 — carried into every P3 tile. No numbers. */
+export const P3_ACTIVE_STRIDE_LINE = "Your stride is something you do, not something that happens to you. The back hip drives you toward the pitcher and takes you all the way to the ground from your load. It is never a fall. Load, pause, stride, pause, then swing.";
+export const P3_ACTIVE_STRIDE_LINE_SOFTBALL = "Your stride is something you do, not something that happens to you. The back hip drives you toward the circle and takes you all the way to the ground from your load. It is never a fall. Load, pause, stride, pause, then swing.";
+
 export function coachFacingTile(tile: ReportCardTileSpec, sport: string): ReportCardTileSpec {
   const copy = sport === "softball" ? SOFTBALL_HITTING[tile.key] ?? HITTING[tile.key] : HITTING[tile.key];
-  if (!copy) return tile;
+  const p3 = (tile.phase ?? "").startsWith("P3") ? ` ${sport === "softball" ? P3_ACTIVE_STRIDE_LINE_SOFTBALL : P3_ACTIVE_STRIDE_LINE}` : "";
+  if (!copy) return p3 ? { ...tile, explainer: { ...tile.explainer, whatWhy: tile.explainer.whatWhy + p3 } } : tile;
   const [standard, whatWhy, howToImprove] = copy;
   return { ...tile, standard, thresholdChip: undefined,
-    explainer: { whatWhy, howToImprove, encouragement: howToImprove } };
+    explainer: { whatWhy: whatWhy + p3, howToImprove, encouragement: howToImprove } };
 }

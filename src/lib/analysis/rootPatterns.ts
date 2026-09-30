@@ -40,7 +40,7 @@ export const ROOT_PATTERNS: Record<string, RootPattern> = {
     key: "back_leg_did_not_hold_load",
     label: "Your back leg didn't hold the load",
     plain:
-      "As you load, your weight should sit balanced on your back leg. When it doesn't, it shows up later: the head moves past your centre of mass, the back hip gives up its turn, or the hips keep drifting forward after the front foot lands.",
+      "As you load, your weight should sit balanced on your back leg. When it doesn't, it shows up later: the head moves past your centre of mass, the back hip gives up its turn, the hips keep drifting forward after the front foot lands, or the stride falls forward instead of being driven by the back hip.",
     why: "These all come from one thing, not separate problems. Get your weight settled on your back leg as you load and they all clean up together.",
   },
   hands_leak_forward_early: {
@@ -64,6 +64,8 @@ const ROOT_BY_FAULT: Record<string, string> = {
   back_hip_socket_hold_fail: "back_leg_did_not_hold_load",
   post_landing_hip_drift_fail: "back_leg_did_not_hold_load",
   back_knee_straightened_fail: "back_leg_did_not_hold_load",
+  // Owner doctrine 2026-09-30: a stride that falls instead of being driven by the back hip is the same root. Mapped; not emitted until the owner rules (strideRhythm ROOT_EVIDENCE_ENABLED).
+  active_stride_falling: "back_leg_did_not_hold_load",
   hands_below_back_elbow_at_heel_landing: "trunk_rotates_before_front_foot_plant",
 };
 

@@ -793,3 +793,17 @@ hand_load depth (ungraded by the fascial-variation ruling), head_discipline (com
 - First run of the new back-heel tile: FAIL. Front-heel plant on the same clip: PASS.
 - The earlier 7.8% "heel above toe" reading was the back foot, filed under the wrong tile — not a miscalculation.
 - Status: owner-confirmed, n=1. A signal, not validation.
+
+
+---
+
+## P3 — the stride is active, not passive [owner-supplied 2026-09-30]
+
+> "our stride and step are not momentum or gravity based. We create that reach/stride/stretch/direction with the back hip toward the pitcher to get us all the way to the ground from our P2 position. As we operate on micro pauses, P1-P2-Pause-P3-Pause-P4."
+
+Carried into the athlete-facing text of every P3 tile (`coachCopy.ts`, `P3_ACTIVE_STRIDE_LINE`).
+
+### What it makes measurable (`metrics/strideRhythm.ts`, record-only)
+- **Active stride vs falling** — end of stance → front-foot plant. Back-hip forward travel toward the pitcher vs pelvis drop. Pattern from still floors only (back hip 1.3 %, pelvis drop 2.8 % of shoulder-to-ankle height, still 15d75bc9): active / falling / mixed / no travel. Sits in **P3: Load by Stride** as a record-only tile (2 points once the athlete has 8 in-context clips). Falling is mapped to the back-leg root pattern (`active_stride_falling`) as evidence, **not emitted** until the owner rules (`ROOT_EVIDENCE_ENABLED = false`).
+- **Micro-pauses** — body speed between end of P2 (load apex) and plant, and between plant and swing start. Records the deepest slowing (min ÷ peak) and time spent near it. Own reading ("Rhythm"), unscored: it spans P2–P4, and putting it inside the double-weighted P4 meter would let an unvalidated timing reading move the most important score.
+- **Frame rate:** speed uses a two-frame difference plus a three-frame median, so a pause must fill ≥ 5 frames between the anchors to be resolved: ≥ 0.17 s at 30 fps, ≥ 0.21 s at 24 fps. Shorter pauses are smeared out and refuse (`insufficient_temporal_resolution`). 60 fps halves that. The owner has given no pause duration, so none is assumed.

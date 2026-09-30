@@ -5,6 +5,8 @@ import { runHittingPoseTiles } from "@/lib/biomech/metrics/hittingPoseTiles";
 import { runHittingCardTiles } from "@/lib/biomech/metrics/hittingCardTiles";
 import { runHittingOwnerTiles } from "@/lib/biomech/metrics/hittingOwnerTiles";
 import { runFrontLegGather } from "@/lib/biomech/metrics/frontLegGather";
+import { runActiveStride, runMicroPauses } from "@/lib/biomech/metrics/strideRhythm";
+import { HIP_LOAD_ATHLETE_UNLOCKED } from "@/lib/biomech/metrics/hipLoadVisibility";
 import { runPitchingTiles } from "@/lib/biomech/metrics/pitchingTiles";
 import { runPitchingCardTiles } from "@/lib/biomech/metrics/pitchingCardTiles";
 import { runThrowingTiles } from "@/lib/biomech/metrics/throwingTiles";
@@ -15,15 +17,15 @@ import { HITTING_CATEGORIES, PITCHING_CATEGORIES, THROWING_CATEGORIES, WINDMILL_
 const load = (n: string) => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "../../biomech/__tests__/fixtures", n))).toString("utf8"));
 const still = load("still-subject-15d75bc9.ndjson.gz"), A = load("swing-24fps-914cf54c.ndjson.gz"), B = load("swing-24fps-9d2e117e.ndjson.gz");
 type S = ReturnType<typeof load>;
-const hitting = (s: S, side: "L" | "R") => ({ pose: runHittingPoseTiles(s, { side }), card: runHittingCardTiles(s, { side }), owner: runHittingOwnerTiles(s, { side, athlete_height_in: null }), gather: runFrontLegGather(s, { side }) });
+const hitting = (s: S, side: "L" | "R") => ({ pose: runHittingPoseTiles(s, { side }), card: runHittingCardTiles(s, { side }), owner: runHittingOwnerTiles(s, { side, athlete_height_in: null }), gather: runFrontLegGather(s, { side }), rhythm: { active: runActiveStride(s, { side }), pauses: runMicroPauses(s, { side }) } });
 const pitching = (s: S) => ({ tiles: runPitchingTiles(s, { throwing_side: "R" }), card: runPitchingCardTiles(s, { throwing_side: "R", athlete_height_in: null }) });
 const summary = (c: ReturnType<typeof scoreCard>) => ({ total: c.total, totalReason: c.totalReason, cats: c.categories.map((x) => [x.key, x.status, x.score, x.points, x.incompleteReason, x.measuredShare]) });
 
 describe("category scoring", () => {
-  it("weights: hitting 97 + 3 bonus; pitching 100; allocations sum", () => {
+  it("weights: hitting 99 + 3 bonus; pitching 100; allocations sum", () => {
     for (const spec of [HITTING_CATEGORIES, PITCHING_CATEGORIES, THROWING_CATEGORIES, WINDMILL_CATEGORIES])
       for (const c of spec.categories) expect(c.tiles.reduce((a, t) => a + t.points, 0)).toBe(c.points);
-    expect(HITTING_CATEGORIES.categories.filter((c) => !c.additive).reduce((a, c) => a + c.points, 0)).toBe(97);
+    expect(HITTING_CATEGORIES.categories.filter((c) => !c.additive).reduce((a, c) => a + c.points, 0)).toBe(99);
     expect(PITCHING_CATEGORIES.categories.reduce((a, c) => a + c.points, 0)).toBe(100);
     expect(INCOMPLETE_MIN_SHARE).toBe(0.6);
   });
@@ -72,5 +74,38 @@ describe("category scoring", () => {
     expect(staff.categories.find((c) => c.key === "front_leg_gather")!.score).toBeGreaterThanOrEqual(0);
     // Deterministic.
     expect(JSON.stringify(scoreCard(HITTING_CATEGORIES, hitting(A, "L"), { audience: "staff" }))).toBe(JSON.stringify(staff));
+  });
+
+  it("hip-load switch: off today; flipping it recomputes athlete P1 and P3 from the same clip", () => {
+    expect(HIP_LOAD_ATHLETE_UNLOCKED).toBe(false);
+    const raw = hitting(A, "L");
+    const off = scoreCard(HITTING_CATEGORIES, raw, { audience: "athlete" });
+    const on = scoreCard(HITTING_CATEGORIES, raw, { audience: "athlete", unlock: { hip_load: true, back_hip_socket_hold: true } });
+    const staff = scoreCard(HITTING_CATEGORIES, raw, { audience: "staff" });
+    for (const k of ["p1", "p3"]) {
+      const o = off.categories.find((c) => c.key === k)!, n = on.categories.find((c) => c.key === k)!, st = staff.categories.find((c) => c.key === k)!;
+      expect(o.tiles.find((t) => t.key === (k === "p1" ? "hip_load" : "back_hip_socket_hold"))!.outcome).toEqual({ status: "missing", reason: "staff_only_until_validated" });
+      expect(n.tiles.find((t) => t.key === (k === "p1" ? "hip_load" : "back_hip_socket_hold"))!.outcome.status).not.toBe("missing");
+      // Head path (tile 19) stays on its own 10-clip rule, so unlocked P3 differs from staff only by that tile.
+      if (k === "p1") expect(n.score).toBe(st.score);
+    }
+    console.log("SWITCH", JSON.stringify({ off: summary(off), on: summary(on) }));
+  });
+
+  it("stride rhythm: still refuses; swing clips record, never graded", () => {
+    for (const side of ["L", "R", null] as const) {
+      expect(runActiveStride(still, { side }).value).toBeNull();
+      expect(runMicroPauses(still, { side }).value).toBeNull();
+    }
+    const a = runActiveStride(A, { side: "L" }), p = runMicroPauses(A, { side: "L" });
+    console.log("RHYTHM 914 L", JSON.stringify({ a: { pattern: a.pattern, value: a.value, why: a.missing_reason, l: a.lineage }, p }));
+    expect(a.root_evidence?.emitted ?? false).toBe(false);
+    expect(JSON.stringify(runMicroPauses(A, { side: "L" }))).toBe(JSON.stringify(p));
+  });
+
+  it("windmill: Wind-up and Follow-through exist, record-only, never scored on these fixtures", () => {
+    const keys = WINDMILL_CATEGORIES.categories.map((c) => c.key);
+    expect(keys).toEqual(["windup", "stride", "acceleration", "follow_through"]);
+    for (const c of WINDMILL_CATEGORIES.categories.filter((c) => c.key === "windup" || c.key === "follow_through")) for (const t of c.tiles) expect(t.recordOnly).toBe(true);
   });
 });

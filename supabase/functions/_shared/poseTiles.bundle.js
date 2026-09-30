@@ -3125,6 +3125,7 @@ function runThrowingTiles(series, side) {
     shoulder_opening: absent("degrees", reason),
     head_stability: absent("percent", reason),
     stride_length: absent("percent_of_height", reason),
+    front_knee_at_landing: absent("degrees", reason),
     injury: refusedInjuryMarkers(reason)
   });
   const movement = evaluateMovementGate(series);
@@ -3151,6 +3152,7 @@ function runThrowingTiles(series, side) {
     shoulder_opening: absent("degrees", MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED),
     head_stability: absent("percent", MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED),
     stride_length: absent("percent_of_height", MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, { reason: "throwing_delivery_not_confirmed" }),
+    front_knee_at_landing: absent("degrees", MISSINGNESS_REASONS.ANCHOR_NOT_DETECTED, { reason: "throwing_delivery_not_confirmed" }),
     injury: refusedInjuryMarkers("throwing_delivery_not_confirmed")
   };
   const plantFrame = anchors.plant.frame_index, liftFrame = anchors.lift.frame_index, releaseFrame = release.frame_index;
@@ -3209,6 +3211,7 @@ function runThrowingTiles(series, side) {
     shoulder_opening: shoulderOpening,
     head_stability: adapt(head, "percent"),
     stride_length: strideFromFinalStep(masked, lock, side, dir, lk, pk),
+    front_knee_at_landing: frontKneeAtLanding(masked, side, pk),
     injury: computeThrowingInjuryMarkers(masked, d, lock, side, view, sh ? { verdict: sh.verdict, value: sh.value, lineage: sh.lineage } : null)
   };
 }
@@ -3243,6 +3246,33 @@ function strideFromFinalStep(s, lock, side, dir, liftK, plantK) {
     verdict: pct2 >= THROWING_STRIDE_PASS_MIN_PCT ? "pass" : "fail",
     missing_reason: null,
     lineage: { final_step_frame: s.frames[stepK].frame_index, rear_ankle: ri, front_ankle: fi, noise_floor_pct: 2.8, standard: "owner: same as pitching (>= 90 % of height)", unvalidated: true }
+  };
+}
+var FRONT_KNEE_FLOOR_DEG = 5.4;
+function frontKneeAtLanding(s, side, plantK) {
+  const [h, k, a] = side === "R" ? [LM.L_HIP, LM.L_KNEE, LM.L_ANKLE] : [LM.R_HIP, LM.R_KNEE, LM.R_ANKLE];
+  const px2 = (j, i) => {
+    const f = s.frames[j];
+    const p = f && point(f, i);
+    return p ? { x: p.x * s.header.width, y: p.y * s.header.height } : null;
+  };
+  const ang = (j) => {
+    const p = px2(j, h), q3 = px2(j, k), r2 = px2(j, a);
+    if (!p || !q3 || !r2)
+      return null;
+    const u = { x: p.x - q3.x, y: p.y - q3.y }, w = { x: r2.x - q3.x, y: r2.y - q3.y };
+    const n = Math.hypot(u.x, u.y) * Math.hypot(w.x, w.y);
+    return n > 0 ? Math.acos(Math.max(-1, Math.min(1, (u.x * w.x + u.y * w.y) / n))) * 180 / Math.PI : null;
+  };
+  const xs = [plantK - 1, plantK, plantK + 1].map(ang).filter((v) => v != null);
+  if (xs.length < 2)
+    return absent("degrees", MISSINGNESS_REASONS.LANDMARK_OCCLUDED, { reason: "front_leg_unobserved_at_landing" });
+  return {
+    value: round4(median(xs)),
+    unit: "degrees",
+    verdict: null,
+    missing_reason: null,
+    lineage: { record_only: true, never_graded: "per_athlete_baseline_only", floor_deg: FRONT_KNEE_FLOOR_DEG, plant_frame: s.frames[plantK]?.frame_index ?? null, unvalidated: true }
   };
 }
 
@@ -3631,6 +3661,8 @@ function detectWindmillAnchors(s, side) {
 
 // src/lib/biomech/metrics/softballPitchingTiles.ts
 var SOFTBALL_PITCHING_TILES_VERSION = "softball_pitching_tiles@1.1.0-2026-09-30-separation-baseline-stride-sfc-release-unvalidated";
+var SP_RECORD_ONLY_REINSTATED = ["windup_trunk_tibia", "windup_hip_square", "windup_knee_over_foot", "windup_foot_power_line", "ft_knee_ankle"];
+var REINSTATED_FLOORS = { trunk_tibia_deg: 3.4, world_hip_yaw_deg: 4.5 };
 var SEPARATION_FLOORS = { separation_deg: 6, pelvis_speed_dps: 25 };
 var SP_STANDARDS = {
   stride_profile: { basis: "SOURCED", moments: ["sfc", "release"], never_graded_until: "phase_order_resolved", reference_pct: { youth: { sfc: 89, release: 68 }, collegiate: { sfc: 89, release: 73 } }, camera: "side_on" },
@@ -3640,10 +3672,15 @@ var SP_STANDARDS = {
   sfc_foot_angle: { basis: "SOURCED_BAND", band_deg_arm_side: [0, 45], camera: "plate_line", do_not_alter: true },
   arm_path: { basis: "SOURCED", threshold_basis: "PROPOSED", camera: "plate_line" },
   windup_knee_valgus_flag: { basis: "SOURCED", grading_weight: 0, camera: "plate_line", source: "PubMed 34250163" },
-  sfc_knee_valgus_flag: { basis: "SOURCED", grading_weight: 0, camera: "plate_line", source: "PubMed 34250163" }
+  sfc_knee_valgus_flag: { basis: "SOURCED", grading_weight: 0, camera: "plate_line", source: "PubMed 34250163" },
+  windup_trunk_tibia: { basis: "SOURCED", record_only: true, never_graded: true, camera: "side_on", source: "Friesen 1A (qualitative: roughly parallel)" },
+  windup_hip_square: { basis: "SOURCED", record_only: true, never_graded: true, camera: "any_single_3d_estimate", source: "Friesen 1B (qualitative: relatively square)" },
+  windup_knee_over_foot: { basis: "SOURCED", record_only: true, never_graded: true, camera: "plate_line", source: "Friesen 1C (qualitative)" },
+  windup_foot_power_line: { basis: "SOURCED", record_only: true, never_graded: true, camera: "plate_line", source: "Friesen 1D (qualitative)" },
+  ft_knee_ankle: { basis: "SOURCED", record_only: true, never_graded: true, camera: "plate_line", source: "Friesen / Werner (qualitative)" }
 };
 var KEYS2 = Object.keys(SP_STANDARDS);
-var base = (key) => ({ key, basis: SP_STANDARDS[key].basis, grading_weight: key.endsWith("_flag") || key === "trunk_flexion" || key === "sfc_separation" || key === "stride_profile" ? 0 : 1 });
+var base = (key) => ({ key, basis: SP_STANDARDS[key].basis, grading_weight: key.endsWith("_flag") || SP_RECORD_ONLY_REINSTATED.includes(key) || key === "trunk_flexion" || key === "sfc_separation" || key === "stride_profile" ? 0 : 1 });
 var refuse5 = (key, reason, lineage = {}) => ({ ...base(key), values: {}, verdict: null, graded: false, flag: null, missing_reason: reason, lineage: { unvalidated: true, reason, ...lineage } });
 function runSoftballPitchingTiles(s, o) {
   const an = detectWindmillAnchors(s, o.throwing_side);
@@ -3659,7 +3696,7 @@ function runSoftballPitchingTiles(s, o) {
   const F = s.frames, P3 = (k, i) => k == null ? null : pointPx(s, F[k], i);
   const fa = frontAnkleIndex(side), ra = rearAnkleIndex(side);
   const plate = (k) => refuse5(k, view === "side_on" ? "camera_view_mismatch:needs_plate_line_view" : "not_built:no_plate_line_softball_clip", { camera: "plate_line" });
-  for (const k of ["sfc_foot_angle", "arm_path", "windup_knee_valgus_flag", "sfc_knee_valgus_flag"])
+  for (const k of ["sfc_foot_angle", "arm_path", "windup_knee_valgus_flag", "sfc_knee_valgus_flag", "windup_knee_over_foot", "windup_foot_power_line", "ft_knee_ankle"])
     tiles[k] = plate(k);
   const sideOnOnly = view === "on_line" ? "camera_view_mismatch:needs_side_on_view" : null;
   const pct2 = (k) => {
@@ -3719,6 +3756,27 @@ function runSoftballPitchingTiles(s, o) {
       lineage: { unvalidated: true, channel_a: chA, channel_b: "needs_plate_line_view", channel_c: chC, ungraded_reason: "channel_b_needs_plate_line:two_view_capture_required" }
     };
   }
+  const di = side === "R" ? { k: LM.R_KNEE, a: LM.R_ANKLE } : { k: LM.L_KNEE, a: LM.L_ANKLE };
+  const trunkTibia = (() => {
+    const k = A.wu_end.k;
+    if (k == null)
+      return null;
+    const S = mid(P3(k, LM.L_SHOULDER), P3(k, LM.R_SHOULDER)), H = mid(P3(k, LM.L_HIP), P3(k, LM.R_HIP)), kn = P3(k, di.k), an2 = P3(k, di.a);
+    if (!S || !H || !kn || !an2)
+      return null;
+    const t = Math.atan2(S.x - H.x, H.y - S.y), b = Math.atan2(kn.x - an2.x, an2.y - kn.y);
+    return round4(Math.abs(((t - b) * 180 / Math.PI + 540) % 360 - 180));
+  })();
+  tiles.windup_trunk_tibia = sideOnOnly ? refuse5("windup_trunk_tibia", sideOnOnly) : {
+    ...base("windup_trunk_tibia"),
+    values: { angle_deg: trunkTibia },
+    verdict: null,
+    graded: false,
+    flag: null,
+    missing_reason: trunkTibia == null ? A.wu_end.k == null ? "wu_end_missing" : "trunk_or_drive_leg_unobserved" : null,
+    lineage: { unvalidated: true, record_only: true, never_graded: "no_published_number_standard_comes_from_athlete_history", floor_deg: REINSTATED_FLOORS.trunk_tibia_deg }
+  };
+  tiles.windup_hip_square = measureHipSquare(s, A.wu_end.k, A.sfc.k, side);
   tiles.sfc_separation = measureSeparation(s, A.sfc.k, A.stride_start.k ?? A.wu_end.k, side);
   return { version: SOFTBALL_PITCHING_TILES_VERSION, validated: false, anchors: an, view, tiles };
 }
@@ -3769,6 +3827,34 @@ function measureSeparation(s, sfc, from, side) {
     flag: null,
     missing_reason: sep == null && peak == null ? raw == null ? "world_landmarks_unavailable_at_sfc" : "within_still_clip_noise" : null,
     lineage: { unvalidated: true, never_graded: "per_athlete_baseline_only", source_3d: "mediapipe_world_single_estimate_unconfirmed", direction_convention: "unverified_no_softball_clip", floors: SEPARATION_FLOORS, evidence: "mixed" }
+  };
+}
+function measureHipSquare(s, wuEnd, sfc, side) {
+  if (wuEnd == null || sfc == null)
+    return refuse5("windup_hip_square", wuEnd == null ? "wu_end_missing" : "sfc_missing");
+  const W = (k) => {
+    const w = s.frames[k]?.world;
+    return w && w.length >= 99 ? w : null;
+  };
+  const a = W(wuEnd), b = W(sfc);
+  if (!a || !b)
+    return refuse5("windup_hip_square", "world_landmarks_unavailable");
+  const drive = side === "R" ? LM.R_ANKLE : LM.L_ANKLE, stride2 = side === "R" ? LM.L_ANKLE : LM.R_ANKLE;
+  const tx = b[stride2 * 3] - a[drive * 3], tz = b[stride2 * 3 + 2] - a[drive * 3 + 2];
+  const hx = a[LM.R_HIP * 3] - a[LM.L_HIP * 3], hz = a[LM.R_HIP * 3 + 2] - a[LM.L_HIP * 3 + 2];
+  const nt = Math.hypot(tx, tz), nh = Math.hypot(hx, hz);
+  if (!(nt > 0) || !(nh > 0))
+    return refuse5("windup_hip_square", "direction_of_travel_undetermined");
+  const cos = Math.abs((tx * hx + tz * hz) / (nt * nh));
+  const off = round4(Math.asin(Math.min(1, cos)) * 180 / Math.PI);
+  return {
+    ...base("windup_hip_square"),
+    values: { off_square_deg: off },
+    verdict: null,
+    graded: false,
+    flag: null,
+    missing_reason: null,
+    lineage: { unvalidated: true, record_only: true, never_graded: "no_published_number_standard_comes_from_athlete_history", source_3d: "mediapipe_world_single_estimate_unconfirmed", floor_deg: REINSTATED_FLOORS.world_hip_yaw_deg }
   };
 }
 

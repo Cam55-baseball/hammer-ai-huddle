@@ -21,7 +21,18 @@ import { frontAnkleIndex, rearAnkleIndex, type Handedness } from "../side/stride
 export const SOFTBALL_PITCHING_TILES_VERSION = "softball_pitching_tiles@1.1.0-2026-09-30-separation-baseline-stride-sfc-release-unvalidated";
 
 export type SpBasis = "SOURCED" | "PROPOSED" | "SOURCED_BAND" | "SOURCED_CORRELATION" | "SOURCED_MIXED";
-export type SpKey = "stride_profile" | "stride_triple_extension" | "trunk_flexion" | "sfc_separation" | "sfc_foot_angle" | "arm_path" | "windup_knee_valgus_flag" | "sfc_knee_valgus_flag";
+export type SpKey = "stride_profile" | "stride_triple_extension" | "trunk_flexion" | "sfc_separation" | "sfc_foot_angle" | "arm_path" | "windup_knee_valgus_flag" | "sfc_knee_valgus_flag"
+  | "windup_trunk_tibia" | "windup_hip_square" | "windup_knee_over_foot" | "windup_foot_power_line" | "ft_knee_ankle";
+
+/**
+ * Owner ruling 2026-09-30: the elite filter removes invented THRESHOLDS, not
+ * measurements. These five Friesen items are qualitative in the paper; the
+ * ≤10° numbers were ours. Reinstated RECORD-ONLY: measured, never graded,
+ * scored later only against the athlete's own range.
+ */
+export const SP_RECORD_ONLY_REINSTATED = ["windup_trunk_tibia", "windup_hip_square", "windup_knee_over_foot", "windup_foot_power_line", "ft_knee_ankle"] as const;
+/** Still clip 15d75bc9, measured 2026-09-30 before use: trunk-vs-tibia 3.37° (worst side); world hip-line yaw 4.46°. */
+export const REINSTATED_FLOORS = { trunk_tibia_deg: 3.4, world_hip_yaw_deg: 4.5 } as const;
 
 /**
  * Separation noise floors — still clip 15d75bc9, measured BEFORE use, from
@@ -43,10 +54,15 @@ export const SP_STANDARDS = {
   arm_path: { basis: "SOURCED" as SpBasis, threshold_basis: "PROPOSED", camera: "plate_line" },
   windup_knee_valgus_flag: { basis: "SOURCED" as SpBasis, grading_weight: 0, camera: "plate_line", source: "PubMed 34250163" },
   sfc_knee_valgus_flag: { basis: "SOURCED" as SpBasis, grading_weight: 0, camera: "plate_line", source: "PubMed 34250163" },
+  windup_trunk_tibia: { basis: "SOURCED" as SpBasis, record_only: true, never_graded: true, camera: "side_on", source: "Friesen 1A (qualitative: roughly parallel)" },
+  windup_hip_square: { basis: "SOURCED" as SpBasis, record_only: true, never_graded: true, camera: "any_single_3d_estimate", source: "Friesen 1B (qualitative: relatively square)" },
+  windup_knee_over_foot: { basis: "SOURCED" as SpBasis, record_only: true, never_graded: true, camera: "plate_line", source: "Friesen 1C (qualitative)" },
+  windup_foot_power_line: { basis: "SOURCED" as SpBasis, record_only: true, never_graded: true, camera: "plate_line", source: "Friesen 1D (qualitative)" },
+  ft_knee_ankle: { basis: "SOURCED" as SpBasis, record_only: true, never_graded: true, camera: "plate_line", source: "Friesen / Werner (qualitative)" },
 } as const;
 
-/** sfc_hip_shoulder_rotation was cut as a GRADED tile; it returns as record-only `sfc_separation`. */
-export const SP_CUT_BY_ELITE_FILTER = ["windup_trunk_tibia", "windup_hip_square", "windup_foot_power_line", "ft_knee_ankle", "accel_arm_path"] as const;
+/** Cut for the RIGHT reason (style): drive-leg drift off the power line. sfc_hip_shoulder_rotation returned as record-only `sfc_separation`; the five above are record-only. */
+export const SP_CUT_BY_ELITE_FILTER = ["accel_arm_path_drive_leg_drift"] as const;
 
 export interface SpTile {
   readonly key: SpKey;
@@ -69,7 +85,7 @@ export interface SoftballPitchingResult {
 
 const KEYS = Object.keys(SP_STANDARDS) as SpKey[];
 const base = (key: SpKey): Omit<SpTile, "values" | "verdict" | "graded" | "missing_reason" | "lineage" | "flag"> =>
-  ({ key, basis: SP_STANDARDS[key].basis, grading_weight: key.endsWith("_flag") || key === "trunk_flexion" || key === "sfc_separation" || key === "stride_profile" ? 0 : 1 });
+  ({ key, basis: SP_STANDARDS[key].basis, grading_weight: key.endsWith("_flag") || (SP_RECORD_ONLY_REINSTATED as readonly string[]).includes(key) || key === "trunk_flexion" || key === "sfc_separation" || key === "stride_profile" ? 0 : 1 });
 const refuse = (key: SpKey, reason: string, lineage: Record<string, unknown> = {}): SpTile =>
   ({ ...base(key), values: {}, verdict: null, graded: false, flag: null, missing_reason: reason, lineage: { unvalidated: true, reason, ...lineage } });
 
@@ -95,7 +111,7 @@ export function runSoftballPitchingTiles(s: LandmarkSeries, o: SpOptions): Softb
 
   // Plate-line tiles — frontal-plane; refuse side-on, and no plate-line softball clip exists to build against.
   const plate = (k: SpKey) => refuse(k, view === "side_on" ? "camera_view_mismatch:needs_plate_line_view" : "not_built:no_plate_line_softball_clip", { camera: "plate_line" });
-  for (const k of ["sfc_foot_angle", "arm_path", "windup_knee_valgus_flag", "sfc_knee_valgus_flag"] as SpKey[]) tiles[k] = plate(k);
+  for (const k of ["sfc_foot_angle", "arm_path", "windup_knee_valgus_flag", "sfc_knee_valgus_flag", "windup_knee_over_foot", "windup_foot_power_line", "ft_knee_ankle"] as SpKey[]) tiles[k] = plate(k);
 
   const sideOnOnly = view === "on_line" ? "camera_view_mismatch:needs_side_on_view" : null;
 
@@ -137,6 +153,19 @@ export function runSoftballPitchingTiles(s: LandmarkSeries, o: SpOptions): Softb
       verdict: null, graded: false, flag: null, missing_reason: chA == null ? "drive_leg_unobserved" : null,
       lineage: { unvalidated: true, channel_a: chA, channel_b: "needs_plate_line_view", channel_c: chC, ungraded_reason: "channel_b_needs_plate_line:two_view_capture_required" } };
   }
+  // Wind-up trunk vs drive-leg tibia at wu_end — RECORD ONLY (0° = parallel). Side-on.
+  const di = side === "R" ? { k: LM.R_KNEE, a: LM.R_ANKLE } : { k: LM.L_KNEE, a: LM.L_ANKLE };
+  const trunkTibia = (() => {
+    const k = A.wu_end.k; if (k == null) return null;
+    const S = mid(P(k, LM.L_SHOULDER), P(k, LM.R_SHOULDER)), H = mid(P(k, LM.L_HIP), P(k, LM.R_HIP)), kn = P(k, di.k), an2 = P(k, di.a);
+    if (!S || !H || !kn || !an2) return null;
+    const t = Math.atan2(S.x - H.x, H.y - S.y), b = Math.atan2(kn.x - an2.x, an2.y - kn.y);
+    return round4(Math.abs((((t - b) * 180) / Math.PI + 540) % 360 - 180));
+  })();
+  tiles.windup_trunk_tibia = sideOnOnly ? refuse("windup_trunk_tibia", sideOnOnly)
+    : { ...base("windup_trunk_tibia"), values: { angle_deg: trunkTibia }, verdict: null, graded: false, flag: null, missing_reason: trunkTibia == null ? (A.wu_end.k == null ? "wu_end_missing" : "trunk_or_drive_leg_unobserved") : null,
+        lineage: { unvalidated: true, record_only: true, never_graded: "no_published_number_standard_comes_from_athlete_history", floor_deg: REINSTATED_FLOORS.trunk_tibia_deg } };
+  tiles.windup_hip_square = measureHipSquare(s, A.wu_end.k, A.sfc.k, side);
   tiles.sfc_separation = measureSeparation(s, A.sfc.k, A.stride_start.k ?? A.wu_end.k, side);
   return { version: SOFTBALL_PITCHING_TILES_VERSION, validated: false, anchors: an, view, tiles };
 }
@@ -176,4 +205,25 @@ function measureSeparation(s: LandmarkSeries, sfc: number | null, from: number |
   return { ...base("sfc_separation"), values: { separation_at_sfc_deg: sep, peak_pelvic_counter_rotation_dps: peak }, verdict: null, graded: false, flag: null,
     missing_reason: sep == null && peak == null ? (raw == null ? "world_landmarks_unavailable_at_sfc" : "within_still_clip_noise") : null,
     lineage: { unvalidated: true, never_graded: "per_athlete_baseline_only", source_3d: "mediapipe_world_single_estimate_unconfirmed", direction_convention: "unverified_no_softball_clip", floors: SEPARATION_FLOORS, evidence: "mixed" } };
+}
+
+/**
+ * Wind-up hips square — RECORD ONLY. MediaPipe world landmarks: how far the hip
+ * line sits from perpendicular to the direction of travel (drive ankle at wu_end
+ * → stride ankle at SFC), in the ground plane. 0° = square. One 3-D estimate, unconfirmed.
+ */
+function measureHipSquare(s: LandmarkSeries, wuEnd: number | null, sfc: number | null, side: Handedness): SpTile {
+  if (wuEnd == null || sfc == null) return refuse("windup_hip_square", wuEnd == null ? "wu_end_missing" : "sfc_missing");
+  const W = (k: number) => { const w = s.frames[k]?.world as number[] | undefined; return w && w.length >= 99 ? w : null; };
+  const a = W(wuEnd), b = W(sfc);
+  if (!a || !b) return refuse("windup_hip_square", "world_landmarks_unavailable");
+  const drive = side === "R" ? LM.R_ANKLE : LM.L_ANKLE, stride = side === "R" ? LM.L_ANKLE : LM.R_ANKLE;
+  const tx = b[stride * 3] - a[drive * 3], tz = b[stride * 3 + 2] - a[drive * 3 + 2];
+  const hx = a[LM.R_HIP * 3] - a[LM.L_HIP * 3], hz = a[LM.R_HIP * 3 + 2] - a[LM.L_HIP * 3 + 2];
+  const nt = Math.hypot(tx, tz), nh = Math.hypot(hx, hz);
+  if (!(nt > 0) || !(nh > 0)) return refuse("windup_hip_square", "direction_of_travel_undetermined");
+  const cos = Math.abs((tx * hx + tz * hz) / (nt * nh));
+  const off = round4((Math.asin(Math.min(1, cos)) * 180) / Math.PI);
+  return { ...base("windup_hip_square"), values: { off_square_deg: off }, verdict: null, graded: false, flag: null, missing_reason: null,
+    lineage: { unvalidated: true, record_only: true, never_graded: "no_published_number_standard_comes_from_athlete_history", source_3d: "mediapipe_world_single_estimate_unconfirmed", floor_deg: REINSTATED_FLOORS.world_hip_yaw_deg } };
 }

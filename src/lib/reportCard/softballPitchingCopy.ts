@@ -67,4 +67,34 @@ export const SOFTBALL_PITCHING_COPY: Record<SpKey, { name: string; standard: str
     coach: `Your stride knee looked like it caved inward when your foot landed. Research links that to less stable hips and more stress on the leg. ${SP_PRO_LINE}`,
     missing: "This one needs a clip filmed from the plate line.",
   },
+  windup_trunk_tibia: {
+    name: "Wind-Up Posture: Trunk and Drive Shin",
+    standard: "A measurement without a published standard. Your own standard will come from your own pitching history.",
+    coach: "At the end of the wind-up, your trunk and your drive-leg shin lean together like a sprinter ready to go. We track how yours lines up and compare it with your usual.",
+    missing: "We couldn't see your trunk and drive leg clearly at the end of the wind-up.",
+  },
+  windup_hip_square: {
+    name: "Wind-Up Hips Facing the Plate",
+    standard: "A measurement without a published standard. Your own standard will come from your own pitching history.",
+    coach: "Finish the wind-up with your hips facing the plate so the drive has somewhere to go. We track yours and compare it with your usual.",
+    missing: "We couldn't read your hips clearly at the end of the wind-up.",
+  },
+  windup_knee_over_foot: {
+    name: "Wind-Up Drive Knee Over the Foot",
+    standard: "A measurement without a published standard. Your own standard will come from your own pitching history. Needs a clip from the plate line.",
+    coach: "Keep your drive knee stacked over the middle of your foot as you load. We track yours and compare it with your usual.",
+    missing: "This one needs a clip filmed from the plate line.",
+  },
+  windup_foot_power_line: {
+    name: "Drive Foot on the Power Line",
+    standard: "A measurement without a published standard. Your own standard will come from your own pitching history. Needs a clip from the plate line.",
+    coach: "Set your drive foot on the power line, pointed at the plate. We track where yours sits and compare it with your usual.",
+    missing: "This one needs a clip filmed from the plate line.",
+  },
+  ft_knee_ankle: {
+    name: "Follow-Through Knee and Ankle",
+    standard: "A measurement without a published standard. Your own standard will come from your own pitching history. Needs a clip from the plate line.",
+    coach: "Finish with your stride knee stacked over your ankle as you come through. We track yours and compare it with your usual.",
+    missing: "This one needs a clip filmed from the plate line.",
+  },
 };
