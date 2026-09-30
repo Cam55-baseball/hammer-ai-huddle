@@ -219,7 +219,7 @@ export const ELBOW_ONSET_FLOOR = { forward_pct: 0.95, down_pct: 0.81 } as const;
  * rigid way as sequencing (acos(width ÷ widest width)). Window end of P2 → swing peak.
  * Record-only; the owner has not supplied a sufficient-separation figure. Unsigned side-on
  * proxy: acos is insensitive near square-to-camera, so small angles are under-read there. */
-export const SEPARATION_FLOOR_DEG = 0; // set below from the still clip
+export const SEPARATION_FLOOR_DEG = 13.9; // still 15d75bc9, whole clip: max 13.82° (median 2.28°) — acos is steep near full width, so width noise reads as angle
 function separationMagnitude(c: Ctx, apexK: number, pkK: number) {
   const n = c.s.frames.length;
   if (apexK < 0 || pkK <= apexK) return { key: "separation_magnitude", value: null, missing_reason: "end_of_p2_not_before_swing_peak" };
