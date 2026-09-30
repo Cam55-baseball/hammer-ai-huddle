@@ -373,7 +373,7 @@ function chinLeak(c: Ctx, apexK: number, endK: number) {
  * grades (owner: "theoretically"). Same fault as the leak, seen as position.
  * Floor: still clip 15d75bc9, max |med3 − median| across both sides. */
 export const CHIN_POSITION_FLOOR_PCT = 0.9;
-export function chinPosition(c: Ctx, apexK: number, plantK: number) {
+function chinPosition(c: Ctx, apexK: number, plantK: number) {
   if (apexK < 0 || plantK <= apexK) return { measured: false as const, reason: "end_of_p2_not_before_landing" };
   const d = (j: number) => { const n = Fw(c, P(c, j, 0)), s = Fw(c, P(c, j, c.lead.sh)); return n == null || s == null ? null : n - s; };
   let worst = -Infinity, wk = -1, seen = 0;
