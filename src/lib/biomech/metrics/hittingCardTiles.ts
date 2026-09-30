@@ -204,6 +204,7 @@ function backHeelEarlyRise(c: Ctx, p4K: number): CardTileResult {
  *   pelvis     — hip line turning out of the image plane (rigid length: acos(width ÷ stance width))
  *   shoulders  — shoulder line turning out of the image plane (same solve)
  * Rigid solves are unsigned, so speed is |dθ/dt|. */
+const FORESHORTEN_MIN = 0.6;
 export const SEQUENCING_CHAIN = ["back_elbow", "back_knee", "pelvis", "shoulders"] as const;
 function sequencing(c: Ctx, ssK: number, pkK: number): CardTileResult {
   const K: CardKey = "sequencing", u = "boolean", n = c.s.frames.length;
@@ -212,9 +213,11 @@ function sequencing(c: Ctx, ssK: number, pkK: number): CardTileResult {
   const stanceWidth = (a: number, b: number) => { let w = 0; for (let j = c.lock.start_k!; j <= plantEnd; j++) { const x = m3(c, j, (i) => dist(i, a, b)); if (x != null && x > w) w = x; } return w > 0 ? w : null; };
   const Lh = stanceWidth(LM.L_HIP, LM.R_HIP), Ls = stanceWidth(LM.L_SHOULDER, LM.R_SHOULDER);
   const rigid = (a: number, b: number, L: number | null) => (j: number) => { if (!L) return null; const d = dist(j, a, b); return d == null ? null : (Math.acos(Math.min(1, d / L)) * 180) / Math.PI; };
+  // Foreshortening guard: an in-plane angle is only readable while the upper arm shows ≥ FORESHORTEN_MIN of its stance length.
+  const armRef = lockMed(c, (j) => dist(j, c.rear.sh, c.rear.el));
   const inPlane = (a: number, b: number) => (j: number) => { const p = P(c, j, a), q = P(c, j, b); return p && q ? (Math.atan2(q.y - p.y, q.x - p.x) * 180) / Math.PI : null; };
   const chans: [string, (j: number) => number | null, boolean][] = [
-    ["back_elbow", inPlane(c.rear.sh, c.rear.el), true],
+    ["back_elbow", (j) => { const L = armRef, d = dist(j, c.rear.sh, c.rear.el); return L && d != null && d >= L * FORESHORTEN_MIN ? inPlane(c.rear.sh, c.rear.el)(j) : null; }, true],
     ["back_knee", inPlane(c.rear.hip, c.rear.knee), true],
     ["pelvis", rigid(LM.L_HIP, LM.R_HIP, Lh), false],
     ["shoulders", rigid(LM.L_SHOULDER, LM.R_SHOULDER, Ls), false],
