@@ -36,7 +36,8 @@ export interface CategoryTileSpec {
   points: number;
   nonNegotiable?: boolean;
   recordOnly?: boolean;
-  staffOnly?: boolean;
+  /** A function is read at score time, so a visibility switch takes effect on the next render. */
+  staffOnly?: boolean | (() => boolean);
   /** Ledger metric key used to look up this athlete's own band (record-only tiles). */
   baselineKey?: string;
   read: (raw: unknown) => TileReading;
@@ -104,7 +105,7 @@ export function bandProximity(value: number, band: AthleteBand): number {
 
 const r1 = (x: number) => Math.round(x * 10) / 10;
 
-export function scoreCard(spec: CardCategorySpec, raw: unknown, o: { audience: Audience; bands?: Record<string, AthleteBand> }): CardScore {
+export function scoreCard(spec: CardCategorySpec, raw: unknown, o: { audience: Audience; bands?: Record<string, AthleteBand>; /** Test-only: simulate a visibility switch being flipped. */ unlock?: Record<string, boolean> }): CardScore {
   const bands = o.bands ?? {};
   const scored = spec.categories.filter((c) => !c.additive);
   const baseSum = scored.reduce((a, c) => a + c.points, 0);
@@ -113,7 +114,7 @@ export function scoreCard(spec: CardCategorySpec, raw: unknown, o: { audience: A
   const categories = spec.categories.map((c): CategoryResult => {
     const tiles = c.tiles.map((t) => {
       let outcome: TileOutcome;
-      if (t.staffOnly && o.audience === "athlete") outcome = { status: "missing", reason: "staff_only_until_validated" };
+      if (o.audience === "athlete" && !o.unlock?.[t.key] && (typeof t.staffOnly === "function" ? t.staffOnly() : t.staffOnly)) outcome = { status: "missing", reason: "staff_only_until_validated" };
       else {
         const rd = t.read(raw);
         if (rd.kind === "not_applicable") outcome = { status: "not_applicable", reason: rd.reason };
