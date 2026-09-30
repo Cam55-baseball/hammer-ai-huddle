@@ -16,6 +16,8 @@ const headPathStaff = () => ownerTileAudience("head_path_through_stride") === "s
 /* ============================ HITTING ============================ */
 /** raw = { pose, card, owner, gather } from runHittingTilesFromText (+ gather). */
 const naPitcher = { naIf: pitcherAbsent };
+/** Routed to DelayCam mechanics when the frame rate cannot order hips vs shoulders (standing rule 2026-09-30). */
+const naDelayCam = { naIf: (r: string) => r.startsWith("routed_to_delaycam") };
 const gatherPresent = (raw: unknown): TileReading => {
   const g = at(raw, "gather") as { pattern?: string | null; value?: number | null; missing_reason?: string | null } | undefined;
   if (!g || g.pattern == null) return { kind: "missing", reason: g?.missing_reason ?? "not_measured" };
@@ -56,6 +58,7 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
       { key: "stride_foot_vs_body", name: "Foot goes forward, body stays back", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.foot_vs_body", read: coilAt("foot_vs_body") },
       { key: "stride_hands_opposite", name: "Hands go back as the foot goes forward", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.hands_opposite", read: coilAt("hands_opposite") },
       { key: "stride_side_bend", name: "Side bend builds through the stride", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.side_bend", read: coilAt("side_bend") },
+      { key: "shin_vs_front_shoulder", name: "Front shin stays with or behind the front shoulder until landing", points: 0, recordOnly: true, baselineKey: "hitting_rhythm.shin_vs_front_shoulder", read: recordAt("rhythm.shin") },
       { key: "stride_sink", name: "Sinking into the back leg, not falling forward", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.sink", read: coilAt("sink") },
       { key: "head_discipline", name: "Head discipline", points: 2, read: verdictAt("pose.head_discipline") },
       { key: "back_heel_early_rise", name: "Back heel stays down until P4", points: 2, read: verdictAt("card.back_heel_early_rise") },
@@ -67,7 +70,7 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
       { key: "hands_stay_up_at_plant", name: "Hands above the back elbow at heel landing", points: 1, read: verdictAt("card.hands_stay_up_at_plant") },
     ] },
     { key: "p4", title: "P4: Hitter's Move", points: 40, note: "This meter is the Hitter's Move composite.", tiles: [
-      { key: "sequencing", name: "Sequence: back elbow, back knee, hips, shoulders", points: 9, nonNegotiable: true, read: verdictAt("card.sequencing") },
+      { key: "sequencing", name: "Hips turn before shoulders", points: 9, nonNegotiable: true, read: verdictAt("card.sequencing", naDelayCam) },
       { key: "shoulder_to_shoulder_hold", name: "Chin-to-shoulder hold and front-shoulder leak", points: 9, nonNegotiable: true, read: verdictAt("card.shoulder_to_shoulder_hold") },
       { key: "back_elbow_connection", name: "Hands stay back while the elbow gains ground", points: 5, read: verdictAt("card.back_elbow_connection") },
       { key: "shoulder_plane_steadiness", name: "Shoulder plane steadiness", points: 5, read: scoreAt("card.shoulder_plane_steadiness") },
