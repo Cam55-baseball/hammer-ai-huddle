@@ -1941,7 +1941,7 @@ var CARD_COACHING = {
   lead_elbow_bend_increasing: "Your lead elbow should not bend more than it was at the end of P2. Full extension is ideal, but your own P2 position is the honest measure of what your arm can do.",
   pelvis_rotation_efficiency: "Because you stride to the pitcher, not the ball, your pelvis should be able to get square to fair (the front of home plate) by the end of P4, before you run.",
   sequencing: "Your hitter's move starts when your back elbow begins moving down and toward the pitcher. It does not have to move far or fast, it just has to start the move that releases your loaded stride. From there your back knee turns, your hips turn, then your shoulders, then your hands. The true test is simple: your hips turn before your shoulders. Shoulders that fire first spend the load before it can be used.",
-  shoulder_to_shoulder_hold: "Keep your chin and front shoulder tucked together until the swing goes. The tuck makes the move easier on your body and keeps both eyes on the ball. A front shoulder that pulls away from your chin before the swing is a leak: it opens you early and costs you the look at the pitch. Through the stride, keep your chin over or behind your front shoulder until your foot lands. If your chin gets out in front, the front shoulder gets yanked out and the swing goes out of order."
+  shoulder_to_shoulder_hold: "Keep your chin and front shoulder tucked together until the swing goes. The tuck makes the move easier on your body and keeps both eyes on the ball. A front shoulder that pulls away from your chin before the swing is a leak: it opens you early and costs you the look at the pitch. Through the stride, keep your chin over your front shoulder, or behind it, until your foot lands. That tuck does three things: the move is easier on your body, you see the ball better, and it stops the front shoulder getting yanked out, which keeps your swing in order."
 };
 var mr2 = (r2) => missingness(r2, "D-METRIC");
 var refuse2 = (key, unit, rec, lineage) => ({ key, value: null, unit, uncertainty: null, verdict: null, missingness: rec, confidence: missingConfidence(), lineage });
@@ -2230,12 +2230,12 @@ function sequencing(c, ssK, pkK, apexK) {
   };
   if (!pel.ok || !sho.ok)
     return refuse2(K, u, mr2(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { ...base, reason: `segment_unobserved_for_most_of_window:${[!pel.ok && "pelvis", !sho.ok && "shoulders"].filter(Boolean).join(",")}` });
+  const small = Math.abs(gap) < SEQ_MIN_GAP_FRAMES;
+  const would = small ? { verdict: "fail", finding: "insufficient_separation" } : gap > 0 ? { verdict: "pass", finding: "hips_before_shoulders" } : { verdict: "fail", finding: "shoulders_before_hips" };
+  const gapLin = { gap_ms: round4(gap * 1000 / c.fps), gap_uncertainty_ms: round4(1000 / c.fps), frame_interval_ms: round4(1000 / c.fps), gap_possible_range_ms: [round4(Math.max(0, (Math.abs(gap) - 1) * 1000 / c.fps)), round4((Math.abs(gap) + 1) * 1000 / c.fps)], verdict_logic_owner_2026_09_30: would };
   if (c.fps < SEQ_MIN_FPS)
-    return refuse2(K, u, mr2(MISSINGNESS_REASONS.INSUFFICIENT_TEMPORAL_RESOLUTION), { ...base, reason: `routed_to_delaycam:frame_rate_${Math.round(c.fps)}_below_${SEQ_MIN_FPS}`, routed_to: "delaycam_mechanics" });
-  if (Math.abs(gap) < SEQ_MIN_GAP_FRAMES)
-    return refuse2(K, u, mr2(MISSINGNESS_REASONS.INSUFFICIENT_TEMPORAL_RESOLUTION), { ...base, reason: "hips_and_shoulders_peak_too_close_to_order" });
-  const pass = gap > 0;
-  return ok(K, u, pass ? 1 : 0, null, pass ? "pass" : "fail", { ...base, order: pass ? "hips_before_shoulders" : "shoulders_before_hips" });
+    return refuse2(K, u, mr2(MISSINGNESS_REASONS.INSUFFICIENT_TEMPORAL_RESOLUTION), { ...base, ...gapLin, reason: `routed_to_delaycam:frame_rate_${Math.round(c.fps)}_below_${SEQ_MIN_FPS}`, routed_to: "delaycam_mechanics", why_not_graded: "one frame is longer than typical real separation, so 'insufficient' and 'adequate' look the same at this rate" });
+  return ok(K, u, would.verdict === "pass" ? 1 : 0, null, would.verdict, { ...base, ...gapLin, finding: would.finding, order: small ? "unknown_gap_within_one_frame" : would.finding });
 }
 function backElbow(c, ssK, pkK) {
   const K = "back_elbow_connection", u = "percent_stature";
