@@ -161,7 +161,7 @@ function measureSeparation(s: LandmarkSeries, sfc: number | null, from: number |
     const t: number[] = [], y: number[] = [];
     for (let k = Math.max(0, from - 2); k <= Math.min(s.frames.length - 1, sfc + 2); k++) {
       const v = yaw(k, LM.L_HIP, LM.R_HIP); if (v == null) continue;
-      y.push(y.length ? y[y.length - 1] + wrap(v - ((y[y.length - 1] % 360) + 360) % 360 + 0) : v); t.push(s.frames[k].timestamp_seconds);
+      y.push(v); t.push(s.frames[k].timestamp_seconds);
     }
     // re-unwrap cleanly
     for (let i = 1; i < y.length; i++) y[i] = y[i - 1] + wrap(y[i] - y[i - 1]);
