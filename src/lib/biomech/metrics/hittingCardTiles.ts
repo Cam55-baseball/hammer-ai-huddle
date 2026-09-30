@@ -501,7 +501,7 @@ export function runHittingCardTiles(series: LandmarkSeries, o: { side: Handednes
     back_elbow_connection: need("back_elbow_connection", [SS, PK], () => backElbow(c, ssK, pkK)),
     shoulder_plane_steadiness: need("shoulder_plane_steadiness", [P4, PK], () => shoulderPlane(c, p4K, pkK)),
     finish_balance: need("finish_balance", [PK, FIN], () => (finK <= pkK ? refuse("finish_balance", units.finish_balance, mr(R.ANCHOR_NOT_DETECTED), { reason: "finish_not_after_swing_peak" }) : finishBalance(c, pkK, finK))),
-    shoulder_to_shoulder_hold: need("shoulder_to_shoulder_hold", [P_, SS, PK], () => shoulderToShoulder(c, plantK, pkK)),
+    shoulder_to_shoulder_hold: need("shoulder_to_shoulder_hold", [P_, SS, PK, AP], () => shoulderToShoulder(c, plantK, pkK, apexK, p4K)),
     back_knee_flex_maintained: need("back_knee_flex_maintained", [AP, P_], () => backKnee(c, apexK, plantK)),
     post_landing_hip_drift: need("post_landing_hip_drift", [P_, P4], () => hipDrift(c, plantK, p4K, pkK)),
     hands_stay_up_at_plant: need("hands_stay_up_at_plant", [P_], () => handsUp(c, plantK)),
