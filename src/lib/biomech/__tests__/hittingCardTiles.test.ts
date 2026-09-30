@@ -35,9 +35,11 @@ describe("hitting card tiles including separate front and back heels (23 total)"
     expect(r.back_heel_early_rise.value).toBe(1.4099);
     expect(Number(r.back_heel_early_rise.lineage.peak_pre_p4_frame)).toBeLessThan(Number(r.back_heel_early_rise.lineage.p4_start_frame_excluded));
     expect(r.back_heel_early_rise.lineage.root_pattern_key).toBe("back_leg_did_not_hold_load");
-    // 2026-09-29 duplicate-decode repair: the two hip channels now peak 3 frames apart → honest refusal (was "fail").
-    expect(r.sequencing.verdict).toBeNull();
-    expect(r.sequencing.lineage.reason).toBe("hip_translation_and_rotation_peaks_disagree");
+    // 2026-09-30 ruling: angular speed only. Pelvis 187, torso 188 (tie at 24 fps); lead shoulder 185 → out of order.
+    expect(r.sequencing.lineage.linear_terms).toBe("none");
+    expect(r.sequencing.verdict).toBe("fail");
+    expect(r.sequencing.lineage.out_of_order).toEqual(["lead_shoulder_before_torso"]);
+    expect(r.pelvis_rotation_efficiency.value).not.toBeNull();
     expect(r.back_elbow_connection.value).toBe(8.6633); expect(r.back_elbow_connection.verdict).toBe("pass");
     expect(r.shoulder_plane_steadiness.value).toBeNull();
     expect(r.shoulder_plane_steadiness.lineage.reason).toBe("swing_peak_not_after_p4_start");
