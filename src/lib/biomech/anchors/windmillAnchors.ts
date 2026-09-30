@@ -76,8 +76,8 @@ export function detectWindmillAnchors(s: LandmarkSeries, side: Handedness | null
 
   // 1. wu_first_move — D-STILL exit (shared detector, one implementation).
   const fm = detectFirstMove(s);
-  if (fm.frame == null) { fail("wu_first_move", String((fm as { missing_reason?: string }).missing_reason ?? "never_left_stillness")); return done(dir, st); }
-  const k0 = s.frames.findIndex((f) => f.frame_index === fm.frame);
+  if (fm.frame_index == null) { fail("wu_first_move", `${fm.missingness?.missing_reason ?? "anchor_not_detected"}:${String(fm.diagnostics.reason ?? "")}`); return done(dir, st); }
+  const k0 = s.frames.findIndex((f) => f.frame_index === fm.frame_index);
   hit("wu_first_move", k0);
   if (dir == null) { fail("sfc", "stride_direction_unknown"); return done(dir, st); }
 
