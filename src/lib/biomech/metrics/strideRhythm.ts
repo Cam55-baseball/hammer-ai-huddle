@@ -157,8 +157,8 @@ export function runMicroPauses(series: LandmarkSeries, o: { side: Handedness | n
  * "…should not actually gain ground but become more coiled as 'forward move' P3
  *  stride happens… It is not a gravity move but a controlled voluntary movement."
  *
- * Four RECORD-ONLY readings over the same window as active stride (load apex →
- * front-foot plant). No owner numbers exist; nothing is graded. Classification
+ * Four RECORD-ONLY readings over P3: the front foot leaving its stance position
+ * (first frame beyond its floor, minus one) → front-foot plant. No owner numbers exist; nothing is graded. Classification
  * uses only still-clip floors. All four map to back_leg_did_not_hold_load but are
  * NOT emitted while ROOT_EVIDENCE_ENABLED is false.
  *
@@ -201,14 +201,18 @@ export function runStrideCoil(series: LandmarkSeries, o: { side: Handedness | nu
   const c = context(series, o.side);
   if (!c) return refuse("stance_lock_or_direction_missing");
   if (c.plantK < 0) return refuse("front_foot_plant_missing");
-  const apex = detectLoadApex(series, c.dir);
-  const a = apex.frame_index == null ? -1 : series.frames.findIndex((f) => f.frame_index === apex.frame_index);
-  if (a < 0) return refuse("p2_position_missing:load_apex_not_detected");
-  const b = c.plantK;
-  if (b - a < 3) return refuse("stride_window_too_short");
   const F = STRIDE_COIL_FLOORS, dir = c.dir, st = c.st;
   const front = o.side === "R" ? LM.L_ANKLE : LM.R_ANKLE, back = o.side === "R" ? LM.R_ANKLE : LM.L_ANKLE;
   const fwd = (i: number) => (k: number) => { const p = c.P(k, i); return p ? (p.x * dir * 100) / st : null; };
+  // P3 window starts when the FRONT FOOT starts forward, not at the hand extremum:
+  // after the load apex the hands can only come forward, which would fake finding B.
+  const b = c.plantK, lockEnd = c.lock.end_k as number;
+  const origin = c.m3(lockEnd, fwd(front));
+  if (origin == null) return refuse("front_ankle_unobserved_at_stance");
+  let a = -1;
+  for (let k = lockEnd; k < b; k++) { const x = c.m3(k, fwd(front)); if (x != null && x - origin > F.foot_forward_pct) { a = Math.max(lockEnd, k - 1); break; } }
+  if (a < 0) return refuse("stride_start_not_detected");
+  if (b - a < 3) return refuse("stride_window_too_short");
   const pel = (k: number) => mid(c.P(k, LM.L_HIP), c.P(k, LM.R_HIP));
   const pelFw = (k: number) => { const p = pel(k); return p ? (p.x * dir * 100) / st : null; };
   const pelDn = (k: number) => { const p = pel(k); return p ? (p.y * 100) / st : null; };
