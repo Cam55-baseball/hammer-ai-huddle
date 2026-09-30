@@ -366,10 +366,30 @@ function chinLeak(c: Ctx, apexK: number, endK: number) {
   return { ok: true as const, deg: Math.abs(exc), leaked: Math.abs(exc) > CHIN_LEAK_FLOOR_DEG, at_frame: at < 0 ? null : c.s.frames[at].frame_index,
     window: { end_of_p2_frame: c.s.frames[apexK].frame_index, last_frame_before_p4: c.s.frames[endK].frame_index }, samples: seen, frames };
 }
+/* POSITION channel (owner 2026-09-30, corrected quote): "Theoretically we want that chin
+ * over/in line with/or beyond the front shoulder toward the back until landing (P3 is over)
+ * & P4 begins." Nose − front shoulder on the FORWARD axis (image plane, % stature), end of
+ * P2 → plant. + = chin ahead of the front shoulder toward the pitcher. Record-only, never
+ * grades (owner: "theoretically"). Same fault as the leak, seen as position.
+ * Floor: still clip 15d75bc9, max |med3 − median| across both sides. */
+export const CHIN_POSITION_FLOOR_PCT = 0.9;
+export function chinPosition(c: Ctx, apexK: number, plantK: number) {
+  if (apexK < 0 || plantK <= apexK) return { measured: false as const, reason: "end_of_p2_not_before_landing" };
+  const d = (j: number) => { const n = Fw(c, P(c, j, 0)), s = Fw(c, P(c, j, c.lead.sh)); return n == null || s == null ? null : n - s; };
+  let worst = -Infinity, wk = -1, seen = 0;
+  for (let j = apexK; j <= plantK; j++) { const x = m3(c, j, d); if (x == null) continue; seen++; if (x > worst) { worst = x; wk = j; } }
+  if (seen < Math.max(3, Math.ceil((plantK - apexK + 1) * 0.6))) return { measured: false as const, reason: "head_or_front_shoulder_unobserved_through_p3", samples: seen };
+  const F = CHIN_POSITION_FLOOR_PCT;
+  return { measured: true as const, chin_minus_front_shoulder_max_pct: round4(worst), worst_frame: c.s.frames[wk].frame_index, floor_pct: F,
+    pattern: worst > F ? "chin_got_ahead_of_front_shoulder" : "chin_at_or_behind_front_shoulder",
+    window: { end_of_p2_frame: c.s.frames[apexK].frame_index, landing_frame: c.s.frames[plantK].frame_index }, samples: seen,
+    sign: "+ = chin (nose) ahead of the front shoulder toward the pitcher", record_only: true, graded: false, owner_standard: "not_supplied (owner: 'theoretically')", linked_to: "leak" };
+}
 function shoulderToShoulder(c: Ctx, plantK: number, pkK: number, apexK: number, p4K: number): CardTileResult {
   const K: CardKey = "shoulder_to_shoulder_hold", u = "percent_of_window";
   const lk = chinLeak(c, apexK, (p4K >= 0 ? p4K : plantK) - 1);
-  const leakLin = lk.ok ? { measured: true, change_deg: round4(lk.deg), floor_deg: CHIN_LEAK_FLOOR_DEG, leaked_before_swing: lk.leaked, largest_change_frame: lk.at_frame, window: lk.window, method: "head_to_front_shoulder_angle_image_plane", proxy: "unsigned, image plane only; a head move also changes the angle" } : { measured: false, reason: lk.reason };
+  const position = chinPosition(c, apexK, plantK);
+  const leakLin = lk.ok ? { measured: true, change_deg: round4(lk.deg), floor_deg: CHIN_LEAK_FLOOR_DEG, leaked_before_swing: lk.leaked, largest_change_frame: lk.at_frame, window: lk.window, method: "head_to_front_shoulder_angle_image_plane", proxy: "unsigned, image plane only; a head move also changes the angle", position } : { measured: false, reason: lk.reason, position };
   const leakOnly = (holdReason: string, extra: Record<string, unknown> = {}): CardTileResult => {
     if (!lk.ok) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { reason: holdReason, leak: leakLin, ...extra });
     return ok(K, "degrees", lk.deg, CHIN_LEAK_FLOOR_DEG, lk.leaked ? "fail" : "pass", { reported_channel: "leak_only", leak: leakLin, hold: { measured: false, reason: holdReason, why: "the chin-to-shoulder gap lives partly in depth and is not visible from the side for most of the window" }, ...extra, verdict_basis: "owner standard: the front shoulder must not leak open before the swing; leak = auto-fail. Hold refused, so no elite grade is possible", coaching: CARD_COACHING.shoulder_to_shoulder_hold });
