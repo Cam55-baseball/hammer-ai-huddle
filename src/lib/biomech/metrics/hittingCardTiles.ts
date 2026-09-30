@@ -189,15 +189,20 @@ function backHeelEarlyRise(c: Ctx, p4K: number): CardTileResult {
   });
 }
 
-/* ================= 9 sequencing — hips → torso → lead shoulder → lead arm =================
- * ROTATIONAL chain only (owner ruling 2026-09-30): every segment is timed by its
- * PEAK ANGULAR SPEED. No linear (forward-travel) term enters the order check.
- *   pelvis        — hip line turning out of the image plane (rigid length: acos(width ÷ stance width))
- *   torso         — shoulder line turning out of the image plane (same solve)
- *   lead_shoulder — angle at the lead shoulder between the shoulder line and the lead upper arm
- *   lead_arm      — lead arm (shoulder → wrist) turning in the image plane
- * Rigid solves are unsigned, so speed is |dθ/dt|. Stance width = widest the
- * segment appears between stance and plant (the most side-on it gets on this clip). */
+/* ================= 9 sequencing — OWNER'S CHAIN (2026-09-30) =================
+ * "…until the back bicep/elbow moves forward which turns the back knee … which
+ *  begins the hip rotation which catapults shoulders (Rotationally) from their
+ *  square position … which drives the barrel through the ball."
+ * Order checked: back elbow → back knee → pelvis → shoulders. The barrel link
+ * is bat tracking and belongs to DelayCam. Forward travel is the BUFFER that
+ * loads the chain, not a link in it — no linear term enters (owner 2026-09-30).
+ * Every segment is timed by its PEAK ANGULAR SPEED:
+ *   back_elbow — back upper arm (shoulder → elbow) turning in the image plane
+ *   back_knee  — back thigh (hip → knee) turning in the image plane (the knee turn that makes the triangles)
+ *   pelvis     — hip line turning out of the image plane (rigid length: acos(width ÷ stance width))
+ *   shoulders  — shoulder line turning out of the image plane (same solve)
+ * Rigid solves are unsigned, so speed is |dθ/dt|. */
+export const SEQUENCING_CHAIN = ["back_elbow", "back_knee", "pelvis", "shoulders"] as const;
 function sequencing(c: Ctx, ssK: number, pkK: number): CardTileResult {
   const K: CardKey = "sequencing", u = "boolean", n = c.s.frames.length;
   const dist = (j: number, a: number, b: number) => { const p = P(c, j, a), q = P(c, j, b); return p && q ? Math.hypot(p.x - q.x, p.y - q.y) : null; };
@@ -205,14 +210,14 @@ function sequencing(c: Ctx, ssK: number, pkK: number): CardTileResult {
   const stanceWidth = (a: number, b: number) => { let w = 0; for (let j = c.lock.start_k!; j <= plantEnd; j++) { const x = m3(c, j, (i) => dist(i, a, b)); if (x != null && x > w) w = x; } return w > 0 ? w : null; };
   const Lh = stanceWidth(LM.L_HIP, LM.R_HIP), Ls = stanceWidth(LM.L_SHOULDER, LM.R_SHOULDER);
   const rigid = (a: number, b: number, L: number | null) => (j: number) => { if (!L) return null; const d = dist(j, a, b); return d == null ? null : (Math.acos(Math.min(1, d / L)) * 180) / Math.PI; };
-  const rear = c.rear.sh;
+  const inPlane = (a: number, b: number) => (j: number) => { const p = P(c, j, a), q = P(c, j, b); return p && q ? (Math.atan2(q.y - p.y, q.x - p.x) * 180) / Math.PI : null; };
   const chans: [string, (j: number) => number | null, boolean][] = [
+    ["back_elbow", inPlane(c.rear.sh, c.rear.el), true],
+    ["back_knee", inPlane(c.rear.hip, c.rear.knee), true],
     ["pelvis", rigid(LM.L_HIP, LM.R_HIP, Lh), false],
-    ["torso", rigid(LM.L_SHOULDER, LM.R_SHOULDER, Ls), false],
-    ["lead_shoulder", (j) => angleDeg(P(c, j, rear), P(c, j, c.lead.sh), P(c, j, c.lead.el)), false],
-    ["lead_arm", (j) => { const a = P(c, j, c.lead.sh), b = P(c, j, c.lead.wr); return a && b ? (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI : null; }, true],
+    ["shoulders", rigid(LM.L_SHOULDER, LM.R_SHOULDER, Ls), false],
   ];
-  // Window: swing start → a little past D-SWING-PEAK (fastest torso turn), so a segment peaking AFTER the torso is not cut off.
+  // Window: swing start → a little past D-SWING-PEAK (fastest torso turn), so a segment peaking after the shoulders is not cut off.
   const k0 = Math.max(1, ssK - 1), k1 = Math.min(n - 2, pkK + Math.ceil(c.fps * 0.125));
   const peaks: Record<string, { frame: number | null; deg_per_s: number | null; coverage: number }> = {};
   for (const [name, g, wrap] of chans) {
@@ -223,13 +228,14 @@ function sequencing(c: Ctx, ssK: number, pkK: number): CardTileResult {
     for (let j = k0; j <= k1; j++) { const a = x[j - 1], b = x[j + 1]; if (a == null || b == null) continue; seen++; const w = Math.abs(((b - a) * c.fps) / 2); if (w > bv) { bv = w; best = j; } }
     peaks[name] = { frame: best < 0 ? null : c.s.frames[best].frame_index, deg_per_s: best < 0 ? null : round4(bv), coverage: round4(seen / (k1 - k0 + 1)) };
   }
-  const base = { method: "peak_angular_speed_every_segment", linear_terms: "none", swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, window_end_frame: c.s.frames[k1].frame_index, stance_width_px: { pelvis: Lh && round4(Lh), torso: Ls && round4(Ls) }, per_segment: peaks, frame_uncertainty: 1 };
+  const base = { method: "peak_angular_speed_every_segment", chain: "owner_2026-09-30: back elbow → back knee → pelvis → shoulders → barrel", barrel_link: "DelayCam (bat tracking) — not checked on the upload card", linear_terms: "none", linear_terms_why: "forward travel is the buffer that loads the chain, not a link in it", swing_start_frame: c.s.frames[ssK].frame_index, swing_peak_frame_not_contact: c.s.frames[pkK].frame_index, window_end_frame: c.s.frames[k1].frame_index, stance_width_px: { pelvis: Lh && round4(Lh), shoulders: Ls && round4(Ls) }, per_segment: peaks, frame_uncertainty: 1, coaching: CARD_COACHING.sequencing };
   const thin = chans.filter(([nm]) => peaks[nm].frame == null || peaks[nm].coverage < 0.6).map(([nm]) => nm);
   if (thin.length) return refuse(K, u, mr(R.LANDMARK_OCCLUDED), { ...base, reason: `segment_unobserved_for_most_of_window:${thin.join(",")}` });
   const order = chans.map(([nm]) => peaks[nm].frame!);
   const out: string[] = [];
-  for (let i = 1; i < order.length; i++) if (order[i] < order[i - 1] - 1) out.push(`${chans[i][0]}_before_${chans[i - 1][0]}`);
-  return ok(K, u, out.length === 0 ? 1 : 0, null, out.length === 0 ? "pass" : "fail", { ...base, out_of_order: out, rule: "a segment reaching its fastest turn more than 1 frame before the segment below it is out of order; within 1 frame cannot be ordered at this frame rate" });
+  // Every link is checked against every link before it, so "shoulders before elbow" is caught even if a middle link ties.
+  for (let i = 1; i < order.length; i++) for (let h = 0; h < i; h++) if (order[i] < order[h] - 1) out.push(`${chans[i][0]}_before_${chans[h][0]}`);
+  return ok(K, u, out.length === 0 ? 1 : 0, null, out.length === 0 ? "pass" : "fail", { ...base, out_of_order: out, rule: "a link reaching its fastest turn more than 1 frame before any earlier link in the owner's chain is out of order; within 1 frame cannot be ordered at this frame rate" });
 }
 
 /* ================= 10 back-elbow connection — a PATH, not an angle (owner 2026-09-28) ================= */
