@@ -8,14 +8,9 @@
  * Two readings, neither graded, neither worth points until the athlete has a
  * baseline, no owner duration or threshold invented:
  *
- *  A. ACTIVE STRIDE vs FALLING — window: the P2 position (load apex) → front-foot
- *     plant ("from our P2 position"). Back-hip forward travel toward the pitcher vs the pelvis (centre-of-
- *     mass proxy) dropping. Classification uses ONLY the still-clip floors:
- *       active  = back hip drove beyond its floor, pelvis did not drop beyond its floor
- *       falling = pelvis dropped beyond its floor, back hip did not drive beyond its floor
- *       mixed   = both beyond their floors; no_travel = neither.
- *     Evidence for the back-leg root pattern is MAPPED but NOT EMITTED until the
- *     owner rules on it (ROOT_EVIDENCE_ENABLED = false).
+ *  A. ACTIVE STRIDE — back-hip ROTATION only (ruling 2026-09-30), P2 position →
+ *     plant. Body travel is measured by foot_vs_body, never here, so the two can
+ *     no longer contradict. Refuses when the turn is inside the still-clip floor.
  *
  *  B. MICRO-PAUSES — body speed (median of wrists/shoulders/hips/ankles) in two
  *     windows: end of P2 (load apex) → plant, and plant → swing start. Records the
@@ -41,17 +36,19 @@ export const STRIDE_RHYTHM_FLOORS = { pelvis_drop_pct: 2.8, back_hip_drive_pct: 
 export const MIN_PAUSE_WINDOW_FRAMES = 5;
 export const ROOT_EVIDENCE_ENABLED = false;
 
-export type StridePattern = "active" | "falling" | "mixed" | "no_travel";
+export type StridePattern = "hip_turned";
+/** Still clip 15d75bc9, measured 2026-09-30 before use: rigid pelvis-turn wobble 11.73° (hip line near edge-on). */
+export const ACTIVE_STRIDE_TURN_FLOOR_DEG = 11.8;
 export interface ActiveStrideResult {
   readonly key: "active_stride";
   readonly version: string;
   readonly pattern: StridePattern | null;
-  /** Back-hip forward travel toward the pitcher, % stature. Record-only. */
+  /** Back-hip (pelvis) turn during the stride, degrees, unsigned. Record-only. */
   readonly value: number | null;
-  readonly unit: "percent_stature";
+  readonly unit: "degrees";
   readonly missing_reason: string | null;
   /** Would-be evidence for back_leg_did_not_hold_load. Never emitted while ROOT_EVIDENCE_ENABLED is false. */
-  readonly root_evidence: { fault_key: "active_stride_falling"; raised: boolean; emitted: false } | null;
+  readonly root_evidence: null;
   readonly lineage: Readonly<Record<string, unknown>>;
 }
 export interface PauseReading { dip_ratio: number | null; dwell_sec: number | null; slowing_detectable: boolean | null; frames: number; missing_reason: string | null }
@@ -80,8 +77,10 @@ function context(series: LandmarkSeries, side: Handedness) {
 }
 
 export function runActiveStride(series: LandmarkSeries, o: { side: Handedness | null }): ActiveStrideResult {
+  // ANGULAR only (owner ruling 2026-09-30): the glute driving is back-hip ROTATION.
+  // Body travel is foot_vs_body's job and never enters this tile.
   const refuse = (reason: string, lineage: Record<string, unknown> = {}): ActiveStrideResult =>
-    ({ key: "active_stride", version: STRIDE_RHYTHM_VERSION, pattern: null, value: null, unit: "percent_stature", missing_reason: reason, root_evidence: null, lineage: { reason, ...lineage } });
+    ({ key: "active_stride", version: STRIDE_RHYTHM_VERSION, pattern: null, value: null, unit: "degrees", missing_reason: reason, root_evidence: null, lineage: { reason, method: "pelvis_turn_rigid_length", linear_terms: "none", ...lineage } });
   if (!o.side) return refuse("batting_side_unknown");
   const c = context(series, o.side);
   if (!c) return refuse("stance_lock_or_direction_missing");
@@ -89,23 +88,19 @@ export function runActiveStride(series: LandmarkSeries, o: { side: Handedness | 
   const apex = detectLoadApex(series, c.dir);
   const startK = apex.frame_index == null ? -1 : series.frames.findIndex((f) => f.frame_index === apex.frame_index);
   if (startK < 0) return refuse("p2_position_missing:load_apex_not_detected");
-  if (c.plantK - startK < 3) return refuse("stride_window_too_short", { load_apex_frame: apex.frame_index, plant_frame: series.frames[c.plantK].frame_index });
-  const backHip = o.side === "R" ? LM.R_HIP : LM.L_HIP;
-  const fw = (k: number) => { const p = c.P(k, backHip); return p ? (p.x * c.dir * 100) / c.st : null; };
-  const down = (k: number) => { const p = mid(c.P(k, LM.L_HIP), c.P(k, LM.R_HIP)); return p ? (p.y * 100) / c.st : null; };
-  const pelFw = (k: number) => { const p = mid(c.P(k, LM.L_HIP), c.P(k, LM.R_HIP)); return p ? (p.x * c.dir * 100) / c.st : null; };
-  const h0 = c.m3(startK, fw), h1 = c.m3(c.plantK, fw), d0 = c.m3(startK, down), d1 = c.m3(c.plantK, down), f0 = c.m3(startK, pelFw), f1 = c.m3(c.plantK, pelFw);
-  if (h0 == null || h1 == null || d0 == null || d1 == null) return refuse("back_hip_or_pelvis_unobserved");
-  const drive = h1 - h0, drop = d1 - d0, F = STRIDE_RHYTHM_FLOORS;
-  const drove = drive > F.back_hip_drive_pct, fell = drop > F.pelvis_drop_pct;
-  const pattern: StridePattern = drove && !fell ? "active" : fell && !drove ? "falling" : drove && fell ? "mixed" : "no_travel";
-  return {
-    key: "active_stride", version: STRIDE_RHYTHM_VERSION, pattern, value: round4(drive), unit: "percent_stature", missing_reason: null,
-    root_evidence: { fault_key: "active_stride_falling", raised: pattern === "falling", emitted: false },
-    lineage: { window: { start_frame: series.frames[startK].frame_index, plant_frame: series.frames[c.plantK].frame_index },
-      back_hip_drive_pct: round4(drive), pelvis_drop_pct: round4(drop), pelvis_forward_pct: f0 != null && f1 != null ? round4(f1 - f0) : null,
-      floors: F, record_only: true, graded: false, root_pattern: "back_leg_did_not_hold_load", root_evidence_enabled: ROOT_EVIDENCE_ENABLED },
-  };
+  if (c.plantK - startK < 3) return refuse("stride_window_too_short");
+  const w = (k: number) => { const a = c.P(k, LM.L_HIP), b = c.P(k, LM.R_HIP); return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : null; };
+  let L = 0; for (let k = c.lock.start_k as number; k <= c.plantK; k++) { const x = c.m3(k, w); if (x != null && x > L) L = x; }
+  if (!(L > 0)) return refuse("hips_unobserved");
+  const th = (k: number) => { const x = c.m3(k, w); return x == null ? null : (Math.acos(Math.min(1, x / L)) * 180) / Math.PI; };
+  const t0 = th(startK); if (t0 == null) return refuse("hips_unobserved_at_p2");
+  let exc = 0, n = 0; for (let k = startK + 1; k <= c.plantK; k++) { const t = th(k); if (t == null) continue; n++; if (Math.abs(t - t0) > Math.abs(exc)) exc = t - t0; }
+  const lin = { window: { start_frame: series.frames[startK].frame_index, plant_frame: series.frames[c.plantK].frame_index }, pelvis_turn_excursion_deg: round4(exc), floor_deg: ACTIVE_STRIDE_TURN_FLOOR_DEG, samples: n, record_only: true, graded: false,
+    limitation: "side-on, the hip line is near edge-on to the camera at stance; the length solve is unsigned and ill-conditioned there, so a turn smaller than the still-clip floor cannot be told apart from noise" };
+  if (n < 3) return refuse("hips_unobserved_through_stride", lin);
+  if (Math.abs(exc) <= ACTIVE_STRIDE_TURN_FLOOR_DEG) return refuse("back_hip_turn_within_still_noise_side_on", lin);
+  return { key: "active_stride", version: STRIDE_RHYTHM_VERSION, pattern: "hip_turned", value: round4(Math.abs(exc)), unit: "degrees", missing_reason: null,
+    root_evidence: null, lineage: { ...lin, method: "pelvis_turn_rigid_length", linear_terms: "none", direction: "unsigned" } };
 }
 
 export function runMicroPauses(series: LandmarkSeries, o: { side: Handedness | null }): MicroPauseResult {
