@@ -27,3 +27,10 @@ Conclusion: no off-the-shelf lifting model (MotionBERT, VideoPose3D, BEDLAM-trai
 - `src/lib/biomech/lift3d/constraintStage.ts` — model-agnostic correction: height scale, fixed bone lengths from Stance Lock, ground plane; frames needing > 8 % of stature correction are marked missing, never repaired.
 
 Measured (synthetic, known focal, ±2 px taps, camera 25 ft behind plate): median camera-position error 8.5 in, 200/200 solved. Side-on low cameras see the plate edge-on and are refused or weak. Automatic corner detection is NOT built: the cleared BaseballCV classes return boxes, not corners.
+
+## Path research (2026-09-30)
+- OpenBiomechanics (Driveline): data CC BY-NC-SA 4.0 + professional-organisation exclusion; code MIT. Commercial use and derived works (trained weights) NOT permitted without a paid commercial licence from Driveline. 100 pitchers / 98 hitters, 411 fastball trials, marker C3D + force plates. Baseball only; no softball equivalent found. Action: request commercial-licence quote.
+- Pose2Sim: BSD-3; ≥2 calibrated cameras; validated vs markers CMC >0.9 sagittal (walking/running/cycling, one subject), 15° hip offset in running. Needs a rig.
+- Synthetic (BEDLAM/AGORA/SURREAL): all non-commercial, SMPL-based. Own pipeline possible on CMU mocap + a commercially licensed body model.
+- Clean pretrained weights: none found for temporal lifting.
+- Paid APIs (DeepMotion, Plask, Move AI, PoseTracker): pricing/terms not verified this pass.
