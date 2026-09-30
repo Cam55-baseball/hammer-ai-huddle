@@ -879,6 +879,149 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_baseline_alerts: {
+        Row: {
+          context_key: string
+          created_at: string
+          direction: string
+          dismissed_at: string | null
+          id: string
+          kind: string
+          metric_key: string
+          observation_id: string
+          user_id: string
+          version: string
+        }
+        Insert: {
+          context_key: string
+          created_at?: string
+          direction: string
+          dismissed_at?: string | null
+          id?: string
+          kind: string
+          metric_key: string
+          observation_id: string
+          user_id: string
+          version: string
+        }
+        Update: {
+          context_key?: string
+          created_at?: string
+          direction?: string
+          dismissed_at?: string | null
+          id?: string
+          kind?: string
+          metric_key?: string
+          observation_id?: string
+          user_id?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_baseline_alerts_observation_id_fkey"
+            columns: ["observation_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_metric_observations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_baseline_alerts_observation_id_fkey"
+            columns: ["observation_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_metric_pairs"
+            referencedColumns: ["obs_a"]
+          },
+          {
+            foreignKeyName: "athlete_baseline_alerts_observation_id_fkey"
+            columns: ["observation_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_metric_pairs"
+            referencedColumns: ["obs_b"]
+          },
+        ]
+      }
+      athlete_baseline_history: {
+        Row: {
+          band_hi: number | null
+          band_lo: number | null
+          computed_at: string
+          context_key: string
+          id: string
+          median: number | null
+          metric_key: string
+          n_used: number
+          noise_floor: number | null
+          observation_id: string
+          q1: number | null
+          q3: number | null
+          robust_sd: number | null
+          status: string
+          trend: string | null
+          user_id: string
+          version: string
+        }
+        Insert: {
+          band_hi?: number | null
+          band_lo?: number | null
+          computed_at?: string
+          context_key: string
+          id?: string
+          median?: number | null
+          metric_key: string
+          n_used: number
+          noise_floor?: number | null
+          observation_id: string
+          q1?: number | null
+          q3?: number | null
+          robust_sd?: number | null
+          status: string
+          trend?: string | null
+          user_id: string
+          version: string
+        }
+        Update: {
+          band_hi?: number | null
+          band_lo?: number | null
+          computed_at?: string
+          context_key?: string
+          id?: string
+          median?: number | null
+          metric_key?: string
+          n_used?: number
+          noise_floor?: number | null
+          observation_id?: string
+          q1?: number | null
+          q3?: number | null
+          robust_sd?: number | null
+          status?: string
+          trend?: string | null
+          user_id?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_baseline_history_observation_id_fkey"
+            columns: ["observation_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_metric_observations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_baseline_history_observation_id_fkey"
+            columns: ["observation_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_metric_pairs"
+            referencedColumns: ["obs_a"]
+          },
+          {
+            foreignKeyName: "athlete_baseline_history_observation_id_fkey"
+            columns: ["observation_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_metric_pairs"
+            referencedColumns: ["obs_b"]
+          },
+        ]
+      }
       athlete_body_goals: {
         Row: {
           created_at: string | null
@@ -1346,34 +1489,55 @@ export type Database = {
       }
       athlete_metric_observations: {
         Row: {
+          capture_context: Json
+          confidence: number | null
+          context_key: string
           created_at: string
           engine_version: string
           id: string
           metric_key: string
+          noise_floor: number | null
           recorded_at: string
+          session_id: string | null
           source: string
+          source_row_id: string | null
+          unit: string | null
           user_id: string
           value: number
           video_id: string | null
         }
         Insert: {
+          capture_context?: Json
+          confidence?: number | null
+          context_key?: string
           created_at?: string
           engine_version: string
           id?: string
           metric_key: string
+          noise_floor?: number | null
           recorded_at?: string
+          session_id?: string | null
           source: string
+          source_row_id?: string | null
+          unit?: string | null
           user_id: string
           value: number
           video_id?: string | null
         }
         Update: {
+          capture_context?: Json
+          confidence?: number | null
+          context_key?: string
           created_at?: string
           engine_version?: string
           id?: string
           metric_key?: string
+          noise_floor?: number | null
           recorded_at?: string
+          session_id?: string | null
           source?: string
+          source_row_id?: string | null
+          unit?: string | null
           user_id?: string
           value?: number
           video_id?: string | null
@@ -8655,6 +8819,42 @@ export type Database = {
           name?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      measurement_definitions: {
+        Row: {
+          athlete_label: string | null
+          created_at: string
+          metric_key: string
+          min_confidence: number
+          noise_floor: number | null
+          notes: string | null
+          policy: string
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          athlete_label?: string | null
+          created_at?: string
+          metric_key: string
+          min_confidence?: number
+          noise_floor?: number | null
+          notes?: string | null
+          policy?: string
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          athlete_label?: string | null
+          created_at?: string
+          metric_key?: string
+          min_confidence?: number
+          noise_floor?: number | null
+          notes?: string | null
+          policy?: string
+          unit?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -18514,6 +18714,22 @@ export type Database = {
       }
     }
     Views: {
+      athlete_metric_pairs: {
+        Row: {
+          context_a: string | null
+          context_b: string | null
+          day: string | null
+          key_a: string | null
+          key_b: string | null
+          obs_a: string | null
+          obs_b: string | null
+          pairing: string | null
+          user_id: string | null
+          value_a: number | null
+          value_b: number | null
+        }
+        Relationships: []
+      }
       checkout_ab_summary: {
         Row: {
           ab_variant: string | null
@@ -18961,6 +19177,7 @@ export type Database = {
         Args: { p_link_code: string; p_session_id: string; p_user_id: string }
         Returns: undefined
       }
+      baseline_recompute: { Args: { p_obs: string }; Returns: undefined }
       batch_decrement_sets: {
         Args: { p_workout_ids: string[] }
         Returns: number
@@ -19311,6 +19528,28 @@ export type Database = {
       }
       is_system_user: { Args: { _uid: string }; Returns: boolean }
       is_training_intel_owner: { Args: { _user_id: string }; Returns: boolean }
+      ledger_record: {
+        Args: {
+          p_at: string
+          p_conf: number
+          p_ctx: Json
+          p_engine: string
+          p_floor: number
+          p_key: string
+          p_session: string
+          p_source: string
+          p_source_row: string
+          p_unit: string
+          p_user: string
+          p_value: number
+          p_video: string
+        }
+        Returns: string
+      }
+      ledger_record_tiles: {
+        Args: { p_field: string; p_tiles: Json; p_video: string }
+        Returns: number
+      }
       manual_archive_scout_applications: {
         Args: never
         Returns: {
