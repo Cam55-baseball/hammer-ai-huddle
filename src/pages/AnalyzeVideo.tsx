@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { CategoryScoreCard } from "@/components/report-card/categories/CategoryScoreCard";
 import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
