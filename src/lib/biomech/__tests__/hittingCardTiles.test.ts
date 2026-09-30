@@ -35,18 +35,21 @@ describe("hitting card tiles including separate front and back heels (23 total)"
     expect(r.back_heel_early_rise.value).toBe(1.4099);
     expect(Number(r.back_heel_early_rise.lineage.peak_pre_p4_frame)).toBeLessThan(Number(r.back_heel_early_rise.lineage.p4_start_frame_excluded));
     expect(r.back_heel_early_rise.lineage.root_pattern_key).toBe("back_leg_did_not_hold_load");
-    // 2026-09-30 ruling: angular speed only. Pelvis 187, torso 188 (tie at 24 fps); lead shoulder 185 → out of order.
+    // 2026-09-30 owner chain: back elbow 186 (proxy), back knee 185, pelvis 187, shoulders 188 — nothing provably out of order at 24 fps.
     expect(r.sequencing.lineage.linear_terms).toBe("none");
-    expect(r.sequencing.verdict).toBe("fail");
-    expect(r.sequencing.lineage.out_of_order).toEqual(["lead_shoulder_before_torso"]);
+    expect(r.sequencing.lineage.back_elbow_source).toBe("forward_speed_relative_to_back_shoulder_proxy");
+    expect(r.sequencing.verdict).toBe("pass");
+    expect(r.sequencing.lineage.out_of_order).toEqual([]);
+    expect(r.sequencing.lineage.unresolved_ties).toEqual(["back_elbow~back_knee"]);
     expect(r.pelvis_rotation_efficiency.value).not.toBeNull();
     expect(r.back_elbow_connection.value).toBe(8.6633); expect(r.back_elbow_connection.verdict).toBe("pass");
     expect(r.shoulder_plane_steadiness.value).toBeNull();
     expect(r.shoulder_plane_steadiness.lineage.reason).toBe("swing_peak_not_after_p4_start");
     expect(r.finish_balance.value).toBeNull();
     // 2026-09-29 duplicate-decode repair: spacing is observed on too few real frames → refuses (was "fail").
-    expect(r.shoulder_to_shoulder_hold.verdict).toBeNull();
-    expect(r.shoulder_to_shoulder_hold.lineage.reason).toBe("spacing_unobserved_for_most_of_window");
+    // 2026-09-30: gap refuses side-on, leak reports — head-to-front-shoulder angle moved 14.5° (floor 3.2°) before P4.
+    expect(r.shoulder_to_shoulder_hold.lineage.reported_channel).toBe("leak_only");
+    expect(r.shoulder_to_shoulder_hold.value).toBe(14.4629); expect(r.shoulder_to_shoulder_hold.verdict).toBe("fail");
     expect(r.back_knee_flex_maintained.value).toBe(-7.3573); expect(r.back_knee_flex_maintained.verdict).toBe("pass");
     expect(r.post_landing_hip_drift.value).toBe(6.8282); expect(r.post_landing_hip_drift.verdict).toBe("fail");
     expect(r.post_landing_hip_drift.lineage.hips_rotating).toBe(true);
