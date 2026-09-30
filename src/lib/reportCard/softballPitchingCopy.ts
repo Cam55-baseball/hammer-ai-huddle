@@ -11,6 +11,7 @@ export const SP_BASIS_LABEL: Record<SpBasis, string> = {
   SOURCED_BAND: "Research-based standard (published range)",
   SOURCED_CORRELATION: "Research-based — recorded, never graded",
   PROPOSED: "Proposed starting standard — not yet published",
+  SOURCED_MIXED: "Research is mixed — recorded and compared only with your own pitching, never graded",
 };
 
 export const SP_PRO_LINE = "Worth showing this to your coach or a qualified pitching or medical professional.";
@@ -20,8 +21,8 @@ export const SP_CARD_INTRO = "This windmill card is built from published softbal
 export const SOFTBALL_PITCHING_COPY: Record<SpKey, { name: string; standard: string; coach: string; missing: string }> = {
   stride_profile: {
     name: "Stride Through the Circle",
-    standard: "Stride length compared with your height, checked at the back of the circle, at stride foot contact and at release. Research-based standard; the pass window is a proposed starting point. Graded only for a fastball with your age group known.",
-    coach: "Drive off the rubber and let the stride carry you toward the plate. Your stride changes with the pitch you throw, so we only grade it on your fastball.",
+    standard: "Stride length compared with your height, checked when your stride foot lands and at release. Recorded, not graded yet.",
+    coach: "Drive off the rubber and let the stride carry you toward the plate. Your stride changes with the pitch you throw, so we track it rather than grade it.",
     missing: "We couldn't see both feet clearly through the stride on this clip.",
   },
   stride_triple_extension: {
@@ -35,6 +36,12 @@ export const SOFTBALL_PITCHING_COPY: Record<SpKey, { name: string; standard: str
     standard: "Recorded only, never graded. Research on young pitchers links more forward lean with more speed, so more lean is never marked as a fault.",
     coach: "Staying over your front side as you come through is a good thing — it's shown here so you and your coach can track it.",
     missing: "We couldn't see your hips and shoulders clearly at the key moments.",
+  },
+  sfc_separation: {
+    name: "Hip and Shoulder Separation",
+    standard: "Recorded on every pitch and compared only with your own normal range. Every pitcher's body is different, so there is no single right amount — your best range comes from your own pitching.",
+    coach: "Let your hips lead and your shoulders stay back a beat as your stride foot lands. We'll learn where you sit when you throw your best and help you stay there.",
+    missing: "We couldn't read your hips and shoulders clearly when your stride foot landed.",
   },
   sfc_foot_angle: {
     name: "Stride Foot Landing Angle",
