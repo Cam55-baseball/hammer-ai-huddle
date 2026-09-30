@@ -136,17 +136,47 @@ export function solveFieldCamera(world: P2[], image: P2[], o: PnPOptions): PnPRe
   // Ground frame has +z up; image y points down so the solved camera may sit at −z. Fold to +z.
   const camZ = Math.abs(C[2]);
   if (camZ < 1) return refuse("camera_below_ground", `camera height ${camZ.toFixed(1)}in`);
-  let se = 0;
-  world.forEach((w, i) => {
-    const X = [R[0][0] * w.x + R[0][1] * w.y + t[0], R[1][0] * w.x + R[1][1] * w.y + t[1], R[2][0] * w.x + R[2][1] * w.y + t[2]];
-    const u = f * X[0] / X[2] + cx, v = f * X[1] / X[2] + cy;
-    se += (u - image[i].x) ** 2 + (v - image[i].y) ** 2;
-  });
-  const rms = Math.sqrt(se / world.length);
+  // Refine pose (and focal when unknown) by minimising reprojection error.
+  const fitF = !(o.focalPx && o.focalPx > 0);
+  let p = [...rotToVec(R), ...t, ...(fitF ? [f] : [])];
+  const resid = (q: number[]) => {
+    const Rq = vecToRot(q.slice(0, 3)), fq = fitF ? q[6] : f, out: number[] = [];
+    world.forEach((w, i) => {
+      const X = [0, 1, 2].map((r) => Rq[r][0] * w.x + Rq[r][1] * w.y + q[3 + r]);
+      out.push(fq * X[0] / X[2] + cx - image[i].x, fq * X[1] / X[2] + cy - image[i].y);
+    });
+    return out;
+  };
+  let lambda = 1e-3, e = resid(p), cost = e.reduce((s, v) => s + v * v, 0);
+  for (let it = 0; it < 100; it++) {
+    const J = p.map((_, j) => { const h = Math.max(1e-6, Math.abs(p[j]) * 1e-6); const q = [...p]; q[j] += h; return resid(q).map((v, k) => (v - e[k]) / h); });
+    const n = p.length, A = Array.from({ length: n }, (_, a) => Array.from({ length: n }, (_, b) => J[a].reduce((s, v, k) => s + v * J[b][k], 0) + (a === b ? lambda * (1 + J[a].reduce((s, v) => s + v * v, 0)) : 0)));
+    const g = Array.from({ length: n }, (_, a) => -J[a].reduce((s, v, k) => s + v * e[k], 0));
+    const dp = solve(A, g); if (!dp) break;
+    const q = p.map((v, j) => v + dp[j]), eq = resid(q), cq = eq.reduce((s, v) => s + v * v, 0);
+    if (Number.isFinite(cq) && cq < cost) { p = q; e = eq; const done = cost - cq < 1e-10 * cost; cost = cq; lambda *= 0.3; if (done) break; } else lambda *= 10;
+  }
+  const Rf = vecToRot(p.slice(0, 3)), tf = p.slice(3, 6), ff = fitF ? p[6] : f;
+  const Cf = [0, 1, 2].map((i) => -(Rf[0][i] * tf[0] + Rf[1][i] * tf[1] + Rf[2][i] * tf[2]));
+  if (Math.abs(Cf[2]) < 1 || tf[2] <= 0) return refuse("camera_below_ground", "refined pose places camera on or behind the ground");
+  const rms = Math.sqrt(cost / world.length);
   const maxRms = o.maxRmsPx ?? 3;
   if (rms > maxRms) return refuse("reprojection_too_high", `rms ${rms.toFixed(2)}px > ${maxRms}px — taps or detections disagree with the known shape`);
-  return { ok: true, version: FIELD_PNP_VERSION, focal_px: f, R, t, camera_in: { x: C[0], y: C[1], z: camZ },
-    camera_height_ft: camZ / 12, camera_distance_ft: Math.hypot(C[0], C[1]) / 12, reprojection_rms_px: rms, n_points: world.length };
+  return { ok: true, version: FIELD_PNP_VERSION, focal_px: ff, R: Rf, t: tf, camera_in: { x: Cf[0], y: Cf[1], z: Math.abs(Cf[2]) },
+    camera_height_ft: Math.abs(Cf[2]) / 12, camera_distance_ft: Math.hypot(Cf[0], Cf[1]) / 12, reprojection_rms_px: rms, n_points: world.length };
+}
+
+function vecToRot(v: number[]): number[][] {
+  const th = Math.hypot(v[0], v[1], v[2]);
+  if (th < 1e-12) return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  const [x, y, z] = v.map((c) => c / th), c = Math.cos(th), s = Math.sin(th), C = 1 - c;
+  return [[c + x * x * C, x * y * C - z * s, x * z * C + y * s], [y * x * C + z * s, c + y * y * C, y * z * C - x * s], [z * x * C - y * s, z * y * C + x * s, c + z * z * C]];
+}
+function rotToVec(R: number[][]): number[] {
+  const c = Math.max(-1, Math.min(1, (R[0][0] + R[1][1] + R[2][2] - 1) / 2)), th = Math.acos(c);
+  if (th < 1e-9) return [0, 0, 0];
+  const k = th / (2 * Math.sin(th));
+  return [(R[2][1] - R[1][2]) * k, (R[0][2] - R[2][0]) * k, (R[1][0] - R[0][1]) * k];
 }
 
 /** Synthetic projector used by tests and accuracy sweeps. */
