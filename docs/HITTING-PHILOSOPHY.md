@@ -843,3 +843,9 @@ What it establishes (built 2026-09-30, `metrics/hittingCardTiles.ts`):
 - **Forward movement is the buffer**, not a link. No translation term enters the order check.
 - **Measurement:** peak angular speed per link. Side-on the back upper arm points at the camera for most of the swing (image length under 60% of stance length), so the elbow link falls back to a labelled proxy: the elbow's forward speed relative to the back shoulder — the owner's own words for the trigger, and the arm's motion, not body travel.
 - **Chin-to-shoulder tuck** is confirmed doctrine with two benefits: ease of movement and seeing the ball. The leak (head-to-front-shoulder angle, end of P2 → P4 start, still floor 3.2°) is measured side-on; the gap itself is reported only when visible.
+
+## Sequencing — the true test `[owner-supplied 2026-09-30]`
+
+"The knee leads hips leads shoulders leads hands is the same sequence in a different way to see it but we know the hitters move starts it. We should be able to see if it is happening. That is bottom of the barrel inference. The true test by itself is hips before shoulders and the other tests give signals for the rest of the sequencing to paint a whole picture if we cannot see it. Depending on a users fascial system the back elbow/bicep may not have to begin moving far forward at all before activating the chain & it does not have to move completely forward, it just has to begin the forward move to release our loaded power step. Elbow begins the hitters move responsible for getting the barrel to the ball in a timely manner. The elbow does not have to be fast at all, it is about the sequence of the matter. The elbow moving down and toward the pitcher is what we are looking for."
+
+"Theoretically we want that shin over/in line with/or beyond the front shoulder toward the back until landing (P3 is over) & P4 begins."
