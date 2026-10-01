@@ -41,3 +41,14 @@ describe("owner drill builder", () => {
     expect(app).toMatch(/\/owner\/drill-builder" element=\{<StaffOnlyRoute><DrillBuilder/);
   });
 });
+
+describe("usage is never effectiveness", () => {
+  it("no drill screen claims outcome evidence", () => {
+    for (const f of ["src/components/analyze/AnalysisPrescriptionSection.tsx", "src/pages/owner/DrillBuilder.tsx"]) {
+      expect(readFileSync(f, "utf8")).not.toMatch(/most effective|best performing|proven|top performer|works best/i);
+    }
+  });
+  it("athletes never see usage counts", () => {
+    expect(readFileSync("src/components/analyze/AnalysisPrescriptionSection.tsx", "utf8")).not.toMatch(/Used \{|Repeated|usage/);
+  });
+});
