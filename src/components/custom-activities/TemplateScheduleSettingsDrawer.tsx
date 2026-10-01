@@ -146,7 +146,7 @@ export function TemplateScheduleSettingsDrawer({
               <div className="flex-1">
                 <p className="font-medium">{t('customActivity.showOnGamePlan', 'Show on My Daily Game Plan')}</p>
                 <p className="text-sm text-muted-foreground">
-                  {t('customActivity.showOnGamePlanDesc', 'Display this activity in your daily My Daily Game Plan')}
+                  {t('customActivity.showOnGamePlanDesc', 'Display this activity in My Daily Game Plan')}
                 </p>
               </div>
               <Switch 

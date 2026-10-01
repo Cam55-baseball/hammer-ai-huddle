@@ -73,13 +73,13 @@ export function LockDayPickerDialog({
   // Get display labels for selected days (new locks only)
   const selectedDayLabels = selectedDays
     .sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b))
-    .map(d => t(`My Daily Game Plan.lockOrder.days.${DAYS.find(day => day.value === d)?.key}`))
+    .map(d => t(`gamePlan.lockOrder.days.${DAYS.find(day => day.value === d)?.key}`))
     .join(', ');
 
   // Get display labels for already locked days
   const lockedDayLabels = lockedDays
     .sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b))
-    .map(d => t(`My Daily Game Plan.lockOrder.days.${DAYS.find(day => day.value === d)?.key}`))
+    .map(d => t(`gamePlan.lockOrder.days.${DAYS.find(day => day.value === d)?.key}`))
     .join(', ');
 
   return (

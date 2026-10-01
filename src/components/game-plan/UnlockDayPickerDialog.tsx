@@ -71,7 +71,7 @@ export function UnlockDayPickerDialog({
   // Get display labels
   const lockedDayLabels = selectedLockedDays
     .sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b))
-    .map(d => t(`My Daily Game Plan.lockOrder.days.${DAYS.find(day => day.value === d)?.key}`))
+    .map(d => t(`gamePlan.lockOrder.days.${DAYS.find(day => day.value === d)?.key}`))
     .join(', ');
 
   const unlockedDays = DAYS.filter(d => !selectedLockedDays.includes(d.value));
