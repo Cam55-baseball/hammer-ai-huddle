@@ -93,7 +93,9 @@ export function SpotlightTour({ tourId, steps, open, onClose }: Props) {
       setVp({ w: window.innerWidth, h: window.innerHeight });
       const el = targetRef.current;
       if (!el || !el.isConnected) { setRect(null); return; }
-      setRect(el.getBoundingClientRect());
+      const nr = el.getBoundingClientRect();
+      (window as unknown as { __tourRect?: DOMRect }).__tourRect = nr;
+      setRect(nr);
     });
   }, []);
 
