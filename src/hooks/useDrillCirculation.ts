@@ -49,6 +49,11 @@ export function useDrillCirculation() {
   }, [user]);
 
   const catalog: EliteDrill[] = useMemo(() => mergeCatalog(ELITE_DRILL_CATALOG, rows), [rows]);
+  /** Every drill ever defined, switched off or not — for showing past prescriptions intact. */
+  const historyCatalog: EliteDrill[] = useMemo(
+    () => mergeCatalog(ELITE_DRILL_CATALOG, rows.map((r) => ({ ...r, active: true }))),
+    [rows],
+  );
   const circulation: CirculationInput = useMemo(() => ({ servedToUser: served, usage }), [served, usage]);
 
   const log = useCallback(
@@ -74,5 +79,5 @@ export function useDrillCirculation() {
     [completedOn, log],
   );
 
-  return { catalog, circulation, log, markDone };
+  return { catalog, historyCatalog, circulation, log, markDone, userId: user?.id ?? null };
 }

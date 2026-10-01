@@ -1669,6 +1669,7 @@ export default function AnalyzeVideo() {
                         violations={analysis.violations_detected ?? null}
                         faultKeys={(analysis.improvements ?? []).map((i) => i.fault_key ?? "").filter(Boolean)}
                         includePendingReview={isOwner || isAdmin}
+                        historyKey={currentVideoId}
                       />
                     }
                      recommendations={

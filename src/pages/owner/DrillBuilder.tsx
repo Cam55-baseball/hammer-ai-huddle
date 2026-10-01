@@ -78,7 +78,7 @@ export default function DrillBuilder() {
   useEffect(() => { void load(); }, []);
 
   const overrideById = useMemo(() => new Map(rows.filter((r) => r.overrides_drill_id).map((r) => [r.overrides_drill_id!, r])), [rows]);
-  const ownerOnly = rows.filter((r) => !r.overrides_drill_id && !r.placements.includes("retired"));
+  const ownerOnly = rows.filter((r) => !r.overrides_drill_id);
 
   const groups = useMemo(() => ANALYSIS_PLACEMENTS.map((p) => {
     const [, sport, cat] = p.id.split(":");
@@ -119,26 +119,6 @@ export default function DrillBuilder() {
     const db = supabase as any;
     if (row) await db.from("owner_drills").update({ active: !row.active }).eq("id", row.id);
     else if (builtIn) await db.from("owner_drills").insert({ ...fromBuiltIn(builtIn), active: false });
-    void load();
-  };
-
-  /** Same button, system decides: never given → deleted; given → retired. */
-  const removeDrill = async (r: OwnerDrillRow) => {
-    if (!window.confirm(`Remove "${r.name}"?`)) return;
-    const db = supabase as any;
-    const { count } = await db.from("drill_engagement").select("id", { count: "exact", head: true })
-      .eq("event", "served").like("drill_id", `owner.${r.id}%`);
-    const retire = async (why: string) => {
-      await db.from("owner_drills").update({ active: false, placements: [...r.placements, "retired"] }).eq("id", r.id);
-      toast({ title: "Retired", description: why });
-    };
-    if ((count ?? 1) > 0) {
-      await retire("Athletes have been given this drill, so it stays in their history. It won't be prescribed again.");
-    } else {
-      const { data } = await db.from("owner_drills").delete().eq("id", r.id).select("id");
-      if (data && data.length) toast({ title: "Deleted", description: "No athlete was ever given this drill." });
-      else await retire("No athlete was given it, but full deletion isn't switched on yet, so it was retired instead.");
-    }
     void load();
   };
 
@@ -185,7 +165,6 @@ export default function DrillBuilder() {
                 <div className="flex items-center gap-2">
                   <Switch checked={r.active} onCheckedChange={() => toggleActive(r)} aria-label="Drill on or off" />
                   <Button size="sm" variant="ghost" onClick={() => setDraft({ ...r })} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
-                  <Button size="sm" variant="ghost" onClick={() => removeDrill(r)} aria-label="Delete">Delete</Button>
                 </div>
               </div>
             ))}
@@ -217,7 +196,6 @@ export default function DrillBuilder() {
               <div className="flex items-center gap-2">
                 <Switch checked={r.active} onCheckedChange={() => toggleActive(r)} aria-label="Drill on or off" />
                 <Button size="sm" variant="ghost" onClick={() => setDraft({ ...r })} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
-                <Button size="sm" variant="ghost" onClick={() => removeDrill(r)}>Delete</Button>
               </div>
             </div>
           ))}
