@@ -27,7 +27,7 @@ interface Props {
  */
 export function RadialMeter({
   fraction,
-  acceptable = 0.6,
+  acceptable = null,
   elite,
   status,
   centerLabel,

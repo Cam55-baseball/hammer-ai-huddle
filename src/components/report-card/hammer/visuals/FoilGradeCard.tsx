@@ -8,6 +8,9 @@ export interface DisciplineRibbonProps {
   total: number;
   eliteCount?: number;
   nonNegotiableFailed?: number;
+  categoryTotal?: number | null;
+  categoryMax?: number;
+  coverageLabel?: string;
 }
 
 /**
@@ -21,6 +24,9 @@ export function FoilGradeCard({
   total,
   eliteCount = 0,
   nonNegotiableFailed = 0,
+  categoryTotal,
+  categoryMax,
+  coverageLabel,
 }: DisciplineRibbonProps) {
   const reduce = useReducedMotion();
   const coveragePct = total > 0 ? Math.round((measured / total) * 100) : 0;
@@ -52,7 +58,7 @@ export function FoilGradeCard({
             <div className="text-lg font-black leading-tight">{disciplineLabel}</div>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-1.5">
-            <CoverageChip pct={coveragePct} label={`${measured}/${total} measured`} />
+             <CoverageChip pct={coveragePct} label={coverageLabel ?? `${measured}/${total} measured`} />
             {eliteCount > 0 && (
               <span
                 className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-wider text-foreground"
@@ -70,6 +76,10 @@ export function FoilGradeCard({
             )}
           </div>
         </div>
+
+        {categoryTotal != null && categoryMax != null && (
+          <p className="text-xl font-black tabular-nums">{categoryTotal} / {categoryMax}</p>
+        )}
 
         <p className="text-xs font-semibold leading-snug text-muted-foreground">
           You don't need elite mechanics to compete like an all-time great — chase progress, not

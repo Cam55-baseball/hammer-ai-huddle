@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useScoredGradingAccess, SCORED_GRADING_NOTICE } from "@/hooks/useScoredGradingAccess";
 import { measuredClipSpec } from "@/lib/reportCard/measuredClipSpec";
+import { measuredClipScore } from "@/lib/reportCard/measuredClipSpec";
+import { PHASE_EXPLAINER } from "@/lib/reportCard/measuredClipCopy";
 
 interface Props {
   sport: string | undefined;
@@ -88,6 +90,7 @@ export function HammerReportCard({
 
 
   const tilesWithState = spec.tiles.map((t) => ({ spec: t, state: t.compute(analysis) }));
+  const scored = measuredOnly ? measuredClipScore(analysis as Record<string, unknown>, sport, module) : null;
 
   const total = tilesWithState.length;
   const measured = tilesWithState.filter((t) => t.state.status !== "missing").length;
@@ -114,8 +117,13 @@ export function HammerReportCard({
       key,
       label: key,
       count: v.total,
-      measured: v.measured,
+       measured: scored ? (scored.categories.find((c) => c.title === key)?.coverage.scoredTiles ?? v.measured) : v.measured,
       passRate: v.measured > 0 ? v.passed / v.measured : 0,
+       ...(scored?.categories.find((c) => c.title === key) ? {
+         score: scored.categories.find((c) => c.title === key)?.score,
+         points: scored.categories.find((c) => c.title === key)?.points,
+         status: scored.categories.find((c) => c.title === key)?.status,
+       } : {}),
     }));
   })();
 
@@ -147,8 +155,17 @@ export function HammerReportCard({
           total={total}
           eliteCount={eliteCount}
           nonNegotiableFailed={nonNegotiableFailed}
+          categoryTotal={scored?.total}
+          categoryMax={scored ? 100 : undefined}
+          coverageLabel={scored ? `${scored.categories.filter((c) => !c.additive && c.status === "complete").length} / ${scored.categories.filter((c) => !c.additive).length} categories measured` : undefined}
         />
       </motion.div>
+
+      {scored?.card === "hitting" && (
+        <section aria-label="Hitting phases" className="space-y-1 text-xs leading-relaxed text-muted-foreground">
+          {PHASE_EXPLAINER.map((line) => <p key={line}>{line}</p>)}
+        </section>
+      )}
 
       {/* Phase rail — staggered 120ms after ribbon */}
       {spec.groupByPhase && phases.length > 0 && (

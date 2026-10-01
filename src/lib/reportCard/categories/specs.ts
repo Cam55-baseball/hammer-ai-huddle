@@ -72,31 +72,31 @@ const P1_PROOF = "p1.back_leg_balance_at_load";
 export const HITTING_CATEGORIES: CardCategorySpec = {
   card: "hitting",
   sections: [],
-  scaleTo: 100,
+  scaleTo: 97,
   showTotal: true,
   cardNotes: [
-    "The five scored categories add up to 100. Front Leg Gather is a bonus on top and the total is capped at 100, so a hitter who doesn't use a gather can still reach 100.",
+    "The scored categories make up the base score. Front Leg Gather only adds points; it never takes them away.",
   ],
   categories: [
-    { key: "p1", title: "P1: Create Balance", points: 20, tiles: [
-      { key: "hip_load", name: "Back hip socket rotation reached at P1", points: 13, nonNegotiable: true, read: verdictAt("pose.hip_load") },
+    { key: "p1", title: "Phase 1 — Create Balance", points: 20, tiles: [
+      { key: "hip_load", name: "Back hip socket rotation reached at Phase 1 — Create Balance", points: 13, nonNegotiable: true, read: verdictAt("pose.hip_load") },
       { key: "back_leg_balance_at_load", name: "Back-leg balance, proven by the stride", points: 7, disproves: "hip_load", read: backLegBalanceProven },
     ] },
-    { key: "p2", title: "P2: Gather", points: 13, tiles: [
+    { key: "p2", title: "Phase 2 — Gather", points: 13, tiles: [
       { key: "hand_load", name: "Hands loaded behind the head", points: 5, read: verdictAt("pose.hand_load") },
       { key: "hand_load_depth", name: "Hand load depth", points: 4, recordOnly: true, baselineKey: "hitting_pose_tiles_deterministic.hand_load", read: recordAt("pose.hand_load") },
       { key: "p2_timing", name: "Hand load timing vs the pitcher", points: 4, read: verdictAt("pose.p2_timing", naPitcher) },
     ] },
-    { key: "p3", title: "P3: Load by Stride", points: 19, tiles: [
+    { key: "p3", title: "Phase 3 — Load by Stride", points: 17, tiles: [
       { key: "back_hip_socket_hold", evidenceFor: P1_PROOF, name: "Back hip socket holds or increases", points: 3, nonNegotiable: true, read: verdictAt("owner.tile20") },
-      { key: "head_path_through_stride", evidenceFor: P1_PROOF, name: "Head path through the stride", points: 2, read: verdictAt("owner.tile19") },
+      { key: "head_path_through_stride", evidenceFor: P1_PROOF, name: "Head path through the stride", points: 0, read: verdictAt("owner.tile19") },
       { key: "active_stride", name: "Stride driven by the back hip, not a fall", points: 2, recordOnly: true, baselineKey: "hitting_rhythm.active_stride", read: recordAt("rhythm.active") },
       { key: "stride_foot_vs_body", name: "Foot goes forward, body stays back", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.foot_vs_body", read: coilAt("foot_vs_body") },
       { key: "stride_hands_opposite", name: "Hands go back as the foot goes forward", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.hands_opposite", read: coilAt("hands_opposite") },
       { key: "stride_side_bend", name: "Side bend builds through the stride", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.side_bend", read: coilAt("side_bend") },
       { key: "stride_sink", name: "Sinking into the back leg, not falling forward", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.sink", read: coilAt("sink") },
       { key: "head_discipline", evidenceFor: P1_PROOF, name: "Head discipline", points: 2, read: verdictAt("pose.head_discipline") },
-      { key: "back_heel_early_rise", evidenceFor: P1_PROOF, name: "Back heel stays down until P4", points: 2, read: verdictAt("card.back_heel_early_rise") },
+      { key: "back_heel_early_rise", evidenceFor: P1_PROOF, name: "Back heel stays down until Phase 4 — Hitter's Move", points: 2, read: verdictAt("card.back_heel_early_rise") },
       { key: "stride_direction", name: "Stride direction to the pitcher", points: 2, read: verdictAt("pose.stride_direction") },
       { key: "p3_timing", name: "Foot-down timing vs the pitcher", points: 2, read: verdictAt("pose.p3_timing", naPitcher) },
       { key: "back_knee_flex_maintained", evidenceFor: P1_PROOF, name: "Back knee holds its bend", points: 1, read: verdictAt("card.back_knee_flex_maintained") },
@@ -104,22 +104,22 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
       { key: "hands_outside_shoulders_at_landing", name: "Hands outside the shoulders at landing", points: 1, read: verdictAt("pose.hands_outside_shoulders_at_landing") },
       { key: "hands_stay_up_at_plant", name: "Hands above the back elbow at heel landing", points: 1, read: verdictAt("card.hands_stay_up_at_plant") },
     ] },
-    { key: "p4", title: "P4: Hitter's Move", points: 40, note: "This meter is the Hitter's Move composite.", tiles: [
+    { key: "p4", title: "Phase 4 — Hitter's Move", points: 40, note: "This meter is the Hitter's Move composite.", tiles: [
       { key: "sequencing", name: "Hips turn before shoulders", points: 9, nonNegotiable: true, read: verdictAt("card.sequencing", naDelayCam) },
       { key: "separation_magnitude", name: "How far the hips lead the shoulders", points: 0, recordOnly: true, baselineKey: "hitting_card_tiles.separation_magnitude", read: recordAt("card.separation_magnitude") },
       { key: "shoulder_to_shoulder_hold", name: "Chin-to-shoulder hold and front-shoulder leak", points: 9, nonNegotiable: true, read: verdictAt("card.shoulder_to_shoulder_hold") },
       { key: "back_elbow_connection", name: "Hands stay back while the elbow gains ground", points: 5, read: verdictAt("card.back_elbow_connection") },
       { key: "shoulder_plane_steadiness", name: "Shoulder plane steadiness", points: 5, read: scoreAt("card.shoulder_plane_steadiness") },
-      { key: "lead_elbow_bend_increasing", name: "Lead elbow bend no more than at the end of P2", points: 4, read: verdictAt("card.lead_elbow_bend_increasing") },
+      { key: "lead_elbow_bend_increasing", name: "Lead elbow bend no more than at the end of Phase 2 — Gather", points: 4, read: verdictAt("card.lead_elbow_bend_increasing") },
       { key: "head_vertical_movement_post_landing", name: "Head not rising before the ball is gone", points: 4, read: verdictAt("card.head_vertical_movement_post_landing") },
       { key: "post_landing_hip_drift", evidenceFor: P1_PROOF, name: "Hips rotating after landing, not drifting", points: 4, read: verdictAt("card.post_landing_hip_drift") },
     ] },
     { key: "finish", title: "The Finish", points: 7, tiles: [
-      { key: "pelvis_rotation_efficiency", name: "Pelvis square to fair at the end of P4", points: 4, read: verdictAt("card.pelvis_rotation_efficiency") },
+      { key: "pelvis_rotation_efficiency", name: "Pelvis square to fair at the end of Phase 4 — Hitter's Move", points: 4, read: verdictAt("card.pelvis_rotation_efficiency") },
       { key: "finish_balance", name: "Finish balance", points: 3, read: verdictAt("card.finish_balance") },
     ] },
-    { key: "front_leg_gather", title: "Front Leg Gather (bonus)", points: 3, additive: true,
-      note: "A power-loading option during P2, never required. It can only add points, never take them away.",
+    { key: "front_leg_gather", title: "Front Leg Gather", points: 3, additive: true,
+      note: "A power-loading option during Phase 2 — Gather, never required. It can only add points, never take them away.",
       tiles: [
         { key: "front_leg_gather", name: "Front leg gather", points: 3, recordOnly: true, baselineKey: "hitting_gather.front_leg_gather", read: gatherPresent },
       ] },

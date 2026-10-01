@@ -52,12 +52,11 @@ export function withoutMeasurementNotation(text: string): string {
   const lines = text.split(/(?<=[.!?])\s+|\n+/).filter((part) => !/[<>≤≥≈~±]?\s*[-+]?\d+(?:\.\d+)?\s*(?:[°%]|ms\b|milliseconds?\b|fps\b|mph\b)/i.test(part));
   const safe = lines.join(" ")
     .replace(/\b(?:frames?)\s*#?\d+\b/gi, "that moment")
-    .replace(/\bP1\b/gi, "the load")
-    .replace(/\bP2\b/gi, "the hand load")
-    .replace(/\bP3\b/gi, "the stride")
-    .replace(/\bP4\b/gi, "the turn")
+    .replace(/\bP([1-4])\b/gi, "Phase $1")
+    .replace(/\bPhase\s+Phase\s+/gi, "Phase ")
+    .replace(/\bPhase ([1-4])\b(?!\s*—)/gi, (_, n: string) => `Phase ${n} — ${["", "Create Balance", "Gather", "Load by Stride", "Hitter's Move"][Number(n)]}`)
     .replace(/\b\d+(?:\.\d+)?\s*(?:seconds?|secs?|inches|feet|ft)\b/gi, "")
-    .replace(/\b\d+(?:\.\d+)?\b/g, "")
+    .replace(/\b(?<!Phase )\d+(?:\.\d+)?\b/g, "")
     .replace(/\s{2,}/g, " ").trim();
   return safe || "We couldn't make a trustworthy coaching call on this from the clip.";
 }

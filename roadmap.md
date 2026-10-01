@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Report-card content draft: doctrine-backed hitting tiles, honest reading and failure context, category header/rail, numbered phase labels and phase explainer; owner wording approval pending.
 - [x] Analysis/Report Card separation: clean coaching on Analysis, clip-local measured tiles on Report Card, no athlete-facing tracking or camera detection cards; camera and tracking saved with landmark diagnostics.
 - [ ] Completed-clip browser readback for both tabs — blocked: the signed-in preview opens at upload, not an existing result; available movement footage is broadcast footage with unreliable subject tracking. Do not fabricate a completed screen result or run the same invalid clip as proof.
 - [ ] Staff View display of saved clip diagnostics — blocked: this training-only view has separate athlete access rules; do not expose another athlete's landmark records without an authorized clip-specific read path.

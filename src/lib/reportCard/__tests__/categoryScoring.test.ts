@@ -22,10 +22,11 @@ const pitching = (s: S) => ({ tiles: runPitchingTiles(s, { throwing_side: "R" })
 const summary = (c: ReturnType<typeof scoreCard>) => ({ total: c.total, totalReason: c.totalReason, cats: c.categories.map((x) => [x.key, x.status, x.score, x.points, x.incompleteReason, x.measuredShare]) });
 
 describe("category scoring", () => {
-  it("weights: hitting 99 + 3 bonus; pitching 100; allocations sum", () => {
+  it("weights: hitting 97 + 3 additive bonus; pitching 100; allocations sum", () => {
     for (const spec of [HITTING_CATEGORIES, PITCHING_CATEGORIES, THROWING_CATEGORIES, WINDMILL_CATEGORIES])
       for (const c of spec.categories) expect(c.tiles.reduce((a, t) => a + t.points, 0)).toBe(c.points);
-    expect(HITTING_CATEGORIES.categories.filter((c) => !c.additive).reduce((a, c) => a + c.points, 0)).toBe(99);
+    expect(HITTING_CATEGORIES.categories.filter((c) => !c.additive).reduce((a, c) => a + c.points, 0)).toBe(97);
+    expect(HITTING_CATEGORIES.categories.map((c) => c.points)).toEqual([20, 13, 17, 40, 7, 3]);
     expect(THROWING_CATEGORIES.categories.reduce((a, c) => a + c.points, 0)).toBe(100);
     expect(PITCHING_CATEGORIES.categories.reduce((a, c) => a + c.points, 0)).toBe(100);
     expect(INCOMPLETE_MIN_SHARE).toBe(0.6);
@@ -142,9 +143,9 @@ describe("evidence rule — a thin category never shows full marks (2026-09-30)"
     const hl = by.p1.tiles.find((t: { key: string }) => t.key === "hip_load")!.outcome; expect(hl).toMatchObject({ status: "scored", frac: 0, disprovenBy: "back_leg_balance_at_load" });
     for (const k of ["head_discipline", "back_heel_early_rise", "back_hip_socket_hold", "head_path_through_stride"]) expect(by.p3.tiles.find((t: { key: string }) => t.key === k)!.outcome.status).toBe("attributed");
     expect(by.p3.tiles.find((t: { key: string }) => t.key === "back_knee_flex_maintained")!.outcome.status).toBe("scored");
-    expect(by.p2.status).toBe("limited_evidence"); expect(by.p2.measuredScore).toEqual({ earned: 5.1, outOf: 5.1 });
+    expect(by.p2.status).toBe("limited_evidence"); expect(by.p2.measuredScore).toEqual({ earned: 5, outOf: 5 });
     expect(by.p3.status).toBe("incomplete"); expect(by.p3.coverage.attributedElsewhere).toBe(4);
-    expect(by.p4.status).toBe("limited_evidence"); expect(by.p4.measuredScore).toEqual({ earned: 9.1, outOf: 18.2 } /* hip drift fail counts as P1 proof, not against P4 */);
+    expect(by.p4.status).toBe("limited_evidence"); expect(by.p4.measuredScore).toEqual({ earned: 9, outOf: 18 } /* hip drift fail counts as P1 proof, not against P4 */);
     expect(r.total).toBeNull();
   });
 });
