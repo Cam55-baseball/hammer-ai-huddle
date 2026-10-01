@@ -153,3 +153,12 @@ describe("evidence rule — a thin category never shows full marks (2026-09-30)"
     expect(r.total).toBeNull();
   });
 });
+
+import { backLegProof } from "../categories/specs";
+describe("P1 proof never passes on absence of a fault (owner 2026-10-01)", () => {
+  const held = { coil: { foot_vs_body: { pattern: "body_stayed_back" } }, card: { back_heel_early_rise: { verdict: "pass" } } };
+  it("no stride → unproven, not pass", () => expect(backLegProof({ coil: { foot_vs_body: { pattern: "no_stride" } } }).verdict).toBeNull());
+  it("held but sequencing routed to DelayCam → proof incomplete", () => expect(backLegProof(held)).toMatchObject({ verdict: null, unproven: "proof_incomplete:hip_first_sequencing_not_readable" }));
+  it("held + graded hips-first → pass", () => expect(backLegProof({ ...held, card: { ...held.card, sequencing: { verdict: "pass" } } }).verdict).toBe("pass"));
+  it("graded insufficient separation → fail", () => expect(backLegProof({ ...held, card: { ...held.card, sequencing: { verdict: "fail" } } }).verdict).toBe("fail"));
+});
