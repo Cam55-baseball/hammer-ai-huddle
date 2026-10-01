@@ -4036,6 +4036,30 @@ export type Database = {
           },
         ]
       }
+      drill_engagement: {
+        Row: {
+          created_at: string
+          drill_id: string
+          event: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          drill_id: string
+          event: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          drill_id?: string
+          event?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       drill_equipment: {
         Row: {
           created_at: string
@@ -4898,6 +4922,33 @@ export type Database = {
           temp_f?: number | null
           user_id?: string
           weather?: Json | null
+        }
+        Relationships: []
+      }
+      fault_key_requests: {
+        Row: {
+          analysis: string
+          created_at: string
+          description: string
+          id: string
+          requested_by: string | null
+          status: string
+        }
+        Insert: {
+          analysis: string
+          created_at?: string
+          description: string
+          id?: string
+          requested_by?: string | null
+          status?: string
+        }
+        Update: {
+          analysis?: string
+          created_at?: string
+          description?: string
+          id?: string
+          requested_by?: string | null
+          status?: string
         }
         Relationships: []
       }
@@ -9950,6 +10001,81 @@ export type Database = {
           minute_bucket?: string
           severity?: string
           title?: string
+        }
+        Relationships: []
+      }
+      owner_drills: {
+        Row: {
+          active: boolean
+          common_mistake: string | null
+          created_at: string
+          created_by: string | null
+          cue: string | null
+          dosage: string | null
+          equipment: string[]
+          fault_keys: string[]
+          feel: string | null
+          feel_wrong: string | null
+          id: string
+          level: string | null
+          name: string
+          overrides_drill_id: string | null
+          phase: string | null
+          pinned: boolean
+          placements: string[]
+          setup: string | null
+          sports: string[]
+          steps: string[]
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          active?: boolean
+          common_mistake?: string | null
+          created_at?: string
+          created_by?: string | null
+          cue?: string | null
+          dosage?: string | null
+          equipment?: string[]
+          fault_keys?: string[]
+          feel?: string | null
+          feel_wrong?: string | null
+          id?: string
+          level?: string | null
+          name: string
+          overrides_drill_id?: string | null
+          phase?: string | null
+          pinned?: boolean
+          placements?: string[]
+          setup?: string | null
+          sports?: string[]
+          steps?: string[]
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          active?: boolean
+          common_mistake?: string | null
+          created_at?: string
+          created_by?: string | null
+          cue?: string | null
+          dosage?: string | null
+          equipment?: string[]
+          fault_keys?: string[]
+          feel?: string | null
+          feel_wrong?: string | null
+          id?: string
+          level?: string | null
+          name?: string
+          overrides_drill_id?: string | null
+          phase?: string | null
+          pinned?: boolean
+          placements?: string[]
+          setup?: string | null
+          sports?: string[]
+          steps?: string[]
+          updated_at?: string
+          video_url?: string | null
         }
         Relationships: []
       }
@@ -19308,6 +19434,15 @@ export type Database = {
       dispatch_standard_match_pings_v2: {
         Args: { p_message?: string }
         Returns: Json
+      }
+      drill_usage_totals: {
+        Args: never
+        Returns: {
+          completed: number
+          drill_id: string
+          returned: number
+          served: number
+        }[]
       }
       expire_ab_link: {
         Args: { p_link_code: string; p_user_id: string }

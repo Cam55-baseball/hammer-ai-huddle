@@ -637,3 +637,8 @@ export function selectDefenseDrills(input: DefenseSelectorInput): DefensePrescri
     why,
   };
 }
+
+/** Read-only view for the owner drill builder. Does not affect plan generation. */
+export function listDefenseCatalogForOwner(): Array<{ key: string; drills: ReadonlyArray<DrillStep> }> {
+  return Object.entries(CATALOG).map(([key, drills]) => ({ key, drills: drills ?? [] }));
+}

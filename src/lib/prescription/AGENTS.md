@@ -1,0 +1,1 @@
+- Drills are never hidden by review status; owner edits/additions live in `owner_drills` and merge over the built-in catalog by id (`src/lib/prescription/ownerDrills.ts`), with capped rotation. Why: owner must see drills in use; usage is shown as counts, never as effectiveness.

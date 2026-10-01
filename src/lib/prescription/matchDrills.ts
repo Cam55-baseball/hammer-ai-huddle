@@ -11,6 +11,7 @@ import {
 } from "@/data/drills/eliteDrillCatalog";
 import type { VideoSport } from "@/lib/videoCategoricalTaxonomy";
 import { mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
+import { circulate, type CirculationInput } from "./ownerDrills";
 
 const LEVEL_BONUS: Record<EliteDrill["level"], number> = {
   feel: 3,
@@ -40,6 +41,10 @@ export interface MatchInput {
   max?: number;
   /** Owner/admin only: include drills still pending owner review. */
   includePendingReview?: boolean;
+  /** Catalog with owner overrides/additions applied (defaults to the built-in catalog). */
+  catalog?: EliteDrill[];
+  /** Circulation inputs — rotate drills fixing the same fault (owner-approved rules). */
+  circulation?: CirculationInput;
 }
 
 function moduleToCategory(module?: string | null): EliteDrill["category"] | null {
@@ -68,7 +73,7 @@ export function matchPrescriptionDrills(input: MatchInput): PrescriptionMatch[] 
 
   const matches: PrescriptionMatch[] = [];
 
-  for (const drill of ELITE_DRILL_CATALOG) {
+  for (const drill of input.catalog ?? ELITE_DRILL_CATALOG) {
     if (!drill.sports.includes(sport)) continue;
     // Owner ruling 2026-10-01: review-pending drills are never hidden.
     if (category && drill.category !== category) continue;
@@ -100,7 +105,8 @@ export function matchPrescriptionDrills(input: MatchInput): PrescriptionMatch[] 
     matches.push({ drill, score, reasons: [...new Set(reasons)] });
   }
 
-  return matches.sort((a, b) => b.score - a.score || a.drill.id.localeCompare(b.drill.id)).slice(0, max);
+  const sorted = matches.sort((a, b) => b.score - a.score || a.drill.id.localeCompare(b.drill.id));
+  return (input.circulation ? circulate(sorted, input.circulation) : sorted).slice(0, max);
 }
 
 /**
