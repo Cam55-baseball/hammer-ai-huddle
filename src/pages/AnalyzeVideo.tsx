@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { runClipPreflight, type PreflightVerdict } from "@/lib/biomech/pose/clipPreflight";
 import { ClipPreflightCard } from "@/components/analyze/ClipPreflightCard";
+import { UploadAnalysisReport } from "@/components/analyze/UploadAnalysisReport";
 import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
@@ -1351,6 +1352,7 @@ export default function AnalyzeVideo() {
                 <p className="text-xs text-muted-foreground">
                   {t('videoAnalysis.maxFileSize')}
                 </p>
+                <UploadAnalysisReport />
                 <label htmlFor="video-upload">
                   <Button asChild size="sm">
                     <span>
