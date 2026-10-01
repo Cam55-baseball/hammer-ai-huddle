@@ -128,7 +128,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
   const [active, setActive] = useState<TourStep[]>([]);
   const [ready, setReady] = useState(false);
   const wasOpen = useRef(false);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (open && wasOpen.current) return; // keep the live list mid-tour
     wasOpen.current = open;
     if (open) {
