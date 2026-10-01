@@ -212,7 +212,7 @@ export function FolderBuilder({ onSave, onCancel, initialData }: FolderBuilderPr
                   <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                   <div className="space-y-2 text-xs text-muted-foreground">
                     <p className="font-medium text-foreground">How it works:</p>
-                    <p>Pick a start date and how many weeks your cycle lasts. Each activity you add will be assigned to a specific week. The system automatically knows which week you're in and only shows those activities on your Game Plan.</p>
+                    <p>Pick a start date and how many weeks your cycle lasts. Each activity you add will be assigned to a specific week. The system automatically knows which week you're in and only shows those activities on My Daily Game Plan.</p>
                     <div className="rounded bg-muted/50 p-2 font-mono text-[10px] space-y-0.5">
                       <p className="font-semibold text-foreground">Example: 3-week cycle starting Jan 6</p>
                       <p>Jan 6–12 = Week 1</p>

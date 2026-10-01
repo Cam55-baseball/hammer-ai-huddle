@@ -144,9 +144,9 @@ export function TemplateScheduleSettingsDrawer({
             {/* Show on Game Plan Toggle */}
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
-                <p className="font-medium">{t('customActivity.showOnGamePlan', 'Show on Game Plan')}</p>
+                <p className="font-medium">{t('customActivity.showOnGamePlan', 'Show on My Daily Game Plan')}</p>
                 <p className="text-sm text-muted-foreground">
-                  {t('customActivity.showOnGamePlanDesc', 'Display this activity in your daily game plan')}
+                  {t('customActivity.showOnGamePlanDesc', 'Display this activity in your daily My Daily Game Plan')}
                 </p>
               </div>
               <Switch 

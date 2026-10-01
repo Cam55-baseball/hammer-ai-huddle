@@ -39,7 +39,7 @@ export function ProgramStartCard({
               {programDescription ||
                 t(
                   'programStatus.startDescription',
-                  'Start your structured training program to add workouts to your Game Plan.'
+                  'Start your structured training program to add workouts to My Daily Game Plan.'
                 )}
             </p>
           </div>

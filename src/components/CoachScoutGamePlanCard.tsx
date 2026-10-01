@@ -209,7 +209,7 @@ export function CoachScoutGamePlanCard({ isCoach, isScout }: CoachScoutGamePlanC
             </div>
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-primary-foreground tracking-tight uppercase">
-                {isCoach ? 'Coach Game Plan' : 'Scout Game Plan'}
+                {isCoach ? 'Coach My Daily Game Plan' : 'Scout My Daily Game Plan'}
               </h2>
               <div className="flex items-center gap-2">
                 <span className="text-xs sm:text-sm font-bold text-cyan-500 tracking-wide">{today}</span>

@@ -157,7 +157,7 @@ export function StartHereGuide({ open, onOpenChange }: StartHereGuideProps) {
               <div className="text-center space-y-2 p-3 rounded-xl bg-muted/50 border">
                 <Sparkles className="h-8 w-8 mx-auto text-primary" />
                 <p className="text-xs font-medium">Develop</p>
-                <p className="text-[10px] text-muted-foreground">Daily Game Plan built for you</p>
+                <p className="text-[10px] text-muted-foreground">Daily My Daily Game Plan built for you</p>
               </div>
             </div>
 
@@ -337,7 +337,7 @@ export function StartHereGuide({ open, onOpenChange }: StartHereGuideProps) {
                   <ListChecks className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="font-bold">Go to Your Game Plan</p>
+                  <p className="font-bold">Go to My Daily Game Plan</p>
                   <p className="text-xs text-muted-foreground">Your daily to-do list, built for you</p>
                 </div>
               </Button>

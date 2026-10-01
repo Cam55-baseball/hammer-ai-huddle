@@ -512,7 +512,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         coach_user_id: coachOrigin.senderId,
         sender_user_id: user.id,
         notification_type: 'folder_removed',
-        title: `${playerName} removed a folder from their Game Plan`,
+        title: `${playerName} removed a folder from My Daily Game Plan`,
         message: `"${fid.folderName}" • Removed ${new Date().toLocaleString()}`,
       });
     } catch (err) {
@@ -2744,7 +2744,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                       coach_user_id: coachOrigin.senderId,
                       sender_user_id: user.id,
                       notification_type: 'activity_removed',
-                      title: `${playerName} removed an activity from their Game Plan`,
+                      title: `${playerName} removed an activity from My Daily Game Plan`,
                       message: `"${templateTitle}" • Removed ${removedAt.toLocaleString()}`,
                       template_snapshot: coachOrigin.templateSnapshot ?? undefined,
                     });
@@ -2776,7 +2776,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                               coach_user_id: coachOrigin.senderId,
                               sender_user_id: user.id,
                               notification_type: 'activity_restored',
-                              title: `${playerName2} restored an activity to their Game Plan`,
+                              title: `${playerName2} restored an activity to My Daily Game Plan`,
                               message: `"${templateTitle}" • Restored ${new Date().toLocaleString()}`,
                               template_snapshot: coachOrigin.templateSnapshot ?? undefined,
                             });

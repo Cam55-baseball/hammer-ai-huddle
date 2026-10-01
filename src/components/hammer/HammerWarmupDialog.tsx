@@ -90,7 +90,7 @@ export function HammerWarmupDialog({ open, onOpenChange, sport }: HammerWarmupDi
       queryClient.invalidateQueries({ queryKey: ["custom-activity-logs"] });
       queryClient.invalidateQueries({ queryKey: ["custom-activity-templates"] });
       queryClient.invalidateQueries({ queryKey: ["game-plan"] });
-      toast.success("Warm-up added to today's Game Plan", {
+      toast.success("Warm-up added to My Daily Game Plan", {
         action: {
           label: "View",
           onClick: () => navigate("/dashboard#game-plan"),

@@ -1415,7 +1415,7 @@ export function CustomActivityDetailDialog({
               {deleteVariant === 'folder-own'
                 ? t('customActivity.detail.removeFromFolderTitle', 'Remove this item from the folder?')
                 : deleteVariant === 'folder-coach'
-                  ? t('customActivity.detail.removeFolderTitle', 'Remove this folder from your Game Plan?')
+                  ? t('customActivity.detail.removeFolderTitle', 'Remove this folder from My Daily Game Plan?')
                   : t('customActivity.detail.deleteConfirmTitle', 'Delete this activity?')}
             </AlertDialogTitle>
             <AlertDialogDescription>
@@ -1427,18 +1427,18 @@ export function CustomActivityDetailDialog({
                 : deleteVariant === 'folder-coach'
                   ? t(
                       'customActivity.detail.removeFolderDescription',
-                      "This will remove the whole folder from your Game Plan. {{coach}} will be notified. You can re-accept the folder later if they share it again.",
+                      "This will remove the whole folder from My Daily Game Plan. {{coach}} will be notified. You can re-accept the folder later if they share it again.",
                       { coach: coachName || t('customActivity.detail.theCoachWhoSentIt', 'The coach who sent it') }
                     )
                   : isCoachSent
                     ? t(
                         'customActivity.detail.deleteConfirmDescriptionCoach',
-                        'It will be moved to Recently Deleted and removed from your Game Plan. {{coach}} will be notified that you removed it. You can restore it within 30 days from My Activities → Recently Deleted.',
+                        'It will be moved to Recently Deleted and removed from My Daily Game Plan. {{coach}} will be notified that you removed it. You can restore it within 30 days from My Activities → Recently Deleted.',
                         { coach: coachName || t('customActivity.detail.theCoachWhoSentIt', 'The coach who sent it') }
                       )
                     : t(
                         'customActivity.detail.deleteConfirmDescription',
-                        'It will be moved to Recently Deleted and removed from your Game Plan. You can restore it within 30 days from My Activities → Recently Deleted.'
+                        'It will be moved to Recently Deleted and removed from My Daily Game Plan. You can restore it within 30 days from My Activities → Recently Deleted.'
                       )}
             </AlertDialogDescription>
           </AlertDialogHeader>

@@ -461,7 +461,7 @@ export function buildIndividualPostgame(input: BuildIndividualInput): ReportSnap
       title: "Plan vs reality",
       summary: input.planOutcome?.verdict
         ? `Verdict: ${input.planOutcome.verdict}`
-        : "Pregame plan logged — verdict not recorded.",
+        : "PreMy Daily Game Plan logged — verdict not recorded.",
       bullets: [
         ...(input.plan?.plan_text ? [`Plan: ${input.plan.plan_text}`] : []),
         ...(input.planOutcome?.notes ? [`Outcome: ${input.planOutcome.notes}`] : []),

@@ -84,7 +84,7 @@ export default function HelpDesk() {
       ],
     },
     {
-      title: t('helpDesk.faq.customActivities', 'Custom Activities & Game Plan'),
+      title: t('helpDesk.faq.customActivities', 'Custom Activities & My Daily Game Plan'),
       icon: <LayoutGrid className="h-4 w-4" />,
       items: [
         {

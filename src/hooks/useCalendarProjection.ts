@@ -160,7 +160,7 @@ export function useCalendarProjection({
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
       console.debug(
-        `[calendar-projection] logs=${(logsQ.data ?? []).length} templates=${(templatesQ.data ?? []).length} blockWorkouts=${(blockWorkoutsQ.data ?? []).length} gamePlanDays=${(gamePlanDaysQ.data ?? []).length} → events=${built.length} range=${startDate}..${endDate}`,
+        `[calendar-projection] logs=${(logsQ.data ?? []).length} templates=${(templatesQ.data ?? []).length} blockWorkouts=${(blockWorkoutsQ.data ?? []).length} My Daily Game PlanDays=${(My Daily Game PlanDaysQ.data ?? []).length} → events=${built.length} range=${startDate}..${endDate}`,
       );
     }
     return built;

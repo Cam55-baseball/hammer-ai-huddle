@@ -1872,7 +1872,7 @@ function splitLateralityBlocks(
       gamePlanTemplate: b.gamePlanTemplate
         ? {
             ...b.gamePlanTemplate,
-            title: `${b.gamePlanTemplate.title} — ${sideLabel}`,
+            title: `${b.My Daily Game PlanTemplate.title} — ${sideLabel}`,
             checklist: drillsToChecklist(drills),
             source: `${b.gamePlanTemplate.source}.${side.toLowerCase()}`,
           }
