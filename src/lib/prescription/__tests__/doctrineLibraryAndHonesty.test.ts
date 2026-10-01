@@ -18,12 +18,22 @@ describe("doctrine drill library", () => {
     );
   });
 
-  it("pending drills never reach athletes", () => {
+  it("doctrine drills reach athletes (owner ruling: never hidden)", () => {
     for (const d of DOCTRINE_DRILLS) {
-      expect(d.ownerReview).toBe("pending_owner_review");
-      const sport = d.sports[0];
-      const hits = matchPrescriptionDrills({ faultKeys: d.violationKeys, module: d.category, sport, max: 50 });
-      expect(hits.some((h) => h.drill.id === d.id)).toBe(false);
+      const hits = matchPrescriptionDrills({ faultKeys: d.violationKeys, module: d.category, sport: d.sports[0], max: 50 });
+      expect(hits.some((h) => h.drill.id === d.id)).toBe(true);
+    }
+  });
+
+  it("every drill has full first-read instructions", () => {
+    for (const d of DOCTRINE_DRILLS) {
+      expect(d.setup.length).toBeGreaterThan(30);
+      expect(d.steps.length).toBeGreaterThanOrEqual(3);
+      expect(d.cues[0]).toBeTruthy();
+      expect(d.feel).toBeTruthy();
+      expect(d.feelWrong).toBeTruthy();
+      expect(d.commonMistake).toBeTruthy();
+      expect(d.dosage).toMatch(/x/);
     }
   });
 
@@ -32,7 +42,7 @@ describe("doctrine drill library", () => {
       expect(d.videoUrl).toBeNull();
       expect(d.violationKeys.length).toBe(1);
       if (d.category === "hitting") expect(d.phase).toMatch(/^Phase [1-4] — /);
-      const text = [d.fixes, d.setup, ...d.steps, ...d.cues, d.feel ?? ""].join(" ");
+      const text = [d.fixes, d.setup, ...d.steps, ...d.cues, d.feel ?? "", d.feelWrong ?? "", d.commonMistake ?? ""].join(" ");
       expect(text.replace(/Phase [1-4]/g, "")).not.toMatch(/\d/);
     }
   });
