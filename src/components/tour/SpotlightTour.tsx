@@ -12,6 +12,7 @@
  * animated with Framer Motion springs; reduced motion fades instead.
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion, useSpring } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
@@ -94,7 +95,6 @@ export function SpotlightTour({ tourId, steps, open, onClose }: Props) {
       const el = targetRef.current;
       if (!el || !el.isConnected) { setRect(null); return; }
       const nr = el.getBoundingClientRect();
-      (window as unknown as { __tourRect?: DOMRect }).__tourRect = nr;
       setRect(nr);
     });
   }, []);
@@ -156,7 +156,6 @@ export function SpotlightTour({ tourId, steps, open, onClose }: Props) {
     window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
   });
 
-  (window as unknown as { __tourM?: unknown }).__tourM = m;
   if (!open || !step) return null;
 
   // Edge-aware coach mark: prefer below, flip above, clamp horizontally.
@@ -169,7 +168,9 @@ export function SpotlightTour({ tourId, steps, open, onClose }: Props) {
   const mask = vp.w ? maskUrl(vp.w, vp.h, m.x, m.y, m.w, m.h) : undefined;
   const layer = { maskImage: mask, WebkitMaskImage: mask, maskSize: "100% 100%", WebkitMaskSize: "100% 100%" } as React.CSSProperties;
 
-  return (
+  // Portal to <body>: an ancestor with a transform (page transitions) would
+  // otherwise make `fixed` relative to it and offset the cutout.
+  return createPortal(
     <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-label={step.title} data-testid="spotlight-tour">
       <motion.div
         className="absolute inset-0 bg-background/60 backdrop-blur-md"
@@ -208,6 +209,7 @@ export function SpotlightTour({ tourId, steps, open, onClose }: Props) {
           </div>
         </motion.div>
       </AnimatePresence>
-    </div>
+    </div>,
+    document.body,
   );
 }
