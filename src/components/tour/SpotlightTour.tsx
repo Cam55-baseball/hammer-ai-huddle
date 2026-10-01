@@ -278,8 +278,8 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
       if (!historyArmed.current) return;
       finish("skipped", false);
     };
-    window.addEventListener("popstate", onBack);
-    return () => window.removeEventListener("popstate", onBack);
+    window.addEventListener("popstate", onBack, true);
+    return () => window.removeEventListener("popstate", onBack, true);
   }, [finish, open]);
 
   if (!open) return null;
