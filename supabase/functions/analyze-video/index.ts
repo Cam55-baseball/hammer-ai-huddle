@@ -18,7 +18,7 @@ import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalys
 import { chatCompletion } from "../_shared/googleAi.ts";
 import { canSeeScoredGrading, stripScoredGrading } from "../_shared/scoredGradingGate.ts";
 import { buildFaultFindings } from "../_shared/faultFindings.ts";
-import { runStoredThrowPitchCards, checkStoredMovement, runAndWritePoseTileFindings } from "../_shared/poseTileFindingsServer.ts";
+import { runStoredThrowPitchCards, runAndWritePoseTileFindings } from "../_shared/poseTileFindingsServer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
