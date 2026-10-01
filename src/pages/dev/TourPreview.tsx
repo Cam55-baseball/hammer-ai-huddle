@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { SpotlightTour, type TourStep } from "@/components/tour/SpotlightTour";
 
@@ -18,6 +19,7 @@ const STEPS: TourStep[] = [
 
 export default function TourPreview() {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
   return (
     <div className="mx-auto max-w-md space-y-6 p-4 pb-40">
       <Button data-tour="home" className="min-h-11 w-full" onClick={() => setOpen(true)}>Start tour preview</Button>
@@ -31,7 +33,7 @@ export default function TourPreview() {
       </div>
       <div className="h-[40vh]" />
       <div data-tour="edge" className="ml-auto w-24 rounded-lg border bg-card p-2 text-xs">Edge</div>
-      <SpotlightTour tourId="preview" steps={STEPS} open={open} onClose={() => setOpen(false)} />
+      <SpotlightTour tourId="preview" steps={STEPS} open={open} onClose={() => setOpen(false)} userId={user?.id} />
     </div>
   );
 }

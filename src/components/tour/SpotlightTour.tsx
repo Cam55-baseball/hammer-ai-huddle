@@ -31,6 +31,8 @@ interface Props {
   steps: TourStep[];
   open: boolean;
   onClose: (result: "completed" | "skipped") => void;
+  /** Signed-in user; seen/skipped is remembered per user. */
+  userId?: string | null;
 }
 
 const PAD = 8;
@@ -62,7 +64,7 @@ function maskUrl(w: number, h: number, x: number, y: number, rw: number, rh: num
   return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
 }
 
-export function SpotlightTour({ tourId, steps, open, onClose }: Props) {
+export function SpotlightTour({ tourId, steps, open, onClose, userId }: Props) {
   const reduce = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
@@ -146,7 +148,7 @@ export function SpotlightTour({ tourId, steps, open, onClose }: Props) {
     [sx, sy, sw, sh].forEach((s, i) => (reduce ? s.jump(vals[i]) : s.set(vals[i])));
   }, [rect, reduce, sx, sy, sw, sh]);
 
-  const finish = (result: "completed" | "skipped") => { markTour(tourId, result); onClose(result); };
+  const finish = (result: "completed" | "skipped") => { markTour(tourId, result, userId); onClose(result); };
   const next = () => (index + 1 < active.length ? setIndex(index + 1) : finish("completed"));
   const back = () => setIndex((i) => Math.max(0, i - 1));
 
