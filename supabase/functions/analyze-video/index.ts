@@ -1697,14 +1697,27 @@ Deno.serve(async (req) => {
       console.warn(`[ANALYZE-VIDEO] dropped ${malformedCount} malformed frame(s) before AI call`);
     }
 
-    // Keep the landing frame; thin the rest evenly until the payload fits.
+    // Keep the landing frame; thin the rest EVENLY until the payload fits.
+    // 2026-10-01: this used to drop the LAST frame repeatedly, which chopped
+    // the end of the clip (the swing) and left the model with only the
+    // set-up — it then "explained" the missing swing as a camera edit.
+    // Now we drop every other non-landing frame from the middle out, keeping
+    // the first and last frames, so the full movement stays represented.
     let landingPos = rawLandingFrameIndex == null ? -1 : validIndexes.indexOf(rawLandingFrameIndex);
     let keptFrames = validFrames;
     const payloadBytes = (arr: string[]) => arr.reduce((n, s) => n + s.length, 0);
     while (payloadBytes(keptFrames) > MAX_FRAME_PAYLOAD_BYTES && keptFrames.length > 3) {
-      const dropAt = keptFrames.length - 1 === landingPos ? keptFrames.length - 2 : keptFrames.length - 1;
-      keptFrames = keptFrames.filter((_, i) => i !== dropAt);
-      if (landingPos > dropAt) landingPos -= 1;
+      const n = keptFrames.length;
+      const target = Math.max(3, Math.floor(n * 0.85));
+      const keepIdx = new Set<number>([0, n - 1]);
+      if (landingPos >= 0) keepIdx.add(landingPos);
+      for (let k = 0; keepIdx.size < target && k < target; k++) {
+        keepIdx.add(Math.round((k * (n - 1)) / (target - 1)));
+      }
+      const sorted = [...keepIdx].sort((a, b) => a - b);
+      if (sorted.length >= n) break;
+      keptFrames = sorted.map((i) => keptFrames[i]);
+      landingPos = landingPos >= 0 ? sorted.indexOf(landingPos) : -1;
     }
     if (keptFrames.length !== validFrames.length) {
       console.warn(`[ANALYZE-VIDEO] trimmed frame payload to ${keptFrames.length} frames (size cap)`);
@@ -2144,12 +2157,12 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                 },
                 summary: {
                   type: "array",
-                  description: "REQUIRED: Exactly 3-5 bullet points in plain, beginner-friendly language (no jargon, max 15 words per bullet). Focus on actionable insights a player or parent would understand. Be direct about issues.",
+                  description: "REQUIRED: Exactly 3-5 bullet points in plain, beginner-friendly language (no jargon, max 15 words per bullet). Be direct about issues: allude to the main fault(s) from `improvements` so the athlete knows what the detailed analysis covers. Describe only what is visible; never claim the clip is cut or missing frames.",
                   items: { type: "string" }
                 },
                 feedback: {
                   type: "string",
-                  description: "Detailed feedback on mechanics and form"
+                  description: "Detailed analysis in coaching prose. Weave every item in `improvements` into it naturally in phase order (what you see, why it matters, what to change) — not as a separate list. Describe only what is visible; never claim the clip is cut, edited or missing any part of the movement."
                 },
                 positives: {
                   type: "array",
