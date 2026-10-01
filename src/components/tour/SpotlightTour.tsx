@@ -107,6 +107,10 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
   const openingPath = useRef<string | null>(null);
   const historyArmed = useRef(false);
   const closing = useRef(false);
+  const onCloseRef = useRef(onClose);
+  const tourIdRef = useRef(tourId);
+  const userIdRef = useRef(userId);
+  useLayoutEffect(() => { onCloseRef.current = onClose; tourIdRef.current = tourId; userIdRef.current = userId; });
 
   const finish = useCallback((result: "completed" | "skipped", restoreOpeningPage = true) => {
     if (closing.current) return;
@@ -276,11 +280,14 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
     if (!open) return;
     const onBack = () => {
       if (!historyArmed.current) return;
-      finish("skipped", false);
+      historyArmed.current = false;
+      closing.current = true;
+      markTour(tourIdRef.current, "skipped", userIdRef.current);
+      onCloseRef.current("skipped");
     };
     window.addEventListener("popstate", onBack, true);
     return () => window.removeEventListener("popstate", onBack, true);
-  }, [finish, open]);
+  }, [open]);
 
   if (!open) return null;
 
