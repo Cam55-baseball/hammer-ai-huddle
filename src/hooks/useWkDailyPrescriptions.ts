@@ -270,7 +270,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     },
   });
 
-  // Tell Hammers — the newest timeline change. A plan built before it is stale
+  // Update Hammer — the newest timeline change. A plan built before it is stale
   // and re-plans on open. Inert (never runs) while the switch is off.
   const tellHammersOn = useTellHammersEnabled();
   const timelineQuery = useQuery({
@@ -398,7 +398,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   // Step 21E3 — plain reason shown in the day header after a season change.
   const [replanReason, setReplanReason] = useState<string | null>(null);
 
-  // Tell Hammers — a saved entry re-plans the next 7 days right now, in place,
+  // Update Hammer — a saved entry re-plans the next 7 days right now, in place,
   // with the plain "what changed" line. No restart, no navigation.
   const generateRef = useRef<() => Promise<void>>(async () => undefined);
   useEffect(() => {

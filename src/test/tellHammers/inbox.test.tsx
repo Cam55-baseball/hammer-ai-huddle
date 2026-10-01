@@ -15,17 +15,17 @@ beforeEach(() => {
   localStorage.clear(); enabled = true; save.mockReset(); undo.mockReset();
   save.mockImplementation(async (d) => ({ merged: false, entry: { ...d, id: String(save.mock.calls.length), created_at: new Date().toISOString() }, message: "Hammer re-planned your week." }));
 });
-const open = () => fireEvent.click(screen.getByRole("button", { name: /Tell Hammer/i }));
+const open = () => fireEvent.click(screen.getByRole("button", { name: /Update Hammer/i }));
 const send = () => fireEvent.click(screen.getByTestId("entry-send"));
 
-describe("Tell Hammer shared entry flow", () => {
+describe("Update Hammer shared entry flow", () => {
   it("starts closed; opens to exactly eight choices and no filter or example button", () => {
     render(<TellHammersInbox />);
     expect(screen.queryByTestId("tell-break")).toBeNull();
     open();
     for (const key of ["games", "season", "cancelled", "pain", "break", "event", "travel", "resume"]) expect(screen.getByTestId(`tell-${key}`)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "All" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Close Tell Hammer" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close Update Hammer" }));
     expect(screen.queryByTestId("tell-break")).toBeNull();
   });
   it("sends two entries in a row and confirms each without closing", async () => {
@@ -108,10 +108,10 @@ describe("Tell Hammer shared entry flow", () => {
     expect(screen.getByTestId("checkin-no-changes").textContent).toMatch(/No changes today/);
     expect(save).not.toHaveBeenCalled();
   });
-  it("disabled timeline still leaves the Tell Hammer row visible", () => {
+  it("disabled timeline still leaves the Update Hammer row visible", () => {
     enabled = false;
     render(<TellHammersInbox />);
-    expect(screen.getByText("Tell Hammer")).toBeTruthy();
+    expect(screen.getByText("Update Hammer")).toBeTruthy();
     expect(screen.queryByTestId("tell-break")).toBeNull();
   });
 });

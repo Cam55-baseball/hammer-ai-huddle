@@ -5,7 +5,7 @@
 //     but the template resolver only recognised the legacy "in_season" id, so
 //     every in-season athlete resolved the off-season strength template.
 //  2. On a day where the schedule law strips loaded work (48-hour pre-game
-//     primer window, rest day, Tell Hammers hold) the missing compound
+//     primer window, rest day, Update Hammer hold) the missing compound
 //     category was reported as FATAL, which failed the card build and served
 //     the safe fallback day instead.
 import { describe, expect, it } from "vitest";

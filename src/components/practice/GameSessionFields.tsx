@@ -12,7 +12,7 @@ interface GameSessionFieldsProps {
 /**
  * GameSessionFields — practice-session opponent picker. Uses the unified
  * competition-level catalog so the same level keys persist as everywhere
- * else (onboarding, Tell Hammer, Game Setup).
+ * else (onboarding, Update Hammer, Game Setup).
  */
 export function GameSessionFields({ opponentName, opponentLevel, onNameChange, onLevelChange }: GameSessionFieldsProps) {
   const { sport } = useSportTheme();

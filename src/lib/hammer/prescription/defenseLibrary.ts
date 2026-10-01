@@ -492,7 +492,7 @@ function cuesFor(pos: DefensePosition, sport: DefenseSport): string[] {
 }
 
 const STOP_RULES: string[] = [
-  "Knee, ankle, or hip pain — stop and tell Hammer.",
+  "Knee, ankle, or hip pain — stop and update Hammer.",
   "Shoulder or elbow pain on throws — stop, do dry-footwork only.",
   "Any lightheadedness on charge/sprint drills — stop and hydrate.",
 ];

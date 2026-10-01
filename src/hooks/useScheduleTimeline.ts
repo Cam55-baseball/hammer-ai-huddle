@@ -1,5 +1,5 @@
 /**
- * useScheduleTimeline — the one reader/writer for the Tell Hammers timeline.
+ * useScheduleTimeline — the one reader/writer for the Update Hammer timeline.
  * Every module that needs athlete-told schedule facts reads through here (app)
  * or through the shared pure module (plan builder).
  */
@@ -29,7 +29,7 @@ export interface SaveResult {
   message: string;
 }
 
-/** Tell Hammers switch for the signed-in athlete. Off unless the switch includes them. */
+/** Update Hammer switch for the signed-in athlete. Off unless the switch includes them. */
 export function useTellHammersEnabled(): boolean {
   const { user } = useOptionalAuth();
   const q = useQuery({
@@ -115,7 +115,7 @@ export function useScheduleTimeline(enabledOverride?: boolean) {
         const r = await recordPain({
           userId: user.id, region: draft.payload.region as any, severity: FACE_SEVERITY[face] ?? "sore",
           origin: source === "ask_hammer" ? "tell_hammers" : ((draft.payload.origin as any) ?? "tell_hammers"),
-          date: draft.start_date, note: String(draft.payload.text ?? "Reported through Tell Hammers"), queryClient: qc,
+          date: draft.start_date, note: String(draft.payload.text ?? "Reported through Update Hammer"), queryClient: qc,
         });
         const message = r.merged ? "You already told me this — I updated it." : "Saved to your pain log — tell a coach or parent too.";
         return { merged: r.merged, entry: { ...draft, id: r.entryId, source: "inbox", summary: message, created_at: new Date().toISOString(), undone_at: null } as TimelineEntry, message };

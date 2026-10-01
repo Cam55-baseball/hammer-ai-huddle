@@ -1,5 +1,5 @@
 /**
- * Ask Hammer → Tell Hammers entry. Deterministic plain-words parser (no AI
+ * Ask Hammer → Update Hammer entry. Deterministic plain-words parser (no AI
  * call, no guessing): if it can't read a date, it asks instead of inventing one.
  */
 import { isoShift, type TimelineTag } from "../../../../supabase/functions/_shared/wic/schedule/timeline";

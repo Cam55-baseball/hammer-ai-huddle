@@ -165,7 +165,7 @@ export function useScheduleWindow(): ScheduleWindow {
     },
   });
 
-  // Tell Hammers timeline — empty (and so a no-op) while the switch is off.
+  // Update Hammer timeline — empty (and so a no-op) while the switch is off.
   const timeline = useScheduleTimeline();
   const tlEntries = timeline.enabled ? timeline.entries : [];
 

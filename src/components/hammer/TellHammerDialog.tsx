@@ -102,7 +102,7 @@ export function TellHammerDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Tell Hammer what changed</DialogTitle>
+          <DialogTitle>Update Hammer what changed</DialogTitle>
           <DialogDescription>
             Anything new I should plan around — new team, in playoffs, a long
             stretch, schedule unknown, life context. Your words always outrank

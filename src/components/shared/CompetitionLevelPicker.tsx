@@ -1,10 +1,10 @@
 /**
  * CompetitionLevelPicker — the single, sport-aware competition-context picker
- * used across onboarding, Tell Hammer, Game Setup, and Practice game logging.
+ * used across onboarding, Update Hammer, Game Setup, and Practice game logging.
  *
  * Two modes:
  *   - Legacy (string value): renders only the playing-tier grid. Used by
- *     Tell Hammer and Practice game logging where only the level matters.
+ *     Update Hammer and Practice game logging where only the level matters.
  *   - Composite (object value): also renders age-group chips (when the tier
  *     is age-group-eligible), home/play state selects, and an optional
  *     "events" chip group. Used by onboarding to capture the full picture.
