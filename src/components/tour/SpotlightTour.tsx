@@ -121,10 +121,20 @@ export function SpotlightTour({ tourId, steps, open, onClose }: Props) {
     };
     raf = requestAnimationFrame(settle);
     const ro = new ResizeObserver(measure); ro.observe(el);
+    // Safety net: some movements (nested smooth scroll finishing, layout
+    // shifts from late content) emit no event we can hear. A light per-frame
+    // check re-measures only when the target actually moved.
+    let watch = 0, prev = el.getBoundingClientRect();
+    const watchLoop = () => {
+      const r = el.getBoundingClientRect();
+      if (Math.abs(r.top - prev.top) > 0.5 || Math.abs(r.left - prev.left) > 0.5 || Math.abs(r.width - prev.width) > 0.5 || Math.abs(r.height - prev.height) > 0.5) { prev = r; measure(); }
+      watch = requestAnimationFrame(watchLoop);
+    };
+    watch = requestAnimationFrame(watchLoop);
     window.addEventListener("scroll", measure, true);
     window.addEventListener("scrollend", measure, true);
     window.addEventListener("resize", measure);
-    return () => { cancelAnimationFrame(raf); ro.disconnect(); window.removeEventListener("scroll", measure, true); window.removeEventListener("scrollend", measure, true); window.removeEventListener("resize", measure); };
+    return () => { cancelAnimationFrame(raf); cancelAnimationFrame(watch); ro.disconnect(); window.removeEventListener("scroll", measure, true); window.removeEventListener("scrollend", measure, true); window.removeEventListener("resize", measure); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, step?.id]);
 
