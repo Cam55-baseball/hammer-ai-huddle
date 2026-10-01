@@ -15,7 +15,7 @@ describe("measured report-card content", () => {
     expect(surface).not.toMatch(/\bP[1-4]\b|\bP[1-4]\s*[:—-]/i);
     expect(surface).not.toMatch(/\bPhase [1-4]\b(?!\s*—\s*(?:Create Balance|Gather|Load by Stride|Hitter's Move))/);
     for (const c of HITTING_CATEGORIES.categories.filter((g) => /^p[1-4]$/.test(g.key))) expect(c.title).toMatch(/^Phase [1-4] — /);
-    expect(withoutMeasurementNotation("P1 then P4")).toBe("Phase 1 then Phase 4");
+    expect(withoutMeasurementNotation("P1 then P4")).toBe("Phase 1 — Create Balance then Phase 4 — Hitter's Move");
   });
 
   it("only a complete card has a total; a missing clip never becomes zero", () => {
