@@ -1352,7 +1352,6 @@ export default function AnalyzeVideo() {
                 <p className="text-xs text-muted-foreground">
                   {t('videoAnalysis.maxFileSize')}
                 </p>
-                <UploadAnalysisReport />
                 <label htmlFor="video-upload">
                   <Button asChild size="sm">
                     <span>
@@ -1370,6 +1369,9 @@ export default function AnalyzeVideo() {
                 />
               </div>
             </Card>
+            <div className="mx-auto w-full max-w-xl">
+              <UploadAnalysisReport />
+            </div>
           </div>
         )}
 
