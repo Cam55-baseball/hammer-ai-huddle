@@ -53,7 +53,8 @@ import {
 import type { LandmarkSeries, LandmarkSeriesFrame } from "./landmarkSeriesFormat";
 
 /**
- * Per-clip frame budget. 600 frames is ~20s at 30fps, ~10s at 60fps and ~5s at
+ * Frame CEILING only (2026-10-01) — the window length is MOVEMENT_WINDOW_SEC in
+ * real time (scoutPass.ts); this cap only protects memory/time. 600 frames is ~20s at 30fps, ~10s at 60fps and ~5s at
  * 120fps — comfortably longer than any swing or delivery — while keeping peak
  * memory and inference time inside what a mid-range phone tolerates.
  */
