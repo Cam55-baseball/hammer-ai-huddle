@@ -102,6 +102,7 @@ describe("SpotlightTour exits", () => {
         />
       </>,
     );
+    window.history.replaceState({}, "", window.location.href);
     fireEvent.click(screen.getByRole("button", { name: "Exit demo" }));
     expect(navigate).toHaveBeenCalledWith("/opening-page", { replace: true });
     expect(onClose).toHaveBeenCalledWith("skipped");
