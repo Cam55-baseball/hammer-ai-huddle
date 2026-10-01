@@ -103,6 +103,7 @@ const ThrowingRepEntry = lazyWithRetry(() => import("./pages/ThrowingRepEntry"))
 
 const AnalysisResultsPreview = lazyWithRetry(() => import("./pages/dev/AnalysisResultsPreview"));
 const TourPreview = lazyWithRetry(() => import("./pages/dev/TourPreview"));
+import { DemoTourHost } from "@/components/demo/DemoButton";
 const MyDailyGamePlan = lazyWithRetry(() => import("./pages/MyDailyGamePlan"));
 const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
 const VideoLibrary = lazyWithRetry(() => import("./pages/VideoLibrary"));
@@ -547,6 +548,7 @@ const App = () => {
               <Route path="/demo/:tier/:category/:submodule" element={<DemoSubmodule />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
+              <DemoTourHost />
               </DemoGate>
             </Suspense>
             </QuickEditProfileProvider>
