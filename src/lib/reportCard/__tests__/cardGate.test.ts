@@ -38,10 +38,30 @@ describe("card gate — no cross-contamination", () => {
       for (const [s2, m2] of CARDS) {
         if (family(m, s) === family(m2, s2)) continue;
         const a = keysFor(s, m), b = keysFor(s2, m2);
-        const rcClash = [...a.rc].filter((k) => b.rc.has(k));
+        // Report-card tiles read their own stored namespace; a shared key name is not a leak
+        // (proved behaviourally below). Category specs share one raw input, so keys must be unique.
+        const rcClash: string[] = [];
         const catClash = [...a.cat].filter((k) => b.cat.has(k));
         expect({ card: `${s} ${m} vs ${s2} ${m2}`, rcClash, catClash }).toEqual({ card: `${s} ${m} vs ${s2} ${m2}`, rcClash: [], catClash: [] });
       }
+    }
+  });
+
+  it("a card fed only another card's stored readings shows nothing measured", () => {
+    const filled = (status: string) => ({ value: 1, verdict: "pass", flag: "clear", missing_reason: null, status });
+    const store = new Proxy({}, { get: (_t, k) => (k === "injury" ? store : filled(String(k))) });
+    const stores: Record<string, Record<string, unknown>> = {
+      hitting: { hitting_tiles_deterministic: store, hitting_card_tiles: store },
+      baseball_pitching: { pitching_tiles_deterministic: store, pitching_card_tiles_deterministic: store },
+      softball_pitching: { softball_pitching_tiles_deterministic: store },
+      throwing: { throwing_tiles_deterministic: store },
+    };
+    for (const [s, m] of CARDS) {
+      const own = family(m, s);
+      const foreign = Object.assign({}, ...Object.entries(stores).filter(([k]) => k !== own).map(([, v]) => v));
+      const spec = getReportCardSpec(s, m)!;
+      const leaked = spec.tiles.filter((t) => t.compute(foreign as never).status !== "missing").map((t) => t.key);
+      expect({ card: `${s} ${m}`, leaked }).toEqual({ card: `${s} ${m}`, leaked: [] });
     }
   });
 
