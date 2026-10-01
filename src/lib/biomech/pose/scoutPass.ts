@@ -37,6 +37,17 @@ import { MISSINGNESS_REASONS, type MissingnessReason } from "../metrics/missingn
  */
 export const SCOUT_SAMPLE_BUDGET = 32;
 
+/**
+ * Dense window length in REAL TIME (2026-10-01). 3.0 s, placed 60/40 on the
+ * scouted motion: 1.8 s before covers stance → load → stride, 1.2 s after
+ * covers contact/release and finish. A swing or delivery is under 2 s, and the
+ * scout centre is only known to within one sample period (~0.6 s on a 20 s
+ * clip), so 3 s holds the whole movement with that error either side. The
+ * passing 2026-10-01 clips were 6 s long and still read at 63–74 % pose; the
+ * failures analysed 10–18.5 s and fell to 8–11 %.
+ */
+export const MOVEMENT_WINDOW_SEC = 3;
+
 /** A scout sample only counts as "athlete present" at or above this mean
  *  landmark visibility — the same floor the subject lock uses to consider a
  *  candidate lock-worthy. */
