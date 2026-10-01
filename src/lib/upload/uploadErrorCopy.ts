@@ -37,7 +37,7 @@ export const UPLOAD_ERRORS = {
     "Your browser couldn't read this video. Try again in Safari or Chrome, or re-save the clip from your camera roll first.",
 
   poseFailed:
-    "We couldn't find the athlete's body in this clip. Make sure the whole body is in frame, the camera is steady, and the lighting is good — then upload again.",
+    "Your video opened fine, but we couldn't follow one athlete through the swing or throw. Usually the athlete is too small in the picture, out of frame for most of the clip, or the camera switches angles (like a TV broadcast). Upload one rep from one steady camera, with the athlete filling most of the frame.",
 
   storageFailed:
     "The upload didn't finish. Check your connection and try again — your video is still selected.",
