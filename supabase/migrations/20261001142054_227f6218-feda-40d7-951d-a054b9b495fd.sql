@@ -1,0 +1,2 @@
+ALTER POLICY "Signed-in users read active owner drills" ON public.owner_drills
+USING (active OR overrides_drill_id IS NOT NULL OR has_role(auth.uid(), 'owner'::app_role) OR has_role(auth.uid(), 'admin'::app_role));

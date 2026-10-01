@@ -1,4 +1,6 @@
 # Roadmap
+- [ ] Athlete tour: "pick one plan" step wording sent to owner; awaiting approval. Plan-mixing nudges reported.
+- [ ] Drill builder: audit done, on/off switch fixed; open gaps (no fault keys stored by recent analyses, no delete, no video upload, Hammers Today/defense not wired, no search/filter/preview/duplicate) await owner priorities.
 - [ ] Role/tier demo tours: inventory profiles+tiers+access, propose athlete-per-tier/coach/scout step lists for owner approval, then build masked spotlight tour; report card only in admin/owner tour; no publish.
 - [ ] Urgent measurement regression: sparse-scout elapsed-time defect fixed, short clips again retain complete evidence under the unchanged frame ceiling, and false pre-check prediction removed; known-clip reruns and full historical evidence matrix still in progress.
 - [ ] Demo rebuild: masked spotlight mechanics built and phone-verified on staff preview; wiring to Demo button + real copy waits on owner story approval.
