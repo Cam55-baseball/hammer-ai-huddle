@@ -25,8 +25,8 @@ export function AnalysisToggle({ value, onChange, className }: Props) {
     >
       {(
         [
-          { id: "report_card", label: "Report Card" },
           { id: "analysis", label: "Analysis" },
+          { id: "report_card", label: "Report Card" },
         ] as const
       ).map((tab) => {
         const active = value === tab.id;

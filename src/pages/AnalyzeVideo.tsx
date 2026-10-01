@@ -100,7 +100,7 @@ export default function AnalyzeVideo() {
   // Report Card / Analysis tab. Report Card renders only Release-1 VISIBLE,
   // measurement-backed tiles; every unvalidated tile stays behind its
   // existing kill switch in src/lib/reportCard/release1.ts.
-  const [analysisView, setAnalysisView] = useState<AnalysisView>("report_card");
+  const [analysisView, setAnalysisView] = useState<AnalysisView>("analysis");
   // Scored grading (report card, score dial, 20–80 band) is owner/admin only
   // until the measurement engine is real. Server strips the numbers too.
   const { allowed: scoresAllowed } = useScoredGradingAccess();
@@ -1585,7 +1585,8 @@ export default function AnalyzeVideo() {
 
                 {scoresAllowed && analysisView === "report_card" ? (
                   <>
-                  <CategoryScoreCard videoId={currentVideoId} sport={sport} module={module} side={sideResolution.status === 'known' ? sideResolution.side : null} />
+                  {/* Report card: only this clip's own analysis type. No
+                      cross-skill findings and no category scoring here. */}
                   <HammerReportCard
                     sport={sport}
                     module={module}
@@ -1596,13 +1597,12 @@ export default function AnalyzeVideo() {
                       tempo_sec_deterministic: persistedTempo
                         ? { value: persistedTempo.value, missing_reason: persistedTempo.missing_reason }
                         : undefined,
-                      pitching_tiles_deterministic: pitchingTilesDet ?? (analysis as Record<string, unknown>).pitching_tiles_deterministic ?? undefined,
+                      pitching_tiles_deterministic: module === 'pitching'
+                        ? (pitchingTilesDet ?? (analysis as Record<string, unknown>).pitching_tiles_deterministic ?? undefined)
+                        : undefined,
                     } as never}
                     showShare={false}
                   />
-                  {/* Report-card view has no findings card, so the cross-skill
-                      pattern gets its one home directly under the report. */}
-                  <RootPatternCallout />
                   <AnalysisPrescriptionSection
                     module={module}
                     sport={sport}
@@ -1619,7 +1619,6 @@ export default function AnalyzeVideo() {
                     onSaveToLibrary={() => setSaveDialogOpen(true)}
                     onReturnToDashboard={() => navigate('/dashboard')}
                     showScore={scoresAllowed}
-                    crossDomainSlot={<RootPatternCallout inline />}
                     prescriptionExtra={
                       <AnalysisPrescriptionSection
                         embedded
