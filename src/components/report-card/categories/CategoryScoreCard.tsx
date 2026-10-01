@@ -21,7 +21,8 @@ const why = (r: string | null) => {
 };
 const outcomeLabel = (o: TileOutcome) => {
   switch (o.status) {
-    case "scored": return o.frac >= 1 ? "Pass" : o.frac <= 0 ? "Needs work" : "Partial";
+    case "attributed": return "Counted in P1";
+    case "scored": if (o.disprovenBy) return "Not held through the stride"; return o.frac >= 1 ? "Pass" : o.frac <= 0 ? "Needs work" : "Partial";
     case "waiting_on_baseline": return "Recorded";
     case "ungraded": return "Measured, not graded";
     case "not_applicable": return o.reason.startsWith("pitcher_not_in_frame") ? "Needs pitcher in frame" : "Doesn't apply";
@@ -73,7 +74,7 @@ export function CategoryScoreCard({ videoId, sport, module, side }: { videoId: s
             <p className="text-sm font-semibold text-foreground">{c.score != null ? `${c.score} / ${c.points}` : c.measuredScore ? <span className="text-muted-foreground">Limited evidence</span> : <span className="text-muted-foreground">Incomplete</span>}</p>
           </div>
           <Progress value={c.score != null && c.points > 0 ? (c.score / c.points) * 100 : 0} />
-          {!c.additive && <p className="text-xs font-semibold text-foreground">{c.coverage.scoredTiles} of {c.coverage.totalTiles} checks measured{c.coverage.waitingOnBaseline ? ` · ${c.coverage.waitingOnBaseline} recorded, waiting on this athlete's own range` : ""}{c.coverage.notApplicable ? ` · ${c.coverage.notApplicable} need the pitcher in frame or don't apply` : ""}</p>}
+          {!c.additive && <p className="text-xs font-semibold text-foreground">{c.coverage.scoredTiles} of {c.coverage.totalTiles} checks measured{c.coverage.attributedElsewhere ? ` · ${c.coverage.attributedElsewhere} counted as proof for P1, not against this category` : ""}{c.coverage.waitingOnBaseline ? ` · ${c.coverage.waitingOnBaseline} recorded, waiting on this athlete's own range` : ""}{c.coverage.notApplicable ? ` · ${c.coverage.notApplicable} need the pitcher in frame or don't apply` : ""}</p>}
           {c.status === "limited_evidence" && c.measuredScore && <p className="text-xs text-muted-foreground">Too little of this category was measured to give it a score. Of what was measured: {c.measuredScore.earned} of {c.measuredScore.outOf} points. This is not a full score.</p>}
           {c.status === "incomplete" && <p className="text-xs text-muted-foreground">{why(c.incompleteReason)}</p>}
           {c.notApplicable.length > 0 && <p className="text-xs text-muted-foreground">Not counted here (needs the pitcher in frame or doesn't apply to this clip): {c.notApplicable.join(", ")}.</p>}

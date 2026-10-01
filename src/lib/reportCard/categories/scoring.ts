@@ -23,7 +23,7 @@ export const INCOMPLETE_MIN_SHARE = 0.6;
  * and not-applicable tiles stay in this denominator. Otherwise it is "limited evidence":
  * the score is shown only against the points actually measured, never scaled up. */
 export const MIN_SCORING_TILES = 2;
-export const CATEGORY_SCORING_VERSION = "category_scoring@1.1.0-evidence-2026-09-30";
+export const CATEGORY_SCORING_VERSION = "category_scoring@1.2.0-downstream-proof-2026-09-30";
 
 export type Audience = "athlete" | "staff";
 
@@ -47,6 +47,12 @@ export interface CategoryTileSpec {
   /** Ledger metric key used to look up this athlete's own band (record-only tiles). */
   baselineKey?: string;
   read: (raw: unknown) => TileReading;
+  /** Downstream-proof rule (owner 2026-09-30): when THIS tile fails, the named snapshot tile in the same
+   * category is disproven — its pass cannot stand, so it earns 0 and records why. */
+  disproves?: string;
+  /** This tile is evidence for a proof tile elsewhere ("categoryKey.tileKey"). When that proof fails and this
+   * tile fails, the failure is attributed to the proof's category and does not deduct here a second time. */
+  evidenceFor?: string;
 }
 export interface CategorySpec {
   key: string;
@@ -77,7 +83,8 @@ export interface CardCategorySpec {
 export interface AthleteBand { low: number; high: number; n: number }
 
 export type TileOutcome =
-  | { status: "scored"; frac: number; points: number; earned: number }
+  | { status: "scored"; frac: number; points: number; earned: number; disprovenBy?: string }
+  | { status: "attributed"; to: string; points: number }
   | { status: "waiting_on_baseline"; value: number; clipsNeeded: number }
   | { status: "ungraded"; value: number | null; why: string }
   | { status: "missing"; reason: string }
@@ -87,7 +94,7 @@ export interface CategoryResult {
   key: string; title: string; points: number; additive: boolean;
   status: "complete" | "limited_evidence" | "incomplete";
   /** How much of the category was actually measured. */
-  coverage: { scoredTiles: number; totalTiles: number; measuredPoints: number; fullPoints: number; waitingOnBaseline: number; notApplicable: number; notMeasured: number; evidence: "full" | "limited" | "none" };
+  coverage: { scoredTiles: number; attributedElsewhere: number; totalTiles: number; measuredPoints: number; fullPoints: number; waitingOnBaseline: number; notApplicable: number; notMeasured: number; evidence: "full" | "limited" | "none" };
   /** Limited evidence only: earned vs the points actually measured (category scale), never scaled up. */
   measuredScore: { earned: number; outOf: number } | null;
   /** Category score in its own points, 1 dp. null when incomplete. */
@@ -121,7 +128,15 @@ export function scoreCard(spec: CardCategorySpec, raw: unknown, o: { audience: A
   const baseSum = scored.reduce((a, c) => a + c.points, 0);
   const scale = baseSum > 0 ? spec.scaleTo / baseSum : 1;
 
+  // Pre-pass: which proof tiles failed (read once, audience-independent; proof tiles are never staff-only).
+  const failedProofs = new Set<string>();
+  for (const c of spec.categories) for (const t of c.tiles) if (t.disproves) {
+    const rd = t.read(raw);
+    if (rd.kind === "verdict" && !rd.pass) failedProofs.add(`${c.key}.${t.key}`);
+  }
+
   const categories = spec.categories.map((c): CategoryResult => {
+    const failedHere = new Map(c.tiles.filter((t) => t.disproves && failedProofs.has(`${c.key}.${t.key}`)).map((t) => [t.disproves!, t.key]));
     const tiles = c.tiles.map((t) => {
       let outcome: TileOutcome;
       if (o.audience === "athlete" && !o.unlock?.[t.key] && (typeof t.staffOnly === "function" ? t.staffOnly() : t.staffOnly)) outcome = { status: "missing", reason: "staff_only_until_validated" };
@@ -140,26 +155,32 @@ export function scoreCard(spec: CardCategorySpec, raw: unknown, o: { audience: A
           outcome = { status: "scored", frac, points: t.points, earned: 0 };
         }
       }
+      if (outcome.status === "scored" && failedHere.has(t.key)) outcome = { ...outcome, frac: 0, disprovenBy: failedHere.get(t.key) };
+      if (outcome.status === "scored" && outcome.frac <= 0 && t.evidenceFor && failedProofs.has(t.evidenceFor)) outcome = { status: "attributed", to: t.evidenceFor, points: t.points };
       if (outcome.status === "scored") outcome = { ...outcome, earned: outcome.frac * t.points };
       return { key: t.key, name: t.name, points: t.points, nonNegotiable: !!t.nonNegotiable, outcome };
     });
-    const inCheck = tiles.filter((t) => t.outcome.status !== "not_applicable" && t.outcome.status !== "waiting_on_baseline");
+    const inCheck = tiles.filter((t) => t.outcome.status !== "not_applicable" && t.outcome.status !== "waiting_on_baseline" && t.outcome.status !== "attributed");
+    const attributed = tiles.filter((t) => t.outcome.status === "attributed");
+    const attributedPts = attributed.reduce((a, t) => a + t.points, 0);
     const applicable = inCheck.reduce((a, t) => a + t.points, 0);
     const measured = inCheck.filter((t) => t.outcome.status === "scored");
     const mPts = measured.reduce((a, t) => a + t.points, 0);
     const share = applicable > 0 ? mPts / applicable : 0;
-    const nnMissing = tiles.filter((t) => t.nonNegotiable && t.outcome.status !== "scored" && t.outcome.status !== "not_applicable");
+    const nnMissing = tiles.filter((t) => t.nonNegotiable && t.outcome.status !== "scored" && t.outcome.status !== "not_applicable" && t.outcome.status !== "attributed");
     const notApplicable = tiles.filter((t) => t.outcome.status === "not_applicable").map((t) => t.name);
     const catPts = c.additive ? c.points : c.points * scale;
     let reason: string | null = null;
     const fullPts = tiles.reduce((a, t) => a + t.points, 0);
-    const fullShare = fullPts > 0 ? mPts / fullPts : 0;
+    // Attributed tiles WERE measured — they count as evidence here, they just deduct in the proof's category.
+    const fullShare = fullPts > 0 ? (mPts + attributedPts) / fullPts : 0;
+    const evidenceTiles = measured.length + attributed.length;
     const cov = {
-      scoredTiles: measured.length, totalTiles: tiles.length, measuredPoints: mPts, fullPoints: fullPts,
+      scoredTiles: measured.length, attributedElsewhere: attributed.length, totalTiles: tiles.length, measuredPoints: mPts, fullPoints: fullPts,
       waitingOnBaseline: tiles.filter((t) => t.outcome.status === "waiting_on_baseline").length,
       notApplicable: tiles.filter((t) => t.outcome.status === "not_applicable").length,
       notMeasured: tiles.filter((t) => t.outcome.status === "missing" || t.outcome.status === "ungraded").length,
-      evidence: (measured.length === 0 ? "none" : measured.length >= MIN_SCORING_TILES && fullShare >= INCOMPLETE_MIN_SHARE ? "full" : "limited") as "full" | "limited" | "none",
+      evidence: (evidenceTiles === 0 ? "none" : evidenceTiles >= MIN_SCORING_TILES && fullShare >= INCOMPLETE_MIN_SHARE ? "full" : "limited") as "full" | "limited" | "none",
     };
     if (c.additive) {
       // Never incomplete in a way that costs anything: bonus is 0 until earned.

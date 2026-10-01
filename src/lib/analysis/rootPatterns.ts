@@ -38,10 +38,10 @@ export const ROOT_PATTERNS: Record<string, RootPattern> = {
   },
   back_leg_did_not_hold_load: {
     key: "back_leg_did_not_hold_load",
-    label: "Your back leg didn't hold the load",
+    label: "Your back leg wasn't truly loaded in your set-up",
     plain:
-      "As you load, your weight should sit balanced on your back leg. When it doesn't, it shows up later: the head moves past your centre of mass, the back hip gives up its turn, the hips keep drifting forward after the front foot lands, or the stride falls forward instead of being driven by the back hip.",
-    why: "These all come from one thing, not separate problems. Get your weight settled on your back leg as you load and they all clean up together.",
+      "This starts in your load, not your stride. Your set-up can look right and still not be holding. The stride is where it showed: your body travelled with your front foot, your head got out in front, or your back heel came up early.",
+    why: "Fix the load, not the stride. Get your weight truly settled on your back leg as you load, and the stride stops giving ground on its own.",
   },
   hands_leak_forward_early: {
     key: "hands_leak_forward_early",
