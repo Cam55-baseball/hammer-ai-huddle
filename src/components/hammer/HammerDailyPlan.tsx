@@ -834,7 +834,7 @@ function HammerDailyPlanBody({
         <RampLines />
       </BeforeYouStartSection>
     <Card id="hammer-plan" className="scroll-mt-24">
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2" data-tour="today-plan-heading" data-tour-context>
         <CardTitle className="text-sm flex items-center justify-between gap-2">
           <span className="truncate">{identity.voiceLabel} · today's plan</span>
           <div className="flex items-center gap-1.5 shrink-0">

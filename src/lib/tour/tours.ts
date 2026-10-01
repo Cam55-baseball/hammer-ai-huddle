@@ -31,7 +31,7 @@ export function athleteSteps(c: TourContext): TourStep[] {
     ? { route: "/production-studio", name: "Heat Factory" }
     : hit || thr ? { route: "/production-lab", name: "Iron Bambino" } : null;
   return [
-    { id: "today", route: "/dashboard", target: '[data-tour="today-plan"]', title: "Hammers Today",
+    { id: "today", route: "/dashboard", target: '[data-tour="today-plan-heading"]', title: "Hammers Today",
       body: "This is your day. Hammers Today lays out what to do, built around you. Open the app, start here." },
     { id: "update-hammer", route: "/dashboard", target: '[data-tour="update-hammer"]', title: "Update Hammer",
       body: "Sore, busy, game tomorrow? Tell Hammer here and today's work changes to fit." },
