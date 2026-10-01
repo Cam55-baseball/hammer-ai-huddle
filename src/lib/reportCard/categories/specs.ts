@@ -33,6 +33,32 @@ const coilAt = (k: string) => (raw: unknown): TileReading => {
   return { kind: "missing", reason: r?.missing_reason ?? "not_measured" };
 };
 
+/**
+ * Back-leg balance is PROVEN downstream (owner 2026-09-30: "P1 has to read the rest of the swing").
+ * Fail when any P3 reading shows the body went forward beyond its still-clip floor; pass when at least
+ * one reads held and none went forward; missing when nothing downstream can be read. No owner numbers —
+ * only the floor-based patterns the P3 readings already produce. Staff-only tiles (19/20) are not used,
+ * so the proof reads the same in athlete and staff view.
+ */
+export const BACK_LEG_PROOF_SOURCES = ["coil.foot_vs_body", "coil.sink", "pose.head_discipline", "card.back_heel_early_rise", "card.back_knee_flex_maintained"] as const;
+export function backLegProof(raw: unknown): { verdict: "pass" | "fail" | null; forward: string[]; held: string[] } {
+  const forward: string[] = [], held: string[] = [];
+  const fvb = (at(raw, "coil.foot_vs_body") as { pattern?: string } | undefined)?.pattern;
+  if (fvb === "body_went_with_foot") forward.push("foot_vs_body"); else if (fvb === "body_stayed_back") held.push("foot_vs_body");
+  const sink = (at(raw, "coil.sink") as { pattern?: string } | undefined)?.pattern;
+  if (sink === "fell_forward") forward.push("sink"); else if (sink === "sank_over_back_leg") held.push("sink");
+  for (const [k, p] of [["head_discipline", "pose.head_discipline"], ["back_heel_early_rise", "card.back_heel_early_rise"], ["back_knee_flex_maintained", "card.back_knee_flex_maintained"]] as const) {
+    const v = at(raw, p)?.verdict;
+    if (v === "fail") forward.push(k); else if (v === "pass" || v === "elite") held.push(k);
+  }
+  return { verdict: forward.length ? "fail" : held.length ? "pass" : null, forward, held };
+}
+const backLegBalanceProven = (raw: unknown): TileReading => {
+  const p = backLegProof(raw);
+  return p.verdict == null ? { kind: "missing", reason: "no_downstream_p3_evidence_readable" } : { kind: "verdict", pass: p.verdict === "pass" };
+};
+const P1_PROOF = "p1.back_leg_balance_at_load";
+
 export const HITTING_CATEGORIES: CardCategorySpec = {
   card: "hitting",
   sections: [],
@@ -44,7 +70,7 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
   categories: [
     { key: "p1", title: "P1: Create Balance", points: 20, tiles: [
       { key: "hip_load", name: "Back hip socket rotation reached at P1", points: 13, nonNegotiable: true, staffOnly: hipLoadStaff, read: verdictAt("pose.hip_load") },
-      { key: "back_leg_balance_at_load", name: "Back-leg balance at load", points: 7, read: missingTile("no_separate_detector_yet") },
+      { key: "back_leg_balance_at_load", name: "Back-leg balance, proven by the stride", points: 7, disproves: "hip_load", read: backLegBalanceProven },
     ] },
     { key: "p2", title: "P2: Gather", points: 13, tiles: [
       { key: "hand_load", name: "Hands loaded behind the head", points: 5, read: verdictAt("pose.hand_load") },
@@ -52,18 +78,18 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
       { key: "p2_timing", name: "Hand load timing vs the pitcher", points: 4, read: verdictAt("pose.p2_timing", naPitcher) },
     ] },
     { key: "p3", title: "P3: Load by Stride", points: 19, tiles: [
-      { key: "back_hip_socket_hold", name: "Back hip socket holds or increases", points: 3, nonNegotiable: true, staffOnly: hipLoadStaff, read: verdictAt("owner.tile20") },
-      { key: "head_path_through_stride", name: "Head path through the stride", points: 2, staffOnly: headPathStaff, read: verdictAt("owner.tile19") },
+      { key: "back_hip_socket_hold", evidenceFor: P1_PROOF, name: "Back hip socket holds or increases", points: 3, nonNegotiable: true, staffOnly: hipLoadStaff, read: verdictAt("owner.tile20") },
+      { key: "head_path_through_stride", evidenceFor: P1_PROOF, name: "Head path through the stride", points: 2, staffOnly: headPathStaff, read: verdictAt("owner.tile19") },
       { key: "active_stride", name: "Stride driven by the back hip, not a fall", points: 2, recordOnly: true, baselineKey: "hitting_rhythm.active_stride", read: recordAt("rhythm.active") },
       { key: "stride_foot_vs_body", name: "Foot goes forward, body stays back", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.foot_vs_body", read: coilAt("foot_vs_body") },
       { key: "stride_hands_opposite", name: "Hands go back as the foot goes forward", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.hands_opposite", read: coilAt("hands_opposite") },
       { key: "stride_side_bend", name: "Side bend builds through the stride", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.side_bend", read: coilAt("side_bend") },
       { key: "stride_sink", name: "Sinking into the back leg, not falling forward", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.sink", read: coilAt("sink") },
-      { key: "head_discipline", name: "Head discipline", points: 2, read: verdictAt("pose.head_discipline") },
-      { key: "back_heel_early_rise", name: "Back heel stays down until P4", points: 2, read: verdictAt("card.back_heel_early_rise") },
+      { key: "head_discipline", evidenceFor: P1_PROOF, name: "Head discipline", points: 2, read: verdictAt("pose.head_discipline") },
+      { key: "back_heel_early_rise", evidenceFor: P1_PROOF, name: "Back heel stays down until P4", points: 2, read: verdictAt("card.back_heel_early_rise") },
       { key: "stride_direction", name: "Stride direction to the pitcher", points: 2, read: verdictAt("pose.stride_direction") },
       { key: "p3_timing", name: "Foot-down timing vs the pitcher", points: 2, read: verdictAt("pose.p3_timing", naPitcher) },
-      { key: "back_knee_flex_maintained", name: "Back knee holds its bend", points: 1, read: verdictAt("card.back_knee_flex_maintained") },
+      { key: "back_knee_flex_maintained", evidenceFor: P1_PROOF, name: "Back knee holds its bend", points: 1, read: verdictAt("card.back_knee_flex_maintained") },
       { key: "heel_plant", name: "Front heel down at landing", points: 1, read: verdictAt("card.heel_plant") },
       { key: "hands_outside_shoulders_at_landing", name: "Hands outside the shoulders at landing", points: 1, read: verdictAt("pose.hands_outside_shoulders_at_landing") },
       { key: "hands_stay_up_at_plant", name: "Hands above the back elbow at heel landing", points: 1, read: verdictAt("card.hands_stay_up_at_plant") },
