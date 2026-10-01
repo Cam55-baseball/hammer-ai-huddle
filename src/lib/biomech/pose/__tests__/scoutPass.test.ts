@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   SCOUT_SAMPLE_BUDGET,
+  MOVEMENT_WINDOW_SEC,
   deriveScoutFindings,
   placeDenseWindowFromScout,
   selectScoutFrameIndices,
@@ -164,5 +165,17 @@ describe("window placement", () => {
         }),
       );
     expect(call()).toBe(call());
+  });
+});
+
+describe("window is budgeted in seconds, not frames (fix 2026-10-01)", () => {
+  it("covers the same real time at every frame rate; budget is only a ceiling", () => {
+    for (const fps of [24, 30, 60, 120]) {
+      const f = deriveScoutFindings([obs(0, fps), obs(Math.round(4 * fps), fps, { hipX: 0.8 }), obs(Math.round(12 * fps), fps)]);
+      const r = placeDenseWindowFromScout({ fps_true: fps, duration_sec: 12.5, budget: 600, landingTimeSec: null, findings: f });
+      if ("failed" in r) throw new Error("expected a window");
+      expect(r.frame_count).toBe(Math.round(MOVEMENT_WINDOW_SEC * fps));
+      expect(r.rule.startsWith("window_3s_native_fps")).toBe(true);
+    }
   });
 });
