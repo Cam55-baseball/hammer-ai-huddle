@@ -264,11 +264,15 @@ export interface ScoutedWindowFailure {
 export function placeDenseWindowFromScout(args: {
   fps_true: number;
   duration_sec: number;
+  /** Frame CEILING only (memory/time). Never defines the window's length. */
   budget: number;
   landingTimeSec: number | null;
   findings: ScoutFindings;
+  /** Real-time window length. Defaults to MOVEMENT_WINDOW_SEC. */
+  windowSec?: number;
 }): ScoutedWindow | ScoutedWindowFailure {
   const { fps_true, duration_sec, budget, landingTimeSec, findings } = args;
+  const windowSec = args.windowSec ?? MOVEMENT_WINDOW_SEC;
   if (!Number.isFinite(fps_true) || fps_true <= 0 || !Number.isFinite(duration_sec) || duration_sec <= 0) {
     return {
       failed: true,
@@ -286,7 +290,11 @@ export function placeDenseWindowFromScout(args: {
 
   const totalFrames = Math.max(1, Math.floor(duration_sec * fps_true));
   const maxIndex = totalFrames - 1;
-  const windowFrames = Math.min(totalFrames, Math.max(1, Math.floor(budget)));
+  // Window is budgeted in SECONDS; frames follow from the rate. The frame
+  // budget is a ceiling only (fix 2026-10-01: 600 frames at 60 fps was 10 s of
+  // walk-up and walk-off around a sub-2 s swing, collapsing pose coverage).
+  const secFrames = Math.max(1, Math.round(windowSec * fps_true));
+  const windowFrames = Math.min(totalFrames, secFrames, Math.max(1, Math.floor(budget)));
 
   const span = findings.presence;
   const hasLanding =
@@ -346,7 +354,11 @@ export function placeDenseWindowFromScout(args: {
   }
 
   const ruleBase =
-    windowFrames >= totalFrames ? "full_clip_native_fps" : `budget_${windowFrames}_frames`;
+    windowFrames >= totalFrames
+      ? "full_clip_native_fps"
+      : windowFrames === secFrames
+        ? `window_${windowSec}s_native_fps`
+        : `budget_${windowFrames}_frames`;
   const rule =
     source === "landing_mark"
       ? `${ruleBase}_landing_centred_60_40_scout_validated`
