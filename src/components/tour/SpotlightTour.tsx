@@ -270,7 +270,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
     window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return;
     const onBack = () => {
       if (!historyArmed.current) return;
