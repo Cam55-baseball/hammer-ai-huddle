@@ -51,7 +51,6 @@ import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxon
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { HighFpsCapture } from "@/components/analyze/HighFpsCapture";
 import { evaluateMovementGate, type MovementGateResult } from "@/lib/biomech/gates/movementGate";
-import { NoMovementCard } from "@/components/analyze/NoMovementCard";
 import { diagnoseTrack } from "@/lib/biomech/pose/trackDiagnosis";
 import { detectCameraView } from "@/lib/biomech/camera/cameraView";
 import { fpsProvenance } from "@/lib/biomech/probeVideoMetadata";
@@ -172,8 +171,6 @@ export default function AnalyzeVideo() {
   const [captureMode, setCaptureMode] = useState<"choose" | "upload" | "capture">("choose");
   // Owner ruling: Analysis is body mechanics only. Ball speed / reference
   // distance live in DelayCam (code kept in src/lib/cv + src/lib/capture).
-  // Movement gate result — a refused clip produces no tiles, faults or drills.
-  const [noMovement, setNoMovement] = useState<Extract<MovementGateResult, { status: "refused" }> | null>(null);
   const { saveDrill, savedDrills } = useVault();
 
   // Side-aware analysis: hitting → hit discipline; pitching/throwing → throw.
@@ -335,7 +332,6 @@ export default function AnalyzeVideo() {
     setAnalysisView("analysis");
     setClipTiles(null);
     setAnalysisError(null);
-    setNoMovement(null);
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
     setLandingTime(null);
@@ -1053,14 +1049,9 @@ export default function AnalyzeVideo() {
         return;
       }
 
-      // ===== MOVEMENT GATE — refuse the whole analysis on a motionless clip =====
-      // No AI call, no tiles, no faults, no drills. The clip and its landmark
-      // series are still saved above so the refusal is auditable.
-      if (movementGate.status === "refused") {
-        setNoMovement(movementGate);
-        setUploading(false);
-        return;
-      }
+      // The movement gate governs pose-measured report-card tiles ONLY (applied
+      // above, before any tile runs). It never blocks the analysis: coaching,
+      // faults and drills do not come from pose (owner ruling 2026-10-01).
 
       toast.success(t('videoAnalysis.uploadedStartingAnalysis', "Video uploaded! Starting analysis..."));
       setUploading(false);
@@ -1583,9 +1574,6 @@ export default function AnalyzeVideo() {
             )}
 
 
-            {noMovement && !analyzing && !analysis && (
-              <NoMovementCard module={module || 'hitting'} sport={sport} reason={noMovement.reason} />
-            )}
 
             {analysisError && !analyzing && (
               <Card className="p-6 border-destructive">
