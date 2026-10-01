@@ -162,7 +162,7 @@ export const PITCHING_CATEGORIES: CardCategorySpec = {
     { key: "finish", title: "The Finish", points: 10, tiles: [
       { key: "glove_drift_outside_frame_in", name: "Glove control", points: 5, read: verdictAt("card.tiles.glove_drift_outside_frame_in") },
       { key: "glove_swivel", name: "Glove swivel", points: 0, read: verdictAt("card.tiles.glove_swivel") },
-      { key: "finish_balance", name: "Finish balance", points: 5, read: missingTile("no_pitching_finish_detector_yet") },
+      { key: "pitching_finish_balance", name: "Finish balance", points: 5, read: missingTile("no_pitching_finish_detector_yet") },
     ] },
   ],
 };
