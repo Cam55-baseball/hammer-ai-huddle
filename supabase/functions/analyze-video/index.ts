@@ -18,6 +18,7 @@ import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalys
 import { chatCompletion } from "../_shared/googleAi.ts";
 import { canSeeScoredGrading, stripScoredGrading } from "../_shared/scoredGradingGate.ts";
 import { buildFaultFindings } from "../_shared/faultFindings.ts";
+import { constructiveCriticismBlock, IMPROVEMENTS_SCHEMA } from "./constructiveCriticism.ts";
 import { runStoredThrowPitchCards, runAndWritePoseTileFindings } from "../_shared/poseTileFindingsServer.ts";
 
 const corsHeaders = {
@@ -1976,7 +1977,7 @@ Every fault you surface in feedback/drill recommendations MUST be expressed as a
     // Hammer Report Card: per-discipline structured metrics block (additive).
     const reportCardContract = getContractFor(module, sport);
     const metricsPromptBlock = reportCardContract ? buildMetricsPromptBlock(reportCardContract) : "";
-    const systemPrompt = getSystemPrompt(module, sport) + getScorecardInstructions(hasHistory) + languageInstruction + causalSuffix + metricsPromptBlock;
+    const systemPrompt = getSystemPrompt(module, sport) + getScorecardInstructions(hasHistory) + languageInstruction + causalSuffix + metricsPromptBlock + constructiveCriticismBlock(module, sport);
 
     // ===== BUILD MULTIMODAL USER CONTENT WITH FRAMES =====
     const userContent: Array<{type: string; text?: string; image_url?: {url: string}}> = [];
@@ -2152,9 +2153,11 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                 },
                 positives: {
                   type: "array",
-                  description: "List of 2-4 specific positive aspects of the player's mechanics that they should feel good about and build upon",
+                  description: "0-3 positives, only what the clip clearly shows. Optional — never pad with praise.",
                   items: { type: "string" }
                 },
+                improvements: IMPROVEMENTS_SCHEMA,
+                clean_reason: { type: "string", description: "Only when improvements is empty: which doctrine checks were verified clean" },
                 drills: {
                   type: "array",
                   items: {
@@ -2235,8 +2238,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                 ...(reportCardContract ? { metrics: buildMetricsSchema(reportCardContract) } : {}),
               },
               required: reportCardContract
-                ? ["efficiency_score", "violations", "summary", "feedback", "positives", "drills", "scorecard", "metrics"]
-                : ["efficiency_score", "violations", "summary", "feedback", "positives", "drills", "scorecard"]
+                ? ["efficiency_score", "violations", "summary", "feedback", "improvements", "drills", "scorecard", "metrics"]
+                : ["efficiency_score", "violations", "summary", "feedback", "improvements", "drills", "scorecard"]
             }
           }
         }
@@ -2289,6 +2292,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     let summary: string[] = [];
     let positives: string[] = [];
     let drills: any[] = [];
+    let improvements: any[] = [];
+    let clean_reason: string | null = null;
     // Calculate average historical score
     const averageHistoricalScore = historicalScores.length > 0 
       ? Math.round(historicalScores.reduce((sum, s) => sum + s, 0) / historicalScores.length)
@@ -2329,6 +2334,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         feedback = analysisArgs.feedback || "No feedback available";
         positives = analysisArgs.positives || [];
         drills = analysisArgs.drills || [];
+        improvements = Array.isArray(analysisArgs.improvements) ? analysisArgs.improvements : [];
+        clean_reason = typeof analysisArgs.clean_reason === "string" ? analysisArgs.clean_reason : null;
         violations = analysisArgs.violations || {};
         if (analysisArgs.metrics && typeof analysisArgs.metrics === "object") {
           metrics = analysisArgs.metrics;
@@ -2516,6 +2523,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       summary,
       feedback,
       positives,
+      improvements,
+      clean_reason,
       drills,
       scorecard,
       violations_detected: violations,
@@ -2791,6 +2800,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       summary,
       feedback,
       positives,
+      improvements,
+      clean_reason,
       drills,
       scorecard,
       // The structured fault flags. The client matches library videos and
