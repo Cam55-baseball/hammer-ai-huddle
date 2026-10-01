@@ -96,7 +96,9 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
   useEffect(() => {
     if (!open || !step) return;
     setFoundId(null);
-    if (step.route && navigate && currentPath !== step.route) navigate(step.route);
+    // Wait for the page to actually change before looking — the old page's
+    // headings would otherwise match and then vanish.
+    if (step.route && navigate && (currentPath ?? "").split("?")[0] !== step.route.split("?")[0]) { navigate(step.route); return; }
     let raf = 0; const t0 = performance.now();
     const poll = () => {
       if (findTarget(step.target)) { setFoundId(step.id); return; }
@@ -110,7 +112,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
     raf = requestAnimationFrame(poll);
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, step?.id]);
+  }, [open, step?.id, (currentPath ?? "").split("?")[0]]);
 
   const spring = { stiffness: 260, damping: 30 };
   const sx = useSpring(0, spring), sy = useSpring(0, spring), sw = useSpring(0, spring), sh = useSpring(0, spring);
