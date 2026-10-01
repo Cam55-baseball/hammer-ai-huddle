@@ -2295,6 +2295,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     let drills: any[] = [];
     let improvements: any[] = [];
     let clean_reason: string | null = null;
+    let honesty_flags: unknown[] = [];
     // Calculate average historical score
     const averageHistoricalScore = historicalScores.length > 0 
       ? Math.round(historicalScores.reduce((sum, s) => sum + s, 0) / historicalScores.length)
@@ -2343,7 +2344,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         {
           const scrub = scrubFootageClaims({ summary, feedback, positives, improvements, clean_reason });
           summary = scrub.summary; feedback = scrub.feedback; positives = scrub.positives;
-          improvements = scrub.improvements; clean_reason = scrub.clean_reason;
+          improvements = scrub.improvements; clean_reason = scrub.clean_reason; honesty_flags = scrub.flags;
           if (scrub.flags.length > 0) console.warn(`[HONESTY-CHECK] removed ${scrub.flags.length} footage claim(s):`, JSON.stringify(scrub.flags));
         }
         if (analysisArgs.metrics && typeof analysisArgs.metrics === "object") {
@@ -2534,6 +2535,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       positives,
       improvements,
       clean_reason,
+      honesty_flags,
       drills,
       scorecard,
       violations_detected: violations,
