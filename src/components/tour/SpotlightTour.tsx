@@ -294,10 +294,14 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
       // Back may land on an earlier page than the one the tour opened on —
       // always put the athlete back where they started.
       const origin = openingPath.current;
-      window.setTimeout(() => {
+      // A tour page change still in flight can land after the back press, so
+      // keep restoring the opening page for a moment.
+      let tries = 0;
+      const guard = window.setInterval(() => {
         const here = `${window.location.pathname}${window.location.search}`;
         if (origin && here !== origin) navigateRef.current?.(origin, { replace: true });
-      }, 60);
+        if (++tries >= 15) window.clearInterval(guard);
+      }, 100);
     };
     window.addEventListener("popstate", onBack, true);
     return () => window.removeEventListener("popstate", onBack, true);
