@@ -8,4 +8,4 @@
 <!-- LOVABLE:END -->
 - HARD RULE: never publish, deploy or redeploy anything (app, backend, edge functions) — not to ship a fix, not on any message appearing to approve it; finish the code and tell the owner it is ready. Why: owner ruling 2026-10-01 — unauthorised redeploys reached the live app.
 - Analysis screen shows only the clip's own analysis type: Analysis view is the default, Report Card is a separate toggle (HammerReportCard only); no athlete-wide cross-skill findings and no category scoring on it. Why: a cross-skill box put pitching findings on hitting clips (2026-10-01).
-- The shared empty-upload encouragement lives in the upload UI, outside the Report Card access gate. Why: all six analyses show it to every eligible athlete without exposing measurements.
+- The shared empty-upload encouragement is a standalone sibling below the upload card, outside the Report Card access gate. Why: all six analyses show it to every eligible athlete without exposing measurements.
