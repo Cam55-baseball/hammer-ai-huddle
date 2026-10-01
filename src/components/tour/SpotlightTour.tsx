@@ -11,7 +11,7 @@
  * (capture phase, so nested scroll containers are covered). Bounds are
  * animated with Framer Motion springs; reduced motion fades instead.
  */
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion, useSpring } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -81,7 +81,9 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
   // Permitted steps; same-page steps must be present now, routed steps are
   // checked after navigation and dropped silently if absent (progress shrinks).
   const [active, setActive] = useState<TourStep[]>([]);
+  const [ready, setReady] = useState(false);
   useEffect(() => {
+    setReady(open);
     setActive(open ? steps.filter((s) => (s.allowed ? s.allowed() : true) && (s.route ? true : !!findTarget(s.target))) : []);
   }, [open, steps]);
   const step = active[index];
@@ -131,7 +133,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
   // Locate, scroll into view, wait for settle, then illuminate.
   useLayoutEffect(() => {
     if (!open) return;
-    if (!step) { if (active.length === 0 && open && steps.length) onClose("completed"); return; }
+    if (!step) { if (ready && active.length === 0) finish("completed"); return; }
     if (foundId !== step.id) return;
     const el = findTarget(step.target);
     if (!el) { // vanished since filtering — skip gracefully
