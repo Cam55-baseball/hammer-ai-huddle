@@ -19,7 +19,10 @@ export function useDrillCirculation() {
       try {
         const db = supabase as any;
         const [{ data: r }, { data: u }, { data: e }] = await Promise.all([
-          db.from("owner_drills").select("*").eq("active", true),
+          // Load switched-off rows too: an inactive override is how the owner
+          // removes a built-in drill (mergeCatalog drops it). Filtering them out
+          // here left switched-off built-ins in the prescription.
+          db.from("owner_drills").select("*"),
           db.rpc("drill_usage_totals"),
           db.from("drill_engagement").select("drill_id,event,created_at").eq("user_id", user.id).in("event", ["served", "completed"]),
         ]);

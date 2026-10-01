@@ -32,3 +32,11 @@ describe("owner drill reaches the prescription by fault key", () => {
     expect(soft.map((m: any) => m.drill?.id ?? m.id)).not.toContain("owner.2298000f-b6c5-466a-b3b9-726952deb0fd");
   });
 });
+
+describe("switching off a built-in drill removes it", () => {
+  it("drops the built-in when an inactive override row is present", () => {
+    const d = ELITE_DRILL_CATALOG[0];
+    const off: OwnerDrillRow = { ...row, id: "off", overrides_drill_id: d.id, active: false };
+    expect(mergeCatalog(ELITE_DRILL_CATALOG, [off]).some((x) => x.id === d.id)).toBe(false);
+  });
+});
