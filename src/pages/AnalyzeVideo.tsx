@@ -52,10 +52,7 @@ import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { HighFpsCapture } from "@/components/analyze/HighFpsCapture";
 import { evaluateMovementGate, type MovementGateResult } from "@/lib/biomech/gates/movementGate";
 import { NoMovementCard } from "@/components/analyze/NoMovementCard";
-import { TrackDiagnosisCard, FpsUnknownCard } from "@/components/analyze/TrackDiagnosisCard";
 import { diagnoseTrack, type TrackDiagnosis } from "@/lib/biomech/pose/trackDiagnosis";
-import { detectCameraView, type CameraViewResult } from "@/lib/biomech/camera/cameraView";
-import { CameraViewCard } from "@/components/analyze/CameraViewCard";
 import { fpsProvenance } from "@/lib/biomech/probeVideoMetadata";
 import { classifyFps } from "@/lib/capture/highFpsCapture";
 import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
@@ -171,9 +168,7 @@ export default function AnalyzeVideo() {
   // Owner ruling: Analysis is body mechanics only. Ball speed / reference
   // distance live in DelayCam (code kept in src/lib/cv + src/lib/capture).
   // Movement gate result — a refused clip produces no tiles, faults or drills.
-  const [fpsUnknown, setFpsUnknown] = useState(false);
   const [trackDiagnosis, setTrackDiagnosis] = useState<TrackDiagnosis | null>(null);
-  const [cameraView, setCameraView] = useState<CameraViewResult | null>(null);
   const [noMovement, setNoMovement] = useState<Extract<MovementGateResult, { status: "refused" }> | null>(null);
   const { saveDrill, savedDrills } = useVault();
 
@@ -337,9 +332,7 @@ export default function AnalyzeVideo() {
     setClipTiles(null);
     setAnalysisError(null);
     setNoMovement(null);
-    setFpsUnknown(false);
     setTrackDiagnosis(null);
-    setCameraView(null);
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
     setLandingTime(null);
@@ -509,9 +502,7 @@ export default function AnalyzeVideo() {
     }
 
     setUploading(true);
-    setFpsUnknown(false);
     setTrackDiagnosis(null);
-    setCameraView(null);
 
     // ===== PHASE 0/1 — Deterministic probe (sha256 + true fps + dimensions) =====
     // Probe FIRST so deterministic frame selection can use fps_true.
@@ -581,7 +572,6 @@ export default function AnalyzeVideo() {
     const fpsTrue = probed.fps_true;
     const seekHz = fpsTrue ?? UNKNOWN_FPS_SAMPLING_GRID_HZ;
     const runAnalysis = analysisEnabled;
-    setFpsUnknown(analysisEnabled && fpsTrue == null);
     if (analysisEnabled) {
       try {
         setUploadStage('Picking out key frames…');
@@ -657,7 +647,6 @@ export default function AnalyzeVideo() {
         });
         movementGate = evaluateMovementGate(denseRun.series);
         setTrackDiagnosis(diagnoseTrack(denseRun.series));
-        setCameraView(detectCameraView(denseRun.series));
         // The report card reads the same local deterministic tile code as the
         // server's generated bundle. Never use the AI analysis's legacy metrics.
         if (movementGate.status === "movement" && sideResolution.status === "known") {
@@ -1189,7 +1178,6 @@ export default function AnalyzeVideo() {
       toast.info(t('videoAnalysis.extractingFrames', "Extracting key frames for analysis..."));
 
       const probedRetry = await probeVideoMetadata(videoFile);
-      setFpsUnknown(probedRetry.fps_true == null);
       // Seek grid only — an unknown rate is never recorded as a rate.
       const probed = { ...probedRetry, fps_true: probedRetry.fps_true ?? UNKNOWN_FPS_SAMPLING_GRID_HZ };
       const result = await extractKeyFramesDeterministic({
@@ -1585,17 +1573,6 @@ export default function AnalyzeVideo() {
               </div>
             )}
 
-
-            {(isOwner || isAdmin) && !analyzing && (fpsUnknown || cameraView || trackDiagnosis) && (
-              <details className="border border-border p-4 text-sm">
-                <summary className="cursor-pointer font-medium">Staff diagnostics</summary>
-                <div className="mt-3 space-y-3">
-                  {fpsUnknown && <FpsUnknownCard />}
-                  {cameraView && <CameraViewCard result={cameraView} module={module || 'hitting'} />}
-                  {trackDiagnosis && trackDiagnosis.status !== "clean" && <TrackDiagnosisCard diagnosis={trackDiagnosis} />}
-                </div>
-              </details>
-            )}
 
             {noMovement && !analyzing && !analysis && (
               <NoMovementCard module={module || 'hitting'} sport={sport} reason={noMovement.reason} />

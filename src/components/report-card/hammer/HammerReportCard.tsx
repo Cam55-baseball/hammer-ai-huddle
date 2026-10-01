@@ -97,7 +97,7 @@ export function HammerReportCard({
   ).length;
 
   // Build phase summary for the rail (BH only)
-  const phases: PhaseNode[] = useMemo(() => {
+  const phases: PhaseNode[] = (() => {
     if (!spec.groupByPhase) return [];
     const map = new Map<string, { passed: number; measured: number; total: number }>();
     for (const t of tilesWithState) {
@@ -117,7 +117,7 @@ export function HammerReportCard({
       measured: v.measured,
       passRate: v.measured > 0 ? v.passed / v.measured : 0,
     }));
-  }, [tilesWithState, spec.groupByPhase]);
+  })();
 
   const visibleTiles = activePhase
     ? tilesWithState.filter((t) => (t.spec.phase ?? "Other") === activePhase)
