@@ -46,7 +46,7 @@ function fromBuiltIn(d: EliteDrill): Draft {
 }
 
 /** Union of fault keys for the analyses ticked — never the full list. */
-export function availableFaultKeys(placements: string[]): string[] {
+function availableFaultKeys(placements: string[]): string[] {
   const keys = new Set<string>();
   for (const p of placements) {
     if (!p.startsWith("analysis:")) continue;
