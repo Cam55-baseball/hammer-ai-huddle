@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { stepsFor, PICK_ONE_PLAN_BODY } from "../tours";
+import { stepsFor } from "../tours";
 
 const ids = (a: Parameters<typeof stepsFor>[0], modules: string[], owner = false) =>
   stepsFor(a, { modules, sport: "baseball", isOwnerOrAdmin: owner }).filter((s) => (s.allowed ? s.allowed() : true)).map((s) => s.id);
@@ -9,18 +9,14 @@ describe("tour assembly per tier", () => {
     expect(ids("athlete", [])).toEqual(["today", "update-hammer"]);
   });
   it("Complete Pitcher", () => {
-    expect(ids("athlete", ["baseball_pitcher"])).toEqual(["today", "update-hammer", "pick-one", "program", "upload", "game-plan", "vault"]);
+    expect(ids("athlete", ["baseball_pitcher"])).toEqual(["today", "update-hammer", "upload", "game-plan", "vault"]);
   });
   it("5Tool", () => {
-    expect(ids("athlete", ["baseball_5tool"])).toEqual(["today", "update-hammer", "pick-one", "program", "upload", "game-plan", "vault"]);
+    expect(ids("athlete", ["baseball_5tool"])).toEqual(["today", "update-hammer", "upload", "game-plan", "vault"]);
   });
-  it("Golden 2Way adds The Unicorn", () => {
-    expect(ids("athlete", ["baseball_golden2way"])).toContain("unicorn");
-  });
-  it("pick-one sits before the programme step with approved wording", () => {
-    const s = ids("athlete", ["baseball_5tool"]);
-    expect(s.indexOf("pick-one")).toBeLessThan(s.indexOf("program"));
-    expect(PICK_ONE_PLAN_BODY).toMatch(/^There are two ways to train here\./);
+  it("does not teach temporary programmes", () => {
+    const text = JSON.stringify(stepsFor("staff", { modules: ["baseball_golden2way"], sport: "baseball", isOwnerOrAdmin: true })).toLowerCase();
+    expect(text).not.toMatch(/iron bambino|heat factory|speed lab|the unicorn|pick your path/);
   });
   it("no non-staff tour mentions the Report Card", () => {
     for (const a of ["athlete", "coach", "scout"] as const) {

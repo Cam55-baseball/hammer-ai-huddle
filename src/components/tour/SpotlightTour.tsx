@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion, useSpring } from "framer-motion";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export interface TourStep {
@@ -37,13 +38,14 @@ interface Props {
   /** Signed-in user; seen/skipped is remembered per user. */
   userId?: string | null;
   /** Router hooks for multi-page tours. */
-  navigate?: (to: string) => void;
+  navigate?: (to: string, options?: { replace?: boolean; state?: unknown }) => void;
   currentPath?: string;
 }
 
-const PAD = 8;
+const PAD = 12;
 const RADIUS = 14;
 const STORAGE_PREFIX = "hm-tour:";
+const EXIT_RESERVED_PX = 76;
 
 export function tourSeen(tourId: string, userId?: string | null) {
   try { return !!localStorage.getItem(`${STORAGE_PREFIX}${userId ?? "anon"}:${tourId}`); } catch { return false; }
@@ -62,6 +64,30 @@ function findTarget(sel: string): HTMLElement | null {
   return null;
 }
 
+/**
+ * A bare heading or tiny label is hard to recognise in isolation. Prefer its
+ * explicitly-marked context, then its compact parent. If a selected section is
+ * taller than a phone screen, use its heading area rather than cutting the
+ * section in half.
+ */
+function contextualTarget(el: HTMLElement): HTMLElement {
+  const explicit = el.closest<HTMLElement>("[data-tour-context]");
+  if (explicit) return explicit;
+  const rect = el.getBoundingClientRect();
+  const tooTall = rect.height > window.innerHeight * 0.42;
+  const isHeading = /^H[1-6]$/.test(el.tagName);
+  const heading = tooTall ? el.querySelector<HTMLElement>("h1, h2, h3") : null;
+  const focus = heading ?? el;
+  if (tooTall || isHeading || rect.height < 36 || rect.width < 100) {
+    const parent = focus.parentElement;
+    if (parent) {
+      const pr = parent.getBoundingClientRect();
+      if (pr.height > 0 && pr.height <= window.innerHeight * 0.42) return parent;
+    }
+  }
+  return focus;
+}
+
 function maskUrl(w: number, h: number, x: number, y: number, rw: number, rh: number) {
   // CSS masks use ALPHA by default: an even-odd path leaves the hole fully
   // transparent (no blur) and the rest opaque (blurred), in every engine.
@@ -78,6 +104,27 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
   const [vp, setVp] = useState({ w: 0, h: 0 });
   const targetRef = useRef<HTMLElement | null>(null);
   const frame = useRef<number | null>(null);
+  const openingPath = useRef<string | null>(null);
+  const historyArmed = useRef(false);
+  const closing = useRef(false);
+  const onCloseRef = useRef(onClose);
+  const tourIdRef = useRef(tourId);
+  const userIdRef = useRef(userId);
+  useLayoutEffect(() => { onCloseRef.current = onClose; tourIdRef.current = tourId; userIdRef.current = userId; });
+
+  const finish = useCallback((result: "completed" | "skipped", restoreOpeningPage = true) => {
+    if (closing.current) return;
+    closing.current = true;
+    markTour(tourId, result, userId);
+    const origin = openingPath.current;
+    const markerIsCurrent = !!(window.history.state?.usr?.hmTour);
+    if (restoreOpeningPage && markerIsCurrent) {
+      window.history.back();
+    } else if (restoreOpeningPage && origin && navigate && currentPath !== origin) {
+      navigate(origin, { replace: true });
+    }
+    onClose(result);
+  }, [currentPath, navigate, onClose, tourId, userId]);
 
   // Only steps that are permitted AND present; recomputed on open.
   // Permitted steps; same-page steps must be present now, routed steps are
@@ -85,13 +132,25 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
   const [active, setActive] = useState<TourStep[]>([]);
   const [ready, setReady] = useState(false);
   const wasOpen = useRef(false);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (open && wasOpen.current) return; // keep the live list mid-tour
     wasOpen.current = open;
+    if (open) {
+      closing.current = false;
+      openingPath.current = currentPath ?? `${window.location.pathname}${window.location.search}`;
+      historyArmed.current = true;
+      const state = window.history.state ?? {};
+      const usr = typeof state.usr === "object" && state.usr ? state.usr : {};
+      const { hmTour: _staleTourMarker, ...cleanUsr } = usr as Record<string, unknown>;
+      window.history.replaceState({ ...state, usr: cleanUsr }, "", window.location.href);
+      window.history.pushState({ ...state, usr: { ...cleanUsr, hmTour: true } }, "", window.location.href);
+    } else {
+      historyArmed.current = false;
+    }
     resolved.current = {};
     setReady(open);
     setActive(open ? steps.filter((s) => (s.allowed ? s.allowed() : true) && (s.route ? true : !!findTarget(s.target))) : []);
-  }, [open, steps]);
+  }, [open, steps, currentPath]);
   useEffect(() => { if (index > 0 && index >= active.length) setIndex(active.length - 1); }, [active.length, index]);
   const step = active[index];
   const [foundId, setFoundId] = useState<string | null>(null);
@@ -107,7 +166,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
     if (route && navigate && (currentPath ?? "").split("?")[0] !== route.split("?")[0]) {
       // Navigate once per step. If the page redirects away (viewer can't use it),
       // the step is dropped silently instead of waiting forever.
-      if (navigatedFor.current !== step.id) { navigatedFor.current = step.id; navigate(route); }
+      if (navigatedFor.current !== step.id) { navigatedFor.current = step.id; navigate(route, { replace: true, state: { hmTour: true } }); }
       const id = window.setTimeout(() => setActive((a) => a.filter((x) => x.id !== step.id)), 8000);
       return () => window.clearTimeout(id);
     }
@@ -162,11 +221,12 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
     if (!open) return;
     if (!step) { if (ready && active.length === 0) finish("completed"); return; }
     if (foundId !== step.id) return;
-    const el = findTarget(step.target);
-    if (!el) { // vanished since filtering — skip gracefully
+    const raw = findTarget(step.target);
+    if (!raw) { // vanished since filtering — skip gracefully
       setActive((a) => a.filter((x) => x.id !== step.id));
       return;
     }
+    const el = contextualTarget(raw);
     targetRef.current = el;
     el.scrollIntoView({ block: "center", inline: "nearest", behavior: reduce ? "auto" : "smooth" });
     // Wait until BOTH axes hold still for several frames (outer page and any
@@ -198,15 +258,15 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
 
   useEffect(() => {
     if (!rect) return;
-    // Clip tall/wide targets to the viewport so the cutout and card stay usable.
+    // The target is context-sized before this point. The mask follows its full
+    // rendered bounds; viewport edges are the only clipping boundary.
     const vw = window.innerWidth, vh = window.innerHeight;
     const x0 = Math.max(4, rect.left - PAD), y0 = Math.max(4, rect.top - PAD);
-    const x1 = Math.min(vw - 4, rect.right + PAD), y1 = Math.min(vh * 0.5, rect.bottom + PAD);
+    const x1 = Math.min(vw - 4, rect.right + PAD), y1 = Math.min(vh - EXIT_RESERVED_PX, rect.bottom + PAD);
     const vals = [x0, y0, Math.max(24, x1 - x0), Math.max(24, y1 - y0)];
     [sx, sy, sw, sh].forEach((s, i) => (reduce ? s.jump(vals[i]) : s.set(vals[i])));
   }, [rect, reduce, sx, sy, sw, sh]);
 
-  const finish = (result: "completed" | "skipped") => { markTour(tourId, result, userId); onClose(result); };
   const next = () => (index + 1 < active.length ? setIndex(index + 1) : finish("completed"));
   const back = () => setIndex((i) => Math.max(0, i - 1));
 
@@ -216,37 +276,58 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
     window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
   });
 
-  if (!open || !step || foundId !== step.id || !rect) return null;
+  useLayoutEffect(() => {
+    if (!open) return;
+    const onBack = () => {
+      if (!historyArmed.current) return;
+      historyArmed.current = false;
+      closing.current = true;
+      markTour(tourIdRef.current, "skipped", userIdRef.current);
+      onCloseRef.current("skipped");
+    };
+    window.addEventListener("popstate", onBack, true);
+    return () => window.removeEventListener("popstate", onBack, true);
+  }, [open]);
+
+  if (!open) return null;
+
+  const showingStep = !!step && foundId === step.id && !!rect;
 
   // Edge-aware coach mark: prefer below, flip above, clamp horizontally.
-  const cardW = Math.min(340, vp.w - 24);
-  const cardH = Math.min(420, Math.round(vp.h * 0.5));
+  const cardW = Math.min(340, Math.max(280, vp.w - 24));
+  const cardH = Math.min(360, Math.round((vp.h - EXIT_RESERVED_PX) * 0.46));
   const below = m.y + m.h + 12;
-  const placeAbove = below + cardH > vp.h - 12 && m.y - cardH - 12 > 12;
-  const top = Math.max(12, Math.min(placeAbove ? m.y - cardH - 12 : below, vp.h - cardH - 12));
+  const usableBottom = vp.h - EXIT_RESERVED_PX;
+  const roomBelow = usableBottom - below - 12;
+  const roomAbove = m.y - 24;
+  const placeAbove = roomAbove > roomBelow;
+  const available = Math.max(164, placeAbove ? roomAbove : roomBelow);
+  const fittedCardH = Math.min(cardH, available);
+  const top = Math.max(12, Math.min(placeAbove ? m.y - fittedCardH - 12 : below, usableBottom - fittedCardH - 12));
   const left = Math.max(12, Math.min(m.x + m.w / 2 - cardW / 2, vp.w - cardW - 12));
-  const mask = vp.w ? maskUrl(vp.w, vp.h, m.x, m.y, m.w, m.h) : undefined;
+  const mask = showingStep && vp.w ? maskUrl(vp.w, vp.h, m.x, m.y, m.w, m.h) : undefined;
   const layer = { maskImage: mask, WebkitMaskImage: mask, maskSize: "100% 100%", WebkitMaskSize: "100% 100%" } as React.CSSProperties;
 
   // Portal to <body>: an ancestor with a transform (page transitions) would
   // otherwise make `fixed` relative to it and offset the cutout.
   return createPortal(
-    <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-label={step.title} data-testid="spotlight-tour">
+    <div className="fixed inset-0 z-[1000]" role="dialog" aria-modal="true" aria-label={step?.title ?? "Demo tour"} data-testid="spotlight-tour">
       <motion.div
         className="absolute inset-0 bg-background/60 backdrop-blur-md"
         style={layer}
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.25 }}
         onClick={() => finish("skipped")}
+        data-testid="spotlight-tour-backdrop"
       />
-      <div
+      {showingStep && <div
         className="pointer-events-none absolute rounded-[14px] ring-2 ring-primary/80 shadow-[0_0_24px_hsl(var(--primary)/0.45)]"
         style={{ left: m.x, top: m.y, width: m.w, height: m.h }}
-      />
+      />}
       <AnimatePresence mode="wait">
-        <motion.div
+        {showingStep && <motion.div
           key={step.id}
           className="absolute flex flex-col rounded-2xl border border-primary/30 bg-card/95 p-4 text-card-foreground shadow-2xl backdrop-blur-xl"
-          style={{ top, left, width: cardW, maxHeight: cardH }}
+          style={{ top, left, width: cardW, maxHeight: fittedCardH }}
           initial={reduce ? { opacity: 0 } : { opacity: 0, y: placeAbove ? -8 : 8, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0 }}
@@ -261,14 +342,24 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
           <h3 className="text-base font-bold">{step.title}</h3>
           <p className="mt-1 min-h-0 flex-1 overflow-y-auto text-sm text-muted-foreground">{step.body}</p>
           <div className="mt-3 flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="min-h-11 transition-transform hover:scale-105" onClick={() => finish("skipped")}>Skip</Button>
             <div className="ml-auto flex gap-2">
               {index > 0 && <Button variant="outline" size="sm" className="min-h-11 transition-transform hover:scale-105" onClick={back}>Back</Button>}
               <Button size="sm" className="min-h-11 transition-transform hover:scale-105" onClick={next}>{index + 1 === active.length ? "Done" : "Next"}</Button>
             </div>
           </div>
-        </motion.div>
+        </motion.div>}
       </AnimatePresence>
+      <div className="absolute inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 px-[calc(0.75rem+var(--safe-left))] pb-[calc(0.75rem+var(--safe-bottom))] pt-2 backdrop-blur-xl">
+        <Button
+          variant="outline"
+          size="lg"
+          className="min-h-12 w-full text-base font-bold"
+          onClick={() => finish("skipped")}
+          autoFocus
+        >
+          <X className="h-5 w-5" /> Exit demo
+        </Button>
+      </div>
     </div>,
     document.body,
   );
