@@ -172,7 +172,11 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
 
   useEffect(() => {
     if (!rect) return;
-    const vals = [rect.left - PAD, rect.top - PAD, rect.width + PAD * 2, rect.height + PAD * 2];
+    // Clip tall/wide targets to the viewport so the cutout and card stay usable.
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const x0 = Math.max(4, rect.left - PAD), y0 = Math.max(4, rect.top - PAD);
+    const x1 = Math.min(vw - 4, rect.right + PAD), y1 = Math.min(vh * 0.5, rect.bottom + PAD);
+    const vals = [x0, y0, Math.max(24, x1 - x0), Math.max(24, y1 - y0)];
     [sx, sy, sw, sh].forEach((s, i) => (reduce ? s.jump(vals[i]) : s.set(vals[i])));
   }, [rect, reduce, sx, sy, sw, sh]);
 
@@ -190,7 +194,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
 
   // Edge-aware coach mark: prefer below, flip above, clamp horizontally.
   const cardW = Math.min(340, vp.w - 24);
-  const cardH = 190;
+  const cardH = Math.min(340, Math.round(vp.h * 0.45));
   const below = m.y + m.h + 12;
   const placeAbove = below + cardH > vp.h - 12 && m.y - cardH - 12 > 12;
   const top = Math.max(12, Math.min(placeAbove ? m.y - cardH - 12 : below, vp.h - cardH - 12));
@@ -216,7 +220,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
         <motion.div
           key={step.id}
           className="absolute rounded-2xl border border-primary/30 bg-card/95 p-4 text-card-foreground shadow-2xl backdrop-blur-xl"
-          style={{ top, left, width: cardW }}
+          style={{ top, left, width: cardW, maxHeight: cardH, overflowY: "auto" }}
           initial={reduce ? { opacity: 0 } : { opacity: 0, y: placeAbove ? -8 : 8, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0 }}
