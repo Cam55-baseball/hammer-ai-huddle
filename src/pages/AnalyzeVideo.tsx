@@ -108,6 +108,8 @@ export default function AnalyzeVideo() {
     summary?: string[];
     feedback: string;
     positives?: string[];
+    improvements?: Array<{ phase: string; fault: string; why: string; fix: string }>;
+    clean_reason?: string | null;
     drills: Array<{
       title: string;
       purpose: string;
