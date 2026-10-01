@@ -13,6 +13,7 @@ describe("measured report-card content", () => {
       ...card?.tiles.flatMap((t) => [t.name, t.phase ?? "", t.standard, t.explainer.whatWhy, t.explainer.howToImprove, t.explainer.encouragement]) ?? [],
     ].join(" ");
     expect(surface).not.toMatch(/\bP[1-4]\b|\bP[1-4]\s*[:—-]/i);
+    expect(surface).not.toMatch(/\bPhase [1-4]\b(?!\s*—\s*(?:Create Balance|Gather|Load by Stride|Hitter's Move))/);
     for (const c of HITTING_CATEGORIES.categories.filter((g) => /^p[1-4]$/.test(g.key))) expect(c.title).toMatch(/^Phase [1-4] — /);
     expect(withoutMeasurementNotation("P1 then P4")).toBe("Phase 1 then Phase 4");
   });
