@@ -1,4 +1,6 @@
 # Roadmap
+- [ ] Urgent measurement regression: rerun every previously measured clip, identify the exact changed stage, fix the cause without loosening thresholds, and correct any false unmeasurable claim.
+- [ ] Demo rebuild: after owner approves the proposed tour story, replace the old demo with a phone-first masked spotlight walkthrough; do not write tour copy before approval.
 - [x] Show the owner's exact Analysis Report encouragement as its own standalone card below the upload card on all six empty upload screens, outside the Report Card gate.
 - [x] Rename visible Tell Hammer wording to Update Hammer; keep persisted event and database identifiers stable.
 - [x] Move phase explainer to a short hitting Report Card card using owner's exact four lines; remove it from Analysis.
