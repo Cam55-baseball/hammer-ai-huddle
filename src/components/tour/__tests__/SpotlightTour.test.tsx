@@ -86,7 +86,7 @@ describe("SpotlightTour exits", () => {
     const navigate = vi.fn();
     const onClose = vi.fn();
     const { rerender } = renderReady(onClose, navigate);
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/opening-page", { state: { hmTour: true } }));
+    await waitFor(() => expect(window.history.state?.usr?.hmTour).toBe(true));
     navigate.mockClear();
     rerender(
       <>

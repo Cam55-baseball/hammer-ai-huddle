@@ -135,14 +135,16 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
       closing.current = false;
       openingPath.current = currentPath ?? `${window.location.pathname}${window.location.search}`;
       historyArmed.current = true;
-      navigate?.(openingPath.current, { state: { hmTour: true } });
+      const state = window.history.state ?? {};
+      const usr = typeof state.usr === "object" && state.usr ? state.usr : {};
+      window.history.pushState({ ...state, usr: { ...usr, hmTour: true } }, "", window.location.href);
     } else {
       historyArmed.current = false;
     }
     resolved.current = {};
     setReady(open);
     setActive(open ? steps.filter((s) => (s.allowed ? s.allowed() : true) && (s.route ? true : !!findTarget(s.target))) : []);
-  }, [open, steps, currentPath, navigate]);
+  }, [open, steps, currentPath]);
   useEffect(() => { if (index > 0 && index >= active.length) setIndex(active.length - 1); }, [active.length, index]);
   const step = active[index];
   const [foundId, setFoundId] = useState<string | null>(null);
