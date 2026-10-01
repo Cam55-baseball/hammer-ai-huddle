@@ -89,8 +89,8 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
     ] },
     { key: "p3", title: "Phase 3 — Load by Stride", points: 17, tiles: [
       { key: "back_hip_socket_hold", evidenceFor: P1_PROOF, name: "Back hip socket holds or increases", points: 3, nonNegotiable: true, read: verdictAt("owner.tile20") },
-      { key: "head_path_through_stride", evidenceFor: P1_PROOF, name: "Head path through the stride", points: 2, read: verdictAt("owner.tile19") },
-      { key: "active_stride", name: "Stride driven by the back hip, not a fall", points: 0, recordOnly: true, baselineKey: "hitting_rhythm.active_stride", read: recordAt("rhythm.active") },
+      { key: "head_path_through_stride", evidenceFor: P1_PROOF, name: "Head path through the stride", points: 0, read: verdictAt("owner.tile19") },
+      { key: "active_stride", name: "Stride driven by the back hip, not a fall", points: 2, recordOnly: true, baselineKey: "hitting_rhythm.active_stride", read: recordAt("rhythm.active") },
       { key: "stride_foot_vs_body", name: "Foot goes forward, body stays back", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.foot_vs_body", read: coilAt("foot_vs_body") },
       { key: "stride_hands_opposite", name: "Hands go back as the foot goes forward", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.hands_opposite", read: coilAt("hands_opposite") },
       { key: "stride_side_bend", name: "Side bend builds through the stride", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.side_bend", read: coilAt("side_bend") },
