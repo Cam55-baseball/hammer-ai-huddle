@@ -50,12 +50,17 @@ export function athleteSteps(c: TourContext): TourStep[] {
   ];
 }
 
+const hrefOf = (sel: string) => () =>
+  (document.querySelector(sel)?.getAttribute("data-tour-href") ?? document.querySelector(sel)?.getAttribute("href")) || undefined;
+
 export function coachSteps(): TourStep[] {
   return [
     { id: "console", route: "/coach/console", target: H1, title: "Coach Console",
       body: "Every athlete you coach, in one list. Find someone fast and see who needs you today." },
-    { id: "athlete", route: "/coach/console", target: '[data-tour="page-main"] a[href*="/athlete"], [data-tour="page-main"] [data-tour="athlete-row"]', title: "Open an athlete",
+    { id: "athlete", route: "/coach/console", target: 'a[href^="/coach/athlete/"]', title: "Open an athlete",
       body: "Tap an athlete to see their recent work, clips and how they're trending." },
+    { id: "clips", route: hrefOf('a[href^="/coach/athlete/"]'), target: H1, title: "Their work and clips",
+      body: "Everything this athlete has done lately, with their clips and what Hammer said about them. Scroll to review." },
     { id: "digest", route: "/coach/digest", target: H1, title: "Org Digest",
       body: "A quick read on your whole group — who's training, who's slipping, what to talk about." },
     { id: "dashboard", route: "/coach-dashboard", target: H1, title: "Coach Dashboard",
@@ -67,10 +72,14 @@ export function scoutSteps(): TourStep[] {
   return [
     { id: "scout-home", route: "/scout-dashboard", target: H1, title: "Scout Dashboard",
       body: "Find players and follow the ones you're watching." },
-    { id: "grades", route: "/scout-dashboard", target: '[data-tour="page-main"] h2, [data-tour="page-main"] h3', title: "Reading grades and measurements",
+    { id: "open-profile", route: "/scout-dashboard", target: '[data-tour="scout-profile"]', title: "Read a profile",
+      body: "Open a player's profile to see who they are, where they play and their grades." },
+    { id: "grades", route: hrefOf('[data-tour="scout-profile"]'), target: H1, title: "Reading grades and measurements",
       body: "Grades come from the people who saw the player. Measurements come from video and are not exact — a short or blurry clip, odd camera angle or one bad rep can move them. Treat every number as a range, and look at several clips before you trust a trend." },
-    { id: "evaluate", route: "/scout-dashboard", target: H1, title: "Record your evaluation",
-      body: "Watch their video, then save your own grades and notes so your read is on record." },
+    { id: "video", route: hrefOf('[data-tour="scout-video"]'), target: H1, title: "Review their video",
+      body: "Their clips live here. Watch several before you settle on a read." },
+    { id: "evaluate", route: hrefOf('[data-tour="scout-evaluate"]'), target: H1, title: "Record your evaluation",
+      body: "Save your own grades and notes so your read is on record." },
   ];
 }
 

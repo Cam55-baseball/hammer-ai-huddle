@@ -378,7 +378,8 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           built = fallback;
         }
       }
-      const drills: DrillStep[] = built.drills.map((d) => ({
+      // Owner-approved narrow addition: swap one slot for an eligible owner drill.
+      const drills: DrillStep[] = mergeOwnerSlotDrills(built.drills.map((d) => ({
         name: d.name,
         slug: d.slug,
         setup: d.setup,
@@ -387,7 +388,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         stopIf: d.stopIf,
         equipmentNote: d.equipmentNote,
         guide: d.guide,
-      }));
+      })), ["hammers_today:warmup"], { sport: normalizeSport(ctx.get<unknown>("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []) });
 
       // Su Wen / Neijing micro-dose: on low-readiness / recovery days, lead the
       // warm-up with a 60-second season-aware breath primer so we downshift
@@ -819,7 +820,8 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       // (Left and Right). Do NOT halve volume or interleave sides here.
       // EQUIPMENT LAW: what the athlete declared actually changes the drills.
       const declaredDrills = ownedHitting.size > 0 ? hittingDrillsForEquipment(ownedHitting, seasonPhase) : null;
-      const drills: DrillStep[] = declaredDrills ?? (equipmentUnknown
+      // Owner-approved narrow addition: swap one slot for an eligible owner drill.
+      const drills: DrillStep[] = mergeOwnerSlotDrills<DrillStep>(declaredDrills ?? (equipmentUnknown
         ? [
             { name: "Dry swings — barrel path", dosage: "3 rounds of 10", cue: "shoulder-to-shoulder hold, no hand push" },
             { name: "Tee work (or a towel drill if you have no tee)", dosage: "20 swings", cue: "hit the back of the ball, finish balanced" },
@@ -844,7 +846,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
               { name: "Front toss — sequence drill", dosage: "15 swings" },
               { name: "Live BP or machine", dosage: "25 swings" },
               { name: "Video + tag in PIE", dosage: "best 5 swings flagged" },
-            ]);
+            ]), ["hammers_today:skill"], { sport: normalizeSport(ctx.get<unknown>("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: ownedHitting, skill: "hitting" });
       return {
         modality,
         title: equipmentUnknown
@@ -945,7 +947,8 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       // dosage envelope and completion checklist. Do not push mirror drills here.
 
       // Map EASS drills → DrillStep shape used by the UI.
-      const drills: DrillStep[] = eass.drills.map((d) => ({
+      // Owner-approved narrow addition: swap one slot for an eligible owner drill.
+      const drills: DrillStep[] = mergeOwnerSlotDrills(eass.drills.map((d) => ({
         name: d.name,
         slug: (d as { slug?: string }).slug,
         setup: d.setup,
@@ -953,7 +956,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         cue: d.cue,
         stopIf: d.stopIf,
         guide: _guideForMovement((d as { slug?: string }).slug) ?? _guideForMovement(d.name) ?? undefined,
-      }));
+      })), ["hammers_today:skill"], { sport: normalizeSport(sportRaw) === "softball" ? "softball" : "baseball", owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []), skill: "throwing" });
 
       // Anthropometric throwing cues + supplemental drills (additive overlay, non-authoritative).
       const thrOut = anthroSignal ? selectThrowingAdaptations(anthro) : {
@@ -1074,7 +1077,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         : [
             { name: "Pre-pitch + first-step reads", dosage: "20 reps", cue: "low athletic stance, weight on balls of feet" },
             { name: "Glove work — 4 corners", dosage: "15 reps", cue: "field through the ball, don't stab" },
-          ], ["hammers_today:defense", "defensive_library"], defenseSport);
+          ], ["hammers_today:defense", "defensive_library"], { sport: defenseSport, owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []) });
       const cues = prescription?.cues ?? ["Field through the ball.", "Footwork before glove."];
       const stopRules = prescription?.stopRules ?? ["Knee, ankle, or hip pain — stop and update Hammer."];
       const durationMin = prescription?.durationMin ?? (inSeason ? 15 : offSeason ? 35 : 25);

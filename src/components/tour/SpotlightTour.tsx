@@ -25,7 +25,8 @@ export interface TourStep {
   /** Optional permission check; false skips the step silently. */
   allowed?: () => boolean;
   /** Page the target lives on; the tour navigates there first. Missing target after load → skipped. */
-  route?: string;
+  /** Page the target lives on. A function is resolved when the step is reached (e.g. from a link on the previous page); undefined → step skipped. */
+  route?: string | (() => string | undefined);
 }
 
 interface Props {
@@ -87,21 +88,40 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
   useEffect(() => {
     if (open && wasOpen.current) return; // keep the live list mid-tour
     wasOpen.current = open;
+    resolved.current = {};
     setReady(open);
     setActive(open ? steps.filter((s) => (s.allowed ? s.allowed() : true) && (s.route ? true : !!findTarget(s.target))) : []);
   }, [open, steps]);
   useEffect(() => { if (index > 0 && index >= active.length) setIndex(active.length - 1); }, [active.length, index]);
   const step = active[index];
   const [foundId, setFoundId] = useState<string | null>(null);
+  const resolved = useRef<Record<string, string | undefined>>({});
+  const navigatedFor = useRef<string | null>(null);
   useEffect(() => {
     if (!open || !step) return;
     setFoundId(null);
     // Wait for the page to actually change before looking — the old page's
     // headings would otherwise match and then vanish.
-    if (step.route && navigate && (currentPath ?? "").split("?")[0] !== step.route.split("?")[0]) { navigate(step.route); return; }
+    const route = typeof step.route === "function" ? (resolved.current[step.id] ??= step.route()) : step.route;
+    if (typeof step.route === "function" && !route) { setActive((a) => a.filter((x) => x.id !== step.id)); return; }
+    if (route && navigate && (currentPath ?? "").split("?")[0] !== route.split("?")[0]) {
+      // Navigate once per step. If the page redirects away (viewer can't use it),
+      // the step is dropped silently instead of waiting forever.
+      if (navigatedFor.current !== step.id) { navigatedFor.current = step.id; navigate(route); }
+      const id = window.setTimeout(() => setActive((a) => a.filter((x) => x.id !== step.id)), 8000);
+      return () => window.clearTimeout(id);
+    }
     let raf = 0; const t0 = performance.now();
     const poll = () => {
-      if (findTarget(step.target)) { setFoundId(step.id); return; }
+      if (findTarget(step.target)) {
+        // Capture later link-derived routes while their links are on screen.
+        for (const later of active.slice(index + 1)) {
+          if (typeof later.route === "function" && !resolved.current[later.id]) {
+            const r = later.route(); if (r) resolved.current[later.id] = r;
+          }
+        }
+        navigatedFor.current = null; setFoundId(step.id); return;
+      }
       if (performance.now() - t0 > 12000) {
         // Drop it; the next step slides into this index and the count shrinks.
         setActive((a) => a.filter((x) => x.id !== step.id));

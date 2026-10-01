@@ -38,18 +38,24 @@ export function DemoTourHost() {
     return () => window.removeEventListener(OPEN_EVENT, h);
   }, []);
 
-  const audience: TourAudience = isOwner || isAdmin ? 'staff' : isCoach ? 'coach' : isScout ? 'scout' : 'athlete';
+  // Staff-only preview override so the owner can check another audience's or plan's tour.
+  const staff = isOwner || isAdmin;
+  const read = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
+  const asOverride = staff ? (read('hm.tourAs') as TourAudience | null) : null;
+  const modulesOverride = staff && read('hm.tourModules') !== null ? (read('hm.tourModules') ?? '').split(',').filter(Boolean) : null;
+  const audience: TourAudience = asOverride ?? (staff ? 'staff' : isCoach ? 'coach' : isScout ? 'scout' : 'athlete');
+  const viewAsStaff = staff && !asOverride;
   const sport = (() => { try { return localStorage.getItem('selectedSport') === 'softball' ? 'softball' : 'baseball'; } catch { return 'baseball'; } })() as 'baseball' | 'softball';
   const steps = useMemo(
-    () => stepsFor(audience, { modules, sport, isOwnerOrAdmin: isOwner || isAdmin }),
+    () => stepsFor(audience, { modules: modulesOverride ?? modules, sport, isOwnerOrAdmin: viewAsStaff }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [audience, modules.join(','), sport, isOwner, isAdmin],
+    [audience, (modulesOverride ?? modules).join(','), sport, viewAsStaff],
   );
 
   if (!user) return null;
   return (
     <SpotlightTour
-      tourId={`demo-${audience}`}
+      tourId={asOverride || modulesOverride ? `preview-${audience}-${(modulesOverride ?? []).join('-')}` : `demo-${audience}`}
       steps={steps}
       open={open}
       onClose={() => setOpen(false)}
