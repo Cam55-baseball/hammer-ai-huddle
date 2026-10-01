@@ -79,7 +79,7 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
   ],
   categories: [
     { key: "p1", title: "Phase 1 — Create Balance", points: 20, tiles: [
-      { key: "hip_load", name: "Back hip socket rotation reached at P1", points: 13, nonNegotiable: true, read: verdictAt("pose.hip_load") },
+      { key: "hip_load", name: "Back hip socket rotation reached at Phase 1", points: 13, nonNegotiable: true, read: verdictAt("pose.hip_load") },
       { key: "back_leg_balance_at_load", name: "Back-leg balance, proven by the stride", points: 7, disproves: "hip_load", read: backLegBalanceProven },
     ] },
     { key: "p2", title: "Phase 2 — Gather", points: 13, tiles: [
@@ -96,7 +96,7 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
       { key: "stride_side_bend", name: "Side bend builds through the stride", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.side_bend", read: coilAt("side_bend") },
       { key: "stride_sink", name: "Sinking into the back leg, not falling forward", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.sink", read: coilAt("sink") },
       { key: "head_discipline", evidenceFor: P1_PROOF, name: "Head discipline", points: 2, read: verdictAt("pose.head_discipline") },
-      { key: "back_heel_early_rise", evidenceFor: P1_PROOF, name: "Back heel stays down until P4", points: 2, read: verdictAt("card.back_heel_early_rise") },
+      { key: "back_heel_early_rise", evidenceFor: P1_PROOF, name: "Back heel stays down until Phase 4", points: 2, read: verdictAt("card.back_heel_early_rise") },
       { key: "stride_direction", name: "Stride direction to the pitcher", points: 2, read: verdictAt("pose.stride_direction") },
       { key: "p3_timing", name: "Foot-down timing vs the pitcher", points: 2, read: verdictAt("pose.p3_timing", naPitcher) },
       { key: "back_knee_flex_maintained", evidenceFor: P1_PROOF, name: "Back knee holds its bend", points: 1, read: verdictAt("card.back_knee_flex_maintained") },
@@ -110,16 +110,16 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
       { key: "shoulder_to_shoulder_hold", name: "Chin-to-shoulder hold and front-shoulder leak", points: 9, nonNegotiable: true, read: verdictAt("card.shoulder_to_shoulder_hold") },
       { key: "back_elbow_connection", name: "Hands stay back while the elbow gains ground", points: 5, read: verdictAt("card.back_elbow_connection") },
       { key: "shoulder_plane_steadiness", name: "Shoulder plane steadiness", points: 5, read: scoreAt("card.shoulder_plane_steadiness") },
-      { key: "lead_elbow_bend_increasing", name: "Lead elbow bend no more than at the end of P2", points: 4, read: verdictAt("card.lead_elbow_bend_increasing") },
+      { key: "lead_elbow_bend_increasing", name: "Lead elbow bend no more than at the end of Phase 2", points: 4, read: verdictAt("card.lead_elbow_bend_increasing") },
       { key: "head_vertical_movement_post_landing", name: "Head not rising before the ball is gone", points: 4, read: verdictAt("card.head_vertical_movement_post_landing") },
       { key: "post_landing_hip_drift", evidenceFor: P1_PROOF, name: "Hips rotating after landing, not drifting", points: 4, read: verdictAt("card.post_landing_hip_drift") },
     ] },
     { key: "finish", title: "The Finish", points: 7, tiles: [
-      { key: "pelvis_rotation_efficiency", name: "Pelvis square to fair at the end of P4", points: 4, read: verdictAt("card.pelvis_rotation_efficiency") },
+      { key: "pelvis_rotation_efficiency", name: "Pelvis square to fair at the end of Phase 4", points: 4, read: verdictAt("card.pelvis_rotation_efficiency") },
       { key: "finish_balance", name: "Finish balance", points: 3, read: verdictAt("card.finish_balance") },
     ] },
     { key: "front_leg_gather", title: "Front Leg Gather", points: 3, additive: true,
-      note: "A power-loading option during P2, never required. It can only add points, never take them away.",
+      note: "A power-loading option during Phase 2 — Gather, never required. It can only add points, never take them away.",
       tiles: [
         { key: "front_leg_gather", name: "Front leg gather", points: 3, recordOnly: true, baselineKey: "hitting_gather.front_leg_gather", read: gatherPresent },
       ] },
