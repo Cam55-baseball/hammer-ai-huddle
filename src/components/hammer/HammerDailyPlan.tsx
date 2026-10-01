@@ -764,7 +764,7 @@ function HammerDailyPlanBody({
     <div className="space-y-6">
       {/* Always visible — never inside a collapsed box: Update Hammer must not be missed. */}
       <ErrorBoundary>
-        <TellHammersInbox />
+        <div data-tour="update-hammer"><TellHammersInbox /></div>
       </ErrorBoundary>
       <ErrorBoundary>
         <GuardianConsentPrompt />

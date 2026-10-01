@@ -1337,7 +1337,7 @@ export default function AnalyzeVideo() {
           <div className="space-y-4">
             {/* Pre-filming guidance for pitching (both sports). */}
             {module === "pitching" && <PitchingFilmingGuide />}
-            <Card className="mx-auto max-w-xl p-6 sm:p-8 text-center border-dashed border-2">
+            <Card data-tour="upload" className="mx-auto max-w-xl p-6 sm:p-8 text-center border-dashed border-2">
               <div className="flex flex-col items-center space-y-3">
                 <div className="p-3 sm:p-4 rounded-full bg-primary/10">
                   <Upload className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />

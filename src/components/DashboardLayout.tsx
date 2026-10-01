@@ -138,7 +138,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             user={user}
             onTutorialOpen={() => setTutorialOpen(true)}
           />
-          <main className="flex-1 p-3 sm:p-6 pb-[calc(0.75rem+var(--safe-bottom))] sm:pb-[calc(1.5rem+var(--safe-bottom))] pl-[calc(0.75rem+var(--safe-left))] pr-[calc(0.75rem+var(--safe-right))] sm:pl-[calc(1.5rem+var(--safe-left))] sm:pr-[calc(1.5rem+var(--safe-right))] overflow-x-hidden max-w-full box-border">
+          <main data-tour="page-main" className="flex-1 p-3 sm:p-6 pb-[calc(0.75rem+var(--safe-bottom))] sm:pb-[calc(1.5rem+var(--safe-bottom))] pl-[calc(0.75rem+var(--safe-left))] pr-[calc(0.75rem+var(--safe-right))] sm:pl-[calc(1.5rem+var(--safe-left))] sm:pr-[calc(1.5rem+var(--safe-right))] overflow-x-hidden max-w-full box-border">
             <OfflineIndicator />
             <OnboardingResumeBanner />
             <StaffOnboardingResumeBanner />

@@ -629,7 +629,7 @@ export default function Dashboard() {
         {hasPlayerAccess && (
           <>
             <div ref={setBeforeStartPortalTarget} className="pb-3 sm:pb-5" />
-            <section className="pb-2">
+            <section className="pb-2" data-tour="today-plan">
               <DashboardTodayPlan beforeStartPortalTarget={beforeStartPortalTarget} />
             </section>
           </>
