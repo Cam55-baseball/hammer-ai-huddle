@@ -52,4 +52,4 @@ export function mergeOwnerSlotDrills<T extends StepLike>(drills: T[], slots: Pla
   return [...drills.slice(0, -1), owned];
 }
 
-if (typeof window !== "undefined") void loadOwnerPlanDrills();
+if (typeof window !== "undefined" && import.meta.env.MODE !== "test") void loadOwnerPlanDrills();
