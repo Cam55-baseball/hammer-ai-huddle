@@ -16,7 +16,7 @@ const asState = (reading: TileReading, raw?: unknown, path?: string, proof?: { s
     : reading.kind === "verdict" && !reading.pass && reading.finding === "not_used" ? "Phase 1 — Create Balance: the load was held but not used in the turn."
     : proof?.outcome?.disprovenBy ? "Phase 1 — Create Balance: the later stride disproved this load position." : undefined;
   if (reading.kind === "verdict") return { status: proof?.outcome?.disprovenBy ? "fail" : reading.elite ? "elite" : reading.pass ? "pass" : "fail", value, confidence, note };
-  if (reading.kind === "score" && Number.isFinite(reading.frac) && reading.frac >= 0 && reading.frac <= 1) return { status: "record", score100: reading.frac * 100, value: valueText(reading.frac * 100), confidence };
+  if (reading.kind === "score" && Number.isFinite(reading.frac) && reading.frac >= 0 && reading.frac <= 1) return { status: "record", value: value ?? valueText(reading.frac * 100), confidence };
   if (reading.kind === "record" && Number.isFinite(reading.value)) return { status: "record", value: value ?? valueText(reading.value), confidence };
   if (reading.kind === "ungraded" && typeof reading.value === "number" && Number.isFinite(reading.value)) return { status: "record", value: value ?? valueText(reading.value), confidence };
   return { status: "missing", missing_reason: reading.kind === "missing" || reading.kind === "not_applicable" ? reading.reason : "no_owner_standard_yet" };
@@ -60,7 +60,7 @@ export function measuredClipSpec(sport: string | undefined, module: string | und
       key: `${group.key}.${tile.key}`,
        name: tile.name.replace(/\bP([1-4])\b/g, "Phase $1"),
       phase: group.title,
-      mode: tile.key === "shoulder_plane_steadiness" ? "score_meter" as const : "pass_fail" as const,
+      mode: "pass_fail" as const,
        nonNegotiable: spec.card === "hitting" && group.key === "p4" ? true : tile.nonNegotiable,
        standard: spec.card === "hitting" ? HITTING_CLIP_COPY[`${group.key}.${tile.key}`]?.[0] ?? "" : "",
        explainer: spec.card === "hitting" && HITTING_CLIP_COPY[`${group.key}.${tile.key}`]
