@@ -156,6 +156,7 @@ export function SpotlightTour({ tourId, steps, open, onClose }: Props) {
     window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
   });
 
+  (window as unknown as { __tourM?: unknown }).__tourM = m;
   if (!open || !step) return null;
 
   // Edge-aware coach mark: prefer below, flip above, clamp horizontally.
