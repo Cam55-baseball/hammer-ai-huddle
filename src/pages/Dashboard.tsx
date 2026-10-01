@@ -637,18 +637,7 @@ export default function Dashboard() {
         )}
 
 
-        {/* Hard visual break so the daily plan and the game plan read as two
-            distinct sections instead of one crowded block. */}
-        {hasPlayerAccess && (
-          <div aria-hidden className="my-8 sm:my-10 border-t-2 border-border/70" />
-        )}
-
-        {hasPlayerAccess && (
-          <section className="pt-1">
-            <GamePlanCard selectedSport={selectedSport} />
-          </section>
-        )}
-
+        {/* My Daily Game Plan lives on its own page (side menu). */}
 
         {/* Long-term Hammer video picks — athletes only */}
         {hasPlayerAccess && <LongTermVideoSuggestions />}

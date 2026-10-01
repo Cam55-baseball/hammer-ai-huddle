@@ -103,6 +103,7 @@ const ThrowingRepEntry = lazyWithRetry(() => import("./pages/ThrowingRepEntry"))
 
 const AnalysisResultsPreview = lazyWithRetry(() => import("./pages/dev/AnalysisResultsPreview"));
 const TourPreview = lazyWithRetry(() => import("./pages/dev/TourPreview"));
+const MyDailyGamePlan = lazyWithRetry(() => import("./pages/MyDailyGamePlan"));
 const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
 const VideoLibrary = lazyWithRetry(() => import("./pages/VideoLibrary"));
 const VideoLibraryPlayer = lazyWithRetry(() => import("./pages/VideoLibraryPlayer"));
@@ -333,6 +334,7 @@ const App = () => {
               <Route path="/profile-setup" element={<ProfileSetup />} />
               <Route path="/activate" element={<Activate />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/my-daily-game-plan" element={<MyDailyGamePlan />} />
               <Route path="/timeline" element={<AsbTimeline />} />
               <Route path="/replay/:eventId" element={<AsbReplay />} />
               <Route path="/command" element={<AthleteCommand />} />
