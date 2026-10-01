@@ -65,7 +65,7 @@ export function PhaseRail({ phases, activePhase, onSelect }: Props) {
           const isDim = activePhase !== null && !isActive;
           // Athlete-facing: no percentages (owner ruling) — plain words instead.
            const pctLabel = p.status === "complete" && p.score != null && p.points != null
-             ? `${p.score} / ${p.points}` : p.status === "limited_evidence" ? "Limited evidence" : noData ? "Not measured" : "Incomplete";
+             ? `${p.score} / ${p.points} pts` : p.status === "limited_evidence" ? "Limited evidence" : noData ? "Not measured" : "Incomplete";
           return (
             <button
               key={p.key}
@@ -94,10 +94,13 @@ export function PhaseRail({ phases, activePhase, onSelect }: Props) {
                   color,
                 }}
               >
-                 <span className="text-white text-xs">{p.count}</span>
               </motion.span>
               <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/75 text-center leading-tight">
                 {p.label}
+              </span>
+              {/* Tile count, labelled so it never reads as a score (owner 2026-10-01). */}
+              <span className="text-[10px] text-muted-foreground">
+                {p.count} {p.count === 1 ? "check" : "checks"}
               </span>
               <span className="text-[10px] font-bold tabular-nums" style={{ color }}>
                 {pctLabel}
