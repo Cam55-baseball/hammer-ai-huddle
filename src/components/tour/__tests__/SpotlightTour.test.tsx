@@ -18,7 +18,10 @@ describe("SpotlightTour exits", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(rect);
-    vi.spyOn(HTMLElement.prototype, "scrollIntoView").mockImplementation(() => undefined);
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: vi.fn(),
+    });
   });
 
   afterEach(() => vi.restoreAllMocks());
