@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import { CategoryScoreCard } from "@/components/report-card/categories/CategoryScoreCard";
 import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
@@ -49,7 +48,6 @@ import { AnalysisPrescriptionSection } from "@/components/analyze/AnalysisPrescr
 import { AnalysisResultsPanel } from "@/components/analyze/AnalysisResultsPanel";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
 import { AnalysisVideoRecommendations } from "@/components/analyze/AnalysisVideoRecommendations";
-import { RootPatternCallout } from "@/components/analyze/RootPatternCallout";
 import { BackLegFinding } from "@/components/analyze/BackLegFinding";
 import { useQueryClient } from "@tanstack/react-query";
 import { useScoredGradingAccess } from "@/hooks/useScoredGradingAccess";
