@@ -56,7 +56,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     try { setOpen(localStorage.getItem(storageKey) === "true"); } catch { /* private browsing */ }
   }, [storageKey, checkIn]);
   const todayEntries = useMemo(() => tl.entries.filter(e => !e.undone_at && e.created_at?.slice(0, 10) === today), [tl.entries, today]);
-  if (!tl.enabled) return <section className="rounded-md border border-border bg-card p-3"><div className="font-semibold">Tell Hammer</div><p className="text-sm text-muted-foreground">Not available right now.</p></section>;
+  if (!tl.enabled) return <section className="rounded-md border border-border bg-card p-3"><div className="font-semibold">Update Hammer</div><p className="text-sm text-muted-foreground">Not available right now.</p></section>;
   const toggle = (value: boolean) => {
     setOpen(value);
     if (!value) reset();
@@ -130,20 +130,20 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     <Button variant="ghost" size="sm" onClick={() => setNoChanges(false)}>Add something</Button>
   </section>;
 
-  return <section className="rounded-md border border-border bg-card p-3 space-y-3" aria-label={checkIn ? "Anything change?" : "Tell Hammer"}>
+  return <section className="rounded-md border border-border bg-card p-3 space-y-3" aria-label={checkIn ? "Anything change?" : "Update Hammer"}>
     {checkIn ? <div className="flex items-center justify-between"><h3 className="font-semibold">Anything change?</h3>{flow && backBtn}</div> :
       <div className="flex items-center justify-between gap-2">
         <Button variant="ghost" className="h-11 flex-1 justify-between px-1 font-semibold" aria-expanded={open} onClick={() => toggle(!open)}>
-          Tell Hammer {open ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          Update Hammer {open ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
         </Button>
-        {open && <Button size="icon" variant="ghost" aria-label="Close Tell Hammer" onClick={() => toggle(false)}><X className="h-4 w-4" /></Button>}
+        {open && <Button size="icon" variant="ghost" aria-label="Close Update Hammer" onClick={() => toggle(false)}><X className="h-4 w-4" /></Button>}
       </div>}
     {(open || checkIn) && <div className="space-y-3">
       {!checkIn && flow && backBtn}
       {lastMessage && <div role="status" data-testid="tell-hammers-result" className="rounded-md border border-primary/30 bg-primary/10 p-3 text-sm"><strong>Got it — Hammer has it</strong><p>{lastMessage}</p></div>}
       {!flow && <>
         <div className="grid grid-cols-2 gap-2">{BUTTONS.map(({flow: f, label, icon: Icon}) => <Button key={f} variant="outline" className="h-20 flex-col gap-1 whitespace-normal text-center text-sm" data-testid={`tell-${f}`} onClick={() => enter(f)}><Icon className="h-5 w-5 shrink-0" />{label}</Button>)}</div>
-        <Button variant="outline" className="w-full" data-testid="tell-ask" onClick={() => enter("ask")}>Tell Hammer in your words</Button>
+        <Button variant="outline" className="w-full" data-testid="tell-ask" onClick={() => enter("ask")}>Update Hammer in your words</Button>
         {checkIn && <>
           {!nextGameDone && !todayEntries.some(e => e.tag === "NOTE" && e.payload?.kind === "next_game_answer" && e.start_date === today) && <div className="border-t pt-3 space-y-2"><p className="text-sm font-semibold">When's your next game?</p><div className="grid grid-cols-2 gap-2">{NEXT_GAME_ANSWERS.map(a => choiceBtn(`next-${a.key}`, a.label, () => tap(nextGameDraft(today, a.key), `next-${a.key}`)))}</div></div>}
           {/* Collapses this section only — the check-in's own finish button is the only thing that submits. */}
@@ -161,8 +161,8 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
         {flow !== "pain" && flow !== "ask" && <p className="text-xs text-muted-foreground">Or something else:</p>}
         <form onSubmit={e => { e.preventDefault(); prepare(); }} className="space-y-2">
           <Textarea value={text} onChange={e => onType(e.target.value)} rows={2} data-testid="entry-text" enterKeyHint="send"
-            aria-label={flow === "pain" ? "Tell Hammer more — where exactly, when it started" : "Something else"}
-            placeholder={flow === "pain" ? "Tell Hammer more — where exactly, when it started" : flow === "ask" ? "e.g. Games cancelled Oct 5 to 19" : "Something else…"}
+            aria-label={flow === "pain" ? "Update Hammer more — where exactly, when it started" : "Something else"}
+            placeholder={flow === "pain" ? "Update Hammer more — where exactly, when it started" : flow === "ask" ? "e.g. Games cancelled Oct 5 to 19" : "Something else…"}
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); prepare(); } }} />
           <Button type="submit" className="w-full" disabled={busy || !!confirm || (flow === "pain" ? !pending : !text.trim())} data-testid="entry-send">
             {busyKey === "pain-send" || busyKey === "text-send" ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}Send

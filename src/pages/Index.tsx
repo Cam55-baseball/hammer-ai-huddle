@@ -98,7 +98,7 @@ const Index = () => {
                 <span className="text-2xl">📅</span>
               </div>
               <h4 className="text-xl font-bold mb-2">A Plan That Moves With You</h4>
-              <p className="text-muted-foreground">Tell Hammers about a game, a trip or a sore arm and the next seven days re-plan around it.</p>
+              <p className="text-muted-foreground">Update Hammer about a game, a trip or a sore arm and the next seven days re-plan around it.</p>
             </div>
             <div className="bg-card p-8 rounded-xl shadow-lg border border-border hover:border-primary/50 transition-all duration-300">
               <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">

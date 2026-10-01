@@ -1,6 +1,6 @@
 /**
  * v1.2 §A — ONE pain record, everywhere. Every body-part pain selection in the
- * app (Report pain dialog, onboarding intake, Tell Hammers "Something hurts",
+ * app (Report pain dialog, onboarding intake, Update Hammer "Something hurts",
  * check-in chips, the daily check-in body map, "Something's off") calls
  * recordPain(). It writes the same PAIN timeline entry (tag, body part,
  * severity, date) and merges repeats on the same body part. The existing pain
@@ -93,7 +93,7 @@ export async function recordPain(args: {
     d.payload.face = severityToFace(priorSev);
     d.payload.faceLabel = FACE_LABEL[d.payload.face];
   }
-  if (args.note && args.note !== "Reported through Tell Hammers") (d.payload as Record<string, unknown>).text = args.note.trim();
+  if (args.note && args.note !== "Reported through Update Hammer" && args.note !== "Reported through Tell Hammers") (d.payload as Record<string, unknown>).text = args.note.trim();
 
   let linkedRef: string | null = null;
   if (worse) {

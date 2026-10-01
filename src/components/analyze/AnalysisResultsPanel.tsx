@@ -64,6 +64,8 @@ interface Props {
    * card, so an athlete never sees two competing prescription boxes.
    */
   prescriptionExtra?: ReactNode;
+  /** Matched video shelf between the detailed analysis and prescription. */
+  recommendations?: ReactNode;
   /**
    * Cross-skill root pattern, folded into Key findings so the report never
    * repeats it in a separate block at the bottom.
@@ -101,6 +103,7 @@ export function AnalysisResultsPanel({
   onSaveToLibrary,
   onReturnToDashboard,
   prescriptionExtra,
+  recommendations,
   crossDomainSlot,
 
 }: Props) {
@@ -207,9 +210,11 @@ export function AnalysisResultsPanel({
         </RevealSection>
       )}
 
+      {recommendations && <RevealSection order={5}>{recommendations}</RevealSection>}
+
       {/* ── 6 · YOUR PRESCRIPTION (drills) ───────────────────────────── */}
       {((analysis.drills && analysis.drills.length > 0) || prescriptionExtra) && (
-        <RevealSection order={5}>
+        <RevealSection order={6}>
           <Card className="space-y-5 p-5 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <SectionHeading icon={<ClipboardList className="h-3.5 w-3.5 text-primary" />}>
@@ -298,7 +303,7 @@ export function AnalysisResultsPanel({
       )}
 
       {/* ── 7 · ASK THE COACH ────────────────────────────────────────── */}
-      <RevealSection order={6}>
+      <RevealSection order={7}>
         <div className="space-y-2">
           <SectionHeading icon={<Wrench className="h-3.5 w-3.5 text-primary" />}>
             {t('videoAnalysis.askTheCoach', 'Ask the coach')}
@@ -317,7 +322,7 @@ export function AnalysisResultsPanel({
       </RevealSection>
 
       {/* ── 8 · FOOTER ───────────────────────────────────────────────── */}
-      <RevealSection order={7}>
+      <RevealSection order={8}>
         <div className="space-y-4">
           <p className="border-t pt-4 text-xs leading-relaxed text-muted-foreground/70">
             <strong>{t('videoAnalysis.disclaimer')}</strong> {branding.appName} waives all liability for any injuries that may occur from performing training techniques demonstrated or recommended through this platform. Users assume full responsibility for their safety and should consult with qualified professionals before beginning any training program.

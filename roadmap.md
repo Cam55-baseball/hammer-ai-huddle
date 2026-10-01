@@ -1,4 +1,7 @@
 # Roadmap
+- [x] Rename visible Tell Hammer wording to Update Hammer; keep persisted event and database identifiers stable.
+- [x] Move phase explainer to a short hitting Report Card card using owner's exact four lines; remove it from Analysis.
+- [x] Place Watch this next between detailed analysis and Your prescription; report six-card prerequisites (live upload readbacks still require owner clips and release).
 - [ ] Report-card content draft: doctrine-backed hitting tiles, honest reading and failure context, category header/rail, numbered phase labels and phase explainer; owner wording approval pending.
 - [x] Analysis/Report Card separation: clean coaching on Analysis, clip-local measured tiles on Report Card, no athlete-facing tracking or camera detection cards; camera and tracking saved with landmark diagnostics.
 - [ ] Completed-clip browser readback for both tabs — blocked: the signed-in preview opens at upload, not an existing result; available movement footage is broadcast footage with unreliable subject tracking. Do not fabricate a completed screen result or run the same invalid clip as proof.

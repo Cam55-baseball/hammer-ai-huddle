@@ -193,11 +193,11 @@ export function missingContextPrompt(keys: ReadonlyArray<string>): string {
     .map((k) => MISSING_CONTEXT_PROMPTS[k])
     .filter((v): v is string => Boolean(v));
   if (asks.length === 0) {
-    return "Tell Hammer more about your setup in the chat below and today's plan will adapt.";
+    return "Update Hammer more about your setup in the chat below and today's plan will adapt.";
   }
   const list =
     asks.length === 1 ? asks[0] : `${asks.slice(0, -1).join(", ")} and ${asks[asks.length - 1]}`;
-  return `Tell Hammer ${list} in the chat below and today's plan will adapt.`;
+  return `Update Hammer ${list} in the chat below and today's plan will adapt.`;
 }
 
 function DrillRow({
@@ -762,7 +762,7 @@ function HammerDailyPlanBody({
   return (
     <PlanAdjustContext.Provider value={adjustApi}>
     <div className="space-y-6">
-      {/* Always visible — never inside a collapsed box: Tell Hammers must not be missed. */}
+      {/* Always visible — never inside a collapsed box: Update Hammer must not be missed. */}
       <ErrorBoundary>
         <TellHammersInbox />
       </ErrorBoundary>
@@ -1074,7 +1074,7 @@ function HammerDailyPlanBody({
 /**
  * ScheduleDropdownWrapper — collapsible wrapper around HammerScheduleStrip
  * that starts closed and is clearly labeled so athletes know where to update
- * games, season dates, cancels/reschedules, and tell Hammer what changed.
+ * games, season dates, cancels/reschedules, and update Hammer what changed.
  * Per-day open state persists in localStorage.
  */
 function ScheduleDropdownWrapper() {
@@ -1089,8 +1089,8 @@ function ScheduleDropdownWrapper() {
   };
   const seasonLabel = seasonWords[String(seasonCtx?.seasonPhase ?? "")] ?? null;
   const seasonLine = seasonLabel
-    ? `${seasonLabel} — games, season dates, cancels/reschedules, and tell Hammer what changed.`
-    : "Games, season dates, cancels/reschedules, and tell Hammer what changed.";
+    ? `${seasonLabel} — games, season dates, cancels/reschedules, and update Hammer what changed.`
+    : "Games, season dates, cancels/reschedules, and update Hammer what changed.";
   const dayKey = `hammer.today.schedule.open.${new Date().toISOString().slice(0, 10)}`;
   const [open, setOpen] = useState<boolean>(() => {
     try {

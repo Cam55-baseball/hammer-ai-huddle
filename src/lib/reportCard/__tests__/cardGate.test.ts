@@ -9,6 +9,7 @@ import { getReportCardSpec } from "@/lib/reportCard";
 import { categorySpecFor } from "@/lib/reportCard/categories/specs";
 import { measuredClipSpec } from "@/lib/reportCard/measuredClipSpec";
 import { athleteMissingness } from "@/lib/reportCard/athleteLanguage";
+import { PHASE_EXPLAINER } from "@/lib/reportCard/measuredClipCopy";
 
 const CARDS = [
   ["baseball", "hitting"], ["softball", "hitting"],
@@ -90,6 +91,22 @@ describe("card gate — no cross-contamination", () => {
     expect(src).not.toMatch(/<CameraViewCard|<TrackDiagnosisCard|SCORED_GRADING_NOTICE/);
     const panel = readFileSync("src/components/analyze/AnalysisResultsPanel.tsx", "utf8");
     expect(panel).not.toMatch(/RadialDial|SCORED_GRADING_NOTICE|CameraViewCard|TrackDiagnosisCard/);
+  });
+
+  it("places the owner's exact four hitting phases on Report Card only and puts Watch this next before prescription", () => {
+    expect(PHASE_EXPLAINER).toEqual([
+      "Phase 1 — Create Balance: load the back hip and hold weight on the back leg.",
+      "Phase 2 — Gather for stability and Power : Load the bat and the front leg simultaneously",
+      "Phase 3 — Load by Stride: Take a deliberate power step, Driven by the back glute to get your foot to the floor and land before the pitch leaves the hand. Momentum does not play into your stride",
+      "Phase 4 — Hitter's Move: from a planted foot, the back Bicep starts forward through the ball while the knob stay back; releasing a mighty swing",
+    ]);
+    const analysis = readFileSync("src/pages/AnalyzeVideo.tsx", "utf8");
+    expect(analysis).not.toMatch(/PHASE_EXPLAINER|Hitting phases/);
+    const card = readFileSync("src/components/report-card/hammer/HammerReportCard.tsx", "utf8");
+    expect(card).toMatch(/scored\?\.card === "hitting" && \([\s\S]*?PHASE_EXPLAINER\.map/);
+    const panel = readFileSync("src/components/analyze/AnalysisResultsPanel.tsx", "utf8");
+    expect(panel.indexOf("{recommendations &&")).toBeGreaterThan(panel.indexOf("feedbackParagraphs.map"));
+    expect(panel.indexOf("{recommendations &&")).toBeLessThan(panel.indexOf("yourPrescription"));
   });
 
   it("the measured report card never consumes another discipline's readings", () => {

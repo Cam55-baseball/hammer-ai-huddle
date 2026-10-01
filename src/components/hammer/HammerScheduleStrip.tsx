@@ -121,7 +121,7 @@ export function HammerScheduleStrip() {
               onClick={() => setDialogOpen(true)}
             >
               <MessageSquarePlus className="h-3 w-3" />
-              Tell Hammer what changed
+              Update Hammer what changed
             </Button>
           </div>
         </CardContent>

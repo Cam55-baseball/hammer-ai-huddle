@@ -485,7 +485,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           "Quick feet, quiet feet — the ground gets hit hard and left fast.",
         ],
         stopRules: [
-          "Sharp pain (not muscle soreness) — stop and tell Hammer where.",
+          "Sharp pain (not muscle soreness) — stop and update Hammer where.",
           "Any pull or tightness on a fast-twitch drill — end the fast-twitch portion.",
           "Ground contacts getting loud or slow — the twitch work is done for today.",
           "Dizziness or shortness of breath — pause, hydrate, restart slower.",
@@ -643,7 +643,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           title: "Strength — conservative start",
           why: "I don't have your lifting history yet, so I'm starting you light and safe rather than skipping the day.",
           assumption:
-            "Assuming you're new to structured lifting. Tell Hammer how long you've been lifting and I'll load this properly.",
+            "Assuming you're new to structured lifting. Update Hammer how long you've been lifting and I'll load this properly.",
           roadmapReason: "No lifting history on file — prescribing the entry-level session until you tell me otherwise.",
           phase: "build",
           steps: drillsToSteps(drills),
@@ -852,7 +852,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
             ? `Hitting — built from your gear${inSeason ? " (in-season)" : offSeason ? " (off-season)" : ""}`
             : inSeason ? "Hitting — in-season quality" : offSeason ? "Hitting — off-season build" : "Hitting",
         assumption: equipmentUnknown
-          ? "Assuming you have a bat and somewhere safe to swing. Tell Hammer what you actually have and I'll upgrade this."
+          ? "Assuming you have a bat and somewhere safe to swing. Update Hammer what you actually have and I'll upgrade this."
           : undefined,
         why: (inSeason ? "Sharpen timing without spending." : offSeason ? "Volume + mechanical rebuild." : "Quality reps targeting your weakness pattern.") + (goal ? ` ${goal}` : ""),
         roadmapReason: inSeason
@@ -1028,7 +1028,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
           steps: drillsToSteps(generalDrills),
           drills: generalDrills,
           cues: ["Field through the ball.", "Footwork before glove."],
-          stopRules: ["Knee, ankle, hip, or shoulder pain — stop and tell Hammer."],
+          stopRules: ["Knee, ankle, hip, or shoulder pain — stop and update Hammer."],
           durationMin: 20,
           route: "#hammer-onboarding",
           ctaLabel: "Set my position",
@@ -1074,7 +1074,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
             { name: "Glove work — 4 corners", dosage: "15 reps", cue: "field through the ball, don't stab" },
           ];
       const cues = prescription?.cues ?? ["Field through the ball.", "Footwork before glove."];
-      const stopRules = prescription?.stopRules ?? ["Knee, ankle, or hip pain — stop and tell Hammer."];
+      const stopRules = prescription?.stopRules ?? ["Knee, ankle, or hip pain — stop and update Hammer."];
       const durationMin = prescription?.durationMin ?? (inSeason ? 15 : offSeason ? 35 : 25);
       const title = prescription?.title ?? `Defense — ${pos}`;
       const why = prescription?.why

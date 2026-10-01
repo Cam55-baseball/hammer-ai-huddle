@@ -64,7 +64,7 @@ export function FuelRecoveryStep({ onContinue, onBack }: Props) {
         <h2 className="text-lg font-semibold">Fuel & recovery</h2>
       </div>
       <p className="text-sm text-muted-foreground">
-        Tell Hammer how you sleep, hydrate, and eat. These seed your Nutrition
+        Update Hammer how you sleep, hydrate, and eat. These seed your Nutrition
         Hub goals and daily recovery cues — every field is optional.
       </p>
 

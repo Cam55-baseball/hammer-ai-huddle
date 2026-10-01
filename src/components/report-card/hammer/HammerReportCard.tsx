@@ -162,9 +162,20 @@ export function HammerReportCard({
       </motion.div>
 
       {scored?.card === "hitting" && (
-        <section aria-label="Hitting phases" className="space-y-1 text-xs leading-relaxed text-muted-foreground">
-          {PHASE_EXPLAINER.map((line) => <p key={line}>{line}</p>)}
-        </section>
+        <motion.section
+          aria-label="Hitting phases"
+          initial={reduce ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.08 }}
+          className="rc-glass-tile rc-tile-border-pass relative overflow-hidden rounded-2xl border p-4 sm:p-5"
+        >
+          <div aria-hidden="true" className="rc-foil pointer-events-none absolute inset-0 opacity-40" />
+          <div className="relative grid gap-x-6 gap-y-3 sm:grid-cols-2">
+            {PHASE_EXPLAINER.map((line) => (
+              <p key={line} className="border-l-2 border-primary/50 pl-3 text-xs font-medium leading-relaxed text-foreground/90">{line}</p>
+            ))}
+          </div>
+        </motion.section>
       )}
 
       {/* Phase rail — staggered 120ms after ribbon */}
