@@ -52,12 +52,13 @@ export function markTour(tourId: string, result: "completed" | "skipped", userId
 }
 
 function findTarget(sel: string): HTMLElement | null {
-  const el = document.querySelector<HTMLElement>(sel);
-  if (!el) return null;
-  const r = el.getBoundingClientRect();
-  const style = getComputedStyle(el);
-  if (r.width === 0 || r.height === 0 || style.visibility === "hidden" || style.display === "none") return null;
-  return el;
+  // First VISIBLE match — a selector list can hit a hidden heading first.
+  for (const el of Array.from(document.querySelectorAll<HTMLElement>(sel))) {
+    const r = el.getBoundingClientRect();
+    const style = getComputedStyle(el);
+    if (r.width > 0 && r.height > 0 && style.visibility !== "hidden" && style.display !== "none") return el;
+  }
+  return null;
 }
 
 function maskUrl(w: number, h: number, x: number, y: number, rw: number, rh: number) {
