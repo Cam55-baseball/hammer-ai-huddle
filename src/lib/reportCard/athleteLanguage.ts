@@ -55,7 +55,7 @@ export function withoutMeasurementNotation(text: string): string {
     .replace(/\bP([1-4])\b/gi, "Phase $1")
     .replace(/\bPhase\s+Phase\s+/gi, "Phase ")
     .replace(/\b\d+(?:\.\d+)?\s*(?:seconds?|secs?|inches|feet|ft)\b/gi, "")
-    .replace(/\b\d+(?:\.\d+)?\b/g, "")
+    .replace(/\b(?<!Phase )\d+(?:\.\d+)?\b/g, "")
     .replace(/\s{2,}/g, " ").trim();
   return safe || "We couldn't make a trustworthy coaching call on this from the clip.";
 }

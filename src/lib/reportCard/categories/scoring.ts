@@ -4,7 +4,7 @@
  *  - Points inside a category follow weight units (non-negotiables = 2 units),
  *    written as whole points per tile in the card spec.
  *  - Meter = weighted average of MEASURED tiles, scaled to the category's points.
- *  - INCOMPLETE unless measured tiles hold ≥ 60% of the applicable points AND
+  *  - INCOMPLETE unless measured tiles hold ≥ 60% of the full category points AND
  *    every non-negotiable returned a verdict.
  *  - "Not applicable" tiles (e.g. pitcher not in frame, energy angle on a
  *    non-shuffle throw) leave the category entirely — never counted as missing.
@@ -187,7 +187,7 @@ export function scoreCard(spec: CardCategorySpec, raw: unknown, o: { audience: A
     }
     if (applicable === 0) reason = measured.length === 0 && tiles.some((t) => t.outcome.status === "waiting_on_baseline") ? "waiting_on_athlete_baseline" : "nothing_measurable_in_this_clip";
     else if (nnMissing.length) reason = `non_negotiable_not_measured:${nnMissing.map((t) => t.key).join(",")}`;
-    else if (share < INCOMPLETE_MIN_SHARE) reason = "too_many_tiles_not_measured";
+    else if (fullShare < INCOMPLETE_MIN_SHARE) reason = "too_many_tiles_not_measured";
     const earnedRaw = measured.reduce((a, t) => a + (t.outcome as { earned: number }).earned, 0);
     const limited = !reason && cov.evidence !== "full";
     const score = reason || limited ? null : r1((earnedRaw / mPts) * catPts);
