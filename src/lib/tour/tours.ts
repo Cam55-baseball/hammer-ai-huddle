@@ -14,7 +14,7 @@ export interface TourContext {
   isOwnerOrAdmin: boolean;
 }
 
-const H1 = '[data-tour="page-main"] h1';
+const H1 = '[data-tour="page-main"] h1, main h1, h1, main h2, h2';
 
 /** Approved owner wording (2026-10-01) — do not edit without owner approval. */
 export const PICK_ONE_PLAN_BODY =
@@ -43,7 +43,7 @@ export function athleteSteps(c: TourContext): TourStep[] {
       body: "Your two-way program — hitting and pitching work in one plan.", allowed: () => c.isOwnerOrAdmin || hasUnicornAccess(m) },
     { id: "upload", route: `/analyze/${analysis ?? "hitting"}?sport=${c.sport}`, target: '[data-tour="upload"]', title: "Send Hammer a clip",
       body: "Film a rep and upload it. Hammer tells you what's working, what to fix, and gives you drills for it.", allowed: () => !!analysis },
-    { id: "game-plan", route: "/my-daily-game-plan", target: H1 + ', [data-tour="game-plan-page"]', title: "My Daily Game Plan",
+    { id: "game-plan", route: "/my-daily-game-plan", target: '[data-tour="game-plan-page"]', title: "My Daily Game Plan",
       body: "Your own activities and saved work live here. It starts closed — open it when you want it.", allowed: () => paid },
     { id: "vault", route: "/vault", target: H1, title: "The Vault",
       body: "Your history, check-ins and progress in one place.", allowed: () => paid },
