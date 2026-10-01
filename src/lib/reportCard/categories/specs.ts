@@ -34,14 +34,18 @@ const coilAt = (k: string) => (raw: unknown): TileReading => {
 };
 
 /**
- * Back-leg balance is PROVEN downstream (owner 2026-09-30: "P1 has to read the rest of the swing").
- * Fail when any P3 reading shows the body went forward beyond its still-clip floor; pass when at least
- * one reads held and none went forward; missing when nothing downstream can be read. No owner numbers —
- * only the floor-based patterns the P3 readings already produce. Staff-only tiles (19/20) are not used,
- * so the proof reads the same in athlete and staff view.
+ * Back-leg balance is PROVEN downstream (owner 2026-09-30: "P1 has to read the rest of the swing";
+ * 2026-10-01: hip-first sequencing proves the method was real, "It must be real").
+ * P1 never passes on the ABSENCE of a fault — it needs positive evidence the load was built AND used:
+ *  - FAIL: any P3 reading shows the body went forward beyond its still floor, or graded sequencing
+ *    (≥60 fps) reads shoulders first / insufficient separation.
+ *  - PASS: none of the above AND a real stride with the body held back AND graded hips-first sequencing.
+ *  - UNPROVEN (missing): no stride above the floor, or sequencing unavailable (routed to DelayCam below
+ *    60 fps — its would-be verdict is lineage only and is never used as proof either way).
+ * Staff-only tiles (19/20) are not used, so the proof reads the same in athlete and staff view.
  */
-export const BACK_LEG_PROOF_SOURCES = ["coil.foot_vs_body", "coil.sink", "pose.head_discipline", "card.back_heel_early_rise", "card.back_knee_flex_maintained"] as const;
-export function backLegProof(raw: unknown): { verdict: "pass" | "fail" | null; forward: string[]; held: string[] } {
+export const BACK_LEG_PROOF_SOURCES = ["coil.foot_vs_body", "coil.sink", "pose.head_discipline", "card.back_heel_early_rise", "card.back_knee_flex_maintained", "card.sequencing"] as const;
+export function backLegProof(raw: unknown): { verdict: "pass" | "fail" | null; forward: string[]; held: string[]; unproven: string | null } {
   const forward: string[] = [], held: string[] = [];
   const fvb = (at(raw, "coil.foot_vs_body") as { pattern?: string } | undefined)?.pattern;
   if (fvb === "body_went_with_foot") forward.push("foot_vs_body"); else if (fvb === "body_stayed_back") held.push("foot_vs_body");
@@ -51,11 +55,17 @@ export function backLegProof(raw: unknown): { verdict: "pass" | "fail" | null; f
     const v = at(raw, p)?.verdict;
     if (v === "fail") forward.push(k); else if (v === "pass" || v === "elite") held.push(k);
   }
-  return { verdict: forward.length ? "fail" : held.length ? "pass" : null, forward, held };
+  const seq = at(raw, "card.sequencing")?.verdict;
+  if (seq === "fail") forward.push("sequencing"); else if (seq === "pass") held.push("sequencing");
+  if (forward.length) return { verdict: "fail", forward, held, unproven: null };
+  const unproven = fvb === "no_stride" ? "unproven:no_stride_above_noise_nothing_to_prove_the_load_with"
+    : fvb !== "body_stayed_back" ? "unproven:stride_not_readable"
+    : seq !== "pass" ? "proof_incomplete:hip_first_sequencing_not_readable" : null;
+  return { verdict: unproven ? null : "pass", forward, held, unproven };
 }
 const backLegBalanceProven = (raw: unknown): TileReading => {
   const p = backLegProof(raw);
-  return p.verdict == null ? { kind: "missing", reason: "no_downstream_p3_evidence_readable" } : { kind: "verdict", pass: p.verdict === "pass" };
+  return p.verdict == null ? { kind: "missing", reason: p.unproven ?? "unproven" } : { kind: "verdict", pass: p.verdict === "pass" };
 };
 const P1_PROOF = "p1.back_leg_balance_at_load";
 

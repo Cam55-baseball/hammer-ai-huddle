@@ -892,3 +892,9 @@ What this establishes:
 Built: P1 "Back-leg balance, proven by the stride" fails when any of foot-vs-body, sink, head discipline, back heel or back knee shows the body went forward beyond its still-clip floor. A failed proof voids the hip-load pass. Failing P3 evidence tiles (back hip socket, head path, head discipline, back heel, back knee) count in P1, not again in P3.
 
 Proposed, not built (owner to confirm): P2 proven by P3 hands-opposite and P4 back-elbow connection; P3 proven by P4 hip drift after landing and front-shoulder leak; the chain stops at P4 — P4 and the Finish are judged on their own, so no phase waits past the swing.
+
+## Sequencing proves P1 was real `[owner-supplied 2026-10-01]`
+
+> "Proper sequencing of the hip first also confirms that the hitter had the right method of attempt and not faking a good P1 by not fully using your back hip for P3. It must be real."
+
+**Standing rule:** P1 cannot pass on the absence of a fault. It needs positive evidence the load was built (body held back through a real stride) AND used (graded hips-first sequencing). No stride above the noise floor = unproven. Sequencing routed to DelayCam (below 60 fps) = proof incomplete — its would-be verdict is never used as proof in either direction.

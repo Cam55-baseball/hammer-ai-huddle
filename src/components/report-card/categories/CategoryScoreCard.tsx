@@ -26,7 +26,7 @@ const outcomeLabel = (o: TileOutcome) => {
     case "waiting_on_baseline": return "Recorded";
     case "ungraded": return "Measured, not graded";
     case "not_applicable": return o.reason.startsWith("pitcher_not_in_frame") ? "Needs pitcher in frame" : "Doesn't apply";
-    default: return o.reason === "staff_only_until_validated" ? "Staff only" : "Not measured";
+    default: return o.reason === "staff_only_until_validated" ? "Staff only" : o.reason.startsWith("unproven") || o.reason.startsWith("proof_incomplete") ? "Not proven yet" : "Not measured";
   }
 };
 const flagLabel = (r: TileReading) => (r.kind === "verdict" ? (r.pass ? "Clear" : "Raised") : r.kind === "record" ? "Recorded" : "Not checked");
