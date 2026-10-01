@@ -6,7 +6,11 @@ import { at, scoreCard, type TileReading } from "./categories/scoring";
 import { HITTING_CLIP_COPY } from "./measuredClipCopy";
 import type { ReportCardSpec, ReportCardTileSpec, TileState } from "./types";
 
-const valueText = (n: number, unit?: string): string => `${Math.round(n * 100) / 100}${unit && unit !== "boolean" && unit !== "value" ? ` ${unit.replaceAll("_", " ")}` : ""}`;
+// Raw degrees, percentages, elapsed time and positional fractions belong in stored diagnostics,
+// not in athlete copy. A dimensionless record can still show its actual reading.
+const valueText = (n: number, unit?: string): string | undefined =>
+  unit && /degree|percent|pct|ms|sec|fraction|angle|fps|inch|foot|feet|boolean/i.test(unit)
+    ? undefined : `${Math.round(n * 100) / 100}${unit && unit !== "value" ? ` ${unit.replaceAll("_", " ")}` : ""}`;
 
 const asState = (reading: TileReading, raw?: unknown, path?: string, proof?: { status: string; outcome?: { disprovenBy?: string } }): TileState => {
   const source = path ? at(raw, path) as { value?: unknown; unit?: string; confidence?: { status?: string; value?: number | null }; lineage?: Record<string, unknown> } | undefined : undefined;
@@ -16,9 +20,9 @@ const asState = (reading: TileReading, raw?: unknown, path?: string, proof?: { s
     : reading.kind === "verdict" && !reading.pass && reading.finding === "not_used" ? "Phase 1 — Create Balance: the load was held but not used in the turn."
     : proof?.outcome?.disprovenBy ? "Phase 1 — Create Balance: the later stride disproved this load position." : undefined;
   if (reading.kind === "verdict") return { status: proof?.outcome?.disprovenBy ? "fail" : reading.elite ? "elite" : reading.pass ? "pass" : "fail", value, confidence, note };
-  if (reading.kind === "score" && Number.isFinite(reading.frac) && reading.frac >= 0 && reading.frac <= 1) return { status: "record", value: value ?? valueText(reading.frac * 100), confidence };
-  if (reading.kind === "record" && Number.isFinite(reading.value)) return { status: "record", value: value ?? valueText(reading.value), confidence };
-  if (reading.kind === "ungraded" && typeof reading.value === "number" && Number.isFinite(reading.value)) return { status: "record", value: value ?? valueText(reading.value), confidence };
+  if (reading.kind === "score" && Number.isFinite(reading.frac) && reading.frac >= 0 && reading.frac <= 1) return { status: "record", value, confidence };
+  if (reading.kind === "record" && Number.isFinite(reading.value)) return { status: "record", value, confidence };
+  if (reading.kind === "ungraded" && typeof reading.value === "number" && Number.isFinite(reading.value)) return { status: "record", value, confidence };
   return { status: "missing", missing_reason: reading.kind === "missing" || reading.kind === "not_applicable" ? reading.reason : "no_owner_standard_yet" };
 };
 
