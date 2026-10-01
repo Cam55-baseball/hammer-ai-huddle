@@ -82,10 +82,14 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
   // checked after navigation and dropped silently if absent (progress shrinks).
   const [active, setActive] = useState<TourStep[]>([]);
   const [ready, setReady] = useState(false);
+  const wasOpen = useRef(false);
   useEffect(() => {
+    if (open && wasOpen.current) return; // keep the live list mid-tour
+    wasOpen.current = open;
     setReady(open);
     setActive(open ? steps.filter((s) => (s.allowed ? s.allowed() : true) && (s.route ? true : !!findTarget(s.target))) : []);
   }, [open, steps]);
+  useEffect(() => { if (index > 0 && index >= active.length) setIndex(active.length - 1); }, [active.length, index]);
   const step = active[index];
   const [foundId, setFoundId] = useState<string | null>(null);
   useEffect(() => {
@@ -95,9 +99,9 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
     let raf = 0; const t0 = performance.now();
     const poll = () => {
       if (findTarget(step.target)) { setFoundId(step.id); return; }
-      if (performance.now() - t0 > 4000) {
+      if (performance.now() - t0 > 7000) {
+        // Drop it; the next step slides into this index and the count shrinks.
         setActive((a) => a.filter((x) => x.id !== step.id));
-        setIndex((i) => Math.max(0, Math.min(i, active.length - 2)));
         return;
       }
       raf = requestAnimationFrame(poll);
@@ -137,8 +141,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
     if (foundId !== step.id) return;
     const el = findTarget(step.target);
     if (!el) { // vanished since filtering — skip gracefully
-      setIndex((i) => (i + 1 < active.length ? i + 1 : i));
-      if (index + 1 >= active.length) onClose("completed");
+      setActive((a) => a.filter((x) => x.id !== step.id));
       return;
     }
     targetRef.current = el;
