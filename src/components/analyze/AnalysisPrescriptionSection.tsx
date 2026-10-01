@@ -37,8 +37,9 @@ interface Props {
   embedded?: boolean;
 }
 
-function DrillRow({ drill, reasons, staff, onOpen }: { drill: EliteDrill; reasons?: string[]; staff?: boolean; onOpen?: () => void }) {
+function DrillRow({ drill, reasons, staff, onOpen, onDone }: { drill: EliteDrill; reasons?: string[]; staff?: boolean; onOpen?: () => void; onDone?: () => void }) {
   const [open, setOpen] = useState(false);
+  const [done, setDone] = useState(false);
   return (
     <div className="rounded-lg border bg-accent/20 p-3">
       <button
@@ -117,6 +118,12 @@ function DrillRow({ drill, reasons, staff, onOpen }: { drill: EliteDrill; reason
             <span className="font-medium text-foreground">Equipment: </span>
             {drill.equipment.join(", ")}
           </div>
+          {onDone && (
+            <Button size="sm" variant={done ? "secondary" : "outline"} disabled={done}
+              onClick={() => { setDone(true); onDone(); }}>
+              {done ? "Marked done" : "I did this drill"}
+            </Button>
+          )}
         </div>
       )}
     </div>
@@ -132,7 +139,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
     [snapshot],
   );
 
-  const { catalog, circulation, log } = useDrillCirculation();
+  const { catalog, circulation, log, markDone } = useDrillCirculation();
   const matches = useMemo(
     () =>
       matchPrescriptionDrills({
@@ -182,7 +189,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
             {matches.length > 0 ? "From this clip" : "Maintenance work"}
           </h4>
           {matches.length > 0 ? (
-            matches.map((m) => <DrillRow key={m.drill.id} drill={m.drill} reasons={m.reasons} staff={includePendingReview} onOpen={() => log([m.drill.id], "opened")} />)
+            matches.map((m) => <DrillRow key={m.drill.id} drill={m.drill} reasons={m.reasons} staff={includePendingReview} onOpen={() => log([m.drill.id], "opened")} onDone={() => markDone(m.drill.id)} />)
           ) : fallback.length > 0 ? (
             <>
               <p className="text-xs text-muted-foreground">

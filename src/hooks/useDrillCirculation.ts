@@ -10,6 +10,7 @@ export function useDrillCirculation() {
   const [rows, setRows] = useState<OwnerDrillRow[]>([]);
   const [usage, setUsage] = useState<CirculationInput["usage"]>({});
   const [served, setServed] = useState<Record<string, number>>({});
+  const [completedOn, setCompletedOn] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -20,7 +21,7 @@ export function useDrillCirculation() {
         const [{ data: r }, { data: u }, { data: e }] = await Promise.all([
           db.from("owner_drills").select("*").eq("active", true),
           db.rpc("drill_usage_totals"),
-          db.from("drill_engagement").select("drill_id").eq("user_id", user.id).eq("event", "served"),
+          db.from("drill_engagement").select("drill_id,event,created_at").eq("user_id", user.id).in("event", ["served", "completed"]),
         ]);
         if (cancelled) return;
         setRows((r ?? []) as OwnerDrillRow[]);
@@ -30,8 +31,13 @@ export function useDrillCirculation() {
         }
         setUsage(us);
         const sv: Record<string, number> = {};
-        for (const x of (e ?? []) as Array<{ drill_id: string }>) sv[x.drill_id] = (sv[x.drill_id] ?? 0) + 1;
+        const done: Record<string, string> = {};
+        for (const x of (e ?? []) as Array<{ drill_id: string; event: string; created_at: string }>) {
+          if (x.event === "served") sv[x.drill_id] = (sv[x.drill_id] ?? 0) + 1;
+          else done[x.drill_id] = x.created_at.slice(0, 10);
+        }
         setServed(sv);
+        setCompletedOn(done);
       } catch {
         /* built-in catalog stays */
       }
@@ -53,5 +59,17 @@ export function useDrillCirculation() {
     [user],
   );
 
-  return { catalog, circulation, log };
+  /** Done → "completed"; done again on a later day → also "returned". */
+  const markDone = useCallback(
+    (drillId: string) => {
+      const today = new Date().toISOString().slice(0, 10);
+      const prev = completedOn[drillId];
+      log([drillId], "completed");
+      if (prev && prev !== today) log([drillId], "returned");
+      setCompletedOn((c) => ({ ...c, [drillId]: today }));
+    },
+    [completedOn, log],
+  );
+
+  return { catalog, circulation, log, markDone };
 }
