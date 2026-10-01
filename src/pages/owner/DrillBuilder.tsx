@@ -259,7 +259,7 @@ export default function DrillBuilder() {
                           fault_keys: d.fault_keys.filter((k) => allowed.has(k)),
                         }));
                       }} />
-                      <span>{p.label}{!p.id.startsWith("analysis:") && <span className="block text-[10px] text-muted-foreground">Saved, not shown to athletes yet</span>}</span>
+                      <span>{p.label}{(p.id === "hammers_today:skill" || p.id === "hammers_today:warmup") && <span className="block text-[10px] text-muted-foreground">Saved, not shown to athletes yet</span>}</span>
                     </label>
                   ))}
                 </div>
