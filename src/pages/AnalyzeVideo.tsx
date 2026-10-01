@@ -52,7 +52,7 @@ import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { HighFpsCapture } from "@/components/analyze/HighFpsCapture";
 import { evaluateMovementGate, type MovementGateResult } from "@/lib/biomech/gates/movementGate";
 import { NoMovementCard } from "@/components/analyze/NoMovementCard";
-import { diagnoseTrack, type TrackDiagnosis } from "@/lib/biomech/pose/trackDiagnosis";
+import { diagnoseTrack } from "@/lib/biomech/pose/trackDiagnosis";
 import { fpsProvenance } from "@/lib/biomech/probeVideoMetadata";
 import { classifyFps } from "@/lib/capture/highFpsCapture";
 import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
@@ -168,7 +168,6 @@ export default function AnalyzeVideo() {
   // Owner ruling: Analysis is body mechanics only. Ball speed / reference
   // distance live in DelayCam (code kept in src/lib/cv + src/lib/capture).
   // Movement gate result — a refused clip produces no tiles, faults or drills.
-  const [trackDiagnosis, setTrackDiagnosis] = useState<TrackDiagnosis | null>(null);
   const [noMovement, setNoMovement] = useState<Extract<MovementGateResult, { status: "refused" }> | null>(null);
   const { saveDrill, savedDrills } = useVault();
 
@@ -332,7 +331,6 @@ export default function AnalyzeVideo() {
     setClipTiles(null);
     setAnalysisError(null);
     setNoMovement(null);
-    setTrackDiagnosis(null);
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
     setLandingTime(null);
@@ -502,7 +500,6 @@ export default function AnalyzeVideo() {
     }
 
     setUploading(true);
-    setTrackDiagnosis(null);
 
     // ===== PHASE 0/1 — Deterministic probe (sha256 + true fps + dimensions) =====
     // Probe FIRST so deterministic frame selection can use fps_true.
@@ -646,7 +643,6 @@ export default function AnalyzeVideo() {
           },
         });
         movementGate = evaluateMovementGate(denseRun.series);
-        setTrackDiagnosis(diagnoseTrack(denseRun.series));
         // The report card reads the same local deterministic tile code as the
         // server's generated bundle. Never use the AI analysis's legacy metrics.
         if (movementGate.status === "movement" && sideResolution.status === "known") {
