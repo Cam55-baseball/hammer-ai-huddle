@@ -1,7 +1,8 @@
 import { PARKED_UI } from "@/lib/flags/parked";
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles, BarChart3, Flame, Building2, Gamepad2, Library, Crown, Bell, Archive, ClipboardList, Camera, Activity } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles, BarChart3, Flame, Building2, Gamepad2, Library, Crown, Bell, Archive, ClipboardList, Camera, Activity, ListChecks } from "lucide-react";
+import { hasAnySubscription } from "@/utils/tierAccess";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useLocation } from "react-router-dom";
