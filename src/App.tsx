@@ -102,6 +102,7 @@ const CatchingRepEntry = lazyWithRetry(() => import("./pages/CatchingRepEntry"))
 const ThrowingRepEntry = lazyWithRetry(() => import("./pages/ThrowingRepEntry"));
 
 const AnalysisResultsPreview = lazyWithRetry(() => import("./pages/dev/AnalysisResultsPreview"));
+const TourPreview = lazyWithRetry(() => import("./pages/dev/TourPreview"));
 const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
 const VideoLibrary = lazyWithRetry(() => import("./pages/VideoLibrary"));
 const VideoLibraryPlayer = lazyWithRetry(() => import("./pages/VideoLibraryPlayer"));
@@ -434,6 +435,7 @@ const App = () => {
               {/* Internal design harness (fixture data only) — staff only so it
                   is not a publicly reachable debug surface in production. */}
               <Route path="/dev/analysis-results-preview" element={<StaffOnlyRoute><AnalysisResultsPreview /></StaffOnlyRoute>} />
+              <Route path="/dev/tour-preview" element={<StaffOnlyRoute><TourPreview /></StaffOnlyRoute>} />
               <Route path="/video-library" element={<VideoLibrary />} />
               <Route path="/video-library/:id" element={<VideoLibraryPlayer />} />
               <Route path="/owner" element={<OwnerDashboard />} />
