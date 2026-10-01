@@ -8,6 +8,7 @@ import { readFileSync } from "node:fs";
 import { getReportCardSpec } from "@/lib/reportCard";
 import { categorySpecFor } from "@/lib/reportCard/categories/specs";
 import { measuredClipSpec } from "@/lib/reportCard/measuredClipSpec";
+import { athleteMissingness } from "@/lib/reportCard/athleteLanguage";
 
 const CARDS = [
   ["baseball", "hitting"], ["softball", "hitting"],
@@ -132,6 +133,15 @@ describe("card gate — no cross-contamination", () => {
     const hitting = measuredClipSpec("baseball", "hitting");
     for (const key of ["p1.hip_load", "p3.back_hip_socket_hold", "p3.head_path_through_stride"]) {
       expect(hitting?.tiles.some((tile) => tile.key === key), key).toBe(true);
+    }
+  });
+
+  it("explains missing pitcher, slow footage, unreadable landmarks and unproven movement without a placeholder value", () => {
+    for (const reason of ["pitcher_not_in_frame:release_unobservable", "routed_to_delaycam:frame_rate_24_below_60", "hands_or_front_ankle_unobserved", "proof_incomplete:hip_first_sequencing_not_readable"]) {
+      const copy = athleteMissingness(reason);
+      expect(copy).toBeTruthy();
+      expect(copy).not.toMatch(/\d+\s*[°%]/);
+      expect(copy).not.toMatch(/trustworthy read/);
     }
   });
 
