@@ -16,6 +16,32 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { planReadiness, type PlanSlot } from "@/lib/prescription/ownerPlanDrills";
+
+const SLOT_LABEL: Record<PlanSlot, string> = {
+  "hammers_today:skill": "Skill block",
+  "hammers_today:warmup": "Warm-up",
+  "hammers_today:defense": "Defense block",
+  defensive_library: "Defensive library",
+};
+
+/** At-a-glance: will this drill actually compete in each block it's filed under? */
+function PlanReadiness({ row, compact = false }: { row: Omit<OwnerDrillRow, "created_at" | "id"> & { id?: string }; compact?: boolean }) {
+  const items = planReadiness(row);
+  if (items.length === 0) return null;
+  return (
+    <ul className={compact ? "mt-0.5 space-y-0.5 text-[11px]" : "space-y-1 rounded-md border p-2 text-xs"} aria-label="Hammers Today readiness">
+      {!compact && <li className="font-semibold">Hammers Today readiness</li>}
+      {items.map(({ slot, missing }) => (
+        <li key={slot} className={missing.length || !row.active ? "text-destructive" : "text-primary"}>
+          {SLOT_LABEL[slot]}: {missing.length
+            ? `not served yet — needs ${missing.join(", ")}`
+            : row.active ? "complete, competing" : "complete, but switched off"}
+        </li>
+      ))}
+    </ul>
+  );
+}
 import { Plus, Pencil } from "lucide-react";
 import { ELITE_DRILL_CATALOG, type EliteDrill } from "@/data/drills/eliteDrillCatalog";
 import { listDefenseCatalogForOwner } from "@/lib/hammer/prescription/defenseLibrary";
@@ -189,10 +215,13 @@ export default function DrillBuilder() {
 
         <Card className="space-y-2 p-4">
           <h2 className="font-semibold">Hammers Today and defensive library — your drills</h2>
-          <p className="text-xs text-muted-foreground">Defense-block and defensive-library drills appear in the daily defense block when switched on, taking one slot in rotation. Skill-block and warm-up placements are not shown yet.</p>
+          <p className="text-xs text-muted-foreground">A switched-on drill takes one slot in the block it's filed under (skill, warm-up or defense), taking turns by day with your other drills there. It only shows to athletes whose sport matches and who have the equipment it lists.</p>
           {ownerOnly.filter((r) => r.placements.some((p) => !p.startsWith("analysis:"))).map((r) => (
             <div key={r.id} className="flex items-center justify-between rounded border p-2">
-              <span className="text-sm">{r.name}</span>
+              <div className="min-w-0">
+                <span className="text-sm">{r.name}</span>
+                <PlanReadiness row={r} compact />
+              </div>
               <div className="flex items-center gap-2">
                 <Switch checked={r.active} onCheckedChange={() => toggleActive(r)} aria-label="Drill on or off" />
                 <Button size="sm" variant="ghost" onClick={() => setDraft({ ...r })} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
@@ -237,7 +266,7 @@ export default function DrillBuilder() {
                           fault_keys: d.fault_keys.filter((k) => allowed.has(k)),
                         }));
                       }} />
-                      <span>{p.label}{(p.id === "hammers_today:skill" || p.id === "hammers_today:warmup") && <span className="block text-[10px] text-muted-foreground">Saved, not shown to athletes yet</span>}</span>
+                      <span>{p.label}</span>
                     </label>
                   ))}
                 </div>
@@ -301,6 +330,7 @@ export default function DrillBuilder() {
               <div><Label>The common mistake (and how to tell)</Label><Textarea value={draft.common_mistake ?? ""} onChange={(e) => set("common_mistake", e.target.value)} /></div>
               <div><Label>Equipment (comma separated)</Label><Input value={draft.equipment.join(", ")} onChange={(e) => set("equipment", e.target.value.split(","))} /></div>
               <div><Label>Video link</Label><Input value={draft.video_url ?? ""} onChange={(e) => set("video_url", e.target.value)} placeholder="Paste your drill video link" /></div>
+              <PlanReadiness row={draft} />
               <div className="flex gap-6">
                 <label className="flex items-center gap-2"><Switch checked={draft.active} onCheckedChange={(v) => set("active", v)} />On</label>
                 <label className="flex items-center gap-2"><Switch checked={draft.pinned} onCheckedChange={(v) => set("pinned", v)} />Pinned (always include)</label>

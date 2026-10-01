@@ -448,6 +448,7 @@ export default function ScoutDashboard() {
                     <div className="flex flex-wrap gap-2 items-center">
                       <Button
                         onClick={() => navigate(`/profile?userId=${player.id}`)}
+                        data-tour="scout-profile" data-tour-href={`/profile?userId=${player.id}`}
                         size="lg"
                         variant="outline"
                         className="flex-shrink-0 h-12 px-5 text-base"
@@ -457,6 +458,7 @@ export default function ScoutDashboard() {
                       </Button>
                       <Button
                         onClick={() => navigate(`/players-club?playerId=${player.id}`)}
+                        data-tour="scout-video" data-tour-href={`/players-club?playerId=${player.id}`}
                         size="lg"
                         variant="outline"
                         className="flex-shrink-0 h-12 px-5 text-base"
@@ -466,6 +468,7 @@ export default function ScoutDashboard() {
                       </Button>
                       <Button
                         onClick={() => navigate(`/scout-evaluation/${player.id}`)}
+                        data-tour="scout-evaluate" data-tour-href={`/scout-evaluation/${player.id}`}
                         size="lg"
                         variant="secondary"
                         className="flex-shrink-0 h-12 px-5 text-base"
