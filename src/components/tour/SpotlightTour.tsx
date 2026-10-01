@@ -200,7 +200,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
 
   // Edge-aware coach mark: prefer below, flip above, clamp horizontally.
   const cardW = Math.min(340, vp.w - 24);
-  const cardH = Math.min(340, Math.round(vp.h * 0.45));
+  const cardH = Math.min(420, Math.round(vp.h * 0.5));
   const below = m.y + m.h + 12;
   const placeAbove = below + cardH > vp.h - 12 && m.y - cardH - 12 > 12;
   const top = Math.max(12, Math.min(placeAbove ? m.y - cardH - 12 : below, vp.h - cardH - 12));
