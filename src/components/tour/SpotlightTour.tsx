@@ -99,7 +99,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
     let raf = 0; const t0 = performance.now();
     const poll = () => {
       if (findTarget(step.target)) { setFoundId(step.id); return; }
-      if (performance.now() - t0 > 7000) {
+      if (performance.now() - t0 > 12000) {
         // Drop it; the next step slides into this index and the count shrinks.
         setActive((a) => a.filter((x) => x.id !== step.id));
         return;
