@@ -2,6 +2,7 @@
  * No category totals, AI metrics, or default measurements enter this card.
  */
 import { categorySpecFor } from "./categories/specs";
+import { otherClipCopy } from "./measuredClipOtherCopy";
 import { at, scoreCard, type TileReading } from "./categories/scoring";
 import { HITTING_CLIP_COPY } from "./measuredClipCopy";
 import type { ReportCardSpec, ReportCardTileSpec, TileState } from "./types";
@@ -66,10 +67,10 @@ export function measuredClipSpec(sport: string | undefined, module: string | und
       phase: group.title,
       mode: "pass_fail" as const,
        nonNegotiable: spec.card === "hitting" && group.key === "p4" ? true : tile.nonNegotiable,
-       standard: spec.card === "hitting" ? HITTING_CLIP_COPY[`${group.key}.${tile.key}`]?.[0] ?? "" : "",
+       standard: spec.card === "hitting" ? HITTING_CLIP_COPY[`${group.key}.${tile.key}`]?.[0] ?? "" : otherClipCopy(spec.card, sport, tile.key).standard,
        explainer: spec.card === "hitting" && HITTING_CLIP_COPY[`${group.key}.${tile.key}`]
          ? { whatWhy: HITTING_CLIP_COPY[`${group.key}.${tile.key}`][1], howToImprove: HITTING_CLIP_COPY[`${group.key}.${tile.key}`][2], encouragement: HITTING_CLIP_COPY[`${group.key}.${tile.key}`][3] }
-         : { whatWhy: "", howToImprove: "", encouragement: "" },
+         : (({ standard: _s, ...rest }) => rest)(otherClipCopy(spec.card, sport, tile.key)),
        compute: (analysis) => {
          const raw = readClip(analysis as Record<string, unknown>, spec.card);
          const outcome = measuredClipScore(analysis as Record<string, unknown>, sport, module)?.categories.find((c) => c.key === group.key)?.tiles.find((t) => t.key === tile.key);
