@@ -22,7 +22,7 @@ const why = (r: string | null) => {
 const outcomeLabel = (o: TileOutcome) => {
   switch (o.status) {
     case "attributed": return "Counted in P1";
-    case "scored": if (o.disprovenBy) return "Not held through the stride"; return o.frac >= 1 ? "Pass" : o.frac <= 0 ? "Needs work" : "Partial";
+    case "scored": if (o.disprovenBy) return "Not proven by the swing"; if (o.finding === "not_held") return "Load not held"; if (o.finding === "not_used") return "Load not used"; return o.frac >= 1 ? "Pass" : o.frac <= 0 ? "Needs work" : "Partial";
     case "waiting_on_baseline": return "Recorded";
     case "ungraded": return "Measured, not graded";
     case "not_applicable": return o.reason.startsWith("pitcher_not_in_frame") ? "Needs pitcher in frame" : "Doesn't apply";

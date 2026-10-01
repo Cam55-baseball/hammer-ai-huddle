@@ -44,8 +44,8 @@ const coilAt = (k: string) => (raw: unknown): TileReading => {
  *    60 fps — its would-be verdict is lineage only and is never used as proof either way).
  * Staff-only tiles (19/20) are not used, so the proof reads the same in athlete and staff view.
  */
-export const BACK_LEG_PROOF_SOURCES = ["coil.foot_vs_body", "coil.sink", "pose.head_discipline", "card.back_heel_early_rise", "card.back_knee_flex_maintained", "card.sequencing"] as const;
-export function backLegProof(raw: unknown): { verdict: "pass" | "fail" | null; forward: string[]; held: string[]; unproven: string | null } {
+export const BACK_LEG_PROOF_SOURCES = ["coil.foot_vs_body", "coil.sink", "pose.head_discipline", "card.back_heel_early_rise", "card.back_knee_flex_maintained", "card.sequencing", "card.post_landing_hip_drift"] as const;
+export function backLegProof(raw: unknown): { verdict: "pass" | "fail" | null; forward: string[]; held: string[]; unproven: string | null; mode: "not_held" | "not_used" | null } {
   const forward: string[] = [], held: string[] = [];
   const fvb = (at(raw, "coil.foot_vs_body") as { pattern?: string } | undefined)?.pattern;
   if (fvb === "body_went_with_foot") forward.push("foot_vs_body"); else if (fvb === "body_stayed_back") held.push("foot_vs_body");
@@ -55,17 +55,22 @@ export function backLegProof(raw: unknown): { verdict: "pass" | "fail" | null; f
     const v = at(raw, p)?.verdict;
     if (v === "fail") forward.push(k); else if (v === "pass" || v === "elite") held.push(k);
   }
-  const seq = at(raw, "card.sequencing")?.verdict;
-  if (seq === "fail") forward.push("sequencing"); else if (seq === "pass") held.push("sequencing");
-  if (forward.length) return { verdict: "fail", forward, held, unproven: null };
-  const unproven = fvb === "no_stride" ? "unproven:no_stride_above_noise_nothing_to_prove_the_load_with"
-    : fvb !== "body_stayed_back" ? "unproven:stride_not_readable"
-    : seq !== "pass" ? "proof_incomplete:hip_first_sequencing_not_readable" : null;
-  return { verdict: unproven ? null : "pass", forward, held, unproven };
+  // HALF A — did the body hold back? (any forward reading fails: load not held)
+  if (forward.length) return { verdict: "fail", forward, held, unproven: null, mode: "not_held" };
+  if (fvb === "no_stride") return { verdict: null, forward, held, unproven: "unproven:no_stride_above_noise_nothing_to_prove_the_load_with", mode: null };
+  if (fvb !== "body_stayed_back") return { verdict: null, forward, held, unproven: "unproven:stride_not_readable", mode: null };
+  // HALF B — did the back hip DRIVE? (owner 2026-09-30: hips-first separation AND no hip slide after landing)
+  const seq = at(raw, "card.sequencing")?.verdict, drift = at(raw, "card.post_landing_hip_drift")?.verdict;
+  const notUsed = [seq === "fail" && "sequencing", drift === "fail" && "post_landing_hip_drift"].filter(Boolean) as string[];
+  if (notUsed.length) return { verdict: "fail", forward: notUsed, held, unproven: null, mode: "not_used" };
+  // No-slide alone cannot carry Half B: a passive hitter who never drives also never slides.
+  if (seq !== "pass") return { verdict: null, forward, held, unproven: "proof_incomplete:hip_first_sequencing_not_readable", mode: null };
+  if (drift !== "pass") return { verdict: null, forward, held, unproven: "proof_incomplete:post_landing_hip_drift_not_readable", mode: null };
+  return { verdict: "pass", forward, held: [...held, "sequencing", "post_landing_hip_drift"], unproven: null, mode: null };
 }
 const backLegBalanceProven = (raw: unknown): TileReading => {
   const p = backLegProof(raw);
-  return p.verdict == null ? { kind: "missing", reason: p.unproven ?? "unproven" } : { kind: "verdict", pass: p.verdict === "pass" };
+  return p.verdict == null ? { kind: "missing", reason: p.unproven ?? "unproven" } : { kind: "verdict", pass: p.verdict === "pass", finding: p.mode ?? undefined };
 };
 const P1_PROOF = "p1.back_leg_balance_at_load";
 
@@ -112,7 +117,7 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
       { key: "shoulder_plane_steadiness", name: "Shoulder plane steadiness", points: 5, read: scoreAt("card.shoulder_plane_steadiness") },
       { key: "lead_elbow_bend_increasing", name: "Lead elbow bend no more than at the end of P2", points: 4, read: verdictAt("card.lead_elbow_bend_increasing") },
       { key: "head_vertical_movement_post_landing", name: "Head not rising before the ball is gone", points: 4, read: verdictAt("card.head_vertical_movement_post_landing") },
-      { key: "post_landing_hip_drift", name: "Hips rotating after landing, not drifting", points: 4, read: verdictAt("card.post_landing_hip_drift") },
+      { key: "post_landing_hip_drift", evidenceFor: P1_PROOF, name: "Hips rotating after landing, not drifting", points: 4, read: verdictAt("card.post_landing_hip_drift") },
     ] },
     { key: "finish", title: "The Finish", points: 7, tiles: [
       { key: "pelvis_rotation_efficiency", name: "Pelvis square to fair at the end of P4", points: 4, read: verdictAt("card.pelvis_rotation_efficiency") },

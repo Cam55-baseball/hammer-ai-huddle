@@ -43,6 +43,12 @@ export const ROOT_PATTERNS: Record<string, RootPattern> = {
       "This starts in your load, not your stride. Your set-up can look right and still not be holding. The stride is where it showed: your body travelled with your front foot, your head got out in front, or your back heel came up early.",
     why: "Fix the load, not the stride. Get your weight truly settled on your back leg as you load, and the stride stops giving ground on its own.",
   },
+  back_hip_did_not_drive: {
+    key: "back_hip_did_not_drive",
+    label: "You stayed back, but your back hip never drove the swing",
+    plain: "Staying back is only half of it. The load has to go somewhere: your hips should lead the swing and turn, not slide forward after your front foot lands.",
+    why: "It must be real. A load you hold but never use gives the swing nothing. Drive from the back hip and turn it into the swing.",
+  },
   hands_leak_forward_early: {
     key: "hands_leak_forward_early",
     label: "Your hands leave early",
@@ -70,6 +76,7 @@ const ROOT_BY_FAULT: Record<string, string> = {
   stride_hands_went_with_foot: "back_leg_did_not_hold_load",
   stride_side_bend_lost: "back_leg_did_not_hold_load",
   stride_fell_forward: "back_leg_did_not_hold_load",
+  p1_load_not_used: "back_hip_did_not_drive",
   hands_below_back_elbow_at_heel_landing: "trunk_rotates_before_front_foot_plant",
 };
 

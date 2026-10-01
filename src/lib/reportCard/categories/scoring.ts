@@ -29,7 +29,7 @@ export type Audience = "athlete" | "staff";
 
 /** What a tile reader returns — normalised from any engine's raw result. */
 export type TileReading =
-  | { kind: "verdict"; pass: boolean; elite?: boolean }
+  | { kind: "verdict"; pass: boolean; elite?: boolean; finding?: string }
   | { kind: "score"; frac: number } // 0..1, higher is better
   | { kind: "record"; value: number }
   | { kind: "ungraded"; value: number | null; why: string }
@@ -83,7 +83,7 @@ export interface CardCategorySpec {
 export interface AthleteBand { low: number; high: number; n: number }
 
 export type TileOutcome =
-  | { status: "scored"; frac: number; points: number; earned: number; disprovenBy?: string }
+  | { status: "scored"; frac: number; points: number; earned: number; disprovenBy?: string; finding?: string }
   | { status: "attributed"; to: string; points: number }
   | { status: "waiting_on_baseline"; value: number; clipsNeeded: number }
   | { status: "ungraded"; value: number | null; why: string }
@@ -152,7 +152,7 @@ export function scoreCard(spec: CardCategorySpec, raw: unknown, o: { audience: A
             : { status: "waiting_on_baseline", value: rd.value, clipsNeeded: Math.max(0, BASELINE_MIN_CLIPS - (b?.n ?? 0)) };
         } else {
           const frac = rd.kind === "score" ? Math.max(0, Math.min(1, rd.frac)) : rd.pass ? 1 : 0;
-          outcome = { status: "scored", frac, points: t.points, earned: 0 };
+          outcome = { status: "scored", frac, points: t.points, earned: 0, ...(rd.kind === "verdict" && rd.finding ? { finding: rd.finding } : {}) };
         }
       }
       if (outcome.status === "scored" && failedHere.has(t.key)) outcome = { ...outcome, frac: 0, disprovenBy: failedHere.get(t.key) };

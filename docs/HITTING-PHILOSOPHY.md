@@ -898,3 +898,9 @@ Proposed, not built (owner to confirm): P2 proven by P3 hands-opposite and P4 ba
 > "Proper sequencing of the hip first also confirms that the hitter had the right method of attempt and not faking a good P1 by not fully using your back hip for P3. It must be real."
 
 **Standing rule:** P1 cannot pass on the absence of a fault. It needs positive evidence the load was built (body held back through a real stride) AND used (graded hips-first sequencing). No stride above the noise floor = unproven. Sequencing routed to DelayCam (below 60 fps) = proof incomplete — its would-be verdict is never used as proof in either direction.
+
+## The P1 proof is two-sided `[owner-supplied 2026-09-30]`
+
+> "Proper sequencing of the hip first separation and no hip slide forward after landing both also confirms that the hitter had the right method of attempt and not faking a good P1 by not fully using your back hip for P3. It must be real."
+
+Built: Half A (body held back) fails → "load not held". Half A holds but hips-first separation or no-slide-after-landing fails → "load not used". Both confirmed → pass. Half B unreadable → unproven, never passed. No-slide alone does not carry Half B (a passive hitter never slides either).
