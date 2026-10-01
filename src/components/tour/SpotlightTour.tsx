@@ -3,8 +3,8 @@
  *
  * Cutout architecture: a full-screen layer applies `backdrop-filter: blur()`
  * and is masked by an inline SVG (`mask-image` + `-webkit-mask-image`). The SVG
- * paints the whole viewport white (blur visible) with a black rounded rect at
- * the target bounds (blur removed), so the hole is genuinely sharp while the
+ * is one even-odd path: the viewport is opaque (blur visible) and a rounded
+ * rect at the target bounds is a transparent hole (masks use alpha), so the hole is genuinely sharp while the
  * rest is genuinely blurred — a box-shadow cutout cannot blur. A second,
  * unmasked-equivalent dim layer uses the same mask. Geometry is recomputed
  * via ResizeObserver on the target plus rAF-throttled scroll/resize listeners
@@ -53,7 +53,11 @@ function findTarget(sel: string): HTMLElement | null {
 }
 
 function maskUrl(w: number, h: number, x: number, y: number, rw: number, rh: number) {
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'><rect width='100%' height='100%' fill='white'/><rect x='${x}' y='${y}' width='${rw}' height='${rh}' rx='${RADIUS}' fill='black'/></svg>`;
+  // CSS masks use ALPHA by default: an even-odd path leaves the hole fully
+  // transparent (no blur) and the rest opaque (blurred), in every engine.
+  const r = Math.min(RADIUS, rw / 2, rh / 2);
+  const hole = `M${x + r},${y}H${x + rw - r}A${r},${r} 0 0 1 ${x + rw},${y + r}V${y + rh - r}A${r},${r} 0 0 1 ${x + rw - r},${y + rh}H${x + r}A${r},${r} 0 0 1 ${x},${y + rh - r}V${y + r}A${r},${r} 0 0 1 ${x + r},${y}Z`;
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'><path fill-rule='evenodd' fill='white' d='M0,0H${w}V${h}H0Z ${hole}'/></svg>`;
   return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
 }
 
