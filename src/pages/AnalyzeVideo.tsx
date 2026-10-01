@@ -30,6 +30,8 @@ import { useSideContext } from "@/contexts/SideContext";
 import { UPLOAD_ERRORS, friendlyRejectReason, friendlyThrownError } from "@/lib/upload/uploadErrorCopy";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
+import { ReportCardAccessGate } from "@/components/report-card/hammer/ReportCardAccessGate";
+import { canSeeReportCard } from "@/lib/reportCard/visibility";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
@@ -94,6 +96,7 @@ export default function AnalyzeVideo() {
   const { modules: subscribedModules, loading: subLoading, initialized, refetch, hasAccessForSport } = useSubscription();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
+  const showReportCard = canSeeReportCard({ isOwner, isAdmin });
   const navigate = useNavigate();
   const goBack = useSmartBack();
   const location = useLocation();
@@ -1621,18 +1624,22 @@ export default function AnalyzeVideo() {
 
             {analysis && (
               <div className="space-y-4">
-                <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
+                {showReportCard && (
+                  <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
+                )}
 
-                {analysisView === "report_card" ? (
-                  <HammerReportCard
-                    sport={sport}
-                    module={module}
-                    analysis={{
-                      deterministic_clip_tiles: clipTiles,
-                    } as never}
-                    measuredOnly
-                    showShare={false}
-                  />
+                {showReportCard && analysisView === "report_card" ? (
+                  <ReportCardAccessGate>
+                    <HammerReportCard
+                      sport={sport}
+                      module={module}
+                      analysis={{
+                        deterministic_clip_tiles: clipTiles,
+                      } as never}
+                      measuredOnly
+                      showShare={false}
+                    />
+                  </ReportCardAccessGate>
                 ) : (
                   <>
                     {module === "hitting" && <BackLegFinding videoId={currentVideoId} />}
