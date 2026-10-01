@@ -22,10 +22,10 @@ export function TileExplainerSheet({ spec, open, onOpenChange }: Props) {
             </SheetHeader>
 
             <div className="mt-6 space-y-6">
-               <Section title="What it is &amp; why it matters" body={withoutMeasurementNotation(spec.explainer.whatWhy)} />
-               <Section title="How to improve it" body={withoutMeasurementNotation(spec.explainer.howToImprove)} />
+               {spec.explainer.whatWhy && <Section title="What it is & why it matters" body={withoutMeasurementNotation(spec.explainer.whatWhy)} />}
+               {spec.explainer.howToImprove && <Section title="How to improve it" body={withoutMeasurementNotation(spec.explainer.howToImprove)} />}
               <Section title="Trend vs prior sessions" body="Your trend across recent submissions will appear here as you build history." muted />
-               <Section title="Keep going" body={withoutMeasurementNotation(spec.explainer.encouragement)} accent />
+               {spec.explainer.encouragement && <Section title="Keep going" body={withoutMeasurementNotation(spec.explainer.encouragement)} accent />}
             </div>
           </>
         )}

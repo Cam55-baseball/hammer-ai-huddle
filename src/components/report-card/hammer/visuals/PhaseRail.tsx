@@ -10,6 +10,9 @@ export interface PhaseNode {
   count: number;
   /** How many tiles in this phase have been measured (non-missing). */
   measured: number;
+  score?: number | null;
+  points?: number;
+  status?: "complete" | "limited_evidence" | "incomplete";
 }
 
 interface Props {
@@ -42,7 +45,7 @@ export function PhaseRail({ phases, activePhase, onSelect }: Props) {
 
       <div className="relative flex items-start justify-between gap-2">
         {phases.map((p, i) => {
-          const noData = p.measured === 0;
+           const noData = p.score === null || p.measured === 0;
           const tier = noData
             ? "missing"
             : p.passRate >= 0.85
@@ -61,7 +64,8 @@ export function PhaseRail({ phases, activePhase, onSelect }: Props) {
           const isActive = activePhase === p.key;
           const isDim = activePhase !== null && !isActive;
           // Athlete-facing: no percentages (owner ruling) — plain words instead.
-          const pctLabel = noData ? "—" : p.passRate >= 0.99 ? "All" : p.passRate >= 0.5 ? "Most" : p.passRate > 0 ? "Some" : "None";
+           const pctLabel = p.status === "complete" && p.score != null && p.points != null
+             ? `${p.score} / ${p.points}` : p.status === "limited_evidence" ? "Limited evidence" : noData ? "Not measured" : "Incomplete";
           return (
             <button
               key={p.key}
@@ -90,7 +94,7 @@ export function PhaseRail({ phases, activePhase, onSelect }: Props) {
                   color,
                 }}
               >
-                <span className="text-white text-xs">{p.count}</span>
+                 <span className="text-white text-xs">{p.count}</span>
               </motion.span>
               <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/75 text-center leading-tight">
                 {p.label}

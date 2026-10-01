@@ -88,11 +88,11 @@ export function ReportCardTile({ spec, state, onOpen, index = 0 }: Props) {
             animate={!reduce}
           />
         ) : isRecord ? (
-          <span className="text-xs font-bold uppercase text-muted-foreground">Recorded · not graded</span>
+          <span className="text-center text-xs font-bold text-muted-foreground">{state.value != null && <span className="block text-base tabular-nums text-foreground">{state.value}</span>}Recorded · not graded</span>
         ) : spec.mode === "score_meter" ? (
-          <RadialMeter
+          state.score100 == null ? <span className="text-xs font-bold text-muted-foreground">No scored meter</span> : <RadialMeter
             fraction={Math.max(0, Math.min(1, (state.score100 ?? 0) / 100))}
-            acceptable={(state.acceptable ?? 60) / 100}
+             acceptable={state.acceptable == null ? null : state.acceptable / 100}
             elite={state.elite !== undefined ? state.elite / 100 : undefined}
             status={isElite ? "elite" : isPass ? "pass" : isWarn ? "warn" : "fail"}
             centerLabel={athleteResult(state.status)}

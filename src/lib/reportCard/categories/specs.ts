@@ -75,7 +75,7 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
   scaleTo: 97,
   showTotal: true,
   cardNotes: [
-    "The five scored categories add up to 100. Front Leg Gather is a bonus on top and the total is capped at 100, so a hitter who doesn't use a gather can still reach 100.",
+    "The scored categories make up the base score. Front Leg Gather only adds points; it never takes them away.",
   ],
   categories: [
     { key: "p1", title: "Phase 1 — Create Balance", points: 20, tiles: [
@@ -118,7 +118,7 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
       { key: "pelvis_rotation_efficiency", name: "Pelvis square to fair at the end of P4", points: 4, read: verdictAt("card.pelvis_rotation_efficiency") },
       { key: "finish_balance", name: "Finish balance", points: 3, read: verdictAt("card.finish_balance") },
     ] },
-    { key: "front_leg_gather", title: "Front Leg Gather (bonus)", points: 3, additive: true,
+    { key: "front_leg_gather", title: "Front Leg Gather", points: 3, additive: true,
       note: "A power-loading option during P2, never required. It can only add points, never take them away.",
       tiles: [
         { key: "front_leg_gather", name: "Front leg gather", points: 3, recordOnly: true, baselineKey: "hitting_gather.front_leg_gather", read: gatherPresent },
