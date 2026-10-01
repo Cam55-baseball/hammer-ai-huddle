@@ -26,12 +26,12 @@ describe("measured report-card content", () => {
     expect(measuredClipSpec("baseball", "pitching")?.tiles.every((t) => !t.explainer.whatWhy && !t.explainer.howToImprove)).toBe(true);
   });
 
-  it("retains recorded values, but never manufactures a confidence score", () => {
+  it("keeps prohibited units out of athlete copy and never manufactures confidence", () => {
     const card = measuredClipSpec("baseball", "hitting");
     const analysis = { deterministic_clip_tiles: { card: "hitting", readings: { pose: { hand_load: { value: 0.42, unit: "percent_stature", confidence: { status: "uncalibrated", value: null } } } } } };
     const state = card?.tiles.find((t) => t.key === "p2.hand_load_depth")?.compute(analysis as never);
     expect(state?.status).toBe("record");
-    expect(state?.value).toContain("0.42");
+    expect(state?.value).toBeUndefined();
     expect(state?.confidence).toBeUndefined();
   });
 });
