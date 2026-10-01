@@ -26,7 +26,7 @@ function keysFor(s: string, m: string) {
 describe("card gate — no cross-contamination", () => {
   it("each module resolves to its own card", () => {
     expect(getReportCardSpec("baseball", "hitting")?.disciplineLabel).toMatch(/Hitting/);
-    expect(getReportCardSpec("softball", "pitching")?.id ?? "").not.toBe(getReportCardSpec("baseball", "pitching")?.id);
+    expect(getReportCardSpec("softball", "pitching")).not.toBe(getReportCardSpec("baseball", "pitching"));
     expect(getReportCardSpec("baseball", "throwing")?.disciplineLabel).toMatch(/Throwing/);
     expect(getReportCardSpec("baseball", "fielding")).toBeNull();
     expect(getReportCardSpec("baseball", undefined)).toBeNull();
