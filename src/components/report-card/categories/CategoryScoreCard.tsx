@@ -1,9 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useCategoryInputs } from "@/hooks/useCategoryScore";
 import { scoreCard, type TileOutcome, type TileReading } from "@/lib/reportCard/categories/scoring";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 const REASONS: Record<string, string> = {
   waiting_on_athlete_baseline: "Waiting on this athlete's own range.",
