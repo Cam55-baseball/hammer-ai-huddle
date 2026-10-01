@@ -1592,7 +1592,7 @@ export default function AnalyzeVideo() {
                       ...analysis,
                       metrics: (analysis.metrics ?? undefined) as never,
                       // Deterministic tempo pipeline output (already evidence-hashed).
-                      tempo_sec_deterministic: persistedTempo
+                      tempo_sec_deterministic: module === 'pitching' && persistedTempo
                         ? { value: persistedTempo.value, missing_reason: persistedTempo.missing_reason }
                         : undefined,
                       pitching_tiles_deterministic: module === 'pitching'

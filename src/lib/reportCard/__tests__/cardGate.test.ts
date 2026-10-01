@@ -51,8 +51,8 @@ describe("card gate — no cross-contamination", () => {
     const filled = (status: string) => ({ value: 1, verdict: "pass", flag: "clear", missing_reason: null, status });
     const store = new Proxy({}, { get: (_t, k) => (k === "injury" ? store : filled(String(k))) });
     const stores: Record<string, Record<string, unknown>> = {
-      hitting: { hitting_tiles_deterministic: store, hitting_card_tiles: store },
-      baseball_pitching: { pitching_tiles_deterministic: store, pitching_card_tiles_deterministic: store },
+      hitting: { hitting_tiles_deterministic: store, hitting_card_tiles: store, hitting_pose_tiles_deterministic: store },
+      baseball_pitching: { pitching_tiles_deterministic: store, pitching_card_tiles_deterministic: store, tempo_sec_deterministic: { value: 1.2, missing_reason: null } },
       softball_pitching: { softball_pitching_tiles_deterministic: store },
       throwing: { throwing_tiles_deterministic: store },
     };
@@ -70,6 +70,7 @@ describe("card gate — no cross-contamination", () => {
     expect(src).not.toMatch(/<RootPatternCallout/);
     expect(src).not.toMatch(/<CategoryScoreCard/);
     expect(src).toMatch(/pitching_tiles_deterministic: module === 'pitching'/);
+    expect(src).toMatch(/tempo_sec_deterministic: module === 'pitching'/);
     expect(src).toMatch(/useState<AnalysisView>\("analysis"\)/);
   });
 });
