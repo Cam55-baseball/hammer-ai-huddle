@@ -53,6 +53,7 @@ import { HighFpsCapture } from "@/components/analyze/HighFpsCapture";
 import { evaluateMovementGate, type MovementGateResult } from "@/lib/biomech/gates/movementGate";
 import { NoMovementCard } from "@/components/analyze/NoMovementCard";
 import { diagnoseTrack } from "@/lib/biomech/pose/trackDiagnosis";
+import { detectCameraView } from "@/lib/biomech/camera/cameraView";
 import { fpsProvenance } from "@/lib/biomech/probeVideoMetadata";
 import { classifyFps } from "@/lib/capture/highFpsCapture";
 import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
@@ -885,6 +886,7 @@ export default function AnalyzeVideo() {
                 phase: "step1_dense_capture",
                 fps_provenance: fpsProvenance(probed),
                 track_diagnosis: diagnoseTrack(denseRun.series),
+                camera_view: detectCameraView(denseRun.series),
                 // Flat, always-written tracking record so a failed clip can be explained from the row alone.
                 tracking: (() => {
                   const h = denseRun.series.header;
