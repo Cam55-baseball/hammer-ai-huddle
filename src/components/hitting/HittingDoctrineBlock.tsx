@@ -83,7 +83,7 @@ export function HittingDoctrineBlock({ doctrine, title }: Props) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">
-            {title ?? 'Hitting doctrine (P1-P4)'}
+            {title ?? 'Hitting doctrine (Phase 1 — Create Balance through Phase 4 — Hitter’s Move)'}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
@@ -107,7 +107,7 @@ export function HittingDoctrineBlock({ doctrine, title }: Props) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center justify-between gap-2">
-            <span>{title ?? 'Hitting doctrine (P1-P4)'}</span>
+            <span>{title ?? 'Hitting doctrine (Phase 1 — Create Balance through Phase 4 — Hitter’s Move)'}</span>
             <Badge variant="outline" className="text-[10px]">
               confidence 0
             </Badge>
