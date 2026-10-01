@@ -64,9 +64,6 @@ function readCache(surface: GamePlanSurface): boolean {
 }
 
 /** The remembered Hide/Show position; defaults to the "in use" answer. */
-function readOpenCache(surface: GamePlanSurface): boolean {
-  return readFlag(openCacheKey(surface), readCache(surface));
-}
 
 function writeFlag(key: string, value: boolean) {
   try {
