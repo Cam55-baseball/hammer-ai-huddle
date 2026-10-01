@@ -45,14 +45,18 @@ function fromBuiltIn(d: EliteDrill): Draft {
   };
 }
 
-function availableFaultKeys(placements: string[]): string[] {
+/** Union of fault keys for the analyses ticked — never the full list. */
+export function availableFaultKeys(placements: string[]): string[] {
   const keys = new Set<string>();
   for (const p of placements) {
     if (!p.startsWith("analysis:")) continue;
     const [, sport, module] = p.split(":");
     for (const k of faultKeysFor(module, sport)) keys.add(k);
+    // Keys already on built-in drills for this same analysis only.
+    for (const d of ELITE_DRILL_CATALOG) {
+      if (d.category === module && d.sports.includes(sport as any)) d.violationKeys.forEach((k) => keys.add(k));
+    }
   }
-  for (const d of ELITE_DRILL_CATALOG) d.violationKeys.forEach((k) => keys.add(k));
   return [...keys].sort();
 }
 
