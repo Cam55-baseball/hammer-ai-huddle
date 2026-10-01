@@ -202,7 +202,7 @@ export function scoreCard(spec: CardCategorySpec, raw: unknown, o: { audience: A
   else if (done < scoredRes.length) totalReason = `incomplete:${done}_of_${scoredRes.length}_categories_fully_measured`;
   else {
     const bonus = categories.filter((c) => c.additive).reduce((a, c) => a + (c.score ?? 0), 0);
-    total = r1(Math.min(spec.scaleTo, scoredRes.reduce((a, c) => a + (c.score ?? 0), 0) + bonus));
+    total = r1(Math.min(spec.scaleTo + categories.filter((c) => c.additive).reduce((a, c) => a + c.points, 0), scoredRes.reduce((a, c) => a + (c.score ?? 0), 0) + bonus));
   }
   return {
     version: CATEGORY_SCORING_VERSION, card: spec.card, audience: o.audience,

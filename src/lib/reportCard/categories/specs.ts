@@ -72,25 +72,25 @@ const P1_PROOF = "p1.back_leg_balance_at_load";
 export const HITTING_CATEGORIES: CardCategorySpec = {
   card: "hitting",
   sections: [],
-  scaleTo: 100,
+  scaleTo: 97,
   showTotal: true,
   cardNotes: [
     "The five scored categories add up to 100. Front Leg Gather is a bonus on top and the total is capped at 100, so a hitter who doesn't use a gather can still reach 100.",
   ],
   categories: [
-    { key: "p1", title: "P1: Create Balance", points: 20, tiles: [
+    { key: "p1", title: "Phase 1 — Create Balance", points: 20, tiles: [
       { key: "hip_load", name: "Back hip socket rotation reached at P1", points: 13, nonNegotiable: true, read: verdictAt("pose.hip_load") },
       { key: "back_leg_balance_at_load", name: "Back-leg balance, proven by the stride", points: 7, disproves: "hip_load", read: backLegBalanceProven },
     ] },
-    { key: "p2", title: "P2: Gather", points: 13, tiles: [
+    { key: "p2", title: "Phase 2 — Gather", points: 13, tiles: [
       { key: "hand_load", name: "Hands loaded behind the head", points: 5, read: verdictAt("pose.hand_load") },
       { key: "hand_load_depth", name: "Hand load depth", points: 4, recordOnly: true, baselineKey: "hitting_pose_tiles_deterministic.hand_load", read: recordAt("pose.hand_load") },
       { key: "p2_timing", name: "Hand load timing vs the pitcher", points: 4, read: verdictAt("pose.p2_timing", naPitcher) },
     ] },
-    { key: "p3", title: "P3: Load by Stride", points: 19, tiles: [
+    { key: "p3", title: "Phase 3 — Load by Stride", points: 17, tiles: [
       { key: "back_hip_socket_hold", evidenceFor: P1_PROOF, name: "Back hip socket holds or increases", points: 3, nonNegotiable: true, read: verdictAt("owner.tile20") },
       { key: "head_path_through_stride", evidenceFor: P1_PROOF, name: "Head path through the stride", points: 2, read: verdictAt("owner.tile19") },
-      { key: "active_stride", name: "Stride driven by the back hip, not a fall", points: 2, recordOnly: true, baselineKey: "hitting_rhythm.active_stride", read: recordAt("rhythm.active") },
+      { key: "active_stride", name: "Stride driven by the back hip, not a fall", points: 0, recordOnly: true, baselineKey: "hitting_rhythm.active_stride", read: recordAt("rhythm.active") },
       { key: "stride_foot_vs_body", name: "Foot goes forward, body stays back", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.foot_vs_body", read: coilAt("foot_vs_body") },
       { key: "stride_hands_opposite", name: "Hands go back as the foot goes forward", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.hands_opposite", read: coilAt("hands_opposite") },
       { key: "stride_side_bend", name: "Side bend builds through the stride", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.side_bend", read: coilAt("side_bend") },
@@ -104,7 +104,7 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
       { key: "hands_outside_shoulders_at_landing", name: "Hands outside the shoulders at landing", points: 1, read: verdictAt("pose.hands_outside_shoulders_at_landing") },
       { key: "hands_stay_up_at_plant", name: "Hands above the back elbow at heel landing", points: 1, read: verdictAt("card.hands_stay_up_at_plant") },
     ] },
-    { key: "p4", title: "P4: Hitter's Move", points: 40, note: "This meter is the Hitter's Move composite.", tiles: [
+    { key: "p4", title: "Phase 4 — Hitter's Move", points: 40, note: "This meter is the Hitter's Move composite.", tiles: [
       { key: "sequencing", name: "Hips turn before shoulders", points: 9, nonNegotiable: true, read: verdictAt("card.sequencing", naDelayCam) },
       { key: "separation_magnitude", name: "How far the hips lead the shoulders", points: 0, recordOnly: true, baselineKey: "hitting_card_tiles.separation_magnitude", read: recordAt("card.separation_magnitude") },
       { key: "shoulder_to_shoulder_hold", name: "Chin-to-shoulder hold and front-shoulder leak", points: 9, nonNegotiable: true, read: verdictAt("card.shoulder_to_shoulder_hold") },
