@@ -225,8 +225,8 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
       <AnimatePresence mode="wait">
         <motion.div
           key={step.id}
-          className="absolute rounded-2xl border border-primary/30 bg-card/95 p-4 text-card-foreground shadow-2xl backdrop-blur-xl"
-          style={{ top, left, width: cardW, maxHeight: cardH, overflowY: "auto" }}
+          className="absolute flex flex-col rounded-2xl border border-primary/30 bg-card/95 p-4 text-card-foreground shadow-2xl backdrop-blur-xl"
+          style={{ top, left, width: cardW, maxHeight: cardH }}
           initial={reduce ? { opacity: 0 } : { opacity: 0, y: placeAbove ? -8 : 8, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0 }}
@@ -239,7 +239,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
             <span className="ml-auto text-xs text-muted-foreground">{index + 1} / {active.length}</span>
           </div>
           <h3 className="text-base font-bold">{step.title}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{step.body}</p>
+          <p className="mt-1 min-h-0 flex-1 overflow-y-auto text-sm text-muted-foreground">{step.body}</p>
           <div className="mt-3 flex items-center gap-2">
             <Button variant="ghost" size="sm" className="min-h-11 transition-transform hover:scale-105" onClick={() => finish("skipped")}>Skip</Button>
             <div className="ml-auto flex gap-2">
