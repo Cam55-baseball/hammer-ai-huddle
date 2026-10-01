@@ -222,7 +222,7 @@ export const DOCTRINE_DRILLS: EliteDrill[] = [
     steps: ["Step to the target.", "Land the front foot with the shoulders still closed.", "Then turn and throw."],
     cue: "Foot down first, then the shoulders turn.",
     feel: "The throw going straight to the target, not across you.",
-    dosage: "3 x 10", equipment: ["balls"], source: TH }),
+    dosage: "3 x 10", equipment: ["balls"], source: TH, basis: "proposed_shape" }),
   d({ id: "doc.th.line_up_landing", name: "Line-Up Landing Throws", category: "throwing", sports: BOTH,
     faultKey: "shoulders_not_aligned", phase: "Landing", level: "constraint",
     fixes: "Feet and shoulders not lined up to the target at landing.",
@@ -230,7 +230,7 @@ export const DOCTRINE_DRILLS: EliteDrill[] = [
     steps: ["Line the feet up on the line.", "Land with the front shoulder pointing down the line.", "Throw along it."],
     cue: "Feet and shoulders lined up at the target when you land.",
     feel: "Everything pointing the same way as the throw.",
-    dosage: "3 x 10", equipment: ["balls", "tape"], source: TH }),
+    dosage: "3 x 10", equipment: ["balls", "tape"], source: TH, basis: "proposed_shape" }),
   d({ id: "doc.th.back_leg_drive", name: "Back-Leg Drive to Target", category: "throwing", sports: BOTH,
     faultKey: "back_leg_not_facing_target", phase: "Landing", level: "feel",
     fixes: "The back leg was not driving toward the target at landing.",
@@ -238,7 +238,7 @@ export const DOCTRINE_DRILLS: EliteDrill[] = [
     steps: ["Push off the back leg toward the target.", "Let the back knee and foot turn to face the target as you throw.", "Finish facing the target."],
     cue: "Drive the back leg at the target.",
     feel: "The back hip and knee coming through toward where the ball is going.",
-    dosage: "3 x 10", equipment: ["balls"], source: TH }),
+    dosage: "3 x 10", equipment: ["balls"], source: TH, basis: "proposed_shape" }),
 
   // ── SOFTBALL WINDMILL ───────────────────────────────────────────────
   d({ id: "doc.sp.sprinter_start", name: "Sprinter-Start Hold", category: "pitching", sports: ["softball"],

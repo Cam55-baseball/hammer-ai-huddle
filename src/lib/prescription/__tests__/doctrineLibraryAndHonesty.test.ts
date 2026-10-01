@@ -11,11 +11,20 @@ describe("doctrine drill library", () => {
   ];
   it.each(cases)("%s/%s: emitted fault keys match a doctrine drill, never maintenance", (module, sport) => {
     const keys = faultKeysFor(module, sport);
-    const covered = keys.filter((k) => matchPrescriptionDrills({ faultKeys: [k], module, sport }).length > 0);
+    const covered = keys.filter((k) => matchPrescriptionDrills({ faultKeys: [k], module, sport, includePendingReview: true }).length > 0);
     // only documented gaps may lack a drill
     expect(keys.filter((k) => !covered.includes(k))).toEqual(
       module === "hitting" ? ["lead_elbow_bends_in_swing"] : [],
     );
+  });
+
+  it("pending drills never reach athletes", () => {
+    for (const d of DOCTRINE_DRILLS) {
+      expect(d.ownerReview).toBe("pending_owner_review");
+      const sport = d.sports[0];
+      const hits = matchPrescriptionDrills({ faultKeys: d.violationKeys, module: d.category, sport, max: 50 });
+      expect(hits.some((h) => h.drill.id === d.id)).toBe(false);
+    }
   });
 
   it("every drill has a phase with its number where it is hitting, a video slot, and no athlete numbers", () => {
