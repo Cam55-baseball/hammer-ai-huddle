@@ -42,6 +42,7 @@ import {
   type EassContext,
 } from "./eassLibrary";
 import { selectDefenseDrills, resolveDefenseTier } from "./defenseLibrary";
+import { mergeOwnerSlotDrills } from "@/lib/prescription/ownerPlanDrills";
 import {
   resolveWeeklyTemplate,
   applyMicrocycle,
@@ -1067,12 +1068,13 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       // Fallback to a safe generic prescription if the catalog somehow returns
       // nothing (unknown position + heavy injury gating). Never fabricate —
       // just keep the modality visible with a "come back tomorrow" note.
-      const drills: DrillStep[] = prescription?.drills
+      // Owner-approved narrow addition: swap one slot for a switched-on owner drill.
+      const drills: DrillStep[] = mergeOwnerSlotDrills(prescription?.drills
         ? [...prescription.drills]
         : [
             { name: "Pre-pitch + first-step reads", dosage: "20 reps", cue: "low athletic stance, weight on balls of feet" },
             { name: "Glove work — 4 corners", dosage: "15 reps", cue: "field through the ball, don't stab" },
-          ];
+          ], ["hammers_today:defense", "defensive_library"], defenseSport);
       const cues = prescription?.cues ?? ["Field through the ball.", "Footwork before glove."];
       const stopRules = prescription?.stopRules ?? ["Knee, ankle, or hip pain — stop and update Hammer."];
       const durationMin = prescription?.durationMin ?? (inSeason ? 15 : offSeason ? 35 : 25);
