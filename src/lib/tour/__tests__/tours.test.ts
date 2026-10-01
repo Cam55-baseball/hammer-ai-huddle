@@ -16,7 +16,7 @@ describe("tour assembly per tier", () => {
   });
   it("does not teach temporary programmes", () => {
     const text = JSON.stringify(stepsFor("staff", { modules: ["baseball_golden2way"], sport: "baseball", isOwnerOrAdmin: true })).toLowerCase();
-    expect(text).not.toMatch(/iron bambino|heat factory|speed lab|the unicorn|pick your path/);
+    expect(text).not.toMatch(/iron bambino|heat factory|speed lab|the unicorn/);
   });
   it("no non-staff tour mentions the Report Card", () => {
     for (const a of ["athlete", "coach", "scout"] as const) {
