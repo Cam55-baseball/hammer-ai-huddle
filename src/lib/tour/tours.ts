@@ -4,7 +4,7 @@
  * No tour mentions the Report Card except the admin/owner tour.
  */
 import type { TourStep } from "@/components/tour/SpotlightTour";
-import { hasFeatureAccess, hasUnicornAccess, hasAnySubscription } from "@/utils/tierAccess";
+import { hasFeatureAccess, hasAnySubscription } from "@/utils/tierAccess";
 
 export type TourAudience = "athlete" | "coach" | "scout" | "staff";
 
@@ -16,10 +16,6 @@ export interface TourContext {
 
 const H1 = '[data-tour="page-main"] h1, main h1, h1, main h2, h2';
 
-/** Approved owner wording (2026-10-01) — do not edit without owner approval. */
-export const PICK_ONE_PLAN_BODY =
-  "There are two ways to train here. Hammers Today builds your day around how you're feeling and what you've got going on — it moves with you. Game Plan is the set programs — Iron Bambino, Speed Lab, Heat Factory, The Unicorn and the rest in your plan — a planned path you follow start to finish. Choose one. Don't run both. Stacking them doubles your work and burns you out. If your schedule and energy change a lot, go with Hammers Today. If you want a set plan and you'll stick to it, go with Game Plan.";
-
 export function athleteSteps(c: TourContext): TourStep[] {
   const m = c.modules;
   const paid = c.isOwnerOrAdmin || hasAnySubscription(m);
@@ -27,20 +23,11 @@ export function athleteSteps(c: TourContext): TourStep[] {
   const pitch = c.isOwnerOrAdmin || hasFeatureAccess(m, "pitching");
   const thr = c.isOwnerOrAdmin || hasFeatureAccess(m, "throwing");
   const analysis = hit ? "hitting" : pitch ? "pitching" : thr ? "throwing" : null;
-  const program = pitch && !hit
-    ? { route: "/production-studio", name: "Heat Factory" }
-    : hit || thr ? { route: "/production-lab", name: "Iron Bambino" } : null;
   return [
     { id: "today", route: "/dashboard", target: '[data-tour="today-plan-heading"]', title: "Hammers Today",
       body: "This is your day. Hammers Today lays out what to do, built around you. Open the app, start here." },
     { id: "update-hammer", route: "/dashboard", target: '[data-tour="update-hammer"]', title: "Update Hammer",
       body: "Sore, busy, game tomorrow? Tell Hammer here and today's work changes to fit." },
-    { id: "pick-one", route: "/dashboard", target: '[data-tour="today-plan"]', title: "Pick your path — one, not both.",
-      body: PICK_ONE_PLAN_BODY, allowed: () => paid },
-    { id: "program", route: program?.route ?? "/dashboard", target: H1, title: program?.name ?? "Your program",
-      body: "Your set program lives here. Follow it week by week if this is the path you picked.", allowed: () => !!program },
-    { id: "unicorn", route: "/the-unicorn", target: H1, title: "The Unicorn",
-      body: "Your two-way program — hitting and pitching work in one plan.", allowed: () => c.isOwnerOrAdmin || hasUnicornAccess(m) },
     { id: "upload", route: `/analyze/${analysis ?? "hitting"}?sport=${c.sport}`, target: '[data-tour="upload"]', title: "Send Hammer a clip",
       body: "Film a rep and upload it. Hammer tells you what's working, what to fix, and gives you drills for it.", allowed: () => !!analysis },
     { id: "game-plan", route: "/my-daily-game-plan", target: '[data-tour="game-plan-page"]', title: "My Daily Game Plan",

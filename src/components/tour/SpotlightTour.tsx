@@ -306,6 +306,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
         style={layer}
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.25 }}
         onClick={() => finish("skipped")}
+        data-testid="spotlight-tour-backdrop"
       />
       {showingStep && <div
         className="pointer-events-none absolute rounded-[14px] ring-2 ring-primary/80 shadow-[0_0_24px_hsl(var(--primary)/0.45)]"
