@@ -66,7 +66,6 @@ import { runThrowingTiles } from "@/lib/biomech/metrics/throwingTiles";
 import { runPitchingCardTiles } from "@/lib/biomech/metrics/pitchingCardTiles";
 import { runSoftballPitchingTiles } from "@/lib/biomech/metrics/softballPitchingTiles";
 import type { MeasuredClipTiles } from "@/lib/reportCard/measuredClipSpec";
-import { PHASE_EXPLAINER } from "@/lib/reportCard/measuredClipCopy";
 
 /**
  * A replayed (cached) analysis comes back wrapped as `{ replay_cache, ai_analysis }`,
@@ -1613,14 +1612,7 @@ export default function AnalyzeVideo() {
                   />
                 ) : (
                   <>
-                   {module === "hitting" && (
-                     <>
-                       <section aria-label="Hitting phases" className="space-y-1 text-xs leading-relaxed text-muted-foreground">
-                         {PHASE_EXPLAINER.map((line) => <p key={line}>{line}</p>)}
-                       </section>
-                       <BackLegFinding videoId={currentVideoId} />
-                     </>
-                   )}
+                    {module === "hitting" && <BackLegFinding videoId={currentVideoId} />}
                   <AnalysisResultsPanel
                     analysis={analysis}
                     moduleKey={module || 'hitting'}
@@ -1637,12 +1629,14 @@ export default function AnalyzeVideo() {
                         violations={analysis.violations_detected ?? null}
                       />
                     }
-                  />
-                  <AnalysisVideoRecommendations
-                    analysis={analysis}
-                    module={module}
-                    sport={sport}
-                    persistenceError={(analysis as { fault_persistence?: { error?: string | null } })?.fault_persistence?.error ?? null}
+                     recommendations={
+                       <AnalysisVideoRecommendations
+                         analysis={analysis}
+                         module={module}
+                         sport={sport}
+                         persistenceError={(analysis as { fault_persistence?: { error?: string | null } })?.fault_persistence?.error ?? null}
+                       />
+                     }
                   />
                   </>
                 )}

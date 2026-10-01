@@ -37,9 +37,8 @@ export const HITTING_CLIP_COPY: Record<string, Copy> = {
 };
 
 export const PHASE_EXPLAINER = [
-  "Phase 1 — Create Balance: load the back hip and hold the body back. The stride and turn show whether the load was real.",
-  "Phase 2 — Gather: set the hands behind the head after the back hip loads.",
-  "Phase 3 — Load by Stride: take a deliberate power step, keep the body back and land before the pitch leaves the hand.",
-  "Phase 4 — Hitter's Move: from a planted foot, the back elbow starts forward while the hands stay back; the hips turn before the shoulders.",
-  "The Finish: stay with the move after the turn.",
+  "Phase 1 — Create Balance: load the back hip and hold weight on the back leg.",
+  "Phase 2 — Gather for stability and Power : Load the bat and the front leg simultaneously",
+  "Phase 3 — Load by Stride: Take a deliberate power step, Driven by the back glute to get your foot to the floor and land before the pitch leaves the hand. Momentum does not play into your stride",
+  "Phase 4 — Hitter's Move: from a planted foot, the back Bicep starts forward through the ball while the knob stay back; releasing a mighty swing",
 ] as const;
