@@ -10,9 +10,9 @@ import type { ReportCardSpec, ReportCardTileSpec, TileState } from "./types";
 // not in athlete copy. A dimensionless record can still show its actual reading.
 const valueText = (n: number, unit?: string): string | undefined =>
   unit && /degree|percent|pct|ms|sec|fraction|angle|fps|inch|foot|feet|boolean/i.test(unit)
-    ? undefined : `${Math.round(n * 100) / 100}${unit && unit !== "value" ? ` ${unit.replaceAll("_", " ")}` : ""}`;
+    ? undefined : `${Math.round(n * 100) / 100}${unit && unit !== "value" ? ` ${unit.replace(/_/g, " ")}` : ""}`;
 
-const asState = (reading: TileReading, raw?: unknown, path?: string, proof?: { status: string; outcome?: { disprovenBy?: string } }): TileState => {
+const asState = (reading: TileReading, raw?: unknown, path?: string, proof?: { outcome: { status: string; disprovenBy?: string } }): TileState => {
   const source = path ? at(raw, path) as { value?: unknown; unit?: string; confidence?: { status?: string; value?: number | null }; lineage?: Record<string, unknown> } | undefined : undefined;
   const confidence = source?.confidence?.status === "calibrated" && typeof source.confidence.value === "number" ? source.confidence.value : undefined;
   const value = typeof source?.value === "number" && Number.isFinite(source.value) ? valueText(source.value, source.unit) : undefined;
@@ -73,7 +73,8 @@ export function measuredClipSpec(sport: string | undefined, module: string | und
        compute: (analysis) => {
          const raw = readClip(analysis as Record<string, unknown>, spec.card);
          const outcome = measuredClipScore(analysis as Record<string, unknown>, sport, module)?.categories.find((c) => c.key === group.key)?.tiles.find((t) => t.key === tile.key);
-         return asState(tile.read(raw), raw, spec.card === "hitting" ? HITTING_PATHS[`${group.key}.${tile.key}`] : undefined, outcome);
+          return asState(tile.read(raw), raw, spec.card === "hitting" ? HITTING_PATHS[`${group.key}.${tile.key}`] : undefined,
+            outcome?.outcome.status === "scored" ? { outcome: outcome.outcome } : undefined);
        },
     })))];
   return { disciplineLabel: label, groupByPhase: true, tiles };
