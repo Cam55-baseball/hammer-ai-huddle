@@ -260,7 +260,7 @@ export default function CoachDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
+        <div data-tour="coach-landing" data-tour-context>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <GraduationCap className="h-8 w-8" />
             {t('coach.dashboard', 'Coach Intelligence Hub')}
@@ -273,13 +273,13 @@ export default function CoachDashboard() {
         <StaffGettingStarted role="coach" />
 
         {/* Hammer Progress Reports Inbox */}
-        <FollowerReportsInbox role="coach" />
+        <div data-tour="coach-reports"><FollowerReportsInbox role="coach" /></div>
 
         {/* HIE: Team Overview */}
         <TeamOverviewCard />
 
         {/* HIE: Alert System */}
-        <CoachAlertPanel playerNames={playerNameMap} />
+        <div data-tour="coach-alerts"><CoachAlertPanel playerNames={playerNameMap} /></div>
 
         {/* HIE: Actionable Player Cards */}
         {playerSnapshots.length > 0 && (
@@ -406,7 +406,7 @@ export default function CoachDashboard() {
                         <BookMarked className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('coach.viewLibrary', 'View Library')}</span>
                       </Button>
-                      <Button onClick={() => navigate('/my-custom-activities?tab=templates')} size="sm" variant="default" className="flex-shrink-0">
+                      <Button data-tour="coach-send" onClick={() => navigate('/my-custom-activities?tab=templates')} size="sm" variant="default" className="flex-shrink-0">
                         <Send className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('coach.sendActivity', 'Send Activity')}</span>
                       </Button>

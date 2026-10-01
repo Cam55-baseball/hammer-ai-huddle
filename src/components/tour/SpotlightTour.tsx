@@ -110,7 +110,8 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
   const onCloseRef = useRef(onClose);
   const tourIdRef = useRef(tourId);
   const userIdRef = useRef(userId);
-  useLayoutEffect(() => { onCloseRef.current = onClose; tourIdRef.current = tourId; userIdRef.current = userId; });
+  const navigateRef = useRef(navigate);
+  useLayoutEffect(() => { onCloseRef.current = onClose; tourIdRef.current = tourId; userIdRef.current = userId; navigateRef.current = navigate; });
 
   const finish = useCallback((result: "completed" | "skipped", restoreOpeningPage = true) => {
     if (closing.current) return;
@@ -166,7 +167,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
     if (route && navigate && (currentPath ?? "").split("?")[0] !== route.split("?")[0]) {
       // Navigate once per step. If the page redirects away (viewer can't use it),
       // the step is dropped silently instead of waiting forever.
-      if (navigatedFor.current !== step.id) { navigatedFor.current = step.id; navigate(route, { replace: true, state: { hmTour: true } }); }
+      if (!closing.current && navigatedFor.current !== step.id) { navigatedFor.current = step.id; navigate(route, { replace: true, state: { hmTour: true } }); }
       const id = window.setTimeout(() => setActive((a) => a.filter((x) => x.id !== step.id)), 8000);
       return () => window.clearTimeout(id);
     }
@@ -228,7 +229,12 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
     }
     const el = contextualTarget(raw);
     targetRef.current = el;
-    el.scrollIntoView({ block: "center", inline: "nearest", behavior: reduce ? "auto" : "smooth" });
+    // Park the target near the top (clear of the sticky header) so the coach
+    // mark has the lower part of the screen to itself and never covers it.
+    const prevMargin = el.style.scrollMarginTop;
+    el.style.scrollMarginTop = "88px";
+    el.scrollIntoView({ block: "start", inline: "nearest", behavior: reduce ? "auto" : "smooth" });
+    el.style.scrollMarginTop = prevMargin;
     // Wait until BOTH axes hold still for several frames (outer page and any
     // nested scroll container finish their smooth scroll), then illuminate.
     let last = el.getBoundingClientRect(), still = 0, raf = 0;
@@ -269,6 +275,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
 
   const next = () => (index + 1 < active.length ? setIndex(index + 1) : finish("completed"));
   const back = () => setIndex((i) => Math.max(0, i - 1));
+  const skipStep = () => { if (step) setActive((a) => a.filter((x) => x.id !== step.id)); };
 
   useEffect(() => {
     if (!open) return;
@@ -284,10 +291,22 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
       closing.current = true;
       markTour(tourIdRef.current, "skipped", userIdRef.current);
       onCloseRef.current("skipped");
+      // Back may land on an earlier page than the one the tour opened on —
+      // always put the athlete back where they started.
+      const origin = openingPath.current;
+      // A tour page change still in flight can land after the back press, so
+      // keep restoring the opening page for a moment.
+      let tries = 0;
+      const guard = window.setInterval(() => {
+        const here = `${window.location.pathname}${window.location.search}`;
+        if (origin && here !== origin) navigateRef.current?.(origin, { replace: true });
+        if (++tries >= 15) window.clearInterval(guard);
+      }, 100);
     };
     window.addEventListener("popstate", onBack, true);
     return () => window.removeEventListener("popstate", onBack, true);
   }, [open]);
+
 
   if (!open) return null;
 
@@ -311,7 +330,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
   // Portal to <body>: an ancestor with a transform (page transitions) would
   // otherwise make `fixed` relative to it and offset the cutout.
   return createPortal(
-    <div className="fixed inset-0 z-[1000]" role="dialog" aria-modal="true" aria-label={step?.title ?? "Demo tour"} data-testid="spotlight-tour">
+    <div className="fixed inset-0 z-[2147483000]" role="dialog" aria-modal="true" aria-label={step?.title ?? "Demo tour"} data-testid="spotlight-tour">
       <motion.div
         className="absolute inset-0 bg-background/60 backdrop-blur-md"
         style={layer}
@@ -349,6 +368,13 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
           </div>
         </motion.div>}
       </AnimatePresence>
+      {!showingStep && step && (
+        <div className="absolute inset-x-3 bottom-[calc(5.5rem+var(--safe-bottom))] z-10 mx-auto max-w-sm rounded-2xl border border-border bg-card/95 p-4 text-card-foreground shadow-2xl backdrop-blur-xl" role="status" data-testid="spotlight-tour-waiting">
+          <p className="text-sm font-semibold">Getting the next step ready…</p>
+          <p className="mt-1 text-sm text-muted-foreground">You can leave the demo any time below.</p>
+          <Button variant="outline" size="sm" className="mt-3 min-h-11 w-full" onClick={skipStep}>Skip this step</Button>
+        </div>
+      )}
       <div className="absolute inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 px-[calc(0.75rem+var(--safe-left))] pb-[calc(0.75rem+var(--safe-bottom))] pt-2 backdrop-blur-xl">
         <Button
           variant="outline"

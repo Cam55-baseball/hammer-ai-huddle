@@ -59,7 +59,7 @@ export default function Weather() {
             <Wind className="absolute bottom-4 left-8 h-12 w-12 text-white/10" />
           </div>
           
-          <div className="relative z-10">
+          <div className="relative z-10" data-tour="weather" data-tour-context>
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm">
                 <Wind className="h-6 w-6" />

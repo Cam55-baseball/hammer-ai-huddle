@@ -27,7 +27,7 @@ export default function CoachConsole() {
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6">
-        <header className="flex flex-wrap items-center gap-3">
+        <header className="flex flex-wrap items-center gap-3" data-tour="coach-console" data-tour-context>
           <div>
             <h1 className="text-2xl font-bold">Coach Console</h1>
             <p className="text-sm text-muted-foreground">
@@ -50,7 +50,7 @@ export default function CoachConsole() {
 
         <ReadinessDistributionStrip rowsByAthlete={buckets} />
 
-        <section>
+        <section data-tour="coach-roster">
           <h2 className="mb-3 text-lg font-semibold">Roster</h2>
           <RosterGrid roster={roster} snapshots={snapshots} isLoading={isLoading} />
         </section>

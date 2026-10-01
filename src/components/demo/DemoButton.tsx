@@ -26,11 +26,18 @@ export function DemoTourHost() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useOptionalAuth();
-  const { modules } = useSubscription();
-  const { isOwner } = useOwnerAccess();
-  const { isAdmin } = useAdminAccess();
-  const { isScout, isCoach } = useScoutAccess();
+  const { modules, loading: subLoading } = useSubscription();
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const { isAdmin, loading: adminLoading } = useAdminAccess();
   const [open, setOpen] = useState(false);
+  const { isScout, isCoach, loading: roleLoading } = useScoutAccess();
+  // The tour fixes its step list when it opens, so wait until plan and role
+  // are known — otherwise a paid athlete could get the free tour.
+  const accessReady = !subLoading && !ownerLoading && !adminLoading && !roleLoading;
+  // Latch: role/plan hooks re-load on page changes; the tour must not blink
+  // closed and reopen mid-walk (that dropped the back-press exit).
+  const [latched, setLatched] = useState(false);
+  useEffect(() => { if (!open) setLatched(false); else if (accessReady) setLatched(true); }, [open, accessReady]);
 
   useEffect(() => {
     const h = () => setOpen(true);
@@ -57,7 +64,7 @@ export function DemoTourHost() {
     <SpotlightTour
       tourId={asOverride || modulesOverride ? `preview-${audience}-${(modulesOverride ?? []).join('-')}` : `demo-${audience}`}
       steps={steps}
-      open={open}
+      open={open && (latched || accessReady)}
       onClose={() => setOpen(false)}
       userId={user.id}
       navigate={navigate}

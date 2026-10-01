@@ -362,7 +362,7 @@ export default function ScoutDashboard() {
     <DashboardLayout>
       <div className="space-y-6">
       <StaffGettingStarted role="scout" />
-      <div>
+      <div data-tour="scout-home" data-tour-context>
         <h1 className="text-3xl font-bold">{t('scout.dashboard')}</h1>
         <p className="text-muted-foreground mt-2">
           {t('scout.dashboardDescription')}
@@ -379,7 +379,7 @@ export default function ScoutDashboard() {
 
       <FollowerReportsInbox role="scout" />
 
-      <Card>
+      <Card data-tour="scout-following">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>{t('scout.following')}</span>
@@ -498,7 +498,7 @@ export default function ScoutDashboard() {
 
         <PlayerNotesSection players={following} />
 
-        <Card>
+        <Card data-tour="scout-find">
           <CardHeader>
             <CardTitle>{t('scout.findPlayers')}</CardTitle>
           </CardHeader>
@@ -532,7 +532,7 @@ export default function ScoutDashboard() {
                 })}
               />
               
-              <Command className="rounded-lg border shadow-md">
+              <Command className="rounded-lg border shadow-md" data-tour="scout-search">
                 <CommandInput
                   placeholder={t('scout.searchPlayersPlaceholder')}
                   value={searchTerm}
