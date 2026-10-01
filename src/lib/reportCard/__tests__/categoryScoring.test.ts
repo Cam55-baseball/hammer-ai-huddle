@@ -138,14 +138,17 @@ import { runFrontLegGather as rg } from "../../biomech/metrics/frontLegGather";
 import { runActiveStride as ra, runStrideCoil as rs } from "../../biomech/metrics/strideRhythm";
 import { categorySpecFor as csf } from "../categories/specs"; import { scoreCard as sc } from "../categories/scoring";
 describe("evidence rule — a thin category never shows full marks (2026-09-30)", () => {
-  it("914cf54c staff: P1 and P2 are limited evidence off one tile; P4 limited; only P3 full", () => {
+  it("914cf54c staff: P1 fails on downstream proof; P3 faults move to P1; P2 and P4 limited", () => {
     const s = dec(gz(rf(jn(__dirname, "../../biomech/__tests__/fixtures/swing-24fps-914cf54c.ndjson.gz"))).toString("utf8")); const side = "L" as const;
     const raw = { pose: rp(s, { side }), card: rc(s, { side }), owner: ro(s, { side, athlete_height_in: null }), gather: rg(s, { side }), rhythm: { active: ra(s, { side }) }, coil: rs(s, { side }) };
     const r = sc(csf("baseball", "hitting")!, raw, { audience: "staff" });
     const by = Object.fromEntries(r.categories.map((c) => [c.key, c]));
-    expect(by.p1.status).toBe("limited_evidence"); expect(by.p1.score).toBeNull(); expect(by.p1.coverage.scoredTiles).toBe(1);
+    expect(by.p1.status).toBe("complete"); expect(by.p1.score).toBe(0);
+    const hl = by.p1.tiles.find((t: { key: string }) => t.key === "hip_load")!.outcome; expect(hl).toMatchObject({ status: "scored", frac: 0, disprovenBy: "back_leg_balance_at_load" });
+    for (const k of ["head_discipline", "back_heel_early_rise", "back_hip_socket_hold", "head_path_through_stride"]) expect(by.p3.tiles.find((t: { key: string }) => t.key === k)!.outcome.status).toBe("attributed");
+    expect(by.p3.tiles.find((t: { key: string }) => t.key === "back_knee_flex_maintained")!.outcome.status).toBe("scored");
     expect(by.p2.status).toBe("limited_evidence"); expect(by.p2.measuredScore).toEqual({ earned: 5.1, outOf: 5.1 });
-    expect(by.p3.status).toBe("complete"); expect(by.p3.score).toBe(5.9);
+    expect(by.p3.status).toBe("incomplete"); expect(by.p3.coverage.attributedElsewhere).toBe(4);
     expect(by.p4.status).toBe("limited_evidence"); expect(by.p4.measuredScore).toEqual({ earned: 9.1, outOf: 22.2 });
     expect(r.total).toBeNull();
   });
