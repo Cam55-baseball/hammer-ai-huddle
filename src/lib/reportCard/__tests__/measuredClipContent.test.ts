@@ -24,7 +24,11 @@ describe("measured report-card content", () => {
     expect(score?.total).toBeNull();
     expect(score?.categories.filter((c) => !c.additive).every((c) => c.score === null)).toBe(true);
     expect(measuredClipSpec("baseball", "hitting")?.tiles.filter((t) => t.phase === "Phase 4 — Hitter's Move").every((t) => t.nonNegotiable)).toBe(true);
-    expect(measuredClipSpec("baseball", "pitching")?.tiles.every((t) => !t.explainer.whatWhy && !t.explainer.howToImprove)).toBe(true);
+    // Pitching copy only where pitchingCopy.ts sources it; unsourced tiles stay empty.
+    const pitch = measuredClipSpec("baseball", "pitching")!.tiles;
+    expect(pitch.find((t) => t.key.endsWith(".tempo_sec"))?.explainer.howToImprove).toBeTruthy();
+    expect(pitch.find((t) => t.key.endsWith(".lift_thrust"))?.explainer.howToImprove).toBe("");
+    for (const t of pitch) expect(`${t.standard} ${t.explainer.howToImprove}`).not.toMatch(/\d\s*(°|%)/);
   });
 
   it("keeps prohibited units out of athlete copy and never manufactures confidence", () => {
