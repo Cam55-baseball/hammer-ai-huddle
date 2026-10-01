@@ -84,9 +84,24 @@ describe("SpotlightTour exits", () => {
 
   it("restores the route where the tour opened", async () => {
     const navigate = vi.fn();
-    const { onClose } = renderReady(vi.fn(), navigate);
+    const onClose = vi.fn();
+    const { rerender } = renderReady(onClose, navigate);
     await waitFor(() => expect(navigate).toHaveBeenCalledWith("/opening-page", { state: { hmTour: true } }));
     navigate.mockClear();
+    rerender(
+      <>
+        <section data-tour="target"><h2>Whole target heading</h2></section>
+        <SpotlightTour
+          tourId="exit-test"
+          steps={[step]}
+          open
+          onClose={onClose}
+          userId="athlete-1"
+          navigate={navigate}
+          currentPath="/tour-target"
+        />
+      </>,
+    );
     fireEvent.click(screen.getByRole("button", { name: "Exit demo" }));
     expect(navigate).toHaveBeenCalledWith("/opening-page", { replace: true });
     expect(onClose).toHaveBeenCalledWith("skipped");
