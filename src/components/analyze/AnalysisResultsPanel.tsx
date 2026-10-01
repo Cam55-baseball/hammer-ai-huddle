@@ -163,11 +163,24 @@ export function AnalysisResultsPanel({
         </RevealSection>
       )}
 
-      {/* Owner ruling 2026-10-01: no standalone "What to fix" section. The
-          improvements data is woven into the detailed analysis (feedback)
-          and alluded to in the key findings by the analyzer itself. */}
-
-
+      {/* ── 3b · WHAT TO FIX ─────────────────────────────────────────── */}
+      {(analysis.improvements?.length ?? 0) > 0 && (
+        <RevealSection order={2}>
+          <Card className="space-y-4 border-warning/40 p-5 sm:p-6" data-testid="analysis-improvements">
+            <SectionHeading icon={<Wrench className="h-3.5 w-3.5 text-warning" />}>What to fix</SectionHeading>
+            <ol className="space-y-4">
+              {analysis.improvements!.map((imp, i) => (
+                <li key={i} className="space-y-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-warning">{withoutMeasurementNotation(imp.phase)}</p>
+                  <p className="font-medium leading-snug">{withoutMeasurementNotation(imp.fault)}</p>
+                  <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground">Why it matters: </span>{withoutMeasurementNotation(imp.why)}</p>
+                  <p className="text-sm"><span className="font-semibold">What to change: </span>{withoutMeasurementNotation(imp.fix)}</p>
+                </li>
+              ))}
+            </ol>
+          </Card>
+        </RevealSection>
+      )}
 
       {/* ── 4 · WHAT'S WORKING ───────────────────────────────────────── */}
       {analysis.positives && analysis.positives.length > 0 && (
