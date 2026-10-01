@@ -114,6 +114,27 @@ describe("card gate — no cross-contamination", () => {
     expect(softball?.tiles.filter((tile) => tile.compute({ deterministic_clip_tiles: { card: "pitching_baseball", readings: foreignSources.baseball_pitching } } as never).status !== "missing")).toEqual([]);
   });
 
+  it("renders every built tile on all six cards, including formerly staff-only hitting checks", () => {
+    for (const [sport, module] of CARDS) {
+      const source = categorySpecFor(sport, module);
+      const card = measuredClipSpec(sport, module);
+      const expected = [
+        ...(source?.sections.flatMap((section) => section.tiles.map((tile) => `${section.key}.${tile.key}`)) ?? []),
+        ...(source?.categories.flatMap((group) => group.tiles.map((tile) => `${group.key}.${tile.key}`)) ?? []),
+      ];
+      expect(card?.tiles.map((tile) => tile.key), `${sport} ${module}`).toEqual(expected);
+      for (const tile of card?.tiles ?? []) {
+        const result = tile.compute({ deterministic_clip_tiles: { card: source?.card, readings: {} } } as never);
+        expect(result.status === "missing" || result.status === "record" || result.status === "pass" || result.status === "fail", tile.key).toBe(true);
+        if (result.status === "missing") expect(result.score100).toBeUndefined();
+      }
+    }
+    const hitting = measuredClipSpec("baseball", "hitting");
+    for (const key of ["p1.hip_load", "p3.back_hip_socket_hold", "p3.head_path_through_stride"]) {
+      expect(hitting?.tiles.some((tile) => tile.key === key), key).toBe(true);
+    }
+  });
+
   it("shows real measured tiles but never invents a grade from a record-only meter", () => {
     const card = measuredClipSpec("baseball", "hitting");
     const result = card?.tiles.find((tile) => tile.key === "p4.shoulder_plane_steadiness")?.compute({
