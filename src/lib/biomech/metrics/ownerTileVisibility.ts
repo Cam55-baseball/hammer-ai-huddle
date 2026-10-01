@@ -1,12 +1,11 @@
 /**
- * Audience gate for tiles 19 (head_path_through_stride) and 20
- * (back_hip_socket_hold).
+ * Owner-confirmed evidence for tiles 19 (head_path_through_stride) and 20
+ * (back_hip_socket_hold). Kept for provenance, not report-card visibility.
  *
- * STAFF-VISIBLE ONLY. Gate 4 passed on ONE owner-confirmed clip (2026-09-27,
+ * Gate 4 passed on ONE owner-confirmed clip (2026-09-27,
  * clip 914cf54c, hitting Left: owner confirmed head drifted forward past COM
  * and back hip opened before P4). One confirmed clip is a strong signal, not
- * validation. Athlete visibility requires n ≥ 10 owner-confirmed clips
- * spanning BOTH batting sides. The counter below makes that visible.
+ * validation. A visible tile still refuses when its clip lacks a trustworthy reading.
  *
  * Add a row ONLY when the owner has watched the clip and confirmed the tile's
  * verdict. Never add unconfirmed clips.
@@ -20,8 +19,6 @@ export interface ConfirmedClip {
   readonly tiles: readonly OwnerTileKey[];
   readonly note: string;
 }
-
-export const ATHLETE_VISIBLE_MIN_CONFIRMED = 10;
 
 export const OWNER_CONFIRMED_CLIPS: readonly ConfirmedClip[] = [
   {
@@ -38,7 +35,3 @@ export function confirmedCount(tile: OwnerTileKey) {
   return { total: rows.length, left: rows.filter((r) => r.batting_side === "L").length, right: rows.filter((r) => r.batting_side === "R").length };
 }
 
-export function ownerTileAudience(tile: OwnerTileKey): "staff" | "athlete" {
-  const c = confirmedCount(tile);
-  return c.total >= ATHLETE_VISIBLE_MIN_CONFIRMED && c.left > 0 && c.right > 0 ? "athlete" : "staff";
-}
