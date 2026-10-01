@@ -159,6 +159,8 @@ describe("P1 proof never passes on absence of a fault (owner 2026-10-01)", () =>
   const held = { coil: { foot_vs_body: { pattern: "body_stayed_back" } }, card: { back_heel_early_rise: { verdict: "pass" } } };
   it("no stride → unproven, not pass", () => expect(backLegProof({ coil: { foot_vs_body: { pattern: "no_stride" } } }).verdict).toBeNull());
   it("held but sequencing routed to DelayCam → proof incomplete", () => expect(backLegProof(held)).toMatchObject({ verdict: null, unproven: "proof_incomplete:hip_first_sequencing_not_readable" }));
-  it("held + graded hips-first → pass", () => expect(backLegProof({ ...held, card: { ...held.card, sequencing: { verdict: "pass" } } }).verdict).toBe("pass"));
-  it("graded insufficient separation → fail", () => expect(backLegProof({ ...held, card: { ...held.card, sequencing: { verdict: "fail" } } }).verdict).toBe("fail"));
+  it("held + hips-first + no slide → pass", () => expect(backLegProof({ ...held, card: { ...held.card, sequencing: { verdict: "pass" }, post_landing_hip_drift: { verdict: "pass" } } }).verdict).toBe("pass"));
+  it("held + insufficient separation → fail: not used", () => expect(backLegProof({ ...held, card: { ...held.card, sequencing: { verdict: "fail" } } })).toMatchObject({ verdict: "fail", mode: "not_used" }));
+  it("held + hip slide after landing → fail: not used", () => expect(backLegProof({ ...held, card: { ...held.card, post_landing_hip_drift: { verdict: "fail" } } })).toMatchObject({ verdict: "fail", mode: "not_used" }));
+  it("held + no slide but sequencing unreadable → unproven", () => expect(backLegProof({ ...held, card: { ...held.card, post_landing_hip_drift: { verdict: "pass" } } }).verdict).toBeNull());
 });
