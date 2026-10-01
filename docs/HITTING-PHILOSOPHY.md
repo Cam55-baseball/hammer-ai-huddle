@@ -877,3 +877,18 @@ Chin-to-shoulder now has three channels: POSITION (nose vs front shoulder on the
 Three reasons for the tuck: ease of movement, seeing the ball, staying in sequence (links chin-to-shoulder to sequencing). FUTURE WORK, not measured: eyes moving toward the plate while the hips turn the shoulders the other way.
 
 Sequencing verdict logic (2026-09-30): gap ≤ one frame = insufficient separation (fail); ≥ two frames, hips first = pass; shoulders first = fail. Graded only at ≥60 fps; below, the would-be verdict is recorded and the tile routes to DelayCam.
+
+## P1 is proven downstream `[owner-supplied 2026-09-30]`
+
+> "For hitting P1 is what missed if P2 passed. If I drift forward then I couldn't have had the back hip balance. P1 has to read the rest of the swing but P3 took the hit of the P1 trouble."
+
+What this establishes:
+- A snapshot at the load point shows position only. Whether the load was real is proven by what follows: the body holds back through the stride (P1 real) or drifts forward (P1 not real, whatever the snapshot showed).
+- Back-leg balance is not a separate snapshot. It is the downstream proof: did the body hold its position through P3?
+- When the back-leg pattern fires, it is a P1 fault with P3 as its evidence. The coaching fix is the load, not the stride.
+
+**Standing rule:** a phase whose quality can only be proven by what follows must read the following phases before giving its verdict. A snapshot measures position; only the consequence proves whether the position was real.
+
+Built: P1 "Back-leg balance, proven by the stride" fails when any of foot-vs-body, sink, head discipline, back heel or back knee shows the body went forward beyond its still-clip floor. A failed proof voids the hip-load pass. Failing P3 evidence tiles (back hip socket, head path, head discipline, back heel, back knee) count in P1, not again in P3.
+
+Proposed, not built (owner to confirm): P2 proven by P3 hands-opposite and P4 back-elbow connection; P3 proven by P4 hip drift after landing and front-shoulder leak; the chain stops at P4 — P4 and the Finish are judged on their own, so no phase waits past the swing.
