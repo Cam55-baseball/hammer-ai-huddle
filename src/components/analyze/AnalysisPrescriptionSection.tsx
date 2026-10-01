@@ -25,6 +25,8 @@ interface Props {
   violations?: Record<string, boolean> | null;
   /** Doctrine fault keys from the analysis `improvements` list. */
   faultKeys?: string[];
+  /** Owner/admin preview of drills pending owner review. */
+  includePendingReview?: boolean;
   pieV2Signals?: string[];
   /**
    * When true, drop the card shell and the duplicate "Your prescription"
@@ -55,6 +57,9 @@ function DrillRow({ drill, reasons }: { drill: EliteDrill; reasons?: string[] })
             <Badge variant="secondary" className="text-[10px] capitalize">{drill.level}</Badge>
             <Badge variant="outline" className="text-[10px]">{drill.dosage}</Badge>
             <Badge variant="outline" className="text-[10px]">{drill.subSkill}</Badge>
+            {drill.ownerReview === "pending_owner_review" && (
+              <Badge variant="outline" className="text-[10px]">Awaiting owner review</Badge>
+            )}
             {!drill.phase && reasons?.slice(0, 2).map((r) => (
               <Badge key={r} variant="destructive" className="text-[10px] capitalize">
                 fixes: {r}
@@ -101,7 +106,7 @@ function DrillRow({ drill, reasons }: { drill: EliteDrill; reasons?: string[] })
   );
 }
 
-export function AnalysisPrescriptionSection({ module, sport, violations, faultKeys, pieV2Signals, embedded }: Props) {
+export function AnalysisPrescriptionSection({ module, sport, violations, faultKeys, includePendingReview, pieV2Signals, embedded }: Props) {
   const navigate = useNavigate();
   const { snapshot } = useHIESnapshot();
 
@@ -115,12 +120,13 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
       matchPrescriptionDrills({
         violations,
         faultKeys,
+        includePendingReview,
         pieV2Signals,
         weaknessAreas,
         module,
         sport,
       }),
-    [violations, faultKeys, pieV2Signals, weaknessAreas, module, sport],
+    [violations, faultKeys, includePendingReview, pieV2Signals, weaknessAreas, module, sport],
   );
 
   const fallback = useMemo(
@@ -160,7 +166,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
             </>
           ) : (
             <p className="text-xs text-muted-foreground">
-              {faultKeys?.length ? "No library drill for this fault yet — your coach is adding one." : "No drill match for this module yet."}
+              {faultKeys?.length ? "Your drills for this clip are written above." : "No drill match for this module yet."}
             </p>
           )}
         </section>

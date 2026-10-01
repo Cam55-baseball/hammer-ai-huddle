@@ -1702,8 +1702,16 @@ Deno.serve(async (req) => {
     let landingPos = rawLandingFrameIndex == null ? -1 : validIndexes.indexOf(rawLandingFrameIndex);
     let keptFrames = validFrames;
     const payloadBytes = (arr: string[]) => arr.reduce((n, s) => n + s.length, 0);
+    // Owner ruling 2026-10-01: never chop the end (contact/finish) — the old
+    // loop dropped the LAST frame each time, which the model then narrated
+    // as "contact cut out". Keep first, last and landing; thin interior
+    // frames spread across the clip.
+    let thinStep = 0;
     while (payloadBytes(keptFrames) > MAX_FRAME_PAYLOAD_BYTES && keptFrames.length > 3) {
-      const dropAt = keptFrames.length - 1 === landingPos ? keptFrames.length - 2 : keptFrames.length - 1;
+      const candidates = keptFrames.map((_, i) => i).filter((i) => i !== 0 && i !== keptFrames.length - 1 && i !== landingPos);
+      if (candidates.length === 0) break;
+      const dropAt = candidates[(thinStep * 2 + 1) % candidates.length];
+      thinStep += 1;
       keptFrames = keptFrames.filter((_, i) => i !== dropAt);
       if (landingPos > dropAt) landingPos -= 1;
     }

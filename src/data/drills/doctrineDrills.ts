@@ -32,6 +32,7 @@ interface Spec {
   dosage: string;
   equipment: string[];
   source: string;
+  basis?: "doctrine_fix" | "proposed_shape";
 }
 
 const d = (s: Spec): EliteDrill => ({
@@ -54,7 +55,8 @@ const d = (s: Spec): EliteDrill => ({
   feel: s.feel,
   source: s.source,
   videoUrl: null,
-  ownerReview: "draft",
+  ownerReview: "pending_owner_review",
+  basis: s.basis ?? "doctrine_fix",
 });
 
 const BOTH: EliteDrill["sports"] = ["baseball", "softball"];

@@ -48,7 +48,10 @@ export interface EliteDrill {
   source?: string;
   /** Owner's own drill video — empty until he attaches one. */
   videoUrl?: string | null;
-  ownerReview?: "draft" | "approved";
+  /** doctrine_fix = drill trains the correct move the doctrine states; proposed_shape = our drill shape. */
+  basis?: "doctrine_fix" | "proposed_shape";
+  /** pending_owner_review drills never reach athletes; owner/admin preview only. */
+  ownerReview?: "pending_owner_review" | "approved";
 }
 
 const BASE_DRILLS: EliteDrill[] = [
