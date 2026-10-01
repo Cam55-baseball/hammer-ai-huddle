@@ -149,7 +149,7 @@ describe("evidence rule — a thin category never shows full marks (2026-09-30)"
     expect(by.p3.tiles.find((t: { key: string }) => t.key === "back_knee_flex_maintained")!.outcome.status).toBe("scored");
     expect(by.p2.status).toBe("limited_evidence"); expect(by.p2.measuredScore).toEqual({ earned: 5.1, outOf: 5.1 });
     expect(by.p3.status).toBe("incomplete"); expect(by.p3.coverage.attributedElsewhere).toBe(4);
-    expect(by.p4.status).toBe("limited_evidence"); expect(by.p4.measuredScore).toEqual({ earned: 9.1, outOf: 22.2 });
+    expect(by.p4.status).toBe("limited_evidence"); expect(by.p4.measuredScore).toEqual({ earned: 9.1, outOf: 18.2 } /* hip drift fail counts as P1 proof, not against P4 */);
     expect(r.total).toBeNull();
   });
 });
