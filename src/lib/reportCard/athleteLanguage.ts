@@ -17,6 +17,9 @@ const MISSING: Record<string, string> = {
   calibration_unavailable: "This camera angle doesn't show what this check needs.",
   deterministic_pitching_tiles_not_run: "This body-mechanics check was not available for this clip.",
   tempo_anchors_unavailable: "We couldn't see both the leg lift and front-foot landing clearly enough.",
+  no_pitching_finish_detector_yet: "We can't judge this finish from the footage yet.",
+  throwing_delivery_not_confirmed: "We couldn't confirm a throw in this clip.",
+  only_measured_on_a_sideways_shuffle_throw: "This check needs a sideways shuffle throw.",
 };
 
 export function athleteMissingness(reason?: string): string | undefined {
@@ -25,6 +28,8 @@ export function athleteMissingness(reason?: string): string | undefined {
     ? "This camera angle doesn't show what this check needs."
     : reason.startsWith("pitcher_not_in_frame")
       ? "We couldn't see the pitcher clearly enough to check this timing."
+    : reason.startsWith("no_windmill_delivery")
+      ? "We couldn't see the windmill stride and landing clearly enough to confirm a pitch."
     : reason.startsWith("routed_to_delaycam")
       ? "This timing needs a faster recording to tell which move came first."
     : reason.startsWith("unproven") || reason.startsWith("proof_incomplete")
