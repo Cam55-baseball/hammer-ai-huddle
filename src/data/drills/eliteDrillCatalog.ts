@@ -50,8 +50,12 @@ export interface EliteDrill {
   videoUrl?: string | null;
   /** doctrine_fix = drill trains the correct move the doctrine states; proposed_shape = our drill shape. */
   basis?: "doctrine_fix" | "proposed_shape";
-  /** pending_owner_review drills never reach athletes; owner/admin preview only. */
+  /** Review label only (owner ruling 2026-10-01: drills are never hidden). Staff see a badge. */
   ownerReview?: "pending_owner_review" | "approved";
+  /** What it feels like when it's wrong. */
+  feelWrong?: string;
+  /** What athletes do instead, and how to tell. */
+  commonMistake?: string;
 }
 
 const BASE_DRILLS: EliteDrill[] = [

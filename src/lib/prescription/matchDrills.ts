@@ -70,7 +70,7 @@ export function matchPrescriptionDrills(input: MatchInput): PrescriptionMatch[] 
 
   for (const drill of ELITE_DRILL_CATALOG) {
     if (!drill.sports.includes(sport)) continue;
-    if (drill.ownerReview === "pending_owner_review" && !input.includePendingReview) continue;
+    // Owner ruling 2026-10-01: review-pending drills are never hidden.
     if (category && drill.category !== category) continue;
 
     let score = 0;
@@ -116,6 +116,6 @@ export function maintenanceDrills(
   const s: VideoSport = sport === "softball" ? "softball" : "baseball";
   const category = moduleToCategory(module);
   return ELITE_DRILL_CATALOG.filter(
-    (d) => d.ownerReview !== "pending_owner_review" && d.sports.includes(s) && (!category || d.category === category) && d.level !== "iso",
+    (d) => !d.phase && d.sports.includes(s) && (!category || d.category === category) && d.level !== "iso",
   ).slice(0, max);
 }

@@ -36,7 +36,7 @@ interface Props {
   embedded?: boolean;
 }
 
-function DrillRow({ drill, reasons }: { drill: EliteDrill; reasons?: string[] }) {
+function DrillRow({ drill, reasons, staff }: { drill: EliteDrill; reasons?: string[]; staff?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="rounded-lg border bg-accent/20 p-3">
@@ -57,7 +57,7 @@ function DrillRow({ drill, reasons }: { drill: EliteDrill; reasons?: string[] })
             <Badge variant="secondary" className="text-[10px] capitalize">{drill.level}</Badge>
             <Badge variant="outline" className="text-[10px]">{drill.dosage}</Badge>
             <Badge variant="outline" className="text-[10px]">{drill.subSkill}</Badge>
-            {drill.ownerReview === "pending_owner_review" && (
+            {staff && drill.ownerReview === "pending_owner_review" && (
               <Badge variant="outline" className="text-[10px]">Awaiting owner review</Badge>
             )}
             {!drill.phase && reasons?.slice(0, 2).map((r) => (
@@ -72,7 +72,7 @@ function DrillRow({ drill, reasons }: { drill: EliteDrill; reasons?: string[] })
       {open && (
         <div className="mt-3 space-y-2 border-t pt-3 text-xs">
           <div>
-            <span className="font-medium">Setup: </span>
+            <span className="font-medium">Set-up: </span>
             <span className="text-muted-foreground">{drill.setup}</span>
           </div>
           <ol className="list-decimal space-y-1 pl-4 text-muted-foreground">
@@ -91,6 +91,22 @@ function DrillRow({ drill, reasons }: { drill: EliteDrill; reasons?: string[] })
               <span className="text-muted-foreground">{drill.feel}</span>
             </div>
           )}
+          {drill.feelWrong && (
+            <div>
+              <span className="font-medium">When it's wrong: </span>
+              <span className="text-muted-foreground">{drill.feelWrong}</span>
+            </div>
+          )}
+          {drill.commonMistake && (
+            <div>
+              <span className="font-medium">Common mistake: </span>
+              <span className="text-muted-foreground">{drill.commonMistake}</span>
+            </div>
+          )}
+          <div>
+            <span className="font-medium">Dose: </span>
+            <span className="text-muted-foreground">{drill.dosage}</span>
+          </div>
           {drill.videoUrl ? (
             <a href={drill.videoUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-primary">
               <Play className="h-3 w-3" /> Watch the drill
@@ -154,14 +170,14 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
             {matches.length > 0 ? "From this clip" : "Maintenance work"}
           </h4>
           {matches.length > 0 ? (
-            matches.map((m) => <DrillRow key={m.drill.id} drill={m.drill} reasons={m.reasons} />)
+            matches.map((m) => <DrillRow key={m.drill.id} drill={m.drill} reasons={m.reasons} staff={includePendingReview} />)
           ) : fallback.length > 0 ? (
             <>
               <p className="text-xs text-muted-foreground">
                 Nothing was flagged on this clip. These keep the pattern sharp.
               </p>
               {fallback.map((d) => (
-                <DrillRow key={d.id} drill={d} />
+                <DrillRow key={d.id} drill={d} staff={includePendingReview} />
               ))}
             </>
           ) : (
