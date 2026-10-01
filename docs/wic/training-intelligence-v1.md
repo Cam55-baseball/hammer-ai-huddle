@@ -54,6 +54,10 @@ Evidence grades (one scale replaces the A/B/C and A–E tiers in the source pack
 
 Why TL-5 works: next-day soreness comes mainly from eccentric (lowering) work [E1], and low-volume, high-intensity work maintains strength in-season [E2]. Dead-stop and concentric-only lifts, overcoming isometrics and sled pushes carry high force at low eccentric cost.
 
+### Training-system doctrine
+
+Owner ruling, 2026-10-01: an athlete runs **Hammers Today or one temporary programme, never both**. This remains doctrine while the temporary programmes are being consolidated. It is intentionally not taught in Demo tours during that consolidation, and this record does not change current workout creation, scheduling, or tracking behavior.
+
 ### 2.1 Order of operations for one athlete-day
 
 1. Season dates → block and phase (§7) → the legal pool.
