@@ -38,6 +38,8 @@ export interface MatchInput {
   module?: string | null;
   sport?: string | null;
   max?: number;
+  /** Owner/admin only: include drills still pending owner review. */
+  includePendingReview?: boolean;
 }
 
 function moduleToCategory(module?: string | null): EliteDrill["category"] | null {
@@ -68,6 +70,7 @@ export function matchPrescriptionDrills(input: MatchInput): PrescriptionMatch[] 
 
   for (const drill of ELITE_DRILL_CATALOG) {
     if (!drill.sports.includes(sport)) continue;
+    if (drill.ownerReview === "pending_owner_review" && !input.includePendingReview) continue;
     if (category && drill.category !== category) continue;
 
     let score = 0;
@@ -113,6 +116,6 @@ export function maintenanceDrills(
   const s: VideoSport = sport === "softball" ? "softball" : "baseball";
   const category = moduleToCategory(module);
   return ELITE_DRILL_CATALOG.filter(
-    (d) => d.sports.includes(s) && (!category || d.category === category) && d.level !== "iso",
+    (d) => d.ownerReview !== "pending_owner_review" && d.sports.includes(s) && (!category || d.category === category) && d.level !== "iso",
   ).slice(0, max);
 }

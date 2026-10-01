@@ -1648,6 +1648,7 @@ export default function AnalyzeVideo() {
                       faultKeys: (analysis.improvements ?? []).map((i) => i.fault_key ?? "").filter(Boolean),
                       violations: analysis.violations_detected ?? null,
                       module, sport,
+                      includePendingReview: isOwner || isAdmin,
                     }).length > 0}
                     prescriptionExtra={
                       <AnalysisPrescriptionSection
@@ -1656,6 +1657,7 @@ export default function AnalyzeVideo() {
                         sport={sport}
                         violations={analysis.violations_detected ?? null}
                         faultKeys={(analysis.improvements ?? []).map((i) => i.fault_key ?? "").filter(Boolean)}
+                        includePendingReview={isOwner || isAdmin}
                       />
                     }
                      recommendations={
