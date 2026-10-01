@@ -11,7 +11,7 @@
  * (capture phase, so nested scroll containers are covered). Bounds are
  * animated with Framer Motion springs; reduced motion fades instead.
  */
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion, useSpring } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,8 @@ export interface TourStep {
   body: string;
   /** Optional permission check; false skips the step silently. */
   allowed?: () => boolean;
+  /** Page the target lives on; the tour navigates there first. Missing target after load → skipped. */
+  route?: string;
 }
 
 interface Props {
@@ -33,6 +35,9 @@ interface Props {
   onClose: (result: "completed" | "skipped") => void;
   /** Signed-in user; seen/skipped is remembered per user. */
   userId?: string | null;
+  /** Router hooks for multi-page tours. */
+  navigate?: (to: string) => void;
+  currentPath?: string;
 }
 
 const PAD = 8;
@@ -47,12 +52,13 @@ export function markTour(tourId: string, result: "completed" | "skipped", userId
 }
 
 function findTarget(sel: string): HTMLElement | null {
-  const el = document.querySelector<HTMLElement>(sel);
-  if (!el) return null;
-  const r = el.getBoundingClientRect();
-  const style = getComputedStyle(el);
-  if (r.width === 0 || r.height === 0 || style.visibility === "hidden" || style.display === "none") return null;
-  return el;
+  // First VISIBLE match — a selector list can hit a hidden heading first.
+  for (const el of Array.from(document.querySelectorAll<HTMLElement>(sel))) {
+    const r = el.getBoundingClientRect();
+    const style = getComputedStyle(el);
+    if (r.width > 0 && r.height > 0 && style.visibility !== "hidden" && style.display !== "none") return el;
+  }
+  return null;
 }
 
 function maskUrl(w: number, h: number, x: number, y: number, rw: number, rh: number) {
@@ -64,7 +70,7 @@ function maskUrl(w: number, h: number, x: number, y: number, rw: number, rh: num
   return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
 }
 
-export function SpotlightTour({ tourId, steps, open, onClose, userId }: Props) {
+export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, currentPath }: Props) {
   const reduce = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
@@ -73,12 +79,40 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId }: Props) {
   const frame = useRef<number | null>(null);
 
   // Only steps that are permitted AND present; recomputed on open.
-  const active = useMemo(
-    () => (open ? steps.filter((s) => (s.allowed ? s.allowed() : true) && !!findTarget(s.target)) : []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [open, steps],
-  );
+  // Permitted steps; same-page steps must be present now, routed steps are
+  // checked after navigation and dropped silently if absent (progress shrinks).
+  const [active, setActive] = useState<TourStep[]>([]);
+  const [ready, setReady] = useState(false);
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (open && wasOpen.current) return; // keep the live list mid-tour
+    wasOpen.current = open;
+    setReady(open);
+    setActive(open ? steps.filter((s) => (s.allowed ? s.allowed() : true) && (s.route ? true : !!findTarget(s.target))) : []);
+  }, [open, steps]);
+  useEffect(() => { if (index > 0 && index >= active.length) setIndex(active.length - 1); }, [active.length, index]);
   const step = active[index];
+  const [foundId, setFoundId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!open || !step) return;
+    setFoundId(null);
+    // Wait for the page to actually change before looking — the old page's
+    // headings would otherwise match and then vanish.
+    if (step.route && navigate && (currentPath ?? "").split("?")[0] !== step.route.split("?")[0]) { navigate(step.route); return; }
+    let raf = 0; const t0 = performance.now();
+    const poll = () => {
+      if (findTarget(step.target)) { setFoundId(step.id); return; }
+      if (performance.now() - t0 > 12000) {
+        // Drop it; the next step slides into this index and the count shrinks.
+        setActive((a) => a.filter((x) => x.id !== step.id));
+        return;
+      }
+      raf = requestAnimationFrame(poll);
+    };
+    raf = requestAnimationFrame(poll);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, step?.id, (currentPath ?? "").split("?")[0]]);
 
   const spring = { stiffness: 260, damping: 30 };
   const sx = useSpring(0, spring), sy = useSpring(0, spring), sw = useSpring(0, spring), sh = useSpring(0, spring);
@@ -106,11 +140,11 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId }: Props) {
   // Locate, scroll into view, wait for settle, then illuminate.
   useLayoutEffect(() => {
     if (!open) return;
-    if (!step) { if (active.length === 0 && open) onClose("completed"); return; }
+    if (!step) { if (ready && active.length === 0) finish("completed"); return; }
+    if (foundId !== step.id) return;
     const el = findTarget(step.target);
     if (!el) { // vanished since filtering — skip gracefully
-      setIndex((i) => (i + 1 < active.length ? i + 1 : i));
-      if (index + 1 >= active.length) onClose("completed");
+      setActive((a) => a.filter((x) => x.id !== step.id));
       return;
     }
     targetRef.current = el;
@@ -140,11 +174,15 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId }: Props) {
     window.addEventListener("resize", measure);
     return () => { cancelAnimationFrame(raf); cancelAnimationFrame(watch); ro.disconnect(); window.removeEventListener("scroll", measure, true); window.removeEventListener("scrollend", measure, true); window.removeEventListener("resize", measure); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, step?.id]);
+  }, [open, step?.id, foundId]);
 
   useEffect(() => {
     if (!rect) return;
-    const vals = [rect.left - PAD, rect.top - PAD, rect.width + PAD * 2, rect.height + PAD * 2];
+    // Clip tall/wide targets to the viewport so the cutout and card stay usable.
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const x0 = Math.max(4, rect.left - PAD), y0 = Math.max(4, rect.top - PAD);
+    const x1 = Math.min(vw - 4, rect.right + PAD), y1 = Math.min(vh * 0.5, rect.bottom + PAD);
+    const vals = [x0, y0, Math.max(24, x1 - x0), Math.max(24, y1 - y0)];
     [sx, sy, sw, sh].forEach((s, i) => (reduce ? s.jump(vals[i]) : s.set(vals[i])));
   }, [rect, reduce, sx, sy, sw, sh]);
 
@@ -158,11 +196,11 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId }: Props) {
     window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
   });
 
-  if (!open || !step) return null;
+  if (!open || !step || foundId !== step.id || !rect) return null;
 
   // Edge-aware coach mark: prefer below, flip above, clamp horizontally.
   const cardW = Math.min(340, vp.w - 24);
-  const cardH = 190;
+  const cardH = Math.min(420, Math.round(vp.h * 0.5));
   const below = m.y + m.h + 12;
   const placeAbove = below + cardH > vp.h - 12 && m.y - cardH - 12 > 12;
   const top = Math.max(12, Math.min(placeAbove ? m.y - cardH - 12 : below, vp.h - cardH - 12));
@@ -187,8 +225,8 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId }: Props) {
       <AnimatePresence mode="wait">
         <motion.div
           key={step.id}
-          className="absolute rounded-2xl border border-primary/30 bg-card/95 p-4 text-card-foreground shadow-2xl backdrop-blur-xl"
-          style={{ top, left, width: cardW }}
+          className="absolute flex flex-col rounded-2xl border border-primary/30 bg-card/95 p-4 text-card-foreground shadow-2xl backdrop-blur-xl"
+          style={{ top, left, width: cardW, maxHeight: cardH }}
           initial={reduce ? { opacity: 0 } : { opacity: 0, y: placeAbove ? -8 : 8, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0 }}
@@ -201,7 +239,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId }: Props) {
             <span className="ml-auto text-xs text-muted-foreground">{index + 1} / {active.length}</span>
           </div>
           <h3 className="text-base font-bold">{step.title}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{step.body}</p>
+          <p className="mt-1 min-h-0 flex-1 overflow-y-auto text-sm text-muted-foreground">{step.body}</p>
           <div className="mt-3 flex items-center gap-2">
             <Button variant="ghost" size="sm" className="min-h-11 transition-transform hover:scale-105" onClick={() => finish("skipped")}>Skip</Button>
             <div className="ml-auto flex gap-2">

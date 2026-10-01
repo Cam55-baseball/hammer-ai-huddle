@@ -90,7 +90,7 @@ export function CardActions({ modality, items, phaseDisplay }: Props) {
 
   async function handleAdd() {
     if (adding || added) return;
-    if (!user) return toast.error("Sign in to add to your Game Plan.");
+    if (!user) return toast.error("Sign in to add to My Daily Game Plan.");
     if (items.length === 0) return;
     setAdding(true);
     try {
@@ -154,12 +154,12 @@ export function CardActions({ modality, items, phaseDisplay }: Props) {
       queryClient.invalidateQueries({ queryKey: ["custom-activity-logs"] });
       queryClient.invalidateQueries({ queryKey: ["custom-activity-templates"] });
       queryClient.invalidateQueries({ queryKey: ["game-plan"] });
-      toast.success(`${meta.title} added to today's Game Plan`, {
+      toast.success(`${meta.title} added to My Daily Game Plan`, {
         action: { label: "View", onClick: () => navigate("/dashboard#game-plan") },
       });
     } catch (e) {
       console.error("[CardActions] add to game plan failed", e);
-      toast.error(e instanceof Error ? e.message : "Couldn't add to Game Plan");
+      toast.error(e instanceof Error ? e.message : "Couldn't add to My Daily Game Plan");
     } finally {
       setAdding(false);
     }
@@ -178,7 +178,7 @@ export function CardActions({ modality, items, phaseDisplay }: Props) {
           {added ? (
             <><CheckCircle2 className="h-3 w-3" /> Added</>
           ) : (
-            <><CalendarPlus className="h-3 w-3" />{adding ? "Adding…" : "Add to game plan"}</>
+            <><CalendarPlus className="h-3 w-3" />{adding ? "Adding…" : "Add to My Daily Game Plan"}</>
           )}
         </Button>
         <Button

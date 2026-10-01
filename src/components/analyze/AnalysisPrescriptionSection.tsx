@@ -35,6 +35,8 @@ interface Props {
    * prescription card rather than standing on its own.
    */
   embedded?: boolean;
+  /** The analysed video's id — freezes the first prescription so history never changes. */
+  historyKey?: string | null;
 }
 
 function DrillRow({ drill, reasons, staff, onOpen, onDone }: { drill: EliteDrill; reasons?: string[]; staff?: boolean; onOpen?: () => void; onDone?: () => void }) {
@@ -130,7 +132,7 @@ function DrillRow({ drill, reasons, staff, onOpen, onDone }: { drill: EliteDrill
   );
 }
 
-export function AnalysisPrescriptionSection({ module, sport, violations, faultKeys, includePendingReview, pieV2Signals, embedded }: Props) {
+export function AnalysisPrescriptionSection({ module, sport, violations, faultKeys, includePendingReview, pieV2Signals, embedded, historyKey }: Props) {
   const navigate = useNavigate();
   const { snapshot } = useHIESnapshot();
 
@@ -139,8 +141,9 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
     [snapshot],
   );
 
-  const { catalog, circulation, log, markDone } = useDrillCirculation();
-  const matches = useMemo(
+  const { catalog, historyCatalog, circulation, log, markDone, userId } = useDrillCirculation();
+  const frozenKey = historyKey ? `rx.frozen.v1:${userId ?? "anon"}:${historyKey}` : null;
+  const live = useMemo(
     () =>
       matchPrescriptionDrills({
         catalog,
@@ -155,6 +158,23 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
       }),
     [catalog, circulation, violations, faultKeys, includePendingReview, pieV2Signals, weaknessAreas, module, sport],
   );
+  // History stays intact: once a video's prescription is shown, the same drills
+  // are shown for that video forever — even if a drill is later switched off.
+  const matches = useMemo(() => {
+    if (!frozenKey) return live;
+    try {
+      const raw = localStorage.getItem(frozenKey);
+      if (raw) {
+        const saved = JSON.parse(raw) as Array<{ id: string; reasons: string[] }>;
+        const byId = new Map(historyCatalog.map((d) => [d.id, d]));
+        const restored = saved.map((x) => ({ drill: byId.get(x.id), score: 0, reasons: x.reasons })).filter((x) => x.drill);
+        if (restored.length === saved.length) return restored as typeof live;
+      } else if (live.length) {
+        localStorage.setItem(frozenKey, JSON.stringify(live.map((m) => ({ id: m.drill.id, reasons: m.reasons }))));
+      }
+    } catch { /* storage unavailable — live list */ }
+    return live;
+  }, [frozenKey, live, historyCatalog]);
 
   const fallback = useMemo(
     // Maintenance work only when the clip genuinely had no faults.

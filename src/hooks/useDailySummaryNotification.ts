@@ -100,7 +100,7 @@ export function useDailySummaryNotification() {
 
     timeoutRef.current = setTimeout(() => {
       showNotification(
-        t('gamePlan.dailySummary.notificationTitle', 'Your Game Plan for Today'),
+        t('gamePlan.dailySummary.notificationTitle', 'My Daily Game Plan for Today'),
         buildSummaryBody(activities)
       );
       localStorage.setItem(DAILY_SUMMARY_LAST_SENT_KEY, today);

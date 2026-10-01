@@ -74,7 +74,7 @@ export function DailyWorkoutPlanner() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['calendar'] });
       queryClient.invalidateQueries({ queryKey: ['game-plan'] });
-      toast.success(`Saved to your Game Plan for ${format(date, 'MMM d')}`);
+      toast.success(`Saved to My Daily Game Plan for ${format(date, 'MMM d')}`);
       clearResult();
     },
     onError: () => toast.error('Failed to save workout'),

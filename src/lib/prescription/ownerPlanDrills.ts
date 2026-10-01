@@ -35,7 +35,7 @@ export function loadOwnerPlanDrills(): Promise<void> {
 
 export function ownerDrillsForSlot(slots: PlanSlot[], sport: string): OwnerDrillRow[] {
   return rows.filter(
-    (r) => r.active && !r.placements.includes("retired") && r.placements.some((p) => slots.includes(p as PlanSlot))
+    (r) => r.active && r.placements.some((p) => slots.includes(p as PlanSlot))
       && (r.sports.length === 0 || r.sports.includes(sport)),
   );
 }

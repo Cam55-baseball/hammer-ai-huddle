@@ -175,7 +175,7 @@ export function useReceivedActivities() {
       if (error) throw error;
 
       await fetchActivities();
-      toast.success(t('sentActivity.acceptedSuccess', 'Activity accepted and added to your Game Plan!'), {
+      toast.success(t('sentActivity.acceptedSuccess', 'Activity accepted and added to My Daily Game Plan!'), {
         description: t('sentActivity.acceptedSuccessHint', 'It will now appear in your daily tasks.')
       });
       return newTemplate;

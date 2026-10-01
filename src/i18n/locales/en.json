@@ -655,7 +655,7 @@
       "program": "Iron Bambino",
       "heatFactory": "Heat Factory",
       "meal": "Meal",
-      "gamePlan": "Game Plan",
+      "gamePlan": "My Daily Game Plan",
       "event": "Event"
     },
     "eventTypes": {
@@ -664,7 +664,7 @@
       "program": "Training",
       "meal": "Meal",
       "manual": "Event",
-      "game_plan": "Game Plan"
+      "game_plan": "My Daily Game Plan"
     },
     "types": {
       "event": "General Event",
@@ -699,7 +699,7 @@
       "meals": "Meals",
       "workouts": "Workouts",
       "activities": "Activities",
-      "gamePlan": "Game Plan",
+      "gamePlan": "My Daily Game Plan",
       "athleteEvents": "Events",
       "manual": "Manual"
     },
@@ -5570,7 +5570,7 @@
     }
   },
   "gamePlan": {
-    "title": "THE GAME PLAN",
+    "title": "MY DAILY GAME PLAN",
     "mentalFuelPlus": {
       "title": "Complete Mental Fuel+",
       "description": "Finish your 5 daily mental training tasks",
@@ -5624,7 +5624,7 @@
       "title": "Daily Summary Notification",
       "enable": "Enable Daily Summary",
       "sendAt": "Send at",
-      "notificationTitle": "Your Game Plan for Today",
+      "notificationTitle": "My Daily Game Plan for Today",
       "activitiesScheduled": "{{count}} activities scheduled",
       "noActivitiesScheduled": "No activities scheduled with times today.",
       "letsGo": "Let's crush it! 💪"
@@ -6548,7 +6548,7 @@
     "quickAdd": "Quick Add",
     "selectType": "Select Activity Type",
     "badge": "CUSTOM",
-    "addedToToday": "Added to today's game plan",
+    "addedToToday": "Added to My Daily Game Plan",
     "markedComplete": "Activity completed!",
     "unmarkedComplete": "Activity marked incomplete",
     "saved": "Activity saved!",
@@ -6719,9 +6719,9 @@
       "guidance": {
         "title": "How custom fields work",
         "checkbox": "Track daily habits (e.g., 'Ice Bath,' 'Foam Roll,' 'Stretch Before Bed')",
-        "number": "Track measurable data the Hammer analyzes for trends (e.g., 'Sprint Time: 4.2,' 'Weight Used: 185'). Set a goal here — you'll log your actual value each day on your Game Plan.",
-        "text": "Log notes or observations (e.g., 'How I felt today'). Enter daily notes when viewing the card on your Game Plan.",
-        "time": "Track time-based data (e.g., 'Recovery Duration'). Enter your actual time daily on the Game Plan."
+        "number": "Track measurable data the Hammer analyzes for trends (e.g., 'Sprint Time: 4.2,' 'Weight Used: 185'). Set a goal here — you'll log your actual value each day on My Daily Game Plan.",
+        "text": "Log notes or observations (e.g., 'How I felt today'). Enter daily notes when viewing the card on My Daily Game Plan.",
+        "time": "Track time-based data (e.g., 'Recovery Duration'). Enter your actual time daily on My Daily Game Plan."
       },
       "types": {
         "text": "Text",
@@ -6738,7 +6738,7 @@
     "selectColor": "Select a color",
     "favorites": {
       "drawerTitle": "Quick Add Favorites",
-      "drawerDescription": "Tap to add to today's game plan",
+      "drawerDescription": "Tap to add to My Daily Game Plan",
       "noFavorites": "No favorites yet",
       "noFavoritesHint": "Star activities to add them here"
     },
@@ -6771,8 +6771,8 @@
       "deleteLink": "Delete Link",
       "preview": "Preview"
     },
-    "scheduleForToday": "Add to Today's Game Plan",
-    "scheduleForTodayDesc": "Activity will appear on your Game Plan immediately",
+    "scheduleForToday": "Add to My Daily Game Plan",
+    "scheduleForTodayDesc": "Activity will appear on My Daily Game Plan immediately",
     "created": "Activity created!",
     "createError": "Failed to create activity",
     "updated": "Activity updated!",

@@ -1,7 +1,8 @@
 import { PARKED_UI } from "@/lib/flags/parked";
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles, BarChart3, Flame, Building2, Gamepad2, Library, Crown, Bell, Archive, ClipboardList, Camera, Activity } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles, BarChart3, Flame, Building2, Gamepad2, Library, Crown, Bell, Archive, ClipboardList, Camera, Activity, ListChecks } from "lucide-react";
+import { hasAnySubscription } from "@/utils/tierAccess";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -180,6 +181,7 @@ export function AppSidebar() {
     { title: t('navigation.dashboard'), url: "/dashboard", icon: Home },
     ...(isCoach ? [{ title: t('navigation.coachConsole', 'Coach Console'), url: "/coach/console", icon: Users }] : []),
     ...(isCoach ? [{ title: t('navigation.orgDigest', 'Org Digest'), url: "/coach/digest", icon: CalendarDays }] : []),
+    ...(hasAnySubscription(modules) || isOwner || isAdmin ? [{ title: 'My Daily Game Plan', url: "/my-daily-game-plan", icon: ListChecks }] : []),
     { title: t('navigation.calendar'), url: "/calendar", icon: CalendarDays },
     { title: 'The General', url: '/progress', icon: BarChart3 },
     ...(hasPlayerAccess ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),

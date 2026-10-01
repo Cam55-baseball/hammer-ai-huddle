@@ -57,7 +57,7 @@ export function GamePlanCollapseControls({
           id={switchId}
           checked={inUse}
           onCheckedChange={onInUseChange}
-          aria-label="Game plan in use"
+          aria-label="My Daily Game Plan in use"
         />
         <span
           className={cn(

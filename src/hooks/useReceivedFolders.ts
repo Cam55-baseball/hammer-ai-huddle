@@ -97,7 +97,7 @@ export function useReceivedFolders() {
         .eq('id', assignmentId);
 
       if (error) throw error;
-      toast.success('Folder accepted! It will appear in your Game Plan.');
+      toast.success('Folder accepted! It will appear in My Daily Game Plan.');
       await fetchAssignments();
     } catch (error) {
       console.error('Error accepting folder:', error);

@@ -472,7 +472,7 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
               className="h-7 px-2 gap-1.5 data-[state=on]:bg-blue-500/20 data-[state=on]:text-blue-700 dark:data-[state=on]:text-blue-400"
             >
               <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <span className="text-xs">{t('calendar.filter.gamePlan', 'Game Plan')}</span>
+              <span className="text-xs">{t('calendar.filter.gamePlan', 'My Daily Game Plan')}</span>
             </Toggle>
             
             <Toggle
@@ -534,7 +534,7 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <span className="text-muted-foreground">{t('calendar.legend.gamePlan', 'Game Plan')}</span>
+              <span className="text-muted-foreground">{t('calendar.legend.gamePlan', 'My Daily Game Plan')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-indigo-500" />

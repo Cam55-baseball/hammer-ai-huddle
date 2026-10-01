@@ -764,7 +764,7 @@ function HammerDailyPlanBody({
     <div className="space-y-6">
       {/* Always visible — never inside a collapsed box: Update Hammer must not be missed. */}
       <ErrorBoundary>
-        <TellHammersInbox />
+        <div data-tour="update-hammer"><TellHammersInbox /></div>
       </ErrorBoundary>
       <ErrorBoundary>
         <GuardianConsentPrompt />
@@ -1278,7 +1278,7 @@ function BlockCard({
   async function handleAddToGamePlan() {
     if (!block.gamePlanTemplate || adding) return;
     if (!user) {
-      toast.error("Sign in to add to your Game Plan.");
+      toast.error("Sign in to add to My Daily Game Plan.");
       return;
     }
     setAdding(true);
@@ -1340,7 +1340,7 @@ function BlockCard({
       queryClient.invalidateQueries({ queryKey: ["custom-activity-logs"] });
       queryClient.invalidateQueries({ queryKey: ["custom-activity-templates"] });
       queryClient.invalidateQueries({ queryKey: ["game-plan"] });
-      toast.success(`${block.title} added to today's Game Plan`, {
+      toast.success(`${block.title} added to My Daily Game Plan`, {
         action: {
           label: "View",
           onClick: () => navigate("/dashboard#game-plan"),
@@ -1348,7 +1348,7 @@ function BlockCard({
       });
     } catch (e) {
       console.error("[HammerDailyPlan] Add to Game Plan failed", e);
-      toast.error(e instanceof Error ? e.message : "Couldn't add to Game Plan");
+      toast.error(e instanceof Error ? e.message : "Couldn't add to My Daily Game Plan");
     } finally {
       setAdding(false);
     }
@@ -1550,7 +1550,7 @@ function BlockCard({
                 ) : (
                   <>
                     <CalendarPlus className="h-3 w-3" />
-                    {adding ? "Adding…" : "Add to Game Plan"}
+                    {adding ? "Adding…" : "Add to My Daily Game Plan"}
                   </>
                 )}
               </Button>
