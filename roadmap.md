@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Urgent measurement regression: sparse-scout elapsed-time defect fixed without loosening thresholds and false pre-check prediction removed; known-clip reruns and full historical evidence matrix still in progress.
+- [ ] Urgent measurement regression: sparse-scout elapsed-time defect fixed, short clips again retain complete evidence under the unchanged frame ceiling, and false pre-check prediction removed; known-clip reruns and full historical evidence matrix still in progress.
 - [ ] Demo rebuild: after owner approves the proposed tour story, replace the old demo with a phone-first masked spotlight walkthrough; do not write tour copy before approval.
 - [x] Show the owner's exact Analysis Report encouragement as its own standalone card below the upload card on all six empty upload screens, outside the Report Card gate.
 - [x] Rename visible Tell Hammer wording to Update Hammer; keep persisted event and database identifiers stable.
