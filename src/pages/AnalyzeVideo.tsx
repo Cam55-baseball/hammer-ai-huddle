@@ -1624,7 +1624,7 @@ export default function AnalyzeVideo() {
                   />
                 ) : (
                   <>
-                  {module === "hitting" && <BackLegFinding videoId={currentVideoId} />}
+                   {module === "hitting" && <BackLegFinding videoId={currentVideoId} />}
                   <AnalysisResultsPanel
                     analysis={analysis}
                     moduleKey={module || 'hitting'}
