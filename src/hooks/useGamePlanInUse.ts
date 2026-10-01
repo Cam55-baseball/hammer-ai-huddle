@@ -64,9 +64,6 @@ function readCache(surface: GamePlanSurface): boolean {
 }
 
 /** The remembered Hide/Show position; defaults to the "in use" answer. */
-function readOpenCache(surface: GamePlanSurface): boolean {
-  return readFlag(openCacheKey(surface), readCache(surface));
-}
 
 function writeFlag(key: string, value: boolean) {
   try {
@@ -93,10 +90,11 @@ export function useGamePlanInUse(surface: GamePlanSurface) {
   const userId = user?.id ?? null;
 
   const [inUse, setInUseState] = useState<boolean>(() => readCache(surface));
-  const [open, setOpen] = useState<boolean>(() => readOpenCache(surface));
+  // Owner ruling 2026-10-01: Game Plan ALWAYS begins closed, on every screen,
+  // every visit. The open state is in-memory only — never restored from cache
+  // or the server — so it can never be left open on return.
+  const [open, setOpen] = useState<boolean>(false);
   const [hydrated, setHydrated] = useState(false);
-  // A manual expand/collapse made before the server answer lands wins over it.
-  const touched = useRef(false);
 
   useEffect(() => {
     if (!userId) {
@@ -107,7 +105,7 @@ export function useGamePlanInUse(surface: GamePlanSurface) {
     (async () => {
       const { data, error } = await supabase
         .from('game_plan_user_preferences')
-        .select(`${IN_USE_COLUMN[surface]}, ${OPEN_COLUMN[surface]}`)
+        .select(`${IN_USE_COLUMN[surface]}`)
         .eq('user_id', userId)
         .maybeSingle();
       if (cancelled) return;
@@ -118,11 +116,6 @@ export function useGamePlanInUse(surface: GamePlanSurface) {
         const nextInUse = inUseValue === false ? false : true;
         setInUseState(nextInUse);
         writeCache(surface, nextInUse);
-
-        const openValue = row[OPEN_COLUMN[surface]];
-        const nextOpen = openValue === false ? false : openValue === true ? true : nextInUse;
-        writeFlag(openCacheKey(surface), nextOpen);
-        if (!touched.current) setOpen(nextOpen);
       }
       setHydrated(true);
     })();
@@ -134,8 +127,6 @@ export function useGamePlanInUse(surface: GamePlanSurface) {
   const persist = useCallback(
     (patch: Record<string, boolean>) => {
       if (!userId) return;
-      // `.then()` matters: the query builder is lazy, so a bare `void
-      // supabase...upsert(...)` never actually sends the request.
       void supabase
         .from('game_plan_user_preferences')
         .upsert({ user_id: userId, ...patch }, { onConflict: 'user_id' })
@@ -146,29 +137,19 @@ export function useGamePlanInUse(surface: GamePlanSurface) {
     [userId],
   );
 
-  /** Save the yes/no answer and re-sync the card to it immediately. */
+  /** Save the yes/no answer. Never opens the card — the athlete opens it. */
   const setInUse = useCallback(
     (value: boolean) => {
       setInUseState(value);
-      setOpen(value);
-      touched.current = false;
+      if (!value) setOpen(false);
       writeCache(surface, value);
-      writeFlag(openCacheKey(surface), value);
-      persist({ [IN_USE_COLUMN[surface]]: value, [OPEN_COLUMN[surface]]: value });
+      persist({ [IN_USE_COLUMN[surface]]: value });
     },
     [persist, surface],
   );
 
-  /** Hide / Show. Remembered per user so it survives navigation and reload. */
-  const setOpenPersisted = useCallback(
-    (value: boolean) => {
-      touched.current = true;
-      setOpen(value);
-      writeFlag(openCacheKey(surface), value);
-      persist({ [OPEN_COLUMN[surface]]: value });
-    },
-    [persist, surface],
-  );
+  /** Hide / Show for this visit only. The next visit starts closed again. */
+  const setOpenSession = useCallback((value: boolean) => setOpen(value), []);
 
-  return { inUse, setInUse, open, setOpen: setOpenPersisted, hydrated };
+  return { inUse, setInUse, open, setOpen: setOpenSession, hydrated };
 }

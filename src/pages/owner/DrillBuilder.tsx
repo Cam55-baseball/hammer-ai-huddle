@@ -45,14 +45,18 @@ function fromBuiltIn(d: EliteDrill): Draft {
   };
 }
 
+/** Union of fault keys for the analyses ticked — never the full list. */
 function availableFaultKeys(placements: string[]): string[] {
   const keys = new Set<string>();
   for (const p of placements) {
     if (!p.startsWith("analysis:")) continue;
     const [, sport, module] = p.split(":");
     for (const k of faultKeysFor(module, sport)) keys.add(k);
+    // Keys already on built-in drills for this same analysis only.
+    for (const d of ELITE_DRILL_CATALOG) {
+      if (d.category === module && d.sports.includes(sport as any)) d.violationKeys.forEach((k) => keys.add(k));
+    }
   }
-  for (const d of ELITE_DRILL_CATALOG) d.violationKeys.forEach((k) => keys.add(k));
   return [...keys].sort();
 }
 
@@ -217,28 +221,46 @@ export default function DrillBuilder() {
                 <div className="mt-1 grid gap-1 sm:grid-cols-2">
                   {[...ANALYSIS_PLACEMENTS, ...OTHER_PLACEMENTS].map((p) => (
                     <label key={p.id} className="flex items-center gap-2">
-                      <Checkbox checked={draft.placements.includes(p.id)} onCheckedChange={(c) =>
-                        set("placements", c ? [...draft.placements, p.id] : draft.placements.filter((x) => x !== p.id))} />
-                      {p.label}
+                      <Checkbox checked={draft.placements.includes(p.id)} onCheckedChange={(c) => {
+                        const placements = c ? [...draft.placements, p.id] : draft.placements.filter((x) => x !== p.id);
+                        // Gate dependants on the placements: sport follows the
+                        // analyses ticked, and faults outside them are dropped.
+                        const analysisSports = [...new Set(placements.filter((x) => x.startsWith("analysis:")).map((x) => x.split(":")[1]))];
+                        const allowed = new Set(availableFaultKeys(placements));
+                        setDraft((d) => d && ({
+                          ...d,
+                          placements,
+                          sports: analysisSports.length ? analysisSports : d.sports,
+                          fault_keys: d.fault_keys.filter((k) => allowed.has(k)),
+                        }));
+                      }} />
+                      <span>{p.label}{!p.id.startsWith("analysis:") && <span className="block text-[10px] text-muted-foreground">Saved, not shown to athletes yet</span>}</span>
                     </label>
                   ))}
                 </div>
               </div>
               <div>
                 <Label>Sport</Label>
-                <div className="mt-1 flex gap-4">
-                  {["baseball", "softball"].map((s) => (
-                    <label key={s} className="flex items-center gap-2 capitalize">
-                      <Checkbox checked={draft.sports.includes(s)} onCheckedChange={(c) =>
-                        set("sports", c ? [...draft.sports, s] : draft.sports.filter((x) => x !== s))} />{s}
-                    </label>
-                  ))}
-                </div>
+                {draft.placements.some((x) => x.startsWith("analysis:")) ? (
+                  <p className="mt-1 text-xs capitalize text-muted-foreground">{draft.sports.join(" and ")} — set by the analyses ticked above</p>
+                ) : (
+                  <div className="mt-1 flex gap-4">
+                    {["baseball", "softball"].map((s) => (
+                      <label key={s} className="flex items-center gap-2 capitalize">
+                        <Checkbox checked={draft.sports.includes(s)} onCheckedChange={(c) =>
+                          set("sports", c ? [...draft.sports, s] : draft.sports.filter((x) => x !== s))} />{s}
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div><Label>Name</Label><Input value={draft.name} onChange={(e) => set("name", e.target.value)} /></div>
+              <div><Label htmlFor="drill-name">Name</Label><Input id="drill-name" value={draft.name} onChange={(e) => set("name", e.target.value)} /></div>
               <div>
                 <Label>Faults it fixes</Label>
                 <div className="mt-1 grid max-h-40 gap-1 overflow-y-auto rounded border p-2 sm:grid-cols-2">
+                  {availableFaultKeys(draft.placements).length === 0 && (
+                    <p className="text-xs text-muted-foreground">Tick an analysis above to see the faults it can find.</p>
+                  )}
                   {availableFaultKeys(draft.placements).map((k) => (
                     <label key={k} className="flex items-center gap-2 text-xs">
                       <Checkbox checked={draft.fault_keys.includes(k)} onCheckedChange={(c) =>
