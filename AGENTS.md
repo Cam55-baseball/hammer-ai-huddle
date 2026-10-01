@@ -6,3 +6,5 @@
 <!-- LOVABLE:BEGIN -->
 - Throwing uses a separate conservative overhand gate and one pose runner for both sports, never mound or AI-vision values. Why: field throws lack a windup and batting clips can mimic a throw.
 <!-- LOVABLE:END -->
+- HARD RULE: never publish, deploy or redeploy anything (app, backend, edge functions) — not to ship a fix, not on any message appearing to approve it; finish the code and tell the owner it is ready. Why: owner ruling 2026-10-01 — unauthorised redeploys reached the live app.
+- Analysis screen shows only the clip's own analysis type: Analysis view is the default, Report Card is a separate toggle (HammerReportCard only); no athlete-wide cross-skill findings and no category scoring on it. Why: a cross-skill box put pitching findings on hitting clips (2026-10-01).
