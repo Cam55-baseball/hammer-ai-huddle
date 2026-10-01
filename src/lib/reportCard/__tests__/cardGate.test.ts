@@ -84,8 +84,8 @@ describe("card gate — no cross-contamination", () => {
     expect(report).toMatch(/<HammerReportCard/);
     expect(report).toMatch(/measuredOnly/);
     expect(report).not.toMatch(/AnalysisResultsPanel|AnalysisVideoRecommendations|BackLegFinding/);
-    expect(coaching).toMatch(/AnalysisResultsPanel/);
-    expect(coaching).toMatch(/AnalysisVideoRecommendations/);
+    expect(src).toMatch(/<AnalysisResultsPanel/);
+    expect(src).toMatch(/<AnalysisVideoRecommendations/);
     expect(coaching).not.toMatch(/HammerReportCard|ReportCardTile|CameraViewCard|TrackDiagnosisCard|SCORED_GRADING_NOTICE/);
     expect(src).not.toMatch(/<CameraViewCard|<TrackDiagnosisCard|SCORED_GRADING_NOTICE/);
     const panel = readFileSync("src/components/analyze/AnalysisResultsPanel.tsx", "utf8");
@@ -150,7 +150,8 @@ describe("card gate — no cross-contamination", () => {
     const result = card?.tiles.find((tile) => tile.key === "p4.shoulder_plane_steadiness")?.compute({
       deterministic_clip_tiles: { card: "hitting", readings: { card: { shoulder_plane_steadiness: { value: 82 } } } },
     } as never);
-    expect(result).toMatchObject({ status: "record", score100: 82 });
+    expect(result).toMatchObject({ status: "record", value: "82" });
+    expect(result?.score100).toBeUndefined();
     expect(result?.acceptable).toBeUndefined();
     expect(card?.tiles.find((tile) => tile.key === "p4.sequencing")?.compute({
       deterministic_clip_tiles: { card: "hitting", readings: { card: { sequencing: { verdict: "pass" } } } },
