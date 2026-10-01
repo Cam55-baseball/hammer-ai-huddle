@@ -111,17 +111,20 @@ export function SpotlightTour({ tourId, steps, open, onClose }: Props) {
     }
     targetRef.current = el;
     el.scrollIntoView({ block: "center", inline: "nearest", behavior: reduce ? "auto" : "smooth" });
-    let last = el.getBoundingClientRect().top, still = 0, raf = 0;
+    // Wait until BOTH axes hold still for several frames (outer page and any
+    // nested scroll container finish their smooth scroll), then illuminate.
+    let last = el.getBoundingClientRect(), still = 0, raf = 0;
     const settle = () => {
-      const t = el.getBoundingClientRect().top;
-      still = Math.abs(t - last) < 0.5 ? still + 1 : 0; last = t;
-      if (still >= 4) measure(); else raf = requestAnimationFrame(settle);
+      const r = el.getBoundingClientRect();
+      still = Math.abs(r.top - last.top) < 0.5 && Math.abs(r.left - last.left) < 0.5 ? still + 1 : 0; last = r;
+      if (still >= 8) measure(); else raf = requestAnimationFrame(settle);
     };
     raf = requestAnimationFrame(settle);
     const ro = new ResizeObserver(measure); ro.observe(el);
     window.addEventListener("scroll", measure, true);
+    window.addEventListener("scrollend", measure, true);
     window.addEventListener("resize", measure);
-    return () => { cancelAnimationFrame(raf); ro.disconnect(); window.removeEventListener("scroll", measure, true); window.removeEventListener("resize", measure); };
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); window.removeEventListener("scroll", measure, true); window.removeEventListener("scrollend", measure, true); window.removeEventListener("resize", measure); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, step?.id]);
 
