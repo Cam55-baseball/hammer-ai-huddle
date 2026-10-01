@@ -1624,7 +1624,18 @@ export default function AnalyzeVideo() {
                   />
                 ) : (
                   <>
-                   {module === "hitting" && <BackLegFinding videoId={currentVideoId} />}
+                   {module === "hitting" && (
+                     <>
+                       <section aria-label="Hitting phases" className="space-y-1 text-sm text-muted-foreground">
+                         <p>Phase 1 — Create Balance: load the back hip and hold the body back. The stride and turn prove the load.</p>
+                         <p>Phase 2 — Gather: set the hands behind the head after the back hip loads.</p>
+                         <p>Phase 3 — Load by Stride: take a deliberate power step, keep the body back and land before release.</p>
+                         <p>Phase 4 — Hitter's Move: the back elbow starts forward while the hands stay back; the hips turn before the shoulders.</p>
+                         <p>The Finish: stay with the move after the turn.</p>
+                       </section>
+                       <BackLegFinding videoId={currentVideoId} />
+                     </>
+                   )}
                   <AnalysisResultsPanel
                     analysis={analysis}
                     moduleKey={module || 'hitting'}
