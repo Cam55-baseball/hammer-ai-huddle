@@ -13,6 +13,13 @@
  *   multiple_people  ≥ 2 people detected on at least MULTI_MIN_FRAMES frames
  *                    (needs per-frame people counts — series written before
  *                    that was recorded report this cause as "not assessed")
+ *   too_small        on most frames NOBODY was detected at all (gap_reason
+ *                    "no_person" on ≥ TOO_SMALL_NO_PERSON_SHARE of frames) AND
+ *                    the body box on held frames is below TOO_SMALL_BODY of
+ *                    the frame height — the detector cannot find a figure that
+ *                    small (e.g. a TV broadcast wide shot). Ranked first when
+ *                    present: missing feet on a tiny figure is a symptom, not
+ *                    the cause.
  *   low_light        torso landmark visibility below LOW_VIS on average
  *   camera_moving    head AND both feet drift the same way by ≥ CAMERA_SHIFT
  *                    body heights (smoothed), while the gap between the ankles
@@ -27,7 +34,7 @@
  */
 import type { LandmarkSeries, LandmarkSeriesFrame } from "./landmarkSeriesFormat";
 
-export const TRACK_DIAGNOSIS_VERSION = "track_diagnosis@1.0.0";
+export const TRACK_DIAGNOSIS_VERSION = "track_diagnosis@1.1.0";
 
 const VIS = 0.5;
 const EDGE = 0.02;
@@ -36,6 +43,10 @@ const CUT_OFF_SHARE = 0.25;
 const MULTI_MIN_FRAMES = 5;
 const MULTI_MIN_SHARE = 0.1;
 const LOW_VIS = 0.6;
+/** Share of frames where nobody at all was detected. */
+const TOO_SMALL_NO_PERSON_SHARE = 0.5;
+/** Median held body-box height (share of frame height). Phone clips that work sit ~0.7; the failing broadcast clips sit ~0.1. */
+const TOO_SMALL_BODY = 0.3;
 const MIN_OBSERVED = 10;
 const CAMERA_SHIFT = 0.25;
 const SMOOTH = 15;
@@ -50,6 +61,7 @@ export type TrackCause =
   | { kind: "left_frame"; severity: number; exits: { start_sec: number; end_sec: number | null; edge: "left" | "right" | "top" | "bottom" }[]; frames: number }
   | { kind: "body_cut_off"; severity: number; end: "head" | "feet" | "head_and_feet"; head_share: number; feet_share: number }
   | { kind: "multiple_people"; severity: number; multi_frames: number; max_people: number; lost_to_other: number; regained: number }
+  | { kind: "too_small"; severity: number; no_person_share: number; body_height_share: number }
   | { kind: "low_light"; severity: number; torso_visibility: number }
   | { kind: "camera_moving"; severity: number; shift_body: number };
 
@@ -186,6 +198,26 @@ export function diagnoseTrack(series: LandmarkSeries): TrackDiagnosis {
     }
   }
 
+  // ---- too_small ---------------------------------------------------------
+  if (hasCounts && observed.length > 0) {
+    const noPerson = frames.filter((f) => !f.pose_detected && f.gap_reason === "no_person").length / Math.max(1, total);
+    const boxes: number[] = [];
+    for (const f of observed) {
+      let minY = 1, maxY = 0;
+      for (let k = 0; k < 33; k++) {
+        const y = f.normalized[k * 3 + 1];
+        if (!Number.isFinite(y)) continue;
+        minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+      }
+      if (maxY > minY) boxes.push(maxY - minY);
+    }
+    const box = median(boxes);
+    if (box != null && noPerson >= TOO_SMALL_NO_PERSON_SHARE && box < TOO_SMALL_BODY) {
+      // +1 so it outranks the symptoms it explains (feet "cut off", lost frames).
+      causes.push({ kind: "too_small", severity: 1 + noPerson, no_person_share: r3(noPerson), body_height_share: r3(box) });
+    }
+  }
+
   // ---- low_light ---------------------------------------------------------
   if (observed.length >= MIN_OBSERVED) {
     const vs: number[] = [];
@@ -275,6 +307,12 @@ export function describeCause(c: TrackCause): TrackCauseMessage {
         title: "More than one person was in the frame",
         detail: `Up to ${c.max_people} people were seen, in ${c.multi_frames} frames. Tracking lost the athlete for ${c.lost_to_other} frames while someone else was in view${c.regained > 0 ? ` and had to find them again ${c.regained} ${c.regained === 1 ? "time" : "times"}` : ""}.`,
         fix: "Film with only the athlete in frame — ask coaches, catchers and teammates to step out of the shot.",
+      };
+    case "too_small":
+      return {
+        title: "The athlete was too small in the picture",
+        detail: `On most of the clip nobody could be found at all — the athlete only filled about ${Math.round(c.body_height_share * 100)}% of the picture's height. This happens with wide or TV broadcast shots.`,
+        fix: "Film one rep from one steady camera, close enough that the athlete fills most of the picture from head to feet.",
       };
     case "low_light":
       return {

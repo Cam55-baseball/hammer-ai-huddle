@@ -876,6 +876,32 @@ export default function AnalyzeVideo() {
                 phase: "step1_dense_capture",
                 fps_provenance: fpsProvenance(probed),
                 track_diagnosis: diagnoseTrack(denseRun.series),
+                // Flat, always-written tracking record so a failed clip can be explained from the row alone.
+                tracking: (() => {
+                  const h = denseRun.series.header;
+                  const td = diagnoseTrack(denseRun.series);
+                  const gaps: Record<string, number> = {};
+                  for (const f of denseRun.series.frames) if (!f.pose_detected) gaps[f.gap_reason ?? "unknown"] = (gaps[f.gap_reason ?? "unknown"] ?? 0) + 1;
+                  return {
+                    frames_total: denseRun.frames_processed,
+                    frames_locked: h.subject_frames_locked ?? null,
+                    frames_lost: h.subject_frames_lost ?? null,
+                    subject_reacquisitions: h.subject_reacquisitions ?? null,
+                    subject_track_reliable: h.subject_track_reliable ?? null,
+                    subject_locked_on_ordinal: h.subject_locked_on_ordinal ?? null,
+                    subjects_detected_min: h.subjects_detected_min ?? null,
+                    subjects_detected_median: h.subjects_detected_median ?? null,
+                    subjects_detected_max: h.subjects_detected_max ?? null,
+                    lost_frames_by_reason: gaps,
+                    track_failure_cause: td.status === "clean" ? null : (td.causes?.[0]?.kind ?? "undetermined"),
+                    movement_gate_status: movementGate.status,
+                    movement_score: movementGate.movement_score,
+                    movement_gate_reason: movementGate.status === "refused" ? movementGate.reason : null,
+                    window_start_sec: h.window_start_sec ?? null,
+                    window_end_sec: h.window_end_sec ?? null,
+                    scout_motion_centre_frame: h.scout_motion_centre_frame ?? null,
+                  };
+                })(),
                 series_format: denseRun.series.header.format,
                 series_bucket: seriesWrite ? "pose-landmarks" : null,
                 series_bytes_stored: seriesWrite?.bytes_stored ?? null,
