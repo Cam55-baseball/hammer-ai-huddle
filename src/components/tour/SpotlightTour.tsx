@@ -167,7 +167,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
     if (route && navigate && (currentPath ?? "").split("?")[0] !== route.split("?")[0]) {
       // Navigate once per step. If the page redirects away (viewer can't use it),
       // the step is dropped silently instead of waiting forever.
-      if (navigatedFor.current !== step.id) { navigatedFor.current = step.id; navigate(route, { replace: true, state: { hmTour: true } }); }
+      if (!closing.current && navigatedFor.current !== step.id) { navigatedFor.current = step.id; navigate(route, { replace: true, state: { hmTour: true } }); }
       const id = window.setTimeout(() => setActive((a) => a.filter((x) => x.id !== step.id)), 8000);
       return () => window.clearTimeout(id);
     }
@@ -297,7 +297,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
       window.setTimeout(() => {
         const here = `${window.location.pathname}${window.location.search}`;
         if (origin && here !== origin) navigateRef.current?.(origin, { replace: true });
-      }, 0);
+      }, 60);
     };
     window.addEventListener("popstate", onBack, true);
     return () => window.removeEventListener("popstate", onBack, true);
