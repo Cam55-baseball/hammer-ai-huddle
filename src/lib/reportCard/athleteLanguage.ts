@@ -54,6 +54,7 @@ export function withoutMeasurementNotation(text: string): string {
     .replace(/\b(?:frames?)\s*#?\d+\b/gi, "that moment")
     .replace(/\bP([1-4])\b/gi, "Phase $1")
     .replace(/\bPhase\s+Phase\s+/gi, "Phase ")
+    .replace(/\bPhase ([1-4])\b(?!\s*—)/gi, (_, n: string) => `Phase ${n} — ${["", "Create Balance", "Gather", "Load by Stride", "Hitter's Move"][Number(n)]}`)
     .replace(/\b\d+(?:\.\d+)?\s*(?:seconds?|secs?|inches|feet|ft)\b/gi, "")
     .replace(/\b(?<!Phase )\d+(?:\.\d+)?\b/g, "")
     .replace(/\s{2,}/g, " ").trim();
