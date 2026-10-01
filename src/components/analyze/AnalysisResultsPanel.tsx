@@ -24,16 +24,7 @@ import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AnalysisCoachChat } from "@/components/AnalysisCoachChat";
 import { RevealSection } from "./RevealSection";
-import { RadialDial } from "@/components/demo/viz/RadialDial";
-import {
-  efficiencyToScoutGrade,
-  gradeToColor,
-  gradeToHex,
-  gradeToLabel,
-  gradeToSurface,
-} from "@/lib/gradeEngine";
 import { branding } from "@/branding";
-import { SCORED_GRADING_NOTICE } from "@/hooks/useScoredGradingAccess";
 import { withoutMeasurementNotation } from "@/lib/reportCard/athleteLanguage";
 
 export interface AnalysisDrill {
@@ -69,12 +60,6 @@ interface Props {
   onSaveToLibrary: () => void;
   onReturnToDashboard: () => void;
   /**
-   * Release gate. When false the score dial, the 20–80 scout-grade band and
-   * every grade colour are replaced by an honest line. Coaching text is
-   * untouched — words stay, scores go.
-   */
-  showScore?: boolean;
-  /**
    * Extra prescription content folded into the single "Your prescription"
    * card, so an athlete never sees two competing prescription boxes.
    */
@@ -99,9 +84,8 @@ function SectionHeading({ icon, children }: { icon: ReactNode; children: ReactNo
 /**
  * Analysis results — composed reveal.
  *
- * Visual order is intentional: the score anchors the screen first (20–80
- * grade language drives its color, never decoration), then what the model
- * saw, then what to do about it. Every section cascades in via
+ * Visual order is intentional: what the clip showed, then what to do about it.
+ * Every section cascades in via
  * RevealSection so results feel delivered, not dumped.
  *
  * Presentation-only: renders data the pipeline already produced. No
@@ -116,19 +100,11 @@ export function AnalysisResultsPanel({
   onSaveDrill,
   onSaveToLibrary,
   onReturnToDashboard,
-  showScore = true,
   prescriptionExtra,
   crossDomainSlot,
 
 }: Props) {
   const { t } = useTranslation();
-
-  const score = Math.round(analysis.efficiency_score ?? 0);
-  const grade = efficiencyToScoutGrade(score);
-  const gradeLabel = gradeToLabel(grade);
-  const gradeColor = gradeToColor(grade);
-  const gradeHex = gradeToHex(grade);
-  const gradeSurface = gradeToSurface(grade);
 
   const summary = analysis.summary ?? [];
   const [topTakeaway, ...restFindings] = summary;
@@ -139,53 +115,6 @@ export function AnalysisResultsPanel({
 
   return (
     <div className="space-y-5">
-      {/* ── 1 · SCORE ANCHOR ─────────────────────────────────────────── */}
-      <RevealSection order={0}>
-        {false && showScore ? (
-          <Card className={cn("overflow-hidden border-2", gradeSurface)}>
-            <div className="flex items-center gap-5 p-5 sm:gap-8 sm:p-7">
-              <div className="shrink-0">
-                <RadialDial value={score} size={132} color={gradeHex} label={t('videoAnalysis.scoreDialLabel', 'score')} />
-              </div>
-              <div className="min-w-0 flex-1 space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  {t('videoAnalysis.analysisResults')}
-                </p>
-                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <span className={cn("text-3xl font-black leading-none sm:text-4xl", gradeColor)}>
-                    {gradeLabel}
-                  </span>
-                  <span className={cn("rounded-full border px-2.5 py-1 text-xs font-bold tabular-nums", gradeColor, gradeSurface)}>
-                    {t('videoAnalysis.scoutGradeChip', 'Scout grade')} {grade}
-                    <span className="font-normal text-muted-foreground"> / 80</span>
-                  </span>
-                </div>
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  {t(
-                    'videoAnalysis.scoreContext',
-                    "Model read of this clip on the 20–80 scouting scale — a coaching signal from this video, not a measurement of game performance."
-                  )}
-                </p>
-              </div>
-            </div>
-          </Card>
-        ) : (
-          <Card className="overflow-hidden border-2 border-dashed">
-            <div className="space-y-1.5 p-5 sm:p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                {t('videoAnalysis.analysisResults')}
-              </p>
-              <p className="text-sm font-semibold">{SCORED_GRADING_NOTICE}</p>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                Everything below — what the clip showed, what to change and the drills for
-                it — is unaffected.
-              </p>
-            </div>
-          </Card>
-        )}
-      </RevealSection>
-
-
       {/* ── 2 · KEY FINDINGS ─────────────────────────────────────────── */}
       {(summary.length > 0 || crossDomainSlot) && (
         <RevealSection order={1}>
@@ -217,65 +146,6 @@ export function AnalysisResultsPanel({
                 ))}
               </ol>
             )}
-          </Card>
-        </RevealSection>
-      )}
-
-      {/* ── 3 · TEMPO (pitching only) ────────────────────────────────── */}
-      {persistedTempo && moduleKey === "pitching" && (
-        <RevealSection order={2}>
-          <Card className="p-5 sm:p-6">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="space-y-1">
-                <SectionHeading icon={<Timer className="h-3.5 w-3.5 text-primary" />}>
-                  {t('videoAnalysis.tempoTitle', 'Tempo')}
-                </SectionHeading>
-                 {persistedTempo.value != null ? (
-                   <p className="text-sm font-semibold">Your move from leg lift to landing was measured.</p>
-                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    {t('videoAnalysis.tempoUnreadable', 'Tempo could not be read from this clip.')}
-                  </p>
-                )}
-                <p className="text-[11px] text-muted-foreground/80">
-                  {t('videoAnalysis.tempoNote', 'Measured deterministically from your video — leg lift to front-foot strike.')}
-                </p>
-              </div>
-
-              <Collapsible className="w-full sm:w-auto sm:min-w-[280px]">
-                <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border border-border px-3 py-2 text-left text-xs font-semibold hover:bg-muted/40">
-                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform data-[state=open]:rotate-180" />
-                  {t('videoAnalysis.tempoRecordingTips', 'How to record for reliable Tempo')}
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-3">
-                  <div className="space-y-3">
-                    <p className="text-xs text-muted-foreground">
-                      Tempo needs to see your peak leg lift and front-foot strike. A few small framing choices make this consistent.
-                    </p>
-                    <ul className="space-y-2">
-                      {[
-                         { Icon: Camera, label: 'Side-on camera', body: 'Film from the open side, perpendicular to the rubber-to-plate line.' },
-                         { Icon: User, label: 'Full body in frame', body: 'Keep your head and feet visible throughout the delivery.' },
-                        { Icon: Play, label: 'Start before the leg lift', body: "Begin recording at the set position; don't trim the front of the clip." },
-                        { Icon: Square, label: 'End after release', body: 'Keep filming through ball release and into follow-through.' },
-                        { Icon: Sun, label: 'Good lighting, low motion blur', body: 'Daylight or bright cage lighting; lock exposure on the pitcher.' },
-                      ].map(({ Icon, label, body }) => (
-                        <li key={label} className="flex items-start gap-2">
-                          <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                          <span className="text-xs">
-                            <span className="font-semibold">{label}</span>
-                            <span className="text-muted-foreground"> — {body}</span>
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                    <p className="text-[11px] text-muted-foreground/80">
-                       If Tempo keeps failing to read, the lead leg may be hidden by the glove-side arm. Try a camera at chest height and step back.
-                    </p>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            </div>
           </Card>
         </RevealSection>
       )}

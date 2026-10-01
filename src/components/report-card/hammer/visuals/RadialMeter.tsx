@@ -7,7 +7,7 @@ interface Props {
   /** 0..1 — fraction of the arc to fill. */
   fraction: number;
   /** Acceptable PASS threshold (0..1). */
-  acceptable?: number;
+  acceptable?: number | null;
   /** Elite/perfection threshold (0..1). Optional. */
   elite?: number;
   status: Status;
@@ -72,8 +72,8 @@ export function RadialMeter({
   // Acceptable PASS band (faint green from acceptable→elite or →end)
   const passBandEnd = elite ?? 1;
   const passBandStart = acceptable;
-  const passDash = circ * Math.max(0, passBandEnd - passBandStart);
-  const passOffset = circ * passBandStart;
+  const passDash = passBandStart == null ? 0 : circ * Math.max(0, passBandEnd - passBandStart);
+  const passOffset = circ * (passBandStart ?? 0);
 
   // Elite band (faint gold from elite→end)
   const eliteDash = elite !== undefined ? circ * Math.max(0, 1 - elite) : 0;

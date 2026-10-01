@@ -10,6 +10,7 @@ import { applySlotEmphasis, readArmSlot } from "@/lib/reportCard/slotEmphasis";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useScoredGradingAccess, SCORED_GRADING_NOTICE } from "@/hooks/useScoredGradingAccess";
+import { measuredClipSpec } from "@/lib/reportCard/measuredClipSpec";
 
 interface Props {
   sport: string | undefined;
@@ -20,6 +21,8 @@ interface Props {
   /** Show the Share / PNG export button. */
   showShare?: boolean;
   athleteName?: string | null;
+  /** Only locally computed, clip-specific pose readings; never legacy AI scores. */
+  measuredOnly?: boolean;
 }
 
 export function HammerReportCard({
@@ -29,12 +32,13 @@ export function HammerReportCard({
   compact = false,
   showShare = true,
   athleteName,
+  measuredOnly = false,
 }: Props) {
   const slot = readArmSlot(analysis as AnalysisLike, module);
   const spec = useMemo(() => {
-    const s = getReportCardSpec(sport, module);
-    return s ? applySlotEmphasis(s, slot, sport) : s;
-  }, [sport, module, slot]);
+    const s = measuredOnly ? measuredClipSpec(sport, module) : getReportCardSpec(sport, module);
+    return s && !measuredOnly ? applySlotEmphasis(s, slot, sport) : s;
+  }, [sport, module, slot, measuredOnly]);
   const [openTile, setOpenTile] = useState<ReportCardTileSpec | null>(null);
   const [activePhase, setActivePhase] = useState<string | null>(null);
   const [tilesOpen, setTilesOpen] = useState(!compact);
@@ -44,8 +48,8 @@ export function HammerReportCard({
   // engine is real. Enforced again server-side; this is the UI half.
   const { allowed: scoresAllowed, loading: gateLoading } = useScoredGradingAccess();
 
-  if (gateLoading) return null;
-  if (!scoresAllowed) {
+  if (gateLoading && !measuredOnly) return null;
+  if (!scoresAllowed && !measuredOnly) {
     return (
       <div className="space-y-2 rounded-2xl border border-dashed bg-muted/30 p-6 text-center">
         <p className="text-sm font-semibold text-foreground">Grades are off for now</p>
@@ -93,14 +97,14 @@ export function HammerReportCard({
   ).length;
 
   // Build phase summary for the rail (BH only)
-  const phases: PhaseNode[] = useMemo(() => {
+  const phases: PhaseNode[] = (() => {
     if (!spec.groupByPhase) return [];
     const map = new Map<string, { passed: number; measured: number; total: number }>();
     for (const t of tilesWithState) {
       const k = t.spec.phase ?? "Other";
       const e = map.get(k) ?? { passed: 0, measured: 0, total: 0 };
       e.total += 1;
-      if (t.state.status !== "missing") {
+      if (t.state.status !== "missing" && t.state.status !== "record") {
         e.measured += 1;
         if (t.state.status === "pass" || t.state.status === "elite") e.passed += 1;
       }
@@ -113,7 +117,7 @@ export function HammerReportCard({
       measured: v.measured,
       passRate: v.measured > 0 ? v.passed / v.measured : 0,
     }));
-  }, [tilesWithState, spec.groupByPhase]);
+  })();
 
   const visibleTiles = activePhase
     ? tilesWithState.filter((t) => (t.spec.phase ?? "Other") === activePhase)

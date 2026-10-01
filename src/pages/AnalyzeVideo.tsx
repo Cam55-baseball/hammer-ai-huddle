@@ -28,10 +28,6 @@ import { useSideContext } from "@/contexts/SideContext";
 import { UPLOAD_ERRORS, friendlyRejectReason, friendlyThrownError } from "@/lib/upload/uploadErrorCopy";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
-// Release-1: the Report Card tab is restored, but populated ONLY from tiles
-// whose backing metric is classified VISIBLE in src/lib/reportCard/release1.ts.
-
-
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
@@ -50,21 +46,24 @@ import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSugge
 import { AnalysisVideoRecommendations } from "@/components/analyze/AnalysisVideoRecommendations";
 import { BackLegFinding } from "@/components/analyze/BackLegFinding";
 import { useQueryClient } from "@tanstack/react-query";
-import { useScoredGradingAccess } from "@/hooks/useScoredGradingAccess";
 import { analysisFeedbackToTaxonomy } from "@/lib/analysisFeedbackToTaxonomy";
 import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { HighFpsCapture } from "@/components/analyze/HighFpsCapture";
 import { evaluateMovementGate, type MovementGateResult } from "@/lib/biomech/gates/movementGate";
 import { NoMovementCard } from "@/components/analyze/NoMovementCard";
-import { TrackDiagnosisCard, FpsUnknownCard } from "@/components/analyze/TrackDiagnosisCard";
-import { diagnoseTrack, type TrackDiagnosis } from "@/lib/biomech/pose/trackDiagnosis";
-import { detectCameraView, type CameraViewResult } from "@/lib/biomech/camera/cameraView";
-import { CameraViewCard } from "@/components/analyze/CameraViewCard";
+import { diagnoseTrack } from "@/lib/biomech/pose/trackDiagnosis";
+import { detectCameraView } from "@/lib/biomech/camera/cameraView";
 import { fpsProvenance } from "@/lib/biomech/probeVideoMetadata";
 import { classifyFps } from "@/lib/capture/highFpsCapture";
 import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
 import { useSmartBack } from "@/hooks/useSmartBack";
+import { runHittingPoseTiles } from "@/lib/biomech/metrics/hittingPoseTiles";
+import { runHittingCardTiles } from "@/lib/biomech/metrics/hittingCardTiles";
+import { runThrowingTiles } from "@/lib/biomech/metrics/throwingTiles";
+import { runPitchingCardTiles } from "@/lib/biomech/metrics/pitchingCardTiles";
+import { runSoftballPitchingTiles } from "@/lib/biomech/metrics/softballPitchingTiles";
+import type { MeasuredClipTiles } from "@/lib/reportCard/measuredClipSpec";
 
 /**
  * A replayed (cached) analysis comes back wrapped as `{ replay_cache, ai_analysis }`,
@@ -95,13 +94,9 @@ export default function AnalyzeVideo() {
   const location = useLocation();
   const [uploading, setUploading] = useState(false);
   const [uploadStage, setUploadStage] = useState<string | null>(null);
-  // Report Card / Analysis tab. Report Card renders only Release-1 VISIBLE,
-  // measurement-backed tiles; every unvalidated tile stays behind its
-  // existing kill switch in src/lib/reportCard/release1.ts.
+  // Analysis opens first; Report Card reads only this clip's measured tiles.
   const [analysisView, setAnalysisView] = useState<AnalysisView>("analysis");
-  // Scored grading (report card, score dial, 20–80 band) is owner/admin only
-  // until the measurement engine is real. Server strips the numbers too.
-  const { allowed: scoresAllowed } = useScoredGradingAccess();
+  const [clipTiles, setClipTiles] = useState<MeasuredClipTiles | null>(null);
 
   const [analyzing, setAnalyzing] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -174,9 +169,6 @@ export default function AnalyzeVideo() {
   // Owner ruling: Analysis is body mechanics only. Ball speed / reference
   // distance live in DelayCam (code kept in src/lib/cv + src/lib/capture).
   // Movement gate result — a refused clip produces no tiles, faults or drills.
-  const [fpsUnknown, setFpsUnknown] = useState(false);
-  const [trackDiagnosis, setTrackDiagnosis] = useState<TrackDiagnosis | null>(null);
-  const [cameraView, setCameraView] = useState<CameraViewResult | null>(null);
   const [noMovement, setNoMovement] = useState<Extract<MovementGateResult, { status: "refused" }> | null>(null);
   const { saveDrill, savedDrills } = useVault();
 
@@ -336,11 +328,10 @@ export default function AnalyzeVideo() {
     setVideoFile(null);
     setVideoPreview(null);
     setAnalysis(null);
+    setAnalysisView("analysis");
+    setClipTiles(null);
     setAnalysisError(null);
     setNoMovement(null);
-    setFpsUnknown(false);
-    setTrackDiagnosis(null);
-    setCameraView(null);
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
     setLandingTime(null);
@@ -406,6 +397,8 @@ export default function AnalyzeVideo() {
     setVideoFile(null);
     setVideoPreview(null);
     setAnalysis(null);
+    setAnalysisView("analysis");
+    setClipTiles(null);
     setAnalysisError(null);
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
@@ -432,6 +425,8 @@ export default function AnalyzeVideo() {
     setVideoFile(file);
     setVideoPreview(URL.createObjectURL(file));
     setAnalysis(null);
+    setAnalysisView("analysis");
+    setClipTiles(null);
     setAnalysisError(null);
     setCurrentVideoId(null);
     setLandingTime(null);
@@ -506,9 +501,6 @@ export default function AnalyzeVideo() {
     }
 
     setUploading(true);
-    setFpsUnknown(false);
-    setTrackDiagnosis(null);
-    setCameraView(null);
 
     // ===== PHASE 0/1 — Deterministic probe (sha256 + true fps + dimensions) =====
     // Probe FIRST so deterministic frame selection can use fps_true.
@@ -578,7 +570,6 @@ export default function AnalyzeVideo() {
     const fpsTrue = probed.fps_true;
     const seekHz = fpsTrue ?? UNKNOWN_FPS_SAMPLING_GRID_HZ;
     const runAnalysis = analysisEnabled;
-    setFpsUnknown(analysisEnabled && fpsTrue == null);
     if (analysisEnabled) {
       try {
         setUploadStage('Picking out key frames…');
@@ -653,8 +644,27 @@ export default function AnalyzeVideo() {
           },
         });
         movementGate = evaluateMovementGate(denseRun.series);
-        setTrackDiagnosis(diagnoseTrack(denseRun.series));
-        setCameraView(detectCameraView(denseRun.series));
+        // The report card reads the same local deterministic tile code as the
+        // server's generated bundle. Never use the AI analysis's legacy metrics.
+        if (movementGate.status === "movement" && sideResolution.status === "known") {
+          try {
+            const side = sideResolution.side;
+            const readings = module === "hitting"
+              ? { pose: runHittingPoseTiles(denseRun.series, { side }), card: runHittingCardTiles(denseRun.series, { side }) }
+              : module === "throwing"
+                ? runThrowingTiles(denseRun.series, side)
+                : module === "pitching" && sport === "softball"
+                  ? runSoftballPitchingTiles(denseRun.series, { throwing_side: side })
+                  : module === "pitching"
+                    ? { tiles: runPitchingTiles(denseRun.series, { throwing_side: side }), card: runPitchingCardTiles(denseRun.series, { throwing_side: side, athlete_height_in: null }) }
+                    : null;
+            if (readings) setClipTiles({ card: module === "pitching" ? (sport === "softball" ? "pitching_softball_windmill" : "pitching_baseball") : module || "", readings });
+          } catch (tileError) {
+            // Tile presentation cannot prevent an otherwise valid analysis.
+            console.warn("[report-card] clip tiles unavailable", tileError);
+            setClipTiles(null);
+          }
+        }
         console.log('[MOVEMENT-GATE]', movementGate);
         poseRows = denseRun.series.frames.map((f) =>
           densePoseRowToPoseFrameRow(f.frame_index, f.timestamp_seconds, f),
@@ -876,6 +886,7 @@ export default function AnalyzeVideo() {
                 phase: "step1_dense_capture",
                 fps_provenance: fpsProvenance(probed),
                 track_diagnosis: diagnoseTrack(denseRun.series),
+                camera_view: detectCameraView(denseRun.series),
                 // Flat, always-written tracking record so a failed clip can be explained from the row alone.
                 tracking: (() => {
                   const h = denseRun.series.header;
@@ -1165,7 +1176,6 @@ export default function AnalyzeVideo() {
       toast.info(t('videoAnalysis.extractingFrames', "Extracting key frames for analysis..."));
 
       const probedRetry = await probeVideoMetadata(videoFile);
-      setFpsUnknown(probedRetry.fps_true == null);
       // Seek grid only — an unknown rate is never recorded as a rate.
       const probed = { ...probedRetry, fps_true: probedRetry.fps_true ?? UNKNOWN_FPS_SAMPLING_GRID_HZ };
       const result = await extractKeyFramesDeterministic({
@@ -1562,18 +1572,6 @@ export default function AnalyzeVideo() {
             )}
 
 
-            {fpsUnknown && !analyzing && !analysis && (
-              <FpsUnknownCard />
-            )}
-
-            {cameraView && !noMovement && (
-              <CameraViewCard result={cameraView} module={module || 'hitting'} />
-            )}
-
-            {trackDiagnosis && trackDiagnosis.status !== "clean" && !analyzing && (
-              <TrackDiagnosisCard diagnosis={trackDiagnosis} />
-            )}
-
             {noMovement && !analyzing && !analysis && (
               <NoMovementCard module={module || 'hitting'} sport={sport} reason={noMovement.reason} />
             )}
@@ -1602,38 +1600,21 @@ export default function AnalyzeVideo() {
 
             {analysis && (
               <div className="space-y-4">
-                 {module === "hitting" && <BackLegFinding videoId={currentVideoId} />}
-                {scoresAllowed && (
-                  <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
-                )}
+                <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
 
-                {scoresAllowed && analysisView === "report_card" ? (
-                  <>
-                  {/* Report card: only this clip's own analysis type. No
-                      cross-skill findings and no category scoring here. */}
+                {analysisView === "report_card" ? (
                   <HammerReportCard
                     sport={sport}
                     module={module}
                     analysis={{
-                      ...analysis,
-                      metrics: (analysis.metrics ?? undefined) as never,
-                      // Deterministic tempo pipeline output (already evidence-hashed).
-                      tempo_sec_deterministic: module === 'pitching' && persistedTempo
-                        ? { value: persistedTempo.value, missing_reason: persistedTempo.missing_reason }
-                        : undefined,
-                      pitching_tiles_deterministic: module === 'pitching'
-                        ? (pitchingTilesDet ?? (analysis as Record<string, unknown>).pitching_tiles_deterministic ?? undefined)
-                        : undefined,
+                      deterministic_clip_tiles: clipTiles,
                     } as never}
+                    measuredOnly
                     showShare={false}
                   />
-                  <AnalysisPrescriptionSection
-                    module={module}
-                    sport={sport}
-                    violations={analysis.violations_detected ?? null}
-                  />
-                  </>
                 ) : (
+                  <>
+                  {module === "hitting" && <BackLegFinding videoId={currentVideoId} />}
                   <AnalysisResultsPanel
                     analysis={analysis}
                     moduleKey={module || 'hitting'}
@@ -1642,7 +1623,6 @@ export default function AnalyzeVideo() {
                     onSaveDrill={handleSaveDrill}
                     onSaveToLibrary={() => setSaveDialogOpen(true)}
                     onReturnToDashboard={() => navigate('/dashboard')}
-                    showScore={scoresAllowed}
                     prescriptionExtra={
                       <AnalysisPrescriptionSection
                         embedded
@@ -1652,20 +1632,14 @@ export default function AnalyzeVideo() {
                       />
                     }
                   />
+                  <AnalysisVideoRecommendations
+                    analysis={analysis}
+                    module={module}
+                    sport={sport}
+                    persistenceError={(analysis as { fault_persistence?: { error?: string | null } })?.fault_persistence?.error ?? null}
+                  />
+                  </>
                 )}
-
-
-                {/* Headline feature: sits directly under the detailed analysis,
-                    matched to the faults this run actually reported. */}
-                <AnalysisVideoRecommendations
-                  analysis={analysis}
-                  module={module}
-                  sport={sport}
-                  persistenceError={
-                    (analysis as { fault_persistence?: { error?: string | null } } | null)
-                      ?.fault_persistence?.error ?? null
-                  }
-                />
 
 
 
