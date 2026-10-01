@@ -120,7 +120,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
             const r = later.route(); if (r) resolved.current[later.id] = r;
           }
         }
-        setFoundId(step.id); return;
+        navigatedFor.current = null; setFoundId(step.id); return;
       }
       if (performance.now() - t0 > 12000) {
         // Drop it; the next step slides into this index and the count shrinks.
