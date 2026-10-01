@@ -8,3 +8,4 @@
 <!-- LOVABLE:END -->
 - HARD RULE: never publish, deploy or redeploy anything (app, backend, edge functions) — not to ship a fix, not on any message appearing to approve it; finish the code and tell the owner it is ready. Why: owner ruling 2026-10-01 — unauthorised redeploys reached the live app.
 - Analysis screen shows only the clip's own analysis type: Analysis view is the default, Report Card is a separate toggle (HammerReportCard only); no athlete-wide cross-skill findings and no category scoring on it. Why: a cross-skill box put pitching findings on hitting clips (2026-10-01).
+- Clip Report Card uses `measuredClipSpec` over movement-gated local deterministic readings with a matching card identity; it bypasses the legacy grading gate without restoring legacy scores. Why: the old meter presentation must show honest clip-local tiles, never another discipline or invented grades.

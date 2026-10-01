@@ -28,10 +28,6 @@ import { useSideContext } from "@/contexts/SideContext";
 import { UPLOAD_ERRORS, friendlyRejectReason, friendlyThrownError } from "@/lib/upload/uploadErrorCopy";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
-// Release-1: the Report Card tab is restored, but populated ONLY from tiles
-// whose backing metric is classified VISIBLE in src/lib/reportCard/release1.ts.
-
-
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
@@ -50,7 +46,6 @@ import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSugge
 import { AnalysisVideoRecommendations } from "@/components/analyze/AnalysisVideoRecommendations";
 import { BackLegFinding } from "@/components/analyze/BackLegFinding";
 import { useQueryClient } from "@tanstack/react-query";
-import { useScoredGradingAccess } from "@/hooks/useScoredGradingAccess";
 import { analysisFeedbackToTaxonomy } from "@/lib/analysisFeedbackToTaxonomy";
 import { moduleToSkillDomain, mapHIEAreaToMovement } from "@/lib/analysisToTaxonomy";
 import { emitVideoMoment } from "@/lib/videoMoments/bus";
@@ -65,6 +60,12 @@ import { fpsProvenance } from "@/lib/biomech/probeVideoMetadata";
 import { classifyFps } from "@/lib/capture/highFpsCapture";
 import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide";
 import { useSmartBack } from "@/hooks/useSmartBack";
+import { runHittingPoseTiles } from "@/lib/biomech/metrics/hittingPoseTiles";
+import { runHittingCardTiles } from "@/lib/biomech/metrics/hittingCardTiles";
+import { runThrowingTiles } from "@/lib/biomech/metrics/throwingTiles";
+import { runPitchingCardTiles } from "@/lib/biomech/metrics/pitchingCardTiles";
+import { runSoftballPitchingTiles } from "@/lib/biomech/metrics/softballPitchingTiles";
+import type { MeasuredClipTiles } from "@/lib/reportCard/measuredClipSpec";
 
 /**
  * A replayed (cached) analysis comes back wrapped as `{ replay_cache, ai_analysis }`,
@@ -95,13 +96,9 @@ export default function AnalyzeVideo() {
   const location = useLocation();
   const [uploading, setUploading] = useState(false);
   const [uploadStage, setUploadStage] = useState<string | null>(null);
-  // Report Card / Analysis tab. Report Card renders only Release-1 VISIBLE,
-  // measurement-backed tiles; every unvalidated tile stays behind its
-  // existing kill switch in src/lib/reportCard/release1.ts.
+  // Analysis opens first; Report Card reads only this clip's measured tiles.
   const [analysisView, setAnalysisView] = useState<AnalysisView>("analysis");
-  // Scored grading (report card, score dial, 20–80 band) is owner/admin only
-  // until the measurement engine is real. Server strips the numbers too.
-  const { allowed: scoresAllowed } = useScoredGradingAccess();
+  const [clipTiles, setClipTiles] = useState<MeasuredClipTiles | null>(null);
 
   const [analyzing, setAnalyzing] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -336,6 +333,8 @@ export default function AnalyzeVideo() {
     setVideoFile(null);
     setVideoPreview(null);
     setAnalysis(null);
+    setAnalysisView("analysis");
+    setClipTiles(null);
     setAnalysisError(null);
     setNoMovement(null);
     setFpsUnknown(false);
@@ -406,6 +405,8 @@ export default function AnalyzeVideo() {
     setVideoFile(null);
     setVideoPreview(null);
     setAnalysis(null);
+    setAnalysisView("analysis");
+    setClipTiles(null);
     setAnalysisError(null);
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
@@ -432,6 +433,8 @@ export default function AnalyzeVideo() {
     setVideoFile(file);
     setVideoPreview(URL.createObjectURL(file));
     setAnalysis(null);
+    setAnalysisView("analysis");
+    setClipTiles(null);
     setAnalysisError(null);
     setCurrentVideoId(null);
     setLandingTime(null);
@@ -655,6 +658,27 @@ export default function AnalyzeVideo() {
         movementGate = evaluateMovementGate(denseRun.series);
         setTrackDiagnosis(diagnoseTrack(denseRun.series));
         setCameraView(detectCameraView(denseRun.series));
+        // The report card reads the same local deterministic tile code as the
+        // server's generated bundle. Never use the AI analysis's legacy metrics.
+        if (movementGate.status === "movement" && sideResolution.status === "known") {
+          try {
+            const side = sideResolution.side;
+            const readings = module === "hitting"
+              ? { pose: runHittingPoseTiles(denseRun.series, { side }), card: runHittingCardTiles(denseRun.series, { side }) }
+              : module === "throwing"
+                ? runThrowingTiles(denseRun.series, side)
+                : module === "pitching" && sport === "softball"
+                  ? runSoftballPitchingTiles(denseRun.series, { throwing_side: side })
+                  : module === "pitching"
+                    ? { tiles: runPitchingTiles(denseRun.series, { throwing_side: side }), card: runPitchingCardTiles(denseRun.series, { throwing_side: side, athlete_height_in: null }) }
+                    : null;
+            if (readings) setClipTiles({ card: module === "pitching" ? (sport === "softball" ? "pitching_softball_windmill" : "pitching_baseball") : module || "", readings });
+          } catch (tileError) {
+            // Tile presentation cannot prevent an otherwise valid analysis.
+            console.warn("[report-card] clip tiles unavailable", tileError);
+            setClipTiles(null);
+          }
+        }
         console.log('[MOVEMENT-GATE]', movementGate);
         poseRows = denseRun.series.frames.map((f) =>
           densePoseRowToPoseFrameRow(f.frame_index, f.timestamp_seconds, f),
@@ -1562,16 +1586,15 @@ export default function AnalyzeVideo() {
             )}
 
 
-            {fpsUnknown && !analyzing && !analysis && (
-              <FpsUnknownCard />
-            )}
-
-            {cameraView && !noMovement && (
-              <CameraViewCard result={cameraView} module={module || 'hitting'} />
-            )}
-
-            {trackDiagnosis && trackDiagnosis.status !== "clean" && !analyzing && (
-              <TrackDiagnosisCard diagnosis={trackDiagnosis} />
+            {(isOwner || isAdmin) && !analyzing && (fpsUnknown || cameraView || trackDiagnosis) && (
+              <details className="border border-border p-4 text-sm">
+                <summary className="cursor-pointer font-medium">Staff diagnostics</summary>
+                <div className="mt-3 space-y-3">
+                  {fpsUnknown && <FpsUnknownCard />}
+                  {cameraView && <CameraViewCard result={cameraView} module={module || 'hitting'} />}
+                  {trackDiagnosis && trackDiagnosis.status !== "clean" && <TrackDiagnosisCard diagnosis={trackDiagnosis} />}
+                </div>
+              </details>
             )}
 
             {noMovement && !analyzing && !analysis && (
@@ -1602,38 +1625,21 @@ export default function AnalyzeVideo() {
 
             {analysis && (
               <div className="space-y-4">
-                 {module === "hitting" && <BackLegFinding videoId={currentVideoId} />}
-                {scoresAllowed && (
-                  <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
-                )}
+                <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
 
-                {scoresAllowed && analysisView === "report_card" ? (
-                  <>
-                  {/* Report card: only this clip's own analysis type. No
-                      cross-skill findings and no category scoring here. */}
+                {analysisView === "report_card" ? (
                   <HammerReportCard
                     sport={sport}
                     module={module}
                     analysis={{
-                      ...analysis,
-                      metrics: (analysis.metrics ?? undefined) as never,
-                      // Deterministic tempo pipeline output (already evidence-hashed).
-                      tempo_sec_deterministic: module === 'pitching' && persistedTempo
-                        ? { value: persistedTempo.value, missing_reason: persistedTempo.missing_reason }
-                        : undefined,
-                      pitching_tiles_deterministic: module === 'pitching'
-                        ? (pitchingTilesDet ?? (analysis as Record<string, unknown>).pitching_tiles_deterministic ?? undefined)
-                        : undefined,
+                      deterministic_clip_tiles: clipTiles,
                     } as never}
+                    measuredOnly
                     showShare={false}
                   />
-                  <AnalysisPrescriptionSection
-                    module={module}
-                    sport={sport}
-                    violations={analysis.violations_detected ?? null}
-                  />
-                  </>
                 ) : (
+                  <>
+                  {module === "hitting" && <BackLegFinding videoId={currentVideoId} />}
                   <AnalysisResultsPanel
                     analysis={analysis}
                     moduleKey={module || 'hitting'}
@@ -1642,7 +1648,6 @@ export default function AnalyzeVideo() {
                     onSaveDrill={handleSaveDrill}
                     onSaveToLibrary={() => setSaveDialogOpen(true)}
                     onReturnToDashboard={() => navigate('/dashboard')}
-                    showScore={scoresAllowed}
                     prescriptionExtra={
                       <AnalysisPrescriptionSection
                         embedded
@@ -1652,20 +1657,14 @@ export default function AnalyzeVideo() {
                       />
                     }
                   />
+                  <AnalysisVideoRecommendations
+                    analysis={analysis}
+                    module={module}
+                    sport={sport}
+                    persistenceError={(analysis as { fault_persistence?: { error?: string | null } })?.fault_persistence?.error ?? null}
+                  />
+                  </>
                 )}
-
-
-                {/* Headline feature: sits directly under the detailed analysis,
-                    matched to the faults this run actually reported. */}
-                <AnalysisVideoRecommendations
-                  analysis={analysis}
-                  module={module}
-                  sport={sport}
-                  persistenceError={
-                    (analysis as { fault_persistence?: { error?: string | null } } | null)
-                      ?.fault_persistence?.error ?? null
-                  }
-                />
 
 
 

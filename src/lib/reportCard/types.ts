@@ -18,7 +18,7 @@ export type TileMode =
   | "raw_pass_fail"       // Raw measurement + PASS/FAIL badge combined (with optional elite badge)
   | "score_meter";        // 0..100 score with circular meter, acceptable + elite arcs
 
-export type TileStatus = "pass" | "fail" | "warn" | "elite" | "missing";
+export type TileStatus = "pass" | "fail" | "warn" | "elite" | "record" | "missing";
 
 export interface TileState {
   status: TileStatus;

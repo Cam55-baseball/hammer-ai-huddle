@@ -7,6 +7,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { getReportCardSpec } from "@/lib/reportCard";
 import { categorySpecFor } from "@/lib/reportCard/categories/specs";
+import { measuredClipSpec } from "@/lib/reportCard/measuredClipSpec";
 
 const CARDS = [
   ["baseball", "hitting"], ["softball", "hitting"],
@@ -69,8 +70,44 @@ describe("card gate — no cross-contamination", () => {
     const src = readFileSync("src/pages/AnalyzeVideo.tsx", "utf8");
     expect(src).not.toMatch(/<RootPatternCallout/);
     expect(src).not.toMatch(/<CategoryScoreCard/);
-    expect(src).toMatch(/pitching_tiles_deterministic: module === 'pitching'/);
-    expect(src).toMatch(/tempo_sec_deterministic: module === 'pitching'/);
+    expect(src).toMatch(/module === "pitching"\s*\? \{ tiles: runPitchingTiles/);
+    expect(src).toMatch(/card: module === "pitching" \?/);
+    expect(src).toMatch(/analysisView === "report_card" \?/);
     expect(src).toMatch(/useState<AnalysisView>\("analysis"\)/);
+  });
+
+  it("the measured report card never consumes another discipline's readings", () => {
+    const winning = { verdict: "pass", value: 1, flag: "clear", values: { value: 1 } };
+    const filled = new Proxy({}, { get: () => winning });
+    const foreignSources: Record<string, unknown> = {
+      hitting: { pose: filled, card: filled, coil: filled },
+      baseball_pitching: { tiles: filled, card: { tiles: filled } },
+      softball_pitching: { tiles: filled },
+      throwing: { ...Object.fromEntries(["tempo", "stride_length", "energy_angle", "head_stability", "front_knee_at_landing"].map((k) => [k, winning])), injury: filled },
+    };
+    for (const [sport, module] of CARDS) {
+      const own = family(module, sport);
+      const foreign = Object.assign({}, ...Object.entries(foreignSources).filter(([k]) => k !== own).map(([, v]) => v));
+      const card = measuredClipSpec(sport, module);
+      expect(card).not.toBeNull();
+      const rendered = card?.tiles.filter((tile) => tile.compute({ deterministic_clip_tiles: { card: own === "hitting" ? "throwing" : "hitting", readings: foreign } } as never).status !== "missing").map((tile) => tile.key) ?? [];
+      expect(rendered, `${sport} ${module} must not render foreign tiles`).toEqual([]);
+    }
+    const baseball = measuredClipSpec("baseball", "pitching");
+    const softball = measuredClipSpec("softball", "pitching");
+    expect(baseball?.tiles.filter((tile) => tile.compute({ deterministic_clip_tiles: { card: "pitching_softball_windmill", readings: foreignSources.softball_pitching } } as never).status !== "missing")).toEqual([]);
+    expect(softball?.tiles.filter((tile) => tile.compute({ deterministic_clip_tiles: { card: "pitching_baseball", readings: foreignSources.baseball_pitching } } as never).status !== "missing")).toEqual([]);
+  });
+
+  it("shows real measured tiles but never invents a grade from a record-only meter", () => {
+    const card = measuredClipSpec("baseball", "hitting");
+    const result = card?.tiles.find((tile) => tile.key === "p4.shoulder_plane_steadiness")?.compute({
+      deterministic_clip_tiles: { card: "hitting", readings: { card: { shoulder_plane_steadiness: { value: 82 } } } },
+    } as never);
+    expect(result).toMatchObject({ status: "record", score100: 82 });
+    expect(result?.acceptable).toBeUndefined();
+    expect(card?.tiles.find((tile) => tile.key === "p4.sequencing")?.compute({
+      deterministic_clip_tiles: { card: "hitting", readings: { card: { sequencing: { verdict: "pass" } } } },
+    } as never).status).toBe("pass");
   });
 });

@@ -9,9 +9,7 @@ interface Props {
 }
 
 /**
- * Per-analysis segmented pill: [Report Card] [Analysis].
- * Report Card is the default; the Analysis tab exposes the full detailed
- * narrative analysis untouched.
+ * Separate clip-local views. Analysis is the default in the parent.
  */
 export function AnalysisToggle({ value, onChange, className }: Props) {
   return (

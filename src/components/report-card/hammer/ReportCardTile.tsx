@@ -19,8 +19,9 @@ export function ReportCardTile({ spec, state, onOpen, index = 0 }: Props) {
   const isPass = !isMissing && (state.status === "pass" || isElite);
   const isFail = !isMissing && state.status === "fail";
   const isWarn = !isMissing && state.status === "warn";
+  const isRecord = state.status === "record";
 
-  const borderClass = isMissing
+  const borderClass = isMissing || isRecord
     ? "rc-tile-border-missing"
     : isElite
       ? "rc-tile-border-pass"
@@ -77,6 +78,17 @@ export function ReportCardTile({ spec, state, onOpen, index = 0 }: Props) {
       <div className="flex flex-1 items-center justify-center py-3">
         {isMissing ? (
           <MissingBody reason={athleteMissingness(state.missing_reason)} />
+        ) : isRecord && spec.mode === "score_meter" && state.score100 != null ? (
+          <RadialMeter
+            fraction={state.score100 / 100}
+            acceptable={null}
+            status="warn"
+            centerLabel={String(Math.round(state.score100))}
+            centerSub="Recorded"
+            animate={!reduce}
+          />
+        ) : isRecord ? (
+          <span className="text-xs font-bold uppercase text-muted-foreground">Recorded · not graded</span>
         ) : spec.mode === "score_meter" ? (
           <RadialMeter
             fraction={Math.max(0, Math.min(1, (state.score100 ?? 0) / 100))}
