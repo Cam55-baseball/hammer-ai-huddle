@@ -23,6 +23,22 @@ export function athleteMissingness(reason?: string): string | undefined {
   if (!reason) return undefined;
   return MISSING[reason] ?? (reason.includes("camera_view_mismatch")
     ? "This camera angle doesn't show what this check needs."
+    : reason.startsWith("pitcher_not_in_frame")
+      ? "We couldn't see the pitcher clearly enough to check this timing."
+    : reason.startsWith("routed_to_delaycam")
+      ? "This timing needs a faster recording to tell which move came first."
+    : reason.startsWith("unproven") || reason.startsWith("proof_incomplete")
+      ? "We couldn't see enough of the stride and turn to prove this move."
+    : reason.includes("within_still_noise")
+      ? "This move was too small to separate from normal camera movement."
+    : reason.includes("hands_or_front_ankle_unobserved")
+      ? "We couldn't follow your hands and front foot through the stride."
+    : reason.includes("swing_peak_not_after_p4_start")
+      ? "We couldn't clearly place the start and peak of your swing."
+    : reason.includes("lead_arm_pointing_at_camera")
+      ? "Your lead arm pointed toward the camera, so we couldn't judge its bend."
+    : reason.includes("no_return_to_stillness")
+      ? "The clip ended before we could see you settle after the swing."
     : "We couldn't get a trustworthy read from this clip.");
 }
 
