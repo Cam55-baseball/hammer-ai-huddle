@@ -15,7 +15,7 @@ const asState = (reading: TileReading, raw?: unknown, path?: string, proof?: { s
   const note = reading.kind === "verdict" && !reading.pass && reading.finding === "not_held" ? "Phase 1 — Create Balance: the load was not held through the stride."
     : reading.kind === "verdict" && !reading.pass && reading.finding === "not_used" ? "Phase 1 — Create Balance: the load was held but not used in the turn."
     : proof?.outcome?.disprovenBy ? "Phase 1 — Create Balance: the later stride disproved this load position." : undefined;
-  if (reading.kind === "verdict") return { status: proof?.outcome?.disprovenBy ? "fail" : proof?.status === "attributed" ? "record" : reading.elite ? "elite" : reading.pass ? "pass" : "fail", value, confidence, note };
+  if (reading.kind === "verdict") return { status: proof?.outcome?.disprovenBy ? "fail" : reading.elite ? "elite" : reading.pass ? "pass" : "fail", value, confidence, note };
   if (reading.kind === "score" && Number.isFinite(reading.frac) && reading.frac >= 0 && reading.frac <= 1) return { status: "record", score100: reading.frac * 100, value: valueText(reading.frac * 100), confidence };
   if (reading.kind === "record" && Number.isFinite(reading.value)) return { status: "record", value: value ?? valueText(reading.value), confidence };
   if (reading.kind === "ungraded" && typeof reading.value === "number" && Number.isFinite(reading.value)) return { status: "record", value: value ?? valueText(reading.value), confidence };
