@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Show the owner's exact Analysis Report encouragement beneath upload details on all six empty upload screens, outside the Report Card gate.
 - [x] Rename visible Tell Hammer wording to Update Hammer; keep persisted event and database identifiers stable.
 - [x] Move phase explainer to a short hitting Report Card card using owner's exact four lines; remove it from Analysis.
 - [x] Place Watch this next between detailed analysis and Your prescription; report six-card prerequisites (live upload readbacks still require owner clips and release).
