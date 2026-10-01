@@ -253,9 +253,11 @@ export class SubjectTracker {
     this.fps = Number.isFinite(fps) && fps > 0 ? fps : 30;
   }
 
-  /** Displacement gate for the current gap length, in normalized frame heights. */
-  private gate(): number {
-    const gapFrames = Math.max(1, this.framesSinceSeen + 1);
+  /** Displacement gate for the current gap length, in normalized frame heights.
+   * `frameAdvance` matters for sparse callers: two scout observations can be
+   * many source frames apart even though they are consecutive function calls. */
+  private gate(frameAdvance: number): number {
+    const gapFrames = Math.max(1, this.framesSinceSeen + frameAdvance);
     const perFrame = Math.max(
       MIN_HIP_GATE_PER_FRAME,
       MAX_HIP_SPEED_PER_SEC / this.fps,
@@ -263,14 +265,17 @@ export class SubjectTracker {
     return Math.min(MAX_HIP_GATE, perFrame * gapFrames);
   }
 
-  step(candidates: readonly PoseCandidate[]): LockStep {
+  step(candidates: readonly PoseCandidate[], frameAdvance = 1): LockStep {
+    const elapsedFrames = Number.isFinite(frameAdvance)
+      ? Math.max(1, Math.floor(frameAdvance))
+      : 1;
     this.ordinal += 1;
     this.counts.push(candidates.length);
 
     if (candidates.length === 0) {
       if (this.everLocked) {
         this.framesLost += 1;
-        this.framesSinceSeen += 1;
+        this.framesSinceSeen += elapsedFrames;
         return { candidate_index: null, event: "lost", candidates_detected: 0, lost_reason: "no_person" };
       }
       return { candidate_index: null, event: "no_pose", candidates_detected: 0 };
@@ -301,7 +306,7 @@ export class SubjectTracker {
     }
 
     // Locked: nearest-neighbour match under the displacement + scale gates.
-    const gate = this.gate();
+    const gate = this.gate(elapsedFrames);
     const prev = this.state!;
     let bestIdx = -1;
     let bestDist = Infinity;
@@ -323,7 +328,7 @@ export class SubjectTracker {
     if (bestIdx < 0) {
       // HONEST FAILURE. No re-selection: this frame is unobserved.
       this.framesLost += 1;
-      this.framesSinceSeen += 1;
+      this.framesSinceSeen += elapsedFrames;
       return {
         candidate_index: null,
         event: "lost",

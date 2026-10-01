@@ -305,7 +305,15 @@ export function placeDenseWindowFromScout(args: {
   // budget is a ceiling only (fix 2026-10-01: 600 frames at 60 fps was 10 s of
   // walk-up and walk-off around a sub-2 s swing, collapsing pose coverage).
   const secFrames = Math.max(1, Math.round(windowSec * fps_true));
-  const windowFrames = Math.min(totalFrames, secFrames, Math.max(1, Math.floor(budget)));
+  const frameBudget = Math.max(1, Math.floor(budget));
+  // Preserve the complete evidence record when the whole clip already fits
+  // under the established processing ceiling. The 3-second focus exists to
+  // stop long clips from spending the entire budget on walk-up/walk-off; it
+  // must not discard stance/reference frames from short clips that previously
+  // measured successfully.
+  const windowFrames = totalFrames <= frameBudget
+    ? totalFrames
+    : Math.min(totalFrames, secFrames, frameBudget);
 
   const span = findings.presence;
   const hasLanding =

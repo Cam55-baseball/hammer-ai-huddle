@@ -23,7 +23,7 @@ export function ClipPreflightCard({ verdict, checking }: { verdict: PreflightVer
     <Card className="space-y-3 border-warning/50 p-4" data-testid="clip-preflight-issues">
       <p className="flex items-center gap-2 font-semibold">
         <AlertTriangle className="h-4 w-4 text-warning" />
-        {verdict.willRead ? "Your clip will work, with one note" : "Your report card probably won't read from this clip"}
+        Filming notes from this clip
       </p>
       <ul className="space-y-2">
         {verdict.issues.map((i) => (
@@ -35,7 +35,7 @@ export function ClipPreflightCard({ verdict, checking }: { verdict: PreflightVer
           </li>
         ))}
       </ul>
-      <p className="text-xs text-muted-foreground">You can still analyse it — your coaching and drills will be made either way.</p>
+      <p className="text-xs text-muted-foreground">These notes do not decide whether your clip can be measured. Analysis still runs.</p>
     </Card>
   );
 }

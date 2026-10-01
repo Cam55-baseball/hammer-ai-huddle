@@ -117,6 +117,19 @@ describe("subject tracking", () => {
     expect(t.stats().reacquisitions).toBe(1);
   });
 
+  it("uses elapsed source frames for sparse scout observations", () => {
+    const t = new SubjectTracker(60);
+    t.step([person({ cx: 0.4, top: 0.15, bottom: 0.9, hipY: 0.5 })]);
+    // The athlete moved 0.2 frame-heights over 0.5 seconds. That is normal
+    // motion, but the old scout treated this as a one-frame jump and lost them.
+    const s = t.step(
+      [person({ cx: 0.6, top: 0.15, bottom: 0.9, hipY: 0.5 })],
+      30,
+    );
+    expect(s.event).toBe("held");
+    expect(s.candidate_index).toBe(0);
+  });
+
   it("flags the track unreliable when it keeps breaking", () => {
     const t = new SubjectTracker(30);
     t.step([person({ cx: 0.5, top: 0.15, bottom: 0.9, hipY: 0.5 })]);

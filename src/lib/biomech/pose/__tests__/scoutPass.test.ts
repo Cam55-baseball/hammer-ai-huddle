@@ -169,8 +169,18 @@ describe("window placement", () => {
 });
 
 describe("window is budgeted in seconds, not frames (fix 2026-10-01)", () => {
-  it("covers the same real time at every frame rate; budget is only a ceiling", () => {
-    for (const fps of [24, 30, 60, 120]) {
+  it("keeps the full clip when it fits the processing ceiling", () => {
+    for (const { fps, duration } of [{ fps: 24, duration: 8.97 }, { fps: 24, duration: 4.97 }]) {
+      const f = deriveScoutFindings([obs(0, fps), obs(Math.round(4 * fps), fps, { hipX: 0.8 }), obs(Math.round(duration * fps) - 1, fps)]);
+      const r = placeDenseWindowFromScout({ fps_true: fps, duration_sec: duration, budget: 600, landingTimeSec: null, findings: f });
+      if ("failed" in r) throw new Error("expected a window");
+      expect(r.frame_count).toBe(Math.floor(duration * fps));
+      expect(r.rule.startsWith("full_clip_native_fps")).toBe(true);
+    }
+  });
+
+  it("uses the real-time movement window when the whole clip exceeds the processing ceiling", () => {
+    for (const fps of [60, 120]) {
       const f = deriveScoutFindings([obs(0, fps), obs(Math.round(4 * fps), fps, { hipX: 0.8 }), obs(Math.round(12 * fps), fps)]);
       const r = placeDenseWindowFromScout({ fps_true: fps, duration_sec: 12.5, budget: 600, landingTimeSec: null, findings: f });
       if ("failed" in r) throw new Error("expected a window");

@@ -257,6 +257,7 @@ export async function captureDenseLandmarkSeries(
     const scoutTracker = new SubjectTracker(stepHz);
     const observations: ScoutObservation[] = [];
     let scoutFramesInferred = 0;
+    let previousScoutFrameIndex: number | null = null;
     for (let i = 0; i < scoutIndices.length; i++) {
       const frameIndex = scoutIndices[i];
       const t = round6(frameIndex / stepHz);
@@ -271,7 +272,15 @@ export async function captureDenseLandmarkSeries(
       } catch {
         candidates = [];
       }
-      const step = scoutTracker.step(candidates);
+      // Scout observations are sparse. Pass the real source-frame distance so
+      // the lock's speed gate measures elapsed time, not function-call count.
+      // Treating samples ~0.3–0.6 s apart as adjacent frames rejected normal
+      // athlete motion and could centre the dense window before the swing.
+      const frameAdvance = previousScoutFrameIndex == null
+        ? 1
+        : Math.max(1, frameIndex - previousScoutFrameIndex);
+      const step = scoutTracker.step(candidates, frameAdvance);
+      previousScoutFrameIndex = frameIndex;
       const d = step.candidate_index == null ? null : candidates[step.candidate_index];
       observations.push({
         frame_index: frameIndex,
