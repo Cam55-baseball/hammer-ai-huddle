@@ -137,7 +137,9 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
       historyArmed.current = true;
       const state = window.history.state ?? {};
       const usr = typeof state.usr === "object" && state.usr ? state.usr : {};
-      window.history.pushState({ ...state, usr: { ...usr, hmTour: true } }, "", window.location.href);
+      const { hmTour: _staleTourMarker, ...cleanUsr } = usr as Record<string, unknown>;
+      window.history.replaceState({ ...state, usr: cleanUsr }, "", window.location.href);
+      window.history.pushState({ ...state, usr: { ...cleanUsr, hmTour: true } }, "", window.location.href);
     } else {
       historyArmed.current = false;
     }
