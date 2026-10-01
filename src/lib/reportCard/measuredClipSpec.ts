@@ -1,5 +1,5 @@
 /** Presentation adapter: read only the deterministic, clip-local tile namespaces.
- * No category totals, AI metrics, defaults, or staff-only measurements enter this card.
+ * No category totals, AI metrics, or default measurements enter this card.
  */
 import { categorySpecFor } from "./categories/specs";
 import type { TileReading } from "./categories/scoring";
@@ -33,7 +33,6 @@ export function measuredClipSpec(sport: string | undefined, module: string | und
     explainer: { whatWhy: tile.name, howToImprove: "", encouragement: "" },
     compute: (analysis) => asState(tile.read(readClip(analysis as Record<string, unknown>, spec.card))),
   }))), ...spec.categories.flatMap((group) => group.tiles
-    .filter((tile) => !(typeof tile.staffOnly === "function" ? tile.staffOnly() : tile.staffOnly))
     .map((tile) => ({
       key: `${group.key}.${tile.key}`,
       name: tile.name,

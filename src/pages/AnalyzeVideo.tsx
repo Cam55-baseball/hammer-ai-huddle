@@ -60,6 +60,9 @@ import { PitchingFilmingGuide } from "@/components/analyze/PitchingFilmingGuide"
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { runHittingPoseTiles } from "@/lib/biomech/metrics/hittingPoseTiles";
 import { runHittingCardTiles } from "@/lib/biomech/metrics/hittingCardTiles";
+import { runHittingOwnerTiles } from "@/lib/biomech/metrics/hittingOwnerTiles";
+import { runFrontLegGather } from "@/lib/biomech/metrics/frontLegGather";
+import { runActiveStride, runStrideCoil } from "@/lib/biomech/metrics/strideRhythm";
 import { runThrowingTiles } from "@/lib/biomech/metrics/throwingTiles";
 import { runPitchingCardTiles } from "@/lib/biomech/metrics/pitchingCardTiles";
 import { runSoftballPitchingTiles } from "@/lib/biomech/metrics/softballPitchingTiles";
@@ -650,7 +653,14 @@ export default function AnalyzeVideo() {
           try {
             const side = sideResolution.side;
             const readings = module === "hitting"
-              ? { pose: runHittingPoseTiles(denseRun.series, { side }), card: runHittingCardTiles(denseRun.series, { side }) }
+              ? {
+                  pose: runHittingPoseTiles(denseRun.series, { side }),
+                  card: runHittingCardTiles(denseRun.series, { side }),
+                  owner: runHittingOwnerTiles(denseRun.series, { side, athlete_height_in: null }),
+                  gather: runFrontLegGather(denseRun.series, { side }),
+                  rhythm: { active: runActiveStride(denseRun.series, { side }) },
+                  coil: runStrideCoil(denseRun.series, { side }),
+                }
               : module === "throwing"
                 ? runThrowingTiles(denseRun.series, side)
                 : module === "pitching" && sport === "softball"

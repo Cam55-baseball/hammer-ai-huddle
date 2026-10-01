@@ -1,9 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useCategoryInputs } from "@/hooks/useCategoryScore";
-import { scoreCard, type Audience, type TileOutcome, type TileReading } from "@/lib/reportCard/categories/scoring";
+import { scoreCard, type TileOutcome, type TileReading } from "@/lib/reportCard/categories/scoring";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 const REASONS: Record<string, string> = {
   waiting_on_athlete_baseline: "Waiting on this athlete's own range.",
@@ -26,15 +25,14 @@ const outcomeLabel = (o: TileOutcome) => {
     case "waiting_on_baseline": return "Recorded";
     case "ungraded": return "Measured, not graded";
     case "not_applicable": return o.reason.startsWith("pitcher_not_in_frame") ? "Needs pitcher in frame" : "Doesn't apply";
-    default: return o.reason === "staff_only_until_validated" ? "Staff only" : o.reason.startsWith("unproven") || o.reason.startsWith("proof_incomplete") ? "Not proven yet" : "Not measured";
+    default: return o.reason.startsWith("unproven") || o.reason.startsWith("proof_incomplete") ? "Not proven yet" : "Not measured";
   }
 };
 const flagLabel = (r: TileReading) => (r.kind === "verdict" ? (r.pass ? "Clear" : "Raised") : r.kind === "record" ? "Recorded" : "Not checked");
 
 export function CategoryScoreCard({ videoId, sport, module, side }: { videoId: string | null; sport?: string; module?: string; side: "L" | "R" | null }) {
   const { loading, data } = useCategoryInputs(videoId, sport, module, side);
-  const [audience, setAudience] = useState<Audience>("athlete");
-  const card = useMemo(() => (data && "spec" in data ? scoreCard(data.spec, data.raw, { audience }) : null), [data, audience]);
+  const card = useMemo(() => (data && "spec" in data ? scoreCard(data.spec, data.raw, { audience: "athlete" }) : null), [data]);
 
   if (loading) return <p className="text-xs text-muted-foreground">Scoring categories…</p>;
   if (!data) return null;
@@ -49,11 +47,6 @@ export function CategoryScoreCard({ videoId, sport, module, side }: { videoId: s
           <p className="text-2xl font-black text-foreground">
             {card.total != null ? <>{card.total}<span className="text-sm font-semibold text-muted-foreground"> / 100</span></> : <span className="text-base font-semibold text-muted-foreground">{card.totalReason === "no_total_for_this_card" ? "No total for this card" : "No total yet: some categories weren't fully measured"}</span>}
           </p>
-        </div>
-        <div className="flex gap-1">
-          {(["athlete", "staff"] as const).map((a) => (
-            <Button key={a} size="sm" variant={audience === a ? "default" : "outline"} onClick={() => setAudience(a)}>{a === "athlete" ? "Athlete view" : "Staff view"}</Button>
-          ))}
         </div>
       </div>
 

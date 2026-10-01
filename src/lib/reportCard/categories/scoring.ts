@@ -10,7 +10,7 @@
  *    non-shuffle throw) leave the category entirely — never counted as missing.
  *  - Record-only tiles: worth 0 and outside the check until the athlete has a
  *    baseline (8 in-context clips); then scored on proximity to THEIR band.
- *  - Staff-only tiles (owner tiles 19/20) are missing in athlete view.
+ *  - All built tiles remain visible; missing readings never become values.
  *  - Total only when every scored category is complete.
  * Pure and deterministic.
  */
@@ -42,8 +42,6 @@ export interface CategoryTileSpec {
   points: number;
   nonNegotiable?: boolean;
   recordOnly?: boolean;
-  /** A function is read at score time, so a visibility switch takes effect on the next render. */
-  staffOnly?: boolean | (() => boolean);
   /** Ledger metric key used to look up this athlete's own band (record-only tiles). */
   baselineKey?: string;
   read: (raw: unknown) => TileReading;
@@ -122,13 +120,13 @@ export function bandProximity(value: number, band: AthleteBand): number {
 
 const r1 = (x: number) => Math.round(x * 10) / 10;
 
-export function scoreCard(spec: CardCategorySpec, raw: unknown, o: { audience: Audience; bands?: Record<string, AthleteBand>; /** Test-only: simulate a visibility switch being flipped. */ unlock?: Record<string, boolean> }): CardScore {
+export function scoreCard(spec: CardCategorySpec, raw: unknown, o: { audience: Audience; bands?: Record<string, AthleteBand> }): CardScore {
   const bands = o.bands ?? {};
   const scored = spec.categories.filter((c) => !c.additive);
   const baseSum = scored.reduce((a, c) => a + c.points, 0);
   const scale = baseSum > 0 ? spec.scaleTo / baseSum : 1;
 
-  // Pre-pass: which proof tiles failed (read once, audience-independent; proof tiles are never staff-only).
+  // Pre-pass: which proof tiles failed (read once, independent of the viewer).
   const failedProofs = new Set<string>();
   for (const c of spec.categories) for (const t of c.tiles) if (t.disproves) {
     const rd = t.read(raw);
@@ -139,8 +137,7 @@ export function scoreCard(spec: CardCategorySpec, raw: unknown, o: { audience: A
     const failedHere = new Map(c.tiles.filter((t) => t.disproves && failedProofs.has(`${c.key}.${t.key}`)).map((t) => [t.disproves!, t.key]));
     const tiles = c.tiles.map((t) => {
       let outcome: TileOutcome;
-      if (o.audience === "athlete" && !o.unlock?.[t.key] && (typeof t.staffOnly === "function" ? t.staffOnly() : t.staffOnly)) outcome = { status: "missing", reason: "staff_only_until_validated" };
-      else {
+      {
         const rd = t.read(raw);
         if (rd.kind === "not_applicable") outcome = { status: "not_applicable", reason: rd.reason };
         else if (rd.kind === "missing") outcome = { status: "missing", reason: rd.reason };

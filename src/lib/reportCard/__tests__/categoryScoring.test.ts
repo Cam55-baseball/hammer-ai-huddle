@@ -6,7 +6,6 @@ import { runHittingCardTiles } from "@/lib/biomech/metrics/hittingCardTiles";
 import { runHittingOwnerTiles } from "@/lib/biomech/metrics/hittingOwnerTiles";
 import { runFrontLegGather } from "@/lib/biomech/metrics/frontLegGather";
 import { runActiveStride, runMicroPauses, runStrideCoil, ROUTED_TO_DELAYCAM } from "@/lib/biomech/metrics/strideRhythm";
-import { HIP_LOAD_ATHLETE_UNLOCKED } from "@/lib/biomech/metrics/hipLoadVisibility";
 import { runPitchingTiles } from "@/lib/biomech/metrics/pitchingTiles";
 import { runPitchingCardTiles } from "@/lib/biomech/metrics/pitchingCardTiles";
 import { runThrowingTiles } from "@/lib/biomech/metrics/throwingTiles";
@@ -68,8 +67,7 @@ describe("category scoring", () => {
     console.log("914 STAFF", JSON.stringify(summary(staff)));
     console.log("914 ATHLETE", JSON.stringify(summary(athlete)));
     console.log("914 TILES", JSON.stringify(staff.categories.map((c) => [c.key, c.tiles.map((t) => [t.key, t.outcome.status, "frac" in t.outcome ? t.outcome.frac : ("reason" in t.outcome ? t.outcome.reason : "why" in t.outcome ? t.outcome.why : null)])])));
-    // Staff-only non-negotiable → athlete P3 incomplete (owner ruling 1).
-    expect(athlete.categories.find((c) => c.key === "p3")!.status).toBe("incomplete");
+    expect(athlete.categories.map((c) => c.tiles.map((t) => t.outcome))).toEqual(staff.categories.map((c) => c.tiles.map((t) => t.outcome)));
     // Pitcher-absent tiles are not applicable, never missing.
     expect(staff.categories.find((c) => c.key === "p2")!.notApplicable).toContain("Hand load timing vs the pitcher");
     // Gather never deducts.
@@ -78,20 +76,17 @@ describe("category scoring", () => {
     expect(JSON.stringify(scoreCard(HITTING_CATEGORIES, hitting(A, "L"), { audience: "staff" }))).toBe(JSON.stringify(staff));
   });
 
-  it("hip-load switch: off today; flipping it recomputes athlete P1 and P3 from the same clip", () => {
-    expect(HIP_LOAD_ATHLETE_UNLOCKED).toBe(false);
+  it("hip load, back hip socket and head path are visible with real readings or honest missingness to every viewer", () => {
     const raw = hitting(A, "L");
-    const off = scoreCard(HITTING_CATEGORIES, raw, { audience: "athlete" });
-    const on = scoreCard(HITTING_CATEGORIES, raw, { audience: "athlete", unlock: { hip_load: true, back_hip_socket_hold: true } });
+    const athlete = scoreCard(HITTING_CATEGORIES, raw, { audience: "athlete" });
     const staff = scoreCard(HITTING_CATEGORIES, raw, { audience: "staff" });
-    for (const k of ["p1", "p3"]) {
-      const o = off.categories.find((c) => c.key === k)!, n = on.categories.find((c) => c.key === k)!, st = staff.categories.find((c) => c.key === k)!;
-      expect(o.tiles.find((t) => t.key === (k === "p1" ? "hip_load" : "back_hip_socket_hold"))!.outcome).toEqual({ status: "missing", reason: "staff_only_until_validated" });
-      expect(n.tiles.find((t) => t.key === (k === "p1" ? "hip_load" : "back_hip_socket_hold"))!.outcome.status).not.toBe("missing");
-      // Head path (tile 19) stays on its own 10-clip rule, so unlocked P3 differs from staff only by that tile.
-      if (k === "p1") expect(n.score).toBe(st.score);
+    for (const [category, key] of [["p1", "hip_load"], ["p3", "back_hip_socket_hold"], ["p3", "head_path_through_stride"]]) {
+      const tile = athlete.categories.find((c) => c.key === category)?.tiles.find((t) => t.key === key);
+      const staffTile = staff.categories.find((c) => c.key === category)?.tiles.find((t) => t.key === key);
+      expect(tile).toBeDefined();
+      expect(tile?.outcome).toEqual(staffTile?.outcome);
+      expect(tile?.outcome).not.toEqual({ status: "missing", reason: "staff_only_until_validated" });
     }
-    console.log("SWITCH", JSON.stringify({ off: summary(off), on: summary(on) }));
   });
 
   it("stride rhythm: still refuses; swing clips record, never graded", () => {

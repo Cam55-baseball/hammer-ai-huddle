@@ -7,11 +7,6 @@ import {
   verdictAt, scoreAt, recordAt, missingTile, pitcherAbsent, at,
   type CardCategorySpec, type TileReading,
 } from "./scoring";
-import { hipLoadIsStaffOnly } from "@/lib/biomech/metrics/hipLoadVisibility";
-import { ownerTileAudience } from "@/lib/biomech/metrics/ownerTileVisibility";
-
-const hipLoadStaff = () => hipLoadIsStaffOnly();
-const headPathStaff = () => ownerTileAudience("head_path_through_stride") === "staff";
 
 /* ============================ HITTING ============================ */
 /** raw = { pose, card, owner, gather } from runHittingTilesFromText (+ gather). */
@@ -42,7 +37,7 @@ const coilAt = (k: string) => (raw: unknown): TileReading => {
  *  - PASS: none of the above AND a real stride with the body held back AND graded hips-first sequencing.
  *  - UNPROVEN (missing): no stride above the floor, or sequencing unavailable (routed to DelayCam below
  *    60 fps — its would-be verdict is lineage only and is never used as proof either way).
- * Staff-only tiles (19/20) are not used, so the proof reads the same in athlete and staff view.
+ * Tiles 19/20 are not proof inputs; the proof reads downstream movement evidence.
  */
 export const BACK_LEG_PROOF_SOURCES = ["coil.foot_vs_body", "coil.sink", "pose.head_discipline", "card.back_heel_early_rise", "card.back_knee_flex_maintained", "card.sequencing", "card.post_landing_hip_drift"] as const;
 export function backLegProof(raw: unknown): { verdict: "pass" | "fail" | null; forward: string[]; held: string[]; unproven: string | null; mode: "not_held" | "not_used" | null } {
@@ -84,7 +79,7 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
   ],
   categories: [
     { key: "p1", title: "P1: Create Balance", points: 20, tiles: [
-      { key: "hip_load", name: "Back hip socket rotation reached at P1", points: 13, nonNegotiable: true, staffOnly: hipLoadStaff, read: verdictAt("pose.hip_load") },
+      { key: "hip_load", name: "Back hip socket rotation reached at P1", points: 13, nonNegotiable: true, read: verdictAt("pose.hip_load") },
       { key: "back_leg_balance_at_load", name: "Back-leg balance, proven by the stride", points: 7, disproves: "hip_load", read: backLegBalanceProven },
     ] },
     { key: "p2", title: "P2: Gather", points: 13, tiles: [
@@ -93,8 +88,8 @@ export const HITTING_CATEGORIES: CardCategorySpec = {
       { key: "p2_timing", name: "Hand load timing vs the pitcher", points: 4, read: verdictAt("pose.p2_timing", naPitcher) },
     ] },
     { key: "p3", title: "P3: Load by Stride", points: 19, tiles: [
-      { key: "back_hip_socket_hold", evidenceFor: P1_PROOF, name: "Back hip socket holds or increases", points: 3, nonNegotiable: true, staffOnly: hipLoadStaff, read: verdictAt("owner.tile20") },
-      { key: "head_path_through_stride", evidenceFor: P1_PROOF, name: "Head path through the stride", points: 2, staffOnly: headPathStaff, read: verdictAt("owner.tile19") },
+      { key: "back_hip_socket_hold", evidenceFor: P1_PROOF, name: "Back hip socket holds or increases", points: 3, nonNegotiable: true, read: verdictAt("owner.tile20") },
+      { key: "head_path_through_stride", evidenceFor: P1_PROOF, name: "Head path through the stride", points: 2, read: verdictAt("owner.tile19") },
       { key: "active_stride", name: "Stride driven by the back hip, not a fall", points: 2, recordOnly: true, baselineKey: "hitting_rhythm.active_stride", read: recordAt("rhythm.active") },
       { key: "stride_foot_vs_body", name: "Foot goes forward, body stays back", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.foot_vs_body", read: coilAt("foot_vs_body") },
       { key: "stride_hands_opposite", name: "Hands go back as the foot goes forward", points: 0, recordOnly: true, baselineKey: "hitting_stride_coil.hands_opposite", read: coilAt("hands_opposite") },

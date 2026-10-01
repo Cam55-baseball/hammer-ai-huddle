@@ -8,7 +8,7 @@ import { pointPx, bodyScalePx } from "../anchors/poseKinematics";
 import { detectStanceLock, headCentroidPx, unroll } from "../anchors/stanceLock";
 import { solveSegment } from "../rigid/segmentRotation";
 import { oneEuroZeroPhase, HEAD_ONE_EURO } from "../filters/oneEuro";
-import { ownerTileAudience, confirmedCount } from "../metrics/ownerTileVisibility";
+import { confirmedCount } from "../metrics/ownerTileVisibility";
 
 const load = (n: string): LandmarkSeries => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "fixtures", n))).toString("utf8"));
 const still = load("still-subject-15d75bc9.ndjson.gz");
@@ -83,10 +83,9 @@ describe("standards are owner-supplied, floors are measured", () => {
   });
 });
 
-describe("tiles 19/20 audience", () => {
-  it("stays staff-only until n≥10 confirmed clips across both sides", () => {
+describe("tiles 19/20 provenance", () => {
+  it("keeps confirmed-clip counts as provenance, not an audience gate", () => {
     expect(confirmedCount("head_path_through_stride")).toEqual({ total: 1, left: 1, right: 0 });
-    expect(ownerTileAudience("head_path_through_stride")).toBe("staff");
-    expect(ownerTileAudience("back_hip_socket_hold")).toBe("staff");
+    expect(confirmedCount("back_hip_socket_hold")).toEqual({ total: 1, left: 1, right: 0 });
   });
 });
