@@ -9,7 +9,7 @@
  *
  * Presentation only. No new intelligence, no re-scoring.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ import { Zap, ChevronDown, ChevronRight, ArrowRight, Play } from "lucide-react";
 import { useHIESnapshot } from "@/hooks/useHIESnapshot";
 import { matchPrescriptionDrills, maintenanceDrills } from "@/lib/prescription/matchDrills";
 import type { EliteDrill } from "@/data/drills/eliteDrillCatalog";
+import { useDrillCirculation } from "@/hooks/useDrillCirculation";
 
 interface Props {
   module?: string | null;
@@ -36,13 +37,13 @@ interface Props {
   embedded?: boolean;
 }
 
-function DrillRow({ drill, reasons, staff }: { drill: EliteDrill; reasons?: string[]; staff?: boolean }) {
+function DrillRow({ drill, reasons, staff, onOpen }: { drill: EliteDrill; reasons?: string[]; staff?: boolean; onOpen?: () => void }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="rounded-lg border bg-accent/20 p-3">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen((o) => { if (!o) onOpen?.(); return !o; })}
         className="flex w-full items-start gap-2 text-left"
       >
         {open ? (
@@ -131,9 +132,12 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
     [snapshot],
   );
 
+  const { catalog, circulation, log } = useDrillCirculation();
   const matches = useMemo(
     () =>
       matchPrescriptionDrills({
+        catalog,
+        circulation,
         violations,
         faultKeys,
         includePendingReview,
@@ -142,7 +146,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
         module,
         sport,
       }),
-    [violations, faultKeys, includePendingReview, pieV2Signals, weaknessAreas, module, sport],
+    [catalog, circulation, violations, faultKeys, includePendingReview, pieV2Signals, weaknessAreas, module, sport],
   );
 
   const fallback = useMemo(
@@ -150,6 +154,14 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
     () => (matches.length === 0 && !(faultKeys?.length) ? maintenanceDrills(module, sport) : []),
     [matches.length, faultKeys, module, sport],
   );
+
+  // Record each drill served once per screen, so rotation can move on next time.
+  const loggedServe = useRef(false);
+  useEffect(() => {
+    if (loggedServe.current || matches.length === 0) return;
+    loggedServe.current = true;
+    log(matches.map((m) => m.drill.id), "served");
+  }, [matches, log]);
 
   const hieActions = snapshot?.prescriptive_actions ?? [];
 
@@ -170,7 +182,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
             {matches.length > 0 ? "From this clip" : "Maintenance work"}
           </h4>
           {matches.length > 0 ? (
-            matches.map((m) => <DrillRow key={m.drill.id} drill={m.drill} reasons={m.reasons} staff={includePendingReview} />)
+            matches.map((m) => <DrillRow key={m.drill.id} drill={m.drill} reasons={m.reasons} staff={includePendingReview} onOpen={() => log([m.drill.id], "opened")} />)
           ) : fallback.length > 0 ? (
             <>
               <p className="text-xs text-muted-foreground">
