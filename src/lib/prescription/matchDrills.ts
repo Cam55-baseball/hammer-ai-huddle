@@ -17,6 +17,7 @@ const LEVEL_BONUS: Record<EliteDrill["level"], number> = {
   iso: 4,
   constraint: 2,
   transfer: 1,
+  timing: 2,
 };
 
 export interface PrescriptionMatch {
@@ -28,6 +29,8 @@ export interface PrescriptionMatch {
 export interface MatchInput {
   /** `violations_detected` from analyze-video (booleans keyed by violation). */
   violations?: Record<string, boolean> | null;
+  /** `improvements[].fault_key` doctrine faults from analyze-video. */
+  faultKeys?: string[];
   /** PIE V2 signal ids flagged at minor+ severity. */
   pieV2Signals?: string[];
   /** HIE weakness areas (free text / snake_case). */
@@ -52,7 +55,8 @@ export function matchPrescriptionDrills(input: MatchInput): PrescriptionMatch[] 
 
   const activeViolations = Object.entries(input.violations ?? {})
     .filter(([, v]) => v === true)
-    .map(([k]) => k);
+    .map(([k]) => k)
+    .concat((input.faultKeys ?? []).filter((k) => k && k !== "other"));
   const signals = new Set(input.pieV2Signals ?? []);
   const movements = new Set(
     (input.weaknessAreas ?? [])
@@ -69,7 +73,7 @@ export function matchPrescriptionDrills(input: MatchInput): PrescriptionMatch[] 
     let score = 0;
     const reasons: string[] = [];
 
-    for (const v of activeViolations) {
+    for (const v of new Set(activeViolations)) {
       if (drill.violationKeys.includes(v)) {
         score += 30;
         reasons.push(v.replace(/_/g, " "));

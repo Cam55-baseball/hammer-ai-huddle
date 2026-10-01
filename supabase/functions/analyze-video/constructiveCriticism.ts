@@ -33,6 +33,7 @@ OWNER DOCTRINE FAULTS (baseball pitching) — check every one you can see:
 - Head outside the base at landing.
 - Glove flies open instead of turning over and tucking inside the shoulders.
 - Back-foot drag long or crooked instead of short and straight to the plate.
+- Eyes off the target at the top of the leg lift.
 `;
 
 const THROWING_FAULTS = `
@@ -68,7 +69,7 @@ Your job is to help the athlete get better. Praise is NOT the default.
 ${faults}
 Return an "improvements" list:
 - Every fault you can actually see in this clip, most important first (the non-negotiable Phase 4 first for hitting).
-- For each: the phase with its number written out (e.g. "Phase 3 — Load by Stride"), the fault in plain coach language, why it matters using the reasoning above, and exactly what to change.
+- For each: pick its "fault_key" from the allowed list ("other" if none fits), the phase with its number written out (e.g. "Phase 3 — Load by Stride"), the fault in plain coach language, why it matters using the reasoning above, and exactly what to change.
 - NEVER flatter. A swing with a fault is told about the fault, even if it is a professional swing.
 - NEVER invent a fault. If you cannot see it clearly, leave it out.
 - Only if the clip genuinely shows none of these faults may the list be empty — then say in "clean_reason" which checks you verified.
@@ -96,7 +97,7 @@ const FAULT_KEYS: Record<string, string[]> = {
   ],
   pitching_baseball: [
     "early_shoulder_rotation", "chest_open_at_landing", "hang_at_peak_lift", "not_stacked_at_release",
-    "head_outside_base_at_landing", "glove_flies_open", "drag_line_long_or_crooked",
+    "head_outside_base_at_landing", "glove_flies_open", "drag_line_long_or_crooked", "eyes_off_target_at_peak_lift",
   ],
   pitching_softball: [
     "windup_not_sprinter_position", "no_drive_leg_extension", "stride_foot_off_power_line",
