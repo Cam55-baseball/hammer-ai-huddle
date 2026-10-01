@@ -1,4 +1,6 @@
 import { useEffect, useState, useRef } from "react";
+import { runClipPreflight, type PreflightVerdict } from "@/lib/biomech/pose/clipPreflight";
+import { ClipPreflightCard } from "@/components/analyze/ClipPreflightCard";
 import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
@@ -99,6 +101,8 @@ export default function AnalyzeVideo() {
   // Analysis opens first; Report Card reads only this clip's measured tiles.
   const [analysisView, setAnalysisView] = useState<AnalysisView>("analysis");
   const [clipTiles, setClipTiles] = useState<MeasuredClipTiles | null>(null);
+  const [preflight, setPreflight] = useState<PreflightVerdict | null>(null);
+  const [preflightChecking, setPreflightChecking] = useState(false);
 
   const [analyzing, setAnalyzing] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -108,6 +112,8 @@ export default function AnalyzeVideo() {
     summary?: string[];
     feedback: string;
     positives?: string[];
+    improvements?: Array<{ phase: string; fault: string; why: string; fix: string }>;
+    clean_reason?: string | null;
     drills: Array<{
       title: string;
       purpose: string;
@@ -423,6 +429,20 @@ export default function AnalyzeVideo() {
 
     setVideoFile(file);
     setVideoPreview(URL.createObjectURL(file));
+    // One-second clip check before analysis (advisory; never blocks).
+    setPreflight(null);
+    setPreflightChecking(true);
+    void (async () => {
+      try {
+        const meta = await probeVideoMetadata(file).catch(() => null);
+        const fps = meta && meta.fps_source === "container" ? meta.fps_true ?? null : null;
+        setPreflight(await runClipPreflight(file, fps));
+      } catch (err) {
+        console.warn("[clip-preflight] skipped", err);
+      } finally {
+        setPreflightChecking(false);
+      }
+    })();
     setAnalysis(null);
     setAnalysisView("analysis");
     setClipTiles(null);
@@ -1370,6 +1390,8 @@ export default function AnalyzeVideo() {
                   </div>
                 </div>
                 
+                <ClipPreflightCard verdict={preflight} checking={preflightChecking} />
+
                 {/* File metadata and analysis context */}
                 <div className="bg-muted/50 p-3 rounded-lg">
                   <div className="flex items-center justify-between text-sm">
