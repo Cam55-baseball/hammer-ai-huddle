@@ -24,6 +24,8 @@ export interface TourStep {
   body: string;
   /** Optional permission check; false skips the step silently. */
   allowed?: () => boolean;
+  /** Page the target lives on; the tour navigates there first. Missing target after load → skipped. */
+  route?: string;
 }
 
 interface Props {
@@ -33,6 +35,9 @@ interface Props {
   onClose: (result: "completed" | "skipped") => void;
   /** Signed-in user; seen/skipped is remembered per user. */
   userId?: string | null;
+  /** Router hooks for multi-page tours. */
+  navigate?: (to: string) => void;
+  currentPath?: string;
 }
 
 const PAD = 8;
@@ -64,7 +69,7 @@ function maskUrl(w: number, h: number, x: number, y: number, rw: number, rh: num
   return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
 }
 
-export function SpotlightTour({ tourId, steps, open, onClose, userId }: Props) {
+export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, currentPath }: Props) {
   const reduce = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
@@ -73,12 +78,32 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId }: Props) {
   const frame = useRef<number | null>(null);
 
   // Only steps that are permitted AND present; recomputed on open.
-  const active = useMemo(
-    () => (open ? steps.filter((s) => (s.allowed ? s.allowed() : true) && !!findTarget(s.target)) : []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [open, steps],
-  );
+  // Permitted steps; same-page steps must be present now, routed steps are
+  // checked after navigation and dropped silently if absent (progress shrinks).
+  const [active, setActive] = useState<TourStep[]>([]);
+  useEffect(() => {
+    setActive(open ? steps.filter((s) => (s.allowed ? s.allowed() : true) && (s.route ? true : !!findTarget(s.target))) : []);
+  }, [open, steps]);
   const step = active[index];
+  const [foundId, setFoundId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!open || !step) return;
+    setFoundId(null);
+    if (step.route && navigate && currentPath !== step.route) navigate(step.route);
+    let raf = 0; const t0 = performance.now();
+    const poll = () => {
+      if (findTarget(step.target)) { setFoundId(step.id); return; }
+      if (performance.now() - t0 > 4000) {
+        setActive((a) => a.filter((x) => x.id !== step.id));
+        setIndex((i) => Math.max(0, Math.min(i, active.length - 2)));
+        return;
+      }
+      raf = requestAnimationFrame(poll);
+    };
+    raf = requestAnimationFrame(poll);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, step?.id]);
 
   const spring = { stiffness: 260, damping: 30 };
   const sx = useSpring(0, spring), sy = useSpring(0, spring), sw = useSpring(0, spring), sh = useSpring(0, spring);
@@ -106,7 +131,8 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId }: Props) {
   // Locate, scroll into view, wait for settle, then illuminate.
   useLayoutEffect(() => {
     if (!open) return;
-    if (!step) { if (active.length === 0 && open) onClose("completed"); return; }
+    if (!step) { if (active.length === 0 && open && steps.length) onClose("completed"); return; }
+    if (foundId !== step.id) return;
     const el = findTarget(step.target);
     if (!el) { // vanished since filtering — skip gracefully
       setIndex((i) => (i + 1 < active.length ? i + 1 : i));
@@ -140,7 +166,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId }: Props) {
     window.addEventListener("resize", measure);
     return () => { cancelAnimationFrame(raf); cancelAnimationFrame(watch); ro.disconnect(); window.removeEventListener("scroll", measure, true); window.removeEventListener("scrollend", measure, true); window.removeEventListener("resize", measure); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, step?.id]);
+  }, [open, step?.id, foundId]);
 
   useEffect(() => {
     if (!rect) return;
@@ -158,7 +184,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId }: Props) {
     window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
   });
 
-  if (!open || !step) return null;
+  if (!open || !step || foundId !== step.id || !rect) return null;
 
   // Edge-aware coach mark: prefer below, flip above, clamp horizontally.
   const cardW = Math.min(340, vp.w - 24);
