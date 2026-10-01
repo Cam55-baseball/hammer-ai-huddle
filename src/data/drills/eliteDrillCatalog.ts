@@ -15,9 +15,10 @@
  */
 import type { VideoCategory, VideoSport } from "@/lib/videoCategoricalTaxonomy";
 import type { PieV2SignalId } from "@/lib/pieV2/types";
+import { DOCTRINE_DRILLS } from "./doctrineDrills";
 
 /** Teaching level — matches the existing feel → iso → constraint → transfer ladder. */
-export type EliteDrillLevel = "feel" | "iso" | "constraint" | "transfer";
+export type EliteDrillLevel = "feel" | "iso" | "constraint" | "transfer" | "timing";
 
 export interface EliteDrill {
   id: string;
@@ -41,9 +42,16 @@ export interface EliteDrill {
   pieV2Signals: PieV2SignalId[];
   /** movement_pattern taxonomy keys (video_tag_taxonomy). */
   movementPatterns: string[];
+  /** Doctrine library fields (owner review draft). */
+  phase?: string;
+  feel?: string;
+  source?: string;
+  /** Owner's own drill video — empty until he attaches one. */
+  videoUrl?: string | null;
+  ownerReview?: "draft" | "approved";
 }
 
-export const ELITE_DRILL_CATALOG: EliteDrill[] = [
+const BASE_DRILLS: EliteDrill[] = [
   // ── HITTING ────────────────────────────────────────────────────────────
   {
     id: "elite.hit.walkaway_load",
@@ -538,3 +546,5 @@ export function eliteDrillsForCategory(
     (d) => d.category === category && d.sports.includes(sport),
   );
 }
+
+export const ELITE_DRILL_CATALOG: EliteDrill[] = [...BASE_DRILLS, ...DOCTRINE_DRILLS];

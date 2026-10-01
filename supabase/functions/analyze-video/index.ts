@@ -18,7 +18,8 @@ import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalys
 import { chatCompletion } from "../_shared/googleAi.ts";
 import { canSeeScoredGrading, stripScoredGrading } from "../_shared/scoredGradingGate.ts";
 import { buildFaultFindings } from "../_shared/faultFindings.ts";
-import { constructiveCriticismBlock, IMPROVEMENTS_SCHEMA } from "./constructiveCriticism.ts";
+import { constructiveCriticismBlock, improvementsSchema } from "./constructiveCriticism.ts";
+import { scrubFootageClaims } from "./honestyCheck.ts";
 import { runStoredThrowPitchCards, runAndWritePoseTileFindings } from "../_shared/poseTileFindingsServer.ts";
 
 const corsHeaders = {
@@ -2149,14 +2150,14 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                 },
                 feedback: {
                   type: "string",
-                  description: "Detailed feedback on mechanics and form"
+                  description: "Detailed analysis: one flowing coaching piece that weaves in every improvement (fault, why it matters, what to change), phase by phase. Body mechanics only — never describe the video itself."
                 },
                 positives: {
                   type: "array",
                   description: "0-3 positives, only what the clip clearly shows. Optional — never pad with praise.",
                   items: { type: "string" }
                 },
-                improvements: IMPROVEMENTS_SCHEMA,
+                improvements: improvementsSchema(module, sport),
                 clean_reason: { type: "string", description: "Only when improvements is empty: which doctrine checks were verified clean" },
                 drills: {
                   type: "array",
@@ -2294,6 +2295,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     let drills: any[] = [];
     let improvements: any[] = [];
     let clean_reason: string | null = null;
+    let honesty_flags: unknown[] = [];
     // Calculate average historical score
     const averageHistoricalScore = historicalScores.length > 0 
       ? Math.round(historicalScores.reduce((sum, s) => sum + s, 0) / historicalScores.length)
@@ -2337,6 +2339,14 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         improvements = Array.isArray(analysisArgs.improvements) ? analysisArgs.improvements : [];
         clean_reason = typeof analysisArgs.clean_reason === "string" ? analysisArgs.clean_reason : null;
         violations = analysisArgs.violations || {};
+        // Honesty check (owner ruling 2026-10-01): strip any sentence that
+        // asserts edits, cuts, missing frames or on-screen readouts as fact.
+        {
+          const scrub = scrubFootageClaims({ summary, feedback, positives, improvements, clean_reason });
+          summary = scrub.summary; feedback = scrub.feedback; positives = scrub.positives;
+          improvements = scrub.improvements; clean_reason = scrub.clean_reason; honesty_flags = scrub.flags;
+          if (scrub.flags.length > 0) console.warn(`[HONESTY-CHECK] removed ${scrub.flags.length} footage claim(s):`, JSON.stringify(scrub.flags));
+        }
         if (analysisArgs.metrics && typeof analysisArgs.metrics === "object") {
           metrics = analysisArgs.metrics;
           console.log(`[REPORT-CARD] Captured metrics for ${reportCardContract?.id ?? "unknown"}: ${Object.keys(metrics).length} keys`);
@@ -2525,6 +2535,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       positives,
       improvements,
       clean_reason,
+      honesty_flags,
       drills,
       scorecard,
       violations_detected: violations,

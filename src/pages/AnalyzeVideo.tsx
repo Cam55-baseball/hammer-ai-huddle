@@ -43,6 +43,7 @@ import { toStrideFrames } from "@/lib/biomech/pose/toAnchorFrames";
 import { runTempoPipeline } from "@/lib/biomech/pipeline/tempoPipeline";
 import { useVault } from "@/hooks/useVault";
 import { AnalysisPrescriptionSection } from "@/components/analyze/AnalysisPrescriptionSection";
+import { matchPrescriptionDrills } from "@/lib/prescription/matchDrills";
 import { AnalysisResultsPanel } from "@/components/analyze/AnalysisResultsPanel";
 import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
 import { AnalysisVideoRecommendations } from "@/components/analyze/AnalysisVideoRecommendations";
@@ -112,7 +113,7 @@ export default function AnalyzeVideo() {
     summary?: string[];
     feedback: string;
     positives?: string[];
-    improvements?: Array<{ phase: string; fault: string; why: string; fix: string }>;
+    improvements?: Array<{ phase: string; fault: string; why: string; fix: string; fault_key?: string }>;
     clean_reason?: string | null;
     drills: Array<{
       title: string;
@@ -1643,12 +1644,18 @@ export default function AnalyzeVideo() {
                     onSaveDrill={handleSaveDrill}
                     onSaveToLibrary={() => setSaveDialogOpen(true)}
                     onReturnToDashboard={() => navigate('/dashboard')}
+                    hideGeneratedDrills={matchPrescriptionDrills({
+                      faultKeys: (analysis.improvements ?? []).map((i) => i.fault_key ?? "").filter(Boolean),
+                      violations: analysis.violations_detected ?? null,
+                      module, sport,
+                    }).length > 0}
                     prescriptionExtra={
                       <AnalysisPrescriptionSection
                         embedded
                         module={module}
                         sport={sport}
                         violations={analysis.violations_detected ?? null}
+                        faultKeys={(analysis.improvements ?? []).map((i) => i.fault_key ?? "").filter(Boolean)}
                       />
                     }
                      recommendations={
