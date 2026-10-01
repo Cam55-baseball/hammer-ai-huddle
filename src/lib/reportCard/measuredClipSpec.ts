@@ -57,8 +57,8 @@ export function measuredClipSpec(sport: string | undefined, module: string | und
     name: tile.name,
     phase: section.title,
     mode: "pass_fail" as const,
-    standard: "",
-    explainer: { whatWhy: "", howToImprove: "", encouragement: "" },
+    standard: otherClipCopy(spec.card, sport, tile.key).standard,
+    explainer: (({ standard: _s, ...rest }) => rest)(otherClipCopy(spec.card, sport, tile.key)),
     compute: (analysis) => asState(tile.read(readClip(analysis as Record<string, unknown>, spec.card))),
   }))), ...spec.categories.flatMap((group) => group.tiles
     .map((tile) => ({
