@@ -74,6 +74,8 @@ interface Props {
    * card, so an athlete never sees two competing prescription boxes.
    */
   prescriptionExtra?: ReactNode;
+  /** When the doctrine library matched this clip's faults, hide freshly written drills. */
+  hideGeneratedDrills?: boolean;
   /** Matched video shelf between the detailed analysis and prescription. */
   recommendations?: ReactNode;
   /**
@@ -113,6 +115,7 @@ export function AnalysisResultsPanel({
   onSaveToLibrary,
   onReturnToDashboard,
   prescriptionExtra,
+  hideGeneratedDrills,
   recommendations,
   crossDomainSlot,
 
@@ -159,25 +162,6 @@ export function AnalysisResultsPanel({
                 ))}
               </ol>
             )}
-          </Card>
-        </RevealSection>
-      )}
-
-      {/* ── 3b · WHAT TO FIX ─────────────────────────────────────────── */}
-      {(analysis.improvements?.length ?? 0) > 0 && (
-        <RevealSection order={2}>
-          <Card className="space-y-4 border-warning/40 p-5 sm:p-6" data-testid="analysis-improvements">
-            <SectionHeading icon={<Wrench className="h-3.5 w-3.5 text-warning" />}>What to fix</SectionHeading>
-            <ol className="space-y-4">
-              {analysis.improvements!.map((imp, i) => (
-                <li key={i} className="space-y-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-warning">{withoutMeasurementNotation(imp.phase)}</p>
-                  <p className="font-medium leading-snug">{withoutMeasurementNotation(imp.fault)}</p>
-                  <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground">Why it matters: </span>{withoutMeasurementNotation(imp.why)}</p>
-                  <p className="text-sm"><span className="font-semibold">What to change: </span>{withoutMeasurementNotation(imp.fix)}</p>
-                </li>
-              ))}
-            </ol>
           </Card>
         </RevealSection>
       )}
@@ -255,7 +239,7 @@ export function AnalysisResultsPanel({
               </p>
             </div>
 
-            {analysis.drills && analysis.drills.length > 0 && (
+            {!hideGeneratedDrills && analysis.drills && analysis.drills.length > 0 && (
             <div className="space-y-4">
               {analysis.drills.map((drill, index) => {
                 const isSaved = savedDrillIds.has(drill.title);

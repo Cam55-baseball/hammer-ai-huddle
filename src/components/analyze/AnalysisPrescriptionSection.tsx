@@ -23,6 +23,8 @@ interface Props {
   module?: string | null;
   sport?: string | null;
   violations?: Record<string, boolean> | null;
+  /** Doctrine fault keys from the analysis `improvements` list. */
+  faultKeys?: string[];
   pieV2Signals?: string[];
   /**
    * When true, drop the card shell and the duplicate "Your prescription"
@@ -53,7 +55,7 @@ function DrillRow({ drill, reasons }: { drill: EliteDrill; reasons?: string[] })
             <Badge variant="secondary" className="text-[10px] capitalize">{drill.level}</Badge>
             <Badge variant="outline" className="text-[10px]">{drill.dosage}</Badge>
             <Badge variant="outline" className="text-[10px]">{drill.subSkill}</Badge>
-            {reasons?.slice(0, 2).map((r) => (
+            {!drill.phase && reasons?.slice(0, 2).map((r) => (
               <Badge key={r} variant="destructive" className="text-[10px] capitalize">
                 fixes: {r}
               </Badge>
@@ -78,6 +80,17 @@ function DrillRow({ drill, reasons }: { drill: EliteDrill; reasons?: string[] })
               <Badge key={c} variant="outline" className="text-[10px]">“{c}”</Badge>
             ))}
           </div>
+          {drill.feel && (
+            <div>
+              <span className="font-medium">What it should feel like: </span>
+              <span className="text-muted-foreground">{drill.feel}</span>
+            </div>
+          )}
+          {drill.videoUrl ? (
+            <a href={drill.videoUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-primary">
+              <Play className="h-3 w-3" /> Watch the drill
+            </a>
+          ) : null}
           <div className="text-muted-foreground">
             <span className="font-medium text-foreground">Equipment: </span>
             {drill.equipment.join(", ")}
@@ -88,7 +101,7 @@ function DrillRow({ drill, reasons }: { drill: EliteDrill; reasons?: string[] })
   );
 }
 
-export function AnalysisPrescriptionSection({ module, sport, violations, pieV2Signals, embedded }: Props) {
+export function AnalysisPrescriptionSection({ module, sport, violations, faultKeys, pieV2Signals, embedded }: Props) {
   const navigate = useNavigate();
   const { snapshot } = useHIESnapshot();
 
@@ -101,17 +114,19 @@ export function AnalysisPrescriptionSection({ module, sport, violations, pieV2Si
     () =>
       matchPrescriptionDrills({
         violations,
+        faultKeys,
         pieV2Signals,
         weaknessAreas,
         module,
         sport,
       }),
-    [violations, pieV2Signals, weaknessAreas, module, sport],
+    [violations, faultKeys, pieV2Signals, weaknessAreas, module, sport],
   );
 
   const fallback = useMemo(
-    () => (matches.length === 0 ? maintenanceDrills(module, sport) : []),
-    [matches.length, module, sport],
+    // Maintenance work only when the clip genuinely had no faults.
+    () => (matches.length === 0 && !(faultKeys?.length) ? maintenanceDrills(module, sport) : []),
+    [matches.length, faultKeys, module, sport],
   );
 
   const hieActions = snapshot?.prescriptive_actions ?? [];
@@ -145,7 +160,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, pieV2Si
             </>
           ) : (
             <p className="text-xs text-muted-foreground">
-              No drill match for this module yet.
+              {faultKeys?.length ? "No library drill for this fault yet — your coach is adding one." : "No drill match for this module yet."}
             </p>
           )}
         </section>
