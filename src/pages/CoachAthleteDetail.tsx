@@ -173,7 +173,7 @@ export default function CoachAthleteDetail() {
         )}
 
         {snap && (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3" data-tour="coach-work">
             {(["readiness", "fatigue", "workload"] as const).map((k) => {
               const p = snap[k];
               return (
@@ -251,7 +251,7 @@ export default function CoachAthleteDetail() {
           </Card>
         )}
 
-        <Card>
+        <Card data-tour="coach-stream">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               Canonical event stream

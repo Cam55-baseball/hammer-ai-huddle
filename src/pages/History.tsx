@@ -133,7 +133,7 @@ export default function History() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <header>
+        <header data-tour="history" data-tour-context>
           <h1 className="flex items-center gap-2 text-3xl font-bold">
             <Archive className="h-8 w-8" />
             History

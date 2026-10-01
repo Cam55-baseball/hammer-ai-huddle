@@ -1370,7 +1370,7 @@ export default function AnalyzeVideo() {
               </div>
             </Card>
             <div className="mx-auto w-full max-w-xl">
-              <UploadAnalysisReport />
+              <div data-tour="analysis-report"><UploadAnalysisReport /></div>
             </div>
           </div>
         )}

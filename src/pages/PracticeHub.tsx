@@ -445,7 +445,7 @@ export default function PracticeHub() {
             {prescribedConstraints && <span className="text-xs text-muted-foreground ml-2">({prescribedConstraints})</span>}
           </div>
         )}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between" data-tour="practice-log" data-tour-context>
           <div>
             <h1 className="text-3xl font-bold text-foreground">Practice Intelligence</h1>
             <p className="text-muted-foreground">Log your practice here — pick a module below to get started</p>

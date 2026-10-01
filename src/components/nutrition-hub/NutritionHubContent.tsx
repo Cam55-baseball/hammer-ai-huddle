@@ -499,7 +499,7 @@ export function NutritionHubContent() {
       />
 
       {/* Log Meal (with nested Quick Pick Foods, Favorites, Quick Actions, Supplements) */}
-      <div id="log-meal" className="scroll-mt-24">
+      <div id="log-meal" className="scroll-mt-24" data-tour="log-meal">
         <LogMealCard
           onLogMeal={(mealType) => handleLogMeal(mealType)}
           onSelectFood={handleGalleryFoodSelect}

@@ -945,7 +945,7 @@ export default function ScoutEvaluation() {
 
         {/* 5. Remaining tool grades */}
         {flatGroups.length > 0 && (
-          <Card>
+          <Card data-tour="scout-grades-form">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Tool grades</CardTitle>
               <CardDescription>
@@ -1012,7 +1012,7 @@ export default function ScoutEvaluation() {
           </CardContent>
         </Card>
 
-        <Button onClick={handleSubmit} disabled={!canSubmit} className="w-full" size="lg">
+        <Button data-tour="scout-save" onClick={handleSubmit} disabled={!canSubmit} className="w-full" size="lg">
           {saving ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (

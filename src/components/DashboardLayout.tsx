@@ -35,6 +35,7 @@ function DashboardHeader({ tutorialCompleted, user, onTutorialOpen }: {
         {/* Enhanced Menu Button */}
         <Button
           onClick={toggleSidebar}
+          data-tour="menu"
           variant="outline"
           size="lg"
           className="h-11 px-4 gap-2 bg-primary/10 hover:bg-primary/20 text-primary border-primary/30 shadow-md transition-all hover:shadow-lg animate-pulse-gentle"

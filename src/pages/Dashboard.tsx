@@ -583,7 +583,7 @@ export default function Dashboard() {
       <div className="space-y-3 sm:space-y-5 overflow-x-hidden max-w-full">
         <FollowRequestsPanel />
         
-        <div>
+        <div data-tour="landing" data-tour-context>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('dashboard.title')}</h1>
           <div className="flex items-center gap-2">
             <p className="text-sm sm:text-base text-muted-foreground">{t('dashboard.welcomeBack')} {user?.user_metadata?.full_name}</p>

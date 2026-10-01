@@ -748,7 +748,7 @@ export default function Profile() {
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
+            <div className="flex-1" data-tour="profile-details">
               <h2 className="text-2xl font-bold">{displayName}</h2>
               {displayEmail && <p className="text-muted-foreground">{displayEmail}</p>}
               {profile?.bio && (
@@ -1926,14 +1926,14 @@ export default function Profile() {
           isPlayer &&
           followStatus === 'accepted' &&
           (currentUserRole === 'coach' || currentUserRole === 'scout') && (
-            <div className="mb-6">
+            <div className="mb-6" data-tour="scout-grades">
               <FollowedPlayerGradesCard athleteId={viewingUserId ?? undefined} />
             </div>
           )}
 
         {/* Public Verified Stats - visible to everyone */}
         {profile && (
-          <Card className="p-4 mb-6">
+          <Card className="p-4 mb-6" data-tour="scout-measures">
             <PublicVerifiedStats userId={viewingUserId || user.id} />
           </Card>
         )}
