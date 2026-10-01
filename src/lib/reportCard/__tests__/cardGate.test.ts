@@ -76,6 +76,21 @@ describe("card gate — no cross-contamination", () => {
     expect(src).toMatch(/useState<AnalysisView>\("analysis"\)/);
   });
 
+  it("keeps coaching and measured tiles on separate tabs without athlete-facing diagnostics", () => {
+    const src = readFileSync("src/pages/AnalyzeVideo.tsx", "utf8");
+    const report = src.match(/analysisView === "report_card" \? \(\s*([\s\S]*?)\s*\) : \(/)?.[1];
+    const coaching = src.match(/analysisView === "report_card" \? \([\s\S]*?\) : \(\s*<>\s*([\s\S]*?)\s*<\/>(?:\s*\))\s*}/)?.[1];
+    expect(report).toMatch(/<HammerReportCard/);
+    expect(report).toMatch(/measuredOnly/);
+    expect(report).not.toMatch(/AnalysisResultsPanel|AnalysisVideoRecommendations|BackLegFinding/);
+    expect(coaching).toMatch(/AnalysisResultsPanel/);
+    expect(coaching).toMatch(/AnalysisVideoRecommendations/);
+    expect(coaching).not.toMatch(/HammerReportCard|ReportCardTile|CameraViewCard|TrackDiagnosisCard|SCORED_GRADING_NOTICE/);
+    expect(src).not.toMatch(/<CameraViewCard|<TrackDiagnosisCard|SCORED_GRADING_NOTICE/);
+    const panel = readFileSync("src/components/analyze/AnalysisResultsPanel.tsx", "utf8");
+    expect(panel).not.toMatch(/RadialDial|SCORED_GRADING_NOTICE|CameraViewCard|TrackDiagnosisCard/);
+  });
+
   it("the measured report card never consumes another discipline's readings", () => {
     const winning = { verdict: "pass", value: 1, flag: "clear", values: { value: 1 } };
     const filled = new Proxy({}, { get: () => winning });
