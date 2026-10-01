@@ -37,6 +37,17 @@ import { MISSINGNESS_REASONS, type MissingnessReason } from "../metrics/missingn
  */
 export const SCOUT_SAMPLE_BUDGET = 32;
 
+/**
+ * Dense window length in REAL TIME (2026-10-01). 3.0 s, placed 60/40 on the
+ * scouted motion: 1.8 s before covers stance → load → stride, 1.2 s after
+ * covers contact/release and finish. A swing or delivery is under 2 s, and the
+ * scout centre is only known to within one sample period (~0.6 s on a 20 s
+ * clip), so 3 s holds the whole movement with that error either side. The
+ * passing 2026-10-01 clips were 6 s long and still read at 63–74 % pose; the
+ * failures analysed 10–18.5 s and fell to 8–11 %.
+ */
+export const MOVEMENT_WINDOW_SEC = 3;
+
 /** A scout sample only counts as "athlete present" at or above this mean
  *  landmark visibility — the same floor the subject lock uses to consider a
  *  candidate lock-worthy. */
@@ -264,11 +275,15 @@ export interface ScoutedWindowFailure {
 export function placeDenseWindowFromScout(args: {
   fps_true: number;
   duration_sec: number;
+  /** Frame CEILING only (memory/time). Never defines the window's length. */
   budget: number;
   landingTimeSec: number | null;
   findings: ScoutFindings;
+  /** Real-time window length. Defaults to MOVEMENT_WINDOW_SEC. */
+  windowSec?: number;
 }): ScoutedWindow | ScoutedWindowFailure {
   const { fps_true, duration_sec, budget, landingTimeSec, findings } = args;
+  const windowSec = args.windowSec ?? MOVEMENT_WINDOW_SEC;
   if (!Number.isFinite(fps_true) || fps_true <= 0 || !Number.isFinite(duration_sec) || duration_sec <= 0) {
     return {
       failed: true,
@@ -286,7 +301,11 @@ export function placeDenseWindowFromScout(args: {
 
   const totalFrames = Math.max(1, Math.floor(duration_sec * fps_true));
   const maxIndex = totalFrames - 1;
-  const windowFrames = Math.min(totalFrames, Math.max(1, Math.floor(budget)));
+  // Window is budgeted in SECONDS; frames follow from the rate. The frame
+  // budget is a ceiling only (fix 2026-10-01: 600 frames at 60 fps was 10 s of
+  // walk-up and walk-off around a sub-2 s swing, collapsing pose coverage).
+  const secFrames = Math.max(1, Math.round(windowSec * fps_true));
+  const windowFrames = Math.min(totalFrames, secFrames, Math.max(1, Math.floor(budget)));
 
   const span = findings.presence;
   const hasLanding =
@@ -346,7 +365,11 @@ export function placeDenseWindowFromScout(args: {
   }
 
   const ruleBase =
-    windowFrames >= totalFrames ? "full_clip_native_fps" : `budget_${windowFrames}_frames`;
+    windowFrames >= totalFrames
+      ? "full_clip_native_fps"
+      : windowFrames === secFrames
+        ? `window_${windowSec}s_native_fps`
+        : `budget_${windowFrames}_frames`;
   const rule =
     source === "landing_mark"
       ? `${ruleBase}_landing_centred_60_40_scout_validated`
