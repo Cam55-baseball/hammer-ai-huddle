@@ -311,7 +311,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
   // Portal to <body>: an ancestor with a transform (page transitions) would
   // otherwise make `fixed` relative to it and offset the cutout.
   return createPortal(
-    <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-label={step?.title ?? "Demo tour"} data-testid="spotlight-tour">
+    <div className="fixed inset-0 z-[1000]" role="dialog" aria-modal="true" aria-label={step?.title ?? "Demo tour"} data-testid="spotlight-tour">
       <motion.div
         className="absolute inset-0 bg-background/60 backdrop-blur-md"
         style={layer}
