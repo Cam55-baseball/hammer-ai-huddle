@@ -304,8 +304,21 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
       }, 100);
     };
     window.addEventListener("popstate", onBack, true);
+    backRef.current = onBack;
     return () => window.removeEventListener("popstate", onBack, true);
   }, [open]);
+
+  // Safety net: every tour page carries the tour marker. If the page now
+  // showing has none, the user went back past it — treat it as an exit even
+  // if the back event itself was missed.
+  const backRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    if (!open || closing.current || !historyArmed.current) return;
+    const id = window.setTimeout(() => {
+      if (!closing.current && historyArmed.current && !window.history.state?.usr?.hmTour) backRef.current?.();
+    }, 250);
+    return () => window.clearTimeout(id);
+  }, [open, currentPath]);
 
   if (!open) return null;
 
