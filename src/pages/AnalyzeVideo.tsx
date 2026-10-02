@@ -1223,6 +1223,7 @@ export default function AnalyzeVideo() {
         fps_true: probed.fps_true,
         duration_sec: probed.duration_sec,
         landingTime,
+        motionCentreSec: lastMotionCentreRef.current,
       });
       frames = result.frames.map((f) => f.dataUrl);
       frameExtractions = result.frames.map((f) => ({
