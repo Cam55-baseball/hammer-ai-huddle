@@ -14,9 +14,12 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { planReadiness, type PlanSlot } from "@/lib/prescription/ownerPlanDrills";
+import { validateVideoFile } from "@/data/videoLimits";
+import { VideoPlayer } from "@/components/video-library/VideoPlayer";
 
 const SLOT_LABEL: Record<PlanSlot, string> = {
   "hammers_today:skill": "Skill block",
@@ -42,7 +45,7 @@ function PlanReadiness({ row, compact = false }: { row: Omit<OwnerDrillRow, "cre
     </ul>
   );
 }
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, Eye } from "lucide-react";
 import { ELITE_DRILL_CATALOG, type EliteDrill } from "@/data/drills/eliteDrillCatalog";
 import { listDefenseCatalogForOwner } from "@/lib/hammer/prescription/defenseLibrary";
 import { ANALYSIS_PLACEMENTS, OTHER_PLACEMENTS, type OwnerDrillRow } from "@/lib/prescription/ownerDrills";
@@ -51,6 +54,17 @@ import { faultKeysFor } from "../../../supabase/functions/analyze-video/construc
 const LEVELS = ["feel", "iso", "constraint", "transfer", "timing"] as const;
 
 type Draft = Omit<OwnerDrillRow, "id" | "created_at"> & { id?: string };
+
+type Preview = Pick<Draft, "name" | "setup" | "steps" | "dosage" | "cue" | "feel" | "feel_wrong" | "common_mistake" | "video_url">;
+
+function readiness(row: Draft): string {
+  if (!row.active) return "Off";
+  const missing = planReadiness(row).flatMap((item) => item.missing);
+  if (missing.length) return "Needs details";
+  if (!row.name.trim() || row.placements.length === 0 || !row.steps.some((s) => s.trim())) return "Needs details";
+  if (row.placements.some((p) => p.startsWith("analysis:")) && (row.fault_keys.length === 0 || !row.phase?.trim())) return "Needs details";
+  return "Ready";
+}
 
 const EMPTY: Draft = {
   overrides_drill_id: null, placements: [], sports: [], name: "", fault_keys: [], phase: "", level: null,
@@ -92,6 +106,23 @@ export default function DrillBuilder() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [requestOpen, setRequestOpen] = useState(false);
   const [request, setRequest] = useState({ analysis: "", description: "" });
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [preview, setPreview] = useState<Preview | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!videoFile) { setLocalVideoUrl(null); return; }
+    const url = URL.createObjectURL(videoFile);
+    setLocalVideoUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [videoFile]);
+
+  const matches = (name: string, active: boolean, placements: string[]) =>
+    name.toLowerCase().includes(search.trim().toLowerCase()) &&
+    (filter === "all" || (filter === "on" ? active : filter === "off" ? !active : placements.includes(filter)));
 
   const load = async () => {
     const db = supabase as any;
@@ -117,28 +148,46 @@ export default function DrillBuilder() {
   const defense = useMemo(() => listDefenseCatalogForOwner(), []);
 
   const save = async () => {
-    if (!draft) return;
+    if (!draft || saving) return;
     if (!draft.name.trim() || draft.placements.length === 0) {
       toast({ title: "Name and at least one place to land are required" });
       return;
     }
+    const valid = videoFile ? validateVideoFile(videoFile) : { valid: true };
+    if (!valid.valid) { toast({ title: "Video not supported", description: valid.error }); return; }
+    setSaving(true);
+    try {
     const { id, ...body } = draft;
+    let videoUrl = body.video_url;
+    if (videoFile) {
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError || !auth.user) throw new Error("Sign in to upload a video.");
+      const ext = videoFile.name.split(".").pop()?.toLowerCase() ?? "mp4";
+      const path = `${auth.user.id}/library/drills/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("videos").upload(path, videoFile, { upsert: false });
+      if (uploadError) throw uploadError;
+      videoUrl = supabase.storage.from("videos").getPublicUrl(path).data.publicUrl;
+    }
     const payload = {
       ...body,
       steps: body.steps.map((s) => s.trim()).filter(Boolean),
       equipment: body.equipment.map((s) => s.trim()).filter(Boolean),
       level: body.level || null,
-      video_url: body.video_url || null,
+      video_url: videoUrl || null,
     };
     const { data: u } = await supabase.auth.getUser();
     const db = supabase as any;
     const res = id
       ? await db.from("owner_drills").update(payload).eq("id", id)
       : await db.from("owner_drills").insert({ ...payload, created_by: u?.user?.id ?? null });
-    if (res.error) { toast({ title: "Couldn't save", description: res.error.message }); return; }
+    if (res.error) throw res.error;
     toast({ title: "Drill saved" });
     setDraft(null);
+    setVideoFile(null);
     void load();
+    } catch (error) {
+      toast({ title: "Couldn't save drill", description: error instanceof Error ? error.message : "Try again." });
+    } finally { setSaving(false); }
   };
 
   const toggleActive = async (row: OwnerDrillRow | undefined, builtIn?: EliteDrill) => {
@@ -178,33 +227,50 @@ export default function DrillBuilder() {
           </div>
         </div>
 
+        <div className="flex flex-wrap gap-2" aria-label="Search and filter drills">
+          <Input aria-label="Search drills" placeholder="Search drills by name" value={search} onChange={(e) => setSearch(e.target.value)} className="min-w-44 flex-1" />
+          <Select value={filter} onValueChange={setFilter}>
+            <SelectTrigger className="w-full sm:w-64" aria-label="Filter drills"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All drills</SelectItem>
+              <SelectItem value="on">Switched on</SelectItem>
+              <SelectItem value="off">Switched off</SelectItem>
+              {[...ANALYSIS_PLACEMENTS, ...OTHER_PLACEMENTS].map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+
         {groups.map((g) => (
           <Card key={g.id} className="space-y-2 p-4">
             <h2 className="font-semibold">{g.label}</h2>
-            {g.owner.map((r) => (
+            {g.owner.filter((r) => matches(r.name, r.active, r.placements)).map((r) => (
               <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded border p-2">
                 <div className="min-w-0">
                   <div className="text-sm font-medium">{r.name} <Badge variant="secondary" className="ml-1 text-[10px]">Your drill</Badge>{r.pinned && <Badge className="ml-1 text-[10px]">Pinned</Badge>}</div>
                   <div className="text-xs text-muted-foreground">{r.fault_keys.join(", ") || "No fault picked"}</div>
-                  <UsageLine id={`owner.${r.id}`} />
+                  <UsageLine id={`owner.${r.id}`} /> <Badge variant="outline">{readiness(r)}</Badge>
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch checked={r.active} onCheckedChange={() => toggleActive(r)} aria-label="Drill on or off" />
+                  <Button size="sm" variant="ghost" onClick={() => setPreview(r)} aria-label={`Preview ${r.name}`}><Eye className="h-4 w-4" /></Button>
                   <Button size="sm" variant="ghost" onClick={() => setDraft({ ...r })} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
                 </div>
               </div>
             ))}
-            {g.builtIn.map((d) => {
+            {g.builtIn.filter((d) => matches(overrideById.get(d.id)?.name ?? d.name, overrideById.get(d.id)?.active ?? true, overrideById.get(d.id)?.placements ?? placementsFor(d))).map((d) => {
               const ov = overrideById.get(d.id);
+              const view = ov ?? fromBuiltIn(d);
               return (
                 <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 rounded border p-2">
                   <div className="min-w-0">
                     <div className="text-sm font-medium">{ov?.name ?? d.name}{ov && <Badge variant="outline" className="ml-1 text-[10px]">Edited</Badge>}</div>
                     <div className="text-xs text-muted-foreground">{(ov?.fault_keys ?? d.violationKeys).join(", ")}</div>
                     <UsageLine id={d.id} />
+                    <Badge variant="outline">{readiness(view)}</Badge>
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch checked={ov ? ov.active : true} onCheckedChange={() => toggleActive(ov, d)} aria-label="Drill on or off" />
+                    <Button size="sm" variant="ghost" onClick={() => setPreview(view)} aria-label={`Preview ${view.name}`}><Eye className="h-4 w-4" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => setDraft(ov ? { ...ov } : fromBuiltIn(d))}><Pencil className="h-4 w-4" /></Button>
                   </div>
                 </div>
@@ -216,14 +282,16 @@ export default function DrillBuilder() {
         <Card className="space-y-2 p-4">
           <h2 className="font-semibold">Hammers Today and defensive library — your drills</h2>
           <p className="text-xs text-muted-foreground">A switched-on drill takes one slot in the block it's filed under (skill, warm-up or defense), taking turns by day with your other drills there. It only shows to athletes whose sport matches and who have the equipment it lists.</p>
-          {ownerOnly.filter((r) => r.placements.some((p) => !p.startsWith("analysis:"))).map((r) => (
+          {ownerOnly.filter((r) => r.placements.some((p) => !p.startsWith("analysis:")) && matches(r.name, r.active, r.placements)).map((r) => (
             <div key={r.id} className="flex items-center justify-between rounded border p-2">
               <div className="min-w-0">
                 <span className="text-sm">{r.name}</span>
                 <PlanReadiness row={r} compact />
+                <Badge variant="outline">{readiness(r)}</Badge>
               </div>
               <div className="flex items-center gap-2">
                 <Switch checked={r.active} onCheckedChange={() => toggleActive(r)} aria-label="Drill on or off" />
+                <Button size="sm" variant="ghost" onClick={() => setPreview(r)} aria-label={`Preview ${r.name}`}><Eye className="h-4 w-4" /></Button>
                 <Button size="sm" variant="ghost" onClick={() => setDraft({ ...r })} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
               </div>
             </div>
@@ -232,18 +300,34 @@ export default function DrillBuilder() {
 
         <Card className="space-y-2 p-4">
           <h2 className="font-semibold">Defensive library (current, view only)</h2>
-          {defense.map((g) => (
+          {defense.filter((g) => (filter === "all" || filter === "on" || filter === "defensive_library") && (!search.trim() || g.key.toLowerCase().includes(search.toLowerCase()) || g.drills.some((d) => d.name.toLowerCase().includes(search.toLowerCase())))).map((g) => (
             <details key={g.key} className="rounded border p-2">
               <summary className="cursor-pointer text-sm font-medium">{g.key} · {g.drills.length} drills</summary>
               <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                {g.drills.map((d, i) => <li key={i}><span className="text-foreground">{d.name}</span> — {d.dosage}{d.cue ? ` — ${d.cue}` : ""}</li>)}
+                {g.drills.filter((d) => !search.trim() || g.key.toLowerCase().includes(search.toLowerCase()) || d.name.toLowerCase().includes(search.toLowerCase())).map((d, i) => <li key={i} className="flex items-center justify-between gap-2"><span><span className="text-foreground">{d.name}</span> — {d.dosage}{d.cue ? ` — ${d.cue}` : ""}</span><Button variant="ghost" size="sm" aria-label={`Preview ${d.name}`} onClick={() => setPreview({ name: d.name, dosage: d.dosage, cue: d.cue ?? "", steps: [], setup: "", feel: "", feel_wrong: "", common_mistake: "", video_url: "" })}><Eye className="h-4 w-4" /></Button></li>)}
               </ul>
             </details>
           ))}
         </Card>
       </div>
 
-      <Dialog open={!!draft} onOpenChange={(o) => !o && setDraft(null)}>
+      <Dialog open={!!preview} onOpenChange={(open) => !open && setPreview(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{preview?.name}</DialogTitle></DialogHeader>
+          {preview && <div className="space-y-3 text-sm">
+            {preview.video_url && <VideoPlayer videoUrl={preview.video_url} videoType={/\.(mp4|mov|webm|avi|m4v)(\?|$)/i.test(preview.video_url) ? "upload" : "external"} title={preview.name} />}
+            {preview.setup && <p><strong>Set-up:</strong> {preview.setup}</p>}
+            {preview.steps?.length > 0 && <ol className="list-decimal pl-5">{preview.steps.filter(Boolean).map((step, i) => <li key={i}>{step}</li>)}</ol>}
+            {preview.cue && <p><strong>Cue:</strong> {preview.cue}</p>}
+            {preview.dosage && <p><strong>Dose:</strong> {preview.dosage}</p>}
+            {preview.feel && <p><strong>Feels right:</strong> {preview.feel}</p>}
+            {preview.feel_wrong && <p><strong>Feels wrong:</strong> {preview.feel_wrong}</p>}
+            {preview.common_mistake && <p><strong>Common mistake:</strong> {preview.common_mistake}</p>}
+          </div>}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!draft} onOpenChange={(o) => !o && (setDraft(null), setVideoFile(null))}>
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader><DialogTitle>{draft?.id || draft?.overrides_drill_id ? "Edit drill" : "New drill"}</DialogTitle></DialogHeader>
           {draft && (
@@ -330,6 +414,8 @@ export default function DrillBuilder() {
               <div><Label>The common mistake (and how to tell)</Label><Textarea value={draft.common_mistake ?? ""} onChange={(e) => set("common_mistake", e.target.value)} /></div>
               <div><Label>Equipment (comma separated)</Label><Input value={draft.equipment.join(", ")} onChange={(e) => set("equipment", e.target.value.split(","))} /></div>
               <div><Label>Video link</Label><Input value={draft.video_url ?? ""} onChange={(e) => set("video_url", e.target.value)} placeholder="Paste your drill video link" /></div>
+              <div><Label htmlFor="drill-video-file">Or upload a video</Label><Input id="drill-video-file" type="file" accept="video/mp4,video/quicktime,video/webm,video/x-msvideo,video/x-m4v" onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)} />{videoFile && <p className="text-xs text-muted-foreground">{videoFile.name} will be attached when you save.</p>}</div>
+              {(draft.video_url || localVideoUrl) && <VideoPlayer videoUrl={localVideoUrl || draft.video_url} videoType={localVideoUrl || /\.(mp4|mov|webm|avi|m4v)(\?|$)/i.test(draft.video_url ?? "") ? "upload" : "external"} title={draft.name || "Drill preview"} />}
               <PlanReadiness row={draft} />
               <div className="flex gap-6">
                 <label className="flex items-center gap-2"><Switch checked={draft.active} onCheckedChange={(v) => set("active", v)} />On</label>
@@ -337,7 +423,7 @@ export default function DrillBuilder() {
               </div>
             </div>
           )}
-          <DialogFooter><Button variant="outline" onClick={() => setDraft(null)}>Cancel</Button><Button onClick={save}>Save drill</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => { setDraft(null); setVideoFile(null); }}>Cancel</Button><Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save drill"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
