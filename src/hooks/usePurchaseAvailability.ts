@@ -27,13 +27,14 @@ export function usePurchaseAvailability(): PurchaseAvailability & { isStaffAccou
   }, []);
 
   const isStaffAccount = isCoach || isScout;
-  // A stale or failed role lookup must never advertise athlete modules to staff.
+  // Role readiness is for unsolicited advertising only; purchases remain available
+  // through deliberate navigation under the platform storefront rules.
   const unresolved = authLoading || (!!user && (roleLoading || roleCheckFailed));
   return {
     ...availability,
-    canShowPurchaseUI: availability.canShowPurchaseUI && !isStaffAccount && !unresolved,
+    canShowPurchaseUI: availability.canShowPurchaseUI,
     isStaffAccount,
     roleLoading: unresolved,
-    reason: isStaffAccount ? "coach/scout account: athlete purchases hidden" : unresolved ? "role unresolved: purchases hidden" : availability.reason,
+    reason: availability.reason,
   };
 }

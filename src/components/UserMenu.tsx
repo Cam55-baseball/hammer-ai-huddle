@@ -23,7 +23,7 @@ interface UserMenuProps {
 
 export function UserMenu({ userName, userEmail }: UserMenuProps) {
   const navigate = useNavigate();
-  const { canShowPurchaseUI } = usePurchaseAvailability();
+  const { canShowPurchaseUI, isStaffAccount, roleLoading } = usePurchaseAvailability();
   const { signOut } = useAuth();
   const { open: openQuickEdit } = useQuickEditProfile();
   const { hasCompletedOnboarding, loading: onboardingLoading } = useAthleteOnboardingState();
@@ -78,10 +78,10 @@ export function UserMenu({ userName, userEmail }: UserMenuProps) {
           <Pencil className="mr-2 h-4 w-4" />
           <span>Quick edit</span>
         </DropdownMenuItem>
-        {canShowPurchaseUI && (
-          <DropdownMenuItem onClick={() => navigate("/checkout")}>
+        {canShowPurchaseUI && !roleLoading && (
+          <DropdownMenuItem onClick={() => navigate(isStaffAccount ? "/select-modules" : "/checkout")}>
             <Settings className="mr-2 h-4 w-4" />
-            <span>Manage Subscription</span>
+            <span>{isStaffAccount ? "Plans & subscriptions" : "Manage Subscription"}</span>
           </DropdownMenuItem>
         )}
         <DropdownMenuItem onClick={() => navigate("/athlete/recruiting-consent")}>

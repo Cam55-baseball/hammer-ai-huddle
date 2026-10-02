@@ -1757,7 +1757,7 @@ export default function Profile() {
 
         {/* People & access — the only discoverable entry point for parent
             invites and per-person access control. */}
-        {!viewingOtherProfile && !isStaffAccount && !roleLoading && (
+        {!viewingOtherProfile && (
           <Card className="p-6 mb-6">
             <h3 className="text-xl font-bold mb-1">People &amp; access</h3>
             <p className="text-sm text-muted-foreground mb-4">
@@ -1783,7 +1783,7 @@ export default function Profile() {
         )}
 
         {/* Subscription Status Card */}
-        {!viewingOtherProfile && !isStaffAccount && !roleLoading && (
+        {!viewingOtherProfile && !roleLoading && (
           <Card className="p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold flex items-center gap-2">
@@ -1848,7 +1848,7 @@ export default function Profile() {
               <p className="text-muted-foreground mb-4">
                 {t('profile.noActiveSubscriptions')}
               </p>
-              {canShowPurchaseUI && (
+              {canShowPurchaseUI && !isStaffAccount && (
                 <Button onClick={() => navigate("/checkout")}>
                   {t('profile.subscribeToModules')}
                 </Button>
@@ -1859,7 +1859,7 @@ export default function Profile() {
         )}
 
         {/* Manage Subscriptions Section */}
-        {!viewingOtherProfile && !isStaffAccount && !roleLoading && module_details && Object.keys(module_details).length > 0 && (
+        {!viewingOtherProfile && !roleLoading && module_details && Object.keys(module_details).length > 0 && (
           <Card className="p-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-4">
