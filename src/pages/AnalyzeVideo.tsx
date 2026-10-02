@@ -1350,8 +1350,7 @@ export default function AnalyzeVideo() {
             lives in DelayCam. */}
         {!videoPreview && (
           <div className="space-y-4">
-            {/* Pre-filming guidance for pitching (both sports). */}
-            {module === "pitching" && <PitchingFilmingGuide />}
+            <PitchingFilmingGuide />
             <Card data-tour="upload" className="mx-auto max-w-xl p-6 sm:p-8 text-center border-dashed border-2">
               <div className="flex flex-col items-center space-y-3">
                 <div className="p-3 sm:p-4 rounded-full bg-primary/10">

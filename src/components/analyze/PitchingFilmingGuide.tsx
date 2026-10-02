@@ -1,58 +1,20 @@
-/**
- * PitchingFilmingGuide — a short pre-recording checklist shown before a user
- * films or uploads for pitching analysis (baseball & softball).
- *
- * Grounded in a real failure seen on actual user footage: softball pitching
- * returned 13/13 missing tiles because of three filming gaps. Each item below
- * directly prevents one of those gaps so the analysis can actually measure.
- */
+/** Shared filming guidance for every analysis upload. */
 import { Card } from "@/components/ui/card";
-import { Ruler, Maximize2, Clapperboard, Smartphone } from "lucide-react";
-
 const ITEMS = [
-  {
-    icon: Ruler,
-    title: "Keep rubber & home plate both in frame",
-    body: "Without both visible at once, the system can't establish a reference line — and most tiles can't measure.",
-  },
-  {
-    icon: Maximize2,
-    title: "Capture a standing reference first",
-    body: "Before the pitch, film the athlete standing at full height next to a visible reference. Without it, stride length can't be measured.",
-  },
-  {
-    icon: Clapperboard,
-    title: "Frame wide & stay continuous",
-    body: "Keep the whole athlete in frame, wind-up through release. Tiles need to locate specific phase moments and fail if the camera cuts away or crops too tight.",
-  },
-  {
-    icon: Smartphone,
-    title: "Film with your phone's normal camera",
-    body: "Upright (portrait) is fine. What we can't read is a clip that's been shrunk by a text or social app — send the original from your camera roll, at 24 frames a second or faster.",
-  },
-] as const;
-
+  "Film close, so you fill a good part of the picture, head to feet",
+  "Keep your whole body in the shot the whole time",
+  "Just you in the picture",
+  "Hold the camera still, in good light",
+  "Include the move itself, not just the wait before it",
+];
 
 export function PitchingFilmingGuide() {
   return (
-    <Card className="border-amber-500/30 bg-amber-500/5 p-3 sm:p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
-          Before you film — 4 things to get right
-        </span>
-      </div>
-      <ul className="space-y-2">
-        {ITEMS.map(({ icon: Icon, title, body }) => (
-          <li key={title} className="flex items-start gap-2.5">
-            <div className="mt-0.5 shrink-0 rounded-md bg-amber-500/15 p-1.5">
-              <Icon className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-[13px] font-semibold leading-tight">{title}</div>
-              <p className="text-[12px] leading-snug text-muted-foreground">{body}</p>
-            </div>
-          </li>
-        ))}
+    <Card className="mx-auto max-w-xl space-y-2 p-4">
+      <h2 className="text-sm font-semibold">Filming tips</h2>
+      <p className="text-sm text-muted-foreground">Every clip gets an analysis — almost any video works. For the best read:</p>
+      <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+        {ITEMS.map((item) => <li key={item}>{item}</li>)}
       </ul>
     </Card>
   );
