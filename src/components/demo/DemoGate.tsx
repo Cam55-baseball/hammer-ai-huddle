@@ -24,6 +24,5 @@ export function DemoGate({ children }: { children: ReactNode }) {
     navigate(`/start-here?intent=${intent}`, { replace: true });
   }, [user, progress, loading, authLoading, roleLoading, isStaffAccount, pathname, search, navigate]);
 
-  // Never flash a pending athlete purchase flow to a coach or scout while redirecting.
   return <>{children}</>;
 }

@@ -1783,7 +1783,7 @@ export default function Profile() {
         )}
 
         {/* Subscription Status Card */}
-        {!viewingOtherProfile && (
+        {!viewingOtherProfile && !isStaffAccount && !roleLoading && (
           <Card className="p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold flex items-center gap-2">
