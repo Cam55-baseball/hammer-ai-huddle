@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { planReadiness, type PlanSlot } from "@/lib/prescription/ownerPlanDrills";
@@ -108,7 +109,15 @@ export default function DrillBuilder() {
   const [filter, setFilter] = useState("all");
   const [preview, setPreview] = useState<Preview | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!videoFile) { setLocalVideoUrl(null); return; }
+    const url = URL.createObjectURL(videoFile);
+    setLocalVideoUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [videoFile]);
 
   const matches = (name: string, active: boolean, placements: string[]) =>
     name.toLowerCase().includes(search.trim().toLowerCase()) &&
@@ -405,7 +414,7 @@ export default function DrillBuilder() {
               <div><Label>Equipment (comma separated)</Label><Input value={draft.equipment.join(", ")} onChange={(e) => set("equipment", e.target.value.split(","))} /></div>
               <div><Label>Video link</Label><Input value={draft.video_url ?? ""} onChange={(e) => set("video_url", e.target.value)} placeholder="Paste your drill video link" /></div>
               <div><Label htmlFor="drill-video-file">Or upload a video</Label><Input id="drill-video-file" type="file" accept="video/mp4,video/quicktime,video/webm,video/x-msvideo,video/x-m4v" onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)} />{videoFile && <p className="text-xs text-muted-foreground">{videoFile.name} will be attached when you save.</p>}</div>
-              {(draft.video_url || videoFile) && <VideoPlayer videoUrl={videoFile ? URL.createObjectURL(videoFile) : draft.video_url} videoType="upload" title={draft.name || "Drill preview"} />}
+              {(draft.video_url || localVideoUrl) && <VideoPlayer videoUrl={localVideoUrl || draft.video_url} videoType={localVideoUrl || /\.(mp4|mov|webm|avi|m4v)(\?|$)/i.test(draft.video_url ?? "") ? "upload" : "external"} title={draft.name || "Drill preview"} />}
               <PlanReadiness row={draft} />
               <div className="flex gap-6">
                 <label className="flex items-center gap-2"><Switch checked={draft.active} onCheckedChange={(v) => set("active", v)} />On</label>
