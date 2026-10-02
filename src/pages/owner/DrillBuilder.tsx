@@ -62,6 +62,7 @@ function readiness(row: Draft): string {
   const missing = planReadiness(row).flatMap((item) => item.missing);
   if (missing.length) return "Needs details";
   if (!row.name.trim() || row.placements.length === 0 || !row.steps.some((s) => s.trim())) return "Needs details";
+  if (row.placements.some((p) => p.startsWith("analysis:")) && (row.fault_keys.length === 0 || !row.phase?.trim())) return "Needs details";
   return "Ready";
 }
 
