@@ -24,5 +24,10 @@ export function DemoGate({ children }: { children: ReactNode }) {
     navigate(`/start-here?intent=${intent}`, { replace: true });
   }, [user, progress, loading, authLoading, roleLoading, isStaffAccount, pathname, search, navigate]);
 
+  // Never flash a pending athlete purchase flow to a coach or scout while redirecting.
+  if (user && progress?.demo_state === 'pending' && !roleLoading && !isStaffAccount &&
+      !pathname.startsWith('/demo') && !pathname.startsWith('/start-here') &&
+      GATED_PREFIXES.some(p => pathname.startsWith(p))) return null;
+
   return <>{children}</>;
 }

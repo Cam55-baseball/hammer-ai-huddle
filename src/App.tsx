@@ -531,7 +531,7 @@ const App = () => {
               <Route path="/training-block" element={<TrainingBlock />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="/program/:id" element={<BuildAccessGate buildType="program" />} />
-              <Route path="/b/:slug" element={<BundleStorefront />} />
+              <Route path="/b/:slug" element={<AthletePurchaseRoute><BundleStorefront /></AthletePurchaseRoute>} />
               <Route path="/bundle/:id" element={<BundlePlayer />} />
               <Route path="/consultation/:id" element={<BuildAccessGate buildType="consultation" />} />
               <Route path="/start-here" element={<AthletePurchaseRoute><StartHereRunner /></AthletePurchaseRoute>} />
