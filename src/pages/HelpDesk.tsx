@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { HelpDeskChat } from "@/components/HelpDeskChat";
 import { IdeaDropBox } from "@/components/IdeaDropBox";
@@ -37,6 +38,7 @@ const quickLinks = [
 export default function HelpDesk() {
   const { t } = useTranslation();
   const { user, session, loading, isAuthStable } = useAuth();
+  const { isStaffAccount, roleLoading } = usePurchaseAvailability();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -59,10 +61,10 @@ export default function HelpDesk() {
           question: t('helpDesk.faq.chooseSport', 'How do I choose my sport?'),
           answer: t('helpDesk.faq.chooseSportAnswer', 'During onboarding you select Baseball or Softball. You can switch anytime from the Dashboard by tapping the sport selector at the top.'),
         },
-        {
+        ...(!roleLoading && !isStaffAccount ? [{
           question: t('helpDesk.faq.whatModules', 'What modules are available?'),
           answer: t('helpDesk.faq.whatModulesAnswer', 'There are three main modules: **Complete Hitter** (hitting analysis + Production Lab + Tex Vision), **Complete Pitcher** (pitching analysis + Production Studio), and **Complete Player** (throwing analysis + Speed Lab). Each requires a subscription.'),
-        },
+        }] : []),
       ],
     },
     {
@@ -133,17 +135,17 @@ export default function HelpDesk() {
       title: t('helpDesk.faq.accountSettings', 'Account & Settings'),
       icon: <User className="h-4 w-4" />,
       items: [
-        {
+        ...(!roleLoading && !isStaffAccount ? [{
           question: t('helpDesk.faq.changeSubscription', 'How do I change my subscription?'),
           answer: t('helpDesk.faq.changeSubscriptionAnswer', 'Go to **Profile** and manage your subscription from there. You can upgrade, downgrade, or cancel modules individually.'),
-        },
+        }] : []),
         {
           question: t('helpDesk.faq.updateProfile', 'How do I update my profile?'),
           answer: t('helpDesk.faq.updateProfileAnswer', 'Navigate to **Profile** from the sidebar. Update your name, avatar, position, height, weight, social links, and more. Tap Save when done.'),
         },
       ],
     },
-  ], [t]);
+  ], [t, roleLoading, isStaffAccount]);
 
   const filteredCategories = useMemo(() => {
     if (!searchQuery.trim()) return faqCategories;

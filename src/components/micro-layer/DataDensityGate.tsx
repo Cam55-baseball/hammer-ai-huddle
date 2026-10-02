@@ -13,9 +13,10 @@ interface DataDensityGateProps {
 
 export function DataDensityGate({ requiredLevel, children }: DataDensityGateProps) {
   const { level } = useDataDensityLevel();
-  const { canShowPurchaseUI } = usePurchaseAvailability();
+  const { canShowPurchaseUI, isStaffAccount, roleLoading } = usePurchaseAvailability();
 
   if (level >= requiredLevel) return <>{children}</>;
+  if (isStaffAccount || roleLoading) return null;
 
   const needed = dataDensityLevels.find(d => d.level === requiredLevel);
 

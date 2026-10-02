@@ -43,7 +43,7 @@ const SelectRole = () => {
     } else {
       // Scout/Coach and Admin don't need age confirmation
       localStorage.setItem('selectedRole', role);
-      navigate("/select-modules", { state: { sport: selectedSport, role } });
+      navigate(role === 'Scout/Coach' ? "/select-sport-scout" : "/select-modules", { state: { sport: selectedSport, role } });
     }
   };
 
@@ -79,8 +79,6 @@ const SelectRole = () => {
             <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">{t('selectRole.sport')}: {selectedSport}</span>
             <span>→</span>
             <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">{t('selectRole.role')}</span>
-            <span>→</span>
-            <span>{t('selectRole.module')}</span>
           </div>
         </div>
 

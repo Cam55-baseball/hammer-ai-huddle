@@ -95,7 +95,7 @@ export function AppSidebar() {
   const { signOut } = useAuth();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
-  const { isScout, isCoach } = useScoutAccess();
+  const { isScout, isCoach, loading: staffRoleLoading, roleCheckFailed } = useScoutAccess();
   // Player-only navigation follows the purchase, not the role.
   const { hasPlayerAccess } = usePlayerModuleAccess();
   const { visible: rankingsVisible, loading: rankingsVisibilityLoading } = useRankingsVisibility();
@@ -181,7 +181,7 @@ export function AppSidebar() {
     { title: t('navigation.dashboard'), url: "/dashboard", icon: Home },
     ...(isCoach ? [{ title: t('navigation.coachConsole', 'Coach Console'), url: "/coach/console", icon: Users }] : []),
     ...(isCoach ? [{ title: t('navigation.orgDigest', 'Org Digest'), url: "/coach/digest", icon: CalendarDays }] : []),
-    ...(hasAnySubscription(modules) || isOwner || isAdmin ? [{ title: 'My Daily Game Plan', url: "/my-daily-game-plan", icon: ListChecks }] : []),
+    ...(!staffRoleLoading && !roleCheckFailed && !(isCoach || isScout) && (hasAnySubscription(modules) || isOwner || isAdmin) ? [{ title: 'My Daily Game Plan', url: "/my-daily-game-plan", icon: ListChecks }] : []),
     { title: t('navigation.calendar'), url: "/calendar", icon: CalendarDays },
     { title: 'The General', url: '/progress', icon: BarChart3 },
     ...(hasPlayerAccess ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
@@ -592,7 +592,7 @@ export function AppSidebar() {
         )}
 
         {/* The Vault - Featured Section */}
-        <SidebarGroup className="border-b border-sidebar-border pb-3">
+        {!staffRoleLoading && !roleCheckFailed && !(isCoach || isScout) && <SidebarGroup className="border-b border-sidebar-border pb-3">
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem className="sidebar-item">
@@ -626,7 +626,7 @@ export function AppSidebar() {
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
+        </SidebarGroup>}
 
         <SidebarGroup>
           <SidebarGroupLabel className="group-label-animated flex items-center gap-2 cursor-default">
@@ -777,7 +777,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
 
-        <SidebarGroup>
+        {!staffRoleLoading && !roleCheckFailed && !(isCoach || isScout) && <SidebarGroup>
           <SidebarGroupLabel className="group-label-animated flex items-center gap-2 cursor-default">
             {t('navigation.trainingModules')}
           </SidebarGroupLabel>
@@ -858,7 +858,7 @@ export function AppSidebar() {
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
+        </SidebarGroup>}
 
         <SidebarGroup>
           <SidebarGroupLabel className="group-label-animated flex items-center gap-2 cursor-default">

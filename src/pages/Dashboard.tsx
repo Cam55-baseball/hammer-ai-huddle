@@ -113,7 +113,7 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { modules: subscribedModules, module_details, loading: subLoading, refetch, hasAccessForSport, getModuleDetails, onModulesChange, enableFastPolling } = useSubscription();
-  const { canShowPurchaseUI } = usePurchaseAvailability();
+  const { canShowPurchaseUI, isStaffAccount, roleLoading: purchaseRoleLoading } = usePurchaseAvailability();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const { isScout, isCoach, loading: scoutLoading } = useScoutAccess();
@@ -607,7 +607,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Module cards above Game Plan when user has no tier (players only) */}
-        {!hasAnyTier && !isCoach && !isScout && moduleCardsSection}
+        {!purchaseRoleLoading && !isStaffAccount && !hasAnyTier && moduleCardsSection}
 
         {/* Coach Hammer Next Best Step — surfaced above the Identity card. */}
         {hasPlayerAccess && <CommunicationAI />}
@@ -678,7 +678,7 @@ export default function Dashboard() {
         </AlertDialog>
 
         {/* Module cards below Game Plan when user has a tier, or is coach/scout */}
-        {(hasAnyTier || isCoach || isScout) && moduleCardsSection}
+        {!purchaseRoleLoading && !isStaffAccount && hasAnyTier && moduleCardsSection}
 
         {/* Merch always pinned below the Game Plan */}
         {merchSection}

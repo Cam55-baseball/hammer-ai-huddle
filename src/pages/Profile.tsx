@@ -83,7 +83,7 @@ function PracticeIntelligenceSections() {
 }
 
 export default function Profile() {
-  const { canShowPurchaseUI } = usePurchaseAvailability();
+  const { canShowPurchaseUI, isStaffAccount, roleLoading } = usePurchaseAvailability();
   useRequireAuth();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
@@ -1757,7 +1757,7 @@ export default function Profile() {
 
         {/* People & access — the only discoverable entry point for parent
             invites and per-person access control. */}
-        {!viewingOtherProfile && (
+        {!viewingOtherProfile && !isStaffAccount && !roleLoading && (
           <Card className="p-6 mb-6">
             <h3 className="text-xl font-bold mb-1">People &amp; access</h3>
             <p className="text-sm text-muted-foreground mb-4">
@@ -1783,7 +1783,7 @@ export default function Profile() {
         )}
 
         {/* Subscription Status Card */}
-        {!viewingOtherProfile && (
+        {!viewingOtherProfile && !isStaffAccount && !roleLoading && (
           <Card className="p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold flex items-center gap-2">
@@ -1859,7 +1859,7 @@ export default function Profile() {
         )}
 
         {/* Manage Subscriptions Section */}
-        {!viewingOtherProfile && module_details && Object.keys(module_details).length > 0 && (
+        {!viewingOtherProfile && !isStaffAccount && !roleLoading && module_details && Object.keys(module_details).length > 0 && (
           <Card className="p-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-4">
