@@ -38,11 +38,17 @@ export interface DeterministicExtractInput {
    * 'dense' — uniform ~12fps sampling (max 48) for ball-flight measurement.
    */
   sampling?: "key" | "dense";
+  /**
+   * Seconds where the scout pass found the movement. When set (and no landing
+   * mark), the 'key' budget is placed around it instead of spread evenly.
+   */
+  motionCentreSec?: number | null;
 }
 
 export interface DeterministicExtractResult {
   requested: FrameSelection[];
   frames: ExtractedFrame[];
+  placement: "dense" | "landing_mark" | "movement_centred" | "even_spread";
 }
 
 /**
@@ -51,11 +57,18 @@ export interface DeterministicExtractResult {
  * Encoding is PNG → SHA-256 of the raw PNG bytes.
  */
 export const extractKeyFramesDeterministic = async (
-  { videoFile, fps_true, duration_sec, landingTime, sampling = "key" }: DeterministicExtractInput,
+  { videoFile, fps_true, duration_sec, landingTime, sampling = "key", motionCentreSec }: DeterministicExtractInput,
 ): Promise<DeterministicExtractResult> => {
+  const hasLanding = landingTime != null && landingTime > 0 && landingTime < duration_sec;
+  const movement = sampling === "key" && !hasLanding && motionCentreSec != null
+    ? buildMovementFrameSelection(fps_true, duration_sec, motionCentreSec)
+    : [];
+  const placement: DeterministicExtractResult["placement"] = sampling === "dense"
+    ? "dense"
+    : hasLanding ? "landing_mark" : movement.length > 0 ? "movement_centred" : "even_spread";
   const requested = sampling === "dense"
     ? buildDenseFrameSelection(fps_true, duration_sec)
-    : buildFrameSelection(fps_true, duration_sec, landingTime ?? null);
+    : movement.length > 0 ? movement : buildFrameSelection(fps_true, duration_sec, landingTime ?? null);
   if (requested.length === 0) {
     return { requested: [], frames: [] };
   }
