@@ -245,6 +245,7 @@ const AcceptParentInvite = lazyWithRetry(() => import("./pages/AcceptParentInvit
 const SafetyCenter = lazyWithRetry(() => import("./pages/SafetyCenter"));
 const RelationshipSettings = lazyWithRetry(() => import("./pages/RelationshipSettings"));
 import { DemoGate } from "./components/demo/DemoGate";
+import { AthletePurchaseRoute } from "./components/purchase/AthletePurchaseRoute";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -329,11 +330,11 @@ const App = () => {
               <Route path="/scout-application" element={<ScoutApplication />} />
               <Route path="/scout-application-pending" element={<ScoutApplicationPending />} />
               <Route path="/select-sport" element={<SelectSport />} />
-              <Route path="/select-modules" element={<SelectModules />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/select-modules" element={<AthletePurchaseRoute><SelectModules /></AthletePurchaseRoute>} />
+              <Route path="/pricing" element={<AthletePurchaseRoute><Pricing /></AthletePurchaseRoute>} />
+              <Route path="/checkout" element={<AthletePurchaseRoute><Checkout /></AthletePurchaseRoute>} />
               <Route path="/profile-setup" element={<ProfileSetup />} />
-              <Route path="/activate" element={<Activate />} />
+              <Route path="/activate" element={<AthletePurchaseRoute><Activate /></AthletePurchaseRoute>} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/my-daily-game-plan" element={<MyDailyGamePlan />} />
               <Route path="/timeline" element={<AsbTimeline />} />
@@ -533,7 +534,7 @@ const App = () => {
               <Route path="/b/:slug" element={<BundleStorefront />} />
               <Route path="/bundle/:id" element={<BundlePlayer />} />
               <Route path="/consultation/:id" element={<BuildAccessGate buildType="consultation" />} />
-              <Route path="/start-here" element={<StartHereRunner />} />
+              <Route path="/start-here" element={<AthletePurchaseRoute><StartHereRunner /></AthletePurchaseRoute>} />
               <Route path="/relational" element={<Relational />} />
               <Route path="/relational/demo" element={<RelationalDemo />} />
               <Route path="/parent-invite" element={<ParentInvite />} />
@@ -541,11 +542,11 @@ const App = () => {
               <Route path="/safety" element={<SafetyCenter />} />
               <Route path="/relationships/settings" element={<RelationshipSettings />} />
 
-              <Route path="/demo" element={<DemoRoot />} />
-              <Route path="/demo/upgrade" element={<DemoUpgrade />} />
-              <Route path="/demo/:tier" element={<DemoTier />} />
-              <Route path="/demo/:tier/:category" element={<DemoCategory />} />
-              <Route path="/demo/:tier/:category/:submodule" element={<DemoSubmodule />} />
+              <Route path="/demo" element={<AthletePurchaseRoute><DemoRoot /></AthletePurchaseRoute>} />
+              <Route path="/demo/upgrade" element={<AthletePurchaseRoute><DemoUpgrade /></AthletePurchaseRoute>} />
+              <Route path="/demo/:tier" element={<AthletePurchaseRoute><DemoTier /></AthletePurchaseRoute>} />
+              <Route path="/demo/:tier/:category" element={<AthletePurchaseRoute><DemoCategory /></AthletePurchaseRoute>} />
+              <Route path="/demo/:tier/:category/:submodule" element={<AthletePurchaseRoute><DemoSubmodule /></AthletePurchaseRoute>} />
               <Route path="*" element={<NotFound />} />
               </Routes>
               <DemoTourHost />

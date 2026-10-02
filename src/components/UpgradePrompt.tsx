@@ -15,7 +15,9 @@ interface UpgradePromptProps {
 export function UpgradePrompt({ featureName, featureDescription, variant = 'inline' }: UpgradePromptProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { canShowPurchaseUI } = usePurchaseAvailability();
+  const { canShowPurchaseUI, isStaffAccount, roleLoading } = usePurchaseAvailability();
+
+  if (isStaffAccount || roleLoading) return null;
 
   // Purchase hidden (native, non-US or unknown storefront): no price, no CTA, no link.
   if (!canShowPurchaseUI) {
