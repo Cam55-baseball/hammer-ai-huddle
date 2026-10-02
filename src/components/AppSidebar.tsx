@@ -628,7 +628,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>}
 
-        {!staffRoleLoading && !(isCoach || isScout) && <SidebarGroup>
+        <SidebarGroup>
           <SidebarGroupLabel className="group-label-animated flex items-center gap-2 cursor-default">
             {t('navigation.mainNavigation')}
           </SidebarGroupLabel>
@@ -710,7 +710,7 @@ export function AppSidebar() {
 
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>}
+        </SidebarGroup>
 
         {/* Practice Intelligence Section */}
         <SidebarGroup>
@@ -777,7 +777,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
 
-        <SidebarGroup>
+        {!staffRoleLoading && !(isCoach || isScout) && <SidebarGroup>
           <SidebarGroupLabel className="group-label-animated flex items-center gap-2 cursor-default">
             {t('navigation.trainingModules')}
           </SidebarGroupLabel>
