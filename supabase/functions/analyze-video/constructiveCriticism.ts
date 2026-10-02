@@ -30,7 +30,7 @@ OWNER DOCTRINE FAULTS (baseball pitching) — check every one you can see:
 - Chest already facing the plate at landing.
 - Hanging at the top of the leg lift (lift and thrust not working together; tempo stalls).
 - Not stacked at release: shoulders or eyes tip off line.
-- Head outside the base at landing.
+- Eye-to-eye line tilts more than 15° from horizontal at front-foot strike. Do not call this from a side-on view or any unvalidated camera view.
 - Glove flies open instead of turning over and tucking inside the shoulders.
 - Back-foot drag long or crooked instead of short and straight to the plate.
 - Eyes off the target at the top of the leg lift.

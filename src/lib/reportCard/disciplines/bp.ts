@@ -93,7 +93,7 @@ const pm = (u: number | null, d: number, unit: string) => (u == null ? "" : ` ±
 const PITCHING_CARD_EXTRA: ReportCardTileSpec[] = ([
   ["drag_line", "Drag Line", "Short back-foot drag, straight to the plate", "The back foot's drag after landing shows how you finished your push. Direction needs a camera behind you."],
   ["stack_and_track", "Stack and Track", "Shoulders and eyes level at release", "Level shoulders and eyes let your whole body throw on one line. Needs a camera behind or in front of you."],
-  ["balance_at_landing", "Balance at Landing", "Head over your base at landing", "Landing with your head over your legs keeps the delivery under control."],
+  ["balance_at_landing", "Balance at Landing", "Eye line within 15° of horizontal at landing", "The line between your eyes should stay near horizontal when your front foot lands. This needs a camera behind or in front of you and does not run from a side-on clip."],
   ["eyes_on_target_at_peak_lift", "Eyes on Target", "Head faces the target at the top of the lift", "The camera cannot see your eyes. It reads which way your head faces at the top of your leg lift."],
   ["glove_swivel", "Glove Swivel", "Glove turns over and tucks in", "The tracker cannot see your fingers inside the glove, so this check does not run yet."],
   ["release_extension", "Release Extension", "Ball out in front of your front foot", "Only a release clearly outside the owner's range gets a call; close ones get no call."],
@@ -111,7 +111,7 @@ const tiles: ReportCardTileSpec[] = [
     standard: "18° OR MORE",
     explainer: {
       whatWhy:
-        "The angle from the center mass of your plant foot to your front hip at peak leg lift. Elite target is 25°. Leading with your glute toward home plate marks an appropriate coil that kicks off a powerful, fast, efficient delivery.",
+        "The angle from the back ankle of your support leg to your front hip at peak leg lift. Elite target is 25°. Leading with your glute toward home plate marks an appropriate coil that kicks off a powerful, fast, efficient delivery.",
       howToImprove:
         "Pause at peak leg lift in a mirror. Feel the glute load. Hip-hinge mobility, lateral leg lifts against a wall, and tempo-controlled wind-up drills build the awareness.",
       encouragement: "The game is hard. Stack small wins — your delivery is a habit, not a moment.",

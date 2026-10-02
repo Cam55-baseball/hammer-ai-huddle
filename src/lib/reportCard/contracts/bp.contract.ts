@@ -16,8 +16,8 @@ export const bpContract: DisciplineContract = {
       unit: "degrees",
       range: [0, 60],
       prompt:
-        "Angle from the center mass of the plant foot to the front hip at PEAK LEG LIFT. " +
-        "Measure in degrees. 18° passes; 25° is elite. If you cannot see the plant foot and front hip simultaneously, mark missing.",
+        "Angle from the back ankle of the support leg to the front hip at PEAK LEG LIFT. " +
+        "Measure in degrees. 18° passes; 25° is elite. If you cannot see the back ankle and front hip simultaneously, mark missing.",
     },
     {
       key: "premature_shoulder_open_deg",
