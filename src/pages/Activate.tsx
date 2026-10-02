@@ -105,7 +105,7 @@ const Activate = () => {
     }
     toast({
       title: "Free access enabled",
-      description: "Upgrade anytime from your dashboard.",
+      description: isStaffAccount ? "Your access is ready." : "Upgrade anytime from your dashboard.",
     });
     navigate("/dashboard", { replace: true });
   };
@@ -222,7 +222,7 @@ const Activate = () => {
               className="w-full"
               onClick={handleContinueFree}
             >
-              {canShowPurchaseUI ? "Continue Free" : "Continue"}
+              {canShowPurchaseUI && !isStaffAccount ? "Continue Free" : "Continue"}
             </Button>
           </Card>
         </div>
