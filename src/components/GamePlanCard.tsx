@@ -75,6 +75,8 @@ import { format, addDays, startOfWeek, isSameDay, getDay } from 'date-fns';
 
 interface GamePlanCardProps {
   selectedSport: 'baseball' | 'softball';
+  /** Only the dedicated My Daily Game Plan page opens it expanded. */
+  defaultOpen?: boolean;
 }
 
 // Stable constant to avoid new array instances triggering re-renders
@@ -114,7 +116,7 @@ function DraggableTaskItem({
   );
 }
 
-export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
+export function GamePlanCard({ selectedSport, defaultOpen = false }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { tasks, customActivities, completedCount, totalCount, loading, refetch, addOptimisticActivity, updateOptimisticActivity, refreshCustomActivities, folderTasks, toggleFolderItemCompletion, saveFolderCheckboxState, saveFolderPerformanceData, setFolderItemCompletionState, markFolderItemAllAndComplete, reopenFolderItem, isDayComplete } = useGamePlan(selectedSport);
@@ -161,7 +163,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     setInUse: setPlanInUse,
     open: planOpen,
     setOpen: setPlanOpen,
-  } = useGamePlanInUse('athlete');
+  } = useGamePlanInUse('athlete', { defaultOpen });
   const planHidden = !planOpen;
 
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);

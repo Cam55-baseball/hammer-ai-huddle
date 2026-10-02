@@ -85,7 +85,7 @@ function writeCache(surface: GamePlanSurface, value: boolean) {
   }
 }
 
-export function useGamePlanInUse(surface: GamePlanSurface) {
+export function useGamePlanInUse(surface: GamePlanSurface, opts: { defaultOpen?: boolean } = {}) {
   const { user } = useAuthContext();
   const userId = user?.id ?? null;
 
@@ -93,7 +93,10 @@ export function useGamePlanInUse(surface: GamePlanSurface) {
   // Owner ruling 2026-10-01: Game Plan ALWAYS begins closed, on every screen,
   // every visit. The open state is in-memory only — never restored from cache
   // or the server — so it can never be left open on return.
-  const [open, setOpen] = useState<boolean>(false);
+  // Owner ruling 2026-10-02: the dedicated My Daily Game Plan page passes
+  // defaultOpen and starts expanded. The default per surface always wins —
+  // nothing remembered between visits can override it either way.
+  const [open, setOpen] = useState<boolean>(!!opts.defaultOpen);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {

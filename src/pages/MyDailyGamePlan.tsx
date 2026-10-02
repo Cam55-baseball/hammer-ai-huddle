@@ -10,7 +10,7 @@ export default function MyDailyGamePlan() {
     <DashboardLayout>
       <SubscriptionGate requiredAccess="any" featureName="My Daily Game Plan">
         <section className="mx-auto max-w-4xl p-3 sm:p-6" data-tour="game-plan-page">
-          <GamePlanCard selectedSport={sport} />
+          <GamePlanCard selectedSport={sport} defaultOpen />
         </section>
       </SubscriptionGate>
     </DashboardLayout>
