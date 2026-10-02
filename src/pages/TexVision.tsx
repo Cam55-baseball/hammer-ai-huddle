@@ -29,7 +29,7 @@ interface ActiveDrill {
 }
 
 export default function TexVision() {
-  const { canShowPurchaseUI } = usePurchaseAvailability();
+  const { canShowPurchaseUI, isStaffAccount, roleLoading } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
@@ -194,7 +194,7 @@ export default function TexVision() {
   // Access denied - show locked state
   // Purchase hidden: locked modules show a neutral unavailable state, with no
   // price, no "subscribe" and no link out. See src/lib/purchase/purchaseGate.ts.
-  if (!hasAccess && !canShowPurchaseUI) {
+  if (!hasAccess && (!canShowPurchaseUI || isStaffAccount || roleLoading)) {
     return (
       <DashboardLayout>
         <PurchaseUnavailable variant="full" />
