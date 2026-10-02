@@ -31,6 +31,7 @@ A known mismatch refuses with `calibration_unavailable` and detail `camera_view_
 | hands_outside_shoulders_at_landing | side-on | wrist behind rear shoulder along target line |
 | shoulder_plane_steadiness | side-on | shoulder-line tilt in-plane |
 | finish_balance | either | centre-of-mass stillness |
+| balance_at_landing | on-line, not yet released | eye-to-eye line tilt is foreshortened side-on; the on-line branch still needs a confirmed pitching fixture |
 | back_knee_flex_maintained | side-on | knee angle in sagittal plane |
 | post_landing_hip_drift | side-on | forward hip drift in-plane |
 | hands_stay_up_at_plant | either | vertical |

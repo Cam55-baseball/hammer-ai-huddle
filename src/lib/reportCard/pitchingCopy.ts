@@ -13,7 +13,7 @@ export const PITCHING_COPY: Record<CardKey, { pass: string; fail: string }> = {
   head_at_release_deg: { pass: "Your head stayed on the line to the plate at release.", fail: "Your head pulled off the line to the plate at release. Keep your eyes and belly button pointed at the target." },
   drag_line: { pass: "Your back foot drag stayed short and went straight to the plate.", fail: "Your back foot is dragging too far. Finish the push and let the foot come through." },
   stack_and_track: { pass: "You stayed stacked — shoulders level and eyes level as you let it go.", fail: "You tipped as you let it go. Keep your shoulders and your eyes level so your whole body throws on one line." },
-  balance_at_landing: { pass: "You landed balanced with your head over your base.", fail: "Your head was outside your base when your front foot landed. Land with your head over your legs." },
+  balance_at_landing: { pass: "Your eye line stayed level when your front foot landed.", fail: "Your eye line tilted when your front foot landed. Keep your eyes level through landing." },
   eyes_on_target_at_peak_lift: { pass: "Your eyes were on the target before you moved forward.", fail: "Your eyes weren't on the target at the top of your leg lift. Lock onto the glove before you go." },
   glove_swivel: { pass: "Your glove turned over and tucked into your body inside your shoulders.", fail: "Your glove flew open. Turn it over, pinky to your body, and keep it inside your shoulders." },
   glove_drift_outside_frame_in: { pass: "Your glove stayed inside your shoulders.", fail: "Your glove drifted outside your shoulders. Keep it in front of your chest." },

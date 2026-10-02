@@ -43,7 +43,7 @@ export const bpContract: DisciplineContract = {
       unit: "degrees",
       range: [0, 60],
       prompt:
-        "Angle from the center mass of the plant foot to the front hip at PEAK LEG LIFT, measured in degrees. PASS at 18°, ELITE at 25°. Worked example: vertical thigh, no forward lean → ~10°; clear angled load over the rubber with hip stacked over plant foot → ~26°. If plant foot AND front hip are not simultaneously visible in the peak-leg-lift frame, set missing=true with reason 'Plant foot or front hip not visible at peak leg lift'.",
+        "Angle from the back ankle of the support leg to the front hip at PEAK LEG LIFT, measured in degrees. PASS at 18°, ELITE at 25°. If the back ankle AND front hip are not simultaneously visible in the peak-leg-lift frame, set missing=true with reason 'Back ankle or front hip not visible at peak leg lift'.",
     },
     {
       key: "premature_shoulder_open_deg",

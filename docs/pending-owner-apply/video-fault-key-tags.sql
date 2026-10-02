@@ -24,7 +24,7 @@ insert into public.video_tag_taxonomy (layer, key, label, skill_domain, sport, d
   ('correction', 'chest_open_at_landing', 'chest open at landing', 'pitching', 'baseball', 'Landing', true),
   ('correction', 'hang_at_peak_lift', 'hang at peak lift', 'pitching', 'baseball', 'Leg lift', true),
   ('correction', 'not_stacked_at_release', 'not stacked at release', 'pitching', 'baseball', 'Release', true),
-  ('correction', 'head_outside_base_at_landing', 'head outside base at landing', 'pitching', 'baseball', 'Landing', true),
+  ('correction', 'head_outside_base_at_landing', 'eye line tilted at landing', 'pitching', 'baseball', 'Landing', true),
   ('correction', 'glove_flies_open', 'glove flies open', 'pitching', 'baseball', 'Landing to release', true),
   ('correction', 'drag_line_long_or_crooked', 'drag line long or crooked', 'pitching', 'baseball', 'Release to finish', true),
   ('correction', 'eyes_off_target_at_peak_lift', 'eyes off target at peak lift', 'pitching', 'baseball', 'Leg lift', true),

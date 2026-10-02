@@ -6,6 +6,7 @@ import { decodeLandmarkSeriesText, type LandmarkSeries } from "../pose/landmarkS
 import { runPitchingCardTiles, pitchingRootPatterns, PITCHING_CARD_FLOORS, PITCHING_CARD_STANDARDS } from "../metrics/pitchingCardTiles";
 import { frontAnkleIndex, rearAnkleIndex } from "../side/strideSide";
 import { PITCHING_COPY, PITCHING_ROOT_COPY } from "../../reportCard/pitchingCopy";
+import { TILE_CAMERA_REQUIREMENTS } from "../camera/cameraView";
 
 const load = (n: string): LandmarkSeries => decodeLandmarkSeriesText(gunzipSync(readFileSync(join(__dirname, "fixtures", n))).toString("utf8"));
 const still = load("still-subject-15d75bc9.ndjson.gz"), A = load("swing-24fps-914cf54c.ndjson.gz"), B = load("swing-24fps-9d2e117e.ndjson.gz");
@@ -47,9 +48,15 @@ it("constant detector (every frame identical) refuses everything", () => {
 it("floors below the owner's standard, except release extension (flagged)", () => {
   expect(PITCHING_CARD_FLOORS.shoulder_tilt_deg).toBeLessThan(PITCHING_CARD_STANDARDS.shoulder_tilt_deg.pass_max);
   expect(PITCHING_CARD_FLOORS.eye_tilt_deg).toBeLessThan(PITCHING_CARD_STANDARDS.stack_and_track.pass_max);
-  expect(PITCHING_CARD_FLOORS.balance_deg).toBeLessThan(PITCHING_CARD_STANDARDS.balance_at_landing.pass_max_from_vertical_deg);
+  expect(PITCHING_CARD_FLOORS.eye_tilt_deg).toBe(5);
+  expect(PITCHING_CARD_FLOORS.eye_tilt_deg).toBeLessThan(PITCHING_CARD_STANDARDS.balance_at_landing.pass_max_from_horizontal_deg);
   const [lo, hi] = PITCHING_CARD_STANDARDS.release_extension.band_in;
   expect(PITCHING_CARD_FLOORS.release_extension_in).toBeGreaterThan((hi - lo) / 2);
+});
+
+it("defines landing balance as an on-line eye-to-eye reading", () => {
+  expect(TILE_CAMERA_REQUIREMENTS.balance_at_landing).toBe("on_line");
+  expect(PITCHING_CARD_STANDARDS.balance_at_landing.pass_max_from_horizontal_deg).toBe(15);
 });
 
 it("posture root pattern is one finding", () => {

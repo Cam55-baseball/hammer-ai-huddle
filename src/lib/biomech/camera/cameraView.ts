@@ -87,7 +87,10 @@ export const TILE_CAMERA_REQUIREMENTS: Readonly<Record<string, CameraRequirement
   drag_line: "side_on",
   release_extension: "side_on",
   eyes_on_target_at_peak_lift: "side_on",
-  balance_at_landing: "either",
+  // The eye-to-eye line points toward a side-on camera and is foreshortened.
+  // On-line geometry is required, and the tile still refuses until that branch
+  // has a confirmed pitching fixture.
+  balance_at_landing: "on_line",
   glove_swivel: "either",
   // hitting owner tiles
   head_path_through_stride: "side_on",

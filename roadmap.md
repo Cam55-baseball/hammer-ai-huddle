@@ -24,3 +24,11 @@
 - [x] Add Drill Builder search, filters, preview, upload, and readiness badges without schema changes
 - [ ] Drill deletion: requires an approved durable snapshot and owner-only database delete policy before enabling; do not remove athlete history
 - [x] Keep the pitching energy-angle conflict and five questions unresolved for the owner
+# Approved pitching doctrine activation
+- [ ] Align energy angle copy everywhere to back ankle → front hip at maximum leg lift
+- [ ] Define landing balance as eye-line tilt; side-on refuses, on-line awaits fixture validation
+- [ ] Report 5.00° still floor against 15° standard plainly
+- [ ] Apply and verify only the owner-authorized doctrine function and active fault tags
+- [ ] Allow only owner-hand Drill Builder removal; preserve every past prescription
+- [ ] Separate live, preview-only, blocked, and three open pitching questions in final report
+
