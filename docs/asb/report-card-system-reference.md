@@ -72,8 +72,8 @@ Each entry: the exact AI extraction prompt (from `bp.contract.ts`), then the exa
 
 ### Energy Angle — `energy_angle_deg`
 - **Range:** 0–60°. **Standard:** 18° or more (elite 25°). Non-negotiable: no.
-- **AI prompt (verbatim):** *"Angle from the center mass of the plant foot to the front hip at PEAK LEG LIFT. Measure in degrees. 18° passes; 25° is elite. If you cannot see the plant foot and front hip simultaneously, mark missing."*
-- **What/why (verbatim):** *"The angle from the center mass of your plant foot to your front hip at peak leg lift. Elite target is 25°. Leading with your glute toward home plate marks an appropriate coil that kicks off a powerful, fast, efficient delivery."*
+- **AI prompt (verbatim):** *"Angle from the back ankle of the support leg to the front hip at PEAK LEG LIFT. Measure in degrees. 18° passes; 25° is elite. If you cannot see the back ankle and front hip simultaneously, mark missing."*
+- **What/why (verbatim):** *"The angle from the back ankle of your support leg to your front hip at peak leg lift. Elite target is 25°. Leading with your glute toward home plate marks an appropriate coil that kicks off a powerful, fast, efficient delivery."*
 - **How to improve (verbatim):** *"Pause at peak leg lift in a mirror. Feel the glute load. Hip-hinge mobility, lateral leg lifts against a wall, and tempo-controlled wind-up drills build the awareness."*
 - **Encouragement (verbatim):** *"The game is hard. Stack small wins — your delivery is a habit, not a moment."*
 
