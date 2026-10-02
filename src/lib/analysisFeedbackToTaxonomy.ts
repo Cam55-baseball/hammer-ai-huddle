@@ -17,6 +17,7 @@
  */
 import type { SkillDomain, TagSport } from './videoRecommendationEngine';
 import { mapHIEAreaToMovement } from './analysisToTaxonomy';
+import { faultKeysFor } from '../../supabase/functions/analyze-video/constructiveCriticism';
 
 export interface FeedbackSignals {
   skillDomain: SkillDomain;
@@ -264,13 +265,7 @@ export function analysisFeedbackToTaxonomy(
 
   // The structured improvements list is the analysis's own per-sport fault
   // vocabulary. Never derive a correction from prose or an unrelated module.
-  const allowed: Record<string, Set<string>> = {
-    hitting: new Set(['hip_load_back_leg_not_balanced', 'back_knee_straightened_fail', 'back_hip_socket_hold_fail', 'front_heel_not_down_at_landing', 'hands_below_back_elbow_at_heel_landing', 'stride_body_gained_ground', 'early_shoulder_rotation', 'hands_pass_elbow_early', 'post_landing_hip_drift_fail', 'head_rises_before_contact', 'head_discipline_head_past_com', 'lead_elbow_bends_in_swing', 'p1_load_not_used']),
-    pitching_baseball: new Set(['early_shoulder_rotation', 'chest_open_at_landing', 'hang_at_peak_lift', 'not_stacked_at_release', 'head_outside_base_at_landing', 'glove_flies_open', 'drag_line_long_or_crooked', 'eyes_off_target_at_peak_lift']),
-    pitching_softball: new Set(['windup_not_sprinter_position', 'no_drive_leg_extension', 'stride_foot_off_power_line', 'arm_path_away_from_body', 'back_leg_off_power_line']),
-    throwing: new Set(['early_shoulder_rotation', 'shoulders_not_aligned', 'back_leg_not_facing_target']),
-  };
-  const legal = allowed[violationBucket(skillDomain, sport)];
+  const legal = new Set(faultKeysFor(skillDomain, sport ?? 'baseball'));
   for (const finding of analysis?.improvements ?? []) {
     const key = finding.fault_key;
     if (!key || !legal?.has(key)) continue;
