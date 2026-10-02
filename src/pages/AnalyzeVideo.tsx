@@ -374,6 +374,7 @@ export default function AnalyzeVideo() {
   // Auto-recompute report card ONCE per video when metrics are missing/sparse.
   // Lineage-preserving: only mutates ai_analysis.metrics via the edge function.
   const autoRecomputedRef = useRef<Set<string>>(new Set());
+  const lastMotionCentreRef = useRef<number | null>(null);
   useEffect(() => {
     if (!currentVideoId || !analysis) return;
     if (autoRecomputedRef.current.has(currentVideoId)) return;
@@ -584,6 +585,8 @@ export default function AnalyzeVideo() {
     // Movement gate — decided from the persisted-format landmark series before
     // any analysis output. No series (pose failed) = cannot confirm movement.
     let movementGate: MovementGateResult = evaluateMovementGate(null);
+    // Seconds where the scout pass found the movement (null = not found).
+    let scoutCentreSec: number | null = null;
 
     // Frame rate unknown (container unreadable): the clip is still accepted and
     // saved with fps unknown, but every frame-indexed step needs a real rate,
@@ -595,51 +598,6 @@ export default function AnalyzeVideo() {
     const seekHz = fpsTrue ?? UNKNOWN_FPS_SAMPLING_GRID_HZ;
     const runAnalysis = analysisEnabled;
     if (analysisEnabled) {
-      try {
-        setUploadStage('Picking out key frames…');
-    setExtractingFrames(true);
-        toast.info(t('videoAnalysis.extractingFrames', "Extracting key frames for analysis..."));
-
-        const result = await extractKeyFramesDeterministic({
-          videoFile,
-          fps_true: seekHz,
-          duration_sec: probed.duration_sec,
-          landingTime,
-        });
-        frames = result.frames.map((f) => f.dataUrl);
-        frameExtractions = result.frames.map((f) => ({
-          frame_index: f.frame_index,
-          timestamp_seconds: f.timestamp_seconds,
-          sha256_hex: f.sha256_hex,
-          width: f.width,
-          height: f.height,
-        }));
-
-        if (frames.length < 3) {
-          throw new Error(UPLOAD_ERRORS.notEnoughFrames);
-        }
-
-
-        if (landingTime != null) {
-          landingFrameIndex = calculateLandingFrameIndex(
-            landingTime,
-            seekHz,
-            result.frames.map((f) => f.frame_index),
-          );
-          console.log('[ANALYSIS] Using landing frame index:', landingFrameIndex);
-        }
-
-        console.log(`[ANALYSIS] Successfully extracted ${frames.length} frames for analysis`);
-        setExtractingFrames(false);
-      } catch (frameError: any) {
-        console.error('[ANALYSIS] Frame extraction failed:', frameError);
-        setExtractingFrames(false);
-        toast.error(friendlyThrownError(frameError) === UPLOAD_ERRORS.generic
-          ? UPLOAD_ERRORS.frameExtractionFailed
-          : friendlyThrownError(frameError));
-        setUploading(false);
-        return;
-      }
 
 
       // ===== STEP 1 — Dense D-POSE landmark production =====
@@ -667,6 +625,10 @@ export default function AnalyzeVideo() {
             setUploadStage(f < 0.33 ? 'Tracking your movement — just started…' : f < 0.66 ? 'Tracking your movement — about halfway…' : 'Tracking your movement — nearly done…');
           },
         });
+        {
+          const c = (denseRun.series.header as { scout_motion_centre_frame?: number | null }).scout_motion_centre_frame;
+          scoutCentreSec = c != null ? c / seekHz : null;
+        }
         movementGate = evaluateMovementGate(denseRun.series);
         // The report card reads the same local deterministic tile code as the
         // server's generated bundle. Never use the AI analysis's legacy metrics.
@@ -757,6 +719,7 @@ export default function AnalyzeVideo() {
         // honest window to analyse. Logged with its canonical missingness
         // reason instead of being smoothed into a guessed window.
         if (poseErr instanceof WindowSelectionFailure) {
+          if (poseErr.scout.motion_centre_frame != null) scoutCentreSec = poseErr.scout.motion_centre_frame / seekHz;
           console.error('[D-POSE] window selection failed:', {
             missing_reason: poseErr.missingness.missing_reason,
             emitted_by: poseErr.missingness.emitted_by,
@@ -767,6 +730,57 @@ export default function AnalyzeVideo() {
         }
         // Do not block the rest of the analysis flow — surface honest failure.
         toast.error(UPLOAD_ERRORS.poseFailed);
+      }
+
+      // AI frames are placed AFTER the scout pass so the budget lands on the
+      // movement, not spread evenly across the wait and the walk-off.
+      try {
+        setUploadStage('Picking out key frames…');
+    setExtractingFrames(true);
+        toast.info(t('videoAnalysis.extractingFrames', "Extracting key frames for analysis..."));
+
+        const result = await extractKeyFramesDeterministic({
+          videoFile,
+          fps_true: seekHz,
+          duration_sec: probed.duration_sec,
+          landingTime,
+          motionCentreSec: scoutCentreSec,
+        });
+        lastMotionCentreRef.current = scoutCentreSec;
+        console.log('[AI-FRAMES]', { placement: result.placement, motion_centre_sec: scoutCentreSec, sent_sec: result.frames.map((f) => f.timestamp_seconds) });
+        frames = result.frames.map((f) => f.dataUrl);
+        frameExtractions = result.frames.map((f) => ({
+          frame_index: f.frame_index,
+          timestamp_seconds: f.timestamp_seconds,
+          sha256_hex: f.sha256_hex,
+          width: f.width,
+          height: f.height,
+        }));
+
+        if (frames.length < 3) {
+          throw new Error(UPLOAD_ERRORS.notEnoughFrames);
+        }
+
+
+        if (landingTime != null) {
+          landingFrameIndex = calculateLandingFrameIndex(
+            landingTime,
+            seekHz,
+            result.frames.map((f) => f.frame_index),
+          );
+          console.log('[ANALYSIS] Using landing frame index:', landingFrameIndex);
+        }
+
+        console.log(`[ANALYSIS] Successfully extracted ${frames.length} frames for analysis`);
+        setExtractingFrames(false);
+      } catch (frameError: any) {
+        console.error('[ANALYSIS] Frame extraction failed:', frameError);
+        setExtractingFrames(false);
+        toast.error(friendlyThrownError(frameError) === UPLOAD_ERRORS.generic
+          ? UPLOAD_ERRORS.frameExtractionFailed
+          : friendlyThrownError(frameError));
+        setUploading(false);
+        return;
       }
 
     }
@@ -1209,6 +1223,7 @@ export default function AnalyzeVideo() {
         fps_true: probed.fps_true,
         duration_sec: probed.duration_sec,
         landingTime,
+        motionCentreSec: lastMotionCentreRef.current,
       });
       frames = result.frames.map((f) => f.dataUrl);
       frameExtractions = result.frames.map((f) => ({
