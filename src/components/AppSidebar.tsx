@@ -181,7 +181,7 @@ export function AppSidebar() {
     { title: t('navigation.dashboard'), url: "/dashboard", icon: Home },
     ...(isCoach ? [{ title: t('navigation.coachConsole', 'Coach Console'), url: "/coach/console", icon: Users }] : []),
     ...(isCoach ? [{ title: t('navigation.orgDigest', 'Org Digest'), url: "/coach/digest", icon: CalendarDays }] : []),
-    ...(hasAnySubscription(modules) || isOwner || isAdmin ? [{ title: 'My Daily Game Plan', url: "/my-daily-game-plan", icon: ListChecks }] : []),
+    ...(!staffRoleLoading && !roleCheckFailed && !(isCoach || isScout) && (hasAnySubscription(modules) || isOwner || isAdmin) ? [{ title: 'My Daily Game Plan', url: "/my-daily-game-plan", icon: ListChecks }] : []),
     { title: t('navigation.calendar'), url: "/calendar", icon: CalendarDays },
     { title: 'The General', url: '/progress', icon: BarChart3 },
     ...(hasPlayerAccess ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
