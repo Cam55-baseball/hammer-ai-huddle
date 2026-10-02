@@ -1476,7 +1476,7 @@ var TILE_CAMERA_REQUIREMENTS = {
   drag_line: "side_on",
   release_extension: "side_on",
   eyes_on_target_at_peak_lift: "side_on",
-  balance_at_landing: "either",
+  balance_at_landing: "on_line",
   glove_swivel: "either",
   head_path_through_stride: "side_on",
   back_hip_socket_hold: "side_on",
@@ -3518,7 +3518,7 @@ var PITCHING_CARD_STANDARDS = {
   head_at_release_deg: { pass_max: 15, source: "owner_coaching_standard" },
   drag_line: { length_max_foot_lengths: 2, direction: "straight to target", source: "owner_coaching_standard" },
   stack_and_track: { pass_max: 10, elite: 0, source: "owner_coaching_standard" },
-  balance_at_landing: { pass_max_from_vertical_deg: 15, source: "owner_coaching_standard" },
+  balance_at_landing: { pass_max_from_horizontal_deg: 15, source: "owner_coaching_standard" },
   eyes_on_target_at_peak_lift: { pass: "eyes on target before moving forward", source: "owner_coaching_standard" },
   glove_swivel: { pass: "open → closed, pinky to body, inside the shoulder frame", source: "owner_coaching_standard" },
   glove_drift_outside_frame_in: { pass_max: 0, source: "owner_coaching_standard" },
@@ -3527,7 +3527,6 @@ var PITCHING_CARD_STANDARDS = {
 var PITCHING_CARD_FLOORS = {
   shoulder_tilt_deg: 2.74,
   eye_tilt_deg: 5,
-  balance_deg: 1.69,
   stride_pct: 2.8,
   nose_ahead_ear_widths: 0.077,
   release_extension_in: 2.9,
@@ -3613,17 +3612,31 @@ function stackTrack(c) {
   const v = Math.max(sh, ey);
   return ok2("stack_and_track", "degrees", v, v <= PITCHING_CARD_STANDARDS.stack_and_track.pass_max ? "pass" : "fail", { shoulders_deg: round4(sh), eyes_deg: round4(ey), elite_note: `elite (0°) is only resolvable to the ${PITCHING_CARD_FLOORS.eye_tilt_deg}° eye-line floor`, root_pattern_key: POSTURE_ROOT }, v <= PITCHING_CARD_FLOORS.eye_tilt_deg);
 }
-function balance(c) {
-  const v = med32(c, c.d.plant_k, (f) => {
-    const a = P2(c, f, 27), b = P2(c, f, 28), e1 = P2(c, f, 2), e2 = P2(c, f, 5);
-    if (!a || !b || !e1 || !e2)
-      return null;
-    const bx = (a.x + b.x) / 2, by = (a.y + b.y) / 2, ex = (e1.x + e2.x) / 2, ey = (e1.y + e2.y) / 2;
-    return by > ey ? Math.abs(Math.atan2(ex - bx, by - ey) * 180 / Math.PI) : null;
+function balance(c, cam) {
+  const common2 = {
+    definition: "absolute tilt of the line between the two eye landmarks from horizontal at front-foot strike",
+    eye_landmarks: [2, 5],
+    standard_deg: PITCHING_CARD_STANDARDS.balance_at_landing.pass_max_from_horizontal_deg,
+    noise_floor_deg: PITCHING_CARD_FLOORS.eye_tilt_deg,
+    root_pattern_key: POSTURE_ROOT
+  };
+  if (cam.view === "side_on")
+    return refuse4("balance_at_landing", "degrees", mr4(MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE), {
+      ...common2,
+      reason: "camera_view_mismatch:needs_on_line_view:clip_side_on",
+      message: "The eye-to-eye line points toward a side-on camera and its tilt cannot be resolved. Film from behind or in front of the pitcher."
+    });
+  if (cam.view == null)
+    return refuse4("balance_at_landing", "degrees", mr4(MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE), {
+      ...common2,
+      reason: "camera_view_undetermined:needs_on_line_view",
+      message: "This measurement needs a confirmed camera view behind or in front of the pitcher."
+    });
+  return refuse4("balance_at_landing", "degrees", mr4(MISSINGNESS_REASONS.CALIBRATION_UNAVAILABLE), {
+    ...common2,
+    reason: "not_built:no_confirmed_on_line_pitching_fixture",
+    message: "The correct camera position was detected, but this measurement stays unavailable until that view is validated on a confirmed pitching clip."
   });
-  if (v == null)
-    return refuse4("balance_at_landing", "degrees", mr4(MISSINGNESS_REASONS.LANDMARK_OCCLUDED), { reason: "eyes_or_ankles_unobserved_at_plant" });
-  return ok2("balance_at_landing", "degrees", v, v <= PITCHING_CARD_STANDARDS.balance_at_landing.pass_max_from_vertical_deg ? "pass" : "fail", { interpretation: "eye midpoint within 15° of vertical over the midpoint of the two ankles at front-foot strike — OWNER TO CONFIRM", noise_floor_deg: PITCHING_CARD_FLOORS.balance_deg, root_pattern_key: POSTURE_ROOT });
 }
 var EYES_PROXY = {
   measures: "head direction (nose ahead of the ear line toward the target) at peak leg lift",
@@ -3688,7 +3701,7 @@ function runPitchingCardTiles(series, o) {
     head_at_release_deg: lateralOnly("head_at_release_deg", "degrees", cam, "The head's angle to the target line"),
     drag_line: needLock("drag_line", () => drag(c)),
     stack_and_track: needLock("stack_and_track", () => stackTrack(c)),
-    balance_at_landing: balance({ ...c }),
+    balance_at_landing: balance({ ...c }, cam),
     eyes_on_target_at_peak_lift: needLock("eyes_on_target_at_peak_lift", () => eyesOnTarget(c)),
     glove_swivel: refuse4("glove_swivel", "pattern", mr4(MISSINGNESS_REASONS.HANDS_NOT_DETECTED), { reason: "glove_hides_hand_landmarks", permanent_until: "a detector that can see the glove hand", never_approximated_from: "wrist", still_bare_hand_floor_deg: PITCHING_CARD_FLOORS.swivel_deg, message: "The pose model's finger points are guesses under a glove; the open→closed turn cannot be read from them." }),
     glove_drift_outside_frame_in: lateralOnly("glove_drift_outside_frame_in", "inches", cam, "Glove drift outside the shoulder frame"),
