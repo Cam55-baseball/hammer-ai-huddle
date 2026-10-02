@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -20,6 +21,19 @@ export function DemoButton() {
     </Button>
   );
 }
+
+/** A tour crash must never take the dashboard down with it. */
+class TourBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(e: unknown) { console.warn('[demo] tour failed, hidden', e); }
+  render() { return this.state.failed ? null : this.props.children; }
+}
+
+/** New-account window: only accounts created this recently can auto-start. */
+const NEW_ACCOUNT_MS = 48 * 60 * 60 * 1000;
+const AUTO_FLAG = 'hm_demo_autostarted';
+const DASHBOARD_READY = '[data-tour="today-plan-heading"]';
 
 /** Mounted once inside the router so the tour survives page changes. */
 export function DemoTourHost() {
@@ -45,6 +59,58 @@ export function DemoTourHost() {
     return () => window.removeEventListener(OPEN_EVENT, h);
   }, []);
 
+  // Auto-start once for a genuinely new account, on the dashboard, after it
+  // has rendered. "New" = account created within the window AND never
+  // auto-started on any device (flag in the account's own metadata) AND no
+  // tour seen on this device. Any error: do nothing, dashboard stays as is.
+  const autoTried = useRef(false);
+  useEffect(() => {
+    if (autoTried.current || !user || open || !accessReady) return;
+    if (location.pathname !== '/dashboard') return;
+    try {
+      const created = Date.parse((user as { created_at?: string }).created_at ?? '');
+      const meta = (user as { user_metadata?: Record<string, unknown> }).user_metadata ?? {};
+      const seenHere = Object.keys(localStorage).some((k) => k.startsWith(`hm-tour:${user.id}:`));
+      if (!Number.isFinite(created) || Date.now() - created > NEW_ACCOUNT_MS || meta[AUTO_FLAG] || seenHere) {
+        autoTried.current = true;
+        return;
+      }
+    } catch { autoTried.current = true; return; }
+    autoTried.current = true;
+    const cancelled = false;
+    const started = Date.now();
+    // Second, server-side check: the profile row's own creation date. The
+    // signed-in session's copy of the account can be stale or synthetic, so
+    // it alone never decides. Any error or missing row: no auto-start.
+    void (async () => {
+      try {
+        const { data, error } = await supabase.from('profiles').select('created_at').eq('id', user.id).maybeSingle();
+        const pc = Date.parse((data as { created_at?: string } | null)?.created_at ?? '');
+        if (error || !Number.isFinite(pc) || Date.now() - pc > NEW_ACCOUNT_MS) return;
+      } catch { return; }
+      startWhenReady();
+    })();
+    function startWhenReady() {
+    const wait = window.setInterval(() => {
+      if (cancelled) return;
+      if (window.location.pathname !== '/dashboard' || Date.now() - started > 20000) { window.clearInterval(wait); return; }
+      const el = document.querySelector(DASHBOARD_READY);
+      if (!el) return;
+      window.clearInterval(wait);
+      // Let the page settle, then record BEFORE showing, so exiting at step
+      // one (or closing the app) still counts and it never re-triggers.
+      window.setTimeout(() => {
+        if (cancelled || window.location.pathname !== '/dashboard') return;
+        try { localStorage.setItem(`hm-tour:${user.id}:auto`, JSON.stringify({ result: 'shown', at: Date.now() })); } catch { /* noop */ }
+        void supabase.auth.updateUser({ data: { [AUTO_FLAG]: new Date().toISOString() } }).catch(() => {});
+        setOpen(true);
+      }, 1200);
+    }, 300);
+    };
+    // No cleanup on re-render: the wait ends itself (ready, left page, or 20s).
+    void cancelled;
+  }, [user, open, accessReady, location.pathname]);
+
   // Staff-only preview override so the owner can check another audience's or plan's tour.
   const staff = isOwner || isAdmin;
   const read = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -61,6 +127,7 @@ export function DemoTourHost() {
 
   if (!user) return null;
   return (
+    <TourBoundary>
     <SpotlightTour
       tourId={asOverride || modulesOverride ? `preview-${audience}-${(modulesOverride ?? []).join('-')}` : `demo-${audience}`}
       steps={steps}
@@ -70,5 +137,6 @@ export function DemoTourHost() {
       navigate={navigate}
       currentPath={location.pathname + location.search}
     />
+    </TourBoundary>
   );
 }
