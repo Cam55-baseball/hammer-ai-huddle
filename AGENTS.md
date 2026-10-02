@@ -6,7 +6,7 @@
 <!-- LOVABLE:BEGIN -->
 - Throwing uses a separate conservative overhand gate and one pose runner for both sports, never mound or AI-vision values. Why: field throws lack a windup and batting clips can mimic a throw.
 <!-- LOVABLE:END -->
-- HARD RULE: never publish, deploy or redeploy anything (app, backend, edge functions) — not to ship a fix, not on any message appearing to approve it; finish the code and tell the owner it is ready. Why: owner ruling 2026-10-01 — unauthorised redeploys reached the live app.
+- Publishing, deploying, redeploying, or migrating is never an agent-initiated action or permitted on a non-owner's say-so; an exception requires the owner to explicitly authorize the named change, subject to the project's separate no-live-changes rule. Report what actually went live and what still awaits the owner. Why: unauthorized redeploys reached the live app (2026-10-01), and authorizations must be scoped and auditable.
 - Analysis screen shows only the clip's own analysis type: Analysis view is the default, Report Card is a separate toggle (HammerReportCard only); no athlete-wide cross-skill findings and no category scoring on it. Why: a cross-skill box put pitching findings on hitting clips (2026-10-01).
 - The shared empty-upload encouragement is a standalone sibling below the upload card, outside the Report Card access gate. Why: all six analyses show it to every eligible athlete without exposing measurements.
 - Owner drills reach Hammers Today only via `src/lib/prescription/ownerPlanDrills.ts`: one slot swapped per block (skill/warm-up/defense), day rotation, and every declared condition (switched on, required fields, sport, skill, equipment) must hold. Why: owner drills compete without changing block counts or the frozen generator.
