@@ -36,6 +36,13 @@ describe('analysisFeedbackToTaxonomy', () => {
     expect(s.movementPatterns).toEqual([]);
     expect(s.correctionTags).toEqual([]);
   });
+  it('matches structured fault keys only within the analysis sport', () => {
+    const analysis = { improvements: [{ fault_key: 'hang_at_peak_lift', fault: 'You paused at the top' }] };
+    const bb = analysisFeedbackToTaxonomy(analysis, 'pitching', 'baseball');
+    expect(bb.correctionTags).toContain('hang_at_peak_lift');
+    expect(bb.evidence['correction:hang_at_peak_lift']).toBe('You paused at the top');
+    expect(analysisFeedbackToTaxonomy(analysis, 'pitching', 'softball').correctionTags).not.toContain('hang_at_peak_lift');
+  });
 });
 
 // Minimal taxonomy/video fixtures shaped exactly like the DB rows.
