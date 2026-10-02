@@ -17,6 +17,7 @@ export const useScoutAccess = () => {
         return;
       }
 
+      setLoading(true);
       try {
         const { data, error } = await supabase
           .from('user_roles')

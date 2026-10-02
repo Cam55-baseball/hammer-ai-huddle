@@ -57,7 +57,8 @@ export function resolvePostLoginRoute(gate: PostLoginGate): string {
     if (!gate.hasStaffContext) {
       return isScout ? "/onboarding/scout" : "/onboarding/coach";
     }
-    return isScout ? "/scout-dashboard" : POST_LOGIN_FALLBACK_ROUTE;
+    // Owner ruling 2026-10-02: coaches and scouts land on the dashboard too.
+    return POST_LOGIN_FALLBACK_ROUTE;
   }
 
   // Athlete with no canonical event and no role → onboarding.

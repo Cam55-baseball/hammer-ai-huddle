@@ -72,9 +72,10 @@ describe("resolvePostLoginRoute", () => {
     );
   });
 
-  it("sends a completed scout to the scout dashboard", () => {
-    expect(resolvePostLoginRoute({ roles: ["scout"], hasStaffContext: true })).toBe(
-      "/scout-dashboard",
+  it("sends a completed scout or coach to the dashboard", () => {
+    expect(resolvePostLoginRoute({ roles: ["scout"], hasStaffContext: true })).toBe(POST_LOGIN_FALLBACK_ROUTE);
+    expect(resolvePostLoginRoute({ roles: ["coach"], hasStaffContext: true })).toBe(
+      POST_LOGIN_FALLBACK_ROUTE,
     );
   });
 
