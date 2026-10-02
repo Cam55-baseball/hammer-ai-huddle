@@ -1,14 +1,4 @@
 /**
- * STAGED — NOT WIRED. Owner approved applying the doctrine on 2026-10-02,
- * but project standing rules still prohibit deploy/redeploy, including changes
- * under supabase/functions (which go live automatically).
- *
- * To apply (owner's call):
- *   1. bash scripts/build-doctrine-bundle.sh supabase/functions/analyze-video/doctrine.bundle.ts
- *   2. copy this file to supabase/functions/analyze-video/doctrineContext.ts
- *   3. in analyze-video/index.ts append `+ doctrineContextBlock(module, sport)`
- *      to the `systemPrompt` line (after constructiveCriticismBlock). Nothing else.
- *
  * Each analysis gets ONLY its own doctrine, gated exactly like the tiles.
  * The existing fault bullets stay; this is added alongside them.
  */
