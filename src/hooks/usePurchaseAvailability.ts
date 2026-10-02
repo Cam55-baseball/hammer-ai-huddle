@@ -9,8 +9,12 @@ import {
   getPurchaseAvailability,
   type PurchaseAvailability,
 } from "@/lib/purchase/purchaseGate";
+import { useScoutAccess } from "@/hooks/useScoutAccess";
+import { useAuth } from "@/hooks/useAuth";
 
-export function usePurchaseAvailability(): PurchaseAvailability {
+export function usePurchaseAvailability(): PurchaseAvailability & { isStaffAccount: boolean; roleLoading: boolean } {
+  const { user, loading: authLoading } = useAuth();
+  const { isCoach, isScout, loading: roleLoading, roleCheckFailed } = useScoutAccess();
   const [availability, setAvailability] = useState<PurchaseAvailability>(() =>
     getPurchaseAvailability(),
   );
@@ -22,5 +26,14 @@ export function usePurchaseAvailability(): PurchaseAvailability {
     return () => window.removeEventListener("hammers:storefront-changed", onChange);
   }, []);
 
-  return availability;
+  const isStaffAccount = isCoach || isScout;
+  // A stale or failed role lookup must never advertise athlete modules to staff.
+  const unresolved = authLoading || (!!user && (roleLoading || roleCheckFailed));
+  return {
+    ...availability,
+    canShowPurchaseUI: availability.canShowPurchaseUI && !isStaffAccount && !unresolved,
+    isStaffAccount,
+    roleLoading: unresolved,
+    reason: isStaffAccount ? "coach/scout account: athlete purchases hidden" : unresolved ? "role unresolved: purchases hidden" : availability.reason,
+  };
 }
