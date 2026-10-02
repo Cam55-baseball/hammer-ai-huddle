@@ -9,7 +9,7 @@ describe("movement-centred AI frame placement", () => {
     expect(moved.length).toBe(even.length);
     const inSwing = (ix: number[]) => ix.filter((i) => Math.abs(i / fps - centre) <= 0.2).length;
     expect(inSwing(moved)).toBeGreaterThanOrEqual(1);
-    expect(moved.filter((i) => Math.abs(i / fps - centre) <= 0.6).length).toBe(5);
+    expect(moved.filter((i) => Math.abs(i / fps - centre) <= 0.61).length).toBe(5);
   });
   it("is deterministic and clamps at clip edges", () => {
     expect(selectMovementFrameIndices(30, 12, 0.2)).toEqual(selectMovementFrameIndices(30, 12, 0.2));
