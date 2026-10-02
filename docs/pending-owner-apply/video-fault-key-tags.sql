@@ -1,9 +1,10 @@
 -- STAGED, NOT APPLIED. Owner applies. Adds the analysis's own fault keys as video
 -- correction tags so a tagged video can be matched to the exact fault the analysis emits.
--- Additive only: ON CONFLICT DO NOTHING; no existing row changes. New rows INACTIVE until owner review.
--- Snapshot first: create table if not exists video_tag_taxonomy_snapshot_20261002 as select * from public.video_tag_taxonomy;
+-- Additive only: ON CONFLICT DO NOTHING; no existing row changes. Owner explicitly
+-- requested these new tags ACTIVE. STAGED: DO NOT RUN under the project no-migration rule.
+-- Snapshot first, separately: create table if not exists public.video_tag_taxonomy_snapshot_20261002 as select * from public.video_tag_taxonomy;
 insert into public.video_tag_taxonomy (layer, key, label, skill_domain, sport, description, active) values
-  ('correction', 'hip_load_back_leg_not_balanced', 'hip load back leg not balanced', 'hitting', 'both', 'Phase 1 — Create Balance', false),
+  ('correction', 'hip_load_back_leg_not_balanced', 'hip load back leg not balanced', 'hitting', 'both', 'Phase 1 — Create Balance', true),
   ('correction', 'back_knee_straightened_fail', 'back knee straightened fail', 'hitting', 'both', 'Phase 1 — Create Balance', false),
   ('correction', 'back_hip_socket_hold_fail', 'back hip socket hold fail', 'hitting', 'both', 'Phase 2 — Gather', false),
   ('correction', 'front_heel_not_down_at_landing', 'front heel not down at landing', 'hitting', 'both', 'Phase 3 — Load by Stride', false),
