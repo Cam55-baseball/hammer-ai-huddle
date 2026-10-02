@@ -303,7 +303,7 @@ export default function DrillBuilder() {
             <details key={g.key} className="rounded border p-2">
               <summary className="cursor-pointer text-sm font-medium">{g.key} · {g.drills.length} drills</summary>
               <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                {g.drills.filter((d) => !search.trim() || g.key.toLowerCase().includes(search.toLowerCase()) || d.name.toLowerCase().includes(search.toLowerCase())).map((d, i) => <li key={i} className="flex items-center justify-between gap-2"><span><span className="text-foreground">{d.name}</span> — {d.dosage}{d.cue ? ` — ${d.cue}` : ""}</span><Button variant="ghost" size="sm" aria-label={`Preview ${d.name}`} onClick={() => setPreview({ ...d, steps: [], setup: "", feel: "", feel_wrong: "", common_mistake: "", video_url: "" })}><Eye className="h-4 w-4" /></Button></li>)}
+                {g.drills.filter((d) => !search.trim() || g.key.toLowerCase().includes(search.toLowerCase()) || d.name.toLowerCase().includes(search.toLowerCase())).map((d, i) => <li key={i} className="flex items-center justify-between gap-2"><span><span className="text-foreground">{d.name}</span> — {d.dosage}{d.cue ? ` — ${d.cue}` : ""}</span><Button variant="ghost" size="sm" aria-label={`Preview ${d.name}`} onClick={() => setPreview({ name: d.name, dosage: d.dosage, cue: d.cue ?? "", steps: [], setup: "", feel: "", feel_wrong: "", common_mistake: "", video_url: "" })}><Eye className="h-4 w-4" /></Button></li>)}
               </ul>
             </details>
           ))}
