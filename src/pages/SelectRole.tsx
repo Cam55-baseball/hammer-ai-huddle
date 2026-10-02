@@ -80,7 +80,7 @@ const SelectRole = () => {
             <span>→</span>
             <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">{t('selectRole.role')}</span>
             <span>→</span>
-            <span>{t('selectRole.module')}</span>
+            <span>{localStorage.getItem('selectedRole') === 'Scout/Coach' ? t('selectRole.scoutCoach') : t('selectRole.module')}</span>
           </div>
         </div>
 
