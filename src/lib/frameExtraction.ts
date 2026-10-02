@@ -14,6 +14,7 @@ import { sha256HexOfBlob } from "@/lib/biomech/fingerprint";
 import {
   buildDenseFrameSelection,
   buildFrameSelection,
+  buildMovementFrameSelection,
   type FrameSelection,
 } from "@/lib/biomech/frameExtractionDeterministic";
 
@@ -70,7 +71,7 @@ export const extractKeyFramesDeterministic = async (
     ? buildDenseFrameSelection(fps_true, duration_sec)
     : movement.length > 0 ? movement : buildFrameSelection(fps_true, duration_sec, landingTime ?? null);
   if (requested.length === 0) {
-    return { requested: [], frames: [] };
+    return { requested: [], frames: [], placement };
   }
 
   const video = document.createElement("video");
@@ -151,7 +152,7 @@ export const extractKeyFramesDeterministic = async (
       }
     }
 
-    return { requested, frames };
+    return { requested, frames, placement };
   } finally {
     cleanup();
   }
