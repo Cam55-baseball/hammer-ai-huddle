@@ -89,4 +89,27 @@ describe('recommendVideos ranking', () => {
     });
     expect(out).toEqual([]);
   });
+
+  it('matches an owner-tagged video to an observed fault, but not across sports', () => {
+    const analysis = { improvements: [{ fault_key: 'hang_at_peak_lift', fault: 'Paused at the top' }] };
+    const signals = analysisFeedbackToTaxonomy(analysis, 'pitching', 'baseball');
+    const tag: TaxonomyTag = {
+      id: 'owner-pitch-tag', layer: 'correction', key: 'hang_at_peak_lift',
+      label: 'Pause at peak lift', skill_domain: 'pitching', sport: 'baseball',
+    };
+    const tagged: VideoWithTags = {
+      id: 'owner-tagged-pitch', title: 'Lift drill', video_url: 'https://example.com/lift',
+      sport: ['baseball'], skill_domains: ['pitching'], assignments: [{ tag_id: tag.id, weight: 1 }],
+    };
+    const input = {
+      skillDomain: 'pitching' as const, mode: 'session' as const,
+      movementPatterns: signals.movementPatterns, resultTags: [], contextTags: [],
+      correctionTags: signals.correctionTags, taxonomy: [tag], rules: [], candidateVideos: [tagged],
+    };
+    const found = recommendVideos({ ...input, sport: 'baseball' });
+    expect(found.map((v) => v.video.id)).toContain(tagged.id);
+    expect(found[0].matchedLayers).toContain('correction');
+    expect(recommendVideos({ ...input, sport: 'softball' })).toEqual([]);
+    expect(analysisFeedbackToTaxonomy(analysis, 'pitching', 'softball').correctionTags).not.toContain(tag.key);
+  });
 });
