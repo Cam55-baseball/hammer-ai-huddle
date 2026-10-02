@@ -17,7 +17,8 @@ export function UpgradePrompt({ featureName, featureDescription, variant = 'inli
   const { t } = useTranslation();
   const { canShowPurchaseUI, isStaffAccount, roleLoading } = usePurchaseAvailability();
 
-  if (isStaffAccount || roleLoading) return null;
+  // A locked screen can explain access, but must not advertise a purchase to staff.
+  if (isStaffAccount || roleLoading) return <PurchaseUnavailable featureName={featureName} variant={variant} />;
 
   // Purchase hidden (native, non-US or unknown storefront): no price, no CTA, no link.
   if (!canShowPurchaseUI) {

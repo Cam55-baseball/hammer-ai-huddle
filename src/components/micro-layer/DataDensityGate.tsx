@@ -16,7 +16,7 @@ export function DataDensityGate({ requiredLevel, children }: DataDensityGateProp
   const { canShowPurchaseUI, isStaffAccount, roleLoading } = usePurchaseAvailability();
 
   if (level >= requiredLevel) return <>{children}</>;
-  if (isStaffAccount || roleLoading) return null;
+  if (isStaffAccount || roleLoading) return <PurchaseUnavailable />;
 
   const needed = dataDensityLevels.find(d => d.level === requiredLevel);
 

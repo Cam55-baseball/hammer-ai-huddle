@@ -96,7 +96,7 @@ export function AppSidebar() {
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const { isScout, isCoach, loading: staffRoleLoading, roleCheckFailed } = useScoutAccess();
-  // Player-only navigation follows the purchase, not the role.
+  // Purchased modules stay navigable for coaches and scouts too; never tease unowned ones.
   const { hasPlayerAccess } = usePlayerModuleAccess();
   const { visible: rankingsVisible, loading: rankingsVisibilityLoading } = useRankingsVisibility();
   const { modules } = useSubscription();
