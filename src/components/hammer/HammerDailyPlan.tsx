@@ -524,7 +524,7 @@ export function HammerDailyPlan({
   beforeStartPortalTarget?: HTMLElement | null;
 } = {}) {
   const { modules, loading, initialized } = useSubscription();
-  const { canShowPurchaseUI } = usePurchaseAvailability();
+  const { canShowPurchaseUI, isStaffAccount, roleLoading: purchaseRoleLoading } = usePurchaseAvailability();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { isScout, isCoach, loading: roleLoading } = useScoutAccess();
   const navigate = useNavigate();
@@ -573,7 +573,7 @@ export function HammerDailyPlan({
     );
   }
 
-  if (!hasAccess && !canShowPurchaseUI) {
+  if (!hasAccess && (!canShowPurchaseUI || isStaffAccount || purchaseRoleLoading)) {
     // Purchase hidden: no subscription language, no "view plans" button.
     return <PurchaseUnavailable featureName="Coach Hammer's daily plan" />;
   }

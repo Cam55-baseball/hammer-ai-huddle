@@ -26,7 +26,7 @@ interface Props {
 }
 
 export function ModuleManagementCard({ sport, module, details, onActionComplete }: Props) {
-  const { canShowPurchaseUI } = usePurchaseAvailability();
+  const { canShowPurchaseUI, isStaffAccount, roleLoading } = usePurchaseAvailability();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -181,7 +181,7 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
             )}
             
             {/* Fully canceled module - show resubscribe button */}
-            {details.status === 'canceled' && canShowPurchaseUI && (
+            {details.status === 'canceled' && canShowPurchaseUI && !isStaffAccount && !roleLoading && (
               <Button
                 size="sm"
                 onClick={() => window.location.href = '/pricing'}

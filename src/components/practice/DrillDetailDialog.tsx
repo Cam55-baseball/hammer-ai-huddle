@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { getSideFor } from '@/lib/side/getSideFor';
+import { usePurchaseAvailability } from '@/hooks/usePurchaseAvailability';
 
 interface DrillInstructions {
   purpose?: string;
@@ -25,6 +26,7 @@ interface DrillDetailDialogProps {
 
 export function DrillDetailDialog({ open, onOpenChange, scoredDrill }: DrillDetailDialogProps) {
   const { user } = useAuth();
+  const { isStaffAccount, roleLoading } = usePurchaseAvailability();
 
   if (!scoredDrill) return null;
   const { drill, locked, matchReasons } = scoredDrill;
@@ -80,10 +82,10 @@ export function DrillDetailDialog({ open, onOpenChange, scoredDrill }: DrillDeta
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <div className="relative text-center space-y-2">
                 <Lock className="h-10 w-10 text-muted-foreground mx-auto" />
-                <p className="text-sm text-muted-foreground font-medium">Premium Content</p>
-                <Button size="sm" variant="secondary">
-                  Upgrade to Unlock
-                </Button>
+                <p className="text-sm text-muted-foreground font-medium">
+                  {isStaffAccount || roleLoading ? 'Not available on your account' : 'Premium Content'}
+                </p>
+                {!isStaffAccount && !roleLoading && <Button size="sm" variant="secondary">Upgrade to Unlock</Button>}
               </div>
             </div>
           ) : hasVideo ? (

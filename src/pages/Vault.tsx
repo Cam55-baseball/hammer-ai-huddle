@@ -124,7 +124,7 @@ export default function Vault() {
   const [intakeOpen, setIntakeOpen] = useState(false);
   const [editPhysioOpen, setEditPhysioOpen] = useState(false);
 
-  const { canShowPurchaseUI } = usePurchaseAvailability();
+  const { canShowPurchaseUI, isStaffAccount, roleLoading } = usePurchaseAvailability();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState('today');
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
@@ -379,7 +379,7 @@ export default function Vault() {
 
   // Locked state
   // Purchase hidden: neutral unavailable state, no unlock CTA, no link.
-  if (!hasAccess && !canShowPurchaseUI) {
+  if (!hasAccess && (!canShowPurchaseUI || isStaffAccount || roleLoading)) {
     return (
       <DashboardLayout>
         <PurchaseUnavailable variant="full" />

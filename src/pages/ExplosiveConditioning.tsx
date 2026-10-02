@@ -24,7 +24,7 @@ import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 import { useSmartBack } from "@/hooks/useSmartBack";
 
 export default function ExplosiveConditioning() {
-  const { canShowPurchaseUI } = usePurchaseAvailability();
+  const { canShowPurchaseUI, isStaffAccount, roleLoading } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const goBack = useSmartBack();
@@ -80,7 +80,7 @@ export default function ExplosiveConditioning() {
 
   // Purchase hidden: locked modules show a neutral unavailable state, with no
   // price, no "subscribe" and no link out. See src/lib/purchase/purchaseGate.ts.
-  if (!hasAccess && !canShowPurchaseUI) {
+  if (!hasAccess && (!canShowPurchaseUI || isStaffAccount || roleLoading)) {
     return (
       <DashboardLayout>
         <PurchaseUnavailable variant="full" />

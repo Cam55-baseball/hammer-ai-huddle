@@ -96,7 +96,7 @@ export function AppSidebar() {
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const { isScout, isCoach, loading: staffRoleLoading, roleCheckFailed } = useScoutAccess();
-  // Player-only navigation follows the purchase, not the role.
+  // Purchased modules stay navigable for coaches and scouts too; never tease unowned ones.
   const { hasPlayerAccess } = usePlayerModuleAccess();
   const { visible: rankingsVisible, loading: rankingsVisibilityLoading } = useRankingsVisibility();
   const { modules } = useSubscription();
@@ -592,7 +592,7 @@ export function AppSidebar() {
         )}
 
         {/* The Vault - Featured Section */}
-        {!staffRoleLoading && !roleCheckFailed && !(isCoach || isScout) && <SidebarGroup className="border-b border-sidebar-border pb-3">
+        {!staffRoleLoading && !roleCheckFailed && (!(isCoach || isScout) || hasVaultAccess) && <SidebarGroup className="border-b border-sidebar-border pb-3">
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem className="sidebar-item">
@@ -777,7 +777,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
 
-        {!staffRoleLoading && !roleCheckFailed && !(isCoach || isScout) && <SidebarGroup>
+        {!staffRoleLoading && !roleCheckFailed && <SidebarGroup>
           <SidebarGroupLabel className="group-label-animated flex items-center gap-2 cursor-default">
             {t('navigation.trainingModules')}
           </SidebarGroupLabel>

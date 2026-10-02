@@ -3,13 +3,16 @@ import { Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDemoProgress } from '@/hooks/useDemoProgress';
 import { useState } from 'react';
+import { usePurchaseAvailability } from '@/hooks/usePurchaseAvailability';
 
 // Persistent nudge shown on Pricing/Checkout/etc. when user skipped before completing the demo.
 export function SkipNudgeBanner() {
   const navigate = useNavigate();
   const { progress } = useDemoProgress();
+  const { isStaffAccount, roleLoading } = usePurchaseAvailability();
   const [dismissed, setDismissed] = useState(false);
 
+  if (isStaffAccount || roleLoading) return null;
   if (!progress) return null;
   if (dismissed) return null;
   if (progress.demo_state !== 'skipped' || !progress.incomplete) return null;
