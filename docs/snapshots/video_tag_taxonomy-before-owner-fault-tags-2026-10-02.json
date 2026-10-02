@@ -1,0 +1,4161 @@
+{
+  "rows": [
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "008c5039-23d9-483f-9745-f5e63f4f8e75",
+      "key": "clean_arm_path",
+      "label": "Clean arm path",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "pitching",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Relay throw rep.",
+      "id": "00af4b26-406d-43aa-a225-c3bd98c2756c",
+      "key": "th_outfield_relay",
+      "label": "Outfield relay / cutoff",
+      "layer": "context",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Poor carom read.",
+      "id": "01b22088-d3a3-4ce3-b1a1-24b29b8a33d1",
+      "key": "of_misplayed_wall_ball",
+      "label": "Misplayed ball off the wall",
+      "layer": "result",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Ball elevates out of the zone.",
+      "id": "01fec529-d99b-478c-87dd-5a9b503d2217",
+      "key": "bb_miss_high",
+      "label": "Misses high",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "02317925-588a-4b25-acf2-2f85bda899fe",
+      "key": "pop_up",
+      "label": "Pop up",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Catch-to-release is too slow.",
+      "id": "0329e644-7282-4e28-ac87-7921fe09e02d",
+      "key": "th_slow_pop_time",
+      "label": "Slow pop time",
+      "layer": "result",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Reset feet to throwing alignment.",
+      "id": "03660ebf-15e7-4be5-bd0b-785f538a9e97",
+      "key": "c_replace_feet_on_throw",
+      "label": "Replace the feet on the throw",
+      "layer": "correction",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Throw pulls glove side of the target.",
+      "id": "057d833a-01cb-466e-809b-885ba2081f8b",
+      "key": "th_offline_glove_side",
+      "label": "Offline glove side",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Sync arm and stride at the top of the circle.",
+      "id": "0680bec3-710c-42a6-af07-c146f4b27086",
+      "key": "sb_hold_k_position",
+      "label": "Hold the K position",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Decide early: come get the short hop or back up to the long one.",
+      "id": "07a1fedc-6c64-4b01-93f2-c778e3e932ef",
+      "key": "attack_or_retreat_decision",
+      "label": "Attack it or give ground",
+      "layer": "correction",
+      "position_scope": [
+        "first_base",
+        "middle_infield",
+        "third_base",
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Base given up on the pitcher's clock, not the catcher's arm.",
+      "id": "07f88847-0569-4cd7-bb33-16c938827d43",
+      "key": "p_runner_steals_on_delivery",
+      "label": "Runner steals on the delivery",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Ball lingers in the glove.",
+      "id": "08b07f1f-f35d-4774-bb3e-a53bd60bae00",
+      "key": "th_slow_transfer",
+      "label": "Slow glove-to-hand transfer",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "catcher",
+        "first_base",
+        "middle_infield",
+        "third_base",
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Baserunner pressure.",
+      "id": "09925eb3-3c50-4d8d-9f3f-4f946bdd03be",
+      "key": "sb_runners_on",
+      "label": "Runners on base",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "0a47af32-123f-4990-a6a0-1e80f99d6536",
+      "key": "outside_pitch",
+      "label": "Outside pitch",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:44:13.371217+00",
+      "created_by": null,
+      "description": null,
+      "id": "0a74cd0a-9da8-46d7-8bbf-29deaf169102",
+      "key": "getting_to_contact_clean",
+      "label": "Getting the bat head out",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:44:13.371217+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "0a7f7f2f-afa5-4c33-aa60-4086ec0dcdfb",
+      "key": "late_throw",
+      "label": "Late throw",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Arm is stopped abruptly instead of finishing.",
+      "id": "0ad2186c-87f3-4e91-974a-ff6b7c994ca8",
+      "key": "bb_poor_deceleration",
+      "label": "Poor deceleration pattern",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "0b3d553f-e051-45ff-ad54-8e39098330bf",
+      "key": "head_pull_off",
+      "label": "Head pulling off",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Balance breaks at the top of the leg lift.",
+      "id": "0c4329e2-4825-42a3-bd8d-ff4f341ebdc1",
+      "key": "bb_leg_lift_unbalanced",
+      "label": "Leg lift loses balance",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Firm the front leg to transfer energy.",
+      "id": "0de2d276-30f8-47e2-b9c5-e8743f8d4415",
+      "key": "sb_block_with_plant_leg",
+      "label": "Block with the plant leg",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Get deep behind the base the throw is going to, angle to the ball.",
+      "id": "10eb3586-ea88-429f-91df-e1a6da0ba35c",
+      "key": "p_back_up_the_throw",
+      "label": "Back up the throw",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "115095e1-b6c3-479b-8ef3-522d7297dee6",
+      "key": "breaking_ball",
+      "label": "Breaking ball",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Surface changes the hop.",
+      "id": "117a0828-d925-4b91-887a-e765f1c869c6",
+      "key": "fd_wet_or_turf",
+      "label": "Wet grass / turf surface",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "14ad014d-7910-4dfd-bcba-dd61969eb420",
+      "key": "stay_through_ball",
+      "label": "Stay through the ball",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Slow to attack the slapped ball.",
+      "id": "15aa3cb4-56b5-463f-a302-d4c3057e05a5",
+      "key": "mi_slap_charge_late",
+      "label": "Late charge on the slap",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "middle_infield",
+        "third_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:28:14.469837+00",
+      "created_by": null,
+      "description": null,
+      "id": "17c9116f-b237-4a59-a43c-a8a3910595ef",
+      "key": "end_cap_hit",
+      "label": "Capping balls",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:28:14.469837+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Delivery from the stretch.",
+      "id": "1910d6af-fd99-460f-9819-b7109f13f9e9",
+      "key": "bb_from_stretch",
+      "label": "From the stretch",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Softball pitcher does not finish in a fielding position on the short diamond.",
+      "id": "192a597e-c7bd-47d7-bc42-566c368f7af3",
+      "key": "sb_pitcher_as_fifth_infielder",
+      "label": "Pitcher not playing as a fifth infielder",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:41:16.949514+00",
+      "created_by": null,
+      "description": null,
+      "id": "19e664e7-2fea-44f0-8bdf-601c8a74844a",
+      "key": "landing_balanced",
+      "label": "Balanced landing",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:41:16.949514+00"
+    },
+    {
+      "active": false,
+      "created_at": "2026-05-01 03:39:56.029861+00",
+      "created_by": null,
+      "description": null,
+      "id": "1bdbc403-38b3-4871-aba8-7240a89f2d92",
+      "key": "landing_balanced",
+      "label": "Landing balanced",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:40:18.928356+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "1c7f3c57-3138-4dc9-8dcd-13ab69c2c9c2",
+      "key": "roll_over_contact",
+      "label": "Roll-over contact",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Attack the hop with the glove out front.",
+      "id": "1dc47645-449a-44c1-a68d-4d8600a5dbf6",
+      "key": "fb_work_through_short_hop",
+      "label": "Work through the short hop",
+      "layer": "correction",
+      "position_scope": [
+        "first_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Waits on the slow roller instead of picking it clean.",
+      "id": "1ddbdd3f-f64e-4eb5-b06f-299d88af75d9",
+      "key": "bare_hand_late",
+      "label": "Late to the bare hand",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "middle_infield",
+        "third_base",
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Feed comes across the body.",
+      "id": "1f2d99c5-6ea3-474a-8174-8a041277cb43",
+      "key": "mi_feed_from_wrong_hip",
+      "label": "Feeds from the wrong hip",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "middle_infield"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Fastball is on plane with the bat path.",
+      "id": "1f5a6d3a-8e7d-4d2c-9965-534e82670ff7",
+      "key": "bb_flat_fastball_plane",
+      "label": "Flat fastball plane",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:26:58.571799+00",
+      "created_by": null,
+      "description": null,
+      "id": "2052c40c-a1ad-40bb-a307-f74b5b158505",
+      "key": "top_spun_balls",
+      "label": "Top Spin ball flight",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:26:58.571799+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Backhand is presented after the hop.",
+      "id": "21b31e20-ffc9-48aa-ac9a-365f8c00ff11",
+      "key": "fd_backhand_reach_late",
+      "label": "Late backhand reach",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "first_base",
+        "middle_infield",
+        "third_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Rise-driven infield pop-ups change who owns the ball.",
+      "id": "22472b18-c5e8-408c-961a-6bcde3de6d69",
+      "key": "sb_riseball_popup_priority",
+      "label": "Riseball pop-up priority",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "2306f0cf-1f50-4e35-9984-74b3d097b69b",
+      "key": "over_rotation",
+      "label": "Over rotation",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Ball is lost to glare and drops or plays off the fielder.",
+      "id": "230baff7-be58-4360-974f-5485d4f9bea3",
+      "key": "of_lost_in_sun",
+      "label": "Lost in the sun",
+      "layer": "result",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Ball caroms off an upright chest.",
+      "id": "242224e1-02e7-4318-b516-b153844c9cff",
+      "key": "c_block_chest_up",
+      "label": "Chest up in the block",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Find the four-seam grip on the way out.",
+      "id": "24a50a12-cfb2-4dcd-8493-ab5303c72721",
+      "key": "th_four_seam_exchange",
+      "label": "Four-seam quick exchange",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Bring the glove to the center of the chest.",
+      "id": "2592ea13-76bc-414b-ba79-b0b4ba2e0d20",
+      "key": "th_glove_to_chest_transfer",
+      "label": "Transfer at the chest",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "25957a71-e806-4c78-87c1-689dfc883520",
+      "key": "late_exchange",
+      "label": "Late exchange",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Rise loses spin efficiency and stays hittable.",
+      "id": "2730edd3-4998-46d2-9ad1-07cca45d99e7",
+      "key": "sb_rise_flattens",
+      "label": "Riseball flattens",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "2762b8e7-f2f3-4051-8052-3e98e4134735",
+      "key": "direction_through_contact",
+      "label": "Direction through contact",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Back leg does not drive the body down the power line.",
+      "id": "286fb9a0-c801-40b7-9d01-d17ceb0e6cf1",
+      "key": "sb_weak_drive_push",
+      "label": "Weak drive off the mound",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Arm and stride are not synced at the top.",
+      "id": "2931a634-7a65-4c64-95ce-ab629bcf67d3",
+      "key": "sb_k_position_late",
+      "label": "Late to K position",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Cut the time to the plate from the stretch without losing the pitch.",
+      "id": "2972efea-27d9-46c7-9bbf-1ece13f5c2f3",
+      "key": "p_quicken_the_delivery",
+      "label": "Quicken the delivery",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "baseball",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Deliver the feed on a straight line.",
+      "id": "2986aad6-986c-47ff-ae53-ac939b10a6ab",
+      "key": "mi_feed_from_glove_side",
+      "label": "Feed from the glove side",
+      "layer": "correction",
+      "position_scope": [
+        "middle_infield"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Arm speed or grip tips the change.",
+      "id": "2ae94a9a-0fb5-42be-bdf3-6a913818dacb",
+      "key": "sb_change_telegraphed",
+      "label": "Changeup telegraphed",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Push the body with the back leg toward the plate.",
+      "id": "2b44bad8-8422-41d8-a8bb-5d38826ad3db",
+      "key": "sb_drive_down_power_line",
+      "label": "Drive down the power line",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "2b588a25-375c-4796-a370-65d01b0127b8",
+      "key": "high_pitch",
+      "label": "High pitch",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "2bc34799-f25b-4691-a1e3-b07abafc3011",
+      "key": "steep_attack_angle",
+      "label": "Steep attack angle",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Front leg gives at landing.",
+      "id": "2e92d187-b50a-4864-a4be-5447ab3c2f4a",
+      "key": "sb_plant_leg_collapse",
+      "label": "Plant leg collapses",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Feet are still at contact.",
+      "id": "2eb35f57-f0f7-4181-8940-ac0cefede4ed",
+      "key": "fd_no_pre_pitch_hop",
+      "label": "No pre-pitch hop",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:57:27.61956+00",
+      "created_by": null,
+      "description": "Blocking a ball climbing out of the zone is not the same block as a ball down.",
+      "id": "2ebf995f-0ed0-4b38-b3c0-b3b53b34fd35",
+      "key": "sb_c_block_riseball_out_of_crouch",
+      "label": "Riseball blocked out of the crouch",
+      "layer": "result",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-09-08 13:57:27.61956+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Bunt coverage rep.",
+      "id": "3050da62-23e2-4dbc-b698-b412aacc67e9",
+      "key": "fd_bunt_defense",
+      "label": "Bunt defense",
+      "layer": "context",
+      "position_scope": [
+        "catcher",
+        "first_base",
+        "third_base",
+        "middle_infield"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Land the front foot on the target line.",
+      "id": "314f0832-0054-46d5-8297-7aeb9e2fcde4",
+      "key": "bb_stride_to_power_line",
+      "label": "Stride to the power line",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Too many throws, runner advances or is safe.",
+      "id": "341b9fb9-4eba-4414-88bb-6d3ba10778da",
+      "key": "rundown_gave_extra_base",
+      "label": "Rundown gave up a base",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Throw tails off the arm side of the target.",
+      "id": "353da99d-99e0-4567-b8b9-f1b4f6d5ef59",
+      "key": "th_offline_arm_side",
+      "label": "Offline arm side",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "35d314f1-6a90-42b1-bcf9-9c4a22da4283",
+      "key": "barrel_control",
+      "label": "Barrel control",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "37ed0e4b-4dae-4734-a71c-0e9d62ee463c",
+      "key": "improve_adjustability",
+      "label": "Improve adjustability",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Break on contact, run to the line, then up it.",
+      "id": "394bd2dd-e01e-44a4-86e4-1bfc1be229f9",
+      "key": "p_beat_the_ball_to_the_bag",
+      "label": "Beat the ball to the bag",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Field it moving, off the throwing-side foot.",
+      "id": "39a2d509-ed85-4d69-8b35-019b865d1fde",
+      "key": "barehand_pickup",
+      "label": "Bare-hand pickup on the run",
+      "layer": "correction",
+      "position_scope": [
+        "middle_infield",
+        "third_base",
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Lower half is not pointed at the target.",
+      "id": "3acdbe73-0f54-41e9-a5b5-956cec4ab61f",
+      "key": "th_feet_misaligned",
+      "label": "Feet misaligned to target",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Claim the ball on the way, repeat it, everyone else peels.",
+      "id": "3adf27e1-3238-468d-8f01-8baf86b3d8c6",
+      "key": "call_it_early_and_loud",
+      "label": "Call it early and loud",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Take an angle that lets the glove finish through the ball.",
+      "id": "3bb5a8ea-904d-4dc8-9685-61e23545a3ed",
+      "key": "work_around_the_backhand",
+      "label": "Work around the backhand",
+      "layer": "correction",
+      "position_scope": [
+        "middle_infield",
+        "third_base",
+        "first_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Ball gets past the catcher.",
+      "id": "3c383ba5-2773-4321-85b7-a7723a37e476",
+      "key": "c_passed_ball",
+      "label": "Passed ball",
+      "layer": "result",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Back-end throw is beaten.",
+      "id": "3c449a98-5e89-4ad4-9dcd-213dd047dd90",
+      "key": "mi_dp_turn_late",
+      "label": "Double play turn late",
+      "layer": "result",
+      "position_scope": [
+        "middle_infield"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Angle the chest to keep the ball in front.",
+      "id": "3fa4b202-82a9-4ca1-84ff-87a258b03447",
+      "key": "c_block_angle_to_plate",
+      "label": "Block angle back to the plate",
+      "layer": "correction",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:41:45.09928+00",
+      "created_by": null,
+      "description": null,
+      "id": "40b49639-13b0-4978-b7b7-ad8936acea34",
+      "key": "staying_inside_the_ball",
+      "label": "Staying inside of the ball",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:41:45.09928+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "42f5a253-3d0b-48f9-a836-ef430d225a78",
+      "key": "missed_pitch",
+      "label": "Missed pitch",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Front foot lands open or closed to the target line.",
+      "id": "43c3d002-1ac0-4b60-b002-e2a7a245a6fc",
+      "key": "bb_stride_direction_off",
+      "label": "Stride lands off the power line",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Ball is lost against the lights on a night ball.",
+      "id": "4526ab3b-b362-4415-a319-0c2909740b23",
+      "key": "of_lost_in_lights",
+      "label": "Lost in the lights",
+      "layer": "result",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Low, on a line, through the cut man's chest.",
+      "id": "4706af43-1c00-459c-8501-bdfba99f5e9a",
+      "key": "throw_through_the_cutoff",
+      "label": "Throw through the cutoff",
+      "layer": "correction",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Upper body flies open before release.",
+      "id": "47d12d82-08d4-41ae-9046-de4f8c643cb1",
+      "key": "sb_shoulders_open_early",
+      "label": "Shoulders open early",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Knees hit late on the block.",
+      "id": "47f91368-1218-41c7-8bcb-70c7672dad5f",
+      "key": "c_late_block_drop",
+      "label": "Late to drop into the block",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Arm-building long toss rep.",
+      "id": "48ac1aed-644a-44b6-b0e1-ebd2f529e27c",
+      "key": "th_long_toss",
+      "label": "Long toss",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:57:27.61956+00",
+      "created_by": null,
+      "description": "Sixty-foot bases remove a beat; the release breaks down rather than the fielding.",
+      "id": "49115d82-ae25-477f-8f28-d32c9865b12e",
+      "key": "sb_short_diamond_throw_rushed",
+      "label": "Throw rushed on the short diamond",
+      "layer": "result",
+      "position_scope": [
+        "middle_infield",
+        "third_base",
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-09-08 13:57:27.61956+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "491887dc-6324-476b-9d22-d6e040e04580",
+      "key": "arm_lag",
+      "label": "Arm lag",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "pitching",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "496ba1f7-0920-413b-b5dc-b48cd0f155c6",
+      "key": "hands_forward_early",
+      "label": "Hands drifting forward early",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "49903259-490b-4030-9937-11af7cba68ad",
+      "key": "jam_shot",
+      "label": "Jam shot",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Curve rep.",
+      "id": "4a2f17a5-efdf-4501-8da0-5281972a9901",
+      "key": "sb_curveball",
+      "label": "Curveball",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "4b41afbc-ffb8-4bac-8f02-da4402e5e365",
+      "key": "ground_ball_middle",
+      "label": "Ground ball up the middle",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Throw lands well short.",
+      "id": "4b459dac-4f9d-4dbd-bc28-a99c570785ef",
+      "key": "th_short_hopped",
+      "label": "Short hops the receiver",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "4bda52f6-063f-42f3-991f-2e06426e0cf8",
+      "key": "late_barrel",
+      "label": "Late barrel delivery",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Throw arrives after the runner.",
+      "id": "4cec75f1-8926-4583-93a3-27a31b37d8f7",
+      "key": "th_late_to_bag",
+      "label": "Late to the bag",
+      "layer": "result",
+      "position_scope": [
+        "middle_infield",
+        "third_base",
+        "first_base"
+      ],
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Borderline low pitch is called a ball.",
+      "id": "4db2c173-e6f0-470b-95e6-a308c9461538",
+      "key": "c_bottom_strike_lost",
+      "label": "Loses the bottom strike",
+      "layer": "result",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Replant from the drag so the finish leaves you square and able to field.",
+      "id": "4db92ef5-11a3-4a88-aba4-07c7b6b61c5e",
+      "key": "sb_p_finish_square_off_the_drag",
+      "label": "Finish square off the drag",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "No block from the lead leg.",
+      "id": "4efe95b8-a001-406f-8637-53f71906044e",
+      "key": "bb_front_leg_collapse",
+      "label": "Front leg collapses at landing",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "4f35a0ad-1a46-4deb-90d3-1f4e35e86452",
+      "key": "match_plane_early",
+      "label": "Match the plane early",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Throw sails over the cut and the trail runner advances.",
+      "id": "4f84785c-9978-425b-ad72-c5cbbd47ca37",
+      "key": "missed_cutoff_man",
+      "label": "Missed the cutoff man",
+      "layer": "result",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Throw carries over the receiver.",
+      "id": "511eeeb9-0873-40db-909c-45fd455b27af",
+      "key": "th_sailed_high",
+      "label": "Sails high",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Runner reaches first because the pitcher arrived late.",
+      "id": "516e69d8-34f5-4749-82e5-bef4183a024b",
+      "key": "p_beaten_to_the_bag",
+      "label": "Beaten to the bag",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Overthrow advances a runner because no one was behind the base.",
+      "id": "51bc6d4f-585c-40d0-8424-d437702272c5",
+      "key": "p_missed_backup",
+      "label": "Missed the backup",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:33:02.810478+00",
+      "created_by": null,
+      "description": null,
+      "id": "535bd22a-8bf6-4fb8-bddb-0f0297c0b7a8",
+      "key": "hitting_ball_farther",
+      "label": "Power Contact",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:33:02.810478+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Retreats instead of adjusting.",
+      "id": "5413d90c-bbdf-448c-ba00-9391b574e511",
+      "key": "tb_backs_up_in_between_hop",
+      "label": "Backs up on the in-between hop",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "third_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Bunt fielded too slowly to get an out anywhere.",
+      "id": "55de0269-4d66-484e-ac0e-eedcf20e412c",
+      "key": "p_bunt_no_play",
+      "label": "No play on the bunt",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Controlled non-game rep.",
+      "id": "59fce63c-3d09-499a-9b10-4c60c7ff460f",
+      "key": "sb_bullpen",
+      "label": "Bullpen / flat ground",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "No athletic bend through the field.",
+      "id": "5a25ea06-95bd-4e08-8a3b-e9854725af1c",
+      "key": "fd_stiff_lower_half",
+      "label": "Stiff lower half",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:35:42.727746+00",
+      "created_by": null,
+      "description": null,
+      "id": "5a43d269-0f46-4ed7-8c8f-a0513a57691a",
+      "key": "ahead_in_the_count",
+      "label": "Hitters counts",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:35:42.727746+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Receive with a soft, early presentation.",
+      "id": "5a8a28b8-2ebd-41d9-b350-e80d911fdf60",
+      "key": "c_quiet_receiving",
+      "label": "Quiet receiving hands",
+      "layer": "correction",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Catches flat-footed before throwing.",
+      "id": "5ab38f14-83a4-40db-8a33-3e782a106fb3",
+      "key": "of_no_throwing_momentum",
+      "label": "No momentum into the throw",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Reaction time at 60-foot bases beats the first move.",
+      "id": "5b85ef69-5edf-4e7d-ac21-28f115d90407",
+      "key": "sb_short_field_reaction_late",
+      "label": "Late reaction on the short diamond",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "middle_infield",
+        "third_base",
+        "first_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Spin axis varies rep to rep.",
+      "id": "5c33f18c-dd9f-4d4c-89d4-7e8ee02d3b16",
+      "key": "sb_spin_inconsistent",
+      "label": "Inconsistent spin",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "5c3cd18f-b360-4c15-a430-0c99835a18d2",
+      "key": "slow_first_step",
+      "label": "Slow first step",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "base_running",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Controlled non-game rep.",
+      "id": "5c3d1528-fc98-4876-8998-8d3d4bbe154c",
+      "key": "bb_bullpen",
+      "label": "Bullpen / flat ground",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "5c5deebf-6fce-4ff9-b558-95cb3156d322",
+      "key": "opposite_field_flare",
+      "label": "Opposite-field flare",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "5cee8eb0-3a96-494e-bd63-354843918559",
+      "key": "quick_exchange",
+      "label": "Quick exchange",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Pitch lands short of the plate.",
+      "id": "5e7d517d-64c5-444c-a071-eb13487f2e48",
+      "key": "bb_bounced_pitch",
+      "label": "Bounces the pitch",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "The relay leg misses the target and costs a base.",
+      "id": "5e9d9989-6895-44eb-a785-29afb5e77875",
+      "key": "relay_throw_offline",
+      "label": "Relay throw offline",
+      "layer": "result",
+      "position_scope": [
+        "middle_infield",
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "5f70cb8a-5cba-4f5c-92a2-d563596bb05e",
+      "key": "high_velocity",
+      "label": "High velocity",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Pitch pulls to the glove side.",
+      "id": "6217c4ac-4eb8-47c4-b05a-93c910c4ee9d",
+      "key": "bb_glove_side_miss",
+      "label": "Misses glove side",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "First move opens to the ball.",
+      "id": "62d0cc42-aa6c-41b5-b7ed-e17f2aab57a9",
+      "key": "of_drop_step_on_read",
+      "label": "Drop step on the read",
+      "layer": "correction",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Move up or back to a clean hop.",
+      "id": "631eab49-0f86-4042-b8ba-75466faed837",
+      "key": "tb_work_through_the_hop",
+      "label": "Work through the hop",
+      "layer": "correction",
+      "position_scope": [
+        "third_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Waits for the ball to stop instead of attacking it.",
+      "id": "63bc7dde-f28e-4538-8102-5244e6f62ca7",
+      "key": "p_slow_off_mound_on_bunt",
+      "label": "Slow off the mound on the bunt",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:30:00.34822+00",
+      "created_by": null,
+      "description": null,
+      "id": "63fb8049-f460-4480-a6e1-b0634ea9aecd",
+      "key": "swing_and_miss_underneath_ball",
+      "label": "Swinging under pitches",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:30:00.34822+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "6439bfd9-55b9-493a-b8ff-fa9d0a53530d",
+      "key": "arm_lag",
+      "label": "Arm lag",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "651f1dfd-da7f-4f08-be2c-8a67c66641c8",
+      "key": "first_step_quickness",
+      "label": "First-step quickness",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:31:16.073887+00",
+      "created_by": null,
+      "description": null,
+      "id": "67427ab2-200d-4c04-a19a-b2e647de157b",
+      "key": "perfect_backspin_batted_ball",
+      "label": "Backspinning the ball",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:31:16.073887+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Relay arrives late.",
+      "id": "69e2770c-3dd4-491d-a3fe-3a52d2d7943d",
+      "key": "of_late_to_cutoff",
+      "label": "Late to the cutoff",
+      "layer": "result",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Hands separate late and rush the arm.",
+      "id": "6a5096c9-de41-4035-81ff-8ffd82a186b2",
+      "key": "th_late_glove_break",
+      "label": "Late glove break",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:18:48.832236+00",
+      "created_by": null,
+      "description": null,
+      "id": "6aa47682-8ea9-49cc-bc23-5a4633e3be37",
+      "key": "shoulders_turning_early",
+      "label": "Pulling front shoulder",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:18:48.832236+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Does not leave the mound on contact to the right side.",
+      "id": "6b1b0d1b-1113-462b-bbd7-13754956540e",
+      "key": "p_late_to_cover_first",
+      "label": "Late breaking to first",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Glove turns over and the ball gets past.",
+      "id": "6b800eb9-0239-43d8-919f-f779cd105152",
+      "key": "backhand_pulled_off",
+      "label": "Pulled off the backhand",
+      "layer": "result",
+      "position_scope": [
+        "middle_infield",
+        "third_base",
+        "first_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "6c24c90f-cf45-4b63-bade-1a03504c5aa6",
+      "key": "clean_glove_path",
+      "label": "Clean glove path",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Commits to a direction too early.",
+      "id": "6c519ebd-0757-48bb-bff6-c475513c983c",
+      "key": "fb_early_stretch",
+      "label": "Stretches before the read",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "first_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "6c9b8e68-cd3e-4cf6-8841-1e14926b40ac",
+      "key": "under_rotation",
+      "label": "Under rotation",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Delay shoulder rotation until release.",
+      "id": "6de804e8-a5fd-4617-96e5-b696383ba800",
+      "key": "sb_stay_closed_through_whip",
+      "label": "Stay closed through the whip",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Delivery time lets the runner leave uncontested.",
+      "id": "6df4e797-5ac6-4071-814d-de8624f2a3ca",
+      "key": "p_slow_to_plate_with_runner",
+      "label": "Slow to the plate with a runner on",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "baseball",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Breaking ball stays up with weak break.",
+      "id": "6f165e45-8759-4e09-a487-9f1c2ccad0b3",
+      "key": "bb_hung_breaking_ball",
+      "label": "Hangs the breaking ball",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Slider / curveball rep.",
+      "id": "6f16a0ff-51aa-4aab-89d8-4c50d7ea67d4",
+      "key": "bb_breaking_ball",
+      "label": "Breaking ball",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Hips and shoulders rotate together instead of sequencing.",
+      "id": "6f46fa4e-3a88-490c-aead-273301d4c3bc",
+      "key": "bb_hip_shoulder_sep_loss",
+      "label": "Loses hip/shoulder separation",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "722cf5bb-38f4-4ecf-9042-6771ee841c0b",
+      "key": "fatigue_state",
+      "label": "Fatigue state",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Watches the play rather than getting deep behind the base.",
+      "id": "72434029-ce97-43a2-afa8-2171e2161c22",
+      "key": "p_drifts_on_backup",
+      "label": "Drifts instead of backing up",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "73254ff0-9055-473b-888f-e07031b670e1",
+      "key": "poor_footwork_angle",
+      "label": "Poor footwork angle",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:40:48.542173+00",
+      "created_by": null,
+      "description": null,
+      "id": "73f8a553-2483-4bf4-b6a1-0baee4a6c0d7",
+      "key": "landing_unbalanced",
+      "label": "Unbalanced landing",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:40:48.542173+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Throw made flat-footed with no momentum.",
+      "id": "7486fd57-8c86-4847-9e6a-4553d1d8fde2",
+      "key": "th_no_crow_hop",
+      "label": "No crow hop / momentum",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Catch moving toward the target.",
+      "id": "74dbcc68-a4ca-4e71-a5c7-703e1d33c664",
+      "key": "of_play_through_the_ball",
+      "label": "Play through the ball",
+      "layer": "correction",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Glove drops after the hop.",
+      "id": "7563e5de-7ecc-43ce-9b98-fd3b013c6ade",
+      "key": "fb_late_scoop_glove",
+      "label": "Late glove on the scoop",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "first_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Foot leaves the base early.",
+      "id": "75e6a77a-d6a4-4c2b-9181-d54386ef3c52",
+      "key": "fb_pulled_off_bag",
+      "label": "Pulled off the bag",
+      "layer": "result",
+      "position_scope": [
+        "first_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Glove arrives after the ball on a ball hit back at the pitcher.",
+      "id": "7706460f-b587-4e11-b24a-df4ea8a98bcf",
+      "key": "p_comebacker_late_hands",
+      "label": "Late hands on the comebacker",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Glove attacks the ball instead of receiving it.",
+      "id": "77b252c0-88a5-48e1-8066-010eb0076ca5",
+      "key": "c_stabs_at_receiving",
+      "label": "Stabs at the receive",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Footwork at second arrives late.",
+      "id": "77fb6b33-f094-4b9f-9047-6469672f3222",
+      "key": "mi_late_pivot_at_bag",
+      "label": "Late pivot at the bag",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "middle_infield"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Finish square, glove out front, secure it before the throw.",
+      "id": "7995b86c-d2d5-4026-8379-ecd7a4afc631",
+      "key": "p_field_the_comebacker",
+      "label": "Field the comebacker cleanly",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Point the lower half at the receiver.",
+      "id": "7a47e304-6a47-47fa-9519-c39953f12f98",
+      "key": "th_align_feet_to_target",
+      "label": "Align feet to the target",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Finish the chest toward the target.",
+      "id": "7b37ee62-40d8-4f6d-a907-4886772914d8",
+      "key": "th_stay_online_finish",
+      "label": "Stay online through the finish",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Reads the slap late and opens away from the ball.",
+      "id": "7b779f0c-8478-47dd-a36c-cfe2123c675e",
+      "key": "sb_slap_first_step_wrong_way",
+      "label": "First step wrong way on the slap",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "middle_infield",
+        "first_base",
+        "third_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Push the runner full speed back to the previous bag, one throw to tag.",
+      "id": "7c2941b1-0f9b-472d-94cd-e1c131b44454",
+      "key": "run_him_hard_one_throw",
+      "label": "Run him hard, one throw",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Build momentum into the throw.",
+      "id": "7cf85ef9-694e-425f-9513-b6a8e59ac391",
+      "key": "th_crow_hop_through_target",
+      "label": "Crow hop through the target",
+      "layer": "correction",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "7db3753a-1ab1-4a4b-b654-ef4470012357",
+      "key": "flat_path",
+      "label": "Flat bat path",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Curve the route to throw through the target.",
+      "id": "7e178be5-7f3c-420b-a79f-82d9d5d3318e",
+      "key": "of_banana_route",
+      "label": "Banana route to the line",
+      "layer": "correction",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Glove side pulls out early and drags the arm.",
+      "id": "7facdd8b-a83c-4183-a25c-aafad6da71cc",
+      "key": "bb_front_side_flyout",
+      "label": "Front side flies open",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Pitch lands short of the plate.",
+      "id": "809b8140-1681-4e8a-ae9d-08806e6eda41",
+      "key": "sb_bounced_pitch",
+      "label": "Bounces the pitch",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Hard hop plays the fielder.",
+      "id": "81d04dd5-16b4-41c0-9f29-12a9fab02741",
+      "key": "tb_eaten_by_hop",
+      "label": "Eaten up by the hop",
+      "layer": "result",
+      "position_scope": [
+        "third_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Short-range feed rep.",
+      "id": "81e94fbb-2848-4beb-bf99-a9a883176af8",
+      "key": "th_infield_feed",
+      "label": "Infield feed",
+      "layer": "context",
+      "position_scope": [
+        "middle_infield",
+        "third_base",
+        "first_base"
+      ],
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Defending the slapper.",
+      "id": "82014457-d9d8-4171-a4fd-e75ea391f8bd",
+      "key": "fd_slap_defense",
+      "label": "Slap defense",
+      "layer": "context",
+      "position_scope": [
+        "first_base",
+        "middle_infield",
+        "third_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Nobody called it, ball drops or two fielders converge.",
+      "id": "82595a4d-a16c-4c5b-bc94-133dd02ca777",
+      "key": "no_priority_call",
+      "label": "No priority call",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Ball back through the box is booted, dropped or thrown away.",
+      "id": "82f203ce-3968-46af-b896-d03a7cfc2481",
+      "key": "p_comebacker_misplayed",
+      "label": "Comebacker misplayed",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Steps forward on a ball hit over.",
+      "id": "8456a62b-7a55-4244-9b78-b45491b61e32",
+      "key": "of_first_step_drift_in",
+      "label": "First step drifts in",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:57:27.61956+00",
+      "created_by": null,
+      "description": "Follow through off the windmill so the pitcher lands ready as a fifth infielder.",
+      "id": "84afcd3b-6df3-4491-bc97-8557fb5aac1a",
+      "key": "sb_p_follow_through_to_fifth_infielder",
+      "label": "Finish the windmill into fielding position",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-09-08 13:57:27.61956+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Late-outing fatigue state.",
+      "id": "84e9915d-8602-4025-a6ab-db9fcdd5f688",
+      "key": "bb_high_pitch_count",
+      "label": "High pitch count",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "857eedfe-a05c-4e3e-b206-a62df3e70035",
+      "key": "early_extension",
+      "label": "Early extension",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "pitching",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Stride length under-covers the drive.",
+      "id": "88312b43-8886-4a40-b504-7b239799e99b",
+      "key": "sb_short_stride",
+      "label": "Short stride",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Baserunner pressure.",
+      "id": "8ae02aef-df19-4942-bc37-64f472db0454",
+      "key": "bb_runners_on",
+      "label": "Runners on base",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "90c195f2-eabe-4ec6-a1f2-778f1e5c394c",
+      "key": "weight_stuck_back",
+      "label": "Weight stuck back",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:25:34.22516+00",
+      "created_by": null,
+      "description": null,
+      "id": "916022bc-4c9b-4b26-aa72-a67eaaf2c966",
+      "key": "chasing_pitches",
+      "label": "Chasing pitches",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:25:34.22516+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Arm is behind the body at foot strike.",
+      "id": "919fae99-17f1-4682-a9d8-6f2da33845ee",
+      "key": "bb_arm_path_late",
+      "label": "Late arm path into slot",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Shorten the arm circle and the drag so the delivery clock holds the runner.",
+      "id": "922c6e8c-c7ec-451a-b651-494ac9a09719",
+      "key": "sb_p_quicken_the_windmill",
+      "label": "Quicken the windmill",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:57:27.61956+00",
+      "created_by": null,
+      "description": "Corner commits before reading slap or swing and is beaten both ways.",
+      "id": "957fdbe6-834d-4003-ac23-ee3ff0590f9a",
+      "key": "sb_corner_crash_too_early",
+      "label": "Corner crashes too early on the slap",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "first_base",
+        "third_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-09-08 13:57:27.61956+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Hold the front side until foot strike.",
+      "id": "95a9c22c-ca2e-4f78-ad06-173df238753d",
+      "key": "bb_stay_closed_longer",
+      "label": "Stay closed longer",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Ball sits in the glove before the exchange.",
+      "id": "99bb1f34-7f4d-4293-be02-ff645b9a44e9",
+      "key": "c_transfer_stalls",
+      "label": "Transfer stalls",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Work through contact toward the target.",
+      "id": "9a27d48a-d691-4eea-9336-b806a97245c5",
+      "key": "mi_field_through_the_ball",
+      "label": "Field through the ball",
+      "layer": "correction",
+      "position_scope": [
+        "middle_infield"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Finish carries the pitcher off line and out of the play.",
+      "id": "9b4b899a-9247-4ba4-84ef-6205ea522fbf",
+      "key": "p_falls_off_glove_side",
+      "label": "Falls off to the glove side",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "baseball",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Ball leaves late from the crouch to second.",
+      "id": "9d18d0a3-f974-44af-b802-f653b2acb2e5",
+      "key": "pop_time_slow",
+      "label": "Slow pop time",
+      "layer": "result",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Windmill timing and the leaping start make the delivery clock different from baseball.",
+      "id": "9dd195c3-73d7-4882-b015-cfeefc33071f",
+      "key": "sb_p_slow_windmill_with_runner",
+      "label": "Slow windmill with a runner on",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "9e30b8df-3925-453f-be66-d0d5200d94fc",
+      "key": "maintain_posture",
+      "label": "Maintain posture",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Fastball rep.",
+      "id": "a0877b25-3c95-4008-a29f-e5015c332074",
+      "key": "sb_fastball",
+      "label": "Fastball",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Short hop is not handled.",
+      "id": "a221277c-ef7c-4269-b7dd-db78029e3ca0",
+      "key": "fb_missed_pick",
+      "label": "Missed pick",
+      "layer": "result",
+      "position_scope": [
+        "first_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Constrain the release window.",
+      "id": "a35f6a57-bb32-4029-b306-71c626e63777",
+      "key": "bb_repeat_release_point",
+      "label": "Repeat the release point",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "a49bc4f7-13ce-4530-889b-e0c0fc76f58f",
+      "key": "double_clutch",
+      "label": "Double clutch",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "a68959e8-fc9a-42ae-99bf-d4630196a906",
+      "key": "reaction_drills",
+      "label": "Reaction drills",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:57:27.61956+00",
+      "created_by": null,
+      "description": "First baseman holds the bag too long against the slap-and-run.",
+      "id": "a72a56ad-1452-4cbe-a26e-0c5512304794",
+      "key": "sb_fb_late_off_bag_slap_and_run",
+      "label": "Late off the bag on the slap-and-run",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "first_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-09-08 13:57:27.61956+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Extend release toward the target.",
+      "id": "abbf768f-11fb-4e11-ab30-2ced1430a552",
+      "key": "bb_finish_out_front",
+      "label": "Finish out front",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Turn rep at the bag.",
+      "id": "ad29628a-eac8-4133-8986-60f926f89419",
+      "key": "th_double_play_turn",
+      "label": "Double play turn",
+      "layer": "context",
+      "position_scope": [
+        "middle_infield"
+      ],
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:57:27.61956+00",
+      "created_by": null,
+      "description": "Depth played for a baseball fence on a shorter softball outfield.",
+      "id": "ae18ea4b-c225-4fb4-8d9a-f3bda6065810",
+      "key": "sb_of_depth_short_porch",
+      "label": "Outfield depth wrong for the short porch",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-09-08 13:57:27.61956+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Neither charges nor retreats, takes the worst hop.",
+      "id": "af729056-db89-482d-8e12-d971f6fc06c2",
+      "key": "in_between_hop_frozen",
+      "label": "Frozen on the in-between hop",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "first_base",
+        "middle_infield",
+        "third_base",
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Eyes leave the ball before the catch.",
+      "id": "b10220ad-0026-4392-acac-7f66dffa73ef",
+      "key": "fd_head_lifts_early",
+      "label": "Head lifts early",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Use the underhand feed when close.",
+      "id": "b1c1fa35-da45-4ba2-afad-060deac0d400",
+      "key": "mi_underhand_inside_range",
+      "label": "Underhand inside your range",
+      "layer": "correction",
+      "position_scope": [
+        "middle_infield"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Arm slot collapses under the shoulder.",
+      "id": "b36ccd9b-2db4-4055-9bbc-56bf839c7f3b",
+      "key": "th_low_elbow_slot",
+      "label": "Elbow drops below slot",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Feed pulls the pivot man off the bag.",
+      "id": "b3d0194a-fb38-4b56-b0ee-2c807b1b4a05",
+      "key": "mi_feed_offline",
+      "label": "Offline feed",
+      "layer": "result",
+      "position_scope": [
+        "middle_infield"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "b4353e12-7309-490a-9ed8-b2cfa175f45d",
+      "key": "arm_lag",
+      "label": "Arm lag",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "b52fcf0f-6c74-4432-9c24-ff2ecd143dce",
+      "key": "first_step_quickness",
+      "label": "First-step quickness",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "base_running",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Ball beats the catcher laterally.",
+      "id": "b5f268b7-157f-41b4-8fb8-c54c7700023f",
+      "key": "c_missed_block_away",
+      "label": "Missed block to the side",
+      "layer": "result",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "b6aa52fa-1fb9-4bce-9b9a-1e8c59198c29",
+      "key": "slow_first_step",
+      "label": "Slow first step",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Corners and middle drawn in.",
+      "id": "baa7e38d-9953-4fe0-823c-d8c74eed4f86",
+      "key": "fd_infield_in",
+      "label": "Infield in",
+      "layer": "context",
+      "position_scope": [
+        "first_base",
+        "middle_infield",
+        "third_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "bd9587a7-a841-4a0f-88ce-3adef767df55",
+      "key": "inside_pitch",
+      "label": "Inside pitch",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Glove up to block the light, move off the straight line to keep it visible.",
+      "id": "bdf1b75a-d810-4fb1-abc3-bca199f22629",
+      "key": "shield_and_drift",
+      "label": "Shield and drift",
+      "layer": "correction",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Let the arm finish across the body.",
+      "id": "bf00a2e1-41c9-4243-ad64-cf95455db037",
+      "key": "bb_decelerate_through_finish",
+      "label": "Decelerate through the finish",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "First-and-third defensive rep.",
+      "id": "c099eb46-f180-4fb7-947f-5570ccb75039",
+      "key": "fd_first_and_third",
+      "label": "First and third",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "c30b367c-6f52-469e-982d-cb22863643af",
+      "key": "glove_drift",
+      "label": "Glove drift",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Read the throw, then commit.",
+      "id": "c46fbd32-0622-439d-961e-b8628d7ffe37",
+      "key": "fb_stretch_after_read",
+      "label": "Stretch after the read",
+      "layer": "correction",
+      "position_scope": [
+        "first_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Throw to second/third from the crouch.",
+      "id": "c6f4f561-31c2-44c7-93db-9f87fc4ef057",
+      "key": "th_catcher_throw_down",
+      "label": "Catcher throw down",
+      "layer": "context",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:57:27.61956+00",
+      "created_by": null,
+      "description": "Backspin carries the ball differently; first read on the pop-up is late or wrong.",
+      "id": "c7371e2a-b3f7-4a95-8e7c-eaf5581747fe",
+      "key": "sb_riseball_popup_tracking_late",
+      "label": "Late tracking the riseball pop-up",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-09-08 13:57:27.61956+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Screw rep.",
+      "id": "c7a33332-c759-4331-88ac-ec28cb0bd3fd",
+      "key": "sb_screwball",
+      "label": "Screwball",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Late-outing fatigue state.",
+      "id": "c9177bd8-8164-4390-85f4-90172ae981df",
+      "key": "sb_high_pitch_count",
+      "label": "High pitch count",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Cannot move laterally from setup.",
+      "id": "cabc8938-fb2d-4755-a6d7-ac8098362892",
+      "key": "c_wide_secondary",
+      "label": "Secondary stance too wide",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Late to find and retrieve the blocked ball.",
+      "id": "cafd12b2-f5c2-479a-bdfb-884f2e560e86",
+      "key": "c_slow_block_recovery",
+      "label": "Slow block recovery",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:44:43.339332+00",
+      "created_by": null,
+      "description": null,
+      "id": "cc8046ee-3e3d-43b4-ba59-616d1ccc73c8",
+      "key": "driving_the_ball",
+      "label": "Drive the ball",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:44:43.339332+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Change rep.",
+      "id": "cd46e7b7-5cd7-43be-a478-c486f5700999",
+      "key": "sb_changeup",
+      "label": "Changeup",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Match arm action to the throw type.",
+      "id": "ce38aa92-b831-4082-b056-431f10bd1479",
+      "key": "th_shorten_arm_circle",
+      "label": "Shorten the arm circle",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Baserunner pressure.",
+      "id": "cec10a93-fb1a-4f22-b0b0-f174a4e26dda",
+      "key": "fd_runners_on",
+      "label": "Runners on base",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Sequence hips before chest.",
+      "id": "cf3fef51-8e44-4f76-b37f-ea9d67d13daa",
+      "key": "bb_delay_trunk_rotation",
+      "label": "Delay trunk rotation",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Chest opens before front foot stabilizes.",
+      "id": "d0d24e32-324b-4cbd-ae11-52bf7b58f9f7",
+      "key": "bb_trunk_rotation_early",
+      "label": "Trunk rotates early",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Pitch runs off the arm-side edge.",
+      "id": "d1134332-859d-4a1f-b17b-0023c0739964",
+      "key": "bb_arm_side_miss",
+      "label": "Misses arm side",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Changeup rep.",
+      "id": "d393d4ff-6f06-4ec0-a96a-f1918a0951e5",
+      "key": "bb_changeup",
+      "label": "Changeup",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "d7ab0594-3dab-47e8-b85b-78a73530ac97",
+      "key": "barrel",
+      "label": "Barreled ball",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Constrain release for spin consistency.",
+      "id": "d82c9e59-2df0-4b73-b41d-699920048946",
+      "key": "sb_repeat_release_window",
+      "label": "Repeat the release window",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Release height/width varies pitch to pitch.",
+      "id": "d91ebe6b-ad9a-446c-bae5-66af6eb2af04",
+      "key": "bb_release_point_drift",
+      "label": "Release point drifts",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "da644cb0-8104-4c40-a545-b861ee1741dc",
+      "key": "maintain_posture",
+      "label": "Maintain posture",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "pitching",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Fastball rep.",
+      "id": "db3bf9fd-7447-42ea-bd79-87503192728f",
+      "key": "bb_fastball",
+      "label": "Fastball",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Screw loses its run and cuts.",
+      "id": "db6c0796-ac37-4323-8be7-889652590acd",
+      "key": "sb_screw_backs_up",
+      "label": "Screwball backs up",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "dc8685d6-ca6f-4ead-a8bf-175981512bf3",
+      "key": "weight_leak_forward",
+      "label": "Weight leaking forward",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Back foot replants away from the power line.",
+      "id": "dea2ecea-d128-45a3-8245-a17dfbf1a533",
+      "key": "sb_replant_drift",
+      "label": "Replant drifts off line",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Move the lower half first laterally.",
+      "id": "df63dcfc-d389-4465-acf2-32c14a46f835",
+      "key": "c_beat_ball_with_hips",
+      "label": "Beat the ball with the hips",
+      "layer": "correction",
+      "position_scope": [
+        "catcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Front side blocks the throwing lane.",
+      "id": "e0b9396a-3214-491f-8c63-513a849edd3d",
+      "key": "th_across_body",
+      "label": "Throws across the body",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "e2734fab-beb3-4b5d-b066-fac29d09421f",
+      "key": "clean_arm_path",
+      "label": "Clean arm path",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Land balanced with the chest to the hitter, ready to field.",
+      "id": "e3171e51-fba8-4e26-b475-1f6c51d125ea",
+      "key": "p_finish_square_and_fieldable",
+      "label": "Finish square and fieldable",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "baseball",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Arm circle finishes away from the hip.",
+      "id": "e4d3bd3f-40b3-4a25-b453-0b39bdc20acb",
+      "key": "sb_brush_contact_missed",
+      "label": "Misses brush contact",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Glove is not funneling through the ball.",
+      "id": "e4e09e48-94b5-4603-941c-5ae0de5f9afb",
+      "key": "mi_flat_glove_approach",
+      "label": "Flat glove approach",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "middle_infield"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "e553d948-bcac-41cd-b15d-a42379f5f26b",
+      "key": "low_pitch",
+      "label": "Low pitch",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Arm circle is too long for the throw type.",
+      "id": "e5d999db-ba33-4843-bacb-86b71780b6b7",
+      "key": "th_long_arm_action",
+      "label": "Long arm action",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Pitch runs off the arm-side edge.",
+      "id": "e62f48ae-40a2-452c-a721-a4a802d2274d",
+      "key": "sb_arm_side_miss",
+      "label": "Misses arm side",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Route loses ground to the ball.",
+      "id": "e6c93171-2512-462c-8baf-aed2381e69c0",
+      "key": "of_rounded_route",
+      "label": "Rounded route",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Glove starts above the hop window.",
+      "id": "e883e347-2186-424a-83aa-4727c79c1b23",
+      "key": "fd_high_hands_setup",
+      "label": "Hands too high in setup",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Charge, field on the move, throw on the run.",
+      "id": "e88c3849-e3aa-4525-af4d-557aa185fa97",
+      "key": "tb_attack_slow_roller",
+      "label": "Attack the slow roller",
+      "layer": "correction",
+      "position_scope": [
+        "third_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Snap happens behind the release window.",
+      "id": "e90035c9-75d6-4941-96e9-fb7d003bccf0",
+      "key": "sb_snap_late",
+      "label": "Late wrist snap",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Runner beats the play.",
+      "id": "e99e36cf-99e7-48c2-aa7d-2d58193fd9ba",
+      "key": "tb_slow_roller_late_throw",
+      "label": "Slow roller — late throw",
+      "layer": "result",
+      "position_scope": [
+        "third_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Firm the lead leg to transfer energy.",
+      "id": "e9bd5e73-2d83-4cd8-bf50-8b39b5836300",
+      "key": "bb_block_with_front_leg",
+      "label": "Block with the front leg",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:36:15.54335+00",
+      "created_by": null,
+      "description": null,
+      "id": "ec229d41-2f6f-441d-b372-d8e6a64a4204",
+      "key": "batting_practice",
+      "label": "Batting Practice",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:36:15.54335+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "ec611a63-2fb9-4c2b-bad7-fa4c3ba1edc0",
+      "key": "offline_throw",
+      "label": "Offline throw",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "ecfab212-4be2-4779-a423-1a45ff92aaca",
+      "key": "weak_contact",
+      "label": "Weak contact",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Misjudged deep ball.",
+      "id": "ed158616-afa1-418d-8d14-573d2ec90dcf",
+      "key": "of_ball_over_head",
+      "label": "Ball gets over the head",
+      "layer": "result",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Drop stays up in the zone.",
+      "id": "ed23dfc8-40a3-4992-a478-6d92940ecf02",
+      "key": "sb_drop_hangs",
+      "label": "Dropball hangs",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "eef1753a-76a1-4093-aef4-662f25b76446",
+      "key": "short_arm",
+      "label": "Short arm action",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "throwing",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "ef28a1f0-2e39-4ccd-a63d-9aed3747099b",
+      "key": "early_extension",
+      "label": "Early extension",
+      "layer": "movement_pattern",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "ef451fdc-4c9b-4073-9942-4affbee7ded9",
+      "key": "keep_hands_back",
+      "label": "Keep hands back",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Get to the ball early enough to gather and throw on line.",
+      "id": "f003d999-b915-4619-a98f-905e44ddee62",
+      "key": "p_attack_the_bunt_set_the_feet",
+      "label": "Attack the bunt and set the feet",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Waits on a ball that must be attacked.",
+      "id": "f13d26f7-6709-4b7f-8a81-5cc7a0a0a906",
+      "key": "tb_no_charge_slow_roller",
+      "label": "Does not charge the slow roller",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "third_base"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:42:13.989135+00",
+      "created_by": null,
+      "description": null,
+      "id": "f1677c3d-3eb2-43e6-a5a2-3715153f718d",
+      "key": "seeing_the_ball_well",
+      "label": "Seeing the ball better",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:42:13.989135+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Close the circle tight to the hip.",
+      "id": "f25e84e8-13dd-4f4d-b46d-e9ded907c566",
+      "key": "sb_finish_brush_contact",
+      "label": "Finish with brush contact",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "f3094c76-c77e-4d6d-ad48-11101d34a9bb",
+      "key": "game_pressure",
+      "label": "Game pressure",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Delivery from the windup.",
+      "id": "f49b2782-c74e-4ac6-951a-1fc3da4cc8da",
+      "key": "bb_from_windup",
+      "label": "From the windup",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Strike thrown over the middle with no intent.",
+      "id": "f4f6c91e-42e0-4e0a-8146-34aef9861d36",
+      "key": "bb_noncompetitive_strike",
+      "label": "Non-competitive strike",
+      "layer": "result",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "baseball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Windmill drag and replant finish leaves the pitcher unbalanced and unfieldable.",
+      "id": "f5884e3c-5764-42c0-96bf-6dd914471229",
+      "key": "sb_p_drag_finish_off_line",
+      "label": "Drag finish carries off line",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "fielding",
+      "sport": "softball",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-09-08 13:43:12.294067+00",
+      "created_by": null,
+      "description": "Get on the line early, hands up, turn glove side.",
+      "id": "f854c3ad-dcbd-4cce-a5d5-22ee149f3b60",
+      "key": "line_up_the_relay",
+      "label": "Line up the relay",
+      "layer": "correction",
+      "position_scope": [
+        "middle_infield",
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-09-08 13:43:12.294067+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "f85a8a73-b894-442c-925b-3d236b96bfda",
+      "key": "two_strike",
+      "label": "Two-strike count",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Turn is delayed on balls overhead.",
+      "id": "f8caf689-b92f-4826-aa10-0aee598c9412",
+      "key": "of_late_drop_step",
+      "label": "Late drop step",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "corner_outfield",
+        "center_field"
+      ],
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "f93faea2-b473-40e1-a71e-539aea81b6c5",
+      "key": "booted_ball",
+      "label": "Booted ball",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "fielding",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "f973c9ad-6b87-470a-b66d-5fc2e238c74d",
+      "key": "hard_line_drive",
+      "label": "Hard line drive",
+      "layer": "result",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Drop rep.",
+      "id": "f9be2d16-db06-4c45-8034-bb14e6d5fbf7",
+      "key": "sb_dropball",
+      "label": "Dropball",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "fbf8e044-e391-4414-ac4e-d84cdcd7ffcb",
+      "key": "barrel_stays_behind_hands",
+      "label": "Barrel stays behind hands",
+      "layer": "correction",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-04-20 20:52:15.731336+00",
+      "created_by": null,
+      "description": null,
+      "id": "fc1c4964-fbe3-4a9e-99ac-7bc4c0183192",
+      "key": "risp",
+      "label": "Runners in scoring position",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-04-20 20:52:15.731336+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:36:02.344169+00",
+      "created_by": null,
+      "description": null,
+      "id": "fce9e62b-9fe7-4e54-b59e-9a3b59c0e0ad",
+      "key": "tee_work",
+      "label": "Tee Work",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:36:02.344169+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-05-01 03:34:55.764246+00",
+      "created_by": null,
+      "description": null,
+      "id": "fdc81d16-90c4-4abe-8a87-57cb9051964b",
+      "key": "off_speed_pitches",
+      "label": "Off-speed pitches",
+      "layer": "context",
+      "position_scope": null,
+      "skill_domain": "hitting",
+      "sport": "both",
+      "updated_at": "2026-05-01 03:34:55.764246+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Release the snap in front of the hip.",
+      "id": "fdd07dc3-6ce5-405f-9f26-49c0d2d49acb",
+      "key": "sb_snap_out_front",
+      "label": "Snap out front",
+      "layer": "correction",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Rise rep.",
+      "id": "fe7affdc-07cf-4061-a932-2a0858021e2e",
+      "key": "sb_riseball",
+      "label": "Riseball",
+      "layer": "context",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    },
+    {
+      "active": true,
+      "created_at": "2026-08-21 16:15:06.849839+00",
+      "created_by": null,
+      "description": "Arm accelerates before the lower half arrives.",
+      "id": "ff106a87-95e3-4e00-863a-a16b5460676e",
+      "key": "sb_whip_arm_early",
+      "label": "Whips the arm early",
+      "layer": "movement_pattern",
+      "position_scope": [
+        "pitcher"
+      ],
+      "skill_domain": "pitching",
+      "sport": "softball",
+      "updated_at": "2026-08-21 16:15:06.849839+00"
+    }
+  ]
+}
