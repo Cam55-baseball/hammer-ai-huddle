@@ -1757,7 +1757,7 @@ export default function Profile() {
 
         {/* People & access — the only discoverable entry point for parent
             invites and per-person access control. */}
-        {!viewingOtherProfile && (
+        {!viewingOtherProfile && !isStaffAccount && !roleLoading && (
           <Card className="p-6 mb-6">
             <h3 className="text-xl font-bold mb-1">People &amp; access</h3>
             <p className="text-sm text-muted-foreground mb-4">

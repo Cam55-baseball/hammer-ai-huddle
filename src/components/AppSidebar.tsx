@@ -95,7 +95,7 @@ export function AppSidebar() {
   const { signOut } = useAuth();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
-  const { isScout, isCoach } = useScoutAccess();
+  const { isScout, isCoach, loading: staffRoleLoading } = useScoutAccess();
   // Player-only navigation follows the purchase, not the role.
   const { hasPlayerAccess } = usePlayerModuleAccess();
   const { visible: rankingsVisible, loading: rankingsVisibilityLoading } = useRankingsVisibility();
@@ -592,7 +592,7 @@ export function AppSidebar() {
         )}
 
         {/* The Vault - Featured Section */}
-        <SidebarGroup className="border-b border-sidebar-border pb-3">
+        {!staffRoleLoading && !(isCoach || isScout) && <SidebarGroup className="border-b border-sidebar-border pb-3">
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem className="sidebar-item">
@@ -626,9 +626,9 @@ export function AppSidebar() {
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
+        </SidebarGroup>}
 
-        <SidebarGroup>
+        {!staffRoleLoading && !(isCoach || isScout) && <SidebarGroup>
           <SidebarGroupLabel className="group-label-animated flex items-center gap-2 cursor-default">
             {t('navigation.mainNavigation')}
           </SidebarGroupLabel>
@@ -710,7 +710,7 @@ export function AppSidebar() {
 
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
+        </SidebarGroup>}
 
         {/* Practice Intelligence Section */}
         <SidebarGroup>
