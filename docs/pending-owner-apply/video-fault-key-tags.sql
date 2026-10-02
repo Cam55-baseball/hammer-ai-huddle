@@ -1,7 +1,9 @@
 -- STAGED, NOT APPLIED. Owner applies. Adds the analysis's own fault keys as video
 -- correction tags so a tagged video can be matched to the exact fault the analysis emits.
--- Additive only: ON CONFLICT DO NOTHING; no existing row changes. New rows INACTIVE until owner review.
--- Snapshot first: create table if not exists video_tag_taxonomy_snapshot_20261002 as select * from public.video_tag_taxonomy;
+-- Additive only: ON CONFLICT DO NOTHING; no existing row changes. Owner requested
+-- these ACTIVE, but standing rule requires new rows INACTIVE until owner review.
+-- CONFLICT: do not apply until this is reconciled. STAGED: DO NOT RUN.
+-- Snapshot first, separately: create table if not exists public.video_tag_taxonomy_snapshot_20261002 as select * from public.video_tag_taxonomy;
 insert into public.video_tag_taxonomy (layer, key, label, skill_domain, sport, description, active) values
   ('correction', 'hip_load_back_leg_not_balanced', 'hip load back leg not balanced', 'hitting', 'both', 'Phase 1 — Create Balance', false),
   ('correction', 'back_knee_straightened_fail', 'back knee straightened fail', 'hitting', 'both', 'Phase 1 — Create Balance', false),
@@ -14,6 +16,8 @@ insert into public.video_tag_taxonomy (layer, key, label, skill_domain, sport, d
   ('correction', 'p1_load_not_used', 'p1 load not used', 'hitting', 'both', 'Phase 4 — Hitter''s Move', false),
   ('correction', 'head_rises_before_contact', 'head rises before contact', 'hitting', 'both', 'Phase 4 — Hitter''s Move', false),
   ('correction', 'head_discipline_head_past_com', 'head discipline head past com', 'hitting', 'both', 'Phase 4 — Hitter''s Move', false),
+  ('correction', 'lead_elbow_bends_in_swing', 'lead elbow bends in swing', 'hitting', 'both', 'Phase 4 — Hitter''s Move', false),
+  ('correction', 'early_shoulder_rotation', 'early shoulder rotation', 'hitting', 'both', 'Phase 3 — Load by Stride', false),
   ('correction', 'chest_open_at_landing', 'chest open at landing', 'pitching', 'baseball', 'Landing', false),
   ('correction', 'hang_at_peak_lift', 'hang at peak lift', 'pitching', 'baseball', 'Leg lift', false),
   ('correction', 'not_stacked_at_release', 'not stacked at release', 'pitching', 'baseball', 'Release', false),

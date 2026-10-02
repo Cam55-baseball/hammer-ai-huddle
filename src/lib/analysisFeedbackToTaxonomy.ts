@@ -17,6 +17,7 @@
  */
 import type { SkillDomain, TagSport } from './videoRecommendationEngine';
 import { mapHIEAreaToMovement } from './analysisToTaxonomy';
+import { faultKeysFor } from '../../supabase/functions/analyze-video/constructiveCriticism';
 
 export interface FeedbackSignals {
   skillDomain: SkillDomain;
@@ -231,6 +232,7 @@ function violationBucket(skillDomain: SkillDomain, sport: TagSport | null | unde
 
 export interface AnalysisLike {
   violations_detected?: Record<string, unknown> | null;
+  improvements?: Array<{ fault_key?: string | null; fault?: string | null }> | null;
   scorecard?: {
     regressions?: Array<{ area?: string | null }> | null;
     neutral?: Array<{ area?: string | null }> | null;
@@ -259,6 +261,16 @@ export function analysisFeedbackToTaxonomy(
       correction.add(mapping.correction);
       evidence[`correction:${mapping.correction}`] = mapping.says;
     }
+  }
+
+  // The structured improvements list is the analysis's own per-sport fault
+  // vocabulary. Never derive a correction from prose or an unrelated module.
+  const legal = new Set(faultKeysFor(skillDomain, sport ?? 'baseball'));
+  for (const finding of analysis?.improvements ?? []) {
+    const key = finding.fault_key;
+    if (!key || !legal?.has(key)) continue;
+    correction.add(key);
+    evidence[`correction:${key}`] = finding.fault?.trim() || key.replace(/_/g, ' ');
   }
 
   const areas = [

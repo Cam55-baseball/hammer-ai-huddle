@@ -11,3 +11,10 @@
 - [x] Suppress unsolicited module ads in dashboard, sidebar, profile, locked surfaces, drills, and onboarding
 - [x] Check coach/scout phone simulations and tour entry; verify optional plans navigation
 - [ ] Complete paid checkout with a real non-owner coach/scout account (blocked: preview session is owner; no transaction should be made from it)
+
+# Owner-approved analysis and library work
+- [x] Show plain filming tips on every analysis upload without restricted-card references
+- [ ] Stage full doctrine prompt integration and write baseball pitching doctrine (no live function edits permitted)
+- [ ] Stage active fault tags with snapshot instructions; do not execute migration
+- [ ] Close video and drill editor gaps possible without schema changes; report remaining dependencies
+- [ ] Verify doctrine on a real clip and fault-tag prescription end to end (blocked until owner applies live changes)
