@@ -16,11 +16,11 @@
 - [x] Show plain filming tips on every analysis upload without restricted-card references
 - [ ] Stage full doctrine prompt integration and write baseball pitching doctrine (no live function edits permitted)
 - [ ] Stage active fault tags with snapshot instructions; do not execute migration
-- [ ] Close video and drill editor gaps possible without schema changes; report remaining dependencies
+- [x] Add drill search, placement/status filters, preview, file upload, and readiness badges; report deletion dependency
 - [ ] Verify doctrine on a real clip and fault-tag prescription end to end (blocked until owner applies live changes)
 
 # October owner request follow-up
 - [ ] Doctrine and fault tags: live application and real-clip verification blocked by the higher-priority no-deploy/no-migration rule; do not claim live
-- [ ] Add Drill Builder search, filters, preview, upload, and readiness badges without schema changes
+- [x] Add Drill Builder search, filters, preview, upload, and readiness badges without schema changes
 - [ ] Drill deletion: requires an approved durable snapshot and owner-only database delete policy before enabling; do not remove athlete history
 - [x] Keep the pitching energy-angle conflict and five questions unresolved for the owner
