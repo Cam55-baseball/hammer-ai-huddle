@@ -610,7 +610,7 @@ export function GameDayPrep({ sunrise, sunset, sport = 'baseball', temperature, 
               <text x="160" y="70" textAnchor="middle" fill="white">RF</text>
               <text x="55" y="125" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">3B</text>
               <text x="145" y="125" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">1B</text>
-              <text x="100" y="88" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">2B</text>
+              <text x="130" y="108" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">2B</text>
               <text x="70" y="108" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">SS</text>
               <text x="100" y="145" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">P</text>
             </g>

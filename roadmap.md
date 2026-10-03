@@ -1,4 +1,6 @@
 # Demo polish
+- [x] Verify weather Game Day Prep 2B-only move with screenshot; audit six analysis Report Card gates and identify failures; research Stripe in-app checkout risks without changing payments
+- [ ] Fully close regular-athlete Report Card exposure (blocked: scored fields readable from videos require an owner-authorized database access change; real athlete account and clip needed for end-to-end confirmation)
 - [x] Remove every Pick your path tour reference
 - [x] Record the owner doctrine outside tours
 - [x] Confirm temporary programmes remain excluded
