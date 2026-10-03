@@ -62,7 +62,10 @@ function errorText(error: unknown): string {
 }
 
 function loadDraft(): Draft {
-  try { return { ...EMPTY, ...JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}"), password: "" }; }
+  try {
+    const d = { ...EMPTY, ...JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}"), password: "" } as Draft;
+    return { ...d, step: Math.min(Math.max(0, Number(d.step) || 0), SCREENS.length - 1) };
+  }
   catch { return EMPTY; }
 }
 function yearsOld(raw: string) {
@@ -84,10 +87,13 @@ export default function UnifiedSignupOnboarding() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [primerOpen, setPrimerOpen] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const finishing = useRef(false);
   const minor = draft.dateOfBirth ? yearsOld(draft.dateOfBirth) >= 13 && yearsOld(draft.dateOfBirth) < 18 : false;
+  const screen: ScreenKey = SCREENS[draft.step] ?? "finish";
 
   useEffect(() => {
+    if (finishing.current) return;
     const safe = { ...draft, password: "" };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
   }, [draft]);
@@ -95,30 +101,56 @@ export default function UnifiedSignupOnboarding() {
   useEffect(() => {
     if (!user?.id || !session || finishing.current) return;
     if (draft.awaitingConfirmation || searchParams.get("confirmed") === "1") {
-      setDraft((d) => ({ ...d, accountCreated: true, awaitingConfirmation: false, step: Math.max(d.step, 7) }));
+      setDraft((d) => ({ ...d, accountCreated: true, awaitingConfirmation: false, step: Math.max(d.step, AFTER_ACCOUNT) }));
     }
   }, [user?.id, session, searchParams, draft.awaitingConfirmation]);
+
+  /** Save & exit: answers already live on this device (and on the account once it exists). */
+  const exitRef = useRef<() => void>(() => {});
+  exitRef.current = () => {
+    if (finishing.current) return;
+    toast({ title: "Progress saved", description: "Your answers are saved. Come back anytime to finish where you left off." });
+    if (user?.id && session) navigate("/dashboard", { replace: true });
+    else if (draft.accountCreated) navigate("/auth", { replace: true });
+    else navigate("/", { replace: true });
+  };
+
+  // Escape and the phone back gesture both mean "save & exit" — never a dead end.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || primerOpen) return;
+      if (document.querySelector("[role='listbox'],[role='dialog']")) return; // let open pickers close first
+      exitRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [primerOpen]);
+  useEffect(() => {
+    window.history.pushState({ hmOnboardingGuard: true }, "");
+    const onPop = () => exitRef.current();
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   const progress = Math.round(((draft.step + 1) / SCREENS.length) * 100);
   const patch = (next: Partial<Draft>) => setDraft((d) => ({ ...d, ...next }));
   const fail = (message: string) => { toast({ title: "One more thing", description: message, variant: "destructive" }); return false; };
 
   const valid = () => {
-    const s = draft.step;
-    if (s === 0 && !z.string().email().safeParse(draft.email).success) return fail("Enter a valid email address.");
-    if (s === 1 && draft.password.length < 6) return fail("Use at least 6 characters for your password.");
-    if (s === 2) {
+    const s = screen;
+    if (s === "email" && !z.string().email().safeParse(draft.email).success) return fail("Enter a valid email address.");
+    if (s === "password" && draft.password.length < 6) return fail("Use at least 6 characters for your password.");
+    if (s === "age") {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.dateOfBirth)) return fail("Enter your date of birth.");
       if (minor && !z.string().email().safeParse(draft.guardianEmail).success) return fail("Enter a valid parent or guardian email.");
     }
-    if (s === 3 && (!draft.firstName.trim() || !draft.lastName.trim())) return fail("Enter your first and last name.");
-    if (s === 5 && (!draft.sport || !draft.position.trim())) return fail("Choose your sport and enter your position.");
-    if (s === 6 && (!draft.battingSide || !draft.throwingHand)) return fail("Choose how you bat and throw.");
-    if (s === 7 && (!draft.height || !draft.weight)) return fail("Enter your height and weight.");
-    if (s === 8 && !/^\d{4}$/.test(draft.graduationYear)) return fail("Enter a four-digit graduation year.");
-    if (s === 9 && (!draft.state.trim() || !draft.team.trim())) return fail("Enter your state and team.");
-    if (s === 10 && !draft.level) return fail("Choose your current level.");
-    if (s === 15 && !draft.injuryStatus) return fail("Tell us whether you're healthy or have something to report.");
+    if (s === "name" && (!draft.firstName.trim() || !draft.lastName.trim())) return fail("Enter your first and last name.");
+    if (s === "sport" && (!draft.sport || !draft.position.trim())) return fail("Choose your sport and enter your position.");
+    if (s === "play" && (!draft.battingSide || !draft.throwingHand)) return fail("Choose how you bat and throw.");
+    if (s === "height" && (!heightToInches(draft.height) || !draft.weight)) return fail("Choose your height and enter your weight.");
+    if (s === "graduation" && !/^\d{4}$/.test(draft.graduationYear)) return fail("Enter a four-digit graduation year.");
+    if (s === "team" && (!draft.state.trim() || !draft.team.trim())) return fail("Enter your state and team.");
+    if (s === "level" && !draft.level) return fail("Choose your current level.");
     return true;
   };
 
