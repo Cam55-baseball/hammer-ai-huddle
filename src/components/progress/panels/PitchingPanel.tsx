@@ -5,6 +5,7 @@
  */
 import { useMemo, useState } from "react";
 import { UhrcAthleteSection } from "@/components/report-card/UhrcAthleteSection";
+import { ReportCardAccessGate } from "@/components/report-card/hammer/ReportCardAccessGate";
 import { AutoCorrelationCards } from "@/components/progress/correlations/AutoCorrelationCards";
 import { CorrelationExplorer } from "@/components/progress/correlations/CorrelationExplorer";
 import { buildTopicVariables } from "@/lib/progress/topicVariables";
@@ -60,7 +61,9 @@ export function PitchingPanel() {
           <SideViewTabs value={sideView} onChange={setSideView} discipline="throw" />
         </div>
       )}
-      <UhrcAthleteSection />
+      <ReportCardAccessGate>
+        <UhrcAthleteSection />
+      </ReportCardAccessGate>
       <AutoCorrelationCards items={auto} />
       <CorrelationExplorer variables={vars} />
     </div>

@@ -1,3 +1,4 @@
+import { HeightFeetInchesInput } from "@/components/shared/HeightFeetInchesInput";
 import { useEffect, useState } from "react";
 import { DelayCamSessionsCard } from "@/components/profile/DelayCamSessionsCard";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -1212,17 +1213,18 @@ export default function Profile() {
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-2">
                           <Label htmlFor="height">{t('profile.height')}</Label>
-                          <Input
+                          <HeightFeetInchesInput
                             id="height"
                             value={editForm.height}
-                            onChange={(e) => setEditForm({ ...editForm, height: e.target.value })}
-                            placeholder={t('profile.placeholders.height')}
+                            onChange={(v) => setEditForm({ ...editForm, height: v })}
                           />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="weight">{t('profile.weight')}</Label>
                           <Input
                             id="weight"
+                            type="text"
+                            inputMode="decimal"
                             value={editForm.weight}
                             onChange={(e) => setEditForm({ ...editForm, weight: e.target.value })}
                             placeholder={t('profile.placeholders.weight')}
@@ -1245,6 +1247,8 @@ export default function Profile() {
                           <Input
                             id="graduation_year"
                             type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             value={editForm.graduation_year}
                             onChange={(e) => setEditForm({ ...editForm, graduation_year: e.target.value })}
                             placeholder={t('profile.placeholders.hsGradYear')}

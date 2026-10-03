@@ -1,3 +1,4 @@
+import { HeightFeetInchesInput } from "@/components/shared/HeightFeetInchesInput";
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -400,18 +401,14 @@ const ProfileSetup = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="height">{t('profileSetup.height')} *</Label>
-                    <Input
-                      id="height"
-                      value={height}
-                      onChange={(e) => setHeight(e.target.value)}
-                      placeholder={t('profileSetup.placeholders.height')}
-                      required
-                    />
+                    <HeightFeetInchesInput id="height" value={height} onChange={setHeight} required />
                   </div>
                   <div>
                     <Label htmlFor="weight">{t('profileSetup.weight')} *</Label>
                     <Input
                       id="weight"
+                      type="text"
+                      inputMode="decimal"
                       value={weight}
                       onChange={(e) => setWeight(e.target.value)}
                       placeholder={t('profileSetup.placeholders.weight')}
@@ -436,6 +433,8 @@ const ProfileSetup = () => {
                     <Input
                       id="graduationYear"
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={graduationYear}
                       onChange={(e) => setGraduationYear(e.target.value)}
                       placeholder={t('profileSetup.placeholders.gradYear')}

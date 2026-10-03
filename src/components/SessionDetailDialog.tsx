@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { uploadOptimizedThumbnail, uploadThumbnailSizes } from '@/lib/uploadHelpers';
 import { processVideoThumbnail } from '@/lib/thumbnailHelpers';
 import { useScoutAccess } from '@/hooks/useScoutAccess';
+import { ReportCardAccessGate } from '@/components/report-card/hammer/ReportCardAccessGate';
 // Phase 49: TheScorecard import removed.
 import {
   Dialog,
@@ -423,7 +424,9 @@ export function SessionDetailDialog({
             <Badge variant="outline">{session.sport}</Badge>
             <Badge variant="outline">{session.module}</Badge>
             {session.efficiency_score !== undefined && (
-              <Badge>{t('sessionDetail.efficiency')}: {session.efficiency_score}%</Badge>
+              <ReportCardAccessGate>
+                <Badge>{t('sessionDetail.efficiency')}: {session.efficiency_score}%</Badge>
+              </ReportCardAccessGate>
             )}
             {session.shared_with_scouts && (
               <Badge variant="secondary">{t('sessionDetail.sharedWithScouts')}</Badge>

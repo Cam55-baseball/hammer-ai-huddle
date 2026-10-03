@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSideContext } from "@/contexts/SideContext";
 import { SideDifferentialCard } from "./SideDifferentialCard";
+import { ReportCardAccessGate } from "@/components/report-card/hammer/ReportCardAccessGate";
 import {
   computeSideDifferential,
   type SidedPoint,
@@ -110,7 +111,9 @@ export function SideSplitsSection() {
 
   if (!showAny) return null;
 
+  // Scored efficiency is Report Card data: owner/admin only.
   return (
+    <ReportCardAccessGate>
     <section className="space-y-3">
       <div>
         <h2 className="text-sm font-semibold text-foreground">Side splits</h2>
@@ -140,5 +143,6 @@ export function SideSplitsSection() {
         )}
       </div>
     </section>
+    </ReportCardAccessGate>
   );
 }
