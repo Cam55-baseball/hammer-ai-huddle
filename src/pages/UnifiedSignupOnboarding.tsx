@@ -23,29 +23,43 @@ type Draft = {
   avatarName: string; sport: "baseball" | "softball" | ""; position: string;
   battingSide: string; throwingHand: string; dateOfBirth: string; guardianEmail: string;
   acceptedTerms: boolean; height: string; weight: string; graduationYear: string;
-  state: string; team: string; level: string; wingspan: string; bodyFat: string; footLength: string;
-  equipment: string[]; injuryStatus: "healthy" | "report" | ""; injuryNote: string;
-  sleep: string; water: string; mentalFocus: string; careerGoal: string;
-  accountCreated: boolean; awaitingConfirmation: boolean;
+  state: string; team: string; level: string; wingspan: string; footLength: string;
+  careerGoal: string; accountCreated: boolean; awaitingConfirmation: boolean;
 };
 
 const EMPTY: Draft = {
   step: 0, email: "", password: "", firstName: "", lastName: "", avatarName: "", sport: "",
   position: "", battingSide: "", throwingHand: "", dateOfBirth: "", guardianEmail: "",
   acceptedTerms: false, height: "", weight: "", graduationYear: "", state: "", team: "", level: "",
-  wingspan: "", bodyFat: "", footLength: "", equipment: [], injuryStatus: "", injuryNote: "",
-  sleep: "", water: "", mentalFocus: "", careerGoal: "", accountCreated: false, awaitingConfirmation: false,
+  wingspan: "", footLength: "", careerGoal: "", accountCreated: false, awaitingConfirmation: false,
 };
 
-const STORAGE_KEY = "hm.unifiedSignupDraft.v1";
+export const UNIFIED_SIGNUP_DRAFT_KEY = "hm.unifiedSignupDraft.v1";
+const STORAGE_KEY = UNIFIED_SIGNUP_DRAFT_KEY;
+/**
+ * Owner ruling 2026-10-03: body fat, equipment, injury check, recovery targets
+ * and mental focus are collected after a module purchase, not here.
+ */
 const SCREENS = [
-  "Email", "Password", "Age protection", "Your name", "Your photo", "Sport & position", "How you play",
-  "Height & weight", "Graduation", "State & team", "Competition level", "Body measurements", "Foot measurement",
-  "Portable equipment", "Training equipment", "Injuries", "Sleep & water", "Mental focus", "Career goal", "Review", "Finish",
-];
-const GROUPS = ["Account", "Account", "Account", "About you", "About you", "Your game", "Your game", "Profile", "Profile", "Team", "Team", "Body", "Body", "Equipment", "Equipment", "Health", "Recovery", "Goals", "Goals", "Review", "Review"];
-const EQUIPMENT = ["bodyweight", "bands", "mini_band", "jband", "med_ball", "plyo_ball", "dumbbell", "kettlebell", "barbell", "plates", "squat_rack", "bench", "trap_bar", "cable_stack", "landmine", "box", "ladder", "hurdles"];
-const LABELS: Record<string, string> = { bodyweight: "Bodyweight", bands: "Resistance bands", mini_band: "Mini bands", jband: "Arm-care bands", med_ball: "Medicine ball", plyo_ball: "Plyo balls", dumbbell: "Dumbbells", kettlebell: "Kettlebells", barbell: "Barbell", plates: "Weight plates", squat_rack: "Squat rack", bench: "Bench", trap_bar: "Trap bar", cable_stack: "Cable machine", landmine: "Landmine", box: "Box or step", ladder: "Agility ladder", hurdles: "Hurdles" };
+  "email", "password", "age", "name", "photo", "sport", "play",
+  "height", "graduation", "team", "level", "body", "career", "review", "finish",
+] as const;
+type ScreenKey = typeof SCREENS[number];
+const GROUP: Record<ScreenKey, string> = {
+  email: "Account", password: "Account", age: "Account", name: "About you", photo: "About you",
+  sport: "Your game", play: "Your game", height: "Profile", graduation: "Profile", team: "Team",
+  level: "Team", body: "Body", career: "Goals", review: "Review", finish: "Review",
+};
+const AFTER_ACCOUNT = SCREENS.indexOf("height");
+
+/** Supabase errors are plain objects — surface their real message. */
+function errorText(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (error && typeof error === "object" && "message" in error && typeof (error as { message: unknown }).message === "string") {
+    return (error as { message: string }).message;
+  }
+  return "Unknown error";
+}
 
 function loadDraft(): Draft {
   try { return { ...EMPTY, ...JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}"), password: "" }; }
