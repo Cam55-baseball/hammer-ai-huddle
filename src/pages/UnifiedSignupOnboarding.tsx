@@ -16,6 +16,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { branding } from "@/branding";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import { HeightFeetInchesInput, heightToInches } from "@/components/shared/HeightFeetInchesInput";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { clearDraftSlot, type DraftSlot } from "@/lib/onboarding/draftStore";
 import { NotificationPrimer, shouldAskNotifications } from "@/components/onboarding/NotificationPrimer";
 
 type Draft = {
@@ -105,11 +107,22 @@ export default function UnifiedSignupOnboarding() {
     }
   }, [user?.id, session, searchParams, draft.awaitingConfirmation]);
 
-  /** Save & exit: answers already live on this device (and on the account once it exists). */
+  /**
+   * Owner ruling 2026-10-03: a deliberate Exit discards the draft (device and
+   * account) so the next start is step one. Closing the app or a crash never
+   * runs this path, so the device draft survives and resumes as before.
+   */
+  const [confirmExit, setConfirmExit] = useState(false);
   const exitRef = useRef<() => void>(() => {});
-  exitRef.current = () => {
-    if (finishing.current) return;
-    toast({ title: "Progress saved", description: "Your answers are saved. Come back anytime to finish where you left off." });
+  exitRef.current = () => { if (!finishing.current) setConfirmExit(true); };
+  const leaveAndDiscard = () => {
+    finishing.current = true; // stop the autosave effect re-writing the draft
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    if (user?.id) {
+      const slots: DraftSlot[] = ["onboarding-step", "profile-answers", "anthropometrics", "fuel-recovery", "mental-career", "connections"];
+      slots.forEach((slot) => clearDraftSlot(user.id, slot));
+    }
+    setConfirmExit(false);
     if (user?.id && session) navigate("/dashboard", { replace: true });
     else if (draft.accountCreated) navigate("/auth", { replace: true });
     else navigate("/", { replace: true });
@@ -118,16 +131,17 @@ export default function UnifiedSignupOnboarding() {
   // Escape and the phone back gesture both mean "save & exit" — never a dead end.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || primerOpen) return;
+      if (e.key !== "Escape" || primerOpen || confirmExit) return;
       if (document.querySelector("[role='listbox'],[role='dialog']")) return; // let open pickers close first
       exitRef.current();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [primerOpen]);
+  }, [primerOpen, confirmExit]);
   useEffect(() => {
     window.history.pushState({ hmOnboardingGuard: true }, "");
-    const onPop = () => exitRef.current();
+    // Back gesture asks first; re-arm the guard so a second back still asks.
+    const onPop = () => { window.history.pushState({ hmOnboardingGuard: true }, ""); exitRef.current(); };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
@@ -272,6 +286,18 @@ export default function UnifiedSignupOnboarding() {
         </div>
       </motion.div>
     </AnimatePresence>
+    <AlertDialog open={confirmExit} onOpenChange={setConfirmExit}>
+      <AlertDialogContent className="max-w-sm">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Leave setup?</AlertDialogTitle>
+          <AlertDialogDescription>If you leave now, you'll start over next time.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
+          <AlertDialogCancel className="m-0 h-12 w-full border-0 bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground">Keep going</AlertDialogCancel>
+          <AlertDialogAction className="m-0 h-12 w-full bg-transparent text-destructive border border-destructive/40 hover:bg-destructive/10" onClick={leaveAndDiscard}>Leave and start over</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     {user?.id && <NotificationPrimer uid={user.id} open={primerOpen} onDone={() => navigate("/dashboard", { replace: true })} />}
   </Frame>;
 
@@ -304,7 +330,7 @@ function Frame({ step, progress, group, children, onExit }:{step:number;progress
     <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_-10%,hsl(var(--primary)/0.16),transparent_42%)]" />
     <div className="relative mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col">
       <header className="mb-4 flex items-center justify-between"><img src={branding.logo} alt={branding.appName} className="h-9 w-9 object-contain"/><span className="text-xs font-medium text-muted-foreground">{group}</span><span className="flex items-center gap-1"><span className="text-xs tabular-nums text-muted-foreground">{step+1}/{SCREENS.length}</span><Button type="button" variant="ghost" className="h-11 gap-1 px-3 text-xs" aria-label="Save and exit" onClick={onExit}><X className="h-4 w-4"/>Exit</Button></span></header>
-      <p className="-mt-2 mb-3 text-center text-[11px] text-muted-foreground">Exit anytime — your answers are saved so you can finish later.</p>
+      <p className="-mt-2 mb-3 text-center text-[11px] text-muted-foreground">Your answers are kept if the app closes. Exiting starts setup over.</p>
       <div className="mb-5 h-1 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><div className="h-full rounded-full bg-primary transition-[width] duration-300 motion-reduce:transition-none" style={{width:`${progress}%`}}/></div>
       <section className="relative flex-1 overflow-hidden rounded-lg border border-border/70 bg-card/85 p-5 shadow-[var(--shadow-card)] backdrop-blur-xl sm:p-7">{children}</section>
     </div>
