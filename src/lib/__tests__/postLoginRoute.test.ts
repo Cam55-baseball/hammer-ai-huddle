@@ -81,7 +81,7 @@ describe("resolvePostLoginRoute", () => {
 
   it("sends a brand-new athlete to athlete onboarding", () => {
     expect(resolvePostLoginRoute({ roles: [], hasFirstEvent: false })).toBe(
-      "/onboarding/athlete",
+      "/signup",
     );
   });
 

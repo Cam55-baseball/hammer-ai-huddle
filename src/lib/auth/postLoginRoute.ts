@@ -62,7 +62,7 @@ export function resolvePostLoginRoute(gate: PostLoginGate): string {
   }
 
   // Athlete with no canonical event and no role → onboarding.
-  if (!gate.hasFirstEvent && roles.length === 0) return "/onboarding/athlete";
+  if (!gate.hasFirstEvent && roles.length === 0) return "/signup";
 
   return POST_LOGIN_FALLBACK_ROUTE;
 }

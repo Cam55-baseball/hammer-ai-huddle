@@ -27,13 +27,15 @@ type Draft = {
   acceptedTerms: boolean; height: string; weight: string; graduationYear: string;
   state: string; team: string; level: string; wingspan: string; footLength: string;
   careerGoal: string; accountCreated: boolean; awaitingConfirmation: boolean;
+  /** First screen this person sees: 0 for new visitors, the name step when already signed in. */
+  startAt: number;
 };
 
 const EMPTY: Draft = {
   step: 0, email: "", password: "", firstName: "", lastName: "", avatarName: "", sport: "",
   position: "", battingSide: "", throwingHand: "", dateOfBirth: "", guardianEmail: "",
   acceptedTerms: false, height: "", weight: "", graduationYear: "", state: "", team: "", level: "",
-  wingspan: "", footLength: "", careerGoal: "", accountCreated: false, awaitingConfirmation: false,
+  wingspan: "", footLength: "", careerGoal: "", accountCreated: false, awaitingConfirmation: false, startAt: 0,
 };
 
 export const UNIFIED_SIGNUP_DRAFT_KEY = "hm.unifiedSignupDraft.v1";
@@ -53,6 +55,7 @@ const GROUP: Record<ScreenKey, string> = {
   level: "Team", body: "Body", career: "Goals", review: "Review", finish: "Review",
 };
 const AFTER_ACCOUNT = SCREENS.indexOf("height");
+const NAME_STEP = SCREENS.indexOf("name");
 
 /** Supabase errors are plain objects — surface their real message. */
 function errorText(error: unknown): string {
@@ -100,6 +103,15 @@ export default function UnifiedSignupOnboarding() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
   }, [draft]);
 
+  // Owner ruling 2026-10-03 (Option A): someone already signed in skips the
+  // email, password and age screens (age was checked when the account was made).
+  useEffect(() => {
+    if (!user?.id || !session || finishing.current || busy) return;
+    if (draft.step < NAME_STEP && !draft.awaitingConfirmation) {
+      setDraft((d) => ({ ...d, accountCreated: true, step: NAME_STEP, startAt: NAME_STEP }));
+    }
+  }, [user?.id, session, busy, draft.step, draft.awaitingConfirmation]);
+
   useEffect(() => {
     if (!user?.id || !session || finishing.current) return;
     if (draft.awaitingConfirmation || searchParams.get("confirmed") === "1") {
@@ -146,7 +158,10 @@ export default function UnifiedSignupOnboarding() {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  const progress = Math.round(((draft.step + 1) / SCREENS.length) * 100);
+  const startAt = Math.min(draft.startAt || 0, draft.step);
+  const shownTotal = SCREENS.length - startAt;
+  const shownStep = draft.step - startAt + 1;
+  const progress = Math.round((shownStep / shownTotal) * 100);
   const patch = (next: Partial<Draft>) => setDraft((d) => ({ ...d, ...next }));
   const fail = (message: string) => { toast({ title: "One more thing", description: message, variant: "destructive" }); return false; };
 
@@ -202,7 +217,7 @@ export default function UnifiedSignupOnboarding() {
     if (screen === "play" && !session) { const r = await supabase.auth.signInWithPassword({ email: draft.email.trim(), password: draft.password }); if (r.error) return fail("We couldn't sign you in. Go back and re-enter your password."); }
     setDirection(1); patch({ step: Math.min(draft.step + 1, SCREENS.length - 1) });
   };
-  const back = () => { setDirection(-1); patch({ step: Math.max(0, draft.step - 1) }); };
+  const back = () => { setDirection(-1); patch({ step: Math.max(startAt, draft.step - 1) }); };
 
   /**
    * Every write here is idempotent, so a failed Finish can simply be retried.
@@ -227,7 +242,8 @@ export default function UnifiedSignupOnboarding() {
         id: user.id, first_name: draft.firstName.trim(), last_name: draft.lastName.trim(),
         full_name: `${draft.firstName.trim()} ${draft.lastName.trim()}`,
         ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
-        date_of_birth: draft.dateOfBirth, position: draft.position.trim(), experience_level: draft.level,
+        // Signed-in restarts skip the age screen; keep the date already on the account.
+        ...((draft.dateOfBirth || (user.user_metadata?.date_of_birth as string | undefined)) ? { date_of_birth: draft.dateOfBirth || (user.user_metadata?.date_of_birth as string) } : {}), position: draft.position.trim(), experience_level: draft.level,
         height: draft.height, weight: draft.weight, state: draft.state.trim(),
         high_school_grad_year: Number(draft.graduationYear), graduation_year: Number(draft.graduationYear),
         team_affiliation: draft.team.trim(), throwing_hand: draft.throwingHand as "L" | "R",
@@ -275,13 +291,13 @@ export default function UnifiedSignupOnboarding() {
 
   const toggle = (v: string, cur: string, label: string, onPick: (v: string) => void) => choice(v, cur, label, onPick);
 
-  return <Frame step={draft.step} progress={progress} group={GROUP[screen]} onExit={() => exitRef.current()}>
+  return <Frame step={shownStep} total={shownTotal} progress={progress} group={GROUP[screen]} onExit={() => exitRef.current()}>
     <AnimatePresence mode="wait" initial={false} custom={direction}>
       <motion.div key={draft.step} custom={direction} initial={{ opacity: 0, x: direction * 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: direction * -18 }} transition={{ duration: 0.22 }} className="flex min-h-[430px] flex-col motion-reduce:transform-none">
         <div className="flex-1">{renderStep()}</div>
         {saveError && screen === "finish" && <div role="alert" className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-foreground">{saveError}</div>}
         <div className="mt-6 flex items-center gap-3 border-t border-border/60 pt-4">
-          <Button aria-label="Back" variant="ghost" size="icon" className="h-12 w-12" onClick={back} disabled={draft.step === 0 || busy}><ArrowLeft className="h-5 w-5" /></Button>
+          <Button aria-label="Back" variant="ghost" size="icon" className="h-12 w-12" onClick={back} disabled={draft.step <= startAt || busy}><ArrowLeft className="h-5 w-5" /></Button>
           {draft.step < SCREENS.length - 1 ? <Button className="h-12 flex-1 text-base" onClick={next} disabled={busy}>{busy ? "Creating your account…" : "Next"}<ArrowRight className="ml-2 h-4 w-4" /></Button> : <Button className="h-12 flex-1 text-base" onClick={finish} disabled={busy}>{busy ? "Saving…" : saveError ? "Try again" : "Finish"}<Check className="ml-2 h-4 w-4" /></Button>}
         </div>
       </motion.div>
@@ -325,11 +341,11 @@ export default function UnifiedSignupOnboarding() {
 }
 
 function Summary({label,value}:{label:string;value:string}) { return <div className="flex items-start justify-between gap-4 rounded-md border border-border/60 bg-muted/20 px-3 py-2.5"><span className="text-muted-foreground">{label}</span><span className="text-right font-medium capitalize">{value}</span></div>; }
-function Frame({ step, progress, group, children, onExit }:{step:number;progress:number;group:string;children:React.ReactNode;onExit:()=>void}) {
+function Frame({ step, total, progress, group, children, onExit }:{step:number;total:number;progress:number;group:string;children:React.ReactNode;onExit:()=>void}) {
   return <main className="min-h-[100dvh] overflow-hidden bg-background px-4 pb-[calc(1rem+var(--safe-bottom))] pt-[calc(1rem+var(--safe-top))]">
     <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_-10%,hsl(var(--primary)/0.16),transparent_42%)]" />
     <div className="relative mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col">
-      <header className="mb-4 flex items-center justify-between"><img src={branding.logo} alt={branding.appName} className="h-9 w-9 object-contain"/><span className="text-xs font-medium text-muted-foreground">{group}</span><span className="flex items-center gap-1"><span className="text-xs tabular-nums text-muted-foreground">{step+1}/{SCREENS.length}</span><Button type="button" variant="ghost" className="h-11 gap-1 px-3 text-xs" aria-label="Save and exit" onClick={onExit}><X className="h-4 w-4"/>Exit</Button></span></header>
+      <header className="mb-4 flex items-center justify-between"><img src={branding.logo} alt={branding.appName} className="h-9 w-9 object-contain"/><span className="text-xs font-medium text-muted-foreground">{group}</span><span className="flex items-center gap-1"><span className="text-xs tabular-nums text-muted-foreground">{step}/{total}</span><Button type="button" variant="ghost" className="h-11 gap-1 px-3 text-xs" aria-label="Save and exit" onClick={onExit}><X className="h-4 w-4"/>Exit</Button></span></header>
       <p className="-mt-2 mb-3 text-center text-[11px] text-muted-foreground">Your answers are kept if the app closes. Exiting starts setup over.</p>
       <div className="mb-5 h-1 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><div className="h-full rounded-full bg-primary transition-[width] duration-300 motion-reduce:transition-none" style={{width:`${progress}%`}}/></div>
       <section className="relative flex-1 overflow-hidden rounded-lg border border-border/70 bg-card/85 p-5 shadow-[var(--shadow-card)] backdrop-blur-xl sm:p-7">{children}</section>

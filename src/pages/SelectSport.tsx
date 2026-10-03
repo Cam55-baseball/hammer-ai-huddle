@@ -22,7 +22,7 @@ const SelectSport = () => {
   const handleSportSelect = (sport: 'baseball' | 'softball') => {
     localStorage.setItem('selectedSport', sport);
     // Skip module selection - users explore and purchase later from dashboard
-    navigate("/profile-setup", { state: { sport } });
+    navigate("/signup", { state: { sport } });
   };
 
   return (
