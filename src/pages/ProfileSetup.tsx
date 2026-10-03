@@ -387,8 +387,8 @@ const ProfileSetup = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 py-8 pt-[calc(2rem+var(--safe-top))] pb-[calc(2rem+var(--safe-bottom))]">
       <div className="w-full max-w-2xl">
-        <div className="bg-card border border-border rounded-xl p-8 shadow-lg">
-          <div className="text-center mb-8">
+        <div className="bg-card border border-border rounded-xl p-5 sm:p-8 shadow-lg">
+          <div className={`text-center mb-6 ${isPlayer && pStep > 0 ? "hidden sm:block" : ""}`}>
             <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
               <span className="text-primary-foreground font-bold text-2xl">H</span>
             </div>
@@ -398,8 +398,20 @@ const ProfileSetup = () => {
             </p>
           </div>
 
+          {isPlayer && (
+            <div className="mb-5" aria-live="polite">
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+                <span>Step {pStep + 1} of {PLAYER_STEPS.length}</span>
+                <span className="font-medium text-foreground">{PLAYER_STEPS[pStep]}</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-muted overflow-hidden" role="progressbar" aria-valuemin={1} aria-valuemax={PLAYER_STEPS.length} aria-valuenow={pStep + 1}>
+                <div className="h-full bg-primary transition-all" style={{ width: `${((pStep + 1) / PLAYER_STEPS.length) * 100}%` }} />
+              </div>
+            </div>
+          )}
+
           {/* Selection Summary */}
-          <div className="bg-muted/30 p-4 rounded-lg mb-6">
+          <div className={`bg-muted/30 p-4 rounded-lg mb-6 ${isPlayer && pStep !== 1 ? "hidden" : ""}`}>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">{t('profileSetup.role')}</p>
@@ -943,7 +955,7 @@ const ProfileSetup = () => {
               onDone={() => { setPrimerOpen(false); if (pendingNav) navigate(pendingNav, { replace: true }); }}
             />
           )}
-          <p className="text-xs text-muted-foreground text-center mt-2">
+          <p className={`text-xs text-muted-foreground text-center mt-2 ${isPlayer && pStep < 3 ? "hidden" : ""}`}>
             {isPlayer ? "Next: Choose your access" : "Next: Your dashboard"}
           </p>
         </div>
