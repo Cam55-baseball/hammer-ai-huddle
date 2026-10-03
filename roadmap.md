@@ -17,7 +17,7 @@
 - [x] Wire the full doctrine into the live analysis prompt and keep the fault checklist alongside it
 - [x] Snapshot and activate the fault tags in the live taxonomy
 - [x] Add drill search, placement/status filters, preview, file upload, and readiness badges; report deletion dependency
-- [ ] Verify generated doctrine feedback on a real clip (blocked: tested owner clip lacks resolution metadata)
+- [ ] Verify generated doctrine feedback on a real clip (last owner clip lacks resolution metadata; try another)
 
 # October owner request follow-up
 - [x] Apply the specifically owner-authorized doctrine function and active fault tags; no unrelated deployment
@@ -32,9 +32,11 @@
 - [ ] Allow only owner-hand Drill Builder removal; preserve every past prescription
 - [x] Separate live, preview-only, blocked, and owner-approval items in the owner report
 
-# Pitching phase proposal and elite-filter consistency
-- [x] Record proposed analysis-only phase names and boundaries for owner approval without changing output or Report Card names
+# Pitching phase and elite-filter consistency
+- [x] Record approved analysis-only phase names and boundaries without changing Report Card names
 - [x] Remove the elbow-flexion-at-foot-contact proposal from the pitching doctrine and document why it must not return
 - [x] Audit analogous cross-card items and report distinctions and remaining conflicts without changing card grading
-- [ ] Update the live doctrine bundle to remove the elbow-flexion proposal (blocked: no owner authorization naming this deployment; proposed names must not enter output before approval)
+- [x] Regenerate doctrine bundle without research-derived elbow-flexion standard under explicit owner authorization
+- [ ] Deploy only authorized pitching/throwing analysis functions and verify new arm-care boundary and phase names live
+- [ ] Try a different real pitching clip with resolution metadata and inspect generated feedback
 
