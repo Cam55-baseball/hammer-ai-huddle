@@ -17,6 +17,7 @@ export function shouldAskNotifications(uid: string): boolean {
 
 /** One-line reason, then the system prompt. Asked once; declining changes nothing in the app. */
 export function NotificationPrimer({ uid, open, onDone }: { uid: string; open: boolean; onDone: () => void }) {
+  const canPrompt = Capacitor.isNativePlatform() || (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default");
   const finish = (answer: string) => {
     try { localStorage.setItem(KEY(uid), `${answer}:${new Date().toISOString()}`); } catch { /* ignore */ }
     onDone();
@@ -43,11 +44,11 @@ export function NotificationPrimer({ uid, open, onDone }: { uid: string; open: b
         <DialogHeader>
           <DialogTitle>Stay in the loop</DialogTitle>
           <DialogDescription>
-            Get your daily plan, coach messages, and analysis updates.
+            {canPrompt ? "Get your daily plan, coach messages, and analysis updates." : "Notifications aren't available here. You can still use everything in the app."}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex-col gap-2 sm:flex-col">
-          <Button size="lg" className="w-full" onClick={allow}>Allow notifications</Button>
+          {canPrompt && <Button size="lg" className="w-full" onClick={allow}>Allow notifications</Button>}
           <Button size="lg" variant="ghost" className="w-full" onClick={() => finish("not_now")}>Not now</Button>
         </DialogFooter>
       </DialogContent>
