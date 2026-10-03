@@ -11,13 +11,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { LandingDemoVideo } from "@/components/landing/LandingDemoVideo";
 import heroImage from "@/assets/hero-baseball.jpg";
-import { LaunchOpening } from "@/components/landing/LaunchOpening";
-import "@/components/landing/LaunchOpening.css";
+import { useEffect } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isOwner } = useOwnerAccess();
+  useEffect(() => {
+    // The landing page is usable now; never hold it behind the opening.
+    window.dispatchEvent(new Event("hm:landing-ready"));
+  }, []);
 
   const handleGetStarted = () => {
     navigate("/auth");
@@ -25,7 +28,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
-      <LaunchOpening />
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border pt-safe">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-2">

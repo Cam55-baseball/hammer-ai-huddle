@@ -17,6 +17,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { LaunchOpening } from "@/components/landing/LaunchOpening";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
 import { SportThemeProvider } from "./contexts/SportThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -298,6 +299,7 @@ const App = () => {
           <PWAUpdatePrompt />
           <VideoMomentHost />
           <BrowserRouter>
+            <LaunchOpening />
             <QuickEditProfileProvider>
             <PurchaseConfirmationWatcher />
             <Suspense fallback={<PageLoadingSkeleton />}>

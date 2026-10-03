@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { branding } from "@/branding";
+import "./LaunchOpening.css";
 
 // Per document launch, not per route visit. Reloading the app resets this flag.
 let playedThisLaunch = false;
 
 export function LaunchOpening() {
+  const { pathname } = useLocation();
   const [visible, setVisible] = useState(() => {
-    if (playedThisLaunch) return false;
+    if (playedThisLaunch || window.location.pathname !== "/") return false;
     playedThisLaunch = true;
     return true;
   });
@@ -14,10 +17,12 @@ export function LaunchOpening() {
   useEffect(() => {
     if (!visible) return;
     const timer = window.setTimeout(() => setVisible(false), 1450);
-    return () => window.clearTimeout(timer);
+    const ready = () => setVisible(false);
+    window.addEventListener("hm:landing-ready", ready);
+    return () => { window.clearTimeout(timer); window.removeEventListener("hm:landing-ready", ready); };
   }, [visible]);
 
-  if (!visible) return null;
+  if (!visible || pathname !== "/") return null;
 
   return (
     <div className="hm-launch" aria-hidden="true" onPointerDown={() => setVisible(false)}>
