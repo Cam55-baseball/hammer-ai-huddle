@@ -26,7 +26,8 @@ const ProfileSetup = () => {
   const locationState = location.state as { role?: string; sport?: string; module?: string };
 
   // Read from both possible localStorage keys for role
-  const rawRole = locationState?.role || localStorage.getItem('selectedRole') || localStorage.getItem('userRole');
+  // Read once so finishing (which clears the stored role) can't flip the page mid-handoff.
+  const [rawRole] = useState<string | null>(() => locationState?.role || localStorage.getItem('selectedRole') || localStorage.getItem('userRole'));
   
   // Normalize role value to expected format (handle both lowercase and capitalized)
   let selectedRole: string | null = rawRole;
