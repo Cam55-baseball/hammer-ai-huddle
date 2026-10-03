@@ -101,7 +101,7 @@ serve(async (req) => {
 
     const { data: progress } = await supabase
       .from("user_progress")
-      .select("*")
+      .select("sport,module,videos_analyzed")
       .eq("user_id", userId);
 
     if (subscription || progress) {
@@ -123,7 +123,7 @@ serve(async (req) => {
       if (progress && progress.length > 0) {
         userContext += `Progress:\n`;
         progress.forEach((p: any) => {
-          userContext += `- ${p.sport} ${p.module}: ${p.videos_analyzed} videos, avg score: ${p.average_efficiency_score || "N/A"}\n`;
+          userContext += `- ${p.sport} ${p.module}: ${p.videos_analyzed} videos\n`;
         });
       }
     }

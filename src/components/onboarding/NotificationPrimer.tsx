@@ -31,7 +31,7 @@ export function NotificationPrimer({ uid, open, onDone }: { uid: string; open: b
         <DialogHeader>
           <DialogTitle>Stay in the loop</DialogTitle>
           <DialogDescription>
-            We'll let you know when your daily plan is ready, when your coach messages you, and when your analysis is done.
+            Get your daily plan, coach messages, and analysis updates.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex-col gap-2 sm:flex-col">

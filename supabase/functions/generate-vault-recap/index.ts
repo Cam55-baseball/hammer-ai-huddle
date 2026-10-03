@@ -150,7 +150,7 @@ serve(async (req) => {
       supabase.from("tex_vision_metrics").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("tex_vision_progress").select("*").eq("user_id", user.id).maybeSingle(),
       // VIDEO ANALYSIS DATA
-      supabase.from("videos").select("id, module, sport, efficiency_score, created_at, analysis_result")
+      supabase.from("videos").select("id, module, sport, created_at, analysis_result")
         .eq("user_id", user.id)
         .gte("created_at", startDateStr).lte("created_at", endDateStr),
       // MIND FUEL DATA
@@ -1146,19 +1146,13 @@ serve(async (req) => {
 
     // ========== VIDEO ANALYSIS SUMMARY (E2E Integration) ==========
     const videos = videoAnalysisData || [];
-    const videosByModule: Record<string, { count: number; avgScore: number; totalScore: number }> = {};
+    const videosByModule: Record<string, { count: number }> = {};
     videos.forEach((v: any) => {
       const mod = v.module || 'unknown';
       if (!videosByModule[mod]) {
-        videosByModule[mod] = { count: 0, avgScore: 0, totalScore: 0 };
+        videosByModule[mod] = { count: 0 };
       }
       videosByModule[mod].count++;
-      videosByModule[mod].totalScore += v.efficiency_score || 0;
-    });
-    Object.keys(videosByModule).forEach(m => {
-      videosByModule[m].avgScore = videosByModule[m].count > 0 
-        ? videosByModule[m].totalScore / videosByModule[m].count 
-        : 0;
     });
 
     // Extract recurring feedback themes from analysis_result

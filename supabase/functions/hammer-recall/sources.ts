@@ -161,14 +161,13 @@ export const RECALL_SOURCES: RecallSourceDef[] = [
     dateColumn: "created_at",
     timestamp: true,
     select:
-      "id,library_title,library_notes,module,sport,efficiency_score,status,session_date,created_at",
+      "id,library_title,library_notes,module,sport,status,session_date,created_at",
     searchColumns: ["library_title", "library_notes", "module", "sport"],
     limit: 8,
     eq: { saved_to_library: true },
     map: (r) => ({
       text: join(
         clean(r.library_title, 90) || `${r.sport ?? ""} ${r.module ?? "video"}`.trim(),
-        r.efficiency_score != null ? `efficiency ${r.efficiency_score}` : "",
         r.status ? `status ${r.status}` : "",
         clean(r.library_notes, 240),
       ),
