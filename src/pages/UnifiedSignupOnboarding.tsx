@@ -169,24 +169,30 @@ export default function UnifiedSignupOnboarding() {
       });
       if (error) return fail(error.message);
       if (!data.session) {
-        patch({ accountCreated: true, awaitingConfirmation: true, step: 7, password: "" });
+        patch({ accountCreated: true, awaitingConfirmation: true, step: AFTER_ACCOUNT, password: "" });
         return true;
       }
-      patch({ accountCreated: true, awaitingConfirmation: false, step: 7, password: "" });
+      patch({ accountCreated: true, awaitingConfirmation: false, step: AFTER_ACCOUNT, password: "" });
       return true;
     } finally { setBusy(false); }
   };
 
   const next = async () => {
     if (!valid()) return;
-    if (draft.step === 6 && !draft.accountCreated) { await createAccount(); return; }
+    if (screen === "play" && !draft.accountCreated) { await createAccount(); return; }
     setDirection(1); patch({ step: Math.min(draft.step + 1, SCREENS.length - 1) });
   };
   const back = () => { setDirection(-1); patch({ step: Math.max(0, draft.step - 1) }); };
 
+  /**
+   * Every write here is idempotent, so a failed Finish can simply be retried.
+   * The device draft is only cleared after every write succeeds.
+   */
   const finish = async () => {
     if (!user?.id) return fail("Confirm your email, then return here to finish.");
     setBusy(true);
+    setSaveError(null);
+    let stage = "profile photo";
     try {
       let avatarUrl: string | null = null;
       if (avatarFile) {
@@ -196,41 +202,51 @@ export default function UnifiedSignupOnboarding() {
         if (uploaded.error) throw uploaded.error;
         avatarUrl = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
       }
+      stage = "profile";
       const profile = {
         id: user.id, first_name: draft.firstName.trim(), last_name: draft.lastName.trim(),
-        full_name: `${draft.firstName.trim()} ${draft.lastName.trim()}`, avatar_url: avatarUrl,
+        full_name: `${draft.firstName.trim()} ${draft.lastName.trim()}`,
+        ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
         date_of_birth: draft.dateOfBirth, position: draft.position.trim(), experience_level: draft.level,
         height: draft.height, weight: draft.weight, state: draft.state.trim(),
         high_school_grad_year: Number(draft.graduationYear), graduation_year: Number(draft.graduationYear),
-        team_affiliation: draft.team.trim(), throwing_hand: draft.throwingHand as "L" | "R" | "S",
-        batting_side: draft.battingSide as "L" | "R" | "S",
+        team_affiliation: draft.team.trim(), throwing_hand: draft.throwingHand as "L" | "R",
+        // profiles.batting_side enum is R/L/B — "Switch" is stored as B there.
+        batting_side: (draft.battingSide === "S" ? "B" : draft.battingSide) as "L" | "R" | "B",
       };
       const profileWrite = await supabase.from("profiles").upsert(profile as never);
       if (profileWrite.error) throw profileWrite.error;
-      const roleWrite = await supabase.from("user_roles").upsert({ user_id: user.id, role: "player", status: "active" }, { onConflict: "user_id,role" });
-      if (roleWrite.error) throw roleWrite.error;
-      await Promise.all([
-        persistContextAnswer(user.id, "sport_primary", draft.sport, "onboarding.unified"),
-        persistContextAnswer(user.id, "position_primary", draft.position.trim(), "onboarding.unified"),
-        persistContextAnswer(user.id, "throws_hand", draft.throwingHand, "onboarding.unified"),
-        persistContextAnswer(user.id, "bats_hand", draft.battingSide, "onboarding.unified"),
-        persistContextAnswer(user.id, "competition_home_state", draft.state.trim(), "onboarding.unified"),
-        persistContextAnswer(user.id, "competition_level", draft.level, "onboarding.unified"),
-        persistContextAnswer(user.id, "anthropometrics", { height_in: Number(draft.height) || null, weight_lb: Number(draft.weight) || null, wingspan_in: Number(draft.wingspan) || null, body_fat_pct: Number(draft.bodyFat) || null, foot_length_in: Number(draft.footLength) || null }, "onboarding.unified"),
-        persistContextAnswer(user.id, "injury_history", draft.injuryStatus === "report" ? draft.injuryNote : "none", "onboarding.unified"),
-        persistContextAnswer(user.id, "sleep_target_hrs", Number(draft.sleep) || null, "onboarding.unified"),
-        persistContextAnswer(user.id, "water_goal_oz", Number(draft.water) || null, "onboarding.unified"),
-        persistContextAnswer(user.id, "focus_area", draft.mentalFocus.trim(), "onboarding.unified"),
-        persistContextAnswer(user.id, "level_target", draft.careerGoal.trim(), "onboarding.unified"),
-        writePersistentEquipment(user.id, draft.equipment, null, "onboarding.unified"),
-      ]);
+      stage = "athlete role";
+      // Regular users may add a role but never update one, so only insert when missing.
+      const existingRole = await supabase.from("user_roles").select("id").eq("user_id", user.id).eq("role", "player").maybeSingle();
+      if (existingRole.error) throw existingRole.error;
+      if (!existingRole.data) {
+        const roleWrite = await supabase.from("user_roles").insert({ user_id: user.id, role: "player", status: "active" });
+        if (roleWrite.error && roleWrite.error.code !== "23505") throw roleWrite.error;
+      }
+      stage = "training profile";
+      const heightIn = heightToInches(draft.height);
+      const answers: Array<[string, unknown]> = [
+        ["sport_primary", draft.sport],
+        ["position_primary", draft.position.trim()],
+        ["throws_hand", draft.throwingHand],
+        ["bats_hand", draft.battingSide],
+        ["competition_home_state", draft.state.trim()],
+        ["competition_level", draft.level],
+        ["anthropometrics", { height_in: heightIn, weight_lb: Number(draft.weight) || null, wingspan_in: Number(draft.wingspan) || null, foot_length_in: Number(draft.footLength) || null }],
+      ];
+      if (draft.careerGoal.trim()) answers.push(["level_target", draft.careerGoal.trim()]);
+      // Sequential: each write merges the shared confidence map.
+      for (const [key, value] of answers) await persistContextAnswer(user.id, key, value, "onboarding.unified");
       finishing.current = true;
       localStorage.removeItem(STORAGE_KEY);
       localStorage.setItem("selectedSport", draft.sport);
       if (shouldAskNotifications(user.id)) setPrimerOpen(true);
       else navigate("/dashboard", { replace: true });
     } catch (error) {
-      fail(error instanceof Error ? error.message : "Your answers couldn't be saved. Nothing was lost; try again.");
+      const detail = errorText(error);
+      console.error(`[onboarding] Finish failed at ${stage}:`, error);
+      setSaveError(`We couldn't save your ${stage} (${detail}). Every answer is still here — tap Finish to try again.`);
     } finally { setBusy(false); }
   };
 
