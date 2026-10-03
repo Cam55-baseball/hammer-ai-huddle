@@ -9,6 +9,11 @@
   touch-action: manipulation;
 }
 
+.hm-launch-ready {
+  animation: hm-launch-out 180ms ease-out both;
+  pointer-events: none;
+}
+
 .hm-launch-stage {
   position: relative;
   display: grid;
