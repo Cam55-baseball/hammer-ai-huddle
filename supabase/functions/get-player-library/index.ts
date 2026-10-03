@@ -1,4 +1,5 @@
 import { recruitingGate } from '../_shared/recruitingGate.ts';
+import { canSeeScoredGrading, stripScoredGrading } from '../_shared/scoredGradingGate.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
 
 const corsHeaders = {
@@ -118,6 +119,11 @@ Deno.serve(async (req) => {
         }
         return rest;
       });
+    }
+
+    // Score lock-down (owner ruling 2026-10-03): scored fields are owner/admin only.
+    if (!(await canSeeScoredGrading(supabase, user.id))) {
+      videoResults = videoResults.map((v) => stripScoredGrading(v as Record<string, unknown>) as typeof v);
     }
 
     // Players Club is video-only. Practices, games, reports and recaps live in
