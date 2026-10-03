@@ -344,6 +344,7 @@ const ProfileSetup = () => {
 
           {/* Bio Form */}
           <div className="space-y-4">
+            <div className={sv(0)}>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="firstName">{t('profileSetup.firstName')} *</Label>
@@ -366,7 +367,9 @@ const ProfileSetup = () => {
                 />
               </div>
             </div>
+            </div>
 
+            <div className={sv(2)}>
             <div>
               <Label>Date of Birth *</Label>
               <BirthDatePicker
@@ -375,7 +378,9 @@ const ProfileSetup = () => {
               />
               <p className="text-xs text-muted-foreground mt-1">Required — used across the app for age-based features.</p>
             </div>
+            </div>
             
+            <div className={sv(0)}>
             <div>
               <Label htmlFor="avatar">{t('profileSetup.profilePicture')}</Label>
               <div className="flex gap-4 items-center">
@@ -395,9 +400,11 @@ const ProfileSetup = () => {
               </div>
               <p className="text-xs text-muted-foreground mt-1">{t('profileSetup.maxFileSize')}</p>
             </div>
+            </div>
 
             {isPlayer && (
               <>
+            <div className={sv(2)}>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="height">{t('profileSetup.height')} *</Label>
@@ -416,8 +423,10 @@ const ProfileSetup = () => {
                     />
                   </div>
                 </div>
+            </div>
                 
                 <div className="grid grid-cols-2 gap-3">
+            <div className={sv(3)}>
                   <div>
                     <Label htmlFor="playerState">{t('profileSetup.state')} *</Label>
                     <Input
@@ -428,6 +437,8 @@ const ProfileSetup = () => {
                       required
                     />
                   </div>
+            </div>
+            <div className={sv(2)}>
                   <div>
                     <Label htmlFor="graduationYear">{t('profileSetup.graduationYear')} *</Label>
                     <Input
@@ -441,8 +452,10 @@ const ProfileSetup = () => {
                       required
                     />
                   </div>
+            </div>
                 </div>
 
+            <div className={sv(1)}>
                 <div>
                   <Label htmlFor="position">{t('profileSetup.position')} *</Label>
                   <Input
@@ -453,7 +466,9 @@ const ProfileSetup = () => {
                     required
                   />
                 </div>
+            </div>
 
+            <div className={sv(1)}>
                 <div>
                   <Label htmlFor="experienceLevel">{t('profileSetup.experienceLevel')} *</Label>
                   <Select value={experienceLevel} onValueChange={setExperienceLevel} required>
@@ -468,7 +483,9 @@ const ProfileSetup = () => {
                     </SelectContent>
                   </Select>
                 </div>
+            </div>
 
+            <div className={sv(3)}>
                 <div>
                   <Label htmlFor="teamAffiliation">{t('profileSetup.teamAffiliation')} *</Label>
                   <Input
@@ -479,7 +496,9 @@ const ProfileSetup = () => {
                     required
                   />
                 </div>
+            </div>
 
+            <div className={sv(1)}>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="throwingHand">{t('profileSetup.throwingHand')}</Label>
@@ -508,7 +527,9 @@ const ProfileSetup = () => {
                     </Select>
                   </div>
                 </div>
+            </div>
 
+            <div className={sv(3)}>
                 <div>
                   <Label htmlFor="commitmentStatus">{t('profileSetup.commitmentStatus')}</Label>
                   <Select value={commitmentStatus} onValueChange={setCommitmentStatus}>
@@ -702,6 +723,7 @@ const ProfileSetup = () => {
                     </div>
                   </>
                 )}
+            </div>
               </>
             )}
 
@@ -743,6 +765,7 @@ const ProfileSetup = () => {
               </>
             )}
 
+            <div className={sv(3)}>
             <div>
               <Label htmlFor="bio">{t('profileSetup.bioOptional')}</Label>
               {isPlayer && (
@@ -762,8 +785,10 @@ const ProfileSetup = () => {
                 {t('profileSetup.characterCount', { count: bio.length })}
               </p>
             </div>
+            </div>
             
             {/* Credentials (Optional) */}
+            <div className={sv(3)}>
             <div>
               <Label className="text-sm font-semibold">{t('profileSetup.experienceCredentials')}</Label>
               <p className="text-xs text-muted-foreground mb-2">
@@ -809,6 +834,7 @@ const ProfileSetup = () => {
                   </Button>
                 )}
               </div>
+            </div>
             </div>
           </div>
 
