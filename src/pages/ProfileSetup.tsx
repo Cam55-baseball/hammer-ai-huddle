@@ -1,4 +1,5 @@
 import { HeightFeetInchesInput } from "@/components/shared/HeightFeetInchesInput";
+import { NotificationPrimer, shouldAskNotifications } from "@/components/onboarding/NotificationPrimer";
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -74,6 +75,12 @@ const ProfileSetup = () => {
   const isPlayer = selectedRole === 'Player';
   const isCoachOrScout = selectedRole === 'Scout/Coach';
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Click-through steps (players): 0 name/photo · 1 position/sides · 2 body/grad year/birth date · 3 state/team/level.
+  const PLAYER_STEPS = ["Name and photo", "Position, bats and throws", "Height, weight and graduation year", "State, team and level"];
+  const [pStep, setPStep] = useState(0);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const [primerOpen, setPrimerOpen] = useState(false);
+  const [pendingNav, setPendingNav] = useState<string | null>(null);
 
   const { session } = useAuth();
 
@@ -425,7 +432,7 @@ const ProfileSetup = () => {
                 </div>
             </div>
                 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
             <div className={sv(3)}>
                   <div>
                     <Label htmlFor="playerState">{t('profileSetup.state')} *</Label>
