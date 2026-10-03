@@ -5,7 +5,7 @@ import { PushNotifications } from "@capacitor/push-notifications";
 
 const KEY = (uid: string) => `hm.notifPrimerAsked.${uid}`;
 
-/** True only the first time, and only where the browser can still show the system prompt. */
+/** True only until the athlete has answered this handoff, including in unsupported browsers. */
 export function shouldAskNotifications(uid: string): boolean {
   try {
     if (typeof window === "undefined") return false;
@@ -27,7 +27,6 @@ export function NotificationPrimer({ uid, open, onDone }: { uid: string; open: b
     try {
       if (Capacitor.isNativePlatform()) {
         result = (await PushNotifications.requestPermissions()).receive;
-        if (result === "granted") await PushNotifications.register();
       } else if ("Notification" in window && Notification.permission === "default") {
         result = await Notification.requestPermission();
       } else if ("Notification" in window) {
