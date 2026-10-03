@@ -14,6 +14,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      _snapshot_videos_acl_20261003: {
+        Row: {
+          relacl: string
+          taken_at: string
+        }
+        Insert: {
+          relacl: string
+          taken_at?: string
+        }
+        Update: {
+          relacl?: string
+          taken_at?: string
+        }
+        Relationships: []
+      }
       activity_card_versions: {
         Row: {
           created_at: string
@@ -19552,6 +19567,16 @@ export type Database = {
           video_url: string
         }[]
       }
+      get_my_side_split_inputs: {
+        Args: never
+        Returns: {
+          diff_pct: number
+          discipline: string
+          favored: string
+          left_n: number
+          right_n: number
+        }[]
+      }
       get_pending_evaluations: {
         Args: never
         Returns: {
@@ -19568,6 +19593,24 @@ export type Database = {
         }[]
       }
       get_public_bundle: { Args: { p_slug: string }; Returns: Json }
+      get_staff_report_card_trend: {
+        Args: { p_limit?: number; p_module: string; p_user_id: string }
+        Returns: {
+          ai_analysis: Json
+          created_at: string
+          id: string
+          module: string
+          sport: string
+        }[]
+      }
+      get_staff_video_scores: {
+        Args: { p_video_ids: string[] }
+        Returns: {
+          ai_analysis: Json
+          efficiency_score: number
+          id: string
+        }[]
+      }
       gp_game_rep_counts: {
         Args: { _user_id: string }
         Returns: {
