@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { branding } from "@/branding";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import { writePersistentEquipment } from "@/lib/hammer/context/equipment";
+import { writeDraftSlot, clearDraftSlot } from "@/lib/onboarding/draftStore";
 import { NotificationPrimer, shouldAskNotifications } from "@/components/onboarding/NotificationPrimer";
 
 type Draft = {
@@ -39,11 +40,11 @@ const EMPTY: Draft = {
 
 const STORAGE_KEY = "hm.unifiedSignupDraft.v1";
 const SCREENS = [
-  "Email", "Password", "Your name", "Your photo", "Sport & position", "How you play",
-  "Height & weight", "Graduation", "State & team", "Competition level", "Body measurements",
-  "Equipment", "Injuries", "Sleep & water", "Mental focus", "Career goal", "Review", "Finish",
+  "Email", "Password", "Age protection", "Your name", "Your photo", "Sport & position", "How you play",
+  "Height & weight", "Graduation", "State & team", "Competition level", "Body measurements", "Foot measurement",
+  "Portable equipment", "Training equipment", "Injuries", "Sleep & water", "Mental focus", "Career goal", "Review", "Finish",
 ];
-const GROUPS = ["Account", "Account", "About you", "About you", "Your game", "Your game", "Profile", "Profile", "Team", "Team", "Body", "Equipment", "Health", "Recovery", "Goals", "Goals", "Review", "Review"];
+const GROUPS = ["Account", "Account", "Account", "About you", "About you", "Your game", "Your game", "Profile", "Profile", "Team", "Team", "Body", "Body", "Equipment", "Equipment", "Health", "Recovery", "Goals", "Goals", "Review", "Review"];
 const EQUIPMENT = ["bodyweight", "bands", "mini_band", "jband", "med_ball", "plyo_ball", "dumbbell", "kettlebell", "barbell", "plates", "squat_rack", "bench", "trap_bar", "cable_stack", "landmine", "box", "ladder", "hurdles"];
 const LABELS: Record<string, string> = { bodyweight: "Bodyweight", bands: "Resistance bands", mini_band: "Mini bands", jband: "Arm-care bands", med_ball: "Medicine ball", plyo_ball: "Plyo balls", dumbbell: "Dumbbells", kettlebell: "Kettlebells", barbell: "Barbell", plates: "Weight plates", squat_rack: "Squat rack", bench: "Bench", trap_bar: "Trap bar", cable_stack: "Cable machine", landmine: "Landmine", box: "Box or step", ladder: "Agility ladder", hurdles: "Hurdles" };
 
@@ -79,9 +80,14 @@ export default function UnifiedSignupOnboarding() {
   }, [draft]);
 
   useEffect(() => {
+    if (!user?.id || !draft.accountCreated) return;
+    void writeDraftSlot(user.id, "unified-signup", { ...draft, password: "" });
+  }, [draft, user?.id]);
+
+  useEffect(() => {
     if (!user?.id || !session || finishing.current) return;
     if (draft.awaitingConfirmation || searchParams.get("confirmed") === "1") {
-      setDraft((d) => ({ ...d, accountCreated: true, awaitingConfirmation: false, step: Math.max(d.step, 6) }));
+      setDraft((d) => ({ ...d, accountCreated: true, awaitingConfirmation: false, step: Math.max(d.step, 7) }));
     }
   }, [user?.id, session, searchParams, draft.awaitingConfirmation]);
 
@@ -92,19 +98,19 @@ export default function UnifiedSignupOnboarding() {
   const valid = () => {
     const s = draft.step;
     if (s === 0 && !z.string().email().safeParse(draft.email).success) return fail("Enter a valid email address.");
-    if (s === 1) {
-      if (draft.password.length < 6) return fail("Use at least 6 characters for your password.");
+    if (s === 1 && draft.password.length < 6) return fail("Use at least 6 characters for your password.");
+    if (s === 2) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.dateOfBirth)) return fail("Enter your date of birth.");
       if (minor && !z.string().email().safeParse(draft.guardianEmail).success) return fail("Enter a valid parent or guardian email.");
     }
-    if (s === 2 && (!draft.firstName.trim() || !draft.lastName.trim())) return fail("Enter your first and last name.");
-    if (s === 4 && (!draft.sport || !draft.position.trim())) return fail("Choose your sport and enter your position.");
-    if (s === 5 && (!draft.battingSide || !draft.throwingHand)) return fail("Choose how you bat and throw.");
-    if (s === 6 && (!draft.height || !draft.weight)) return fail("Enter your height and weight.");
-    if (s === 7 && !/^\d{4}$/.test(draft.graduationYear)) return fail("Enter a four-digit graduation year.");
-    if (s === 8 && (!draft.state.trim() || !draft.team.trim())) return fail("Enter your state and team.");
-    if (s === 9 && !draft.level) return fail("Choose your current level.");
-    if (s === 12 && !draft.injuryStatus) return fail("Tell us whether you're healthy or have something to report.");
+    if (s === 3 && (!draft.firstName.trim() || !draft.lastName.trim())) return fail("Enter your first and last name.");
+    if (s === 5 && (!draft.sport || !draft.position.trim())) return fail("Choose your sport and enter your position.");
+    if (s === 6 && (!draft.battingSide || !draft.throwingHand)) return fail("Choose how you bat and throw.");
+    if (s === 7 && (!draft.height || !draft.weight)) return fail("Enter your height and weight.");
+    if (s === 8 && !/^\d{4}$/.test(draft.graduationYear)) return fail("Enter a four-digit graduation year.");
+    if (s === 9 && (!draft.state.trim() || !draft.team.trim())) return fail("Enter your state and team.");
+    if (s === 10 && !draft.level) return fail("Choose your current level.");
+    if (s === 15 && !draft.injuryStatus) return fail("Tell us whether you're healthy or have something to report.");
     return true;
   };
 
@@ -123,17 +129,17 @@ export default function UnifiedSignupOnboarding() {
       });
       if (error) return fail(error.message);
       if (!data.session) {
-        patch({ accountCreated: true, awaitingConfirmation: true, step: 6, password: "" });
+        patch({ accountCreated: true, awaitingConfirmation: true, step: 7, password: "" });
         return true;
       }
-      patch({ accountCreated: true, awaitingConfirmation: false, step: 6, password: "" });
+      patch({ accountCreated: true, awaitingConfirmation: false, step: 7, password: "" });
       return true;
     } finally { setBusy(false); }
   };
 
   const next = async () => {
     if (!valid()) return;
-    if (draft.step === 5 && !draft.accountCreated) { await createAccount(); return; }
+    if (draft.step === 6 && !draft.accountCreated) { await createAccount(); return; }
     setDirection(1); patch({ step: Math.min(draft.step + 1, SCREENS.length - 1) });
   };
   const back = () => { setDirection(-1); patch({ step: Math.max(0, draft.step - 1) }); };
@@ -180,6 +186,7 @@ export default function UnifiedSignupOnboarding() {
       ]);
       finishing.current = true;
       localStorage.removeItem(STORAGE_KEY);
+      clearDraftSlot(user.id, "unified-signup");
       localStorage.setItem("selectedSport", draft.sport);
       if (shouldAskNotifications(user.id)) setPrimerOpen(true);
       else navigate("/dashboard", { replace: true });
@@ -205,7 +212,7 @@ export default function UnifiedSignupOnboarding() {
         <div className="flex-1">{renderStep()}</div>
         <div className="mt-6 flex items-center gap-3 border-t border-border/60 pt-4">
           <Button aria-label="Back" variant="ghost" size="icon" onClick={back} disabled={draft.step === 0 || busy}><ArrowLeft className="h-5 w-5" /></Button>
-          {draft.step < 17 ? <Button className="h-12 flex-1 text-base" onClick={next} disabled={busy}>{busy ? "Creating your account…" : "Next"}<ArrowRight className="ml-2 h-4 w-4" /></Button> : <Button className="h-12 flex-1 text-base" onClick={finish} disabled={busy}>{busy ? "Saving…" : "Finish"}<Check className="ml-2 h-4 w-4" /></Button>}
+          {draft.step < SCREENS.length - 1 ? <Button className="h-12 flex-1 text-base" onClick={next} disabled={busy}>{busy ? "Creating your account…" : "Next"}<ArrowRight className="ml-2 h-4 w-4" /></Button> : <Button className="h-12 flex-1 text-base" onClick={finish} disabled={busy}>{busy ? "Saving…" : "Finish"}<Check className="ml-2 h-4 w-4" /></Button>}
         </div>
       </motion.div>
     </AnimatePresence>
@@ -217,11 +224,12 @@ export default function UnifiedSignupOnboarding() {
   function renderStep() {
     switch (draft.step) {
       case 0: return <>{title("What's your email?", "This will be your sign-in and the place we send account updates.")}<Label htmlFor="new-email">Email</Label><div className="relative mt-2"><Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" /><Input id="new-email" autoFocus type="email" autoComplete="email" className="h-12 pl-10" value={draft.email} onChange={(e) => patch({ email: e.target.value })} placeholder="you@example.com" /></div></>;
-      case 1: return <>{title("Secure your account", "Your date of birth keeps the existing age protections in place.")}<div className="space-y-4"><div><Label htmlFor="new-password">Password</Label><div className="relative mt-2"><LockKeyhole className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground"/><Input id="new-password" autoFocus type={showPassword ? "text" : "password"} autoComplete="new-password" className="h-12 pl-10 pr-11" value={draft.password} onChange={(e) => patch({ password: e.target.value })}/><Button type="button" variant="ghost" size="icon" aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-1 top-1" onClick={() => setShowPassword((v) => !v)}>{showPassword ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</Button></div></div><div><Label htmlFor="new-dob">Date of birth</Label><Input id="new-dob" type="date" className="mt-2 h-12" max={new Date().toISOString().slice(0,10)} value={draft.dateOfBirth} onChange={(e) => patch({ dateOfBirth: e.target.value })}/></div>{minor && <div><Label htmlFor="guardian">Parent or guardian email</Label><Input id="guardian" type="email" className="mt-2 h-12" value={draft.guardianEmail} onChange={(e) => patch({ guardianEmail: e.target.value })}/><p className="mt-2 text-xs leading-5 text-muted-foreground">We'll notify them that this account was created and how to contact support.</p></div>}</div></>;
-      case 2: return <>{title("What should we call you?")}<div className="grid gap-4"><div><Label htmlFor="first">First name</Label><Input id="first" autoFocus className="mt-2 h-12" value={draft.firstName} onChange={(e) => patch({ firstName: e.target.value })}/></div><div><Label htmlFor="last">Last name</Label><Input id="last" className="mt-2 h-12" value={draft.lastName} onChange={(e) => patch({ lastName: e.target.value })}/></div></>;
-      case 3: return <>{title("Add a profile photo", "Optional. You can change it later.")}<label className="mx-auto flex h-48 w-48 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-full border border-dashed border-primary/50 bg-primary/5 text-center">{avatarPreview ? <img src={avatarPreview} alt="Profile preview" className="h-full w-full object-cover"/> : <><Camera className="mb-3 h-8 w-8 text-primary"/><span className="text-sm font-medium">Choose photo</span><span className="mt-1 text-xs text-muted-foreground">Up to 5 MB</span></>}<input type="file" accept="image/*" className="sr-only" onChange={(e) => { const f=e.target.files?.[0]; if(!f) return; if(f.size>5*1024*1024){ fail("Choose a photo smaller than 5 MB."); return; } setAvatarFile(f); setAvatarPreview(URL.createObjectURL(f)); patch({avatarName:f.name}); }}/></label></>;
-      case 4: return <>{title("What's your game?")}<div className="grid grid-cols-2 gap-3">{choice("baseball",draft.sport,"Baseball",v=>patch({sport:v as Draft["sport"]}))}{choice("softball",draft.sport,"Softball",v=>patch({sport:v as Draft["sport"]}))}</div><div className="mt-5"><Label htmlFor="position">Primary position</Label><Input id="position" className="mt-2 h-12" value={draft.position} onChange={(e)=>patch({position:e.target.value})} placeholder="Pitcher, catcher, shortstop…"/></div></>;
-      case 5: return <>{title("How do you play?", "Your account is created after this screen so every answer that follows can save to you.")}<div className="space-y-5"><div><Label>Batting side</Label><div className="mt-2 grid grid-cols-3 gap-2">{[["R","Right"],["L","Left"],["S","Switch"]].map(([v,l])=>choice(v,draft.battingSide,l,x=>patch({battingSide:x})))}</div></div><div><Label>Throwing hand</Label><div className="mt-2 grid grid-cols-2 gap-2">{[["R","Right"],["L","Left"]].map(([v,l])=>choice(v,draft.throwingHand,l,x=>patch({throwingHand:x})))}</div></div><div className="flex items-start gap-3 rounded-md border border-border/70 bg-muted/30 p-3"><Checkbox id="terms" checked={draft.acceptedTerms} onCheckedChange={(v)=>patch({acceptedTerms:v===true})}/><Label htmlFor="terms" className="text-xs font-normal leading-5 text-muted-foreground">I agree to the <Link className="text-foreground underline" target="_blank" to="/terms">Terms</Link> and <Link className="text-foreground underline" target="_blank" to="/privacy">Privacy Policy</Link>.</Label></div></div></>;
+      case 1: return <>{title("Create a strong password")}<Label htmlFor="new-password">Password</Label><div className="relative mt-2"><LockKeyhole className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground"/><Input id="new-password" autoFocus type={showPassword ? "text" : "password"} autoComplete="new-password" className="h-12 pl-10 pr-11" value={draft.password} onChange={(e) => patch({ password: e.target.value })}/><Button type="button" variant="ghost" size="icon" aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-1 top-1" onClick={() => setShowPassword((v) => !v)}>{showPassword ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</Button></div><p className="mt-2 text-xs text-muted-foreground">At least 6 characters. For your security, passwords are never saved as draft answers.</p></>;
+      case 2: return <>{title("When were you born?", "This keeps the existing age protections in place.")}<Label htmlFor="new-dob">Date of birth</Label><Input id="new-dob" type="date" className="mt-2 h-12" max={new Date().toISOString().slice(0,10)} value={draft.dateOfBirth} onChange={(e) => patch({ dateOfBirth: e.target.value })}/>{minor && <div className="mt-4"><Label htmlFor="guardian">Parent or guardian email</Label><Input id="guardian" type="email" className="mt-2 h-12" value={draft.guardianEmail} onChange={(e) => patch({ guardianEmail: e.target.value })}/><p className="mt-2 text-xs leading-5 text-muted-foreground">We'll notify them that this account was created and how to contact support.</p></div>}</>;
+      case 3: return <>{title("What should we call you?")}<div className="grid gap-4"><div><Label htmlFor="first">First name</Label><Input id="first" autoFocus className="mt-2 h-12" value={draft.firstName} onChange={(e) => patch({ firstName: e.target.value })}/></div><div><Label htmlFor="last">Last name</Label><Input id="last" className="mt-2 h-12" value={draft.lastName} onChange={(e) => patch({ lastName: e.target.value })}/></div></div></>;
+      case 4: return <>{title("Add a profile photo", "Optional. You can change it later.")}<label className="mx-auto flex h-48 w-48 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-full border border-dashed border-primary/50 bg-primary/5 text-center">{avatarPreview ? <img src={avatarPreview} alt="Profile preview" className="h-full w-full object-cover"/> : <><Camera className="mb-3 h-8 w-8 text-primary"/><span className="text-sm font-medium">Choose photo</span><span className="mt-1 text-xs text-muted-foreground">Up to 5 MB</span></>}<input type="file" accept="image/*" className="sr-only" onChange={(e) => { const f=e.target.files?.[0]; if(!f) return; if(f.size>5*1024*1024){ fail("Choose a photo smaller than 5 MB."); return; } setAvatarFile(f); setAvatarPreview(URL.createObjectURL(f)); patch({avatarName:f.name}); }}/></label></>;
+      case 5: return <>{title("What's your game?")}<div className="grid grid-cols-2 gap-3">{choice("baseball",draft.sport,"Baseball",v=>patch({sport:v as Draft["sport"]}))}{choice("softball",draft.sport,"Softball",v=>patch({sport:v as Draft["sport"]}))}</div><div className="mt-5"><Label htmlFor="position">Primary position</Label><Input id="position" className="mt-2 h-12" value={draft.position} onChange={(e)=>patch({position:e.target.value})} placeholder="Pitcher, catcher, shortstop…"/></div></>;
+      case 6: return <>{title("How do you play?", "Your account is created after this screen so every answer that follows can save to you.")}<div className="space-y-5"><div><Label>Batting side</Label><div className="mt-2 grid grid-cols-3 gap-2">{[["R","Right"],["L","Left"],["S","Switch"]].map(([v,l])=>choice(v,draft.battingSide,l,x=>patch({battingSide:x})))}</div></div><div><Label>Throwing hand</Label><div className="mt-2 grid grid-cols-2 gap-2">{[["R","Right"],["L","Left"]].map(([v,l])=>choice(v,draft.throwingHand,l,x=>patch({throwingHand:x})))}</div></div><div className="flex items-start gap-3 rounded-md border border-border/70 bg-muted/30 p-3"><Checkbox id="terms" checked={draft.acceptedTerms} onCheckedChange={(v)=>patch({acceptedTerms:v===true})}/><Label htmlFor="terms" className="text-xs font-normal leading-5 text-muted-foreground">I agree to the <Link className="text-foreground underline" target="_blank" to="/terms">Terms</Link> and <Link className="text-foreground underline" target="_blank" to="/privacy">Privacy Policy</Link>.</Label></div></div></>;
       case 6: return <>{title("Build your physical profile")}<div className="grid grid-cols-2 gap-3"><div><Label htmlFor="height">Height (inches)</Label><Input id="height" inputMode="numeric" type="number" className="mt-2 h-12" value={draft.height} onChange={(e)=>patch({height:e.target.value})}/></div><div><Label htmlFor="weight">Weight (lb)</Label><Input id="weight" inputMode="numeric" type="number" className="mt-2 h-12" value={draft.weight} onChange={(e)=>patch({weight:e.target.value})}/></div></div></>;
       case 7: return <>{title("When do you graduate?")}<Label htmlFor="grad">Graduation year</Label><Input id="grad" autoFocus inputMode="numeric" type="number" min="2020" max="2045" className="mt-2 h-12" value={draft.graduationYear} onChange={(e)=>patch({graduationYear:e.target.value})} placeholder="2028"/></>;
       case 8: return <>{title("Where do you compete?")}<div className="grid gap-4"><div><Label htmlFor="state">State</Label><Input id="state" className="mt-2 h-12" value={draft.state} onChange={(e)=>patch({state:e.target.value})} placeholder="Texas"/></div><div><Label htmlFor="team">Team</Label><Input id="team" className="mt-2 h-12" value={draft.team} onChange={(e)=>patch({team:e.target.value})} placeholder="Team name"/></div></div></>;
