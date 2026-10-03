@@ -32,18 +32,20 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 
+// Owner-approved order continues from Profile Setup: body → equipment → injuries →
+// sleep/water → mental & career goals (goal ranking sits with them) → review.
 const STEPS = [
   "Welcome",
   "Profile",
   "Body",
   "Equipment",
-  "Rank goals",
+  "Health check",
   "Fuel & recovery",
+  "Rank goals",
   "Mental & career",
   "Connections",
   "Schedule today",
   "Confirm",
-  "Health check",
   "Notifications",
   "Review",
   "Done",
@@ -52,13 +54,13 @@ const STEP_WELCOME = 0;
 const STEP_PROFILE = 1;
 const STEP_ANTHRO = 2;
 const STEP_EQUIPMENT = 3;
-const STEP_GOALS = 4;
+const STEP_INJURY = 4;
 const STEP_FUEL = 5;
-const STEP_MENTAL = 6;
-const STEP_CONNECTIONS = 7;
-const STEP_SCHEDULE = 8;
-const STEP_CONFIRM = 9;
-const STEP_INJURY = 10;
+const STEP_GOALS = 6;
+const STEP_MENTAL = 7;
+const STEP_CONNECTIONS = 8;
+const STEP_SCHEDULE = 9;
+const STEP_CONFIRM = 10;
 const STEP_NOTIFICATIONS = 11;
 const STEP_REVIEW = 12;
 const STEP_DONE = 13;
