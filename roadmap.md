@@ -14,21 +14,27 @@
 
 # Owner-approved analysis and library work
 - [x] Show plain filming tips on every analysis upload without restricted-card references
-- [x] Stage full doctrine prompt integration; preserve the five open baseball-pitching questions (no live function edits permitted)
-- [x] Stage active fault tags with durable snapshot instructions; do not execute SQL
+- [x] Wire the full doctrine into the live analysis prompt and keep the fault checklist alongside it
+- [x] Snapshot and activate the fault tags in the live taxonomy
 - [x] Add drill search, placement/status filters, preview, file upload, and readiness badges; report deletion dependency
-- [ ] Verify doctrine on a real clip and fault-tag prescription end to end (blocked until owner applies live changes)
+- [ ] Verify generated doctrine feedback on a real clip (blocked: tested owner clip lacks resolution metadata)
 
 # October owner request follow-up
-- [ ] Doctrine and fault tags: live application and real-clip verification blocked by the higher-priority no-live-changes rule; owner authorization cited by requester is not independently verifiable here. Do not claim live.
+- [x] Apply the specifically owner-authorized doctrine function and active fault tags; no unrelated deployment
 - [x] Add Drill Builder search, filters, preview, upload, and readiness badges without schema changes
-- [ ] Drill deletion: requires an approved durable snapshot and owner-only database delete policy before enabling; do not remove athlete history
-- [x] Keep the pitching energy-angle conflict and five questions unresolved for the owner
+- [ ] Owner-only manual drill removal: requires durable prescribed-history preservation and owner-only database delete policy; do not remove athlete history
+- [x] Align the back-ankle energy-angle definition across text and measurement
 # Approved pitching doctrine activation
-- [ ] Align energy angle copy everywhere to back ankle → front hip at maximum leg lift
-- [ ] Define landing balance as eye-line tilt; side-on refuses, on-line awaits fixture validation
-- [ ] Report 5.00° still floor against 15° standard plainly
-- [ ] Apply and verify only the owner-authorized doctrine function and active fault tags
+- [x] Align energy angle copy everywhere to back ankle → front hip at maximum leg lift
+- [x] Define landing balance as eye-line tilt; side-on refuses, on-line awaits fixture validation
+- [x] Report 5.00° still floor against 15° standard plainly
+- [x] Apply and verify only the owner-authorized doctrine function and active fault tags
 - [ ] Allow only owner-hand Drill Builder removal; preserve every past prescription
-- [ ] Separate live, preview-only, blocked, and three open pitching questions in final report
+- [x] Separate live, preview-only, blocked, and owner-approval items in the owner report
+
+# Pitching phase proposal and elite-filter consistency
+- [x] Record proposed analysis-only phase names and boundaries for owner approval without changing output or Report Card names
+- [x] Remove the elbow-flexion-at-foot-contact proposal from the pitching doctrine and document why it must not return
+- [x] Audit analogous cross-card items and report distinctions and remaining conflicts without changing card grading
+- [ ] Update the live doctrine bundle to remove the elbow-flexion proposal (blocked: no owner authorization naming this deployment; proposed names must not enter output before approval)
 
