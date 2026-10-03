@@ -104,6 +104,64 @@ const ProfileSetup = () => {
     }
   }, [user, loading, navigate, selectedRole]);
 
+  const sv = (n: number) => (isPlayer && pStep !== n ? "hidden" : "");
+  const draftKey = user ? `hm.profileSetupDraft.${user.id}` : null;
+
+  // Resume where they stopped: restore the saved draft once.
+  useEffect(() => {
+    if (!draftKey || draftLoaded) return;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d.firstName) setFirstName(d.firstName);
+        if (d.lastName) setLastName(d.lastName);
+        setPosition(d.position ?? ""); setExperienceLevel(d.experienceLevel ?? "");
+        setThrowingHand(d.throwingHand ?? ""); setBattingSide(d.battingSide ?? "");
+        setHeight(d.height ?? ""); setWeight(d.weight ?? ""); setGraduationYear(d.graduationYear ?? "");
+        if (d.dateOfBirth) setDateOfBirth(new Date(d.dateOfBirth));
+        setPlayerState(d.playerState ?? ""); setTeamAffiliation(d.teamAffiliation ?? "");
+        setCommitmentStatus(d.commitmentStatus ?? ""); setBio(d.bio ?? "");
+        if (typeof d.pStep === "number") setPStep(Math.min(Math.max(d.pStep, 0), 3));
+      }
+    } catch { /* ignore a bad draft */ }
+    setDraftLoaded(true);
+  }, [draftKey, draftLoaded]);
+
+  // Save progress as they go.
+  useEffect(() => {
+    if (!draftKey || !draftLoaded) return;
+    try {
+      localStorage.setItem(draftKey, JSON.stringify({
+        firstName, lastName, position, experienceLevel, throwingHand, battingSide,
+        height, weight, graduationYear, dateOfBirth: dateOfBirth ? dateOfBirth.toISOString() : null,
+        playerState, teamAffiliation, commitmentStatus, bio, pStep,
+      }));
+    } catch { /* storage full or blocked */ }
+  }, [draftKey, draftLoaded, firstName, lastName, position, experienceLevel, throwingHand, battingSide,
+      height, weight, graduationYear, dateOfBirth, playerState, teamAffiliation, commitmentStatus, bio, pStep]);
+
+  /** Per-step check so a mistake is caught on the screen where it was made. */
+  const stepError = (n: number): string | null => {
+    if (n === 0 && (!firstName.trim() || !lastName.trim())) return "Enter your first and last name.";
+    if (n === 1 && (!position.trim() || !experienceLevel)) return "Add your position and experience level.";
+    if (n === 2) {
+      if (!/^\d+'\d+"$/.test(height)) return "Add your height in feet and inches.";
+      if (!weight.trim()) return "Add your weight.";
+      if (!graduationYear.trim()) return "Add your graduation year.";
+      if (!dateOfBirth) return "Pick your date of birth.";
+    }
+    if (n === 3 && (!playerState.trim() || !teamAffiliation.trim())) return "Add your state and team.";
+    return null;
+  };
+  const goNextStep = () => {
+    const err = stepError(pStep);
+    if (err) { toast({ title: "One more thing", description: err, variant: "destructive" }); return; }
+    setPStep((x) => Math.min(x + 1, 3));
+    window.scrollTo({ top: 0 });
+  };
+  const goBackStep = () => { setPStep((x) => Math.max(x - 1, 0)); window.scrollTo({ top: 0 }); };
+
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -306,7 +364,15 @@ const ProfileSetup = () => {
       // Scouts/Coaches/Admins skip it entirely (they don't pay).
       // RFL-053 — canonical athlete home is /command, not /dashboard.
       const goToActivate = isPlayer && dbRole !== 'admin';
-      navigate(goToActivate ? "/activate" : "/command", { replace: true });
+      const dest = goToActivate ? "/activate" : "/command";
+      try { if (draftKey) localStorage.removeItem(draftKey); } catch { /* ignore */ }
+      // Notifications right after Finish (explained first), before the dashboard tour can start.
+      if (shouldAskNotifications(user.id)) {
+        setPendingNav(dest);
+        setPrimerOpen(true);
+      } else {
+        navigate(dest, { replace: true });
+      }
     } catch (error: any) {
       toast({
         title: t('profileSetup.setupFailed'),
@@ -845,14 +911,38 @@ const ProfileSetup = () => {
             </div>
           </div>
 
-          <Button 
-            onClick={handleCompleteSetup} 
-            className="w-full" 
-            size="lg"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? t('profileSetup.creatingProfile') : "Complete Profile & Continue"}
-          </Button>
+          {isPlayer && pStep < 3 ? (
+            <div className="flex gap-3 sticky bottom-0 bg-card pt-3 pb-[var(--safe-bottom)]">
+              {pStep > 0 && (
+                <Button variant="outline" size="lg" className="flex-1" onClick={goBackStep}>Back</Button>
+              )}
+              <Button size="lg" className="flex-1" onClick={goNextStep}>Next</Button>
+            </div>
+          ) : (
+            <div className="flex gap-3 sticky bottom-0 bg-card pt-3 pb-[var(--safe-bottom)]">
+              {isPlayer && (
+                <Button variant="outline" size="lg" className="flex-1" onClick={goBackStep} disabled={isSubmitting}>Back</Button>
+              )}
+              <Button
+                onClick={() => {
+                  if (isPlayer) { const err = stepError(3); if (err) { toast({ title: "One more thing", description: err, variant: "destructive" }); return; } }
+                  handleCompleteSetup();
+                }}
+                className="flex-1"
+                size="lg"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? t('profileSetup.creatingProfile') : isPlayer ? "Finish" : "Complete Profile & Continue"}
+              </Button>
+            </div>
+          )}
+          {user && (
+            <NotificationPrimer
+              uid={user.id}
+              open={primerOpen}
+              onDone={() => { setPrimerOpen(false); if (pendingNav) navigate(pendingNav, { replace: true }); }}
+            />
+          )}
           <p className="text-xs text-muted-foreground text-center mt-2">
             {isPlayer ? "Next: Choose your access" : "Next: Your dashboard"}
           </p>
