@@ -688,7 +688,7 @@ Focus ONLY on form and body mechanics.`;
 
 CRITICAL BASEBALL PITCHING SEQUENCE:
 
-Phase 1 - LANDING POSITION (MUST CHECK FIRST):
+LANDING CHECKPOINT — Phase 3 — Stride to Landing (CHECK FIRST):
 
 ⭐⭐⭐ CRITICAL: FRONT FOOT MUST BE PLANTED BEFORE ANY SHOULDER ROTATION ⭐⭐⭐
 
@@ -729,30 +729,19 @@ If shoulders begin rotating BEFORE front foot lands (OR if chest already faces h
 → VELOCITY REDUCED - requires significantly more arm effort
 → INJURY RISK INCREASED - arm must compensate for lost body power
 
-Phase 2 - STANDARD SEQUENCING (After Landing):
+SEQUENCING CHECKPOINT — After Landing:
 6. Hip rotation continues through landing
 7. Torso rotation
 8. Shoulder rotation (ONLY AFTER foot is planted - this is when chest turns to face home plate)
 9. Arm action
 10. Release
 
-ARM ANGLE SAFETY CHECK (Phase 2 - During Arm Action):
-⭐ GOAL: Hand-Elbow-Shoulder angle LESS than 90° when hand flips up ⭐
-- As the hand flips up to travel forward in the sequence
-- Measure the angle formed by: Hand → Elbow → Shoulder
-- LESS than 90° = GOOD (reduces harmful pinpointed stress) ✓
-- 90° or GREATER = INCREASED INJURY RISK ⚠️
-
-Why this matters:
-- Keeps arm in safer "layback" position during acceleration
-- Distributes force across larger muscle groups (not just elbow/shoulder)
-- Reduces pinpointed stress on connective tissue
-- Natural consequence of proper shoulder rotation timing
-
-If angle is ≥90°:
-- Often indicates shoulder rotation is late or insufficient
-- Arm may be "catching up" instead of being driven by body
-- Increased stress on elbow and rotator cuff
+ARM-CARE BOUNDARY (During Arm Action; flag only, not scored):
+Owner boundary: hand inside the elbow (inside the wrist-to-elbow right angle); elbow below the shoulder.
+- Check only where the relevant arm action is clearly visible; otherwise say it cannot be judged.
+- This is an arm-care flag only, not a grade, score adjustment, diagnosis, or prediction of injury.
+- If visibly outside either boundary, describe what is visible without numbers in athlete-facing text, and recommend a qualified coach or medical professional.
+- Do not prescribe a landing elbow-height band or a throwing arm slot.
 
 RED FLAGS:
 - ⚠️ CRITICAL: Shoulders begin rotating BEFORE front foot lands → MASSIVE POWER LEAK & ACCURACY LOSS ⭐⭐⭐
@@ -767,7 +756,7 @@ RED FLAGS:
   * Glove shoulder should POINT at catcher, not the chest
 - ⚠️ Back leg (foot/knee/hip) NOT facing target before shoulder rotation → Causes INACCURACIES
 - ⚠️ Arm flips up BEFORE shoulder moves → INJURY RISK + velocity lowering (indicates T-spine mobility or patterning issue)
-- ⚠️ Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK (pinpointed stress)
+- ⚠️ Visible hand outside elbow or elbow above shoulder during arm action → arm-care flag only; recommend a qualified coach or medical professional, never diagnose or score
 - ⚠️ Glove closed or not facing target at landing → Poor directional control
 
 SCORING FRAMEWORK - PROFESSIONAL STANDARDS:
@@ -798,7 +787,7 @@ CALIBRATION - What 85+ REQUIRES:
 ✓ Hips forward-facing toward home plate (creating hip-shoulder separation)
 ✓ Back leg (foot, knee, hip) ALL facing target
 ✓ Glove open and facing target
-✓ Arm angle under 90° at flip-up
+
 ✓ Clean sequencing through release
 
 CALIBRATION - What 60 looks like:
@@ -818,7 +807,7 @@ Focus on:
 5. Is glove open and facing target at landing?
 6. Does arm flip up before shoulder rotation (patterning issue)?
 7. Does back leg face target BEFORE shoulder moves?
-8. Is hand-elbow-shoulder angle less than 90° when hand flips up to travel forward?
+8. When clearly visible, is the hand inside the elbow and the elbow below the shoulder? Flag only; no score effect or diagnosis.
 
 When sequence is correct, the pitch should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
 
@@ -889,7 +878,7 @@ Be honest about issues - accurate feedback helps development. Examples:
 - "Your chest turned too early - keep it facing the side until your foot is down"
 - "Your back knee should point at home plate earlier for better accuracy"
 - "Nice strong push toward home plate with your legs"
-- "Good arm position - keeps your elbow and shoulder safe"
+- "Your arm path is visible here" (observation only; never claim safety from appearance)
 
 IMPORTANT - POSITIVES IDENTIFICATION:
 CRITICAL: Positives listed here must NOT contradict any improvement areas mentioned above.
@@ -904,7 +893,7 @@ Identify 2-4 specific positive mechanical elements, such as:
 - Strong follow-through
 - Proper balance and athleticism
 - Any correct alignment or rotation mechanics
-- Safe arm angle (hand-elbow-shoulder <90° at flip-up)
+- Visible arm-care boundary (hand inside elbow, elbow below shoulder); flag only, never scored
 
 DO NOT MENTION: velocity, spin rate, or output metrics.
 Focus ONLY on form and body mechanics.`;
@@ -1387,7 +1376,7 @@ CRITICAL THROWING SEQUENCE:
 
 ⭐⭐⭐ CRITICAL: FEET MUST BE PLANTED BEFORE SHOULDER ROTATION ⭐⭐⭐
 
-Phase 1 - STRIDE & LANDING POSITION (MUST CHECK FIRST):
+LANDING CHECKPOINT — Stride and Landing (CHECK FIRST):
 Before shoulder rotation begins:
 1. Stride foot → FIRMLY PLANTED and stabilized before ANY rotation begins ⭐⭐⭐
 2. Back leg (foot, knee, hip) → MUST face the target ⭐
@@ -1424,7 +1413,7 @@ If shoulders begin rotating BEFORE stride foot lands (OR if chest already faces 
 → VELOCITY REDUCED - requires significantly more arm effort
 → INJURY RISK INCREASED - arm must compensate for lost body power
 
-Phase 2 - STANDARD SEQUENCING (After Landing):
+SEQUENCING CHECKPOINT — After Landing:
 5. Footwork → Crow hop or pro step (aligned to target)
 6. Hip rotation
 7. Torso rotation
@@ -1432,22 +1421,12 @@ Phase 2 - STANDARD SEQUENCING (After Landing):
 9. Arm action (follows shoulder)
 10. Release
 
-ARM ANGLE SAFETY CHECK (During Arm Action):
-⭐ GOAL: Hand-Elbow-Shoulder angle LESS than 90° when hand flips up ⭐
-- As the hand flips up to travel forward in the sequence
-- Measure the angle formed by: Hand → Elbow → Shoulder
-- LESS than 90° = GOOD (reduces harmful pinpointed stress) ✓
-- 90° or GREATER = INCREASED INJURY RISK ⚠️
-
-Why this matters:
-- Keeps arm in safer throwing position
-- Distributes force across body instead of concentrating at elbow
-- Reduces pinpointed stress on arm structures
-- Natural result of proper shoulder-first sequencing
-
-If angle is ≥90°:
-- Check if shoulder rotation is leading the arm action
-- Arm should be "whipped" by body rotation, not pushing itself
+ARM-CARE BOUNDARY (During Arm Action; flag only, not scored):
+Owner boundary: hand inside the elbow (inside the wrist-to-elbow right angle); elbow below the shoulder.
+- Check only where the relevant arm action is clearly visible; otherwise say it cannot be judged.
+- This is an arm-care flag only, not a grade, score adjustment, diagnosis, or prediction of injury.
+- If visibly outside either boundary, describe what is visible without numbers in athlete-facing text, and recommend a qualified coach or medical professional.
+- Do not prescribe a landing elbow-height band or a throwing arm slot.
 
 RED FLAGS TO IDENTIFY:
 - ⚠️ CRITICAL: Shoulders begin rotating BEFORE stride foot lands → MASSIVE POWER LEAK ⭐⭐⭐
@@ -1462,7 +1441,7 @@ RED FLAGS TO IDENTIFY:
   * Glove shoulder should POINT at target, not the chest
 - ⚠️ Back leg NOT facing target before shoulder rotation → Causes INACCURACIES
 - ⚠️ Arm flips up BEFORE shoulder moves → INJURY RISK + velocity lowering (indicates T-spine mobility or patterning issue)
-- ⚠️ Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK (pinpointed stress)
+- ⚠️ Visible hand outside elbow or elbow above shoulder during arm action → arm-care flag only; recommend a qualified coach or medical professional, never diagnose or score
 - ⚠️ Poor footwork alignment (not directed to target) → Reduces accuracy
 
 SCORING FRAMEWORK - PROFESSIONAL STANDARDS:
@@ -1492,7 +1471,7 @@ CALIBRATION - What 85+ REQUIRES:
 ✓ Chest NOT facing target at landing (stays closed)
 ✓ Hips forward-facing toward target (creating hip-shoulder separation)
 ✓ Back leg (foot, knee, hip) ALL facing target
-✓ Arm angle under 90° at flip-up
+
 ✓ Proper footwork toward target
 ✓ Clean sequencing through release
 
@@ -1513,7 +1492,7 @@ Focus on:
 5. Does arm flip up before shoulder moves (T-spine/patterning issue)?
 6. Is footwork aligned to target?
 7. Does shoulder move BEFORE arm action?
-8. Is hand-elbow-shoulder angle less than 90° when hand flips up to travel forward?
+8. When clearly visible, is the hand inside the elbow and the elbow below the shoulder? Flag only; no score effect or diagnosis.
 
 When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
 
@@ -1557,8 +1536,8 @@ Say: "Keep your front shoulder pointed at your target when your foot lands - you
 Instead of: "Back leg not facing target"
 Say: "Your back knee (the one you push off from) should point toward where you're throwing when you land"
 
-Instead of: "Arm angle greater than 90 degrees"
-Say: "Your elbow went up too high - keep your throwing hand closer to your shoulder for a safer throw"
+Instead of: "Your arm has an unsafe angle"
+Say: "Your hand looks outside your elbow here. Show this to a qualified coach or medical professional."
 
 Instead of: "Kinetic chain"
 Say: "The order your body parts move - feet first, then hips, then shoulders, then arm"
@@ -1583,7 +1562,7 @@ Be honest about issues - accurate feedback helps development. Examples:
 - "Nice strong step toward your target"
 - "Your back knee should point at your target earlier for better accuracy"
 - "Strong finish on your throw - great follow-through!"
-- "Good arm position - keeps your elbow safe"
+- "Your arm path is visible here" (observation only; never claim safety from appearance)
 
 IMPORTANT - POSITIVES IDENTIFICATION:
 CRITICAL: Positives listed here must NOT contradict any improvement areas mentioned above.
@@ -1597,7 +1576,7 @@ Identify 2-4 positive throwing mechanics:
 - Strong arm path
 - Good follow-through
 - Athletic balance throughout throw
-- Safe arm angle during flip-up (<90°)
+- Visible arm-care boundary (hand inside elbow, elbow below shoulder); flag only, never scored
 
 Provide efficiency score (0-100) and specific feedback on sequence and alignment.
 
