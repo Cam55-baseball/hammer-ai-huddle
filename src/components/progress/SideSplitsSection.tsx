@@ -13,6 +13,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSideContext } from "@/contexts/SideContext";
 import { SideDifferentialCard } from "./SideDifferentialCard";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { canSeeReportCard } from "@/lib/reportCard/visibility";
+import { withStaffScores } from "@/lib/reportCard/staffVideoScores";
 import { ReportCardAccessGate } from "@/components/report-card/hammer/ReportCardAccessGate";
 import {
   computeSideDifferential,
@@ -64,50 +68,53 @@ function toPoints(
 
 export function SideSplitsSection() {
   const { user } = useAuth();
+  const { isOwner, loading: l1 } = useOwnerAccess();
+  const { isAdmin, loading: l2 } = useAdminAccess();
+  const canSee = !l1 && !l2 && canSeeReportCard({ isOwner, isAdmin });
   const { isSwitchHitter, isAmbidextrousThrower } = useSideContext();
   const showAny = isSwitchHitter || isAmbidextrousThrower;
 
   const { data: rows = [] } = useQuery({
     queryKey: ["side-splits-videos", user?.id],
-    enabled: !!user && showAny,
+    enabled: !!user && showAny && canSee,
     staleTime: 60_000,
     queryFn: async (): Promise<SidedVideoRow[]> => {
       const { data, error } = await supabase
         .from("videos")
-        .select("module,batting_side,throwing_hand,efficiency_score,created_at")
+        .select("id,module,batting_side,throwing_hand,created_at")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(200);
       if (error) return [];
-      return (data ?? []) as SidedVideoRow[];
+      // Scores are locked to owner/admin; the chart only renders for them.
+      return (await withStaffScores((data ?? []) as any)) as unknown as SidedVideoRow[];
     },
   });
 
   const hitPoints = useMemo(() => toPoints(rows, "hit"), [rows]);
   const throwPoints = useMemo(() => toPoints(rows, "throw"), [rows]);
 
-  // Cache differential inputs for the daily plan side-bias reader.
+  // Daily-plan side bias: server-side summary only (never raw scores).
+  const { data: biasRows } = useQuery({
+    queryKey: ["side-split-inputs", user?.id],
+    enabled: !!user && showAny,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)("get_my_side_split_inputs");
+      if (error) return null;
+      return (data ?? []) as Array<{ discipline: "hit" | "throw"; favored: Side | "even"; diff_pct: number; left_n: number; right_n: number }>;
+    },
+  });
+
   useEffect(() => {
-    if (!showAny) return;
-    const persist = (
-      discipline: "hit" | "throw",
-      points: SidedPoint[],
-      higherIsBetter: boolean,
-    ) => {
-      const r = computeSideDifferential(points, { higherIsBetter });
-      const input: SideBiasInput | null = r
-        ? {
-            favored: r.favored,
-            diffPct: r.diffPct,
-            leftN: r.leftN,
-            rightN: r.rightN,
-          }
-        : null;
-      writeSideBiasInput(discipline, input);
+    if (!showAny || !biasRows) return;
+    const pick = (d: "hit" | "throw"): SideBiasInput | null => {
+      const r = biasRows.find((x) => x.discipline === d);
+      return r ? { favored: r.favored, diffPct: Number(r.diff_pct), leftN: r.left_n, rightN: r.right_n } : null;
     };
-    if (isSwitchHitter) persist("hit", hitPoints, true);
-    if (isAmbidextrousThrower) persist("throw", throwPoints, true);
-  }, [showAny, isSwitchHitter, isAmbidextrousThrower, hitPoints, throwPoints]);
+    if (isSwitchHitter) writeSideBiasInput("hit", pick("hit"));
+    if (isAmbidextrousThrower) writeSideBiasInput("throw", pick("throw"));
+  }, [showAny, isSwitchHitter, isAmbidextrousThrower, biasRows]);
 
   if (!showAny) return null;
 

@@ -1,3 +1,4 @@
+import { VIDEO_PUBLIC_COLUMNS, withStaffScores } from "@/lib/reportCard/staffVideoScores";
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -156,7 +157,7 @@ const AdminDashboard = () => {
   const loadData = async () => {
     try {
       const [videosResponse, trainingResponse, scoutAppResponse] = await Promise.all([
-        supabase.from('videos').select('*').order('created_at', { ascending: false }).limit(50),
+        supabase.from('videos').select(VIDEO_PUBLIC_COLUMNS).order('created_at', { ascending: false }).limit(50).then(async (r) => ({ ...r, data: r.data ? await withStaffScores(r.data as any) : r.data })),
         supabase.from('training_data').select('*').order('created_at', { ascending: false }),
         supabase.from('scout_applications').select('*').order('created_at', { ascending: false }),
       ]);

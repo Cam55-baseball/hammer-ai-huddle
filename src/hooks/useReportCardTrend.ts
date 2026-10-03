@@ -27,15 +27,11 @@ export function useReportCardTrend(module: string | null, limit = 8, userIdOverr
     enabled: !!targetUserId && !!module,
     staleTime: 60_000,
     queryFn: async (): Promise<TrendEntry[]> => {
-      const { data, error } = await supabase
-        .from("videos")
-        .select("id, created_at, sport, module, ai_analysis")
-        .eq("user_id", targetUserId!)
-        .eq("module", module as "hitting")
-        .not("ai_analysis", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(limit);
-      if (error) throw error;
+      // Stored analyses are locked to owner/admin (score lock-down 2026-10-03).
+      const { data, error } = await (supabase.rpc as any)("get_staff_report_card_trend", {
+        p_user_id: targetUserId!, p_module: module, p_limit: limit,
+      });
+      if (error) return [];
 
       const rows = (data ?? []) as Array<{
         id: string;
