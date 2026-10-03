@@ -43,12 +43,14 @@
 - [ ] Inspect fresh feedback on real pitching footage (blocked: owner session has no eligible stored pitching clip; another athlete's clips require that athlete's access)
 
 # Unified sign-up onboarding
-- [ ] Replace the scrolling sign-up sheet with one phone-first click-through journey
+- [x] Replace the scrolling sign-up sheet with one phone-first click-through journey
 - [ ] Preserve the existing age check and guardian branch exactly; document current behavior without adding under-13 features
 - [ ] Create the account at the committed-profile checkpoint and preserve resume before and after account creation
 - [ ] Keep email confirmation inside the journey without losing progress
-- [ ] Preserve Finish → notification explanation/prompt → dashboard → demo tour ordering
-- [ ] Verify at least four onboarding screens on a phone viewport
+- [x] Preserve Finish → notification explanation/prompt → dashboard → demo tour ordering
+- [x] Verify at least four onboarding screens on a phone viewport
+- [x] Fix notification primer eligibility and add native permission support
+- [x] Add a skippable, reduced-motion-safe opening before the landing page
 - [ ] Reconcile and verify the already-authorized score lock-down without unrelated deployment or migration
 
 # Analysis-to-plan and daily guidance

@@ -1,0 +1,82 @@
+.hm-launch {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: hsl(var(--background));
+  animation: hm-launch-out 650ms ease-in 800ms both;
+  touch-action: manipulation;
+}
+
+.hm-launch-ready {
+  animation: hm-launch-out 180ms ease-out both;
+  pointer-events: none;
+}
+
+.hm-launch-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: clamp(5px, 2vw, 12px);
+  width: min(76vw, 340px);
+  aspect-ratio: 1.45;
+  align-content: center;
+  transform: rotate(-11deg);
+}
+
+.hm-launch-tile {
+  display: block;
+  aspect-ratio: 1;
+  border: 1px solid hsl(var(--rc-glass-border) / .18);
+  border-radius: 4px;
+  background: hsl(var(--primary) / .7);
+  opacity: 0;
+  transform: translate3d(-70px, -80px, 0) scale(.72);
+  animation: hm-launch-drop 480ms cubic-bezier(.2, .8, .2, 1) both;
+  will-change: transform, opacity;
+}
+
+.hm-launch-tile-0 { background: hsl(var(--primary) / .9); }
+.hm-launch-tile-1 { background: hsl(var(--rc-glass) / .85); }
+.hm-launch-tile-2 { background: hsl(var(--meter-warn) / .65); }
+.hm-launch-tile-3 { background: hsl(var(--meter-pass) / .55); }
+.hm-launch-tile-4 { background: hsl(var(--primary) / .4); }
+.hm-launch-tile-5 { background: hsl(var(--rc-glass) / .5); }
+
+.hm-launch-mark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: hsl(var(--foreground));
+  font-weight: 800;
+  font-size: clamp(17px, 5vw, 24px);
+  line-height: 1.05;
+  background: hsl(var(--background) / .82);
+  border: 1px solid hsl(var(--rc-glass-border) / .18);
+  border-radius: 5px;
+  opacity: 0;
+  transform: rotate(11deg) scale(.85);
+  animation: hm-launch-mark-in 520ms ease-out 510ms both;
+  will-change: transform, opacity;
+}
+
+.hm-launch-mark img { width: 50px; height: 50px; object-fit: contain; }
+
+@keyframes hm-launch-drop {
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes hm-launch-mark-in {
+  to { opacity: 1; transform: rotate(11deg) scale(1); }
+}
+@keyframes hm-launch-out {
+  to { opacity: 0; pointer-events: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-launch { animation: hm-launch-out 180ms ease-out both; }
+  .hm-launch-tile, .hm-launch-mark { animation: none; opacity: 0; }
+}

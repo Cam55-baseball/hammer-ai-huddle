@@ -11,11 +11,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { LandingDemoVideo } from "@/components/landing/LandingDemoVideo";
 import heroImage from "@/assets/hero-baseball.jpg";
+import { useEffect } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isOwner } = useOwnerAccess();
+  useEffect(() => {
+    // The landing page is usable now; never hold it behind the opening.
+    window.dispatchEvent(new Event("hm:landing-ready"));
+  }, []);
 
   const handleGetStarted = () => {
     navigate("/auth");
