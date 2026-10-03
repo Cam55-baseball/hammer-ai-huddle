@@ -17,7 +17,7 @@
 - [x] Wire the full doctrine into the live analysis prompt and keep the fault checklist alongside it
 - [x] Snapshot and activate the fault tags in the live taxonomy
 - [x] Add drill search, placement/status filters, preview, file upload, and readiness badges; report deletion dependency
-- [ ] Verify generated doctrine feedback on a real clip (last owner clip lacks resolution metadata; try another)
+- [ ] Verify generated doctrine feedback on a real clip (blocked: owner's available clip lacks resolution metadata; suitable stored pitching clips belong to another account)
 
 # October owner request follow-up
 - [x] Apply the specifically owner-authorized doctrine function and active fault tags; no unrelated deployment
@@ -37,6 +37,6 @@
 - [x] Remove the elbow-flexion-at-foot-contact proposal from the pitching doctrine and document why it must not return
 - [x] Audit analogous cross-card items and report distinctions and remaining conflicts without changing card grading
 - [x] Regenerate doctrine bundle without research-derived elbow-flexion standard under explicit owner authorization
-- [ ] Deploy only authorized pitching/throwing analysis functions and verify new arm-care boundary and phase names live
-- [ ] Try a different real pitching clip with resolution metadata and inspect generated feedback
+- [x] Deploy only the owner-authorized pitching/throwing analysis functions; verify the bundled arm-care boundary and phase names in the deployed sources
+- [ ] Inspect fresh feedback on real pitching footage (blocked: owner session has no eligible stored pitching clip; another athlete's clips require that athlete's access)
 
