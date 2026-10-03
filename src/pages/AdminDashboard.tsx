@@ -162,7 +162,7 @@ const AdminDashboard = () => {
         supabase.from('scout_applications').select('*').order('created_at', { ascending: false }),
       ]);
 
-      if (videosResponse.data) setVideos(videosResponse.data);
+      if (videosResponse.data) setVideos(videosResponse.data as any);
       if (trainingResponse.data) setTrainingData(trainingResponse.data);
       if (scoutAppResponse.data) setScoutApplications(scoutAppResponse.data);
     } catch (error) {
