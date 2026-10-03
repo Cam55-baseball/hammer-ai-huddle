@@ -293,7 +293,7 @@ export default function UnifiedSignupOnboarding() {
           <AlertDialogDescription>If you leave now, you'll start over next time.</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
-          <AlertDialogCancel className="m-0 h-12 w-full">Keep going</AlertDialogCancel>
+          <AlertDialogCancel className="m-0 h-12 w-full border-0 bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground">Keep going</AlertDialogCancel>
           <AlertDialogAction className="m-0 h-12 w-full bg-transparent text-destructive border border-destructive/40 hover:bg-destructive/10" onClick={leaveAndDiscard}>Leave and start over</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
