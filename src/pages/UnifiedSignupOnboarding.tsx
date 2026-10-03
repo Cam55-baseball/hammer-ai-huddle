@@ -168,9 +168,14 @@ export default function UnifiedSignupOnboarding() {
         ...(age.age_band === "minor_13_17" ? { guardian_email: draft.guardianEmail.trim() } : {}),
       });
       if (error) return fail(error.message);
+      // Email verification never blocks onboarding: if sign-up returned no
+      // session, sign straight in with the password just chosen.
       if (!data.session) {
-        patch({ accountCreated: true, awaitingConfirmation: true, step: AFTER_ACCOUNT, password: "" });
-        return true;
+        const signedIn = await supabase.auth.signInWithPassword({ email: draft.email.trim(), password: draft.password });
+        if (signedIn.error || !signedIn.data.session) {
+          patch({ accountCreated: true });
+          return fail("Your account was created, but we couldn't sign you in. Tap Next to try again.");
+        }
       }
       patch({ accountCreated: true, awaitingConfirmation: false, step: AFTER_ACCOUNT, password: "" });
       return true;
@@ -180,6 +185,7 @@ export default function UnifiedSignupOnboarding() {
   const next = async () => {
     if (!valid()) return;
     if (screen === "play" && !draft.accountCreated) { await createAccount(); return; }
+    if (screen === "play" && !session) { const r = await supabase.auth.signInWithPassword({ email: draft.email.trim(), password: draft.password }); if (r.error) return fail("We couldn't sign you in. Go back and re-enter your password."); }
     setDirection(1); patch({ step: Math.min(draft.step + 1, SCREENS.length - 1) });
   };
   const back = () => { setDirection(-1); patch({ step: Math.max(0, draft.step - 1) }); };
@@ -189,7 +195,7 @@ export default function UnifiedSignupOnboarding() {
    * The device draft is only cleared after every write succeeds.
    */
   const finish = async () => {
-    if (!user?.id) return fail("Confirm your email, then return here to finish.");
+    if (!user?.id) return fail("You're signed out. Sign in, then return here to finish — your answers are saved.");
     setBusy(true);
     setSaveError(null);
     let stage = "profile photo";
@@ -252,17 +258,6 @@ export default function UnifiedSignupOnboarding() {
       setSaveError(`We couldn't save your ${stage} (${detail}). Every answer is still here — tap Finish to try again.`);
     } finally { setBusy(false); }
   };
-
-  if (draft.awaitingConfirmation && !session) {
-    return <Frame step={draft.step} progress={progress} group="Account" onExit={() => exitRef.current()}>
-      <div className="flex min-h-[360px] flex-col items-center justify-center text-center">
-        <div className="mb-6 grid h-16 w-16 place-items-center rounded-full border border-primary/30 bg-primary/10"><Mail className="h-7 w-7 text-primary" /></div>
-        <h1 className="text-3xl font-semibold">Check your email</h1>
-        <p className="mt-3 max-w-sm text-sm leading-6 text-muted-foreground">Open the confirmation link we sent to <strong className="text-foreground">{draft.email}</strong>. Your answers are saved on this device.</p>
-        <Button className="mt-8 w-full" variant="outline" onClick={() => navigate("/auth")}>Back to sign in</Button>
-      </div>
-    </Frame>;
-  }
 
   const toggle = (v: string, cur: string, label: string, onPick: (v: string) => void) => choice(v, cur, label, onPick);
 
