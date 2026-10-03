@@ -878,7 +878,7 @@ Be honest about issues - accurate feedback helps development. Examples:
 - "Your chest turned too early - keep it facing the side until your foot is down"
 - "Your back knee should point at home plate earlier for better accuracy"
 - "Nice strong push toward home plate with your legs"
-- "Good arm position - keeps your elbow and shoulder safe"
+- "Your arm path is visible here" (observation only; never claim safety from appearance)
 
 IMPORTANT - POSITIVES IDENTIFICATION:
 CRITICAL: Positives listed here must NOT contradict any improvement areas mentioned above.
@@ -1562,7 +1562,7 @@ Be honest about issues - accurate feedback helps development. Examples:
 - "Nice strong step toward your target"
 - "Your back knee should point at your target earlier for better accuracy"
 - "Strong finish on your throw - great follow-through!"
-- "Good arm position - keeps your elbow safe"
+- "Your arm path is visible here" (observation only; never claim safety from appearance)
 
 IMPORTANT - POSITIVES IDENTIFICATION:
 CRITICAL: Positives listed here must NOT contradict any improvement areas mentioned above.

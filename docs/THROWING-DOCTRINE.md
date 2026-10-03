@@ -38,7 +38,7 @@ Supersedes the earlier throwing spec. Earlier research notes: `docs/THROWING-INJ
 | Front foot lands across the body / turned in | limited (PMC8720247; Davis 2009) — a fault, not structure | behind/in front only | refuses until a behind-view throwing clip exists |
 
 **Cut, with reasons — do not re-add without a new owner ruling:**
-- Elbow height at landing — owner ruling 4 (structure, makes throwers robotic).
+- Graded elbow-height band at landing — owner ruling 4 (structure, makes throwers robotic); the later arm-care boundary is an ungraded flag, not this band.
 - Sidearm arm slot — owner ruling 5 (a slot is not a fault).
 - Elbow bend at landing — fails (b) and (d): varies with structure and slot; far-arm jitter 26° side-on means only extreme cases could ever be called.
 - Front knee at landing/release — **reinstated record-only 2026-09-30** (`front_knee_at_landing`): the cut removed a band our noise couldn't resolve; a per-athlete baseline needs no band. Still never a flag.
