@@ -242,7 +242,8 @@ export default function UnifiedSignupOnboarding() {
         id: user.id, first_name: draft.firstName.trim(), last_name: draft.lastName.trim(),
         full_name: `${draft.firstName.trim()} ${draft.lastName.trim()}`,
         ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
-        date_of_birth: draft.dateOfBirth, position: draft.position.trim(), experience_level: draft.level,
+        // Signed-in restarts skip the age screen; keep the date already on the account.
+        ...(draft.dateOfBirth ? { date_of_birth: draft.dateOfBirth } : {}), position: draft.position.trim(), experience_level: draft.level,
         height: draft.height, weight: draft.weight, state: draft.state.trim(),
         high_school_grad_year: Number(draft.graduationYear), graduation_year: Number(draft.graduationYear),
         team_affiliation: draft.team.trim(), throwing_hand: draft.throwingHand as "L" | "R",
