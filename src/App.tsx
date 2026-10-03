@@ -59,6 +59,7 @@ const ScoutDashboard = lazyWithRetry(() => scoutDashboardPreload.then((m) => m ?
 const Index = lazyWithRetry(() => import("./pages/Index"));
 
 const Auth = lazyWithRetry(() => import("./pages/Auth"));
+const UnifiedSignupOnboarding = lazyWithRetry(() => import("./pages/UnifiedSignupOnboarding"));
 const AccountDeleted = lazyWithRetry(() => import("./pages/AccountDeleted"));
 const Privacy = lazyWithRetry(() => import("./pages/Privacy"));
 const PurchaseComplete = lazyWithRetry(() => import("./pages/PurchaseComplete"));
@@ -314,6 +315,7 @@ const App = () => {
               )}
 
               <Route path="/auth" element={<Auth />} />
+              <Route path="/signup" element={<UnifiedSignupOnboarding />} />
               <Route path="/account-deleted" element={<AccountDeleted />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/purchase-complete" element={<PurchaseComplete />} />

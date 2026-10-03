@@ -44,6 +44,7 @@
 
 # Unified sign-up onboarding
 - [ ] Replace the scrolling sign-up sheet with one phone-first click-through journey
+- [ ] Preserve the existing age check and guardian branch exactly; document current behavior without adding under-13 features
 - [ ] Create the account at the committed-profile checkpoint and preserve resume before and after account creation
 - [ ] Keep email confirmation inside the journey without losing progress
 - [ ] Preserve Finish → notification explanation/prompt → dashboard → demo tour ordering

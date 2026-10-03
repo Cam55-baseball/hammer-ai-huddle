@@ -539,10 +539,7 @@ const Auth = () => {
                 type="button"
                 variant="outline"
                 size="lg"
-                onClick={() => {
-                  setIsForgotPassword(false);
-                  setIsLogin(false);
-                }}
+                onClick={() => navigate("/signup")}
                 className="w-full border-2 border-primary/60 text-primary hover:bg-primary/10 hover:text-primary hover:border-primary font-semibold"
               >
                 <UserPlus className="h-4 w-4 mr-2" />

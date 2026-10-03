@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
+import { canSeeScoredGrading } from '../_shared/scoredGradingGate.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -53,6 +54,15 @@ Deno.serve(async (req) => {
 
     if (authError || !user) {
       throw new Error('Unauthorized');
+    }
+
+    if (!(await canSeeScoredGrading(supabase, user.id))) {
+      return new Response(JSON.stringify({
+        error: 'Report Card is available to owner/admin accounts only.',
+      }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const { forceGenerate } = await req.json().catch(() => ({}));
