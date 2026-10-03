@@ -1069,8 +1069,8 @@ Say: "Keep your front shoulder pointed at your target when your foot lands - you
 Instead of: "Back leg not facing target"
 Say: "Your back knee (the one you push off from) should point toward where you're throwing when you land"
 
-Instead of: "Arm angle greater than 90 degrees"
-Say: "Your elbow went up too high - keep your throwing hand closer to your shoulder for a safer throw"
+Instead of: "Your arm has an unsafe angle"
+Say: "Your hand looks outside your elbow here. Show this to a qualified coach or medical professional."
 
 RULES:
 1. No technical jargon without immediate explanation
@@ -1263,7 +1263,7 @@ Use the analyze_mechanics tool to return your structured analysis.`
                   redFlags: {
                     type: 'array',
                     items: { type: 'string' },
-                    description: 'Critical issues or injury risks identified (e.g., arm angle ≥90°, early shoulder opening, hands passing elbow too early). Mark with ⚠️ prefix. Return empty array if none found.'
+                    description: 'Visible mechanical issues; arm-care boundaries are flags only, never a diagnosis or score change. If a hand-outside-elbow or elbow-above-shoulder flag is clearly visible, advise a qualified coach or medical professional. Mark with ⚠️ prefix. Return empty array if none found.'
                   },
                   positives: {
                     type: 'array',

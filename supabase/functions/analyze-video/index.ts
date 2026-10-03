@@ -1536,8 +1536,8 @@ Say: "Keep your front shoulder pointed at your target when your foot lands - you
 Instead of: "Back leg not facing target"
 Say: "Your back knee (the one you push off from) should point toward where you're throwing when you land"
 
-Instead of: "Arm angle greater than 90 degrees"
-Say: "Your elbow went up too high - keep your throwing hand closer to your shoulder for a safer throw"
+Instead of: "Your arm has an unsafe angle"
+Say: "Your hand looks outside your elbow here. Show this to a qualified coach or medical professional."
 
 Instead of: "Kinetic chain"
 Say: "The order your body parts move - feet first, then hips, then shoulders, then arm"
@@ -1576,7 +1576,7 @@ Identify 2-4 positive throwing mechanics:
 - Strong arm path
 - Good follow-through
 - Athletic balance throughout throw
-- Safe arm angle during flip-up (<90°)
+- Visible arm-care boundary (hand inside elbow, elbow below shoulder); flag only, never scored
 
 Provide efficiency score (0-100) and specific feedback on sequence and alignment.
 
