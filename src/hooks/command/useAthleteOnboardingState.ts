@@ -39,7 +39,7 @@ export function useAthleteOnboardingState() {
     staleTime: 15_000,
     queryFn: async () => {
       const [profile, anyEvent, scheduleEvent, pref, ctx] = await Promise.all([
-        supabase.from("profiles").select("id").eq("id", uid!).maybeSingle(),
+        supabase.from("profiles").select("id, position, height, throwing_hand, graduation_year").eq("id", uid!).maybeSingle(),
         supabase
           .from("asb_events")
           .select("event_id", { count: "exact", head: true })
@@ -60,6 +60,8 @@ export function useAthleteOnboardingState() {
           .eq("user_id", uid!)
           .maybeSingle(),
       ]);
+      const pr = profile.data as { position?: string | null; height?: string | null; throwing_hand?: string | null; graduation_year?: number | null } | null;
+      const unifiedDone = !!(pr?.position && pr?.height && pr?.throwing_hand && pr?.graduation_year);
       const hasSchedule = (scheduleEvent.count ?? 0) > 0;
       const hasPref = !!(pref as { data?: unknown }).data;
       const goalsRaw = (ctx.data as { category_goals?: unknown } | null)?.category_goals;
@@ -70,7 +72,9 @@ export function useAthleteOnboardingState() {
         hasScheduleEvent: hasSchedule,
         hasNotificationsPref: hasPref,
         hasCategoryGoals: hasGoals,
-        hasCompletedOnboarding: hasSchedule && hasPref && hasGoals,
+        // The unified sign-up flow (canonical since 2026-10-03) completes setup
+        // once it has saved the core profile; the legacy three-signal rule still counts.
+        hasCompletedOnboarding: (hasSchedule && hasPref && hasGoals) || unifiedDone,
       };
     },
   });
