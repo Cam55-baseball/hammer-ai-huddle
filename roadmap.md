@@ -42,3 +42,10 @@
 - [x] Deploy only the owner-authorized pitching/throwing analysis functions; verify the bundled arm-care boundary and phase names in the deployed sources
 - [ ] Inspect fresh feedback on real pitching footage (blocked: owner session has no eligible stored pitching clip; another athlete's clips require that athlete's access)
 
+# Unified sign-up onboarding
+- [ ] Replace the scrolling sign-up sheet with one phone-first click-through journey
+- [ ] Create the account at the committed-profile checkpoint and preserve resume before and after account creation
+- [ ] Keep email confirmation inside the journey without losing progress
+- [ ] Preserve Finish → notification explanation/prompt → dashboard → demo tour ordering
+- [ ] Verify at least four onboarding screens on a phone viewport
+- [ ] Reconcile and verify the already-authorized score lock-down without unrelated deployment or migration
