@@ -147,7 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     fullName: string,
     ageMeta?: { date_of_birth: string; age_band: string; guardian_email?: string },
   ) => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `${window.location.origin}/signup?confirmed=1`;
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
