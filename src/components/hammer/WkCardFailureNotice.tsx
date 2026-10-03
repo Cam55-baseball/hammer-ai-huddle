@@ -77,7 +77,7 @@ export function WkCardFailureNotice({
     ? "/onboarding/athlete?edit=equipment"
     : hasCompletedOnboarding
       ? "/onboarding/athlete?step=review"
-      : "/onboarding/athlete";
+      : "/signup";
 
   const primary =
     engineReasons[0] ??

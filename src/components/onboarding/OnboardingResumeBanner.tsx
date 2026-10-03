@@ -33,10 +33,9 @@ export function OnboardingResumeBanner() {
   // Don't render while on the onboarding flow itself, while loading, when complete, or when dismissed.
   if (loading || roleLoading || hasCompletedOnboarding || dismissed) return null;
   if (isScout || isCoach) return null;
-  if (location.pathname.startsWith("/onboarding")) return null;
-  // Someone who exited the sign-up flow resumes it exactly where they stopped.
-  let resumeTo = "/onboarding/athlete?resume=1";
-  try { if (localStorage.getItem("hm.unifiedSignupDraft.v1")) resumeTo = "/signup"; } catch { /* ignore */ }
+  if (location.pathname.startsWith("/onboarding") || location.pathname === "/signup") return null;
+  // The unified flow is the only setup path; signed-in people start at the name step.
+  const resumeTo = "/signup";
 
   return (
     <div className="mb-3 flex items-center justify-between gap-3 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs">

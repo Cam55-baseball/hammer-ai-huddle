@@ -62,7 +62,7 @@ export function OnboardingQuickAccess() {
           </div>
         </div>
         <Button asChild size="sm" className="w-full sm:w-auto">
-          <Link to="/onboarding/athlete?resume=1">
+          <Link to="/signup">
             Finish setup
             <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
           </Link>

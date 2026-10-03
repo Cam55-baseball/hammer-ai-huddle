@@ -51,7 +51,7 @@ export default function AthleteCommand() {
   useEffect(() => {
     if (roleLoading || isScout || isCoach) return;
     if (!authLoading && isAuthStable && user && !onboardingLoading && !hasFirstEvent) {
-      navigate("/onboarding/athlete", { replace: true });
+      navigate("/signup", { replace: true });
     }
   }, [authLoading, isAuthStable, user, onboardingLoading, hasFirstEvent, roleLoading, isScout, isCoach, navigate]);
 
