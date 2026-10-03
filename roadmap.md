@@ -50,3 +50,10 @@
 - [ ] Preserve Finish → notification explanation/prompt → dashboard → demo tour ordering
 - [ ] Verify at least four onboarding screens on a phone viewport
 - [ ] Reconcile and verify the already-authorized score lock-down without unrelated deployment or migration
+
+# Analysis-to-plan and daily guidance
+- [ ] Present the owner with a no-shape-change design for fault-keyed analysis and future Report Card findings to influence existing Hammers Today slots
+- [ ] Document recency decay, circulation limits, and the honest boundary for detecting resolved faults before changing the frozen generator
+- [ ] Audit nutrition-tip provenance and propose only sourced or owner-supplied session-relevant tips
+- [ ] Map the night check-in and place Mind Fuel+ naturally without adding compulsory workload
+- [ ] Define Tex Vision's current duration and load, then recommend adaptive placement rather than calendar pinning
