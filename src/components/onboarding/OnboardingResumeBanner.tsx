@@ -34,6 +34,9 @@ export function OnboardingResumeBanner() {
   if (loading || roleLoading || hasCompletedOnboarding || dismissed) return null;
   if (isScout || isCoach) return null;
   if (location.pathname.startsWith("/onboarding")) return null;
+  // Someone who exited the sign-up flow resumes it exactly where they stopped.
+  let resumeTo = "/onboarding/athlete?resume=1";
+  try { if (localStorage.getItem("hm.unifiedSignupDraft.v1")) resumeTo = "/signup"; } catch { /* ignore */ }
 
   return (
     <div className="mb-3 flex items-center justify-between gap-3 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs">
@@ -49,7 +52,7 @@ export function OnboardingResumeBanner() {
       </div>
       <div className="flex items-center gap-1">
         <Link
-          to="/onboarding/athlete?resume=1"
+          to={resumeTo}
           className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-amber-900 hover:bg-amber-500/20 dark:text-amber-100"
         >
           Resume <ArrowRight className="h-3 w-3" />
