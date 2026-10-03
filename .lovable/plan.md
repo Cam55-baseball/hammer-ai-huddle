@@ -1,21 +1,33 @@
-# Pitching doctrine rulings and live activation
+# Unified sign-up and onboarding
 
 ## Outcome
-- Make every current energy-angle definition use the support-leg back ankle to front hip at maximum leg lift, with the owner’s thresholds unchanged.
-- Replace landing balance with eye-to-eye line tilt from horizontal at front-foot strike, and refuse views where that line is foreshortened or unvalidated.
-- Keep exactly three unresolved pitching questions visible in the doctrine.
-- Activate the already owner-authorized doctrine and correction tags, then verify the real analysis and tag-to-prescription paths.
-- Complete only the remaining Drill Builder parity item that needs no schema change: owner-only manual removal, preserving prescribed history.
+- Clicking **Sign Up** opens the first click-through screen immediately; the long create-account sheet disappears from the new-user journey.
+- Keep the owner’s proposed order unchanged. Longer named sections may use short sub-screens so every phone screen contains at most two fields and never requires page scrolling.
+- Preserve Back, Next, per-screen validation, visible progress, and resume across app closes.
 
-## Implementation
-1. Update report-card copy, contracts, shared server contract, deterministic tile, camera requirements, tests, and doctrine so displayed definitions match computed definitions.
-2. Use the existing still-clip eye-line floor of 5.00° and add explicit eye-line tests; require an on-line camera because side-on foreshortens the eye line. The existing on-line classifier has no confirmed pitching fixture, so on-line readings remain missing until that validation exists.
-3. Rebuild the doctrine bundle, wire its context alongside existing fault bullets, and deploy only the explicitly authorized analysis function change.
-4. Snapshot the correction-tag table, insert the complete active analyzer-key set without changing existing rows, and verify coverage by sport and analysis type.
-5. Exercise one real video through tagging, fault matching, and prescription selection; clean up only disposable test state.
-6. Verify Drill Builder search, filters, preview, upload, delete/retire safeguard, and readiness behavior without schema expansion.
+## Account creation decision
+- Collect email and password first, but do not create the account immediately.
+- Create it after the user completes **Sport, position, bats and throws**. At that point they have supplied the minimum meaningful athlete identity, reducing empty abandoned accounts while allowing all later health, body, equipment, and goal progress to save under their account.
+- Before account creation, keep the draft on that device. Immediately after creation, attach and persist the draft to the signed-in account, then continue seamlessly.
+- Keep terms/privacy acceptance in the account checkpoint without adding a separate long form. Remove the current age-gate/guardian branch as instructed; keep the existing DOB field only for its non-gating purpose within a short later sub-screen.
+
+## Email confirmation
+- Use the current auth setting when it returns an active session and continue without interruption.
+- If confirmation is required and no session is returned, show an in-flow confirmation screen, retain the full local draft, and resume the same step after the confirmation callback hydrates the session. The user will not be sent back to the old form or lose progress.
+
+## Build
+1. Turn sign-up mode on the auth page into the unified onboarding entry while leaving sign-in and password reset intact.
+2. Consolidate existing profile and athlete-onboarding fields into one ordered flow: email; password; name/photo; sport/position/bats/throws; height/weight/graduation year; state/team/level; optional measurements; equipment; injuries; sleep/water; mental/career goals; review/Finish. Split dense groups into short sub-screens without changing their order or inventing fields.
+3. Reuse existing validation and persistence. Save pre-account state locally, then migrate it to the existing account-scoped draft store after account creation.
+4. Keep the exact Finish handoff: explanation line → one-time system permission request → dashboard → eligible new-account demo tour. Decline/errors continue normally; existing users remain unchanged.
+5. Match the existing Hammers foil, glass, motion, controls, and typography; use a focused single-question composition, stable bottom navigation, compact progress, and reduced-motion support.
+6. Verify the full path on a phone viewport, including close/resume, validation, account checkpoint, Finish handoff, no vertical overflow, and screenshots from at least four representative steps.
+
+## Score lock-down verification
+- First inspect the existing authorized migration and report its exact effect plus every reader of `efficiency_score` and `ai_analysis`. Do not rerun an already-applied migration.
+- Verify denial with a real regular-user token and successful Report Card rendering with the owner session. Audit service-role responses and daily-plan weaker-side parity.
+- Make local code-only leak fixes where required. Do not publish, deploy, redeploy, or run any unrelated migration; report any backend change still requiring separate owner authorization.
 
 ## Boundaries
-- No unrelated publish, deploy, redeploy, or migration.
-- No invented answer for phase names, elbow-flexion sourcing, or the three camera/calibration-limited measures.
-- No destructive database change without a verified snapshot; prescribed drill history remains intact.
+- No changes to legal text, child signup, consent tables, iOS files, or Capacitor configuration.
+- No publish, deployment, redeployment, or migration beyond the already named score lock-down authorization.
