@@ -30,6 +30,7 @@ import { getTodayDate } from '@/utils/dateUtils';
 import { safeGet, safeSet, safeRemove } from '@/lib/safeStorage';
 import { trackLaunchEvent } from '@/lib/launchEvents';
 import { useDailyOutcome, type DailyOutcomeStatus, type StreakImpact } from '@/hooks/useDailyOutcome';
+import { useNavigate } from 'react-router-dom';
 
 interface TodayStats {
   checkinsCompleted: number;
@@ -68,6 +69,7 @@ export function NightCheckInSuccess({
   onClose,
 }: NightCheckInSuccessProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [sleepCountdown, setSleepCountdown] = useState<string | null>(null);
 
   // Trigger confetti on mount
@@ -337,6 +339,22 @@ export function NightCheckInSuccess({
           </div>
         </motion.div>
       )}
+
+      {/* Optional wind-down suggestion; never counted as a check-in or scheduled task. */}
+      <motion.div variants={itemVariants} className="border-y border-border/50 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <Brain className="h-4 w-4 text-primary" />
+              Wind down with Mind Fuel+
+            </div>
+            <p className="mt-0.5 text-xs text-muted-foreground">Optional mental reset before you close the day.</p>
+          </div>
+          <Button type="button" size="sm" variant="outline" className="shrink-0" onClick={() => navigate('/mind-fuel')}>
+            Open
+          </Button>
+        </div>
+      </motion.div>
 
       {/* Phase 10.7 — Lightweight feedback prompt (post-success) */}
       <motion.div variants={itemVariants}>
