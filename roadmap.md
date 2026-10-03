@@ -22,7 +22,7 @@
 # October owner request follow-up
 - [x] Apply the specifically owner-authorized doctrine function and active fault tags; no unrelated deployment
 - [x] Add Drill Builder search, filters, preview, upload, and readiness badges without schema changes
-- [ ] Drill deletion: requires an approved durable snapshot and owner-only database delete policy before enabling; do not remove athlete history
+- [ ] Owner-only manual drill removal: requires durable prescribed-history preservation and owner-only database delete policy; do not remove athlete history
 - [x] Align the back-ankle energy-angle definition across text and measurement
 # Approved pitching doctrine activation
 - [x] Align energy angle copy everywhere to back ankle → front hip at maximum leg lift
@@ -30,7 +30,7 @@
 - [x] Report 5.00° still floor against 15° standard plainly
 - [x] Apply and verify only the owner-authorized doctrine function and active fault tags
 - [ ] Allow only owner-hand Drill Builder removal; preserve every past prescription
-- [ ] Separate live, preview-only, blocked, and three open pitching questions in final report
+- [x] Separate live, preview-only, blocked, and owner-approval items in the owner report
 
 # Pitching phase proposal and elite-filter consistency
 - [x] Record proposed analysis-only phase names and boundaries for owner approval without changing output or Report Card names
