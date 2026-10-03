@@ -4,11 +4,11 @@
 
 ## Phase model
 
-The headings below are existing editorial organization, not owner-approved phase names. Where a sequence boundary is not visible, do not infer it. Do not publish proposed names in analysis output until the owner approves them. Pitching Report Card phase names are a separate future owner decision.
+The following phase names are **owner-approved for analysis only** `[owner-supplied 2026-10-02; approved 2026-10-03]`. Where a sequence boundary is not visible, do not infer it. Pitching Report Card phase names are a separate future owner decision.
 
-**Proposed for the owner's approval — analysis only, not yet output or Report Card labels:**
+**Analysis phase model — not Report Card labels:**
 
-| Proposed analysis name | Proposed span |
+| Analysis name | Span |
 |---|---|
 | Phase 1 — Create Balance | Set through gather to peak leg lift |
 | Phase 2 — Load and Drive | Energy angle, with lift and thrust happening together |
@@ -16,7 +16,7 @@ The headings below are existing editorial organization, not owner-approved phase
 | Phase 4 — The Pitcher's Move | Release, stack and track, extension |
 | The Finish | Drag line, glove and balance after release |
 
-If approved, numbered phases must always be written with number and name, never a bare abbreviation. These boundaries and words remain proposals; they do not change any tile or standard.
+Numbered phases must always be written with number and name, never a bare abbreviation. These boundaries and words do not change any tile or standard.
 
 ### Phase 1 — Leg Lift and Direction
 
@@ -46,6 +46,9 @@ If approved, numbered phases must always be written with number and name, never 
 
 - **Research-sourced:** Shoulder abduction near 90° at foot contact is discussed in Matsuo et al. (2002 simulation), summarized in `docs/THROWING-INJURY-RESEARCH.md`; evidence for a phone-video fault threshold is limited. **Do not grade elbow height or cue a raised elbow.**
 - **Removed, do not re-add as a standard or fault:** elbow flexion above 90° at foot contact came from research into throwing injury biomechanics, not from the owner. It varies with individual anatomy and was already cut from the throwing card by the owner's elite filter. The same exclusion applies to pitching: do not grade, flag, or cue an athlete on this structural angle.
+- **Owner arm-care boundary** `[owner-supplied 2026-10-02]`: "The hand needs to be inside of the 90 degree angle from wrist to elbow. The elbow needs to be below the shoulder. So hand inside elbow and elbow below shoulder." This replaces the old hand–elbow–shoulder angle claim, not the retired flexion-at-contact item. Check only where the arm action is clearly visible; flag only, zero grading weight, no diagnosis, no claimed individual injury prediction. Athlete wording has no numbers and advises a qualified coach or medical professional.
+- **Ruling history:** On 2026-09-29 the owner rejected a 70–110° elbow-height-at-landing band because it would make throwers robotic. The new hand-inside-elbow/elbow-below-shoulder instruction is a boundary for arm care, not a prescribed elbow slot or landing band. Keep both rulings; do not use the boundary to restore the rejected graded tile. If they prove incompatible in a real view, return to the owner rather than guessing.
+- **Pitching shoulder tilt:** grade shoulder tilt at release in a confirmed pitching delivery from a usable view. The owner kept this for pitching because the pitcher delivers from a known position; a fielder may throw off balance, on the run or from the knees, so throwing does not check shoulder tilt. `[owner-supplied 2026-10-03]`
 - **Research-sourced:** Aguinaldo & Chambers (2009) connect early trunk rotation with elbow loading; an open shoulder at contact is a mechanics observation, not a diagnosis. No clip can establish individual injury risk or torque. Arm-care items are flags with zero grading weight, and advise a qualified professional where appropriate. Sources: `docs/THROWING-INJURY-RESEARCH.md`, `src/lib/biomech/AGENTS.md`.
 - **Owner-supplied:** Arm slot is fascial and individually variable, never itself a fault. Elite review excludes style nitpicks; individually variable readings remain recorded for a per-athlete baseline, not discarded. Sources: `docs/THROWING-DOCTRINE.md`, `src/lib/biomech/AGENTS.md`.
 
@@ -55,7 +58,6 @@ If approved, numbered phases must always be written with number and name, never 
 - **Existing refusal rules:** pose delivery must establish lift → plant → release within the configured gate; unreadable landmarks or insufficient calibration produce missingness, never guessed measurements. A sampled analysis can describe only visible frames. Source: `src/lib/biomech/AGENTS.md` and `src/lib/biomech/metrics/pitchingTiles.ts`.
 - **Analysis is not the Report Card:** the model may describe balance at landing, head position, and visible glove action in plain coaching language when the frames actually show them. A refused eye-line or glove tile does not prohibit a qualitative observation. Do not turn that observation into an angle, calibrated distance, pass/fail measurement, or inferred unseen swivel.
 
-## Pending owner approval and deferred Report Card work
+## Deferred Report Card work
 
-1. **Analysis phase names and boundaries:** the five proposed names and spans above require owner approval before they appear in analysis output. Report Card phase naming is reserved for a separate ruling.
-2. **Deferred Report Card measurements:** leave glove swivel, drag direction, and release extension as they are. Glove swivel needs a reliable glove/hand detector; drag direction needs a validated target-line view; extension needs reliable height calibration and a resolvable noise floor. Until then, report missingness rather than a fault. The settled eye-line definition likewise remains missing on side-on footage and awaits an on-line pitching fixture before any measurement is released.
+1. **Deferred Report Card measurements:** leave glove swivel, drag direction, and release extension as they are. Glove swivel needs a reliable glove/hand detector; drag direction needs a validated target-line view; extension needs reliable height calibration and a resolvable noise floor. Until then, report missingness rather than a fault. The settled eye-line definition likewise remains missing on side-on footage and awaits an on-line pitching fixture before any measurement is released. Report Card phase naming is reserved for a separate owner ruling.
