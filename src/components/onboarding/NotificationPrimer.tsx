@@ -1,13 +1,14 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Capacitor } from "@capacitor/core";
+import { PushNotifications } from "@capacitor/push-notifications";
 
 const KEY = (uid: string) => `hm.notifPrimerAsked.${uid}`;
 
 /** True only the first time, and only where the browser can still show the system prompt. */
 export function shouldAskNotifications(uid: string): boolean {
   try {
-    if (typeof window === "undefined" || !("Notification" in window)) return false;
-    if (Notification.permission !== "default") return false;
+    if (typeof window === "undefined") return false;
     return localStorage.getItem(KEY(uid)) == null;
   } catch {
     return false;
@@ -22,7 +23,18 @@ export function NotificationPrimer({ uid, open, onDone }: { uid: string; open: b
   };
   const allow = async () => {
     let result = "error";
-    try { result = await Notification.requestPermission(); } catch { /* ignore */ }
+    try {
+      if (Capacitor.isNativePlatform()) {
+        result = (await PushNotifications.requestPermissions()).receive;
+        if (result === "granted") await PushNotifications.register();
+      } else if ("Notification" in window && Notification.permission === "default") {
+        result = await Notification.requestPermission();
+      } else if ("Notification" in window) {
+        result = Notification.permission;
+      } else {
+        result = "unsupported";
+      }
+    } catch { /* permission errors never block the app */ }
     finish(result);
   };
   return (
