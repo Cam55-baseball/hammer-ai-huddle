@@ -1,6 +1,6 @@
 import { HeightFeetInchesInput } from "@/components/shared/HeightFeetInchesInput";
 import { NotificationPrimer, shouldAskNotifications } from "@/components/onboarding/NotificationPrimer";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -81,11 +81,13 @@ const ProfileSetup = () => {
   const [draftLoaded, setDraftLoaded] = useState(false);
   const [primerOpen, setPrimerOpen] = useState(false);
   const [pendingNav, setPendingNav] = useState<string | null>(null);
+  // Set once the profile is saved: finishing clears selectedRole, which must not bounce them to "/".
+  const finishingRef = useRef(false);
 
   const { session } = useAuth();
 
   useEffect(() => {
-    if (loading || !isAuthStable) return;
+    if (loading || !isAuthStable || finishingRef.current) return;
     if (!user && !session) {
       navigate("/auth", { replace: true });
       return;
@@ -343,6 +345,7 @@ const ProfileSetup = () => {
         if (progressError) throw progressError;
       }
 
+      finishingRef.current = true;
       // Clear localStorage (keep selectedSport for consistency)
       localStorage.removeItem('selectedRole');
       localStorage.removeItem('selectedModule');
