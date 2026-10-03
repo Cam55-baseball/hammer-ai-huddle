@@ -112,12 +112,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           .maybeSingle();
 
         if (!error && data) {
-          const completed = data.tutorial_completed || false;
-          setTutorialCompleted(completed);
-          // Auto-open for new users
-          if (!completed) {
-            setTutorialOpen(true);
-          }
+          // Never auto-opens (owner ruling 2026-10-03): new users go straight
+          // from onboarding to the dashboard, where the spotlight tour
+          // auto-starts. The guide stays available from the header.
+          setTutorialCompleted(data.tutorial_completed || false);
         }
       } catch (error) {
         console.error("Error fetching tutorial status:", error);
