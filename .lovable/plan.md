@@ -9,7 +9,7 @@
 - Collect email and password first, but do not create the account immediately.
 - Create it after the user completes **Sport, position, bats and throws**. At that point they have supplied the minimum meaningful athlete identity, reducing empty abandoned accounts while allowing all later health, body, equipment, and goal progress to save under their account.
 - Before account creation, keep the draft on that device. Immediately after creation, attach and persist the draft to the signed-in account, then continue seamlessly.
-- Keep terms/privacy acceptance in the account checkpoint without adding a separate long form. Remove the current age-gate/guardian branch as instructed; keep the existing DOB field only for its non-gating purpose within a short later sub-screen.
+- Keep terms/privacy acceptance in the account checkpoint without adding a separate long form. Preserve the current age check and guardian branch exactly: do not lower or remove protection, and do not add an under-13 flow, consent table, or new gate. Keep DOB in its current role within a short sub-screen and report the existing behavior.
 
 ## Email confirmation
 - Use the current auth setting when it returns an active session and continue without interruption.
