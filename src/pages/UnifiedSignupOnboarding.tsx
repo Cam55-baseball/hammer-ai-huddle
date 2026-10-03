@@ -16,7 +16,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { branding } from "@/branding";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import { writePersistentEquipment } from "@/lib/hammer/context/equipment";
-import { writeDraftSlot, clearDraftSlot } from "@/lib/onboarding/draftStore";
 import { NotificationPrimer, shouldAskNotifications } from "@/components/onboarding/NotificationPrimer";
 
 type Draft = {
@@ -78,11 +77,6 @@ export default function UnifiedSignupOnboarding() {
     const safe = { ...draft, password: "" };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
   }, [draft]);
-
-  useEffect(() => {
-    if (!user?.id || !draft.accountCreated) return;
-    void writeDraftSlot(user.id, "unified-signup", { ...draft, password: "" });
-  }, [draft, user?.id]);
 
   useEffect(() => {
     if (!user?.id || !session || finishing.current) return;
@@ -165,7 +159,7 @@ export default function UnifiedSignupOnboarding() {
         team_affiliation: draft.team.trim(), throwing_hand: draft.throwingHand as "L" | "R" | "S",
         batting_side: draft.battingSide as "L" | "R" | "S",
       };
-      const profileWrite = await supabase.from("profiles").upsert(profile);
+      const profileWrite = await supabase.from("profiles").upsert(profile as never);
       if (profileWrite.error) throw profileWrite.error;
       const roleWrite = await supabase.from("user_roles").upsert({ user_id: user.id, role: "player", status: "active" }, { onConflict: "user_id,role" });
       if (roleWrite.error) throw roleWrite.error;
@@ -186,7 +180,6 @@ export default function UnifiedSignupOnboarding() {
       ]);
       finishing.current = true;
       localStorage.removeItem(STORAGE_KEY);
-      clearDraftSlot(user.id, "unified-signup");
       localStorage.setItem("selectedSport", draft.sport);
       if (shouldAskNotifications(user.id)) setPrimerOpen(true);
       else navigate("/dashboard", { replace: true });
