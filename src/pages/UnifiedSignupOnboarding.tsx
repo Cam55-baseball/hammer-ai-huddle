@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Camera, Check, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, Check, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck, X } from "lucide-react";
 import { format } from "date-fns";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { branding } from "@/branding";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
-import { writePersistentEquipment } from "@/lib/hammer/context/equipment";
+import { HeightFeetInchesInput, heightToInches } from "@/components/shared/HeightFeetInchesInput";
 import { NotificationPrimer, shouldAskNotifications } from "@/components/onboarding/NotificationPrimer";
 
 type Draft = {
@@ -226,6 +226,9 @@ export default function UnifiedSignupOnboarding() {
       }
       stage = "training profile";
       const heightIn = heightToInches(draft.height);
+      // Merge so measurements entered elsewhere (e.g. body fat %) are never wiped.
+      const prior = await supabase.from("athlete_context").select("anthropometrics").eq("user_id", user.id).maybeSingle();
+      const priorAnthro = ((prior.data as { anthropometrics?: Record<string, unknown> } | null)?.anthropometrics ?? {}) as Record<string, unknown>;
       const answers: Array<[string, unknown]> = [
         ["sport_primary", draft.sport],
         ["position_primary", draft.position.trim()],
@@ -233,7 +236,7 @@ export default function UnifiedSignupOnboarding() {
         ["bats_hand", draft.battingSide],
         ["competition_home_state", draft.state.trim()],
         ["competition_level", draft.level],
-        ["anthropometrics", { height_in: heightIn, weight_lb: Number(draft.weight) || null, wingspan_in: Number(draft.wingspan) || null, foot_length_in: Number(draft.footLength) || null }],
+        ["anthropometrics", { ...priorAnthro, height_in: heightIn, weight_lb: Number(draft.weight) || null, wingspan_in: Number(draft.wingspan) || (priorAnthro.wingspan_in ?? null), foot_length_in: Number(draft.footLength) || (priorAnthro.foot_length_in ?? null) }],
       ];
       if (draft.careerGoal.trim()) answers.push(["level_target", draft.careerGoal.trim()]);
       // Sequential: each write merges the shared confidence map.
