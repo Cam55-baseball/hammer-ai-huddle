@@ -4,8 +4,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { useDemoProgress } from '@/hooks/useDemoProgress';
 import { usePurchaseAvailability } from '@/hooks/usePurchaseAvailability';
 
-const GATED_PREFIXES = ['/select-modules', '/pricing', '/checkout', '/dashboard', '/training', '/nutrition', '/vault'];
+const GATED_PREFIXES = ['/select-modules', '/pricing', '/checkout', '/training', '/nutrition', '/vault'];
 
+// '/dashboard' is deliberately NOT gated: new athletes go straight from
+// onboarding to the dashboard, where the spotlight tour auto-starts.
 export function DemoGate({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const { progress, loading } = useDemoProgress();
