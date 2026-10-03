@@ -1,4 +1,4 @@
-import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 /** Parses `5'10"`, `5 10`, `70` (inches) into feet/inches strings. */
 function parse(value: string): { ft: string; inch: string } {
@@ -16,7 +16,17 @@ function serialize(ft: string, inch: string): string {
   return `${ft || 0}'${inch || 0}"`;
 }
 
-/** Height as two number-pad fields (feet, inches); value stays in the existing `5'10"` format. */
+/** Total inches for a stored height string, or null when unset. */
+export function heightToInches(value: string): number | null {
+  const { ft, inch } = parse(value);
+  if (!ft) return null;
+  return Number(ft) * 12 + (Number(inch) || 0);
+}
+
+const FEET = ["3", "4", "5", "6", "7"];
+const INCHES = Array.from({ length: 12 }, (_, i) => String(i));
+
+/** Height as two selectors (feet, inches) — no typing; value stays in the existing `5'10"` format. */
 export function HeightFeetInchesInput({
   id,
   value,
@@ -29,33 +39,24 @@ export function HeightFeetInchesInput({
   required?: boolean;
 }) {
   const { ft, inch } = parse(value);
-  const digits = (s: string, max: number) => s.replace(/\D/g, "").slice(0, max);
   return (
-    <div className="flex items-center gap-2">
-      <Input
-        id={id}
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        aria-label="Feet"
-        placeholder="ft"
-        value={ft}
-        required={required}
-        onChange={(e) => onChange(serialize(digits(e.target.value, 1), inch))}
-      />
-      <Input
-        id={`${id}-inches`}
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        aria-label="Inches"
-        placeholder="in"
-        value={inch}
-        onChange={(e) => {
-          const d = digits(e.target.value, 2);
-          onChange(serialize(ft, d && Number(d) > 11 ? "11" : d));
-        }}
-      />
+    <div className="grid grid-cols-2 gap-2">
+      <Select value={ft || undefined} onValueChange={(v) => onChange(serialize(v, inch || "0"))} required={required}>
+        <SelectTrigger id={id} aria-label="Feet" className="h-12 text-base">
+          <SelectValue placeholder="Feet" />
+        </SelectTrigger>
+        <SelectContent>
+          {FEET.map((f) => <SelectItem key={f} value={f} className="py-3 text-base">{f} ft</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Select value={inch || undefined} onValueChange={(v) => onChange(serialize(ft || "5", v))}>
+        <SelectTrigger id={`${id}-inches`} aria-label="Inches" className="h-12 text-base">
+          <SelectValue placeholder="Inches" />
+        </SelectTrigger>
+        <SelectContent>
+          {INCHES.map((i) => <SelectItem key={i} value={i} className="py-3 text-base">{i} in</SelectItem>)}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
