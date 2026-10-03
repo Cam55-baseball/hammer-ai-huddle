@@ -14,7 +14,7 @@
  *
  * Schedule context line from `useScheduleWindow` retained.
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DailyIntentHeader } from "@/components/hammer/DailyIntentHeader";
 import { WeeklyRoadmapStrip } from "@/components/hammer/WeeklyRoadmapStrip";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
@@ -131,6 +131,10 @@ import { positionLabel, positionShort } from "@/lib/drills/positionLabels";
 import { PositionPickerDialog } from "@/components/hammer/PositionPickerDialog";
 import { announceAthleteContextChanged } from "@/lib/hammer/context/contextRefresh";
 import { Repeat } from "lucide-react";
+import { useFaultLedger } from "@/hooks/useFaultLedger";
+import { useDrillCirculation } from "@/hooks/useDrillCirculation";
+import { projectEnvelope } from "@/lib/hammer/context/decisionFilters";
+import { applyFaultPlanInfluence } from "@/lib/prescription/applyFaultPlanInfluence";
 
 function shortSeasonPhase(p: string | null | undefined): "off" | "pre" | "in" | "post" | null {
   if (!p) return null;
@@ -236,6 +240,9 @@ function DrillRow({
           />
           <div className="min-w-0 flex-1">
             <div className={`font-medium ${checked ? "line-through" : ""}`}>{d.name}</div>
+            {d.analysisInfluence && (
+              <div className="mt-0.5 text-[10px] font-medium text-primary">From your recent analysis</div>
+            )}
             {(() => {
               // Step 24 item 4 — multi-part details read as bullets, not a comma run-on.
               const parts = doseBullets(d.dosage);
@@ -615,6 +622,7 @@ function HammerDailyPlanBody({
   beforeStartPortalTarget?: HTMLElement | null;
 }) {
   const ctx = useHammerAthleteContext();
+  const projectedAthlete = useMemo(() => projectEnvelope(ctx), [ctx]);
   const { isSwitchHitter, isAmbidextrousThrower } = useSideContext();
   const navigate = useNavigate();
   const identity = getHammerIdentity();
@@ -655,6 +663,9 @@ function HammerDailyPlanBody({
   const wkRx = useHammersToday();
   const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
   const planAdjust = usePlanAdjustments(bodyPlanDate);
+  const { data: rankedFaults = [] } = useFaultLedger();
+  const drillCirculation = useDrillCirculation();
+  const influencedLoggedServe = useRef<string | null>(null);
   // Game-day defense override — athlete-owned, one tap, resets each day.
   const defenseOverrideKey = `hammer.defenseFull.${bodyPlanDate}`;
   const [defenseFullOverride, setDefenseFullOverrideState] = useState(false);
@@ -721,8 +732,30 @@ function HammerDailyPlanBody({
       : rawPlan;
     // Athlete-authored swaps / "can't do it" choices, including the ones they
     // asked to stick from now on.
-    return { ...base, blocks: applyAdjustments(base.blocks, planAdjust.adjustments) };
-  }, [rawPlan, cnsHigh, planAdjust.adjustments]);
+    const influencedBlocks = applyFaultPlanInfluence({
+      blocks: base.blocks,
+      rankedFaults,
+      sport: ctx.get<unknown>("sport_primary")?.value === "softball" ? "softball" : "baseball",
+      ownedEquipment: new Set(projectedAthlete.equipmentList),
+      catalog: drillCirculation.catalog,
+      circulation: drillCirculation.circulation,
+    });
+    return { ...base, blocks: applyAdjustments(influencedBlocks, planAdjust.adjustments) };
+  }, [rawPlan, cnsHigh, planAdjust.adjustments, rankedFaults, projectedAthlete.equipmentList, ctx, drillCirculation.catalog, drillCirculation.circulation]);
+
+  const influencedDrillIds = useMemo(
+    () => plan.blocks.flatMap((block) => block.drills)
+      .filter((drill) => drill.prescriptionOrigin === "analysis")
+      .map((drill) => drill.slug)
+      .filter((id): id is string => Boolean(id)),
+    [plan.blocks],
+  );
+  const influencedServeKey = influencedDrillIds.join("|");
+  useEffect(() => {
+    if (!influencedServeKey || influencedLoggedServe.current === influencedServeKey) return;
+    influencedLoggedServe.current = influencedServeKey;
+    drillCirculation.log(influencedDrillIds, "served");
+  }, [drillCirculation.log, influencedDrillIds, influencedServeKey]);
   const adjustApi = useMemo<PlanAdjustApi>(
     () => ({
       save: planAdjust.save,

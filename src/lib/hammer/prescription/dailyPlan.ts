@@ -110,6 +110,9 @@ export interface DrillStep {
   /** Athlete-facing "You need:" line when the drill requires equipment. */
   readonly equipmentNote?: string;
   readonly guide?: import("./movementGuide").MovementGuide;
+  /** Keeps owner routing and downstream analysis overlays auditable. */
+  readonly prescriptionOrigin?: "owner" | "analysis";
+  readonly analysisInfluence?: import("@/lib/prescription/applyFaultPlanInfluence").AnalysisInfluenceTrace;
 }
 
 
