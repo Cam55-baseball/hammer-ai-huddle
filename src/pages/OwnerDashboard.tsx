@@ -1,3 +1,4 @@
+import { VIDEO_PUBLIC_COLUMNS, withStaffScores } from "@/lib/reportCard/staffVideoScores";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -240,7 +241,7 @@ const OwnerDashboard = () => {
       const [usersResponse, rolesResponse, videosResponse, subsResponse, adminReqResponse, scoutAppResponse] = await Promise.all([
         supabase.from("profiles").select("id, full_name, created_at").order("created_at", { ascending: false }),
         supabase.from("user_roles").select("user_id, role, status"),
-        supabase.from("videos").select("*").order("created_at", { ascending: false }).limit(10),
+        supabase.from("videos").select(VIDEO_PUBLIC_COLUMNS).order("created_at", { ascending: false }).limit(10).then(async (r) => ({ ...r, data: r.data ? await withStaffScores(r.data as any) : r.data })),
         supabase.from("subscriptions").select("*"),
         supabase
           .from("user_roles")

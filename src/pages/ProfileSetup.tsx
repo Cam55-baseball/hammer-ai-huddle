@@ -1,5 +1,6 @@
 import { HeightFeetInchesInput } from "@/components/shared/HeightFeetInchesInput";
-import { useEffect, useState } from "react";
+import { NotificationPrimer, shouldAskNotifications } from "@/components/onboarding/NotificationPrimer";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,8 @@ const ProfileSetup = () => {
   const locationState = location.state as { role?: string; sport?: string; module?: string };
 
   // Read from both possible localStorage keys for role
-  const rawRole = locationState?.role || localStorage.getItem('selectedRole') || localStorage.getItem('userRole');
+  // Read once so finishing (which clears the stored role) can't flip the page mid-handoff.
+  const [rawRole] = useState<string | null>(() => locationState?.role || localStorage.getItem('selectedRole') || localStorage.getItem('userRole'));
   
   // Normalize role value to expected format (handle both lowercase and capitalized)
   let selectedRole: string | null = rawRole;
@@ -74,11 +76,19 @@ const ProfileSetup = () => {
   const isPlayer = selectedRole === 'Player';
   const isCoachOrScout = selectedRole === 'Scout/Coach';
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Click-through steps (players): 0 name/photo · 1 position/sides · 2 body/grad year/birth date · 3 state/team/level.
+  const PLAYER_STEPS = ["Name and photo", "Position, bats and throws", "Height, weight and graduation year", "State, team and level"];
+  const [pStep, setPStep] = useState(0);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const [primerOpen, setPrimerOpen] = useState(false);
+  const [pendingNav, setPendingNav] = useState<string | null>(null);
+  // Set once the profile is saved: finishing clears selectedRole, which must not bounce them to "/".
+  const finishingRef = useRef(false);
 
   const { session } = useAuth();
 
   useEffect(() => {
-    if (loading || !isAuthStable) return;
+    if (loading || !isAuthStable || finishingRef.current) return;
     if (!user && !session) {
       navigate("/auth", { replace: true });
       return;
@@ -96,6 +106,64 @@ const ProfileSetup = () => {
       setLastName(nameParts.slice(1).join(' ') || "");
     }
   }, [user, loading, navigate, selectedRole]);
+
+  const sv = (n: number) => (isPlayer && pStep !== n ? "hidden" : "");
+  const draftKey = user ? `hm.profileSetupDraft.${user.id}` : null;
+
+  // Resume where they stopped: restore the saved draft once.
+  useEffect(() => {
+    if (!draftKey || draftLoaded) return;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d.firstName) setFirstName(d.firstName);
+        if (d.lastName) setLastName(d.lastName);
+        setPosition(d.position ?? ""); setExperienceLevel(d.experienceLevel ?? "");
+        setThrowingHand(d.throwingHand ?? ""); setBattingSide(d.battingSide ?? "");
+        setHeight(d.height ?? ""); setWeight(d.weight ?? ""); setGraduationYear(d.graduationYear ?? "");
+        if (d.dateOfBirth) setDateOfBirth(new Date(d.dateOfBirth));
+        setPlayerState(d.playerState ?? ""); setTeamAffiliation(d.teamAffiliation ?? "");
+        setCommitmentStatus(d.commitmentStatus ?? ""); setBio(d.bio ?? "");
+        if (typeof d.pStep === "number") setPStep(Math.min(Math.max(d.pStep, 0), 3));
+      }
+    } catch { /* ignore a bad draft */ }
+    setDraftLoaded(true);
+  }, [draftKey, draftLoaded]);
+
+  // Save progress as they go.
+  useEffect(() => {
+    if (!draftKey || !draftLoaded) return;
+    try {
+      localStorage.setItem(draftKey, JSON.stringify({
+        firstName, lastName, position, experienceLevel, throwingHand, battingSide,
+        height, weight, graduationYear, dateOfBirth: dateOfBirth ? dateOfBirth.toISOString() : null,
+        playerState, teamAffiliation, commitmentStatus, bio, pStep,
+      }));
+    } catch { /* storage full or blocked */ }
+  }, [draftKey, draftLoaded, firstName, lastName, position, experienceLevel, throwingHand, battingSide,
+      height, weight, graduationYear, dateOfBirth, playerState, teamAffiliation, commitmentStatus, bio, pStep]);
+
+  /** Per-step check so a mistake is caught on the screen where it was made. */
+  const stepError = (n: number): string | null => {
+    if (n === 0 && (!firstName.trim() || !lastName.trim())) return "Enter your first and last name.";
+    if (n === 1 && (!position.trim() || !experienceLevel)) return "Add your position and experience level.";
+    if (n === 2) {
+      if (!/^\d+'\d+"$/.test(height)) return "Add your height in feet and inches.";
+      if (!weight.trim()) return "Add your weight.";
+      if (!graduationYear.trim()) return "Add your graduation year.";
+      if (!dateOfBirth) return "Pick your date of birth.";
+    }
+    if (n === 3 && (!playerState.trim() || !teamAffiliation.trim())) return "Add your state and team.";
+    return null;
+  };
+  const goNextStep = () => {
+    const err = stepError(pStep);
+    if (err) { toast({ title: "One more thing", description: err, variant: "destructive" }); return; }
+    setPStep((x) => Math.min(x + 1, 3));
+    window.scrollTo({ top: 0 });
+  };
+  const goBackStep = () => { setPStep((x) => Math.max(x - 1, 0)); window.scrollTo({ top: 0 }); };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -278,6 +346,7 @@ const ProfileSetup = () => {
         if (progressError) throw progressError;
       }
 
+      finishingRef.current = true;
       // Clear localStorage (keep selectedSport for consistency)
       localStorage.removeItem('selectedRole');
       localStorage.removeItem('selectedModule');
@@ -299,7 +368,15 @@ const ProfileSetup = () => {
       // Scouts/Coaches/Admins skip it entirely (they don't pay).
       // RFL-053 — canonical athlete home is /command, not /dashboard.
       const goToActivate = isPlayer && dbRole !== 'admin';
-      navigate(goToActivate ? "/activate" : "/command", { replace: true });
+      const dest = goToActivate ? "/activate" : "/command";
+      try { if (draftKey) localStorage.removeItem(draftKey); } catch { /* ignore */ }
+      // Notifications right after Finish (explained first), before the dashboard tour can start.
+      if (shouldAskNotifications(user.id)) {
+        setPendingNav(dest);
+        setPrimerOpen(true);
+      } else {
+        navigate(dest, { replace: true });
+      }
     } catch (error: any) {
       toast({
         title: t('profileSetup.setupFailed'),
@@ -314,8 +391,8 @@ const ProfileSetup = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 py-8 pt-[calc(2rem+var(--safe-top))] pb-[calc(2rem+var(--safe-bottom))]">
       <div className="w-full max-w-2xl">
-        <div className="bg-card border border-border rounded-xl p-8 shadow-lg">
-          <div className="text-center mb-8">
+        <div className="bg-card border border-border rounded-xl p-5 sm:p-8 shadow-lg">
+          <div className={`text-center mb-6 ${isPlayer && pStep > 0 ? "hidden sm:block" : ""}`}>
             <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
               <span className="text-primary-foreground font-bold text-2xl">H</span>
             </div>
@@ -325,8 +402,20 @@ const ProfileSetup = () => {
             </p>
           </div>
 
+          {isPlayer && (
+            <div className="mb-5" aria-live="polite">
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+                <span>Step {pStep + 1} of {PLAYER_STEPS.length}</span>
+                <span className="font-medium text-foreground">{PLAYER_STEPS[pStep]}</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-muted overflow-hidden" role="progressbar" aria-valuemin={1} aria-valuemax={PLAYER_STEPS.length} aria-valuenow={pStep + 1}>
+                <div className="h-full bg-primary transition-all" style={{ width: `${((pStep + 1) / PLAYER_STEPS.length) * 100}%` }} />
+              </div>
+            </div>
+          )}
+
           {/* Selection Summary */}
-          <div className="bg-muted/30 p-4 rounded-lg mb-6">
+          <div className={`bg-muted/30 p-4 rounded-lg mb-6 ${isPlayer && pStep !== 1 ? "hidden" : ""}`}>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">{t('profileSetup.role')}</p>
@@ -344,6 +433,7 @@ const ProfileSetup = () => {
 
           {/* Bio Form */}
           <div className="space-y-4">
+            <div className={sv(0)}>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="firstName">{t('profileSetup.firstName')} *</Label>
@@ -366,7 +456,9 @@ const ProfileSetup = () => {
                 />
               </div>
             </div>
+            </div>
 
+            <div className={sv(2)}>
             <div>
               <Label>Date of Birth *</Label>
               <BirthDatePicker
@@ -375,7 +467,9 @@ const ProfileSetup = () => {
               />
               <p className="text-xs text-muted-foreground mt-1">Required — used across the app for age-based features.</p>
             </div>
+            </div>
             
+            <div className={sv(0)}>
             <div>
               <Label htmlFor="avatar">{t('profileSetup.profilePicture')}</Label>
               <div className="flex gap-4 items-center">
@@ -395,9 +489,11 @@ const ProfileSetup = () => {
               </div>
               <p className="text-xs text-muted-foreground mt-1">{t('profileSetup.maxFileSize')}</p>
             </div>
+            </div>
 
             {isPlayer && (
               <>
+            <div className={sv(2)}>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="height">{t('profileSetup.height')} *</Label>
@@ -416,8 +512,10 @@ const ProfileSetup = () => {
                     />
                   </div>
                 </div>
+            </div>
                 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
+            <div className={sv(3)}>
                   <div>
                     <Label htmlFor="playerState">{t('profileSetup.state')} *</Label>
                     <Input
@@ -428,6 +526,8 @@ const ProfileSetup = () => {
                       required
                     />
                   </div>
+            </div>
+            <div className={sv(2)}>
                   <div>
                     <Label htmlFor="graduationYear">{t('profileSetup.graduationYear')} *</Label>
                     <Input
@@ -441,8 +541,10 @@ const ProfileSetup = () => {
                       required
                     />
                   </div>
+            </div>
                 </div>
 
+            <div className={sv(1)}>
                 <div>
                   <Label htmlFor="position">{t('profileSetup.position')} *</Label>
                   <Input
@@ -453,7 +555,9 @@ const ProfileSetup = () => {
                     required
                   />
                 </div>
+            </div>
 
+            <div className={sv(1)}>
                 <div>
                   <Label htmlFor="experienceLevel">{t('profileSetup.experienceLevel')} *</Label>
                   <Select value={experienceLevel} onValueChange={setExperienceLevel} required>
@@ -468,7 +572,9 @@ const ProfileSetup = () => {
                     </SelectContent>
                   </Select>
                 </div>
+            </div>
 
+            <div className={sv(3)}>
                 <div>
                   <Label htmlFor="teamAffiliation">{t('profileSetup.teamAffiliation')} *</Label>
                   <Input
@@ -479,7 +585,9 @@ const ProfileSetup = () => {
                     required
                   />
                 </div>
+            </div>
 
+            <div className={sv(1)}>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="throwingHand">{t('profileSetup.throwingHand')}</Label>
@@ -508,7 +616,9 @@ const ProfileSetup = () => {
                     </Select>
                   </div>
                 </div>
+            </div>
 
+            <div className={sv(3)}>
                 <div>
                   <Label htmlFor="commitmentStatus">{t('profileSetup.commitmentStatus')}</Label>
                   <Select value={commitmentStatus} onValueChange={setCommitmentStatus}>
@@ -702,6 +812,7 @@ const ProfileSetup = () => {
                     </div>
                   </>
                 )}
+            </div>
               </>
             )}
 
@@ -743,6 +854,7 @@ const ProfileSetup = () => {
               </>
             )}
 
+            <div className={sv(3)}>
             <div>
               <Label htmlFor="bio">{t('profileSetup.bioOptional')}</Label>
               {isPlayer && (
@@ -762,8 +874,10 @@ const ProfileSetup = () => {
                 {t('profileSetup.characterCount', { count: bio.length })}
               </p>
             </div>
+            </div>
             
             {/* Credentials (Optional) */}
+            <div className={sv(3)}>
             <div>
               <Label className="text-sm font-semibold">{t('profileSetup.experienceCredentials')}</Label>
               <p className="text-xs text-muted-foreground mb-2">
@@ -810,17 +924,42 @@ const ProfileSetup = () => {
                 )}
               </div>
             </div>
+            </div>
           </div>
 
-          <Button 
-            onClick={handleCompleteSetup} 
-            className="w-full" 
-            size="lg"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? t('profileSetup.creatingProfile') : "Complete Profile & Continue"}
-          </Button>
-          <p className="text-xs text-muted-foreground text-center mt-2">
+          {isPlayer && pStep < 3 ? (
+            <div className="flex gap-3 sticky bottom-0 bg-card pt-3 pb-[var(--safe-bottom)]">
+              {pStep > 0 && (
+                <Button variant="outline" size="lg" className="flex-1" onClick={goBackStep}>Back</Button>
+              )}
+              <Button size="lg" className="flex-1" onClick={goNextStep}>Next</Button>
+            </div>
+          ) : (
+            <div className="flex gap-3 sticky bottom-0 bg-card pt-3 pb-[var(--safe-bottom)]">
+              {isPlayer && (
+                <Button variant="outline" size="lg" className="flex-1" onClick={goBackStep} disabled={isSubmitting}>Back</Button>
+              )}
+              <Button
+                onClick={() => {
+                  if (isPlayer) { const err = stepError(3); if (err) { toast({ title: "One more thing", description: err, variant: "destructive" }); return; } }
+                  handleCompleteSetup();
+                }}
+                className="flex-1"
+                size="lg"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? t('profileSetup.creatingProfile') : isPlayer ? "Finish" : "Complete Profile & Continue"}
+              </Button>
+            </div>
+          )}
+          {user && (
+            <NotificationPrimer
+              uid={user.id}
+              open={primerOpen}
+              onDone={() => { setPrimerOpen(false); if (pendingNav) navigate(pendingNav, { replace: true }); }}
+            />
+          )}
+          <p className={`text-xs text-muted-foreground text-center mt-2 ${isPlayer && pStep < 3 ? "hidden" : ""}`}>
             {isPlayer ? "Next: Choose your access" : "Next: Your dashboard"}
           </p>
         </div>
