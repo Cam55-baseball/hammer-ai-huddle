@@ -665,6 +665,7 @@ function HammerDailyPlanBody({
   const planAdjust = usePlanAdjustments(bodyPlanDate);
   const { data: rankedFaults = [] } = useFaultLedger();
   const drillCirculation = useDrillCirculation();
+  const influencedLoggedServe = useRef<string | null>(null);
   // Game-day defense override — athlete-owned, one tap, resets each day.
   const defenseOverrideKey = `hammer.defenseFull.${bodyPlanDate}`;
   const [defenseFullOverride, setDefenseFullOverrideState] = useState(false);
@@ -751,10 +752,10 @@ function HammerDailyPlanBody({
   );
   const influencedServeKey = influencedDrillIds.join("|");
   useEffect(() => {
-    if (influencedDrillIds.length > 0) drillCirculation.log(influencedDrillIds, "served");
-    // One serve record per stable daily selection, not per render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [influencedServeKey]);
+    if (!influencedServeKey || influencedLoggedServe.current === influencedServeKey) return;
+    influencedLoggedServe.current = influencedServeKey;
+    drillCirculation.log(influencedDrillIds, "served");
+  }, [drillCirculation.log, influencedDrillIds, influencedServeKey]);
   const adjustApi = useMemo<PlanAdjustApi>(
     () => ({
       save: planAdjust.save,
