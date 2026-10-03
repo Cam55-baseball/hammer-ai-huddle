@@ -1,4 +1,5 @@
 # Demo polish
+- [ ] Verify weather Game Day Prep 2B-only move with screenshot; audit six analysis Report Card gates, server refusal, and regular-user coaching; research Stripe in-app checkout risks without changing payments
 - [x] Remove every Pick your path tour reference
 - [x] Record the owner doctrine outside tours
 - [x] Confirm temporary programmes remain excluded
