@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * Owner Alert Center — full-page view of every owner_alerts row.
  * Critical, unacknowledged alerts pinned at the top in red. Each row can be
@@ -113,7 +114,7 @@ export default function OwnerAlertCenter() {
     else toast.success('Test alert fired — check the bell.');
   };
 
-  if (ownerLoading) return <div className="p-8 text-sm text-muted-foreground">Loading…</div>;
+  if (ownerLoading) return <HMLoadingFallback />;
   if (!isOwner) {
     return (
       <div className="p-8">
