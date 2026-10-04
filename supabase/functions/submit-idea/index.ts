@@ -34,7 +34,8 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Hammers Modality <onboarding@resend.dev>',
+        from: EMAIL_FROM,
+        reply_to: EMAIL_REPLY_TO,
         to: ['hammersmodality@hammersmodality.org'],
         subject: `💡 New Idea Submission from Hammers Modality`,
         html: `

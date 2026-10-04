@@ -103,7 +103,8 @@ async function sendWithResend(to: string, subject: string, html: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Hammers Modality <onboarding@resend.dev>",
+      from: EMAIL_FROM,
+      reply_to: EMAIL_REPLY_TO,
       to: [to],
       subject,
       html,

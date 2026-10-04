@@ -55,7 +55,8 @@ async function sendWithResend(params: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Hammers Modality <onboarding@resend.dev>",
+      from: EMAIL_FROM,
+      reply_to: EMAIL_REPLY_TO,
       to: [params.to],
       subject: params.subject,
       html: params.html,
