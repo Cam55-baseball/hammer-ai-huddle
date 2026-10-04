@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -448,15 +449,7 @@ export default function AdminTrainingIntelligence() {
     await load();
   };
 
-  if (gateLoading || (allowed && loading)) {
-    return (
-      <DashboardLayout>
-        <div className="flex h-64 items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (gateLoading || (allowed && loading))  return <HMLoadingFallback />;
   if (!allowed) return null;
 
   const uniq = (vals: Array<string | null>) =>

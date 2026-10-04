@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -181,15 +182,7 @@ export default function TexVision() {
 
   // CRITICAL FIX: Wait for BOTH auth AND access loading to complete
   // This prevents showing "locked" state while roles/subscriptions are being fetched
-  if (authLoading || accessLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--tex-vision-primary))]" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (authLoading || accessLoading)  return <HMLoadingFallback />;
 
   // Access denied - show locked state
   // Purchase hidden: locked modules show a neutral unavailable state, with no

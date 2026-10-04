@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -150,13 +151,7 @@ export default function SharedActivity() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background pt-safe pb-safe">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  if (loading)  return <HMLoadingFallback />;
 
   if (error || !sharedData) {
     return (

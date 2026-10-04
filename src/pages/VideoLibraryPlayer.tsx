@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -133,16 +134,7 @@ const VideoLibraryPlayer = () => {
   const displayDescription = translated?.description || video?.description || '';
   const displayNotes = translated?.notes || (video as any)?.notes || '';
 
-  if (loading) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="aspect-video w-full" />
-        <Skeleton className="h-6 w-64" />
-        <Skeleton className="h-20 w-full" />
-      </div>
-    );
-  }
+  if (loading)  return <HMLoadingFallback />;
 
   if (!video) {
     return (

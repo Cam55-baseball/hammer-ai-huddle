@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -444,15 +445,7 @@ export default function ScoutEvaluation() {
     }
   };
 
-  if (authLoading || accessLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center py-24">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (authLoading || accessLoading)  return <HMLoadingFallback />;
 
   if (!user || !canSendActivities) {
     return (

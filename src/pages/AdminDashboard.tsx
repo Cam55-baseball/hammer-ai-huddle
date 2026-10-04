@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { VIDEO_PUBLIC_COLUMNS, withStaffScores } from "@/lib/reportCard/staffVideoScores";
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -197,13 +198,7 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading || authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  if (loading || authLoading)  return <HMLoadingFallback />;
 
   if (!isAdmin) {
     return null;

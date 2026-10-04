@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -175,17 +176,7 @@ export default function Rankings() {
   const TrendIcon = userRank?.trend_direction === "rising" ? TrendingUp : userRank?.trend_direction === "dropping" ? TrendingDown : Minus;
   const trendColor = userRank?.trend_direction === "rising" ? "text-green-500" : userRank?.trend_direction === "dropping" ? "text-red-500" : "text-muted-foreground";
 
-  if (accessLoading) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-64 w-full" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (accessLoading)  return <HMLoadingFallback />;
 
   if (!canViewRankings) {
     return (

@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 // Force module rebuild - Mar 2026
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -413,23 +414,7 @@ export default function Dashboard() {
     );
   };
 
-  if (authLoading || loading || subLoading || scoutLoading) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <div className="h-8 w-64 bg-muted animate-pulse rounded" />
-            <div className="h-4 w-96 bg-muted animate-pulse rounded" />
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <DashboardModuleSkeleton />
-            <DashboardModuleSkeleton />
-            <DashboardModuleSkeleton />
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (authLoading || loading || subLoading || scoutLoading)  return <HMLoadingFallback />;
 
   const moduleCardsSection = (
     <>

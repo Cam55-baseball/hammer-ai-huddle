@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -144,7 +145,7 @@ export default function IqLibrary() {
     };
   }, [listQ.data]);
 
-  if (loading) return <DashboardLayout><div className="p-8">Loading…</div></DashboardLayout>;
+  if (loading) return <HMLoadingFallback />;
   if (!isOwner) return null;
 
   return (

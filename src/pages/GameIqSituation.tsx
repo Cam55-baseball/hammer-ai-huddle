@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -73,17 +74,7 @@ export default function GameIqSituation() {
 
 
 
-  if (q.isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="max-w-3xl mx-auto p-4 space-y-4">
-          <Skeleton className="h-8 w-1/2" />
-          <Skeleton className="aspect-square w-full" />
-          <Skeleton className="h-32 w-full" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (q.isLoading)  return <HMLoadingFallback />;
   if (!q.data) {
     return (
       <DashboardLayout>

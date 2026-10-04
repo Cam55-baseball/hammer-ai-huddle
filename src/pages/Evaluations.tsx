@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useMemo, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -91,15 +92,7 @@ export default function Evaluations() {
   const awaiting = filed.filter((r) => !r.player_confirmed).length;
 
 
-  if (authLoading || accessLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center py-24">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (authLoading || accessLoading)  return <HMLoadingFallback />;
 
   // Signed-out visitors were seeing the full app shell with an empty hub.
   if (!user) return <Navigate to="/auth" replace />;

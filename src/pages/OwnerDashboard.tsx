@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { VIDEO_PUBLIC_COLUMNS, withStaffScores } from "@/lib/reportCard/staffVideoScores";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -515,13 +516,7 @@ const OwnerDashboard = () => {
     }
   };
 
-  if (loading || dataLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  if (loading || dataLoading)  return <HMLoadingFallback />;
 
   if (!isOwner) {
     return null;

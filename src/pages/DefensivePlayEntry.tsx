@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * Evaluator-facing defensive play entry (pre-release, staff-gated route).
  * Role gate matches Combine entry: active scout or coach only.
@@ -134,15 +135,7 @@ export default function DefensivePlayEntry() {
     }
   };
 
-  if (accessLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[300px]">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (accessLoading)  return <HMLoadingFallback />;
 
   return (
     <DashboardLayout>

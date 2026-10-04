@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,9 +12,7 @@ export default function LandingDemoManager() {
   const goBack = useSmartBack();
   const { isOwner, loading } = useOwnerAccess();
 
-  if (loading) {
-    return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
-  }
+  if (loading)  return <HMLoadingFallback />;
 
   if (!isOwner) {
     return (

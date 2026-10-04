@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * IqCombos — owner-facing composite alignment presets.
  *
@@ -134,7 +135,7 @@ export default function IqCombos() {
     return p?.preset_key ?? "—";
   }, [presetsQ.data, editing?.base_alignment_id]);
 
-  if (ownerLoading) return <DashboardLayout><div className="p-8">Loading…</div></DashboardLayout>;
+  if (ownerLoading) return <HMLoadingFallback />;
   if (!isOwner) {
     return (
       <DashboardLayout>

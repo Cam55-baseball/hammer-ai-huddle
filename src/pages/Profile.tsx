@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { HeightFeetInchesInput } from "@/components/shared/HeightFeetInchesInput";
 import { useEffect, useState } from "react";
 import { DelayCamSessionsCard } from "@/components/profile/DelayCamSessionsCard";
@@ -591,13 +592,7 @@ export default function Profile() {
     }
   };
 
-  if (authLoading || subLoading || ownerLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  if (authLoading || subLoading || ownerLoading)  return <HMLoadingFallback />;
 
   if (!user) return null;
 

@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * Evaluator-facing throwing rep entry (pre-release, staff-gated route).
  * Position context is load-bearing: an outfield throw and an infield throw
@@ -76,15 +77,7 @@ export default function ThrowingRepEntry() {
     }
   };
 
-  if (accessLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[300px]">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (accessLoading)  return <HMLoadingFallback />;
 
   if (!canSendActivities) {
     return (

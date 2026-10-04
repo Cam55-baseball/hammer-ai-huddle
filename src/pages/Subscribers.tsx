@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users2, Target, Search } from "lucide-react";
@@ -179,19 +180,7 @@ export default function Subscribers() {
     };
   };
 
-  if (ownerLoading || loading) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <Skeleton className="h-10 w-64" />
-          <div className="grid gap-4 md:grid-cols-1">
-            <Skeleton className="h-32" />
-          </div>
-          <Skeleton className="h-64" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (ownerLoading || loading)  return <HMLoadingFallback />;
 
   if (!isOwner) {
     return null;

@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -130,16 +131,7 @@ export default function TodaySession() {
     navigate("/today");
   }
 
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="mx-auto max-w-xl space-y-3 p-4">
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-48 w-full" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (isLoading)  return <HMLoadingFallback />;
 
   if (!rx.blocks.length) {
     return (

@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PlayerSearchFilters } from '@/components/PlayerSearchFilters';
@@ -239,15 +240,7 @@ export default function CoachDashboard() {
     } finally { setIsUnfollowing(false); }
   };
 
-  if (authLoading || loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (authLoading || loading)  return <HMLoadingFallback />;
 
   const followingCount = following.length;
   const activeOrg = myOrgs.data?.[0];
