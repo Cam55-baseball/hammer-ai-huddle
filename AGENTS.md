@@ -17,3 +17,4 @@
 - The landing opening uses a full first-install sequence and a skippable short sequence on subsequent document launches; it waits for the landing page before the final wipe. Why: preserve the owner's launch identity without revealing an unloaded page.
 - Client reads and write-backs on `videos` must name their columns (`.select('id')`, `VIDEO_PUBLIC_COLUMNS`); never bare `.select()` or `'*'`. Why: score columns are locked from direct reads, so a whole-row read-back makes the save itself fail.
 - Video save failures go through `src/lib/upload/saveFailure.ts`: true message, reference code, structured `[video-save-failure]` log. Why: a refused save was once shown as "signed out" and noticed only by the owner.
+- Anything a player does must be verified signed in as a player (or the exact role affected), never only as owner/admin. Why: two fixes passed as owner and failed for real players (2026-10-04); owner accounts skip subscription and access gates.
