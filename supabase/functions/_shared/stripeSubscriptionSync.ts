@@ -226,16 +226,45 @@ export async function syncCustomer(opts: SyncOptions): Promise<SyncRow> {
 
   const hasPendingCancellations = Object.values(moduleMapping).some((m: any) => m.cancel_at_period_end);
 
-  const activeTier = activeModules.find((m) => m.includes("golden2way")) ? "golden2way"
-    : activeModules.find((m) => m.includes("5tool")) ? "5tool"
-    : activeModules.find((m) => m.includes("pitcher")) ? "pitcher"
+  // Preserve manual (hand-granted) modules from the current row.
+  // Manual = module whose key is missing from the current mapping, or whose
+  // mapping entry's subscription_id does not start with "sub_".
+  let currentRow = opts.currentRow;
+  if (currentRow === undefined) {
+    const { data, error } = await supabase
+      .from("subscriptions")
+      .select("subscribed_modules, module_subscription_mapping")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw new Error(`subscriptions read failed: ${error.message}`);
+    currentRow = data ?? null;
+  }
+  const curModules: string[] = Array.isArray(currentRow?.subscribed_modules) ? currentRow.subscribed_modules : [];
+  const curMapping: Record<string, any> =
+    currentRow?.module_subscription_mapping && typeof currentRow.module_subscription_mapping === "object"
+      ? currentRow.module_subscription_mapping : {};
+  const manualModules = curModules.filter((m) => {
+    const entry = curMapping[m];
+    if (!entry) return true;
+    const sid = typeof entry.subscription_id === "string" ? entry.subscription_id : "";
+    return !sid.startsWith("sub_");
+  });
+  const finalModules = [...new Set([...activeModules, ...manualModules])];
+  const finalMapping: Record<string, any> = { ...moduleMapping };
+  for (const m of manualModules) {
+    if (curMapping[m] && !(m in finalMapping)) finalMapping[m] = curMapping[m];
+  }
+
+  const activeTier = finalModules.find((m) => m.includes("golden2way")) ? "golden2way"
+    : finalModules.find((m) => m.includes("5tool")) ? "5tool"
+    : finalModules.find((m) => m.includes("pitcher")) ? "pitcher"
     : null;
 
   const row: SyncRow = {
     user_id: userId,
-    status: activeModules.length > 0 ? "active" : "inactive",
-    subscribed_modules: activeModules,
-    module_subscription_mapping: moduleMapping,
+    status: finalModules.length > 0 ? "active" : "inactive",
+    subscribed_modules: finalModules,
+    module_subscription_mapping: finalMapping,
     has_pending_cancellations: hasPendingCancellations,
     stripe_customer_id: customerId,
     stripe_subscription_id: subIds.join(","),
