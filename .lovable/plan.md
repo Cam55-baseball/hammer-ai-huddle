@@ -1,50 +1,43 @@
-# API key / secret inventory (read-only)
+# Daily surfaces — findings, owner decisions, and implementation plan
 
-Nothing was changed. Names only — no values.
+No app code has been changed for this request. Nothing will be published, deployed, redeployed, or migrated. The player upload retest remains outstanding and is outside this work.
 
-## 1. Secrets configured in the backend (11)
+## What is there now
 
-| Secret | Service | What it does | Used by |
-|---|---|---|---|
-| STRIPE_SECRET_KEY | Stripe | Charges, subscriptions, refunds, account deletion cleanup | create-checkout, create-bundle-checkout, create-build-checkout, customer-portal, cancel-module-subscription, cancel-all-subscriptions, admin-cancel-user-subscriptions, admin-delete-user, delete-account |
-| STRIPE_WEBHOOK_SECRET | Stripe | Verifies that webhook calls really come from Stripe | stripe-webhook |
-| OPENAI_API_KEY | OpenAI (your own key, not the built-in gateway) | Powers most AI features: video analysis, report cards, chat, meal/training generation, league classification, hydration, game-plan analysis | analyze-video, ai-helpdesk, analyze-base-stealing-rep, analyze-hydration-beverage, analyze-hydration-text, calculate-regulation, classify-league, coach-hammer-next-step, generate-block-workout, generate-drills, generate-training-block, generate-vault-recap, generate-warmup, get-owner-profile, gp-analyze-ab-swing, gp-ingest-document, and more via _shared/googleAi.ts |
-| GOOGLE_AI_API_KEY | Google Gemini (your own key) | Backup/alternate AI model for the same features | Same set as above via _shared/googleAi.ts |
-| RESEND_API_KEY | Resend | Sends transactional email (recaps, recruiting matches, idea box, guardian notice, subscription feedback) | send-recap-email, send-recruiting-match-emails, submit-idea, notify-guardian-minor-signup, send-subscription-feedback |
-| ROBOFLOW_API_KEY | Roboflow | Hosted ball-tracking model for pitch velocity measurement | pitch-velocity-measure |
-| OWNER_INIT_KEY | Internal | One-time password for the owner-initialization screen | initialize-owner, populate-drill-instructions |
-| Owner_Key | Internal | Header password for the drill-instructions backfill | populate-drill-instructions |
-| TCS_RUNNER_TOKEN | Internal | Token for the test-runner function | tcs-test-runner |
-| OPENWEATHER_API_KEY | OpenWeather | **Not used anywhere in code** (see §3) | — |
-| LOVABLE_API_KEY | Lovable AI gateway (managed) | **Not referenced by any code** (see §5) | — |
+| Item | Current home | Proposed home |
+|---|---|---|
+| Day intent (Rest / Skip / Push, explanation, rest budget) | Expanded Identity card | Final control of morning check-in, immediately before Finish; preserve its existing `useDayState` write and safe failure behavior. This is distinct from the free-text morning “Mental Wellness” field and the separate Start Line narrative. |
+| Develop this week (`focusSentence`) | Within Today's Standard in expanded Identity card | Morning completion message, once |
+| Today's Standard (sentence, rationale, confirm action, motivational closer) | Expanded Identity card | Morning completion message, once, retaining confirmation/write behavior |
+| Due today (recap, photos, performance re-test, self-grades, wellness) | `ScheduledPriorityStrip` inside Before You Start | Morning completion message, once, still based on its existing due-task hook |
+| “Why this matters” | **The quoted “Game ready production • Strength focus • 3 Weeks left” card is not present in this checkout.** Nearest live surface is the adaptive-phase strip, including “Why this phase matters,” in Before You Start. | Need the owner to identify whether this adaptive-phase strip is the intended card before moving it. Do not substitute silently. |
+| Schedule & What Changed | Collapsible schedule wrapper in Before You Start | Compact, collapsed identity-card affordance retaining all the existing schedule actions |
 
-Also present automatically (platform-provided, not secrets you set): SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY — used by nearly every function to talk to the database.
+The identity card now has an always-visible tier/streak/status header; its expanded panel contains Today's Standard and Develop this week, Day intent and rest budget, and One Thing (a rotating alert). After the proposed moves, the expanded identity panel would retain One Thing, plus a compact, collapsed schedule affordance and, if confirmed, one compact phase/why affordance — not three new open cards. The existing always-visible status stays. Before/after **phone screenshots are not yet available**; they must be captured and compared before calling the result cleaner.
 
-## 2. Configured but unused / read but not configured
+**Document conflict to resolve first:** `docs/wic/adaptive-phases-and-schedule-v1.2.md` explicitly says the phase explanation belongs **inside Before You Start** and to add nothing else to that drawer. Moving the adaptive-phase explanation to Identity would contradict that owner-directed document. Do not move it until the owner confirms this new direction supersedes that placement; then update the relevant placement documentation together with the UI. No unrelated logic changes.
 
-**Configured but never read by code:**
-- OPENWEATHER_API_KEY — the weather feature (get-weather) uses free no-key services (weather.gov, Open-Meteo, Zippopotam). Safe to remove later.
-- LOVABLE_API_KEY — no function calls the Lovable AI gateway; all AI goes through your own OpenAI/Gemini keys. Keep it (it's managed by the platform), just note nothing uses it.
+### Before You Start: present and proposed
 
-**Read by code but NOT configured (feature would fail or fall back):**
-- AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, REMOTION_LAMBDA_FUNCTION_NAME, REMOTION_LAMBDA_REGION, REMOTION_S3_BUCKET, REMOTION_SITE_URL — read by render-promo and check-render-status. None are configured, so the Remotion video-render feature is currently dead (see §6).
-- ROBOFLOW_MODEL_ID — read by pitch-velocity-measure but has a built-in default, so it works without the secret.
-- APP_PUBLIC_URL — read by send-recruiting-match-emails; not configured (likely falls back or produces a wrong link — worth a check if that email is used).
-- SLACK_WEBHOOK_URL — read by _shared/notificationAdapters.ts (foundation alerts); not configured, so Slack alerts stay disabled by design per docs/foundations/notification-enablement.md.
+Currently contains adaptive-phase explanation/ramps; Due today; load/volume notices; Schedule & What Changed; Today's Wisdom; fault-driven defensive prep video; Human Performance Intelligence; Start Line; Ask Hammer — Recall & Clarity; Game IQ and fueling blocks; weekly roadmap; ramp lines. Some components only appear when applicable. **Proposed final contents for owner approval:** load/volume notices; Today's Wisdom; fault-driven defensive prep; HPI (pending integration ruling); Start Line; Ask Hammer; fueling; conditional Tex Vision (pending prescription ruling); weekly roadmap and ramp lines. Remove Due today, schedule, and — only if the owner identifies it as the requested card and supersedes the doc — adaptive-phase strip; remove athlete Game IQ prompts. Keep a short, accurate drawer subtitle. If the owner wants the weekly roadmap or HPI elsewhere too, decide before finalizing; preserve each item exactly once per surface.
 
-## 3. Hard-coded keys in code
+## Two proposals to review before rebuilding
 
-None found. A scan for common key patterns (OpenAI, Google, AWS, Stripe, Slack, webhook secrets) across supabase/, src/, scripts/, docs/ found no real keys — only documentation text and the publishable (safe, public-by-design) anon key in .env.
+**Build · In-Season · block not set:** This line is the header of `WeeklyRoadmapStrip` in Before You Start. “Build” comes from the athlete-context training-age/competition projection; missing history defaults conservatively to Build. “In-Season” comes from the season resolver, which can be stored, manual or date-based. “Block not set” means the phase is known but its start date is missing or invalid, so the quarter cannot be placed; this is **not** evidence that no workout or training block exists. A conservative quarter volume ceiling is used. The strip already shows a weekly rhythm, today's modalities and a roadmap explainer, but its fallback only points to Profile when the *phase* is unknown, not when the phase is known and the block start is unknown. Proposal: use the same resolved phase/date and training progression lineage displayed in the daily prescription/workout cards; show a plain-language “season dates needed to place your training block” prompt that opens the existing Season Dates dialog when quarterKnown is false; once set, show the actual phase/week from the same source. Keep safety limits and generator unchanged; do not conflate the roadmap rung with the athlete's training-block record. Await owner ruling.
 
-## 4. AI features: gateway or direct keys?
+**Human Performance Intelligence:** It appears in the Before You Start drawer and separately on Athlete Command. Today it reads the season phase and a one-time localStorage lifestyle intake (typical sleep vs target, water, stress, constitution, preferred training time). A phase-based formula generates a 0–100 score/band, narrative and phase breath primer; without intake it uses a season baseline. It does **not** read current morning check-in, actual recovery/workload, clip findings, or athlete baselines, and does not feed the daily planner. Proposal: first label season-only/missing-input context honestly rather than presenting it as a live readiness score; then connect to the canonical, consent-appropriate check-in, workload/recovery, analysis-finding and baseline selectors, showing dated evidence and missingness. Let the canonical plan/recovery governor remain authoritative; HPI explains why a prescribed action changed, never creates competing doses or medical claims. Reuse its breath primer where prescribed. Await owner specification before changing scoring or authority.
 
-**Direct provider keys, not the Lovable gateway.** Every AI function reads OPENAI_API_KEY and/or GOOGLE_AI_API_KEY via _shared/googleAi.ts or directly. No code references LOVABLE_API_KEY. This matches the known state from the upload incident: the OpenAI account hit its usage limit and the Gemini account ran out of prepaid credit — those are your own provider accounts being billed.
+## Reachability and prescription audit
 
-## 5. AWS / Remotion leftovers
+Game IQ is **not open to regular athletes**: `/iq`, `/iq/review`, and `/iq/:slug` are owner-only behind `GameIqLock` and show Coming Soon to everyone else. Yet `dailyPlan.ts` generates a ready Game IQ block and `weeklyMicrocycle.ts` treats it as a daily anchor, making it appear inside Before You Start with a Start reps CTA. Owner-only authoring can remain. The module landing tiles in Complete Hitter/Pitcher and Five Tool/Golden Two-Way also link to `/iq`; those currently tell athletes “coming soon” rather than being actionable reps, but should not be presented as prescribed work. Remove athlete-facing Game IQ prescriptions at the **presentation edge**, not in the frozen plan generator or scheduler; keep staff/owner testing intact and filter associated athlete plan/roadmap labels where needed.
 
-**Yes, still referenced.** render-promo and check-render-status still read the AWS and Remotion secrets listed above. The secrets themselves are no longer configured (already removed), so these two functions cannot work — they are dead code awaiting a decision: remove the functions, or restore the keys. The remotion/ folder at the project root also still exists.
+Tex Vision `/tex-vision` is gated by hitting entitlement (or owner/admin). There is **no Tex Vision block in the daily plan today**. `useNextAction` contains a time-of-day morning Tex Vision recommendation, independent of access or plan state, but a source search found no active callers. Proposed prescription: show it inside Before You Start **only when the existing plan's hitting work and athlete state justify it and `useTexVisionAccess` confirms it is open**; never pin it every day or silently substitute an inaccessible CTA. Await owner ruling on plan-driven versus always before implementing this new recommendation. Other inspected drawer actions target existing authenticated routes or inline video; the due-task module checks gate self-grades. Full athlete-role navigation testing is still required; a route existing in code is not proof it is open for every plan.
 
-## Notes
+Record the rule in `AGENTS.md`: **Never prescribe or recommend an athlete action the affected athlete cannot open; verify athlete actions as an athlete, not only as owner.**
 
-- "Owner_Key" duplicates OWNER_INIT_KEY's purpose in one function; harmless but could be consolidated later.
-- No action taken; removal of OPENWEATHER_API_KEY, the dead Remotion functions, and the remotion/ folder each await your explicit instruction.
+## After the owner decides
+
+1. Resolve the adaptive-phase document/identity-card conflict and confirm the final drawer list and Tex Vision rule. No block-card or HPI rebuild until their proposals are approved.
+2. Move the named UI pieces without duplicates; add a morning post-completion screen using the night success screen's visual pattern, keep the dialog open after a successful morning save until the athlete dismisses it, and preserve existing writes. Place Day intent last before Finish; handle save errors honestly.
+3. Suppress inaccessible Game IQ prompts at the athlete display boundary without touching frozen generation; gate any conditional Tex Vision prompt on real access.
+4. Test mobile layout and both check-in paths; capture actual phone-viewport before/after identity, Before You Start, final morning check-in, and morning completion screenshots. Verify as an athlete, not as owner. If the preview lacks an athlete session or screenshots cannot be obtained, report that limitation rather than claiming verification.
