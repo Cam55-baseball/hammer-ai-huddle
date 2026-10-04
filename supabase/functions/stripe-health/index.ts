@@ -55,7 +55,15 @@ async function hmacHex(secret: string, msg: string) {
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(msg));
   return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
-const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e)).slice(0, 300);
+// Redact any API key / secret pattern before an error string is returned or logged
+// (Stripe's own error text echoes a masked key).
+const sanitize = (s: string) =>
+  s
+    .replace(/(sk|rk|pk)_(live|test)_[A-Za-z0-9*]+/g, "[redacted]")
+    .replace(/whsec_[A-Za-z0-9]+/g, "[redacted]")
+    .replace(/re_[A-Za-z0-9_]+/g, "[redacted]");
+const errMsg = (e: unknown) => sanitize(e instanceof Error ? e.message : String(e)).slice(0, 300);
+const bodySnippet = (t: string) => sanitize(t).slice(0, 200);
 async function section<T>(fn: () => Promise<T>): Promise<T | { error: string }> {
   try { return await fn(); } catch (e) { return { error: errMsg(e) }; }
 }
