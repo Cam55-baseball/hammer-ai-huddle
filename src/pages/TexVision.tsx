@@ -187,7 +187,13 @@ export default function TexVision() {
   // Access denied - show locked state
   // Purchase hidden: locked modules show a neutral unavailable state, with no
   // price, no "subscribe" and no link out. See src/lib/purchase/purchaseGate.ts.
-  if (!hasAccess && (!canShowPurchaseUI || isStaffAccount || roleLoading))  return <HMLoadingFallback />;
+  if (!hasAccess && (!canShowPurchaseUI || isStaffAccount || roleLoading)) {
+    return (
+      <DashboardLayout>
+        <PurchaseUnavailable variant="full" />
+      </DashboardLayout>
+    );
+  }
 
   if (!hasAccess) {
     return (
