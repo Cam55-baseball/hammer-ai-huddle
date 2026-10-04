@@ -5,6 +5,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { buildEmailIndex, syncCustomer } from "../_shared/stripeSubscriptionSync.ts";
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "../_shared/email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -381,7 +382,6 @@ async function selftest(stripe: Stripe, supabase: any) {
 // ----------------------------------------------------------------- email_test
 // Sends exactly one email to Resend's test inbox, using the same "from" address
 // as send-recap-email / notify-guardian-minor-signup.
-const EMAIL_FROM = "Hammers Modality <onboarding@resend.dev>";
 async function emailTest() {
   const k = Deno.env.get("RESEND_API_KEY");
   if (!k) return { configured: false };
@@ -390,6 +390,7 @@ async function emailTest() {
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${k}` },
     body: JSON.stringify({
       from: EMAIL_FROM,
+      reply_to: EMAIL_REPLY_TO,
       to: ["delivered@resend.dev"],
       subject: "Hammers Modality email health check",
       text: "Automated email health check from stripe-health. No action needed.",
