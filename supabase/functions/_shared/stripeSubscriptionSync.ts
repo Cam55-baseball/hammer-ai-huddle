@@ -110,6 +110,8 @@ export interface SyncOptions {
   /** Pre-fetched subscriptions for this customer (same set the default list returns: status != canceled). */
   subscriptions?: Stripe.Subscription[];
   productCache?: Map<string, Stripe.Product>;
+  /** undefined = read the current row; null = no row exists; object = pre-fetched row. */
+  currentRow?: { subscribed_modules?: string[] | null; module_subscription_mapping?: any } | null;
   log?: (step: string, details?: unknown) => void;
 }
 
@@ -282,14 +284,14 @@ export async function syncCustomer(opts: SyncOptions): Promise<SyncRow> {
 
   const { error } = await supabase.from("subscriptions").upsert(upsertRow, { onConflict: "user_id" });
   if (error) throw new Error(`subscriptions upsert failed: ${error.message}`);
-  log("Database updated", { userId, activeModules, hasPendingCancellations });
+  log("Database updated", { userId, finalModules, hasPendingCancellations });
 
   try {
     const channel = supabase.channel(`subscription:${userId}`);
     await channel.send({
       type: "broadcast",
       event: "updated",
-      payload: { active_modules: activeModules, tier: activeTier },
+      payload: { active_modules: finalModules, tier: activeTier },
     });
     await supabase.removeChannel(channel);
   } catch (e) {
