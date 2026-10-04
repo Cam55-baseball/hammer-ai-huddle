@@ -378,15 +378,54 @@ async function selftest(stripe: Stripe, supabase: any) {
   return result;
 }
 
+// ----------------------------------------------------------------- email_test
+// Sends exactly one email to Resend's test inbox, using the same "from" address
+// as send-recap-email / notify-guardian-minor-signup.
+const EMAIL_FROM = "Hammers Modality <onboarding@resend.dev>";
+async function emailTest() {
+  const k = Deno.env.get("RESEND_API_KEY");
+  if (!k) return { configured: false };
+  const r = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${k}` },
+    body: JSON.stringify({
+      from: EMAIL_FROM,
+      to: ["delivered@resend.dev"],
+      subject: "Hammers Modality email health check",
+      text: "Automated email health check from stripe-health. No action needed.",
+    }),
+  });
+  const t = await r.text();
+  return { from: EMAIL_FROM, http_status: r.status, ...(r.status !== 200 ? { error: bodySnippet(t) } : {}) };
+}
+
+// ------------------------------------------------------- fix_webhook_events
+// Adds any missing required events to OUR webhook endpoint only.
+async function fixWebhookEvents(stripe: Stripe) {
+  let ours: Stripe.WebhookEndpoint | null = null;
+  for await (const ep of stripe.webhookEndpoints.list({ limit: 100 })) {
+    if (ep.url === WEBHOOK_URL && ep.status === "enabled") { ours = ep; break; }
+    if (ep.url === WEBHOOK_URL && !ours) ours = ep;
+  }
+  if (!ours) return { error: "no webhook endpoint points at the app webhook url" };
+  const before = ours.enabled_events ?? [];
+  if (before.includes("*")) return { endpoint_id: ours.id, events_before: before, events_after: before, changed: false };
+  const missing = REQUIRED_EVENTS.filter((e) => !before.includes(e));
+  if (missing.length === 0) return { endpoint_id: ours.id, events_before: before, events_after: before, changed: false };
+  const after = [...before, ...missing];
+  await stripe.webhookEndpoints.update(ours.id, { enabled_events: after as Stripe.WebhookEndpointUpdateParams.EnabledEvent[] });
+  return { endpoint_id: ours.id, events_before: before, events_after: after, changed: true };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const token = req.headers.get("x-reconcile-token");
   if (!token || !safeEqual(await sha256Hex(token), TOKEN_SHA256)) return json({ error: "unauthorized" }, 401);
 
-  let action: "health" | "selftest" = "health";
+  let action: "health" | "selftest" | "email_test" | "fix_webhook_events" = "health";
   try {
     const body = await req.json();
-    if (body?.action === "selftest") action = "selftest";
+    if (body?.action === "selftest" || body?.action === "email_test" || body?.action === "fix_webhook_events") action = body.action;
   } catch { /* default health */ }
 
   try {
@@ -396,7 +435,10 @@ serve(async (req) => {
     const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "", {
       auth: { persistSession: false },
     });
-    const data = action === "selftest" ? await selftest(stripe, supabase) : await health(stripe, stripeKey, supabase);
+    const data = action === "selftest" ? await selftest(stripe, supabase)
+      : action === "email_test" ? await emailTest()
+      : action === "fix_webhook_events" ? await fixWebhookEvents(stripe)
+      : await health(stripe, stripeKey, supabase);
     return json({ action, ...data });
   } catch (e) {
     console.error(`[STRIPE-HEALTH] ERROR - ${errMsg(e)}`);
