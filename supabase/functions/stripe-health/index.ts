@@ -4,7 +4,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { buildEmailIndex, syncCustomer } from "../_shared/stripeSubscriptionSync.ts";
+import { buildEmailIndex, resolveUserId, syncCustomer } from "../_shared/stripeSubscriptionSync.ts";
 import { EMAIL_FROM, EMAIL_REPLY_TO } from "../_shared/email.ts";
 
 const corsHeaders = {
@@ -219,6 +219,19 @@ async function health(stripe: Stripe, stripeKey: string, supabase: any) {
     return { total_auth_users: users.length, email_index_size: idx.size, match: users.length === idx.size };
   });
 
+  out.deliveries = await section(async () => {
+    const since = Math.floor(Date.now() / 1000) - 7 * 86400;
+    let total = 0;
+    for await (const _e of stripe.events.list({ created: { gte: since }, limit: 100 })) total++;
+    let undelivered = 0;
+    const recent: any[] = [];
+    for await (const e of stripe.events.list({ created: { gte: since }, delivery_success: false, limit: 100 })) {
+      undelivered++;
+      if (recent.length < 10) recent.push({ type: e.type, id: e.id, created: new Date(e.created * 1000).toISOString() });
+    }
+    return { events_last_7_days: total, undelivered_last_7_days: undelivered, recent_undelivered: recent };
+  });
+
   return out;
 }
 
@@ -418,15 +431,59 @@ async function fixWebhookEvents(stripe: Stripe) {
   return { endpoint_id: ours.id, events_before: before, events_after: after, changed: true };
 }
 
+// ---------------------------------------------------------------- duplicates
+// Read-only: customers holding 2+ live subscriptions on the same price.
+async function duplicates(stripe: Stripe, supabase: any) {
+  const LIVE = new Set(["active", "trialing", "past_due"]);
+  const groups = new Map<string, Stripe.Subscription[]>(); // customer|price
+  for await (const s of stripe.subscriptions.list({ status: "all", limit: 100 })) {
+    if (!LIVE.has(s.status)) continue;
+    const cid = typeof s.customer === "string" ? s.customer : s.customer.id;
+    const priceIds = new Set(s.items.data.map((i) => i.price.id));
+    for (const pid of priceIds) {
+      const k = `${cid}|${pid}`;
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k)!.push(s);
+    }
+  }
+  const dupKeys = [...groups.entries()].filter(([, subs]) => subs.length >= 2);
+  const emailIndex = dupKeys.length ? await buildEmailIndex(supabase) : undefined;
+  const priceCache = new Map<string, any>();
+  const out: any[] = [];
+  for (const [k, subs] of dupKeys) {
+    const [cid, pid] = k.split("|");
+    if (!priceCache.has(pid)) {
+      const p: any = await stripe.prices.retrieve(pid, { expand: ["product"] });
+      priceCache.set(pid, { product_name: typeof p.product === "object" ? p.product?.name ?? null : null, unit_amount: p.unit_amount, currency: p.currency });
+    }
+    const resolved = await resolveUserId({ supabase, stripe, customerId: cid, subscription: subs[0], emailIndex });
+    const subRows: any[] = [];
+    for (const s of subs) {
+      let paid = 0, total = 0;
+      for await (const inv of stripe.invoices.list({ subscription: s.id, status: "paid", limit: 100 })) {
+        paid++; total += inv.amount_paid ?? 0;
+      }
+      const cpe = (s as any).current_period_end ?? s.items.data[0]?.current_period_end ?? null;
+      subRows.push({
+        id: s.id, status: s.status, created: new Date(s.created * 1000).toISOString(),
+        current_period_end: cpe ? new Date(cpe * 1000).toISOString() : null,
+        paid_invoices: paid, total_paid: total,
+      });
+    }
+    out.push({ stripe_customer_id: cid, user_id: resolved.userId, price_id: pid, ...priceCache.get(pid), subscriptions: subRows });
+  }
+  return { duplicate_groups: out.length, duplicates: out };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const token = req.headers.get("x-reconcile-token");
   if (!token || !safeEqual(await sha256Hex(token), TOKEN_SHA256)) return json({ error: "unauthorized" }, 401);
 
-  let action: "health" | "selftest" | "email_test" | "fix_webhook_events" = "health";
+  let action: "health" | "selftest" | "email_test" | "fix_webhook_events" | "duplicates" = "health";
   try {
     const body = await req.json();
-    if (body?.action === "selftest" || body?.action === "email_test" || body?.action === "fix_webhook_events") action = body.action;
+    if (["selftest", "email_test", "fix_webhook_events", "duplicates"].includes(body?.action)) action = body.action;
   } catch { /* default health */ }
 
   try {
@@ -439,6 +496,7 @@ serve(async (req) => {
     const data = action === "selftest" ? await selftest(stripe, supabase)
       : action === "email_test" ? await emailTest()
       : action === "fix_webhook_events" ? await fixWebhookEvents(stripe)
+      : action === "duplicates" ? await duplicates(stripe, supabase)
       : await health(stripe, stripeKey, supabase);
     return json({ action, ...data });
   } catch (e) {
