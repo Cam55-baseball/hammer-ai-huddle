@@ -19,6 +19,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { LaunchOpening } from "@/components/landing/LaunchOpening";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
+import { HMLoadingProvider } from "./components/loading/HMLoadingScreen";
 import { SportThemeProvider } from "./contexts/SportThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SideContextProvider } from "@/contexts/SideContext";
@@ -299,6 +300,7 @@ const App = () => {
           <PWAUpdatePrompt />
           <VideoMomentHost />
           <BrowserRouter>
+            <HMLoadingProvider>
             <LaunchOpening />
             <QuickEditProfileProvider>
             <PurchaseConfirmationWatcher />
@@ -556,6 +558,7 @@ const App = () => {
               </DemoGate>
             </Suspense>
             </QuickEditProfileProvider>
+            </HMLoadingProvider>
           </BrowserRouter>
         </ErrorBoundary>
       </TooltipProvider>

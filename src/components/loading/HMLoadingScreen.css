@@ -1,0 +1,22 @@
+.hm-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: grid;
+  place-items: center;
+  background: hsl(var(--secondary));
+  color: hsl(var(--primary-foreground) / .28);
+  overflow: hidden;
+}
+.hm-loading-mark { width: min(58vw, 280px); height: auto; overflow: visible; }
+.hm-loading-red { fill: hsl(var(--primary)); transform-origin: center bottom; animation: hm-load-rise 2.2s ease-in-out infinite; }
+.hm-loading-white { fill: hsl(var(--primary-foreground)); transform-origin: center bottom; animation: hm-load-rise 2.2s ease-in-out -.65s infinite; opacity: .9; }
+@keyframes hm-load-rise {
+  0% { transform: translate3d(0, 100%, 0); }
+  62% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(0, -100%, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hm-loading-red, .hm-loading-white { animation: none; transform: none; }
+  .hm-loading-white { opacity: .35; }
+}
