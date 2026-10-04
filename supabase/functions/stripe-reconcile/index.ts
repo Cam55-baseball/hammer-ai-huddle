@@ -53,6 +53,7 @@ serve(async (req) => {
     if (body && typeof body.dry_run === "boolean") dryRun = body.dry_run;
   } catch { /* empty body → dry run */ }
 
+  const startedAt = Date.now();
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -74,7 +75,7 @@ serve(async (req) => {
     // 2. Current rows + customers present only in the database.
     const { data: rows, error: rowsErr } = await supabase
       .from("subscriptions")
-      .select("user_id, status, subscribed_modules, tier, stripe_customer_id, has_pending_cancellations");
+      .select("user_id, status, subscribed_modules, tier, stripe_customer_id, has_pending_cancellations, module_subscription_mapping");
     if (rowsErr) throw new Error(`subscriptions read failed: ${rowsErr.message}`);
     const rowByUser = new Map<string, any>((rows ?? []).map((r: any) => [r.user_id, r]));
     for (const r of rows ?? []) {
@@ -107,9 +108,9 @@ serve(async (req) => {
       if (protectedIds.has(resolved.userId)) { counts.skipped_staff++; return; }
 
       // Same set the webhook uses: Stripe's default list (everything except canceled).
-      const liveSubs = subs.filter((s) => s.status !== "canceled");
-      const next = await syncCustomer({ supabase, stripe, customerId, userId: resolved.userId, computeOnly: true, subscriptions: liveSubs, productCache });
       const cur = rowByUser.get(resolved.userId);
+      const liveSubs = subs.filter((s) => s.status !== "canceled");
+      const next = await syncCustomer({ supabase, stripe, customerId, userId: resolved.userId, computeOnly: true, subscriptions: liveSubs, productCache, currentRow: cur ?? null });
       if (!differs(cur, next)) { counts.unchanged++; return; }
 
       const before = slim(cur);
@@ -133,7 +134,7 @@ serve(async (req) => {
       });
 
       if (!dryRun) {
-        await syncCustomer({ supabase, stripe, customerId, userId: resolved.userId, subscriptions: liveSubs, productCache });
+        await syncCustomer({ supabase, stripe, customerId, userId: resolved.userId, subscriptions: liveSubs, productCache, currentRow: cur ?? null });
       }
     };
 
@@ -147,6 +148,17 @@ serve(async (req) => {
       }
     }));
 
+    try {
+      const { error: logErr } = await supabase.from("engine_function_logs").insert({
+        function_name: "stripe-reconcile",
+        status: errors.length > 0 ? "error" : "ok",
+        duration_ms: Date.now() - startedAt,
+        metadata: { dry_run: dryRun, counts, errors_count: errors.length },
+      });
+      if (logErr) console.error(`[RECONCILE] log insert failed - ${logErr.message}`);
+    } catch (e) {
+      console.error(`[RECONCILE] log insert failed - ${e instanceof Error ? e.message : String(e)}`);
+    }
     console.log(`[RECONCILE] done - ${JSON.stringify({ dryRun, ...counts, errors: errors.length })}`);
     return json({ dry_run: dryRun, counts, changes, unmatched, errors });
   } catch (e) {

@@ -103,7 +103,16 @@ serve(async (req) => {
     );
 
     // Get email addresses from auth.users
-    const { data: { users: authUsers }, error: authError } = await supabaseClient.auth.admin.listUsers();
+    let __all: any[] = [];
+    let authError: any = null;
+    for (let page = 1; page <= 500; page++) {
+      const { data, error } = await supabaseClient.auth.admin.listUsers({ page, perPage: 200 });
+      if (error) { authError = error; break; }
+      const batch = data?.users ?? [];
+      __all = __all.concat(batch);
+      if (batch.length < 200) break;
+    }
+    const authUsers = __all;
     
     if (authError) {
       logStep("Error fetching auth users", { error: authError });

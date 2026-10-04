@@ -304,3 +304,6 @@ verify_jwt = true
 
 [functions.stripe-reconcile]
 verify_jwt = true
+
+[functions.stripe-health]
+verify_jwt = true
