@@ -149,12 +149,13 @@ serve(async (req) => {
     }));
 
     try {
-      await supabase.from("engine_function_logs").insert({
+      const { error: logErr } = await supabase.from("engine_function_logs").insert({
         function_name: "stripe-reconcile",
         status: errors.length > 0 ? "error" : "ok",
         duration_ms: Date.now() - startedAt,
         metadata: { dry_run: dryRun, counts, errors_count: errors.length },
       });
+      if (logErr) console.error(`[RECONCILE] log insert failed - ${logErr.message}`);
     } catch (e) {
       console.error(`[RECONCILE] log insert failed - ${e instanceof Error ? e.message : String(e)}`);
     }

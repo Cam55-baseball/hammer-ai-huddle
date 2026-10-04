@@ -58,7 +58,16 @@ serve(async (req) => {
     }
 
     // Look up user by email
-    const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
+    let __all: any[] = [];
+    let userError: any = null;
+    for (let page = 1; page <= 500; page++) {
+      const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
+      if (error) { userError = error; break; }
+      const batch = data?.users ?? [];
+      __all = __all.concat(batch);
+      if (batch.length < 200) break;
+    }
+    const users = __all;
     
     if (userError) {
       console.error('Error fetching users:', userError);
