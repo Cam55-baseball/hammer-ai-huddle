@@ -379,6 +379,10 @@ export default function AnalyzeVideo() {
   const lastMotionCentreRef = useRef<number | null>(null);
   useEffect(() => {
     if (!currentVideoId || !analysis) return;
+    // recompute-report-card is owner/admin only; a player must never call it
+    // (it answers 403). The call is also non-fatal by design: the analysis is
+    // the product, the recompute is an extra.
+    if (!showReportCard) return;
     if (autoRecomputedRef.current.has(currentVideoId)) return;
     const m = (analysis as any).metrics as Record<string, any> | null | undefined;
     const present = m && typeof m === "object"
