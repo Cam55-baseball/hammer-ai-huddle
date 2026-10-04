@@ -400,7 +400,7 @@ export default function AnalyzeVideo() {
         }
       })
       .catch((e) => console.warn("[auto-recompute] failed", e));
-  }, [currentVideoId, analysis]);
+  }, [currentVideoId, analysis, showReportCard]);
 
   const handlePlaybackRateChange = (rate: string) => {
     setPlaybackRate(rate);
