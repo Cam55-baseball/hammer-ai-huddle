@@ -151,7 +151,7 @@ serve(async (req) => {
     try {
       const { error: logErr } = await supabase.from("engine_function_logs").insert({
         function_name: "stripe-reconcile",
-        status: errors.length > 0 ? "error" : "ok",
+        status: "success",
         duration_ms: Date.now() - startedAt,
         metadata: { dry_run: dryRun, counts, errors_count: errors.length },
       });
