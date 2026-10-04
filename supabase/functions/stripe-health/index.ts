@@ -357,7 +357,7 @@ async function selftest(stripe: Stripe, supabase: any) {
 
   // d. Clean up self-test idempotency rows.
   result.cleanup = await section(async () => {
-    const { error, count } = await supabase.from("processed_webhook_events").delete({ count: "exact" }).like("event_id", "evt_selftest_%");
+    const { error, count } = await supabase.from("processed_webhook_events").delete({ count: "exact" }).like("stripe_event_id", "evt_selftest_%");
     if (error) throw new Error(error.message);
     return { deleted: count ?? 0 };
   });
