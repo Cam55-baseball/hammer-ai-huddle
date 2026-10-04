@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { resolveUserId, syncCustomer } from "../_shared/stripeSubscriptionSync.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,7 @@ serve(async (req) => {
     { auth: { persistSession: false } }
   );
 
+  let claimedEventId: string | null = null;
   try {
     logStep("Webhook received");
 
@@ -83,28 +85,37 @@ serve(async (req) => {
       });
     }
 
+    claimedEventId = event.id;
+    let outcome: SyncOutcome = undefined;
+
     // Handle different event types
     switch (event.type) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted':
-        await handleSubscriptionEvent(event, supabaseClient, stripe);
+        outcome = await handleSubscriptionEvent(event, supabaseClient, stripe);
         break;
 
       case 'checkout.session.completed':
-        await handleCheckoutCompleted(event, supabaseClient, stripe);
+        outcome = await handleCheckoutCompleted(event, supabaseClient, stripe);
         break;
 
       case 'invoice.payment_succeeded':
-        await handlePaymentSuccess(event, supabaseClient, stripe);
+        outcome = await handlePaymentSuccess(event, supabaseClient, stripe);
         break;
 
       case 'invoice.payment_failed':
-        await handlePaymentFailed(event, supabaseClient, stripe);
+        outcome = await handlePaymentFailed(event, supabaseClient, stripe);
         break;
 
       default:
         logStep("Unhandled event type", { type: event.type });
+    }
+
+    if (outcome && outcome.unmatched) {
+      const details = { type: event.type, unmatched: true, customer_id: outcome.customer_id ?? null, reason: outcome.reason ?? null };
+      console.error(`[WEBHOOK] UNMATCHED subscription event - ${JSON.stringify({ eventId: event.id, ...details })}`);
+      await supabaseClient.from('processed_webhook_events').update({ details }).eq('stripe_event_id', event.id);
     }
 
     return new Response(JSON.stringify({ received: true }), {
@@ -114,6 +125,15 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in webhook", { error: errorMessage });
+    // Release the idempotency claim so Stripe's automatic retry reprocesses this event.
+    if (claimedEventId) {
+      try {
+        await supabaseClient.from('processed_webhook_events').delete().eq('stripe_event_id', claimedEventId);
+        logStep("Released idempotency claim for retry", { eventId: claimedEventId });
+      } catch (relErr) {
+        logStep("Failed to release idempotency claim", { error: String(relErr) });
+      }
+    }
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
@@ -121,233 +141,38 @@ serve(async (req) => {
   }
 });
 
+type SyncOutcome = { unmatched?: true; customer_id?: string; reason?: string } | void;
+
 async function handleSubscriptionEvent(
   event: Stripe.Event,
   supabaseClient: any,
-  stripe: Stripe
-) {
+  stripe: Stripe,
+  session?: Stripe.Checkout.Session | null
+): Promise<SyncOutcome> {
   const subscription = event.data.object as Stripe.Subscription;
   const customerId = subscription.customer as string;
-  
-  logStep("Processing subscription event", { 
-    eventType: event.type, 
+
+  logStep("Processing subscription event", {
+    eventType: event.type,
     subscriptionId: subscription.id,
     customerId,
     status: subscription.status
   });
 
-  // Get customer email
-  const customer = await stripe.customers.retrieve(customerId);
-  const email = (customer as Stripe.Customer).email;
-  
-  if (!email) {
-    logStep("No email found for customer", { customerId });
-    return;
+  const resolved = await resolveUserId({ supabase: supabaseClient, stripe, customerId, subscription, session });
+  if (!resolved.userId) {
+    return { unmatched: true, customer_id: customerId, reason: resolved.reason ?? "unresolved" };
   }
+  logStep("User resolved", { userId: resolved.userId, via: resolved.via });
 
-  // Get user from Supabase
-  const { data: userData } = await supabaseClient.auth.admin.listUsers();
-  const user = userData.users.find((u: any) => u.email === email);
-  
-  if (!user) {
-    logStep("No user found for email", { email });
-    return;
-  }
-
-  // Fetch all active subscriptions for this customer
-  const allSubscriptions = await stripe.subscriptions.list({
-    customer: customerId,
-    limit: 100,
-    expand: ['data.latest_invoice', 'data.discount'],  // Expand to get full subscription data
-  });
-
-  const moduleMapping: Record<string, any> = {};
-  const activeModules: string[] = [];
-
-  for (const sub of allSubscriptions.data) {
-    // Skip canceled subscriptions that are past their period end
-    if (sub.status === 'canceled' && sub.current_period_end * 1000 < Date.now()) {
-      continue;
-    }
-
-    // Retrieve full subscription details to ensure we have all fields including current_period_end
-    const fullSub = await stripe.subscriptions.retrieve(sub.id);
-    const subscriptionItem = fullSub.items.data[0];
-    logStep("Full subscription retrieved in webhook", { 
-      subscriptionId: fullSub.id,
-      hasCurrentPeriodEnd: !!subscriptionItem?.current_period_end,
-      currentPeriodEnd: subscriptionItem?.current_period_end,
-      status: fullSub.status
-    });
-
-    for (const item of fullSub.items.data) {
-      const productId = typeof item.price.product === 'string' 
-        ? item.price.product 
-        : item.price.product.id;
-      
-      const product = await stripe.products.retrieve(productId);
-      
-      // Check for tier-based products first
-      let tier = product.metadata?.tier?.toLowerCase();
-      let sport = product.metadata?.sport?.toLowerCase();
-      
-      // Fallback: infer tier from product name if metadata is missing
-      if (!tier) {
-        const name = product.name.toLowerCase();
-        if (name.includes('golden 2way') || name.includes('golden2way')) tier = 'golden2way';
-        else if (name.includes('5tool') || name.includes('5 tool')) tier = '5tool';
-        else if (name.includes('complete pitcher') || name.includes('pitcher')) tier = 'pitcher';
-      }
-
-      if (!sport) {
-        const name = product.name.toLowerCase();
-        if (name.includes('softball')) sport = 'softball';
-        else if (name.includes('baseball')) sport = 'baseball';
-      }
-
-      if (tier && sport) {
-        // Tier-based product
-        const sportModule = `${sport}_${tier}`;
-        moduleMapping[sportModule] = {
-          subscription_id: fullSub.id,
-          status: fullSub.status,
-          current_period_end: item.current_period_end 
-            ? new Date(item.current_period_end * 1000).toISOString()
-            : null,
-          cancel_at_period_end: fullSub.cancel_at_period_end || false,
-          price_id: item.price.id,
-          canceled_at: fullSub.canceled_at ? new Date(fullSub.canceled_at * 1000).toISOString() : null
-        };
-        if (fullSub.status === 'active' || 
-            (fullSub.status === 'canceled' && fullSub.current_period_end * 1000 > Date.now())) {
-          activeModules.push(sportModule);
-        }
-        continue;
-      }
-
-      // Legacy module-based products
-      let module = product.metadata?.module?.toLowerCase();
-      
-      if (!sport || !module) {
-        const name = product.name.toLowerCase();
-        if (!sport) {
-          if (name.includes('softball')) sport = 'softball';
-          else if (name.includes('baseball')) sport = 'baseball';
-        }
-        if (!module) {
-          if (name.includes('hitting')) module = 'hitting';
-          else if (name.includes('pitching')) module = 'pitching';
-          else if (name.includes('throwing')) module = 'throwing';
-        }
-      }
-
-      if (!sport || !module) continue;
-
-      const sportModule = `${sport}_${module}`;
-      
-      moduleMapping[sportModule] = {
-        subscription_id: fullSub.id,
-        status: fullSub.status,
-        current_period_end: item.current_period_end 
-          ? new Date(item.current_period_end * 1000).toISOString()
-          : null,
-        cancel_at_period_end: fullSub.cancel_at_period_end || false,
-        price_id: item.price.id,
-        canceled_at: fullSub.canceled_at ? new Date(fullSub.canceled_at * 1000).toISOString() : null
-      };
-
-      // Add to active modules if subscription is active or canceled but still within period
-      if (fullSub.status === 'active' || 
-          (fullSub.status === 'canceled' && fullSub.current_period_end * 1000 > Date.now())) {
-        activeModules.push(sportModule);
-      }
-    }
-  }
-
-  logStep("Built module mapping", { 
-    moduleCount: Object.keys(moduleMapping).length,
-    activeModuleCount: activeModules.length,
-    mapping: moduleMapping 
-  });
-
-  // Calculate latest end date
-  const endDates = Object.values(moduleMapping)
-    .map((m: any) => new Date(m.current_period_end).getTime())
-    .filter(d => !isNaN(d));
-  const latestEnd = endDates.length > 0 
-    ? new Date(Math.max(...endDates)).toISOString() 
-    : null;
-
-  // Get all subscription IDs
-  const subIds = allSubscriptions.data
-    .filter((s: Stripe.Subscription) => s.status !== 'canceled' || s.current_period_end * 1000 > Date.now())
-    .map((s: Stripe.Subscription) => s.id);
-
-  // Check for pending cancellations
-  const hasPendingCancellations = Object.values(moduleMapping)
-    .some((m: any) => m.cancel_at_period_end);
-
-  // Determine tier from active modules
-  const activeTier = activeModules.find(m => m.includes('golden2way')) ? 'golden2way'
-    : activeModules.find(m => m.includes('5tool')) ? '5tool'
-    : activeModules.find(m => m.includes('pitcher')) ? 'pitcher'
-    : null;
-
-  // Update database
-  const upsertData: any = {
-    user_id: user.id,
-    status: activeModules.length > 0 ? 'active' : 'inactive',
-    subscribed_modules: activeModules,
-    module_subscription_mapping: moduleMapping,
-    has_pending_cancellations: hasPendingCancellations,
-    stripe_customer_id: customerId,
-    stripe_subscription_id: subIds.join(','),
-    current_period_end: latestEnd,
-    tier: activeTier,
-  };
-
-  // Check existing record to preserve grandfathered data
-  const { data: existingSub } = await supabaseClient
-    .from('subscriptions')
-    .select('grandfathered_price')
-    .eq('user_id', user.id)
-    .maybeSingle();
-
-  // Don't overwrite existing grandfathered data
-  if (existingSub?.grandfathered_price) {
-    // preserve existing grandfathered fields
-  }
-
-  await supabaseClient
-    .from('subscriptions')
-    .upsert(upsertData, { onConflict: 'user_id' });
-
-  logStep("Database updated", {
-    userId: user.id,
-    activeModules,
-    hasPendingCancellations
-  });
-
-  // Realtime broadcast — frontend flips to "paid" within ~300ms, no reload lag.
-  try {
-    const channel = supabaseClient.channel(`subscription:${user.id}`);
-    await channel.send({
-      type: 'broadcast',
-      event: 'updated',
-      payload: { active_modules: activeModules, tier: activeTier },
-    });
-    await supabaseClient.removeChannel(channel);
-    logStep("Realtime broadcast sent", { userId: user.id });
-  } catch (broadcastErr) {
-    logStep("Realtime broadcast failed (non-fatal)", { error: String(broadcastErr) });
-  }
+  await syncCustomer({ supabase: supabaseClient, stripe, customerId, userId: resolved.userId, log: logStep });
 }
 
 async function handleCheckoutCompleted(
   event: Stripe.Event,
   supabaseClient: any,
   stripe: Stripe
-) {
+): Promise<SyncOutcome> {
   const session = event.data.object as Stripe.Checkout.Session;
   logStep("Checkout completed", { sessionId: session.id, customer: session.customer });
 
@@ -360,10 +185,11 @@ async function handleCheckoutCompleted(
   if (!session.subscription) return;
 
   const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-  await handleSubscriptionEvent(
+  return await handleSubscriptionEvent(
     { ...event, data: { object: subscription } } as Stripe.Event,
     supabaseClient,
-    stripe
+    stripe,
+    session
   );
 }
 
@@ -489,13 +315,14 @@ async function handlePaymentSuccess(
   event: Stripe.Event,
   supabaseClient: any,
   stripe: Stripe
-) {
+): Promise<SyncOutcome> {
   const invoice = event.data.object as Stripe.Invoice;
+  const invoiceSubId = invoiceSubscriptionId(invoice);
   
-  if (!invoice.subscription) return;
+  if (!invoiceSubId) return;
   
   const subscription = await stripe.subscriptions.retrieve(
-    invoice.subscription as string
+    invoiceSubId
   );
   
   logStep("Payment succeeded, updating subscription", { 
@@ -503,7 +330,7 @@ async function handlePaymentSuccess(
   });
   
   // Trigger full subscription update
-  await handleSubscriptionEvent(
+  return await handleSubscriptionEvent(
     { ...event, data: { object: subscription } } as Stripe.Event,
     supabaseClient,
     stripe
@@ -514,21 +341,32 @@ async function handlePaymentFailed(
   event: Stripe.Event,
   supabaseClient: any,
   stripe: Stripe
-) {
+): Promise<SyncOutcome> {
   const invoice = event.data.object as Stripe.Invoice;
+  const invoiceSubId = invoiceSubscriptionId(invoice);
   
   logStep("Payment failed", { invoiceId: invoice.id });
   
-  if (!invoice.subscription) return;
+  if (!invoiceSubId) return;
   
   const subscription = await stripe.subscriptions.retrieve(
-    invoice.subscription as string
+    invoiceSubId
   );
   
   // Update subscription status to reflect payment failure
-  await handleSubscriptionEvent(
+  return await handleSubscriptionEvent(
     { ...event, data: { object: subscription } } as Stripe.Event,
     supabaseClient,
     stripe
   );
+}
+
+// Newer Stripe API versions moved invoice.subscription to
+// invoice.parent.subscription_details.subscription.
+function invoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
+  const a = (invoice as any).subscription;
+  const b = (invoice as any).parent?.subscription_details?.subscription;
+  const v = a ?? b ?? null;
+  if (!v) return null;
+  return typeof v === "string" ? v : v.id ?? null;
 }
