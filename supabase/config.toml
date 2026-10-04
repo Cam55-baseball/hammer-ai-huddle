@@ -301,3 +301,6 @@ verify_jwt = true
 
 [functions.wk-training-intel]
 verify_jwt = true
+
+[functions.stripe-reconcile]
+verify_jwt = true
