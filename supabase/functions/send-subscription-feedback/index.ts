@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "../_shared/email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,7 +29,8 @@ async function sendWithResend(params: { to: string; subject: string; html: strin
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "HammerAI Huddle <onboarding@resend.dev>",
+      from: EMAIL_FROM,
+      reply_to: EMAIL_REPLY_TO,
       to: [params.to],
       subject: params.subject,
       html: params.html,

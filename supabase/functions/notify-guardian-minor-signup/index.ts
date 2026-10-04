@@ -14,6 +14,7 @@
  *  - The account must have been created within the last 15 minutes.
  *  - One notification row per user (unique user_id) — repeat calls no-op.
  */
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "../_shared/email.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
@@ -112,7 +113,8 @@ Deno.serve(async (req: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Hammers Modality <onboarding@resend.dev>",
+        from: EMAIL_FROM,
+        reply_to: EMAIL_REPLY_TO,
         to: [guardianEmail],
         subject: "A minor listed you as their parent or guardian on Hammers Modality",
         html: guardianEmailBody(athleteName),

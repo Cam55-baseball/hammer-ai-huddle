@@ -8,6 +8,7 @@
  * notified_* so nobody can be pinged twice.
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "../_shared/email.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -103,7 +104,8 @@ async function sendWithResend(to: string, subject: string, html: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Hammers Modality <onboarding@resend.dev>",
+      from: EMAIL_FROM,
+      reply_to: EMAIL_REPLY_TO,
       to: [to],
       subject,
       html,

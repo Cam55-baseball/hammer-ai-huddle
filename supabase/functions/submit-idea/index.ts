@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "../_shared/email.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,7 +35,8 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Hammers Modality <onboarding@resend.dev>',
+        from: EMAIL_FROM,
+        reply_to: EMAIL_REPLY_TO,
         to: ['hammersmodality@hammersmodality.org'],
         subject: `💡 New Idea Submission from Hammers Modality`,
         html: `
