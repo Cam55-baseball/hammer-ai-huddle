@@ -14,6 +14,11 @@
 
 .hm-launch--short { --hm-title-time: 650ms; --hm-hit-time: 1750ms; }
 .hm-launch--short { cursor: pointer; }
+.hm-launch:not(.hm-launch--loaded) .hm-launch-title,
+.hm-launch:not(.hm-launch--loaded) .hm-launch-bat,
+.hm-launch:not(.hm-launch--loaded) .hm-launch-ball,
+.hm-launch:not(.hm-launch--loaded) .hm-launch-backdrop,
+.hm-launch:not(.hm-launch--loaded) .hm-launch-beam { animation-play-state: paused; }
 
 .hm-launch-backdrop {
   position: absolute;
@@ -68,6 +73,8 @@
   aspect-ratio: 1;
   transform: translate3d(-50%, -50%, 0);
   will-change: transform, opacity;
+  border-radius: 50%;
+  background: var(--launch-ball-fallback);
 }
 .hm-launch-ball {
   width: 100%;

@@ -6,6 +6,11 @@ import "./LaunchOpening.css";
 
 const FIRST_LAUNCH_KEY = "hm.launchOpening.fullSeen.v1";
 let playedThisLaunch = false;
+const artworkReady = Promise.all([baseball, bat].map((source) => {
+  const image = new Image();
+  image.src = source;
+  return image.decode().catch(() => undefined);
+}));
 
 export function LaunchOpening() {
   const { pathname } = useLocation();
@@ -21,6 +26,8 @@ export function LaunchOpening() {
   const [ready, setReady] = useState(false);
   const [hit, setHit] = useState(false);
   const [exiting, setExiting] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [skipped, setSkipped] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
@@ -28,9 +35,25 @@ export function LaunchOpening() {
     window.addEventListener("hm:landing-ready", onReady);
     // Index may have committed before the listener is installed.
     if (document.querySelector("[data-hm-landing]")) setReady(true);
-    const timer = window.setTimeout(() => setHit(true), mode === "full" ? 4400 : 2150);
-    return () => { window.clearTimeout(timer); window.removeEventListener("hm:landing-ready", onReady); };
+    return () => window.removeEventListener("hm:landing-ready", onReady);
   }, [visible]);
+
+  useEffect(() => {
+    if (!visible) return;
+    let active = true;
+    void artworkReady.then(() => { if (active) setLoaded(true); });
+    return () => { active = false; };
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible || !loaded) return;
+    const timer = window.setTimeout(() => setHit(true), mode === "full" ? 4400 : 2150);
+    return () => window.clearTimeout(timer);
+  }, [visible, loaded, mode]);
+
+  useEffect(() => {
+    if (skipped && ready) setVisible(false);
+  }, [skipped, ready]);
 
   useEffect(() => {
     if (!hit || !ready || !visible) return;
@@ -48,11 +71,11 @@ export function LaunchOpening() {
 
   const skip = () => {
     if (mode !== "short") return;
-    setVisible(false);
+    setSkipped(true);
   };
 
   return (
-    <div className={`hm-launch hm-launch--${mode}${exiting ? " hm-launch--exit" : ""}`} aria-label="Hammers Modality opening" role="presentation" onPointerDown={skip}>
+    <div className={`hm-launch hm-launch--${mode}${loaded ? " hm-launch--loaded" : ""}${exiting ? " hm-launch--exit" : ""}`} aria-label="Hammers Modality opening" role="presentation" onPointerDown={skip}>
       <div className="hm-launch-backdrop" />
       <div className="hm-launch-beam" />
       <div className="hm-launch-stage">
