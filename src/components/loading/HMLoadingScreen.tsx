@@ -55,7 +55,7 @@ export function HMLoadingProvider({ children }: { children: React.ReactNode }) {
         <text x="140" y="137" textAnchor="middle" fontFamily="Impact, Arial Narrow, sans-serif" fontWeight="900" fontSize="158" letterSpacing="0" fill="none" stroke="currentColor" strokeWidth="2">HM</text>
         <g mask="url(#hm-loading-letters)">
           <rect className="hm-loading-red" width="280" height="180" />
-          <rect className="hm-loading-white" width="280" height="180" />
+          <rect className="hm-loading-white" x="140" width="140" height="180" />
         </g>
       </svg>
       <span className="sr-only">Loading</span>

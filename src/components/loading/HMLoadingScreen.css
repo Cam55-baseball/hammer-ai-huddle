@@ -10,7 +10,7 @@
 }
 .hm-loading-mark { width: min(58vw, 280px); height: auto; overflow: visible; }
 .hm-loading-red { fill: #f00; transform-origin: center bottom; animation: hm-load-rise 2.2s ease-in-out infinite; }
-.hm-loading-white { fill: #fff; transform-origin: center bottom; animation: hm-load-rise 2.2s ease-in-out -.65s infinite; opacity: .9; }
+.hm-loading-white { fill: #fff; transform-origin: center bottom; animation: hm-load-rise 2.2s ease-in-out -.65s infinite; }
 @keyframes hm-load-rise {
   0% { transform: translate3d(0, 100%, 0); }
   62% { transform: translate3d(0, 0, 0); }
