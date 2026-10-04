@@ -30,6 +30,7 @@ import { AnalysisProgressIndicator } from "@/components/report-card/hammer/Analy
 import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protectedEditing";
 import { useSideContext } from "@/contexts/SideContext";
 import { UPLOAD_ERRORS, friendlyRejectReason, friendlyThrownError } from "@/lib/upload/uploadErrorCopy";
+import { describeVideoSaveFailure } from "@/lib/upload/saveFailure";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
 import { ReportCardAccessGate } from "@/components/report-card/hammer/ReportCardAccessGate";
@@ -873,16 +874,15 @@ export default function AnalyzeVideo() {
                 : { throwing_hand: activeSide })
             : {}),
         }] as never)
-        .select()
+        // Read back only the id. Score columns are locked from direct reads, so
+        // a bare `.select()` (RETURNING *) makes the whole save fail.
+        .select('id')
         .single();
 
-      if (videoError) {
-        console.error('[upload] videos insert failed', videoError);
-        const msg = (videoError as any)?.code === '42501'
-          ? UPLOAD_ERRORS.sessionExpired
-          : UPLOAD_ERRORS.recordFailed;
-        toast.error(msg);
-        throw new Error(msg);
+      if (videoError || !videoData) {
+        const failure = describeVideoSaveFailure(videoError as any, { surface: 'analyze-upload', module, userId: user.id });
+        toast.error(failure.message, { duration: 12000 });
+        throw new Error(failure.message);
       }
 
 
@@ -1164,7 +1164,7 @@ export default function AnalyzeVideo() {
     } catch (error: any) {
       console.error("Error:", error);
       setAnalysisError(error);
-      toast.error(friendlyThrownError(error));
+      if (!error?.userNotified) toast.error(friendlyThrownError(error));
       setAnalyzing(false);
     } finally {
       setUploading(false);

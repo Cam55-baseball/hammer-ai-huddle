@@ -472,7 +472,7 @@ const OwnerDashboard = () => {
         profiles.map(async (player) => {
           const { count } = await supabase
             .from('videos')
-            .select('*', { count: 'exact', head: true })
+            .select('id', { count: 'exact', head: true })
             .eq('user_id', player.id)
             .eq('saved_to_library', true);
           

@@ -28,6 +28,7 @@ import { emitVideoMoment } from "@/lib/videoMoments/bus";
 import { useSideContext } from "@/contexts/SideContext";
 import { toast } from "sonner";
 import fixWebmDuration from "fix-webm-duration";
+import { describeVideoSaveFailure } from "@/lib/upload/saveFailure";
 import { UPLOAD_ERRORS } from "@/lib/upload/uploadErrorCopy";
 import {
   analysisScopeForFps,
@@ -448,7 +449,10 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
         }] as never)
         .select("id")
         .single();
-      if (insertError) throw insertError;
+      if (insertError || !videoRow) {
+        const failure = describeVideoSaveFailure(insertError as any, { surface: "high-fps-capture", module: resolvedModule, userId: user.id });
+        throw Object.assign(new Error(failure.message), { userMessage: failure.message });
+      }
 
       emitVideoMoment({
         kind: "delaycam_saved",
@@ -493,7 +497,7 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp }: HighFps
       toast.error(
         e?.message === "not_enough_frames"
           ? UPLOAD_ERRORS.notEnoughFrames
-          : "Couldn't finish saving this clip. Try again.",
+          : e?.userMessage ?? "Couldn't finish saving this clip. Try again.",
         { id: toastId },
       );
     } finally {
