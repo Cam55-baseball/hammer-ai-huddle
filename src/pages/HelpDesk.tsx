@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -162,7 +163,8 @@ export default function HelpDesk() {
       .filter((cat) => cat.items.length > 0);
   }, [faqCategories, searchQuery]);
 
-  if (loading || !user) return null;
+  if (loading) return <HMLoadingFallback />;
+  if (!user) return null;
 
   return (
     <DashboardLayout>

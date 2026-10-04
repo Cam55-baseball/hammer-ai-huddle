@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * IqSituationsAuthoring — owner-facing end-to-end situation builder.
  *
@@ -249,7 +250,7 @@ export default function IqSituationsAuthoring() {
     rafRef.current = requestAnimationFrame(step);
   };
 
-  if (ownerLoading) return <DashboardLayout><div className="p-8">Loading…</div></DashboardLayout>;
+  if (ownerLoading) return <HMLoadingFallback />;
   if (!isOwner) return (
     <DashboardLayout>
       <div className="p-8 text-center text-muted-foreground">Owner access required.</div>
