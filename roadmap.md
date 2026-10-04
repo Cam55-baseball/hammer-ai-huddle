@@ -50,7 +50,7 @@
 - [x] Preserve Finish → notification explanation/prompt → dashboard → demo tour ordering
 - [x] Verify at least four onboarding screens on a phone viewport
 - [x] Fix notification primer eligibility and add native permission support
-- [x] Add a skippable, reduced-motion-safe opening before the landing page
+- [x] Replace the tile opening with a full first-install baseball sequence and a shorter skippable subsequent-launch sequence; respect reduced motion
 - [ ] Reconcile and verify the already-authorized score lock-down without unrelated deployment or migration
 
 # Analysis-to-plan and daily guidance

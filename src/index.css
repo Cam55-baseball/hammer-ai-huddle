@@ -43,6 +43,8 @@ All colors MUST be HSL.
     --primary: 0 100% 50%;
     --primary-foreground: 0 0% 100%;
     --primary-glow: 0 100% 60%;
+    --launch-backdrop: radial-gradient(ellipse at 52% 44%, hsl(var(--primary) / .9), hsl(var(--primary) / .37) 40%, hsl(var(--secondary)) 78%);
+    --launch-beam: linear-gradient(90deg, transparent 31%, hsl(var(--rc-glass) / .22) 49%, transparent 65%);
     
     /* Deep Black - Secondary */
     --secondary: 0 0% 8%;

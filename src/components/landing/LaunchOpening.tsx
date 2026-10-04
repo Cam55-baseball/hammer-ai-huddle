@@ -1,47 +1,68 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { branding } from "@/branding";
+import baseball from "@/assets/launch-baseball.png";
+import bat from "@/assets/launch-bat.png";
 import "./LaunchOpening.css";
 
-// Per document launch, not per route visit. Reloading the app resets this flag.
+const FIRST_LAUNCH_KEY = "hm.launchOpening.fullSeen.v1";
 let playedThisLaunch = false;
 
 export function LaunchOpening() {
   const { pathname } = useLocation();
-  const [ready, setReady] = useState(false);
+  const [mode] = useState<"full" | "short">(() => {
+    try { return window.localStorage.getItem(FIRST_LAUNCH_KEY) === "yes" ? "short" : "full"; }
+    catch { return "full"; }
+  });
   const [visible, setVisible] = useState(() => {
     if (playedThisLaunch || window.location.pathname !== "/") return false;
     playedThisLaunch = true;
     return true;
   });
+  const [ready, setReady] = useState(false);
+  const [hit, setHit] = useState(false);
+  const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
-    const timer = window.setTimeout(() => setVisible(false), 1450);
     const onReady = () => setReady(true);
     window.addEventListener("hm:landing-ready", onReady);
+    // Index may have committed before the listener is installed.
+    if (document.querySelector("[data-hm-landing]")) setReady(true);
+    const timer = window.setTimeout(() => setHit(true), mode === "full" ? 4400 : 2150);
     return () => { window.clearTimeout(timer); window.removeEventListener("hm:landing-ready", onReady); };
   }, [visible]);
 
   useEffect(() => {
-    if (!ready) return;
-    const timer = window.setTimeout(() => setVisible(false), 180);
+    if (!hit || !ready || !visible) return;
+    setExiting(true);
+    const timer = window.setTimeout(() => {
+      if (mode === "full") {
+        try { window.localStorage.setItem(FIRST_LAUNCH_KEY, "yes"); } catch { /* Storage unavailable: replay the full opening next launch. */ }
+      }
+      setVisible(false);
+    }, 650);
     return () => window.clearTimeout(timer);
-  }, [ready]);
+  }, [hit, ready, visible, mode]);
 
   if (!visible || pathname !== "/") return null;
 
+  const skip = () => {
+    if (mode !== "short") return;
+    setVisible(false);
+  };
+
   return (
-    <div className={`hm-launch${ready ? " hm-launch-ready" : ""}`} aria-hidden="true" onPointerDown={() => setVisible(false)}>
+    <div className={`hm-launch hm-launch--${mode}${exiting ? " hm-launch--exit" : ""}`} aria-label="Hammers Modality opening" role="presentation" onPointerDown={skip}>
+      <div className="hm-launch-backdrop" />
+      <div className="hm-launch-beam" />
       <div className="hm-launch-stage">
-        {Array.from({ length: 18 }, (_, i) => (
-          <span key={i} className={`hm-launch-tile hm-launch-tile-${i % 6}`} style={{ animationDelay: `${i * 34}ms` }} />
-        ))}
-        <div className="hm-launch-mark">
-          <img src={branding.logo} alt="" />
-          <span>HAMMERS<br />MODALITY</span>
+        <div className="hm-launch-title"><span>HAMMERS</span><span>MODALITY</span></div>
+        <div className="hm-launch-ball-wrap">
+          <img className="hm-launch-ball" src={baseball} width={1024} height={1024} alt="" />
         </div>
+        <img className="hm-launch-bat" src={bat} width={1536} height={768} alt="" />
       </div>
+      <div className="hm-launch-flash" />
     </div>
   );
 }
