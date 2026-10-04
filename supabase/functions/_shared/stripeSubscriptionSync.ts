@@ -245,7 +245,13 @@ export async function syncCustomer(opts: SyncOptions): Promise<SyncRow> {
 
   if (computeOnly) return row;
 
-  const { error } = await supabase.from("subscriptions").upsert(row, { onConflict: "user_id" });
+  // current_period_end is NOT NULL in the database (default now() + 7 days).
+  // When there is no remaining period (full cancellation), leave the column out
+  // entirely: an existing row keeps its value, a new row gets the default.
+  const upsertRow: Record<string, unknown> = { ...row };
+  if (upsertRow.current_period_end == null) delete upsertRow.current_period_end;
+
+  const { error } = await supabase.from("subscriptions").upsert(upsertRow, { onConflict: "user_id" });
   if (error) throw new Error(`subscriptions upsert failed: ${error.message}`);
   log("Database updated", { userId, activeModules, hasPendingCancellations });
 
