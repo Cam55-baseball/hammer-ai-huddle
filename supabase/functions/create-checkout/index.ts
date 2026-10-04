@@ -159,7 +159,7 @@ serve(async (req) => {
       const wanted = new Set(lineItems.map((li) => li.price));
       const LIVE = new Set(["active", "trialing", "past_due"]);
       for await (const s of stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 })) {
-        if (LIVE.has(s.status) && s.items.data.some((i) => wanted.has(i.price.id))) {
+        if (LIVE.has(s.status) && s.items.data.some((i: any) => wanted.has(i.price.id))) {
           logStep("Duplicate purchase blocked", { customerId, subscriptionId: s.id });
           return new Response(
             JSON.stringify({ error: "You already have this plan. Manage it from your account settings.", already_subscribed: true }),

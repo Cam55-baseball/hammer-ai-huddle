@@ -439,7 +439,7 @@ async function duplicates(stripe: Stripe, supabase: any) {
   for await (const s of stripe.subscriptions.list({ status: "all", limit: 100 })) {
     if (!LIVE.has(s.status)) continue;
     const cid = typeof s.customer === "string" ? s.customer : s.customer.id;
-    const priceIds = new Set(s.items.data.map((i) => i.price.id));
+    const priceIds = new Set(s.items.data.map((i: any) => i.price.id));
     for (const pid of priceIds) {
       const k = `${cid}|${pid}`;
       if (!groups.has(k)) groups.set(k, []);
