@@ -153,6 +153,22 @@ serve(async (req) => {
       );
     }
 
+    // Block a duplicate purchase: an existing customer already holding a live
+    // subscription on the exact price being bought gets 409 and no session.
+    if (customerId) {
+      const wanted = new Set(lineItems.map((li) => li.price));
+      const LIVE = new Set(["active", "trialing", "past_due"]);
+      for await (const s of stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 })) {
+        if (LIVE.has(s.status) && s.items.data.some((i: any) => wanted.has(i.price.id))) {
+          logStep("Duplicate purchase blocked", { customerId, subscriptionId: s.id });
+          return new Response(
+            JSON.stringify({ error: "You already have this plan. Manage it from your account settings.", already_subscribed: true }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 409 },
+          );
+        }
+      }
+    }
+
     // A native Capacitor build sends origin "capacitor://localhost". Safari
     // cannot open that, so a paid buyer was stranded on Stripe's page. Only
     // real web origins are trusted; anything else returns to the public site.
