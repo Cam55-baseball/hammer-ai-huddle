@@ -15,3 +15,5 @@
 - Spotlight tours own one replace-only navigation entry and always restore their opening route on exit; their exit bar renders even while targets load. Why: users must never be trapped or left on a tour-only page.
 - Coach/scout roles suppress unsolicited module advertising even on dual-role accounts, but purchase pages and subscribed module navigation remain accessible on deliberate visits under the storefront gate. Why: staff can buy without being sold to.
 - The landing opening uses a full first-install sequence and a skippable short sequence on subsequent document launches; it waits for the landing page before the final wipe. Why: preserve the owner's launch identity without revealing an unloaded page.
+- Client reads and write-backs on `videos` must name their columns (`.select('id')`, `VIDEO_PUBLIC_COLUMNS`); never bare `.select()` or `'*'`. Why: score columns are locked from direct reads, so a whole-row read-back makes the save itself fail.
+- Video save failures go through `src/lib/upload/saveFailure.ts`: true message, reference code, structured `[video-save-failure]` log. Why: a refused save was once shown as "signed out" and noticed only by the owner.
