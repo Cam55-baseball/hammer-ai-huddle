@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * Evaluator-facing baserunning split entry (pre-release, staff-gated route).
  * Role gate matches Combine / Defensive Play entry: active scout or coach.
@@ -72,15 +73,7 @@ export default function BaserunningSplitEntry() {
     }
   };
 
-  if (accessLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[300px]">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (accessLoading)  return <HMLoadingFallback />;
 
   if (!canSendActivities) {
     return (

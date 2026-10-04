@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * Owner Bundle Control Center — /owner/builds
  * Database-backed bundles: draft/publish, public link, videos, price,
@@ -317,15 +318,7 @@ export default function BuildLibrary() {
     return map;
   }, [bundles]);
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (loading)  return <HMLoadingFallback />;
   if (!isOwner) return null;
 
   const pendingDelete = confirmDeleteId ? bundles.find((b) => b.id === confirmDeleteId) : null;

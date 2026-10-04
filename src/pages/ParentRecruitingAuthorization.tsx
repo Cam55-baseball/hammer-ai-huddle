@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * RR-10 — Parent recruiting authorization surface.
  *
@@ -50,13 +51,7 @@ export default function ParentRecruitingAuthorization() {
     }
   };
 
-  if (loading || linkLoading || isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="p-6 text-sm text-muted-foreground">Loading…</div>
-      </DashboardLayout>
-    );
-  }
+  if (loading || linkLoading || isLoading)  return <HMLoadingFallback />;
 
   if (!isParent) {
     return (

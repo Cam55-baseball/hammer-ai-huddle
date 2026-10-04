@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -15,15 +16,7 @@ export default function AdminEngineSettings() {
     }
   }, [isOwner, ownerLoading, navigate]);
 
-  if (ownerLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (ownerLoading)  return <HMLoadingFallback />;
 
   if (!isOwner) return null;
 

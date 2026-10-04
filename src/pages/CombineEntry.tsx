@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -112,15 +113,7 @@ export default function CombineEntry() {
     }
   };
 
-  if (accessLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[300px]">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (accessLoading)  return <HMLoadingFallback />;
 
   if (!canSendActivities) {
     return (

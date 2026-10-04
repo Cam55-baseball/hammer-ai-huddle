@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -110,13 +111,7 @@ const Activate = () => {
     navigate("/dashboard", { replace: true });
   };
 
-  if (authLoading || profileLoading || ownerLoading || adminLoading || roleLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center pt-safe pb-safe">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary" />
-      </div>
-    );
-  }
+  if (authLoading || profileLoading || ownerLoading || adminLoading || roleLoading)  return <HMLoadingFallback />;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30 px-4 py-8 pt-[calc(2rem+var(--safe-top))] pb-[calc(2rem+var(--safe-bottom))]">

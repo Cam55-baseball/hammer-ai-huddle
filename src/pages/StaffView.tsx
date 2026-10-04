@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 // Staff View (v1.2 §D3) — read-only, printable, behind the staff_view switch.
 // Everything on this page comes from rows the app already stored. Nothing is
 // recalculated here, so the page always matches what the athlete was given.
@@ -269,15 +270,7 @@ export default function StaffView() {
     [todayDecision],
   );
 
-  if (switchesLoading || loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex h-64 items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (switchesLoading || loading)  return <HMLoadingFallback />;
 
   if (!on) {
     return (

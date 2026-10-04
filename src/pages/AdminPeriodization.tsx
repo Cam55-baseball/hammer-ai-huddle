@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * AdminPeriodization — owner-tunable phase-block dosing for `wk_periodization_blocks`.
  *
@@ -109,9 +110,7 @@ export default function AdminPeriodization() {
   const upd = (phase: string, patch: Partial<PhaseRow>) =>
     setRows((m) => ({ ...m, [phase]: { ...m[phase], ...patch } }));
 
-  if (ownerLoading) {
-    return <div className="min-h-screen flex items-center justify-center pt-safe pb-safe"><Loader2 className="h-5 w-5 animate-spin" /></div>;
-  }
+  if (ownerLoading)  return <HMLoadingFallback />;
   if (!isOwner) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3 p-6 text-center pt-[calc(1.5rem+var(--safe-top))] pb-[calc(1.5rem+var(--safe-bottom))]">

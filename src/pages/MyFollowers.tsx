@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,15 +15,7 @@ export default function MyFollowers() {
     }
   }, [user, session, authLoading, isAuthStable, navigate]);
 
-  if (authLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (authLoading)  return <HMLoadingFallback />;
 
   return (
     <DashboardLayout>

@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * PHASE 10 — Program Builder (owner-only scaffold)
  * No DB writes. Console-log only on save.
@@ -49,15 +50,7 @@ export default function ProgramBuilder() {
     }
   }, [videos, pendingSelect]);
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (loading)  return <HMLoadingFallback />;
   if (!isOwner) return null;
 
   const handleAttached = (newVideoId: string) => {

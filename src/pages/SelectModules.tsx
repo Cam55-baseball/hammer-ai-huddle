@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -88,13 +89,7 @@ const SelectModules = () => {
     });
   };
 
-  if (authLoading || subscriptionLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center pt-safe pb-safe">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  if (authLoading || subscriptionLoading)  return <HMLoadingFallback />;
 
   // Purchase hidden: no tiers, no prices, no checkout entry point.
   if (!canShowPurchaseUI) {

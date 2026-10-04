@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * PHASE 14 — Access enforcement + post-purchase UX + safe owner bypass.
  * - Owner role bypasses hasAccess() for preview/testing (no DB writes).
@@ -56,9 +57,7 @@ export default function BuildAccessGate({ buildType }: Props) {
     </div>
   );
 
-  if (authLoading || ownerLoading || checking) {
-    return <Wrap><p className="text-muted-foreground">Loading…</p></Wrap>;
-  }
+  if (authLoading || ownerLoading || checking)  return <HMLoadingFallback />;
   if (!buildId) {
     return <Wrap><p className="text-muted-foreground">Invalid link.</p></Wrap>;
   }

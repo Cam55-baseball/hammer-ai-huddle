@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * DEVELOPER TEST HARNESS — NOT A PRODUCT FEATURE.
  * Bare internal rig for exercising the Roboflow ball-tracking / velocity pipeline.
@@ -355,15 +356,7 @@ export default function PitchVelocityPrep() {
     }
   };
 
-  if (authLoading || staffLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex min-h-[50vh] items-center justify-center">
-          <Loader2 className="h-7 w-7 animate-spin text-primary" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (authLoading || staffLoading)  return <HMLoadingFallback />;
 
   if (!isStaff) return null;
 

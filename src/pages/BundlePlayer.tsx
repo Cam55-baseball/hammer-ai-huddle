@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * Purchased bundle delivery — /bundle/:id
  * Access is enforced server-side by get_bundle_videos (owner or user_build_access).
@@ -82,13 +83,7 @@ export default function BundlePlayer() {
     [watched.length, videos.length],
   );
 
-  if (authLoading || ownerLoading || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center pt-safe pb-safe">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  if (authLoading || ownerLoading || loading)  return <HMLoadingFallback />;
 
   if (!user) {
     return (

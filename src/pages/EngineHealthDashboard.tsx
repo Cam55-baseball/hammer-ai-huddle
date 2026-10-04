@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -46,15 +47,7 @@ export default function EngineHealthDashboard() {
     if (!ownerLoading && !adminLoading && !isOwner && !isAdmin) navigate('/dashboard');
   }, [isOwner, isAdmin, ownerLoading, adminLoading, navigate]);
 
-  if (ownerLoading || adminLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex min-h-[400px] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (ownerLoading || adminLoading)  return <HMLoadingFallback />;
   if (!isOwner && !isAdmin) return null;
 
   const mpiStatus = statusFor(health.lastNightlyMpi, 30);

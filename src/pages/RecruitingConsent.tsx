@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * Athlete-owned recruiting consent (RR-9 / RR-10, v1.1 granular).
  * Four separate choices: profile, metrics, video, contact.
@@ -40,15 +41,7 @@ export default function RecruitingConsent() {
   const fail = () =>
     toast({ title: "That didn't save", description: "Please check your connection and try again.", variant: "destructive" });
 
-  if (loading || isLoading || !consent) {
-    return (
-      <DashboardLayout>
-        <div className="mx-auto max-w-2xl p-4">
-          <div className="h-64 animate-pulse rounded-md bg-muted/40" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (loading || isLoading || !consent)  return <HMLoadingFallback />;
 
   const g = consent as unknown as GranularConsent;
   const line = statusLine(g);

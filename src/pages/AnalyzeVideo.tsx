@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useEffect, useState, useRef } from "react";
 import { runClipPreflight, type PreflightVerdict } from "@/lib/biomech/pose/clipPreflight";
 import { ClipPreflightCard } from "@/components/analyze/ClipPreflightCard";
@@ -1310,16 +1311,7 @@ export default function AnalyzeVideo() {
     }
   };
 
-  if (authLoading || subLoading || !initialized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">{t('videoAnalysis.verifyingAccess')}</p>
-        </div>
-      </div>
-    );
-  }
+  if (authLoading || subLoading || !initialized)  return <HMLoadingFallback />;
 
   return (
     <DashboardLayout>

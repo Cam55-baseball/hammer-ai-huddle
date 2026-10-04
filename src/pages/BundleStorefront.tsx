@@ -1,3 +1,4 @@
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * Public bundle sales page — /b/:slug
  * Anyone with the link can view and buy. No account required to view.
@@ -79,13 +80,7 @@ export default function BundleStorefront() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center pt-safe pb-safe">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  if (loading)  return <HMLoadingFallback />;
 
   if (!bundle) {
     return (
