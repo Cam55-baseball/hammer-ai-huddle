@@ -14,4 +14,4 @@
 - Tour steps live in `src/lib/tour/tours.ts`; `DemoTourHost` is mounted once in `App.tsx` so tours survive page changes; staff may preview another audience/plan via localStorage `hm.tourAs` / `hm.tourModules`. Why: each page remounts its own layout.
 - Spotlight tours own one replace-only navigation entry and always restore their opening route on exit; their exit bar renders even while targets load. Why: users must never be trapped or left on a tour-only page.
 - Coach/scout roles suppress unsolicited module advertising even on dual-role accounts, but purchase pages and subscribed module navigation remain accessible on deliberate visits under the storefront gate. Why: staff can buy without being sold to.
-- The landing opening starts once per document launch and exits as soon as the landing renders (1.45s cap); tapping skips it. Why: daily brand presence must not obstruct users.
+- The landing opening uses a full first-install sequence and a skippable short sequence on subsequent document launches; it waits for the landing page before the final wipe. Why: preserve the owner's launch identity without revealing an unloaded page.
