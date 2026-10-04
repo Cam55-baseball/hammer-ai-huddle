@@ -177,7 +177,7 @@ async function health(stripe: Stripe, stripeKey: string, supabase: any) {
         body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "hi" }] }], generationConfig: { maxOutputTokens: 1 } }),
       });
       const t = await r.text();
-      return { model: GEMINI_MODEL, http_status: r.status, ...(r.status !== 200 ? { error: t.slice(0, 200) } : {}) };
+      return { model: GEMINI_MODEL, http_status: r.status, ...(r.status !== 200 ? { error: bodySnippet(t) } : {}) };
     });
     const openai = !oKey ? { configured: false } : await section(async () => {
       const r = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -186,7 +186,7 @@ async function health(stripe: Stripe, stripeKey: string, supabase: any) {
         body: JSON.stringify({ model: "gpt-4o-mini", max_tokens: 1, messages: [{ role: "user", content: "hi" }] }),
       });
       const t = await r.text();
-      return { model: "gpt-4o-mini", http_status: r.status, ...(r.status !== 200 ? { error: t.slice(0, 200) } : {}) };
+      return { model: "gpt-4o-mini", http_status: r.status, ...(r.status !== 200 ? { error: bodySnippet(t) } : {}) };
     });
     return { gemini, openai };
   });
@@ -195,8 +195,13 @@ async function health(stripe: Stripe, stripeKey: string, supabase: any) {
     const k = Deno.env.get("RESEND_API_KEY");
     if (!k) return { configured: false };
     const r = await fetch("https://api.resend.com/domains", { headers: { Authorization: `Bearer ${k}` } });
-    const body: any = await r.json().catch(() => null);
-    return { http_status: r.status, domains: (body?.data ?? []).map((d: any) => ({ name: d.name, status: d.status })) };
+    const t = await r.text();
+    const body: any = (() => { try { return JSON.parse(t); } catch { return null; } })();
+    return {
+      http_status: r.status,
+      domains: (body?.data ?? []).map((d: any) => ({ name: d.name, status: d.status })),
+      ...(r.status !== 200 ? { error: bodySnippet(t) } : {}),
+    };
   });
 
   out.roboflow = await section(async () => {
