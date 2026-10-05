@@ -124,6 +124,7 @@ import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
 import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
 // Phase 10 — Performance Support Engines (Conditioning + Cross-Sport + Recovery + Arm Care).
 import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.ts";
+import { resolveOutingFacts, type OutingFacts } from "../_shared/wic/pitching/outingFacts.ts";
 import { selectConditioning, conditioningPhaseFrom, isReturningAfterGap, type ConditioningSelection } from "../_shared/wic/conditioning/selectConditioning.ts";
 import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
 import { resolveCrossSportTemplate } from "../_shared/wic/crossSport/templates.ts";
@@ -581,6 +582,29 @@ const handler = async (req: Request): Promise<Response> => {
     // same real game entered in Game Plan and on the calendar is one game.
     // An athlete with neither surface gets NO_SCHEDULE and the session is
     // generated exactly as it was before this rule existed.
+    // -------- Pitcher schedule (owner-authorised 2026-10-05) --------
+    // Real start / relief / availability data. Actual beats planned; an
+    // unconfirmed past outing is unknown, never counted. No rows → the old
+    // game-flag behaviour, said honestly on the conditioning card.
+    let outingFacts: OutingFacts | null = null;
+    try {
+      const [pss, pout, pav] = await Promise.all([
+        admin.from("pitcher_schedule_settings").select("role, rotation_anchor_date, rotation_every_days, rotation_active").eq("user_id", user.id).maybeSingle(),
+        admin.from("pitcher_outings").select("id, outing_type, planned_date, actual_date, status").eq("user_id", user.id)
+          .or(`planned_date.gte.${isoShift(planDate, -21)},actual_date.gte.${isoShift(planDate, -21)}`).limit(200),
+        admin.from("pitcher_availability").select("date, available").eq("user_id", user.id)
+          .gte("date", isoShift(planDate, -1)).lte("date", isoShift(planDate, 2)),
+      ]);
+      outingFacts = resolveOutingFacts({
+        planDate,
+        settings: (pss as any)?.data ?? null,
+        outings: ((pout as any)?.data ?? []) as any[],
+        availability: ((pav as any)?.data ?? []) as any[],
+      });
+      if (!outingFacts.hasSchedule) outingFacts = null;
+    } catch (_e) {
+      outingFacts = null;
+    }
     const scheduledGames: ScheduledGame[] = [
       ...gameWindowRows.map((g: any) => ({
         id: g.id ?? null,
@@ -619,6 +643,20 @@ const handler = async (req: Request): Promise<Response> => {
         })),
       ),
     ];
+    // A scheduled or actually-thrown start is a start: mark the game that day,
+    // or add the start as its own entry so start-day / day-before lift limits apply.
+    if (outingFacts) {
+      const startDays = new Set<string>([
+        ...outingFacts.plannedStartDates.filter((d) => d >= planDate),
+        ...outingFacts.thrownDates.filter((d) => d >= isoShift(planDate, -3)),
+      ]);
+      for (const d of startDays) {
+        if (d > isoShift(planDate, 3)) continue;
+        const same = scheduledGames.filter((g) => g.date === d && !g.ignored);
+        if (same.length > 0) same.forEach((g) => { g.isStartingPitcher = true; });
+        else scheduledGames.push({ id: `pitcher-start-${d}`, date: d, time: null, isStartingPitcher: true, status: null, declaredDoubleheader: false, ignored: false, label: "Pitching", source: "timeline" as const } as any);
+      }
+    }
     const isPitcherAthlete = athletePositions.some((x) => /pitch|^p$|^rhp$|^lhp$|^sp$|^rp$/.test(x));
     // Zero-exposure invariant input: the days in the last week on which the
     // athlete actually received a lift. Read-only, best-effort — a failure
@@ -851,6 +889,8 @@ const handler = async (req: Request): Promise<Response> => {
         const startOffsets = [
           ...(gamesToday ?? []).filter((g: any) => g.is_starting_pitcher).map((g: any) => g.game_date),
           ...(calendarGames ?? []).filter((g: any) => g.is_starting_pitcher).map((g: any) => g.event_date),
+          // Pitcher schedule starts — keeps the no-grip-loading rule on real start days.
+          ...(outingFacts ? outingFacts.plannedStartDates.filter((d) => d >= planDate) : []),
         ].map((d: string) => Math.round((dayMs(d) - dayMs(planDate)) / 86400000));
         const isPitcher = athletePositions.some((x) => /pitch|^p$|rhp|lhp|sp|rp/.test(x));
         const weekStart = isoShift(planDate, -((new Date(`${planDate}T12:00:00Z`).getUTCDay() + 6) % 7));
@@ -2608,8 +2648,17 @@ const handler = async (req: Request): Promise<Response> => {
         phase: conditioningPhaseFrom(phaseRes.phase, (phaseRes as any).source ?? null),
         isTournamentDay: trainingContext.day_type === "tournament_day",
         hoursToNearestGame: gameProximity.hoursToNearestGame,
-        pitcherStartedYesterday: isPitcherAthlete && scheduledGames.some((g) => g.isStartingPitcher && !g.ignored && g.date === yesterday),
+        // Actual beats planned: with a pitcher schedule only a confirmed outing counts.
+        pitcherStartedYesterday: isPitcherAthlete && (outingFacts
+          ? outingFacts.pitchedYesterday
+          : scheduledGames.some((g) => g.isStartingPitcher && !g.ignored && g.date === yesterday)),
         isPitcher: isPitcherAthlete,
+        pitcherStartsTomorrow: isPitcherAthlete && (outingFacts
+          ? outingFacts.startsTomorrow
+          : scheduledGames.some((g) => g.isStartingPitcher && !g.ignored && g.date === isoShift(planDate, 1))),
+        relieverAvailableSoon: isPitcherAthlete && !!outingFacts?.relieverAvailableSoon,
+        isTravelDay: !!timelineToday.travel,
+        outingSource: outingFacts ? "schedule" : scheduledGames.some((g) => g.isStartingPitcher) ? "game_flag" : "none",
         returningAfterGap: isReturningAfterGap(((historyLogRows ?? []) as any[]).map((r: any) => String(r.plan_date)), planDate),
         dialDownReasons,
       });
@@ -3280,6 +3329,8 @@ const handler = async (req: Request): Promise<Response> => {
     const conditioningCertification = certifyConditioning({
       prescriptions: finalRxs as any,
       catalog: lib as any,
+      // Certify against the session type the selector actually chose.
+      templateId: conditioningSelection?.templateId,
       template: {
         seasonPhase: trainingContext.season_phase,
         dayType: trainingContext.day_type,

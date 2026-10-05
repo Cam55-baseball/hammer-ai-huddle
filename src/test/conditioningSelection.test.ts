@@ -20,7 +20,9 @@ const sel = (o: Partial<ConditioningSelectionInput>) => selectConditioning({ ...
 const CATALOG = new Set([
   "bases_1st_3rd", "bases_home_2nd", "catcher_up_downs", "mif_turn_and_fire", "of_read_and_go",
   "pitcher_field_and_cover", "if_lateral_repeat", "inning_restart_sim_bb", "inning_restart_sim_sb",
-  "repeat_43ft_sb", "repeat_90ft_bb",
+  "repeat_43ft_sb", "repeat_90ft_bb", "rc_easy_flush", "rc_long_reach_walk", "rc_travel_reset", "rc_breathing_reset",
+  "pc_ankle_pogos_bb", "pc_buildup_strides_bb", "pc_pretension_hold_bb", "rp_ready_series_bb",
+  "sp_drive_bounds_sb", "sp_stride_stick_sb", "sp_arm_circle_rhythm_sb", "rp_ready_series_sb",
 ]);
 
 describe("conditioning selection paths", () => {
@@ -58,11 +60,11 @@ describe("conditioning selection paths", () => {
   it("game beyond 48h does not trigger the short day", () => {
     expect(sel({ hoursToNearestGame: 49 }).path).toBe("offseason");
   });
-  it("pitcher the day after a start gets pitcher recovery work", () => {
-    const s = sel({ position: "Pitcher", phase: "in_season", pitcherStartedYesterday: true, hoursToNearestGame: 20 });
+  it("pitcher the day after an outing gets the recovery flush", () => {
+    const s = sel({ position: "Pitcher", isPitcher: true, outingSource: "schedule", phase: "in_season", pitcherStartedYesterday: true, hoursToNearestGame: 20 });
     expect(s.path).toBe("pitcher_after_start");
-    expect(s.templateId).toBe("cond.pitcher_conditioning");
-    expect(s.slugs).toEqual(["pitcher_field_and_cover"]);
+    expect(s.templateId).toBe("cond.recovery_flush");
+    expect(s.slugs).toEqual(["rc_easy_flush", "rc_long_reach_walk"]);
   });
   it("tournament day (not a game day) stays light", () => {
     const s = sel({ isTournamentDay: true });
@@ -80,12 +82,12 @@ describe("conditioning selection paths", () => {
 
 describe("check-ins and the recovery governor dial it down", () => {
   for (const r of ["sleep", "cns", "soreness", "governor"]) {
-    it(`${r} → one movement, said plainly`, () => {
+    it(`${r} → hard sprint swapped for an easy flush, count held`, () => {
       const s = sel({ dialDownReasons: [r] });
-      expect(s.slugs).toHaveLength(1);
+      expect(s.slugs).toHaveLength(2);
       expect(s.dialedDown).toBe(true);
       expect(s.why).toMatch(/go easier today/);
-      expect(s.slugs).toEqual(["bases_home_2nd"]);
+      expect(s.slugs).toEqual(["rc_easy_flush", "bases_home_2nd"]);
     });
   }
   it("single-movement days are not marked dialed down twice", () => {

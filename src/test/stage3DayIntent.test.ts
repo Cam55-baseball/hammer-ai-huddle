@@ -3,7 +3,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { selectConditioning, PITCHER_STAND_IN_LINE, ALACTIC, type ConditioningSelectionInput } from "../../supabase/functions/_shared/wic/conditioning/selectConditioning";
+import { selectConditioning, ALACTIC, type ConditioningSelectionInput } from "../../supabase/functions/_shared/wic/conditioning/selectConditioning";
 import { certifyConditioning } from "../../supabase/functions/_shared/wic/conditioning/sessionBuilder";
 import { certifyArmCare } from "../../supabase/functions/_shared/wic/armCare/sessionBuilder";
 import { certifyRecovery } from "../../supabase/functions/_shared/wic/recovery/sessionBuilder";
@@ -44,21 +44,31 @@ describe("pitcher conditioning fallback", () => {
       template: { seasonPhase: "in_season", isPostGame: true } as any });
     expect(rec.fatal.filter((f) => f.code === "rec_unresolved_template")).toEqual([]);
   });
-  it("the pitcher reason says honestly that a team drill stands in, on every path", () => {
-    for (const o of [{}, { pitcherStartedYesterday: true }, { hoursToNearestGame: 20 }, { phase: null }, { dialDownReasons: ["day_intent"] }]) {
-      const s = selectConditioning({ ...base, ...o });
-      expect(s.why).toContain(PITCHER_STAND_IN_LINE);
-      expect(s.why).not.toMatch(/\d/);
+  it("pitchers get their own work from real outing facts, and say so when the schedule is missing", () => {
+    const S = { ...base, outingSource: "schedule" as const };
+    expect(selectConditioning({ ...S, pitcherStartsTomorrow: true }).slugs).toEqual(["pc_ankle_pogos_bb", "pc_buildup_strides_bb"]);
+    expect(selectConditioning({ ...S, sport: "softball", pitcherStartsTomorrow: true }).slugs).toEqual(["sp_drive_bounds_sb", "sp_stride_stick_sb"]);
+    expect(selectConditioning({ ...S, relieverAvailableSoon: true }).slugs).toEqual(["rp_ready_series_bb", "pc_pretension_hold_bb"]);
+    expect(selectConditioning({ ...S, sport: "softball", relieverAvailableSoon: true }).slugs).toEqual(["rp_ready_series_sb", "sp_arm_circle_rhythm_sb"]);
+    expect(selectConditioning({ ...S, pitcherStartedYesterday: true }).templateId).toBe("cond.recovery_flush");
+    // Zero sport mix-ups: a softball pitcher never receives a baseball pitcher slug and vice versa.
+    for (const o of [{ pitcherStartsTomorrow: true }, { relieverAvailableSoon: true }]) {
+      expect(selectConditioning({ ...S, ...o, sport: "softball" }).slugs.some((x) => x.endsWith("_bb"))).toBe(false);
+      expect(selectConditioning({ ...S, ...o, sport: "baseball" }).slugs.some((x) => x.endsWith("_sb"))).toBe(false);
     }
-    expect(selectConditioning({ ...base, position: "SS", isPitcher: false }).why).not.toContain(PITCHER_STAND_IN_LINE);
+    const none = selectConditioning({ ...base, outingSource: "none" });
+    expect(none.why).toMatch(/Add your pitching days/);
+    for (const o of [{}, { pitcherStartsTomorrow: true }, { relieverAvailableSoon: true }, { pitcherStartedYesterday: true }, { isTravelDay: true }]) {
+      expect(selectConditioning({ ...S, ...o }).why).not.toMatch(/\d|closest team drill/);
+    }
   });
 });
 
 describe("day intent", () => {
-  it("an easier day drops the hard sprint, keeps one easier drill, never adds", () => {
+  it("an easier day swaps the hard sprint for an easy flush — same count, never adds", () => {
     const normal = selectConditioning({ ...base, position: "SS", isPitcher: false });
     const light = selectConditioning({ ...base, position: "SS", isPitcher: false, dialDownReasons: ["day_intent"] });
-    expect(light.slugs.length).toBeLessThanOrEqual(normal.slugs.length);
+    expect(light.slugs.length).toBe(normal.slugs.length);
     expect(light.slugs.some((x) => ALACTIC.has(x))).toBe(false);
     expect(light.why).toMatch(/go easier/);
   });

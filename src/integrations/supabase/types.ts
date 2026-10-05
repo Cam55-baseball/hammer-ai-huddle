@@ -10612,6 +10612,108 @@ export type Database = {
         }
         Relationships: []
       }
+      pitcher_availability: {
+        Row: {
+          available: boolean
+          created_at: string
+          date: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          available: boolean
+          created_at?: string
+          date: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          available?: boolean
+          created_at?: string
+          date?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pitcher_outings: {
+        Row: {
+          actual_date: string | null
+          created_at: string
+          id: string
+          innings: number | null
+          notes: string | null
+          outing_type: string
+          pitch_count: number | null
+          planned_date: string | null
+          source: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actual_date?: string | null
+          created_at?: string
+          id?: string
+          innings?: number | null
+          notes?: string | null
+          outing_type?: string
+          pitch_count?: number | null
+          planned_date?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actual_date?: string | null
+          created_at?: string
+          id?: string
+          innings?: number | null
+          notes?: string | null
+          outing_type?: string
+          pitch_count?: number | null
+          planned_date?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pitcher_schedule_settings: {
+        Row: {
+          created_at: string
+          role: string
+          rotation_active: boolean
+          rotation_anchor_date: string | null
+          rotation_every_days: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          role?: string
+          rotation_active?: boolean
+          rotation_anchor_date?: string | null
+          rotation_every_days?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          role?: string
+          rotation_active?: boolean
+          rotation_anchor_date?: string | null
+          rotation_every_days?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       planned_off_days: {
         Row: {
           created_at: string
