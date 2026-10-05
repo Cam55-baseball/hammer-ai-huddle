@@ -2112,6 +2112,7 @@ const handler = async (req: Request): Promise<Response> => {
           game_day: isGameDay,
           day_intent: dayIntent,
           day_intent_applied: dayIntentApplied,
+          recent_load: recentLoad,
           training_age_years: trainingAgeYears, is_pro_prospect: isProProspect,
           intensity_class: s.movement.intensity_class,
           pattern: s.movement.pattern,
