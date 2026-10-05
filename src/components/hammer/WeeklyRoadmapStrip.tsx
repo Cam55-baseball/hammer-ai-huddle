@@ -59,7 +59,7 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
   const { weeklyRoadmap, weeklyTemplate, microcycle, roadmap } = plan;
   const season = useSeasonStatus();
   const resolvedPhaseCode = { off_season: "off", preseason: "pre", in_season: "in", post_season: "post" }[season.resolvedPhase];
-  const phaseWeek = roadmap.quarter.quarterKnown && season.phaseStartedAt && season.phaseDaysIn !== null && resolvedPhaseCode === roadmap.quarter.phase
+  const phaseWeek = roadmap.quarter.phaseKnown && season.phaseStartedAt && season.phaseDaysIn !== null && resolvedPhaseCode === roadmap.quarter.phase
     ? Math.max(1, Math.floor(season.phaseDaysIn / 7) + 1)
     : null;
 
@@ -76,25 +76,27 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
             <div className="text-[11px] text-muted-foreground">Your training path: {roadmap.rung.label}</div>
             {!roadmap.quarter.quarterKnown ? (
               <div className="text-[11px] text-muted-foreground leading-tight">
-                Add your season dates to show where you are in your training block.{' '}
+                {roadmap.quarter.phaseKnown ? "Your season phase is known, but its start date isn't. Add your season dates to show your week." : "Add your season dates to show where you are in your training block."}{' '}
                 <Button variant="link" size="sm" className="h-auto p-0 text-[11px]" onClick={() => setSeasonDatesOpen(true)}>Set season dates</Button>
               </div>
             ) : (
               <div className="text-[11px] text-muted-foreground leading-tight">
-                {roadmap.quarter.label}{phaseWeek !== null ? ` · Week ${phaseWeek}` : ''} · {weeklyTemplate.label}
+                {season.resolvedPhase.replace(/_/g, " ")} · {phaseWeek !== null ? `Week ${phaseWeek}` : "Week not set"} · {weeklyTemplate.label}
               </div>
             )}
 
           </div>
         </div>
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           onClick={() => setExplainerOpen(true)}
-          className="flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary hover:bg-primary/20 shrink-0"
+          className="flex items-center gap-1 px-2 text-[11px] shrink-0"
         >
           <Target className="h-3 w-3" />
           Your training path
-        </button>
+        </Button>
       </header>
       <RoadmapExplainerSheet
         open={explainerOpen}
