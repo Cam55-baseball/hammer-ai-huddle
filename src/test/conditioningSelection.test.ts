@@ -86,7 +86,7 @@ describe("check-ins and the recovery governor dial it down", () => {
       const s = sel({ dialDownReasons: [r] });
       expect(s.slugs).toHaveLength(2);
       expect(s.dialedDown).toBe(true);
-      expect(s.why).toMatch(/go easier today/);
+      expect(s.why).toMatch(r === "governor" ? /lighter day/ : /go easier today/);
       expect(s.slugs).toEqual(["rc_easy_flush", "bases_home_2nd"]);
     });
   }

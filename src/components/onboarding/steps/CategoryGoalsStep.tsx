@@ -269,10 +269,14 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
     }
     setSaving(true);
     try {
+      // Keep the athlete's goal ranking (saved by the rank-your-goals card).
+      const { data: prev } = await supabase.from("athlete_context").select("category_goals").eq("user_id", user.id).maybeSingle();
+      const prevOrder = (prev as { category_goals?: { categoryOrder?: unknown } } | null)?.category_goals?.categoryOrder;
+      const merged = Array.isArray(prevOrder) ? { ...(payload as object), categoryOrder: prevOrder } : payload;
       const { error } = await supabase
         .from("athlete_context")
         .upsert(
-          { user_id: user.id, category_goals: payload as unknown as never },
+          { user_id: user.id, category_goals: merged as unknown as never },
           { onConflict: "user_id" },
         );
       if (error) throw error;

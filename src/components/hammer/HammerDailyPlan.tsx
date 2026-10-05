@@ -95,6 +95,7 @@ import { WkBatSpeedCard } from "@/components/hammer/WkBatSpeedCard";
 import { WkLiftsCard } from "@/components/hammer/WkLiftsCard";
 import { WkConditioningCard } from "@/components/hammer/WkConditioningCard";
 import { GameLogPromptCard } from "@/components/hammer/GameLogPromptCard";
+import { RankGoalsPromptCard } from "@/components/hammer/RankGoalsPromptCard";
 import { PitcherScheduleGate } from "@/components/hammer/pitching/PitcherScheduleCard";
 import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
 import { useGpSignal } from "@/hooks/useGpSignal";
@@ -1011,6 +1012,9 @@ function HammerDailyPlanBody({
               </ErrorBoundary>
               <ErrorBoundary label="game-log-prompt">
                 <GameLogPromptCard />
+              </ErrorBoundary>
+              <ErrorBoundary label="rank-goals">
+                <RankGoalsPromptCard />
               </ErrorBoundary>
               <ErrorBoundary label="pitcher-schedule">
                 <PitcherScheduleGate />

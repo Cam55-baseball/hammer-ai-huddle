@@ -88,6 +88,14 @@ export const ALACTIC = new Set(["if_lateral_repeat", "inning_restart_sim_bb", "i
 const aerobicPositionDrill = (slug: string) => (ALACTIC.has(slug) ? "bases_1st_3rd" : slug);
 
 const DIAL_DOWN_LINE = "Your check-in says go easier today, so the hard sprint is swapped for an easy flush.";
+const RECENT_LOAD_LINE = "You've had a busy few days, so the hard sprint is swapped for an easy flush.";
+const GENERIC_DIAL_LINE = "Today is a lighter day, so the hard sprint is swapped for an easy flush.";
+const CHECK_IN_REASONS = new Set(["sleep", "cns", "soreness", "day_intent", "silent_signals"]);
+function dialLine(reasons: readonly string[]): string {
+  if (reasons.some((r) => CHECK_IN_REASONS.has(r))) return DIAL_DOWN_LINE;
+  if (reasons.includes("recent_load")) return RECENT_LOAD_LINE;
+  return GENERIC_DIAL_LINE;
+}
 /** Easy work that replaces a hard sprint on a dial-down day, so the count holds. */
 export const DIAL_DOWN_SWAP = "rc_easy_flush";
 const NO_SCHEDULE_LINE = "Add your pitching days so this can line up with your outings.";
@@ -100,7 +108,7 @@ export function selectConditioning(input: ConditioningSelectionInput): Condition
       path, templateId,
       // Dialing down swaps the hard sprint for an easy flush — same count.
       slugs: dial ? slugs.map((x) => (ALACTIC.has(x) ? DIAL_DOWN_SWAP : x)).filter((x, i, a) => a.indexOf(x) === i) : slugs,
-      why: [why, dial && slugs.some((x) => ALACTIC.has(x)) ? DIAL_DOWN_LINE : null].filter(Boolean).join(" "),
+      why: [why, dial && slugs.some((x) => ALACTIC.has(x)) ? dialLine(input.dialDownReasons) : null].filter(Boolean).join(" "),
       fallback, dialedDown: dial,
     };
   };

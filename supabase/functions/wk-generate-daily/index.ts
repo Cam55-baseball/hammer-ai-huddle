@@ -125,6 +125,8 @@ import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
 // Phase 10 — Performance Support Engines (Conditioning + Cross-Sport + Recovery + Arm Care).
 import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.ts";
 import { resolveOutingFacts, type OutingFacts } from "../_shared/wic/pitching/outingFacts.ts";
+import { baselineSignal, type BaselineSignal } from "../_shared/wic/recovery/baselineSignal.ts";
+import { recentLoadEffect, type RecentLoadEffect, GAME_WINDOW_DAYS } from "../_shared/wic/recovery/recentLoad.ts";
 import { selectConditioning, conditioningPhaseFrom, isReturningAfterGap, type ConditioningSelection } from "../_shared/wic/conditioning/selectConditioning.ts";
 import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
 import { resolveCrossSportTemplate } from "../_shared/wic/crossSport/templates.ts";
@@ -587,6 +589,7 @@ const handler = async (req: Request): Promise<Response> => {
     // unconfirmed past outing is unknown, never counted. No rows → the old
     // game-flag behaviour, said honestly on the conditioning card.
     let outingFacts: OutingFacts | null = null;
+    let outingLoadDates: string[] = [];
     try {
       const [pss, pout, pav] = await Promise.all([
         admin.from("pitcher_schedule_settings").select("role, rotation_anchor_date, rotation_every_days, rotation_active").eq("user_id", user.id).maybeSingle(),
@@ -601,6 +604,9 @@ const handler = async (req: Request): Promise<Response> => {
         outings: ((pout as any)?.data ?? []) as any[],
         availability: ((pav as any)?.data ?? []) as any[],
       });
+      outingLoadDates = (((pout as any)?.data ?? []) as any[])
+        .filter((o) => o.status === "thrown" && o.actual_date && o.outing_type !== "bullpen")
+        .map((o) => String(o.actual_date));
       if (!outingFacts.hasSchedule) outingFacts = null;
     } catch (_e) {
       outingFacts = null;
@@ -968,6 +974,34 @@ const handler = async (req: Request): Promise<Response> => {
       dayIntentApplied = true;
       reductions.push({ reason: "day_intent", detail: "You chose an easier day in your check-in, so the hard work is dialled back." });
     }
+    // -------- Stage 7 (owner-authorised 2026-10-05) — the athlete's own baselines --------
+    // An established baseline sharpens the check-in rule to this athlete's own
+    // usual. One step at most, never stacked on a check-in step, lighter only.
+    // No baseline (most athletes) → nothing changes, recorded as coverage.
+    let baseline: BaselineSignal | null = null;
+    try {
+      const { data: bRows } = await admin
+        .from("athlete_baseline_history")
+        .select("metric_key, status, n_used, computed_at, observation:athlete_metric_observations(recorded_at)")
+        .eq("user_id", user.id)
+        .gte("computed_at", new Date(Date.parse(`${planDate}T00:00:00Z`) - 120 * 86400000).toISOString())
+        .order("computed_at", { ascending: false })
+        .limit(300);
+      baseline = baselineSignal({
+        planDate,
+        rows: ((bRows ?? []) as any[]).map((r) => ({
+          metric_key: r.metric_key, status: r.status, n_used: r.n_used, computed_at: r.computed_at,
+          observed_at: r.observation?.recorded_at ?? null,
+        })),
+        checkInAlreadyStepped: reductions.some((r) => r.reason === "sleep" || r.reason === "cns" || r.reason === "day_intent"),
+      });
+      if (baseline.applied) {
+        cnsCap = Math.max(1, cnsCap - 1);
+        reductions.push({ reason: "baseline", detail: baseline.reason! });
+      }
+    } catch (_e) {
+      baseline = null;
+    }
     // -------- TCS v1.1 §3 — Silent Signals (E2E WP4 item 2) --------
     // Reads the last 28 days of one-tap logs. Reduce, never remove: at most one
     // CNS-cap step, neutral copy. Pain always wins (active pain → no signal
@@ -1129,6 +1163,33 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
 
+
+    // -------- Stage 4 (owner-authorised 2026-10-05) — recent game & practice load --------
+    // Logged games, confirmed outings and past, uncancelled practices from the
+    // last few days. One recovery-limit step at most; never adds work. Any
+    // failure or no records → no effect, exactly as before.
+    let recentLoad: RecentLoadEffect | null = null;
+    try {
+      const from = isoShift(planDate, -GAME_WINDOW_DAYS);
+      const [rg, rp] = await Promise.all([
+        admin.from("gp_games").select("game_date, status, is_doubleheader, ignored_for_training, deleted_at")
+          .eq("user_id", user.id).gte("game_date", from).lt("game_date", planDate),
+        admin.from("scheduled_practice_sessions").select("scheduled_date, status, intensity, practice_kind")
+          .eq("user_id", user.id).gte("scheduled_date", from).lt("scheduled_date", planDate),
+      ]);
+      recentLoad = recentLoadEffect({
+        planDate,
+        games: ((rg as any)?.data ?? []) as any[],
+        practices: ((rp as any)?.data ?? []) as any[],
+        outingDates: outingLoadDates,
+      });
+      if (recentLoad.applied) {
+        cnsCap = Math.max(1, cnsCap - 1);
+        reductions.push({ reason: "recent_load", detail: recentLoad.reason! });
+      }
+    } catch (_e) {
+      recentLoad = null;
+    }
 
     // -------- TCS stage S4 — rest-day calculator (switch-gated) --------
     // Off for everyone by default. When the `rest_day_calculator` switch does
@@ -1710,7 +1771,15 @@ const handler = async (req: Request): Promise<Response> => {
     // ---- Goal Emphasis Authority + Weekly Balance Ledger -------------------
     // Emphasis biases WHICH legal movement fills a discretionary slot. It can
     // never author a dose, relax a gate, or delete a required category.
-    const goalEmphasis = resolveGoalEmphasis({ bodyGoals: bodyGoals ?? [], profile: p });
+    // Stage 5 (owner-authorised 2026-10-05): the athlete's own category ranking
+    // and career goal tilt choice only — never a gate, never a dose.
+    const goalEmphasis = resolveGoalEmphasis({
+      bodyGoals: bodyGoals ?? [],
+      profile: p,
+      categoryOrder: ((ctx as any)?.category_goals?.categoryOrder ?? null) as string[] | null,
+      careerGoal: ((ctx as any)?.goal_summary ?? null) as string | null,
+      isPitcher: isPitcherAthlete,
+    });
     const weeklyLedger = buildWeeklyLedger(
       (recentLifts ?? []).map((r: any) => ({
         plan_date: String(r.plan_date),
@@ -1808,6 +1877,8 @@ const handler = async (req: Request): Promise<Response> => {
       const parts: string[] = [];
       if (!goalEmphasis.isBaselineOnly && goalEmphasis.ranked.length) {
         parts.push(`you ranked ${goalEmphasis.ranked[0]} first`);
+      } else if (goalEmphasis.career.length) {
+        parts.push(`your goal points toward ${goalEmphasis.career.join(" and ")}`);
       }
       if (short > 0) parts.push(`your week is short on ${cat.replace(/_/g, " ")}`);
       return parts.length ? ` Chosen because ${parts.join(" and ")}.` : "";
@@ -2080,6 +2151,9 @@ const handler = async (req: Request): Promise<Response> => {
           game_day: isGameDay,
           day_intent: dayIntent,
           day_intent_applied: dayIntentApplied,
+          recent_load: recentLoad,
+          baseline: baseline ? { coverage: baseline.coverage, applied: baseline.applied, trigger: baseline.trigger, established: baseline.established } : { coverage: "unread" },
+          goal_direction: { ranked: goalEmphasis.ranked, career: goalEmphasis.career, athlete_ranked: goalEmphasis.athleteRanked },
           training_age_years: trainingAgeYears, is_pro_prospect: isProProspect,
           intensity_class: s.movement.intensity_class,
           pattern: s.movement.pattern,
