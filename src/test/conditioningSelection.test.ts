@@ -6,6 +6,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import {
+  ALACTIC,
   selectConditioning, conditioningPhaseFrom, isReturningAfterGap,
   type ConditioningSelectionInput,
 } from "../../supabase/functions/_shared/wic/conditioning/selectConditioning";
@@ -84,6 +85,7 @@ describe("check-ins and the recovery governor dial it down", () => {
       expect(s.slugs).toHaveLength(1);
       expect(s.dialedDown).toBe(true);
       expect(s.why).toMatch(/go easier today/);
+      expect(s.slugs).toEqual(["bases_home_2nd"]);
     });
   }
   it("single-movement days are not marked dialed down twice", () => {
@@ -119,6 +121,8 @@ describe("shape and voice guarantees", () => {
     {}, { phase: "preseason" }, { phase: "in_season" }, { phase: null }, { hoursToNearestGame: 10 },
     { isTournamentDay: true }, { pitcherStartedYesterday: true, position: "P" }, { returningAfterGap: true },
     { dialDownReasons: ["sleep"] }, { sport: "softball", position: "C" }, { position: "OF" },
+    { position: "IF", phase: "in_season" }, { position: "IF", hoursToNearestGame: 10 },
+    { phase: "in_season", dialDownReasons: ["governor"] }, { phase: "preseason", dialDownReasons: ["soreness"] },
   ];
   it("never more than two movements, every slug exists, every template exists, no digits in copy", () => {
     for (const o of all) {
@@ -129,6 +133,9 @@ describe("shape and voice guarantees", () => {
       expect(CONDITIONING_TEMPLATES[s.templateId]).toBeTruthy();
       expect(s.why).not.toMatch(/\d/);
       expect(s.why).not.toMatch(/load|volume|ramp|ceiling|governor|aerobic/i);
+      // Certifier contract: >=1 non-sprint (aerobic) movement, <=1 sprint movement.
+      expect(s.slugs.filter((x) => !ALACTIC.has(x)).length).toBeGreaterThanOrEqual(1);
+      expect(s.slugs.filter((x) => ALACTIC.has(x)).length).toBeLessThanOrEqual(1);
     }
   });
   it("on/off switches are untouched in the generator", () => {

@@ -67,15 +67,23 @@ export function positionDrillSlug(position: string | null): string {
 export const inningRestart = (s: "baseball" | "softball") => (s === "baseball" ? "inning_restart_sim_bb" : "inning_restart_sim_sb");
 export const repeatSprint = (s: "baseball" | "softball") => (s === "baseball" ? "repeat_90ft_bb" : "repeat_43ft_sb");
 
+// Catalog categories (wk_movement_catalog.conditioning_category). The existing
+// conditioning certifier requires at least one aerobic_base movement and at
+// most one alactic_power movement, and a failed certifier sends the athlete to
+// the safe session — so every selection keeps to that.
+export const ALACTIC = new Set(["if_lateral_repeat", "inning_restart_sim_bb", "inning_restart_sim_sb", "repeat_43ft_sb", "repeat_90ft_bb"]);
+const aerobicPositionDrill = (slug: string) => (ALACTIC.has(slug) ? "bases_1st_3rd" : slug);
+
 const DIAL_DOWN_LINE = "Your check-in says go easier today, so it's one round only.";
 
 export function selectConditioning(input: ConditioningSelectionInput): ConditioningSelection {
-  const pos = positionDrillSlug(input.position);
+  const pos = aerobicPositionDrill(positionDrillSlug(input.position));
   const base = (path: ConditioningPath, templateId: ConditioningTemplateId, slugs: string[], why: string, fallback = false): ConditioningSelection => {
     const dial = input.dialDownReasons.length > 0 && slugs.length > 1;
     return {
       path, templateId,
-      slugs: dial ? slugs.slice(0, 1) : slugs,
+      // Dialing down drops the hard sprint and keeps the easier drill.
+      slugs: dial ? slugs.filter((x) => !ALACTIC.has(x)).slice(0, 1) : slugs,
       why: dial ? `${why} ${DIAL_DOWN_LINE}` : why,
       fallback, dialedDown: dial,
     };
