@@ -2576,6 +2576,7 @@ const handler = async (req: Request): Promise<Response> => {
       conditioningEmptyPool = conditioning.length === 0;
       for (const m of conditioning) {
         push("conditioning", "conditioning", m, {}, conditioningSelection.why, {
+          conditioning_why: conditioningSelection.why,
           conditioning_path: conditioningSelection.path,
           conditioning_template_id: conditioningSelection.templateId,
           conditioning_fallback: conditioningSelection.fallback,
