@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 /** The existing day override write, relocated to the final morning step. */
 export function MorningDayIntent() {
-  const { dayType, setDayType, restBudgetLeft, usedThisWeek, maxPerWeek, overBudget } = useDayState();
+  const { dayType, setDayType, restBudgetLeft, overBudget } = useDayState();
   const [saving, setSaving] = useState(false);
   const choices = [
     { type: 'rest' as const, label: 'Rest', icon: Moon },
@@ -45,7 +45,7 @@ export function MorningDayIntent() {
           dayType === 'push' ? 'Higher standard today. Extra output expected.' :
           'Standard day. Operate at your current standard.'}
       </p>
-      <p className="text-xs text-muted-foreground">{usedThisWeek}/{maxPerWeek} rest used this week{overBudget ? ' — over budget' : ''}.</p>
+      <p className="text-xs text-muted-foreground">{overBudget ? 'Rest allowance exceeded this week.' : 'Rest allowance is managed for you this week.'}</p>
     </section>
   );
 }

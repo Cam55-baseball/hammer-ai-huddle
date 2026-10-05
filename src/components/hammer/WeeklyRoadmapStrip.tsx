@@ -88,7 +88,7 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
           className="flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary hover:bg-primary/20 shrink-0"
         >
           <Target className="h-3 w-3" />
-          Rung {roadmap.rung.index}/5
+          Your training path
         </button>
       </header>
       <RoadmapExplainerSheet
@@ -118,16 +118,16 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
         <span className="font-medium text-foreground">Today:</span>
         <span>
           {SCHEDULED_TODAY_LINE(plan.microcycle.perModality) ||
-            "Anchor blocks only — warm-up + fueling + recovery."}{" "}
+            "Warm-up, fueling and recovery."}{" "}
           <span className="text-muted-foreground/70">
-            (Spacing: max-speed days and heavy lower-body days are never back-to-back.)
+            Hammer spaces high-demand work and protects recovery.
           </span>
         </span>
       </div>
 
       {microcycle.template.id === "in_season" && (
         <div className="mt-1 text-[10px] text-muted-foreground">
-          In-season posture: lifts run 2×/week for maintenance only. Speed is 1×/week for freshness. Skill work is daily but capped at activation dose.
+          In-season: strength maintains your base; speed stays fresh and skill work stays measured.
         </div>
       )}
     </section>
