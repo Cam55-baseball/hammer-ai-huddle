@@ -58,15 +58,17 @@ export function recentLoadEffect(input: RecentLoadInput): RecentLoadEffect {
   const practiceFrom = shift(input.planDate, -PRACTICE_WINDOW_DAYS);
   const inGame = (d: string) => d >= gameFrom && d < input.planDate;
 
-  let games = 0;
-  const gameDates = new Set<string>();
+  // Per date: one game, or two for a doubleheader / two logged games. Never
+  // more than two a day, so a duplicated log can't inflate the load.
+  const perDate = new Map<string, number>();
   for (const g of input.games) {
     const d = String(g.game_date ?? "").slice(0, 10);
     if (!d || !inGame(d) || g.deleted_at || g.ignored_for_training) continue;
     if (!LOGGED.has(String(g.status ?? "").toLowerCase())) continue;
-    games += g.is_doubleheader ? 2 : 1;
-    gameDates.add(d);
+    perDate.set(d, Math.min(2, (perDate.get(d) ?? 0) + (g.is_doubleheader ? 2 : 1)));
   }
+  let games = [...perDate.values()].reduce((a, b) => a + b, 0);
+  const gameDates = new Set<string>(perDate.keys());
   for (const d0 of input.outingDates) {
     const d = d0.slice(0, 10);
     if (!inGame(d) || gameDates.has(d)) continue;
