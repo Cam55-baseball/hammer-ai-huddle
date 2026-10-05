@@ -51,5 +51,5 @@ export function useNextAction(): NextAction {
       route: '/nutrition-hub',
       ctaLabel: 'Plan Tomorrow',
     };
-  }, [overallState, readiness.state, hasAccess, due]);
+  }, [overallState, readiness.state]);
 }
