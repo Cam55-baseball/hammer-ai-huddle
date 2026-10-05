@@ -12,6 +12,9 @@ import { mergeHpiLifestyle, type StressLevel } from "@/lib/hpi/lifestyleStore";
 
 export type VaultQuizType = "morning" | "pre_lift" | "night";
 
+/** Form-only values used to calculate other answers; never columns on the check-in row. */
+export const NOT_STORED = new Set(["bedtime_actual", "wake_time_actual"]);
+
 export interface VaultQuizRow {
   id: string;
   user_id: string;
@@ -68,6 +71,13 @@ export function useVaultQuizzesForDate(date?: string) {
         wakeTime = d.toISOString();
       }
 
+      // The form also collects bedtime/wake time to calculate hours_slept;
+      // those two values are not stored columns. Sending them made the whole
+      // save fail (2026-10-05 check-in blocker), so only stored fields go.
+      const row: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(data)) {
+        if (!NOT_STORED.has(k) && v !== undefined) row[k] = v;
+      }
       const { error } = await supabase
         .from("vault_focus_quizzes")
         .upsert(
@@ -77,7 +87,7 @@ export function useVaultQuizzesForDate(date?: string) {
             quiz_type: quizType,
             sleep_time: sleepTime,
             wake_time: wakeTime,
-            ...data,
+            ...row,
           } as any,
           { onConflict: "user_id,entry_date,quiz_type" },
         );
