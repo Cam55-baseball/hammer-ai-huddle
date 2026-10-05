@@ -7,6 +7,6 @@ describe("athlete notice translation", () => {
     expect(copy).toBe("You slept less than usual. Today's hard work is lighter; follow the plan shown.");
   });
   it("does not infer a cause for an unfamiliar notice", () => {
-    expect(athleteNoticeCopy({ reason: "game_proximity", detail: "Unexpected schedule reason" })).toBe("Unexpected schedule reason");
+    expect(athleteNoticeCopy({ reason: "game_proximity", detail: "Unexpected schedule reason" })).toBe("Today's work may have changed. Follow the plan shown, and ask your coach if the reason isn't clear.");
   });
 });

@@ -79,7 +79,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     finally { setBusy(false); setBusyKey(null); }
   }
   /** A fixed choice is one tap: it clears any typed text and sends immediately. */
-  function tap(value: EntryDraft, key: string) { setText(""); setConfirm(null); if (checkIn) { if (value.tag === "PAIN") void commit(value, key); else { setPending(value); setFlow(null); } } else void commit(value, key); }
+  function tap(value: EntryDraft, key: string) { setText(""); setConfirm(null); if (checkIn) { setPending(value); setFlow(null); } else void commit(value, key); }
   async function undo(id: string) {
     try {
       if (await tl.undo(id)) { setSent(s => s.filter(e => e.id !== id)); toast.success("Undone"); }
@@ -95,7 +95,8 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     const words = text.trim();
     if (flow === "pain") {
       if (!pending) return; // a pain entry always needs a face
-      void commit(words ? { ...pending, payload: { ...pending.payload, text: words } } : pending, "pain-send");
+      if (checkIn) { setPending(words ? { ...pending, payload: { ...pending.payload, text: words } } : pending); setFlow(null); }
+      else void commit(words ? { ...pending, payload: { ...pending.payload, text: words } } : pending, "pain-send");
       return;
     }
     if (!words) return;
@@ -129,7 +130,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
 
   const changeConfirmed = todayEntries.some(e => e.tag === "NOTE" && e.start_date === today && (e.payload?.kind === "morning_change_confirmation"));
   const confirmChanges = async (nothing: boolean) => {
-    if (nothing && pending) { setSaveError("You have an unsaved change. Tap Done to save it, or go Back to remove it."); return; }
+    if (nothing && pending) { setSaveError("You have an unsaved change. Tap Done to save it, or Remove it before confirming nothing changed."); return; }
     if (pending) { await commit(pending, "change-done"); return; }
     await commit(draft("NOTE", today, today, { kind: "morning_change_confirmation", answer: nothing ? "no_change" : "done" }), nothing ? "change-no-change" : "change-done");
   };

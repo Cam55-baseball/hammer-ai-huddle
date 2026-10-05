@@ -66,7 +66,7 @@ export function athleteNoticeCopy({ reason, detail }: Notice): string {
     if (s.includes("restart easy")) return "You haven't logged this work lately. Start with the easy version shown.";
     if (s.includes(" capped at ")) return "Recent work in this area has been lower. Do only the work shown today.";
   }
-  // Do not invent a cause for an unfamiliar rule or a changed backend template.
+  // Unknown future templates must not leak internal language or imply a cause we cannot verify.
   if (import.meta.env.DEV) console.warn("[untranslated-athlete-notice]", { reason, detail });
-  return detail;
+  return "Today's work may have changed. Follow the plan shown, and ask your coach if the reason isn't clear.";
 }
