@@ -64,9 +64,13 @@ export function RampLines() {
 
 /** Pure view (tested): the top line, then ONE collapsed "Why this phase matters" line. Nothing else. */
 export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePlan; open: boolean; onToggle: () => void }) {
+  const phaseLabels = { P1: "Build your strength base", P2: "Lift heavier and move faster", P3: "Turn strength into game speed", P4: "Game-ready training" } as const;
+  const phaseName = plan.phase in phaseLabels ? phaseLabels[plan.phase as keyof typeof phaseLabels] : null;
+  const displayLine = phaseName ? stripText(plan).replace(/^(Power Potential|Power Building|Explosiveness|Game-Ready Production)/, phaseName) : stripText(plan);
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground" data-testid="phase-strip">
-      <div className="font-medium">{stripText(plan)}</div>
+      <div className="font-medium">{displayLine}</div>
+      {plan.phase === "P4" && <p className="text-xs text-muted-foreground">Lifting: short, sharp lifts to keep your strength without leaving you tired for games.</p>}
       {(plan.ramps ?? []).map((r) => (
         <div key={r.discipline} className="text-xs text-foreground" data-testid="ramp-line">{r.line}</div>
       ))}
@@ -74,7 +78,7 @@ export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePla
         <div key={w} className="text-xs text-foreground" data-testid="ramp-warning">{w}</div>
       ))}
       <button type="button" aria-expanded={open} onClick={onToggle} className="mt-1 inline-flex min-h-11 items-center text-xs text-muted-foreground underline underline-offset-2" data-testid="phase-why-toggle">
-        Why this phase matters
+        Why you're training this way
       </button>
       {open && <p className="mt-1 text-muted-foreground" data-testid="phase-why">{plan.why}</p>}
     </div>

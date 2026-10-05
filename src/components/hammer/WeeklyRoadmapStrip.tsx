@@ -58,30 +58,29 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
   const [seasonDatesOpen, setSeasonDatesOpen] = useState(false);
   const { weeklyRoadmap, weeklyTemplate, microcycle, roadmap } = plan;
   const season = useSeasonStatus();
-  const phaseWeek = roadmap.quarter.quarterKnown && season.phaseDaysIn !== null
+  const phaseWeek = roadmap.quarter.quarterKnown && season.phaseStartedAt && season.phaseDaysIn !== null && season.resolvedPhase === roadmap.quarter.phase
     ? Math.max(1, Math.floor(season.phaseDaysIn / 7) + 1)
     : null;
 
   return (
     <section
-      aria-label="Weekly training roadmap"
+      aria-label="Your training block and season"
       className="rounded-lg border border-primary/25 bg-gradient-to-b from-primary/5 to-transparent p-3"
     >
       <header className="mb-2 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <Calendar className="h-4 w-4 text-primary shrink-0" />
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-foreground truncate">
-              {roadmap.rung.label} · {roadmap.quarter.quarterKnown ? roadmap.quarter.label : roadmap.quarter.phaseKnown ? roadmap.quarter.label.replace(' · block not set', '') : 'Season dates needed'}
-            </div>
+            <div className="text-xs font-semibold text-foreground">Your training block &amp; season</div>
+            <div className="text-[11px] text-muted-foreground">Your training path: {roadmap.rung.label}</div>
             {!roadmap.quarter.quarterKnown ? (
               <div className="text-[11px] text-muted-foreground leading-tight">
-                Set your season dates to place this training block.{' '}
+                Add your season dates to show where you are in your training block.{' '}
                 <Button variant="link" size="sm" className="h-auto p-0 text-[11px]" onClick={() => setSeasonDatesOpen(true)}>Set season dates</Button>
               </div>
             ) : (
               <div className="text-[11px] text-muted-foreground leading-tight">
-                {season.phaseProfile.label}{phaseWeek !== null ? ` · Week ${phaseWeek}` : ''} · {weeklyTemplate.label}
+                {roadmap.quarter.label}{phaseWeek !== null ? ` · Week ${phaseWeek}` : ''} · {weeklyTemplate.label}
               </div>
             )}
 

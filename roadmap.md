@@ -68,3 +68,8 @@
 - [ ] Find Tex Vision S2 baseline; prescribe accessible baseline in Due today and eligible baseline-driven work in drawer
 - [ ] Connect roadmap missing dates to Season Dates and make HPI honest and evidence-linked without changing authority
 - [ ] Record accessibility rule; verify athlete role and both check-ins on phone with before/after screenshots (report blockers honestly)
+
+# Approved clarity follow-up (preview-only)
+- [ ] Clarify lifting phase and translate daily notices at display edge
+- [ ] Add independent Anything change and next game confirmations at morning check-in end
+- [ ] Name and unify the training block card; audit remaining labels and verify mobile athlete flow
