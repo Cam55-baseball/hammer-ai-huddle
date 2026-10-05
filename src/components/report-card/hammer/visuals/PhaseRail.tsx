@@ -102,8 +102,8 @@ export function PhaseRail({ phases, activePhase, onSelect }: Props) {
               <span className="text-[10px] text-muted-foreground">
                 {p.count} {p.count === 1 ? "check" : "checks"}
               </span>
-              <span className="text-[10px] font-bold tabular-nums" style={{ color }}>
-                {pctLabel}
+               <span className="text-[10px] font-bold tabular-nums" style={{ color }}>
+                 {p.status === "complete" && p.score != null ? "Phase score: " : "Phase result: "}{pctLabel}
               </span>
             </button>
           );

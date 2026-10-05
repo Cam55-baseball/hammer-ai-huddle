@@ -75,7 +75,8 @@ export function ReportCardTile({ spec, state, onOpen, index = 0 }: Props) {
         {spec.name}
       </div>
 
-      <div className="flex flex-1 items-center justify-center py-3">
+       <div className="flex flex-1 flex-col items-center justify-center py-3">
+         {!isMissing && (spec.mode === "raw_passed" || spec.mode === "raw_pass_fail" || isRecord) && <span className="mb-1 text-[10px] font-bold text-muted-foreground">Measurement</span>}
         {isMissing ? (
           <MissingBody reason={athleteMissingness(state.missing_reason)} />
         ) : isRecord && spec.mode === "score_meter" && state.score100 != null ? (
@@ -84,7 +85,7 @@ export function ReportCardTile({ spec, state, onOpen, index = 0 }: Props) {
             acceptable={null}
             status="warn"
             centerLabel={String(Math.round(state.score100))}
-            centerSub="Recorded"
+             centerSub="Recorded score"
             animate={!reduce}
           />
         ) : isRecord ? (

@@ -137,14 +137,14 @@ export function NightCheckInSuccess({
     }
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+   const itemVariants = {
+     hidden: reducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 },
     visible: { opacity: 1, y: 0 }
   };
 
   return (
     <motion.div
-      className="flex flex-col gap-4 py-2"
+       className="flex flex-col gap-5 py-2"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -157,7 +157,7 @@ export function NightCheckInSuccess({
       {/* Hero Section */}
       <motion.div
         variants={itemVariants}
-        className="daily-success-header rounded-md border border-primary/35 px-5 py-6 text-center space-y-3"
+         className="daily-success-header rounded-md border border-primary/35 px-5 py-7 text-center space-y-4"
       >
         <div className="flex items-center justify-center gap-2 text-3xl">
           <Sparkles className="h-6 w-6 text-primary" />
@@ -171,9 +171,9 @@ export function NightCheckInSuccess({
         {streakDays > 0 && (
           <motion.div 
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30"
-            initial={reducedMotion ? false : { scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, type: 'spring' }}
+             initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ duration: 0.3 }}
           >
             <Flame className="h-5 w-5 text-orange-500" />
             <span className="font-bold text-orange-500">{streakDays}</span>
@@ -184,7 +184,7 @@ export function NightCheckInSuccess({
 
       {/* Today's Highlights */}
       <motion.div variants={itemVariants}>
-        <Card className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-indigo-500/20">
+         <Card className="daily-success-section border-l-2 border-l-primary">
           <CardContent className="p-4 space-y-3">
             <h3 className="font-bold text-sm flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -234,7 +234,7 @@ export function NightCheckInSuccess({
 
       {/* Tomorrow Preview */}
       <motion.div variants={itemVariants}>
-        <Card className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/20">
+         <Card className="daily-success-section border-l-2 border-l-primary">
           <CardContent className="p-4 space-y-3">
             <h3 className="font-bold text-sm flex items-center gap-2">
               <Sun className="h-4 w-4 text-amber-500" />
@@ -285,7 +285,7 @@ export function NightCheckInSuccess({
 
       {/* Morning Bonus Section */}
       <motion.div variants={itemVariants}>
-        <Card className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border-emerald-500/20">
+         <Card className="daily-success-section border-l-2 border-l-primary">
           <CardContent className="p-4 space-y-3">
             <h3 className="font-bold text-sm flex items-center gap-2">
               <Sun className="h-4 w-4 text-amber-500" />
@@ -366,7 +366,7 @@ export function NightCheckInSuccess({
       <motion.div variants={itemVariants} className="pt-2">
         <Button 
           onClick={onClose}
-          className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-6 text-lg"
+           className="w-full min-h-12 font-bold text-lg"
         >
           <Moon className="h-5 w-5 mr-2" />
           {t('vault.quiz.nightSuccess.closeButton')}
@@ -494,7 +494,8 @@ function DailyOutcomeSection() {
           <div className={cn('rounded-lg p-2 bg-background/30', meta.iconClass)}>
             <StatusIcon className="h-6 w-6" />
           </div>
-          <div className="min-w-0">
+           <div className="min-w-0">
+             <div className="text-xs font-semibold text-muted-foreground">How today finished</div>
             <div className={cn('text-lg sm:text-xl font-black uppercase tracking-wider', meta.textClass)}>
               {outcome.status}
             </div>
