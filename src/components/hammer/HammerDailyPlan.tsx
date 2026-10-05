@@ -84,9 +84,10 @@ import {
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 import { TellHammersInbox } from "@/components/hammer/TellHammersInbox";
 import { GuardianConsentPrompt } from "@/components/recruiting/GuardianConsentPrompt";
-import { RampLines, AdaptivePhaseStrip } from "@/components/hammer/AdaptivePhaseStrip";
+import { RampLines } from "@/components/hammer/AdaptivePhaseStrip";
 import { TodaysWisdomCard } from "@/components/hammer/TodaysWisdomCard";
-import { ScheduledPriorityStrip } from "@/components/hammer/ScheduledPriorityStrip";
+import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
+import { TexVisionWork } from "@/components/hammer/TexVisionWork";
 
 import { HumanPerformanceCard } from "@/components/hpi/HumanPerformanceCard";
 import { useOpenedOnceToday } from "@/hooks/useOpenedOnceToday";
@@ -804,21 +805,10 @@ function HammerDailyPlanBody({
       </ErrorBoundary>
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
-        {/* Owner direction: phase name, weeks left, what's next and "Why this phase matters" live inside this drawer. */}
-        <ErrorBoundary>
-          <AdaptivePhaseStrip />
-        </ErrorBoundary>
-        {/* 0. Scheduled priority items (recap, photos, re-tests) — only when due */}
-        <ErrorBoundary>
-          <ScheduledPriorityStrip />
-        </ErrorBoundary>
         {/* 0b. Today's load and volume notices — checked off as read. */}
         <ErrorBoundary>
           <DayNoticesDrawerItem />
         </ErrorBoundary>
-        {/* 1. Schedule & What Changed */}
-        <ScheduleDropdownWrapper />
-
         {/* 2. Today's Wisdom */}
         <TodaysWisdomCard />
         {/* 2b. Defensive prep video — driven by the athlete's fielding signals */}
@@ -827,6 +817,7 @@ function HammerDailyPlanBody({
         </ErrorBoundary>
         {/* 3. Human Performance Intelligence */}
         <HumanPerformanceCard />
+        <TexVisionWork />
 
         {/* 4. Start Line (DailyIntentHeader) */}
         <DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} />
@@ -849,7 +840,7 @@ function HammerDailyPlanBody({
         </button>
         {/* 6. Non-physical prescribed blocks: mental / vision work + eating plan */}
         {plan.blocks
-          .filter((b) => PRE_START_MODALITIES.has(b.modality))
+          .filter((b) => PRE_START_MODALITIES.has(b.modality) && (b.modality !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES))
           .map((b) => {
             const adj = adaptive.find((a) => a.modality === b.modality);
             return (
@@ -982,7 +973,7 @@ function HammerDailyPlanBody({
             (b) =>
               b.modality !== "warmup" &&
               !WK_OWNED.has(b.modality) &&
-              !PRE_START_MODALITIES.has(b.modality),
+              !PRE_START_MODALITIES.has(b.modality) && (b.modality !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES),
           );
           // Step 21B — skill work runs before practice / conditioning / lift;
           // the recovery flow is the last thing in the day.
@@ -1110,7 +1101,7 @@ function HammerDailyPlanBody({
  * games, season dates, cancels/reschedules, and update Hammer what changed.
  * Per-day open state persists in localStorage.
  */
-function ScheduleDropdownWrapper() {
+export function ScheduleDropdownWrapper() {
   // Step 21E1 — the season drives this card: the athlete's current season
   // state is the headline, and the entry point for changing it lives here.
   const seasonCtx = useGameDayContext();

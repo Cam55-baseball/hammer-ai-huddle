@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { SeasonDatesDialog } from "@/components/hammer/SeasonDatesDialog";
+import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 
 import { ChevronDown, ChevronUp, Calendar, Target } from "lucide-react";
 import type {
@@ -52,6 +54,7 @@ interface Props {
 export function WeeklyRoadmapStrip({ plan }: Props) {
   const [expanded, setExpanded] = useState<number | null>(null);
   const [explainerOpen, setExplainerOpen] = useState(false);
+  const [seasonDatesOpen, setSeasonDatesOpen] = useState(false);
   const { weeklyRoadmap, weeklyTemplate, microcycle, roadmap } = plan;
 
   return (
@@ -68,14 +71,12 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
             </div>
             {!roadmap.quarter.phaseKnown ? (
               <div className="text-[11px] text-muted-foreground truncate">
-                No season dates on file —{' '}
-                <Link to="/profile" className="font-medium text-primary hover:underline">
-                  set your season dates
-                </Link>
+                Season dates needed to place this training block.{' '}
+                <Button variant="link" size="sm" className="h-auto p-0 text-[11px]" onClick={() => setSeasonDatesOpen(true)}>Set season dates</Button>
               </div>
             ) : (
               <div className="text-[11px] text-muted-foreground truncate">
-                {weeklyTemplate.label} · builds toward {roadmap.eliteTarget.league} 6-game weeks
+                {weeklyTemplate.label} · {roadmap.quarter.label}
               </div>
             )}
 
@@ -95,6 +96,7 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
         onOpenChange={setExplainerOpen}
         roadmap={roadmap}
       />
+      <SeasonDatesDialog open={seasonDatesOpen} onOpenChange={setSeasonDatesOpen} />
 
 
       <div className="grid grid-cols-7 gap-1">
@@ -142,7 +144,7 @@ function DayCell({
   active: boolean;
 }) {
   const primaryChips = day.modalities.filter(
-    (m) => m.intensity === "primary" || m.intensity === "secondary",
+    (m) => (m.key !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES) && (m.intensity === "primary" || m.intensity === "secondary"),
   );
   return (
     <button
@@ -190,10 +192,10 @@ function DayDetail({ day }: { day: RoadmapDay }) {
   return (
     <div className="mt-2 space-y-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px]">
       <div className="text-xs font-semibold text-foreground">
-        {day.short} · {day.modalities.length} scheduled block{day.modalities.length === 1 ? "" : "s"}
+        {day.short} · {day.modalities.filter((m) => m.key !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES).length} scheduled blocks
       </div>
       <ul className="space-y-0.5">
-        {day.modalities.map((m) => (
+        {day.modalities.filter((m) => m.key !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES).map((m) => (
           <li key={m.key} className="flex items-center gap-2">
             <span className={`rounded px-1.5 py-0.5 text-[10px] border ${INTENSITY_TONE[m.intensity]}`}>
               {m.intensity}

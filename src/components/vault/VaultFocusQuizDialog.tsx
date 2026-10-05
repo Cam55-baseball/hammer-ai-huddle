@@ -40,6 +40,8 @@ import { FasciaInsightPanel } from './FasciaInsightPanel';
 import { TissueTypeSelector } from './quiz/TissueTypeSelector';
 import { TISSUE_TYPES } from './quiz/body-maps/tissueTypeDefinitions';
 import { NightCheckInSuccess } from './quiz/NightCheckInSuccess';
+import { MorningCheckInSuccess } from './quiz/MorningCheckInSuccess';
+import { MorningDayIntent } from './quiz/MorningDayIntent';
 import { useNightCheckInStats } from '@/hooks/useNightCheckInStats';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 
@@ -706,6 +708,11 @@ export function VaultFocusQuizDialog({
         return;
       }
       
+      if (quizType === 'morning') {
+        setShowNightSuccess(true);
+        return;
+      }
+
       // Reset form and close for other quiz types
       resetFormAndClose();
     }
@@ -785,8 +792,10 @@ export function VaultFocusQuizDialog({
       }
     }}>
       <DialogContent className="max-w-full sm:max-w-lg p-4 sm:p-6 overflow-y-auto max-h-[90vh]">
-        {/* Night Check-in Success Screen */}
-        {showNightSuccess && quizType === 'night' ? (
+        {/* Both check-ins keep their result visible until dismissed. */}
+        {showNightSuccess && quizType === 'morning' ? (
+          <MorningCheckInSuccess onClose={handleNightSuccessClose} />
+        ) : showNightSuccess && quizType === 'night' ? (
           <NightCheckInSuccess
             streakDays={nightStats.streakDays}
             todayStats={{
@@ -2167,6 +2176,8 @@ export function VaultFocusQuizDialog({
               </div>
             </div>
           )}
+
+          {quizType === 'morning' && <MorningDayIntent />}
 
           {/* Submit Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-6 mt-4 border-t border-border">

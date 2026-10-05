@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { useReadinessState } from './useReadinessState';
 import { useHammerState } from './useHammerState';
+import { useTexVisionAccess } from './useTexVisionAccess';
+import { useTexVisionS2Priority } from '@/components/hammer/TexVisionS2Priority';
 
 export interface NextAction {
   moduleHint: string;
@@ -16,6 +18,8 @@ export interface NextAction {
 export function useNextAction(): NextAction {
   const readiness = useReadinessState();
   const { overallState } = useHammerState();
+  const { hasAccess } = useTexVisionAccess();
+  const { due } = useTexVisionS2Priority();
 
   return useMemo(() => {
     const hour = new Date().getHours();
@@ -29,12 +33,12 @@ export function useNextAction(): NextAction {
       };
     }
 
-    if (hour < 10) {
+    if (hour < 10 && hasAccess && due) {
       return {
         moduleHint: 'physio',
-        label: 'Prime your nervous system',
+        label: 'Complete your Tex Vision S2 assessment',
         route: '/tex-vision',
-        ctaLabel: 'Start Tex Vision',
+        ctaLabel: 'Open S2 assessment',
       };
     }
     if (hour < 16) {
@@ -59,5 +63,5 @@ export function useNextAction(): NextAction {
       route: '/nutrition-hub',
       ctaLabel: 'Plan Tomorrow',
     };
-  }, [overallState, readiness.state]);
+  }, [overallState, readiness.state, hasAccess, due]);
 }

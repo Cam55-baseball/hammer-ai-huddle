@@ -55,8 +55,7 @@ export function BeforeYouStartSection({
             <div className="min-w-0">
               <div className="text-sm font-semibold leading-tight">Before you start</div>
               <p className="text-[11px] leading-tight text-muted-foreground">
-                Due today, schedule, wisdom, performance signal, start line, Ask Hammer,
-                mental / vision / eating.
+                Today's notices, wisdom, performance context, vision work, start line and fueling.
               </p>
             </div>
           </div>
