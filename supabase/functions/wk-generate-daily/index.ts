@@ -1742,7 +1742,15 @@ const handler = async (req: Request): Promise<Response> => {
     // ---- Goal Emphasis Authority + Weekly Balance Ledger -------------------
     // Emphasis biases WHICH legal movement fills a discretionary slot. It can
     // never author a dose, relax a gate, or delete a required category.
-    const goalEmphasis = resolveGoalEmphasis({ bodyGoals: bodyGoals ?? [], profile: p });
+    // Stage 5 (owner-authorised 2026-10-05): the athlete's own category ranking
+    // and career goal tilt choice only — never a gate, never a dose.
+    const goalEmphasis = resolveGoalEmphasis({
+      bodyGoals: bodyGoals ?? [],
+      profile: p,
+      categoryOrder: ((ctx as any)?.category_goals?.categoryOrder ?? null) as string[] | null,
+      careerGoal: ((ctx as any)?.goal_summary ?? null) as string | null,
+      isPitcher: isPitcherAthlete,
+    });
     const weeklyLedger = buildWeeklyLedger(
       (recentLifts ?? []).map((r: any) => ({
         plan_date: String(r.plan_date),
@@ -1840,6 +1848,8 @@ const handler = async (req: Request): Promise<Response> => {
       const parts: string[] = [];
       if (!goalEmphasis.isBaselineOnly && goalEmphasis.ranked.length) {
         parts.push(`you ranked ${goalEmphasis.ranked[0]} first`);
+      } else if (goalEmphasis.career.length) {
+        parts.push(`your goal points toward ${goalEmphasis.career.join(" and ")}`);
       }
       if (short > 0) parts.push(`your week is short on ${cat.replace(/_/g, " ")}`);
       return parts.length ? ` Chosen because ${parts.join(" and ")}.` : "";
