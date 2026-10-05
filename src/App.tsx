@@ -20,6 +20,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { LaunchOpening } from "@/components/landing/LaunchOpening";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
 import { HMLoadingProvider } from "./components/loading/HMLoadingScreen";
+import { MorningCheckInSuccess } from "./components/vault/quiz/MorningCheckInSuccess";
 import { SportThemeProvider } from "./contexts/SportThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SideContextProvider } from "@/contexts/SideContext";
@@ -307,6 +308,7 @@ const App = () => {
             <Suspense fallback={<PageLoadingSkeleton />}>
               <DemoGate>
               <Routes>
+              {import.meta.env.DEV && <Route path="/__local_morning_visual" element={<main className="mx-auto max-w-md p-4"><MorningCheckInSuccess onClose={() => {}} /></main>} />}
               <Route path="/" element={<Index />} />
               {import.meta.env.DEV && (
                 <>
