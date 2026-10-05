@@ -1,5 +1,6 @@
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { CheckInLifeChips } from "@/components/checkin/CheckInLifeChips";
+import { toast } from "sonner";
 import { NextGameConfirmation } from "@/components/checkin/NextGameConfirmation";
 import { recordPain, bodyAreaToRegion, scaleToSeverity } from "@/lib/hammer/injury/recordPain";
 import { useQueryClient as usePainQc } from "@tanstack/react-query";
