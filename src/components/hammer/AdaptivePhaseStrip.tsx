@@ -63,15 +63,16 @@ export function RampLines() {
   );
 }
 
-/** Pure view (tested): the top line, then ONE collapsed "Why this phase matters" line. Nothing else. */
+/** Pure view: the kind of plan, its current phase, then what that means for lifting. */
 export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePlan; open: boolean; onToggle: () => void }) {
   const phaseLabels = { P1: "Build your strength base", P2: "Lift heavier and move faster", P3: "Turn strength into game speed", P4: "Game-ready training" } as const;
   const displayNames: Record<string, string> = { "Power Potential": phaseLabels.P1, "Power Building": phaseLabels.P2, Explosiveness: phaseLabels.P3, "Game-Ready Production": phaseLabels.P4 };
   const displayLine = stripText(plan).replace(/Power Potential|Power Building|Explosiveness|Game-Ready Production/g, name => displayNames[name] ?? name);
   return (
     <div className="rounded-md border border-border/80 bg-background/65 px-4 py-3 text-sm text-foreground" data-testid="phase-strip">
-      <div className="font-semibold leading-snug">{displayLine}</div>
-      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{({ P1: "Lifting: build a strong base with controlled work.", P2: "Lifting: build strength with heavier and faster work.", P3: "Lifting: move weight faster and turn strength into speed.", P4: "Lifting: short, sharp lifts to keep your strength without leaving you tired for games." } as const)[plan.phase]}</p>
+      <h3 className="text-xs font-bold uppercase text-muted-foreground" data-testid="phase-heading">Your training phase</h3>
+      <p className="mt-2 text-base font-semibold leading-snug" data-testid="phase-name">{displayLine}</p>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{({ P1: "Lifting: build a strong base with controlled work.", P2: "Lifting: build strength with heavier and faster work.", P3: "Lifting: move weight faster and turn strength into speed.", P4: "Lifting: short, sharp lifts to keep your strength without leaving you tired for games." } as const)[plan.phase]}</p>
       {(plan.ramps ?? []).map((r) => (
         <div key={r.discipline} className="text-xs text-foreground" data-testid="ramp-line">{r.line}</div>
       ))}
