@@ -70,6 +70,6 @@
 - [ ] Record accessibility rule; verify athlete role and both check-ins on phone with before/after screenshots (report blockers honestly)
 
 # Approved clarity follow-up (preview-only)
-- [ ] Clarify lifting phase and translate daily notices at display edge
-- [ ] Add independent Anything change and next game confirmations at morning check-in end
-- [ ] Name and unify the training block card; audit remaining labels and verify mobile athlete flow
+- [x] Clarify lifting phase and translate daily notices at display edge; unknown wording falls back without guessing its cause
+- [x] Add independent Anything change and next game confirmations at morning check-in end
+- [ ] Obtain owner approval for proposed training-block name and remaining labels; verify phone flow as a player (blocked: only owner preview session is available)
