@@ -103,7 +103,7 @@ describe("v1.2 §F", () => {
   });
 
   it("the drawer shows the phase explanation in one tap and adds nothing else", () => {
-    const plan = { phaseName: "Power Building", why: "Now we add force.", weeksLeft: 3 } as any;
+    const plan = { phase: "P2", mode: "in_season", hardDate: null, schedule: { estimated: false }, ramp: null, why: "Now we add force.", weeksLeft: 3 } as any;
     function Host() { const [o, s] = useState(false); return React.createElement(PhaseStripView, { plan, open: o, onToggle: () => s(!o) }); }
     const { container } = render(React.createElement(Host));
     expect(screen.queryByTestId("phase-why")).toBeNull();
