@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
@@ -66,7 +67,7 @@ export function RampLines() {
 export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePlan; open: boolean; onToggle: () => void }) {
   const phaseLabels = { P1: "Build your strength base", P2: "Lift heavier and move faster", P3: "Turn strength into game speed", P4: "Game-ready lifting and training" } as const;
   const phaseName = plan.phase in phaseLabels ? phaseLabels[plan.phase as keyof typeof phaseLabels] : null;
-  const displayLine = phaseName ? stripText(plan).replace(/^(Power Potential|Power Building|Explosiveness|Game-Ready Production)/, phaseName) : stripText(plan);
+  const displayLine = phaseName ? stripText(plan).replace(/^(Power Potential|Power Building|Explosiveness|Game-Ready Production)/, phaseName).replace(/next: (Power Potential|Power Building|Explosiveness|Game-Ready Production)/, (_, next) => `next: ${Object.values({ "Power Potential": phaseLabels.P1, "Power Building": phaseLabels.P2, Explosiveness: phaseLabels.P3, "Game-Ready Production": phaseLabels.P4 })[Object.keys({ "Power Potential": phaseLabels.P1, "Power Building": phaseLabels.P2, Explosiveness: phaseLabels.P3, "Game-Ready Production": phaseLabels.P4 }).indexOf(next)]}`) : stripText(plan);
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground" data-testid="phase-strip">
       <div className="font-medium">{displayLine}</div>
@@ -77,9 +78,9 @@ export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePla
       {(plan.rampWarnings ?? []).map((w) => (
         <div key={w} className="text-xs text-foreground" data-testid="ramp-warning">{w}</div>
       ))}
-      <button type="button" aria-expanded={open} onClick={onToggle} className="mt-1 inline-flex min-h-11 items-center text-xs text-muted-foreground underline underline-offset-2" data-testid="phase-why-toggle">
+      <Button type="button" variant="link" aria-expanded={open} onClick={onToggle} className="mt-1 min-h-11 h-auto px-0 text-xs text-muted-foreground underline underline-offset-2" data-testid="phase-why-toggle">
         Why you're training this way
-      </button>
+      </Button>
       {open && <p className="mt-1 text-muted-foreground" data-testid="phase-why">{plan.why}</p>}
     </div>
   );
