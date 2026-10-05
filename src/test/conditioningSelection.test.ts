@@ -58,11 +58,11 @@ describe("conditioning selection paths", () => {
   it("game beyond 48h does not trigger the short day", () => {
     expect(sel({ hoursToNearestGame: 49 }).path).toBe("offseason");
   });
-  it("pitcher the day after a start gets pitcher recovery work", () => {
-    const s = sel({ position: "Pitcher", phase: "in_season", pitcherStartedYesterday: true, hoursToNearestGame: 20 });
+  it("pitcher the day after an outing gets the recovery flush", () => {
+    const s = sel({ position: "Pitcher", isPitcher: true, outingSource: "schedule", phase: "in_season", pitcherStartedYesterday: true, hoursToNearestGame: 20 });
     expect(s.path).toBe("pitcher_after_start");
-    expect(s.templateId).toBe("cond.pitcher_conditioning");
-    expect(s.slugs).toEqual(["pitcher_field_and_cover"]);
+    expect(s.templateId).toBe("cond.recovery_flush");
+    expect(s.slugs).toEqual(["rc_easy_flush", "rc_long_reach_walk"]);
   });
   it("tournament day (not a game day) stays light", () => {
     const s = sel({ isTournamentDay: true });
@@ -80,12 +80,12 @@ describe("conditioning selection paths", () => {
 
 describe("check-ins and the recovery governor dial it down", () => {
   for (const r of ["sleep", "cns", "soreness", "governor"]) {
-    it(`${r} → one movement, said plainly`, () => {
+    it(`${r} → hard sprint swapped for an easy flush, count held`, () => {
       const s = sel({ dialDownReasons: [r] });
-      expect(s.slugs).toHaveLength(1);
+      expect(s.slugs).toHaveLength(2);
       expect(s.dialedDown).toBe(true);
       expect(s.why).toMatch(/go easier today/);
-      expect(s.slugs).toEqual(["bases_home_2nd"]);
+      expect(s.slugs).toEqual(["rc_easy_flush", "bases_home_2nd"]);
     });
   }
   it("single-movement days are not marked dialed down twice", () => {
