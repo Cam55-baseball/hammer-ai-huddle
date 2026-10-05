@@ -196,26 +196,27 @@ export function IdentityCommandCard({ className }: Props) {
     <TooltipProvider delayDuration={200}>
       <div
         className={cn(
-          'relative overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm',
+          'daily-identity relative overflow-hidden rounded-md border border-border bg-card text-card-foreground shadow-sm',
           className,
         )}
       >
         {/* Thin tier accent — only colored signal on the surface */}
-        <div className={cn('pointer-events-none absolute inset-y-0 left-0 w-[3px]', accent)} aria-hidden />
+        <div className={cn('pointer-events-none absolute inset-y-0 left-0 w-1', accent)} aria-hidden />
 
         {/* ─── Always-visible header (acts as the toggle) ──────────────── */}
-        <button
+        <Button
+          variant="ghost"
           type="button"
           onClick={handleToggle}
           aria-expanded={open}
           aria-label={open ? 'Collapse identity card' : 'Open identity card'}
-          className="relative w-full text-left px-4 py-3.5 sm:px-5 hover:bg-muted/40 transition-colors"
+          className="relative h-auto min-h-28 w-full whitespace-normal rounded-none px-5 py-5 text-left hover:bg-muted/20 sm:px-6"
         >
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Identity
+                <span className="text-xs font-bold uppercase text-primary">
+                  Your day
                 </span>
                 {dayType !== 'standard' && (
                   <span
@@ -229,10 +230,10 @@ export function IdentityCommandCard({ className }: Props) {
                 )}
               </div>
 
-              <div className="mt-1.5 flex items-end justify-between gap-3 sm:block">
+              <div className="mt-3 flex items-end justify-between gap-3 sm:block">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className={cn('text-2xl font-bold tracking-tight leading-tight break-words', tone)}>
+                    <span className={cn('text-3xl font-black leading-tight break-words', tone)}>
                       {label}
                     </span>
                   </div>
@@ -240,10 +241,10 @@ export function IdentityCommandCard({ className }: Props) {
 
                 {/* Mobile-only score */}
                 <div className="flex flex-col items-end shrink-0 sm:hidden">
-                  <div className={cn('text-3xl font-bold tabular-nums leading-none', scoreText)}>
+                  <div className={cn('text-3xl font-black tabular-nums leading-none', scoreText)}>
                     {score}
                   </div>
-                  <div className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  <div className="mt-1 text-xs font-medium text-muted-foreground">
                     Consistency
                   </div>
                 </div>
@@ -255,7 +256,7 @@ export function IdentityCommandCard({ className }: Props) {
               <div className={cn('text-3xl font-bold tabular-nums leading-none', scoreText)}>
                 {score}
               </div>
-              <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <div className="text-xs font-medium text-muted-foreground">
                 Consistency
               </div>
             </div>
@@ -275,46 +276,46 @@ export function IdentityCommandCard({ className }: Props) {
           </div>
 
           {/* Row 3: streak chips */}
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
-            <span className="inline-flex items-center gap-1.5 h-6 rounded-full border border-border bg-muted/50 px-2.5 font-medium text-foreground">
+          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/70 pt-3 text-xs">
+            <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
               <Flame className="h-3 w-3 text-orange-500" />
               <span className="tabular-nums">{perfStreak}</span>
-              <span className="text-muted-foreground">d perf</span>
+              <span className="text-muted-foreground">days meeting your standard</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 h-6 rounded-full border border-border bg-muted/50 px-2.5 font-medium text-foreground">
+            <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
               <ShieldCheck className="h-3 w-3 text-emerald-500" />
               <span className="tabular-nums">{discStreak}</span>
-              <span className="text-muted-foreground">d active</span>
+              <span className="text-muted-foreground">active days</span>
             </span>
             {nnMiss > 0 && (
-              <span className="inline-flex items-center gap-1.5 h-6 rounded-full border border-rose-500/25 bg-rose-500/10 px-2.5 font-medium text-rose-700 dark:text-rose-300">
+              <span className="inline-flex items-center gap-1.5 font-medium text-destructive">
                 <span className="tabular-nums">{nnMiss}</span>
-                <span>miss/7d</span>
+                <span>missed days this week</span>
               </span>
             )}
             {typeof hieSnapshot?.readiness_score === 'number' && (
               <Link
                 to="/progress#body"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1.5 h-6 rounded-full border border-border bg-muted/50 px-2.5 font-medium text-foreground hover:bg-muted transition-colors"
+                className="inline-flex items-center gap-1.5 font-medium text-foreground hover:text-primary transition-colors"
                 aria-label="Open full body report"
               >
-                <span className="text-muted-foreground">Body</span>
+                <span className="text-muted-foreground">Body check-in</span>
                 <span className="tabular-nums">{Math.round(hieSnapshot.readiness_score)}</span>
                 <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
               </Link>
             )}
           </div>
-        </button>
+        </Button>
 
 
 
         {/* ─── Expanded panel ─────────────────────────────────────────── */}
         <Collapsible open={open}>
           <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
-            <div className="px-3 sm:px-4 pb-4 pt-1 space-y-4 border-t border-border/40">
+            <div className="space-y-5 border-t border-border/70 px-4 pb-5 pt-4 sm:px-5">
 
-              <div className="space-y-2 pt-2">
+              <div className="space-y-3">
                 <AdaptivePhaseStrip />
                 <ScheduleDropdownWrapper />
               </div>
@@ -328,7 +329,7 @@ export function IdentityCommandCard({ className }: Props) {
                 return (
                   <section>
                     <SectionHeader
-                      title="One Thing"
+                      title="Focus today"
                       helpText="The single most important thing for you right now. Acting clears it."
                     />
                     <div
