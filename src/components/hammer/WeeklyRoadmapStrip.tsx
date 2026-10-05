@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { SeasonDatesDialog } from "@/components/hammer/SeasonDatesDialog";
 import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 
-import { ChevronDown, ChevronUp, Calendar, Target } from "lucide-react";
+import { Calendar, Target } from "lucide-react";
 import type {
   HammerDailyPlanResult,
 } from "@/lib/hammer/prescription/dailyPlan";
@@ -13,6 +13,7 @@ import type {
 } from "@/lib/hammer/prescription/weeklyMicrocycle";
 import type { ModalityKey } from "@/lib/hammer/prescription/dailyPlan";
 import { RoadmapExplainerSheet } from "./RoadmapExplainerSheet";
+import { useSeasonStatus } from "@/hooks/useSeasonStatus";
 
 const MODALITY_ABBR: Record<ModalityKey, string> = {
   warmup: "WU",
@@ -56,6 +57,10 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
   const [explainerOpen, setExplainerOpen] = useState(false);
   const [seasonDatesOpen, setSeasonDatesOpen] = useState(false);
   const { weeklyRoadmap, weeklyTemplate, microcycle, roadmap } = plan;
+  const season = useSeasonStatus();
+  const phaseWeek = roadmap.quarter.quarterKnown && season.phaseStartedAt
+    ? Math.max(1, Math.floor((Date.now() - new Date(`${season.phaseStartedAt}T00:00:00`).getTime()) / (7 * 86400000)) + 1)
+    : null;
 
   return (
     <section
@@ -67,16 +72,16 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
           <Calendar className="h-4 w-4 text-primary shrink-0" />
           <div className="min-w-0">
             <div className="text-xs font-semibold text-foreground truncate">
-              {roadmap.rung.label} · {roadmap.quarter.label}
+              {roadmap.quarter.phaseKnown ? `${roadmap.rung.label} · ${roadmap.quarter.quarterKnown ? roadmap.quarter.label : season.phaseProfile.label}` : roadmap.rung.label}
             </div>
-            {!roadmap.quarter.phaseKnown ? (
-              <div className="text-[11px] text-muted-foreground truncate">
-                Season dates needed to place this training block.{' '}
+            {!roadmap.quarter.quarterKnown ? (
+              <div className="text-[11px] text-muted-foreground leading-tight">
+                Set your season dates to place this training block.{' '}
                 <Button variant="link" size="sm" className="h-auto p-0 text-[11px]" onClick={() => setSeasonDatesOpen(true)}>Set season dates</Button>
               </div>
             ) : (
-              <div className="text-[11px] text-muted-foreground truncate">
-                {weeklyTemplate.label} · {roadmap.quarter.label}
+              <div className="text-[11px] text-muted-foreground leading-tight">
+                {season.phaseProfile.label} · Week {phaseWeek} · {weeklyTemplate.label}
               </div>
             )}
 
