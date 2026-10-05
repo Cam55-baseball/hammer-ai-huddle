@@ -21,20 +21,29 @@ export function MorningCheckInSuccess({ onClose }: { onClose: () => void }) {
   const standard = useMemo(() => deriveTodaysStandard(commandRows, dayType), [commandRows, dayType]);
   const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [checking, setChecking] = useState(true);
   useEffect(() => {
-    if (!user) return;
+    if (!user) { setChecking(false); return; }
     let active = true;
     void (supabase as any).from('daily_standard_checks').select('id').eq('user_id', user.id).eq('check_date', getTodayDate()).maybeSingle()
-      .then(({ data }: { data: { id: string } | null }) => { if (active) setConfirmed(!!data); });
+      .then(({ data, error }: { data: { id: string } | null; error: unknown }) => {
+        if (active) { if (!error) setConfirmed(!!data); setChecking(false); }
+      });
     return () => { active = false; };
   }, [user?.id]);
   const confirm = async () => {
     if (!user || saving) return;
     setSaving(true);
-    const { error } = await (supabase as any).from('daily_standard_checks').insert({ user_id: user.id, check_date: getTodayDate(), tier_at_confirm: tier });
-    if (error) toast.error('Standard could not be confirmed. Please try again.');
-    else { setConfirmed(true); toast.success(`Standard confirmed. ${label}.`); }
-    setSaving(false);
+    try {
+      const { error } = await (supabase as any).from('daily_standard_checks').insert({ user_id: user.id, check_date: getTodayDate(), tier_at_confirm: tier });
+      if (error) {
+        // Another open check-in may have confirmed this same date already.
+        const { data } = await (supabase as any).from('daily_standard_checks').select('id').eq('user_id', user.id).eq('check_date', getTodayDate()).maybeSingle();
+        if (data) setConfirmed(true);
+        else toast.error('Standard could not be confirmed. Please try again.');
+      } else { setConfirmed(true); toast.success(`Standard confirmed. ${label}.`); }
+    } catch { toast.error('Standard could not be confirmed. Please try again.'); }
+    finally { setSaving(false); }
   };
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="min-w-0 w-full space-y-5 py-3" role="status">
@@ -44,7 +53,7 @@ export function MorningCheckInSuccess({ onClose }: { onClose: () => void }) {
       <section className="space-y-2"><h3 className="text-xs font-semibold uppercase text-muted-foreground">Today's Standard</h3>
         <p className="text-sm font-semibold">{standard.standard}</p><p className="text-xs text-muted-foreground">{standard.rationale}</p>
         {confirmed ? <p className="text-sm text-primary">Standard confirmed for today.</p> :
-          <Button onClick={() => void confirm()} disabled={saving} className="w-full">Confirm I'm at this standard</Button>}
+          <Button onClick={() => void confirm()} disabled={saving || checking} className="w-full">Confirm I'm at this standard</Button>}
         <p className="text-xs italic text-muted-foreground">{standard.motivational}</p>
       </section>
       <section className="space-y-2" aria-label="Due today"><ScheduledPriorityStrip /><TexVisionS2Priority /></section>
