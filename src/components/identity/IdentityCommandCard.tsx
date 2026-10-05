@@ -204,13 +204,12 @@ export function IdentityCommandCard({ className }: Props) {
         <div className={cn('pointer-events-none absolute inset-y-0 left-0 w-1', accent)} aria-hidden />
 
         {/* ─── Always-visible header (acts as the toggle) ──────────────── */}
-        <Button
-          variant="ghost"
+        <button
           type="button"
           onClick={handleToggle}
           aria-expanded={open}
           aria-label={open ? 'Collapse identity card' : 'Open identity card'}
-          className="relative h-auto min-h-28 w-full whitespace-normal rounded-none px-5 py-5 text-left hover:bg-muted/20 sm:px-6"
+          className="relative min-h-28 w-full rounded-none px-5 py-5 text-left hover:bg-muted/20 sm:px-6"
         >
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
@@ -306,7 +305,7 @@ export function IdentityCommandCard({ className }: Props) {
               </Link>
             )}
           </div>
-        </Button>
+        </button>
 
 
 

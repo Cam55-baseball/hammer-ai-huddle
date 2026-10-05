@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { CheckCircle2, ArrowRight, Target, CalendarCheck, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 export function MorningCheckInSuccess({ onClose }: { onClose: () => void }) {
+  const reducedMotion = useReducedMotion();
   const { user } = useAuth();
   const { tier, label, focusSentence } = useIdentityState();
   const { dayType } = useDayState();
@@ -45,7 +46,7 @@ export function MorningCheckInSuccess({ onClose }: { onClose: () => void }) {
     } catch { toast.error('Standard could not be confirmed. Please try again.'); }
     finally { setSaving(false); }
   };
-  const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.36, ease: 'easeOut' as const } };
+  const rise = { initial: reducedMotion ? false as const : { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { duration: reducedMotion ? 0 : 0.36, ease: 'easeOut' as const } };
   return (
     <div className="daily-success min-w-0 w-full space-y-4 pb-2 pt-1" role="status">
       <motion.header {...rise} className="daily-success-header rounded-md border border-primary/35 px-5 py-6 sm:px-6">
