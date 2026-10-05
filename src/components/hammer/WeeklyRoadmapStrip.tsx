@@ -72,7 +72,7 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
           <Calendar className="h-4 w-4 text-primary shrink-0" />
           <div className="min-w-0">
             <div className="text-xs font-semibold text-foreground truncate">
-              {roadmap.quarter.phaseKnown ? `${roadmap.rung.label} · ${roadmap.quarter.quarterKnown ? roadmap.quarter.label : season.phaseProfile.label}` : roadmap.rung.label}
+              {roadmap.rung.label} · {roadmap.quarter.quarterKnown ? roadmap.quarter.label : roadmap.quarter.phaseKnown ? season.phaseProfile.label : 'Season dates needed'}
             </div>
             {!roadmap.quarter.quarterKnown ? (
               <div className="text-[11px] text-muted-foreground leading-tight">
