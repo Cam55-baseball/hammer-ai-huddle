@@ -1,8 +1,6 @@
 import { useMemo } from 'react';
 import { useReadinessState } from './useReadinessState';
 import { useHammerState } from './useHammerState';
-import { useTexVisionAccess } from './useTexVisionAccess';
-import { useTexVisionS2Priority } from '@/components/hammer/TexVisionS2Priority';
 
 export interface NextAction {
   moduleHint: string;
@@ -18,8 +16,6 @@ export interface NextAction {
 export function useNextAction(): NextAction {
   const readiness = useReadinessState();
   const { overallState } = useHammerState();
-  const { hasAccess } = useTexVisionAccess();
-  const { due } = useTexVisionS2Priority();
 
   return useMemo(() => {
     const hour = new Date().getHours();
@@ -33,14 +29,6 @@ export function useNextAction(): NextAction {
       };
     }
 
-    if (hour < 10 && hasAccess && due) {
-      return {
-        moduleHint: 'physio',
-        label: 'Complete your Tex Vision S2 assessment',
-        route: '/tex-vision',
-        ctaLabel: 'Open S2 assessment',
-      };
-    }
     if (hour < 16) {
       return {
         moduleHint: 'practice',
