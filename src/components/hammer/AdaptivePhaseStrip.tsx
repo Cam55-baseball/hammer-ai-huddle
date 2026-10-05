@@ -64,7 +64,7 @@ export function RampLines() {
 
 /** Pure view (tested): the top line, then ONE collapsed "Why this phase matters" line. Nothing else. */
 export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePlan; open: boolean; onToggle: () => void }) {
-  const phaseLabels = { P1: "Build your strength base", P2: "Lift heavier and move faster", P3: "Turn strength into game speed", P4: "Game-ready training" } as const;
+  const phaseLabels = { P1: "Build your strength base", P2: "Lift heavier and move faster", P3: "Turn strength into game speed", P4: "Game-ready lifting and training" } as const;
   const phaseName = plan.phase in phaseLabels ? phaseLabels[plan.phase as keyof typeof phaseLabels] : null;
   const displayLine = phaseName ? stripText(plan).replace(/^(Power Potential|Power Building|Explosiveness|Game-Ready Production)/, phaseName) : stripText(plan);
   return (
