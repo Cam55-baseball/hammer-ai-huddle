@@ -40,6 +40,7 @@ import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { useScheduleWindow } from "@/hooks/command/useScheduleWindow";
 import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
 import ProgressDashboard from "@/pages/ProgressDashboard";
+import { RecordsShowCard } from "@/components/progress/RecordsShowCard";
 
 interface TopicDef {
   readonly id: ProgressTopicId;
@@ -206,6 +207,8 @@ export default function ProgressLanding() {
         </div>
 
         <TopicButtonGrid tiles={tiles} onSelect={handleSelect} />
+
+        <RecordsShowCard />
 
         <GpInGameSummaryCard />
 
