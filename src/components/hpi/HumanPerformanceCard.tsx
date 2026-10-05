@@ -24,7 +24,7 @@ export function HumanPerformanceCard() {
   const analysis = hie.snapshot && fresh(hie.snapshot.computed_at) ? hie.snapshot : null;
   const day = (iso: string) => new Date(iso).toLocaleDateString();
   const rows: { label: string; value: string | null }[] = [
-    { label: "Morning check-in", value: morning ? `Recorded ${morning.entry_date}` : null },
+    { label: "Morning check-in", value: checkins.isLoading ? "Checking…" : morning ? `Recorded ${morning.entry_date}` : null },
     { label: "Workload and recovery", value: workload ? `${workload.overall_state} · ${day(workload.computed_at)}` : null },
     { label: "Video analysis", value: analysis?.primary_limiter ? `${analysis.primary_limiter} · ${day(analysis.computed_at)}` : null },
     { label: "Readiness", value: readiness.hasSignal ? String(readiness.state) : null },
