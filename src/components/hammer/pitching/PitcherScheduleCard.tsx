@@ -12,6 +12,21 @@ import { CalendarClock, Check } from "lucide-react";
 import { toast } from "sonner";
 import { usePitcherSchedule, shiftIso, type PitcherRole } from "@/hooks/usePitcherSchedule";
 import { HammersTodayContext } from "@/components/hammer/HammersTodayProvider";
+import { useAuth } from "@/hooks/useAuth";
+import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
+import { readPitcherProfile, shouldShowPitchingCard } from "@/lib/hammer/pitching/pitcherProfile";
+
+/** Mounts only for athletes who pitch — same rule as the pitching card. */
+export function PitcherScheduleGate() {
+  const { user } = useAuth();
+  const ctx = useHammerAthleteContext();
+  const show = shouldShowPitchingCard(
+    readPitcherProfile(user?.id),
+    ctx.get<unknown>("position_primary")?.value ?? null,
+    ctx.get<unknown>("position_secondary")?.value ?? null,
+  );
+  return show ? <PitcherScheduleCard /> : null;
+}
 
 const ROLE_LABEL: Record<PitcherRole, string> = { starter: "Starter", reliever: "Reliever", both: "Both" };
 const dayName = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString(undefined, { weekday: "short", timeZone: "UTC" });

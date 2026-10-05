@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { localIso, shiftIso } from "@/hooks/usePitcherSchedule";
+import { useSportTheme } from "@/contexts/SportThemeContext";
 
 interface G { id: string; game_date: string; status: string | null; opponent_team: string | null }
 const ASKED = "hm.gameLogAsked.";
@@ -21,6 +22,7 @@ export function GameLogPromptCard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { sport } = useSportTheme();
   const today = localIso();
   const yesterday = shiftIso(today, -1);
   const [, bump] = useState(0);
@@ -60,7 +62,7 @@ export function GameLogPromptCard() {
   const openLogger = async (date: string, existing?: G) => {
     if (existing) { navigate(`/games?game=${existing.id}`); return; }
     const { data, error } = await (supabase as any).from("gp_games")
-      .insert({ user_id: user!.id, game_date: date, status: "draft" }).select("id").single();
+      .insert({ user_id: user!.id, game_date: date, sport: sport === "softball" ? "softball" : "baseball", status: "draft" }).select("id").single();
     if (error) { toast.error(`Couldn't start the game log: ${error.message}`); return; }
     qc.invalidateQueries({ queryKey: ["game-log-prompt"] });
     navigate(`/games?game=${data.id}`);
