@@ -37,7 +37,7 @@ export function MorningCheckInSuccess({ onClose }: { onClose: () => void }) {
     setSaving(false);
   };
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-5 py-3" role="status">
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="min-w-0 w-full space-y-5 py-3" role="status">
       <div className="text-center"><CheckCircle2 className="mx-auto h-10 w-10 text-primary" />
         <h2 className="mt-2 text-xl font-bold">Morning check-in complete</h2></div>
       {focusSentence && <section><h3 className="text-xs font-semibold uppercase text-muted-foreground">Develop this week</h3><p className="mt-1 text-sm">{focusSentence}</p></section>}

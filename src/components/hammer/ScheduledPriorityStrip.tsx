@@ -25,7 +25,7 @@ export function ScheduledPriorityStrip() {
   return (
     <div
       className={cn(
-        "rounded-lg border border-primary/30 bg-primary/5 p-2 sm:p-2.5",
+        "min-w-0 rounded-lg border border-primary/30 bg-primary/5 p-2 sm:p-2.5",
         shouldGlow && "animate-pulse ring-2 ring-primary/40",
       )}
     >

@@ -791,7 +791,7 @@ export function VaultFocusQuizDialog({
         onOpenChange(isOpen);
       }
     }}>
-      <DialogContent className="max-w-full sm:max-w-lg p-4 sm:p-6 overflow-y-auto max-h-[90vh]">
+      <DialogContent className="min-w-0 max-w-full sm:max-w-lg p-4 sm:p-6 overflow-x-hidden overflow-y-auto max-h-[90vh]">
         {/* Both check-ins keep their result visible until dismissed. */}
         {showNightSuccess && quizType === 'morning' ? (
           <MorningCheckInSuccess onClose={handleNightSuccessClose} />
