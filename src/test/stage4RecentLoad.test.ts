@@ -20,6 +20,9 @@ describe("Stage 4 — recent game and practice load", () => {
   it("one game alone is a normal week — no change", () => {
     expect(recentLoadEffect({ ...none, games: [g("2026-10-11")] }).applied).toBe(false);
   });
+  it("duplicated logs on one date count at most two", () => {
+    expect(recentLoadEffect({ ...none, games: [g("2026-10-11"), g("2026-10-11"), g("2026-10-11"), g("2026-10-11")] }).games).toBe(2);
+  });
   it("doubleheader yesterday counts twice", () => {
     expect(recentLoadEffect({ ...none, games: [g("2026-10-11", { is_doubleheader: true })] }).applied).toBe(true);
   });
