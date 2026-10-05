@@ -17,6 +17,7 @@ import { useHammerState } from '@/hooks/useHammerState';
 import { useHIESnapshot } from '@/hooks/useHIESnapshot';
 import { useReadinessState } from '@/hooks/useReadinessState';
 import { useTexVisionS2Priority } from '@/components/hammer/TexVisionS2Priority';
+import type { PrescribedBlock } from '@/lib/hammer/prescription/dailyPlan';
 
 /**
  * Performance context card — Neijing-inspired overlay.
@@ -24,7 +25,7 @@ import { useTexVisionS2Priority } from '@/components/hammer/TexVisionS2Priority'
  * with a soft primary-tinted pulse until the athlete opens it once today.
  * Today's Wisdom now lives in its own card above this one.
  */
-export function HumanPerformanceCard() {
+export function HumanPerformanceCard({ planBlocks = [] }: { planBlocks?: ReadonlyArray<PrescribedBlock> }) {
   const { resolvedPhase, phaseProfile } = useSeasonStatus();
   const lifestyle = useMemo(() => readHpiLifestyle(), []);
   const signal = useMemo(
@@ -49,6 +50,9 @@ export function HumanPerformanceCard() {
     readiness.hasSignal ? `Canonical readiness · ${readiness.state}` : 'Canonical readiness · insufficient fresh evidence',
     lifestyle ? `Lifestyle questionnaire · ${new Date(lifestyle.savedAt).toLocaleDateString()}` : 'Lifestyle questionnaire · not recorded',
   ];
+  // Read an actual decision from the canonical plan, never attribute it to a
+  // particular signal merely because both happened to be present today.
+  const adjusted = planBlocks.find(b => b.status === 'suppressed' || b.status === 'off-day');
   const { shouldGlow, markOpened } = useOpenedOnceToday("hpi");
 
   const handleOpenChange = (next: boolean) => {
@@ -93,6 +97,9 @@ export function HumanPerformanceCard() {
             <ul className="space-y-1 text-xs text-muted-foreground" aria-label="Dated performance evidence">
               {evidence.map(line => <li key={line}>{line}</li>)}
             </ul>
+            <p className="text-xs text-foreground/90">{adjusted
+              ? `Plan decision · ${adjusted.title}: ${adjusted.why}`
+              : 'Plan decision · no held or off-day block to explain from the current plan.'}</p>
             <p className="text-xs text-muted-foreground">Hammer's plan and recovery limits decide what changes today. These signals explain context; they do not add work or diagnose a condition.</p>
             <p className="text-xs text-muted-foreground">
               Today starts here. Use this breath primer before warm-up, at-bats, or pitches. The recovery card at the end of the day has its own down-regulation breath — this one is for activation.

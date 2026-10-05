@@ -816,7 +816,7 @@ function HammerDailyPlanBody({
           <DefensivePrepVideo />
         </ErrorBoundary>
         {/* 3. Human Performance Intelligence */}
-        <HumanPerformanceCard />
+        <HumanPerformanceCard planBlocks={plan.blocks} />
         <TexVisionWork />
 
         {/* 4. Start Line (DailyIntentHeader) */}
