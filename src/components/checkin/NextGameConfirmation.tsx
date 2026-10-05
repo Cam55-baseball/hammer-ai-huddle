@@ -16,6 +16,7 @@ export function NextGameConfirmation() {
   const answer = justSaved ?? saved;
 
   async function save(nothing: boolean) {
+    if (nothing && !selected && answer === "no_change") return; // already recorded today
     if (nothing && selected) { setError("You picked a game answer. Tap Done to save it, or clear your choice before confirming nothing changed."); return; }
     if (!nothing && !selected) { setError("Choose when your next game is, then tap Done."); return; }
     setBusy(true);
