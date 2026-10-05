@@ -67,7 +67,8 @@ export function RampLines() {
 export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePlan; open: boolean; onToggle: () => void }) {
   const phaseLabels = { P1: "Build your strength base", P2: "Lift heavier and move faster", P3: "Turn strength into game speed", P4: "Game-ready lifting and training" } as const;
   const phaseName = plan.phase in phaseLabels ? phaseLabels[plan.phase as keyof typeof phaseLabels] : null;
-  const displayLine = phaseName ? stripText(plan).replace(/^(Power Potential|Power Building|Explosiveness|Game-Ready Production)/, phaseName).replace(/next: (Power Potential|Power Building|Explosiveness|Game-Ready Production)/, (_, next) => `next: ${Object.values({ "Power Potential": phaseLabels.P1, "Power Building": phaseLabels.P2, Explosiveness: phaseLabels.P3, "Game-Ready Production": phaseLabels.P4 })[Object.keys({ "Power Potential": phaseLabels.P1, "Power Building": phaseLabels.P2, Explosiveness: phaseLabels.P3, "Game-Ready Production": phaseLabels.P4 }).indexOf(next)]}`) : stripText(plan);
+  const displayNames: Record<string, string> = { "Power Potential": phaseLabels.P1, "Power Building": phaseLabels.P2, Explosiveness: phaseLabels.P3, "Game-Ready Production": phaseLabels.P4 };
+  const displayLine = stripText(plan).replace(/Power Potential|Power Building|Explosiveness|Game-Ready Production/g, name => displayNames[name] ?? name);
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground" data-testid="phase-strip">
       <div className="font-medium">{displayLine}</div>
