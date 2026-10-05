@@ -5,6 +5,7 @@
  */
 import { useState } from "react";
 import { noticesForSurface } from "@/lib/hammer/notices/noticeRouting";
+import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -83,7 +84,7 @@ export function WkBatSpeedCard({ side = null }: Props = {}) {
             {swingNotices.length > 0 && (
               <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-2 text-xs text-amber-900 dark:text-amber-100">
                 <ul className="space-y-0.5">
-                  {swingNotices.map((n, i) => <li key={i}>• {n.detail}</li>)}
+                  {swingNotices.map((n, i) => <li key={i}>• {athleteNoticeCopy(n)}</li>)}
                 </ul>
               </div>
             )}

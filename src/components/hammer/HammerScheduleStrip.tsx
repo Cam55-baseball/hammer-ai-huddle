@@ -47,7 +47,8 @@ export function HammerScheduleStrip() {
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-2 min-w-0">
               <CalendarClock className="h-4 w-4 text-muted-foreground shrink-0" />
-              <Badge
+               <span className="text-xs text-muted-foreground">Season phase:</span>
+               <Badge
                 variant="outline"
                 className={`text-[10px] uppercase tracking-wide ${PHASE_TONE[ctx.seasonPhase] ?? ""}`}
               >

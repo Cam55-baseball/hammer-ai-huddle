@@ -46,7 +46,7 @@ export function WkProgressionBadge({
 }) {
   if (!progression && !stageLabel) return null;
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+     <div className="flex flex-wrap items-center gap-1.5"><span className="text-[10px] font-semibold text-muted-foreground">Training step:</span>
       {stageLabel && (
         <Badge variant="outline" className="text-[10px] border-primary/50 text-primary">
           {stageLabel}
@@ -116,13 +116,13 @@ export function WkProgressionNote({
       {builds_on && (
         <div className="flex items-start gap-1.5 text-muted-foreground">
           <History className="h-3 w-3 mt-0.5 shrink-0" />
-          <span>{builds_on}</span>
+           <span><span className="font-semibold text-foreground">What to build on: </span>{builds_on}</span>
         </div>
       )}
       {target ? (
         <div className="flex items-start gap-1.5 text-foreground/90">
           <Target className="h-3 w-3 mt-0.5 shrink-0" />
-          <span>{target}</span>
+           <span><span className="font-semibold text-foreground">Your target: </span>{target}</span>
         </div>
       ) : baseline ? (
         <div className="flex items-start gap-1.5 text-muted-foreground">

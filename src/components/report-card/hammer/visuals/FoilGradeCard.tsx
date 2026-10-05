@@ -77,8 +77,8 @@ export function FoilGradeCard({
           </div>
         </div>
 
-        {categoryTotal != null && categoryMax != null && (
-          <p className="text-xl font-black tabular-nums">{categoryTotal} / {categoryMax}</p>
+         {categoryTotal != null && categoryMax != null && (
+           <div><span className="text-xs font-semibold text-muted-foreground">Discipline score</span><p className="text-xl font-black tabular-nums">{categoryTotal} / {categoryMax}</p></div>
         )}
 
         <p className="text-xs font-semibold leading-snug text-muted-foreground">

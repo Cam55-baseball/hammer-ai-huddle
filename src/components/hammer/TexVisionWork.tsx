@@ -42,7 +42,8 @@ export function TexVisionWork() {
     .find(d => d && eligible.has(d.id) && TIER_ORDER[d.tier] <= TIER_ORDER[progress?.current_tier ?? 'beginner']);
   if (!match) return null;
   return <div className="rounded-lg border border-primary/25 bg-primary/5 p-3 space-y-2">
-    <p className="text-sm font-semibold">Tex Vision · {match.defaultName}</p>
+     <p className="text-xs font-semibold text-muted-foreground">Recommended vision drill</p>
+     <p className="text-sm font-semibold">Tex Vision · {match.defaultName}</p>
     <p className="text-xs text-muted-foreground">Based on your S2 assessment from {baseline.test_date}. This drill is in your current vision selection. Follow your Tex Vision checklist; no extra session is added.</p>
     <Button size="sm" variant="outline" onClick={() => navigate('/tex-vision')}>Open vision work</Button>
   </div>;

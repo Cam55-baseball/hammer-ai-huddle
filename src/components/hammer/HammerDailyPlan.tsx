@@ -1321,7 +1321,7 @@ function BlockCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-semibold capitalize">{block.title}</span>
+               <span className="min-w-0"><span className="block text-[10px] font-semibold text-muted-foreground">Today's movement</span><span className="block text-sm font-semibold capitalize">{block.title}</span></span>
               {block.side && (
                 <Badge variant="outline" className="text-[10px] border-primary/50 text-primary">
                   {block.side === "L" ? "Left" : "Right"}
@@ -1337,7 +1337,7 @@ function BlockCard({
                   variant="outline"
                   className={`text-[10px] border-transparent ${PHASE_TONE[block.phase] ?? ""}`}
                 >
-                  {block.phase}
+                   Training step: {block.phase}
                 </Badge>
               )}
             </div>

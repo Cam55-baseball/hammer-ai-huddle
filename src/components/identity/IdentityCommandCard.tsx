@@ -196,12 +196,12 @@ export function IdentityCommandCard({ className }: Props) {
     <TooltipProvider delayDuration={200}>
       <div
         className={cn(
-          'daily-identity relative overflow-hidden rounded-md border border-border bg-card text-card-foreground shadow-sm',
+           'daily-identity relative overflow-hidden rounded-md border border-border bg-card text-card-foreground shadow-sm',
           className,
         )}
       >
         {/* A single tier accent against the dark daily hero. */}
-        <div className={cn('pointer-events-none absolute inset-y-0 left-0 w-1', accent)} aria-hidden />
+         <div className={cn('pointer-events-none absolute inset-y-0 left-0 w-1', accent)} aria-hidden />
 
         {/* ─── Always-visible header (acts as the toggle) ──────────────── */}
         <button
@@ -209,13 +209,13 @@ export function IdentityCommandCard({ className }: Props) {
           onClick={handleToggle}
           aria-expanded={open}
           aria-label={open ? 'Collapse identity card' : 'Open identity card'}
-          className="daily-identity-hero relative min-h-36 w-full rounded-none px-5 py-6 text-left sm:px-6"
+           className="daily-identity-hero relative min-h-40 w-full rounded-none px-5 py-6 text-left sm:px-6"
         >
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-bold uppercase text-red-400">
-                  Your day
+                 <span className="text-xs font-bold uppercase text-primary-foreground/80">
+                   Your current standing
                 </span>
                 {dayType !== 'standard' && (
                   <span
@@ -229,10 +229,10 @@ export function IdentityCommandCard({ className }: Props) {
                 )}
               </div>
 
-              <div className="mt-3 flex items-end justify-between gap-3 sm:block">
+               <div className="mt-5 flex items-end justify-between gap-3 sm:block">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="text-4xl font-black leading-none tracking-tight text-white break-words">
+                     <span className="text-4xl font-black leading-none text-primary-foreground break-words">
                       {label}
                     </span>
                   </div>
@@ -240,10 +240,10 @@ export function IdentityCommandCard({ className }: Props) {
 
                 {/* Mobile-only score */}
                 <div className="flex flex-col items-end shrink-0 sm:hidden">
-                  <div className="text-3xl font-black tabular-nums leading-none text-white">
+                   <div className="text-3xl font-black tabular-nums leading-none text-primary-foreground">
                     {score}
                   </div>
-                  <div className="mt-1 text-xs font-medium text-white/70">
+                   <div className="mt-1 text-xs font-medium text-primary-foreground/70">
                     Consistency
                   </div>
                 </div>
@@ -252,10 +252,10 @@ export function IdentityCommandCard({ className }: Props) {
 
             {/* Right column on sm+ */}
             <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
-              <div className="text-3xl font-bold tabular-nums leading-none text-white">
+               <div className="text-3xl font-bold tabular-nums leading-none text-primary-foreground">
                 {score}
               </div>
-              <div className="text-xs font-medium text-white/70">
+               <div className="text-xs font-medium text-primary-foreground/70">
                 Consistency
               </div>
             </div>
@@ -267,7 +267,7 @@ export function IdentityCommandCard({ className }: Props) {
               )}
               <ChevronDown
                 className={cn(
-                  'h-5 w-5 text-white/70 transition-transform',
+                   'h-5 w-5 text-primary-foreground/70 transition-transform',
                   open && 'rotate-180',
                 )}
               />
@@ -275,16 +275,16 @@ export function IdentityCommandCard({ className }: Props) {
           </div>
 
           {/* Row 3: streak chips */}
-          <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-white/20 pt-4 text-xs">
-            <span className="inline-flex items-center gap-1.5 font-medium text-white">
+           <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-primary-foreground/20 pt-4 text-xs">
+             <span className="inline-flex items-center gap-1.5 font-medium text-primary-foreground">
               <Flame className="h-3 w-3 text-orange-500" />
               <span className="tabular-nums">{perfStreak}</span>
-              <span className="text-white/70">days meeting your standard</span>
+               <span className="text-primary-foreground/70">days meeting your standard</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 font-medium text-white">
+             <span className="inline-flex items-center gap-1.5 font-medium text-primary-foreground">
               <ShieldCheck className="h-3 w-3 text-emerald-500" />
               <span className="tabular-nums">{discStreak}</span>
-              <span className="text-white/70">active days</span>
+               <span className="text-primary-foreground/70">active days</span>
             </span>
             {nnMiss > 0 && (
               <span className="inline-flex items-center gap-1.5 font-medium text-red-300">
@@ -296,10 +296,10 @@ export function IdentityCommandCard({ className }: Props) {
               <Link
                 to="/progress#body"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1.5 font-medium text-white hover:text-red-300 transition-colors"
+                 className="inline-flex items-center gap-1.5 font-medium text-primary-foreground hover:text-primary transition-colors"
                 aria-label="Open full body report"
               >
-                <span className="text-white/70">Body check-in</span>
+                 <span className="text-primary-foreground/70">Body check-in</span>
                 <span className="tabular-nums">{Math.round(hieSnapshot.readiness_score)}</span>
                 <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
               </Link>
@@ -312,7 +312,7 @@ export function IdentityCommandCard({ className }: Props) {
         {/* ─── Expanded panel ─────────────────────────────────────────── */}
         <Collapsible open={open}>
           <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
-            <div className="space-y-5 border-t border-border/70 px-4 pb-5 pt-4 sm:px-5">
+             <div className="space-y-6 border-t border-border/70 px-4 pb-6 pt-5 sm:px-5">
 
               <div className="space-y-3">
                 <AdaptivePhaseStrip />

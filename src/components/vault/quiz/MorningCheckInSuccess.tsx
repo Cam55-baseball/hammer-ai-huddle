@@ -48,26 +48,27 @@ export function MorningCheckInSuccess({ onClose }: { onClose: () => void }) {
   };
   const rise = { initial: reducedMotion ? false as const : { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { duration: reducedMotion ? 0 : 0.36, ease: 'easeOut' as const } };
   return (
-    <div className="daily-success min-w-0 w-full space-y-4 pb-2 pt-1" role="status">
-      <motion.header {...rise} className="daily-success-header rounded-md border border-primary/35 px-5 py-6 sm:px-6">
+     <div className="daily-success min-w-0 w-full space-y-5 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1" role="status">
+       <motion.header {...rise} className="daily-success-header rounded-md border border-primary/35 px-5 py-7 sm:px-6">
         <span className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-primary/40 bg-primary/15 text-primary"><CheckCircle2 className="h-6 w-6" aria-hidden /></span>
         <p className="mt-5 text-xs font-bold uppercase text-primary">Check-in saved</p>
-        <h2 className="mt-1 text-3xl font-black leading-tight text-foreground">Your day starts here.</h2>
+         <h2 className="mt-2 text-3xl font-black leading-tight text-foreground">Your day starts here.</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">You showed up. Now take the next step.</p>
       </motion.header>
-      <motion.section {...rise} transition={{ ...rise.transition, delay: 0.06 }} className="daily-success-section border-l-2 border-l-primary" aria-label="Develop this week">
+       <motion.section {...rise} transition={{ ...rise.transition, delay: reducedMotion ? 0 : 0.06 }} className="daily-success-section border-l-2 border-l-primary" aria-label="Develop this week">
         <div className="flex items-center gap-2 text-primary"><Sparkles className="h-4 w-4" aria-hidden /><h3 className="text-xs font-bold uppercase">Develop this week</h3></div>
         <p className="mt-3 text-lg font-semibold leading-snug text-foreground">{focusSentence || 'Keep showing up. Your next step is in today’s plan.'}</p>
       </motion.section>
-      <motion.section {...rise} transition={{ ...rise.transition, delay: 0.12 }} className="daily-success-section border-l-2 border-l-foreground" aria-label="Today's Standard">
+       <motion.section {...rise} transition={{ ...rise.transition, delay: reducedMotion ? 0 : 0.12 }} className="daily-success-section border-l-2 border-l-foreground" aria-label="Today's Standard">
         <div className="flex items-center gap-2 text-muted-foreground"><Target className="h-4 w-4" aria-hidden /><h3 className="text-xs font-bold uppercase">Today's Standard</h3></div>
         <p className="mt-3 text-lg font-bold leading-snug text-foreground">{standard.standard}</p>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{standard.rationale}</p>
+         <p className="mt-3 text-xs font-bold uppercase text-muted-foreground">Why this is today's standard</p>
+         <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{standard.rationale}</p>
         {confirmed ? <p className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary"><CheckCircle2 className="h-4 w-4" aria-hidden />Standard confirmed for today.</p> :
           <Button onClick={() => void confirm()} disabled={saving || checking} className="mt-4 min-h-12 w-full whitespace-normal">Confirm I'm at this standard</Button>}
         <p className="mt-3 text-sm text-muted-foreground">{standard.motivational}</p>
       </motion.section>
-      <motion.section {...rise} transition={{ ...rise.transition, delay: 0.18 }} className="daily-success-section border-l-2 border-l-primary" aria-label="Due today">
+       <motion.section {...rise} transition={{ ...rise.transition, delay: reducedMotion ? 0 : 0.18 }} className="daily-success-section border-l-2 border-l-primary" aria-label="Due today">
         <div className="mb-3 flex items-center gap-2 text-primary"><CalendarCheck className="h-4 w-4" aria-hidden /><h3 className="text-xs font-bold uppercase">Due today</h3></div>
         <div className="space-y-2"><ScheduledPriorityStrip /><TexVisionS2Priority /></div>
       </motion.section>

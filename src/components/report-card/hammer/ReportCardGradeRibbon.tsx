@@ -20,7 +20,8 @@ export function ReportCardGradeRibbon({ grade }: { grade: GradeResult }) {
       >
         {grade.letter}
       </div>
-      <div className="flex flex-1 flex-col gap-1">
+       <div className="flex flex-1 flex-col gap-1">
+         <span className="text-xs font-semibold text-muted-foreground">Total score</span>
         <div className="flex items-baseline gap-2">
           <span className="text-2xl font-bold tabular-nums">{grade.score}</span>
           <span className="text-xs text-muted-foreground">/ 100</span>
