@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Target, CalendarCheck, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useIdentityState } from '@/hooks/useIdentityState';
@@ -45,19 +45,32 @@ export function MorningCheckInSuccess({ onClose }: { onClose: () => void }) {
     } catch { toast.error('Standard could not be confirmed. Please try again.'); }
     finally { setSaving(false); }
   };
+  const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.36, ease: 'easeOut' as const } };
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="min-w-0 w-full space-y-5 py-3" role="status">
-      <div className="text-center"><CheckCircle2 className="mx-auto h-10 w-10 text-primary" />
-        <h2 className="mt-2 text-xl font-bold">Morning check-in complete</h2></div>
-      {focusSentence && <section><h3 className="text-xs font-semibold uppercase text-muted-foreground">Develop this week</h3><p className="mt-1 text-sm">{focusSentence}</p></section>}
-      <section className="space-y-2"><h3 className="text-xs font-semibold uppercase text-muted-foreground">Today's Standard</h3>
-        <p className="text-sm font-semibold">{standard.standard}</p><p className="text-xs text-muted-foreground">{standard.rationale}</p>
-        {confirmed ? <p className="text-sm text-primary">Standard confirmed for today.</p> :
-          <Button onClick={() => void confirm()} disabled={saving || checking} className="w-full">Confirm I'm at this standard</Button>}
-        <p className="text-xs italic text-muted-foreground">{standard.motivational}</p>
-      </section>
-      <section className="space-y-2" aria-label="Due today"><ScheduledPriorityStrip /><TexVisionS2Priority /></section>
-      <Button variant="outline" className="w-full" onClick={onClose}>Continue to today</Button>
-    </motion.div>
+    <div className="daily-success min-w-0 w-full space-y-4 pb-2 pt-1" role="status">
+      <motion.header {...rise} className="daily-success-header rounded-md border border-primary/35 px-5 py-6 sm:px-6">
+        <span className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-primary/40 bg-primary/15 text-primary"><CheckCircle2 className="h-6 w-6" aria-hidden /></span>
+        <p className="mt-5 text-xs font-bold uppercase text-primary">Check-in saved</p>
+        <h2 className="mt-1 text-3xl font-black leading-tight text-foreground">Your day starts here.</h2>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">You showed up. Now take the next step.</p>
+      </motion.header>
+      <motion.section {...rise} transition={{ ...rise.transition, delay: 0.06 }} className="daily-success-section border-l-2 border-l-primary" aria-label="Develop this week">
+        <div className="flex items-center gap-2 text-primary"><Sparkles className="h-4 w-4" aria-hidden /><h3 className="text-xs font-bold uppercase">Develop this week</h3></div>
+        <p className="mt-3 text-lg font-semibold leading-snug text-foreground">{focusSentence || 'Keep showing up. Your next step is in today’s plan.'}</p>
+      </motion.section>
+      <motion.section {...rise} transition={{ ...rise.transition, delay: 0.12 }} className="daily-success-section border-l-2 border-l-foreground" aria-label="Today's Standard">
+        <div className="flex items-center gap-2 text-muted-foreground"><Target className="h-4 w-4" aria-hidden /><h3 className="text-xs font-bold uppercase">Today's Standard</h3></div>
+        <p className="mt-3 text-lg font-bold leading-snug text-foreground">{standard.standard}</p>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{standard.rationale}</p>
+        {confirmed ? <p className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary"><CheckCircle2 className="h-4 w-4" aria-hidden />Standard confirmed for today.</p> :
+          <Button onClick={() => void confirm()} disabled={saving || checking} className="mt-4 min-h-12 w-full whitespace-normal">Confirm I'm at this standard</Button>}
+        <p className="mt-3 text-sm text-muted-foreground">{standard.motivational}</p>
+      </motion.section>
+      <motion.section {...rise} transition={{ ...rise.transition, delay: 0.18 }} className="daily-success-section border-l-2 border-l-primary" aria-label="Due today">
+        <div className="mb-3 flex items-center gap-2 text-primary"><CalendarCheck className="h-4 w-4" aria-hidden /><h3 className="text-xs font-bold uppercase">Due today</h3></div>
+        <div className="space-y-2"><ScheduledPriorityStrip /><TexVisionS2Priority /></div>
+      </motion.section>
+      <Button className="min-h-12 w-full gap-2 text-base font-bold" onClick={onClose}>Continue to today <ArrowRight className="h-4 w-4" aria-hidden /></Button>
+    </div>
   );
 }
