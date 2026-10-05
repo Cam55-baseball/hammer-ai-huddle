@@ -40,9 +40,9 @@ export function MorningDayIntent() {
         ))}
       </div>
       <p className="text-xs text-muted-foreground">
-        {dayType === 'rest' ? 'Recovery supports performance. Streak protected. Non-Negotiables waived.' :
+        {dayType === 'rest' ? 'Easier day: the hard work in your plan is dialled back. Streak protected. Non-Negotiables waived.' :
           dayType === 'skip' ? 'Day ignored. No progress or recovery credit.' :
-          dayType === 'push' ? 'Higher standard today. Extra output expected.' :
+          dayType === 'push' ? 'Higher standard today. Your plan already sets the most you should do, so no extra work is added.' :
           'Standard day. Operate at your current standard.'}
       </p>
       <p className="text-xs text-muted-foreground">{overBudget ? 'Rest allowance exceeded this week.' : 'Rest allowance is managed for you this week.'}</p>

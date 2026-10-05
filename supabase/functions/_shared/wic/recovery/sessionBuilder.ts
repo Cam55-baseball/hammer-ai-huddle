@@ -113,7 +113,13 @@ export function certifyRecovery(input: CertifyRecoveryInput): CertifyRecoveryRes
   const categorized = rxs.map((r) => ({ slug: r.movement_slug, recovery_category: catBySlug.get(r.movement_slug)?.recovery_category ?? null }));
   const categoryCoverage = coverageOf(categorized);
   const missing = missingCategories(template.requiredCategories, categorized);
-  if (missing.length > 0) fatal.push({ code: "rec_unresolved_template", message: `Template ${template.id} requires: ${missing.join(", ")}` });
+  // Library gap: a required type the library has no active drill for can never
+  // be filled, so it warns instead of sending the athlete to the stand-in day.
+  const libraryHas = new Set(input.catalog.map((c: any) => c.recovery_category).filter(Boolean).map(String));
+  const libraryGap = missing.filter((c) => !libraryHas.has(String(c)));
+  const realMissing = missing.filter((c) => libraryHas.has(String(c)));
+  if (libraryGap.length > 0) warn.push({ code: "rec_library_gap", message: `Template ${template.id} needs drill types the library does not have yet: ${libraryGap.join(", ")}` });
+  if (realMissing.length > 0) fatal.push({ code: "rec_unresolved_template", message: `Template ${template.id} requires: ${realMissing.join(", ")}` });
 
   const substitutionCompleteness = ladderScores.length ? ladderScores.reduce((s, v) => s + v, 0) / ladderScores.length : 1;
   return { templateId: template.id, templateName: template.displayName, categoryCoverage, substitutionCompleteness, validationStatus: fatal.length === 0 ? "passed" : "failed", governanceVersion: GOV_VERSION, stamps, fatal, warn };

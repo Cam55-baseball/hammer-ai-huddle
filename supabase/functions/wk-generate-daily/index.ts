@@ -903,6 +903,31 @@ const handler = async (req: Request): Promise<Response> => {
     if (soreness >= 8) {
       reductions.push({ reason: "soreness", detail: `Reported soreness ${soreness}/10 — substituting regressions where possible.` });
     }
+    // Stage 3 (owner-authorised 2026-10-05) — the morning Day intent answer.
+    // Read from the athlete's own dated row for this plan date. It can only
+    // moderate downward inside what is already allowed: an easier day takes the
+    // same single step as a low-readiness check-in (never stacked on one), and
+    // a push day never adds anything. Missing row or failed read = no change.
+    let dayIntent: "rest" | "skip" | "push" | null = null;
+    let dayIntentApplied = false;
+    try {
+      const { data: intentRow } = await admin
+        .from("user_day_state_overrides")
+        .select("type")
+        .eq("user_id", user.id)
+        .eq("date", planDate)
+        .maybeSingle();
+      const t = (intentRow as any)?.type;
+      dayIntent = t === "rest" || t === "skip" || t === "push" ? t : null;
+    } catch (_e) {
+      dayIntent = null;
+    }
+    if (dayIntent === "rest") {
+      const checkInAlreadyStepped = reductions.some((r) => r.reason === "sleep" || r.reason === "cns");
+      if (!checkInAlreadyStepped) cnsCap = Math.max(1, cnsCap - 1);
+      dayIntentApplied = true;
+      reductions.push({ reason: "day_intent", detail: "You chose an easier day in your check-in, so the hard work is dialled back." });
+    }
     // -------- TCS v1.1 §3 — Silent Signals (E2E WP4 item 2) --------
     // Reads the last 28 days of one-tap logs. Reduce, never remove: at most one
     // CNS-cap step, neutral copy. Pain always wins (active pain → no signal
@@ -2013,6 +2038,8 @@ const handler = async (req: Request): Promise<Response> => {
           phase: phaseRes.phase, phase_display: phaseRes.displayName,
           generator_version: WIC_VERSION,
           game_day: isGameDay,
+          day_intent: dayIntent,
+          day_intent_applied: dayIntentApplied,
           training_age_years: trainingAgeYears, is_pro_prospect: isProProspect,
           intensity_class: s.movement.intensity_class,
           pattern: s.movement.pattern,
@@ -2582,6 +2609,7 @@ const handler = async (req: Request): Promise<Response> => {
         isTournamentDay: trainingContext.day_type === "tournament_day",
         hoursToNearestGame: gameProximity.hoursToNearestGame,
         pitcherStartedYesterday: isPitcherAthlete && scheduledGames.some((g) => g.isStartingPitcher && !g.ignored && g.date === yesterday),
+        isPitcher: isPitcherAthlete,
         returningAfterGap: isReturningAfterGap(((historyLogRows ?? []) as any[]).map((r: any) => String(r.plan_date)), planDate),
         dialDownReasons,
       });

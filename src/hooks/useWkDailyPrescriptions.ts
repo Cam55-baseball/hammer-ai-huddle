@@ -289,6 +289,24 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     },
   });
 
+  // Stage 3 — today's Day intent answer. A plan built before the athlete
+  // answered (or changed) it is stale and rebuilds once, like a season change.
+  const dayIntentQuery = useQuery({
+    queryKey: ["day-state-overrides", user?.id, "plan", planDate],
+    enabled: !!user?.id,
+    staleTime: 15_000,
+    queryFn: async (): Promise<"rest" | "skip" | "push" | null> => {
+      const { data } = await (supabase as any)
+        .from("user_day_state_overrides")
+        .select("type")
+        .eq("user_id", user!.id)
+        .eq("date", planDate)
+        .maybeSingle();
+      const t = data?.type;
+      return t === "rest" || t === "skip" || t === "push" ? t : null;
+    },
+  });
+
   const invokeOnce = useCallback(async () => {
     // Pull the most recent *live* recovery ack so the edge function can bias the
     // next plan (real learning loop instead of one-way personalization).
@@ -441,6 +459,12 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     const firstCreated = (first as any)?.created_at as string | undefined;
     const staleTimeline =
       tellHammersOn && !!first && !!timelineQuery.data && !!firstCreated && firstCreated < timelineQuery.data;
+    // Rows built before Stage 3 carry no intent; they rebuild only for an easier day.
+    const intentRow = (query.data ?? []).find((rx) => rx.why_payload && "day_intent" in (rx.why_payload as any));
+    const storedIntent = intentRow ? ((intentRow.why_payload as any).day_intent ?? null) : undefined;
+    const staleIntent =
+      !!first && !dayIntentQuery.isLoading && dayIntentQuery.data !== undefined &&
+      (storedIntent === undefined ? dayIntentQuery.data === "rest" : storedIntent !== dayIntentQuery.data);
     const refreshKey = !query.data
       ? null
       : query.data.length === 0
@@ -451,7 +475,9 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
             ? `game:${String(first?.why_payload?.game_day)}->${String(isGameDayForPlan)}`
             : stalePhase
               ? `phase:${first?.why_payload?.phase ?? first?.phase ?? "missing"}->${expectedPhase}`
-              : null;
+              : staleIntent
+                ? `intent:${storedIntent ?? "none"}->${dayIntentQuery.data ?? "none"}`
+                : null;
     if (
       !query.isLoading &&
       !gameDayQuery.isLoading &&
@@ -482,7 +508,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       }
       generate();
     }
-  }, [tellHammersOn, timelineQuery.data, query.isLoading, query.data, gameDayQuery.isLoading, gameDayQuery.data, canonicalPhase.phase, canonicalPhase.displayName, season.isLoading, generate, generating, failed, qc, planDate, user?.id]);
+  }, [dayIntentQuery.isLoading, dayIntentQuery.data, tellHammersOn, timelineQuery.data, query.isLoading, query.data, gameDayQuery.isLoading, gameDayQuery.data, canonicalPhase.phase, canonicalPhase.displayName, season.isLoading, generate, generating, failed, qc, planDate, user?.id]);
 
   const retry = useCallback(() => {
     autoTriedKey.current = null;
