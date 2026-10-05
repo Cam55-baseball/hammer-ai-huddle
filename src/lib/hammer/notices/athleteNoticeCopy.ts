@@ -28,7 +28,7 @@ export function athleteNoticeCopy({ reason, detail }: Notice): string {
     if (exact[s]) return exact[s];
   }
   if (reason === "game_proximity") {
-    if (s.includes("games in seven days")) return "You have games close together. Game days get a short warm-up; follow the plan on other days.";
+    if (s.includes("games in seven days")) return "You have games close together. Game days get only short preparation; follow the plan shown on other days.";
     if (s.startsWith("lighter today — you have a game")) return "Your next game is close. Do only the short warm-up shown until after the game.";
     if (s.includes("no start time")) return "We don't have your game's start time, so we used an estimated time. Add the real time to update today's work.";
     if (s.startsWith("you marked today a doubleheader")) return "You have two games today. Hard work is lighter; follow today's plan.";
