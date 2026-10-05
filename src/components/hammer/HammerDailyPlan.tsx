@@ -89,7 +89,6 @@ import { TodaysWisdomCard } from "@/components/hammer/TodaysWisdomCard";
 import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 import { TexVisionWork } from "@/components/hammer/TexVisionWork";
 
-import { HumanPerformanceCard } from "@/components/hpi/HumanPerformanceCard";
 import { useOpenedOnceToday } from "@/hooks/useOpenedOnceToday";
 import { WkSpeedCard } from "@/components/hammer/WkSpeedCard";
 import { WkBatSpeedCard } from "@/components/hammer/WkBatSpeedCard";
