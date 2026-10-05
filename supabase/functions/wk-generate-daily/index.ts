@@ -124,7 +124,7 @@ import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
 import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
 // Phase 10 — Performance Support Engines (Conditioning + Cross-Sport + Recovery + Arm Care).
 import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.ts";
-import { selectConditioning, conditioningPhaseFrom, isReturningAfterGap, type ConditioningSelection } from "../_shared/wic/conditioning/select.ts";
+import { selectConditioning, conditioningPhaseFrom, isReturningAfterGap, type ConditioningSelection } from "../_shared/wic/conditioning/selectConditioning.ts";
 import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
 import { resolveCrossSportTemplate } from "../_shared/wic/crossSport/templates.ts";
 import { certifyRecovery } from "../_shared/wic/recovery/sessionBuilder.ts";

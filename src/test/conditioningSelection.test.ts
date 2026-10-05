@@ -8,7 +8,7 @@ import { readFileSync } from "node:fs";
 import {
   selectConditioning, conditioningPhaseFrom, isReturningAfterGap,
   type ConditioningSelectionInput,
-} from "../../supabase/functions/_shared/wic/conditioning/select";
+} from "../../supabase/functions/_shared/wic/conditioning/selectConditioning";
 import { CONDITIONING_TEMPLATES } from "../../supabase/functions/_shared/wic/conditioning/templates";
 
 const base: ConditioningSelectionInput = {
