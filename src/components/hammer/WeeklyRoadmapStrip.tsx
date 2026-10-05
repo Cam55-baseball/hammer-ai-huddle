@@ -81,7 +81,7 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
               </div>
             ) : (
               <div className="text-[11px] text-muted-foreground leading-tight">
-                {season.resolvedPhase.replace(/_/g, " ")} · {phaseWeek !== null ? `Week ${phaseWeek}` : "Week not set"} · {weeklyTemplate.label}
+                {season.resolvedPhase.replace(/_/g, " ")} · {phaseWeek !== null ? `Week ${phaseWeek}` : "Week not set"}
               </div>
             )}
 
