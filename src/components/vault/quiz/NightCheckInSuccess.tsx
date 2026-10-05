@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Sparkles,
   Flame,
@@ -69,12 +69,13 @@ export function NightCheckInSuccess({
   onClose,
 }: NightCheckInSuccessProps) {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const navigate = useNavigate();
   const [sleepCountdown, setSleepCountdown] = useState<string | null>(null);
 
   // Trigger confetti on mount
   useEffect(() => {
-    triggerConfetti();
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) triggerConfetti();
     return () => stopConfetti();
   }, []);
 
@@ -154,27 +155,27 @@ export function NightCheckInSuccess({
       </motion.div>
 
       {/* Hero Section */}
-      <motion.div 
+      <motion.div
         variants={itemVariants}
-        className="text-center space-y-2"
+        className="daily-success-header rounded-md border border-primary/35 px-5 py-6 text-center space-y-3"
       >
         <div className="flex items-center justify-center gap-2 text-3xl">
-          <Sparkles className="h-8 w-8 text-amber-400 animate-pulse" />
-          <span className="font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <Sparkles className="h-6 w-6 text-primary" />
+          <span className="font-black text-foreground">
             {t('vault.quiz.nightSuccess.title')}
           </span>
-          <Sparkles className="h-8 w-8 text-amber-400 animate-pulse" />
+          <Sparkles className="h-6 w-6 text-primary" />
         </div>
         
         {/* Streak Counter */}
         {streakDays > 0 && (
           <motion.div 
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30"
-            initial={{ scale: 0 }}
+            initial={reducedMotion ? false : { scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.3, type: 'spring' }}
           >
-            <Flame className="h-5 w-5 text-orange-500 animate-pulse" />
+            <Flame className="h-5 w-5 text-orange-500" />
             <span className="font-bold text-orange-500">{streakDays}</span>
             <span className="text-sm text-muted-foreground">{t('vault.quiz.nightSuccess.days')}</span>
           </motion.div>
