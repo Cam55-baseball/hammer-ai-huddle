@@ -1,0 +1,1 @@
+- Conditioning is chosen by `conditioning/selectConditioning.ts` (session type from season, next game, pitcher start, tournament, return-from-gap; dial-down from check-ins/governor), never more than two movements, and every pick must satisfy the conditioning certifier (>=1 non-sprint, <=1 sprint). Why: a certifier failure sends the athlete to the safe session (2026-10-05).
