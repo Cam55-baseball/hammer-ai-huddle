@@ -72,8 +72,8 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
         <div className="flex items-center gap-2 min-w-0">
           <Calendar className="h-4 w-4 text-primary shrink-0" />
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-foreground">Your training block &amp; season</div>
-            <div className="text-[11px] text-muted-foreground">Your training path: {roadmap.rung.label}</div>
+            <div className="text-sm font-bold text-foreground">Your training block &amp; season</div>
+            <div className="text-xs text-muted-foreground">Your training steps: {roadmap.rung.label}</div>
             {!roadmap.quarter.quarterKnown ? (
               <div className="text-[11px] text-muted-foreground leading-tight">
                 {roadmap.quarter.phaseKnown ? "Your season phase is known, but its start date isn't. Add your season dates to show your week." : "Add your season dates to show where you are in your training block."}{' '}
@@ -81,7 +81,7 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
               </div>
             ) : (
               <div className="text-[11px] text-muted-foreground leading-tight">
-                {season.resolvedPhase.replace(/_/g, " ")} · {phaseWeek !== null ? `Week ${phaseWeek}` : "Week not set"}
+                {season.resolvedPhase.replace(/_/g, " ")} {phaseWeek !== null ? `· Week ${phaseWeek}` : "· Add your season dates to show your week"}
               </div>
             )}
 
@@ -95,7 +95,7 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
           className="flex items-center gap-1 px-2 text-[11px] shrink-0"
         >
           <Target className="h-3 w-3" />
-          Your training path
+          Training steps
         </Button>
       </header>
       <RoadmapExplainerSheet

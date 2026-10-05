@@ -54,7 +54,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     if (checkIn) return;
     try { setOpen(localStorage.getItem(storageKey) === "true"); } catch { /* private browsing */ }
   }, [storageKey, checkIn]);
-  const todayEntries = useMemo(() => tl.entries.filter(e => !e.undone_at && e.created_at?.slice(0, 10) === today), [tl.entries, today]);
+  const todayEntries = useMemo(() => tl.entries.filter(e => !e.undone_at && (e.start_date === today || e.created_at?.slice(0, 10) === today)), [tl.entries, today]);
   if (!tl.enabled) return <section className="rounded-md border border-border bg-card p-3"><div className="font-semibold">{checkIn ? "Anything change?" : "Update Hammer"}</div><p className="text-sm text-muted-foreground">Changes can't be saved right now. You can still finish your check-in.</p></section>;
   const toggle = (value: boolean) => {
     setOpen(value);
@@ -75,7 +75,8 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
       setSaveError(null);
       if (d.tag === "PAIN" && RED_FLAG.test(String(d.payload.text ?? ""))) toast.error("Stop and get it checked by a trainer or doctor.");
       reset();
-    } catch (e) { setSaveError("That change wasn't saved. Try again; your other check-in answers are safe."); toast.error(e instanceof Error ? e.message : "Couldn't save that"); }
+      return true;
+    } catch (e) { setSaveError("That change wasn't saved. Try again; your other check-in answers are safe."); toast.error(e instanceof Error ? e.message : "Couldn't save that"); return false; }
     finally { setBusy(false); setBusyKey(null); }
   }
   /** A fixed choice is one tap: it clears any typed text and sends immediately. */
@@ -131,7 +132,10 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
   const changeConfirmed = todayEntries.some(e => e.tag === "NOTE" && e.start_date === today && (e.payload?.kind === "morning_change_confirmation"));
   const confirmChanges = async (nothing: boolean) => {
     if (nothing && pending) { setSaveError("You have an unsaved change. Tap Done to save it, or Remove it before confirming nothing changed."); return; }
-    if (pending) { await commit(pending, "change-done"); return; }
+    if (pending) {
+      if (await commit(pending, "change-done")) await commit(draft("NOTE", today, today, { kind: "morning_change_confirmation", answer: "done" }), "change-done");
+      return;
+    }
     await commit(draft("NOTE", today, today, { kind: "morning_change_confirmation", answer: nothing ? "no_change" : "done" }), nothing ? "change-no-change" : "change-done");
   };
 

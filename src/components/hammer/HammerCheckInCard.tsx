@@ -20,14 +20,14 @@ const META: Record<
 > = {
   morning: {
     title: "Morning check-in",
-    subtitle: "Sleep, mood, discipline — set the tone before the day starts.",
+    subtitle: "Sleep, mood and how you feel — set the tone before the day starts.",
     Icon: Sun,
     accent: "text-amber-500",
     slot: "First thing today",
   },
   pre_lift: {
     title: "Pre-workout check-in",
-    subtitle: "Freshness, pain, intent — Hammer tunes today's load before you lift.",
+    subtitle: "How you feel before lifting — Hammer adjusts today's workout.",
     Icon: Dumbbell,
     accent: "text-orange-500",
     slot: "Before training",
