@@ -3228,7 +3228,6 @@ const handler = async (req: Request): Promise<Response> => {
     const conditioningCertification = certifyConditioning({
       prescriptions: finalRxs as any,
       catalog: lib as any,
-      templateId: conditioningSelection?.templateId,
       template: {
         seasonPhase: trainingContext.season_phase,
         dayType: trainingContext.day_type,
