@@ -1,5 +1,6 @@
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { CheckInLifeChips } from "@/components/checkin/CheckInLifeChips";
+import { NextGameConfirmation } from "@/components/checkin/NextGameConfirmation";
 import { recordPain, bodyAreaToRegion, scaleToSeverity } from "@/lib/hammer/injury/recordPain";
 import { useQueryClient as usePainQc } from "@tanstack/react-query";
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -832,8 +833,7 @@ export function VaultFocusQuizDialog({
 
         {/* Tips Section - NOW AT TOP */}
         <div className="space-y-3 mt-4">
-          {/* "Nope" only collapses this section; the check-in's own finish button is the only submit. */}
-          {(quizType === 'morning' || quizType === 'night') && <CheckInLifeChips />}
+          {quizType === 'night' && <CheckInLifeChips />}
           {/* Morning Quiz Tip */}
           {quizType === 'morning' && (
             <Alert className="bg-amber-500/10 border-amber-500/30">
@@ -2177,7 +2177,7 @@ export function VaultFocusQuizDialog({
             </div>
           )}
 
-          {quizType === 'morning' && <MorningDayIntent />}
+          {quizType === 'morning' && <div className="space-y-3"><CheckInLifeChips /><NextGameConfirmation /><MorningDayIntent /></div>}
 
           {/* Submit Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-6 mt-4 border-t border-border">

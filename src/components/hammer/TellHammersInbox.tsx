@@ -64,7 +64,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
   function reset() {
     setFlow(null); setPending(null); setPicked([]); setWhich(null); setEventKind(null); setRegion(null); setText(""); setConfirm(null);
   }
-  function enter(next: Flow) { reset(); setLastMessage(null); setFlow(next); }
+  function enter(next: Flow) { reset(); setSaveError(null); setLastMessage(null); setFlow(next); }
   async function commit(d: EntryDraft, key: string | null = null) {
     if (busy) return;
     setBusy(true); setBusyKey(key);
@@ -79,7 +79,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     finally { setBusy(false); setBusyKey(null); }
   }
   /** A fixed choice is one tap: it clears any typed text and sends immediately. */
-  function tap(value: EntryDraft, key: string) { setText(""); setConfirm(null); if (checkIn) { setPending(value); setFlow(null); } else void commit(value, key); }
+  function tap(value: EntryDraft, key: string) { setText(""); setConfirm(null); if (checkIn) { if (value.tag === "PAIN") void commit(value, key); else { setPending(value); setFlow(null); } } else void commit(value, key); }
   async function undo(id: string) {
     try {
       if (await tl.undo(id)) { setSent(s => s.filter(e => e.id !== id)); toast.success("Undone"); }
@@ -95,8 +95,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     const words = text.trim();
     if (flow === "pain") {
       if (!pending) return; // a pain entry always needs a face
-      if (checkIn) { setPending(words ? { ...pending, payload: { ...pending.payload, text: words } } : pending); setFlow(null); }
-      else void commit(words ? { ...pending, payload: { ...pending.payload, text: words } } : pending, "pain-send");
+      void commit(words ? { ...pending, payload: { ...pending.payload, text: words } } : pending, "pain-send");
       return;
     }
     if (!words) return;
