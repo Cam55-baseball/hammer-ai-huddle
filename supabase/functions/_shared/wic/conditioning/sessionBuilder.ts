@@ -20,6 +20,8 @@ export interface CertifyConditioningInput {
   prescriptions: ConditioningRxLike[];
   catalog: readonly ConditioningCatalogEntry[];
   template: ConditioningTemplateResolutionInput;
+  /** Stage 1: the template the selector actually used. */
+  templateId?: keyof typeof CONDITIONING_TEMPLATES;
   availableEquipment?: readonly string[];
   environment?: "indoor" | "outdoor" | string;
   trainingAgeClass?: string;
@@ -58,7 +60,7 @@ export interface CertifyConditioningResult {
 const GOV_VERSION = "conditioning_v1";
 
 export function certifyConditioning(input: CertifyConditioningInput): CertifyConditioningResult {
-  const template = resolveConditioningTemplate(input.template);
+  const template = input.templateId ? CONDITIONING_TEMPLATES[input.templateId] : resolveConditioningTemplate(input.template);
   const rxs = input.prescriptions.filter((r) => r.slot === "conditioning");
   const catBySlug = new Map(input.catalog.map((c) => [c.slug, c] as const));
   const stamps = new Map<string, ConditioningGovernanceStamp>();

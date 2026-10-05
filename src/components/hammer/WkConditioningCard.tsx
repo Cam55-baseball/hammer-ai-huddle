@@ -71,7 +71,15 @@ export function WkConditioningCard() {
             ) : isLoading ? (
               <Skeleton className="h-14 w-full rounded" />
             ) : (
-              items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} generating={generating} />)
+              <>
+              {typeof (items[0]?.why_payload as any)?.conditioning_why === "string" && (
+                <div className="rounded-md border border-border bg-muted/40 p-3" data-testid="conditioning-why">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Why today's conditioning</p>
+                  <p className="mt-1 text-sm text-foreground">{(items[0]?.why_payload as any).conditioning_why}</p>
+                </div>
+              )}
+              {items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} generating={generating} />)}
+              </>
             )}
             {items.length > 0 && (
               <WkSessionShapeLine
