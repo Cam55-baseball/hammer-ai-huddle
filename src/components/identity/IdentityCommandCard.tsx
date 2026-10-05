@@ -138,7 +138,7 @@ interface Props { className?: string }
 
 export function IdentityCommandCard({ className }: Props) {
   const { user } = useAuth();
-  const { snapshot, label, tone, accent, scoreText, loading } = useIdentityState();
+  const { snapshot, label, accent, loading } = useIdentityState();
   const { snapshot: hieSnapshot } = useHIESnapshot();
   const { dayType } = useDayState();
   const { active: activeEvent, all: allEvents, acknowledge } = useBehavioralEvents();
@@ -200,7 +200,7 @@ export function IdentityCommandCard({ className }: Props) {
           className,
         )}
       >
-        {/* Thin tier accent — only colored signal on the surface */}
+        {/* A single tier accent against the dark daily hero. */}
         <div className={cn('pointer-events-none absolute inset-y-0 left-0 w-1', accent)} aria-hidden />
 
         {/* ─── Always-visible header (acts as the toggle) ──────────────── */}
