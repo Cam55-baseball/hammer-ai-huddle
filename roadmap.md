@@ -82,3 +82,6 @@
 - [ ] Cross-feature inference in The General — awaiting owner ruling on the proposal.
 - [ ] Verify morning check-in, completion message and shared Ask Hammer memory as a player — blocked: no player preview session.
 - [x] Stage 1 conditioning (live 2026-10-05 18:50 UTC): templates choose the work, respond to governor + check-ins, tests, verify, deploy (owner-authorised 2026-10-05).
+- [x] Stage 2 faults fade when fixed — plan builder live 2026-10-05; app note awaits owner publish
+- [ ] Owner ruling: one vs two clean clips (default: one eases, two clear)
+- [ ] Owner ruling: pitcher/recovery conditioning drill gap
