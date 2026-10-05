@@ -234,11 +234,6 @@ export function IdentityCommandCard({ className }: Props) {
                     <span className={cn('text-2xl font-bold tracking-tight leading-tight break-words', tone)}>
                       {label}
                     </span>
-                    {standardConfirmed && (
-                      <span className="text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 px-1.5 py-0.5 rounded">
-                        ✓ Confirmed
-                      </span>
-                    )}
                   </div>
                 </div>
 
