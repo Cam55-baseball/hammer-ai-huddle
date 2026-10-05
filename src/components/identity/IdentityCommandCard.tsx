@@ -209,12 +209,12 @@ export function IdentityCommandCard({ className }: Props) {
           onClick={handleToggle}
           aria-expanded={open}
           aria-label={open ? 'Collapse identity card' : 'Open identity card'}
-          className="relative min-h-28 w-full rounded-none px-5 py-5 text-left hover:bg-muted/20 sm:px-6"
+          className="daily-identity-hero relative min-h-36 w-full rounded-none px-5 py-6 text-left sm:px-6"
         >
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-bold uppercase text-primary">
+                <span className="text-xs font-bold uppercase text-red-400">
                   Your day
                 </span>
                 {dayType !== 'standard' && (
@@ -232,7 +232,7 @@ export function IdentityCommandCard({ className }: Props) {
               <div className="mt-3 flex items-end justify-between gap-3 sm:block">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className={cn('text-3xl font-black leading-tight break-words', tone)}>
+                    <span className="text-4xl font-black leading-none tracking-tight text-white break-words">
                       {label}
                     </span>
                   </div>
@@ -240,10 +240,10 @@ export function IdentityCommandCard({ className }: Props) {
 
                 {/* Mobile-only score */}
                 <div className="flex flex-col items-end shrink-0 sm:hidden">
-                  <div className={cn('text-3xl font-black tabular-nums leading-none', scoreText)}>
+                  <div className="text-3xl font-black tabular-nums leading-none text-white">
                     {score}
                   </div>
-                  <div className="mt-1 text-xs font-medium text-muted-foreground">
+                  <div className="mt-1 text-xs font-medium text-white/70">
                     Consistency
                   </div>
                 </div>
@@ -252,10 +252,10 @@ export function IdentityCommandCard({ className }: Props) {
 
             {/* Right column on sm+ */}
             <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
-              <div className={cn('text-3xl font-bold tabular-nums leading-none', scoreText)}>
+              <div className="text-3xl font-bold tabular-nums leading-none text-white">
                 {score}
               </div>
-              <div className="text-xs font-medium text-muted-foreground">
+              <div className="text-xs font-medium text-white/70">
                 Consistency
               </div>
             </div>
@@ -267,7 +267,7 @@ export function IdentityCommandCard({ className }: Props) {
               )}
               <ChevronDown
                 className={cn(
-                  'h-5 w-5 text-muted-foreground transition-transform',
+                  'h-5 w-5 text-white/70 transition-transform',
                   open && 'rotate-180',
                 )}
               />
@@ -275,19 +275,19 @@ export function IdentityCommandCard({ className }: Props) {
           </div>
 
           {/* Row 3: streak chips */}
-          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/70 pt-3 text-xs">
-            <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
+          <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-white/20 pt-4 text-xs">
+            <span className="inline-flex items-center gap-1.5 font-medium text-white">
               <Flame className="h-3 w-3 text-orange-500" />
               <span className="tabular-nums">{perfStreak}</span>
-              <span className="text-muted-foreground">days meeting your standard</span>
+              <span className="text-white/70">days meeting your standard</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
+            <span className="inline-flex items-center gap-1.5 font-medium text-white">
               <ShieldCheck className="h-3 w-3 text-emerald-500" />
               <span className="tabular-nums">{discStreak}</span>
-              <span className="text-muted-foreground">active days</span>
+              <span className="text-white/70">active days</span>
             </span>
             {nnMiss > 0 && (
-              <span className="inline-flex items-center gap-1.5 font-medium text-destructive">
+              <span className="inline-flex items-center gap-1.5 font-medium text-red-300">
                 <span className="tabular-nums">{nnMiss}</span>
                 <span>missed days this week</span>
               </span>
@@ -296,10 +296,10 @@ export function IdentityCommandCard({ className }: Props) {
               <Link
                 to="/progress#body"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1.5 font-medium text-foreground hover:text-primary transition-colors"
+                className="inline-flex items-center gap-1.5 font-medium text-white hover:text-red-300 transition-colors"
                 aria-label="Open full body report"
               >
-                <span className="text-muted-foreground">Body check-in</span>
+                <span className="text-white/70">Body check-in</span>
                 <span className="tabular-nums">{Math.round(hieSnapshot.readiness_score)}</span>
                 <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
               </Link>

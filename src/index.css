@@ -545,6 +545,13 @@ All colors MUST be HSL.
   background: linear-gradient(155deg, hsl(var(--card)), hsl(var(--background)));
   box-shadow: inset 0 1px hsl(var(--rc-glass) / .12), var(--shadow-card);
 }
+.daily-identity-hero {
+  color: white;
+  background: radial-gradient(ellipse at 100% 0%, hsl(var(--primary) / .23), transparent 52%),
+    linear-gradient(155deg, #181818, #090909);
+}
+.daily-identity-hero:hover { background-color: #191919; }
+.daily-identity-hero:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: -3px; }
 .daily-success-header {
   background: linear-gradient(145deg, hsl(var(--primary) / .13), hsl(var(--card)) 42%, hsl(var(--background)));
   box-shadow: inset 0 1px hsl(var(--rc-glass) / .14), var(--shadow-card);
