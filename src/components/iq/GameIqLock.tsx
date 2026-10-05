@@ -1,3 +1,4 @@
+import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 import { ReactNode } from "react";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,7 +20,7 @@ export function GameIqLock({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!isOwner) return <GameIqComingSoon />;
+  if (!isOwner && !GAME_IQ_AVAILABLE_TO_ATHLETES) return <GameIqComingSoon />;
 
   return <>{children}</>;
 }
