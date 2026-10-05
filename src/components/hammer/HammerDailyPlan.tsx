@@ -1324,6 +1324,12 @@ function BlockCard({
                 {block.assumption}
               </p>
             )}
+            {block.cleanClipNote && (
+              <div className="mt-1 rounded-md border border-border bg-muted/40 px-2 py-1" data-testid="clean-clip-note">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Progress from your clips</p>
+                <p className="text-[11px] text-foreground">{block.cleanClipNote}</p>
+              </div>
+            )}
             {block.roadmapReason && !block.why.includes(block.roadmapReason) && (
               <p className="text-[11px] text-muted-foreground/80 mt-0.5 italic">
                 {block.roadmapReason}

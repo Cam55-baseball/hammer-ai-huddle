@@ -15,6 +15,9 @@
  * build if the two drift.
  */
 
+import { fadeForSignal, CLEAN_CLIP_FADE_VERSION, type ClipEvidence, type FadeState } from "./cleanClipFade.ts";
+export type { ClipEvidence } from "./cleanClipFade.ts";
+
 export type Discipline =
   | "hitting"
   | "pitching"
@@ -188,12 +191,16 @@ export interface RankedPriority {
   readonly sampleSize: number;
   readonly disciplines: readonly string[];
   readonly sources: readonly string[];
+  /** Clean-clip fades applied to this group (empty when none). */
+  readonly fades: ReadonlyArray<{ readonly fault_key: string; readonly discipline: string; readonly fade: FadeState }>;
+  readonly clearedByCleanClips: boolean;
 }
 
 /** Collapse raw rows into ranked root patterns, highest first. Deterministic. */
 export function rankLedger(
   rows: readonly LedgerSignalRow[],
   now: number = Date.now(),
+  clips: readonly ClipEvidence[] = [],
 ): RankedPriority[] {
   const groups = new Map<string, LedgerSignalRow[]>();
   for (const r of rows) {
@@ -205,15 +212,22 @@ export function rankLedger(
 
   const ranked: RankedPriority[] = [];
   for (const [rootPatternId, group] of groups) {
-    const base = group.reduce(
-      (sum, s) =>
+    const withFade = group.map((s) => ({ s, fade: fadeForSignal(s, clips) }));
+    // Timer underneath, clean-clip fade on top. No clips = multiplier 1 = unchanged.
+    const base = withFade.reduce(
+      (sum, { s, fade }) =>
         sum +
         Number(s.confidence) *
           Number(s.severity) *
           sampleWeight(Number(s.sample_size)) *
-          recencyWeight(s.observed_at, now),
+          recencyWeight(s.observed_at, now) *
+          fade.multiplier,
       0,
     );
+    const fades = withFade
+      .filter(({ fade }) => fade.status !== "none")
+      .map(({ s, fade }) => ({ fault_key: s.fault_key, discipline: s.discipline, fade }));
+    const clearedByCleanClips = withFade.every(({ fade }) => fade.status === "cleared");
     const sources = Array.from(new Set(group.map((s) => s.source)));
     const disciplines = Array.from(new Set(group.map((s) => s.discipline)));
     const agreement = 1 + 0.35 * (sources.length - 1) + 0.25 * (disciplines.length - 1);
@@ -224,6 +238,8 @@ export function rankLedger(
       sampleSize: group.reduce((n, s) => n + Number(s.sample_size), 0),
       disciplines,
       sources,
+      fades,
+      clearedByCleanClips,
     });
   }
 
@@ -254,8 +270,10 @@ export function buildFaultPriority(
   rows: readonly LedgerSignalRow[],
   now: number = Date.now(),
   limit = 3,
+  clips: readonly ClipEvidence[] = [],
 ): FaultPriority {
-  const ranked = rankLedger(rows, now).slice(0, limit);
+  // A fault cleared by clean clips gives up its rank slot; the next one moves up.
+  const ranked = rankLedger(rows, now, clips).filter((r) => !r.clearedByCleanClips).slice(0, limit);
   const bonuses = new Map<string, number>();
   const trace: Array<Record<string, unknown>> = [];
 
@@ -275,9 +293,21 @@ export function buildFaultPriority(
       disciplines: r.disciplines,
       bonus: weight,
       slugs_prioritized: r.family ? slugs.length : 0,
+      clean_clip_fades: r.fades.map((f) => ({ fault_key: f.fault_key, discipline: f.discipline, status: f.fade.status, clips: f.fade.cleanClipIds, latest_clean_clip_at: f.fade.latestCleanClipAt })),
       version: FAULT_PRIORITY_VERSION,
     });
   });
+
+  // Cleared faults stay in the replay trace so the change is auditable.
+  for (const r of rankLedger(rows, now, clips).filter((x) => x.clearedByCleanClips)) {
+    trace.push({
+      rank: null,
+      root_pattern: r.rootPatternId,
+      cleared_by_clean_clips: true,
+      clean_clip_fades: r.fades.map((f) => ({ fault_key: f.fault_key, discipline: f.discipline, status: f.fade.status, clips: f.fade.cleanClipIds, latest_clean_clip_at: f.fade.latestCleanClipAt })),
+      version: CLEAN_CLIP_FADE_VERSION,
+    });
+  }
 
   return {
     bonusForSlug: (slug: string) => bonuses.get(slug) ?? 0,

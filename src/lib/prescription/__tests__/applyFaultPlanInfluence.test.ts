@@ -24,7 +24,7 @@ const block = (status: PrescribedBlock["status"] = "ready"): PrescribedBlock => 
 const ranked: RankedFault[] = [{
   rootPatternId: "trunk_rotates_before_front_foot_plant", family: null, score: 1,
   sources: ["video_analysis"], disciplines: ["hitting"], totalSampleSize: 1,
-  latestObservedAt: "2026-10-02T00:00:00.000Z", says: "Recent finding",
+  latestObservedAt: "2026-10-02T00:00:00.000Z", says: "Recent finding", fades: [], clearedByCleanClips: false,
   signals: [{ id: "signal-1", user_id: "athlete-1", source: "video_analysis",
     fault_key: "front_shoulder_opens_early", root_pattern_id: "trunk_rotates_before_front_foot_plant",
     discipline: "hitting", confidence: 0.7, sample_size: 1, severity: 0.46,
