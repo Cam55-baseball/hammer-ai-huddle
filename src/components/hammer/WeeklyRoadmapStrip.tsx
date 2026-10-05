@@ -58,8 +58,8 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
   const [seasonDatesOpen, setSeasonDatesOpen] = useState(false);
   const { weeklyRoadmap, weeklyTemplate, microcycle, roadmap } = plan;
   const season = useSeasonStatus();
-  const phaseWeek = roadmap.quarter.quarterKnown && season.phaseStartedAt
-    ? Math.max(1, Math.floor((Date.now() - new Date(`${season.phaseStartedAt}T00:00:00`).getTime()) / (7 * 86400000)) + 1)
+  const phaseWeek = roadmap.quarter.quarterKnown && season.phaseDaysIn !== null
+    ? Math.max(1, Math.floor(season.phaseDaysIn / 7) + 1)
     : null;
 
   return (
@@ -72,7 +72,7 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
           <Calendar className="h-4 w-4 text-primary shrink-0" />
           <div className="min-w-0">
             <div className="text-xs font-semibold text-foreground truncate">
-              {roadmap.rung.label} · {roadmap.quarter.quarterKnown ? roadmap.quarter.label : roadmap.quarter.phaseKnown ? season.phaseProfile.label : 'Season dates needed'}
+              {roadmap.rung.label} · {roadmap.quarter.quarterKnown ? roadmap.quarter.label : roadmap.quarter.phaseKnown ? roadmap.quarter.label.replace(' · block not set', '') : 'Season dates needed'}
             </div>
             {!roadmap.quarter.quarterKnown ? (
               <div className="text-[11px] text-muted-foreground leading-tight">
@@ -81,7 +81,7 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
               </div>
             ) : (
               <div className="text-[11px] text-muted-foreground leading-tight">
-                {season.phaseProfile.label} · Week {phaseWeek} · {weeklyTemplate.label}
+                {season.phaseProfile.label}{phaseWeek !== null ? ` · Week ${phaseWeek}` : ''} · {weeklyTemplate.label}
               </div>
             )}
 
