@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,7 +67,6 @@ export function RampLines() {
 /** Pure view: heading (what kind of thing) · name (which phase) · one plain line (what it means).
  *  No day counts or timelines here (owner 2026-10-05) — Ask Hammer carries the detail. */
 export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePlan; open: boolean; onToggle: () => void }) {
-  const nav = useNavigate();
   const phaseLabels = { P1: "Build your strength base", P2: "Lift heavier and move faster", P3: "Turn strength into game speed", P4: "Game-ready training" } as const;
   const where = plan.ramp?.activeToday ? "getting ready for games"
     : plan.mode === "in_season" ? "in season"
@@ -85,7 +83,7 @@ export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePla
   const askHammer = () => {
     const detail = [stripText(plan), ...(plan.ramps ?? []).map((r) => r.line), ...(plan.rampWarnings ?? [])].join(" | ");
     const q = `My training phase card says "${displayLine}". The full plan detail is: ${detail}. Explain where I am in my programme and what's coming next.`;
-    nav(`/hammer/recall?ask=${encodeURIComponent(q)}`);
+    window.location.assign(`/hammer/recall?ask=${encodeURIComponent(q)}`);
   };
   return (
     <div className="rounded-md border border-border/80 bg-background/65 px-4 py-3 text-sm text-foreground" data-testid="phase-strip">
