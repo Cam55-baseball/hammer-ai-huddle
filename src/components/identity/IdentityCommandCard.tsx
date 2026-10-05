@@ -139,6 +139,7 @@ interface Props { className?: string }
 export function IdentityCommandCard({ className }: Props) {
   const { user } = useAuth();
   const { snapshot, label, tone, accent, scoreText, loading } = useIdentityState();
+  const { snapshot: hieSnapshot } = useHIESnapshot();
   const { dayType } = useDayState();
   const { active: activeEvent, all: allEvents, acknowledge } = useBehavioralEvents();
   const { execute, running } = useQuickActionExecutor();
