@@ -10,6 +10,7 @@ import { AlertTriangle, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type Notice, noticeKey, surfaceForNotice } from "@/lib/hammer/notices/noticeRouting";
+import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
 
 const SURFACE_LABEL: Record<string, string> = {
   lift: "Lift",
@@ -59,7 +60,7 @@ export function DayNoticesCard({
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-sm">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
-          Notices for today
+          Why today's plan changed
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -76,7 +77,7 @@ export function DayNoticesCard({
               <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {SURFACE_LABEL[surfaceForNotice(notice)] ?? "Today"}
               </div>
-              <p className="leading-relaxed">{notice.detail}</p>
+              <p className="leading-relaxed">{athleteNoticeCopy(notice)}</p>
               {isRead ? (
                 <div className="mt-2 flex items-center gap-1 text-[11px] font-medium">
                   <Check className="h-3.5 w-3.5" /> Read

@@ -24,7 +24,7 @@ describe("stepped check-in", () => {
   });
   it("morning/night check-in no longer submits from the Anything-change section", () => {
     const src = readFileSync("src/components/vault/VaultFocusQuizDialog.tsx", "utf8");
-    expect(src).toMatch(/<CheckInLifeChips \/>/);
+    expect(src).toMatch(/quizType === 'morning'.*<CheckInLifeChips \/><NextGameConfirmation \/><MorningDayIntent \/>/);
     expect(src).not.toMatch(/CheckInLifeChips onDone/);
   });
 });

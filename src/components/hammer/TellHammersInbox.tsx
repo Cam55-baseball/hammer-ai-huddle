@@ -9,7 +9,7 @@ import { useOptionalAuth } from "@/hooks/useAuth";
 import { useScheduleTimeline } from "@/hooks/useScheduleTimeline";
 import { getTodayDate, getLocalDateString } from "@/utils/dateUtils";
 import { describeEntry, isoShift } from "../../../supabase/functions/_shared/wic/schedule/timeline";
-import { parseScheduleRequest, FACE_LABEL, extractDates, NEXT_GAME_ANSWERS, nextGameDraft, type EntryDraft } from "@/lib/hammer/tellHammers/parse";
+import { parseScheduleRequest, FACE_LABEL, extractDates, type EntryDraft } from "@/lib/hammer/tellHammers/parse";
 import { REPORT_INJURY_REGIONS } from "@/lib/hammer/injury/reportInjury";
 
 type Flow = "games" | "season" | "cancelled" | "pain" | "break" | "event" | "travel" | "resume" | "ask";
@@ -49,14 +49,13 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
   const [confirm, setConfirm] = useState<EntryDraft | null>(null);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const [sent, setSent] = useState<Array<{ id: string; label: string }>>([]);
-  const [nextGameDone, setNextGameDone] = useState(false);
-  const [noChanges, setNoChanges] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   useEffect(() => {
     if (checkIn) return;
     try { setOpen(localStorage.getItem(storageKey) === "true"); } catch { /* private browsing */ }
   }, [storageKey, checkIn]);
   const todayEntries = useMemo(() => tl.entries.filter(e => !e.undone_at && e.created_at?.slice(0, 10) === today), [tl.entries, today]);
-  if (!tl.enabled) return <section className="rounded-md border border-border bg-card p-3"><div className="font-semibold">Update Hammer</div><p className="text-sm text-muted-foreground">Not available right now.</p></section>;
+  if (!tl.enabled) return <section className="rounded-md border border-border bg-card p-3"><div className="font-semibold">{checkIn ? "Anything change?" : "Update Hammer"}</div><p className="text-sm text-muted-foreground">Changes can't be saved right now. You can still finish your check-in.</p></section>;
   const toggle = (value: boolean) => {
     setOpen(value);
     if (!value) reset();
@@ -65,22 +64,22 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
   function reset() {
     setFlow(null); setPending(null); setPicked([]); setWhich(null); setEventKind(null); setRegion(null); setText(""); setConfirm(null);
   }
-  function enter(next: Flow) { reset(); setLastMessage(null); setFlow(next); }
+  function enter(next: Flow) { reset(); setSaveError(null); setLastMessage(null); setFlow(next); }
   async function commit(d: EntryDraft, key: string | null = null) {
     if (busy) return;
     setBusy(true); setBusyKey(key);
     try {
       const res = await tl.save(d, "inbox");
-      setLastMessage(d.tag === "NOTE" && d.payload.kind === "free_text" ? NOTE_MESSAGE : res.message);
-      setSent(previous => [{ id: res.entry.id, label: describeEntry({ ...d, ...res.entry, payload: res.entry.payload ?? d.payload }) }, ...previous.filter(item => item.id !== res.entry.id)]);
-      if (d.payload.kind === "next_game_answer") setNextGameDone(true);
+      setLastMessage(d.payload.kind === "morning_change_confirmation" ? "You confirmed today's changes. Your plan stays as shown." : d.tag === "NOTE" && d.payload.kind === "free_text" ? NOTE_MESSAGE : res.message);
+      setSent(previous => [{ id: res.entry.id, label: d.payload.kind === "morning_change_confirmation" ? "Anything change? — confirmed" : describeEntry({ ...d, ...res.entry, payload: res.entry.payload ?? d.payload }) }, ...previous.filter(item => item.id !== res.entry.id)]);
+      setSaveError(null);
       if (d.tag === "PAIN" && RED_FLAG.test(String(d.payload.text ?? ""))) toast.error("Stop and get it checked by a trainer or doctor.");
       reset();
-    } catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't save that"); }
+    } catch (e) { setSaveError("That change wasn't saved. Try again; your other check-in answers are safe."); toast.error(e instanceof Error ? e.message : "Couldn't save that"); }
     finally { setBusy(false); setBusyKey(null); }
   }
   /** A fixed choice is one tap: it clears any typed text and sends immediately. */
-  function tap(value: EntryDraft, key: string) { setText(""); setConfirm(null); void commit(value, key); }
+  function tap(value: EntryDraft, key: string) { setText(""); setConfirm(null); if (checkIn) { setPending(value); setFlow(null); } else void commit(value, key); }
   async function undo(id: string) {
     try {
       if (await tl.undo(id)) { setSent(s => s.filter(e => e.id !== id)); toast.success("Undone"); }
@@ -96,7 +95,8 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     const words = text.trim();
     if (flow === "pain") {
       if (!pending) return; // a pain entry always needs a face
-      void commit(words ? { ...pending, payload: { ...pending.payload, text: words } } : pending, "pain-send");
+      if (checkIn) { setPending(words ? { ...pending, payload: { ...pending.payload, text: words } } : pending); setFlow(null); }
+      else void commit(words ? { ...pending, payload: { ...pending.payload, text: words } } : pending, "pain-send");
       return;
     }
     if (!words) return;
@@ -107,11 +107,14 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
       // Never let a different category in free text silently replace the selected option.
       const expected: Partial<Record<Flow, EntryDraft["tag"]>> = { break: "HOLD", travel: "HOLD", games: "GAME", cancelled: "CANCELLED", season: "SEASON", event: "EVENT", resume: "RESUME" };
       if (!flow || flow === "ask" || parsed.draft.tag === expected[flow]) {
-        setConfirm({ ...parsed.draft, payload: { ...parsed.draft.payload, text: words } }); return;
+        if (checkIn) { setPending({ ...parsed.draft, payload: { ...parsed.draft.payload, text: words } }); setFlow(null); }
+        else setConfirm({ ...parsed.draft, payload: { ...parsed.draft.payload, text: words } });
+        return;
       }
     }
     // Words that can't be read into a plan change are saved as a note; the plan never changes from them.
-    void commit(draft("NOTE", today, today, { kind: "free_text", text: words }), "text-send");
+    if (checkIn) { setPending(draft("NOTE", today, today, { kind: "free_text", text: words })); setFlow(null); }
+    else void commit(draft("NOTE", today, today, { kind: "free_text", text: words }), "text-send");
   }
   const sel = (key: string) => busyKey === key;
   const choiceBtn = (key: string, label: string, onClick: () => void, extra = "h-12") =>
@@ -122,13 +125,15 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     onSelect={(value: any) => setPicked(multiple ? (value ?? []) : (value ? [value] : []))}
     className="mx-auto rounded-md border pointer-events-auto [&_button]:h-11 [&_button]:w-11" />;
   const sendDays = (tag: EntryDraft["tag"], key: string) => { const days = picked.map(getLocalDateString).sort(); tap(draft(tag, days[0], days[days.length - 1], {}, days), key); };
-  const sentList = [...sent, ...todayEntries.filter(e => !sent.some(s => s.id === e.id)).map(e => ({ id: e.id, label: describeEntry(e) }))];
+  const sentList = [...sent, ...todayEntries.filter(e => !sent.some(s => s.id === e.id) && e.payload?.kind !== "next_game_answer").map(e => ({ id: e.id, label: e.payload?.kind === "morning_change_confirmation" ? "Anything change? — confirmed" : describeEntry(e) }))];
   const backBtn = <Button variant="ghost" data-testid="entry-back" onClick={reset}><ArrowLeft className="mr-1 h-4 w-4" /> Back</Button>;
 
-  if (checkIn && noChanges) return <section className="rounded-md border border-border bg-card p-3 flex items-center justify-between gap-2" aria-label="Anything change?" data-testid="checkin-no-changes">
-    <span className="text-sm"><strong>Anything change?</strong> No changes today.</span>
-    <Button variant="ghost" size="sm" onClick={() => setNoChanges(false)}>Add something</Button>
-  </section>;
+  const changeConfirmed = todayEntries.some(e => e.tag === "NOTE" && e.start_date === today && (e.payload?.kind === "morning_change_confirmation"));
+  const confirmChanges = async (nothing: boolean) => {
+    if (nothing && pending) { setSaveError("You have an unsaved change. Tap Done to save it, or Remove it before confirming nothing changed."); return; }
+    if (pending) { await commit(pending, "change-done"); return; }
+    await commit(draft("NOTE", today, today, { kind: "morning_change_confirmation", answer: nothing ? "no_change" : "done" }), nothing ? "change-no-change" : "change-done");
+  };
 
   return <section className="rounded-md border border-border bg-card p-3 space-y-3" aria-label={checkIn ? "Anything change?" : "Update Hammer"}>
     {checkIn ? <div className="flex items-center justify-between"><h3 className="font-semibold">Anything change?</h3>{flow && backBtn}</div> :
@@ -141,14 +146,12 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     {(open || checkIn) && <div className="space-y-3">
       {!checkIn && flow && backBtn}
       {lastMessage && <div role="status" data-testid="tell-hammers-result" className="rounded-md border border-primary/30 bg-primary/10 p-3 text-sm"><strong>Got it — Hammer has it</strong><p>{lastMessage}</p></div>}
+      {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
+      {checkIn && (changeConfirmed || sentList.length > 0) && !pending && <p className="text-sm text-muted-foreground">{changeConfirmed ? "You confirmed your answer today." : "Your update was saved today."} You can still add a change.</p>}
+      {checkIn && pending && <div className="rounded-md border border-primary/30 p-2 text-sm">Ready to save: {describeEntry(pending)} <Button size="sm" variant="ghost" onClick={() => setPending(null)}>Remove</Button></div>}
       {!flow && <>
         <div className="grid grid-cols-2 gap-2">{BUTTONS.map(({flow: f, label, icon: Icon}) => <Button key={f} variant="outline" className="h-20 flex-col gap-1 whitespace-normal text-center text-sm" data-testid={`tell-${f}`} onClick={() => enter(f)}><Icon className="h-5 w-5 shrink-0" />{label}</Button>)}</div>
         <Button variant="outline" className="w-full" data-testid="tell-ask" onClick={() => enter("ask")}>Update Hammer in your words</Button>
-        {checkIn && <>
-          {!nextGameDone && !todayEntries.some(e => e.tag === "NOTE" && e.payload?.kind === "next_game_answer" && e.start_date === today) && <div className="border-t pt-3 space-y-2"><p className="text-sm font-semibold">When's your next game?</p><div className="grid grid-cols-2 gap-2">{NEXT_GAME_ANSWERS.map(a => choiceBtn(`next-${a.key}`, a.label, () => tap(nextGameDraft(today, a.key), `next-${a.key}`)))}</div></div>}
-          {/* Collapses this section only — the check-in's own finish button is the only thing that submits. */}
-          <Button variant="secondary" className="w-full" data-testid="chip-nope" onClick={() => { reset(); setNoChanges(true); onDone?.(); }}>Nope / Done</Button>
-        </>}
       </>}
       {flow === "games" && <><p className="text-sm">Tap your game days, then send.</p>{pickCalendar(true)}{choiceBtn("games-send", "Send these days", () => sendDays("GAME", "games-send"), "h-12 w-full")}</>}
       {flow === "season" && <>{!which ? <div className="grid grid-cols-2 gap-2"><Button variant="outline" onClick={() => setWhich("starts")}>Season starts</Button><Button variant="outline" onClick={() => setWhich("ends")}>Season ends</Button></div> : <><p className="text-sm">Tap the day your season {which}.</p>{pickCalendar(false)}{choiceBtn("season-send", "Send this day", () => tap(draft("SEASON", getLocalDateString(picked[0]), getLocalDateString(picked[0]), { which }), "season-send"), "h-12 w-full")}</>}</>}
@@ -175,6 +178,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
       {sentList.length > 0 && <div className="border-t pt-3 space-y-2" data-testid="sent-today"><h4 className="text-sm font-semibold">Sent today</h4>
         {sentList.map(e => <div key={e.id} className="flex items-center gap-2 text-sm"><span className="min-w-0 flex-1 break-words">{e.label}</span><Button size="sm" variant="ghost" aria-label={`Undo ${e.label}`} onClick={() => void undo(e.id)}><Undo2 className="h-4 w-4" /> Undo</Button></div>)}
       </div>}
+      {checkIn && <div className="grid grid-cols-2 gap-3 border-t border-border pt-3"><Button className="h-12" disabled={busy || !!flow} onClick={() => void confirmChanges(false)} data-testid="change-done">Done</Button><Button className="h-12 whitespace-normal" variant="outline" disabled={busy || !!flow} onClick={() => void confirmChanges(true)} data-testid="change-no-change">Nothing's changed</Button></div>}
     </div>}
   </section>;
 }

@@ -101,12 +101,24 @@ describe("Update Hammer shared entry flow", () => {
     render(<TellHammersInbox />); open();
     expect(screen.queryByText("Sent today")).toBeNull();
   });
-  it("check-in Nope collapses the section and submits nothing", () => {
-    const onDone = vi.fn();
-    render(<TellHammersInbox checkIn onDone={onDone} />);
-    fireEvent.click(screen.getByTestId("chip-nope"));
-    expect(screen.getByTestId("checkin-no-changes").textContent).toMatch(/No changes today/);
+  it("check-in Nothing's changed persists an independent confirmation", async () => {
+    render(<TellHammersInbox checkIn />);
+    fireEvent.click(screen.getByTestId("change-no-change"));
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+    expect(save.mock.calls[0][0]).toMatchObject({ tag: "NOTE", payload: { kind: "morning_change_confirmation", answer: "no_change" } });
+  });
+  it("check-in Done saves a pending change, and failure leaves it ready to retry", async () => {
+    save.mockRejectedValueOnce(new Error("Unavailable"));
+    render(<TellHammersInbox checkIn />);
+    fireEvent.click(screen.getByTestId("tell-break"));
+    fireEvent.click(screen.getByTestId("hold-3"));
     expect(save).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId("change-done"));
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/wasn't saved/));
+    expect(screen.getByText(/Ready to save:/)).toBeTruthy();
+    fireEvent.click(screen.getByTestId("change-done"));
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
+    expect(save.mock.calls[1][0]).toMatchObject({ tag: "HOLD", payload: { reason: "break" } });
   });
   it("disabled timeline still leaves the Update Hammer row visible", () => {
     enabled = false;

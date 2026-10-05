@@ -56,45 +56,47 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
   const [expanded, setExpanded] = useState<number | null>(null);
   const [explainerOpen, setExplainerOpen] = useState(false);
   const [seasonDatesOpen, setSeasonDatesOpen] = useState(false);
-  const { weeklyRoadmap, weeklyTemplate, microcycle, roadmap } = plan;
+  const { weeklyRoadmap, microcycle, roadmap } = plan;
   const season = useSeasonStatus();
-  const phaseWeek = roadmap.quarter.quarterKnown && season.phaseDaysIn !== null
+  const resolvedPhaseCode = { off_season: "off", preseason: "pre", in_season: "in", post_season: "post" }[season.resolvedPhase];
+  const phaseWeek = roadmap.quarter.phaseKnown && season.phaseStartedAt && season.phaseDaysIn !== null && resolvedPhaseCode === roadmap.quarter.phase
     ? Math.max(1, Math.floor(season.phaseDaysIn / 7) + 1)
     : null;
 
   return (
     <section
-      aria-label="Weekly training roadmap"
+      aria-label="Your training block and season"
       className="rounded-lg border border-primary/25 bg-gradient-to-b from-primary/5 to-transparent p-3"
     >
       <header className="mb-2 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <Calendar className="h-4 w-4 text-primary shrink-0" />
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-foreground truncate">
-              {roadmap.rung.label} · {roadmap.quarter.quarterKnown ? roadmap.quarter.label : roadmap.quarter.phaseKnown ? roadmap.quarter.label.replace(' · block not set', '') : 'Season dates needed'}
-            </div>
+            <div className="text-xs font-semibold text-foreground">Your training block &amp; season</div>
+            <div className="text-[11px] text-muted-foreground">Your training path: {roadmap.rung.label}</div>
             {!roadmap.quarter.quarterKnown ? (
               <div className="text-[11px] text-muted-foreground leading-tight">
-                Set your season dates to place this training block.{' '}
+                {roadmap.quarter.phaseKnown ? "Your season phase is known, but its start date isn't. Add your season dates to show your week." : "Add your season dates to show where you are in your training block."}{' '}
                 <Button variant="link" size="sm" className="h-auto p-0 text-[11px]" onClick={() => setSeasonDatesOpen(true)}>Set season dates</Button>
               </div>
             ) : (
               <div className="text-[11px] text-muted-foreground leading-tight">
-                {season.phaseProfile.label}{phaseWeek !== null ? ` · Week ${phaseWeek}` : ''} · {weeklyTemplate.label}
+                {season.resolvedPhase.replace(/_/g, " ")} · {phaseWeek !== null ? `Week ${phaseWeek}` : "Week not set"}
               </div>
             )}
 
           </div>
         </div>
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           onClick={() => setExplainerOpen(true)}
-          className="flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary hover:bg-primary/20 shrink-0"
+          className="flex items-center gap-1 px-2 text-[11px] shrink-0"
         >
           <Target className="h-3 w-3" />
           Your training path
-        </button>
+        </Button>
       </header>
       <RoadmapExplainerSheet
         open={explainerOpen}

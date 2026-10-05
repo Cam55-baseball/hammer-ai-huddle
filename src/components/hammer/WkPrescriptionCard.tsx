@@ -28,6 +28,7 @@ import {
   WkProgressionNote,
   type ProgressionPayloadShape,
 } from "@/components/hammer/WkProgressionNote";
+import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
 
 const SLOT_TONE: Record<WkRx["slot"], string> = {
   lift: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
@@ -416,9 +417,9 @@ export function WkPrescriptionCard({
 
           {reductions.length > 0 && (
             <div className="rounded border border-amber-500/30 bg-amber-500/5 p-2">
-              <div className="font-medium mb-0.5">Why reduced today</div>
+              <div className="font-medium mb-0.5">Why today's work changed</div>
               <ul className="list-disc list-inside space-y-0.5 text-muted-foreground">
-                {reductions.map((r, i) => <li key={i}>{r.detail}</li>)}
+                {reductions.map((r, i) => <li key={i}>{athleteNoticeCopy(r)}</li>)}
               </ul>
             </div>
           )}

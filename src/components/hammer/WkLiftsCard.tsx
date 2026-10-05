@@ -45,6 +45,7 @@ import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
 import { ScheduleAdjustmentNotice } from "@/components/hammer/ScheduleAdjustmentNotice";
 import { useArmCareBudget } from "@/components/hammer/ArmCareBudgetContext";
 import { isDayStatementNotAReduction } from "@/components/hammer/WkPrescriptionCard";
+import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
 
 export function WkLiftsCard() {
   const { user } = useAuth();
@@ -179,9 +180,9 @@ export function WkLiftsCard() {
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-amber-800 dark:text-amber-200">Volume reduced today</div>
+                    <div className="font-semibold text-amber-800 dark:text-amber-200">Why today's work changed</div>
                     <ul className="mt-1 space-y-0.5 text-amber-900/80 dark:text-amber-100/80">
-                      {reductions.map((r, i) => <li key={i}>• {r.detail}</li>)}
+                      {reductions.map((r, i) => <li key={i}>• {athleteNoticeCopy(r)}</li>)}
                     </ul>
                     <Button size="sm" className="mt-2 h-7" onClick={() => setAckOpen((v) => !v)}>
                       Got it
