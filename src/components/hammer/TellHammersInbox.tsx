@@ -130,10 +130,13 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
   const backBtn = <Button variant="ghost" data-testid="entry-back" onClick={reset}><ArrowLeft className="mr-1 h-4 w-4" /> Back</Button>;
 
   const changeConfirmed = todayEntries.some(e => e.tag === "NOTE" && e.start_date === today && (e.payload?.kind === "morning_change_confirmation"));
+  const alreadyConfirmed = changeConfirmed || sent.some(x => x.label === "Anything change? — confirmed");
   const confirmChanges = async (nothing: boolean) => {
+    // One confirmation per day: a repeat tap must not record a second answer.
+    if (!pending && alreadyConfirmed) return;
     if (nothing && pending) { setSaveError("You have an unsaved change. Tap Done to save it, or Remove it before confirming nothing changed."); return; }
     if (pending) {
-      if (await commit(pending, "change-done")) await commit(draft("NOTE", today, today, { kind: "morning_change_confirmation", answer: "done" }), "change-done");
+      if (await commit(pending, "change-done") && !alreadyConfirmed) await commit(draft("NOTE", today, today, { kind: "morning_change_confirmation", answer: "done" }), "change-done");
       return;
     }
     await commit(draft("NOTE", today, today, { kind: "morning_change_confirmation", answer: nothing ? "no_change" : "done" }), nothing ? "change-no-change" : "change-done");
