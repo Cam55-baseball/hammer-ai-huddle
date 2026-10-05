@@ -39,6 +39,6 @@ describe("Stage 7 — baselines in the plan", () => {
   });
   it("athlete notice passes the line through", () => {
     const line = "Your check-in is lower than your usual, so today is lighter.";
-    expect(athleteNoticeCopy("baseline", line)).toBe(line);
+    expect(athleteNoticeCopy({ reason: "baseline", detail: line } as any)).toBe(line);
   });
 });
