@@ -81,7 +81,7 @@ export function DailyIntentHeader({ plan, cnsHigh, tick }: Props) {
             <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
             <div className="min-w-0 flex-1">
               <div className="text-[10px] uppercase tracking-wider font-semibold text-primary/80 leading-none mb-0.5">
-                Start Line{shouldGlow ? " · New today" : ""}
+                 Today's aim{shouldGlow ? " · New today" : ""}
               </div>
               <div className="flex items-start justify-between gap-2">
                 <div className="text-sm font-semibold leading-tight">{intent.headline}</div>
@@ -112,7 +112,7 @@ export function DailyIntentHeader({ plan, cnsHigh, tick }: Props) {
             return (
               <div className="pl-6 rounded-md border border-primary/15 bg-primary/5 p-2">
                 <div className="text-[10px] uppercase tracking-wider font-semibold text-primary/80">
-                  Today's Focus · {phaseLabel} · {hpi.element}
+                   Today's training focus · {phaseLabel} · {hpi.element}
                 </div>
                 <div className="text-[11px] text-foreground/85 mt-0.5 leading-snug">
                   {hpi.qiDirective}

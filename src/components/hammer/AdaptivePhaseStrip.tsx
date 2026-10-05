@@ -73,12 +73,12 @@ export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePla
       <h3 className="text-xs font-bold uppercase text-muted-foreground" data-testid="phase-heading">Your training phase</h3>
       <p className="mt-2 text-base font-semibold leading-snug" data-testid="phase-name">{displayLine}</p>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{({ P1: "Lifting: build a strong base with controlled work.", P2: "Lifting: build strength with heavier and faster work.", P3: "Lifting: move weight faster and turn strength into speed.", P4: "Lifting: short, sharp lifts to keep your strength without leaving you tired for games." } as const)[plan.phase]}</p>
-      {(plan.ramps ?? []).map((r) => (
-        <div key={r.discipline} className="text-xs text-foreground" data-testid="ramp-line">{r.line}</div>
-      ))}
-      {(plan.rampWarnings ?? []).map((w) => (
-        <div key={w} className="text-xs text-foreground" data-testid="ramp-warning">{w}</div>
-      ))}
+       {(plan.ramps ?? []).length > 0 && <div className="mt-3 space-y-1"><h4 className="text-xs font-bold text-muted-foreground">Your return to full training</h4>{plan.ramps?.map((r) => (
+         <div key={r.discipline} className="text-xs text-foreground" data-testid="ramp-line">{r.line}</div>
+       ))}</div>}
+       {(plan.rampWarnings ?? []).length > 0 && <div className="mt-2 space-y-1"><h4 className="text-xs font-bold text-muted-foreground">What to watch today</h4>{plan.rampWarnings?.map((w) => (
+         <div key={w} className="text-xs text-foreground" data-testid="ramp-warning">{w}</div>
+       ))}</div>}
       <Button type="button" variant="link" aria-expanded={open} onClick={onToggle} className="mt-1 min-h-11 h-auto px-0 text-xs text-muted-foreground underline underline-offset-2" data-testid="phase-why-toggle">
         Why you're training this way
       </Button>

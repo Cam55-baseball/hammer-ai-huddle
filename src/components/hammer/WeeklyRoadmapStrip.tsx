@@ -73,15 +73,15 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
           <Calendar className="h-4 w-4 text-primary shrink-0" />
           <div className="min-w-0">
             <div className="text-sm font-bold text-foreground">Your training block &amp; season</div>
-            <div className="text-xs text-muted-foreground">Your training steps: {roadmap.rung.label}</div>
+             <div className="text-xs text-muted-foreground">Your training steps: {roadmap.rung.label}</div>
             {!roadmap.quarter.quarterKnown ? (
               <div className="text-[11px] text-muted-foreground leading-tight">
                 {roadmap.quarter.phaseKnown ? "Your season phase is known, but its start date isn't. Add your season dates to show your week." : "Add your season dates to show where you are in your training block."}{' '}
                 <Button variant="link" size="sm" className="h-auto p-0 text-[11px]" onClick={() => setSeasonDatesOpen(true)}>Set season dates</Button>
               </div>
             ) : (
-              <div className="text-[11px] text-muted-foreground leading-tight">
-                {season.resolvedPhase.replace(/_/g, " ")} {phaseWeek !== null ? `· Week ${phaseWeek}` : "· Add your season dates to show your week"}
+               <div className="text-[11px] text-muted-foreground leading-tight">
+                 Where you are in the season: {season.resolvedPhase.replace(/_/g, " ")} {phaseWeek !== null ? `· Week ${phaseWeek}` : "· Add your season dates to show your week"}
               </div>
             )}
 
