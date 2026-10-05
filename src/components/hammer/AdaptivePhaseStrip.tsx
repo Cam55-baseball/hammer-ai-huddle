@@ -91,7 +91,7 @@ export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePla
       <p className="mt-2 text-base font-semibold leading-snug" data-testid="phase-name">{displayLine}</p>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{meaning}</p>
       {ramping && <div className="mt-3"><h4 className="text-xs font-bold text-muted-foreground">Your return to full training</h4>
-        <p className="text-xs text-foreground" data-testid="ramp-line">Build up gradually over the coming days, with high-intent work later.</p></div>}
+        {plan.ramps?.map((r) => <p key={r.discipline} className="text-xs text-foreground" data-testid="ramp-line"><span className="font-semibold capitalize">{String(r.discipline).replace(/_/g, " ")}:</span> build up gradually over the coming days, with high-intent work later.</p>)}</div>}
       {(plan.rampWarnings ?? []).length > 0 && <div className="mt-2"><h4 className="text-xs font-bold text-muted-foreground">What to watch today</h4>
         <p className="text-xs text-foreground" data-testid="ramp-warning">Keep today's work easy and controlled. Ask Hammer for the details.</p></div>}
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
