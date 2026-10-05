@@ -1,3 +1,4 @@
+import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Target, Dumbbell, Eye, Zap, ArrowRight, Footprints, Brain } from "lucide-react";
@@ -123,6 +124,7 @@ export default function FiveToolPlayer() {
 
   const filteredTiles = tiles.filter(
     (tile) =>
+      (tile.key !== 'game-iq' || GAME_IQ_AVAILABLE_TO_ATHLETES) &&
       (!tile.baseballOnly || selectedSport === "baseball") &&
       (!tile.softballOnly || selectedSport === "softball")
   );

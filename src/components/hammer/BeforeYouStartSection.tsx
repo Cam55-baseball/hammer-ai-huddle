@@ -1,7 +1,8 @@
 /**
  * BeforeYouStartSection — one collapsible drawer that holds every
- * pre-work surface (due-today items, schedule, wisdom, HPI, start line,
- * Ask Hammer recall, plus the non-physical blocks: mental / vision / eating).
+ * pre-work surface (notices, wisdom, performance context, start line,
+ * Ask Hammer recall, plus accessible non-physical work). Due-today items
+ * live in morning completion; phase and schedule live in Identity.
  *
  * Collapse affordance intentionally matches the game-plan cards:
  * a real, labelled Hide / Show button with a chevron. Defaults collapsed so
@@ -55,8 +56,7 @@ export function BeforeYouStartSection({
             <div className="min-w-0">
               <div className="text-sm font-semibold leading-tight">Before you start</div>
               <p className="text-[11px] leading-tight text-muted-foreground">
-                Due today, schedule, wisdom, performance signal, start line, Ask Hammer,
-                mental / vision / eating.
+                Today's notices, wisdom, performance context, vision work, start line and fueling.
               </p>
             </div>
           </div>

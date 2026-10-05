@@ -84,9 +84,10 @@ import {
 import { HammerScheduleStrip } from "@/components/hammer/HammerScheduleStrip";
 import { TellHammersInbox } from "@/components/hammer/TellHammersInbox";
 import { GuardianConsentPrompt } from "@/components/recruiting/GuardianConsentPrompt";
-import { RampLines, AdaptivePhaseStrip } from "@/components/hammer/AdaptivePhaseStrip";
+import { RampLines } from "@/components/hammer/AdaptivePhaseStrip";
 import { TodaysWisdomCard } from "@/components/hammer/TodaysWisdomCard";
-import { ScheduledPriorityStrip } from "@/components/hammer/ScheduledPriorityStrip";
+import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
+import { TexVisionWork } from "@/components/hammer/TexVisionWork";
 
 import { HumanPerformanceCard } from "@/components/hpi/HumanPerformanceCard";
 import { useOpenedOnceToday } from "@/hooks/useOpenedOnceToday";
@@ -804,21 +805,10 @@ function HammerDailyPlanBody({
       </ErrorBoundary>
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
-        {/* Owner direction: phase name, weeks left, what's next and "Why this phase matters" live inside this drawer. */}
-        <ErrorBoundary>
-          <AdaptivePhaseStrip />
-        </ErrorBoundary>
-        {/* 0. Scheduled priority items (recap, photos, re-tests) — only when due */}
-        <ErrorBoundary>
-          <ScheduledPriorityStrip />
-        </ErrorBoundary>
         {/* 0b. Today's load and volume notices — checked off as read. */}
         <ErrorBoundary>
           <DayNoticesDrawerItem />
         </ErrorBoundary>
-        {/* 1. Schedule & What Changed */}
-        <ScheduleDropdownWrapper />
-
         {/* 2. Today's Wisdom */}
         <TodaysWisdomCard />
         {/* 2b. Defensive prep video — driven by the athlete's fielding signals */}
@@ -826,7 +816,8 @@ function HammerDailyPlanBody({
           <DefensivePrepVideo />
         </ErrorBoundary>
         {/* 3. Human Performance Intelligence */}
-        <HumanPerformanceCard />
+        <HumanPerformanceCard planBlocks={plan.blocks} />
+        <TexVisionWork />
 
         {/* 4. Start Line (DailyIntentHeader) */}
         <DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} />
@@ -849,7 +840,7 @@ function HammerDailyPlanBody({
         </button>
         {/* 6. Non-physical prescribed blocks: mental / vision work + eating plan */}
         {plan.blocks
-          .filter((b) => PRE_START_MODALITIES.has(b.modality))
+          .filter((b) => PRE_START_MODALITIES.has(b.modality) && (b.modality !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES))
           .map((b) => {
             const adj = adaptive.find((a) => a.modality === b.modality);
             return (
@@ -982,7 +973,7 @@ function HammerDailyPlanBody({
             (b) =>
               b.modality !== "warmup" &&
               !WK_OWNED.has(b.modality) &&
-              !PRE_START_MODALITIES.has(b.modality),
+              !PRE_START_MODALITIES.has(b.modality) && (b.modality !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES),
           );
           // Step 21B — skill work runs before practice / conditioning / lift;
           // the recovery flow is the last thing in the day.
@@ -1090,7 +1081,7 @@ function HammerDailyPlanBody({
           existingNightQuiz={checkInQuiz === "night" ? nightQuizRow ? { id: nightQuizRow.id } : null : null}
           onSubmit={async (data) => {
             const res = await vaultQuizzes.saveFocusQuiz(checkInQuiz, data as Record<string, unknown>);
-            if (res.success) {
+            if (res.success && checkInQuiz === "pre_lift") {
               setTimeout(() => setCheckInQuiz(null), 400);
             }
             return res;
@@ -1103,74 +1094,6 @@ function HammerDailyPlanBody({
   );
 }
 
-
-/**
- * ScheduleDropdownWrapper — collapsible wrapper around HammerScheduleStrip
- * that starts closed and is clearly labeled so athletes know where to update
- * games, season dates, cancels/reschedules, and update Hammer what changed.
- * Per-day open state persists in localStorage.
- */
-function ScheduleDropdownWrapper() {
-  // Step 21E1 — the season drives this card: the athlete's current season
-  // state is the headline, and the entry point for changing it lives here.
-  const seasonCtx = useGameDayContext();
-  const seasonWords: Record<string, string> = {
-    in_season: "In season",
-    preseason: "Preseason",
-    post_season: "Postseason",
-    off_season: "Offseason",
-  };
-  const seasonLabel = seasonWords[String(seasonCtx?.seasonPhase ?? "")] ?? null;
-  const seasonLine = seasonLabel
-    ? `${seasonLabel} — games, season dates, cancels/reschedules, and update Hammer what changed.`
-    : "Games, season dates, cancels/reschedules, and update Hammer what changed.";
-  const dayKey = `hammer.today.schedule.open.${new Date().toISOString().slice(0, 10)}`;
-  const [open, setOpen] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(dayKey) === "1";
-    } catch {
-      return false;
-    }
-  });
-  useEffect(() => {
-    try {
-      localStorage.setItem(dayKey, open ? "1" : "0");
-    } catch {
-      /* ignore */
-    }
-  }, [open, dayKey]);
-  return (
-    <Card className="border-border/60">
-      <Collapsible open={open} onOpenChange={setOpen}>
-        <CollapsibleTrigger asChild>
-          <button
-            type="button"
-            className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-muted/40 transition-colors rounded-md"
-            aria-expanded={open}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <CalendarClock className="h-4 w-4 text-primary shrink-0" />
-              <div className="min-w-0">
-                <div className="text-sm font-semibold leading-tight">Schedule & What Changed</div>
-                <div className="text-[11px] text-muted-foreground leading-tight">
-                  {seasonLine}
-                </div>
-              </div>
-            </div>
-            <ChevronDown
-              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
-                open ? "rotate-180" : ""
-              }`}
-            />
-          </button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="px-1 pb-1">
-          <HammerScheduleStrip />
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
-  );
-}
 
 /**
  * In-season crossover primer, rendered inside the Warm-up card as a short

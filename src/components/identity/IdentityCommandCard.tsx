@@ -7,39 +7,28 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIdentityState } from '@/hooks/useIdentityState';
-import { useDayState, type DayType } from '@/hooks/useDayState';
+import { useDayState } from '@/hooks/useDayState';
+import { AdaptivePhaseStrip } from '@/components/hammer/AdaptivePhaseStrip';
+import { ScheduleDropdownWrapper } from '@/components/hammer/ScheduleDropdownWrapper';
 import { useBehavioralEvents, type BehavioralEvent } from '@/hooks/useBehavioralEvents';
 import { useHIESnapshot } from '@/hooks/useHIESnapshot';
 import { Link } from 'react-router-dom';
 
 import { useQuickActionExecutor, type QuickActionType } from '@/hooks/useQuickActionExecutor';
 import { useEngineRecomputeTrigger } from '@/hooks/useEngineRecomputeTrigger';
-import { useAthleteCommandRows } from '@/hooks/command/useAthleteCommandRows';
 import { pickRotatingAlert } from '@/lib/identity/rotatingAlert';
-import { deriveTodaysStandard } from '@/lib/standard/todaysStandard';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { safeGet, safeSet } from '@/lib/safeStorage';
+import { safeSet } from '@/lib/safeStorage';
 import { getTodayDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const COLLAPSE_KEY = 'hm:identityCard:collapsedDate';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Day intent meta — kept in sync with the old DayControlCard / DayStateBanner
-// ─────────────────────────────────────────────────────────────────────────────
-const DAY_META: Record<DayType, { label: string; explanation: string; chipClass: string }> = {
-  rest:     { label: 'REST',     explanation: 'Recovery supports performance. Streak protected. Non-Negotiables waived for today.', chipClass: 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/25' },
-  skip:     { label: 'SKIP',     explanation: 'Day ignored. No progress. No recovery credit.',                                       chipClass: 'bg-muted text-muted-foreground border-border' },
-  push:     { label: 'PUSH',     explanation: 'Higher standard today. Extra output expected.',                                        chipClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25' },
-  standard: { label: 'STANDARD', explanation: 'Operate at your current identity standard.',                                           chipClass: 'bg-muted text-muted-foreground border-border' },
-};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Pressure-event presentation (mirrors BehavioralPressureToast)
@@ -149,38 +138,16 @@ interface Props { className?: string }
 
 export function IdentityCommandCard({ className }: Props) {
   const { user } = useAuth();
-  const { snapshot, tier, label, tone, ring, bg, chip, accent, scoreText, loading, focusSentence } = useIdentityState();
-  const { dayType, setDayType, restBudgetLeft, usedThisWeek, maxPerWeek, overBudget } = useDayState();
+  const { snapshot, label, tone, accent, scoreText, loading } = useIdentityState();
+  const { snapshot: hieSnapshot } = useHIESnapshot();
+  const { dayType } = useDayState();
   const { active: activeEvent, all: allEvents, acknowledge } = useBehavioralEvents();
   const { execute, running } = useQuickActionExecutor();
-  const { data: commandRows } = useAthleteCommandRows({ days: 30, limit: 500 });
-  const { snapshot: hieSnapshot } = useHIESnapshot();
-  const todaysStandard = useMemo(
-    () => deriveTodaysStandard(commandRows, dayType),
-    [commandRows, dayType],
-  );
   const rotatingAlert = useMemo(() => pickRotatingAlert(allEvents), [allEvents]);
   useEngineRecomputeTrigger();
 
   // ─── Standard-confirmed state ───────────────────────────────────────────
   const today = useMemo(() => getTodayDate(), []);
-  const [standardConfirmed, setStandardConfirmed] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    (async () => {
-      const { data } = await (supabase as any)
-        .from('daily_standard_checks')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('check_date', today)
-        .maybeSingle();
-      if (!cancelled) setStandardConfirmed(!!data);
-    })();
-    return () => { cancelled = true; };
-  }, [user?.id, today]);
-
   // ─── Open / closed ──────────────────────────────────────────────────────
   // Defaults to CLOSED. The athlete opens it when they want it; alerts are
   // still surfaced on the collapsed header (unread dot), never auto-expanded.
@@ -197,38 +164,6 @@ export function IdentityCommandCard({ className }: Props) {
       if (!next) stampCollapsed();
       return next;
     });
-  };
-
-  // ─── Day intent handler ─────────────────────────────────────────────────
-  const [busyDay, setBusyDay] = useState(false);
-  const handleDayClick = async (target: 'rest' | 'skip' | 'push') => {
-    if (busyDay) return;
-    setBusyDay(true);
-    try {
-      const nextType = dayType === target ? null : target;
-      if (nextType === 'rest' && restBudgetLeft <= 0) {
-        toast.warning('Rest budget exceeded', { description: 'Extra rest counts as missed.' });
-      }
-      await setDayType(nextType);
-      const msgs: Record<string, string> = {
-        rest: 'Rest day set — streak protected.',
-        skip: 'Skip day set — day will not count.',
-        push: 'Push day set — extra load expected.',
-      };
-      toast.success(nextType ? msgs[nextType] : 'Standard day restored.');
-    } finally {
-      setBusyDay(false);
-    }
-  };
-
-  // ─── Confirm standard ────────────────────────────────────────────────────
-  const handleConfirmStandard = async () => {
-    if (!user) return;
-    await (supabase as any)
-      .from('daily_standard_checks')
-      .insert({ user_id: user.id, check_date: today, tier_at_confirm: tier });
-    setStandardConfirmed(true);
-    toast.success(`Standard confirmed. ${label}.`);
   };
 
   // ─── Pressure event action ───────────────────────────────────────────────
@@ -254,7 +189,7 @@ export function IdentityCommandCard({ className }: Props) {
   const perfStreak = snapshot?.performance_streak ?? 0;
   const discStreak = snapshot?.discipline_streak ?? 0;
   const nnMiss = snapshot?.nn_miss_count_7d ?? 0;
-  const dayMeta = DAY_META[dayType];
+
   const hasUnreadAlert = !!activeEvent;
 
   return (
@@ -286,10 +221,10 @@ export function IdentityCommandCard({ className }: Props) {
                   <span
                     className={cn(
                       'text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border',
-                      dayMeta.chipClass,
+                      "bg-muted text-muted-foreground border-border",
                     )}
                   >
-                    {dayMeta.label} day
+                    {dayType.toUpperCase()} day
                   </span>
                 )}
               </div>
@@ -300,11 +235,6 @@ export function IdentityCommandCard({ className }: Props) {
                     <span className={cn('text-2xl font-bold tracking-tight leading-tight break-words', tone)}>
                       {label}
                     </span>
-                    {standardConfirmed && (
-                      <span className="text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 px-1.5 py-0.5 rounded">
-                        ✓ Confirmed
-                      </span>
-                    )}
                   </div>
                 </div>
 
@@ -384,120 +314,10 @@ export function IdentityCommandCard({ className }: Props) {
           <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
             <div className="px-3 sm:px-4 pb-4 pt-1 space-y-4 border-t border-border/40">
 
-              {/* ── 1. Today's Standard ──────────────────────────────── */}
-              <section className="space-y-3">
-                <SectionHeader
-                  title="Today's Standard"
-                  helpText={
-                    `Your tier is ${label}. Confirming means you're holding yourself to it today. ` +
-                    `Hitting your standard with everything checked off locks your streak. ` +
-                    `Confirming and then missing chips at your consistency.`
-                  }
-                />
-
-                {/* Plain-English standard sentence (single source of truth) */}
-                <div className="rounded-lg border border-border/60 bg-background/40 px-3 py-2.5">
-                  <p className="text-sm font-semibold text-foreground leading-snug">
-                    {todaysStandard.standard}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                    {todaysStandard.rationale}
-                  </p>
-                </div>
-
-                {/* Develop This Week — one sentence, plain English */}
-                {focusSentence && (
-                  <div className="flex items-start gap-2 px-1">
-                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground mt-0.5 shrink-0">
-                      Develop&nbsp;this&nbsp;week
-                    </span>
-                    <p className="text-xs text-foreground/85 leading-relaxed">
-                      {focusSentence}
-                    </p>
-                  </div>
-                )}
-
-                {standardConfirmed ? (
-                  <div className="flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/5 px-3 py-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                    <span className="text-sm font-bold text-emerald-300">
-                      Standard confirmed for today.
-                    </span>
-                  </div>
-                ) : (
-                  <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-3 space-y-2.5">
-                    <p className="text-xs text-foreground/85 leading-relaxed">
-                      You're being held to the{' '}
-                      <span className={cn(
-                        'inline-flex items-center px-1.5 py-0.5 rounded-md border text-[11px] font-black uppercase tracking-wider align-middle',
-                        chip,
-                      )}>{label}</span> standard today.
-                      Tap Confirm to lock in that you're operating at it.
-                    </p>
-                    <Button
-                      size="sm"
-                      onClick={handleConfirmStandard}
-                      className="w-full font-bold"
-                    >
-                      <CheckCircle2 className="h-4 w-4 mr-1.5" />
-                      Confirm I'm at this standard
-                    </Button>
-                  </div>
-                )}
-
-                {/* Motivational closer tied to standard tone */}
-                <p className="text-xs italic text-muted-foreground text-center px-2">
-                  {todaysStandard.motivational}
-                </p>
-              </section>
-
-              {/* ── 2. Day Intent ────────────────────────────────────── */}
-              <section>
-                <SectionHeader
-                  title="Day Intent"
-                  helpText="Tell the engine how today should count. Rest protects the streak and waives Non-Negotiables. Skip ignores the day with no recovery credit. Push raises the bar with extra output expected."
-                />
-                <div className="grid grid-cols-3 gap-2">
-                  <DayButton
-                    label="Rest" Icon={Moon}
-                    active={dayType === 'rest'} disabled={busyDay}
-                    activeClass="bg-sky-600 hover:bg-sky-600/90 text-white border-sky-600"
-                    onClick={() => handleDayClick('rest')}
-                  />
-                  <DayButton
-                    label="Skip" Icon={SkipForward}
-                    active={dayType === 'skip'} disabled={busyDay}
-                    activeClass="bg-muted-foreground hover:bg-muted-foreground/90 text-background border-muted-foreground"
-                    onClick={() => handleDayClick('skip')}
-                  />
-                  <DayButton
-                    label="Push" Icon={Flame}
-                    active={dayType === 'push'} disabled={busyDay}
-                    activeClass="bg-amber-600 hover:bg-amber-600/90 text-white border-amber-600"
-                    onClick={() => handleDayClick('push')}
-                  />
-                </div>
-                <p className="mt-2 text-xs text-foreground/85 leading-relaxed">
-                  {dayMeta.explanation}
-                </p>
-                <div className="mt-2 flex items-center gap-2 rounded-md border border-border/60 bg-background/40 px-2.5 py-1.5 text-[11px]">
-                  {overBudget ? (
-                    <>
-                      <AlertTriangle className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-                      <span className="font-bold text-rose-400">
-                        {usedThisWeek}/{maxPerWeek} rest used — over budget.
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                      <span className="font-semibold">
-                        {usedThisWeek}/{maxPerWeek} rest used this week
-                      </span>
-                    </>
-                  )}
-                </div>
-              </section>
+              <div className="space-y-2 pt-2">
+                <AdaptivePhaseStrip />
+                <ScheduleDropdownWrapper />
+              </div>
 
               {/* ── 3. One Rotating Alert (highest priority only) ────── */}
               {rotatingAlert && (() => {
@@ -590,25 +410,3 @@ function SectionHeader({ title, helpText }: { title: string; helpText: string })
   );
 }
 
-function DayButton({
-  label, Icon, active, disabled, activeClass, onClick,
-}: {
-  label: string; Icon: any; active: boolean; disabled: boolean;
-  activeClass: string; onClick: () => void;
-}) {
-  return (
-    <Button
-      type="button"
-      variant={active ? 'default' : 'outline'}
-      disabled={disabled}
-      onClick={onClick}
-      className={cn(
-        'h-10 gap-1 sm:gap-1.5 px-1 sm:px-3 text-[11px] sm:text-xs font-black',
-        active && activeClass,
-      )}
-    >
-      <Icon className="h-3.5 w-3.5 shrink-0" />
-      <span className="truncate">{label.toUpperCase()}</span>
-    </Button>
-  );
-}

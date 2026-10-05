@@ -60,3 +60,11 @@
 - [x] Map the night check-in and place Mind Fuel+ naturally without adding compulsory workload
 - [x] Define Tex Vision's current duration and load, then recommend adaptive placement rather than calendar pinning
 - [ ] Add pitching-analysis influence without adding a pitching slot or replacing pitch-count/PFP prescriptions (blocked: the pitching card has no mechanical drill slot)
+
+# Owner-approved daily surfaces restructure (preview-only)
+- [ ] Move Day intent to final morning step; move Standard, Develop this week, Due today into morning success; preserve writes and night flow
+- [ ] Compact identity with collapsed phase/why and schedule; update superseded phase placement doc; make drawer lighter without duplication
+- [ ] Suppress inaccessible athlete Game IQ at one presentation switch, retaining generator/scheduler and owner authoring
+- [ ] Find Tex Vision S2 baseline; prescribe accessible baseline in Due today and eligible baseline-driven work in drawer
+- [ ] Connect roadmap missing dates to Season Dates and make HPI honest and evidence-linked without changing authority
+- [ ] Record accessibility rule; verify athlete role and both check-ins on phone with before/after screenshots (report blockers honestly)

@@ -1,3 +1,4 @@
+import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Target, Dumbbell, Eye, Zap, ArrowRight, Sparkles, Crosshair, Brain } from "lucide-react";
@@ -134,6 +135,7 @@ export default function GoldenTwoWay() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {tiles
             .filter(tile => {
+              if (tile.key === 'game-iq' && !GAME_IQ_AVAILABLE_TO_ATHLETES) return false;
               if ('baseballOnly' in tile && tile.baseballOnly) return selectedSport === 'baseball';
               if ('softballOnly' in tile && tile.softballOnly) return selectedSport === 'softball';
               return true;

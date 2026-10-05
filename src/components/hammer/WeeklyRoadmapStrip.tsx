@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { SeasonDatesDialog } from "@/components/hammer/SeasonDatesDialog";
+import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 
-import { ChevronDown, ChevronUp, Calendar, Target } from "lucide-react";
+import { Calendar, Target } from "lucide-react";
 import type {
   HammerDailyPlanResult,
 } from "@/lib/hammer/prescription/dailyPlan";
@@ -11,6 +13,7 @@ import type {
 } from "@/lib/hammer/prescription/weeklyMicrocycle";
 import type { ModalityKey } from "@/lib/hammer/prescription/dailyPlan";
 import { RoadmapExplainerSheet } from "./RoadmapExplainerSheet";
+import { useSeasonStatus } from "@/hooks/useSeasonStatus";
 
 const MODALITY_ABBR: Record<ModalityKey, string> = {
   warmup: "WU",
@@ -52,7 +55,12 @@ interface Props {
 export function WeeklyRoadmapStrip({ plan }: Props) {
   const [expanded, setExpanded] = useState<number | null>(null);
   const [explainerOpen, setExplainerOpen] = useState(false);
+  const [seasonDatesOpen, setSeasonDatesOpen] = useState(false);
   const { weeklyRoadmap, weeklyTemplate, microcycle, roadmap } = plan;
+  const season = useSeasonStatus();
+  const phaseWeek = roadmap.quarter.quarterKnown && season.phaseDaysIn !== null
+    ? Math.max(1, Math.floor(season.phaseDaysIn / 7) + 1)
+    : null;
 
   return (
     <section
@@ -64,18 +72,16 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
           <Calendar className="h-4 w-4 text-primary shrink-0" />
           <div className="min-w-0">
             <div className="text-xs font-semibold text-foreground truncate">
-              {roadmap.rung.label} · {roadmap.quarter.label}
+              {roadmap.rung.label} · {roadmap.quarter.quarterKnown ? roadmap.quarter.label : roadmap.quarter.phaseKnown ? roadmap.quarter.label.replace(' · block not set', '') : 'Season dates needed'}
             </div>
-            {!roadmap.quarter.phaseKnown ? (
-              <div className="text-[11px] text-muted-foreground truncate">
-                No season dates on file —{' '}
-                <Link to="/profile" className="font-medium text-primary hover:underline">
-                  set your season dates
-                </Link>
+            {!roadmap.quarter.quarterKnown ? (
+              <div className="text-[11px] text-muted-foreground leading-tight">
+                Set your season dates to place this training block.{' '}
+                <Button variant="link" size="sm" className="h-auto p-0 text-[11px]" onClick={() => setSeasonDatesOpen(true)}>Set season dates</Button>
               </div>
             ) : (
-              <div className="text-[11px] text-muted-foreground truncate">
-                {weeklyTemplate.label} · builds toward {roadmap.eliteTarget.league} 6-game weeks
+              <div className="text-[11px] text-muted-foreground leading-tight">
+                {season.phaseProfile.label}{phaseWeek !== null ? ` · Week ${phaseWeek}` : ''} · {weeklyTemplate.label}
               </div>
             )}
 
@@ -87,7 +93,7 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
           className="flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary hover:bg-primary/20 shrink-0"
         >
           <Target className="h-3 w-3" />
-          Rung {roadmap.rung.index}/5
+          Your training path
         </button>
       </header>
       <RoadmapExplainerSheet
@@ -95,6 +101,7 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
         onOpenChange={setExplainerOpen}
         roadmap={roadmap}
       />
+      <SeasonDatesDialog open={seasonDatesOpen} onOpenChange={setSeasonDatesOpen} />
 
 
       <div className="grid grid-cols-7 gap-1">
@@ -116,16 +123,16 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
         <span className="font-medium text-foreground">Today:</span>
         <span>
           {SCHEDULED_TODAY_LINE(plan.microcycle.perModality) ||
-            "Anchor blocks only — warm-up + fueling + recovery."}{" "}
+            "Warm-up, fueling and recovery."}{" "}
           <span className="text-muted-foreground/70">
-            (Spacing: max-speed days and heavy lower-body days are never back-to-back.)
+            Hammer spaces high-demand work and protects recovery.
           </span>
         </span>
       </div>
 
       {microcycle.template.id === "in_season" && (
         <div className="mt-1 text-[10px] text-muted-foreground">
-          In-season posture: lifts run 2×/week for maintenance only. Speed is 1×/week for freshness. Skill work is daily but capped at activation dose.
+          In-season: strength maintains your base; speed stays fresh and skill work stays measured.
         </div>
       )}
     </section>
@@ -142,7 +149,7 @@ function DayCell({
   active: boolean;
 }) {
   const primaryChips = day.modalities.filter(
-    (m) => m.intensity === "primary" || m.intensity === "secondary",
+    (m) => (m.key !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES) && (m.intensity === "primary" || m.intensity === "secondary"),
   );
   return (
     <button
@@ -190,10 +197,10 @@ function DayDetail({ day }: { day: RoadmapDay }) {
   return (
     <div className="mt-2 space-y-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px]">
       <div className="text-xs font-semibold text-foreground">
-        {day.short} · {day.modalities.length} scheduled block{day.modalities.length === 1 ? "" : "s"}
+        {day.short} · {day.modalities.filter((m) => m.key !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES).length} scheduled blocks
       </div>
       <ul className="space-y-0.5">
-        {day.modalities.map((m) => (
+        {day.modalities.filter((m) => m.key !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES).map((m) => (
           <li key={m.key} className="flex items-center gap-2">
             <span className={`rounded px-1.5 py-0.5 text-[10px] border ${INTENSITY_TONE[m.intensity]}`}>
               {m.intensity}

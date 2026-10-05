@@ -88,18 +88,20 @@ export function useDayState() {
   const setDayType = async (next: 'rest' | 'skip' | 'push' | null) => {
     if (!user) return;
     if (next === null) {
-      await (supabase as any)
+      const { error } = await (supabase as any)
         .from('user_day_state_overrides')
         .delete()
         .eq('user_id', user.id)
         .eq('date', todayStr);
+      if (error) throw error;
     } else {
-      await (supabase as any)
+      const { error } = await (supabase as any)
         .from('user_day_state_overrides')
         .upsert(
           { user_id: user.id, date: todayStr, type: next },
           { onConflict: 'user_id,date' }
         );
+      if (error) throw error;
     }
     qc.invalidateQueries({ queryKey: ['day-state-overrides', user.id] });
     // Mirror legacy rest-overrides table for backward compat

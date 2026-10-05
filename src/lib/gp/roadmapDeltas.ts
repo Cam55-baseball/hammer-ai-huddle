@@ -13,6 +13,7 @@
  * Hammer Daily Plan render these as advisory chips.
  */
 import type { GpSignal } from "@/hooks/useGpSignal";
+import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 
 export type RoadmapDeltaKind =
   | "new_weakness"
@@ -114,7 +115,7 @@ export function computeRoadmapDeltas(
       detail: `K-rate ${current.kRate}%${pctDelta(prior.kRate, current.kRate)} — review at-bat plan + 2-strike approach.`,
       priorValue: prior.kRate,
       currentValue: current.kRate,
-      cta: { label: "Game IQ — two-strike", href: "/training/game-iq" },
+      cta: GAME_IQ_AVAILABLE_TO_ATHLETES ? { label: "Game IQ — two-strike", href: "/iq/review" } : undefined,
     });
   }
 

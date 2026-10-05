@@ -329,7 +329,7 @@ export default function TexVision() {
         />
 
         {/* S2 Cognition Diagnostics */}
-        <div ref={s2SectionRef}>
+        <div id="s2" ref={s2SectionRef}>
           <S2CognitionDiagnostics sport={currentSport} />
         </div>
 

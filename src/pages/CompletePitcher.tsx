@@ -1,3 +1,4 @@
+import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Target, Dumbbell, ArrowRight, Zap, Crosshair, Brain } from "lucide-react";
@@ -69,6 +70,7 @@ export default function CompletePitcher() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {tiles
             .filter(tile => {
+              if (tile.key === 'pitcher-iq' && !GAME_IQ_AVAILABLE_TO_ATHLETES) return false;
               if ('baseballOnly' in tile && tile.baseballOnly) return selectedSport === 'baseball';
               return true;
             })

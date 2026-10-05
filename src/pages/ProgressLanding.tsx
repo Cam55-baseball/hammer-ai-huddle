@@ -25,7 +25,7 @@ import { TopicButtonGrid, type TopicTile } from "@/components/progress/TopicButt
 import { TopicPanel } from "@/components/progress/TopicPanel";
 import { GpInGameSummaryCard } from "@/components/progress/GpInGameSummaryCard";
 import { IqInsightCard } from "@/components/progress/IqInsightCard";
-import { PARKED_UI } from "@/lib/flags/parked";
+import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 import { SideSplitsSection } from "@/components/progress/SideSplitsSection";
 import { DriftMarkersCard } from "@/components/progress/DriftMarkersCard";
 import { PitchingPanel } from "@/components/progress/panels/PitchingPanel";
@@ -211,7 +211,7 @@ export default function ProgressLanding() {
 
         <DriftMarkersCard />
 
-        {PARKED_UI.progressGameIqTile && <IqInsightCard />}
+        {GAME_IQ_AVAILABLE_TO_ATHLETES && <IqInsightCard />}
 
         <SideSplitsSection />
 

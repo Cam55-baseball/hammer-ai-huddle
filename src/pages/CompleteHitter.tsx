@@ -1,3 +1,4 @@
+import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Target, Dumbbell, Eye, ArrowRight, Brain } from "lucide-react";
@@ -66,7 +67,7 @@ export default function CompleteHitter() {
 
         {/* Selection Tiles */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {tiles.map((tile) => {
+          {tiles.filter(tile => tile.key !== 'hitter-iq' || GAME_IQ_AVAILABLE_TO_ATHLETES).map((tile) => {
             const Icon = tile.icon;
             const route = tile.getRoute(selectedSport);
 

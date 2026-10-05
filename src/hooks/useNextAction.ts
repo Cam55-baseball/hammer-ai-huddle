@@ -29,14 +29,6 @@ export function useNextAction(): NextAction {
       };
     }
 
-    if (hour < 10) {
-      return {
-        moduleHint: 'physio',
-        label: 'Prime your nervous system',
-        route: '/tex-vision',
-        ctaLabel: 'Start Tex Vision',
-      };
-    }
     if (hour < 16) {
       return {
         moduleHint: 'practice',
