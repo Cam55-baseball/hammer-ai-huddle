@@ -38,7 +38,7 @@ export function TexVisionWork() {
   if (!Object.keys(scores).length) return null;
   const eligible = new Set(dailyDrills.filter(d => !dailyChecklist?.checklist_items?.[d.id]).map(d => d.id));
   const match = getRecommendedDrills(scores).flatMap(r => r.drills)
-    .map(d => ALL_DRILLS.find(candidate => candidate.id === LEGACY_IDS[d.drillId]))
+    .map(d => ALL_DRILLS.find(candidate => candidate.id === (LEGACY_IDS[d.drillId] ?? d.drillId)))
     .find(d => d && eligible.has(d.id) && TIER_ORDER[d.tier] <= TIER_ORDER[progress?.current_tier ?? 'beginner']);
   if (!match) return null;
   return <div className="rounded-lg border border-primary/25 bg-primary/5 p-3 space-y-2">
