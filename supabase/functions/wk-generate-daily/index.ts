@@ -125,6 +125,7 @@ import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
 // Phase 10 — Performance Support Engines (Conditioning + Cross-Sport + Recovery + Arm Care).
 import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.ts";
 import { resolveOutingFacts, type OutingFacts } from "../_shared/wic/pitching/outingFacts.ts";
+import { recentLoadEffect, type RecentLoadEffect, GAME_WINDOW_DAYS } from "../_shared/wic/recovery/recentLoad.ts";
 import { selectConditioning, conditioningPhaseFrom, isReturningAfterGap, type ConditioningSelection } from "../_shared/wic/conditioning/selectConditioning.ts";
 import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
 import { resolveCrossSportTemplate } from "../_shared/wic/crossSport/templates.ts";
@@ -587,6 +588,7 @@ const handler = async (req: Request): Promise<Response> => {
     // unconfirmed past outing is unknown, never counted. No rows → the old
     // game-flag behaviour, said honestly on the conditioning card.
     let outingFacts: OutingFacts | null = null;
+    let outingLoadDates: string[] = [];
     try {
       const [pss, pout, pav] = await Promise.all([
         admin.from("pitcher_schedule_settings").select("role, rotation_anchor_date, rotation_every_days, rotation_active").eq("user_id", user.id).maybeSingle(),
@@ -601,6 +603,9 @@ const handler = async (req: Request): Promise<Response> => {
         outings: ((pout as any)?.data ?? []) as any[],
         availability: ((pav as any)?.data ?? []) as any[],
       });
+      outingLoadDates = (((pout as any)?.data ?? []) as any[])
+        .filter((o) => o.status === "thrown" && o.actual_date && o.outing_type !== "bullpen")
+        .map((o) => String(o.actual_date));
       if (!outingFacts.hasSchedule) outingFacts = null;
     } catch (_e) {
       outingFacts = null;
@@ -1129,6 +1134,33 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
 
+
+    // -------- Stage 4 (owner-authorised 2026-10-05) — recent game & practice load --------
+    // Logged games, confirmed outings and past, uncancelled practices from the
+    // last few days. One recovery-limit step at most; never adds work. Any
+    // failure or no records → no effect, exactly as before.
+    let recentLoad: RecentLoadEffect | null = null;
+    try {
+      const from = isoShift(planDate, -GAME_WINDOW_DAYS);
+      const [rg, rp] = await Promise.all([
+        admin.from("gp_games").select("game_date, status, is_doubleheader, ignored_for_training, deleted_at")
+          .eq("user_id", user.id).gte("game_date", from).lt("game_date", planDate),
+        admin.from("scheduled_practice_sessions").select("scheduled_date, status, intensity, practice_kind")
+          .eq("user_id", user.id).gte("scheduled_date", from).lt("scheduled_date", planDate),
+      ]);
+      recentLoad = recentLoadEffect({
+        planDate,
+        games: ((rg as any)?.data ?? []) as any[],
+        practices: ((rp as any)?.data ?? []) as any[],
+        outingDates: outingLoadDates,
+      });
+      if (recentLoad.applied) {
+        cnsCap = Math.max(1, cnsCap - 1);
+        reductions.push({ reason: "recent_load", detail: recentLoad.reason! });
+      }
+    } catch (_e) {
+      recentLoad = null;
+    }
 
     // -------- TCS stage S4 — rest-day calculator (switch-gated) --------
     // Off for everyone by default. When the `rest_day_calculator` switch does

@@ -84,7 +84,7 @@ export function recentLoadEffect(input: RecentLoadInput): RecentLoadEffect {
     if (st === "canceled" || st === "cancelled" || st === "rescheduled") continue;
     const intensity = String(p.intensity ?? "moderate").toLowerCase();
     if (intensity === "light") continue;
-    const heavy = intensity === "high" || intensity === "hard" || p.practice_kind === "showcase";
+    const heavy = intensity === "high" || intensity === "hard" || p.practice_kind === "showcase" || p.practice_kind === "team";
     practiceUnits += heavy ? 1 : 0.5;
     practices += 1;
     practiceDates.add(d);
