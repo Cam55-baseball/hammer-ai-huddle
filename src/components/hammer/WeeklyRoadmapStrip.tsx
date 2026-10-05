@@ -58,7 +58,8 @@ export function WeeklyRoadmapStrip({ plan }: Props) {
   const [seasonDatesOpen, setSeasonDatesOpen] = useState(false);
   const { weeklyRoadmap, weeklyTemplate, microcycle, roadmap } = plan;
   const season = useSeasonStatus();
-  const phaseWeek = roadmap.quarter.quarterKnown && season.phaseStartedAt && season.phaseDaysIn !== null && season.resolvedPhase === roadmap.quarter.phase
+  const resolvedPhaseCode = { off_season: "off", preseason: "pre", in_season: "in", post_season: "post" }[season.resolvedPhase];
+  const phaseWeek = roadmap.quarter.quarterKnown && season.phaseStartedAt && season.phaseDaysIn !== null && resolvedPhaseCode === roadmap.quarter.phase
     ? Math.max(1, Math.floor(season.phaseDaysIn / 7) + 1)
     : null;
 
