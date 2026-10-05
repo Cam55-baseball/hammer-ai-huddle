@@ -70,8 +70,8 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     setBusy(true); setBusyKey(key);
     try {
       const res = await tl.save(d, "inbox");
-      setLastMessage(d.tag === "NOTE" && d.payload.kind === "free_text" ? NOTE_MESSAGE : res.message);
-      setSent(previous => [{ id: res.entry.id, label: describeEntry({ ...d, ...res.entry, payload: res.entry.payload ?? d.payload }) }, ...previous.filter(item => item.id !== res.entry.id)]);
+      setLastMessage(d.payload.kind === "morning_change_confirmation" ? "You confirmed today's changes. Your plan stays as shown." : d.tag === "NOTE" && d.payload.kind === "free_text" ? NOTE_MESSAGE : res.message);
+      setSent(previous => [{ id: res.entry.id, label: d.payload.kind === "morning_change_confirmation" ? "Anything change? — confirmed" : describeEntry({ ...d, ...res.entry, payload: res.entry.payload ?? d.payload }) }, ...previous.filter(item => item.id !== res.entry.id)]);
       setSaveError(null);
       if (d.tag === "PAIN" && RED_FLAG.test(String(d.payload.text ?? ""))) toast.error("Stop and get it checked by a trainer or doctor.");
       reset();
@@ -124,7 +124,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
     onSelect={(value: any) => setPicked(multiple ? (value ?? []) : (value ? [value] : []))}
     className="mx-auto rounded-md border pointer-events-auto [&_button]:h-11 [&_button]:w-11" />;
   const sendDays = (tag: EntryDraft["tag"], key: string) => { const days = picked.map(getLocalDateString).sort(); tap(draft(tag, days[0], days[days.length - 1], {}, days), key); };
-  const sentList = [...sent, ...todayEntries.filter(e => !sent.some(s => s.id === e.id)).map(e => ({ id: e.id, label: describeEntry(e) }))];
+  const sentList = [...sent, ...todayEntries.filter(e => !sent.some(s => s.id === e.id) && e.payload?.kind !== "next_game_answer").map(e => ({ id: e.id, label: e.payload?.kind === "morning_change_confirmation" ? "Anything change? — confirmed" : describeEntry(e) }))];
   const backBtn = <Button variant="ghost" data-testid="entry-back" onClick={reset}><ArrowLeft className="mr-1 h-4 w-4" /> Back</Button>;
 
   const changeConfirmed = todayEntries.some(e => e.tag === "NOTE" && e.start_date === today && (e.payload?.kind === "morning_change_confirmation"));
@@ -146,7 +146,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
       {!checkIn && flow && backBtn}
       {lastMessage && <div role="status" data-testid="tell-hammers-result" className="rounded-md border border-primary/30 bg-primary/10 p-3 text-sm"><strong>Got it — Hammer has it</strong><p>{lastMessage}</p></div>}
       {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
-      {checkIn && (changeConfirmed || sentList.length > 0) && !pending && <p className="text-sm text-muted-foreground">Your update was saved today. You can still add a change.</p>}
+      {checkIn && (changeConfirmed || sentList.length > 0) && !pending && <p className="text-sm text-muted-foreground">{changeConfirmed ? "You confirmed your answer today." : "Your update was saved today."} You can still add a change.</p>}
       {checkIn && pending && <div className="rounded-md border border-primary/30 p-2 text-sm">Ready to save: {describeEntry(pending)} <Button size="sm" variant="ghost" onClick={() => setPending(null)}>Remove</Button></div>}
       {!flow && <>
         <div className="grid grid-cols-2 gap-2">{BUTTONS.map(({flow: f, label, icon: Icon}) => <Button key={f} variant="outline" className="h-20 flex-col gap-1 whitespace-normal text-center text-sm" data-testid={`tell-${f}`} onClick={() => enter(f)}><Icon className="h-5 w-5 shrink-0" />{label}</Button>)}</div>

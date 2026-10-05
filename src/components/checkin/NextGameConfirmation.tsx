@@ -13,6 +13,7 @@ export function NextGameConfirmation() {
   const answer = timeline.entries.find(e => !e.undone_at && e.tag === "NOTE" && e.start_date === today && e.payload?.kind === "next_game_answer")?.payload?.answer;
 
   async function save(nothing: boolean) {
+    if (nothing && selected) { setError("You picked a game answer. Tap Done to save it, or clear your choice before confirming nothing changed."); return; }
     if (!nothing && !selected) { setError("Choose when your next game is, then tap Done."); return; }
     setBusy(true);
     try {
@@ -32,7 +33,7 @@ export function NextGameConfirmation() {
     {!timeline.enabled ? <p className="text-sm text-muted-foreground">Game updates can't be saved right now. You can still finish your check-in.</p> : <>
       {answer && <p role="status" className="text-sm text-muted-foreground">{answer === "no_change" ? "You confirmed nothing changed today." : "Your game answer is saved for today."}</p>}
       <div className="grid grid-cols-2 gap-2">{NEXT_GAME_ANSWERS.map(option =>
-        <Button key={option.key} type="button" variant={selected === option.key ? "default" : "outline"} aria-pressed={selected === option.key} className="h-12 whitespace-normal" onClick={() => setSelected(option.key)}>{option.label}</Button>
+        <Button key={option.key} type="button" variant={selected === option.key ? "default" : "outline"} aria-pressed={selected === option.key} className="h-12 whitespace-normal" onClick={() => { setSelected(selected === option.key ? null : option.key); setError(null); }}>{option.label}</Button>
       )}</div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <div className="grid grid-cols-2 gap-3 border-t border-border pt-3">
