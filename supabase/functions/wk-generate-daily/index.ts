@@ -2123,6 +2123,7 @@ const handler = async (req: Request): Promise<Response> => {
           day_intent: dayIntent,
           day_intent_applied: dayIntentApplied,
           recent_load: recentLoad,
+          goal_direction: { ranked: goalEmphasis.ranked, career: goalEmphasis.career, athlete_ranked: goalEmphasis.athleteRanked },
           training_age_years: trainingAgeYears, is_pro_prospect: isProProspect,
           intensity_class: s.movement.intensity_class,
           pattern: s.movement.pattern,
