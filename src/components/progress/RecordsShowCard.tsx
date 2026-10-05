@@ -63,7 +63,9 @@ export function RecordsShowCard() {
                 {q.data.show.onFile.map((k) => (
                   <li key={k.key} className="rounded-md border border-border p-2.5">
                     <p className="text-sm font-medium">{k.label}</p>
-                    {k.last ? (
+                    {(k as any).ok === false ? (
+                      <p className="text-xs text-muted-foreground">Couldn't read this right now. Nothing is shown rather than a guess.</p>
+                    ) : k.last ? (
                       <p className="text-xs text-muted-foreground">Since {fmt(k.first)} · latest {fmt(k.last)}</p>
                     ) : (
                       <p className="text-xs text-muted-foreground">Nothing yet. {k.unlocks}</p>
