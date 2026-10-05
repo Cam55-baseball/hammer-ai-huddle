@@ -11,6 +11,7 @@ export function athleteNoticeCopy({ reason, detail }: Notice): string {
     if (s.startsWith("practice scheduled today")) return "You have practice today. Some skill work is already covered there; do only what's shown here.";
     if (s.startsWith("team practice") || s.startsWith("showcase")) return "You have team practice or a showcase today. Your lift is easier; do the lift shown.";
   }
+  if (reason === "day_intent") return "You chose an easier day in your check-in, so the hard work is dialled back.";
   if (reason === "travel" && s.startsWith("travel day")) return "You're travelling today. Today's work is easier; focus on the movement work shown.";
   if (reason === "silent_signals") {
     const exact: Record<string, string> = {

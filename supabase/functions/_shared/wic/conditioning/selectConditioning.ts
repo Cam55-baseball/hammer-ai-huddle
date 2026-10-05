@@ -31,6 +31,9 @@ export interface ConditioningSelectionInput {
   returningAfterGap: boolean;
   /** Check-in / governor reasons that ask for less today (e.g. "sleep", "soreness", "governor"). */
   dialDownReasons: readonly string[];
+  /** Athlete pitches. The library has no pitcher-only conditioning yet, so the
+   *  reason says honestly that a team drill stands in. */
+  isPitcher?: boolean;
 }
 
 export type ConditioningPath =
@@ -75,6 +78,8 @@ export const ALACTIC = new Set(["if_lateral_repeat", "inning_restart_sim_bb", "i
 const aerobicPositionDrill = (slug: string) => (ALACTIC.has(slug) ? "bases_1st_3rd" : slug);
 
 const DIAL_DOWN_LINE = "Your check-in says go easier today, so it's one round only.";
+// Temporary until the owner records pitcher-only conditioning drills.
+export const PITCHER_STAND_IN_LINE = "There's no pitcher-only conditioning in your drill list yet, so this is the closest team drill for now.";
 
 export function selectConditioning(input: ConditioningSelectionInput): ConditioningSelection {
   const pos = aerobicPositionDrill(positionDrillSlug(input.position));
@@ -84,7 +89,7 @@ export function selectConditioning(input: ConditioningSelectionInput): Condition
       path, templateId,
       // Dialing down drops the hard sprint and keeps the easier drill.
       slugs: dial ? slugs.filter((x) => !ALACTIC.has(x)).slice(0, 1) : slugs,
-      why: dial ? `${why} ${DIAL_DOWN_LINE}` : why,
+      why: [why, dial ? DIAL_DOWN_LINE : null, input.isPitcher ? PITCHER_STAND_IN_LINE : null].filter(Boolean).join(" "),
       fallback, dialedDown: dial,
     };
   };

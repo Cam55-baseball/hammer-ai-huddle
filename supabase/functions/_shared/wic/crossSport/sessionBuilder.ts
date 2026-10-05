@@ -107,7 +107,13 @@ export function certifyCrossSport(input: CertifyCrossSportInput): CertifyCrossSp
   const categorized = rxs.map((r) => ({ slug: r.movement_slug, cross_sport_category: catBySlug.get(r.movement_slug)?.cross_sport_category ?? null }));
   const categoryCoverage = coverageOf(categorized);
   const missing = missingCategories(template.requiredCategories, categorized);
-  if (missing.length > 0) fatal.push({ code: "xs_unresolved_template", message: `Template ${template.id} requires: ${missing.join(", ")}` });
+  // Library gap: a required type the library has no active drill for can never
+  // be filled, so it warns instead of sending the athlete to the stand-in day.
+  const libraryHas = new Set(input.catalog.map((c: any) => c.cross_sport_category).filter(Boolean).map(String));
+  const libraryGap = missing.filter((c) => !libraryHas.has(String(c)));
+  const realMissing = missing.filter((c) => libraryHas.has(String(c)));
+  if (libraryGap.length > 0) warn.push({ code: "xs_library_gap", message: `Template ${template.id} needs drill types the library does not have yet: ${libraryGap.join(", ")}` });
+  if (realMissing.length > 0) fatal.push({ code: "xs_unresolved_template", message: `Template ${template.id} requires: ${realMissing.join(", ")}` });
 
   const SINGLE = new Set<CrossSportCategory>(["explosive_transfer", "rotational_power", "reflex", "visual_reaction"]);
   for (const [k, n] of Object.entries(categoryCoverage)) {
