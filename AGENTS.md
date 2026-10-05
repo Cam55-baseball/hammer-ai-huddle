@@ -18,3 +18,4 @@
 - Client reads and write-backs on `videos` must name their columns (`.select('id')`, `VIDEO_PUBLIC_COLUMNS`); never bare `.select()` or `'*'`. Why: score columns are locked from direct reads, so a whole-row read-back makes the save itself fail.
 - Video save failures go through `src/lib/upload/saveFailure.ts`: true message, reference code, structured `[video-save-failure]` log. Why: a refused save was once shown as "signed out" and noticed only by the owner.
 - Anything a player does must be verified signed in as a player (or the exact role affected), never only as owner/admin. Why: two fixes passed as owner and failed for real players (2026-10-04); owner accounts skip subscription and access gates.
+- Never prescribe or recommend an athlete action that the affected athlete cannot open; keep unreleased Game IQ suppressed at one presentation switch until its routes open to athletes. Why: inaccessible prescriptions teach players the app is broken.
