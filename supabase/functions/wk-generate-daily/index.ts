@@ -124,6 +124,7 @@ import { certifySpeed } from "../_shared/wic/speed/sessionBuilder.ts";
 import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
 // Phase 10 — Performance Support Engines (Conditioning + Cross-Sport + Recovery + Arm Care).
 import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.ts";
+import { selectConditioning, conditioningPhaseFrom, isReturningAfterGap, type ConditioningSelection } from "../_shared/wic/conditioning/select.ts";
 import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
 import { resolveCrossSportTemplate } from "../_shared/wic/crossSport/templates.ts";
 import { certifyRecovery } from "../_shared/wic/recovery/sessionBuilder.ts";
@@ -2541,15 +2542,45 @@ const handler = async (req: Request): Promise<Response> => {
     // defect, not an outcome — surface it in diagnostics instead of quietly
     // emitting `cond.off_day`.
     let conditioningEmptyPool = false;
+    let conditioningSelection: ConditioningSelection | null = null;
     // Tell Hammers HOLD is a recovery day: no conditioning is built.
     if (!isGameDay && !isPostSeason && !conditioningSuppressed && !timelineToday.hold) {
-      const conditioning: MovementRow[] = [
-        lib.find((m) => m.slug === (sport === "baseball" ? "inning_restart_sim_bb" : "inning_restart_sim_sb") && eligible(m)),
-        conditioningForPosition(lib, position, eligible),
-      ].filter(Boolean) as MovementRow[];
+      // Stage 1 (owner-authorised 2026-10-05): the session type chooses the
+      // work from recorded facts. Same card, never more than two movements.
+      const dialDownReasons = [
+        ...reductions.map((r) => r.reason),
+        ...(cnsCap < block.cns_unit_cap ? ["governor"] : []),
+      ];
+      const yesterday = isoShift(planDate, -1);
+      conditioningSelection = selectConditioning({
+        sport,
+        position,
+        phase: conditioningPhaseFrom(phaseRes.phase, (phaseRes as any).source ?? null),
+        isTournamentDay: trainingContext.day_type === "tournament_day",
+        hoursToNearestGame: gameProximity.hoursToNearestGame,
+        pitcherStartedYesterday: isPitcherAthlete && scheduledGames.some((g) => g.isStartingPitcher && !g.ignored && g.date === yesterday),
+        returningAfterGap: isReturningAfterGap(((historyLogRows ?? []) as any[]).map((r: any) => String(r.plan_date)), planDate),
+        dialDownReasons,
+      });
+      let conditioning: MovementRow[] = conditioningSelection.slugs
+        .map((slug) => lib.find((m) => m.slug === slug))
+        .filter((m): m is MovementRow => eligible(m));
+      if (conditioning.length === 0) {
+        // Chosen work not available to this athlete — pre-Stage-1 pair, said honestly.
+        conditioning = [
+          lib.find((m) => m.slug === (sport === "baseball" ? "inning_restart_sim_bb" : "inning_restart_sim_sb") && eligible(m)),
+          conditioningForPosition(lib, position, eligible),
+        ].filter(Boolean) as MovementRow[];
+        conditioningSelection = { ...conditioningSelection, fallback: true, why: "Standard conditioning today — the planned work isn't available to you yet." };
+      }
       conditioningEmptyPool = conditioning.length === 0;
       for (const m of conditioning) {
-        push("conditioning", "conditioning", m, {}, "Conditioning belongs next to practice — inning-restart + position-specific.");
+        push("conditioning", "conditioning", m, {}, conditioningSelection.why, {
+          conditioning_path: conditioningSelection.path,
+          conditioning_template_id: conditioningSelection.templateId,
+          conditioning_fallback: conditioningSelection.fallback,
+          conditioning_dialed_down: conditioningSelection.dialedDown,
+        });
       }
     }
 
@@ -3197,6 +3228,7 @@ const handler = async (req: Request): Promise<Response> => {
     const conditioningCertification = certifyConditioning({
       prescriptions: finalRxs as any,
       catalog: lib as any,
+      templateId: conditioningSelection?.templateId,
       template: {
         seasonPhase: trainingContext.season_phase,
         dayType: trainingContext.day_type,
@@ -3866,6 +3898,8 @@ const handler = async (req: Request): Promise<Response> => {
             explosive_governance_version: speedCertification.governanceVersion,
             // Phase 10 — Performance Support Engine diagnostics
             conditioning_template_id: conditioningCertification.templateId,
+            conditioning_path: conditioningSelection?.path ?? null,
+            conditioning_fallback: conditioningSelection?.fallback ?? null,
             conditioning_category_coverage: conditioningCertification.categoryCoverage,
             conditioning_validation_status: conditioningCertification.validationStatus,
             conditioning_substitution_completeness: conditioningCertification.substitutionCompleteness,

@@ -1,0 +1,134 @@
+// Stage 1 — conditioning selection (owner-authorised 2026-10-05).
+//
+// The conditioning session types now choose the work instead of only labelling
+// it afterwards. Pure and deterministic: every input is a recorded fact
+// (season phase, game dates, starting-pitcher flags, position, logged sessions,
+// check-in reductions, the recovery governor). When a fact is missing the
+// selector falls back to the pre-Stage-1 pair and says so.
+//
+// Shape rules: conditioning keeps its one card and never exceeds the two
+// movements it always had. It can only shrink (to one) when the day calls for
+// less. Short repeated efforts with full rest are the backbone — never
+// endurance work. On/off switches (game day, post-season, suppressed days,
+// "take it easy") stay with the caller and are untouched.
+
+import type { ConditioningTemplateId } from "./templates.ts";
+
+export type ConditioningPhase = "offseason" | "preseason" | "in_season" | "post_season";
+
+export interface ConditioningSelectionInput {
+  sport: "baseball" | "softball";
+  position: string | null;
+  /** Null when the season could not be resolved from the athlete's own settings. */
+  phase: ConditioningPhase | null;
+  /** Tournament marked on the plan date that is not itself a game day. */
+  isTournamentDay: boolean;
+  /** Hours to the next scheduled game; null when nothing is scheduled ahead. */
+  hoursToNearestGame: number | null;
+  /** A game the athlete started as pitcher was recorded on the previous day. */
+  pitcherStartedYesterday: boolean;
+  /** Logged sessions exist in the last 28 days but none in the last 7. */
+  returningAfterGap: boolean;
+  /** Check-in / governor reasons that ask for less today (e.g. "sleep", "soreness", "governor"). */
+  dialDownReasons: readonly string[];
+}
+
+export type ConditioningPath =
+  | "return_to_conditioning"
+  | "pitcher_after_start"
+  | "tournament"
+  | "game_within_48h"
+  | "offseason"
+  | "preseason"
+  | "in_season"
+  | "fallback_no_phase";
+
+export interface ConditioningSelection {
+  path: ConditioningPath;
+  templateId: ConditioningTemplateId;
+  /** Ordered slugs, at most two. */
+  slugs: string[];
+  /** Plain coach-language reason shown to the athlete. No numbers. */
+  why: string;
+  /** True when the pre-Stage-1 behaviour was used because data was missing. */
+  fallback: boolean;
+  dialedDown: boolean;
+}
+
+export function positionDrillSlug(position: string | null): string {
+  const pos = (position ?? "").toLowerCase();
+  if (pos.includes("catch")) return "catcher_up_downs";
+  if (pos.includes("pitch")) return "pitcher_field_and_cover";
+  if (pos.includes("of") || pos.includes("outfield")) return "of_read_and_go";
+  if (pos === "ss" || pos === "2b" || pos.includes("mid") || pos.includes("infield")) return "mif_turn_and_fire";
+  if (pos.includes("if")) return "if_lateral_repeat";
+  return "bases_1st_3rd";
+}
+export const inningRestart = (s: "baseball" | "softball") => (s === "baseball" ? "inning_restart_sim_bb" : "inning_restart_sim_sb");
+export const repeatSprint = (s: "baseball" | "softball") => (s === "baseball" ? "repeat_90ft_bb" : "repeat_43ft_sb");
+
+const DIAL_DOWN_LINE = "Your check-in says go easier today, so it's one round only.";
+
+export function selectConditioning(input: ConditioningSelectionInput): ConditioningSelection {
+  const pos = positionDrillSlug(input.position);
+  const base = (path: ConditioningPath, templateId: ConditioningTemplateId, slugs: string[], why: string, fallback = false): ConditioningSelection => {
+    const dial = input.dialDownReasons.length > 0 && slugs.length > 1;
+    return {
+      path, templateId,
+      slugs: dial ? slugs.slice(0, 1) : slugs,
+      why: dial ? `${why} ${DIAL_DOWN_LINE}` : why,
+      fallback, dialedDown: dial,
+    };
+  };
+
+  if (input.returningAfterGap) {
+    return base("return_to_conditioning", "cond.return_to_conditioning", [pos],
+      "You've had some time off, so conditioning starts easy. Build back up over the coming days, with hard sprints later.");
+  }
+  if (input.pitcherStartedYesterday) {
+    return base("pitcher_after_start", "cond.pitcher_conditioning", ["pitcher_field_and_cover"],
+      "You started yesterday, so today is easy pitcher work to help you recover.");
+  }
+  if (input.isTournamentDay) {
+    return base("tournament", "cond.tournament_day", [pos],
+      "Tournament on, so conditioning stays light to save your legs for games.");
+  }
+  if (input.hoursToNearestGame != null && input.hoursToNearestGame > 0 && input.hoursToNearestGame <= 48) {
+    const when = input.hoursToNearestGame <= 30 ? "Game tomorrow" : "Game in two days";
+    return base("game_within_48h", "cond.baseball_game_day", [pos],
+      `${when}, so today stays short and easy.`);
+  }
+  switch (input.phase) {
+    case "offseason":
+      return base("offseason", "cond.repeated_sprint", [repeatSprint(input.sport), "bases_home_2nd"],
+        "Off-season: build your engine with hard sprints and full rest between them.");
+    case "preseason":
+      return base("preseason", "cond.practice_day", [inningRestart(input.sport), pos],
+        "Getting ready for games, so conditioning copies game effort: short bursts, then rest.");
+    case "in_season":
+      return base("in_season", "cond.repeated_sprint", [repeatSprint(input.sport), pos],
+        "In season with no game in the next two days: short, sharp sprints with full rest.");
+    default:
+      return base("fallback_no_phase", "cond.off_day", [inningRestart(input.sport), pos],
+        "Standard conditioning for now. Add your season dates so this can match where you are in the year.", true);
+  }
+}
+
+/** Phase mapping from the generator's resolved WK phase. Null = unknown. */
+export function conditioningPhaseFrom(wkPhase: string | null | undefined, source: string | null | undefined): ConditioningPhase | null {
+  if (!wkPhase || source === "default") return null;
+  if (wkPhase === "in_season") return "in_season";
+  if (wkPhase === "post_season") return "post_season";
+  if (wkPhase === "os_q4") return "preseason";
+  if (wkPhase.startsWith("os_")) return "offseason";
+  return null;
+}
+
+/** "Returning after time off" from logged sessions only. No logs = no evidence = false. */
+export function isReturningAfterGap(logDates: readonly string[], planDate: string): boolean {
+  const day = (d: string) => new Date(`${d}T00:00:00Z`).getTime();
+  const p = day(planDate);
+  const ages = logDates.map((d) => Math.round((p - day(d)) / 86400000)).filter((a) => a > 0 && a <= 28);
+  if (ages.length === 0) return false;
+  return ages.every((a) => a > 7);
+}

@@ -81,3 +81,4 @@
 - [ ] Conditioning optimisation — awaiting owner ruling on the report (same two movements every training day; 9 templates exist but are not wired).
 - [ ] Cross-feature inference in The General — awaiting owner ruling on the proposal.
 - [ ] Verify morning check-in, completion message and shared Ask Hammer memory as a player — blocked: no player preview session.
+- [ ] Stage 1 conditioning: templates choose the work, respond to governor + check-ins, tests, verify, deploy (owner-authorised 2026-10-05).
