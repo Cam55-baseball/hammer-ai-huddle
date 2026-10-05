@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { loadSharedHistory, recordSharedExchange } from "@/lib/hammer/oneConversation";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -57,7 +58,7 @@ export function AskHammerPanel({ dashboardContext }: AskHammerPanelProps) {
           Authorization: `Bearer ${session?.access_token}`,
         },
         body: JSON.stringify({
-          messages: allMessages,
+          messages: [...(await loadSharedHistory()), ...allMessages],
           dashboardContext,
           stream: true,
         }),

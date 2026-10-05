@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { loadSharedHistory, recordSharedExchange } from "@/lib/hammer/oneConversation";
 import { useQueryClient } from '@tanstack/react-query';
 import { Crown, Play, Pause, SkipBack, SkipForward, Camera, Timer, Loader2, Send, Sparkles, ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -189,7 +190,7 @@ export function RoyalTimingModule() {
 
           const response = await supabase.functions.invoke('ai-chat', {
             body: {
-              messages: [{ role: 'user', content: `Analyze my timing study. Subject: ${subjectReason}. My findings: ${findings}` }],
+              messages: [...(await loadSharedHistory()), { role: 'user', content: `Analyze my timing study. Subject: ${subjectReason}. My findings: ${findings}` }],
               royalTimingContext,
               stream: false,
             },
@@ -198,6 +199,7 @@ export function RoyalTimingModule() {
           if (response.data?.message) {
             aiAnalysis = { response: response.data.message, generated_at: new Date().toISOString() };
             setAiResponse(response.data.message);
+            void recordSharedExchange("Royal Timing study", `Analyze my timing study. Subject: ${subjectReason}. My findings: ${findings}`, response.data.message);
           }
         }
       }
