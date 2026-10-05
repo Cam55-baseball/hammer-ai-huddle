@@ -95,7 +95,9 @@ export function recentLoadEffect(input: RecentLoadInput): RecentLoadEffect {
   const applied = games + practiceUnits >= 2;
   const reason = !applied
     ? null
-    : games >= 2
+    : games >= 2 && gameDates.size === 1
+      ? "You played twice in one day recently, so today is lighter to help you recover."
+      : games >= 2
       ? "You've played a lot of games the last few days, so today is lighter to help you recover."
       : games >= 1
         ? "Games and practice have stacked up the last few days, so today is lighter to help you recover."
