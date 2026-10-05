@@ -1,3 +1,4 @@
+import { HONEST_EDGES_PROMPT } from "../_shared/honestEdges.ts";
 // Hammer Recall & Clarity chat — grounded recall + mental-clarity dialogue over
 // the athlete's own history, plus a live "right now" snapshot of today.
 //
@@ -28,7 +29,7 @@ Your job:
 5) SHAPE THE PLAN: when the athlete asks to lighten or reshape today, propose changes as a bulleted "Suggested reset" block at the end. Stay inside what a coach would allow (no ego-lifting on a bad-CNS day, no skipping recovery, never push through a flagged injury).
 6) VOICE: warm, direct, one-teammate-to-another. Short paragraphs. No fluff, no hype, no fake certainty. When you don't know, say "I don't have that in your log yet."
 
-If the athlete gives a date range, ONLY reason about entries inside that range.`;
+If the athlete gives a date range, ONLY reason about entries inside that range.${HONEST_EDGES_PROMPT}`;
 
 // ---------- Retrieval ----------
 async function retrieveContext(
