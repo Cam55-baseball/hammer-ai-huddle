@@ -62,14 +62,15 @@
 - [ ] Add pitching-analysis influence without adding a pitching slot or replacing pitch-count/PFP prescriptions (blocked: the pitching card has no mechanical drill slot)
 
 # Owner-approved daily surfaces restructure (preview-only)
-- [ ] Move Day intent to final morning step; move Standard, Develop this week, Due today into morning success; preserve writes and night flow
-- [ ] Compact identity with collapsed phase/why and schedule; update superseded phase placement doc; make drawer lighter without duplication
-- [ ] Suppress inaccessible athlete Game IQ at one presentation switch, retaining generator/scheduler and owner authoring
-- [ ] Find Tex Vision S2 baseline; prescribe accessible baseline in Due today and eligible baseline-driven work in drawer
-- [ ] Connect roadmap missing dates to Season Dates and make HPI honest and evidence-linked without changing authority
-- [ ] Record accessibility rule; verify athlete role and both check-ins on phone with before/after screenshots (report blockers honestly)
+- [x] Move Day intent to final morning step; move Standard, Develop this week, Due today into morning success; preserve writes and night flow
+- [x] Compact identity with collapsed phase/why and schedule; update superseded phase placement doc; make drawer lighter without duplication
+- [x] Suppress inaccessible athlete Game IQ at one presentation switch, retaining generator/scheduler and owner authoring
+- [x] Find Tex Vision S2 baseline; prescribe accessible baseline in Due today and eligible baseline-driven work in drawer
+- [x] Connect roadmap missing dates to Season Dates and make HPI honest and evidence-linked without changing authority
+- [ ] Verify athlete role and both check-ins on phone with honest before/after screenshots (blocked: only owner preview session available; no valid pre-edit morning success capture)
 
 # Approved clarity follow-up (preview-only)
 - [x] Clarify lifting phase and translate daily notices at display edge; unknown wording falls back without guessing its cause
 - [x] Add independent Anything change and next game confirmations at morning check-in end
-- [ ] Obtain owner approval for proposed training-block name and remaining labels; verify phone flow as a player (blocked: only owner preview session is available)
+- [x] Apply owner-approved training-block name and athlete labels; verify unchanged answers persist through reopening on phone as owner
+- [ ] Verify these daily surfaces as a player (blocked: only owner preview session available)
