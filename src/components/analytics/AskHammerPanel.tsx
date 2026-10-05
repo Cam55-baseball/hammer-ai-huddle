@@ -138,6 +138,7 @@ export function AskHammerPanel({ dashboardContext }: AskHammerPanelProps) {
         }
       }
 
+      if (assistantSoFar) void recordSharedExchange("progress page", text, assistantSoFar);
       // If no streaming content received, check for non-streaming response
       if (!assistantSoFar) {
         // This was likely a non-streaming JSON response that got passed through
