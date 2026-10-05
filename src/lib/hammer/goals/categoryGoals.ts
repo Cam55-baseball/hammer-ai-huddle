@@ -126,6 +126,8 @@ export interface CategoryGoalsPayloadV2 {
   readonly baseball?: { position?: DisciplineGoals; pitcher?: DisciplineGoals };
   readonly softball?: { position?: DisciplineGoals; pitcher?: DisciplineGoals };
   readonly updatedAt: string;
+  /** The athlete's own ranking of the five training categories, best first. */
+  readonly categoryOrder?: ReadonlyArray<CategoryKey>;
 }
 
 /* ── V2 normalization ─────────────────────────────────────────────────────── */
@@ -184,8 +186,9 @@ function normalizeDiscipline(
 
 export function normalizeCategoryGoalsV2(raw: unknown): CategoryGoalsPayloadV2 | null {
   if (!raw || typeof raw !== "object") return null;
-  const obj = raw as { version?: unknown; baseball?: unknown; softball?: unknown; updatedAt?: unknown };
+  const obj = raw as { version?: unknown; baseball?: unknown; softball?: unknown; updatedAt?: unknown; categoryOrder?: unknown };
   if (obj.version !== 2) return null;
+  const categoryOrder = normalizeCategoryOrder(obj.categoryOrder);
   const baseball = obj.baseball && typeof obj.baseball === "object"
     ? {
         position: normalizeDiscipline("baseball", "position", (obj.baseball as Record<string, unknown>).position) ?? undefined,
@@ -206,7 +209,18 @@ export function normalizeCategoryGoalsV2(raw: unknown): CategoryGoalsPayloadV2 |
     ...(baseball ? { baseball } : {}),
     ...(softball ? { softball } : {}),
     updatedAt: typeof obj.updatedAt === "string" ? obj.updatedAt : new Date().toISOString(),
+    ...(categoryOrder ? { categoryOrder } : {}),
   };
+}
+
+/** A complete, duplicate-free ranking of the five categories, or null. */
+export function normalizeCategoryOrder(raw: unknown): CategoryKey[] | null {
+  if (!Array.isArray(raw)) return null;
+  const out: CategoryKey[] = [];
+  for (const x of raw) {
+    if ((CATEGORY_KEYS as readonly string[]).includes(x as string) && !out.includes(x as CategoryKey)) out.push(x as CategoryKey);
+  }
+  return out.length === CATEGORY_KEYS.length ? out : null;
 }
 
 /* ── V1 normalization (legacy) ────────────────────────────────────────────── */
