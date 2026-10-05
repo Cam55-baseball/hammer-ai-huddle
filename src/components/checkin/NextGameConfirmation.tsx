@@ -10,8 +10,10 @@ export function NextGameConfirmation() {
   const [selected, setSelected] = useState<NextGameAnswer | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const answer = [...timeline.entries].filter(e => !e.undone_at && e.tag === "NOTE" && e.start_date === today && e.payload?.kind === "next_game_answer")
+  const [justSaved, setJustSaved] = useState<string | null>(null);
+  const saved = [...timeline.entries].filter(e => !e.undone_at && e.tag === "NOTE" && e.start_date === today && e.payload?.kind === "next_game_answer")
     .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))[0]?.payload?.answer;
+  const answer = justSaved ?? saved;
 
   async function save(nothing: boolean) {
     if (nothing && selected) { setError("You picked a game answer. Tap Done to save it, or clear your choice before confirming nothing changed."); return; }
@@ -22,6 +24,7 @@ export function NextGameConfirmation() {
         ? { ...nextGameDraft(today, "not_sure"), payload: { kind: "next_game_answer", answer: "no_change" } }
         : nextGameDraft(today, selected as NextGameAnswer);
       await timeline.save(entry, "inbox");
+      setJustSaved(nothing ? "no_change" : (selected as string));
       setSelected(null);
       setError(null);
     } catch {
