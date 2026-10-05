@@ -5,6 +5,7 @@
  */
 import { useState } from "react";
 import { noticesForSurface } from "@/lib/hammer/notices/noticeRouting";
+import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
