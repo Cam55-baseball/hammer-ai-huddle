@@ -31,14 +31,24 @@ export interface ConditioningSelectionInput {
   returningAfterGap: boolean;
   /** Check-in / governor reasons that ask for less today (e.g. "sleep", "soreness", "governor"). */
   dialDownReasons: readonly string[];
-  /** Athlete pitches. The library has no pitcher-only conditioning yet, so the
-   *  reason says honestly that a team drill stands in. */
+  /** Athlete pitches. */
   isPitcher?: boolean;
+  /** A start is scheduled (or confirmed planned) for the day after the plan date. */
+  pitcherStartsTomorrow?: boolean;
+  /** Reliever marked available today or tomorrow. */
+  relieverAvailableSoon?: boolean;
+  /** Travel marked on the plan date. */
+  isTravelDay?: boolean;
+  /** Where the outing facts came from — "schedule" (pitcher schedule), "game_flag" (starting-pitcher tick on a game), or "none". */
+  outingSource?: "schedule" | "game_flag" | "none";
 }
 
 export type ConditioningPath =
   | "return_to_conditioning"
   | "pitcher_after_start"
+  | "pitcher_day_before_start"
+  | "reliever_ready"
+  | "travel_day"
   | "tournament"
   | "game_within_48h"
   | "offseason"
@@ -77,19 +87,20 @@ export const repeatSprint = (s: "baseball" | "softball") => (s === "baseball" ? 
 export const ALACTIC = new Set(["if_lateral_repeat", "inning_restart_sim_bb", "inning_restart_sim_sb", "repeat_43ft_sb", "repeat_90ft_bb"]);
 const aerobicPositionDrill = (slug: string) => (ALACTIC.has(slug) ? "bases_1st_3rd" : slug);
 
-const DIAL_DOWN_LINE = "Your check-in says go easier today, so it's one round only.";
-// Temporary until the owner records pitcher-only conditioning drills.
-export const PITCHER_STAND_IN_LINE = "There's no pitcher-only conditioning in your drill list yet, so this is the closest team drill for now.";
+const DIAL_DOWN_LINE = "Your check-in says go easier today, so the hard sprint is swapped for an easy flush.";
+/** Easy work that replaces a hard sprint on a dial-down day, so the count holds. */
+export const DIAL_DOWN_SWAP = "rc_easy_flush";
+const NO_SCHEDULE_LINE = "Add your pitching days so this can line up with your outings.";
 
 export function selectConditioning(input: ConditioningSelectionInput): ConditioningSelection {
   const pos = aerobicPositionDrill(positionDrillSlug(input.position));
   const base = (path: ConditioningPath, templateId: ConditioningTemplateId, slugs: string[], why: string, fallback = false): ConditioningSelection => {
-    const dial = input.dialDownReasons.length > 0 && slugs.length > 1;
+    const dial = input.dialDownReasons.length > 0 && slugs.some((x) => ALACTIC.has(x));
     return {
       path, templateId,
-      // Dialing down drops the hard sprint and keeps the easier drill.
-      slugs: dial ? slugs.filter((x) => !ALACTIC.has(x)).slice(0, 1) : slugs,
-      why: [why, dial ? DIAL_DOWN_LINE : null, input.isPitcher ? PITCHER_STAND_IN_LINE : null].filter(Boolean).join(" "),
+      // Dialing down swaps the hard sprint for an easy flush — same count.
+      slugs: dial ? slugs.map((x) => (ALACTIC.has(x) ? DIAL_DOWN_SWAP : x)).filter((x, i, a) => a.indexOf(x) === i) : slugs,
+      why: [why, dial && slugs.some((x) => ALACTIC.has(x)) ? DIAL_DOWN_LINE : null].filter(Boolean).join(" "),
       fallback, dialedDown: dial,
     };
   };
@@ -98,9 +109,28 @@ export function selectConditioning(input: ConditioningSelectionInput): Condition
     return base("return_to_conditioning", "cond.return_to_conditioning", [pos],
       "You've had some time off, so conditioning starts easy. Build back up over the coming days, with hard sprints later.");
   }
-  if (input.pitcherStartedYesterday) {
-    return base("pitcher_after_start", "cond.pitcher_conditioning", ["pitcher_field_and_cover"],
-      "You started yesterday, so today is easy pitcher work to help you recover.");
+  const sb = input.sport === "softball";
+  if (input.isPitcher && input.pitcherStartedYesterday) {
+    return base("pitcher_after_start", "cond.recovery_flush", ["rc_easy_flush", "rc_long_reach_walk"],
+      "You pitched yesterday, so today is an easy flush to get you ready for the next one.");
+  }
+  if (input.isTravelDay) {
+    return base("travel_day", "cond.recovery_flush", ["rc_travel_reset", "rc_breathing_reset"],
+      "You're travelling, so today is easy movement to stay loose.");
+  }
+  if (input.isPitcher && input.pitcherStartsTomorrow) {
+    return base("pitcher_day_before_start", "cond.pitcher_conditioning",
+      sb ? ["sp_drive_bounds_sb", "sp_stride_stick_sb"] : ["pc_ankle_pogos_bb", "pc_buildup_strides_bb"],
+      "You pitch tomorrow, so today primes you to feel springy, not tired.");
+  }
+  if (input.isPitcher && input.relieverAvailableSoon) {
+    return base("reliever_ready", "cond.pitcher_conditioning",
+      sb ? ["rp_ready_series_sb", "sp_arm_circle_rhythm_sb"] : ["rp_ready_series_bb", "pc_pretension_hold_bb"],
+      "You could get the call, so this keeps you ready without spending anything.");
+  }
+  if (input.isPitcher && input.outingSource === "none") {
+    const r = selectConditioning({ ...input, isPitcher: false });
+    return { ...r, why: `${r.why} ${NO_SCHEDULE_LINE}` };
   }
   if (input.isTournamentDay) {
     return base("tournament", "cond.tournament_day", [pos],
