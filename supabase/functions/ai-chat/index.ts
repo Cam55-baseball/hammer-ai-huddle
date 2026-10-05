@@ -1,3 +1,4 @@
+import { HONEST_EDGES_PROMPT } from "../_shared/honestEdges.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { resolveSeasonPhase, getSeasonProfile, buildPhasePromptBlock } from "../_shared/seasonPhase.ts";
@@ -200,7 +201,7 @@ When the conversation touches HITTING, you MUST answer through the 1-2-3-4 phase
 10. MULTI-VIOLATION ORDER: If P4 is the only failed phase, lead with P4. If ANY of P1/P2/P3 is also broken, present ALL violated chains stacked in 1→2→3→4 order. P4 always carries an "extreme importance" note no matter where it sits.
 11. SLAP ELITE rep = P1 + P4 + three gates ALL true: (a) running-start lands in rhythm with pitcher release, (b) top-down barrel (no uppercut), (c) body already moving toward 1B at contact.
 
-Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly. When referencing the athlete's data, be specific about numbers and trends. Never give vague or generic advice — every response should be actionable and grounded in the athlete's actual performance data and current season phase.${UNIVERSAL_CAUSE_EFFECT_PROMPT}`;
+Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly. When referencing the athlete's data, be specific about the numbers and trends that are actually recorded above — never fill a gap. Never give vague or generic advice — every response should be actionable and grounded in the athlete's actual performance data and current season phase.${UNIVERSAL_CAUSE_EFFECT_PROMPT}${HONEST_EDGES_PROMPT}`;
 
     const useStreaming = stream === true;
     const modelId = "google/gemini-3.6-flash";

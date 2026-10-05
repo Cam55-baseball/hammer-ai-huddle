@@ -1,3 +1,4 @@
+import { HONEST_EDGES_PROMPT } from "../_shared/honestEdges.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { chatCompletion } from "../_shared/googleAi.ts";
 
@@ -159,9 +160,9 @@ RESPONSE GUIDELINES:
 - Be concise, friendly, and helpful
 - Use step-by-step instructions when explaining how to do something
 - Use bold for important terms and navigation paths
-- If you genuinely cannot answer a question, say: "I'm not sure about that.${supportEmail ? ` Please contact support at ${supportEmail} for further help.` : ' Please contact support for further help.'}"
+- If you cannot answer a question, follow the rule below and, as the real place to go, give: ${supportEmail ? `support at ${supportEmail}` : 'the support team'}
 - Never make up features that don't exist
-- Never provide biomechanics or training advice — redirect to "Ask the Coach" in analysis pages`;
+- Never provide biomechanics or training advice — redirect to "Ask the Coach" in analysis pages${HONEST_EDGES_PROMPT}`;
 
     const result = await chatCompletion({
       model: "google/gemini-2.5-flash",
