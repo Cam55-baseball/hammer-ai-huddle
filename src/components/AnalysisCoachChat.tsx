@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { loadSharedHistory, recordSharedExchange } from "@/lib/hammer/oneConversation";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,9 +110,10 @@ export function AnalysisCoachChat({ module, analysisContext }: AnalysisCoachChat
     setLoading(true);
 
     try {
+      const shared = await loadSharedHistory();
       const { data, error } = await supabase.functions.invoke("ai-chat", {
         body: {
-          messages: updatedMessages,
+          messages: [...shared, ...updatedMessages],
           analysisContext: buildAnalysisContextString(),
         },
       });
@@ -123,6 +125,7 @@ export function AnalysisCoachChat({ module, analysisContext }: AnalysisCoachChat
         content: data.message,
       };
       setMessages((prev) => [...prev, assistantMessage]);
+      void recordSharedExchange(`${module} clip analysis`, text, data.message ?? "");
     } catch (error: any) {
       console.error("Error sending message:", error);
       toast({

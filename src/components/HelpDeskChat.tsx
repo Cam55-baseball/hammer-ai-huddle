@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { loadSharedHistory, recordSharedExchange } from "@/lib/hammer/oneConversation";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,9 +78,11 @@ export function HelpDeskChat({ embedded = false, onClose }: HelpDeskChatProps) {
     setLoading(true);
 
     try {
+      // App support keeps its own job, but shares the athlete's memory.
+      const shared = await loadSharedHistory(12);
       const { data, error } = await supabase.functions.invoke("ai-helpdesk", {
         body: {
-          messages: [...messages, userMessage],
+          messages: [...shared, ...messages, userMessage],
         },
       });
 
@@ -90,6 +93,7 @@ export function HelpDeskChat({ embedded = false, onClose }: HelpDeskChatProps) {
         content: data.message,
       };
       setMessages((prev) => [...prev, assistantMessage]);
+      void recordSharedExchange("app help desk", text, data.message ?? "");
     } catch (error: any) {
       console.error("Error sending message:", error);
       toast({

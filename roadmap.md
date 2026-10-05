@@ -75,5 +75,9 @@
 - [x] Apply owner-approved training-block name and athlete labels; verify unchanged answers persist through reopening on phone as owner
 - [ ] Verify these daily surfaces as a player (blocked: only owner preview session available)
 
-- [ ] Ask Hammer: analysis-clip chat, dashboard panel, floating help widget and Royal Timing still keep separate conversations — owner to rule whether they join the one conversation.
+- [x] Ask Hammer: all chats share one memory (2026-10-05).
 - [ ] Verify phase card, Ask Hammer and check-ins as a player — blocked: no player preview session.
+- [ ] Coaching/clip/progress chat backend (ai-chat) has no explicit "say you don't know" rule — needs owner-approved edit + redeploy.
+- [ ] Conditioning optimisation — awaiting owner ruling on the report (same two movements every training day; 9 templates exist but are not wired).
+- [ ] Cross-feature inference in The General — awaiting owner ruling on the proposal.
+- [ ] Verify morning check-in, completion message and shared Ask Hammer memory as a player — blocked: no player preview session.
