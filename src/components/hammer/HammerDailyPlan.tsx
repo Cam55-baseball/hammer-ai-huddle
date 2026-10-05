@@ -1081,7 +1081,7 @@ function HammerDailyPlanBody({
           existingNightQuiz={checkInQuiz === "night" ? nightQuizRow ? { id: nightQuizRow.id } : null : null}
           onSubmit={async (data) => {
             const res = await vaultQuizzes.saveFocusQuiz(checkInQuiz, data as Record<string, unknown>);
-            if (res.success) {
+            if (res.success && checkInQuiz === "pre_lift") {
               setTimeout(() => setCheckInQuiz(null), 400);
             }
             return res;
