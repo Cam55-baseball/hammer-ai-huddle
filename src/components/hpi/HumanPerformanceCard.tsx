@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Activity, ChevronDown } from "lucide-react";
 import {
   Collapsible,
@@ -26,7 +25,7 @@ import { useTexVisionS2Priority } from '@/components/hammer/TexVisionS2Priority'
  * Today's Wisdom now lives in its own card above this one.
  */
 export function HumanPerformanceCard() {
-  const { resolvedPhase, phaseProfile, isLoading } = useSeasonStatus();
+  const { resolvedPhase, phaseProfile } = useSeasonStatus();
   const lifestyle = useMemo(() => readHpiLifestyle(), []);
   const signal = useMemo(
     () => computeHpiSignal(resolvedPhase, lifestyle),
@@ -38,7 +37,7 @@ export function HumanPerformanceCard() {
   const hie = useHIESnapshot();
   const readiness = useReadinessState();
   const vision = useTexVisionS2Priority();
-  const morning = checkins.quizzes?.find(q => q.quiz_type === 'morning');
+  const morning = checkins.quizzes.find(q => q.quiz_type === 'morning');
   const fresh = (iso?: string | null) => !!iso && Date.now() - new Date(iso).getTime() < 48 * 3600_000;
   const workload = hammer.snapshot && fresh(hammer.snapshot.computed_at) ? hammer.snapshot : null;
   const analysis = hie.snapshot && fresh(hie.snapshot.computed_at) ? hie.snapshot : null;
@@ -51,13 +50,6 @@ export function HumanPerformanceCard() {
     lifestyle ? `Lifestyle questionnaire · ${new Date(lifestyle.savedAt).toLocaleDateString()}` : 'Lifestyle questionnaire · not recorded',
   ];
   const { shouldGlow, markOpened } = useOpenedOnceToday("hpi");
-
-  const bandColor: Record<typeof signal.band, string> = {
-    peak: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
-    sharp: "bg-primary/15 text-primary border-primary/30",
-    steady: "bg-amber-500/10 text-amber-500 border-amber-500/30",
-    restore: "bg-rose-500/10 text-rose-500 border-rose-500/30",
-  };
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
@@ -83,14 +75,7 @@ export function HumanPerformanceCard() {
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Activity className="h-4 w-4 text-primary" />
                     Performance context
-                    {shouldGlow && (
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] border-primary/50 text-primary uppercase tracking-wide"
-                      >
-                        New today
-                      </Badge>
-                    )}
+
                   </CardTitle>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {phaseProfile.label} · {morning || workload || analysis ? "Recent signals available" : lifestyle ? "Questionnaire and season only" : "Season only · inputs missing"}
@@ -103,7 +88,7 @@ export function HumanPerformanceCard() {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="space-y-3 pt-0">
-            <p className="text-sm text-foreground/90">{signal.narrative}</p>
+            <p className="text-sm text-foreground/90">{lifestyle ? signal.narrative : `Season context: ${phaseProfile.label}. A lifestyle questionnaire is needed for a personal interpretation.`}</p>
             <p className="text-xs font-medium">Season and questionnaire provide context, not a live readiness score.</p>
             <ul className="space-y-1 text-xs text-muted-foreground" aria-label="Dated performance evidence">
               {evidence.map(line => <li key={line}>{line}</li>)}
