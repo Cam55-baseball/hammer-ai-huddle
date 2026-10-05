@@ -107,6 +107,8 @@ describe("v1.2 §F", () => {
     function Host() { const [o, s] = useState(false); return React.createElement(PhaseStripView, { plan, open: o, onToggle: () => s(!o) }); }
     const { container } = render(React.createElement(Host));
     expect(screen.queryByTestId("phase-why")).toBeNull();
+    expect(screen.getByTestId("phase-heading").textContent).toBe("Your training phase");
+    expect(screen.getByTestId("phase-name").textContent).toContain("Lift heavier and move faster");
     expect(container.querySelectorAll("button")).toHaveLength(1);
     fireEvent.click(screen.getByTestId("phase-why-toggle"));
     expect(screen.getByTestId("phase-why").textContent).toBe("Now we add force.");
