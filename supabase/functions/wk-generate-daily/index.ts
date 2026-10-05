@@ -125,6 +125,7 @@ import { certifyBatSpeed } from "../_shared/wic/batSpeed/sessionBuilder.ts";
 // Phase 10 — Performance Support Engines (Conditioning + Cross-Sport + Recovery + Arm Care).
 import { certifyConditioning } from "../_shared/wic/conditioning/sessionBuilder.ts";
 import { resolveOutingFacts, type OutingFacts } from "../_shared/wic/pitching/outingFacts.ts";
+import { baselineSignal, type BaselineSignal } from "../_shared/wic/recovery/baselineSignal.ts";
 import { recentLoadEffect, type RecentLoadEffect, GAME_WINDOW_DAYS } from "../_shared/wic/recovery/recentLoad.ts";
 import { selectConditioning, conditioningPhaseFrom, isReturningAfterGap, type ConditioningSelection } from "../_shared/wic/conditioning/selectConditioning.ts";
 import { certifyCrossSport } from "../_shared/wic/crossSport/sessionBuilder.ts";
@@ -972,6 +973,34 @@ const handler = async (req: Request): Promise<Response> => {
       if (!checkInAlreadyStepped) cnsCap = Math.max(1, cnsCap - 1);
       dayIntentApplied = true;
       reductions.push({ reason: "day_intent", detail: "You chose an easier day in your check-in, so the hard work is dialled back." });
+    }
+    // -------- Stage 7 (owner-authorised 2026-10-05) — the athlete's own baselines --------
+    // An established baseline sharpens the check-in rule to this athlete's own
+    // usual. One step at most, never stacked on a check-in step, lighter only.
+    // No baseline (most athletes) → nothing changes, recorded as coverage.
+    let baseline: BaselineSignal | null = null;
+    try {
+      const { data: bRows } = await admin
+        .from("athlete_baseline_history")
+        .select("metric_key, status, n_used, computed_at, observation:athlete_metric_observations(recorded_at)")
+        .eq("user_id", user.id)
+        .gte("computed_at", new Date(Date.parse(`${planDate}T00:00:00Z`) - 120 * 86400000).toISOString())
+        .order("computed_at", { ascending: false })
+        .limit(300);
+      baseline = baselineSignal({
+        planDate,
+        rows: ((bRows ?? []) as any[]).map((r) => ({
+          metric_key: r.metric_key, status: r.status, n_used: r.n_used, computed_at: r.computed_at,
+          observed_at: r.observation?.recorded_at ?? null,
+        })),
+        checkInAlreadyStepped: reductions.some((r) => r.reason === "sleep" || r.reason === "cns" || r.reason === "day_intent"),
+      });
+      if (baseline.applied) {
+        cnsCap = Math.max(1, cnsCap - 1);
+        reductions.push({ reason: "baseline", detail: baseline.reason! });
+      }
+    } catch (_e) {
+      baseline = null;
     }
     // -------- TCS v1.1 §3 — Silent Signals (E2E WP4 item 2) --------
     // Reads the last 28 days of one-tap logs. Reduce, never remove: at most one
@@ -2123,6 +2152,7 @@ const handler = async (req: Request): Promise<Response> => {
           day_intent: dayIntent,
           day_intent_applied: dayIntentApplied,
           recent_load: recentLoad,
+          baseline: baseline ? { coverage: baseline.coverage, applied: baseline.applied, trigger: baseline.trigger, established: baseline.established } : { coverage: "unread" },
           goal_direction: { ranked: goalEmphasis.ranked, career: goalEmphasis.career, athlete_ranked: goalEmphasis.athleteRanked },
           training_age_years: trainingAgeYears, is_pro_prospect: isProProspect,
           intensity_class: s.movement.intensity_class,
