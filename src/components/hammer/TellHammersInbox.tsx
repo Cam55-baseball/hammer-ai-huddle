@@ -146,7 +146,7 @@ export function TellHammersInbox({ checkIn = false, onDone }: { checkIn?: boolea
       {!checkIn && flow && backBtn}
       {lastMessage && <div role="status" data-testid="tell-hammers-result" className="rounded-md border border-primary/30 bg-primary/10 p-3 text-sm"><strong>Got it — Hammer has it</strong><p>{lastMessage}</p></div>}
       {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
-      {checkIn && changeConfirmed && !pending && <p className="text-sm text-muted-foreground">You've answered this today. You can still add a change.</p>}
+      {checkIn && (changeConfirmed || sentList.length > 0) && !pending && <p className="text-sm text-muted-foreground">Your update was saved today. You can still add a change.</p>}
       {checkIn && pending && <div className="rounded-md border border-primary/30 p-2 text-sm">Ready to save: {describeEntry(pending)} <Button size="sm" variant="ghost" onClick={() => setPending(null)}>Remove</Button></div>}
       {!flow && <>
         <div className="grid grid-cols-2 gap-2">{BUTTONS.map(({flow: f, label, icon: Icon}) => <Button key={f} variant="outline" className="h-20 flex-col gap-1 whitespace-normal text-center text-sm" data-testid={`tell-${f}`} onClick={() => enter(f)}><Icon className="h-5 w-5 shrink-0" />{label}</Button>)}</div>

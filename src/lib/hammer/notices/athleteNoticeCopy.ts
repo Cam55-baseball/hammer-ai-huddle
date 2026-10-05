@@ -14,13 +14,13 @@ export function athleteNoticeCopy({ reason, detail }: Notice): string {
   if (reason === "travel" && s.startsWith("travel day")) return "You're travelling today. Today's work is easier; focus on the movement work shown.";
   if (reason === "silent_signals") {
     const exact: Record<string, string> = {
-      "we set today to match your last few sessions.": "Your recent sessions showed today's work should be easier. Do the work shown.",
+      "we set today to match your last few sessions.": "Your last sessions shaped today's work. Do the work shown.",
       "we trimmed the reps to match how the last sessions went.": "Recent reps were hard to finish. Do the shorter version shown.",
       "we kept today steady while things settle.": "Recent work called for a steady day. Follow today's plan.",
       "today is set a touch lighter than your recent best.": "Recent strength work was harder. Use the lighter work shown.",
       "we swapped in a friendlier version of this movement.": "Recent work called for a different move. Do the one shown.",
       "extra single-side work today to even things up.": "Your sides have worked differently. Do the single-side work shown.",
-      "we moved this session to a day that fits your schedule better.": "Your schedule changed when this session fits. Do it when it appears in your plan.",
+      "we moved this session to a day that fits your schedule better.": "This session moved to fit your schedule. Do it when it appears in your plan.",
       "shorter session today so you can finish it.": "Recent sessions ended early. Do the shorter session shown.",
       "today is set to match your latest test numbers.": "Your latest test changed today's work. Follow the updated plan.",
       "today stays at the planned weight.": "Your recent sessions support today's weight. Keep the work shown.",
@@ -59,7 +59,7 @@ export function athleteNoticeCopy({ reason, detail }: Notice): string {
     for (const [prefix, copy] of starts) if (s.startsWith(prefix)) return copy;
     if (/^\d+ lifts already this week/.test(s)) return "You've already lifted this week. Keep today's lift easier as shown.";
     if (/^\d+ hours of practice/.test(s)) return "You've had a lot of practice. Give your legs an easier day; follow the plan.";
-    if (s.startsWith("next heavy day:")) return `Your next hard lift is ${detail.split(":")[1]?.trim() ?? "in your plan"} Do today's work as shown.`;
+    if (s.startsWith("next heavy day:")) return `Your next hard lift is ${detail.split(":")[1]?.trim().replace(/\.$/, "") ?? "in your plan"}. Do today's work as shown.`;
   }
   if (reason === "load_spike") {
     if (s.startsWith("throwing is on hold")) return "Your throwing needs more rest after recent pitches. Skip the hard throws today.";

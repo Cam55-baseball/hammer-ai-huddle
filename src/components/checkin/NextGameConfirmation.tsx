@@ -20,6 +20,7 @@ export function NextGameConfirmation() {
         ? { ...nextGameDraft(today, "not_sure"), payload: { kind: "next_game_answer", answer: "no_change" } }
         : nextGameDraft(today, selected as NextGameAnswer);
       await timeline.save(entry, "inbox");
+      setSelected(null);
       setError(null);
     } catch {
       setError("Your game answer wasn't saved. Try again; you can still finish your check-in.");
