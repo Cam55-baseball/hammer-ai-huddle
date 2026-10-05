@@ -13,6 +13,7 @@ export function athleteNoticeCopy({ reason, detail }: Notice): string {
   }
   if (reason === "day_intent") return "You chose an easier day in your check-in, so the hard work is dialled back.";
   if (reason === "recent_load" && s.includes("lighter to help you recover")) return detail;
+  if (reason === "baseline" && s.includes("usual") && s.includes("today is lighter")) return detail;
   if (reason === "travel" && s.startsWith("travel day")) return "You're travelling today. Today's work is easier; focus on the movement work shown.";
   if (reason === "silent_signals") {
     const exact: Record<string, string> = {
