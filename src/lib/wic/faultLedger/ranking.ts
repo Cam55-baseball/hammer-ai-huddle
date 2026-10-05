@@ -13,6 +13,7 @@
  *    fault that no source reported.
  */
 import { familyForRootPattern, type FaultFamily } from "./families";
+import { fadeForSignal, type ClipEvidence, type FadeState } from "./cleanClipFade";
 
 export type FaultSource =
   | "complaint"
@@ -70,6 +71,13 @@ export interface RankedFault {
   readonly signals: readonly FaultSignal[];
   /** One line the athlete can read. */
   readonly says: string;
+  /**
+   * Clean-clip fades on this group's signals (only analyzer signals a newer
+   * same-skill clip genuinely checked). Empty when nothing faded.
+   */
+  readonly fades: ReadonlyArray<{ readonly signal: FaultSignal; readonly fade: FadeState }>;
+  /** True when every signal in the group was cleared by clean clips. */
+  readonly clearedByCleanClips: boolean;
 }
 
 const HALF_LIFE_DAYS = 21;
@@ -96,7 +104,11 @@ function unique<T>(xs: readonly T[]): T[] {
  * Collapse raw signals into ranked root patterns, highest first.
  * Deterministic: same rows in, same order out.
  */
-export function rankFaults(signals: readonly FaultSignal[], now: number = Date.now()): RankedFault[] {
+export function rankFaults(
+  signals: readonly FaultSignal[],
+  now: number = Date.now(),
+  clips: readonly ClipEvidence[] = [],
+): RankedFault[] {
   const groups = new Map<string, FaultSignal[]>();
   for (const s of signals) {
     const g = groups.get(s.root_pattern_id);
@@ -106,11 +118,16 @@ export function rankFaults(signals: readonly FaultSignal[], now: number = Date.n
 
   const ranked: RankedFault[] = [];
   for (const [rootPatternId, group] of groups) {
-    const base = group.reduce(
-      (sum, s) =>
-        sum + s.confidence * s.severity * sampleWeight(s.sample_size) * recencyWeight(s.observed_at, now),
+    const fadeBySignal = group.map((s) => ({ signal: s, fade: fadeForSignal(s, clips) }));
+    // The timer still runs underneath; a clean clip multiplies on top of it.
+    const base = fadeBySignal.reduce(
+      (sum, { signal: s, fade }) =>
+        sum +
+        s.confidence * s.severity * sampleWeight(s.sample_size) * recencyWeight(s.observed_at, now) * fade.multiplier,
       0,
     );
+    const fades = fadeBySignal.filter(({ fade }) => fade.status !== "none");
+    const clearedByCleanClips = fadeBySignal.every(({ fade }) => fade.status === "cleared");
     const sources = unique(group.map((s) => s.source));
     const disciplines = unique(group.map((s) => s.discipline));
     // Independent agreement is worth more than repetition from one place.
@@ -129,6 +146,8 @@ export function rankFaults(signals: readonly FaultSignal[], now: number = Date.n
       latestObservedAt: sorted[0].observed_at,
       signals: sorted,
       says: sayIt(sorted[0], disciplines, totalSampleSize),
+      fades,
+      clearedByCleanClips,
     });
   }
 
@@ -147,6 +166,10 @@ function sayIt(latest: FaultSignal, disciplines: readonly Discipline[], n: numbe
 }
 
 /** The work that comes first. Three is the ceiling — more is not a plan. */
-export function topPriorities(signals: readonly FaultSignal[], limit = 3): RankedFault[] {
-  return rankFaults(signals).slice(0, limit);
+export function topPriorities(
+  signals: readonly FaultSignal[],
+  limit = 3,
+  clips: readonly ClipEvidence[] = [],
+): RankedFault[] {
+  return rankFaults(signals, Date.now(), clips).filter((r) => !r.clearedByCleanClips).slice(0, limit);
 }

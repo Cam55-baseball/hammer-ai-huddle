@@ -10,6 +10,22 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { rankFaults, type FaultSignal, type RankedFault } from "@/lib/wic/faultLedger/ranking";
+import type { ClipEvidence } from "@/lib/wic/faultLedger/cleanClipFade";
+
+/**
+ * The athlete's own clips with their stored yes/no fault answers. Any failure
+ * returns no clips, which leaves every weight exactly as the timer sets it —
+ * never a fade without evidence.
+ */
+async function readClipEvidence(): Promise<ClipEvidence[]> {
+  try {
+    const { data, error } = await supabase.functions.invoke("fault-clip-evidence", { body: {} });
+    if (error || !Array.isArray((data as any)?.clips)) return [];
+    return (data as any).clips as ClipEvidence[];
+  } catch {
+    return [];
+  }
+}
 import {
   familyForSlug,
   laddersAtOrBelow,
@@ -28,6 +44,7 @@ export function useFaultLedger(days = 120) {
     staleTime: 60_000,
     queryFn: async () => {
       const since = new Date(Date.now() - days * 86_400_000).toISOString();
+      const clipsPromise = readClipEvidence();
       const { data, error } = await supabase
         .from("wk_fault_signals")
         .select(
@@ -37,7 +54,7 @@ export function useFaultLedger(days = 120) {
         .order("observed_at", { ascending: false })
         .limit(500);
       if (error) throw error;
-      return rankFaults((data ?? []) as unknown as FaultSignal[]);
+      return rankFaults((data ?? []) as unknown as FaultSignal[], Date.now(), await clipsPromise);
     },
   });
 }

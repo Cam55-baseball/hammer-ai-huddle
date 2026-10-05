@@ -4,6 +4,7 @@ import type { PrescribedBlock, DrillStep } from "@/lib/hammer/prescription/daily
 import type { CirculationInput, OwnerDrill } from "@/lib/prescription/ownerDrills";
 import { matchPrescriptionDrills } from "@/lib/prescription/matchDrills";
 import { recencyWeight, type Discipline, type RankedFault } from "@/lib/wic/faultLedger/ranking";
+import { fadeMessage } from "@/lib/wic/faultLedger/cleanClipFade";
 
 const PLAN_SIGNAL_SOURCES = new Set(["video_analysis", "report_card"]);
 
@@ -47,6 +48,20 @@ function eligibleCatalog(catalog: ReadonlyArray<EliteDrill>, ownedEquipment: Rea
   });
 }
 
+/**
+ * The athlete-facing reason drills eased: the most recent clean-clip fade for
+ * this skill. Text only — never adds, removes or reorders a drill.
+ */
+function withCleanClipNote(block: PrescribedBlock, discipline: Discipline, ranked: ReadonlyArray<RankedFault>): PrescribedBlock {
+  const fades = ranked.flatMap((r) => r.fades ?? [])
+    .filter(({ signal, fade }) => signal.discipline === discipline && fade.status !== "none" && fade.latestCleanClipAt)
+    .sort((a, b) => String(b.fade.latestCleanClipAt).localeCompare(String(a.fade.latestCleanClipAt)));
+  const top = fades[0];
+  if (!top) return block;
+  const note = fadeMessage(discipline, top.signal.fault_key, top.fade.status);
+  return note ? { ...block, cleanClipNote: note } : block;
+}
+
 function disciplineForBlock(block: PrescribedBlock): Discipline | null {
   if (block.modality === "hitting") return "hitting";
   if (block.modality === "throwing") return "throwing";
@@ -55,14 +70,15 @@ function disciplineForBlock(block: PrescribedBlock): Discipline | null {
 
 export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): ReadonlyArray<PrescribedBlock> {
   const now = input.now ?? new Date();
-  const priorities = input.rankedFaults.slice(0, 3);
-  if (priorities.length === 0) return input.blocks;
+  // A fault cleared by clean clips gives up its priority slot (Stage 2).
+  const priorities = input.rankedFaults.filter((r) => !r.clearedByCleanClips).slice(0, 3);
   const catalog = eligibleCatalog(input.catalog, input.ownedEquipment);
-  if (catalog.length === 0) return input.blocks;
 
-  return input.blocks.map((block) => {
-    const discipline = disciplineForBlock(block);
-    if (!discipline || block.status !== "ready" || block.drills.length === 0) return block;
+  return input.blocks.map((original) => {
+    const discipline = disciplineForBlock(original);
+    if (!discipline || original.status !== "ready" || original.drills.length === 0) return original;
+    const block = withCleanClipNote(original, discipline, input.rankedFaults);
+    if (priorities.length === 0 || catalog.length === 0) return block;
     const signals = priorities.flatMap((priority) => priority.signals
       .filter((signal) => signal.discipline === discipline && PLAN_SIGNAL_SOURCES.has(signal.source))
       .map((signal) => ({ signal, priority })));

@@ -148,6 +148,7 @@ import {
 import { selectFromBand, DEFAULT_ROTATION_BAND, ROTATION_BAND_VERSION } from "../_shared/wic/lift/rotationBand.ts";
 import {
   buildFaultPriority,
+  type ClipEvidence,
   FAULT_PRIORITY_VERSION,
   type LedgerSignalRow,
 } from "../_shared/wic/faultLedger/priority.ts";
@@ -1392,6 +1393,26 @@ const handler = async (req: Request): Promise<Response> => {
       .gte("observed_at", ledgerSince)
       .order("observed_at", { ascending: false })
       .limit(500);
+    // Stage 2 (clean-clip fade): the athlete's own analysed clips in the same
+    // window, flags only. A newer same-skill clip that genuinely checked a
+    // fault and did not see it eases that fault. A read failure yields no
+    // clips, which leaves every weight exactly as the timer alone sets it.
+    const { data: clipEvidenceRows } = await admin
+      .from("videos")
+      .select("id,module,created_at,violations:ai_analysis->violations_detected")
+      .eq("user_id", user.id)
+      .eq("status", "completed")
+      .in("module", ["hitting", "throwing", "pitching"])
+      .gte("created_at", ledgerSince)
+      .lte("created_at", `${planDate}T23:59:59Z`)
+      .order("created_at", { ascending: true })
+      .limit(500);
+    const clipEvidence: ClipEvidence[] = (clipEvidenceRows ?? []).map((r: any) => ({
+      video_id: r.id,
+      module: r.module,
+      created_at: r.created_at,
+      violations: r.violations && typeof r.violations === "object" ? r.violations : null,
+    }));
 
     const [{ data: recentLifts }, { data: activeOverrides }] = await Promise.all([
       admin.from("wk_prescriptions")
@@ -1649,6 +1670,8 @@ const handler = async (req: Request): Promise<Response> => {
     const faultPriority = buildFaultPriority(
       ((faultSignals ?? []) as unknown as LedgerSignalRow[]),
       Date.parse(`${planDate}T12:00:00Z`) || Date.now(),
+      3,
+      clipEvidence,
     );
 
     /**
@@ -4373,6 +4396,7 @@ const handler = async (req: Request): Promise<Response> => {
         version: FAULT_PRIORITY_VERSION,
         active: faultPriority.active,
         signals_read: (faultSignals ?? []).length,
+        clean_clips_read: clipEvidence.length,
         ranked: faultPriority.trace,
       },
       diagnostics_id: diagId,

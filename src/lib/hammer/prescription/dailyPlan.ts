@@ -141,6 +141,8 @@ export interface PrescribedBlock {
   readonly title: string;
   readonly why: string;
   readonly roadmapReason: string;
+  /** Stage 2: why drills for a fault eased — a newer clip genuinely checked it and didn't see it. */
+  readonly cleanClipNote?: string;
   readonly phase: BlockPhase;
   readonly steps: ReadonlyArray<string>;
   readonly drills: ReadonlyArray<DrillStep>;
