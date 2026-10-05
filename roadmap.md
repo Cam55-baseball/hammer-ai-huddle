@@ -85,3 +85,7 @@
 - [x] Stage 2 faults fade when fixed — plan builder live 2026-10-05; app note awaits owner publish
 - [ ] Owner ruling: one vs two clean clips (default: one eases, two clear)
 - [ ] Owner ruling: pitcher/recovery conditioning drill gap
+
+- [x] Stage 3: day intent + pitcher conditioning fallback (plan builder live 2026-10-05; app wording awaits owner publish)
+- [ ] Owner: record pitcher-only + recovery conditioning drills (fallback is temporary)
+- [ ] Owner: rule on one vs two clean clips
