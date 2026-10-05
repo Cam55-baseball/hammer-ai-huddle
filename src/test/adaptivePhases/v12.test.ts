@@ -109,7 +109,8 @@ describe("v1.2 §F", () => {
     expect(screen.queryByTestId("phase-why")).toBeNull();
     expect(screen.getByTestId("phase-heading").textContent).toBe("Your training phase");
     expect(screen.getByTestId("phase-name").textContent).toContain("Lift heavier and move faster");
-    expect(container.querySelectorAll("button")).toHaveLength(1);
+    // Owner 2026-10-05: the card also carries its own Ask Hammer button.
+    expect(container.querySelectorAll("button")).toHaveLength(2);
     fireEvent.click(screen.getByTestId("phase-why-toggle"));
     expect(screen.getByTestId("phase-why").textContent).toBe("Now we add force.");
     fireEvent.click(screen.getByTestId("phase-why-toggle"));

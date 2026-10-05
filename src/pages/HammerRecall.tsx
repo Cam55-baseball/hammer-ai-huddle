@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MessageCirclePlus, Send, ArrowLeft } from "lucide-react";
+import { Loader2, Send, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 type Source = {
@@ -49,10 +49,13 @@ export default function HammerRecall() {
   const { user } = useAuthContext();
   const nav = useNavigate();
   const { threadId } = useParams();
+  const [search] = useSearchParams();
+  const askPrefill = search.get("ask");
 
   const [threads, setThreads] = useState<Thread[]>([]);
   const [messages, setMessages] = useState<UIMessage[]>([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(askPrefill ?? "");
+  const [threadsLoaded, setThreadsLoaded] = useState(false);
   const [sending, setSending] = useState(false);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -76,7 +79,16 @@ export default function HammerRecall() {
       return;
     }
     setThreads(data || []);
+    setThreadsLoaded(true);
   }, [user]);
+
+  // One conversation (owner 2026-10-05): every entry point continues the
+  // athlete's latest conversation with its full history, never a fresh one.
+  useEffect(() => {
+    if (!threadId && threadsLoaded && threads.length > 0) {
+      nav(`/hammer/recall/${threads[0].id}${askPrefill ? `?ask=${encodeURIComponent(askPrefill)}` : ""}`, { replace: true });
+    }
+  }, [threadId, threadsLoaded, threads, nav, askPrefill]);
 
   useEffect(() => {
     loadThreads();
@@ -177,12 +189,6 @@ export default function HammerRecall() {
     [sending, threadId, loadThreads, nav, focusComposer],
   );
 
-  const startNew = useCallback(() => {
-    nav("/hammer/recall");
-    setMessages([]);
-    focusComposer();
-  }, [nav, focusComposer]);
-
   const empty = messages.length === 0 && !loadingMsgs;
 
   return (
@@ -194,49 +200,12 @@ export default function HammerRecall() {
         <div className="flex-1">
           <h1 className="text-lg font-semibold">Ask Hammer — Recall & Clarity</h1>
           <p className="text-xs text-muted-foreground">
-            Ask anything about your own notes, drills, journals, workouts, at-bats.
-            Give a date range if you want a specific window.
+            One ongoing conversation that remembers what you've asked. Hammer answers from your own records and says so when it doesn't know.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={startNew}>
-          <MessageCirclePlus className="mr-1 h-4 w-4" /> New
-        </Button>
       </div>
 
-      <div className="grid flex-1 min-h-0 gap-3 md:grid-cols-[220px_1fr]">
-        {/* Thread list */}
-        <Card className="hidden md:flex md:flex-col min-h-0">
-          <CardHeader className="py-3">
-            <CardTitle className="text-sm">Past conversations</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 min-h-0 overflow-y-auto p-2">
-            {threads.length === 0 ? (
-              <p className="px-2 py-3 text-xs text-muted-foreground">
-                No conversations yet.
-              </p>
-            ) : (
-              <ul className="space-y-1">
-                {threads.map((t) => (
-                  <li key={t.id}>
-                    <button
-                      type="button"
-                      onClick={() => nav(`/hammer/recall/${t.id}`)}
-                      className={`w-full rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted ${
-                        t.id === threadId ? "bg-muted font-medium" : ""
-                      }`}
-                    >
-                      <div className="line-clamp-2">{t.title}</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {new Date(t.updated_at).toLocaleDateString()}
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
+      <div className="grid flex-1 min-h-0 gap-3">
         {/* Conversation */}
         <Card className="flex min-h-0 flex-col">
           <CardContent className="flex flex-1 min-h-0 flex-col gap-3 p-3">

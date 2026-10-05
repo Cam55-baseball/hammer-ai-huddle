@@ -316,6 +316,14 @@ export function IdentityCommandCard({ className }: Props) {
 
               <div className="space-y-3">
                 <AdaptivePhaseStrip />
+                <Link to="/hammer/recall" className="flex min-h-12 w-full items-center justify-between gap-3 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-left hover:bg-primary/10" data-testid="identity-recall">
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold uppercase text-primary">Ask Hammer</div>
+                    <div className="text-sm font-medium text-foreground">Recall &amp; Clarity</div>
+                    <div className="text-[11px] text-muted-foreground">Talk through anything you've logged and reset your head.</div>
+                  </div>
+                  <span className="shrink-0 text-xs font-semibold text-primary">Open →</span>
+                </Link>
                 <ScheduleDropdownWrapper />
               </div>
 

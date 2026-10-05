@@ -28,6 +28,7 @@ import {
 } from "@/lib/hammer/prescription/dailyEngagement";
 import type { HammerDailyPlanResult } from "@/lib/hammer/prescription/dailyPlan";
 import { getSeasonHPI, seasonPhaseFromShort } from "@/lib/seasonPhase";
+import { BreathPrimer } from "@/components/hpi/BreathPrimer";
 
 interface Props {
   readonly plan: HammerDailyPlanResult;
@@ -117,8 +118,10 @@ export function DailyIntentHeader({ plan, cnsHigh, tick }: Props) {
                 <div className="text-[11px] text-foreground/85 mt-0.5 leading-snug">
                   {hpi.qiDirective}
                 </div>
-                <div className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
-                  <span className="font-medium text-foreground/70">Breath primer:</span> {hpi.breathPrimer}
+                <div className="mt-2 border-t border-primary/15 pt-2">
+                  <div className="text-[10px] uppercase tracking-wider font-semibold text-primary/80">Breathing before you start</div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Use before warm-up, at-bats or pitches to switch on.</p>
+                  <BreathPrimer primer={hpi.breathPrimer} scheduleLabel="Before you start" />
                 </div>
               </div>
             );

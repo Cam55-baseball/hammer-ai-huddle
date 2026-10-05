@@ -89,7 +89,6 @@ import { TodaysWisdomCard } from "@/components/hammer/TodaysWisdomCard";
 import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 import { TexVisionWork } from "@/components/hammer/TexVisionWork";
 
-import { HumanPerformanceCard } from "@/components/hpi/HumanPerformanceCard";
 import { useOpenedOnceToday } from "@/hooks/useOpenedOnceToday";
 import { WkSpeedCard } from "@/components/hammer/WkSpeedCard";
 import { WkBatSpeedCard } from "@/components/hammer/WkBatSpeedCard";
@@ -805,39 +804,17 @@ function HammerDailyPlanBody({
       </ErrorBoundary>
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
-        {/* 0b. Today's load and volume notices — checked off as read. */}
-        <ErrorBoundary>
-          <DayNoticesDrawerItem />
-        </ErrorBoundary>
-        {/* 2. Today's Wisdom */}
-        <TodaysWisdomCard />
-        {/* 2b. Defensive prep video — driven by the athlete's fielding signals */}
+        {/* Owner order 2026-10-05: aim (with breath primer) → defensive video → coach advice → why the plan changed.
+            Performance context moved to The General; Recall & Clarity moved to the identity drawer. */}
+        <DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} />
         <ErrorBoundary>
           <DefensivePrepVideo />
         </ErrorBoundary>
-        {/* 3. Human Performance Intelligence */}
-        <HumanPerformanceCard planBlocks={plan.blocks} />
+        <TodaysWisdomCard />
+        <ErrorBoundary>
+          <DayNoticesDrawerItem />
+        </ErrorBoundary>
         <TexVisionWork />
-
-        {/* 4. Start Line (DailyIntentHeader) */}
-        <DailyIntentHeader plan={plan} cnsHigh={cnsHigh} tick={engagementTick} />
-        {/* 5. Ask Hammer — Recall & Clarity */}
-        <button
-          type="button"
-          onClick={() => navigate("/hammer/recall")}
-          className="flex w-full items-center justify-between rounded-md border border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 px-3 py-2 text-left hover:from-primary/15 hover:to-primary/10"
-        >
-          <div className="flex items-center gap-2">
-            <MessageCircle className="h-4 w-4 text-primary" />
-            <div>
-              <div className="text-sm font-medium">Ask Hammer — Recall & Clarity</div>
-              <div className="text-[11px] text-muted-foreground">
-                Dialogue about anything you've logged. Reset your head. Reshape today.
-              </div>
-            </div>
-          </div>
-          <span className="text-xs text-primary">Open →</span>
-        </button>
         {/* 6. Non-physical prescribed blocks: mental / vision work + eating plan */}
         {plan.blocks
           .filter((b) => PRE_START_MODALITIES.has(b.modality) && (b.modality !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES))

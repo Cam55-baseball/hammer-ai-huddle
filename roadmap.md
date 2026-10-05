@@ -74,3 +74,6 @@
 - [x] Add independent Anything change and next game confirmations at morning check-in end
 - [x] Apply owner-approved training-block name and athlete labels; verify unchanged answers persist through reopening on phone as owner
 - [ ] Verify these daily surfaces as a player (blocked: only owner preview session available)
+
+- [ ] Ask Hammer: analysis-clip chat, dashboard panel, floating help widget and Royal Timing still keep separate conversations — owner to rule whether they join the one conversation.
+- [ ] Verify phase card, Ask Hammer and check-ins as a player — blocked: no player preview session.

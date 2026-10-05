@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { MessageCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
@@ -63,25 +64,44 @@ export function RampLines() {
   );
 }
 
-/** Pure view: the kind of plan, its current phase, then what that means for lifting. */
+/** Pure view: heading (what kind of thing) · name (which phase) · one plain line (what it means).
+ *  No day counts or timelines here (owner 2026-10-05) — Ask Hammer carries the detail. */
 export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePlan; open: boolean; onToggle: () => void }) {
   const phaseLabels = { P1: "Build your strength base", P2: "Lift heavier and move faster", P3: "Turn strength into game speed", P4: "Game-ready training" } as const;
-  const displayNames: Record<string, string> = { "Power Potential": phaseLabels.P1, "Power Building": phaseLabels.P2, Explosiveness: phaseLabels.P3, "Game-Ready Production": phaseLabels.P4 };
-  const displayLine = stripText(plan).replace(/Power Potential|Power Building|Explosiveness|Game-Ready Production/g, name => displayNames[name] ?? name);
+  const where = plan.ramp?.activeToday ? "getting ready for games"
+    : plan.mode === "in_season" ? "in season"
+    : plan.mode === "maintenance" ? "staying game-ready"
+    : "building toward your season";
+  const displayLine = `${phaseLabels[plan.phase]} · ${where}`;
+  const meaning = ({
+    P1: "Lifting: controlled work to build a strong base.",
+    P2: "Lifting: heavier and faster work to build strength.",
+    P3: "Lifting: move weight fast so strength turns into speed.",
+    P4: "Lifting: short, sharp lifts that keep you strong and fresh for games.",
+  } as const)[plan.phase];
+  const ramping = (plan.ramps ?? []).length > 0;
+  const askHammer = () => {
+    const detail = [stripText(plan), ...(plan.ramps ?? []).map((r) => r.line), ...(plan.rampWarnings ?? [])].join(" | ");
+    const q = `My training phase card says "${displayLine}". The full plan detail is: ${detail}. Explain where I am in my programme and what's coming next.`;
+    window.location.assign(`/hammer/recall?ask=${encodeURIComponent(q)}`);
+  };
   return (
     <div className="rounded-md border border-border/80 bg-background/65 px-4 py-3 text-sm text-foreground" data-testid="phase-strip">
       <h3 className="text-xs font-bold uppercase text-muted-foreground" data-testid="phase-heading">Your training phase</h3>
       <p className="mt-2 text-base font-semibold leading-snug" data-testid="phase-name">{displayLine}</p>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{({ P1: "Lifting: build a strong base with controlled work.", P2: "Lifting: build strength with heavier and faster work.", P3: "Lifting: move weight faster and turn strength into speed.", P4: "Lifting: short, sharp lifts to keep your strength without leaving you tired for games." } as const)[plan.phase]}</p>
-       {(plan.ramps ?? []).length > 0 && <div className="mt-3 space-y-1"><h4 className="text-xs font-bold text-muted-foreground">Your return to full training</h4>{plan.ramps?.map((r) => (
-         <div key={r.discipline} className="text-xs text-foreground" data-testid="ramp-line">{r.line}</div>
-       ))}</div>}
-       {(plan.rampWarnings ?? []).length > 0 && <div className="mt-2 space-y-1"><h4 className="text-xs font-bold text-muted-foreground">What to watch today</h4>{plan.rampWarnings?.map((w) => (
-         <div key={w} className="text-xs text-foreground" data-testid="ramp-warning">{w}</div>
-       ))}</div>}
-      <Button type="button" variant="link" aria-expanded={open} onClick={onToggle} className="mt-1 min-h-11 h-auto px-0 text-xs text-muted-foreground underline underline-offset-2" data-testid="phase-why-toggle">
-        Why you're training this way
-      </Button>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{meaning}</p>
+      {ramping && <div className="mt-3"><h4 className="text-xs font-bold text-muted-foreground">Your return to full training</h4>
+        {plan.ramps?.map((r) => <p key={r.discipline} className="text-xs text-foreground" data-testid="ramp-line"><span className="font-semibold capitalize">{String(r.discipline).replace(/_/g, " ")}:</span> build up gradually over the coming days, with high-intent work later.</p>)}</div>}
+      {(plan.rampWarnings ?? []).length > 0 && <div className="mt-2"><h4 className="text-xs font-bold text-muted-foreground">What to watch today</h4>
+        <p className="text-xs text-foreground" data-testid="ramp-warning">Keep today's work easy and controlled. Ask Hammer for the details.</p></div>}
+      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
+        <Button type="button" size="sm" variant="secondary" onClick={askHammer} className="min-h-11 gap-1.5" data-testid="phase-ask-hammer">
+          <MessageCircle className="h-4 w-4" /> Ask Hammer about your phase
+        </Button>
+        <Button type="button" variant="link" aria-expanded={open} onClick={onToggle} className="min-h-11 h-auto px-0 text-xs text-muted-foreground underline underline-offset-2" data-testid="phase-why-toggle">
+          Why you're training this way
+        </Button>
+      </div>
       {open && <p className="mt-1 text-muted-foreground" data-testid="phase-why">{plan.why}</p>}
     </div>
   );

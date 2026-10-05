@@ -1,5 +1,6 @@
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { CheckInLifeChips } from "@/components/checkin/CheckInLifeChips";
+import { toast } from "sonner";
 import { NextGameConfirmation } from "@/components/checkin/NextGameConfirmation";
 import { recordPain, bodyAreaToRegion, scaleToSeverity } from "@/lib/hammer/injury/recordPain";
 import { useQueryClient as usePainQc } from "@tanstack/react-query";
@@ -663,7 +664,7 @@ export function VaultFocusQuizDialog({
       data.wake_time_goal = wakeTimeGoal || undefined;
     }
 
-    // Save adult wellness data if enabled
+    // Save adult wellness data if enabled — optional, never blocks the check-in.
     if (adultFeaturesEnabled && (quizType === 'morning' || quizType === 'night')) {
       const adultData: any = {};
       if (adultLibidoLevel > 0) adultData.libido_level = adultLibidoLevel;
@@ -679,12 +680,23 @@ export function VaultFocusQuizDialog({
         if (adultSymptomTags.length > 0) adultData.symptom_tags = adultSymptomTags;
       }
       if (Object.keys(adultData).length > 0) {
-        await saveTracking(adultData);
+        try { await saveTracking(adultData); } catch { /* optional */ }
       }
     }
 
-    const result = await onSubmit(data);
-    setLoading(false);
+    let result: { success: boolean; error?: string };
+    try {
+      result = await onSubmit(data);
+    } catch (e) {
+      result = { success: false, error: e instanceof Error ? e.message : 'unknown' };
+    } finally {
+      setLoading(false);
+    }
+    if (!result.success) {
+      console.error('[checkin-save-failure]', { quizType, error: result.error });
+      toast.error("Your check-in wasn't saved. Your answers are still here — check your connection and tap Save again.");
+      return;
+    }
     // v1.2 §A: body-map pain becomes the same one pain record as every other screen.
     if (result.success && painUser?.id && painLocations.length > 0) {
       const today = getTodayDate();

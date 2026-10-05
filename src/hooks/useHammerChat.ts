@@ -15,7 +15,7 @@
  * Hammer shows what it understood and asks — it never says "got it" and
  * stores nothing.
  */
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
@@ -77,6 +77,31 @@ export function useHammerChat(options: HammerChatOptions = {}): HammerChatApi {
   const [savedEquipment, setSavedEquipment] = useState(false);
   const pending = useRef<ParsedEquipmentStatement | null>(null);
   const categoryFocus = options.categoryFocus ?? null;
+  // One conversation (owner 2026-10-05): every Ask Hammer surface continues
+  // the athlete's latest saved conversation, shared with Recall & Clarity.
+  const threadRef = useRef<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth?.user?.id;
+      if (!uid) return;
+      const { data: t } = await supabase.from("recall_threads").select("id").eq("user_id", uid)
+        .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+      if (!active || !t?.id) return;
+      threadRef.current = t.id;
+      const { data: rows } = await supabase.from("recall_messages").select("role,parts,created_at")
+        .eq("thread_id", t.id).order("created_at", { ascending: true }).limit(200);
+      if (!active || !rows) return;
+      const prior: HammerChatMessage[] = rows.map((r: any) => ({
+        role: r.role === "assistant" ? "assistant" : "user",
+        content: (Array.isArray(r.parts) ? r.parts[0]?.text : "") ?? "",
+        ts: new Date(r.created_at).getTime(),
+      }));
+      setMessages((cur) => [...prior, ...cur]);
+    })();
+    return () => { active = false; };
+  }, []);
 
   const say = useCallback((content: string) => {
     setMessages((cur) => [...cur, { role: "assistant", content, ts: Date.now() }]);
@@ -186,31 +211,14 @@ export function useHammerChat(options: HammerChatOptions = {}): HammerChatApi {
           return;
         }
 
-        // --- Ordinary conversation ---
-        const contextSnapshot = ctx.variables.map((v) => ({
-          key: v.key,
-          value: v.value,
-          missing: v.missing,
-          source: v.source,
-        }));
-        const history = [...messages, { role: "user" as const, content: trimmed }];
-        const { data, error: invokeError } = await supabase.functions.invoke("hammer-chat", {
-          body: {
-            messages: history.map((m) => ({ role: m.role, content: m.content })),
-            context: { variables: contextSnapshot },
-            nextStep: {
-              tier: nextStep.tier,
-              title: nextStep.title,
-              why: nextStep.why,
-              instruction: nextStep.instruction,
-              route: nextStep.route,
-              source: nextStep.source,
-            },
-            categoryFocus,
-          },
+        // --- Ordinary conversation: the shared, remembered conversation ---
+        const about = categoryFocus ? `(About ${categoryFocus.name}) ` : "";
+        const { data, error: invokeError } = await supabase.functions.invoke("hammer-recall", {
+          body: { threadId: threadRef.current ?? undefined, message: about + trimmed, tzOffsetMinutes: new Date().getTimezoneOffset() },
         });
         if (invokeError) throw invokeError;
-        const reply = (data?.reply as string | undefined) ?? "I'm here — say more.";
+        if (data?.threadId) threadRef.current = data.threadId as string;
+        const reply = (data?.answer as string | undefined) || "I don't have an answer for that yet.";
         say(reply);
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
@@ -218,7 +226,7 @@ export function useHammerChat(options: HammerChatOptions = {}): HammerChatApi {
         setIsSending(false);
       }
     },
-    [messages, ctx, nextStep, categoryFocus, commitEquipment, say],
+    [categoryFocus, commitEquipment, say],
   );
 
   const reset = useCallback(() => {
