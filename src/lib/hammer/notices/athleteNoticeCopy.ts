@@ -30,10 +30,12 @@ export function athleteNoticeCopy({ reason, detail }: Notice): string {
   if (reason === "game_proximity") {
     if (s.includes("games in seven days")) return "You have games close together. Game days get a short warm-up; follow the plan on other days.";
     if (s.startsWith("lighter today — you have a game")) return "Your next game is close. Do only the short warm-up shown until after the game.";
-    if (s.includes("no start time")) return "We don't have your game's start time. Add it so today's plan can match your game.";
+    if (s.includes("no start time")) return "We don't have your game's start time, so we used an estimated time. Add the real time to update today's work.";
     if (s.startsWith("you marked today a doubleheader")) return "You have two games today. Hard work is lighter; follow today's plan.";
     if (s.startsWith("doubleheader yesterday")) return "You played two games yesterday. Hard work is still lighter today; follow the plan.";
-    if (s.includes("starting pitcher today")) return "You're starting today. Skip the lift; follow the rest of today's plan.";
+    if (s.includes("starting pitcher today")) return "You're starting today. The lift is off; follow the rest of today's plan.";
+    if (s.startsWith("you marked yourself the starting pitcher today")) return "You're starting today. The lift is off; follow the rest of today's plan.";
+    if (s.startsWith("pitcher next to a team game")) return "You have a game soon, but haven't marked whether you're starting. Do the short work shown and update your game details.";
     if (s.startsWith("you start ")) return "You're starting tomorrow. Do only the short work shown today.";
     if (s.includes("no start declared")) return "You have a game soon but haven't marked whether you're starting. Do the short work shown, and update your game details if needed.";
     if (s.includes("lift through today's game day")) return "You chose to lift on game day. Follow today's lift; other safety limits still apply.";
