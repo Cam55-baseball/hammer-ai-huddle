@@ -24,7 +24,10 @@ export function useTexVisionS2Priority() {
     },
   });
   const baseline = query.data;
-  const due = !query.isLoading && !query.isError && hasAccess && (!baseline || (baseline.next_test_date && new Date(baseline.next_test_date).getTime() <= Date.now()));
+  // S2 dates are calendar dates: compare in the athlete's local day, not UTC midnight.
+  const today = new Date();
+  const localDay = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const due = !query.isLoading && !query.isError && hasAccess && (!baseline || !baseline.next_test_date || baseline.next_test_date <= localDay);
   return { due: !!due, baseline, hasAccess, loading: accessLoading || query.isLoading };
 }
 
