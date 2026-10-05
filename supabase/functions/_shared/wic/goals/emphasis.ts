@@ -37,6 +37,44 @@ export interface GoalEmphasisInput {
   bodyGoals?: Array<Record<string, unknown>> | null;
   /** Profile row — carries goal_speed / goal_power / ... free-text answers. */
   profile?: Record<string, unknown> | null;
+  /** Stage 5 — the athlete's own ranking of the five training categories (best first). */
+  categoryOrder?: readonly string[] | null;
+  /** Stage 5 — the athlete's career goal in their own words (athlete_context.goal_summary). */
+  careerGoal?: string | null;
+  isPitcher?: boolean;
+}
+
+/** A career goal tilts at most this much — less than a third-ranked goal. */
+export const CAREER_BONUS = 0.15;
+
+// Explicit, auditable phrases. A goal that names none of them (e.g. "make
+// varsity", "earn a roster spot") tilts nothing: the plan keeps training
+// everything evenly toward it. Level targets are never read here.
+const CAREER_LEXICON: Array<{ re: RegExp; domains: GoalDomain[]; pitcherOnly?: boolean }> = [
+  { re: /home ?runs?|homers?|exit velo|hit (it )?(harder|farther|further)|more power|power in my swing|distance/i, domains: ["hitting", "power"] },
+  { re: /bat speed|swing|hitting|hit (for )?average|batting average|contact|barrel|hit more|better hitter|strike ?outs? less|fewer strike ?outs/i, domains: ["hitting"] },
+  { re: /command|throw strikes|more strikes|locat|accura|control/i, domains: ["throwing"] },
+  { re: /throw harder|arm strength|velo(city)?|mph|pitch harder|throw faster/i, domains: ["throwing"], pitcherOnly: false },
+  { re: /steal|faster|speed|sprint|quicker|run faster/i, domains: ["speed"] },
+  { re: /defen[cs]e|glove|field(ing|er)?|gold glove|range/i, domains: ["fielding"] },
+  { re: /stronger|strength|bigger|put on (muscle|size)/i, domains: ["strength"] },
+  { re: /stay healthy|durab|never miss|injury[- ]free|available every/i, domains: ["durability"] },
+];
+
+/** Domains a career goal clearly points at, in first-mention order. Max two. */
+export function careerDirection(text: string | null | undefined, isPitcher = false): GoalDomain[] {
+  const t = String(text ?? "").trim();
+  if (!t) return [];
+  const hits: Array<{ at: number; d: GoalDomain }> = [];
+  for (const { re, domains, pitcherOnly } of CAREER_LEXICON) {
+    if (pitcherOnly && !isPitcher) continue;
+    const m = re.exec(t);
+    if (m) for (const d of domains) hits.push({ at: m.index, d });
+  }
+  hits.sort((a, b) => a.at - b.at);
+  const out: GoalDomain[] = [];
+  for (const h of hits) if (!out.includes(h.d)) out.push(h.d);
+  return out.slice(0, 2);
 }
 
 export interface GoalEmphasis {
@@ -48,6 +86,10 @@ export interface GoalEmphasis {
   /** True when the athlete stated nothing — everything stays at baseline. */
   readonly isBaselineOnly: boolean;
   readonly rationale: string;
+  /** Stage 5 — domains the career goal tilts toward (never an entitlement). */
+  readonly career: readonly GoalDomain[];
+  /** Stage 5 — true when the athlete ranked the five categories themselves. */
+  readonly athleteRanked: boolean;
 }
 
 const DOMAIN_ALIASES: Record<string, GoalDomain> = {
@@ -120,6 +162,16 @@ export function resolveGoalEmphasis(input: GoalEmphasisInput): GoalEmphasis {
     rankedPairs.push({ domain: cat, rank });
   }
 
+  // 3) Stage 5 — the athlete's own ranking of the five categories. It is the
+  //    ordering authority for those categories when present.
+  const order = Array.isArray(input.categoryOrder)
+    ? input.categoryOrder.map((x) => normalizeGoalDomain(x)).filter((d): d is GoalDomain => !!d)
+    : [];
+  const athleteRanked = order.length >= 5;
+  if (athleteRanked) {
+    order.forEach((domain, i) => rankedPairs.push({ domain, rank: i + 1 }));
+  }
+
   // Deterministic: best (lowest) rank wins per domain, ties broken by domain
   // order in GOAL_DOMAINS.
   const bestRank = new Map<GoalDomain, number>();
@@ -132,11 +184,16 @@ export function resolveGoalEmphasis(input: GoalEmphasisInput): GoalEmphasis {
     weights[domain] = clampWeight(weights[domain] + bonusForRank(rank));
   }
 
+  // Stage 5 — career goal: a small tilt toward what the goal names. Bounded by
+  // MAX_WEIGHT like everything else; it only biases choice between legal moves.
+  const career = careerDirection(input.careerGoal, input.isPitcher === true);
+  for (const d of career) weights[d] = clampWeight(weights[d] + CAREER_BONUS);
+
   // Domains never mentioned drift slightly below baseline so a stated goal is
   // actually visible in the plan — but never below MIN_WEIGHT.
-  if (bestRank.size > 0) {
+  if (bestRank.size > 0 || career.length > 0) {
     for (const d of GOAL_DOMAINS) {
-      if (!bestRank.has(d)) weights[d] = clampWeight(weights[d] - 0.1);
+      if (!bestRank.has(d) && !career.includes(d)) weights[d] = clampWeight(weights[d] - 0.1);
     }
   }
 
@@ -153,8 +210,10 @@ export function resolveGoalEmphasis(input: GoalEmphasisInput): GoalEmphasis {
     version: GOAL_EMPHASIS_VERSION,
     weights: Object.freeze(weights),
     ranked: Object.freeze(ranked) as readonly GoalDomain[],
-    isBaselineOnly: ranked.length === 0,
+    isBaselineOnly: ranked.length === 0 && career.length === 0,
     rationale,
+    career: Object.freeze(career) as readonly GoalDomain[],
+    athleteRanked,
   }) as GoalEmphasis;
 }
 
