@@ -1,3 +1,4 @@
+import { HeightFeetInchesInput, heightToInches } from '@/components/shared/HeightFeetInchesInput';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -42,6 +43,7 @@ interface VaultProgressPhotosCardProps {
     waist_measurement: number | null;
     leg_measurement: number | null;
     notes: string | null;
+    height_inches: number;
   }) => Promise<{ success: boolean }>;
   recapUnlockedAt?: Date | null;
   autoOpen?: boolean;
@@ -66,6 +68,7 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
   
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState('');
   const [bodyFat, setBodyFat] = useState('');
   const [arm, setArm] = useState('');
   const [chest, setChest] = useState('');
@@ -117,6 +120,8 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
   };
 
   const handleSave = async () => {
+    const heightIn = heightToInches(height);
+    if (!heightIn) { toast.error("Add your current height to save this photo."); return; }
     setSaving(true);
     console.log('[VaultProgressPhotosCard] Saving progress photos...');
     const result = await onSave({
@@ -128,6 +133,7 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
       waist_measurement: waist ? parseFloat(waist) : null,
       leg_measurement: leg ? parseFloat(leg) : null,
       notes: notes || null,
+      height_inches: heightIn,
     });
     console.log('[VaultProgressPhotosCard] Save result:', result);
     
@@ -136,6 +142,7 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
       setJustSaved(true); // Immediately show as locked
       setSelectedFiles([]);
       setWeight('');
+      setHeight('');
       setBodyFat('');
       setArm('');
       setChest('');
@@ -243,6 +250,13 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
                   )}
                 </div>
 
+                {/* Height — required with every progress photo */}
+                <div className="space-y-1.5 rounded-md border border-primary/30 bg-primary/5 p-3">
+                  <Label htmlFor="photo-height" className="text-sm font-semibold">Your height today (required)</Label>
+                  <HeightFeetInchesInput id="photo-height" value={height} onChange={setHeight} required />
+                  <p className="text-xs text-muted-foreground">Every progress photo needs your current height so your plan can adjust as you grow.</p>
+                </div>
+
                 {/* Measurements */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
@@ -324,7 +338,7 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
                   />
                 </div>
 
-                <Button onClick={handleSave} disabled={saving} className="w-full">
+                <Button onClick={handleSave} disabled={saving || !heightToInches(height)} className="w-full">
                   {saving ? t('common.loading') : t('vault.progressPhotos.save')}
                 </Button>
               </>
