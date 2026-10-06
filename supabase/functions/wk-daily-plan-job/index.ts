@@ -95,6 +95,7 @@ Deno.serve(async (req) => {
     .from("profiles")
     .select("id, timezone")
     .not("hammers_today_started_at", "is", null)
+    .is("account_paused_at", null)
     .limit(limit);
   if (error) return json({ error: error.message }, 500);
 

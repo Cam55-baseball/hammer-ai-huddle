@@ -19,6 +19,8 @@ export async function recruitingGate(
   await Promise.all([...new Set(athleteIds)].map(async (id) => {
     if (id === viewerId) { out.set(id, "visible"); return; }
     try {
+      const { data: pz } = await admin.from("profiles").select("account_paused_at").eq("id", id).maybeSingle();
+      if (pz?.account_paused_at) { out.set(id, "waiting_on_guardian"); return; }
       const [coach, minor, scoped] = await Promise.all([
         admin.rpc("is_coach_of", { _coach: viewerId, _athlete: id }),
         admin.rpc("is_minor", { _user_id: id }),
