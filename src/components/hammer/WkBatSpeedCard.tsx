@@ -25,6 +25,8 @@ import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
 import { WkSessionShapeLine } from "@/components/hammer/WkProgressionNote";
+import { useAthletePositions } from "@/hooks/useAthletePositions";
+import { playerRole } from "@/lib/hammer/startPlanItems";
 
 interface Props {
   /** For switch hitters, render this card twice — once per side. */
@@ -32,6 +34,7 @@ interface Props {
 }
 
 export function WkBatSpeedCard({ side = null }: Props = {}) {
+  const throws = playerRole(useAthletePositions().positions) !== "position";
   const { grouped, reductions: rawReductions, generate, generating, isLoading, failed, failureReason, retry, snapshotIdentity, dayKind } = useHammersToday();
   // Step 24 item 2 — a swing notice belongs here, on the hitting card.
   const swingNotices = noticesForSurface(rawReductions ?? [], "swing");
@@ -61,7 +64,7 @@ export function WkBatSpeedCard({ side = null }: Props = {}) {
             <CollapsibleTrigger asChild>
               <button type="button" className="flex items-center gap-2 min-w-0 text-left flex-1" aria-expanded={open}>
                 <Bolt className="h-4 w-4 text-fuchsia-500 shrink-0" />
-                <span className="truncate">Bat Speed{sideLabel ? ` — ${sideLabel}` : ""}</span>
+                <span className="truncate">{throws ? "Bat speed: velocity training" : "Bat Speed"}{sideLabel ? ` — ${sideLabel}` : ""}</span>
                 {sideLabel && (
                   <Badge variant="outline" className="text-[10px] border-primary/50 text-primary">
                     {side}
@@ -78,6 +81,7 @@ export function WkBatSpeedCard({ side = null }: Props = {}) {
             </Button>
           </CardTitle>
           {label && <div className="text-[11px] text-muted-foreground line-clamp-2">{label}</div>}
+          {throws && <p className="text-[11px] leading-5 text-muted-foreground">Bat speed builds the hip-and-shoulder power that carries into your fastball.</p>}
         </CardHeader>
         <CollapsibleContent>
           <CardContent className="space-y-2">

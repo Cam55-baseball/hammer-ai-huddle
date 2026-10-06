@@ -22,6 +22,7 @@ import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton"
 import { HMLoadingProvider } from "./components/loading/HMLoadingScreen";
 import { SportThemeProvider } from "./contexts/SportThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AccountGate } from "@/components/auth/AccountGate";
 import { SideContextProvider } from "@/contexts/SideContext";
 import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
 import { VideoMomentHost } from "@/components/video-suggestions/VideoMomentHost";
@@ -308,6 +309,7 @@ const App = () => {
             <PurchaseConfirmationWatcher />
             <Suspense fallback={<PageLoadingSkeleton />}>
               <DemoGate>
+              <AccountGate>
               <Routes>
               <Route path="/" element={<Index />} />
               {import.meta.env.DEV && (
@@ -558,6 +560,7 @@ const App = () => {
               <Route path="/demo/:tier/:category/:submodule" element={<DemoSubmodule />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
+              </AccountGate>
               <DemoTourHost />
               </DemoGate>
             </Suspense>

@@ -85,12 +85,14 @@ export interface FinalCheckContext {
   gameTomorrow?: boolean;
   /** Training already completed today in another program (Iron Bambino, Speed Lab …). */
   sameDayExternal?: { lift?: boolean; hard_run?: boolean };
+  /** Growth Mode from measured height (growth/growthMode.ts). */
+  growthMode?: boolean;
   catalog: ReadonlyMap<string, CatalogFacts>;
 }
 
 export interface FinalCheckSwap {
   rule: "lift_spacing" | "weekly_lift_max" | "rest_day" | "min_age" | "eccentric_in_season" | "season_legality"
-    | "run_spacing" | "run_before_game" | "jump_spacing" | "bat_consecutive" | "trained_elsewhere_today";
+    | "run_spacing" | "run_before_game" | "jump_spacing" | "bat_consecutive" | "trained_elsewhere_today" | "growth_mode";
   movement_slug: string | null;
   slot: string | null;
   detail: string;
@@ -125,6 +127,12 @@ export function finalRuleCheck<T extends FinalCheckRow>(
     if (facts.eccentric_overload === true && IN_SEASON.has(ctx.phase)) {
       drop.add(r);
       swaps.push({ rule: "eccentric_in_season", movement_slug: slug, slot: r.slot ?? null, detail: ctx.phase });
+      continue;
+    }
+    // Growth Mode (§10.2): easy, rhythmic jumps only; no eccentric overload.
+    if (ctx.growthMode === true && (facts.eccentric_overload === true || rowKinds(r, facts).includes("high_jump"))) {
+      drop.add(r);
+      swaps.push({ rule: "growth_mode", movement_slug: slug, slot: r.slot ?? null, detail: facts.eccentric_overload ? "eccentric overload" : "high-intensity jump" });
       continue;
     }
     const legal = facts.season_legality?.[ctx.phase];

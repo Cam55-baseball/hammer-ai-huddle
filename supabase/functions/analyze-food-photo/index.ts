@@ -1,3 +1,4 @@
+import { isAccountPaused, pausedResponse } from "../_shared/accountPause.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { chatCompletion } from "../_shared/googleAi.ts";
@@ -20,7 +21,6 @@ serve(async (req) => {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -32,6 +32,7 @@ serve(async (req) => {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    if (await isAccountPaused(null, user.id)) return pausedResponse(corsHeaders);
 
     const { data: ownerRole } = await supabase
       .from('user_roles')

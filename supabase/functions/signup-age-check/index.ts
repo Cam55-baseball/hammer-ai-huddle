@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
         allowed: false,
         age_band: ageBand,
         message:
-          "Signing up at this age requires a parent or guardian, and that isn't available yet. Account creation can't continue.",
+          "Players under 13 need a parent or guardian to set up and manage their account.",
       });
     }
 

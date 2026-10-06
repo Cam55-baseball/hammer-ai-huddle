@@ -1100,8 +1100,9 @@ export function useVault() {
     setProgressPhotos((data || []).map(p => ({ ...p, photo_urls: (p.photo_urls as string[]) || [] })));
   }, [user]);
 
-  const saveProgressPhoto = useCallback(async (photoData: { photos: File[]; weight_lbs: number | null; body_fat_percent: number | null; arm_measurement: number | null; chest_measurement: number | null; waist_measurement: number | null; leg_measurement: number | null; notes: string | null; }) => {
+  const saveProgressPhoto = useCallback(async (photoData: { photos: File[]; weight_lbs: number | null; body_fat_percent: number | null; arm_measurement: number | null; chest_measurement: number | null; waist_measurement: number | null; leg_measurement: number | null; notes: string | null; height_inches: number; }) => {
     if (!user) return { success: false };
+    if (!(photoData.height_inches > 0)) return { success: false };
     const photoUrls: string[] = [];
     for (const file of photoData.photos) {
       const path = `${user.id}/progress/${Date.now()}_${file.name}`;
@@ -1135,6 +1136,7 @@ export function useVault() {
       user_id: user.id, photo_urls: photoUrls, weight_lbs: photoData.weight_lbs, body_fat_percent: photoData.body_fat_percent,
       arm_measurement: photoData.arm_measurement, chest_measurement: photoData.chest_measurement, waist_measurement: photoData.waist_measurement,
       leg_measurement: photoData.leg_measurement, notes: photoData.notes,
+      height_inches: photoData.height_inches,
       next_entry_date: nextEntryDate.toISOString().split('T')[0],
       cycle_week: cycleWeek,
     } as any);

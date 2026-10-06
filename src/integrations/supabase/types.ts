@@ -11297,6 +11297,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_paused_at: string | null
           act_score: number | null
           activation_choice: string | null
           activity_level: string | null
@@ -11338,6 +11339,7 @@ export type Database = {
           mlb_affiliate: string | null
           ncaa_id: string | null
           one_rm: Json | null
+          paused_reason: string | null
           position: string | null
           positions: string[]
           preferred_language: string | null
@@ -11368,6 +11370,7 @@ export type Database = {
           years_affiliated: number | null
         }
         Insert: {
+          account_paused_at?: string | null
           act_score?: number | null
           activation_choice?: string | null
           activity_level?: string | null
@@ -11409,6 +11412,7 @@ export type Database = {
           mlb_affiliate?: string | null
           ncaa_id?: string | null
           one_rm?: Json | null
+          paused_reason?: string | null
           position?: string | null
           positions?: string[]
           preferred_language?: string | null
@@ -11439,6 +11443,7 @@ export type Database = {
           years_affiliated?: number | null
         }
         Update: {
+          account_paused_at?: string | null
           act_score?: number | null
           activation_choice?: string | null
           activity_level?: string | null
@@ -11480,6 +11485,7 @@ export type Database = {
           mlb_affiliate?: string | null
           ncaa_id?: string | null
           one_rm?: Json | null
+          paused_reason?: string | null
           position?: string | null
           positions?: string[]
           preferred_language?: string | null
@@ -15453,6 +15459,7 @@ export type Database = {
           chest_measurement: number | null
           created_at: string | null
           cycle_week: number | null
+          height_inches: number | null
           id: string
           leg_measurement: number | null
           next_entry_date: string | null
@@ -15470,6 +15477,7 @@ export type Database = {
           chest_measurement?: number | null
           created_at?: string | null
           cycle_week?: number | null
+          height_inches?: number | null
           id?: string
           leg_measurement?: number | null
           next_entry_date?: string | null
@@ -15487,6 +15495,7 @@ export type Database = {
           chest_measurement?: number | null
           created_at?: string | null
           cycle_week?: number | null
+          height_inches?: number | null
           id?: string
           leg_measurement?: number | null
           next_entry_date?: string | null
@@ -20375,6 +20384,7 @@ export type Database = {
             }
             Returns: string
           }
+      is_account_paused: { Args: { _user_id: string }; Returns: boolean }
       is_authorizing_parent: {
         Args: { _athlete: string; _parent: string }
         Returns: boolean
@@ -20389,6 +20399,7 @@ export type Database = {
         Returns: boolean
       }
       is_minor: { Args: { _user_id: string }; Returns: boolean }
+      is_my_account_paused: { Args: never; Returns: boolean }
       is_org_coach_or_owner: {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean

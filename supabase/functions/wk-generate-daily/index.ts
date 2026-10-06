@@ -183,7 +183,9 @@ import {
   resolvePersonalizationContext,
   type PersonalizationContext,
 } from "../_shared/wic/personalizationContext.ts";
-import { filterUbCatalog, trainingAgeBand, ubGrowthMode } from "../_shared/wic/ubPlyo/liveFilter.ts";
+import { ageFromDob, AGE_UNKNOWN_FLOOR } from "../_shared/age/ageFromDob.ts";
+import { growthMode, growthModeNote } from "../_shared/wic/growth/growthMode.ts";
+import { filterUbCatalog, trainingAgeBand } from "../_shared/wic/ubPlyo/liveFilter.ts";
 import { doseCap as ubDoseCap } from "../_shared/wic/ubPlyo/rules.ts";
 import { UB_MOVEMENTS } from "../_shared/wic/ubPlyo/families.ts";
 const ubLetterOf = (slug: string): any => {
@@ -231,6 +233,7 @@ function ruleCheckNote(rules: readonly string[]): string {
   if (r.has("lift_spacing") || r.has("weekly_lift_max") || r.has("rest_day")) return "Your body needs more rest between lifts, so today's lift came out.";
   if (r.has("run_spacing")) return "You had hard running yesterday, so today's run came out.";
   if (r.has("jump_spacing")) return "You had big jumps yesterday, so today's jumps came out.";
+  if (r.has("growth_mode")) return "You're growing fast right now, so big jumps and heavy eccentric work came out for now.";
   if (r.has("bat_consecutive")) return "Heavy and light bat work can't be two days in a row, so it came out.";
   return "One exercise didn't fit your age or season, so we took it out.";
 }
@@ -461,8 +464,12 @@ const handler = async (req: Request): Promise<Response> => {
     {
       const [{ data: gateRows }, { data: startRow }] = await Promise.all([
         admin.from("wk_feature_switches").select("feature_key, mode, allowlist, updated_by").eq("feature_key", "hammers_today_start_gate"),
-        admin.from("profiles").select("hammers_today_started_at").eq("id", user.id).maybeSingle(),
+        admin.from("profiles").select("hammers_today_started_at, account_paused_at").eq("id", user.id).maybeSingle(),
       ]);
+      // Paused accounts (under 13 pending a parent/guardian) never get a plan.
+      if ((startRow as any)?.account_paused_at) {
+        return json({ error: "account_paused", message: "This account is paused until a parent or guardian sets it up." }, 409);
+      }
       const gateRow = ((gateRows ?? []) as any[])[0];
       const gateOn = !!gateRow && (gateRow.mode === "all" ||
         (gateRow.mode === "pilot" && (gateRow.allowlist ?? []).includes(user.id)) ||
@@ -523,13 +530,15 @@ const handler = async (req: Request): Promise<Response> => {
         const byDate = new Map<string, any[]>();
         for (const r of (vPrior ?? []) as any[]) byDate.set(String(r.plan_date), [...(byDate.get(String(r.plan_date)) ?? []), r]);
         const vMerged = mergeExternal(vExt, planDate, [...byDate.entries()].filter(([, rs]) => loadedLiftRows(rs).length > 0).map(([d]) => d), vPriorKinds as any);
-        const dob = (vCtx as any)?.date_of_birth ? Date.parse(String((vCtx as any).date_of_birth)) : NaN;
-        const vAge = Number.isFinite(dob) ? Math.floor((Date.parse(`${planDate}T00:00:00Z`) - dob) / (365.25 * 86_400_000)) : null;
+        const vAge = ageFromDob((vCtx as any)?.date_of_birth, planDate);
+        const { data: vH } = await admin.from("athlete_height_checks").select("measured_on, inches").eq("user_id", user.id)
+          .gte("measured_on", new Date(Date.parse(`${planDate}T00:00:00Z`) - 200 * 86_400_000).toISOString().slice(0, 10)).lte("measured_on", planDate).order("measured_on");
+        const vGrowth = growthMode(((vH ?? []) as any[]).map((h) => ({ date: h.measured_on, inches: Number(h.inches) })), planDate).active;
         const vPhase = String(savedRows.find((r) => r.phase)?.phase ?? "in_season");
         const vSpacing = resolveFeatures((vSw ?? []) as any, user.id).rest_day_calculator === true;
         // Marked cards are never touched, so only unmarked rows are checked.
         const vCheck = finalRuleCheck(savedRows.filter((r) => !isMarkedRow(r)), {
-          planDate, phase: vPhase, age: vAge, priorLiftDates: vMerged.priorLiftDates,
+          planDate, phase: vPhase, age: vAge, growthMode: vGrowth, priorLiftDates: vMerged.priorLiftDates,
           restDaysBetweenLifts: vSpacing ? 2 : null,
           weeklyLiftMax: vSpacing && vPhase === "in_season" ? 2 : null,
           liftRemoved: false,
@@ -659,6 +668,18 @@ const handler = async (req: Request): Promise<Response> => {
     ]);
 
     const p: any = profile ?? {};
+    // ONE age source (owner ruling 2026-10-06): profiles.date_of_birth only.
+    const athleteAgeYears: number | null = ageFromDob(p.date_of_birth, planDate);
+    // ONE growth rule: measured height only (docs/wic/training-intelligence-v1.md §10.2).
+    const { data: heightRows } = await admin
+      .from("athlete_height_checks")
+      .select("measured_on, inches")
+      .eq("user_id", user.id)
+      .gte("measured_on", isoShift(planDate, -200))
+      .lte("measured_on", planDate)
+      .order("measured_on");
+    const heightReadings = ((heightRows ?? []) as any[]).map((h) => ({ date: h.measured_on as string, inches: Number(h.inches) }));
+    const growthState = growthMode(heightReadings, planDate);
     const sport = (p.sport ?? "baseball") as "baseball" | "softball";
     const position = p.primary_position ?? p.position ?? null;
     // Every position label the athlete holds, for the domain scope gate.
@@ -1038,8 +1059,7 @@ const handler = async (req: Request): Promise<Response> => {
         const days = (tier: string[], from: string) => new Set(
           (ubLogs ?? []).filter((r: any) => r.plan_date >= from && (r.sets_completed ?? 1) > 0 && tier.includes(tierBySlug.get(r.movement_slug) ?? "")).map((r: any) => r.plan_date),
         ).size;
-        const dob = (p as any).date_of_birth ? new Date(`${(p as any).date_of_birth}T00:00:00Z`) : null;
-        const ubAge = dob ? Math.floor((new Date(`${planDate}T12:00:00Z`).getTime() - dob.getTime()) / (365.25 * 86400000)) : null;
+        const ubAge = athleteAgeYears;
         const dayMs = (d: string) => new Date(`${d}T00:00:00Z`).getTime();
         const startOffsets = [
           ...(gamesToday ?? []).filter((g: any) => g.is_starting_pitcher).map((g: any) => g.game_date),
@@ -1049,15 +1069,7 @@ const handler = async (req: Request): Promise<Response> => {
         ].map((d: string) => Math.round((dayMs(d) - dayMs(planDate)) / 86400000));
         const isPitcher = athletePositions.some((x) => /pitch|^p$|rhp|lhp|sp|rp/.test(x));
         const weekStart = isoShift(planDate, -((new Date(`${planDate}T12:00:00Z`).getUTCDay() + 6) % 7));
-        // Real growth from height checks (same trigger as growth-adjusted pitching age); unknown = not growing.
-        const { data: ubHeights } = await admin
-          .from("athlete_height_checks")
-          .select("measured_on, inches")
-          .eq("user_id", user.id)
-          .gte("measured_on", isoShift(planDate, -120))
-          .lte("measured_on", planDate)
-          .order("measured_on");
-        const ubGrowth = ubGrowthMode(ubAge, (ubHeights ?? []).map((h: any) => ({ date: h.measured_on, inches: Number(h.inches) })), planDate);
+        const ubGrowth = growthState.active;
         const f = filterUbCatalog(libBase as any[], {
           phase: phaseRes.phase as any,
           ageYears: ubAge,
@@ -1479,11 +1491,10 @@ const handler = async (req: Request): Promise<Response> => {
     // Both are OFF by default. With the switch off, `arcMethod` stays null and
     // `inSeasonPlan.applies` stays false, so every dose and every timing string
     // is byte-identical to today.
-    const athleteAgeYears = Number(p.age ?? p.age_years ?? p.chronological_age ?? null) || null;
     const heavyEligible = isHeavyEligible({
       ageYears: athleteAgeYears,
       trainingAgeYears,
-      growthMode: athleteAgeYears != null && athleteAgeYears <= 15,
+      growthMode: growthState.active,
       painFlag: injurySlugs.size > 0,
     });
 
@@ -1575,7 +1586,7 @@ const handler = async (req: Request): Promise<Response> => {
       cnsReadiness,
       sleepHours: sleep,
       soreness,
-      ageYears: Number(p.age ?? p.age_years ?? p.chronological_age ?? null) || null,
+      ageYears: athleteAgeYears,
       trainingAgeYears,
       hoursSinceSpeed: 9999,
       hoursSinceLift: 9999,
@@ -1732,8 +1743,8 @@ const handler = async (req: Request): Promise<Response> => {
     // a duplicate single-slot category was noticed — by then the whole plan was
     // already dead. These two objects move those exact rules in FRONT of
     // selection, so an illegal candidate is never proposed in the first place.
-    const chronologicalAgeYears: number | null =
-      Number((athleteContext as any)?.development?.chronological_age ?? NaN) || null;
+    // Unknown birthdate → the app minimum (13), never a guess upward.
+    const chronologicalAgeYears: number | null = athleteAgeYears ?? AGE_UNKNOWN_FLOOR;
     const trainingAgeClassForSelection: string | null =
       ((trainingAgeContext as any)?.classification ?? null) as string | null;
     const categoryBudget = createCategoryBudget();
@@ -2652,7 +2663,7 @@ const handler = async (req: Request): Promise<Response> => {
       planDate,
       prescriptions: (historyRxRows ?? []) as any,
       logs: (historyLogRows ?? []) as any,
-      ageYears: Number(p.age ?? p.age_years ?? p.chronological_age ?? null) || null,
+      ageYears: athleteAgeYears,
       trainingAgeYears: trainingAgeYears ?? null,
     });
 
@@ -3203,7 +3214,6 @@ const handler = async (req: Request): Promise<Response> => {
           : phaseRes.phase === "post_season"
           ? "B5"
           : null;
-        const govAge = Number(p.age ?? p.age_years ?? p.chronological_age ?? NaN);
         const buildYesterday = (["LIFT", "JUMP", "UB_PLYO", "SPRINT", "THROW", "SWING"] as const)
           .filter((c) => wasBuildDay(ledger, isoAdd(planDate, -1), c));
         const teamLoad = (ledger.find((d) => d.date === planDate)?.entries ?? [])
@@ -3217,7 +3227,7 @@ const handler = async (req: Request): Promise<Response> => {
           ctx: {
             block: blockId,
             inSeason: phaseRes.phase === "in_season",
-            growthMode: Number.isFinite(govAge) && govAge <= 15,
+            growthMode: growthState.active,
             buildYesterday: [...buildYesterday],
             pitchSmartRestDay: false,
           },
@@ -3880,7 +3890,7 @@ const handler = async (req: Request): Promise<Response> => {
     };
     const methodAthleteCtx = {
       trainingAgeClass: (((trainingAgeContext as any)?.classification ?? "beginner") as any),
-      ageYears: ((athleteContext as any)?.ageYears ?? (Number(p.age ?? p.age_years ?? 0) || null)) as number | null,
+      ageYears: ((athleteContext as any)?.ageYears ?? athleteAgeYears) as number | null,
       strengthFloorCleared,
       hasActiveInjury: injurySlugs.size > 0,
       equipment: ((availableEquipmentCtx as string[]) ?? []),
@@ -4544,7 +4554,6 @@ const handler = async (req: Request): Promise<Response> => {
         priorByDate.set(d, [...(priorByDate.get(d) ?? []), r]);
       }
       const priorLiftDates = [...priorByDate.entries()].filter(([, rs]) => loadedLiftRows(rs).length > 0).map(([d]) => d);
-      const fcAge = Number((athleteContext as any)?.development?.chronological_age ?? NaN);
       const enforceSpacing = features.rest_day_calculator === true;
       const fcPhase = String(phaseRes.phase);
       const fcCatMap = new Map(((fcCat ?? []) as any[]).map((c) => [String(c.slug), c]));
@@ -4556,7 +4565,8 @@ const handler = async (req: Request): Promise<Response> => {
       const checked = finalRuleCheck(rows as any[], {
         planDate,
         phase: fcPhase,
-        age: Number.isFinite(fcAge) ? fcAge : null,
+        age: athleteAgeYears,
+        growthMode: growthState.active,
         priorLiftDates: fcMerged.priorLiftDates,
         sameDayExternal: fcMerged.sameDayExternal,
         restDaysBetweenLifts: enforceSpacing ? 2 : null,

@@ -17,7 +17,7 @@ describe("Step 26 B — growth-adjusted pitching age", () => {
     const g = growthAdjustment(13, [{ date: "2026-08-25", inches: 62 }, { date: "2026-09-24", inches: 63 }], today);
     expect(g.active).toBe(true);
     expect(g.band.label).toBe(PITCH_SMART_BANDS[bandIndex(13) - 1].label);
-    expect(g.until).toBe("2026-11-19");
+    expect(g.until).toBe("2026-11-18");
     expect(g.athleteLine).toBe(GROWTH_RULE.athleteLine);
     expect(g.staffLabel).toContain("growth-adjusted pitching age");
     expect(g.grounding).toContain("not a published figure");
@@ -27,15 +27,15 @@ describe("Step 26 B — growth-adjusted pitching age", () => {
     const g = growthAdjustment(13, [{ date: "2026-06-01", inches: 62 }, { date: "2026-06-30", inches: 63 }], today);
     expect(g.active).toBe(false);
   });
-  it("two inches drop two bands and extend to 16 weeks; floor is the youngest band", () => {
+  it("one shared growth rule: big growth still drops one band for 8 weeks; floor is the youngest band", () => {
     const g = growthAdjustment(13, [{ date: "2026-09-01", inches: 60 }, { date: "2026-09-28", inches: 62 }], today);
-    expect(g.bandsDropped).toBe(2);
-    expect(g.until).toBe("2027-01-18");
+    expect(g.bandsDropped).toBe(1);
+    expect(g.until).toBe("2026-11-22");
     const f = growthAdjustment(8, [{ date: "2026-09-01", inches: 50 }, { date: "2026-09-28", inches: 53 }], today);
     expect(f.band.label).toBe(PITCH_SMART_BANDS[0].label);
   });
-  it("under an inch never triggers", () => {
-    expect(growthAdjustment(13, [{ date: "2026-09-01", inches: 60 }, { date: "2026-09-28", inches: 60.9 }], today).active).toBe(false);
+  it("under ¾ inch never triggers", () => {
+    expect(growthAdjustment(13, [{ date: "2026-09-01", inches: 60 }, { date: "2026-09-28", inches: 60.7 }], today).active).toBe(false);
   });
 });
 

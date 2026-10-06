@@ -65,6 +65,7 @@ export async function fetchShadowData(
     quizzes,
     dailyLogs,
     pitcherSettings, pitcherOutings, pitcherAvailability,
+    profileDob, heightRows,
   ] = await Promise.all([
     db.from("athlete_mpi_settings").select(
       "sport,primary_position,date_of_birth,season_status,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date",
@@ -117,6 +118,9 @@ export async function fetchShadowData(
     db.from("pitcher_outings").select("id, outing_type, planned_date, actual_date, status").eq("user_id", userId)
       .or(`planned_date.gte.${windowStart},actual_date.gte.${windowStart}`).limit(200),
     db.from("pitcher_availability").select("date, available").eq("user_id", userId).gte("date", today).lte("date", horizonEnd),
+    // ONE age source (profiles.date_of_birth) and ONE growth rule (measured height).
+    db.from("profiles").select("date_of_birth").eq("id", userId).maybeSingle(),
+    db.from("athlete_height_checks").select("measured_on, inches").eq("user_id", userId).order("measured_on").limit(200),
   ]);
   const pitcherScheduleError = [pitcherSettings, pitcherOutings, pitcherAvailability].some((r) => !!r.error);
 
@@ -126,7 +130,8 @@ export async function fetchShadowData(
     timezone,
     windowStart,
     horizonEnd,
-    mpi: (mpiRes as any)?.data ?? null,
+    mpi: { ...(((mpiRes as any)?.data) ?? {}), date_of_birth: (profileDob as any)?.data?.date_of_birth ?? null },
+    heights: (((heightRows as any)?.data ?? []) as any[]).map((h) => ({ date: h.measured_on, inches: Number(h.inches) })),
     context: (contextRes as any)?.data ?? null,
     prescriptions: prescriptions as any,
     sessionLogs: sessionLogs as any,

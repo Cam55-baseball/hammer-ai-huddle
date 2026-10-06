@@ -18,6 +18,8 @@ import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import { HeightFeetInchesInput, heightToInches } from "@/components/shared/HeightFeetInchesInput";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { clearDraftSlot, type DraftSlot } from "@/lib/onboarding/draftStore";
+import { isSignupDeviceLocked, lockSignupDevice, yearsOldFromDob } from "@/lib/auth/under13Lock";
+import { Under13Block } from "@/components/auth/Under13Block";
 import { NotificationPrimer, shouldAskNotifications } from "@/components/onboarding/NotificationPrimer";
 
 type Draft = {
@@ -94,6 +96,7 @@ export default function UnifiedSignupOnboarding() {
   const [primerOpen, setPrimerOpen] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const finishing = useRef(false);
+  const [under13, setUnder13] = useState<boolean>(() => !user && isSignupDeviceLocked());
   const minor = draft.dateOfBirth ? yearsOld(draft.dateOfBirth) >= 13 && yearsOld(draft.dateOfBirth) < 18 : false;
   const screen: ScreenKey = SCREENS[draft.step] ?? "finish";
 
@@ -127,6 +130,15 @@ export default function UnifiedSignupOnboarding() {
   const [confirmExit, setConfirmExit] = useState(false);
   const exitRef = useRef<() => void>(() => {});
   exitRef.current = () => { if (!finishing.current) setConfirmExit(true); };
+  /** Under 13: no account, nothing kept, this device locked for 30 days. */
+  const blockUnder13 = () => {
+    finishing.current = true;
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    setDraft(EMPTY);
+    lockSignupDevice();
+    setUnder13(true);
+  };
+
   const leaveAndDiscard = () => {
     finishing.current = true; // stop the autosave effect re-writing the draft
     try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
@@ -171,6 +183,8 @@ export default function UnifiedSignupOnboarding() {
     if (s === "password" && draft.password.length < 6) return fail("Use at least 6 characters for your password.");
     if (s === "age") {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.dateOfBirth)) return fail("Enter your date of birth.");
+      const y = yearsOldFromDob(draft.dateOfBirth);
+      if (y !== null && y < 13) { blockUnder13(); return false; }
       if (minor && !z.string().email().safeParse(draft.guardianEmail).success) return fail("Enter a valid parent or guardian email.");
     }
     if (s === "name" && (!draft.firstName.trim() || !draft.lastName.trim())) return fail("Enter your first and last name.");
@@ -189,7 +203,7 @@ export default function UnifiedSignupOnboarding() {
     try {
       const { data: age, error: ageError } = await supabase.functions.invoke("signup-age-check", { body: { date_of_birth: draft.dateOfBirth } });
       if (ageError || !age || typeof age.allowed !== "boolean") return fail("We couldn't verify age. Please try again.");
-      if (!age.allowed) return fail(age.message ?? "Account creation can't continue for this age.");
+      if (!age.allowed) { blockUnder13(); return false; }
       const fullName = `${draft.firstName.trim()} ${draft.lastName.trim()}`;
       const { data, error } = await signUp(draft.email.trim(), draft.password, fullName, {
         date_of_birth: draft.dateOfBirth,
@@ -244,7 +258,7 @@ export default function UnifiedSignupOnboarding() {
         ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
         // Signed-in restarts skip the age screen; keep the date already on the account.
         ...((draft.dateOfBirth || (user.user_metadata?.date_of_birth as string | undefined)) ? { date_of_birth: draft.dateOfBirth || (user.user_metadata?.date_of_birth as string) } : {}), position: draft.position.trim(), experience_level: draft.level,
-        height: draft.height, weight: draft.weight, state: draft.state.trim(),
+        height: draft.height, height_inches: heightToInches(draft.height), weight: draft.weight, state: draft.state.trim(),
         high_school_grad_year: Number(draft.graduationYear), graduation_year: Number(draft.graduationYear),
         team_affiliation: draft.team.trim(), throwing_hand: draft.throwingHand as "L" | "R",
         // profiles.batting_side enum is R/L/B — "Switch" is stored as B there.
@@ -291,6 +305,7 @@ export default function UnifiedSignupOnboarding() {
 
   const toggle = (v: string, cur: string, label: string, onPick: (v: string) => void) => choice(v, cur, label, onPick);
 
+  if (under13) return <Under13Block />;
   return <Frame step={shownStep} total={shownTotal} progress={progress} group={GROUP[screen]} onExit={() => exitRef.current()}>
     <AnimatePresence mode="wait" initial={false} custom={direction}>
       <motion.div key={draft.step} custom={direction} initial={{ opacity: 0, x: direction * 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: direction * -18 }} transition={{ duration: 0.22 }} className="flex min-h-[430px] flex-col motion-reduce:transform-none">
@@ -323,12 +338,12 @@ export default function UnifiedSignupOnboarding() {
     switch (screen) {
       case "email": return <>{title("What's your email?", "This will be your sign-in and the place we send account updates.")}<Label htmlFor="new-email">Email</Label><div className="relative mt-2"><Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" /><Input id="new-email" autoFocus type="email" autoComplete="email" className="h-12 pl-10" value={draft.email} onChange={(e) => patch({ email: e.target.value })} placeholder="you@example.com" /></div></>;
       case "password": return <>{title("Create a strong password")}<Label htmlFor="new-password">Password</Label><div className="relative mt-2"><LockKeyhole className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground"/><Input id="new-password" autoFocus type={showPassword ? "text" : "password"} autoComplete="new-password" className="h-12 pl-10 pr-11" value={draft.password} onChange={(e) => patch({ password: e.target.value })}/><Button type="button" variant="ghost" size="icon" aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-1 top-1" onClick={() => setShowPassword((v) => !v)}>{showPassword ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</Button></div><p className="mt-2 text-xs text-muted-foreground">At least 6 characters. For your security, passwords are never saved as draft answers.</p></>;
-      case "age": return <>{title("When were you born?", "This keeps the existing age protections in place.")}<Label htmlFor="new-dob">Date of birth</Label><Input id="new-dob" type="date" className="mt-2 h-12" max={new Date().toISOString().slice(0,10)} value={draft.dateOfBirth} onChange={(e) => patch({ dateOfBirth: e.target.value })}/>{minor && <div className="mt-4"><Label htmlFor="guardian">Parent or guardian email</Label><Input id="guardian" type="email" className="mt-2 h-12" value={draft.guardianEmail} onChange={(e) => patch({ guardianEmail: e.target.value })}/><p className="mt-2 text-xs leading-5 text-muted-foreground">We'll notify them that this account was created and how to contact support.</p></div>}</>;
+      case "age": return <>{title("When were you born?")}<Label htmlFor="new-dob">Date of birth</Label><Input id="new-dob" type="date" className="mt-2 h-12" max={new Date().toISOString().slice(0,10)} value={draft.dateOfBirth} onChange={(e) => patch({ dateOfBirth: e.target.value })}/>{minor && <div className="mt-4"><Label htmlFor="guardian">Parent or guardian email</Label><Input id="guardian" type="email" className="mt-2 h-12" value={draft.guardianEmail} onChange={(e) => patch({ guardianEmail: e.target.value })}/><p className="mt-2 text-xs leading-5 text-muted-foreground">We'll notify them that this account was created and how to contact support.</p></div>}</>;
       case "name": return <>{title("What should we call you?")}<div className="grid gap-4"><div><Label htmlFor="first">First name</Label><Input id="first" autoFocus className="mt-2 h-12" value={draft.firstName} onChange={(e) => patch({ firstName: e.target.value })}/></div><div><Label htmlFor="last">Last name</Label><Input id="last" className="mt-2 h-12" value={draft.lastName} onChange={(e) => patch({ lastName: e.target.value })}/></div></div></>;
       case "photo": return <>{title("Add a profile photo", "Optional. You can change it later.")}<label className="mx-auto flex h-48 w-48 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-full border border-dashed border-primary/50 bg-primary/5 text-center">{avatarPreview ? <img src={avatarPreview} alt="Profile preview" className="h-full w-full object-cover"/> : <><Camera className="mb-3 h-8 w-8 text-primary"/><span className="text-sm font-medium">Choose photo</span><span className="mt-1 text-xs text-muted-foreground">Up to 5 MB</span></>}<input type="file" accept="image/*" className="sr-only" onChange={(e) => { const f=e.target.files?.[0]; if(!f) return; if(f.size>5*1024*1024){ fail("Choose a photo smaller than 5 MB."); return; } setAvatarFile(f); setAvatarPreview(URL.createObjectURL(f)); patch({avatarName:f.name}); }}/></label></>;
       case "sport": return <>{title("What's your game?")}<div className="grid grid-cols-2 gap-3">{toggle("baseball",draft.sport,"Baseball",v=>patch({sport:v as Draft["sport"]}))}{toggle("softball",draft.sport,"Softball",v=>patch({sport:v as Draft["sport"]}))}</div><div className="mt-5"><Label htmlFor="position">Primary position</Label><Input id="position" className="mt-2 h-12" value={draft.position} onChange={(e)=>patch({position:e.target.value})} placeholder="Pitcher, catcher, shortstop…"/></div></>;
       case "play": return <>{title("How do you play?", "Your account is created after this screen so every answer that follows can save to you.")}<div className="space-y-5"><div><Label>Batting side</Label><div className="mt-2 grid grid-cols-3 gap-2">{[["R","Right"],["L","Left"],["S","Switch"]].map(([v,l])=>toggle(v,draft.battingSide,l,x=>patch({battingSide:x})))}</div></div><div><Label>Throwing hand</Label><div className="mt-2 grid grid-cols-2 gap-2">{[["R","Right"],["L","Left"]].map(([v,l])=>toggle(v,draft.throwingHand,l,x=>patch({throwingHand:x})))}</div></div><div className="flex items-start gap-3 rounded-md border border-border/70 bg-muted/30 p-3"><Checkbox id="terms" checked={draft.acceptedTerms} onCheckedChange={(v)=>patch({acceptedTerms:v===true})}/><Label htmlFor="terms" className="text-xs font-normal leading-5 text-muted-foreground">I agree to the <Link className="text-foreground underline" target="_blank" to="/terms">Terms</Link> and <Link className="text-foreground underline" target="_blank" to="/privacy">Privacy Policy</Link>.</Label></div></div></>;
-      case "height": return <>{title("Build your physical profile")}<div className="grid gap-5"><div><Label htmlFor="height">Height</Label><div className="mt-2"><HeightFeetInchesInput id="height" value={draft.height} onChange={(v)=>patch({height:v})}/></div></div><div><Label htmlFor="weight">Weight (lb)</Label><Input id="weight" inputMode="numeric" type="number" className="mt-2 h-12" value={draft.weight} onChange={(e)=>patch({weight:e.target.value})}/></div></div></>;
+      case "height": return <>{title("Build your physical profile")}<div className="grid gap-5"><div><Label htmlFor="height">Height</Label><div className="mt-2"><HeightFeetInchesInput id="height" value={draft.height} onChange={(v)=>patch({height:v})} required/></div><p className="mt-2 text-xs leading-5 text-muted-foreground">We'll ask you to update this as you grow.</p></div><div><Label htmlFor="weight">Weight (lb)</Label><Input id="weight" inputMode="numeric" type="number" className="mt-2 h-12" value={draft.weight} onChange={(e)=>patch({weight:e.target.value})}/></div></div></>;
       case "graduation": return <>{title("When do you graduate?")}<Label htmlFor="grad">Graduation year</Label><Input id="grad" autoFocus inputMode="numeric" type="number" min="2020" max="2045" className="mt-2 h-12" value={draft.graduationYear} onChange={(e)=>patch({graduationYear:e.target.value})} placeholder="2028"/></>;
       case "team": return <>{title("Where do you compete?")}<div className="grid gap-4"><div><Label htmlFor="state">State</Label><Input id="state" className="mt-2 h-12" value={draft.state} onChange={(e)=>patch({state:e.target.value})} placeholder="Texas"/></div><div><Label htmlFor="team">Team</Label><Input id="team" className="mt-2 h-12" value={draft.team} onChange={(e)=>patch({team:e.target.value})} placeholder="Team name"/></div></div></>;
       case "level": return <>{title("What's your current level?")}<Select value={draft.level} onValueChange={(v)=>patch({level:v})}><SelectTrigger className="h-12"><SelectValue placeholder="Choose a level"/></SelectTrigger><SelectContent>{["Youth","Middle School","High School","College","Professional","Recreational"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></>;
