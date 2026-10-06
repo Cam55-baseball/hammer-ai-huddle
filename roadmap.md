@@ -13,9 +13,9 @@
 - [x] Stage 5 — career goal direction + rank-goals prompt
 - [x] Stage 6 — The General shows records (preview; published release unverified)
 - [x] Stage 7 — baselines in the plan
-- [ ] Closeout: FRC and softball-distance display renames; full outside-name/jargon audit
-- [ ] Closeout: propose same-night flush placement; owner decides shape before implementation
-- [ ] Closeout: report morning game-question trade-off; owner decides placement
-- [ ] Closeout: wire pitcher schedule to arm care, throwing plan and weekly stress planner
-- [ ] Closeout: phone evidence for Stage 4 and Stage 5; verify as athlete
-- [ ] Closeout: audit failed reads displayed as empty; report confirmed instances
+- [x] Closeout: 40 catalog display renames live; outside-name/jargon findings in docs/wic/remaining-items-closeout.md
+- [x] Closeout: proposed optional game-linked flush after night save; owner decision pending
+- [x] Closeout: morning game-question trade-off reported; owner decision pending
+- [x] Closeout: pitcher connections implemented/tested in checkout; deployment and player/pitcher E2E unverified
+- [ ] Closeout: Stage 4/5 phone-width card screenshots delivered as owner; player verification still owed
+- [ ] Closeout: identified failed-read cases reported; exhaustive all-app audit still unfinished

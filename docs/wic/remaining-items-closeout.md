@@ -17,7 +17,7 @@ Full suite: **252 files, 2,317 tests passed** after final wiring/name edits. Aut
 | `wu_spine_cars` | Segmental spine CARs | Slow Back Bends and Turns |
 | `wu_ankle_cars` | Ankle CARs (seated) | Seated Ankle Circles |
 | `wu_wrist_cars` | Wrist CARs | Controlled Wrist Circles |
-| `wu_scapular_cars` | Scapular CARs (...) | Shoulder-Blade Circles |
+| `wu_scapular_cars` | Scapular CARs (elevation/depression/pro/retract) | Shoulder-Blade Circles |
 | `seated_hip_cars` | Seated Hip CARs | Seated Hip Circles |
 | `kot_jefferson_curl` | Jefferson Curl | Slow Standing Back Curl |
 | `lift_jefferson_curl` | Jefferson Curl | Slow Standing Back Curl |
