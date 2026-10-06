@@ -142,6 +142,8 @@ export interface RawShadowData {
   windowStart: string;
   horizonEnd: string;
   mpi: RawMpi | null;
+  /** Measured heights (growth mode). */
+  heights?: { date: string; inches: number }[];
   context: RawContext | null;
   prescriptions: RawPrescription[];
   sessionLogs: RawSessionLog[];
@@ -475,7 +477,7 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
   const profile: Profile = {
     athleteId: raw.userId,
     age,
-    growthMode: growthMode((raw as any).heights ?? [], raw.today).active,
+    growthMode: growthMode(raw.heights ?? [], raw.today).active,
     trainingAgeBand: trainingAgeBandFrom(raw.context),
     sport: raw.mpi?.sport ?? raw.context?.sport_primary ?? "baseball",
     position: positionRole(position, false),
