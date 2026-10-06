@@ -1,0 +1,2 @@
+- Tour steps live in `tours.ts`; `DemoTourHost` is mounted once in `App.tsx` so tours survive page changes; staff preview via localStorage `hm.tourAs` / `hm.tourModules`. Why: each page remounts its own layout.
+- Spotlight tours own one replace-only navigation entry, always restore their opening route on exit, and render the exit bar while targets load. Why: users must never be trapped on a tour-only page.
