@@ -1,6 +1,5 @@
 import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -37,18 +36,10 @@ const AUTO_FLAG = 'hm_demo_autostarted';
 const LANDING_READY = '[data-tour="landing"]';
 const PLAN_READY = '[data-tour="today-plan-heading"]';
 
-/**
- * Auto-start diagnostic. Always: console line "[demo auto-start] …" and
- * window.__hmDemoAutoStart / localStorage "hm.demoAutoStart" (last outcome).
- * Staff also get one on-screen line per final outcome.
- */
-function autoDiag(reason: string, staff: boolean, final: boolean) {
+/** Internal auto-start outcomes belong only in the debug console, for every role. */
+function autoDiag(reason: string) {
   try {
-    const rec = { reason, at: new Date().toISOString() };
-    (window as unknown as { __hmDemoAutoStart?: unknown }).__hmDemoAutoStart = rec;
-    localStorage.setItem('hm.demoAutoStart', JSON.stringify(rec));
-    console.info('[demo auto-start]', reason);
-    if (staff && final) toast.message('Demo auto-start: ' + reason, { duration: 8000 });
+    console.debug('[demo auto-start]', reason);
   } catch { /* never let diagnostics break anything */ }
 }
 
@@ -82,8 +73,6 @@ export function DemoTourHost() {
   // on this device. Any error: no tour, dashboard untouched. Every outcome is
   // reported by autoDiag() — never a silent no-op.
   const autoTried = useRef(false);
-  const staffRef = useRef(false);
-  staffRef.current = isOwner || isAdmin;
   const roleRef = useRef({ isCoach, isScout });
   roleRef.current = { isCoach, isScout };
   useEffect(() => {
