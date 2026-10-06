@@ -1,6 +1,5 @@
 import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -37,18 +36,10 @@ const AUTO_FLAG = 'hm_demo_autostarted';
 const LANDING_READY = '[data-tour="landing"]';
 const PLAN_READY = '[data-tour="today-plan-heading"]';
 
-/**
- * Auto-start diagnostic. Always: console line "[demo auto-start] …" and
- * window.__hmDemoAutoStart / localStorage "hm.demoAutoStart" (last outcome).
- * Staff also get one on-screen line per final outcome.
- */
-function autoDiag(reason: string, staff: boolean, final: boolean) {
+/** Internal auto-start outcomes belong only in the debug console, for every role. */
+function autoDiag(reason: string) {
   try {
-    const rec = { reason, at: new Date().toISOString() };
-    (window as unknown as { __hmDemoAutoStart?: unknown }).__hmDemoAutoStart = rec;
-    localStorage.setItem('hm.demoAutoStart', JSON.stringify(rec));
-    console.info('[demo auto-start]', reason);
-    if (staff && final) toast.message('Demo auto-start: ' + reason, { duration: 8000 });
+    console.debug('[demo auto-start]', reason);
   } catch { /* never let diagnostics break anything */ }
 }
 
@@ -82,18 +73,16 @@ export function DemoTourHost() {
   // on this device. Any error: no tour, dashboard untouched. Every outcome is
   // reported by autoDiag() — never a silent no-op.
   const autoTried = useRef(false);
-  const staffRef = useRef(false);
-  staffRef.current = isOwner || isAdmin;
   const roleRef = useRef({ isCoach, isScout });
   roleRef.current = { isCoach, isScout };
   useEffect(() => {
     if (!user) return;
-    if (location.pathname !== '/dashboard') { autoDiag('waiting: not on /dashboard (' + location.pathname + ')', staffRef.current, false); return; }
+    if (location.pathname !== '/dashboard') { autoDiag('waiting: not on /dashboard (' + location.pathname + ')'); return; }
     if (open) return;
     if (autoTried.current) return;
-    if (!accessReady) { autoDiag('waiting: plan/role still loading', staffRef.current, false); return; }
+    if (!accessReady) { autoDiag('waiting: plan/role still loading'); return; }
     autoTried.current = true;
-    const stop = (why: string) => autoDiag('skipped: ' + why, staffRef.current, true);
+    const stop = (why: string) => autoDiag('skipped: ' + why);
     try {
       const created = Date.parse((user as { created_at?: string }).created_at ?? '');
       const meta = (user as { user_metadata?: Record<string, unknown> }).user_metadata ?? {};
@@ -117,7 +106,7 @@ export function DemoTourHost() {
       }
       if (!Number.isFinite(pc)) return stop('profile row not found or unreadable after retries');
       if (Date.now() - pc > NEW_ACCOUNT_MS) return stop(`profile is older than 48 hours (created ${new Date(pc).toISOString()})`);
-      autoDiag('waiting: dashboard to finish loading', staffRef.current, false);
+      autoDiag('waiting: dashboard to finish loading');
       let landingAt = 0;
       const wait = window.setInterval(() => {
         if (window.location.pathname !== '/dashboard') { window.clearInterval(wait); return stop('left the dashboard before it finished loading'); }
@@ -134,7 +123,7 @@ export function DemoTourHost() {
           if (window.location.pathname !== '/dashboard') return stop('left the dashboard before the tour opened');
           try { localStorage.setItem(`hm-tour:${user.id}:auto`, JSON.stringify({ result: 'shown', at: Date.now() })); } catch { /* noop */ }
           void supabase.auth.updateUser({ data: { [AUTO_FLAG]: new Date().toISOString() } }).catch(() => {});
-          autoDiag('started', staffRef.current, true);
+          autoDiag('started');
           setOpen(true);
         }, 1200);
       }, 300);
