@@ -21,3 +21,7 @@ Data a minimization review must cover before any under-13 launch:
 - Mental-health journal and career-goal text
 - Training videos, analyses and anything visible to linked coaches or scouts
 - Notification permission and device details
+
+## Status 2026-10-06: built, switched off, waiting on legal sign-off
+The parent-controlled under-13 account is built behind switch `under13_parent_program` (OFF).
+Open legal questions: (1) is typed name + drawn signature + card payment an acceptable verifiable-parental-consent method; (2) do Google AI and OpenAI terms confirm child data sent for analysis is never used for training; (3) Parent Notice and Promise wording; (4) data retention after a parent takes back permission; (5) the consent record's IP/device storage.

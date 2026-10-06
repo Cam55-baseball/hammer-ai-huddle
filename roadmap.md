@@ -26,3 +26,16 @@
 - [x] Closeout: pitcher connections implemented/tested in checkout; deployment and player/pitcher E2E unverified
 - [ ] Closeout: Stage 4/5 phone-width card screenshots delivered as owner; player verification still owed
 - [ ] Closeout: identified failed-read cases reported; exhaustive all-app audit still unfinished
+
+## Round 2 (owner-approved 2026-10-06) — under13_parent_program stays OFF
+- [ ] A. Bat speed wording ("rotational power ... pitching velocity")
+- [ ] B. Under-13 parent-controlled account behind OFF switch (signup, notice, promise, payment, consent record, parent controls, protections)
+- [ ] C. Under-13 Pitch Smart exact, no weighted balls, innings 60/80, 4 months off, FB/CH only
+- [ ] D. 13th birthday → normal account; no teen promise, no 18th step
+- [ ] E. Pause gaps (hydration, base-stealing, hammer-chat, leaderboards, public pages)
+- [ ] F. Round 1 tests (screenshots, growth on/off, 16yo heavy track)
+- [ ] Stress tests 1–19 + daily-plan job scale
+- [ ] Deferral note + youth-throwing doc updates
+- [x] Round 2: switch, consent tables, parent flow, Pitch Smart U13, pause gaps (deployed)
+- [ ] Round 2: signed-in stress tests 1–11, 15, 17 and Round 1 screenshots — waiting on owner approval to sign the preview in as test players
+- [ ] Round 2: daily-plan job scale estimate (case 19)

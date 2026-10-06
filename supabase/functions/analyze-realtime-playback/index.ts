@@ -1,3 +1,4 @@
+import { guardSignedInNotPaused } from "../_shared/accountPause.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { chatCompletion } from "../_shared/googleAi.ts";
 
@@ -1103,6 +1104,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  { const blocked = await guardSignedInNotPaused(req, corsHeaders); if (blocked) return blocked; }
 
   try {
     const { videoId, module, sport, language = 'en', frames = [] } = await req.json();

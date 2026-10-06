@@ -20,3 +20,6 @@ Code: `supabase/functions/_shared/wic/phases/youthThrowing.ts`. Baseball only; s
 1. The fixed annual rest rule (2–3 / 4 months off, longer-of-the-two).
 2. The pitch-type age-unlock table.
 3. The under-14 block on velocity targets and leaderboards.
+
+## Under 13 only (owner ruling 2026-10-06)
+MLB Pitch Smart exactly for players under 13: 4 months off throwing a year (2–3 in a row), fastballs and changeups only, 60 innings a year at 8 and under and 80 at 9–12, no pitching three days in a row, no weighted or plyo balls. Ages 13 and up keep the Step 27 A rules (100 innings through high school).

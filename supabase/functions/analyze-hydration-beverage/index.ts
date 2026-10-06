@@ -1,3 +1,4 @@
+import { guardSignedInNotPaused } from "../_shared/accountPause.ts";
 // Edge function: analyze-hydration-beverage
 // Given a beverage NAME (e.g. "Goat Milk"), returns USDA-style per-oz macros
 // AND micronutrients. Used to lazily enrich hydration_beverage_database
@@ -173,6 +174,7 @@ async function callAI(
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  { const blocked = await guardSignedInNotPaused(req, corsHeaders); if (blocked) return blocked; }
 
   try {
     const authHeader = req.headers.get("Authorization");

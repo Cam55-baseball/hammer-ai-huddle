@@ -1,3 +1,4 @@
+import { guardSignedInNotPaused } from "../_shared/accountPause.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { chatCompletion } from "../_shared/googleAi.ts";
 
@@ -11,6 +12,7 @@ interface Body {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  { const blocked = await guardSignedInNotPaused(req, corsHeaders); if (blocked) return blocked; }
 
   try {
     const body: Body = await req.json().catch(() => ({}));

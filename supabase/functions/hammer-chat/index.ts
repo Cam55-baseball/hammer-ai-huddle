@@ -1,3 +1,4 @@
+import { guardSignedInNotPaused } from "../_shared/accountPause.ts";
 /**
  * Hammer Chat — unified conversational coaching surface.
  *
@@ -79,6 +80,7 @@ CANONICAL_NEXT_STEP = ${nextJson}${focusBlock}`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  { const blocked = await guardSignedInNotPaused(req, corsHeaders); if (blocked) return blocked; }
 
   const hb = startHeartbeat("hammer-chat", { intervalMs: 6_000 });
   try {

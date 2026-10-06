@@ -23,3 +23,24 @@ export function pausedResponse(cors: Record<string, string> = {}): Response {
     status: 403, headers: { ...cors, "Content-Type": "application/json" },
   });
 }
+
+/**
+ * For functions that had no sign-in check: requires a signed-in caller who is
+ * not paused. Returns a Response to send back, or null to continue.
+ */
+export async function guardSignedInNotPaused(req: Request, cors: Record<string, string> = {}): Promise<Response | null> {
+  const auth = req.headers.get("Authorization") ?? "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  const deny = (status: number, error: string) => new Response(JSON.stringify({ error }), { status, headers: { ...cors, "Content-Type": "application/json" } });
+  if (!token) return deny(401, "unauthorized");
+  try {
+    const admin: any = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+    const { data } = await admin.auth.getUser(token);
+    const uid = data?.user?.id;
+    if (!uid) return deny(401, "unauthorized");
+    if (await isAccountPaused(null, uid)) return pausedResponse(cors);
+    return null;
+  } catch {
+    return deny(401, "unauthorized");
+  }
+}

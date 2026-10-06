@@ -3229,6 +3229,30 @@ export type Database = {
         }
         Relationships: []
       }
+      child_data_deletions: {
+        Row: {
+          child_user_id: string
+          consent_id: string | null
+          created_at: string
+          id: string
+          removed: Json
+        }
+        Insert: {
+          child_user_id: string
+          consent_id?: string | null
+          created_at?: string
+          id?: string
+          removed?: Json
+        }
+        Update: {
+          child_user_id?: string
+          consent_id?: string | null
+          created_at?: string
+          id?: string
+          removed?: Json
+        }
+        Relationships: []
+      }
       coach_context: {
         Row: {
           age_groups: string[] | null
@@ -3455,6 +3479,27 @@ export type Database = {
           tier_at_time?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      consent_texts: {
+        Row: {
+          body: string
+          created_at: string
+          kind: string
+          version: number
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          kind: string
+          version: number
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          kind?: string
+          version?: number
         }
         Relationships: []
       }
@@ -10595,6 +10640,81 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_consents: {
+        Row: {
+          child_display_name: string
+          child_user_id: string
+          created_at: string
+          id: string
+          ip: string | null
+          notice_version: number
+          optional_sharing: boolean
+          optional_sharing_at: string | null
+          parent_birthdate: string
+          parent_email: string
+          parent_full_name: string
+          parent_is_adult: boolean
+          payment_confirmed_at: string | null
+          promise_text: string
+          promise_version: number
+          relationship: string
+          signature_path: string
+          signed_at: string
+          stripe_payment_id: string | null
+          typed_name: string
+          user_agent: string | null
+          withdrawn_at: string | null
+        }
+        Insert: {
+          child_display_name: string
+          child_user_id: string
+          created_at?: string
+          id?: string
+          ip?: string | null
+          notice_version: number
+          optional_sharing?: boolean
+          optional_sharing_at?: string | null
+          parent_birthdate: string
+          parent_email: string
+          parent_full_name: string
+          parent_is_adult: boolean
+          payment_confirmed_at?: string | null
+          promise_text: string
+          promise_version: number
+          relationship: string
+          signature_path: string
+          signed_at?: string
+          stripe_payment_id?: string | null
+          typed_name: string
+          user_agent?: string | null
+          withdrawn_at?: string | null
+        }
+        Update: {
+          child_display_name?: string
+          child_user_id?: string
+          created_at?: string
+          id?: string
+          ip?: string | null
+          notice_version?: number
+          optional_sharing?: boolean
+          optional_sharing_at?: string | null
+          parent_birthdate?: string
+          parent_email?: string
+          parent_full_name?: string
+          parent_is_adult?: boolean
+          payment_confirmed_at?: string | null
+          promise_text?: string
+          promise_version?: number
+          relationship?: string
+          signature_path?: string
+          signed_at?: string
+          stripe_payment_id?: string | null
+          typed_name?: string
+          user_agent?: string | null
+          withdrawn_at?: string | null
+        }
+        Relationships: []
+      }
       parent_invite_dispatches: {
         Row: {
           athlete_id: string
@@ -11339,6 +11459,8 @@ export type Database = {
           mlb_affiliate: string | null
           ncaa_id: string | null
           one_rm: Json | null
+          parent_consent_ok: boolean
+          parent_controlled: boolean
           paused_reason: string | null
           position: string | null
           positions: string[]
@@ -11412,6 +11534,8 @@ export type Database = {
           mlb_affiliate?: string | null
           ncaa_id?: string | null
           one_rm?: Json | null
+          parent_consent_ok?: boolean
+          parent_controlled?: boolean
           paused_reason?: string | null
           position?: string | null
           positions?: string[]
@@ -11485,6 +11609,8 @@ export type Database = {
           mlb_affiliate?: string | null
           ncaa_id?: string | null
           one_rm?: Json | null
+          parent_consent_ok?: boolean
+          parent_controlled?: boolean
           paused_reason?: string | null
           position?: string | null
           positions?: string[]
@@ -20410,6 +20536,7 @@ export type Database = {
       }
       is_system_user: { Args: { _uid: string }; Returns: boolean }
       is_training_intel_owner: { Args: { _user_id: string }; Returns: boolean }
+      is_under_13: { Args: { _user_id: string }; Returns: boolean }
       ledger_record: {
         Args: {
           p_at: string
