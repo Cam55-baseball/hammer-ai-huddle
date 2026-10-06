@@ -33,6 +33,7 @@ function mountHost() {
 describe('console-only demo diagnostics', () => {
   beforeEach(() => {
     localStorage.clear();
+    window.history.replaceState(null, '', '/dashboard');
     vi.clearAllMocks();
     mocks.owner = false;
     mocks.admin = false;
