@@ -16,6 +16,8 @@ export interface StartPlanPlayer {
   positions: readonly string[];
   sport?: string | null;
   age?: number | null;
+  /** True only while measured height says growth mode is on. */
+  growthActive?: boolean;
 }
 
 export type PlayerRole = "pitcher" | "position" | "two_way";
@@ -31,13 +33,15 @@ export function playerRole(positions: readonly string[]): PlayerRole {
 export function startPlanItems(input: readonly string[] | StartPlanPlayer): StartPlanItem[] {
   const player: StartPlanPlayer = Array.isArray(input) ? { positions: input as readonly string[] } : (input as StartPlanPlayer);
   const softball = String(player.sport ?? "").toLowerCase() === "softball";
-  const youth = player.age != null && player.age < 18;
   const role = playerRole(player.positions);
+  const throws = role !== "position";
   const PLAIN: Partial<Record<CardType, { title: string; detail: string }>> = {
     warmup: { title: "Warm-up", detail: "Get your body ready before anything hard." },
     speed: { title: "Speed", detail: softball ? "Short, fast sprints for the 60-foot base path." : "Short, fast sprints to get quicker on the bases." },
-    bat_speed: { title: "Bat speed", detail: "Swings built to add speed to your bat." },
-    lift: { title: "Lift", detail: youth ? "Strength work built for a growing body, with real rest days." : "Strength work, spaced with real rest days." },
+    bat_speed: throws
+      ? { title: "Bat speed: velocity training", detail: "Bat speed builds the hip-and-shoulder power that carries into your fastball." }
+      : { title: "Bat speed", detail: "Swings built to add speed to your bat." },
+    lift: { title: "Lift", detail: player.growthActive ? "Strength work held steady while you're growing fast, with real rest days." : "Strength work, spaced with real rest days." },
     conditioning: { title: "Conditioning", detail: "Base-running fitness matched to your season." },
     cross_sport: { title: "Athletic movement", detail: "Moves from other sports that build athleticism." },
     recovery: { title: "Recovery", detail: "Mobility and tissue work so you bounce back." },

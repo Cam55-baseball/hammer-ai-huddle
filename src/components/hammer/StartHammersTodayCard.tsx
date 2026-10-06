@@ -6,6 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAthletePositions } from "@/hooks/useAthletePositions";
 import { playerRole, startPlanItems } from "@/lib/hammer/startPlanItems";
+import { useGrowthMode } from "@/hooks/useGrowthMode";
+import { GrowthModeCardView } from "@/components/hammer/GrowthModeCard";
+import type { GrowthModeState } from "../../../supabase/functions/_shared/wic/growth/growthMode";
 
 interface Props {
   onStart: () => void;
@@ -37,12 +40,13 @@ export function StartHammersTodayCard({ onStart, starting, error }: Props) {
     return () => { alive = false; };
   }, [user?.id]);
 
-  return <StartHammersTodayCardView onStart={onStart} starting={starting} error={error} positions={positions} sport={sport} age={age} />;
+  const growth = useGrowthMode().data ?? null;
+  return <StartHammersTodayCardView onStart={onStart} starting={starting} error={error} positions={positions} sport={sport} age={age} growth={growth} />;
 }
 
 /** Presentational card — the same view the player sees, from explicit player facts. */
-export function StartHammersTodayCardView({ onStart, starting, error, positions, sport, age }: Props & { positions: readonly string[]; sport: string | null; age: number | null }) {
-  const items = startPlanItems({ positions, sport, age });
+export function StartHammersTodayCardView({ onStart, starting, error, positions, sport, age, growth = null }: Props & { positions: readonly string[]; sport: string | null; age: number | null; growth?: GrowthModeState | null }) {
+  const items = startPlanItems({ positions, sport, age, growthActive: !!growth?.active });
   const role = playerRole(positions);
   const sportLabel = sport ? sport.charAt(0).toUpperCase() + sport.slice(1) : null;
 
@@ -58,6 +62,7 @@ export function StartHammersTodayCardView({ onStart, starting, error, positions,
           {starting ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Play className="h-5 w-5 fill-current" /> Start Hammers Today Plan</>}
         </Button>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+        {growth?.active && <GrowthModeCardView state={growth} />}
 
         <div className="space-y-1.5">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Hammers Today</p>
