@@ -144,14 +144,15 @@ export interface HeavyEligibleInput {
 }
 
 /**
- * §8.1 — age ≥ 16 AND advanced/elite training age AND not in Growth Mode AND no
- * active pain flag. Everyone else rides the Foundation track unchanged.
+ * §8.1 — age ≥ 16 AND training age advanced or higher (app bands: advanced =
+ * 4–6 years, elite 6+, professional) AND not in Growth Mode AND no active pain
+ * flag. Everyone else rides the Foundation track unchanged.
  */
 export function isHeavyEligible(input: HeavyEligibleInput): boolean {
   const age = Number(input.ageYears ?? 0);
   const trainingAge = Number(input.trainingAgeYears ?? 0);
   if (!Number.isFinite(age) || age < 16) return false;
-  if (!Number.isFinite(trainingAge) || trainingAge < 6) return false; // advanced+ band
+  if (!Number.isFinite(trainingAge) || trainingAge < 4) return false; // advanced+ band (4+ years)
   if (input.growthMode === true) return false;
   if (input.painFlag === true) return false;
   return true;

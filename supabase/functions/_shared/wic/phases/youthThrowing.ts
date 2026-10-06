@@ -1,3 +1,4 @@
+import { growthMode, GROWTH_MODE_RULE } from "../growth/growthMode.ts";
 // Step 26 / Step 27 — youth throwing limits, growth-adjusted pitching age,
 // the Hammers offseason-to-off-days ratio, readiness-based pitch progression
 // and readiness-gated velocity work. Pure: budgets, flags and labels only,
@@ -52,8 +53,8 @@ export function restDaysFor(band: AgeBand, pitches: number): number {
 
 // ── B. Growth-adjusted pitching age (Hammers rule, E3) ──────────────────────
 export const GROWTH_RULE = {
-  inchTrigger: 1,
-  windowDays: 30,
+  inchTrigger: GROWTH_MODE_RULE.inchTrigger,
+  windowDays: GROWTH_MODE_RULE.windowDays,
   weeksPerInch: 8,
   evidence: "E3",
   staffLabel: "growth-adjusted pitching age",
@@ -80,28 +81,16 @@ const toMs = (d: string) => new Date(d + "T00:00:00Z").getTime();
 const isoAdd = (d: string, n: number) => new Date(toMs(d) + n * dayMs).toISOString().slice(0, 10);
 
 /**
- * Each growth spurt of ≥1 in inside ~30 days opens (or extends) the window by
- * 8 weeks per whole inch; each inch can drop one more band. Floor = youngest band.
+ * Growth-adjusted pitching age now uses the ONE Growth Mode rule
+ * (growth/growthMode.ts: ¾ in in ~3 months → 8 weeks, renewing). While it is
+ * on, the arm sits one band younger. Floor = youngest band.
  */
 export function growthAdjustment(age: number, heights: HeightCheck[], today: string): GrowthAdjustment {
   const real = bandIndex(age);
-  const sorted = [...heights].sort((a, b) => a.date.localeCompare(b.date));
-  let until: string | null = null;
-  let inches = 0;
-  for (let i = 1; i < sorted.length; i++) {
-    const cur = sorted[i];
-    // Earliest reading within the window before this one.
-    const base = sorted.slice(0, i).find((p) => toMs(cur.date) - toMs(p.date) <= (GROWTH_RULE.windowDays + 3) * dayMs);
-    if (!base) continue;
-    const grown = cur.inches - base.inches;
-    if (grown < GROWTH_RULE.inchTrigger) continue;
-    const whole = Math.floor(grown + 1e-9);
-    const end = isoAdd(cur.date, whole * GROWTH_RULE.weeksPerInch * 7);
-    if (end <= today) continue;
-    if (!until || end > until) until = end;
-    inches = Math.max(inches, whole);
-  }
-  const active = until !== null && until > today;
+  const gm = growthMode(heights, today);
+  const until: string | null = gm.until;
+  const inches = gm.active ? 1 : 0;
+  const active = gm.active;
   const dropped = active ? Math.min(inches, real) : 0;
   const band = PITCH_SMART_BANDS[real - dropped];
   return {
