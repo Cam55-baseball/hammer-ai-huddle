@@ -79,7 +79,7 @@ export interface WarmupDrill {
 export const WARMUP_LIBRARY: WarmupDrill[] = [
   // Breathwork
   { slug: "wu_crocodile_breathing", name: "Crocodile breathing (prone diaphragm reset)", role: "breathwork", setup: "prone, forehead on hands", cue: "expand ribs 360°, exhale twice as long", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 slow breaths" },
-  { slug: "wu_9020_reset", name: "90/90 breathing reset", role: "breathwork", setup: "back on floor, feet on wall, hips/knees 90°", cue: "ribs down, exhale fully before inhaling", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "6 breaths" },
+  { slug: "wu_9020_reset", name: "Feet-on-Wall Breathing Reset", role: "breathwork", setup: "back on floor, feet on wall, hips/knees 90°", cue: "ribs down, exhale fully before inhaling", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "6 breaths" },
 
   // Tissue prep / ECM
   { slug: "wu_foam_roll_tspine", name: "T-spine foam roll extensions", role: "tissue_prep", setup: "roller under mid-back", cue: "small ranges, exhale into extension", stopIf: "pinch or sharp pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 slow reps" },
@@ -105,7 +105,7 @@ export const WARMUP_LIBRARY: WarmupDrill[] = [
   { slug: "wu_scapular_cars", name: "Shoulder-blade circles", role: "cars", cue: "trace a square with the shoulder blade only", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "5 per direction per side" },
 
   // Mobility
-  { slug: "wu_90_90_switch", name: "90/90 hip switches", role: "mobility_joint", cue: "sit tall, drive knees down slowly — no hands", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 per side" },
+  { slug: "wu_90_90_switch", name: "Seated Bent-Knee Hip Switches", role: "mobility_joint", cue: "sit tall, drive knees down slowly — no hands", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 per side" },
   { slug: "wu_shin_box_get_up", name: "Shin-box get-up", role: "mobility_joint", cue: "rise without hands — control both hips", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "4 per side" },
   { slug: "wu_cossack_squat", name: "Cossack squat flow", role: "mobility_joint", cue: "shift weight foot-to-foot — heel of extended leg stays down", stopIf: "knee or groin sharp pain", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "6 per side" },
   { slug: "wu_worlds_greatest_stretch", name: "World's greatest stretch", role: "mobility_joint", cue: "elbow to instep, then reach up to open thorax", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "5 per side" },
@@ -127,7 +127,7 @@ export const WARMUP_LIBRARY: WarmupDrill[] = [
   { slug: "wu_singleleg_glute_bridge", name: "Single-leg glute bridge", role: "activation", cue: "drive through the heel, keep hips level", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 6 per side" },
 
   // Stability
-  { slug: "wu_pallof_press_iso", name: "Pallof press iso (anti-rotation)", role: "stability", cue: "arms extend, ribs stay square to cable", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 20 sec per side" },
+  { slug: "wu_pallof_press_iso", name: "Resist-Turning Press Hold", role: "stability", cue: "arms extend, ribs stay square to cable", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 20 sec per side" },
   { slug: "wu_copenhagen_short_lever", name: "Short-lever Copenhagen plank", role: "stability", cue: "top knee on bench, drive it down into the pad", stopIf: "groin pain", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "2 x 15 sec per side", eliteDose: "2 x 25 sec per side" },
   { slug: "wu_sl_rdl_reach", name: "Single-leg RDL balance reach", role: "stability", cue: "hips square, reach long, no wobble", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 x 5 per side" },
   { slug: "wu_split_stance_iso_hold", name: "Split-stance iso hold + march", role: "stability", cue: "vertical shin, ribs stacked over pelvis", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "2 x 20 sec per side" },
