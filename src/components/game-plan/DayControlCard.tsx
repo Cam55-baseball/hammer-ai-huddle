@@ -19,26 +19,26 @@ const STATE_META: Record<DayType, {
   headerClass: string;
 }> = {
   rest: {
-    label: 'REST DAY — RECOVERY MODE',
-    explanation: 'Recovery supports performance. Streak protected. NN waived.',
+    label: 'REST — TAKE IT EASIER',
+    explanation: 'Eligible remaining work is dialled back, not cancelled. Daily must-do tasks are waived; streak protection is within your rest allowance.',
     cardClass: 'border-sky-500/50 bg-gradient-to-br from-sky-500/10 to-blue-500/5',
     headerClass: 'text-sky-400',
   },
   skip: {
-    label: 'SKIP DAY — NO LOGGED OUTPUT',
-    explanation: 'Day ignored. No progress. No recovery credit.',
+    label: 'SKIP — SIT TODAY OUT',
+    explanation: 'No progress or recovery credit for the day. This does not mark every workout skipped.',
     cardClass: 'border-muted bg-muted/30',
     headerClass: 'text-muted-foreground',
   },
   push: {
-    label: 'PUSH DAY — EXTRA LOAD',
-    explanation: 'Higher standard today. Extra output expected.',
+    label: 'PUSH — COMMIT TO THE PLAN',
+    explanation: 'Follow today’s plan, not a harder plan. All training limits still apply.',
     cardClass: 'border-amber-500/50 bg-gradient-to-br from-amber-500/10 to-rose-500/5',
     headerClass: 'text-amber-400',
   },
   standard: {
     label: 'STANDARD DAY',
-    explanation: 'Operate at your current identity standard.',
+    explanation: 'Follow today’s plan.',
     cardClass: 'border-border bg-card/50',
     headerClass: 'text-foreground',
   },
@@ -67,9 +67,9 @@ export function DayControlCard() {
       }
       await setDayType(next);
       const msgs: Record<string, string> = {
-        rest: 'Rest day set — streak protected.',
+        rest: 'Rest selected — eligible remaining work dialled back.',
         skip: 'Skip day set — day will not count.',
-        push: 'Push day set — extra load expected.',
+        push: 'Push selected — no extra work added.',
       };
       toast.success(next ? msgs[next] : 'Standard day restored.');
     } finally {
@@ -106,46 +106,52 @@ export function DayControlCard() {
         </div>
 
         {/* ACTION BUTTON ROW */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="min-w-0 space-y-1.5">
           <Button
             type="button"
             variant={isRest ? 'default' : 'outline'}
             disabled={busy}
             onClick={() => handleClick('rest')}
             className={cn(
-              'h-11 gap-1.5 text-xs font-black',
-              isRest && 'bg-sky-600 hover:bg-sky-600/90 text-white border-sky-600'
+              'h-11 w-full gap-1.5 px-2 text-xs font-bold'
             )}
           >
             <Moon className="h-4 w-4" />
-            REST
+            Rest: take it easier
           </Button>
+          <p className="text-xs leading-relaxed text-muted-foreground">Dial back hard work still to do; keep completed work.</p>
+          </div>
+          <div className="min-w-0 space-y-1.5">
           <Button
             type="button"
             variant={isSkip ? 'default' : 'outline'}
             disabled={busy}
             onClick={() => handleClick('skip')}
             className={cn(
-              'h-11 gap-1.5 text-xs font-black',
-              isSkip && 'bg-muted-foreground hover:bg-muted-foreground/90 text-background border-muted-foreground'
+              'h-11 w-full gap-1.5 px-2 text-xs font-bold'
             )}
           >
             <SkipForward className="h-4 w-4" />
-            SKIP
+            Skip: sit today out
           </Button>
+          <p className="text-xs leading-relaxed text-muted-foreground">No day credit; workout amounts stay the same.</p>
+          </div>
+          <div className="min-w-0 space-y-1.5">
           <Button
             type="button"
             variant={isPush ? 'default' : 'outline'}
             disabled={busy}
             onClick={() => handleClick('push')}
             className={cn(
-              'h-11 gap-1.5 text-xs font-black',
-              isPush && 'bg-amber-600 hover:bg-amber-600/90 text-white border-amber-600'
+              'h-11 w-full gap-1.5 px-2 text-xs font-bold'
             )}
           >
             <Flame className="h-4 w-4" />
-            PUSH
+            Push: commit to the plan
           </Button>
+          <p className="text-xs leading-relaxed text-muted-foreground">Do today’s planned work; no extra sets or harder work added.</p>
+          </div>
         </div>
 
         {/* QUICK EXPLANATION */}

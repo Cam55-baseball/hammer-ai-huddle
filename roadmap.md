@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] Current request: clarify Rest / Push / Skip with accurate frontend-only labels and explanations; report exact before/after text (phone/desktop checked with local-only test state)
+- [x] Current request: quote the complete Start card for all five requested player examples, read-only
+
 - [ ] Current frontend-only: match softball identity styling to baseball and verify contrast
 - [ ] Current read-only/frontend-only: verify Tissue & Recovery lifting count against recorded data; correct display if needed
 - [ ] Current read-only: report scheduled completion and overdue lift behavior
