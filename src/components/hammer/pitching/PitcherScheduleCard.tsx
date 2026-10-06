@@ -47,6 +47,12 @@ export function PitcherScheduleCard() {
   const fail = (e: unknown) => toast.error(`Couldn't save: ${(e as Error)?.message ?? "try again"}`);
 
   if (s.isLoading) return null;
+  if (s.isError) return (
+    <Card><CardContent className="p-3 space-y-2">
+      <p className="text-sm">Couldn't check your pitching days. Your saved schedule hasn't been cleared.</p>
+      <Button size="sm" variant="outline" onClick={() => s.refetch()}>Try again</Button>
+    </CardContent></Card>
+  );
 
   return (
     <Card className="border-primary/30" data-testid="pitcher-schedule-card">
@@ -56,7 +62,7 @@ export function PitcherScheduleCard() {
         </CardTitle>
         {!s.data?.settings && s.upcoming.length === 0 && (
           <p className="text-xs text-muted-foreground">
-            No pitching days yet, so your plan is guessing from your games. Add them and it lines up with every outing.
+            No pitching schedule recorded. Your plan still uses your games and check-ins. Add your pitching days to help it protect the next outing.
           </p>
         )}
       </CardHeader>

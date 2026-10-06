@@ -96,6 +96,7 @@ import { WkLiftsCard } from "@/components/hammer/WkLiftsCard";
 import { WkConditioningCard } from "@/components/hammer/WkConditioningCard";
 import { GameLogPromptCard } from "@/components/hammer/GameLogPromptCard";
 import { RankGoalsPromptCard } from "@/components/hammer/RankGoalsPromptCard";
+import { usePitcherSchedule } from "@/hooks/usePitcherSchedule";
 import { PitcherScheduleGate } from "@/components/hammer/pitching/PitcherScheduleCard";
 import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
 import { useGpSignal } from "@/hooks/useGpSignal";
@@ -630,6 +631,7 @@ function HammerDailyPlanBody({
   const navigate = useNavigate();
   const identity = getHammerIdentity();
   const sched = useScheduleWindow();
+  const pitcherSchedule = usePitcherSchedule();
   const scheduleSignal = useMemo(() => projectScheduleSignal(sched), [sched]);
   const sideBias = useMemo(
     () => ({ hit: readSideBias("hit"), throw: readSideBias("throw") }),
@@ -707,9 +709,10 @@ function HammerDailyPlanBody({
           seasonPhaseSource: phaseSource ?? null,
           positionOverride: planAdjust.positionWorked,
           defenseFullOverride,
+          pitcherOutings: pitcherSchedule.facts,
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a

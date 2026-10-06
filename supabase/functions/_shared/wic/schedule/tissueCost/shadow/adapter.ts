@@ -1,3 +1,4 @@
+import { resolveOutingFacts, type PitcherSettingsRow, type PitcherOutingRow, type PitcherAvailabilityRow } from "../../../pitching/outingFacts.ts";
 // Tissue Cost Scheduler — stage S3 shadow mode, input adapter.
 // Spec: docs/wic/tissue-cost-scheduler-v1.md §2 (inputs and their defaults).
 //
@@ -131,6 +132,8 @@ export interface RawShadowData {
   speedSessions: RawSpeedSession[];
   quizzes: RawQuiz[];
   dailyLogs: RawDailyLog[];
+  pitcherSchedule?: { settings: PitcherSettingsRow | null; outings: PitcherOutingRow[]; availability: PitcherAvailabilityRow[] };
+  pitcherScheduleError?: boolean;
 }
 
 export interface ShadowInputs {
@@ -323,6 +326,32 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
       doubleheader: e.is_doubleheader === true,
     };
     if (e.is_starting_pitcher) target.pitcherStartDay = true;
+  }
+
+  /* Pitcher schedule is the competition anchor, not an invented pitch count. */
+  if (raw.pitcherScheduleError) diagnostics.push("pitcher_schedule_read_failed");
+  if (raw.pitcherSchedule) {
+    const facts = resolveOutingFacts({ planDate: raw.today, ...raw.pitcherSchedule });
+    if (!facts.hasSchedule) diagnostics.push("no_pitcher_schedule");
+    for (const date of facts.plannedStartDates.filter((d) => d >= raw.today && d <= raw.horizonEnd)) {
+      const target = day(date);
+      target.pitcherStartDay = true;
+      target.games = { ...target.games, role: "starting_pitcher", count: Math.max(1, target.games?.count ?? 0) };
+      diagnostics.push(`pitcher_start_planned_${date}`);
+    }
+    for (const outing of raw.pitcherSchedule.outings) {
+      if (outing.status !== "thrown" || !outing.actual_date || outing.actual_date < raw.windowStart || outing.actual_date > raw.today) continue;
+      if (outing.outing_type === "bullpen") { diagnostics.push(`bullpen_confirmed_pitch_count_unknown_${outing.actual_date}`); continue; }
+      const target = day(outing.actual_date);
+      const start = outing.outing_type === "start";
+      target.pitcherStartDay = target.pitcherStartDay || start;
+      target.games = { ...target.games, role: start ? "starting_pitcher" : (target.games?.role ?? "position"), count: Math.max(1, target.games?.count ?? 0) };
+      diagnostics.push(`pitcher_${outing.outing_type}_actual_${outing.actual_date}_pitch_count_unknown`);
+    }
+    for (const row of raw.pitcherSchedule.availability) {
+      if (row.available) diagnostics.push(`reliever_available_${row.date}_not_thrown`);
+    }
+    for (const row of facts.unconfirmed) diagnostics.push(`pitcher_outing_unconfirmed_${row.planned_date}`);
   }
 
   /* practices */

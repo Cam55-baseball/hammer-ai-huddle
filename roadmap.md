@@ -9,7 +9,13 @@
 - [ ] Pitcher schedule → recovery governor, arm care, throwing plan, weekly stress planner
 - [ ] "Did you play yesterday?" / "Did you pitch?" inside the morning check-in itself (currently on Hammers Today)
 - [ ] Live verification as a player and as a pitcher with schedule data
-- [ ] Stage 4 — game/practice load feeds recovery limit
-- [ ] Stage 5 — career goal direction + rank-goals prompt
-- [ ] Stage 6 — The General shows records
-- [ ] Stage 7 — baselines in the plan
+- [x] Stage 4 — game/practice load feeds recovery limit (scheduled practices are not confirmed logs)
+- [x] Stage 5 — career goal direction + rank-goals prompt
+- [x] Stage 6 — The General shows records (preview; published release unverified)
+- [x] Stage 7 — baselines in the plan
+- [ ] Closeout: FRC and softball-distance display renames; full outside-name/jargon audit
+- [ ] Closeout: propose same-night flush placement; owner decides shape before implementation
+- [ ] Closeout: report morning game-question trade-off; owner decides placement
+- [ ] Closeout: wire pitcher schedule to arm care, throwing plan and weekly stress planner
+- [ ] Closeout: phone evidence for Stage 4 and Stage 5; verify as athlete
+- [ ] Closeout: audit failed reads displayed as empty; report confirmed instances

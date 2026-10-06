@@ -97,12 +97,12 @@ export const WARMUP_LIBRARY: WarmupDrill[] = [
   { slug: "wu_medball_rot_toss_wall", name: "Med-ball rotational toss (fascial spring)", role: "fascial_rotation", setup: "6-8 lb ball vs wall", cue: "load the back hip, let fascia snap through", stopIf: "any rib/oblique tweak", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "3 x 4 per side", beginnerDose: "2 x 3 per side", eliteDose: "3 x 5 per side max intent" },
 
   // CARs
-  { slug: "wu_hip_cars", name: "Hip CARs (Controlled Articular Rotations)", role: "cars", cue: "biggest circle you own — no compensations", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 per direction per side" },
-  { slug: "wu_shoulder_cars", name: "Shoulder CARs", role: "cars", cue: "full end-range, no rib flare", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 per direction per side" },
-  { slug: "wu_spine_cars", name: "Segmental spine CARs", role: "cars", cue: "cat-cow then side bend then rotation — one segment at a time", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "3 slow reps" },
-  { slug: "wu_ankle_cars", name: "Ankle CARs (seated)", role: "cars", cue: "maximum circle, keep shin still", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "5 per direction per side" },
-  { slug: "wu_wrist_cars", name: "Wrist CARs", role: "cars", cue: "big circles, elbow locked", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "5 per direction per side" },
-  { slug: "wu_scapular_cars", name: "Scapular CARs (elevation/depression/pro/retract)", role: "cars", cue: "trace a square with the shoulder blade only", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "5 per direction per side" },
+  { slug: "wu_hip_cars", name: "Controlled hip circles", role: "cars", cue: "biggest circle you own — no compensations", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 per direction per side" },
+  { slug: "wu_shoulder_cars", name: "Controlled shoulder circles", role: "cars", cue: "full end-range, no rib flare", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "2 per direction per side" },
+  { slug: "wu_spine_cars", name: "Slow back bends and turns", role: "cars", cue: "cat-cow then side bend then rotation — one segment at a time", gameDayLegal: true, minLifecycle: "intermediate", source: "internal", baseDose: "3 slow reps" },
+  { slug: "wu_ankle_cars", name: "Seated ankle circles", role: "cars", cue: "maximum circle, keep shin still", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "5 per direction per side" },
+  { slug: "wu_wrist_cars", name: "Controlled wrist circles", role: "cars", cue: "big circles, elbow locked", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "5 per direction per side" },
+  { slug: "wu_scapular_cars", name: "Shoulder-blade circles", role: "cars", cue: "trace a square with the shoulder blade only", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "5 per direction per side" },
 
   // Mobility
   { slug: "wu_90_90_switch", name: "90/90 hip switches", role: "mobility_joint", cue: "sit tall, drive knees down slowly — no hands", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 per side" },

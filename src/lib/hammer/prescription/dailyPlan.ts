@@ -1,3 +1,4 @@
+import type { OutingFacts } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
 /**
  * Hammer Daily Plan — 9-modality orchestrator.
  *
@@ -195,6 +196,7 @@ const ALL_MODALITIES: ModalityKey[] = [
 ];
 
 interface BuilderArgs {
+  readonly pitcherOutings?: OutingFacts | null;
   readonly modality: ModalityKey;
   readonly ctx: HammerAthleteContext;
   readonly proj: AthleteContextProjection;
@@ -290,7 +292,7 @@ function drillsToChecklist(drills: ReadonlyArray<DrillStep>): string[] {
   return drills.map((d) => `${d.name} — ${d.dosage}`);
 }
 
-function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride }: BuilderArgs): PrescribedBlock {
+function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings }: BuilderArgs): PrescribedBlock {
   const declaredPos =
     firstPositionToken(ctx.get<unknown>("position_primary")?.value) ??
     firstPositionToken(ctx.get<unknown>("position")?.value) ??
@@ -437,8 +439,8 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         game_day: "Prime the fascial system and fire fast-twitch pathways without spending — you want the CNS awake, not fatigued.",
         in_season_practice: "Restore tissue glide, wake up stabilizers, spark the fast-twitch reflex — carry patterns stay sharp inside the warm-up so you save legs for practice.",
         in_season_default: "Short elite prep so you're honest before skill work — CARs and fascial rotation open the joints, low-cost neural priming keeps quickness alive.",
-        speed_day: "Fast-twitch prep is the whole point — CARs open the joints, ankle bounces and pogos wake stiffness, altitude drops sharpen ground contact.",
-        lift_day: "Joint CARs and stability activation earn your right to load — Pallof and Copenhagen bulletproof the trunk before the barbell.",
+        speed_day: "Fast-twitch prep is the whole point — controlled joint circles open the joints, ankle bounces and pogos wake stiffness, altitude drops sharpen ground contact.",
+        lift_day: "Controlled joint circles and trunk holds prepare you to lift — resist turning and hold your side steady before the barbell.",
         throwing_day: "Warm the tissue, open the thorax, and progress arm-care so the shoulder complex is ready before the first throw.",
         hitting_day: "Fascial rotation, hip mobility, and low-volume rotational power ready the swing without pre-fatiguing it.",
         offseason_extended: "Full spectrum — tissue hydration, CARs, fascial spirals, mobility, stability, neural priming, and fast-twitch primer — because volume today demands honest prep.",
@@ -937,15 +939,21 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         trainingAgeYears: liftingAge ?? null,
         injuryRegions: [...injuryRegions],
         armSore,
-        isGameDay: !!sched.isGameDay,
+        isGameDay: !!sched.isGameDay || !!(pitcherOutings?.startsToday || pitcherOutings?.startsTomorrow || pitcherOutings?.relieverAvailableSoon),
         // If schedule doesn't declare throwing day explicitly, treat non-game days as throwing days
         // when the athlete's development priorities include throwing/velocity, otherwise alternate.
         isThrowingDay: sched.isThrowingDay ?? !sched.isGameDay,
-        isRecoveryDay: !!sched.isRecoveryDay || recoverDay,
+        isRecoveryDay: !!sched.isRecoveryDay || recoverDay || !!pitcherOutings?.pitchedYesterday,
         readinessScore,
       };
 
       const eass = buildEassPrescription(eassCtx);
+      const outingReason = pitcherOutings?.pitchedYesterday
+        ? "You pitched yesterday. Today's arm care is easy recovery work."
+        : pitcherOutings?.startsToday ? "You start today. Save your throwing work for the outing."
+        : pitcherOutings?.startsTomorrow ? "You start tomorrow. Today's throwing keeps you ready."
+        : pitcherOutings?.relieverAvailableSoon ? "You're available to pitch. Keep your arm ready without a separate hard session."
+        : "";
 
       // Ambidextrous throwers get TWO independent throwing cards downstream
       // via splitLateralityBlocks (dominant + non-dominant), each with its own
@@ -981,7 +989,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       return {
         modality,
         title: eass.title,
-        why: eass.why + (goal ? ` ${goal}` : ""),
+        why: (outingReason || eass.why) + (goal ? ` ${goal}` : ""),
         roadmapReason: eass.roadmapReason + (thrOut.rationale ? ` ${thrOut.rationale}` : ""),
         phase:
           eass.mode === "arm_protected" || eass.mode === "recovery_day"
@@ -2120,6 +2128,7 @@ function scaleDosageLabel(dosage: string, scale: number): string {
 
 
 export interface RoadmapInputs {
+  readonly pitcherOutings?: OutingFacts | null;
   readonly recentCompletions?: RecentCompletions;
   readonly phaseStartedAt?: string | null;
   /** Canonical phase from resolveSeasonPhase (short form: off/pre/in/post). */
@@ -2186,7 +2195,7 @@ export function buildHammerDailyPlan(
 
   const positionOverrideArg = roadmapInputs.positionOverride ?? null;
   const firstPass = ALL_MODALITIES.map((m) =>
-    builder({ modality: m, ctx, proj, speed, positionOverride: positionOverrideArg }),
+    builder({ modality: m, ctx, proj, speed, positionOverride: positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings }),
   );
   // Warm-up bias is derived from the slots that actually landed in today's
   // plan — a lift day gets lift prep, a speed day gets speed prep. Priority

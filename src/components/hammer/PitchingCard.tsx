@@ -35,6 +35,7 @@ import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { projectEnvelope } from "@/lib/hammer/context/decisionFilters";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
 import { useScheduleWindow } from "@/hooks/command/useScheduleWindow";
+import { usePitcherSchedule } from "@/hooks/usePitcherSchedule";
 import { useRecentPitchingLoad } from "@/hooks/useRecentPitchingLoad";
 import { resolveRoadmapRung } from "@/lib/hammer/roadmap/roadmapLadder";
 import { resolveSeasonQuarter } from "@/lib/hammer/roadmap/seasonQuarters";
@@ -149,6 +150,7 @@ export function PitchingCard() {
   );
 
   const recentLoad = useRecentPitchingLoad(7);
+  const pitcherSchedule = usePitcherSchedule();
 
   // Game dows in the next 7 days from the schedule window
   const gameDows = useMemo<number[]>(() => {
@@ -173,8 +175,9 @@ export function PitchingCard() {
         today,
         gameDows,
         preferredBullpenDow: profile.preferredBullpenDow,
+        pitcherSchedule: pitcherSchedule.data,
       }),
-    [sport, rung, quarter, profile, today, gameDows],
+    [sport, rung, quarter, profile, today, gameDows, pitcherSchedule.data],
   );
 
   const plannedLadder = useMemo(
