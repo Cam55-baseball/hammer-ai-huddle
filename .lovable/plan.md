@@ -1,112 +1,61 @@
-# What drives Hammers Today, and the model to build in stages
+# Rules that always hold + "Start Hammers Today Plan"
 
-Report first. Nothing in the app was changed to produce it. Each stage below needs the owner's approval before anything is built.
+Nothing gets published or scheduled, and `wk_mark_missed_lifts()` is never run. The start-card gate is built switched off.
 
-## Part 1: what drives each part of the day today
+## Two things to settle before I start
 
-Key: Y = responds, P = partly or only switches it on/off, N = ignores, ? = not confirmed.
+1. **The rules disagree with each other (my standing rule is to stop and report this).** The in-season law says at most 2 lift days a week. Your in-season plan says lift every third day, with 2 full rest days between lifts. Every third day comes to 2–3 lifts in some weeks. Unless you say otherwise, I'll treat both as hard limits: 2 rest days between lifts AND no more than 2 lift days in any Mon–Sun week. In practice that means 2 lifts a week.
+2. **Turning the rest-day rule on for everyone takes effect right away.** That switch is read live, so it would change real players' plans today. Publishing doesn't hold it back. Unless you say otherwise, I'll leave it on for your account only, prepare everything else, and give you the one statement that turns it on for everyone.
 
-| Part of the day | Goals | Clip faults | Games | Practices | Check-ins | Workload | Season | Position | Own baselines | Next game | Age / level | Injury |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Lifting | Y | Y | P | P | Y | Y | Y | P | N | Y | Y | Y |
-| Conditioning | N | N | P | P | N | P | P | Y | N | P | N | P |
-| Skill work | Y | Y | N | P | Y | P | Y | Y | N | Y | Y | Y |
-| Defensive work | P | Y | N | P | P | N | P | Y | N | P | P | P |
-| Warm-up | N | Y | N | N | P | N | P | P | N | P | P | ? |
-| Recovery | N | N | P | P | Y | Y | P | N | N | Y | P | Y |
-| Mobility | N | N | N | N | P | P | N | N | N | N | N | ? |
-| Tex Vision / Mind Fuel | N | N | N | N | N | N | N | N | N | N | N | N |
-| Nutrition targets | Y (body goals) | N | N | N | N | N | N | N | N | N | N | N |
+## Part A — the rules hold in the plan itself
 
-**What the table shows:**
-- **Games:** no part of the day reads what happened in a game. Game days and the next game's date change things, but game results never do. No part of the day reads at-bat or pitch records.
-- **Practices:** a practice day can lower the load, but what the athlete actually did at practice never changes what is prescribed.
-- **Own baselines:** the plan never reads the athlete's personal normal. Baselines exist only on the measurement side.
-- **Conditioning:** it responds to position, and to being switched off on game days, after the season, and on rest or "take it easy" days. It is the same two drills on every training day: an inning-restart drill plus one drill set by position. The app has 10 conditioning session types, but they are only used to label the session afterwards. They never choose what the athlete does.
-- **Check-ins:** short sleep (under 6 hours) or high soreness (8 or more) cuts lifting and skill intensity. Day intent and energy have no clear effect on the plan.
-- **Workload:** the recovery limit on effort works. Lifting and recovery respond to it. Conditioning only responds when the whole day is switched off.
+1. **Plans count, check-offs don't.** Spacing and weekly limits are checked against lifts already in the plan, so they hold even if nothing is checked off.
+2. **Missed lifts stay put.** A missed lift is never made up and never moves. The next lift goes on the first day the rules allow, counted from the missed lift's date.
+3. **Effort uses real work only.** How hard a lift should be is based only on lifts marked Done or Cut short.
+4. **Recovery days aren't lift days.** A day with only arm care or mobility no longer counts as a lift day anywhere: the rest-day calculator, the weekly count, the reasons shown to players, or the audits.
+5. **Fix the calculator's push-back loop.** Today a lift merely planned for tomorrow can block today's lift, and the day after that is blocked by today's. From now on, each day only looks back at days already planned, so the lift lands on the first legal day. Turning it on for everyone: see question 2.
+6. **Final check before saving.** Every plan gets one last rule check before it's saved. If a card breaks a rule (spacing, weekly limit, game-day, age or season), it's replaced with an allowed recovery card and the swap is logged. A broken plan can never be saved.
+7. **Card types and their rules.** A plain-words table of every card type the planner creates (warm-up, speed and sprint, bat speed, plyo/power, lift, conditioning, throwing, arm care, mobility, recovery, cross-sport, nutrition, mental). It shows each card's existing rest and frequency rules, taken from the code. Card types with no rule are marked "none". I'll suggest a rule for those for you to approve, but won't apply it.
+8. **Eight-week simulation.**
+   - **Who:** every mix of season (in-season, off-season, post-season), games or no games, age (13–17 or 18+), role (pitcher, position player, 2-Way), sport (baseball or softball), and what the player does (everything, nothing, a mix).
+   - **How:** each one is run through the real planning rules and the final check.
+   - **What you get:** the number of violations for every rule, which must be zero, with age rules checked against each movement's minimum age.
 
-## Part 2: the athlete's goals
+## Part B — "Start Hammers Today Plan"
 
-There are three kinds of goal, and they are treated very differently:
+1. **Start date per account.** A new `hammers_today_started_at` field on the profile. It's set once on the server, and a second tap leaves the first date untouched.
+2. **New switch.** A `hammers_today_start_gate` switch, built OFF.
+   - **While it's off:** everything works exactly as it does today.
+   - **When it's on:** accounts without a start date get no plan built — not on opening the app, and not from any background job.
+3. **The Start card.** Shown where the plan normally appears, under the same access rules as the plan:
+   - one large "Start Hammers Today Plan" button
+   - a short plain description underneath
+   - a tidy list of what's on the plan, built from the card types the planner actually creates for that player (sport, role, season)
+   - designed phone-first and matched to the app
+4. **Tapping it** saves the start date, builds today's plan straight away and shows it. The card never comes back on that account, on any device.
+5. **A plan every day.** A daily job builds each started player's plan for their own local day (built, not scheduled). Opening the app builds it if it's missing. A daily check retries any missing plans and logs failures. A plan is never rebuilt once anything on it is marked.
+6. **Testing** on a test account:
+   - the card shows
+   - one tap builds the plan
+   - the card stays gone after a reload and in a fresh browser
+   - several simulated days each get a plan
+   - an account that hasn't started gets none
+   - everything is undone afterwards
+   - includes a phone-size screenshot of the Start card
 
-1. **Ranked training goals** (strength, speed, power and so on). These are saved and they do shape the plan. They change which lifting and skill work wins a slot, never the amount. The plan's explanation even says "you ranked X first." Only 13 goal rows exist, across 8 athletes, so most athletes have none and get no goal effect.
-2. **Career goal** ("Where do you want the game to take you?"). This is saved as the athlete's target level. The plan builder ignores it on purpose: the code calls it "an aspiration, never an entitlement." Only Ask Hammer and the setup checklist read it.
-3. **Mental goals** (the mental and career setup step). These are saved but nothing in the plan reads them.
+## What goes live when
 
-Athletes can change all of these later through Settings → "Review answers", which reopens setup. There is no separate goals page.
+- **Database changes:** live as soon as they're applied. That covers the new start-date field, the new switch (built off), and the start and daily-check functions.
+- **Planner changes:** live once the planner function is updated on the server. I'll list exactly which ones.
+- **Screen changes:** live when the owner publishes. That covers the Start card and last round's check-off fixes.
 
-**Verdict:** your expectation is half right. Training goals are used. Career and mental goals are collected and never shape the plan.
-
-## Part 3: the complete model, layer by layer
-
-Each layer only changes **what fills a slot** or **switches off work the recovery limit already allows**. The number of slots stays the same. Every change traces back to a dated record. There are no medical claims.
-
-### Layer A: goals set the direction
-- **Exists today:** ranked training goals shape lifting and skill choices.
-- **Missing:** career and mental goals have no effect. Most athletes have ranked nothing. Conditioning and defensive work ignore goals.
-- **To close the gap:**
-  - Turn the career goal into a direction the plan can use. "Play in college" would lean toward the measurements recruiters look at (speed, arm strength, exit velocity), within the same limits on how much goals can sway choices.
-  - Mental goals feed the Mind Fuel lesson choice only, not training.
-  - Show "Rank your goals" on the identity card until it is answered.
-- **What the athlete sees:** "Because you want to play in college, today's speed work comes first."
-
-### Layer B: clip faults set the technical work
-- **Exists today:** faults from clips push up drill choice for skill, warm-up and defensive slots. The effect fades by half every 21 days and drops away entirely after 120 days with no repeat. There are 80 fault records across 18 athletes.
-- **Missing:** a fault that is fixed keeps getting drills for weeks. Nothing notices when a newer clip of the same skill is clean.
-- **To close the gap:** when a newer clip of the same skill is analysed and doesn't show the fault, fade that fault's drills right away. Say so on the card ("your last clip didn't show it").
-- **What the athlete sees:** drills stop the moment they've fixed the fault, instead of weeks later.
-
-### Layer C: games and practices check the load and the reality
-- **Exists today:** game days and the date of the next game only.
-- **Missing:** results of logged games, and what was actually done at practice.
-- **To close the gap:**
-  - Add up throwing from logged games (pitch counts) and practice sessions into the same load the recovery limit already uses. A heavy game week then leaves less room automatically. No second plan is created.
-  - A fault seen in both a game and a clip ranks above one seen in clips only. Before this can work, the game records need the same fault labels, which they don't have today.
-- **What the athlete sees:** a three-game weekend means a lighter Monday. Their real problem in games gets the drill time.
-
-### Layer D: check-ins and workload set the amount
-- **Exists today:** sleep, soreness and the recovery limit work.
-- **Missing:** day intent and energy have no effect. Conditioning ignores both check-ins and workload.
-- **To close the gap:** pass the existing reductions through to conditioning. Day intent ("light day") picks the lighter option for each slot. It never adds work.
-
-### Layer E: season and the next game set the shape (folds in the conditioning proposal)
-- **Exists today:** lifting and skill already follow both. Conditioning is two fixed drills.
-- **To close the gap:** connect the 10 existing session types so they actually choose conditioning, rotating by:
-  - Off-season: building conditioning and repeated sprints.
-  - Preseason: practice-day type sessions.
-  - In season: short, sharp work, and nothing hard within 48 hours of a game.
-  - Pitchers: their own session the day after a start.
-  - Tournaments: tournament-day sessions.
-  - Coming back after time off: return-to-conditioning sessions.
-
-  The main work stays short, repeated sprints with full rest — what the game demands, not long-distance fitness. Same slot count, same safety limits.
-- **What the athlete sees:** conditioning that changes through the year and around their games, instead of the same two drills every day.
-
-### Layer F: their own baselines set what "normal" means
-- **Exists today:** personal baselines are recorded but the plan never reads them.
-- **To close the gap:** use them in one place only. When a measurement drifts clearly below the athlete's own normal (the existing alert rule: at least 8 clips), that skill gets priority for a slot. Drifting above normal earns nothing extra. Mostly this should explain the plan rather than change it.
-- **What the athlete sees:** "Your bat speed is below your normal this week — so today's work is about getting it back."
-
-### Layer G: The General explains it all (folds in The General inference proposal)
-- Add a "What your records show" section. Each item links two real records, with dates and the number of data points. Something only appears once it has at least 5 data points.
-- It also shows **why today's plan changed** and **which layer caused it**, using Layers A–F.
-- It is read-only and never sets the amount of work.
-
-## Suggested order for approval
-1. **E — conditioning.** Biggest gap, and the session types are already built.
-2. **B — fault fades when fixed.** Small change, big honesty gain.
-3. **D — day intent and conditioning respond to check-ins and workload.**
-4. **C — game and practice load feeds the recovery limit.** Needs game load tallied.
-5. **A — career goal direction** and the goal-ranking prompt.
-6. **G — The General "What your records show".**
-7. **F — baselines in the plan.** Last, because few athletes have 8 or more clips yet.
-8. **C, part two — faults in game records.** Only after game logging captures fault labels.
+The report will end with the exact statements to:
+- switch the gate on
+- schedule the daily plan job
+- schedule `wk_mark_missed_lifts()`
 
 ## Technical notes
-- The daily plan is built by `wk-generate-daily`. Goal weighting: `_shared/wic/goals/emphasis.ts`. Fault fading: `faultLedger/priority.ts`. Conditioning: `engines/conditioning.ts` plus `conditioning/templates.ts`, where the 10 session types are currently used only for labelling.
-- Stages A–F all change how the plan is built, which is currently frozen. Each one needs your sign-off by name, its own tests, and a live redeploy that you authorise.
-- Not confirmed:
-  - Whether the profile-goal path in `emphasis.ts` can ever run, because those profile fields may not exist.
-  - Where clip faults are written into `wk_fault_signals`. Rows exist, but the code that writes them wasn't found.
-  - Whether mobility exists as its own slot, or only sits inside warm-up and recovery.
+
+- **Planner touches.** Changes to the frozen planner: the calculator's history window, the shared lift-day rule, the final check before saving, and the start-gate check. I'll report each one.
+- **Simulation and tests.** The simulation lives under `scripts/audits/`, and new unit tests sit next to the rule code.
+- **Rules for future work.** Two rules go into `AGENTS.md`: the final check before saving, and the start gate.
