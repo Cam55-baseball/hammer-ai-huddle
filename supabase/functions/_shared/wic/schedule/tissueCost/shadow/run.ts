@@ -73,7 +73,7 @@ export async function fetchShadowData(
       "sport_primary,position_primary,season_phase,lifting_age_years,competition_level",
     ).eq("user_id", userId).maybeSingle(),
     rows(
-      db.from("wk_prescriptions").select("plan_date,slot,movement_slug,cns_cost,sets,status")
+      db.from("wk_prescriptions").select("plan_date,slot,movement_slug,cns_cost,sets,status,sequence_role")
         .eq("user_id", userId).gte("plan_date", windowStart).lte("plan_date", horizonEnd),
     ),
     rows(
