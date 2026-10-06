@@ -11297,6 +11297,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_paused_at: string | null
           act_score: number | null
           activation_choice: string | null
           activity_level: string | null
@@ -11338,6 +11339,7 @@ export type Database = {
           mlb_affiliate: string | null
           ncaa_id: string | null
           one_rm: Json | null
+          paused_reason: string | null
           position: string | null
           positions: string[]
           preferred_language: string | null
@@ -11368,6 +11370,7 @@ export type Database = {
           years_affiliated: number | null
         }
         Insert: {
+          account_paused_at?: string | null
           act_score?: number | null
           activation_choice?: string | null
           activity_level?: string | null
@@ -11409,6 +11412,7 @@ export type Database = {
           mlb_affiliate?: string | null
           ncaa_id?: string | null
           one_rm?: Json | null
+          paused_reason?: string | null
           position?: string | null
           positions?: string[]
           preferred_language?: string | null
@@ -11439,6 +11443,7 @@ export type Database = {
           years_affiliated?: number | null
         }
         Update: {
+          account_paused_at?: string | null
           act_score?: number | null
           activation_choice?: string | null
           activity_level?: string | null
@@ -11480,6 +11485,7 @@ export type Database = {
           mlb_affiliate?: string | null
           ncaa_id?: string | null
           one_rm?: Json | null
+          paused_reason?: string | null
           position?: string | null
           positions?: string[]
           preferred_language?: string | null
@@ -20375,6 +20381,7 @@ export type Database = {
             }
             Returns: string
           }
+      is_account_paused: { Args: { _user_id: string }; Returns: boolean }
       is_authorizing_parent: {
         Args: { _athlete: string; _parent: string }
         Returns: boolean
