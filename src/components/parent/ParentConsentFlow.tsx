@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { branding } from "@/branding";
 import { SignaturePad } from "./SignaturePad";
 import { UNDER_13_LOCK_KEY } from "@/lib/auth/under13Lock";
-import { callParentConsent, fetchConsentTexts, yearsOn, PARENT_ERRORS, PROMISE_VERSION, NOTICE_VERSION } from "@/lib/parent/parentConsent";
+import { callParentConsent, fetchConsentTexts, yearsOn, PARENT_ERRORS, PROMISE_VERSION, NOTICE_VERSION, TRAINING_OPT_IN_TEXT } from "@/lib/parent/parentConsent";
 
 const RELATIONSHIPS = ["Mother", "Father", "Legal guardian", "Other parent"];
 
@@ -28,6 +28,7 @@ export function ParentConsentFlow({ mode, accountEmail, onSigned }: { mode: "sig
   const [f, setF] = useState({ parentName: "", relationship: "", parentDob: "", email: accountEmail ?? "", password: "", childName: "", childDob: "" });
   const [typed, setTyped] = useState("");
   const [agreed, setAgreed] = useState(false);
+  const [trainingOptIn, setTrainingOptIn] = useState(false);
   const [sig, setSig] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +58,7 @@ export function ParentConsentFlow({ mode, accountEmail, onSigned }: { mode: "sig
     const common = {
       parent_full_name: f.parentName.trim(), relationship: f.relationship, parent_birthdate: f.parentDob,
       child_display_name: f.childName.trim(), typed_name: typed.trim(), agreed: true, signature_png: sig,
-      promise_version: PROMISE_VERSION, notice_version: NOTICE_VERSION, parent_email: f.email.trim(),
+      promise_version: PROMISE_VERSION, notice_version: NOTICE_VERSION, parent_email: f.email.trim(), training_opt_in: trainingOptIn,
     };
     try {
       if (mode === "signup") {
@@ -139,6 +140,10 @@ export function ParentConsentFlow({ mode, accountEmail, onSigned }: { mode: "sig
             <label className="flex items-start gap-3 text-sm leading-6">
               <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-1" />
               <span>I agree to the Parent Promise and the Parent Notice.</span>
+            </label>
+            <label className="flex items-start gap-3 rounded-xl border p-3 text-sm leading-6">
+              <Checkbox checked={trainingOptIn} onCheckedChange={(v) => setTrainingOptIn(v === true)} className="mt-1" aria-label="Optional: help improve Hammers Modality" />
+              <span>{TRAINING_OPT_IN_TEXT}</span>
             </label>
             {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
             <Button className="h-12 w-full text-base" disabled={!canSign || busy} onClick={submit}>{busy ? "Saving…" : "Sign the Parent Promise"}</Button>

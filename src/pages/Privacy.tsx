@@ -107,6 +107,29 @@ const sections: LegalSection[] = [
       </>
     ),
   },
+  // OWNER REVIEW: Round 3 wording for the anonymous in-house training store.
+  {
+    id: "improving-training",
+    title: "Improving our training programs",
+    body: (
+      <>
+        <p>
+          To improve our training programs, we keep anonymous training records: what was prescribed,
+          what was completed, what worked, and measured numbers like angles, timing and speeds. Your
+          name, email, birthdate, photos, videos, location, team, school and anything you write are
+          never included, and records use a code instead of your account.
+        </p>
+        <p>
+          <strong>These records stay inside Hammers Modality.</strong> They are never sold, never sent
+          to outside companies, and never given to any AI provider to train their models.
+        </p>
+        <p>
+          Players 13 and older can turn this off in their Profile; we then remove their records and stop
+          collecting. Players under 13 are included only if a parent says yes, which is off by default.
+        </p>
+      </>
+    ),
+  },
   {
     id: "location",
     title: "Location and weather",

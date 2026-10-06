@@ -13,6 +13,7 @@
  */
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { runPool, CONCURRENCY, RUN_BUDGET_MS } from "./scheduler.ts";
 
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -88,25 +89,50 @@ Deno.serve(async (req) => {
     }
     return json({ ok: true, mode: "recheck", ...out });
   }
+  // mode "dry_run": the real scheduler over N fake players whose build takes
+  // simulated_ms — no database reads or writes. Proves batching at scale.
+  if (body.mode === "dry_run") {
+    const n = Math.min(Math.max(Number((body as any).players ?? 1000) || 1000, 1), 20000);
+    const ms = Math.min(Math.max(Number((body as any).simulated_ms ?? 3000) || 3000, 1), 60000);
+    const budgetMs = Math.min(Number((body as any).budget_ms ?? RUN_BUDGET_MS) || RUN_BUDGET_MS, RUN_BUDGET_MS);
+    const items = Array.from({ length: n }, (_, i) => i);
+    const r = await runPool(items, () => new Promise((res) => setTimeout(res, ms)), { budgetMs });
+    return json({ ok: true, mode: "dry_run", players: n, simulated_ms: ms, concurrency: CONCURRENCY, budget_ms: budgetMs, ...r });
+  }
+
   const mode = body.mode === "check" ? "check" : "build";
-  const limit = Math.min(Math.max(Number(body.limit ?? 2000) || 2000, 1), 5000);
+  const limit = Math.min(Math.max(Number(body.limit ?? 20000) || 20000, 1), 20000);
 
-  const { data: players, error } = await admin
-    .from("profiles")
-    .select("id, timezone")
-    .not("hammers_today_started_at", "is", null)
-    .is("account_paused_at", null)
-    .limit(limit);
-  if (error) return json({ error: error.message }, 500);
+  // Every started, unpaused player, paged so no one is cut off by a row cap.
+  const players: Array<{ id: string; timezone: string | null }> = [];
+  for (let from = 0; players.length < limit; from += 1000) {
+    const { data, error } = await admin.from("profiles").select("id, timezone")
+      .not("hammers_today_started_at", "is", null).is("account_paused_at", null)
+      .order("id").range(from, from + 999);
+    if (error) return json({ error: error.message }, 500);
+    players.push(...((data ?? []) as any[]));
+    if ((data ?? []).length < 1000) break;
+  }
 
-  const counts = { players: 0, present: 0, built: 0, failed: 0 };
-  for (const p of (players ?? []) as Array<{ id: string; timezone: string | null }>) {
-    counts.players++;
+  // One bulk read per local day for which plans already exist.
+  const days = new Map<string, string[]>();
+  for (const p of players) {
+    const d = localDate(p.timezone);
+    days.set(d, [...(days.get(d) ?? []), p.id]);
+  }
+  const have = new Set<string>();
+  for (const [d, ids] of days) {
+    for (let i = 0; i < ids.length; i += 500) {
+      const { data } = await admin.from("wk_prescriptions").select("user_id")
+        .eq("plan_date", d).in("user_id", ids.slice(i, i + 500)).limit(50000);
+      for (const r of (data ?? []) as any[]) have.add(`${r.user_id}|${d}`);
+    }
+  }
+  const missing = players.filter((p) => !have.has(`${p.id}|${localDate(p.timezone)}`));
+  const counts = { players: players.length, present: players.length - missing.length, built: 0, failed: 0, leftover_for_next_run: 0 };
+
+  const pool = await runPool(missing, async (p) => {
     const day = localDate(p.timezone);
-    const { data: existing } = await admin.from("wk_prescriptions").select("id")
-      .eq("user_id", p.id).eq("plan_date", day).limit(1);
-    if ((existing ?? []).length > 0) { counts.present++; continue; }
-
     const attempt = async (): Promise<string | null> => {
       try {
         const r = await fetch(`${URL_}/functions/v1/wk-generate-daily`, {
@@ -115,6 +141,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({ user_id: p.id, plan_date: day }),
         });
         if (!r.ok) return `HTTP ${r.status}: ${(await r.text()).slice(0, 300)}`;
+        await r.text();
         return null;
       } catch (e) {
         return String(e).slice(0, 300);
@@ -126,6 +153,12 @@ Deno.serve(async (req) => {
     await admin.from("wk_daily_plan_runs").insert({
       user_id: p.id, plan_date: day, mode, outcome: err ? "failed" : "built", error_text: err,
     });
-  }
-  return json({ ok: true, mode, ...counts });
+  });
+  counts.leftover_for_next_run = pool.leftover;
+
+  // Anonymous training store: refresh a few of the stalest eligible players.
+  let anonRefreshed = 0;
+  try { const { data } = await admin.rpc("anon_training_refresh_batch", { _limit: 25 }); anonRefreshed = Number(data ?? 0); } catch { /* never costs a plan */ }
+
+  return json({ ok: true, mode, ...counts, elapsed_ms: pool.elapsedMs, anon_refreshed: anonRefreshed });
 });

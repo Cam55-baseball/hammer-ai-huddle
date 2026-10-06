@@ -60,6 +60,7 @@ const Parent = z.object({
   signature_png: z.string().startsWith("data:image/png;base64,").max(600_000),
   promise_version: z.number().int().positive(),
   notice_version: z.number().int().positive(),
+  training_opt_in: z.boolean().optional().default(false),
 });
 const Signup = Parent.extend({
   child_birthdate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -115,6 +116,7 @@ Deno.serve(async (req) => {
       promise_version: d.promise_version, notice_version: d.notice_version,
       promise_text: t.promise.replace("[child's name]", d.child_display_name),
       ip: meta.ip, user_agent: meta.ua,
+      training_opt_in: d.training_opt_in === true, training_opt_in_at: d.training_opt_in ? new Date().toISOString() : null,
     }).select("id").single();
     if (error) return { error: "consent_save_failed" };
     return { id: data.id as string };
@@ -249,6 +251,15 @@ Deno.serve(async (req) => {
       const { error } = await admin.from("parent_consents").update({ optional_sharing: yes, optional_sharing_at: new Date().toISOString() })
         .eq("child_user_id", user.id).is("withdrawn_at", null);
       return error ? json({ error: "failed" }, 500) : json({ ok: true, optional_sharing: yes });
+    }
+
+    if (action === "training") {
+      const yes = body?.training_opt_in === true;
+      const { error } = await admin.from("parent_consents").update({ training_opt_in: yes, training_opt_in_at: new Date().toISOString() })
+        .eq("child_user_id", user.id).is("withdrawn_at", null);
+      if (error) return json({ error: "failed" }, 500);
+      if (yes) { try { await admin.rpc("anon_training_refresh", { _user: user.id }); } catch { /* next run */ } }
+      return json({ ok: true, training_opt_in: yes });
     }
 
     if (action === "signature_url") {

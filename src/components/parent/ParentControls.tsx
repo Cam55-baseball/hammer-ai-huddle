@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
-import { callParentConsent } from "@/lib/parent/parentConsent";
+import { callParentConsent, TRAINING_OPT_IN_TEXT } from "@/lib/parent/parentConsent";
 
 const STORED = [
   "Child's first name or nickname, birthdate, height and weight",
@@ -57,6 +57,10 @@ export function ParentControls({ userId }: { userId: string }) {
     } catch { setResult("That didn't work. Please try again."); }
     finally { setBusy(null); }
   };
+  const training = async (yes: boolean) => {
+    setBusy("training");
+    try { await callParentConsent("training", { training_opt_in: yes }); await q.refetch(); } finally { setBusy(null); }
+  };
   const share = async (yes: boolean) => {
     setBusy("share");
     try { await callParentConsent("sharing", { optional_sharing: yes }); await q.refetch(); } finally { setBusy(null); }
@@ -77,6 +81,10 @@ export function ParentControls({ userId }: { userId: string }) {
       <div className="flex items-center justify-between gap-3 rounded-lg border p-3 text-sm">
         <span>Optional sharing (for example PitchLab)</span>
         <Switch checked={!!c.optional_sharing} disabled={!!c.withdrawn_at || busy === "share"} onCheckedChange={share} aria-label="Optional sharing" />
+      </div>
+      <div className="flex items-start justify-between gap-3 rounded-lg border p-3 text-sm">
+        <span className="leading-6">{TRAINING_OPT_IN_TEXT}</span>
+        <Switch checked={!!c.training_opt_in} disabled={!!c.withdrawn_at || busy === "training"} onCheckedChange={training} aria-label="Help improve Hammers Modality" />
       </div>
       <Button variant="outline" className="h-11 w-full" onClick={download}>Download the signed record</Button>
       {!c.withdrawn_at && <>

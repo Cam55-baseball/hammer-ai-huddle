@@ -5,8 +5,12 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
-export const PROMISE_VERSION = 1;
-export const NOTICE_VERSION = 1;
+export const PROMISE_VERSION = 2;
+export const NOTICE_VERSION = 2;
+
+/** Exact owner-approved wording (Round 3). */
+export const TRAINING_OPT_IN_TEXT =
+  "Optional: Help improve Hammers Modality. If you say yes, we use your child's training information — what was prescribed, what was completed, what worked, and numbers like angles, timing and speeds — with name, email, birthdate, photos and videos removed, to improve our training programs. It stays inside Hammers Modality and is never sold or given to other companies to train their AI. You can turn this off anytime, and we'll remove your child's information from future training.";
 
 export interface ConsentStatus {
   enabled: boolean;
