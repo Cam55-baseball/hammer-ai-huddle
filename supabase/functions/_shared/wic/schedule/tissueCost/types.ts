@@ -30,6 +30,8 @@ export interface LiftEntry {
   hardSets?: number | null;
   /** Prescribed counts as done unless explicitly marked skipped. */
   skipped?: boolean | null;
+  /** True only when the athlete checked the lift off or logged it as done. */
+  confirmed?: boolean | null;
   /** Main movement not performed in the last 28 days. */
   novelty?: boolean | null;
 }

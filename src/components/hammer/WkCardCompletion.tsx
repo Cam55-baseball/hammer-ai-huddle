@@ -76,7 +76,7 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
         if (!side) {
           const { error } = await supabase
             .from("wk_prescriptions" as any)
-            .update({ status: "pending" })
+            .update({ status: "planned" })
             .in("id", ids);
           if (error) console.warn("wk_prescriptions status undo failed", error);
         }
@@ -145,6 +145,10 @@ export function WkCardCompletion({ modality, modalityLabel, items, side = null }
             .in("id", ids);
           if (error) {
             console.warn("wk_prescriptions bulk status update failed", error);
+            toast.error(`Couldn't save — ${error.message || "try again"}.`);
+            clearCompletion(user?.id, modality, side);
+            setCurrent(null);
+            return;
           } else if (status === "done") {
             // Best-effort session-log rows for the Learning Loop.
             const planDate = items[0]?.plan_date;

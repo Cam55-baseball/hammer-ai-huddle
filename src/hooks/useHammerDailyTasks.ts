@@ -11,6 +11,7 @@
 import { useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { setTaskCompletion } from "@/lib/hammer/taskCompletionWrite";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -87,22 +88,8 @@ export function useHammerDailyTasks(planDate: string) {
   const upsertMut = useMutation({
     mutationFn: async ({ seed, completed }: { seed: TaskSeed; completed: boolean }) => {
       if (!user?.id) throw new Error("Not signed in");
-      const { error } = await supabase
-        .from("hammer_daily_task_completions" as any)
-        .upsert(
-          {
-            user_id: user.id,
-            plan_date: planDate,
-            task_id: seed.taskId,
-            source: seed.source,
-            source_ref: seed.sourceRef,
-            payload: seed.payload ?? {},
-            side: seed.side ?? null,
-            completed,
-            completed_at: completed ? new Date().toISOString() : null,
-          },
-          { onConflict: "user_id,plan_date,task_id,side" },
-        );
+      const err = await setTaskCompletion(user.id, planDate, seed, completed);
+      const error = err ? new Error(err) : null;
       if (error) throw error;
     },
     onMutate: async ({ seed, completed }) => {
@@ -146,20 +133,10 @@ export function useHammerDailyTasks(planDate: string) {
   const bulkSetMut = useMutation({
     mutationFn: async ({ seeds, completed }: { seeds: TaskSeed[]; completed: boolean }) => {
       if (!user?.id || seeds.length === 0) return;
-      const rows = seeds.map((s) => ({
-        user_id: user.id,
-        plan_date: planDate,
-        task_id: s.taskId,
-        source: s.source,
-        source_ref: s.sourceRef,
-        payload: s.payload ?? {},
-        side: s.side ?? null,
-        completed,
-        completed_at: completed ? new Date().toISOString() : null,
-      }));
-      const { error } = await supabase
-        .from("hammer_daily_task_completions" as any)
-        .upsert(rows, { onConflict: "user_id,plan_date,task_id,side" });
+      const errs = (
+        await Promise.all(seeds.map((s) => setTaskCompletion(user.id, planDate, s, completed)))
+      ).filter(Boolean);
+      const error = errs.length ? new Error(errs[0] as string) : null;
       if (error) throw error;
     },
     onSettled: () => qc.invalidateQueries({ queryKey }),

@@ -10897,6 +10897,7 @@ export type Database = {
           suspended_at: string | null
           team_affiliation: string | null
           throwing_hand: Database["public"]["Enums"]["throwing_hand"] | null
+          timezone: string | null
           training_age_years: number | null
           tutorial_completed: boolean | null
           updated_at: string | null
@@ -10966,6 +10967,7 @@ export type Database = {
           suspended_at?: string | null
           team_affiliation?: string | null
           throwing_hand?: Database["public"]["Enums"]["throwing_hand"] | null
+          timezone?: string | null
           training_age_years?: number | null
           tutorial_completed?: boolean | null
           updated_at?: string | null
@@ -11035,6 +11037,7 @@ export type Database = {
           suspended_at?: string | null
           team_affiliation?: string | null
           throwing_hand?: Database["public"]["Enums"]["throwing_hand"] | null
+          timezone?: string | null
           training_age_years?: number | null
           tutorial_completed?: boolean | null
           updated_at?: string | null
@@ -17781,6 +17784,27 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_missed_lift_settings: {
+        Row: {
+          enabled_from: string | null
+          id: number
+          last_run_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          enabled_from?: string | null
+          id?: number
+          last_run_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          enabled_from?: string | null
+          id?: number
+          last_run_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       wk_movement_catalog: {
         Row: {
           aliases: string[] | null
@@ -19951,6 +19975,7 @@ export type Database = {
       wk_fielding_generic_fault: { Args: { p_group: string }; Returns: string }
       wk_fielding_position_group: { Args: { p_pos: string }; Returns: string }
       wk_fielding_root_pattern: { Args: { p_fault: string }; Returns: string }
+      wk_mark_missed_lifts: { Args: never; Returns: Json }
       wk_persist_prescriptions_atomic: {
         Args: { p_date: string; p_diag: Json; p_rows: Json; p_user: string }
         Returns: string

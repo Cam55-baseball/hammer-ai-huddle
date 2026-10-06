@@ -28,6 +28,7 @@ import {
   WkProgressionNote,
   type ProgressionPayloadShape,
 } from "@/components/hammer/WkProgressionNote";
+import { missedStillEditable } from "@/lib/wic/execution/liftCompletion";
 import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
 
 const SLOT_TONE: Record<WkRx["slot"], string> = {
@@ -104,15 +105,22 @@ export function WkPrescriptionCard({
   };
   const checked = side ? tasks.isDone(rx.id, side) : rx.status === "completed" || tasks.isDone(rx.id);
 
+  const isMissed = (rx.status as string) === "missed";
+  const missedLocked = isMissed && !missedStillEditable(rx.plan_date);
+
   const mark = async (status: "completed" | "skipped") => {
     if (!user?.id) return;
+    if (missedLocked) {
+      toast("This lift was more than 7 days ago, so it can't be changed now.");
+      return;
+    }
     if (!side) {
       const { error } = await supabase
         .from("wk_prescriptions" as any)
         .update({ status })
         .eq("id", rx.id);
       if (error) {
-        toast.error("Could not update");
+        toast.error(`Couldn't save — ${error.message || "try again"}.`);
         return;
       }
     }
@@ -141,18 +149,23 @@ export function WkPrescriptionCard({
     qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
   };
 
+  // Unchecking takes the mark back: the row returns to planned (or to missed
+  // if the day already ended and was marked missed). It never records a skip.
   const toggleCheckbox = (next: boolean) => {
-    void mark(next ? "completed" : "skipped");
-    if (!next && !side) {
-      // Return the row to planned when the athlete unchecks after completing.
+    if (next) {
+      void mark("completed");
+      return;
+    }
+    if (missedLocked || !user?.id) return;
+    tasks.toggleTask(taskSeed, false);
+    if (!side) {
       void supabase
         .from("wk_prescriptions" as any)
         .update({ status: "planned" })
         .eq("id", rx.id)
         .then(({ error }) => {
-          if (!error && user?.id) {
-            qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
-          }
+          if (error) toast.error(`Couldn't save — ${error.message || "try again"}.`);
+          else qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
         });
     }
   };
@@ -276,6 +289,11 @@ export function WkPrescriptionCard({
               <div className="font-semibold text-sm line-clamp-2 break-words">
                 {rx.movement_name}
               </div>
+              {isMissed && !checked && (
+                <Badge variant="outline" className="mt-0.5 text-[10px] border-destructive/50 text-destructive">
+                  Missed{missedLocked ? "" : " — you can still mark it done"}
+                </Badge>
+              )}
             </button>
           </CollapsibleTrigger>
           <CollapsibleTrigger asChild>
@@ -424,10 +442,10 @@ export function WkPrescriptionCard({
             </div>
           )}
           <div className="flex gap-2 pt-1">
-            <Button size="sm" variant="default" className="flex-1 gap-1" onClick={() => mark("completed")} disabled={rx.status === "completed"}>
+            <Button size="sm" variant="default" className="flex-1 gap-1" onClick={() => mark("completed")} disabled={rx.status === "completed" || missedLocked}>
               <CheckCircle2 className="h-3.5 w-3.5" /> Complete
             </Button>
-            <Button size="sm" variant="outline" onClick={() => mark("skipped")} disabled={rx.status === "skipped"}>
+            <Button size="sm" variant="outline" onClick={() => mark("skipped")} disabled={rx.status === "skipped" || missedLocked}>
               Skip
             </Button>
           </div>
