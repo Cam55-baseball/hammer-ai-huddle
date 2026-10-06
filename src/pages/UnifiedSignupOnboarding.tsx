@@ -305,6 +305,7 @@ export default function UnifiedSignupOnboarding() {
 
   const toggle = (v: string, cur: string, label: string, onPick: (v: string) => void) => choice(v, cur, label, onPick);
 
+  if (under13) return <Under13Block />;
   return <Frame step={shownStep} total={shownTotal} progress={progress} group={GROUP[screen]} onExit={() => exitRef.current()}>
     <AnimatePresence mode="wait" initial={false} custom={direction}>
       <motion.div key={draft.step} custom={direction} initial={{ opacity: 0, x: direction * 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: direction * -18 }} transition={{ duration: 0.22 }} className="flex min-h-[430px] flex-col motion-reduce:transform-none">

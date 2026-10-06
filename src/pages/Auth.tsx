@@ -40,6 +40,7 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [ageBlocked, setAgeBlocked] = useState<string | null>(null);
+  const [under13, setUnder13] = useState<boolean>(() => isSignupDeviceLocked());
   const [guardianEmail, setGuardianEmail] = useState("");
   // Apple Guideline 1.2 — signup cannot proceed without the agreement.
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -252,10 +253,10 @@ const Auth = () => {
         }
 
         if (!ageResult.allowed) {
-          setAgeBlocked(
-            ageResult.message ??
-              "Signing up at this age requires a parent or guardian, and that isn't available yet. Account creation can't continue.",
-          );
+          // Nothing typed is kept; this device can't retry for 30 days.
+          setEmail(""); setPassword(""); setFullName(""); setDateOfBirth(""); setGuardianEmail("");
+          lockSignupDevice();
+          setUnder13(true);
           return;
         }
 
@@ -403,7 +404,7 @@ const Auth = () => {
                   required={!isLogin}
                 />
                 <p className="text-xs text-muted-foreground">
-                  We ask for your real date of birth to know whether we're allowed to create an account for you.
+                  Required to set up your account.
                 </p>
               </div>
             )}
