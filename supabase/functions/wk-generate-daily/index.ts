@@ -219,7 +219,7 @@ import {
   resolveUbPrimerDose,
 } from "../_shared/wic/dosage/doctrine.ts";
 import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
-import { finalRuleCheck } from "../_shared/wic/schedule/finalCheck.ts";
+import { finalRuleCheck, dayKinds, FINAL_CHECK_CATALOG_COLUMNS, type DayKind } from "../_shared/wic/schedule/finalCheck.ts";
 import { loadedLiftRows } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
 
 
@@ -480,6 +480,21 @@ const handler = async (req: Request): Promise<Response> => {
             .in("slug", Array.from(new Set(savedRows.map((r) => String(r.movement_slug ?? "")).filter(Boolean)))),
           admin.from("profiles").select("date_of_birth").eq("id", user.id).maybeSingle(),
         ]);
+        const vYesterday = new Date(Date.parse(`${planDate}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
+        const vTomorrow = new Date(Date.parse(`${planDate}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+        const [{ data: vYRows }, { data: vGp }, { data: vCal }] = await Promise.all([
+          admin.from("wk_prescriptions").select("slot, sequence_role, movement_slug").eq("user_id", user.id).eq("plan_date", vYesterday),
+          admin.from("gp_games").select("id").eq("user_id", user.id).is("deleted_at", null).eq("game_date", vTomorrow)
+            .neq("ignored_for_training", true).not("status", "in", "(canceled,cancelled,rescheduled)").limit(1),
+          admin.from("calendar_events").select("id").eq("user_id", user.id).is("deleted_at", null).eq("event_date", vTomorrow)
+            .in("event_type", ["game", "tournament", "scrimmage"]).neq("ignored_for_training", true).limit(1),
+        ]);
+        const vSlugs = Array.from(new Set([...savedRows, ...((vYRows ?? []) as any[])].map((r: any) => String(r.movement_slug ?? "")).filter(Boolean)));
+        const { data: vCatFull } = await admin.from("wk_movement_catalog").select(FINAL_CHECK_CATALOG_COLUMNS).in("slug", vSlugs);
+        const vCatMap = new Map(((vCatFull ?? vCat ?? []) as any[]).map((c) => [String(c.slug), c]));
+        const vYKinds = dayKinds((vYRows ?? []) as any[], vCatMap);
+        const vPriorKinds: Partial<Record<DayKind, string[]>> = {};
+        for (const k of vYKinds) vPriorKinds[k] = [vYesterday];
         const byDate = new Map<string, any[]>();
         for (const r of (vPrior ?? []) as any[]) byDate.set(String(r.plan_date), [...(byDate.get(String(r.plan_date)) ?? []), r]);
         const vPriorDates = [...byDate.entries()].filter(([, rs]) => loadedLiftRows(rs).length > 0).map(([d]) => d);
@@ -492,7 +507,9 @@ const handler = async (req: Request): Promise<Response> => {
           restDaysBetweenLifts: vSpacing ? 2 : null,
           weeklyLiftMax: vSpacing && vPhase === "in_season" ? 2 : null,
           liftRemoved: false,
-          catalog: new Map(((vCat ?? []) as any[]).map((c) => [String(c.slug), c])),
+          priorKindDates: vPriorKinds,
+          gameTomorrow: ((vGp ?? []) as any[]).length > 0 || ((vCal ?? []) as any[]).length > 0,
+          catalog: vCatMap,
         });
         if (vCheck.swaps.length === 0) {
           return json({ ok: true, verified: true, plan_date: planDate }, 200);
@@ -4487,9 +4504,11 @@ const handler = async (req: Request): Promise<Response> => {
     // Spacing and weekly limits follow the rest-day switch for this player;
     // age and season rules always apply.
     try {
-      const fcSlugs = Array.from(new Set(rows.map((r: any) => String(r.movement_slug ?? "")).filter(Boolean)));
+      const { data: fcYRows } = await admin.from("wk_prescriptions").select("slot, sequence_role, movement_slug")
+        .eq("user_id", user.id).eq("plan_date", isoShift(planDate, -1));
+      const fcSlugs = Array.from(new Set([...rows, ...((fcYRows ?? []) as any[])].map((r: any) => String(r.movement_slug ?? "")).filter(Boolean)));
       const [{ data: fcCat }, { data: fcPrior }] = await Promise.all([
-        admin.from("wk_movement_catalog").select("slug, min_age_years, eccentric_overload, season_legality").in("slug", fcSlugs),
+        admin.from("wk_movement_catalog").select(FINAL_CHECK_CATALOG_COLUMNS).in("slug", fcSlugs),
         admin.from("wk_prescriptions").select("plan_date, slot, sequence_role")
           .eq("user_id", user.id).eq("slot", "lift")
           .gte("plan_date", isoShift(planDate, -13)).lt("plan_date", planDate).limit(400),
@@ -4503,6 +4522,10 @@ const handler = async (req: Request): Promise<Response> => {
       const fcAge = Number((athleteContext as any)?.development?.chronological_age ?? NaN);
       const enforceSpacing = features.rest_day_calculator === true;
       const fcPhase = String(phaseRes.phase);
+      const fcCatMap = new Map(((fcCat ?? []) as any[]).map((c) => [String(c.slug), c]));
+      const fcPriorKinds: Partial<Record<DayKind, string[]>> = {};
+      for (const k of dayKinds((fcYRows ?? []) as any[], fcCatMap)) fcPriorKinds[k] = [isoShift(planDate, -1)];
+      const fcTomorrowGame = scheduledGames.some((g: any) => g.date === isoShift(planDate, 1) && g.ignored !== true);
       const checked = finalRuleCheck(rows as any[], {
         planDate,
         phase: fcPhase,
@@ -4511,7 +4534,9 @@ const handler = async (req: Request): Promise<Response> => {
         restDaysBetweenLifts: enforceSpacing ? 2 : null,
         weeklyLiftMax: enforceSpacing && fcPhase === "in_season" ? 2 : null,
         liftRemoved: tcsAdjust?.removeLift === true,
-        catalog: new Map(((fcCat ?? []) as any[]).map((c) => [String(c.slug), c])),
+        priorKindDates: fcPriorKinds,
+        gameTomorrow: fcTomorrowGame,
+        catalog: fcCatMap,
       });
       if (checked.swaps.length > 0) {
         rows.splice(0, rows.length, ...(checked.rows as any[]));
