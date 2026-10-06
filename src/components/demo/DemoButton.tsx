@@ -77,12 +77,12 @@ export function DemoTourHost() {
   roleRef.current = { isCoach, isScout };
   useEffect(() => {
     if (!user) return;
-    if (location.pathname !== '/dashboard') { autoDiag('waiting: not on /dashboard (' + location.pathname + ')', staffRef.current, false); return; }
+    if (location.pathname !== '/dashboard') { autoDiag('waiting: not on /dashboard (' + location.pathname + ')'); return; }
     if (open) return;
     if (autoTried.current) return;
-    if (!accessReady) { autoDiag('waiting: plan/role still loading', staffRef.current, false); return; }
+    if (!accessReady) { autoDiag('waiting: plan/role still loading'); return; }
     autoTried.current = true;
-    const stop = (why: string) => autoDiag('skipped: ' + why, staffRef.current, true);
+    const stop = (why: string) => autoDiag('skipped: ' + why);
     try {
       const created = Date.parse((user as { created_at?: string }).created_at ?? '');
       const meta = (user as { user_metadata?: Record<string, unknown> }).user_metadata ?? {};
@@ -106,7 +106,7 @@ export function DemoTourHost() {
       }
       if (!Number.isFinite(pc)) return stop('profile row not found or unreadable after retries');
       if (Date.now() - pc > NEW_ACCOUNT_MS) return stop(`profile is older than 48 hours (created ${new Date(pc).toISOString()})`);
-      autoDiag('waiting: dashboard to finish loading', staffRef.current, false);
+      autoDiag('waiting: dashboard to finish loading');
       let landingAt = 0;
       const wait = window.setInterval(() => {
         if (window.location.pathname !== '/dashboard') { window.clearInterval(wait); return stop('left the dashboard before it finished loading'); }
@@ -123,7 +123,7 @@ export function DemoTourHost() {
           if (window.location.pathname !== '/dashboard') return stop('left the dashboard before the tour opened');
           try { localStorage.setItem(`hm-tour:${user.id}:auto`, JSON.stringify({ result: 'shown', at: Date.now() })); } catch { /* noop */ }
           void supabase.auth.updateUser({ data: { [AUTO_FLAG]: new Date().toISOString() } }).catch(() => {});
-          autoDiag('started', staffRef.current, true);
+          autoDiag('started');
           setOpen(true);
         }, 1200);
       }, 300);
