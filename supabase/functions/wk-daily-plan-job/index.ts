@@ -18,6 +18,21 @@ import { runPool, CONCURRENCY, WORKERS, WORKER_BUDGET_MS, SAFE_PARALLEL } from "
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
+/** Local hour (0–23) in the player's time zone. */
+function localHour(tz: string | null, now = new Date()): number {
+  try {
+    const h = new Intl.DateTimeFormat("en-GB", { timeZone: tz || "UTC", hour: "2-digit", hourCycle: "h23" }).format(now);
+    return Number(h) % 24;
+  } catch { return now.getUTCHours(); }
+}
+
+/** Round 6 (midnight rule): from this local hour on, tomorrow's plan is built
+ *  ahead so it is already saved when the player's day starts at 00:00. */
+export const PREBUILD_FROM_LOCAL_HOUR = 12;
+/** A worker that runs out of time hands its leftovers to a fresh copy of
+ *  itself, up to this many times, so building is continuous between runs. */
+const MAX_CHAIN = 4;
+
 function localDate(tz: string | null, now = new Date()): string {
   try {
     return new Intl.DateTimeFormat("en-CA", {
@@ -156,6 +171,10 @@ Deno.serve(async (req) => {
         }
       };
       let err = await attempt();
+      // The platform may briefly refuse a call ("Rate limit exceeded ... Retry after N ms"):
+      // wait as told (max 20 s) and try once more, in every mode.
+      const wait = err && /Rate limit/i.test(err) ? Math.min(Number(err.match(/Retry after (\d+)ms/)?.[1] ?? 5000), 20000) : 0;
+      if (wait) { await new Promise((r) => setTimeout(r, wait + 250)); err = await attempt(); }
       if (err && parentMode === "check") err = await attempt(); // one retry on the safety-net pass
       if (err) { c.failed++; await admin.from("wk_plan_build_claims").delete().eq("user_id", p.id).eq("plan_date", p.day); }
       else c.built++;
@@ -163,7 +182,19 @@ Deno.serve(async (req) => {
         user_id: p.id, plan_date: p.day, mode: parentMode, outcome: err ? "failed" : "built", error_text: err, duration_ms: Date.now() - t,
       });
     }, { budgetMs: WORKER_BUDGET_MS, concurrency: lanes });
-    return json({ ok: true, ...c, ...r });
+    const depth = Number((body as any).chain ?? 0) || 0;
+    let chained = false;
+    if (r.leftover > 0 && depth < MAX_CHAIN) {
+      const rest = (slice as any[]).slice(r.processed);
+      const p = fetch(`${URL_}/functions/v1/wk-daily-plan-job`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-job-token": req.headers.get("x-job-token")! },
+        body: JSON.stringify({ mode: "worker", slice: rest, parent_mode: parentMode, lanes, chain: depth + 1 }),
+      }).then((x) => x.text()).catch(() => {});
+      try { (globalThis as any).EdgeRuntime?.waitUntil?.(p); } catch { /* next run picks them up */ }
+      chained = true;
+    }
+    return json({ ok: true, ...c, ...r, chained });
   }
 
   const mode = body.mode === "check" ? "check" : "build";
@@ -180,12 +211,22 @@ Deno.serve(async (req) => {
     if ((data ?? []).length < 1000) break;
   }
 
-  // One bulk read per local day for which plans already exist.
-  const days = new Map<string, string[]>();
+  // Each player's target days: local today, plus local tomorrow once their
+  // local clock has reached PREBUILD_FROM_LOCAL_HOUR (built ahead so the plan
+  // is already there at 00:00). One bulk read per day for plans that exist.
+  const nowD = new Date();
+  const targets: Array<{ id: string; day: string; pri: number }> = [];
   for (const p of players) {
-    const d = localDate(p.timezone);
-    days.set(d, [...(days.get(d) ?? []), p.id]);
+    const today = localDate(p.timezone, nowD);
+    targets.push({ id: p.id, day: today, pri: 100 });
+    const h = localHour(p.timezone, nowD);
+    if (mode === "build" && h >= PREBUILD_FROM_LOCAL_HOUR && (body as any).prebuild !== false) {
+      // Players closest to their own midnight go first.
+      targets.push({ id: p.id, day: localDate(p.timezone, new Date(nowD.getTime() + (24 - h) * 3_600_000 + 60_000)), pri: h });
+    }
   }
+  const days = new Map<string, string[]>();
+  for (const t of targets) days.set(t.day, [...(days.get(t.day) ?? []), t.id]);
   const have = new Set<string>();
   for (const [d, ids] of days) {
     for (let i = 0; i < ids.length; i += 500) {
@@ -194,22 +235,34 @@ Deno.serve(async (req) => {
       for (const r of (data ?? []) as any[]) have.add(`${r.user_id}|${d}`);
     }
   }
-  const missing = players
-    .map((p) => ({ id: p.id, day: localDate(p.timezone) }))
-    .filter((p) => !have.has(`${p.id}|${p.day}`));
+  const missing = targets
+    .filter((t) => !have.has(`${t.id}|${t.day}`))
+    .sort((a, b) => b.pri - a.pri)
+    .map(({ id, day }) => ({ id, day }));
   const t0 = Date.now();
   // Total builds at once across all slices (SAFE_PARALLEL by default; a
   // token-holding caller may pass "parallel" 1–80 to measure load).
   const parallel = Math.min(Math.max(Number((body as any).parallel ?? SAFE_PARALLEL) || SAFE_PARALLEL, 1), WORKERS * CONCURRENCY);
   const nSlices = Math.min(WORKERS, Math.ceil(parallel / CONCURRENCY), missing.length);
   const lanes = Math.ceil(parallel / Math.max(nSlices, 1));
+  // Round 6: make the shared catalog copy once before the burst starts.
+  if (missing.length) {
+    try {
+      await fetch(`${URL_}/functions/v1/wk-generate-daily`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
+        body: JSON.stringify({ warm_catalog: true }),
+      }).then((r) => r.text());
+    } catch { /* builds fall back to reading the catalog themselves */ }
+  }
   const rs = missing.length ? await fanOut(split(missing, nSlices), { parent_mode: mode, lanes }) : [];
 
   // Anonymous training store: refresh a few of the stalest eligible players.
   let anonRefreshed = 0;
   try { const { data } = await admin.rpc("anon_training_refresh_batch", { _limit: 25 }); anonRefreshed = Number(data ?? 0); } catch { /* never costs a plan */ }
 
-  return json({ ok: true, mode, players: players.length, present: players.length - missing.length,
+  return json({ ok: true, mode, players: players.length, plans_wanted: targets.length, present: targets.length - missing.length,
+    prebuild_tomorrow: targets.filter((t) => t.pri < 100).length,
     built: sum(rs, "built"), failed: sum(rs, "failed"), skipped_claimed: sum(rs, "skipped_claimed"),
     leftover_for_next_run: sum(rs, "leftover"), worker_errors: rs.filter((r: any) => r?.error).length,
     parallel, elapsed_ms: Date.now() - t0, anon_refreshed: anonRefreshed });

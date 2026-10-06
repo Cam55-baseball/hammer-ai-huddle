@@ -57,3 +57,10 @@
 - [ ] OPEN (owner): plan building capacity ~860/hour on current database; 5,000 in first hour needs a larger database or faster builds
 - [x] Real build time: 3 first builds + 20 at once; undo
 - [x] Stripe promo HMPARENTTEST (100% off, 1 use, 7 days)
+
+## Round 6 (owner-approved 2026-10-06) — no publish, no cron/switch changes
+- [ ] A. Profile + speed up wk-generate-daily; identical-output proof; before/after times
+- [ ] B. Local-midnight readiness; pre-build proposal; cron proposal; multi-TZ proof
+- [ ] C. Plan never changes on reload (20 reloads, preview + live)
+- [ ] D. Screenshots 360/390: pitcher Bat speed, warm-up season label off/in season
+- [ ] Clean up all test data

@@ -242,6 +242,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // player's sessions on every other phone, tablet and browser too.
     const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) explicitSignOutPending = false;
+    else {
+      // The device copy of saved plans belongs to this player only.
+      try {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('hm.wkrx.')) localStorage.removeItem(k);
+        }
+      } catch { /* storage blocked */ }
+    }
     await syncNativeSession(true);
     return { error };
   };
