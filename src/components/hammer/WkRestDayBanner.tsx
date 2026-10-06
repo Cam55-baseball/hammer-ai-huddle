@@ -2,6 +2,7 @@ import { HeartPulse, CalendarClock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
+import { liftingPlanCopy } from "@/lib/hammer/notices/liftingPlanCopy";
 
 type RestDayPayload = {
   allowed_class?: string | null;
@@ -47,7 +48,7 @@ export function WkRestDayBanner() {
         {reasons.length > 0 && (
           <ul className="text-[11px] text-muted-foreground list-disc pl-4 space-y-0.5">
             {reasons.map((r, i) => (
-              <li key={i}>{r}</li>
+              <li key={i}>{liftingPlanCopy(r) ?? r}</li>
             ))}
           </ul>
         )}

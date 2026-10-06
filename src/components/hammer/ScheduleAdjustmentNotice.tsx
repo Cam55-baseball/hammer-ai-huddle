@@ -29,6 +29,7 @@ import {
 import { CalendarClock, Dumbbell, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { liftingPlanCopy } from "@/lib/hammer/notices/liftingPlanCopy";
 
 export interface ScheduleNoticeData {
   headline?: string | null;
@@ -162,7 +163,7 @@ export function ScheduleAdjustmentNotice({
           {(schedule.reasons ?? []).length > 0 && (
             <ul className="space-y-1 text-xs text-muted-foreground">
               {(schedule.reasons ?? []).map((r, i) => (
-                <li key={i}>• {r}</li>
+                <li key={i}>• {liftingPlanCopy(r) ?? r}</li>
               ))}
             </ul>
           )}
