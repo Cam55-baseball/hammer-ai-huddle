@@ -1,3 +1,4 @@
+import { ageFromDob } from "../age/ageFromDob.ts";
 // supabase/functions/_shared/wic/athleteContext.ts — Phase 5 SERVER.
 // Shape parity with src/lib/wic/athleteContext.ts. This file OWNS resolution.
 
@@ -130,13 +131,13 @@ export function resolveAthleteContext(input: {
   need(!!hittingSide, "hitting_side");
   need(!!primary, "primary_position");
 
-  const chronoAge = Number(p.age ?? p.age_years ?? p.chronological_age ?? NaN);
+  const chronoAge = ageFromDob(p.date_of_birth) ?? NaN; // ONE age source: profiles.date_of_birth
   const compLevel = competitiveLevelFrom(p);
   need(Number.isFinite(chronoAge), "chronological_age");
   need(compLevel !== "unknown", "competitive_level");
 
   const weightLb = Number(input.latestWeight?.weight_lb ?? input.latestWeight?.weight ?? p.weight_lb ?? p.weight ?? NaN);
-  const heightIn = Number(p.height_in ?? p.height ?? NaN);
+  const heightIn = Number(p.height_inches ?? p.height_in ?? NaN);
   need(Number.isFinite(weightLb), "weight_lb");
   need(Number.isFinite(heightIn), "height_in");
 
