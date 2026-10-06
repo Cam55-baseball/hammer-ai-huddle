@@ -17,6 +17,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { resolvePostLoginRoute, withLoginTimeout } from "@/lib/auth/postLoginRoute";
 import { AppleSignInButton } from "@/components/auth/AppleSignInButton";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
+import { isSignupDeviceLocked, lockSignupDevice } from "@/lib/auth/under13Lock";
+import { Under13Block } from "@/components/auth/Under13Block";
 
 
 const authSchema = z.object({
@@ -344,6 +346,7 @@ const Auth = () => {
 
   // Wait for the saved session; never flash the form at a signed-in player.
   if (authLoading || (user && !sawSignedOutRef.current)) return <HMLoadingFallback />;
+  if (under13 && !isLogin) return <Under13Block />;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 pt-safe pb-safe">
