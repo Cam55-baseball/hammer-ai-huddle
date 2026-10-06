@@ -827,6 +827,9 @@ function HammerDailyPlanBody({
         <div data-tour="update-hammer"><TellHammersInbox /></div>
       </ErrorBoundary>
       <ErrorBoundary>
+        <GrowthModeCard />
+      </ErrorBoundary>
+      <ErrorBoundary>
         <GuardianConsentPrompt />
       </ErrorBoundary>
       {/* Before you start — standalone section ABOVE the plan card. */}
