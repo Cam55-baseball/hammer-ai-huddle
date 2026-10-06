@@ -485,9 +485,9 @@ const handler = async (req: Request): Promise<Response> => {
         const [{ data: vYRows }, { data: vGp }, { data: vCal }] = await Promise.all([
           admin.from("wk_prescriptions").select("slot, sequence_role, movement_slug").eq("user_id", user.id).eq("plan_date", vYesterday),
           admin.from("gp_games").select("id").eq("user_id", user.id).is("deleted_at", null).eq("game_date", vTomorrow)
-            .neq("ignored_for_training", true).not("status", "in", "(canceled,cancelled,rescheduled)").limit(1),
+            .or("ignored_for_training.is.null,ignored_for_training.eq.false").not("status", "in", "(canceled,cancelled,rescheduled)").limit(1),
           admin.from("calendar_events").select("id").eq("user_id", user.id).is("deleted_at", null).eq("event_date", vTomorrow)
-            .in("event_type", ["game", "tournament", "scrimmage"]).neq("ignored_for_training", true).limit(1),
+            .in("event_type", ["game", "tournament", "scrimmage"]).or("ignored_for_training.is.null,ignored_for_training.eq.false").limit(1),
         ]);
         const vSlugs = Array.from(new Set([...savedRows, ...((vYRows ?? []) as any[])].map((r: any) => String(r.movement_slug ?? "")).filter(Boolean)));
         const { data: vCatFull } = await admin.from("wk_movement_catalog").select(FINAL_CHECK_CATALOG_COLUMNS).in("slug", vSlugs);
