@@ -10859,6 +10859,7 @@ export type Database = {
           full_name: string | null
           gpa: number | null
           graduation_year: number | null
+          hammers_today_started_at: string | null
           height: string | null
           height_inches: number | null
           high_school_grad_year: number | null
@@ -10929,6 +10930,7 @@ export type Database = {
           full_name?: string | null
           gpa?: number | null
           graduation_year?: number | null
+          hammers_today_started_at?: string | null
           height?: string | null
           height_inches?: number | null
           high_school_grad_year?: number | null
@@ -10999,6 +11001,7 @@ export type Database = {
           full_name?: string | null
           gpa?: number | null
           graduation_year?: number | null
+          hammers_today_started_at?: string | null
           height?: string | null
           height_inches?: number | null
           high_school_grad_year?: number | null
@@ -17253,6 +17256,36 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_daily_plan_runs: {
+        Row: {
+          created_at: string
+          error_text: string | null
+          id: string
+          mode: string
+          outcome: string
+          plan_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_text?: string | null
+          id?: string
+          mode: string
+          outcome: string
+          plan_date: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_text?: string | null
+          id?: string
+          mode?: string
+          outcome?: string
+          plan_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wk_exposure_daily: {
         Row: {
           channel: string
@@ -17517,6 +17550,39 @@ export type Database = {
           sort_order?: number | null
           updated_at?: string | null
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      wk_final_check_swaps: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          movement_slug: string | null
+          plan_date: string
+          rule: string
+          slot: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          movement_slug?: string | null
+          plan_date: string
+          rule: string
+          slot?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          movement_slug?: string | null
+          plan_date?: string
+          rule?: string
+          slot?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -19938,6 +20004,7 @@ export type Database = {
           typed_text: string
         }[]
       }
+      start_hammers_today: { Args: never; Returns: string }
       tell_hammers_save: {
         Args: {
           p_dates: string[]

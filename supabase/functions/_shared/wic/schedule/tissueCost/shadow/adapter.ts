@@ -31,6 +31,25 @@ export interface RawPrescription {
   sets: number | null;
   status: string | null;
   intensity_mode?: string | null;
+  sequence_role?: string | null;
+}
+
+/**
+ * Roles that make up a recovery-only day (arm care, mobility, trunk prep).
+ * A day whose lift-slot rows are ALL in this set is not a lift day: it never
+ * counts toward spacing, weekly limits, load or the reasons athletes read.
+ */
+export const RECOVERY_ONLY_ROLES: ReadonlySet<string> = new Set([
+  "arm_care", "mobility", "rotation", "trunk_primer", "breathing", "recovery", "flush",
+]);
+
+/** Lift-slot rows that are real lifting work (not recovery-only rows). */
+export function loadedLiftRows<T extends { slot?: string | null; sequence_role?: string | null }>(rows: readonly T[]): T[] {
+  const lifts = rows.filter((r) => (r.slot ?? "").toLowerCase() === "lift");
+  // Rows without a role (older data) keep the old behaviour: any lift row counts.
+  if (lifts.length > 0 && lifts.every((r) => r.sequence_role == null)) return lifts;
+  if (lifts.every((r) => r.sequence_role == null || RECOVERY_ONLY_ROLES.has(String(r.sequence_role)))) return [];
+  return lifts;
 }
 
 export interface RawSessionLog {
@@ -159,7 +178,7 @@ const num = (v: unknown): number | null => {
 
 /** Class from the day's prescribed lift intensity (§2, plan-only correctness). */
 export function classFromPrescriptions(rows: RawPrescription[]): SessionClass | null {
-  const lifts = rows.filter((r) => (r.slot ?? "").toLowerCase() === "lift");
+  const lifts = loadedLiftRows(rows);
   if (lifts.length === 0) return null;
   const peak = lifts.reduce((m, r) => Math.max(m, num(r.cns_cost) ?? 0), 0);
   if (peak >= 5) return "H";
@@ -278,7 +297,7 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
   for (const [date, rows] of byDate) {
     const cls = classFromPrescriptions(rows);
     if (!cls) continue;
-    const lifts = rows.filter((r) => (r.slot ?? "").toLowerCase() === "lift");
+    const lifts = loadedLiftRows(rows);
     const notDone = (st: string | null | undefined) => {
       const v = (st ?? "").toLowerCase();
       return v === "skipped" || v === "missed";

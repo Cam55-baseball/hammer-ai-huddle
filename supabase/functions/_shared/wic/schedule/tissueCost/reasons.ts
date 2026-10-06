@@ -19,7 +19,14 @@ export interface ReasonContext {
   loadPatternSignal: boolean;
   /** v1.2 §B1.5 — easing back in after time off. */
   onRamp?: boolean;
+  /** Last planned lift day (done, skipped or missed) — spacing counts from it. */
+  lastPlannedLift?: { date: string; confirmed: boolean } | null;
+  /** Set when this week's lift-day limit is already reached. */
+  weeklyMaxReached?: number | null;
 }
+
+export const WEEKLY_MAX_TEXT = (n: number) =>
+  `You already have ${n} lift days this week — the next one is next week.`;
 
 /** v1.2 §B1.5 on-ramp copy. */
 export const ON_RAMP_TEXT = "Easing back in after time off.";
@@ -66,11 +73,15 @@ export function buildReasons(ctx: ReasonContext): string[] {
   );
   const lastLift = [...ctx.contributions].reverse().find((c) => c.day.lift && !c.day.lift.skipped);
 
-  if (out.length < 2 && ctx.floorsApplied.length > 0 && lastLift) {
+  if (out.length < 2 && ctx.weeklyMaxReached) out.push(WEEKLY_MAX_TEXT(ctx.weeklyMaxReached));
+  const spacingFrom = ctx.lastPlannedLift !== undefined
+    ? ctx.lastPlannedLift
+    : lastLift ? { date: lastLift.date, confirmed: lastLift.day.lift?.confirmed === true } : null;
+  if (out.length < 2 && !ctx.weeklyMaxReached && ctx.floorsApplied.length > 0 && spacingFrom) {
     out.push(
-      lastLift.day.lift?.confirmed
-        ? `Your last lift was ${weekdayName(lastLift.date)} — we keep full rest days between lifts.`
-        : `Your last planned lift was ${weekdayName(lastLift.date)} — we keep full rest days between lifts.`,
+      spacingFrom.confirmed
+        ? `Your last lift was ${weekdayName(spacingFrom.date)} — we keep full rest days between lifts.`
+        : `Your last planned lift was ${weekdayName(spacingFrom.date)} — we keep full rest days between lifts.`,
     );
   }
 
@@ -116,6 +127,7 @@ export const ALL_REASON_TEMPLATES: string[] = [
   "3 hours of practice this week — the legs need the day.",
   "Load has been piling up — we dropped the level instead of skipping the day.",
   "Next heavy day: Monday.",
+  WEEKLY_MAX_TEXT(2),
   "You're rested — heavy day is on.",
   "We don't have today's date yet — recovery and skills only.",
 ];

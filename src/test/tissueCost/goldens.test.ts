@@ -327,12 +327,14 @@ describe("TCS goldens — schedule shapes", () => {
       { date: "2026-01-06" },
     ];
     expect(run(ADV17, days, "2026-01-06").allowedClass).toBe("none");
-    // marked skipped → it never stacks
+    // Owner ruling 2026-10-06: a skipped or missed lift still holds its place
+    // in the plan — it is never made up, so the next lift waits for the rest days.
     const skipped = [
       { date: "2026-01-05", lift: { class: "H" as const, method: "standard" as const, skipped: true } },
       { date: "2026-01-06" },
     ];
-    expect(run(ADV17, skipped, "2026-01-06").allowedClass).toBe("H");
+    expect(run(ADV17, skipped, "2026-01-06").allowedClass).toBe("none");
+    expect(run(ADV17, skipped, "2026-01-09").allowedClass).not.toBe("none");
   });
 
   it("no inputs at all: class M max, never H", () => {

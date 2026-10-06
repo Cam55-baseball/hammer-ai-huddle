@@ -219,6 +219,8 @@ import {
   resolveUbPrimerDose,
 } from "../_shared/wic/dosage/doctrine.ts";
 import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
+import { finalRuleCheck } from "../_shared/wic/schedule/finalCheck.ts";
+import { loadedLiftRows } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
 
 
 
@@ -383,10 +385,22 @@ const handler = async (req: Request): Promise<Response> => {
     const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user }, error: authErr } = await userClient.auth.getUser();
-    if (authErr || !user) return json({ error: "Unauthenticated" }, 401);
-
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    // The body is read once, here, so the daily plan job can name the athlete.
+    const rawBody = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    // Daily plan job path: only a caller holding the service key may build a
+    // plan for a named athlete. Everyone else builds only their own plan.
+    const isServiceCaller = authHeader === `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
+    let user: { id: string };
+    if (isServiceCaller) {
+      const uid = typeof rawBody.user_id === "string" ? rawBody.user_id : "";
+      if (!/^[0-9a-f-]{36}$/i.test(uid)) return json({ error: "user_id required" }, 400);
+      user = { id: uid };
+    } else {
+      const { data: { user: authUser }, error: authErr } = await userClient.auth.getUser();
+      if (authErr || !authUser) return json({ error: "Unauthenticated" }, 401);
+      user = authUser;
+    }
 
     // A training plan belongs to the athlete doing the training, and only to an
     // account that actually holds a prescription. Enforced here, not just in the
@@ -420,13 +434,40 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
 
-    const body = (await req.json().catch(() => ({}))) as {
+    const body = rawBody as {
       plan_date?: string;
       side_hit?: "L" | "R" | null;
       side_throw?: "L" | "R" | null;
       recent_ack?: { reduction_reason?: string; reduction_payload?: unknown; acknowledged_at?: string } | null;
     };
     const planDate = body.plan_date ?? todayStr();
+
+    // -------- Start gate (switch `hammers_today_start_gate`, built OFF) --------
+    // When the switch is on for this athlete, no plan is built until they have
+    // tapped "Start Hammers Today Plan" — from the app or from any job.
+    {
+      const [{ data: gateRows }, { data: startRow }] = await Promise.all([
+        admin.from("wk_feature_switches").select("feature_key, mode, allowlist, updated_by").eq("feature_key", "hammers_today_start_gate"),
+        admin.from("profiles").select("hammers_today_started_at").eq("id", user.id).maybeSingle(),
+      ]);
+      const gateRow = ((gateRows ?? []) as any[])[0];
+      const gateOn = !!gateRow && (gateRow.mode === "all" ||
+        (gateRow.mode === "pilot" && (gateRow.allowlist ?? []).includes(user.id)) ||
+        (gateRow.mode === "self" && gateRow.updated_by === user.id));
+      if (gateOn && !(startRow as any)?.hammers_today_started_at) {
+        return json({ error: "not_started", message: "Tap Start Hammers Today Plan to begin." }, 409);
+      }
+    }
+
+    // -------- Never rebuild a plan once anything on it is marked --------
+    {
+      const { data: marked } = await admin.from("wk_prescriptions").select("id")
+        .eq("user_id", user.id).eq("plan_date", planDate)
+        .not("status", "in", "(planned,pending)").limit(1);
+      if ((marked ?? []).length > 0) {
+        return json({ ok: true, skipped: "already_marked", plan_date: planDate }, 200);
+      }
+    }
     const recentAck = body.recent_ack ?? null;
     const sideOverride =
       (body.side_hit === "L" || body.side_hit === "R" || body.side_throw === "L" || body.side_throw === "R")
@@ -675,15 +716,21 @@ const handler = async (req: Request): Promise<Response> => {
     // a primer, never tighten anything.
     const { data: recentLiftRows } = await admin
       .from("wk_prescriptions")
-      .select("plan_date")
+      .select("plan_date, slot, sequence_role")
       .eq("user_id", user.id)
       .eq("slot", "lift")
       .gte("plan_date", isoShift(planDate, -6))
       .lt("plan_date", planDate)
-      .limit(60);
-    const liftExposureDatesLast7 = Array.from(
-      new Set(((recentLiftRows ?? []) as any[]).map((r: any) => String(r.plan_date))),
-    );
+      .limit(200);
+    // Recovery-only days (arm care, mobility) are not lift days.
+    const recentLiftByDate = new Map<string, any[]>();
+    for (const r of (recentLiftRows ?? []) as any[]) {
+      const d = String(r.plan_date);
+      recentLiftByDate.set(d, [...(recentLiftByDate.get(d) ?? []), r]);
+    }
+    const liftExposureDatesLast7 = [...recentLiftByDate.entries()]
+      .filter(([, rs]) => loadedLiftRows(rs).length > 0)
+      .map(([d]) => d);
     // The athlete's own one-day "Lift anyway" call. Scoped to this plan date
     // and this plan date only — there is no carry-over by construction.
     const { data: overrideRow } = await admin
@@ -4378,6 +4425,54 @@ const handler = async (req: Request): Promise<Response> => {
       if (slow) watchNotes.push(slow);
       await writeNotes(admin as any, watchNotes);
     } catch { /* a missing note never costs a card */ }
+
+    // -------- Final rule check (owner ruling 2026-10-06) --------
+    // Runs on every plan right before it is saved. Any card that breaks a rule
+    // is removed and the swap is logged; the day's recovery cards remain.
+    // Spacing and weekly limits follow the rest-day switch for this player;
+    // age and season rules always apply.
+    try {
+      const fcSlugs = Array.from(new Set(rows.map((r: any) => String(r.movement_slug ?? "")).filter(Boolean)));
+      const [{ data: fcCat }, { data: fcPrior }] = await Promise.all([
+        admin.from("wk_movement_catalog").select("slug, min_age_years, eccentric_overload, season_legality").in("slug", fcSlugs),
+        admin.from("wk_prescriptions").select("plan_date, slot, sequence_role")
+          .eq("user_id", user.id).eq("slot", "lift")
+          .gte("plan_date", isoShift(planDate, -13)).lt("plan_date", planDate).limit(400),
+      ]);
+      const priorByDate = new Map<string, any[]>();
+      for (const r of (fcPrior ?? []) as any[]) {
+        const d = String(r.plan_date);
+        priorByDate.set(d, [...(priorByDate.get(d) ?? []), r]);
+      }
+      const priorLiftDates = [...priorByDate.entries()].filter(([, rs]) => loadedLiftRows(rs).length > 0).map(([d]) => d);
+      const fcAge = Number((athleteContext as any)?.development?.chronological_age ?? NaN);
+      const enforceSpacing = features.rest_day_calculator === true;
+      const fcPhase = String(phaseRes.phase);
+      const checked = finalRuleCheck(rows as any[], {
+        planDate,
+        phase: fcPhase,
+        age: Number.isFinite(fcAge) ? fcAge : null,
+        priorLiftDates,
+        restDaysBetweenLifts: enforceSpacing ? 2 : null,
+        weeklyLiftMax: enforceSpacing && fcPhase === "in_season" ? 2 : null,
+        liftRemoved: tcsAdjust?.removeLift === true,
+        catalog: new Map(((fcCat ?? []) as any[]).map((c) => [String(c.slug), c])),
+      });
+      if (checked.swaps.length > 0) {
+        rows.splice(0, rows.length, ...(checked.rows as any[]));
+        await admin.from("wk_final_check_swaps").insert(checked.swaps.map((sw) => ({
+          user_id: user.id, plan_date: planDate, rule: sw.rule,
+          movement_slug: sw.movement_slug, slot: sw.slot, detail: sw.detail,
+        })));
+      }
+    } catch (fcErr) {
+      console.warn("[wk-generate-daily] final rule check failed", fcErr);
+      try {
+        await admin.from("wk_feature_error_events").insert({
+          feature_key: "final_rule_check", user_id: user.id, error_text: String(fcErr).slice(0, 500),
+        });
+      } catch { /* never blocks */ }
+    }
 
     const { data: diagId, error: rpcErr } = await admin.rpc("wk_persist_prescriptions_atomic" as any, {
       p_user: user.id,

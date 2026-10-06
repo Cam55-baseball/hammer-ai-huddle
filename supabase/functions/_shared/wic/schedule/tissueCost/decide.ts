@@ -271,6 +271,19 @@ export function decide(
   // ---- floors (evaluated before any tank math)
   const lastLiftEntry = [...pastDays].reverse().find((d) => d.lift && !d.lift.skipped) ?? null;
   const restSinceLastLift = lastLiftEntry ? fullRestDaysBetween(lastLiftEntry.date, today) : Infinity;
+  // Owner ruling 2026-10-06 — spacing and weekly limits apply to the PLAN.
+  // A planned lift holds its place whether it was done, skipped or missed: it
+  // is never made up and never moves, and the next lift lands on the next day
+  // the rules allow counted from it. Load (tanks) still uses done lifts only.
+  const lastPlannedEntry = [...pastDays].reverse().find((d) => d.lift) ?? null;
+  const restSincePlanned = lastPlannedEntry ? fullRestDaysBetween(lastPlannedEntry.date, today) : Infinity;
+  const weekStart = (() => {
+    const dow = new Date(`${today}T12:00:00Z`).getUTCDay(); // 0 = Sunday
+    return addDays(today, -((dow + 6) % 7)); // Monday
+  })();
+  const plannedLiftDaysThisWeek = pastDays.filter((d) => d.lift && d.date >= weekStart).length;
+  const weeklyMax = phase === "in_season" ? config.weeklyLiftMax?.inSeason ?? null : null;
+  const weeklyFull = weeklyMax !== null && plannedLiftDaysThisWeek >= weeklyMax;
   const floorsApplied: string[] = [];
 
   // Step 9 decision C — I12 is a SECOND check, independent of the floor table:
@@ -392,9 +405,12 @@ export function decide(
   const rulesOk = (cls: SessionClass): { ok: boolean; rule: string | null; floor: string | null } => {
     const rule = hardRuleFor(safeProfile, todayDay, nextDay, painToday, cls);
     if (rule) return { ok: false, rule, floor: null };
-    const need = lastLiftEntry ? requiredRestDays(phase, lastLiftEntry.lift!.class, cls, config) : 0;
-    if (lastLiftEntry && restSinceLastLift < need) {
-      return { ok: false, rule: null, floor: `${phase}_after_${lastLiftEntry.lift!.class}_needs_${need}` };
+    if (weeklyFull) {
+      return { ok: false, rule: null, floor: `${phase}_weekly_max_${weeklyMax}` };
+    }
+    const need = lastPlannedEntry ? requiredRestDays(phase, lastPlannedEntry.lift!.class, cls, config) : 0;
+    if (lastPlannedEntry && restSincePlanned < need) {
+      return { ok: false, rule: null, floor: `${phase}_after_${lastPlannedEntry.lift!.class}_needs_${need}` };
     }
     if (i12Blocks(cls, today)) {
       return {
@@ -457,8 +473,20 @@ export function decide(
       lv = addLevels(decay(lv, config, mods.halfLifeMul), applyCostMul(sportCost(day, config), mods.costMul));
       const rule = hardRuleFor(safeProfile, day, byDate.get(addDays(date, 1)) ?? null, false, "H");
       if (rule) continue;
-      const need = lastLiftEntry ? requiredRestDays(phase, lastLiftEntry.lift!.class, "H", config) : 0;
-      if (lastLiftEntry && fullRestDaysBetween(lastLiftEntry.date, date) < need) continue;
+      // Spacing counts from the last PLANNED lift — today's, if today lifts.
+      const anchorDate = allowedClass !== "none" ? today : lastPlannedEntry?.date ?? null;
+      const anchorClass: SessionClass | null = allowedClass !== "none"
+        ? allowedClass as SessionClass
+        : lastPlannedEntry?.lift?.class ?? null;
+      const need = anchorDate && anchorClass ? requiredRestDays(phase, anchorClass, "H", config) : 0;
+      if (anchorDate && fullRestDaysBetween(anchorDate, date) < need) continue;
+      if (weeklyMax !== null) {
+        const dow = new Date(`${date}T12:00:00Z`).getUTCDay();
+        const ws = addDays(date, -((dow + 6) % 7));
+        const inWeek = pastDays.filter((d) => d.lift && d.date >= ws).length +
+          (allowedClass !== "none" && today >= ws ? 1 : 0);
+        if (inWeek >= weeklyMax) continue;
+      }
       if (i12Blocks("H", date)) continue;
       if (!tanksOk("H", lv, phase)) continue;
       nextHeavyDate = date;
@@ -475,6 +503,10 @@ export function decide(
     hardRule: allowedClass === "none" ? hardRuleHit : null,
     loadPatternSignal,
     onRamp,
+    lastPlannedLift: lastPlannedEntry
+      ? { date: lastPlannedEntry.date, confirmed: lastPlannedEntry.lift?.confirmed === true }
+      : null,
+    weeklyMaxReached: weeklyFull ? weeklyMax : null,
   });
 
   const safeLevels: TankLevels = zeroTanks();

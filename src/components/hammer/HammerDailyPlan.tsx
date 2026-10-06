@@ -15,6 +15,8 @@
  * Schedule context line from `useScheduleWindow` retained.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useHammersTodayStart } from "@/hooks/useHammersTodayStart";
+import { StartHammersTodayCard } from "@/components/hammer/StartHammersTodayCard";
 import { DailyIntentHeader } from "@/components/hammer/DailyIntentHeader";
 import { WeeklyRoadmapStrip } from "@/components/hammer/WeeklyRoadmapStrip";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
@@ -612,6 +614,25 @@ export function HammerDailyPlan({
   }
 
 
+  return <StartGate beforeStartPortalTarget={beforeStartPortalTarget} />;
+}
+
+/**
+ * Start gate (switch `hammers_today_start_gate`). Until the account has
+ * started, the plan provider is not mounted, so nothing is built.
+ */
+function StartGate({ beforeStartPortalTarget }: { beforeStartPortalTarget?: HTMLElement | null }) {
+  const start = useHammersTodayStart();
+  if (start.loading) {
+    return (
+      <Card id="hammer-plan" className="scroll-mt-24">
+        <CardContent className="p-4"><Skeleton className="h-24 w-full rounded" /></CardContent>
+      </Card>
+    );
+  }
+  if (start.needsStart) {
+    return <StartHammersTodayCard onStart={start.start} starting={start.starting} error={start.error} />;
+  }
   return (
     <HammersTodayProvider>
       <HammerDailyPlanBody beforeStartPortalTarget={beforeStartPortalTarget} />
