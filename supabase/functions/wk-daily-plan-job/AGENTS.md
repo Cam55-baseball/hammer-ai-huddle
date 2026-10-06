@@ -1,0 +1,2 @@
+- Every mode requires header `x-job-token` (SHA-256 checked in code, token in Vault `wk_daily_plan_job_token`); bare 401 otherwise, never log the token. Why: the job rebuilds plans for every player.
+- Builds missing plans in parallel within a budget under the 150 s cutoff; next run takes leftovers. Why: overrun runs are killed.
