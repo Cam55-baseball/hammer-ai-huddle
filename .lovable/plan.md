@@ -1,91 +1,77 @@
-# Owner decisions — bat speed, growth mode, heavy track, birthdate, under-13 pause
+# Round 2: under-13 parent-controlled accounts, youth throwing, age path, pause gaps, tests
 
-No publish. No cron changes. `rest_day_calculator` and `hammers_today_start_gate` stay as they are. Part 5 (parent-managed under-13 program) is not built.
+Nothing is published. No schedule (cron) changes. `rest_day_calculator` and `hammers_today_start_gate` stay as they are. Nothing is deleted.
 
-## Part 1 — Bat speed is velocity training for pitchers
-- The Bat speed card on Hammers Today, for pitcher and 2-Way players: title "Bat speed: velocity training", plus the line "Bat speed builds the hip-and-shoulder power that carries into your fastball."
-- Start card: pitchers and 2-Way players see the same title and line. Position players keep "Bat speed".
-- The rule "no heavy- or light-bat work on back-to-back days" stays in force in both rule checks. No age or season limit is added to Bat speed.
+## Conflicts to settle before building (standing rule: stop and report)
 
-## Part 2 — Growth mode comes only from measured height
-- One shared rule, used by the planner and the app: growth of 2 cm (¾ in) or more within about 3 months (the latest height compared with the lowest height in the last ~90 days) turns growth mode on for 8 weeks. Each new qualifying increase renews it. It is never inferred from age. Missing height history means growth mode is off.
-- Every "age 15 or younger" shortcut is removed: heavy-track eligibility, weekly workload, and tissue recovery. The upper-body "1 inch in 30 days" rule is replaced by the shared rule.
-- When growth mode is on, these change together:
-  - Lifting: no heavy track; weekly workload held level.
-  - Jumps: easy, rhythmic jumps only (newly wired into the jump card).
-  - Upper-body throws and catches: tier 1 only.
-  - Tissue recovery: slower recovery.
-- A new growth card on Hammers Today shows the doc's text word for word while growth mode is on. It also says when it ends ("Ends on <date> unless you keep growing") and why it ended once it turns off. That off-notice shows for 7 days.
-- Height input:
-  - Onboarding: height becomes required, with the note "We'll ask you to update this as you grow."
-  - Progress photos: height is required before a photo can be saved.
-  - Players under 18: a reminder to update height when their last height entry is 28 days old. This is shown in the app; nothing is scheduled.
-  - Every entry writes one height record, shared by every place that reads height, so growth mode updates on the very next plan check.
+1. **Legal deferral.** `docs/legal/under-13-deferral.md` says: "A lawyer must confirm the verifiable-parental-consent method before any under-13 path ships." Part B builds that path behind a switch that stays OFF, which is consistent with "the owner will turn it on after legal sign-off." **Assumption:** build it, keep it OFF, and update the deferral note to read "built, switched off, waiting on legal sign-off". The note will list the open legal questions. One example: is a card payment plus a typed and drawn signature enough as verifiable parental consent?
+2. **Removed rules come back (Part C).** `docs/wic/youth-throwing-v1.md` lists rules "Removed by owner order (Step 27 A) — do not re-add". Two of them are the fixed yearly rest rule and the pitch-type age table. Part C brings back "4 months off a year, 2–3 in a row" and "fastballs and changeups only". **Assumption:** this new owner ruling overrides Step 27 A **for players under 13 only**. Ages 13 and up keep the current Hammers rest ratio and the readiness-based pitch rules. The doc gets updated to say this.
+3. **Innings cap.** The code uses 100 innings a year for high school and younger. Part C sets 60 a year (age 8 and under) and 80 a year (ages 9–12). **Assumption:** these apply under 13, and 100 stays for ages 13 and up.
+4. **AI providers and "no AI training".** The Parent Notice names Google AI and OpenAI as places the child's data goes. **Assumption:** the notice says data is sent to them only to produce analysis, not to train models. That depends on the providers' terms, which the lawyer should confirm. We will also never put children's data into our own pattern library or training tables.
+5. **Decimal scale below 20.** **Assumption:** "decimal scale" means the existing sub-20 developing scale already in report cards. If no such scale exists, I'll report that and not invent one.
 
-## Part 3 — Heavy track matches the approved plan
-- Heavy track: age 16 or older, training age 4+ years (advanced, elite or professional bands), not in growth mode, and no pain flag. The "6+ years only" rule is removed.
-- I will compare the code with the approved lifting plan (v4) and the Weight-Room Standards doc (barbell spinal work 16+ advanced, bodyweight ladders 14+, standards 14 minimum, safe session legal at 14). Every place that is stricter or looser gets fixed and listed in the report. Under the standing rule, no exercise's minimum age is lowered. If the plan would require lowering one, I list it for the owner instead.
+## A. Bat speed wording
+On the plan card and the Start card, the line becomes: "Bat speed builds rotational power that transfers seamlessly into pitching velocity." No single pitch is named anywhere. Tests get updated.
 
-## Part 4 — Birthdate is the one source of age
-- One shared age calculation from `profiles.date_of_birth`, used by the planner, the final rule check, legality, throwing limits, growth mode and the Start card. The separate age field is no longer read anywhere.
-- Signup: birthdate is required and asked neutrally ("Date of birth").
-  - Under 13: no account is created, nothing they typed is sent or stored, and they see: "Players under 13 need a parent or guardian to set up and manage their account."
-  - The device keeps a lock flag with no personal data, so the same device can't immediately retry with a different date.
-- Existing players with no birthdate: a required full-screen birthdate step on next open. They can't continue until it's saved. Entering an under-13 date pauses the account (below).
-- After a birthdate is saved, players can't change it; only the owner or admins can. This is enforced in the database, not just the screen.
-- Pausing an account (the 4 existing under-13 accounts now, plus any account where an under-13 date is entered later). A pause flag on the account means:
-  - no plans built: the planner and the daily job skip paused accounts;
-  - no uploads or AI analysis: upload and analysis functions refuse paused accounts;
-  - hidden from scouts, recruiters, search, leaderboards and public pages;
-  - the player sees a full screen: "A parent or guardian must set up and manage this account."
-  - No data is deleted.
-- Start card: the under-18 "growing body" wording is removed. The growth note appears only while the player is actually in growth mode.
+## B. Under-13 parent-controlled account (switch `under13_parent_program`, OFF)
+- **New switch.** Add it to the feature switches, set OFF. While it is OFF, today's behavior holds: under-13 signup is blocked and paused accounts show the paused screen.
+- **Signup when ON:**
+  1. An under-13 birthdate leads to "A parent or guardian must finish this signup."
+  2. The parent enters their legal name, relationship, their own birthdate (must be 18+), their email (used as the login) and the child's first name or nickname.
+  3. The parent reads the Parent Notice.
+  4. The parent signs the Promise with a typed name, a finger-drawn signature and a checkbox.
+  5. The parent pays with a card through the existing checkout.
+  Nothing is saved until the signature step. The account opens only when the signature **and** a confirmed payment are both on file.
+- **Paused accounts (when ON):** the screen becomes "Parent signature required" and leads into the same steps, including payment or card confirmation.
+- **Consent record.** A new table stores: parent name, relationship, the 18+ result, the signature image (in private storage), typed name, promise and notice versions, time, device and IP, the payment ID and status. The parent can view and download it in Settings. Owners and admins can see it. Records can't be edited; withdrawing permission adds a new entry.
+- **Parent controls in Settings:**
+  - view the signed promise
+  - see what is stored about the child
+  - delete the child's data (needs a typed confirmation and starts a logged deletion request)
+  - take back permission (locks the account at once)
+  - a separate optional-sharing "yes" (for example PitchLab), off by default
+- **Child protections:**
+  - hidden from scouts, recruiters, search, leaderboards and public pages (same route as paused accounts)
+  - no messaging with adults
+  - emails and notifications go to the parent
+  - left out of any training or pattern tables
+- **Versioned texts.** The Promise and the Notice are stored with version numbers (v1 uses the owner's draft wording).
 
-## Testing
-- Unit tests:
-  - the growth rule: turns on at ¾ in in 3 months, off after 8 weeks, renews;
-  - the heavy track: an advanced 16-year-old qualifies; 15 years old, in growth mode, or under 4 years of training does not;
-  - age from birthdate;
-  - Bat speed wording.
-- Re-run the 8-week simulation. All rule violations must stay 0.
-- On test accounts (server paths through the job token, as before):
-  - a height increase turns growth mode on, and it turns off after 8 weeks of simulated dates;
-  - an advanced 16-year-old test player gets the heavy track;
-  - a paused account gets no plan.
-- Phone screenshots of:
-  - the signup birthdate step and the under-13 block;
-  - the required birthdate screen;
-  - the paused-account screen;
-  - the height prompt on a progress photo;
-  - the growth card;
-  - a pitcher's Bat speed card and Start card.
+## C. Under-13 training (by birthdate)
+- **Pitch Smart, exactly:**
+  - Daily maximums and rest stay as listed.
+  - The 7–8 band drops the 51 and 66 rest rows, which can't be reached under its 50-pitch maximum.
+  - Innings: 60 a year at age 8 and under, 80 a year at ages 9–12.
+  - Rest: 4 months a year with no throwing, 2–3 of them in a row.
+  - Fastballs and changeups only.
+  - Never pitch three days in a row, or in two games on the same day.
+- **No weighted balls or weighted plyo-ball work under 13.** This is enforced in the planner and in the final rule check. Light-bat bat speed stays allowed.
+- **Lifting:** each exercise's minimum age, growth mode and every rest rule still apply. No minimum age is lowered. Every other card stays on wherever the rules allow.
 
-  These use sample-player preview pages, like the earlier Start-card evidence, because no signed-in player session is available.
+## D. Age path (one continuous record)
+- **13th birthday:** the parent signs the teen Promise using the same signature system. The parent can then move the login to the teen's email and stays linked with view-only access. Recruiting follows the existing 13–17 parent-consent rules.
+- **New 13–17 signups (switch ON):** a parent signs the teen permission.
+- **Existing 13–17 accounts:** prompted for a parent signature, with a 30-day grace period counted from the day the switch turns on.
+- **18th birthday:** the parent link ends, both are told, and the athlete is fully on their own.
+- **No new schedule (cron) jobs.** Birthday changes are checked when the player opens the app or when a plan is built.
+
+## E. Pause gaps
+Add the paused and under-13 check to every function that processes or shows athlete data. That includes hydration checks, base-stealing analysis, hammer-chat, realtime playback, exercise-log coach and the analysis functions. I'll audit every leaderboard and public page, and add any missing database hiding rules. The owner has authorized these redeploys.
+
+## F. Tests
+- **Phone screenshots:** birthdate screen, under-13 block, paused screen, progress-photo height, growth card, pitcher Bat speed, Start card.
+- **Real plans:**
+  - growth mode on, then off (by adding height readings to a test account)
+  - an advanced 16-year-old on the heavy track
+- **Switch ON for test accounts only:** run B, C and D end to end, then set the switch back to OFF.
+- **Sign-in needed.** Signing the preview in as a test player needs your approval. I'll ask for it clearly before I do it.
+- **Payment:** uses Stripe's test mode if the project has it. If not, I'll stop at checkout and report.
 
 ## Live now vs after publish
-- Live now, once deployed: database changes (pause flag, birthdate lock, hiding paused accounts), the 4 accounts paused, and the redeployed planner, daily job and upload/analysis functions.
-- After publish: every screen (birthdate, under-13 block, paused screen, height prompts, growth card, Bat speed wording, Start card).
+Database changes and backend functions go live when deployed (owner-authorized). Screens and wording go live when the owner publishes. The switch stays OFF either way.
 
-## Points to confirm (my assumptions in brackets)
-1. Google sign-in creates the account before a birthdate can be asked. ["No account created" applies to email signup. A Google signup with an under-13 date is paused immediately, not deleted, because deleting would break the no-delete rule.]
-2. How long the under-13 device lock lasts. [30 days.]
-3. Upper-body drills currently assume age 14 when age is unknown. Birthdate becomes required, so [unknown age is treated as 13, matching the final rule check].
-4. Paused accounts and the scouting and recruiting functions: [hide them through the existing recruiting gate (`_shared/recruitingGate.ts`) plus the database's access rules].
-
-## Technical details
-- Migration:
-  - `profiles.account_paused_at`, `paused_reason`;
-  - a trigger that blocks non-admin changes to `date_of_birth` once it is set, and pauses the account when the birthdate is under 13;
-  - paused accounts excluded from the visibility functions behind search, leaderboards and recruiting;
-  - a data update pausing the 4 accounts.
-- Shared modules:
-  - `_shared/wic/growth/growthMode.ts` plus a client mirror;
-  - `_shared/age/ageFromDob.ts`;
-  - `isHeavyEligible` changed to 4+ years of training.
-- Edits:
-  - in `wk-generate-daily`: lines ~1481–1486, ~3220 and ~1040–1060;
-  - also `tissueCost/shadow/adapter.ts`, `blockContent.ts` (pass growth mode in), `finalCheck.ts` and `startPlanItems.ts`;
-  - the onboarding, progress-photo and signup screens;
-  - a new `BirthdateGate` and `PausedAccountScreen` at the app root.
-- Redeploy: `wk-generate-daily`, `wk-daily-plan-job`, and the upload/analysis functions that gain the pause check.
-- Record each decision in `AGENTS.md`. Save to memory: growth mode is height-only, birthdate is the one source of age, and the under-13 pause.
+## Technical notes
+- New tables: `parent_consents` (insert-only, with grants and row rules), `consent_texts` (versioned), `parent_links`, `child_data_deletion_requests`.
+- A storage bucket for signatures; access only for the signer and owners/admins.
+- `accountPause.ts` grows into a single "can this account be processed" check (paused, or under 13 without consent).
+- Checkout confirmation is read back through the existing subscription check; the account opens on signature plus payment.
