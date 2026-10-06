@@ -1,3 +1,4 @@
+import { isAccountPaused, pausedResponse } from "../_shared/accountPause.ts";
 // Owner-triggered: analyzes a video's ai_description + title with Gemini (via OpenAI-compatible gateway)
 // and inserts proposals into video_tag_suggestions for owner review.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
@@ -32,6 +33,7 @@ Deno.serve(async (req) => {
       });
     }
     const userId = userData.user.id;
+    if (await isAccountPaused(null, userId)) return pausedResponse(corsHeaders);
 
     const admin = createClient(
       Deno.env.get('SUPABASE_URL')!,
