@@ -15459,6 +15459,7 @@ export type Database = {
           chest_measurement: number | null
           created_at: string | null
           cycle_week: number | null
+          height_inches: number | null
           id: string
           leg_measurement: number | null
           next_entry_date: string | null
@@ -15476,6 +15477,7 @@ export type Database = {
           chest_measurement?: number | null
           created_at?: string | null
           cycle_week?: number | null
+          height_inches?: number | null
           id?: string
           leg_measurement?: number | null
           next_entry_date?: string | null
@@ -15493,6 +15495,7 @@ export type Database = {
           chest_measurement?: number | null
           created_at?: string | null
           cycle_week?: number | null
+          height_inches?: number | null
           id?: string
           leg_measurement?: number | null
           next_entry_date?: string | null
