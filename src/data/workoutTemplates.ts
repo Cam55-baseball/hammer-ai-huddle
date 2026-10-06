@@ -31,7 +31,7 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
       { id: 'tpl-bench', name: 'Bench Press', type: 'strength', sets: 3, reps: 10, rest: 90 },
       { id: 'tpl-rows', name: 'Barbell Rows', type: 'strength', sets: 3, reps: 10, rest: 90 },
       { id: 'tpl-lunges', name: 'Lunges', type: 'strength', sets: 3, reps: 12, rest: 60 },
-      { id: 'tpl-pallof', name: 'Pallof Press', type: 'core', sets: 3, reps: 10, rest: 45 },
+      { id: 'tpl-pallof', name: 'Resist-Turning Press', type: 'core', sets: 3, reps: 10, rest: 45 },
     ],
   },
   {

@@ -62,7 +62,7 @@ const CYCLE_1_DAY_1: UnicornDayTemplate = {
       description: 'Strict form, squeeze at top.', notes: '1s hold at top' },
   ],
   secondaryExercises: [
-    { name: 'Pallof Press', type: 'strength', sets: 3, reps: 8, percentOf1RM: 60, trackWeight: true,
+    { name: 'Resist-Turning Press', type: 'strength', sets: 3, reps: 8, percentOf1RM: 60, trackWeight: true,
       description: 'Anti-rotation core stability.', notes: 'Each side' },
     { name: 'Isometric Wall Sit', type: 'isometric', sets: 3, holdTime: 10,
       description: 'Thighs parallel, maximum quad tension.', notes: 'Foundation hold' },
