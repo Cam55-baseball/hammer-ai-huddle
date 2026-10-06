@@ -1,9 +1,15 @@
 import "./i18n";
-import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
 import "./index.css";
 import { registerSW } from "./registerSW";
+import { restoreNativeSession } from "./lib/auth/nativeSessionStore";
 
-createRoot(document.getElementById("root")!).render(<App />);
-
-registerSW();
+// In the native iPhone app, restore the saved sign-in from native storage
+// BEFORE the auth client loads (App imports it). On the web this is a no-op.
+restoreNativeSession().finally(async () => {
+  const [{ createRoot }, { default: App }] = await Promise.all([
+    import("react-dom/client"),
+    import("./App.tsx"),
+  ]);
+  createRoot(document.getElementById("root")!).render(<App />);
+  registerSW();
+});
