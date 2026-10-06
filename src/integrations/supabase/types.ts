@@ -17952,6 +17952,7 @@ export type Database = {
       wk_daily_plan_runs: {
         Row: {
           created_at: string
+          duration_ms: number | null
           error_text: string | null
           id: string
           mode: string
@@ -17961,6 +17962,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          duration_ms?: number | null
           error_text?: string | null
           id?: string
           mode: string
@@ -17970,6 +17972,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          duration_ms?: number | null
           error_text?: string | null
           id?: string
           mode?: string
@@ -18996,6 +18999,24 @@ export type Database = {
           speed_cadence_hours?: number
           supplemental_style?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      wk_plan_build_claims: {
+        Row: {
+          claimed_at: string
+          plan_date: string
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string
+          plan_date: string
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string
+          plan_date?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -20378,6 +20399,7 @@ export type Database = {
         }
       }
       cron_call: { Args: { body?: Json; fn: string }; Returns: number }
+      delete_child_data: { Args: { _uid: string }; Returns: Json }
       dispatch_standard_match_pings: { Args: never; Returns: Json }
       dispatch_standard_match_pings_v2: {
         Args: { p_message?: string }
@@ -20794,6 +20816,10 @@ export type Database = {
           p_user: string
         }
         Returns: Json
+      }
+      wk_claim_plan_build: {
+        Args: { _day: string; _user: string }
+        Returns: boolean
       }
       wk_external_training_days: {
         Args: { p_from: string; p_to: string; p_user: string }

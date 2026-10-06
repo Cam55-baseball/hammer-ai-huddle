@@ -102,13 +102,19 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil" 
     });
 
-    // Check if customer already exists
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    // Parent-controlled (under-13) accounts: the Stripe customer comes only from
+    // this account's own subscriptions row — never an email lookup.
+    const admin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+    const { data: pc } = await admin.from("profiles").select("parent_controlled").eq("id", user.id).maybeSingle();
     let customerId;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-      logStep("Existing customer found", { customerId });
+    if (pc?.parent_controlled) {
+      const { data: row } = await admin.from("subscriptions").select("stripe_customer_id").eq("user_id", user.id).maybeSingle();
+      customerId = row?.stripe_customer_id ?? undefined;
+    } else {
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (customers.data.length > 0) customerId = customers.data[0].id;
     }
+    if (customerId) logStep("Existing customer found", { customerId });
 
     let lineItems: { price: string; quantity: number }[];
     const checkoutMetadata: Record<string, string> = { user_id: user.id };

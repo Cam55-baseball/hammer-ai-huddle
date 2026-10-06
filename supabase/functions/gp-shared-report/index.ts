@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
 
     const { data, error } = await supabase
       .from("gp_reports")
-      .select("snapshot, share_expires_at, share_revoked")
+      .select("snapshot, share_expires_at, share_revoked, user_id")
       .eq("share_token", token)
       .maybeSingle();
 
@@ -33,6 +33,12 @@ Deno.serve(async (req) => {
       return json({ error: "Lookup failed" }, 500);
     }
     if (!data || data.share_revoked) return json({ error: "Not found" }, 404);
+    // Paused and under-13 accounts never show on a public link.
+    const [{ data: paused }, { data: u13 }] = await Promise.all([
+      supabase.rpc("is_account_paused", { _user_id: data.user_id }),
+      supabase.rpc("is_under_13", { _user_id: data.user_id }),
+    ]);
+    if (paused === true || u13 === true) return json({ error: "Not found" }, 404);
     if (data.share_expires_at && new Date(data.share_expires_at) < new Date()) {
       return json({ error: "Expired" }, 410);
     }

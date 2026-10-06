@@ -41,14 +41,7 @@ const utcToday = () => new Date().toISOString().slice(0, 10);
  * Tables cleared by "delete my child's data". The account row, the consent
  * record and this deletion log are kept (proof of consent and of deletion).
  */
-export const CHILD_DATA_TABLES: Array<[string, string]> = [
-  ["videos", "user_id"], ["vault_progress_photos", "user_id"], ["athlete_height_checks", "user_id"],
-  ["athlete_daily_log", "user_id"], ["hydration_logs", "user_id"], ["mental_health_journal", "user_id"],
-  ["emotion_tracking", "user_id"], ["mindfulness_sessions", "user_id"], ["custom_activity_logs", "user_id"],
-  ["athlete_body_goals", "user_id"], ["athlete_events", "user_id"], ["calendar_events", "user_id"],
-  ["catching_reps", "user_id"], ["defensive_plays", "user_id"], ["user_behavior_patterns", "user_id"],
-  ["wk_prescriptions", "user_id"], ["wk_session_logs", "user_id"], ["wk_plan_changes", "user_id"], ["hammer_daily_task_completions", "user_id"],
-];
+export const KEPT_ON_DELETE = ["profiles (the account)", "parent_consents", "child_data_deletions", "parent-signatures files"];
 
 const Parent = z.object({
   parent_full_name: z.string().trim().min(3).max(120),
@@ -135,25 +128,24 @@ Deno.serve(async (req) => {
   };
 
   const stripe = () => new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", { apiVersion: "2025-08-27.basil" });
-  const activeSubscription = async (email: string) => {
-    const s = stripe();
-    const customers = await s.customers.list({ email, limit: 5 });
-    for (const c of customers.data) {
-      const subs = await s.subscriptions.list({ customer: c.id, status: "all", limit: 10 });
-      const live = subs.data.find((x) => x.status === "active" || x.status === "trialing");
-      if (live) return live;
-    }
-    return null;
+  // Payment is tied to the account itself (checkout sets client_reference_id
+  // and metadata.user_id; stripe-webhook syncs public.subscriptions). Never by email.
+  const paidRow = async (uid: string) => {
+    const { data } = await admin.from("subscriptions").select("status, stripe_subscription_id, stripe_customer_id, current_period_end")
+      .eq("user_id", uid).maybeSingle();
+    if (!data || data.status !== "active" || !data.stripe_subscription_id) return null;
+    if (data.current_period_end && new Date(data.current_period_end).getTime() < Date.now()) return null;
+    return data;
   };
-  const cancelBilling = async (email: string) => {
-    const s = stripe();
+  const cancelBilling = async (uid: string) => {
+    const { data } = await admin.from("subscriptions").select("stripe_customer_id").eq("user_id", uid).maybeSingle();
     const canceled: string[] = [];
-    const customers = await s.customers.list({ email, limit: 5 });
-    for (const c of customers.data) {
-      const subs = await s.subscriptions.list({ customer: c.id, status: "all", limit: 20 });
-      for (const x of subs.data) if (["active", "trialing", "past_due", "unpaid", "incomplete"].includes(x.status)) {
-        await s.subscriptions.cancel(x.id); canceled.push(x.id);
-      }
+    if (!data?.stripe_customer_id) return canceled;
+    const s = stripe();
+    const subs = await s.subscriptions.list({ customer: data.stripe_customer_id, status: "all", limit: 20 });
+    for (const x of subs.data) {
+      if ((x.metadata?.user_id ?? uid) !== uid) continue; // only this child's plans
+      if (["active", "trialing", "past_due", "unpaid", "incomplete"].includes(x.status)) { await s.subscriptions.cancel(x.id); canceled.push(x.id); }
     }
     return canceled;
   };
@@ -220,9 +212,9 @@ Deno.serve(async (req) => {
       const { data: c } = await admin.from("parent_consents").select("id, payment_confirmed_at")
         .eq("child_user_id", user.id).is("withdrawn_at", null).order("signed_at", { ascending: false }).limit(1).maybeSingle();
       if (!c) return json({ ok: false, reason: "signature_missing" });
-      const sub = user.email ? await activeSubscription(user.email) : null;
+      const sub = await paidRow(user.id);
       if (!sub) return json({ ok: false, reason: "payment_missing" });
-      await admin.from("parent_consents").update({ stripe_payment_id: sub.id, payment_confirmed_at: c.payment_confirmed_at ?? new Date().toISOString() }).eq("id", c.id);
+      await admin.from("parent_consents").update({ stripe_payment_id: sub.stripe_subscription_id, payment_confirmed_at: c.payment_confirmed_at ?? new Date().toISOString() }).eq("id", c.id);
       await admin.from("profiles").update({ parent_consent_ok: true, account_paused_at: null, paused_reason: null }).eq("id", user.id);
       return json({ ok: true });
     }
@@ -234,12 +226,25 @@ Deno.serve(async (req) => {
       await lock(user.id, action === "delete" ? "parent_deleted_data" : "parent_withdrew");
       await admin.from("parent_consents").update({ withdrawn_at: new Date().toISOString() }).eq("id", c.id);
       let canceled: string[] = []; let billingError: string | null = null;
-      try { if (user.email) canceled = await cancelBilling(user.email); } catch { billingError = "stripe_cancel_failed"; }
+      try { canceled = await cancelBilling(user.id); } catch { billingError = "stripe_cancel_failed"; }
       const removed: Record<string, number | string> = {};
       if (action === "delete") {
-        for (const [table, col] of CHILD_DATA_TABLES) {
-          const { count, error } = await admin.from(table).delete({ count: "exact" }).eq(col, user.id);
-          removed[table] = error ? `error: ${error.code ?? "failed"}` : (count ?? 0);
+        // Every public table holding this child's rows (see delete_child_data).
+        // Two passes so rows blocked by another table's link go on the second.
+        for (let pass = 0; pass < 2; pass++) {
+          const { data, error } = await admin.rpc("delete_child_data", { _uid: user.id });
+          if (error) { removed[`pass_${pass + 1}`] = `error: ${error.code ?? "failed"}`; continue; }
+          for (const [k, v] of Object.entries(data ?? {})) {
+            if (pass === 0 || typeof v === "number" || typeof removed[k] === "string") removed[k] = v as any;
+          }
+        }
+        // Stored files in the child's own folder of every bucket (signatures are kept).
+        const { data: buckets } = await admin.storage.listBuckets();
+        for (const b of buckets ?? []) {
+          if (b.name === "parent-signatures") continue;
+          const { data: files } = await admin.storage.from(b.name).list(user.id, { limit: 1000 });
+          const paths = (files ?? []).map((f) => `${user.id}/${f.name}`);
+          if (paths.length) { const { error } = await admin.storage.from(b.name).remove(paths); removed[`storage:${b.name}`] = error ? "error" : paths.length; }
         }
         await admin.from("child_data_deletions").insert({ child_user_id: user.id, consent_id: c.id, removed });
       }
