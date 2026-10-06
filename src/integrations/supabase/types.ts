@@ -920,6 +920,93 @@ export type Database = {
         }
         Relationships: []
       }
+      anon_training_records: {
+        Row: {
+          age_band: string | null
+          card_type: string | null
+          created_at: string
+          delta_2w: Json
+          delta_4w: Json
+          delta_8w: Json
+          dose: Json
+          growth_mode: boolean | null
+          id: string
+          logged: Json
+          measures: Json
+          movement_slug: string | null
+          outcome: string | null
+          pid: string
+          readiness_band: string | null
+          role: string | null
+          rules: Json
+          season_phase: string | null
+          sport: string | null
+          training_age_band: string | null
+          week_start: string
+        }
+        Insert: {
+          age_band?: string | null
+          card_type?: string | null
+          created_at?: string
+          delta_2w?: Json
+          delta_4w?: Json
+          delta_8w?: Json
+          dose?: Json
+          growth_mode?: boolean | null
+          id?: string
+          logged?: Json
+          measures?: Json
+          movement_slug?: string | null
+          outcome?: string | null
+          pid: string
+          readiness_band?: string | null
+          role?: string | null
+          rules?: Json
+          season_phase?: string | null
+          sport?: string | null
+          training_age_band?: string | null
+          week_start: string
+        }
+        Update: {
+          age_band?: string | null
+          card_type?: string | null
+          created_at?: string
+          delta_2w?: Json
+          delta_4w?: Json
+          delta_8w?: Json
+          dose?: Json
+          growth_mode?: boolean | null
+          id?: string
+          logged?: Json
+          measures?: Json
+          movement_slug?: string | null
+          outcome?: string | null
+          pid?: string
+          readiness_band?: string | null
+          role?: string | null
+          rules?: Json
+          season_phase?: string | null
+          sport?: string | null
+          training_age_band?: string | null
+          week_start?: string
+        }
+        Relationships: []
+      }
+      anon_training_refresh_state: {
+        Row: {
+          refreshed_at: string
+          user_id: string
+        }
+        Insert: {
+          refreshed_at?: string
+          user_id: string
+        }
+        Update: {
+          refreshed_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       anonymized_pattern_library: {
         Row: {
           confidence: number | null
@@ -10661,6 +10748,8 @@ export type Database = {
           signature_path: string
           signed_at: string
           stripe_payment_id: string | null
+          training_opt_in: boolean
+          training_opt_in_at: string | null
           typed_name: string
           user_agent: string | null
           withdrawn_at: string | null
@@ -10685,6 +10774,8 @@ export type Database = {
           signature_path: string
           signed_at?: string
           stripe_payment_id?: string | null
+          training_opt_in?: boolean
+          training_opt_in_at?: string | null
           typed_name: string
           user_agent?: string | null
           withdrawn_at?: string | null
@@ -10709,6 +10800,8 @@ export type Database = {
           signature_path?: string
           signed_at?: string
           stripe_payment_id?: string | null
+          training_opt_in?: boolean
+          training_opt_in_at?: string | null
           typed_name?: string
           user_agent?: string | null
           withdrawn_at?: string | null
@@ -11421,6 +11514,7 @@ export type Database = {
           act_score: number | null
           activation_choice: string | null
           activity_level: string | null
+          anon_training_opt_out: boolean
           avatar_url: string | null
           batting_side: Database["public"]["Enums"]["batting_side"] | null
           bio: string | null
@@ -11496,6 +11590,7 @@ export type Database = {
           act_score?: number | null
           activation_choice?: string | null
           activity_level?: string | null
+          anon_training_opt_out?: boolean
           avatar_url?: string | null
           batting_side?: Database["public"]["Enums"]["batting_side"] | null
           bio?: string | null
@@ -11571,6 +11666,7 @@ export type Database = {
           act_score?: number | null
           activation_choice?: string | null
           activity_level?: string | null
+          anon_training_opt_out?: boolean
           avatar_url?: string | null
           batting_side?: Database["public"]["Enums"]["batting_side"] | null
           bio?: string | null
@@ -20139,6 +20235,15 @@ export type Database = {
     }
     Functions: {
       all_checked: { Args: { cb: Json }; Returns: boolean }
+      anon_age_band: { Args: { _age: number }; Returns: string }
+      anon_pid: { Args: { _user: string }; Returns: string }
+      anon_training_eligible: { Args: { _user: string }; Returns: boolean }
+      anon_training_refresh: { Args: { _user: string }; Returns: number }
+      anon_training_refresh_batch: {
+        Args: { _limit?: number }
+        Returns: number
+      }
+      anon_training_remove: { Args: { _user: string }; Returns: number }
       archive_old_scout_applications: { Args: never; Returns: undefined }
       assert_owns_block: { Args: { _block_id: string }; Returns: undefined }
       assert_self: { Args: { _user_id: string }; Returns: undefined }

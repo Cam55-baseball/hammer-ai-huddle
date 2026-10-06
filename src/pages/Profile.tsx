@@ -31,6 +31,7 @@ import { OnboardingQuickAccess } from "@/components/settings/OnboardingQuickAcce
 import { CategoryGoalsCard } from "@/components/settings/CategoryGoalsCard";
 import { DeleteAccountSection } from "@/components/account/DeleteAccountSection";
 import { ParentControls } from "@/components/parent/ParentControls";
+import { TrainingDataToggle } from "@/components/account/TrainingDataToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -1972,6 +1973,7 @@ export default function Profile() {
         </Card>
 
         {!viewingOtherProfile && <ParentControls userId={user.id} />}
+        {!viewingOtherProfile && <TrainingDataToggle userId={user.id} />}
 
         {/* Danger zone — self-service account deletion (own profile only) */}
         {!viewingOtherProfile && (

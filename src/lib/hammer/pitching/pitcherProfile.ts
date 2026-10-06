@@ -133,6 +133,10 @@ export const SOFTBALL_ARSENAL: ReadonlyArray<PitcherArsenalPitch> = [
   { key: "cb_soft", label: "Off-speed curve" },
 ];
 
-export function arsenalCatalog(sport: "baseball" | "softball"): ReadonlyArray<PitcherArsenalPitch> {
-  return sport === "softball" ? SOFTBALL_ARSENAL : BASEBALL_ARSENAL;
+/** Under 13 (owner Pitch Smart ruling): fastball and changeup only. */
+const U13_KEYS = new Set(["4s", "fb", "ch"]);
+
+export function arsenalCatalog(sport: "baseball" | "softball", age?: number | null): ReadonlyArray<PitcherArsenalPitch> {
+  const all = sport === "softball" ? SOFTBALL_ARSENAL : BASEBALL_ARSENAL;
+  return age != null && age < 13 ? all.filter((p) => U13_KEYS.has(p.key)) : all;
 }

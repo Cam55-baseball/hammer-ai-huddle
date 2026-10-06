@@ -31,6 +31,8 @@ import {
 import { ChevronDown, Settings2, Target, ShieldAlert, Trophy, Timer, HeartPulse, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { yearsOn } from "@/lib/parent/parentConsent";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { projectEnvelope } from "@/lib/hammer/context/decisionFilters";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
@@ -515,7 +517,14 @@ function PitcherSettings({
 }) {
   const [draft, setDraft] = useState<PitcherProfile>(value);
   useEffect(() => setDraft(value), [value]);
-  const catalog = arsenalCatalog(sport);
+  const { user } = useAuth();
+  const [age, setAge] = useState<number | null>(null);
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from("profiles").select("date_of_birth").eq("id", user.id).maybeSingle()
+      .then(({ data }) => setAge((data as any)?.date_of_birth ? yearsOn(String((data as any).date_of_birth)) : null));
+  }, [user?.id]);
+  const catalog = arsenalCatalog(sport, age);
 
   const toggleArsenal = (pitch: PitcherArsenalPitch) => {
     const exists = draft.arsenal.find((p) => p.key === pitch.key);

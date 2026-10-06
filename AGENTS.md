@@ -1,7 +1,7 @@
 - Service-role functions returning athlete data to a non-self viewer must pass `_shared/recruitingGate.ts`. Why: service role bypasses RLS.
 - `create-test-athlete` is owner-only and the only way to run the real generator as the demo test pitcher. Why: no approval-free session mint exists for other users.
 - Every measurement goes through `public.ledger_record` (source triggers + `ledger_record_tiles`); triggers swallow their own errors. Why: new measurements join baselines by declaring themselves; recording must never cost a clip.
-- Folder rules: `src/lib/{biomech,reportCard,prescription,tour,upload}/AGENTS.md`, `supabase/functions/_shared/wic/AGENTS.md` (plan final check, lift certifier).
+- Folder rules: `src/lib/{biomech,reportCard,prescription,tour,upload}/AGENTS.md`, `supabase/functions/_shared/wic/AGENTS.md` (plan final check, lift certifier), `supabase/functions/wk-daily-plan-job/AGENTS.md`.
 <!-- LOVABLE:BEGIN -->
 - Throwing uses a separate conservative overhand gate and one pose runner for both sports, never mound or AI-vision values. Why: field throws lack a windup and batting clips can mimic a throw.
 <!-- LOVABLE:END -->
@@ -18,5 +18,5 @@
 - Every value shown to an athlete must carry a label saying what kind of thing it is. Why: a bare name leaves athletes guessing what it is.
 - Internal demo auto-start outcomes and inspector state/events must use console.debug only, never app UI for any role. Why: diagnostic skips and failures are not user-facing messages.
 - No plan is built for an account without `profiles.hammers_today_started_at` while switch `hammers_today_start_gate` is on — enforced in `wk-generate-daily`, and the client mounts no plan provider before the start. `wk-daily-plan-job` builds only missing plans for started players. Why: one start per account, the same on every device.
-- `wk-daily-plan-job` requires header `x-job-token` (SHA-256 checked in code, token in Vault `wk_daily_plan_job_token`); bare 401 otherwise, never log the token. Why: the job rebuilds plans for every player.
 - Sessions end only by an explicit Sign out (`signOut({ scope: 'local' })`) or a server-ended session; `/` and `/auth` forward signed-in players and wait for session load; in the native app the auth key is mirrored to `@capacitor/preferences` via `src/lib/auth/nativeSessionStore.ts`, restored in `main.tsx` before the auth client loads. Why: players were re-typing passwords; iOS may clear WebView localStorage.
+- Anonymous training store: bucketed, week-rounded, no free text, Vault-HMAC key; under-13 needs parent opt-in. Why: lawyer-approved scope.

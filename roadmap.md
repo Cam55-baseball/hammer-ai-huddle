@@ -39,3 +39,13 @@
 - [x] Round 2: switch, consent tables, parent flow, Pitch Smart U13, pause gaps (deployed)
 - [ ] Round 2: signed-in stress tests 1–11, 15, 17 and Round 1 screenshots — waiting on owner approval to sign the preview in as test players
 - [ ] Round 2: daily-plan job scale estimate (case 19)
+## Round 3
+- [ ] Stress cases 1–11, 15, 17 + Round 1 screenshots (signed-in test players)
+- [ ] Case 19 scale dry run (1,000 / 5,000)
+- [ ] Checks: pitch types U13, sub-20 scale, leaderboards/public pages
+- [ ] Anonymized training store + opt-ins (v2 promise/notice, toggles, backfill 13+, proofs)
+- [x] R3 security fixes for anon store migration
+- [x] R3 anon store: opt-in UI (parent signup + controls), 13+ toggle, privacy text, backfill 13+, proofs
+- [x] R3 pitch types U13 limited (pitch list); sub-20 scale confirmed; rankings hide paused/U13
+- [~] R3 case 19: batching built + dry run; real per-player build time not yet measured
+- [ ] R3 stress cases 1–11, 15, 17 + Round 1 screenshots (need signed-in test-player sessions)
