@@ -17,6 +17,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHammersTodayStart } from "@/hooks/useHammersTodayStart";
 import { StartHammersTodayCard } from "@/components/hammer/StartHammersTodayCard";
+import { GrowthModeCard, HeightReminderCard } from "@/components/hammer/GrowthModeCard";
 import { DailyIntentHeader } from "@/components/hammer/DailyIntentHeader";
 import { WeeklyRoadmapStrip } from "@/components/hammer/WeeklyRoadmapStrip";
 import { useSeasonStatus } from "@/hooks/useSeasonStatus";
@@ -827,6 +828,7 @@ function HammerDailyPlanBody({
         <div data-tour="update-hammer"><TellHammersInbox /></div>
       </ErrorBoundary>
       <ErrorBoundary>
+        <HeightReminderCard />
         <GrowthModeCard />
       </ErrorBoundary>
       <ErrorBoundary>
