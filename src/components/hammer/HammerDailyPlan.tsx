@@ -14,6 +14,7 @@
  *
  * Schedule context line from `useScheduleWindow` retained.
  */
+import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHammersTodayStart } from "@/hooks/useHammersTodayStart";
 import { StartHammersTodayCard } from "@/components/hammer/StartHammersTodayCard";
@@ -1114,13 +1115,18 @@ function HammerDailyPlanBody({
 
 
 /**
- * In-season crossover primer, rendered inside the Warm-up card as a short
+ * Crossover primer, rendered inside the Warm-up card as a short
  * "finish the warm-up with this" addon. Sourced from the backend
  * `cross_sport` slot at `placement: "warmup_integration"`.
  */
 function WarmupCrossoverAddons() {
-  const { grouped } = useHammersToday();
+  const { grouped, snapshotIdentity } = useHammersToday();
   const addons = grouped.warmupAddons ?? [];
+  // Same season label every other plan card shows — never a fixed string.
+  const { display: seasonLabel } = useCanonicalPhaseDisplay(
+    snapshotIdentity.season_display,
+    snapshotIdentity.season_phase,
+  );
   const [open, setOpen] = useState<boolean>(false);
   if (addons.length === 0) return null;
   return (
@@ -1137,7 +1143,7 @@ function WarmupCrossoverAddons() {
                 <div className="flex items-center gap-2 min-w-0">
                   <HeartPulse className="h-4 w-4 text-rose-500 shrink-0" />
                   <span className="truncate">Finish the warm-up — crossover primer</span>
-                  <Badge variant="outline" className="text-[10px]">In-season</Badge>
+                  {seasonLabel && <Badge variant="outline" className="text-[10px]">Season: {seasonLabel}</Badge>}
                 </div>
                 <ChevronDown
                   className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${

@@ -64,7 +64,10 @@ export function WkBatSpeedCard({ side = null }: Props = {}) {
             <CollapsibleTrigger asChild>
               <button type="button" className="flex items-center gap-2 min-w-0 text-left flex-1" aria-expanded={open}>
                 <Bolt className="h-4 w-4 text-fuchsia-500 shrink-0" />
-                <span className="truncate">{throws ? "Bat speed: velocity training" : "Bat Speed"}{sideLabel ? ` — ${sideLabel}` : ""}</span>
+                <span className="min-w-0 flex flex-col leading-tight">
+                  <span className="break-words">{throws ? "Bat speed" : "Bat Speed"}{sideLabel ? ` — ${sideLabel}` : ""}</span>
+                  {throws && <span className="text-[11px] font-normal text-muted-foreground">Velocity training</span>}
+                </span>
                 {sideLabel && (
                   <Badge variant="outline" className="text-[10px] border-primary/50 text-primary">
                     {side}
