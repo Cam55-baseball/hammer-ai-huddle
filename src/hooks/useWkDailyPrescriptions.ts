@@ -468,6 +468,26 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     generateRef.current = generate;
   }, [generate]);
 
+  // Saved-plan re-check (owner ruling 2026-10-06): whenever a saved plan is
+  // shown, the server re-runs the final rule check on it once. A failing plan
+  // is rebuilt (nothing marked) or trimmed of failing unmarked cards.
+  const verifiedKey = useRef<string | null>(null);
+  useEffect(() => {
+    const rows = query.data ?? [];
+    if (!user?.id || rows.length === 0 || generating) return;
+    const key = `${user.id}:${planDate}:${(rows[0] as any)?.created_at ?? ""}`;
+    if (verifiedKey.current === key) return;
+    verifiedKey.current = key;
+    void supabase.functions
+      .invoke("wk-generate-daily", { body: { plan_date: planDate, verify_saved: true } })
+      .then(({ data, error }) => {
+        if (error) { console.debug("[wk-verify-saved] failed", error); return; }
+        if (data && (data as any).verified !== true) {
+          void qc.invalidateQueries({ queryKey: ["wk-rx", user.id, planDate] });
+        }
+      });
+  }, [user?.id, planDate, query.data, generating, qc]);
+
   // Auto-generate exactly once per mount if empty.
   useEffect(() => {
     const first = query.data?.[0];
