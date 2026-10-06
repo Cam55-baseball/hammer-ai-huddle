@@ -39,7 +39,7 @@ export function startPlanItems(input: readonly string[] | StartPlanPlayer): Star
     warmup: { title: "Warm-up", detail: "Get your body ready before anything hard." },
     speed: { title: "Speed", detail: softball ? "Short, fast sprints for the 60-foot base path." : "Short, fast sprints to get quicker on the bases." },
     bat_speed: throws
-      ? { title: "Bat speed: velocity training", detail: "Bat speed builds the hip-and-shoulder power that carries into your fastball." }
+      ? { title: "Bat speed: velocity training", detail: "Bat speed builds rotational power that transfers seamlessly into pitching velocity." }
       : { title: "Bat speed", detail: "Swings built to add speed to your bat." },
     lift: { title: "Lift", detail: player.growthActive ? "Strength work held steady while you're growing fast, with real rest days." : "Strength work, spaced with real rest days." },
     conditioning: { title: "Conditioning", detail: "Base-running fitness matched to your season." },

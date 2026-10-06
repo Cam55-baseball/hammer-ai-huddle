@@ -6,7 +6,10 @@ import { growthMode, GROWTH_MODE_RULE } from "../growth/growthMode.ts";
 // number here transfers to softball.
 //
 // Removed by owner order (Step 27 A): the fixed annual rest rule, the
-// pitch-type age-unlock table and the under-14 velocity block. Do not re-add.
+// pitch-type age-unlock table and the under-14 velocity block. Do not re-add
+// for ages 13 and up. Owner ruling 2026-10-06 (Round 2, Part C): UNDER 13
+// ONLY, MLB Pitch Smart exactly — 4 months off a year (2–3 in a row),
+// fastballs and changeups only, 60 innings a year at 8 and under, 80 at 9–12.
 
 export const YOUTH_THROWING_VERSION = "youth_throwing_v1";
 
@@ -14,7 +17,7 @@ export const YOUTH_THROWING_VERSION = "youth_throwing_v1";
 export interface AgeBand { label: string; minAge: number; maxAge: number; dailyMax: number; rest: Array<[number, number]> }
 /** rest: [minPitches, restDays] — pitches at or above the threshold need that many days. */
 export const PITCH_SMART_BANDS: AgeBand[] = [
-  { label: "7–8", minAge: 0, maxAge: 8, dailyMax: 50, rest: [[1, 0], [21, 1], [36, 2], [51, 3], [66, 4]] },
+  { label: "7–8", minAge: 0, maxAge: 8, dailyMax: 50, rest: [[1, 0], [21, 1], [36, 2]] },
   { label: "9–10", minAge: 9, maxAge: 10, dailyMax: 75, rest: [[1, 0], [21, 1], [36, 2], [51, 3], [66, 4]] },
   { label: "11–12", minAge: 11, maxAge: 12, dailyMax: 85, rest: [[1, 0], [21, 1], [36, 2], [51, 3], [66, 4]] },
   { label: "13–14", minAge: 13, maxAge: 14, dailyMax: 95, rest: [[1, 0], [21, 1], [36, 2], [51, 3], [66, 4]] },
@@ -116,8 +119,10 @@ export const YOUTH_CAPS: Array<{ minAge: number; maxAge: number; caps: PitchCaps
 ];
 export const ANNUAL_LOW_11_12 = 2000; // the published range is 2,000–3,000; warn from 2,000
 export const CAP_WARN_AT = 0.8;
-/** 100 competitive innings a calendar year for high school and younger. */
+/** Innings in 12 months: 60 at 8 and under, 80 at 9–12 (Pitch Smart), 100 for 13 through high school. */
 export function inningsCap(age: number, level: string | null): number | null {
+  if (age <= 8) return 60;
+  if (age <= 12) return 80;
   const hsOrYounger = age <= 18 && !/college|pro|professional|free_agent/i.test(level ?? "");
   return hsOrYounger ? 100 : null;
 }
@@ -278,4 +283,60 @@ export function velocityGate(r: VeloReadiness): { unlocked: boolean; missing: st
   if (r.growthWindow) missing.push("finish the growth window");
   // Mechanics work is always prescribed alongside velocity work, never after it.
   return { unlocked: missing.length === 0, missing, withMechanics: true };
+}
+
+// ── Under 13 only (owner ruling 2026-10-06): Pitch Smart exactly ──────────
+export const U13_MAX_AGE = 12;
+export const isUnder13 = (age: number | null) => age !== null && age <= U13_MAX_AGE;
+/** Fastballs and changeups only under 13. */
+export const U13_ALLOWED_PITCHES = ["fastball", "changeup"] as const;
+export function pitchTypeAllowed(age: number | null, pitchType: string): boolean {
+  if (!isUnder13(age)) return true;
+  const t = pitchType.toLowerCase().replace(/[^a-z]/g, "");
+  return t.includes("fastball") || t === "fb" || t.includes("change") || t === "ch";
+}
+/** Under 13: no pitching three days in a row (any pitching day, not just games). */
+export const U13_THIRD_DAY_LINE = "No pitching today — that would be three days in a row.";
+export function under13ThirdDay(pitchDates: string[], today: string): boolean {
+  return thirdConsecutiveGameDay(pitchDates, today);
+}
+/** 4 months (120 days) off throwing in any 12 months, with 2–3 months (60+ days) in a row. */
+export const U13_REST = { offDaysPerYear: 120, consecutiveOffDays: 60, windowDays: 365 } as const;
+export const U13_YEARLY_REST_LINE = "No throwing today — players under 13 need 4 months off throwing each year, with at least 2 in a row.";
+/**
+ * Blocks throwing today when throwing would make the yearly rest impossible
+ * inside the trailing 12-month window: (a) the off-days left could no longer
+ * reach 120, or (b) no 60-day off stretch is in the window and the window has
+ * only 60 days left to fit one, which must start today.
+ * Throw dates are any day with pitching or a throwing session.
+ */
+export function under13YearlyRestBlocks(throwDates: string[], today: string): { blocked: boolean; reason: string | null; throwDaysInWindow: number; longestOff: number } {
+  const start = isoAdd(today, -(U13_REST.windowDays - 1));
+  const set = new Set(throwDates.filter((d) => d >= start && d < today));
+  const throwDays = set.size + 1; // including today if allowed
+  let longest = 0, run = 0, lastStreakEnd: string | null = null;
+  for (let i = 0; i < U13_REST.windowDays - 1; i++) {
+    const d = isoAdd(start, i);
+    if (set.has(d)) { run = 0; continue; }
+    run += 1;
+    if (run >= U13_REST.consecutiveOffDays) lastStreakEnd = d;
+    longest = Math.max(longest, run);
+  }
+  if (throwDays > U13_REST.windowDays - U13_REST.offDaysPerYear) return { blocked: true, reason: U13_YEARLY_REST_LINE, throwDaysInWindow: throwDays - 1, longestOff: longest };
+  // Off-streak needed: if none ended within the last 305 days, today must be off.
+  const need = U13_REST.windowDays - U13_REST.consecutiveOffDays;
+  const recentStreak = lastStreakEnd !== null && (toMs(today) - toMs(lastStreakEnd)) / dayMs <= need;
+  const runEndingToday = run; // off days right before today
+  if (!recentStreak && runEndingToday === 0 && throwDates.some((d) => d < start)) {
+    // Long history with no 60-day break in the past year: rest now.
+    return { blocked: true, reason: U13_YEARLY_REST_LINE, throwDaysInWindow: throwDays - 1, longestOff: longest };
+  }
+  if (!recentStreak && runEndingToday > 0 && runEndingToday < U13_REST.consecutiveOffDays && throwDates.some((d) => d < start)) {
+    return { blocked: true, reason: U13_YEARLY_REST_LINE, throwDaysInWindow: throwDays - 1, longestOff: longest };
+  }
+  return { blocked: false, reason: null, throwDaysInWindow: throwDays - 1, longestOff: longest };
+}
+/** Under 13: no weighted balls and no weighted plyo-ball work, ever. */
+export function weightedBallAllowed(age: number | null): boolean {
+  return !isUnder13(age);
 }

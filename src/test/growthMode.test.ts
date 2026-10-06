@@ -38,7 +38,7 @@ describe("Start card wording", () => {
     for (const pos of [["P"], ["P", "SS"]]) {
       const b = startPlanItems({ positions: pos }).find((i) => i.key === "bat_speed")!;
       expect(b.title).toBe("Bat speed: velocity training");
-      expect(b.detail).toMatch(/fastball/);
+      expect(b.detail).toBe("Bat speed builds rotational power that transfers seamlessly into pitching velocity.");
     }
     expect(startPlanItems({ positions: ["SS"] }).find((i) => i.key === "bat_speed")!.title).toBe("Bat speed");
   });

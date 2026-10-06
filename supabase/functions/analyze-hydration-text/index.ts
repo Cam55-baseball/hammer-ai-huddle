@@ -1,3 +1,4 @@
+import { guardSignedInNotPaused } from "../_shared/accountPause.ts";
 // Edge function: analyze-hydration-text
 // Estimates per-oz hydration nutrition (macros + 13-key micros) for a free-form
 // beverage description using Lovable AI structured tool calling.
@@ -185,6 +186,7 @@ async function callAI(
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  { const blocked = await guardSignedInNotPaused(req, corsHeaders); if (blocked) return blocked; }
 
   try {
     const authHeader = req.headers.get("Authorization");

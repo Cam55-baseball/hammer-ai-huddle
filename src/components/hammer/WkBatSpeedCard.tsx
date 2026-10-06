@@ -81,7 +81,7 @@ export function WkBatSpeedCard({ side = null }: Props = {}) {
             </Button>
           </CardTitle>
           {label && <div className="text-[11px] text-muted-foreground line-clamp-2">{label}</div>}
-          {throws && <p className="text-[11px] leading-5 text-muted-foreground">Bat speed builds the hip-and-shoulder power that carries into your fastball.</p>}
+          {throws && <p className="text-[11px] leading-5 text-muted-foreground">Bat speed builds rotational power that transfers seamlessly into pitching velocity.</p>}
         </CardHeader>
         <CollapsibleContent>
           <CardContent className="space-y-2">
