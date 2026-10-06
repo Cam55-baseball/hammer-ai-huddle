@@ -333,6 +333,7 @@ export function PitchingCard() {
                 />
               </CardTitle>
               <div className="text-[11px] text-muted-foreground">{cycle.weekLabel}</div>
+              {recentLoad.isError && <p className="text-[11px] text-amber-600 dark:text-amber-400">Couldn't read your logged pitch totals. No pitch count is assumed; your other recovery limits still apply.</p>}
               <p className="text-[11px] text-muted-foreground">
                 {pitcherSchedule.isError
                   ? "Couldn't read your pitching schedule. This uses the existing game-based plan; your saved pitching days haven't been cleared."

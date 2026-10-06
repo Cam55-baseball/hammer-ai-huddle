@@ -7,7 +7,7 @@ import { aggregateRecentPitchingLoad, type RecentPitchingLoad } from "@/lib/hamm
  * Fetches the last `days` of pitching logs and aggregates into a
  * per-day pitch total + last-outing summary.
  */
-export function useRecentPitchingLoad(days = 7): { data: RecentPitchingLoad | null; loading: boolean } {
+export function useRecentPitchingLoad(days = 7): { data: RecentPitchingLoad | null; loading: boolean; isError: boolean } {
   const { user } = useAuth();
   const q = useQuery({
     queryKey: ["recent-pitching-load", user?.id, days],
@@ -29,5 +29,5 @@ export function useRecentPitchingLoad(days = 7): { data: RecentPitchingLoad | nu
     enabled: !!user,
     staleTime: 60_000,
   });
-  return { data: q.data ?? null, loading: q.isLoading };
+  return { data: q.data ?? null, loading: q.isLoading, isError: q.isError };
 }

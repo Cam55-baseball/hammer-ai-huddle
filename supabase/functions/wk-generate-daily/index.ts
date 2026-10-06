@@ -2754,6 +2754,10 @@ const handler = async (req: Request): Promise<Response> => {
         ].filter(Boolean) as MovementRow[];
         conditioningSelection = { ...conditioningSelection, fallback: true, why: "Standard conditioning today — the planned work isn't available to you yet." };
       }
+      if (isPitcherAthlete && pitcherScheduleReadFailed) {
+        conditioningSelection = { ...conditioningSelection, fallback: true,
+          why: `Couldn't read your pitching schedule. This uses your existing games and check-ins. ${conditioningSelection.why}` };
+      }
       conditioningEmptyPool = conditioning.length === 0;
       for (const m of conditioning) {
         push("conditioning", "conditioning", m, {}, conditioningSelection.why, {
