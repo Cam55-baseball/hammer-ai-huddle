@@ -13,7 +13,7 @@
  */
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
-import { runPool, CONCURRENCY, WORKERS, WORKER_BUDGET_MS } from "./scheduler.ts";
+import { runPool, CONCURRENCY, WORKERS, WORKER_BUDGET_MS, SAFE_PARALLEL } from "./scheduler.ts";
 
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -136,6 +136,7 @@ Deno.serve(async (req) => {
     }
     const parentMode = (body as any).parent_mode === "check" ? "check" : "build";
     const c = { built: 0, failed: 0, skipped_claimed: 0 };
+    const lanes = Math.min(Math.max(Number((body as any).lanes ?? CONCURRENCY) || CONCURRENCY, 1), CONCURRENCY);
     const r = await runPool(slice as Array<{ id: string; day: string }>, async (p) => {
       const { data: got } = await admin.rpc("wk_claim_plan_build", { _user: p.id, _day: p.day });
       if (got !== true) { c.skipped_claimed++; return; }
@@ -161,7 +162,7 @@ Deno.serve(async (req) => {
       await admin.from("wk_daily_plan_runs").insert({
         user_id: p.id, plan_date: p.day, mode: parentMode, outcome: err ? "failed" : "built", error_text: err, duration_ms: Date.now() - t,
       });
-    }, { budgetMs: WORKER_BUDGET_MS });
+    }, { budgetMs: WORKER_BUDGET_MS, concurrency: lanes });
     return json({ ok: true, ...c, ...r });
   }
 
@@ -197,7 +198,12 @@ Deno.serve(async (req) => {
     .map((p) => ({ id: p.id, day: localDate(p.timezone) }))
     .filter((p) => !have.has(`${p.id}|${p.day}`));
   const t0 = Date.now();
-  const rs = missing.length ? await fanOut(split(missing, Math.min(WORKERS, Math.ceil(missing.length / CONCURRENCY))), { parent_mode: mode }) : [];
+  // Total builds at once across all slices (SAFE_PARALLEL by default; a
+  // token-holding caller may pass "parallel" 1–80 to measure load).
+  const parallel = Math.min(Math.max(Number((body as any).parallel ?? SAFE_PARALLEL) || SAFE_PARALLEL, 1), WORKERS * CONCURRENCY);
+  const nSlices = Math.min(WORKERS, Math.ceil(parallel / CONCURRENCY), missing.length);
+  const lanes = Math.ceil(parallel / Math.max(nSlices, 1));
+  const rs = missing.length ? await fanOut(split(missing, nSlices), { parent_mode: mode, lanes }) : [];
 
   // Anonymous training store: refresh a few of the stalest eligible players.
   let anonRefreshed = 0;
@@ -206,5 +212,5 @@ Deno.serve(async (req) => {
   return json({ ok: true, mode, players: players.length, present: players.length - missing.length,
     built: sum(rs, "built"), failed: sum(rs, "failed"), skipped_claimed: sum(rs, "skipped_claimed"),
     leftover_for_next_run: sum(rs, "leftover"), worker_errors: rs.filter((r: any) => r?.error).length,
-    elapsed_ms: Date.now() - t0, anon_refreshed: anonRefreshed });
+    parallel, elapsed_ms: Date.now() - t0, anon_refreshed: anonRefreshed });
 });
