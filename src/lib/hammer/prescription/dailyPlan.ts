@@ -939,10 +939,11 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         trainingAgeYears: liftingAge ?? null,
         injuryRegions: [...injuryRegions],
         armSore,
-        isGameDay: !!sched.isGameDay || !!(pitcherOutings?.startsToday || pitcherOutings?.startsTomorrow || pitcherOutings?.relieverAvailableSoon),
+        isGameDay: !!sched.isGameDay || !!pitcherOutings?.startsToday,
         // If schedule doesn't declare throwing day explicitly, treat non-game days as throwing days
         // when the athlete's development priorities include throwing/velocity, otherwise alternate.
-        isThrowingDay: sched.isThrowingDay ?? !sched.isGameDay,
+        isThrowingDay: pitcherOutings?.startsTomorrow || pitcherOutings?.relieverAvailableSoon
+          ? false : sched.isThrowingDay ?? !sched.isGameDay,
         isRecoveryDay: !!sched.isRecoveryDay || recoverDay || !!pitcherOutings?.pitchedYesterday,
         readinessScore,
       };
@@ -989,7 +990,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       return {
         modality,
         title: eass.title,
-        why: (outingReason || eass.why) + (goal ? ` ${goal}` : ""),
+        why: eass.why + (outingReason ? ` ${outingReason}` : "") + (goal ? ` ${goal}` : ""),
         roadmapReason: eass.roadmapReason + (thrOut.rationale ? ` ${thrOut.rationale}` : ""),
         phase:
           eass.mode === "arm_protected" || eass.mode === "recovery_day"

@@ -631,7 +631,6 @@ function HammerDailyPlanBody({
   const navigate = useNavigate();
   const identity = getHammerIdentity();
   const sched = useScheduleWindow();
-  const pitcherSchedule = usePitcherSchedule();
   const scheduleSignal = useMemo(() => projectScheduleSignal(sched), [sched]);
   const sideBias = useMemo(
     () => ({ hit: readSideBias("hit"), throw: readSideBias("throw") }),
@@ -667,6 +666,7 @@ function HammerDailyPlanBody({
   const { data: recentCompletions } = useRecentMaxIntentCompletions();
   const wkRx = useHammersToday();
   const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
+  const pitcherSchedule = usePitcherSchedule(bodyPlanDate);
   const planAdjust = usePlanAdjustments(bodyPlanDate);
   const { data: rankedFaults = [] } = useFaultLedger();
   const drillCirculation = useDrillCirculation();
