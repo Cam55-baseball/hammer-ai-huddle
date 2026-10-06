@@ -13,7 +13,7 @@
  */
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
-import { runPool, CONCURRENCY, RUN_BUDGET_MS } from "./scheduler.ts";
+import { runPool, CONCURRENCY, WORKERS, WORKER_BUDGET_MS } from "./scheduler.ts";
 
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -89,15 +89,80 @@ Deno.serve(async (req) => {
     }
     return json({ ok: true, mode: "recheck", ...out });
   }
-  // mode "dry_run": the real scheduler over N fake players whose build takes
-  // simulated_ms — no database reads or writes. Proves batching at scale.
+  // Parallel batches: the coordinator splits the work into WORKERS slices and
+  // runs each slice as its own invocation of this function (same token), all
+  // at once. Each slice runs CONCURRENCY builds at a time inside the budget.
+  const token = req.headers.get("x-job-token")!; // forwarded only, never logged
+  const fanOut = async (slices: unknown[][], extra: Record<string, unknown>) =>
+    Promise.all(slices.map(async (slice) => {
+      try {
+        const r = await fetch(`${URL_}/functions/v1/wk-daily-plan-job`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-job-token": token },
+          body: JSON.stringify({ ...extra, mode: "worker", slice }),
+        });
+        return r.ok ? await r.json() : { error: `HTTP ${r.status}`, processed: 0, leftover: slice.length };
+      } catch (e) {
+        return { error: String(e).slice(0, 200), processed: 0, leftover: slice.length };
+      }
+    }));
+  const split = <T,>(items: T[], n: number) => {
+    const out: T[][] = Array.from({ length: n }, () => []);
+    items.forEach((x, i) => out[i % n].push(x));
+    return out.filter((s) => s.length > 0);
+  };
+  const sum = (rs: any[], k: string) => rs.reduce((a, r) => a + (Number(r?.[k]) || 0), 0);
+
+  // mode "dry_run": the real fan-out + pool over N fake players whose build
+  // takes simulated_ms — no database reads or writes. Proves scale.
   if (body.mode === "dry_run") {
     const n = Math.min(Math.max(Number((body as any).players ?? 1000) || 1000, 1), 20000);
     const ms = Math.min(Math.max(Number((body as any).simulated_ms ?? 3000) || 3000, 1), 60000);
-    const budgetMs = Math.min(Number((body as any).budget_ms ?? RUN_BUDGET_MS) || RUN_BUDGET_MS, RUN_BUDGET_MS);
-    const items = Array.from({ length: n }, (_, i) => i);
-    const r = await runPool(items, () => new Promise((res) => setTimeout(res, ms)), { budgetMs });
-    return json({ ok: true, mode: "dry_run", players: n, simulated_ms: ms, concurrency: CONCURRENCY, budget_ms: budgetMs, ...r });
+    const t0 = Date.now();
+    const rs = await fanOut(split(Array.from({ length: n }, (_, i) => i), WORKERS), { dry_ms: ms });
+    return json({ ok: true, mode: "dry_run", players: n, simulated_ms: ms, workers: WORKERS, concurrency_per_worker: CONCURRENCY,
+      processed: sum(rs, "processed"), leftover_for_next_run: sum(rs, "leftover"), elapsed_ms: Date.now() - t0,
+      worker_errors: rs.filter((r: any) => r?.error).length });
+  }
+
+  // mode "worker": one slice. Each real build first takes an atomic claim on
+  // (player, day), so overlapping slices or runs never build the same plan twice.
+  if (body.mode === "worker") {
+    const slice = Array.isArray((body as any).slice) ? (body as any).slice : [];
+    const dryMs = Number((body as any).dry_ms ?? 0);
+    if (dryMs > 0) {
+      const r = await runPool(slice, () => new Promise((res) => setTimeout(res, dryMs)), { budgetMs: WORKER_BUDGET_MS });
+      return json({ ok: true, ...r });
+    }
+    const parentMode = (body as any).parent_mode === "check" ? "check" : "build";
+    const c = { built: 0, failed: 0, skipped_claimed: 0 };
+    const r = await runPool(slice as Array<{ id: string; day: string }>, async (p) => {
+      const { data: got } = await admin.rpc("wk_claim_plan_build", { _user: p.id, _day: p.day });
+      if (got !== true) { c.skipped_claimed++; return; }
+      const t = Date.now();
+      const attempt = async (): Promise<string | null> => {
+        try {
+          const res = await fetch(`${URL_}/functions/v1/wk-generate-daily`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
+            body: JSON.stringify({ user_id: p.id, plan_date: p.day }),
+          });
+          if (!res.ok) return `HTTP ${res.status}: ${(await res.text()).slice(0, 300)}`;
+          await res.text();
+          return null;
+        } catch (e) {
+          return String(e).slice(0, 300);
+        }
+      };
+      let err = await attempt();
+      if (err && parentMode === "check") err = await attempt(); // one retry on the safety-net pass
+      if (err) { c.failed++; await admin.from("wk_plan_build_claims").delete().eq("user_id", p.id).eq("plan_date", p.day); }
+      else c.built++;
+      await admin.from("wk_daily_plan_runs").insert({
+        user_id: p.id, plan_date: p.day, mode: parentMode, outcome: err ? "failed" : "built", error_text: err, duration_ms: Date.now() - t,
+      });
+    }, { budgetMs: WORKER_BUDGET_MS });
+    return json({ ok: true, ...c, ...r });
   }
 
   const mode = body.mode === "check" ? "check" : "build";
@@ -128,37 +193,18 @@ Deno.serve(async (req) => {
       for (const r of (data ?? []) as any[]) have.add(`${r.user_id}|${d}`);
     }
   }
-  const missing = players.filter((p) => !have.has(`${p.id}|${localDate(p.timezone)}`));
-  const counts = { players: players.length, present: players.length - missing.length, built: 0, failed: 0, leftover_for_next_run: 0 };
-
-  const pool = await runPool(missing, async (p) => {
-    const day = localDate(p.timezone);
-    const attempt = async (): Promise<string | null> => {
-      try {
-        const r = await fetch(`${URL_}/functions/v1/wk-generate-daily`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
-          body: JSON.stringify({ user_id: p.id, plan_date: day }),
-        });
-        if (!r.ok) return `HTTP ${r.status}: ${(await r.text()).slice(0, 300)}`;
-        await r.text();
-        return null;
-      } catch (e) {
-        return String(e).slice(0, 300);
-      }
-    };
-    let err = await attempt();
-    if (err && mode === "check") err = await attempt(); // one retry on the safety-net pass
-    if (err) counts.failed++; else counts.built++;
-    await admin.from("wk_daily_plan_runs").insert({
-      user_id: p.id, plan_date: day, mode, outcome: err ? "failed" : "built", error_text: err,
-    });
-  });
-  counts.leftover_for_next_run = pool.leftover;
+  const missing = players
+    .map((p) => ({ id: p.id, day: localDate(p.timezone) }))
+    .filter((p) => !have.has(`${p.id}|${p.day}`));
+  const t0 = Date.now();
+  const rs = missing.length ? await fanOut(split(missing, Math.min(WORKERS, Math.ceil(missing.length / CONCURRENCY))), { parent_mode: mode }) : [];
 
   // Anonymous training store: refresh a few of the stalest eligible players.
   let anonRefreshed = 0;
   try { const { data } = await admin.rpc("anon_training_refresh_batch", { _limit: 25 }); anonRefreshed = Number(data ?? 0); } catch { /* never costs a plan */ }
 
-  return json({ ok: true, mode, ...counts, elapsed_ms: pool.elapsedMs, anon_refreshed: anonRefreshed });
+  return json({ ok: true, mode, players: players.length, present: players.length - missing.length,
+    built: sum(rs, "built"), failed: sum(rs, "failed"), skipped_claimed: sum(rs, "skipped_claimed"),
+    leftover_for_next_run: sum(rs, "leftover"), worker_errors: rs.filter((r: any) => r?.error).length,
+    elapsed_ms: Date.now() - t0, anon_refreshed: anonRefreshed });
 });

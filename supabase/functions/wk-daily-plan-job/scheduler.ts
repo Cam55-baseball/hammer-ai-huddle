@@ -1,12 +1,16 @@
 /**
- * Batching for the daily plan job (case 19). Each run builds as many missing
- * plans as fit in its time budget, CONCURRENCY at a time, and stops cleanly
- * before the platform limit. Whatever is left is simply still "missing" and
- * the next hourly run picks it up first — no state to carry between runs.
+ * Batching for the daily plan job (case 19). A run fans out to WORKERS
+ * parallel slices; each slice builds CONCURRENCY plans at a time and stops
+ * starting new builds at WORKER_BUDGET_MS, so every request answers inside
+ * the platform's 150 s no-reply cutoff. Leftovers stay "missing" and the next
+ * run (every 10 minutes) takes them first. Duplicate builds are prevented by
+ * an atomic per-(player, day) claim, not by timing.
  */
+export const WORKERS = 8;
 export const CONCURRENCY = 10;
-/** Stop starting new builds after this long (the platform cuts a request off after 150 s without a reply). */
-export const RUN_BUDGET_MS = 110_000;
+export const WORKER_BUDGET_MS = 100_000;
+/** Kept for callers that run a single pool. */
+export const RUN_BUDGET_MS = WORKER_BUDGET_MS;
 
 export async function runPool<T>(
   items: readonly T[],

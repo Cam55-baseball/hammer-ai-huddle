@@ -66,10 +66,11 @@ export function ParentConsentFlow({ mode, accountEmail, onSigned }: { mode: "sig
         const { error: e } = await supabase.auth.signInWithPassword({ email: f.email.trim(), password: f.password });
         if (e) throw e;
         try { localStorage.removeItem(UNDER_13_LOCK_KEY); } catch { /* storage unavailable */ }
-        navigate("/dashboard", { replace: true });
+        navigate("/pricing", { replace: true }); // straight to checkout
       } else {
         await callParentConsent("sign", common);
         onSigned?.();
+        navigate("/pricing", { replace: true });
       }
     } catch (e: any) {
       setError(PARENT_ERRORS[e?.code] ?? "Something went wrong. Nothing was charged. Please try again.");
@@ -169,6 +170,11 @@ export function ParentPaymentStep({ childName, onUnlocked }: { childName: string
     } catch { setMsg("We couldn't check right now. Please try again."); }
     finally { setBusy(false); }
   };
+  // Opens right away when this account already has an active, paid plan (no second charge).
+  useEffect(() => {
+    callParentConsent<{ ok: boolean }>("finalize").then((r) => { if (r.ok) onUnlocked(); }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <main className="flex min-h-[100dvh] items-center justify-center bg-background px-5 pb-[calc(1.5rem+var(--safe-bottom))] pt-[calc(1.5rem+var(--safe-top))]">
       <div className="w-full max-w-sm space-y-5 text-center">
