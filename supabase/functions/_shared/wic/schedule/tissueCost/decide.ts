@@ -473,8 +473,20 @@ export function decide(
       lv = addLevels(decay(lv, config, mods.halfLifeMul), applyCostMul(sportCost(day, config), mods.costMul));
       const rule = hardRuleFor(safeProfile, day, byDate.get(addDays(date, 1)) ?? null, false, "H");
       if (rule) continue;
-      const need = lastLiftEntry ? requiredRestDays(phase, lastLiftEntry.lift!.class, "H", config) : 0;
-      if (lastLiftEntry && fullRestDaysBetween(lastLiftEntry.date, date) < need) continue;
+      // Spacing counts from the last PLANNED lift — today's, if today lifts.
+      const anchorDate = allowedClass !== "none" ? today : lastPlannedEntry?.date ?? null;
+      const anchorClass: SessionClass | null = allowedClass !== "none"
+        ? allowedClass as SessionClass
+        : lastPlannedEntry?.lift?.class ?? null;
+      const need = anchorDate && anchorClass ? requiredRestDays(phase, anchorClass, "H", config) : 0;
+      if (anchorDate && fullRestDaysBetween(anchorDate, date) < need) continue;
+      if (weeklyMax !== null) {
+        const dow = new Date(`${date}T12:00:00Z`).getUTCDay();
+        const ws = addDays(date, -((dow + 6) % 7));
+        const inWeek = pastDays.filter((d) => d.lift && d.date >= ws).length +
+          (allowedClass !== "none" && today >= ws ? 1 : 0);
+        if (inWeek >= weeklyMax) continue;
+      }
       if (i12Blocks("H", date)) continue;
       if (!tanksOk("H", lv, phase)) continue;
       nextHeavyDate = date;
@@ -491,6 +503,10 @@ export function decide(
     hardRule: allowedClass === "none" ? hardRuleHit : null,
     loadPatternSignal,
     onRamp,
+    lastPlannedLift: lastPlannedEntry
+      ? { date: lastPlannedEntry.date, confirmed: lastPlannedEntry.lift?.confirmed === true }
+      : null,
+    weeklyMaxReached: weeklyFull ? weeklyMax : null,
   });
 
   const safeLevels: TankLevels = zeroTanks();
