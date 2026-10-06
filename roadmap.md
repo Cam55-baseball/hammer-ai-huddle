@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] Current frontend-only: match softball identity styling to baseball and verify contrast
+- [ ] Current read-only/frontend-only: verify Tissue & Recovery lifting count against recorded data; correct display if needed
+- [ ] Current read-only: report scheduled completion and overdue lift behavior
+
 - [x] Pitcher + recovery conditioning drills live (13 rows), stand-in line retired
 - [x] Gaps filled: reliever primer, same-night flush, travel reset, windmill set (soft-tissue tools left out — thin evidence; no ice)
 - [x] Sport audit of conditioning library
