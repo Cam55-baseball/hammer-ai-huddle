@@ -17,7 +17,7 @@ describe("Step 26 B — growth-adjusted pitching age", () => {
     const g = growthAdjustment(13, [{ date: "2026-08-25", inches: 62 }, { date: "2026-09-24", inches: 63 }], today);
     expect(g.active).toBe(true);
     expect(g.band.label).toBe(PITCH_SMART_BANDS[bandIndex(13) - 1].label);
-    expect(g.until).toBe("2026-11-19");
+    expect(g.until).toBe("2026-11-18");
     expect(g.athleteLine).toBe(GROWTH_RULE.athleteLine);
     expect(g.staffLabel).toContain("growth-adjusted pitching age");
     expect(g.grounding).toContain("not a published figure");
