@@ -34,6 +34,43 @@ Deno.serve(async (req) => {
   const admin = createClient(URL_, SERVICE);
 
   const body = (await req.json().catch(() => ({}))) as { mode?: string; limit?: number };
+  // mode "recheck": re-run the final rule check on every saved plan from each
+  // player's local today forward, in date order; failing unmarked plans are
+  // rebuilt by wk-generate-daily (verify_saved), marked cards are never touched.
+  if (body.mode === "recheck") {
+    const utcYesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    const { data: rx, error: rxErr } = await admin.from("wk_prescriptions")
+      .select("user_id, plan_date").gte("plan_date", utcYesterday).limit(50000);
+    if (rxErr) return json({ error: rxErr.message }, 500);
+    const byUser = new Map<string, Set<string>>();
+    for (const r of (rx ?? []) as any[]) {
+      if (!byUser.has(r.user_id)) byUser.set(r.user_id, new Set());
+      byUser.get(r.user_id)!.add(String(r.plan_date));
+    }
+    const { data: tzs } = await admin.from("profiles").select("id, timezone").in("id", [...byUser.keys()]);
+    const tzOf = new Map(((tzs ?? []) as any[]).map((p) => [p.id, p.timezone]));
+    const out = { players: 0, days: 0, passed: 0, rebuilt: 0, trimmed: 0, failed: 0, failures: [] as string[] };
+    for (const [uid, dates] of byUser) {
+      out.players++;
+      const today = localDate(tzOf.get(uid) ?? null);
+      for (const d of [...dates].filter((x) => x >= today).sort()) {
+        out.days++;
+        try {
+          const r = await fetch(`${URL_}/functions/v1/wk-generate-daily`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
+            body: JSON.stringify({ user_id: uid, plan_date: d, verify_saved: true }),
+          });
+          const b = await r.json().catch(() => ({}));
+          if (!r.ok) { out.failed++; out.failures.push(`${uid} ${d} HTTP ${r.status} ${String(b?.error ?? "")}`); }
+          else if (b.verified === true) out.passed++;
+          else if (typeof b.trimmed === "number") out.trimmed++;
+          else out.rebuilt++;
+        } catch (e) { out.failed++; out.failures.push(`${uid} ${d} ${String(e).slice(0, 120)}`); }
+      }
+    }
+    return json({ ok: true, mode: "recheck", ...out });
+  }
   const mode = body.mode === "check" ? "check" : "build";
   const limit = Math.min(Math.max(Number(body.limit ?? 2000) || 2000, 1), 5000);
 

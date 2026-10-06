@@ -459,6 +459,61 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // -------- Saved-plan re-check (owner ruling 2026-10-06) --------
+    // `verify_saved: true` runs the final rule check on the plan already saved
+    // for this date (the app sends it whenever a saved plan is shown). A plan
+    // that passes is left alone. A failing plan with nothing marked falls
+    // through to a full rebuild below; a failing plan with something marked
+    // keeps every marked card and loses only the failing unmarked cards.
+    if ((rawBody as any).verify_saved === true) {
+      const { data: saved } = await admin.from("wk_prescriptions")
+        .select("id, slot, sequence_role, movement_slug, status, phase")
+        .eq("user_id", user.id).eq("plan_date", planDate);
+      const savedRows = (saved ?? []) as any[];
+      if (savedRows.length > 0) {
+        const [{ data: vSw }, { data: vPrior }, { data: vCat }, { data: vCtx }] = await Promise.all([
+          admin.from("wk_feature_switches").select("feature_key, mode, allowlist, updated_by").eq("feature_key", "rest_day_calculator"),
+          admin.from("wk_prescriptions").select("plan_date, slot, sequence_role")
+            .eq("user_id", user.id).eq("slot", "lift")
+            .gte("plan_date", new Date(Date.parse(`${planDate}T00:00:00Z`) - 13 * 86_400_000).toISOString().slice(0, 10)).lt("plan_date", planDate).limit(400),
+          admin.from("wk_movement_catalog").select("slug, min_age_years, eccentric_overload, season_legality")
+            .in("slug", Array.from(new Set(savedRows.map((r) => String(r.movement_slug ?? "")).filter(Boolean)))),
+          admin.from("profiles").select("date_of_birth").eq("id", user.id).maybeSingle(),
+        ]);
+        const byDate = new Map<string, any[]>();
+        for (const r of (vPrior ?? []) as any[]) byDate.set(String(r.plan_date), [...(byDate.get(String(r.plan_date)) ?? []), r]);
+        const vPriorDates = [...byDate.entries()].filter(([, rs]) => loadedLiftRows(rs).length > 0).map(([d]) => d);
+        const dob = (vCtx as any)?.date_of_birth ? Date.parse(String((vCtx as any).date_of_birth)) : NaN;
+        const vAge = Number.isFinite(dob) ? Math.floor((Date.parse(`${planDate}T00:00:00Z`) - dob) / (365.25 * 86_400_000)) : null;
+        const vPhase = String(savedRows.find((r) => r.phase)?.phase ?? "in_season");
+        const vSpacing = resolveFeatures((vSw ?? []) as any, user.id).rest_day_calculator === true;
+        const vCheck = finalRuleCheck(savedRows, {
+          planDate, phase: vPhase, age: vAge, priorLiftDates: vPriorDates,
+          restDaysBetweenLifts: vSpacing ? 2 : null,
+          weeklyLiftMax: vSpacing && vPhase === "in_season" ? 2 : null,
+          liftRemoved: false,
+          catalog: new Map(((vCat ?? []) as any[]).map((c) => [String(c.slug), c])),
+        });
+        if (vCheck.swaps.length === 0) {
+          return json({ ok: true, verified: true, plan_date: planDate }, 200);
+        }
+        const isMarked = (r: any) => r.status && r.status !== "planned" && r.status !== "pending";
+        await admin.from("wk_final_check_swaps").insert(vCheck.swaps.map((sw) => ({
+          user_id: user.id, plan_date: planDate, rule: sw.rule,
+          movement_slug: sw.movement_slug, slot: sw.slot, detail: `saved plan re-check: ${sw.detail}`,
+        })));
+        if (savedRows.some(isMarked)) {
+          const keep = new Set(vCheck.rows.map((r: any) => r.id));
+          const dropIds = savedRows.filter((r) => !keep.has(r.id) && !isMarked(r)).map((r) => r.id);
+          if (dropIds.length > 0) {
+            await admin.from("wk_prescriptions").delete().eq("user_id", user.id).in("id", dropIds);
+          }
+          return json({ ok: true, verified: false, trimmed: dropIds.length, plan_date: planDate }, 200);
+        }
+        // Nothing marked: fall through and rebuild the whole day under the rules.
+      }
+    }
+
     // -------- Never rebuild a plan once anything on it is marked --------
     {
       const { data: marked } = await admin.from("wk_prescriptions").select("id")
