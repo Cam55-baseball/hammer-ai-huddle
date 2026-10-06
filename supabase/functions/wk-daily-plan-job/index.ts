@@ -50,24 +50,7 @@ Deno.serve(async (req) => {
   const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const admin = createClient(URL_, SERVICE);
 
-  const body = (await req.json().catch(() => ({}))) as { mode?: string; limit?: number; [k: string]: unknown };
-  // mode "probe": token-locked test hook — forwards one planner request for a
-  // TEST account only (…@hammersmodality.test or hammersmodality+demo…).
-  if (body.mode === "probe") {
-    const uid = String(body.user_id ?? "");
-    const { data: u } = await admin.auth.admin.getUserById(uid);
-    const email = String(u?.user?.email ?? "").toLowerCase();
-    if (!/@hammersmodality\.test$|^hammersmodality\+demo/.test(email)) return json({ error: "not_a_test_account" }, 403);
-    const fwd: Record<string, unknown> = { user_id: uid };
-    for (const k of ["plan_date", "verify_saved", "change_reason", "change_text", "change_key"]) if (k in body) fwd[k] = body[k];
-    const r = await fetch(`${URL_}/functions/v1/wk-generate-daily`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
-      body: JSON.stringify(fwd),
-    });
-    const text = await r.text();
-    return json({ status: r.status, body: (() => { try { return JSON.parse(text); } catch { return text.slice(0, 300); } })() });
-  }
+  const body = (await req.json().catch(() => ({}))) as { mode?: string; limit?: number };
   // mode "recheck": re-run the final rule check on every saved plan from each
   // player's local today forward, in date order; failing unmarked plans are
   // rebuilt by wk-generate-daily (verify_saved), marked cards are never touched.
