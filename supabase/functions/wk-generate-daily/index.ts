@@ -222,6 +222,7 @@ import {
 } from "../_shared/wic/dosage/doctrine.ts";
 import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
 import { finalRuleCheck, dayKinds, FINAL_CHECK_CATALOG_COLUMNS, type DayKind } from "../_shared/wic/schedule/finalCheck.ts";
+import { loadU13ThrowBlock } from "../_shared/wic/phases/u13ThrowGate.ts";
 import { loadedLiftRows } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
 import { loadExternalTraining, mergeExternal } from "../_shared/wic/schedule/externalTraining.ts";
 
@@ -539,6 +540,7 @@ const handler = async (req: Request): Promise<Response> => {
         // Marked cards are never touched, so only unmarked rows are checked.
         const vCheck = finalRuleCheck(savedRows.filter((r) => !isMarkedRow(r)), {
           planDate, phase: vPhase, age: vAge, growthMode: vGrowth, priorLiftDates: vMerged.priorLiftDates,
+          u13ThrowBlock: await loadU13ThrowBlock(admin, user.id, vAge, planDate),
           restDaysBetweenLifts: vSpacing ? 2 : null,
           weeklyLiftMax: vSpacing && vPhase === "in_season" ? 2 : null,
           liftRemoved: false,
@@ -4567,6 +4569,7 @@ const handler = async (req: Request): Promise<Response> => {
         phase: fcPhase,
         age: athleteAgeYears,
         growthMode: growthState.active,
+        u13ThrowBlock: await loadU13ThrowBlock(admin, user.id, athleteAgeYears, planDate),
         priorLiftDates: fcMerged.priorLiftDates,
         sameDayExternal: fcMerged.sameDayExternal,
         restDaysBetweenLifts: enforceSpacing ? 2 : null,
