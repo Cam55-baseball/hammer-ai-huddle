@@ -3840,7 +3840,7 @@
         "notes": "Thighs parallel, maximum quad tension"
       },
       "isometric_pallof_hold": {
-        "name": "Isometric Pallof Hold",
+        "name": "Resist-Turning Press Hold",
         "description": "Cable/band at chest height, arms extended forward. Resist the rotational pull with your core - anti-rotation is the goal.",
         "notes": "Each side, resist rotation"
       },
@@ -3900,7 +3900,7 @@
         "notes": "Each leg, rear foot elevated"
       },
       "pallof_press": {
-        "name": "Pallof Press",
+        "name": "Resist-Turning Press",
         "description": "Cable at chest height, stand perpendicular. Press hands forward slowly, hold 3s at extension while resisting rotation, return with control.",
         "notes": "3s hold at full extension"
       },
@@ -3980,7 +3980,7 @@
         "notes": "Independent arm work"
       },
       "pallof_press_step": {
-        "name": "Pallof Press with Step",
+        "name": "Resist-Turning Press with Step",
         "description": "Dynamic anti-rotation. Press hands forward while stepping laterally, increasing lever arm.",
         "notes": "Each side, step out"
       },

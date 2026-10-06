@@ -590,6 +590,8 @@ const handler = async (req: Request): Promise<Response> => {
     // game-flag behaviour, said honestly on the conditioning card.
     let outingFacts: OutingFacts | null = null;
     let outingLoadDates: string[] = [];
+    let actualStartDates: string[] = [];
+    let pitcherScheduleReadFailed = false;
     try {
       const [pss, pout, pav] = await Promise.all([
         admin.from("pitcher_schedule_settings").select("role, rotation_anchor_date, rotation_every_days, rotation_active").eq("user_id", user.id).maybeSingle(),
@@ -598,6 +600,8 @@ const handler = async (req: Request): Promise<Response> => {
         admin.from("pitcher_availability").select("date, available").eq("user_id", user.id)
           .gte("date", isoShift(planDate, -1)).lte("date", isoShift(planDate, 2)),
       ]);
+      for (const result of [pss, pout, pav]) if (result.error) throw result.error;
+      actualStartDates = ((pout.data ?? []) as any[]).filter((o) => o.status === "thrown" && o.outing_type === "start" && o.actual_date).map((o) => String(o.actual_date));
       outingFacts = resolveOutingFacts({
         planDate,
         settings: (pss as any)?.data ?? null,
@@ -609,6 +613,7 @@ const handler = async (req: Request): Promise<Response> => {
         .map((o) => String(o.actual_date));
       if (!outingFacts.hasSchedule) outingFacts = null;
     } catch (_e) {
+      pitcherScheduleReadFailed = true;
       outingFacts = null;
     }
     const scheduledGames: ScheduledGame[] = [
@@ -654,7 +659,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (outingFacts) {
       const startDays = new Set<string>([
         ...outingFacts.plannedStartDates.filter((d) => d >= planDate),
-        ...outingFacts.thrownDates.filter((d) => d >= isoShift(planDate, -3)),
+        ...actualStartDates.filter((d) => d >= isoShift(planDate, -3)),
       ]);
       for (const d of startDays) {
         if (d > isoShift(planDate, 3)) continue;
@@ -2350,16 +2355,16 @@ const handler = async (req: Request): Promise<Response> => {
       // Non-throwing / recovery days still get lift-slot arm care so the arm
       // is never neglected.
       const isThrowingDayForArmCare = !!(ctxAny.throwing_day) || isPitcherRole;
-      const isRecoveryDay = decision?.primary === "recovery_only";
+      const isRecoveryDay = decision?.primary === "recovery_only" || !!outingFacts?.pitchedYesterday;
       const skipLiftArmCare = isThrowingDayForArmCare && !isRecoveryDay;
       if (!skipLiftArmCare) {
         const armCarePicked = pickArmCarePrimary(lib as unknown as ArmCareCatalogRow[], {
           sport,
           isPitcher: isPitcherRole,
           isCatcher: isCatcherRole,
-          isThrowingDay: !isGameDay,
+          isThrowingDay: !isRecoveryDay,
           isRecoveryDay,
-          isGameDay: !!isGameDay,
+          isGameDay: !!isGameDay || !!(outingFacts?.startsToday || outingFacts?.startsTomorrow || outingFacts?.relieverAvailableSoon),
           trainingAge: trainingAgeYears,
           ageYears: Math.max(0, Math.floor(trainingAgeYears) + 6),
           daySeed: daySeedForArmCare,
@@ -2368,7 +2373,9 @@ const handler = async (req: Request): Promise<Response> => {
         const armCareRow = armCarePicked && eligible(armCarePicked as unknown as MovementRow)
           ? (armCarePicked as unknown as MovementRow)
           : pickFirst(StrengthEngine.ARM_CARE_SLUGS, "arm_care");
-        if (armCareRow) push("lift", "arm_care", armCareRow, {}, armCareRow.why_prescribed || "Non-negotiable shoulder prep. Every session opens here.");
+        if (armCareRow) push("lift", "arm_care", armCareRow, {}, outingFacts?.pitchedYesterday
+          ? "You pitched yesterday. Easy arm care today keeps the next outing in view."
+          : armCareRow.why_prescribed || "Non-negotiable shoulder prep. Every session opens here.");
       }
 
       // Step 20 C — a full rest day ("none" from the rest-day calculator) is a
@@ -2746,6 +2753,10 @@ const handler = async (req: Request): Promise<Response> => {
           conditioningForPosition(lib, position, eligible),
         ].filter(Boolean) as MovementRow[];
         conditioningSelection = { ...conditioningSelection, fallback: true, why: "Standard conditioning today — the planned work isn't available to you yet." };
+      }
+      if (isPitcherAthlete && pitcherScheduleReadFailed) {
+        conditioningSelection = { ...conditioningSelection, fallback: true,
+          why: `Couldn't read your pitching schedule. This uses your existing games and check-ins. ${conditioningSelection.why}` };
       }
       conditioningEmptyPool = conditioning.length === 0;
       for (const m of conditioning) {
@@ -4090,6 +4101,7 @@ const handler = async (req: Request): Promise<Response> => {
             recovery_validation_status: recoveryCertification.validationStatus,
             recovery_substitution_completeness: recoveryCertification.substitutionCompleteness,
             recovery_governance_version: recoveryCertification.governanceVersion,
+            pitcher_schedule_read_failed: pitcherScheduleReadFailed,
             arm_care_template_id: armCareCertification.templateId,
             arm_care_category_coverage: armCareCertification.categoryCoverage,
             arm_care_validation_status: armCareCertification.validationStatus,

@@ -89,7 +89,7 @@ const TABLE: Record<SeasonPhase, Record<SeasonQuarter, Omit<QuarterDescriptor, "
          headline: "Restore tissue.", description: "Movement quality, sleep, low-intent skill work.",
          recoveryWindowMultiplier: 1.20, volumeCeilingMultiplier: 0.5 },
     3: { label: "Post-season Q3 · Movement quality", accent: "Movement",
-         headline: "Fix the leaks.", description: "Corrective + FRC + light strength returns.",
+         headline: "Fix the leaks.", description: "Movement patterning and light strength return.",
          recoveryWindowMultiplier: 1.15, volumeCeilingMultiplier: 0.7 },
     4: { label: "Post-season Q4 · Base rebuild", accent: "Rebuild",
          headline: "Rebuild the base.", description: "General strength + capacity returns. Onramp to off-season.",

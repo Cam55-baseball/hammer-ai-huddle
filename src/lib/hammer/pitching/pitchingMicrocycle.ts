@@ -18,6 +18,7 @@
 import type { RoadmapRung } from "@/lib/hammer/roadmap/roadmapLadder";
 import type { QuarterDescriptor } from "@/lib/hammer/roadmap/seasonQuarters";
 import type { PitcherProfile } from "./pitcherProfile";
+import { resolveOutingFacts, type PitcherSettingsRow, type PitcherOutingRow, type PitcherAvailabilityRow } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
 
 export type PitcherDayType =
   | "start"
@@ -74,6 +75,7 @@ interface Input {
   readonly today: Date;
   readonly gameDows: ReadonlyArray<number>;   // JS getDay() values of games in the next 7 days
   readonly preferredBullpenDow: number | null;
+  readonly pitcherSchedule?: { settings: PitcherSettingsRow | null; outings: PitcherOutingRow[]; availability: PitcherAvailabilityRow[] };
 }
 
 /**
@@ -185,6 +187,27 @@ export function buildPitchingMicrocycle(input: Input): PitchingMicrocycle {
     week = role === "reliever" || role === "closer"
       ? baseballReliever(input)
       : baseballStarter(input);
+  }
+  if (input.pitcherSchedule) {
+    const baseDate = new Date(input.today.getTime() - input.today.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    week = week.map((entry) => {
+      const offset = (entry.dow - input.today.getDay() + 7) % 7;
+      const date = new Date(`${baseDate}T12:00:00Z`);
+      date.setUTCDate(date.getUTCDate() + offset);
+      const planDate = date.toISOString().slice(0, 10);
+      const facts = resolveOutingFacts({ planDate, ...input.pitcherSchedule });
+      if (!facts.hasSchedule) return entry;
+      // A scheduled competition is an anchor, not permission to add practice pitches.
+      // Recovery and pain clamps remain downstream and authoritative.
+      if (facts.pitchedYesterday) return mkDay(entry.dow, "flush");
+      if (facts.startsToday) return mkDay(entry.dow, "start");
+      if (facts.startsTomorrow) return mkDay(entry.dow, "touch");
+      const available = input.pitcherSchedule.availability.find((a) => a.date === planDate);
+      if (available?.available && (input.pitcherSchedule.settings?.role === "reliever" || input.pitcherSchedule.settings?.role === "both")) return mkDay(entry.dow, "available");
+      // Never invent a start from a weekday template once real scheduling exists.
+      if (entry.dayType === "start" || entry.dayType === "game" || entry.dayType === "available") return mkDay(entry.dow, "touch");
+      return entry;
+    });
   }
   const todayDow = input.today.getDay();
   const today = week.find((d) => d.dow === todayDow) ?? week[0];

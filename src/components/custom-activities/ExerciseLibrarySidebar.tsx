@@ -101,7 +101,7 @@ const EXERCISE_LIBRARY: Record<string, Exercise[]> = {
     { id: 'stolen-base-work', name: 'Stolen Base Work', type: 'baseball', sets: 5, reps: 1, rest: 90 },
   ],
   core: [
-    { id: 'pallof-press', name: 'Pallof Press', type: 'core', sets: 3, reps: 10, rest: 45 },
+    { id: 'pallof-press', name: 'Resist-Turning Press', type: 'core', sets: 3, reps: 10, rest: 45 },
     { id: 'russian-twists', name: 'Russian Twists', type: 'core', sets: 3, reps: 20, rest: 30 },
     { id: 'dead-bug', name: 'Dead Bug', type: 'core', sets: 3, reps: 10, rest: 30 },
     { id: 'bird-dog', name: 'Bird Dog', type: 'core', sets: 3, reps: 10, rest: 30 },

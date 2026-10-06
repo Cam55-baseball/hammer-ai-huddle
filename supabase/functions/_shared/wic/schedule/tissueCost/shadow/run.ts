@@ -64,6 +64,7 @@ export async function fetchShadowData(
     speedSessions,
     quizzes,
     dailyLogs,
+    pitcherSettings, pitcherOutings, pitcherAvailability,
   ] = await Promise.all([
     db.from("athlete_mpi_settings").select(
       "sport,primary_position,date_of_birth,season_status,preseason_start_date,preseason_end_date,in_season_start_date,in_season_end_date,post_season_start_date,post_season_end_date",
@@ -112,7 +113,12 @@ export async function fetchShadowData(
         "entry_date,day_status,injury_mode,injury_body_region,game_logged",
       ).eq("user_id", userId).gte("entry_date", windowStart).lte("entry_date", today),
     ),
+    db.from("pitcher_schedule_settings").select("role, rotation_anchor_date, rotation_every_days, rotation_active").eq("user_id", userId).maybeSingle(),
+    db.from("pitcher_outings").select("id, outing_type, planned_date, actual_date, status").eq("user_id", userId)
+      .or(`planned_date.gte.${windowStart},actual_date.gte.${windowStart}`).limit(200),
+    db.from("pitcher_availability").select("date, available").eq("user_id", userId).gte("date", today).lte("date", horizonEnd),
   ]);
+  const pitcherScheduleError = [pitcherSettings, pitcherOutings, pitcherAvailability].some((r) => !!r.error);
 
   return {
     userId,
@@ -131,6 +137,12 @@ export async function fetchShadowData(
     speedSessions: speedSessions as any,
     quizzes: quizzes as any,
     dailyLogs: dailyLogs as any,
+    pitcherScheduleError,
+    pitcherSchedule: pitcherScheduleError ? undefined : {
+      settings: pitcherSettings.data ?? null,
+      outings: pitcherOutings.data ?? [],
+      availability: pitcherAvailability.data ?? [],
+    },
   };
 }
 

@@ -25,7 +25,7 @@ const TIER0_NAME: Record<string, string> = {
   wu_scapular_cars: "Scapular CARs",
   bs_deep_hip_load: "Deep Hip Load",
   wu_pogo_double: "Double-Leg Pogo",
-  wu_pallof_press_iso: "Pallof Press Hold",
+  wu_pallof_press_iso: "Resist-Turning Press Hold",
   wu_forearm_pump: "Forearm Pump",
 };
 

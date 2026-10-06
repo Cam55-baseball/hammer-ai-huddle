@@ -3282,7 +3282,7 @@
         "notes": "Oberschenkel parallel, maximale Spannung"
       },
       "isometric_pallof_hold": {
-        "name": "Isometrischer Pallof-Halt",
+        "name": "Drücken ohne Drehen — Halten",
         "description": "Kabel/Band auf Brusthöhe, Arme nach vorne gestreckt. Der Rotationszug mit dem Core widerstehen - Anti-Rotation ist das Ziel.",
         "notes": "Jede Seite, Rotation widerstehen"
       },
@@ -3342,7 +3342,7 @@
         "notes": "Jedes Bein, hinterer Fuß erhöht"
       },
       "pallof_press": {
-        "name": "Pallof Press",
+        "name": "Resist-Turning Press",
         "description": "Kabel auf Brusthöhe, senkrecht stehen. Hände langsam nach vorne drücken, 3s in Streckung halten, Rotation widerstehen.",
         "notes": "3s halten in voller Streckung"
       },
@@ -3422,7 +3422,7 @@
         "notes": "Unabhängige Armarbeit"
       },
       "pallof_press_step": {
-        "name": "Pallof Press mit Schritt",
+        "name": "Drücken ohne Drehen mit Schritt",
         "description": "Dynamische Anti-Rotation. Hände nach vorne drücken beim seitlichen Schritt, Hebelarm vergrößern.",
         "notes": "Jede Seite, Schritt heraus"
       },
@@ -4007,7 +4007,7 @@
         },
         "cable_machine": {
           "name": "Kabelzug-Maschine",
-          "description": "Für Holzhacker, Rudern & Pallof Press"
+          "description": "Für Holzhacker, Rudern & Resist-Turning Press"
         },
         "pullup_bar": {
           "name": "Klimmzugstange",

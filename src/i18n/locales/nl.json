@@ -2561,7 +2561,7 @@
         "notes": "Dijen parallel, maximale quad spanning"
       },
       "isometric_pallof_hold": {
-        "name": "Isometrische Pallof Hold",
+        "name": "Draaivrije Druk Vasthouden",
         "description": "Kabel/band op borsthoogte, armen naar voren gestrekt. Weersta de rotatie met je core - anti-rotatie is het doel.",
         "notes": "Elke kant, weersta rotatie"
       },
@@ -2621,7 +2621,7 @@
         "notes": "Elk been, achtervoet verhoogd"
       },
       "pallof_press": {
-        "name": "Pallof Press",
+        "name": "Resist-Turning Press",
         "description": "Kabel op borsthoogte, sta loodrecht. Druk handen langzaam naar voren, houd 3s bij extensie terwijl je rotatie weerstaat, gecontroleerd terug.",
         "notes": "3s hold bij volledige extensie"
       },
@@ -2701,7 +2701,7 @@
         "notes": "Onafhankelijk armwerk"
       },
       "pallof_press_step": {
-        "name": "Pallof Press met Stap",
+        "name": "Draaivrije Druk met Stap",
         "description": "Dynamische anti-rotatie. Druk handen naar voren terwijl je zijwaarts stapt, vergroot hefboomarm.",
         "notes": "Elke kant, stap uit"
       },

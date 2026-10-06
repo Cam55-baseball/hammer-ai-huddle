@@ -3282,7 +3282,7 @@
         "notes": "Cuisses parallèles, tension maximale"
       },
       "isometric_pallof_hold": {
-        "name": "Maintien Pallof Isométrique",
+        "name": "Maintien de Presse sans Rotation",
         "description": "Câble/bande à hauteur de poitrine, bras tendus devant. Résistez à la traction rotationnelle avec votre core - l'anti-rotation est l'objectif.",
         "notes": "Chaque côté, résistez à la rotation"
       },
@@ -3342,7 +3342,7 @@
         "notes": "Chaque jambe, pied arrière élevé"
       },
       "pallof_press": {
-        "name": "Pallof Press",
+        "name": "Resist-Turning Press",
         "description": "Câble à hauteur de poitrine, debout perpendiculaire. Poussez les mains en avant lentement, maintenez 3s en extension en résistant à la rotation.",
         "notes": "Maintien 3s en extension complète"
       },
@@ -3422,7 +3422,7 @@
         "notes": "Travail bras indépendant"
       },
       "pallof_press_step": {
-        "name": "Pallof Press avec Pas",
+        "name": "Presse sans Rotation avec Pas",
         "description": "Anti-rotation dynamique. Poussez les mains en avant tout en faisant un pas latéral, augmentant le bras de levier.",
         "notes": "Chaque côté, pas vers l'extérieur"
       },

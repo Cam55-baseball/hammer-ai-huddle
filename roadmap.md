@@ -9,7 +9,13 @@
 - [ ] Pitcher schedule → recovery governor, arm care, throwing plan, weekly stress planner
 - [ ] "Did you play yesterday?" / "Did you pitch?" inside the morning check-in itself (currently on Hammers Today)
 - [ ] Live verification as a player and as a pitcher with schedule data
-- [ ] Stage 4 — game/practice load feeds recovery limit
-- [ ] Stage 5 — career goal direction + rank-goals prompt
-- [ ] Stage 6 — The General shows records
-- [ ] Stage 7 — baselines in the plan
+- [x] Stage 4 — game/practice load feeds recovery limit (scheduled practices are not confirmed logs)
+- [x] Stage 5 — career goal direction + rank-goals prompt
+- [x] Stage 6 — The General shows records (preview; published release unverified)
+- [x] Stage 7 — baselines in the plan
+- [x] Closeout: 40 catalog display renames live; outside-name/jargon findings in docs/wic/remaining-items-closeout.md
+- [x] Closeout: proposed optional game-linked flush after night save; owner decision pending
+- [x] Closeout: morning game-question trade-off reported; owner decision pending
+- [x] Closeout: pitcher connections implemented/tested in checkout; deployment and player/pitcher E2E unverified
+- [ ] Closeout: Stage 4/5 phone-width card screenshots delivered as owner; player verification still owed
+- [ ] Closeout: identified failed-read cases reported; exhaustive all-app audit still unfinished

@@ -3333,7 +3333,7 @@
         "notes": "Muslos paralelos, máxima tensión"
       },
       "isometric_pallof_hold": {
-        "name": "Pallof Isométrico",
+        "name": "Presión sin Girar — Sostén",
         "description": "Cable/banda a altura del pecho, brazos extendidos hacia adelante. Resiste la tracción rotacional con tu core - la anti-rotación es el objetivo.",
         "notes": "Cada lado, resiste la rotación"
       },
@@ -3393,7 +3393,7 @@
         "notes": "Cada pierna, pie trasero elevado"
       },
       "pallof_press": {
-        "name": "Pallof Press",
+        "name": "Resist-Turning Press",
         "description": "Cable a altura de pecho, de pie perpendicular. Presiona manos adelante lentamente, mantén 3s en extensión resistiendo rotación.",
         "notes": "Mantén 3s en extensión completa"
       },
@@ -3473,7 +3473,7 @@
         "notes": "Trabajo independiente de brazos"
       },
       "pallof_press_step": {
-        "name": "Pallof Press con Paso",
+        "name": "Presión sin Girar con Paso",
         "description": "Anti-rotación dinámica. Presiona manos adelante mientras das paso lateral, aumentando el brazo de palanca.",
         "notes": "Cada lado, paso afuera"
       },
