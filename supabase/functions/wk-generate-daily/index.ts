@@ -475,10 +475,10 @@ const handler = async (req: Request): Promise<Response> => {
           admin.from("wk_feature_switches").select("feature_key, mode, allowlist, updated_by").eq("feature_key", "rest_day_calculator"),
           admin.from("wk_prescriptions").select("plan_date, slot, sequence_role")
             .eq("user_id", user.id).eq("slot", "lift")
-            .gte("plan_date", isoShift(planDate, -13)).lt("plan_date", planDate).limit(400),
+            .gte("plan_date", new Date(Date.parse(`${planDate}T00:00:00Z`) - 13 * 86_400_000).toISOString().slice(0, 10)).lt("plan_date", planDate).limit(400),
           admin.from("wk_movement_catalog").select("slug, min_age_years, eccentric_overload, season_legality")
             .in("slug", Array.from(new Set(savedRows.map((r) => String(r.movement_slug ?? "")).filter(Boolean)))),
-          admin.from("athlete_context").select("date_of_birth").eq("user_id", user.id).maybeSingle(),
+          admin.from("profiles").select("date_of_birth").eq("id", user.id).maybeSingle(),
         ]);
         const byDate = new Map<string, any[]>();
         for (const r of (vPrior ?? []) as any[]) byDate.set(String(r.plan_date), [...(byDate.get(String(r.plan_date)) ?? []), r]);
