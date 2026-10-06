@@ -333,6 +333,15 @@ export function PitchingCard() {
                 />
               </CardTitle>
               <div className="text-[11px] text-muted-foreground">{cycle.weekLabel}</div>
+              <p className="text-[11px] text-muted-foreground">
+                {pitcherSchedule.isError
+                  ? "Couldn't read your pitching schedule. This uses the existing game-based plan; your saved pitching days haven't been cleared."
+                  : pitcherSchedule.isLoading
+                    ? "Checking your recorded pitching days…"
+                    : !pitcherSchedule.facts?.hasSchedule
+                      ? "No pitching schedule recorded. This uses your current games and check-ins."
+                      : "Your recorded pitching days guide this plan. Recovery limits still come first."}
+              </p>
             </CardHeader>
           </button>
         </CollapsibleTrigger>
