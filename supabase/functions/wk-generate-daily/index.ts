@@ -464,8 +464,12 @@ const handler = async (req: Request): Promise<Response> => {
     {
       const [{ data: gateRows }, { data: startRow }] = await Promise.all([
         admin.from("wk_feature_switches").select("feature_key, mode, allowlist, updated_by").eq("feature_key", "hammers_today_start_gate"),
-        admin.from("profiles").select("hammers_today_started_at").eq("id", user.id).maybeSingle(),
+        admin.from("profiles").select("hammers_today_started_at, account_paused_at").eq("id", user.id).maybeSingle(),
       ]);
+      // Paused accounts (under 13 pending a parent/guardian) never get a plan.
+      if ((startRow as any)?.account_paused_at) {
+        return json({ error: "account_paused", message: "This account is paused until a parent or guardian sets it up." }, 409);
+      }
       const gateRow = ((gateRows ?? []) as any[])[0];
       const gateOn = !!gateRow && (gateRow.mode === "all" ||
         (gateRow.mode === "pilot" && (gateRow.allowlist ?? []).includes(user.id)) ||
