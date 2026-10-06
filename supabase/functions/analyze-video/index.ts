@@ -1,3 +1,4 @@
+import { isAccountPaused, pausedResponse } from "../_shared/accountPause.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { HITTING_DOCTRINE_PROMPT } from "../_shared/hittingPhases.ts";
 import { HITTING_CAUSAL_CHAIN_PROMPT, PHASE_CAUSAL_CHAINS, PHASE_ROADMAPS, formatChainText, formatRoadmapText } from "../_shared/hittingCausalChains.ts";
@@ -1741,6 +1742,7 @@ Deno.serve(async (req) => {
     if (callerError || !caller?.user || !videoRow || caller.user.id !== userId || videoRow.user_id !== userId || videoRow.module !== module || videoRow.sport !== sport) {
       return new Response(JSON.stringify({ error: "Video access denied" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    if (await isAccountPaused(supabase, userId)) return pausedResponse(corsHeaders);
 
     const videoSha256Hex = (videoRow?.sha256_hex as string | null) ?? null;
     const fpsTrue = videoRow?.fps_true == null ? null : Number(videoRow.fps_true);

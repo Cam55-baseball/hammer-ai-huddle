@@ -1,3 +1,4 @@
+import { isAccountPaused, pausedResponse } from "../_shared/accountPause.ts";
 import { HONEST_EDGES_PROMPT } from "../_shared/honestEdges.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
@@ -57,6 +58,7 @@ serve(async (req) => {
     if (userError || !user) {
       throw new Error("Unauthorized");
     }
+    if (await isAccountPaused(supabase, user.id)) return pausedResponse(corsHeaders);
 
     const { messages, analysisContext, dashboardContext, royalTimingContext, stream } = await req.json();
 

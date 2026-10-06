@@ -1,3 +1,4 @@
+import { isAccountPaused, pausedResponse } from "../_shared/accountPause.ts";
 /**
  * gp-analyze-ab-swing — analyze a single at-bat swing video in the context of
  * the specific pitcher faced. Produces mechanics notes + drills + cues that
@@ -54,6 +55,7 @@ serve(async (req) => {
     const user = who?.user;
     if (!user) return json({ error: "unauthorized" }, 401);
     const admin = createClient(SUPABASE_URL, SERVICE);
+    if (await isAccountPaused(admin, user.id)) return pausedResponse();
 
     // pitcher context
     let pitcher_context: any = {};
