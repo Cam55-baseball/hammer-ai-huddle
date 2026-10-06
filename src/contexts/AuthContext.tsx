@@ -247,7 +247,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         for (let i = localStorage.length - 1; i >= 0; i--) {
           const k = localStorage.key(i);
-          if (k && k.startsWith('hm.wkrx.')) localStorage.removeItem(k);
+          if (k && (k.startsWith('hm.wkrx.') || k.startsWith('hm.htstart.') || k.startsWith('hm.planaccess.'))) localStorage.removeItem(k);
         }
       } catch { /* storage blocked */ }
     }
