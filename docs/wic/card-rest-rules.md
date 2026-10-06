@@ -20,3 +20,9 @@ Owner ruling 2026-10-06: every rule holds, every day, for every player, on the p
 **Age rules (all cards):** app minimum age 13. Each movement's minimum age is enforced. Under 18 uses growth mode. Eccentric-overload movements are lifted to 16+/advanced.
 
 **Final check before saving and whenever a saved plan is shown:** lift spacing, weekly limit, rest-day removal, minimum age, eccentric overload in season, season legality, hard-running spacing and day-before-game, jump spacing, and bat over/underload on back-to-back days. Planned days count whether done or not; nothing is ever made up. Any failing card is removed (the day's recovery cards remain) and logged in `wk_final_check_swaps`. Spacing and weekly limits follow the `rest_day_calculator` switch. Age and season rules always apply.
+
+**One plan per day (owner ruling 2026-10-06):** each day is built once. It changes only when the player asks, when tracked activity makes it necessary (a check-in, a game added or removed, training done in another program), or when the final rule check removes a card. Only unmarked cards change; every change is logged in `wk_plan_changes` and shown on the plan as "Plan change: …".
+
+**Completion (every card):** checked off or fully logged = Done; partly logged (cards with sets) = Cut short; unchecked and unlogged when the player's day ends = Missed (changeable for 7 days). Marked hourly by `wk_mark_missed_lifts()` from its existing start date; no backfill.
+
+**Other programs count:** a completed Iron Bambino, Heat Factory or The Unicorn day, a completed training-block workout (except recovery/mobility/deload) or a completed custom "workout" = a lift day. A Speed Lab / Explosive Conditioning session (not a break day) or a completed hard running session = a hard running day. Completed work only; done today removes today's lift or hard running.

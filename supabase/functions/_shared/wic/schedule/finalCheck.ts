@@ -83,12 +83,14 @@ export interface FinalCheckContext {
   priorKindDates?: Partial<Record<DayKind, readonly string[]>>;
   /** A game or tournament is on the day after planDate. */
   gameTomorrow?: boolean;
+  /** Training already completed today in another program (Iron Bambino, Speed Lab …). */
+  sameDayExternal?: { lift?: boolean; hard_run?: boolean };
   catalog: ReadonlyMap<string, CatalogFacts>;
 }
 
 export interface FinalCheckSwap {
   rule: "lift_spacing" | "weekly_lift_max" | "rest_day" | "min_age" | "eccentric_in_season" | "season_legality"
-    | "run_spacing" | "run_before_game" | "jump_spacing" | "bat_consecutive";
+    | "run_spacing" | "run_before_game" | "jump_spacing" | "bat_consecutive" | "trained_elsewhere_today";
   movement_slug: string | null;
   slot: string | null;
   detail: string;
@@ -144,6 +146,9 @@ export function finalRuleCheck<T extends FinalCheckRow>(
     if (ctx.liftRemoved) {
       rule = "rest_day";
       detail = "rest-day calculator removed the lift";
+    } else if (ctx.sameDayExternal?.lift) {
+      rule = "trained_elsewhere_today";
+      detail = "a lift was already completed today in another program";
     } else if (ctx.restDaysBetweenLifts != null && last != null && today - last - 1 < ctx.restDaysBetweenLifts) {
       rule = "lift_spacing";
       detail = `${today - last - 1} rest days since last planned lift, need ${ctx.restDaysBetweenLifts}`;
@@ -174,6 +179,7 @@ export function finalRuleCheck<T extends FinalCheckRow>(
     let rule: FinalCheckSwap["rule"] | null = null;
     let detail = "";
     if (kinds.includes("hard_run") && ctx.gameTomorrow) { rule = "run_before_game"; detail = "hard running the day before a game"; }
+    else if (kinds.includes("hard_run") && ctx.sameDayExternal?.hard_run) { rule = "trained_elsewhere_today"; detail = "hard running already completed today in another program"; }
     else if (kinds.includes("hard_run") && hadYesterday("hard_run")) { rule = "run_spacing"; detail = "hard running planned yesterday"; }
     else if (kinds.includes("high_jump") && hadYesterday("high_jump")) { rule = "jump_spacing"; detail = "high-intensity jumps planned yesterday"; }
     else if (kinds.includes("bat_over_under") && hadYesterday("bat_over_under")) { rule = "bat_consecutive"; detail = "overload/underload bat work planned yesterday"; }

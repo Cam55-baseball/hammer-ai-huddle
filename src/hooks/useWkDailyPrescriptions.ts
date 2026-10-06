@@ -310,7 +310,35 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     },
   });
 
-  const invokeOnce = useCallback(async () => {
+  // One plan per day: every change to a built day is logged with its reason.
+  const planChangesQuery = useQuery({
+    queryKey: ["wk-plan-changes", user?.id, planDate],
+    enabled: !!user?.id,
+    staleTime: 15_000,
+    queryFn: async () => {
+      const { data } = await (supabase as any).from("wk_plan_changes")
+        .select("id, reason_code, reason_text, changed_slots, outcome, detail, created_at")
+        .eq("user_id", user!.id).eq("plan_date", planDate)
+        .order("created_at", { ascending: false }).limit(20);
+      return (data ?? []) as Array<{ id: string; reason_code: string; reason_text: string; changed_slots: string[]; outcome: string; detail: any; created_at: string }>;
+    },
+  });
+  // Latest morning/night check-in for this day — a check-in after the plan
+  // was built is tracked activity that may adjust the remaining cards.
+  const checkInQuery = useQuery({
+    queryKey: ["wk-plan-checkin", user?.id, planDate],
+    enabled: !!user?.id,
+    staleTime: 15_000,
+    queryFn: async () => {
+      const { data } = await supabase.from("vault_focus_quizzes").select("created_at")
+        .eq("user_id", user!.id).eq("entry_date", planDate)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      return ((data as any)?.created_at as string | undefined) ?? null;
+    },
+  });
+
+  type ChangeReq = { reason: "player_request" | "tracked_activity"; text: string; key: string };
+  const invokeOnce = useCallback(async (change?: ChangeReq) => {
     // Pull the most recent *live* recovery ack so the edge function can bias the
     // next plan (real learning loop instead of one-way personalization).
     // Superseded acks are spent — their cause has cleared, or they were written
@@ -332,6 +360,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
           side_hit: sideHit,
           side_throw: sideThrow,
           recent_ack: lastAck ?? null,
+          ...(change ? { change_reason: change.reason, change_text: change.text, change_key: change.key } : {}),
         },
       }),
       30_000,
@@ -360,12 +389,11 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     void (supabase as any).from("profiles").update({ timezone: tz }).eq("id", user.id)
       .then(({ error }: { error: unknown }) => { if (!error) sessionStorage.setItem(key, tz as string); });
   }, [user?.id]);
-  const generate = useCallback(async () => {
+  const generate = useCallback(async (change?: ChangeReq) => {
     if (!user?.id) return;
-    // A rebuild deletes and re-inserts the day's rows, which would erase any
-    // check-off (and its logs). Once the athlete has marked anything, the day
-    // is kept as it is.
-    if (confirmedRef.current) {
+    // A built day is never rebuilt. With a stated change the server adjusts
+    // only the remaining unmarked cards; marked cards are never touched.
+    if (confirmedRef.current && !change) {
       console.debug("[wk-generate-daily] skipped — day already has check-offs");
       return;
     }
@@ -382,7 +410,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       let lastErr: unknown = null;
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          const { error } = await invokeOnce();
+          const { error } = await invokeOnce(change);
           if (error) throw error;
           lastErr = null;
           break;
@@ -396,6 +424,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       if (lastErr) throw lastErr;
       console.debug("[wk-generate-daily] ok", { ms: Date.now() - started });
       await qc.invalidateQueries({ queryKey: ["wk-rx", user.id, planDate] });
+      await qc.invalidateQueries({ queryKey: ["wk-plan-changes", user.id, planDate] });
     } catch (e: any) {
       console.warn("wk-generate-daily failed (after retry)", e);
       // Parse the structured error body the edge function returns so cards
@@ -444,7 +473,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
 
   // Update Hammer — a saved entry re-plans the next 7 days right now, in place,
   // with the plain "what changed" line. No restart, no navigation.
-  const generateRef = useRef<() => Promise<void>>(async () => undefined);
+  const generateRef = useRef<(c?: ChangeReq) => Promise<void>>(async () => undefined);
   useEffect(() => {
     if (!tellHammersOn) return;
     const onChange = (ev: Event) => {
@@ -458,8 +487,9 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
           qc.invalidateQueries({ queryKey: ["wk-rx", user.id, iso] });
         }
       }
-      autoTriedKey.current = `timeline-event:${Date.now()}`;
-      void generateRef.current();
+      const key = `timeline-event:${Date.now()}`;
+      autoTriedKey.current = key;
+      void generateRef.current({ reason: "player_request", text: reason ?? "You updated Hammer, so we adjusted what's left today.", key });
     };
     window.addEventListener(SCHEDULE_CHANGED_EVENT, onChange);
     return () => window.removeEventListener(SCHEDULE_CHANGED_EVENT, onChange);
@@ -484,6 +514,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
         if (error) { console.debug("[wk-verify-saved] failed", error); return; }
         if (data && (data as any).verified !== true) {
           void qc.invalidateQueries({ queryKey: ["wk-rx", user.id, planDate] });
+          void qc.invalidateQueries({ queryKey: ["wk-plan-changes", user.id, planDate] });
         }
       });
   }, [user?.id, planDate, query.data, generating, qc]);
@@ -491,7 +522,6 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   // Auto-generate exactly once per mount if empty.
   useEffect(() => {
     const first = query.data?.[0];
-    const staleVersion = !!first && first.why_payload?.generator_version !== WK_GENERATOR_VERSION;
     const isGameDayForPlan = gameDayQuery.data ?? false;
     const staleGameDay = !!first && typeof first.why_payload?.game_day === "boolean" && first.why_payload.game_day !== isGameDayForPlan;
     const expectedPhase = canonicalPhase.phase;
@@ -511,20 +541,41 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     const staleIntent =
       !!first && !dayIntentQuery.isLoading && dayIntentQuery.data !== undefined &&
       (storedIntent === undefined ? dayIntentQuery.data === "rest" : storedIntent !== dayIntentQuery.data);
+    const checkInAt = checkInQuery.data ?? null;
+    const staleCheckIn = !!first && !!checkInAt && !!firstCreated && checkInAt > firstCreated;
+    // A built day is never rebuilt for a new app version. It changes only for
+    // a stated reason, and each reason is applied once (logged change_key).
     const refreshKey = !query.data
       ? null
       : query.data.length === 0
         ? "empty"
-        : staleVersion
-          ? `version:${first?.why_payload?.generator_version ?? "missing"}`
-          : staleGameDay
-            ? `game:${String(first?.why_payload?.game_day)}->${String(isGameDayForPlan)}`
-            : stalePhase
-              ? `phase:${first?.why_payload?.phase ?? first?.phase ?? "missing"}->${expectedPhase}`
-              : staleIntent
-                ? `intent:${storedIntent ?? "none"}->${dayIntentQuery.data ?? "none"}`
-                : null;
+        : staleGameDay
+          ? `game:${String(first?.why_payload?.game_day)}->${String(isGameDayForPlan)}`
+          : stalePhase
+            ? `phase:${first?.why_payload?.phase ?? first?.phase ?? "missing"}->${expectedPhase}`
+            : staleIntent
+              ? `intent:${storedIntent ?? "none"}->${dayIntentQuery.data ?? "none"}`
+              : staleTimeline
+                ? `timeline:${timelineQuery.data}`
+                : staleCheckIn
+                  ? `checkin:${checkInAt}`
+                  : null;
+    const alreadyApplied = !!refreshKey && refreshKey !== "empty" &&
+      (planChangesQuery.data ?? []).some((c) => c.detail?.change_key === refreshKey);
+    const change: ChangeReq | undefined = !refreshKey || refreshKey === "empty" ? undefined
+      : refreshKey.startsWith("game:")
+        ? { reason: "tracked_activity", text: isGameDayForPlan ? "A game was added for today, so we adjusted what's left." : "Today's game came off your schedule, so we adjusted what's left.", key: refreshKey }
+        : refreshKey.startsWith("phase:")
+          ? { reason: "player_request", text: `You changed your season to ${canonicalPhase.displayName ?? expectedPhase}, so we adjusted what's left today.`, key: refreshKey }
+          : refreshKey.startsWith("intent:")
+            ? { reason: "player_request", text: "You told Hammer how you want today to go, so we adjusted what's left.", key: refreshKey }
+            : refreshKey.startsWith("timeline:")
+              ? { reason: "player_request", text: "You updated Hammer, so we adjusted what's left today.", key: refreshKey }
+              : { reason: "tracked_activity", text: "You checked in, so we fitted what's left today to how you feel.", key: refreshKey };
     if (
+      !alreadyApplied &&
+      !planChangesQuery.isLoading &&
+      !checkInQuery.isLoading &&
       !query.isLoading &&
       !gameDayQuery.isLoading &&
       !season.isLoading &&
@@ -552,9 +603,14 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
           }
         }
       }
-      generate();
+      generate(change);
     }
-  }, [dayIntentQuery.isLoading, dayIntentQuery.data, tellHammersOn, timelineQuery.data, query.isLoading, query.data, gameDayQuery.isLoading, gameDayQuery.data, canonicalPhase.phase, canonicalPhase.displayName, season.isLoading, generate, generating, failed, qc, planDate, user?.id]);
+  }, [planChangesQuery.data, planChangesQuery.isLoading, checkInQuery.data, checkInQuery.isLoading, dayIntentQuery.isLoading, dayIntentQuery.data, tellHammersOn, timelineQuery.data, query.isLoading, query.data, gameDayQuery.isLoading, gameDayQuery.data, canonicalPhase.phase, canonicalPhase.displayName, season.isLoading, generate, generating, failed, qc, planDate, user?.id]);
+
+  const planChangeNotes = useMemo(
+    () => (planChangesQuery.data ?? []).filter((c) => c.outcome === "changed").map((c) => ({ id: c.id, text: c.reason_text, at: c.created_at, kind: c.reason_code })),
+    [planChangesQuery.data],
+  );
 
   const retry = useCallback(() => {
     autoTriedKey.current = null;
@@ -662,7 +718,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     });
     if (error) return toast.error("Could not record override");
     toast.success("Override logged — regenerating plan");
-    await generate();
+    await generate({ reason: "player_request", text: "You swapped an exercise, so we adjusted that card.", key: `override:${movementSlug}:${Date.now()}` });
   }, [user?.id, planDate, generate]);
 
   // Phase 3 — unified snapshot identity. Every card stamps this so cross-card
@@ -754,6 +810,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     failed,
     failureReason,
     retry,
+    planChangeNotes,
     effectiveCnsTotal,
     overrideMovement,
     snapshotIdentity,
