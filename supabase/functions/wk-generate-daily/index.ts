@@ -233,6 +233,7 @@ function ruleCheckNote(rules: readonly string[]): string {
   if (r.has("lift_spacing") || r.has("weekly_lift_max") || r.has("rest_day")) return "Your body needs more rest between lifts, so today's lift came out.";
   if (r.has("run_spacing")) return "You had hard running yesterday, so today's run came out.";
   if (r.has("jump_spacing")) return "You had big jumps yesterday, so today's jumps came out.";
+  if (r.has("growth_mode")) return "You're growing fast right now, so big jumps and heavy eccentric work came out for now.";
   if (r.has("bat_consecutive")) return "Heavy and light bat work can't be two days in a row, so it came out.";
   return "One exercise didn't fit your age or season, so we took it out.";
 }

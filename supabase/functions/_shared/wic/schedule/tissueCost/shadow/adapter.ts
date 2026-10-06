@@ -1,3 +1,4 @@
+import { growthMode } from "../../../growth/growthMode.ts";
 import { resolveOutingFacts, type PitcherSettingsRow, type PitcherOutingRow, type PitcherAvailabilityRow } from "../../../pitching/outingFacts.ts";
 // Tissue Cost Scheduler — stage S3 shadow mode, input adapter.
 // Spec: docs/wic/tissue-cost-scheduler-v1.md §2 (inputs and their defaults).
@@ -474,7 +475,7 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
   const profile: Profile = {
     athleteId: raw.userId,
     age,
-    growthMode: age !== null && age <= 15,
+    growthMode: growthMode((raw as any).heights ?? [], raw.today).active,
     trainingAgeBand: trainingAgeBandFrom(raw.context),
     sport: raw.mpi?.sport ?? raw.context?.sport_primary ?? "baseball",
     position: positionRole(position, false),
