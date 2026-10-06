@@ -18,3 +18,4 @@
 - Every value shown to an athlete must carry a label saying what kind of thing it is. Why: a bare name leaves athletes guessing what it is.
 - Internal demo auto-start outcomes and inspector state/events must use console.debug only, never app UI for any role. Why: diagnostic skips and failures are not user-facing messages.
 - No plan is built for an account without `profiles.hammers_today_started_at` while switch `hammers_today_start_gate` is on — enforced in `wk-generate-daily`, and the client mounts no plan provider before the start. `wk-daily-plan-job` builds only missing plans for started players. Why: one start per account, the same on every device.
+- `wk-daily-plan-job` requires header `x-job-token` (SHA-256 checked in code, token in Vault `wk_daily_plan_job_token`); bare 401 otherwise, never log the token. Why: the job rebuilds plans for every player.

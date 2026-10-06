@@ -27,8 +27,25 @@ function localDate(tz: string | null, now = new Date()): string {
   }
 }
 
+// Job lock (owner-authorised 2026-10-06): every mode requires header
+// x-job-token whose SHA-256 hex matches this digest. The token itself lives
+// in Vault (wk_daily_plan_job_token) and is never logged or echoed here.
+const JOB_TOKEN_SHA256 = "92a0d7f956decec62aeaf2c309a150a936afda73572d8755f9b3999fc91325c9";
+
+async function tokenOk(req: Request): Promise<boolean> {
+  const t = req.headers.get("x-job-token");
+  if (!t) return false;
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+  const hex = Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  if (hex.length !== JOB_TOKEN_SHA256.length) return false;
+  let diff = 0;
+  for (let i = 0; i < hex.length; i++) diff |= hex.charCodeAt(i) ^ JOB_TOKEN_SHA256.charCodeAt(i);
+  return diff === 0;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (!(await tokenOk(req))) return new Response(null, { status: 401, headers: corsHeaders });
   const URL_ = Deno.env.get("SUPABASE_URL")!;
   const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const admin = createClient(URL_, SERVICE);

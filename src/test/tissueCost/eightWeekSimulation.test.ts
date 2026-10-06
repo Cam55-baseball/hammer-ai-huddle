@@ -8,12 +8,27 @@
 // Every rule is then re-checked on the saved plans and violations counted.
 import { describe, expect, it } from "vitest";
 import { decide, TCS_CONFIG } from "./harness.ts";
-import { finalRuleCheck, type CatalogFacts } from "../../../supabase/functions/_shared/wic/schedule/finalCheck.ts";
+import { finalRuleCheck, dayKinds, type CatalogFacts, type DayKind } from "../../../supabase/functions/_shared/wic/schedule/finalCheck.ts";
 import type { DaySchedule, Phase, Profile, SessionClass } from "../../../supabase/functions/_shared/wic/schedule/tissueCost/types.ts";
 import catalogRows from "../fixtures/wkCatalogRules.json";
 
 const CATALOG = new Map<string, CatalogFacts>((catalogRows as any[]).map((c) => [c.slug, c]));
 const SLUGS = [...CATALOG.keys()].sort();
+// Real catalog facts (wk_movement_catalog, 2026-10-06) for the run / jump / bat cards.
+const SPACED: Record<string, CatalogFacts & { slot: string }> = {
+  repeat_90ft_bb: { slot: "conditioning", exposure_channel: "sprint", intensity_class: "supplemental", conditioning_category: "top_speed" },
+  bases_1st_3rd: { slot: "conditioning", exposure_channel: "lifting", intensity_class: "supplemental", conditioning_category: "aerobic_base" },
+  rc_easy_flush: { slot: "conditioning", intensity_class: "supplemental", conditioning_category: "recovery_flush" },
+  accel_10_30y: { slot: "speed", exposure_channel: "sprint", intensity_class: "supplemental", speed_category: "acceleration" },
+  sp_wall_drive_iso: { slot: "speed", exposure_channel: "sprint", intensity_class: "elastic", movement_velocity: "submax", speed_category: "acceleration" },
+  sp_singleleg_bound_alt: { slot: "speed", exposure_channel: "elastic", intensity_class: "elastic", movement_velocity: "max", plyo_tier: 2 },
+  sp_pogo_double: { slot: "speed", exposure_channel: "elastic", intensity_class: "elastic", plyo_tier: 1 },
+  bs_heavy_bat_tee_work: { slot: "bat_speed", exposure_channel: "low_load", intensity_class: "maximal", bat_speed_category: "overload" },
+  bs_pvc_overspeed_swings: { slot: "bat_speed", exposure_channel: "low_load", intensity_class: "high", bat_speed_category: "underload" },
+  bs_mb_side_wall_toss: { slot: "bat_speed", exposure_channel: "low_load", intensity_class: "high", bat_speed_category: "med_ball" },
+};
+for (const [slug, f] of Object.entries(SPACED)) CATALOG.set(slug, { min_age_years: 0, eccentric_overload: false, season_legality: null, ...f });
+const SPACED_SLUGS = Object.keys(SPACED);
 
 const START = "2026-01-05"; // Monday
 const DAYS = 56;
@@ -46,10 +61,12 @@ const violations: Record<string, number> = {
   lift_spacing: 0, offseason_heavy_spacing: 0, weekly_lift_max: 0, doubleheader_no_lift: 0,
   pitcher_start_day_no_lift: 0, pitcher_day_before_start_primer_only: 0, min_age: 0,
   eccentric_in_season: 0, season_legality: 0, recovery_day_counted_as_lift: 0,
+  run_spacing: 0, run_before_game: 0, jump_spacing: 0, bat_consecutive: 0,
 };
 const swapsByRule: Record<string, number> = {};
 let liftDays = 0;
 let planDays = 0;
+const kindDays: Record<DayKind, number> = { hard_run: 0, high_jump: 0, bat_over_under: 0 };
 
 function simulate(sc: Scenario, seed: number) {
   const r = rng(seed);
@@ -72,7 +89,7 @@ function simulate(sc: Scenario, seed: number) {
     cal.set(date, d);
   }
   const history: DaySchedule[] = [];
-  const saved: { date: string; liftClass: SessionClass | null; slugs: string[] }[] = [];
+  const saved: { date: string; liftClass: SessionClass | null; slugs: string[]; kinds: Set<DayKind> }[] = [];
 
   for (let i = 0; i < DAYS; i++) {
     const today = add(START, i);
@@ -87,18 +104,28 @@ function simulate(sc: Scenario, seed: number) {
       ...Array.from({ length: 4 }, () => ({
         slot: "lift", sequence_role: "compound_lower", movement_slug: SLUGS[Math.floor(r() * SLUGS.length)],
       })),
+      // Every day the planner also asks for runs, sprints, jumps and bat work.
+      ...Array.from({ length: 4 }, () => {
+        const slug = SPACED_SLUGS[Math.floor(r() * SPACED_SLUGS.length)];
+        return { slot: SPACED[slug].slot, sequence_role: SPACED[slug].slot, movement_slug: slug as string | null };
+      }),
     ];
+    const priorKindDates: Partial<Record<DayKind, string[]>> = {};
+    for (const s of saved) for (const k of s.kinds) (priorKindDates[k] ??= []).push(s.date);
     const priorLiftDates = saved.filter((s) => s.liftClass).map((s) => s.date);
     const checked = finalRuleCheck(offered, {
       planDate: today, phase: sc.phase, age: sc.age, priorLiftDates,
       restDaysBetweenLifts: 2, weeklyLiftMax: sc.phase === "in_season" ? 2 : null,
       liftRemoved: allowed === "none", catalog: CATALOG,
+      priorKindDates, gameTomorrow: !!cal.get(add(today, 1))?.games,
     });
     for (const s of checked.swaps) swapsByRule[s.rule] = (swapsByRule[s.rule] ?? 0) + 1;
     const loaded = checked.rows.filter((x) => x.sequence_role === "compound_lower");
     const liftClass: SessionClass | null = loaded.length > 0 && allowed !== "none" ? allowed : null;
     if (loaded.length > 0 && allowed === "none") violations.recovery_day_counted_as_lift++;
-    saved.push({ date: today, liftClass, slugs: loaded.map((x) => x.movement_slug!) });
+    const kinds = dayKinds(checked.rows, CATALOG);
+    for (const k of kinds) kindDays[k]++;
+    saved.push({ date: today, liftClass, slugs: loaded.map((x) => x.movement_slug!), kinds });
     if (liftClass) liftDays++;
 
     // What the athlete does with it.
@@ -119,6 +146,13 @@ function simulate(sc: Scenario, seed: number) {
       if (rest < need) violations.offseason_heavy_spacing++;
     }
   }
+  for (let k = 1; k < saved.length; k++) {
+    const a = saved[k - 1].kinds, b = saved[k].kinds;
+    if (a.has("hard_run") && b.has("hard_run")) violations.run_spacing++;
+    if (a.has("high_jump") && b.has("high_jump")) violations.jump_spacing++;
+    if (a.has("bat_over_under") && b.has("bat_over_under")) violations.bat_consecutive++;
+  }
+  for (const s of saved) if (s.kinds.has("hard_run") && cal.get(add(s.date, 1))?.games) violations.run_before_game++;
   if (sc.phase === "in_season") {
     const perWeek = new Map<number, number>();
     for (const l of lifts) perWeek.set(monday(l.date), (perWeek.get(monday(l.date)) ?? 0) + 1);
@@ -142,8 +176,9 @@ describe("eight-week rule simulation", () => {
   it(`runs ${scenarios.length} players x ${DAYS} days with zero rule violations`, () => {
     scenarios.forEach((sc, i) => simulate(sc, 1000 + i));
     // eslint-disable-next-line no-console
-    console.log(JSON.stringify({ scenarios: scenarios.length, planDays, liftDays, violations, swapsByRule }, null, 2));
+    console.log(JSON.stringify({ scenarios: scenarios.length, planDays, liftDays, kindDays, violations, swapsByRule }, null, 2));
     for (const [rule, n] of Object.entries(violations)) expect(n, rule).toBe(0);
     expect(liftDays).toBeGreaterThan(0);
+    for (const n of Object.values(kindDays)) expect(n).toBeGreaterThan(0);
   }, 120_000);
 });
