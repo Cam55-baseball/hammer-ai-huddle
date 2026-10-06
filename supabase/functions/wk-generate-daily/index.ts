@@ -532,7 +532,7 @@ const handler = async (req: Request): Promise<Response> => {
         const vMerged = mergeExternal(vExt, planDate, [...byDate.entries()].filter(([, rs]) => loadedLiftRows(rs).length > 0).map(([d]) => d), vPriorKinds as any);
         const vAge = ageFromDob((vCtx as any)?.date_of_birth, planDate);
         const { data: vH } = await admin.from("athlete_height_checks").select("measured_on, inches").eq("user_id", user.id)
-          .gte("measured_on", isoShift(planDate, -200)).lte("measured_on", planDate).order("measured_on");
+          .gte("measured_on", new Date(Date.parse(`${planDate}T00:00:00Z`) - 200 * 86_400_000).toISOString().slice(0, 10)).lte("measured_on", planDate).order("measured_on");
         const vGrowth = growthMode(((vH ?? []) as any[]).map((h) => ({ date: h.measured_on, inches: Number(h.inches) })), planDate).active;
         const vPhase = String(savedRows.find((r) => r.phase)?.phase ?? "in_season");
         const vSpacing = resolveFeatures((vSw ?? []) as any, user.id).rest_day_calculator === true;

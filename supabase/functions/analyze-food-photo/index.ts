@@ -21,8 +21,6 @@ serve(async (req) => {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    if (await isAccountPaused(supabase, user.id)) return pausedResponse(corsHeaders);
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -34,6 +32,7 @@ serve(async (req) => {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    if (await isAccountPaused(null, user.id)) return pausedResponse(corsHeaders);
 
     const { data: ownerRole } = await supabase
       .from('user_roles')
