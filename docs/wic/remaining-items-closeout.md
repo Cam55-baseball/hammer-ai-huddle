@@ -10,15 +10,15 @@ Full suite: **252 files, 2,317 tests passed** after final wiring/name edits. Aut
 
 | Drill key (unchanged) | Before | After |
 |---|---|---|
-| `frc_cars_full_body` | Full-Body Controlled Joint Circles | Full-Body Controlled Joint Circles |
-| `repeat_43ft_sb` | Repeated 43-Foot Sprints (Softball) | Repeated 43-Foot Sprints (Softball) |
-| `wu_hip_cars` | Controlled Hip Circles | Controlled Hip Circles |
-| `wu_shoulder_cars` | Controlled Shoulder Circles | Controlled Shoulder Circles |
-| `wu_spine_cars` | Slow Back Bends and Turns | Slow Back Bends and Turns |
-| `wu_ankle_cars` | Seated Ankle Circles | Seated Ankle Circles |
-| `wu_wrist_cars` | Controlled Wrist Circles | Controlled Wrist Circles |
-| `wu_scapular_cars` | Shoulder-Blade Circles | Shoulder-Blade Circles |
-| `seated_hip_cars` | Seated Hip Circles | Seated Hip Circles |
+| `frc_cars_full_body` | FRC CARs — Full Body | Full-Body Controlled Joint Circles |
+| `repeat_43ft_sb` | Repeat 43ft Accel (Softball) | Repeated 43-Foot Sprints (Softball) |
+| `wu_hip_cars` | Hip CARs (Controlled Articular Rotations) | Controlled Hip Circles |
+| `wu_shoulder_cars` | Shoulder CARs | Controlled Shoulder Circles |
+| `wu_spine_cars` | Segmental spine CARs | Slow Back Bends and Turns |
+| `wu_ankle_cars` | Ankle CARs (seated) | Seated Ankle Circles |
+| `wu_wrist_cars` | Wrist CARs | Controlled Wrist Circles |
+| `wu_scapular_cars` | Scapular CARs (...) | Shoulder-Blade Circles |
+| `seated_hip_cars` | Seated Hip CARs | Seated Hip Circles |
 | `kot_jefferson_curl` | Jefferson Curl | Slow Standing Back Curl |
 | `lift_jefferson_curl` | Jefferson Curl | Slow Standing Back Curl |
 | `slant_board_jefferson_curl` | Slant Board Jefferson Curl | Slow Standing Back Curl on Slant Board |
