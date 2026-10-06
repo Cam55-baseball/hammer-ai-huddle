@@ -16,6 +16,7 @@ import { AuthLanguageSelector } from "@/components/AuthLanguageSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { resolvePostLoginRoute, withLoginTimeout } from "@/lib/auth/postLoginRoute";
 import { AppleSignInButton } from "@/components/auth/AppleSignInButton";
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 
 
 const authSchema = z.object({
@@ -110,14 +111,21 @@ const Auth = () => {
   // on the auth page — they may have landed here intentionally.
   // A player who is already signed in never sees the sign-in form: send them
   // straight in (to ?redirect= / returnTo when present, else the dashboard).
+  // Players who sign in on this page (password, Apple) keep their own routing.
+  const sawSignedOutRef = useRef(false);
+  if (!authLoading && !user) sawSignedOutRef.current = true;
   useEffect(() => {
-    if (!user || submittingRef.current) return;
+    if (authLoading || !user || submittingRef.current) return;
+    if (sawSignedOutRef.current) {
+      const target = resolveRedirect();
+      if (target) navigate(target, { replace: true });
+      return;
+    }
     const returnTo = (location.state as { returnTo?: unknown } | null)?.returnTo;
     const safeReturn = typeof returnTo === "string" && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : null;
-    const target = resolveRedirect() ?? safeReturn ?? "/dashboard";
-    navigate(target, { replace: true });
+    navigate(resolveRedirect() ?? safeReturn ?? "/dashboard", { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, authLoading]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -332,6 +340,9 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+
+  // Wait for the saved session; never flash the form at a signed-in player.
+  if (authLoading || (user && !sawSignedOutRef.current)) return <HMLoadingFallback />;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 pt-safe pb-safe">

@@ -12,19 +12,27 @@ import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { LandingDemoVideo } from "@/components/landing/LandingDemoVideo";
 import heroImage from "@/assets/hero-baseball.jpg";
 import { useEffect } from "react";
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { isOwner } = useOwnerAccess();
   useEffect(() => {
     // The landing page is usable now; never hold it behind the opening.
     window.dispatchEvent(new Event("hm:landing-ready"));
   }, []);
+  // Signed-in players (website, home-screen app, iPhone app) go straight in
+  // instead of landing on the marketing page and its Sign in button.
+  useEffect(() => {
+    if (!loading && user) navigate("/dashboard", { replace: true });
+  }, [loading, user, navigate]);
 
   const handleGetStarted = () => {
     navigate("/auth");
   };
+
+  if (loading || user) return <HMLoadingFallback />;
 
   return (
     <div data-hm-landing className="min-h-screen bg-gradient-to-b from-background to-muted/30">
