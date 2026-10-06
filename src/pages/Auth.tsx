@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, useSearchParams, Link } from "react-router-dom";
 
 import { useTranslation } from "react-i18next";
@@ -66,7 +66,9 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { user, signIn, signUp, resetPassword } = useAuth();
+  const { user, loading: authLoading, signIn, signUp, resetPassword } = useAuth();
+  // True once this page starts a sign-in/sign-up, so its own routing wins.
+  const submittingRef = useRef(false);
 
   const state = location.state as {
     role?: string;
@@ -106,10 +108,14 @@ const Auth = () => {
   // If user is already authenticated and a ?redirect= target is present
   // (e.g. parent invite link), honor it immediately. Otherwise leave them
   // on the auth page — they may have landed here intentionally.
+  // A player who is already signed in never sees the sign-in form: send them
+  // straight in (to ?redirect= / returnTo when present, else the dashboard).
   useEffect(() => {
-    if (!user) return;
-    const target = resolveRedirect();
-    if (target) navigate(target, { replace: true });
+    if (!user || submittingRef.current) return;
+    const returnTo = (location.state as { returnTo?: unknown } | null)?.returnTo;
+    const safeReturn = typeof returnTo === "string" && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : null;
+    const target = resolveRedirect() ?? safeReturn ?? "/dashboard";
+    navigate(target, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -117,6 +123,7 @@ const Auth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    submittingRef.current = true;
 
     try {
       if (isForgotPassword) {
