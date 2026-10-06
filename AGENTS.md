@@ -21,3 +21,4 @@
 - Never prescribe or recommend an athlete action that the affected athlete cannot open; keep unreleased Game IQ suppressed at one presentation switch until its routes open to athletes. Why: inaccessible prescriptions teach players the app is broken.
 - Athlete-facing headings, notices and status lines must make sense to a fourteen-year-old without explanation; translate canonical plan reasons only at the display edge. Why: athletes must know what changed and what to do without guessing or altering the prescription.
 - Every value shown to an athlete must carry a label saying what kind of thing it is; a name without a heading leaves the athlete guessing what they are looking at. Why: plain wording alone cannot explain the role of a training phase or status value.
+- Internal demo auto-start outcomes and inspector state/events must use console.debug only, never app UI for any role. Why: diagnostic skips and failures are not user-facing messages.
