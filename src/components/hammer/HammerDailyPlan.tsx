@@ -555,6 +555,23 @@ export function HammerDailyPlan({
   const isStaffOnlyRole = (isScout || isCoach) && !hasPurchasedModule;
   const hasAccess = hasPlayerAccess || modules.length > 0;
 
+  // Round 6 (plan never flashes on reload): if this device last saw the plan
+  // open for this player, show it straight away while the access checks
+  // finish; once they finish, their answer decides (and updates the memory).
+  const { user: planUser } = useAuth();
+  const accessKey = planUser?.id ? `hm.planaccess.${planUser.id}` : null;
+  let accessRemembered = false;
+  try { accessRemembered = !!accessKey && localStorage.getItem(accessKey) === "1"; } catch { /* storage blocked */ }
+  const resolvedOpen = gateResolved && !isStaffOnlyRole && hasAccess;
+  useEffect(() => {
+    if (!accessKey || !gateResolved) return;
+    try { if (resolvedOpen) localStorage.setItem(accessKey, "1"); else localStorage.removeItem(accessKey); } catch { /* storage blocked */ }
+  }, [accessKey, gateResolved, resolvedOpen]);
+
+  if (!gateResolved && accessRemembered) {
+    return <StartGate beforeStartPortalTarget={beforeStartPortalTarget} />;
+  }
+
   if (!gateResolved) {
     return (
       <Card id="hammer-plan" className="scroll-mt-24">
