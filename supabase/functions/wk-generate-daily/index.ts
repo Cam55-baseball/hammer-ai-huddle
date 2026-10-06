@@ -221,6 +221,19 @@ import {
 import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
 import { finalRuleCheck, dayKinds, FINAL_CHECK_CATALOG_COLUMNS, type DayKind } from "../_shared/wic/schedule/finalCheck.ts";
 import { loadedLiftRows } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
+import { loadExternalTraining, mergeExternal } from "../_shared/wic/schedule/externalTraining.ts";
+
+/** Short plain note shown to the player when the rule check removes a card. */
+function ruleCheckNote(rules: readonly string[]): string {
+  const r = new Set(rules);
+  if (r.has("trained_elsewhere_today")) return "You already trained in another program today, so we took that part out.";
+  if (r.has("run_before_game")) return "No hard running the day before a game, so we took it out.";
+  if (r.has("lift_spacing") || r.has("weekly_lift_max") || r.has("rest_day")) return "Your body needs more rest between lifts, so today's lift came out.";
+  if (r.has("run_spacing")) return "You had hard running yesterday, so today's run came out.";
+  if (r.has("jump_spacing")) return "You had big jumps yesterday, so today's jumps came out.";
+  if (r.has("bat_consecutive")) return "Heavy and light bat work can't be two days in a row, so it came out.";
+  return "One exercise didn't fit your age or season, so we took it out.";
+}
 
 
 
@@ -459,86 +472,98 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // -------- Saved-plan re-check (owner ruling 2026-10-06) --------
-    // `verify_saved: true` runs the final rule check on the plan already saved
-    // for this date (the app sends it whenever a saved plan is shown). A plan
-    // that passes is left alone. A failing plan with nothing marked falls
-    // through to a full rebuild below; a failing plan with something marked
-    // keeps every marked card and loses only the failing unmarked cards.
+    // -------- One plan per day (owner ruling 2026-10-06) --------
+    // A day is built once. Afterwards it changes only for a stated reason:
+    // the player asked, tracked activity made it necessary, or the final rule
+    // check removed a card. Only unmarked cards ever change; every change is
+    // logged in `wk_plan_changes` and shown to the player.
+    const CHANGE_CODES = new Set(["player_request", "tracked_activity"]);
+    const changeReason: { code: "player_request" | "tracked_activity"; text: string } | null =
+      CHANGE_CODES.has(String((rawBody as any).change_reason ?? ""))
+        ? { code: (rawBody as any).change_reason, text: String((rawBody as any).change_text ?? "").slice(0, 200) || "Your day changed" }
+        : null;
+    const { data: existingDayData } = await admin.from("wk_prescriptions")
+      .select("id, slot, sequence_role, movement_slug, status, phase, sets, reps, duration_seconds, distance_feet, total_reps")
+      .eq("user_id", user.id).eq("plan_date", planDate);
+    const existingDay = (existingDayData ?? []) as any[];
+    const isMarkedRow = (r: any) => r.status && r.status !== "planned" && r.status !== "pending";
+
+    // -------- Saved-plan re-check --------
+    // `verify_saved: true` runs the final rule check on the saved plan (the app
+    // sends it whenever a saved plan is shown). A passing plan is left alone; a
+    // failing plan loses only its failing unmarked cards. Never a rebuild.
     if ((rawBody as any).verify_saved === true) {
-      const { data: saved } = await admin.from("wk_prescriptions")
-        .select("id, slot, sequence_role, movement_slug, status, phase")
-        .eq("user_id", user.id).eq("plan_date", planDate);
-      const savedRows = (saved ?? []) as any[];
-      if (savedRows.length > 0) {
-        const [{ data: vSw }, { data: vPrior }, { data: vCat }, { data: vCtx }] = await Promise.all([
+      const savedRows = existingDay;
+      if (savedRows.length === 0) return json({ ok: true, verified: true, empty: true, plan_date: planDate }, 200);
+      {
+        const [{ data: vSw }, { data: vPrior }, { data: vCtx }] = await Promise.all([
           admin.from("wk_feature_switches").select("feature_key, mode, allowlist, updated_by").eq("feature_key", "rest_day_calculator"),
           admin.from("wk_prescriptions").select("plan_date, slot, sequence_role")
             .eq("user_id", user.id).eq("slot", "lift")
             .gte("plan_date", new Date(Date.parse(`${planDate}T00:00:00Z`) - 13 * 86_400_000).toISOString().slice(0, 10)).lt("plan_date", planDate).limit(400),
-          admin.from("wk_movement_catalog").select("slug, min_age_years, eccentric_overload, season_legality")
-            .in("slug", Array.from(new Set(savedRows.map((r) => String(r.movement_slug ?? "")).filter(Boolean)))),
           admin.from("profiles").select("date_of_birth").eq("id", user.id).maybeSingle(),
         ]);
         const vYesterday = new Date(Date.parse(`${planDate}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
         const vTomorrow = new Date(Date.parse(`${planDate}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
-        const [{ data: vYRows }, { data: vGp }, { data: vCal }] = await Promise.all([
+        const vFrom = new Date(Date.parse(`${planDate}T00:00:00Z`) - 13 * 86_400_000).toISOString().slice(0, 10);
+        const [{ data: vYRows }, { data: vGp }, { data: vCal }, vExt] = await Promise.all([
           admin.from("wk_prescriptions").select("slot, sequence_role, movement_slug").eq("user_id", user.id).eq("plan_date", vYesterday),
           admin.from("gp_games").select("id").eq("user_id", user.id).is("deleted_at", null).eq("game_date", vTomorrow)
             .or("ignored_for_training.is.null,ignored_for_training.eq.false").not("status", "in", "(canceled,cancelled,rescheduled)").limit(1),
           admin.from("calendar_events").select("id").eq("user_id", user.id).is("deleted_at", null).eq("event_date", vTomorrow)
             .in("event_type", ["game", "tournament", "scrimmage"]).or("ignored_for_training.is.null,ignored_for_training.eq.false").limit(1),
+          loadExternalTraining(admin, user.id, vFrom, planDate),
         ]);
         const vSlugs = Array.from(new Set([...savedRows, ...((vYRows ?? []) as any[])].map((r: any) => String(r.movement_slug ?? "")).filter(Boolean)));
         const { data: vCatFull } = await admin.from("wk_movement_catalog").select(FINAL_CHECK_CATALOG_COLUMNS).in("slug", vSlugs);
-        const vCatMap = new Map(((vCatFull ?? vCat ?? []) as any[]).map((c) => [String(c.slug), c]));
+        const vCatMap = new Map(((vCatFull ?? []) as any[]).map((c) => [String(c.slug), c]));
         const vYKinds = dayKinds((vYRows ?? []) as any[], vCatMap);
         const vPriorKinds: Partial<Record<DayKind, string[]>> = {};
         for (const k of vYKinds) vPriorKinds[k] = [vYesterday];
         const byDate = new Map<string, any[]>();
         for (const r of (vPrior ?? []) as any[]) byDate.set(String(r.plan_date), [...(byDate.get(String(r.plan_date)) ?? []), r]);
-        const vPriorDates = [...byDate.entries()].filter(([, rs]) => loadedLiftRows(rs).length > 0).map(([d]) => d);
+        const vMerged = mergeExternal(vExt, planDate, [...byDate.entries()].filter(([, rs]) => loadedLiftRows(rs).length > 0).map(([d]) => d), vPriorKinds as any);
         const dob = (vCtx as any)?.date_of_birth ? Date.parse(String((vCtx as any).date_of_birth)) : NaN;
         const vAge = Number.isFinite(dob) ? Math.floor((Date.parse(`${planDate}T00:00:00Z`) - dob) / (365.25 * 86_400_000)) : null;
         const vPhase = String(savedRows.find((r) => r.phase)?.phase ?? "in_season");
         const vSpacing = resolveFeatures((vSw ?? []) as any, user.id).rest_day_calculator === true;
-        const vCheck = finalRuleCheck(savedRows, {
-          planDate, phase: vPhase, age: vAge, priorLiftDates: vPriorDates,
+        // Marked cards are never touched, so only unmarked rows are checked.
+        const vCheck = finalRuleCheck(savedRows.filter((r) => !isMarkedRow(r)), {
+          planDate, phase: vPhase, age: vAge, priorLiftDates: vMerged.priorLiftDates,
           restDaysBetweenLifts: vSpacing ? 2 : null,
           weeklyLiftMax: vSpacing && vPhase === "in_season" ? 2 : null,
           liftRemoved: false,
-          priorKindDates: vPriorKinds,
+          priorKindDates: vMerged.priorKindDates as any,
           gameTomorrow: ((vGp ?? []) as any[]).length > 0 || ((vCal ?? []) as any[]).length > 0,
+          sameDayExternal: vMerged.sameDayExternal,
           catalog: vCatMap,
         });
         if (vCheck.swaps.length === 0) {
           return json({ ok: true, verified: true, plan_date: planDate }, 200);
         }
-        const isMarked = (r: any) => r.status && r.status !== "planned" && r.status !== "pending";
         await admin.from("wk_final_check_swaps").insert(vCheck.swaps.map((sw) => ({
           user_id: user.id, plan_date: planDate, rule: sw.rule,
           movement_slug: sw.movement_slug, slot: sw.slot, detail: `saved plan re-check: ${sw.detail}`,
         })));
-        if (savedRows.some(isMarked)) {
-          const keep = new Set(vCheck.rows.map((r: any) => r.id));
-          const dropIds = savedRows.filter((r) => !keep.has(r.id) && !isMarked(r)).map((r) => r.id);
-          if (dropIds.length > 0) {
-            await admin.from("wk_prescriptions").delete().eq("user_id", user.id).in("id", dropIds);
-          }
-          return json({ ok: true, verified: false, trimmed: dropIds.length, plan_date: planDate }, 200);
+        const keep = new Set(vCheck.rows.map((r: any) => r.id));
+        const dropIds = savedRows.filter((r) => !keep.has(r.id) && !isMarkedRow(r)).map((r) => r.id);
+        if (dropIds.length > 0) {
+          await admin.from("wk_prescriptions").delete().eq("user_id", user.id).in("id", dropIds)
+            .in("status", ["planned", "pending"]);
+          await admin.from("wk_plan_changes").insert({
+            user_id: user.id, plan_date: planDate, reason_code: "rule_check",
+            reason_text: ruleCheckNote(vCheck.swaps.map((s) => s.rule)),
+            changed_slots: Array.from(new Set(vCheck.swaps.map((s) => String(s.slot ?? "")))),
+            detail: { removed: dropIds.length, rules: vCheck.swaps.map((s) => s.rule) },
+          });
         }
-        // Nothing marked: fall through and rebuild the whole day under the rules.
+        return json({ ok: true, verified: false, trimmed: dropIds.length, plan_date: planDate }, 200);
       }
     }
 
-    // -------- Never rebuild a plan once anything on it is marked --------
-    {
-      const { data: marked } = await admin.from("wk_prescriptions").select("id")
-        .eq("user_id", user.id).eq("plan_date", planDate)
-        .not("status", "in", "(planned,pending)").limit(1);
-      if ((marked ?? []).length > 0) {
-        return json({ ok: true, skipped: "already_marked", plan_date: planDate }, 200);
-      }
+    // -------- Built already and no stated reason: never rebuild --------
+    if (existingDay.length > 0 && !changeReason) {
+      return json({ ok: true, skipped: "already_built", plan_date: planDate }, 200);
     }
     const recentAck = body.recent_ack ?? null;
     const sideOverride =
@@ -4526,15 +4551,18 @@ const handler = async (req: Request): Promise<Response> => {
       const fcPriorKinds: Partial<Record<DayKind, string[]>> = {};
       for (const k of dayKinds((fcYRows ?? []) as any[], fcCatMap)) fcPriorKinds[k] = [isoShift(planDate, -1)];
       const fcTomorrowGame = scheduledGames.some((g: any) => g.date === isoShift(planDate, 1) && g.ignored !== true);
+      const fcExt = await loadExternalTraining(admin, user.id, isoShift(planDate, -13), planDate);
+      const fcMerged = mergeExternal(fcExt, planDate, priorLiftDates, fcPriorKinds as any);
       const checked = finalRuleCheck(rows as any[], {
         planDate,
         phase: fcPhase,
         age: Number.isFinite(fcAge) ? fcAge : null,
-        priorLiftDates,
+        priorLiftDates: fcMerged.priorLiftDates,
+        sameDayExternal: fcMerged.sameDayExternal,
         restDaysBetweenLifts: enforceSpacing ? 2 : null,
         weeklyLiftMax: enforceSpacing && fcPhase === "in_season" ? 2 : null,
         liftRemoved: tcsAdjust?.removeLift === true,
-        priorKindDates: fcPriorKinds,
+        priorKindDates: fcMerged.priorKindDates as any,
         gameTomorrow: fcTomorrowGame,
         catalog: fcCatMap,
       });
@@ -4552,6 +4580,21 @@ const handler = async (req: Request): Promise<Response> => {
           feature_key: "final_rule_check", user_id: user.id, error_text: String(fcErr).slice(0, 500),
         });
       } catch { /* never blocks */ }
+    }
+
+    // -------- Stated change to a day already built: adjust unmarked cards only --------
+    if (existingDay.length > 0 && changeReason) {
+      const sig = (rs: any[]) => rs.map((r) => [r.movement_slug, r.sets ?? "", r.reps ?? "", r.duration_seconds ?? "", r.distance_feet ?? "", r.total_reps ?? ""].join(":")).sort().join("|");
+      const bySlot = (rs: any[]) => { const m = new Map<string, any[]>(); for (const r of rs) m.set(String(r.slot), [...(m.get(String(r.slot)) ?? []), r]); return m; };
+      const oldBy = bySlot(existingDay), newBy = bySlot(rows as any[]);
+      const replace = [...new Set([...oldBy.keys(), ...newBy.keys()])].filter((sl) => sig(oldBy.get(sl) ?? []) !== sig(newBy.get(sl) ?? []));
+      const { data: adj, error: adjErr } = await admin.rpc("wk_adjust_prescriptions_atomic" as any, {
+        p_user: user.id, p_date: planDate, p_rows: rows, p_replace_slots: replace,
+        p_reason_code: changeReason.code, p_reason_text: changeReason.text,
+        p_detail: { generator_version: WIC_VERSION, change_key: String((rawBody as any).change_key ?? "").slice(0, 120) || null },
+      });
+      if (adjErr) return json({ error: "adjust_failed", message: adjErr.message }, 500);
+      return json({ ok: true, adjusted: true, plan_date: planDate, ...(adj as any) }, 200);
     }
 
     const { data: diagId, error: rpcErr } = await admin.rpc("wk_persist_prescriptions_atomic" as any, {

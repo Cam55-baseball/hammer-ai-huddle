@@ -18768,6 +18768,45 @@ export type Database = {
         }
         Relationships: []
       }
+      wk_plan_changes: {
+        Row: {
+          changed_slots: string[]
+          created_at: string
+          detail: Json
+          id: string
+          kept_slots: string[]
+          outcome: string
+          plan_date: string
+          reason_code: string
+          reason_text: string
+          user_id: string
+        }
+        Insert: {
+          changed_slots?: string[]
+          created_at?: string
+          detail?: Json
+          id?: string
+          kept_slots?: string[]
+          outcome?: string
+          plan_date: string
+          reason_code: string
+          reason_text: string
+          user_id: string
+        }
+        Update: {
+          changed_slots?: string[]
+          created_at?: string
+          detail?: Json
+          id?: string
+          kept_slots?: string[]
+          outcome?: string
+          plan_date?: string
+          reason_code?: string
+          reason_text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wk_prescriptions: {
         Row: {
           adaptation: string | null
@@ -20500,6 +20539,27 @@ export type Database = {
       wic_adaptations_compatible: {
         Args: { day_adaptation: string; movement_adaptation: string }
         Returns: boolean
+      }
+      wk_adjust_prescriptions_atomic: {
+        Args: {
+          p_date: string
+          p_detail?: Json
+          p_reason_code: string
+          p_reason_text: string
+          p_replace_slots: string[]
+          p_rows: Json
+          p_user: string
+        }
+        Returns: Json
+      }
+      wk_external_training_days: {
+        Args: { p_from: string; p_to: string; p_user: string }
+        Returns: {
+          day: string
+          intensity: string
+          kind: string
+          source: string
+        }[]
       }
       wk_fielding_generic_fault: { Args: { p_group: string }; Returns: string }
       wk_fielding_position_group: { Args: { p_pos: string }; Returns: string }
