@@ -8,6 +8,8 @@
  */
 export const WORKERS = 8;
 export const CONCURRENCY = 10;
+/** Builds at once across a whole run; measured safe on the current database (Round 5). */
+export const SAFE_PARALLEL = 4;
 export const WORKER_BUDGET_MS = 100_000;
 /** Kept for callers that run a single pool. */
 export const RUN_BUDGET_MS = WORKER_BUDGET_MS;

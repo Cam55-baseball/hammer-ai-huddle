@@ -49,3 +49,10 @@
 - [x] R3 pitch types U13 limited (pitch list); sub-20 scale confirmed; rankings hide paused/U13
 - [~] R3 case 19: batching built + dry run; real per-player build time not yet measured
 - [ ] R3 stress cases 1–11, 15, 17 + Round 1 screenshots (need signed-in test-player sessions)
+
+## Round 5 (2026-10-06) — test without approval tool
+- [ ] Test accounts via admin API (hidden, cleaned after)
+- [ ] Cases 1–11, 15, 17 backend + screen
+- [ ] Phone screenshots of every new screen
+- [ ] Real build time: 3 first builds + 20 at once; undo
+- [ ] Stripe promo HMPARENTTEST (100% off, 1 use, 7 days)

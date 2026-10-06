@@ -118,6 +118,8 @@ Deno.serve(async (req) => {
   const sendReceipt = async (to: string, child: string) => {
     const key = Deno.env.get("RESEND_API_KEY") ?? "";
     if (!key) return { sent: false, reason: "no_key" };
+    // A failed email never blocks signup or unlock; the record stays in Parent controls.
+    try {
     const r = await fetch("https://api.resend.com/emails", {
       method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject: "Your signed Parent Promise — Hammers Modality",
@@ -125,6 +127,7 @@ Deno.serve(async (req) => {
     });
     const ok = r.ok; await r.text();
     return { sent: ok, reason: ok ? null : `resend_${r.status}` };
+    } catch { return { sent: false, reason: "resend_unreachable" }; }
   };
 
   const stripe = () => new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", { apiVersion: "2025-08-27.basil" });
