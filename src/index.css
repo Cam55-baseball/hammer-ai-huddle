@@ -542,6 +542,13 @@ All colors MUST be HSL.
    ============================================ */
 /* Daily identity: restrained report-card glass, a decisive red seam, no perpetual effects. */
 .daily-identity {
+  /* Both sports share baseball's identity palette; other surfaces keep their theme. */
+  --primary: 0 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --primary-glow: 0 100% 60%;
+  --accent: 0 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --ring: 0 100% 50%;
   background: linear-gradient(155deg, hsl(var(--card)), hsl(var(--background)));
   box-shadow: inset 0 1px hsl(var(--rc-glass) / .12), var(--shadow-card);
 }

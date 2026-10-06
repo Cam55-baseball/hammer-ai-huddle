@@ -1,4 +1,5 @@
 import type { Notice } from "./noticeRouting";
+import { liftingPlanCopy } from "./liftingPlanCopy";
 
 /** Display-only translations. Keep the canonical detail intact for storage, routing and read keys. */
 export function athleteNoticeCopy({ reason, detail }: Notice): string {
@@ -45,6 +46,8 @@ export function athleteNoticeCopy({ reason, detail }: Notice): string {
     if (s.startsWith("zero-exposure rule:")) return "You haven't lifted recently. A short, easy lift remains today; do only what's shown.";
   }
   if (reason === "tissue_cost") {
+    const plannedLifting = liftingPlanCopy(detail);
+    if (plannedLifting) return plannedLifting;
     const starts: Array<[string, string]> = [
       ["game day — the lift comes after", "You play today. Lift only after your game."],
       ["tournament day", "You're in a tournament today. Skip the lift."],
@@ -62,7 +65,6 @@ export function athleteNoticeCopy({ reason, detail }: Notice): string {
       ["standard spacing today", "Today's work is spaced to give you time to recover. Follow the plan."],
     ];
     for (const [prefix, copy] of starts) if (s.startsWith(prefix)) return copy;
-    if (/^\d+ lifts already this week/.test(s)) return "You've already lifted this week. Keep today's lift easier as shown.";
     if (/^\d+ hours of practice/.test(s)) return "You've had a lot of practice. Give your legs an easier day; follow the plan.";
     if (s.startsWith("next heavy day:")) return `Your next hard lift is ${detail.split(":")[1]?.trim().replace(/\.$/, "") ?? "in your plan"}. Do today's work as shown.`;
   }
