@@ -165,6 +165,8 @@ export interface TcsConfig {
     inSeasonBetweenLifts: number;
   };
   readonly ceilingRestDays: { offseason: number; inSeason: number };
+  /** Most planned lift days in one Monday–Sunday week (law L0.3: in-season 2). */
+  readonly weeklyLiftMax?: { inSeason: number };
   /** v1.2 §B1.5 — easing back in after time off. */
   readonly onRamp: {
     /** Days since the last completed loaded lift that starts an on-ramp. */

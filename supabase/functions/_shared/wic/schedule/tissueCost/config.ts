@@ -88,6 +88,9 @@ export const TCS_CONFIG: TcsConfig = Object.freeze({
   // §4 ceiling (full rest days)
   ceilingRestDays: Object.freeze({ offseason: 5, inSeason: 4 }),
 
+  // Law L0.3 — in-season, at most 2 lift days in any Monday–Sunday week.
+  weeklyLiftMax: Object.freeze({ inSeason: 2 }),
+
   // v1.2 §B1.5 on-ramp — easing back in after time off.
   onRamp: Object.freeze({
     triggerGapDays: 14,
