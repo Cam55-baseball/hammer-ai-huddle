@@ -219,6 +219,8 @@ import {
   resolveUbPrimerDose,
 } from "../_shared/wic/dosage/doctrine.ts";
 import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
+import { finalRuleCheck } from "../_shared/wic/schedule/finalCheck.ts";
+import { loadedLiftRows } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
 
 
 
@@ -4378,6 +4380,54 @@ const handler = async (req: Request): Promise<Response> => {
       if (slow) watchNotes.push(slow);
       await writeNotes(admin as any, watchNotes);
     } catch { /* a missing note never costs a card */ }
+
+    // -------- Final rule check (owner ruling 2026-10-06) --------
+    // Runs on every plan right before it is saved. Any card that breaks a rule
+    // is removed and the swap is logged; the day's recovery cards remain.
+    // Spacing and weekly limits follow the rest-day switch for this player;
+    // age and season rules always apply.
+    try {
+      const fcSlugs = Array.from(new Set(rows.map((r: any) => String(r.movement_slug ?? "")).filter(Boolean)));
+      const [{ data: fcCat }, { data: fcPrior }] = await Promise.all([
+        admin.from("wk_movement_catalog").select("slug, min_age_years, eccentric_overload, season_legality").in("slug", fcSlugs),
+        admin.from("wk_prescriptions").select("plan_date, slot, sequence_role")
+          .eq("user_id", user.id).eq("slot", "lift")
+          .gte("plan_date", isoShift(planDate, -13)).lt("plan_date", planDate).limit(400),
+      ]);
+      const priorByDate = new Map<string, any[]>();
+      for (const r of (fcPrior ?? []) as any[]) {
+        const d = String(r.plan_date);
+        priorByDate.set(d, [...(priorByDate.get(d) ?? []), r]);
+      }
+      const priorLiftDates = [...priorByDate.entries()].filter(([, rs]) => loadedLiftRows(rs).length > 0).map(([d]) => d);
+      const fcAge = Number((athleteContext as any)?.development?.chronological_age ?? NaN);
+      const enforceSpacing = features.rest_day_calculator === true;
+      const fcPhase = String(phaseRes.phase);
+      const checked = finalRuleCheck(rows as any[], {
+        planDate,
+        phase: fcPhase,
+        age: Number.isFinite(fcAge) ? fcAge : null,
+        priorLiftDates,
+        restDaysBetweenLifts: enforceSpacing ? 2 : null,
+        weeklyLiftMax: enforceSpacing && fcPhase === "in_season" ? 2 : null,
+        liftRemoved: tcsAdjust?.removeLift === true,
+        catalog: new Map(((fcCat ?? []) as any[]).map((c) => [String(c.slug), c])),
+      });
+      if (checked.swaps.length > 0) {
+        rows.splice(0, rows.length, ...(checked.rows as any[]));
+        await admin.from("wk_final_check_swaps").insert(checked.swaps.map((sw) => ({
+          user_id: user.id, plan_date: planDate, rule: sw.rule,
+          movement_slug: sw.movement_slug, slot: sw.slot, detail: sw.detail,
+        })));
+      }
+    } catch (fcErr) {
+      console.warn("[wk-generate-daily] final rule check failed", fcErr);
+      try {
+        await admin.from("wk_feature_error_events").insert({
+          feature_key: "final_rule_check", user_id: user.id, error_text: String(fcErr).slice(0, 500),
+        });
+      } catch { /* never blocks */ }
+    }
 
     const { data: diagId, error: rpcErr } = await admin.rpc("wk_persist_prescriptions_atomic" as any, {
       p_user: user.id,
