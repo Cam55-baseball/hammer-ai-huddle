@@ -126,7 +126,8 @@ export function buildLedger(raw: RawShadowData, catalog: CatalogMap): ExposureDa
 
   const skipped = new Set<string>();
   for (const p of raw.prescriptions ?? []) {
-    if ((p.status ?? "").toLowerCase() === "skipped") {
+    const st = (p.status ?? "").toLowerCase();
+    if (st === "skipped" || st === "missed") {
       skipped.add(`${p.plan_date}|${p.movement_slug ?? ""}`);
     }
   }

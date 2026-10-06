@@ -68,7 +68,9 @@ export function buildReasons(ctx: ReasonContext): string[] {
 
   if (out.length < 2 && ctx.floorsApplied.length > 0 && lastLift) {
     out.push(
-      `Your last lift was ${weekdayName(lastLift.date)} — we keep full rest days between lifts.`,
+      lastLift.day.lift?.confirmed
+        ? `Your last lift was ${weekdayName(lastLift.date)} — we keep full rest days between lifts.`
+        : `Your last planned lift was ${weekdayName(lastLift.date)} — we keep full rest days between lifts.`,
     );
   }
 
@@ -76,7 +78,12 @@ export function buildReasons(ctx: ReasonContext): string[] {
     out.push(`You played ${games} games this week — one more day before heavy work.`);
   }
   if (out.length < 2 && lifts.length >= 2) {
-    out.push(`${lifts.length} lifts already this week — today stays lighter.`);
+    const done = lifts.filter((c) => c.day.lift?.confirmed).length;
+    out.push(
+      done === lifts.length
+        ? `${lifts.length} lifts already this week — today stays lighter.`
+        : `${lifts.length} lifting days planned this week, ${done} checked off — today stays lighter.`,
+    );
   }
   if (out.length < 2 && practiceMin >= 180) {
     out.push(`${Math.round(practiceMin / 60)} hours of practice this week — the legs need the day.`);
@@ -104,6 +111,8 @@ export const ALL_REASON_TEMPLATES: string[] = [
   "Your last lift was Monday — we keep full rest days between lifts.",
   "You played 3 games this week — one more day before heavy work.",
   "2 lifts already this week — today stays lighter.",
+  "Your last planned lift was Monday — we keep full rest days between lifts.",
+  "3 lifting days planned this week, 1 checked off — today stays lighter.",
   "3 hours of practice this week — the legs need the day.",
   "Load has been piling up — we dropped the level instead of skipping the day.",
   "Next heavy day: Monday.",

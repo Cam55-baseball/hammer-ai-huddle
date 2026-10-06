@@ -262,7 +262,9 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
   const phase = phaseFrom(raw.mpi, raw.context, raw.today);
   const position = raw.mpi?.primary_position ?? raw.context?.position_primary ?? null;
 
-  /* lifts — prescribed counts as done unless marked skipped */
+  /* lifts — prescribed counts as done unless marked skipped or missed.
+     "missed" exists only once the missed-lift job is switched on; until then
+     past planned lifts keep counting exactly as before. */
   const byDate = new Map<string, RawPrescription[]>();
   for (const p of raw.prescriptions) {
     const d = isoDay(p.plan_date);
@@ -277,8 +279,12 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
     const cls = classFromPrescriptions(rows);
     if (!cls) continue;
     const lifts = rows.filter((r) => (r.slot ?? "").toLowerCase() === "lift");
-    const skipped = lifts.length > 0 &&
-      lifts.every((r) => (r.status ?? "").toLowerCase() === "skipped");
+    const notDone = (st: string | null | undefined) => {
+      const v = (st ?? "").toLowerCase();
+      return v === "skipped" || v === "missed";
+    };
+    const skipped = lifts.length > 0 && lifts.every((r) => notDone(r.status));
+    const confirmed = lifts.some((r) => (r.status ?? "").toLowerCase() === "completed");
     const hardSets = lifts.reduce((t, r) => t + (num(r.sets) ?? 0), 0);
     const entry: LiftEntry = {
       class: cls,
@@ -287,6 +293,7 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
         : "standard",
       hardSets: hardSets > 0 ? hardSets : null,
       skipped,
+      confirmed,
     };
     if (hardSets === 0) diagnostics.push(`no_hard_sets_${date}`);
     if (!loggedDates.has(date) && date < raw.today) diagnostics.push(`lift_unlogged_${date}`);

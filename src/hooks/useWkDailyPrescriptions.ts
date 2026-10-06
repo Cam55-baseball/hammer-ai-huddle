@@ -24,10 +24,13 @@ import type { TrainingContext } from "@/lib/wic/trainingContext";
 import type { AthleteContext } from "@/lib/wic/athleteContext";
 import type { PersonalizationContext } from "@/lib/wic/personalizationContext";
 import type { TrainingAgeContext } from "@/lib/wic/trainingAge";
+import { WIC_VERSION } from "../../supabase/functions/_shared/wic/constitution";
 import { resolveWkPhase } from "@/lib/hammer/workout/phaseQuarter";
 import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useScheduleTimeline";
 
-const WK_GENERATOR_VERSION = "wic_v1.3_google";
+// Must equal the version the generator stamps on every row. A mismatch made
+// every visit look "stale" and rebuild today's plan, wiping check-offs.
+const WK_GENERATOR_VERSION = WIC_VERSION;
 
 export type WkSlot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental" | "ub_primer";
 
@@ -147,7 +150,7 @@ export interface WkRx {
     why_order?: string;
     why_recovery?: string;
   } | null;
-  status: "planned" | "completed" | "skipped";
+  status: "planned" | "pending" | "completed" | "skipped" | "missed";
 }
 
 /**
@@ -341,8 +344,31 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   // so the identity of `generate` no longer flips every time we start/finish.
   // Any second concurrent call while the first is in-flight is a no-op.
   const inFlightRef = useRef(false);
+  const confirmedRef = useRef(false);
+  confirmedRef.current = (query.data ?? []).some(
+    (r) => !!r.status && r.status !== "planned" && r.status !== "pending",
+  );
+  // Record the device time zone so "the day ended" is judged in the
+  // athlete's own time when missed lifts are marked.
+  useEffect(() => {
+    if (!user?.id) return;
+    let tz: string | null = null;
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? null; } catch { tz = null; }
+    if (!tz) return;
+    const key = `hm.tz.${user.id}`;
+    if (sessionStorage.getItem(key) === tz) return;
+    void (supabase as any).from("profiles").update({ timezone: tz }).eq("id", user.id)
+      .then(({ error }: { error: unknown }) => { if (!error) sessionStorage.setItem(key, tz as string); });
+  }, [user?.id]);
   const generate = useCallback(async () => {
     if (!user?.id) return;
+    // A rebuild deletes and re-inserts the day's rows, which would erase any
+    // check-off (and its logs). Once the athlete has marked anything, the day
+    // is kept as it is.
+    if (confirmedRef.current) {
+      console.debug("[wk-generate-daily] skipped — day already has check-offs");
+      return;
+    }
     if (inFlightRef.current) {
       console.debug("[wk-generate-daily] skipped — already in flight");
       return;
@@ -599,7 +625,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const effectiveCnsTotal = useMemo(
     () =>
       (query.data ?? []).reduce(
-        (s, r) => s + (r.status === "skipped" ? 0 : Number(r.cns_cost) || 0),
+        (s, r) => s + (r.status === "skipped" || r.status === "missed" ? 0 : Number(r.cns_cost) || 0),
         0,
       ),
     [query.data],

@@ -1,3 +1,6 @@
+import { useAuth } from "@/hooks/useAuth";
+import { useQueryClient } from "@tanstack/react-query";
+import { isFullLiftLog, markPrescriptionDone, missedStillEditable } from "@/lib/wic/execution/liftCompletion";
 import { useEffect, useMemo, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -50,6 +53,8 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
   const { data: latest } = useLatestExerciseLog(rx.id, rx.movement_slug);
   const { data: previous } = usePreviousMovementLog(rx.movement_slug, rx.id);
   const save = useSaveExerciseLog();
+  const { user } = useAuth();
+  const qc = useQueryClient();
 
   // Weight-room standards this movement can contribute to. Display + award
   // detection only — never an input to the prescribed dose.
@@ -193,7 +198,23 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
         field_schema: template.fields.map((f) => ({ key: f.key, label: f.label, unit: f.unit, kind: f.kind })),
       });
       setSavedAt(new Date().toISOString());
-      toast.success("Saved to your log");
+      // A log with reps for every prescribed set finishes the lift, exactly
+      // like the Done button. A partial log leaves the mark untouched.
+      let markedDone = false;
+      if (rx.slot === "lift" && rx.status !== "completed" && user?.id &&
+          isFullLiftLog(roundsToPayload(), initialRoundsCount)) {
+        if (rx.status === "missed" && !missedStillEditable(rx.plan_date)) {
+          /* past the 7-day window — the log saves, the mark stays */
+        } else {
+          const err = await markPrescriptionDone(rx, user.id);
+          if (err) toast.error(`Log saved, but couldn't mark the lift done — ${err}.`);
+          else {
+            markedDone = true;
+            qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
+          }
+        }
+      }
+      toast.success(markedDone ? "Saved to your log — lift marked done." : "Saved to your log");
 
       // Raw research collection: bank this set's numbers against any standard
       // the movement belongs to. Never rendered, never graded, never a dose.
