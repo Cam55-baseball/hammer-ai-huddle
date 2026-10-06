@@ -26,11 +26,12 @@ export interface CatalogFacts {
   speed_category?: string | null;
   conditioning_category?: string | null;
   bat_speed_category?: string | null;
+  equipment?: string[] | null;
 }
 
 /** Catalog columns the final check needs (select list for callers). */
 export const FINAL_CHECK_CATALOG_COLUMNS =
-  "slug, min_age_years, eccentric_overload, season_legality, exposure_channel, intensity_class, movement_velocity, plyo_tier, speed_category, conditioning_category, bat_speed_category";
+  "slug, min_age_years, eccentric_overload, season_legality, exposure_channel, intensity_class, movement_velocity, plyo_tier, speed_category, conditioning_category, bat_speed_category, equipment";
 
 export type DayKind = "hard_run" | "high_jump" | "bat_over_under";
 
@@ -87,12 +88,15 @@ export interface FinalCheckContext {
   sameDayExternal?: { lift?: boolean; hard_run?: boolean };
   /** Growth Mode from measured height (growth/growthMode.ts). */
   growthMode?: boolean;
+  /** Under 13: reason today must be a no-throw day (Pitch Smart rest, 3rd day, yearly rest); null = throwing allowed. */
+  u13ThrowBlock?: string | null;
   catalog: ReadonlyMap<string, CatalogFacts>;
 }
 
 export interface FinalCheckSwap {
   rule: "lift_spacing" | "weekly_lift_max" | "rest_day" | "min_age" | "eccentric_in_season" | "season_legality"
-    | "run_spacing" | "run_before_game" | "jump_spacing" | "bat_consecutive" | "trained_elsewhere_today" | "growth_mode";
+    | "run_spacing" | "run_before_game" | "jump_spacing" | "bat_consecutive" | "trained_elsewhere_today" | "growth_mode"
+    | "u13_weighted_ball" | "u13_pitch_smart";
   movement_slug: string | null;
   slot: string | null;
   detail: string;
@@ -105,6 +109,17 @@ const mondayOf = (iso: string) => {
 };
 const IN_SEASON = new Set(["in_season", "post_season"]);
 const APP_MIN_AGE = 13;
+
+/** Weighted-ball or plyo-ball work (equipment or name). */
+export function isWeightedBallCard(slug: string, f: CatalogFacts | undefined): boolean {
+  const eq = (f?.equipment ?? []).map((e) => String(e).toLowerCase());
+  return eq.some((e) => /weighted_ball|plyo_ball/.test(e)) || /weighted_ball|plyo_?ball|plyoball/i.test(slug);
+}
+/** Throwing or upper-body plyo cards (what a no-throw day removes). */
+export function isThrowCard(r: FinalCheckRow, f: CatalogFacts | undefined): boolean {
+  const slot = r.slot ?? r.sequence_role ?? "";
+  return slot === "throwing" || slot === "ub_primer" || f?.exposure_channel === "throwing" || f?.exposure_channel === "UB_PLYO";
+}
 
 export function finalRuleCheck<T extends FinalCheckRow>(
   rows: readonly T[],
@@ -127,6 +142,17 @@ export function finalRuleCheck<T extends FinalCheckRow>(
     if (facts.eccentric_overload === true && IN_SEASON.has(ctx.phase)) {
       drop.add(r);
       swaps.push({ rule: "eccentric_in_season", movement_slug: slug, slot: r.slot ?? null, detail: ctx.phase });
+      continue;
+    }
+    // Under 13 (owner ruling 2026-10-06): never weighted balls or weighted plyo balls.
+    if (ctx.age !== null && ctx.age < 13 && isWeightedBallCard(slug, facts)) {
+      drop.add(r);
+      swaps.push({ rule: "u13_weighted_ball", movement_slug: slug, slot: r.slot ?? null, detail: "no weighted or plyo balls under 13" });
+      continue;
+    }
+    if (ctx.age !== null && ctx.age < 13 && ctx.u13ThrowBlock && isThrowCard(r, facts)) {
+      drop.add(r);
+      swaps.push({ rule: "u13_pitch_smart", movement_slug: slug, slot: r.slot ?? null, detail: ctx.u13ThrowBlock });
       continue;
     }
     // Growth Mode (§10.2): easy, rhythmic jumps only; no eccentric overload.

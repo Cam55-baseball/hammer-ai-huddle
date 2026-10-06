@@ -40,7 +40,8 @@ export async function loadU13ThrowBlock(admin: any, userId: string, age: number 
     const d = String(r.entry_date);
     const cur = by.get(d) ?? { date: d, pitches: 0, throws: 0 };
     const n = Number(r.count ?? 0);
-    if (String(r.source) === "pitching" || /pitch/i.test(String(r.throw_type ?? ""))) cur.pitches += n; else cur.throws += n;
+    const isPitch = String(r.source) === "pitching" && !/warm/i.test(String(r.throw_type ?? ""));
+    if (isPitch) cur.pitches += n; else cur.throws += n;
     by.set(d, cur);
   }
   return u13ThrowBlockFrom(age, [...by.values()], today);
