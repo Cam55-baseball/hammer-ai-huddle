@@ -36,3 +36,6 @@
 - [ ] F. Round 1 tests (screenshots, growth on/off, 16yo heavy track)
 - [ ] Stress tests 1–19 + daily-plan job scale
 - [ ] Deferral note + youth-throwing doc updates
+- [x] Round 2: switch, consent tables, parent flow, Pitch Smart U13, pause gaps (deployed)
+- [ ] Round 2: signed-in stress tests 1–11, 15, 17 and Round 1 screenshots — waiting on owner approval to sign the preview in as test players
+- [ ] Round 2: daily-plan job scale estimate (case 19)
