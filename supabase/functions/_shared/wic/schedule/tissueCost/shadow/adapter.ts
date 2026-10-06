@@ -342,6 +342,12 @@ export function buildShadowInputs(raw: RawShadowData): ShadowInputs {
     for (const outing of raw.pitcherSchedule.outings) {
       if (outing.status !== "thrown" || !outing.actual_date || outing.actual_date < raw.windowStart || outing.actual_date > raw.today) continue;
       if (outing.outing_type === "bullpen") { diagnostics.push(`bullpen_confirmed_pitch_count_unknown_${outing.actual_date}`); continue; }
+      if (outing.outing_type === "relief") {
+        diagnostics.push(`pitcher_relief_actual_${outing.actual_date}_pitch_count_unknown`);
+        // A relief appearance is real evidence, not a measured position-player game.
+        // The recent-load governor consumes it; this cost model has no relief coefficient.
+        continue;
+      }
       const target = day(outing.actual_date);
       const start = outing.outing_type === "start";
       target.pitcherStartDay = target.pitcherStartDay || start;

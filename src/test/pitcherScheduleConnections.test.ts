@@ -18,6 +18,16 @@ const raw = (extra: Partial<RawShadowData> = {}): RawShadowData => ({
 });
 
 describe("pitcher schedule reaches existing load owners", () => {
+  it("actual recovery wins even when another start is scheduled today", () => {
+    const cycle = buildPitchingMicrocycle({ ...input, pitcherSchedule: { ...schedule, outings: [outing,
+      { ...outing, id: "b", planned_date: "2026-03-12", actual_date: null, status: "planned" }] } });
+    expect(cycle.today.dayType).toBe("flush");
+  });
+  it("relief evidence is exposed without inventing a position-game cost", () => {
+    const load = buildShadowInputs(raw({ pitcherSchedule: { ...schedule, outings: [{ ...outing, outing_type: "relief" }] } }));
+    expect(load.history.find((d) => d.date === outing.actual_date)?.games).toBeUndefined();
+    expect(load.diagnostics).toContain("pitcher_relief_actual_2026-03-11_pitch_count_unknown");
+  });
   it("actual Wednesday gives Thursday flush, never planned Tuesday", () => {
     const cycle = buildPitchingMicrocycle({ ...input, pitcherSchedule: schedule });
     expect(cycle.today.dayType).toBe("flush");
