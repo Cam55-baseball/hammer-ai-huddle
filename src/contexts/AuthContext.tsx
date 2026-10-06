@@ -4,6 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { emitObservability } from '@/hooks/useEmitObservability';
 import { clearProtectedEditing, isProtectedEditingActive } from '@/lib/auth/protectedEditing';
 import { canEvictNow, noteTokenRefreshed, hasPersistedSupabaseToken } from '@/lib/auth/canEvict';
+import { syncNativeSession } from '@/lib/auth/nativeSessionStore';
+
+// Set only by an explicit Sign out tap, so that path signs out at once while
+// every other SIGNED_OUT event is verified before anyone is evicted.
+let explicitSignOutPending = false;
 
 
 interface AuthContextType {
@@ -108,6 +113,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           noteTokenRefreshed();
         }
 
+        // Keep the native (iPhone app) copy of the session current.
+        void syncNativeSession(event === 'SIGNED_OUT' && explicitSignOutPending);
+
+        if (event === 'SIGNED_OUT' && explicitSignOutPending) {
+          explicitSignOutPending = false;
+          if (pendingSignOutTimer) clearTimeout(pendingSignOutTimer);
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
         if (event === 'SIGNED_OUT') {
           // Verify before evicting — spurious SIGNED_OUT events (network blips,
           // 401 retries, multi-tab races, WS reconnects) must not boot a still-
@@ -134,7 +151,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
 
+    // iOS can suspend the app at any time; save the session when it backgrounds.
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') void syncNativeSession();
+    };
+    document.addEventListener('visibilitychange', onHide);
+
     return () => {
+      document.removeEventListener('visibilitychange', onHide);
       cancelled = true;
       if (pendingSignOutTimer) clearTimeout(pendingSignOutTimer);
       subscription.unsubscribe();
@@ -213,7 +237,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     clearProtectedEditing();
-    const { error } = await supabase.auth.signOut();
+    explicitSignOutPending = true;
+    // 'local' signs out this device only. The default ('global') revoked the
+    // player's sessions on every other phone, tablet and browser too.
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
+    if (error) explicitSignOutPending = false;
+    await syncNativeSession(true);
     return { error };
   };
 

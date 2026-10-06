@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, useSearchParams, Link } from "react-router-dom";
 
 import { useTranslation } from "react-i18next";
@@ -16,6 +16,7 @@ import { AuthLanguageSelector } from "@/components/AuthLanguageSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { resolvePostLoginRoute, withLoginTimeout } from "@/lib/auth/postLoginRoute";
 import { AppleSignInButton } from "@/components/auth/AppleSignInButton";
+import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 
 
 const authSchema = z.object({
@@ -66,7 +67,9 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { user, signIn, signUp, resetPassword } = useAuth();
+  const { user, loading: authLoading, signIn, signUp, resetPassword } = useAuth();
+  // True once this page starts a sign-in/sign-up, so its own routing wins.
+  const submittingRef = useRef(false);
 
   const state = location.state as {
     role?: string;
@@ -106,17 +109,29 @@ const Auth = () => {
   // If user is already authenticated and a ?redirect= target is present
   // (e.g. parent invite link), honor it immediately. Otherwise leave them
   // on the auth page — they may have landed here intentionally.
+  // A player who is already signed in never sees the sign-in form: send them
+  // straight in (to ?redirect= / returnTo when present, else the dashboard).
+  // Players who sign in on this page (password, Apple) keep their own routing.
+  const sawSignedOutRef = useRef(false);
+  if (!authLoading && !user) sawSignedOutRef.current = true;
   useEffect(() => {
-    if (!user) return;
-    const target = resolveRedirect();
-    if (target) navigate(target, { replace: true });
+    if (authLoading || !user || submittingRef.current) return;
+    if (sawSignedOutRef.current) {
+      const target = resolveRedirect();
+      if (target) navigate(target, { replace: true });
+      return;
+    }
+    const returnTo = (location.state as { returnTo?: unknown } | null)?.returnTo;
+    const safeReturn = typeof returnTo === "string" && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : null;
+    navigate(resolveRedirect() ?? safeReturn ?? "/dashboard", { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, authLoading]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    submittingRef.current = true;
 
     try {
       if (isForgotPassword) {
@@ -325,6 +340,9 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+
+  // Wait for the saved session; never flash the form at a signed-in player.
+  if (authLoading || (user && !sawSignedOutRef.current)) return <HMLoadingFallback />;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 pt-safe pb-safe">
