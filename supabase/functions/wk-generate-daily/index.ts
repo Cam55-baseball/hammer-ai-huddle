@@ -525,8 +525,7 @@ const handler = async (req: Request): Promise<Response> => {
         const byDate = new Map<string, any[]>();
         for (const r of (vPrior ?? []) as any[]) byDate.set(String(r.plan_date), [...(byDate.get(String(r.plan_date)) ?? []), r]);
         const vMerged = mergeExternal(vExt, planDate, [...byDate.entries()].filter(([, rs]) => loadedLiftRows(rs).length > 0).map(([d]) => d), vPriorKinds as any);
-        const dob = (vCtx as any)?.date_of_birth ? Date.parse(String((vCtx as any).date_of_birth)) : NaN;
-        const vAge = Number.isFinite(dob) ? Math.floor((Date.parse(`${planDate}T00:00:00Z`) - dob) / (365.25 * 86_400_000)) : null;
+        const vAge = ageFromDob((vCtx as any)?.date_of_birth, planDate);
         const vPhase = String(savedRows.find((r) => r.phase)?.phase ?? "in_season");
         const vSpacing = resolveFeatures((vSw ?? []) as any, user.id).rest_day_calculator === true;
         // Marked cards are never touched, so only unmarked rows are checked.
