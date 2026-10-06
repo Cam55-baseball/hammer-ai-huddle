@@ -526,11 +526,14 @@ const handler = async (req: Request): Promise<Response> => {
         for (const r of (vPrior ?? []) as any[]) byDate.set(String(r.plan_date), [...(byDate.get(String(r.plan_date)) ?? []), r]);
         const vMerged = mergeExternal(vExt, planDate, [...byDate.entries()].filter(([, rs]) => loadedLiftRows(rs).length > 0).map(([d]) => d), vPriorKinds as any);
         const vAge = ageFromDob((vCtx as any)?.date_of_birth, planDate);
+        const { data: vH } = await admin.from("athlete_height_checks").select("measured_on, inches").eq("user_id", user.id)
+          .gte("measured_on", isoShift(planDate, -200)).lte("measured_on", planDate).order("measured_on");
+        const vGrowth = growthMode(((vH ?? []) as any[]).map((h) => ({ date: h.measured_on, inches: Number(h.inches) })), planDate).active;
         const vPhase = String(savedRows.find((r) => r.phase)?.phase ?? "in_season");
         const vSpacing = resolveFeatures((vSw ?? []) as any, user.id).rest_day_calculator === true;
         // Marked cards are never touched, so only unmarked rows are checked.
         const vCheck = finalRuleCheck(savedRows.filter((r) => !isMarkedRow(r)), {
-          planDate, phase: vPhase, age: vAge, priorLiftDates: vMerged.priorLiftDates,
+          planDate, phase: vPhase, age: vAge, growthMode: vGrowth, priorLiftDates: vMerged.priorLiftDates,
           restDaysBetweenLifts: vSpacing ? 2 : null,
           weeklyLiftMax: vSpacing && vPhase === "in_season" ? 2 : null,
           liftRemoved: false,
@@ -4546,7 +4549,6 @@ const handler = async (req: Request): Promise<Response> => {
         priorByDate.set(d, [...(priorByDate.get(d) ?? []), r]);
       }
       const priorLiftDates = [...priorByDate.entries()].filter(([, rs]) => loadedLiftRows(rs).length > 0).map(([d]) => d);
-      const fcAge = Number((athleteContext as any)?.development?.chronological_age ?? NaN);
       const enforceSpacing = features.rest_day_calculator === true;
       const fcPhase = String(phaseRes.phase);
       const fcCatMap = new Map(((fcCat ?? []) as any[]).map((c) => [String(c.slug), c]));
@@ -4558,7 +4560,8 @@ const handler = async (req: Request): Promise<Response> => {
       const checked = finalRuleCheck(rows as any[], {
         planDate,
         phase: fcPhase,
-        age: Number.isFinite(fcAge) ? fcAge : null,
+        age: athleteAgeYears,
+        growthMode: growthState.active,
         priorLiftDates: fcMerged.priorLiftDates,
         sameDayExternal: fcMerged.sameDayExternal,
         restDaysBetweenLifts: enforceSpacing ? 2 : null,
