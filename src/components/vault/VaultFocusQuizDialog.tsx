@@ -2189,7 +2189,7 @@ export function VaultFocusQuizDialog({
             </div>
           )}
 
-          {quizType === 'morning' && <div className="space-y-3"><CheckInLifeChips /><NextGameConfirmation /><MorningDayIntent /></div>}
+          {quizType === 'morning' && <div className="space-y-3"><CheckInLifeChips /><MorningGameQuestions /><NextGameConfirmation /><MorningDayIntent /></div>}
 
           {/* Submit Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-6 mt-4 border-t border-border">
