@@ -711,15 +711,17 @@ function HammerDailyPlanBody({
   const wkRx = useHammersToday();
   const pocketDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
   const sportIsBaseball = (ctx.get<unknown>("sport_primary")?.value ?? "baseball") !== "softball";
+  const { user: bodyUser } = useAuth();
+  const { modules } = useSubscription();
   const showPitching = shouldShowPitchingCard(
-    readPitcherProfile(planUser?.id),
+    readPitcherProfile(bodyUser?.id),
     ctx.get<unknown>("position_primary")?.value ?? null,
     ctx.get<unknown>("position_secondary")?.value ?? null,
   );
   const sportKey = sportIsBaseball ? "baseball" : "softball";
   // Base Stealer: 5Tool and Golden 2Way only (owner rule) — never Complete Pitcher.
   const hasBaseStealer = modules.includes(`${sportKey}_5tool`) || modules.includes(`${sportKey}_golden2way`);
-  const baserunningToday = plan.blocks.some((b) => b.modality === "baserunning" && b.status !== "suppressed" && b.status !== "off-day");
+
   const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
   const pitcherSchedule = usePitcherSchedule(bodyPlanDate);
   const planAdjust = usePlanAdjustments(bodyPlanDate);
@@ -1025,6 +1027,7 @@ function HammerDailyPlanBody({
 
           // Arm-care budget: throwing block owns arm care whenever it's rendered
           // as a real block (ready/awaiting-input). Otherwise the lift card carries it.
+          const baserunningToday = plan.blocks.some((b) => b.modality === "baserunning" && b.status !== "suppressed" && b.status !== "off-day");
           const throwingBlock = plan.blocks.find((b) => b.modality === "throwing");
           const armCareOwner: import("@/components/hammer/ArmCareBudgetContext").ArmCareOwner =
             throwingBlock && throwingBlock.status !== "suppressed" ? "throwing" : "lift";
