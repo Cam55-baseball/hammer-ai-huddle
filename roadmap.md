@@ -1,4 +1,5 @@
-## Owner update (C + D), 2026-10-07 23:40 UTC
+## Owner update (C + D), 2026-10-07 23:45 UTC
+- Final checks (G1): 2,449/2,449 tests pass, including the 8-week simulations and the season check (0 mismatches). Daily plan job: 17 good runs since 22:45 and the latest at 23:40 was OK; the 4 failures at 22:40 were the database outage. 165-page phone check not re-run this round.
 - Ready to publish: yes, once the owner checks the change list and signs in once in the preview.
 - Login (preview): fixed. The sign-in page now always sends a signed-in player on, and inside the preview the app checks again for a late sign-in.
 - Demo video: still on the signed-out home page. Signed-in players can see it at /home.
