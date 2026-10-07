@@ -3,11 +3,23 @@ import { liftingPlanCopy } from './liftingPlanCopy';
 import { athleteNoticeCopy } from './athleteNoticeCopy';
 
 describe('planned lifting is not completed lifting', () => {
-  it('labels the count as planned dates with unconfirmed completion', () => {
-    expect(liftingPlanCopy('7 lifts already this week — today stays lighter.')).toBe("7 days with lifting planned in the previous 7 days. Completion isn't confirmed; today's work stays lighter.");
+  it('labels an all-confirmed count as checked-off sessions', () => {
+    expect(liftingPlanCopy('7 lifts already this week — today stays lighter.')).toBe(
+      '7 lifting sessions checked off in the previous 7 days — today stays lighter.'
+    );
+  });
+  it('passes the split planned/checked-off count through unchanged', () => {
+    const detail = '3 lifting days planned this week, 1 checked off — today stays lighter.';
+    expect(liftingPlanCopy(detail)).toBeNull();
+  });
+  it('lets the confirmed last-lift line speak for itself', () => {
+    expect(liftingPlanCopy('Your last lift was Monday — we keep full rest days between lifts.')).toBeNull();
+  });
+  it('lets the planned last-lift line speak for itself', () => {
+    expect(liftingPlanCopy('Your last planned lift was Monday — we keep full rest days between lifts.')).toBeNull();
   });
   it('does not call a scheduled Monday a completed lift', () => {
-    expect(liftingPlanCopy('Your last lift was Monday — we keep full rest days between lifts.')).toContain('last planned lifting day was Monday');
+    expect(liftingPlanCopy('Your last lift was Monday — we keep full rest days between lifts.')).not.toContain('checked off');
   });
   it('leaves unrelated explanations alone', () => {
     expect(liftingPlanCopy('Next heavy day: Thursday.')).toBeNull();
