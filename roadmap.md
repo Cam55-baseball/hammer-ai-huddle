@@ -5,6 +5,14 @@
 
 **Morning game question.** The morning check-in asks "Did you play yesterday?" / "Did you pitch?" once, if a game or start wasn't logged. The trade-off is one extra tap in the morning versus plans built without knowing about yesterday's game. Recommendation: keep it on as it is now (asked once, shared with the plan-page prompt).
 
+## OWNER RULE 2026-10-07 (20:26) — ONE SYSTEM, ONE PHASE (high priority)
+- [x] Audit started (see docs/phase-audit.md)
+- [x] Fixed: app season reader defaulted to "in season" when nothing was saved (server says off-season) — now off-season, matching the server
+- [x] Fixed: weekly recap had its own phase math — now uses the shared calculator
+- [ ] One resolver returning phase + sub-block + ramp-up + lighter week + growth, feeding every card, Key Rules, counter, goal gate, AI context
+- [ ] Mismatch scan per player per day (162-game, year-round, school, softball, game-day transitions, time zones) = 0
+- [ ] Phone-size check with test accounts
+
 ## Owner answers 2026-10-07 (20:07)
 - [x] 1. Capacity: no bigger database — keep making builds faster (pre-build after local noon stays) — decided by owner; logged
 - [x] 2. Missed-lift job is ON (wk-mark-missed-lifts, every 15 min since Oct 6) — roadmap corrected

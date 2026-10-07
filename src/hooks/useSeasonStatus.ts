@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { resolveSeasonPhase, getSeasonProfile, type SeasonPhase } from '@/lib/seasonPhase';
 
-export type SeasonStatus = 'in_season' | 'preseason' | 'post_season';
+export type SeasonStatus = 'in_season' | 'preseason' | 'post_season' | 'off_season';
 
 interface SeasonData {
   season_status: SeasonStatus;
