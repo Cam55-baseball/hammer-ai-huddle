@@ -32,6 +32,8 @@ export const FEATURE_KEYS = [
   "adaptive_phases",
   "phase_feedback",
   "hammers_today_start_gate",
+  "power_primer",
+  "pap_real_throws",
 ] as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];

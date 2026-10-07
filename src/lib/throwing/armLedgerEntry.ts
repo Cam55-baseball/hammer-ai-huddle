@@ -32,7 +32,9 @@ export type ThrowType =
   | "long_toss"
   | "catcher_throwdowns"
   | "pitcher_warmup"
-  | "pitcher_catch_play";
+  | "pitcher_catch_play"
+  | "pap_max_throws"
+  | "pap_warmup";
 
 export type EntrySource = "position" | "pitching";
 
@@ -53,6 +55,8 @@ export const THROW_TYPES: Record<ThrowType, ThrowTypeDef> = {
   catcher_throwdowns: { label: "Catcher throw-downs", source: "position", intent: "high", kind: "throwdown" },
   pitcher_warmup: { label: "Warm-up throws", source: "pitching", intent: "low", kind: "warmup" },
   pitcher_catch_play: { label: "Catch play", source: "pitching", intent: "low", kind: "warmup" },
+  pap_max_throws: { label: "Power Primer max throws", source: "pitching", intent: "high", kind: "pap_max" },
+  pap_warmup: { label: "Power Primer warm-up throws", source: "pitching", intent: "low", kind: "warmup" },
 };
 
 export interface ArmEntry {
@@ -117,6 +121,7 @@ export function prescribedThrows(role: ThrowRole, primary: unknown, secondary?: 
 export function enterableTypes(role: ThrowRole, source: EntrySource): ThrowType[] {
   return (Object.keys(THROW_TYPES) as ThrowType[]).filter((t) => {
     if (THROW_TYPES[t].source !== source) return false;
+    if (t === "pap_max_throws" || t === "pap_warmup") return false; // logged by the Power Primer block only
     if (source === "pitching") return role !== "position" && role !== "catcher";
     if (role === "pitcher") return false;
     if (t === "catcher_throwdowns") return role === "catcher" || role === "pitcher_catcher";

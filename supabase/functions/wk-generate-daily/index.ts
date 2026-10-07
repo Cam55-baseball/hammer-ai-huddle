@@ -228,6 +228,7 @@ import { loadU13ThrowBlock, loadU13ThrowState } from "../_shared/wic/phases/u13T
 import { nextThrowDate, nextPickoffDate } from "../_shared/wic/phases/nextThrowDate.ts";
 import { trendDeload, loadTrendInput, lighterSets, TREND_DELOAD_VERSION } from "../_shared/wic/lift/trendDeload.ts";
 import { goalDose, goalDoseKey, GOAL_DOSE_VERSION } from "../_shared/wic/goals/goalDose.ts";
+import { planPowerPrimer, liftPatternOf, painAreasFromInjuries, type PapRole } from "../_shared/wic/pap/powerPrimer.ts";
 import { loadedLiftRows } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
 import { loadExternalTraining, mergeExternal } from "../_shared/wic/schedule/externalTraining.ts";
 
@@ -4800,6 +4801,65 @@ const handler = async (req: Request): Promise<Response> => {
           feature_key: "final_rule_check", user_id: user.id, error_text: String(fcErr).slice(0, 500),
         });
       } catch { /* never blocks */ }
+    }
+
+    // -------- Power Primer (owner approved 2026-10-07) --------
+    // One primer block on the day's first heavy lift row. Lives in why_payload
+    // only: no new card, no dose change, never a hard-running day.
+    try {
+      if (features.power_primer === true) {
+        const liftRows = (rows as any[]).filter((r) => r.slot === "lift" && r.sequence_role !== "arm_care" && r.sequence_role !== "warmup");
+        if (liftRows.length > 0) {
+          const ppSlugs = Array.from(new Set((rows as any[]).map((r) => String(r.movement_slug ?? "")).filter(Boolean)));
+          const [{ data: ppCat }, { data: ppPrior }] = await Promise.all([
+            admin.from("wk_movement_catalog").select(`${FINAL_CHECK_CATALOG_COLUMNS}, movement_pattern, movement_category, ub_tier, default_load_pct`).in("slug", ppSlugs),
+            admin.from("wk_prescriptions").select("plan_date, pp:why_payload->power_primer").eq("user_id", user.id).eq("slot", "lift")
+              .gte("plan_date", isoShift(planDate, -6)).lt("plan_date", planDate).limit(200),
+          ]);
+          const ppMap = new Map(((ppCat ?? []) as any[]).map((c) => [String(c.slug), c]));
+          const kinds = dayKinds(rows as any[], ppMap as any);
+          const first = liftRows.find((r) => /compound|unilateral|main/.test(String(r.sequence_role ?? ""))) ?? liftRows[0];
+          const fc = ppMap.get(String(first.movement_slug)) ?? {};
+          const pattern = liftPatternOf(String(first.movement_slug), (fc as any).movement_pattern, (fc as any).movement_category);
+          const heavy = Number((fc as any).default_load_pct ?? 0) >= 75 || Number(first.reps ?? 99) <= 5;
+          const isVelo = (r: any) => r.slot === "ub_primer" && (Number(ppMap.get(String(r.movement_slug))?.ub_tier ?? 0) >= 2
+            || /velo|pull_?down|weighted|max_?throw/.test(String(r.movement_slug)));
+          const pos = athletePositions.join(" ");
+          const pitches = isPitcherAthlete;
+          const role: PapRole = sport === "softball" && pitches ? "windmill"
+            : pitches && athletePositions.some((x) => !/pitch|^p$|^rhp$|^lhp$|^sp$|^rp$/.test(x)) ? "two_way"
+            : pitches ? "pitcher" : /catch|^c$/.test(pos) ? "catcher" : "hitter";
+          const futureStarts = scheduledGames.filter((g: any) => g.isStartingPitcher && !g.ignored && g.date >= planDate).map((g: any) => g.date).sort();
+          const pastStarts = [...actualStartDates, ...scheduledGames.filter((g: any) => g.isStartingPitcher && g.date < planDate).map((g: any) => g.date)].sort();
+          const dayDiff = (a: string, b: string) => Math.round((Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / 86_400_000);
+          const realDays = new Set(((ppPrior ?? []) as any[]).filter((r) => r.pp?.action?.real_throw === true).map((r) => String(r.plan_date))).size;
+          const cns = (dailyLog as any)?.cns_readiness;
+          const pp = planPowerPrimer({
+            sport, role, age: athleteAgeYears, growthMode: growthState.active,
+            readiness: cns == null ? null : Math.max(0, Math.min(100, Number(cns) * 10)),
+            pain: painAreasFromInjuries(injurySlugs),
+            dayHas: {
+              velocityThrow: (rows as any[]).some(isVelo),
+              batSpeed: (rows as any[]).some((r) => r.slot === "bat_speed"),
+              hardRun: kinds.has("hard_run"),
+            },
+            gameTomorrow: scheduledGames.some((g: any) => g.date === isoShift(planDate, 1) && g.ignored !== true),
+            daysSinceStart: pastStarts.length ? dayDiff(planDate, pastStarts[pastStarts.length - 1]) : null,
+            daysUntilStart: futureStarts.length ? dayDiff(futureStarts[0], planDate) : null,
+            realThrowDaysThisWeek: realDays,
+            realThrowsEnabled: features.pap_real_throws === true,
+            goals: [...(goalEmphasis.ranked ?? [])].map(String),
+            equipment: declaredEquipment.length ? declaredEquipment : null,
+            firstLift: { slug: String(first.movement_slug), name: String(first.movement_name ?? first.movement_slug), pattern, heavy },
+          });
+          if (pp.block) {
+            pp.block.reasons = pp.reasons;
+            first.why_payload = { ...(first.why_payload ?? {}), power_primer: pp.block };
+          }
+        }
+      }
+    } catch (ppErr) {
+      console.warn("[wk-generate-daily] power primer skipped", ppErr);
     }
 
     // -------- Stated change to a day already built: adjust unmarked cards only --------

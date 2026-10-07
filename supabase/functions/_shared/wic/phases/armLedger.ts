@@ -16,7 +16,7 @@ export type Intent = "low" | "moderate" | "high";
 
 export interface ThrowAthlete { sport: Sport; role: ThrowRole; age: number | null }
 export interface ThrowEvent {
-  kind: "warmup" | "practice" | "pregame" | "game" | "long_toss" | "throwdown" | "pitch";
+  kind: "warmup" | "practice" | "pregame" | "game" | "long_toss" | "throwdown" | "pitch" | "pap_max";
   count: number; intent: Intent; estimated: boolean;
 }
 
@@ -91,6 +91,7 @@ export function armBudget(a: ThrowAthlete): ArmBudget {
 export function throwUnits(events: ThrowEvent[]): number {
   return events.reduce((s, e) => s + e.count * (
     e.kind === "pitch" ? 1
+    : e.kind === "pap_max" ? 1.5 // Power Primer max-effort throw (owner 2026-10-07)
     : e.kind === "warmup" ? ARM_DEFAULTS.warmupWeight
     : ARM_DEFAULTS.intentWeight[e.intent]), 0);
 }
