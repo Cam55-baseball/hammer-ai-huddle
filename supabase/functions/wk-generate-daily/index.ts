@@ -228,7 +228,8 @@ import { loadU13ThrowBlock, loadU13ThrowState } from "../_shared/wic/phases/u13T
 import { nextThrowDate, nextPickoffDate } from "../_shared/wic/phases/nextThrowDate.ts";
 import { trendDeload, loadTrendInput, lighterSets, TREND_DELOAD_VERSION } from "../_shared/wic/lift/trendDeload.ts";
 import { goalDose, goalDoseKey, GOAL_DOSE_VERSION } from "../_shared/wic/goals/goalDose.ts";
-import { planPowerPrimer, liftPatternOf, painAreasFromInjuries, type PapRole } from "../_shared/wic/pap/powerPrimer.ts";
+import { planPowerPrimer, liftPatternOf, painAreasFromInjuries, type PapRole, type PapPitchBudget } from "../_shared/wic/pap/powerPrimer.ts";
+import { PITCH_SMART_BANDS as PP_BANDS_UNUSED } from "../_shared/wic/phases/youthThrowing.ts";
 import { planWindmillSession, WINDMILL_PROGRAM_VERSION } from "../_shared/wic/pitching/windmillProgram.ts";
 import { loadedLiftRows } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
 import { loadExternalTraining, mergeExternal } from "../_shared/wic/schedule/externalTraining.ts";
@@ -4892,7 +4893,32 @@ const handler = async (req: Request): Promise<Response> => {
           const dayDiff = (a: string, b: string) => Math.round((Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / 86_400_000);
           const realDays = new Set(((ppPrior ?? []) as any[]).filter((r) => r.pp?.action?.real_throw === true).map((r) => String(r.plan_date))).size;
           const cns = (dailyLog as any)?.cns_readiness;
+          // Pitch Smart budget for max PAP throws (owner 2026-10-07: 1.5 each).
+          let pitchBudget: PapPitchBudget | undefined;
+          if (sport === "baseball" && athleteAgeYears != null && pitchSmartApplies(athleteAgeYears, null)) {
+            const { data: ppLedger } = await admin.from("arm_ledger_entries").select("entry_date, source, throw_type, count, status")
+              .eq("user_id", user.id).gte("entry_date", isoShift(planDate, -365)).lte("entry_date", planDate).limit(5000);
+            const perDay = new Map<string, number>();
+            for (const e of (ppLedger ?? []) as any[]) {
+              if (e.status && /skip|missed|cancel/i.test(String(e.status))) continue;
+              const w = /warm|catch/i.test(String(e.throw_type ?? "")) ? 0.25 : String(e.source) === "pitching" ? 1 : 0;
+              if (!w) continue;
+              perDay.set(String(e.entry_date), (perDay.get(String(e.entry_date)) ?? 0) + Number(e.count ?? 0) * w);
+            }
+            const band = PITCH_SMART_BANDS[bandIndex(athleteAgeYears)];
+            const ddiff = (a: string, b: string) => Math.round((Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / 86_400_000);
+            let restDay = false, week = 0, year = 0;
+            for (const [d, p] of perDay) {
+              const gap = ddiff(planDate, d);
+              if (gap > 0 && gap <= restDaysFor(band, Math.ceil(p))) restDay = true;
+              if (gap >= 0 && gap < 7) week += p;
+              year += p;
+            }
+            const caps = checkCaps(athleteAgeYears, null, { week, season: year, year, inningsYear: 0 }, 0);
+            pitchBudget = { pitchesToday: perDay.get(planDate) ?? 0, restDay, capRemaining: caps.remainingToday };
+          }
           const pp = planPowerPrimer({
+            pitchBudget,
             sport, role, age: athleteAgeYears, growthMode: growthState.active,
             readiness: cns == null ? null : Math.max(0, Math.min(100, Number(cns) * 10)),
             pain: painAreasFromInjuries(injurySlugs),
