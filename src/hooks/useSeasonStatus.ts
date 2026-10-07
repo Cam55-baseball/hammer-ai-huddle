@@ -61,7 +61,7 @@ export function useSeasonStatus() {
         .maybeSingle();
       if (error) throw error;
       return {
-        season_status: (data?.season_status as SeasonStatus) ?? 'in_season',
+        season_status: (data?.season_status as SeasonStatus) ?? ('off_season' as SeasonStatus),
         season_status_manual: (data as any)?.season_status_manual === true,
         preseason_start_date: data?.preseason_start_date ?? null,
         preseason_end_date: data?.preseason_end_date ?? null,
@@ -131,11 +131,11 @@ export function useSeasonStatus() {
 
   const resolution = query.data
     ? resolveSeasonPhase(query.data)
-    : { phase: 'in_season' as SeasonPhase, phaseStartedAt: null, daysIntoPhase: null, daysUntilNextPhase: null, source: 'default' as const };
+    : { phase: 'off_season' as SeasonPhase, phaseStartedAt: null, daysIntoPhase: null, daysUntilNextPhase: null, source: 'default' as const };
   const profile = getSeasonProfile(resolution.phase);
 
   return {
-    seasonStatus: query.data?.season_status ?? 'in_season',
+    seasonStatus: query.data?.season_status ?? ('off_season' as SeasonStatus),
     resolvedPhase: resolution.phase,
     phaseStartedAt: resolution.phaseStartedAt,
     phaseDaysIn: resolution.daysIntoPhase,
