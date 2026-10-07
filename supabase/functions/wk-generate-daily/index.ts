@@ -229,7 +229,7 @@ import { nextThrowDate, nextPickoffDate } from "../_shared/wic/phases/nextThrowD
 import { trendDeload, loadTrendInput, lighterSets, TREND_DELOAD_VERSION } from "../_shared/wic/lift/trendDeload.ts";
 import { goalDose, goalDoseKey, GOAL_DOSE_VERSION } from "../_shared/wic/goals/goalDose.ts";
 import { planPowerPrimer, liftPatternOf, painAreasFromInjuries, type PapRole, type PapPitchBudget } from "../_shared/wic/pap/powerPrimer.ts";
-import { PITCH_SMART_BANDS as PP_BANDS_UNUSED } from "../_shared/wic/phases/youthThrowing.ts";
+import { PITCH_SMART_BANDS, bandIndex, restDaysFor, checkCaps, pitchSmartApplies } from "../_shared/wic/phases/youthThrowing.ts";
 import { planWindmillSession, WINDMILL_PROGRAM_VERSION } from "../_shared/wic/pitching/windmillProgram.ts";
 import { loadedLiftRows } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
 import { loadExternalTraining, mergeExternal } from "../_shared/wic/schedule/externalTraining.ts";
