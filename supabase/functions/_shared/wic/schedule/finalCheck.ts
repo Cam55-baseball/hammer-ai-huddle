@@ -115,6 +115,10 @@ export function isWeightedBallCard(slug: string, f: CatalogFacts | undefined): b
   const eq = (f?.equipment ?? []).map((e) => String(e).toLowerCase());
   return eq.some((e) => /weighted_ball|plyo_ball/.test(e)) || /weighted_ball|plyo_?ball|plyoball/i.test(slug);
 }
+/** 4 oz / underload ball work (no age limit, owner 2026-10-07). */
+export function isUnderloadBallCard(slug: string): boolean {
+  return /(^|_)(4_?oz|underload)(_|$)/i.test(slug);
+}
 /** Throwing or upper-body plyo cards (what a no-throw day removes). */
 export function isThrowCard(r: FinalCheckRow, f: CatalogFacts | undefined): boolean {
   const slot = r.slot ?? r.sequence_role ?? "";
@@ -145,7 +149,8 @@ export function finalRuleCheck<T extends FinalCheckRow>(
       continue;
     }
     // Under 13 (owner ruling 2026-10-06): never weighted balls or weighted plyo balls.
-    if (ctx.age !== null && ctx.age < 13 && isWeightedBallCard(slug, facts)) {
+    // Owner rule 2026-10-07: 4 oz / underload balls have no age limit.
+    if (ctx.age !== null && ctx.age < 13 && isWeightedBallCard(slug, facts) && !isUnderloadBallCard(slug)) {
       drop.add(r);
       swaps.push({ rule: "u13_weighted_ball", movement_slug: slug, slot: r.slot ?? null, detail: "no weighted or plyo balls under 13" });
       continue;

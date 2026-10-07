@@ -1,5 +1,19 @@
 # Roadmap
 
+## Closeout decisions for the owner (2026-10-07)
+**Game-linked flush.** After a player saves a game at night, the app could add a short easy flush (light jog, mobility, breathing) to the next morning's plan. Today the flush only appears from the regular schedule rules, so a game logged late may not trigger one. Recommendation: turn it on as an optional card the player can skip, never replacing planned work.
+
+**Morning game question.** The morning check-in asks "Did you play yesterday?" / "Did you pitch?" once, if a game or start wasn't logged. The trade-off is one extra tap in the morning versus plans built without knowing about yesterday's game. Recommendation: keep it on as it is now (asked once, shared with the plan-page prompt).
+
+## Owner answers 2026-10-07 (20:07)
+- [x] 1. Capacity: no bigger database — keep making builds faster (pre-build after local noon stays) — decided by owner; logged
+- [x] 2. Missed-lift job is ON (wk-mark-missed-lifts, every 15 min since Oct 6) — roadmap corrected
+- [ ] 3. Restore owner bat-speed wording for pitchers
+- [ ] 4. 4 oz balls: no age limit (undo 5c removal); U13 may do max 4 oz PAP throws under safeguards; 6–7 oz stays 16+ until owner answers
+- [x] 5. ONE SYSTEM, ONE PHASE: audit every phase source, single server-side resolver, remove duplicates, prove 0 mismatches — done: one server resolver; tissue-load reader now uses it (fixed 'in' read as offseason); screens show the plan's saved phase; 4,000-case sim 0 mismatches.
+- [ ] 6. lift_mcgill_big3: no outside name in explanation/display
+- [x] 7. Closeout decisions written at top
+
 > **Status (2026-10-07, end of batch B)**
 > - Finished: owner corrections 1–4 (limb data from onboarding only; proportions shift emphasis, never exclude; goals shape every card; goal sets/reps built + live-proven; max-effort throw rest 15–45 s); phone screenshots incl. pitcher Bat speed + season label; live pitcher check (pitching days entered as player → next day lighter); all-app audit (160 pages, 0 errors); Finish-your-profile card (proven: player missing items sees exact list, complete player sees no card, under-13 parent filled 5 measurements and only the other 5 stayed listed). Test data removed.
 > - Batch C (2026-10-07): PAP, goal table v2, Alternative button, windmill program (on, live-proved) and 2g done; builder now reads softball sport correctly.
@@ -11,8 +25,8 @@
 >   2. Step 9 backup step, then redirects.
 >   3. Email key.
 >   4. Real-ball Power Primer throws (apply pap-throw-types.sql).
->   5. Plan-building capacity (~860/hour).
->   6. Missed-lift job switch-on; game-linked flush and morning-question decisions.
+>   5. (resolved 2026-10-07: owner chose faster builds, no bigger database)
+>   6. Game-linked flush and morning-question decisions (see top). Missed-lift job is ON since Oct 6.
 >   7. Reword the core exercise explanation naming an outside coach (lift_mcgill_big3).
 
 ## Owner corrections 2026-10-07
@@ -36,7 +50,7 @@
 
 - [x] Current frontend-only: match softball identity styling to baseball and verify contrast (identity card has no sport branch anywhere — IdentityCommandCard/IdentityBanner take no sport prop; .daily-identity CSS is one shared baseball palette for both sports; verified live on the dashboard: hero text contrast 7.7:1–14.9:1 vs 4.5:1 worst-case red-overlaid background, all WCAG pass)
 - [x] Current read-only/frontend-only: verify Tissue & Recovery lifting count against recorded data; correct display if needed (backend counts planned lift-slot days in a rolling 7-day window, emitting "N lifts already this week" only when ALL are checked off; liftingPlanCopy.ts corrected so the all-checked-off string now reads "N lifting sessions checked off in the previous 7 days", the split "N planned, D checked off" line passes through accurate; verified against owner account: 9 lift-slot days in window, 0 checked off, one missed; 6 tests pass)
-- [x] Current read-only: report scheduled completion and overdue lift behavior (delivered in chat + /mnt/documents/identity-recovery-report/report.md: completion only by player check-off or full log; missed-lift job built but OFF until owner runs select public.wk_mark_missed_lifts(); no rollover)
+- [x] Current read-only: report scheduled completion and overdue lift behavior (delivered in chat + /mnt/documents/identity-recovery-report/report.md: completion only by player check-off or full log; missed-lift job ON since 2026-10-06 (wk-mark-missed-lifts every 15 min); no rollover)
 
 - [x] Pitcher + recovery conditioning drills live (13 rows), stand-in line retired
 - [x] Gaps filled: reliever primer, same-night flush, travel reset, windmill set (soft-tissue tools left out — thin evidence; no ice)
@@ -85,7 +99,7 @@
 - [x] Test accounts via admin API (hidden, cleaned after)
 - [x] Cases 1–11, 15, 17 backend + screen
 - [x] Phone screenshots — 2026-10-07 /today, /my-daily-game-plan, /profile at 360+390 as hidden test player: no sideways scroll, 0 errors; "No organism signal yet" note reworded for players
-- [ ] OPEN (owner): plan building capacity ~860/hour on current database; 5,000 in first hour needs a larger database or faster builds
+- [x] OPEN (owner): plan building capacity ~860/hour on current database; 5,000 in first hour needs a larger database or faster builds
 - [x] Real build time: 3 first builds + 20 at once; undo
 - [x] Stripe promo HMPARENTTEST (100% off, 1 use, 7 days)
 

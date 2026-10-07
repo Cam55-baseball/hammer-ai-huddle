@@ -51,13 +51,13 @@ describe("Power Primer — 8-week simulations", () => {
         if (i.dayHas.velocityThrow && i.dayHas.batSpeed && i.dayHas.hardRun && block.target !== "jump") v("all three present but not jump");
         // implements
         if (block.action.oz != null && (block.action.oz > 7 || block.action.oz < 4)) v("implement weight");
-        if (block.action.oz != null && block.action.oz >= 6 && age < 13) v("6-7 oz under 13");
+        if (block.action.oz != null && block.action.oz >= 6 && age < 16) v("6-7 oz under 16 (doctrine until owner answers)");
         if (a.constrainedOnly) v("constrained 6 oz picked as default");
         // real throws
         if (block.action.real_throw) {
           realThrowBlocks++; weekReal++;
           if (!block.requires_throwing_warmup) v("real throws without warm-up lock");
-          if (age < 13) v("under-13 max baseball throws");
+          if (age < 13 && block.action.oz !== 4) v("under-13 real throw other than 4 oz");
           if (sport !== "baseball" || role === "windmill") v("real throws outside baseball");
           if (i.gameTomorrow) v("throws day before game");
           if ((block.max_total_reps ?? 99) > 5) v("more than 5 real throws");

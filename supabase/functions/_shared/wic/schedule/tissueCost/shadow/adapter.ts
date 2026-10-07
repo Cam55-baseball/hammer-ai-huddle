@@ -1,3 +1,4 @@
+import { resolveSeasonPhase } from "../../../../seasonPhase.ts";
 import { growthMode } from "../../../growth/growthMode.ts";
 import { resolveOutingFacts, type PitcherSettingsRow, type PitcherOutingRow, type PitcherAvailabilityRow } from "../../../pitching/outingFacts.ts";
 // Tissue Cost Scheduler — stage S3 shadow mode, input adapter.
@@ -208,20 +209,17 @@ function practiceIntensityOf(v: string | null | undefined): PracticeIntensity {
   return "moderate";
 }
 
+/**
+ * ONE SYSTEM, ONE PHASE (owner 2026-10-07): delegates to the single server
+ * resolver so tissue-load reads exactly the phase the plan builder uses.
+ * athlete_context.season_phase only fills in when no season status is saved.
+ */
 export function phaseFrom(mpi: RawMpi | null, context: RawContext | null, today: string): Phase {
-  const within = (a?: string | null, b?: string | null) => {
-    const s = isoDay(a);
-    const e = isoDay(b);
-    return !!s && !!e && today >= s && today <= e;
-  };
-  if (within(mpi?.in_season_start_date, mpi?.in_season_end_date)) return "in_season";
-  if (within(mpi?.preseason_start_date, mpi?.preseason_end_date)) return "pre_season";
-  if (within(mpi?.post_season_start_date, mpi?.post_season_end_date)) return "post_season";
-  const s = (mpi?.season_status ?? context?.season_phase ?? "").toLowerCase();
-  if (s.includes("in_season") || s === "in season") return "in_season";
-  if (s.includes("pre")) return "pre_season";
-  if (s.includes("post")) return "post_season";
-  return "offseason";
+  const settings = mpi
+    ? { ...(mpi as any), season_status: (mpi as any).season_status ?? context?.season_phase ?? null }
+    : (context?.season_phase ? { season_status: context.season_phase } as any : null);
+  const p = resolveSeasonPhase(settings, isoDay(today) ?? today).phase;
+  return p === "in_season" ? "in_season" : p === "post_season" ? "post_season" : p === "preseason" ? "pre_season" : "offseason";
 }
 
 export function trainingAgeBandFrom(context: RawContext | null): TrainingAgeBand {

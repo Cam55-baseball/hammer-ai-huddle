@@ -50,6 +50,11 @@ export function useCanonicalPhaseDisplay(
     });
     // If the server already resolved to the same canonical phase, keep the
     // richer server-stamped label (may include daysIntoPhase copy etc.).
+    // ONE SYSTEM, ONE PHASE: once the server has built the plan, its phase
+    // wins; the app only resolves on its own before a plan exists.
+    if (serverPhase && serverPhase !== resolution.phase) {
+      return { phase: serverPhase as typeof resolution.phase, display: serverDisplay || resolution.displayName };
+    }
     if (serverDisplay && serverPhase && serverPhase === resolution.phase) {
       return { phase: resolution.phase, display: serverDisplay };
     }

@@ -57,9 +57,9 @@ export const PAP_LIBRARY: readonly LibraryItem[] = [
   // ---- actions: throwing ----
   A({ slug: "pap_a_mb_overhead", name: "2-hand overhead med-ball throw", targets: ["throw"], heavy: false, minAge: 9, growthOk: true, painBlocks: ["arm"], equipment: ["med_ball"], lb: 3, countWeight: 0, cue: "Step and throw it as far as you can. 100% intent." }),
   A({ slug: "pap_a_mb_underhand_windmill", name: "Underhand med-ball whip toss (windmill side)", targets: ["throw"], heavy: false, minAge: 9, growthOk: true, painBlocks: ["arm"], equipment: ["med_ball"], lb: 2, countWeight: 0, cue: "Drive off the back leg and whip it forward underhand. 100% intent." }),
-  A({ slug: "pap_a_throw_4oz", name: "Max-effort throw, 4 oz ball", targets: ["throw"], heavy: false, minAge: 13, growthOk: false, painBlocks: ["arm"], equipment: ["plyo_balls", "baseball"], oz: 4, countWeight: 1.5, realThrow: true, cue: "Full throw, 100% intent, into a net or partner." }),
+  A({ slug: "pap_a_throw_4oz", name: "Max-effort throw, 4 oz ball", targets: ["throw"], heavy: false, minAge: 0, growthOk: false, painBlocks: ["arm"], equipment: ["plyo_balls", "baseball"], oz: 4, countWeight: 1.5, realThrow: true, cue: "Full throw, 100% intent, into a net or partner." }),
   A({ slug: "pap_a_throw_baseball", name: "Max-effort throw, baseball (5 oz)", targets: ["throw"], heavy: false, minAge: 13, growthOk: false, painBlocks: ["arm"], equipment: ["baseball"], oz: 5, countWeight: 1.5, realThrow: true, cue: "Full throw, 100% intent." }),
-  A({ slug: "pap_a_throw_6oz_constrained", name: "Max-effort throw, 6 oz ball from a kneeling or rocker position", targets: ["throw"], heavy: false, minAge: 13, growthOk: false, painBlocks: ["arm"], equipment: ["plyo_balls"], oz: 6, countWeight: 1.5, realThrow: true, constrainedOnly: true, cue: "Constrained position only — kneeling or rocker." }),
+  A({ slug: "pap_a_throw_6oz_constrained", name: "Max-effort throw, 6 oz ball from a kneeling or rocker position", targets: ["throw"], heavy: false, minAge: 16, growthOk: false, painBlocks: ["arm"], equipment: ["plyo_balls"], oz: 6, countWeight: 1.5, realThrow: true, constrainedOnly: true, cue: "Constrained position only — kneeling or rocker." }),
   // ---- actions: bat speed ----
   A({ slug: "pap_a_swing_light", name: "Max swings, bat 20% lighter", targets: ["bat_speed"], heavy: false, minAge: 11, growthOk: true, painBlocks: [], equipment: ["light_bat", "bat"], countWeight: 0, isSwing: true, cue: "3–5 swings, all-out speed, full finish." }),
   A({ slug: "pap_a_swing_game", name: "Max swings, game bat", targets: ["bat_speed"], heavy: false, minAge: 9, growthOk: true, painBlocks: [], equipment: ["bat"], countWeight: 0, isSwing: true, cue: "3–5 swings, all-out speed, full finish." }),
@@ -203,9 +203,11 @@ function build(target: PapTarget, i: PapInput, heavyOk: boolean, half: boolean, 
   let actions = PAP_LIBRARY.filter((x) => x.use === "action" && x.targets.includes(target) && allowed(x, i, heavyOk));
   if (i.growthMode) actions = actions.filter((x) => x.slug === "pap_a_easy_box_jump" || x.slug === "pap_a_mb_scoop");
   if (target === "throw") {
-    const realOk = i.realThrowsEnabled && i.sport === "baseball" && i.role !== "windmill" && age >= 13
+    const realOk = i.realThrowsEnabled && i.sport === "baseball" && i.role !== "windmill"
       && !i.gameTomorrow && i.realThrowDaysThisWeek < 2;
     if (!realOk) actions = actions.filter((x) => !x.realThrow);
+    // Owner rule 2026-10-07: under 13 may throw the 4 oz ball all-out, never a baseball or heavier.
+    if (age < 13) actions = actions.filter((x) => !x.realThrow || x.oz === 4);
     if (i.role === "windmill") actions = actions.filter((x) => x.slug === "pap_a_mb_underhand_windmill");
     else actions = actions.filter((x) => x.slug !== "pap_a_mb_underhand_windmill");
     // Prefer real throws on the 1–2 allowed days; the constrained 6 oz is never the default.
