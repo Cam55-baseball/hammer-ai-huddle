@@ -2,22 +2,32 @@
  * PlanStreakStrip — Round 8 Step 1 (screen only; reads, never changes the plan).
  * Streak = planned days in a row with at least one card marked Done.
  * Days with no plan (rest/recovery-only) never break the streak.
- * Milestones celebrate total training days once per device.
+ * Flame: lights at 5 days, glows at 25, changes color every 100.
+ * Milestones: completed workouts (cards marked Done) at 10/50/100/200/350/500/700/1000,
+ * each once per device with confetti + phone vibration.
  */
 import { useEffect, useMemo } from "react";
+import { createRoot } from "react-dom/client";
 import { useQuery } from "@tanstack/react-query";
 import { Flame, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { ConfettiEffect } from "@/components/bounce-back-bay/ConfettiEffect";
 
-const MILESTONES = [1, 7, 14, 30, 50, 100, 200, 365];
-const SEEN_KEY = "hm_milestones_seen";
+export const MILESTONES = [10, 50, 100, 200, 350, 500, 700, 1000];
+const SEEN_KEY = "hm_workout_milestones_seen";
+export const FLAME_LIT_AT = 5;
+export const FLAME_GLOW_AT = 25;
+// Color changes every 100 days; semantic tokens only.
+const FLAME_COLORS = ["text-primary", "text-accent-foreground", "text-destructive", "text-secondary-foreground"];
 
 export function computeStreak(rows: ReadonlyArray<{ plan_date: string; status: string }>, today: string) {
   const byDay = new Map<string, boolean>();
+  let workouts = 0;
   for (const r of rows) {
     const done = r.status === "completed";
+    if (done && r.plan_date <= today) workouts++;
     byDay.set(r.plan_date, (byDay.get(r.plan_date) ?? false) || done);
   }
   const days = [...byDay.keys()].sort().reverse();
@@ -28,8 +38,26 @@ export function computeStreak(rows: ReadonlyArray<{ plan_date: string; status: s
     else if (d === today) continue; // today isn't over yet
     else break;
   }
-  const total = [...byDay.values()].filter(Boolean).length;
-  return { streak, total };
+  return { streak, workouts };
+}
+
+export function flameState(streak: number) {
+  return {
+    lit: streak >= FLAME_LIT_AT,
+    glow: streak >= FLAME_GLOW_AT,
+    colorClass: FLAME_COLORS[Math.floor(streak / 100) % FLAME_COLORS.length],
+  };
+}
+
+function celebrate() {
+  try {
+    const el = document.createElement("div");
+    document.body.appendChild(el);
+    const root = createRoot(el);
+    root.render(<ConfettiEffect />);
+    setTimeout(() => { root.unmount(); el.remove(); }, 5000);
+  } catch { /* no DOM */ }
+  try { navigator.vibrate?.([100, 50, 100]); } catch { /* unsupported */ }
 }
 
 export function PlanStreakStrip() {
@@ -40,41 +68,50 @@ export function PlanStreakStrip() {
     enabled: !!user?.id,
     staleTime: 5 * 60_000,
     queryFn: async () => {
-      const since = new Date(Date.now() - 400 * 86400000).toISOString().slice(0, 10);
       const { data, error } = await supabase
         .from("wk_prescriptions")
         .select("plan_date,status")
         .eq("user_id", user!.id)
-        .gte("plan_date", since)
-        .limit(5000);
+        .limit(20000);
       if (error) throw error;
       return (data ?? []) as Array<{ plan_date: string; status: string }>;
     },
   });
-  const { streak, total } = useMemo(() => computeStreak(data ?? [], today), [data, today]);
-  const next = MILESTONES.find((m) => m > total) ?? null;
+  const { streak, workouts } = useMemo(() => computeStreak(data ?? [], today), [data, today]);
+  const next = MILESTONES.find((m) => m > workouts) ?? null;
+  const flame = flameState(streak);
 
   useEffect(() => {
-    if (!total) return;
-    const hit = [...MILESTONES].reverse().find((m) => m <= total);
+    if (!workouts) return;
+    const hit = [...MILESTONES].reverse().find((m) => m <= workouts);
     if (!hit) return;
     try {
       const seen: number[] = JSON.parse(localStorage.getItem(SEEN_KEY) ?? "[]");
       if (seen.includes(hit)) return;
-      localStorage.setItem(SEEN_KEY, JSON.stringify([...seen, hit]));
-      toast.success(hit === 1 ? "First training day done!" : `Milestone: ${hit} training days done!`);
+      localStorage.setItem(SEEN_KEY, JSON.stringify([...seen, ...MILESTONES.filter((m) => m <= hit && !seen.includes(m))]));
+      celebrate();
+      toast.success(`Milestone: ${hit.toLocaleString()} workouts done!`);
     } catch { /* storage unavailable */ }
-  }, [total]);
+  }, [workouts]);
 
-  if (!data || total === 0) return null;
+  if (!data || workouts === 0) return null;
   return (
     <div data-streak-strip className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-border px-3 py-2 text-[12px]">
-      <span className="flex items-center gap-1 font-medium text-foreground">
-        <Flame className="h-4 w-4 text-primary" aria-hidden />Streak: {streak} day{streak === 1 ? "" : "s"}
+      <span className="flex items-center gap-1 font-medium text-foreground" data-flame={flame.glow ? "glow" : flame.lit ? "lit" : "off"}>
+        <Flame
+          aria-hidden
+          className={[
+            "h-4 w-4",
+            flame.lit ? flame.colorClass : "text-muted-foreground opacity-50",
+            flame.glow ? "drop-shadow-[0_0_6px_currentColor] motion-safe:animate-pulse" : "",
+          ].join(" ")}
+        />
+        Streak: {streak} day{streak === 1 ? "" : "s"}
+        {!flame.lit ? ` · flame lights at ${FLAME_LIT_AT}` : ""}
       </span>
       <span className="flex items-center gap-1 text-muted-foreground">
-        <Trophy className="h-3.5 w-3.5" aria-hidden />Training days done: {total}
-        {next ? ` · next milestone: ${next}` : ""}
+        <Trophy className="h-3.5 w-3.5" aria-hidden />Workouts done: {workouts.toLocaleString()}
+        {next ? ` · next milestone: ${next.toLocaleString()}` : ""}
       </span>
     </div>
   );
