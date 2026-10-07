@@ -146,3 +146,6 @@
 - Windmill switch-on go-ahead.
 - Signed-in stress tests / phone screenshots as test players: need owner OK to sign the preview in as test players.
 - Answered 2026-10-07 and built: throw rates (0.25/0.6/0.75/0.85/1.0), trend deload, barefoot gates.
+
+## Owner addition 2026-10-07 — Finish your profile
+- [ ] Finish-your-profile card on plan page (lists missing onboarding fields, one tap to step, why line), reminder every 3 days, never blocks; under-13 → parent; read weight_lb + weight_lbs; never re-ask saved; prove with 3 test accounts; clean up
