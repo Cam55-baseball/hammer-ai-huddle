@@ -6,3 +6,5 @@
 - One plan per day: `wk-generate-daily` refuses to rebuild a built day unless `change_reason` is player_request/tracked_activity; then `wk_adjust_prescriptions_atomic` replaces only unmarked cards whose content changed and logs to `wk_plan_changes` (shown to the player). Why: owner ruling 2026-10-06 — a plan is built once.
 - Lift certifier (`lift/sessionBuilder.ts`): an emptied required category is never fatal — warn, or swap down to a lighter fitting template (never up, never RTP). Why: one emptied category served the fallback day.
 - Plan saves store the plan-wide `why_v2.why_substitution_path` on the first card only (`splitSharedForPersist` in `wk-generate-daily`); readers needing it take it from that card. Why: repeating it on every card made each save ~0.8 MB and 8 saves at once timed out (2026-10-07).
+
+- Per-card "Next … in" times come only from `nextEligibleDates` in `schedule/finalCheck.ts`, returned by `wk-generate-daily` verify_saved as `next_eligible`; the app only formats the countdown. Why: owner ruling — release times must match the planner's own rest rules.
