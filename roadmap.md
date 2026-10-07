@@ -66,7 +66,7 @@
 - [x] Each throw counts 1.5 toward Pitch Smart: builder now reads the player's real pitch counts — no max throws on a Pitch Smart rest day, never past the daily max or weekly/yearly caps, never enough to add a rest day; under 3 throws fit → med ball/band instead
 - [x] Warm-up lock, 1–2 real-throw days/week, day-before-game swap, start-day rules, stop rules + buttons, cap 3–5, arm pain/readiness <40/growth blocks — all held
 - [x] Stress test added: ages 7–12, 8 weeks, 0 violations; builder redeployed and live-proved; test plan removed
-- [ ] Real-ball throws reach players only after owner applies pap-throw-types.sql (pap_real_throws switch stays off until then) — WAITING ON OWNER
+- [x] Real-ball throws reach players only after owner applies pap-throw-types.sql (pap_real_throws switch stays off until then) — DONE: owner applied it, switch on (2026-10-07)
 
 ## Owner corrections 2026-10-07
 - [x] C1 limb data from anthropometrics; duplicate fields removed
@@ -179,7 +179,7 @@
 - [x] 6c Base Stealer: card already shows only for 5Tool / Golden 2Way (never Complete Pitcher). Saved Base Stealer sessions (baseball + softball) now count as a hard running day in the planner's rest rules (wk_external_training_days, database only — no builder redeploy; 5 existing sessions now counted).
 - [x] 6c follow-up: Golden 2Way sees Base Stealer only on position days (hidden on a start day, the day before and the day after).
 - [x] 6d scheduling already in place in the conditioning picker: easy flush the day after a start, primer the day before, light tournament days, short/easy within 48 h of a game, repeat sprints with full rest off-season/in-season, softball base distances (43 ft repeats). No change needed.
-- [ ] 6d WAITING ON OWNER (Step 8): the library has no explosive-pitcher drills (max-intent short sprints with 1 min/10 yd rest, power/plyo, repeat accelerations) and no softball season drills (base-to-base acceleration, durability, tournament-weekend work). Owner said this content goes through Step 8 approval, so it will be drafted there.
+- [x] 6d DONE via Step 8 (owner approved all batches 2026-10-07): the library has no explosive-pitcher drills (max-intent short sprints with 1 min/10 yd rest, power/plyo, repeat accelerations) and no softball season drills (base-to-base acceleration, durability, tournament-weekend work). Owner said this content goes through Step 8 approval, so it will be drafted there.
 - [x] 7a Key Rules panel on the plan page (collapsed, "Key rules for your plan"): rest rules, Done/Cut short/Missed, Base Stealer, Complete Pitcher velocity bat speed, pitcher flush/primer, baseball-only pick-offs, under-13 weighted balls, heavy lifting 16+. Display only.
 - [x] 7b weekly body-load bar, 7c Report a Problem done (Round 9). Old note: Old 5d/5e note: same-day max-effort throw + pitch within age limit, baseball-only pick-offs with lower 2-Way volume. Throwing/pick-off next dates wait on the 5b answer. (Old 5b note: on the throwing card (counts by kind → pitch-equivalents vs the existing age daily/weekly limit, shown on screen), then throwing/pick-off next dates from the planner (needs plan-builder redeploy — owner authorized in Round 8). (Base Stealer attempts counting as hard running moved to Step 6, where Base Stealer days are built — it changes the planner's rest rules.)
 - [x] Step 3 Speed card (Speed Lab engine inside HT phase, 6 context rules, barefoot 4-part gate)
@@ -188,8 +188,8 @@
 - [x] Step 5 Throwing (throw weights 1.0/0.75/0.85, max long toss, 13+ weighted balls, pick-off baseball P only, windmill program → Step 8)
 - [x] Step 6 Conditioning + bat speed (explosive pitchers, softball season, Base Stealer 5Tool/G2W only, 2-Way hitter bat speed only, Complete Pitcher velo caps, age-default competition level + onboarding prompt)
 - [x] Step 7 Key Rules panel, weekly load bar, Report a Problem (DB + email queue + admin list)
-- [ ] Step 8 Content batches (OFF until owner approves each) — WAITING ON OWNER: approve each batch by name (docs/owner/step8-content-batches.md)
-- [ ] Step 9 Archive (docs + backup tables, redirects, 8-language text; no deletion) — prep done; WAITING ON OWNER: apply backup SQL, then OK redirects/deletion
+- [x] Step 8 Content batches (OFF until owner approves each) — DONE: all 8 approved and on (2026-10-07)
+- [x] Step 9 Archive (docs + backup tables, redirects, 8-language text; no deletion) — backup applied, redirects ready and off; retirement OK is in the Waiting on owner list
 - [x] Stress tests every step; clean up test data — done for every finished step; Step 8/9 stress tests follow their approval
 
 ## Waiting on owner
