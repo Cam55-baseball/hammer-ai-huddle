@@ -69,7 +69,7 @@ export function PulseStrip({ rx }: { rx: DailyPrescription }) {
           <div
             key={it.label}
             className={cn(
-              "flex items-center gap-2 rounded-xl border px-3 py-2.5",
+              "flex items-center gap-1.5 rounded-xl border px-2 sm:gap-2 sm:px-3 py-2.5",
               tone(it.state),
             )}
           >
