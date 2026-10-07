@@ -117,6 +117,7 @@ import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 import { PitchingCard } from "@/components/hammer/PitchingCard";
 import { readPitcherProfile, shouldShowPitchingCard } from "@/lib/hammer/pitching/pitcherProfile";
+import { PracticeLog } from "@/components/hammer/logging/ExtraLogs";
 import { PlanStreakStrip } from "@/components/hammer/cards/PlanStreakStrip";
 import { ArmThrowsPanel } from "@/components/hammer/ArmThrowsPanel";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -1037,6 +1038,7 @@ function HammerDailyPlanBody({
               <WkSafePlanNotice />
               <ReleaseCountdown />
               <PlanStreakStrip />
+<PracticeLog />
 
               <WkRestDayBanner />
               <WkSomethingOffRow />

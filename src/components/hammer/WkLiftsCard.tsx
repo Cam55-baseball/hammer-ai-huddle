@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { TestedMaxLog } from "@/components/hammer/logging/ExtraLogs";
 import { RestTimer, liftRestBand } from "@/components/hammer/cards/RestTimer";
 import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { useBlockedLiftMovements, explainWhyBlocked, type BlockedMovement } from "@/hooks/useBlockedLiftMovements";
@@ -220,6 +221,7 @@ export function WkLiftsCard({ pocket = false }: { pocket?: boolean } = {}) {
                 <div key={rx.id} className="space-y-1">
                   <WkPrescriptionCard rx={rx} phaseDisplay={phaseDisplay} phaseKey={phaseKey} allowSwap />
                   {(() => { const b = liftRestBand(rx as any); return <RestTimer label="Rest between sets" seconds={b.min} maxSeconds={b.max} />; })()}
+                  {rx.load_pct ? <TestedMaxLog movementSlug={rx.movement_slug} movementName={rx.movement_name} /> : null}
                 </div>
               ))
             )}
