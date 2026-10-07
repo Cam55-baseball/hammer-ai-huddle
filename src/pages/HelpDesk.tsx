@@ -1,3 +1,5 @@
+import { useProgramsRetired } from "@/hooks/useProgramsRetired";
+import { mentionsRetired, scrubRetiredInline } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -42,6 +44,7 @@ export default function HelpDesk() {
   const { user, session, loading, isAuthStable } = useAuth();
   const { isStaffAccount, roleLoading } = usePurchaseAvailability();
   const navigate = useNavigate();
+  const { retired: programsRetired } = useProgramsRetired();
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -149,10 +152,25 @@ export default function HelpDesk() {
     },
   ], [t, roleLoading, isStaffAccount]);
 
-  const filteredCategories = useMemo(() => {
-    if (!searchQuery.trim()) return faqCategories;
-    const query = searchQuery.toLowerCase();
+  // Program retirement switch ON: drop questions about the five programs and
+  // take their names out of answers (e.g. "hitting analysis + Production Lab").
+  const visibleCategories = useMemo(() => {
+    if (!programsRetired) return faqCategories;
     return faqCategories
+      .map((cat) => ({
+        ...cat,
+        items: cat.items
+          .filter((item) => !mentionsRetired(item.question))
+          .map((item) => ({ ...item, answer: scrubRetiredInline(item.answer) }))
+          .filter((item) => !mentionsRetired(item.answer)),
+      }))
+      .filter((cat) => cat.items.length > 0);
+  }, [faqCategories, programsRetired]);
+
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery.trim()) return visibleCategories;
+    const query = searchQuery.toLowerCase();
+    return visibleCategories
       .map((cat) => ({
         ...cat,
         items: cat.items.filter(
@@ -162,7 +180,7 @@ export default function HelpDesk() {
         ),
       }))
       .filter((cat) => cat.items.length > 0);
-  }, [faqCategories, searchQuery]);
+  }, [visibleCategories, searchQuery]);
 
   if (loading) return <HMLoadingFallback />;
   if (!user) return null;

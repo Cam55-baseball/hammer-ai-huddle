@@ -80,3 +80,14 @@ export function scrubRetiredLines(text: string): string {
     .filter((line) => !mentionsRetired(line))
     .join("\n");
 }
+
+/** Take program names out of running text joined by "+" or ",": "analysis + Production Lab" -> "analysis". */
+export function scrubRetiredInline(text: string): string {
+  if (!mentionsRetired(text)) return text;
+  let out = text;
+  for (const n of NAMES) {
+    out = out.replace(new RegExp(`\\s*(\\+|,)\\s*${n}(?![A-Za-z])`, "gi"), "");
+    out = out.replace(new RegExp(`${n}\\s*(\\+|,)\\s*`, "gi"), "");
+  }
+  return out;
+}
