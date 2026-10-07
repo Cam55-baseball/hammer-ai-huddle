@@ -1,9 +1,9 @@
 # Roadmap
 
 > **Status (2026-10-07, Round 8)**
-> - Finished: Step 1 (cards), Step 2 (timers/logging/dashboards), Step 3 (speed), Step 4 (lift); Step 5a throw-count rule; 5b throwing log built (phone proof pending).
-> - Next: 5b phone proof as a pitcher, then throwing/pick-off next dates from the planner.
-> - Waiting on owner: (1) should hard-session ratings trigger an earlier lift deload? (2) barefoot pain-free days per stage + readiness test — nobody moves past Foundation until set. (3) Step 8 content batches need approval one by one.
+> - Finished: Steps 1–4; Step 5a throw-count rule.
+> - Next: 5c (long-toss/start-day and 13+ weighted-ball checks).
+> - Waiting on owner: (1) should hard-session ratings trigger an earlier lift deload? (2) barefoot pain-free days per stage + readiness test — nobody moves past Foundation until set. (3) Step 8 content batches need approval one by one. (4) Throw counting: do warm-up throws and catch play count as "off-mound low-intensity" (0.6 instead of today's 0.25)? If yes, should the daily arm budget (95 units at age 16) rise to match, or stay and cut throwing sooner?
 
 - [x] Current request: clarify Rest / Push / Skip with accurate frontend-only labels and explanations; report exact before/after text (phone/desktop checked with local-only test state)
 - [x] Current request: quote the complete Start card for all five requested player examples, read-only
@@ -90,8 +90,8 @@
 - [x] 4d Lift phone proof 360/390 (adult test player, 10 training years, Push Press 70%): 4 logged sessions of 135×3 → "working weight: 100 lb" (verified max 149), plateau note shown, rest 2:00 + why lines on all 7 lifts, no page errors; test player removed. Note: "Your progression" text is written when the plan is built, so logs added later in the day only show there from the next plan.
 - [x] 4e variety proof: real plans (4 players, last 28 days, ~10 lift days each) used 18.5 different lifts on average at ~7.6 lifts a day — HT pools already rotate accessories while main lifts repeat for progression. Nothing added; new exercises wait for Step 8. Step 4 done.
 - [x] 5a throw-counting rule module (_shared/wic/phases/throwCount.ts, not deployed): mound 1.0, off-mound high 0.75, low 0.6, non-4-seam 0.85, pick-off high 0.75/low 0.6/no-throw 0; 6 tests pass
-- [x] 5b throwing log on the pitching card (baseball): counts by kind saved as throw_count logs, arm total = mound pitches + pitch-equivalents vs Pitch Smart daily max, stop line at max; pick-off rows only for pitchers/2-Way. Type-check clean; phone proof pending.
-- [ ] NEXT ITEM: 5b phone proof as a signed-in pitcher at 360/390, then throwing/pick-off next dates from the planner (planner redeploy; prove live builder). Previously: 5b throwing log on the throwing card (counts by kind → pitch-equivalents vs the existing age daily/weekly limit, shown on screen), then throwing/pick-off next dates from the planner (needs plan-builder redeploy — owner authorized in Round 8). (Base Stealer attempts counting as hard running moved to Step 6, where Base Stealer days are built — it changes the planner's rest rules.)
+- [ ] 5b PAUSED (owner): phone test showed the pitching card already has ONE arm ledger (warm-up/catch play counted at 0.25/0.5/1 against a 95-unit day). A separate throw log would be a duplicate, so it was taken off screen; owner rates must go into that one ledger, which changes everyone's arm totals. Test pitcher removed.
+- [ ] NEXT ITEM: 5c max-long-toss never the day before a start; weighted/plyo balls 13+ check. Throwing/pick-off next dates wait on the 5b answer. (Old 5b note: on the throwing card (counts by kind → pitch-equivalents vs the existing age daily/weekly limit, shown on screen), then throwing/pick-off next dates from the planner (needs plan-builder redeploy — owner authorized in Round 8). (Base Stealer attempts counting as hard running moved to Step 6, where Base Stealer days are built — it changes the planner's rest rules.)
 - [x] Step 3 Speed card (Speed Lab engine inside HT phase, 6 context rules, barefoot 4-part gate)
 - [x] Step 4 (include: switch Lift rest to the owner's saved bands — 80%+ 180 s; 65–79% 120–150 s; <65% 90–120 s; holds 60–90 s; skill 45–60 s; +30 s button; HT rest wins)
 - [ ] Step 4 Lift card (scheme unchanged; weights, rest, why-line, plateau swap, deload proof)
@@ -103,5 +103,6 @@
 - [ ] Stress tests every step; clean up test data
 
 ## Waiting on owner
+- Throw counting vs the existing arm ledger: warm-up/catch play now count 0.25 (moderate 0.5, high/pitch 1.0) against age budgets built on those numbers. Owner rates (0.6/0.75/0.85) would raise totals about 2.4x for easy throws. Do warm-ups/catch play use 0.6, and do budgets rise to match?
 - Adaptive (fatigue-triggered) lift deload: an extra lighter week based on how hard sessions felt would change lift volume, and lift schemes may never change. The fixed every-4th-week deload already runs. Owner: should hard-session ratings trigger an earlier deload? (yes/no)
 - Barefoot gate numbers: how many pain-free days per stage (Foundation→Introduction, →Integration, →Advanced), and what the barefoot readiness test is (e.g. which hops/holds, pass mark). Until set, nobody moves past Foundation.
