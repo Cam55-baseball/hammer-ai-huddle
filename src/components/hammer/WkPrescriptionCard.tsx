@@ -20,6 +20,8 @@ import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { useHammerDailyTasks } from "@/hooks/useHammerDailyTasks";
 import { LogButton } from "@/components/hammer/logging/LogButton";
 import { WkOneTapLog } from "@/components/hammer/logging/WkOneTapLog";
+import { useVerifiedMax } from "@/hooks/useVerifiedMax";
+import { workingWeight, UNLOCK_COPY } from "@/lib/lift/verifiedMax";
 import { MethodBadge, MethodPanel } from "@/components/hammer/MethodPanel";
 import { readTrainingMethod } from "@/lib/wic/methods";
 import { deriveExecutionDisplay, type ExecutionSource } from "@/lib/wic/execution/executionDisplay";
@@ -94,6 +96,7 @@ export function WkPrescriptionCard({
   const swapAvailable = allowSwap && swapLadder.hasOptions;
 
   const { user } = useAuth();
+  const vMax = useVerifiedMax(rx.load_pct ? rx.movement_slug : null);
   const qc = useQueryClient();
   const tasks = useHammerDailyTasks(rx.plan_date);
   const taskSeed = {
@@ -135,7 +138,7 @@ export function WkPrescriptionCard({
         movement_slug: rx.movement_slug,
         sets_completed: rx.sets ?? null,
         reps_completed: rx.sets && rx.reps ? Array.from({ length: rx.sets }, () => rx.reps as number) : null,
-        load_used: rx.load_pct ?? null,
+        load_used: null, // never store a % as a weight (Round 8 2c)
         duration_seconds_completed: rx.duration_seconds ?? null,
         distance_feet_completed: rx.distance_feet ?? null,
         total_reps_completed: rx.total_reps ?? null,
@@ -264,7 +267,10 @@ export function WkPrescriptionCard({
     if (exec.densityLabel) dosageParts.push(exec.densityLabel);
     if (exec.rirLabel) dosageParts.push(exec.rirLabel);
     if (rx.tempo) dosageParts.push(`tempo ${rx.tempo}`);
-    if (rx.load_pct) dosageParts.push(`${rx.load_pct}% 1RM`);
+    if (rx.load_pct) {
+      const w = workingWeight(vMax, rx.load_pct);
+      dosageParts.push(w != null ? `${rx.load_pct}% of your max · working weight: ${w} lb` : `${rx.load_pct}% of your max · ${UNLOCK_COPY}`);
+    }
   }
   const dosage = dosageParts.length > 0
     ? dosageParts.join(" • ")

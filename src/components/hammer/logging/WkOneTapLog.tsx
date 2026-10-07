@@ -25,6 +25,8 @@ import {
   targetWeight,
   type LoggedSet,
 } from "../../../../supabase/functions/_shared/wic/schedule/tissueCost/v11/silentSignals";
+import { useVerifiedMax } from "@/hooks/useVerifiedMax";
+import { workingWeight } from "@/lib/lift/verifiedMax";
 import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 
 export type OneTapOutcome = "completed" | "skipped" | "cut_short";
@@ -77,6 +79,10 @@ export function WkOneTapLog({ rx }: { rx: WkRx }) {
     youthOrFoundation,
     lastSession: lastLoad != null ? { load: lastLoad, reps: loggedSets[0]!.reps } : null,
   });
+  // Round 8 2c: pre-fill only from a verified max; never a guess.
+  const vMax = useVerifiedMax(rx.movement_slug);
+  const verifiedW = workingWeight(vMax, rx.load_pct);
+  void target;
   const [outcome, setOutcome] = useState<OneTapOutcome | null>(null);
   const [hard, setHard] = useState<string>("");
   const [load, setLoad] = useState<string>("");
@@ -100,10 +106,10 @@ export function WkOneTapLog({ rx }: { rx: WkRx }) {
         next !== "skipped" && rx.sets && Number(reps)
           ? Array.from({ length: rx.sets }, () => Number(reps))
           : null,
-      load_used: next !== "skipped" && Number(load) ? Number(load) : null,
+      load_used: next !== "skipped" && Number(load || verifiedW) ? Number(load || verifiedW) : null,
       rpe: Number.isFinite(rpeRaw) && rpeRaw >= 1 && rpeRaw <= 10 ? Math.round(rpeRaw) : null,
       notes: null,
-      metrics: { one_tap_outcome: next },
+      metrics: { one_tap_outcome: next, weight_source: "player", prescribed_reps: rx.reps ?? null, cut_short: next === "cut_short" },
     });
     setSaving(false);
     if (error) {
@@ -157,7 +163,7 @@ export function WkOneTapLog({ rx }: { rx: WkRx }) {
             type="number"
             min={0}
             inputMode="numeric"
-            value={load !== "" ? load : target.target != null ? String(target.target) : ""}
+            value={load !== "" ? load : verifiedW != null ? String(verifiedW) : ""}
             onChange={(e) => setLoad(e.target.value)}
             className="h-8 text-xs"
             placeholder="optional"
