@@ -75,7 +75,7 @@ export function PulseStrip({ rx }: { rx: DailyPrescription }) {
           >
             <it.Icon className="h-4 w-4 shrink-0" />
             <div className="min-w-0">
-              <div className="truncate text-[10px] uppercase tracking-wider opacity-75">
+              <div className="text-[9px] uppercase tracking-normal sm:text-[10px] sm:tracking-wider break-words leading-tight opacity-75">
                 {it.label}
               </div>
               <div className="truncate text-base font-semibold leading-tight">
