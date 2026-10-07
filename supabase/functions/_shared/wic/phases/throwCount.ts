@@ -11,7 +11,9 @@ export type ThrowKind =
   | "pickoff_high"         // pick-off throw, high intent       → 0.75
   | "pickoff_low"          // pick-off throw, low intent        → 0.6
   | "pickoff_no_throw"     // footwork/timing only              → 0
-  | "warmup_catch";        // warm-ups and catch play           → 0.25
+  | "warmup_catch"         // warm-ups and catch play           → 0.25
+  | "pap_max_throw"        // Power Primer max-effort throw (baseball/4 oz/plyo) → 1.5
+  | "med_ball_throw";      // med-ball throw                    → 0
 
 export const THROW_WEIGHTS: Readonly<Record<ThrowKind, number>> = {
   mound_pitch: 1.0,
@@ -22,6 +24,8 @@ export const THROW_WEIGHTS: Readonly<Record<ThrowKind, number>> = {
   pickoff_low: 0.6,
   pickoff_no_throw: 0,
   warmup_catch: 0.25,
+  pap_max_throw: 1.5,
+  med_ball_throw: 0,
 };
 
 /** Classify one logged throw. Mound always 1.0; off-mound non-4-seam pitch beats intent. */
