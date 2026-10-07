@@ -2776,7 +2776,15 @@ const handler = async (req: Request): Promise<Response> => {
           isRecoveryDay: isRecoveryDayCtx,
           isReturnToPlay: false,
         },
-        eligible: (m: any) => eligible(m as MovementRow),
+        eligible: (m: any) => {
+          const ok = eligible(m as MovementRow);
+          if (profLog && m?.bat_speed_category) {
+            const k = `${m.bat_speed_category}:${ok ? "ok" : __rej}`;
+            (globalThis as any).__bsRej = (globalThis as any).__bsRej ?? {};
+            (globalThis as any).__bsRej[k] = ((globalThis as any).__bsRej[k] ?? 0) + 1;
+          }
+          return ok;
+        },
         dayOfYearSeed,
         cnsBudget: isGameDay ? 2 : Math.max(2, Math.round(cnsCap * 0.5)),
         progression,
