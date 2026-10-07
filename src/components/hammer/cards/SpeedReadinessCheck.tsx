@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { useSpeedHistory } from "@/hooks/useSpeedHistory";
-import { isPlateau, speedFocus, unlocks, breakDayReasons, cutReps, readinessScore, type BodyFeel, type SpeedCheckIn } from "@/lib/speed/speedEngine";
+import { BAREFOOT_STAGES, barefootState, isPlateau, speedFocus, unlocks, breakDayReasons, cutReps, readinessScore, type BodyFeel, type SpeedCheckIn } from "@/lib/speed/speedEngine";
 
 const SPOTS = ["Foot", "Ankle", "Shin", "Achilles", "Calf", "Hamstring", "Quad", "Hip", "Groin", "Back"];
 const SLEEP = ["Awful", "Poor", "OK", "Good", "Great"];
@@ -85,6 +85,15 @@ export function SpeedReadinessCheck({ planDate, sprintSets, inSeason }: { planDa
   const un = unlocks(hist.sessions.length);
   const plateau = isPlateau(hist.sessions);
   const breakDay = reasons.length > 0 && !saved.override;
+  const todayPain = saved.painAreas.length ? [{ kind: "pain" as const, date: planDate, areas: saved.painAreas }] : [];
+  const bf = barefootState([...hist.barefootEvents, ...todayPain], score);
+  const saveRpe = async (n: number) => {
+    setSaved({ ...saved, rpe: n } as any);
+    if (user?.id) await supabase.from("wk_session_logs" as any).insert({
+      user_id: user.id, plan_date: planDate, movement_slug: "speed_rpe", metrics: { kind: "speed_rpe", rpe: n },
+    } as any);
+  };
+  const rpe = (saved as any).rpe as number | undefined;
   return (
     <div data-speed-readiness={score} className="space-y-1 rounded-md border border-border bg-muted/30 p-2 text-xs">
       <p className="font-medium text-foreground">Speed readiness: {score} out of 100</p>
@@ -107,7 +116,16 @@ export function SpeedReadinessCheck({ planDate, sprintSets, inSeason }: { planDa
         </>
       )}
       <p className="text-muted-foreground">Today's focus: {focus.label}</p>
-      <p className="text-muted-foreground">Timed speed sessions so far: {hist.sessions.length}. {un.overspeed ? "Resisted and downhill sprints are unlocked." : un.resisted ? "Resisted sprints are unlocked; downhill sprints unlock at session 10." : "Resisted sprints unlock at session 7."}</p>
+      <p data-barefoot-stage={bf.stage} className="text-muted-foreground">Barefoot level: {BAREFOOT_STAGES[bf.stage]}{bf.stage === 0 ? " — keep your shoes on for sprints." : "."}{bf.missing.length ? ` To move up: ${bf.missing.join(", ")}.` : ""} Any foot, ankle, shin, Achilles or calf pain drops you back one level.</p>
+      <div data-speed-rpe className="pt-1">
+        <p className="text-muted-foreground">After sprinting: how hard was it? (1 = very easy, 10 = all-out){rpe ? ` — you said ${rpe}` : ""}</p>
+        <div className="mt-1 flex flex-wrap gap-1">
+          {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+            <Button key={n} size="sm" variant={rpe === n ? "default" : "outline"} className="h-7 w-7 p-0 text-[11px]" onClick={() => saveRpe(n)}>{n}</Button>
+          ))}
+        </div>
+      </div>
+      <p className="text-muted-foreground">Speed sessions so far: {hist.sessions.length}. {un.overspeed ? "Resisted and downhill sprints are unlocked." : un.resisted ? "Resisted sprints are unlocked; downhill sprints unlock at session 10." : "Resisted sprints unlock at session 7."}</p>
       {plateau && <p className="text-foreground">No new best in 4 sessions — that's normal. Focus on clean form and full rest; speed will come.</p>}
       {saved.painAreas.length > 0 && <p className="text-muted-foreground">Sore spots: {saved.painAreas.join(", ")}. Stop if anything hurts.</p>}
     </div>

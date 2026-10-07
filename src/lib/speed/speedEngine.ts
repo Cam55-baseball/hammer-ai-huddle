@@ -48,6 +48,7 @@ export function isPlateau(sessions: SpeedSessionLite[] /* oldest first */): bool
   const best: Record<string, number> = {};
   let since = 0;
   for (const s of sessions) {
+    if (!Object.keys(s.times).length) continue; // effort-only day, no times to compare
     let pb = false;
     for (const [d, t] of Object.entries(s.times)) {
       if (!(t > 0)) continue;
@@ -92,6 +93,8 @@ export function speedFocus(ctx: {
 /** Group logged sprint times (wk_session_logs kind=sprint_time) into sessions, oldest first. */
 export function sessionsFromLogs(rows: { plan_date: string; distance_feet_completed: number | null; metrics: any }[]): SpeedSessionLite[] {
   const by = new Map<string, SpeedSessionLite>();
+  const rpe = new Map<string, number>();
+  for (const r of rows) if (r.metrics?.kind === "speed_rpe" && Number(r.metrics?.rpe) >= 1) rpe.set(r.plan_date, Number(r.metrics.rpe));
   for (const r of rows) {
     const t = Number(r.metrics?.sprint_time_s), yd = Math.round(Number(r.distance_feet_completed) / 3);
     if (r.metrics?.kind !== "sprint_time" || !(t > 0) || !(yd > 0)) continue;
@@ -99,6 +102,7 @@ export function sessionsFromLogs(rows: { plan_date: string; distance_feet_comple
     s.times[yd] = s.times[yd] ? Math.min(s.times[yd], t) : t;
     by.set(r.plan_date, s);
   }
+  for (const [d, v] of rpe) by.set(d, { ...(by.get(d) ?? { date: d, times: {} }), rpe: v } as SpeedSessionLite);
   return [...by.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 export function bestsOf(sessions: SpeedSessionLite[]): Record<string, number> {
@@ -110,4 +114,53 @@ export function bestsOf(sessions: SpeedSessionLite[]): Record<string, number> {
 export function worldClassFor(sport: "baseball" | "softball", yd: number): number | null {
   const w = Object.values(WORLD_CLASS[sport]).find((x) => x.yd === yd);
   return w ? w.s : null;
+}
+
+/* ---------- Barefoot gate (Round 8 Step 3c, owner rule) ----------
+ * Four parts must ALL hold to move up a stage: sessions in this stage, healthy (pain-free)
+ * days in this stage, a passed readiness test in this stage, and readiness at/above threshold.
+ * Any barefoot-linked foot/ankle/shin/Achilles/calf pain drops one stage and resets that
+ * stage's session and healthy-day counts (and its test) to zero. Never progresses on sessions alone.
+ * Healthy-day counts and the readiness-test definition await the owner: while null, nobody advances.
+ */
+export const BAREFOOT_STAGES = ["Foundation", "Introduction", "Integration", "Advanced"] as const;
+export const BAREFOOT_PAIN_AREAS = ["Foot", "Ankle", "Shin", "Achilles", "Calf"];
+export interface BarefootGateConfig { sessions: number[]; healthyDays: (number | null)[]; readinessMin: number }
+/** Sessions per stage from Speed Lab (10 / 15 / 20 cumulative). Healthy days: owner to set. */
+export const BAREFOOT_GATE: BarefootGateConfig = { sessions: [10, 5, 5], healthyDays: [null, null, null], readinessMin: 60 };
+export type BarefootEvent =
+  | { kind: "session"; date: string }
+  | { kind: "healthy_day"; date: string }
+  | { kind: "test_pass"; date: string }
+  | { kind: "pain"; date: string; areas: string[] };
+export interface BarefootState { stage: number; sessions: number; healthyDays: number; testPassed: boolean; missing: string[] }
+
+export function barefootState(events: BarefootEvent[] /* oldest first */, readiness: number | null, cfg: BarefootGateConfig = BAREFOOT_GATE): BarefootState {
+  let stage = 0, sessions = 0, healthy = 0, test = false;
+  const reset = () => { sessions = 0; healthy = 0; test = false; };
+  const canAdvance = () => {
+    if (stage >= BAREFOOT_STAGES.length - 1) return false;
+    const hd = cfg.healthyDays[stage];
+    return sessions >= cfg.sessions[stage] && hd != null && healthy >= hd && test && readiness != null && readiness >= cfg.readinessMin;
+  };
+  for (const e of events) {
+    if (e.kind === "pain") {
+      if (e.areas.some((a) => BAREFOOT_PAIN_AREAS.includes(a))) { stage = Math.max(0, stage - 1); reset(); }
+      continue;
+    }
+    if (e.kind === "session") sessions++;
+    else if (e.kind === "healthy_day") healthy++;
+    else test = true;
+    if (canAdvance()) { stage++; reset(); }
+  }
+  const missing: string[] = [];
+  if (stage < BAREFOOT_STAGES.length - 1) {
+    const hd = cfg.healthyDays[stage];
+    if (sessions < cfg.sessions[stage]) missing.push(`${cfg.sessions[stage] - sessions} more sessions at this level`);
+    if (hd == null) missing.push("pain-free day count not set yet");
+    else if (healthy < hd) missing.push(`${hd - healthy} more pain-free days`);
+    if (!test) missing.push("pass the readiness test");
+    if (readiness == null || readiness < cfg.readinessMin) missing.push(`readiness of ${cfg.readinessMin} or more`);
+  }
+  return { stage, sessions, healthyDays: healthy, testPassed: test, missing };
 }
