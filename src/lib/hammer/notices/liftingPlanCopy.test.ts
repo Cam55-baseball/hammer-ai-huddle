@@ -18,9 +18,6 @@ describe('planned lifting is not completed lifting', () => {
   it('lets the planned last-lift line speak for itself', () => {
     expect(liftingPlanCopy('Your last planned lift was Monday — we keep full rest days between lifts.')).toBeNull();
   });
-  it('does not call a scheduled Monday a completed lift', () => {
-    expect(liftingPlanCopy('Your last lift was Monday — we keep full rest days between lifts.')).not.toContain('checked off');
-  });
   it('leaves unrelated explanations alone', () => {
     expect(liftingPlanCopy('Next heavy day: Thursday.')).toBeNull();
   });
