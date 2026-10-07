@@ -1053,7 +1053,7 @@ function HammerDailyPlanBody({
                     key={`${b.modality}-${b.side ?? "x"}`}
                     id={`block_${b.modality}_${b.side ?? "x"}`}
                     category={BLOCK_CATEGORY[b.modality] ?? b.title}
-                    focus={b.side ? `${b.title} (${b.side === "L" ? "left" : b.side === "R" ? "right" : b.side})` : b.title !== (BLOCK_CATEGORY[b.modality] ?? b.title) ? b.title : null}
+                    focus={blockFocus(b.title, BLOCK_CATEGORY[b.modality] ?? b.title, b.side)}
                     tone="bg-muted-foreground"
                     planDate={pocketDate}
                     prescribed={b.status !== "suppressed" && b.status !== "off-day"}
@@ -1179,7 +1179,7 @@ function HammerDailyPlanBody({
                     key={`${b.modality}-${b.side ?? "x"}`}
                     id={`block_${b.modality}_${b.side ?? "x"}`}
                     category={BLOCK_CATEGORY[b.modality] ?? b.title}
-                    focus={b.side ? `${b.title} (${b.side === "L" ? "left" : b.side === "R" ? "right" : b.side})` : b.title !== (BLOCK_CATEGORY[b.modality] ?? b.title) ? b.title : null}
+                    focus={blockFocus(b.title, BLOCK_CATEGORY[b.modality] ?? b.title, b.side)}
                     tone="bg-muted-foreground"
                     planDate={pocketDate}
                     prescribed={b.status !== "suppressed" && b.status !== "off-day"}
@@ -1214,7 +1214,7 @@ function HammerDailyPlanBody({
                     key={`${b.modality}-${b.side ?? "x"}`}
                     id={`block_${b.modality}_${b.side ?? "x"}`}
                     category={BLOCK_CATEGORY[b.modality] ?? b.title}
-                    focus={b.side ? `${b.title} (${b.side === "L" ? "left" : b.side === "R" ? "right" : b.side})` : b.title !== (BLOCK_CATEGORY[b.modality] ?? b.title) ? b.title : null}
+                    focus={blockFocus(b.title, BLOCK_CATEGORY[b.modality] ?? b.title, b.side)}
                     tone="bg-muted-foreground"
                     planDate={pocketDate}
                     prescribed={b.status !== "suppressed" && b.status !== "off-day"}
@@ -1278,6 +1278,13 @@ function pocketFocus(items: ReadonlyArray<{ sequence_role?: string | null; inten
     return raw.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   }
   return null;
+}
+function blockFocus(title: string, category: string, side?: string | null): string | null {
+  let t = title.trim();
+  const low = category.toLowerCase();
+  while (t.toLowerCase().startsWith(low)) t = t.slice(category.length).replace(/^\s*[—·:-]\s*/, "").trim();
+  const sideLabel = side === "L" ? " (left)" : side === "R" ? " (right)" : "";
+  return t ? `${t}${sideLabel}` : sideLabel ? sideLabel.trim() : null;
 }
 function progressOf(items: ReadonlyArray<{ status?: string | null }>): { done: number; total: number } | null {
   if (!items.length) return null;

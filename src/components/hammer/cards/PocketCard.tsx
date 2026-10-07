@@ -8,6 +8,7 @@
  * on this device for the plan date, so a reload or app close reopens it.
  */
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { ChevronRight, ExternalLink, Lock, LogOut, PartyPopper, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -146,14 +147,14 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
         </div>
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           role="dialog"
           aria-modal="true"
           aria-label={heading}
           data-pocket-page={id}
           data-locked={locked ? "1" : "0"}
-          className={`fixed inset-0 z-50 flex flex-col animate-in fade-in zoom-in-95 duration-200 motion-reduce:animate-none ${locked ? "bg-background" : "bg-background/98"}`}
+          className={`fixed inset-0 z-50 flex flex-col animate-in fade-in zoom-in-95 duration-200 motion-reduce:animate-none bg-background`}
         >
           <header className="flex items-center gap-2 border-b border-border px-3 py-2">
             <span className={`h-6 w-1.5 rounded-full ${tone}`} aria-hidden />
@@ -215,7 +216,8 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
