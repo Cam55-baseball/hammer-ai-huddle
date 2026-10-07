@@ -28,3 +28,10 @@ Deno.test("complete pitcher start-day spacing", () => {
     assertEquals(batSpeedProgramGate({ ...base, modules: m, [k]: true } as any).allow, false);
   }
 });
+Deno.test("planner phase names", () => {
+  const m = ["baseball_pitching"];
+  assertEquals(batSpeedProgramGate({ ...base, modules: m, season: "regular_season" }).lightOnly, true);
+  assertEquals(batSpeedProgramGate({ ...base, modules: m, season: "tournament" }).lightOnly, true);
+  assertEquals(batSpeedProgramGate({ ...base, modules: m, season: "offseason_q2", batSpeedDaysThisWeek: 1 }).allow, true);
+  assertEquals(batSpeedProgramGate({ ...base, modules: m, season: "preseason" }).lightOnly, false);
+});
