@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/accordion";
 import { Search, Home, LayoutGrid, User, Trophy, BookOpen, Target, Apple, Brain, HeartPulse, HelpCircle } from "lucide-react";
 import { useEffect } from "react";
+import { ReportProblemButton } from "@/components/support/ReportProblemButton";
 
 interface FaqItem {
   question: string;
@@ -272,6 +273,7 @@ export default function HelpDesk() {
         </div>
 
         {/* Idea Drop Box */}
+        <div className="flex justify-center"><ReportProblemButton /></div>
         <IdeaDropBox />
 
         {/* Embedded Chat */}

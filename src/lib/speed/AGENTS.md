@@ -1,0 +1,1 @@
+- Barefoot stage is rebuilt from logged events (`speedEngine.barefootState`); move-ups are recorded as `barefoot_stage_up` with that day's readiness. Why: readiness is only known on the day.

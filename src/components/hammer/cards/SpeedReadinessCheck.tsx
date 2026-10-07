@@ -3,12 +3,13 @@
  * Screen-side only: shows how many of each prescribed sprint set to do and when to take
  * a break day. It never rewrites the saved plan.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { BarefootReadinessTest } from "./BarefootReadinessTest";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { useSpeedHistory } from "@/hooks/useSpeedHistory";
-import { BAREFOOT_STAGES, barefootState, isPlateau, speedFocus, unlocks, breakDayReasons, cutReps, readinessScore, type BodyFeel, type SpeedCheckIn } from "@/lib/speed/speedEngine";
+import { BAREFOOT_STAGES, barefootState, isBarefootPain, isPlateau, speedFocus, unlocks, breakDayReasons, cutReps, readinessScore, type BodyFeel, type SpeedCheckIn } from "@/lib/speed/speedEngine";
 
 const SPOTS = ["Foot", "Ankle", "Shin", "Achilles", "Calf", "Hamstring", "Quad", "Hip", "Groin", "Back"];
 const SLEEP = ["Awful", "Poor", "OK", "Good", "Great"];
@@ -30,6 +31,7 @@ export function SpeedReadinessCheck({ planDate, sprintSets, inSeason }: { planDa
   const [sleep, setSleep] = useState<number | null>(null);
   const [feel, setFeel] = useState<BodyFeel | null>(null);
   const [pain, setPain] = useState<string[]>([]);
+  const stageSaved = useRef(false);
 
   const submit = async () => {
     if (!sleep || !feel) return;
@@ -85,8 +87,18 @@ export function SpeedReadinessCheck({ planDate, sprintSets, inSeason }: { planDa
   const un = unlocks(hist.sessions.length);
   const plateau = isPlateau(hist.sessions);
   const breakDay = reasons.length > 0 && !saved.override;
-  const todayPain = saved.painAreas.length ? [{ kind: "pain" as const, date: planDate, areas: saved.painAreas }] : [];
-  const bf = barefootState([...hist.barefootEvents, ...todayPain], score);
+  const todayEv = isBarefootPain(saved.painAreas)
+    ? [{ kind: "pain" as const, date: planDate, areas: saved.painAreas }]
+    : [{ kind: "healthy_day" as const, date: planDate }];
+  const bf = barefootState([...hist.barefootEvents, ...todayEv], score, planDate);
+  // A move-up is recorded once, with today's readiness, so later visits rebuild the same stage.
+  if (bf.advancedToday && user?.id && !stageSaved.current) {
+    stageSaved.current = true;
+    void supabase.from("wk_session_logs" as any).insert({
+      user_id: user.id, plan_date: planDate, movement_slug: "barefoot_stage_up",
+      metrics: { kind: "barefoot_stage_up", to: bf.stage, readiness: score },
+    } as any);
+  }
   const saveRpe = async (n: number) => {
     setSaved({ ...saved, rpe: n } as any);
     if (user?.id) await supabase.from("wk_session_logs" as any).insert({
@@ -117,6 +129,9 @@ export function SpeedReadinessCheck({ planDate, sprintSets, inSeason }: { planDa
       )}
       <p className="text-muted-foreground">Today's focus: {focus.label}</p>
       <p data-barefoot-stage={bf.stage} className="text-muted-foreground">Barefoot level: {BAREFOOT_STAGES[bf.stage]}{bf.stage === 0 ? " — keep your shoes on for sprints." : "."}{bf.missing.length ? ` To move up: ${bf.missing.join(", ")}.` : ""} Any foot, ankle, shin, Achilles or calf pain drops you back one level.</p>
+      {bf.stage < BAREFOOT_STAGES.length - 1 && !bf.testPassed && !bf.testPending && !(bf.retestOn && planDate < bf.retestOn) && (
+        <BarefootReadinessTest planDate={planDate} />
+      )}
       <div data-speed-rpe className="pt-1">
         <p className="text-muted-foreground">After sprinting: how hard was it? (1 = very easy, 10 = all-out){rpe ? ` — you said ${rpe}` : ""}</p>
         <div className="mt-1 flex flex-wrap gap-1">

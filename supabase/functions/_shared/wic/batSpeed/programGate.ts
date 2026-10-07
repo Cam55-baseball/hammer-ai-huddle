@@ -8,7 +8,8 @@
 
 export type BatSpeedProgram = "hitter" | "velocity" | "unchanged";
 
-const HITTING = new Set(["hitting", "baseball_hitting", "softball_hitting", "baseball_5tool", "baseball_golden2way"]);
+// Round 9 bug fix: softball 5Tool and Golden 2Way are hitter programs exactly like baseball.
+const HITTING = new Set(["hitting", "baseball_hitting", "softball_hitting", "baseball_5tool", "baseball_golden2way", "softball_5tool", "softball_golden2way"]);
 const PITCHING = new Set(["pitching", "baseball_pitching", "softball_pitching"]);
 
 export const LIGHT_BAT_CATEGORIES = new Set(["underload", "light_implement"]);

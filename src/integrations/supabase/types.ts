@@ -2003,6 +2003,45 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_limb_measurements: {
+        Row: {
+          created_at: string
+          entered_by: string | null
+          hand_length_in: number | null
+          id: string
+          measured_on: string
+          sitting_height_in: number | null
+          source: string
+          standing_height_in: number | null
+          user_id: string
+          wingspan_in: number | null
+        }
+        Insert: {
+          created_at?: string
+          entered_by?: string | null
+          hand_length_in?: number | null
+          id?: string
+          measured_on?: string
+          sitting_height_in?: number | null
+          source?: string
+          standing_height_in?: number | null
+          user_id: string
+          wingspan_in?: number | null
+        }
+        Update: {
+          created_at?: string
+          entered_by?: string | null
+          hand_length_in?: number | null
+          id?: string
+          measured_on?: string
+          sitting_height_in?: number | null
+          source?: string
+          standing_height_in?: number | null
+          user_id?: string
+          wingspan_in?: number | null
+        }
+        Relationships: []
+      }
       athlete_load_tracking: {
         Row: {
           cns_load_total: number | null
@@ -11480,6 +11519,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      problem_reports: {
+        Row: {
+          app_info: Json
+          created_at: string
+          email_attempts: number
+          email_last_error: string | null
+          email_sent_at: string | null
+          email_status: string
+          id: string
+          message: string
+          page: string | null
+          user_id: string
+        }
+        Insert: {
+          app_info?: Json
+          created_at?: string
+          email_attempts?: number
+          email_last_error?: string | null
+          email_sent_at?: string | null
+          email_status?: string
+          id?: string
+          message: string
+          page?: string | null
+          user_id?: string
+        }
+        Update: {
+          app_info?: Json
+          created_at?: string
+          email_attempts?: number
+          email_last_error?: string | null
+          email_sent_at?: string | null
+          email_status?: string
+          id?: string
+          message?: string
+          page?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       processed_webhook_events: {
         Row: {

@@ -18,7 +18,8 @@
 - Every value shown to an athlete must carry a label saying what kind of thing it is. Why: a bare name leaves athletes guessing what it is.
 - Demo auto-start outcomes and inspector state/events go to console.debug only, never app UI. Why: diagnostics are not user messages.
 - No plan is built for an account without `profiles.hammers_today_started_at` while switch `hammers_today_start_gate` is on — enforced in `wk-generate-daily`, and the client mounts no plan provider before the start. `wk-daily-plan-job` builds only missing plans for started players. Why: one start per account, the same on every device.
-- Sessions end only by an explicit Sign out (`signOut({ scope: 'local' })`) or a server-ended session; `/` and `/auth` forward signed-in players and wait for session load; in the native app the auth key is mirrored to `@capacitor/preferences` via `src/lib/auth/nativeSessionStore.ts`, restored in `main.tsx` before the auth client loads. Why: players were re-typing passwords; iOS may clear WebView localStorage.
+- Sessions end only by explicit Sign out (`signOut({ scope: 'local' })`) or server end; `/` and `/auth` forward signed-in players after session load; native auth key mirrored to `@capacitor/preferences` (`src/lib/auth/nativeSessionStore.ts`), restored in `main.tsx`. Why: iOS may clear WebView storage.
 - Anonymous training store: bucketed, week-rounded, no free text, Vault-HMAC key; under-13 needs parent opt-in. Why: lawyer-approved scope.
-- The plan screen shows the last saved plan, the start flag and plan access from the device at once, and acts (rule checks, changes) only after this visit's server answer arrives; device copies are cleared on Sign out. Why: a plain reload must never flash, rebuild or change the plan.
-
+- The plan screen shows the device's last saved plan, start flag and access at once, but acts only after this visit's server answer; device copies clear on Sign out. Why: a reload must never flash, rebuild or change the plan.
+- Limb sizes are history-only (`athlete_limb_measurements`); no prescription reads them until the owner approves `docs/wic/limb-size-report.md`. Why: owner gate first.
+- Problem reports save to `problem_reports` first; `report-problem-mailer` only sends/retries. Why: a broken email key must never lose a report.

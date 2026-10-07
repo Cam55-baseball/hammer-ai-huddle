@@ -30,9 +30,9 @@ describe("Step 30 E — every thrower logs into ONE arm ledger", () => {
     // Missing entries count as done at the prescribed number.
     expect(before.usedToday).toBeGreaterThan(0);
     const after = view("position", "SS", null, [{ entry_date: D, throw_type: "infield_quick_release", count: 30, status: "done" }]);
-    expect(after.usedToday).toBe(before.usedToday + 15); // 15 more high-intent throws
+    expect(after.usedToday).toBeCloseTo(before.usedToday + 11.25, 0); // 15 more high-intent throws × 0.75 (owner table 2026-10-07)
     const skipped = view("position", "SS", null, [{ entry_date: D, throw_type: "infield_quick_release", count: 0, status: "skipped" }]);
-    expect(skipped.usedToday).toBe(before.usedToday - 15);
+    expect(skipped.usedToday).toBeCloseTo(before.usedToday - 11.25, 0);
     expect(after.line).toMatch(/arm units/);
   });
 
@@ -56,7 +56,7 @@ describe("Step 30 E — every thrower logs into ONE arm ledger", () => {
     expect(enterableTypes("position", "position")).not.toContain("catcher_throwdowns");
     const base = view("catcher", "C", null, []);
     const more = view("catcher", "C", null, [{ entry_date: D, throw_type: "catcher_throwdowns", count: 18, status: "done" }]);
-    expect(more.usedToday).toBe(base.usedToday + 10);
+    expect(more.usedToday).toBeCloseTo(base.usedToday + 7.5, 0); // 10 more throw-downs × 0.75
     expect(base.budget.daily).toBe(armBudget({ sport: "baseball", role: "position", age: 16 }).daily + 15);
   });
 
@@ -80,7 +80,7 @@ describe("Step 30 E — every thrower logs into ONE arm ledger", () => {
   it("weekly budget accumulates logged past days", () => {
     const past: ArmEntry[] = [{ entry_date: "2026-09-23", throw_type: "long_toss", count: 40, status: "done" }];
     const v = view("position", "CF", null, past);
-    expect(v.usedWeek).toBe(v.usedToday + 20);
+    expect(v.usedWeek).toBe(v.usedToday + 24); // 40 long toss × 0.6
   });
 
   it("softball position player and windmill pitcher use the same entry and ledger", () => {

@@ -29,7 +29,8 @@ jobs:
         with: { node-version: '20' }
       - uses: oven-sh/setup-bun@v2
       - name: Install deps
-        run: npm ci
+        # Lovable maintains bun.lock; package-lock.json drifted (2026-10-07) and broke npm ci.
+        run: bun install --frozen-lockfile
       - name: Goldens, chaos, v1.1 engines, invariant slice
         run: npx vitest run src/test/tissueCost src/test/ubPlyo
         env:
@@ -49,7 +50,8 @@ jobs:
         with: { node-version: '20' }
       - uses: oven-sh/setup-bun@v2
       - name: Install deps
-        run: npm ci
+        # Lovable maintains bun.lock; package-lock.json drifted (2026-10-07) and broke npm ci.
+        run: bun install --frozen-lockfile
       - name: 100,000 athlete-seasons
         run: bun scripts/audits/tcs-property-sweep.ts 100000 16 20260920 | tee tcs-full-sweep.json
 

@@ -14,6 +14,9 @@
  *
  * Schedule context line from `useScheduleWindow` retained.
  */
+import { ReportProblemButton } from "@/components/support/ReportProblemButton";
+import { WeeklyBodyLoadBar } from "@/components/hammer/WeeklyBodyLoadBar";
+import { TrendDeloadNotice } from "@/components/hammer/TrendDeloadNotice";
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
 import { ReleaseCountdown, NextReleaseLine } from "@/components/hammer/cards/ReleaseCountdown";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
@@ -123,6 +126,7 @@ import { PracticeLog } from "@/components/hammer/logging/ExtraLogs";
 import { PlanStreakStrip } from "@/components/hammer/cards/PlanStreakStrip";
 import { KeyRulesPanel } from "@/components/hammer/cards/KeyRulesPanel";
 import { ArmThrowsPanel } from "@/components/hammer/ArmThrowsPanel";
+import { ThrowPacingGuide } from "@/components/hammer/cards/ThrowPacingGuide";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ArmCareBudgetProvider } from "@/components/hammer/ArmCareBudgetContext";
 import {
@@ -1044,8 +1048,10 @@ function HammerDailyPlanBody({
             <ArmCareBudgetProvider owner={armCareOwner}>
 
               <WkSafePlanNotice />
+              <TrendDeloadNotice />
               <ReleaseCountdown />
               <PlanStreakStrip />
+              <WeeklyBodyLoadBar />
               <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
               <KeyRulesPanel sport={sportIsBaseball ? "baseball" : "softball"} modules={modules} isPitcher={showPitching} />
 <PracticeLog />
@@ -1053,6 +1059,7 @@ function HammerDailyPlanBody({
 
               <WkRestDayBanner />
               <WkSomethingOffRow />
+              <div className="flex justify-end"><ReportProblemButton className="h-7 text-[12px]" /></div>
               <HammerCheckInCard
                 quizType="morning"
                 completed={vaultQuizzes.hasCompleted("morning")}
@@ -1657,6 +1664,7 @@ function BlockCard({
           {block.modality === "defense" && <DefensePositionSwap />}
 
           {block.modality === "throwing" && <ArmThrowsPanel source="position" planDate={planDate} />}
+          {block.modality === "throwing" && <ThrowPacingGuide />}
 
           {block.drills.length > 0 && (
             <div className="space-y-1.5">

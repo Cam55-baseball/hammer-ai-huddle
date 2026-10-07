@@ -1,4 +1,6 @@
 import { HeightFeetInchesInput, heightToInches } from '@/components/shared/HeightFeetInchesInput';
+import { LimbMeasurementsFields, saveLimbMeasurements, emptyLimbs, type LimbValues } from '@/components/shared/LimbMeasurementsFields';
+import { supabase as limbDb } from '@/integrations/supabase/client';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -69,6 +71,7 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
+  const [limbs, setLimbs] = useState<LimbValues>(emptyLimbs);
   const [bodyFat, setBodyFat] = useState('');
   const [arm, setArm] = useState('');
   const [chest, setChest] = useState('');
@@ -138,6 +141,11 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
     console.log('[VaultProgressPhotosCard] Save result:', result);
     
     if (result.success) {
+      try {
+        const { data: au } = await limbDb.auth.getUser();
+        if (au.user) await saveLimbMeasurements(au.user.id, limbs, heightIn, 'progress_photo');
+      } catch { /* limb sizes are optional — never block the photo */ }
+      setLimbs(emptyLimbs);
       console.log('[VaultProgressPhotosCard] Setting justSaved to true');
       setJustSaved(true); // Immediately show as locked
       setSelectedFiles([]);
@@ -256,6 +264,8 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
                   <HeightFeetInchesInput id="photo-height" value={height} onChange={setHeight} required />
                   <p className="text-xs text-muted-foreground">Every progress photo needs your current height so your plan can adjust as you grow.</p>
                 </div>
+
+                <LimbMeasurementsFields value={limbs} onChange={setLimbs} />
 
                 {/* Measurements */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
