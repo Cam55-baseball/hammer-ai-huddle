@@ -387,8 +387,22 @@ async function loadMovementCatalog(
   // (~0.9 s of database work apiece), which jammed every other read. The
   // first copy in each 5-minute window now leaves a private file copy that
   // the others read instead. Same rows, same 5-minute freshness as before.
-  const windowKey = Math.floor(Date.now() / CATALOG_TTL_MS);
-  const objectPath = `catalog/${sport}-${windowKey}.json`;
+  // Round 7: the file copy is named after the catalog's own version (row
+  // count + newest updated_at) instead of a 5-minute clock window. Every
+  // window change used to send all builds in flight to the database at once
+  // for the ~3 MB read, which timed out. Now the database is read only when
+  // the catalog itself changed, and a build never uses a copy older than the
+  // catalog it would read.
+  let objectPath = `catalog/${sport}-${Math.floor(Date.now() / CATALOG_TTL_MS)}.json`;
+  try {
+    const ver = await admin.from("wk_movement_catalog").select("updated_at", { count: "exact" })
+      .or(`sport_scope.eq.both,sport_scope.eq.${sport}`)
+      .order("updated_at", { ascending: false, nullsFirst: false }).limit(1);
+    if (!ver.error && typeof ver.count === "number") {
+      const newest = Array.isArray(ver.data) && ver.data[0]?.updated_at ? Date.parse(ver.data[0].updated_at) : 0;
+      objectPath = `catalog/${sport}-v${ver.count}-${newest}.json`;
+    }
+  } catch { /* keep the clock-window name */ }
   const storage = (admin as any).storage?.from?.("wk-cache");
   if (storage) {
     try {
