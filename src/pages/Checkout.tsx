@@ -1,3 +1,5 @@
+import { useProgramsRetired } from "@/hooks/useProgramsRetired";
+import { mentionsRetired, scrubRetiredFromList } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -476,7 +478,7 @@ const Checkout = () => {
               {t("subscriptionTiers.includes", { tier: t(`subscriptionTiers.${selectedTier}.name`) })}
             </h3>
             <ul className="space-y-2">
-              {tierConfig.includes.map((feature, i) => (
+              {tierConfig.includes.filter((f) => !programsRetired || !mentionsRetired(f)).map((feature, i) => (
                 <li key={i} className="flex items-center gap-2 text-sm">
                   <Check className="h-4 w-4 text-primary flex-shrink-0" />
                   <span>{feature}</span>

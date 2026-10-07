@@ -1,3 +1,5 @@
+import { useProgramsRetired } from "@/hooks/useProgramsRetired";
+import { mentionsRetired, scrubRetiredFromList } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 // Force module rebuild - Mar 2026
 import { useEffect, useState } from "react";
@@ -445,7 +447,8 @@ export default function Dashboard() {
           { tier: 'pitcher', Icon: CircleDot, title: 'Complete Pitcher', desc: 'Pitching Analysis, Heat Factory, Ask the Coach', topBadge: null as string | null },
           { tier: '5tool', Icon: Zap, title: '5Tool Player', desc: 'Hitting + Throwing Analysis, Iron Bambino, Speed Lab, Tex Vision', topBadge: 'Most Popular' },
           { tier: 'golden2way', Icon: Target, title: 'The Golden 2Way', desc: 'Everything + The Unicorn workout system', topBadge: 'Best Value' },
-        ] as const).map(({ tier, Icon: ModIcon, title, desc, topBadge }) => {
+        ] as const).map(({ tier, Icon: ModIcon, title, desc: rawDesc, topBadge }) => {
+          const desc = programsRetired ? scrubRetiredFromList(rawDesc) : rawDesc;
           const unlocked = isTierUnlocked(tier);
           const price = TIER_CONFIG[tier]?.price;
           return (

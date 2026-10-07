@@ -1,3 +1,5 @@
+import { useProgramsRetired } from "@/hooks/useProgramsRetired";
+import { mentionsRetired, scrubRetiredFromList } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
@@ -162,7 +164,7 @@ const SelectModules = () => {
                   ${tier.price}<span className="text-sm text-muted-foreground">/month</span>
                 </p>
                 <ul className="space-y-1.5">
-                  {tier.includes.map((feature, i) => (
+                  {tier.includes.filter((f) => !programsRetired || !mentionsRetired(f)).map((feature, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm">
                       <Check className="h-3 w-3 text-primary flex-shrink-0" />
                       <span>{feature}</span>
