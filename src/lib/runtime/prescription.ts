@@ -168,10 +168,10 @@ export function buildDailyPrescription(
     return {
       state: "unknown",
       kind: "rest",
-      headline: "No organism signal yet",
+      headline: "No check-ins yet",
       rationale: [
-        "No readiness, fatigue, or recovery events present in the last 30 days.",
-        "Today's prescription stays open until you log a signal — nothing is imputed.",
+        "You haven't logged how you feel in the last 30 days.",
+        "Do a quick check-in so we can set today's session. We never guess for you.",
       ],
       blocks: [],
       confidence: null,
