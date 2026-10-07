@@ -62,3 +62,35 @@ export function ReleaseCountdown({ timeZone }: { readonly timeZone?: string }) {
     </div>
   );
 }
+
+function localToday(nowMs: number, tz: string): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(nowMs));
+}
+
+/** Ms from now until 00:00 local on plan date `date` (DST-safe, server-clock corrected). */
+export function msUntilLocalDate(nowMs: number, date: string, tz: string): number {
+  const days = Math.round((Date.parse(`${date}T00:00:00Z`) - Date.parse(`${localToday(nowMs, tz)}T00:00:00Z`)) / 86_400_000);
+  if (days <= 0) return 0;
+  let t = nowMs;
+  for (let i = 0; i < days; i++) t += msUntilLocalMidnight(t, tz) + (i < days - 1 ? 1 : 0);
+  return t - nowMs + (days > 1 ? -(days - 1) : 0) + 0;
+}
+
+export function formatLeft(ms: number): string {
+  const m = Math.floor(ms / 60_000), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60);
+  if (d > 0) return h > 0 ? `${d}d ${h}h` : `${d}d`;
+  return h > 0 ? `${h}h ${m % 60}m` : `${m % 60}m`;
+}
+
+/** "Next lift in 1d 14h" — the date comes from the server's rule check only. */
+export function NextReleaseLine({ label, date, timeZone }: { readonly label: string; readonly date: string | null | undefined; readonly timeZone?: string }) {
+  const tz = timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    void loadSkew();
+    const id = window.setInterval(() => setNow(Date.now() + skewMs), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+  if (!date) return <span>Not on today's plan.</span>;
+  return <span data-next-release>{`Next ${label} in ${formatLeft(msUntilLocalDate(now, date, tz))}`}</span>;
+}
