@@ -9,9 +9,9 @@
 - [x] Audit started (see docs/phase-audit.md)
 - [x] Fixed: app season reader defaulted to "in season" when nothing was saved (server says off-season) — now off-season, matching the server
 - [x] Fixed: weekly recap had its own phase math — now uses the shared calculator
-- [ ] One resolver returning phase + sub-block + ramp-up + lighter week + growth, feeding every card, Key Rules, counter, goal gate, AI context
-- [ ] Mismatch scan per player per day (162-game, year-round, school, softball, game-day transitions, time zones) = 0
-- [ ] Phone-size check with test accounts
+- [x] One resolver (_shared/phaseState.ts) returns season, sub-block, ramp-up, lighter week, growth; builder stamps it on every card; new phase-state function answers the app; app season/phase readers show only the server answer (no device math)
+- [x] Mismatch scan: 26,352 player-days, 368,956 checks, 0 mismatches (found + fixed: app copy ignored the player's own day)
+- [x] Phone-size check 360/390 signed in as test player: 0 errors, no conflicting labels; live builder proved (17 cards all os_q1/off-season), test plan removed
 
 ## Owner answers 2026-10-07 (20:07)
 - [x] 1. Capacity: no bigger database — keep making builds faster (pre-build after local noon stays) — decided by owner; logged
@@ -34,6 +34,7 @@
 >   6. Game-linked flush and morning-question decisions (see top).
 >   7. How limb sizes get used (proposal).
 > - Under-13 4 oz Power Primer update (20:21) done and live-proved on the server.
+> - Phase unification (D1) done and live on the server; app side waits on Publish.
 > - Ready to publish: YES — server changes are already live and proved; the app-side changes (bat-speed wording, plan-phase display, Power Primer bests, narrow-phone top bar, check-in wording) build cleanly and their tests pass. They reach players only when the owner presses Publish.
 > - Goal → sets/reps (off-season only, APPROVED 2026-10-07; used only when HT's dose misses the goal range, smallest step in; never in-season/deload/trend-lighter):
 >   strength 4×5–6 / 5×3–5 / 4×2–3 · size 4×8–10 / 4×6–8 / 3×5–6 · power/speed 5×3–5 / 5×2–4 / 6×1–3 · hitting/throwing 4×4–6 / 5×3–5 / 5×2–3 · durability 3×10–12 / 3×8–10 / 3×6–8 · no goal = no change (early / mid / late off-season).
