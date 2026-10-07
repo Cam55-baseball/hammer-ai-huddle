@@ -1,3 +1,4 @@
+import { PITCH_SMART_BANDS, bandIndex, restDaysFor, pitchSmartApplies } from "../phases/youthThrowing.ts";
 // Power Primer (PAP) block — owner approved 2026-10-07.
 // Pure. Builds ONE primer block for a lift card: primer set → rest → max-intent
 // action, repeated until the stop rule or the cap; then the lift ALWAYS continues.
@@ -93,6 +94,40 @@ export interface PapInput {
   /** null = unknown equipment → bodyweight/band/med-ball/bat assumed. */
   equipment: readonly string[] | null;
   firstLift: { slug: string; name: string; pattern: LiftPattern; heavy: boolean } | null;
+  /**
+   * Pitch Smart budget for today (owner 2026-10-07: each max PAP throw counts 1.5
+   * toward the daily limit, rest days and yearly caps). Omitted = no limits known.
+   */
+  pitchBudget?: PapPitchBudget;
+}
+
+export interface PapPitchBudget {
+  /** Pitches already counted today (incl. 0.25 warm-up throws). */
+  pitchesToday: number;
+  /** A required Pitch Smart rest day falls on today. */
+  restDay: boolean;
+  /** Fewest pitches left under the weekly/season/yearly caps; null = no cap. */
+  capRemaining: number | null;
+}
+
+/**
+ * How many max PAP throws (1.5 each) fit today without passing the daily max,
+ * the caps, or adding a rest day the athlete would not otherwise owe.
+ */
+export function papThrowsAllowed(age: number | null, b: PapPitchBudget | undefined, cap: number): number {
+  if (!b) return cap;
+  if (b.restDay) return 0;
+  const band = pitchSmartApplies(age, null) ? PITCH_SMART_BANDS[bandIndex(age ?? 0)] : null;
+  let n = cap;
+  while (n > 0) {
+    const total = b.pitchesToday + n * 1.5;
+    const capOk = b.capRemaining == null || n * 1.5 <= b.capRemaining;
+    const dailyOk = !band || total <= band.dailyMax;
+    const restOk = !band || restDaysFor(band, Math.ceil(total)) === restDaysFor(band, Math.ceil(b.pitchesToday));
+    if (capOk && dailyOk && restOk) break;
+    n--;
+  }
+  return n;
 }
 
 export interface PapBlock {
@@ -206,6 +241,8 @@ function build(target: PapTarget, i: PapInput, heavyOk: boolean, half: boolean, 
     const realOk = i.realThrowsEnabled && i.sport === "baseball" && i.role !== "windmill"
       && !i.gameTomorrow && i.realThrowDaysThisWeek < 2;
     if (!realOk) actions = actions.filter((x) => !x.realThrow);
+    // Pitch Smart: fewer than 3 throws fit → med ball / band instead (cap is 3–5).
+    else if (papThrowsAllowed(i.age, i.pitchBudget, 5) < 3) { actions = actions.filter((x) => !x.realThrow); reasons.push("pitch_smart_budget"); }
     // Owner rule 2026-10-07: under 13 may throw the 4 oz ball all-out, never a baseball or heavier.
     if (age < 13) actions = actions.filter((x) => !x.realThrow || x.oz === 4);
     if (i.role === "windmill") actions = actions.filter((x) => x.slug === "pap_a_mb_underhand_windmill");
@@ -245,7 +282,7 @@ function build(target: PapTarget, i: PapInput, heavyOk: boolean, half: boolean, 
   else if (target === "throw") { maxSets = 4; reps = [3, 5]; }
   else { maxSets = 4; reps = [2, 3]; }
   if (half) maxSets = Math.max(1, Math.ceil(maxSets / 2));
-  const maxTotal = realThrow ? (half ? 3 : 5) : null;
+  const maxTotal = realThrow ? papThrowsAllowed(i.age, i.pitchBudget, half ? 3 : 5) : null;
 
   return {
     version: PAP_VERSION,
