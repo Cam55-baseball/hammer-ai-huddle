@@ -481,11 +481,14 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
     };
   }
 
+  // Owner rule (Round 8 Step 5): weighted and plyo balls only at 13+. Unknown age = not allowed.
+  const plyoOk = ctx.ageYears != null && ctx.ageYears >= 13;
+
   // ------------ Non-throwing day — band prep + tennis ball / underload only
   if (!ctx.isThrowingDay) {
     const prep = isSoftball ? BAND_PREP_SOFTBALL_WINDMILL : BAND_PREP_BASEBALL;
-    const under = isSoftball ? [...TENNIS_BALL_SOFTBALL, ...UNDERLOAD_SOFTBALL.slice(0, 1)]
-                             : [...TENNIS_BALL_BASEBALL, ...UNDERLOAD_BASEBALL.slice(0, 1)];
+    const under = isSoftball ? [...TENNIS_BALL_SOFTBALL, ...(plyoOk ? UNDERLOAD_SOFTBALL.slice(0, 1) : [])]
+                             : [...TENNIS_BALL_BASEBALL, ...(plyoOk ? UNDERLOAD_BASEBALL.slice(0, 1) : [])];
     return {
       mode: "non_throwing_day",
       title: `EASS Throwing — non-throwing (fast-object + neural)`,
@@ -519,7 +522,7 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
   const scaledPrep = isPositionPlayer
     ? prep.map((d) => ({ ...d, dosage: d.dosage.replace(/2x/g, "1x") }))
     : prep;
-  const underloadCount = isPositionPlayer ? 0 : (offSeason ? 3 : 1);
+  const underloadCount = isPositionPlayer || !plyoOk ? 0 : (offSeason ? 3 : 1);
   const regulationTrimmed = isPositionPlayer ? regulation.slice(0, 2) : regulation;
 
   const drills: EassDrill[] = [
