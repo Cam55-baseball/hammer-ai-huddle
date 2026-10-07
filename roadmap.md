@@ -86,4 +86,4 @@
 - [ ] Stress tests every step; clean up test data
 
 ## Waiting on owner
-(none open)
+- Lift rest bands: no owner-approved rest times exist, so the Lift card shows a count-up rest stopwatch. Owner to give rest seconds by lift type (e.g. strength, power, accessory).
