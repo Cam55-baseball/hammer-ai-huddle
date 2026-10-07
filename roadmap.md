@@ -1,6 +1,6 @@
 # Roadmap
 
-**Ready to publish: YES (after owner reviews the change list)** — 2026-10-07 urgent pass: redirects OFF, game flush OFF (builder redeployed + live-proved), day-mode/organism wording reverted, /home added; 2,447 tests pass, phase scan 0, 165/165 pages at 390 px clean, sign-in form answers in under 2 s on preview and live site. Login failure 22:40–22:44 was a backend database outage, now recovered. Change list: docs/owner/changes-since-2026-10-06.md.
+**Ready to publish: YES (after owner reviews the change list)** — 2026-10-07 urgent pass (re-checked F1): redirects OFF, game flush OFF (builder redeployed + live-proved), day-mode/organism wording reverted, /home added; 2,447 tests pass, phase scan 0, 165/165 pages at 390 px clean, sign-in form answers in under 2 s on preview and live site. Login failure 22:40–22:44 was a backend database outage, now recovered. Change list: docs/owner/changes-since-2026-10-06.md.
 **Waiting on owner:** (1) a test account password, or a sign-in by the owner, for a full successful form sign-in proof; (2) keep/revert on the 11 "Owner to confirm" files; (3) email path; (4) program retirement — not approved, pages work as before.
 
 ## Closeout decisions — ANSWERED by the owner (2026-10-07, E3)
