@@ -67,12 +67,6 @@ export const CONTENT_LIBRARY: ContentItem[] = [
   { slug: "sc_tournament_reset", batch: "content_softball_conditioning", name: "Tournament-weekend reset", cue: "Easy walk, mobility and breathing between games. Stay loose, stay light.", kind: "drill", slots: ["conditioning"], hard: false, minAge: 9, growthOk: true, phases: "all", painBlocks: [], equipment: [] },
 
   // ---- Batch 6: Lift exercise notes (notes only; HT schemes untouched) ----
-  { slug: "ln_squat_note", batch: "content_lift_notes", name: "Squat note", cue: "Brace before you go down, knees track over the toes, stand up fast.", kind: "note", slots: ["lift"], hard: false, minAge: 0, growthOk: true, phases: "all", painBlocks: [], equipment: [], pattern: /squat/ },
-  { slug: "ln_hinge_note", batch: "content_lift_notes", name: "Hinge note", cue: "Push the hips back, long spine, feel the hamstrings, then snap the hips through.", kind: "note", slots: ["lift"], hard: false, minAge: 0, growthOk: true, phases: "all", painBlocks: [], equipment: [], pattern: /hinge|deadlift|rdl/ },
-  { slug: "ln_press_note", batch: "content_lift_notes", name: "Press note", cue: "Shoulder blades set, elbows a little tucked, press smooth and fast.", kind: "note", slots: ["lift"], hard: false, minAge: 0, growthOk: true, phases: "all", painBlocks: [], equipment: [], pattern: /press|push/ },
-  { slug: "ln_pull_note", batch: "content_lift_notes", name: "Pull note", cue: "Start the pull with the shoulder blade, finish with the elbow, control the way back.", kind: "note", slots: ["lift"], hard: false, minAge: 0, growthOk: true, phases: "all", painBlocks: [], equipment: [], pattern: /pull|row|chin/ },
-  { slug: "ln_lunge_note", batch: "content_lift_notes", name: "Single-leg note", cue: "Own the balance first. Front foot flat, hips square, drive up through the whole foot.", kind: "note", slots: ["lift"], hard: false, minAge: 0, growthOk: true, phases: "all", painBlocks: [], equipment: [], pattern: /lunge|split|step|single/ },
-  { slug: "ln_core_note", batch: "content_lift_notes", name: "Movement Patterning note", cue: "Ribs down, breathe behind the brace, keep the spine still while the limbs move.", kind: "note", slots: ["lift"], hard: false, minAge: 0, growthOk: true, phases: "all", painBlocks: [], equipment: [], pattern: /core|anti|carry|plank|rotat/ },
 
   // ---- Batch 7: Base Stealer (5Tool; Golden 2Way on position days) ----
   { slug: "bs_lead_read", batch: "content_base_stealer", name: "Lead and read", cue: "Take your lead, read the pitcher's first move, go on first motion.", kind: "drill", slots: ["speed"], hard: true, minAge: 9, growthOk: true, phases: NOT_POST, painBlocks: ["leg"], equipment: [], rest: REST_10YD },
@@ -167,7 +161,7 @@ export function applyProgramContent<T extends ContentRow>(rows: readonly T[], c:
   if (live.includes("content_lift_notes")) {
     let n = 0;
     out.forEach((r, idx) => {
-      if (n >= 2 || r.slot !== "lift" || /warmup|arm_care/.test(String(r.sequence_role ?? "")) || r.why_payload?.program_content) return;
+      if (n >= 2 || r.slot !== "lift" || !/compound|main|unilateral/.test(String(r.sequence_role ?? "")) || r.why_payload?.program_content) return;
       const pat = c.liftPatternOf(r).toLowerCase();
       const it = CONTENT_LIBRARY.find((x) => x.batch === "content_lift_notes" && x.pattern!.test(pat) && !itemLegal(x, r, c));
       if (it) { tag(idx, it); n++; }

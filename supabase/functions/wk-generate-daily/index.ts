@@ -3802,6 +3802,7 @@ const handler = async (req: Request): Promise<Response> => {
         isPitcher: isPitcherCtx,
       },
       availableEquipment: availableEquipmentCtx,
+      equipmentUnknown,
       environment: environmentCtx,
       trainingAgeClass: trainingAgeClassCtx,
     });
