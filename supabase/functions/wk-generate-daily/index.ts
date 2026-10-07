@@ -3250,7 +3250,7 @@ const handler = async (req: Request): Promise<Response> => {
           // Off-season goal dose (owner approved 2026-10-07): only when HT's dose misses the goal range.
           if (domain === "lift") {
             const gd = goalDose({
-              seasonPhase: trainingContext.season_phase, key: goalDoseKey(goalEmphasis.ranked[0], (trainingPrefs as any)?.goal ?? null),
+              seasonPhase: phaseRes.phase, key: goalDoseKey(goalEmphasis.ranked[0], (trainingPrefs as any)?.goal ?? null),
               weekInBlock: progression.weekInBlock, isDeloadWeek: progression.isDeloadWeek, trendLighter: !!trendDecision?.apply,
               role: dd.role ?? rx.sequence_role, category: dd.category, sets: rx.sets, reps: rx.reps, method: arcMethod,
             });
