@@ -25,6 +25,7 @@ import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
 import { WkSessionShapeLine } from "@/components/hammer/WkProgressionNote";
 import { RestTimer, sprintRestSeconds } from "@/components/hammer/cards/RestTimer";
+import { SpeedReadinessCheck } from "@/components/hammer/cards/SpeedReadinessCheck";
 import { CardDashboard } from "@/components/hammer/cards/CardDashboard";
 import { SprintStopwatch } from "@/components/hammer/cards/SprintStopwatch";
 
@@ -79,7 +80,12 @@ export function WkSpeedCard({ pocket = false }: { pocket?: boolean } = {}) {
                 {isGameDay ? "No activation programmed (rest)." : "No sprint work today (cadence rest)."}
               </p>
             ) : (
-              items.map((rx) => (
+              <>
+              <SpeedReadinessCheck
+                planDate={items[0].plan_date}
+                sprintSets={items.filter((r) => sprintRestSeconds(r.distance_feet) != null || (r.sets ?? 0) > 1).map((r) => ({ name: r.movement_name ?? r.movement_slug, sets: r.sets ?? 1 }))}
+              />
+              {items.map((rx) => (
                 <div key={rx.id} className="space-y-1">
                   <WkPrescriptionCard rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} />
                   {sprintRestSeconds(rx.distance_feet) != null && (
@@ -89,7 +95,8 @@ export function WkSpeedCard({ pocket = false }: { pocket?: boolean } = {}) {
                     </>
                   )}
                 </div>
-              ))
+              ))}
+              </>
             )}
             {items.length > 0 && (
               <WkSessionShapeLine
