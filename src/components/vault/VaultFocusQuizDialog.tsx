@@ -44,6 +44,7 @@ import { TISSUE_TYPES } from './quiz/body-maps/tissueTypeDefinitions';
 import { NightCheckInSuccess } from './quiz/NightCheckInSuccess';
 import { MorningCheckInSuccess } from './quiz/MorningCheckInSuccess';
 import { MorningDayIntent } from './quiz/MorningDayIntent';
+import { MorningGameQuestions } from './quiz/MorningGameQuestions';
 import { useNightCheckInStats } from '@/hooks/useNightCheckInStats';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 
@@ -2189,7 +2190,7 @@ export function VaultFocusQuizDialog({
             </div>
           )}
 
-          {quizType === 'morning' && <div className="space-y-3"><CheckInLifeChips /><NextGameConfirmation /><MorningDayIntent /></div>}
+          {quizType === 'morning' && <div className="space-y-3"><CheckInLifeChips /><MorningGameQuestions /><NextGameConfirmation /><MorningDayIntent /></div>}
 
           {/* Submit Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-6 mt-4 border-t border-border">

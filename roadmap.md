@@ -18,9 +18,9 @@
 - [x] Current request: clarify Rest / Push / Skip with accurate frontend-only labels and explanations; report exact before/after text (phone/desktop checked with local-only test state)
 - [x] Current request: quote the complete Start card for all five requested player examples, read-only
 
-- [ ] Current frontend-only: match softball identity styling to baseball and verify contrast
-- [ ] Current read-only/frontend-only: verify Tissue & Recovery lifting count against recorded data; correct display if needed
-- [ ] Current read-only: report scheduled completion and overdue lift behavior
+- [x] Current frontend-only: match softball identity styling to baseball and verify contrast (identity card has no sport branch anywhere — IdentityCommandCard/IdentityBanner take no sport prop; .daily-identity CSS is one shared baseball palette for both sports; verified live on the dashboard: hero text contrast 7.7:1–14.9:1 vs 4.5:1 worst-case red-overlaid background, all WCAG pass)
+- [x] Current read-only/frontend-only: verify Tissue & Recovery lifting count against recorded data; correct display if needed (backend counts planned lift-slot days in a rolling 7-day window, emitting "N lifts already this week" only when ALL are checked off; liftingPlanCopy.ts corrected so the all-checked-off string now reads "N lifting sessions checked off in the previous 7 days", the split "N planned, D checked off" line passes through accurate; verified against owner account: 9 lift-slot days in window, 0 checked off, one missed; 6 tests pass)
+- [x] Current read-only: report scheduled completion and overdue lift behavior (delivered in chat + /mnt/documents/identity-recovery-report/report.md: completion only by player check-off or full log; missed-lift job built but OFF until owner runs select public.wk_mark_missed_lifts(); no rollover)
 
 - [x] Pitcher + recovery conditioning drills live (13 rows), stand-in line retired
 - [x] Gaps filled: reliever primer, same-night flush, travel reset, windmill set (soft-tissue tools left out — thin evidence; no ice)
@@ -29,7 +29,7 @@
 - [x] Pitcher schedule: tables, card, plan reads it (conditioning, lift limits, no-grip rule)
 - [x] Rest-day count held (hard sprint swapped for easy flush)
 - [ ] Pitcher schedule → recovery governor, arm care, throwing plan, weekly stress planner
-- [ ] "Did you play yesterday?" / "Did you pitch?" inside the morning check-in itself (currently on Hammers Today)
+- [x] "Did you play yesterday?" / "Did you pitch?" inside the morning check-in itself (MorningGameQuestions renders in the morning check-in: game question for anyone with an unlogged game yesterday, pitching question for pitchers via the same pitcher gate as the schedule card; saves a draft game row / confirms or adds a thrown outing dated yesterday; shares the asked-once key with the Hammers Today game prompt so the athlete is asked once, in either place; decided by pure decideMorningGameAsk with 6 passing tests; verified live as the owner — question rendered from a test calendar event, Yes-click created the draft game row, test rows removed)
 - [ ] Live verification as a player and as a pitcher with schedule data
 - [x] Stage 4 — game/practice load feeds recovery limit (scheduled practices are not confirmed logs)
 - [x] Stage 5 — career goal direction + rank-goals prompt
