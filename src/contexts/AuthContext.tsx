@@ -151,6 +151,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
 
+    // Inside the Lovable preview the session is fetched from the editor, which
+    // may answer late (or hand over a sign-in done in the editor). When this
+    // page started signed out, look again when the player returns to it.
+    const framed = typeof window !== 'undefined' && window.parent !== window;
+    const recheck = () => {
+      if (cancelled || document.visibilityState !== 'visible') return;
+      void supabase.auth.getSession().then(({ data: { session: s } }) => {
+        if (cancelled || !s) return;
+        setSession((prev) => (prev?.access_token === s.access_token ? prev : s));
+        setUser((prev) => (prev?.id === s.user.id ? prev : s.user));
+        setLoading(false);
+      });
+    };
+    const lateTimer = framed ? setTimeout(recheck, 3000) : null;
+    if (framed) window.addEventListener('focus', recheck);
+
     // iOS can suspend the app at any time; save the session when it backgrounds.
     const onHide = () => {
       if (document.visibilityState === 'hidden') void syncNativeSession();
