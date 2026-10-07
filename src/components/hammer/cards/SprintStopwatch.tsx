@@ -1,12 +1,15 @@
 /**
  * SprintStopwatch — Round 8 Step 2b (screen only; never changes the plan).
  * Self or partner timing, optional step count → average stride length.
- * Times are kept on this device per card (keyed by card id) until logging (2d) saves them.
+ * Each rep is kept on the device and saved to the account (wk_session_logs, metrics.kind sprint_time).
  */
 import { useEffect, useRef, useState } from "react";
 import { Play, Square, Users, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { useOptionalAuth } from "@/hooks/useAuth";
+import { saveSprintRun } from "@/components/hammer/logging/ExtraLogs";
 
 export interface SprintRun { seconds: number; by: "self" | "partner"; steps: number | null }
 
@@ -18,7 +21,8 @@ export function strideFeet(distanceFeet: number | null | undefined, steps: numbe
 
 const key = (id: string) => `hm_sprint_runs:${id}`;
 
-export function SprintStopwatch({ cardId, distanceFeet }: { cardId: string; distanceFeet?: number | null }) {
+export function SprintStopwatch({ cardId, distanceFeet, movementSlug, planDate }: { cardId: string; distanceFeet?: number | null; movementSlug?: string; planDate?: string }) {
+  const { user } = useOptionalAuth();
   const [by, setBy] = useState<"self" | "partner">("partner");
   const [t0, setT0] = useState<number | null>(null);
   const [now, setNow] = useState(0);
@@ -44,6 +48,10 @@ export function SprintStopwatch({ cardId, distanceFeet }: { cardId: string; dist
     setT0(null);
     setSteps("");
     try { localStorage.setItem(key(cardId), JSON.stringify(next)); } catch { /* full */ }
+    if (user && movementSlug && planDate) {
+      void saveSprintRun(user.id, movementSlug, planDate, cardId, next[next.length - 1], distanceFeet ?? null)
+        .then((ok) => { if (!ok) toast.error("Sprint time kept on this phone — couldn't save to your account."); });
+    }
   };
 
   const best = runs.length ? Math.min(...runs.map((r) => r.seconds)) : null;

@@ -83,7 +83,7 @@ export function WkSpeedCard({ pocket = false }: { pocket?: boolean } = {}) {
                   <WkPrescriptionCard rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} />
                   {sprintRestSeconds(rx.distance_feet) != null && (
                     <>
-                      <SprintStopwatch cardId={rx.id} distanceFeet={rx.distance_feet} />
+                      <SprintStopwatch cardId={rx.id} distanceFeet={rx.distance_feet} movementSlug={rx.movement_slug} planDate={rx.plan_date} />
                       <RestTimer label="Sprint rest" seconds={sprintRestSeconds(rx.distance_feet)} />
                     </>
                   )}
