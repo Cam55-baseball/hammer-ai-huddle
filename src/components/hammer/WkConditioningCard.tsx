@@ -25,7 +25,7 @@ import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
 
-export function WkConditioningCard() {
+export function WkConditioningCard({ pocket = false }: { pocket?: boolean } = {}) {
   const gp = useGpSignal();
   const { grouped, generate, generating, isLoading, failed, failureReason, retry, snapshotIdentity } = useHammersToday();
   const entry = getCard("conditioning")!;
@@ -33,7 +33,7 @@ export function WkConditioningCard() {
     snapshotIdentity.season_display,
     snapshotIdentity.season_phase,
   );
-  const [open, setOpen] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(pocket);
 
   if (gp.gameToday) return null;
 

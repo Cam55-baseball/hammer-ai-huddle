@@ -33,7 +33,7 @@ interface Props {
   readonly side?: "L" | "R" | null;
 }
 
-export function WkBatSpeedCard({ side = null }: Props = {}) {
+export function WkBatSpeedCard({ side = null, pocket = false }: Props & { pocket?: boolean } = {}) {
   const throws = playerRole(useAthletePositions().positions) !== "position";
   const { grouped, reductions: rawReductions, generate, generating, isLoading, failed, failureReason, retry, snapshotIdentity, dayKind } = useHammersToday();
   // Step 24 item 2 — a swing notice belongs here, on the hitting card.
@@ -48,7 +48,7 @@ export function WkBatSpeedCard({ side = null }: Props = {}) {
 
   const sideLabel = side === "L" ? "Left-handed" : side === "R" ? "Right-handed" : null;
 
-  const [open, setOpen] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(pocket);
 
   return (
     <Card

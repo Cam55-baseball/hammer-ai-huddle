@@ -25,7 +25,7 @@ import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
 import { WkSessionShapeLine } from "@/components/hammer/WkProgressionNote";
 
-export function WkSpeedCard() {
+export function WkSpeedCard({ pocket = false }: { pocket?: boolean } = {}) {
   const { grouped, generate, generating, isLoading, failed, failureReason, retry, snapshotIdentity, dayKind } = useHammersToday();
   const entry = getCard("speed")!;
   const items = grouped.speedCard;
@@ -35,7 +35,7 @@ export function WkSpeedCard() {
     snapshotIdentity.season_phase,
   );
 
-  const [open, setOpen] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(pocket);
 
   return (
     <Card
