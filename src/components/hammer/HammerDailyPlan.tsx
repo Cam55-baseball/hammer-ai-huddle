@@ -14,6 +14,7 @@
  *
  * Schedule context line from `useScheduleWindow` retained.
  */
+import { WeeklyBodyLoadBar } from "@/components/hammer/WeeklyBodyLoadBar";
 import { TrendDeloadNotice } from "@/components/hammer/TrendDeloadNotice";
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
 import { ReleaseCountdown, NextReleaseLine } from "@/components/hammer/cards/ReleaseCountdown";
@@ -1049,6 +1050,7 @@ function HammerDailyPlanBody({
               <TrendDeloadNotice />
               <ReleaseCountdown />
               <PlanStreakStrip />
+              <WeeklyBodyLoadBar />
               <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
               <KeyRulesPanel sport={sportIsBaseball ? "baseball" : "softball"} modules={modules} isPitcher={showPitching} />
 <PracticeLog />
