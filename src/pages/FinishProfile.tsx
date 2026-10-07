@@ -25,7 +25,7 @@ export default function FinishProfile() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { user } = useOptionalAuth();
-  const { anthropometrics, under13, loading } = useProfileGaps();
+  const { anthropometrics, under13, sport, loading } = useProfileGaps();
   const [vals, setVals] = useState<Record<string, string>>({});
   const [years, setYears] = useState("");
   const [busy, setBusy] = useState(false);
@@ -83,7 +83,7 @@ export default function FinishProfile() {
         <section className="space-y-3">
           <h1 className="text-lg font-semibold">Level of play</h1>
           <p className="text-xs text-muted-foreground">{under13 ? "Your player's" : "Your"} level sets how hard and how much the plan trains.</p>
-          <CompetitionLevelPicker sport="baseball" value="" onChange={async (v) => {
+          <CompetitionLevelPicker sport={sport} value="" onChange={async (v) => {
             if (!user) return;
             try {
               await persistContextAnswer(user.id, "competition_level", typeof v === "string" ? v : v.level, "finish_profile", "self_report");

@@ -122,6 +122,7 @@ const ParentRecruitingAuthorization = lazyWithRetry(
   () => import("./pages/ParentRecruitingAuthorization"),
 );
 const AthleteOnboarding = lazyWithRetry(() => import("./pages/AthleteOnboarding"));
+const FinishProfile = lazyWithRetry(() => import("./pages/FinishProfile"));
 const ScoutOnboarding = lazyWithRetry(() => import("./pages/ScoutOnboarding"));
 const CoachOnboarding = lazyWithRetry(() => import("./pages/CoachOnboarding"));
 const HammerRecall = lazyWithRetry(() => import("./pages/HammerRecall"));
@@ -393,6 +394,7 @@ const App = () => {
                 }
               />
               <Route path="/onboarding/athlete" element={<AthleteOnboarding />} />
+              <Route path="/finish-profile" element={<FinishProfile />} />
               <Route path="/onboarding/scout" element={<ScoutOnboarding />} />
               <Route path="/onboarding/coach" element={<CoachOnboarding />} />
               <Route path="/hammer/recall" element={<HammerRecall />} />

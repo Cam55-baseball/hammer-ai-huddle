@@ -8,6 +8,7 @@ export interface ProfileGapState {
   gaps: ProfileGap[];
   anthropometrics: Record<string, unknown>;
   under13: boolean;
+  sport: "baseball" | "softball";
   loading: boolean;
 }
 
@@ -20,7 +21,7 @@ export function useProfileGaps(): ProfileGapState {
     queryFn: async () => {
       const [ctx, eq, prof] = await Promise.all([
         supabase.from("athlete_context")
-          .select("anthropometrics, category_goals, goal_summary, goal_priority_rank, competition_level, lifting_age_years, lifting_history")
+          .select("sport_primary, anthropometrics, category_goals, goal_summary, goal_priority_rank, competition_level, lifting_age_years, lifting_history")
           .eq("user_id", user!.id).maybeSingle(),
         supabase.from("athlete_equipment_context").select("equipment").eq("user_id", user!.id).eq("scope", "persistent").maybeSingle(),
         supabase.from("profiles").select("date_of_birth").eq("id", user!.id).maybeSingle(),
@@ -32,8 +33,9 @@ export function useProfileGaps(): ProfileGapState {
         gaps: profileGaps({ ...c, equipment: (eq.data as { equipment?: string[] } | null)?.equipment ?? [] }),
         anthropometrics: (c.anthropometrics ?? {}) as Record<string, unknown>,
         under13: age != null && age < 13,
+        sport: (c.sport_primary === "softball" ? "softball" : "baseball") as "baseball" | "softball",
       };
     },
   });
-  return { gaps: q.data?.gaps ?? [], anthropometrics: q.data?.anthropometrics ?? {}, under13: q.data?.under13 ?? false, loading: q.isLoading };
+  return { gaps: q.data?.gaps ?? [], anthropometrics: q.data?.anthropometrics ?? {}, under13: q.data?.under13 ?? false, sport: q.data?.sport ?? "baseball", loading: q.isLoading };
 }

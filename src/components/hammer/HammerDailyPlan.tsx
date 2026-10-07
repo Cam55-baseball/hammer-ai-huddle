@@ -16,6 +16,7 @@
  */
 import { ReportProblemButton } from "@/components/support/ReportProblemButton";
 import { WeeklyBodyLoadBar } from "@/components/hammer/WeeklyBodyLoadBar";
+import { FinishProfileCard } from "@/components/hammer/FinishProfileCard";
 import { TrendDeloadNotice } from "@/components/hammer/TrendDeloadNotice";
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
 import { ReleaseCountdown, NextReleaseLine } from "@/components/hammer/cards/ReleaseCountdown";
@@ -1052,6 +1053,7 @@ function HammerDailyPlanBody({
               <ReleaseCountdown />
               <PlanStreakStrip />
               <WeeklyBodyLoadBar />
+              <FinishProfileCard />
               <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
               <KeyRulesPanel sport={sportIsBaseball ? "baseball" : "softball"} modules={modules} isPitcher={showPitching} />
 <PracticeLog />
