@@ -73,7 +73,9 @@
   - [x] 2c lift weights only from verified logs (src/lib/lift/verifiedMax.ts): % only + "Log your sets to unlock your numbers" until ≥2 qualifying sets or a tested max; auto-complete no longer stores % as weight; one-tap prefill only from verified max
   - [x] 2d "Log a practice" (team/lesson/own work, minutes, how hard), "Log a tested max" on % lifts, stopwatch reps saved to account — all record-only (wk_session_logs metrics.kind)
   - [x] 2e "Your numbers" dashboards: speed (best/latest per distance), lift (verified max + gain), practice (minutes 7/28 days)
-  - [ ] NEXT ITEM: 2f Step 2 player proof — test player at 360/390: rest timers, stopwatch save, tested max unlocks weight, practice log, dashboards; identical-plan check; cleanup
+  - [x] 2f Step 2 player proof (test player, 360/390): sprint stopwatch + 2:00 rest timer, speed and practice dashboards show logged numbers, plan fingerprint identical before/after, 0 page errors, test player removed
+  - [ ] 2g lift weight-unlock on-screen proof — needs a test plan with percentage lifts (in-season beginner plan had none); fold into Step 4 lift tests
+- [ ] NEXT ITEM: Step 3a Speed card — Speed Lab flow inside HT phase + one readiness score
 - [ ] Step 3 Speed card (Speed Lab engine inside HT phase, 6 context rules, barefoot 4-part gate)
 - [ ] Step 4 Lift card (scheme unchanged; weights, rest, why-line, plateau swap, deload proof)
 - [ ] Step 5 Throwing (throw weights 1.0/0.75/0.85, max long toss, 13+ weighted balls, pick-off baseball P only, windmill program → Step 8)
@@ -84,4 +86,4 @@
 - [ ] Stress tests every step; clean up test data
 
 ## Waiting on owner
-(none open)
+- Lift rest bands: no owner-approved rest times exist, so the Lift card shows a count-up rest stopwatch. Owner to give rest seconds by lift type (e.g. strength, power, accessory).
