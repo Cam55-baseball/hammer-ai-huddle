@@ -13,17 +13,17 @@ export function DayStateBanner() {
   const map = {
     rest: {
       Icon: Moon,
-      text: 'RECOVERY MODE — Resume tomorrow',
+      text: 'REST — Eligible remaining work dialled back',
       class: 'border-sky-500/50 bg-sky-500/10 text-sky-300',
     },
     skip: {
       Icon: SkipForward,
-      text: 'DAY SKIPPED — No progress recorded',
+      text: 'SKIP — No day credit; workout amounts unchanged',
       class: 'border-muted bg-muted/40 text-muted-foreground',
     },
     push: {
       Icon: Flame,
-      text: 'PUSH DAY — Higher output expected',
+      text: 'PUSH — Follow today’s plan; no extra work added',
       class: 'border-amber-500/50 bg-amber-500/10 text-amber-300',
     },
   } as const;
