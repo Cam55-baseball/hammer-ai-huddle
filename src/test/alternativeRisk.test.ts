@@ -18,5 +18,9 @@ describe("Alternative button — same or lower risk", () => {
     expect(loadTier(["barbell"])).toBe(3); expect(loadTier(["trap_bar"])).toBe(2); expect(loadTier(["kb"])).toBe(1); expect(loadTier([])).toBe(0);
   });
 });
-import { describe, it, expect } from "vitest"; import { isSameOrLowerRisk } from "@/lib/prescription/alternativeRisk";
-describe("ub tier strings", () => { it("U3 never replaces U1", () => { expect(isSameOrLowerRisk({ ub_tier: "U1" }, { ub_tier: "U3" })).toBe(false); expect(isSameOrLowerRisk({ ub_tier: "U3" }, { ub_tier: "U1" })).toBe(true); }); });
+describe("ub tier strings", () => {
+  it("U3 never replaces U1", () => {
+    expect(isSameOrLowerRisk({ ub_tier: "U1" } as any, { ub_tier: "U3" } as any)).toBe(false);
+    expect(isSameOrLowerRisk({ ub_tier: "U3" } as any, { ub_tier: "U1" } as any)).toBe(true);
+  });
+});
