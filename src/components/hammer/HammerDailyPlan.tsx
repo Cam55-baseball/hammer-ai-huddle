@@ -1156,18 +1156,22 @@ function WarmupCrossoverAddons() {
             aria-expanded={open}
           >
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <HeartPulse className="h-4 w-4 text-rose-500 shrink-0" />
-                  <span className="truncate">Finish the warm-up — crossover primer</span>
-                  {seasonLabel && <Badge variant="outline" className="text-[10px]">Season: {seasonLabel}</Badge>}
+              <CardTitle className="text-sm flex items-start justify-between gap-2">
+                <div className="flex items-start gap-2 min-w-0">
+                  <HeartPulse className="h-4 w-4 mt-0.5 text-rose-500 shrink-0" />
+                  <span className="min-w-0 break-words">Finish the warm-up — crossover primer</span>
                 </div>
                 <ChevronDown
-                  className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+                  className={`h-4 w-4 mt-0.5 shrink-0 text-muted-foreground transition-transform ${
                     open ? "rotate-180" : ""
                   }`}
                 />
               </CardTitle>
+              {seasonLabel && (
+                <div>
+                  <Badge variant="outline" className="text-[10px] whitespace-normal rounded-md">Season: {seasonLabel}</Badge>
+                </div>
+              )}
               <div className="text-[11px] text-muted-foreground">
                 Short, low-cost coordination drill folded into the warm-up. Frees the nervous system from sport patterns without stealing freshness from the day.
               </div>
