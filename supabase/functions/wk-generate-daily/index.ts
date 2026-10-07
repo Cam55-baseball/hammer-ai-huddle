@@ -363,6 +363,8 @@ import { OS_ONLY_ECCENTRIC_SLUGS, IN_SEASON_BLOCKED_SLUGS } from "../_shared/wic
 // That build is not comparable with a warm one, so the watchdog logs it for
 // information instead of raising a slowdown alarm.
 let servedARequest = false;
+const ISOLATE_ID = crypto.randomUUID().slice(0, 8);
+let inFlight = 0;
 
 // -------- Movement catalog cache (read-only reference data) ----------------
 // The catalog is ~1,000 rows and identical for every athlete of a sport. It
@@ -373,19 +375,84 @@ let servedARequest = false;
 const CATALOG_TTL_MS = 5 * 60 * 1000;
 const catalogCache = new Map<string, { at: number; rows: unknown[] }>();
 async function loadMovementCatalog(
-  admin: { from: (t: string) => any },
+  admin: { from: (t: string) => any; storage?: any },
   sport: string,
 ): Promise<{ data: any[] | null; error: any }> {
   const hit = catalogCache.get(sport);
   if (hit && Date.now() - hit.at < CATALOG_TTL_MS) {
     return { data: hit.rows as any[], error: null };
   }
+  // Round 6: a burst of builds starts many fresh copies of this function at
+  // once, and each used to pull the whole ~3 MB catalog from the database
+  // (~0.9 s of database work apiece), which jammed every other read. The
+  // first copy in each 5-minute window now leaves a private file copy that
+  // the others read instead. Same rows, same 5-minute freshness as before.
+  const windowKey = Math.floor(Date.now() / CATALOG_TTL_MS);
+  const objectPath = `catalog/${sport}-${windowKey}.json`;
+  const storage = (admin as any).storage?.from?.("wk-cache");
+  if (storage) {
+    try {
+      const { data: blob } = await storage.download(objectPath);
+      if (blob) {
+        const rows = JSON.parse(await blob.text());
+        if (Array.isArray(rows) && rows.length > 0) {
+          catalogCache.set(sport, { at: Date.now(), rows });
+          return { data: rows, error: null };
+        }
+      }
+    } catch { /* fall through to the database */ }
+  }
   const res = await admin.from("wk_movement_catalog").select("*")
     .or(`sport_scope.eq.both,sport_scope.eq.${sport}`);
   if (!res.error && Array.isArray(res.data)) {
     catalogCache.set(sport, { at: Date.now(), rows: res.data });
+    if (storage) {
+      try {
+        await storage.upload(objectPath, new Blob([JSON.stringify(res.data)], { type: "application/json" }), { upsert: true, contentType: "application/json" });
+      } catch { /* the copy is only a speed-up */ }
+    }
   }
   return res as { data: any[] | null; error: any };
+}
+
+// Round 6 profiling: when a request asks for `profile: true`, every database
+// call's table, start offset and duration are returned (no data, no ids).
+type ProfEntry = { t: string; at: number; ms: number; st?: number };
+// Round 6: one build used to send the exact same read to the database several
+// times (shared helpers each asked again). Within ONE request, an identical
+// GET is answered from the first answer. Any write or RPC call clears the
+// remembered answers first, so a read after a write always goes to the
+// database. Nothing is remembered between requests.
+function timedFetch(log: ProfEntry[] | null, t0: number, memo: Map<string, Promise<{ status: number; statusText: string; headers: [string, string][]; body: string }>> | null, stats?: { hits: number }): typeof fetch {
+  return async (input: any, init?: any) => {
+    const u = String(typeof input === "string" ? input : input?.url ?? "");
+    const method = String(init?.method ?? (typeof input === "object" && input?.method) ?? "GET").toUpperCase();
+    const isRest = u.includes("/rest/v1/");
+    const at = Date.now() - t0;
+    const m = u.match(/\/(rest\/v1|functions\/v1|auth\/v1|storage\/v1)\/([^?]+)/);
+    const label = `${method} ${m ? m[2] : "?"}`;
+    let res: Response;
+    if (memo && isRest && method === "GET" && !init?.signal) {
+      const h = new Headers(init?.headers ?? {});
+      const key = `${u}|${h.get("Authorization") ?? h.get("apikey") ?? ""}|${h.get("Accept") ?? ""}|${h.get("Prefer") ?? ""}|${h.get("Range") ?? ""}|${h.get("Accept-Profile") ?? ""}`;
+      let p = memo.get(key);
+      const hit = !!p;
+      if (!p) {
+        p = fetch(input, init).then(async (r) => ({ status: r.status, statusText: r.statusText, headers: [...r.headers.entries()], body: await r.text() }));
+        memo.set(key, p);
+        p.catch(() => memo.delete(key));
+      } else if (stats) stats.hits++;
+      const c = await p;
+      if (c.status >= 300 && !hit) memo.delete(key);
+      res = new Response(c.status === 204 || c.status === 304 ? null : c.body, { status: c.status, statusText: c.statusText, headers: c.headers });
+      if (log) log.push({ t: label + (hit ? " (memo)" : "") + ` <${c.body.length}>`, at, ms: Date.now() - t0 - at, st: c.status });
+      return res;
+    }
+    if (memo && method !== "GET" && method !== "HEAD") memo.clear();
+    res = await fetch(input, init);
+    if (log) log.push({ t: label + (typeof init?.body === "string" ? ` [${init.body.length}b]` : "") + ` <${res.headers.get("content-length") ?? "?"}>`, at, ms: Date.now() - t0 - at, st: res.status });
+    return res;
+  };
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -393,22 +460,42 @@ const handler = async (req: Request): Promise<Response> => {
   const WAS_COLD_START = !servedARequest;
   servedARequest = true;
   const generationStartedAt = Date.now();
+  inFlight++;
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return json({ error: "Missing Authorization" }, 401);
-    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     // The body is read once, here, so the daily plan job can name the athlete.
     const rawBody = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const profLog: ProfEntry[] | null = rawBody.profile === true ? [] : null;
+    (globalThis as any).__wkProf = profLog;
+    (globalThis as any).__wkInFlightAtStart = inFlight;
+    const memoStats = { hits: 0 };
+    (globalThis as any).__wkMemoStats = profLog ? memoStats : null;
+    const noMemo = rawBody.no_memo === true; // for before/after comparison only
+    const sharedMemo = noMemo ? null : new Map();
+    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader }, fetch: timedFetch(profLog, generationStartedAt, sharedMemo, memoStats) },
+    });
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      global: { fetch: timedFetch(profLog, generationStartedAt, sharedMemo, memoStats) },
+    });
     // Daily plan job path: only a caller holding the service key may build a
     // plan for a named athlete. Everyone else builds only their own plan.
     const isServiceCaller = authHeader === `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
     let user: { id: string };
+    // Round 6: the daily plan job asks for the catalog copy to be made once,
+    // before it starts a burst of builds, so no build in the burst pays for it.
+    if (isServiceCaller && rawBody.warm_catalog === true) {
+      const out: Record<string, number> = {};
+      for (const sp of ["baseball", "softball"]) {
+        const r = await loadMovementCatalog(admin as any, sp);
+        out[sp] = Array.isArray(r.data) ? r.data.length : -1;
+      }
+      return json({ ok: true, warmed: out });
+    }
     if (isServiceCaller) {
       const uid = typeof rawBody.user_id === "string" ? rawBody.user_id : "";
       if (!/^[0-9a-f-]{36}$/i.test(uid)) return json({ error: "user_id required" }, 400);
@@ -4806,6 +4893,8 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (e) {
     console.error("wk-generate-daily error", e);
     return json({ error: (e as Error).message }, 500);
+  } finally {
+    inFlight--;
   }
 };
 
@@ -4837,6 +4926,10 @@ function todayStr(): string {
 }
 
 function json(body: unknown, status = 200) {
+  const prof = (globalThis as any).__wkProf as ProfEntry[] | null;
+  if (prof && body && typeof body === "object" && !Array.isArray(body)) {
+    body = { ...(body as Record<string, unknown>), _profile: { total_ms: 0, isolate: ISOLATE_ID, memo_hits: (globalThis as any).__wkMemoStats?.hits ?? null, in_flight_at_start: (globalThis as any).__wkInFlightAtStart ?? null, calls: prof } };
+  }
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 

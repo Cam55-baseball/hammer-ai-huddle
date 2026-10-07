@@ -221,9 +221,24 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     season.postSeasonEndDate,
   ]);
 
+  // Round 6 (plan never changes on reload): the last plan this device saw is
+  // shown instantly from the device, then quietly checked against the server.
+  // Nothing below may act on the device copy — every rule and rebuild decision
+  // waits until the server answer for this visit has arrived.
+  const deviceKey = user?.id ? `hm.wkrx.v1.${user.id}.${planDate}` : null;
+  const deviceCopy = useMemo(() => {
+    if (!deviceKey) return undefined;
+    try {
+      const raw = localStorage.getItem(deviceKey);
+      const rows = raw ? (JSON.parse(raw) as WkRx[]) : undefined;
+      return Array.isArray(rows) && rows.length > 0 ? rows : undefined;
+    } catch { return undefined; }
+  }, [deviceKey]);
   const query = useQuery({
     queryKey: ["wk-rx", user?.id, planDate],
     enabled: !!user?.id,
+    initialData: deviceCopy,
+    initialDataUpdatedAt: 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("wk_prescriptions" as any)
@@ -232,10 +247,19 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
         .eq("plan_date", planDate)
         .order("sequence_order", { ascending: true });
       if (error) throw error;
-      return (data ?? []) as unknown as WkRx[];
+      const rows = (data ?? []) as unknown as WkRx[];
+      try {
+        if (deviceKey) {
+          if (rows.length > 0) localStorage.setItem(deviceKey, JSON.stringify(rows));
+          else localStorage.removeItem(deviceKey);
+        }
+      } catch { /* device storage full or blocked — the plan still shows */ }
+      return rows;
     },
     staleTime: 60_000,
   });
+  // True once this visit's server answer is in (not just the device copy).
+  const serverFresh = query.isFetchedAfterMount && !query.isFetching;
 
   const gameDayQuery = useQuery({
     queryKey: ["wk-rx-game-day", user?.id, planDate],
@@ -504,7 +528,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const verifiedKey = useRef<string | null>(null);
   useEffect(() => {
     const rows = query.data ?? [];
-    if (!user?.id || rows.length === 0 || generating) return;
+    if (!user?.id || rows.length === 0 || generating || !serverFresh) return;
     const key = `${user.id}:${planDate}:${(rows[0] as any)?.created_at ?? ""}`;
     if (verifiedKey.current === key) return;
     verifiedKey.current = key;
@@ -517,7 +541,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
           void qc.invalidateQueries({ queryKey: ["wk-plan-changes", user.id, planDate] });
         }
       });
-  }, [user?.id, planDate, query.data, generating, qc]);
+  }, [user?.id, planDate, query.data, generating, qc, serverFresh]);
 
   // Auto-generate exactly once per mount if empty.
   useEffect(() => {
@@ -573,6 +597,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
               ? { reason: "player_request", text: "You updated Hammer, so we adjusted what's left today.", key: refreshKey }
               : { reason: "tracked_activity", text: "You checked in, so we fitted what's left today to how you feel.", key: refreshKey };
     if (
+      serverFresh &&
       !alreadyApplied &&
       !planChangesQuery.isLoading &&
       !checkInQuery.isLoading &&
@@ -605,7 +630,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       }
       generate(change);
     }
-  }, [planChangesQuery.data, planChangesQuery.isLoading, checkInQuery.data, checkInQuery.isLoading, dayIntentQuery.isLoading, dayIntentQuery.data, tellHammersOn, timelineQuery.data, query.isLoading, query.data, gameDayQuery.isLoading, gameDayQuery.data, canonicalPhase.phase, canonicalPhase.displayName, season.isLoading, generate, generating, failed, qc, planDate, user?.id]);
+  }, [planChangesQuery.data, planChangesQuery.isLoading, checkInQuery.data, checkInQuery.isLoading, dayIntentQuery.isLoading, dayIntentQuery.data, tellHammersOn, timelineQuery.data, query.isLoading, query.data, gameDayQuery.isLoading, gameDayQuery.data, canonicalPhase.phase, canonicalPhase.displayName, season.isLoading, generate, generating, failed, qc, planDate, user?.id, serverFresh]);
 
   const planChangeNotes = useMemo(
     () => (planChangesQuery.data ?? []).filter((c) => c.outcome === "changed").map((c) => ({ id: c.id, text: c.reason_text, at: c.created_at, kind: c.reason_code })),

@@ -1,3 +1,5 @@
 - Every mode requires header `x-job-token` (SHA-256 checked in code, token in Vault `wk_daily_plan_job_token`); bare 401 otherwise, never log the token. Why: the job rebuilds plans for every player.
 - Each run fans out to parallel worker slices of itself (same token); every build first takes an atomic per-(player, day) claim via `wk_claim_plan_build`. Why: overlapping slices or runs must never build the same plan twice, and each request must answer inside the 150 s cutoff.
 - Total builds at once per run stay at `SAFE_PARALLEL` (scheduler.ts) unless re-measured. Why: on 2026-10-06, 16–20 concurrent builds hit database statement timeouts and 8 took 4× longer each.
+- Mode "build" also pre-builds each started player's local tomorrow once their local clock reaches `PREBUILD_FROM_LOCAL_HOUR`, closest-to-midnight first. Why: the plan must already exist at local 00:00 and the database builds only ~0.3–0.45 plans/s.
+- A worker out of time hands its leftovers to a fresh copy of itself (max `MAX_CHAIN`), and a platform "Rate limit … Retry after" refusal is waited out and retried once. Why: keeps building continuous between 10-minute runs without raising builds at once.
