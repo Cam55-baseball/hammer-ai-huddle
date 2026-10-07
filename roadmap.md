@@ -28,9 +28,9 @@
 - [x] Game logging card (game today / pitching today, ask once about yesterday)
 - [x] Pitcher schedule: tables, card, plan reads it (conditioning, lift limits, no-grip rule)
 - [x] Rest-day count held (hard sprint swapped for easy flush)
-- [ ] Pitcher schedule → recovery governor, arm care, throwing plan, weekly stress planner
+- [x] Pitcher schedule → recovery governor, arm care, throwing plan, weekly stress planner (wired per docs/wic/remaining-items-closeout.md §4; 156 pitching/weekly-load tests pass 2026-10-07; live pitcher check is the next item, owner-blocked)
 - [x] "Did you play yesterday?" / "Did you pitch?" inside the morning check-in itself (MorningGameQuestions renders in the morning check-in: game question for anyone with an unlogged game yesterday, pitching question for pitchers via the same pitcher gate as the schedule card; saves a draft game row / confirms or adds a thrown outing dated yesterday; shares the asked-once key with the Hammers Today game prompt so the athlete is asked once, in either place; decided by pure decideMorningGameAsk with 6 passing tests; verified live as the owner — question rendered from a test calendar event, Yes-click created the draft game row, test rows removed)
-- [ ] Live verification as a player and as a pitcher with schedule data
+- [ ] Live verification as a player and as a pitcher with schedule data — WAITING ON OWNER: test-player sign-in approval
 - [x] Stage 4 — game/practice load feeds recovery limit (scheduled practices are not confirmed logs)
 - [x] Stage 5 — career goal direction + rank-goals prompt
 - [x] Stage 6 — The General shows records (preview; published release unverified)
