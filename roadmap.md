@@ -1,9 +1,9 @@
 # Roadmap
 
-## Closeout decisions for the owner (2026-10-07)
-**Game-linked flush.** After a player saves a game at night, the app could add a short easy flush (light jog, mobility, breathing) to the next morning's plan. Today the flush only appears from the regular schedule rules, so a game logged late may not trigger one. Recommendation: turn it on as an optional card the player can skip, never replacing planned work.
-
-**Morning game question.** The morning check-in asks "Did you play yesterday?" / "Did you pitch?" once, if a game or start wasn't logged. The trade-off is one extra tap in the morning versus plans built without knowing about yesterday's game. Recommendation: keep it on as it is now (asked once, shared with the plan-page prompt).
+## Closeout decisions — ANSWERED by the owner (2026-10-07, E3)
+- [x] Game-linked flush: YES, as an optional card note the player can skip; never replaces planned work. Built, tested, live-proved.
+- [x] Morning game question: keep as is (asked once, shared with the plan-page prompt). Nothing changed.
+- [x] Retire the five programs: YES to redirects. Speed Lab, Explosive Conditioning, The Unicorn, Iron Bambino, Heat Factory pages now open the daily plan (reaches players on Publish). Menus, pricing/help text and data untouched; nothing deleted.
 
 ## OWNER DECISIONS 2026-10-07 — FINISH END TO END
 - [x] Verified owner-applied files: throw types accepted, real-ball switch on; 10 program backups exist with RLS on
@@ -19,12 +19,12 @@
 - [x] Daily plan job running on schedule with no errors (21:30 run)
 - [x] Test plans and test body sizes removed; test players back to "not started"
 
-> **Status (2026-10-07, final)**
-> - Finished: everything above, including the all-pages phone check (160 pages, 0 errors).
-> - Next item: none — waits on the owner.
+> **Status (2026-10-07, E3)**
+> - Finished: everything, plus the owner's three answers (game flush on, morning question kept, program redirects on).
+> - Next item: none.
 > - Phase mismatch scan: 0 mismatches (26,352 player-days, 368,956 checks).
-> - Waiting on owner: 1. Email key. 2. OK to retire the five programs (redirects ready, off, nothing deleted). 3. Game-linked flush / morning question decisions (see top).
-> - Ready to publish: YES — server side live and proved; 2,445 tests pass; phase scan 0; all 160 pages clean at 390 px; app changes (card notes, body-size guides, labels) reach players on Publish.
+> - Waiting on owner: 1. Email key. 2. Separate OK if the old programs' menu items, pricing/help text or data should ever be removed.
+> - Ready to publish: YES — plan builder redeployed and live-proved (game flush), test data removed; redirects and the flush's Skip button reach players on Publish.
 
 ## OWNER RULE 2026-10-07 (20:26) — ONE SYSTEM, ONE PHASE (high priority)
 - [x] Audit started (see docs/phase-audit.md)
