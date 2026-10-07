@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { RestTimer } from "@/components/hammer/cards/RestTimer";
+import { RestTimer, liftRestBand } from "@/components/hammer/cards/RestTimer";
 import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
 import { useBlockedLiftMovements, explainWhyBlocked, type BlockedMovement } from "@/hooks/useBlockedLiftMovements";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
@@ -217,7 +217,10 @@ export function WkLiftsCard({ pocket = false }: { pocket?: boolean } = {}) {
               <p className="text-xs text-muted-foreground py-2">Tap refresh to generate today's full-body template.</p>
             ) : (
               items.map((rx) => (
-                <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={phaseDisplay} phaseKey={phaseKey} allowSwap />
+                <div key={rx.id} className="space-y-1">
+                  <WkPrescriptionCard rx={rx} phaseDisplay={phaseDisplay} phaseKey={phaseKey} allowSwap />
+                  {(() => { const b = liftRestBand(rx as any); return <RestTimer label="Rest between sets" seconds={b.min} maxSeconds={b.max} />; })()}
+                </div>
               ))
             )}
 
@@ -228,7 +231,6 @@ export function WkLiftsCard({ pocket = false }: { pocket?: boolean } = {}) {
                 shape={(items[0]?.why_payload as any)?.session_shape ?? null}
               />
             )}
-            {items.length > 0 && <RestTimer label="Rest between sets" />}
             <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
             {items.length > 0 && <WkCardCompletion modality="lifts" modalityLabel="Lifts" items={items} />}
             {items.length > 0 && <CardActions modality="lifts" items={items} phaseDisplay={phaseDisplay} />}

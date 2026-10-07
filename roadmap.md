@@ -68,7 +68,7 @@
 ## Round 8 — Master Integration Plan (owner-approved 2026-10-07; never publish, no cron changes)
 - [x] Step 1 Card design — accepted; streak correction done (flame lit 5 / glow 25 / color every 100; workout milestones 10/50/100/200/350/500/700/1000 with confetti + vibration; no-plan days never break streak)
 - [ ] Step 2 Timers (set rest, sprint rest 1 min/10 yd), sprint stopwatch/partner/steps, % → weight, practice logging, in-card dashboards
-  - [x] 2a sprint rest countdown (1 min/10 yd from card distance) + lift rest timer (count-up). BLOCKED part: HT cards carry no rest time and no owner rest bands exist anywhere — lift countdown waits for owner's band numbers
+  - [x] 2a sprint rest countdown (1 min/10 yd) + lift rest countdown per exercise from owner bands (80%+ 180 s; 65–79% 120–150; <65% 90–120; holds 60–90; skill/throw 45–60; HT rest wins; ranges start low with +30 s)
   - [x] 2b sprint stopwatch (partner/self), steps → stride, best-today; kept on device until 2d logging saves it
   - [ ] NEXT ITEM: 2c lift weights from verified logged sets only ("Log your sets to unlock your numbers")
 - [ ] Step 3 Speed card (Speed Lab engine inside HT phase, 6 context rules, barefoot 4-part gate)
@@ -79,3 +79,6 @@
 - [ ] Step 8 Content batches (OFF until owner approves each)
 - [ ] Step 9 Archive (docs + backup tables, redirects, 8-language text; no deletion)
 - [ ] Stress tests every step; clean up test data
+
+## Waiting on owner
+(none open)
