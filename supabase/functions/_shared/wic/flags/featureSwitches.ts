@@ -35,6 +35,13 @@ export const FEATURE_KEYS = [
   "power_primer",
   "pap_real_throws",
   "windmill_program",
+  "content_speed_lab",
+  "content_heat_factory",
+  "content_explosive_pitcher",
+  "content_softball_conditioning",
+  "content_lift_notes",
+  "content_base_stealer",
+  "content_barefoot_items",
 ] as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];

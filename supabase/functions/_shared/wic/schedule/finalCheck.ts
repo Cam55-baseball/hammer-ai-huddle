@@ -1,3 +1,4 @@
+import { MAX_BALL_OZ, OVERLOAD_MIN_AGE, ozFromSlug } from "../content/programContent.ts";
 /**
  * Final rule check — runs on every plan immediately before it is saved.
  *
@@ -96,7 +97,7 @@ export interface FinalCheckContext {
 export interface FinalCheckSwap {
   rule: "lift_spacing" | "weekly_lift_max" | "rest_day" | "min_age" | "eccentric_in_season" | "season_legality"
     | "run_spacing" | "run_before_game" | "jump_spacing" | "bat_consecutive" | "trained_elsewhere_today" | "growth_mode"
-    | "u13_weighted_ball" | "u13_pitch_smart";
+    | "u13_weighted_ball" | "u16_weighted_ball" | "ball_over_7oz" | "u13_pitch_smart";
   movement_slug: string | null;
   slot: string | null;
   detail: string;
@@ -146,6 +147,24 @@ export function finalRuleCheck<T extends FinalCheckRow>(
     if (facts.eccentric_overload === true && IN_SEASON.has(ctx.phase)) {
       drop.add(r);
       swaps.push({ rule: "eccentric_in_season", movement_slug: slug, slot: r.slot ?? null, detail: ctx.phase });
+      continue;
+    }
+    // Ball-weight law (owner final 2026-10-07): nothing over 7 oz, ever.
+    const oz = ozFromSlug(slug);
+    if (oz != null && oz > MAX_BALL_OZ) {
+      drop.add(r);
+      swaps.push({ rule: "ball_over_7oz", movement_slug: slug, slot: r.slot ?? null, detail: `${oz} oz` });
+      continue;
+    }
+    // Weighted/overload balls (incl. plyo balls) 16+ only; unknown age = no; 4 oz underload exempt.
+    if ((ctx.age === null || ctx.age < OVERLOAD_MIN_AGE) && ctx.age !== null && ctx.age >= 13 && isWeightedBallCard(slug, facts) && !isUnderloadBallCard(slug)) {
+      drop.add(r);
+      swaps.push({ rule: "u16_weighted_ball", movement_slug: slug, slot: r.slot ?? null, detail: "weighted or overload balls need age 16" });
+      continue;
+    }
+    if (ctx.age === null && isWeightedBallCard(slug, facts) && !isUnderloadBallCard(slug)) {
+      drop.add(r);
+      swaps.push({ rule: "u16_weighted_ball", movement_slug: slug, slot: r.slot ?? null, detail: "age unknown" });
       continue;
     }
     // Under 13 (owner ruling 2026-10-06): never weighted balls or weighted plyo balls.
