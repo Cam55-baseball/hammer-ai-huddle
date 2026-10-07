@@ -9,7 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { ageFrom, throwRoleFrom } from "@/lib/throwing/armLedgerEntry";
-import { ThrowCountLog } from "@/components/hammer/ThrowCountLog";
 import { youthPitchingToday, type PitchDay } from "@/lib/throwing/youthPitchingToday";
 
 const num = (v: unknown) => {
@@ -100,8 +99,6 @@ export function YouthPitchingLimits({ today }: { today: string }) {
       ))}
       {v.growthLine && <p className="text-[11px]">{v.growthLine}</p>}
       {v.pitcherCatcherLine && <p className="text-[11px] font-medium">{v.pitcherCatcherLine}</p>}
-      <ThrowCountLog today={today} moundPitches={v.pitchesToday} dailyMax={v.pitchSmart ? v.dailyMax : null}
-        showPickoffs={role === "pitcher" || role === "two_way" || role === "pitcher_catcher"} />
     </div>
   );
 }
