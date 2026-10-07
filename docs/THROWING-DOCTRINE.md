@@ -60,3 +60,10 @@ Still clip and both swing clips refuse every flag (swings now via the hands-apar
 ## 2026-09-29 owner decisions
 - Sidearm pitchers allowed ("We have to allow"): pitching now uses the same slot-free hands-apart gate as throwing (`gates/releaseHandsApart.ts`, one implementation).
 - Sidearm proposal approved ("Good"): arm slot is staff-only context (`metrics/armSlot.ts`, blind to trunk lateral tilt); a low slot moves shoulders-wait-for-landing and front-foot-in-line to the top and swaps in low-slot cues (`reportCard/slotEmphasis.ts`). Never "get on top" or "raise your elbow" (test-enforced).
+
+## Youth throwing and pacing (owner-approved, 2026-10-06/07)
+- Under 13 (Pitch Smart, exact): max 60 innings a year at 8 and under, 80 at 9–12; at least 4 months off throwing each year, 2+ in a row; no weighted balls; fastball and change-up only. Enforced in `under13PitchSmart` (23 tests).
+- Max-effort pull-downs and velocity throws: 15–45 s between throws. Health first — no stiffening (thixotropy) between throws. The 45–60 s band is rest between rounds/sets, never between every throw. Other pacing defaults unchanged.
+
+## Deferral note
+Signed-in verification of these rules (under-13 parent account, pitcher plans, phone screenshots) is deferred until the owner approves test-player sign-in. The rules are built and unit-tested; only live player-view proof is outstanding.
