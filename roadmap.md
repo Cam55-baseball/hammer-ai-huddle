@@ -81,7 +81,8 @@
 - [x] 3d phone proof of 3c at 360/390 as a test player: barefoot line, calf-pain easy-run message, effort rating saved (rpe 9) and pain check-in saved; no page errors; test player removed. Step 3 done.
 - [x] 4a Lift rest counts down from the owner's bands (HT rest wins, +30 s up to band top) + plain "Why this rest" line under each lift
 - [x] 4b lift plateau: 3 logged sessions with no new best → note suggesting the card's existing legal Swap (same kind of lift, HT pools); never auto-swaps; sets/reps/% unchanged; 5 tests pass
-- [ ] NEXT ITEM: Step 4c — adaptive deload + prove whether HT off-season phases already contain a deload week (add every-4th only if none). (Base Stealer attempts counting as hard running moved to Step 6, where Base Stealer days are built — it changes the planner's rest rules.)
+- [x] 4c deload proof: HT already deloads every 4th week in every phase (progression block accumulate→intensify→peak→deload; builder writes deload_applied). Real saved plans show deload weeks of Aug 31 and Sep 28 and none between. Nothing added (owner rule: add only if none).
+- [ ] NEXT ITEM: Step 4d — Lift card phone proof at 360/390 with a test player who has percentage lifts: weight unlock after 2 qualifying logged sets, rest countdown + why line, plateau note. (Base Stealer attempts counting as hard running moved to Step 6, where Base Stealer days are built — it changes the planner's rest rules.)
 - [x] Step 3 Speed card (Speed Lab engine inside HT phase, 6 context rules, barefoot 4-part gate)
 - [ ] Step 4 (include: switch Lift rest to the owner's saved bands — 80%+ 180 s; 65–79% 120–150 s; <65% 90–120 s; holds 60–90 s; skill 45–60 s; +30 s button; HT rest wins)
 - [ ] Step 4 Lift card (scheme unchanged; weights, rest, why-line, plateau swap, deload proof)
@@ -93,4 +94,5 @@
 - [ ] Stress tests every step; clean up test data
 
 ## Waiting on owner
+- Adaptive (fatigue-triggered) lift deload: an extra lighter week based on how hard sessions felt would change lift volume, and lift schemes may never change. The fixed every-4th-week deload already runs. Owner: should hard-session ratings trigger an earlier deload? (yes/no)
 - Barefoot gate numbers: how many pain-free days per stage (Foundation→Introduction, →Integration, →Advanced), and what the barefoot readiness test is (e.g. which hops/holds, pass mark). Until set, nobody moves past Foundation.
