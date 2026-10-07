@@ -1,7 +1,7 @@
 # Roadmap
 
 > **Status (2026-10-07, end of batch B)**
-> - Finished: owner corrections 1–4 (limb data from onboarding only; proportions shift emphasis, never exclude; goals shape every card; goal sets/reps built + live-proven; max-effort throw rest 15–45 s); phone screenshots incl. pitcher Bat speed + season label; live pitcher check (pitching days entered as player → next day lighter); all-app audit (160 pages, 0 errors). Test data removed.
+> - Finished: owner corrections 1–4 (limb data from onboarding only; proportions shift emphasis, never exclude; goals shape every card; goal sets/reps built + live-proven; max-effort throw rest 15–45 s); phone screenshots incl. pitcher Bat speed + season label; live pitcher check (pitching days entered as player → next day lighter); all-app audit (160 pages, 0 errors); Finish-your-profile card (proven: player missing items sees exact list, complete player sees no card, under-13 parent filled 5 measurements and only the other 5 stayed listed). Test data removed.
 > - Next item: remaining signed-in stress tests (Round 1–3 cases) and the lift weight-unlock proof (2g).
 > - Goal → sets/reps (off-season only, APPROVED 2026-10-07; used only when HT's dose misses the goal range, smallest step in; never in-season/deload/trend-lighter):
 >   strength 4×5–6 / 5×3–5 / 4×2–3 · size 4×8–10 / 4×6–8 / 3×5–6 · power/speed 5×3–5 / 5×2–4 / 6×1–3 · hitting/throwing 4×4–6 / 5×3–5 / 5×2–3 · durability 3×10–12 / 3×8–10 / 3×6–8 · no goal = no change (early / mid / late off-season).
@@ -148,4 +148,4 @@
 - Answered 2026-10-07 and built: throw rates (0.25/0.6/0.75/0.85/1.0), trend deload, barefoot gates.
 
 ## Owner addition 2026-10-07 — Finish your profile
-- [ ] Finish-your-profile card on plan page (lists missing onboarding fields, one tap to step, why line), reminder every 3 days, never blocks; under-13 → parent; read weight_lb + weight_lbs; never re-ask saved; prove with 3 test accounts; clean up
+- [x] Finish-your-profile card on plan page (lists missing onboarding fields, one tap to step, why line), reminder every 3 days, never blocks; under-13 → parent; read weight_lb + weight_lbs; never re-ask saved; prove with 3 test accounts; clean up
