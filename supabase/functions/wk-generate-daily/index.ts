@@ -387,8 +387,22 @@ async function loadMovementCatalog(
   // (~0.9 s of database work apiece), which jammed every other read. The
   // first copy in each 5-minute window now leaves a private file copy that
   // the others read instead. Same rows, same 5-minute freshness as before.
-  const windowKey = Math.floor(Date.now() / CATALOG_TTL_MS);
-  const objectPath = `catalog/${sport}-${windowKey}.json`;
+  // Round 7: the file copy is named after the catalog's own version (row
+  // count + newest updated_at) instead of a 5-minute clock window. Every
+  // window change used to send all builds in flight to the database at once
+  // for the ~3 MB read, which timed out. Now the database is read only when
+  // the catalog itself changed, and a build never uses a copy older than the
+  // catalog it would read.
+  let objectPath = `catalog/${sport}-${Math.floor(Date.now() / CATALOG_TTL_MS)}.json`;
+  try {
+    const ver = await admin.from("wk_movement_catalog").select("updated_at", { count: "exact" })
+      .or(`sport_scope.eq.both,sport_scope.eq.${sport}`)
+      .order("updated_at", { ascending: false, nullsFirst: false }).limit(1);
+    if (!ver.error && typeof ver.count === "number") {
+      const newest = Array.isArray(ver.data) && ver.data[0]?.updated_at ? Date.parse(ver.data[0].updated_at) : 0;
+      objectPath = `catalog/${sport}-v${ver.count}-${newest}.json`;
+    }
+  } catch { /* keep the clock-window name */ }
   const storage = (admin as any).storage?.from?.("wk-cache");
   if (storage) {
     try {
@@ -470,6 +484,7 @@ const handler = async (req: Request): Promise<Response> => {
     // The body is read once, here, so the daily plan job can name the athlete.
     const rawBody = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const profLog: ProfEntry[] | null = rawBody.profile === true ? [] : null;
+    (globalThis as any).__wkLegacyPersist = rawBody.profile === true && rawBody.legacy_persist === true;
     (globalThis as any).__wkProf = profLog;
     (globalThis as any).__wkInFlightAtStart = inFlight;
     const memoStats = { hits: 0 };
@@ -1877,13 +1892,14 @@ const handler = async (req: Request): Promise<Response> => {
     };
 
     // -------- Movement filters --------
+    let __rej = "";
     const eligibleWith = (
       m: MovementRow | undefined | null,
       opts?: { ignoreAdaptation?: boolean; ignoreTcsClass?: boolean; domain?: EngineDomain },
     ): m is MovementRow => {
-      if (!m) return false;
+      if (!m) return (__rej = "L1884", false);
       // WIC Stage 2 — hard-block movements missing constitutional metadata.
-      if (m.wic_metadata_complete === false) return false;
+      if (m.wic_metadata_complete === false) return (__rej = "L1886", false);
       // Schedule enforcement: within 48 hours of a game nothing above a primer
       // survives in the lift slot. Arm care runs under its own domain and is
       // deliberately untouched — it exists FOR the season.
@@ -1891,7 +1907,7 @@ const handler = async (req: Request): Promise<Response> => {
         gameProximity.primerOnly &&
         opts?.domain === "lift" &&
         !survivesPrimerOnly((m as any).intensity_class as string | null)
-      ) return false;
+      ) return (__rej = "L1894", false);
       // TCS stage S4 — never build ANYTHING above today's allowed class.
       // Step 15 item 3: this used to guard the lift slot only, so warm-up,
       // speed, bat-speed and conditioning rows walked straight past the
@@ -1905,25 +1921,25 @@ const handler = async (req: Request): Promise<Response> => {
         if (
           !opts?.ignoreTcsClass &&
           tcsAdjust.blockedIntensityClasses.includes(String(resolveIntensityClass(m as any) ?? ""))
-        ) return false;
+        ) return (__rej = "L1908", false);
       }
-      if (trainingAgeKnown && m.min_training_age_years > trainingAgeYears && !isProProspect) return false;
+      if (trainingAgeKnown && m.min_training_age_years > trainingAgeYears && !isProProspect) return (__rej = "L1910", false);
       // Competition-level ceiling. Only ever OPENS movements for higher levels
       // — a null minimum is no gate at all, so nothing an athlete could reach
       // yesterday disappears today.
-      if (!meetsCompetitionLevel(m.min_competition_level, athleteCompetitionRank)) return false;
+      if (!meetsCompetitionLevel(m.min_competition_level, athleteCompetitionRank)) return (__rej = "L1914", false);
       // Categorical training-age legality — the SAME field every certifier
       // reads. Never relaxable: a beginner-illegal movement is a safety call,
       // not a preference. Without this gate the selector proposed picks the
       // certifier then killed with `*_illegal_training_age`.
-      if (!isTrainingAgeLegal(m as any, trainingAgeClassForSelection)) return false;
+      if (!isTrainingAgeLegal(m as any, trainingAgeClassForSelection)) return (__rej = "L1919", false);
       // Game-day legality — the SAME `game_day_legal` field the bat-speed and
       // speed certifiers enforce at publish time. Selection used to ignore it,
       // so generation happily proposed movements its own validator then killed
       // ("cable_chops is not game-day-legal"). Canonical column: game_day_legal.
       // Semantics match the certifier exactly: only an explicit `false` blocks;
       // NULL means untagged, not illegal. Never relaxable by override.
-      if (isGameDay && (m as any).game_day_legal === false) return false;
+      if (isGameDay && (m as any).game_day_legal === false) return (__rej = "L1926", false);
       // Chronological-age gate. Only applies when we actually KNOW the
       // athlete's age. The old rule inferred age as `training age + 6`, which
       // is a fabricated number: a beginner with 1 training year "became" 7
@@ -1934,39 +1950,39 @@ const handler = async (req: Request): Promise<Response> => {
         (m.min_age_years ?? 0) > 0 &&
         (m.min_age_years ?? 0) > chronologicalAgeYears &&
         !isProProspect
-      ) return false;
-      if (m.contraindications?.some((c) => injurySlugs.has(c))) return false;
+      ) return (__rej = "L1937", false);
+      if (m.contraindications?.some((c) => injurySlugs.has(c))) return (__rej = "L1938", false);
       // Single canonical seasonal legality gate — overrides may unlock.
       const legality = isMovementSeasonLegal(seasonCtx, m);
       // L0.3 (TI-0a-1) — eccentric overload in a competitive phase is a safety
       // gate: an athlete override can never unlock it. Every other seasonal
       // reason keeps its existing override pathway.
-      if (legality.reason === ECCENTRIC_OVERLOAD_REASON) return false;
-      if (!legality.legal && !overrideSlugs.has(m.slug)) return false;
+      if (legality.reason === ECCENTRIC_OVERLOAD_REASON) return (__rej = "L1944", false);
+      if (!legality.legal && !overrideSlugs.has(m.slug)) return (__rej = "L1945", false);
       // Session dedupe — no movement twice in a day.
-      if (usedThisSession.has(m.slug)) return false;
-      if (usedNamesThisSession.has(normalizeName(m.name))) return false;
+      if (usedThisSession.has(m.slug)) return (__rej = "L1947", false);
+      if (usedNamesThisSession.has(normalizeName(m.name))) return (__rej = "L1948", false);
       // 72h non-repeat for compound lifts.
-      if (isCompoundMovement(m) && recentCompoundSlugs.has(m.slug)) return false;
+      if (isCompoundMovement(m) && recentCompoundSlugs.has(m.slug)) return (__rej = "L1950", false);
       // Single-slot category budget for the engine that is asking. Prevents
       // two different sequence ROLES resolving to the same canonical CATEGORY
       // (the `compound_lower appears 2 times` failure).
       if (opts?.domain && !categoryBudget.hasRoom(opts.domain, domainCategoryOf(m, opts.domain))) {
-        return false;
+        return (__rej = "L1955", false);
       }
       // WIC Stage 3 — day-adaptation compatibility. This is the ONLY gate the
       // template-completion fallback is allowed to relax: safety, season,
       // injury, training age and scope gates always apply.
       if (!opts?.ignoreAdaptation && decision?.primary && m.primary_adaptation) {
-        if (!adaptationsCompatible(decision.primary, m.primary_adaptation)) return false;
+        if (!adaptationsCompatible(decision.primary, m.primary_adaptation)) return (__rej = "L1961", false);
       }
       // Constitutional scope gate — sport / discipline specialization applied
       // to every candidate, so a mis-scoped row cannot reach any card even if
       // the catalog query is later loosened.
-      if (!checkAthleteScope(m as any, { sport, positions: athletePositions }).allowed) return false;
+      if (!checkAthleteScope(m as any, { sport, positions: athletePositions }).allowed) return (__rej = "L1966", false);
       // Catalog integrity — a row whose text or tags contradict its owning
       // domain is never prescribable, no matter which engine asks for it.
-      if (auditMovementIntegrity(m as any).length > 0) return false;
+      if (auditMovementIntegrity(m as any).length > 0) return (__rej = "L1969", false);
       return true;
     };
     const eligible = (m: MovementRow | undefined | null): m is MovementRow => eligibleWith(m);
@@ -2775,7 +2791,15 @@ const handler = async (req: Request): Promise<Response> => {
           isRecoveryDay: isRecoveryDayCtx,
           isReturnToPlay: false,
         },
-        eligible: (m: any) => eligible(m as MovementRow),
+        eligible: (m: any) => {
+          const ok = eligible(m as MovementRow);
+          if (profLog && m?.bat_speed_category) {
+            const k = `${m.bat_speed_category}:${ok ? "ok" : __rej}`;
+            (globalThis as any).__bsRej = (globalThis as any).__bsRej ?? {};
+            (globalThis as any).__bsRej[k] = ((globalThis as any).__bsRej[k] ?? 0) + 1;
+          }
+          return ok;
+        },
         dayOfYearSeed,
         cnsBudget: isGameDay ? 2 : Math.max(2, Math.round(cnsCap * 0.5)),
         progression,
@@ -4456,10 +4480,12 @@ const handler = async (req: Request): Promise<Response> => {
       }));
 
       try {
-        await admin.rpc("wk_persist_prescriptions_atomic" as any, {
+        const __split = splitSharedForPersist(safeRows as any[]);
+        await admin.rpc("wk_persist_prescriptions_shared" as any, {
+          p_shared: __split.shared,
           p_user: user.id,
           p_date: planDate,
-          p_rows: safeRows,
+          p_rows: __split.rows,
           p_diag: {
             generator_version: WIC_VERSION,
             season_phase: phaseRes.phase,
@@ -4697,10 +4723,12 @@ const handler = async (req: Request): Promise<Response> => {
       return json({ ok: true, adjusted: true, plan_date: planDate, ...(adj as any) }, 200);
     }
 
-    const { data: diagId, error: rpcErr } = await admin.rpc("wk_persist_prescriptions_atomic" as any, {
+    const __split = splitSharedForPersist(rows as any[]);
+    const { data: diagId, error: rpcErr } = await admin.rpc("wk_persist_prescriptions_shared" as any, {
+      p_shared: __split.shared,
       p_user: user.id,
       p_date: planDate,
-      p_rows: rows,
+      p_rows: __split.rows,
       p_diag: {
         generator_version: WIC_VERSION,
         season_phase: phaseRes.phase,
@@ -4925,10 +4953,63 @@ function todayStr(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+/**
+ * Performance only (Round 7): blocks identical on every card are sent once in
+ * `shared`; `wk_persist_prescriptions_shared` copies them back onto each card
+ * before the unchanged save, so the stored rows are the same jsonb.
+ */
+function splitSharedForPersist(rows: any[]): { rows: any[]; shared: Record<string, unknown> } {
+  const shared: Record<string, unknown> = {};
+  // Test switch (profiling requests only): send the old full payload.
+  if ((globalThis as any).__wkLegacyPersist === true) return { rows, shared };
+  if (!Array.isArray(rows) || rows.length < 2) return { rows, shared };
+  // why_v2.why_substitution_path is the same plan-wide blob (~26 KB) on every
+  // card and nothing reads it per card. Keep it on the first card only so
+  // one plan save writes it once instead of once per card.
+  {
+    const first = rows[0]?.why_v2?.why_substitution_path;
+    if (first !== undefined) {
+      const ref = JSON.stringify(first);
+      rows = rows.map((r: any, i: number) => {
+        if (i === 0 || !r?.why_v2 || JSON.stringify(r.why_v2.why_substitution_path) !== ref) return r;
+        const { why_substitution_path: _drop, ...rest } = r.why_v2;
+        return { ...r, why_v2: rest };
+      });
+    }
+  }
+  const isObj = (v: unknown) => v !== null && typeof v === "object" && !Array.isArray(v);
+  const out = rows.map((r) => ({ ...r }));
+  for (const col of ["why_payload", "why_v2"]) {
+    if (!out.every((r) => isObj(r[col]))) continue;
+    const keys = Object.keys(out[0][col]);
+    const common: Record<string, unknown> = {};
+    for (const k of keys) {
+      const first = JSON.stringify(out[0][col][k]);
+      if (first === undefined || first.length < 512) continue;
+      if (out.every((r) => k in r[col] && JSON.stringify(r[col][k]) === first)) common[k] = out[0][col][k];
+    }
+    if (Object.keys(common).length === 0) continue;
+    shared[col] = common;
+    for (const r of out) {
+      const copy = { ...r[col] };
+      for (const k of Object.keys(common)) delete copy[k];
+      r[col] = copy;
+    }
+  }
+  if (out.every((r) => isObj(r.validator_report))) {
+    const first = JSON.stringify(out[0].validator_report);
+    if (out.every((r) => JSON.stringify(r.validator_report) === first)) {
+      shared.validator_report = out[0].validator_report;
+      for (const r of out) delete r.validator_report;
+    }
+  }
+  return { rows: out, shared };
+}
+
 function json(body: unknown, status = 200) {
   const prof = (globalThis as any).__wkProf as ProfEntry[] | null;
   if (prof && body && typeof body === "object" && !Array.isArray(body)) {
-    body = { ...(body as Record<string, unknown>), _profile: { total_ms: 0, isolate: ISOLATE_ID, memo_hits: (globalThis as any).__wkMemoStats?.hits ?? null, in_flight_at_start: (globalThis as any).__wkInFlightAtStart ?? null, calls: prof } };
+    body = { ...(body as Record<string, unknown>), _profile: { total_ms: 0, isolate: ISOLATE_ID, memo_hits: (globalThis as any).__wkMemoStats?.hits ?? null, in_flight_at_start: (globalThis as any).__wkInFlightAtStart ?? null, calls: prof, bs_rej: (globalThis as any).__bsRej ?? null } }; (globalThis as any).__bsRej = undefined;
   }
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
