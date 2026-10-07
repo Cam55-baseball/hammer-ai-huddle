@@ -49,7 +49,7 @@ describe("ONE SYSTEM, ONE PHASE", () => {
       // The app runs "today" on the athlete's own calendar day.
       vi.useFakeTimers(); vi.setSystemTime(new Date(day + "T12:00:00"));
       const sv = serverWk(s, new Date(day + "T12:00:00Z"), day);
-      const cv = clientWk(s, new Date(day + "T12:00:00"), day as any);
+      const cv = clientWk(s, new Date(day + "T12:00:00"));
       const ss = serverSeason(s, day).phase;
       const cs = clientSeason(s, day).phase;
       const tc = phaseFrom(s, null, day);

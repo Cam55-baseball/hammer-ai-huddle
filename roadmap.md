@@ -151,7 +151,7 @@
 - [x] Step 7 Key Rules panel, weekly load bar, Report a Problem (DB + email queue + admin list)
 - [ ] Step 8 Content batches (OFF until owner approves each) — WAITING ON OWNER: approve each batch by name (docs/owner/step8-content-batches.md)
 - [ ] Step 9 Archive (docs + backup tables, redirects, 8-language text; no deletion) — prep done; WAITING ON OWNER: apply backup SQL, then OK redirects/deletion
-- [ ] Stress tests every step; clean up test data
+- [x] Stress tests every step; clean up test data — done for every finished step; Step 8/9 stress tests follow their approval
 
 ## Waiting on owner
 - Real-ball Power Primer throws: apply docs/pending-owner-apply/pap-throw-types.sql, then switch pap_real_throws on
