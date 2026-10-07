@@ -39,7 +39,7 @@ export function restWhyLine(b: RestBand): string {
   switch (b.why) {
     case "plan rest": return "Why this rest: your plan sets it for this lift.";
     case "hold": return "Why this rest: holds tire your muscles fast — about 1 to 1½ minutes brings them back.";
-    case "skill/throw": return "Why this rest: short rest keeps your movement sharp without cooling down.";
+    case "skill/throw": return "Why this rest: rest 45–60 seconds between rounds or sets of throws, not between every throw — it keeps you sharp without cooling down.";
     case "80%+ of max": return "Why this rest: heavy sets need about 3 minutes so you're strong again for the next one.";
     case "65–79% of max": return "Why this rest: medium-heavy sets need 2 to 2½ minutes to recover.";
     default: return "Why this rest: lighter sets need 1½ to 2 minutes to recover.";

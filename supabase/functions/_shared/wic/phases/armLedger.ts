@@ -30,8 +30,10 @@ export const ARM_DEFAULTS = {
   positionDaily: [{ maxAge: 12, units: 40 }, { maxAge: 15, units: 55 }, { maxAge: 18, units: 70 }, { maxAge: 200, units: 85 }],
   /** CHOSEN — catchers carry extra volume; throw-downs still count as high intent. */
   catcherExtra: 15,
-  /** CHOSEN — how much a throw counts toward the tank by intent. */
-  intentWeight: { low: 0.25, moderate: 0.5, high: 1 } as Record<Intent, number>,
+  /** OWNER FINAL (2026-10-07) — off-mound throw weight by intent: high 0.75, low/moderate 0.6.
+   *  Warm-ups and catch play 0.25, pitches 1.0 (see throwUnits). Budgets unchanged. */
+  intentWeight: { low: 0.6, moderate: 0.6, high: 0.75 } as Record<Intent, number>,
+  warmupWeight: 0.25,
   /** CHOSEN — a pitcher who also catches is budgeted to this share of the stricter budget. */
   pitcherCatcherShare: 0.7,
   /** CHOSEN — softball tournament weekend budget per tournament day (pitches). */
@@ -84,9 +86,13 @@ export function armBudget(a: ThrowAthlete): ArmBudget {
   return { daily: Math.floor(daily * s), weekly: Math.floor(weekly * s), unit: "throws", strictest, tight: true };
 }
 
-/** Units a set of throws uses. A pitch always counts as high intent. */
+/** Units a set of throws uses (owner final table 2026-10-07): pitch 1.0, warm-up/catch play 0.25,
+ *  other off-mound throws (incl. catcher throw-downs) 0.75 high / 0.6 low. */
 export function throwUnits(events: ThrowEvent[]): number {
-  return events.reduce((s, e) => s + e.count * (e.kind === "pitch" || e.kind === "throwdown" ? 1 : ARM_DEFAULTS.intentWeight[e.intent]), 0);
+  return events.reduce((s, e) => s + e.count * (
+    e.kind === "pitch" ? 1
+    : e.kind === "warmup" ? ARM_DEFAULTS.warmupWeight
+    : ARM_DEFAULTS.intentWeight[e.intent]), 0);
 }
 
 export type DayType = "off" | "practice" | "game" | "tournament";

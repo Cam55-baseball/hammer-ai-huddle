@@ -14,6 +14,7 @@
  *
  * Schedule context line from `useScheduleWindow` retained.
  */
+import { TrendDeloadNotice } from "@/components/hammer/TrendDeloadNotice";
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
 import { ReleaseCountdown, NextReleaseLine } from "@/components/hammer/cards/ReleaseCountdown";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
@@ -123,6 +124,7 @@ import { PracticeLog } from "@/components/hammer/logging/ExtraLogs";
 import { PlanStreakStrip } from "@/components/hammer/cards/PlanStreakStrip";
 import { KeyRulesPanel } from "@/components/hammer/cards/KeyRulesPanel";
 import { ArmThrowsPanel } from "@/components/hammer/ArmThrowsPanel";
+import { ThrowPacingGuide } from "@/components/hammer/cards/ThrowPacingGuide";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ArmCareBudgetProvider } from "@/components/hammer/ArmCareBudgetContext";
 import {
@@ -1044,6 +1046,7 @@ function HammerDailyPlanBody({
             <ArmCareBudgetProvider owner={armCareOwner}>
 
               <WkSafePlanNotice />
+              <TrendDeloadNotice />
               <ReleaseCountdown />
               <PlanStreakStrip />
               <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
@@ -1657,6 +1660,7 @@ function BlockCard({
           {block.modality === "defense" && <DefensePositionSwap />}
 
           {block.modality === "throwing" && <ArmThrowsPanel source="position" planDate={planDate} />}
+          {block.modality === "throwing" && <ThrowPacingGuide />}
 
           {block.drills.length > 0 && (
             <div className="space-y-1.5">

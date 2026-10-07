@@ -44,6 +44,7 @@ import { resolveSeasonQuarter } from "@/lib/hammer/roadmap/seasonQuarters";
 import { useArmCareBudget } from "@/components/hammer/ArmCareBudgetContext";
 import { ExerciseLogSheet } from "@/components/hammer/logging/ExerciseLogSheet";
 import { ArmThrowsPanel } from "@/components/hammer/ArmThrowsPanel";
+import { ThrowPacingGuide } from "@/components/hammer/cards/ThrowPacingGuide";
 import { YouthPitchingLimits } from "@/components/hammer/YouthPitchingLimits";
 import { PitchingBests } from "@/components/hammer/cards/PitchingBests";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
@@ -409,6 +410,7 @@ export function PitchingCard() {
 
             {/* Step 30 E — warm-up / catch play entered ALONGSIDE pitch counts */}
             <ArmThrowsPanel source="pitching" planDate={todayIso} />
+            <ThrowPacingGuide />
 
             {/* Weekly rhythm */}
             <div>

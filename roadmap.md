@@ -5,6 +5,16 @@
 > - Next: 7b weekly body-load bar, then 7c Report a Problem.
 > - Waiting on owner: (1) Throw counting: do warm-ups/catch play count 0.6 instead of 0.25, and does the daily arm budget rise to match? (also blocks 5b and throwing/pick-off next dates) (2) Should hard-session ratings trigger an earlier lift deload? (3) Barefoot pain-free days per stage + readiness test — nobody moves past Foundation until set. (4) Step 8 content batches, one by one — including the new explosive-pitcher and softball-season conditioning drills (6d).
 
+## Round 9 (owner answers 2026-10-07, redeploys authorized)
+- [ ] 9.1 Throw counting final (warm-up/catch 0.25, budget unchanged) → finish 5b + throwing/pick-off next dates
+- [ ] 9.2 Lift deload by trends (14d: ≥3 sessions 8+/10 AND flat/down verified lift OR 7d readiness < 28d OR new pain → next week sets ×0.6; never stacked; not in-season) + simulations
+- [ ] 9.3 Barefoot gates live (12/21/60, 10/28/60, 10/42/65) + guided readiness test
+- [ ] 9.4 Throwing pacing guidance + optional timer
+- [ ] 9.5 Bug: softball 5Tool/Golden 2Way get hitter bat speed + simulation
+- [ ] 9.6 GitHub tcs-reliability fast tier: lockfile sync, all tests pass, nightly install check
+- [ ] 9.7 Limb size: input report, collection (wingspan, sitting height, hand length; history; parent for U13), proposal only
+- [ ] 9.8 7b body-load bar, 7c Report a Problem (save + email queue/retry), Step 8 batch summaries, Step 9 archive prep
+
 - [x] Current request: clarify Rest / Push / Skip with accurate frontend-only labels and explanations; report exact before/after text (phone/desktop checked with local-only test state)
 - [x] Current request: quote the complete Start card for all five requested player examples, read-only
 

@@ -224,6 +224,8 @@ import {
 import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
 import { finalRuleCheck, nextEligibleDates, dayKinds, FINAL_CHECK_CATALOG_COLUMNS, type DayKind } from "../_shared/wic/schedule/finalCheck.ts";
 import { loadU13ThrowBlock, loadU13ThrowState } from "../_shared/wic/phases/u13ThrowGate.ts";
+import { nextThrowDate, nextPickoffDate } from "../_shared/wic/phases/nextThrowDate.ts";
+import { trendDeload, loadTrendInput, lighterSets, TREND_DELOAD_VERSION } from "../_shared/wic/lift/trendDeload.ts";
 import { loadedLiftRows } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
 import { loadExternalTraining, mergeExternal } from "../_shared/wic/schedule/externalTraining.ts";
 
@@ -655,13 +657,17 @@ const handler = async (req: Request): Promise<Response> => {
         // Round 8 Step 1: next allowed date per spaced card type, same rules.
         // Every scheduled game/tournament in the next 60 days feeds the day-before-game rule.
         const vTo = new Date(Date.parse(`${planDate}T00:00:00Z`) + 60 * 86_400_000).toISOString().slice(0, 10);
-        const [{ data: vGpAll }, { data: vCalAll }, vU13] = await Promise.all([
+        const [{ data: vGpAll }, { data: vCalAll }, vU13, vArm, { data: vAc }] = await Promise.all([
           admin.from("gp_games").select("game_date").eq("user_id", user.id).is("deleted_at", null).gt("game_date", planDate).lte("game_date", vTo)
             .or("ignored_for_training.is.null,ignored_for_training.eq.false").not("status", "in", "(canceled,cancelled,rescheduled)").limit(200),
           admin.from("calendar_events").select("event_date").eq("user_id", user.id).is("deleted_at", null).gt("event_date", planDate).lte("event_date", vTo)
             .in("event_type", ["game", "tournament", "scrimmage"]).or("ignored_for_training.is.null,ignored_for_training.eq.false").limit(200),
           loadU13ThrowState(admin, user.id, vAge, planDate),
+          admin.from("arm_ledger_entries").select("entry_date, source, throw_type, count, status").eq("user_id", user.id)
+            .gte("entry_date", new Date(Date.parse(`${planDate}T00:00:00Z`) - 7 * 86_400_000).toISOString().slice(0, 10)).lte("entry_date", planDate).limit(2000),
+          admin.from("athlete_context").select("sport_primary, position_primary, position_secondary, competition_level").eq("user_id", user.id).maybeSingle(),
         ]);
+        const vArmRows = ((vArm as any)?.data ?? []) as any[];
         const vGameDates = [...((vGpAll ?? []) as any[]).map((g) => String(g.game_date)), ...((vCalAll ?? []) as any[]).map((g) => String(g.event_date))];
         const nextEligible: Record<string, string | null> = nextEligibleDates(vCheck.rows as any[], {
           gameDates: vGameDates,
@@ -670,9 +676,12 @@ const handler = async (req: Request): Promise<Response> => {
           weeklyLiftMax: vSpacing && vPhase === "in_season" ? 2 : null,
           catalog: vCatMap,
         });
-        // Throwing: only the existing Pitch Smart rules give a date (under 13). Pick-off: no built rule yet → null.
-        nextEligible.throwing = vU13.next;
-        nextEligible.pick_off = null;
+        // Round 9: throwing = later of the under-13 gate and the Pitch Smart rest table over
+        // pitch-equivalents (owner final throw table). Pick-off shares the arm: baseball pitchers only.
+        const vIsP = [vAc?.position_primary, vAc?.position_secondary].some((p: any) => /^(p|sp|rp|pitcher)$/i.test(String(p ?? "").trim()));
+        const vThrow13 = nextThrowDate(vAge, (vAc as any)?.competition_level ?? null, vArmRows, planDate);
+        nextEligible.throwing = [vU13.next, vThrow13].filter(Boolean).sort().pop() ?? null;
+        nextEligible.pick_off = nextPickoffDate((vAc as any)?.sport_primary ?? null, vIsP, nextEligible.throwing);
         if (vCheck.swaps.length === 0) {
           return json({ ok: true, verified: true, plan_date: planDate, next_eligible: nextEligible }, 200);
         }
@@ -2795,6 +2804,15 @@ const handler = async (req: Request): Promise<Response> => {
       trainingAgeYears: trainingAgeYears ?? null,
     });
 
+    // -------- Round 9: lighter week brought forward by trends (owner rule 2026-10-07) --------
+    // Decided from data before this week's Monday, so every build this week agrees.
+    const tdWeekStart = isoShift(planDate, -((new Date(`${planDate}T12:00:00Z`).getUTCDay() + 6) % 7));
+    let trendDecision: ReturnType<typeof trendDeload> | null = null;
+    try {
+      const tdIn = await loadTrendInput(admin, user.id, tdWeekStart, String(phaseRes?.phase ?? ""), progression.isDeloadWeek, progression.weekInBlock === 1 && progression.blockIndex > 0);
+      if (tdIn) trendDecision = trendDeload(tdIn);
+    } catch (_e) { trendDecision = null; }
+
     const dayOfYearSeed = Math.floor(
       (new Date(planDate + "T00:00:00").getTime() - new Date(new Date(planDate).getFullYear(), 0, 0).getTime()) / 86400000,
     );
@@ -3213,6 +3231,12 @@ const handler = async (req: Request): Promise<Response> => {
           }
           if (!isWithinEnvelope(phaseRes.phase, dd.role ?? rx.sequence_role, dd.category, rx.sets, rx.reps, arcMethod)) {
             dd.envelope_violation = true;
+          }
+          // Round 9 trend lighter week: approved sets × 0.6 on lift rows only; reps/% unchanged.
+          if (trendDecision?.apply && domain === "lift" && !progression.isDeloadWeek) {
+            const fromSets = rx.sets;
+            rx.sets = lighterSets(rx.sets);
+            wp.trend_deload = { version: TREND_DELOAD_VERSION, from: fromSets, to: rx.sets, reason: trendDecision.reason, signals: trendDecision.signals };
           }
 
         }

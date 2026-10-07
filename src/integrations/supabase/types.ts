@@ -2003,6 +2003,45 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_limb_measurements: {
+        Row: {
+          created_at: string
+          entered_by: string | null
+          hand_length_in: number | null
+          id: string
+          measured_on: string
+          sitting_height_in: number | null
+          source: string
+          standing_height_in: number | null
+          user_id: string
+          wingspan_in: number | null
+        }
+        Insert: {
+          created_at?: string
+          entered_by?: string | null
+          hand_length_in?: number | null
+          id?: string
+          measured_on?: string
+          sitting_height_in?: number | null
+          source?: string
+          standing_height_in?: number | null
+          user_id: string
+          wingspan_in?: number | null
+        }
+        Update: {
+          created_at?: string
+          entered_by?: string | null
+          hand_length_in?: number | null
+          id?: string
+          measured_on?: string
+          sitting_height_in?: number | null
+          source?: string
+          standing_height_in?: number | null
+          user_id?: string
+          wingspan_in?: number | null
+        }
+        Relationships: []
+      }
       athlete_load_tracking: {
         Row: {
           cns_load_total: number | null

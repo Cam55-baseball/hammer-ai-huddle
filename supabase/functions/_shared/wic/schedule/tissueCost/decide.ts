@@ -180,6 +180,7 @@ function requiredRestDays(
 
 /* --------------------------------------------------------------------- decide */
 
+let inCheckInProbe = false;
 export function decide(
   profile: Profile,
   history: DaySchedule[],
@@ -459,6 +460,20 @@ export function decide(
   const gameToday = !!todayDay?.games;
   const timing: Timing = allowedClass === "none" ? "none" : gameToday ? "post_game" : "after_skill_work";
 
+  let probeClass: SessionClass | null = null;
+  const checkInOnlyRest = (): boolean => {
+    if (inCheckInProbe) return false;
+    const softened = checkIns.map((c) => ({ ...c, poorSleep: false, highSoreness: false }));
+    if (softened.every((c, i) => c.poorSleep === checkIns[i].poorSleep && c.highSoreness === checkIns[i].highSoreness)) return false;
+    inCheckInProbe = true;
+    try {
+      const c = decide(profile, history, calendar, softened, config, today, timezone).allowedClass;
+      probeClass = c === "none" ? null : c as SessionClass;
+      return probeClass !== null;
+    }
+    finally { inCheckInProbe = false; }
+  };
+
   // ---- next heavy date (forward simulation, no extra lifts, horizon 10 days)
   let nextHeavyDate: string | null = null;
   if (allowedClass === "H") {
@@ -474,10 +489,16 @@ export function decide(
       const rule = hardRuleFor(safeProfile, day, byDate.get(addDays(date, 1)) ?? null, false, "H");
       if (rule) continue;
       // Spacing counts from the last PLANNED lift — today's, if today lifts.
-      const anchorDate = allowedClass !== "none" ? today : lastPlannedEntry?.date ?? null;
+      // I4 fix (2026-10-07): if today is "none" only because of poor-sleep /
+      // soreness check-ins (the same day with those removed would allow a lift),
+      // anchor the forecast at today at the class that day would have allowed. Otherwise a worse check-in
+      // that cancels today's lift pulls the heavy day EARLIER. Tank-only rest
+      // days (no check-in cause) are unchanged.
+      const todayAnchors = allowedClass !== "none" || checkInOnlyRest();
+      const anchorDate = todayAnchors ? today : lastPlannedEntry?.date ?? null;
       const anchorClass: SessionClass | null = allowedClass !== "none"
         ? allowedClass as SessionClass
-        : lastPlannedEntry?.lift?.class ?? null;
+        : todayAnchors ? (probeClass ?? "L") : lastPlannedEntry?.lift?.class ?? null;
       const need = anchorDate && anchorClass ? requiredRestDays(phase, anchorClass, "H", config) : 0;
       if (anchorDate && fullRestDaysBetween(anchorDate, date) < need) continue;
       if (weeklyMax !== null) {
