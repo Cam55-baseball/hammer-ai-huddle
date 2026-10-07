@@ -20838,6 +20838,16 @@ export type Database = {
         Args: { p_date: string; p_diag: Json; p_rows: Json; p_user: string }
         Returns: string
       }
+      wk_persist_prescriptions_shared: {
+        Args: {
+          p_date: string
+          p_diag: Json
+          p_rows: Json
+          p_shared: Json
+          p_user: string
+        }
+        Returns: string
+      }
       wk_upsert_fault_signal: {
         Args: {
           p_confidence: number
