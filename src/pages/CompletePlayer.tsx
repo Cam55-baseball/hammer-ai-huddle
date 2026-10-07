@@ -1,5 +1,5 @@
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
-import { isRetiredRoute, scrubRetiredFromList } from "../../supabase/functions/_shared/archive/retiredPrograms";
+import { isRetiredRoute } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Target, Zap, ArrowRight } from "lucide-react";
