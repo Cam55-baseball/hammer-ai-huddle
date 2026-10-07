@@ -2,7 +2,7 @@
 
 > **Status (2026-10-07, owner corrections applied)**
 > - Finished: owner corrections 1, 2, 4 and goal-based exercise choice (3, choice part): duplicate limb questions removed (0 saved rows, nothing to move); limb proportions shift lift emphasis (long femur → more split squats/lunges/trap bar, bilateral still appears; long arms → more DB/neutral presses), never exclude; all goal sources shape exercise choice; max-effort throw rest 15–45 s. 8 simulations pass, 0 violations. Plan builder redeployed; it starts and answers, but your account has never tapped Start, so the new picks can't be shown on a live plan yet.
-> - Next item: live player/pitcher verification with schedule data (test players approved), then exhaustive all-app audit.
+> - Next item: exhaustive all-app audit.
 > - Waiting on owner:
 >   1. Step 8 content batches, by name.
 >   2. Step 9 backup step, then redirects.
@@ -10,6 +10,7 @@
 >   4. Windmill switch-on.
 >   5. Plan-building capacity (~860/hour).
 >   6. Missed-lift job switch-on; game-linked flush and morning-question decisions.
+>   7. Approve rewording the core exercise explanation that names an outside coach (lift_mcgill_big3) to plain text, e.g. "Back-friendly trunk basics: curl-up, side plank, bird-dog."
 >   (Limb-size proposal resolved by your correction — rules in docs/wic/limb-size-report.md §d.)
 
 ## Owner corrections 2026-10-07
@@ -43,7 +44,7 @@
 - [x] Rest-day count held (hard sprint swapped for easy flush)
 - [x] Pitcher schedule → recovery governor, arm care, throwing plan, weekly stress planner (wired per docs/wic/remaining-items-closeout.md §4; 156 pitching/weekly-load tests pass 2026-10-07; live pitcher check is the next item, owner-blocked)
 - [x] "Did you play yesterday?" / "Did you pitch?" inside the morning check-in itself (MorningGameQuestions renders in the morning check-in: game question for anyone with an unlogged game yesterday, pitching question for pitchers via the same pitcher gate as the schedule card; saves a draft game row / confirms or adds a thrown outing dated yesterday; shares the asked-once key with the Hammers Today game prompt so the athlete is asked once, in either place; decided by pure decideMorningGameAsk with 6 passing tests; verified live as the owner — question rendered from a test calendar event, Yes-click created the draft game row, test rows removed)
-- [ ] Live verification as a player and as a pitcher with schedule data — WAITING ON OWNER: test-player sign-in approval
+- [x] Live verification as a player and as a pitcher with schedule data — done 2026-10-07 signed in as hidden test pitcher (demoramp): set Starter, next start Oct 12, tapped "I threw today: Start" (saved: 1 planned + 1 thrown outing, message "Tomorrow's plan will help you recover"). Next-day plan dropped speed, sprint conditioning and bat speed and kept arm care + light lift (no squat). Finding: one exercise explanation names an outside coach ("Stuart McGill's back-preserving trunk staple", slug lift_mcgill_big3) — rewording is catalog content, logged for owner. Test data removed.
 - [x] Stage 4 — game/practice load feeds recovery limit (scheduled practices are not confirmed logs)
 - [x] Stage 5 — career goal direction + rank-goals prompt
 - [x] Stage 6 — The General shows records (preview; published release unverified)
