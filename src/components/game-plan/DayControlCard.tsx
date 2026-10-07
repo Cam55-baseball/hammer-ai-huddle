@@ -19,26 +19,26 @@ const STATE_META: Record<DayType, {
   headerClass: string;
 }> = {
   rest: {
-    label: 'REST — TAKE IT EASIER',
-    explanation: 'Eligible remaining work is dialled back, not cancelled. Daily must-do tasks are waived; streak protection is within your rest allowance.',
+    label: 'REST DAY — RECOVERY MODE',
+    explanation: 'Recovery supports performance. Streak protected. NN waived.',
     cardClass: 'border-sky-500/50 bg-gradient-to-br from-sky-500/10 to-blue-500/5',
     headerClass: 'text-sky-400',
   },
   skip: {
-    label: 'SKIP — SIT TODAY OUT',
-    explanation: 'No progress or recovery credit for the day. This does not mark every workout skipped.',
+    label: 'SKIP DAY — NO LOGGED OUTPUT',
+    explanation: 'Day ignored. No progress. No recovery credit.',
     cardClass: 'border-muted bg-muted/30',
     headerClass: 'text-muted-foreground',
   },
   push: {
-    label: 'PUSH — COMMIT TO THE PLAN',
-    explanation: 'Follow today’s plan, not a harder plan. All training limits still apply.',
+    label: 'PUSH DAY — EXTRA LOAD',
+    explanation: 'Higher standard today. Extra output expected.',
     cardClass: 'border-amber-500/50 bg-gradient-to-br from-amber-500/10 to-rose-500/5',
     headerClass: 'text-amber-400',
   },
   standard: {
     label: 'STANDARD DAY',
-    explanation: 'Follow today’s plan.',
+    explanation: 'Operate at your current identity standard.',
     cardClass: 'border-border bg-card/50',
     headerClass: 'text-foreground',
   },
@@ -67,9 +67,9 @@ export function DayControlCard() {
       }
       await setDayType(next);
       const msgs: Record<string, string> = {
-        rest: 'Rest selected — eligible remaining work dialled back.',
+        rest: 'Rest day set — streak protected.',
         skip: 'Skip day set — day will not count.',
-        push: 'Push selected — no extra work added.',
+        push: 'Push day set — extra load expected.',
       };
       toast.success(next ? msgs[next] : 'Standard day restored.');
     } finally {
@@ -118,7 +118,7 @@ export function DayControlCard() {
             )}
           >
             <Moon className="h-4 w-4" />
-            Rest: take it easier
+            REST
           </Button>
           <p className="text-xs leading-relaxed text-muted-foreground">Dial back hard work still to do; keep completed work.</p>
           </div>
@@ -133,7 +133,7 @@ export function DayControlCard() {
             )}
           >
             <SkipForward className="h-4 w-4" />
-            Skip: sit today out
+            SKIP
           </Button>
           <p className="text-xs leading-relaxed text-muted-foreground">No day credit; workout amounts stay the same.</p>
           </div>
@@ -148,7 +148,7 @@ export function DayControlCard() {
             )}
           >
             <Flame className="h-4 w-4" />
-            Push: commit to the plan
+            PUSH
           </Button>
           <p className="text-xs leading-relaxed text-muted-foreground">Do today’s planned work; no extra sets or harder work added.</p>
           </div>
