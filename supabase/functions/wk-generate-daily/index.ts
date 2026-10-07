@@ -82,8 +82,6 @@ import {
   selectBatSpeedPicks,
 } from "../_shared/wic/engines/batSpeed.ts";
 import { batSpeedProgramGate, LIGHT_BAT_CATEGORIES } from "../_shared/wic/batSpeed/programGate.ts";
-import {
-} from "../_shared/wic/engines/batSpeed.ts";
 // Elite progression — block/week wave + personal-best lineage (pure, replay-safe).
 import {
   buildProgressionState,
