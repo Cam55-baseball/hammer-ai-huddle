@@ -234,13 +234,19 @@ export function finalRuleCheck<T extends FinalCheckRow>(
  */
 export function nextEligibleDates(
   todayRows: readonly FinalCheckRow[],
-  ctx: Pick<FinalCheckContext, "planDate" | "priorLiftDates" | "restDaysBetweenLifts" | "weeklyLiftMax" | "catalog">,
+  ctx: Pick<FinalCheckContext, "planDate" | "priorLiftDates" | "restDaysBetweenLifts" | "weeklyLiftMax" | "catalog">
+    & { gameDates?: readonly string[] },
 ): Record<"lift" | DayKind, string> {
   const iso = (n: number) => new Date(n * 86_400_000).toISOString().slice(0, 10);
   const today = dayNum(ctx.planDate);
   const kinds = dayKinds(todayRows, ctx.catalog);
   const out = {} as Record<"lift" | DayKind, string>;
   for (const k of ["hard_run", "high_jump", "bat_over_under"] as DayKind[]) out[k] = iso(today + (kinds.has(k) ? 2 : 1));
+  // Day-before-game rule: hard running never the day before ANY scheduled game.
+  const games = new Set(ctx.gameDates ?? []);
+  let hr = dayNum(out.hard_run);
+  for (let i = 0; i < 60 && games.has(iso(hr + 1)); i++) hr++;
+  out.hard_run = iso(hr);
   const liftDays = ctx.priorLiftDates.filter((d) => d < ctx.planDate).map(dayNum);
   if (loadedLiftRows(todayRows as FinalCheckRow[]).length > 0) liftDays.push(today);
   liftDays.sort((a, b) => a - b);

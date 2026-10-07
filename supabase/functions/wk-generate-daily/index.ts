@@ -652,12 +652,26 @@ const handler = async (req: Request): Promise<Response> => {
           catalog: vCatMap,
         });
         // Round 8 Step 1: next allowed date per spaced card type, same rules.
-        const nextEligible = nextEligibleDates(vCheck.rows as any[], {
+        // Every scheduled game/tournament in the next 60 days feeds the day-before-game rule.
+        const vTo = new Date(Date.parse(`${planDate}T00:00:00Z`) + 60 * 86_400_000).toISOString().slice(0, 10);
+        const [{ data: vGpAll }, { data: vCalAll }, vU13] = await Promise.all([
+          admin.from("gp_games").select("game_date").eq("user_id", user.id).is("deleted_at", null).gt("game_date", planDate).lte("game_date", vTo)
+            .or("ignored_for_training.is.null,ignored_for_training.eq.false").not("status", "in", "(canceled,cancelled,rescheduled)").limit(200),
+          admin.from("calendar_events").select("event_date").eq("user_id", user.id).is("deleted_at", null).gt("event_date", planDate).lte("event_date", vTo)
+            .in("event_type", ["game", "tournament", "scrimmage"]).or("ignored_for_training.is.null,ignored_for_training.eq.false").limit(200),
+          loadU13ThrowState(admin, user.id, vAge, planDate),
+        ]);
+        const vGameDates = [...((vGpAll ?? []) as any[]).map((g) => String(g.game_date)), ...((vCalAll ?? []) as any[]).map((g) => String(g.event_date))];
+        const nextEligible: Record<string, string | null> = nextEligibleDates(vCheck.rows as any[], {
+          gameDates: vGameDates,
           planDate, priorLiftDates: vMerged.priorLiftDates,
           restDaysBetweenLifts: vSpacing ? 2 : null,
           weeklyLiftMax: vSpacing && vPhase === "in_season" ? 2 : null,
           catalog: vCatMap,
         });
+        // Throwing: only the existing Pitch Smart rules give a date (under 13). Pick-off: no built rule yet → null.
+        nextEligible.throwing = vU13.next;
+        nextEligible.pick_off = null;
         if (vCheck.swaps.length === 0) {
           return json({ ok: true, verified: true, plan_date: planDate, next_eligible: nextEligible }, 200);
         }
