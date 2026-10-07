@@ -10,6 +10,8 @@
  * a swap can only land inside the ladder the backend already certified.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { isSameOrLowerRisk, loadTier, type RiskFacts } from "@/lib/prescription/alternativeRisk";
+import { busyGymEquivalents } from "@/lib/prescription/busyGymEquivalents";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,7 +26,7 @@ export type SwapReason =
 
 export const SWAP_REASON_LABEL: Record<SwapReason, string> = {
   equipment_unavailable: "No equipment / no rack",
-  facility_unavailable: "Not at the facility",
+  facility_unavailable: "Busy gym / not at the facility",
   injury_restriction: "Something hurts",
   time_restriction: "Short on time",
   coach_override: "Coach override",
@@ -79,14 +81,14 @@ export function governanceCategory(rx: WkRx): string | null {
 }
 
 /** Catalog fields needed to re-derive a ladder with the backend's own rules. */
-interface FamilyRow extends SwapCandidate {
+interface FamilyRow extends SwapCandidate, Omit<RiskFacts, "equipment_requirements"> {
   substitution_family: string | null;
   season_legality: Record<string, boolean> | null;
   training_age_legality: Record<string, boolean> | null;
 }
 
 const CATALOG_COLS =
-  "slug, name, movement_category, substitution_family, season_legality, training_age_legality, default_sets, default_reps, default_duration_seconds, default_distance_feet, default_total_reps, dosage_unit, equipment_requirements, cue";
+  "slug, name, movement_category, substitution_family, season_legality, training_age_legality, default_sets, default_reps, default_duration_seconds, default_distance_feet, default_total_reps, dosage_unit, equipment_requirements, cue, min_age_years, plyo_tier, ub_tier, eccentric_overload, contraindications";
 
 /**
  * Mirror of `_shared/wic/lift/substitutions.ts::resolveSubstitutionLadder`.
@@ -127,16 +129,23 @@ function deriveLadder(self: FamilyRow, members: FamilyRow[], phase: string | nul
 export function useSwapLadder(rx: WkRx | null, enabled: boolean) {
   const stored = rx ? readLadder(rx) : {};
   const storedSlugs = ladderSlugs(stored);
-  const category = rx ? governanceCategory(rx) : null;
+  const govCategory = rx ? governanceCategory(rx) : null;
   const needsFallback = storedSlugs.length === 0;
 
   const query = useQuery({
     queryKey: needsFallback
-      ? ["wk-swap-family", category, rx?.movement_slug, rx?.phase]
+      ? ["wk-swap-family", govCategory, rx?.movement_slug, rx?.phase]
       : ["wk-swap-options", rx?.id, storedSlugs.join(",")],
-    enabled: enabled && !!rx && (storedSlugs.length > 0 || !!category),
+    enabled: enabled && !!rx,
     staleTime: 5 * 60_000,
     queryFn: async (): Promise<{ ladder: Ladder; options: Record<string, SwapCandidate> }> => {
+      // Non-lift cards carry no lift_governance: read the category off the catalog row itself.
+      let category = govCategory;
+      if (!category && rx?.movement_slug) {
+        const { data: selfRow } = await supabase.from("wk_movement_catalog" as any).select("movement_category").eq("slug", rx.movement_slug).maybeSingle();
+        category = ((selfRow as any)?.movement_category as string | null) ?? null;
+      }
+      if (needsFallback && !category) return { ladder: {}, options: {} };
       const wanted = [...storedSlugs, rx?.substituted_from_slug ?? "", rx?.movement_slug ?? ""].filter(Boolean);
       let q = supabase.from("wk_movement_catalog" as any).select(CATALOG_COLS);
       q = needsFallback ? q.eq("movement_category", category) : q.in("slug", wanted);
@@ -155,10 +164,40 @@ export function useSwapLadder(rx: WkRx | null, enabled: boolean) {
       }
 
       const options: Record<string, SwapCandidate> = {};
+      // Risk is judged against the ORIGINAL prescription (so swapping twice can't creep up).
+      const anchor = rows.find((r) => r.slug === (rx?.substituted_from_slug ?? rx?.movement_slug));
       for (const row of allowed) {
         const isOriginal = row.slug === rx?.substituted_from_slug;
+        if (!isOriginal && anchor && row.slug !== rx?.movement_slug && !isSameOrLowerRisk(anchor, row)) continue;
         if (!isOriginal && category && row.movement_category && row.movement_category !== category) continue;
         options[row.slug] = row;
+      }
+      // Busy gym: barbell / trap-bar lifts also get pattern equivalents that need neither.
+      const anchorSlug = rx?.substituted_from_slug ?? rx?.movement_slug ?? null;
+      if (anchor && loadTier(anchor.equipment_requirements) >= 2) {
+        const eq = busyGymEquivalents(anchorSlug);
+        if (eq.length) {
+          const [{ data: eqRows }, { data: auth }] = await Promise.all([
+            supabase.from("wk_movement_catalog" as any).select(CATALOG_COLS).in("slug", eq).eq("is_active", true),
+            supabase.auth.getUser(),
+          ]);
+          let playerAge: number | null = null;
+          if (auth?.user?.id) {
+            const { data: prof } = await supabase.from("profiles").select("date_of_birth").eq("id", auth.user.id).maybeSingle();
+            const dob = (prof as any)?.date_of_birth as string | null;
+            if (dob) playerAge = Math.floor((Date.now() - Date.parse(dob)) / (365.25 * 86_400_000));
+          }
+          const ageCap = Math.max(Number(anchor.min_age_years ?? 0), playerAge ?? 0);
+          const picked: string[] = [];
+          for (const r of (eqRows ?? []) as unknown as FamilyRow[]) {
+            if (rx?.phase && r.season_legality && r.season_legality[rx.phase] === false) continue;
+            if (!isSameOrLowerRisk({ ...anchor, min_age_years: ageCap }, r)) continue;
+            options[r.slug] = r; picked.push(r.slug);
+          }
+          if (picked.length) {
+            ladder = { ...ladder, facility_unavailable: [...new Set([...(ladder.facility_unavailable ?? []), ...picked])] };
+          }
+        }
       }
       return { ladder, options };
     },

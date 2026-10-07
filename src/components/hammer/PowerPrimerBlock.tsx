@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Zap, Lock } from "lucide-react";
 import { RestTimer } from "@/components/hammer/cards/RestTimer";
+import { papAlternatives } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
 
 export type PowerPrimerPayload = {
   target: "throw" | "bat_speed" | "first_step" | "jump";
-  primer: { source: "lift" | "library"; name: string; reps: [number, number]; heavy: boolean; cue?: string };
-  action: { name: string; reps: [number, number]; oz?: number | null; lb?: number | null; real_throw?: boolean; cue?: string };
+  primer: { source: "lift" | "library"; slug?: string; name: string; reps: [number, number]; heavy: boolean; cue?: string };
+  action: { slug?: string; name: string; reps: [number, number]; oz?: number | null; lb?: number | null; real_throw?: boolean; cue?: string };
   rest_s: [number, number];
   max_sets: number;
   max_total_reps: number | null;
@@ -29,7 +30,20 @@ const UNIT: Record<PowerPrimerPayload["target"], string> = { throw: "mph", bat_s
 
 function pbKey(t: string) { return `hm.pap.best.${t}`; }
 
-export function PowerPrimerBlock({ pp, planDate }: { pp: PowerPrimerPayload; planDate?: string | null }) {
+export function PowerPrimerBlock({ pp: base, planDate }: { pp: PowerPrimerPayload; planDate?: string | null }) {
+  const [primerIdx, setPrimerIdx] = useState(0);
+  const [actionIdx, setActionIdx] = useState(0);
+  const primerAlts = useMemo(() => base.primer.source === "library" && base.primer.slug ? papAlternatives(base.primer.slug, base.target) : [], [base]);
+  const actionAlts = useMemo(() => base.action.slug ? papAlternatives(base.action.slug, base.target) : [], [base]);
+  const pp: PowerPrimerPayload = useMemo(() => {
+    const pa = primerIdx > 0 ? primerAlts[primerIdx - 1] : null;
+    const aa = actionIdx > 0 ? actionAlts[actionIdx - 1] : null;
+    return {
+      ...base,
+      primer: pa ? { ...base.primer, slug: pa.slug, name: pa.name, heavy: pa.heavy, cue: pa.cue } : base.primer,
+      action: aa ? { ...base.action, slug: aa.slug, name: aa.name, oz: aa.oz ?? null, lb: aa.lb ?? null, cue: aa.cue } : base.action,
+    };
+  }, [base, primerIdx, actionIdx, primerAlts, actionAlts]);
   const warmKey = `hm.pap.warm.${planDate ?? "today"}`;
   const [warm, setWarm] = useState(() => typeof window !== "undefined" && localStorage.getItem(warmKey) === "1");
   const [values, setValues] = useState<number[]>([]);
@@ -80,9 +94,9 @@ export function PowerPrimerBlock({ pp, planDate }: { pp: PowerPrimerPayload; pla
         Do the primer, rest, then one all-out effort. Repeat. Your lift's sets and weights stay the same. Finish the whole lift after.
       </p>
       <ol className="text-xs space-y-1 list-decimal pl-4">
-        <li><span className="font-medium">Primer:</span> {pp.primer.name} — {pp.primer.reps[0]}–{pp.primer.reps[1]} reps{pp.primer.source === "lift" ? " (your first sets of this lift)" : ""}. Never to failure.</li>
+        <li><span className="font-medium">Primer:</span> {pp.primer.name} — {pp.primer.reps[0]}–{pp.primer.reps[1]} reps{pp.primer.source === "lift" ? " (your first sets of this lift)" : ""}. Never to failure. {primerAlts.length > 0 && <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => setPrimerIdx((i) => (i + 1) % (primerAlts.length + 1))}>Alternative</Button>}</li>
         <li><span className="font-medium">Rest:</span> {Math.round(pp.rest_s[0] / 60 * 10) / 10}–{Math.round(pp.rest_s[1] / 60 * 10) / 10} min.</li>
-        <li><span className="font-medium">All-out effort:</span> {pp.action.name} — {pp.action.reps[0]}–{pp.action.reps[1]} reps{pp.action.oz ? ` (${pp.action.oz} oz ball)` : pp.action.lb ? ` (${pp.action.lb} lb med ball)` : ""}, 100% effort.</li>
+        <li><span className="font-medium">All-out effort:</span> {pp.action.name} — {pp.action.reps[0]}–{pp.action.reps[1]} reps{pp.action.oz ? ` (${pp.action.oz} oz ball)` : pp.action.lb ? ` (${pp.action.lb} lb med ball)` : ""}, 100% effort. {actionAlts.length > 0 && <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => setActionIdx((i) => (i + 1) % (actionAlts.length + 1))}>Alternative</Button>}</li>
       </ol>
       <p className="text-[11px] text-muted-foreground">
         Limit: {pp.max_sets} rounds{pp.max_total_reps != null ? `, ${pp.max_total_reps} throws total` : ""}{pp.half_volume ? " (half today — readiness is lower)" : ""}.

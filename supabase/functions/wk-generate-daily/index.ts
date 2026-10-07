@@ -3252,8 +3252,12 @@ const handler = async (req: Request): Promise<Response> => {
           if (domain === "lift") {
             const gd = goalDose({
               seasonPhase: phaseRes.phase, key: goalDoseKey(goalEmphasis.ranked[0], (trainingPrefs as any)?.goal ?? null),
+              secondKey: goalDoseKey(goalEmphasis.ranked[1] ?? goalEmphasis.ranked[0], null),
               weekInBlock: progression.weekInBlock, isDeloadWeek: progression.isDeloadWeek, trendLighter: !!trendDecision?.apply,
               role: dd.role ?? rx.sequence_role, category: dd.category, sets: rx.sets, reps: rx.reps, method: arcMethod,
+              loadPct: (rx as any).load_pct ?? null, age: athleteAgeYears, trainingYears: trainingAgeYears,
+              readiness: (dailyLog as any)?.cns_readiness == null ? null : Number((dailyLog as any).cns_readiness) * 10,
+              growthMode: growthState.active,
             });
             if (gd) {
               wp.goal_dose = { version: GOAL_DOSE_VERSION, from: `${rx.sets}×${rx.reps}`, to: `${gd.sets}×${gd.reps}`, goal: goalEmphasis.ranked[0] ?? (trainingPrefs as any)?.goal ?? null };

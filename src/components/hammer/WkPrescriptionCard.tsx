@@ -79,7 +79,7 @@ export function WkPrescriptionCard({
   phaseKey,
   generating,
   side = null,
-  allowSwap = false,
+  allowSwap = true,
 }: {
   rx: WkRx;
   phaseDisplay?: string | null;
@@ -97,7 +97,7 @@ export function WkPrescriptionCard({
 
   const { user } = useAuth();
   const vMax = useVerifiedMax(rx.load_pct ? rx.movement_slug : null);
-  const plateau = useLiftPlateau(allowSwap ? rx.movement_slug : null);
+  const plateau = useLiftPlateau(allowSwap && rx.slot === "lift" ? rx.movement_slug : null);
   const qc = useQueryClient();
   const tasks = useHammerDailyTasks(rx.plan_date);
   const taskSeed = {
@@ -303,6 +303,32 @@ export function WkPrescriptionCard({
               )}
             </button>
           </CollapsibleTrigger>
+              {allowSwap && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-[11px] gap-1 shrink-0"
+                  disabled={!swapAvailable}
+                  title={
+                    swapLadder.isLoading
+                      ? "Checking alternatives…"
+                      : swapAvailable
+                        ? "Pick an equivalent exercise"
+                        : "No safe alternative for this exercise today"
+                  }
+                  onClick={() => setSwapOpen(true)}
+                >
+                  {swapLadder.isLoading ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Repeat2 className="h-3 w-3" />
+                  )}
+                  {swapLadder.isLoading ? "Alternative…" : swapAvailable ? "Alternative" : "No alternative"}
+                </Button>
+              )}
+          {swapAvailable && (
+            <LiftSwapSheet rx={rx} open={swapOpen} onOpenChange={setSwapOpen} />
+          )}
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="h-7 px-2 shrink-0">
               <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -363,42 +389,16 @@ export function WkPrescriptionCard({
               )}
             </div>
             <div className="flex items-center gap-1 shrink-0">
-              {allowSwap && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-[11px] gap-1"
-                  disabled={!swapAvailable}
-                  title={
-                    swapLadder.isLoading
-                      ? "Checking legal swaps…"
-                      : swapAvailable
-                        ? "Swap this movement for a certified alternate"
-                        : "No legal swap exists for this movement today"
-                  }
-                  onClick={() => setSwapOpen(true)}
-                >
-                  {swapLadder.isLoading ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Repeat2 className="h-3 w-3" />
-                  )}
-                  {swapLadder.isLoading ? "Swaps…" : swapAvailable ? "Swap" : "No swaps"}
-                </Button>
-              )}
               <LogButton rx={rx} dosageText={dosage} compact />
             </div>
           </div>
           <WkOneTapLog rx={rx} />
           {plateau && (
             <p data-lift-plateau className="text-[11px] text-foreground">
-              No new best on this lift in 3 sessions.{swapAvailable ? " Try a different lift of the same kind — tap Swap. Your sets and reps stay the same." : " Keep your form clean — progress will come."}
+              No new best on this lift in 3 sessions.{swapAvailable ? " Try a different lift of the same kind — tap Alternative. Your sets and reps stay the same." : " Keep your form clean — progress will come."}
             </p>
           )}
           {allowSwap && rx.substituted_from_slug && <LiftSwapUndoChip rx={rx} />}
-          {swapAvailable && (
-            <LiftSwapSheet rx={rx} open={swapOpen} onOpenChange={setSwapOpen} />
-          )}
 
           {/* Step 21D1 — Cue sits above "Why this movement". */}
           {why.cue && (
