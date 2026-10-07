@@ -47,7 +47,7 @@ import { useArmCareBudget } from "@/components/hammer/ArmCareBudgetContext";
 import { isDayStatementNotAReduction } from "@/components/hammer/WkPrescriptionCard";
 import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
 
-export function WkLiftsCard() {
+export function WkLiftsCard({ pocket = false }: { pocket?: boolean } = {}) {
   const { user } = useAuth();
   const gp = useGpSignal();
   // Phase 2 Fix 4 — pure consumer of the canonical snapshot.
@@ -80,7 +80,7 @@ export function WkLiftsCard() {
     ? grouped.lifts.filter((r) => r.sequence_role !== "arm_care")
     : grouped.lifts;
   const blockedItems = blocked.data ?? [];
-  const [open, setOpen] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(pocket);
 
   const submitAck = async () => {
     if (!user?.id) return;
