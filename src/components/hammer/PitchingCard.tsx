@@ -257,7 +257,7 @@ export function PitchingCard() {
     [sport, rung, quarter, profile, effectiveDayType],
   );
 
-  const pfp = useMemo(() => pickPfpDrillsForToday(today, rung), [rung, today]);
+  const pfp = useMemo(() => pickPfpDrillsForToday(today, rung, { sport, twoWay: profile.role === "two_way" }), [rung, today, sport, profile.role]);
 
   const isMoundDay = effectiveDayType === "start" || effectiveDayType === "bullpen" || effectiveDayType === "side";
 
