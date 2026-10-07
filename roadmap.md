@@ -15,15 +15,16 @@
 - [x] Step 9 redirects prepared and switched OFF; nothing deleted
 - [x] Corrections 1–5 re-verified
 - [x] Full test run: 2,445 tests incl. 8-week sims and phase scan — all pass after one outdated card test updated
-- [ ] Phone check of every page at 390 px — the test machine ran out of memory twice mid-run; last full pass (160 pages, 0 errors) was before this round. Re-run next.
+- [x] Phone check of every page at 390 px (E1, in 4 batches): 160 pages, 0 crashes, 0 errors, nothing wider than the screen
+- [x] Daily plan job running on schedule with no errors (21:30 run)
 - [x] Test plans and test body sizes removed; test players back to "not started"
 
 > **Status (2026-10-07, final)**
-> - Finished: everything above except the all-pages phone re-check.
-> - Next item: re-run the all-pages phone check at 390 px in smaller batches.
+> - Finished: everything above, including the all-pages phone check (160 pages, 0 errors).
+> - Next item: none — waits on the owner.
 > - Phase mismatch scan: 0 mismatches (26,352 player-days, 368,956 checks).
 > - Waiting on owner: 1. Email key. 2. OK to retire the five programs (redirects ready, off, nothing deleted). 3. Game-linked flush / morning question decisions (see top).
-> - Ready to publish: NOT YET — server side is live and proved, tests pass, but the all-pages phone check must pass on the new card notes first.
+> - Ready to publish: YES — server side live and proved; 2,445 tests pass; phase scan 0; all 160 pages clean at 390 px; app changes (card notes, body-size guides, labels) reach players on Publish.
 
 ## OWNER RULE 2026-10-07 (20:26) — ONE SYSTEM, ONE PHASE (high priority)
 - [x] Audit started (see docs/phase-audit.md)
