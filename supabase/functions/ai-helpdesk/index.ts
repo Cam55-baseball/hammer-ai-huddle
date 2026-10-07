@@ -169,7 +169,7 @@ RESPONSE GUIDELINES:
     // Program retirement switch ON: the help chat never mentions the five programs.
     let promptForUser = systemPrompt;
     try {
-      const { data: sw } = await supabase.from("wk_feature_switches").select("*").eq("key", PROGRAMS_RETIRED_KEY).maybeSingle();
+      const { data: sw } = await supabase.from("wk_feature_switches").select("*").eq("feature_key", PROGRAMS_RETIRED_KEY).maybeSingle();
       if (sw && isSwitchOnFor(sw as any, userId)) {
         promptForUser = scrubRetiredLines(scrubRetiredInline(systemPrompt)) +
           "\n- Never mention Heat Factory, Iron Bambino, The Unicorn, Speed Lab or Explosive Conditioning. Daily training lives in Hammers Today.";
