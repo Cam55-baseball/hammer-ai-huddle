@@ -4465,10 +4465,12 @@ const handler = async (req: Request): Promise<Response> => {
       }));
 
       try {
-        await admin.rpc("wk_persist_prescriptions_atomic" as any, {
+        const __split = splitSharedForPersist(safeRows as any[]);
+        await admin.rpc("wk_persist_prescriptions_shared" as any, {
+          p_shared: __split.shared,
           p_user: user.id,
           p_date: planDate,
-          p_rows: safeRows,
+          p_rows: __split.rows,
           p_diag: {
             generator_version: WIC_VERSION,
             season_phase: phaseRes.phase,
@@ -4706,10 +4708,12 @@ const handler = async (req: Request): Promise<Response> => {
       return json({ ok: true, adjusted: true, plan_date: planDate, ...(adj as any) }, 200);
     }
 
-    const { data: diagId, error: rpcErr } = await admin.rpc("wk_persist_prescriptions_atomic" as any, {
+    const __split = splitSharedForPersist(rows as any[]);
+    const { data: diagId, error: rpcErr } = await admin.rpc("wk_persist_prescriptions_shared" as any, {
+      p_shared: __split.shared,
       p_user: user.id,
       p_date: planDate,
-      p_rows: rows,
+      p_rows: __split.rows,
       p_diag: {
         generator_version: WIC_VERSION,
         season_phase: phaseRes.phase,
@@ -4932,6 +4936,43 @@ function clamp(v: number, min: number, max: number): number {
 function todayStr(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/**
+ * Performance only (Round 7): blocks identical on every card are sent once in
+ * `shared`; `wk_persist_prescriptions_shared` copies them back onto each card
+ * before the unchanged save, so the stored rows are the same jsonb.
+ */
+function splitSharedForPersist(rows: any[]): { rows: any[]; shared: Record<string, unknown> } {
+  const shared: Record<string, unknown> = {};
+  if (!Array.isArray(rows) || rows.length < 2) return { rows, shared };
+  const isObj = (v: unknown) => v !== null && typeof v === "object" && !Array.isArray(v);
+  const out = rows.map((r) => ({ ...r }));
+  for (const col of ["why_payload", "why_v2"]) {
+    if (!out.every((r) => isObj(r[col]))) continue;
+    const keys = Object.keys(out[0][col]);
+    const common: Record<string, unknown> = {};
+    for (const k of keys) {
+      const first = JSON.stringify(out[0][col][k]);
+      if (first === undefined || first.length < 512) continue;
+      if (out.every((r) => k in r[col] && JSON.stringify(r[col][k]) === first)) common[k] = out[0][col][k];
+    }
+    if (Object.keys(common).length === 0) continue;
+    shared[col] = common;
+    for (const r of out) {
+      const copy = { ...r[col] };
+      for (const k of Object.keys(common)) delete copy[k];
+      r[col] = copy;
+    }
+  }
+  if (out.every((r) => isObj(r.validator_report))) {
+    const first = JSON.stringify(out[0].validator_report);
+    if (out.every((r) => JSON.stringify(r.validator_report) === first)) {
+      shared.validator_report = out[0].validator_report;
+      for (const r of out) delete r.validator_report;
+    }
+  }
+  return { rows: out, shared };
 }
 
 function json(body: unknown, status = 200) {
