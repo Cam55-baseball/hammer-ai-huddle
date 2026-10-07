@@ -103,7 +103,7 @@ function baseballStarter(input: Input): PitcherDay[] {
         case 3: t = rung === "foundation" ? "touch" : "bullpen"; break;
         case 4: t = "fielding_only"; break;
         case 5: t = "touch"; break;
-        case 6: t = quarter.phase === "in" ? "rest" : "long_toss"; break;
+        case 6: t = quarter.phase === "in" ? "rest" : "touch"; break; // owner rule: no max long toss the day before a start
         default: t = "start"; break;
       }
     }
