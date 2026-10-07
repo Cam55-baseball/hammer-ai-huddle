@@ -776,6 +776,144 @@ export type Database = {
         }
         Relationships: []
       }
+      _snapshot_test_plan_20261007b: {
+        Row: {
+          adaptation: string | null
+          asymmetry_rule: string | null
+          cns_clamped: boolean | null
+          cns_cost: number | null
+          created_at: string | null
+          cue_ids: string[] | null
+          density_target_seconds: number | null
+          distance_feet: number | null
+          dosage_unit: string | null
+          duration_seconds: number | null
+          engine: string | null
+          execution_note: string | null
+          generator_version: string | null
+          id: string | null
+          intensity_mode: string | null
+          intent_tag: string | null
+          load_pct: number | null
+          movement_name: string | null
+          movement_slug: string | null
+          open_ended: boolean | null
+          per_side: boolean | null
+          phase: string | null
+          plan_date: string | null
+          rationale: string | null
+          reps: number | null
+          rir_high: number | null
+          rir_low: number | null
+          sequence_order: number | null
+          sequence_role: string | null
+          set_range_max: number | null
+          sets: number | null
+          slot: string | null
+          status: string | null
+          substituted_from_slug: string | null
+          substitution_reason: string | null
+          tempo: string | null
+          total_reps: number | null
+          troubleshoot_video_id: string | null
+          updated_at: string | null
+          user_id: string | null
+          validator_report: Json | null
+          why_payload: Json | null
+          why_v2: Json | null
+        }
+        Insert: {
+          adaptation?: string | null
+          asymmetry_rule?: string | null
+          cns_clamped?: boolean | null
+          cns_cost?: number | null
+          created_at?: string | null
+          cue_ids?: string[] | null
+          density_target_seconds?: number | null
+          distance_feet?: number | null
+          dosage_unit?: string | null
+          duration_seconds?: number | null
+          engine?: string | null
+          execution_note?: string | null
+          generator_version?: string | null
+          id?: string | null
+          intensity_mode?: string | null
+          intent_tag?: string | null
+          load_pct?: number | null
+          movement_name?: string | null
+          movement_slug?: string | null
+          open_ended?: boolean | null
+          per_side?: boolean | null
+          phase?: string | null
+          plan_date?: string | null
+          rationale?: string | null
+          reps?: number | null
+          rir_high?: number | null
+          rir_low?: number | null
+          sequence_order?: number | null
+          sequence_role?: string | null
+          set_range_max?: number | null
+          sets?: number | null
+          slot?: string | null
+          status?: string | null
+          substituted_from_slug?: string | null
+          substitution_reason?: string | null
+          tempo?: string | null
+          total_reps?: number | null
+          troubleshoot_video_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          validator_report?: Json | null
+          why_payload?: Json | null
+          why_v2?: Json | null
+        }
+        Update: {
+          adaptation?: string | null
+          asymmetry_rule?: string | null
+          cns_clamped?: boolean | null
+          cns_cost?: number | null
+          created_at?: string | null
+          cue_ids?: string[] | null
+          density_target_seconds?: number | null
+          distance_feet?: number | null
+          dosage_unit?: string | null
+          duration_seconds?: number | null
+          engine?: string | null
+          execution_note?: string | null
+          generator_version?: string | null
+          id?: string | null
+          intensity_mode?: string | null
+          intent_tag?: string | null
+          load_pct?: number | null
+          movement_name?: string | null
+          movement_slug?: string | null
+          open_ended?: boolean | null
+          per_side?: boolean | null
+          phase?: string | null
+          plan_date?: string | null
+          rationale?: string | null
+          reps?: number | null
+          rir_high?: number | null
+          rir_low?: number | null
+          sequence_order?: number | null
+          sequence_role?: string | null
+          set_range_max?: number | null
+          sets?: number | null
+          slot?: string | null
+          status?: string | null
+          substituted_from_slug?: string | null
+          substitution_reason?: string | null
+          tempo?: string | null
+          total_reps?: number | null
+          troubleshoot_video_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          validator_report?: Json | null
+          why_payload?: Json | null
+          why_v2?: Json | null
+        }
+        Relationships: []
+      }
       _snapshot_videos_acl_20261003: {
         Row: {
           relacl: string
