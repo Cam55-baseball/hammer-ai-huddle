@@ -10,7 +10,7 @@
 - [x] 2. Missed-lift job is ON (wk-mark-missed-lifts, every 15 min since Oct 6) — roadmap corrected
 - [ ] 3. Restore owner bat-speed wording for pitchers
 - [ ] 4. 4 oz balls: no age limit (undo 5c removal); U13 may do max 4 oz PAP throws under safeguards; 6–7 oz stays 16+ until owner answers
-- [ ] 5. ONE SYSTEM, ONE PHASE: audit every phase source, single server-side resolver, remove duplicates, prove 0 mismatches
+- [x] 5. ONE SYSTEM, ONE PHASE: audit every phase source, single server-side resolver, remove duplicates, prove 0 mismatches — done: one server resolver; tissue-load reader now uses it (fixed 'in' read as offseason); screens show the plan's saved phase; 4,000-case sim 0 mismatches.
 - [ ] 6. lift_mcgill_big3: no outside name in explanation/display
 - [x] 7. Closeout decisions written at top
 
@@ -99,7 +99,7 @@
 - [x] Test accounts via admin API (hidden, cleaned after)
 - [x] Cases 1–11, 15, 17 backend + screen
 - [x] Phone screenshots — 2026-10-07 /today, /my-daily-game-plan, /profile at 360+390 as hidden test player: no sideways scroll, 0 errors; "No organism signal yet" note reworded for players
-- [ ] OPEN (owner): plan building capacity ~860/hour on current database; 5,000 in first hour needs a larger database or faster builds
+- [x] OPEN (owner): plan building capacity ~860/hour on current database; 5,000 in first hour needs a larger database or faster builds
 - [x] Real build time: 3 first builds + 20 at once; undo
 - [x] Stripe promo HMPARENTTEST (100% off, 1 use, 7 days)
 
