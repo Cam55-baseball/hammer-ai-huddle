@@ -48,6 +48,7 @@ export function isPlateau(sessions: SpeedSessionLite[] /* oldest first */): bool
   const best: Record<string, number> = {};
   let since = 0;
   for (const s of sessions) {
+    if (!Object.keys(s.times).length) continue; // effort-only day, no times to compare
     let pb = false;
     for (const [d, t] of Object.entries(s.times)) {
       if (!(t > 0)) continue;
