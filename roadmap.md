@@ -75,7 +75,8 @@
   - [x] 2e "Your numbers" dashboards: speed (best/latest per distance), lift (verified max + gain), practice (minutes 7/28 days)
   - [x] 2f Step 2 player proof (test player, 360/390): sprint stopwatch + 2:00 rest timer, speed and practice dashboards show logged numbers, plan fingerprint identical before/after, 0 page errors, test player removed
   - [ ] 2g lift weight-unlock on-screen proof — needs a test plan with percentage lifts (in-season beginner plan had none); fold into Step 4 lift tests
-- [ ] NEXT ITEM: Step 3a Speed card — Speed Lab flow inside HT phase + one readiness score
+- [x] 3a Speed check-in on Speed card: one readiness score (sleep/legs/sore spots), rep cuts <60 (x0.75) / <40 (x0.6), break-day triggers + override; rules in src/lib/speed/speedEngine.ts (12 rule tests pass). Screen-side only, plan rows untouched
+- [ ] NEXT ITEM: 3b feed past speed sessions (RPE, times, PBs) into break-day/plateau checks; tiers + sport targets on dashboard; resisted 7 / overspeed 10 gating; context rules; then player proof at 360/390
 - [ ] Step 3 Speed card (Speed Lab engine inside HT phase, 6 context rules, barefoot 4-part gate)
 - [ ] Step 4 Lift card (scheme unchanged; weights, rest, why-line, plateau swap, deload proof)
 - [ ] Step 5 Throwing (throw weights 1.0/0.75/0.85, max long toss, 13+ weighted balls, pick-off baseball P only, windmill program → Step 8)
