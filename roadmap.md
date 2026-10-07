@@ -25,9 +25,17 @@
 >   5. 6–7 oz overload age: 13+ (owner) vs 16+ (doctrine) — 16+ until answered.
 >   6. Game-linked flush and morning-question decisions (see top).
 >   7. How limb sizes get used (proposal).
+> - Under-13 4 oz Power Primer update (20:21) done and live-proved on the server.
 > - Ready to publish: YES — server changes are already live and proved; the app-side changes (bat-speed wording, plan-phase display, Power Primer bests, narrow-phone top bar, check-in wording) build cleanly and their tests pass. They reach players only when the owner presses Publish.
 > - Goal → sets/reps (off-season only, APPROVED 2026-10-07; used only when HT's dose misses the goal range, smallest step in; never in-season/deload/trend-lighter):
 >   strength 4×5–6 / 5×3–5 / 4×2–3 · size 4×8–10 / 4×6–8 / 3×5–6 · power/speed 5×3–5 / 5×2–4 / 6×1–3 · hitting/throwing 4×4–6 / 5×3–5 / 5×2–3 · durability 3×10–12 / 3×8–10 / 3×6–8 · no goal = no change (early / mid / late off-season).
+
+## Owner update 2026-10-07 (20:21) — under-13 4 oz Power Primer throws
+- [x] U13 may do max-effort 4 oz throws as the PAP action; 5 oz baseball stays off under 13; nothing over 7 oz
+- [x] Each throw counts 1.5 toward Pitch Smart: builder now reads the player's real pitch counts — no max throws on a Pitch Smart rest day, never past the daily max or weekly/yearly caps, never enough to add a rest day; under 3 throws fit → med ball/band instead
+- [x] Warm-up lock, 1–2 real-throw days/week, day-before-game swap, start-day rules, stop rules + buttons, cap 3–5, arm pain/readiness <40/growth blocks — all held
+- [x] Stress test added: ages 7–12, 8 weeks, 0 violations; builder redeployed and live-proved; test plan removed
+- [ ] Real-ball throws reach players only after owner applies pap-throw-types.sql (pap_real_throws switch stays off until then) — WAITING ON OWNER
 
 ## Owner corrections 2026-10-07
 - [x] C1 limb data from anthropometrics; duplicate fields removed
