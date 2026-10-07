@@ -336,7 +336,7 @@ export function under13YearlyRestBlocks(throwDates: string[], today: string): { 
   }
   return { blocked: false, reason: null, throwDaysInWindow: throwDays - 1, longestOff: longest };
 }
-/** Under 13: no weighted balls and no weighted plyo-ball work, ever. */
+/** Weighted/overload balls and weighted plyo-ball work: 16+ only (owner final 2026-10-07). 4 oz underload is separate. */
 export function weightedBallAllowed(age: number | null): boolean {
-  return !isUnder13(age);
+  return age != null && age >= 16;
 }

@@ -224,11 +224,13 @@ import {
   resolveUbPrimerDose,
 } from "../_shared/wic/dosage/doctrine.ts";
 import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
-import { finalRuleCheck, nextEligibleDates, dayKinds, FINAL_CHECK_CATALOG_COLUMNS, type DayKind } from "../_shared/wic/schedule/finalCheck.ts";
+import { finalRuleCheck, nextEligibleDates, dayKinds, rowKinds, FINAL_CHECK_CATALOG_COLUMNS, type DayKind } from "../_shared/wic/schedule/finalCheck.ts";
 import { loadU13ThrowBlock, loadU13ThrowState } from "../_shared/wic/phases/u13ThrowGate.ts";
 import { nextThrowDate, nextPickoffDate } from "../_shared/wic/phases/nextThrowDate.ts";
 import { trendDeload, loadTrendInput, lighterSets, TREND_DELOAD_VERSION } from "../_shared/wic/lift/trendDeload.ts";
 import { goalDose, goalDoseKey, GOAL_DOSE_VERSION } from "../_shared/wic/goals/goalDose.ts";
+import { applyProgramContent, BATCH_KEYS } from "../_shared/wic/content/programContent.ts";
+import { limbGuidance, attachLimbHints } from "../_shared/wic/limb/limbGuidance.ts";
 import { planPowerPrimer, liftPatternOf, painAreasFromInjuries, type PapRole, type PapPitchBudget } from "../_shared/wic/pap/powerPrimer.ts";
 import { PITCH_SMART_BANDS, bandIndex, restDaysFor, checkCaps, pitchSmartApplies } from "../_shared/wic/phases/youthThrowing.ts";
 import { planWindmillSession, WINDMILL_PROGRAM_VERSION } from "../_shared/wic/pitching/windmillProgram.ts";
@@ -3802,6 +3804,7 @@ const handler = async (req: Request): Promise<Response> => {
         isPitcher: isPitcherCtx,
       },
       availableEquipment: availableEquipmentCtx,
+      equipmentUnknown,
       environment: environmentCtx,
       trainingAgeClass: trainingAgeClassCtx,
     });
@@ -4865,6 +4868,51 @@ const handler = async (req: Request): Promise<Response> => {
           feature_key: "final_rule_check", user_id: user.id, error_text: String(fcErr).slice(0, 500),
         });
       } catch { /* never blocks */ }
+    }
+
+    // -------- Step 8 program content + limb guidance (owner approved 2026-10-07) --------
+    // One labelled option per card in why_payload only: never a new card, slug, set or rep change.
+    try {
+      const pcEnabled: Record<string, boolean> = {};
+      for (const k of BATCH_KEYS) pcEnabled[k] = (features as any)[k] === true;
+      if (Object.values(pcEnabled).some(Boolean)) {
+        const pcSlugs = Array.from(new Set((rows as any[]).map((r) => String(r.movement_slug ?? "")).filter(Boolean)));
+        const weekMon = (() => { const d = new Date(`${planDate}T12:00:00Z`); const dow = (d.getUTCDay() + 6) % 7; return isoShift(planDate, -dow); })();
+        const [{ data: pcCat }, { data: pcSub }, { data: pcPrior }] = await Promise.all([
+          admin.from("wk_movement_catalog").select(`${FINAL_CHECK_CATALOG_COLUMNS}, movement_pattern, movement_category`).in("slug", pcSlugs),
+          admin.from("subscriptions").select("status, subscribed_modules").eq("user_id", user.id).maybeSingle(),
+          admin.from("wk_prescriptions").select("plan_date, slot, pc:why_payload->program_content->>slug").eq("user_id", user.id)
+            .in("slot", ["speed"]).gte("plan_date", isoShift(planDate, -60)).lt("plan_date", planDate).limit(500),
+        ]);
+        const pcMap = new Map(((pcCat ?? []) as any[]).map((c) => [String(c.slug), c]));
+        const pastStartsPc = [...actualStartDates, ...scheduledGames.filter((g: any) => g.isStartingPitcher && g.date < planDate).map((g: any) => g.date)];
+        const futStartsPc = scheduledGames.filter((g: any) => g.isStartingPitcher && !g.ignored).map((g: any) => g.date);
+        const gameOn = (d: string) => scheduledGames.some((g: any) => g.date === d && g.ignored !== true);
+        const pain = painAreasFromInjuries(injurySlugs) as any;
+        const res = applyProgramContent(rows as any[], {
+          planDate, phase: String(phaseRes.phase), sport,
+          modules: (pcSub?.status === "active" ? (pcSub.subscribed_modules ?? []) : []).map(String),
+          isPitcher: isPitcherAthlete, age: athleteAgeYears, growthMode: growthState.active, pain,
+          equipment: declaredEquipment.length ? declaredEquipment : null,
+          gameToday: gameOn(planDate), gameTomorrow: gameOn(isoShift(planDate, 1)),
+          startToday: futStartsPc.includes(planDate), startTomorrow: futStartsPc.includes(isoShift(planDate, 1)),
+          startYesterday: pastStartsPc.includes(isoShift(planDate, -1)),
+          speedSessionsBefore: new Set(((pcPrior ?? []) as any[]).map((r) => String(r.plan_date))).size,
+          u13ThrowBlock: !!(await loadU13ThrowBlock(admin, user.id, athleteAgeYears, planDate)),
+          barefootThisWeek: ((pcPrior ?? []) as any[]).some((r) => r.pc === "bf_readiness_check" && String(r.plan_date) >= weekMon),
+          enabled: pcEnabled as any,
+          isHardRow: (r: any) => { const k = rowKinds(r, pcMap.get(String(r.movement_slug)) as any); return k.includes("hard_run") || k.includes("high_jump"); },
+          liftPatternOf: (r: any) => { const c: any = pcMap.get(String(r.movement_slug)) ?? {}; return `${liftPatternOf(String(r.movement_slug), c.movement_pattern, c.movement_category)} ${r.movement_slug}`; },
+        });
+        rows.splice(0, rows.length, ...(res.rows as any[]));
+      }
+      const hints = limbGuidance({
+        anthropometrics: ((ctx as any)?.anthropometrics ?? null) as any, age: athleteAgeYears, sport,
+        growthMode: growthState.active, pain: painAreasFromInjuries(injurySlugs) as any,
+      });
+      rows.splice(0, rows.length, ...(attachLimbHints(rows as any[], hints) as any[]));
+    } catch (pcErr) {
+      console.warn("[wk-generate-daily] program content skipped", pcErr);
     }
 
     // -------- Power Primer (owner approved 2026-10-07) --------

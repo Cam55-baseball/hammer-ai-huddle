@@ -5,6 +5,26 @@
 
 **Morning game question.** The morning check-in asks "Did you play yesterday?" / "Did you pitch?" once, if a game or start wasn't logged. The trade-off is one extra tap in the morning versus plans built without knowing about yesterday's game. Recommendation: keep it on as it is now (asked once, shared with the plan-page prompt).
 
+## OWNER DECISIONS 2026-10-07 — FINISH END TO END
+- [x] Verified owner-applied files: throw types accepted, real-ball switch on; 10 program backups exist with RLS on
+- [x] Step 8: all batches built behind one switch each, stress test 50,000+ cases 0 violations, all switched on; ball law everywhere (4 oz any age, 6–7 oz 16+, weighted never under 16, nothing over 7 oz)
+- [x] Real-ball Power Primer proved live: throwing warm-up required first, max throws 1.5 and warm-ups 0.25, cap 5, stop rules + buttons, day-before-game → med ball, 1–2 real-throw days a week, 13-year-old got 4 oz throws; Pitch Smart budget sim (ages 7–12) 0 violations
+- [x] Limb sizes: stride, bat size, extension context, mobility focus — card text only, never overrides age/growth/injury/phase; 40,000+ case sim 0 violations; live cards proved
+- [x] Found + fixed: player with no gear saved got the stand-in day — now gets the full plan (live-proved)
+- [x] Lift notes on main lifts only, right note per pattern
+- [x] Step 9 redirects prepared and switched OFF; nothing deleted
+- [x] Corrections 1–5 re-verified
+- [x] Full test run: 2,445 tests incl. 8-week sims and phase scan — all pass after one outdated card test updated
+- [ ] Phone check of every page at 390 px — the test machine ran out of memory twice mid-run; last full pass (160 pages, 0 errors) was before this round. Re-run next.
+- [x] Test plans and test body sizes removed; test players back to "not started"
+
+> **Status (2026-10-07, final)**
+> - Finished: everything above except the all-pages phone re-check.
+> - Next item: re-run the all-pages phone check at 390 px in smaller batches.
+> - Phase mismatch scan: 0 mismatches (26,352 player-days, 368,956 checks).
+> - Waiting on owner: 1. Email key. 2. OK to retire the five programs (redirects ready, off, nothing deleted). 3. Game-linked flush / morning question decisions (see top).
+> - Ready to publish: NOT YET — server side is live and proved, tests pass, but the all-pages phone check must pass on the new card notes first.
+
 ## OWNER RULE 2026-10-07 (20:26) — ONE SYSTEM, ONE PHASE (high priority)
 - [x] Audit started (see docs/phase-audit.md)
 - [x] Fixed: app season reader defaulted to "in season" when nothing was saved (server says off-season) — now off-season, matching the server

@@ -23,6 +23,8 @@ export interface CertifyConditioningInput {
   /** Stage 1: the template the selector actually used. */
   templateId?: keyof typeof CONDITIONING_TEMPLATES;
   availableEquipment?: readonly string[];
+  /** Gear unknown: the selector sticks to gear-free work, so only gear-free drills count for gaps. */
+  equipmentUnknown?: boolean;
   environment?: "indoor" | "outdoor" | string;
   trainingAgeClass?: string;
 }
@@ -112,7 +114,10 @@ export function certifyConditioning(input: CertifyConditioningInput): CertifyCon
   const missing = missingCategories(template.requiredCategories, categorized);
   // Library gap: a required type the library has no active drill for can never
   // be filled, so it warns instead of sending the athlete to the stand-in day.
-  const libraryHas = new Set(input.catalog.map((c: any) => c.conditioning_category).filter(Boolean).map(String));
+  // Only drills this athlete can actually do count (equipment they have; gear-free always counts).
+  const avail = input.equipmentUnknown ? new Set<string>() : Array.isArray(input.availableEquipment) ? new Set((input.availableEquipment as any[]).map(String)) : null;
+  const usable = (c: any) => avail == null || !Array.isArray(c.equipment) || c.equipment.length === 0 || c.equipment.every((e: any) => avail.has(String(e)));
+  const libraryHas = new Set(input.catalog.filter(usable).map((c: any) => c.conditioning_category).filter(Boolean).map(String));
   const libraryGap = missing.filter((c) => !libraryHas.has(String(c)));
   const realMissing = missing.filter((c) => libraryHas.has(String(c)));
   if (libraryGap.length > 0) warn.push({ code: "cond_library_gap", message: `Template ${template.id} needs drill types the library does not have yet: ${libraryGap.join(", ")}` });
