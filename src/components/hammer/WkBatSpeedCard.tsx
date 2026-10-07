@@ -84,7 +84,7 @@ export function WkBatSpeedCard({ side = null, pocket = false }: Props & { pocket
             </Button>
           </CardTitle>
           {label && <div className="text-[11px] text-muted-foreground line-clamp-2">{label}</div>}
-          {throws && <p className="text-[11px] leading-5 text-muted-foreground">Bat speed builds rotational power for your swing. Throwing velocity still comes from throwing work.</p>}
+          {throws && <p className="text-[11px] leading-5 text-muted-foreground">Bat speed builds rotational power that transfers seamlessly into pitching velocity.</p>}
         </CardHeader>
         <CollapsibleContent>
           <CardContent className="space-y-2">
