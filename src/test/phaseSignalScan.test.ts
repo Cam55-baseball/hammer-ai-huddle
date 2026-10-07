@@ -74,7 +74,7 @@ describe("phase signal scan — 0 mismatches", () => {
               // Goal gate (off-season only) and in-season lighter-week ban read the same sub-block.
               checks += 3;
               if (isOffseasonPhase(ps.sub_block as any) !== ps.sub_block.startsWith("os_")) mism.push(`${name} ${date} goal gate`);
-              if (isInSeasonPhase(ps.sub_block) !== (ps.sub_block === "in_season")) mism.push(`${name} ${date} lighter-week in-season`);
+              if (isInSeasonPhase(ps.sub_block) !== (ps.sub_block === "in_season" || ps.sub_block === "post_season")) mism.push(`${name} ${date} lighter-week in-season`);
               if (ps.sub_block === "in_season" && ps.season !== "in_season") mism.push(`${name} ${date} in-season badge on ${ps.season}`);
               // Labels: one vocabulary.
               checks += 3;
