@@ -1095,7 +1095,7 @@ function HammerDailyPlanBody({
                 </PocketCard>
               </ErrorBoundary>
               <ErrorBoundary label="wk-lifts">
-                <PocketCard id="lift" notPrescribedNote={<NextReleaseLine label="lift" date={wkRx.nextEligible?.lift} />} category="Lift" focus={pocketFocus(wkRx.grouped.lifts)} tone="bg-destructive" planDate={pocketDate} prescribed={wkRx.grouped.lifts.length > 0} countLabel={countLabel(wkRx.grouped.lifts)}>
+                <PocketCard id="lift" notPrescribedNote={<><NextReleaseLine label="lift" date={wkRx.nextEligible?.lift} /><br /><NextReleaseLine label="high-intensity jump day" date={wkRx.nextEligible?.high_jump} /></>} category="Lift" focus={pocketFocus(wkRx.grouped.lifts)} tone="bg-destructive" planDate={pocketDate} prescribed={wkRx.grouped.lifts.length > 0} countLabel={countLabel(wkRx.grouped.lifts)}>
                   {() => <WkLiftsCard pocket />}
                 </PocketCard>
               </ErrorBoundary>

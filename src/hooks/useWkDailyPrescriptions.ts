@@ -526,7 +526,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   // shown, the server re-runs the final rule check on it once. A failing plan
   // is rebuilt (nothing marked) or trimmed of failing unmarked cards.
   const verifiedKey = useRef<string | null>(null);
-  const [nextEligible, setNextEligible] = useState<Record<string, string> | null>(null);
+  const [nextEligible, setNextEligible] = useState<Record<string, string | null> | null>(null);
   useEffect(() => {
     const rows = query.data ?? [];
     if (!user?.id || rows.length === 0 || generating || !serverFresh) return;
