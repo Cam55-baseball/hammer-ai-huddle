@@ -175,6 +175,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       document.removeEventListener('visibilitychange', onHide);
+      if (lateTimer) clearTimeout(lateTimer);
+      if (framed) window.removeEventListener('focus', recheck);
       cancelled = true;
       if (pendingSignOutTimer) clearTimeout(pendingSignOutTimer);
       subscription.unsubscribe();
