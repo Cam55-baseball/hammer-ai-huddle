@@ -4849,7 +4849,7 @@ const handler = async (req: Request): Promise<Response> => {
             realThrowDaysThisWeek: realDays,
             realThrowsEnabled: features.pap_real_throws === true,
             goals: [...(goalEmphasis.ranked ?? [])].map(String),
-            equipment: declaredEquipment.length ? declaredEquipment : ((availableEquipmentCtx as string[] | null)?.length ? (availableEquipmentCtx as string[]) : null),
+            equipment: declaredEquipment.length ? declaredEquipment : null,
             firstLift: { slug: String(first.movement_slug), name: String(first.movement_name ?? first.movement_slug), pattern, heavy },
           });
           if (pp.block) {
