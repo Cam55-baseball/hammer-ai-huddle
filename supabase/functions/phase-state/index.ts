@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
   const date = /^\d{4}-\d{2}-\d{2}$/.test(String(body?.date ?? "")) ? String(body.date) : new Date().toISOString().slice(0, 10);
   const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-  const { data: saved } = await admin.from("wk_daily_prescriptions")
+  const { data: saved } = await admin.from("wk_prescriptions")
     .select("why_payload").eq("user_id", user.id).eq("plan_date", date).limit(20);
   const stamped = ((saved ?? []) as any[]).map((r) => r?.why_payload?.phase_state).find((p) => p && p.version);
   if (stamped) return json({ phase_state: stamped, from: "plan" });

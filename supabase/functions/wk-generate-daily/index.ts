@@ -16,6 +16,7 @@ import { proportionProfile, proportionBonus, proportionWhy } from "../_shared/wi
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { resolveWkPhase } from "../_shared/wkPhaseQuarter.ts";
+import { resolvePhaseState } from "../_shared/phaseState.ts";
 // Workout Intelligence Constitution (WIC) — see supabase/functions/_shared/wic/*
 import { WIC_VERSION, type WicEngine } from "../_shared/wic/constitution.ts";
 import { selectAdaptation, type AdaptationDecision } from "../_shared/wic/adaptationSelector.ts";
@@ -2825,6 +2826,9 @@ const handler = async (req: Request): Promise<Response> => {
       const tdIn = await loadTrendInput(admin, user.id, tdWeekStart, String(phaseRes?.phase ?? ""), progression.isDeloadWeek, progression.weekInBlock === 1 && progression.blockIndex > 0);
       if (tdIn) trendDecision = trendDeload(tdIn);
     } catch (_e) { trendDecision = null; }
+    // ONE SYSTEM, ONE PHASE: the one answer every card of this day carries.
+    const phaseState = resolvePhaseState({ settings: seasonSettings as any, date: planDate, heights: heightReadings, plannedDeload: !!progression.isDeloadWeek, trendLighter: !!trendDecision?.apply && !progression.isDeloadWeek });
+    const stampPhase = (rs: any[]) => { for (const r of rs) r.why_payload = { ...(r.why_payload ?? {}), phase_state: phaseState }; return rs; };
 
     const dayOfYearSeed = Math.floor(
       (new Date(planDate + "T00:00:00").getTime() - new Date(new Date(planDate).getFullYear(), 0, 0).getTime()) / 86400000,
@@ -4582,6 +4586,7 @@ const handler = async (req: Request): Promise<Response> => {
       }));
 
       try {
+        stampPhase(safeRows as any[]);
         const __split = splitSharedForPersist(safeRows as any[]);
         await admin.rpc("wk_persist_prescriptions_shared" as any, {
           p_shared: __split.shared,
@@ -4952,6 +4957,7 @@ const handler = async (req: Request): Promise<Response> => {
       const bySlot = (rs: any[]) => { const m = new Map<string, any[]>(); for (const r of rs) m.set(String(r.slot), [...(m.get(String(r.slot)) ?? []), r]); return m; };
       const oldBy = bySlot(existingDay), newBy = bySlot(rows as any[]);
       const replace = [...new Set([...oldBy.keys(), ...newBy.keys()])].filter((sl) => sig(oldBy.get(sl) ?? []) !== sig(newBy.get(sl) ?? []));
+      stampPhase(rows as any[]);
       const { data: adj, error: adjErr } = await admin.rpc("wk_adjust_prescriptions_atomic" as any, {
         p_user: user.id, p_date: planDate, p_rows: rows, p_replace_slots: replace,
         p_reason_code: changeReason.code, p_reason_text: changeReason.text,
@@ -4961,6 +4967,7 @@ const handler = async (req: Request): Promise<Response> => {
       return json({ ok: true, adjusted: true, plan_date: planDate, ...(adj as any) }, 200);
     }
 
+    stampPhase(rows as any[]);
     const __split = splitSharedForPersist(rows as any[]);
     const { data: diagId, error: rpcErr } = await admin.rpc("wk_persist_prescriptions_shared" as any, {
       p_shared: __split.shared,
