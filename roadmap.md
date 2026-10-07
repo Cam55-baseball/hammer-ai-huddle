@@ -153,5 +153,5 @@
 ## Owner addition 2026-10-07 (18:41) — PAP + goal table + Alternative + windmill (backend redeploys authorized)
 - [x] A. Power Primer (PAP) block in every Lift card — live (switch power_primer on), 8-week sims 0 violations, proved on a hidden test player at 360/390, cleaned up. Real-ball PAP throws wait on owner: apply docs/pending-owner-apply/pap-throw-types.sql (switch pap_real_throws stays off until then). PBs are saved per phone for now.
 - [ ] B. Off-season goal table v2 + safety ceiling + taper to zero at ramp-up (sims across phases)
-- [ ] C. Alternative button on every exercise (incl. PAP), busy-gym test at phone size
+- [x] C. Alternative button on every exercise (incl. PAP), busy-gym test at phone size — done 2026-10-07: same-or-lower risk check, busy-gym chips, dumbbell/kettlebell equivalents for every barbell/trap-bar lift (2 of 97 left without one), swap proved as test player at 390, test plans removed
 - [ ] D. Windmill program: optimize, stress test, switch on
