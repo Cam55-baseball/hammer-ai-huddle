@@ -77,7 +77,7 @@ export function msUntilLocalDate(nowMs: number, date: string, tz: string): numbe
 }
 
 export function formatLeft(ms: number): string {
-  const m = Math.floor(ms / 60_000), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60);
+  const m = Math.round(ms / 60_000), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60);
   if (d > 0) return h > 0 ? `${d}d ${h}h` : `${d}d`;
   return h > 0 ? `${h}h ${m % 60}m` : `${m % 60}m`;
 }
