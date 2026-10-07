@@ -3,7 +3,7 @@
 > **Status (2026-10-07, end of batch B)**
 > - Finished: owner corrections 1–4 (limb data from onboarding only; proportions shift emphasis, never exclude; goals shape every card; goal sets/reps built + live-proven; max-effort throw rest 15–45 s); phone screenshots incl. pitcher Bat speed + season label; live pitcher check (pitching days entered as player → next day lighter); all-app audit (160 pages, 0 errors); Finish-your-profile card (proven: player missing items sees exact list, complete player sees no card, under-13 parent filled 5 measurements and only the other 5 stayed listed). Test data removed.
 > - Batch C (2026-10-07): PAP, goal table v2, Alternative button, windmill program (on, live-proved) and 2g done; builder now reads softball sport correctly.
-> - Next item: Step 2 Timers (set rest, sprint rest, stopwatch, % → weight, practice logging, in-card dashboards).
+> - Next item: none open that I can do — remaining items wait on owner (see Waiting on owner).
 > - Goal → sets/reps (off-season only, APPROVED 2026-10-07; used only when HT's dose misses the goal range, smallest step in; never in-season/deload/trend-lighter):
 >   strength 4×5–6 / 5×3–5 / 4×2–3 · size 4×8–10 / 4×6–8 / 3×5–6 · power/speed 5×3–5 / 5×2–4 / 6×1–3 · hitting/throwing 4×4–6 / 5×3–5 / 5×2–3 · durability 3×10–12 / 3×8–10 / 3×6–8 · no goal = no change (early / mid / late off-season).
 > - Waiting on owner:
@@ -78,7 +78,7 @@
 - [x] R3 security fixes for anon store migration
 - [x] R3 anon store: opt-in UI (parent signup + controls), 13+ toggle, privacy text, backfill 13+, proofs
 - [x] R3 pitch types U13 limited (pitch list); sub-20 scale confirmed; rankings hide paused/U13
-- [~] R3 case 19: batching built + dry run; real per-player build time not yet measured
+- [x] R3 case 19: batching built + dry run; real build time measured Round 5/9 (~3–5 s single)
 - [x] R3 stress cases 1–11, 15, 17 + Round 1 screenshots (need signed-in test-player sessions) — done via Round 5 hidden test players + 2026-10-07 screenshots
 
 ## Round 5 (2026-10-06) — test without approval tool
@@ -94,11 +94,11 @@
 - [x] B. Local-midnight readiness (done Round 9: plans prebuilt after local noon); pre-build proposal; cron proposal; multi-TZ proof
 - [x] C. Plan never changes on reload (done Round 9) (20 reloads, preview + live)
 - [x] D. Screenshots 360/390: plan screens done 2026-10-07 as hidden test player (Readiness/Recovery chip labels fixed); pitcher Bat speed card + warm-up season label shot 2026-10-07 as hidden in-season test pitcher (demoramp): Bat speed card shows, label reads "Season: In-Season — Strength Primer", no sideways scroll, no errors. Off-season label uses the same phase display ("Offseason Q1 — Strength & Capacity" on the off-season test player's plan); that day had no crossover card so no badge to shoot. Test plans removed, Start un-tapped.
-- [ ] Clean up all test data
+- [x] Clean up all test data — 2026-10-07: leftover Oct 8 test plan removed; test players un-started, no logs; Sept 25 plans kept per owner
 
 ## Round 8 — Master Integration Plan (owner-approved 2026-10-07; never publish, no cron changes)
 - [x] Step 1 Card design — accepted; streak correction done (flame lit 5 / glow 25 / color every 100; workout milestones 10/50/100/200/350/500/700/1000 with confetti + vibration; no-plan days never break streak)
-- [ ] Step 2 Timers (set rest, sprint rest 1 min/10 yd), sprint stopwatch/partner/steps, % → weight, practice logging, in-card dashboards
+- [x] Step 2 Timers (all of 2a–2g done) (set rest, sprint rest 1 min/10 yd), sprint stopwatch/partner/steps, % → weight, practice logging, in-card dashboards
   - [x] 2a sprint rest countdown (1 min/10 yd) + lift rest countdown per exercise from owner bands (80%+ 180 s; 65–79% 120–150; <65% 90–120; holds 60–90; skill/throw 45–60; HT rest wins; ranges start low with +30 s)
   - [x] 2b sprint stopwatch (partner/self), steps → stride, best-today; kept on device until 2d logging saves it
   - [x] 2c lift weights only from verified logs (src/lib/lift/verifiedMax.ts): % only + "Log your sets to unlock your numbers" until ≥2 qualifying sets or a tested max; auto-complete no longer stores % as weight; one-tap prefill only from verified max
