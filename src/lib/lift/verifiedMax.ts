@@ -74,6 +74,6 @@ export function liftPlateau(rows: ReadonlyArray<LogRow>): boolean {
   }
   const days = [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   let best = 0, since = 0;
-  for (const [, e] of days) { if (e > best) { since = best > 0 ? 0 : since; best = e; if (since === 0) continue; } since++; }
+  for (const [, e] of days) { if (e > best) { best = e; since = 0; } else since++; }
   return days.length >= 4 && since >= 3;
 }
