@@ -25,7 +25,7 @@ import type { AthleteContext } from "@/lib/wic/athleteContext";
 import type { PersonalizationContext } from "@/lib/wic/personalizationContext";
 import type { TrainingAgeContext } from "@/lib/wic/trainingAge";
 import { WIC_VERSION } from "../../supabase/functions/_shared/wic/constitution";
-import { resolveWkPhase } from "@/lib/hammer/workout/phaseQuarter";
+import { usePhaseState } from "@/hooks/usePhaseState";
 import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useScheduleTimeline";
 
 // Must equal the version the generator stamps on every row. A mismatch made
@@ -203,23 +203,12 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const sideHit = sideCtx.selectedSide?.hit;
   const sideThrow = sideCtx.selectedSide?.throw;
 
-  const canonicalPhase = useMemo(() => resolveWkPhase({
-    season_status: season.seasonStatus,
-    preseason_start_date: season.preseasonStartDate,
-    preseason_end_date: season.preseasonEndDate,
-    in_season_start_date: season.inSeasonStartDate,
-    in_season_end_date: season.inSeasonEndDate,
-    post_season_start_date: season.postSeasonStartDate,
-    post_season_end_date: season.postSeasonEndDate,
-  }), [
-    season.seasonStatus,
-    season.preseasonStartDate,
-    season.preseasonEndDate,
-    season.inSeasonStartDate,
-    season.inSeasonEndDate,
-    season.postSeasonStartDate,
-    season.postSeasonEndDate,
-  ]);
+  // ONE SYSTEM, ONE PHASE: the server's live answer (never device math).
+  const { livePhaseState } = usePhaseState();
+  const canonicalPhase = useMemo(() => ({
+    phase: (livePhaseState?.sub_block ?? null) as any,
+    displayName: livePhaseState?.sub_block_label ?? null,
+  }), [livePhaseState?.sub_block, livePhaseState?.sub_block_label]);
 
   // Round 6 (plan never changes on reload): the last plan this device saw is
   // shown instantly from the device, then quietly checked against the server.

@@ -36,20 +36,20 @@ export function usePhaseState() {
     queryKey: ['phase-state', user?.id, date],
     enabled: !!user?.id,
     staleTime: 60_000,
-    queryFn: async (): Promise<PhaseState | null> => {
+    queryFn: async (): Promise<{ shown: PhaseState | null; live: PhaseState | null } | null> => {
       const { data, error } = await supabase.functions.invoke('phase-state', { body: { date } });
       if (error) throw error;
-      const ps = (data as any)?.phase_state ?? null;
-      try { if (ps && user?.id) localStorage.setItem(cacheKey(user.id), JSON.stringify(ps)); } catch { /* ignore */ }
-      return ps;
+      const out = { shown: (data as any)?.phase_state ?? null, live: (data as any)?.live ?? null };
+      try { if (out.shown && user?.id) localStorage.setItem(cacheKey(user.id), JSON.stringify(out)); } catch { /* ignore */ }
+      return out;
     },
     placeholderData: () => {
       try {
         const raw = user?.id ? localStorage.getItem(cacheKey(user.id)) : null;
-        const ps = raw ? (JSON.parse(raw) as PhaseState) : null;
-        return ps && ps.date === date ? ps : undefined;
+        const c = raw ? JSON.parse(raw) : null;
+        return c?.shown?.date === date ? c : undefined;
       } catch { return undefined; }
     },
   });
-  return { phaseState: q.data ?? null, isLoading: q.isLoading };
+  return { phaseState: q.data?.shown ?? null, livePhaseState: q.data?.live ?? null, isLoading: q.isLoading, isFresh: q.isFetched && !q.isPlaceholderData };
 }

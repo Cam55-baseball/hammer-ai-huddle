@@ -1,6 +1,6 @@
 // phase-state — the device asks; the server answers. ONE SYSTEM, ONE PHASE.
-// If today's plan is built, its saved phase_state wins (plan never contradicts
-// itself). Otherwise the same resolver the builder uses answers live.
+// phase_state = today's built plan's saved answer if a plan exists, else live.
+// live = the resolver's answer right now (used to detect season edits).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { resolvePhaseState } from "../_shared/phaseState.ts";
 
@@ -25,8 +25,6 @@ Deno.serve(async (req) => {
   const { data: saved } = await admin.from("wk_prescriptions")
     .select("why_payload").eq("user_id", user.id).eq("plan_date", date).limit(20);
   const stamped = ((saved ?? []) as any[]).map((r) => r?.why_payload?.phase_state).find((p) => p && p.version);
-  if (stamped) return json({ phase_state: stamped, from: "plan" });
-
   const [{ data: s }, { data: h }] = await Promise.all([
     admin.from("athlete_mpi_settings").select("season_status, season_status_manual, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date").eq("user_id", user.id).maybeSingle(),
     admin.from("athlete_height_checks").select("measured_on, inches").eq("user_id", user.id).lte("measured_on", date).order("measured_on").limit(60),
@@ -35,5 +33,7 @@ Deno.serve(async (req) => {
     settings: s as any, date,
     heights: ((h ?? []) as any[]).map((x) => ({ date: x.measured_on, inches: Number(x.inches) })),
   });
-  return json({ phase_state: ps, from: "live" });
+  // The plan's own answer is what screens show; the live answer lets the app
+  // notice a season edit and ask the builder to adjust (unmarked cards only).
+  return json({ phase_state: stamped ?? ps, live: ps, plan: stamped ?? null, from: stamped ? "plan" : "live" });
 });
