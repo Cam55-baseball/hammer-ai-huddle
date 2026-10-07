@@ -20,7 +20,7 @@ import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { useHammerDailyTasks } from "@/hooks/useHammerDailyTasks";
 import { LogButton } from "@/components/hammer/logging/LogButton";
 import { WkOneTapLog } from "@/components/hammer/logging/WkOneTapLog";
-import { useVerifiedMax } from "@/hooks/useVerifiedMax";
+import { useLiftPlateau, useVerifiedMax } from "@/hooks/useVerifiedMax";
 import { workingWeight, UNLOCK_COPY } from "@/lib/lift/verifiedMax";
 import { MethodBadge, MethodPanel } from "@/components/hammer/MethodPanel";
 import { readTrainingMethod } from "@/lib/wic/methods";
@@ -97,6 +97,7 @@ export function WkPrescriptionCard({
 
   const { user } = useAuth();
   const vMax = useVerifiedMax(rx.load_pct ? rx.movement_slug : null);
+  const plateau = useLiftPlateau(allowSwap ? rx.movement_slug : null);
   const qc = useQueryClient();
   const tasks = useHammerDailyTasks(rx.plan_date);
   const taskSeed = {
@@ -389,6 +390,11 @@ export function WkPrescriptionCard({
             </div>
           </div>
           <WkOneTapLog rx={rx} />
+          {plateau && (
+            <p data-lift-plateau className="text-[11px] text-foreground">
+              No new best on this lift in 3 sessions.{swapAvailable ? " Try a different lift of the same kind — tap Swap. Your sets and reps stay the same." : " Keep your form clean — progress will come."}
+            </p>
+          )}
           {allowSwap && rx.substituted_from_slug && <LiftSwapUndoChip rx={rx} />}
           {swapAvailable && (
             <LiftSwapSheet rx={rx} open={swapOpen} onOpenChange={setSwapOpen} />

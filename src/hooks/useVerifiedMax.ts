@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
-import { verifiedMax, type LogRow } from "@/lib/lift/verifiedMax";
+import { liftPlateau, verifiedMax, type LogRow } from "@/lib/lift/verifiedMax";
 
 /** Verified max for one movement from the player's own logs; null until verified. */
-export function useVerifiedMax(movementSlug: string | null | undefined, enabled = true) {
+function useLiftLogs(movementSlug: string | null | undefined, enabled: boolean) {
   const { user } = useOptionalAuth();
   const q = useQuery({
     queryKey: ["verified-max", user?.id, movementSlug],
@@ -20,8 +20,16 @@ export function useVerifiedMax(movementSlug: string | null | undefined, enabled 
         .order("plan_date", { ascending: false })
         .limit(60);
       if (error) throw error;
-      return verifiedMax((data ?? []) as unknown as LogRow[]);
+      const rows = (data ?? []) as unknown as LogRow[];
+      return { max: verifiedMax(rows), plateau: liftPlateau(rows) };
     },
   });
   return q.data ?? null;
+}
+export function useVerifiedMax(movementSlug: string | null | undefined, enabled = true) {
+  return useLiftLogs(movementSlug, enabled)?.max ?? null;
+}
+/** True after 3 logged sessions in a row with no new best (Round 8 Step 4). */
+export function useLiftPlateau(movementSlug: string | null | undefined, enabled = true) {
+  return useLiftLogs(movementSlug, enabled)?.plateau ?? false;
 }
