@@ -24,6 +24,7 @@ import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
 import { WkSessionShapeLine } from "@/components/hammer/WkProgressionNote";
+import { RestTimer, sprintRestSeconds } from "@/components/hammer/cards/RestTimer";
 
 export function WkSpeedCard({ pocket = false }: { pocket?: boolean } = {}) {
   const { grouped, generate, generating, isLoading, failed, failureReason, retry, snapshotIdentity, dayKind } = useHammersToday();
@@ -76,7 +77,14 @@ export function WkSpeedCard({ pocket = false }: { pocket?: boolean } = {}) {
                 {isGameDay ? "No activation programmed (rest)." : "No sprint work today (cadence rest)."}
               </p>
             ) : (
-              items.map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} />)
+              items.map((rx) => (
+                <div key={rx.id} className="space-y-1">
+                  <WkPrescriptionCard rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} />
+                  {sprintRestSeconds(rx.distance_feet) != null && (
+                    <RestTimer label="Sprint rest" seconds={sprintRestSeconds(rx.distance_feet)} />
+                  )}
+                </div>
+              ))
             )}
             {items.length > 0 && (
               <WkSessionShapeLine
