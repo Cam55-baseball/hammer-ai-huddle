@@ -18,7 +18,7 @@ export function ageDefaultLabel(age: number | null): string | null {
   return age < 14 ? "Middle school" : age < 16 ? "High school JV" : "High school varsity";
 }
 
-function ageNow(dob: string | null): number | null {
+export function ageNow(dob: string | null): number | null {
   if (!dob) return null;
   const b = new Date(dob + "T12:00:00"), n = new Date();
   let a = n.getFullYear() - b.getFullYear();

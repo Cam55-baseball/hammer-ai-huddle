@@ -1,14 +1,9 @@
 # Roadmap
 
 > **Status (2026-10-07, Round 8)**
-> - Finished: Steps 1–4; Step 5a throw-count rule.
-> - Also done: 5c (no long toss the day before a start; plyo balls 13+).
-> - Also done: 5d pitching bests box (logs already existed).
-> - Also done: 5e pick-offs baseball-only, half for 2-Way.
-> - Also done: 5d/5e phone proof.
-> - Step 6a done (age-default level + save-your-level prompt; plan builder redeployed and proven).
-> - Done: 6b, 6c Base Stealer, 6d scheduling. Waiting: 6d new drills (Step 8 approval). Next: Step 7 Key Rules panel.
-> - Waiting on owner: (1) should hard-session ratings trigger an earlier lift deload? (2) barefoot pain-free days per stage + readiness test — nobody moves past Foundation until set. (3) Step 8 content batches need approval one by one. (4) Throw counting: do warm-up throws and catch play count as "off-mound low-intensity" (0.6 instead of today's 0.25)? If yes, should the daily arm budget (95 units at age 16) rise to match, or stay and cut throwing sooner?
+> - Finished: Steps 1–4; Step 5 (5a, 5c–5f; 5b paused); Step 6 (6a, 6b, 6c, 6d scheduling); Step 7a Key Rules panel.
+> - Next: 7b weekly body-load bar, then 7c Report a Problem.
+> - Waiting on owner: (1) Throw counting: do warm-ups/catch play count 0.6 instead of 0.25, and does the daily arm budget rise to match? (also blocks 5b and throwing/pick-off next dates) (2) Should hard-session ratings trigger an earlier lift deload? (3) Barefoot pain-free days per stage + readiness test — nobody moves past Foundation until set. (4) Step 8 content batches, one by one — including the new explosive-pitcher and softball-season conditioning drills (6d).
 
 - [x] Current request: clarify Rest / Push / Skip with accurate frontend-only labels and explanations; report exact before/after text (phone/desktop checked with local-only test state)
 - [x] Current request: quote the complete Start card for all five requested player examples, read-only
@@ -106,7 +101,8 @@
 - [x] 6c follow-up: Golden 2Way sees Base Stealer only on position days (hidden on a start day, the day before and the day after).
 - [x] 6d scheduling already in place in the conditioning picker: easy flush the day after a start, primer the day before, light tournament days, short/easy within 48 h of a game, repeat sprints with full rest off-season/in-season, softball base distances (43 ft repeats). No change needed.
 - [ ] 6d WAITING ON OWNER (Step 8): the library has no explosive-pitcher drills (max-intent short sprints with 1 min/10 yd rest, power/plyo, repeat accelerations) and no softball season drills (base-to-base acceleration, durability, tournament-weekend work). Owner said this content goes through Step 8 approval, so it will be drafted there.
-- [ ] NEXT ITEM: Step 7. Old 5d/5e note: same-day max-effort throw + pitch within age limit, baseball-only pick-offs with lower 2-Way volume. Throwing/pick-off next dates wait on the 5b answer. (Old 5b note: on the throwing card (counts by kind → pitch-equivalents vs the existing age daily/weekly limit, shown on screen), then throwing/pick-off next dates from the planner (needs plan-builder redeploy — owner authorized in Round 8). (Base Stealer attempts counting as hard running moved to Step 6, where Base Stealer days are built — it changes the planner's rest rules.)
+- [x] 7a Key Rules panel on the plan page (collapsed, "Key rules for your plan"): rest rules, Done/Cut short/Missed, Base Stealer, Complete Pitcher velocity bat speed, pitcher flush/primer, baseball-only pick-offs, under-13 weighted balls, heavy lifting 16+. Display only.
+- [ ] NEXT ITEM: 7b weekly body-load bar. Old 5d/5e note: same-day max-effort throw + pitch within age limit, baseball-only pick-offs with lower 2-Way volume. Throwing/pick-off next dates wait on the 5b answer. (Old 5b note: on the throwing card (counts by kind → pitch-equivalents vs the existing age daily/weekly limit, shown on screen), then throwing/pick-off next dates from the planner (needs plan-builder redeploy — owner authorized in Round 8). (Base Stealer attempts counting as hard running moved to Step 6, where Base Stealer days are built — it changes the planner's rest rules.)
 - [x] Step 3 Speed card (Speed Lab engine inside HT phase, 6 context rules, barefoot 4-part gate)
 - [x] Step 4 (include: switch Lift rest to the owner's saved bands — 80%+ 180 s; 65–79% 120–150 s; <65% 90–120 s; holds 60–90 s; skill 45–60 s; +30 s button; HT rest wins)
 - [ ] Step 4 Lift card (scheme unchanged; weights, rest, why-line, plateau swap, deload proof)
