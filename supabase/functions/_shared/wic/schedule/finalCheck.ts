@@ -225,3 +225,35 @@ export function finalRuleCheck<T extends FinalCheckRow>(
 
   return { rows: rows.filter((r) => !drop.has(r)), swaps };
 }
+
+/**
+ * Round 8 Step 1 — when each spaced card type is next allowed, from the SAME
+ * rules as finalRuleCheck (so the app never works it out on its own).
+ * Assumes nothing new is planned in between. Returns plan dates (YYYY-MM-DD,
+ * the player's local calendar). PURE.
+ */
+export function nextEligibleDates(
+  todayRows: readonly FinalCheckRow[],
+  ctx: Pick<FinalCheckContext, "planDate" | "priorLiftDates" | "restDaysBetweenLifts" | "weeklyLiftMax" | "catalog">,
+): Record<"lift" | DayKind, string> {
+  const iso = (n: number) => new Date(n * 86_400_000).toISOString().slice(0, 10);
+  const today = dayNum(ctx.planDate);
+  const kinds = dayKinds(todayRows, ctx.catalog);
+  const out = {} as Record<"lift" | DayKind, string>;
+  for (const k of ["hard_run", "high_jump", "bat_over_under"] as DayKind[]) out[k] = iso(today + (kinds.has(k) ? 2 : 1));
+  const liftDays = ctx.priorLiftDates.filter((d) => d < ctx.planDate).map(dayNum);
+  if (loadedLiftRows(todayRows as FinalCheckRow[]).length > 0) liftDays.push(today);
+  liftDays.sort((a, b) => a - b);
+  const last = liftDays.length ? liftDays[liftDays.length - 1] : null;
+  let d = today + 1;
+  if (ctx.restDaysBetweenLifts != null && last != null) d = Math.max(d, last + ctx.restDaysBetweenLifts + 1);
+  if (ctx.weeklyLiftMax != null) {
+    for (let i = 0; i < 3; i++) {
+      const wk = mondayOf(iso(d));
+      if (liftDays.filter((x) => x >= wk && x < wk + 7).length < ctx.weeklyLiftMax) break;
+      d = wk + 7;
+    }
+  }
+  out.lift = iso(d);
+  return out;
+}

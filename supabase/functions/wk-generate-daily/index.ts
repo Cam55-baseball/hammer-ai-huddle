@@ -221,7 +221,7 @@ import {
   resolveUbPrimerDose,
 } from "../_shared/wic/dosage/doctrine.ts";
 import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
-import { finalRuleCheck, dayKinds, FINAL_CHECK_CATALOG_COLUMNS, type DayKind } from "../_shared/wic/schedule/finalCheck.ts";
+import { finalRuleCheck, nextEligibleDates, dayKinds, FINAL_CHECK_CATALOG_COLUMNS, type DayKind } from "../_shared/wic/schedule/finalCheck.ts";
 import { loadU13ThrowBlock } from "../_shared/wic/phases/u13ThrowGate.ts";
 import { loadedLiftRows } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
 import { loadExternalTraining, mergeExternal } from "../_shared/wic/schedule/externalTraining.ts";
@@ -651,8 +651,15 @@ const handler = async (req: Request): Promise<Response> => {
           sameDayExternal: vMerged.sameDayExternal,
           catalog: vCatMap,
         });
+        // Round 8 Step 1: next allowed date per spaced card type, same rules.
+        const nextEligible = nextEligibleDates(vCheck.rows as any[], {
+          planDate, priorLiftDates: vMerged.priorLiftDates,
+          restDaysBetweenLifts: vSpacing ? 2 : null,
+          weeklyLiftMax: vSpacing && vPhase === "in_season" ? 2 : null,
+          catalog: vCatMap,
+        });
         if (vCheck.swaps.length === 0) {
-          return json({ ok: true, verified: true, plan_date: planDate }, 200);
+          return json({ ok: true, verified: true, plan_date: planDate, next_eligible: nextEligible }, 200);
         }
         await admin.from("wk_final_check_swaps").insert(vCheck.swaps.map((sw) => ({
           user_id: user.id, plan_date: planDate, rule: sw.rule,
@@ -670,7 +677,7 @@ const handler = async (req: Request): Promise<Response> => {
             detail: { removed: dropIds.length, rules: vCheck.swaps.map((s) => s.rule) },
           });
         }
-        return json({ ok: true, verified: false, trimmed: dropIds.length, plan_date: planDate }, 200);
+        return json({ ok: true, verified: false, trimmed: dropIds.length, plan_date: planDate, next_eligible: nextEligible }, 200);
       }
     }
 
