@@ -91,9 +91,17 @@ function tierAllowed(cap: PfpTier, tier: PfpTier): boolean {
 export function pickPfpDrillsForToday(
   today: Date,
   rung: RoadmapRung,
+  opts: { sport?: "baseball" | "softball"; twoWay?: boolean } = {},
 ): ReadonlyArray<PfpDrill> {
   const cap = tierCap(rung);
-  const pool = CATALOG.filter((d) => tierAllowed(cap, d.tier));
+  // Round 8 Step 5e — pick-offs are baseball pitchers only (never softball);
+  // 2-Way players get half the pick-off time (lower throw volume).
+  const pool = CATALOG
+    .filter((d) => tierAllowed(cap, d.tier))
+    .filter((d) => !(d.slug === "pfp_pickoff" && opts.sport !== "baseball"))
+    .map((d) => (d.slug === "pfp_pickoff" && opts.twoWay
+      ? { ...d, minutes: Math.ceil(d.minutes / 2), cue: `${d.cue} 2-Way: half the reps — mostly footwork, few real throws.` }
+      : d));
   if (pool.length === 0) return [];
   // Day-of-year seed for deterministic rotation.
   const start = new Date(Date.UTC(today.getUTCFullYear(), 0, 0));
