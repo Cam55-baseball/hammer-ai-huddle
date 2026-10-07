@@ -42,6 +42,14 @@ export interface GoalEmphasisInput {
   /** Stage 5 — the athlete's career goal in their own words (athlete_context.goal_summary). */
   careerGoal?: string | null;
   isPitcher?: boolean;
+  /** athlete_context.goal_priority_rank — ordered list (or {domain: rank}). */
+  priorityRank?: unknown;
+  /** athlete_context.category_goals — per-category sub-goals tagged primary/secondary. */
+  categoryGoals?: unknown;
+  /** training_preferences.goal (strength / hypertrophy / power / speed …). */
+  trainingGoal?: string | null;
+  /** athlete_context.goal_horizon — short horizons tilt a little harder. */
+  goalHorizon?: string | null;
 }
 
 /** A career goal tilts at most this much — less than a third-ranked goal. */
@@ -172,6 +180,39 @@ export function resolveGoalEmphasis(input: GoalEmphasisInput): GoalEmphasis {
     order.forEach((domain, i) => rankedPairs.push({ domain, rank: i + 1 }));
   }
 
+  // 4) goal_priority_rank — explicit ordering authority when present.
+  const pr = input.priorityRank;
+  if (Array.isArray(pr)) {
+    pr.forEach((x, i) => { const d = normalizeGoalDomain(x); if (d) rankedPairs.push({ domain: d, rank: i + 1 }); });
+  } else if (pr && typeof pr === "object") {
+    for (const [k, v] of Object.entries(pr as Record<string, unknown>)) {
+      const d = normalizeGoalDomain(k); const r = Number(v);
+      if (d && Number.isFinite(r) && r > 0) rankedPairs.push({ domain: d, rank: Math.floor(r) });
+    }
+  }
+  // 5) category_goals sub-goals: a category holding a PRIMARY sub-goal ranks 2,
+  //    secondary-only ranks 3 (never above the athlete's own ordering).
+  if (!athleteRanked && input.categoryGoals && typeof input.categoryGoals === "object") {
+    const walk = (node: unknown, depth: number) => {
+      if (!node || typeof node !== "object" || depth > 4) return;
+      for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+        if (Array.isArray(v)) {
+          const d = normalizeGoalDomain(k);
+          if (!d || v.length === 0) continue;
+          const primary = v.some((g) => (g as Record<string, unknown>)?.rank === "primary");
+          rankedPairs.push({ domain: d, rank: primary ? 2 : 3 });
+        } else walk(v, depth + 1);
+      }
+    };
+    walk(input.categoryGoals, 0);
+  }
+  // 6) training_preferences.goal — rank 2 for its domain.
+  const tg = String(input.trainingGoal ?? "").toLowerCase();
+  const tgDomain: GoalDomain | null = /hypertroph|strength|size|muscle/.test(tg) ? "strength"
+    : /power|explos/.test(tg) ? "power" : /speed/.test(tg) ? "speed"
+    : /endur|condition/.test(tg) ? "conditioning" : normalizeGoalDomain(tg);
+  if (tgDomain) rankedPairs.push({ domain: tgDomain, rank: 2 });
+
   // Deterministic: best (lowest) rank wins per domain, ties broken by domain
   // order in GOAL_DOMAINS.
   const bestRank = new Map<GoalDomain, number>();
@@ -180,8 +221,9 @@ export function resolveGoalEmphasis(input: GoalEmphasisInput): GoalEmphasis {
     if (prev === undefined || rank < prev) bestRank.set(domain, rank);
   }
 
+  const horizonScale = /short|this season|weeks?|month/i.test(String(input.goalHorizon ?? "")) ? 1.15 : 1;
   for (const [domain, rank] of bestRank) {
-    weights[domain] = clampWeight(weights[domain] + bonusForRank(rank));
+    weights[domain] = clampWeight(weights[domain] + bonusForRank(rank) * horizonScale);
   }
 
   // Stage 5 — career goal: a small tilt toward what the goal names. Bounded by
