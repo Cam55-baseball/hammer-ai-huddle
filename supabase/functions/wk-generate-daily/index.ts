@@ -222,7 +222,7 @@ import {
 } from "../_shared/wic/dosage/doctrine.ts";
 import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
 import { finalRuleCheck, nextEligibleDates, dayKinds, FINAL_CHECK_CATALOG_COLUMNS, type DayKind } from "../_shared/wic/schedule/finalCheck.ts";
-import { loadU13ThrowBlock } from "../_shared/wic/phases/u13ThrowGate.ts";
+import { loadU13ThrowBlock, loadU13ThrowState } from "../_shared/wic/phases/u13ThrowGate.ts";
 import { loadedLiftRows } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
 import { loadExternalTraining, mergeExternal } from "../_shared/wic/schedule/externalTraining.ts";
 
