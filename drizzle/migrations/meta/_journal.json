@@ -15,6 +15,13 @@
       "when": 1791391466348,
       "tag": "0001_athlete_limb_measurements",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791391660163,
+      "tag": "0002_problem_reports",
+      "breakpoints": true
     }
   ]
 }

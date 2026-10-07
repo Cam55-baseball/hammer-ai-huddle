@@ -11520,6 +11520,45 @@ export type Database = {
           },
         ]
       }
+      problem_reports: {
+        Row: {
+          app_info: Json
+          created_at: string
+          email_attempts: number
+          email_last_error: string | null
+          email_sent_at: string | null
+          email_status: string
+          id: string
+          message: string
+          page: string | null
+          user_id: string
+        }
+        Insert: {
+          app_info?: Json
+          created_at?: string
+          email_attempts?: number
+          email_last_error?: string | null
+          email_sent_at?: string | null
+          email_status?: string
+          id?: string
+          message: string
+          page?: string | null
+          user_id?: string
+        }
+        Update: {
+          app_info?: Json
+          created_at?: string
+          email_attempts?: number
+          email_last_error?: string | null
+          email_sent_at?: string | null
+          email_status?: string
+          id?: string
+          message?: string
+          page?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       processed_webhook_events: {
         Row: {
           details: Json | null
