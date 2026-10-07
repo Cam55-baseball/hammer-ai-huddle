@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { CardDashboard } from "@/components/hammer/cards/CardDashboard";
 import { TestedMaxLog } from "@/components/hammer/logging/ExtraLogs";
 import { RestTimer, liftRestBand } from "@/components/hammer/cards/RestTimer";
 import { useHammersToday } from "@/components/hammer/HammersTodayProvider";
@@ -233,6 +234,7 @@ export function WkLiftsCard({ pocket = false }: { pocket?: boolean } = {}) {
                 shape={(items[0]?.why_payload as any)?.session_shape ?? null}
               />
             )}
+            {items.length > 0 && <CardDashboard mode="lift" slugs={items.filter((r) => r.load_pct).map((r) => r.movement_slug)} />}
             <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
             {items.length > 0 && <WkCardCompletion modality="lifts" modalityLabel="Lifts" items={items} />}
             {items.length > 0 && <CardActions modality="lifts" items={items} phaseDisplay={phaseDisplay} />}

@@ -25,6 +25,7 @@ import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
 import { WkSessionShapeLine } from "@/components/hammer/WkProgressionNote";
 import { RestTimer, sprintRestSeconds } from "@/components/hammer/cards/RestTimer";
+import { CardDashboard } from "@/components/hammer/cards/CardDashboard";
 import { SprintStopwatch } from "@/components/hammer/cards/SprintStopwatch";
 
 export function WkSpeedCard({ pocket = false }: { pocket?: boolean } = {}) {
@@ -96,6 +97,7 @@ export function WkSpeedCard({ pocket = false }: { pocket?: boolean } = {}) {
                 shape={(items[0]?.why_payload as any)?.session_shape ?? null}
               />
             )}
+            <CardDashboard mode="speed" />
             <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
             {items.length > 0 && <WkCardCompletion modality="speed" modalityLabel="Speed" items={items} />}
             {items.length > 0 && <CardActions modality="speed" items={items} phaseDisplay={label} />}
