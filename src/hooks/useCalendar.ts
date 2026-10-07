@@ -1,3 +1,5 @@
+import { useProgramsRetired } from "@/hooks/useProgramsRetired";
+import { isRetiredKey, isRetiredRoute, mentionsRetired } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -189,6 +191,7 @@ const getMealTime = (mealType: string): string => {
 
 export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCalendarResult {
   const { user } = useAuth();
+  const { retired: programsRetired } = useProgramsRetired();
   const { modules } = useSubscription();
   const { getDaySchedule, lockedDays } = useGamePlanLock();
   const [events, setEvents] = useState<Record<string, CalendarEvent[]>>({});
@@ -956,8 +959,19 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
   // Real-time subscriptions are now handled by useSchedulingRealtime
   // No per-hook channels needed here
 
+  // Program retirement switch ON: the five programs' calendar entries are hidden
+  // (their saved data is untouched, so switching OFF shows them again).
+  const visibleEvents = useMemo(() => {
+    if (!programsRetired) return events;
+    const out: Record<string, CalendarEvent[]> = {};
+    for (const [k, list] of Object.entries(events)) {
+      out[k] = list.filter((e) => !isRetiredKey(e.source) && !isRetiredRoute(e.link) && !mentionsRetired(e.title));
+    }
+    return out;
+  }, [events, programsRetired]);
+
   return {
-    events,
+    events: visibleEvents,
     loading,
     fetchEventsForRange,
     addEvent,

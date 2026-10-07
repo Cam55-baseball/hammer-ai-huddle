@@ -25,7 +25,7 @@ export interface RetiredProgram {
 export const RETIRED_PROGRAMS: ReadonlyArray<RetiredProgram> = [
   { name: "Speed Lab", aliases: [], routes: ["/speed-lab"], keys: ["speed-lab", "speed_lab"] },
   { name: "Explosive Conditioning", aliases: [], routes: ["/explosive-conditioning"], keys: ["explosive-conditioning", "explosive_conditioning"] },
-  { name: "The Unicorn", aliases: ["The Unicorn Workout System", "Unicorn"], routes: ["/the-unicorn"], keys: ["the-unicorn", "the_unicorn", "unicorn"] },
+  { name: "The Unicorn", aliases: ["The Unicorn Workout System", "Unicorn"], routes: ["/the-unicorn"], keys: ["the-unicorn", "the_unicorn", "unicorn", "workout-unicorn"] },
   { name: "Iron Bambino", aliases: ["Iron Bambino (Upgraded)", "Production Lab"], routes: ["/production-lab"], keys: ["production-lab", "production_lab", "iron_bambino", "iron-bambino", "workout-hitting"] },
   { name: "Heat Factory", aliases: ["Production Studio"], routes: ["/production-studio"], keys: ["production-studio", "production_studio", "heat_factory", "heat-factory", "workout-pitching"] },
 ];
