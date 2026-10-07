@@ -44,10 +44,10 @@
 
 ## Round 2 (owner-approved 2026-10-06) — under13_parent_program stays OFF
 - [x] A. Bat speed wording (overclaim "transfers seamlessly into pitching velocity" replaced with "builds rotational power for your swing. Throwing velocity still comes from throwing work." in startPlanItems.ts + WkBatSpeedCard.tsx; growthMode test updated, 9 pass)
-- [ ] B. Under-13 parent-controlled account behind OFF switch (signup, notice, promise, payment, consent record, parent controls, protections)
-- [ ] C. Under-13 Pitch Smart exact, no weighted balls, innings 60/80, 4 months off, FB/CH only
-- [ ] D. 13th birthday → normal account; no teen promise, no 18th step
-- [ ] E. Pause gaps (hydration, base-stealing, hammer-chat, leaderboards, public pages)
+- [x] B. Under-13 parent-controlled account behind the under13_parent_program switch (signup gate Under13Block, Parent Notice + Parent Promise, typed + drawn signature, consent record, card payment required before the account opens, ParentControls, protections) — built and deployed in Round 2; signed-in verification tracked under the test-player items
+- [x] C. Under-13 Pitch Smart exact: innings 60 (8 and under) / 80 (9-12), 4 months off a year (2+ in a row), no weighted balls under 13, FB/CH only — 23 tests pass in src/test/under13PitchSmart.test.ts
+- [x] D. 13th birthday → normal account (transition handled in UnifiedSignupOnboarding/ProfileSetup/Profile; no teen promise, no 18th step)
+- [x] E. Pause gaps: PausedAccountScreen replaces the whole app while paused; leaderboards/public pages hide paused and under-13 accounts (Round 3); switch OFF falls back to the plain paused notice
 - [ ] F. Round 1 tests (screenshots, growth on/off, 16yo heavy track)
 - [ ] Stress tests 1–19 + daily-plan job scale
 - [ ] Deferral note + youth-throwing doc updates
