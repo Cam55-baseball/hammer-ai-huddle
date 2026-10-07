@@ -4963,6 +4963,20 @@ function splitSharedForPersist(rows: any[]): { rows: any[]; shared: Record<strin
   // Test switch (profiling requests only): send the old full payload.
   if ((globalThis as any).__wkLegacyPersist === true) return { rows, shared };
   if (!Array.isArray(rows) || rows.length < 2) return { rows, shared };
+  // why_v2.why_substitution_path is the same plan-wide blob (~26 KB) on every
+  // card and nothing reads it per card. Keep it on the first card only so
+  // one plan save writes it once instead of once per card.
+  {
+    const first = rows[0]?.why_v2?.why_substitution_path;
+    if (first !== undefined) {
+      const ref = JSON.stringify(first);
+      rows = rows.map((r: any, i: number) => {
+        if (i === 0 || !r?.why_v2 || JSON.stringify(r.why_v2.why_substitution_path) !== ref) return r;
+        const { why_substitution_path: _drop, ...rest } = r.why_v2;
+        return { ...r, why_v2: rest };
+      });
+    }
+  }
   const isObj = (v: unknown) => v !== null && typeof v === "object" && !Array.isArray(v);
   const out = rows.map((r) => ({ ...r }));
   for (const col of ["why_payload", "why_v2"]) {
