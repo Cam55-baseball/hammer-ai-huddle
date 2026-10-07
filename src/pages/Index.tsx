@@ -14,7 +14,8 @@ import heroImage from "@/assets/hero-baseball.jpg";
 import { useEffect } from "react";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 
-const Index = () => {
+/** `browse` = /home: lets signed-in people view the landing page without being sent to the dashboard. */
+const Index = ({ browse = false }: { browse?: boolean }) => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { isOwner } = useOwnerAccess();
@@ -25,14 +26,14 @@ const Index = () => {
   // Signed-in players (website, home-screen app, iPhone app) go straight in
   // instead of landing on the marketing page and its Sign in button.
   useEffect(() => {
-    if (!loading && user) navigate("/dashboard", { replace: true });
-  }, [loading, user, navigate]);
+    if (!browse && !loading && user) navigate("/dashboard", { replace: true });
+  }, [browse, loading, user, navigate]);
 
   const handleGetStarted = () => {
     navigate("/auth");
   };
 
-  if (loading || user) return <HMLoadingFallback />;
+  if (loading || (user && !browse)) return <HMLoadingFallback />;
 
   return (
     <div data-hm-landing className="min-h-screen bg-gradient-to-b from-background to-muted/30">

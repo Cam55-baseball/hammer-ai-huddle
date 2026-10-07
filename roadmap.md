@@ -1,11 +1,12 @@
 # Roadmap
 
-**Ready to publish: YES** — final regression clean (see status below). **Waiting on owner:** email path; OK to remove old programs' menus/pricing/data.
+**Ready to publish: YES (after owner reviews the change list)** — 2026-10-07 urgent pass: redirects OFF, game flush OFF (builder redeployed + live-proved), day-mode/organism wording reverted, /home added; 2,447 tests pass, phase scan 0, 165/165 pages at 390 px clean, sign-in form answers in under 2 s on preview and live site. Login failure 22:40–22:44 was a backend database outage, now recovered. Change list: docs/owner/changes-since-2026-10-06.md.
+**Waiting on owner:** (1) a test account password, or a sign-in by the owner, for a full successful form sign-in proof; (2) keep/revert on the 11 "Owner to confirm" files; (3) email path; (4) program retirement — not approved, pages work as before.
 
 ## Closeout decisions — ANSWERED by the owner (2026-10-07, E3)
-- [x] Game-linked flush: YES, as an optional card note the player can skip; never replaces planned work. Built, tested, live-proved.
+- [ ] Game-linked flush: SWITCHED OFF 2026-10-07 (owner: decision still pending). Was: YES, as an optional card note the player can skip; never replaces planned work. Built, tested, live-proved.
 - [x] Morning game question: keep as is (asked once, shared with the plan-page prompt). Nothing changed.
-- [x] Retire the five programs: YES to redirects. Speed Lab, Explosive Conditioning, The Unicorn, Iron Bambino, Heat Factory pages now open the daily plan (reaches players on Publish). Menus, pricing/help text and data untouched; nothing deleted.
+- [ ] Retire the five programs: NOT approved — redirects switched OFF 2026-10-07, pages work as before. Was: YES to redirects. Speed Lab, Explosive Conditioning, The Unicorn, Iron Bambino, Heat Factory pages now open the daily plan (reaches players on Publish). Menus, pricing/help text and data untouched; nothing deleted.
 
 ## OWNER DECISIONS 2026-10-07 — FINISH END TO END
 - [x] Verified owner-applied files: throw types accepted, real-ball switch on; 10 program backups exist with RLS on

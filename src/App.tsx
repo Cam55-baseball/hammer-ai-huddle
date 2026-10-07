@@ -315,6 +315,7 @@ const App = () => {
               <AccountGate>
               <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/home" element={<Index browse />} />
               {import.meta.env.DEV && (
                 <>
                 <Route path="/__evidence/safe-session" element={<EvidenceSafeSession />} />

@@ -1,10 +1,10 @@
 /**
- * Step 9 — program retirement redirects. Switched ON by the owner 2026-10-07.
+ * Step 9 — program retirement redirects. Switched OFF 2026-10-07 (owner: five programs NOT approved for retirement).
  * Only the page addresses redirect; menu items, pricing/help text and data are
  * untouched (those need a separate owner OK). Nothing is deleted.
  * Destinations are the daily plan, which now holds each program's content.
  */
-export const PROGRAM_REDIRECTS_ENABLED = true as const;
+export const PROGRAM_REDIRECTS_ENABLED = false as const;
 
 export const PROGRAM_REDIRECT_TARGET = "/my-daily-game-plan";
 

@@ -9,9 +9,9 @@ export function MorningDayIntent() {
   const { dayType, setDayType, restBudgetLeft, overBudget } = useDayState();
   const [saving, setSaving] = useState(false);
   const choices = [
-    { type: 'rest' as const, label: 'Rest: take it easier', explanation: 'Dial back hard work still to do; keep completed work.', icon: Moon },
-    { type: 'skip' as const, label: 'Skip: sit today out', explanation: 'No day credit; workout amounts stay the same.', icon: SkipForward },
-    { type: 'push' as const, label: 'Push: commit to the plan', explanation: 'Do today’s planned work; no extra sets or harder work added.', icon: Flame },
+    { type: 'rest' as const, label: 'Rest', icon: Moon },
+    { type: 'skip' as const, label: 'Skip', icon: SkipForward },
+    { type: 'push' as const, label: 'Push', icon: Flame },
   ];
   const choose = async (type: 'rest' | 'skip' | 'push') => {
     if (saving) return;
@@ -29,24 +29,21 @@ export function MorningDayIntent() {
   };
   return (
     <section aria-label="Day intent" className="space-y-2 border-t border-border pt-4">
-      <h3 className="text-sm font-semibold">How do you want to train today?</h3>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {choices.map(({ type, label, explanation, icon: Icon }) => (
-          <div key={type} className="min-w-0 space-y-1.5">
+      <h3 className="text-sm font-semibold">Day intent</h3>
+      <p className="text-xs text-muted-foreground">Choose how today counts, or leave it as a standard day.</p>
+      <div className="grid grid-cols-3 gap-2">
+        {choices.map(({ type, label, icon: Icon }) => (
           <Button key={type} type="button" size="sm" variant={dayType === type ? 'default' : 'outline'}
-            className="h-11 w-full gap-1.5 px-2 text-xs" aria-describedby={`morning-day-${type}`}
             disabled={saving} onClick={() => void choose(type)} aria-pressed={dayType === type}>
-            <Icon className="h-4 w-4 shrink-0" />{label}
+            <Icon className="mr-1 h-4 w-4" />{label}
           </Button>
-          <p id={`morning-day-${type}`} className="text-xs leading-relaxed text-muted-foreground">{explanation}</p>
-          </div>
         ))}
       </div>
       <p className="text-xs text-muted-foreground">
-        {dayType === 'rest' ? 'Rest selected. Eligible remaining work is dialled back, not cancelled. Daily must-do tasks are waived; streak protection is within your rest allowance.' :
-          dayType === 'skip' ? 'Skip selected. No progress or recovery credit for the day. This does not mark every workout skipped.' :
-          dayType === 'push' ? 'Push selected. Follow today’s plan, not a harder plan. All training limits still apply.' :
-          'Standard day. Follow today’s plan.'}
+        {dayType === 'rest' ? 'Easier day: the hard work in your plan is dialled back. Streak protected. Non-Negotiables waived.' :
+          dayType === 'skip' ? 'Day ignored. No progress or recovery credit.' :
+          dayType === 'push' ? 'Higher standard today. Your plan already sets the most you should do, so no extra work is added.' :
+          'Standard day. Operate at your current standard.'}
       </p>
       <p className="text-xs text-muted-foreground">{overBudget ? 'Rest allowance exceeded this week.' : 'Rest allowance is managed for you this week.'}</p>
     </section>
