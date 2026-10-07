@@ -55,3 +55,25 @@ export function workingWeight(max: number | null, pct: number | null | undefined
   const p = pct <= 1.5 ? pct : pct / 100;
   return Math.floor((max * p) / 5) * 5;
 }
+
+/**
+ * Lift plateau (Round 8 Step 4): 3 logged sessions in a row with no new best estimated max
+ * (after a first best exists). Only player-typed weights count. It only SUGGESTS a swap —
+ * the player chooses one from the plan's own legal swaps; sets/reps/% never change.
+ */
+export function liftPlateau(rows: ReadonlyArray<LogRow>): boolean {
+  const byDay = new Map<string, number>();
+  for (const r of rows) {
+    const w = Number(r.load_used);
+    if (!isPlayerWeight(r) || !(w > 0)) continue;
+    for (const n of r.reps_completed ?? []) {
+      if (!(n >= 1 && n <= 10)) continue;
+      const e = estimateMax(w, n);
+      if (e > (byDay.get(r.plan_date) ?? 0)) byDay.set(r.plan_date, e);
+    }
+  }
+  const days = [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  let best = 0, since = 0;
+  for (const [, e] of days) { if (e > best) { since = best > 0 ? 0 : since; best = e; if (since === 0) continue; } since++; }
+  return days.length >= 4 && since >= 3;
+}
