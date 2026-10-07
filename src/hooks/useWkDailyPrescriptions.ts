@@ -25,7 +25,7 @@ import type { AthleteContext } from "@/lib/wic/athleteContext";
 import type { PersonalizationContext } from "@/lib/wic/personalizationContext";
 import type { TrainingAgeContext } from "@/lib/wic/trainingAge";
 import { WIC_VERSION } from "../../supabase/functions/_shared/wic/constitution";
-import { resolveWkPhase } from "@/lib/hammer/workout/phaseQuarter";
+import { usePhaseState } from "@/hooks/usePhaseState";
 import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useScheduleTimeline";
 
 // Must equal the version the generator stamps on every row. A mismatch made
@@ -203,23 +203,12 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const sideHit = sideCtx.selectedSide?.hit;
   const sideThrow = sideCtx.selectedSide?.throw;
 
-  const canonicalPhase = useMemo(() => resolveWkPhase({
-    season_status: season.seasonStatus,
-    preseason_start_date: season.preseasonStartDate,
-    preseason_end_date: season.preseasonEndDate,
-    in_season_start_date: season.inSeasonStartDate,
-    in_season_end_date: season.inSeasonEndDate,
-    post_season_start_date: season.postSeasonStartDate,
-    post_season_end_date: season.postSeasonEndDate,
-  }), [
-    season.seasonStatus,
-    season.preseasonStartDate,
-    season.preseasonEndDate,
-    season.inSeasonStartDate,
-    season.inSeasonEndDate,
-    season.postSeasonStartDate,
-    season.postSeasonEndDate,
-  ]);
+  // ONE SYSTEM, ONE PHASE: the server's live answer (never device math).
+  const { livePhaseState } = usePhaseState();
+  const canonicalPhase = useMemo(() => ({
+    phase: (livePhaseState?.sub_block ?? null) as any,
+    displayName: livePhaseState?.sub_block_label ?? null,
+  }), [livePhaseState?.sub_block, livePhaseState?.sub_block_label]);
 
   // Round 6 (plan never changes on reload): the last plan this device saw is
   // shown instantly from the device, then quietly checked against the server.
@@ -557,7 +546,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       !season.isLoading &&
       (query.data ?? []).some((rx) => {
         const storedPhase = rx.why_payload?.phase ?? rx.phase ?? null;
-        return !!storedPhase && storedPhase !== expectedPhase;
+        return !!storedPhase && !!expectedPhase && storedPhase !== expectedPhase;
       });
     const firstCreated = (first as any)?.created_at as string | undefined;
     const staleTimeline =
@@ -715,14 +704,14 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const phaseDisplay = useMemo(() => {
     const first = (query.data ?? [])[0];
     const storedPhase = first?.why_payload?.phase ?? first?.phase ?? null;
-    if (storedPhase && storedPhase !== canonicalPhase.phase) return canonicalPhase.displayName;
+    if (storedPhase && canonicalPhase.phase && storedPhase !== canonicalPhase.phase) return canonicalPhase.displayName;
     return first?.why_payload?.phase_display ?? canonicalPhase.displayName ?? null;
   }, [query.data, canonicalPhase.phase, canonicalPhase.displayName]);
 
   const phaseKey = useMemo(() => {
     const first = (query.data ?? [])[0];
     const storedPhase = first?.why_payload?.phase ?? first?.phase ?? null;
-    if (storedPhase && storedPhase !== canonicalPhase.phase) return canonicalPhase.phase;
+    if (storedPhase && canonicalPhase.phase && storedPhase !== canonicalPhase.phase) return canonicalPhase.phase;
     return first?.why_payload?.phase ?? canonicalPhase.phase ?? null;
   }, [query.data, canonicalPhase.phase]);
 
@@ -765,7 +754,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       }, null) ?? null;
     const generatorVersion = (first as any)?.generator_version ?? first?.why_payload?.generator_version ?? null;
     const storedSeasonPhase = first?.why_payload?.phase ?? null;
-    const seasonPhase = storedSeasonPhase && storedSeasonPhase !== canonicalPhase.phase
+    const seasonPhase = storedSeasonPhase && canonicalPhase.phase && storedSeasonPhase !== canonicalPhase.phase
       ? canonicalPhase.phase
       : storedSeasonPhase;
     const generationId =
@@ -777,7 +766,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       generated_at: generatedAt,
       generator_version: generatorVersion,
       season_phase: seasonPhase,
-      season_display: storedSeasonPhase && storedSeasonPhase !== canonicalPhase.phase
+      season_display: storedSeasonPhase && canonicalPhase.phase && storedSeasonPhase !== canonicalPhase.phase
         ? canonicalPhase.displayName
         : ((first?.why_payload?.phase_display as string | undefined) ?? canonicalPhase.displayName ?? null),
       plan_date: planDate,

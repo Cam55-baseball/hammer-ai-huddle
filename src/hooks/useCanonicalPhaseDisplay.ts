@@ -1,73 +1,24 @@
 /**
- * useCanonicalPhaseDisplay — single source of truth for the "phase" label
- * that appears on every WK card (Speed / Bat Speed / Lifts / Conditioning).
- *
- * The server generator stamps a phase into `why_payload.phase_display`, but
- * when an athlete has no explicit season windows the generator would drift to
- * "Offseason Q1" while the profile / plan header (client-resolved) correctly
- * showed "In Season". This hook resolves the phase on the client using the
- * SAME rules as the server (mirrored resolveWkPhase) and prefers the stored
- * `season_status` over any default fallback — so every card, the header, and
- * the profile agree in the same paint.
+ * useCanonicalPhaseDisplay — the phase label on every card, header and
+ * counter. ONE SYSTEM, ONE PHASE: the label comes from the server's one
+ * resolver (phase-state), which returns today's built plan's own answer when
+ * a plan exists. The device never works a phase out.
  */
-import { useMemo } from 'react';
-import { useSeasonStatus } from '@/hooks/useSeasonStatus';
-import { resolveWkPhase, type WkPhase } from '@/lib/hammer/workout/phaseQuarter';
+import { usePhaseState } from '@/hooks/usePhaseState';
+import type { WkPhase } from '@/lib/hammer/workout/phaseQuarter';
 
 export interface CanonicalPhaseDisplay {
   phase: WkPhase;
   display: string;
 }
 
-/**
- * @param serverDisplay optional label the generator emitted for this snapshot;
- *   used only when the client resolves to the same phase (avoids losing extra
- *   detail the server appended).
- */
+/** Arguments kept for older callers; the server answer always wins. */
 export function useCanonicalPhaseDisplay(
   serverDisplay?: string | null,
   serverPhase?: string | null,
 ): CanonicalPhaseDisplay {
-  const {
-    seasonStatus,
-    preseasonStartDate,
-    preseasonEndDate,
-    inSeasonStartDate,
-    inSeasonEndDate,
-    postSeasonStartDate,
-    postSeasonEndDate,
-  } = useSeasonStatus();
-
-  return useMemo(() => {
-    const resolution = resolveWkPhase({
-      season_status: seasonStatus,
-      preseason_start_date: preseasonStartDate,
-      preseason_end_date: preseasonEndDate,
-      in_season_start_date: inSeasonStartDate,
-      in_season_end_date: inSeasonEndDate,
-      post_season_start_date: postSeasonStartDate,
-      post_season_end_date: postSeasonEndDate,
-    });
-    // If the server already resolved to the same canonical phase, keep the
-    // richer server-stamped label (may include daysIntoPhase copy etc.).
-    // ONE SYSTEM, ONE PHASE: once the server has built the plan, its phase
-    // wins; the app only resolves on its own before a plan exists.
-    if (serverPhase && serverPhase !== resolution.phase) {
-      return { phase: serverPhase as typeof resolution.phase, display: serverDisplay || resolution.displayName };
-    }
-    if (serverDisplay && serverPhase && serverPhase === resolution.phase) {
-      return { phase: resolution.phase, display: serverDisplay };
-    }
-    return { phase: resolution.phase, display: resolution.displayName };
-  }, [
-    seasonStatus,
-    preseasonStartDate,
-    preseasonEndDate,
-    inSeasonStartDate,
-    inSeasonEndDate,
-    postSeasonStartDate,
-    postSeasonEndDate,
-    serverDisplay,
-    serverPhase,
-  ]);
+  const { phaseState } = usePhaseState();
+  if (phaseState) return { phase: phaseState.sub_block as WkPhase, display: phaseState.sub_block_label };
+  if (serverPhase) return { phase: serverPhase as WkPhase, display: serverDisplay || '' };
+  return { phase: 'os_q1', display: '' };
 }

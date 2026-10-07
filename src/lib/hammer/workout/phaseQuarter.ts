@@ -48,11 +48,13 @@ const QUARTER_LABEL: Record<WkPhase, string> = {
 export function resolveWkPhase(
   settings: SeasonSettingsLike | null | undefined,
   now: Date = new Date(),
+  /** The athlete's own calendar day (same argument the server takes). */
+  today?: string,
 ): WkPhaseResolution {
   const normalized = settings
     ? { ...settings, season_status: normalizeSeasonStatus(settings.season_status) ?? settings.season_status }
     : settings;
-  const seasonRes = resolveSeasonPhase(normalized);
+  const seasonRes = resolveSeasonPhase(normalized, today);
 
   if (seasonRes.phase === 'in_season') {
     return {
