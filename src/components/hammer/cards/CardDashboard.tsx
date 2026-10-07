@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
+import { speedTier, worldClassFor } from "@/lib/speed/speedEngine";
 import { verifiedMax, type LogRow } from "@/lib/lift/verifiedMax";
 
 type Row = LogRow & { movement_slug: string; distance_feet_completed: number | null; duration_seconds_completed: number | null };
@@ -77,7 +78,7 @@ export function CardDashboard({ mode, slugs }: { mode: "speed" | "lift" | "pract
     const s = summarizeSprints(data);
     if (!s.length) return null;
     body = s.map((x) => (
-      <li key={x.yards}>{x.yards} yd — best time: {x.best.toFixed(2)}s · latest: {x.latest.toFixed(2)}s · reps timed: {x.reps}</li>
+      <li key={x.yards}>{x.yards} yd — best time: {x.best.toFixed(2)}s · latest: {x.latest.toFixed(2)}s · reps timed: {x.reps}{(() => { const w = worldClassFor("baseball", x.yards) ?? worldClassFor("softball", x.yards); return w ? ` · speed level: ${speedTier(x.best, w)}` : ""; })()}</li>
     ));
   } else if (mode === "lift") {
     const s = summarizeLift(data);

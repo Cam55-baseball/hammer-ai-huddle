@@ -88,3 +88,26 @@ export function speedFocus(ctx: {
     ? { key: "max_velocity", label: "Top-speed focus today.", maxEffort: true, repCap: null }
     : { key: "acceleration", label: "First-step speed focus today.", maxEffort: true, repCap: null };
 }
+
+/** Group logged sprint times (wk_session_logs kind=sprint_time) into sessions, oldest first. */
+export function sessionsFromLogs(rows: { plan_date: string; distance_feet_completed: number | null; metrics: any }[]): SpeedSessionLite[] {
+  const by = new Map<string, SpeedSessionLite>();
+  for (const r of rows) {
+    const t = Number(r.metrics?.sprint_time_s), yd = Math.round(Number(r.distance_feet_completed) / 3);
+    if (r.metrics?.kind !== "sprint_time" || !(t > 0) || !(yd > 0)) continue;
+    const s = by.get(r.plan_date) ?? { date: r.plan_date, rpe: null, times: {} };
+    s.times[yd] = s.times[yd] ? Math.min(s.times[yd], t) : t;
+    by.set(r.plan_date, s);
+  }
+  return [...by.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+export function bestsOf(sessions: SpeedSessionLite[]): Record<string, number> {
+  const b: Record<string, number> = {};
+  for (const s of sessions) for (const [d, t] of Object.entries(s.times)) if (b[d] == null || t < b[d]) b[d] = t;
+  return b;
+}
+/** Nearest world-class reference for a distance in yards (only exact sport distances count). */
+export function worldClassFor(sport: "baseball" | "softball", yd: number): number | null {
+  const w = Object.values(WORLD_CLASS[sport]).find((x) => x.yd === yd);
+  return w ? w.s : null;
+}

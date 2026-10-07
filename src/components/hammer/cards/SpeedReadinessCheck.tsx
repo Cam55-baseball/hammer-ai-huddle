@@ -7,7 +7,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
-import { breakDayReasons, cutReps, readinessScore, type BodyFeel, type SpeedCheckIn } from "@/lib/speed/speedEngine";
+import { useSpeedHistory } from "@/hooks/useSpeedHistory";
+import { isPlateau, speedFocus, unlocks, breakDayReasons, cutReps, readinessScore, type BodyFeel, type SpeedCheckIn } from "@/lib/speed/speedEngine";
 
 const SPOTS = ["Foot", "Ankle", "Shin", "Achilles", "Calf", "Hamstring", "Quad", "Hip", "Groin", "Back"];
 const SLEEP = ["Awful", "Poor", "OK", "Good", "Great"];
@@ -21,7 +22,9 @@ export function useSpeedCheckIn(planDate: string) {
   return [c, setC] as const;
 }
 
-export function SpeedReadinessCheck({ planDate, sprintSets }: { planDate: string; sprintSets: { name: string; sets: number }[] }) {
+const LOWER = ["Foot", "Ankle", "Shin", "Achilles", "Calf", "Hamstring", "Quad", "Hip", "Groin"];
+export function SpeedReadinessCheck({ planDate, sprintSets, inSeason }: { planDate: string; sprintSets: { name: string; sets: number }[]; inSeason?: boolean }) {
+  const hist = useSpeedHistory(planDate);
   const { user } = useOptionalAuth();
   const [saved, setSaved] = useSpeedCheckIn(planDate);
   const [sleep, setSleep] = useState<number | null>(null);
@@ -75,7 +78,12 @@ export function SpeedReadinessCheck({ planDate, sprintSets }: { planDate: string
   }
 
   const score = readinessScore(saved);
-  const reasons = breakDayReasons(saved, [], {});
+  const reasons = breakDayReasons(saved, hist.newestFirst, hist.bests);
+  const focus = speedFocus({ lowerBodyInjury: false, highLoadOrLowReadiness: score < 40, inSeason });
+  const sore = saved.painAreas.some((p) => LOWER.includes(p));
+  const cap = (n: number) => { const c = cutReps(n, score); return focus.repCap ? Math.min(c, Math.max(1, focus.repCap)) : c; };
+  const un = unlocks(hist.sessions.length);
+  const plateau = isPlateau(hist.sessions);
   const breakDay = reasons.length > 0 && !saved.override;
   return (
     <div data-speed-readiness={score} className="space-y-1 rounded-md border border-border bg-muted/30 p-2 text-xs">
@@ -86,16 +94,21 @@ export function SpeedReadinessCheck({ planDate, sprintSets }: { planDate: string
           <ul className="list-disc pl-4 text-muted-foreground">{reasons.map((r) => <li key={r}>{r}</li>)}</ul>
           <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => setSaved({ ...saved, override: true })}>I feel fine — sprint anyway</Button>
         </>
-      ) : score >= 60 ? (
+      ) : sore ? (
+        <p className="text-foreground">You marked a sore spot in your legs — run easy today, no all-out sprints. Stop if anything hurts.</p>
+      ) : score >= 60 && !sprintSets.some((x) => cap(x.sets) < x.sets) ? (
         <p className="text-muted-foreground">Good to go — do every rep on the plan.</p>
       ) : (
         <>
-          <p className="text-muted-foreground">Your body needs a lighter day, so do fewer sprints:</p>
+          <p className="text-muted-foreground">{score < 60 ? "Your body needs a lighter day, so do fewer sprints:" : focus.label}</p>
           <ul className="pl-1 text-foreground">
-            {sprintSets.map((s) => <li key={s.name}>{s.name}: {cutReps(s.sets, score)} of {s.sets} reps</li>)}
+            {sprintSets.map((s) => <li key={s.name}>{s.name}: {cap(s.sets)} of {s.sets} reps</li>)}
           </ul>
         </>
       )}
+      <p className="text-muted-foreground">Today's focus: {focus.label}</p>
+      <p className="text-muted-foreground">Timed speed sessions so far: {hist.sessions.length}. {un.overspeed ? "Resisted and downhill sprints are unlocked." : un.resisted ? "Resisted sprints are unlocked; downhill sprints unlock at session 10." : "Resisted sprints unlock at session 7."}</p>
+      {plateau && <p className="text-foreground">No new best in 4 sessions — that's normal. Focus on clean form and full rest; speed will come.</p>}
       {saved.painAreas.length > 0 && <p className="text-muted-foreground">Sore spots: {saved.painAreas.join(", ")}. Stop if anything hurts.</p>}
     </div>
   );

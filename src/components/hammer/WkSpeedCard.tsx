@@ -83,6 +83,7 @@ export function WkSpeedCard({ pocket = false }: { pocket?: boolean } = {}) {
               <>
               <SpeedReadinessCheck
                 planDate={items[0].plan_date}
+                inSeason={/in[-_ ]season/i.test(snapshotIdentity.season_phase ?? label ?? "")}
                 sprintSets={items.filter((r) => sprintRestSeconds(r.distance_feet) != null || (r.sets ?? 0) > 1).map((r) => ({ name: r.movement_name ?? r.movement_slug, sets: r.sets ?? 1 }))}
               />
               {items.map((rx) => (
