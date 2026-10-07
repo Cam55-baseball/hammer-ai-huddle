@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { resolveSeasonPhase, getSeasonProfile, type SeasonPhase } from '@/lib/seasonPhase';
+import { usePhaseState } from '@/hooks/usePhaseState';
 
 export type SeasonStatus = 'in_season' | 'preseason' | 'post_season' | 'off_season';
 
@@ -129,9 +130,13 @@ export function useSeasonStatus() {
     return detected && detected !== query.data.season_status ? detected : null;
   }, [query.data]);
 
-  const resolution = query.data
-    ? resolveSeasonPhase(query.data)
-    : { phase: 'off_season' as SeasonPhase, phaseStartedAt: null, daysIntoPhase: null, daysUntilNextPhase: null, source: 'default' as const };
+  // ONE SYSTEM, ONE PHASE: the server's one resolver answers; the device
+  // only shows it. Until it answers, nothing is guessed (off-season default,
+  // same as the server's own default).
+  const { phaseState } = usePhaseState();
+  const resolution = phaseState
+    ? { phase: phaseState.season as SeasonPhase, phaseStartedAt: null as string | null, daysIntoPhase: phaseState.days_in, daysUntilNextPhase: phaseState.days_left, source: phaseState.source as any }
+    : { phase: 'off_season' as SeasonPhase, phaseStartedAt: null as string | null, daysIntoPhase: null as number | null, daysUntilNextPhase: null as number | null, source: 'default' as const };
   const profile = getSeasonProfile(resolution.phase);
 
   return {
@@ -158,5 +163,6 @@ export function useSeasonStatus() {
       if (suggestedPhase) mutation.mutate({ season_status: suggestedPhase });
     },
     updateSeasonStatus: mutation.mutate,
+    phaseState,
   };
 }
