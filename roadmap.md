@@ -124,7 +124,10 @@
 - [ ] Stress tests every step; clean up test data
 
 ## Waiting on owner
-- 6d new conditioning drills (explosive pitchers; softball full season): drafted in Step 8 for approval; the conditioning card uses the existing drills until then.
-- Throw counting vs the existing arm ledger: warm-up/catch play now count 0.25 (moderate 0.5, high/pitch 1.0) against age budgets built on those numbers. Owner rates (0.6/0.75/0.85) would raise totals about 2.4x for easy throws. Do warm-ups/catch play use 0.6, and do budgets rise to match?
-- Adaptive (fatigue-triggered) lift deload: an extra lighter week based on how hard sessions felt would change lift volume, and lift schemes may never change. The fixed every-4th-week deload already runs. Owner: should hard-session ratings trigger an earlier deload? (yes/no)
-- Barefoot gate numbers: how many pain-free days per stage (Foundation→Introduction, →Integration, →Advanced), and what the barefoot readiness test is (e.g. which hops/holds, pass mark). Until set, nobody moves past Foundation.
+- Step 8 content batches (incl. 6d explosive-pitcher + softball season drills, windmill program): approve each by name.
+- Limb-size proposal (docs/wic/limb-size-report.md) before any prescription uses limb sizes.
+- Step 9: apply docs/pending-owner-apply/step9-program-backups.sql; then OK redirects; deletion only after final OK.
+- Email key (Resend invalid): problem reports queue until fixed.
+- Windmill switch-on go-ahead.
+- Signed-in stress tests / phone screenshots as test players: need owner OK to sign the preview in as test players.
+- Answered 2026-10-07 and built: throw rates (0.25/0.6/0.75/0.85/1.0), trend deload, barefoot gates.
