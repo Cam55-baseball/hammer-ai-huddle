@@ -5,4 +5,4 @@ ALTER TABLE public.arm_ledger_entries ADD CONSTRAINT arm_ledger_entries_throw_ty
   'catch_play','position_throws','infield_quick_release','infield_short_hops','outfield_crow_hop','long_toss',
   'catcher_throwdowns','pitcher_warmup','pitcher_catch_play','pap_max_throws','pap_warmup']));
 -- Then switch on real-throw Power Primer actions:
--- INSERT INTO feature_switches ... (key 'pap_real_throws', on) — see roadmap "Waiting on owner".
+UPDATE public.wk_feature_switches SET mode = 'all' WHERE feature_key = 'pap_real_throws';
