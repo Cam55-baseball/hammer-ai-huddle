@@ -145,3 +145,87 @@ describe("Power Primer alternatives", () => {
     expect(papAlternatives("pap_p_trap_bar_heavy", "bat_speed").length).toBeGreaterThan(0);
   });
 });
+
+// ---- Owner 2026-10-07: under-13 max-effort 4 oz throws ----
+import { papThrowsAllowed } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
+import { PITCH_SMART_BANDS, bandIndex, restDaysFor } from "../../../supabase/functions/_shared/wic/phases/youthThrowing";
+
+describe("Power Primer — under-13 4 oz stress test", () => {
+  it("0 Pitch Smart violations, warm-up first, caps and stops hold over 8 weeks", () => {
+    const r = rng(13042026);
+    const v: string[] = []; const bad = (m: string) => { if (v.length < 20) v.push(m); };
+    let realBlocks = 0, throws = 0;
+    for (const age of [7, 8, 9, 10, 11, 12]) for (const role of ["pitcher", "two_way", "hitter", "position", "catcher"] as PapRole[]) for (let run = 0; run < 25; run++) {
+      const band = PITCH_SMART_BANDS[bandIndex(age)];
+      const perDay: number[] = []; let weekReal = 0, year = 0;
+      const pitchEvery = role === "pitcher" || role === "two_way" ? 4 + Math.floor(r() * 3) : 0;
+      for (let day = 0; day < 56; day++) {
+        if (day % 7 === 0) weekReal = 0;
+        // game pitching today?
+        let today = pitchEvery && day % pitchEvery === 0 ? Math.floor(r() * band.dailyMax * 0.8) : 0;
+        if (r() < 0.3) today += Math.floor(r() * 20) * 0.25; // catch/warm-up throws
+        // owed rest from earlier days
+        let restDay = false;
+        for (let d = 0; d < day; d++) if (day - d <= restDaysFor(band, Math.ceil(perDay[d]))) if (perDay[d] > 0 && restDaysFor(band, Math.ceil(perDay[d])) > 0) restDay = true;
+        const liftDay = r() < 0.6;
+        let added = 0;
+        if (liftDay) {
+          const readiness = r() < 0.1 ? 20 + r() * 19 : 40 + r() * 60;
+          const growth = r() < 0.15, armPain = r() < 0.08, gameTomorrow = r() < 0.15;
+          const daysUntilStart = pitchEvery ? (pitchEvery - (day % pitchEvery)) % pitchEvery : null;
+          const daysSinceStart = pitchEvery ? day % pitchEvery : null;
+          const capRemaining = r() < 0.1 ? Math.floor(r() * 10) : null;
+          const i: PapInput = {
+            sport: "baseball", role, age, growthMode: growth, readiness, pain: { arm: armPain },
+            dayHas: { velocityThrow: false, batSpeed: r() < 0.3, hardRun: r() < 0.3 }, gameTomorrow,
+            daysSinceStart, daysUntilStart, realThrowDaysThisWeek: weekReal, realThrowsEnabled: true,
+            goals: ["throwing"], equipment: ["plyo_balls", "baseball", "med_ball", "band", "bat"],
+            firstLift: { slug: "goblet_squat", name: "Goblet squat", pattern: "squat", heavy: false },
+            pitchBudget: { pitchesToday: today, restDay, capRemaining },
+          };
+          const { block } = planPowerPrimer(i);
+          if (block?.action.real_throw) {
+            realBlocks++; weekReal++;
+            if (block.action.oz !== 4) bad(`u13 real throw ${block.action.oz} oz`);
+            if (!block.requires_throwing_warmup) bad("max throws without warm-up lock");
+            if (block.action.count_weight !== 1.5) bad("not 1.5");
+            if (weekReal > 2) bad("> 2 real-throw days a week");
+            if (gameTomorrow) bad("real throws day before game");
+            if (growth || armPain || readiness < 40) bad("blocked state got throws");
+            if ((role === "pitcher" || role === "two_way") && (daysSinceStart! <= 1 || daysUntilStart! <= 2)) bad("start-day rule");
+            const cap = block.max_total_reps!;
+            if (cap < 3 || cap > 5) bad(`cap ${cap}`);
+            if (restDay) bad("throws on a Pitch Smart rest day");
+            // throw until a stop rule fires: random speeds, sometimes a 'Lost snap'
+            const vals: number[] = []; let n = 0;
+            while (!shouldStop(block, vals, n, n)) { if (r() < 0.05) break; vals.push(45 + r() * 10); n++; }
+            if (n > cap) bad("cap broken");
+            added = n * 1.5; throws += n;
+            if (capRemaining != null && added > capRemaining) bad("yearly/weekly cap passed");
+          }
+        }
+        const total = today + added;
+        if (total > band.dailyMax) bad(`daily max ${total}/${band.dailyMax}`);
+        if (added && restDaysFor(band, Math.ceil(total)) !== restDaysFor(band, Math.ceil(today))) bad("PAP added a rest day");
+        perDay.push(total); year += total;
+      }
+    }
+    expect(v).toEqual([]);
+    expect(realBlocks).toBeGreaterThan(100);
+    expect(throws).toBeGreaterThan(300);
+  });
+
+  it("5 oz baseball and 6–7 oz never under 13; nothing over 7 oz", () => {
+    for (const age of [7, 9, 11, 12]) for (const n of [0, 1]) {
+      const b = planPowerPrimer({ sport: "baseball", role: "position", age, growthMode: false, readiness: 90, pain: {},
+        dayHas: { velocityThrow: false, batSpeed: true, hardRun: true }, gameTomorrow: false, daysSinceStart: null, daysUntilStart: null,
+        realThrowDaysThisWeek: n, realThrowsEnabled: true, goals: ["throwing"], equipment: ["plyo_balls", "baseball"],
+        firstLift: { slug: "x", name: "x", pattern: "squat", heavy: false } }).block!;
+      expect(b.action.real_throw).toBe(true);
+      expect(b.action.oz).toBe(4);
+    }
+    expect(PAP_LIBRARY.every((x) => (x.oz ?? 0) <= 7)).toBe(true);
+    expect(papThrowsAllowed(10, { pitchesToday: 0, restDay: true, capRemaining: null }, 5)).toBe(0);
+    expect(papThrowsAllowed(10, { pitchesToday: 17, restDay: false, capRemaining: null }, 5)).toBe(2); // 20 → 21 would add a rest day
+  });
+});
