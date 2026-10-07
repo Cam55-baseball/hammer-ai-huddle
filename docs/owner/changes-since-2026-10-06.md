@@ -170,3 +170,16 @@ Status per file. "Owner to confirm" = I could not find a quoted owner request; p
 | `src/hooks/useHammersTodayStart.ts` | 1 (2026-10-06→2026-10-06) | Owner to confirm | No quoted request found |
 | `supabase/functions/wk-daily-plan-job/index.ts` | 1 (2026-10-06→2026-10-06) | Requested — kept (builder) | Owner-authorized builder work; flush block now disabled |
 | `src/components/hammer/__tests__/warmupSeasonLabel.test.ts` | 1 (2026-10-06→2026-10-06) | Requested — kept | "REAL-BALL POWER PRIMER enabled" / "4 oz rule" |
+
+## Reverted 2026-10-07 (not approved)
+- Old program redirects → off; all five pages open as before.
+- Game-linked flush + Skip button → off (app card and plan builder; builder redeployed and proved).
+- Rest/Skip/Push day labels and explanations, morning "Day intent" card, day banners → original wording.
+- "No organism signal yet" note → original wording.
+- Bat speed wording: already the owner's exact sentence — no change.
+- Catalog display names: no changes since the Oct 6 snapshot — nothing to revert.
+
+## Pure bug fixes kept (owner to review)
+- No-gear player got the stand-in day → now gets the full plan.
+- Lift notes matched the wrong pattern → right note per lift.
+- Plan builder read the wrong sport field → reads the player's main sport.
