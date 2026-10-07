@@ -1,0 +1,1 @@
+- Lift weights shown to players come only from `src/lib/lift/verifiedMax.ts` (player-entered sets marked `metrics.weight_source`, or `metrics.tested_max`); never store a % in `wk_session_logs.load_used`. Why: owner rule — never show an unverified weight.
