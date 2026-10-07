@@ -481,8 +481,9 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
     };
   }
 
-  // Owner rule (Round 8 Step 5): weighted and plyo balls only at 13+. Unknown age = not allowed.
-  const plyoOk = ctx.ageYears != null && ctx.ageYears >= 13;
+  // Owner rule 2026-10-07: 4 oz / underload balls have no age limit (the fascial system is built young).
+  // Overload stays 16+ and intent 13+ (see gates above). Nothing over 7 oz, ever.
+  const plyoOk = true;
 
   // ------------ Non-throwing day — band prep + tennis ball / underload only
   if (!ctx.isThrowingDay) {
