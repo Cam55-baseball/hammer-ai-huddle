@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { AMBIENT_EQUIPMENT } from "@/lib/wic/faultLedger/equipmentTier";
 import { matchesUnilateralSlug } from "@/components/hammer/logging/logTemplates";
 import { Loader2, Repeat2 } from "lucide-react";
+import { useState } from "react";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import {
   useSwapLadder,
@@ -35,11 +36,14 @@ interface Props {
 export function LiftSwapSheet({ rx, open, onOpenChange }: Props) {
   const { ladder, options, isLoading } = useSwapLadder(rx, open);
   const { apply } = useLiftSubstitution(rx.plan_date);
+  const [missing, setMissing] = useState<string[]>([]);
+  const needs = (c: SwapCandidate, key: string) => (c.equipment_requirements ?? []).some((e) => String(e).toLowerCase().replace(/[\s-]+/g, "_").includes(key));
 
   const seen = new Set<string>();
   const groups = SWAP_REASON_ORDER.map((reason) => {
     const slugs = (ladder[reason] ?? []).filter((s) => {
       if (!options[s] || s === rx.movement_slug || seen.has(s)) return false;
+      if (missing.some((m) => needs(options[s], m))) return false;
       seen.add(s);
       return true;
     });
@@ -51,20 +55,30 @@ export function LiftSwapSheet({ rx, open, onOpenChange }: Props) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
         <SheetHeader className="text-left">
-          <SheetTitle className="text-base">Swap {rx.movement_name}</SheetTitle>
+          <SheetTitle className="text-base">Alternatives for {rx.movement_name}</SheetTitle>
           <SheetDescription className="text-xs">
-            These are the only legal replacements Hammer certified for this slot today. Your dose carries over.
+            Same kind of exercise, same job, same or lower risk. Your sets and reps carry over.
           </SheetDescription>
         </SheetHeader>
 
+        <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Busy gym">
+          <span className="text-[11px] text-muted-foreground self-center">Busy gym? Not free right now:</span>
+          {[{ k: "barbell", l: "Barbell" }, { k: "trap_bar", l: "Trap bar" }, { k: "rack", l: "Rack" }, { k: "bench", l: "Bench" }].map(({ k, l }) => (
+            <Button key={k} size="sm" variant={missing.includes(k) ? "default" : "outline"} className="h-7 px-2 text-[11px]"
+              aria-pressed={missing.includes(k)}
+              onClick={() => setMissing((m) => (m.includes(k) ? m.filter((x) => x !== k) : [...m, k]))}>
+              No {l.toLowerCase()}
+            </Button>
+          ))}
+        </div>
         <div className="mt-3 space-y-4 pb-6">
           {isLoading ? (
             <div className="flex items-center gap-2 py-6 text-xs text-muted-foreground">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading legal swaps…
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading alternatives…
             </div>
           ) : groups.length === 0 ? (
             <p className="py-6 text-xs text-muted-foreground">
-              No legal swap exists for this movement today. Ask Hammer on the card if you need a different option.
+              No safe alternative for this exercise today. Ask Hammer on the card if you need a different option.
             </p>
           ) : (
             groups.map((g) => (

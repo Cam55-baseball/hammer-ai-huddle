@@ -130,3 +130,18 @@ describe("Power Primer — 8-week simulations", () => {
     for (const x of PAP_LIBRARY) if (x.oz != null) expect(x.oz >= 4 && x.oz <= 7).toBe(true);
   });
 });
+
+import { papAlternatives } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
+describe("Power Primer alternatives", () => {
+  it("are same use, same target and never riskier", () => {
+    for (const o of PAP_LIBRARY) for (const t of o.targets) for (const c of papAlternatives(o.slug, t)) {
+      expect(c.use).toBe(o.use); expect(c.targets).toContain(t);
+      if (c.heavy) expect(o.heavy).toBe(true);
+      if (c.realThrow) expect(o.realThrow).toBe(true);
+      expect(c.minAge).toBeLessThanOrEqual(o.minAge);
+      if (c.oz != null) expect(c.oz).toBeLessThanOrEqual(o.oz!);
+    }
+    expect(papAlternatives("pap_a_mb_overhead", "throw").some((c) => c.realThrow)).toBe(false);
+    expect(papAlternatives("pap_p_trap_bar_heavy", "bat_speed").length).toBeGreaterThan(0);
+  });
+});

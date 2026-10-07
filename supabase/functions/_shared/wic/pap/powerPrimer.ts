@@ -301,3 +301,24 @@ export function painAreasFromInjuries(slugs: Iterable<string>): Partial<Record<P
   }
   return out;
 }
+
+/**
+ * Alternative button (owner 2026-10-07): equivalent swaps for a primer or
+ * action — same use and target, same or lower risk (never heavier, never a
+ * real throw unless the original was, never a heavier ball, never a lower min
+ * age, never less growth-safe, no constrained-only items, no new pain blocks).
+ */
+export function papAlternatives(slug: string, target: PapTarget, opts: { painFree?: PainArea[] } = {}): LibraryItem[] {
+  const o = PAP_LIBRARY.find((x) => x.slug === slug);
+  if (!o) return [];
+  return PAP_LIBRARY.filter((c) => c.slug !== o.slug && c.use === o.use && c.targets.includes(target)
+    && (!c.heavy || o.heavy)
+    && (!c.realThrow || !!o.realThrow)
+    && (c.oz == null || (o.oz != null && c.oz <= o.oz))
+    && !c.constrainedOnly
+    && c.minAge <= o.minAge
+    && (c.growthOk || !o.growthOk)
+    && (!c.isSprint || !!o.isSprint)
+    && (!c.isPress || !!o.isPress)
+    && c.painBlocks.every((p) => o.painBlocks.includes(p) || (opts.painFree ?? []).includes(p)));
+}
