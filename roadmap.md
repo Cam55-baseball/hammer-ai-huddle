@@ -1,17 +1,24 @@
 # Roadmap
 
-> **Status (2026-10-07, after A12)**
-> - Finished: Round 9 items 9.1–9.8; Round 8 Steps 1, 2a–2f, 3a–3d, 4a–4d; Round 2 A–E; pitcher schedule wiring; morning game questions; Tissue & Recovery count fix; bat-speed wording fix; older items re-verified and ticked in A10/A11. Step 2 (timers, stopwatch, practice logging, dashboards) is built except 2g, which needs a test player.
-> - Next item: exhaustive all-app audit (item "identified failed-read cases… audit still unfinished") — the only open item that needs no owner decision.
+> **Status (2026-10-07, owner corrections applied)**
+> - Finished: owner corrections 1, 2, 4 and goal-based exercise choice (3, choice part): duplicate limb questions removed (0 saved rows, nothing to move); limb proportions shift lift emphasis (long femur → more split squats/lunges/trap bar, bilateral still appears; long arms → more DB/neutral presses), never exclude; all goal sources shape exercise choice; max-effort throw rest 15–45 s. 8 simulations pass, 0 violations. Plan builder redeployed; it starts and answers, but your account has never tapped Start, so the new picks can't be shown on a live plan yet.
+> - Next item: exhaustive all-app audit.
 > - Waiting on owner:
->   1. Test-player sign-in approval (may I keep making hidden test players and removing them afterward?) — unblocks live player/pitcher check, 2g lift weight-unlock proof, Round 1/2/3 stress tests, phone screenshots 360/390, under-13 signed-in checks.
->   2. Step 8 content batches, approved one by one by name (docs/owner/step8-content-batches.md), incl. explosive-pitcher and softball season drills (6d).
->   3. Limb-size proposal (docs/wic/limb-size-report.md). Proposed rules, all display/ranking only, behind one switch, doses proven identical: (a) long femurs (leg ÷ height ≥ 0.53) rank trap-bar deadlift, front-loaded/safety-bar squat, box squat first in the same category; long arms (span ÷ height ≥ 1.04) rank conventional/trap-bar pulls over sumo and neutral-grip pressing — same sets/reps/%; (b) stride shown as % of height/leg length (overhand pitch band 77–87% of height, record-only); (c) arm span gives release-extension context, arm slot never flagged; (d) display-only bat-length starting range from height + arm span; (e) long-lever athletes get existing hip/hamstring/T-spine mobility ranked first in the same warm-up slots, no added minutes. Missing measurements = today's behavior.
->   4. Step 9 archive: apply docs/pending-owner-apply/step9-program-backups.sql, then OK redirects.
->   5. Email key: problem reports keep queuing until fixed.
->   6. Windmill program switch-on.
->   7. Plan-building capacity: ~860 plans/hour; 5,000 in the first hour needs a bigger database or faster builds.
->   8. Missed-lift job: built but OFF until you run it; optional game-linked flush and morning-question trade-off decisions (closeout).
+>   1. Approve goal → sets/reps table (docs/owner/goal-reps-sets-proposal.md) — conflicts with "reps never change"; choose (a) or (b).
+>   2. Test-player approval — needed to prove the new lift picks on a live started plan, plus 2g, stress tests, phone screenshots, live player/pitcher check.
+>   3. Step 8 content batches, by name.
+>   4. Step 9 backup step, then redirects.
+>   5. Email key.
+>   6. Windmill switch-on.
+>   7. Plan-building capacity (~860/hour).
+>   8. Missed-lift job switch-on; game-linked flush and morning-question decisions.
+>   (Limb-size proposal resolved by your correction — rules in docs/wic/limb-size-report.md §d.)
+
+## Owner corrections 2026-10-07
+- [x] C1 limb data from anthropometrics; duplicate fields removed
+- [x] C2 proportion emphasis + simulations
+- [x] C3 goals shape exercise choice (built); [ ] sets/reps — WAITING ON OWNER approval
+- [x] C4 max-effort throws 15–45 s
 
 ## Round 9 (owner answers 2026-10-07, redeploys authorized)
 - [x] 9.1 Throw counting final (warm-up/catch 0.25, budget unchanged) → finish 5b + throwing/pick-off next dates

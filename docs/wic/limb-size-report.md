@@ -42,3 +42,15 @@ Ratios use the newest measurement set; anything missing → today's behavior.
 5. **Mobility emphasis.** Long-lever athletes get the existing hip/hamstring and T-spine mobility items ranked first inside the same warm-up slot count; no added minutes.
 
 All five would ship as display/ranking only, behind a switch, with tests showing doses identical before and after.
+
+## d. Owner correction (2026-10-07) — BUILT
+Limb data comes from `athlete_context.anthropometrics` (onboarding). The duplicate fields added in Round 9
+(sitting height, hand length) were removed from onboarding and progress photos; `athlete_limb_measurements`
+had 0 rows, so nothing needed moving. Rule built in `_shared/wic/lift/proportionEmphasis.ts`:
+proportions shift emphasis only, never rule out an exercise (only injury does).
+- Femur ÷ torso (fallback leg ÷ height): long → split squats, lunges, trap bar win on up to 80% of days;
+  bilateral squats the rest. Short → the reverse. Lever basis: longer femur relative to torso forces more
+  trunk lean and hip moment in bilateral squats; single-leg and trap-bar keep the trunk upright.
+- Arm span ÷ height: long arms → dumbbell / neutral / landmine presses favoured (longer barbell range),
+  small nudge toward pulls (shorter deadlift range). Barbell pressing still appears.
+- Missing measurements = no change. Doses untouched. Simulations: src/test/proportionGoalEmphasis.test.ts (0 violations).

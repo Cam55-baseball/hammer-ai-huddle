@@ -1,7 +1,7 @@
 /**
  * ThrowPacingGuide — Round 9 owner rule (2026-10-07). Guidance only, never a
- * dose. The 45–60 s band is rest between ROUNDS or SETS, never between every
- * throw. Each line has an optional timer; warm-ups/catch play/long toss have none.
+ * dose. Max-effort throws rest 15–45 s (owner 2026-10-07: health first, no
+ * stiffening between throws). Each line has an optional timer; warm-ups/catch play/long toss have none.
  */
 import { useState } from "react";
 import { RestTimer } from "@/components/hammer/cards/RestTimer";
@@ -11,7 +11,7 @@ export interface ThrowPace { key: string; label: string; between: string; min: n
 export const THROW_PACES: ThrowPace[] = [
   { key: "warmup", label: "Warm-ups, catch play, long toss", between: "no timer", min: null, max: null, line: "Throw at your natural rhythm." },
   { key: "pitches", label: "Flat-ground and bullpen pitches", between: "between pitches", min: 15, max: 20, line: "About 15–20 seconds between pitches — game pace." },
-  { key: "max_intent", label: "Max-effort pull-downs and velocity throws", between: "between throws", min: 45, max: 60, line: "45–60 seconds between throws so each one is full effort." },
+  { key: "max_intent", label: "Max-effort pull-downs and velocity throws", between: "between throws", min: 15, max: 45, line: "15–45 seconds between throws — enough to reset, short enough that your arm stays warm and loose." },
   { key: "rounds", label: "PlyoCare and drill rounds", between: "between rounds", min: 60, max: 90, line: "60–90 seconds between rounds, not between every throw." },
 ];
 

@@ -12,6 +12,7 @@
 //     conditioning next to practice)
 //
 // Idempotent for (user_id, plan_date, sequence_field).
+import { proportionProfile, proportionBonus, proportionWhy } from "../_shared/wic/lift/proportionEmphasis.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { resolveWkPhase } from "../_shared/wkPhaseQuarter.ts";
@@ -2076,7 +2077,13 @@ const handler = async (req: Request): Promise<Response> => {
       categoryOrder: ((ctx as any)?.category_goals?.categoryOrder ?? null) as string[] | null,
       careerGoal: ((ctx as any)?.goal_summary ?? null) as string | null,
       isPitcher: isPitcherAthlete,
+      priorityRank: (ctx as any)?.goal_priority_rank ?? null,
+      categoryGoals: (ctx as any)?.category_goals ?? null,
+      trainingGoal: ((trainingPrefs as any)?.goal ?? null) as string | null,
+      goalHorizon: ((ctx as any)?.goal_horizon ?? null) as string | null,
     });
+    // Limb proportions shift emphasis only (owner 2026-10-07); never a gate.
+    const limbProfile = proportionProfile(((ctx as any)?.anthropometrics ?? null) as Record<string, unknown> | null);
     const weeklyLedger = buildWeeklyLedger(
       (recentLifts ?? []).map((r: any) => ({
         plan_date: String(r.plan_date),
@@ -2117,7 +2124,8 @@ const handler = async (req: Request): Promise<Response> => {
       const score =
         emphasisFor(goalEmphasis, m as any) +
         (cat ? shortfallBonus(weeklyLedger, cat) : 0) +
-        faultPriority.bonusForSlug(m.slug) -
+        faultPriority.bonusForSlug(m.slug) +
+        proportionBonus(limbProfile, m as any, `${user.id}|${planDate}`) -
         varietyPenalty(weeklyLedger, m.slug) -
         poolIndex * 0.001; // stable pool-order tie-break
       return Math.round(score * 1e6) / 1e6;
@@ -2178,7 +2186,7 @@ const handler = async (req: Request): Promise<Response> => {
         parts.push(`your goal points toward ${goalEmphasis.career.join(" and ")}`);
       }
       if (short > 0) parts.push(`your week is short on ${cat.replace(/_/g, " ")}`);
-      return parts.length ? ` Chosen because ${parts.join(" and ")}.` : "";
+      return (parts.length ? ` Chosen because ${parts.join(" and ")}.` : "") + proportionWhy(limbProfile, m as any);
     };
 
     const pickFirstByCanonicalCategory = (slugs: string[], category: string): MovementRow | undefined => {

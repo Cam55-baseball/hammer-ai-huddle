@@ -14,7 +14,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { persistContextAnswer } from "@/lib/hammer/context/acquisition";
 import { writeDraftSlot, readDraftSlot } from "@/lib/onboarding/draftStore";
-import { LimbMeasurementsFields, saveLimbMeasurements, emptyLimbs, type LimbValues } from "@/components/shared/LimbMeasurementsFields";
 
 interface Anthro {
   height_in?: number | null;
@@ -42,7 +41,6 @@ export function AnthropometricsStep({ onContinue, onBack }: Props) {
   const [bodyFat, setBodyFat] = useState("");
   const [footLength, setFootLength] = useState("");
   const [saving, setSaving] = useState(false);
-  const [limbs, setLimbs] = useState<LimbValues>(emptyLimbs);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -101,9 +99,6 @@ export function AnthropometricsStep({ onContinue, onBack }: Props) {
       if (hasAny) {
         await persistContextAnswer(user.id, "anthropometrics", payload, "onboarding.anthropometrics");
       }
-      try {
-        await saveLimbMeasurements(user.id, { ...limbs, wingspan: limbs.wingspan || wingspan }, num(height), "onboarding");
-      } catch { /* optional history — never blocks onboarding */ }
       onContinue();
     } catch (e) {
       console.warn("[onboarding] anthropometrics save failed", e);
@@ -176,8 +171,6 @@ export function AnthropometricsStep({ onContinue, onBack }: Props) {
           </p>
         </div>
       </div>
-
-      <LimbMeasurementsFields value={{ ...limbs, wingspan: limbs.wingspan || wingspan }} onChange={(v) => { setLimbs(v); setWingspan(v.wingspan); }} />
 
       <div className="flex justify-between">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1.5 h-4 w-4" />Back</Button>
