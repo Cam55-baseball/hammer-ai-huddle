@@ -227,6 +227,7 @@ import { finalRuleCheck, nextEligibleDates, dayKinds, FINAL_CHECK_CATALOG_COLUMN
 import { loadU13ThrowBlock, loadU13ThrowState } from "../_shared/wic/phases/u13ThrowGate.ts";
 import { nextThrowDate, nextPickoffDate } from "../_shared/wic/phases/nextThrowDate.ts";
 import { trendDeload, loadTrendInput, lighterSets, TREND_DELOAD_VERSION } from "../_shared/wic/lift/trendDeload.ts";
+import { goalDose, goalDoseKey, GOAL_DOSE_VERSION } from "../_shared/wic/goals/goalDose.ts";
 import { loadedLiftRows } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
 import { loadExternalTraining, mergeExternal } from "../_shared/wic/schedule/externalTraining.ts";
 
@@ -3245,6 +3246,18 @@ const handler = async (req: Request): Promise<Response> => {
             const fromSets = rx.sets;
             rx.sets = lighterSets(rx.sets);
             wp.trend_deload = { version: TREND_DELOAD_VERSION, from: fromSets, to: rx.sets, reason: trendDecision.reason, signals: trendDecision.signals };
+          }
+          // Off-season goal dose (owner approved 2026-10-07): only when HT's dose misses the goal range.
+          if (domain === "lift") {
+            const gd = goalDose({
+              seasonPhase: phaseRes.phase, key: goalDoseKey(goalEmphasis.ranked[0], (trainingPrefs as any)?.goal ?? null),
+              weekInBlock: progression.weekInBlock, isDeloadWeek: progression.isDeloadWeek, trendLighter: !!trendDecision?.apply,
+              role: dd.role ?? rx.sequence_role, category: dd.category, sets: rx.sets, reps: rx.reps, method: arcMethod,
+            });
+            if (gd) {
+              wp.goal_dose = { version: GOAL_DOSE_VERSION, from: `${rx.sets}×${rx.reps}`, to: `${gd.sets}×${gd.reps}`, goal: goalEmphasis.ranked[0] ?? (trainingPrefs as any)?.goal ?? null };
+              rx.sets = gd.sets; rx.reps = gd.reps;
+            }
           }
 
         }
