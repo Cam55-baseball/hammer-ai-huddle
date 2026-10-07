@@ -45,6 +45,7 @@ import { useArmCareBudget } from "@/components/hammer/ArmCareBudgetContext";
 import { ExerciseLogSheet } from "@/components/hammer/logging/ExerciseLogSheet";
 import { ArmThrowsPanel } from "@/components/hammer/ArmThrowsPanel";
 import { YouthPitchingLimits } from "@/components/hammer/YouthPitchingLimits";
+import { PitchingBests } from "@/components/hammer/cards/PitchingBests";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import {
   DEFAULT_PITCHER_PROFILE,
@@ -403,6 +404,8 @@ export function PitchingCard() {
                 Log PFP
               </Button>
             </div>
+
+            <PitchingBests today={todayIso} />
 
             {/* Step 30 E — warm-up / catch play entered ALONGSIDE pitch counts */}
             <ArmThrowsPanel source="pitching" planDate={todayIso} />
