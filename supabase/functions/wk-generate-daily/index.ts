@@ -4752,6 +4752,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Softball pitchers only. Its own card (slot "windmill"); limits come from
     // the windmill arm rules; the final check below still runs on every row.
     try {
+      console.log("[windmill] gate", JSON.stringify({ on: features.windmill_program, sport, isPitcherAthlete, positions: athletePositions }));
       if (features.windmill_program === true && sport === "softball" && isPitcherAthlete) {
         const [{ data: wmLedger }, { data: wmPrior }] = await Promise.all([
           admin.from("arm_ledger_entries").select("entry_date, source, throw_type, count, status")
@@ -4781,6 +4782,7 @@ const handler = async (req: Request): Promise<Response> => {
           fullSessionYesterday: fullDays.has(isoShift(planDate, -1)),
           equipment: declaredEquipment.length ? declaredEquipment : null,
         });
+        console.log("[windmill] session", JSON.stringify({ type: wm.type, rows: wm.rows.length, reasons: wm.reasons }));
         const summary = { version: WINDMILL_PROGRAM_VERSION, type: wm.type, full_pitches: wm.fullPitches, drill_throws: wm.drillThrows, arm_units: wm.armUnits, reasons: wm.reasons };
         wm.rows.forEach((wr, idx) => {
           (rows as any[]).push({
