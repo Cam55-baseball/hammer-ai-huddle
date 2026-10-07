@@ -53,7 +53,7 @@ Status per file. "Owner to confirm" = I could not find a quoted owner request; p
 | `src/components/hammer/WkBatSpeedCard.tsx` | 4 (2026-10-06→2026-10-07) | Requested — kept | "Bat speed builds rotational power that transfers seamlessly into pitching velocity." |
 | `src/lib/hammer/startPlanItems.ts` | 2 (2026-10-07→2026-10-07) | Requested — kept | "Bat speed builds rotational power that transfers seamlessly into pitching velocity." |
 | `src/test/growthMode.test.ts` | 2 (2026-10-07→2026-10-07) | Requested — kept | "Bat speed builds rotational power that transfers seamlessly into pitching velocity." |
-| `src/components/hammer/PowerPrimerBlock.tsx` | 5 (2026-10-07→2026-10-07) | Owner to confirm | No quoted request found |
+| `src/components/hammer/PowerPrimerBlock.tsx` | 5 (2026-10-07→2026-10-07) | Requested — kept | "REAL-BALL POWER PRIMER enabled" |
 | `src/components/TutorialButton.tsx` | 1 (2026-10-07→2026-10-07) | Requested (owner Rounds 1–9 / A1–A11 briefs, Oct 6–7) — kept | Part of a numbered owner round; owner to confirm if any item inside was not asked for |
 | `src/test/round1GrowthHeavyTrack.test.ts` | 1 (2026-10-07→2026-10-07) | Tests | Supports requested work |
 | `src/lib/hammer/prescription/dailyEngagement.ts` | 1 (2026-10-07→2026-10-07) | Requested (owner Rounds 1–9 / A1–A11 briefs, Oct 6–7) — kept | Part of a numbered owner round; owner to confirm if any item inside was not asked for |
