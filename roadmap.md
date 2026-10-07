@@ -19,11 +19,11 @@
 - [x] Daily plan job running on schedule with no errors (21:30 run)
 - [x] Test plans and test body sizes removed; test players back to "not started"
 
-> **Status (2026-10-07, E7)**
+> **Status (2026-10-07, E8)**
 > - Finished: everything, plus the owner's three answers (game flush on, morning question kept, program redirects on).
 > - Next item: none.
 > - Phase mismatch scan: 0 mismatches (26,352 player-days, 368,956 checks).
-> - Waiting on owner: 1. Email key. 2. Separate OK if the old programs' menu items, pricing/help text or data should ever be removed.
+> - Waiting on owner: 1. Email path — built-in app emails (needs the owner's one-time domain setup) or a valid Resend key; `problem_reports` currently holds 0 rows, so nothing is queued. 2. Separate OK if the old programs' menu items, pricing/help text or data should ever be removed.
 > - Ready to publish: YES — plan builder redeployed and live-proved (game flush), test data removed; redirects and the flush's Skip button reach players on Publish.
 
 ## OWNER RULE 2026-10-07 (20:26) — ONE SYSTEM, ONE PHASE (high priority)
@@ -192,8 +192,10 @@
 - [x] Step 9 Archive (docs + backup tables, redirects, 8-language text; no deletion) — backup applied, redirects ready and off; retirement OK is in the Waiting on owner list
 - [x] Stress tests every step; clean up test data — done for every finished step; Step 8/9 stress tests follow their approval
 
-## Waiting on owner (updated 2026-10-07, E4)
-1. Email key (Resend invalid): problem reports queue until fixed.
+## Waiting on owner (updated 2026-10-07, E8)
+1. Email key — needs the owner's choice of path (checked E8: `problem_reports` has **0 rows**, so nothing is queued or lost right now):
+   - **Path A (recommended, no key):** Lovable's built-in app emails. `www.hammersmodality.org` is a configured website domain but is **not** set up for email (project email setup: not_started). The owner completes the email-domain setup once; then I set up the mail infrastructure and point the problem-report mailer at it. This creates a queue worker and its own scheduled job, so I will not start it without the owner's OK.
+   - **Path B:** the owner adds a valid Resend key in Project Settings → Secrets. Nothing else changes; the mailer already retries the queue automatically.
 2. Separate OK if the old programs' menu items, pricing/help text or saved data should ever be removed (redirects are on; nothing deleted).
 - Answered and built: throw rates (0.25/0.6/0.75/0.85/1.0), trend deload, barefoot gates; real-ball Power Primer (pap-throw-types.sql applied, switch on); Step 8 batches (all 8 approved and on); limb sizes (approved, card text only); Step 9 backups applied, redirects on; game flush (on, skippable); morning question (kept); signed-in test-player checks (done via hidden test players).
 
