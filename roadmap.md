@@ -6,7 +6,7 @@
 **Morning game question.** The morning check-in asks "Did you play yesterday?" / "Did you pitch?" once, if a game or start wasn't logged. The trade-off is one extra tap in the morning versus plans built without knowing about yesterday's game. Recommendation: keep it on as it is now (asked once, shared with the plan-page prompt).
 
 ## Owner answers 2026-10-07 (20:07)
-- [ ] 1. Capacity: no bigger database — keep making builds faster (pre-build after local noon stays)
+- [x] 1. Capacity: no bigger database — keep making builds faster (pre-build after local noon stays) — decided by owner; logged
 - [x] 2. Missed-lift job is ON (wk-mark-missed-lifts, every 15 min since Oct 6) — roadmap corrected
 - [ ] 3. Restore owner bat-speed wording for pitchers
 - [ ] 4. 4 oz balls: no age limit (undo 5c removal); U13 may do max 4 oz PAP throws under safeguards; 6–7 oz stays 16+ until owner answers
@@ -25,7 +25,7 @@
 >   2. Step 9 backup step, then redirects.
 >   3. Email key.
 >   4. Real-ball Power Primer throws (apply pap-throw-types.sql).
->   5. Plan-building capacity (~860/hour).
+>   5. (resolved 2026-10-07: owner chose faster builds, no bigger database)
 >   6. Game-linked flush and morning-question decisions (see top). Missed-lift job is ON since Oct 6.
 >   7. Reword the core exercise explanation naming an outside coach (lift_mcgill_big3).
 
