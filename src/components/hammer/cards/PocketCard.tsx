@@ -85,7 +85,7 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
   const [open, setOpen] = useState(() => prescribed && readOpenPocket(planDate) === id);
   const [locked, setLocked] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
-  const heading = focus ? `${category} — ${focus}` : category;
+  const heading = focus && focus.trim().toLowerCase() !== category.toLowerCase() ? `${category} — ${focus}` : category;
 
   useEffect(() => {
     if (prescribed && readOpenPocket(planDate) === id) setOpen(true);
