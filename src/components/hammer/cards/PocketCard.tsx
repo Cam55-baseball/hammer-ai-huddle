@@ -8,7 +8,8 @@
  * on this device for the plan date, so a reload or app close reopens it.
  */
 import { useEffect, useState, type ReactNode } from "react";
-import { ChevronRight, Lock, LogOut, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { ChevronRight, ExternalLink, Lock, LogOut, PartyPopper, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -21,6 +22,15 @@ export const CARD_DISCLAIMER =
   "Hammer's Modality is not responsible for any injury that may occur during exercises. There are no guarantees in results. Always consult with a qualified healthcare professional before beginning any exercise program. Listen to your body and stop immediately if you experience pain.";
 
 const OPEN_KEY = "hm_pocket_open";
+const INTRO_KEY = "hm_pocket_intro_seen";
+const CELEBRATED_KEY = "hm_pocket_celebrated";
+
+function readSet(key: string): string[] {
+  try { const v = JSON.parse(localStorage.getItem(key) ?? "[]"); return Array.isArray(v) ? v : []; } catch { return []; }
+}
+function addToSet(key: string, val: string) {
+  try { const v = readSet(key); if (!v.includes(val)) localStorage.setItem(key, JSON.stringify([...v, val].slice(-200))); } catch { /* storage unavailable */ }
+}
 
 export function readOpenPocket(planDate: string): string | null {
   try {
@@ -49,13 +59,33 @@ interface Props {
   readonly countLabel?: string | null; // e.g. "6 exercises"
   readonly notPrescribedNote?: ReactNode;
   readonly children: (opts: { pocket: true }) => ReactNode;
+  /** Done / total for today's card (Done or Cut short count as done). */
+  readonly progress?: { done: number; total: number } | null;
+  /** One-time intro, shown the first time this card type is opened on this device. */
+  readonly intro?: string | null;
+  /** Link card: the page shows these steps and a button to the linked screen. */
+  readonly link?: { route: string; label: string; steps: ReadonlyArray<string> } | null;
+  readonly onNavigate?: (route: string) => void;
 }
 
-export function PocketCard({ id, category, focus, tone, planDate, prescribed, countLabel, notPrescribedNote, children }: Props) {
+export function PocketCard({ id, category, focus, tone, planDate, prescribed, countLabel, notPrescribedNote, children, progress, intro, link, onNavigate }: Props) {
+  const [showIntro, setShowIntro] = useState(false);
+  const allDone = !!progress && progress.total > 0 && progress.done >= progress.total;
+  const [celebrate, setCelebrate] = useState(false);
+  useEffect(() => {
+    if (!allDone) return;
+    const key = `${id}:${planDate}`;
+    if (readSet(CELEBRATED_KEY).includes(key)) return;
+    addToSet(CELEBRATED_KEY, key);
+    setCelebrate(true);
+    toast.success(`${category} done. Nice work!`);
+    const t = setTimeout(() => setCelebrate(false), 2400);
+    return () => clearTimeout(t);
+  }, [allDone, id, planDate, category]);
   const [open, setOpen] = useState(() => prescribed && readOpenPocket(planDate) === id);
   const [locked, setLocked] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
-  const heading = focus ? `${category} — ${focus}` : category;
+  const heading = focus && focus.trim().toLowerCase() !== category.toLowerCase() ? `${category} — ${focus}` : category;
 
   useEffect(() => {
     if (prescribed && readOpenPocket(planDate) === id) setOpen(true);
@@ -72,7 +102,9 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
     if (!prescribed) return;
     setOpen(true);
     writeOpenPocket(id, planDate);
+    if (intro && !readSet(INTRO_KEY).includes(id)) setShowIntro(true);
   }
+  function dismissIntro() { addToSet(INTRO_KEY, id); setShowIntro(false); }
   function close(saved: boolean) {
     setOpen(false);
     setLocked(false);
@@ -95,24 +127,34 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
             <div className="flex flex-wrap items-center gap-1.5">
               <Badge className={`text-[10px] ${tone} text-primary-foreground border-0`}>{category}</Badge>
               {countLabel && prescribed && <span className="text-[11px] text-muted-foreground">{countLabel}</span>}
+              {progress && prescribed && progress.total > 0 && (
+                <span
+                  data-progress-pill
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${allDone ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                >
+                  {allDone ? "Done" : `${progress.done} of ${progress.total} done`}
+                </span>
+              )}
             </div>
             <p className="mt-1 text-sm font-semibold leading-snug text-foreground">{heading}</p>
+            {link && prescribed && <p className="text-[11px] text-muted-foreground">Opens {link.label}</p>}
             {!prescribed && (
               <p className="text-[11px] text-muted-foreground">{notPrescribedNote ?? "Not on today's plan."}</p>
             )}
           </div>
+          {celebrate && <PartyPopper className="h-5 w-5 shrink-0 text-primary animate-bounce motion-reduce:animate-none" aria-label="Card complete" />}
           {prescribed && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />}
         </div>
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           role="dialog"
           aria-modal="true"
           aria-label={heading}
           data-pocket-page={id}
           data-locked={locked ? "1" : "0"}
-          className={`fixed inset-0 z-50 flex flex-col animate-in fade-in zoom-in-95 duration-200 motion-reduce:animate-none ${locked ? "bg-background" : "bg-background/98"}`}
+          className={`fixed inset-0 z-50 flex flex-col animate-in fade-in zoom-in-95 duration-200 motion-reduce:animate-none bg-background`}
         >
           <header className="flex items-center gap-2 border-b border-border px-3 py-2">
             <span className={`h-6 w-1.5 rounded-full ${tone}`} aria-hidden />
@@ -129,6 +171,24 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
             )}
           </header>
           <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-3">
+            {showIntro && intro && (
+              <div data-pocket-intro className="mb-3 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm text-foreground animate-in fade-in motion-reduce:animate-none">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">First time here</p>
+                <p className="mt-1 leading-snug">{intro}</p>
+                <Button size="sm" variant="outline" className="mt-2" onClick={dismissIntro}>Got it</Button>
+              </div>
+            )}
+            {link && (
+              <div className="mb-3 rounded-lg border border-border p-3">
+                <p className="text-sm font-semibold text-foreground">How to do it</p>
+                <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
+                  {link.steps.map((s) => <li key={s}>{s}</li>)}
+                </ol>
+                <Button className="mt-3 w-full" onClick={() => { close(true); onNavigate?.(link.route); }}>
+                  <ExternalLink className="mr-1.5 h-4 w-4" />Open {link.label}
+                </Button>
+              </div>
+            )}
             {children({ pocket: true })}
             <p className="mt-6 text-[11px] leading-relaxed text-muted-foreground" data-card-disclaimer>
               {CARD_DISCLAIMER}
@@ -156,7 +216,8 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );

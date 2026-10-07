@@ -6,6 +6,7 @@
  * The legacy ProgressDashboard is preserved at the bottom under
  * "Classic view" so nothing is lost.
  */
+import { SeasonCounter } from '@/components/progress/SeasonCounter';
 import { useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import {
@@ -205,6 +206,7 @@ export default function ProgressLanding() {
             {sport ? ` Ordered for your ${sport} profile.` : ""}
           </p>
         </div>
+        <SeasonCounter />
 
         <TopicButtonGrid tiles={tiles} onSelect={handleSelect} />
 

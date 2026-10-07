@@ -95,6 +95,7 @@ Confidence: ${snapshot.development_confidence}%
           <p className="text-muted-foreground">Diagnose → Prescribe → Guide → Verify</p>
         </div>
 
+
         {/* Performance context — real evidence only; moved from Before You Start (owner 2026-10-05). */}
         <section id="performance-context" className="scroll-mt-20"><HumanPerformanceCard /></section>
 
