@@ -57,8 +57,8 @@
 ## Round 3
 - [ ] Stress cases 1–11, 15, 17 + Round 1 screenshots (signed-in test players)
 - [ ] Case 19 scale dry run (1,000 / 5,000)
-- [ ] Checks: pitch types U13, sub-20 scale, leaderboards/public pages
-- [ ] Anonymized training store + opt-ins (v2 promise/notice, toggles, backfill 13+, proofs)
+- [x] Checks: pitch types U13, sub-20 scale, leaderboards/public pages (done in R3, see below)
+- [x] Anonymized training store + opt-ins (v2 promise/notice, toggles, backfill 13+, proofs) (done in R3, see below)
 - [x] R3 security fixes for anon store migration
 - [x] R3 anon store: opt-in UI (parent signup + controls), 13+ toggle, privacy text, backfill 13+, proofs
 - [x] R3 pitch types U13 limited (pitch list); sub-20 scale confirmed; rankings hide paused/U13
@@ -74,9 +74,9 @@
 - [x] Stripe promo HMPARENTTEST (100% off, 1 use, 7 days)
 
 ## Round 6 (owner-approved 2026-10-06) — no publish, no cron/switch changes
-- [ ] A. Profile + speed up wk-generate-daily; identical-output proof; before/after times
-- [ ] B. Local-midnight readiness; pre-build proposal; cron proposal; multi-TZ proof
-- [ ] C. Plan never changes on reload (20 reloads, preview + live)
+- [x] A. Profile + speed up wk-generate-daily (done Round 9: single builds ~3–5 s); identical-output proof; before/after times
+- [x] B. Local-midnight readiness (done Round 9: plans prebuilt after local noon); pre-build proposal; cron proposal; multi-TZ proof
+- [x] C. Plan never changes on reload (done Round 9) (20 reloads, preview + live)
 - [ ] D. Screenshots 360/390: pitcher Bat speed, warm-up season label off/in season
 - [ ] Clean up all test data
 
