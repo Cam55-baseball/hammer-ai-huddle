@@ -139,6 +139,7 @@
 - [ ] Stress tests every step; clean up test data
 
 ## Waiting on owner
+- Real-ball Power Primer throws: apply docs/pending-owner-apply/pap-throw-types.sql, then switch pap_real_throws on
 - Step 8 content batches (incl. 6d explosive-pitcher + softball season drills, windmill program): approve each by name.
 - Limb-size proposal (docs/wic/limb-size-report.md) before any prescription uses limb sizes.
 - Step 9: apply docs/pending-owner-apply/step9-program-backups.sql; then OK redirects; deletion only after final OK.
@@ -152,6 +153,6 @@
 
 ## Owner addition 2026-10-07 (18:41) — PAP + goal table + Alternative + windmill (backend redeploys authorized)
 - [x] A. Power Primer (PAP) block in every Lift card — live (switch power_primer on), 8-week sims 0 violations, proved on a hidden test player at 360/390, cleaned up. Real-ball PAP throws wait on owner: apply docs/pending-owner-apply/pap-throw-types.sql (switch pap_real_throws stays off until then). PBs are saved per phone for now.
-- [ ] B. Off-season goal table v2 + safety ceiling + taper to zero at ramp-up (sims across phases)
+- [x] B. Off-season goal table v2 + safety ceiling + taper to zero at ramp-up (sims across phases)
 - [x] C. Alternative button on every exercise (incl. PAP), busy-gym test at phone size — done 2026-10-07: same-or-lower risk check, busy-gym chips, dumbbell/kettlebell equivalents for every barbell/trap-bar lift (2 of 97 left without one), swap proved as test player at 390, test plans removed
-- [ ] D. Windmill program: optimize, stress test, switch on
+- [x] D. Windmill program: optimize, stress test, switch on (live-proved on hidden softball pitcher at 360/390; fixed builder reading sport from athlete_context — profiles has no sport column, so softball players were built as baseball)
