@@ -9,7 +9,7 @@ import { resolveSeasonPhase, type SeasonSettingsLike } from "./seasonPhase.ts";
  */
 export function normalizeSeasonStatus(v: unknown): string | null {
   if (v == null) return null;
-  const s = String(v).trim().toLowerCase();
+  const s = String(v).trim().toLowerCase().replace(/[\s-]+/g, '_');
   if (!s) return null;
   if (s === "in" || s === "in_season" || s === "inseason") return "in_season";
   if (s === "post" || s === "post_season" || s === "postseason") return "post_season";
