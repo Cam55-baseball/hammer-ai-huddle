@@ -1,5 +1,5 @@
 // Force rebuild to clear stale module references - Dec 2025
-import { programRedirectFor } from "@/lib/archive/programRedirects";
+import { RetiredProgramRoute } from "@/components/archive/RetiredProgramRoute";
 import { Suspense, useEffect, ComponentType } from "react";
 import {
   lazyWithRetry,
@@ -503,22 +503,22 @@ const App = () => {
               <Route path="/nutrition-hub" element={<NutritionHub />} />
               <Route path="/mind-fuel" element={<MindFuel />} />
               <Route path="/bounce-back-bay" element={<BounceBackBay />} />
-              <Route path="/production-lab" element={programRedirectFor("/production-lab") ? <Navigate to={programRedirectFor("/production-lab")!} replace /> : <ProductionLab />} />
-              <Route path="/production-studio" element={programRedirectFor("/production-studio") ? <Navigate to={programRedirectFor("/production-studio")!} replace /> : <ProductionStudio />} />
+              <Route path="/production-lab" element={<RetiredProgramRoute><ProductionLab /></RetiredProgramRoute>} />
+              <Route path="/production-studio" element={<RetiredProgramRoute><ProductionStudio /></RetiredProgramRoute>} />
               <Route path="/vault" element={<Vault />} />
               <Route path="/tex-vision" element={<SoftballLock feature="tex_vision"><TexVision /></SoftballLock>} />
               <Route path="/coming-soon" element={<ComingSoon />} />
               <Route path="/my-custom-activities" element={<MyCustomActivities />} />
               <Route path="/shared-activity/:shareCode" element={<SharedActivity />} />
               <Route path="/calendar" element={<Calendar />} />
-              <Route path="/speed-lab" element={programRedirectFor("/speed-lab") ? <Navigate to={programRedirectFor("/speed-lab")!} replace /> : <SpeedLab />} />
+              <Route path="/speed-lab" element={<RetiredProgramRoute><SpeedLab /></RetiredProgramRoute>} />
               <Route path="/complete-player" element={<SubscriptionGate requiredAccess="throwing" featureName="Complete Player" featureDescription="Complete Player is included with 5Tool Player and The Golden 2Way."><CompletePlayer /></SubscriptionGate>} />
               <Route path="/complete-hitter" element={<SubscriptionGate requiredAccess="hitting" featureName="Complete Hitter" featureDescription="Complete Hitter is included with 5Tool Player and The Golden 2Way."><CompleteHitter /></SubscriptionGate>} />
               <Route path="/complete-pitcher" element={<CompletePitcher />} />
               <Route path="/5tool-player" element={<FiveToolPlayer />} />
               <Route path="/golden-2way" element={<GoldenTwoWay />} />
-              <Route path="/the-unicorn" element={programRedirectFor("/the-unicorn") ? <Navigate to={programRedirectFor("/the-unicorn")!} replace /> : <TheUnicorn />} />
-              <Route path="/explosive-conditioning" element={programRedirectFor("/explosive-conditioning") ? <Navigate to={programRedirectFor("/explosive-conditioning")!} replace /> : <ExplosiveConditioning />} />
+              <Route path="/the-unicorn" element={<RetiredProgramRoute><TheUnicorn /></RetiredProgramRoute>} />
+              <Route path="/explosive-conditioning" element={<RetiredProgramRoute><ExplosiveConditioning /></RetiredProgramRoute>} />
               <Route path="/practice" element={<PracticeHub />} />
               <Route path="/progress" element={<ProgressDashboard />} />
               <Route path="/organization" element={<OrganizationDashboard />} />
