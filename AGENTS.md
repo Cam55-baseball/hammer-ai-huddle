@@ -21,5 +21,3 @@
 - Sessions end only by an explicit Sign out (`signOut({ scope: 'local' })`) or a server-ended session; `/` and `/auth` forward signed-in players and wait for session load; in the native app the auth key is mirrored to `@capacitor/preferences` via `src/lib/auth/nativeSessionStore.ts`, restored in `main.tsx` before the auth client loads. Why: players were re-typing passwords; iOS may clear WebView localStorage.
 - Anonymous training store: bucketed, week-rounded, no free text, Vault-HMAC key; under-13 needs parent opt-in. Why: lawyer-approved scope.
 - The plan screen shows the last saved plan, the start flag and plan access from the device at once, and acts (rule checks, changes) only after this visit's server answer arrives; device copies are cleared on Sign out. Why: a plain reload must never flash, rebuild or change the plan.
-
-- Per-card "Next … in" times come only from `nextEligibleDates` in `_shared/wic/schedule/finalCheck.ts`, returned by `wk-generate-daily` verify_saved as `next_eligible`; the app only formats the countdown. Why: owner ruling — release times must match the planner's own rest rules.
