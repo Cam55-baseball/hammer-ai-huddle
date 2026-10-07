@@ -77,7 +77,8 @@
   - [ ] 2g lift weight-unlock on-screen proof — needs a test plan with percentage lifts (in-season beginner plan had none); fold into Step 4 lift tests
 - [x] 3a Speed check-in on Speed card: one readiness score (sleep/legs/sore spots), rep cuts <60 (x0.75) / <40 (x0.6), break-day triggers + override; rules in src/lib/speed/speedEngine.ts (12 rule tests pass). Screen-side only, plan rows untouched
 - [x] 3b past sprint sessions feed slower-than-best break trigger + 4-session plateau note; speed level tiers on dashboard; resisted/downhill unlock line (7/10); context rules (low readiness, in-season cap 4, leg soreness = easy only). Player proof 360/390 passed, plan identical, test player removed. Gap: speed RPE not logged yet, so "two very hard sessions" trigger waits for an RPE input
-- [ ] NEXT ITEM: 3c barefoot 4-part gate (sessions, healthy days, readiness test, readiness threshold; any foot/ankle/shin/Achilles/calf pain drops one stage and resets counts) + post-sprint RPE input; Base Stealer attempts count as hard running
+- [x] 3c barefoot 4-part gate engine (7 rule tests pass; sessions alone never advance; foot/ankle/shin/Achilles/calf pain drops a stage + resets counts) + barefoot level line + post-sprint 1–10 effort rating feeding the two-hard-sessions break trigger
+- [ ] NEXT ITEM: 3d phone proof of 3c at 360/390 as a test player, then Step 4. (Base Stealer attempts counting as hard running moved to Step 6, where Base Stealer days are built — it changes the planner's rest rules.)
 - [ ] Step 3 Speed card (Speed Lab engine inside HT phase, 6 context rules, barefoot 4-part gate)
 - [ ] Step 4 Lift card (scheme unchanged; weights, rest, why-line, plateau swap, deload proof)
 - [ ] Step 5 Throwing (throw weights 1.0/0.75/0.85, max long toss, 13+ weighted balls, pick-off baseball P only, windmill program → Step 8)
@@ -88,4 +89,5 @@
 - [ ] Stress tests every step; clean up test data
 
 ## Waiting on owner
+- Barefoot gate numbers: how many pain-free days per stage (Foundation→Introduction, →Integration, →Advanced), and what the barefoot readiness test is (e.g. which hops/holds, pass mark). Until set, nobody moves past Foundation.
 - Lift rest bands: no owner-approved rest times exist, so the Lift card shows a count-up rest stopwatch. Owner to give rest seconds by lift type (e.g. strength, power, accessory).
