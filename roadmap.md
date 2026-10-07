@@ -2,16 +2,14 @@
 
 > **Status (2026-10-07, owner corrections applied)**
 > - Finished: owner corrections 1, 2, 4 and goal-based exercise choice (3, choice part): duplicate limb questions removed (0 saved rows, nothing to move); limb proportions shift lift emphasis (long femur → more split squats/lunges/trap bar, bilateral still appears; long arms → more DB/neutral presses), never exclude; all goal sources shape exercise choice; max-effort throw rest 15–45 s. 8 simulations pass, 0 violations. Plan builder redeployed; it starts and answers, but your account has never tapped Start, so the new picks can't be shown on a live plan yet.
-> - Next item: exhaustive all-app audit.
+> - Next item: live player/pitcher verification with schedule data (test players approved), then exhaustive all-app audit.
 > - Waiting on owner:
->   1. Approve goal → sets/reps table (docs/owner/goal-reps-sets-proposal.md) — conflicts with "reps never change"; choose (a) or (b).
->   2. Test-player approval — needed to prove the new lift picks on a live started plan, plus 2g, stress tests, phone screenshots, live player/pitcher check.
->   3. Step 8 content batches, by name.
->   4. Step 9 backup step, then redirects.
->   5. Email key.
->   6. Windmill switch-on.
->   7. Plan-building capacity (~860/hour).
->   8. Missed-lift job switch-on; game-linked flush and morning-question decisions.
+>   1. Step 8 content batches, by name.
+>   2. Step 9 backup step, then redirects.
+>   3. Email key.
+>   4. Windmill switch-on.
+>   5. Plan-building capacity (~860/hour).
+>   6. Missed-lift job switch-on; game-linked flush and morning-question decisions.
 >   (Limb-size proposal resolved by your correction — rules in docs/wic/limb-size-report.md §d.)
 
 ## Owner corrections 2026-10-07
@@ -92,7 +90,7 @@
 - [x] A. Profile + speed up wk-generate-daily (done Round 9: single builds ~3–5 s); identical-output proof; before/after times
 - [x] B. Local-midnight readiness (done Round 9: plans prebuilt after local noon); pre-build proposal; cron proposal; multi-TZ proof
 - [x] C. Plan never changes on reload (done Round 9) (20 reloads, preview + live)
-- [ ] D. Screenshots 360/390: plan screens done 2026-10-07 as hidden test player (no sideways scroll, no errors; Readiness/Recovery chip labels fixed); pitcher Bat speed + warm-up season label still to shoot
+- [x] D. Screenshots 360/390: plan screens done 2026-10-07 as hidden test player (Readiness/Recovery chip labels fixed); pitcher Bat speed card + warm-up season label shot 2026-10-07 as hidden in-season test pitcher (demoramp): Bat speed card shows, label reads "Season: In-Season — Strength Primer", no sideways scroll, no errors. Off-season label uses the same phase display ("Offseason Q1 — Strength & Capacity" on the off-season test player's plan); that day had no crossover card so no badge to shoot. Test plans removed, Start un-tapped.
 - [ ] Clean up all test data
 
 ## Round 8 — Master Integration Plan (owner-approved 2026-10-07; never publish, no cron changes)
