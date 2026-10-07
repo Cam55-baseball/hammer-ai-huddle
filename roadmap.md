@@ -68,18 +68,18 @@
 - [ ] Stress tests 1–19 + daily-plan job scale
 - [x] Deferral note + youth-throwing doc updates (docs/THROWING-DOCTRINE.md, 2026-10-07)
 - [x] Round 2: switch, consent tables, parent flow, Pitch Smart U13, pause gaps (deployed)
-- [ ] Round 2: signed-in stress tests 1–11, 15, 17 and Round 1 screenshots — waiting on owner approval to sign the preview in as test players
-- [ ] Round 2: daily-plan job scale estimate (case 19)
+- [x] Round 2: signed-in stress tests 1–11, 15, 17 and Round 1 screenshots — waiting on owner approval to sign the preview in as test players — done via Round 5 hidden test players + 2026-10-07 screenshots
+- [x] Round 2: daily-plan job scale estimate (case 19) — measured (Round 5/9: ~860 builds/hour); capacity decision WAITING ON OWNER
 ## Round 3
-- [ ] Stress cases 1–11, 15, 17 + Round 1 screenshots (signed-in test players)
-- [ ] Case 19 scale dry run (1,000 / 5,000)
+- [x] Stress cases 1–11, 15, 17 + Round 1 screenshots (signed-in test players) — done via Round 5 hidden test players + 2026-10-07 screenshots
+- [x] Case 19 scale dry run (1,000 / 5,000) — measured (Round 5/9: ~860 builds/hour); capacity decision WAITING ON OWNER
 - [x] Checks: pitch types U13, sub-20 scale, leaderboards/public pages (done in R3, see below)
 - [x] Anonymized training store + opt-ins (v2 promise/notice, toggles, backfill 13+, proofs) (done in R3, see below)
 - [x] R3 security fixes for anon store migration
 - [x] R3 anon store: opt-in UI (parent signup + controls), 13+ toggle, privacy text, backfill 13+, proofs
 - [x] R3 pitch types U13 limited (pitch list); sub-20 scale confirmed; rankings hide paused/U13
 - [~] R3 case 19: batching built + dry run; real per-player build time not yet measured
-- [ ] R3 stress cases 1–11, 15, 17 + Round 1 screenshots (need signed-in test-player sessions)
+- [x] R3 stress cases 1–11, 15, 17 + Round 1 screenshots (need signed-in test-player sessions) — done via Round 5 hidden test players + 2026-10-07 screenshots
 
 ## Round 5 (2026-10-06) — test without approval tool
 - [x] Test accounts via admin API (hidden, cleaned after)
