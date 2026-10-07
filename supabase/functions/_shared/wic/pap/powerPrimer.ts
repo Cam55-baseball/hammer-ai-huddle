@@ -271,11 +271,11 @@ export function shouldStop(block: Pick<PapBlock, "stop" | "max_sets" | "max_tota
     const best = Math.max(...values);
     const n = block.stop.in_a_row;
     if (values.length < n) return false;
-    return values.slice(-n).every((v) => v <= best * (1 - block.stop.drop_pct / 100));
+    return values.slice(-n).every((v) => v <= best * (1 - (block.stop as { drop_pct: number }).drop_pct / 100));
   }
   if (block.stop.kind === "sprint") {
     const best = Math.min(...values);
-    return values[values.length - 1] >= best * (1 + block.stop.drop_pct / 100);
+    return values[values.length - 1] >= best * (1 + (block.stop as { drop_pct: number }).drop_pct / 100);
   }
   return false;
 }
