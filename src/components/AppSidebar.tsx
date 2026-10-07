@@ -1,5 +1,7 @@
 import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 import { useState, useEffect, useMemo } from "react";
+import { useProgramsRetired } from "@/hooks/useProgramsRetired";
+import { isRetiredRoute } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { useTranslation } from "react-i18next";
 import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles, BarChart3, Flame, Building2, Gamepad2, Library, Crown, Bell, Archive, ClipboardList, Camera, Activity, ListChecks } from "lucide-react";
 import { hasAnySubscription } from "@/utils/tierAccess";
@@ -100,6 +102,7 @@ export function AppSidebar() {
   const { hasPlayerAccess } = usePlayerModuleAccess();
   const { visible: rankingsVisible, loading: rankingsVisibilityLoading } = useRankingsVisibility();
   const { modules } = useSubscription();
+  const { retired: programsRetired } = useProgramsRetired();
   const { hasPendingItems, pendingCount } = useVaultPendingStatus();
   const { isSoftball } = useSportTheme();
   const [ownerProfile, setOwnerProfile] = useState<OwnerProfile | null>(null);
@@ -339,8 +342,14 @@ export function AppSidebar() {
       }
     }
 
+    // Program retirement switch ON: the five programs leave the menu entirely.
+    if (programsRetired) {
+      return items
+        .filter((it: any) => !isRetiredRoute(it.url))
+        .map((it: any) => it.subModules ? { ...it, subModules: it.subModules.filter((sm: any) => !isRetiredRoute(sm.url)) } : it);
+    }
     return items;
-  }, [isOwner, isAdmin, activeTier, modules, selectedSport, hasPlayerAccess, t]);
+  }, [isOwner, isAdmin, activeTier, modules, selectedSport, hasPlayerAccess, t, programsRetired]);
 
   const accountItems = [
     { title: t('navigation.helpDesk', 'Help Desk'), url: "/help-desk", icon: HelpCircle },
