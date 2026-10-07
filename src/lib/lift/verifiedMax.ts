@@ -33,6 +33,7 @@ export function verifiedMax(rows: ReadonlyArray<LogRow>): number | null {
     const w = Number(r.load_used);
     if (!isPlayerWeight(r) || !Number.isFinite(w) || w <= 0) continue;
     const m = (r.metrics ?? {}) as Record<string, unknown>;
+    if (m.one_tap_outcome === "cut_short" || m.one_tap_outcome === "skipped") continue; // not completed as prescribed
     const reps = (r.reps_completed ?? []).filter((x) => Number.isFinite(x) && x > 0);
     if (m.tested_max === true && reps.length && reps[0] === 1) { tested = Math.max(tested ?? 0, w); continue; }
     const presc = Number(m.prescribed_reps);
