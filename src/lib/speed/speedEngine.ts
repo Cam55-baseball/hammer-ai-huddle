@@ -1,0 +1,90 @@
+/**
+ * Speed engine — Round 8 Step 3 (Speed Lab rules folded into the Hammers Today Speed card).
+ * Pure functions only. Hammers Today owns the phase and the dose; these rules can only
+ * LOWER today's sprint reps or turn the day into a break day — never add work.
+ * Source: docs/research/program-consolidation-report.md Part 3.
+ */
+
+export type BodyFeel = "good" | "okay" | "tight";
+export interface SpeedCheckIn { sleep: 1 | 2 | 3 | 4 | 5; feel: BodyFeel; painAreas: string[] }
+
+/** One readiness score, 0–100: 50 + (sleep−3)×10, feel +15/0/−15, −5 per pain area. */
+export function readinessScore(c: SpeedCheckIn): number {
+  const feel = c.feel === "good" ? 15 : c.feel === "tight" ? -15 : 0;
+  return Math.max(0, Math.min(100, 50 + (c.sleep - 3) * 10 + feel - 5 * c.painAreas.length));
+}
+
+/** Readiness under 40 → reps ×0.6; 40–59 → ×0.75. Never below 1 rep, never above prescribed. */
+export function repFactor(score: number): number {
+  return score < 40 ? 0.6 : score < 60 ? 0.75 : 1;
+}
+export function cutReps(prescribed: number, score: number): number {
+  if (!(prescribed > 0)) return prescribed;
+  return Math.max(1, Math.min(prescribed, Math.floor(prescribed * repFactor(score))));
+}
+
+export interface SpeedSessionLite { date: string; rpe: number | null; times: Record<string, number> }
+
+/** Break-day triggers (player may override). Returns plain-language reasons. */
+export function breakDayReasons(
+  checkIn: SpeedCheckIn,
+  recent: SpeedSessionLite[], // newest first
+  bests: Record<string, number>,
+): string[] {
+  const out: string[] = [];
+  const [a, b] = recent;
+  if (a?.rpe != null && b?.rpe != null && a.rpe >= 8 && b.rpe >= 8) out.push("Your last two speed sessions were both very hard (8 or more out of 10).");
+  if (checkIn.sleep <= 2) out.push("You slept poorly.");
+  if (checkIn.painAreas.length >= 3) out.push("You marked 3 or more sore spots.");
+  if (a) {
+    const slow = Object.entries(a.times).filter(([d, t]) => bests[d] > 0 && t > bests[d] * 1.05).length;
+    if (slow >= 2) out.push("Your last sprints were more than 5% slower than your best at 2 or more distances.");
+  }
+  return out;
+}
+
+/** Plateau: 4 timed sessions in a row without a new personal best. */
+export function isPlateau(sessions: SpeedSessionLite[] /* oldest first */): boolean {
+  const best: Record<string, number> = {};
+  let since = 0;
+  for (const s of sessions) {
+    let pb = false;
+    for (const [d, t] of Object.entries(s.times)) {
+      if (!(t > 0)) continue;
+      if (best[d] == null || t < best[d]) { if (best[d] != null) pb = true; best[d] = t; }
+    }
+    since = pb ? 0 : since + 1;
+  }
+  return sessions.length >= 4 && since >= 4;
+}
+
+/** Resisted work opens at session 7, overspeed at 10 — and never below the age floors the catalog already sets. */
+export function unlocks(sessionsDone: number) {
+  return { resisted: sessionsDone + 1 >= 7, overspeed: sessionsDone + 1 >= 10 };
+}
+
+/** Speed tiers as % of the world-class reference time (generic names only). */
+export const WORLD_CLASS = {
+  baseball: { short: { yd: 10, s: 1.41 }, mid: { yd: 30, s: 3.3 }, long: { yd: 60, s: 6.4 } },
+  softball: { short: { yd: 7, s: 1.0 }, mid: { yd: 20, s: 2.2 }, long: { yd: 40, s: 4.25 } },
+} as const;
+export function speedTier(time: number, worldClass: number): "Building Speed" | "Competitive Speed" | "Elite Speed" | "World Class" {
+  const pct = (worldClass / time) * 100;
+  return pct >= 95 ? "World Class" : pct >= 80 ? "Elite Speed" : pct >= 60 ? "Competitive Speed" : "Building Speed";
+}
+
+/** Six context rules, first match wins. They can only soften the day. */
+export type SpeedFocus = { key: string; label: string; maxEffort: boolean; repCap: number | null };
+export function speedFocus(ctx: {
+  minorParentConcern?: boolean; lowerBodyInjury?: boolean; highLoadOrLowReadiness?: boolean;
+  asymmetryOver10?: boolean; inSeason?: boolean; speedPriority?: boolean;
+}): SpeedFocus {
+  if (ctx.minorParentConcern) return { key: "parent_concern", label: "Easy running only today — no all-out sprints.", maxEffort: false, repCap: 4 };
+  if (ctx.lowerBodyInjury) return { key: "injury", label: "Easy running only — protect the injured area.", maxEffort: false, repCap: null };
+  if (ctx.highLoadOrLowReadiness) return { key: "deload", label: "Lighter speed day — your body needs it.", maxEffort: true, repCap: 3 };
+  if (ctx.asymmetryOver10) return { key: "symmetry", label: "Single-leg balance focus — even out both sides.", maxEffort: true, repCap: null };
+  if (ctx.inSeason) return { key: "freshness", label: "Stay fresh for games — quality reps only.", maxEffort: true, repCap: 4 };
+  return ctx.speedPriority
+    ? { key: "max_velocity", label: "Top-speed focus today.", maxEffort: true, repCap: null }
+    : { key: "acceleration", label: "First-step speed focus today.", maxEffort: true, repCap: null };
+}
