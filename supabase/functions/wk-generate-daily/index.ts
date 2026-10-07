@@ -12,6 +12,7 @@
 //     conditioning next to practice)
 //
 // Idempotent for (user_id, plan_date, sequence_field).
+import { gameFlushFor } from "../_shared/wic/conditioning/gameFlush.ts";
 import { proportionProfile, proportionBonus, proportionWhy } from "../_shared/wic/lift/proportionEmphasis.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -4869,6 +4870,20 @@ const handler = async (req: Request): Promise<Response> => {
         });
       } catch { /* never blocks */ }
     }
+
+    // -------- Game-linked flush (owner approved 2026-10-07): optional, display-only --------
+    try {
+      const gf = gameFlushFor({
+        planDate, games: scheduledGames as any, isGameDay,
+        conditioningPath: conditioningSelection?.path ?? null,
+        holdDay: !!timelineToday.hold,
+      });
+      if (gf && (rows as any[]).length > 0) {
+        // Shown on the first non-lift card (the lift card has its own layout).
+        const r0: any = (rows as any[]).find((r: any) => r.slot !== "lift") ?? (rows as any[])[0];
+        r0.why_payload = { ...(r0.why_payload ?? {}), game_flush: gf };
+      }
+    } catch { /* never blocks */ }
 
     // -------- Step 8 program content + limb guidance (owner approved 2026-10-07) --------
     // One labelled option per card in why_payload only: never a new card, slug, set or rep change.

@@ -23,3 +23,4 @@
 - Ball-weight law (`schedule/finalCheck.ts`): nothing over 7 oz; weighted/overload (6–7 oz, PAP overload bats) 16+ only, unknown age = no; 4 oz any age. Why: owner final 2026-10-07.
 - Limb guidance (`limb/limbGuidance.ts`) is card text (`why_payload.limb_hint`) only, never changes a row, never overrides age/growth/injury/phase, never grades arm slot. Why: owner approved limb use 2026-10-07.
 - Conditioning library gaps count only drills the athlete's gear allows (unknown gear = gear-free only). Why: a player with no gear saved got the stand-in day (2026-10-07).
+- Game-linked flush (`conditioning/gameFlush.ts`) is an optional, skippable note (`why_payload.game_flush`) on the first non-lift card the day after a saved game; never a new card or a change to planned work, never on game/hold days or when the day is already a flush. Why: owner 2026-10-07.

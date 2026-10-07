@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 /** Shows the one labelled option (Step 8 content) the planner attached to a row. Display only. */
 export function ProgramContentBlock({ pc }: { pc: any }) {
   if (!pc || typeof pc.name !== "string") return null;
@@ -18,6 +20,22 @@ export function LimbHintBlock({ text }: { text: unknown }) {
   return (
     <div className="rounded-md border border-border bg-muted/40 p-2 text-xs text-muted-foreground break-words" data-testid="limb-hint">
       <span className="font-medium text-foreground">Body-size guide: </span>{text}
+    </div>
+  );
+}
+
+/** Optional easy flush after yesterday's game (owner approved 2026-10-07). Skippable, never replaces work. */
+export function GameFlushBlock({ gf, rxId }: { gf: any; rxId: string }) {
+  const key = `game-flush-skipped:${rxId}`;
+  const [skipped, setSkipped] = useState(() => { try { return localStorage.getItem(key) === "1"; } catch { return false; } });
+  if (!gf || gf.optional !== true || typeof gf.title !== "string" || skipped) return null;
+  return (
+    <div className="rounded-md border border-border bg-muted/40 p-2 text-xs break-words" data-testid="game-flush">
+      <div className="font-medium text-foreground">{gf.title}</div>
+      {gf.why ? <div className="text-muted-foreground">{gf.why}</div> : null}
+      <button type="button" className="mt-1 text-primary underline" onClick={() => { try { localStorage.setItem(key, "1"); } catch { /* ignore */ } setSkipped(true); }}>
+        Skip it
+      </button>
     </div>
   );
 }
