@@ -64,7 +64,7 @@
 - [x] C. Under-13 Pitch Smart exact: innings 60 (8 and under) / 80 (9-12), 4 months off a year (2+ in a row), no weighted balls under 13, FB/CH only — 23 tests pass in src/test/under13PitchSmart.test.ts
 - [x] D. 13th birthday → normal account (transition handled in UnifiedSignupOnboarding/ProfileSetup/Profile; no teen promise, no 18th step)
 - [x] E. Pause gaps: PausedAccountScreen replaces the whole app while paused; leaderboards/public pages hide paused and under-13 accounts (Round 3); switch OFF falls back to the plain paused notice
-- [~] F. Round 1 tests — growth on/off + 16yo heavy track proved 2026-10-07 (src/test/round1GrowthHeavyTrack.test.ts, 4 pass); signed-in screenshots done 2026-10-07
+- [x] F. Round 1 tests — growth on/off + 16yo heavy track proved 2026-10-07 (src/test/round1GrowthHeavyTrack.test.ts, 4 pass); signed-in screenshots done 2026-10-07
 - [ ] Stress tests 1–19 + daily-plan job scale
 - [x] Deferral note + youth-throwing doc updates (docs/THROWING-DOCTRINE.md, 2026-10-07)
 - [x] Round 2: switch, consent tables, parent flow, Pitch Smart U13, pause gaps (deployed)
