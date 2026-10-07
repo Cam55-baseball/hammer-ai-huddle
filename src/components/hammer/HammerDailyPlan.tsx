@@ -15,6 +15,7 @@
  * Schedule context line from `useScheduleWindow` retained.
  */
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
+import { ReleaseCountdown } from "@/components/hammer/cards/ReleaseCountdown";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHammersTodayStart } from "@/hooks/useHammersTodayStart";
@@ -1019,6 +1020,7 @@ function HammerDailyPlanBody({
             <ArmCareBudgetProvider owner={armCareOwner}>
 
               <WkSafePlanNotice />
+              <ReleaseCountdown />
 
               <WkRestDayBanner />
               <WkSomethingOffRow />
