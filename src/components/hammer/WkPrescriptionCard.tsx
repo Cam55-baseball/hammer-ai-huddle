@@ -235,7 +235,7 @@ export function WkPrescriptionCard({
       !(isTotalDoseUnit && hasTotalDose);
     // Execution layer (display only). `exec.repsSuffix` is a "+" on the way to
     // the screen; `rx.reps` below is still the doctrine's number, untouched.
-    const setsText = exec.setsLabel ?? `${rx.sets} sets`;
+    const setsText = exec.setsLabel ?? `${rx.sets} ${rx.sets === 1 ? "set" : "sets"}`;
     if (setsRepsMeaningful) {
       const repsLabel =
         unit === "seconds" ? `${rx.reps} sec` :
@@ -451,7 +451,7 @@ export function WkPrescriptionCard({
             <div className="rounded border border-amber-500/30 bg-amber-500/5 p-2">
               <div className="font-medium mb-0.5">Why today's work changed</div>
               <ul className="list-disc list-inside space-y-0.5 text-muted-foreground">
-                {reductions.map((r, i) => <li key={i}>{athleteNoticeCopy(r)}</li>)}
+                {Array.from(new Set(reductions.map((r) => athleteNoticeCopy(r)))).map((line, i) => <li key={i}>{line}</li>)}
               </ul>
             </div>
           )}
