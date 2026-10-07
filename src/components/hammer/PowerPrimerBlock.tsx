@@ -77,7 +77,7 @@ export function PowerPrimerBlock({ pp, planDate }: { pp: PowerPrimerPayload; pla
         <h4 className="text-sm font-semibold">Power Primer: {TARGET_LABEL[pp.target]}</h4>
       </div>
       <p className="text-xs text-muted-foreground">
-        Do one heavy set, rest, then one all-out effort. Repeat. Your lift's sets and weights stay the same. Finish the whole lift after.
+        Do the primer, rest, then one all-out effort. Repeat. Your lift's sets and weights stay the same. Finish the whole lift after.
       </p>
       <ol className="text-xs space-y-1 list-decimal pl-4">
         <li><span className="font-medium">Primer:</span> {pp.primer.name} — {pp.primer.reps[0]}–{pp.primer.reps[1]} reps{pp.primer.source === "lift" ? " (your first sets of this lift)" : ""}. Never to failure.</li>
