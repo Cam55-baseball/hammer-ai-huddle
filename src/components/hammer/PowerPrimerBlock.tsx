@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Zap, Lock } from "lucide-react";
-import { RestTimer } from "@/components/hammer/RestTimer";
+import { RestTimer } from "@/components/hammer/cards/RestTimer";
 
 export type PowerPrimerPayload = {
   target: "throw" | "bat_speed" | "first_step" | "jump";
