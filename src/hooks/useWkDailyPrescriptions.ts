@@ -546,7 +546,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       !season.isLoading &&
       (query.data ?? []).some((rx) => {
         const storedPhase = rx.why_payload?.phase ?? rx.phase ?? null;
-        return !!storedPhase && storedPhase !== expectedPhase;
+        return !!storedPhase && !!expectedPhase && storedPhase !== expectedPhase;
       });
     const firstCreated = (first as any)?.created_at as string | undefined;
     const staleTimeline =
@@ -704,14 +704,14 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   const phaseDisplay = useMemo(() => {
     const first = (query.data ?? [])[0];
     const storedPhase = first?.why_payload?.phase ?? first?.phase ?? null;
-    if (storedPhase && storedPhase !== canonicalPhase.phase) return canonicalPhase.displayName;
+    if (storedPhase && canonicalPhase.phase && storedPhase !== canonicalPhase.phase) return canonicalPhase.displayName;
     return first?.why_payload?.phase_display ?? canonicalPhase.displayName ?? null;
   }, [query.data, canonicalPhase.phase, canonicalPhase.displayName]);
 
   const phaseKey = useMemo(() => {
     const first = (query.data ?? [])[0];
     const storedPhase = first?.why_payload?.phase ?? first?.phase ?? null;
-    if (storedPhase && storedPhase !== canonicalPhase.phase) return canonicalPhase.phase;
+    if (storedPhase && canonicalPhase.phase && storedPhase !== canonicalPhase.phase) return canonicalPhase.phase;
     return first?.why_payload?.phase ?? canonicalPhase.phase ?? null;
   }, [query.data, canonicalPhase.phase]);
 
@@ -754,7 +754,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       }, null) ?? null;
     const generatorVersion = (first as any)?.generator_version ?? first?.why_payload?.generator_version ?? null;
     const storedSeasonPhase = first?.why_payload?.phase ?? null;
-    const seasonPhase = storedSeasonPhase && storedSeasonPhase !== canonicalPhase.phase
+    const seasonPhase = storedSeasonPhase && canonicalPhase.phase && storedSeasonPhase !== canonicalPhase.phase
       ? canonicalPhase.phase
       : storedSeasonPhase;
     const generationId =
@@ -766,7 +766,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       generated_at: generatedAt,
       generator_version: generatorVersion,
       season_phase: seasonPhase,
-      season_display: storedSeasonPhase && storedSeasonPhase !== canonicalPhase.phase
+      season_display: storedSeasonPhase && canonicalPhase.phase && storedSeasonPhase !== canonicalPhase.phase
         ? canonicalPhase.displayName
         : ((first?.why_payload?.phase_display as string | undefined) ?? canonicalPhase.displayName ?? null),
       plan_date: planDate,
