@@ -34,6 +34,18 @@ export function liftRestBand(rx: {
   return { min: 90, max: 120, why: pct == null ? "no % on this set" : "under 65% of max" };
 }
 
+/** Plain-language reason shown under the lift rest timer. */
+export function restWhyLine(b: RestBand): string {
+  switch (b.why) {
+    case "plan rest": return "Why this rest: your plan sets it for this lift.";
+    case "hold": return "Why this rest: holds tire your muscles fast — about 1 to 1½ minutes brings them back.";
+    case "skill/throw": return "Why this rest: short rest keeps your movement sharp without cooling down.";
+    case "80%+ of max": return "Why this rest: heavy sets need about 3 minutes so you're strong again for the next one.";
+    case "65–79% of max": return "Why this rest: medium-heavy sets need 2 to 2½ minutes to recover.";
+    default: return "Why this rest: lighter sets need 1½ to 2 minutes to recover.";
+  }
+}
+
 export function fmtClock(totalSec: number) {
   const s = Math.max(0, Math.round(totalSec));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
