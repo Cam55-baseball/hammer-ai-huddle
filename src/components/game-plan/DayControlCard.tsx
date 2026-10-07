@@ -120,7 +120,6 @@ export function DayControlCard() {
             <Moon className="h-4 w-4" />
             REST
           </Button>
-          <p className="text-xs leading-relaxed text-muted-foreground">Dial back hard work still to do; keep completed work.</p>
           </div>
           <div className="min-w-0 space-y-1.5">
           <Button
@@ -135,7 +134,6 @@ export function DayControlCard() {
             <SkipForward className="h-4 w-4" />
             SKIP
           </Button>
-          <p className="text-xs leading-relaxed text-muted-foreground">No day credit; workout amounts stay the same.</p>
           </div>
           <div className="min-w-0 space-y-1.5">
           <Button
@@ -150,7 +148,6 @@ export function DayControlCard() {
             <Flame className="h-4 w-4" />
             PUSH
           </Button>
-          <p className="text-xs leading-relaxed text-muted-foreground">Do today’s planned work; no extra sets or harder work added.</p>
           </div>
         </div>
 

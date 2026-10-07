@@ -370,7 +370,7 @@ export function WkPrescriptionCard({
           )}
           <ProgramContentBlock pc={(rx.why_payload as any)?.program_content} />
           <LimbHintBlock text={(rx.why_payload as any)?.limb_hint} />
-          <GameFlushBlock gf={(rx.why_payload as any)?.game_flush} rxId={rx.id} />
+          {/* Game-linked flush switched off 2026-10-07 (owner decision pending). */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0 space-y-1">
               <div className="text-xs text-muted-foreground break-words">{dosage}</div>
