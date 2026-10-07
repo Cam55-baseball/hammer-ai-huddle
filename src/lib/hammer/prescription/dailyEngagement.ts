@@ -38,7 +38,7 @@ export type CompletionState = "done" | "skipped";
  * persisted alongside the generic modality blocks without touching every
  * ModalityKey switch. UI-only.
  */
-export type EngagementKey = ModalityKey | "lifts" | "bat_speed" | "conditioning";
+export type EngagementKey = ModalityKey | "lifts" | "bat_speed" | "conditioning" | "windmill";
 export type LateralityCompletionKey = EngagementKey | `${EngagementKey}:L` | `${EngagementKey}:R`;
 
 function completionKey(modality: EngagementKey, side?: "L" | "R" | null): LateralityCompletionKey {
