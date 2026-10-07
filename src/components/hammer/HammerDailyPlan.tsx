@@ -116,6 +116,8 @@ import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
 import { PitchingCard } from "@/components/hammer/PitchingCard";
+import { readPitcherProfile, shouldShowPitchingCard } from "@/lib/hammer/pitching/pitcherProfile";
+import { PlanStreakStrip } from "@/components/hammer/cards/PlanStreakStrip";
 import { ArmThrowsPanel } from "@/components/hammer/ArmThrowsPanel";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ArmCareBudgetProvider } from "@/components/hammer/ArmCareBudgetContext";
@@ -708,6 +710,16 @@ function HammerDailyPlanBody({
   const { data: recentCompletions } = useRecentMaxIntentCompletions();
   const wkRx = useHammersToday();
   const pocketDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
+  const sportIsBaseball = (ctx.get<unknown>("sport_primary")?.value ?? "baseball") !== "softball";
+  const showPitching = shouldShowPitchingCard(
+    readPitcherProfile(planUser?.id),
+    ctx.get<unknown>("position_primary")?.value ?? null,
+    ctx.get<unknown>("position_secondary")?.value ?? null,
+  );
+  const sportKey = sportIsBaseball ? "baseball" : "softball";
+  // Base Stealer: 5Tool and Golden 2Way only (owner rule) — never Complete Pitcher.
+  const hasBaseStealer = modules.includes(`${sportKey}_5tool`) || modules.includes(`${sportKey}_golden2way`);
+  const baserunningToday = plan.blocks.some((b) => b.modality === "baserunning" && b.status !== "suppressed" && b.status !== "off-day");
   const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
   const pitcherSchedule = usePitcherSchedule(bodyPlanDate);
   const planAdjust = usePlanAdjustments(bodyPlanDate);
@@ -1021,6 +1033,7 @@ function HammerDailyPlanBody({
 
               <WkSafePlanNotice />
               <ReleaseCountdown />
+              <PlanStreakStrip />
 
               <WkRestDayBanner />
               <WkSomethingOffRow />
@@ -1033,13 +1046,26 @@ function HammerDailyPlanBody({
               {warmupBlocks.map((b) => {
                 const adj = adaptive.find((a) => a.modality === b.modality);
                 return (
-                  <BlockCard
+                  <PocketCard
                     key={`${b.modality}-${b.side ?? "x"}`}
-                    block={b}
-                    onNavigate={(r) => navigate(r)}
-                    onEngagementChanged={bumpEngagement}
-                    adaptiveNote={adj?.note}
-                  />
+                    id={`block_${b.modality}_${b.side ?? "x"}`}
+                    category={BLOCK_CATEGORY[b.modality] ?? b.title}
+                    focus={b.side ? `${b.title} (${b.side === "L" ? "left" : b.side === "R" ? "right" : b.side})` : b.title !== (BLOCK_CATEGORY[b.modality] ?? b.title) ? b.title : null}
+                    tone="bg-muted-foreground"
+                    planDate={pocketDate}
+                    prescribed={b.status !== "suppressed" && b.status !== "off-day"}
+                    countLabel={b.durationMin ? `${b.durationMin} min` : null}
+                    intro={POCKET_INTROS[b.modality] ?? null}
+                  >
+                    {() => (
+                      <BlockCard
+                        block={b}
+                        onNavigate={(r) => navigate(r)}
+                        onEngagementChanged={bumpEngagement}
+                        adaptiveNote={adj?.note}
+                      />
+                    )}
+                  </PocketCard>
                 );
               })}
               <WarmupCrossoverAddons />
@@ -1049,12 +1075,12 @@ function HammerDailyPlanBody({
                 onOpen={() => setCheckInQuiz("pre_lift")}
               />
               <ErrorBoundary label="wk-speed">
-                <PocketCard id="speed" notPrescribedNote={<NextReleaseLine label="hard run" date={wkRx.nextEligible?.hard_run} />} category="Speed" focus={pocketFocus(wkRx.grouped.speedCard)} tone="bg-primary" planDate={pocketDate} prescribed={wkRx.grouped.speedCard.length > 0} countLabel={countLabel(wkRx.grouped.speedCard)}>
+                <PocketCard id="speed" progress={progressOf(wkRx.grouped.speedCard)} intro={POCKET_INTROS.speed} notPrescribedNote={<NextReleaseLine label="hard run" date={wkRx.nextEligible?.hard_run} />} category="Speed" focus={pocketFocus(wkRx.grouped.speedCard)} tone="bg-primary" planDate={pocketDate} prescribed={wkRx.grouped.speedCard.length > 0} countLabel={countLabel(wkRx.grouped.speedCard)}>
                   {() => <WkSpeedCard pocket />}
                 </PocketCard>
               </ErrorBoundary>
               <ErrorBoundary label="wk-bat-speed">
-                <PocketCard id="bat_speed" notPrescribedNote={<NextReleaseLine label="heavy-bat day" date={wkRx.nextEligible?.bat_over_under} />} category="Bat speed" focus={pocketFocus(wkRx.grouped.batSpeedCard)} tone="bg-accent" planDate={pocketDate} prescribed={wkRx.grouped.batSpeedCard.length > 0} countLabel={countLabel(wkRx.grouped.batSpeedCard)}>
+                <PocketCard id="bat_speed" progress={progressOf(wkRx.grouped.batSpeedCard)} intro={POCKET_INTROS.bat_speed} notPrescribedNote={<NextReleaseLine label="heavy-bat day" date={wkRx.nextEligible?.bat_over_under} />} category="Bat speed" focus={pocketFocus(wkRx.grouped.batSpeedCard)} tone="bg-accent" planDate={pocketDate} prescribed={wkRx.grouped.batSpeedCard.length > 0} countLabel={countLabel(wkRx.grouped.batSpeedCard)}>
                   {() => isSwitchHitter ? (
                     <>
                       <WkBatSpeedCard side="L" pocket />
@@ -1074,41 +1100,133 @@ function HammerDailyPlanBody({
               <ErrorBoundary label="pitcher-schedule">
                 <PitcherScheduleGate />
               </ErrorBoundary>
-              <ErrorBoundary label="pitching-card">
-                <PitchingCard />
-              </ErrorBoundary>
+              {showPitching && (
+                <ErrorBoundary label="pitching-card">
+                  <PocketCard
+                    id="pitching"
+                    category="Pitching"
+                    focus="Throwing, arm care and pitch work"
+                    tone="bg-primary"
+                    planDate={pocketDate}
+                    prescribed
+                    intro={POCKET_INTROS.pitching}
+                    notPrescribedNote={null}
+                    countLabel={null}
+                  >
+                    {() => (
+                      <>
+                        <div className="mb-3 space-y-0.5 rounded-md border border-border px-3 py-2 text-[11px]">
+                          <p><span className="font-medium text-foreground">Throwing/velo:</span> <NextReleaseLine label="hard throwing day" date={wkRx.nextEligible?.throwing} /></p>
+                          {sportIsBaseball && <p><span className="font-medium text-foreground">Pick-off:</span> <NextReleaseLine label="pick-off day" date={wkRx.nextEligible?.pick_off} /></p>}
+                        </div>
+                        <PitchingCard />
+                      </>
+                    )}
+                  </PocketCard>
+                </ErrorBoundary>
+              )}
+              {showPitching && sportIsBaseball && (
+                <PocketCard
+                  id="link_pickoff"
+                  category="Pick-off Trainer"
+                  focus="Pick-off moves"
+                  tone="bg-accent"
+                  planDate={pocketDate}
+                  prescribed={false}
+                  notPrescribedNote={<NextReleaseLine label="pick-off day" date={wkRx.nextEligible?.pick_off} />}
+                  link={{ route: "/pickoff-trainer", label: "the Pick-off Trainer", steps: ["Open the Pick-off Trainer.", "Do today's moves in order.", "Log each throw so it counts toward your throwing limit."] }}
+                  onNavigate={(r) => navigate(r)}
+                >
+                  {() => null}
+                </PocketCard>
+              )}
+              {hasBaseStealer && (
+                <PocketCard
+                  id="link_base_stealer"
+                  category="Base Stealer"
+                  focus="Jumps and steals"
+                  tone="bg-accent"
+                  planDate={pocketDate}
+                  prescribed={baserunningToday}
+                  intro={POCKET_INTROS.base_stealer}
+                  notPrescribedNote={<NextReleaseLine label="hard run" date={wkRx.nextEligible?.hard_run} />}
+                  link={{ route: sportIsBaseball ? "/base-stealing" : "/softball-stealing", label: "Base Stealer", steps: ["Open Base Stealer.", "Warm up first, then do the reps it gives you.", "Every steal attempt counts as a sprint, so stop when it tells you."] }}
+                  onNavigate={(r) => navigate(r)}
+                >
+                  {() => null}
+                </PocketCard>
+              )}
+              <PocketCard
+                id="link_video"
+                category="Video upload"
+                focus="Send a clip for analysis"
+                tone="bg-secondary"
+                planDate={pocketDate}
+                prescribed
+                intro={POCKET_INTROS.video}
+                link={{ route: showPitching ? "/analyze/pitching" : "/analyze/hitting", label: "video upload", steps: ["Film from the side, whole body in the frame.", "Pick the clip type that matches what you filmed.", "Upload it. Your analysis shows up when it's ready."] }}
+                onNavigate={(r) => navigate(r)}
+              >
+                {() => null}
+              </PocketCard>
               {otherBlocks.map((b) => {
                 const adj = adaptive.find((a) => a.modality === b.modality);
                 return (
-                  <BlockCard
+                  <PocketCard
                     key={`${b.modality}-${b.side ?? "x"}`}
-                    block={b}
-                    onNavigate={(r) => navigate(r)}
-                    onEngagementChanged={bumpEngagement}
-                    adaptiveNote={adj?.note}
-                  />
+                    id={`block_${b.modality}_${b.side ?? "x"}`}
+                    category={BLOCK_CATEGORY[b.modality] ?? b.title}
+                    focus={b.side ? `${b.title} (${b.side === "L" ? "left" : b.side === "R" ? "right" : b.side})` : b.title !== (BLOCK_CATEGORY[b.modality] ?? b.title) ? b.title : null}
+                    tone="bg-muted-foreground"
+                    planDate={pocketDate}
+                    prescribed={b.status !== "suppressed" && b.status !== "off-day"}
+                    countLabel={b.durationMin ? `${b.durationMin} min` : null}
+                    intro={POCKET_INTROS[b.modality] ?? null}
+                  >
+                    {() => (
+                      <BlockCard
+                        block={b}
+                        onNavigate={(r) => navigate(r)}
+                        onEngagementChanged={bumpEngagement}
+                        adaptiveNote={adj?.note}
+                      />
+                    )}
+                  </PocketCard>
                 );
               })}
               <ErrorBoundary label="wk-conditioning">
-                <PocketCard id="conditioning" notPrescribedNote={<NextReleaseLine label="hard run" date={wkRx.nextEligible?.hard_run} />} category="Conditioning" focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} prescribed={wkRx.grouped.conditioningCard.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
+                <PocketCard id="conditioning" progress={progressOf(wkRx.grouped.conditioningCard)} intro={POCKET_INTROS.conditioning} notPrescribedNote={<NextReleaseLine label="hard run" date={wkRx.nextEligible?.hard_run} />} category="Conditioning" focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} prescribed={wkRx.grouped.conditioningCard.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
                   {() => <WkConditioningCard pocket />}
                 </PocketCard>
               </ErrorBoundary>
               <ErrorBoundary label="wk-lifts">
-                <PocketCard id="lift" notPrescribedNote={<><NextReleaseLine label="lift" date={wkRx.nextEligible?.lift} /><br /><NextReleaseLine label="high-intensity jump day" date={wkRx.nextEligible?.high_jump} /></>} category="Lift" focus={pocketFocus(wkRx.grouped.lifts)} tone="bg-destructive" planDate={pocketDate} prescribed={wkRx.grouped.lifts.length > 0} countLabel={countLabel(wkRx.grouped.lifts)}>
+                <PocketCard id="lift" progress={progressOf(wkRx.grouped.lifts)} intro={POCKET_INTROS.lift} notPrescribedNote={<><NextReleaseLine label="lift" date={wkRx.nextEligible?.lift} /><br /><NextReleaseLine label="high-intensity jump day" date={wkRx.nextEligible?.high_jump} /></>} category="Lift" focus={pocketFocus(wkRx.grouped.lifts)} tone="bg-destructive" planDate={pocketDate} prescribed={wkRx.grouped.lifts.length > 0} countLabel={countLabel(wkRx.grouped.lifts)}>
                   {() => <WkLiftsCard pocket />}
                 </PocketCard>
               </ErrorBoundary>
               {recoveryBlocks.map((b) => {
                 const adj = adaptive.find((a) => a.modality === b.modality);
                 return (
-                  <BlockCard
+                  <PocketCard
                     key={`${b.modality}-${b.side ?? "x"}`}
-                    block={b}
-                    onNavigate={(r) => navigate(r)}
-                    onEngagementChanged={bumpEngagement}
-                    adaptiveNote={adj?.note}
-                  />
+                    id={`block_${b.modality}_${b.side ?? "x"}`}
+                    category={BLOCK_CATEGORY[b.modality] ?? b.title}
+                    focus={b.side ? `${b.title} (${b.side === "L" ? "left" : b.side === "R" ? "right" : b.side})` : b.title !== (BLOCK_CATEGORY[b.modality] ?? b.title) ? b.title : null}
+                    tone="bg-muted-foreground"
+                    planDate={pocketDate}
+                    prescribed={b.status !== "suppressed" && b.status !== "off-day"}
+                    countLabel={b.durationMin ? `${b.durationMin} min` : null}
+                    intro={POCKET_INTROS[b.modality] ?? null}
+                  >
+                    {() => (
+                      <BlockCard
+                        block={b}
+                        onNavigate={(r) => navigate(r)}
+                        onEngagementChanged={bumpEngagement}
+                        adaptiveNote={adj?.note}
+                      />
+                    )}
+                  </PocketCard>
                 );
               })}
               <HammerCheckInCard
@@ -1158,6 +1276,30 @@ function pocketFocus(items: ReadonlyArray<{ sequence_role?: string | null; inten
   }
   return null;
 }
+function progressOf(items: ReadonlyArray<{ status?: string | null }>): { done: number; total: number } | null {
+  if (!items.length) return null;
+  return { done: items.filter((r) => r.status === "completed").length, total: items.length };
+}
+const BLOCK_CATEGORY: Record<string, string> = {
+  warmup: "Warm-up", hitting: "Hitting", throwing: "Throwing", defense: "Defense",
+  baserunning: "Base running", recovery: "Recovery", game_iq: "Game IQ", fueling: "Fuel",
+  mobility: "Mobility", regeneration: "Recovery", sleep: "Sleep",
+};
+const POCKET_INTROS: Record<string, string> = {
+  warmup: "This gets your body ready. Do it first, every time, before anything hard.",
+  speed: "Short, all-out sprints with full rest. Quality beats quantity — stop if you slow down.",
+  bat_speed: "Fast swings to build rotational power. Swing hard, rest between sets.",
+  conditioning: "Builds your engine so you stay strong late in games. Follow the rest times.",
+  lift: "Your strength work. Log every set so the app can show your real weights.",
+  hitting: "Your swing work for today. Do the drills in order.",
+  throwing: "Your throwing for today. Every throw counts toward your daily limit.",
+  defense: "Fielding work for your position.",
+  baserunning: "Base running reads and jumps.",
+  recovery: "Cool down and recover so you're ready tomorrow.",
+  pitching: "Your pitching plan: arm care, throwing and pitch work. It follows your pitch-count rest rules.",
+  base_stealer: "Practice your jumps and steals. Each steal counts as a sprint.",
+  video: "Upload a clip and get feedback on your mechanics.",
+};
 function countLabel(items: ReadonlyArray<unknown>): string | null {
   return items.length ? `${items.length} exercise${items.length === 1 ? "" : "s"}` : null;
 }
