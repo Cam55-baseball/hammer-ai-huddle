@@ -64,3 +64,15 @@
 - [ ] C. Plan never changes on reload (20 reloads, preview + live)
 - [ ] D. Screenshots 360/390: pitcher Bat speed, warm-up season label off/in season
 - [ ] Clean up all test data
+
+## Round 8 — Master Integration Plan (owner-approved 2026-10-07; never publish, no cron changes)
+- [ ] Step 1 Card design (pocket pages, lock-in, Save & Exit / Exit without saving, autosave, disclaimer, server-time countdown, pills/badges/intros, celebrations, single season counter) — identical-plan proof
+- [ ] Step 2 Timers (set rest, sprint rest 1 min/10 yd), sprint stopwatch/partner/steps, % → weight, practice logging, in-card dashboards
+- [ ] Step 3 Speed card (Speed Lab engine inside HT phase, 6 context rules, barefoot 4-part gate)
+- [ ] Step 4 Lift card (scheme unchanged; weights, rest, why-line, plateau swap, deload proof)
+- [ ] Step 5 Throwing (throw weights 1.0/0.75/0.85, max long toss, 13+ weighted balls, pick-off baseball P only, windmill program → Step 8)
+- [ ] Step 6 Conditioning + bat speed (explosive pitchers, softball season, Base Stealer 5Tool/G2W only, 2-Way hitter bat speed only, Complete Pitcher velo caps, age-default competition level + onboarding prompt)
+- [ ] Step 7 Key Rules panel, weekly load bar, Report a Problem (DB + email queue + admin list)
+- [ ] Step 8 Content batches (OFF until owner approves each)
+- [ ] Step 9 Archive (docs + backup tables, redirects, 8-language text; no deletion)
+- [ ] Stress tests every step; clean up test data
