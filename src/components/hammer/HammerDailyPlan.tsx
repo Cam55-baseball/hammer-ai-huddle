@@ -121,6 +121,7 @@ import { readPitcherProfile, shouldShowPitchingCard } from "@/lib/hammer/pitchin
 import { CardDashboard } from "@/components/hammer/cards/CardDashboard";
 import { PracticeLog } from "@/components/hammer/logging/ExtraLogs";
 import { PlanStreakStrip } from "@/components/hammer/cards/PlanStreakStrip";
+import { KeyRulesPanel } from "@/components/hammer/cards/KeyRulesPanel";
 import { ArmThrowsPanel } from "@/components/hammer/ArmThrowsPanel";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ArmCareBudgetProvider } from "@/components/hammer/ArmCareBudgetContext";
@@ -1046,6 +1047,7 @@ function HammerDailyPlanBody({
               <ReleaseCountdown />
               <PlanStreakStrip />
               <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
+              <KeyRulesPanel sport={sportIsBaseball ? "baseball" : "softball"} modules={modules} isPitcher={showPitching} />
 <PracticeLog />
 <CardDashboard mode="practice" />
 

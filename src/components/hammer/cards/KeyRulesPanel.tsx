@@ -6,6 +6,11 @@
  */
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useOptionalAuth } from "@/hooks/useAuth";
+import { batSpeedProgramOf } from "../../../../supabase/functions/_shared/wic/batSpeed/programGate";
+import { ageNow } from "./CompetitionLevelPrompt";
 
 export interface KeyRulesInput {
   sport: "baseball" | "softball";
@@ -17,7 +22,7 @@ export interface KeyRulesInput {
 export function keyRulesFor(i: KeyRulesInput): string[] {
   const k = i.sport;
   const has = (m: string) => i.modules.includes(`${k}_${m}`);
-  const pitcherOnly = has("pitcher") && !has("5tool") && !has("golden2way");
+  const pitcherOnly = batSpeedProgramOf(i.modules) === "velocity";
   const rules = [
     "Hard running (sprints, hard conditioning, steal attempts): at least one full day off between, and never the day before a game.",
     "Big jump days: at least one full day off between.",
@@ -42,9 +47,14 @@ export function keyRulesFor(i: KeyRulesInput): string[] {
   return rules;
 }
 
-export function KeyRulesPanel(props: KeyRulesInput) {
+export function KeyRulesPanel(props: Omit<KeyRulesInput, "age">) {
   const [open, setOpen] = useState(false);
-  const rules = keyRulesFor(props);
+  const { user } = useOptionalAuth();
+  const dob = useQuery({
+    queryKey: ["level-prompt-dob", user?.id], enabled: !!user,
+    queryFn: async () => ((await supabase.from("profiles").select("date_of_birth").eq("id", user!.id).maybeSingle()).data as any)?.date_of_birth ?? null,
+  });
+  const rules = keyRulesFor({ ...props, age: ageNow(dob.data ?? null) });
   return (
     <div data-key-rules className="rounded-md border border-border text-xs">
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}
