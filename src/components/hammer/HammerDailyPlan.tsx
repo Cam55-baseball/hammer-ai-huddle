@@ -115,6 +115,7 @@ import { usePlayerModuleAccess } from "@/hooks/usePlayerModuleAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { HammerWarmupDialog } from "@/components/hammer/HammerWarmupDialog";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
+import { CompetitionLevelPrompt } from "@/components/hammer/cards/CompetitionLevelPrompt";
 import { PitchingCard } from "@/components/hammer/PitchingCard";
 import { readPitcherProfile, shouldShowPitchingCard } from "@/lib/hammer/pitching/pitcherProfile";
 import { CardDashboard } from "@/components/hammer/cards/CardDashboard";
@@ -1039,6 +1040,7 @@ function HammerDailyPlanBody({
               <WkSafePlanNotice />
               <ReleaseCountdown />
               <PlanStreakStrip />
+              <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
 <PracticeLog />
 <CardDashboard mode="practice" />
 

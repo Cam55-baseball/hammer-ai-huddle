@@ -52,6 +52,20 @@ export interface AthleteLevelInput {
   competition_last_level?: string | null;
   level_target?: string | null;
   is_professional?: boolean | null;
+  /** Round 8 Step 6 — age default when no level is saved (birthdate age). */
+  age_years?: number | null;
+}
+
+/**
+ * Owner rule (Round 8): a missing level uses an age default until the player
+ * saves their real one — under 14 middle school, 14–15 JV, 16+ varsity.
+ * Unknown age stays unknown.
+ */
+export function ageDefaultRank(ageYears: number | null | undefined): number | null {
+  if (ageYears == null || !Number.isFinite(ageYears)) return null;
+  if (ageYears < 14) return RANKS.middle_school;
+  if (ageYears < 16) return RANKS.jv;
+  return RANKS.varsity;
 }
 
 /**
@@ -63,7 +77,7 @@ export function resolveAthleteRank(input: AthleteLevelInput): number | null {
   const explicit =
     competitionRank(input.competition_level) ?? competitionRank(input.competition_last_level);
   if (input.is_professional === true) return Math.max(explicit ?? 0, RANKS.pro);
-  return explicit;
+  return explicit ?? ageDefaultRank(input.age_years);
 }
 
 /**

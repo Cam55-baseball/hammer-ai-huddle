@@ -1001,6 +1001,7 @@ const handler = async (req: Request): Promise<Response> => {
       competition_level: (ctx as any)?.competition_level ?? null,
       competition_last_level: (ctx as any)?.competition_last_level ?? null,
       is_professional: p.is_professional === true,
+      age_years: athleteAgeYears,
     });
 
 
