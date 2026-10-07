@@ -4871,8 +4871,8 @@ const handler = async (req: Request): Promise<Response> => {
       } catch { /* never blocks */ }
     }
 
-    // -------- Game-linked flush (owner approved 2026-10-07): optional, display-only --------
-    try {
+    // -------- Game-linked flush: SWITCHED OFF 2026-10-07 (owner decision still pending) --------
+    if (false) try {
       const gf = gameFlushFor({
         planDate, games: scheduledGames as any, isGameDay,
         conditioningPath: conditioningSelection?.path ?? null,
