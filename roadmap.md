@@ -1,5 +1,7 @@
 # Roadmap
 
+**Ready to publish: YES** — final regression clean (see status below). **Waiting on owner:** email path; OK to remove old programs' menus/pricing/data.
+
 ## Closeout decisions — ANSWERED by the owner (2026-10-07, E3)
 - [x] Game-linked flush: YES, as an optional card note the player can skip; never replaces planned work. Built, tested, live-proved.
 - [x] Morning game question: keep as is (asked once, shared with the plan-page prompt). Nothing changed.
@@ -19,12 +21,10 @@
 - [x] Daily plan job running on schedule with no errors (21:30 run)
 - [x] Test plans and test body sizes removed; test players back to "not started"
 
-> **Status (2026-10-07, E14)**
-> - Finished: everything, plus the owner's three answers (game flush on, morning question kept, program redirects on).
-> - Next item: none.
-> - Phase mismatch scan: 0 mismatches (26,352 player-days, 368,956 checks).
-> - Waiting on owner: 1. Email path — built-in app emails (needs the owner's one-time domain setup) or a valid Resend key; `problem_reports` currently holds 0 rows, so nothing is queued. 2. Separate OK if the old programs' menu items, pricing/help text or data should ever be removed.
-> - Ready to publish: YES — plan builder redeployed and live-proved (game flush), test data removed; redirects and the flush's Skip button reach players on Publish.
+> **Status (2026-10-07, E15 — final regression)**
+> - **Ready to publish: YES.** Reason: all 2,447 tests pass (incl. 8-week simulations across subscriptions, sports, roles, age bands 7–12/13–15/16–17/18+, season types, completion patterns: 0 rule violations); phase mismatch scan 0; phone check 160/160 pages at 390 px with 0 crashes, 0 errors, nothing too wide; daily plan job last run 22:10 succeeded, 0 failures in 3 h; builder unchanged since its last live proof; no test data left. Redirects and the flush Skip button reach players on Publish.
+> - Finished: everything. Next item: none.
+> - **Waiting on owner:** 1. Email path — built-in app emails (one-time domain setup) or a valid Resend key; 0 problem reports queued. 2. Separate OK if the old programs' menu items, pricing/help text or data should ever be removed.
 
 ## OWNER RULE 2026-10-07 (20:26) — ONE SYSTEM, ONE PHASE (high priority)
 - [x] Audit started (see docs/phase-audit.md)
