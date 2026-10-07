@@ -81,6 +81,9 @@ import {
   BAT_SPEED_STAGE_LABEL,
   selectBatSpeedPicks,
 } from "../_shared/wic/engines/batSpeed.ts";
+import { batSpeedProgramGate, LIGHT_BAT_CATEGORIES } from "../_shared/wic/batSpeed/programGate.ts";
+import {
+} from "../_shared/wic/engines/batSpeed.ts";
 // Elite progression — block/week wave + personal-best lineage (pure, replay-safe).
 import {
   buildProgressionState,
@@ -2799,9 +2802,27 @@ const handler = async (req: Request): Promise<Response> => {
     );
     const isRecoveryDayCtx = (trainingContext as any)?.day_type === "recovery";
 
+    // -------- Bat-speed program gate (Round 8 step 6b) --------
+    // Hitting programs unchanged; Complete Pitcher = velocity caps/spacing.
+    const { data: bsSubRow } = await admin.from("subscriptions").select("status, subscribed_modules").eq("user_id", user.id).maybeSingle();
+    const bsModules: string[] = bsSubRow?.status === "active" ? (bsSubRow.subscribed_modules ?? []) : [];
+    const bsWeekStart = isoShift(planDate, -((new Date(`${planDate}T12:00:00Z`).getUTCDay() + 6) % 7));
+    const bsStartOn = (d: string) => scheduledGames.some((g) => g.isStartingPitcher && !g.ignored && g.date === d);
+    const bsGate = batSpeedProgramGate({
+      modules: bsModules,
+      season: trainingContext.season_phase,
+      isStartDay: bsStartOn(planDate),
+      startedYesterday: outingFacts ? outingFacts.pitchedYesterday : bsStartOn(isoShift(planDate, -1)),
+      startsTomorrow: outingFacts ? outingFacts.startsTomorrow : bsStartOn(isoShift(planDate, 1)),
+      batSpeedDaysThisWeek: new Set(((historyRxRows ?? []) as any[]).filter((r) => r.slot === "bat_speed" && r.plan_date >= bsWeekStart).map((r) => r.plan_date)).size,
+    });
+    if (!bsGate.allow && bsGate.reason) {
+      selectionSkips.record({ domain: "bat_speed", requirement: "program_limit", reason: bsGate.reason });
+    }
+
     // -------- Bat-speed engine (its own card, always pre-lift) --------
     // Game day now receives the constitutional short primer instead of nothing.
-    {
+    if (bsGate.allow) {
       const batSpeedSelection = selectBatSpeedPicks({
         catalog: lib as any,
         template: {
@@ -2855,10 +2876,11 @@ const handler = async (req: Request): Promise<Response> => {
       // On a game day a thin block is the CORRECT outcome, not a failure: most
       // of the bat-speed catalog is legitimately game-day-illegal. Publish the
       // legal picks we do have (activation only) instead of dropping the block.
-      const bsPublishable =
+      const bsPublishable = (
         bsMissingRequired.length === 0 || (isGameDay && batSpeedSelection.picks.length > 0)
           ? batSpeedSelection.picks
-          : [];
+          : []
+      ).filter((p) => !bsGate.lightOnly || LIGHT_BAT_CATEGORIES.has(String(p.category)));
       for (const pick of bsPublishable) {
 
         const m = pick.movement as unknown as MovementRow;
