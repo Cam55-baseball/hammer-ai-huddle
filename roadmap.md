@@ -19,7 +19,7 @@
 - [x] Daily plan job running on schedule with no errors (21:30 run)
 - [x] Test plans and test body sizes removed; test players back to "not started"
 
-> **Status (2026-10-07, E9)**
+> **Status (2026-10-07, E10)**
 > - Finished: everything, plus the owner's three answers (game flush on, morning question kept, program redirects on).
 > - Next item: none.
 > - Phase mismatch scan: 0 mismatches (26,352 player-days, 368,956 checks).
@@ -192,8 +192,8 @@
 - [x] Step 9 Archive (docs + backup tables, redirects, 8-language text; no deletion) — backup applied, redirects ready and off; retirement OK is in the Waiting on owner list
 - [x] Stress tests every step; clean up test data — done for every finished step; Step 8/9 stress tests follow their approval
 
-## Waiting on owner (updated 2026-10-07, E9)
-1. Email key — needs the owner's choice of path (checked E9: `problem_reports` has **0 rows**, so nothing is queued or lost right now):
+## Waiting on owner (updated 2026-10-07, E10)
+1. Email key — needs the owner's choice of path (checked E10: `problem_reports` has **0 rows**, so nothing is queued or lost right now):
    - **Path A (recommended, no key):** Lovable's built-in app emails. `www.hammersmodality.org` is a configured website domain but is **not** set up for email (project email setup: not_started). The owner completes the email-domain setup once; then I set up the mail infrastructure and point the problem-report mailer at it. This creates a queue worker and its own scheduled job, so I will not start it without the owner's OK.
    - **Path B:** the owner adds a valid Resend key in Project Settings → Secrets. Nothing else changes; the mailer already retries the queue automatically.
 2. Separate OK if the old programs' menu items, pricing/help text or saved data should ever be removed (redirects are on; nothing deleted).
