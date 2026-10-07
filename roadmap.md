@@ -19,7 +19,7 @@
 - [x] Daily plan job running on schedule with no errors (21:30 run)
 - [x] Test plans and test body sizes removed; test players back to "not started"
 
-> **Status (2026-10-07, E3)**
+> **Status (2026-10-07, E4)**
 > - Finished: everything, plus the owner's three answers (game flush on, morning question kept, program redirects on).
 > - Next item: none.
 > - Phase mismatch scan: 0 mismatches (26,352 player-days, 368,956 checks).
@@ -192,14 +192,10 @@
 - [x] Step 9 Archive (docs + backup tables, redirects, 8-language text; no deletion) — backup applied, redirects ready and off; retirement OK is in the Waiting on owner list
 - [x] Stress tests every step; clean up test data — done for every finished step; Step 8/9 stress tests follow their approval
 
-## Waiting on owner
-- Real-ball Power Primer throws: apply docs/pending-owner-apply/pap-throw-types.sql, then switch pap_real_throws on
-- Step 8 content batches (incl. 6d explosive-pitcher + softball season drills): approve each by name.
-- Limb-size proposal (docs/wic/limb-size-report.md) before any prescription uses limb sizes.
-- Step 9: apply docs/pending-owner-apply/step9-program-backups.sql; then OK redirects; deletion only after final OK.
-- Email key (Resend invalid): problem reports queue until fixed.
-- Signed-in stress tests / phone screenshots as test players: need owner OK to sign the preview in as test players.
-- Answered 2026-10-07 and built: throw rates (0.25/0.6/0.75/0.85/1.0), trend deload, barefoot gates.
+## Waiting on owner (updated 2026-10-07, E4)
+1. Email key (Resend invalid): problem reports queue until fixed.
+2. Separate OK if the old programs' menu items, pricing/help text or saved data should ever be removed (redirects are on; nothing deleted).
+- Answered and built: throw rates (0.25/0.6/0.75/0.85/1.0), trend deload, barefoot gates; real-ball Power Primer (pap-throw-types.sql applied, switch on); Step 8 batches (all 8 approved and on); limb sizes (approved, card text only); Step 9 backups applied, redirects on; game flush (on, skippable); morning question (kept); signed-in test-player checks (done via hidden test players).
 
 ## Owner addition 2026-10-07 — Finish your profile
 - [x] Finish-your-profile card on plan page (lists missing onboarding fields, one tap to step, why line), reminder every 3 days, never blocks; under-13 → parent; read weight_lb + weight_lbs; never re-ask saved; prove with 3 test accounts; clean up
