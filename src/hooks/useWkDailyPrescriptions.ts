@@ -526,6 +526,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   // shown, the server re-runs the final rule check on it once. A failing plan
   // is rebuilt (nothing marked) or trimmed of failing unmarked cards.
   const verifiedKey = useRef<string | null>(null);
+  const [nextEligible, setNextEligible] = useState<Record<string, string> | null>(null);
   useEffect(() => {
     const rows = query.data ?? [];
     if (!user?.id || rows.length === 0 || generating || !serverFresh) return;
@@ -536,6 +537,8 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
       .invoke("wk-generate-daily", { body: { plan_date: planDate, verify_saved: true } })
       .then(({ data, error }) => {
         if (error) { console.debug("[wk-verify-saved] failed", error); return; }
+        const ne = (data as any)?.next_eligible;
+        if (ne && typeof ne === "object") setNextEligible(ne);
         if (data && (data as any).verified !== true) {
           void qc.invalidateQueries({ queryKey: ["wk-rx", user.id, planDate] });
           void qc.invalidateQueries({ queryKey: ["wk-plan-changes", user.id, planDate] });
@@ -846,5 +849,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     trainingAgeContext,
     /** Step 21E3 — plain reason for the last season-driven re-plan. */
     replanReason,
+    /** Round 8 — next allowed plan date per spaced card type, from the server's rule check. */
+    nextEligible,
   };
 }
