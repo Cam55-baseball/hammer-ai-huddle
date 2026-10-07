@@ -60,8 +60,7 @@ export function PrescriptionCard({
         </ol>
       ) : (
         <div className="mb-4 rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground">
-          No blocks until organism signal is present. Log a check-in to unlock
-          today's prescription.
+          Nothing here yet. Do a quick check-in to unlock today's session.
         </div>
       )}
       <div className="flex flex-wrap gap-2">

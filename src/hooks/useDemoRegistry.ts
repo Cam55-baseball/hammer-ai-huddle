@@ -1,3 +1,5 @@
+import { useProgramsRetired } from './useProgramsRetired';
+import { mentionsRetired } from '../../supabase/functions/_shared/archive/retiredPrograms';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDemoAudience } from './useDemoAudience';
@@ -25,6 +27,7 @@ const CACHE_TTL = 24 * 60 * 60 * 1000;
 
 export function useDemoRegistry() {
   const audience = useDemoAudience();
+  const { retired: programsRetired } = useProgramsRetired();
   const [allNodes, setAllNodes] = useState<DemoNode[]>(() => {
     try {
       const raw = localStorage.getItem(CACHE_KEY);
@@ -56,9 +59,11 @@ export function useDemoRegistry() {
 
   // Filter team-only nodes when current viewer isn't a team audience.
   const nodes = useMemo<DemoNode[]>(() => {
-    if (audience === 'team') return allNodes;
-    return allNodes.filter(n => (n.audience ?? 'all') !== 'team');
-  }, [allNodes, audience]);
+    // Program retirement switch ON: the five programs leave the demo tour too.
+    const base = programsRetired ? allNodes.filter(n => !mentionsRetired(n.title)) : allNodes;
+    if (audience === 'team') return base;
+    return base.filter(n => (n.audience ?? 'all') !== 'team');
+  }, [allNodes, audience, programsRetired]);
 
   const tiers = nodes.filter(n => n.node_type === 'tier');
   const categoriesOf = (tier: string) => nodes

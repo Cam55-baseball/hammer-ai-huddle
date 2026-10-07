@@ -1,3 +1,5 @@
+import { useProgramsRetired } from "@/hooks/useProgramsRetired";
+import { isRetiredKey, isRetiredRoute, mentionsRetired } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -97,6 +99,7 @@ const STRENGTH_TRAINING_DAYS = [1, 5];
 
 export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const { user } = useAuth();
+  const { retired: programsRetired } = useProgramsRetired();
   const { modules: subscribedModules } = useSubscription();
   const [loading, setLoading] = useState(true);
   const currentDateRef = useRef(getTodayDate());
@@ -1653,6 +1656,13 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     });
   });
 
+  // Program retirement switch ON: the five programs' Game Plan tasks are removed.
+  if (programsRetired) {
+    for (let i = tasks.length - 1; i >= 0; i--) {
+      const tk = tasks[i] as any;
+      if (isRetiredKey(tk.id) || isRetiredRoute(tk.link) || mentionsRetired(tk.titleKey)) tasks.splice(i, 1);
+    }
+  }
   const completedCount = tasks.filter(t => t.completed).length;
 
   return {

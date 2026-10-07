@@ -1,6 +1,8 @@
 import { HONEST_EDGES_PROMPT } from "../_shared/honestEdges.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { chatCompletion } from "../_shared/googleAi.ts";
+import { PROGRAMS_RETIRED_KEY, scrubRetiredLines, scrubRetiredInline } from "../_shared/archive/retiredPrograms.ts";
+import { isSwitchOnFor } from "../_shared/wic/flags/featureSwitches.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -164,10 +166,20 @@ RESPONSE GUIDELINES:
 - Never make up features that don't exist
 - Never provide biomechanics or training advice — redirect to "Ask the Coach" in analysis pages${HONEST_EDGES_PROMPT}`;
 
+    // Program retirement switch ON: the help chat never mentions the five programs.
+    let promptForUser = systemPrompt;
+    try {
+      const { data: sw } = await supabase.from("wk_feature_switches").select("*").eq("feature_key", PROGRAMS_RETIRED_KEY).maybeSingle();
+      if (sw && isSwitchOnFor(sw as any, userId)) {
+        promptForUser = scrubRetiredLines(scrubRetiredInline(systemPrompt)) +
+          "\n- Never mention Heat Factory, Iron Bambino, The Unicorn, Speed Lab or Explosive Conditioning. Daily training lives in Hammers Today.";
+      }
+    } catch (_e) { /* switch unreadable = programs stay as they are */ }
+
     const result = await chatCompletion({
       model: "google/gemini-2.5-flash",
       messages: [
-        { role: "system", content: systemPrompt },
+        { role: "system", content: promptForUser },
         ...messages,
       ],
     });

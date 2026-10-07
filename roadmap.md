@@ -1,3 +1,12 @@
+## Owner update (C + D), 2026-10-07 23:40 UTC
+- Ready to publish: yes, once the owner checks the change list and signs in once in the preview.
+- Login (preview): fixed. The sign-in page now always sends a signed-in player on, and inside the preview the app checks again for a late sign-in.
+- Demo video: still on the signed-out home page. Signed-in players can see it at /home.
+- Old programs: no redirects. All five work as before. The `programs_retired` switch is built and set to OFF.
+- When it is ON, the programs are hidden from: the menu, hub tiles, Dashboard cards, pricing, checkout, Help questions, the help chat, Game Plan, the calendar and the demo tour. Program pages go to the dashboard. No data is deleted.
+- Kept per owner: flush "Skip it", catalog renames, Readiness/Recovery labels, "No organism signal yet" wording. Bat speed line: exact.
+- Waiting on owner: turn on the switch to check it on screens (or approve a test-account check); one sign-in in the preview; help-chat update not yet deployed (only matters once the switch is on); email key; decisions on the 10 "owner to confirm" files.
+
 # Roadmap
 
 **Ready to publish: YES (after owner reviews the change list)** — 2026-10-07 final pass F5 (23:30 UTC): redirects OFF, game flush OFF (builder redeployed + live-proved earlier), day-mode/organism wording reverted, /home added; 2,447/2,447 tests pass (incl. 8-week sims, phase scan 0), 165/165 pages at 390 px clean, real form sign-in answers in ~2 s on preview and live site (wrong-password test; no test password for a full success), daily plan job 17 runs OK since 22:45 (4 failures 22:40 = database outage). Login failure 22:40–22:44 was a backend database outage, now recovered — no code fix needed. Demo video was never removed; signed-in users are forwarded to the dashboard, so /home was added. Change list: docs/owner/changes-since-2026-10-06.md.

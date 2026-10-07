@@ -118,12 +118,11 @@ const Auth = () => {
   const sawSignedOutRef = useRef(false);
   if (!authLoading && !user) sawSignedOutRef.current = true;
   useEffect(() => {
+    // The form's own submit handles its routing. Any OTHER way a session
+    // arrives while this page is open (the Lovable preview's sign-in, another
+    // tab, a slow saved-session load) must still move the player in — staying
+    // on the form made a signed-in player look signed out.
     if (authLoading || !user || submittingRef.current) return;
-    if (sawSignedOutRef.current) {
-      const target = resolveRedirect();
-      if (target) navigate(target, { replace: true });
-      return;
-    }
     const returnTo = (location.state as { returnTo?: unknown } | null)?.returnTo;
     const safeReturn = typeof returnTo === "string" && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : null;
     navigate(resolveRedirect() ?? safeReturn ?? "/dashboard", { replace: true });

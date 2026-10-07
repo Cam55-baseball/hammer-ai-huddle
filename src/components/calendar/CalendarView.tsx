@@ -1,3 +1,4 @@
+import { useProgramsRetired } from "@/hooks/useProgramsRetired";
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -69,6 +70,7 @@ const getInitialFilters = (): CalendarFilters => {
 };
 
 export function CalendarView({ selectedSport }: CalendarViewProps) {
+  const { retired: programsRetired } = useProgramsRetired();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -520,6 +522,7 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
               <div className="w-2 h-2 rounded-full bg-purple-500" />
               <span className="text-muted-foreground">{t('calendar.legend.activity', 'Activity')}</span>
             </div>
+            {!programsRetired && (<>
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-amber-500" />
               <span className="text-muted-foreground">{t('calendar.legend.program', 'Iron Bambino')}</span>
@@ -528,6 +531,7 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#f97316' }} />
               <span className="text-muted-foreground">{t('calendar.legend.heatFactory', 'Heat Factory')}</span>
             </div>
+            </>)}
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-green-500" />
               <span className="text-muted-foreground">{t('calendar.legend.meal', 'Meal')}</span>

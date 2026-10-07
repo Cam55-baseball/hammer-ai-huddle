@@ -1,3 +1,5 @@
+import { useProgramsRetired } from "@/hooks/useProgramsRetired";
+import { isRetiredRoute } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -5,7 +7,7 @@ import { Target, Dumbbell, Eye, Zap, ArrowRight, Sparkles, Crosshair, Brain } fr
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 
-const tiles = [
+const ALL_TILES = [
   {
     key: "complete-hitter",
     icon: Target,
@@ -118,6 +120,8 @@ const tiles = [
 export default function GoldenTwoWay() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { retired: programsRetired } = useProgramsRetired();
+  const tiles = programsRetired ? ALL_TILES.filter((x) => !isRetiredRoute(x.getRoute("baseball"))) : ALL_TILES;
   const selectedSport = localStorage.getItem("selectedSport") || "baseball";
 
   return (
@@ -128,7 +132,9 @@ export default function GoldenTwoWay() {
             The Golden 2Way
           </h1>
           <p className="text-muted-foreground text-base sm:text-lg">
-            Complete 2-way athlete development — hitting, pitching, throwing, speed, and The Unicorn
+            {programsRetired
+              ? "Complete 2-way athlete development — hitting, pitching, throwing and speed"
+              : "Complete 2-way athlete development — hitting, pitching, throwing, speed, and The Unicorn"}
           </p>
         </div>
 

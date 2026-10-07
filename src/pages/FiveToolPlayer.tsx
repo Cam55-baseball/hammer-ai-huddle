@@ -1,3 +1,5 @@
+import { useProgramsRetired } from "@/hooks/useProgramsRetired";
+import { isRetiredRoute } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -5,7 +7,7 @@ import { Target, Dumbbell, Eye, Zap, ArrowRight, Footprints, Brain } from "lucid
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 
-const tiles = [
+const ALL_TILES = [
   {
     key: "complete-hitter",
     icon: Target,
@@ -120,6 +122,8 @@ const tiles = [
 export default function FiveToolPlayer() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { retired: programsRetired } = useProgramsRetired();
+  const tiles = programsRetired ? ALL_TILES.filter((x) => !isRetiredRoute(x.getRoute("baseball"))) : ALL_TILES;
   const selectedSport = localStorage.getItem("selectedSport") || "baseball";
 
   const filteredTiles = tiles.filter(
