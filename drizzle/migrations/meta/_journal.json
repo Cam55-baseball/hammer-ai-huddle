@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791384469989,
+      "tag": "0000_base_stealer_counts_as_hard_run",
+      "breakpoints": true
+    }
+  ]
+}
