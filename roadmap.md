@@ -22,7 +22,7 @@
 - [x] 6. lift_mcgill_big3: no outside name in explanation/display
 - [x] 7. Closeout decisions written at top
 
-> **Status (2026-10-07, end of batch C10)**
+> **Status (2026-10-07, after D2 — no open item I can do; D1 phase unification already finished)**
 > - Finished: owner answers 1–7 (capacity logged; missed-lift job ON; bat-speed wording restored word-for-word; 4 oz no age limit, 6–7 oz stays 16+; one system, one phase — 4,000-case sim 0 mismatches, builder redeployed and live-proved; outside coach name gone from the catalog and from 3 old saved cards; closeout decisions at top). Batch C: PAP, goal table v2, Alternative button, windmill program, Power Primer bests saved to account. Test data removed.
 > - Next item: none I can do — everything left waits on the owner.
 > - Waiting on owner:
