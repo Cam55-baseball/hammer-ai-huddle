@@ -4,6 +4,9 @@
  * own first sets — sets, reps and % never change here. Display + logging only.
  */
 import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useOptionalAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Zap, Lock } from "lucide-react";
@@ -51,10 +54,26 @@ export function PowerPrimerBlock({ pp: base, planDate }: { pp: PowerPrimerPayloa
   const [reps, setReps] = useState(0);
   const [entry, setEntry] = useState("");
   const [stopped, setStopped] = useState<string | null>(null);
+  const { user } = useOptionalAuth();
+  const qc = useQueryClient();
+  const lowerFirst = pp.target === "first_step";
+  // Account best (record-only rows, metrics.kind "pap_speed"); device copy is a fallback.
+  const { data: accountBest } = useQuery({
+    queryKey: ["pap-best", user?.id, pp.target],
+    enabled: !!user && pp.target !== "jump",
+    queryFn: async () => {
+      const { data } = await supabase.from("wk_session_logs" as any).select("metrics")
+        .eq("user_id", user!.id).eq("metrics->>kind", "pap_speed").eq("metrics->>target", pp.target).limit(500);
+      const vals = ((data as any[]) ?? []).map((r) => Number(r.metrics?.value)).filter((v) => Number.isFinite(v) && v > 0);
+      if (!vals.length) return null;
+      return lowerFirst ? Math.min(...vals) : Math.max(...vals);
+    },
+  });
   const best = useMemo(() => {
+    if (accountBest != null) return accountBest;
     const v = Number(typeof window !== "undefined" ? localStorage.getItem(pbKey(pp.target)) : NaN);
     return Number.isFinite(v) && v > 0 ? v : null;
-  }, [pp.target, stopped]);
+  }, [pp.target, stopped, accountBest]);
   const locked = pp.requires_throwing_warmup && !warm;
   const lowerIsBetter = pp.target === "first_step";
 
@@ -76,6 +95,13 @@ export function PowerPrimerBlock({ pp: base, planDate }: { pp: PowerPrimerPayloa
     const next = Number.isFinite(v) && v > 0 ? [...values, v] : values;
     const s = sets + 1; const r = reps + pp.action.reps[1];
     setValues(next); setSets(s); setReps(r); setEntry("");
+    if (user && Number.isFinite(v) && v > 0 && pp.target !== "jump") {
+      void supabase.from("wk_session_logs" as any).insert({
+        user_id: user.id, plan_date: planDate ?? new Date().toLocaleDateString("en-CA"), prescription_id: null,
+        movement_slug: pp.action.slug ?? `pap_${pp.target}`, load_used: null,
+        metrics: { kind: "pap_speed", target: pp.target, value: v, unit: UNIT[pp.target] },
+      }).then(({ error }) => { if (!error) qc.invalidateQueries({ queryKey: ["pap-best", user.id, pp.target] }); });
+    }
     if (next.length) {
       const top = lowerIsBetter ? Math.min(...next) : Math.max(...next);
       if (best == null || (lowerIsBetter ? top < best : top > best)) localStorage.setItem(pbKey(pp.target), String(top));
