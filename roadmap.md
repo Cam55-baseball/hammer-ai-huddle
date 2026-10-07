@@ -1,6 +1,6 @@
 # Roadmap
 
-**Ready to publish: YES (after owner reviews the change list)** — 2026-10-07 urgent pass (re-checked F4): redirects OFF, game flush OFF (builder redeployed + live-proved), day-mode/organism wording reverted, /home added; 2,447 tests pass, phase scan 0, 165/165 pages at 390 px clean, sign-in form answers in under 2 s on preview and live site. Login failure 22:40–22:44 was a backend database outage, now recovered. Change list: docs/owner/changes-since-2026-10-06.md.
+**Ready to publish: YES (after owner reviews the change list)** — 2026-10-07 final pass F5 (23:30 UTC): redirects OFF, game flush OFF (builder redeployed + live-proved earlier), day-mode/organism wording reverted, /home added; 2,447/2,447 tests pass (incl. 8-week sims, phase scan 0), 165/165 pages at 390 px clean, real form sign-in answers in ~2 s on preview and live site (wrong-password test; no test password for a full success), daily plan job 17 runs OK since 22:45 (4 failures 22:40 = database outage). Login failure 22:40–22:44 was a backend database outage, now recovered — no code fix needed. Demo video was never removed; signed-in users are forwarded to the dashboard, so /home was added. Change list: docs/owner/changes-since-2026-10-06.md.
 **Waiting on owner:** (1) a test account password, or a sign-in by the owner, for a full successful form sign-in proof; (2) keep/revert on the 10 "Owner to confirm" files; (3) email path; (4) program retirement — not approved, pages work as before.
 
 ## Closeout decisions — ANSWERED by the owner (2026-10-07, E3)
