@@ -38,10 +38,10 @@ export interface PhaseStateInput {
 
 /** One vocabulary: these are the only season words shown anywhere. */
 export const SEASON_LABEL: Record<SeasonName, string> = {
-  off_season: "Off-season",
-  preseason: "Pre-season",
-  in_season: "In-season",
-  post_season: "Post-season",
+  off_season: "Off-Season",
+  preseason: "Pre-Season",
+  in_season: "In-Season",
+  post_season: "Post-Season",
 };
 
 export function resolvePhaseState(i: PhaseStateInput): PhaseState {
