@@ -1,19 +1,19 @@
 # Roadmap
 
-> **Status (2026-10-07, Round 8)**
-> - Finished: Steps 1–4; Step 5 (5a, 5c–5f; 5b paused); Step 6 (6a, 6b, 6c, 6d scheduling); Step 7a Key Rules panel.
-> - Next: 7b weekly body-load bar, then 7c Report a Problem.
-> - Waiting on owner: (1) Throw counting: do warm-ups/catch play count 0.6 instead of 0.25, and does the daily arm budget rise to match? (also blocks 5b and throwing/pick-off next dates) (2) Should hard-session ratings trigger an earlier lift deload? (3) Barefoot pain-free days per stage + readiness test — nobody moves past Foundation until set. (4) Step 8 content batches, one by one — including the new explosive-pitcher and softball-season conditioning drills (6d).
+> **Status (2026-10-07, Round 9)**
+> - Finished: Round 9 items 9.1–9.8 (throw counting, lighter week by trends, barefoot gates + guided test, throwing pacing, softball bat speed, GitHub fast tier, limb-size collection + report, body-load bar, Report a Problem, Step 8 summaries, Step 9 prep).
+> - Next: owner decisions below.
+> - Waiting on owner: (1) Step 8 batches, one by one (docs/owner/step8-content-batches.md). (2) Limb-size proposal (docs/wic/limb-size-report.md). (3) Step 9 backup SQL (docs/pending-owner-apply/step9-program-backups.sql). (4) Email key: reports queue until it is fixed. (5) Windmill switch-on.
 
 ## Round 9 (owner answers 2026-10-07, redeploys authorized)
-- [ ] 9.1 Throw counting final (warm-up/catch 0.25, budget unchanged) → finish 5b + throwing/pick-off next dates
-- [ ] 9.2 Lift deload by trends (14d: ≥3 sessions 8+/10 AND flat/down verified lift OR 7d readiness < 28d OR new pain → next week sets ×0.6; never stacked; not in-season) + simulations
-- [ ] 9.3 Barefoot gates live (12/21/60, 10/28/60, 10/42/65) + guided readiness test
-- [ ] 9.4 Throwing pacing guidance + optional timer
-- [ ] 9.5 Bug: softball 5Tool/Golden 2Way get hitter bat speed + simulation
-- [ ] 9.6 GitHub tcs-reliability fast tier: lockfile sync, all tests pass, nightly install check
-- [ ] 9.7 Limb size: input report, collection (wingspan, sitting height, hand length; history; parent for U13), proposal only
-- [ ] 9.8 7b body-load bar, 7c Report a Problem (save + email queue/retry), Step 8 batch summaries, Step 9 archive prep
+- [x] 9.1 Throw counting final (warm-up/catch 0.25, budget unchanged) → finish 5b + throwing/pick-off next dates
+- [x] 9.2 Lift deload by trends (14d: ≥3 sessions 8+/10 AND flat/down verified lift OR 7d readiness < 28d OR new pain → next week sets ×0.6; never stacked; not in-season) + simulations
+- [x] 9.3 Barefoot gates live (12/21/60, 10/28/60, 10/42/65) + guided readiness test
+- [x] 9.4 Throwing pacing guidance + optional timer
+- [x] 9.5 Bug: softball 5Tool/Golden 2Way get hitter bat speed + simulation
+- [x] 9.6 GitHub tcs-reliability fast tier: lockfile sync, all tests pass, nightly install check
+- [x] 9.7 Limb size: input report, collection (wingspan, sitting height, hand length; history; parent for U13), proposal only
+- [x] 9.8 7b body-load bar, 7c Report a Problem (save + email queue/retry), Step 8 batch summaries, Step 9 archive prep
 
 - [x] Current request: clarify Rest / Push / Skip with accurate frontend-only labels and explanations; report exact before/after text (phone/desktop checked with local-only test state)
 - [x] Current request: quote the complete Start card for all five requested player examples, read-only
@@ -112,13 +112,13 @@
 - [x] 6d scheduling already in place in the conditioning picker: easy flush the day after a start, primer the day before, light tournament days, short/easy within 48 h of a game, repeat sprints with full rest off-season/in-season, softball base distances (43 ft repeats). No change needed.
 - [ ] 6d WAITING ON OWNER (Step 8): the library has no explosive-pitcher drills (max-intent short sprints with 1 min/10 yd rest, power/plyo, repeat accelerations) and no softball season drills (base-to-base acceleration, durability, tournament-weekend work). Owner said this content goes through Step 8 approval, so it will be drafted there.
 - [x] 7a Key Rules panel on the plan page (collapsed, "Key rules for your plan"): rest rules, Done/Cut short/Missed, Base Stealer, Complete Pitcher velocity bat speed, pitcher flush/primer, baseball-only pick-offs, under-13 weighted balls, heavy lifting 16+. Display only.
-- [ ] NEXT ITEM: 7b weekly body-load bar. Old 5d/5e note: same-day max-effort throw + pitch within age limit, baseball-only pick-offs with lower 2-Way volume. Throwing/pick-off next dates wait on the 5b answer. (Old 5b note: on the throwing card (counts by kind → pitch-equivalents vs the existing age daily/weekly limit, shown on screen), then throwing/pick-off next dates from the planner (needs plan-builder redeploy — owner authorized in Round 8). (Base Stealer attempts counting as hard running moved to Step 6, where Base Stealer days are built — it changes the planner's rest rules.)
+- [x] 7b weekly body-load bar, 7c Report a Problem done (Round 9). Old note: Old 5d/5e note: same-day max-effort throw + pitch within age limit, baseball-only pick-offs with lower 2-Way volume. Throwing/pick-off next dates wait on the 5b answer. (Old 5b note: on the throwing card (counts by kind → pitch-equivalents vs the existing age daily/weekly limit, shown on screen), then throwing/pick-off next dates from the planner (needs plan-builder redeploy — owner authorized in Round 8). (Base Stealer attempts counting as hard running moved to Step 6, where Base Stealer days are built — it changes the planner's rest rules.)
 - [x] Step 3 Speed card (Speed Lab engine inside HT phase, 6 context rules, barefoot 4-part gate)
 - [x] Step 4 (include: switch Lift rest to the owner's saved bands — 80%+ 180 s; 65–79% 120–150 s; <65% 90–120 s; holds 60–90 s; skill 45–60 s; +30 s button; HT rest wins)
 - [ ] Step 4 Lift card (scheme unchanged; weights, rest, why-line, plateau swap, deload proof)
 - [ ] Step 5 Throwing (throw weights 1.0/0.75/0.85, max long toss, 13+ weighted balls, pick-off baseball P only, windmill program → Step 8)
 - [ ] Step 6 Conditioning + bat speed (explosive pitchers, softball season, Base Stealer 5Tool/G2W only, 2-Way hitter bat speed only, Complete Pitcher velo caps, age-default competition level + onboarding prompt)
-- [ ] Step 7 Key Rules panel, weekly load bar, Report a Problem (DB + email queue + admin list)
+- [x] Step 7 Key Rules panel, weekly load bar, Report a Problem (DB + email queue + admin list)
 - [ ] Step 8 Content batches (OFF until owner approves each)
 - [ ] Step 9 Archive (docs + backup tables, redirects, 8-language text; no deletion)
 - [ ] Stress tests every step; clean up test data

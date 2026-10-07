@@ -22,3 +22,7 @@
 - Anonymous training store: bucketed, week-rounded, no free text, Vault-HMAC key; under-13 needs parent opt-in. Why: lawyer-approved scope.
 - The plan screen shows the last saved plan, the start flag and plan access from the device at once, and acts (rule checks, changes) only after this visit's server answer arrives; device copies are cleared on Sign out. Why: a plain reload must never flash, rebuild or change the plan.
 
+
+- Limb sizes live as history in `athlete_limb_measurements`; no prescription reads them until the owner approves `docs/wic/limb-size-report.md`. Why: collection first, owner gate before any dose change.
+- Problem reports are saved to `problem_reports` first; `report-problem-mailer` only sends and retries queued rows. Why: a broken email key must never lose a report.
+- Barefoot stage is rebuilt from logged events (`speedEngine.barefootState`); move-ups are recorded as `barefoot_stage_up` with that day's readiness. Why: readiness is only known on the day.
