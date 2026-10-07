@@ -34,6 +34,7 @@ export const FEATURE_KEYS = [
   "hammers_today_start_gate",
   "power_primer",
   "pap_real_throws",
+  "windmill_program",
 ] as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];

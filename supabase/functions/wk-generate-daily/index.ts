@@ -229,6 +229,7 @@ import { nextThrowDate, nextPickoffDate } from "../_shared/wic/phases/nextThrowD
 import { trendDeload, loadTrendInput, lighterSets, TREND_DELOAD_VERSION } from "../_shared/wic/lift/trendDeload.ts";
 import { goalDose, goalDoseKey, GOAL_DOSE_VERSION } from "../_shared/wic/goals/goalDose.ts";
 import { planPowerPrimer, liftPatternOf, painAreasFromInjuries, type PapRole } from "../_shared/wic/pap/powerPrimer.ts";
+import { planWindmillSession, WINDMILL_PROGRAM_VERSION } from "../_shared/wic/pitching/windmillProgram.ts";
 import { loadedLiftRows } from "../_shared/wic/schedule/tissueCost/shadow/adapter.ts";
 import { loadExternalTraining, mergeExternal } from "../_shared/wic/schedule/externalTraining.ts";
 
@@ -818,7 +819,8 @@ const handler = async (req: Request): Promise<Response> => {
       .order("measured_on");
     const heightReadings = ((heightRows ?? []) as any[]).map((h) => ({ date: h.measured_on as string, inches: Number(h.inches) }));
     const growthState = growthMode(heightReadings, planDate);
-    const sport = (p.sport ?? "baseball") as "baseball" | "softball";
+    // profiles has no sport column — the player's sport lives in athlete_context.sport_primary.
+    const sport = (String(p.sport ?? (ctx as any)?.sport_primary ?? "baseball").toLowerCase() === "softball" ? "softball" : "baseball") as "baseball" | "softball";
     const position = p.primary_position ?? p.position ?? null;
     // Every position label the athlete holds, for the domain scope gate.
     const athletePositions: string[] = Array.from(
@@ -4746,6 +4748,58 @@ const handler = async (req: Request): Promise<Response> => {
       if (slow) watchNotes.push(slow);
       await writeNotes(admin as any, watchNotes);
     } catch { /* a missing note never costs a card */ }
+
+    // -------- Windmill pitching program (owner approved 2026-10-07) --------
+    // Softball pitchers only. Its own card (slot "windmill"); limits come from
+    // the windmill arm rules; the final check below still runs on every row.
+    try {
+      if (features.windmill_program === true && sport === "softball" && isPitcherAthlete) {
+        const [{ data: wmLedger }, { data: wmPrior }] = await Promise.all([
+          admin.from("arm_ledger_entries").select("entry_date, source, throw_type, count, status")
+            .eq("user_id", user.id).gte("entry_date", isoShift(planDate, -14)).lte("entry_date", planDate).limit(2000),
+          admin.from("wk_prescriptions").select("plan_date, wm:why_payload->windmill")
+            .eq("user_id", user.id).eq("slot", "windmill").gte("plan_date", isoShift(planDate, -6)).lt("plan_date", planDate).limit(200),
+        ]);
+        const byDay = new Map<string, number>();
+        for (const e of (wmLedger ?? []) as any[]) {
+          if (e.status && /skip|missed|cancel/i.test(String(e.status))) continue;
+          if (String(e.source) !== "pitching" || /warm/i.test(String(e.throw_type ?? ""))) continue;
+          byDay.set(String(e.entry_date), (byDay.get(String(e.entry_date)) ?? 0) + Number(e.count ?? 0));
+        }
+        const history = [...byDay.entries()].filter(([d]) => d < planDate).map(([date, pitches]) => ({ date, pitches, innings: Math.ceil(pitches / 15) }));
+        const fullDays = new Set(((wmPrior ?? []) as any[]).filter((r) => Number(r.wm?.full_pitches ?? 0) >= 20 && r.wm?.type !== "sharpen").map((r) => String(r.plan_date)));
+        const mondayOffset = (new Date(`${planDate}T00:00:00Z`).getUTCDay() + 6) % 7;
+        const weekStart = isoShift(planDate, -mondayOffset);
+        const cnsW = (dailyLog as any)?.cns_readiness;
+        const wm = planWindmillSession({
+          planDate, phase: String(phaseRes.phase), age: athleteAgeYears, growthMode: growthState.active,
+          readiness: cnsW == null ? null : Math.max(0, Math.min(100, Number(cnsW) * 10)),
+          armPain: painAreasFromInjuries(injurySlugs).arm === true,
+          history, todayPitchesSoFar: byDay.get(planDate) ?? 0,
+          gameToday: scheduledGames.some((g: any) => g.date === planDate && g.ignored !== true),
+          gameTomorrow: scheduledGames.some((g: any) => g.date === isoShift(planDate, 1) && g.ignored !== true),
+          priorFullSessionsThisWeek: [...fullDays].filter((d) => d >= weekStart).length,
+          fullSessionYesterday: fullDays.has(isoShift(planDate, -1)),
+          equipment: declaredEquipment.length ? declaredEquipment : null,
+        });
+        const summary = { version: WINDMILL_PROGRAM_VERSION, type: wm.type, full_pitches: wm.fullPitches, drill_throws: wm.drillThrows, arm_units: wm.armUnits, reasons: wm.reasons };
+        wm.rows.forEach((wr, idx) => {
+          (rows as any[]).push({
+            slot: "windmill", sequence_order: 300 + idx, sequence_role: wr.kind === "pitch" ? "windmill_pitch" : "windmill_drill",
+            movement_slug: wr.slug, movement_name: wr.name, phase: phaseRes.phase, sets: wr.sets, reps: wr.reps,
+            tempo: null, load_pct: null, duration_seconds: null, distance_feet: null, total_reps: wr.sets * wr.reps, dosage_unit: "reps",
+            cns_cost: wr.kind === "pitch" ? 3 : 1, cns_clamped: false, substituted_from_slug: null, substitution_reason: null,
+            why_payload: { cue: wr.cue, pitch_type: wr.pitchType ?? null, count_weight: wr.countWeight, ...(idx === 0 ? { windmill: summary } : {}) },
+            rationale: wr.kind === "pitch" ? "Windmill pitching — count every pitch." : "Windmill drill — easy effort.",
+            adaptation: adaptationDecision.primary, engine: "windmill_program", why_v2: null, validator_report: validatorReport,
+            generator_version: WIC_VERSION, status: "planned",
+          });
+        });
+      }
+    } catch (wmErr) {
+      console.warn("[wk-generate-daily] windmill program failed", wmErr);
+      try { await admin.from("wk_feature_error_events").insert({ feature_key: "windmill_program", user_id: user.id, error_text: String(wmErr).slice(0, 500) }); } catch { /* never blocks */ }
+    }
 
     // -------- Final rule check (owner ruling 2026-10-06) --------
     // Runs on every plan right before it is saved. Any card that breaks a rule
