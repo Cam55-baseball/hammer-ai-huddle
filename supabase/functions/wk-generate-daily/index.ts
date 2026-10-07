@@ -484,6 +484,7 @@ const handler = async (req: Request): Promise<Response> => {
     // The body is read once, here, so the daily plan job can name the athlete.
     const rawBody = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const profLog: ProfEntry[] | null = rawBody.profile === true ? [] : null;
+    (globalThis as any).__wkLegacyPersist = rawBody.profile === true && rawBody.legacy_persist === true;
     (globalThis as any).__wkProf = profLog;
     (globalThis as any).__wkInFlightAtStart = inFlight;
     const memoStats = { hits: 0 };
@@ -4959,6 +4960,8 @@ function todayStr(): string {
  */
 function splitSharedForPersist(rows: any[]): { rows: any[]; shared: Record<string, unknown> } {
   const shared: Record<string, unknown> = {};
+  // Test switch (profiling requests only): send the old full payload.
+  if ((globalThis as any).__wkLegacyPersist === true) return { rows, shared };
   if (!Array.isArray(rows) || rows.length < 2) return { rows, shared };
   const isObj = (v: unknown) => v !== null && typeof v === "object" && !Array.isArray(v);
   const out = rows.map((r) => ({ ...r }));
