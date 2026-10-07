@@ -121,6 +121,7 @@ export function prescribedThrows(role: ThrowRole, primary: unknown, secondary?: 
 export function enterableTypes(role: ThrowRole, source: EntrySource): ThrowType[] {
   return (Object.keys(THROW_TYPES) as ThrowType[]).filter((t) => {
     if (THROW_TYPES[t].source !== source) return false;
+    if (t === "pap_max_throws" || t === "pap_warmup") return false; // logged by the Power Primer block only
     if (source === "pitching") return role !== "position" && role !== "catcher";
     if (role === "pitcher") return false;
     if (t === "catcher_throwdowns") return role === "catcher" || role === "pitcher_catcher";
