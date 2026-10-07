@@ -2,14 +2,15 @@
 
 > **Status (2026-10-07, end of batch B)**
 > - Finished: owner corrections 1–4 (limb data from onboarding only; proportions shift emphasis, never exclude; goals shape every card; goal sets/reps built + live-proven; max-effort throw rest 15–45 s); phone screenshots incl. pitcher Bat speed + season label; live pitcher check (pitching days entered as player → next day lighter); all-app audit (160 pages, 0 errors); Finish-your-profile card (proven: player missing items sees exact list, complete player sees no card, under-13 parent filled 5 measurements and only the other 5 stayed listed). Test data removed.
-> - Next item: remaining signed-in stress tests (Round 1–3 cases) and the lift weight-unlock proof (2g).
+> - Batch C (2026-10-07): PAP, goal table v2, Alternative button, windmill program (on, live-proved) and 2g done; builder now reads softball sport correctly.
+> - Next item: remaining Round 1–3 signed-in stress cases (F, screenshots) with hidden test players.
 > - Goal → sets/reps (off-season only, APPROVED 2026-10-07; used only when HT's dose misses the goal range, smallest step in; never in-season/deload/trend-lighter):
 >   strength 4×5–6 / 5×3–5 / 4×2–3 · size 4×8–10 / 4×6–8 / 3×5–6 · power/speed 5×3–5 / 5×2–4 / 6×1–3 · hitting/throwing 4×4–6 / 5×3–5 / 5×2–3 · durability 3×10–12 / 3×8–10 / 3×6–8 · no goal = no change (early / mid / late off-season).
 > - Waiting on owner:
 >   1. Step 8 content batches, by name.
 >   2. Step 9 backup step, then redirects.
 >   3. Email key.
->   4. Windmill switch-on.
+>   4. Real-ball Power Primer throws (apply pap-throw-types.sql).
 >   5. Plan-building capacity (~860/hour).
 >   6. Missed-lift job switch-on; game-linked flush and morning-question decisions.
 >   7. Reword the core exercise explanation naming an outside coach (lift_mcgill_big3).
@@ -104,7 +105,7 @@
   - [x] 2d "Log a practice" (team/lesson/own work, minutes, how hard), "Log a tested max" on % lifts, stopwatch reps saved to account — all record-only (wk_session_logs metrics.kind)
   - [x] 2e "Your numbers" dashboards: speed (best/latest per distance), lift (verified max + gain), practice (minutes 7/28 days)
   - [x] 2f Step 2 player proof (test player, 360/390): sprint stopwatch + 2:00 rest timer, speed and practice dashboards show logged numbers, plan fingerprint identical before/after, 0 page errors, test player removed
-  - [ ] 2g lift weight-unlock on-screen proof — needs a test plan with percentage lifts (in-season beginner plan had none); fold into Step 4 lift tests
+  - [x] 2g lift weight-unlock on-screen proof (2026-10-07, hidden test player, 360/390: 75% lift showed "Log your sets to unlock your numbers"; after logging a 200 lb tested max it showed "working weight: 150 lb"; no sideways scroll, 0 errors; also fixed "1 sets" → "1 set" and repeated change notes; test data removed) — needs a test plan with percentage lifts (in-season beginner plan had none); fold into Step 4 lift tests
 - [x] 3a Speed check-in on Speed card: one readiness score (sleep/legs/sore spots), rep cuts <60 (x0.75) / <40 (x0.6), break-day triggers + override; rules in src/lib/speed/speedEngine.ts (12 rule tests pass). Screen-side only, plan rows untouched
 - [x] 3b past sprint sessions feed slower-than-best break trigger + 4-session plateau note; speed level tiers on dashboard; resisted/downhill unlock line (7/10); context rules (low readiness, in-season cap 4, leg soreness = easy only). Player proof 360/390 passed, plan identical, test player removed. Gap: speed RPE not logged yet, so "two very hard sessions" trigger waits for an RPE input
 - [x] 3c barefoot 4-part gate engine (7 rule tests pass; sessions alone never advance; foot/ankle/shin/Achilles/calf pain drops a stage + resets counts) + barefoot level line + post-sprint 1–10 effort rating feeding the two-hard-sessions break trigger
