@@ -44,6 +44,7 @@ import { TISSUE_TYPES } from './quiz/body-maps/tissueTypeDefinitions';
 import { NightCheckInSuccess } from './quiz/NightCheckInSuccess';
 import { MorningCheckInSuccess } from './quiz/MorningCheckInSuccess';
 import { MorningDayIntent } from './quiz/MorningDayIntent';
+import { MorningGameQuestions } from './quiz/MorningGameQuestions';
 import { useNightCheckInStats } from '@/hooks/useNightCheckInStats';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 
