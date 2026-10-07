@@ -13,7 +13,7 @@ export function useSpeedHistory(beforeDate: string) {
     queryFn: async () => {
       const { data, error } = await supabase.from("wk_session_logs" as any)
         .select("plan_date, distance_feet_completed, metrics")
-        .eq("user_id", user!.id).eq("metrics->>kind", "sprint_time").lt("plan_date", beforeDate)
+        .eq("user_id", user!.id).in("metrics->>kind", ["sprint_time", "speed_rpe"]).lt("plan_date", beforeDate)
         .order("plan_date", { ascending: false }).limit(500);
       if (error) throw error;
       return sessionsFromLogs((data ?? []) as any);
