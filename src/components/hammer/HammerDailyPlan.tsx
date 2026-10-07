@@ -101,6 +101,7 @@ import { TexVisionWork } from "@/components/hammer/TexVisionWork";
 
 import { useOpenedOnceToday } from "@/hooks/useOpenedOnceToday";
 import { WkSpeedCard } from "@/components/hammer/WkSpeedCard";
+import { WkWindmillCard } from "@/components/hammer/WkWindmillCard";
 import { WkBatSpeedCard } from "@/components/hammer/WkBatSpeedCard";
 import { WkLiftsCard } from "@/components/hammer/WkLiftsCard";
 import { WkConditioningCard } from "@/components/hammer/WkConditioningCard";
@@ -1116,6 +1117,13 @@ function HammerDailyPlanBody({
                   )}
                 </PocketCard>
               </ErrorBoundary>
+              {wkRx.grouped.windmillCard.length > 0 && (
+                <ErrorBoundary label="wk-windmill">
+                  <PocketCard id="windmill" progress={progressOf(wkRx.grouped.windmillCard)} intro={POCKET_INTROS.windmill} category="Windmill pitching" focus={pocketFocus(wkRx.grouped.windmillCard)} tone="bg-primary" planDate={pocketDate} prescribed countLabel={countLabel(wkRx.grouped.windmillCard)}>
+                    {() => <WkWindmillCard />}
+                  </PocketCard>
+                </ErrorBoundary>
+              )}
               <ErrorBoundary label="game-log-prompt">
                 <GameLogPromptCard />
               </ErrorBoundary>
@@ -1321,6 +1329,7 @@ const POCKET_INTROS: Record<string, string> = {
   warmup: "This gets your body ready. Do it first, every time, before anything hard.",
   speed: "Short, all-out sprints with full rest. Quality beats quantity — stop if you slow down.",
   bat_speed: "Fast swings to build rotational power. Swing hard, rest between sets.",
+  windmill: "Your windmill pitching for today: easy drills first, then pitches. Count every pitch.",
   conditioning: "Builds your engine so you stay strong late in games. Follow the rest times.",
   lift: "Your strength work. Log every set so the app can show your real weights.",
   hitting: "Your swing work for today. Do the drills in order.",

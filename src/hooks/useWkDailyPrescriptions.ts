@@ -32,7 +32,7 @@ import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useSchedu
 // every visit look "stale" and rebuild today's plan, wiping check-offs.
 const WK_GENERATOR_VERSION = WIC_VERSION;
 
-export type WkSlot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental" | "ub_primer";
+export type WkSlot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental" | "ub_primer" | "windmill";
 
 export type WkSequenceRole =
   | "arm_care"
@@ -676,6 +676,8 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
         ...rxs.filter((r) => r.slot === "speed"),
       ],
       batSpeedCard: rxs.filter((r) => r.slot === "bat_speed"),
+      // Softball windmill pitching program — its own card (owner approved 2026-10-07).
+      windmillCard: rxs.filter((r) => r.slot === "windmill").sort(byRoleOrder),
       lifts: [
         ...rxs.filter((r) => r.slot === "lift").sort(byRoleOrder),
         ...rxs.filter((r) => r.slot === "supplemental"),
