@@ -28,12 +28,27 @@ export function u13ThrowBlockFrom(age: number | null, days: LedgerDay[], today: 
   return yr.blocked ? yr.reason : null;
 }
 
-export async function loadU13ThrowBlock(admin: any, userId: string, age: number | null, today: string): Promise<string | null> {
+/** Round 8: first date (after today) the same Pitch Smart rules allow throwing again; null over 12. Assumes no new throwing in between. */
+export function u13NextThrowDate(age: number | null, days: LedgerDay[], today: string): string | null {
   if (!isUnder13(age)) return null;
+  for (let i = 1; i <= 150; i++) {
+    const d = new Date(ms(today) + i * dayMs).toISOString().slice(0, 10);
+    if (u13ThrowBlockFrom(age, days, d) === null) return d;
+  }
+  return null;
+}
+
+export async function loadU13ThrowBlock(admin: any, userId: string, age: number | null, today: string): Promise<string | null> {
+  const r = await loadU13ThrowState(admin, userId, age, today);
+  return r.block;
+}
+
+export async function loadU13ThrowState(admin: any, userId: string, age: number | null, today: string): Promise<{ block: string | null; next: string | null }> {
+  if (!isUnder13(age)) return { block: null, next: null };
   const from = new Date(ms(today) - 730 * dayMs).toISOString().slice(0, 10);
   const { data, error } = await admin.from("arm_ledger_entries").select("entry_date, source, throw_type, count, status")
     .eq("user_id", userId).gte("entry_date", from).lt("entry_date", today).limit(5000);
-  if (error) return "Throwing paused today — pitch history couldn't be read.";
+  if (error) return { block: "Throwing paused today — pitch history couldn't be read.", next: null };
   const by = new Map<string, LedgerDay>();
   for (const r of (data ?? []) as any[]) {
     if (r.status && /skip|missed|cancel/i.test(String(r.status))) continue;
@@ -44,5 +59,6 @@ export async function loadU13ThrowBlock(admin: any, userId: string, age: number 
     if (isPitch) cur.pitches += n; else cur.throws += n;
     by.set(d, cur);
   }
-  return u13ThrowBlockFrom(age, [...by.values()], today);
+  const days = [...by.values()];
+  return { block: u13ThrowBlockFrom(age, days, today), next: u13NextThrowDate(age, days, today) };
 }
