@@ -1,3 +1,4 @@
+import { resolveSeasonPhase } from "../_shared/seasonPhase.ts";
 // Context Aggregation Layer for 6-Week Recap V2
 // Builds a `globalContext` object from all relevant performance data sources.
 // Engine NEVER throws — missing rows degrade gracefully.
@@ -87,27 +88,10 @@ function calcAge(dob: string | null): number | null {
   return Math.floor(diffMs / (1000 * 60 * 60 * 24 * 365.25));
 }
 
+// One system, one phase: delegate to the shared resolver (no local math).
 function detectSeasonPhase(settings: any): { phase: SeasonPhase; phaseStartedAt: string | null; daysIntoPhase: number | null; daysUntilNextPhase: number | null } {
-  if (!settings) return { phase: 'off_season', phaseStartedAt: null, daysIntoPhase: null, daysUntilNextPhase: null };
-  const today = new Date().toISOString().split('T')[0];
-  const phases: { status: SeasonPhase; start: string | null; end: string | null }[] = [
-    { status: 'preseason', start: settings.preseason_start_date, end: settings.preseason_end_date },
-    { status: 'in_season', start: settings.in_season_start_date, end: settings.in_season_end_date },
-    { status: 'post_season', start: settings.post_season_start_date, end: settings.post_season_end_date },
-  ];
-  for (const p of phases) {
-    if (p.start && p.end && today >= p.start && today <= p.end) {
-      const startDate = new Date(p.start);
-      const endDate = new Date(p.end);
-      const now = new Date();
-      const daysIntoPhase = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      const daysUntilNextPhase = Math.floor((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return { phase: p.status, phaseStartedAt: p.start, daysIntoPhase, daysUntilNextPhase };
-    }
-  }
-  // Stored fallback
-  const stored = (settings.season_status as SeasonPhase) || 'off_season';
-  return { phase: stored === 'in_season' || stored === 'preseason' || stored === 'post_season' ? stored : 'off_season', phaseStartedAt: null, daysIntoPhase: null, daysUntilNextPhase: null };
+  const r = resolveSeasonPhase(settings ?? null);
+  return { phase: r.phase as SeasonPhase, phaseStartedAt: r.phaseStartedAt, daysIntoPhase: r.daysIntoPhase, daysUntilNextPhase: r.daysUntilNextPhase };
 }
 
 function safeAvg(nums: (number | null | undefined)[]): number | null {
