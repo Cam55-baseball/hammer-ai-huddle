@@ -723,10 +723,15 @@ function HammerDailyPlanBody({
   );
   const sportKey = sportIsBaseball ? "baseball" : "softball";
   // Base Stealer: 5Tool and Golden 2Way only (owner rule) — never Complete Pitcher.
-  const hasBaseStealer = modules.includes(`${sportKey}_5tool`) || modules.includes(`${sportKey}_golden2way`);
+  const has5Tool = modules.includes(`${sportKey}_5tool`);
+  const hasG2W = modules.includes(`${sportKey}_golden2way`);
 
   const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
   const pitcherSchedule = usePitcherSchedule(bodyPlanDate);
+  // Golden 2Way: position days only — not a start day, the primer day before, or the flush day after.
+  const g2wPitchingDay = !!pitcherSchedule.facts &&
+    (pitcherSchedule.facts.startsToday || pitcherSchedule.facts.startsTomorrow || pitcherSchedule.facts.pitchedYesterday);
+  const hasBaseStealer = has5Tool || (hasG2W && !g2wPitchingDay);
   const planAdjust = usePlanAdjustments(bodyPlanDate);
   const { data: rankedFaults = [] } = useFaultLedger();
   const drillCirculation = useDrillCirculation();
