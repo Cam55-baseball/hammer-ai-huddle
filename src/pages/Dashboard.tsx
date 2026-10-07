@@ -1,5 +1,5 @@
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
-import { mentionsRetired, scrubRetiredFromList } from "../../supabase/functions/_shared/archive/retiredPrograms";
+import { scrubRetiredFromList } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 // Force module rebuild - Mar 2026
 import { useEffect, useState } from "react";
@@ -124,6 +124,7 @@ export default function Dashboard() {
   // never on role. Staff who buy one get the player plan in addition to theirs.
   const { hasPlayerAccess } = usePlayerModuleAccess();
   const navigate = useNavigate();
+  const { retired: programsRetired } = useProgramsRetired();
   const [selectedSport, setSelectedSport] = useState<SportType>(() => {
     const saved = localStorage.getItem('selectedSport');
     if (saved === 'baseball' || saved === 'softball') {

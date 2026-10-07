@@ -1,5 +1,5 @@
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
-import { mentionsRetired, scrubRetiredFromList } from "../../supabase/functions/_shared/archive/retiredPrograms";
+import { mentionsRetired } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -36,6 +36,7 @@ const Checkout = () => {
   const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { retired: programsRetired } = useProgramsRetired();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();

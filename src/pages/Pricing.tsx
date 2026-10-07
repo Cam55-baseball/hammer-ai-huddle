@@ -1,5 +1,5 @@
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
-import { mentionsRetired, scrubRetiredFromList } from "../../supabase/functions/_shared/archive/retiredPrograms";
+import { mentionsRetired } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -19,6 +19,7 @@ const Pricing = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
+  const { retired: programsRetired } = useProgramsRetired();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const state = location.state as { sport?: string; tier?: string };
   

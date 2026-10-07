@@ -1,5 +1,5 @@
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
-import { mentionsRetired, scrubRetiredFromList } from "../../supabase/functions/_shared/archive/retiredPrograms";
+import { mentionsRetired } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
@@ -62,6 +62,7 @@ const SelectModules = () => {
   const { canShowPurchaseUI } = usePurchaseAvailability();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { retired: programsRetired } = useProgramsRetired();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const momentumContext = searchParams.get("context") ?? "";
