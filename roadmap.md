@@ -8,26 +8,26 @@
 ## Owner answers 2026-10-07 (20:07)
 - [x] 1. Capacity: no bigger database — keep making builds faster (pre-build after local noon stays) — decided by owner; logged
 - [x] 2. Missed-lift job is ON (wk-mark-missed-lifts, every 15 min since Oct 6) — roadmap corrected
-- [ ] 3. Restore owner bat-speed wording for pitchers
-- [ ] 4. 4 oz balls: no age limit (undo 5c removal); U13 may do max 4 oz PAP throws under safeguards; 6–7 oz stays 16+ until owner answers
+- [x] 3. Restore owner bat-speed wording for pitchers
+- [x] 4. 4 oz balls: no age limit (undo 5c removal); U13 may do max 4 oz PAP throws under safeguards; 6–7 oz stays 16+ until owner answers
 - [x] 5. ONE SYSTEM, ONE PHASE: audit every phase source, single server-side resolver, remove duplicates, prove 0 mismatches — done: one server resolver; tissue-load reader now uses it (fixed 'in' read as offseason); screens show the plan's saved phase; 4,000-case sim 0 mismatches.
-- [ ] 6. lift_mcgill_big3: no outside name in explanation/display
+- [x] 6. lift_mcgill_big3: no outside name in explanation/display
 - [x] 7. Closeout decisions written at top
 
-> **Status (2026-10-07, end of batch B)**
-> - Finished: owner corrections 1–4 (limb data from onboarding only; proportions shift emphasis, never exclude; goals shape every card; goal sets/reps built + live-proven; max-effort throw rest 15–45 s); phone screenshots incl. pitcher Bat speed + season label; live pitcher check (pitching days entered as player → next day lighter); all-app audit (160 pages, 0 errors); Finish-your-profile card (proven: player missing items sees exact list, complete player sees no card, under-13 parent filled 5 measurements and only the other 5 stayed listed). Test data removed.
-> - Batch C (2026-10-07): PAP, goal table v2, Alternative button, windmill program (on, live-proved) and 2g done; builder now reads softball sport correctly.
-> - Next item: none open that I can do — remaining items wait on owner (see Waiting on owner).
-> - Goal → sets/reps (off-season only, APPROVED 2026-10-07; used only when HT's dose misses the goal range, smallest step in; never in-season/deload/trend-lighter):
->   strength 4×5–6 / 5×3–5 / 4×2–3 · size 4×8–10 / 4×6–8 / 3×5–6 · power/speed 5×3–5 / 5×2–4 / 6×1–3 · hitting/throwing 4×4–6 / 5×3–5 / 5×2–3 · durability 3×10–12 / 3×8–10 / 3×6–8 · no goal = no change (early / mid / late off-season).
+> **Status (2026-10-07, end of batch C10)**
+> - Finished: owner answers 1–7 (capacity logged; missed-lift job ON; bat-speed wording restored word-for-word; 4 oz no age limit, 6–7 oz stays 16+; one system, one phase — 4,000-case sim 0 mismatches, builder redeployed and live-proved; outside coach name gone from the catalog and from 3 old saved cards; closeout decisions at top). Batch C: PAP, goal table v2, Alternative button, windmill program, Power Primer bests saved to account. Test data removed.
+> - Next item: none I can do — everything left waits on the owner.
 > - Waiting on owner:
->   1. Step 8 content batches, by name.
+>   1. Step 8 content batches, by name (incl. explosive-pitcher and softball season drills).
 >   2. Step 9 backup step, then redirects.
 >   3. Email key.
->   4. Real-ball Power Primer throws (apply pap-throw-types.sql).
->   5. (resolved 2026-10-07: owner chose faster builds, no bigger database)
->   6. Game-linked flush and morning-question decisions (see top). Missed-lift job is ON since Oct 6.
->   7. Reword the core exercise explanation naming an outside coach (lift_mcgill_big3).
+>   4. Real-ball Power Primer throws (apply docs/pending-owner-apply/pap-throw-types.sql).
+>   5. 6–7 oz overload age: 13+ (owner) vs 16+ (doctrine) — 16+ until answered.
+>   6. Game-linked flush and morning-question decisions (see top).
+>   7. How limb sizes get used (proposal).
+> - Ready to publish: YES — server changes are already live and proved; the app-side changes (bat-speed wording, plan-phase display, Power Primer bests, narrow-phone top bar, check-in wording) build cleanly and their tests pass. They reach players only when the owner presses Publish.
+> - Goal → sets/reps (off-season only, APPROVED 2026-10-07; used only when HT's dose misses the goal range, smallest step in; never in-season/deload/trend-lighter):
+>   strength 4×5–6 / 5×3–5 / 4×2–3 · size 4×8–10 / 4×6–8 / 3×5–6 · power/speed 5×3–5 / 5×2–4 / 6×1–3 · hitting/throwing 4×4–6 / 5×3–5 / 5×2–3 · durability 3×10–12 / 3×8–10 / 3×6–8 · no goal = no change (early / mid / late off-season).
 
 ## Owner corrections 2026-10-07
 - [x] C1 limb data from anthropometrics; duplicate fields removed
@@ -151,7 +151,7 @@
 - [x] Step 7 Key Rules panel, weekly load bar, Report a Problem (DB + email queue + admin list)
 - [ ] Step 8 Content batches (OFF until owner approves each) — WAITING ON OWNER: approve each batch by name (docs/owner/step8-content-batches.md)
 - [ ] Step 9 Archive (docs + backup tables, redirects, 8-language text; no deletion) — prep done; WAITING ON OWNER: apply backup SQL, then OK redirects/deletion
-- [ ] Stress tests every step; clean up test data
+- [x] Stress tests every step; clean up test data — done for every finished step; Step 8/9 stress tests follow their approval
 
 ## Waiting on owner
 - Real-ball Power Primer throws: apply docs/pending-owner-apply/pap-throw-types.sql, then switch pap_real_throws on

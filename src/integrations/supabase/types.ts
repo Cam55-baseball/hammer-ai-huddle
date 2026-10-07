@@ -14,6 +14,444 @@ export type Database = {
   }
   public: {
     Tables: {
+      _archive_block_exercises_20261007: {
+        Row: {
+          cns_demand: string | null
+          coaching_cues: string[] | null
+          id: string | null
+          name: string | null
+          ordinal: number | null
+          reps: number | null
+          rest_seconds: number | null
+          sets: number | null
+          tempo: string | null
+          velocity_intent: string | null
+          weight: number | null
+          workout_id: string | null
+        }
+        Insert: {
+          cns_demand?: string | null
+          coaching_cues?: string[] | null
+          id?: string | null
+          name?: string | null
+          ordinal?: number | null
+          reps?: number | null
+          rest_seconds?: number | null
+          sets?: number | null
+          tempo?: string | null
+          velocity_intent?: string | null
+          weight?: number | null
+          workout_id?: string | null
+        }
+        Update: {
+          cns_demand?: string | null
+          coaching_cues?: string[] | null
+          id?: string | null
+          name?: string | null
+          ordinal?: number | null
+          reps?: number | null
+          rest_seconds?: number | null
+          sets?: number | null
+          tempo?: string | null
+          velocity_intent?: string | null
+          weight?: number | null
+          workout_id?: string | null
+        }
+        Relationships: []
+      }
+      _archive_block_workout_metrics_20261007: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          id: string | null
+          notes: string | null
+          rpe: number | null
+          user_id: string | null
+          workout_id: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          id?: string | null
+          notes?: string | null
+          rpe?: number | null
+          user_id?: string | null
+          workout_id?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          id?: string | null
+          notes?: string | null
+          rpe?: number | null
+          user_id?: string | null
+          workout_id?: string | null
+        }
+        Relationships: []
+      }
+      _archive_block_workouts_20261007: {
+        Row: {
+          block_id: string | null
+          completed_at: string | null
+          day_label: string | null
+          estimated_duration: number | null
+          id: string | null
+          scheduled_date: string | null
+          status: string | null
+          week_number: number | null
+          workout_type: string | null
+        }
+        Insert: {
+          block_id?: string | null
+          completed_at?: string | null
+          day_label?: string | null
+          estimated_duration?: number | null
+          id?: string | null
+          scheduled_date?: string | null
+          status?: string | null
+          week_number?: number | null
+          workout_type?: string | null
+        }
+        Update: {
+          block_id?: string | null
+          completed_at?: string | null
+          day_label?: string | null
+          estimated_duration?: number | null
+          id?: string | null
+          scheduled_date?: string | null
+          status?: string | null
+          week_number?: number | null
+          workout_type?: string | null
+        }
+        Relationships: []
+      }
+      _archive_speed_goals_20261007: {
+        Row: {
+          adjustment_history: Json | null
+          created_at: string | null
+          current_track: string | null
+          goal_distances: Json | null
+          id: string | null
+          last_adjustment_date: string | null
+          personal_bests: Json | null
+          program_status: string | null
+          sport: string | null
+          updated_at: string | null
+          user_id: string | null
+          weeks_without_improvement: number | null
+        }
+        Insert: {
+          adjustment_history?: Json | null
+          created_at?: string | null
+          current_track?: string | null
+          goal_distances?: Json | null
+          id?: string | null
+          last_adjustment_date?: string | null
+          personal_bests?: Json | null
+          program_status?: string | null
+          sport?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          weeks_without_improvement?: number | null
+        }
+        Update: {
+          adjustment_history?: Json | null
+          created_at?: string | null
+          current_track?: string | null
+          goal_distances?: Json | null
+          id?: string | null
+          last_adjustment_date?: string | null
+          personal_bests?: Json | null
+          program_status?: string | null
+          sport?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          weeks_without_improvement?: number | null
+        }
+        Relationships: []
+      }
+      _archive_speed_partner_timings_20261007: {
+        Row: {
+          created_at: string | null
+          distance: string | null
+          id: string | null
+          session_id: string | null
+          time_seconds: number | null
+          timed_by: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          distance?: string | null
+          id?: string | null
+          session_id?: string | null
+          time_seconds?: number | null
+          timed_by?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          distance?: string | null
+          id?: string | null
+          session_id?: string | null
+          time_seconds?: number | null
+          timed_by?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      _archive_speed_sessions_20261007: {
+        Row: {
+          body_feel_after: string | null
+          body_feel_before: string | null
+          created_at: string | null
+          distances: Json | null
+          drill_log: Json | null
+          id: string | null
+          is_break_day: boolean | null
+          notes: string | null
+          pain_areas: Json | null
+          readiness_score: number | null
+          rpe: number | null
+          session_date: string | null
+          session_number: number | null
+          sleep_rating: number | null
+          sport: string | null
+          steps_per_rep: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          body_feel_after?: string | null
+          body_feel_before?: string | null
+          created_at?: string | null
+          distances?: Json | null
+          drill_log?: Json | null
+          id?: string | null
+          is_break_day?: boolean | null
+          notes?: string | null
+          pain_areas?: Json | null
+          readiness_score?: number | null
+          rpe?: number | null
+          session_date?: string | null
+          session_number?: number | null
+          sleep_rating?: number | null
+          sport?: string | null
+          steps_per_rep?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          body_feel_after?: string | null
+          body_feel_before?: string | null
+          created_at?: string | null
+          distances?: Json | null
+          drill_log?: Json | null
+          id?: string | null
+          is_break_day?: boolean | null
+          notes?: string | null
+          pain_areas?: Json | null
+          readiness_score?: number | null
+          rpe?: number | null
+          session_date?: string | null
+          session_number?: number | null
+          sleep_rating?: number | null
+          sport?: string | null
+          steps_per_rep?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      _archive_sub_module_progress_20261007: {
+        Row: {
+          created_at: string | null
+          current_cycle: number | null
+          current_week: number | null
+          day_completion_times: Json | null
+          equipment_checklist: Json | null
+          exercise_progress: Json | null
+          experience_level: string | null
+          id: string | null
+          last_activity: string | null
+          last_workout_date: string | null
+          loops_completed: number | null
+          module: string | null
+          program_status: string | null
+          sport: string | null
+          started_at: string | null
+          streak_last_updated: string | null
+          sub_module: string | null
+          total_workouts_completed: number | null
+          updated_at: string | null
+          user_id: string | null
+          week_progress: Json | null
+          weight_log: Json | null
+          workout_streak_current: number | null
+          workout_streak_longest: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_cycle?: number | null
+          current_week?: number | null
+          day_completion_times?: Json | null
+          equipment_checklist?: Json | null
+          exercise_progress?: Json | null
+          experience_level?: string | null
+          id?: string | null
+          last_activity?: string | null
+          last_workout_date?: string | null
+          loops_completed?: number | null
+          module?: string | null
+          program_status?: string | null
+          sport?: string | null
+          started_at?: string | null
+          streak_last_updated?: string | null
+          sub_module?: string | null
+          total_workouts_completed?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          week_progress?: Json | null
+          weight_log?: Json | null
+          workout_streak_current?: number | null
+          workout_streak_longest?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          current_cycle?: number | null
+          current_week?: number | null
+          day_completion_times?: Json | null
+          equipment_checklist?: Json | null
+          exercise_progress?: Json | null
+          experience_level?: string | null
+          id?: string | null
+          last_activity?: string | null
+          last_workout_date?: string | null
+          loops_completed?: number | null
+          module?: string | null
+          program_status?: string | null
+          sport?: string | null
+          started_at?: string | null
+          streak_last_updated?: string | null
+          sub_module?: string | null
+          total_workouts_completed?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          week_progress?: Json | null
+          weight_log?: Json | null
+          workout_streak_current?: number | null
+          workout_streak_longest?: number | null
+        }
+        Relationships: []
+      }
+      _archive_training_blocks_20261007: {
+        Row: {
+          created_at: string | null
+          end_date: string | null
+          generation_metadata: Json | null
+          goal: string | null
+          id: string | null
+          idempotency_key: string | null
+          pending_goal_change: boolean | null
+          sport: string | null
+          start_date: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_date?: string | null
+          generation_metadata?: Json | null
+          goal?: string | null
+          id?: string | null
+          idempotency_key?: string | null
+          pending_goal_change?: boolean | null
+          sport?: string | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string | null
+          generation_metadata?: Json | null
+          goal?: string | null
+          id?: string | null
+          idempotency_key?: string | null
+          pending_goal_change?: boolean | null
+          sport?: string | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      _archive_user_blocks_20261007: {
+        Row: {
+          blocked_id: string | null
+          blocker_id: string | null
+          created_at: string | null
+          id: string | null
+        }
+        Insert: {
+          blocked_id?: string | null
+          blocker_id?: string | null
+          created_at?: string | null
+          id?: string | null
+        }
+        Update: {
+          blocked_id?: string | null
+          blocker_id?: string | null
+          created_at?: string | null
+          id?: string | null
+        }
+        Relationships: []
+      }
+      _archive_workout_blocks_20261007: {
+        Row: {
+          block_type: string | null
+          created_at: string | null
+          exercises: Json | null
+          id: string | null
+          intent: string | null
+          is_custom: boolean | null
+          metadata: Json | null
+          name: string | null
+          order_index: number | null
+          template_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          block_type?: string | null
+          created_at?: string | null
+          exercises?: Json | null
+          id?: string | null
+          intent?: string | null
+          is_custom?: boolean | null
+          metadata?: Json | null
+          name?: string | null
+          order_index?: number | null
+          template_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          block_type?: string | null
+          created_at?: string | null
+          exercises?: Json | null
+          id?: string | null
+          intent?: string | null
+          is_custom?: boolean | null
+          metadata?: Json | null
+          name?: string | null
+          order_index?: number | null
+          template_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       _snapshot_catalog_movcat_20261006: {
         Row: {
           aliases: string[] | null
