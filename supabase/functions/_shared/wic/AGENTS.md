@@ -13,3 +13,4 @@
 
 - Limb proportions (from `athlete_context.anthropometrics` only) shift lift emphasis via `lift/proportionEmphasis.ts` as a bounded score bonus on already-legal candidates; never a gate, never a dose. Why: owner rule — only injury rules an exercise out.
 - Goal sources (category order, category_goals, goal_priority_rank, goal_horizon, training_preferences.goal, athlete_body_goals, goal_summary) become weights only in `goals/emphasis.ts`. Why: one place goals shape choice; doses wait on owner approval.
+- Off-season goal sets/reps come only from `goals/goalDose.ts`: change only when HT's dose misses the goal range (smallest step in), never deload/trend-lighter/in-season, and a result outside the phase envelope keeps HT's dose. Why: owner approved 2026-10-07 as a necessity-only exception to "reps never change".

@@ -17,7 +17,7 @@
 ## Owner corrections 2026-10-07
 - [x] C1 limb data from anthropometrics; duplicate fields removed
 - [x] C2 proportion emphasis + simulations
-- [x] C3 goals shape exercise choice (built); [ ] sets/reps — owner APPROVED table 2026-10-07 (change only when optimal planning needs it); build next (generation-path change, needs redeploy)
+- [x] C3 goals shape exercise choice (built); [x] sets/reps — owner APPROVED table 2026-10-07 (change only when optimal planning needs it); BUILT + deployed 2026-10-07 (goalDose.ts; sim 57,600 cases, 0 violations; live builder proven on hidden test player, test plans removed)
 - [x] C4 max-effort throws 15–45 s
 
 ## Round 9 (owner answers 2026-10-07, redeploys authorized)
