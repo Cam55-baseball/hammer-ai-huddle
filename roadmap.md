@@ -18,7 +18,7 @@
 - [x] Current request: clarify Rest / Push / Skip with accurate frontend-only labels and explanations; report exact before/after text (phone/desktop checked with local-only test state)
 - [x] Current request: quote the complete Start card for all five requested player examples, read-only
 
-- [ ] Current frontend-only: match softball identity styling to baseball and verify contrast
+- [x] Current frontend-only: match softball identity styling to baseball and verify contrast (identity card has no sport branch anywhere — IdentityCommandCard/IdentityBanner take no sport prop; .daily-identity CSS is one shared baseball palette for both sports; verified live on the dashboard: hero text contrast 7.7:1–14.9:1 vs 4.5:1 worst-case red-overlaid background, all WCAG pass)
 - [ ] Current read-only/frontend-only: verify Tissue & Recovery lifting count against recorded data; correct display if needed
 - [ ] Current read-only: report scheduled completion and overdue lift behavior
 
