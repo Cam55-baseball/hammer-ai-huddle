@@ -1,8 +1,10 @@
 # Roadmap
 
-> **Status (2026-10-07, owner corrections applied)**
-> - Finished: owner corrections 1, 2, 4 and goal-based exercise choice (3, choice part): duplicate limb questions removed (0 saved rows, nothing to move); limb proportions shift lift emphasis (long femur → more split squats/lunges/trap bar, bilateral still appears; long arms → more DB/neutral presses), never exclude; all goal sources shape exercise choice; max-effort throw rest 15–45 s. 8 simulations pass, 0 violations. Plan builder redeployed; it starts and answers, but your account has never tapped Start, so the new picks can't be shown on a live plan yet.
-> - Next item: exhaustive all-app audit.
+> **Status (2026-10-07, end of batch B)**
+> - Finished: owner corrections 1–4 (limb data from onboarding only; proportions shift emphasis, never exclude; goals shape every card; goal sets/reps built + live-proven; max-effort throw rest 15–45 s); phone screenshots incl. pitcher Bat speed + season label; live pitcher check (pitching days entered as player → next day lighter); all-app audit (160 pages, 0 errors). Test data removed.
+> - Next item: remaining signed-in stress tests (Round 1–3 cases) and the lift weight-unlock proof (2g).
+> - Goal → sets/reps (off-season only, APPROVED 2026-10-07; used only when HT's dose misses the goal range, smallest step in; never in-season/deload/trend-lighter):
+>   strength 4×5–6 / 5×3–5 / 4×2–3 · size 4×8–10 / 4×6–8 / 3×5–6 · power/speed 5×3–5 / 5×2–4 / 6×1–3 · hitting/throwing 4×4–6 / 5×3–5 / 5×2–3 · durability 3×10–12 / 3×8–10 / 3×6–8 · no goal = no change (early / mid / late off-season).
 > - Waiting on owner:
 >   1. Step 8 content batches, by name.
 >   2. Step 9 backup step, then redirects.
@@ -10,8 +12,7 @@
 >   4. Windmill switch-on.
 >   5. Plan-building capacity (~860/hour).
 >   6. Missed-lift job switch-on; game-linked flush and morning-question decisions.
->   7. Approve rewording the core exercise explanation that names an outside coach (lift_mcgill_big3) to plain text, e.g. "Back-friendly trunk basics: curl-up, side plank, bird-dog."
->   (Limb-size proposal resolved by your correction — rules in docs/wic/limb-size-report.md §d.)
+>   7. Reword the core exercise explanation naming an outside coach (lift_mcgill_big3).
 
 ## Owner corrections 2026-10-07
 - [x] C1 limb data from anthropometrics; duplicate fields removed
@@ -53,8 +54,8 @@
 - [x] Closeout: proposed optional game-linked flush after night save; owner decision pending
 - [x] Closeout: morning game-question trade-off reported; owner decision pending
 - [x] Closeout: pitcher connections implemented/tested in checkout; deployment and player/pitcher E2E unverified
-- [ ] Closeout: Stage 4/5 phone-width card screenshots delivered as owner; player verification still owed
-- [ ] Closeout: identified failed-read cases reported; exhaustive all-app audit still unfinished
+- [x] Closeout: Stage 4/5 phone-width card screenshots; player verification done 2026-10-07 as hidden test players
+- [x] Closeout: exhaustive all-app audit — 2026-10-07, all 160 pages (staff /ops pages excluded) opened at phone width 390 signed in as hidden test player: 0 page crashes, 0 server errors, 0 sideways scroll, no "undefined"/"NaN"/"Something went wrong" text
 
 ## Round 2 (owner-approved 2026-10-06) — under13_parent_program stays OFF
 - [x] A. Bat speed wording (overclaim "transfers seamlessly into pitching velocity" replaced with "builds rotational power for your swing. Throwing velocity still comes from throwing work." in startPlanItems.ts + WkBatSpeedCard.tsx; growthMode test updated, 9 pass)
