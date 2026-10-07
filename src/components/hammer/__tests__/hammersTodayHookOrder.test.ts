@@ -12,7 +12,7 @@ function readHammerCard(fileName: string): string {
 describe("Hammers Today card hook order", () => {
   it("keeps WkConditioningCard state hooks before early returns", () => {
     const source = readHammerCard("WkConditioningCard.tsx");
-    const openHook = source.indexOf("const [open, setOpen] = useState<boolean>(false);");
+    const openHook = source.indexOf("const [open, setOpen] = useState<boolean>(pocket);");
     const gameDayReturn = source.indexOf("if (gp.gameToday) return null;");
     const emptyReturn = source.indexOf("if (!isLoading && items.length === 0 && !failed) return null;");
 
@@ -26,7 +26,7 @@ describe("Hammers Today card hook order", () => {
   it("keeps WkLiftsCard hooks before the game-day early return", () => {
     const source = readHammerCard("WkLiftsCard.tsx");
     const budgetHook = source.indexOf("const budget = useArmCareBudget();");
-    const openHook = source.indexOf("const [open, setOpen] = useState<boolean>(false);");
+    const openHook = source.indexOf("const [open, setOpen] = useState<boolean>(pocket);");
     const gameDayReturn = source.indexOf("if (gp.gameToday && !schedule?.override_applied) {");
 
     expect(budgetHook).toBeGreaterThan(-1);
