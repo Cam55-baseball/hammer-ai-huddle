@@ -1,3 +1,16 @@
+# Ready to publish: yes, once the owner reviews the change list and signs in once in the preview (2026-10-07 23:50 UTC)
+
+## Final status (G3)
+- **Login.** Sign-ins failed between 22:40 and 22:44 UTC because the database was down; it is back. In the preview, the sign-in page could stay on the form after sign-in. It now always sends a signed-in player on, and inside the preview the app checks again for a late sign-in (Auth.tsx, AuthContext.tsx).
+- **Demo video.** Never removed. It shows on the signed-out home page. Signed-in players are sent to the dashboard, so the home page and video are at /home.
+- **Kept (owner approved):** the flush "Skip it" button, 40 catalog name changes, the Readiness/Recovery labels and the "No organism signal yet" wording.
+- **Restored:** the bat speed line, word for word.
+- **Reverted:** all program redirects. The five programs work exactly as before.
+- **Bug fixes kept for review:** a player with no gear gets a full plan, lift notes match the right lift, and the plan builder reads the right sport.
+- **programs_retired switch: OFF.** Its hiding rules pass tests.
+- **Checks:** 2,449/2,449 tests pass, including the 8-week simulations and the season check (0 mismatches). 165/165 pages at 390 px have 0 crashes or errors. Real sign-in form on the preview and the live site: the server answers in about 1.7 s (wrong-password test). Daily job: last run 23:40 OK.
+- **Waiting on owner:** (1) one real sign-in in the preview, since there is no test password; (2) an OK to try the switch on test accounts; (3) the help-chat update is not live yet (only matters with the switch on); (4) an email key; (5) the 10 "owner to confirm" files; (6) retiring the programs, not approved.
+
 ## Owner update (C + D), 2026-10-07 23:45 UTC
 - Final checks (G1): 2,449/2,449 tests pass, including the 8-week simulations and the season check (0 mismatches). Daily plan job: 17 good runs since 22:45 and the latest at 23:40 was OK; the 4 failures at 22:40 were the database outage. 165-page phone check not re-run this round.
 - Ready to publish: yes, once the owner checks the change list and signs in once in the preview.
