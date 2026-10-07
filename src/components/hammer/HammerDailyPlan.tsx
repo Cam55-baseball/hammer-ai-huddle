@@ -14,6 +14,7 @@
  *
  * Schedule context line from `useScheduleWindow` retained.
  */
+import { PocketCard } from "@/components/hammer/cards/PocketCard";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHammersTodayStart } from "@/hooks/useHammersTodayStart";
@@ -705,6 +706,7 @@ function HammerDailyPlanBody({
   const { phaseStartedAt, resolvedPhase, phaseSource } = useSeasonStatus();
   const { data: recentCompletions } = useRecentMaxIntentCompletions();
   const wkRx = useHammersToday();
+  const pocketDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
   const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
   const pitcherSchedule = usePitcherSchedule(bodyPlanDate);
   const planAdjust = usePlanAdjustments(bodyPlanDate);
@@ -1045,17 +1047,21 @@ function HammerDailyPlanBody({
                 onOpen={() => setCheckInQuiz("pre_lift")}
               />
               <ErrorBoundary label="wk-speed">
-                <WkSpeedCard />
+                <PocketCard id="speed" category="Speed" focus={pocketFocus(wkRx.grouped.speedCard)} tone="bg-primary" planDate={pocketDate} prescribed={wkRx.grouped.speedCard.length > 0} countLabel={countLabel(wkRx.grouped.speedCard)}>
+                  {() => <WkSpeedCard pocket />}
+                </PocketCard>
               </ErrorBoundary>
               <ErrorBoundary label="wk-bat-speed">
-                {isSwitchHitter ? (
-                  <>
-                    <WkBatSpeedCard side="L" />
-                    <WkBatSpeedCard side="R" />
-                  </>
-                ) : (
-                  <WkBatSpeedCard />
-                )}
+                <PocketCard id="bat_speed" category="Bat speed" focus={pocketFocus(wkRx.grouped.batSpeedCard)} tone="bg-accent" planDate={pocketDate} prescribed={wkRx.grouped.batSpeedCard.length > 0} countLabel={countLabel(wkRx.grouped.batSpeedCard)}>
+                  {() => isSwitchHitter ? (
+                    <>
+                      <WkBatSpeedCard side="L" pocket />
+                      <WkBatSpeedCard side="R" pocket />
+                    </>
+                  ) : (
+                    <WkBatSpeedCard pocket />
+                  )}
+                </PocketCard>
               </ErrorBoundary>
               <ErrorBoundary label="game-log-prompt">
                 <GameLogPromptCard />
@@ -1082,10 +1088,14 @@ function HammerDailyPlanBody({
                 );
               })}
               <ErrorBoundary label="wk-conditioning">
-                <WkConditioningCard />
+                <PocketCard id="conditioning" category="Conditioning" focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} prescribed={wkRx.grouped.conditioningCard.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
+                  {() => <WkConditioningCard pocket />}
+                </PocketCard>
               </ErrorBoundary>
               <ErrorBoundary label="wk-lifts">
-                <WkLiftsCard />
+                <PocketCard id="lift" category="Lift" focus={pocketFocus(wkRx.grouped.lifts)} tone="bg-destructive" planDate={pocketDate} prescribed={wkRx.grouped.lifts.length > 0} countLabel={countLabel(wkRx.grouped.lifts)}>
+                  {() => <WkLiftsCard pocket />}
+                </PocketCard>
               </ErrorBoundary>
               {recoveryBlocks.map((b) => {
                 const adj = adaptive.find((a) => a.modality === b.modality);
@@ -1136,6 +1146,20 @@ function HammerDailyPlanBody({
  * "finish the warm-up with this" addon. Sourced from the backend
  * `cross_sport` slot at `placement: "warmup_integration"`.
  */
+const POCKET_ROLE_SKIP = new Set(["warmup", "warm_up", "cooldown", "arm_care", "primer"]);
+/** Plain focus for a card heading, taken from the plan's own card roles. */
+function pocketFocus(items: ReadonlyArray<{ sequence_role?: string | null; intent_tag?: string | null }>): string | null {
+  for (const r of items) {
+    const raw = r.sequence_role ?? r.intent_tag;
+    if (!raw || POCKET_ROLE_SKIP.has(raw)) continue;
+    return raw.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+  return null;
+}
+function countLabel(items: ReadonlyArray<unknown>): string | null {
+  return items.length ? `${items.length} exercise${items.length === 1 ? "" : "s"}` : null;
+}
+
 function WarmupCrossoverAddons() {
   const { grouped, snapshotIdentity } = useHammersToday();
   const addons = grouped.warmupAddons ?? [];
