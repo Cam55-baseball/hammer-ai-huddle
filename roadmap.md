@@ -66,8 +66,8 @@
 - [ ] Clean up all test data
 
 ## Round 8 — Master Integration Plan (owner-approved 2026-10-07; never publish, no cron changes)
-- [~] Step 1 (done: pocket pages for Speed/Bat speed/Conditioning/Lift, lock-in, Save & Exit, confirmed exit, disclaimer, release countdown w/ server clock + DST tests, per-card 'Next … in' from server rule engine (lift, hard run, heavy-bat, jumps on lift card, every upcoming game, U13 throwing; pick-off waits for Step 5 rule). Open: pocket pages for throwing/other blocks + link cards, progress/focus/intros, celebrations/streak/milestones, single season counter, 360/390 screenshots, identical-plan proof) Card design (pocket pages, lock-in, Save & Exit / Exit without saving, autosave, disclaimer, server-time countdown, pills/badges/intros, celebrations, single season counter) — identical-plan proof
-- [ ] Step 2 Timers (set rest, sprint rest 1 min/10 yd), sprint stopwatch/partner/steps, % → weight, practice logging, in-card dashboards
+- [x] Step 1 Card design — accepted; streak correction done (flame lit 5 / glow 25 / color every 100; workout milestones 10/50/100/200/350/500/700/1000 with confetti + vibration; no-plan days never break streak)
+- [ ] Step 2 Timers (set rest, sprint rest 1 min/10 yd), sprint stopwatch/partner/steps, % → weight, practice logging, in-card dashboards — NEXT ITEM: 2a set-rest timer (HT rest where prescribed, else owner rest bands)
 - [ ] Step 3 Speed card (Speed Lab engine inside HT phase, 6 context rules, barefoot 4-part gate)
 - [ ] Step 4 Lift card (scheme unchanged; weights, rest, why-line, plateau swap, deload proof)
 - [ ] Step 5 Throwing (throw weights 1.0/0.75/0.85, max long toss, 13+ weighted balls, pick-off baseball P only, windmill program → Step 8)
