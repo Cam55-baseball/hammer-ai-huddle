@@ -69,7 +69,8 @@
 - [x] Step 1 Card design — accepted; streak correction done (flame lit 5 / glow 25 / color every 100; workout milestones 10/50/100/200/350/500/700/1000 with confetti + vibration; no-plan days never break streak)
 - [ ] Step 2 Timers (set rest, sprint rest 1 min/10 yd), sprint stopwatch/partner/steps, % → weight, practice logging, in-card dashboards
   - [x] 2a sprint rest countdown (1 min/10 yd from card distance) + lift rest timer (count-up). BLOCKED part: HT cards carry no rest time and no owner rest bands exist anywhere — lift countdown waits for owner's band numbers
-  - [ ] NEXT ITEM: 2b sprint stopwatch / partner times / steps & stride
+  - [x] 2b sprint stopwatch (partner/self), steps → stride, best-today; kept on device until 2d logging saves it
+  - [ ] NEXT ITEM: 2c lift weights from verified logged sets only ("Log your sets to unlock your numbers")
 - [ ] Step 3 Speed card (Speed Lab engine inside HT phase, 6 context rules, barefoot 4-part gate)
 - [ ] Step 4 Lift card (scheme unchanged; weights, rest, why-line, plateau swap, deload proof)
 - [ ] Step 5 Throwing (throw weights 1.0/0.75/0.85, max long toss, 13+ weighted balls, pick-off baseball P only, windmill program → Step 8)
