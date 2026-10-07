@@ -2879,6 +2879,13 @@ const handler = async (req: Request): Promise<Response> => {
           ? batSpeedSelection.picks
           : []
       ).filter((p) => !bsGate.lightOnly || LIGHT_BAT_CATEGORIES.has(String(p.category)));
+      // In-season Complete Pitcher: light bats only. Categories removed here are
+      // an honest owner-rule gap (warn), never a plan-killing certifier fatal.
+      if (bsGate.lightOnly) {
+        for (const p of batSpeedSelection.picks) {
+          if (!LIGHT_BAT_CATEGORIES.has(String(p.category))) unfillableCategories.bat_speed.push(String(p.category));
+        }
+      }
       for (const pick of bsPublishable) {
 
         const m = pick.movement as unknown as MovementRow;
