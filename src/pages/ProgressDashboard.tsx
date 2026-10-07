@@ -1,5 +1,4 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { SeasonCounter } from '@/components/progress/SeasonCounter';
 import { HumanPerformanceCard } from '@/components/hpi/HumanPerformanceCard';
 import { PlayerSnapshotCard } from '@/components/hie/PlayerSnapshotCard';
 import { WeaknessClusterCard } from '@/components/hie/WeaknessClusterCard';
@@ -96,7 +95,6 @@ Confidence: ${snapshot.development_confidence}%
           <p className="text-muted-foreground">Diagnose → Prescribe → Guide → Verify</p>
         </div>
 
-        <SeasonCounter />
 
         {/* Performance context — real evidence only; moved from Before You Start (owner 2026-10-05). */}
         <section id="performance-context" className="scroll-mt-20"><HumanPerformanceCard /></section>
