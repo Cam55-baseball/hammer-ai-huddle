@@ -119,6 +119,7 @@ export function useSeasonStatus() {
       // triggers a regenerate on next mount so cards no longer display a
       // stale "Offseason Q1" alongside a corrected "In Season" header.
       queryClient.invalidateQueries({ queryKey: ['wk-rx'] });
+      queryClient.invalidateQueries({ queryKey: ['phase-state'] });
     },
   });
 
