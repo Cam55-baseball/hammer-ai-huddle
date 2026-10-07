@@ -80,6 +80,7 @@
 - [x] 3c barefoot 4-part gate engine (7 rule tests pass; sessions alone never advance; foot/ankle/shin/Achilles/calf pain drops a stage + resets counts) + barefoot level line + post-sprint 1–10 effort rating feeding the two-hard-sessions break trigger
 - [ ] NEXT ITEM: 3d phone proof of 3c at 360/390 as a test player, then Step 4. (Base Stealer attempts counting as hard running moved to Step 6, where Base Stealer days are built — it changes the planner's rest rules.)
 - [ ] Step 3 Speed card (Speed Lab engine inside HT phase, 6 context rules, barefoot 4-part gate)
+- [ ] Step 4 (include: switch Lift rest to the owner's saved bands — 80%+ 180 s; 65–79% 120–150 s; <65% 90–120 s; holds 60–90 s; skill 45–60 s; +30 s button; HT rest wins)
 - [ ] Step 4 Lift card (scheme unchanged; weights, rest, why-line, plateau swap, deload proof)
 - [ ] Step 5 Throwing (throw weights 1.0/0.75/0.85, max long toss, 13+ weighted balls, pick-off baseball P only, windmill program → Step 8)
 - [ ] Step 6 Conditioning + bat speed (explosive pitchers, softball season, Base Stealer 5Tool/G2W only, 2-Way hitter bat speed only, Complete Pitcher velo caps, age-default competition level + onboarding prompt)
@@ -90,4 +91,3 @@
 
 ## Waiting on owner
 - Barefoot gate numbers: how many pain-free days per stage (Foundation→Introduction, →Integration, →Advanced), and what the barefoot readiness test is (e.g. which hops/holds, pass mark). Until set, nobody moves past Foundation.
-- Lift rest bands: no owner-approved rest times exist, so the Lift card shows a count-up rest stopwatch. Owner to give rest seconds by lift type (e.g. strength, power, accessory).
