@@ -231,6 +231,7 @@ const IqSituationsAuthoring = lazyWithRetry(() => import("./pages/owner/IqSituat
 const WorkoutLibraryViewer = lazyWithRetry(() => import("./pages/owner/WorkoutLibraryViewer"));
 const LandingDemoManager = lazyWithRetry(() => import("./pages/owner/LandingDemoManager"));
 const ModerationQueue = lazyWithRetry(() => import("./pages/owner/ModerationQueue"));
+const ProblemReports = lazyWithRetry(() => import("./pages/owner/ProblemReports"));
 const OAuthConsent = lazyWithRetry(() => import("./pages/oauth/OAuthConsent"));
 
 const Success = lazyWithRetry(() => import("./pages/Success"));
@@ -472,6 +473,7 @@ const App = () => {
               <Route path="/owner/landing-demo" element={<LandingDemoManager />} />
               <Route path="/owner/presentation" element={<StaffOnlyRoute><PresentationDemo /></StaffOnlyRoute>} />
               <Route path="/owner/moderation" element={<StaffOnlyRoute><ModerationQueue /></StaffOnlyRoute>} />
+              <Route path="/owner/problem-reports" element={<StaffOnlyRoute><ProblemReports /></StaffOnlyRoute>} />
 
 
 

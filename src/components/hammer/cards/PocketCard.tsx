@@ -7,6 +7,7 @@
  * saving (confirmed) and the owner's disclaimer. The open card is remembered
  * on this device for the plan date, so a reload or app close reopens it.
  */
+import { ReportProblemButton } from "@/components/support/ReportProblemButton";
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ChevronRight, ExternalLink, Lock, LogOut, PartyPopper, X } from "lucide-react";
@@ -193,6 +194,7 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
             <p className="mt-6 text-[11px] leading-relaxed text-muted-foreground" data-card-disclaimer>
               {CARD_DISCLAIMER}
             </p>
+            <div className="mt-2 flex justify-center"><ReportProblemButton className="h-7 text-[12px]" card={heading} planDate={planDate} /></div>
           </div>
           <footer className="flex items-center justify-between gap-2 border-t border-border px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
             <Button variant="ghost" size="sm" onClick={() => setConfirmDiscard(true)}>

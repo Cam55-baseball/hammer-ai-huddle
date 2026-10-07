@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { ReportProblemButton } from "@/components/support/ReportProblemButton";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -23,6 +24,7 @@ export default function NotificationsSettings() {
           </p>
         </header>
         <NotificationsPreferencesPanel />
+        <div className="mt-6 border-t border-border pt-4"><p className="mb-2 text-sm text-muted-foreground">Something not working?</p><ReportProblemButton /></div>
       </div>
     </DashboardLayout>
   );

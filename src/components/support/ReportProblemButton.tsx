@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-export function ReportProblemButton({ className }: { className?: string }) {
+export function ReportProblemButton({ className, card, planDate }: { className?: string; card?: string; planDate?: string }) {
   const { user } = useOptionalAuth();
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState("");
@@ -23,7 +23,7 @@ export function ReportProblemButton({ className }: { className?: string }) {
     setBusy(true);
     const { error } = await supabase.from("problem_reports").insert({
       user_id: user.id, message, page: window.location.pathname,
-      app_info: { ua: navigator.userAgent.slice(0, 200), w: window.innerWidth, h: window.innerHeight, at: new Date().toISOString() },
+      app_info: { card: card ?? null, plan_date: planDate ?? null, app_version: (import.meta.env.VITE_APP_VERSION as string | undefined) ?? import.meta.env.MODE, device: navigator.userAgent.slice(0, 200), w: window.innerWidth, h: window.innerHeight, at: new Date().toISOString() },
     });
     setBusy(false);
     if (error) { toast.error("Couldn't save your report. Please try again."); return; }
