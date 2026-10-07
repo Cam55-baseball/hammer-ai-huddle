@@ -1,9 +1,17 @@
 # Roadmap
 
-> **Status (2026-10-07, Round 9)**
-> - Finished: Round 9 items 9.1–9.8 (throw counting, lighter week by trends, barefoot gates + guided test, throwing pacing, softball bat speed, GitHub fast tier, limb-size collection + report, body-load bar, Report a Problem, Step 8 summaries, Step 9 prep).
-> - Next: owner decisions below.
-> - Waiting on owner: (1) Step 8 batches, one by one (docs/owner/step8-content-batches.md). (2) Limb-size proposal (docs/wic/limb-size-report.md). (3) Step 9 backup SQL (docs/pending-owner-apply/step9-program-backups.sql). (4) Email key: reports queue until it is fixed. (5) Windmill switch-on.
+> **Status (2026-10-07, after A12)**
+> - Finished: Round 9 items 9.1–9.8; Round 8 Steps 1, 2a–2f, 3a–3d, 4a–4d; Round 2 A–E; pitcher schedule wiring; morning game questions; Tissue & Recovery count fix; bat-speed wording fix; older items re-verified and ticked in A10/A11. Step 2 (timers, stopwatch, practice logging, dashboards) is built except 2g, which needs a test player.
+> - Next item: exhaustive all-app audit (item "identified failed-read cases… audit still unfinished") — the only open item that needs no owner decision.
+> - Waiting on owner:
+>   1. Test-player sign-in approval (may I keep making hidden test players and removing them afterward?) — unblocks live player/pitcher check, 2g lift weight-unlock proof, Round 1/2/3 stress tests, phone screenshots 360/390, under-13 signed-in checks.
+>   2. Step 8 content batches, approved one by one by name (docs/owner/step8-content-batches.md), incl. explosive-pitcher and softball season drills (6d).
+>   3. Limb-size proposal (docs/wic/limb-size-report.md). Proposed rules, all display/ranking only, behind one switch, doses proven identical: (a) long femurs (leg ÷ height ≥ 0.53) rank trap-bar deadlift, front-loaded/safety-bar squat, box squat first in the same category; long arms (span ÷ height ≥ 1.04) rank conventional/trap-bar pulls over sumo and neutral-grip pressing — same sets/reps/%; (b) stride shown as % of height/leg length (overhand pitch band 77–87% of height, record-only); (c) arm span gives release-extension context, arm slot never flagged; (d) display-only bat-length starting range from height + arm span; (e) long-lever athletes get existing hip/hamstring/T-spine mobility ranked first in the same warm-up slots, no added minutes. Missing measurements = today's behavior.
+>   4. Step 9 archive: apply docs/pending-owner-apply/step9-program-backups.sql, then OK redirects.
+>   5. Email key: problem reports keep queuing until fixed.
+>   6. Windmill program switch-on.
+>   7. Plan-building capacity: ~860 plans/hour; 5,000 in the first hour needs a bigger database or faster builds.
+>   8. Missed-lift job: built but OFF until you run it; optional game-linked flush and morning-question trade-off decisions (closeout).
 
 ## Round 9 (owner answers 2026-10-07, redeploys authorized)
 - [x] 9.1 Throw counting final (warm-up/catch 0.25, budget unchanged) → finish 5b + throwing/pick-off next dates
