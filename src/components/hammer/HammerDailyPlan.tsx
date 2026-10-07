@@ -15,7 +15,7 @@
  * Schedule context line from `useScheduleWindow` retained.
  */
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
-import { ReleaseCountdown } from "@/components/hammer/cards/ReleaseCountdown";
+import { ReleaseCountdown, NextReleaseLine } from "@/components/hammer/cards/ReleaseCountdown";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHammersTodayStart } from "@/hooks/useHammersTodayStart";
@@ -1049,12 +1049,12 @@ function HammerDailyPlanBody({
                 onOpen={() => setCheckInQuiz("pre_lift")}
               />
               <ErrorBoundary label="wk-speed">
-                <PocketCard id="speed" category="Speed" focus={pocketFocus(wkRx.grouped.speedCard)} tone="bg-primary" planDate={pocketDate} prescribed={wkRx.grouped.speedCard.length > 0} countLabel={countLabel(wkRx.grouped.speedCard)}>
+                <PocketCard id="speed" notPrescribedNote={<NextReleaseLine label="hard run" date={wkRx.nextEligible?.hard_run} />} category="Speed" focus={pocketFocus(wkRx.grouped.speedCard)} tone="bg-primary" planDate={pocketDate} prescribed={wkRx.grouped.speedCard.length > 0} countLabel={countLabel(wkRx.grouped.speedCard)}>
                   {() => <WkSpeedCard pocket />}
                 </PocketCard>
               </ErrorBoundary>
               <ErrorBoundary label="wk-bat-speed">
-                <PocketCard id="bat_speed" category="Bat speed" focus={pocketFocus(wkRx.grouped.batSpeedCard)} tone="bg-accent" planDate={pocketDate} prescribed={wkRx.grouped.batSpeedCard.length > 0} countLabel={countLabel(wkRx.grouped.batSpeedCard)}>
+                <PocketCard id="bat_speed" notPrescribedNote={<NextReleaseLine label="heavy-bat day" date={wkRx.nextEligible?.bat_over_under} />} category="Bat speed" focus={pocketFocus(wkRx.grouped.batSpeedCard)} tone="bg-accent" planDate={pocketDate} prescribed={wkRx.grouped.batSpeedCard.length > 0} countLabel={countLabel(wkRx.grouped.batSpeedCard)}>
                   {() => isSwitchHitter ? (
                     <>
                       <WkBatSpeedCard side="L" pocket />
@@ -1090,12 +1090,12 @@ function HammerDailyPlanBody({
                 );
               })}
               <ErrorBoundary label="wk-conditioning">
-                <PocketCard id="conditioning" category="Conditioning" focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} prescribed={wkRx.grouped.conditioningCard.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
+                <PocketCard id="conditioning" notPrescribedNote={<NextReleaseLine label="hard run" date={wkRx.nextEligible?.hard_run} />} category="Conditioning" focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} prescribed={wkRx.grouped.conditioningCard.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
                   {() => <WkConditioningCard pocket />}
                 </PocketCard>
               </ErrorBoundary>
               <ErrorBoundary label="wk-lifts">
-                <PocketCard id="lift" category="Lift" focus={pocketFocus(wkRx.grouped.lifts)} tone="bg-destructive" planDate={pocketDate} prescribed={wkRx.grouped.lifts.length > 0} countLabel={countLabel(wkRx.grouped.lifts)}>
+                <PocketCard id="lift" notPrescribedNote={<NextReleaseLine label="lift" date={wkRx.nextEligible?.lift} />} category="Lift" focus={pocketFocus(wkRx.grouped.lifts)} tone="bg-destructive" planDate={pocketDate} prescribed={wkRx.grouped.lifts.length > 0} countLabel={countLabel(wkRx.grouped.lifts)}>
                   {() => <WkLiftsCard pocket />}
                 </PocketCard>
               </ErrorBoundary>

@@ -47,7 +47,7 @@ interface Props {
   readonly planDate: string;
   readonly prescribed: boolean;
   readonly countLabel?: string | null; // e.g. "6 exercises"
-  readonly notPrescribedNote?: string;
+  readonly notPrescribedNote?: ReactNode;
   readonly children: (opts: { pocket: true }) => ReactNode;
 }
 
