@@ -92,7 +92,7 @@
 - [x] A. Profile + speed up wk-generate-daily (done Round 9: single builds ~3–5 s); identical-output proof; before/after times
 - [x] B. Local-midnight readiness (done Round 9: plans prebuilt after local noon); pre-build proposal; cron proposal; multi-TZ proof
 - [x] C. Plan never changes on reload (done Round 9) (20 reloads, preview + live)
-- [ ] D. Screenshots 360/390: pitcher Bat speed, warm-up season label off/in season
+- [ ] D. Screenshots 360/390: plan screens done 2026-10-07 as hidden test player (no sideways scroll, no errors; Readiness/Recovery chip labels fixed); pitcher Bat speed + warm-up season label still to shoot
 - [ ] Clean up all test data
 
 ## Round 8 — Master Integration Plan (owner-approved 2026-10-07; never publish, no cron changes)
