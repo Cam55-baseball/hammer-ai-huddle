@@ -66,7 +66,7 @@
 - [ ] Clean up all test data
 
 ## Round 8 — Master Integration Plan (owner-approved 2026-10-07; never publish, no cron changes)
-- [~] Step 1 (done: pocket pages for Speed/Bat speed/Conditioning/Lift, lock-in, Save & Exit, confirmed exit, disclaimer, release countdown w/ server clock + DST tests. Open: pocket pages for throwing/other blocks + link cards, progress/focus/intros, celebrations/streak/milestones, single season counter, 360/390 screenshots, identical-plan proof) Card design (pocket pages, lock-in, Save & Exit / Exit without saving, autosave, disclaimer, server-time countdown, pills/badges/intros, celebrations, single season counter) — identical-plan proof
+- [~] Step 1 (done: pocket pages for Speed/Bat speed/Conditioning/Lift, lock-in, Save & Exit, confirmed exit, disclaimer, release countdown w/ server clock + DST tests, per-card 'Next … in' from server rule engine (lift, hard run, heavy-bat). Open: pocket pages for throwing/other blocks + link cards, progress/focus/intros, celebrations/streak/milestones, single season counter, 360/390 screenshots, identical-plan proof) Card design (pocket pages, lock-in, Save & Exit / Exit without saving, autosave, disclaimer, server-time countdown, pills/badges/intros, celebrations, single season counter) — identical-plan proof
 - [ ] Step 2 Timers (set rest, sprint rest 1 min/10 yd), sprint stopwatch/partner/steps, % → weight, practice logging, in-card dashboards
 - [ ] Step 3 Speed card (Speed Lab engine inside HT phase, 6 context rules, barefoot 4-part gate)
 - [ ] Step 4 Lift card (scheme unchanged; weights, rest, why-line, plateau swap, deload proof)
