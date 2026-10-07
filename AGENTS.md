@@ -21,5 +21,7 @@
 - Sessions end only by explicit Sign out (`signOut({ scope: 'local' })`) or server end; `/` and `/auth` forward signed-in players after session load; native auth key mirrored to `@capacitor/preferences` (`src/lib/auth/nativeSessionStore.ts`), restored in `main.tsx`. Why: iOS may clear WebView storage.
 - Anonymous training store: bucketed, week-rounded, no free text, Vault-HMAC key; under-13 needs parent opt-in. Why: lawyer-approved scope.
 - The plan screen shows the device's last saved plan, start flag and access at once, but acts only after this visit's server answer; device copies clear on Sign out. Why: a reload must never flash, rebuild or change the plan.
-- Limb sizes are history-only (`athlete_limb_measurements`); no prescription reads them until the owner approves `docs/wic/limb-size-report.md`. Why: owner gate first.
+
 - Problem reports save to `problem_reports` first; `report-problem-mailer` only sends/retries. Why: a broken email key must never lose a report.
+- Limb proportions (from `athlete_context.anthropometrics` only) shift lift emphasis via `_shared/wic/lift/proportionEmphasis.ts` as a bounded score bonus on already-legal candidates; never a gate, never a dose. Why: owner rule — only injury rules an exercise out.
+- Goal sources (category order, category_goals, goal_priority_rank, goal_horizon, training_preferences.goal, athlete_body_goals, goal_summary) become weights only in `_shared/wic/goals/emphasis.ts`. Why: one place goals shape choice; doses wait on owner approval.
