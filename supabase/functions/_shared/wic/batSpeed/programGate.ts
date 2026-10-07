@@ -35,9 +35,18 @@ export interface ProgramGateResult {
   reason: string | null;
 }
 
-export function weeklyVelocityCap(season: string | null | undefined): number {
+// Accepts both plain names (off_season/in_season) and the planner's own
+// phase names (offseason_q1…q4, regular_season, tournament, postseason).
+export function isOffSeason(season: string | null | undefined): boolean {
+  return String(season ?? "").toLowerCase().startsWith("off");
+}
+export function isInSeason(season: string | null | undefined): boolean {
   const s = String(season ?? "").toLowerCase();
-  if (s.startsWith("off")) return 2;
+  return s.startsWith("in") || s === "regular_season" || s === "tournament" || s.startsWith("post");
+}
+
+export function weeklyVelocityCap(season: string | null | undefined): number {
+  if (isOffSeason(season)) return 2;
   return 1; // pre-season, in-season, post-season, unknown → the stricter cap
 }
 
@@ -51,6 +60,5 @@ export function batSpeedProgramGate(i: ProgramGateInput): ProgramGateResult {
   if (i.batSpeedDaysThisWeek >= cap) {
     return { program, allow: false, lightOnly: false, reason: `Velocity bat work is ${cap}x a week this season — already done.` };
   }
-  const s = String(i.season ?? "").toLowerCase();
-  return { program, allow: true, lightOnly: s.startsWith("in"), reason: null };
+  return { program, allow: true, lightOnly: isInSeason(i.season), reason: null };
 }
