@@ -23,5 +23,3 @@
 - The plan screen shows the device's last saved plan, start flag and access at once, but acts only after this visit's server answer; device copies clear on Sign out. Why: a reload must never flash, rebuild or change the plan.
 
 - Problem reports save to `problem_reports` first; `report-problem-mailer` only sends/retries. Why: a broken email key must never lose a report.
-- Limb proportions (from `athlete_context.anthropometrics` only) shift lift emphasis via `_shared/wic/lift/proportionEmphasis.ts` as a bounded score bonus on already-legal candidates; never a gate, never a dose. Why: owner rule — only injury rules an exercise out.
-- Goal sources (category order, category_goals, goal_priority_rank, goal_horizon, training_preferences.goal, athlete_body_goals, goal_summary) become weights only in `_shared/wic/goals/emphasis.ts`. Why: one place goals shape choice; doses wait on owner approval.

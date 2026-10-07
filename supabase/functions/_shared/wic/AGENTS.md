@@ -10,3 +10,6 @@
 - Per-card "Next … in" times come only from `nextEligibleDates` in `schedule/finalCheck.ts`, returned by `wk-generate-daily` verify_saved as `next_eligible`; the app only formats the countdown. Why: owner ruling — release times must match the planner's own rest rules.
 - Trend lighter week (`lift/trendDeload.ts`): decided from data before the week's Monday (≥3 sessions 8+/10 in 14 days AND verified-lift flat/down, 7d readiness clearly under 28d, or new pain) → lift sets ×0.6 that week; never in-season, never next to HT's deload or another trend week. Why: owner rule 2026-10-07; one answer per week keeps the plan stable.
 - `lift/verifiedMax.ts` is the server copy of `src/lib/lift/verifiedMax.ts`; change both together. Why: edge functions cannot import `src/`.
+
+- Limb proportions (from `athlete_context.anthropometrics` only) shift lift emphasis via `lift/proportionEmphasis.ts` as a bounded score bonus on already-legal candidates; never a gate, never a dose. Why: owner rule — only injury rules an exercise out.
+- Goal sources (category order, category_goals, goal_priority_rank, goal_horizon, training_preferences.goal, athlete_body_goals, goal_summary) become weights only in `goals/emphasis.ts`. Why: one place goals shape choice; doses wait on owner approval.
