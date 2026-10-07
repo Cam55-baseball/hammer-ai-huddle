@@ -4937,7 +4937,7 @@ function todayStr(): string {
 function json(body: unknown, status = 200) {
   const prof = (globalThis as any).__wkProf as ProfEntry[] | null;
   if (prof && body && typeof body === "object" && !Array.isArray(body)) {
-    body = { ...(body as Record<string, unknown>), _profile: { total_ms: 0, isolate: ISOLATE_ID, memo_hits: (globalThis as any).__wkMemoStats?.hits ?? null, in_flight_at_start: (globalThis as any).__wkInFlightAtStart ?? null, calls: prof } };
+    body = { ...(body as Record<string, unknown>), _profile: { total_ms: 0, isolate: ISOLATE_ID, memo_hits: (globalThis as any).__wkMemoStats?.hits ?? null, in_flight_at_start: (globalThis as any).__wkInFlightAtStart ?? null, calls: prof, bs_rej: (globalThis as any).__bsRej ?? null } }; (globalThis as any).__bsRej = undefined;
   }
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
