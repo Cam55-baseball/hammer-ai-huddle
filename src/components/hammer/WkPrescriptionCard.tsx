@@ -32,6 +32,7 @@ import {
 } from "@/components/hammer/WkProgressionNote";
 import { missedStillEditable } from "@/lib/wic/execution/liftCompletion";
 import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
+import { ProgramContentBlock, LimbHintBlock } from "@/components/hammer/ProgramContentBlock";
 
 const SLOT_TONE: Record<WkRx["slot"], string> = {
   lift: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
@@ -367,6 +368,8 @@ export function WkPrescriptionCard({
               {(rx.why_payload as any).adaptive_phase.ramp_line}
             </div>
           )}
+          <ProgramContentBlock pc={(rx.why_payload as any)?.program_content} />
+          <LimbHintBlock text={(rx.why_payload as any)?.limb_hint} />
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0 space-y-1">
               <div className="text-xs text-muted-foreground break-words">{dosage}</div>

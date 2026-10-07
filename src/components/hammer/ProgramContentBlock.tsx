@@ -11,3 +11,13 @@ export function ProgramContentBlock({ pc }: { pc: any }) {
     </div>
   );
 }
+
+/** Shows the body-size guide the planner attached to a row. Display only. */
+export function LimbHintBlock({ text }: { text: unknown }) {
+  if (typeof text !== "string" || !text) return null;
+  return (
+    <div className="rounded-md border border-border bg-muted/40 p-2 text-xs text-muted-foreground break-words" data-testid="limb-hint">
+      <span className="font-medium text-foreground">Body-size guide: </span>{text}
+    </div>
+  );
+}
