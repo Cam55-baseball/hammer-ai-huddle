@@ -157,7 +157,7 @@ export function barefootState(events: BarefootEvent[] /* oldest first */, readin
   if (stage < BAREFOOT_STAGES.length - 1) {
     const hd = cfg.healthyDays[stage];
     if (sessions < cfg.sessions[stage]) missing.push(`${cfg.sessions[stage] - sessions} more sessions at this level`);
-    if (hd == null) missing.push("pain-free day count not set yet");
+    if (hd == null) missing.push("more pain-free days");
     else if (healthy < hd) missing.push(`${hd - healthy} more pain-free days`);
     if (!test) missing.push("pass the readiness test");
     if (readiness == null || readiness < cfg.readinessMin) missing.push(`readiness of ${cfg.readinessMin} or more`);
