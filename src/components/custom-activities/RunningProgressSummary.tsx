@@ -18,7 +18,7 @@ const SOURCE_LABELS: Record<string, string> = {
   intervals: 'Intervals',
   cardioExercises: 'Cardio Exercises',
   runningSessions: 'Running Sessions',
-  speedSessions: 'Speed Lab',
+  speedSessions: 'Speed Sessions',
   blockSprints: 'Program Sprints',
 };
 
