@@ -317,6 +317,7 @@ const App = () => {
               <LegalV2Gate>
               <Routes>
               <Route path="/legal/:slug" element={<LegalDocumentPage />} />
+              <Route path="/parent-sign/:token" element={<ParentWaiverSign />} />
               <Route path="/parent-waiver/:token" element={<ParentWaiverSign />} />
               <Route path="/settings/legal" element={<LegalSettings />} />
               <Route path="/owner/legal-records" element={<LegalRecords />} />

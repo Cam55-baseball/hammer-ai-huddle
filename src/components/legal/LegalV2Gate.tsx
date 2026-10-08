@@ -22,7 +22,7 @@ import {
   myConsentStatus, pendingAcceptances, recordConsent, useLegalV2, type LegalDoc,
 } from "@/lib/legal/legalV2";
 
-const OPEN = [/^\/auth/, /^\/signup/, /^\/legal\//, /^\/terms/, /^\/privacy/, /^\/reset-password/, /^\/parent-waiver\//];
+const OPEN = [/^\/auth/, /^\/signup/, /^\/legal\//, /^\/terms/, /^\/privacy/, /^\/reset-password/, /^\/parent-waiver\//, /^\/parent-sign\//];
 
 type Need = { terms: string[]; health: boolean; release: LegalDoc | null; versions: Record<string, number> };
 

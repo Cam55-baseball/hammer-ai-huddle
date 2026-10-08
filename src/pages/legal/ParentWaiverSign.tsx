@@ -9,6 +9,14 @@ import { LegalMarkdown } from "@/components/legal/LegalMarkdown";
 import { SignaturePad } from "@/components/parent/SignaturePad";
 import { callTeenWaiver, TEEN_WAIVER_ERRORS } from "@/lib/legal/teenWaiver";
 
+const NEW_LINK = "To get a new link, ask your player to open the Hammers Modality app and tap \"Resend link\" on their training plan, or email hammersmodality@hammersmodality.org.";
+const LINK_STATES: Record<string, string> = {
+  expired: `This signing link has expired. ${NEW_LINK}`,
+  unknown: `We couldn't find this signing link. It may have been replaced by a newer one. ${NEW_LINK}`,
+  already_signed: "This waiver is already signed. Thank you! There's nothing else you need to do.",
+  not_active: "Online parent signing isn't open yet. We'll email you when it is. Questions? Email hammersmodality@hammersmodality.org.",
+};
+
 const RELATIONSHIPS = ["Mother", "Father", "Legal guardian", "Other natural guardian"];
 
 export default function ParentWaiverSign() {
@@ -25,23 +33,26 @@ export default function ParentWaiverSign() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    callTeenWaiver<{ doc: any; teen_first_name: string | null }>("view", { token })
-      .then((r) => { setDoc(r.doc); setTeen(r.teen_first_name); })
-      .catch((e) => setFatal(TEEN_WAIVER_ERRORS[e.code] ?? TEEN_WAIVER_ERRORS.invalid_link));
+    callTeenWaiver<{ state: string; doc?: any; teen_first_name?: string | null }>("view", { token })
+      .then((r) => {
+        if (r.state === "ok" && r.doc) { setDoc(r.doc); setTeen(r.teen_first_name ?? null); }
+        else setFatal(LINK_STATES[r.state] ?? LINK_STATES.unknown);
+      })
+      .catch(() => setFatal(LINK_STATES.unknown));
   }, [token]);
 
   const ok = name.trim().split(/\s+/).length >= 2 && !!rel && adult && !!sig;
   const sign = async () => {
     setBusy(true); setErr(null);
     try { await callTeenWaiver("sign", { token, name: name.trim(), relationship: rel, adult, signature: sig }); setDone(true); }
-    catch (e: any) { setErr(TEEN_WAIVER_ERRORS[e.code] ?? TEEN_WAIVER_ERRORS.failed); }
+    catch (e: any) { if (LINK_STATES[e.code]) { setDoc(null); setFatal(LINK_STATES[e.code]); } else setErr(TEEN_WAIVER_ERRORS[e.code] ?? TEEN_WAIVER_ERRORS.failed); }
     finally { setBusy(false); }
   };
 
   return (
     <main className="mx-auto w-full max-w-md space-y-5 px-5 pb-10 pt-[calc(1.25rem+var(--safe-top,0px))]">
       <h1 className="text-2xl font-semibold">Parent or guardian waiver</h1>
-      {fatal && <p role="alert" className="text-sm">{fatal}</p>}
+      {fatal && <div role="status" className="rounded-lg border p-4 text-sm">{fatal}</div>}
       {done && <div role="status" className="rounded-lg border p-4"><p className="font-semibold">Signed. Thank you.</p><p className="mt-1 text-sm text-muted-foreground">{teen ?? "Your player"}'s training plan is now open. You can close this page.</p></div>}
       {doc && !done && (
         <>
