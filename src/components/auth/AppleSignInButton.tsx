@@ -2,6 +2,8 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { describeOAuthError } from "@/lib/auth/appleIdentity";
+import { isNativeApp } from "@/lib/auth/nativeSessionStore";
+import { startNativeOAuth } from "@/lib/auth/nativeOAuth";
 
 interface AppleSignInButtonProps {
   /** Same-origin relative path to resume after the round trip, if any. */
@@ -22,6 +24,16 @@ export const AppleSignInButton = ({ redirectTarget, disabled }: AppleSignInButto
   const handleClick = async () => {
     setIsLoading(true);
     try {
+      // iPhone/iPad app: in-app browser sheet, never the Safari app (Guideline 4).
+      if (isNativeApp()) {
+        const { error } = await startNativeOAuth("apple", redirectTarget, "name email");
+        if (error) {
+          toast({ title: "Couldn't sign in with Apple", description: describeOAuthError("apple", error), variant: "destructive" });
+        }
+        setIsLoading(false);
+        return;
+      }
+
       const callback = new URL("/auth/callback", window.location.origin);
       if (redirectTarget) callback.searchParams.set("redirect", redirectTarget);
 

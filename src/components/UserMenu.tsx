@@ -88,6 +88,10 @@ export function UserMenu({ userName, userEmail }: UserMenuProps) {
           <ShieldCheck className="mr-2 h-4 w-4" />
           <span>Recruiting sharing</span>
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/settings/account")}>
+          <Settings className="mr-2 h-4 w-4" />
+          <span>Settings · Delete account</span>
+        </DropdownMenuItem>
         <DropdownMenuItem>
           <HelpCircle className="mr-2 h-4 w-4" />
           <span>Help</span>

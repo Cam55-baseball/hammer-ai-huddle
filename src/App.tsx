@@ -254,6 +254,7 @@ import LegalDocumentPage from "./pages/legal/LegalDocumentPage";
 import ParentWaiverSign from "./pages/legal/ParentWaiverSign";
 import { TeenWaiverGate } from "@/components/legal/TeenWaiverGate";
 import LegalSettings from "./pages/legal/LegalSettings";
+import DeleteAccountSettings from "./pages/settings/DeleteAccountSettings";
 import LegalRecords from "./pages/owner/LegalRecords";
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -320,6 +321,7 @@ const App = () => {
               <Route path="/parent-sign/:token" element={<ParentWaiverSign />} />
               <Route path="/parent-waiver/:token" element={<ParentWaiverSign />} />
               <Route path="/settings/legal" element={<LegalSettings />} />
+              <Route path="/settings/account" element={<DeleteAccountSettings />} />
               <Route path="/owner/legal-records" element={<LegalRecords />} />
               <Route path="/" element={<Index />} />
               <Route path="/home" element={<Index browse />} />

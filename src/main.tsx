@@ -12,4 +12,10 @@ restoreNativeSession().finally(async () => {
   ]);
   createRoot(document.getElementById("root")!).render(<App />);
   registerSW();
+  // iPhone/iPad: finish Apple sign-in returned from the in-app browser sheet.
+  const { installNativeOAuthListener } = await import("./lib/auth/nativeOAuth");
+  installNativeOAuthListener((path) => {
+    window.history.pushState({}, "", path);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
 });

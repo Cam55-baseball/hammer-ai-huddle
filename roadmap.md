@@ -1,3 +1,46 @@
+# APPLE REJECTION — build 1.0 (3) (2026-10-08) — Ready to publish: yes (web); new Xcode build required
+
+## 1. Guideline 4 — sign-in leaving the app
+**What left the app:** "Sign in with Apple" on the sign-in page. It navigated the app's web view to appleid.apple.com; the iPhone/iPad app hands any outside website to the Safari app, so the reviewer landed in Safari. Email/password sign-in, sign-up, password reset, under-13 parent sign-up and the teen waiver all stay inside the app (no outside links, no window.open in those screens). There is NO Google sign-in in the app. Email links (confirm email, password reset, parent waiver) open from the Mail app into Safari — that is outside the app's sign-in flow and Apple allows it, but universal links would be nicer later.
+**Fix (built, web code):** inside the app, Sign in with Apple now opens an in-app browser sheet (Safari View Controller), returns on the app's own link `com.hammersmodality.app://auth/callback`, finishes the session inside the app and closes the sheet. Website behavior unchanged. Test: src/lib/auth/__tests__/nativeOAuth.test.ts (4/4).
+**4.8:** no Google/third-party sign-in is offered, and Sign in with Apple is already there, so nothing more is required.
+**Owner must do (I may not touch the iPhone project files):** see Xcode steps below, plus add `com.hammersmodality.app://auth/callback` to the sign-in allowed return addresses in the backend auth settings (ask me to do this — it is a settings change, not done without your OK).
+
+## 1d. Account deletion
+Already open to everyone, never behind legal_v2 (bottom of Profile). Now ALSO at **Account menu (top-right avatar) → "Settings · Delete account"** → /settings/account, with type-DELETE confirmation, then the account and data are removed and the person is signed out. Owner/admin accounts are blocked by design (shown in screenshot). Screenshots: legal-screens/apple-review/ (iPad Air 11-inch 820×1180 and iPhone 390). A real player deletion was proven in an earlier round; not re-run now because it needs a throwaway player account you approve.
+
+## 2. Guideline 2.3.6 — In-App Controls
+- Parent controls (view/download Parent Promise, take back permission, delete child data, training-data toggle) appear ONLY on a parent-controlled under-13 account (Profile and now Settings · Delete account page). The birthdate age gate shows for every signed-in account without a birthdate.
+- Build 1.0 (3): I cannot see which code that build was made from. If it was built before Oct 6, the birthdate gate and Parent controls were NOT in it (both landed Oct 6+). Either way the reviewer had no under-13 account, so they could not see Parent controls.
+- **Review demo account: NOT created yet — waiting on owner.** It needs a sign-in password Apple can use; creating a password account for a fake child is your call. Once you OK it I will create "APPLE REVIEW — TEST CHILD (age 11)", fake data, hidden from search/leaderboards/scouts, Parent Promise pre-signed by a fake parent, payment step marked complete.
+- **Reviewer path (iPad):** 1) Open app → Sign in with the review email/password. 2) Tap the round avatar, top-right. 3) Tap "Settings · Delete account". 4) "Parent controls" card is at the top: see stored data, download the Parent Promise, take back permission, delete data, training-data switch. Age gate: sign in with any new account → the app asks for birthdate before anything else; under 13 → parent sign-up required.
+
+## 3. Guideline 2.1(b) — business-model audit
+- iOS app: the single purchase gate hides ALL prices, plan names, Subscribe/Upgrade buttons, checkout and Stripe links inside the app (fails closed: unknown storefront = hidden). Locked features show only "isn't available on your account yet" — no link, no price.
+- No link to Stripe or the website for buying.
+- Under-13 parent sign-up: after the Parent Promise it sends the parent to the plans page; in the iOS app that page shows nothing to buy, so **a parent cannot pay inside the iOS app and the child account stays paused ("waiting for payment") until paid on the website.** No card is taken in the app.
+- Paid plans (Complete Pitcher, 5Tool Player, Golden 2Way, bought on hammersmodality.org via Stripe) unlock Hammers Today daily plans, video analysis/report cards, and the plan's modules.
+- Without a plan: account, profile, settings, free areas and locked notices; no paid content.
+
+**Draft answers to Apple:**
+1. Who uses it: athletes (13+), parents of under-13 athletes, and their coaches, who subscribe to a training plan.
+2. Where they buy it: only on our website, hammersmodality.org (card through Stripe). Nothing can be bought in the app.
+3. Previously purchased content: anyone who bought a plan on the website signs in and gets that plan's training plans, video analysis and modules in the app (3.1.3(b) multiplatform).
+4. Unlocked without IAP: nothing paid is sold in the app; free account features (profile, settings, parent controls, account deletion, free areas) work for everyone.
+
+**Options (nothing built until you pick):**
+- **A. No purchase anything in iOS; buy on website.** Work: none — this is today's behavior; just send the answers above. Risk: low. Under-13: parent must pay on the website; the in-app step should say "finish on the website"? NO — that wording is steering; it must just say the account is waiting for a parent.
+- **B. US-only external purchase link.** Work: native storefront check in Xcode (StoreKit Storefront) feeding the app, then show the "buy on website" link for US only. Risk: medium (rules still being litigated; wrong storefront = rejection). Under-13: US parents could tap through to pay on the website.
+- **C. In-App Purchase.** Work: large — App Store Connect products for 3 plans, StoreKit plugin, receipt checking on the backend tied to plan access, refunds via Apple, Apple's 15–30% cut. Risk: low with Apple, high effort. Under-13: parent pays via Apple (Ask to Buy) inside the app.
+
+## Xcode build steps (owner)
+1. Pull latest code; `npm install`; `npm run build`; `npx cap sync ios` (adds the in-app browser and app-link plugins).
+2. In Xcode → App target → Info → URL Types → add one: Identifier `com.hammersmodality.app`, URL Schemes `com.hammersmodality.app`.
+3. Make sure Signing & Capabilities has "Sign in with Apple".
+4. Bump build to 1.0 (4); archive; upload.
+5. Before submitting: on an iPad, tap Sign in with Apple — a sheet must open inside the app and return signed in.
+6. In App Store Connect review notes: the review account (once created), the reviewer path above, and the 4 answers.
+
 # URGENT FIX 2 — parent-signature page was blank below the title (2026-10-08 ~19:00 UTC)
 
 **Ready to publish: YES.** Full test suite: 287/287 files passed; build OK. The fix is in the preview and the backend. The live site still runs the 16:52 build, which is older than this fix. Publishing changes nothing for players because legal_v2 is OFF. It only makes the signing page show its messages properly.
