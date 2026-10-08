@@ -20,7 +20,7 @@
 - Switch OFF: home, all 10 /legal pages, settings, checkout and dashboard unchanged at 360 and 390 px, signed in and out (no footer links, no gate; /legal addresses go back to the old pages or the dashboard).
 - Switch ON for the owner account only: every page and flow at 360 and 390 px, no overflow, no page errors; the agreement screen saved 6 real records (shown on the owner records page), then those test records were removed and the switch set back to OFF. Screenshots: Files → `legal-screens/` (31 images). Fixed: health checkbox text layout and the Legal & privacy link wrapping on phones.
 - Tests: 2,513/2,513 passing. Build OK.
-- **Not done: the 165-page phone audit.** The test sandbox crashed three times under the full run, so it was not re-run this round. (The last full audit passed before this build.)
+- [x] **Phone audit (M1, 2026-10-08):** all 167 pages × 360 and 390 px = 334 loads, signed in as the owner, legal_v2 OFF — 0 crashes, 0 page errors, 0 sideways overflow. One load of /terms briefly showed an error message; it passed on 3 re-tests at both sizes (not reproducible). Ran in small batches to avoid the sandbox crashes.
 - **Not shown:** checkout's auto-renewal box and the under-13 parent waiver step. The owner account skips checkout and is not a parent, and test-account sign-in needs your OK. Both are covered by code and tests only.
 
 ### Waiting on owner (legal)
