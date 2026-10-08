@@ -1,5 +1,38 @@
-# Ready to publish: YES (2026-10-08 K2, final)
-Reason: every owner decision is applied and proven; all checks pass. Email still waits on 3 DNS records (reports save first and re-send automatically), so it does not block.
+# Ready to publish: NO (2026-10-08 — General report restoration)
+Reason: the requested classic report card is restored in preview and phone-checked as owner, but affected-player access proof and successful real preview/published form sign-in remain unverified. Earlier YES statements below are historical, not the current verdict.
+
+## Latest owner decisions — current result
+- [x] **#3 UNDO removal:** restored the original `<UhrcAthleteSection />` in Section 0, inside the existing data/subscription gates. Per-video report cards unchanged; no scoring, programming or backend changes. Historical correction: the Oct 5 version already lacked the section; the original mount exists in June 6 commit `c99d5cc7e`. This restores that original canonical section, not removed MPI scores or unverified composite trends.
+- [x] **#4 KEEP:** ProgressLanding and its season counter unchanged. Visible on the signed-in landing screenshot.
+- [x] **Phone evidence:** actual signed-in owner `/progress` classic view at 360/390 px: absent before, one report card after; 0 page exceptions and 0 sideways overflow. Before: `owner-checks/general-before-360.png`, `general-before-390.png`; after: `general-restored-360.png`, `general-restored-390.png` in Files. Missing report signals remain dashes, not invented grades. These are owner screenshots, NOT affected-player proof.
+- [x] **Rest / Push / Skip:** all three day-choice surfaces retain “Rest: take it easier”, “Push: commit to the plan”, “Skip: sit today out”, with explanations. Whole `src` search finds neither banned extra-load phrase. Inspected the existing phone screenshot `owner-checks/intent_390.png` (360 also retained); unchanged wording, not a newly captured player check-in. Fresh owner check-in access hit health setup; no health answers or check-in submitted.
+- [x] **Checks:** 11/11 focused tests passed (report builder, restoration/gates, season counter, day wording, one-tap logging and check-in), latest build OK. Full suite/phase scan/whole-app audit not rerun this round; prior results below are historical.
+- [ ] **Affected-player screenshot/access proof:** needs approval to sign in as an eligible player; owner-only screenshots do not establish player access. Existing data gate hides advanced sections below 10 sessions; this rule was not widened.
+- **No publish, deploy, migration or cron change. No test account or synthetic test rows created.** Normal report-view observability may record the visit; no athlete measurements were added.
+
+## All 10 decisions — no keep/undo decisions outstanding
+1. One-tap logging — KEEP, ON for everyone (prior live switch proof `all`); fresh 3/3 tests: Done full sets/completed, Skipped zero sets/skipped, Cut short tagged/completed. Prior rollback-only day-end proof: no log → Missed. Live-player phone/save/read-back proof still outstanding.
+2. Streak strip — KEEP.
+3. Classic General report-card removal — UNDO; original canonical section restored above.
+4. General topic landing — KEEP, including season counter.
+5. Season counter — KEEP.
+6. Tomorrow's plan countdown/built-state wording — KEEP.
+7. Conditioning wording — KEEP.
+8. Plan-save speed-up — KEEP.
+9. Sign-in keeper — KEEP.
+10. Start Hammers Today remembered — KEEP.
+
+## Email / DNS — last checked K2, not rechecked this UI-only round
+All three were missing; domain pending. Exact required records remain in **K3** below (full DKIM key, CNAME values, priorities and name.com steps). TEST report `f53996f5-6df5-477b-96c4-5dbff22e3850` last status failed, no sent timestamp. Retries happen on report submission/page open or owner retry button; this is not a scheduled background retry.
+
+## Waiting on owner / blocked proof
+- Add the three DNS records and verify `.org`; then prove TEST report delivery.
+- Approve affected-player sign-in for restored report/card logging phone checks; complete real preview and published password-form sign-in evidence.
+- Approve persisted parent-receipt retry database change.
+- Separate approval to retire five old programs; `programs_retired` remains OFF. No decision remains pending for #3/#4.
+
+---
+## Historical checks and decisions (superseded where corrected above)
 
 ## K2 — final verification of the OWNER DECISIONS + CORRECTIONS
 - **One-tap logging proof:** switch `one_tap_logging` = `all` in the live database (checked directly), so it is ON for everyone. Code proof: WkOneTapLog renders only when that switch is on, and the 3/3 tests pass (Done → full sets saved + card completed; Skipped → 0 sets + card skipped; Cut short → tagged cut short + card completed). Day-end rule proven earlier on the real database with the real day-end job (Done=completed, Skipped=skipped, Cut short=completed, nothing logged=MISSED), all test rows undone.

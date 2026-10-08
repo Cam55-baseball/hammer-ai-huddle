@@ -156,18 +156,18 @@ Status per file. "Owner to confirm" = I could not find a quoted owner request; p
 | `src/components/hammer/cards/SprintStopwatch.tsx` | 2 (2026-10-07→2026-10-07) | Requested (owner Rounds 1–9 / A1–A11 briefs, Oct 6–7) — kept | Part of a numbered owner round; owner to confirm if any item inside was not asked for |
 | `src/components/hammer/logging/ExtraLogs.tsx` | 1 (2026-10-07→2026-10-07) | Requested (owner Rounds 1–9 / A1–A11 briefs, Oct 6–7) — kept | Part of a numbered owner round; owner to confirm if any item inside was not asked for |
 | `src/lib/lift/AGENTS.md` | 1 (2026-10-07→2026-10-07) | Docs/notes | Owner: "tick off roadmap.md" |
-| `src/components/hammer/logging/WkOneTapLog.tsx` | 1 (2026-10-07→2026-10-07) | Owner to confirm | No quoted request found |
-| `src/components/hammer/cards/PlanStreakStrip.tsx` | 2 (2026-10-07→2026-10-07) | Owner to confirm | No quoted request found |
-| `src/pages/ProgressDashboard.tsx` | 2 (2026-10-07→2026-10-07) | Owner to confirm | No quoted request found |
-| `src/pages/ProgressLanding.tsx` | 1 (2026-10-07→2026-10-07) | Owner to confirm | No quoted request found |
-| `src/components/progress/SeasonCounter.tsx` | 1 (2026-10-07→2026-10-07) | Owner to confirm | No quoted request found |
+| `src/components/hammer/logging/WkOneTapLog.tsx` | 1 (2026-10-07→2026-10-07) | KEEP — switch all | Owner: "keep it AND switch it ON for everyone" |
+| `src/components/hammer/cards/PlanStreakStrip.tsx` | 2 (2026-10-07→2026-10-07) | KEEP | Owner: "KEEP: 2 (streak strip)" |
+| `src/pages/ProgressDashboard.tsx` | 2 (2026-10-07→2026-10-07); report restored Oct 8 | UNDO report removal | Owner: "Put the report-card section back exactly as it was before Oct 6". Correction: removal already existed Oct 5; original canonical mount found in c99d5cc7e (June 6). Restored that section only, not suppressed MPI scores or composite trends. |
+| `src/pages/ProgressLanding.tsx` | 1 (2026-10-07→2026-10-07) | KEEP — unchanged this round | Owner: "KEEP, including the season counter" |
+| `src/components/progress/SeasonCounter.tsx` | 1 (2026-10-07→2026-10-07) | KEEP | Owner: "KEEP: ... 5 (season counter)" |
 | `supabase/functions/_shared/wic/phases/u13ThrowGate.ts` | 1 (2026-10-07→2026-10-07) | Requested — kept | "ONE SYSTEM, ONE PHASE — single server-side phase resolver feeds everything" |
-| `src/components/hammer/cards/ReleaseCountdown.tsx` | 3 (2026-10-07→2026-10-07) | Owner to confirm | No quoted request found |
-| `src/components/hammer/WkConditioningCard.tsx` | 1 (2026-10-07→2026-10-07) | Owner to confirm | No quoted request found |
-| `supabase/migrations/20261007003234_7f17666e-a057-42cb-a2ff-b2115159aed6.sql` | 1 (2026-10-07→2026-10-07) | Owner to confirm | No quoted request found |
+| `src/components/hammer/cards/ReleaseCountdown.tsx` | 3 (2026-10-07→2026-10-07) | KEEP | Owner: "KEEP: ... 6 (\"Tomorrow's plan opens in\")" |
+| `src/components/hammer/WkConditioningCard.tsx` | 1 (2026-10-07→2026-10-07) | KEEP | Owner: "KEEP: ... 7 (Conditioning card wording)" |
+| `supabase/migrations/20261007003234_7f17666e-a057-42cb-a2ff-b2115159aed6.sql` | 1 (2026-10-07→2026-10-07) | KEEP — not run this round | Owner: "KEEP: ... 8 (plan-save speed-up)" |
 | `supabase/functions/wk-daily-plan-job/AGENTS.md` | 1 (2026-10-07→2026-10-07) | Docs/notes | Owner: "tick off roadmap.md" |
-| `src/contexts/AuthContext.tsx` | 2 (2026-10-06→2026-10-06) | Owner to confirm | No quoted request found |
-| `src/hooks/useHammersTodayStart.ts` | 1 (2026-10-06→2026-10-06) | Owner to confirm | No quoted request found |
+| `src/contexts/AuthContext.tsx` | 2 (2026-10-06→2026-10-06) | KEEP | Owner: "KEEP: ... 9 (sign-in keeper)" |
+| `src/hooks/useHammersTodayStart.ts` | 1 (2026-10-06→2026-10-06) | KEEP | Owner: "KEEP: ... 10 (Start Hammers Today remembered)" |
 | `supabase/functions/wk-daily-plan-job/index.ts` | 1 (2026-10-06→2026-10-06) | Requested — kept (builder) | Owner-authorized builder work; flush block now disabled |
 | `src/components/hammer/__tests__/warmupSeasonLabel.test.ts` | 1 (2026-10-06→2026-10-06) | Requested — kept | "REAL-BALL POWER PRIMER enabled" / "4 oz rule" |
 
