@@ -1,5 +1,10 @@
 # Ready to publish: no — email still fails (hammersmodality.org not verified in Resend); redesign's inner card content and data visuals only partly done (2026-10-08 H5)
 
+## I1 (2026-10-08 01:31 UTC)
+- Email: retried mailer for TEST row f53996f5-6df5-477b-96c4-5dbff22e3850 → still failed (sent 0, failed 1); .org not verified in Resend. Waiting on owner.
+- UI changes 1–6, countdown accuracy, 10-file list: done (see H5). Visual upgrade: plan done; card interiors, pitch-count meter, sprint trend, readiness scale still open.
+- Ready to publish: no (email unproven; card interiors pending). No publish/deploy/cron; no new test data.
+
 ## Owner requests — H5 results (2026-10-08 01:30 UTC)
 **1. Email (real path): FAILED.** A test account submitted a real problem report (same save + send calls the Report a problem button makes). Row id **`f53996f5-6df5-477b-96c4-5dbff22e3850`**, message "TEST — owner email check", left in place as asked. Result: `email_status = failed`, `email_sent_at` empty. Resend's exact error: HTTP 403 `validation_error` — "The hammersmodality.org domain is not verified. Please, add and verify your domain on https://resend.com/domains". Resend is not fixed for `.org` yet. Parent receipts use the same sender, so they will fail the same way; no fake parent consent created. Once `.org` shows Verified in Resend, any new report (or the next mailer run) retries this row automatically.
 - Test account `93ce8745-46a1-4e00-bfcd-e0ea703a9452` (mailinator) left in place with the report row so the owner can verify; delete both after checking.
