@@ -172,7 +172,7 @@ RESPONSE GUIDELINES:
       const { data: sw } = await supabase.from("wk_feature_switches").select("*").eq("feature_key", PROGRAMS_RETIRED_KEY).maybeSingle();
       if (sw && isSwitchOnFor(sw as any, userId)) {
         promptForUser = scrubRetiredLines(scrubRetiredInline(systemPrompt)) +
-          "\n- Never mention Heat Factory, Iron Bambino, The Unicorn, Speed Lab or Explosive Conditioning. Daily training lives in Hammers Today.";
+          "\n\nHAMMERS TODAY (all daily training):\n- **Hammers Today** (/my-daily-game-plan) — a new personal training plan built every day from the player's subscription, sport, age, season and readiness: warm-up, speed, lifting, throwing/arm care, hitting/bat speed, conditioning and recovery cards, each with sets, reps and instructions inside.\n- Every plan includes Hammers Today; Complete Pitcher adds pitching analysis and pitching work, 5Tool Player adds hitting + throwing analysis, speed work and Tex Vision, The Golden 2Way includes everything.\n- Old program names are no longer part of the app. If a user asks about a program you do not recognize (for example an old workout program), say it is no longer offered and that their daily training now lives in **Hammers Today** — do not describe, name or repeat the old program." ;
       }
     } catch (_e) { /* switch unreadable = programs stay as they are */ }
 
