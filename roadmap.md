@@ -1,6 +1,10 @@
 # LEGAL PAGES & CONSENT (legal_v2) — 2026-10-08
 
-**Ready for lawyer review: YES.** Every draft is written and built into the app behind the `legal_v2` switch, which is **OFF**. Users see nothing new.
+**Ready for lawyer review: YES (N2 final, 2026-10-08 16:50 UTC), including the 13–17 parent waiver.** Every draft is written and built into the app behind the `legal_v2` switch, which is **OFF** (empty list, confirmed). Users see nothing new.
+
+**Packet:** Files → `legal/lawyer-review-packet.pdf` (42 pages, questions 1–17) + `legal/lawyer-review-packet-addendum-q18.pdf` (question 18: teen gating) + `legal/lawyer-review-packet.md` (all 18). **Screenshots:** Files → `legal-screens/` (31) and `legal-screens/teen-waiver/` (13). **Tests:** 2,518/2,518; build OK; 0 test data left.
+
+**Waiting on owner:** 1. Lawyer review (18 questions; Q18 = new teens locked, 14 days of grace for existing teens). 2. DMCA registered agent. 3. "7-day performance guarantee" vs. refund policy. 4. Apply the renewal-reminder schedule. 5. Xcode build for Apple's age-range check. 6. OK to sign in as test accounts (real teen, checkout box, under-13 waiver screenshots).
 
 **13–17 PARENT WAIVER (owner-approved item 11, 2026-10-08 16:45 UTC) — built behind legal_v2 (OFF).**
 - [x] Same Florida §744.301(3) waiver as under-13 (statutory notice word for word, uppercase, larger, boxed, marked for lawyer check).
