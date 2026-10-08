@@ -72,11 +72,12 @@ Deno.serve(async (req) => {
       const token = String(body.token ?? "");
       if (token.length < 40) return json({ error: "invalid_link" }, 400);
       const { data: row } = await admin.from("teen_waiver_requests").select("*").eq("token_hash", await sha256(token)).maybeSingle();
+      const bad = (st: string) => action === "view" ? json({ state: st }) : json({ error: st }, 400);
       // Friendly states, checked in this order: unknown → expired → already signed → feature not active.
-      if (!row) return json({ state: "unknown" });
-      if (!row.token_expires_at || new Date(row.token_expires_at) < now) return json({ state: "expired" });
-      if (row.signed_at) return json({ state: "already_signed" });
-      if (!(await switchOnFor(row.teen_user_id))) return json({ state: "not_active" });
+      if (!row) return bad("unknown");
+      if (!row.token_expires_at || new Date(row.token_expires_at) < now) return bad("expired");
+      if (row.signed_at) return bad("already_signed");
+      if (!(await switchOnFor(row.teen_user_id))) return bad("not_active");
       const { data: doc } = await admin.from("legal_documents").select("slug, version, title, body, approved").eq("slug", SLUG).order("version", { ascending: false }).limit(1).maybeSingle();
       const { data: p } = await admin.from("profiles").select("first_name").eq("id", row.teen_user_id).maybeSingle();
       if (!doc) return json({ error: "not_available" }, 400);
