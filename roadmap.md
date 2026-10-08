@@ -1,3 +1,9 @@
+## I9 (2026-10-08 ~02:20 UTC) — Ready to publish: no
+- Resend rechecked: domains API now returns HTTP 403 Forbidden (previously HTTP 200). Exact Resend error: 403 on the domains list call — the API key no longer authorizes even reading domains. hammersmodality.org verification status could not be checked this round. No resend attempted. TEST row f53996f5-6df5-477b-96c4-5dbff22e3850 kept.
+- Owner action needed: check the Resend API key in Project Settings → Secrets (it may have been rotated or restricted) and verify hammersmodality.org in Resend.
+- No code changes; I5 results (2,497/2,497 tests, build OK) stand. No publish/deploy/migration/cron change/test data.
+- Waiting on owner: working Resend key + hammersmodality.org verified; keep/undo decisions on the 10 ledger files; OK to retire the five old programs.
+
 ## I8 (2026-10-08 ~02:10 UTC) — Ready to publish: no
 - Resend rechecked: domains API HTTP 200, still only hammersmodality.com (status failed); hammersmodality.org not added/verified. No resend attempted. TEST row f53996f5-6df5-477b-96c4-5dbff22e3850 kept.
 - No code changes; I5 results (2,497/2,497 tests, build OK) stand. No publish/deploy/migration/cron change/test data.
