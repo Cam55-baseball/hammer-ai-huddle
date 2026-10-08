@@ -19,6 +19,22 @@ const LIFECYCLES: LifecycleClass[] = ["youth", "beginner", "intermediate", "adva
 const GYM = ["full_gym", "ladder", "med_ball", "box", "bands", "bat", "tennis_ball"];
 
 describe("fast-twitch warm-up primer", () => {
+  it("starts every warm-up with the five-minute tissue-prep block for 8 simulated weeks", () => {
+    for (const context of CONTEXTS) {
+      for (const lifecycle of LIFECYCLES) {
+        for (const sport of ["baseball", "softball"] as const) {
+          for (const isThrower of [false, true]) {
+            for (let day = 0; day < 56; day++) {
+              const built = buildWarmup({ context, lifecycle, gameDay: context === "game_day", daySeed: day, equipment: day % 2 ? GYM : [], sport, isThrower });
+              expect(built.drills[0]?.role, `${context}/${lifecycle}/${sport}/${isThrower}/day-${day}`).toBe("tissue_prep");
+              expect(built.drills[0]?.dosage).toBe("5 minutes total");
+              expect(built.drills.slice(1).some((d) => d.role === "tissue_prep")).toBe(false);
+            }
+          }
+        }
+      }
+    }
+  });
   it("catalog: every twitch drill has a full setup, cue, axis and dose", () => {
     const twitch = WARMUP_LIBRARY.filter((d) => TWITCH_ROLES.includes(d.role));
     expect(twitch.length).toBeGreaterThan(20);

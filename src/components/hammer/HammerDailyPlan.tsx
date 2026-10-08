@@ -129,6 +129,7 @@ import { CardDashboard } from "@/components/hammer/cards/CardDashboard";
 import { PlanStreakStrip } from "@/components/hammer/cards/PlanStreakStrip";
 import { prescribedToday, splitBaserunning, groupPhysicalBaserunning } from "@/components/hammer/cards/todayPresentation";
 import { ExerciseInstructions } from "@/components/hammer/cards/ExerciseInstructions";
+import { ActivityBasics } from "@/components/hammer/cards/ActivityBasics";
 import { usePocketDetails } from "@/components/hammer/cards/PocketCard";
 import { ArmThrowsPanel } from "@/components/hammer/ArmThrowsPanel";
 import { ThrowPacingGuide } from "@/components/hammer/cards/ThrowPacingGuide";
@@ -285,6 +286,9 @@ function DrillRow({
                 </div>
               );
             })()}
+            <div className="mt-1.5">
+              <ActivityBasics name={d.name} slug={d.slug} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} />
+            </div>
           </div>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1 min-[400px]:flex-row min-[400px]:items-center">
@@ -318,19 +322,6 @@ function DrillRow({
           drill={d}
           onSave={adjustApi.save}
         />
-      )}
-      {(d.equipmentNote || d.setup || d.cue) && (
-        <dl className="mt-2 space-y-1 border-l-2 border-border pl-2 text-[12px] leading-snug">
-          {d.equipmentNote && (<div><dt className="inline font-semibold text-foreground/80">You need: </dt><dd className="inline text-muted-foreground">{d.equipmentNote}</dd></div>)}
-          {d.setup && (<div><dt className="inline font-semibold text-foreground/80">Setup: </dt><dd className="inline text-muted-foreground">{d.setup}</dd></div>)}
-          {d.cue && (<div><dt className="inline font-semibold text-foreground/80">Cue: </dt><dd className="inline text-foreground/90">{d.cue}</dd></div>)}
-        </dl>
-      )}
-      {d.stopIf && (
-        <div className="mt-2 flex items-start gap-1.5 rounded-md border border-destructive/30 bg-destructive/5 px-2 py-1.5 text-[12px] text-foreground">
-          <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-destructive" />
-          <span><span className="font-semibold">Stop if: </span>{d.stopIf}</span>
-        </div>
       )}
       <ExerciseInstructions name={d.name} slug={d.slug} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} />
       <MovementGuideSheet
@@ -894,6 +885,7 @@ function HammerDailyPlanBody({
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
         <FinishProfileCard />
+        <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
         {splitBaserunning(plan.blocks).mental.map(b => <BlockCard key={`mental-${b.modality}-${b.side ?? "x"}`} block={b} onNavigate={navigate} />)}
         {/* Owner order 2026-10-05: aim (with breath primer) → defensive video → coach advice → why the plan changed.
             Performance context moved to The General; Recall & Clarity moved to the identity drawer. */}
@@ -1025,6 +1017,8 @@ function HammerDailyPlanBody({
 
         <GpInGameAdvisoryStrip />
 
+        <WeeklyBodyLoadBar />
+
         {/* Step 21E3 — the day's reason lives in the header, not on movements. */}
         <WkSeasonReplanNote />
 
@@ -1066,10 +1060,6 @@ function HammerDailyPlanBody({
               <TrendDeloadNotice />
               <ReleaseCountdown />
               <PlanStreakStrip />
-              <WeeklyBodyLoadBar />
-              <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
-
-
               <WkRestDayBanner />
               <WkSomethingOffRow />
               <div className="flex justify-end"><ReportProblemButton className="h-7 text-[12px]" /></div>

@@ -373,6 +373,8 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         venue: projAny.equipmentVenue ?? equipment ?? null,
         injuryRegions: injuryRegions ?? [],
         suppressTwitch: isRecoveryDay || recoverDay || isTravelDay,
+        sport: normalizeSport(ctx.get<unknown>("sport_primary")?.value ?? null) === "softball" ? "softball" as const : "baseball" as const,
+        isThrower: pos === "P" || pos === "C",
       };
       let built = buildWarmup(warmupArgs);
       if (
@@ -403,7 +405,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       // replaces a drill, only prepends a primer step.
       if (isRecoveryDay || recoverDay) {
         const primer = getSeasonHPI(seasonPhase);
-        drills.unshift({
+        drills.splice(1, 0, {
           name: "Breath primer (60 sec)",
           slug: "hpi-breath-primer",
           setup: "Seated or standing tall, shoulders soft, tongue on the roof of the mouth.",

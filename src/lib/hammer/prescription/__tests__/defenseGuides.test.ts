@@ -49,6 +49,27 @@ describe("defense guides — full drill-name coverage", () => {
     expect(uncovered, `missing defense guides:\n${uncovered.join("\n")}`).toEqual([]);
   });
 
+  it("never gives a position another role's drill or cue", () => {
+    const foreign: Array<{ allowed: DefensePosition[]; pattern: RegExp; label: string }> = [
+      { allowed: ["C"], pattern: /framing|receiving|block-and-recover|pop-time|foul-pop|mask off/i, label: "catcher" },
+      { allowed: ["P"], pattern: /comebacker|1-3-1 PFP|follow-through into fielding position/i, label: "pitcher" },
+      { allowed: ["LF", "CF", "RF", "OF", "utility"], pattern: /drop-step|fence work|sun-ball|crow-hop throw|one-hop accuracy/i, label: "outfield" },
+      { allowed: ["1B", "2B", "SS", "3B", "IF", "utility"], pattern: /DP pivot|double-play|slow-roller|glove work — 4 corners/i, label: "infield" },
+    ];
+    for (const pos of POSITIONS) for (const sport of SPORTS) for (const phase of PHASES) {
+      const rx = selectDefenseDrills({ position: pos, sport, seasonPhase: phase, tier: "developing" });
+      for (const drill of rx?.drills ?? []) {
+        const text = `${drill.name} ${drill.cue ?? ""}`;
+        const secondary = drill.name.match(/\(secondary:\s*([^)]+)\)/i)?.[1] as DefensePosition | undefined;
+        for (const rule of foreign) {
+          const licensed = rule.allowed.includes(pos) || (secondary ? rule.allowed.includes(secondary) : false);
+          if (!licensed) expect(text, `${pos}:${sport}:${phase} received ${rule.label} language`).not.toMatch(rule.pattern);
+        }
+        if (sport === "baseball") expect(text, `${pos}:${phase} baseball received softball language`).not.toMatch(/rise-ball|slap-bunt|slapper|windmill/i);
+      }
+    }
+  });
+
   it("secondary-position drills (blended) still resolve to a guide", () => {
     const rx = selectDefenseDrills({
       position: "SS",

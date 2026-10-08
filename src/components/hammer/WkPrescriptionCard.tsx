@@ -35,6 +35,9 @@ import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
 import { ProgramContentBlock, LimbHintBlock, GameFlushBlock } from "@/components/hammer/ProgramContentBlock";
 import { usePocketDetails } from "./cards/PocketCard";
 import { ExerciseInstructions } from "./cards/ExerciseInstructions";
+import { ActivityBasics } from "./cards/ActivityBasics";
+import { formatPrescriptionDose } from "@/lib/hammer/prescription/formatPrescriptionDose";
+import { InlinePrescriptionLog } from "@/components/hammer/logging/InlinePrescriptionLog";
 
 const SLOT_TONE: Record<WkRx["slot"], string> = {
   lift: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
@@ -279,14 +282,14 @@ export function WkPrescriptionCard({
       dosageParts.push(w != null ? `${rx.load_pct}% of your max · working weight: ${w} lb` : `${rx.load_pct}% of your max · ${UNLOCK_COPY}`);
     }
   }
-  const dosage = dosageParts.length > 0
-    ? dosageParts.join(" • ")
-    : "Complete as described in the cue below.";
+  const baseDose = formatPrescriptionDose(rx);
+  const dosage = [baseDose, exec.densityLabel, exec.rirLabel, rx.tempo ? `tempo ${rx.tempo}` : null]
+    .filter(Boolean).join(" • ");
 
   return (
     <Card className={`p-3 border ${checked ? "opacity-60" : ""}`}>
       <Collapsible open={pocketDetails || open} onOpenChange={setOpen}>
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Checkbox
             checked={checked}
             onCheckedChange={(v) => toggleCheckbox(!!v)}
@@ -296,10 +299,10 @@ export function WkPrescriptionCard({
           <CollapsibleTrigger asChild disabled={pocketDetails}>
             <button
               type="button"
-              className="min-w-0 flex-1 text-left"
+              className="min-w-[9rem] flex-1 text-left"
               aria-expanded={pocketDetails || open}
             >
-              <div className="font-semibold text-sm line-clamp-2 break-words">
+              <div className="font-semibold text-sm whitespace-normal break-words">
                 {rx.movement_name}
               </div>
               {isMissed && !checked && (
@@ -340,6 +343,19 @@ export function WkPrescriptionCard({
               <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
             </Button>
           </CollapsibleTrigger>}
+        </div>
+
+        <div className="mt-2 space-y-2 text-xs">
+          <div className="font-medium text-foreground" data-prescribed-dose>{dosage}</div>
+          <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} dosage={dosage} setup={(why as any)?.setup} cue={why.cue} />
+          <div className="rounded border border-border bg-muted/20 p-2" data-visible-log-rows>
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <span className="font-medium">Log this work</span>
+              <LogButton rx={rx} dosageText={dosage} compact />
+            </div>
+            <InlinePrescriptionLog rx={rx} />
+          </div>
+          <ExerciseInstructions name={rx.movement_name} slug={rx.movement_slug} dosage={dosage} setup={(why as any)?.setup} cue={why.cue} />
         </div>
 
         <CollapsibleContent className="mt-2 space-y-2 text-xs">
@@ -398,11 +414,10 @@ export function WkPrescriptionCard({
               )}
             </div>
             <div className="flex items-center gap-1 shrink-0">
-              <LogButton rx={rx} dosageText={dosage} compact />
+              <span />
             </div>
           </div>
           <WkOneTapLog rx={rx} />
-          {pocketDetails && <ExerciseInstructions name={rx.movement_name} slug={rx.movement_slug} dosage={dosage} cue={why.cue} />}
           {plateau && (
             <p data-lift-plateau className="text-[11px] text-foreground">
               No new best on this lift in 3 sessions.{swapAvailable ? " Try a different lift of the same kind — tap Alternative. Your sets and reps stay the same." : " Keep your form clean — progress will come."}

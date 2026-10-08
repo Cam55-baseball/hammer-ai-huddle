@@ -82,6 +82,7 @@ export const WARMUP_LIBRARY: WarmupDrill[] = [
   { slug: "wu_9020_reset", name: "Feet-on-Wall Breathing Reset", role: "breathwork", setup: "back on floor, feet on wall, hips/knees 90°", cue: "ribs down, exhale fully before inhaling", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "6 breaths" },
 
   // Tissue prep / ECM
+  { slug: "wu_tissue_prep_roll_and_rhythm", name: "Tissue prep — rolling + rhythmic movement", role: "tissue_prep", setup: "Use a tennis ball or your hands for gentle pressure, then clear space for easy swings and bounces.", cue: "Roll the major areas, then use easy oscillations, bounces, and swings before faster work.", stopIf: "sharp pain, numbness, tingling, or bruising pressure", gameDayLegal: true, minLifecycle: "youth", source: "owner_tissue_prep_law", baseDose: "5 minutes total" },
   { slug: "wu_foam_roll_tspine", name: "T-spine foam roll extensions", role: "tissue_prep", setup: "roller under mid-back", cue: "small ranges, exhale into extension", stopIf: "pinch or sharp pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 slow reps" },
   { slug: "wu_lacrosse_ball_pec", name: "Lacrosse ball pec minor pin", role: "tissue_prep", setup: "ball against wall on pec minor", cue: "search-hold-move — arm slow figure-8", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "30-45 sec per side" },
   { slug: "wu_lacrosse_ball_glute", name: "Lacrosse ball glute pin-and-stretch", role: "tissue_prep", cue: "find a hotspot, then flex/extend hip", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "45 sec per side" },
@@ -610,6 +611,8 @@ export interface BuildWarmupInput {
   readonly injuryRegions?: ReadonlyArray<string>;
   /** True on low-readiness days: the twitch layer is dropped entirely. */
   readonly suppressTwitch?: boolean;
+  readonly sport?: "baseball" | "softball" | null;
+  readonly isThrower?: boolean;
 }
 
 export interface BuiltWarmupDrill {
@@ -625,6 +628,39 @@ export interface BuiltWarmupDrill {
   /** Athlete-facing "You need:" line, when the drill needs gear. */
   readonly equipmentNote?: string;
   readonly axis?: WarmupAxis;
+}
+
+function tissuePrepBlock(input: BuildWarmupInput, available: Set<string>): BuiltWarmupDrill {
+  const hasBall = available.has("tennis_ball") || available.has("lacrosse_ball") || available.has("softball");
+  const thrower = input.isThrower !== false;
+  const upper = thrower ? " Then roll the pec, lat, and forearm." : "";
+  return {
+    slug: "wu_tissue_prep_roll_and_rhythm",
+    name: "Tissue prep — rolling + rhythmic movement",
+    role: "tissue_prep",
+    setup: hasBall
+      ? "Use a tennis ball or similar soft ball against the floor or wall. Clear space for easy swings and bounces."
+      : "No ball is available today. Use your hands for gentle pressure, then clear space for easy swings and bounces.",
+    dosage: "5 minutes total",
+    cue: `Spend about 30 seconds each on feet, calves, hips/glutes, and upper back.${upper} Then do easy ankle bounces, leg swings, and arm swings to break the stiffness before faster work.`,
+    stopIf: "You feel sharp pain, numbness, tingling, or bruising pressure.",
+    source: "owner_tissue_prep_law",
+    equipmentNote: hasBall ? "You need: tennis ball or similar soft ball." : undefined,
+    guide: {
+      what: "Gentle rolling followed by rhythmic movement warms stiff tissue so it can move and spring more freely.",
+      setup: hasBall ? "Use a tennis ball or similar soft ball against the floor or wall." : "Use your hands for light pressure because no ball is available.",
+      goodRep: [
+        `Roll feet, calves, hips/glutes, and upper back.${upper}`,
+        "Use slow pressure that feels useful, never sharp.",
+        "Finish with easy oscillations, bounces, leg swings, and arm swings.",
+      ],
+      badRep: ["Grinding hard on one sore spot.", "Skipping the rhythmic movement after rolling."],
+      feel: "Warmer, less stiff, and ready to move faster.",
+      whyToday: "Tissue gets stiffer while you rest. Rolling and rhythm come first to restore easy movement before training.",
+      nextLink: "Continue into the rest of today's warm-up.",
+      stopIf: "Sharp pain, numbness, tingling, or bruising pressure.",
+    },
+  };
 }
 
 export interface BuiltWarmup {
@@ -682,8 +718,12 @@ export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
   }
   const seedBase = input.daySeed ?? 0;
   const seen = new Set<string>();
-  const drills: BuiltWarmupDrill[] = [];
+  const drills: BuiltWarmupDrill[] = [tissuePrepBlock(input, filtersBase.available)];
+  seen.add(drills[0].slug);
   roles.forEach((role, i) => {
+    // The owner-required 4–6 minute tissue sequence is always first and owns
+    // this role; template copies must not add a second rolling block later.
+    if (role === "tissue_prep") return;
     const seed = seedBase + i * 7 + role.length * 3;
     const pick = pickForRole(role, filtersBase, seed, seen, diagnostics);
     if (!pick) {
@@ -744,7 +784,7 @@ export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
     });
   }
 
-  const est = Math.max(8, Math.round((drills.length * 90) / 60));
+  const est = Math.max(8, 5 + Math.round(((drills.length - 1) * 90) / 60));
 
   return { context: input.context, drills, estMinutes: est, singleLegShare, diagnostics };
 }

@@ -130,7 +130,7 @@ export function composeGuide(input: ComposeInput): ComposedGuide {
   } else if (input.dosage?.trim()) {
     steps.push(`Complete the prescribed dose: ${input.dosage.trim()}.`);
   }
-  if (input.cue?.trim()) steps.push(`Hold this through every rep: ${input.cue.trim()}`);
+  if (input.cue?.trim()) steps.push(input.cue.trim());
   steps.push("Finish the last rep as cleanly as the first — if you can't, stop the set there.");
 
   const keyCues = input.cue?.trim() ? [input.cue.trim(), ...fam.cues] : [...fam.cues];
