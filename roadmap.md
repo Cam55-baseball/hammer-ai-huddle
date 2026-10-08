@@ -2,6 +2,8 @@
 
 **Ready for lawyer review: YES.** Every draft is written and built into the app behind the `legal_v2` switch, which is **OFF**. Users see nothing new.
 
+**M10 final check (2026-10-08 16:00 UTC):** live database shows legal_v2 = off with an empty allowlist. There are 0 consent records, so no test data is left, and the 15 draft documents are stored. Full test suite: 2,513/2,513 passing (286 files). The switch-ON flow proof and the 167-page × 360/390 px audit (334 loads, 0 errors) are from earlier today and are listed below. No legal code changed since then, so they weren't re-run. Nothing was published and no schedules were changed.
+
 **Lawyer Review Packet:** Files → `legal/lawyer-review-packet.pdf` (42 pages) and `.md`; in the repo, `docs/legal/lawyer-review-packet.md` (index + 17 open legal questions) and `docs/legal/drafts/`.
 
 ### Built (all hidden while OFF)
