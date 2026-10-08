@@ -18,6 +18,12 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { CardRules } from "./CardRules";
+import { PracticeLog } from "@/components/hammer/logging/ExtraLogs";
+import { createContext, useContext } from "react";
+
+const PocketDetailsContext = createContext(false);
+export const usePocketDetails = () => useContext(PocketDetailsContext);
 
 export const CARD_DISCLAIMER =
   "Hammer's Modality is not responsible for any injury that may occur during exercises. There are no guarantees in results. Always consult with a qualified healthcare professional before beginning any exercise program. Listen to your body and stop immediately if you experience pain.";
@@ -67,9 +73,10 @@ interface Props {
   /** Link card: the page shows these steps and a button to the linked screen. */
   readonly link?: { route: string; label: string; steps: ReadonlyArray<string> } | null;
   readonly onNavigate?: (route: string) => void;
+  readonly practiceLogging?: boolean;
 }
 
-export function PocketCard({ id, category, focus, tone, planDate, prescribed, countLabel, notPrescribedNote, children, progress, intro, link, onNavigate }: Props) {
+export function PocketCard({ id, category, focus, tone, planDate, prescribed, countLabel, notPrescribedNote, children, progress, intro, link, onNavigate, practiceLogging = false }: Props) {
   const [showIntro, setShowIntro] = useState(false);
   const allDone = !!progress && progress.total > 0 && progress.done >= progress.total;
   const [celebrate, setCelebrate] = useState(false);
@@ -113,9 +120,10 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
     if (saved) toast.success("Saved. Your logged work is kept.");
   }
 
+  if (!prescribed) return null;
   return (
     <>
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={openPocket}
         disabled={!prescribed}
@@ -146,7 +154,7 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
           {celebrate && <PartyPopper className="h-5 w-5 shrink-0 text-primary animate-bounce motion-reduce:animate-none" aria-label="Card complete" />}
           {prescribed && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />}
         </div>
-      </button>
+      </Button>
 
       {open && createPortal(
         <div
@@ -190,7 +198,18 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
                 </Button>
               </div>
             )}
-            {children({ pocket: true })}
+            <CardRules category={category} />
+            <PocketDetailsContext.Provider value={true}>{children({ pocket: true })}</PocketDetailsContext.Provider>
+            {practiceLogging && <section className="mt-4 border-t border-border pt-3" data-card-practice>
+              <h3 className="text-sm font-semibold text-foreground">Log your practice</h3>
+              <ol className="my-2 list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
+                <li>Finish the prescribed work. Do not repeat it to make a log.</li>
+                <li>Choose team practice, lesson or own work.</li>
+                <li>Enter the minutes you actually did and how hard it felt.</li>
+                <li>Save once. Do not log the same practice again in another card.</li>
+              </ol>
+              <PracticeLog planDate={planDate} modality={category.toLowerCase()} />
+            </section>}
             <p className="mt-6 text-[11px] leading-relaxed text-muted-foreground" data-card-disclaimer>
               {CARD_DISCLAIMER}
             </p>

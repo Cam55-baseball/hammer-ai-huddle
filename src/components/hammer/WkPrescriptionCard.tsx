@@ -33,6 +33,8 @@ import {
 import { missedStillEditable } from "@/lib/wic/execution/liftCompletion";
 import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
 import { ProgramContentBlock, LimbHintBlock, GameFlushBlock } from "@/components/hammer/ProgramContentBlock";
+import { usePocketDetails } from "./cards/PocketCard";
+import { ExerciseInstructions } from "./cards/ExerciseInstructions";
 
 const SLOT_TONE: Record<WkRx["slot"], string> = {
   lift: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
@@ -91,7 +93,8 @@ export function WkPrescriptionCard({
   side?: "L" | "R" | null;
   allowSwap?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const pocketDetails = usePocketDetails();
+  const [open, setOpen] = useState(pocketDetails);
   const [swapOpen, setSwapOpen] = useState(false);
   // Availability is resolved against the certified ladder (or, for rows that
   // predate substitution families, the identical catalog-derived ladder).
@@ -282,7 +285,7 @@ export function WkPrescriptionCard({
 
   return (
     <Card className={`p-3 border ${checked ? "opacity-60" : ""}`}>
-      <Collapsible open={open} onOpenChange={setOpen}>
+      <Collapsible open={pocketDetails || open} onOpenChange={setOpen}>
         <div className="flex items-center justify-between gap-2">
           <Checkbox
             checked={checked}
@@ -290,7 +293,7 @@ export function WkPrescriptionCard({
             className="shrink-0"
             aria-label={`Mark ${rx.movement_name} done`}
           />
-          <CollapsibleTrigger asChild>
+          <CollapsibleTrigger asChild disabled={pocketDetails}>
             <button
               type="button"
               className="min-w-0 flex-1 text-left"
@@ -329,14 +332,14 @@ export function WkPrescriptionCard({
                   {swapLadder.isLoading ? "Alternative…" : swapAvailable ? "Alternative" : "No alternative"}
                 </Button>
               )}
-          {swapAvailable && (
+           {swapAvailable && (
             <LiftSwapSheet rx={rx} open={swapOpen} onOpenChange={setSwapOpen} />
           )}
-          <CollapsibleTrigger asChild>
+          {!pocketDetails && <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="h-7 px-2 shrink-0">
               <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
             </Button>
-          </CollapsibleTrigger>
+          </CollapsibleTrigger>}
         </div>
 
         <CollapsibleContent className="mt-2 space-y-2 text-xs">
@@ -399,6 +402,7 @@ export function WkPrescriptionCard({
             </div>
           </div>
           <WkOneTapLog rx={rx} />
+          {pocketDetails && <ExerciseInstructions name={rx.movement_name} slug={rx.movement_slug} dosage={dosage} cue={why.cue} />}
           {plateau && (
             <p data-lift-plateau className="text-[11px] text-foreground">
               No new best on this lift in 3 sessions.{swapAvailable ? " Try a different lift of the same kind — tap Alternative. Your sets and reps stay the same." : " Keep your form clean — progress will come."}
@@ -420,7 +424,7 @@ export function WkPrescriptionCard({
             const today = String(todayLine ?? "").trim();
             if (!whyText && !today) return null;
             return (
-              <Collapsible>
+              <Collapsible defaultOpen={pocketDetails}>
                 <CollapsibleTrigger asChild>
                   <button
                     type="button"

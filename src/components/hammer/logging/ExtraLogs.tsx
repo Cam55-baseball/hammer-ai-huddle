@@ -63,7 +63,7 @@ export function TestedMaxLog({ movementSlug, movementName }: { movementSlug: str
 
 const KINDS = [["team_practice", "Team practice"], ["lesson", "Lesson"], ["own_work", "Own work"]] as const;
 
-export function PracticeLog() {
+export function PracticeLog({ planDate, modality }: { planDate?: string; modality?: string } = {}) {
   const { user } = useOptionalAuth();
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<(typeof KINDS)[number][0]>("team_practice");
@@ -76,10 +76,10 @@ export function PracticeLog() {
     if (!Number.isFinite(m) || m < 5 || m > 600) { toast.error("Enter how many minutes (5–600)."); return; }
     setBusy(true);
     const { error } = await supabase.from("wk_session_logs" as any).insert({
-      user_id: user.id, plan_date: today(), movement_slug: `practice_${kind}`, prescription_id: null,
+      user_id: user.id, plan_date: planDate ?? today(), movement_slug: `practice_${kind}`, prescription_id: null,
       duration_seconds_completed: Math.round(m * 60), load_used: null,
       rpe: Number.isFinite(h) && h >= 1 && h <= 10 ? Math.round(h) : null,
-      metrics: { kind: "practice", practice_kind: kind },
+      metrics: { kind: "practice", practice_kind: kind, modality: modality ?? null },
     });
     setBusy(false);
     if (error) { toast.error("Couldn't save — try again."); return; }
