@@ -1033,9 +1033,8 @@ function HammerDailyPlanBody({
         {(() => {
           const warmupBlocks = plan.blocks.filter((b) => b.modality === "warmup" && prescribedToday(b));
           const baseWork = splitBaserunning(plan.blocks);
-          const logPractice = sched.today.some(s => s.kind === "practice");
-          const baseSpeed = hasBaseStealer ? baseWork.physical.filter(b => b.drills.some(d => /steal|sprint|jump start/i.test(d.name))) : [];
-          const baseConditioning = baseWork.physical.filter(b => !baseSpeed.includes(b));
+          const logPractice = sched.practicesToday.length > 0;
+          const { speed: baseSpeed, conditioning: baseConditioning } = groupPhysicalBaserunning(baseWork.physical, hasBaseStealer);
           const WK_OWNED = new Set(["speed", "bat_speed", "strength", "lift", "lifts", "conditioning", "cross_sport"]);
           const allOtherBlocks = plan.blocks.filter(
             (b) =>
