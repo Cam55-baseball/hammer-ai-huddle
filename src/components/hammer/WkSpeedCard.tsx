@@ -48,11 +48,11 @@ export function WkSpeedCard({ pocket = false }: { pocket?: boolean } = {}) {
       data-display-order={entry.displayOrder}
       data-generation-id={snapshotIdentity.generation_id ?? ""}
     >
-      <Collapsible open={open} onOpenChange={setOpen}>
+      <Collapsible open={pocket || open} onOpenChange={setOpen}>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex flex-wrap items-center justify-between gap-2">
-            <CollapsibleTrigger asChild>
-              <button type="button" className="flex items-center gap-2 min-w-0 text-left flex-1" aria-expanded={open}>
+            <CollapsibleTrigger asChild disabled={pocket}>
+              <button type="button" className="flex items-center gap-2 min-w-0 text-left flex-1" aria-expanded={pocket || open}>
                 <Zap className={`h-4 w-4 shrink-0 ${isGameDay ? "text-amber-600" : "text-violet-500"}`} />
                 <span className="truncate">Speed</span>
                 <Badge variant="outline" className="text-[10px]">
