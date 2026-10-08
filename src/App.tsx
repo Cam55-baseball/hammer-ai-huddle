@@ -251,6 +251,8 @@ const RelationshipSettings = lazyWithRetry(() => import("./pages/RelationshipSet
 import { DemoGate } from "./components/demo/DemoGate";
 import { LegalV2Gate } from "@/components/legal/LegalV2Gate";
 import LegalDocumentPage from "./pages/legal/LegalDocumentPage";
+import ParentWaiverSign from "./pages/legal/ParentWaiverSign";
+import { TeenWaiverGate } from "@/components/legal/TeenWaiverGate";
 import LegalSettings from "./pages/legal/LegalSettings";
 import LegalRecords from "./pages/owner/LegalRecords";
 const queryClient = new QueryClient({
@@ -315,6 +317,7 @@ const App = () => {
               <LegalV2Gate>
               <Routes>
               <Route path="/legal/:slug" element={<LegalDocumentPage />} />
+              <Route path="/parent-waiver/:token" element={<ParentWaiverSign />} />
               <Route path="/settings/legal" element={<LegalSettings />} />
               <Route path="/owner/legal-records" element={<LegalRecords />} />
               <Route path="/" element={<Index />} />
@@ -364,8 +367,8 @@ const App = () => {
                 path="/parent/athletes/:athleteId/recruiting"
                 element={<ParentRecruitingAuthorization />}
               />
-              <Route path="/today" element={<Today />} />
-              <Route path="/today/session/:id" element={<TodaySession />} />
+              <Route path="/today" element={<TeenWaiverGate><Today /></TeenWaiverGate>} />
+              <Route path="/today/session/:id" element={<TeenWaiverGate><TodaySession /></TeenWaiverGate>} />
               <Route
                 path="/ops/health"
                 element={

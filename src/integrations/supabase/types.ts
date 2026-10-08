@@ -14460,6 +14460,60 @@ export type Database = {
         }
         Relationships: []
       }
+      teen_waiver_requests: {
+        Row: {
+          consent_record_id: string | null
+          first_seen_at: string
+          grace_until: string | null
+          id: string
+          kind: string
+          last_reminder_at: string | null
+          last_sent_at: string | null
+          parent_email: string | null
+          parent_phone: string | null
+          send_count: number
+          signed_at: string | null
+          teen_user_id: string
+          token_expires_at: string | null
+          token_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          consent_record_id?: string | null
+          first_seen_at?: string
+          grace_until?: string | null
+          id?: string
+          kind: string
+          last_reminder_at?: string | null
+          last_sent_at?: string | null
+          parent_email?: string | null
+          parent_phone?: string | null
+          send_count?: number
+          signed_at?: string | null
+          teen_user_id: string
+          token_expires_at?: string | null
+          token_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          consent_record_id?: string | null
+          first_seen_at?: string
+          grace_until?: string | null
+          id?: string
+          kind?: string
+          last_reminder_at?: string | null
+          last_sent_at?: string | null
+          parent_email?: string | null
+          parent_phone?: string | null
+          send_count?: number
+          signed_at?: string | null
+          teen_user_id?: string
+          token_expires_at?: string | null
+          token_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tex_vision_adaptive_difficulty: {
         Row: {
           accuracy_history: Json | null

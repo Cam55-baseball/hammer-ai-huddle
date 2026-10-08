@@ -29,3 +29,4 @@ Internal: data-inventory.md, wisp.md, data-retention-policy.md, data-breach-resp
 15. Texas App Store Accountability Act / Apple age-range: what is required now, given litigation?
 16. Accessibility statement (WCAG 2.1 AA target): wording OK?
 17. Governing law/venue and arbitration / class-action waiver?
+18. 13–17 parent waiver gating (owner-approved, adjust if needed): a parent signs the Florida §744.301(3) waiver from an emailed link (typed full name, relationship, 18+ checkbox, drawn signature). NEW teen accounts: the training plan is locked until a parent signs. EXISTING teens: 14 days of grace from when they first see the notice (reminders every 3 days), then locked. Is this gating, the grace length, and e-signing by emailed link enough to make the release enforceable? Should the parent's identity or age be verified further?

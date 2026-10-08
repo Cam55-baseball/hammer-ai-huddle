@@ -3,7 +3,8 @@
  *  - Everyone: accept updated Terms / Privacy / Consumer Health Data / Medical & Safety.
  *  - Everyone: health-data collection consent — a separate, unchecked opt-in (yes or no both saved).
  *  - Adults 18+: Assumption of Risk & Release (typed full name + checkbox).
- *  - 13–17: no extra step (owner ruling); under-13 parents sign the minor waiver in the parent flow.
+ *  - 13–17: a parent signs the minor waiver from an emailed link (TeenWaiverGate on the training plan);
+ *    under-13 parents sign it in the parent flow.
  * OFF switch → renders children untouched.
  */
 import { useEffect, useState } from "react";
@@ -21,7 +22,7 @@ import {
   myConsentStatus, pendingAcceptances, recordConsent, useLegalV2, type LegalDoc,
 } from "@/lib/legal/legalV2";
 
-const OPEN = [/^\/auth/, /^\/signup/, /^\/legal\//, /^\/terms/, /^\/privacy/, /^\/reset-password/];
+const OPEN = [/^\/auth/, /^\/signup/, /^\/legal\//, /^\/terms/, /^\/privacy/, /^\/reset-password/, /^\/parent-waiver\//];
 
 type Need = { terms: string[]; health: boolean; release: LegalDoc | null; versions: Record<string, number> };
 
