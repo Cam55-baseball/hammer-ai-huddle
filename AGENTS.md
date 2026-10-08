@@ -24,3 +24,4 @@
 
 - Problem reports save to `problem_reports` first; `report-problem-mailer` only sends/retries. Why: a broken email key never loses a report.
 - Classic General mounts `UhrcAthleteSection` behind existing access gates; video reports stay separate. Why: restore the canonical card without changing scoring or access.
+- Retired programs live only in `src/archive/retired-programs/` (unrouted, `.archived`); old addresses go to /dashboard via `RetiredProgramRoute`; restore per `docs/owner/retired-programs.md`. Why: owner retired them 2026-10-08 but wants them recoverable.
