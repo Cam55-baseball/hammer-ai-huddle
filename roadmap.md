@@ -1,3 +1,40 @@
+# LEGAL PAGES & CONSENT (legal_v2) — 2026-10-08
+
+**Ready for lawyer review: YES.** Every draft is written and built into the app behind the `legal_v2` switch, which is **OFF**. Users see nothing new.
+
+**Lawyer Review Packet:** Files → `legal/lawyer-review-packet.pdf` (42 pages) and `.md`; in the repo, `docs/legal/lawyer-review-packet.md` (index + 17 open legal questions) and `docs/legal/drafts/`.
+
+### Built (all hidden while OFF)
+- [x] Database: `legal_documents` (15 versioned drafts, approved = false), `consent_records` (append-only, kept 3 years after the account ends, never removed by account deletion — tested), `privacy_requests` (30-day due dates). Visitors may read only the legal_v2 switch row, so the footer links can appear on the website once it's on.
+- [x] Public pages at /legal/<name>: Terms, Privacy (COPPA, vendors, retention, rights), Consumer Health Data Privacy Policy (home-page footer link with that exact name), Medical & Safety, Subscription/Auto-Renewal/Cancellation/Refund, Child Safety & Communication, Community & Content, Copyright (DMCA, agent placeholder), Accessibility. Footer links on the home page; Settings → Legal & privacy. The "DRAFT" label shows only to owners and admins.
+- [x] Agreements: one-time "Before you keep training" screen (updated terms, optional health opt-in, Adult Assumption of Risk with typed name for 18+); Florida §744.301(3) parent waiver inside the under-13 parent sign-up (statutory notice uppercase, larger, boxed, marked for lawyer check); separate "share with partners" yes; unchecked auto-renewal checkbox at checkout. **13–17: no step added** (see Waiting on owner).
+- [x] Cancel subscription button (Settings → Legal & privacy; no retention steps; records the cancellation). Download my data; Delete my account (the existing in-app deletion); withdraw-consent switches.
+- [x] Owner page /owner/legal-records: consent records + CSV export, privacy-request queue with deadlines.
+- [x] `renewal-reminders` backend function (deployed): yearly-plan reminder 15–30 days before renewal, plus owner-sent price-change notices. Does nothing unless legal_v2 is on for everyone; dry run by default. Proven: switch OFF → skipped; dry run found 0 yearly renewals due and 81 active subscriptions for a price notice; no emails sent; no login → refused.
+- [x] Internal drafts in docs/legal/: data inventory, WISP, retention policy, breach response plan, privacy request procedure, consent records procedure, vendor list, AI use policy, Apple worksheet + age-range plan (apple-app-store.md).
+
+### Proposed schedule (owner applies; I made no schedule changes)
+`renewal-reminders` daily at 14:00 UTC (10 am Eastern), body `{"mode":"renewal","dry_run":false}`. Reminders are sent once per renewal date.
+
+### Proof
+- Switch OFF: home, all 10 /legal pages, settings, checkout and dashboard unchanged at 360 and 390 px, signed in and out (no footer links, no gate; /legal addresses go back to the old pages or the dashboard).
+- Switch ON for the owner account only: every page and flow at 360 and 390 px, no overflow, no page errors; the agreement screen saved 6 real records (shown on the owner records page), then those test records were removed and the switch set back to OFF. Screenshots: Files → `legal-screens/` (31 images). Fixed: health checkbox text layout and the Legal & privacy link wrapping on phones.
+- Tests: 2,513/2,513 passing. Build OK.
+- **Not done: the 165-page phone audit.** The test sandbox crashed three times under the full run, so it was not re-run this round. (The last full audit passed before this build.)
+- **Not shown:** checkout's auto-renewal box and the under-13 parent waiver step. The owner account skips checkout and is not a parent, and test-account sign-in needs your OK. Both are covered by code and tests only.
+
+### Waiting on owner (legal)
+1. Lawyer review of the packet and its 17 questions. Then mark documents approved and switch legal_v2 on.
+2. Decision: should 13–17 players' parents sign the Florida waiver? It's ready, but not added.
+3. DMCA registered agent details.
+4. Checkout's "7-day performance guarantee" conflicts with the draft refund policy. Choose one.
+5. Apply the renewal-reminder schedule above.
+6. Apple age-range / parent approval: needs your Xcode build (steps in docs/legal/apple-app-store.md).
+7. OK to sign in as test accounts (under-13 parent, a paying player) to screenshot those two flows.
+8. Resend verification is still pending. Renewal emails and the TEST report (f53996f5…) send once it's verified.
+
+---
+
 # Ready to publish: YES for the program retirement (2026-10-08, L4 final) — overall still blocked only by the items under "Waiting on owner"
 
 ## FINAL REPORT — Retirement of the five programs (Heat Factory, Iron Bambino, The Unicorn, Speed Lab, Explosive Conditioning)
