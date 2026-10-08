@@ -9,6 +9,7 @@
 - [x] Owner page /owner/legal-records: "Teens waiting for a parent signature" with Resend.
 - [x] Lawyer question 18 added to the packet (gating and the 14 days).
 - Proof: parent signed on the real backend at 390 px → consent record saved (name, relationship, 18+, signature) and the teen's entry switched to unlocked; owner list showed the teen as locked before signing; lock/grace/expired screens at 360 and 390 px (screen states fed in by the test, no overflow, no page errors); 5 new rule tests (ages, new = locked, exactly 14 days, signing unlocks, reminders). Full suite 2,518/2,518; build OK. Screenshots: Files → legal-screens/teen-waiver/ (13).
+- [x] N1: real signing-link email sent through Resend to hammersmodality@hammersmodality.org (status sent; test link then disabled); with the switch OFF the backend answers "not required" for your account.
 - Cleanup: switch back OFF with empty list, test birthdate removed, test entry and test consent record removed (0 left).
 - Gap: a live teen sign-in wasn't possible (signing in as a test account needs your approval, which wasn't available), so the teen screens used the owner session with fed-in states; the under-13 "unaffected" check is by rule test only.
 
