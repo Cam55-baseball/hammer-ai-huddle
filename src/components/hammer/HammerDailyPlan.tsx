@@ -1228,6 +1228,7 @@ function HammerDailyPlanBody({
                 completed={vaultQuizzes.hasCompleted("night")}
                 onOpen={() => setCheckInQuiz("night")}
               />
+             </TodayRhythmProvider>
             </ArmCareBudgetProvider>
           );
         })()}
