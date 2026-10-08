@@ -78,13 +78,15 @@ Deno.serve(async (req) => {
         const { error } = await admin.auth.admin.updateUserById(id, { password: pw });
         if (error) return json({ error: error.message }, 500);
       }
-      await admin.from("profiles").update({
+      const errs: string[] = [];
+      const pr = await admin.from("profiles").update({
         full_name: a.name, first_name: a.first, last_name: a.last, date_of_birth: a.dob,
         is_system_account: true, anon_training_opt_out: true, account_paused_at: null, paused_reason: null,
-        parent_controlled: a.child, parent_consent_ok: a.child ? true : null,
+        parent_controlled: a.child, parent_consent_ok: a.child,
         hammers_today_started_at: now, position: "SS", positions: ["SS"],
         primary_throwing_hand: "R", primary_batting_side: "R", tutorial_completed: true,
       }).eq("id", id);
+      if (pr.error) errs.push("profile: " + pr.error.message);
       await admin.from("athlete_mpi_settings").upsert({
         user_id: id, sport: "baseball", date_of_birth: a.dob, primary_position: "SS",
         primary_throwing_hand: "R", primary_batting_side: "R", league_tier: "rec", season_status: "off_season",
@@ -97,7 +99,7 @@ Deno.serve(async (req) => {
       if (a.child) {
         const { data: pc } = await admin.from("parent_consents").select("id").eq("child_user_id", id).limit(1).maybeSingle();
         if (!pc) {
-          await admin.from("parent_consents").insert({
+          const ci = await admin.from("parent_consents").insert({
             child_user_id: id, parent_full_name: "TEST Demo Parent", relationship: "parent",
             parent_birthdate: "1980-01-01", parent_is_adult: true, parent_email: "hammersmodality+applereviewparent@gmail.com",
             child_display_name: "TEST Child", typed_name: "TEST Demo Parent", signature_path: "apple-review/none",
@@ -105,9 +107,10 @@ Deno.serve(async (req) => {
             promise_text: "TEST ACCOUNT for Apple App Review — not a real parent consent.",
             payment_confirmed_at: now, training_opt_in: false,
           });
+          if (ci.error) errs.push("consent: " + ci.error.message);
         }
       }
-      out[key] = { user_id: id!, email: a.email };
+      out[key] = { user_id: id!, email: a.email, errors: errs } as any;
       creds.push(`${key === "adult" ? "Adult demo player" : "Under-13 parent-controlled demo child"}\nEmail: ${a.email}\nPassword: ${pw}`);
     }
 
