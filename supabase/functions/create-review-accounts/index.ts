@@ -74,7 +74,8 @@ Deno.serve(async (req) => {
         id = data.user!.id;
       } else {
         const { data: prof } = await admin.from("profiles").select("is_system_account").eq("id", id).maybeSingle();
-        if (prof?.is_system_account !== true) return json({ error: `Refusing: ${key} exists and is not a system account` }, 409);
+        const { data: au } = await admin.auth.admin.getUserById(id);
+        if (prof?.is_system_account !== true && au?.user?.user_metadata?.apple_review !== true) return json({ error: `Refusing: ${key} exists and is not a system account` }, 409);
         const { error } = await admin.auth.admin.updateUserById(id, { password: pw });
         if (error) return json({ error: error.message }, 500);
       }
