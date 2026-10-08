@@ -128,9 +128,9 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
         onClick={openPocket}
         disabled={!prescribed}
         data-pocket-tile={id}
-        className="group w-full rounded-xl border border-border bg-card p-3 text-left transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0 disabled:cursor-default disabled:opacity-70 animate-in fade-in slide-in-from-bottom-1 motion-reduce:animate-none"
+        className="group h-auto w-full justify-start whitespace-normal rounded-lg border border-border bg-card p-3 text-left transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0 disabled:cursor-default disabled:opacity-70 animate-in fade-in slide-in-from-bottom-1 motion-reduce:animate-none"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex w-full items-center gap-3">
           <span className={`h-10 w-1.5 shrink-0 rounded-full ${tone}`} aria-hidden />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
