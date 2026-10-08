@@ -1,4 +1,4 @@
-# OWNER PLAN CARD FIXES — T6 — 2026-10-08 23:52 UTC — Ready to publish: yes (website; nothing published)
+# OWNER PLAN CARD FIXES — T7 — 2026-10-08 23:56 UTC — Ready to publish: yes (website; nothing published)
 Top priority before Xcode. No publishing or cron changes. Only named defensive-role and tissue-prep changes may alter plans.
 - [x] 1–5 Core prescription cards now wrap full titles; show the formatted dose, a visible basic description, open Rx-prefilled applicable inputs (including 1×1), and a closed How to do it drawer. Removed Rules for this card and player-visible barefoot move-up criteria. Inline drafts survive backgrounding in session storage. Drawer now contains setup, steps, stop-if, cue, why, progression and change reason.
 - [x] 6 Catalog defense audit now fails on catcher/pitcher/outfield/infield cue bleed and baseball/softball bleed; all position/sport/phase combinations passed (6/6 defense tests).
@@ -16,6 +16,7 @@ Top priority before Xcode. No publishing or cron changes. Only named defensive-r
 - [x] T4: Audited all 999 library exercises: 25 have their own hand-written plain description; 974 show a general description for their type (e.g. "Light, controlled shoulder work."). Full list for owner in `docs/owner/exercise-descriptions-needed.tsv` (by category). Not guessed. No code, plan or data changes.
 - [x] T5: Re-checked items 1–11 — no unblocked work left. Only open items: owner descriptions (Waiting on owner) and post-publish live check. No changes made.
 - [x] T6: Re-checked again — still no unblocked work left in items 1–11. Both open items remain owner-blocked (descriptions; post-publish live check). No changes made.
+- [x] T7: Re-checked again — items 1–11 remain fully done; both open items still owner-blocked (descriptions; post-publish live check). No changes made.
 - [ ] Remaining: Published affected-player plan-card return behavior remains unprovable until the owner publishes these changes. No publish/deploy/cron/iOS changes and no test data created.
 
 ## Waiting on owner
