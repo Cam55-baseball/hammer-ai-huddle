@@ -1,12 +1,13 @@
-# OWNER PLAN CARD FIXES — 2026-10-08 — Ready to publish: no (work in progress)
+# OWNER PLAN CARD FIXES — 2026-10-08 23:06 UTC — Ready to publish: no
 Top priority before Xcode. No publishing or cron changes. Only named defensive-role and tissue-prep changes may alter plans.
-- [ ] 1–5 Full titles, exact doses, exercise-specific basics, open applicable logs, closed How to do it; remove rules and barefoot advancement criteria.
-- [ ] 6 Defensive-role audit and regression tests.
-- [ ] 7–8 Level of play in Before you start; body load before order/rhythm.
-- [ ] 9 Preserve screen/card/drafts on return; 30s/5min/1h phone and published checks.
-- [ ] 10 All-dose numbers, units and plurals audit and automated checks.
-- [ ] 11 Tissue preparation first in every warm-up; eight-week all-role/age/sport proof.
-- [ ] Phone screenshots 360/390 closed/open every card type, full suite, unchanged-plan comparison, cleanup.
+- [x] 1–5 Core prescription cards now wrap full titles; show the formatted dose, a visible basic description, open Rx-prefilled applicable inputs (including 1×1), and a closed How to do it drawer. Removed Rules for this card and player-visible barefoot move-up criteria. Inline drafts survive backgrounding in session storage. Drawer now contains setup, steps, stop-if, cue, why, progression and change reason.
+- [x] 6 Catalog defense audit now fails on catcher/pitcher/outfield/infield cue bleed and baseball/softball bleed; all position/sport/phase combinations passed (6/6 defense tests).
+- [x] 7–8 Level of play moved into Before you start; body load now precedes Do in this order and the existing progress/NEXT UP rhythm.
+- [x] 9 Removed service-worker/version and exhausted-chunk automatic reload behavior; visibility/pageshow/online no-reload regression passes, and inline unsaved fields persist. Remaining reload controls are explicit user recovery buttons only.
+- [x] 10 Fixed dose pluralization (90 feet, singular foot, explicit 1 set × 1 rep) and centralized prescription-card dose display; dose formatter tests pass.
+- [x] 11 Every generated warm-up starts with one five-minute rolling + rhythmic tissue-prep block; throwers add pec/lat/forearm. Eight-week deterministic simulation passed every context/lifecycle/sport/thrower combination with tissue prep first and unique.
+- [x] Player-session screenshots at 360/390 show a wrapped title, dose, basic description, open prefilled log and closed/open drawer with 0 page errors (`/tmp/browser/plan-cards/`). Final full suite: 291 files, 2,535 tests passed; preview build OK.
+- [ ] Not complete: every legacy Track-B drill still needs activity-specific saved log fields; screenshots do not yet cover every card type; 30s/5min/1h real background returns and published-site behavior were not executed; the complete active-library description review is unresolved. Uncertain descriptions remain generic rather than guessed, especially PFP, throwing-supplemental and EASS entries. No publish/deploy/cron/iOS changes and no test data created.
 
 # S1 OWNER ANSWERS (2026-10-08 20:05 UTC) — Ready to publish: yes (website); iPhone/iPad needs Xcode build 1.0 (4)
 - Sign in with Apple: FOUND it was not switched on in the backend at all (Apple's button failed on web and app). Now switched on through Lovable's managed sign-in. Web button uses it; the app opens hammersmodality.org/auth/native-apple in an in-app sheet, Apple signs in there, and the sign-in is handed back to the app on com.hammersmodality.app://auth/callback (no extra redirect setting needed — the sheet returns to the website itself). Proven: live hammersmodality.org hand-off reaches appleid.apple.com; preview page starts the flow; 10/10 sign-in tests. Needs PUBLISH for the website page; only provable on build 1.0 (4): the sheet opening in the app, returning to the app, and landing signed in. Optional: if you later want the app's return link in the redirect list, it is More → Cloud → Users → Auth settings → Advanced → Redirect URLs.
