@@ -37,9 +37,11 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
     ] };
   }
   if (rx.slot === "lift" || rx.slot === "supplemental") {
+    // Owner fix 4: bands and body-weight work carry no weight to log.
+    const noWeight = /\bband|banded|bodyweight|body[- ]weight|push[- ]?up|pull[- ]?up|chin[- ]?up|bird[- ]?dog|dead[- ]?bug|arm[- ]care/.test(slug);
     return { rows: Math.max(1, rx.sets ?? 1), fields: [
       { key: "reps", label: "Reps", prefill: rx.reps },
-      { key: "weight", label: "Weight", unit: "lb" },
+      ...(noWeight ? [] : [{ key: "weight", label: "Weight", unit: "lb" }]),
     ] };
   }
   return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "reps", label: "Reps", prefill: rx.reps ?? rx.total_reps }] };
