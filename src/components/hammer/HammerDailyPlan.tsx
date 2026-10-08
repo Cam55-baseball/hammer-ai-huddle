@@ -724,6 +724,12 @@ function HammerDailyPlanBody({
   const { data: recentCompletions } = useRecentMaxIntentCompletions();
   const wkRx = useHammersToday();
   const pocketDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
+  // Presentation only: per-card drill progress for the day's rhythm (reads existing check-offs).
+  const dayTasks = useHammerDailyTasks(pocketDate);
+  const blockProgress = (b: { modality: string; side?: "L" | "R" | null; drills: ReadonlyArray<{ slug?: string | null; name: string }> }) =>
+    b.drills.length
+      ? { done: b.drills.filter((d) => dayTasks.isDone(makeBlockTaskId(b.modality, d.slug ?? d.name), b.side ?? null)).length, total: b.drills.length }
+      : null;
   const sportIsBaseball = (ctx.get<unknown>("sport_primary")?.value ?? "baseball") !== "softball";
   const { user: bodyUser } = useAuth();
   const { modules } = useSubscription();
@@ -1088,6 +1094,7 @@ function HammerDailyPlanBody({
                     planDate={pocketDate}
                     practiceLogging={logPractice && (b.modality === "throwing" || b.modality === "hitting")}
                     prescribed={prescribedToday(b)}
+                    progress={blockProgress(b)}
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
                     intro={POCKET_INTROS[b.modality] ?? null}
                   >
@@ -1173,6 +1180,7 @@ function HammerDailyPlanBody({
                     planDate={pocketDate}
                     practiceLogging={logPractice && (b.modality === "throwing" || b.modality === "hitting")}
                     prescribed={prescribedToday(b)}
+                    progress={blockProgress(b)}
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
                     intro={POCKET_INTROS[b.modality] ?? null}
                   >
@@ -1209,6 +1217,7 @@ function HammerDailyPlanBody({
                     planDate={pocketDate}
                     practiceLogging={logPractice && (b.modality === "throwing" || b.modality === "hitting")}
                     prescribed={prescribedToday(b)}
+                    progress={blockProgress(b)}
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
                     intro={POCKET_INTROS[b.modality] ?? null}
                   >
