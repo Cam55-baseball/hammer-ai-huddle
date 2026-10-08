@@ -145,6 +145,7 @@ import { MoreVertical, Sliders } from "lucide-react";
 import type { DrillStep } from "@/lib/hammer/prescription/dailyPlan";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useHammerDailyTasks, makeBlockTaskId } from "@/hooks/useHammerDailyTasks";
+import { LegacyDrillInlineLog } from "@/components/hammer/logging/LegacyDrillInlineLog";
 import { HammerCheckInCard } from "@/components/hammer/HammerCheckInCard";
 import { useVaultQuizzesForDate, type VaultQuizType } from "@/hooks/useVaultQuizzesForDate";
 import { VaultFocusQuizDialog } from "@/components/vault/VaultFocusQuizDialog";
@@ -289,6 +290,14 @@ function DrillRow({
             <div className="mt-1.5">
               <ActivityBasics name={d.name} slug={d.slug} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} />
             </div>
+            <LegacyDrillInlineLog
+              modality={modality}
+              name={d.name}
+              dosage={d.dosage}
+              storageKey={`hammer-block-log-draft:${planDate}:${taskId}:${side ?? ""}`}
+              completed={checked}
+              onSave={(log) => tasks.toggleTask({ ...seed, payload: { ...seed.payload, log } }, true)}
+            />
           </div>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1 min-[400px]:flex-row min-[400px]:items-center">
