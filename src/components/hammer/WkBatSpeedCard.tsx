@@ -58,11 +58,11 @@ export function WkBatSpeedCard({ side = null, pocket = false }: Props & { pocket
       data-generation-id={snapshotIdentity.generation_id ?? ""}
       data-side={side ?? ""}
     >
-      <Collapsible open={open} onOpenChange={setOpen}>
+      <Collapsible open={pocket || open} onOpenChange={setOpen}>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex flex-wrap items-center justify-between gap-2">
-            <CollapsibleTrigger asChild>
-              <button type="button" className="flex items-center gap-2 min-w-0 text-left flex-1" aria-expanded={open}>
+            <CollapsibleTrigger asChild disabled={pocket}>
+              <button type="button" className="flex items-center gap-2 min-w-0 text-left flex-1" aria-expanded={pocket || open}>
                 <Bolt className="h-4 w-4 text-fuchsia-500 shrink-0" />
                 <span className="min-w-0 flex flex-col leading-tight">
                   <span className="break-words">{throws ? "Bat speed" : "Bat Speed"}{sideLabel ? ` — ${sideLabel}` : ""}</span>

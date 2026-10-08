@@ -23,3 +23,4 @@
 - The plan screen shows the device's last saved plan, start flag and access at once, but acts only after this visit's server answer; device copies clear on Sign out. Why: a reload must never flash, rebuild or change the plan.
 
 - Problem reports save to `problem_reports` first; `report-problem-mailer` only sends/retries. Why: a broken email key must never lose a report.
+- Today card grouping is a presentation-only partition preserving original drill objects and completion keys; popup details use a shared context. Why: grouping must not author training or duplicate logging.
