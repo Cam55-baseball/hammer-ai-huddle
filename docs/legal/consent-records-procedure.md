@@ -15,6 +15,7 @@
 | Signup / updated-terms screen | terms, privacy, consumer-health-data, medical-safety | updated_terms |
 | Adults 18+ | adult-release | typed_signature + checkbox |
 | Under-13 parent sign-up | minor-waiver (Florida §744.301(3)) | typed_signature + drawn signature |
+| 13–17 player's parent (emailed link) | minor-waiver | typed_signature + drawn signature, relationship, 18+ confirmed |
 | Health data | health-data-consent (opt-in) | checkbox / toggle |
 | Partner sharing | health-data-sharing (separate yes) | toggle |
 | Checkout | auto-renewal-consent | unchecked checkbox |

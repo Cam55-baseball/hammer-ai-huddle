@@ -2,9 +2,19 @@
 
 **Ready for lawyer review: YES.** Every draft is written and built into the app behind the `legal_v2` switch, which is **OFF**. Users see nothing new.
 
+**13–17 PARENT WAIVER (owner-approved item 11, 2026-10-08 16:45 UTC) — built behind legal_v2 (OFF).**
+- [x] Same Florida §744.301(3) waiver as under-13 (statutory notice word for word, uppercase, larger, boxed, marked for lawyer check).
+- [x] One parent step for teens on the training plan: enter a parent email (phone optional) → Resend email with a secure 30-day link → parent page /parent-waiver/<link>: full legal name, relationship, "18 or older" checkbox, drawn signature → saved in consent_records (signer_role parent_guardian).
+- [x] Until signed: NEW teens — Hammers Today locked with "Waiting for your parent's signature", Resend link, Change email; the rest of the app stays open. EXISTING teens — 14-day grace banner, parent reminder every 3 days (sent when the teen opens the app, no schedule needed), then locked. Under-13 and adults unaffected.
+- [x] Owner page /owner/legal-records: "Teens waiting for a parent signature" with Resend.
+- [x] Lawyer question 18 added to the packet (gating and the 14 days).
+- Proof: parent signed on the real backend at 390 px → consent record saved (name, relationship, 18+, signature) and the teen's entry switched to unlocked; owner list showed the teen as locked before signing; lock/grace/expired screens at 360 and 390 px (screen states fed in by the test, no overflow, no page errors); 5 new rule tests (ages, new = locked, exactly 14 days, signing unlocks, reminders). Full suite 2,518/2,518; build OK. Screenshots: Files → legal-screens/teen-waiver/ (13).
+- Cleanup: switch back OFF with empty list, test birthdate removed, test entry and test consent record removed (0 left).
+- Gap: a live teen sign-in wasn't possible (signing in as a test account needs your approval, which wasn't available), so the teen screens used the owner session with fed-in states; the under-13 "unaffected" check is by rule test only.
+
 **M10 final check (2026-10-08 16:00 UTC):** live database shows legal_v2 = off with an empty allowlist. There are 0 consent records, so no test data is left, and the 15 draft documents are stored. Full test suite: 2,513/2,513 passing (286 files). The switch-ON flow proof and the 167-page × 360/390 px audit (334 loads, 0 errors) are from earlier today and are listed below. No legal code changed since then, so they weren't re-run. Nothing was published and no schedules were changed.
 
-**Lawyer Review Packet:** Files → `legal/lawyer-review-packet.pdf` (42 pages) and `.md`; in the repo, `docs/legal/lawyer-review-packet.md` (index + 17 open legal questions) and `docs/legal/drafts/`.
+**Lawyer Review Packet:** Files → `legal/lawyer-review-packet.pdf` (42 pages) and `.md`; in the repo, `docs/legal/lawyer-review-packet.md` (index + 18 open legal questions) and `docs/legal/drafts/`.
 
 ### Built (all hidden while OFF)
 - [x] Database: `legal_documents` (15 versioned drafts, approved = false), `consent_records` (append-only, kept 3 years after the account ends, never removed by account deletion — tested), `privacy_requests` (30-day due dates). Visitors may read only the legal_v2 switch row, so the footer links can appear on the website once it's on.
@@ -27,7 +37,7 @@
 
 ### Waiting on owner (legal)
 1. Lawyer review of the packet and its 17 questions. Then mark documents approved and switch legal_v2 on.
-2. Decision: should 13–17 players' parents sign the Florida waiver? It's ready, but not added.
+~~2. 13–17 waiver decision~~ — APPROVED and built (see above). Lawyer to confirm gating (question 18).
 3. DMCA registered agent details.
 4. Checkout's "7-day performance guarantee" conflicts with the draft refund policy. Choose one.
 5. Apply the renewal-reminder schedule above.
