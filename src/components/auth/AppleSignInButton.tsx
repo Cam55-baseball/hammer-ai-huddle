@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { useToast } from "@/hooks/use-toast";
 import { describeOAuthError } from "@/lib/auth/appleIdentity";
 import { isNativeApp } from "@/lib/auth/nativeSessionStore";
