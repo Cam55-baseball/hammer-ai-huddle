@@ -179,6 +179,12 @@ const Checkout = () => {
         const dest = ctx
           ? `/select-modules?context=${encodeURIComponent(ctx)}&from=demo${gap ? `&gap=${encodeURIComponent(gap)}` : ""}`
           : "/dashboard";
+        // Came from the iPhone/iPad app: hand the person straight back to it.
+        if (sessionStorage.getItem(FROM_APP_KEY) === "1") {
+          sessionStorage.removeItem(FROM_APP_KEY);
+          window.location.href = PURCHASE_RETURN_URL;
+          return;
+        }
         navigate(dest, { replace: true });
       }, 2500);
       return;
@@ -211,7 +217,7 @@ const Checkout = () => {
     // iPhone/iPad, US storefront: checkout happens on our website, same account.
     if (purchaseMode === "native-linkout") {
       setCheckoutLoading(true);
-      try { await openWebsiteCheckout("/checkout"); }
+      try { await openWebsiteCheckout("/pricing"); }
       catch { toast({ title: "Couldn't open the website", description: "Please try again.", variant: "destructive" }); }
       finally { setCheckoutLoading(false); }
       return;
