@@ -6,7 +6,7 @@ import { PROGRAMS_RETIRED_KEY } from "../../supabase/functions/_shared/archive/r
 
 /**
  * Is the program-retirement switch ON for the signed-in player?
- * Starts false (programs visible, as before) and resolves once per user per
+ * Starts true (programs hidden — retired 2026-10-08) and resolves once per user per
  * page load; every caller shares the same answer.
  */
 const cache = new Map<string, Promise<boolean>>();
@@ -21,9 +21,11 @@ function load(userId: string): Promise<boolean> {
           .select("feature_key, mode, allowlist, updated_by")
           .eq("feature_key", PROGRAMS_RETIRED_KEY)
           .maybeSingle();
-        return isSwitchOnFor(data as any, userId);
+        // Retired 2026-10-08: only an explicit OFF row brings menus/tiles back (pages stay archived).
+        if (!data) return true;
+        return (data as any).mode === "off" ? false : isSwitchOnFor(data as any, userId) || (data as any).mode === "all";
       } catch {
-        return false;
+        return true;
       }
     })();
     cache.set(userId, p);
@@ -33,11 +35,11 @@ function load(userId: string): Promise<boolean> {
 
 export function useProgramsRetired(): { retired: boolean; ready: boolean } {
   const { user, loading } = useAuth();
-  const [state, setState] = useState<{ retired: boolean; ready: boolean }>({ retired: false, ready: false });
+  const [state, setState] = useState<{ retired: boolean; ready: boolean }>({ retired: true, ready: false });
   useEffect(() => {
     let alive = true;
     if (loading) return;
-    if (!user?.id) { setState({ retired: false, ready: true }); return; }
+    if (!user?.id) { setState({ retired: true, ready: true }); return; }
     load(user.id).then((retired) => { if (alive) setState({ retired, ready: true }); });
     return () => { alive = false; };
   }, [user?.id, loading]);
