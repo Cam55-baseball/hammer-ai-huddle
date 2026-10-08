@@ -1,5 +1,8 @@
 # Ready to publish: YES (2026-10-08 K, owner decisions + corrections)
 Reason: all changes this round are wording/switch/test only; checks pass. Email still waits on 3 DNS records (reports save first and re-send automatically), so it does not block.
+## K1 recheck (02:45 UTC)
+- One-tap logging: still ON for everyone. Rest/Push/Skip wording: restored (unchanged since K). Verification re-triggered: Resend still PENDING; all 3 records (resend._domainkey TXT, rsend CNAME, send CNAME) still MISSING in public DNS. TEST row f53996f5… still failed — re-sends automatically once verified. No new test data.
+
 
 ## K1 — the 10 owner-to-confirm changes: decisions applied
 - KEEP: 2 streak strip, 5 season counter, 6 "Tomorrow's plan opens in", 7 Conditioning wording, 8 plan-save speed-up, 9 sign-in keeper, 10 Start Hammers Today remembered.
