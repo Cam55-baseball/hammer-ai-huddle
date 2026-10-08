@@ -128,7 +128,7 @@ export function SpeedReadinessCheck({ planDate, sprintSets, inSeason }: { planDa
         </>
       )}
       <p className="text-muted-foreground">Today's focus: {focus.label}</p>
-      <p data-barefoot-stage={bf.stage} className="text-muted-foreground">Barefoot level: {BAREFOOT_STAGES[bf.stage]}{bf.stage === 0 ? " — keep your shoes on for sprints." : "."}{bf.missing.length ? ` To move up: ${bf.missing.join(", ")}.` : ""} Any foot, ankle, shin, Achilles or calf pain drops you back one level.</p>
+      <p data-barefoot-stage={bf.stage} className="text-muted-foreground">Barefoot level: {BAREFOOT_STAGES[bf.stage]}{bf.stage === 0 ? " — keep your shoes on for sprints." : "."} Any foot, ankle, shin, Achilles or calf pain drops you back one level.</p>
       {bf.stage < BAREFOOT_STAGES.length - 1 && !bf.testPassed && !bf.testPending && !(bf.retestOn && planDate < bf.retestOn) && (
         <BarefootReadinessTest planDate={planDate} />
       )}

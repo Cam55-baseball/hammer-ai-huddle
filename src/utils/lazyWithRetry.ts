@@ -1,4 +1,4 @@
-// Centralized lazy loader with retry + one-shot cache-busting reload recovery
+// Centralized lazy loader with retry. It never reloads the athlete's screen:
 // for stale chunk errors. Every dynamic import in the app MUST go through this
 // helper so the user never sees a white screen after a deploy.
 import { ComponentType, lazy } from "react";
@@ -13,32 +13,12 @@ export function isChunkLoadError(error: unknown): boolean {
   );
 }
 
-const RELOAD_GUARD_KEY = "__chunk_reload_once";
 export function triggerChunkReload(reason: string): boolean {
-  try {
-    if (sessionStorage.getItem(RELOAD_GUARD_KEY) === "1") return false;
-    sessionStorage.setItem(RELOAD_GUARD_KEY, "1");
-  } catch {
-    /* storage disabled — fall through and still try the reload */
-  }
-  console.warn("[chunk-recovery] reloading once due to:", reason);
-  try {
-    const url = new URL(window.location.href);
-    url.searchParams.set("_cb", Date.now().toString(36));
-    window.location.replace(url.toString());
-  } catch {
-    window.location.reload();
-  }
-  return true;
+  console.warn("[chunk-recovery] reload suppressed to preserve athlete work:", reason);
+  return false;
 }
 
-export function clearChunkReloadGuard(): void {
-  try {
-    sessionStorage.removeItem(RELOAD_GUARD_KEY);
-  } catch {
-    /* ignore */
-  }
-}
+export function clearChunkReloadGuard(): void {}
 
 export function lazyWithRetry<T extends ComponentType<any>>(
   componentImport: () => Promise<{ default: T }>,
@@ -59,11 +39,7 @@ export function lazyWithRetry<T extends ComponentType<any>>(
         await new Promise((resolve) => setTimeout(resolve, 500 * (i + 1)));
       }
     }
-    if (isChunkLoadError(lastError)) {
-      if (triggerChunkReload("lazyWithRetry exhausted")) {
-        return await new Promise<{ default: T }>(() => {});
-      }
-    }
+    if (isChunkLoadError(lastError)) triggerChunkReload("lazyWithRetry exhausted");
     throw lastError ?? new Error("Failed to load module after retries");
   });
 }

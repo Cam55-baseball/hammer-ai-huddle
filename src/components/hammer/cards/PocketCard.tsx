@@ -19,7 +19,6 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { CardRules } from "./CardRules";
 import { PracticeLog } from "@/components/hammer/logging/ExtraLogs";
 import { createContext, useContext } from "react";
 
@@ -219,7 +218,6 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
                 </Button>
               </div>
             )}
-            <CardRules category={category} />
             <PocketDetailsContext.Provider value={true}>{children({ pocket: true })}</PocketDetailsContext.Provider>
             {practiceLogging && <section className="mt-4 border-t border-border pt-3" data-card-practice>
               <h3 className="text-sm font-semibold text-foreground">Log your practice</h3>
