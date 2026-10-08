@@ -16,6 +16,8 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { branding } from "@/branding";
 import { SignaturePad } from "./SignaturePad";
+import { LegalMarkdown } from "@/components/legal/LegalMarkdown";
+import { AGREEMENT_SLUGS, fetchLatestDoc, fetchLatestVersions, recordConsent, useLegalV2, type LegalDoc } from "@/lib/legal/legalV2";
 import { UNDER_13_LOCK_KEY } from "@/lib/auth/under13Lock";
 import { callParentConsent, fetchConsentTexts, yearsOn, PARENT_ERRORS, PROMISE_VERSION, NOTICE_VERSION, TRAINING_OPT_IN_TEXT } from "@/lib/parent/parentConsent";
 
@@ -29,6 +31,11 @@ export function ParentConsentFlow({ mode, accountEmail, onSigned }: { mode: "sig
   const [typed, setTyped] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [trainingOptIn, setTrainingOptIn] = useState(false);
+  const legal = useLegalV2();
+  const [waiver, setWaiver] = useState<LegalDoc | null>(null);
+  const [waiverOk, setWaiverOk] = useState(false);
+  const [healthOk, setHealthOk] = useState(false);
+  useEffect(() => { if (legal.on) fetchLatestDoc(AGREEMENT_SLUGS.minorWaiver).then(setWaiver); }, [legal.on]);
   const [sig, setSig] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +58,16 @@ export function ParentConsentFlow({ mode, accountEmail, onSigned }: { mode: "sig
   }, [f, parentAge, childAge, mode]);
 
   const promiseText = texts.promise.replace("[child's name]", f.childName.trim() || "my child");
-  const canSign = typed.trim().toLowerCase() === f.parentName.trim().toLowerCase() && agreed && !!sig;
+  const canSign = typed.trim().toLowerCase() === f.parentName.trim().toLowerCase() && agreed && !!sig && (!legal.on || !waiver || waiverOk);
+
+  /** legal_v2: save the Florida waiver signature and the health-data choice (parent signs for the child). */
+  const recordLegalV2 = async () => {
+    if (!legal.on || !waiver) return;
+    const meta = { child_display_name: f.childName.trim(), relationship: f.relationship };
+    await recordConsent({ slug: waiver.slug, version: waiver.version, choice: "signed", method: "typed_signature", signer_name: typed.trim(), signer_role: "parent_guardian", details: meta });
+    const hv = (await fetchLatestVersions([AGREEMENT_SLUGS.healthConsent]))[AGREEMENT_SLUGS.healthConsent];
+    if (hv) await recordConsent({ slug: AGREEMENT_SLUGS.healthConsent, version: hv, choice: healthOk ? "accepted" : "declined", method: "checkbox", signer_name: typed.trim(), signer_role: "parent_guardian", details: meta });
+  };
 
   const submit = async () => {
     setBusy(true); setError(null);
@@ -66,9 +82,11 @@ export function ParentConsentFlow({ mode, accountEmail, onSigned }: { mode: "sig
         const { error: e } = await supabase.auth.signInWithPassword({ email: f.email.trim(), password: f.password });
         if (e) throw e;
         try { localStorage.removeItem(UNDER_13_LOCK_KEY); } catch { /* storage unavailable */ }
+        await recordLegalV2();
         navigate("/pricing", { replace: true }); // straight to checkout
       } else {
         await callParentConsent("sign", common);
+        await recordLegalV2();
         onSigned?.();
         navigate("/pricing", { replace: true });
       }
@@ -146,6 +164,20 @@ export function ParentConsentFlow({ mode, accountEmail, onSigned }: { mode: "sig
               <Checkbox checked={trainingOptIn} onCheckedChange={(v) => setTrainingOptIn(v === true)} className="mt-1" aria-label="Optional: help improve Hammers Modality" />
               <span>{TRAINING_OPT_IN_TEXT}</span>
             </label>
+            {legal.on && waiver && (
+              <section aria-label="Parent waiver" className="space-y-3 rounded-xl border p-3">
+                <h2 className="text-base font-semibold">{waiver.title}</h2>
+                <div className="max-h-80 overflow-y-auto text-sm"><LegalMarkdown body={waiver.body} /></div>
+                <label className="flex min-h-[44px] items-start gap-3 text-sm leading-6">
+                  <Checkbox checked={waiverOk} onCheckedChange={(v) => setWaiverOk(v === true)} className="mt-1" aria-label="Sign the parent waiver" />
+                  <span>I am the child's parent or legal guardian. By typing my name above and checking this box, I sign this waiver and release.</span>
+                </label>
+                <label className="flex min-h-[44px] items-start gap-3 text-sm leading-6">
+                  <Checkbox checked={healthOk} onCheckedChange={(v) => setHealthOk(v === true)} className="mt-1" aria-label="Health information consent" />
+                  <span>Optional: Hammers Modality may collect and use my child's health information (sleep, pain, injuries, readiness, nutrition, body measurements) as described in the Consumer Health Data Privacy Policy.</span>
+                </label>
+              </section>
+            )}
             {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
             <Button className="h-12 w-full text-base" disabled={!canSign || busy} onClick={submit}>{busy ? "Saving…" : "Sign the Parent Promise"}</Button>
             <p className="text-center text-xs text-muted-foreground">Next: your card payment. The account stays locked until it's confirmed.</p>

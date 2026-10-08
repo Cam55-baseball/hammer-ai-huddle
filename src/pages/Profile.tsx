@@ -29,6 +29,7 @@ import { ColorCustomizationCard } from "@/components/ColorCustomizationCard";
 import { OnboardingStatusCard } from "@/components/settings/OnboardingStatusCard";
 import { OnboardingQuickAccess } from "@/components/settings/OnboardingQuickAccess";
 import { CategoryGoalsCard } from "@/components/settings/CategoryGoalsCard";
+import { LegalSettingsLink } from "@/components/legal/LegalSettingsLink";
 import { DeleteAccountSection } from "@/components/account/DeleteAccountSection";
 import { ParentControls } from "@/components/parent/ParentControls";
 import { TrainingDataToggle } from "@/components/account/TrainingDataToggle";
@@ -1976,12 +1977,15 @@ export default function Profile() {
         {!viewingOtherProfile && <TrainingDataToggle userId={user.id} />}
 
         {/* Danger zone — self-service account deletion (own profile only) */}
+        {!viewingOtherProfile && <LegalSettingsLink />}
         {!viewingOtherProfile && (
+          <div id="delete-account">
           <DeleteAccountSection
             userId={user.id}
             isStaff={isOwner || isAdmin}
             hasActiveSubscription={(subscribedModules?.length ?? 0) > 0}
           />
+          </div>
         )}
       </main>
     </div>

@@ -1,3 +1,5 @@
+import { AutoRenewalCheckbox, saveAutoRenewalConsent } from "@/components/legal/AutoRenewalCheckbox";
+import { useLegalV2 } from "@/lib/legal/legalV2";
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
 import { mentionsRetired } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { useEffect, useMemo, useState, useRef } from "react";
@@ -67,6 +69,8 @@ const Checkout = () => {
   const [showOtherOptions, setShowOtherOptions] = useState(false);
 
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const legalV2 = useLegalV2();
+  const [renewOk, setRenewOk] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [showManualLink, setShowManualLink] = useState(false);
   const [showSuccessState, setShowSuccessState] = useState(false);
@@ -501,7 +505,16 @@ const Checkout = () => {
             </div>
           )}
 
-          <Button onClick={() => handleCreateCheckout()} disabled={checkoutLoading} className="w-full mb-3" size="lg">
+          {legalV2.on && (
+            <AutoRenewalCheckbox checked={renewOk} onChange={setRenewOk} period="month" price={`$${tierConfig.price}`} />
+          )}
+          <Button onClick={async () => {
+              if (legalV2.on) {
+                try { await saveAutoRenewalConsent("month", `$${tierConfig.price}`, selectedTier); }
+                catch { toast({ title: "Couldn't save your agreement", description: "Check your connection and try again.", variant: "destructive" }); return; }
+              }
+              handleCreateCheckout();
+            }} disabled={checkoutLoading || (legalV2.on && !renewOk)} className="w-full mb-3" size="lg">
             {checkoutLoading ? t("subscriptionTiers.processing") : "Start my system now"}
           </Button>
 
