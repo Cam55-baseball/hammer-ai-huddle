@@ -1,3 +1,49 @@
+# APPLE OPTION B — US-storefront-only website link (2026-10-08 19:35 UTC) — Ready to publish: yes (website); iPhone/iPad needs Xcode build 1.0 (4)
+
+## 0. Apple's current rules (developer.apple.com/app-store/review/guidelines, fetched today) — still allow it
+- 3.1.1(a): "These entitlements are not required for developers to include buttons, external links, or other calls to action in their United States storefront apps." … "In all other storefronts, except for the United States storefront, where this prohibition does not apply, apps and their metadata may not include buttons, external links, or other calls to action that direct customers to purchasing mechanisms other than in-app purchase."
+- 3.1.3: "Apps in this section cannot, within the app, encourage users to use a purchasing method other than in-app purchase, except for apps on the United States storefront and as set forth in 3.1.1(a) and 3.1.3(a)."
+- RISK to know: 3.1.3(b) (multiplatform) says access to web-bought content is allowed "provided those items are also available as in-app purchases within the app." We have no In-App Purchase, so outside the US, letting web subscribers use paid features rests on Apple accepting us as a multiplatform service without IAP. Apple often accepts this, but it is the main remaining review risk. Safest: keep App Store availability United States only for 1.0 (4).
+
+## CORRECTION to my earlier audit
+I wrote earlier that the iOS app hid all prices. That was wrong for build 1.0 (3): the code then treated every iPhone app as US and showed prices and the normal checkout button, which sent people to Stripe (out to Safari). Now fixed as below.
+
+## 1. What was built
+- iOS native plugin `Storefront` (ios/App/App/StorefrontPlugin.swift, registered in HammersBridgeViewController.swift; SceneDelegate uses it) reads StoreKit `Storefront.current?.countryCode` ("USA") and passes it to the app; re-read every time the app comes to the front.
+- Purchase gate: "USA" → shows "Subscribe on our website"; any other country, unknown, or an old build without the plugin → NO prices, NO buy buttons, NO links or hints. Website unchanged. Tests: purchaseGate.test.ts (US, GBR/CAN/MEX/DEU, unknown, garbage).
+- Same account: new backend function `app-purchase-handoff` (deployed) mints a single-use sign-in token for the signed-in person only; it opens hammersmodality.org/app-handoff in an in-app browser sheet, which signs out anyone else, signs in that same account, and refuses if the account doesn't match. Reused or altered links show "This link has expired". Token lifetime = the sign-in link expiry setting (single use; not shorter than that — say if you want a 10-minute cap, needs a small database table).
+- Back to the app: after paying, the website returns to `com.hammersmodality.app://purchase-complete` (also a "Return to the app" button on checkout); the sheet closes and the plan re-checks automatically. It also re-checks every time the app resumes, when the sheet is closed, and via the existing "Refresh Access" button (that is the pull-to-refresh equivalent; no swipe gesture added).
+- iOS URL scheme `com.hammersmodality.app` added to Info.plist (also used by Sign in with Apple).
+
+## 2. Proof (legal-screens/apple-option-b/, iPad Air 11-inch 820×1180 and iPhone 390)
+- US: "Subscribe on our website" button shown, no prices on that screen ✔ (both sizes)
+- Non-US (GBR): nothing to buy — "isn't available on your account yet" ✔; dashboard opens normally ✔
+- Unknown: same as non-US ✔
+- Handoff: fresh link → signed in as the SAME account (95de827d…) and on checkout ✔; reused link → expired ✔; wrong account → expired ✔
+- Not proven: an actual Stripe payment through the link and a real paying non-US subscriber (needs a test player account and a test card — you approve). The plan check does not depend on the storefront at all, so web-bought plans keep working everywhere.
+- Full suite 2,526/2,526 passed.
+
+## 3. Under-13 parent step on iOS
+- US: Parent Promise → plans → "Subscribe on our website" → same handoff → pays → back to app; child unpauses.
+- Non-US: the app shows nothing to buy; the child stays "waiting for a parent". Recommended compliant path: email the parent (outside the app — Apple allows communications outside the app) a link to finish on hammersmodality.org from any browser. Not built — say yes and I'll add it.
+
+## 4. App Review notes (draft — paste into App Store Connect)
+"Hammers Modality is a multiplatform training service. Subscriptions (Complete Pitcher, 5Tool Player, Golden 2Way) are sold only on our website, hammersmodality.org, through Stripe. On the United States storefront only (detected with StoreKit Storefront), the app shows a 'Subscribe on our website' button that opens our website checkout for the same signed-in account, as permitted by Guidelines 3.1.1(a) and 3.1.3 for US storefront apps. On every other storefront, and whenever the storefront cannot be determined, the app shows no prices, purchase buttons, links or instructions. Subscribers who bought on the website can sign in and use what they paid for. Parental controls: [review account + path from the section below]."
+
+## 5. Answers to Apple's 4 questions (Option B)
+1. Who: athletes 13+, parents of under-13 athletes, and coaches who subscribe to a training plan.
+2. Where: on our website hammersmodality.org via Stripe. US storefront users can reach it from a "Subscribe on our website" button in the app; elsewhere the app shows no purchase option.
+3. Previously purchased: web-bought plans unlock their training plans, video analysis/report cards and modules in the app after sign-in, on any storefront.
+4. Without IAP: no digital content is sold through IAP; free features (account, profile, settings, parent controls, account deletion, free areas) work for everyone.
+
+## 6. Xcode steps for build 1.0 (4)
+1. Pull latest; `npm install`; `npm run build`; `npx cap sync ios`.
+2. In Xcode, File → Add Files to "App" → select `ios/App/App/StorefrontPlugin.swift` and `HammersBridgeViewController.swift`, tick target "App".
+3. Check Info → URL Types shows `com.hammersmodality.app` (already in Info.plist); Signing & Capabilities has Sign in with Apple. Minimum iOS 15+ (StoreKit Storefront).
+4. Build 1.0 (4), run on a device signed into a US App Store account: "Subscribe on our website" appears; on a Sandbox account set to another country it must not.
+5. Archive, upload, paste the review notes and 4 answers.
+- Still needed from you: OK to add the app's return link to sign-in settings (for Sign in with Apple), OK to create the reviewer under-13 account, and whether to keep App Store availability US-only (recommended).
+
 # FINAL STATUS (2026-10-08 19:10 UTC) — Ready to publish: yes (website). iPhone/iPad needs new Xcode build 1.0 (4).
 - Blank-waiver fix: DONE. Every link state renders for a signed-out parent (valid, signed, used, expired, unknown, not active) behind a friendly error fallback; teen lock/grace/unlock, checkout auto-renew box and under-13 waiver step proven at 360/390 — 39 screenshots in legal-screens/waiver-blank-fix/. Publish puts it live at /parent-sign/<token> and /parent-waiver/<token>.
 - Apple items: full results below (sign-in fix, account deletion, reviewer steps, audit, draft answers, options A/B/C, Xcode steps).
