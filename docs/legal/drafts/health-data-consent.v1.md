@@ -1,0 +1,3 @@
+# Consent to Collect Consumer Health Data (v1, DRAFT)
+
+I agree that Hammers Modality LLC may collect and use my (or my child's) consumer health data — sleep, readiness, pain and injury reports, nutrition and hydration, body measurements, body-movement measurements from videos, and optional mental-performance journal entries — only to build and adjust safe training plans, apply safety rules, show progress and answer questions, as described in the [Consumer Health Data Privacy Policy](/legal/consumer-health-data). I can withdraw this consent anytime in Settings → Legal & privacy. If I say no, health-based features stay off and plans use safe defaults.

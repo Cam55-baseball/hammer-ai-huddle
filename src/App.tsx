@@ -249,6 +249,10 @@ const AcceptParentInvite = lazyWithRetry(() => import("./pages/AcceptParentInvit
 const SafetyCenter = lazyWithRetry(() => import("./pages/SafetyCenter"));
 const RelationshipSettings = lazyWithRetry(() => import("./pages/RelationshipSettings"));
 import { DemoGate } from "./components/demo/DemoGate";
+import { LegalV2Gate } from "@/components/legal/LegalV2Gate";
+import LegalDocumentPage from "./pages/legal/LegalDocumentPage";
+import LegalSettings from "./pages/legal/LegalSettings";
+import LegalRecords from "./pages/owner/LegalRecords";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -308,7 +312,11 @@ const App = () => {
             <Suspense fallback={<PageLoadingSkeleton />}>
               <DemoGate>
               <AccountGate>
+              <LegalV2Gate>
               <Routes>
+              <Route path="/legal/:slug" element={<LegalDocumentPage />} />
+              <Route path="/settings/legal" element={<LegalSettings />} />
+              <Route path="/owner/legal-records" element={<LegalRecords />} />
               <Route path="/" element={<Index />} />
               <Route path="/home" element={<Index browse />} />
               {import.meta.env.DEV && (
@@ -561,6 +569,7 @@ const App = () => {
               <Route path="/demo/:tier/:category/:submodule" element={<DemoSubmodule />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
+              </LegalV2Gate>
               </AccountGate>
               <DemoTourHost />
               </DemoGate>

@@ -4184,6 +4184,57 @@ export type Database = {
         }
         Relationships: []
       }
+      consent_records: {
+        Row: {
+          account_ended_at: string | null
+          choice: string
+          details: Json
+          device: string | null
+          document_slug: string
+          document_version: number
+          id: string
+          ip: string | null
+          method: string
+          recorded_at: string
+          signer_name: string | null
+          signer_role: string | null
+          subject_user_id: string | null
+          user_id: string
+        }
+        Insert: {
+          account_ended_at?: string | null
+          choice: string
+          details?: Json
+          device?: string | null
+          document_slug: string
+          document_version: number
+          id?: string
+          ip?: string | null
+          method: string
+          recorded_at?: string
+          signer_name?: string | null
+          signer_role?: string | null
+          subject_user_id?: string | null
+          user_id: string
+        }
+        Update: {
+          account_ended_at?: string | null
+          choice?: string
+          details?: Json
+          device?: string | null
+          document_slug?: string
+          document_version?: number
+          id?: string
+          ip?: string | null
+          method?: string
+          recorded_at?: string
+          signer_name?: string | null
+          signer_role?: string | null
+          subject_user_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       consent_texts: {
         Row: {
           body: string
@@ -9628,6 +9679,45 @@ export type Database = {
         }
         Relationships: []
       }
+      legal_documents: {
+        Row: {
+          approved: boolean
+          approved_at: string | null
+          approved_by: string | null
+          body: string
+          created_at: string
+          effective_date: string | null
+          id: string
+          slug: string
+          title: string
+          version: number
+        }
+        Insert: {
+          approved?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
+          body: string
+          created_at?: string
+          effective_date?: string | null
+          id?: string
+          slug: string
+          title: string
+          version: number
+        }
+        Update: {
+          approved?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
+          body?: string
+          created_at?: string
+          effective_date?: string | null
+          id?: string
+          slug?: string
+          title?: string
+          version?: number
+        }
+        Relationships: []
+      }
       lesson_trainers: {
         Row: {
           created_at: string
@@ -12095,6 +12185,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      privacy_requests: {
+        Row: {
+          completed_at: string | null
+          details: Json
+          due_at: string
+          id: string
+          kind: string
+          owner_notes: string | null
+          requested_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          details?: Json
+          due_at?: string
+          id?: string
+          kind: string
+          owner_notes?: string | null
+          requested_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          details?: Json
+          due_at?: string
+          id?: string
+          kind?: string
+          owner_notes?: string | null
+          requested_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       problem_reports: {
         Row: {

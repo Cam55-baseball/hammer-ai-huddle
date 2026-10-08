@@ -1,3 +1,4 @@
+import { LegalFooterLinks } from "@/components/legal/LegalFooterLinks";
 import { BUSINESS_ADDRESS_ONE_LINE } from "@/constants/businessAddress";
 import { Shield, Lock, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -155,6 +156,7 @@ const Index = ({ browse = false }: { browse?: boolean }) => {
               <Link to="/terms" className="hover:text-foreground underline underline-offset-4">Terms of Service</Link>
               <Link to="/support" className="hover:text-foreground underline underline-offset-4">Support</Link>
             </div>
+            <LegalFooterLinks />
             <p className="text-sm">
               © 2025 Hammers Modality. Training content only — consult professionals for medical issues.
             </p>

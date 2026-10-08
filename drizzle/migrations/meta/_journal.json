@@ -22,6 +22,20 @@
       "when": 1791391660163,
       "tag": "0002_problem_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791471154343,
+      "tag": "0003_legal_v2_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791471756828,
+      "tag": "0004_legal_v2_public_switch_read",
+      "breakpoints": true
     }
   ]
 }
