@@ -1,4 +1,4 @@
-# OWNER PLAN CARD FIXES — T3 — 2026-10-08 23:50 UTC — Ready to publish: yes (website; nothing published)
+# OWNER PLAN CARD FIXES — T4 — 2026-10-08 23:58 UTC — Ready to publish: yes (website; nothing published)
 Top priority before Xcode. No publishing or cron changes. Only named defensive-role and tissue-prep changes may alter plans.
 - [x] 1–5 Core prescription cards now wrap full titles; show the formatted dose, a visible basic description, open Rx-prefilled applicable inputs (including 1×1), and a closed How to do it drawer. Removed Rules for this card and player-visible barefoot move-up criteria. Inline drafts survive backgrounding in session storage. Drawer now contains setup, steps, stop-if, cue, why, progression and change reason.
 - [x] 6 Catalog defense audit now fails on catcher/pitcher/outfield/infield cue bleed and baseball/softball bleed; all position/sport/phase combinations passed (6/6 defense tests).
@@ -13,9 +13,11 @@ Top priority before Xcode. No publishing or cron changes. Only named defensive-r
 - [x] Full suite: 293 files, 2,542 tests passed. The first run exposed a demo-tour route-restoration timer surviving test teardown; its interval now clears on close/unmount, focused tour/return tests pass 9/9, and the clean full rerun passed.
 - [x] T3: Screenshots of all six card types today (warm-up, bat speed, defense, conditioning, lift, recovery) at 360 and 390 px, drawer closed and open, as the signed-in player — 24 images in `legal-screens/plan-cards-t3/`, 0 page errors. Every activity had a visible log; no "Rules for this card", no move-up criteria, no "1 feet".
 - [x] T3 fixes found by the screenshots: (a) bat speed/conditioning/lift cards showed an empty "Today — ." line — now hidden when there is no real reason; (b) band and body-weight lifts (e.g. Arm-Care Band) showed a Weight box — now reps only. 2 new tests; full suite 294 files, 2,544 tests passed; build OK.
+- [x] T4: Audited all 999 library exercises: 25 have their own hand-written plain description; 974 show a general description for their type (e.g. "Light, controlled shoulder work."). Full list for owner in `docs/owner/exercise-descriptions-needed.tsv` (by category). Not guessed. No code, plan or data changes.
 - [ ] Remaining: Published affected-player plan-card return behavior remains unprovable until the owner publishes these changes. No publish/deploy/cron/iOS changes and no test data created.
 
 ## Waiting on owner
+- 974 exercises need an owner-approved 1–2 sentence plain description (list: `docs/owner/exercise-descriptions-needed.tsv`). Biggest groups: strength 190, warm-up 129, speed lab 117, upper-body plyo 96, arm care 84, bat speed 84. Send descriptions (or approve me drafting them from each exercise's stored cue for your review) and I'll add them.
 - Exercise-specific plain-language descriptions remain blocked for entries where the existing catalogs do not provide enough authoritative setup detail, especially PFP, throwing-supplemental and EASS activities. These will not be guessed.
 
 # S1 OWNER ANSWERS (2026-10-08 20:05 UTC) — Ready to publish: yes (website); iPhone/iPad needs Xcode build 1.0 (4)

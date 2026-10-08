@@ -1,0 +1,975 @@
+slug	name	category
+ac_recovery_belly_breathing	3D Belly Breathing	arm_care
+jband_full_chart	Arm-Care Band — Full Chart	arm_care
+ac_jband_10_and_2	Arm-Care Band 10 & 2	arm_care
+ac_jband_forward_arm_pumps	Arm-Care Band Forward Arm Pumps	arm_care
+ac_jband_horizontal_abduction	Arm-Care Band Horizontal Abduction	arm_care
+ac_jband_lawnmowers	Arm-Care Band Lawnmower Pulls	arm_care
+ac_jband_pronation_supination	Arm-Care Band Pronation/Supination	arm_care
+ac_jband_reverse_arm_pumps	Arm-Care Band Reverse Arm Pumps	arm_care
+ac_jband_stop_signs	Arm-Care Band Stop Signs	arm_care
+assisted_shoulder_flexion	Assisted Shoulder Flexion	arm_care
+ac_jband_full_chart	Band Series — Full Chart	arm_care
+banded_wall_slide	Banded Wall Slide	arm_care
+ac_bench_t_spine	Bench T-Spine Mobilization	arm_care
+ac_recovery_bfr_light_curls	BFR Light Arm Curls	arm_care
+ac_bowler_squat	Bowler Squat with Reach	arm_care
+ac_full_series	Classic Shoulder Series	arm_care
+ac_crossover_activation	Cross-Band Activation Protocol	arm_care
+ac_xband_diagonals	Cross-Band Diagonal Pulls	arm_care
+ac_xband_ir_er_wall	Cross-Band Internal/External Rotation at Wall	arm_care
+ac_crossover_plyo	Cross-Band Plyometric	arm_care
+ac_xband_pull_apart	Cross-Band Pull-Apart Series	arm_care
+ac_crossover_recovery	Cross-Band Recovery Protocol	arm_care
+ac_xband_scap_pushup	Cross-Band Scapular Push-Up	arm_care
+ac_crossover_iron_scap	Cross-Band Scapular Stability Series	arm_care
+crossover_symmetry_full	Cross-Band Series — Full List	arm_care
+dowel_assisted_ninety_ninety_stretch	Dowel Assisted Ninety Ninety Stretch	arm_care
+ac_recovery_forearm_smash	Forearm Ball Smash	arm_care
+ac_forearm_extensor_stretch	Forearm Extensor Stretch	arm_care
+ac_forearm_flexor_stretch	Forearm Flexor Wall Stretch	arm_care
+ac_softball_windmill_forearm_flip	Forearm Flip Series	arm_care
+forearm_pronation_supination	Forearm Pronation Supination	arm_care
+front_neck_bridge	Front Neck Bridge	arm_care
+ac_full_can_scaption	Full-Can Scaption Raise	arm_care
+half_kneeling_band_external_rotation	Half Kneeling Band External Rotation	arm_care
+ac_softball_windmill_hip_shoulder	Hip-Shoulder Separation Drill, Softball Windmill	arm_care
+incline_dumbbell_hammer_curl	Incline Dumbbell Hammer Curl	arm_care
+ac_iso_er_hold	Isometric ER Hold at 90/90	arm_care
+ac_iso_ir_hold	Isometric IR Hold at 90/90	arm_care
+ac_iso_scap_squeeze	Isometric Scap Squeeze Hold	arm_care
+ac_kb_arm_bar	Kettlebell Arm Bar	arm_care
+ac_recovery_lat_foam	Lat Foam Roll	arm_care
+neck_extension	Neck Extension	arm_care
+neck_flexion	Neck Flexion	arm_care
+ac_no_money	No Money Drill	arm_care
+over_bench_wrist_curl	Over Bench Wrist Curl	arm_care
+zottman_curl	Palm-Up Curl with Palm-Down Lowering	arm_care
+ac_recovery_pec_ball_smash	Pec Ball Smash	arm_care
+plate_pinch	Plate Pinch	arm_care
+ac_pivot_pickoff	Plyo Ball Pivot Pickoff	arm_care
+ac_pivot_pickoff_softball	Plyo Ball Pivot Pickoff (Softball adapted)	arm_care
+ac_recovery_plyo	Plyo Ball Recovery Flow	arm_care
+ac_reverse_throw	Plyo Ball Reverse Throw	arm_care
+ac_rocker	Plyo Ball Rocker Throw	arm_care
+ac_walking_windup	Plyo Ball Walking Wind-Up	arm_care
+plyo_ball_pitching	Plyo-Ball Throwing Variants (Arm Care)	arm_care
+powell_raise	Powell Raise	arm_care
+prone_horizontal_abduction	Prone Horizontal Abduction	arm_care
+prone_neck_bridge	Prone Neck Bridge	arm_care
+ac_prone_ytw	Prone Y-T-W on Bench	arm_care
+radial_deviation	Radial Deviation	arm_care
+reverse_powell_raise	Reverse Powell Raise	arm_care
+reverse_wrist_curl	Reverse Wrist Curl	arm_care
+ac_forearm_reverse_curls	Reverse Wrist Curls	arm_care
+ac_forearm_rice_bucket	Rice Bucket Complex	arm_care
+ac_iso_rocker_throw	Rocker Throw Iso Drill	arm_care
+ac_shoulder_tube_front	Shoulder Tube — Front	arm_care
+ac_shoulder_tube_lateral	Shoulder Tube — Lateral	arm_care
+ac_shoulder_tube_overhead	Shoulder Tube — Overhead	arm_care
+ac_shoulder_tube_softball	Shoulder Tube — Windmill Path	arm_care
+ac_side_lying_er	Side-Lying External Rotation	arm_care
+sleeper_stretch	Sleeper Stretch	arm_care
+ac_softball_windmill_kbar	Softball K-Bar Wrist Snap	arm_care
+ac_softball_windmill_prep	Softball Windmill Circle Prep	arm_care
+ulnar_deviation	Ulnar Deviation	arm_care
+wall_finger_crawl	Wall Finger Crawl	arm_care
+ac_recovery_wall_hang	Wall Hang & Reach	arm_care
+ac_wall_slide	Wall Slide with Reach	arm_care
+ac_forearm_wrist_curls	Weighted Wrist Curls	arm_care
+gap_windmill_arm_circle_bw	Windmill Arm Circles	arm_care
+ac_softball_windmill_decel_wall	Windmill Decel Wall Drill	arm_care
+ac_softball_windmill_pec_stretch_iso	Windmill Pec Iso Stretch	arm_care
+gap_windmill_scap_series	Windmill Shoulder-Blade Series	arm_care
+gap_windmill_wall_slide	Windmill Wall Slide	arm_care
+wrist_roller	Wrist Roller	arm_care
+bs_axe_trainer_swings	Axe Trainer Contrast Swings	bat_speed
+bs_bamboo_overload_tee	Bamboo Overload Bat Tee Work	bat_speed
+band_resisted_swings	Band-Resisted Swings	bat_speed
+bs_banded_pelvic_dissoc	Banded Pelvic Disassociation	bat_speed
+bs_bat_speed_radar_intent_set	Bat-Speed Radar Intent Set	bat_speed
+bs_broad_jump_to_swing	Broad Jump → Swing Complex	bat_speed
+bs_cable_chop_to_swing	Cable Chop → Dry Swing Complex	bat_speed
+cable_chops	Cable Chops	bat_speed
+bs_cable_hip_snap	Cable Hip Snap	bat_speed
+bs_cable_rot_pause	Cable Rotation w/ Pause	bat_speed
+bs_cable_rotational_chop	Cable Rotational Chop	bat_speed
+bs_dead_bug_rot_pattern	Dead-Bug Rotational Pattern	bat_speed
+bs_deadlift_to_scoop_toss	Deadlift → Scoop Toss Complex	bat_speed
+bs_deep_hip_load	Deep-Hip Load Rotational Drill	bat_speed
+bs_donut_ring_dry_swings	Donut Ring Dry Swings	bat_speed
+bs_french_contrast_swing	French Contrast for Swing	bat_speed
+bs_fungo_bat_overload	Fungo Bat Full-Turn Swings	bat_speed
+bs_half_kneel_chop	Half-Kneel Chop	bat_speed
+bs_half_kneel_lift	Half-Kneel Lift	bat_speed
+bs_mb_half_kneel_toss	Half-Kneel MB Rotational Toss	bat_speed
+bs_half_turn_iso	Half-Turn Iso Hold	bat_speed
+bs_bat_contrast_complex	Heavy → Standard → Light Bat Complex	bat_speed
+bs_contrast_swing_ladder	Heavy → Standard → Light Contrast Ladder	bat_speed
+bs_heavy_bat_tee_work	Heavy Bat Tee Work	bat_speed
+bs_hip_contrast_swings	Hip Resisted → Free → Assisted Contrast	bat_speed
+bs_hip_assisted_rotational_swings	Hip-Assisted Rotational Swings	bat_speed
+bs_hip_assisted_swings	Hip-Assisted Swings	bat_speed
+bs_hip_contrast_complex	Hip-Resisted → Assisted → Free Complex	bat_speed
+bs_hip_resisted_rotational_swings	Hip-Resisted Rotational Swings	bat_speed
+bs_hip_resisted_swings	Hip-Resisted Swings	bat_speed
+bs_hip_thrust_to_mb_throw	Hip-Thrust → MB Rotational Throw	bat_speed
+bs_iso_hold_to_swing	Iso Split-Stance Rot Hold → Swing	bat_speed
+bs_kb_swing_to_bat_swing	KB Swing → Bat Swing Complex	bat_speed
+bs_knob_loaded_swings	Knob-Weighted Swings	bat_speed
+bs_landmine_meadows_rot	Landmine Meadows Row w/ Rotation	bat_speed
+bs_pushpull_rot_complex	Landmine Push-Pull → Rotational Swing	bat_speed
+bs_landmine_rot_press	Landmine Rotational Press	bat_speed
+bs_landmine_rotational_punch	Landmine Rotational Punch	bat_speed
+bs_landmine_rotational_swing	Landmine Rotational Swing	bat_speed
+bs_mb_lateral_bound_toss	Lateral Bound to MB Toss	bat_speed
+bs_bottom_hand_lead_arm_light	Lead-Arm Light Bat Swings	bat_speed
+bs_plyo_ball_wall_rebounds	Light-Ball Rotational Wall Rebounds (Hitting)	bat_speed
+bs_mb_granny_throw	MB Granny Throw (Anti-Rotation Bomb)	bat_speed
+bs_mb_rebounder_rapid	MB Rebounder Rapid-Fire	bat_speed
+bs_mb_shotput_switch	MB Rotational Shot-Put — Switch	bat_speed
+bs_mb_scoop_toss	MB Scoop Toss (Uppercut)	bat_speed
+bs_mb_side_wall_toss	MB Side Wall Toss	bat_speed
+bs_mb_step_behind_toss	MB Step-Behind Rotational Toss	bat_speed
+bs_mb_rebounder_rapid_fire	Med Ball Rebounder Rapid-Fire	bat_speed
+med_ball_shot_put	Med Ball Rotational Shot-Put	bat_speed
+med_ball_scoop_toss	Med Ball Scoop Toss	bat_speed
+bs_mb_step_behind_side_toss	Med Ball Step-Behind Side Toss	bat_speed
+bs_mb_walking_windup_toss	Med Ball Walking Windup Toss	bat_speed
+bs_mb_to_free_swing_complex	Med-Ball Shot-Put → Free Swing Complex	bat_speed
+bs_ohp_carry_walk	Overhead Carry Rotational Walk	bat_speed
+overload_bat_swings	Overload Bat Swings	bat_speed
+bs_overload_bat_swings_v2	Overload Bat Swings	bat_speed
+bs_pvc_overspeed_swings	PVC Overspeed Swings	bat_speed
+bs_reactive_lead_leg_block	Reactive Lead-Leg Block Drill	bat_speed
+bs_rfess_pallof	Rear-Foot-Raised Resist-Turning Press	bat_speed
+bs_rear_hip_shift_drill	Rear-Hip Shift Load Drill	bat_speed
+paloff_press	Resist-Turning Press	bat_speed
+bs_pallof_iso_hold	Resist-Turning Press Hold	bat_speed
+bs_mb_reverse_scoop	Reverse Overhead MB Scoop	bat_speed
+bs_mb_chest_pass_rotation	Rotational Chest-Pass MB	bat_speed
+bs_mb_seated_rot_toss	Seated Rotational MB Toss	bat_speed
+bs_side_plank_rot_reach	Side Plank Rotational Reach	bat_speed
+bs_sledgehammer_tire_swings	Sledgehammer Tire Swings	bat_speed
+bs_speed_stick_dry_swings	Speed-Stick Dry Swings	bat_speed
+bs_split_squat_to_rot_throw	Split-Squat Iso → Rotational Throw	bat_speed
+bs_mb_split_stance_rot_toss	Split-Stance MB Rotational Toss	bat_speed
+bs_split_stance_iso_hold	Split-Stance Rotational Iso Hold	bat_speed
+bs_stride_drive_wall	Stride-Drive Wall Drill	bat_speed
+bs_tall_kneel_antirot_press	Tall-Kneel Anti-Rotation Press	bat_speed
+bs_mb_tall_kneel_scoop	Tall-Kneel Scoop Toss	bat_speed
+bs_trapbar_to_mb_toss_complex	Trap-Bar Jump → Rotational Med-Ball Toss	bat_speed
+bs_trapbar_jump_to_swing	Trap-Bar Jump → Swing Complex	bat_speed
+bs_underload_bat_swings_v2	Underload Bat Swings	bat_speed
+underload_bat_swings	Underload Bat Swings	bat_speed
+bs_underload_composite_tee	Underload Composite Bat Tee	bat_speed
+bs_underload_wood_top_hand	Underload Top-Hand Wood Swings	bat_speed
+bs_weighted_sleeve_dry_swings	Weighted Sleeve Dry Swings	bat_speed
+bs_weighted_wristwrap_swings	Weighted Wrist-Wrap Swings	bat_speed
+bs_whiffle_bat_overspeed_tee	Whiffle-Bat Overspeed Tee	bat_speed
+standing_cable_hip_flexor	Standing Cable Hip Flexor	carry_antirotation
+waiter_carry	Waiter Carry	carry_antirotation
+back_squat_concentric	Back Squat — Concentric Primer	compound
+back_squat_double_ecc	Back Squat — Double Eccentric	compound
+bench_press_concentric	Bench Press — Concentric	compound
+bench_press_double_ecc	Bench Press — Double Eccentric	compound
+cable_high_low_rotation	Cable High Low Rotation	compound
+db_row_bench	Chest-Supported DB Row	compound
+copenhagen_adduction_ecc	Copenhagen Adduction (Eccentric)	compound
+db_bench	DB Bench Press — Neutral Grip	compound
+rdl_db	DB Romanian Deadlift	compound
+front_squat_double_ecc	Front Squat — Double Eccentric	compound
+glute_bridge	Glute Bridge — Power Primer	compound
+goblet_squat	Goblet Squat — Athletic Primer	compound
+half_kneeling_cable_lift	Half Kneeling Cable Lift	compound
+hip_thrust_concentric	Hip Thrust — Concentric Primer	compound
+hip_thrust_double_ecc	Hip Thrust — Double Eccentric	compound
+incline_bench_double_ecc	Incline Bench — Double Eccentric	compound
+kneeling_medicine_ball_chest_pass	Kneeling Medicine Ball Chest Pass	compound
+lat_pulldown	Lat Pulldown — Athletic Pull	compound
+medicine_ball_chest_pass	Medicine Ball Chest Pass	compound
+medicine_ball_hip_toss	Medicine Ball Hip Toss	compound
+medicine_ball_overhead_throw	Medicine Ball Overhead Throw	compound
+medicine_ball_push_toss	Medicine Ball Push Toss	compound
+medicine_ball_rotational_deceleration_toss	Medicine Ball Rotational Deceleration Toss	compound
+medicine_ball_scoop_toss	Medicine Ball Scoop Toss	compound
+medicine_ball_shot_put_throw	Medicine Ball Shot Put Throw	compound
+medicine_ball_side_toss	Medicine Ball Side Toss	compound
+medicine_ball_sit_up_throw	Medicine Ball Sit Up Throw	compound
+medicine_ball_slam	Medicine Ball Slam	compound
+medicine_ball_supine_throw	Medicine Ball Supine Throw	compound
+nordic_curl	Nordic Hamstring Curl, Bar-Anchored	compound
+push_press_concentric	Push Press — Concentric	compound
+rdl_concentric	Romanian Deadlift — Concentric	compound
+rdl_double_ecc	Romanian Deadlift — Double Eccentric	compound
+safety_bar_box_squat	Safety-Bar Box Squat	compound
+seated_chest_pass	Seated Chest Pass	compound
+split_stance_overhead_jump_toss	Split Stance Overhead Jump Toss	compound
+trap_bar_dl_double_ecc	Trap Bar Deadlift — Double Eccentric	compound
+weighted_pullup_concentric	Weighted Pull-up — Concentric	compound
+weighted_pullup_double_ecc	Weighted Pull-up — Double Eccentric	compound
+weighted_pullup_full	Weighted Pull-Up (Full ROM)	compound
+wide_stance_cable_rotation	Wide Stance Cable Rotation	compound
+bases_1st_3rd	1st → 3rd Sprints	conditioning
+gap_band_backward_drag	Banded Backward Drag	conditioning
+gap_band_march_heavy	Banded Heavy March	conditioning
+catcher_up_downs	Catcher Up-Downs	conditioning
+bases_home_2nd	Home → 2nd Sprints	conditioning
+if_lateral_repeat	Infield Lateral Repeatability	conditioning
+inning_restart_sim_bb	Inning-Restart Sim — Baseball	conditioning
+inning_restart_sim_sb	Inning-Restart Sim — Softball	conditioning
+mif_turn_and_fire	Middle-Infield Turn-and-Fire	conditioning
+of_read_and_go	Outfield Read-and-Go	conditioning
+gap_partner_resisted_drag	Partner-Resisted Drive	conditioning
+pitcher_field_and_cover	Pitcher Field-and-Cover	conditioning
+wost_shuttle_tap_up	Badminton shuttle tap-up	cross_sport
+wost_balloon_hand_switch	Balloon hand-switch keep-up	cross_sport
+wost_balloon_keep_up	Balloon keep-up (solo)	cross_sport
+wost_balloon_keepup_partner	Balloon partner keep-up (game-day primer)	cross_sport
+wost_beanbag_balance_walk	Beanbag balance walk (head)	cross_sport
+wost_beanbag_foot_flip	Beanbag foot flip	cross_sport
+wost_beanbag_toss_catch	Beanbag toss and catch	cross_sport
+wost_coin_finger_roll	Coin finger roll	cross_sport
+cross_sport_basketball	Cross-Sport: Basketball	cross_sport
+cross_sport_bike	Cross-Sport: Bike	cross_sport
+cross_sport_soccer	Cross-Sport: Soccer	cross_sport
+cross_sport_swim	Cross-Sport: Swim	cross_sport
+wost_light_bat_shadow_tap	Light bat shadow tap	cross_sport
+wost_mini_frisbee_roll_catch	Mini frisbee roll catch	cross_sport
+wost_mini_frisbee_toss	Mini frisbee toss and catch	cross_sport
+wost_mirror_me_ball_toss	Mirror-me partner ball toss	cross_sport
+wost_partner_alt_rapid_catch	Partner alternating rapid catch	cross_sport
+wost_reaction_drop_catch	Reaction drop-catch (partner)	cross_sport
+wost_rhythm_ball_tap	Rhythm ball tap (metronome)	cross_sport
+wost_scarf_one_hand_snatch	Scarf one-hand snatch	cross_sport
+wost_scarf_partner_volley	Scarf partner volley (game-day primer)	cross_sport
+wost_tennis_ball_clap_catch	Tennis ball clap-catch	cross_sport
+wost_tennis_ball_cross_body	Tennis ball cross-body catch	cross_sport
+wost_tennis_ball_one_hand_catch	Tennis ball one-hand catch	cross_sport
+wost_tennis_ball_self_rally	Tennis ball one-hand self-rally	cross_sport
+wost_tennis_ball_wall_react	Tennis ball reaction toss vs wall	cross_sport
+wost_scarf_juggle_3	Three-scarf juggle	cross_sport
+wost_scarf_juggle_2	Two-scarf juggle	cross_sport
+hwc_finger_extension_light	Band Finger-Extension Snaps, Light Band	hand_wrist_chain
+hwc_finger_pushup_floor	Finger Push-Ups, Floor	hand_wrist_chain
+hwc_finger_pushup_incline	Finger Push-Ups, Incline	hand_wrist_chain
+hwc_finger_pushup_kneeling	Finger Push-Ups, Kneeling	hand_wrist_chain
+hwc_finger_pushup_wall	Finger Push-Ups, Wall	hand_wrist_chain
+hwc_fingertip_plank_floor	Fingertip Plank Hold, Floor	hand_wrist_chain
+hwc_fingertip_plank_incline	Fingertip Plank Hold, Incline	hand_wrist_chain
+hwc_fingertip_plank_kneeling	Fingertip Plank Hold, Kneeling	hand_wrist_chain
+hwc_fingertip_plank_wall	Fingertip Plank Hold, Wall	hand_wrist_chain
+hwc_wall_ball_pops_light	Fingertip Wall Ball Pops, Light Ball	hand_wrist_chain
+hwc_fingertip_pogo_wall_lean	Fingertip Wall Pogos, Steeper Lean	hand_wrist_chain
+hwc_fingertip_pogo_wall	Fingertip Wall Pogos, Upright	hand_wrist_chain
+hwc_grain_bucket_prep	Grain-Bucket Hand Work	hand_wrist_chain
+hwc_plate_pinch_10lb	Plate Pinch Drop-Catch, 10 lb	hand_wrist_chain
+hwc_plate_pinch_5lb	Plate Pinch Drop-Catch, 5 lb	hand_wrist_chain
+hwc_wrist_snaps_half_kg	Plyo-Ball Wrist Snaps, Four Directions, 0.5 kg	hand_wrist_chain
+hwc_wrist_snaps_one_kg	Plyo-Ball Wrist Snaps, Four Directions, 1 kg	hand_wrist_chain
+hwc_wrist_pogo_floor	Wrist Pogos, Floor	hand_wrist_chain
+hwc_wrist_pogo_incline	Wrist Pogos, Incline Bench	hand_wrist_chain
+hwc_wrist_pogo_kneeling	Wrist Pogos, Kneeling Floor	hand_wrist_chain
+hwc_wrist_pogo_wall	Wrist Wall Pogos, Standing	hand_wrist_chain
+hwc_wrist_pogo_wall_lean	Wrist Wall Pogos, Steeper Lean	hand_wrist_chain
+kot_backward_sled_drag	Backward Sled Drag	kot
+kot_sled_drag	Backward Sled Drag	kot
+backward_step_down_heel_elevated	Backward Step Down Heel Elevated	kot
+gap_catcher_stance_hold_l1	Catcher Stance Hold — Level 1	kot
+gap_catcher_stance_rock_l2	Catcher Stance Rock — Level 2	kot
+gap_catcher_stance_split_l3	Catcher Stance Split Load — Level 3	kot
+kot_couch_stretch_iso	Couch Stretch ISO	kot
+atg_split_squat	Deep Range Split Squat	kot
+sp_atg_split_squat	Deep Range Split Squat, Mobility	kot
+kot_elephant_walks	Elephant Walks	kot
+fhl_peroneal	FHL / Peroneal Work	kot
+fhl_calf_raise	FHL Calf Raise	kot
+full_rom_calf	Full-ROM Calf Raise	kot
+heel_walk	Heel Walk	kot
+kot_hip_airplane	Hip Airplane	kot
+kneeling_ankle_rocks	Kneeling Ankle Rocks	kot
+gap_kot_step_down_low	Low Step-Down	kot
+kot_nordic_hamstring	Nordic Hamstring Curl, Partner-Anchored	kot
+reverse_nordic	Reverse Nordic	kot
+kot_reverse_nordic	Reverse Nordic	kot
+seated_calf_raise	Seated Calf Raise	kot
+kot_seated_good_morning	Seated Good Morning	kot
+seated_tibialis_raise	Seated Tibialis Raise	kot
+gap_tibialis_wall_raise	Shin Raise at the Wall	kot
+single_leg_calf_raise_off_block	Single Leg Calf Raise Off Block	kot
+sissy_squat	Sissy Squat	kot
+slant_board_calf_raise	Slant Board Calf Raise	kot
+kot_slantboard_squat	Slantboard Squat	kot
+kot_jefferson_curl	Slow Standing Back Curl	kot
+kot_atg_split_squat	Split Squat, Short Range	kot
+straight_leg_calf_raise	Straight Leg Calf Raise	kot
+gap_kot_calf_tempo_raise	Tempo Calf Raise	kot
+tibialis_raise	Tibialis Raise	kot
+sp_tibialis_raise	Tibialis Raise	kot
+kot_tibialis_raise	Tibialis Raise, Loaded	kot
+toe_walk	Toe Walk	kot
+kot_ankle_pogo	Weighted Ankle Pogo	kot
+ws_band_pull_through	Band Pull-Through	max_effort_strength
+ws_dynamic_bench	Dynamic-Effort Bench	max_effort_strength
+ws_dynamic_effort_squat	Dynamic-Effort Speed Squat	max_effort_strength
+ws_glute_ham_raise	Glute Ham Raise	max_effort_strength
+ws_farmers_carry	Heavy Farmer's Carry	max_effort_strength
+ws_prowler_sprint	Heavy Sled Push Sprint	max_effort_strength
+ws_max_effort_bench_board	Max-Effort Board Press	max_effort_strength
+ws_max_effort_box_squat	Max-Effort Box Squat	max_effort_strength
+ws_reverse_hyper	Reverse Hyper	max_effort_strength
+ws_seated_band_good_morning	Seated Banded Good Morning	max_effort_strength
+ido_locomotion_ape	Ape Locomotion	movement_capacity
+ido_hollow_body_hold	Hollow Body Hold	movement_capacity
+ido_lizard_crawl	Lizard Crawl	movement_capacity
+ido_qdr	Quadrupedal Rotation (QDR)	movement_capacity
+ido_scap_pulls_hang	Scapular Pulls (Passive Hang → Active)	movement_capacity
+ido_shinbox_get_up	Shinbox Get-Up	movement_capacity
+ido_squat_sit	Squat Sit	movement_capacity
+ido_thoracic_bridge	Thoracic Bridge	movement_capacity
+ninety_ninety_transition	90/90 Hip Transitions	movement_patterning
+contralateral_cross_crawl	Contralateral Cross-Crawl	movement_patterning
+deep_squat_breathing	Deep-Squat Breathing	movement_patterning
+frc_cars_full_body	Full-Body Controlled Joint Circles	movement_patterning
+hanging_brachiation	Hanging Brachiation	movement_patterning
+fp_arm_line_spiral	Movement Patterning: Arm-Line Spiral	movement_patterning
+fp_leg_line_spiral	Movement Patterning: Leg-Line Spiral	movement_patterning
+pap_bench_to_plyo_pushup	Bench Press → Plyo Push-Up	pap_bridge
+pap_hip_thrust_to_sprint	Hip Thrust → 20yd Sprint	pap_bridge
+pap_med_ball_split_squat	Med-Ball Chop + Split Squat	pap_bridge
+pap_overload_underload_bat	Overload → Standard → Underload Swings	pap_bridge
+gap_pair_pogo_to_broad	Pogo into Broad Jump (pair)	pap_bridge
+pap_rfess_to_sl_bound	RFESS → Single-Leg Bound	pap_bridge
+gap_pair_split_iso_to_bound	Split Hold into Bound (pair)	pap_bridge
+gap_pair_squat_hold_to_jump	Squat Hold into Jump (pair)	pap_bridge
+pap_trap_dl_to_broad_jump	Trap-Bar DL → Broad Jump Complex	pap_bridge
+1arm_landmine_row	1-Arm Landmine Row	posterior_chain
+zercher_squat	Elbow-Cradled Squat	posterior_chain
+incline_db_press	Incline DB Press (Neutral Grip)	posterior_chain
+pause_bench	Pause Bench Press	posterior_chain
+snatch_grip_rdl	Snatch-Grip RDL	posterior_chain
+trap_bar_deadlift	Trap Bar Deadlift	posterior_chain
+dead_bug_reach	Dead Bug Contralateral Reach	rotational_strength
+apt_reset	Feet-on-Wall Breathing Reset	rotational_strength
+half_kneel_chop	Half-Kneeling Cable Chop	rotational_strength
+hip_shoulder_sep_drill	Hip-Shoulder Separation Drill, Standing	rotational_strength
+rear_foot_hip_hinge	Rear-Foot-Elevated Hip Hinge	rotational_strength
+anti_rot_press	Resist-Turning Press Hold	rotational_strength
+rotational_med_ball_scoop	Rotational Scoop Toss	rotational_strength
+split_stance_pull	Split-Stance Cable Pull	rotational_strength
+1arm_db_row	1-Arm DB Row (Bench-Supported)	shoulder_prep
+bear_crawl_iso	Bear Crawl ISO	shoulder_prep
+bowler_squat_reach	Bowler Squat	shoulder_prep
+landmine_press	Half-Kneeling Landmine Press	shoulder_prep
+hip_lift_march	Marching Hip Lift	shoulder_prep
+prone_trap_raise	Prone Trap Raise	shoulder_prep
+bulgarian_ss	Rear-Foot Elevated Split Squat	shoulder_prep
+1leg_hip_thrust	Single-Leg Hip Thrust	shoulder_prep
+split_stance_1arm_cable_row	Split-Stance 1-Arm Cable Row	shoulder_prep
+wall_hip_flexor_mob	Wall Hip Flexor Mobilization	shoulder_prep
+wall_slide_with_lift	Wall Slide + Lift-Off	shoulder_prep
+yoga_pushup	Yoga Push-Up	shoulder_prep
+sp_1b_3b_dirt_read	1B-to-3B on Ball-in-Dirt	speed_lab
+sp_2color_start	2-Color Audio Start	speed_lab
+sp_3pt_vs_2pt_audit	3-Point vs 2-Point Start Audit	speed_lab
+accel_10_30y	Acceleration Sprints 10-30y	speed_lab
+accentuated_eccentric_box_jump	Accentuated Eccentric Box Jump	speed_lab
+accentuated_eccentric_single_leg_box_jump	Accentuated Eccentric Single Leg Box Jump	speed_lab
+sp_singleleg_bound_alt	Alt-Leg Bounds for Distance	speed_lab
+alternating_split_jump	Alternating Split Jump	speed_lab
+sp_altitude_drop	Altitude Drop 12-18"	speed_lab
+altitude_landing	Altitude Landing	speed_lab
+backpedal	Backpedal	speed_lab
+sp_backwards_sled	Backwards Sled Drag	speed_lab
+sp_ball_drop_react	Ball-Drop Reaction	speed_lab
+band_assisted_acceleration	Band Assisted Acceleration	speed_lab
+band_release_start	Band Release Start	speed_lab
+band_resisted_acceleration	Band Resisted Acceleration	speed_lab
+sp_band_resisted_start	Band-Resisted Start w/ Release	speed_lab
+sp_band_start_release	Band-Start Contrast Pair	speed_lab
+sp_box_jump_to_sprint	Box Jump → Fly 10	speed_lab
+gap_broad_jump_stick_bw	Broad Jump to Stick	speed_lab
+build_up_sprint	Build Up Sprint	speed_lab
+gap_build_up_60	Build-Up to Full Speed	speed_lab
+sp_pop_time_reactive	Catcher Pop-Time Reactive Break	speed_lab
+sp_coach_signal_cross	Coach-Signal Crossover Start	speed_lab
+sp_continuous_broad	Continuous Broad Jumps	speed_lab
+continuous_hurdle_jump	Continuous Hurdle Jump	speed_lab
+countermovement_jump	Countermovement Jump	speed_lab
+sp_delayed_steal_read	Delayed Steal Read	speed_lab
+depth_drop_to_broad_jump	Depth Drop To Broad Jump	speed_lab
+gap_depth_drop_stick_low	Depth Drop to Stick (low box)	speed_lab
+plyo_depth_jump	Depth Jump	speed_lab
+gap_depth_jump_low_box	Depth Jump (low box)	speed_lab
+sp_diveback_burst	Dive-Back Explosive Return	speed_lab
+sp_pogo_double	Double-Leg Pogo	speed_lab
+sp_downhill_overspeed	Downhill Overspeed (2-3°)	speed_lab
+sp_dribble_to_fly	Dribble → Fly 20	speed_lab
+gap_drop_jump_single_response	Drop Jump — Single Response	speed_lab
+falling_start	Falling Start	speed_lab
+sp_false_step_audit	False-Step vs Drop-Step Audit	speed_lab
+gap_max_velocity_skip_run	Fast Skip into Run	speed_lab
+sp_first3_contact	First-3-Step Contact Drill	speed_lab
+sp_fly_10_countdown	Fly 10 w/ 20y Build	speed_lab
+sp_fly_20	Fly 20 (30y build)	speed_lab
+sp_fly_30_shutdown	Fly 30 w/ Shutdown	speed_lab
+sp_fly_40	Fly 40	speed_lab
+gap_flying_10_relaxed	Flying Ten — Relaxed	speed_lab
+half_kneeling_start	Half Kneeling Start	speed_lab
+hamstring_kick	Hamstring Kick	speed_lab
+sp_heavy_sled_30	Heavy Sled 30% BW 10y	speed_lab
+heavy_sled_explosive_start	Heavy Sled Explosive Start	speed_lab
+sp_sled_march_heavy	Heavy Sled March 20-30% BW	speed_lab
+sp_prowler_push_10	Heavy Sled Push 10y	speed_lab
+sp_prowler_contrast	Heavy Sled To Free Sprint Contrast	speed_lab
+sp_hill_contrast	Hill → Flat Contrast	speed_lab
+sp_home_1b_lhh_slap	Home-to-1B Timed (Left-Handed Hitter Slap)	speed_lab
+sp_home_1b_rhh	Home-to-1B Timed (Right-Handed Hitter)	speed_lab
+sp_hurdle_hop_series	Hurdle Hop Series	speed_lab
+hurdle_jump	Hurdle Jump	speed_lab
+hurdle_pogo	Hurdle Pogo	speed_lab
+sp_ins_and_outs	Ins-and-Outs 60y	speed_lab
+gap_jog_decel_stick	Jog to Deceleration Stick	speed_lab
+gap_lateral_bound_stick	Lateral Bound to Stick	speed_lab
+lateral_first_step	Lateral First-Step (Baseball)	speed_lab
+lateral_shuffle	Lateral Shuffle	speed_lab
+sp_sled_10y_light	Light Sled Sprint 10y	speed_lab
+loaded_broad_jump	Loaded Broad Jump	speed_lab
+loaded_countermovement_jump	Loaded Countermovement Jump	speed_lab
+sp_hill_long	Long Moderate Hill 30-40y	speed_lab
+gap_bound_low_amplitude	Low Bound Series	speed_lab
+max_velocity_flys	Max-Velocity Flys 20y	speed_lab
+sp_medball_scoop_sprint	Med-Ball Scoop → Sprint	speed_lab
+sp_mirror_5510	Mirror Sprint 5-5-10	speed_lab
+non_countermovement_squat_jump	Non Countermovement Squat Jump	speed_lab
+one_eighty_cut_sprint	One Eighty Cut Sprint	speed_lab
+overspeed_assist	Overspeed Assisted Sprint	speed_lab
+plyo_low_box	Plyometric Low-Box Landings	speed_lab
+sp_primary_lead_jump	Primary-Lead Jump Start	speed_lab
+push_up_start	Push Up Start	speed_lab
+reactive_starts	Reactive Starts	speed_lab
+sp_record_fly10	Record-Day Fly 10	speed_lab
+repeat_43ft_sb	Repeated 43-Foot Sprints (Softball)	speed_lab
+repeat_90ft_bb	Repeated 90-Foot Sprints (Baseball)	speed_lab
+resisted_acceleration	Resisted Acceleration	speed_lab
+resisted_sled	Resisted Sled Sprint (≤10% BW)	speed_lab
+rudimentary_skip	Rudimentary Skip	speed_lab
+sp_singleleg_bound_same	Same-Leg Bounds	speed_lab
+seated_box_jump	Seated Box Jump	speed_lab
+seated_broad_jump	Seated Broad Jump	speed_lab
+seated_vertical_jump	Seated Vertical Jump	speed_lab
+sp_secondary_lead_cross	Secondary-Lead Crossover	speed_lab
+sp_hill_short_10	Short Steep Hill 10y	speed_lab
+single_leg_mini_hurdle_jump	Single Leg Mini Hurdle Jump	speed_lab
+single_leg_seated_jump	Single Leg Seated Jump	speed_lab
+sp_pogo_single	Single-Leg Pogo	speed_lab
+sp_skater_bound_dist	Skater Bounds for Distance	speed_lab
+slap_runner_crossover	Slap-Runner Crossover Starts (Softball)	speed_lab
+sled_march	Sled March	speed_lab
+sled_push	Sled Push	speed_lab
+gap_snap_down_stick	Snap-Down to Stick	speed_lab
+sp_sb_43ft_break	Softball 43ft Primary Lead Break	speed_lab
+split_squat_jump	Split Squat Jump	speed_lab
+sp_sport_stance_start	Sport-Stance Reactive Start	speed_lab
+sprint_decelerate_sprint	Sprint Decelerate Sprint	speed_lab
+sprint_to_backpedal	Sprint To Backpedal	speed_lab
+straight_leg_bound	Straight Leg Bound	speed_lab
+sp_tagup_3b_burst	Tag-Up Burst from 3B	speed_lab
+sp_tempo_100_75	Tempo 100y @ 75%	speed_lab
+sp_tempo_build_60	Tempo Build 60y @ 85%	speed_lab
+tempo_run_hundred_meter	Tempo Run Hundred Meter	speed_lab
+sp_tow_assisted_fly	Tow-Assisted Fly 20	speed_lab
+sp_tuck_to_sprint	Tuck-Jump → Sprint	speed_lab
+gap_vertical_jump_reach_bw	Vertical Jump and Reach	speed_lab
+sp_wall_drive_iso	Wall-Drive Isometric	speed_lab
+sp_wall_iso_to_sprint	Wall-Iso → Sprint Contrast	speed_lab
+weighted_squat_jump	Weighted Squat Jump	speed_lab
+sp_wicket_accel_ladder	Wicket Acceleration Ladder	speed_lab
+sp_wicket_maxvelo	Wicket Max-Velocity Run	speed_lab
+mar_grapevine_carioca	Carioca (Grapevine)	sprint_mechanics
+mar_pattern_ladder	Ickey Shuffle Ladder	sprint_mechanics
+mar_multi_direction_starts	Multi-Direction Start (3-Way)	sprint_mechanics
+mar_plyo_scaffold	Plyometric Scaffold (Low→High)	sprint_mechanics
+mar_reactive_mirror	Reactive Mirror Drill	sprint_mechanics
+mar_sand_sprint	Sand Sprint	sprint_mechanics
+mar_underweight_ball_toss	Underweight Ball Toss	sprint_mechanics
+mar_wallball_reaction	Wall Ball Reaction Toss	sprint_mechanics
+lift_1arm_cable_row	1-Arm Cable Row	strength
+lift_block_pull	2-Inch Block Pull	strength
+lift_paused_front_squat	3s Paused Front Squat	strength
+lift_ab_wheel_rollout	Ab-Wheel Rollout (Standing Progression)	strength
+alternating_dumbbell_bench_press	Alternating Dumbbell Bench Press	strength
+lift_kb_swing_american	American KB Swing	strength
+lift_anderson_squat	Anderson Squat	strength
+lift_drop_jump_rebound_assisted	Assisted Drop Jump Rebound	strength
+lift_stepup	Backward Step Down Heel Elevated, Dumbbell	strength
+lift_band_pullapart	Band Pull-Apart	strength
+gap_band_speed_press	Band Speed Press	strength
+gap_band_speed_pull	Band Speed Pull	strength
+gap_band_speed_squat	Band Speed Squat	strength
+lift_band_assisted_explosive_pullup	Band-Assisted Explosive Pull-Up	strength
+lift_band_assisted_plyo_pushup	Band-Assisted Plyo Push-Up	strength
+lift_band_assisted_vertical_jump	Band-Assisted Vertical Jump	strength
+lift_band_deadlift	Band-Loaded Deadlift	strength
+lift_banded_pullthrough	Banded Pull-Through	strength
+banded_push_up	Banded Push Up	strength
+barbell_good_morning	Barbell Good Morning	strength
+lift_bb_hip_thrust	Barbell Hip Thrust	strength
+barbell_lateral_lunge	Barbell Lateral Lunge	strength
+lift_batwing_row	Batwing Row	strength
+belt_squat	Belt Squat	strength
+bent_over_barbell_row	Bent Over Barbell Row	strength
+bird_dog_row	Bird Dog Row	strength
+block_power_clean	Block Power Clean	strength
+block_power_snatch	Block Power Snatch	strength
+block_pull_deadlift	Block Pull Deadlift	strength
+lift_bottoms_up_kb_press	Bottoms-Up KB Press	strength
+box_squat	Box Squat	strength
+gap_heavy_triple_box_squat_pre	Box Squat Heavy Triple (pre-season)	strength
+bulgarian_split_squat	Bulgarian Split Squat	strength
+lift_cable_chop_cluster	Cable Chop Cluster	strength
+lift_cable_lift_cluster	Cable Lift Cluster	strength
+lift_chain_deadlift	Chain-Loaded Deadlift	strength
+chest_supported_row	Chest Supported Row	strength
+lift_chest_tbar_row	Chest-Supported T-Bar Row	strength
+chin_up	Chin Up	strength
+lift_clap_pushup_plyo	Clap Push-Up	strength
+lift_clean_pull	Clean Pull	strength
+clean_pull_from_blocks	Clean Pull From Blocks	strength
+contralateral_step_up	Contralateral Step Up	strength
+conventional_deadlift	Conventional Deadlift	strength
+lift_copenhagen_plank	Copenhagen Adductor Plank	strength
+lift_mcgill_big3	Core Stability Big-3 (Curl-Up, Side Plank, Bird-Dog)	strength
+cossack_squat	Cossack Squat	strength
+lift_couch_stretch_loaded	Couch Stretch (Loaded)	strength
+dead_stop_trap_bar_deadlift	Dead Stop Trap Bar Deadlift	strength
+lift_deadbug_band_press	Dead-Bug + Band Press	strength
+lift_atg_split_squat	Deep Range Split Squat, Dumbbell	strength
+lift_atg_lunge	Deep Range Zombie Lunge	strength
+lift_deficit_deadlift	Deficit Deadlift	strength
+deficit_push_up	Deficit Push Up	strength
+lift_box_jump_depth_drop	Depth Drop → Box Jump	strength
+lift_depth_drop_pushup	Depth Drop Push-Up	strength
+lift_dragon_flag_prog	Dragon Flag Progression	strength
+gap_drop_catch_quarter_squat	Drop-Catch Quarter Squat	strength
+dumbbell_bench_press	Dumbbell Bench Press	strength
+dumbbell_lateral_lunge	Dumbbell Lateral Lunge	strength
+dumbbell_pullover_hold	Dumbbell Pullover Hold	strength
+dumbbell_push_press	Dumbbell Push Press	strength
+dumbbell_rdl_to_row	Dumbbell RDL To Row	strength
+dumbbell_split_stance_rdl	Dumbbell Split Stance RDL	strength
+dumbbell_squat_to_press	Dumbbell Squat To Press	strength
+lift_dynamic_effort_squat	Dynamic-Effort Speed Squat	strength
+lift_zercher_carry	Elbow-Cradled Carry	strength
+lift_elephant_walk	Elephant Walk	strength
+lift_er_at_90	External Rotation at 90° Cable	strength
+lift_face_pull	Face Pull	strength
+lift_farmer_carry	Farmer's Carry	strength
+feet_elevated_inverted_row	Feet Elevated Inverted Row	strength
+lift_floor_press	Floor Press	strength
+forty_five_degree_back_extension	Forty Five Degree Back Extension	strength
+lift_french_contrast_lower	French Contrast Lower Complex	strength
+front_foot_elevated_reverse_lunge	Front Foot Elevated Reverse Lunge	strength
+lift_front_rack_carry	Front-Rack Carry	strength
+full_range_dip	Full Range Dip	strength
+full_range_dumbbell_shoulder_press	Full Range Dumbbell Shoulder Press	strength
+lift_ghr	Glute-Ham Raise	strength
+hack_squat	Hack Squat	strength
+half_kneeling_cable_high_row	Half Kneeling Cable High Row	strength
+half_kneeling_lat_pulldown	Half Kneeling Lat Pulldown	strength
+lift_hk_landmine_press	Half-Kneeling Landmine Press	strength
+lift_hk_pallof_iso	Half-Kneeling Resist-Turning Press Hold	strength
+hang_high_pull	Hang High Pull	strength
+hang_jump_shrug	Hang Jump Shrug	strength
+lift_hang_power_clean	Hang Power Clean	strength
+lift_hang_power_snatch	Hang Power Snatch	strength
+lift_heavy_sled_march	Heavy Sled March	strength
+heel_elevated_front_squat	Heel Elevated Front Squat	strength
+hex_bar_deadlift	Hex Bar Deadlift	strength
+lift_high_pull	High Pull	strength
+lift_hip_airplane	Hip Airplane	strength
+incline_barbell_bench_press	Incline Barbell Bench Press	strength
+incline_dumbbell_press	Incline Dumbbell Press	strength
+lift_split_squat_iso	Iso Split-Squat Hold	strength
+isometric_hold_pull_up	Isometric Hold Pull Up	strength
+lift_jump_shrug	Jump Shrug	strength
+lift_kb_clean_press	Kettlebell Clean & Press	strength
+lift_kot_calf_raise	Knee Forward Calf Raise	strength
+lift_landmine_press	Landmine Press	strength
+landmine_push_press	Landmine Push Press	strength
+lift_vmo_leg_ext	Long-Lever VMO Leg Extension	strength
+lift_mb_scoop_height	MB Scoop Throw for Height	strength
+lift_meadows_row	Meadows Row	strength
+mid_thigh_pull	Mid Thigh Pull	strength
+lift_mixed_carry	Mixed Carry (Bottoms-Up + Rack)	strength
+sp_nordic_hamstring	Nordic Hamstring Curl	strength
+lift_nordic_curl_ecc	Nordic Hamstring Eccentric	strength
+offset_farmer_carry	Offset Farmer Carry	strength
+one_arm_cable_pulldown	One Arm Cable Pulldown	strength
+overhead_carry	Overhead Carry	strength
+lift_overspeed_band_bench_throw	Overspeed Band Bench Throw	strength
+lift_overspeed_band_row	Overspeed Band Row	strength
+lift_overspeed_band_squat_jump	Overspeed Band Squat Jump	strength
+paused_deep_squat	Paused Deep Squat	strength
+petersen_step_up	Petersen Step Up	strength
+lift_peterson_stepup	Peterson Step-Up	strength
+physioball_leg_curl	Physioball Leg Curl	strength
+lift_pin_press	Pin Press	strength
+gap_heavy_triple_pin_press_pre	Pin Press Heavy Triple (pre-season)	strength
+pin_squat_concentric_only	Pin Squat Concentric Only	strength
+plate_press	Plate Press	strength
+power_high_pull	Power High Pull	strength
+prone_weighted_reverse_fly	Prone Weighted Reverse Fly	strength
+prone_y_t_w_raise	Prone Y T W Raise	strength
+pull_up	Pull Up	strength
+lift_push_jerk	Push Jerk	strength
+lift_rdl_cluster	RDL Cluster	strength
+lift_rfess_pallof	Rear-Foot-Raised Resist-Turning Press	strength
+lift_reverse_hyper	Reverse Hyper	strength
+lift_reverse_nordic	Reverse Nordic	strength
+reverse_nordic_curl	Reverse Nordic Curl	strength
+ring_dip	Ring Dip	strength
+ring_push_up	Ring Push Up	strength
+lift_ring_row	Ring Row	strength
+lift_kb_swing_russian	Russian KB Swing	strength
+lift_ssb_good_morning	Safety-Bar Good Morning	strength
+lift_safety_bar_squat	Safety-Bar Squat	strength
+seated_alternating_shoulder_press	Seated Alternating Shoulder Press	strength
+seated_cable_row	Seated Cable Row	strength
+lift_patrick_step	Short Range Knee Step Down	strength
+lift_side_plank_leg_lift	Side Plank + Leg Lift	strength
+single_arm_cable_row	Single Arm Cable Row	strength
+single_arm_dumbbell_bench_press	Single Arm Dumbbell Bench Press	strength
+single_leg_back_extension	Single Leg Back Extension	strength
+single_leg_wall_sit	Single Leg Wall Sit	strength
+lift_sa_db_bench	Single-Arm DB Bench	strength
+lift_db_snatch	Single-Arm DB Snatch	strength
+lift_45_hyper_sl	Single-Leg 45° Hyper	strength
+gap_catch_stick_single_leg	Single-Leg Catch and Stick	strength
+lift_sl_hip_thrust	Single-Leg Hip Thrust	strength
+lift_sl_rdl	Single-Leg RDL	strength
+sp_sl_rdl_iso	Single-Leg RDL Isometric	strength
+lift_kot_sissy_squat	Sissy Squat	strength
+lift_sled_backward	Sled Backward Drag	strength
+slideboard_leg_curl	Slideboard Leg Curl	strength
+slider_reverse_lunge	Slider Reverse Lunge	strength
+lift_jefferson_curl	Slow Standing Back Curl	strength
+slant_board_jefferson_curl	Slow Standing Back Curl on Slant Board	strength
+lift_snatch_pull	Snatch Pull	strength
+lift_snatch_grip_rdl	Snatch-Grip RDL	strength
+lift_split_jerk	Split Jerk	strength
+split_stance_landmine_push_press	Split Stance Landmine Push Press	strength
+gap_drop_catch_split_stance	Split-Stance Drop-Catch	strength
+lift_staggered_rdl	Staggered-Stance RDL	strength
+lift_hip_flexor_iso	Standing Hip-Flexor Iso	strength
+step_up	Step Up	strength
+straight_arm_dumbbell_pullover	Straight Arm Dumbbell Pullover	strength
+lift_suitcase_carry	Suitcase Carry	strength
+lift_swiss_bar_bench	Swiss Bar (Football Bar) Bench	strength
+lift_tempo_back_squat	Tempo Back Squat 5010	strength
+lift_iso_squat	Three-Phase Iso Squat 3s	strength
+lift_tib_raise	Tibialis Raise	strength
+trap_bar_carry	Trap Bar Carry	strength
+trap_three_raise	Trap Three Raise	strength
+gap_heavy_triple_trap_bar_pre	Trap-Bar Heavy Triple (pre-season)	strength
+lift_trap_bar_jump	Trap-Bar Jump	strength
+lift_turkish_getup	Turkish Get-Up	strength
+lift_waiter_carry	Waiter's Overhead Carry	strength
+walking_lunge	Walking Lunge	strength
+gap_isometric_wall_calf_drive	Wall Calf Drive Isometric	strength
+gap_wall_drive_iso_split	Wall Drive Isometric — Split	strength
+gap_iso_wall_press_hold	Wall Press Isometric	strength
+wall_sit	Wall Sit	strength
+lift_weighted_pullup_full	Weighted Pull-Up Full ROM	strength
+lift_weighted_pushup_chains	Weighted Push-Up (Chains)	strength
+wide_grip_pull_up	Wide Grip Pull Up	strength
+lift_box_squat_wide	Wide-Stance Box Squat	strength
+bowler_squat	Bowler Squat	supplemental
+dl_jband_series	Arm-Care Band Full Series	throwing_plyo
+dl_bat_speed_overload_ladder	Bat-Weight Ladder (Overload → Standard)	throwing_plyo
+dl_lateral_bound_to_throw	Lateral Bound to Throw	throwing_plyo
+dl_med_ball_shotput	Med Ball Rotational Shotput	throwing_plyo
+dl_pivot_pickoff_throw	Pivot Pickoff Throw	throwing_plyo
+dl_plyo_pivot_pickoff	Plyo Ball Pivot Pickoff	throwing_plyo
+dl_plyo_reverse_throw	Plyo Ball Reverse Throw	throwing_plyo
+dl_step_back_swing	Step-Back Overload Swing	throwing_plyo
+dl_underload_swing_speed	Underload Speed Swings	throwing_plyo
+dl_weighted_ball_hold	Weighted Ball Rocker Hold	throwing_plyo
+banded_dead_bug	Banded Dead Bug	trunk
+bench_supported_side_bend	Bench Supported Side Bend	trunk
+bird_dog	Bird Dog	trunk
+body_saw	Body Saw	trunk
+sp_copenhagen_plank	Copenhagen Plank	trunk
+cross_body_crunch	Cross Body Crunch	trunk
+dolphin_plank	Dolphin Plank	trunk
+dumbbell_crunch	Dumbbell Crunch	trunk
+four_way_plank	Four Way Plank	trunk
+garhammer_raise	Garhammer Raise	trunk
+hanging_knee_raise	Hanging Knee Raise	trunk
+hanging_knees_to_elbows	Hanging Knees To Elbows	trunk
+heavy_russian_twist	Heavy Russian Twist	trunk
+kneeling_ab_rollout	Kneeling Ab Rollout	trunk
+l_sit	L Sit	trunk
+landmine_overhead_rotation	Landmine Overhead Rotation	trunk
+landmine_straight_leg_sit_up	Landmine Straight Leg Sit Up	trunk
+low_cable_hip_flexor_pull_in	Low Cable Hip Flexor Pull In	trunk
+off_bench_oblique	Off Bench Oblique	trunk
+plank_drag_through	Plank Drag Through	trunk
+plank_with_reach	Plank With Reach	trunk
+resisted_dead_bug	Resisted Dead Bug	trunk
+russian_twist	Russian Twist	trunk
+standing_ab_rollout	Standing Ab Rollout	trunk
+straight_leg_sit_up	Straight Leg Sit Up	trunk
+strap_loaded_hip_flexor_raise	Strap Loaded Hip Flexor Raise	trunk
+tall_plank_shoulder_tap	Tall Plank Shoulder Tap	trunk
+trap_bar_trunk_twist	Trap-Bar Trunk Twist	trunk
+v_up	V Up	trunk
+weighted_crunch	Weighted Crunch	trunk
+weighted_dead_bug	Weighted Dead Bug	trunk
+box_step_up	Box Step-Up — Controlled	unilateral_lower
+kot_lunge	Deep-Range Forward Lunge	unilateral_lower
+lateral_db_step_up	Lateral DB Step-Up	unilateral_lower
+reverse_lunge	Reverse Lunge — Athletic	unilateral_lower
+sl_deadlift_fat_grips	Single-Leg Deadlift (Fat Grips)	unilateral_lower
+slide_lunge	Slide Lunge (Slideboard/Valslide)	unilateral_lower
+renegade_row	Renegade Row	unilateral_pull
+sa_standing_cable_row	Single-Arm Standing Cable Row	unilateral_pull
+landmine_row_to_press	Landmine Row-to-Press	unilateral_push
+sa_db_chest_press	Single-Arm DB Chest Press	unilateral_push
+ubp_f13_b_reverse_plyo_ball_throws_9090	90/90 Reverse Plyo-Ball Wall Throws	upper_body_plyo
+ubp_f22_alternating_hand_bounds	Alternating Hand Bounds	upper_body_plyo
+ubp_f05_a_band_overspeed_row	Band Overspeed Row	upper_body_plyo
+ubp_f08_b_band_pull_down_catch_stick	Band Pull-Down Catch and Stick	upper_body_plyo
+ubp_f07_b_band_pull_down_catch_drive	Band Pull-Down Catch to Drive	upper_body_plyo
+ubp_f06_b_band_rapid_pull_down	Band Rapid Pull-Down	upper_body_plyo
+ubp_f14_a_band_rebound_row_rhythm	Band Rebound Row Rhythm	upper_body_plyo
+ubp_f15_d_band_rotation_hold_throw	Band Rotation Hold to Throw	upper_body_plyo
+ubp_f20_band_assisted_plyo_pushup	Band-Assisted Plyo Push-Up (Overspeed)	upper_body_plyo
+ubp_f20_band_resisted_plyo_pushup	Band-Resisted Plyo Push-Up (Strength-Speed)	upper_body_plyo
+ubp_f23_banded_sled_press_rebound	Banded Sled Press (Rebound)	upper_body_plyo
+ubp_f10_a_behind_body_plyo_ball_catch_stick	Behind-Body Plyo-Ball Catch and Stick	upper_body_plyo
+ubp_f11_base_bench_drop_catch	Bench Drop Catch, Pins	upper_body_plyo
+ubp_f22_box_drop_catch_rebound_pushup	Box Drop-Catch Rebound Push-Up	upper_body_plyo
+ubp_f11_b_cable_pull_down_rapid_rebound	Cable Pull-Down Rapid Rebound	upper_body_plyo
+ubp_f10_base_chest_catch_stick	Chest Catch and Stick	upper_body_plyo
+ubp_f11_a_chest_supported_row_drop_catch	Chest-Supported Row Drop Catch	upper_body_plyo
+ubp_f22_explosive_pushup_travel	Explosive Push-Up Travel	upper_body_plyo
+ubp_f01_d_hk_landmine_rotation_drop_catch	Half-Kneeling Landmine Rotation Drop Catch	upper_body_plyo
+ubp_f22_hand_hops_low_line	Hand Hops Over a Low Line	upper_body_plyo
+ubp_f08_c_high_handle_prowler_catch_stick	High-Handle Prowler Catch and Stick	upper_body_plyo
+ubp_f07_c_high_handle_prowler_catch_press	High-Handle Prowler Catch to Press	upper_body_plyo
+ubp_f05_c_incline_catch_press_throw	Incline Catch to Press-Throw, 45 Degrees	upper_body_plyo
+ubp_f01_a_inverted_row_drop_catch	Inverted Row Drop Catch	upper_body_plyo
+ubp_f15_a_inverted_row_hold_release	Inverted Row Hold to Release Row	upper_body_plyo
+ubp_f03_a_inverted_row_release_clap	Inverted Row to Release-Clap	upper_body_plyo
+ubp_f02_c_landmine_plyo_press	Landmine Plyo Press, Release and Catch	upper_body_plyo
+ubp_f01_c_landmine_press_drop_catch	Landmine Press Drop Catch	upper_body_plyo
+ubp_f15_c_landmine_press_hold_explode	Landmine Press Hold to Explode	upper_body_plyo
+ubp_f16_c_landmine_press_to_landmine_plyo_press	Landmine Press to Landmine Plyo Press	upper_body_plyo
+ubp_f03_c_landmine_press_pause_explode	Landmine Press, Pause to Explosive Press	upper_body_plyo
+ubp_f06_c_landmine_rapid_press	Landmine Rapid Press	upper_body_plyo
+ubp_f11_d_landmine_rotation_catch	Landmine Rotation Catch	upper_body_plyo
+ubp_f16_d_landmine_rotation_to_rotational_shot_put	Landmine Rotation to Rotational Shot-Put	upper_body_plyo
+ubp_f22_lateral_hand_hops	Lateral Hand Hops Over a Line	upper_body_plyo
+ubp_f14_c_light_overhead_rhythm_throw	Light Overhead Rhythm Throws	upper_body_plyo
+ubp_f19_mb_crossover_plyo_pushup	Med-Ball Crossover Plyo Push-Up	upper_body_plyo
+ubp_f22_offset_hand_plyo_pushup	Offset-Hand Plyo Push-Up	upper_body_plyo
+ubp_f19_offset_mb_pushup	Offset-Hand Push-Up on a Med Ball	upper_body_plyo
+ubp_f10_b_overhead_catch_stick	Overhead Catch and Stick	upper_body_plyo
+ubp_f04_b_overhead_catch_slam	Overhead Catch to Slam	upper_body_plyo
+ubp_f14_b_overhead_wall_dribble	Overhead Wall Dribble	upper_body_plyo
+ubp_f13_c_overhead_wall_dribbles	Overhead Wall Dribbles	upper_body_plyo
+ubp_f02_a_plyo_inverted_row	Plyo Inverted Row, Release and Re-Grip	upper_body_plyo
+ubp_f02_b_plyo_pullup	Plyo Pull-Up, Release and Re-Grip, Band Assisted	upper_body_plyo
+ubp_f02_base_plyo_pushup	Plyo Push-Up, Incline to Floor	upper_body_plyo
+ubp_f17_overhead_throw	Plyo-Ball Overhead Throw, Sub-Max	upper_body_plyo
+ubp_f17_pivot_wall_throw	Plyo-Ball Pivot Wall Throw, Sub-Max	upper_body_plyo
+ubp_f17_reverse_throw	Plyo-Ball Reverse Throw, Sub-Max	upper_body_plyo
+ubp_f17_chest_pass	Plyo-Ball Wall Chest Pass, Sub-Max	upper_body_plyo
+ubp_f13_a_prone_plyo_ball_drops_ty	Prone Plyo-Ball Drops, T and Y	upper_body_plyo
+ubp_f04_a_prone_plyo_ball_reverse_catch_throw	Prone Plyo-Ball Reverse Catch to Throw	upper_body_plyo
+ubp_f08_base_prowler_catch_stick	Prowler Catch and Stick	upper_body_plyo
+ubp_f07_base_prowler_catch_press	Prowler Catch to Press	upper_body_plyo
+ubp_f07_d_prowler_catch_rotational_press	Prowler Catch to Rotational Press	upper_body_plyo
+ubp_f01_b_pullup_drop_catch	Pull-Up Drop Catch, Band Assisted	upper_body_plyo
+ubp_f15_b_pullup_mid_hang_hold_explode	Pull-Up Mid-Hang Hold to Explode	upper_body_plyo
+ubp_f16_b_pullup_to_band_snap_down	Pull-Up to Band Snap-Down	upper_body_plyo
+ubp_f03_b_pullup_mid_hang_pause	Pull-Up, Mid-Hang Pause to Explosive Pull	upper_body_plyo
+ubp_f15_base_pushup_bottom_hold_explode	Push-Up Bottom Hold to Explode	upper_body_plyo
+ubp_f01_base_pushup_drop_catch	Push-Up Drop Catch	upper_body_plyo
+ubp_f22_rapid_band_punches	Rapid Band Punches	upper_body_plyo
+ubp_f09_a_rapid_band_rebound_row	Rapid Band Rebound Row	upper_body_plyo
+ubp_f13_d_rebounder_deceleration_catches	Rebounder Deceleration Catches	upper_body_plyo
+ubp_f18_scoop	Rebounder Scoop Toss	upper_body_plyo
+ubp_f18_shot_put	Rebounder Shot-Put Throw	upper_body_plyo
+ubp_f18_step_behind	Rebounder Step-Behind Throw	upper_body_plyo
+ubp_f09_b_repeat_overhead_slam	Repeat Overhead Slam	upper_body_plyo
+ubp_f09_c_repeat_overhead_wall_throw	Repeat Overhead Wall Throw	upper_body_plyo
+ubp_f09_d_repeat_rotational_wall_throw	Repeat Rotational Wall Throw	upper_body_plyo
+ubp_f09_base_repeat_chest_pass	Repeat Wall Chest Pass	upper_body_plyo
+ubp_f08_d_rotational_band_catch_stick	Rotational Band Catch and Stick	upper_body_plyo
+ubp_f10_d_rotational_catch_stick	Rotational Catch and Stick	upper_body_plyo
+ubp_f04_d_rotational_catch_shot_put_throw	Rotational Catch to Shot-Put Throw	upper_body_plyo
+ubp_f03_d_mb_rotational_catch_pause_throw	Rotational Med-Ball Catch, Pause, Throw	upper_body_plyo
+ubp_f16_a_row_to_band_snap_row	Row to Band Snap Row	upper_body_plyo
+ubp_f11_c_seated_landmine_drop_catch	Seated Landmine Drop Catch	upper_body_plyo
+ubp_f04_base_seated_overhead_mb_catch_press_throw	Seated Overhead Med-Ball Catch to Press-Throw	upper_body_plyo
+ubp_f05_d_seated_rotational_catch_throw	Seated Rotational Catch to Throw	upper_body_plyo
+ubp_f12_d_sa_band_chop_snap	Single-Arm Band Chop Snap	upper_body_plyo
+ubp_f12_c_sa_band_overhead_snap_y	Single-Arm Band Overhead Snap, Y Pattern	upper_body_plyo
+ubp_f12_base_sa_band_punch_snap	Single-Arm Band Punch Snap	upper_body_plyo
+ubp_f12_a_sa_band_snap_row	Single-Arm Band Snap Row	upper_body_plyo
+ubp_f12_b_sa_band_snap_down	Single-Arm Band Snap-Down	upper_body_plyo
+ubp_f10_c_sa_overhead_plyo_ball_catch_stick	Single-Arm Overhead Plyo-Ball Catch and Stick, Light	upper_body_plyo
+ubp_f04_c_sa_overhead_plyo_ball_catch_press_throw	Single-Arm Overhead Plyo-Ball Catch to Press-Throw, Light	upper_body_plyo
+ubp_f19_sa_wall_plyo_push	Single-Arm Wall Plyo Push	upper_body_plyo
+ubp_f22_sa_wall_pogos	Single-Arm Wall Pogos	upper_body_plyo
+ubp_f06_base_sled_strap_rapid_press	Sled Strap Rapid Press	upper_body_plyo
+ubp_f06_a_sled_strap_rapid_row	Sled Strap Rapid Row	upper_body_plyo
+ubp_f06_d_sled_strap_rotational_punch	Sled Strap Rotational Punch	upper_body_plyo
+ubp_f08_a_strap_sled_catch_stick	Strap Sled Catch and Stick	upper_body_plyo
+ubp_f07_a_strap_sled_catch_row	Strap Sled Catch to Row	upper_body_plyo
+ubp_f05_base_supine_chest_catch_press_throw	Supine Chest Catch to Press-Throw	upper_body_plyo
+ubp_f05_b_supine_pullover_catch_throw	Supine Pullover Catch to Throw	upper_body_plyo
+ubp_f14_base_wall_chest_pass_rhythm	Wall Chest-Pass Rhythm	upper_body_plyo
+wu_9020_reset	90/90 breathing reset	warmup
+wu_90_90_switch	90/90 hip switches	warmup
+wu_couch_stretch_active	Active couch stretch + posterior tilt	warmup
+wu_adductor_rock	Adductor rock-back	warmup
+all_fours_t_spine_rotation	All Fours T Spine Rotation	warmup
+wu_altitude_drop	Altitude drop landing (RSI primer)	warmup
+gap_ankle_hop_metronome	Ankle Hop — Steady Rhythm	warmup
+gap_ankle_rock_mobility	Ankle Rock — Mobility	warmup
+arm_circle	Arm Circle	warmup
+wu_jband_full_warmup	Arm-Care Band full arm-care chart (warm-up)	warmup
+wu_arm_line_spiral	Arm-line fascial spiral	warmup
+wu_barefoot_towel_scrunch	Barefoot towel scrunch (foot fascia)	warmup
+wu_bird_dog_slow	Bird-dog slow tempo	warmup
+brachial_plexus_glide	Brachial Plexus Glide	warmup
+bretzel_stretch	Bretzel Stretch	warmup
+wu_broad_jump_prep	Broad jump — 60% intent primer	warmup
+butcher_block_stretch	Butcher Block Stretch	warmup
+cat_cow	Cat Cow	warmup
+childs_pose	Childs Pose	warmup
+cobra_stretch	Cobra Stretch	warmup
+wu_hip_cars	Controlled Hip Circles	warmup
+wu_shoulder_cars	Controlled Shoulder Circles	warmup
+wu_wrist_cars	Controlled Wrist Circles	warmup
+wu_cossack_squat	Cossack squat flow	warmup
+couch_stretch	Couch Stretch	warmup
+wu_crocodile_breathing	Crocodile breathing (prone diaphragm reset)	warmup
+wu_crossover_symmetry_full_warmup	Cross-Band activation chart (warm-up)	warmup
+wu_crossover_run	Crossover run (open the hip)	warmup
+dead_hang	Dead Hang	warmup
+wu_deadbug_band_press	Dead-bug w/ band overhead press iso	warmup
+doorway_pec_stretch	Doorway Pec Stretch	warmup
+double_leg_pike_stretch	Double Leg Pike Stretch	warmup
+wu_mirror_throw_prep	Dry throw arm-swing prep	warmup
+elevated_pigeon_stretch	Elevated Pigeon Stretch	warmup
+wu_falling_start	Falling start (10 yd)	warmup
+forward_backward_leg_swing	Forward Backward Leg Swing	warmup
+frankenstein_walk	Frankenstein Walk	warmup
+frog_rock	Frog Rock	warmup
+wu_frog_rock	Frog stretch rock-back	warmup
+gap_primer_activation_walk	Game-Day Primer — Activation Walk	warmup
+gap_primer_elastic_pogo	Game-Day Primer — Elastic Pogos	warmup
+gap_primer_skip_series	Game-Day Primer — Skip Series	warmup
+wu_glute_bridge_walkout	Glute bridge walkout	warmup
+half_kneeling_hip_flexor_stretch	Half Kneeling Hip Flexor Stretch	warmup
+wu_hip_airplane	Hip airplanes (SL hinge + rotation)	warmup
+hip_circle	Hip Circle	warmup
+gap_hip_flow_mobility	Hip Flow — Mobility	warmup
+hurdle_over_under	Hurdle Over Under	warmup
+hurdle_rhythm_walk	Hurdle Rhythm Walk	warmup
+hurdle_step_over	Hurdle Step Over	warmup
+incline_pigeon_pose	Incline Pigeon Pose	warmup
+iron_cross	Iron Cross	warmup
+kneeling_achilles_stretch	Kneeling Achilles Stretch	warmup
+wu_lacrosse_ball_glute	Lacrosse ball glute pin-and-stretch	warmup
+wu_lacrosse_ball_pec	Lacrosse ball pec minor pin	warmup
+lateral_band_walk	Lateral Band Walk	warmup
+lateral_hurdle_step_over	Lateral Hurdle Step Over	warmup
+lateral_leg_swing	Lateral Leg Swing	warmup
+wu_lateral_line_reach	Lateral line reach + side bend	warmup
+lateral_lunge_switch	Lateral Lunge Switch	warmup
+wu_pogo_lateral	Lateral pogo (skater rhythm)	warmup
+leg_cradle	Leg Cradle	warmup
+gap_line_hop_side	Line Hop — Side to Side	warmup
+wu_line_hops_forward_back	Line hops forward-back	warmup
+wu_line_hops_lateral	Line hops lateral	warmup
+long_lunge	Long Lunge	warmup
+lunge_with_elbow_tuck_rotation	Lunge With Elbow Tuck Rotation	warmup
+wu_med_ball_shot_put	Med-ball rotational shot-put	warmup
+wu_medball_rot_toss_wall	Med-ball rotational toss (fascial spring)	warmup
+wu_med_ball_scoop_toss	Med-ball scoop toss (rear-hip explosive)	warmup
+median_nerve_glide	Median Nerve Glide	warmup
+mini_band_clamshell	Mini Band Clamshell	warmup
+wu_miniband_lat_walk	Mini-band lateral walk	warmup
+wu_miniband_monster_walk	Mini-band monster walk	warmup
+monster_walk	Monster Walk	warmup
+ninety_ninety_hip_stretch	Ninety Ninety Hip Stretch	warmup
+overhead_wall_slide	Overhead Wall Slide	warmup
+plantar_fascia_release	Plantar Fascia Release	warmup
+gap_pogo_hold_short	Pogo with a Hold	warmup
+wu_dry_swing_progressive	Progressive dry swings (intent ladder)	warmup
+wu_prone_hip_ext_iso	Prone glute-only hip extension	warmup
+wu_pallof_press_iso	Resist-Turning Press Hold	warmup
+reverse_arm_circle	Reverse Arm Circle	warmup
+roll_back_to_reach_through	Roll Back To Reach Through	warmup
+scorpion	Scorpion	warmup
+wu_ankle_cars	Seated Ankle Circles	warmup
+seated_hip_cars	Seated Hip Circles	warmup
+wu_serratus_wall_slide	Serratus wall slide	warmup
+wu_shin_box_get_up	Shin-box get-up	warmup
+wu_copenhagen_short_lever	Short-lever Copenhagen plank	warmup
+wu_scapular_cars	Shoulder-Blade Circles	warmup
+wu_shuffle_change_direction	Shuffle → change of direction	warmup
+single_leg_calf_stretch	Single Leg Calf Stretch	warmup
+single_leg_pike_stretch	Single Leg Pike Stretch	warmup
+wu_singleleg_glute_bridge	Single-leg glute bridge	warmup
+wu_pogo_single	Single-leg pogo (symmetry)	warmup
+wu_sl_rdl_reach	Single-leg RDL balance reach	warmup
+slant_board_calf_stretch	Slant Board Calf Stretch	warmup
+slant_board_hamstring_stretch	Slant Board Hamstring Stretch	warmup
+wu_spine_cars	Slow Back Bends and Turns	warmup
+wu_snap_jump	Snap jump (rapid concentric)	warmup
+wu_calf_softball_pin	Soleus ball pin (calf ECM hydration)	warmup
+wu_spiderman_reach	Spiderman + rotational reach	warmup
+wu_split_stance_iso_hold	Split-stance iso hold + march	warmup
+wu_split_snap_jump	Split-stance snap-switch jump	warmup
+squat_toe_touch	Squat Toe Touch	warmup
+standing_groin_stretch	Standing Groin Stretch	warmup
+standing_pancake	Standing Pancake	warmup
+wu_spinal_wave_standing	Standing spinal wave	warmup
+t_stretch	T Stretch	warmup
+wu_foam_roll_tspine	T-spine foam roll extensions	warmup
+wu_tspine_open_book	T-spine open book	warmup
+table_slide	Table Slide	warmup
+tailors_pose	Tailors Pose	warmup
+teres_ball_release	Teres Ball Release	warmup
+thoracic_foam_roll	Thoracic Foam Roll	warmup
+wu_thoracic_windmill	Thoracic windmill (side-lying open book)	warmup
+thread_the_needle	Thread The Needle	warmup
+wu_thread_the_needle_slow	Thread-the-needle slow flow	warmup
+tibialis_stretch	Tibialis Stretch	warmup
+towel_sleeper_stretch	Towel Sleeper Stretch	warmup
+trunk_twist	Trunk Twist	warmup
+ulnar_nerve_glide	Ulnar Nerve Glide	warmup
+gap_thoracic_open_mobility	Upper-Back Opener — Mobility	warmup
+wall_ankle_mobilization	Wall Ankle Mobilization	warmup
+wu_wall_hip_flexor_slide	Wall-assisted hip flexor slide	warmup
+weighted_butterfly_stretch	Weighted Butterfly Stretch	warmup
+weighted_pigeon_pose	Weighted Pigeon Pose	warmup
+wu_worlds_greatest_stretch	World's greatest stretch	warmup
+wm_band_resisted_circle	Band-resisted arm circle	windmill_pitching
+wm_changeup	Change-up	windmill_pitching
+wm_curveball	Curveball	windmill_pitching
+wm_drive_line_stride	Drive and stride on the power line	windmill_pitching
+wm_drop_ball	Drop ball	windmill_pitching
+wm_fastball_spots	Fastball to spots	windmill_pitching
+wm_game_sim	Game simulation innings	windmill_pitching
+wm_half_circle_whip	Half-circle whip	windmill_pitching
+wm_k_position_snap	K-position wrist snap	windmill_pitching
+wm_rise_ball	Rise ball	windmill_pitching
+wm_screwball	Screwball	windmill_pitching
+wm_walk_through	Walk-through windmill	windmill_pitching
