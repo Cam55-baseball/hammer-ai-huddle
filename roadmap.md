@@ -1,3 +1,8 @@
+## I7 (2026-10-08 ~02:05 UTC) — Ready to publish: no
+- Resend rechecked: domains API HTTP 200, still only hammersmodality.com (status failed); hammersmodality.org not added/verified. No resend attempted. TEST row f53996f5-6df5-477b-96c4-5dbff22e3850 kept.
+- No code changes; I5 results (2,497/2,497 tests, build OK) stand. No publish/deploy/migration/cron change/test data.
+- Waiting on owner: verify hammersmodality.org in Resend; keep/undo decisions on the 10 ledger files; OK to retire the five old programs.
+
 ## I6 (2026-10-08 02:00 UTC) — Ready to publish: no
 - Resend rechecked: still only hammersmodality.com (failed); .org not verified. No resend. TEST row f53996f5-6df5-477b-96c4-5dbff22e3850 kept.
 - No code changes; I5 results (2,497/2,497 tests, build OK) stand. No publish/deploy/migration/cron change/test data.
