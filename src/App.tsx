@@ -172,8 +172,6 @@ const Nutrition = lazyWithRetry(() => import("./pages/Nutrition"));
 const NutritionHub = lazyWithRetry(() => import("./pages/NutritionHub"));
 const BounceBackBay = lazyWithRetry(() => import("./pages/BounceBackBay"));
 const MindFuel = lazyWithRetry(() => import("./pages/MindFuel"));
-const ProductionLab = lazyWithRetry(() => import("./pages/ProductionLab"));
-const ProductionStudio = lazyWithRetry(() => import("./pages/ProductionStudio"));
 const Vault = lazyWithRetry(() => import("./pages/Vault"));
 const TexVision = lazyWithRetry(() => import("./pages/TexVision"));
 const ComingSoon = lazyWithRetry(() => import("./pages/ComingSoon"));
@@ -181,15 +179,12 @@ const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 const MyCustomActivities = lazyWithRetry(() => import("./pages/MyCustomActivities"));
 const SharedActivity = lazyWithRetry(() => import("./pages/SharedActivity"));
 const Calendar = lazyWithRetry(() => import("./pages/Calendar"));
-const SpeedLab = lazyWithRetry(() => import("./pages/SpeedLab"));
 const CompletePlayer = lazyWithRetry(() => import("./pages/CompletePlayer"));
 const CompleteHitter = lazyWithRetry(() => import("./pages/CompleteHitter"));
 const CompletePitcher = lazyWithRetry(() => import("./pages/CompletePitcher"));
 const HelpDesk = lazyWithRetry(() => import("./pages/HelpDesk"));
 const FiveToolPlayer = lazyWithRetry(() => import("./pages/FiveToolPlayer"));
 const GoldenTwoWay = lazyWithRetry(() => import("./pages/GoldenTwoWay"));
-const TheUnicorn = lazyWithRetry(() => import("./pages/TheUnicorn"));
-const ExplosiveConditioning = lazyWithRetry(() => import("./pages/ExplosiveConditioning"));
 const PracticeHub = lazyWithRetry(() => import("./pages/PracticeHub"));
 const ProgressDashboard = lazyWithRetry(() => import("./pages/ProgressLanding"));
 const OrganizationDashboard = lazyWithRetry(() => import("./pages/OrganizationDashboard"));
@@ -503,22 +498,22 @@ const App = () => {
               <Route path="/nutrition-hub" element={<NutritionHub />} />
               <Route path="/mind-fuel" element={<MindFuel />} />
               <Route path="/bounce-back-bay" element={<BounceBackBay />} />
-              <Route path="/production-lab" element={<RetiredProgramRoute><ProductionLab /></RetiredProgramRoute>} />
-              <Route path="/production-studio" element={<RetiredProgramRoute><ProductionStudio /></RetiredProgramRoute>} />
+              <Route path="/production-lab" element={<RetiredProgramRoute />} />
+              <Route path="/production-studio" element={<RetiredProgramRoute />} />
               <Route path="/vault" element={<Vault />} />
               <Route path="/tex-vision" element={<SoftballLock feature="tex_vision"><TexVision /></SoftballLock>} />
               <Route path="/coming-soon" element={<ComingSoon />} />
               <Route path="/my-custom-activities" element={<MyCustomActivities />} />
               <Route path="/shared-activity/:shareCode" element={<SharedActivity />} />
               <Route path="/calendar" element={<Calendar />} />
-              <Route path="/speed-lab" element={<RetiredProgramRoute><SpeedLab /></RetiredProgramRoute>} />
+              <Route path="/speed-lab" element={<RetiredProgramRoute />} />
               <Route path="/complete-player" element={<SubscriptionGate requiredAccess="throwing" featureName="Complete Player" featureDescription="Complete Player is included with 5Tool Player and The Golden 2Way."><CompletePlayer /></SubscriptionGate>} />
               <Route path="/complete-hitter" element={<SubscriptionGate requiredAccess="hitting" featureName="Complete Hitter" featureDescription="Complete Hitter is included with 5Tool Player and The Golden 2Way."><CompleteHitter /></SubscriptionGate>} />
               <Route path="/complete-pitcher" element={<CompletePitcher />} />
               <Route path="/5tool-player" element={<FiveToolPlayer />} />
               <Route path="/golden-2way" element={<GoldenTwoWay />} />
-              <Route path="/the-unicorn" element={<RetiredProgramRoute><TheUnicorn /></RetiredProgramRoute>} />
-              <Route path="/explosive-conditioning" element={<RetiredProgramRoute><ExplosiveConditioning /></RetiredProgramRoute>} />
+              <Route path="/the-unicorn" element={<RetiredProgramRoute />} />
+              <Route path="/explosive-conditioning" element={<RetiredProgramRoute />} />
               <Route path="/practice" element={<PracticeHub />} />
               <Route path="/progress" element={<ProgressDashboard />} />
               <Route path="/organization" element={<OrganizationDashboard />} />

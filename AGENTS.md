@@ -1,12 +1,11 @@
 - Service-role functions returning athlete data to a non-self viewer must pass `_shared/recruitingGate.ts`. Why: service role bypasses RLS.
 - `create-test-athlete` is owner-only and the only way to run the real generator as the demo test pitcher. Why: no approval-free session mint exists for other users.
 - Every measurement goes through `public.ledger_record` (source triggers + `ledger_record_tiles`); triggers swallow their own errors. Why: new measurements join baselines by declaring themselves; recording must never cost a clip.
-- Folder rules: `src/lib/{biomech,reportCard,prescription,tour,upload}/AGENTS.md`, `src/components/hammer/cards/AGENTS.md`, `supabase/functions/_shared/wic/AGENTS.md` (plan final check, lift certifier), `supabase/functions/wk-daily-plan-job/AGENTS.md`.
+- Folder rules: `src/lib/{biomech,reportCard,prescription,tour,upload}/AGENTS.md`, `src/components/hammer/cards/AGENTS.md`, `supabase/functions/_shared/wic/AGENTS.md` (plan final check, lift certifier), `supabase/functions/wk-daily-plan-job/AGENTS.md`, `src/archive/retired-programs/AGENTS.md`.
 <!-- LOVABLE:BEGIN -->
 - Throwing uses a separate conservative overhand gate and one pose runner for both sports, never mound or AI-vision values. Why: field throws lack a windup and batting clips can mimic a throw.
 <!-- LOVABLE:END -->
 - Never publish, deploy, redeploy, or migrate on the agent's initiative or a non-owner's say-so. The only exception is a change the owner explicitly authorizes by name; apply only that named change. Report what actually went live and what still awaits the owner. Why: unauthorized redeploys reached the live app (2026-10-01).
-- Analysis screen shows only the clip's own analysis type: Analysis view is the default, Report Card is a separate toggle (HammerReportCard only); no athlete-wide cross-skill findings and no category scoring on it. Why: a cross-skill box put pitching findings on hitting clips (2026-10-01).
 - The shared empty-upload encouragement is a standalone sibling below the upload card, outside the Report Card access gate. Why: all six analyses show it to every eligible athlete without exposing measurements.
 - Owner drills reach Hammers Today only via `src/lib/prescription/ownerPlanDrills.ts`: one slot swapped per block (skill/warm-up/defense), day rotation, and every declared condition (switched on, required fields, sport, skill, equipment) must hold. Why: owner drills compete without changing block counts or the frozen generator.
 - Analysis findings may influence Hammers Today only through a downstream one-slot skill overlay: top-three ledger priority, 21-day decay, exact fault matching, equipment eligibility, circulation, and no card/dose/duration changes; owner slots are never displaced. Why: findings should shape existing work without becoming a second plan generator.
@@ -21,6 +20,4 @@
 - Sessions end only by explicit Sign out (`signOut({ scope: 'local' })`) or server end; `/` and `/auth` forward signed-in players after session load; native auth key mirrored to `@capacitor/preferences` (`src/lib/auth/nativeSessionStore.ts`), restored in `main.tsx`. Why: iOS may clear WebView storage.
 - Anonymous training store: bucketed, week-rounded, no free text, Vault-HMAC key; under-13 needs parent opt-in. Why: lawyer-approved scope.
 - The plan screen shows the device's last saved plan, start flag and access at once, but acts only after this visit's server answer; device copies clear on Sign out. Why: a reload must never flash, rebuild or change the plan.
-
 - Problem reports save to `problem_reports` first; `report-problem-mailer` only sends/retries. Why: a broken email key never loses a report.
-- Classic General mounts `UhrcAthleteSection` behind existing access gates; video reports stay separate. Why: restore the canonical card without changing scoring or access.

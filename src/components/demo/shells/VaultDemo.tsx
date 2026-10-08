@@ -10,7 +10,7 @@ const TILES = [
   { id: 2, title: 'Pitching · Week 1', locked: false },
   { id: 3, title: 'Hitting · Week 6', locked: true },
   { id: 4, title: 'Throwing · Week 4', locked: true },
-  { id: 5, title: 'Speed Lab · 60yd', locked: true },
+  { id: 5, title: 'Speed · 60yd', locked: true },
   { id: 6, title: 'Vault Recap · Month 3', locked: true },
 ];
 

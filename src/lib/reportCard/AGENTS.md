@@ -5,3 +5,6 @@
 - Clip Report Card uses `measuredClipSpec` over movement-gated local deterministic readings with a matching card identity; it bypasses the legacy grading gate without restoring legacy scores. Why: the old meter presentation must show honest clip-local tiles, never another discipline or invented grades.
 - All six measured clip cards show every built tile regardless of owner confirmation count; missing readings stay missing and card identity remains mandatory. Why: the owner reviews the complete publish candidate in preview, not a staff-only subset.
 - Report Card visibility is one switch: `REPORT_CARD_RELEASED_TO_ALL_USERS` in `src/lib/reportCard/visibility.ts` (false = owner/admin only). Why: owner ruling 2026-10-01, pre-release; only the owner flips it.
+
+- Analysis screen shows only the clip's own analysis type: Analysis view is the default, Report Card is a separate toggle (HammerReportCard only); no athlete-wide cross-skill findings and no category scoring on it. Why: a cross-skill box put pitching findings on hitting clips (2026-10-01).
+- Classic General mounts `UhrcAthleteSection` behind existing access gates; video reports stay separate. Why: restore the canonical card without changing scoring or access.

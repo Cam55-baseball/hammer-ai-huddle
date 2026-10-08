@@ -569,7 +569,7 @@ export const genericSims: Record<string, (state: Record<string, any>, userId: st
     const videos = [
       { id: '1', title: 'Hitting Fund', tag: 'NEW', hue: 12 },
       { id: '2', title: 'Pitching Mech', tag: 'HOT', hue: 200 },
-      { id: '3', title: 'Speed Lab', tag: '4K', hue: 280 },
+      { id: '3', title: 'Speed Work', tag: '4K', hue: 280 },
       { id: '4', title: 'Vault Tour', tag: 'PRO', hue: 40 },
       { id: '5', title: 'Mental Game', tag: 'NEW', hue: 160 },
     ];

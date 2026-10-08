@@ -1,0 +1,1 @@
+- Pages here are unrouted `.archived` files; old addresses go to /dashboard via `RetiredProgramRoute`; restore via `docs/owner/retired-programs.md`. Why: owner retired them 2026-10-08 but wants them recoverable.
