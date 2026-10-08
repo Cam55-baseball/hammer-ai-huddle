@@ -20,6 +20,7 @@ import { FinishProfileCard } from "@/components/hammer/FinishProfileCard";
 import { TrendDeloadNotice } from "@/components/hammer/TrendDeloadNotice";
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
 import { ReleaseCountdown } from "@/components/hammer/cards/ReleaseCountdown";
+import { DayCommandCenter, TodayRhythmProvider } from "@/components/hammer/cards/todayRhythm";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHammersTodayStart } from "@/hooks/useHammersTodayStart";
@@ -1056,7 +1057,8 @@ function HammerDailyPlanBody({
             throwingBlock && prescribedToday(throwingBlock) ? "throwing" : "lift";
           return (
             <ArmCareBudgetProvider owner={armCareOwner}>
-
+             <TodayRhythmProvider planDate={pocketDate}>
+              <DayCommandCenter />
               <WkSafePlanNotice />
               <TrendDeloadNotice />
               <ReleaseCountdown />
