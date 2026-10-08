@@ -51,6 +51,10 @@ export function LegacyDrillInlineLog({
     sessionStorage.removeItem(storageKey);
   };
 
+  const gridClass = spec.fields.length === 2
+    ? "grid grid-cols-[28px_repeat(2,minmax(0,1fr))] gap-1.5"
+    : "grid grid-cols-[28px_minmax(0,1fr)] gap-1.5";
+
   return (
     <div className="mt-2 space-y-2 rounded border border-border bg-muted/20 p-2" data-legacy-drill-log>
       <div className="text-[11px] font-medium">Log this work</div>
@@ -60,12 +64,12 @@ export function LegacyDrillInlineLog({
           Completed
         </label>
       )}
-      <div className="grid grid-cols-[28px_repeat(2,minmax(0,1fr))] gap-1.5 px-1 text-[10px] uppercase text-muted-foreground">
+      <div className={`${gridClass} px-1 text-[10px] uppercase text-muted-foreground`}>
         <span />
         {spec.fields.map((field) => <span key={field.key}>{field.label}{field.unit ? ` (${field.unit})` : ""}</span>)}
       </div>
       {rounds.map((round, index) => (
-        <div key={index} className="grid grid-cols-[28px_repeat(2,minmax(0,1fr))] items-center gap-1.5">
+        <div key={index} className={`${gridClass} items-center`}>
           <span className="text-center text-[11px] text-muted-foreground">{index + 1}</span>
           {spec.fields.map((field) => (
             <Input key={field.key} aria-label={`${field.label} ${index + 1}`} inputMode="decimal" value={round[field.key] ?? ""} onChange={(event) => edit(index, field.key, event.target.value)} className="h-9 px-2 text-sm" />
