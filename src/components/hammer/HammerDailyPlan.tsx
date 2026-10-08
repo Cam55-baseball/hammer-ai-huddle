@@ -254,7 +254,7 @@ function DrillRow({
     payload: { name: d.name, dosage: d.dosage, slug: d.slug ?? null, side },
   };
   return (
-    <li className={`text-xs rounded-md border border-border/50 bg-muted/30 p-2 ${checked ? "opacity-60" : ""}`}>
+    <li data-task-id={taskId} data-task-side={side ?? ""} className={`text-xs rounded-md border border-border/50 bg-muted/30 p-2 transition-opacity duration-200 motion-reduce:transition-none ${checked ? "opacity-60" : ""}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-2 min-w-0 flex-1">
           <Checkbox
