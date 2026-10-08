@@ -1033,7 +1033,7 @@ function HammerDailyPlanBody({
         {(() => {
           const warmupBlocks = plan.blocks.filter((b) => b.modality === "warmup" && prescribedToday(b));
           const baseWork = splitBaserunning(plan.blocks);
-          const logPractice = sched.practicesToday.length > 0;
+          const logPractice = sched.practicesToday.some(s => ["team", "trainer", "solo", "showcase"].includes(s.practiceKind ?? ""));
           const { speed: baseSpeed, conditioning: baseConditioning } = groupPhysicalBaserunning(baseWork.physical, hasBaseStealer);
           const WK_OWNED = new Set(["speed", "bat_speed", "strength", "lift", "lifts", "conditioning", "cross_sport"]);
           const allOtherBlocks = plan.blocks.filter(
@@ -1053,7 +1053,7 @@ function HammerDailyPlanBody({
           const baserunningToday = plan.blocks.some((b) => b.modality === "baserunning" && b.status !== "suppressed" && b.status !== "off-day");
           const throwingBlock = plan.blocks.find((b) => b.modality === "throwing");
           const armCareOwner: import("@/components/hammer/ArmCareBudgetContext").ArmCareOwner =
-            throwingBlock && throwingBlock.status !== "suppressed" ? "throwing" : "lift";
+            throwingBlock && prescribedToday(throwingBlock) ? "throwing" : "lift";
           return (
             <ArmCareBudgetProvider owner={armCareOwner}>
 
@@ -1187,7 +1187,7 @@ function HammerDailyPlanBody({
               })}
               <ErrorBoundary label="wk-conditioning">
                 <PocketCard id="conditioning" progress={progressOf(wkRx.grouped.conditioningCard)} intro={POCKET_INTROS.conditioning} category="Conditioning" focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} practiceLogging={logPractice} prescribed={wkRx.grouped.conditioningCard.length > 0 || baseConditioning.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
-                  {() => <>{wkRx.grouped.conditioningCard.length > 0 && <WkConditioningCard pocket />}{baseConditioning.map(b => <div key={`physical-${b.side ?? "x"}`}><Badge variant="secondary">Conditioning</Badge><BlockCard block={{...b, title: "Conditioning — base-running footwork"}} onNavigate={navigate} onEngagementChanged={bumpEngagement} /></div>)}</>}
+                  {() => <>{wkRx.grouped.conditioningCard.length > 0 && <WkConditioningCard pocket />}{baseConditioning.map(b => <div key={`physical-${b.side ?? "x"}`}><Badge variant="secondary">Conditioning</Badge><BlockCard block={{...b, title: "Conditioning — base-running work"}} onNavigate={navigate} onEngagementChanged={bumpEngagement} /></div>)}</>}
                 </PocketCard>
               </ErrorBoundary>
               <ErrorBoundary label="wk-lifts">
