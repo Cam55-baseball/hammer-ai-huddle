@@ -1,3 +1,10 @@
+## I5 (2026-10-08) — Ready to publish: no
+- Full test set: 281 files, 2,497/2,497 passed (includes 8-week safety sims, no-bleed, phase scan). Build OK.
+- Email: still blocked. Resend lists only hammersmodality.com (failed); hammersmodality.org absent. TEST row f53996f5-6df5-477b-96c4-5dbff22e3850 kept; no resend attempted.
+- Visual upgrade items all done (plan, card insides, pitch meter, sprint trend, readiness scale). No new edits.
+- Not rerun: 165-page audit, real sign-in (preview/published), player-account proof.
+- No publish, deploy, migration, cron change or new test data.
+
 # Ready to publish: no — email still fails (hammersmodality.org not verified in Resend); full test suite still running at end of I4 (2026-10-08 I4)
 
 ## I4 (2026-10-08 ~02:00 UTC)
