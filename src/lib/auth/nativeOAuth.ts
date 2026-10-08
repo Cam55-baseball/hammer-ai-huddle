@@ -74,19 +74,32 @@ export function installNativeOAuthListener(onDone: (path: string) => void): void
   });
 }
 
-/** Start a provider sign-in inside an in-app browser sheet. */
+/** Website host that runs the managed Apple sign-in for the app. */
+export const NATIVE_SIGNIN_HOST = "https://hammersmodality.org";
+
+/** Return address back into the app (tokens ride in the hash, never the query). */
+export function buildNativeReturn(p: { accessToken?: string; refreshToken?: string; error?: string; redirect?: string | null }): string {
+  const q = new URLSearchParams();
+  if (p.redirect) q.set("redirect", p.redirect);
+  if (p.error) q.set("error", p.error);
+  const h = new URLSearchParams();
+  if (p.accessToken && p.refreshToken) { h.set("access_token", p.accessToken); h.set("refresh_token", p.refreshToken); }
+  return `${NATIVE_AUTH_CALLBACK}${q.toString() ? `?${q}` : ""}${h.toString() ? `#${h}` : ""}`;
+}
+
+/** Sheet URL for the app's Sign in with Apple. */
+export function nativeAppleSheetUrl(redirectTarget?: string | null): string {
+  const u = new URL("/auth/native-apple", NATIVE_SIGNIN_HOST);
+  if (redirectTarget) u.searchParams.set("redirect", redirectTarget);
+  return u.toString();
+}
+
+/** Start a provider sign-in inside an in-app browser sheet (never the Safari app). */
 export async function startNativeOAuth(
-  provider: "apple" | "google",
+  provider: "apple",
   redirectTarget?: string | null,
-  scopes?: string,
 ): Promise<{ error: unknown | null }> {
-  const callback = new URL(NATIVE_AUTH_CALLBACK);
-  if (redirectTarget) callback.searchParams.set("redirect", redirectTarget);
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: { redirectTo: callback.toString(), scopes, skipBrowserRedirect: true },
-  });
-  if (error || !data?.url) return { error: error ?? new Error("no_url") };
-  await Browser.open({ url: data.url, presentationStyle: "popover" });
+  if (provider !== "apple") return { error: new Error("unsupported_provider") };
+  await Browser.open({ url: nativeAppleSheetUrl(redirectTarget), presentationStyle: "popover" });
   return { error: null };
 }
