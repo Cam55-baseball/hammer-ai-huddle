@@ -1,5 +1,13 @@
-# Ready to publish: YES (2026-10-08 ~02:40 UTC)
-Reason: all checks pass. Email is not a blocker — every problem report is saved first and re-sent automatically; the only email gap is the owner verifying hammersmodality.org in Resend.
+# Ready to publish: YES (2026-10-08 J1)
+Reason: all checks pass. Email is not a blocker — every problem report is saved first and re-sent automatically.
+
+## J1 email recheck (02:26 UTC)
+- hammersmodality.org now EXISTS in Resend (added 02:21 UTC) — progress.
+- Status: PENDING. I triggered verification; the 3 DNS records (DKIM TXT `resend._domainkey`, SPF CNAME `rsend`, SPF CNAME `send`) are still pending — the owner must add them at the domain's DNS provider.
+- Once DNS verifies, the TEST report (f53996f5-6df5-477b-96c4-5dbff22e3850) and any failed emails retry automatically (owner "Retry failed emails" button also exists). No send attempted while pending.
+- No code changes this round; no test data created.
+
+## The 10 owner-to-confirm changes (what each does for a player)
 
 ## The 10 owner-to-confirm changes (what each does for a player)
 1. One-tap logging: lets a player mark each exercise Done, Skipped or Cut short with one tap (hidden behind a switch).
