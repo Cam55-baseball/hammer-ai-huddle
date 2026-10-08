@@ -28,6 +28,7 @@ import { RestTimer, sprintRestSeconds } from "@/components/hammer/cards/RestTime
 import { SpeedReadinessCheck } from "@/components/hammer/cards/SpeedReadinessCheck";
 import { CardDashboard } from "@/components/hammer/cards/CardDashboard";
 import { SprintStopwatch } from "@/components/hammer/cards/SprintStopwatch";
+import { SprintBestTrend } from "@/components/hammer/cards/SprintBestTrend";
 
 export function WkSpeedCard({ pocket = false }: { pocket?: boolean } = {}) {
   const { grouped, generate, generating, isLoading, failed, failureReason, retry, snapshotIdentity, dayKind } = useHammersToday();
@@ -105,6 +106,7 @@ export function WkSpeedCard({ pocket = false }: { pocket?: boolean } = {}) {
                 shape={(items[0]?.why_payload as any)?.session_shape ?? null}
               />
             )}
+            {items.length > 0 && <SprintBestTrend today={items[0].plan_date} />}
             <CardDashboard mode="speed" />
             <CardMeta entry={entry} generationId={snapshotIdentity.generation_id} />
             {items.length > 0 && <WkCardCompletion modality="speed" modalityLabel="Speed" items={items} />}
