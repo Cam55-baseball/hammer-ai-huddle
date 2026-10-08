@@ -23,3 +23,4 @@
 - The plan screen shows the device's last saved plan, start flag and access at once, but acts only after this visit's server answer; device copies clear on Sign out. Why: a reload must never flash, rebuild or change the plan.
 
 - Problem reports save to `problem_reports` first; `report-problem-mailer` only sends/retries. Why: a broken email key never loses a report.
+- Classic General mounts `UhrcAthleteSection` behind existing access gates; video reports stay separate. Why: restore the canonical card without changing scoring or access.
