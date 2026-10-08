@@ -77,8 +77,10 @@ export function isNativeShell(): boolean {
 export function getStorefrontCountry(): string | null {
   if (typeof window === "undefined") return null;
   const raw = (window as unknown as { __HAMMERS_STOREFRONT__?: unknown }).__HAMMERS_STOREFRONT__;
-  if (typeof raw !== "string" || raw.trim().length !== 2) return null;
-  return raw.trim().toUpperCase();
+  if (typeof raw !== "string") return null;
+  const c = raw.trim().toUpperCase();
+  if (c === "USA") return "US";
+  return /^[A-Z]{2,3}$/.test(c) ? c : null;
 }
 
 /**
@@ -100,7 +102,7 @@ export function getStorefrontCountry(): string | null {
  *
  * Guarded by src/lib/purchase/__tests__/purchaseGate.test.ts.
  */
-export const US_ONLY_APP_STORE_RELEASE = true;
+export const US_ONLY_APP_STORE_RELEASE = false; // Option B (2026-10-08): real StoreKit storefront detection; unknown = hidden.
 
 export function getPurchaseAvailability(
   opts: { usOnlyRelease?: boolean } = {},

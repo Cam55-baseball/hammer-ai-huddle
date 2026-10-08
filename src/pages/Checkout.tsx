@@ -19,6 +19,8 @@ import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
 import { conversionCopy } from "@/demo/prescriptions/conversionCopy";
 import { getDemoAbVariant, tierForVariant } from "@/lib/demoAbVariant";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { openWebsiteCheckout, PURCHASE_RETURN_URL } from "@/lib/purchase/websiteHandoff";
+import { FROM_APP_KEY } from "@/pages/AppHandoff";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 import { setPendingPurchase } from "@/lib/purchase/pendingPurchase";
 
@@ -35,7 +37,8 @@ const SUCCESS_STEPS = [
 ];
 
 const Checkout = () => {
-  const { canShowPurchaseUI } = usePurchaseAvailability();
+  const { canShowPurchaseUI, mode: purchaseMode } = usePurchaseAvailability();
+  const fromApp = typeof window !== "undefined" && sessionStorage.getItem(FROM_APP_KEY) === "1";
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { retired: programsRetired } = useProgramsRetired();
@@ -176,6 +179,12 @@ const Checkout = () => {
         const dest = ctx
           ? `/select-modules?context=${encodeURIComponent(ctx)}&from=demo${gap ? `&gap=${encodeURIComponent(gap)}` : ""}`
           : "/dashboard";
+        // Came from the iPhone/iPad app: hand the person straight back to it.
+        if (sessionStorage.getItem(FROM_APP_KEY) === "1") {
+          sessionStorage.removeItem(FROM_APP_KEY);
+          window.location.href = PURCHASE_RETURN_URL;
+          return;
+        }
         navigate(dest, { replace: true });
       }, 2500);
       return;
@@ -205,6 +214,14 @@ const Checkout = () => {
   };
 
   const handleCreateCheckout = async (opts?: { silent?: boolean }) => {
+    // iPhone/iPad, US storefront: checkout happens on our website, same account.
+    if (purchaseMode === "native-linkout") {
+      setCheckoutLoading(true);
+      try { await openWebsiteCheckout("/pricing"); }
+      catch { toast({ title: "Couldn't open the website", description: "Please try again.", variant: "destructive" }); }
+      finally { setCheckoutLoading(false); }
+      return;
+    }
     if (!selectedTier) {
       toast({ title: "No tier selected", description: "Please select a training tier.", variant: "destructive" });
       return;
@@ -372,6 +389,19 @@ const Checkout = () => {
     );
   }
 
+  // iPhone/iPad on the US storefront: plans are chosen and bought on our website.
+  if (purchaseMode === "native-linkout" && !tierConfig) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 pt-[calc(2rem+var(--safe-top))] pb-[calc(2rem+var(--safe-bottom))]">
+        <Card className="max-w-md w-full p-6 space-y-3 text-center">
+          <h2 className="text-xl font-semibold">Choose your plan on our website</h2>
+          <p className="text-sm text-muted-foreground">Complete Pitcher, 5Tool Player and Golden 2Way are sold on hammersmodality.org, on this same account. Your plan unlocks here as soon as you come back.</p>
+          <Button className="w-full min-h-11" onClick={() => handleCreateCheckout()} disabled={checkoutLoading}>Subscribe on our website</Button>
+        </Card>
+      </div>
+    );
+  }
+
   if (!tierConfig) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 pt-safe pb-safe">
@@ -400,6 +430,18 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 py-8 pt-[calc(2rem+var(--safe-top))] pb-[calc(2rem+var(--safe-bottom))]">
       <div className="w-full max-w-2xl space-y-4">
+        {fromApp && (
+          <Card className="p-4 flex items-center justify-between gap-3">
+            <p className="text-sm">Finished here? Go back to the Hammers app — your plan unlocks there automatically.</p>
+            <Button asChild size="sm" className="min-h-11"><a href={PURCHASE_RETURN_URL}>Return to the app</a></Button>
+          </Card>
+        )}
+        {purchaseMode === "native-linkout" && (
+          <Card className="p-4 space-y-2">
+            <p className="text-sm font-medium">Plans are bought on our website, hammersmodality.org, on this same account.</p>
+            <Button className="w-full min-h-11" onClick={() => handleCreateCheckout()} disabled={checkoutLoading}>Subscribe on our website</Button>
+          </Card>
+        )}
         {/* Abandonment urgency banner */}
         {hasAbandoned && (
           <Card className="border-amber-500/50 bg-amber-500/10 p-4">
