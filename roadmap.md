@@ -1,4 +1,13 @@
-# Ready to publish: yes, once the owner reviews the change list and signs in once in the preview (2026-10-07 23:50 UTC)
+# Ready to publish: no — owner UI changes and successful sign-in proof pending (2026-10-08)
+
+## Owner UI changes — active
+- [ ] Verify updated Resend key/domain; normal-path owner test; retry queued reports and parent receipts; report provider delivery status.
+- [ ] Open popup exercise details; show card-specific rules; move eligible practice logging into popups.
+- [ ] Group physical base running under Conditioning and Base Stealer under Speed; mental Baserunning IQ in Before you start; preserve eligibility/doses.
+- [ ] Move Finish your profile into Before you start; preserve three-day reminder.
+- [ ] Today-only cards; no Key Rules drawer, floating log button or per-card countdowns; keep tomorrow countdown.
+- [ ] Phone proof 360/390, no-bleed and eight-week unchanged-content checks; resolve remaining urgent proof gaps.
+- programs_retired remains OFF. No publishing or cron changes.
 
 ## Final status (G3)
 - **Login.** Sign-ins failed between 22:40 and 22:44 UTC because the database was down; it is back. In the preview, the sign-in page could stay on the form after sign-in. It now always sends a signed-in player on, and inside the preview the app checks again for a late sign-in (Auth.tsx, AuthContext.tsx).
