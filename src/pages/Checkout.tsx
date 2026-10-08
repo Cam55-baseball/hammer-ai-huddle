@@ -383,6 +383,19 @@ const Checkout = () => {
     );
   }
 
+  // iPhone/iPad on the US storefront: plans are chosen and bought on our website.
+  if (purchaseMode === "native-linkout" && !tierConfig) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 pt-[calc(2rem+var(--safe-top))] pb-[calc(2rem+var(--safe-bottom))]">
+        <Card className="max-w-md w-full p-6 space-y-3 text-center">
+          <h2 className="text-xl font-semibold">Choose your plan on our website</h2>
+          <p className="text-sm text-muted-foreground">Complete Pitcher, 5Tool Player and Golden 2Way are sold on hammersmodality.org, on this same account. Your plan unlocks here as soon as you come back.</p>
+          <Button className="w-full min-h-11" onClick={() => handleCreateCheckout()} disabled={checkoutLoading}>Subscribe on our website</Button>
+        </Card>
+      </div>
+    );
+  }
+
   if (!tierConfig) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 pt-safe pb-safe">
