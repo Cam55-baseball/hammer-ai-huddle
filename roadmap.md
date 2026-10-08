@@ -1,3 +1,6 @@
+# R3 FINAL STATUS (2026-10-08 19:38 UTC) — Ready to publish: yes (website); iPhone/iPad needs Xcode build 1.0 (4)
+Everything requested is finished and reported below: the blank-waiver fix and proof, every Apple fix (in-app Sign in with Apple, account deletion, age-rating reviewer steps), the Option B build and proof, the final draft answers for Apple, and the exact Xcode rebuild steps. Build log clean; full suite 2,526/2,526. Nothing published, deployed or scheduled; no test data left. Waiting on owner: (1) OK to add the app's return link to sign-in settings; (2) OK to create the Apple reviewer under-13 demo account; (3) OK for a test player account + test card to prove a real payment; (4) keep App Store US-only for 1.0 (4) (recommended); (5) OK to build the non-US parent email link; (6) make Xcode build 1.0 (4).
+
 # APPLE OPTION B — US-storefront-only website link (2026-10-08 19:35 UTC) — Ready to publish: yes (website); iPhone/iPad needs Xcode build 1.0 (4)
 
 ## 0. Apple's current rules (developer.apple.com/app-store/review/guidelines, fetched today) — still allow it
