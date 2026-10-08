@@ -1,3 +1,9 @@
+# FINAL STATUS (2026-10-08 19:10 UTC) — Ready to publish: yes (website). iPhone/iPad needs new Xcode build 1.0 (4).
+- Blank-waiver fix: DONE. Every link state renders for a signed-out parent (valid, signed, used, expired, unknown, not active) behind a friendly error fallback; teen lock/grace/unlock, checkout auto-renew box and under-13 waiver step proven at 360/390 — 39 screenshots in legal-screens/waiver-blank-fix/. Publish puts it live at /parent-sign/<token> and /parent-waiver/<token>.
+- Apple items: full results below (sign-in fix, account deletion, reviewer steps, audit, draft answers, options A/B/C, Xcode steps).
+- Waiting on owner: (1) OK to create the Apple review under-13 demo account (needs a password); (2) OK to add the app's return link com.hammersmodality.app://auth/callback to the sign-in settings; (3) pick A/B/C; (4) Xcode build 1.0 (4).
+- Nothing published, deployed or scheduled; no test data left.
+
 # APPLE REJECTION — build 1.0 (3) (2026-10-08) — Ready to publish: yes (web); new Xcode build required
 
 ## 1. Guideline 4 — sign-in leaving the app
