@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
       });
       const t = await r.text();
       if (!r.ok) { console.error("[teen-parent-waiver] resend", r.status, t); return { status: "failed", detail: `${r.status} ${t.slice(0, 200)}` }; }
-      return { status: "sent", test: isTest, link_host: new URL(link).host };
+      return { status: "sent", test: isTest, link_host: new URL(link).host, ...(isTest ? { test_link: link } : {}) };
     };
 
     // ---------- parent (link) ----------
