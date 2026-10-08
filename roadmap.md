@@ -1,4 +1,33 @@
-# Ready to publish: no — `.org` email sender not verified; player-role proof, real preview sign-in and demo playback not proved (2026-10-08 H4)
+# Ready to publish: no — email still fails (hammersmodality.org not verified in Resend); redesign's inner card content and data visuals only partly done (2026-10-08 H5)
+
+## Owner requests — H5 results (2026-10-08 01:30 UTC)
+**1. Email (real path): FAILED.** A test account submitted a real problem report (same save + send calls the Report a problem button makes). Row id **`f53996f5-6df5-477b-96c4-5dbff22e3850`**, message "TEST — owner email check", left in place as asked. Result: `email_status = failed`, `email_sent_at` empty. Resend's exact error: HTTP 403 `validation_error` — "The hammersmodality.org domain is not verified. Please, add and verify your domain on https://resend.com/domains". Resend is not fixed for `.org` yet. Parent receipts use the same sender, so they will fail the same way; no fake parent consent created. Once `.org` shows Verified in Resend, any new report (or the next mailer run) retries this row automatically.
+- Test account `93ce8745-46a1-4e00-bfcd-e0ea703a9452` (mailinator) left in place with the report row so the owner can verify; delete both after checking.
+**2. "Tomorrow's plan opens in" is now honest.** The plan checks whether tomorrow's plan is actually saved (player's own time zone from their profile). Saved → "Tomorrow's plan opens in HH:MM:SS" to local midnight. Not saved → "Your next plan is being built — ready around 12:10 PM, in HH:MM:SS" (expected = later of local noon + one job run, or the next job run), then "almost ready" and rechecks every minute. Nothing shows until the check answers. Tests: 43 passing cases across 7 time zones, US/EU/Australia daylight-saving nights, and a player at 9 am whose pre-build has not run yet.
+**3. The 10 "owner to confirm" changes, in plain words:**
+1. One-tap logging (WkOneTapLog) — Done / Skipped / Cut short in one tap per exercise, optional effort 1–10; hidden behind a switch.
+2. Streak strip (PlanStreakStrip) — "Streak: N days" + workouts done and next milestone at the top of the plan; flame icon at 5+ days.
+3. Progress Dashboard page — removed the old report-card section (it now lives inside each video analysis) and small layout edits.
+4. Progress landing page — topic buttons above the old progress page; old page kept underneath as "Classic view"; adds the season counter.
+5. Season counter (SeasonCounter) — one "where you are in the season" counter in The General, using the same season as the plan.
+6. Release countdown — the "Tomorrow's plan opens in" line (now made honest, item 2).
+7. Conditioning card — small wording/layout change inside the Conditioning card.
+8. Plan-save speed-up (database function) — sends repeated card data once and rebuilds it on save; stored plan is byte-for-byte the same.
+9. Sign-in keeper (AuthContext) — rechecks the sign-in shortly after load and when the app comes back to the front, so players are not dropped.
+10. Start Hammers Today (useHammersTodayStart) — the one-time "Start Hammers Today Plan" is remembered on the account, the same on every device.
+
+**4. Visual upgrade (screen only).** Audit: every card looked the same (thin colour bar + badge + title), there was no sense of what to do next, finished cards stayed as loud as unfinished ones, the confetti icon bounced for 2.4 s, and numbers were not emphasised. Built:
+- **Day command center** at the top of the plan: a progress ring (% of today's drills and exercises checked off), "Today · 0/7 cards", a bold **Next up** with a single Open button, and the session story **Prepare → Prime → Explode → Perform → Recover** (only the stages present today; current stage underlined, finished stages ticked).
+- **Rhythm:** the next card is large with a red outline and "Next up"; done cards shrink to a calm grey row with a check; other cards stay quiet.
+- **Domain marks** (line geometry, one family): speed = velocity lines, bat speed = rotational arc, lift = barbell structure, throwing = dotted trajectory, conditioning = rising work bars, recovery = waves, warm-up = centring target.
+- **Set progress** segments on each card; tabular figures on counts, %, timers.
+- **Motion:** staggered fade-up entrances, 280 ms check-draw + soft pulse when a card finishes (replaces bouncing confetti icon), a quiet "Day complete" moment once per day (ring fills to a check, one toast). All off under reduced motion; transform/opacity only, no layout shift.
+- **Pop-ups:** header now shows the domain mark, category and "x/y done"; Start, Close, Save & Exit, Exit buttons ≥ 40–44 px; details open, card rules, practice logging and disclaimer unchanged.
+- **Screenshots** (360 + 390 px): start of day `/tmp/browser/owner-ui-h5/start-plan-*.png`, mid-day `mid-plan-*.png`, all done `done-plan-*.png` (reduced-motion run), Before you start `*-before-*.png`, every card pop-up `start-popup-*-*.png` (warm-up, throwing, hitting L/R, defense, conditioning, lift, recovery). Before screenshots: `/tmp/browser/owner-ui-h2/fixture-*`. Mid/done states use read-only check-off fixtures; no real data written.
+- **Same plans:** only 6 screen files changed (plan page, card shell, countdown, new rhythm file + test, styles). No generator, prescription, dose, phase, rule or backend file touched. Full suite 2,497/2,497 passing (281 files), including the 8-week safety simulations, no-bleed and grouping tests (original drills preserved 1:1) and the phase scan. Build OK. Zero page errors and no sideways overflow in every pop-up.
+- **Not done (honest):** the inside of each card (exercise rows, notices) is still the older dense style — the biggest remaining clutter; pitch-count meter, sprint best-time trend and readiness scale not added (need real-data wiring I did not verify); no formal 60 fps trace; 165-page audit and real sign-in on preview/published not rerun; checked from the owner account with fixtures, not a player.
+- **Honest answers:** Serious product? The plan page now yes; the inside of cards not yet. Instantly clear? Yes — one Next up and one button. Alive without distraction? Yes, motion is short and sparse. Satisfying to complete? Better (check-draw, calm done rows, day-complete), still modest. Personal? Partly — it follows the athlete's own progress, but no personal data visuals yet. Intentionally designed? The plan list, yes; the card insides, not yet.
+
 
 ## H4 final — 2026-10-08 01:14 UTC
 - **Email test result:** FAILED. Resend key works (domains API HTTP 200), but only `hammersmodality.com` is listed (status `failed`); sending from `noreply@hammersmodality.org` returns HTTP 403 `validation_error` "The hammersmodality.org domain is not verified." Unsent problem reports: 0. Owner must verify `.org` in Resend.

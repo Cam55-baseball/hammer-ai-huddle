@@ -738,3 +738,10 @@ All colors MUST be HSL.
     max-width: none !important;
   }
 }
+
+/* Hammers Today completion moments — short, transform/opacity only, no layout shift. */
+@keyframes hm-check-draw { from { stroke-dasharray: 24; stroke-dashoffset: 24; } to { stroke-dasharray: 24; stroke-dashoffset: 0; } }
+@keyframes hm-card-complete { 0% { transform: scale(1); } 40% { transform: scale(1.015); } 100% { transform: scale(1); } }
+.hm-check-draw { animation: hm-check-draw 280ms ease-out both; }
+.hm-card-complete { animation: hm-card-complete 280ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .hm-check-draw, .hm-card-complete { animation: none; } }

@@ -20,6 +20,7 @@ import { FinishProfileCard } from "@/components/hammer/FinishProfileCard";
 import { TrendDeloadNotice } from "@/components/hammer/TrendDeloadNotice";
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
 import { ReleaseCountdown } from "@/components/hammer/cards/ReleaseCountdown";
+import { DayCommandCenter, TodayRhythmProvider } from "@/components/hammer/cards/todayRhythm";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHammersTodayStart } from "@/hooks/useHammersTodayStart";
@@ -253,7 +254,7 @@ function DrillRow({
     payload: { name: d.name, dosage: d.dosage, slug: d.slug ?? null, side },
   };
   return (
-    <li className={`text-xs rounded-md border border-border/50 bg-muted/30 p-2 ${checked ? "opacity-60" : ""}`}>
+    <li data-task-id={taskId} data-task-side={side ?? ""} className={`text-xs rounded-md border border-border/50 bg-muted/30 p-2 transition-opacity duration-200 motion-reduce:transition-none ${checked ? "opacity-60" : ""}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-2 min-w-0 flex-1">
           <Checkbox
@@ -723,6 +724,12 @@ function HammerDailyPlanBody({
   const { data: recentCompletions } = useRecentMaxIntentCompletions();
   const wkRx = useHammersToday();
   const pocketDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
+  // Presentation only: per-card drill progress for the day's rhythm (reads existing check-offs).
+  const dayTasks = useHammerDailyTasks(pocketDate);
+  const blockProgress = (b: { modality: string; side?: "L" | "R" | null; drills: ReadonlyArray<{ slug?: string | null; name: string }> }) =>
+    b.drills.length
+      ? { done: b.drills.filter((d) => dayTasks.isDone(makeBlockTaskId(b.modality, d.slug ?? d.name), b.side ?? null)).length, total: b.drills.length }
+      : null;
   const sportIsBaseball = (ctx.get<unknown>("sport_primary")?.value ?? "baseball") !== "softball";
   const { user: bodyUser } = useAuth();
   const { modules } = useSubscription();
@@ -1056,7 +1063,8 @@ function HammerDailyPlanBody({
             throwingBlock && prescribedToday(throwingBlock) ? "throwing" : "lift";
           return (
             <ArmCareBudgetProvider owner={armCareOwner}>
-
+             <TodayRhythmProvider planDate={pocketDate}>
+              <DayCommandCenter />
               <WkSafePlanNotice />
               <TrendDeloadNotice />
               <ReleaseCountdown />
@@ -1086,6 +1094,7 @@ function HammerDailyPlanBody({
                     planDate={pocketDate}
                     practiceLogging={logPractice && (b.modality === "throwing" || b.modality === "hitting")}
                     prescribed={prescribedToday(b)}
+                    progress={blockProgress(b)}
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
                     intro={POCKET_INTROS[b.modality] ?? null}
                   >
@@ -1171,6 +1180,7 @@ function HammerDailyPlanBody({
                     planDate={pocketDate}
                     practiceLogging={logPractice && (b.modality === "throwing" || b.modality === "hitting")}
                     prescribed={prescribedToday(b)}
+                    progress={blockProgress(b)}
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
                     intro={POCKET_INTROS[b.modality] ?? null}
                   >
@@ -1207,6 +1217,7 @@ function HammerDailyPlanBody({
                     planDate={pocketDate}
                     practiceLogging={logPractice && (b.modality === "throwing" || b.modality === "hitting")}
                     prescribed={prescribedToday(b)}
+                    progress={blockProgress(b)}
                     countLabel={b.durationMin ? `${b.durationMin} min` : null}
                     intro={POCKET_INTROS[b.modality] ?? null}
                   >
@@ -1226,6 +1237,7 @@ function HammerDailyPlanBody({
                 completed={vaultQuizzes.hasCompleted("night")}
                 onOpen={() => setCheckInQuiz("night")}
               />
+             </TodayRhythmProvider>
             </ArmCareBudgetProvider>
           );
         })()}
