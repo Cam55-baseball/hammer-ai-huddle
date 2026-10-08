@@ -1,77 +1,26 @@
-# Round 2: under-13 parent-controlled accounts, youth throwing, age path, pause gaps, tests
+# Hammers Today: clear cards and uninterrupted returns
 
-Nothing is published. No schedule (cron) changes. `rest_day_calculator` and `hammers_today_start_gate` stay as they are. Nothing is deleted.
+## Scope and safeguards
+Top priority before Xcode. No publishing, cron changes, destructive data changes or iOS work. Preserve prescribed work except the explicitly authorized tissue-prep addition and defensive-role corrections. Backend redeploys are authorized only for these named fixes, after errors are explained and tests pass.
 
-## Conflicts to settle before building (standing rule: stop and report)
+## Ordered implementation
+1. **Keep the app in place on return.** Remove automatic update/version reloads during an active visit; keep quiet background refreshes. Audit authentication and plan loading for remounts that erase an open card or draft. Add regressions for return/update events.
+2. **Make every activity basic-first.** Full wrapping title → exact dose → specific plain-language description → visible activity-specific log rows → closed “How to do it” drawer. Use existing movement guides and audit every active library entry; report uncertain descriptions rather than inventing instructions or loads.
+3. **Clean the detail drawer.** Put setup, steps, Stop if, Cue, Why this movement, Your progression and Why today's work changed inside it. Remove generic setup, incomplete lines and repeated cues. Remove Rules for this card everywhere. Show only the current barefoot stage; preserve its hidden gates.
+4. **Make logging match the work.** Prefill prescribed sets/reps, including 1 × 1; show only applicable lift, sprint, hold, jump, conditioning, throw or recovery fields. Keep existing saving and completion authority; retain unsaved entries during background returns. Never invent missing weights or doses.
+5. **Correct plan placement.** Move Level of play into Before you start. Put body load before the order instruction, progress/NEXT UP and Prepare → Prime → Explode → Perform → Recover strip. No training reorder.
+6. **Fix defensive role bleed.** Audit catalog entries, fallback drills, game-day primers and cues for pitchers, infielders, outfielders and catchers. Pitchers receive pitcher fielding work, not a fielder's release-hop cue. Add tests across every role and sport.
+7. **Audit all doses.** Trace the 90-foot conditioning bug to its stored numeric/unit source, not just pluralization. Check distance conversion and singular/plural formatting across generated and displayed prescriptions. Add catalog and prescription dose checks.
+8. **Tissue preparation first.** Add the authorized 4–6-minute tissue-prep sequence before all other warm-up work: appropriate rolling, then rhythmic movements; include thrower areas, descriptions and logs. Preserve injury and equipment gates. If a tennis ball is unavailable, use a clearly reported equipment-free fallback rather than prescribe unavailable equipment. Audit every warm-up entry path, including recovery breath primers and saved plans.
 
-1. **Legal deferral.** `docs/legal/under-13-deferral.md` says: "A lawyer must confirm the verifiable-parental-consent method before any under-13 path ships." Part B builds that path behind a switch that stays OFF, which is consistent with "the owner will turn it on after legal sign-off." **Assumption:** build it, keep it OFF, and update the deferral note to read "built, switched off, waiting on legal sign-off". The note will list the open legal questions. One example: is a card payment plus a typed and drawn signature enough as verifiable parental consent?
-2. **Removed rules come back (Part C).** `docs/wic/youth-throwing-v1.md` lists rules "Removed by owner order (Step 27 A) — do not re-add". Two of them are the fixed yearly rest rule and the pitch-type age table. Part C brings back "4 months off a year, 2–3 in a row" and "fastballs and changeups only". **Assumption:** this new owner ruling overrides Step 27 A **for players under 13 only**. Ages 13 and up keep the current Hammers rest ratio and the readiness-based pitch rules. The doc gets updated to say this.
-3. **Innings cap.** The code uses 100 innings a year for high school and younger. Part C sets 60 a year (age 8 and under) and 80 a year (ages 9–12). **Assumption:** these apply under 13, and 100 stays for ages 13 and up.
-4. **AI providers and "no AI training".** The Parent Notice names Google AI and OpenAI as places the child's data goes. **Assumption:** the notice says data is sent to them only to produce analysis, not to train models. That depends on the providers' terms, which the lawyer should confirm. We will also never put children's data into our own pattern library or training tables.
-5. **Decimal scale below 20.** **Assumption:** "decimal scale" means the existing sub-20 developing scale already in report cards. If no such scale exists, I'll report that and not invent one.
+## Proof and closeout
+- Run each focused regression before moving to the next step, then the full existing suite.
+- Eight-week simulations across roles, ages and both sports: tissue prep first in 100% of eligible warm-ups; existing safety restrictions remain in force.
+- Compare plans before/after: only tissue prep and defensive-role fixes may change prescribed work; dose-label corrections must preserve intended numeric work.
+- Signed-in affected-player preview checks at 360 and 390 px: every card type, visible logs, closed/open drawer, full title and description.
+- Return checks after 30 seconds, 5 minutes and 1 hour, preserving route, open card and unsaved entry. Distinguish elapsed-time checks from simulated clocks and browser backgrounding from real-device OS termination.
+- Inspect the published site read-only. **It cannot contain unpublished fixes**, so published-site fix verification remains pending the owner's publication; no publish will be performed.
+- Clean up only task-created test data. Tick roadmap.md and report evidence, uncertainties and blockers at its top with Ready to publish: yes/no. Do not claim complete if any required proof remains missing.
 
-## A. Bat speed wording
-On the plan card and the Start card, the line becomes: "Bat speed builds rotational power that transfers seamlessly into pitching velocity." No single pitch is named anywhere. Tests get updated.
-
-## B. Under-13 parent-controlled account (switch `under13_parent_program`, OFF)
-- **New switch.** Add it to the feature switches, set OFF. While it is OFF, today's behavior holds: under-13 signup is blocked and paused accounts show the paused screen.
-- **Signup when ON:**
-  1. An under-13 birthdate leads to "A parent or guardian must finish this signup."
-  2. The parent enters their legal name, relationship, their own birthdate (must be 18+), their email (used as the login) and the child's first name or nickname.
-  3. The parent reads the Parent Notice.
-  4. The parent signs the Promise with a typed name, a finger-drawn signature and a checkbox.
-  5. The parent pays with a card through the existing checkout.
-  Nothing is saved until the signature step. The account opens only when the signature **and** a confirmed payment are both on file.
-- **Paused accounts (when ON):** the screen becomes "Parent signature required" and leads into the same steps, including payment or card confirmation.
-- **Consent record.** A new table stores: parent name, relationship, the 18+ result, the signature image (in private storage), typed name, promise and notice versions, time, device and IP, the payment ID and status. The parent can view and download it in Settings. Owners and admins can see it. Records can't be edited; withdrawing permission adds a new entry.
-- **Parent controls in Settings:**
-  - view the signed promise
-  - see what is stored about the child
-  - delete the child's data (needs a typed confirmation and starts a logged deletion request)
-  - take back permission (locks the account at once)
-  - a separate optional-sharing "yes" (for example PitchLab), off by default
-- **Child protections:**
-  - hidden from scouts, recruiters, search, leaderboards and public pages (same route as paused accounts)
-  - no messaging with adults
-  - emails and notifications go to the parent
-  - left out of any training or pattern tables
-- **Versioned texts.** The Promise and the Notice are stored with version numbers (v1 uses the owner's draft wording).
-
-## C. Under-13 training (by birthdate)
-- **Pitch Smart, exactly:**
-  - Daily maximums and rest stay as listed.
-  - The 7–8 band drops the 51 and 66 rest rows, which can't be reached under its 50-pitch maximum.
-  - Innings: 60 a year at age 8 and under, 80 a year at ages 9–12.
-  - Rest: 4 months a year with no throwing, 2–3 of them in a row.
-  - Fastballs and changeups only.
-  - Never pitch three days in a row, or in two games on the same day.
-- **No weighted balls or weighted plyo-ball work under 13.** This is enforced in the planner and in the final rule check. Light-bat bat speed stays allowed.
-- **Lifting:** each exercise's minimum age, growth mode and every rest rule still apply. No minimum age is lowered. Every other card stays on wherever the rules allow.
-
-## D. Age path (one continuous record)
-- **13th birthday:** the parent signs the teen Promise using the same signature system. The parent can then move the login to the teen's email and stays linked with view-only access. Recruiting follows the existing 13–17 parent-consent rules.
-- **New 13–17 signups (switch ON):** a parent signs the teen permission.
-- **Existing 13–17 accounts:** prompted for a parent signature, with a 30-day grace period counted from the day the switch turns on.
-- **18th birthday:** the parent link ends, both are told, and the athlete is fully on their own.
-- **No new schedule (cron) jobs.** Birthday changes are checked when the player opens the app or when a plan is built.
-
-## E. Pause gaps
-Add the paused and under-13 check to every function that processes or shows athlete data. That includes hydration checks, base-stealing analysis, hammer-chat, realtime playback, exercise-log coach and the analysis functions. I'll audit every leaderboard and public page, and add any missing database hiding rules. The owner has authorized these redeploys.
-
-## F. Tests
-- **Phone screenshots:** birthdate screen, under-13 block, paused screen, progress-photo height, growth card, pitcher Bat speed, Start card.
-- **Real plans:**
-  - growth mode on, then off (by adding height readings to a test account)
-  - an advanced 16-year-old on the heavy track
-- **Switch ON for test accounts only:** run B, C and D end to end, then set the switch back to OFF.
-- **Sign-in needed.** Signing the preview in as a test player needs your approval. I'll ask for it clearly before I do it.
-- **Payment:** uses Stripe's test mode if the project has it. If not, I'll stop at checkout and report.
-
-## Live now vs after publish
-Database changes and backend functions go live when deployed (owner-authorized). Screens and wording go live when the owner publishes. The switch stays OFF either way.
-
-## Technical notes
-- New tables: `parent_consents` (insert-only, with grants and row rules), `consent_texts` (versioned), `parent_links`, `child_data_deletion_requests`.
-- A storage bucket for signatures; access only for the signer and owners/admins.
-- `accountPause.ts` grows into a single "can this account be processed" check (paused, or under 13 without consent).
-- Checkout confirmation is read back through the existing subscription check; the account opens on signature plus payment.
+## Technical approach
+Reuse shared card and logging controls, movement-guide catalogs and canonical dose sources. Keep presentation separate from generator authority. Record structural rules in AGENTS.md. Backend changes must cover the actual persisted-plan path, not only client-side warm-up previews. Existing saved plans must not be silently rebuilt.
