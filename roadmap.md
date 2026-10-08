@@ -1,4 +1,12 @@
-# Ready to publish: no — email still fails (hammersmodality.org not verified in Resend); redesign's inner card content and data visuals only partly done (2026-10-08 H5)
+# Ready to publish: no — email still fails (hammersmodality.org not verified in Resend); full test suite still running at end of I4 (2026-10-08 I4)
+
+## I4 (2026-10-08 ~02:00 UTC)
+- Data visuals added, real data only: pitch-count meter inside the throwing card (YouthPitchingLimits, baseball pitchers with a Pitch Smart limit; turns amber at 75%, red at the limit); sprint best-time trend inside the speed card (new SprintBestTrend, from real logged sprint times only); readiness scale already exists (ReadinessChip) — confirmed, no change.
+- Card-interior restyle (I2/I3) verified on screen: fresh 360/390 px screenshots of the plan and all 8 pop-ups in /tmp/browser/owner-ui-i4/ — details open, labeled You need/Setup/Cue lines, red Stop-if box, card rules inside each pop-up, practice logging only on throwing/hitting/conditioning, no global Key Rules drawer, no plan practice button, zero page errors, zero sideways overflow.
+- Fixture has no pitch-smart or sprint logs, so the meter and trend correctly render nothing there; they only appear with real data.
+- Tests: card suites 89/89 pass. Full suite (2,497 tests at H5) re-run started but still running at end of turn; last full pass H5. Plans unchanged — screen files only.
+- Email: still blocked (.org unverified in Resend); TEST row f53996f5-6df5-477b-96c4-5dbff22e3850 left in place.
+- Ready to publish: no. No publish/deploy/cron; no new test data.
 
 ## I3 (2026-10-08 01:34 UTC)
 - Card interiors (step 2): You need / Setup / Cue shown as labeled lines; "Stop if" is a clear red-outlined safety note (theme colors, works in dark mode). Screen-only; 52/52 card tests pass; wording unchanged.

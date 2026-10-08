@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { ageFrom, throwRoleFrom } from "@/lib/throwing/armLedgerEntry";
 import { youthPitchingToday, type PitchDay } from "@/lib/throwing/youthPitchingToday";
+import { Progress } from "@/components/ui/progress";
 
 const num = (v: unknown) => {
   const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
@@ -87,6 +88,21 @@ export function YouthPitchingLimits({ today }: { today: string }) {
       <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Arm limits today</div>
       {v.pitchSmart && (
         <p className="text-xs" data-testid="pitch-smart-max">MLB Pitch Smart guideline — daily maximum: {v.dailyMax} pitches (pitches only; warm-up and catch play count in the arm total).</p>
+      )}
+      {v.pitchSmart && v.dailyMax != null && v.dailyMax > 0 && (
+        <div className="space-y-1" data-testid="pitch-count-meter">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-[11px] text-muted-foreground">Pitches today</span>
+            <span className="text-sm font-bold tabular-nums">
+              {v.pitchesToday}
+              <span className="text-[11px] font-normal text-muted-foreground"> / {v.dailyMax}</span>
+            </span>
+          </div>
+          <Progress
+            value={Math.min(100, (v.pitchesToday / v.dailyMax) * 100)}
+            className={`h-2 ${v.pitchesToday >= v.dailyMax ? "[&>div]:bg-destructive" : v.pitchesToday >= v.dailyMax * 0.75 ? "[&>div]:bg-amber-500" : ""}`}
+          />
+        </div>
       )}
       {v.pitchSmart && v.restDaysNeeded != null && (
         <p className="text-xs" data-testid="pitch-smart-rest">MLB Pitch Smart guideline — {v.pitchesToday} pitches today means {v.restDaysNeeded} rest day{v.restDaysNeeded === 1 ? "" : "s"} before pitching again.</p>
