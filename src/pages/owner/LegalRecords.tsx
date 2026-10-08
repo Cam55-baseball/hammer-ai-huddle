@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsStaff } from "@/lib/legal/useIsStaff";
+import { callTeenWaiver } from "@/lib/legal/teenWaiver";
 
 const csvCell = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
 
@@ -30,6 +31,14 @@ export default function LegalRecords() {
   const markDone = async (id: string) => {
     await supabase.from("privacy_requests" as any).update({ status: "done", completed_at: new Date().toISOString() }).eq("id", id);
     requests.refetch();
+  };
+  const teens = useQuery({
+    queryKey: ["owner-teen-waivers"], enabled: staff,
+    queryFn: async () => (await callTeenWaiver<{ rows: any[] }>("staff_list")).rows,
+  });
+  const resendTeen = async (id: string) => {
+    try { await callTeenWaiver("staff_resend", { teen_user_id: id }); alert("Link sent again."); } catch { alert("Couldn't send. No parent email yet, or try again."); }
+    teens.refetch();
   };
   if (!staff) return <p className="p-6 text-sm text-muted-foreground">Owners and admins only.</p>;
   const now = Date.now();
@@ -55,6 +64,22 @@ export default function LegalRecords() {
               </div>
             );
           })}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-base">Teens waiting for a parent signature ({(teens.data ?? []).length})</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {(teens.data ?? []).length === 0 && <p className="text-sm text-muted-foreground">None.</p>}
+          {(teens.data ?? []).map((r: any) => (
+            <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 border-t pt-2 text-sm">
+              <span className="min-w-0 break-words">Player: {r.teen_name || String(r.teen_user_id).slice(0, 8) + "…"} · Parent email: {r.parent_email ?? "not entered yet"} · Links sent: {r.send_count}</span>
+              <span className="flex items-center gap-2">
+                <Badge variant={r.locked ? "destructive" : "outline"}>Plan: {r.locked ? "locked" : `open until ${new Date(r.grace_until).toLocaleDateString()}`}</Badge>
+                <Button size="sm" variant="outline" className="min-h-[44px]" disabled={!r.parent_email} onClick={() => resendTeen(r.teen_user_id)}>Resend link</Button>
+              </span>
+            </div>
+          ))}
         </CardContent>
       </Card>
 
