@@ -254,7 +254,7 @@ function DrillRow({
     payload: { name: d.name, dosage: d.dosage, slug: d.slug ?? null, side },
   };
   return (
-    <li data-task-id={taskId} data-task-side={side ?? ""} className={`text-xs rounded-md border border-border/50 bg-muted/30 p-2 transition-opacity duration-200 motion-reduce:transition-none ${checked ? "opacity-60" : ""}`}>
+    <li data-task-id={taskId} data-task-side={side ?? ""} className={`text-xs rounded-lg border p-3 transition-[opacity,background-color,border-color] duration-200 motion-reduce:transition-none ${checked ? "opacity-60 border-border/40 bg-muted/20" : "border-border/70 bg-card"}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-2 min-w-0 flex-1">
           <Checkbox
@@ -264,7 +264,7 @@ function DrillRow({
             aria-label={`Mark ${d.name} done`}
           />
           <div className="min-w-0 flex-1">
-            <div className={`font-medium ${checked ? "line-through" : ""}`}>{d.name}</div>
+            <div className={`text-sm font-semibold leading-snug tracking-tight ${checked ? "line-through" : ""}`}>{d.name}</div>
             {d.analysisInfluence && (
               <div className="mt-0.5 text-[10px] font-medium text-primary">From your recent analysis</div>
             )}
@@ -272,11 +272,11 @@ function DrillRow({
               // Step 24 item 4 — multi-part details read as bullets, not a comma run-on.
               const parts = doseBullets(d.dosage);
               if (parts.bullets.length === 0) {
-                return <div className="text-muted-foreground mt-0.5">{d.dosage}</div>;
+                return <div className="mt-1 text-[13px] font-semibold tabular-nums text-foreground/90">{d.dosage}</div>;
               }
               return (
-                <div className="text-muted-foreground mt-0.5">
-                  {parts.heading && <div>{parts.heading}</div>}
+                <div className="text-muted-foreground mt-1 tabular-nums">
+                  {parts.heading && <div className="text-[13px] font-semibold text-foreground/90">{parts.heading}</div>}
                   <ul className="mt-0.5 space-y-0.5">
                     {parts.bullets.map((b, i) => (
                       <li key={i}>• {b}</li>
@@ -287,12 +287,12 @@ function DrillRow({
             })()}
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 flex-col items-end gap-1 min-[400px]:flex-row min-[400px]:items-center">
           {adjustApi && (
             <button
               type="button"
               onClick={() => setAdjustOpen(true)}
-              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              className="inline-flex min-h-11 items-center gap-1 rounded-full border border-border/70 bg-background/70 px-3 text-[11px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground active:scale-95 transition-[transform,background-color,color] duration-150 motion-reduce:transition-none"
               aria-label={`Swap or skip ${d.name}`}
             >
               <Repeat className="h-3 w-3" />
@@ -302,7 +302,7 @@ function DrillRow({
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            className="inline-flex min-h-11 items-center gap-1 rounded-full border border-border/70 bg-background/70 px-3 text-[11px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground active:scale-95 transition-[transform,background-color,color] duration-150 motion-reduce:transition-none"
             aria-label={`How to do ${d.name}`}
           >
             <BookOpen className="h-3 w-3" />
