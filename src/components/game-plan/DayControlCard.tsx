@@ -19,19 +19,19 @@ const STATE_META: Record<DayType, {
   headerClass: string;
 }> = {
   rest: {
-    label: 'REST — TAKE IT EASIER',
+    label: 'Rest: take it easier',
     explanation: 'Eligible remaining work is dialled back, not cancelled. Daily must-do tasks are waived; streak protection is within your rest allowance.',
     cardClass: 'border-sky-500/50 bg-gradient-to-br from-sky-500/10 to-blue-500/5',
     headerClass: 'text-sky-400',
   },
   skip: {
-    label: 'SKIP — SIT TODAY OUT',
+    label: 'Skip: sit today out',
     explanation: 'No progress or recovery credit for the day. This does not mark every workout skipped.',
     cardClass: 'border-muted bg-muted/30',
     headerClass: 'text-muted-foreground',
   },
   push: {
-    label: 'PUSH — COMMIT TO THE PLAN',
+    label: 'Push: commit to the plan',
     explanation: 'Follow today’s plan, not a harder plan. All training limits still apply.',
     cardClass: 'border-amber-500/50 bg-gradient-to-br from-amber-500/10 to-rose-500/5',
     headerClass: 'text-amber-400',
@@ -90,7 +90,7 @@ export function DayControlCard() {
       <CardContent className="p-4 space-y-4">
         {/* STATUS HEADER */}
         <div className="flex items-center justify-between gap-3">
-          <div className={cn('text-xs font-black uppercase tracking-widest', meta.headerClass)}>
+          <div className={cn('text-sm font-black', meta.headerClass)}>
             {meta.label}
           </div>
           {dayType !== 'standard' && (

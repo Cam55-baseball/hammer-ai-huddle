@@ -8,7 +8,8 @@
  *  - "How hard? 1–10" and per-set load/reps are optional.
  *  - Load and reps are pre-filled with today's target.
  *  - Targets are shown as plain numbers. Percentages are never displayed.
- *  - A missing log still counts as done; only an explicit Skipped marks a skip.
+ *  - Only an explicit Skipped marks a skip. Nothing logged or checked by the
+ *    player's local day end is marked Missed by the day-end job.
  */
 import { useState } from "react";
 import { Button } from "@/components/ui/button";

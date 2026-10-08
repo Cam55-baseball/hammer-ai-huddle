@@ -13,24 +13,24 @@ export function DayStateBanner() {
   const map = {
     rest: {
       Icon: Moon,
-      text: 'REST — Eligible remaining work dialled back',
+      text: 'Rest: take it easier — hard work still to do is dialled back',
       class: 'border-sky-500/50 bg-sky-500/10 text-sky-300',
     },
     skip: {
       Icon: SkipForward,
-      text: 'SKIP — No day credit; workout amounts unchanged',
+      text: 'Skip: sit today out — no day credit; workout amounts stay the same',
       class: 'border-muted bg-muted/40 text-muted-foreground',
     },
     push: {
       Icon: Flame,
-      text: 'PUSH — Follow today’s plan; no extra work added',
+      text: 'Push: commit to the plan — today’s planned work, no extra sets or harder work',
       class: 'border-amber-500/50 bg-amber-500/10 text-amber-300',
     },
   } as const;
 
   const { Icon, text, class: cls } = map[dayType];
   return (
-    <div className={cn('flex items-center gap-2 rounded-lg border-2 px-3 py-2 text-xs font-black uppercase tracking-wider', cls)}>
+    <div className={cn('flex items-center gap-2 rounded-lg border-2 px-3 py-2 text-xs font-bold', cls)}>
       <Icon className="h-4 w-4 shrink-0" />
       {text}
     </div>
