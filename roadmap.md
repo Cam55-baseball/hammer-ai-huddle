@@ -1,4 +1,4 @@
-# OWNER PLAN CARD FIXES — T5 — 2026-10-08 23:47 UTC — Ready to publish: yes (website; nothing published)
+# OWNER PLAN CARD FIXES — T6 — 2026-10-08 23:52 UTC — Ready to publish: yes (website; nothing published)
 Top priority before Xcode. No publishing or cron changes. Only named defensive-role and tissue-prep changes may alter plans.
 - [x] 1–5 Core prescription cards now wrap full titles; show the formatted dose, a visible basic description, open Rx-prefilled applicable inputs (including 1×1), and a closed How to do it drawer. Removed Rules for this card and player-visible barefoot move-up criteria. Inline drafts survive backgrounding in session storage. Drawer now contains setup, steps, stop-if, cue, why, progression and change reason.
 - [x] 6 Catalog defense audit now fails on catcher/pitcher/outfield/infield cue bleed and baseball/softball bleed; all position/sport/phase combinations passed (6/6 defense tests).
