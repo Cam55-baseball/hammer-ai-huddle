@@ -5,6 +5,8 @@ import type { PrescribedBlock } from "@/lib/hammer/prescription/dailyPlan";
 
 const block = (status: PrescribedBlock["status"] = "ready") => ({
   modality: "baserunning", status, title: "Baserunning IQ", route: "/practice?module=baserunning",
+  why: "Decision practice", roadmapReason: "Today's work", phase: "skill", steps: [], cues: [], stopRules: [], durationMin: 15,
+  ctaLabel: "Open", missing: [], missingContextKeys: [], gamePlanTemplate: null,
   drills: [{ name: "Lead + secondary footwork", dosage: "10 reps" }, { name: "Pickoff reads", dosage: "8 reps" }, { name: "Tag-up scenarios", dosage: "5 reps" }],
 } as PrescribedBlock);
 
