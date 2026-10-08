@@ -19,7 +19,7 @@ describe("owner's classic General report restoration", () => {
     for (const file of ["src/components/vault/quiz/MorningDayIntent.tsx", "src/components/game-plan/DayControlCard.tsx", "src/components/game-plan/DayStateBanner.tsx"]) {
       const source = readFileSync(file, "utf8");
       for (const label of ["Rest: take it easier", "Push: commit to the plan", "Skip: sit today out"]) expect(source).toContain(label);
-      expect(source).not.toMatch(/PUSH DAY\s*[—-]\s*EXTRA LOAD|extra output expected/i);
+      expect(source).not.toMatch(/PUSH DAY\s*[—-]\s*EXTRA LOAD|extra\s+output\s+expected/i);
     }
   });
 });
