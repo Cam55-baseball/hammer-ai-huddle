@@ -19,6 +19,8 @@ import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
 import { conversionCopy } from "@/demo/prescriptions/conversionCopy";
 import { getDemoAbVariant, tierForVariant } from "@/lib/demoAbVariant";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { openWebsiteCheckout, PURCHASE_RETURN_URL } from "@/lib/purchase/websiteHandoff";
+import { FROM_APP_KEY } from "@/pages/AppHandoff";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 import { setPendingPurchase } from "@/lib/purchase/pendingPurchase";
 
@@ -35,7 +37,8 @@ const SUCCESS_STEPS = [
 ];
 
 const Checkout = () => {
-  const { canShowPurchaseUI } = usePurchaseAvailability();
+  const { canShowPurchaseUI, mode: purchaseMode } = usePurchaseAvailability();
+  const fromApp = typeof window !== "undefined" && sessionStorage.getItem(FROM_APP_KEY) === "1";
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { retired: programsRetired } = useProgramsRetired();
@@ -210,6 +213,14 @@ const Checkout = () => {
       return;
     }
 
+    // iPhone/iPad, US storefront: checkout happens on our website, same account.
+    if (purchaseMode === "native-linkout") {
+      setCheckoutLoading(true);
+      try { await openWebsiteCheckout("/checkout"); }
+      catch { toast({ title: "Couldn't open the website", description: "Please try again.", variant: "destructive" }); }
+      finally { setCheckoutLoading(false); }
+      return;
+    }
     setCheckoutLoading(true);
     if (!opts?.silent) {
       popupRef.current = window.open("", "_blank", "") || null;
@@ -400,6 +411,18 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 py-8 pt-[calc(2rem+var(--safe-top))] pb-[calc(2rem+var(--safe-bottom))]">
       <div className="w-full max-w-2xl space-y-4">
+        {fromApp && (
+          <Card className="p-4 flex items-center justify-between gap-3">
+            <p className="text-sm">Finished here? Go back to the Hammers app — your plan unlocks there automatically.</p>
+            <Button asChild size="sm" className="min-h-11"><a href={PURCHASE_RETURN_URL}>Return to the app</a></Button>
+          </Card>
+        )}
+        {purchaseMode === "native-linkout" && (
+          <Card className="p-4 space-y-2">
+            <p className="text-sm font-medium">Plans are bought on our website, hammersmodality.org, on this same account.</p>
+            <Button className="w-full min-h-11" onClick={() => handleCreateCheckout()} disabled={checkoutLoading}>Subscribe on our website</Button>
+          </Card>
+        )}
         {/* Abandonment urgency banner */}
         {hasAbandoned && (
           <Card className="border-amber-500/50 bg-amber-500/10 p-4">

@@ -1,11 +1,10 @@
 /**
- * Documents why native purchase UI is visible: the App Store listing is
- * US-only (US_ONLY_APP_STORE_RELEASE). If availability ever expands beyond the
- * US, real storefront detection is mandatory first — the fail-closed branch
- * below must still hide purchase UI when the constant is false.
+ * Option B (owner, 2026-10-08): purchase link-out ONLY on the US App Store
+ * storefront, detected by StoreKit. Any other storefront or unknown = hidden.
  */
 import { afterEach, describe, expect, it } from "vitest";
 import { getPurchaseAvailability, US_ONLY_APP_STORE_RELEASE } from "../purchaseGate";
+import { normalizeStorefront } from "../nativeStorefront";
 
 const w = window as unknown as { __HAMMERS_NATIVE__?: boolean; __HAMMERS_STOREFRONT__?: string };
 
@@ -14,38 +13,35 @@ afterEach(() => {
   delete w.__HAMMERS_STOREFRONT__;
 });
 
-describe("purchase gate — US-only App Store release", () => {
-  it("the release is declared US-only (App Store Connect availability = United States only)", () => {
-    expect(US_ONLY_APP_STORE_RELEASE).toBe(true);
+describe("purchase gate — Option B, US storefront only", () => {
+  it("no longer assumes a US-only listing", () => {
+    expect(US_ONLY_APP_STORE_RELEASE).toBe(false);
   });
-
   it("web is unchanged", () => {
-    const a = getPurchaseAvailability();
-    expect(a).toMatchObject({ canShowPurchaseUI: true, isNative: false, mode: "web" });
+    expect(getPurchaseAvailability()).toMatchObject({ canShowPurchaseUI: true, isNative: false, mode: "web" });
   });
-
-  it("native with unknown storefront shows link-out purchase while the release is US-only", () => {
+  it("native with unknown storefront shows nothing to buy", () => {
     w.__HAMMERS_NATIVE__ = true;
-    expect(getPurchaseAvailability()).toMatchObject({ canShowPurchaseUI: true, mode: "native-linkout" });
+    expect(getPurchaseAvailability()).toMatchObject({ canShowPurchaseUI: false, mode: "hidden" });
   });
-
-  it("DEPENDENCY: without the US-only listing, unknown storefront fails closed", () => {
+  it("StoreKit 'USA' shows the website link-out", () => {
     w.__HAMMERS_NATIVE__ = true;
-    expect(getPurchaseAvailability({ usOnlyRelease: false })).toMatchObject({
-      canShowPurchaseUI: false,
-      mode: "hidden",
-    });
+    w.__HAMMERS_STOREFRONT__ = normalizeStorefront("USA")!;
+    expect(getPurchaseAvailability()).toMatchObject({ canShowPurchaseUI: true, mode: "native-linkout", storefront: "US" });
   });
-
-  it("a reported non-US storefront is always hidden", () => {
+  it("raw 'USA' on the window is also read as the US", () => {
     w.__HAMMERS_NATIVE__ = true;
-    w.__HAMMERS_STOREFRONT__ = "GB";
+    w.__HAMMERS_STOREFRONT__ = "USA";
+    expect(getPurchaseAvailability().storefront).toBe("US");
+  });
+  it.each(["GBR", "CAN", "MEX", "DEU"])("storefront %s shows nothing to buy", (c) => {
+    w.__HAMMERS_NATIVE__ = true;
+    w.__HAMMERS_STOREFRONT__ = normalizeStorefront(c)!;
     expect(getPurchaseAvailability().canShowPurchaseUI).toBe(false);
   });
-
-  it("a reported US storefront is allowed even after the constant is turned off", () => {
-    w.__HAMMERS_NATIVE__ = true;
-    w.__HAMMERS_STOREFRONT__ = "US";
-    expect(getPurchaseAvailability({ usOnlyRelease: false }).canShowPurchaseUI).toBe(true);
+  it("garbage storefront values count as unknown", () => {
+    expect(normalizeStorefront("")).toBeNull();
+    expect(normalizeStorefront(null)).toBeNull();
+    expect(normalizeStorefront("U$A")).toBeNull();
   });
 });

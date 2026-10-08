@@ -11,7 +11,7 @@ import { useOptionalAuth } from "@/hooks/useAuth";
 import { PausedAccountScreen } from "./PausedAccountScreen";
 import { BirthdateRequiredScreen } from "./BirthdateRequiredScreen";
 
-const OPEN_PATHS = [/^\/auth/, /^\/signup/, /^\/terms/, /^\/privacy/, /^\/legal/, /^\/reset-password/, /^\/evidence/];
+const OPEN_PATHS = [/^\/auth/, /^\/signup/, /^\/terms/, /^\/privacy/, /^\/legal/, /^\/reset-password/, /^\/evidence/, /^\/app-handoff/];
 const PAYMENT_PATHS = [/^\/pricing/, /^\/checkout/, /^\/purchase-complete/];
 
 export const accountGateKey = (uid?: string) => ["account-gate", uid];

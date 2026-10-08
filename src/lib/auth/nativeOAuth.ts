@@ -51,7 +51,7 @@ export function installNativeOAuthListener(onDone: (path: string) => void): void
   if (!isNativeApp() || listening) return;
   listening = true;
   CapApp.addListener("appUrlOpen", async ({ url }) => {
-    if (!url?.startsWith(NATIVE_AUTH_SCHEME)) return;
+    if (!url?.startsWith(NATIVE_AUTH_CALLBACK)) return;
     const r = parseNativeReturn(url);
     try { await Browser.close(); } catch { /* sheet already closed */ }
     const next = new URLSearchParams();
