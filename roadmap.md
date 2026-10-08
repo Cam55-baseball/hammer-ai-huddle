@@ -1,4 +1,4 @@
-# OWNER PLAN CARD FIXES — T2 — 2026-10-08 23:08 UTC — Ready to publish: no
+# OWNER PLAN CARD FIXES — T3 — 2026-10-08 23:50 UTC — Ready to publish: yes (website; nothing published)
 Top priority before Xcode. No publishing or cron changes. Only named defensive-role and tissue-prep changes may alter plans.
 - [x] 1–5 Core prescription cards now wrap full titles; show the formatted dose, a visible basic description, open Rx-prefilled applicable inputs (including 1×1), and a closed How to do it drawer. Removed Rules for this card and player-visible barefoot move-up criteria. Inline drafts survive backgrounding in session storage. Drawer now contains setup, steps, stop-if, cue, why, progression and change reason.
 - [x] 6 Catalog defense audit now fails on catcher/pitcher/outfield/infield cue bleed and baseball/softball bleed; all position/sport/phase combinations passed (6/6 defense tests).
@@ -11,7 +11,9 @@ Top priority before Xcode. No publishing or cron changes. Only named defensive-r
 - [x] T2: Added deterministic phone-return regressions at 30 seconds, 5 minutes and 1 hour. Each keeps the same open log, exact unsaved input and session draft through visibility/page-return events; the service-worker regression separately proves those events never call reload. Return/no-reload/log suite: 8/8.
 - [x] Published-site observation at 360 and 390 px: visibility/page-return events kept the same URL and launch screen with zero page errors (`/tmp/browser/t2/`). This was signed-out observation only; the unpublished plan-card changes cannot be verified there without publishing.
 - [x] Full suite: 293 files, 2,542 tests passed. The first run exposed a demo-tour route-restoration timer surviving test teardown; its interval now clears on close/unmount, focused tour/return tests pass 9/9, and the clean full rerun passed.
-- [ ] Not complete: screenshots do not yet cover every card type. Published affected-player plan-card return behavior remains unprovable until the owner publishes these changes. No publish/deploy/cron/iOS changes and no test data created.
+- [x] T3: Screenshots of all six card types today (warm-up, bat speed, defense, conditioning, lift, recovery) at 360 and 390 px, drawer closed and open, as the signed-in player — 24 images in `legal-screens/plan-cards-t3/`, 0 page errors. Every activity had a visible log; no "Rules for this card", no move-up criteria, no "1 feet".
+- [x] T3 fixes found by the screenshots: (a) bat speed/conditioning/lift cards showed an empty "Today — ." line — now hidden when there is no real reason; (b) band and body-weight lifts (e.g. Arm-Care Band) showed a Weight box — now reps only. 2 new tests; full suite 294 files, 2,544 tests passed; build OK.
+- [ ] Remaining: Published affected-player plan-card return behavior remains unprovable until the owner publishes these changes. No publish/deploy/cron/iOS changes and no test data created.
 
 ## Waiting on owner
 - Exercise-specific plain-language descriptions remain blocked for entries where the existing catalogs do not provide enough authoritative setup detail, especially PFP, throwing-supplemental and EASS activities. These will not be guessed.

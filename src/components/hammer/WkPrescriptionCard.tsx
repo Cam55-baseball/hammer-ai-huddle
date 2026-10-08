@@ -436,7 +436,9 @@ export function WkPrescriptionCard({
           {(() => {
             // Step 21D3 — never render a heading with no content.
             const whyText = String(athleteWhy ?? "").trim();
-            const today = String(todayLine ?? "").trim();
+            // Owner fix 5: punctuation-only text (e.g. ".") is not a reason — hide it.
+            const rawToday = String(todayLine ?? "").trim();
+            const today = /[\p{L}\p{N}]/u.test(rawToday) ? rawToday : "";
             if (!whyText && !today) return null;
             return (
               <Collapsible defaultOpen={pocketDetails}>
