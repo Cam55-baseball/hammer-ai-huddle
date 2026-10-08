@@ -319,20 +319,17 @@ function DrillRow({
           onSave={adjustApi.save}
         />
       )}
-      {d.equipmentNote && (
-        <div className="text-[11px] text-muted-foreground mt-1">You need: {d.equipmentNote}</div>
-      )}
-      {d.setup && (
-        <div className="text-[11px] text-muted-foreground mt-1">Setup: {d.setup}</div>
-      )}
-
-      {d.cue && (
-        <div className="text-[11px] text-foreground/80 mt-0.5">Cue: {d.cue}</div>
+      {(d.equipmentNote || d.setup || d.cue) && (
+        <dl className="mt-2 space-y-1 border-l-2 border-border pl-2 text-[12px] leading-snug">
+          {d.equipmentNote && (<div><dt className="inline font-semibold text-foreground/80">You need: </dt><dd className="inline text-muted-foreground">{d.equipmentNote}</dd></div>)}
+          {d.setup && (<div><dt className="inline font-semibold text-foreground/80">Setup: </dt><dd className="inline text-muted-foreground">{d.setup}</dd></div>)}
+          {d.cue && (<div><dt className="inline font-semibold text-foreground/80">Cue: </dt><dd className="inline text-foreground/90">{d.cue}</dd></div>)}
+        </dl>
       )}
       {d.stopIf && (
-        <div className="text-[11px] text-amber-700 dark:text-amber-300 mt-0.5 flex items-start gap-1">
-          <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
-          <span>Stop if: {d.stopIf}</span>
+        <div className="mt-2 flex items-start gap-1.5 rounded-md border border-destructive/30 bg-destructive/5 px-2 py-1.5 text-[12px] text-foreground">
+          <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-destructive" />
+          <span><span className="font-semibold">Stop if: </span>{d.stopIf}</span>
         </div>
       )}
       <ExerciseInstructions name={d.name} slug={d.slug} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} />
