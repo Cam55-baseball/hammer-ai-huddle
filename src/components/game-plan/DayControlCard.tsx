@@ -90,7 +90,7 @@ export function DayControlCard() {
       <CardContent className="p-4 space-y-4">
         {/* STATUS HEADER */}
         <div className="flex items-center justify-between gap-3">
-          <div className={cn('text-xs font-black uppercase tracking-widest', meta.headerClass)}>
+          <div className={cn('text-sm font-black', meta.headerClass)}>
             {meta.label}
           </div>
           {dayType !== 'standard' && (

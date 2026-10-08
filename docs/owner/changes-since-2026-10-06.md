@@ -7,13 +7,13 @@ Status per file. "Owner to confirm" = I could not find a quoted owner request; p
 | `src/App.tsx` | 4 (2026-10-07→2026-10-07) | REVERTED (redirects off) | Owner now: "The owner has NOT approved retiring the five programs." (Earlier card answer 21:40 'Yes, switch on redirects' withdrawn) |
 | `src/pages/Index.tsx` | 1 (2026-10-07→2026-10-07) | Changed today | Owner today: "give the owner a way to view the landing page while signed in" (/home) |
 | `supabase/functions/wk-generate-daily/index.ts` | 33 (2026-10-06→2026-10-07) | Requested — kept (builder) | Owner-authorized builder work; flush block now disabled |
-| `src/components/vault/quiz/MorningDayIntent.tsx` | 1 (2026-10-07→2026-10-07) | REVERTED (wording) | NOT requested |
-| `src/components/game-plan/DayControlCard.tsx` | 2 (2026-10-07→2026-10-07) | REVERTED (wording) | NOT requested |
+| `src/components/vault/quiz/MorningDayIntent.tsx` | 1 (2026-10-07→2026-10-07) | RESTORED 2026-10-08 (clarified wording) | Requested by owner 2026-10-06: "The push button on the rest/push/skip needs to be clarified" (ledger corrected 2026-10-08) |
+| `src/components/game-plan/DayControlCard.tsx` | 2 (2026-10-07→2026-10-07) | RESTORED 2026-10-08 (clarified wording) | Requested by owner 2026-10-06: "The push button on the rest/push/skip needs to be clarified" (ledger corrected 2026-10-08) |
 | `src/components/hammer/WkPrescriptionCard.tsx` | 8 (2026-10-07→2026-10-07) | REVERTED (flush off) | Owner now: "switch it off and restore the previous behavior" |
-| `src/components/game-plan/DayStateBanner.tsx` | 1 (2026-10-07→2026-10-07) | REVERTED (wording) | NOT requested |
+| `src/components/game-plan/DayStateBanner.tsx` | 1 (2026-10-07→2026-10-07) | RESTORED 2026-10-08 (clarified wording) | Requested by owner 2026-10-06: "The push button on the rest/push/skip needs to be clarified" (ledger corrected 2026-10-08) |
 | `src/lib/archive/programRedirects.ts` | 3 (2026-10-07→2026-10-07) | REVERTED (redirects off) | Owner now: "The owner has NOT approved retiring the five programs." (Earlier card answer 21:40 'Yes, switch on redirects' withdrawn) |
-| `src/components/runtime/PrescriptionCard.tsx` | 2 (2026-10-07→2026-10-07) | REVERTED (wording) | NOT requested |
-| `src/lib/runtime/prescription.ts` | 2 (2026-10-07→2026-10-07) | REVERTED (wording) | NOT requested |
+| `src/components/runtime/PrescriptionCard.tsx` | 2 (2026-10-07→2026-10-07) | RESTORED 2026-10-08 (clarified wording) | Requested by owner 2026-10-06: "The push button on the rest/push/skip needs to be clarified" (ledger corrected 2026-10-08) |
+| `src/lib/runtime/prescription.ts` | 2 (2026-10-07→2026-10-07) | RESTORED 2026-10-08 (clarified wording) | Requested by owner 2026-10-06: "The push button on the rest/push/skip needs to be clarified" (ledger corrected 2026-10-08) |
 | `roadmap.md` | 98 (2026-10-06→2026-10-07) | Docs/notes | Owner: "tick off roadmap.md" |
 | `src/test/tellHammers/checkinSteps.test.tsx` | 1 (2026-10-07→2026-10-07) | Tests | Supports requested work |
 | `src/components/hammer/ProgramContentBlock.tsx` | 3 (2026-10-07→2026-10-07) | REVERTED (flush off) | Owner now: "switch it off and restore the previous behavior" |
@@ -174,7 +174,7 @@ Status per file. "Owner to confirm" = I could not find a quoted owner request; p
 ## Reverted 2026-10-07 (not approved)
 - Old program redirects → off; all five pages open as before.
 - Game-linked flush + Skip button → off (app card and plan builder; builder redeployed and proved).
-- Rest/Skip/Push day labels and explanations, morning "Day intent" card, day banners → original wording.
+- Rest/Skip/Push day labels and explanations, morning "Day intent" card, day banners → CORRECTED 2026-10-08: owner requested this on Oct 6; clarified wording restored ("Rest: take it easier", "Push: commit to the plan", "Skip: sit today out").
 - "No organism signal yet" note → original wording.
 - Bat speed wording: already the owner's exact sentence — no change.
 - Catalog display names: no changes since the Oct 6 snapshot — nothing to revert.
