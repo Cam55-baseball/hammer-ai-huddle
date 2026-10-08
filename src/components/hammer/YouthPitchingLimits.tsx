@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { ageFrom, throwRoleFrom } from "@/lib/throwing/armLedgerEntry";
 import { youthPitchingToday, type PitchDay } from "@/lib/throwing/youthPitchingToday";
+import { Progress } from "@/components/ui/progress";
 
 const num = (v: unknown) => {
   const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
