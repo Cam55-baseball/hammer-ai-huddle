@@ -10,7 +10,8 @@
 import { ReportProblemButton } from "@/components/support/ReportProblemButton";
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { ChevronRight, ExternalLink, Lock, LogOut, PartyPopper, X } from "lucide-react";
+import { Check, ChevronRight, ExternalLink, Lock, LogOut, X } from "lucide-react";
+import { DomainGlyph, domainOf, useRhythm } from "./todayRhythm";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -87,7 +88,7 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
     addToSet(CELEBRATED_KEY, key);
     setCelebrate(true);
     toast.success(`${category} done. Nice work!`);
-    const t = setTimeout(() => setCelebrate(false), 2400);
+    const t = setTimeout(() => setCelebrate(false), 900);
     return () => clearTimeout(t);
   }, [allDone, id, planDate, category]);
   const [open, setOpen] = useState(() => prescribed && readOpenPocket(planDate) === id);
@@ -120,7 +121,16 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
     if (saved) toast.success("Saved. Your logged work is kept.");
   }
 
+  const rhythm = useRhythm({ id, category, heading, progress: progress ?? null, open: openPocket }, prescribed);
+  const domain = domainOf(category);
   if (!prescribed) return null;
+  const tileBase = "group h-auto w-full justify-start whitespace-normal rounded-xl border text-left transition-[transform,box-shadow,background-color,padding] duration-200 ease-out active:scale-[0.985] motion-reduce:transition-none motion-reduce:active:scale-100 animate-in fade-in slide-in-from-bottom-1 duration-300 motion-reduce:animate-none";
+  const tileByRhythm = rhythm === "next"
+    ? "border-primary bg-card p-4 shadow-md ring-1 ring-primary/30"
+    : rhythm === "done"
+      ? "border-border bg-muted/40 px-3 py-2"
+      : "border-border bg-card p-3 hover:shadow-sm";
+  const pct = progress && progress.total > 0 ? Math.min(1, progress.done / progress.total) : 0;
   return (
     <>
       <Button variant="ghost"
@@ -128,31 +138,42 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
         onClick={openPocket}
         disabled={!prescribed}
         data-pocket-tile={id}
-        className="group h-auto w-full justify-start whitespace-normal rounded-lg border border-border bg-card p-3 text-left transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0 disabled:cursor-default disabled:opacity-70 animate-in fade-in slide-in-from-bottom-1 motion-reduce:animate-none"
+        data-rhythm={rhythm}
+        className={`${tileBase} ${tileByRhythm} ${celebrate ? "hm-card-complete" : ""} min-h-[44px]`}
       >
         <div className="flex w-full items-center gap-3">
-          <span className={`h-10 w-1.5 shrink-0 rounded-full ${tone}`} aria-hidden />
+          {rhythm === "done" ? (
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground" aria-hidden>
+              <svg viewBox="0 0 24 24" className="h-4 w-4"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={celebrate ? "hm-check-draw" : ""} /></svg>
+            </span>
+          ) : (
+            <span className={`flex shrink-0 items-center justify-center rounded-lg ${rhythm === "next" ? "h-11 w-11 bg-primary text-primary-foreground" : "h-9 w-9 bg-muted text-foreground"}`} aria-hidden>
+              <DomainGlyph domain={domain} className={rhythm === "next" ? "h-6 w-6" : "h-5 w-5"} />
+            </span>
+          )}
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <Badge className={`text-[10px] ${tone} text-primary-foreground border-0`}>{category}</Badge>
-              {countLabel && prescribed && <span className="text-[11px] text-muted-foreground">{countLabel}</span>}
-              {progress && prescribed && progress.total > 0 && (
-                <span
-                  data-progress-pill
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${allDone ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
-                >
-                  {allDone ? "Done" : `${progress.done} of ${progress.total} done`}
-                </span>
-              )}
-            </div>
-            <p className="mt-1 text-sm font-semibold leading-snug text-foreground">{heading}</p>
-            {link && prescribed && <p className="text-[11px] text-muted-foreground">Opens {link.label}</p>}
-            {!prescribed && (
-              <p className="text-[11px] text-muted-foreground">{notPrescribedNote ?? "Not on today's plan."}</p>
+            {rhythm === "next" && <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">Next up</p>}
+            <p className={`leading-snug ${rhythm === "next" ? "text-base font-bold text-foreground" : rhythm === "done" ? "text-sm font-medium text-muted-foreground" : "text-sm font-semibold text-foreground"}`}>{heading}</p>
+            {rhythm !== "done" && (
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground">
+                <span className="font-medium uppercase tracking-wider">{category}</span>
+                {countLabel && <span className="tabular-nums">· {countLabel}</span>}
+                {progress && progress.total > 0 && <span data-progress-pill className="tabular-nums">· {progress.done}/{progress.total} done</span>}
+                {link && <span>· Opens {link.label}</span>}
+              </div>
+            )}
+            {rhythm === "done" && <span data-progress-pill className="sr-only">Done</span>}
+            {rhythm !== "done" && progress && progress.total > 1 && (
+              <div className="mt-2 flex gap-0.5" aria-hidden>
+                {Array.from({ length: Math.min(progress.total, 16) }, (_, i) => (
+                  <span key={i} className={`h-1 flex-1 rounded-full transition-colors duration-300 motion-reduce:transition-none ${i < Math.round(pct * Math.min(progress.total, 16)) ? "bg-primary" : "bg-muted"}`} />
+                ))}
+              </div>
             )}
           </div>
-          {celebrate && <PartyPopper className="h-5 w-5 shrink-0 text-primary animate-bounce motion-reduce:animate-none" aria-label="Card complete" />}
-          {prescribed && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />}
+          {rhythm === "done"
+            ? <span className="text-[11px] font-medium text-muted-foreground">Done</span>
+            : <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none" />}
         </div>
       </Button>
 
@@ -166,15 +187,15 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
           className={`fixed inset-0 z-50 flex flex-col animate-in fade-in zoom-in-95 duration-200 motion-reduce:animate-none bg-background`}
         >
           <header className="flex items-center gap-2 border-b border-border px-3 py-2">
-            <span className={`h-6 w-1.5 rounded-full ${tone}`} aria-hidden />
-            <h2 className="min-w-0 flex-1 text-base font-semibold leading-tight text-foreground">{heading}</h2>
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground" aria-hidden><DomainGlyph domain={domain} className="h-5 w-5" /></span>
+            <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{category}{progress && progress.total > 0 ? <span className="tabular-nums"> · {progress.done}/{progress.total} done</span> : null}</p><h2 className="truncate text-base font-bold leading-tight text-foreground">{heading}</h2></div>
             {locked ? (
               <Badge variant="secondary" className="gap-1 text-[10px]"><Lock className="h-3 w-3" />Locked in</Badge>
             ) : (
-              <Button size="sm" onClick={() => setLocked(true)}>Start</Button>
+              <Button size="sm" className="h-10 px-4 active:scale-95 transition-transform motion-reduce:transition-none" onClick={() => setLocked(true)}>Start</Button>
             )}
             {!locked && (
-              <Button size="icon" variant="ghost" aria-label="Close" onClick={() => close(true)}>
+              <Button size="icon" variant="ghost" className="h-10 w-10" aria-label="Close" onClick={() => close(true)}>
                 <X className="h-4 w-4" />
               </Button>
             )}
@@ -216,10 +237,10 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
             <div className="mt-2 flex justify-center"><ReportProblemButton className="h-7 text-[12px]" card={heading} planDate={planDate} /></div>
           </div>
           <footer className="flex items-center justify-between gap-2 border-t border-border px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-            <Button variant="ghost" size="sm" onClick={() => setConfirmDiscard(true)}>
+            <Button variant="ghost" size="sm" className="h-11" onClick={() => setConfirmDiscard(true)}>
               Exit without saving
             </Button>
-            <Button size="sm" onClick={() => close(true)}>
+            <Button size="sm" className="h-11 px-5 font-semibold active:scale-95 transition-transform motion-reduce:transition-none" onClick={() => close(true)}>
               <LogOut className="mr-1.5 h-3.5 w-3.5" />Save &amp; Exit
             </Button>
           </footer>

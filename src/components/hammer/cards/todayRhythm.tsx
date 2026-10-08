@@ -191,7 +191,7 @@ export function DayCommandCenter() {
             const isNow = s.id === currentStage, isDone = stageDone(s.id);
             return (
               <li key={s.id} data-stage={s.id} data-state={isNow ? "now" : isDone ? "done" : "later"}
-                className={`relative flex-1 py-2 text-center text-[11px] font-semibold uppercase tracking-wider transition-colors duration-300 motion-reduce:transition-none ${isNow ? "text-foreground" : isDone ? "text-muted-foreground" : "text-muted-foreground/70"}`}>
+                className={`relative flex-1 py-2 text-center text-[11px] font-semibold uppercase tracking-wider transition-colors duration-300 motion-reduce:transition-none ${isNow ? "text-foreground" : isDone ? "text-muted-foreground" : "text-muted-foreground font-medium"}`}>
                 {isDone && <Check className="mr-0.5 inline h-3 w-3 -translate-y-px" aria-hidden />}{s.label}
                 <span className={`absolute inset-x-2 top-0 h-0.5 rounded-full transition-colors duration-300 motion-reduce:transition-none ${isNow ? "bg-primary" : isDone ? "bg-foreground/30" : "bg-transparent"}`} aria-hidden />
               </li>
