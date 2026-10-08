@@ -297,7 +297,7 @@ export function WkPrescriptionCard({
             <button
               type="button"
               className="min-w-0 flex-1 text-left"
-              aria-expanded={open}
+              aria-expanded={pocketDetails || open}
             >
               <div className="font-semibold text-sm line-clamp-2 break-words">
                 {rx.movement_name}

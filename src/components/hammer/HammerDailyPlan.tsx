@@ -1775,7 +1775,7 @@ function BlockCard({
                 <span className="text-[11px] text-muted-foreground italic">
                   Nothing to mark done — there's no work prescribed here yet.
                 </span>
-              ) : (
+              ) : block.modality === "baserunning" && block.gamePlanTemplate === null ? null : (
                 <BlockCompletionControls
                   modality={block.modality}
                   modalityLabel={block.title}
