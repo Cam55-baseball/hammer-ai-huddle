@@ -1,4 +1,4 @@
-# OWNER PLAN CARD FIXES — 2026-10-08 23:06 UTC — Ready to publish: no
+# OWNER PLAN CARD FIXES — T1 — 2026-10-08 23:08 UTC — Ready to publish: no
 Top priority before Xcode. No publishing or cron changes. Only named defensive-role and tissue-prep changes may alter plans.
 - [x] 1–5 Core prescription cards now wrap full titles; show the formatted dose, a visible basic description, open Rx-prefilled applicable inputs (including 1×1), and a closed How to do it drawer. Removed Rules for this card and player-visible barefoot move-up criteria. Inline drafts survive backgrounding in session storage. Drawer now contains setup, steps, stop-if, cue, why, progression and change reason.
 - [x] 6 Catalog defense audit now fails on catcher/pitcher/outfield/infield cue bleed and baseball/softball bleed; all position/sport/phase combinations passed (6/6 defense tests).
@@ -7,7 +7,8 @@ Top priority before Xcode. No publishing or cron changes. Only named defensive-r
 - [x] 10 Fixed dose pluralization (90 feet, singular foot, explicit 1 set × 1 rep) and centralized prescription-card dose display; dose formatter tests pass.
 - [x] 11 Every generated warm-up starts with one five-minute rolling + rhythmic tissue-prep block; throwers add pec/lat/forearm. Eight-week deterministic simulation passed every context/lifecycle/sport/thrower combination with tissue prep first and unique.
 - [x] Player-session screenshots at 360/390 show a wrapped title, dose, basic description, open prefilled log and closed/open drawer with 0 page errors (`/tmp/browser/plan-cards/`). Final full suite: 291 files, 2,535 tests passed; preview build OK.
-- [ ] Not complete: every legacy Track-B drill still needs activity-specific saved log fields; screenshots do not yet cover every card type; 30s/5min/1h real background returns and published-site behavior were not executed; the complete active-library description review is unresolved. Uncertain descriptions remain generic rather than guessed, especially PFP, throwing-supplemental and EASS entries. No publish/deploy/cron/iOS changes and no test data created.
+- [x] T1: Legacy Track-B drill rows now show and save applicable Rx-prefilled logs through the existing daily-task row: warm-up/mobility/recovery completed + minutes; throwing throws; conditioning/base-running repetitions × distance (+ time); timed holds seconds; other drills exact sets × reps. Draft inputs remain in session storage. Added 4 concrete parser tests, including 2 × 30 yd → two 90 ft rows and 1 × 1 visibility; focused owner-fix suite is 28/28.
+- [ ] Not complete: screenshots do not yet cover every card type; 30s/5min/1h real background returns and published-site behavior were not executed. No publish/deploy/cron/iOS changes and no test data created.
 
 ## Waiting on owner
 - Exercise-specific plain-language descriptions remain blocked for entries where the existing catalogs do not provide enough authoritative setup detail, especially PFP, throwing-supplemental and EASS activities. These will not be guessed.
