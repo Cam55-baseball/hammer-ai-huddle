@@ -1,3 +1,38 @@
+# Ready to publish: YES (2026-10-08 K, owner decisions + corrections)
+Reason: all changes this round are wording/switch/test only; checks pass. Email still waits on 3 DNS records (reports save first and re-send automatically), so it does not block.
+
+## K1 — the 10 owner-to-confirm changes: decisions applied
+- KEEP: 2 streak strip, 5 season counter, 6 "Tomorrow's plan opens in", 7 Conditioning wording, 8 plan-save speed-up, 9 sign-in keeper, 10 Start Hammers Today remembered.
+- #1 One-tap logging: KEPT and switched ON for everyone (switch one_tap_logging: pilot → all; old setting saved).
+  - Proof: new test wkOneTapLog (3/3): Done → full sets saved, card completed; Skipped → 0 sets, card skipped; Cut short → tagged cut short, card completed.
+  - Day-end rule proven on the real database with the real day-end job, test account 93ce8745…, all undone afterwards (0 test rows left): Done=completed, Skipped=skipped, Cut short=completed, nothing logged=MISSED.
+  - Not done: a phone-size screenshot of the buttons on a live plan — needs a signed-in test player with a started plan (owner account has none; signing in as another account needs the owner's approval).
+- #3 ProgressDashboard: since Oct 6 the only lasting change is one blank line — a season counter was added and removed again on Oct 7, and the report-card box was NOT removed (the earlier description was wrong); the page looks the same.
+- #4 ProgressLanding: since Oct 6 the only change is the season counter ("Season — Offseason Q1 — Strength & Capacity") added above the topic buttons. Before/after: /mnt/documents/owner-checks/progress_before_after_360.png and _390.png.
+
+## K2 — Rest / Push / Skip clarification restored
+- Wording everywhere: "Rest: take it easier", "Push: commit to the plan", "Skip: sit today out", each with a one-line explanation (morning check-in, day card, day banner). "PUSH DAY — EXTRA LOAD" / "extra output expected" appear nowhere in the app (searched; also absent on screen at 360/390 px).
+- The runtime PrescriptionCard / prescription.ts files carry the owner-approved "No check-ins yet" rewording.
+- Screenshots: /mnt/documents/owner-checks/intent_360.png, intent_390.png.
+- Change ledger corrected: these 5 files now read "Requested by owner 2026-10-06".
+
+## K3 — Resend: exactly what's missing (hammersmodality.org)
+Verification triggered (HTTP 200); status still PENDING. DNS host for the domain: name.com.
+| # | Type | Host (name) | Value | Priority | Resend status | Public DNS |
+|---|---|---|---|---|---|---|
+| 1 | TXT (DKIM) | resend._domainkey | p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCwFhaC6XZ4+o61dD1HXobAkERVNxHEuukhx12FxK/at/epGu0yagL4aLXznf4rYacHmc4hNxzYlOkRhOVXQvvUTxqr/94gZ0NjsXrRZ7/wEIY7SarUdLU8ar6cZAiwFNBMRVu1hvbiBtmdW6+QrxPcJqrBSnnpDbtXTyPFnMUrjwIDAQAB | — | pending | MISSING (no record found) |
+| 2 | CNAME (SPF) | rsend | rsend.forge.rmta.net | — | pending | MISSING |
+| 3 | CNAME (SPF) | send | send.forge.rmta.net | — | pending | MISSING |
+None of the three exist yet in public DNS. Resend asks for no MX record; the existing Google MX and site-verification TXT stay as they are.
+
+Steps at name.com:
+1. Sign in to name.com → My Domains → hammersmodality.org → Manage DNS Records.
+2. Add record: Type TXT, Host `resend._domainkey`, Answer = the full p=… value above (one line, no quotes), TTL 300. Save.
+3. Add record: Type CNAME, Host `rsend`, Answer `rsend.forge.rmta.net`, TTL 300. Save.
+4. Add record: Type CNAME, Host `send`, Answer `send.forge.rmta.net`, TTL 300. Save.
+5. Type only the short host (name.com adds ".hammersmodality.org" itself). In Resend, open the domain and click Verify (usually minutes, up to 72 h).
+- The TEST report f53996f5-6df5-477b-96c4-5dbff22e3850 cannot send until then; it re-sends automatically on the next report or when the owner opens Problem reports ("Retry failed emails" also there). Status now: failed, not sent.
+
 # Ready to publish: YES (2026-10-08 J2, final)
 Reason: every pre-publish check passes — 2,497/2,497 tests, 0 phase mismatches, 372-load phone audit (360/390 px) with 0 crashes/errors, daily job proven, plans identical. Email is not a blocker: reports are saved first and re-sent automatically once the domain verifies.
 
