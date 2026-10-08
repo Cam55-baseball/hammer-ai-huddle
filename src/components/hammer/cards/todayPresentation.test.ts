@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { prescribedToday, splitBaserunning } from "./todayPresentation";
+import { prescribedToday, splitBaserunning, groupPhysicalBaserunning } from "./todayPresentation";
 import { rulesForCard } from "./CardRules";
 import type { PrescribedBlock } from "@/lib/hammer/prescription/dailyPlan";
 
@@ -33,5 +33,21 @@ describe("Today presentation — no prescription bleed", () => {
     expect(speed.join(" ")).toMatch(/steal attempt/i);
     expect(rulesForCard("Speed", ["baseball_pitcher"]).join(" ")).not.toMatch(/steal/i);
     expect(rulesForCard("Lift", []).join(" ")).not.toMatch(/steal|bat/i);
+  });
+  it("keeps running scenarios physical and partitions explicit steal drills without duplication", () => {
+    for (let day = 0; day < 56; day++) {
+      for (const eligible of [false, true]) {
+        const original = block();
+        original.drills.push({ name: "Base Stealer sprint", dosage: "3 reps; full rest" });
+        const before = JSON.stringify(original);
+        const split = splitBaserunning([original]);
+        const grouped = groupPhysicalBaserunning(split.physical, eligible);
+        const drills = [...split.mental, ...grouped.speed, ...grouped.conditioning].flatMap(b => b.drills);
+        original.drills.forEach(d => expect(drills.filter(x => x === d)).toHaveLength(1));
+        expect(grouped.speed.length).toBe(eligible ? 1 : 0);
+        expect(split.physical[0].drills.some(d => /scenarios/i.test(d.name))).toBe(true);
+        expect(JSON.stringify(original)).toBe(before);
+      }
+    }
   });
 });

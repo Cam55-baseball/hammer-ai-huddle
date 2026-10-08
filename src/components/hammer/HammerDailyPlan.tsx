@@ -126,7 +126,7 @@ import { readPitcherProfile, shouldShowPitchingCard } from "@/lib/hammer/pitchin
 import { CardDashboard } from "@/components/hammer/cards/CardDashboard";
 
 import { PlanStreakStrip } from "@/components/hammer/cards/PlanStreakStrip";
-import { prescribedToday, splitBaserunning } from "@/components/hammer/cards/todayPresentation";
+import { prescribedToday, splitBaserunning, groupPhysicalBaserunning } from "@/components/hammer/cards/todayPresentation";
 import { ExerciseInstructions } from "@/components/hammer/cards/ExerciseInstructions";
 import { usePocketDetails } from "@/components/hammer/cards/PocketCard";
 import { ArmThrowsPanel } from "@/components/hammer/ArmThrowsPanel";
