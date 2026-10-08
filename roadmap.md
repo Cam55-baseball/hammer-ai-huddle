@@ -1,3 +1,13 @@
+# OWNER PLAN CARD FIXES — 2026-10-08 — Ready to publish: no (work in progress)
+Top priority before Xcode. No publishing or cron changes. Only named defensive-role and tissue-prep changes may alter plans.
+- [ ] 1–5 Full titles, exact doses, exercise-specific basics, open applicable logs, closed How to do it; remove rules and barefoot advancement criteria.
+- [ ] 6 Defensive-role audit and regression tests.
+- [ ] 7–8 Level of play in Before you start; body load before order/rhythm.
+- [ ] 9 Preserve screen/card/drafts on return; 30s/5min/1h phone and published checks.
+- [ ] 10 All-dose numbers, units and plurals audit and automated checks.
+- [ ] 11 Tissue preparation first in every warm-up; eight-week all-role/age/sport proof.
+- [ ] Phone screenshots 360/390 closed/open every card type, full suite, unchanged-plan comparison, cleanup.
+
 # S1 OWNER ANSWERS (2026-10-08 20:05 UTC) — Ready to publish: yes (website); iPhone/iPad needs Xcode build 1.0 (4)
 - Sign in with Apple: FOUND it was not switched on in the backend at all (Apple's button failed on web and app). Now switched on through Lovable's managed sign-in. Web button uses it; the app opens hammersmodality.org/auth/native-apple in an in-app sheet, Apple signs in there, and the sign-in is handed back to the app on com.hammersmodality.app://auth/callback (no extra redirect setting needed — the sheet returns to the website itself). Proven: live hammersmodality.org hand-off reaches appleid.apple.com; preview page starts the flow; 10/10 sign-in tests. Needs PUBLISH for the website page; only provable on build 1.0 (4): the sheet opening in the app, returning to the app, and landing signed in. Optional: if you later want the app's return link in the redirect list, it is More → Cloud → Users → Auth settings → Advanced → Redirect URLs.
 - Reviewer accounts created (owner-only tool create-review-accounts): adult hammersmodality+applereview@gmail.com (born 1995, Golden 2Way all modules, Hammers Today started, no gates) and under-13 hammersmodality+applereview12@gmail.com (born 2014, parent-controlled, test parent consent + payment marked, not paused). Both: system/test accounts, hidden from scouts, rankings and search, excluded from analytics and training data. Passwords were emailed ONLY to hammersmodality@hammersmodality.org, subject "[PRIVATE] Apple App Review demo account sign-ins" (use the newest one; re-running the tool replaces them). Proof: legal-screens/apple-review-accounts/ (iPad size; Parent controls and Delete account found).
