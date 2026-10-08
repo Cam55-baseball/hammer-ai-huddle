@@ -1,4 +1,13 @@
-# Ready to publish: no — .org email verification and actual broker/video playback proof remain open (2026-10-08)
+# Ready to publish: no — `.org` email sender not verified; player-role proof, real preview sign-in and demo playback not proved (2026-10-08 H4)
+
+## H4 final — 2026-10-08 01:14 UTC
+- **Email test result:** FAILED. Resend key works (domains API HTTP 200), but only `hammersmodality.com` is listed (status `failed`); sending from `noreply@hammersmodality.org` returns HTTP 403 `validation_error` "The hammersmodality.org domain is not verified." Unsent problem reports: 0. Owner must verify `.org` in Resend.
+- **UI changes (all done, no edits needed in H4):** 1 details open in popups; 2 one Speed + one Conditioning card, Baserunning IQ as mental work in Before you start (Base Stealer still 5Tool/Golden 2Way only); 3 Key Rules drawer removed, card rules inside popups; 4 floating practice button removed, logging inside applicable popups; 5 Finish your profile in Before you start (3-day reminder kept); 6 only today's cards, no per-card countdowns, "Tomorrow's plan opens in" kept. Screenshots (360/390 px): `/tmp/browser/owner-ui-h2/fixture-plan-*.png`, `fixture-before-*.png`, `fixture-popup-*-*.png` (owner session with fixtures, not a player).
+- [x] All tests: 280 files, 2,454/2,454 passed (includes phase-signal scan and 8-week tissue-cost invariants). Log `/tmp/owner-ui-h4-all.log`.
+- [x] Daily job: latest run `built`, plan date 2026-10-07, 21:00:22 UTC. No new run triggered (cron untouched).
+- [ ] NOT rerun in H4: 160-page phone audit and real form sign-in on preview/published site (last successful real sign-in proof and 165-page audit are earlier results); embedded-preview broker reproduction; demo playback.
+- No publish, deploy, migration or cron change; no test data created.
+
 
 ## H3 continuation — 2026-10-08 01:13 UTC
 - [x] Items 1–6 unchanged since H2 (no code, database, deploy, migration, cron or publish changes in H3; no test data created, so no cleanup).
