@@ -1,7 +1,12 @@
-# Ready to publish: YES (2026-10-08 K, owner decisions + corrections)
-Reason: all changes this round are wording/switch/test only; checks pass. Email still waits on 3 DNS records (reports save first and re-send automatically), so it does not block.
-## K1 recheck (02:45 UTC)
-- One-tap logging: still ON for everyone. Rest/Push/Skip wording: restored (unchanged since K). Verification re-triggered: Resend still PENDING; all 3 records (resend._domainkey TXT, rsend CNAME, send CNAME) still MISSING in public DNS. TEST row f53996f5… still failed — re-sends automatically once verified. No new test data.
+# Ready to publish: YES (2026-10-08 K2, final)
+Reason: every owner decision is applied and proven; all checks pass. Email still waits on 3 DNS records (reports save first and re-send automatically), so it does not block.
+
+## K2 — final verification of the OWNER DECISIONS + CORRECTIONS
+- **One-tap logging proof:** switch `one_tap_logging` = `all` in the live database (checked directly), so it is ON for everyone. Code proof: WkOneTapLog renders only when that switch is on, and the 3/3 tests pass (Done → full sets saved + card completed; Skipped → 0 sets + card skipped; Cut short → tagged cut short + card completed). Day-end rule proven earlier on the real database with the real day-end job (Done=completed, Skipped=skipped, Cut short=completed, nothing logged=MISSED), all test rows undone.
+- **Rest/Push/Skip restore proof:** the clarified wording is live in all four places — morning check-in (MorningDayIntent), day card (DayControlCard), day banner (DayStateBanner): "Rest: take it easier", "Push: commit to the plan", "Skip: sit today out", each with a one-line explanation. "PUSH DAY — EXTRA LOAD" / "extra output expected" appear nowhere (searched source; absent on screen at 360/390 px). Screenshots: /mnt/documents/owner-checks/intent_360.png, intent_390.png.
+- **#3/#4 before-and-after notes:** #3 ProgressDashboard — since Oct 6 the only lasting change is one blank line (a season counter was added and removed again Oct 7; the report-card box was NOT removed — the earlier description was wrong); the page looks the same. #4 ProgressLanding — the only change is the season counter ("Season — Offseason Q1 — Strength & Capacity") above the topic buttons. Before/after screenshots: /mnt/documents/owner-checks/progress_before_after_360.png and _390.png. Both still await the owner's keep/undo decision.
+- **Resend records (K2 recheck):** public DNS lookup run again — all 3 records still MISSING: (1) TXT `resend._domainkey` = p=MIGfMA0G… (DKIM), (2) CNAME `rsend` → rsend.forge.rmta.net, (3) CNAME `send` → send.forge.rmta.net. Domain status in Resend: pending. Full values + step-by-step name.com instructions are in the K3 section below. TEST report f53996f5-6df5-477b-96c4-5dbff22e3850 still failed/not sent — re-sends automatically once the domain verifies (next report, opening Problem reports, or the "Retry failed emails" button).
+- No publish, no cron changes, no deploys, no new test data this round.
 
 
 ## K1 — the 10 owner-to-confirm changes: decisions applied
