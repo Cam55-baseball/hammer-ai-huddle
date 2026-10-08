@@ -12,6 +12,16 @@ const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
 const money = (cents: number | null, cur: string) => new Intl.NumberFormat("en-US", { style: "currency", currency: cur.toUpperCase() }).format((cents ?? 0) / 100);
 const SETTINGS = "https://hammersmodality.org/settings/legal";
+// Digest of Vault secret `wk_daily_plan_job_token` (same as wk-daily-plan-job); the token is never logged.
+const JOB_TOKEN_SHA256 = "92a0d7f956decec62aeaf2c309a150a936afda73572d8755f9b3999fc91325c9";
+async function jobTokenOk(t: string | null): Promise<boolean> {
+  if (!t) return false;
+  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+  const hex = [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  let diff = hex.length ^ JOB_TOKEN_SHA256.length;
+  for (let i = 0; i < Math.min(hex.length, JOB_TOKEN_SHA256.length); i++) diff |= hex.charCodeAt(i) ^ JOB_TOKEN_SHA256.charCodeAt(i);
+  return diff === 0;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -21,9 +31,10 @@ Deno.serve(async (req) => {
   const mode = body.mode === "price_change" ? "price_change" : "renewal";
   const dryRun = body.dry_run !== false;
 
-  // Who may call: the scheduler (service key) or an owner/admin.
+  // Who may call: the scheduler (service key, or the same Vault job token the daily plan job uses —
+  // only its SHA-256 digest lives here) or an owner/admin.
   const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
-  let staff = token === service;
+  let staff = token === service || (await jobTokenOk(req.headers.get("x-job-token")));
   if (!staff) {
     const { data: u } = await admin.auth.getUser(token);
     if (u?.user) {

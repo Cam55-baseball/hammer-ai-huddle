@@ -10,7 +10,7 @@ export interface TeenWaiverState {
 }
 
 export async function callTeenWaiver<T = any>(action: string, body: Record<string, unknown> = {}): Promise<T> {
-  const { data, error } = await supabase.functions.invoke("teen-parent-waiver", { body: { action, origin: window.location.origin, ...body } });
+  const { data, error } = await supabase.functions.invoke("teen-parent-waiver", { body: { action, v: 2, origin: window.location.origin, ...body } });
   if (error) {
     let code = "failed";
     try { code = (await (error as any).context?.json?.())?.error ?? code; } catch { /* no body */ }
