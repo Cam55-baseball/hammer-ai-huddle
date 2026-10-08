@@ -16,7 +16,12 @@ const cors = {
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
 const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i;
-const ORIGINS = ["https://hammersmodality.org", "https://www.hammersmodality.org", "https://hammers-modality.lovable.app", "http://localhost:8080"];
+// Real emails always link to the live site. Any other origin (preview, local) is a TEST:
+// it goes only to the owner inbox, the subject starts with [TEST], and the link uses that origin.
+const LIVE = "https://hammersmodality.org";
+const LIVE_ORIGINS = [LIVE, "https://www.hammersmodality.org", "https://hammers-modality.lovable.app"];
+const TEST_ORIGINS = ["https://id-preview--cefbf3ce-1234-420d-b93f-77c839c5731b.lovable.app", "http://localhost:8080"];
+const OWNER_INBOX = "hammersmodality@hammersmodality.org";
 const SLUG = "minor-waiver";
 
 async function sha256(s: string) {
@@ -31,7 +36,9 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const action = String(body.action ?? "");
-    const origin = ORIGINS.includes(String(body.origin)) ? String(body.origin) : ORIGINS[0];
+    const reqOrigin = String(body.origin ?? "");
+    const isTest = TEST_ORIGINS.includes(reqOrigin) || body.test === true;
+    const origin = isTest ? (TEST_ORIGINS.includes(reqOrigin) ? reqOrigin : TEST_ORIGINS[0]) : LIVE;
 
     const switchOnFor = async (uid: string) => {
       const { data } = await admin.from("wk_feature_switches").select("mode, allowlist, updated_by").eq("feature_key", "legal_v2").maybeSingle();
@@ -43,21 +50,21 @@ Deno.serve(async (req) => {
       const token = crypto.randomUUID() + crypto.randomUUID().replace(/-/g, "");
       const exp = new Date(now.getTime() + LINK_VALID_DAYS * 86_400_000).toISOString();
       await admin.from("teen_waiver_requests").update({ token_hash: await sha256(token), token_expires_at: exp, updated_at: now.toISOString() }).eq("id", row.id);
-      const link = `${origin}/parent-waiver/${token}`;
+      const link = `${origin}/parent-sign/${token}`;
       const key = Deno.env.get("RESEND_API_KEY");
       if (!key) return { status: "no_key" };
       const who = esc(teenFirst || "Your player");
       const r = await fetch("https://api.resend.com/emails", {
         method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: EMAIL_FROM, reply_to: EMAIL_REPLY_TO, to: [row.parent_email],
-          subject: reminder ? `Reminder: ${teenFirst || "your player"} needs your signature` : `${teenFirst || "Your player"} needs your signature to train`,
+          from: EMAIL_FROM, reply_to: EMAIL_REPLY_TO, to: [isTest ? OWNER_INBOX : row.parent_email],
+          subject: (isTest ? "[TEST] " : "") + (reminder ? `Reminder: ${teenFirst || "your player"} needs your signature` : `${teenFirst || "Your player"} needs your signature to train`),
           html: `<p>Hi,</p><p>${who} listed you as their parent or guardian on Hammers Modality, a baseball and softball training app.</p><p>Because they are under 18, a parent or guardian must read and sign a short waiver before ${who} can use the physical training plan.</p><p><a href="${link}">Read and sign the waiver</a></p><p>This link works for ${LINK_VALID_DAYS} days. If you don't know this player, ignore this email.</p><p>Hammers Modality LLC · 15985 Preserve Marketplace #1154, Odessa, FL 33556</p>`,
         }),
       });
       const t = await r.text();
       if (!r.ok) { console.error("[teen-parent-waiver] resend", r.status, t); return { status: "failed", detail: `${r.status} ${t.slice(0, 200)}` }; }
-      return { status: "sent" };
+      return { status: "sent", test: isTest, link_host: new URL(link).host, ...(isTest ? { test_link: link } : {}) };
     };
 
     // ---------- parent (link) ----------
@@ -65,12 +72,16 @@ Deno.serve(async (req) => {
       const token = String(body.token ?? "");
       if (token.length < 40) return json({ error: "invalid_link" }, 400);
       const { data: row } = await admin.from("teen_waiver_requests").select("*").eq("token_hash", await sha256(token)).maybeSingle();
-      if (!row || !row.token_expires_at || new Date(row.token_expires_at) < now) return json({ error: row?.signed_at ? "already_signed" : "invalid_link" }, 400);
-      if (row.signed_at) return json({ error: "already_signed" }, 400);
+      const bad = (st: string) => action === "view" ? json({ state: st }) : json({ error: st }, 400);
+      // Friendly states, checked in this order: unknown → expired → already signed → feature not active.
+      if (!row) return bad("unknown");
+      if (!row.token_expires_at || new Date(row.token_expires_at) < now) return bad("expired");
+      if (row.signed_at) return bad("already_signed");
+      if (!(await switchOnFor(row.teen_user_id))) return bad("not_active");
       const { data: doc } = await admin.from("legal_documents").select("slug, version, title, body, approved").eq("slug", SLUG).order("version", { ascending: false }).limit(1).maybeSingle();
       const { data: p } = await admin.from("profiles").select("first_name").eq("id", row.teen_user_id).maybeSingle();
       if (!doc) return json({ error: "not_available" }, 400);
-      if (action === "view") return json({ doc, teen_first_name: p?.first_name ?? null });
+      if (action === "view") return json({ state: "ok", doc, teen_first_name: p?.first_name ?? null });
 
       const name = String(body.name ?? "").trim().slice(0, 120);
       const relationship = String(body.relationship ?? "").trim().slice(0, 40);
@@ -86,7 +97,7 @@ Deno.serve(async (req) => {
         details: { flow: "teen_13_17_parent_link", relationship, confirmed_18_plus: true, parent_email: row.parent_email, parent_phone: row.parent_phone, drawn_signature_png: sig },
       }).select("id, recorded_at").single();
       if (error) throw error;
-      await admin.from("teen_waiver_requests").update({ signed_at: now.toISOString(), consent_record_id: rec.id, token_hash: null, token_expires_at: null, updated_at: now.toISOString() }).eq("id", row.id);
+      await admin.from("teen_waiver_requests").update({ signed_at: now.toISOString(), consent_record_id: rec.id, updated_at: now.toISOString() }).eq("id", row.id);
       return json({ ok: true, recorded_at: rec.recorded_at });
     }
 
@@ -96,7 +107,7 @@ Deno.serve(async (req) => {
     if (!u?.user) return json({ error: "unauthorized" }, 401);
     const uid = u.user.id;
 
-    if (action === "staff_list" || action === "staff_resend") {
+    if (action === "staff_list" || action === "staff_resend" || action === "staff_test_email" || action === "staff_expire") {
       const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", uid);
       if (!(roles ?? []).some((r: any) => r.role === "owner" || r.role === "admin")) return json({ error: "not_allowed" }, 403);
       if (action === "staff_list") {
@@ -106,8 +117,13 @@ Deno.serve(async (req) => {
         const names = new Map((ps ?? []).map((p: any) => [p.id, `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim()]));
         return json({ rows: (data ?? []).map((r) => ({ ...r, teen_name: names.get(r.teen_user_id) || null, locked: isLocked({ signed_at: null, grace_until: r.grace_until }, now) })) });
       }
+      if (action === "staff_expire") {
+        await admin.from("teen_waiver_requests").update({ token_expires_at: new Date(now.getTime() - 60_000).toISOString(), updated_at: now.toISOString() }).eq("teen_user_id", String(body.teen_user_id));
+        return json({ ok: true });
+      }
       const { data: row } = await admin.from("teen_waiver_requests").select("*").eq("teen_user_id", String(body.teen_user_id)).maybeSingle();
       if (!row?.parent_email || row.signed_at) return json({ error: "nothing_to_send" }, 400);
+      if (action === "staff_test_email" && !isTest) return json({ error: "test_needs_preview_origin" }, 400);
       const { data: p } = await admin.from("profiles").select("first_name").eq("id", row.teen_user_id).maybeSingle();
       const sent = await sendLink(row, p?.first_name ?? "", false);
       await admin.from("teen_waiver_requests").update({ last_sent_at: now.toISOString(), send_count: row.send_count + 1 }).eq("id", row.id);

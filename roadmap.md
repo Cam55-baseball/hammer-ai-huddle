@@ -1,3 +1,20 @@
+# URGENT FIX — parent-signature email opened a 404 (2026-10-08 17:00 UTC)
+
+**What happened.** The email was the 13–17 parent-waiver email ("…needs your signature to train"), from noreply@hammersmodality.org through Resend, sent at N1 to hammersmodality@hammersmodality.org. Its link was `https://hammersmodality.org/parent-waiver/<code>`. It showed "page not found" for two reasons. First, the signing page exists only in the unpublished preview, so the live site (still the old build) shows its own not-found page. Second, the test entry behind that link was deleted during cleanup. The live host itself is fine: deep links return the app normally (checked: /parent-sign/… and /parent-waiver/… both answer 200).
+
+**Fixed (backend redeployed; screens wait for your publish):**
+- [x] The signing page always exists, whatever legal_v2 is set to: /parent-sign/<code> (new address used in emails), with /parent-waiver/<code> kept so older links still open. It never shows not-found. Friendly messages: valid → signing form; expired → "This signing link has expired" + how to get a new one (the teen taps Resend link, or email us); unknown/replaced → same help; already signed → "already signed, nothing else to do"; feature not open yet → "Online parent signing isn't open yet".
+- [x] Real emails always link to https://hammersmodality.org. Tests (preview or local) go only to hammersmodality@hammersmodality.org, start with **[TEST]**, and link to the preview address. Real users can never get a test email.
+- [x] Cleanup no longer deletes sent requests: links are expired instead, so they show the friendly expired message. Signing keeps the link, so it shows "already signed".
+- [x] Other email links checked: renewal reminders → /settings/legal (sends only once legal_v2 is on for everyone); under-13 guardian notice → help desk; parent invite → the address it was sent from (/accept-parent-invite); problem reports and parent receipts contain no links. All of these load on the live site (200). Note: /settings/legal opens on the live site only after you publish.
+
+**Proof:** ONE fresh [TEST] email sent to hammersmodality@hammersmodality.org (Resend: sent; link host = the preview address, path /parent-sign/…). That link's page opened at 360 and 390 px. A test parent signed at 390 px, and the record saved (name, relationship, 18+, signature), so the test teen's plan is unlocked in the database. The link then showed "already signed", and after expiring it, "expired", at both sizes. No overflow, no page errors. Screenshots: Files → legal-screens/teen-waiver-fix/ (7). Legal tests 12/12, build OK.
+- Gap: I couldn't open the plan as the test teen (signing in as a test account needs your approval, which isn't available here). The unlock is shown by the saved record and the unlocked entry, not by a teen screenshot.
+- Cleanup: legal_v2 OFF (empty list), test birthdate removed, test signature record removed. The one expired test entry is kept on purpose, so your [TEST] link shows the friendly expired message.
+- **After you publish:** links in emails open the signing page on hammersmodality.org. The N1 email you received will show "We couldn't find this signing link" + how to get a new one, not a 404.
+
+---
+
 # LEGAL PAGES & CONSENT (legal_v2) — 2026-10-08
 
 **Ready for lawyer review: YES (N2 final, 2026-10-08 16:50 UTC), including the 13–17 parent waiver.** Every draft is written and built into the app behind the `legal_v2` switch, which is **OFF** (empty list, confirmed). Users see nothing new.
