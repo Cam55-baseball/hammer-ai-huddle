@@ -1,5 +1,10 @@
 # Ready to publish: no — email still fails (hammersmodality.org not verified in Resend); redesign's inner card content and data visuals only partly done (2026-10-08 H5)
 
+## I2 (2026-10-08 01:33 UTC)
+- Visual upgrade, card interiors (step 1): exercise rows now card-surface, bigger names, bold tabular amounts, 44 px "How?"/"Can't do it" buttons, calm done state. Screen-only (1 file); 52/52 card tests pass; plans unchanged.
+- Still open: notices restyle, pitch-count meter, sprint trend, readiness scale; email (.org unverified).
+- Ready to publish: no.
+
 ## I1 (2026-10-08 01:31 UTC)
 - Email: retried mailer for TEST row f53996f5-6df5-477b-96c4-5dbff22e3850 → still failed (sent 0, failed 1); .org not verified in Resend. Waiting on owner.
 - UI changes 1–6, countdown accuracy, 10-file list: done (see H5). Visual upgrade: plan done; card interiors, pitch-count meter, sprint trend, readiness scale still open.
