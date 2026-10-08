@@ -36,6 +36,13 @@
       "when": 1791471756828,
       "tag": "0004_legal_v2_public_switch_read",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791477102224,
+      "tag": "0005_teen_parent_waiver",
+      "breakpoints": true
     }
   ]
 }
