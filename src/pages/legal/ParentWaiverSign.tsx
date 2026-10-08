@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { LegalMarkdown } from "@/components/legal/LegalMarkdown";
 import { SignaturePad } from "@/components/parent/SignaturePad";
 import { callTeenWaiver, TEEN_WAIVER_ERRORS } from "@/lib/legal/teenWaiver";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const NEW_LINK = "To get a new link, ask your player to open the Hammers Modality app and tap \"Resend link\" on their training plan, or email hammersmodality@hammersmodality.org.";
 const LINK_STATES: Record<string, string> = {
@@ -19,7 +20,28 @@ const LINK_STATES: Record<string, string> = {
 
 const RELATIONSHIPS = ["Mother", "Father", "Legal guardian", "Other natural guardian"];
 
+/** Never blank: any render error shows a friendly message with a way forward. */
 export default function ParentWaiverSign() {
+  return (
+    <ErrorBoundary label="parent-waiver" fallback={() => (
+      <Shell><Notice text={`Sorry, this page couldn't load. Try opening the link again. ${NEW_LINK}`} /></Shell>
+    )}>
+      <ParentWaiverSignInner />
+    </ErrorBoundary>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <main className="mx-auto w-full max-w-md space-y-5 px-5 pb-10 pt-[calc(1.25rem+var(--safe-top,0px))]">
+      <h1 className="text-2xl font-semibold">Parent or guardian waiver</h1>
+      {children}
+    </main>
+  );
+}
+const Notice = ({ text }: { text: string }) => <div role="status" className="rounded-lg border p-4 text-sm">{text}</div>;
+
+function ParentWaiverSignInner() {
   const { token = "" } = useParams();
   const [doc, setDoc] = useState<{ title: string; body: string } | null>(null);
   const [teen, setTeen] = useState<string | null>(null);
@@ -35,10 +57,10 @@ export default function ParentWaiverSign() {
   useEffect(() => {
     callTeenWaiver<{ state: string; doc?: any; teen_first_name?: string | null }>("view", { token })
       .then((r) => {
-        if (r.state === "ok" && r.doc) { setDoc(r.doc); setTeen(r.teen_first_name ?? null); }
-        else setFatal(LINK_STATES[r.state] ?? LINK_STATES.unknown);
+        if (r?.state === "ok" && r.doc?.body) { setDoc(r.doc); setTeen(r.teen_first_name ?? null); }
+        else setFatal(LINK_STATES[r?.state] ?? LINK_STATES.unknown);
       })
-      .catch(() => setFatal(LINK_STATES.unknown));
+      .catch((e) => setFatal(LINK_STATES[e?.code] ?? `We couldn't open this link right now. Check your connection and try again. ${NEW_LINK}`));
   }, [token]);
 
   const ok = name.trim().split(/\s+/).length >= 2 && !!rel && adult && !!sig;
@@ -49,10 +71,11 @@ export default function ParentWaiverSign() {
     finally { setBusy(false); }
   };
 
+  const loading = !doc && !fatal && !done;
   return (
-    <main className="mx-auto w-full max-w-md space-y-5 px-5 pb-10 pt-[calc(1.25rem+var(--safe-top,0px))]">
-      <h1 className="text-2xl font-semibold">Parent or guardian waiver</h1>
-      {fatal && <div role="status" className="rounded-lg border p-4 text-sm">{fatal}</div>}
+    <Shell>
+      {loading && <p role="status" className="text-sm text-muted-foreground">Loading the waiver…</p>}
+      {fatal && <Notice text={fatal} />}
       {done && <div role="status" className="rounded-lg border p-4"><p className="font-semibold">Signed. Thank you.</p><p className="mt-1 text-sm text-muted-foreground">{teen ?? "Your player"}'s training plan is now open. You can close this page.</p></div>}
       {doc && !done && (
         <>
@@ -71,6 +94,6 @@ export default function ParentWaiverSign() {
           <Button className="h-12 w-full text-base" disabled={!ok || busy} onClick={sign}>{busy ? "Saving…" : "Sign the waiver"}</Button>
         </>
       )}
-    </main>
+    </Shell>
   );
 }

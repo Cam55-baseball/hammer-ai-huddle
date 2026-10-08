@@ -1,3 +1,48 @@
+# URGENT FIX 2 — parent-signature page was blank below the title (2026-10-08 ~19:00 UTC)
+
+**Ready to publish: YES.** The fix is in the preview and the backend. The live site still runs the 16:52 build, which is older than this fix. Publishing changes nothing for players because legal_v2 is OFF. It only makes the signing page show its messages properly.
+
+**Why it was blank.** The live site (published 16:52) still had the *older* signing page. The backend had already been updated and answered with a new reply format, for example "online signing isn't open yet". The older page didn't recognise that reply, so it showed the title and nothing else. There was no crash, the waiver was not blocked by permissions, and nothing was missing from the backend. /parent-sign/… also showed not-found on live because that address only exists in the unpublished build.
+
+**Fixed:**
+- [x] Backend (redeployed): newer pages get the new replies. Older pages (the current live site) get a reply they understand, so live shows "This link has expired or isn't valid. Ask the player to send a new one." instead of a blank page. This was checked on hammersmodality.org at 360/390.
+- [x] Signing page: wrapped in an error catcher with a friendly message. It shows "Loading…" while it waits. Any unexpected or broken reply now shows a friendly message, so the page can't go blank.
+- [x] [TEST] emails always link to the preview address, never to localhost.
+
+**Proven in the preview at 360 and 390 px, signed out, with no page errors** (Files → `legal-screens/waiver-blank-fix/`, 39 images):
+- Valid link: full waiver, uppercase statutory notice and signing form (`parent_valid_*`, `parent_form_390`, `parent_filled_390`).
+- Signed (`parent_signed_390`), already used (`link_used_*`), expired (`link_expired_*`), unknown (`link_unknown_*`) and not yet active (`link_not_active_*`).
+- Test teen (hidden test player demo16ss, signed in with the Round 5 owner-only method): updated-terms screen (`teen_agree_390`), existing teen in the 14-day grace period (`teen_grace_*`), grace period over (`teen_grace_over_*`), new teen locked (`teen_new_locked_*`), waiting for the parent (`teen_waiting_*`), then **plan unlocked after the parent signed** (`teen_unlocked_*`). The saved record: signer "Pat Tester", role parent/guardian, relationship Mother, 18+ confirmed.
+- Checkout auto-renew box, unchecked, with the button disabled until ticked (`checkout_*`).
+- Under-13 parent signup up to the waiver step with the boxed uppercase notice (`u13_block_*`, `u13_step0_*`, `u13_waiver_*`, `u13_notice_*`). Nothing was submitted.
+- Live site, older page, now shows a message (`live_old_page_*`).
+- ONE fresh [TEST] email was sent to hammersmodality@hammersmodality.org (Resend: sent, link = preview address). The earlier [TEST] email from this round linked to localhost and can be ignored.
+
+**Cleanup:** legal_v2 OFF with an empty list. All 6 test agreements removed (0 consent records), and the protection against edits was turned back on. Both emailed test links are kept but expired, so they show the friendly "expired" message. The test teen's signature was cleared.
+
+**What you must publish:** just the normal web **Publish → Update**. That puts the new signing page live at /parent-sign/<code> and /parent-waiver/<code>, with the error catcher and the newer reply handling. The backend is already live. No iPhone rebuild is needed for email links (they open in the browser).
+
+**Renewal reminders — schedule for you to apply (NOT applied).** The reminder job now accepts the same saved Vault key as the daily plan job; I checked this once and it was accepted (it skipped because legal_v2 is OFF). Runs daily at 14:00 UTC = 10 a.m. Eastern in summer (9 a.m. in winter):
+```sql
+select cron.schedule(
+  'renewal-reminders-daily',
+  '0 14 * * *',
+  $$ select net.http_post(
+       url := 'https://wysikbsjalfvjwqzkihj.supabase.co/functions/v1/renewal-reminders',
+       body := '{"mode":"renewal","dry_run":false}'::jsonb,
+       headers := jsonb_build_object('Content-Type','application/json',
+         'x-job-token', (select decrypted_secret from vault.decrypted_secrets where name = 'wk_daily_plan_job_token')),
+       timeout_milliseconds := 60000) $$
+);
+```
+It sends nothing until legal_v2 is ON for everyone. Each reminder goes out once per renewal.
+
+**Refund conflict — word for word, for you to choose:**
+- Checkout (`src/pages/Checkout.tsx`): **"7-day performance guarantee — no risk"** / "If you don't see measurable progress, we'll refund you."
+- Draft Subscription Policy, §6 Refunds: "- We do not give partial refunds for unused time, except where the law requires. - If you were charged after you cancelled, or charged in error, email us within 60 days and we will refund it. - Apple purchases are refunded through Apple. [LAWYER: confirm refund terms and any state-specific cooling-off rules.]"
+
+---
+
 # URGENT FIX — parent-signature email opened a 404 (2026-10-08 17:00 UTC)
 
 **What happened.** The email was the 13–17 parent-waiver email ("…needs your signature to train"), from noreply@hammersmodality.org through Resend, sent at N1 to hammersmodality@hammersmodality.org. Its link was `https://hammersmodality.org/parent-waiver/<code>`. It showed "page not found" for two reasons. First, the signing page exists only in the unpublished preview, so the live site (still the old build) shows its own not-found page. Second, the test entry behind that link was deleted during cleanup. The live host itself is fine: deep links return the app normally (checked: /parent-sign/… and /parent-waiver/… both answer 200).

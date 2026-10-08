@@ -38,7 +38,8 @@ Deno.serve(async (req) => {
     const action = String(body.action ?? "");
     const reqOrigin = String(body.origin ?? "");
     const isTest = TEST_ORIGINS.includes(reqOrigin) || body.test === true;
-    const origin = isTest ? (TEST_ORIGINS.includes(reqOrigin) ? reqOrigin : TEST_ORIGINS[0]) : LIVE;
+    // Test links always open the preview (never localhost, which only exists in the build sandbox).
+    const origin = isTest ? TEST_ORIGINS[0] : LIVE;
 
     const switchOnFor = async (uid: string) => {
       const { data } = await admin.from("wk_feature_switches").select("mode, allowlist, updated_by").eq("feature_key", "legal_v2").maybeSingle();
@@ -72,7 +73,12 @@ Deno.serve(async (req) => {
       const token = String(body.token ?? "");
       if (token.length < 40) return json({ error: "invalid_link" }, 400);
       const { data: row } = await admin.from("teen_waiver_requests").select("*").eq("token_hash", await sha256(token)).maybeSingle();
-      const bad = (st: string) => action === "view" ? json({ state: st }) : json({ error: st }, 400);
+      // v2 pages read { state }. Pages built before 2026-10-08 17:00 (the live site until the owner
+      // publishes) only understand { error } with codes invalid_link / already_signed — answer them in
+      // that shape so they show a message instead of a blank page.
+      const v2 = body.v === 2;
+      const legacy = (st: string) => (st === "already_signed" ? "already_signed" : "invalid_link");
+      const bad = (st: string) => action === "view" && v2 ? json({ state: st }) : json({ error: v2 ? st : legacy(st) }, 400);
       // Friendly states, checked in this order: unknown → expired → already signed → feature not active.
       if (!row) return bad("unknown");
       if (!row.token_expires_at || new Date(row.token_expires_at) < now) return bad("expired");
