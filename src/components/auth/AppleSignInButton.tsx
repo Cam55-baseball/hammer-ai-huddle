@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { useToast } from "@/hooks/use-toast";
 import { describeOAuthError } from "@/lib/auth/appleIdentity";
 import { isNativeApp } from "@/lib/auth/nativeSessionStore";
@@ -26,7 +26,7 @@ export const AppleSignInButton = ({ redirectTarget, disabled }: AppleSignInButto
     try {
       // iPhone/iPad app: in-app browser sheet, never the Safari app (Guideline 4).
       if (isNativeApp()) {
-        const { error } = await startNativeOAuth("apple", redirectTarget, "name email");
+        const { error } = await startNativeOAuth("apple", redirectTarget);
         if (error) {
           toast({ title: "Couldn't sign in with Apple", description: describeOAuthError("apple", error), variant: "destructive" });
         }
@@ -37,21 +37,19 @@ export const AppleSignInButton = ({ redirectTarget, disabled }: AppleSignInButto
       const callback = new URL("/auth/callback", window.location.origin);
       if (redirectTarget) callback.searchParams.set("redirect", redirectTarget);
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "apple",
-        options: {
-          redirectTo: callback.toString(),
-          scopes: "name email",
-        },
-      });
-
-      if (error) {
+      const result = await lovable.auth.signInWithOAuth("apple", { redirect_uri: callback.toString() });
+      if (result.error) {
         toast({
           title: "Couldn't sign in with Apple",
-          description: describeOAuthError("apple", error),
+          description: describeOAuthError("apple", result.error),
           variant: "destructive",
         });
         setIsLoading(false);
+        return;
+      }
+      if (!result.redirected) {
+        window.location.assign(callback.pathname + callback.search);
+        return;
       }
       // On success the browser navigates to Apple; leave the button busy.
     } catch (error) {

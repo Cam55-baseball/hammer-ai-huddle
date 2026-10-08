@@ -1,5 +1,6 @@
 // Force rebuild to clear stale module references - Dec 2025
 import { RetiredProgramRoute } from "@/components/archive/RetiredProgramRoute";
+import NativeAppleSignIn from "./pages/NativeAppleSignIn";
 import { Suspense, useEffect, ComponentType } from "react";
 import {
   lazyWithRetry,
@@ -347,6 +348,7 @@ const App = () => {
               <Route path="/terms" element={<Terms />} />
               <Route path="/support" element={<Support />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/auth/native-apple" element={<NativeAppleSignIn />} />
               <Route path="/complete-profile" element={<CompleteProfileName />} />
 
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
