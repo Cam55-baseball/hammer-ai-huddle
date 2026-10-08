@@ -1,5 +1,9 @@
-# Ready to publish: YES (2026-10-08 J1)
-Reason: all checks pass. Email is not a blocker — every problem report is saved first and re-sent automatically.
+# Ready to publish: YES (2026-10-08 J2, final)
+Reason: every pre-publish check passes — 2,497/2,497 tests, 0 phase mismatches, 372-load phone audit (360/390 px) with 0 crashes/errors, daily job proven, plans identical. Email is not a blocker: reports are saved first and re-sent automatically once the domain verifies.
+
+## J2 final email status
+- hammersmodality.org is in Resend, status PENDING: DKIM pending, SPF rsend pending, SPF send not_started. The owner must add the 3 DNS records at the domain's DNS provider; then verification completes and failed emails (incl. TEST row f53996f5-6df5-477b-96c4-5dbff22e3850) retry automatically. Owner "Retry failed emails" button also available.
+- Waiting on owner: add the Resend DNS records; keep/undo the 10 changes below; OK to retire the five old programs (programs_retired switch, OFF).
 
 ## J1 email recheck (02:26 UTC)
 - hammersmodality.org now EXISTS in Resend (added 02:21 UTC) — progress.
