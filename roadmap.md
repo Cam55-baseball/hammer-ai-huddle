@@ -31,7 +31,7 @@
 5. Apply the renewal-reminder schedule above.
 6. Apple age-range / parent approval: needs your Xcode build (steps in docs/legal/apple-app-store.md).
 7. OK to sign in as test accounts (under-13 parent, a paying player) to screenshot those two flows.
-8. Resend verification is still pending. Renewal emails and the TEST report (f53996f5…) send once it's verified.
+~~8. Resend verification~~ — **DONE (M5, 2026-10-08):** Resend shows hammersmodality.org **verified**. The TEST problem report (f53996f5-6df5-477b-96c4-5dbff22e3850, "TEST — owner email check") was retried through the app's normal mail path and now shows email_status = sent, email_sent_at = 2026-10-08 15:58 UTC (3 attempts). 0 reports remain unsent. The row is left in place so you can check it, and the email should be in hammersmodality@hammersmodality.org's inbox. Renewal reminders and parent receipts will now send normally.
 
 ---
 
