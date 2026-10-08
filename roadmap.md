@@ -1,3 +1,19 @@
+# Ready to publish: YES for the program retirement (2026-10-08) — overall still blocked only by the items under "Waiting on owner"
+Reason: the five programs are retired and verified (tests 2,506/2,506, 330 phone loads clean, help chat proven, daily job healthy). The earlier open items (player-account proof, real password sign-in proof, Resend DNS) are unchanged and listed below; none are caused by this change.
+
+## Program retirement (owner-approved 2026-10-08)
+- Switch `programs_retired` = **all** (live). Help chat (ai-helpdesk) redeployed.
+- **What disappeared and where:** sidebar menu, hub tiles (Complete Pitcher / Complete Hitter / Complete Player / 5Tool / Golden 2Way), dashboard plan cards, pricing + checkout + Select Modules text, Game Plan tasks, calendar entries, demo tour entries (plus demo labels renamed: "Speed Work", "Strength Work"), Help Desk FAQ, help chat, Hammers Today's speed button (now "Open Hammers Today"), running summary label ("Speed Sessions"). Old addresses (/speed-lab, /explosive-conditioning, /the-unicorn, /production-lab, /production-studio) quietly open the dashboard — no banner (checked at 360 and 390 px; screenshots `owner-checks/direct_360.png`, `direct_390.png`). Menus/tiles now stay hidden even while a page loads (no flash).
+- **Page-text scan:** 165 pages × 360/390 px = 330 loads, 0 crashes, 0 errors, 0 sideways overflow, 0 program names in visible text, 0 links to old pages. Translations: the 8 language files still contain the old strings, but nothing shows them any more (scan found none); left in place so the programs can come back.
+- **Notifications/emails:** no notification or email template names the programs (source search).
+- **Access proof:** entitlements are unchanged for every plan — tests for baseball + softball: Complete Pitcher, 5Tool, Golden 2Way each keep exactly the same unlocks; owner/admin access code untouched. Subscriptions were not modified.
+- **Help chat proof (live):** "What is Heat Factory?" → no longer offered, daily training in Hammers Today. "What do I get with Complete Pitcher?" → pitching analysis + Hammers Today, no program named. "Where is Speed Lab and The Unicorn?" → no longer offered, points to Hammers Today.
+- **Archive:** pages in `src/archive/retired-programs/pages/*.tsx.archived` (not routed). Data tables and `_archive_*_20261007` copies untouched; nothing deleted. Finished program sessions still count toward rest rules. How to bring each back: `docs/owner/retired-programs.md`.
+- **Daily plan job:** 19 plans built in the last 48 h, 0 failures.
+- **Honest gap:** proof was run signed in as the owner; separate test accounts for each plan / under-13 were not created (needs owner approval to sign in as them). Hiding is the same code path for every account since the switch is "all".
+- **Reaches players only after the owner publishes** (web) **and rebuilds the iPhone app.** Already live now: the switch and the help chat.
+
+## Previous status (historical)
 # Ready to publish: NO (2026-10-08 — General report restoration)
 Reason: the requested classic report card is restored in preview and phone-checked as owner, but affected-player access proof and successful real preview/published form sign-in remain unverified. Earlier YES statements below are historical, not the current verdict.
 
