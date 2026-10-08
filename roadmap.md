@@ -1,6 +1,6 @@
 # URGENT FIX 2 — parent-signature page was blank below the title (2026-10-08 ~19:00 UTC)
 
-**Ready to publish: YES.** The fix is in the preview and the backend. The live site still runs the 16:52 build, which is older than this fix. Publishing changes nothing for players because legal_v2 is OFF. It only makes the signing page show its messages properly.
+**Ready to publish: YES.** Full test suite: 287/287 files passed; build OK. The fix is in the preview and the backend. The live site still runs the 16:52 build, which is older than this fix. Publishing changes nothing for players because legal_v2 is OFF. It only makes the signing page show its messages properly.
 
 **Why it was blank.** The live site (published 16:52) still had the *older* signing page. The backend had already been updated and answered with a new reply format, for example "online signing isn't open yet". The older page didn't recognise that reply, so it showed the title and nothing else. There was no crash, the waiver was not blocked by permissions, and nothing was missing from the backend. /parent-sign/… also showed not-found on live because that address only exists in the unpublished build.
 
