@@ -1,4 +1,48 @@
-# Ready to publish: YES for the program retirement (2026-10-08) — overall still blocked only by the items under "Waiting on owner"
+# Ready to publish: YES for the program retirement (2026-10-08, L4 final) — overall still blocked only by the items under "Waiting on owner"
+
+## FINAL REPORT — Retirement of the five programs (Heat Factory, Iron Bambino, The Unicorn, Speed Lab, Explosive Conditioning)
+
+**Verdict: Ready to publish: YES for the retirement.** Everything owner-doable is done and proven; the only gaps need the owner's sign-off (listed at the bottom).
+
+### What disappeared and where
+- Sidebar menu, hub tiles (Complete Pitcher / Complete Hitter / Complete Player / 5Tool / Golden 2Way), dashboard plan cards, pricing + checkout + Select Modules text, Game Plan tasks, calendar entries, demo tour entries, Help Desk FAQ, help chat, Hammers Today's speed button (now "Open Hammers Today"), running summary label ("Speed Sessions"). Demo labels renamed: "Speed Work", "Strength Work".
+- Old addresses (/speed-lab, /explosive-conditioning, /the-unicorn, /production-lab, /production-studio) quietly open the dashboard — no banner, no program name (checked at 360 and 390 px; screenshots `owner-checks/direct_360.png`, `direct_390.png`). Menus/tiles stay hidden even while a page loads (no flash).
+- The 8 translation files still contain the old strings, but nothing shows them (scan found none); left in place so the programs can come back.
+- No notification or email template names the programs (source search).
+
+### Access proof per plan
+- Entitlements unchanged for every plan — tests prove baseball + softball: Complete Pitcher, 5Tool and Golden 2Way each keep exactly the same unlocks in Hammers Today; owner/admin access code untouched. Subscriptions were not modified. Test file: `src/test/archive/retirementLive.test.ts`.
+
+### Help-chat proof (live, redeployed function)
+- "What is Heat Factory?" → no longer offered, daily training in Hammers Today.
+- "What do I get with Complete Pitcher?" → pitching analysis + Hammers Today, no program named.
+- "Where is Speed Lab and The Unicorn?" → no longer offered, points to Hammers Today.
+
+### Archive location and how to bring each program back
+- Page code: `src/archive/retired-programs/pages/*.tsx.archived` (not routed, not shown).
+- Data: original tables AND `_archive_*_20261007` backup copies untouched — nothing deleted. Finished program sessions still count toward rest rules.
+- Restore guide (per program and all five): `docs/owner/retired-programs.md`. Setting the switch `programs_retired` to `off` instantly restores menus/tiles.
+
+### Checks
+- **Tests:** 2,506/2,506 passing.
+- **Phone audit:** 165 pages × 360/390 px = 330 loads — 0 crashes, 0 errors, 0 sideways overflow, 0 program names in visible text, 0 links to old pages.
+- **Daily plan job:** 19 plans built in the last 48 h, 0 failures.
+- **Switch:** `programs_retired` = `all` in the live database (rechecked L3/L4); `one_tap_logging` = `all`.
+
+### Honest gap
+All proof was run signed in as the owner; separate test accounts per plan / under-13 were not created (needs owner approval to sign in as them). Hiding is the same code path for every account since the switch is "all".
+
+### What reaches players when
+Already live now: the switch and the help chat. Everything else reaches players only after the owner publishes (web) and rebuilds the iPhone app.
+
+### Waiting on owner
+1. OK to sign in as test accounts (Complete Pitcher, 5Tool, Golden 2Way, under-13; baseball + softball) for per-plan player proof.
+2. Add the three Resend DNS records at name.com (steps in K3 below) so emails can send; TEST report f53996f5-6df5-477b-96c4-5dbff22e3850 then re-sends automatically.
+3. OK to sign in as a player account for real preview + published password-form sign-in proof.
+4. Approve the persisted parent-receipt retry database change.
+
+---
+## Historical detail (superseded where corrected above)
 Reason: the five programs are retired and verified (tests 2,506/2,506, 330 phone loads clean, help chat proven, daily job healthy). The earlier open items (player-account proof, real password sign-in proof, Resend DNS) are unchanged and listed below; none are caused by this change.
 
 ## Program retirement (owner-approved 2026-10-08)
