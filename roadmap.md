@@ -1,3 +1,38 @@
+# Ready to publish: YES (2026-10-08 ~02:40 UTC)
+Reason: all checks pass. Email is not a blocker — every problem report is saved first and re-sent automatically; the only email gap is the owner verifying hammersmodality.org in Resend.
+
+## The 10 owner-to-confirm changes (what each does for a player)
+1. One-tap logging: lets a player mark each exercise Done, Skipped or Cut short with one tap (hidden behind a switch).
+2. Streak strip: shows the player how many days in a row they have trained and their next milestone.
+3. Progress Dashboard: drops the old report-card box so the player sees each video's report inside that video instead.
+4. Progress landing page: gives the player topic buttons to jump to the progress they want, with the old page kept below.
+5. Season counter: tells the player where they are in their season, matching their plan.
+6. Release countdown: tells the player exactly when tomorrow's plan opens, or that it is still being built.
+7. Conditioning card: makes the player's conditioning instructions slightly clearer to read.
+8. Plan-save speed-up: saves the player's plan faster without changing a single thing in it.
+9. Sign-in keeper: keeps the player signed in when the app reloads or comes back from the background.
+10. Start Hammers Today: remembers the player has started their plan, on every device.
+
+## Pre-publish checks
+- **Phone audit:** all 186 app pages at 360 px and 390 px (372 page loads): 0 crashes, 0 page errors, 0 sideways overflow. Run signed in as owner; owner has no started plan, so the plan page itself was checked with the fixture screenshots below.
+- **OWNER UI CHANGES, live in the preview:**
+  - Details open inside pop-ups — done
+  - No separate Baserunning card (conditioning/speed work folded into those cards) — done
+  - Baserunning IQ in "Before you start" with "Open Baserunning IQ" button — done
+  - Key Rules only inside each card (plan-wide drawer removed) — done
+  - No floating Log-a-practice button (logging inside the right pop-ups) — done
+  - Finish your profile in "Before you start" (3-day reminder kept) — done
+  - Only today's cards, no per-card countdowns ("Tomorrow's plan opens in" kept) — done
+- **Email auto-retry:** every new problem report re-sends all unsent ones (up to 20, 50 tries each); the owner Problem reports page now also retries automatically when opened and has a "Retry failed emails" button. TEST row **f53996f5-6df5-477b-96c4-5dbff22e3850** (failed, not yet sent) will go out on the first of those after .org is verified — no manual step needed. No cron added.
+- **Parent receipts:** a failed receipt is not saved anywhere, so it cannot be retried; the signed promise stays in Parent controls. Fixing this needs a small database change — waiting on owner OK. (1 consent on file.)
+- Tests last run this morning: 2,497/2,497 (phase scan 0, 8-week sims 0 violations, identical plans). Daily job last ran 2026-10-07 21:00 UTC.
+- No publish, deploy, migration, cron change or test data.
+
+## Waiting on owner
+- Verify hammersmodality.org in Resend.
+- OK a small database change so failed parent receipts can be retried.
+- Keep/undo on the 10 changes above; OK to retire the five old programs.
+
 ## I11 FINAL (2026-10-08 ~02:15 UTC) — Ready to publish: NO
 Reason: the email proof still fails — hammersmodality.org is not added/verified in Resend.
 - **Email proof:** Resend key works again (domains API HTTP 200 — the I9/I10 403s were a Cloudflare block on the checking tool, not the key). Resend lists only hammersmodality.com (status failed); hammersmodality.org absent. TEST row **f53996f5-6df5-477b-96c4-5dbff22e3850** ("TEST — owner email check") is still email_status=failed, email_sent_at empty; kept for owner. Test account 93ce8745-46a1-4e00-bfcd-e0ea703a9452 kept. Parent receipts use the same sender, so they fail the same way. No resend attempted.

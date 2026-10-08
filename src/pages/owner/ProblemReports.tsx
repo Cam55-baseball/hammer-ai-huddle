@@ -1,4 +1,5 @@
 /** Owner/admin list of saved problem reports and their email status (Roadmap 7c). */
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -20,11 +21,18 @@ export default function ProblemReports() {
     },
   });
   const retry = async () => { await supabase.functions.invoke("report-problem-mailer", { body: {} }); refetch(); };
+  // Unsent reports retry by themselves when this page opens (and on every new report).
+  const autoTried = useRef(false);
+  useEffect(() => {
+    if (autoTried.current || !data?.some((r) => r.email_status !== "sent")) return;
+    autoTried.current = true;
+    void retry();
+  }, [data]);
   return (
     <div className="mx-auto max-w-3xl space-y-3 p-4">
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={() => nav("/owner")}><ArrowLeft className="mr-1 h-4 w-4" />Owner</Button>
-        <Button size="sm" variant="outline" onClick={retry} disabled={isFetching}>Retry sending emails</Button>
+        <Button size="sm" variant="outline" onClick={retry} disabled={isFetching}>Retry failed emails</Button>
       </div>
       <h1 className="text-xl font-semibold">Problem reports</h1>
       {(data ?? []).length === 0 && <p className="text-sm text-muted-foreground">No reports yet.</p>}
