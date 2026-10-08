@@ -1,5 +1,10 @@
 # Ready to publish: no — email still fails (hammersmodality.org not verified in Resend); redesign's inner card content and data visuals only partly done (2026-10-08 H5)
 
+## I3 (2026-10-08 01:34 UTC)
+- Card interiors (step 2): You need / Setup / Cue shown as labeled lines; "Stop if" is a clear red-outlined safety note (theme colors, works in dark mode). Screen-only; 52/52 card tests pass; wording unchanged.
+- Still open: pitch-count meter, sprint trend, readiness scale, phone screenshots; email (.org unverified).
+- Ready to publish: no.
+
 ## I2 (2026-10-08 01:33 UTC)
 - Visual upgrade, card interiors (step 1): exercise rows now card-surface, bigger names, bold tabular amounts, 44 px "How?"/"Can't do it" buttons, calm done state. Screen-only (1 file); 52/52 card tests pass; plans unchanged.
 - Still open: notices restyle, pitch-count meter, sprint trend, readiness scale; email (.org unverified).
