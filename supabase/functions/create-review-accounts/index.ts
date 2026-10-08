@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
             child_user_id: id, parent_full_name: "TEST Demo Parent", relationship: "parent",
             parent_birthdate: "1980-01-01", parent_is_adult: true, parent_email: "hammersmodality+applereviewparent@gmail.com",
             child_display_name: "TEST Child", typed_name: "TEST Demo Parent", signature_path: "apple-review/none",
-            promise_version: "apple-review-demo", notice_version: "apple-review-demo",
+            promise_version: 1, notice_version: 1,
             promise_text: "TEST ACCOUNT for Apple App Review — not a real parent consent.",
             payment_confirmed_at: now, training_opt_in: false,
           });
