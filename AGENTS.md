@@ -1,7 +1,7 @@
 - Service-role functions returning athlete data to a non-self viewer must pass `_shared/recruitingGate.ts`. Why: service role bypasses RLS.
 - `create-test-athlete` is owner-only and the only way to run the real generator as the demo test pitcher. Why: no approval-free session mint exists for other users.
 - Every measurement goes through `public.ledger_record` (source triggers + `ledger_record_tiles`); triggers swallow their own errors. Why: new measurements join baselines by declaring themselves; recording must never cost a clip.
-- Folder rules: `src/lib/{biomech,reportCard,prescription,tour,upload}/AGENTS.md`, `supabase/functions/_shared/wic/AGENTS.md` (plan final check, lift certifier), `supabase/functions/wk-daily-plan-job/AGENTS.md`.
+- Folder rules: `src/lib/{biomech,reportCard,prescription,tour,upload}/AGENTS.md`, `src/components/hammer/cards/AGENTS.md`, `supabase/functions/_shared/wic/AGENTS.md` (plan final check, lift certifier), `supabase/functions/wk-daily-plan-job/AGENTS.md`.
 <!-- LOVABLE:BEGIN -->
 - Throwing uses a separate conservative overhand gate and one pose runner for both sports, never mound or AI-vision values. Why: field throws lack a windup and batting clips can mimic a throw.
 <!-- LOVABLE:END -->
@@ -23,6 +23,3 @@
 - The plan screen shows the device's last saved plan, start flag and access at once, but acts only after this visit's server answer; device copies clear on Sign out. Why: a reload must never flash, rebuild or change the plan.
 
 - Problem reports save to `problem_reports` first; `report-problem-mailer` only sends/retries. Why: a broken email key must never lose a report.
-- Today card grouping is a presentation-only partition preserving original drill objects and completion keys; popup details use a shared context. Why: grouping must not author training or duplicate logging.
-- Hammers Today 'Next up', day ring and stage story come only from `src/components/hammer/cards/todayRhythm.tsx`, fed by progress the cards already compute. Why: the visual rhythm must never author, reorder or change training.
-- The 'Tomorrow's plan opens in' countdown shows only when tomorrow's wk_prescriptions row exists; otherwise it shows the being-built estimate (`releaseState`). Why: never count down to a moment with no plan behind it.
