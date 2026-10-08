@@ -6,6 +6,8 @@
  */
 import { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 
@@ -43,22 +45,93 @@ async function loadSkew() {
   } catch { /* offline: use device clock */ }
 }
 
+/** Local plan date (YYYY-MM-DD) of the instant `nowMs` in `tz`. */
+export function localDateOf(nowMs: number, tz: string): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(nowMs));
+}
+
+/** Same hour the daily job starts building tomorrow (wk-daily-plan-job PREBUILD_FROM_LOCAL_HOUR). */
+export const PREBUILD_FROM_LOCAL_HOUR = 12;
+const JOB_EVERY_MS = 10 * 60_000;
+
+/**
+ * What the release line may honestly say.
+ *  - "ready": tomorrow's plan is already saved → count down to local midnight.
+ *  - "building": not saved yet → count down to the expected build time
+ *    (the later of local noon + one job run, and the next job run from now).
+ *    Never counts down to a midnight with no plan behind it.
+ */
+export function releaseState(nowMs: number, tz: string, tomorrowBuilt: boolean):
+  { kind: "ready"; ms: number } | { kind: "building"; ms: number; readyAt: number } {
+  const toMidnight = msUntilLocalMidnight(nowMs, tz);
+  if (tomorrowBuilt) return { kind: "ready", ms: toMidnight };
+  const midnight = nowMs + toMidnight;
+  const noon = midnight - (24 - PREBUILD_FROM_LOCAL_HOUR) * 3_600_000; // DST shifts happen near 02:00, not between noon and midnight
+  const nextRun = Math.ceil((nowMs + 1) / JOB_EVERY_MS) * JOB_EVERY_MS;
+  const readyAt = Math.max(noon + JOB_EVERY_MS, nextRun);
+  return { kind: "building", ms: Math.max(0, readyAt - nowMs), readyAt };
+}
+
+function hms(ms: number) {
+  const s = Math.floor(ms / 1000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
+}
+
 export function ReleaseCountdown({ timeZone }: { readonly timeZone?: string }) {
-  const tz = timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const [left, setLeft] = useState(() => msUntilLocalMidnight(Date.now(), tz));
+  const { user } = useAuth();
+  const [profileTz, setProfileTz] = useState<string | null>(null);
+  const tz = timeZone || profileTz || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const [now, setNow] = useState(() => Date.now());
+  const [built, setBuilt] = useState<boolean | null>(null);
+  const tomorrow = localDateOf(now + msUntilLocalMidnight(now, tz) + 60_000, tz);
+
   useEffect(() => {
     void loadSkew();
-    const id = window.setInterval(() => setLeft(msUntilLocalMidnight(Date.now() + skewMs, tz)), 1000);
+    const id = window.setInterval(() => setNow(Date.now() + skewMs), 1000);
     return () => window.clearInterval(id);
-  }, [tz]);
-  const s = Math.floor(left / 1000);
-  const hh = Math.floor(s / 3600), mm = Math.floor((s % 3600) / 60), ss = s % 60;
-  const pad = (n: number) => String(n).padStart(2, "0");
+  }, []);
+
+  useEffect(() => {
+    if (!user?.id || timeZone) return;
+    void supabase.from("profiles").select("timezone").eq("id", user.id).maybeSingle()
+      .then(({ data }) => { if (data?.timezone) setProfileTz(String(data.timezone)); });
+  }, [user?.id, timeZone]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let alive = true;
+    const check = async () => {
+      const { count } = await supabase.from("wk_prescriptions").select("plan_date", { count: "exact", head: true })
+        .eq("user_id", user.id).eq("plan_date", tomorrow);
+      if (alive) setBuilt((count ?? 0) > 0);
+    };
+    void check();
+    const id = window.setInterval(() => { if (!document.hidden) void check(); }, 60_000);
+    return () => { alive = false; window.clearInterval(id); };
+  }, [user?.id, tomorrow]);
+
+  if (built === null) return null; // never show a countdown before we know a plan exists
+  const st = releaseState(now, tz, built);
+  const at = st.kind === "building"
+    ? new Intl.DateTimeFormat(undefined, { timeZone: tz, hour: "numeric", minute: "2-digit" }).format(new Date(st.readyAt))
+    : "";
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground" data-release-countdown>
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground" data-release-countdown={st.kind}>
       <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-      <span>Tomorrow's plan opens in</span>
-      <span className="font-mono font-semibold tabular-nums text-foreground">{pad(hh)}:{pad(mm)}:{pad(ss)}</span>
+      {st.kind === "ready" ? (
+        <>
+          <span>Tomorrow's plan opens in</span>
+          <span className="font-mono font-semibold tabular-nums text-foreground">{hms(st.ms)}</span>
+        </>
+      ) : st.ms > 0 ? (
+        <>
+          <span>Your next plan is being built — ready around {at}, in</span>
+          <span className="font-mono font-semibold tabular-nums text-foreground">{hms(st.ms)}</span>
+        </>
+      ) : (
+        <span>Your next plan is being built — almost ready.</span>
+      )}
     </div>
   );
 }
