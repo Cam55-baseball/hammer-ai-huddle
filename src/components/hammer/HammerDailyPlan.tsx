@@ -1034,7 +1034,8 @@ function HammerDailyPlanBody({
           const warmupBlocks = plan.blocks.filter((b) => b.modality === "warmup" && prescribedToday(b));
           const baseWork = splitBaserunning(plan.blocks);
           const logPractice = sched.today.some(s => s.kind === "practice");
-          const baseStealerToday = hasBaseStealer && baseWork.physical.length > 0;
+          const baseSpeed = hasBaseStealer ? baseWork.physical.filter(b => b.drills.some(d => /steal|sprint|jump start/i.test(d.name))) : [];
+          const baseConditioning = baseWork.physical.filter(b => !baseSpeed.includes(b));
           const WK_OWNED = new Set(["speed", "bat_speed", "strength", "lift", "lifts", "conditioning", "cross_sport"]);
           const allOtherBlocks = plan.blocks.filter(
             (b) =>
@@ -1107,8 +1108,8 @@ function HammerDailyPlanBody({
                 onOpen={() => setCheckInQuiz("pre_lift")}
               />
               <ErrorBoundary label="wk-speed">
-                <PocketCard id="speed" progress={progressOf(wkRx.grouped.speedCard)} intro={POCKET_INTROS.speed} category="Speed" focus={pocketFocus(wkRx.grouped.speedCard)} tone="bg-primary" planDate={pocketDate} practiceLogging={logPractice} prescribed={wkRx.grouped.speedCard.length > 0 || baseStealerToday} countLabel={countLabel(wkRx.grouped.speedCard)}>
-                  {() => <>{wkRx.grouped.speedCard.length > 0 && <WkSpeedCard pocket />}{baseStealerToday && <div className="space-y-2 text-sm"><p className="font-semibold text-foreground">Speed — Base Stealer</p><ol className="list-decimal pl-5 text-muted-foreground"><li>Warm up first.</li><li>Open Base Stealer and follow today's prescribed attempts and rest times.</li><li>Count every attempt as a sprint; stop at the prescribed limit.</li></ol><Button onClick={() => navigate(sportIsBaseball ? "/base-stealing" : "/softball-stealing")}>Open Base Stealer</Button></div>}</>}
+                <PocketCard id="speed" progress={progressOf(wkRx.grouped.speedCard)} intro={POCKET_INTROS.speed} category="Speed" focus={pocketFocus(wkRx.grouped.speedCard)} tone="bg-primary" planDate={pocketDate} practiceLogging={logPractice} prescribed={wkRx.grouped.speedCard.length > 0 || baseSpeed.length > 0} countLabel={countLabel(wkRx.grouped.speedCard)}>
+                  {() => <>{wkRx.grouped.speedCard.length > 0 && <WkSpeedCard pocket />}{baseSpeed.map(b => <div key={`speed-${b.side ?? "x"}`}><Badge variant="secondary">Speed</Badge><BlockCard block={{...b, title: "Speed — Base Stealer"}} onNavigate={navigate} onEngagementChanged={bumpEngagement} /></div>)}</>}
                 </PocketCard>
               </ErrorBoundary>
               <ErrorBoundary label="wk-bat-speed">
@@ -1186,8 +1187,8 @@ function HammerDailyPlanBody({
                 );
               })}
               <ErrorBoundary label="wk-conditioning">
-                <PocketCard id="conditioning" progress={progressOf(wkRx.grouped.conditioningCard)} intro={POCKET_INTROS.conditioning} category="Conditioning" focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} practiceLogging={logPractice} prescribed={wkRx.grouped.conditioningCard.length > 0 || baseWork.physical.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
-                  {() => <>{wkRx.grouped.conditioningCard.length > 0 && <WkConditioningCard pocket />}{baseWork.physical.map(b => <div key={`physical-${b.side ?? "x"}`}><Badge variant="secondary">Conditioning</Badge><BlockCard block={b} onNavigate={navigate} onEngagementChanged={bumpEngagement} /></div>)}</>}
+                <PocketCard id="conditioning" progress={progressOf(wkRx.grouped.conditioningCard)} intro={POCKET_INTROS.conditioning} category="Conditioning" focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} practiceLogging={logPractice} prescribed={wkRx.grouped.conditioningCard.length > 0 || baseConditioning.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
+                  {() => <>{wkRx.grouped.conditioningCard.length > 0 && <WkConditioningCard pocket />}{baseConditioning.map(b => <div key={`physical-${b.side ?? "x"}`}><Badge variant="secondary">Conditioning</Badge><BlockCard block={{...b, title: "Conditioning — base-running footwork"}} onNavigate={navigate} onEngagementChanged={bumpEngagement} /></div>)}</>}
                 </PocketCard>
               </ErrorBoundary>
               <ErrorBoundary label="wk-lifts">
