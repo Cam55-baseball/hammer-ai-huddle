@@ -111,6 +111,7 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
   const tourIdRef = useRef(tourId);
   const userIdRef = useRef(userId);
   const navigateRef = useRef(navigate);
+  const restoreGuardRef = useRef<number | null>(null);
   useLayoutEffect(() => { onCloseRef.current = onClose; tourIdRef.current = tourId; userIdRef.current = userId; navigateRef.current = navigate; });
 
   const finish = useCallback((result: "completed" | "skipped", restoreOpeningPage = true) => {
@@ -297,14 +298,25 @@ export function SpotlightTour({ tourId, steps, open, onClose, userId, navigate, 
       // A tour page change still in flight can land after the back press, so
       // keep restoring the opening page for a moment.
       let tries = 0;
+      if (restoreGuardRef.current !== null) window.clearInterval(restoreGuardRef.current);
       const guard = window.setInterval(() => {
         const here = `${window.location.pathname}${window.location.search}`;
         if (origin && here !== origin) navigateRef.current?.(origin, { replace: true });
-        if (++tries >= 15) window.clearInterval(guard);
+        if (++tries >= 15) {
+          window.clearInterval(guard);
+          restoreGuardRef.current = null;
+        }
       }, 100);
+      restoreGuardRef.current = guard;
     };
     window.addEventListener("popstate", onBack, true);
-    return () => window.removeEventListener("popstate", onBack, true);
+    return () => {
+      window.removeEventListener("popstate", onBack, true);
+      if (restoreGuardRef.current !== null) {
+        window.clearInterval(restoreGuardRef.current);
+        restoreGuardRef.current = null;
+      }
+    };
   }, [open]);
 
 
