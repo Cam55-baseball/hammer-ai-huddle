@@ -37,8 +37,8 @@ describe("Today presentation — no prescription bleed", () => {
   it("keeps running scenarios physical and partitions explicit steal drills without duplication", () => {
     for (let day = 0; day < 56; day++) {
       for (const eligible of [false, true]) {
-        const original = block();
-        original.drills.push({ name: "Base Stealer sprint", dosage: "3 reps; full rest" });
+        const fixture = block();
+        const original = { ...fixture, drills: [...fixture.drills, { name: "Base Stealer sprint", dosage: "3 reps; full rest" }] };
         const before = JSON.stringify(original);
         const split = splitBaserunning([original]);
         const grouped = groupPhysicalBaserunning(split.physical, eligible);
