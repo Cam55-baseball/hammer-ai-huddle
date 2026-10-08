@@ -208,11 +208,6 @@ const Checkout = () => {
   };
 
   const handleCreateCheckout = async (opts?: { silent?: boolean }) => {
-    if (!selectedTier) {
-      toast({ title: "No tier selected", description: "Please select a training tier.", variant: "destructive" });
-      return;
-    }
-
     // iPhone/iPad, US storefront: checkout happens on our website, same account.
     if (purchaseMode === "native-linkout") {
       setCheckoutLoading(true);
@@ -221,6 +216,11 @@ const Checkout = () => {
       finally { setCheckoutLoading(false); }
       return;
     }
+    if (!selectedTier) {
+      toast({ title: "No tier selected", description: "Please select a training tier.", variant: "destructive" });
+      return;
+    }
+
     setCheckoutLoading(true);
     if (!opts?.silent) {
       popupRef.current = window.open("", "_blank", "") || null;
