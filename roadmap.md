@@ -1,4 +1,4 @@
-# OWNER PLAN CARD FIXES — T4 — 2026-10-08 23:58 UTC — Ready to publish: yes (website; nothing published)
+# OWNER PLAN CARD FIXES — T5 — 2026-10-08 23:47 UTC — Ready to publish: yes (website; nothing published)
 Top priority before Xcode. No publishing or cron changes. Only named defensive-role and tissue-prep changes may alter plans.
 - [x] 1–5 Core prescription cards now wrap full titles; show the formatted dose, a visible basic description, open Rx-prefilled applicable inputs (including 1×1), and a closed How to do it drawer. Removed Rules for this card and player-visible barefoot move-up criteria. Inline drafts survive backgrounding in session storage. Drawer now contains setup, steps, stop-if, cue, why, progression and change reason.
 - [x] 6 Catalog defense audit now fails on catcher/pitcher/outfield/infield cue bleed and baseball/softball bleed; all position/sport/phase combinations passed (6/6 defense tests).
@@ -14,6 +14,7 @@ Top priority before Xcode. No publishing or cron changes. Only named defensive-r
 - [x] T3: Screenshots of all six card types today (warm-up, bat speed, defense, conditioning, lift, recovery) at 360 and 390 px, drawer closed and open, as the signed-in player — 24 images in `legal-screens/plan-cards-t3/`, 0 page errors. Every activity had a visible log; no "Rules for this card", no move-up criteria, no "1 feet".
 - [x] T3 fixes found by the screenshots: (a) bat speed/conditioning/lift cards showed an empty "Today — ." line — now hidden when there is no real reason; (b) band and body-weight lifts (e.g. Arm-Care Band) showed a Weight box — now reps only. 2 new tests; full suite 294 files, 2,544 tests passed; build OK.
 - [x] T4: Audited all 999 library exercises: 25 have their own hand-written plain description; 974 show a general description for their type (e.g. "Light, controlled shoulder work."). Full list for owner in `docs/owner/exercise-descriptions-needed.tsv` (by category). Not guessed. No code, plan or data changes.
+- [x] T5: Re-checked items 1–11 — no unblocked work left. Only open items: owner descriptions (Waiting on owner) and post-publish live check. No changes made.
 - [ ] Remaining: Published affected-player plan-card return behavior remains unprovable until the owner publishes these changes. No publish/deploy/cron/iOS changes and no test data created.
 
 ## Waiting on owner
