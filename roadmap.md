@@ -1,5 +1,12 @@
 # Ready to publish: no — .org email verification and actual broker/video playback proof remain open (2026-10-08)
 
+## H3 continuation — 2026-10-08 01:13 UTC
+- [x] Items 1–6 unchanged since H2 (no code, database, deploy, migration, cron or publish changes in H3; no test data created, so no cleanup).
+- [ ] Item 0 email: still blocked on the owner verifying `hammersmodality.org` in Resend; no repeat send while unchanged.
+- [ ] Item 7 proof: H2 evidence stands; affected-player phone/save/read-back proof, real preview-broker reproduction and demo playback still open. No new tests rerun in H3.
+- **Ready to publish: no** — same reasons as H2.
+
+
 ## H2 continuation — 2026-10-08
 - [x] Email rechecked: Resend domains API HTTP 200; only `hammersmodality.com` is listed, status `failed`. `hammersmodality.org` is still absent. The prior normal-path test remains failed with HTTP 403 `validation_error`: "The hammersmodality.org domain is not verified." No repeat send or successful delivery claimed while this blocker is unchanged.
 - [x] Problem-report queue rechecked using both `email_sent_at IS NULL` and the mailer's `email_status <> 'sent'` condition: 0 reports. Parent receipts still have no persisted retry backlog; no parent consent fabricated for testing.
