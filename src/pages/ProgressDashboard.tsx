@@ -2,7 +2,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { HumanPerformanceCard } from '@/components/hpi/HumanPerformanceCard';
 import { PlayerSnapshotCard } from '@/components/hie/PlayerSnapshotCard';
 import { WeaknessClusterCard } from '@/components/hie/WeaknessClusterCard';
-// UhrcAthleteSection removed — Hammer Report Card now lives inside each video analysis result.
+import { UhrcAthleteSection } from '@/components/report-card/UhrcAthleteSection';
 import { ReadinessCard } from '@/components/hie/ReadinessCard';
 import { ReadinessBreakdownCard } from '@/components/hie/ReadinessBreakdownCard';
 import { SmartWeekPlan } from '@/components/hie/SmartWeekPlan';
@@ -151,9 +151,8 @@ Confidence: ${snapshot.development_confidence}%
           <div className="space-y-6">
             {hasAdvancedAccess ? (
               <>
-                {/* Section 0 (Universal Hammers Report Card) removed — report card is now per-analysis only. */}
-
-
+                {/* Section 0: Universal Hammers Report Card — classic view; clip reports stay in analyses. */}
+                <UhrcAthleteSection />
 
                 {/* Section 1: Player Snapshot */}
                 <PlayerSnapshotCard />
