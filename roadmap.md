@@ -1,3 +1,7 @@
+## I6 (2026-10-08 02:00 UTC) — Ready to publish: no
+- Resend rechecked: still only hammersmodality.com (failed); .org not verified. No resend. TEST row f53996f5-6df5-477b-96c4-5dbff22e3850 kept.
+- No code changes; I5 results (2,497/2,497 tests, build OK) stand. No publish/deploy/migration/cron change/test data.
+
 ## I5 (2026-10-08) — Ready to publish: no
 - Full test set: 281 files, 2,497/2,497 passed (includes 8-week safety sims, no-bleed, phase scan). Build OK.
 - Email: still blocked. Resend lists only hammersmodality.com (failed); hammersmodality.org absent. TEST row f53996f5-6df5-477b-96c4-5dbff22e3850 kept; no resend attempted.
