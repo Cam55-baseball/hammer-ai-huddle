@@ -34,3 +34,11 @@ describe("release line honesty", () => {
     if (st.kind === "building") expect(new Intl.DateTimeFormat("en-GB", { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(st.readyAt))).toBe("12:10");
   });
 });
+
+describe("player plan-time wording", () => {
+  it("refers to midnight only, never noon or 12 PM", async () => {
+    const { RELEASE_LINE } = await import("../ReleaseCountdown");
+    expect(RELEASE_LINE).toContain("midnight");
+    expect(RELEASE_LINE).not.toMatch(/noon|12\s*PM|being built/i);
+  });
+});
