@@ -1631,12 +1631,7 @@ function BlockCard({
         </div>
 
         <CollapsibleContent className="mt-3 space-y-3">
-          {blockProgression && (
-            <div className="space-y-2 text-xs">
-              <WkProgressionBadge progression={blockProgression} />
-              <WkProgressionNote progression={blockProgression} />
-            </div>
-          )}
+          {/* "Your progression" lives in The General only (owner round 2 C). */}
 
           {block.modality === "defense" && <DefensePositionSwap />}
 

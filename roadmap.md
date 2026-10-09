@@ -1,4 +1,4 @@
-# OWNER FIXES ROUND 2 — 2026-10-09 — Ready to publish: no (2 items open below; nothing published)
+# OWNER FIXES ROUND 2 — 2026-10-09 — Ready to publish: no (1 item open below; nothing published)
 - [x] A Double-check: one checker runs before every plan is saved (live on the backend now) and again on every card shown, inline and pop-up; older inline drill rows are checked against their own written dose. Catches go to an owner-only list (plan builds: rule `integrity:*`; screens: `integrity_render:*`). Root cause: the old test checked a helper, not the saved plan or the text players read.
 - [x] A Audit, whole library (976 exercises): found 44 — 26 text distance vs dose, 10 text time vs dose, 7 saved distance vs the exercise's own name (e.g. repeated 90-foot sprints saved as 1 foot; now 90), 1 two-actions-in-one-rep. After repair: 0. Script: `scripts/audits/integrity-audit.ts`.
 - [x] B Basic one-rep how-to for all 976 exercises, shown first. 341 written as the safest clear version for owner check: `docs/owner/basic-how-to-review.tsv`.
@@ -8,8 +8,9 @@
 - [x] F PFP "comebacker + cover first" split into one play per rep; defense role-bleed test passes.
 - [x] G Players see "midnight" only. H Today / Next up below the streak. I Report a problem at the bottom of every page. J Pop-up header sticky with safe-area padding.
 - [x] Tests that read rendered text: `src/lib/hammer/prescription/__tests__/prescriptionIntegrity.test.tsx`. Full suite: 295 files / 2,556 tests passed. Build OK.
-- [ ] OPEN: move "Your progression" into The General under its own label (removed from cards; not yet added to The General).
-- [ ] OPEN: fresh phone screenshots (360/390 px + iPhone size) of every card type and the page audit for this round.
+- [x] "Your progression" shows only in The General under its own label; last copy removed from the plan blocks.
+- [x] Player phone check (360, 390, iPhone 393 px) found and fixed 2 more errors: a "30 reps total" card asked for 2 rows of 30 (rows now always add up to the total), and 110 timed non-hold drills said "hold the position" (now only real holds say that). Screenshots: `legal-screens/plan-cards-r2/`. No "1 feet", noon, card rules or progression lines; 0 page errors.
+- [ ] OPEN: screenshots of every remaining card type and pop-up (only the open block was captured; the others start closed), plus the page audit, for this round.
 
 # OWNER PLAN CARD FIXES — T10 FINAL — 2026-10-08 23:59 UTC — Ready to publish: yes (website; nothing published)
 - [x] T10 final checks: full suite 294 files / 2,544 tests passed (includes the dose-string test, the defense role-bleed test, the 8-week tissue-prep-first warm-up simulation and the 30s/5m/1h reload-on-return tests). Fresh player screenshots of all six card types at 360 and 390 px, drawer closed and open — 24 images in `legal-screens/plan-cards-t10/`, 0 page errors, no "Rules for this card", no move-up criteria, no "1 feet", no "Today — .". Page audit as the player at 390 px: 170/170 pages, 0 crashes, 0 errors, 0 sideways overflow (one hit on /terms was the words "Something went wrong" inside the billing text, not an error). No changes to the app, nothing published, no cron changes, no test data.
