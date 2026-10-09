@@ -103,7 +103,7 @@ export function WkPrescriptionCard({
   const rx = useCheckedRx(rawRx);
   const repair = (t: string) => repairInstruction(t, rx, "guide") ?? t;
   const pocketDetails = usePocketDetails();
-  const [open, setOpen] = useState(pocketDetails);
+  const [open, setOpen] = useState(false); // owner: every exercise starts collapsed, pop-ups too
   const [swapOpen, setSwapOpen] = useState(false);
   // Availability is resolved against the certified ladder (or, for rows that
   // predate substitution families, the identical catalog-derived ladder).
@@ -294,7 +294,7 @@ export function WkPrescriptionCard({
 
   return (
     <Card className={`p-3 border ${checked ? "opacity-60" : ""}`}>
-      <Collapsible open={pocketDetails || open} onOpenChange={setOpen}>
+      <Collapsible open={open} onOpenChange={setOpen}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Checkbox
             checked={checked}
@@ -302,11 +302,11 @@ export function WkPrescriptionCard({
             className="shrink-0"
             aria-label={`Mark ${rx.movement_name} done`}
           />
-          <CollapsibleTrigger asChild disabled={pocketDetails}>
+          <CollapsibleTrigger asChild>
             <button
               type="button"
               className="min-w-[9rem] flex-1 text-left"
-              aria-expanded={pocketDetails || open}
+              aria-expanded={open}
             >
               <div className="font-semibold text-sm whitespace-normal break-words">
                 {rx.movement_name}
@@ -344,7 +344,7 @@ export function WkPrescriptionCard({
            {swapAvailable && (
             <LiftSwapSheet rx={rx} open={swapOpen} onOpenChange={setSwapOpen} />
           )}
-          {!pocketDetails && <CollapsibleTrigger asChild>
+          {<CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="h-7 px-2 shrink-0">
               <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
             </Button>
