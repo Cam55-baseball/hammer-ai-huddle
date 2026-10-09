@@ -159,3 +159,10 @@ export function checkPrescription<T extends IntegrityRow>(row: T): { row: T; cat
   }
   return { row: r as T, catches };
 }
+
+/** Run distance written in a dose string ("3 × 30 yd", "2 reps × 90 ft"), in feet. */
+export function doseFeet(dosage: string | null | undefined): number | null {
+  const m = String(dosage ?? "").match(/(\d+(?:\.\d+)?)\s*(feet|foot|ft|yards|yard|yds|yd|meters|m)\b/i);
+  if (!m) return null;
+  return Math.round(Number(m[1]) * (UNIT_FT[m[2].toLowerCase()] ?? 1));
+}

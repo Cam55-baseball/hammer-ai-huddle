@@ -18,6 +18,7 @@ import { WeeklyBodyLoadBar } from "@/components/hammer/WeeklyBodyLoadBar";
 import { FinishProfileCard } from "@/components/hammer/FinishProfileCard";
 import { TrendDeloadNotice } from "@/components/hammer/TrendDeloadNotice";
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
+import { repairInstruction, doseFeet } from "../../../supabase/functions/_shared/wic/integrity/doseIntegrity";
 import { ReleaseCountdown } from "@/components/hammer/cards/ReleaseCountdown";
 import { DayCommandCenter, TodayRhythmProvider } from "@/components/hammer/cards/todayRhythm";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
@@ -230,6 +231,13 @@ export function missingContextPrompt(keys: ReadonlyArray<string>): string {
   return `Update Hammer ${list} in the chat below and today's plan will adapt.`;
 }
 
+/** Double-check for older drill rows: text must match the row's own written dose. */
+function legacyRepair(dosage: string | undefined, modality: string) {
+  const feet = doseFeet(dosage);
+  const slot = /speed|baserun|condition/.test(modality) ? "speed" : modality;
+  return (t: string) => (feet ? repairInstruction(t, { distance_feet: feet, slot }, "legacy") ?? t : repairInstruction(t, { slot: "other" }, "legacy") ?? t);
+}
+
 function DrillRow({
   drill: d,
   modality,
@@ -287,7 +295,7 @@ function DrillRow({
               );
             })()}
             <div className="mt-1.5">
-              <ActivityBasics name={d.name} slug={d.slug} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} />
+              <ActivityBasics name={d.name} slug={d.slug} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} repair={legacyRepair(d.dosage, modality)} />
             </div>
             <LegacyDrillInlineLog
               modality={modality}
@@ -296,6 +304,7 @@ function DrillRow({
               storageKey={`hammer-block-log-draft:${planDate}:${taskId}:${side ?? ""}`}
               completed={checked}
               onSave={(log) => tasks.toggleTask({ ...seed, payload: { ...seed.payload, log } }, true)}
+              onOutcome={(outcome, how_hard) => tasks.toggleTask({ ...seed, payload: { ...seed.payload, outcome, how_hard } }, outcome !== "skipped")}
             />
           </div>
         </div>
@@ -311,15 +320,6 @@ function DrillRow({
               <span>Can't do it</span>
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="inline-flex min-h-11 items-center gap-1 rounded-full border border-border/70 bg-background/70 px-3 text-[11px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground active:scale-95 transition-[transform,background-color,color] duration-150 motion-reduce:transition-none"
-            aria-label={`How to do ${d.name}`}
-          >
-            <BookOpen className="h-3 w-3" />
-            <span>How?</span>
-          </button>
         </div>
       </div>
       {adjustApi && (
@@ -331,7 +331,7 @@ function DrillRow({
           onSave={adjustApi.save}
         />
       )}
-      <ExerciseInstructions name={d.name} slug={d.slug} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} />
+      <ExerciseInstructions name={d.name} slug={d.slug} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} repair={legacyRepair(d.dosage, modality)} />
       <MovementGuideSheet
         open={open}
         onOpenChange={setOpen}

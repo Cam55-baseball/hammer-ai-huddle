@@ -13,6 +13,7 @@ export function LegacyDrillInlineLog({
   storageKey,
   completed,
   onSave,
+  onOutcome,
 }: {
   modality: string;
   name: string;
@@ -20,7 +21,10 @@ export function LegacyDrillInlineLog({
   storageKey: string;
   completed: boolean;
   onSave: (log: Record<string, unknown>) => void;
+  onOutcome?: (outcome: "completed" | "skipped" | "cut_short", how_hard: number | null) => void;
 }) {
+  const [outcome, setOutcome] = useState<"completed" | "skipped" | "cut_short" | null>(completed ? "completed" : null);
+  const [hard, setHard] = useState("");
   const spec = useMemo(() => legacyDrillLogSpec(modality, name, dosage), [dosage, modality, name]);
   const initial = useMemo<Draft>(() => Array.from({ length: spec.rows }, () => Object.fromEntries(spec.fields.map((field) => [field.key, field.prefill == null ? "" : String(field.prefill)]))), [spec]);
   const [rounds, setRounds] = useState<Draft>(initial);
@@ -77,6 +81,18 @@ export function LegacyDrillInlineLog({
         </div>
       ))}
       <Button type="button" size="sm" className="w-full" onClick={save}>Save log</Button>
+      {onOutcome && <div className="space-y-2" data-card-outcome-log>
+        <div className="grid grid-cols-3 gap-1.5">
+          {([["completed", "Done"], ["skipped", "Skipped"], ["cut_short", "Cut short"]] as const).map(([k, label]) => (
+            <Button key={k} type="button" size="sm" variant={outcome === k ? "default" : "outline"} className="h-9 text-xs"
+              onClick={() => { setOutcome(k); const n = Number(hard); onOutcome(k, n >= 1 && n <= 10 ? n : null); }}>{label}</Button>
+          ))}
+        </div>
+        <label className="flex items-center gap-2 text-[11px]">
+          <span className="shrink-0 font-medium">How hard 1–10</span>
+          <Input aria-label="How hard 1–10" inputMode="numeric" value={hard} onChange={(e) => setHard(e.target.value.replace(/[^\d]/g, "").slice(0, 2))} className="h-9 w-20 px-2 text-sm" />
+        </label>
+      </div>}
     </div>
   );
 }
