@@ -183,11 +183,11 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
           aria-label={heading}
           data-pocket-page={id}
           data-locked={locked ? "1" : "0"}
-          className={`fixed inset-0 z-50 flex flex-col animate-in fade-in zoom-in-95 duration-200 motion-reduce:animate-none bg-background`}
+          className={`fixed inset-0 z-50 flex h-[100dvh] flex-col animate-in fade-in zoom-in-95 duration-200 motion-reduce:animate-none bg-background`}
         >
-          <header className="flex items-center gap-2 border-b border-border px-3 py-2">
+          <header data-pocket-header className="sticky top-0 z-10 flex shrink-0 items-center gap-2 border-b border-border bg-background pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground" aria-hidden><DomainGlyph domain={domain} className="h-5 w-5" /></span>
-            <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{category}{progress && progress.total > 0 ? <span className="tabular-nums"> · {progress.done}/{progress.total} done</span> : null}</p><h2 className="truncate text-base font-bold leading-tight text-foreground">{heading}</h2></div>
+            <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{category}{progress && progress.total > 0 ? <span className="tabular-nums"> · {progress.done}/{progress.total} done</span> : null}</p><h2 className="break-words text-base font-bold leading-tight text-foreground">{heading}</h2></div>
             {locked ? (
               <Badge variant="secondary" className="gap-1 text-[10px]"><Lock className="h-3 w-3" />Locked in</Badge>
             ) : (
