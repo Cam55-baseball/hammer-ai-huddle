@@ -1,4 +1,4 @@
-# OWNER FIXES ROUND 2 — 2026-10-09 — Ready to publish: no (2 items open below; nothing published)
+# OWNER FIXES ROUND 2 — 2026-10-09 — Ready to publish: no (1 item open below; nothing published)
 - [x] A Double-check: one checker runs before every plan is saved (live on the backend now) and again on every card shown, inline and pop-up; older inline drill rows are checked against their own written dose. Catches go to an owner-only list (plan builds: rule `integrity:*`; screens: `integrity_render:*`). Root cause: the old test checked a helper, not the saved plan or the text players read.
 - [x] A Audit, whole library (976 exercises): found 44 — 26 text distance vs dose, 10 text time vs dose, 7 saved distance vs the exercise's own name (e.g. repeated 90-foot sprints saved as 1 foot; now 90), 1 two-actions-in-one-rep. After repair: 0. Script: `scripts/audits/integrity-audit.ts`.
 - [x] B Basic one-rep how-to for all 976 exercises, shown first. 341 written as the safest clear version for owner check: `docs/owner/basic-how-to-review.tsv`.
@@ -8,7 +8,7 @@
 - [x] F PFP "comebacker + cover first" split into one play per rep; defense role-bleed test passes.
 - [x] G Players see "midnight" only. H Today / Next up below the streak. I Report a problem at the bottom of every page. J Pop-up header sticky with safe-area padding.
 - [x] Tests that read rendered text: `src/lib/hammer/prescription/__tests__/prescriptionIntegrity.test.tsx`. Full suite: 295 files / 2,556 tests passed. Build OK.
-- [ ] OPEN: move "Your progression" into The General under its own label (removed from cards; not yet added to The General).
+- [x] "Your progression" shows only in The General under its own label; last copy removed from the plan blocks.
 - [ ] OPEN: fresh phone screenshots (360/390 px + iPhone size) of every card type and the page audit for this round.
 
 # OWNER PLAN CARD FIXES — T10 FINAL — 2026-10-08 23:59 UTC — Ready to publish: yes (website; nothing published)
