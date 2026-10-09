@@ -19,7 +19,7 @@ const LIFECYCLES: LifecycleClass[] = ["youth", "beginner", "intermediate", "adva
 const GYM = ["full_gym", "ladder", "med_ball", "box", "bands", "bat", "tennis_ball"];
 
 describe("fast-twitch warm-up primer", () => {
-  it("starts every warm-up with the five-minute tissue-prep block for 8 simulated weeks", () => {
+  it("starts every warm-up with rolling then a rhythmic tissue-prep movement for 8 simulated weeks", () => {
     for (const context of CONTEXTS) {
       for (const lifecycle of LIFECYCLES) {
         for (const sport of ["baseball", "softball"] as const) {
@@ -27,8 +27,13 @@ describe("fast-twitch warm-up primer", () => {
             for (let day = 0; day < 56; day++) {
               const built = buildWarmup({ context, lifecycle, gameDay: context === "game_day", daySeed: day, equipment: day % 2 ? GYM : [], sport, isThrower });
               expect(built.drills[0]?.role, `${context}/${lifecycle}/${sport}/${isThrower}/day-${day}`).toBe("tissue_prep");
-              expect(built.drills[0]?.dosage).toBe("5 minutes total");
-              expect(built.drills.slice(1).some((d) => d.role === "tissue_prep")).toBe(false);
+              expect(built.drills[0]?.slug).toBe("wu_tissue_prep_roll_and_rhythm");
+              expect(built.drills[0]?.cue).toMatch(/30 seconds/);
+              expect(built.drills[0]?.setup).toMatch(/4 out of 10/);
+              expect(built.drills[1]?.slug).toBe("wu_tissue_prep_rhythmic_shake");
+              expect(built.drills[1]?.cue).toMatch(/bounces/);
+              if (isThrower) expect(built.drills[0]?.cue).toMatch(/pec/);
+              expect(built.drills.slice(2).some((d) => d.role === "tissue_prep")).toBe(false);
             }
           }
         }
