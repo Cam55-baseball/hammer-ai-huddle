@@ -25,6 +25,7 @@ export interface IntegrityRow {
 export interface IntegrityCatch {
   rule:
     | "nonpositive_number"
+    | "distance_vs_name"
     | "missing_sets"
     | "text_distance_mismatch"
     | "text_time_mismatch"
@@ -104,6 +105,13 @@ export function repairInstruction(text: string | null | undefined, row: Integrit
   return t;
 }
 
+/** Distance written in an activity's name or slug, in feet (one only). */
+export function nameDistanceFeet(text: string): number | null {
+  const hits = [...text.matchAll(/\b(\d{2,3})[-_ ]?(foot|feet|ft|yard|yards|yd|y)\b/gi)];
+  const vals = [...new Set(hits.map((h) => Number(h[1]) * (UNIT_FT[h[2].toLowerCase()] ?? 1)))];
+  return vals.length === 1 ? vals[0] : null;
+}
+
 /** Full check of one prescription row. Returns a repaired copy + catches. */
 export function checkPrescription<T extends IntegrityRow>(row: T): { row: T; catches: IntegrityCatch[] } {
   const catches: IntegrityCatch[] = [];
@@ -113,6 +121,13 @@ export function checkPrescription<T extends IntegrityRow>(row: T): { row: T; cat
       catches.push({ rule: "nonpositive_number", field: k, detail: `${k}=${r[k]}` });
       r[k] = null;
     }
+  }
+  // The activity's own name states its distance ("Repeated 90-Foot Sprints"):
+  // the saved distance must match it (live bug: 90-ft sprints saved as 1 ft).
+  const named = nameDistanceFeet(`${r.movement_name ?? ""} ${r.movement_slug ?? ""}`);
+  if (named && r.distance_feet !== named && /feet|yards/.test(String(r.dosage_unit ?? "feet").toLowerCase())) {
+    catches.push({ rule: "distance_vs_name", field: "distance_feet", detail: `${r.distance_feet} → ${named} ft` });
+    r.distance_feet = named;
   }
   if (r.reps && !r.sets && (r.slot === "lift" || r.slot === "supplemental" || r.slot === "speed")) {
     catches.push({ rule: "missing_sets", field: "sets", detail: "reps without sets → 1 set" });
