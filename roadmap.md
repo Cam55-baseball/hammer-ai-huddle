@@ -1,3 +1,12 @@
+# OWNER FIXES ROUND 2 — FINAL PROOF (U12, 2026-10-09) — Ready to publish: yes (website; nothing published, no cron changes)
+- [x] Library audit (976 exercises), before → after repair: 26 text distance vs dose, 10 text time vs dose, 7 saved distance vs the exercise's own name, 1 two actions in one rep = 44 → 0.
+- [x] Live double-check catch list (owner-only): 0 catches so far from plan builds or screens.
+- [x] Rendered-text tests on real plans (no contradictions, wrong units, impossible combinations), PFP and defense audit, 8-week tissue-prep simulation: all pass.
+- [x] Full suite: 296 files / 2,558 tests passed. Build OK.
+- [x] Phone shots of every card type, inline and pop-up, closed and open, header visible (360/390/393 px): `legal-screens/plan-cards-r2/`. Page audit 170/170 clean. Both were taken earlier today; card code has not changed since.
+- Owner check: 341 how-to drafts in `docs/owner/basic-how-to-review.tsv` — PFP, extra throwing and EASS first.
+- Waiting on owner: publish, then the live-site return check; the parent email link for players outside the US is still on hold.
+
 # OWNER FIXES ROUND 2 — 2026-10-09 — Ready to publish: yes (website; nothing published)
 - [x] A Double-check: one checker runs before every plan is saved (live on the backend now) and again on every card shown, inline and pop-up; older inline drill rows are checked against their own written dose. Catches go to an owner-only list (plan builds: rule `integrity:*`; screens: `integrity_render:*`). Root cause: the old test checked a helper, not the saved plan or the text players read.
 - [x] A Audit, whole library (976 exercises): found 44 — 26 text distance vs dose, 10 text time vs dose, 7 saved distance vs the exercise's own name (e.g. repeated 90-foot sprints saved as 1 foot; now 90), 1 two-actions-in-one-rep. After repair: 0. Script: `scripts/audits/integrity-audit.ts`.
