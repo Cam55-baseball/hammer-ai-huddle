@@ -15,6 +15,7 @@
 - [x] Speed rep timer: a new test starts and stops the timer on a speed card and confirms it fills rep 1's time and leaves rep 2 empty (2026-10-09). Still not seen on a live card because this player has no speed card today.
 - [x] U5 re-check (2026-10-09): no new owner input or approvals arrived; every Round 2 item stays done and the only open items remain owner-blocked (how-to text check; publish, then the live-site return check; non-US parent email link). No changes made, nothing published, no cron or iOS changes, no test data.
 - [x] U6 re-check (2026-10-09): checked docs/owner and uploads — no new owner input; all Round 2 items remain done, open items still owner-blocked. No changes made, nothing published, no cron or iOS changes, no test data.
+- [x] U7 re-check (2026-10-09): no new owner input (docs/owner newest file is still basic-how-to-review.tsv); all Round 2 items remain done, open items still owner-blocked. No changes made, nothing published, no cron or iOS changes, no test data.
 
 ## Waiting on owner
 - Check the 341 basic how-to texts in `docs/owner/basic-how-to-review.tsv` (PFP, extra throwing, EASS first).
