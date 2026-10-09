@@ -9,7 +9,8 @@
 - [x] G Players see "midnight" only. H Today / Next up below the streak. I Report a problem at the bottom of every page. J Pop-up header sticky with safe-area padding.
 - [x] Tests that read rendered text: `src/lib/hammer/prescription/__tests__/prescriptionIntegrity.test.tsx`. Full suite: 295 files / 2,556 tests passed. Build OK.
 - [x] "Your progression" shows only in The General under its own label; last copy removed from the plan blocks.
-- [ ] OPEN: fresh phone screenshots (360/390 px + iPhone size) of every card type and the page audit for this round.
+- [x] Player phone check (360, 390, iPhone 393 px) found and fixed 2 more errors: a "30 reps total" card asked for 2 rows of 30 (rows now always add up to the total), and 110 timed non-hold drills said "hold the position" (now only real holds say that). Screenshots: `legal-screens/plan-cards-r2/`. No "1 feet", noon, card rules or progression lines; 0 page errors.
+- [ ] OPEN: screenshots of every remaining card type and pop-up (only the open block was captured; the others start closed), plus the page audit, for this round.
 
 # OWNER PLAN CARD FIXES — T10 FINAL — 2026-10-08 23:59 UTC — Ready to publish: yes (website; nothing published)
 - [x] T10 final checks: full suite 294 files / 2,544 tests passed (includes the dose-string test, the defense role-bleed test, the 8-week tissue-prep-first warm-up simulation and the 30s/5m/1h reload-on-return tests). Fresh player screenshots of all six card types at 360 and 390 px, drawer closed and open — 24 images in `legal-screens/plan-cards-t10/`, 0 page errors, no "Rules for this card", no move-up criteria, no "1 feet", no "Today — .". Page audit as the player at 390 px: 170/170 pages, 0 crashes, 0 errors, 0 sideways overflow (one hit on /terms was the words "Something went wrong" inside the billing text, not an error). No changes to the app, nothing published, no cron changes, no test data.
