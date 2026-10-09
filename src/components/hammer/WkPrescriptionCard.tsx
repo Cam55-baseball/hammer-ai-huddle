@@ -5,6 +5,7 @@
  */
 import { useState } from "react";
 import { useCheckedRx } from "@/lib/hammer/prescription/useCheckedRx";
+import { repairInstruction } from "../../../supabase/functions/_shared/wic/integrity/doseIntegrity";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -100,6 +101,7 @@ export function WkPrescriptionCard({
 }) {
   // Prescription double-check: every card is repaired before it is shown.
   const rx = useCheckedRx(rawRx);
+  const repair = (t: string) => repairInstruction(t, rx, "guide") ?? t;
   const pocketDetails = usePocketDetails();
   const [open, setOpen] = useState(pocketDetails);
   const [swapOpen, setSwapOpen] = useState(false);
@@ -351,7 +353,7 @@ export function WkPrescriptionCard({
 
         <div className="mt-2 space-y-2 text-xs">
           <div className="font-medium text-foreground" data-prescribed-dose>{dosage}</div>
-          <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} dosage={dosage} setup={(why as any)?.setup} cue={why.cue} />
+          <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} dosage={dosage} setup={(why as any)?.setup} cue={why.cue} repair={repair} />
           <div className="rounded border border-border bg-muted/20 p-2 space-y-2" data-visible-log-rows>
             <span className="font-medium">Log this work</span>
             <InlinePrescriptionLog rx={rx} />
@@ -381,7 +383,7 @@ export function WkPrescriptionCard({
               <ExerciseInstructions name={rx.movement_name} slug={rx.movement_slug} dosage={dosage}
                 setup={(why as any)?.setup} cue={why.cue}
                 why={[whyText, today].filter(Boolean).join(" ") || null}
-                changes={changes} />
+                changes={changes} repair={repair} />
             );
           })()}
           {plateau && (
