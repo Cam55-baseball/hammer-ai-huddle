@@ -13,6 +13,7 @@
 - [x] Every pop-up card today (warm-up, bat speed, hitting, throwing, lift, recovery) opened as the player at 360, 390 and iPhone 393 px: header, Start and X visible at the top every time, exercises start closed, no "1 feet", noon, card rules, progression, "undefined" or "NaN". Closed and open shots in `legal-screens/plan-cards-r2/`.
 - [x] Page audit as the player at 390 px: 170/170 pages, 0 error screens, 0 page errors, 0 sideways scrolling, Report a problem at the bottom of all 170. Full suite: 295 files / 2,557 tests passed. Build OK.
 - [x] Speed rep timer: a new test starts and stops the timer on a speed card and confirms it fills rep 1's time and leaves rep 2 empty (2026-10-09). Still not seen on a live card because this player has no speed card today.
+- [x] U5 re-check (2026-10-09): no new owner input or approvals arrived; every Round 2 item stays done and the only open items remain owner-blocked (how-to text check; publish, then the live-site return check; non-US parent email link). No changes made, nothing published, no cron or iOS changes, no test data.
 
 ## Waiting on owner
 - Check the 341 basic how-to texts in `docs/owner/basic-how-to-review.tsv` (PFP, extra throwing, EASS first).
