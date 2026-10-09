@@ -14,7 +14,6 @@
  *
  * Schedule context line from `useScheduleWindow` retained.
  */
-import { ReportProblemButton } from "@/components/support/ReportProblemButton";
 import { WeeklyBodyLoadBar } from "@/components/hammer/WeeklyBodyLoadBar";
 import { FinishProfileCard } from "@/components/hammer/FinishProfileCard";
 import { TrendDeloadNotice } from "@/components/hammer/TrendDeloadNotice";
@@ -1064,14 +1063,13 @@ function HammerDailyPlanBody({
           return (
             <ArmCareBudgetProvider owner={armCareOwner}>
              <TodayRhythmProvider planDate={pocketDate}>
-              <DayCommandCenter />
               <WkSafePlanNotice />
               <TrendDeloadNotice />
               <ReleaseCountdown />
               <PlanStreakStrip />
+              <DayCommandCenter />
               <WkRestDayBanner />
               <WkSomethingOffRow />
-              <div className="flex justify-end"><ReportProblemButton className="h-7 text-[12px]" /></div>
               <HammerCheckInCard
                 quizType="morning"
                 completed={vaultQuizzes.hasCompleted("morning")}
