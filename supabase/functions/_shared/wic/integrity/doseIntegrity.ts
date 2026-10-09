@@ -55,13 +55,20 @@ function sayDistance(feet: number, unit: string): string {
   return plural(feet, "foot", "feet");
 }
 
+/** A distance that describes spacing, a lead or a size — not how far the rep goes. */
+function isSpacing(all: string, at: number, len: number): boolean {
+  const around = all.slice(Math.max(0, at - 24), at + len + 24).toLowerCase();
+  return /apart|spacing|spaced|\blead\b|off the bag|between|wide|tall|high|away from|from the (wall|bag|plate)|radius|square|box/.test(around);
+}
+
 /** Repair any distance/time numbers in `text` that disagree with the dose. */
 export function repairDoseText(text: string, row: IntegrityRow, field = "text", catches: IntegrityCatch[] = []): string {
   if (!text) return text;
   let out = text;
   const feet = row.distance_feet && row.distance_feet > 0 ? row.distance_feet : null;
   if (feet) {
-    out = out.replace(DIST_RE, (m, a, b, unit) => {
+    out = out.replace(DIST_RE, (m, a, b, unit, at: number, all: string) => {
+      if (isSpacing(all, at, m.length)) return m;
       const mult = UNIT_FT[String(unit).toLowerCase()];
       if (!mult) return m;
       const lo = Number(a) * mult, hi = (b ? Number(b) : Number(a)) * mult;
@@ -71,7 +78,8 @@ export function repairDoseText(text: string, row: IntegrityRow, field = "text", 
     });
   } else if (row.slot === "speed" || row.slot === "conditioning") {
     // No distance prescribed: never let text invent one.
-    out = out.replace(DIST_RE, (m) => {
+    out = out.replace(DIST_RE, (m, _a, _b, _u, at: number, all: string) => {
+      if (isSpacing(all, at, m.length)) return m;
       catches.push({ rule: "text_distance_mismatch", field, detail: `"${m}" with no prescribed distance` });
       return "the prescribed distance";
     });
