@@ -6,9 +6,10 @@ import type { MovementGuide } from "@/lib/hammer/prescription/movementGuide";
 import { activityBasics } from "./ActivityBasics";
 
 /** The movement's existing guide, shown inline; never invents or changes a dose. */
-export function ExerciseInstructions({ name, slug, guideOverride, setup, cue, stopIf, dosage }: {
+export function ExerciseInstructions({ name, slug, guideOverride, setup, cue, stopIf, dosage, why, changes }: {
   name: string; slug?: string | null; guideOverride?: MovementGuide | null;
   setup?: string | null; cue?: string | null; stopIf?: string | null; dosage?: string | null;
+  why?: string | null; changes?: ReadonlyArray<string>;
 }) {
   const [open, setOpen] = useState(false);
   const resolved = activityBasics({ name, slug, setup, cue, stopIf, dosage });
@@ -27,9 +28,8 @@ export function ExerciseInstructions({ name, slug, guideOverride, setup, cue, st
       {steps.length > 0 && <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">{steps.map((step, i) => <li key={i}>{step}</li>)}</ol>}
       {(cue || guide?.feel) && <p className="text-muted-foreground"><span className="font-medium text-foreground">Cue: </span>{cue ?? guide?.feel}</p>}
       <p className="text-muted-foreground"><span className="font-medium text-foreground">Stop if: </span>{stopIf ?? guide?.stopIf ?? fallback?.stopIf ?? "You feel pain."}</p>
-      {guide?.whyToday && <p className="text-muted-foreground"><span className="font-medium text-foreground">Why this movement: </span>{guide.whyToday}</p>}
-      <p className="text-muted-foreground"><span className="font-medium text-foreground">Your progression: </span>{guide?.nextLink ?? "Complete today's prescribed work cleanly before adding more."}</p>
-      <p className="text-muted-foreground"><span className="font-medium text-foreground">Why today's work changed: </span>No change was recorded for this movement today.</p>
+      {(why || guide?.whyToday) && <p data-why-movement className="text-muted-foreground"><span className="font-medium text-foreground">Why this movement: </span>{why || guide?.whyToday}</p>}
+      <p data-why-changed className="text-muted-foreground"><span className="font-medium text-foreground">Why today's work changed: </span>{changes && changes.length ? changes.join(" ") : "Nothing changed today."}</p>
     </CollapsibleContent>
   </Collapsible>;
 }
