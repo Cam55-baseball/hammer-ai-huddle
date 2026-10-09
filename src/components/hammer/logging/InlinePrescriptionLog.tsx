@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -80,7 +80,28 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     sessionStorage.removeItem(key);
     toast.success("Log saved");
   };
+  const hasTime = spec.fields.some((f) => f.key === "time") && (rx.slot === "speed" || rx.slot === "conditioning");
+  const startedAt = useRef<number | null>(null);
+  const [running, setRunning] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!running) return;
+    const id = window.setInterval(() => setElapsed((Date.now() - (startedAt.current ?? Date.now())) / 1000), 100);
+    return () => window.clearInterval(id);
+  }, [running]);
+  const toggleTimer = () => {
+    if (!running) { startedAt.current = Date.now(); setElapsed(0); setRunning(true); return; }
+    setRunning(false);
+    const secs = ((Date.now() - (startedAt.current ?? Date.now())) / 1000).toFixed(2);
+    const i = rounds.findIndex((r) => !r.time);
+    if (i >= 0) edit(i, "time", secs);
+  };
   return <div className="space-y-2" data-inline-prescription-log>
+    {hasTime && <div className="flex items-center gap-2" data-rep-timer>
+      <Button type="button" size="sm" variant={running ? "default" : "outline"} className="h-9 min-w-[96px]" onClick={toggleTimer}>{running ? "Stop timer" : "Start timer"}</Button>
+      <span className="font-mono text-sm tabular-nums text-foreground" aria-live="polite">{elapsed.toFixed(2)} s</span>
+      <span className="text-[11px] text-muted-foreground">Stop fills the next rep's time.</span>
+    </div>}
     <div className="grid gap-1.5 px-1 text-[10px] uppercase tracking-wide text-muted-foreground" style={{ gridTemplateColumns: `28px repeat(${spec.fields.length}, minmax(0, 1fr))` }}>
       <span />{spec.fields.map((f) => <span key={f.key}>{f.label}{f.unit ? ` (${f.unit})` : ""}</span>)}
     </div>
