@@ -18,6 +18,7 @@
 - [x] U7 re-check (2026-10-09): no new owner input (docs/owner newest file is still basic-how-to-review.tsv); all Round 2 items remain done, open items still owner-blocked. No changes made, nothing published, no cron or iOS changes, no test data.
 - [x] U8 re-check (2026-10-09): re-checked docs/owner and uploads — no new owner input; all Round 2 items remain done, open items still owner-blocked. No changes made, nothing published, no cron or iOS changes, no test data.
 - [x] U9 re-check (2026-10-09): re-checked docs/owner and uploads (newest file still basic-how-to-review.tsv) and read the live site's own code — hammersmodality.org still serves the pre-Round-2 build (its plan code has no "Extra log (optional)", no "Copy to other side", no "midnight"), so publishing is confirmed outstanding and the live-site return check still cannot run. All Round 2 items remain done, open items still owner-blocked. No changes made, nothing published, no cron or iOS changes, no test data.
+- [x] U10 re-check (2026-10-09): re-checked docs/owner — newest file is still basic-how-to-review.tsv, no new owner input; all Round 2 items remain done, open items still owner-blocked. No changes made, nothing published, no cron or iOS changes, no test data.
 
 ## Waiting on owner
 - Check the 341 basic how-to texts in `docs/owner/basic-how-to-review.tsv` (PFP, extra throwing, EASS first).
