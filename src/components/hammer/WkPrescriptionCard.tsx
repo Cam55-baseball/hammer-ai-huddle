@@ -4,6 +4,7 @@
  * injury substitutions, and a complete/skip control.
  */
 import { useState } from "react";
+import { useCheckedRx } from "@/lib/hammer/prescription/useCheckedRx";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -83,7 +84,7 @@ function cleanAthleteCopy(value: string | null | undefined): string | null {
 }
 
 export function WkPrescriptionCard({
-  rx,
+  rx: rawRx,
   phaseDisplay,
   phaseKey,
   generating,
@@ -97,6 +98,8 @@ export function WkPrescriptionCard({
   side?: "L" | "R" | null;
   allowSwap?: boolean;
 }) {
+  // Prescription double-check: every card is repaired before it is shown.
+  const rx = useCheckedRx(rawRx);
   const pocketDetails = usePocketDetails();
   const [open, setOpen] = useState(pocketDetails);
   const [swapOpen, setSwapOpen] = useState(false);
