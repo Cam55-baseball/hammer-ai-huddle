@@ -83,6 +83,7 @@ export const WARMUP_LIBRARY: WarmupDrill[] = [
 
   // Tissue prep / ECM
   { slug: "wu_tissue_prep_roll_and_rhythm", name: "Tissue prep — rolling + rhythmic movement", role: "tissue_prep", setup: "Use a tennis ball or your hands for gentle pressure, then clear space for easy swings and bounces.", cue: "Roll the major areas, then use easy oscillations, bounces, and swings before faster work.", stopIf: "sharp pain, numbness, tingling, or bruising pressure", gameDayLegal: true, minLifecycle: "youth", source: "owner_tissue_prep_law", baseDose: "5 minutes total" },
+  { slug: "wu_tissue_prep_rhythmic_shake", name: "Tissue prep 2 — bounces, swings and shake-outs", role: "tissue_prep", setup: "Open space; a wall or fence for balance on leg swings.", cue: "Small quick ankle bounces, then loose leg swings, arm swings and a shake-out.", stopIf: "sharp pain or a pinching joint", gameDayLegal: true, minLifecycle: "youth", source: "owner_tissue_prep_law", baseDose: "2 minutes total", equipment: [] },
   { slug: "wu_foam_roll_tspine", name: "T-spine foam roll extensions", role: "tissue_prep", setup: "roller under mid-back", cue: "small ranges, exhale into extension", stopIf: "pinch or sharp pain", gameDayLegal: true, minLifecycle: "youth", source: "internal", baseDose: "8 slow reps" },
   { slug: "wu_lacrosse_ball_pec", name: "Lacrosse ball pec minor pin", role: "tissue_prep", setup: "ball against wall on pec minor", cue: "search-hold-move — arm slow figure-8", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "30-45 sec per side" },
   { slug: "wu_lacrosse_ball_glute", name: "Lacrosse ball glute pin-and-stretch", role: "tissue_prep", cue: "find a hotspot, then flex/extend hip", gameDayLegal: true, minLifecycle: "beginner", source: "internal", baseDose: "45 sec per side" },
@@ -630,37 +631,60 @@ export interface BuiltWarmupDrill {
   readonly axis?: WarmupAxis;
 }
 
-function tissuePrepBlock(input: BuildWarmupInput, available: Set<string>): BuiltWarmupDrill {
+function tissuePrepBlock(input: BuildWarmupInput, available: Set<string>): BuiltWarmupDrill[] {
   const hasBall = available.has("tennis_ball") || available.has("lacrosse_ball") || available.has("softball");
   const thrower = input.isThrower !== false;
-  const upper = thrower ? " Then roll the pec, lat, and forearm." : "";
-  return {
+  const softball = input.sport === "softball";
+  const tool = hasBall ? "a tennis ball" : "your hands (no ball today)";
+  const upper = thrower ? " Then the chest (pec) against a wall, the side of your back under your armpit (lat), and the forearm on a table — about 20 seconds each, throwing arm first." : "";
+  const where = "Feet: stand and roll the ball under each foot, heel to toes — 30 seconds per foot. Calves: sit, ball under the calf, rock the leg side to side — 30 seconds per leg. Hips/glutes: sit on the ball, lean onto one glute and make small circles — 30 seconds per side. Upper back: lie with the ball between your shoulder blade and spine, roll a few inches up and down — 30 seconds per side.";
+  const rolling: BuiltWarmupDrill = {
     slug: "wu_tissue_prep_roll_and_rhythm",
-    name: "Tissue prep — rolling + rhythmic movement",
+    name: "Tissue prep 1 — tennis-ball rolling",
     role: "tissue_prep",
     setup: hasBall
-      ? "Use a tennis ball or similar soft ball against the floor or wall. Clear space for easy swings and bounces."
-      : "No ball is available today. Use your hands for gentle pressure, then clear space for easy swings and bounces.",
-    dosage: "5 minutes total",
-    cue: `Spend about 30 seconds each on feet, calves, hips/glutes, and upper back.${upper} Then do easy ankle bounces, leg swings, and arm swings to break the stiffness before faster work.`,
+      ? "Use a tennis ball on the floor or against a wall. Press with medium pressure — about a 4 out of 10: firm enough to feel it, never painful."
+      : "No ball today: press and knead with your hands at about a 4 out of 10 pressure — firm, never painful.",
+    dosage: "3 minutes total",
+    cue: `${where}${upper}`,
     stopIf: "You feel sharp pain, numbness, tingling, or bruising pressure.",
     source: "owner_tissue_prep_law",
-    equipmentNote: hasBall ? "You need: tennis ball or similar soft ball." : undefined,
+    equipmentNote: hasBall ? "You need: a tennis ball." : undefined,
     guide: {
-      what: "Gentle rolling followed by rhythmic movement warms stiff tissue so it can move and spring more freely.",
-      setup: hasBall ? "Use a tennis ball or similar soft ball against the floor or wall." : "Use your hands for light pressure because no ball is available.",
-      goodRep: [
-        `Roll feet, calves, hips/glutes, and upper back.${upper}`,
-        "Use slow pressure that feels useful, never sharp.",
-        "Finish with easy oscillations, bounces, leg swings, and arm swings.",
-      ],
-      badRep: ["Grinding hard on one sore spot.", "Skipping the rhythmic movement after rolling."],
-      feel: "Warmer, less stiff, and ready to move faster.",
-      whyToday: "Tissue gets stiffer while you rest. Rolling and rhythm come first to restore easy movement before training.",
-      nextLink: "Continue into the rest of today's warm-up.",
+      what: `Roll your feet, calves, hips/glutes and upper back with ${tool} at medium pressure (about 4 out of 10), about 30 seconds per spot.${thrower ? " Throwers also roll the chest, lat and forearm." : ""}`,
+      setup: hasBall ? "Tennis ball on the floor or against a wall." : "Use your hands for pressure.",
+      goodRep: [where, ...(thrower ? [upper.trim()] : []), "Keep breathing slowly; pressure stays about 4 out of 10."],
+      badRep: ["Grinding hard on one sore spot.", "Rolling over bone or the back of the knee."],
+      feel: "Warmer and less stiff.",
+      whyToday: "Tissue stiffens while you sit still. Pressure and movement loosen it so it can stretch and spring.",
+      nextLink: "Go straight into the rhythmic movements.",
       stopIf: "Sharp pain, numbness, tingling, or bruising pressure.",
     },
   };
+  const swings = thrower
+    ? "10 easy arm swings across the chest and 10 big arm circles each way"
+    : "10 easy arm swings across the chest";
+  const rhythm: BuiltWarmupDrill = {
+    slug: "wu_tissue_prep_rhythmic_shake",
+    name: "Tissue prep 2 — bounces, swings and shake-outs",
+    role: "tissue_prep",
+    setup: "Stand tall in open space with room to swing your arms and legs. Hold a wall or fence for the leg swings.",
+    dosage: "2 minutes total",
+    cue: `Do 20 quick, small ankle bounces (heels barely leave the ground), then 10 front-to-back leg swings and 10 side-to-side leg swings on each leg, then ${swings}, then shake out your arms and legs loosely for 15 seconds.${softball && thrower ? " Pitchers add 10 slow windmill circles each way." : ""}`,
+    stopIf: "You feel sharp pain or a joint pinches.",
+    source: "owner_tissue_prep_law",
+    guide: {
+      what: "Quick ankle bounces, then loose leg and arm swings and a shake-out. The rhythm breaks up stiffness so the body moves freely before faster work.",
+      setup: "Open space; a wall or fence for balance on leg swings.",
+      goodRep: ["20 small, springy ankle bounces.", "10 front-to-back and 10 side-to-side leg swings per leg.", `${swings[0].toUpperCase()}${swings.slice(1)}.`, "Shake out arms and legs for 15 seconds."],
+      badRep: ["Forcing the swings to the end of your range.", "Bouncing high and heavy instead of small and quick."],
+      feel: "Loose and springy.",
+      whyToday: "Rhythmic movement right after rolling turns the loosened tissue into easy, springy motion.",
+      nextLink: "Continue into the rest of today's warm-up.",
+      stopIf: "Sharp pain or a pinching joint.",
+    },
+  };
+  return [rolling, rhythm];
 }
 
 export interface BuiltWarmup {
@@ -718,7 +742,7 @@ export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
   }
   const seedBase = input.daySeed ?? 0;
   const seen = new Set<string>();
-  const drills: BuiltWarmupDrill[] = [tissuePrepBlock(input, filtersBase.available)];
+  const drills: BuiltWarmupDrill[] = [...tissuePrepBlock(input, filtersBase.available)];
   seen.add(drills[0].slug);
   roles.forEach((role, i) => {
     // The owner-required 4–6 minute tissue sequence is always first and owns

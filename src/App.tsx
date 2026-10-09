@@ -1,4 +1,5 @@
 // Force rebuild to clear stale module references - Dec 2025
+import { PageFooterReport } from "@/components/support/PageFooterReport";
 import { RetiredProgramRoute } from "@/components/archive/RetiredProgramRoute";
 import NativeAppleSignIn from "./pages/NativeAppleSignIn";
 import { Suspense, useEffect, ComponentType } from "react";
@@ -579,6 +580,7 @@ const App = () => {
               <Route path="/demo/:tier/:category/:submodule" element={<DemoSubmodule />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
+              <PageFooterReport />
               </LegalV2Gate>
               </AccountGate>
               <DemoTourHost />

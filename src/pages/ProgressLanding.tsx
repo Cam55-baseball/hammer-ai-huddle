@@ -1,3 +1,4 @@
+import { YourProgressionCard } from "@/components/progress/YourProgressionCard";
 /**
  * ProgressLanding — topic-driven landing layer above the legacy
  * ProgressDashboard. Users land on ranked topic buttons; each panel
@@ -207,6 +208,7 @@ export default function ProgressLanding() {
           </p>
         </div>
         <SeasonCounter />
+        <YourProgressionCard />
 
         <TopicButtonGrid tiles={tiles} onSelect={handleSelect} />
 

@@ -1,0 +1,44 @@
+[
+ {
+  "slug": "repeat_43ft_sb",
+  "name": "Repeated 43-Foot Sprints (Softball)",
+  "old": 1,
+  "new": 43
+ },
+ {
+  "slug": "repeat_90ft_bb",
+  "name": "Repeated 90-Foot Sprints (Baseball)",
+  "old": 1,
+  "new": 90
+ },
+ {
+  "slug": "sp_hill_short_10",
+  "name": "Short Steep Hill 10y",
+  "old": 60,
+  "new": 30
+ },
+ {
+  "slug": "sp_ins_and_outs",
+  "name": "Ins-and-Outs 60y",
+  "old": 60,
+  "new": 180
+ },
+ {
+  "slug": "sp_sb_43ft_break",
+  "name": "Softball 43ft Primary Lead Break",
+  "old": 60,
+  "new": 43
+ },
+ {
+  "slug": "sp_sled_10y_light",
+  "name": "Light Sled Sprint 10y",
+  "old": 60,
+  "new": 30
+ },
+ {
+  "slug": "sp_tempo_build_60",
+  "name": "Tempo Build 60y @ 85%",
+  "old": 60,
+  "new": 180
+ }
+]

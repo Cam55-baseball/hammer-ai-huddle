@@ -292,7 +292,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
             <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-[11px] leading-snug">
               <span className="font-medium">One side at a time.</span> Every round is
               tagged L or R so Hammer can track each limb on its own. Log side one,
-              then tap <span className="font-medium">Mirror</span> to copy it across.
+              then tap <span className="font-medium">Copy to other side</span> to fill in the same numbers for your other side.
             </div>
           )}
 

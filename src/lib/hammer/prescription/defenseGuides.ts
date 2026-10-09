@@ -222,13 +222,13 @@ const G: Record<string, DefenseGuide> = {
   // ============ PITCHER (PFP) ==============================================
   pfp_1_3_1: {
     what:
-      "The classic Pitcher's Fielding Practice sequence. Comebacker to the pitcher (1), throw to first (3), and if a runner rounds, cover first for a return throw (back to 1).",
+      "Pitcher's Fielding Practice with two kinds of rep, one play per rep. Rep A: field a comebacker and throw to first (1-3). Rep B: on a ground ball to the right side, run to cover first and take the throw from the first baseman (3-1). Alternate A and B.",
     setup: "Bullpen mound to home. First baseman at 1B, coach hits a comebacker at the pitcher after delivery. Bases marked with cones as needed.",
     goodRep: [
       "After delivery, you land square with your glove up — ready to react.",
       "Inside the 45-ft line: soft underhand toss led out in front of the 1B.",
       "Outside the 45-ft line: overhand chest-high throw.",
-      "Cover first with a controlled sprint — hit the inside of the bag on the run.",
+      "Rep B only: break to first on contact, run a curved path, and step on the inside of the bag as you catch the throw.",
     ],
     badRep: [
       "Sidearm/flip throws that pull the 1B off the bag.",
@@ -243,7 +243,7 @@ const G: Record<string, DefenseGuide> = {
       beginner: "Walk-through only, no batter, coach rolls the ball at you. 4 reps.",
       developing: "Coach fungoes at 60%. Real toss/throw to 1B. 6 reps.",
       advanced: "Live BP comebackers. 8 reps.",
-      elite: "Full simulated inning: 3 comebackers + 2 bunts + 1 covers. Under a coach's stopwatch.",
+      elite: "Full simulated inning, one play per rep: 3 comebackers, 2 bunts and 1 cover of first. Under a coach's stopwatch.",
     },
   },
   comebacker_glove: {

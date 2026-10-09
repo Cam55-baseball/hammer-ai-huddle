@@ -4,6 +4,8 @@
  * injury substitutions, and a complete/skip control.
  */
 import { useState } from "react";
+import { useCheckedRx } from "@/lib/hammer/prescription/useCheckedRx";
+import { repairInstruction } from "../../../supabase/functions/_shared/wic/integrity/doseIntegrity";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +22,7 @@ import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { useHammerDailyTasks } from "@/hooks/useHammerDailyTasks";
 import { LogButton } from "@/components/hammer/logging/LogButton";
 import { WkOneTapLog } from "@/components/hammer/logging/WkOneTapLog";
+import { CardOutcomeLog } from "@/components/hammer/logging/CardOutcomeLog";
 import { useLiftPlateau, useVerifiedMax } from "@/hooks/useVerifiedMax";
 import { workingWeight, UNLOCK_COPY } from "@/lib/lift/verifiedMax";
 import { MethodBadge, MethodPanel } from "@/components/hammer/MethodPanel";
@@ -82,7 +85,7 @@ function cleanAthleteCopy(value: string | null | undefined): string | null {
 }
 
 export function WkPrescriptionCard({
-  rx,
+  rx: rawRx,
   phaseDisplay,
   phaseKey,
   generating,
@@ -96,8 +99,11 @@ export function WkPrescriptionCard({
   side?: "L" | "R" | null;
   allowSwap?: boolean;
 }) {
+  // Prescription double-check: every card is repaired before it is shown.
+  const rx = useCheckedRx(rawRx);
+  const repair = (t: string) => repairInstruction(t, rx, "guide") ?? t;
   const pocketDetails = usePocketDetails();
-  const [open, setOpen] = useState(pocketDetails);
+  const [open, setOpen] = useState(false); // owner: every exercise starts collapsed, pop-ups too
   const [swapOpen, setSwapOpen] = useState(false);
   // Availability is resolved against the certified ladder (or, for rows that
   // predate substitution families, the identical catalog-derived ladder).
@@ -288,7 +294,7 @@ export function WkPrescriptionCard({
 
   return (
     <Card className={`p-3 border ${checked ? "opacity-60" : ""}`}>
-      <Collapsible open={pocketDetails || open} onOpenChange={setOpen}>
+      <Collapsible open={open} onOpenChange={setOpen}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Checkbox
             checked={checked}
@@ -296,11 +302,11 @@ export function WkPrescriptionCard({
             className="shrink-0"
             aria-label={`Mark ${rx.movement_name} done`}
           />
-          <CollapsibleTrigger asChild disabled={pocketDetails}>
+          <CollapsibleTrigger asChild>
             <button
               type="button"
               className="min-w-[9rem] flex-1 text-left"
-              aria-expanded={pocketDetails || open}
+              aria-expanded={open}
             >
               <div className="font-semibold text-sm whitespace-normal break-words">
                 {rx.movement_name}
@@ -338,7 +344,7 @@ export function WkPrescriptionCard({
            {swapAvailable && (
             <LiftSwapSheet rx={rx} open={swapOpen} onOpenChange={setSwapOpen} />
           )}
-          {!pocketDetails && <CollapsibleTrigger asChild>
+          {<CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="h-7 px-2 shrink-0">
               <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
             </Button>
@@ -347,22 +353,48 @@ export function WkPrescriptionCard({
 
         <div className="mt-2 space-y-2 text-xs">
           <div className="font-medium text-foreground" data-prescribed-dose>{dosage}</div>
-          <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} dosage={dosage} setup={(why as any)?.setup} cue={why.cue} />
-          <div className="rounded border border-border bg-muted/20 p-2" data-visible-log-rows>
-            <div className="mb-1 flex items-center justify-between gap-2">
-              <span className="font-medium">Log this work</span>
-              <LogButton rx={rx} dosageText={dosage} compact />
-            </div>
+          <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} dosage={dosage} setup={(why as any)?.setup} cue={why.cue} repair={repair} />
+          <div className="rounded border border-border bg-muted/20 p-2 space-y-2" data-visible-log-rows>
+            <span className="font-medium">Log this work</span>
             <InlinePrescriptionLog rx={rx} />
+            <CardOutcomeLog rx={rx} disabled={missedLocked} />
           </div>
-          <ExerciseInstructions name={rx.movement_name} slug={rx.movement_slug} dosage={dosage} setup={(why as any)?.setup} cue={why.cue} />
+          <Collapsible data-extra-log>
+            <CollapsibleTrigger asChild>
+              <Button type="button" variant="ghost" className="h-9 w-full justify-between text-xs font-medium">
+                Extra log (optional)
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-1 space-y-2">
+              <LogButton rx={rx} dosageText={dosage} compact />
+              <WkOneTapLog rx={rx} />
+            </CollapsibleContent>
+          </Collapsible>
+          {(() => {
+            const whyText = String(athleteWhy ?? "").trim();
+            const rawToday = String(todayLine ?? "").trim();
+            const today = /[\p{L}\p{N}]/u.test(rawToday) ? rawToday : "";
+            const changes = Array.from(new Set([
+              ...reductions.map((r) => athleteNoticeCopy(r)),
+              ...(rx.substitution_reason ? [String(rx.substitution_reason)] : []),
+            ]));
+            return (
+              <ExerciseInstructions name={rx.movement_name} slug={rx.movement_slug} dosage={dosage}
+                setup={(why as any)?.setup} cue={why.cue}
+                why={[whyText, today].filter(Boolean).join(" ") || null}
+                changes={changes} repair={repair} />
+            );
+          })()}
+          {plateau && (
+            <p data-lift-plateau className="text-[11px] text-foreground">
+              No new best on this lift in 3 sessions.{swapAvailable ? " Try a different lift of the same kind — tap Alternative. Your sets and reps stay the same." : " Keep your form clean — progress will come."}
+            </p>
+          )}
+          {allowSwap && rx.substituted_from_slug && <LiftSwapUndoChip rx={rx} />}
         </div>
 
         <CollapsibleContent className="mt-2 space-y-2 text-xs">
-          <WkProgressionBadge
-            progression={progressionPayload}
-            stageLabel={(why as any)?.bat_speed_stage_label ?? null}
-          />
           <div className="flex flex-wrap items-center gap-1.5">
             {SLOT_LABEL[rx.slot] && (
               <Badge variant="secondary" className={`text-[10px] ${SLOT_TONE[rx.slot]}`}>
@@ -390,104 +422,20 @@ export function WkPrescriptionCard({
           <ProgramContentBlock pc={(rx.why_payload as any)?.program_content} />
           <LimbHintBlock text={(rx.why_payload as any)?.limb_hint} />
           <GameFlushBlock gf={(rx.why_payload as any)?.game_flush} rxId={rx.id} />
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 min-w-0 space-y-1">
-              <div className="text-xs text-muted-foreground break-words">{dosage}</div>
-              {(exec.intentLabel || exec.perSideLabel || exec.asymmetryLabel) && (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {exec.intentLabel && (
-                    <Badge variant="outline" className="text-[10px]">{exec.intentLabel}</Badge>
-                  )}
-                  {exec.perSideLabel && (
-                    <Badge variant="outline" className="text-[10px]">{exec.perSideLabel}</Badge>
-                  )}
-                  {exec.asymmetryLabel && (
-                    <span className="text-[11px] text-muted-foreground">{exec.asymmetryLabel}</span>
-                  )}
-                </div>
-              )}
-              {exec.executionNote && (
-                <div className="text-[11px] text-muted-foreground break-words">{exec.executionNote}</div>
-              )}
-              {exec.intensityModeLabel && (
-                <div className="text-[11px] text-muted-foreground break-words">{exec.intensityModeLabel}</div>
-              )}
-            </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <span />
-            </div>
-          </div>
-          <WkOneTapLog rx={rx} />
-          {plateau && (
-            <p data-lift-plateau className="text-[11px] text-foreground">
-              No new best on this lift in 3 sessions.{swapAvailable ? " Try a different lift of the same kind — tap Alternative. Your sets and reps stay the same." : " Keep your form clean — progress will come."}
-            </p>
-          )}
-          {allowSwap && rx.substituted_from_slug && <LiftSwapUndoChip rx={rx} />}
-
-          {/* Step 21D1 — Cue sits above "Why this movement". */}
-          {why.cue && (
-            <div className="rounded border border-primary/20 p-2">
-              <div className="font-medium mb-0.5">Cue</div>
-              <div className="text-foreground/80">{why.cue}</div>
+          {(exec.intentLabel || exec.perSideLabel || exec.asymmetryLabel || exec.executionNote || exec.intensityModeLabel) && (
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {exec.intentLabel && <Badge variant="outline" className="text-[10px]">{exec.intentLabel}</Badge>}
+                {exec.perSideLabel && <Badge variant="outline" className="text-[10px]">{exec.perSideLabel}</Badge>}
+                {exec.asymmetryLabel && <span className="text-[11px] text-muted-foreground">{exec.asymmetryLabel}</span>}
+              </div>
+              {exec.executionNote && <div className="text-[11px] text-muted-foreground break-words">{exec.executionNote}</div>}
+              {exec.intensityModeLabel && <div className="text-[11px] text-muted-foreground break-words">{exec.intensityModeLabel}</div>}
             </div>
           )}
-
-          {(() => {
-            // Step 21D3 — never render a heading with no content.
-            const whyText = String(athleteWhy ?? "").trim();
-            // Owner fix 5: punctuation-only text (e.g. ".") is not a reason — hide it.
-            const rawToday = String(todayLine ?? "").trim();
-            const today = /[\p{L}\p{N}]/u.test(rawToday) ? rawToday : "";
-            if (!whyText && !today) return null;
-            return (
-              <Collapsible defaultOpen={pocketDetails}>
-                <CollapsibleTrigger asChild>
-                  <button
-                    type="button"
-                    className="w-full rounded border border-primary/30 bg-primary/5 p-2 flex items-center justify-between gap-2 text-left hover:bg-primary/10 transition-colors group"
-                  >
-                    <span className="font-medium flex items-center gap-1">
-                      <Info className="h-3 w-3" /> Why this movement
-                    </span>
-                    <ChevronDown className="h-3.5 w-3.5 transition-transform group-data-[state=open]:rotate-180" />
-                  </button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-1 rounded border border-primary/20 bg-primary/5 p-2 space-y-1 text-muted-foreground">
-                  {whyText && <div>{whyText}</div>}
-                  {today && (
-                    <div>
-                      <span className="text-foreground">Today —</span> {today}
-                    </div>
-                  )}
-                </CollapsibleContent>
-              </Collapsible>
-            );
-          })()}
-          <WkProgressionNote progression={progressionPayload} />
           {why.sequencing_hint && (
             <div className="text-[11px] text-amber-700 dark:text-amber-300">{why.sequencing_hint}</div>
           )}
-          {rx.substitution_reason && (
-            <div className="text-[11px] text-rose-700 dark:text-rose-300">{rx.substitution_reason}</div>
-          )}
-
-          {reductions.length > 0 && (
-            <div className="rounded border border-amber-500/30 bg-amber-500/5 p-2">
-              <div className="font-medium mb-0.5">Why today's work changed</div>
-              <ul className="list-disc list-inside space-y-0.5 text-muted-foreground">
-                {Array.from(new Set(reductions.map((r) => athleteNoticeCopy(r)))).map((line, i) => <li key={i}>{line}</li>)}
-              </ul>
-            </div>
-          )}
-          <div className="flex gap-2 pt-1">
-            <Button size="sm" variant="default" className="flex-1 gap-1" onClick={() => mark("completed")} disabled={rx.status === "completed" || missedLocked}>
-              <CheckCircle2 className="h-3.5 w-3.5" /> Complete
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => mark("skipped")} disabled={rx.status === "skipped" || missedLocked}>
-              Skip
-            </Button>
-          </div>
         </CollapsibleContent>
       </Collapsible>
     </Card>

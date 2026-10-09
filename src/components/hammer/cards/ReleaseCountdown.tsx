@@ -112,29 +112,20 @@ export function ReleaseCountdown({ timeZone }: { readonly timeZone?: string }) {
   }, [user?.id, tomorrow]);
 
   if (built === null) return null; // never show a countdown before we know a plan exists
-  const st = releaseState(now, tz, built);
-  const at = st.kind === "building"
-    ? new Intl.DateTimeFormat(undefined, { timeZone: tz, hour: "numeric", minute: "2-digit" }).format(new Date(st.readyAt))
-    : "";
+  // Owner rule: plans are delivered at local midnight. The internal pre-build
+  // time is never shown to players.
+  const ms = msUntilLocalMidnight(now, tz);
   return (
-    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground" data-release-countdown={st.kind}>
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground" data-release-countdown={built ? "ready" : "building"}>
       <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-      {st.kind === "ready" ? (
-        <>
-          <span>Tomorrow's plan opens in</span>
-          <span className="font-mono font-semibold tabular-nums text-foreground">{hms(st.ms)}</span>
-        </>
-      ) : st.ms > 0 ? (
-        <>
-          <span>Your next plan is being built — ready around {at}, in</span>
-          <span className="font-mono font-semibold tabular-nums text-foreground">{hms(st.ms)}</span>
-        </>
-      ) : (
-        <span>Your next plan is being built — almost ready.</span>
-      )}
+      <span>{RELEASE_LINE}</span>
+      <span className="font-mono font-semibold tabular-nums text-foreground">{hms(ms)}</span>
     </div>
   );
 }
+
+/** The only plan-time wording players see. */
+export const RELEASE_LINE = "Tomorrow's plan opens at midnight, in";
 
 function localToday(nowMs: number, tz: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(nowMs));

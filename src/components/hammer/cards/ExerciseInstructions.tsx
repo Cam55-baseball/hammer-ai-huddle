@@ -6,10 +6,12 @@ import type { MovementGuide } from "@/lib/hammer/prescription/movementGuide";
 import { activityBasics } from "./ActivityBasics";
 
 /** The movement's existing guide, shown inline; never invents or changes a dose. */
-export function ExerciseInstructions({ name, slug, guideOverride, setup, cue, stopIf, dosage }: {
+export function ExerciseInstructions({ name, slug, guideOverride, setup, cue, stopIf, dosage, why, changes, repair }: {
   name: string; slug?: string | null; guideOverride?: MovementGuide | null;
   setup?: string | null; cue?: string | null; stopIf?: string | null; dosage?: string | null;
+  why?: string | null; changes?: ReadonlyArray<string>; repair?: (t: string) => string;
 }) {
+  const R = (t: string | null | undefined) => (t && repair ? repair(t) : t);
   const [open, setOpen] = useState(false);
   const resolved = activityBasics({ name, slug, setup, cue, stopIf, dosage });
   const guide = guideOverride ?? resolved.guide;
@@ -23,13 +25,12 @@ export function ExerciseInstructions({ name, slug, guideOverride, setup, cue, st
       </Button>
     </CollapsibleTrigger>
     <CollapsibleContent className="mt-2 space-y-2 border-l-2 border-border pl-3 text-xs">
-      <p className="text-muted-foreground"><span className="font-medium text-foreground">Setup: </span>{setup ?? guide?.setup ?? fallback?.setup}</p>
-      {steps.length > 0 && <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">{steps.map((step, i) => <li key={i}>{step}</li>)}</ol>}
-      {(cue || guide?.feel) && <p className="text-muted-foreground"><span className="font-medium text-foreground">Cue: </span>{cue ?? guide?.feel}</p>}
+      <p className="text-muted-foreground"><span className="font-medium text-foreground">Setup: </span>{R(setup ?? guide?.setup ?? fallback?.setup)}</p>
+      {steps.length > 0 && <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">{steps.map((step, i) => <li key={i}>{R(step)}</li>)}</ol>}
+      {(cue || guide?.feel) && <p className="text-muted-foreground"><span className="font-medium text-foreground">Cue: </span>{R(cue ?? guide?.feel)}</p>}
       <p className="text-muted-foreground"><span className="font-medium text-foreground">Stop if: </span>{stopIf ?? guide?.stopIf ?? fallback?.stopIf ?? "You feel pain."}</p>
-      {guide?.whyToday && <p className="text-muted-foreground"><span className="font-medium text-foreground">Why this movement: </span>{guide.whyToday}</p>}
-      <p className="text-muted-foreground"><span className="font-medium text-foreground">Your progression: </span>{guide?.nextLink ?? "Complete today's prescribed work cleanly before adding more."}</p>
-      <p className="text-muted-foreground"><span className="font-medium text-foreground">Why today's work changed: </span>No change was recorded for this movement today.</p>
+      {(why || guide?.whyToday) && <p data-why-movement className="text-muted-foreground"><span className="font-medium text-foreground">Why this movement: </span>{R(why || guide?.whyToday)}</p>}
+      <p data-why-changed className="text-muted-foreground"><span className="font-medium text-foreground">Why today's work changed: </span>{changes && changes.length ? changes.join(" ") : "Nothing changed today."}</p>
     </CollapsibleContent>
   </Collapsible>;
 }
