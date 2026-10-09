@@ -12,6 +12,7 @@
 //     conditioning next to practice)
 //
 // Idempotent for (user_id, plan_date, sequence_field).
+import { checkPrescription } from "../_shared/wic/integrity/doseIntegrity.ts";
 import { gameFlushFor } from "../_shared/wic/conditioning/gameFlush.ts";
 import { proportionProfile, proportionBonus, proportionWhy } from "../_shared/wic/lift/proportionEmphasis.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
@@ -4869,6 +4870,25 @@ const handler = async (req: Request): Promise<Response> => {
           feature_key: "final_rule_check", user_id: user.id, error_text: String(fcErr).slice(0, 500),
         });
       } catch { /* never blocks */ }
+    }
+
+    // -------- Prescription double-check (owner round 2, 2026-10-09): repair + log, never adds work --------
+    try {
+      const icCatches: Array<Record<string, unknown>> = [];
+      for (let i = 0; i < rows.length; i++) {
+        const res = checkPrescription(rows[i] as any);
+        if (res.catches.length) {
+          rows[i] = res.row as any;
+          for (const c of res.catches) icCatches.push({
+            user_id: user.id, plan_date: planDate, rule: `integrity:${c.rule}`,
+            movement_slug: (rows[i] as any).movement_slug ?? null, slot: (rows[i] as any).slot ?? null,
+            detail: `${c.field}: ${c.detail}`.slice(0, 500),
+          });
+        }
+      }
+      if (icCatches.length) await admin.from("wk_final_check_swaps").insert(icCatches);
+    } catch (icErr) {
+      console.warn("[wk-generate-daily] integrity check failed", icErr);
     }
 
     // -------- Game-linked flush (owner approved 2026-10-07, re-confirmed 23:25): optional, display-only --------
