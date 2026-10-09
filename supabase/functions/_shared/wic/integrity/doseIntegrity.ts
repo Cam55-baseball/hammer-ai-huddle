@@ -118,10 +118,8 @@ export function nameDistanceFeet(text: string): number | null {
   const hits = [...text.matchAll(/\b(\d{2,3})[-_ ]?(foot|feet|ft|yard|yards|yd|y)\b/gi)];
   const vals = [...new Set(hits.map((h) => Number(h[1]) * (UNIT_FT[h[2].toLowerCase()] ?? 1)))];
   // Ambiguous names ("Fly 20 (30y build)", "Hill 30-40y") are never auto-fixed.
-  const name = text.split(" ")[0] === text ? text : text;
-  const numbers = (name.replace(/\b\d+\s*%/g, "").match(/\d+/g) ?? []);
-  const distinct = new Set(numbers);
-  return vals.length === 1 && hits.length >= 1 && distinct.size <= 1 + (distinct.has(String(hits[0][1])) ? 0 : 1) && distinct.size === 1 ? vals[0] : null;
+  const distinct = new Set(text.replace(/\b\d+\s*%/g, "").match(/\d+/g) ?? []);
+  return vals.length === 1 && distinct.size === 1 ? vals[0] : null;
 }
 
 /** Full check of one prescription row. Returns a repaired copy + catches. */
