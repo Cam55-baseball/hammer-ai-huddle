@@ -15,7 +15,9 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "throws", label: "Throws", prefill: rx.reps ?? rx.total_reps }] };
   }
   if (rx.total_reps && !/hold|iso|plank/.test(slug)) {
-    return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "reps", label: "Reps", prefill: rx.reps ?? rx.total_reps }] };
+    // Rows must add up to the total shown on the card: sets × reps only when that equals the total.
+    const split = rx.sets && rx.reps && rx.sets * rx.reps === rx.total_reps;
+    return { rows: split ? rx.sets! : 1, fields: [{ key: "reps", label: "Reps", prefill: split ? rx.reps : rx.total_reps }] };
   }
   if ((rx.dosage_unit ?? "").toLowerCase() === "seconds" || /hold|iso|plank/.test(slug)) {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: "Seconds", unit: "s", prefill: rx.duration_seconds ?? rx.reps }] };

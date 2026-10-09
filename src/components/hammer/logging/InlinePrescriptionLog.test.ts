@@ -15,4 +15,10 @@ describe("inline lift log fields", () => {
     expect(s.rows).toBe(3);
     expect(s.fields[0].prefill).toBe(5);
   });
+  it("a '30 reps total' card logs rows that add up to 30, never 2 × 30", () => {
+    const s = inlineLogSpec(rx({ movement_slug: "wost_tennis_ball_self_rally", slot: "cross_sport" as any, sets: 2, reps: null as any, total_reps: 30 }));
+    expect(s.rows * (s.fields[0].prefill ?? 0)).toBe(30);
+    const t = inlineLogSpec(rx({ movement_slug: "x", sets: 3, reps: 10, total_reps: 30 }));
+    expect([t.rows, t.fields[0].prefill]).toEqual([3, 10]);
+  });
 });
