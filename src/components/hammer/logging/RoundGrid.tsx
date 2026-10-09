@@ -150,14 +150,14 @@ export function RoundGrid({
 
       <div className="flex items-center gap-2 pt-1">
         <Button type="button" variant="outline" size="sm" onClick={addRound} disabled={rounds.length >= maxRounds} className="h-7 gap-1 text-xs">
-          <Plus className="h-3 w-3" /> Round
+          <Plus className="h-3 w-3" /> Add a set
         </Button>
         <Button type="button" variant="ghost" size="sm" onClick={removeRound} disabled={rounds.length <= minRounds} className="h-7 gap-1 text-xs">
-          <Minus className="h-3 w-3" /> Remove
+          <Minus className="h-3 w-3" /> Remove a set
         </Button>
         {hasSide && (
           <Button type="button" variant="ghost" size="sm" onClick={mirrorSides} className="h-7 gap-1 text-xs">
-            <FlipHorizontal className="h-3 w-3" /> Mirror
+            <FlipHorizontal className="h-3 w-3" /> Copy to other side
           </Button>
         )}
 
