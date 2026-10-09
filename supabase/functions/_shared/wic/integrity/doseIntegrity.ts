@@ -149,7 +149,7 @@ export function checkPrescription<T extends IntegrityRow>(row: T): { row: T; cat
     for (const f of ["cue", "setup", "why", "description"]) {
       if (typeof wp[f] === "string") wp[f] = repairInstruction(wp[f], r, `why_payload.${f}`, catches);
     }
-    if (/\bsled\b/.test(name) && !/push|pull|drag|march|press|row|punch|catch|sprint/.test(name + " " + String(wp.cue ?? ""))) {
+    if (/\bsled\b/.test(name) && !/push|pull|drag|march|press|row|punch|catch|sprint/i.test(name + " " + String(wp.cue ?? ""))) {
       catches.push({ rule: "missing_direction", field: "why_payload.cue", detail: "sled without push or pull" });
     }
     r.why_payload = wp;
