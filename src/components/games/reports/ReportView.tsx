@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { StrikeZoneGrid, type Zone } from "@/components/games/StrikeZoneGrid";
+import { SprayChart } from "@/components/games/SprayChart";
 import { cn } from "@/lib/utils";
 import type { ReportSnapshot, ReportSection, StatLine } from "@/lib/games/reportEngine";
 
@@ -68,6 +69,15 @@ function SectionBlock({ section }: { section: ReportSection }) {
           {section.heat?.caption && (
             <p className="text-xs text-muted-foreground">{section.heat.caption}</p>
           )}
+        </div>
+      )}
+
+      {section.spray && section.spray.length > 0 && (
+        <div className="max-w-[16rem] space-y-1">
+          <SprayChart balls={section.spray} />
+          <p className="text-xs text-muted-foreground">
+            Where each batted ball went — one dot per ball you logged.
+          </p>
         </div>
       )}
 

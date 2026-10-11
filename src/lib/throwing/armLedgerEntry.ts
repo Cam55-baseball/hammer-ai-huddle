@@ -149,6 +149,20 @@ export function dayEvents(date: string, prescribed: Prescribed[] | null, entries
   return events;
 }
 
+/**
+ * Merge two pitch-count sources (bullpen/outing logs + logged game pitches)
+ * into one per-day list. Same date adds up — game pitches are real throws
+ * and count toward the arm total, never replace practice counts.
+ */
+export function mergePitchLogs(a: PitchLog[], b: PitchLog[]): PitchLog[] {
+  const byDate = new Map<string, number>();
+  for (const p of [...a, ...b]) {
+    if (!p.plan_date || !(p.pitches > 0)) continue;
+    byDate.set(p.plan_date, (byDate.get(p.plan_date) ?? 0) + p.pitches);
+  }
+  return [...byDate.entries()].map(([plan_date, pitches]) => ({ plan_date, pitches }));
+}
+
 export interface ArmLedgerView {
   role: ThrowRole;
   budget: ArmBudget;
