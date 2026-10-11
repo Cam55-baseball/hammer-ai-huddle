@@ -1,6 +1,6 @@
 # SCOUTING, RECRUITING & FACILITY PLAN v3.1 — build status
 
-**Ready to publish: no** — Phase 1 backend is in and proven; Phase 1 screens and Phases 2–9 are not built yet.
+**Ready to publish: no** — Phase 1 backend and most screens are in; role choice, email code, assign screen and test-account proof remain; Phases 2–9 not started.
 
 - [~] Phase 1 Accounts, organizations and teams
   - [x] Backend (migrations `scouting_v31_phase1_orgs_teams_requests`, `_follow_guard_rpc_path`, `_team_policy_fix`; old rules saved in `_snapshot_security_20261011`): organization verification fields + guard (only the app owner verifies; editing name/official email after approval sends it back to review); teams + team members; Admin/Coach staff seats; coach↔athlete assignments (single or bulk); ONE request table + accept/deny/cancel/end actions; head coach (one per player, no extra data); solo-coach "Create team" (quiet small organization); join by code checked on the server.
