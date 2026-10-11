@@ -103,6 +103,15 @@ export default function Profile() {
   const [profile, setProfile] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null); // Role of the profile being viewed
   const [viewingOtherProfile, setViewingOtherProfile] = useState(false);
+  // Contact details follow the shared backend rule (consent, parents, under-13).
+  const [contactAllowed, setContactAllowed] = useState(false);
+  useEffect(() => {
+    let off = false;
+    setContactAllowed(false);
+    if (!viewingUserId) return;
+    supabase.rpc("can_view_athlete_contact", { _athlete: viewingUserId }).then(({ data }) => { if (!off) setContactAllowed(data === true); });
+    return () => { off = true; };
+  }, [viewingUserId]);
   const [hasAcceptedFollow, setHasAcceptedFollow] = useState(false);
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null); // Role of the logged-in user
   const [followStatus, setFollowStatus] = useState<'none' | 'pending' | 'accepted' | null>(null);
@@ -611,11 +620,10 @@ export default function Profile() {
   // Show email if:
   // 1. Viewing own profile -> show user's auth email
   // 2. Owner viewing someone else's contact_email
-  // 3. Scout/Coach viewing ANY player profile (no follow requirement)
+  // 3. Scout/Coach only when can_view_athlete_contact allows (consent / parent / never under-13)
   // 4. NEVER show scout/coach email to players
   const displayEmail = viewingOtherProfile 
-    ? (isOwner 
-        || ((currentUserRole === 'scout' || currentUserRole === 'coach') && isPlayer)
+    ? (contactAllowed && (isOwner || ((currentUserRole === 'scout' || currentUserRole === 'coach') && isPlayer))
         ? profile?.contact_email || "" 
         : "") 
     : menuEmail;
