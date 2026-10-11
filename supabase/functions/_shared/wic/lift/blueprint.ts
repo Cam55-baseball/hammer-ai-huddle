@@ -101,3 +101,15 @@ export function overloadStep(i: OverloadInput): OverloadStep {
 export function coverageGaps(week: Partial<Record<Area, number>>, season: "off" | "in"): Area[] {
   return AREAS.filter((a) => (week[a] ?? 0) < WEEKLY_MIN[season][a]);
 }
+
+/**
+ * Planner lift slots → blueprint block. Arm care and the trunk primer are
+ * pre-lift prep (they run with the warm-up), so they rank with "warmup".
+ */
+export const SLOT_BLOCK: Record<string, LiftBlock> = {
+  arm_care: "warmup", trunk_primer: "warmup", mobility: "warmup",
+  compound_lower: "main_lower", unilateral_lower: "second_lower",
+  upper_push: "upper", upper_pull: "upper",
+  carry_antirotation: "athletic_strength", trunk_finisher: "robustness",
+};
+export const slotRank = (slot: string) => liftBlockRank(SLOT_BLOCK[slot] ?? "robustness");
