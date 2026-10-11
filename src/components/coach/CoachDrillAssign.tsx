@@ -131,6 +131,15 @@ export function CoachDrillAssign() {
   };
 
   const selectedDrill = drills?.find(d => d.id === selectedDrillId);
+  const selectedSafetyDrill = safetyDrills.find(d => d.id === selectedDrillId);
+  const safety =
+    selectedSafetyDrill && athleteCtx && selectedPlayerId
+      ? checkDrillSafety(selectedSafetyDrill, athleteCtx)
+      : null;
+  const alternatives =
+    safety && !safety.ok && selectedSafetyDrill && athleteCtx
+      ? findSafeAlternatives(safetyDrills, selectedSafetyDrill, athleteCtx)
+      : [];
 
   return (
     <div className="space-y-4">
