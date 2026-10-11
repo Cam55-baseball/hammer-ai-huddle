@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const action = String(body?.action ?? "");
     const slug = String(body?.slug ?? "").trim();
-    if (!slug && action !== "list") return json({ error: "Missing slug" }, 400);
+    if (!slug && action !== "list" && action !== "reviewed") return json({ error: "Missing slug" }, 400);
 
     const audit = (act: string, detail: unknown) =>
       admin.from("exercise_vault_audit").insert({ slug, action: act, actor: u.user.id, detail });
@@ -176,6 +176,22 @@ Deno.serve(async (req) => {
       const [{ data: versions, error: ve }, { data: drafts, error: de }] = await Promise.all([vq, dq]);
       if (ve || de) return json({ error: ve?.message ?? de?.message }, 500);
       return json({ versions: versions ?? [], drafts: drafts ?? [] });
+    }
+
+    if (action === "approve_review") {
+      // Owner accepts the current text as-is; nothing about the card changes.
+      const { error } = await audit("review_approved", { note: body?.note ?? null });
+      if (error) return json({ error: error.message }, 500);
+      return json({ ok: true });
+    }
+
+    if (action === "reviewed") {
+      const [{ data: a, error: ae }, { data: v, error: vErr }] = await Promise.all([
+        admin.from("exercise_vault_audit").select("slug").eq("action", "review_approved").limit(5000),
+        admin.from("exercise_vault_versions").select("slug").is("undone_at", null).limit(5000),
+      ]);
+      if (ae || vErr) return json({ error: (ae ?? vErr)!.message }, 500);
+      return json({ slugs: [...new Set([...(a ?? []), ...(v ?? [])].map((r: any) => r.slug))] });
     }
 
     if (action === "stats") {
