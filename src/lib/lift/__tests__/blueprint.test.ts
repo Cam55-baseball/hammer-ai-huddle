@@ -44,3 +44,16 @@ describe("trunk finisher pool", () => {
     expect(pool("add_size")).toContain("lift_copenhagen_plank");
   });
 });
+
+import { readFileSync } from "node:fs";
+import { slotRank } from "../../../../supabase/functions/_shared/wic/lift/blueprint";
+describe("lift-day order in the plan builder", () => {
+  it("lift slots are added in blueprint order", () => {
+    const src = readFileSync("supabase/functions/wk-generate-daily/index.ts", "utf8");
+    const main = src.slice(0, src.indexOf("Full-body guardrail"));
+    const slots = [...main.matchAll(/push\("lift", "([a-z_]+)"/g)].map((m) => m[1]).filter((s) => s !== "mobility");
+    const ranks = slots.map(slotRank);
+    expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
+    expect(slots.indexOf("compound_lower")).toBeLessThan(slots.indexOf("unilateral_lower"));
+  });
+});
