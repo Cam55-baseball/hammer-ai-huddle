@@ -12,7 +12,7 @@ import { pendingJobs } from "@/lib/logging/logOutbox";
 
 const rx = { id: "completion-proof", plan_date: "2099-10-11", movement_name: "90-foot repeats", movement_slug: "repeat_90ft_bb", slot: "conditioning", sets: 4, reps: 1, distance_feet: 90 } as any;
 const lift = { id: "lift-proof", plan_date: "2099-10-11", movement_name: "Trap Bar Deadlift", movement_slug: "trap_bar_deadlift", slot: "lift", sets: 3, reps: 5 } as any;
-const lastPayload = () => mocks.write.mock.calls.at(-1)?.[2];
+const lastPayload = () => mocks.write.mock.calls[mocks.write.mock.calls.length - 1]?.[2];
 const typeSeconds = (row: number, ss: string, hh = "") => {
   fireEvent.change(screen.getByLabelText(`Time ${row} seconds`), { target: { value: ss } });
   if (hh) fireEvent.change(screen.getByLabelText(`Time ${row} hundredths`), { target: { value: hh } });
