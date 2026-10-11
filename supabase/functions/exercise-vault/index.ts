@@ -139,11 +139,15 @@ Deno.serve(async (req) => {
       const live = cur?.[0];
       if (!live) return json({ error: "Nothing to undo" }, 400);
       if (!live.previous_payload) {
-        // First live version of a vault-created exercise: undo switches it back
-        // off in the planner's catalog (nothing earlier to restore).
-        const { data: cat } = await admin.from("wk_movement_catalog").select("slug").eq("slug", slug).maybeSingle();
-        if (!cat) return json({ error: "This was the first live version — nothing before it to restore" }, 400);
+        const { data: newDraft } = await admin.from("exercise_vault_drafts")
+          .select("id").eq("slug", slug).eq("is_new", true).limit(1);
         await admin.from("exercise_vault_versions").update({ undone_at: new Date().toISOString() }).eq("id", live.id);
+        if (!newDraft?.length) {
+          // First edit of a built-in exercise: the built-in card is back in use; the exercise stays on.
+          await audit("undo", { undone: live.version, restored: "built_in" });
+          return json({ ok: true });
+        }
+        // First live version of a vault-created exercise: undo switches it back off in the planner.
         const { error: de } = await admin.from("wk_movement_catalog").update({ is_active: false, updated_at: new Date().toISOString() }).eq("slug", slug);
         if (de) return json({ error: de.message }, 500);
         await audit("undo", { undone: live.version, deactivated: true });

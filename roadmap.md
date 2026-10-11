@@ -1,3 +1,16 @@
+# Z10 FINAL PROOF — 2026-10-11 — Ready to publish: yes (website; nothing published)
+- [x] Vault end to end as owner: edit Pallof Press → preview → make live → undo (built-in card back, exercise stays on). Fixed: undoing the first edit of a built-in exercise used to switch it off.
+- [x] New exercise with full tags + video made live → prescribed in a test player's speed block (2 × 8) the same day; its video lookup works.
+- [x] Validator: an incomplete exercise is refused at Make live ("Add a full name.").
+- [x] Review queue: 387 items with Approve / Edit (proven in Z8). Non-owner: test player refused by the backend (403) and sent away from the Vault page.
+- [x] Series lists: all 4 cross-band series spell out 7 movements, no brand name; the 4 proposed lists are below.
+- [x] Jump-logging test + description/validator/review/stats tests: 31/31.
+- [x] Page audit as a test player, 171 pages at 390 px: no crashes, blank pages or sideways scrolling. Fixed: 7 owner/admin pages (verification, Foundations health/diagnostics/traces, IQ alignments + audit, workout library) opened for players — now owner/admin only.
+- [x] Full suite: 315 files, all passed; build OK. Test players (4) and all proof rows deleted; 0 left.
+- Vault: ON for owner/admin (Owner dashboard → Content → Exercise Vault).
+
+**Owner next:** 1) publish the website; 2) in the Vault, work the 387 "Needs owner review" items — including the 4 proposed series lists, the 4 flagged cross-band movements and the 2 known-wrong descriptions (weighted pull-up, landmine drop-catch); 3) physical iPhone check. Page audit ran at 390 px only (not 360 px or desktop).
+
 # OWNER REQUESTS 2026-10-11 — Ready to publish: yes (website; nothing published)
 Owner next steps: (1) check the 4 proposed series lists below and the 4 extra cross-band movements; (2) nothing to apply for throws — pap-throw-types.sql is confirmed live (pap_max_throws + pap_warmup accepted, pap_real_throws = all), no new throw types needed; (3) items 3 and 4 continue next.
 - [x] 1. Series list every movement. Cross-Band Series (full list, warm-up chart, activation, recovery) now spells out your 7 movements in order — Row, Reverse Fly, Pulldown, 90/90 External Rotation, Scaption, Incline Plus, Victory — each with anchor height, body position, a one-line how-to and 10 reps. Outside brand name removed from all how-to text (0 left). Further cross-band movements already in our data, FLAGGED for owner (kept as their own exercises, not added to the series): Cross-Band Pull-Apart Series, Diagonal Pulls, Internal/External Rotation at Wall, Scapular Push-Up. The other 4 series now show a PROPOSED full list (never blank) — owner to check:
