@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { BASIC_HOW_TO } from "../basicHowTo.generated";
-import catalog from "../../../test/fixtures/wkCatalogRules.json";
+import catalog from "@/test/fixtures/wkCatalogRules.json";
 
 /**
  * Round 3 (G): premium description quality gates. These FAIL THE BUILD when:
