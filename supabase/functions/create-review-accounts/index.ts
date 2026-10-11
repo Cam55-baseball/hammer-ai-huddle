@@ -58,6 +58,44 @@ Deno.serve(async (req) => {
       return json({ email: a.email, access_token: v.session.access_token, refresh_token: v.session.refresh_token, expires_at: v.session.expires_at, token_type: "bearer", user: v.session.user });
     }
 
+    // Owner page audit: a throwaway TEST player with a password sign-in, deleted after the audit.
+    if (body?.audit === "create") {
+      const email = `hammersmodality+audit${Date.now()}@gmail.com`;
+      const pw = password();
+      const { data, error } = await admin.auth.admin.createUser({
+        email, password: pw, email_confirm: true,
+        user_metadata: { full_name: "TEST Audit Player", test_account: true, audit_player: true },
+      });
+      if (error) return json({ error: error.message }, 500);
+      const id = data.user!.id;
+      const now = new Date().toISOString();
+      const errs: string[] = [];
+      const pr = await admin.from("profiles").update({
+        full_name: "TEST Audit Player", first_name: "TEST", last_name: "Audit", date_of_birth: "2008-04-10",
+        is_system_account: true, anon_training_opt_out: true, hammers_today_started_at: now,
+        position: "SS", positions: ["SS"], primary_throwing_hand: "R", primary_batting_side: "R", tutorial_completed: true,
+      }).eq("id", id);
+      if (pr.error) errs.push("profile: " + pr.error.message);
+      const ms = await admin.from("athlete_mpi_settings").upsert({
+        user_id: id, sport: "baseball", date_of_birth: "2008-04-10", primary_position: "SS",
+        primary_throwing_hand: "R", primary_batting_side: "R", league_tier: "rec", season_status: "off_season",
+        season_status_manual: false, admin_ranking_excluded: true, ranking_eligible: false,
+      }, { onConflict: "user_id" });
+      if (ms.error) errs.push("mpi: " + ms.error.message);
+      const subRow = { plan: "free", status: "active", tier: "golden2way", subscribed_modules: MODULES, current_period_end: new Date(Date.now() + 86400000).toISOString() };
+      const { data: sub } = await admin.from("subscriptions").select("id").eq("user_id", id).maybeSingle();
+      const sr = sub ? await admin.from("subscriptions").update(subRow).eq("user_id", id) : await admin.from("subscriptions").insert({ user_id: id, ...subRow });
+      if (sr.error) errs.push("sub: " + sr.error.message);
+      return json({ user_id: id, email, password: pw, errors: errs });
+    }
+    if (body?.audit === "delete" && typeof body.user_id === "string") {
+      const { data: au } = await admin.auth.admin.getUserById(body.user_id);
+      if (au?.user?.user_metadata?.audit_player !== true) return json({ error: "Refusing: not an audit player" }, 409);
+      const { error } = await admin.auth.admin.deleteUser(body.user_id);
+      if (error) return json({ error: error.message }, 500);
+      return json({ deleted: body.user_id });
+    }
+
     const out: Record<string, { user_id: string; email: string }> = {};
     const creds: string[] = [];
     const now = new Date().toISOString();
