@@ -271,8 +271,7 @@ function DrillRow({
           modality={modality} name={d.name} dosage={d.dosage}
           storageKey={`hammer-block-log-draft:${planDate}:${taskId}:${side ?? ""}`}
           completed={checked}
-          onSave={(log) => tasks.toggleTask({ ...seed, payload: { ...seed.payload, log } }, true)}
-          onOutcome={(outcome, how_hard) => tasks.toggleTask({ ...seed, payload: { ...seed.payload, outcome, how_hard } }, outcome !== "skipped")}
+          taskSync={{ planDate, seed }}
         />
         <ExerciseInstructions name={d.name} slug={d.slug} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} repair={legacyRepair(d.dosage, modality)} expanded />
         {adjustApi && <Button type="button" variant="outline" size="sm" onClick={() => setAdjustOpen(true)} aria-label={`Swap or skip ${d.name}`}><Repeat className="mr-1 h-3 w-3" />Can't do it</Button>}

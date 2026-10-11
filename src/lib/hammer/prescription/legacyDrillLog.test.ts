@@ -17,9 +17,9 @@ describe("legacy drill visible log rows", () => {
     });
   });
 
-  it("uses completion and minutes only for warm-up and recovery work", () => {
+  it("times warm-up and recovery work in seconds, never decimal minutes", () => {
     expect(legacyDrillLogSpec("warmup", "Tissue prep", "5 minutes total")).toEqual({
-      rows: 1, completion: true, fields: [{ key: "minutes", label: "Minutes", unit: "min", prefill: 5 }],
+      rows: 1, completion: true, fields: [{ key: "time", label: "Time", unit: "s", prefill: 300 }],
     });
   });
 

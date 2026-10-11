@@ -1,5 +1,5 @@
 export type LegacyLogField = {
-  key: "reps" | "throws" | "distance" | "time" | "minutes";
+  key: "reps" | "throws" | "distance" | "time";
   label: string;
   unit?: string;
   prefill: number | null;
@@ -29,7 +29,8 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
   const distance = feet ?? (yards == null ? null : yards * 3);
 
   if (["warmup", "mobility", "recovery", "arm_care"].includes(modality)) {
-    return { rows: 1, completion: true, fields: [{ key: "minutes", label: "Minutes", unit: "min", prefill: minutes ?? (seconds == null ? null : seconds / 60) }] };
+    // Time is entered in real segments (s / mm:ss) and stored in seconds — never decimal minutes.
+    return { rows: Math.max(1, sets), completion: true, fields: [{ key: "time", label: "Time", unit: "s", prefill: seconds ?? (minutes == null ? null : Math.round(minutes * 60)) }] };
   }
   if (modality === "throwing" || /throw|pitch|bullpen|catch play|plyo ball/.test(text)) {
     return { rows: sets, completion: false, fields: [{ key: "throws", label: "Throws", prefill: reps }] };
