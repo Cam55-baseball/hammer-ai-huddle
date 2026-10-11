@@ -1,6 +1,6 @@
 # OWNER STATUS — 2026-10-11 evening — security fixes
 
-**Ready to publish: no** — security fixes A1–A3 are live in the backend and proven; A4 is partly done; B1–B3 are not finished yet.
+**Ready to publish: no** — security fixes A1–A3 are live in the backend and proven; A4 is done (CC1: legacy follow reads made minor-aware, proof in security-fixes.md); B1–B3 are not finished yet.
 
 - [x] A1 Private media — videos, scout letters, scout videos and avatars are private; raw links refused; allowed viewers play signed links. Proof in `docs/owner/security-fixes.md`.
 - [x] A2 Self-claimed roles blocked (staff roles start pending, owner approves).
