@@ -15,6 +15,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useHammerAthleteContext } from "@/lib/hammer/context/athleteContext";
 import { useRecentPitchingLoad } from "@/hooks/useRecentPitchingLoad";
+import { useGamePitchLoad } from "@/hooks/useGamePitchLoad";
 import { hasFeatureAccess } from "@/utils/tierAccess";
 import {
   THROW_TYPES,
@@ -48,6 +49,7 @@ export function ArmThrowsPanel({ source, planDate, fixture }: { source: EntrySou
   const role = throwRoleFrom(primary, secondary);
 
   const pitchLoad = useRecentPitchingLoad(7);
+  const gamePitchLoad = useGamePitchLoad(7);
   const from = new Date(Date.parse(date + "T00:00:00Z") - 6 * 86400000).toISOString().slice(0, 10);
   const key = ["arm-ledger", user?.id, date];
   const entriesQ = useQuery({
@@ -66,9 +68,14 @@ export function ArmThrowsPanel({ source, planDate, fixture }: { source: EntrySou
   });
 
   const prescribed = useMemo(() => prescribedThrows(role, primary, secondary), [role, primary, secondary]);
+  // Bullpen/outing logs + pitches thrown in logged games both count (additive).
   const pitches = useMemo(
-    () => Object.entries(pitchLoad.data?.byDate ?? {}).map(([plan_date, n]) => ({ plan_date, pitches: n })),
-    [pitchLoad.data],
+    () =>
+      mergePitchLogs(
+        Object.entries(pitchLoad.data?.byDate ?? {}).map(([plan_date, n]) => ({ plan_date, pitches: n })),
+        Object.entries(gamePitchLoad.data?.byDate ?? {}).map(([plan_date, n]) => ({ plan_date, pitches: n })),
+      ),
+    [pitchLoad.data, gamePitchLoad.data],
   );
   const [local, setLocal] = useState<Record<string, { sets: string[]; status: "done" | "skipped" }>>(() => {
     try { return JSON.parse(localStorage.getItem(`hm-arm-sets:${date}:${source}`) ?? "{}"); } catch { return {}; }
