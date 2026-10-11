@@ -1,3 +1,37 @@
+# SWITCH CHECK BEFORE PUBLISH — 2026-10-11 — Ready to publish: yes (website; nothing published)
+**What turned the rest rules down:** not a test or script. The nightly safety check (`tcs-auto-off`, runs 04:45 UTC) dropped it automatically: Oct 7 04:45 all → pilot ("last night's check did not pass"; the pilot list was empty, so rest rules applied to nobody), then Oct 8 04:45 pilot → self (10 critical watchdog notes; owner only). You set it back to all at Oct 11 18:15.
+**Guard:** the nightly check can no longer turn the rest-day rules down; it now sends an owner alert instead (deployed, dry run shows rest_day_calculator: all). A new test fails if any test or script writes the live switch rows (none do today) or if the guard is removed.
+**Plans since Oct 7:** 18 plan days for 7 players; none had a loaded lift, so no plan broke the 2-rest-day or in-season 2-lift rule. Nothing to correct; no plans rebuilt.
+**Features with no switch (always on in code):** Owner Exercise Vault (owner/admin only), warm-up stage order, new card layout, logging + autosave, double-check validator, Lifting Blueprint, "Your progress".
+
+| Switch | Mode | Controls |
+|---|---|---|
+| rest_day_calculator | all | Rest-day rules (2 rest days between lifts, in-season ≤2 lifts) — now locked on |
+| one_tap_logging | all | One-tap logging |
+| power_primer | all | Power Primer on lift days |
+| pap_real_throws | all | Power Primer real-ball throws |
+| hammers_today_start_gate | all | Plan builds only after the player starts Hammers Today |
+| under13_parent_program | all | Under-13 parent-controlled accounts |
+| windmill_program | all | Softball windmill program |
+| programs_retired | all | Old programs retired/redirected |
+| adaptive_phases | all | Adaptive phases |
+| phase_feedback | all | Phase feedback |
+| offseason_arc | all | Off-season arc |
+| in_season_post_game | all | In-season post-game plan |
+| load_spike_protection | all | Load-spike protection |
+| personalization | all | Personalization |
+| onboarding_off_days | all | Onboarding & off days |
+| ub_plyo_hand_wrist | all | Upper-body plyos + hand & wrist |
+| staff_view | all | Staff View |
+| tell_hammers | all | Tell Hammers schedule inbox |
+| content_speed_lab / heat_factory / explosive_pitcher / softball_conditioning / lift_notes / base_stealer / barefoot_items | all | Program content batches |
+| legal_v2 | **off** | New legal pages + consent — stays off until the lawyer approves |
+| lifting_v2_enabled (app setting) | on | Lifting v2 |
+| rankings_visible (app setting) | off | Public rankings — owner's earlier choice, not changed |
+
+**Held off in code by earlier owner decisions (not changed):** Game IQ for athletes, Report Card for all users (staged release), hitting Report Card release 1, camera/pose measurements not yet validated (11), on-device ball detector, tipping detection, old-program redirects.
+**Owner next:** confirm legal_v2 after the lawyer; say if any "held off" item should be on.
+
 # LIFTING BLUEPRINT — 2026-10-11 — BB8 final — Ready to publish: yes for the website, with the coverage note below (nothing published)
 **Final proof (BB8):**
 - 8-week simulation (scripts/audits/blueprint-sim.ts; planner's own lists + age/season/eccentric rules + isolation gate; 540 combinations = 3 roles × 2 sports × 3 ages × 6 phases × 3 training ages, plus Add size off-season): 0 rule violations, 0 isolation picks outside Add size, 0 illegal picks. Overload: 516 load steps in 20,000 random logs, 0 without a qualifying log. In-season: 2 lift days, 13 sets per session at most (off-season 18).
