@@ -77,8 +77,13 @@ export function CoachDrillAssign() {
     queryFn: async (): Promise<AthleteSafetyContext> => {
       const { data: prof } = await supabase
         .from('profiles')
-        .select('date_of_birth, sport')
+        .select('date_of_birth')
         .eq('id', selectedPlayerId)
+        .maybeSingle();
+      const { data: ctx } = await supabase
+        .from('athlete_context')
+        .select('sport_primary')
+        .eq('user_id', selectedPlayerId)
         .maybeSingle();
       const { data: eq } = await supabase
         .from('athlete_equipment_context')
@@ -94,7 +99,7 @@ export function CoachDrillAssign() {
       }
       return {
         ageYears,
-        sport: (prof as any)?.sport ?? null,
+        sport: (ctx as any)?.sport_primary ?? null,
         equipment: (eq?.equipment as string[]) ?? [],
       };
     },
