@@ -319,13 +319,15 @@ const ProfileSetup = () => {
       // recruiter are only REQUESTED here (status pending); the owner approves
       // them from the approval queue. The database rejects anything else.
       if (dbRole !== 'admin') {
+        // Upsert with ignoreDuplicates: players who already got their role at
+        // sign-up must not fail here with a duplicate-key error.
         const { error: roleError } = await supabase
           .from('user_roles')
-          .insert([{
+          .upsert([{
             user_id: user.id,
             role: dbRole,
             status: dbRole === 'player' ? 'active' : 'pending'
-          }]);
+          }], { onConflict: 'user_id,role', ignoreDuplicates: true });
 
         if (roleError) throw roleError;
       }
