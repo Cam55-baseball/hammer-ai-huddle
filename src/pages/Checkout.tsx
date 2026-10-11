@@ -516,7 +516,7 @@ const Checkout = () => {
             )}
             <p className="text-xs text-muted-foreground mt-1">Cancel anytime</p>
             <p className="text-sm font-semibold text-primary mt-2">
-              Less than ${dailyPrice} per day to fix this gap
+              Less than ${dailyPrice} per day for your training plan
             </p>
           </div>
 
