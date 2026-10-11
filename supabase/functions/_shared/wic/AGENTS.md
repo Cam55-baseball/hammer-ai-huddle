@@ -24,3 +24,4 @@
 - Limb guidance (`limb/limbGuidance.ts`) is card text (`why_payload.limb_hint`) only, never changes a row, never overrides age/growth/injury/phase, never grades arm slot. Why: owner approved limb use 2026-10-07.
 - Conditioning library gaps count only drills the athlete's gear allows (unknown gear = gear-free only). Why: a player with no gear saved got the stand-in day (2026-10-07).
 - Game-linked flush (`conditioning/gameFlush.ts`) is an optional, skippable note (`why_payload.game_flush`) on the first non-lift card the day after a saved game; never a new card or a change to planned work, never on game/hold days or when the day is already a flush. Why: owner 2026-10-07.
+- Safety switches in `tcs-auto-off` SAFETY_LOCKED (rest_day_calculator) are never auto-demoted (owner alert only); no test or script writes `wk_feature_switches` (`src/test/liveSwitchGuard.test.ts`). Why: the nightly check silently narrowed rest rules (2026-10-07/08).

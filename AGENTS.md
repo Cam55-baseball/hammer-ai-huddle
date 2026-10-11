@@ -23,4 +23,3 @@
 - Problem reports save to `problem_reports` first; `report-problem-mailer` only sends/retries. Why: a broken email key never loses a report.
 
 - 13–17 parent waiver gating lives only in `supabase/functions/_shared/legal/teenWaiverRules.ts` (used by `teen-parent-waiver` and tests); `TeenWaiverGate` wraps only the training-plan routes. Why: one rule source, and non-physical parts of the app stay open.
-- Safety switches in `tcs-auto-off` SAFETY_LOCKED (rest_day_calculator) are never demoted automatically; failures raise an owner alert only, and no test or script may write `wk_feature_switches` (`src/test/liveSwitchGuard.test.ts`). Why: the nightly check silently turned rest rules off for players (2026-10-07/08).
