@@ -1,3 +1,4 @@
+import { jumpMeasure } from "@/lib/logging/measureType";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RestTimer, sprintRestSeconds, liftRestBand } from "../cards/RestTimer";
@@ -59,6 +60,13 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
       { key: "bat_speed", label: "Bat speed", unit: "mph" },
       { key: "exit_velo", label: "Exit velo", unit: "mph" },
     ] };
+  }
+  const jump = jumpMeasure(`${rx.movement_slug ?? ""} ${rx.movement_name ?? ""}`);
+  if (jump === "jump_distance") {
+    return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "distance", label: "Jump distance", unit: "ft + in" }] };
+  }
+  if (jump === "jump_height") {
+    return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "height", label: "Jump height", unit: "in" }] };
   }
   if (rx.total_reps && !rx.distance_feet && !rx.duration_seconds && rx.slot !== "lift" && rx.slot !== "supplemental" && !/hold|iso|plank/.test(slug)) {
     // Rows must add up to the total shown on the card: sets × reps only when that equals the total.
