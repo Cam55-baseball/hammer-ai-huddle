@@ -21669,6 +21669,15 @@ export type Database = {
         Args: { p_video_id: string }
         Returns: undefined
       }
+      record_my_test: {
+        Args: {
+          p_key: string
+          p_side?: string
+          p_unit: string
+          p_value: number
+        }
+        Returns: string
+      }
       reject_evaluation_attendance: {
         Args: { p_evaluation_id: string }
         Returns: boolean

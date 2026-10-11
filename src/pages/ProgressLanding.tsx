@@ -43,6 +43,7 @@ import { useScheduleWindow } from "@/hooks/command/useScheduleWindow";
 import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
 import ProgressDashboard from "@/pages/ProgressDashboard";
 import { RecordsShowCard } from "@/components/progress/RecordsShowCard";
+import { YourProgressCard } from "@/components/progress/YourProgressCard";
 
 interface TopicDef {
   readonly id: ProgressTopicId;
@@ -211,6 +212,8 @@ export default function ProgressLanding() {
         <YourProgressionCard />
 
         <TopicButtonGrid tiles={tiles} onSelect={handleSelect} />
+
+        <YourProgressCard />
 
         <RecordsShowCard />
 

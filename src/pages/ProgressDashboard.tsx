@@ -99,6 +99,7 @@ Confidence: ${snapshot.development_confidence}%
         {/* Performance context — real evidence only; moved from Before You Start (owner 2026-10-05). */}
         <section id="performance-context" className="scroll-mt-20"><HumanPerformanceCard /></section>
 
+
         {/* Body today — moved from Dashboard. Collapsible to preserve focus. */}
         <section id="body" className="scroll-mt-20">
           <Collapsible open={bodyOpen} onOpenChange={setBodyOpen}>
