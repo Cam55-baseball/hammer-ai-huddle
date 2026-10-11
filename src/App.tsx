@@ -220,6 +220,7 @@ const ProgramBuilder = lazyWithRetry(() => import("./pages/owner/ProgramBuilder"
 const BundleBuilder = lazyWithRetry(() => import("./pages/owner/BundleBuilder"));
 const ConsultationFlow = lazyWithRetry(() => import("./pages/owner/ConsultationFlow"));
 const BuildLibrary = lazyWithRetry(() => import("./pages/owner/BuildLibrary"));
+const TranscriptReview = lazyWithRetry(() => import("./pages/owner/TranscriptReview"));
 const FoundationTraceInspector = lazyWithRetry(() => import("./pages/owner/FoundationTraceInspector"));
 const FoundationDiagnosticsPanel = lazyWithRetry(() => import("./pages/owner/FoundationDiagnosticsPanel"));
 const FoundationHealthDashboard = lazyWithRetry(() => import("./pages/owner/FoundationHealthDashboard"));
@@ -481,6 +482,7 @@ const App = () => {
               <Route path="/owner/open_bundle_builder" element={<BundleBuilder />} />
               <Route path="/owner/open_consultation_flow" element={<ConsultationFlow />} />
               <Route path="/owner/builds" element={<BuildLibrary />} />
+              <Route path="/owner/transcripts" element={<StaffOnlyRoute><TranscriptReview /></StaffOnlyRoute>} />
               <Route path="/owner/foundations/traces" element={<StaffOnlyRoute><FoundationTraceInspector /></StaffOnlyRoute>} />
               <Route path="/owner/foundations/diagnostics" element={<StaffOnlyRoute><FoundationDiagnosticsPanel /></StaffOnlyRoute>} />
               <Route path="/owner/foundations/health" element={<StaffOnlyRoute><FoundationHealthDashboard /></StaffOnlyRoute>} />
