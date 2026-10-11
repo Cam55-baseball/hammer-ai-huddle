@@ -21,7 +21,6 @@ import { toast } from "sonner";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { useHammerDailyTasks } from "@/hooks/useHammerDailyTasks";
 import { LogButton } from "@/components/hammer/logging/LogButton";
-import { WkOneTapLog } from "@/components/hammer/logging/WkOneTapLog";
 import { CardOutcomeLog } from "@/components/hammer/logging/CardOutcomeLog";
 import { useLiftPlateau, useVerifiedMax } from "@/hooks/useVerifiedMax";
 import { workingWeight, UNLOCK_COPY } from "@/lib/lift/verifiedMax";
@@ -36,10 +35,10 @@ import {
 import { missedStillEditable } from "@/lib/wic/execution/liftCompletion";
 import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
 import { ProgramContentBlock, LimbHintBlock, GameFlushBlock } from "@/components/hammer/ProgramContentBlock";
-import { usePocketDetails } from "./cards/PocketCard";
 import { ExerciseInstructions } from "./cards/ExerciseInstructions";
 import { ActivityBasics } from "./cards/ActivityBasics";
 import { formatPrescriptionDose } from "@/lib/hammer/prescription/formatPrescriptionDose";
+import { ExerciseDisclosure } from "./cards/ExerciseDisclosure";
 import { InlinePrescriptionLog } from "@/components/hammer/logging/InlinePrescriptionLog";
 
 const SLOT_TONE: Record<WkRx["slot"], string> = {
@@ -102,8 +101,6 @@ export function WkPrescriptionCard({
   // Prescription double-check: every card is repaired before it is shown.
   const rx = useCheckedRx(rawRx);
   const repair = (t: string) => repairInstruction(t, rx, "guide") ?? t;
-  const pocketDetails = usePocketDetails();
-  const [open, setOpen] = useState(false); // owner: every exercise starts collapsed, pop-ups too
   const [swapOpen, setSwapOpen] = useState(false);
   // Availability is resolved against the certified ladder (or, for rows that
   // predate substitution families, the identical catalog-derived ladder).
@@ -294,63 +291,7 @@ export function WkPrescriptionCard({
 
   return (
     <Card className={`p-3 border ${checked ? "opacity-60" : ""}`}>
-      <Collapsible open={open} onOpenChange={setOpen}>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <Checkbox
-            checked={checked}
-            onCheckedChange={(v) => toggleCheckbox(!!v)}
-            className="shrink-0"
-            aria-label={`Mark ${rx.movement_name} done`}
-          />
-          <CollapsibleTrigger asChild>
-            <button
-              type="button"
-              className="min-w-[9rem] flex-1 text-left"
-              aria-expanded={open}
-            >
-              <div className="font-semibold text-sm whitespace-normal break-words">
-                {rx.movement_name}
-              </div>
-              {isMissed && !checked && (
-                <Badge variant="outline" className="mt-0.5 text-[10px] border-destructive/50 text-destructive">
-                  Missed{missedLocked ? "" : " — you can still mark it done"}
-                </Badge>
-              )}
-            </button>
-          </CollapsibleTrigger>
-              {allowSwap && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-[11px] gap-1 shrink-0"
-                  disabled={!swapAvailable}
-                  title={
-                    swapLadder.isLoading
-                      ? "Checking alternatives…"
-                      : swapAvailable
-                        ? "Pick an equivalent exercise"
-                        : "No safe alternative for this exercise today"
-                  }
-                  onClick={() => setSwapOpen(true)}
-                >
-                  {swapLadder.isLoading ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Repeat2 className="h-3 w-3" />
-                  )}
-                  {swapLadder.isLoading ? "Alternative…" : swapAvailable ? "Alternative" : "No alternative"}
-                </Button>
-              )}
-           {swapAvailable && (
-            <LiftSwapSheet rx={rx} open={swapOpen} onOpenChange={setSwapOpen} />
-          )}
-          {<CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 px-2 shrink-0">
-              <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
-            </Button>
-          </CollapsibleTrigger>}
-        </div>
-
+      <ExerciseDisclosure name={rx.movement_name}>
         <div className="mt-2 space-y-2 text-xs">
           <div className="font-medium text-foreground" data-prescribed-dose>{dosage}</div>
           <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} dosage={dosage} setup={(why as any)?.setup} cue={why.cue} repair={repair} />
@@ -358,19 +299,8 @@ export function WkPrescriptionCard({
             <span className="font-medium">Log this work</span>
             <InlinePrescriptionLog rx={rx} />
             <CardOutcomeLog rx={rx} disabled={missedLocked} />
+            <LogButton rx={rx} dosageText={dosage} survey />
           </div>
-          <Collapsible data-extra-log>
-            <CollapsibleTrigger asChild>
-              <Button type="button" variant="ghost" className="h-9 w-full justify-between text-xs font-medium">
-                Extra log (optional)
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-1 space-y-2">
-              <LogButton rx={rx} dosageText={dosage} compact />
-              <WkOneTapLog rx={rx} />
-            </CollapsibleContent>
-          </Collapsible>
           {(() => {
             const whyText = String(athleteWhy ?? "").trim();
             const rawToday = String(todayLine ?? "").trim();
@@ -394,7 +324,7 @@ export function WkPrescriptionCard({
           {allowSwap && rx.substituted_from_slug && <LiftSwapUndoChip rx={rx} />}
         </div>
 
-        <CollapsibleContent className="mt-2 space-y-2 text-xs">
+        <div className="mt-2 space-y-2 text-xs">
           <div className="flex flex-wrap items-center gap-1.5">
             {SLOT_LABEL[rx.slot] && (
               <Badge variant="secondary" className={`text-[10px] ${SLOT_TONE[rx.slot]}`}>
@@ -436,8 +366,10 @@ export function WkPrescriptionCard({
           {why.sequencing_hint && (
             <div className="text-[11px] text-amber-700 dark:text-amber-300">{why.sequencing_hint}</div>
           )}
-        </CollapsibleContent>
-      </Collapsible>
+        </div>
+        {allowSwap && <Button variant="outline" size="sm" disabled={!swapAvailable} onClick={() => setSwapOpen(true)}>Alternative</Button>}
+        {swapAvailable && <LiftSwapSheet rx={rx} open={swapOpen} onOpenChange={setSwapOpen} />}
+      </ExerciseDisclosure>
     </Card>
   );
 }

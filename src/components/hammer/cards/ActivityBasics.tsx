@@ -14,5 +14,5 @@ export function activityBasics(input: { name: string; slug?: string | null; setu
 export function ActivityBasics(props: { name: string; slug?: string | null; setup?: string | null; cue?: string | null; stopIf?: string | null; dosage?: string | null; repair?: (t: string) => string }) {
   const { description } = activityBasics(props);
   const text = description && props.repair ? props.repair(description) : description;
-  return text ? <p data-basic-description className="text-sm leading-snug text-foreground">{text}</p> : null;
+  return text ? <div data-basic-description className="text-sm leading-snug text-foreground"><p className="mb-1 font-semibold">How to do one rep</p><p>{text}</p></div> : null;
 }

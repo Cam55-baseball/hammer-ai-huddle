@@ -14,6 +14,8 @@ import { ArmCareBudgetProvider } from "@/components/hammer/ArmCareBudgetContext"
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { WkLiftsCard } from "@/components/hammer/WkLiftsCard";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
+import { ReleaseCountdown } from "@/components/hammer/cards/ReleaseCountdown";
+import { PocketCard } from "@/components/hammer/cards/PocketCard";
 
 const base = {
   plan_date: "2026-03-02",
@@ -101,6 +103,13 @@ export default function EvidenceCardClarity() {
       <ArmCareBudgetProvider owner="lift">
         <main className="mx-auto max-w-[390px] space-y-4 p-3">
           <h1 className="text-base font-semibold">Step 21 — card clarity</h1>
+          <ReleaseCountdown />
+          <section aria-label="Inline exercise list" className="space-y-2">
+            {[liftRow, skillRow].map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} allowSwap={false} />)}
+          </section>
+          <PocketCard id="override-evidence" category="Exercise check" tone="" planDate={base.plan_date} prescribed>
+            {() => <section className="space-y-2">{[liftRow, skillRow].map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} allowSwap={false} />)}</section>}
+          </PocketCard>
 
           <section className="space-y-2">
             <h2 className="text-xs font-medium text-muted-foreground">

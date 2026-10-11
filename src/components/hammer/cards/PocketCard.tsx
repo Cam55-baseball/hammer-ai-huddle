@@ -199,7 +199,7 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
               </Button>
             )}
           </header>
-          <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-3">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">
             {showIntro && intro && (
               <div data-pocket-intro className="mb-3 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm text-foreground animate-in fade-in motion-reduce:animate-none">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">First time here</p>
