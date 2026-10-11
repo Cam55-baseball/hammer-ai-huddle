@@ -45,6 +45,61 @@ export function CoachDrillAssign() {
     },
   });
 
+  // Required equipment per drill (for the safety check).
+  const { data: equipRows } = useQuery({
+    queryKey: ['coach-drill-equipment'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('drill_equipment')
+        .select('drill_id, equipment')
+        .eq('required', true);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const safetyDrills: DrillSafetyInput[] = (drills ?? []).map((d) => ({
+    id: d.id,
+    name: d.name,
+    module: d.module ?? null,
+    skill_target: (d as any).skill_target ?? null,
+    sport: d.sport ?? null,
+    progression_level: d.progression_level ?? null,
+    requiredEquipment: (equipRows ?? [])
+      .filter((e) => e.drill_id === d.id)
+      .map((e) => e.equipment),
+  }));
+
+  // Selected player's safety context: age, sport, owned equipment.
+  const { data: athleteCtx } = useQuery({
+    queryKey: ['coach-drill-safety-ctx', selectedPlayerId],
+    enabled: !!selectedPlayerId,
+    queryFn: async (): Promise<AthleteSafetyContext> => {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('date_of_birth, sport')
+        .eq('id', selectedPlayerId)
+        .maybeSingle();
+      const { data: eq } = await supabase
+        .from('athlete_equipment_context')
+        .select('equipment')
+        .eq('user_id', selectedPlayerId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      let ageYears: number | null = null;
+      if (prof?.date_of_birth) {
+        const dob = new Date(prof.date_of_birth);
+        ageYears = Math.floor((Date.now() - dob.getTime()) / (365.25 * 86400 * 1000));
+      }
+      return {
+        ageYears,
+        sport: (prof as any)?.sport ?? null,
+        equipment: (eq?.equipment as string[]) ?? [],
+      };
+    },
+  });
+
   const { data: players } = useCoachPlayerPool();
   const assignMutation = useAssignDrill();
   const { data: myAssignments } = useCoachAssignments();
