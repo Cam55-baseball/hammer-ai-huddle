@@ -123,7 +123,8 @@ export function SprintStopwatch({ cardId, distanceFeet, movementSlug, planDate }
             const s = strideFeet(distanceFeet, r.steps);
             return (
               <li key={i} className="text-foreground">
-                Rep {i + 1} time: {r.seconds.toFixed(2)}s ({r.by === "partner" ? "partner" : "self"}-timed)
+                Rep {i + 1} time: {r.seconds.toFixed(2)}s ({r.by === "partner" ? "partner" : "self"}-timed, {r.start} start)
+                {r.splits.length > 0 ? ` · splits: ${r.splits.map((sp) => `${sp.yd} yd ${sp.seconds.toFixed(2)}s`).join(", ")}` : ""}
                 {r.steps ? ` · steps: ${r.steps}` : ""}{s ? ` · stride: ${s} ft` : ""}
                 {r.seconds === best && runs.length > 1 ? " · best today" : ""}
               </li>
