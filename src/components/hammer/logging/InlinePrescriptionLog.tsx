@@ -38,21 +38,21 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
       { key: "throws", label: "Throws" },
     ] };
   }
-  if (rx.slot === "baserunning" || /home[_ ]to[_ ]first|steal|baserun|lead[_ ]off|first[_ ]to[_ ]third/.test(slug)) {
+  if ((rx.slot as string) === "baserunning" || /home[_ ]to[_ ]first|steal|baserun|lead[_ ]off|first[_ ]to[_ ]third/.test(slug)) {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [
       { key: "distance", label: "Distance", unit: "ft", prefill: rx.distance_feet },
       { key: "time", label: "Time", unit: "ss.hh" },
       { key: "jump", label: "Reaction / jump (1–5)" },
     ] };
   }
-  if (rx.slot === "defense" || rx.slot === "fielding" || /fielding|ground[_ ]ball|glove[_ ]work|infield|outfield|short[_ ]hop/.test(slug)) {
+  if ((rx.slot as string) === "defense" || (rx.slot as string) === "fielding" || /fielding|ground[_ ]ball|glove[_ ]work|infield|outfield|short[_ ]hop/.test(slug)) {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [
       { key: "reps", label: "Reps", prefill: rx.reps },
       { key: "clean", label: "Clean plays" },
       { key: "throws", label: "Throws (count toward your arm total)" },
     ] };
   }
-  if (rx.slot !== "lift" && rx.slot !== "supplemental" && (rx.slot === "hitting" || /tee[_ ]work|front[_ ]toss|soft[_ ]toss|batting[_ ]practice|dry[_ ]hack|swing/.test(slug))) {
+  if (rx.slot !== "lift" && rx.slot !== "supplemental" && ((rx.slot as string) === "hitting" || /tee[_ ]work|front[_ ]toss|soft[_ ]toss|batting[_ ]practice|dry[_ ]hack|swing/.test(slug))) {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [
       { key: "swings", label: "Swings", prefill: rx.reps },
       { key: "quality", label: "Quality contact" },
