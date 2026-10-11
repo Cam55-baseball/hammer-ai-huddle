@@ -28,3 +28,9 @@ Snapshot first: `public._snapshot_security_20261011` holds every bucket's prior 
 - Under-13 players' clips are no longer visible to their coaches (only parent/owner/admin), per "under-13 hidden".
 - Signed-out visitors cannot see athlete videos or avatars anywhere.
 - Coaches/scouts who signed up after today wait for owner approval before getting access.
+
+## A4 completion (CC1, 2026-10-11) — legacy follow-based reads
+- Migration `minor_aware_linked_coach` (originals saved in `_snapshot_security_20261011`).
+- `is_linked_coach` (used by performance_sessions, vault_scout_grades, hie_snapshots, height checks, limb rows) now requires: accepted follow + active coach/scout/recruiter role + no block + never under-13 + for 13–17 a connected coach or parent-authorized recruiting consent (metrics).
+- `session_videos` coach read and `videos` scout-shared read now use the same `can_view_athlete_media` rule as private storage.
+- Proof: 30 accepted follows → 24 still allowed (6 removed: minors without consent/role); under-13 allowed = 0; 3,000 random non-follow pairs allowed = 0. Full suite 2,730/2,730.
