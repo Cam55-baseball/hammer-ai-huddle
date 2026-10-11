@@ -21,6 +21,7 @@ import {
   THROW_TYPES,
   ageFrom,
   armLedgerView,
+  mergePitchLogs,
   enterableTypes,
   prescribedThrows,
   throwRoleFrom,
