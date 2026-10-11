@@ -1,6 +1,6 @@
 # REPORT — 2026-10-11 23:55 UTC
 
-**Ready to publish: no** — legal wording waits for your lawyer; the coverage decision and test-account decision are open; Phases 5–9 not started.
+**Ready to publish: no** — legal wording waits for your lawyer; the coverage decision and test-account decision are open; Phase 5 in progress; 6–9 not started.
 
 | Phase | State | Proof | Result |
 |---|---|---|---|
@@ -9,7 +9,15 @@
 | 2 Consent up front | Done in the app; legal wording waits for lawyer | DD11–DD13 | PASS |
 | 3 Onboarding fields | Done | EE1–EE5 (below) | PASS |
 | 4 Game stats, location, spray charts | Done | EE6 (below) | PASS |
-| 5–9 | Not started | — | — |
+| 5 Coach tools | Messages done; summary card/tabs and safety-checked From Coach cards still to do | EE7 (below) | Messages PASS |
+| 6–9 | Not started | — | — |
+
+**Phase 5 proof so far (EE7) — coach messages:**
+- Coaches can message a player from the player's page; the server decides who receives it by age: 18+ player only; 13–17 player plus a parent copy; under 13 parent only. Players under 18 with no linked parent can't be messaged.
+- Proven with test accounts through the sign-in API: coach → players not on his roster refused (2 of 2); coach → 13-year-old: player and parent both received it; same player set to under 13 (birth date changed temporarily, then restored): parent received it, the child did not; an unrelated player saw nothing; a player could not fake a coach message (refused).
+- Parent sees "Messages from your child's coaches" on the phone (screenshot /tmp/browser/ee7/parent.png). Player's own list sits on Scouting visibility.
+- 3 new tests pass; build OK. Test messages deleted.
+- Next in Phase 5: coach summary card + tabs, then From Coach workout cards checked by the safety rules.
 
 **Phase 4 proof (EE6)** — signed in as the test player (demo16ss) with a real seeded game (42 pitches, 4 at-bats with field directions):
 - Game report now shows a spray chart: one dot per batted ball on a field diagram, placed by the direction the player actually logged (LF ×2 fanned apart, RCF, SS); unknown directions are skipped, never guessed (screenshots /tmp/browser/ee6/shots/2_spray.png).
