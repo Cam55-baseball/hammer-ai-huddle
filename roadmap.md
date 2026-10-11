@@ -1,14 +1,22 @@
-# REPORT — 2026-10-11 23:10 UTC
+# REPORT — 2026-10-11 23:40 UTC
 
-**Ready to publish: no** — Phase 2 is built and proven but its legal wording waits for your lawyer; Phases 3–9 not started.
+**Ready to publish: no** — legal wording waits for your lawyer; the coverage decision and test-account decision are open; Phases 4–9 not started.
 
 | Phase | State | Proof | Result |
 |---|---|---|---|
 | Security fixes A1–A4 | Done | CC6 | PASS |
 | 1 Accounts, orgs, teams, Requests inbox | Done | DD7–DD10, test accounts + phone screenshots | PASS |
-| 2 Consent up front | Done in the app; legal wording waits for lawyer | DD11 + this round (below) | PASS |
-| 3 Onboarding fields | Partly done (EE1) | Sign-up already asks position, bats/throws, level/team, grad year, state; "Sequencing / pitch mix" goal removed from picks (old saved picks still work); academics labeled "you entered this, not verified"; 2 new tests pass | PASS so far — EE2: "Open to recruiting?" note added to the last sign-up step, pointing to Scouting visibility (one sharing switch, parent approves under 18). EE3: transcript upload added (private file store, only the player and app staff can open it; status waiting / verified / not accepted). EE4: staff review page added (owner/admin only). Proven by API with test accounts: player upload OK, player self-verify refused, coach cannot see the row or open the file, owner opens and marks verified; test file and row removed. Browser check of the review page blocked: the owner test sign-in stops at "Before you keep training" (updated terms not yet accepted on that account — not accepted on the owner's behalf). Still to do: phone proof of sign-up as a new player |
+| 2 Consent up front | Done in the app; legal wording waits for lawyer | DD11–DD13 | PASS |
+| 3 Onboarding fields | Done | EE1–EE5 (below) | PASS |
 | 4–9 | Not started | — | — |
+
+**Phase 3 proof, final round (EE5)** — full sign-up as a brand-new player (ee5proof) on a phone-sized screen, start to finish:
+- Sign-up → terms gate → profile setup → dashboard → Scouting visibility, all on 390×844.
+- Last setup step shows the "Open to recruiting?" note; ticking "Currently in High School" shows the academics box labeled "Source: you entered this (not verified). Only shared if you turn on Academics in Scouting visibility." (screenshots /tmp/browser/ee5/27, 28, 35).
+- No "Sequencing / pitch mix" anywhere in the goal picks; old saved picks still work (unit test).
+- Scouting visibility page shows all six sharing items plus the School transcript box.
+- Two real bugs found and fixed during the proof: (1) profile setup failed with "birthdate_locked" when the player picked a birth date different from sign-up — the lock is the safety rule working, proof re-run with the matching date; (2) profile setup failed for any player who already got their role at sign-up (duplicate-key error) — the role save now skips an existing role instead of failing.
+- Full suite 2,740/2,740; build OK. ee5proof marked as a test account (hidden from search); added to the keep/delete list below.
 
 **Phase 2 proof this round** (test accounts signed in through the sign-in API; phone screenshot /tmp/browser/dd13/01_parent_checklist.png):
 - New parent checklist on the parent's scouting page: parent ticks each item (profile, metrics, video, health, academics, contact); health and academics separate, start off.
