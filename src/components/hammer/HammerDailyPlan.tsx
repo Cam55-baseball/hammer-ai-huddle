@@ -266,7 +266,7 @@ function DrillRow({
     <li data-task-id={taskId} data-task-side={side ?? ""} className={`text-xs rounded-lg border p-3 ${checked ? "opacity-60 border-border/40 bg-muted/20" : "border-border/70 bg-card"}`}>
       <ExerciseDisclosure name={d.name}>
         <div data-prescribed-dose className="text-sm font-semibold whitespace-normal break-words">{d.dosage}</div>
-        <ActivityBasics name={d.name} slug={d.slug} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} repair={legacyRepair(d.dosage, modality)} />
+        <ActivityBasics name={d.name} slug={d.slug} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} repair={legacyRepair(d.dosage, modality)} expanded />
         <LegacyDrillInlineLog
           modality={modality} name={d.name} dosage={d.dosage}
           storageKey={`hammer-block-log-draft:${planDate}:${taskId}:${side ?? ""}`}
@@ -274,7 +274,7 @@ function DrillRow({
           onSave={(log) => tasks.toggleTask({ ...seed, payload: { ...seed.payload, log } }, true)}
           onOutcome={(outcome, how_hard) => tasks.toggleTask({ ...seed, payload: { ...seed.payload, outcome, how_hard } }, outcome !== "skipped")}
         />
-        <ExerciseInstructions name={d.name} slug={d.slug} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} repair={legacyRepair(d.dosage, modality)} />
+        <ExerciseInstructions name={d.name} slug={d.slug} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} repair={legacyRepair(d.dosage, modality)} expanded />
         {adjustApi && <Button type="button" variant="outline" size="sm" onClick={() => setAdjustOpen(true)} aria-label={`Swap or skip ${d.name}`}><Repeat className="mr-1 h-3 w-3" />Can't do it</Button>}
         {adjustApi && <DrillAdjustDialog open={adjustOpen} onOpenChange={setAdjustOpen} modality={modality} drill={d} onSave={adjustApi.save} />}
       </ExerciseDisclosure>

@@ -8,6 +8,7 @@ export interface ExerciseLogPayload {
   plan_date: string;
   movement_slug: string;
   rounds: Record<string, number | string | null>[];
+  outcome?: "completed" | "cut_short";
   rpe?: number | null;
   bar_feel?: string | null;
   notes?: string | null;
@@ -104,6 +105,7 @@ export function useSaveExerciseLog() {
         notes: p.notes ?? null,
         ai_readback: p.ai_readback ?? null,
         metrics: {
+          ...(p.outcome ? { one_tap_outcome: p.outcome, cut_short: p.outcome === "cut_short" } : {}),
           rounds: p.rounds,
           template_id: p.template_id ?? null,
           field_schema: p.field_schema ?? null,

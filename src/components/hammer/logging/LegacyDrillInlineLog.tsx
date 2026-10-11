@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { OptionalSurvey } from "./OptionalSurvey";
+import { createPortal } from "react-dom";
+import { usePocketLogHost } from "../cards/PocketCard";
+import { RestTimer, sprintRestSeconds } from "../cards/RestTimer";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -25,6 +27,7 @@ export function LegacyDrillInlineLog({
   onSave: (log: Record<string, unknown>) => void;
   onOutcome?: (outcome: "completed" | "skipped" | "cut_short", how_hard: number | null) => void;
 }) {
+  const logHost = usePocketLogHost();
   const [outcome, setOutcome] = useState<"completed" | "skipped" | "cut_short" | null>(completed ? "completed" : null);
   const [hard, setHard] = useState("");
   const [notes, setNotes] = useState("");
@@ -63,9 +66,9 @@ export function LegacyDrillInlineLog({
     ? "grid grid-cols-[28px_repeat(2,minmax(0,1fr))] gap-1.5"
     : "grid grid-cols-[28px_minmax(0,1fr)] gap-1.5";
 
-  return (
-    <div className="mt-2 space-y-2 rounded border border-border bg-muted/20 p-2" data-legacy-drill-log>
-      <div className="text-[11px] font-medium">Log this work</div>
+  const entries = <section data-exercise-entry-grid className="space-y-2">
+    {logHost && <h4 className="text-sm font-semibold">{name}</h4>}
+    {(modality === "speed" || modality === "conditioning") && <RestTimer label="Rest between repeats" seconds={modality === "speed" ? sprintRestSeconds(spec.fields.find(f => f.key === "distance")?.prefill) : null} />}
       {spec.completion && (
         <label className="flex min-h-9 items-center gap-2 text-xs">
           <Checkbox checked={done} onCheckedChange={(value) => setDone(value === true)} />
@@ -85,6 +88,10 @@ export function LegacyDrillInlineLog({
         </div>
       ))}
       <Button type="button" size="sm" className="w-full" onClick={save}>Save log</Button>
+  </section>;
+  return (
+    <div className="mt-2 space-y-2 rounded border border-border bg-muted/20 p-2" data-legacy-drill-log>
+      {logHost ? createPortal(entries, logHost) : <><div className="text-[11px] font-medium">Log this work</div>{entries}</>}
       {onOutcome && <div className="space-y-2" data-card-outcome-log>
         <div className="grid grid-cols-3 gap-1.5">
           {([["completed", "Done"], ["skipped", "Skipped"], ["cut_short", "Cut short"]] as const).map(([k, label]) => (
@@ -96,7 +103,7 @@ export function LegacyDrillInlineLog({
           <span className="shrink-0 font-medium">How hard 1–10</span>
           <Input aria-label="How hard 1–10" inputMode="numeric" value={hard} onChange={(e) => setHard(e.target.value.replace(/[^\d]/g, "").slice(0, 2))} className="h-9 w-20 px-2 text-sm" />
         </label>
-        <OptionalSurvey><label className="block text-xs">Notes (optional)<Textarea value={notes} onChange={(e) => setNotes(e.target.value)} /></label></OptionalSurvey>
+        <div data-exercise-survey><label className="block text-xs">Notes (optional)<Textarea value={notes} onChange={(e) => setNotes(e.target.value)} /></label></div>
       </div>}
     </div>
   );

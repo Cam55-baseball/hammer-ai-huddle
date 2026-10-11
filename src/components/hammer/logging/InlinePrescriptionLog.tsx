@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { RestTimer, sprintRestSeconds } from "../cards/RestTimer";
+import { useAuth } from "@/hooks/useAuth";
+import { useQueryClient } from "@tanstack/react-query";
+import { markPrescriptionDone, missedStillEditable } from "@/lib/wic/execution/liftCompletion";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
@@ -17,7 +21,7 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   if (rx.total_reps && !/hold|iso|plank/.test(slug)) {
     // Rows must add up to the total shown on the card: sets × reps only when that equals the total.
     const split = rx.sets && rx.reps && rx.sets * rx.reps === rx.total_reps;
-    return { rows: split ? rx.sets! : 1, fields: [{ key: "reps", label: "Reps", prefill: split ? rx.reps : rx.total_reps }] };
+    return { rows: split ? rx.sets ?? 1 : 1, fields: [{ key: "reps", label: "Reps", prefill: split ? rx.reps : rx.total_reps }] };
   }
   if ((rx.dosage_unit ?? "").toLowerCase() === "seconds" || /hold|iso|plank/.test(slug)) {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: "Seconds", unit: "s", prefill: rx.duration_seconds ?? rx.reps }] };
@@ -25,7 +29,7 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   if (rx.slot === "conditioning") {
     return { rows, fields: [
       ...(rx.distance_feet ? [{ key: "distance", label: "Distance", unit: "ft", prefill: rx.distance_feet }] : []),
-      ...(rx.duration_seconds ? [{ key: "time", label: "Time", unit: "s", prefill: rx.duration_seconds }] : []),
+      ...(rx.distance_feet || rx.duration_seconds ? [{ key: "time", label: "Time", unit: "s", prefill: rx.duration_seconds }] : []),
       ...(!rx.distance_feet && !rx.duration_seconds ? [{ key: "reps", label: "Reps", prefill: rx.reps }] : []),
     ] };
   }
@@ -54,6 +58,8 @@ function seed(spec: ReturnType<typeof inlineLogSpec>): Draft {
 }
 
 export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
+  const { user } = useAuth();
+  const qc = useQueryClient();
   const spec = useMemo(() => inlineLogSpec(rx), [rx]);
   const { data: latest } = useLatestExerciseLog(rx.id, rx.movement_slug);
   const save = useSaveExerciseLog();
@@ -63,8 +69,10 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
   useEffect(() => {
     const stored = sessionStorage.getItem(key);
     const prior = (latest as any)?.metrics?.rounds;
-    try { setRounds(stored ? JSON.parse(stored) : Array.isArray(prior) && prior.length ? prior.map((r: any) => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v == null ? "" : String(v)]))) : seed(spec)); }
-    catch { setRounds(seed(spec)); }
+    try {
+      const source = stored ? JSON.parse(stored) : prior;
+      setRounds(seed(spec).map((row, i) => Array.isArray(source) && source.length === spec.rows ? { ...row, ...Object.fromEntries(Object.entries(source[i] ?? {}).filter(([k]) => spec.fields.some(f => f.key === k)).map(([k, v]) => [k, v == null ? "" : String(v)])) } : row));
+    } catch { setRounds(seed(spec)); }
   }, [key, latest, spec]);
 
   const edit = (i: number, field: string, value: string) => {
@@ -73,14 +81,23 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     sessionStorage.setItem(key, JSON.stringify(next));
   };
   const handleSave = async () => {
+    const payload = rounds.map((r) => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v === "" ? null : Number(v)]))).filter(r => Object.values(r).some(v => typeof v === "number" && v > 0));
+    if (!payload.length) { toast.error("Enter the work you completed first."); return; }
     await save.mutateAsync({
       prescription_id: rx.id, plan_date: rx.plan_date, movement_slug: rx.movement_slug,
-      rounds: rounds.map((r) => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v === "" ? null : Number(v)]))),
+      rounds: payload,
+      rpe: latest?.rpe ?? null, bar_feel: latest?.bar_feel ?? null, notes: latest?.notes ?? null,
+      outcome: payload.length >= spec.rows ? "completed" : "cut_short",
       template_id: `inline_${rx.slot}`,
       field_schema: spec.fields.map((f) => ({ key: f.key, label: f.label, unit: f.unit, kind: "number" })),
     });
+    if (user?.id && (rx.status !== "missed" || missedStillEditable(rx.plan_date))) {
+      const error = await markPrescriptionDone(rx, user.id);
+      if (error) { toast.error("Log saved, but credit couldn't be updated. Try again."); return; }
+      qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
+    }
     sessionStorage.removeItem(key);
-    toast.success("Log saved");
+    toast.success(payload.length >= spec.rows ? "Log saved — Done." : "Log saved — Cut short.");
   };
   const hasTime = spec.fields.some((f) => f.key === "time") && (rx.slot === "speed" || rx.slot === "conditioning");
   const startedAt = useRef<number | null>(null);
@@ -104,6 +121,8 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
       <span className="font-mono text-sm tabular-nums text-foreground" aria-live="polite">{elapsed.toFixed(2)} s</span>
       <span className="text-[11px] text-muted-foreground">Stop fills the next rep's time.</span>
     </div>}
+    {(rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank/.test(rx.movement_slug)) && <RestTimer label="Rest between sets" seconds={rx.rest_seconds} />}
+    {rx.slot === "speed" && hasTime && <RestTimer label="Rest between sprints" seconds={sprintRestSeconds(rx.distance_feet)} />}
     <div className="grid gap-1.5 px-1 text-[10px] uppercase tracking-wide text-muted-foreground" style={{ gridTemplateColumns: `28px repeat(${spec.fields.length}, minmax(0, 1fr))` }}>
       <span />{spec.fields.map((f) => <span key={f.key}>{f.label}{f.unit ? ` (${f.unit})` : ""}</span>)}
     </div>
