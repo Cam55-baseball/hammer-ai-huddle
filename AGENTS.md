@@ -23,3 +23,5 @@
 - Problem reports save to `problem_reports` first; `report-problem-mailer` only sends/retries. Why: a broken email key never loses a report.
 
 - 13–17 parent waiver gating lives only in `supabase/functions/_shared/legal/teenWaiverRules.ts` (used by `teen-parent-waiver` and tests); `TeenWaiverGate` wraps only the training-plan routes. Why: one rule source, and non-physical parts of the app stay open.
+
+- Warm-up ORDER comes only from `src/lib/hammer/prescription/warmupStages.ts` (stage → order-within-stage → builder order, applied after choosing); it never adds/removes movements, and hard rules (tissue prep first, max intent after build-ups) override Vault stage tags. Why: owner 2026-10-11 — choose the old way, order cold to ready.
