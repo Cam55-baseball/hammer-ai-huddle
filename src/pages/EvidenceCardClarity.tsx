@@ -21,6 +21,7 @@ import { ActivityBasics } from "@/components/hammer/cards/ActivityBasics";
 import { ExerciseInstructions } from "@/components/hammer/cards/ExerciseInstructions";
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
 import { PowerPrimerBlock } from "@/components/hammer/PowerPrimerBlock";
+import { ExerciseLogSheet } from "@/components/hammer/logging/ExerciseLogSheet";
 
 const base = {
   plan_date: "2026-03-02",
@@ -120,6 +121,9 @@ export default function EvidenceCardClarity() {
         <main className="mx-auto max-w-[390px] space-y-4 p-3">
           <h1 className="text-base font-semibold">Step 21 — card clarity</h1>
           <ReleaseCountdown />
+          <PocketCard id="pitching-evidence" category="Bullpen" tone="" planDate={base.plan_date} prescribed countLabel="30 pitches · 80% intent">
+            {() => <ExerciseLogSheet activity open onOpenChange={() => {}} rx={{ ...liftRow, id: "pitching-bullpen-evidence", slot: "cross_sport", movement_slug: "bullpen_pen", movement_name: "Bullpen", sets: 1, reps: 30, dosage_unit: "throws", why_payload: {} }} dosageText="30 pitches · 80% intent" />}
+          </PocketCard>
           {activityRows.map(rx => rx.id === liftRow.id ? <PocketCard key={rx.id} id={`activity_${rx.id}`} category="Lift" tone="" planDate={rx.plan_date} prescribed countLabel="3 sets × 5 reps">
             {() => <><WkPrescriptionCard rx={rx} allowSwap={false} /><PowerPrimerBlock planDate={rx.plan_date} pp={{ target: "first_step", primer: { source: "lift", name: "Trap Bar Deadlift", reps: [3, 5], heavy: true }, action: { name: "10-yard sprint", reps: [1, 1] }, rest_s: [120, 180], max_sets: 2, max_total_reps: null, half_volume: false, stop: { kind: "sprint", drop_pct: 3 }, stop_buttons: ["Pain"], requires_throwing_warmup: false }} /></>}
           </PocketCard> : <WkPrescriptionCard key={rx.id} rx={rx} allowSwap={false} />)}

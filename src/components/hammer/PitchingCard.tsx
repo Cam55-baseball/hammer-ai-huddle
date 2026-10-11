@@ -67,6 +67,8 @@ import {
 import { prescribePitchLadder } from "@/lib/hammer/pitching/pitchLadder";
 import { pickPfpDrillsForToday } from "@/lib/hammer/pitching/pfpLibrary";
 import { clampDayTypeForRecovery } from "@/lib/hammer/pitching/recoveryClamp";
+import { usePocketDetails } from "@/components/hammer/cards/PocketCard";
+import { ExerciseDisclosure } from "@/components/hammer/cards/ExerciseDisclosure";
 
 function shortSeasonPhase(p: string | null | undefined): "off" | "pre" | "in" | "post" | null {
   if (!p) return null;
@@ -110,6 +112,7 @@ function detectArmInjury(ctx: ReturnType<typeof useHammerAthleteContext>): strin
 }
 
 export function PitchingCard() {
+  const inPocket = usePocketDetails();
   const { user } = useAuth();
   const ctx = useHammerAthleteContext();
   const proj = useMemo(() => projectEnvelope(ctx), [ctx]);
@@ -315,9 +318,9 @@ export function PitchingCard() {
 
   return (
     <Card className="border-rose-400/30">
-      <Collapsible open={open} onOpenChange={setOpen}>
-        <CollapsibleTrigger asChild>
-          <button type="button" className="w-full text-left" aria-expanded={open}>
+      <Collapsible open={inPocket || open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild disabled={inPocket}>
+          <button type="button" className="w-full text-left" aria-expanded={inPocket || open}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
@@ -389,7 +392,14 @@ export function PitchingCard() {
             {/* E2E WP4 — youth caps, growth-adjusted age, fatigue stop, pitcher-catcher */}
             <YouthPitchingLimits today={todayIso} />
 
-            {/* Log buttons — pitching card owns its own log entry points */}
+            {/* Existing specialized log scopes; no invented prescriptions or outcomes. */}
+            {inPocket ? <>
+              {isMoundDay && <ExerciseLogSheet activity open onOpenChange={() => {}} rx={syntheticRx(effectiveDayType === "start" ? "outing" : "bullpen")} dosageText={effectiveDayType === "start" ? `${ladder.outingPitchCap} pitch cap · ~${ladder.targetInnings} IP` : `${Math.round(ladder.outingPitchCap * 0.5)} pitches · ${ladder.intentPercent}% intent`} />}
+              <ExerciseDisclosure name="Extra pitching logs (optional)">
+                {isMoundDay && <Button size="sm" variant="outline" onClick={() => setLogSheet(effectiveDayType === "start" ? "bullpen" : "outing")}>{effectiveDayType === "start" ? "Log bullpen" : "Log outing"}</Button>}
+                <Button size="sm" variant="outline" onClick={() => setLogSheet("pfp")}>Log PFP</Button>
+              </ExerciseDisclosure>
+            </> :
             <div className="flex flex-wrap gap-2">
               {isMoundDay && (
                 <>
@@ -404,7 +414,7 @@ export function PitchingCard() {
               <Button size="sm" variant="outline" onClick={() => setLogSheet("pfp")}>
                 Log PFP
               </Button>
-            </div>
+            </div>}
 
             <PitchingBests today={todayIso} />
 

@@ -11,6 +11,7 @@ interface Props {
   onChange: (rounds: Round[]) => void;
   minRounds?: number;
   maxRounds?: number;
+  fixedRounds?: boolean;
   /** Flag rounds missing a side (unilateral movements). */
   highlightMissingSide?: boolean;
 }
@@ -24,6 +25,7 @@ export function RoundGrid({
   onChange,
   minRounds = 1,
   maxRounds = 24,
+  fixedRounds = false,
   highlightMissingSide = false,
 }: Props) {
   const hasSide = fields.some((f) => f.kind === "side");
@@ -138,6 +140,7 @@ export function RoundGrid({
                 key={f.key}
                 inputMode="decimal"
                 type="text"
+                aria-label={`${f.label}${f.unit ? ` (${f.unit})` : ""}, row ${idx + 1}`}
                 value={value}
                 placeholder="—"
                 onChange={(e) => setCell(idx, f.key, e.target.value.replace(/[^\d.]/g, ""))}
@@ -148,7 +151,7 @@ export function RoundGrid({
         </div>
       ))}
 
-      <div className="flex items-center gap-2 pt-1">
+      {!fixedRounds && <div className="flex items-center gap-2 pt-1">
         <Button type="button" variant="outline" size="sm" onClick={addRound} disabled={rounds.length >= maxRounds} className="h-7 gap-1 text-xs">
           <Plus className="h-3 w-3" /> Add a set
         </Button>
@@ -162,7 +165,7 @@ export function RoundGrid({
         )}
 
         <div className="text-[10px] text-muted-foreground ml-auto">{rounds.length} round{rounds.length === 1 ? "" : "s"}</div>
-      </div>
+      </div>}
     </div>
   );
 }
