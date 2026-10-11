@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { MovementGuide } from "@/lib/hammer/prescription/movementGuide";
 import { activityBasics } from "./ActivityBasics";
+import { ExerciseVideo } from "./ExerciseVideo";
 
 /** The movement's existing guide, shown inline; never invents or changes a dose. */
 export function ExerciseInstructions({ name, slug, guideOverride, setup, cue, stopIf, dosage, why, changes, repair, expanded = false }: {
@@ -19,6 +20,7 @@ export function ExerciseInstructions({ name, slug, guideOverride, setup, cue, st
   const steps = guide?.goodRep ?? fallback?.steps ?? [];
   const content = <>
 
+      {slug && <ExerciseVideo slug={slug} />}
       <p className="text-muted-foreground"><span className="font-medium text-foreground">Setup: </span>{R(setup ?? guide?.setup ?? fallback?.setup)}</p>
       {steps.length > 0 && <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">{steps.map((step, i) => <li key={i}>{R(step)}</li>)}</ol>}
       {(cue || guide?.feel) && <p className="text-muted-foreground"><span className="font-medium text-foreground">Cue: </span>{R(cue ?? guide?.feel)}</p>}

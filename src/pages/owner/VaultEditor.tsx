@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { validateExercise, MEASURE_TYPES, type VaultExercise } from "@/lib/vault/validateExercise";
+import { ExerciseVideo } from "@/components/hammer/cards/ExerciseVideo";
 
 const CARD_TYPES = ["lift", "primer", "conditioning", "recovery", "speed", "warmup", "bat_speed", "throwing", "pitching", "windmill", "defense", "baserunning", "cross_sport", "mobility", "arm_care"];
 const SPORTS = ["baseball", "softball"];
@@ -57,6 +58,7 @@ export default function VaultEditor({ slug, base, baseHowTo, onClose }: Props) {
     rest_rule: "none",
     arm_weight: null,
     primer_role: "none",
+    video_url: null,
   });
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -89,6 +91,26 @@ export default function VaultEditor({ slug, base, baseHowTo, onClose }: Props) {
 
   const set = <K extends keyof VaultExercise>(k: K, v: VaultExercise[K]) => setE((p) => ({ ...p, [k]: v }));
   const live = history?.versions.find((v) => !v.undone_at);
+
+  const uploadVideo = async (file: File) => {
+    setMsg(null);
+    if (!["video/mp4", "video/webm", "video/quicktime"].includes(file.type)) {
+      setMsg("The video must be an MP4, WebM or MOV file."); return;
+    }
+    if (file.size > 200 * 1024 * 1024) { setMsg("The video must be under 200 MB."); return; }
+    setBusy("upload");
+    try {
+      const path = `${slug}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      const { error } = await supabase.storage.from("exercise-videos").upload(path, file, { contentType: file.type });
+      if (error) throw error;
+      set("video_url", `exercise-videos/${path}`);
+      setMsg("Video uploaded — save the draft to keep it.");
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "The upload failed.");
+    } finally {
+      setBusy(null);
+    }
+  };
 
   return (
     <Card className="p-4 space-y-4" data-vault-editor={slug}>
@@ -139,6 +161,20 @@ export default function VaultEditor({ slug, base, baseHowTo, onClose }: Props) {
             {PRIMER_ROLES.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
           </select>
         </Field>
+        <Field label="Video (https link to an MP4/WebM/MOV, or upload)">
+          <div className="flex flex-col gap-1">
+            <Input value={e.video_url ?? ""} placeholder="https://…/clip.mp4" onChange={(ev) => set("video_url", ev.target.value.trim() || null)} />
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              data-vault-video-upload
+              className="text-xs"
+              disabled={busy !== null}
+              onChange={(ev) => { const f = ev.target.files?.[0]; if (f) void uploadVideo(f); ev.target.value = ""; }}
+            />
+            {busy === "upload" && <span className="text-xs text-muted-foreground">Uploading…</span>}
+          </div>
+        </Field>
       </div>
 
       {/* Double-check validator */}
@@ -158,6 +194,7 @@ export default function VaultEditor({ slug, base, baseHowTo, onClose }: Props) {
         <h3 className="text-sm font-semibold mb-1">Phone preview</h3>
         <div className="w-[360px] max-w-full rounded-xl border border-border bg-card p-3" data-vault-preview>
           <p className="font-semibold">{e.name || "…"}</p>
+          {e.video_url && <div className="mt-2"><ExerciseVideo url={e.video_url} /></div>}
           <p className="text-sm text-muted-foreground mt-1">How to do one rep: {e.how_to_one_rep || "…"}</p>
           {e.setup && <p className="text-sm text-muted-foreground mt-1">Setup: {e.setup}</p>}
           {e.cue && <p className="text-sm mt-1">Cue: {e.cue}</p>}

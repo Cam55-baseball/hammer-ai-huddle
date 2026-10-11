@@ -30,4 +30,11 @@ describe("vault validator", () => {
   it("throws need an arm weight", () => {
     expect(validateExercise({ ...ok, measure_type: "throw_count", arm_weight: null }).join()).toMatch(/arm-ledger/);
   });
+  it("accepts an uploaded video or https mp4 link, rejects anything else", () => {
+    expect(validateExercise({ ...ok, video_url: "exercise-videos/db_press_neutral/1-clip.mp4" })).toEqual([]);
+    expect(validateExercise({ ...ok, video_url: "https://cdn.example.com/clip.mp4" })).toEqual([]);
+    expect(validateExercise({ ...ok, video_url: "http://insecure.com/clip.mp4" }).join()).toMatch(/video/i);
+    expect(validateExercise({ ...ok, video_url: "https://example.com/page" }).join()).toMatch(/MP4/);
+    expect(validateExercise({ ...ok, video_url: "other-bucket/clip.mp4" }).join()).toMatch(/exercise-videos/);
+  });
 });

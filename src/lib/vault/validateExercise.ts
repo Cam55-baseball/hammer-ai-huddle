@@ -26,6 +26,7 @@ export interface VaultExercise {
   rest_rule?: string;
   arm_weight?: number | null;
   primer_role?: "primer_lift" | "explosive_action" | "none";
+  video_url?: string | null;
 }
 
 const FILLER = [/full, controlled movement from start to finish/i, /smooth, controlled form/i];
@@ -89,5 +90,13 @@ export function validateExercise(e: VaultExercise): string[] {
   if (!t(e.rest_rule)) out.push("Pick a rest-rule category.");
   if (e.measure_type === "throw_count" && !(typeof e.arm_weight === "number" && e.arm_weight > 0)) out.push("Throws need an arm-ledger weight.");
   if (e.primer_role === "explosive_action" && e.measure_type === "weight_reps") out.push("An explosive action can't be a weighted lift.");
+  const vid = t(e.video_url ?? undefined);
+  if (vid) {
+    if (/^https:\/\//i.test(vid)) {
+      if (!/\.(mp4|webm|mov)(\?|#|$)/i.test(vid)) out.push("The video link must point at an MP4, WebM or MOV file.");
+    } else if (!/^exercise-videos\/[a-z0-9_][a-z0-9_./-]*\.(mp4|webm|mov)$/i.test(vid)) {
+      out.push("The video must be an uploaded exercise-videos file or an https link to an MP4, WebM or MOV.");
+    }
+  }
   return out;
 }
