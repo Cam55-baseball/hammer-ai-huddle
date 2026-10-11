@@ -101,7 +101,6 @@ export interface AtBatRow {
   exit_velo?: number | null;
   launch_angle?: number | null;
   exit_direction?: string | null;
-  batted_ball_type?: string | null;
   contact_quality?: string | null;
   rbi?: number | null;
   pitch_type?: string | null;
