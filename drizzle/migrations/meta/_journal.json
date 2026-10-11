@@ -148,6 +148,20 @@
       "when": 1791755530901,
       "tag": "0020_scouting_v31_org_roster_rpc",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791755736051,
+      "tag": "0021_scouting_v31_org_email_code_attempts",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791755807174,
+      "tag": "0022_scouting_v31_org_guard_email_code",
+      "breakpoints": true
     }
   ]
 }
