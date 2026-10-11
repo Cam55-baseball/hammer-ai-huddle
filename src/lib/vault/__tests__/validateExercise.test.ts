@@ -1,0 +1,33 @@
+import { describe, it, expect } from "vitest";
+import { validateExercise, type VaultExercise } from "../validateExercise";
+
+const ok: VaultExercise = {
+  slug: "db_press_neutral", name: "DB press, neutral grip",
+  how_to_one_rep: "You need two dumbbells and a flat bench. One rep is lowering both dumbbells to the chest and pressing back up.",
+  cue: "Elbows at 45°", stop_if: "Sharp shoulder pain", measure_type: "weight_reps",
+  default_sets: 3, default_reps: 8, equipment: ["dumbbells", "bench"], card_type: "lift",
+  sports: ["baseball"], season_phases: ["off_season"], min_age: 13, rest_rule: "lift_day", primer_role: "none",
+};
+
+describe("vault validator", () => {
+  it("passes a complete exercise", () => expect(validateExercise(ok)).toEqual([]));
+  it("blocks an incomplete exercise", () => {
+    const p = validateExercise({ ...ok, name: "", stop_if: "", sports: [], default_reps: null });
+    expect(p.length).toBeGreaterThanOrEqual(4);
+  });
+  it("blocks DB named with a barbell description", () => {
+    expect(validateExercise({ ...ok, how_to_one_rep: "You need a barbell. One rep is one press." }).join()).toMatch(/dumbbell/);
+  });
+  it("blocks a series without movements", () => {
+    expect(validateExercise({ ...ok, name: "Band Series", how_to_one_rep: "You need a band. One round is every movement." }).join()).toMatch(/series/);
+  });
+  it("blocks a jump logged in time", () => {
+    expect(validateExercise({ ...ok, name: "Broad jump", measure_type: "hold_seconds", default_seconds: 5 }).join()).toMatch(/never time/);
+  });
+  it("blocks filler", () => {
+    expect(validateExercise({ ...ok, how_to_one_rep: "One rep is one full, controlled movement from start to finish and back. dumbbell" }).join()).toMatch(/filler/);
+  });
+  it("throws need an arm weight", () => {
+    expect(validateExercise({ ...ok, measure_type: "throw_count", arm_weight: null }).join()).toMatch(/arm-ledger/);
+  });
+});
