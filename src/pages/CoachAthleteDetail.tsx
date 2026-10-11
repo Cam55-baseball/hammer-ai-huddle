@@ -1,4 +1,5 @@
 import { CoachMessageBox } from "@/components/coach/CoachMessageBox";
+import { CoachDrillAssign } from "@/components/coach/CoachDrillAssign";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -168,6 +169,10 @@ export default function CoachAthleteDetail() {
         </div>
 
         {athleteId && user?.id !== athleteId && rosterAccess === true && <CoachMessageBox athleteId={athleteId} />}
+
+        {/* Plan v3.1 Phase 5 — coach workout assignment, safety-checked against
+            the player's age, sport and equipment before it can be sent. */}
+        {athleteId && user?.id !== athleteId && rosterAccess === true && <CoachDrillAssign />}
 
         {error && (
           <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
