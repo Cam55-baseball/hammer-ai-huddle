@@ -1,3 +1,8 @@
+# W1 ACTIVITY-CARD TIMER PASS — 2026-10-11 — Ready to publish: no
+- [x] W1 next unfinished item: consolidated lift/sprint rest timers beside each exercise's top entry grid. Removed duplicate timers below exercise disclosures in specialized lift/speed panels. Existing lift rest bands and saved rest overrides remain unchanged; sprint rest remains 1 minute per 10 yards. Existing partner stopwatch and tested-max logging now sit inside the corresponding exercise disclosure as extra logging; no saved-data changes.
+- [x] Fresh proof: **300 files / 2,574 tests passed**. Nine pop-up examples at 360/390/393 px pass closed/open tap, top-entry-only log, survey placement and visible Start/X checks; updated 81 screenshots and run log in `/tmp/browser/activity-layout/` (`w1-phone.log`, `w1-suite.log`). Reviewed lift closed and sprint opened screenshots. Latest harness build OK. Fixtures and browser-emulated iPhone size are not affected-player/native proof.
+- [ ] Next: complete the specialized-panel inventory and exhaustive rendered entry-row checks across actual generated eight-week card types. No recovery tempo or survey was invented; existing prescriptions and storage scopes remain authoritative.
+
 # NEW ACTIVITY-CARD LAYOUT + OWNER CORRECTION — 2026-10-11 — Ready to publish: no
 - [x] Apply owner correction in the shared prescription/legacy pop-ups: top “Log this work” contains timers, exact-dose entry grids and “More information for each exercise is below ↓”. Done / Skipped / Cut short, How hard and existing exercise survey fields are inside initially closed exercise disclosures, not the top log.
 - [x] Existing card-level practice logging sits once in an initially closed “Finish this workout”; no new session survey or storage scope created.

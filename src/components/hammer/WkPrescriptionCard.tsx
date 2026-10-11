@@ -3,7 +3,7 @@
  * Shows phase, why-this-lift, training-age reasoning, CNS load, reductions,
  * injury substitutions, and a complete/skip control.
  */
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { PocketCard, usePocketDetails, usePocketLogHost } from "./cards/PocketCard";
 import { ExerciseLogSheet } from "./logging/ExerciseLogSheet";
@@ -88,12 +88,14 @@ function cleanAthleteCopy(value: string | null | undefined): string | null {
 
 export function WkPrescriptionCard({
   rx: rawRx,
+  extraLogging,
   phaseDisplay,
   phaseKey,
   generating,
   side = null,
   allowSwap = true,
 }: {
+  extraLogging?: ReactNode;
   rx: WkRx;
   phaseDisplay?: string | null;
   phaseKey?: string | null;
@@ -295,7 +297,7 @@ export function WkPrescriptionCard({
     .filter(Boolean).join(" • ");
 
   if (!inPocket) return <PocketCard id={`activity_${rx.id}`} category={rx.movement_name} tone="" planDate={rx.plan_date} prescribed countLabel={dosage} progress={{ done: checked ? 1 : 0, total: 1 }}>
-    {() => <WkPrescriptionCard rx={rawRx} phaseDisplay={phaseDisplay} phaseKey={phaseKey} generating={generating} side={side} allowSwap={allowSwap} />}
+    {() => <WkPrescriptionCard rx={rawRx} extraLogging={extraLogging} phaseDisplay={phaseDisplay} phaseKey={phaseKey} generating={generating} side={side} allowSwap={allowSwap} />}
   </PocketCard>;
   return (
     <div className={`border-b border-border py-2 ${checked ? "opacity-60" : ""}`}>
@@ -372,6 +374,7 @@ export function WkPrescriptionCard({
             <div className="text-[11px] text-amber-700 dark:text-amber-300">{why.sequencing_hint}</div>
           )}
         </div>
+        {extraLogging}
         {allowSwap && <Button variant="outline" size="sm" disabled={!swapAvailable} onClick={() => setSwapOpen(true)}>Alternative</Button>}
         {swapAvailable && <LiftSwapSheet rx={rx} open={swapOpen} onOpenChange={setSwapOpen} />}
       </ExerciseDisclosure>
