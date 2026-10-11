@@ -1,3 +1,10 @@
+# W5 FINAL ACTIVITY-CARD PROOF — 2026-10-11 — Ready to publish: no
+- [x] PFP record-only log no longer shows an invented 20-rep target (rep target left blank; saved fields and rules unchanged).
+- [x] Full suite: **302 files / 2,579 tests passed** (incl. entry-rows-match-dose matrix, 0 mismatches in synthetic eight-week contexts; rendered-text double-check; defense/PFP; tissue prep). Log `w5-suite.log`.
+- [x] Phone proof at 360/390/393 px: nine card pop-ups + bullpen, every drop-down tapped open/closed, top log entries only, Start/X visible — all PASS. Screenshots (closed and opened) in `/tmp/browser/activity-layout/`; logs `w5-phone.log`, `w5-pitching.log`.
+- [ ] Not done: ArmThrowsPanel top-log consolidation; generated-plan (not synthetic) eight-week row coverage; historical-row edge cases.
+- Waiting on owner: affected-player access (real-plan tap test + signed-in page audit), physical iPhone check, 341 how-to drafts, publishing. No publish, cron or iOS changes; no test data created.
+
 # W4 PITCHING ACTIVITY-CARD PASS — 2026-10-11 — Ready to publish: no
 - [x] W4 next unfinished workflow: on existing mound days, the main outing/bullpen log now presents its required count fields directly in the shared top log. Optional pitch statistics, arm-feel survey and notes remain inside a closed named disclosure; secondary outing/bullpen and PFP record-only entry points remain available under extra logging. No generator, dose, saved schema or completion-rule changes; no invented Done/Skipped outcomes for record-only pitching logs.
 - [x] Reused the existing save handler, prescription IDs and template field keys. Added a regression saving 27 actual pitches against a 30-pitch example without opening details; optional fields remain null and closing/reopening details preserves the unsaved count. Fixed row controls are hidden; optional statistics have full-width labeled inputs rather than a crowded phone grid.
