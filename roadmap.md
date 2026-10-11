@@ -1,3 +1,13 @@
+# LIFTING AUDIT (read-only) — 2026-10-11 — nothing changed — Ready to publish: yes (website; nothing published)
+- Full report: docs/owner/lifting-audit.md
+- Biggest finding: the lift planner's exercise lists contain no hamstring curls or Nordics, no calf/shin work, no adductor or abductor work and no hip rotation work. Real saved plans: 0 of 1,182 lift rows. In 8-week simulations (324 combinations), hamstring knee-bending and calves/feet are under 1 hard set a week for every player; abductors (172), glutes/hip extension (216, all off-season) and adductors (138) are often under too. This is mostly by accident, not a rule.
+- 13-year-olds have no legal hamstring-curl option (leg curls are 14+, Nordics/GHR 16+).
+- There is no named heavy-spinal-load rule; it is held back only by age, barbell and eccentric floors.
+- Tags: 88 active strength exercises have no pattern, 52 use "hinge_squat". Proposed tags are in the report (not applied).
+- Progress: verified maxes, 24 tiered standards, combine and baselines exist, but standards and combine have 0 entries, and the tib/calf/Nordic standards can't be earned because they are never prescribed.
+
+**Owner next:** decide whether to add required weekly slots for hamstring curl, adductor/abductor, calf/shin and side-to-side work (and what 13-year-olds get); review the proposed tags.
+
 # WARM-UP STAGE ORDER — 2026-10-11 — Ready to publish: yes (website; nothing published)
 - [x] Stage scale (10 stages, from what the warm-ups really contain): 0 Tissue prep · 1 Breathe and reset · 2 Joint circles · 3 Mobilize · 4 Activate (incl. arm care) · 5 Coordinate · 6 Movement prep · 7 Build-ups · 8 Elastic hops · 9 Prime — each with a "how warm before this" line.
 - [x] Vault tag: "Warm-up stage" (required for every warm-up movement) + optional "Order within stage". Double-check blocks a warm-up with no stage (Make live stays off); the editor shows where it lands in a sample warm-up. All 121 builder warm-up movements are now listed in the Vault (51 were missing).
