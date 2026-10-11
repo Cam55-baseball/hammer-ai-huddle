@@ -5,7 +5,8 @@ import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 
 const state = vi.hoisted(() => ({ host: null as HTMLElement | null, save: vi.fn(async (_payload: unknown) => ({})) }));
 vi.mock("@/components/hammer/cards/PocketCard", () => ({ usePocketLogHost: () => state.host }));
-vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: null }) }));
+vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "test-player" } }) }));
+vi.mock("@/lib/logging/writeExerciseLog", () => ({ writeExerciseLog: vi.fn(async (_c: unknown, _u: string, p: unknown) => { await state.save(p); return null; }) }));
 vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: vi.fn() }) }));
 vi.mock("@/hooks/useUnilateralMovements", () => ({ useUnilateralMovements: () => ({ slugs: new Set() }) }));
 vi.mock("@/hooks/useExerciseLog", () => ({ useLatestExerciseLog: () => ({ data: null }), usePreviousMovementLog: () => ({ data: null }), useSaveExerciseLog: () => ({ mutateAsync: state.save, isPending: false }), fetchAiReadback: vi.fn() }));
@@ -22,8 +23,8 @@ describe("specialized pitching activity logging", () => {
     const toggle = v.getByRole("button", { name: /^Bullpen$/ });
     fireEvent.click(toggle); fireEvent.click(toggle);
     expect(top.getByRole("textbox")).toHaveValue("27");
-    fireEvent.click(top.getByRole("button", { name: "Save log" }));
-    await waitFor(() => expect(state.save).toHaveBeenCalledOnce());
-    expect(state.save.mock.calls[0]?.[0]).toMatchObject({ prescription_id: rx.id, movement_slug: "bullpen_pen", template_id: "bullpen_pitching", rpe: null, rounds: [{ pitches: 27, strikes: null, first_pitch_strikes: null, peak_velo: null, avg_velo: null }] });
+    expect(top.queryByRole("button", { name: /save log/i })).toBeNull();
+    await waitFor(() => expect(state.save).toHaveBeenCalled(), { timeout: 3000 });
+    expect(state.save.mock.calls[state.save.mock.calls.length - 1]?.[0]).toMatchObject({ prescription_id: rx.id, movement_slug: "bullpen_pen", template_id: "bullpen_pitching", rpe: null, rounds: [{ pitches: 27, strikes: null, first_pitch_strikes: null, peak_velo: null, avg_velo: null }] });
   });
 });

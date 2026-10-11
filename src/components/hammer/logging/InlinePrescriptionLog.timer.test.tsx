@@ -19,8 +19,10 @@ describe("speed card rep timer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Start timer" }));
     act(() => vi.advanceTimersByTime(3200));
     fireEvent.click(screen.getByRole("button", { name: "Stop timer" }));
-    expect(Number((screen.getByLabelText("Time 1") as HTMLInputElement).value)).toBeCloseTo(3.2, 1);
-    expect((screen.getByLabelText("Time 2") as HTMLInputElement).value).toBe("");
+    // ss.hh entry filled by the stopwatch
+    expect((screen.getByLabelText("Time 1 seconds") as HTMLInputElement).value).toBe("3");
+    expect((screen.getByLabelText("Time 1 hundredths") as HTMLInputElement).value).toBe("20");
+    expect((screen.getByLabelText("Time 2 seconds") as HTMLInputElement).value).toBe("");
     vi.useRealTimers();
   });
 });

@@ -4,7 +4,7 @@ import { LegacyDrillInlineLog } from "./LegacyDrillInlineLog";
 
 describe("LegacyDrillInlineLog return from background", () => {
   beforeEach(() => {
-    sessionStorage.clear();
+    sessionStorage.clear(); localStorage.clear();
     vi.useFakeTimers();
   });
 
@@ -32,6 +32,6 @@ describe("LegacyDrillInlineLog return from background", () => {
 
     expect(screen.getByText("Log this work")).toBeVisible();
     expect(distance).toHaveValue("88");
-    expect(sessionStorage.getItem("return-test")).toContain('"distance":"88"');
+    expect(localStorage.getItem("return-test")).toContain('"distance":"88"');
   });
 });

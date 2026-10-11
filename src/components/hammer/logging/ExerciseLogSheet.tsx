@@ -1,7 +1,8 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { isFullLiftLog, markPrescriptionDone, missedStillEditable } from "@/lib/wic/execution/liftCompletion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { SavedIndicator, useAutosave } from "./useAutosave";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -128,6 +129,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
     setNotes((latest as any)?.notes ?? "");
     setReadback((latest as any)?.ai_readback ?? null);
     setSavedAt(null);
+    edited.current = false;
   }, [open, latest, previous, rx, template, initialRoundsCount, hasSide]);
 
   const prevSummary = useMemo(() => {
@@ -190,47 +192,9 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
     else toast.message("Hammer read-back unavailable — save still works.");
   };
 
-  const handleSave = async () => {
-    if (embedded && !latest) { toast.error("Save your completed entries above first."); return; }
-    if (!embedded && missingSideCount > 0) {
-      toast.error(
-        `Tag left or right on ${missingSideCount} round${missingSideCount === 1 ? "" : "s"} — side tracking keeps your L/R comparison honest.`,
-      );
-      return;
-    }
-    try {
-      await save.mutateAsync({
-        prescription_id: rx.id,
-        outcome: embedded ? latest?.metrics?.one_tap_outcome : undefined,
-        plan_date: rx.plan_date,
-        movement_slug: rx.movement_slug,
-        rounds: embedded && Array.isArray(latest?.metrics?.rounds) ? latest.metrics.rounds : roundsToPayload(),
-        rpe: embedded ? latest?.rpe ?? null : template.meta.rpe ? rpe : null,
-        bar_feel: template.meta.barFeel || template.meta.armFeel ? barFeel : null,
-        notes: notes.trim() || null,
-        ai_readback: readback,
-        template_id: embedded ? latest?.metrics?.template_id ?? template.id : template.id,
-        field_schema: embedded ? latest?.metrics?.field_schema ?? null : template.fields.map((f) => ({ key: f.key, label: f.label, unit: f.unit, kind: f.kind })),
-      });
-      setSavedAt(new Date().toISOString());
-      // A log with reps for every prescribed set finishes the lift, exactly
-      // like the Done button. A partial log leaves the mark untouched.
-      let markedDone = false;
-      if (!embedded && rx.slot === "lift" && rx.status !== "completed" && user?.id &&
-          isFullLiftLog(roundsToPayload(), initialRoundsCount)) {
-        if (rx.status === "missed" && !missedStillEditable(rx.plan_date)) {
-          /* past the 7-day window — the log saves, the mark stays */
-        } else {
-          const err = await markPrescriptionDone(rx, user.id);
-          if (err) toast.error(`Log saved, but couldn't mark the lift done — ${err}.`);
-          else {
-            markedDone = true;
-            qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
-          }
-        }
-      }
-      toast.success(markedDone ? "Saved to your log — lift marked done." : "Saved to your log");
-
+  const edited = useRef(false);
+  const afterSync = () => {
+    if (user?.id) qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
       // Raw research collection: bank this set's numbers against any standard
       // the movement belongs to. Never rendered, never graded, never a dose.
       if (!embedded && measures) {
@@ -273,6 +237,74 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
           /* standards are a bonus surface — never block a save */
         }
       }
+  };
+  const autosave = useAutosave(`exercise_log:${rx.id}`, afterSync);
+  const buildPayload = () => ({
+    prescription_id: rx.id,
+    outcome: embedded ? latest?.metrics?.one_tap_outcome : undefined,
+    plan_date: rx.plan_date,
+    movement_slug: rx.movement_slug,
+    rounds: embedded && Array.isArray(latest?.metrics?.rounds) ? latest.metrics.rounds : roundsToPayload(),
+    extra_metrics: embedded ? (latest as any)?.metrics ?? null : null,
+    rpe: embedded ? latest?.rpe ?? null : template.meta.rpe ? rpe : null,
+    bar_feel: template.meta.barFeel || template.meta.armFeel ? barFeel : null,
+    notes: notes.trim() || null,
+    ai_readback: readback,
+    template_id: embedded ? latest?.metrics?.template_id ?? template.id : template.id,
+    field_schema: embedded ? latest?.metrics?.field_schema ?? null : template.fields.map((f) => ({ key: f.key, label: f.label, unit: f.unit, kind: f.kind })),
+  });
+  // Autosave: every change is kept on the device and synced — no Save button.
+  useEffect(() => {
+    if (!edited.current || !user?.id) return;
+    if (embedded && !latest) return; // survey answers attach to an entered log
+    const full = !embedded && rx.slot === "lift" && rx.status !== "completed" && isFullLiftLog(roundsToPayload(), initialRoundsCount)
+      && !(rx.status === "missed" && !missedStillEditable(rx.plan_date));
+    autosave.queue({ kind: "exercise_log", id: `exercise_log:${rx.id}`, userId: user.id, at: Date.now(), payload: buildPayload(),
+      credit: full ? { id: rx.id, plan_date: rx.plan_date, slot: rx.slot, movement_name: rx.movement_name, movement_slug: rx.movement_slug } : null }, 800);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rounds, rpe, barFeel, notes]);
+
+  const handleSave = async () => {
+    if (embedded && !latest) { toast.error("Save your completed entries above first."); return; }
+    if (!embedded && missingSideCount > 0) {
+      toast.error(
+        `Tag left or right on ${missingSideCount} round${missingSideCount === 1 ? "" : "s"} — side tracking keeps your L/R comparison honest.`,
+      );
+      return;
+    }
+    try {
+      await save.mutateAsync({
+        prescription_id: rx.id,
+        outcome: embedded ? latest?.metrics?.one_tap_outcome : undefined,
+        plan_date: rx.plan_date,
+        movement_slug: rx.movement_slug,
+        rounds: embedded && Array.isArray(latest?.metrics?.rounds) ? latest.metrics.rounds : roundsToPayload(),
+        rpe: embedded ? latest?.rpe ?? null : template.meta.rpe ? rpe : null,
+        bar_feel: template.meta.barFeel || template.meta.armFeel ? barFeel : null,
+        notes: notes.trim() || null,
+        ai_readback: readback,
+        template_id: embedded ? latest?.metrics?.template_id ?? template.id : template.id,
+        field_schema: embedded ? latest?.metrics?.field_schema ?? null : template.fields.map((f) => ({ key: f.key, label: f.label, unit: f.unit, kind: f.kind })),
+      });
+      setSavedAt(new Date().toISOString());
+      // A log with reps for every prescribed set finishes the lift, exactly
+      // like the Done button. A partial log leaves the mark untouched.
+      let markedDone = false;
+      if (!embedded && rx.slot === "lift" && rx.status !== "completed" && user?.id &&
+          isFullLiftLog(roundsToPayload(), initialRoundsCount)) {
+        if (rx.status === "missed" && !missedStillEditable(rx.plan_date)) {
+          /* past the 7-day window — the log saves, the mark stays */
+        } else {
+          const err = await markPrescriptionDone(rx, user.id);
+          if (err) toast.error(`Log saved, but couldn't mark the lift done — ${err}.`);
+          else {
+            markedDone = true;
+            qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
+          }
+        }
+      }
+      toast.success(markedDone ? "Saved to your log — lift marked done." : "Saved to your log");
+
       // Fire-and-forget read-back if the athlete didn't ask.
       if (!readback && notes.trim()) {
         fetchAiReadback({
@@ -289,19 +321,15 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
     }
   };
 
-  const saveControl = savedAt ? (
-    <div role="status" className="flex items-center gap-2 text-sm text-primary"><CheckCircle2 className="h-4 w-4" /> Saved.</div>
-  ) : <Button onClick={handleSave} disabled={save.isPending} className="w-full gap-2" size="lg">
-    {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-    {save.isPending ? "Saving…" : embedded ? "Save survey" : latest ? "Update log" : "Save log"}
-  </Button>;
+  void handleSave; void savedAt;
+  const saveControl = <SavedIndicator state={autosave.state} />;
   const entryFields = template.fields.filter((field) => !field.optional);
   const extraFields = template.fields.filter((field) => field.optional);
-  const changeFields = (fields: typeof template.fields, next: Round[]) => setRounds(rounds.map((round, i) => {
+  const changeFields = (fields: typeof template.fields, next: Round[]) => { edited.current = true; setRounds(rounds.map((round, i) => {
     const result = { ...round };
     for (const field of fields) result[field.key] = next[i]?.[field.key] ?? "";
     return result;
-  }));
+  })); };
   const topEntries = <section data-pitching-entry-grid className="space-y-2">
     <h4 className="break-words text-sm font-semibold">{rx.movement_name}</h4>
     <p className="text-xs text-muted-foreground">{dosageText}</p>
@@ -342,7 +370,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
           {!embedded && !activity && <RoundGrid
             fields={template.fields}
             rounds={rounds}
-            onChange={setRounds}
+            onChange={(next) => { edited.current = true; setRounds(next); }}
             highlightMissingSide={hasSide}
           />}
 
@@ -377,7 +405,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
                 <Label className="text-xs uppercase tracking-wide text-muted-foreground">How hard 1–10</Label>
                 <Badge variant="secondary">{rpe} / 10</Badge>
               </div>
-              <Slider value={[rpe]} min={1} max={10} step={1} onValueChange={(v) => setRpe(v[0])} className="mt-2" />
+              <Slider value={[rpe]} min={1} max={10} step={1} onValueChange={(v) => { edited.current = true; setRpe(v[0]); }} className="mt-2" />
             </div>
           )}
 
@@ -391,7 +419,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
                   <button
                     key={f}
                     type="button"
-                    onClick={() => setBarFeel(barFeel === f ? null : f)}
+                    onClick={() => { edited.current = true; setBarFeel(barFeel === f ? null : f); }}
                     className={`rounded-full border px-3 py-1 text-xs capitalize transition-colors ${
                       barFeel === f ? "border-primary bg-primary text-primary-foreground" : "bg-muted/30 hover:bg-accent"
                     }`}
@@ -422,7 +450,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
             </div>
             <Textarea
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(e) => { edited.current = true; setNotes(e.target.value); }}
               placeholder="How did it feel? Anything Hammer should know?"
               rows={3}
               className="mt-2 text-sm"

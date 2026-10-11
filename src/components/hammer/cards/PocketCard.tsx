@@ -78,7 +78,15 @@ interface Props {
   readonly practiceLogging?: boolean;
 }
 
-export function PocketCard({ id, category, focus, tone, planDate, prescribed, countLabel, notPrescribedNote, children, progress, intro, link, onNavigate, practiceLogging = false }: Props) {
+export function PocketCard(props: Props) {
+  // A card must never appear inside its own (or any) pop-up: inside a pop-up
+  // a PocketCard renders only its body — no tile, no second pop-up page.
+  const nested = usePocketDetails();
+  if (nested) return <>{props.children({ pocket: true })}</>;
+  return <PocketCardShell {...props} />;
+}
+
+function PocketCardShell({ id, category, focus, tone, planDate, prescribed, countLabel, notPrescribedNote, children, progress, intro, link, onNavigate, practiceLogging = false }: Props) {
   const [logHost, setLogHost] = useState<HTMLElement | null>(null);
   const [showIntro, setShowIntro] = useState(false);
   const allDone = !!progress && progress.total > 0 && progress.done >= progress.total;

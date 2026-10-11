@@ -271,8 +271,7 @@ function DrillRow({
           modality={modality} name={d.name} dosage={d.dosage}
           storageKey={`hammer-block-log-draft:${planDate}:${taskId}:${side ?? ""}`}
           completed={checked}
-          onSave={(log) => tasks.toggleTask({ ...seed, payload: { ...seed.payload, log } }, true)}
-          onOutcome={(outcome, how_hard) => tasks.toggleTask({ ...seed, payload: { ...seed.payload, outcome, how_hard } }, outcome !== "skipped")}
+          taskSync={{ planDate, seed }}
         />
         <ExerciseInstructions name={d.name} slug={d.slug} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} repair={legacyRepair(d.dosage, modality)} expanded />
         {adjustApi && <Button type="button" variant="outline" size="sm" onClick={() => setAdjustOpen(true)} aria-label={`Swap or skip ${d.name}`}><Repeat className="mr-1 h-3 w-3" />Can't do it</Button>}
@@ -1427,13 +1426,15 @@ function BlockCard({
   return (
     <div
       id={domId}
-      className={`rounded-lg border p-3 scroll-mt-24 ${STATUS_TONE[block.status]}`}
+      data-block-body={pocketDetails ? "pocket" : "plan"}
+      className={pocketDetails ? "scroll-mt-24" : `rounded-lg border p-3 scroll-mt-24 ${STATUS_TONE[block.status]}`}
     >
       <Collapsible open={pocketDetails || open} onOpenChange={setOpen}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-               <span className="min-w-0"><span className="block text-[10px] font-semibold text-muted-foreground">Today's movement</span><span className="block text-sm font-semibold capitalize">{block.title}</span></span>
+               {/* Inside its pop-up the header already shows the title — never repeat the card. */}
+               {!pocketDetails && <span className="min-w-0"><span className="block text-[10px] font-semibold text-muted-foreground">Today's movement</span><span className="block text-sm font-semibold capitalize">{block.title}</span></span>}
               {block.side && (
                 <Badge variant="outline" className="text-[10px] border-primary/50 text-primary">
                   {block.side === "L" ? "Left" : "Right"}
@@ -1484,7 +1485,7 @@ function BlockCard({
                   Do a light block anyway
                 </Button>
               )}
-            {block.status !== "off-day" && (
+            {block.status !== "off-day" && !(pocketDetails && block.route === "hammer:open-warmup-generator") && (
               <Button
                 size="sm"
                 variant={block.status === "awaiting-input" ? "outline" : "default"}
@@ -1667,7 +1668,7 @@ function BlockCard({
                 <span className="text-[11px] text-muted-foreground italic">
                   Nothing to mark done — there's no work prescribed here yet.
                 </span>
-              ) : block.modality === "baserunning" && block.gamePlanTemplate === null ? null : (
+              ) : pocketDetails || (block.modality === "baserunning" && block.gamePlanTemplate === null) ? null : (
                 <BlockCompletionControls
                   modality={block.modality}
                   modalityLabel={block.title}

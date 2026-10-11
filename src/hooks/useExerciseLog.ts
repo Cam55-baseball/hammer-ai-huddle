@@ -1,21 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { canonicalMetricMap, deriveSideMetrics } from "@/lib/hammer/logging/metricNormalizer";
 
-export interface ExerciseLogPayload {
-  prescription_id: string;
-  plan_date: string;
-  movement_slug: string;
-  rounds: Record<string, number | string | null>[];
-  outcome?: "completed" | "cut_short";
-  rpe?: number | null;
-  bar_feel?: string | null;
-  notes?: string | null;
-  ai_readback?: string | null;
-  template_id?: string | null;
-  field_schema?: Array<{ key: string; label: string; unit?: string; kind: string }> | null;
-}
+export type { ExerciseLogPayload } from "@/lib/logging/writeExerciseLog";
+import type { ExerciseLogPayload } from "@/lib/logging/writeExerciseLog";
+import { buildExerciseLogRow } from "@/lib/logging/writeExerciseLog";
 
 /** Latest log for prefill / edit-in-place. */
 export function useLatestExerciseLog(prescriptionId: string, movementSlug: string) {
@@ -70,56 +59,7 @@ export function useSaveExerciseLog() {
   return useMutation({
     mutationFn: async (p: ExerciseLogPayload) => {
       if (!user) throw new Error("Not signed in");
-      // Derive canonical wk_session_logs columns from rounds.
-      const setsCompleted = p.rounds.length;
-      const repsCompleted = p.rounds
-        .map((r) => (r.reps ?? r.throws ?? r.contacts ?? null))
-        .filter((v): v is number => typeof v === "number");
-      const loadUsed = (() => {
-        const weights = p.rounds.map((r) => r.weight).filter((v): v is number => typeof v === "number");
-        return weights.length ? Math.max(...weights) : null;
-      })();
-      const totalReps = repsCompleted.reduce((a, b) => a + b, 0) || null;
-      const durationTotal = p.rounds
-        .map((r) => r.duration ?? r.time ?? null)
-        .filter((v): v is number => typeof v === "number")
-        .reduce((a, b) => a + b, 0) || null;
-      const distanceMax = (() => {
-        const d = p.rounds.map((r) => r.distance).filter((v): v is number => typeof v === "number");
-        return d.length ? Math.max(...d) : null;
-      })();
-
-      const row = {
-        user_id: user.id,
-        prescription_id: p.prescription_id,
-        plan_date: p.plan_date,
-        movement_slug: p.movement_slug,
-        sets_completed: setsCompleted,
-        reps_completed: repsCompleted.length ? repsCompleted : null,
-        load_used: loadUsed,
-        duration_seconds_completed: durationTotal,
-        distance_feet_completed: distanceMax,
-        total_reps_completed: totalReps,
-        rpe: p.rpe ?? null,
-        bar_feel: p.bar_feel ?? null,
-        notes: p.notes ?? null,
-        ai_readback: p.ai_readback ?? null,
-        metrics: {
-          ...(p.outcome ? { one_tap_outcome: p.outcome, cut_short: p.outcome === "cut_short" } : {}),
-          rounds: p.rounds,
-          template_id: p.template_id ?? null,
-          field_schema: p.field_schema ?? null,
-          // Canonical top-level metrics (bat_speed_mph, sprint_time_s,
-          // throw_velo_mph, …) so the progression engine can read a personal
-          // best without knowing anything about template field naming.
-          ...canonicalMetricMap(p.template_id ?? null, p.rounds),
-          // Per-limb decomposition for unilateral work. Null when no round
-          // carried a side — never imputed.
-          per_side: deriveSideMetrics(p.template_id ?? null, p.rounds),
-        },
-
-
-      };
+      const row = buildExerciseLogRow(user.id, p);
 
       // Upsert-style: delete the previous log for this prescription, then insert.
       // Keeps history clean and avoids surface-level duplicate logs per card.
