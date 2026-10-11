@@ -1,5 +1,4 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { YourProgressCard } from '@/components/progress/YourProgressCard';
 import { HumanPerformanceCard } from '@/components/hpi/HumanPerformanceCard';
 import { PlayerSnapshotCard } from '@/components/hie/PlayerSnapshotCard';
 import { WeaknessClusterCard } from '@/components/hie/WeaknessClusterCard';
@@ -100,8 +99,6 @@ Confidence: ${snapshot.development_confidence}%
         {/* Performance context — real evidence only; moved from Before You Start (owner 2026-10-05). */}
         <section id="performance-context" className="scroll-mt-20"><HumanPerformanceCard /></section>
 
-        {/* Lifting Blueprint B5: own-baseline testing battery. */}
-        <section id="your-progress" className="scroll-mt-20"><YourProgressCard /></section>
 
         {/* Body today — moved from Dashboard. Collapsible to preserve focus. */}
         <section id="body" className="scroll-mt-20">
