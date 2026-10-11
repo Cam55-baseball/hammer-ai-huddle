@@ -2770,9 +2770,12 @@ const handler = async (req: Request): Promise<Response> => {
         if (carry) push("lift", "carry_antirotation", carry, {}, `Carry / anti-rotation — trunk stiffness that transfers without burying the athlete.${goalWhy(carry)}`);
       }
 
-      // 8) Trunk finisher — offseason only (in-season stays fresh)
+      // 8) Trunk finisher — offseason only (in-season stays fresh).
+      // Lifting Blueprint: isolation work (e.g. Copenhagen plank) only inside the Add size goal block.
       if (isOffseason) {
-        const finisher = pickBestLift(StrengthEngine.TRUNK_FINISHER_SLUGS, "trunk_finisher") ?? pickFirstLift(StrengthEngine.TRUNK_FINISHER_SLUGS);
+        const sizeBlock = goalDoseKey(goalEmphasis.ranked[0], (trainingPrefs as any)?.goal ?? null) === "size" ? "add_size" : null;
+        const finisherPool = StrengthEngine.TRUNK_FINISHER_SLUGS.filter((s) => isolationAllowed(s, { phase: phaseRes.phase, goalBlock: sizeBlock }));
+        const finisher = pickBestLift(finisherPool, "trunk_finisher") ?? pickFirstLift(finisherPool);
         if (finisher) push("lift", "trunk_finisher", finisher, {}, `Loaded trunk finisher — locks the rotational strength from above.${goalWhy(finisher)}`);
       }
 

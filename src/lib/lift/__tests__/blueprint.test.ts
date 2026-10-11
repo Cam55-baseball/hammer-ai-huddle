@@ -34,3 +34,13 @@ describe("lifting blueprint", () => {
     expect(liftBlockRank("second_lower")).toBeLessThan(liftBlockRank("upper"));
   });
 });
+
+import { TRUNK_FINISHER_SLUGS } from "../../../../supabase/functions/_shared/wic/engines/strength";
+describe("trunk finisher pool", () => {
+  it("drops Copenhagen outside Add size, keeps it inside", () => {
+    const pool = (b: string | null) => TRUNK_FINISHER_SLUGS.filter((s) => isolationAllowed(s, { phase: "os_q1", goalBlock: b }));
+    expect(pool(null)).not.toContain("lift_copenhagen_plank");
+    expect(pool(null).length).toBe(TRUNK_FINISHER_SLUGS.length - 1);
+    expect(pool("add_size")).toContain("lift_copenhagen_plank");
+  });
+});
