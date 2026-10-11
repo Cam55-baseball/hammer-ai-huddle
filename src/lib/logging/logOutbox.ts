@@ -13,7 +13,8 @@ const KEY = "hm_log_outbox_v1";
 
 export type OutboxJob =
   | { kind: "exercise_log"; id: string; userId: string; payload: ExerciseLogPayload; credit: MarkableRx | null; at: number }
-  | { kind: "task"; id: string; userId: string; planDate: string; seed: TaskWrite; completed: boolean; at: number };
+  | { kind: "task"; id: string; userId: string; planDate: string; seed: TaskWrite; completed: boolean; at: number }
+  | { kind: "arm"; id: string; userId: string; row: { entry_date: string; source: string; throw_type: string; count: number; prescribed: number | null; status: "done" | "skipped" }; at: number };
 
 function read(): Record<string, OutboxJob> {
   try { const v = JSON.parse(localStorage.getItem(KEY) ?? "{}"); return v && typeof v === "object" ? v : {}; } catch { return {}; }
@@ -35,6 +36,10 @@ export type Sender = (job: OutboxJob) => Promise<string | null>;
 
 export const defaultSender: Sender = async (job) => {
   if (job.kind === "task") return setTaskCompletion(job.userId, job.planDate, job.seed, job.completed);
+  if (job.kind === "arm") {
+    const { error } = await (supabase as any).from("arm_ledger_entries").upsert({ user_id: job.userId, ...job.row }, { onConflict: "user_id,entry_date,throw_type" });
+    return error ? error.message || "Could not save" : null;
+  }
   const err = await writeExerciseLog(supabase, job.userId, job.payload);
   if (err) return err;
   if (job.credit) {
