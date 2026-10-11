@@ -9,7 +9,10 @@
 - [x] A4b Coach/scout video library uses the same media rule (get-player-library redeployed; under-13 = 0).
 - [ ] A-audit — page check of video screens signed in as a real player and coach, with phone screenshots  — WAITING ON OWNER: choose real accounts or temporary test accounts.
 - [ ] Page audit of video screens signed in as a real player and coach (phone screenshots) — not yet run.
-- [ ] B1 Lifting Blueprint coverage minimums, integrated library gaps, remaining lift tags.
+- [~] B1 Lifting Blueprint coverage minimums, integrated library gaps, remaining lift tags.
+  - [x] B1-tags (CC5): 57 active lifts had no movement tag (strength 20, compound 17, max-effort 7, posterior-chain 5, rotational 8). 47 tagged — each checked to leave exercise choice and the double-check's grouping unchanged (backup in _snapshot_movement_pattern_20261011). 10 left untagged on purpose (the tag would regroup them in the double-check): chest passes ×3, band pull-through, snatch, high pulls ×2, jump shrug, mid-thigh pull, reverse fly — suggestions in the Vault queue. Vault "lift tag" queue now 79. 1,134 planner/Vault tests pass.
+  - [ ] B1-coverage: weekly coverage minimums (next).
+  - [ ] B1-library: integrated athletic exercises for remaining gaps.
 - [ ] B2 Legal signed-in checks (updated terms, teen grace/reminders, new-teen lock, under-13 waiver, health consent, auto-renew, Cancel).
 - [~] B3 Guarantee app-button recheck — source scan of every screen (CC4): 0 customer-facing guarantee, money-back, risk-free or guaranteed-results wording (only code comments and the banned-phrase list). Visible tap-through of the in-app upgrade buttons as a player waits on the same owner test-account choice as A-audit.
 - [x] B4 Renewal cron SQL → `docs/owner/renewal-reminders-cron.sql` (not applied).
