@@ -14,6 +14,7 @@ import { JoinOrganization } from '@/components/organization/JoinOrganization';
 import { TeamAnnouncements } from '@/components/organization/TeamAnnouncements';
 import { Building2 } from 'lucide-react';
 import { OrgVerificationForm } from '@/components/organization/OrgVerificationCards';
+import { AssignAthletesCard } from '@/components/organization/AssignAthletesCard';
 
 export default function OrganizationDashboard() {
   const { myOrgs, members } = useOrganization();
@@ -63,7 +64,8 @@ export default function OrganizationDashboard() {
               <TeamRosterView orgId={activeOrg.id} />
             </TabsContent>
 
-            <TabsContent value="members">
+            <TabsContent value="members" className="space-y-4">
+              <AssignAthletesCard orgId={activeOrg.id} />
               <OrganizationMemberList />
             </TabsContent>
 

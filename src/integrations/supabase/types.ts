@@ -22003,6 +22003,15 @@ export type Database = {
           website: string
         }[]
       }
+      list_org_roster: {
+        Args: { _organization_id: string }
+        Returns: {
+          assigned_coaches: string[]
+          full_name: string
+          role_in_org: string
+          user_id: string
+        }[]
+      }
       manual_archive_scout_applications: {
         Args: never
         Returns: {
