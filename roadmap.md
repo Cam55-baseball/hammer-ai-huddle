@@ -11,7 +11,7 @@
 - [ ] Page audit of video screens signed in as a real player and coach (phone screenshots) — not yet run.
 - [ ] B1 Lifting Blueprint coverage minimums, integrated library gaps, remaining lift tags.
 - [ ] B2 Legal signed-in checks (updated terms, teen grace/reminders, new-teen lock, under-13 waiver, health consent, auto-renew, Cancel).
-- [ ] B3 Guarantee app-button recheck.
+- [~] B3 Guarantee app-button recheck — source scan of every screen (CC4): 0 customer-facing guarantee, money-back, risk-free or guaranteed-results wording (only code comments and the banned-phrase list). Visible tap-through of the in-app upgrade buttons as a player waits on the same owner test-account choice as A-audit.
 - [x] B4 Renewal cron SQL → `docs/owner/renewal-reminders-cron.sql` (not applied).
 
 # OWNER STATUS — 2026-10-11 — current; historical sections below do not override this
