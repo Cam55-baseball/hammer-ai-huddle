@@ -137,6 +137,8 @@ export function unilateralSlugs(isInSeason: boolean, dayOfWeek: number): string[
     "lift_split_squat_iso",
     "lateral_db_step_up",
     "sl_deadlift_fat_grips",
+    // Lifting Blueprint: integrated hamstring work (13+), every season.
+    "lift_slider_ham_bridge_curl",
   ];
 
   const offSeason = [
@@ -151,6 +153,11 @@ export function unilateralSlugs(isInSeason: boolean, dayOfWeek: number): string[
     "kot_lunge",
     "slide_lunge",
     "sl_deadlift_fat_grips",
+    // Lifting Blueprint: groin / side-to-side and integrated hamstring work.
+    "cossack_squat",
+    "lift_bw_cossack_squat",
+    "dumbbell_lateral_lunge",
+    "lift_slider_ham_bridge_curl",
   ];
   const pool = isInSeason ? inSeason : offSeason;
   // Weekly rotation: cycle the lead slug by day-of-week
@@ -259,6 +266,8 @@ export function carrySlugs(isInSeason: boolean, dayOfWeek: number = 0): string[]
   const inSeason = [
     "lift_farmer_carry",
     "lift_suitcase_carry",
+    "lift_farmer_toe_walk",
+    "lift_hip_airplane",
     "lift_hk_pallof_iso",
     "lift_rfess_pallof",
     "paloff_press",
@@ -270,6 +279,8 @@ export function carrySlugs(isInSeason: boolean, dayOfWeek: number = 0): string[]
     "lift_waiter_carry",
     "lift_front_rack_carry",
     "lift_mixed_carry",
+    "lift_farmer_toe_walk",
+    "lift_hip_airplane",
     "lift_zercher_carry",
     "lift_turkish_getup",
     "lift_rfess_pallof",

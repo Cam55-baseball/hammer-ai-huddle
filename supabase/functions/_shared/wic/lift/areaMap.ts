@@ -12,7 +12,7 @@ const RULES: Array<[RegExp, Area[]]> = [
   [/hip_thrust|glute_bridge|sled_march|sled/, ["hip_ext"]],
   [/rdl|deadlift|_dl_|good_morning|pull_through/, ["hinge", "hamstring"]],
   [/squat|lunge|step_?up|patrick_step|sissy/, ["squat"]],
-  [/calf|tib|pogo|ankle/, ["calf_foot"]],
+  [/calf|tib|pogo|ankle|toe_walk/, ["calf_foot"]],
   [/hip_rotation|90_90|airplane|hip_er|hip_ir|clam|band_walk|abduct/, ["hip_rotation"]],
   [/press|bench|pushup|dip/, ["upper_push"]],
   [/row|pullup|pulldown|face_pull|pullapart/, ["upper_pull"]],
@@ -48,7 +48,7 @@ export function unreachableAreas(candidates: ReadonlyArray<string>, areas: Reado
 export function oppositeLowerPool(pool: ReadonlyArray<string>, mainSlug: string | null | undefined, dayOfWeek: number): string[] {
   const main = mainSlug ? areasOf(mainSlug)[0] : undefined;
   const want: Area[] = dayOfWeek % 3 === 2 ? ["groin_lateral"]
-    : main === "squat" || main === "power" ? ["hinge", "hip_ext"]
+    : main === "squat" || main === "power" ? ["hinge", "hip_ext", "hamstring"]
     : main === "hinge" || main === "hip_ext" ? ["squat", "groin_lateral"]
     : [];
   return [...new Set(pool)].filter((s) => want.includes(areasOf(s)[0]));
