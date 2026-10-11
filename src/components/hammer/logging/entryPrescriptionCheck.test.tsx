@@ -19,6 +19,17 @@ describe("prescription entry grids", () => {
     expect(v.getAllByLabelText(/^Distance /).map(e => (e as HTMLInputElement).value)).toEqual(["90", "90", "90", "90"]);
     expect(v.getAllByLabelText(/^Time /)).toHaveLength(4);
   });
+  it("a total repeat count never replaces the four prescribed 90-foot timed rows", () => {
+    const v = render(<InlinePrescriptionLog rx={rx({ slot: "conditioning", movement_slug: "repeat_90ft_bb", sets: 4, reps: 1, total_reps: 4, distance_feet: 90, dosage_unit: "feet" })} />);
+    expect(v.getAllByLabelText(/^Distance /).map(e => (e as HTMLInputElement).value)).toEqual(["90", "90", "90", "90"]);
+    expect(v.getAllByLabelText(/^Time /)).toHaveLength(4);
+    expect(v.queryAllByLabelText(/^Reps /)).toHaveLength(0);
+  });
+  it("a lift total preserves three sets of five and the weight boxes", () => {
+    const v = render(<InlinePrescriptionLog rx={rx({ sets: 3, reps: 5, total_reps: 15 })} />);
+    expect(v.getAllByLabelText(/^Reps /).map(e => (e as HTMLInputElement).value)).toEqual(["5", "5", "5"]);
+    expect(v.getAllByLabelText(/^Weight /)).toHaveLength(3);
+  });
   it("holds render sets × seconds", () => {
     const v = render(<InlinePrescriptionLog rx={rx({ movement_slug: "plank_hold", sets: 3, duration_seconds: 30, dosage_unit: "seconds" })} />);
     expect(v.getAllByLabelText(/^Seconds /).map(e => (e as HTMLInputElement).value)).toEqual(["30", "30", "30"]);
@@ -41,14 +52,25 @@ describe("prescription entry grids", () => {
     expect(sprintRestSeconds(90)).toBe(180);
     expect(sprintRestSeconds(60)).toBe(120);
   });
-  it("eight weeks of prescription grids keep exact values across role/sport/age/season presentation contexts", () => {
+  it("eight weeks of mixed entry grids keep exact values across role/sport/age/season presentation contexts", () => {
     let checked = 0;
     for (const sport of ["baseball", "softball"]) for (const role of ["P", "C", "IF", "OF"]) for (const age of [12, 14, 18, 30]) for (const season of ["off_season", "pre_season", "in_season", "post_season"]) for (let day = 0; day < 56; day++) {
       const sets = day % 4 + 1;
       const reps = day % 8 + 1;
-      const v = render(<InlinePrescriptionLog rx={rx({ id: `${sport}-${role}-${age}-${season}-${day}`, sets, reps })} />);
-      expect(v.getAllByLabelText(/^Reps /).map(e => (e as HTMLInputElement).value)).toEqual(Array(sets).fill(String(reps)));
-      expect(v.getAllByLabelText(/^Weight /)).toHaveLength(sets);
+      const cases = [
+        { values: { sets, reps, total_reps: sets * reps }, label: /^Reps /, expected: String(reps), weight: sets },
+        { values: { slot: "speed", movement_slug: "sp_fly_20", sets, reps: 1, total_reps: sets, distance_feet: 60, dosage_unit: "feet" }, label: /^Distance /, expected: "60", time: sets },
+        { values: { slot: "conditioning", movement_slug: "repeat_90ft_bb", sets, reps: 1, total_reps: sets, distance_feet: 90, dosage_unit: "feet" }, label: /^Distance /, expected: "90", time: sets },
+        { values: { movement_slug: "plank_hold", sets, reps: null, duration_seconds: 30, dosage_unit: "seconds" }, label: /^Seconds /, expected: "30" },
+        { values: { slot: "speed", movement_slug: "pogo_jumps", sets, reps, total_reps: sets * reps }, label: /^Reps /, expected: String(reps) },
+        { values: { slot: "supplemental", movement_slug: "catch_play", sets, reps, total_reps: sets * reps, dosage_unit: "throws" }, label: /^Throws /, expected: String(reps) },
+        { values: { slot: "cross_sport", movement_slug: "wost_tennis_ball_self_rally", sets, reps, total_reps: sets * reps }, label: /^Reps /, expected: String(reps) },
+      ];
+      const sample = cases[day % cases.length];
+      const v = render(<InlinePrescriptionLog rx={rx({ id: `${sport}-${role}-${age}-${season}-${day}`, ...sample.values })} />);
+      expect(v.getAllByLabelText(sample.label).map(e => (e as HTMLInputElement).value)).toEqual(Array(sets).fill(sample.expected));
+      expect(v.queryAllByLabelText(/^Weight /)).toHaveLength(sample.weight ?? 0);
+      if (sample.time) expect(v.getAllByLabelText(/^Time /)).toHaveLength(sample.time);
       cleanup(); checked++;
     }
     expect(checked).toBe(7168);
