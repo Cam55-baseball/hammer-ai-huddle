@@ -52,7 +52,7 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
       { key: "throws", label: "Throws (count toward your arm total)" },
     ] };
   }
-  if (rx.slot === "hitting" || /tee[_ ]work|front[_ ]toss|soft[_ ]toss|batting[_ ]practice|dry[_ ]hack|swing/.test(slug)) {
+  if (rx.slot !== "lift" && rx.slot !== "supplemental" && (rx.slot === "hitting" || /tee[_ ]work|front[_ ]toss|soft[_ ]toss|batting[_ ]practice|dry[_ ]hack|swing/.test(slug))) {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [
       { key: "swings", label: "Swings", prefill: rx.reps },
       { key: "quality", label: "Quality contact" },
