@@ -13,6 +13,7 @@ import { InviteCodeCard } from '@/components/organization/InviteCodeCard';
 import { JoinOrganization } from '@/components/organization/JoinOrganization';
 import { TeamAnnouncements } from '@/components/organization/TeamAnnouncements';
 import { Building2 } from 'lucide-react';
+import { OrgVerificationForm } from '@/components/organization/OrgVerificationCards';
 
 export default function OrganizationDashboard() {
   const { myOrgs, members } = useOrganization();
@@ -74,7 +75,8 @@ export default function OrganizationDashboard() {
               <TeamHeatMapOverlay gridData={[]} gridSize={{ rows: 3, cols: 3 }} />
             </TabsContent>
 
-            <TabsContent value="settings">
+            <TabsContent value="settings" className="space-y-4">
+              <OrgVerificationForm org={activeOrg} />
               <OrganizationRegistration existingOrg={activeOrg} />
             </TabsContent>
           </Tabs>

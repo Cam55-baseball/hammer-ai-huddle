@@ -265,6 +265,8 @@ export default function CoachDashboard() {
 
         <StaffGettingStarted role="coach" />
 
+        <TeamsCard />
+
         {/* Hammer Progress Reports Inbox */}
         <div data-tour="coach-reports"><FollowerReportsInbox role="coach" /></div>
 
