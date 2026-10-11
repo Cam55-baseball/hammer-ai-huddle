@@ -140,11 +140,12 @@ export default function EvidenceCardClarity() {
           </PocketCard>
           {[{ id: "warmup", name: "Warm-up", modality: "warmup", drills: [{ name: "Tennis-ball tissue rolling", dosage: "2 minutes" }, { name: "Ankle bounces", dosage: "45 seconds" }, { name: "Rhythmic leg swings", dosage: "2 × 30 seconds" }] }, { id: "recovery", name: "Recovery", modality: "recovery", drills: [{ name: "Easy recovery walk", dosage: "5 minutes" }] }].map(card =>
             <PocketCard key={card.id} id={card.id} category={card.name} tone="" planDate={base.plan_date} prescribed countLabel={`${card.drills.length} exercises`}>
-              {() => card.drills.map(drill => <ExerciseDisclosure key={drill.name} name={drill.name}>
+              {/* Regression fixture: the same card nested inside its own pop-up must render only its body. */}
+              {() => <PocketCard id={card.id} category={card.name} tone="" planDate={base.plan_date} prescribed>{() => card.drills.map(drill => <ExerciseDisclosure key={drill.name} name={drill.name}>
                 <p data-prescribed-dose>{drill.dosage}</p><ActivityBasics name={drill.name} dosage={drill.dosage} />
-                <LegacyDrillInlineLog name={drill.name} modality={card.modality} dosage={drill.dosage} storageKey={`evidence-${drill.name}`} completed={false} onSave={() => {}} onOutcome={() => {}} />
+                <LegacyDrillInlineLog name={drill.name} modality={card.modality} dosage={drill.dosage} storageKey={`evidence-${drill.name}`} completed={false} taskSync={{ planDate: base.plan_date, seed: { taskId: `evidence-${drill.name}`, source: "block_drill", sourceRef: card.modality } }} />
                 <ExerciseInstructions name={drill.name} dosage={drill.dosage} expanded />
-              </ExerciseDisclosure>)}
+              </ExerciseDisclosure>)}</PocketCard>}
             </PocketCard>)}
         </main>
       </ArmCareBudgetProvider>
