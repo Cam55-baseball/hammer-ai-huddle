@@ -232,13 +232,19 @@ export function projectedDose(rx: WkRx, candidate: SwapCandidate, reason: SwapRe
   if (reason === "time_restriction" && candidate.default_sets && sets && candidate.default_sets < sets) {
     sets = candidate.default_sets;
   }
+  // The log rows are built from the dose fields, so a swap must carry a dose
+  // that matches the replacement's own measure type. When the unit changes
+  // (e.g. reps → seconds), adopt the candidate's defaults for the new unit
+  // and clear the old unit's values — never show stale prescribed numbers.
+  const unit = (candidate.dosage_unit ?? rx.dosage_unit ?? "reps").toLowerCase();
+  const sameUnit = unit === (rx.dosage_unit ?? "reps").toLowerCase();
   return {
-    sets,
-    reps: rx.reps,
-    duration_seconds: rx.duration_seconds,
-    distance_feet: rx.distance_feet,
-    total_reps: rx.total_reps,
-    dosage_unit: rx.dosage_unit,
+    sets: sets ?? candidate.default_sets,
+    reps: sameUnit ? rx.reps : candidate.default_reps,
+    duration_seconds: unit === "seconds" ? (sameUnit ? rx.duration_seconds : candidate.default_duration_seconds) : null,
+    distance_feet: sameUnit ? rx.distance_feet : candidate.default_distance_feet,
+    total_reps: sameUnit ? rx.total_reps : candidate.default_total_reps,
+    dosage_unit: candidate.dosage_unit ?? rx.dosage_unit,
     tempo: rx.tempo,
     load_pct: rx.load_pct,
   };
