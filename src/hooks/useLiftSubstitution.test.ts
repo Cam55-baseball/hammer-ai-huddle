@@ -14,12 +14,12 @@ const cand = (o: Partial<SwapCandidate>): SwapCandidate => ({
 
 describe("alternative swap keeps log rows in sync", () => {
   it("same-unit swap carries the prescribed dose over unchanged", () => {
-    const d = projectedDose(rx({}), cand({ slug: "barbell_squat", dosage_unit: "reps" }));
+    const d = projectedDose(rx({}), cand({ slug: "barbell_squat", dosage_unit: "reps" }), "equipment_unavailable");
     expect([d.sets, d.reps, d.dosage_unit]).toEqual([3, 5, "reps"]);
   });
 
   it("reps → seconds swap adopts the replacement's seconds and drops stale rep values", () => {
-    const d = projectedDose(rx({}), cand({ slug: "copenhagen_hold", dosage_unit: "seconds", default_sets: 3, default_duration_seconds: 20 }));
+    const d = projectedDose(rx({}), cand({ slug: "copenhagen_hold", dosage_unit: "seconds", default_sets: 3, default_duration_seconds: 20 }), "equipment_unavailable");
     expect(d.dosage_unit).toBe("seconds");
     expect(d.duration_seconds).toBe(20);
     expect(d.reps).toBeNull();
@@ -37,7 +37,7 @@ describe("alternative swap keeps log rows in sync", () => {
   });
 
   it("the swapped row's log spec matches the projected dose exactly (rows = sets, prefill = per-set value)", () => {
-    const d = projectedDose(rx({ sets: 4, reps: 6 }), cand({ slug: "front_squat", dosage_unit: "reps" }));
+    const d = projectedDose(rx({ sets: 4, reps: 6 }), cand({ slug: "front_squat", dosage_unit: "reps" }), "equipment_unavailable");
     const spec = inlineLogSpec(rx({ movement_slug: "front_squat", movement_name: "Front Squat", sets: d.sets, reps: d.reps }));
     expect(spec.rows).toBe(d.sets);
     expect(spec.fields[0].prefill).toBe(d.reps);

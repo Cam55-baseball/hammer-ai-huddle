@@ -30,6 +30,36 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
     const split = rx.sets && rx.reps && (!rx.total_reps || rx.sets * rx.reps === rx.total_reps);
     return { rows: split ? rx.sets ?? 1 : 1, fields: [{ key: "throws", label: "Throws", prefill: split ? rx.reps : rx.total_reps ?? rx.reps }] };
   }
+  // Skill logging (Round 3 item F): these mirror the logTemplates skill forms so
+  // the pop-up entry grid matches the drill, not a generic reps box.
+  if (/pop[_ ]time|catcher[_ ]pop|pop[_ ]to[_ ]second|catcher[_ ]throw/.test(slug)) {
+    return { rows: Math.max(1, rx.sets ?? 1), fields: [
+      { key: "time", label: "Pop time", unit: "ss.hh" },
+      { key: "throws", label: "Throws" },
+    ] };
+  }
+  if ((rx.slot as string) === "baserunning" || /home[_ ]to[_ ]first|steal|baserun|lead[_ ]off|first[_ ]to[_ ]third/.test(slug)) {
+    return { rows: Math.max(1, rx.sets ?? 1), fields: [
+      { key: "distance", label: "Distance", unit: "ft", prefill: rx.distance_feet },
+      { key: "time", label: "Time", unit: "ss.hh" },
+      { key: "jump", label: "Reaction / jump (1–5)" },
+    ] };
+  }
+  if ((rx.slot as string) === "defense" || (rx.slot as string) === "fielding" || /fielding|ground[_ ]ball|glove[_ ]work|infield|outfield|short[_ ]hop/.test(slug)) {
+    return { rows: Math.max(1, rx.sets ?? 1), fields: [
+      { key: "reps", label: "Reps", prefill: rx.reps },
+      { key: "clean", label: "Clean plays" },
+      { key: "throws", label: "Throws (count toward your arm total)" },
+    ] };
+  }
+  if (rx.slot !== "lift" && rx.slot !== "supplemental" && ((rx.slot as string) === "hitting" || /tee[_ ]work|front[_ ]toss|soft[_ ]toss|batting[_ ]practice|dry[_ ]hack|swing/.test(slug))) {
+    return { rows: Math.max(1, rx.sets ?? 1), fields: [
+      { key: "swings", label: "Swings", prefill: rx.reps },
+      { key: "quality", label: "Quality contact" },
+      { key: "bat_speed", label: "Bat speed", unit: "mph" },
+      { key: "exit_velo", label: "Exit velo", unit: "mph" },
+    ] };
+  }
   if (rx.total_reps && !rx.distance_feet && !rx.duration_seconds && rx.slot !== "lift" && rx.slot !== "supplemental" && !/hold|iso|plank/.test(slug)) {
     // Rows must add up to the total shown on the card: sets × reps only when that equals the total.
     const split = rx.sets && rx.reps && rx.sets * rx.reps === rx.total_reps;
