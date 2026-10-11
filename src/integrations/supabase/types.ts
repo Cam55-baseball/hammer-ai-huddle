@@ -11587,6 +11587,7 @@ export type Database = {
           address: string | null
           admin_role_title: string | null
           created_at: string
+          email_code_attempts: number
           email_code_expires_at: string | null
           email_code_hash: string | null
           email_verified_at: string | null
@@ -11615,6 +11616,7 @@ export type Database = {
           address?: string | null
           admin_role_title?: string | null
           created_at?: string
+          email_code_attempts?: number
           email_code_expires_at?: string | null
           email_code_hash?: string | null
           email_verified_at?: string | null
@@ -11643,6 +11645,7 @@ export type Database = {
           address?: string | null
           admin_role_title?: string | null
           created_at?: string
+          email_code_attempts?: number
           email_code_expires_at?: string | null
           email_code_hash?: string | null
           email_verified_at?: string | null

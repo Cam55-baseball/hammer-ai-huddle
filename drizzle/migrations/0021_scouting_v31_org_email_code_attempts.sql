@@ -1,0 +1,2 @@
+ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS email_code_attempts integer NOT NULL DEFAULT 0;
+COMMENT ON COLUMN public.organizations.email_code_attempts IS 'Wrong official-email code tries for the current code; written only by the org-email-code function.';
