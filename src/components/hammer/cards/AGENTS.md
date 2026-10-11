@@ -4,3 +4,4 @@
 - Hammers Today 'Next up', day ring and stage story come only from `todayRhythm.tsx`, fed by progress the cards already compute. Why: the visual rhythm must never author, reorder or change training.
 - Release presentation uses local midnight only; pre-build state never supplies athlete-facing times. Why: preparation time is not delivery time.
 - Activity pop-ups host each exercise’s entry grid and its timers via one shared log portal; exercise disclosures retain outcomes, surveys and specialized extra logging without duplicating entry state or timers in parent panels. Why: logs remain visible while information stays closed and per-exercise saving stays canonical.
+- Power-primer round recording and rest timers use the same pop-up log host, while its warm-up lock and safety controls remain in its disclosure. Why: relocating controls must not create new lift sets, bypass safety or change record-only saving.
