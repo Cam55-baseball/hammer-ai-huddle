@@ -21933,6 +21933,10 @@ export type Database = {
       is_org_staff: { Args: { _org: string; _user: string }; Returns: boolean }
       is_staff_library_object: { Args: { _name: string }; Returns: boolean }
       is_system_user: { Args: { _uid: string }; Returns: boolean }
+      is_team_member: {
+        Args: { _team: string; _user: string }
+        Returns: boolean
+      }
       is_training_intel_owner: { Args: { _user_id: string }; Returns: boolean }
       is_under_13: { Args: { _user_id: string }; Returns: boolean }
       join_by_invite_code: { Args: { _code: string }; Returns: Json }
@@ -22087,6 +22091,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      team_org: { Args: { _team: string }; Returns: string }
       tell_hammers_save: {
         Args: {
           p_dates: string[]

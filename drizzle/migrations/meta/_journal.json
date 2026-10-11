@@ -127,6 +127,13 @@
       "when": 1791754600566,
       "tag": "0017_scouting_v31_follow_guard_rpc_path",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791754653873,
+      "tag": "0018_scouting_v31_team_policy_fix",
+      "breakpoints": true
     }
   ]
 }
