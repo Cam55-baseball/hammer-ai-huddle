@@ -51,7 +51,37 @@ export function OrgVerificationForm({ org }: { org: any }) {
           <Button className="w-full" disabled={!ready || submit.isPending} onClick={() => submit.mutate()}>Send for review</Button>
         </CardContent>
       )}
+      {org.official_email && !org.email_verified_at && status !== 'verified' && <EmailCodeBox org={org} />}
+      {org.email_verified_at && <CardContent className="pt-0 text-sm text-muted-foreground">Official email confirmed.</CardContent>}
     </Card>
+  );
+}
+
+const CODE_REASON: Record<string, string> = {
+  wrong: "That code isn't right. Check the email and try again.",
+  expired: 'That code ran out. Ask for a new one.',
+  too_many: 'Too many tries. Ask for a new code.',
+};
+
+function EmailCodeBox({ org }: { org: any }) {
+  const qc = useQueryClient();
+  const [code, setCode] = useState('');
+  const call = async (mode: 'send' | 'confirm') => {
+    const { data, error } = await supabase.functions.invoke('org-email-code', { body: { mode, organization_id: org.id, code } });
+    if (error) { toast.error((data as any)?.error ?? 'Could not do that. Try again in a minute.'); return; }
+    if (mode === 'send') toast.success(`Code sent to ${org.official_email}`);
+    else if ((data as any)?.ok) { toast.success('Official email confirmed'); qc.invalidateQueries(); }
+    else toast.error(CODE_REASON[(data as any)?.reason] ?? 'Could not confirm');
+  };
+  return (
+    <CardContent className="space-y-2 border-t pt-3">
+      <p className="text-sm">Confirm your official email: we send a 6-digit code to <span className="font-medium">{org.official_email}</span>.</p>
+      <Button variant="outline" className="w-full" onClick={() => call('send')}>Send me a code</Button>
+      <div className="flex gap-2">
+        <Input inputMode="numeric" maxLength={6} placeholder="6-digit code" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
+        <Button disabled={code.length !== 6} onClick={() => call('confirm')}>Confirm</Button>
+      </div>
+    </CardContent>
   );
 }
 
