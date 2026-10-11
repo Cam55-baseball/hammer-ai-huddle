@@ -87,7 +87,7 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     await save.mutateAsync({
       prescription_id: rx.id, plan_date: rx.plan_date, movement_slug: rx.movement_slug,
       rounds: payload,
-      rpe: latest?.rpe ?? null, bar_feel: latest?.bar_feel ?? null, notes: latest?.notes ?? null,
+      rpe: latest?.rpe ?? null, bar_feel: latest?.bar_feel ?? null, notes: latest?.notes ?? null, ai_readback: latest?.ai_readback ?? null,
       outcome: payload.length >= spec.rows ? "completed" : "cut_short",
       template_id: `inline_${rx.slot}`,
       field_schema: spec.fields.map((f) => ({ key: f.key, label: f.label, unit: f.unit, kind: "number" })),

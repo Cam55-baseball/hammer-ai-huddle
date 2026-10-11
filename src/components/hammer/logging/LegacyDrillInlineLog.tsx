@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { createPortal } from "react-dom";
 import { usePocketLogHost } from "../cards/PocketCard";
@@ -35,11 +35,26 @@ export function LegacyDrillInlineLog({
   const initial = useMemo<Draft>(() => Array.from({ length: spec.rows }, () => Object.fromEntries(spec.fields.map((field) => [field.key, field.prefill == null ? "" : String(field.prefill)]))), [spec]);
   const [rounds, setRounds] = useState<Draft>(initial);
   const [done, setDone] = useState(completed);
+  const [running, setRunning] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const timerStart = useRef<number | null>(null);
+  useEffect(() => {
+    if (!running) return;
+    const id = window.setInterval(() => setElapsed((Date.now() - (timerStart.current ?? Date.now())) / 1000), 100);
+    return () => window.clearInterval(id);
+  }, [running]);
+  const stopwatch = () => {
+    if (!running) { timerStart.current = Date.now(); setElapsed(0); setRunning(true); return; }
+    setRunning(false);
+    const next = rounds.findIndex(row => !row.time);
+    if (next >= 0) edit(next, "time", ((Date.now() - (timerStart.current ?? Date.now())) / 1000).toFixed(2));
+  };
 
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem(storageKey);
-      setRounds(saved ? JSON.parse(saved) : initial);
+      const source = saved ? JSON.parse(saved) : null;
+      setRounds(initial.map((row, i) => Array.isArray(source) && source.length === initial.length ? { ...row, ...source[i] } : row));
     } catch {
       setRounds(initial);
     }
@@ -52,13 +67,21 @@ export function LegacyDrillInlineLog({
   };
 
   const save = () => {
+    const logged = rounds.map((round) => Object.fromEntries(Object.entries(round).map(([key, value]) => [key, value === "" ? null : Number(value)]))).filter(round => Object.values(round).some(v => typeof v === "number" && v > 0));
+    if (!logged.length && !done) return;
     onSave({
       dosage,
       notes: notes.trim() || null,
       completed: spec.completion ? done : true,
-      rounds: rounds.map((round) => Object.fromEntries(Object.entries(round).map(([key, value]) => [key, value === "" ? null : Number(value)]))),
+      rounds: logged,
       fields: spec.fields.map(({ key, label, unit }) => ({ key, label, unit: unit ?? null })),
     });
+    if (!spec.completion || done) {
+      const next = logged.length >= spec.rows || done ? "completed" : "cut_short";
+      setOutcome(next);
+      const effort = Number(hard);
+      onOutcome?.(next, effort >= 1 && effort <= 10 ? effort : null);
+    }
     sessionStorage.removeItem(storageKey);
   };
 
@@ -68,6 +91,7 @@ export function LegacyDrillInlineLog({
 
   const entries = <section data-exercise-entry-grid className="space-y-2">
     {logHost && <h4 className="text-sm font-semibold">{name}</h4>}
+    {(modality === "speed" || modality === "conditioning") && spec.fields.some(f => f.key === "time") && <div data-rep-timer className="flex items-center gap-2"><Button type="button" size="sm" variant="outline" onClick={stopwatch}>{running ? "Stop stopwatch" : "Start stopwatch"}</Button><span className="font-mono text-xs">{elapsed.toFixed(2)} s</span></div>}
     {(modality === "speed" || modality === "conditioning") && <RestTimer label="Rest between repeats" seconds={modality === "speed" ? sprintRestSeconds(spec.fields.find(f => f.key === "distance")?.prefill) : null} />}
       {spec.completion && (
         <label className="flex min-h-9 items-center gap-2 text-xs">
