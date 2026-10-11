@@ -7,11 +7,11 @@
 - [x] A3 Self-joined orgs, self-approved follows, forged folder grants blocked; legitimate request/accept flows still pass.
 - [x] A4 Minors — media, contact, sessions, grades, readiness snapshots, body measurements and session videos all use one rule (under-13 hidden, 13–17 parent consent or connected coach, blocks respected). Proof: 0 under-13 reads, 0 non-follow reads, 2,730/2,730 tests.
 - [x] A4b Coach/scout video library uses the same media rule (get-player-library redeployed; under-13 = 0).
-- [ ] A-audit — page check of video screens signed in as a real player and coach, with phone screenshots (next).
+- [ ] A-audit — page check of video screens signed in as a real player and coach, with phone screenshots  — WAITING ON OWNER: choose real accounts or temporary test accounts.
 - [ ] Page audit of video screens signed in as a real player and coach (phone screenshots) — not yet run.
 - [ ] B1 Lifting Blueprint coverage minimums, integrated library gaps, remaining lift tags.
 - [ ] B2 Legal signed-in checks (updated terms, teen grace/reminders, new-teen lock, under-13 waiver, health consent, auto-renew, Cancel).
-- [ ] B3 Guarantee app-button recheck.
+- [~] B3 Guarantee app-button recheck — source scan of every screen (CC4): 0 customer-facing guarantee, money-back, risk-free or guaranteed-results wording (only code comments and the banned-phrase list). Visible tap-through of the in-app upgrade buttons as a player waits on the same owner test-account choice as A-audit.
 - [x] B4 Renewal cron SQL → `docs/owner/renewal-reminders-cron.sql` (not applied).
 
 # OWNER STATUS — 2026-10-11 — current; historical sections below do not override this
