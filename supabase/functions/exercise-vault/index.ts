@@ -115,6 +115,11 @@ Deno.serve(async (req) => {
           is_active: true,
           wic_metadata_complete: true,
           updated_at: new Date().toISOString(),
+          // Optional engine tags — only written when the owner sets them.
+          ...(typeof p.speed_category === "string" && p.speed_category
+            ? { speed_category: p.speed_category } : {}),
+          ...(p.training_age_legality && typeof p.training_age_legality === "object"
+            ? { training_age_legality: p.training_age_legality } : {}),
         };
         const { error: ce } = await admin.from("wk_movement_catalog").upsert(row, { onConflict: "slug" });
         if (ce) return json({ error: `Catalog entry failed: ${ce.message}` }, 500);
