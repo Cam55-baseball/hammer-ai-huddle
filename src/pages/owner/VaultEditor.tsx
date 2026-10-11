@@ -1,0 +1,203 @@
+/**
+ * Owner Exercise Vault — full card editor for one exercise.
+ * Draft → double-check validator → phone-size preview → Make live → Undo.
+ * Talks to the owner/admin-only exercise-vault function.
+ */
+import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { validateExercise, MEASURE_TYPES, type VaultExercise } from "@/lib/vault/validateExercise";
+
+const CARD_TYPES = ["lift", "primer", "conditioning", "recovery", "speed", "warmup", "bat_speed", "throwing", "pitching", "windmill", "defense", "baserunning", "cross_sport", "mobility", "arm_care"];
+const SPORTS = ["baseball", "softball"];
+const PHASES = ["off_season", "pre_season", "in_season", "post_season"];
+const REST_RULES = ["lift_day", "hard_running", "high_jumps", "heavy_bat", "light_bat", "throwing", "none"];
+const PRIMER_ROLES = ["none", "primer_lift", "explosive_action"];
+
+type Props = {
+  slug: string;
+  base: { name: string; category: string | null; sport_scope: string | null; min_age_years: number | null; season_eligibility: string[] | null; equipment: string[] | null; default_sets: number | null; default_reps: number | null; dosage_unit: string | null };
+  baseHowTo: string;
+  onClose: () => void;
+};
+
+const toList = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
+const num = (s: string) => (s.trim() === "" ? null : Number(s));
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+      {label}
+      {children}
+    </label>
+  );
+}
+
+export default function VaultEditor({ slug, base, baseHowTo, onClose }: Props) {
+  const qc = useQueryClient();
+  const [e, setE] = useState<VaultExercise>({
+    slug,
+    name: base.name,
+    how_to_one_rep: baseHowTo && baseHowTo !== "— not written yet" ? baseHowTo : "",
+    setup: "", steps: "", cue: "", why: "", stop_if: "",
+    movements: [],
+    default_sets: base.default_sets, default_reps: base.default_reps,
+    default_seconds: null, default_distance_ft: null, default_load_pct: null,
+    measure_type: "reps",
+    equipment: base.equipment ?? [],
+    card_type: base.category ?? "",
+    sports: base.sport_scope ? [base.sport_scope] : [...SPORTS],
+    season_phases: base.season_eligibility ?? [...PHASES],
+    min_age: base.min_age_years ?? null,
+    rest_rule: "none",
+    arm_weight: null,
+    primer_role: "none",
+  });
+  const [busy, setBusy] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const problems = useMemo(() => validateExercise(e), [e]);
+
+  const { data: history } = useQuery({
+    queryKey: ["vault-history", slug],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("exercise-vault", { body: { action: "list", slug } });
+      if (error) throw error;
+      return data as { versions: Array<{ version: number; apply_today: boolean; effective_from: string; undone_at: string | null; made_live_at: string }>; drafts: Array<{ status: string; validation: string[]; updated_at: string }> };
+    },
+  });
+
+  const call = async (action: string, extra: Record<string, unknown> = {}) => {
+    setBusy(action); setMsg(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("exercise-vault", { body: { action, slug, ...extra } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setMsg(action === "save_draft" ? "Draft saved." : action === "make_live" ? "Made live — applies from the next plan." : "Undone — the previous version is live again.");
+      qc.invalidateQueries({ queryKey: ["vault-history", slug] });
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const set = <K extends keyof VaultExercise>(k: K, v: VaultExercise[K]) => setE((p) => ({ ...p, [k]: v }));
+  const live = history?.versions.find((v) => !v.undone_at);
+
+  return (
+    <Card className="p-4 space-y-4" data-vault-editor={slug}>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-lg font-bold">Edit: {base.name}</h2>
+        <Button variant="ghost" size="sm" onClick={onClose}>Close</Button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Full name"><Input value={e.name} onChange={(ev) => set("name", ev.target.value)} /></Field>
+        <Field label="Card type">
+          <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={e.card_type} onChange={(ev) => set("card_type", ev.target.value)}>
+            <option value="">Pick…</option>
+            {CARD_TYPES.map((c) => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
+          </select>
+        </Field>
+        <Field label='How to do one rep'><Textarea rows={3} value={e.how_to_one_rep} onChange={(ev) => set("how_to_one_rep", ev.target.value)} /></Field>
+        <Field label="Setup"><Textarea rows={3} value={e.setup} onChange={(ev) => set("setup", ev.target.value)} /></Field>
+        <Field label="Steps"><Textarea rows={3} value={e.steps} onChange={(ev) => set("steps", ev.target.value)} /></Field>
+        <Field label="Key cue"><Input value={e.cue} onChange={(ev) => set("cue", ev.target.value)} /></Field>
+        <Field label="Why this movement"><Textarea rows={2} value={e.why} onChange={(ev) => set("why", ev.target.value)} /></Field>
+        <Field label="Stop if"><Input value={e.stop_if} onChange={(ev) => set("stop_if", ev.target.value)} /></Field>
+        <Field label="Series movements (one per line)"><Textarea rows={4} value={(e.movements ?? []).join("\n")} onChange={(ev) => set("movements", ev.target.value.split("\n"))} /></Field>
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="Sets"><Input inputMode="numeric" value={e.default_sets ?? ""} onChange={(ev) => set("default_sets", num(ev.target.value))} /></Field>
+          <Field label="Reps"><Input inputMode="numeric" value={e.default_reps ?? ""} onChange={(ev) => set("default_reps", num(ev.target.value))} /></Field>
+          <Field label="Seconds"><Input inputMode="numeric" value={e.default_seconds ?? ""} onChange={(ev) => set("default_seconds", num(ev.target.value))} /></Field>
+          <Field label="Distance (ft)"><Input inputMode="numeric" value={e.default_distance_ft ?? ""} onChange={(ev) => set("default_distance_ft", num(ev.target.value))} /></Field>
+          <Field label="Load %"><Input inputMode="numeric" value={e.default_load_pct ?? ""} onChange={(ev) => set("default_load_pct", num(ev.target.value))} /></Field>
+          <Field label="Minimum age"><Input inputMode="numeric" value={e.min_age ?? ""} onChange={(ev) => set("min_age", num(ev.target.value))} /></Field>
+        </div>
+        <Field label="Measure type">
+          <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={e.measure_type} onChange={(ev) => set("measure_type", ev.target.value)}>
+            {MEASURE_TYPES.map((m) => <option key={m} value={m}>{m.replace(/_/g, " ")}</option>)}
+          </select>
+        </Field>
+        <Field label="Equipment (comma-separated, or none)"><Input value={e.equipment.join(", ")} onChange={(ev) => set("equipment", toList(ev.target.value))} /></Field>
+        <Field label="Sports (comma-separated)"><Input value={e.sports.join(", ")} onChange={(ev) => set("sports", toList(ev.target.value))} /></Field>
+        <Field label="Season phases (comma-separated)"><Input value={e.season_phases.join(", ")} onChange={(ev) => set("season_phases", toList(ev.target.value))} /></Field>
+        <Field label="Rest-rule category">
+          <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={e.rest_rule} onChange={(ev) => set("rest_rule", ev.target.value)}>
+            {REST_RULES.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
+          </select>
+        </Field>
+        <Field label="Arm-ledger weight (throws)"><Input inputMode="decimal" value={e.arm_weight ?? ""} onChange={(ev) => set("arm_weight", num(ev.target.value))} /></Field>
+        <Field label="Power Primer role">
+          <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={e.primer_role} onChange={(ev) => set("primer_role", ev.target.value as VaultExercise["primer_role"])}>
+            {PRIMER_ROLES.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
+          </select>
+        </Field>
+      </div>
+
+      {/* Double-check validator */}
+      <div data-vault-validation>
+        <h3 className="text-sm font-semibold">Double-check</h3>
+        {problems.length === 0 ? (
+          <p className="text-sm text-green-600">All checks pass — ready to make live.</p>
+        ) : (
+          <ul className="list-disc pl-5 text-sm text-destructive">
+            {problems.map((p) => <li key={p}>{p}</li>)}
+          </ul>
+        )}
+      </div>
+
+      {/* Phone-size preview */}
+      <div>
+        <h3 className="text-sm font-semibold mb-1">Phone preview</h3>
+        <div className="w-[360px] max-w-full rounded-xl border border-border bg-card p-3" data-vault-preview>
+          <p className="font-semibold">{e.name || "…"}</p>
+          <p className="text-sm text-muted-foreground mt-1">How to do one rep: {e.how_to_one_rep || "…"}</p>
+          {e.setup && <p className="text-sm text-muted-foreground mt-1">Setup: {e.setup}</p>}
+          {e.cue && <p className="text-sm mt-1">Cue: {e.cue}</p>}
+          {e.stop_if && <p className="text-sm text-destructive mt-1">Stop if: {e.stop_if}</p>}
+          {(e.movements ?? []).filter((m) => m.trim()).length > 0 && (
+            <ol className="list-decimal pl-5 text-sm mt-1">
+              {(e.movements ?? []).filter((m) => m.trim()).map((m, i) => <li key={i}>{m}</li>)}
+            </ol>
+          )}
+          <p className="text-xs text-muted-foreground mt-2">
+            Default dose: {e.default_sets ?? "–"} × {e.default_reps ?? e.default_seconds ?? e.default_distance_ft ?? "–"} · Measure: {e.measure_type.replace(/_/g, " ")}
+          </p>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-wrap gap-2">
+        <Button disabled={busy !== null} onClick={() => call("save_draft", { payload: e, validation: problems, is_new: false })}>
+          {busy === "save_draft" ? "Saving…" : "Save draft"}
+        </Button>
+        <Button variant="default" disabled={busy !== null || problems.length > 0} onClick={() => call("make_live")}>
+          {busy === "make_live" ? "Making live…" : "Make live (from next plan)"}
+        </Button>
+        <Button variant="outline" disabled={busy !== null || !live} onClick={() => call("undo")}>
+          {busy === "undo" ? "Undoing…" : "Undo last live"}
+        </Button>
+      </div>
+      {msg && <p className="text-sm" data-vault-msg>{msg}</p>}
+
+      {/* Version history + audit */}
+      <div>
+        <h3 className="text-sm font-semibold">Version history</h3>
+        {live && <Badge variant="secondary">Live: version {live.version} (applies {live.apply_today ? "today" : `from ${live.effective_from}`})</Badge>}
+        <ul className="text-xs text-muted-foreground mt-1 space-y-0.5">
+          {(history?.versions ?? []).map((v) => (
+            <li key={v.version}>v{v.version} · {v.undone_at ? "undone" : "live"} · {new Date(v.made_live_at).toLocaleString()}</li>
+          ))}
+          {(history?.versions ?? []).length === 0 && <li>No live versions yet — the built-in card is in use.</li>}
+        </ul>
+      </div>
+    </Card>
+  );
+}
