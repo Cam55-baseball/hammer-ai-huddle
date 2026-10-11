@@ -1,9 +1,14 @@
-# OWNER CARD OVERRIDES — 2026-10-11 — Ready to publish: no (verification underway)
-- [ ] Exact midnight wording; pre-build stays internal.
-- [ ] Name-only collapsed exercises on plan and pop-ups; working toggles without jumps or draft loss.
-- [ ] Survey directly below How hard; remove Extra log dropdown, retain fields.
-- [ ] Real-player tap regression and 360/390/393 px screenshots of wording, names, open exercise, instructions and survey.
+# OWNER CARD OVERRIDES — 2026-10-11 — Ready to publish: no (player/native proof outstanding)
+- [x] Exact line: "Tomorrow's plan becomes visible at midnight". Removed countdown and build-status reads from this notice; pre-build remains unchanged and internal.
+- [x] Prescription and legacy drill names now toggle independent, initially collapsed exercise bodies on plan and pop-ups. Hidden log controls remain mounted to preserve drafts; toggles do not scroll and exclude browser scroll anchoring.
+- [x] Survey (optional) sits directly below How hard; no Extra log dropdown or duplicate one-tap log. Prescription survey opens the existing extra-field sheet; legacy survey exposes notes.
+- [x] Interaction mismatch corrected: the previous prescription expand controlled secondary details only, while drill names had no whole-exercise toggle. Pop-up scroll body now has `min-h-0` to keep scrolling below its header. No reproduced evidence of a sticky-header tap blocker; no speculative global z-index changes.
+- [x] Full suite before the final accessibility/test additions: 297 files / 2,559 tests passed; timer regression uses React `act`. Latest harness build checked: OK.
+- [x] Browser touch regression passed at 360/390/393 px: every fixture exercise and instruction toggle opens/closes inline and in pop-ups; Survey sheet opens/closes above the pop-up. Screenshots reviewed: `/tmp/browser/card-overrides/` (collapsed, inline-open, popup-collapsed, popup-open, popup-survey). These are DEV fixture components, NOT a real player plan or physical native proof.
+- [ ] Tap every drawer/expand button on an affected player's actual plan; repeat screenshot proof there. Owner account has no started plan and cannot substitute for player verification.
+- No publication, deployment, cron changes, iOS-project changes, or training-data writes; no test data created.
 ## Waiting on owner
+- Player session/access approval is unavailable in this run; provide affected-player preview access for real-plan verification. Physical iPhone/native safe-area and tap verification requires an installed updated build; 393 px above is browser-frame emulation only.
 - Review 341 how-to drafts (`docs/owner/basic-how-to-review.tsv`); native-device check requires an installed updated build.
 - Publication and published-site return proof; non-US parent email link remains deferred.
 

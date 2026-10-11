@@ -21,7 +21,6 @@ import { toast } from "sonner";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { useHammerDailyTasks } from "@/hooks/useHammerDailyTasks";
 import { LogButton } from "@/components/hammer/logging/LogButton";
-import { WkOneTapLog } from "@/components/hammer/logging/WkOneTapLog";
 import { CardOutcomeLog } from "@/components/hammer/logging/CardOutcomeLog";
 import { useLiftPlateau, useVerifiedMax } from "@/hooks/useVerifiedMax";
 import { workingWeight, UNLOCK_COPY } from "@/lib/lift/verifiedMax";
@@ -36,12 +35,10 @@ import {
 import { missedStillEditable } from "@/lib/wic/execution/liftCompletion";
 import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
 import { ProgramContentBlock, LimbHintBlock, GameFlushBlock } from "@/components/hammer/ProgramContentBlock";
-import { usePocketDetails } from "./cards/PocketCard";
 import { ExerciseInstructions } from "./cards/ExerciseInstructions";
 import { ActivityBasics } from "./cards/ActivityBasics";
 import { formatPrescriptionDose } from "@/lib/hammer/prescription/formatPrescriptionDose";
 import { ExerciseDisclosure } from "./cards/ExerciseDisclosure";
-import { OptionalSurvey } from "./logging/OptionalSurvey";
 import { InlinePrescriptionLog } from "@/components/hammer/logging/InlinePrescriptionLog";
 
 const SLOT_TONE: Record<WkRx["slot"], string> = {
@@ -104,7 +101,6 @@ export function WkPrescriptionCard({
   // Prescription double-check: every card is repaired before it is shown.
   const rx = useCheckedRx(rawRx);
   const repair = (t: string) => repairInstruction(t, rx, "guide") ?? t;
-  const pocketDetails = usePocketDetails();
   const [swapOpen, setSwapOpen] = useState(false);
   // Availability is resolved against the certified ladder (or, for rows that
   // predate substitution families, the identical catalog-derived ladder).

@@ -1,12 +1,10 @@
 /**
  * ReleaseCountdown — Round 8 Step 1. Screen only; never changes the plan.
- * Counts down to the next local midnight (when tomorrow's plan shows) in the
- * player's own time zone. Uses the server clock (Date header) to correct a
- * wrong device clock, and Intl so daylight-saving days (23h/25h) are right.
+ * Fixed midnight delivery notice. The date helpers below support other release
+ * labels; no pre-build status or countdown is displayed in this notice.
  */
 import { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 
