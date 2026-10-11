@@ -1,8 +1,8 @@
-// Owner Exercise Vault — owner/admin only. Append-only version store:
-// save_draft, make_live, undo (restores the previous live version as a new
-// version), list. Every action writes an audit row. Nothing is ever updated
-// or deleted; live plans already built today are never touched here — live
-// versions apply from the next plan build.
+// Owner Exercise Vault — owner/admin only. Draft → validate → make live →
+// undo workflow over exercise_vault_drafts / exercise_vault_versions /
+// exercise_vault_audit. Every action writes an audit row. Live plans already
+// built today are never touched: a live version takes effect from the next
+// plan build unless the owner explicitly passes apply_today: true.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 
 const cors = {
@@ -34,65 +34,91 @@ Deno.serve(async (req) => {
     const audit = (act: string, detail: unknown) =>
       admin.from("exercise_vault_audit").insert({ slug, action: act, actor: u.user.id, detail });
 
-    const nextVersion = async () => {
-      const { data } = await admin
-        .from("exercise_vault_versions").select("version").eq("slug", slug)
-        .order("version", { ascending: false }).limit(1);
-      return (data?.[0]?.version ?? 0) + 1;
-    };
-
     if (action === "save_draft") {
       const payload = body?.payload;
       if (!payload || typeof payload !== "object") return json({ error: "Missing payload" }, 400);
-      const version = await nextVersion();
-      const { error } = await admin.from("exercise_vault_versions")
-        .insert({ slug, version, status: "draft", payload, note: body?.note ?? null, edited_by: u.user.id });
+      const validation = Array.isArray(body?.validation) ? body.validation : [];
+      const row = {
+        slug,
+        payload,
+        validation,
+        is_new: Boolean(body?.is_new),
+        status: "draft",
+        created_by: u.user.id,
+        updated_at: new Date().toISOString(),
+      };
+      const { data: existing } = await admin.from("exercise_vault_drafts")
+        .select("id").eq("slug", slug).eq("status", "draft").maybeSingle();
+      const { error } = existing
+        ? await admin.from("exercise_vault_drafts").update(row).eq("id", existing.id)
+        : await admin.from("exercise_vault_drafts").insert(row);
       if (error) return json({ error: error.message }, 500);
-      await audit("save_draft", { version, note: body?.note ?? null });
-      return json({ ok: true, version });
+      await audit("save_draft", { is_new: row.is_new, problems: validation.length });
+      return json({ ok: true });
     }
 
     if (action === "make_live") {
-      const version = Number(body?.version);
-      if (!version) return json({ error: "Missing version" }, 400);
-      const { data: draft } = await admin.from("exercise_vault_versions")
-        .select("id,status").eq("slug", slug).eq("version", version).maybeSingle();
-      if (!draft) return json({ error: "Version not found" }, 404);
-      // Supersede any current live version, then promote this one.
-      await admin.from("exercise_vault_versions").update({ status: "superseded" })
-        .eq("slug", slug).eq("status", "live");
-      const { error } = await admin.from("exercise_vault_versions")
-        .update({ status: "live" }).eq("slug", slug).eq("version", version);
+      const { data: draft } = await admin.from("exercise_vault_drafts")
+        .select("*").eq("slug", slug).eq("status", "draft").maybeSingle();
+      if (!draft) return json({ error: "No draft to make live" }, 404);
+      if (Array.isArray(draft.validation) && draft.validation.length > 0) {
+        return json({ error: "Draft still has validation problems", problems: draft.validation }, 400);
+      }
+      const { data: cur } = await admin.from("exercise_vault_versions")
+        .select("version,payload").eq("slug", slug).is("undone_at", null)
+        .order("version", { ascending: false }).limit(1);
+      const applyToday = Boolean(body?.apply_today);
+      const today = new Date().toISOString().slice(0, 10);
+      const effective = new Date(); if (!applyToday) effective.setDate(effective.getDate() + 1);
+      const { error } = await admin.from("exercise_vault_versions").insert({
+        slug,
+        version: (cur?.[0]?.version ?? 0) + 1,
+        payload: draft.payload,
+        previous_payload: cur?.[0]?.payload ?? null,
+        apply_today: applyToday,
+        effective_from: applyToday ? today : effective.toISOString().slice(0, 10),
+        made_live_by: u.user.id,
+      });
       if (error) return json({ error: error.message }, 500);
-      await audit("make_live", { version });
-      return json({ ok: true, version });
+      await admin.from("exercise_vault_drafts").update({ status: "live", updated_at: new Date().toISOString() }).eq("id", draft.id);
+      await audit("make_live", { version: (cur?.[0]?.version ?? 0) + 1, apply_today: applyToday });
+      return json({ ok: true });
     }
 
     if (action === "undo") {
-      const { data: versions } = await admin.from("exercise_vault_versions")
-        .select("version,status,payload").eq("slug", slug)
-        .in("status", ["live", "superseded"])
-        .order("version", { ascending: false });
-      const live = versions?.find((v) => v.status === "live");
-      const prev = versions?.find((v) => v.status === "superseded");
-      if (!live || !prev) return json({ error: "Nothing to undo" }, 400);
-      await admin.from("exercise_vault_versions").update({ status: "superseded" })
-        .eq("slug", slug).eq("status", "live");
-      const version = await nextVersion();
-      const { error } = await admin.from("exercise_vault_versions")
-        .insert({ slug, version, status: "live", payload: prev.payload, note: `Undo of version ${live.version}`, edited_by: u.user.id });
+      const { data: cur } = await admin.from("exercise_vault_versions")
+        .select("*").eq("slug", slug).is("undone_at", null)
+        .order("version", { ascending: false }).limit(1);
+      const live = cur?.[0];
+      if (!live) return json({ error: "Nothing to undo" }, 400);
+      if (!live.previous_payload) return json({ error: "This was the first live version — nothing before it to restore" }, 400);
+      await admin.from("exercise_vault_versions").update({ undone_at: new Date().toISOString() }).eq("id", live.id);
+      const { error } = await admin.from("exercise_vault_versions").insert({
+        slug,
+        version: live.version + 1,
+        payload: live.previous_payload,
+        previous_payload: live.payload,
+        apply_today: live.apply_today,
+        effective_from: live.effective_from,
+        made_live_by: u.user.id,
+      });
       if (error) return json({ error: error.message }, 500);
-      await audit("undo", { from: live.version, restored: prev.version, as: version });
-      return json({ ok: true, version });
+      await audit("undo", { undone: live.version, restored_as: live.version + 1 });
+      return json({ ok: true });
     }
 
     if (action === "list") {
-      let q = admin.from("exercise_vault_versions").select("slug,version,status,note,edited_by,created_at")
-        .order("created_at", { ascending: false }).limit(200);
-      if (slug) q = q.eq("slug", slug);
-      const { data, error } = await q;
-      if (error) return json({ error: error.message }, 500);
-      return json({ versions: data ?? [] });
+      let vq = admin.from("exercise_vault_versions")
+        .select("slug,version,apply_today,effective_from,undone_at,made_live_by,made_live_at")
+        .order("made_live_at", { ascending: false }).limit(200);
+      if (slug) vq = vq.eq("slug", slug);
+      let dq = admin.from("exercise_vault_drafts")
+        .select("slug,is_new,status,validation,updated_at")
+        .order("updated_at", { ascending: false }).limit(200);
+      if (slug) dq = dq.eq("slug", slug);
+      const [{ data: versions, error: ve }, { data: drafts, error: de }] = await Promise.all([vq, dq]);
+      if (ve || de) return json({ error: ve?.message ?? de?.message }, 500);
+      return json({ versions: versions ?? [], drafts: drafts ?? [] });
     }
 
     return json({ error: "Unknown action" }, 400);
