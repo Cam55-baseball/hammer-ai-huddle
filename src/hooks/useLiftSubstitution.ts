@@ -232,13 +232,19 @@ export function projectedDose(rx: WkRx, candidate: SwapCandidate, reason: SwapRe
   if (reason === "time_restriction" && candidate.default_sets && sets && candidate.default_sets < sets) {
     sets = candidate.default_sets;
   }
+  // The log rows are built from the dose fields, so a swap must carry a dose
+  // that matches the replacement's own measure type. When the unit changes
+  // (e.g. reps → seconds), adopt the candidate's defaults for the new unit
+  // and clear the old unit's values — never show stale prescribed numbers.
+  const unit = (candidate.dosage_unit ?? rx.dosage_unit ?? "reps").toLowerCase();
+  const sameUnit = unit === (rx.dosage_unit ?? "reps").toLowerCase();
   return {
-    sets,
-    reps: rx.reps,
-    duration_seconds: rx.duration_seconds,
-    distance_feet: rx.distance_feet,
-    total_reps: rx.total_reps,
-    dosage_unit: rx.dosage_unit,
+    sets: sets ?? candidate.default_sets,
+    reps: sameUnit ? rx.reps : candidate.default_reps,
+    duration_seconds: unit === "seconds" ? (sameUnit ? rx.duration_seconds : candidate.default_duration_seconds) : null,
+    distance_feet: sameUnit ? rx.distance_feet : candidate.default_distance_feet,
+    total_reps: sameUnit ? rx.total_reps : candidate.default_total_reps,
+    dosage_unit: candidate.dosage_unit ?? rx.dosage_unit,
     tempo: rx.tempo,
     load_pct: rx.load_pct,
   };
@@ -274,6 +280,13 @@ export function useLiftSubstitution(planDate: string) {
         from_slug: rx.movement_slug,
         from_name: rx.movement_name,
         from_sets: rx.sets,
+        from_dose: {
+          reps: rx.reps,
+          duration_seconds: rx.duration_seconds,
+          distance_feet: rx.distance_feet,
+          total_reps: rx.total_reps,
+          dosage_unit: rx.dosage_unit,
+        },
         to_slug: candidate.slug,
         reason,
         reason_label: SWAP_REASON_LABEL[reason],
@@ -286,6 +299,11 @@ export function useLiftSubstitution(planDate: string) {
           movement_slug: candidate.slug,
           movement_name: candidate.name,
           sets: dose.sets,
+          reps: dose.reps,
+          duration_seconds: dose.duration_seconds,
+          distance_feet: dose.distance_feet,
+          total_reps: dose.total_reps,
+          dosage_unit: dose.dosage_unit,
           substituted_from_slug: rx.substituted_from_slug ?? rx.movement_slug,
           substitution_reason: `Swapped — ${SWAP_REASON_LABEL[reason]}`,
           why_payload: why,
@@ -303,6 +321,8 @@ export function useLiftSubstitution(planDate: string) {
   const undo = useMutation({
     mutationFn: async ({ rx, original }: { rx: WkRx; original: SwapCandidate }) => {
       const why = { ...(rx.why_payload ?? {}) } as Record<string, unknown>;
+      const swapMeta = why.athlete_substitution as Record<string, any> | undefined;
+      const fromDose = (swapMeta?.from_dose ?? {}) as Record<string, unknown>;
       delete why.athlete_substitution;
       if (original.cue) why.cue = original.cue;
       const { error } = await supabase
@@ -311,9 +331,14 @@ export function useLiftSubstitution(planDate: string) {
           movement_slug: original.slug,
           movement_name: original.name,
           sets:
-            ((rx.why_payload as Record<string, any> | null)?.athlete_substitution?.from_sets as number | undefined) ??
+            (swapMeta?.from_sets as number | undefined) ??
             original.default_sets ??
             rx.sets,
+          reps: (fromDose.reps as number | null | undefined) ?? original.default_reps ?? null,
+          duration_seconds: (fromDose.duration_seconds as number | null | undefined) ?? original.default_duration_seconds ?? null,
+          distance_feet: (fromDose.distance_feet as number | null | undefined) ?? original.default_distance_feet ?? null,
+          total_reps: (fromDose.total_reps as number | null | undefined) ?? original.default_total_reps ?? null,
+          dosage_unit: (fromDose.dosage_unit as string | null | undefined) ?? original.dosage_unit ?? null,
           substituted_from_slug: null,
           substitution_reason: null,
           why_payload: why,

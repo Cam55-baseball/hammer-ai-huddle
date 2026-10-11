@@ -101,7 +101,10 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
   const qc = useQueryClient();
   const spec = useMemo(() => inlineLogSpec(rx), [rx]);
   const { data: latest } = useLatestExerciseLog(rx.id, rx.movement_slug);
-  const key = `hammer-log-draft:${rx.id}`;
+  // Key the draft on the movement too: an "Alternative" swap rewrites this
+  // row's slug/dose, and the log rows must match the NEW exercise at once —
+  // never hydrate stale fields from the pre-swap draft.
+  const key = `hammer-log-draft:${rx.id}:${rx.movement_slug}`;
   const [rounds, setRounds] = useState<Draft>(() => seed(spec));
   const onSynced = useCallback(() => {
     if (!user?.id) return;
@@ -110,6 +113,10 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
   }, [qc, rx.id, rx.plan_date, user?.id]);
   const autosave = useAutosave(`exercise_log:${rx.id}`, onSynced);
   const hydrated = useRef(false);
+
+  useEffect(() => {
+    hydrated.current = false;
+  }, [key]);
 
   useEffect(() => {
     if (hydrated.current && !latest) return;
