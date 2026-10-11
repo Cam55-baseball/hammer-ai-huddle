@@ -58,6 +58,13 @@ function seed(spec: ReturnType<typeof inlineLogSpec>): Draft {
   return Array.from({ length: spec.rows }, () => Object.fromEntries(spec.fields.map((f) => [f.key, f.prefill == null ? "" : String(f.prefill)])));
 }
 
+/** A prefilled distance alone is not a logged timed repeat. Weight is optional. */
+export function enteredPrescriptionRounds(rounds: Draft, spec: ReturnType<typeof inlineLogSpec>) {
+  const timedRepeat = spec.fields.some(f => f.key === "distance") && spec.fields.some(f => f.key === "time");
+  return rounds.map(r => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v === "" ? null : Number(v)])))
+    .filter(r => timedRepeat ? typeof r.time === "number" && r.time > 0 : Object.values(r).some(v => typeof v === "number" && Number.isFinite(v) && v > 0));
+}
+
 export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -82,7 +89,7 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     sessionStorage.setItem(key, JSON.stringify(next));
   };
   const handleSave = async () => {
-    const payload = rounds.map((r) => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v === "" ? null : Number(v)]))).filter(r => Object.values(r).some(v => typeof v === "number" && v > 0));
+    const payload = enteredPrescriptionRounds(rounds, spec);
     if (!payload.length) { toast.error("Enter the work you completed first."); return; }
     await save.mutateAsync({
       prescription_id: rx.id, plan_date: rx.plan_date, movement_slug: rx.movement_slug,
