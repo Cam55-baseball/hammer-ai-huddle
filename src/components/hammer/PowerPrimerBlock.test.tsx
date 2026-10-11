@@ -15,34 +15,24 @@ const pp: PowerPrimerPayload = {
 beforeEach(() => { localStorage.clear(); state.host = document.createElement("div"); document.body.append(state.host); });
 afterEach(() => { cleanup(); state.host?.remove(); state.host = null; localStorage.clear(); });
 
-describe("power primer pop-up logging", () => {
-  it("logs from the top while its details remain closed, preserving the two-round limit", () => {
-    const v = render(<PowerPrimerBlock pp={pp} planDate="2026-10-11" />);
-    const host = state.host;
-    if (!host) throw new Error("Missing log host");
-    const top = within(host);
-    const toggle = v.getByRole("button", { name: "Power Primer: First step" });
-    expect(toggle).toHaveAttribute("aria-expanded", "false");
-    expect(top.getByRole("textbox", { name: "Speed (sec (10 yd))" })).toBeVisible();
-    expect(v.container.querySelector("[data-power-primer-entries]")).toBeNull();
-    fireEvent.change(top.getByRole("textbox"), { target: { value: "1.50" } });
-    fireEvent.click(top.getByRole("button", { name: "Round 1 done" }));
-    fireEvent.click(toggle);
-    expect(toggle).toHaveAttribute("aria-expanded", "true");
-    fireEvent.click(toggle);
-    expect(toggle).toHaveAttribute("aria-expanded", "false");
-    fireEvent.change(top.getByRole("textbox"), { target: { value: "1.49" } });
-    fireEvent.click(top.getByRole("button", { name: "Round 2 done" }));
-    expect(host.querySelector("[data-pap-stopped]")).not.toBeNull();
-    expect(top.queryByRole("textbox")).toBeNull();
+vi.mock("@/lib/logging/logOutbox", () => ({ enqueue: vi.fn(), sendJob: vi.fn(async () => true) }));
+
+describe("power primer built into the lift", () => {
+  it("interleaves lift sets with rated all-out sets and stops after a 3/5", () => {
+    const v = render(<PowerPrimerBlock pp={{ ...pp, max_sets: 4 }} planDate="2026-10-11" liftName="Trap Bar Deadlift" liftSets={4} />);
+    const top = within(state.host!);
+    expect(top.getByText("All-out effort — this is what we measure")).toBeVisible();
+    fireEvent.click(top.getByRole("button", { name: "5/5 Felt excellent" }));
+    expect(state.host!.querySelectorAll("[data-primer-explosive]").length).toBe(2);
+    fireEvent.click(top.getByRole("button", { name: "3/5 Lost snap" }));
+    expect(state.host!.querySelector("[data-pap-stopped]")?.textContent).toMatch(/last all-out set/);
+    expect(state.host!.querySelectorAll("[data-primer-explosive]").length).toBe(2);
+    expect(state.host!.querySelectorAll("[data-primer-lift-set]").length).toBe(4);
+    expect(v.getByRole("button", { name: /how the heavy set \+ all-out effort works/ })).toHaveAttribute("aria-expanded", "false");
   });
-  it("retains the throwing warm-up lock after portaling entries", () => {
-    const v = render(<PowerPrimerBlock pp={{ ...pp, target: "throw", requires_throwing_warmup: true }} />);
-    const host = state.host;
-    if (!host) throw new Error("Missing log host");
-    expect(within(host).queryByRole("textbox")).toBeNull();
-    fireEvent.click(v.getByRole("button", { name: "Power Primer: Throwing speed" }));
-    fireEvent.click(v.getByRole("checkbox"));
-    expect(within(host).getByRole("textbox", { name: "Speed (mph)" })).toBeVisible();
+  it("keeps the throwing warm-up lock; lift sets still go ahead", () => {
+    render(<PowerPrimerBlock pp={{ ...pp, target: "throw", requires_throwing_warmup: true }} liftSets={3} />);
+    expect(state.host!.querySelector("[data-primer-explosive]")).toBeNull();
+    expect(state.host!.textContent).toMatch(/unlock after your throwing warm-up/);
   });
 });
