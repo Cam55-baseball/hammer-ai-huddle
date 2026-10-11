@@ -110,7 +110,9 @@ serve(async (req) => {
     let profileQuery = supabaseAdmin
       .from('profiles')
       .select('id, full_name, avatar_url, position, throwing_hand, batting_side, height, weight, state, high_school_grad_year, college_grad_year, commitment_status, enrolled_in_college, is_professional, is_free_agent, mlb_affiliate, independent_league, is_foreign_player')
-      .neq('id', user.id);
+      .neq('id', user.id)
+      // Test and system accounts never appear in real searches.
+      .or('is_system_account.is.null,is_system_account.eq.false');
 
     // Apply name search if provided
     if (query && query.trim().length >= 2) {
