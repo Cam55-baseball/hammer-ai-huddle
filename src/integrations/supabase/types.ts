@@ -6200,6 +6200,108 @@ export type Database = {
         }
         Relationships: []
       }
+      exercise_vault_audit: {
+        Row: {
+          action: string
+          actor: string
+          at: string
+          detail: Json
+          id: string
+          slug: string
+        }
+        Insert: {
+          action: string
+          actor: string
+          at?: string
+          detail?: Json
+          id?: string
+          slug: string
+        }
+        Update: {
+          action?: string
+          actor?: string
+          at?: string
+          detail?: Json
+          id?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      exercise_vault_drafts: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_new: boolean
+          payload: Json
+          slug: string
+          status: string
+          updated_at: string
+          validation: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_new?: boolean
+          payload?: Json
+          slug: string
+          status?: string
+          updated_at?: string
+          validation?: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_new?: boolean
+          payload?: Json
+          slug?: string
+          status?: string
+          updated_at?: string
+          validation?: Json
+        }
+        Relationships: []
+      }
+      exercise_vault_versions: {
+        Row: {
+          apply_today: boolean
+          effective_from: string
+          id: string
+          made_live_at: string
+          made_live_by: string
+          payload: Json
+          previous_payload: Json | null
+          slug: string
+          undone_at: string | null
+          version: number
+        }
+        Insert: {
+          apply_today?: boolean
+          effective_from: string
+          id?: string
+          made_live_at?: string
+          made_live_by: string
+          payload: Json
+          previous_payload?: Json | null
+          slug: string
+          undone_at?: string | null
+          version: number
+        }
+        Update: {
+          apply_today?: boolean
+          effective_from?: string
+          id?: string
+          made_live_at?: string
+          made_live_by?: string
+          payload?: Json
+          previous_payload?: Json | null
+          slug?: string
+          undone_at?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       fault_key_requests: {
         Row: {
           analysis: string
