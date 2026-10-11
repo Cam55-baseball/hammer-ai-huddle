@@ -33,7 +33,10 @@ export interface RecruitingConsentState {
   share_profile: boolean;
   share_metrics: boolean;
   share_video: boolean;
+  share_health: boolean;
+  share_academics: boolean;
   allow_contact: boolean;
+  is_under_13: boolean;
   guardian_consented_by: string | null;
   guardian_consented_at: string | null;
 }
@@ -83,13 +86,14 @@ export function useRecruitingConsent(athleteId: string | undefined) {
         supabase
           .from("athlete_recruiting_consent")
           .select(
-            "athlete_id, visibility_enabled, parent_authorized, last_changed_at, last_changed_by, engine_version, share_profile, share_metrics, share_video, allow_contact, guardian_consented_by, guardian_consented_at",
+            "athlete_id, visibility_enabled, parent_authorized, last_changed_at, last_changed_by, engine_version, share_profile, share_metrics, share_video, share_health, share_academics, allow_contact, guardian_consented_by, guardian_consented_at",
           )
           .eq("athlete_id", athleteId)
           .maybeSingle(),
         fetchIsMinor(athleteId),
         fetchResolvedVisibility(athleteId),
       ]);
+      const { data: u13 } = await supabase.rpc("is_under_13" as any, { _user_id: athleteId });
 
       // RLS may legitimately deny non-self viewers when visibility is off —
       // that is the fail-closed signal. Translate to a closed state.
@@ -110,7 +114,11 @@ export function useRecruitingConsent(athleteId: string | undefined) {
         share_profile: (row as any)?.share_profile ?? false,
         share_metrics: (row as any)?.share_metrics ?? false,
         share_video: (row as any)?.share_video ?? false,
+        share_health: (row as any)?.share_health ?? false,
+        share_academics: (row as any)?.share_academics ?? false,
         allow_contact: (row as any)?.allow_contact ?? false,
+        // Fail closed: if the age check fails, treat as under 13 for contact.
+        is_under_13: u13 === false ? false : true,
         guardian_consented_by: (row as any)?.guardian_consented_by ?? null,
         guardian_consented_at: (row as any)?.guardian_consented_at ?? null,
       };
@@ -159,7 +167,7 @@ export function useRecruitingConsent(athleteId: string | undefined) {
   });
 
   const setScope = useMutation({
-    mutationFn: async (patch: Partial<Pick<RecruitingConsentState, "share_profile" | "share_metrics" | "share_video" | "allow_contact">>) => {
+    mutationFn: async (patch: Partial<Pick<RecruitingConsentState, "share_profile" | "share_metrics" | "share_video" | "share_health" | "share_academics" | "allow_contact">>) => {
       if (!user?.id || !athleteId || user.id !== athleteId) throw new Error("Only you can change this.");
       const prev = query.data;
       const { error } = await supabase.from("athlete_recruiting_consent").upsert(
@@ -170,6 +178,8 @@ export function useRecruitingConsent(athleteId: string | undefined) {
           share_profile: prev?.share_profile ?? false,
           share_metrics: prev?.share_metrics ?? false,
           share_video: prev?.share_video ?? false,
+          share_health: prev?.share_health ?? false,
+          share_academics: prev?.share_academics ?? false,
           allow_contact: prev?.allow_contact ?? false,
           ...patch,
           last_changed_by: user.id,

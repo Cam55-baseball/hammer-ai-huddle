@@ -169,6 +169,13 @@
       "when": 1791757247796,
       "tag": "0023_sync_follow_denial_in_respond_connection_request",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791758347092,
+      "tag": "0024_scouting_v31_phase2_health_academics_scopes",
+      "breakpoints": true
     }
   ]
 }

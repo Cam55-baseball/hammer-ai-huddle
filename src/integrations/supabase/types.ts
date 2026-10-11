@@ -3028,6 +3028,8 @@ export type Database = {
           last_changed_at: string
           last_changed_by: string
           parent_authorized: boolean
+          share_academics: boolean
+          share_health: boolean
           share_metrics: boolean
           share_profile: boolean
           share_video: boolean
@@ -3044,6 +3046,8 @@ export type Database = {
           last_changed_at?: string
           last_changed_by: string
           parent_authorized?: boolean
+          share_academics?: boolean
+          share_health?: boolean
           share_metrics?: boolean
           share_profile?: boolean
           share_video?: boolean
@@ -3060,6 +3064,8 @@ export type Database = {
           last_changed_at?: string
           last_changed_by?: string
           parent_authorized?: boolean
+          share_academics?: boolean
+          share_health?: boolean
           share_metrics?: boolean
           share_profile?: boolean
           share_video?: boolean
