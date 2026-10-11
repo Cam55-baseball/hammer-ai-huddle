@@ -190,6 +190,9 @@ const GoldenTwoWay = lazyWithRetry(() => import("./pages/GoldenTwoWay"));
 const PracticeHub = lazyWithRetry(() => import("./pages/PracticeHub"));
 const ProgressDashboard = lazyWithRetry(() => import("./pages/ProgressLanding"));
 const OrganizationDashboard = lazyWithRetry(() => import("./pages/OrganizationDashboard"));
+const RequestsPage = lazyWithRetry(() => import("./pages/Requests"));
+const JoinTeamPage = lazyWithRetry(() => import("./pages/JoinTeam"));
+const OwnerOrganizationsPage = lazyWithRetry(() => import("./pages/OwnerOrganizations"));
 const AdminVerification = lazyWithRetry(() => import("./pages/AdminVerification"));
 const Games = lazyWithRetry(() => import("./pages/Games"));
 const Dossiers = lazyWithRetry(() => import("./pages/Dossiers"));
@@ -538,6 +541,9 @@ const App = () => {
               <Route path="/practice" element={<PracticeHub />} />
               <Route path="/progress" element={<ProgressDashboard />} />
               <Route path="/organization" element={<OrganizationDashboard />} />
+              <Route path="/requests" element={<RequestsPage />} />
+              <Route path="/join" element={<JoinTeamPage />} />
+              <Route path="/owner/organizations" element={<StaffOnlyRoute><OwnerOrganizationsPage /></StaffOnlyRoute>} />
               <Route path="/admin-verification" element={<StaffOnlyRoute><AdminVerification /></StaffOnlyRoute>} />
               <Route path="/games" element={<Games />} />
               <Route path="/games/dossiers" element={<Dossiers />} />
