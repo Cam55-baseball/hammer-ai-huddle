@@ -6,8 +6,7 @@ import { ExerciseInstructions } from "../ExerciseInstructions";
 import { LegacyDrillInlineLog } from "../../logging/LegacyDrillInlineLog";
 import { selectDefenseDrills, type DefensePosition } from "@/lib/hammer/prescription/defenseLibrary";
 import { buildWarmup } from "@/lib/hammer/prescription/warmupLibrary";
-import { doseFeet } from "@/lib/hammer/prescription/legacyDrillLog";
-import { repairInstruction } from "../../../../../supabase/functions/_shared/wic/integrity/doseIntegrity";
+import { doseFeet, repairInstruction } from "../../../../../supabase/functions/_shared/wic/integrity/doseIntegrity";
 
 describe("plan-library drawer tap matrix", () => {
   it("taps every exercise, instructions and survey in selected warm-up and defense plans", () => {
