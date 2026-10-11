@@ -6,6 +6,7 @@
 import type { Area } from "./blueprint.ts";
 
 const RULES: Array<[RegExp, Area[]]> = [
+  [/lateral_sled|lateral_squat_walk|hip_rotation|90_90|airplane|hip_er|hip_ir|clam|band_walk|abduct/, ["hip_rotation"]],
   [/clean|snatch|jerk|jump|french_contrast|high_pull|kb_clean_press|push_press/, ["power"]],
   [/nordic|leg_curl|bridge_curl|slider_ham|ham_curl/, ["hamstring"]],
   [/copenhagen|adduct|cossack|lateral_lunge|slide_lunge|slideboard|lateral_db_step_up/, ["groin_lateral", "squat"]],
@@ -13,7 +14,6 @@ const RULES: Array<[RegExp, Area[]]> = [
   [/rdl|deadlift|_dl_|good_morning|pull_through/, ["hinge", "hamstring"]],
   [/squat|lunge|step_?up|patrick_step|sissy/, ["squat"]],
   [/calf|tib|pogo|ankle|toe_walk/, ["calf_foot"]],
-  [/hip_rotation|90_90|airplane|hip_er|hip_ir|clam|band_walk|abduct/, ["hip_rotation"]],
   [/press|bench|pushup|dip/, ["upper_push"]],
   [/row|pullup|pulldown|face_pull|pullapart/, ["upper_pull"]],
   [/carry|pallof|getup|rollout|dragon|plank|twist|deadbug|mcgill|hip_flexor/, ["trunk"]],

@@ -55,3 +55,11 @@ describe("opposite second lower lift", () => {
     expect(oppositeLowerPool(pool, "goblet_squat", 0).every((s) => pool.includes(s))).toBe(true);
   });
 });
+
+describe("outer hip", () => {
+  it("both outer-hip options map to hip stability and are in every carry pool", () => {
+    expect(areasOf("lift_lateral_sled_drag")[0]).toBe("hip_rotation");
+    expect(areasOf("lift_banded_lateral_squat_walk")[0]).toBe("hip_rotation");
+    for (const i of [true, false]) expect(S.carrySlugs(i, 0)).toContain("lift_banded_lateral_squat_walk");
+  });
+});
