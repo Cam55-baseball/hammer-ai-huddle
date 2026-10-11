@@ -42,6 +42,8 @@ describe("basic how-to quality gates (round 3)", () => {
     for (const [slug, t] of entries) {
       for (const [token, must, mustNot] of EQUIP) {
         if (!token.test(slug)) continue;
+        // "_bb" / "_sb" at the end of a baseball/softball pair is the sport, not a barbell.
+        if (/_bb$/.test(slug) && BASIC_HOW_TO[slug.replace(/_bb$/, "_sb")] && !/(^|_)bb_/.test(slug)) continue;
         expect(t, `${slug} should name its equipment`).toMatch(must);
         for (const bad of mustNot) expect(t, `${slug} names wrong equipment`).not.toMatch(bad);
       }
@@ -50,11 +52,6 @@ describe("basic how-to quality gates (round 3)", () => {
   it("every series/circuit/complex lists or doses its movements", () => {
     // Flagged for the owner (movement list not known — never guessed): must shrink, never grow.
     const PENDING_OWNER_SERIES = new Set([
-      "ac_jband_full_chart",
-      "rp_ready_series_bb",
-      "rp_ready_series_sb",
-      "sp_hurdle_hop_series",
-      "wu_ankle_bounce_series",
     ]);
     for (const [slug, t] of entries) {
       if (!SERIES.test(slug) && !SERIES.test(t)) continue;

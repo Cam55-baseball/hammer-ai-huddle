@@ -47,8 +47,19 @@ const norm = (s: string) => s.toLowerCase().replace(/[_-]+/g, " ");
 const THROW_RE =
   /\bthrow|throws|throwing|pitch|bullpen|catch play|long toss|plyo ?ball|pulldown|crow hop|rocker|step behind|roll[- ]in|walk[- ]in|pickoff|flat ?ground/;
 
-const JUMP_DISTANCE_RE = /\bbroad jump\b|\bstanding long jump\b|\bstanding broad\b/;
-const JUMP_HEIGHT_RE = /\bvertical jump\b|\bvert jump\b|\bcountermovement jump\b|\bcmj\b/;
+const JUMP_DISTANCE_RE =
+  /\bbroad jumps?\b|\blong jumps?\b|\bstanding broad\b|\btriple (jump|broad|hop)s?\b|\bbounds?\b|\bbounding\b/;
+const JUMP_HEIGHT_RE = /\bvertical jumps?\b|\bvert jumps?\b|\bcountermovement jumps?\b|\bcmj\b|\bjump (and|&) reach\b/;
+const JUMP_EXCLUDE_RE = /complex|throw|toss|swing|push ?up|series/;
+
+/** Owner rule: every distance jump logs ft + in and every vertical jump logs height — never time. */
+export function jumpMeasure(slugOrText: string): "jump_distance" | "jump_height" | null {
+  const t = norm(slugOrText);
+  if (JUMP_EXCLUDE_RE.test(t)) return null;
+  if (JUMP_HEIGHT_RE.test(t)) return "jump_height";
+  if (JUMP_DISTANCE_RE.test(t)) return "jump_distance";
+  return null;
+}
 const JUMP_COUNT_RE = /\bjump|bound|hop|pogo|plyo|skip|hurdle hop|depth jump|box jump|tuck jump/;
 
 const SPRINT_RE =
@@ -79,6 +90,10 @@ export function measureTypeFor(input: MeasureInput): MeasureType {
   const unit = (input.dosage_unit ?? "").toLowerCase();
   const slot = (input.slot ?? "").toLowerCase();
 
+  // Distance / height jumps win over any unit — a jump never logs time.
+  const jm = jumpMeasure(text);
+  if (jm) return jm;
+
   // Explicit dosage units win.
   if (unit === "throws" || unit === "pitches") return "throws";
   if (unit === "seconds" && HOLD_RE.test(text)) return "hold_seconds";
@@ -99,8 +114,6 @@ export function measureTypeFor(input: MeasureInput): MeasureType {
   if (SWING_RE.test(text)) return "swing_count";
 
   // Jumps: distance or height when that is the measured quality, else counted reps.
-  if (JUMP_DISTANCE_RE.test(text)) return "jump_distance";
-  if (JUMP_HEIGHT_RE.test(text)) return "jump_height";
   if (JUMP_COUNT_RE.test(text)) return "reps";
 
   // Sprints: ss.hh at a fixed distance.
