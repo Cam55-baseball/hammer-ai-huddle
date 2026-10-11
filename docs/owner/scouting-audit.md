@@ -6,15 +6,15 @@ No scouting code, data, roles, switches, deployments or scheduled jobs were chan
 
 ## 1. Roles and accounts — PARTIAL; approval enforcement BROKEN
 
-`user_roles`: 8 active coach, 11 active scout, 79 player, 9 admin, 2 owner role rows. Roles can overlap; these are not distinct-account counts. `useScoutAccess.ts` checks active roles and fails closed. `ScoutDashboard.tsx` uses role/application gating; `approve-scout-application/index.ts` implements staff approval. `scout_applications`: 19 approved, none pending in this snapshot.
+`user_roles`: 8 active coach, 11 active scout, 79 player, 9 admin, 2 owner role rows. Distinct active accounts per role are also 8 coach and 11 scout; roles can overlap, so do not add them for a unique total. `useScoutAccess.ts` checks active roles and fails closed. `ScoutDashboard.tsx` uses role/application gating; `approve-scout-application/index.ts` implements staff approval. `scout_applications`: 19 approved, none pending in this snapshot.
 
-Live RLS lets users insert their own player/coach/scout/recruiter roles (`Users can claim only a self-service role`) without an approval/status constraint. There is no role trigger in the queried live trigger set enforcing approval. Application INSERT similarly checks only `auth.uid() = user_id`, not an initial pending status. A caller can attempt to bypass the application UI using direct table writes. Owners alone manage other users' roles. Several functions, including `search-players` and `send-follow-request`, query role existence without active status; the latter's `.maybeSingle()` can also reject a dual coach+scout account. Role identity is not verified professional accreditation.
+Live RLS lets users insert their own player/coach/scout/recruiter roles (`Users can claim only a self-service role`) without an approval/status constraint. Live role status defaults to `active`; there is no role trigger in the queried live trigger set enforcing approval. Application INSERT similarly checks only `auth.uid() = user_id`, not an initial pending status. A caller can attempt to bypass the application UI using direct table writes. Owners alone manage other users' roles. Several functions, including `search-players` and `send-follow-request`, query role existence without active status; the latter's `.maybeSingle()` can also reject a dual coach+scout account. Role identity is not verified professional accreditation.
 
 ## 2. Organizations and members — PARTIAL; authorization BROKEN
 
 `organizations` has **2 rows**, `organization_members` **2**, not zero at this read. `usePlayerOrganization.ts` uses `invitation_status = active`; `useCoachPlayerPool.ts` and `is_coach_of` use `status = active`. Two parallel status fields can disagree. Roster SELECT permits self, org owner or admin; an ordinary member cannot necessarily list the whole roster.
 
-All authenticated users can read organizations; owners insert/update their organizations and manage membership. **Member INSERT additionally permits `auth.uid() = user_id` with no invite, role or initial-status check.** `is_coach_of` grants access for any pair of active same-organization members, without checking whether the viewer is a coach. Combined with self-joining, this is a high-priority access escalation risk. No membership trigger in the retrieved live set repairs it. The actual affected-role write must be tested later in an isolated copy, not by changing production here.
+All authenticated users can read organizations; owners insert/update their organizations and manage membership. **Member INSERT additionally permits `auth.uid() = user_id` with no invite, role or initial-status check.** `is_coach_of` grants access for any pair of active same-organization members, without checking whether the viewer is a coach. Both membership status fields default to `active`, with role default `player`. Combined with self-joining, this is a high-priority access escalation risk. No membership trigger in the retrieved live set repairs it. The actual affected-role write must be tested later in an isolated copy, not by changing production here.
 
 ## 3. Follows, applications and scout context — PARTIAL; follows authorization BROKEN
 
@@ -42,7 +42,7 @@ Shared service gate `_shared/recruitingGate.ts` checks paused accounts and permi
 
 `wk_staff_access`: 9 grants; `wk_staff_access_log`: 35 entries. `StaffView.tsx` lets athletes grant/revoke access; owner/admin can manage grants. Staff read rows naming themselves. `staff_athlete_timeline` is security-definer, requires a non-revoked named grant and rejects scout/recruiter roles, including dual-role viewers.
 
-**Plan details do not inherit that grant:** live `wk_prescriptions` RLS is athlete-self only; `wk_schedule_decisions` is self/admin only. `StaffView.openAthlete` queries both directly and ignores their errors, so a normal granted coach can get empty training details. UI search of `profiles` is also relationship-limited. Logging is client-written and does not prove every server read was logged. These grants are separate from `scout_follows` and folders.
+**Plan details do not inherit that grant:** live `wk_prescriptions` RLS is athlete-self only; `wk_schedule_decisions` is self/admin only. `StaffView.openAthlete` queries both directly and ignores their errors, so a normal granted coach can get empty training details. UI search of `profiles` is also relationship-limited. Logging is client-written and does not prove every server read was logged. These grants are separate from `scout_follows` and folders. `wk_session_logs` is athlete-self ALL; observations and `asb_events` also have `is_coach_of` reads; HIE uses legacy `is_linked_coach`.
 
 ## 7. How people connect today — PARTIAL
 
@@ -63,6 +63,14 @@ Profile RLS: self/owner/admin; real linked coach; accepted adult follows or scop
 ## 9. The General — athlete view WORKING; scout-facing General MISSING
 
 The current athlete General/progress landing is `ProgressLanding.tsx` (`YourProgressCard`); it is **not** a target-athlete scout dossier. Tests/baselines use `athlete_metric_observations` (`test.*`), lift history `wk_session_logs`, body weight `profiles`; progress/left-right topics are derived client-side. These queries use the signed-in user, not a scout-provided athlete ID.
+
+Other General sections and sources (same signed-in athlete):
+- pitching/readiness/workload/goals-mind topic panels: `useAthleteCommandRows` → `asb_events`; ranked with athlete context and schedule, not a separate scout target;
+- season counter: `athlete_mpi_settings` and server `phase-state`; schedule: `gp_games`, `scheduled_practice_sessions`;
+- game summary and drift: `useGpSignal`/`useRoadmapDeltas` → `gp_games`, `gp_at_bats`, `gp_pitches`, `gp_defense_plays`, current/prior windows;
+- side splits: own `videos` plus `get_my_side_split_inputs`; scored charts owner/admin only;
+- “What your records show”: dates from `gp_games`, `vault_focus_quizzes`, `videos`, `wk_session_logs`; correlations `athlete_metric_pairs` (security-invoker view, not an RLS-disabled table);
+- “Your progression”: own today's `wk_prescriptions.why_payload`; classic view delegates to `ProgressDashboard.tsx`. Game IQ panel is held behind athlete availability, not switched on by scouting.
 
 The connected journal `/vault` (`Vault.tsx`, `useVault.ts`) is also signed-in-user scoped. Section data sources:
 - focus/sleep/discipline/mental trends, pain and correlations: `vault_focus_quizzes` (correlations are not causal proof);
@@ -97,7 +105,13 @@ Private analysis stripping is conditional on scout role and removes `ai_analysis
 
 625 videos; 189 `video_analysis_runs`; 0 `scout_video_reviews`. Tables include `video_pose_analysis`, `video_metric_runs`, `video_coaching_runs`, `video_performance_metrics`, annotations and versions. Shared `videos` RLS requires shared flag + accepted follow + adult or minor video consent; self/admin/owner have explicit access. Run/pose/coaching policies inspected are video-owner scoped, so scout raw-run access is not automatically granted by sharing a clip. `session_videos` uses the broader legacy linked/org helper without the minor scope check found in `videos`.
 
-`get-scout-pending-reviews` establishes accepted follows then invokes video gate; it supplies shared clips and review counts. Reporting pages (`ScoutingReportPanel.tsx`, report-card components) and Players Club consume stored analysis; official score visibility remains a separate owner/admin restriction. Application evidence downloads are owner/admin only and are not athlete-analysis downloads.
+`get-scout-pending-reviews` establishes accepted follows then invokes video gate; it supplies shared clips and review counts. Reporting pages (`ScoutingReportPanel.tsx`, report-card components) and Players Club consume stored analysis; official score visibility remains a separate owner/admin restriction. The application download endpoint is owner/admin only, but public application buckets bypass that endpoint restriction (see storage finding below).
+
+### Storage confidentiality — BROKEN (live configuration)
+
+Read-only `storage.buckets` + aggregate object counts: **`videos` is public (1,345 objects)**; **`scout-letters` and `scout-videos` are public (29 objects each)**; `vault-photos` is private (9 objects). Public application SELECT policies also explicitly allow everyone. No object path or document contents were fetched or reproduced.
+
+A public bucket serves known object URLs without athlete/follow/consent RLS on `videos`. Thus shared flag, guardian approval, revocation and private-analysis endpoint guards do **not** protect the actual raw media URL. Public bucket does not automatically prove every file was guessed or indexed; it does prove a known URL can bypass the intended confidentiality boundary. Private bucket migration/access design requires owner approval plus snapshot, and must preserve authorized playback. `vault-photos` has own-folder policies, so it is not included in this public-bucket defect. No storage settings changed.
 
 ## 14. Onboarding, academics and sport differences — PARTIAL
 
@@ -131,7 +145,7 @@ Changing a URL alone does not bypass caller RLS. However the following direct-wr
 | Staff grants/logs/timeline | named grant checks, timeline rejects scouts; plan SELECT not grant-aware — PARTIAL |
 | Recaps/settings | recap self/owner; settings owner-only — WORKING, scout recap MISSING |
 | Scout grades and children | official/confirmed/evaluator rules, legacy helper and self-insert provenance holes — PARTIAL |
-| Videos/library/reports | shared video consent checks vs broader session helper and payload filtering — PARTIAL |
+| Videos/library/reports | DB sharing checks exist; raw public media bypasses them; broader session helper/payload risks — BROKEN |
 | General/journal | signed-in-user queries; no scout dossier; private health should stay private — MISSING for scouts |
 | Games/pitches/at-bats/defense | self or `is_coach_of`; inherits helper escalation — PARTIAL |
 | Notifications/audits | recipient/self/owner scopes; no exhaustive read logging — PARTIAL |
@@ -146,6 +160,7 @@ Additional `gp_baserun_events`, `gp_subs`, dossiers, opponent hitters, document/
 
 ## Top security risks and defects — priority order; proposed queue only
 
+0. **Critical: public athlete/application media buckets.** Known raw URLs bypass follow/guardian/revocation checks. `videos`, `scout-letters`, `scout-videos` are public; prepare a snapshotted private-media transition with authorized playback and link invalidation before claiming confidentiality. No change applied.
 1. **Critical: approval/access self-escalation.** Lock role/application initial states, organization invite/role/state, and follow acceptance/identity columns behind verified actor permissions; repair `is_coach_of` to require actual coach authority. Existing live policies/trigger definitions show the gaps. No repair applied.
 2. **Critical: forged folder grants.** Require actual folder ownership for grants and review edit helpers; snapshot before any authorized correction.
 3. **High: minor/privacy boundary inconsistency.** Replace legacy any-follow helpers for sessions/grades/session videos with role-, consent-, paused- and block-aware checks; verify consent guardian fields cannot be self-certified. Preserve legitimate coaching scope distinctly from recruiting.
