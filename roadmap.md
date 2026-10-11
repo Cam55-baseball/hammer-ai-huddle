@@ -5,7 +5,8 @@
 - [x] A1 Private media — videos, scout letters, scout videos and avatars are private; raw links refused; allowed viewers play signed links. Proof in `docs/owner/security-fixes.md`.
 - [x] A2 Self-claimed roles blocked (staff roles start pending, owner approves).
 - [x] A3 Self-joined orgs, self-approved follows, forged folder grants blocked; legitimate request/accept flows still pass.
-- [~] A4 Minors — media + contact unified (under-13 hidden, 13–17 parent consent); older session/grade/session-video rules still use the legacy follow check.
+- [x] A4 Minors — media, contact, sessions, grades, readiness snapshots, body measurements and session videos all use one rule (under-13 hidden, 13–17 parent consent or connected coach, blocks respected). Proof: 0 under-13 reads, 0 non-follow reads, 2,730/2,730 tests.
+- [ ] A-audit — page check of video screens signed in as a real player and coach, with phone screenshots (next).
 - [ ] Page audit of video screens signed in as a real player and coach (phone screenshots) — not yet run.
 - [ ] B1 Lifting Blueprint coverage minimums, integrated library gaps, remaining lift tags.
 - [ ] B2 Legal signed-in checks (updated terms, teen grace/reminders, new-teen lock, under-13 waiver, health consent, auto-renew, Cancel).
