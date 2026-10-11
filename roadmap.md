@@ -1,3 +1,18 @@
+# SCOUTING, RECRUITING & FACILITY PLAN v3.1 — build status
+
+**Ready to publish: no** — Phase 1 backend is in and proven; Phase 1 screens and Phases 2–9 are not built yet.
+
+- [~] Phase 1 Accounts, organizations and teams
+  - [x] Backend (migrations `scouting_v31_phase1_orgs_teams_requests`, `_follow_guard_rpc_path`, `_team_policy_fix`; old rules saved in `_snapshot_security_20261011`): organization verification fields + guard (only the app owner verifies; editing name/official email after approval sends it back to review); teams + team members; Admin/Coach staff seats; coach↔athlete assignments (single or bulk); ONE request table + accept/deny/cancel/end actions; head coach (one per player, no extra data); solo-coach "Create team" (quiet small organization); join by code checked on the server.
+  - [x] Closed two holes found on the way: any signed-in user could list every organization's invite code and join it; organization owners could mark themselves verified.
+  - [x] Proof (pretend sign-ins, all undone): player can't create team; coach creates team; self-verify blocked ×2; guessed code refused; join by real code works; other orgs invisible; self coach seat blocked; wrong receiver blocked; staff coach sees 0 athletes until assigned, then 1; staff can't self-assign; unverified facility can't add athletes; deny → no access; accept → access + video; unconnected head coach blocked; revoke → access, video and head coach gone instantly; under-13 can't accept a scout; non-scout can't send scout requests; strangers see 0 requests. Existing relationships unchanged: 30 accepted follows, 23/28 coach links active as before, 2 org members kept.
+  - [x] App fixes: "Join" box uses the server check; "Leave organization" now really removes access (before, it silently did nothing).
+  - [ ] Screens (next): sign-up role choice (player / coach / organization); organization form + official-email code + owner approval queue + Verified badge; Requests inbox (✓/✗); Coach Dashboard "Create team" with code/link/QR; admin assign screen; head-coach picker; phone screenshots with real test accounts.
+- [ ] Phase 2 Consent up front (legal paragraphs will be shown here for the owner before any v2 approval)
+- [ ] Phase 3 Onboarding fields — [ ] Phase 4 Game stats — [ ] Phase 5 Coach tools — [ ] Phase 6 Organization tools — [ ] Phase 7 Scout tools — [ ] Phase 8 The General — [ ] Phase 9 Sponsorship billing
+
+---
+
 # OWNER STATUS — 2026-10-11 evening — security fixes
 
 **Ready to publish: no** — every security fix (A1–A4) is live in the backend and re-proven (CC6), but the signed-in page check, the upgrade-button tap-through and the legal signed-in checks still need the owner's choice of test accounts, and the Blueprint coverage minimums need the owner's decision.

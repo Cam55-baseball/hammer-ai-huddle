@@ -23,3 +23,5 @@
 - Problem reports save to `problem_reports` first; `report-problem-mailer` only sends/retries. Why: a broken email key never loses a report.
 
 - 13–17 parent waiver gating lives only in `supabase/functions/_shared/legal/teenWaiverRules.ts` (used by `teen-parent-waiver` and tests); `TeenWaiverGate` wraps only the training-plan routes. Why: one rule source, and non-physical parts of the app stay open.
+- Every pairing (org↔coach, coach↔player, org↔player, scout→player) goes through `connection_requests` and the definer RPCs `send_/respond_/cancel_connection_request`, `end_connection`, `join_by_invite_code`; clients never insert follows/members directly. Why: one inbox, server-checked receivers, instant revocation.
+- Org coaches reach athletes only through `org_athlete_assignments` (org admins/owner see all members); unverified non-solo orgs cannot add athletes (`org_can_add_athletes`). Why: coaches see only assigned athletes; verification before athlete access.
