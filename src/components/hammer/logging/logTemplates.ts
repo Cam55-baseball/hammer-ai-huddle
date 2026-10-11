@@ -353,6 +353,11 @@ export function resolveTemplate(rx: WkRx): LogTemplate {
   const role = (rx.sequence_role ?? "").toLowerCase();
   const sets = rx.sets ?? 0;
 
+  // 0. Skill positions: catcher pop time, fielding, baserunning.
+  if (has(slug, /pop_time|catcher_pop|pop_to_second|catchers? Throw/)) return CATCHER_POP;
+  if (slot === "baserunning" || has(slug, /home_to_first|home-to-first|steal|base_steal|baserun|lead_off|first_to_third/)) return BASERUNNING;
+  if (slot === "fielding" || slot === "defense" || has(slug, /fielding|ground_ball|glove_work|infield|outfield_drill|defense|defensive/)) return FIELDING;
+
   // 1. Bat speed
   if (slot === "bat_speed") {
     if (has(slug, /overload|underload|heavy_bat|light_bat/)) return OVERLOAD_BAT;
