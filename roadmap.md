@@ -1,3 +1,7 @@
+# W4 PITCHING ACTIVITY-CARD PASS — 2026-10-11 — Ready to publish: no
+- [ ] Move the next unfinished pitching logging workflow into the activity pop-up without changing prescribed work, saved scopes or completion rules; verify available tests and phone examples.
+- Waiting on owner: affected-player access, physical native-device checks, how-to draft approval and publication/live verification. No publish, cron or iOS changes; no backend test data.
+
 # W3 REMAINING ACTIVITY-CARD CHECK — 2026-10-11 — Ready to publish: no
 - [x] W3 next unfinished panel: power-primer rest timer and round/speed entries now use the shared top-log portal; its instructions, warm-up confirmation, alternatives and safety controls sit in an initially closed disclosure. Existing round/throw limits, speed-stop rules, record-only saving and lift prescriptions remain unchanged.
 - [x] Added two targeted regressions: top-log recording while details are closed, disclosure open/close, round-limit stopping and throwing warm-up lock/unlock. Fresh full suite: **301 files / 2,578 tests passed**; harness build OK.
