@@ -39,11 +39,16 @@ const key = (id: string) => `hm_sprint_runs:${id}`;
 export function SprintStopwatch({ cardId, distanceFeet, movementSlug, planDate }: { cardId: string; distanceFeet?: number | null; movementSlug?: string; planDate?: string }) {
   const { user } = useOptionalAuth();
   const [by, setBy] = useState<"self" | "partner">("partner");
+  const [start, setStart] = useState<StartType>("standing");
   const [t0, setT0] = useState<number | null>(null);
   const [now, setNow] = useState(0);
   const [steps, setSteps] = useState("");
+  const [splitInputs, setSplitInputs] = useState<Record<number, string>>({});
   const [runs, setRuns] = useState<SprintRun[]>(() => {
-    try { return JSON.parse(localStorage.getItem(key(cardId)) ?? "[]"); } catch { return []; }
+    try {
+      const raw = JSON.parse(localStorage.getItem(key(cardId)) ?? "[]") as Partial<SprintRun>[];
+      return raw.map((r) => ({ seconds: r.seconds ?? 0, by: r.by ?? "partner", steps: r.steps ?? null, start: r.start ?? "standing", splits: r.splits ?? [] }));
+    } catch { return []; }
   });
   const raf = useRef(0);
 
@@ -58,10 +63,14 @@ export function SprintStopwatch({ cardId, distanceFeet, movementSlug, planDate }
     if (t0 == null) return;
     const seconds = Math.round((performance.now() - t0) / 10) / 100;
     const n = parseInt(steps, 10);
-    const next = [...runs, { seconds, by, steps: Number.isFinite(n) && n > 0 ? n : null }];
+    const splits = splitMarks(distanceFeet)
+      .map((yd) => ({ yd, seconds: Number(splitInputs[yd]) }))
+      .filter((s) => Number.isFinite(s.seconds) && s.seconds > 0 && s.seconds < seconds);
+    const next = [...runs, { seconds, by, steps: Number.isFinite(n) && n > 0 ? n : null, start, splits }];
     setRuns(next);
     setT0(null);
     setSteps("");
+    setSplitInputs({});
     try { localStorage.setItem(key(cardId), JSON.stringify(next)); } catch { /* full */ }
     if (user && movementSlug && planDate) {
       void saveSprintRun(user.id, movementSlug, planDate, cardId, next[next.length - 1], distanceFeet ?? null)
