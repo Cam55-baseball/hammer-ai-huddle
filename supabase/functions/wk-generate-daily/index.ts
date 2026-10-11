@@ -2736,7 +2736,8 @@ const handler = async (req: Request): Promise<Response> => {
 
       // 4) Unilateral lower — rotate across the week to build all planes
       const uniLowerPool = StrengthEngine.unilateralSlugs(isInSeason, dayOfWeek);
-      const uniLower = pickBestLift(uniLowerPool, "unilateral_lower") ?? pickFirstLift(uniLowerPool);
+      const uniOpposite = oppositeLowerPool(uniLowerPool, compound?.slug, dayOfWeek);
+      const uniLower = (uniOpposite.length ? pickBestLift(uniOpposite, "unilateral_lower") : undefined) ?? pickBestLift(uniLowerPool, "unilateral_lower") ?? pickFirstLift(uniLowerPool);
       if (uniLower) {
         // Safety ceiling only: deep-flexion (ATG family) in-season stays a
         // ROM-limited durability dose. Everything else is doctrine-dosed.

@@ -39,3 +39,17 @@ export function unreachableAreas(candidates: ReadonlyArray<string>, areas: Reado
   const hit = new Set(candidates.flatMap(areasOf));
   return areas.filter((a) => !hit.has(a));
 }
+
+/**
+ * Second lower lift = the opposite pattern of the main lift. Every third day the
+ * side-to-side (groin) option leads so frontal-plane work rotates into the week.
+ * Returns only candidates from the pool (legality is still checked by the caller).
+ */
+export function oppositeLowerPool(pool: ReadonlyArray<string>, mainSlug: string | null | undefined, dayOfWeek: number): string[] {
+  const main = mainSlug ? areasOf(mainSlug)[0] : undefined;
+  const want: Area[] = dayOfWeek % 3 === 2 ? ["groin_lateral"]
+    : main === "squat" || main === "power" ? ["hinge", "hip_ext"]
+    : main === "hinge" || main === "hip_ext" ? ["squat", "groin_lateral"]
+    : [];
+  return [...new Set(pool)].filter((s) => want.includes(areasOf(s)[0]));
+}
