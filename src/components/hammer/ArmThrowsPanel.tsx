@@ -132,7 +132,8 @@ export function ArmThrowsPanel({ source, planDate, fixture }: { source: EntrySou
           const sets = mine?.sets ?? [e && e.status !== "skipped" ? String(e.count) : ""];
           const skipped = (mine?.status ?? e?.status) === "skipped";
           const done = sets.reduce((s, x) => s + (Number(x) || 0), 0);
-          const st = autoStatus({ prescribedRows: 1, targets: { throws: rx || null }, rows: [{ throws: done }], skipped });
+          // Throws of a type not planned today are all extra work.
+          const st = !skipped && rx === 0 && done > 0 ? "did_more" as const : autoStatus({ prescribedRows: 1, targets: { throws: rx || null }, rows: [{ throws: done }], skipped });
           const label = THROW_TYPES[t].label;
           return (
             <li key={t} className="space-y-1" data-throw-type={t}>
