@@ -26,6 +26,8 @@ export interface GranularConsent {
   allow_contact: boolean;
   /** Under 13: staff never contact the player; contact goes to the parent only. */
   is_under_13?: boolean;
+  /** Minors: items the parent allowed on the checklist. Server mirror: resolve_recruiting_scope. */
+  parent_allowed_scopes?: string[];
 }
 
 const COL: Record<ConsentScope, keyof GranularConsent> = {
@@ -47,6 +49,7 @@ export function guardianCleared(c: GranularConsent | null): boolean {
 export function scopeVisible(c: GranularConsent | null, s: ConsentScope): boolean {
   if (!c || !c.visibility_enabled || !guardianCleared(c)) return false;
   if (s === "contact" && c.is_under_13) return false;
+  if (c.is_minor && !(c.parent_allowed_scopes ?? []).includes(s)) return false;
   return Boolean(c[COL[s]]);
 }
 

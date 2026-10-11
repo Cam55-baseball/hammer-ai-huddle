@@ -21,6 +21,11 @@ describe("Phase 2 sharing checklist", () => {
   it("under 13: contact is never open to staff even with parent yes and switch on", () => {
     const kid = { ...adult, is_minor: true, is_under_13: true, parent_authorized: true, guardian_consented_at: "2026-10-11T00:00:00Z" };
     expect(scopeVisible(kid, "contact")).toBe(false);
-    expect(scopeVisible(kid, "profile")).toBe(true);
+    expect(scopeVisible({ ...kid, parent_allowed_scopes: ["profile", "contact"] }, "profile")).toBe(true);
+  });
+  it("minor: an item the parent didn't tick stays hidden even if the teen turns it on", () => {
+    const teen = { ...adult, is_minor: true, parent_authorized: true, guardian_consented_at: "2026-10-11T00:00:00Z", share_health: true, parent_allowed_scopes: ["profile"] };
+    expect(scopeVisible(teen, "health")).toBe(false);
+    expect(scopeVisible(teen, "profile")).toBe(true);
   });
 });
