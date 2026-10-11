@@ -96,10 +96,27 @@ export function SprintStopwatch({ cardId, distanceFeet, movementSlug, planDate }
           <Button size="sm" variant="destructive" className="ml-auto h-8" onClick={stop}><Square className="mr-1 h-3 w-3" />Stop</Button>
         )}
       </div>
+      <div className="flex flex-wrap items-center gap-1">
+        <span className="text-muted-foreground">Start:</span>
+        {START_TYPES.map((s) => (
+          <Button key={s} size="sm" variant={start === s ? "default" : "outline"} className="h-7 px-2 capitalize" onClick={() => setStart(s)}>{s}</Button>
+        ))}
+      </div>
       <label className="flex items-center gap-2">
         <span className="text-muted-foreground">Steps taken (optional):</span>
         <Input inputMode="numeric" pattern="[0-9]*" value={steps} onChange={(e) => setSteps(e.target.value.replace(/\D/g, ""))} className="h-7 w-16 text-xs" />
       </label>
+      {splitMarks(distanceFeet).length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-muted-foreground">Splits (optional):</span>
+          {splitMarks(distanceFeet).map((yd) => (
+            <label key={yd} className="flex items-center gap-1">
+              <span className="text-muted-foreground">{yd} yd</span>
+              <Input inputMode="decimal" value={splitInputs[yd] ?? ""} onChange={(e) => setSplitInputs((p) => ({ ...p, [yd]: e.target.value.replace(/[^0-9.]/g, "") }))} className="h-7 w-16 text-xs" placeholder="0.00" />
+            </label>
+          ))}
+        </div>
+      )}
       {runs.length > 0 && (
         <ul className="space-y-0.5">
           {runs.map((r, i) => {
