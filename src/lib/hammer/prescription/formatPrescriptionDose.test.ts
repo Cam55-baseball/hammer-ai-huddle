@@ -7,7 +7,7 @@ describe("formatPrescriptionDose", () => {
   });
 
   it("uses the prescribed 90-foot distance with correct plural", () => {
-    expect(formatPrescriptionDose({ sets: 2, reps: 1, distance_feet: 90, duration_seconds: null, total_reps: null, dosage_unit: "feet" })).toBe("90 feet per rep");
+    expect(formatPrescriptionDose({ sets: 2, reps: 1, distance_feet: 90, duration_seconds: null, total_reps: null, dosage_unit: "feet" })).toBe("2 reps × 90 feet per rep");
   });
 
   it("uses singular foot only for one foot", () => {

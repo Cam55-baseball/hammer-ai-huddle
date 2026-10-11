@@ -1,9 +1,18 @@
-# NEW ACTIVITY-CARD LAYOUT — 2026-10-11 — Ready to publish: no (implementation pending)
-- [ ] Convert every activity to a clean tile and pop-up with always-open logs first.
-- [ ] Keep full title, Start and X visible; move collapsed exercise information below all logs.
-- [ ] Show optional survey questions directly and preserve existing per-exercise saving.
-- [ ] Exact entry-row double-check, eight-week matrices, all nine phone screenshot types, full suite and page audit.
-- No publish, cron, iOS-project or saved-data changes authorized.
+# NEW ACTIVITY-CARD LAYOUT + OWNER CORRECTION — 2026-10-11 — Ready to publish: no
+- [x] Apply owner correction in the shared prescription/legacy pop-ups: top “Log this work” contains timers, exact-dose entry grids and “More information for each exercise is below ↓”. Done / Skipped / Cut short, How hard and existing exercise survey fields are inside initially closed exercise disclosures, not the top log.
+- [x] Existing card-level practice logging sits once in an initially closed “Finish this workout”; no new session survey or storage scope created.
+- [x] Preserve automatic credit without opening disclosures: complete entries save Done; partial entries save Cut short in existing outcome metrics (existing task/status credit semantics retained). Prefilled sprint distances without measured times no longer count as logged repeats. Outcome saves preserve recorded rounds and measurements.
+- [x] Prescription tiles and shared pop-up header: full title, Start and X visible; fixed a runtime crash when optional why_payload was absent. Cross-sport warm-up add-ons use a pop-up.
+- [x] Browser fixture proof: nine activity examples at 360/390/393 px, every exercise disclosure opened/closed, surveys only below disclosures, Start/X visible; no page errors in the final run. 81 screenshots (closed/open/survey view) under `/tmp/browser/activity-layout/`; 393 px is browser-emulated iPhone size, NOT native-device proof.
+- [x] Full suite: **300 files / 2,573 tests passed**, including rendered-text, defense/PFP, tissue-prep and completion tests. Harness build OK. Entry tests cover 3×5 lift, 4×90 ft conditioning, holds, jumps, throws and recovery; 7,168 rendered lift-grid presentation contexts pass. This is not an audit of every generated activity in real eight-week plans.
+- [ ] Finish exhaustive coverage of specialized activity panels and all generated eight-week card types before claiming the entire replacement complete.
+
+## Waiting on owner
+- Affected-player preview access is needed for tap-every-drawer on an actual saved plan and a fresh authenticated page audit; owner account has no started plan. Fixture proof is not affected-player proof.
+- Physical/native iPhone validation remains outstanding; no iOS-project changes made.
+- Owner review: 341 cautious how-to drafts in `docs/owner/basic-how-to-review.tsv`; safest drafts are not treated as approved instructions.
+- Publication/live-site verification remains owner-controlled; non-US parent email purchase link remains deferred.
+- No publication, deployment, cron, migration, iOS-project or saved-data changes performed. No backend test data created; nothing to clean up.
 
 # OWNER CARD OVERRIDES — 2026-10-11 — Ready to publish: no (player/native proof outstanding)
 - [x] V1 final pass (2026-10-11): available automated proof rerun; all 298 test files / 2,562 tests passed. Real-player, physical-native and affected-player page proof remain explicitly blocked below, so readiness remains **no**.

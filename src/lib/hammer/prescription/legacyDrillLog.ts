@@ -29,13 +29,13 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
   const distance = feet ?? (yards == null ? null : yards * 3);
 
   if (["warmup", "mobility", "recovery", "arm_care"].includes(modality)) {
-    return { rows: 1, completion: true, fields: [{ key: "minutes", label: "Minutes", unit: "min", prefill: minutes }] };
+    return { rows: 1, completion: true, fields: [{ key: "minutes", label: "Minutes", unit: "min", prefill: minutes ?? (seconds == null ? null : seconds / 60) }] };
   }
   if (modality === "throwing" || /throw|pitch|bullpen|catch play|plyo ball/.test(text)) {
     return { rows: sets, completion: false, fields: [{ key: "throws", label: "Throws", prefill: reps }] };
   }
   if (modality === "conditioning" || modality === "baserunning") {
-    return { rows: Math.max(1, sets, reps ?? 1), completion: false, fields: [
+    return { rows: Math.max(1, sets > 1 ? sets : reps ?? 1), completion: false, fields: [
       ...(distance == null ? [] : [{ key: "distance" as const, label: "Distance", unit: "ft", prefill: distance }]),
       { key: "time", label: "Time", unit: "s", prefill: seconds },
     ] };

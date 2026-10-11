@@ -1,5 +1,5 @@
-/** Always-visible Done / Skipped / Cut short + "How hard 1–10" for one card. */
-import { useState } from "react";
+/** Per-exercise outcomes and effort, inside the exercise disclosure. */
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useLatestExerciseLog } from "@/hooks/useExerciseLog";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 
 export type CardOutcome = "completed" | "skipped" | "cut_short";
@@ -15,11 +16,18 @@ export const CARD_OUTCOME_LABEL: Record<CardOutcome, string> = { completed: "Don
 export function CardOutcomeLog({ rx, disabled }: { rx: WkRx; disabled?: boolean }) {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const { data: latest } = useLatestExerciseLog(rx.id, rx.movement_slug);
   const [outcome, setOutcome] = useState<CardOutcome | null>(
     rx.status === "completed" ? "completed" : rx.status === "skipped" ? "skipped" : null,
   );
   const [hard, setHard] = useState("");
   const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    const stored = latest?.metrics?.one_tap_outcome;
+    if (stored === "completed" || stored === "skipped" || stored === "cut_short") setOutcome(stored);
+    else setOutcome(rx.status === "completed" ? "completed" : rx.status === "skipped" ? "skipped" : null);
+    if (latest?.rpe != null) setHard(String(latest.rpe));
+  }, [latest, rx.status]);
 
   const save = async (next: CardOutcome) => {
     if (!user?.id || saving || disabled) return;
@@ -27,15 +35,17 @@ export function CardOutcomeLog({ rx, disabled }: { rx: WkRx; disabled?: boolean 
     const rpe = Number(hard);
     const { error } = await supabase.from("wk_session_logs" as any).insert({
       user_id: user.id, prescription_id: rx.id, plan_date: rx.plan_date, movement_slug: rx.movement_slug,
-      sets_completed: next === "skipped" ? 0 : rx.sets ?? null,
-      reps_completed: next === "completed" && rx.sets && rx.reps ? Array.from({ length: rx.sets }, () => rx.reps as number) : null,
-      load_used: null,
-      duration_seconds_completed: next === "completed" ? rx.duration_seconds ?? null : null,
-      distance_feet_completed: next === "completed" ? rx.distance_feet ?? null : null,
-      total_reps_completed: next === "completed" ? rx.total_reps ?? null : null,
+      sets_completed: latest?.sets_completed ?? (next === "skipped" ? 0 : rx.sets ?? null),
+      reps_completed: latest?.reps_completed ?? (next === "completed" && rx.sets && rx.reps ? Array.from({ length: rx.sets }, () => rx.reps as number) : null),
+      load_used: latest?.load_used ?? null,
+      duration_seconds_completed: latest?.duration_seconds_completed ?? (next === "completed" ? rx.duration_seconds ?? null : null),
+      distance_feet_completed: latest?.distance_feet_completed ?? (next === "completed" ? rx.distance_feet ?? null : null),
+      total_reps_completed: latest?.total_reps_completed ?? (next === "completed" ? rx.total_reps ?? null : null),
       rpe: Number.isFinite(rpe) && rpe >= 1 && rpe <= 10 ? Math.round(rpe) : null,
-      notes: null,
-      metrics: { one_tap_outcome: next, cut_short: next === "cut_short" },
+      notes: latest?.notes ?? null,
+      bar_feel: latest?.bar_feel ?? null,
+      ai_readback: latest?.ai_readback ?? null,
+      metrics: { ...latest?.metrics, one_tap_outcome: next, cut_short: next === "cut_short" },
     });
     if (!error) {
       const { error: e2 } = await supabase.from("wk_prescriptions" as any)
@@ -47,6 +57,7 @@ export function CardOutcomeLog({ rx, disabled }: { rx: WkRx; disabled?: boolean 
     setOutcome(next);
     toast.success(next === "skipped" ? "Marked skipped." : next === "cut_short" ? "Logged as cut short." : "Logged — nice work.");
     qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
+    qc.invalidateQueries({ queryKey: ["exercise-log", user.id, rx.id] });
   };
 
   return (

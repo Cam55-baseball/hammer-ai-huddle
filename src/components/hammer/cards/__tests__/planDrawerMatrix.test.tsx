@@ -9,7 +9,7 @@ import { buildWarmup } from "@/lib/hammer/prescription/warmupLibrary";
 import { doseFeet, repairInstruction } from "../../../../../supabase/functions/_shared/wic/integrity/doseIntegrity";
 
 describe("plan-library drawer tap matrix", () => {
-  it("taps every exercise, instructions and survey in selected warm-up and defense plans", () => {
+  it("taps every exercise, instructions and directly visible survey questions in selected warm-up and defense plans", () => {
     const positions: DefensePosition[] = ["C", "P", "1B", "2B", "SS", "3B", "LF", "CF", "RF", "OF", "IF", "utility"];
     let tapped = 0;
     for (const sport of ["baseball", "softball"] as const) {
@@ -34,11 +34,7 @@ describe("plan-library drawer tap matrix", () => {
           fireEvent.click(instructions);
           expect(instructions).toHaveAttribute("aria-expanded", "true");
           expect(view.container.textContent).not.toMatch(/\b1 feet\b|\bNaN\b|\bundefined\b|Extra log \(optional\)/);
-          const survey = scope.getByRole("button", { name: "Survey (optional)" });
-          fireEvent.click(survey);
-          expect(survey).toHaveAttribute("aria-expanded", "true");
-          fireEvent.click(survey);
-          expect(survey).toHaveAttribute("aria-expanded", "false");
+          expect(scope.getByRole("textbox", { name: "Notes (optional)" })).toBeVisible();
           fireEvent.click(instructions);
           expect(instructions).toHaveAttribute("aria-expanded", "false");
           fireEvent.click(toggle);

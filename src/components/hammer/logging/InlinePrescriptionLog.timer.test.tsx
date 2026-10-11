@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 vi.mock("@/hooks/useExerciseLog", () => ({ useLatestExerciseLog: () => ({ data: null }), useSaveExerciseLog: () => ({ mutateAsync: vi.fn(), isPending: false }) }));
+vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: null }) }));
+vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: vi.fn() }) }));
 import { InlinePrescriptionLog } from "./InlinePrescriptionLog";
 
 describe("speed card rep timer", () => {

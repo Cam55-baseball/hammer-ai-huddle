@@ -28,10 +28,18 @@ import { StandardTargetLine } from "@/components/hammer/standards/StandardTarget
 import { toast } from "sonner";
 
 interface Props {
+  embedded?: boolean;
   open: boolean;
   onOpenChange: (b: boolean) => void;
   rx: WkRx;
   dosageText: string;
+}
+
+function LogSurveyWrapper({ children, embedded, open, onOpenChange }: { children: React.ReactNode; embedded: boolean; open: boolean; onOpenChange: (b: boolean) => void }) {
+  return embedded ? <section data-exercise-survey className="space-y-2">{children}</section> : <Sheet open={open} onOpenChange={onOpenChange}>{children}</Sheet>;
+}
+function LogSurveyContent({ children, embedded }: { children: React.ReactNode; embedded: boolean }) {
+  return embedded ? <div>{children}</div> : <SheetContent side="bottom" className="rounded-t-2xl max-h-[92vh] overflow-y-auto">{children}</SheetContent>;
 }
 
 const BAR_FEEL = ["crisp", "heavy", "off"] as const;
@@ -43,7 +51,7 @@ function toNum(v: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) {
+export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded = false }: Props) {
   const { slugs: unilateralSlugs } = useUnilateralMovements();
   const { template, unilateral } = useMemo(
     () => resolveTemplateForRx(rx, unilateralSlugs),
@@ -177,7 +185,8 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
   };
 
   const handleSave = async () => {
-    if (missingSideCount > 0) {
+    if (embedded && !latest) { toast.error("Save your completed entries above first."); return; }
+    if (!embedded && missingSideCount > 0) {
       toast.error(
         `Tag left or right on ${missingSideCount} round${missingSideCount === 1 ? "" : "s"} — side tracking keeps your L/R comparison honest.`,
       );
@@ -186,22 +195,22 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
     try {
       await save.mutateAsync({
         prescription_id: rx.id,
-
+        outcome: embedded ? latest?.metrics?.one_tap_outcome : undefined,
         plan_date: rx.plan_date,
         movement_slug: rx.movement_slug,
-        rounds: roundsToPayload(),
-        rpe: template.meta.rpe ? rpe : null,
+        rounds: embedded && Array.isArray(latest?.metrics?.rounds) ? latest.metrics.rounds : roundsToPayload(),
+        rpe: embedded ? latest?.rpe ?? null : template.meta.rpe ? rpe : null,
         bar_feel: template.meta.barFeel || template.meta.armFeel ? barFeel : null,
         notes: notes.trim() || null,
         ai_readback: readback,
-        template_id: template.id,
-        field_schema: template.fields.map((f) => ({ key: f.key, label: f.label, unit: f.unit, kind: f.kind })),
+        template_id: embedded ? latest?.metrics?.template_id ?? template.id : template.id,
+        field_schema: embedded ? latest?.metrics?.field_schema ?? null : template.fields.map((f) => ({ key: f.key, label: f.label, unit: f.unit, kind: f.kind })),
       });
       setSavedAt(new Date().toISOString());
       // A log with reps for every prescribed set finishes the lift, exactly
       // like the Done button. A partial log leaves the mark untouched.
       let markedDone = false;
-      if (rx.slot === "lift" && rx.status !== "completed" && user?.id &&
+      if (!embedded && rx.slot === "lift" && rx.status !== "completed" && user?.id &&
           isFullLiftLog(roundsToPayload(), initialRoundsCount)) {
         if (rx.status === "missed" && !missedStillEditable(rx.plan_date)) {
           /* past the 7-day window — the log saves, the mark stays */
@@ -218,7 +227,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
 
       // Raw research collection: bank this set's numbers against any standard
       // the movement belongs to. Never rendered, never graded, never a dose.
-      if (measures) {
+      if (!embedded && measures) {
         try {
           recordAttempts.mutate({
             set: { movement_slug: rx.movement_slug, plan_date: rx.plan_date, rounds: roundsToPayload() as any },
@@ -232,7 +241,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
 
       // Did this set clear a standard? Compare the athlete's history against
       // history-plus-this-set. Self-logged, additive, never dose-changing.
-      if (measures && standardRows.length) {
+      if (!embedded && measures && standardRows.length) {
         try {
           const fresh = buildBestIndex([
             { movement_slug: rx.movement_slug, plan_date: rx.plan_date, rounds: roundsToPayload() as any },
@@ -275,20 +284,20 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl max-h-[92vh] overflow-y-auto">
-        <SheetHeader className="text-left">
+    <LogSurveyWrapper embedded={embedded} open={open} onOpenChange={onOpenChange}>
+      <LogSurveyContent embedded={embedded}>
+        {embedded ? <h4 className="text-xs font-semibold">Survey (optional)</h4> : <SheetHeader className="text-left">
           <SheetTitle className="text-base">{rx.movement_name}</SheetTitle>
           <SheetDescription className="text-xs">
             {dosageText}
             {prevSummary && <span className="block mt-0.5 text-[11px] opacity-80">{prevSummary}</span>}
           </SheetDescription>
-        </SheetHeader>
+        </SheetHeader>}
 
         <div className="mt-4 space-y-4">
-          {template.intro && <p className="text-[11px] text-muted-foreground">{template.intro}</p>}
+          {!embedded && template.intro && <p className="text-[11px] text-muted-foreground">{template.intro}</p>}
 
-          {unilateral && (
+          {!embedded && unilateral && (
             <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-[11px] leading-snug">
               <span className="font-medium">One side at a time.</span> Every round is
               tagged L or R so Hammer can track each limb on its own. Log side one,
@@ -300,12 +309,12 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
             <StandardTargetLine rows={standardRows} bodyweightLbs={measures?.bodyweightLbs ?? null} />
           )}
 
-          <RoundGrid
+          {!embedded && <RoundGrid
             fields={template.fields}
             rounds={rounds}
             onChange={setRounds}
             highlightMissingSide={hasSide}
-          />
+          />}
 
           {sideSummary && (sideSummary.L || sideSummary.R) && (
             <div className="rounded-lg border bg-muted/30 p-2.5 text-[11px]">
@@ -332,7 +341,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
           )}
 
 
-          {template.meta.rpe && (
+          {!embedded && template.meta.rpe && (
             <div>
               <div className="flex items-center justify-between">
                 <Label className="text-xs uppercase tracking-wide text-muted-foreground">RPE</Label>
@@ -405,11 +414,11 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
           ) : (
             <Button onClick={handleSave} disabled={save.isPending} className="w-full gap-2" size="lg">
               {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              {save.isPending ? "Saving…" : latest ? "Update log" : "Save log"}
+              {save.isPending ? "Saving…" : embedded ? "Save survey" : latest ? "Update log" : "Save log"}
             </Button>
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+      </LogSurveyContent>
+    </LogSurveyWrapper>
   );
 }

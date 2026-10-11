@@ -15,18 +15,23 @@ import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
 import { WkLiftsCard } from "@/components/hammer/WkLiftsCard";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { ReleaseCountdown } from "@/components/hammer/cards/ReleaseCountdown";
+import { ExerciseDisclosure } from "@/components/hammer/cards/ExerciseDisclosure";
+import { LegacyDrillInlineLog } from "@/components/hammer/logging/LegacyDrillInlineLog";
+import { ActivityBasics } from "@/components/hammer/cards/ActivityBasics";
+import { ExerciseInstructions } from "@/components/hammer/cards/ExerciseInstructions";
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
 
 const base = {
   plan_date: "2026-03-02",
   status: "pending",
-  sets: 4,
+  sets: 3,
   reps: 5,
   intensity: "RPE 7",
   rest_seconds: 150,
   sequence_order: 1,
   sequence_role: "compound",
   engine: "lift",
+  why_payload: {},
 } as const;
 
 const progression = {
@@ -78,6 +83,16 @@ const skillRow = {
   },
 } as unknown as WkRx;
 
+const activityRows = [
+  liftRow,
+  { ...base, id: "evidence-speed", slot: "speed", movement_slug: "sp_fly_20", movement_name: "Fly 20", sets: 4, reps: 1, distance_feet: 60, dosage_unit: "feet" },
+  { ...base, id: "evidence-conditioning", slot: "conditioning", movement_slug: "repeat_90ft_bb", movement_name: "Repeated 90-Foot Sprints (Baseball)", sets: 4, reps: 1, distance_feet: 90, dosage_unit: "feet" },
+  { ...base, id: "evidence-hold", slot: "lift", movement_slug: "plank_hold", movement_name: "Plank Hold", sets: 3, reps: null, duration_seconds: 30, dosage_unit: "seconds" },
+  { ...base, id: "evidence-jump", slot: "speed", movement_slug: "pogo_jumps", movement_name: "Pogo Jumps", sets: 3, reps: 5 },
+  { ...base, id: "evidence-throws", slot: "supplemental", movement_slug: "catch_play", movement_name: "Catch Play", sets: 2, reps: 10, dosage_unit: "throws" },
+  { ...base, id: "evidence-cross", slot: "cross_sport", movement_slug: "wost_tennis_ball_self_rally", movement_name: "Tennis-Ball Self Rally", sets: 2, reps: 15, total_reps: 30 },
+] as WkRx[];
+
 const snapshot = {
   data: [liftRow, skillRow],
   grouped: { lifts: [liftRow], throwing: [], hitting: [], speed: [], other: [] },
@@ -104,26 +119,15 @@ export default function EvidenceCardClarity() {
         <main className="mx-auto max-w-[390px] space-y-4 p-3">
           <h1 className="text-base font-semibold">Step 21 — card clarity</h1>
           <ReleaseCountdown />
-          <section aria-label="Inline exercise list" className="space-y-2">
-            {[liftRow, skillRow].map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} allowSwap={false} />)}
-          </section>
-          <PocketCard id="override-evidence" category="Exercise check" tone="" planDate={base.plan_date} prescribed>
-            {() => <section className="space-y-2">{[liftRow, skillRow].map((rx) => <WkPrescriptionCard key={rx.id} rx={rx} allowSwap={false} />)}</section>}
-          </PocketCard>
-
-          <section className="space-y-2">
-            <h2 className="text-xs font-medium text-muted-foreground">
-              Lift card — carries "Do this after your skill work"
-            </h2>
-            <WkLiftsCard />
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-xs font-medium text-muted-foreground">
-              Skill card — no timing note, real trim shown
-            </h2>
-            <WkPrescriptionCard rx={skillRow} phaseDisplay="Build the Base" phaseKey="accumulation" />
-          </section>
+          {activityRows.map(rx => <WkPrescriptionCard key={rx.id} rx={rx} allowSwap={false} />)}
+          {[{ id: "warmup", name: "Warm-up", modality: "warmup", drills: [{ name: "Tennis-ball tissue rolling", dosage: "2 minutes" }, { name: "Rhythmic leg swings", dosage: "1 minute" }] }, { id: "recovery", name: "Recovery", modality: "recovery", drills: [{ name: "Easy recovery walk", dosage: "5 minutes" }] }].map(card =>
+            <PocketCard key={card.id} id={card.id} category={card.name} tone="" planDate={base.plan_date} prescribed countLabel={`${card.drills.length} exercises`}>
+              {() => card.drills.map(drill => <ExerciseDisclosure key={drill.name} name={drill.name}>
+                <p data-prescribed-dose>{drill.dosage}</p><ActivityBasics name={drill.name} dosage={drill.dosage} />
+                <LegacyDrillInlineLog name={drill.name} modality={card.modality} dosage={drill.dosage} storageKey={`evidence-${drill.name}`} completed={false} onSave={() => {}} onOutcome={() => {}} />
+                <ExerciseInstructions name={drill.name} dosage={drill.dosage} expanded />
+              </ExerciseDisclosure>)}
+            </PocketCard>)}
         </main>
       </ArmCareBudgetProvider>
     </HammersTodayContext.Provider>
