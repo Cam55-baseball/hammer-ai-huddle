@@ -178,6 +178,22 @@ Deno.serve(async (req) => {
       return json({ versions: versions ?? [], drafts: drafts ?? [] });
     }
 
+    if (action === "approve_review") {
+      // Owner accepts the current text as-is; nothing about the card changes.
+      const { error } = await audit("review_approved", { note: body?.note ?? null });
+      if (error) return json({ error: error.message }, 500);
+      return json({ ok: true });
+    }
+
+    if (action === "reviewed") {
+      const [{ data: a, error: ae }, { data: v, error: vErr }] = await Promise.all([
+        admin.from("exercise_vault_audit").select("slug").eq("action", "review_approved").limit(5000),
+        admin.from("exercise_vault_versions").select("slug").is("undone_at", null).limit(5000),
+      ]);
+      if (ae || vErr) return json({ error: (ae ?? vErr)!.message }, 500);
+      return json({ slugs: [...new Set([...(a ?? []), ...(v ?? [])].map((r: any) => r.slug))] });
+    }
+
     if (action === "stats") {
       // Aggregates only — no athlete names or ids leave this function.
       const [rx, logs, anon] = await Promise.all([
