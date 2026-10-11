@@ -115,3 +115,17 @@ export function pendingAcceptances(
 export function autoRenewalSentence(period: string, price: string): string {
   return `I agree my plan renews automatically every ${period} at ${price} until I cancel. I can cancel anytime in Settings → Legal & privacy.`;
 }
+
+/** Until a DMCA agent is registered, the copyright page shows the contact email instead of a blank placeholder. */
+export const COPYRIGHT_CONTACT = "Copyright notices: [hammersmodality@hammersmodality.org](mailto:hammersmodality@hammersmodality.org)";
+export function displayBody(slug: string, body: string): string {
+  if (slug !== "copyright" || !/PLACEHOLDER/.test(body)) return body;
+  return body
+    .replace(/Send our designated agent a written notice/, "Send us a written notice")
+    .replace(/# Designated agent\n[\s\S]*?(?=\n# )/, `# Where to send notices\n${COPYRIGHT_CONTACT}\n`);
+}
+
+/** Drafting notes for the lawyer ("[LAWYER: …]", "[OWNER/LAWYER: …]") are never shown to readers. */
+export function stripDraftNotes(body: string): string {
+  return body.replace(/[ \t]*\[(?:OWNER\/)?LAWYER:[^\]]*\][ \t]*/g, "").replace(/\n{3,}/g, "\n\n");
+}

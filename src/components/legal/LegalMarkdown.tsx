@@ -4,6 +4,7 @@
  * and a statutory block between ":::notice" and ":::" — rendered uppercase,
  * at least 5 points larger than body text, boxed and set apart (Fla. Stat. §744.301(3)(b)).
  */
+import { stripDraftNotes } from "@/lib/legal/legalV2";
 import { Fragment, type ReactNode } from "react";
 
 function inline(text: string, key: string): ReactNode[] {
@@ -26,7 +27,7 @@ function inline(text: string, key: string): ReactNode[] {
 }
 
 export function LegalMarkdown({ body }: { body: string }) {
-  const lines = body.replace(/\r/g, "").split("\n");
+  const lines = stripDraftNotes(body.replace(/\r/g, "")).split("\n");
   const blocks: ReactNode[] = [];
   let para: string[] = []; let list: string[] = []; let k = 0;
   const flush = () => {

@@ -1,7 +1,7 @@
 /** /legal/:slug — versioned legal document (legal_v2). With the switch OFF it falls back to today's pages. */
 import { useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
-import { fetchLatestDoc, useLegalV2, type LegalDoc } from "@/lib/legal/legalV2";
+import { displayBody, fetchLatestDoc, useLegalV2, type LegalDoc } from "@/lib/legal/legalV2";
 import { useIsStaff } from "@/lib/legal/useIsStaff";
 import { LegalMarkdown } from "@/components/legal/LegalMarkdown";
 import { LegalFooterLinks } from "@/components/legal/LegalFooterLinks";
@@ -30,7 +30,7 @@ export default function LegalDocumentPage() {
         <p className="mt-2 text-sm text-muted-foreground">
           Version {doc.version}{doc.effective_date ? ` · Effective ${doc.effective_date}` : ""}
         </p>
-        <div className="mt-6"><LegalMarkdown body={doc.body} /></div>
+        <div className="mt-6"><LegalMarkdown body={displayBody(doc.slug, doc.body)} /></div>
         <Separator className="my-10" />
         <LegalFooterLinks />
       </main>
