@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { BASIC_HOW_TO } from "@/lib/hammer/prescription/basicHowTo.generated";
+import VaultEditor from "./VaultEditor";
 import reviewTsv from "../../../docs/owner/exercise-descriptions-needed.tsv?raw";
 
 const NEEDS_REVIEW = new Set(
@@ -49,6 +50,7 @@ export default function ExerciseVault() {
     },
   });
   const [q, setQ] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
   const [f, setF] = useState({ card: "", sport: "", position: "", phase: "", equipment: "", status: "", age: "", review: "" });
   const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }));
 
