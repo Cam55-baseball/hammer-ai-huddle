@@ -1,7 +1,7 @@
 # NEW ACTIVITY-CARD LAYOUT — 2026-10-11 — Ready to publish: no (implementation pending)
 - [ ] Convert every activity to a clean tile and pop-up with always-open logs first.
 - [ ] Keep full title, Start and X visible; move collapsed exercise information below all logs.
-- [ ] Show optional survey questions directly and preserve existing per-exercise saving.
+- [ ] Apply 00:54 owner correction: top log contains only timers, exact-dose entries and the information note; outcomes and per-exercise effort/survey live inside each closed exercise drop-down. Session-level fields appear once in closed “Finish this workout” only where currently saved per session. Preserve automatic Done/Cut short credit from set logging and all saved-data rules; update screenshots and taps.
 - [ ] Exact entry-row double-check, eight-week matrices, all nine phone screenshot types, full suite and page audit.
 - No publish, cron, iOS-project or saved-data changes authorized.
 
