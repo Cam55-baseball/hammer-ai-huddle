@@ -21458,6 +21458,7 @@ export type Database = {
           video_url: string
         }[]
       }
+      get_exercise_live_text: { Args: { _slug: string }; Returns: Json }
       get_exercise_video: { Args: { _slug: string }; Returns: string }
       get_my_side_split_inputs: {
         Args: never

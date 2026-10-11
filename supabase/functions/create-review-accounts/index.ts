@@ -60,6 +60,8 @@ Deno.serve(async (req) => {
 
     // Owner page audit: a throwaway TEST player with a password sign-in, deleted after the audit.
     if (body?.audit === "create") {
+      // Optional dob (YYYY-MM-DD) lets an audit pick the player's age band.
+      const dob = /^\d{4}-\d{2}-\d{2}$/.test(String(body?.dob ?? "")) ? String(body.dob) : "2008-04-10";
       const email = `hammersmodality+audit${Date.now()}@gmail.com`;
       const pw = password();
       const { data, error } = await admin.auth.admin.createUser({
@@ -71,13 +73,20 @@ Deno.serve(async (req) => {
       const now = new Date().toISOString();
       const errs: string[] = [];
       const pr = await admin.from("profiles").update({
-        full_name: "TEST Audit Player", first_name: "TEST", last_name: "Audit", date_of_birth: "2008-04-10",
+        full_name: "TEST Audit Player", first_name: "TEST", last_name: "Audit", date_of_birth: dob,
         is_system_account: true, anon_training_opt_out: true, hammers_today_started_at: now,
         position: "SS", positions: ["SS"], primary_throwing_hand: "R", primary_batting_side: "R", tutorial_completed: true,
       }).eq("id", id);
       if (pr.error) errs.push("profile: " + pr.error.message);
+      // Under-13 accounts start paused until a parent finishes setup; an audit
+      // player simulates that completed setup so the plan builder will run.
+      const age = (Date.now() - new Date(dob).getTime()) / (365.25 * 86400000);
+      if (age < 13) {
+        const up = await admin.from("profiles").update({ parent_consent_ok: true, account_paused_at: null, paused_reason: null }).eq("id", id);
+        if (up.error) errs.push("unpause: " + up.error.message);
+      }
       const ms = await admin.from("athlete_mpi_settings").upsert({
-        user_id: id, sport: "baseball", date_of_birth: "2008-04-10", primary_position: "SS",
+        user_id: id, sport: "baseball", date_of_birth: dob, primary_position: "SS",
         primary_throwing_hand: "R", primary_batting_side: "R", league_tier: "rec", season_status: "off_season",
         season_status_manual: false, admin_ranking_excluded: true, ranking_eligible: false,
       }, { onConflict: "user_id" });

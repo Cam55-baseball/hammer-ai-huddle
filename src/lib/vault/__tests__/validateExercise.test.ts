@@ -38,3 +38,18 @@ describe("vault validator", () => {
     expect(validateExercise({ ...ok, video_url: "other-bucket/clip.mp4" }).join()).toMatch(/exercise-videos/);
   });
 });
+
+describe("new exercises entering the planner", () => {
+  const base = {
+    slug: "new_move", name: "Wall Slide Slow", how_to_one_rep: "One rep is one slow slide up the wall.",
+    cue: "Ribs down.", stop_if: "You feel pain.", measure_type: "reps", default_sets: 2, default_reps: 8,
+    equipment: ["none"], card_type: "warmup", sports: ["baseball"], season_phases: ["in_season"], min_age: 8, rest_rule: "none",
+  };
+  it("requires a planner category for a brand-new exercise", () => {
+    expect(validateExercise(base, { isNew: true }).join()).toMatch(/planner category/);
+    expect(validateExercise({ ...base, catalog_category: "shoulder_prep" }, { isNew: true })).toEqual([]);
+  });
+  it("does not require it when editing an existing exercise", () => {
+    expect(validateExercise(base)).toEqual([]);
+  });
+});

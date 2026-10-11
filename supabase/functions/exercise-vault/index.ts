@@ -81,7 +81,45 @@ Deno.serve(async (req) => {
       });
       if (error) return json({ error: error.message }, 500);
       await admin.from("exercise_vault_drafts").update({ status: "live", updated_at: new Date().toISOString() }).eq("id", draft.id);
-      await audit("make_live", { version: (cur?.[0]?.version ?? 0) + 1, apply_today: applyToday });
+      // Brand-new exercises enter the planner's catalog so the next plan build
+      // can prescribe them. The slug is new, so no plan built today references
+      // it — today's plans are never changed.
+      if (draft.is_new) {
+        const p = (draft.payload ?? {}) as Record<string, unknown>;
+        const sports = Array.isArray(p.sports) ? (p.sports as string[]) : [];
+        const equipment = (Array.isArray(p.equipment) ? (p.equipment as string[]) : []).filter((x) => x && x !== "none");
+        const DOSAGE: Record<string, string> = {
+          weight_reps: "reps", reps: "reps", hold_seconds: "seconds", duration: "seconds",
+          sprint_time: "seconds", jump_distance: "feet", jump_height: "inches",
+          throw_count: "throws", velocity: "mph", bat_speed: "mph", exit_velocity: "mph",
+          swing_count: "swings", check_off: "checkoff",
+        };
+        const row = {
+          slug,
+          name: String(p.name ?? slug),
+          category: String(p.catalog_category ?? p.card_type ?? ""),
+          sport_scope: sports.length >= 2 ? "both" : (sports[0] ?? "both"),
+          min_age_years: typeof p.min_age === "number" ? p.min_age : 0,
+          season_eligibility: Array.isArray(p.season_phases) ? p.season_phases : null,
+          equipment,
+          equipment_requirements: equipment.length ? equipment : ["bodyweight"],
+          default_sets: typeof p.default_sets === "number" ? p.default_sets : null,
+          default_reps: typeof p.default_reps === "number" ? p.default_reps : null,
+          default_duration_seconds: typeof p.default_seconds === "number" ? p.default_seconds : null,
+          default_distance_feet: typeof p.default_distance_ft === "number" ? p.default_distance_ft : null,
+          default_load_pct: typeof p.default_load_pct === "number" ? p.default_load_pct : null,
+          dosage_unit: DOSAGE[String(p.measure_type ?? "")] ?? "reps",
+          cue: String(p.cue ?? ""),
+          why_prescribed: String(p.why ?? ""),
+          contraindications: p.stop_if ? [String(p.stop_if)] : null,
+          is_active: true,
+          wic_metadata_complete: true,
+          updated_at: new Date().toISOString(),
+        };
+        const { error: ce } = await admin.from("wk_movement_catalog").upsert(row, { onConflict: "slug" });
+        if (ce) return json({ error: `Catalog entry failed: ${ce.message}` }, 500);
+      }
+      await audit("make_live", { version: (cur?.[0]?.version ?? 0) + 1, apply_today: applyToday, is_new: Boolean(draft.is_new) });
       return json({ ok: true });
     }
 
@@ -91,7 +129,17 @@ Deno.serve(async (req) => {
         .order("version", { ascending: false }).limit(1);
       const live = cur?.[0];
       if (!live) return json({ error: "Nothing to undo" }, 400);
-      if (!live.previous_payload) return json({ error: "This was the first live version — nothing before it to restore" }, 400);
+      if (!live.previous_payload) {
+        // First live version of a vault-created exercise: undo switches it back
+        // off in the planner's catalog (nothing earlier to restore).
+        const { data: cat } = await admin.from("wk_movement_catalog").select("slug").eq("slug", slug).maybeSingle();
+        if (!cat) return json({ error: "This was the first live version — nothing before it to restore" }, 400);
+        await admin.from("exercise_vault_versions").update({ undone_at: new Date().toISOString() }).eq("id", live.id);
+        const { error: de } = await admin.from("wk_movement_catalog").update({ is_active: false, updated_at: new Date().toISOString() }).eq("slug", slug);
+        if (de) return json({ error: de.message }, 500);
+        await audit("undo", { undone: live.version, deactivated: true });
+        return json({ ok: true });
+      }
       await admin.from("exercise_vault_versions").update({ undone_at: new Date().toISOString() }).eq("id", live.id);
       const { error } = await admin.from("exercise_vault_versions").insert({
         slug,

@@ -1,10 +1,28 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { supabase } from "@/integrations/supabase/client";
 import type { MovementGuide } from "@/lib/hammer/prescription/movementGuide";
 import { activityBasics } from "./ActivityBasics";
 import { ExerciseVideo } from "./ExerciseVideo";
+
+type LiveText = { how_to_one_rep?: string; setup?: string; steps?: string; cue?: string; why?: string; stop_if?: string; movements?: string[] };
+
+/** Vault-created exercises have no entry in the built-in guide file — fetch their live text. */
+function useLiveExerciseText(slug: string | null | undefined, needed: boolean) {
+  return useQuery({
+    queryKey: ["exercise-live-text", slug],
+    enabled: needed && !!slug,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_exercise_live_text", { _slug: slug! });
+      if (error) return null;
+      return (data ?? null) as LiveText | null;
+    },
+  });
+}
 
 /** The movement's existing guide, shown inline; never invents or changes a dose. */
 export function ExerciseInstructions({ name, slug, guideOverride, setup, cue, stopIf, dosage, why, changes, repair, expanded = false }: {
@@ -17,15 +35,18 @@ export function ExerciseInstructions({ name, slug, guideOverride, setup, cue, st
   const resolved = activityBasics({ name, slug, setup, cue, stopIf, dosage });
   const guide = guideOverride ?? resolved.guide;
   const fallback = guide ? null : resolved.fallback;
-  const steps = guide?.goodRep ?? fallback?.steps ?? [];
+  const { data: live } = useLiveExerciseText(slug, !guide && !fallback && !setup);
+  const liveSteps = live?.steps ? live.steps.split("\n").map((s) => s.trim()).filter(Boolean) : [];
+  const steps = guide?.goodRep ?? fallback?.steps ?? liveSteps;
   const content = <>
 
       {slug && <ExerciseVideo slug={slug} />}
-      <p className="text-muted-foreground"><span className="font-medium text-foreground">Setup: </span>{R(setup ?? guide?.setup ?? fallback?.setup)}</p>
+      {live?.how_to_one_rep && <p className="text-muted-foreground"><span className="font-medium text-foreground">How to do one rep: </span>{R(live.how_to_one_rep)}</p>}
+      <p className="text-muted-foreground"><span className="font-medium text-foreground">Setup: </span>{R(setup ?? guide?.setup ?? fallback?.setup ?? live?.setup)}</p>
       {steps.length > 0 && <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">{steps.map((step, i) => <li key={i}>{R(step)}</li>)}</ol>}
-      {(cue || guide?.feel) && <p className="text-muted-foreground"><span className="font-medium text-foreground">Cue: </span>{R(cue ?? guide?.feel)}</p>}
-      <p className="text-muted-foreground"><span className="font-medium text-foreground">Stop if: </span>{stopIf ?? guide?.stopIf ?? fallback?.stopIf ?? "You feel pain."}</p>
-      {(why || guide?.whyToday) && <p data-why-movement className="text-muted-foreground"><span className="font-medium text-foreground">Why this movement: </span>{R(why || guide?.whyToday)}</p>}
+      {(cue || guide?.feel || live?.cue) && <p className="text-muted-foreground"><span className="font-medium text-foreground">Cue: </span>{R(cue ?? guide?.feel ?? live?.cue)}</p>}
+      <p className="text-muted-foreground"><span className="font-medium text-foreground">Stop if: </span>{stopIf ?? guide?.stopIf ?? fallback?.stopIf ?? live?.stop_if ?? "You feel pain."}</p>
+      {(why || guide?.whyToday || live?.why) && <p data-why-movement className="text-muted-foreground"><span className="font-medium text-foreground">Why this movement: </span>{R(why || guide?.whyToday || live?.why)}</p>}
       <p data-why-changed className="text-muted-foreground"><span className="font-medium text-foreground">Why today's work changed: </span>{changes && changes.length ? changes.join(" ") : "Nothing changed today."}</p>
   </>;
   if (expanded) return <section data-exercise-instructions className="space-y-2 text-xs"><h4 className="font-semibold">How to do it</h4>{content}</section>;
