@@ -118,9 +118,15 @@ export function guessStageFromName(name: string): number {
 }
 
 /** Stage for one warm-up movement, after hard-rule clamps. Null = unknown. */
+const ROLE_BY_SLUG = new Map<string, WarmupRole>();
+/** Called by the warm-up library so lookups by code alone know each movement's group. */
+export function registerWarmupRoles(entries: ReadonlyArray<{ slug: string; role: WarmupRole }>): void {
+  for (const e of entries) ROLE_BY_SLUG.set(e.slug, e.role);
+}
+
 export function stageFor(slug: string, role?: string | null): number | null {
   if (slug in FIXED_STAGE) return FIXED_STAGE[slug];
-  const r = role as WarmupRole | undefined;
+  const r = (role ?? ROLE_BY_SLUG.get(slug)) as WarmupRole | undefined;
   if (r === "tissue_prep" || slug.startsWith("wu_tissue_prep")) return 0;
   const o = loadOverrides().get(slug);
   let s: number | null = o ? clamp(o.stage) : r && r in STAGE_BY_ROLE ? STAGE_BY_ROLE[r] : null;

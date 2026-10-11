@@ -15,7 +15,7 @@
  *   - Weightless Object Sport Training (WOST) — hand-eye, rhythm, fast-twitch CNS patterning without load
  */
 import { guideFor, type MovementGuide } from "@/lib/hammer/prescription/movementGuide";
-import { sortByWarmupStage } from "./warmupStages";
+import { sortByWarmupStage, registerWarmupRoles } from "./warmupStages";
 
 export type WarmupRole =
   | "breathwork"
@@ -853,3 +853,5 @@ export function lifecycleFor(band: string | null | undefined, liftingAgeYears: n
   if (liftingAgeYears >= 1) return "beginner";
   return "youth";
 }
+
+registerWarmupRoles(WARMUP_LIBRARY);
