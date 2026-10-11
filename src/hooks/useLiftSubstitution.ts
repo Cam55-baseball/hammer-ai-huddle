@@ -321,6 +321,8 @@ export function useLiftSubstitution(planDate: string) {
   const undo = useMutation({
     mutationFn: async ({ rx, original }: { rx: WkRx; original: SwapCandidate }) => {
       const why = { ...(rx.why_payload ?? {}) } as Record<string, unknown>;
+      const swapMeta = why.athlete_substitution as Record<string, any> | undefined;
+      const fromDose = (swapMeta?.from_dose ?? {}) as Record<string, unknown>;
       delete why.athlete_substitution;
       if (original.cue) why.cue = original.cue;
       const { error } = await supabase
@@ -329,9 +331,14 @@ export function useLiftSubstitution(planDate: string) {
           movement_slug: original.slug,
           movement_name: original.name,
           sets:
-            ((rx.why_payload as Record<string, any> | null)?.athlete_substitution?.from_sets as number | undefined) ??
+            (swapMeta?.from_sets as number | undefined) ??
             original.default_sets ??
             rx.sets,
+          reps: (fromDose.reps as number | null | undefined) ?? original.default_reps ?? null,
+          duration_seconds: (fromDose.duration_seconds as number | null | undefined) ?? original.default_duration_seconds ?? null,
+          distance_feet: (fromDose.distance_feet as number | null | undefined) ?? original.default_distance_feet ?? null,
+          total_reps: (fromDose.total_reps as number | null | undefined) ?? original.default_total_reps ?? null,
+          dosage_unit: (fromDose.dosage_unit as string | null | undefined) ?? original.dosage_unit ?? null,
           substituted_from_slug: null,
           substitution_reason: null,
           why_payload: why,
