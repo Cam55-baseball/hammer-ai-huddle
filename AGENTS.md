@@ -21,7 +21,5 @@
 - Anonymous training store: bucketed, week-rounded, no free text, Vault-HMAC key; under-13 needs parent opt-in. Why: lawyer-approved scope.
 - The plan screen shows the device's last saved plan, start flag and access at once, but acts only after this visit's server answer; device copies clear on Sign out. Why: a reload must never flash, rebuild or change the plan.
 - Problem reports save to `problem_reports` first; `report-problem-mailer` only sends/retries. Why: a broken email key never loses a report.
-
 - 13–17 parent waiver gating lives only in `supabase/functions/_shared/legal/teenWaiverRules.ts` (used by `teen-parent-waiver` and tests); `TeenWaiverGate` wraps only the training-plan routes. Why: one rule source, and non-physical parts of the app stay open.
-- Every pairing (org↔coach, coach↔player, org↔player, scout→player) goes through `connection_requests` and the definer RPCs `send_/respond_/cancel_connection_request`, `end_connection`, `join_by_invite_code`; clients never insert follows/members directly. Why: one inbox, server-checked receivers, instant revocation.
-- Org coaches reach athletes only through `org_athlete_assignments` (org admins/owner see all members); unverified non-solo orgs cannot add athletes (`org_can_add_athletes`). Why: coaches see only assigned athletes; verification before athlete access.
+- Pairings (org/coach/player/scout) only via `connection_requests` + definer RPCs (`send_/respond_connection_request`, `end_connection`, `join_by_invite_code`); org coaches see only `org_athlete_assignments`; unverified non-solo orgs add no athletes. Why: one inbox, server checks, instant revocation.
