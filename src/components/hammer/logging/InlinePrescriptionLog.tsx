@@ -45,6 +45,13 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
       ...(!rx.distance_feet && !rx.duration_seconds ? [{ key: "reps", label: "Reps", prefill: rx.reps }] : []),
     ] };
   }
+  if (rx.slot === "speed" && /broad[_ ]jump|standing[_ ](long|broad)[_ ]jump/.test(slug)) {
+    // Broad jump is measured by distance, never seconds or plain reps.
+    return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "distance", label: "Jump distance", unit: "ft + in" }] };
+  }
+  if (rx.slot === "speed" && /vertical[_ ]jump|countermovement/.test(slug)) {
+    return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "height", label: "Jump height", unit: "in" }] };
+  }
   if (rx.slot === "speed" && /jump|bound|hop|pogo|plyo/.test(slug)) {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "reps", label: "Reps", prefill: rx.reps }] };
   }
