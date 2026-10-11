@@ -1,3 +1,9 @@
+# X2 CATCH-PLAY LEDGER VERIFICATION — 2026-10-11 — Ready to publish: no
+- [x] Re-checked the X1 catch-play arm-ledger path with the strict assertion restored: catch play 2 × 10 plus an added set of 10 records exactly 30 throws (prescribed 20) in the arm ledger row, and the added-set lift shows the full "Done · Did more" label with prescribed-vs-done. The X1 softening was a test-setup artifact, not a real bug — no code change needed beyond restoring the strict check.
+- [x] Full suite: **305 files / 2,599 tests passed**. No publish, cron or iOS changes; no test data created.
+- [ ] Still open: Pitch Smart warnings for added pitches use the existing pitching card rules only.
+- Waiting on owner: signed-in player check on a real started plan + page audit, physical iPhone check, 341 how-to drafts, publishing.
+
 # X5 AUTOSAVE / TIME ENTRY / AUTO COMPLETION / ADD SET / NESTED-CARD FIX — 2026-10-11 — Ready to publish: no
 - [x] Autosave: no Save log buttons. Every entry saves on change (short delay), on blur, when the pop-up closes and when the app is backgrounded; a "Saved" line shows. Offline values stay on the device and sync on reconnect/resume/next start (nothing removed until the backend accepts it).
 - [x] Real time entry: seconds (holds ≤90 s), mm:ss, h:mm:ss, ss.hh for sprint/stopwatch; numeric keypad segments with the target as a guide; stored as seconds (hundredths kept). Warm-up/recovery no longer use a decimal-minutes box. Stopwatch fills ss.hh.
@@ -5,7 +11,7 @@
 - [x] Add set on every exercise entry grid and every throw type; added sets save, count in totals and show "Prescribed vs Done". Throwing card throws go into the existing arm ledger (ledger's own weights, unchanged) with a safety warning when over the daily/weekly limit; everything entered is still recorded, and the nightly plan already reads the ledger.
 - [x] Nested card bug: a pop-up could render a full card inside itself (a card component re-wrapping itself in a pop-up, plus the warm-up block repeating its own title/card frame). Fixed at the pop-up shell: inside any pop-up, a card renders only its body. Test fails if any pop-up renders its own or another full card.
 - [x] Proof: full suite **305 files / 2,598 tests passed**. Phone checks at 360/390/393 px: **204 checks, 0 failed** — every card type closed/opened, every drop-down tapped open+closed, no nested cards, Start/X visible; warm-up seconds, sprint ss.hh from stopwatch, lift added set + Did more, throwing added set + arm count + safety warning, autosave surviving close and background+reload. 81 screenshots in `/tmp/browser/x5/shots/`. Backend writes in the browser proof were answered locally: no test data created.
-- [ ] Not done: throws entered on non-throwing-card rows (e.g. a supplemental catch-play row) save to that exercise's log but are not yet added to the arm ledger; Pitch Smart warnings for added pitches use the existing pitching card rules only.
+- [x] Throws entered on non-throwing-card rows (e.g. a supplemental catch-play row) feed the arm ledger — verified in X2 with the strict test.
 - Waiting on owner: signed-in player check on a real started plan + page audit, physical iPhone check, 341 how-to drafts, publishing. No publish, cron or iOS changes.
 
 # W5 FINAL ACTIVITY-CARD PROOF — 2026-10-11 — Ready to publish: no
