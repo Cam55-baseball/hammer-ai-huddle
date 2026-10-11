@@ -1,3 +1,6 @@
+# W2 EXACT-DOSE ENTRY CHECK — 2026-10-11 — Ready to publish: no
+- [ ] Check dimensional prescriptions with total counts and extend rendered entry proof beyond lifts; preserve saved values and completion rules.
+
 # W1 ACTIVITY-CARD TIMER PASS — 2026-10-11 — Ready to publish: no
 - [x] W1 next unfinished item: consolidated lift/sprint rest timers beside each exercise's top entry grid. Removed duplicate timers below exercise disclosures in specialized lift/speed panels. Existing lift rest bands and saved rest overrides remain unchanged; sprint rest remains 1 minute per 10 yards. Existing partner stopwatch and tested-max logging now sit inside the corresponding exercise disclosure as extra logging; no saved-data changes.
 - [x] Fresh proof: **300 files / 2,574 tests passed**. Nine pop-up examples at 360/390/393 px pass closed/open tap, top-entry-only log, survey placement and visible Start/X checks; updated 81 screenshots and run log in `/tmp/browser/activity-layout/` (`w1-phone.log`, `w1-suite.log`). Reviewed lift closed and sprint opened screenshots. Latest harness build OK. Fixtures and browser-emulated iPhone size are not affected-player/native proof.

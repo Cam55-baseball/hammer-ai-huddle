@@ -19,6 +19,17 @@ describe("prescription entry grids", () => {
     expect(v.getAllByLabelText(/^Distance /).map(e => (e as HTMLInputElement).value)).toEqual(["90", "90", "90", "90"]);
     expect(v.getAllByLabelText(/^Time /)).toHaveLength(4);
   });
+  it("a total repeat count never replaces the four prescribed 90-foot timed rows", () => {
+    const v = render(<InlinePrescriptionLog rx={rx({ slot: "conditioning", movement_slug: "repeat_90ft_bb", sets: 4, reps: 1, total_reps: 4, distance_feet: 90, dosage_unit: "feet" })} />);
+    expect(v.getAllByLabelText(/^Distance /).map(e => (e as HTMLInputElement).value)).toEqual(["90", "90", "90", "90"]);
+    expect(v.getAllByLabelText(/^Time /)).toHaveLength(4);
+    expect(v.queryAllByLabelText(/^Reps /)).toHaveLength(0);
+  });
+  it("a lift total preserves three sets of five and the weight boxes", () => {
+    const v = render(<InlinePrescriptionLog rx={rx({ sets: 3, reps: 5, total_reps: 15 })} />);
+    expect(v.getAllByLabelText(/^Reps /).map(e => (e as HTMLInputElement).value)).toEqual(["5", "5", "5"]);
+    expect(v.getAllByLabelText(/^Weight /)).toHaveLength(3);
+  });
   it("holds render sets × seconds", () => {
     const v = render(<InlinePrescriptionLog rx={rx({ movement_slug: "plank_hold", sets: 3, duration_seconds: 30, dosage_unit: "seconds" })} />);
     expect(v.getAllByLabelText(/^Seconds /).map(e => (e as HTMLInputElement).value)).toEqual(["30", "30", "30"]);

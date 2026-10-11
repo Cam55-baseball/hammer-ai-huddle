@@ -19,7 +19,7 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
     const split = rx.sets && rx.reps && (!rx.total_reps || rx.sets * rx.reps === rx.total_reps);
     return { rows: split ? rx.sets ?? 1 : 1, fields: [{ key: "throws", label: "Throws", prefill: split ? rx.reps : rx.total_reps ?? rx.reps }] };
   }
-  if (rx.total_reps && !/hold|iso|plank/.test(slug)) {
+  if (rx.total_reps && !rx.distance_feet && !rx.duration_seconds && rx.slot !== "lift" && rx.slot !== "supplemental" && !/hold|iso|plank/.test(slug)) {
     // Rows must add up to the total shown on the card: sets × reps only when that equals the total.
     const split = rx.sets && rx.reps && rx.sets * rx.reps === rx.total_reps;
     return { rows: split ? rx.sets ?? 1 : 1, fields: [{ key: "reps", label: "Reps", prefill: split ? rx.reps : rx.total_reps }] };
