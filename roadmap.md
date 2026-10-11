@@ -1,5 +1,5 @@
 # NO REFUND OR RESULTS PROMISES — 2026-10-11
-**Ready to publish: no — pending full-suite completion and checkout metadata deployment authorization. Nothing published; no cron changes.**
+**Ready to publish: no — pending clean full-suite proof and checkout metadata deployment authorization. Nothing published; no cron changes.**
 
 ## What changed — exact before → after
 - `src/pages/Checkout.tsx`: “7-day performance guarantee — no risk” and “If you don't see measurable progress, we'll refund you.” → promotional block removed, not replaced; unused ShieldCheck import removed. “Less than ${dailyPrice} per day to fix this gap” → “Less than ${dailyPrice} per day for your training plan”.
@@ -40,13 +40,13 @@ It also adds “We do not offer refunds based on athletic progress or results.�
 - Harness build **OK**, latest observed 19:12 UTC. No manual app build or typecheck run.
 - Actual adult test player at `/checkout`: plan, price, automatic-renewal checkbox and CTA rendered; no refund promotional block; updated training wording visible. Desktop and phone screenshots viewed: `/tmp/browser/no-promises/checkout-desktop.png`, `/tmp/browser/no-promises/checkout-phone.png`. No browser page errors. No payment submitted.
 - Initial browser-script errors were test-harness mistakes (context vs page viewport setter; placeholder vs labeled input) and fixed. Loading, pending-tour redirection and missing selected tier were resolved through the player's tour and local tier state; no access/safety gates altered. Initial database reads used nonexistent columns; corrected to whole-row/schema reads, with no mutation from failed reads.
-- First full-suite attempt exceeded its shell time limit. A subsequent full run remained active at report time and showed a slow drawer-matrix failure under parallel load (107 seconds). The identical test **passed alone in 58 seconds**. Full-suite completion is not claimed; no further deployment is allowed on unexplained failures.
+- First full-suite attempt exceeded its shell time limit. The subsequent full run completed: **2,711 passed, 1 failed (323 files)**. The slow drawer-matrix test failed under parallel load (107 seconds); the identical test **passed alone in 58 seconds**. This is not a clean full-suite pass; no further deployment is allowed on unexplained failures. Nine newly added source/translation assertions were also verified separately in the final 31/31 focused run.
 - Throwaway adult player removed via the owner-only audit cleanup endpoint. Exactly two matching unpaid live-mode Stripe checkout sessions were snapshotted and expired; no Stripe customer existed for that player, no charge made. No cron, switch, iOS, plan-generation or approved-legal changes.
 
 ## Owner next steps
 1. Lawyer reviews Subscription Policy v2; v1 remains approved until a separate decision.
 2. Authorize the named `create-checkout` redeploy to remove obsolete backend metadata; help chat only is already live.
-3. Complete the full regression run before a publish decision. Nothing has been published.
+3. Resolve the full-suite drawer timing failure and obtain clean full-suite proof before a publish decision. Nothing has been published.
 
 # LEGAL GO-LIVE CHECK — 2026-10-11 — Ready to publish: yes (website; nothing published, no cron applied)
 **Checked live (phone size, signed out):** home page footer lists "Consumer Health Data Privacy Policy"; every /legal page opens with "Version 1 · Effective 2026-10-11"; no "DRAFT" label for players.
