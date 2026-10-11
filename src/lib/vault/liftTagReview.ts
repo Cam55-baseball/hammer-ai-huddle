@@ -40,4 +40,6 @@ export const LIFT_TAG_REVIEW: ReadonlyArray<{ slug: string; note: string }> = [
   { slug: "lift_slider_ham_bridge_curl", note: "New Lifting Blueprint exercise (copied from Single-Leg RDL settings) — check every tag." },
   { slug: "lift_bw_cossack_squat", note: "New Lifting Blueprint exercise (copied from Single-Leg RDL settings) — check every tag." },
   { slug: "lift_farmer_toe_walk", note: "New Lifting Blueprint exercise (copied from Single-Leg RDL settings) — check every tag." },
+  { slug: "lift_lateral_sled_drag", note: "New Lifting Blueprint exercise (copied from Farmer Carry on Toes settings) — check every tag." },
+  { slug: "lift_banded_lateral_squat_walk", note: "New Lifting Blueprint exercise (copied from Farmer Carry on Toes settings) — check every tag." },
 ];
