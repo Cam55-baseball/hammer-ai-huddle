@@ -1,5 +1,9 @@
 # W2 EXACT-DOSE ENTRY CHECK — 2026-10-11 — Ready to publish: no
-- [ ] Check dimensional prescriptions with total counts and extend rendered entry proof beyond lifts; preserve saved values and completion rules.
+- [x] W2: fixed total-count precedence in entry grids: total_reps no longer removes distance/time fields from repeats or weight boxes from lifts. Added explicit regressions for 4 × 90 ft with a total count and 3 × 5 with 15 total reps; prescriptions and saved-data/completion rules unchanged.
+- [x] Expanded the 7,168-context, eight-week rendered-grid matrix from lifts alone to seven rotating entry types: lifts, sprints, conditioning, holds, jumps, throws and cross-sport. **0 mismatches** in these synthetic presentation contexts; this is NOT generated-plan or affected-player proof.
+- [x] Fresh full suite: **300 files / 2,576 tests passed**. Nine pop-up fixtures at 360/390/393 px pass disclosure open/close, survey placement and visible header checks; 81 screenshots updated in `/tmp/browser/activity-layout/`, logs `w2-suite.log` and `w2-phone.log`. Conditioning closed and throwing opened screenshots reviewed; harness build OK.
+- [ ] Remaining: actual generated eight-week coverage, specialized-panel inventory, and dimensional total-only/sets-with-multiple-repeats cases need canonical prescription verification before changing their interpretation.
+- Waiting on owner: affected-player access for real-plan taps and authenticated page audit; physical native iPhone proof; 341 cautious how-to drafts; publication/live-site verification. No publication, deployment, cron, migration, iOS or saved-data changes; no backend test data created.
 
 # W1 ACTIVITY-CARD TIMER PASS — 2026-10-11 — Ready to publish: no
 - [x] W1 next unfinished item: consolidated lift/sprint rest timers beside each exercise's top entry grid. Removed duplicate timers below exercise disclosures in specialized lift/speed panels. Existing lift rest bands and saved rest overrides remain unchanged; sprint rest remains 1 minute per 10 yards. Existing partner stopwatch and tested-max logging now sit inside the corresponding exercise disclosure as extra logging; no saved-data changes.
