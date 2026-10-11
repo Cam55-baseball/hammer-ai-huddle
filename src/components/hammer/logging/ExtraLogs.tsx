@@ -16,11 +16,11 @@ import { useOptionalAuth } from "@/hooks/useAuth";
 const today = () => new Date().toLocaleDateString("en-CA");
 
 export async function saveSprintRun(userId: string, movementSlug: string, planDate: string, prescriptionId: string | null,
-  run: { seconds: number; by: "self" | "partner"; steps: number | null }, distanceFeet: number | null) {
+  run: { seconds: number; by: "self" | "partner"; steps: number | null; start?: string; splits?: { yd: number; seconds: number }[] }, distanceFeet: number | null) {
   const { error } = await supabase.from("wk_session_logs" as any).insert({
     user_id: userId, prescription_id: prescriptionId, plan_date: planDate, movement_slug: movementSlug,
     distance_feet_completed: distanceFeet, load_used: null,
-    metrics: { kind: "sprint_time", sprint_time_s: run.seconds, timed_by: run.by, steps: run.steps },
+    metrics: { kind: "sprint_time", sprint_time_s: run.seconds, timed_by: run.by, steps: run.steps, start_type: run.start ?? null, splits: run.splits ?? [] },
   });
   return !error;
 }

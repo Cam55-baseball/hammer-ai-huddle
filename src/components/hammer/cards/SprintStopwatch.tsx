@@ -11,7 +11,22 @@ import { toast } from "sonner";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { saveSprintRun } from "@/components/hammer/logging/ExtraLogs";
 
-export interface SprintRun { seconds: number; by: "self" | "partner"; steps: number | null }
+export const START_TYPES = ["standing", "3-point", "2-point", "flying"] as const;
+export type StartType = (typeof START_TYPES)[number];
+
+export interface SprintRun {
+  seconds: number;
+  by: "self" | "partner";
+  steps: number | null;
+  start: StartType;
+  splits: { yd: number; seconds: number }[];
+}
+
+/** Optional split marks offered when the sprint distance allows them. */
+export function splitMarks(distanceFeet: number | null | undefined): number[] {
+  const yd = (distanceFeet ?? 0) / 3;
+  return [10, 20, 30].filter((m) => m < yd);
+}
 
 /** Average stride in feet = distance ÷ steps. */
 export function strideFeet(distanceFeet: number | null | undefined, steps: number | null | undefined) {
