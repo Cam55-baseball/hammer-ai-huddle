@@ -1,3 +1,29 @@
+# BATCH DD REPORT — 2026-10-11 22:45 UTC
+
+**Ready to publish: no** — Phase 2 is only partly built; legal v2 drafts await lawyer review; earlier owner items below are still open.
+
+| Phase | State | Proof | Result |
+|---|---|---|---|
+| Security fixes A1–A4 | Done | CC6: raw link refused, allowed viewer plays, role/org/follow bypasses blocked, 0 under-13 staff visibility | PASS |
+| 1 Accounts, orgs, teams, Requests inbox | Done | DD7–DD10 test accounts, phone screenshots: org verify + email code, team + code/QR join, parent answers for under-13 (child's own answer refused), head coach, end connection removes access, org assigns athlete (outsider refused); full suite 2,733/2,733 | PASS |
+| 2 Consent up front | Partly done | DD11: separate Health + Academics switches (off by default), "Scouting visibility" page, under-13 contact locked to parent (screen + server); 48/48 sharing tests; phone screenshot | PASS so far |
+| 3–9 | Not started | — | — |
+
+**Next:** finish Phase 2 — parent ticks the checklist up front for 13–17, parent turns scouting on for under-13, parent contact route; then prove with test accounts.
+
+**Waiting on the owner:**
+1. Lawyer review of the legal v2 drafts in `docs/owner/legal-v2-under13-scouting.md` (not saved or shown anywhere). Exact changes:
+   - Child Safety "What minors see" — v1: "Under-13 accounts are parent-controlled: no public profile, no scout or coach visibility, and no contact without the parent." → v2: "Under-13 accounts are parent-controlled and never public. A parent may choose to let approved scouts and coaches see items the parent picks (profile, metrics, video, health, academics). Scouts and coaches can never contact a child under 13; any contact goes only to the parent." Also v1 "(profile, metrics, video, contact)" → v2 adds "health, academics … Health and academics are always separate choices and start off."
+   - Privacy §5 Children, 2nd bullet — v1: "Children cannot make their profile public, cannot be contacted by scouts or coaches without the parent's permission, and cannot message other users outside approved channels." → v2: "Children cannot make their profile public and cannot message other users outside approved channels. A parent may choose to let approved scouts and coaches see specific items (profile, metrics, video, health, academics) and can turn this off at any time, which ends access immediately. Scouts and coaches can never contact a child under 13; they may contact only the parent."
+   - Consumer Health Data §5 — adds: "Sharing health information with scouts or coaches is its own switch, separate from every other sharing choice, and starts off. For a minor, only a parent can turn it on."
+2. Keep or delete the reusable test accounts (democoach, demoorg, demoparent + demo players).
+3. OK by name to redeploy the test-account tool (parent-link fix saved, not live).
+4. Earlier items: Subscription Policy v2 lawyer review; apply `docs/owner/renewal-reminders-cron.sql`; Blueprint coverage-minimum decision; Vault review queue.
+
+No publish, no cron, no iPhone changes.
+
+---
+
 # SCOUTING, RECRUITING & FACILITY PLAN v3.1 — build status
 
 **Ready to publish: no** — Phase 1 built and proven end to end (DD10); Phases 2–9 not started; earlier owner items (below) still open.
