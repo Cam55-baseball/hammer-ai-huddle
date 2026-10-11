@@ -1,6 +1,6 @@
-# REPORT — 2026-10-11 23:40 UTC
+# REPORT — 2026-10-11 23:55 UTC
 
-**Ready to publish: no** — legal wording waits for your lawyer; the coverage decision and test-account decision are open; Phases 4–9 not started.
+**Ready to publish: no** — legal wording waits for your lawyer; the coverage decision and test-account decision are open; Phases 5–9 not started.
 
 | Phase | State | Proof | Result |
 |---|---|---|---|
@@ -8,7 +8,15 @@
 | 1 Accounts, orgs, teams, Requests inbox | Done | DD7–DD10, test accounts + phone screenshots | PASS |
 | 2 Consent up front | Done in the app; legal wording waits for lawyer | DD11–DD13 | PASS |
 | 3 Onboarding fields | Done | EE1–EE5 (below) | PASS |
-| 4–9 | Not started | — | — |
+| 4 Game stats, location, spray charts | Done | EE6 (below) | PASS |
+| 5–9 | Not started | — | — |
+
+**Phase 4 proof (EE6)** — signed in as the test player (demo16ss) with a real seeded game (42 pitches, 4 at-bats with field directions):
+- Game report now shows a spray chart: one dot per batted ball on a field diagram, placed by the direction the player actually logged (LF ×2 fanned apart, RCF, SS); unknown directions are skipped, never guessed (screenshots /tmp/browser/ee6/shots/2_spray.png).
+- Box score header now shows its source and date: "Source: you logged this game · 2026-10-11" (screenshot 3_gamesheet.png).
+- Game pitches now count toward the arm ledger: the player's own pitcher-perspective game pitches merge into the 7-day pitch load by date (42 visible to the player under the same access rules the app uses; merge logic unit-tested — same dates add up, nothing double-counted).
+- 4 new unit tests; full suite 2,744/2,744; build OK. Seeded game, pitches and at-bats deleted after the proof.
+- Next: Phase 5 — coach dashboard/profile, parent-copied messaging, safety-checked workouts.
 
 **Phase 3 proof, final round (EE5)** — full sign-up as a brand-new player (ee5proof) on a phone-sized screen, start to finish:
 - Sign-up → terms gate → profile setup → dashboard → Scouting visibility, all on 390×844.

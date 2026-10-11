@@ -12,6 +12,7 @@
 
 import { asGameSport, pitchTypeLabel, pitchFamily, zoneEmphasis, type GameSport } from "./sportRules";
 import { zoneLabels, type ZoneId } from "./zoneMath";
+import { sprayBalls, type SprayBall } from "./spray";
 
 export type ReportKind = "individual_postgame" | "team_postgame" | "opponent_scouting";
 
@@ -44,6 +45,8 @@ export interface ReportSection {
   stats?: StatLine[];
   table?: TableBlock;
   heat?: HeatBlock;
+  /** batted balls for the spray chart (one dot per logged ball) */
+  spray?: SprayBall[];
   bullets?: string[];
 }
 
@@ -336,6 +339,7 @@ export function buildIndividualPostgame(input: BuildIndividualInput): ReportSnap
             ]),
           }
         : undefined,
+      spray: sprayBalls(ab),
       bullets: Object.entries(spray).map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`),
     });
     if (evs.length && hardHit === 0) {
