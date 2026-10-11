@@ -11,7 +11,22 @@ import { toast } from "sonner";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { saveSprintRun } from "@/components/hammer/logging/ExtraLogs";
 
-export interface SprintRun { seconds: number; by: "self" | "partner"; steps: number | null }
+export const START_TYPES = ["standing", "3-point", "2-point", "flying"] as const;
+export type StartType = (typeof START_TYPES)[number];
+
+export interface SprintRun {
+  seconds: number;
+  by: "self" | "partner";
+  steps: number | null;
+  start: StartType;
+  splits: { yd: number; seconds: number }[];
+}
+
+/** Optional split marks offered when the sprint distance allows them. */
+export function splitMarks(distanceFeet: number | null | undefined): number[] {
+  const yd = (distanceFeet ?? 0) / 3;
+  return [10, 20, 30].filter((m) => m < yd);
+}
 
 /** Average stride in feet = distance ÷ steps. */
 export function strideFeet(distanceFeet: number | null | undefined, steps: number | null | undefined) {
@@ -24,11 +39,16 @@ const key = (id: string) => `hm_sprint_runs:${id}`;
 export function SprintStopwatch({ cardId, distanceFeet, movementSlug, planDate }: { cardId: string; distanceFeet?: number | null; movementSlug?: string; planDate?: string }) {
   const { user } = useOptionalAuth();
   const [by, setBy] = useState<"self" | "partner">("partner");
+  const [start, setStart] = useState<StartType>("standing");
   const [t0, setT0] = useState<number | null>(null);
   const [now, setNow] = useState(0);
   const [steps, setSteps] = useState("");
+  const [splitInputs, setSplitInputs] = useState<Record<number, string>>({});
   const [runs, setRuns] = useState<SprintRun[]>(() => {
-    try { return JSON.parse(localStorage.getItem(key(cardId)) ?? "[]"); } catch { return []; }
+    try {
+      const raw = JSON.parse(localStorage.getItem(key(cardId)) ?? "[]") as Partial<SprintRun>[];
+      return raw.map((r) => ({ seconds: r.seconds ?? 0, by: r.by ?? "partner", steps: r.steps ?? null, start: r.start ?? "standing", splits: r.splits ?? [] }));
+    } catch { return []; }
   });
   const raf = useRef(0);
 
@@ -43,10 +63,14 @@ export function SprintStopwatch({ cardId, distanceFeet, movementSlug, planDate }
     if (t0 == null) return;
     const seconds = Math.round((performance.now() - t0) / 10) / 100;
     const n = parseInt(steps, 10);
-    const next = [...runs, { seconds, by, steps: Number.isFinite(n) && n > 0 ? n : null }];
+    const splits = splitMarks(distanceFeet)
+      .map((yd) => ({ yd, seconds: Number(splitInputs[yd]) }))
+      .filter((s) => Number.isFinite(s.seconds) && s.seconds > 0 && s.seconds < seconds);
+    const next = [...runs, { seconds, by, steps: Number.isFinite(n) && n > 0 ? n : null, start, splits }];
     setRuns(next);
     setT0(null);
     setSteps("");
+    setSplitInputs({});
     try { localStorage.setItem(key(cardId), JSON.stringify(next)); } catch { /* full */ }
     if (user && movementSlug && planDate) {
       void saveSprintRun(user.id, movementSlug, planDate, cardId, next[next.length - 1], distanceFeet ?? null)
@@ -72,17 +96,35 @@ export function SprintStopwatch({ cardId, distanceFeet, movementSlug, planDate }
           <Button size="sm" variant="destructive" className="ml-auto h-8" onClick={stop}><Square className="mr-1 h-3 w-3" />Stop</Button>
         )}
       </div>
+      <div className="flex flex-wrap items-center gap-1">
+        <span className="text-muted-foreground">Start:</span>
+        {START_TYPES.map((s) => (
+          <Button key={s} size="sm" variant={start === s ? "default" : "outline"} className="h-7 px-2 capitalize" onClick={() => setStart(s)}>{s}</Button>
+        ))}
+      </div>
       <label className="flex items-center gap-2">
         <span className="text-muted-foreground">Steps taken (optional):</span>
         <Input inputMode="numeric" pattern="[0-9]*" value={steps} onChange={(e) => setSteps(e.target.value.replace(/\D/g, ""))} className="h-7 w-16 text-xs" />
       </label>
+      {splitMarks(distanceFeet).length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-muted-foreground">Splits (optional):</span>
+          {splitMarks(distanceFeet).map((yd) => (
+            <label key={yd} className="flex items-center gap-1">
+              <span className="text-muted-foreground">{yd} yd</span>
+              <Input inputMode="decimal" value={splitInputs[yd] ?? ""} onChange={(e) => setSplitInputs((p) => ({ ...p, [yd]: e.target.value.replace(/[^0-9.]/g, "") }))} className="h-7 w-16 text-xs" placeholder="0.00" />
+            </label>
+          ))}
+        </div>
+      )}
       {runs.length > 0 && (
         <ul className="space-y-0.5">
           {runs.map((r, i) => {
             const s = strideFeet(distanceFeet, r.steps);
             return (
               <li key={i} className="text-foreground">
-                Rep {i + 1} time: {r.seconds.toFixed(2)}s ({r.by === "partner" ? "partner" : "self"}-timed)
+                Rep {i + 1} time: {r.seconds.toFixed(2)}s ({r.by === "partner" ? "partner" : "self"}-timed, {r.start} start)
+                {r.splits.length > 0 ? ` · splits: ${r.splits.map((sp) => `${sp.yd} yd ${sp.seconds.toFixed(2)}s`).join(", ")}` : ""}
                 {r.steps ? ` · steps: ${r.steps}` : ""}{s ? ` · stride: ${s} ft` : ""}
                 {r.seconds === best && runs.length > 1 ? " · best today" : ""}
               </li>
