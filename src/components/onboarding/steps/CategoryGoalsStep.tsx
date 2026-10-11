@@ -38,7 +38,7 @@ import {
 import { useSideContext, type Discipline as SideDiscipline } from "@/contexts/SideContext";
 import {
   CATEGORIES_FOR,
-  subGoalsFor,
+  offeredSubGoalsFor,
   type Sport,
   type Discipline,
   type CategoryKey,
@@ -379,7 +379,7 @@ export function CategoryGoalsStep({ onContinue, onBack, embedded }: Props) {
       {active && (
         <div className="space-y-3">
           {CATEGORIES_FOR[active.discipline].map((cat) => {
-            const sgs = subGoalsFor(active.sport, active.discipline, cat);
+            const sgs = offeredSubGoalsFor(active.sport, active.discipline, cat);
             if (!sgs.length) return null;
             const pane = picksByPane[paneKey(active)] ?? {};
             const picks = (pane[cat as keyof DisciplineGoals] as ReadonlyArray<SubGoalPick> | undefined) ?? [];

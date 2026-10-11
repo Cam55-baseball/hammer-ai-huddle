@@ -7,7 +7,7 @@
 | Security fixes A1–A4 | Done | CC6 | PASS |
 | 1 Accounts, orgs, teams, Requests inbox | Done | DD7–DD10, test accounts + phone screenshots | PASS |
 | 2 Consent up front | Done in the app; legal wording waits for lawyer | DD11 + this round (below) | PASS |
-| 3 Onboarding fields | Next | — | — |
+| 3 Onboarding fields | Partly done (EE1) | Sign-up already asks position, bats/throws, level/team, grad year, state; "Sequencing / pitch mix" goal removed from picks (old saved picks still work); academics labeled "you entered this, not verified"; 2 new tests pass | PASS so far — still to do: "Open to recruiting" question in sign-up, transcript upload, phone proof as a new player |
 | 4–9 | Not started | — | — |
 
 **Phase 2 proof this round** (test accounts signed in through the sign-in API; phone screenshot /tmp/browser/dd13/01_parent_checklist.png):

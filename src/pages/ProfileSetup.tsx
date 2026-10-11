@@ -699,7 +699,8 @@ const ProfileSetup = () => {
                 {/* Academic Fields - High School */}
                 {currentlyInHighSchool && (
                   <div className="space-y-3 p-4 border border-border rounded-lg bg-muted/20">
-                    <Label className="text-sm font-semibold">{t('profileSetup.academicInfo')}</Label>
+                    <Label className="text-sm font-semibold">{t("profileSetup.academicInfo")}</Label>
+                    <p className="text-xs text-muted-foreground">Source: you entered this (not verified). Only shared if you turn on Academics in Scouting visibility.</p>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label htmlFor="satScore">{t('profileSetup.satScore')}</Label>

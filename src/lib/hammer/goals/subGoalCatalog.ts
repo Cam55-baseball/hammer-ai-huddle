@@ -67,6 +67,8 @@ export interface SubGoal {
   readonly label: string;
   readonly helpText: string;
   readonly weightHints: Partial<Record<SkillLever, number>>;
+  /** Retired: no longer offered to pick; kept so existing saved picks still resolve. */
+  readonly retired?: boolean;
 }
 
 /** Shared (sport-agnostic) sub-goals where the mechanics are identical. */
@@ -120,7 +122,7 @@ const PITCHING_BASEBALL: ReadonlyArray<SubGoal> = [
   { id: "command", label: "Command / zone %", helpText: "Hit your spots — strike one, edges, no give-up pitches.", weightHints: { pitching_command: 0.9 } },
   { id: "velocity", label: "Add velocity", helpText: "Climb the fastball — measured, replay-safe, never overthrown.", weightHints: { pitching_velocity: 0.7, strength_rotational: 0.3 } },
   { id: "secondary_pitch", label: "Develop a secondary pitch", helpText: "Build a true second weapon (curve, slider, change, split).", weightHints: { pitching_secondary: 0.9 } },
-  { id: "pitch_mix", label: "Sequencing / pitch mix", helpText: "Use what you have on purpose — set up the put-away.", weightHints: { pitching_mix: 0.9 } },
+  { id: "pitch_mix", label: "Sequencing / pitch mix", helpText: "Use what you have on purpose — set up the put-away.", weightHints: { pitching_mix: 0.9 }, retired: true },
   { id: "stamina", label: "Stamina / pitch count", helpText: "Hold velo and command deeper into outings.", weightHints: { pitching_stamina: 0.7, speed_conditioning: 0.3 } },
   { id: "hold_runners", label: "Hold runners / pickoffs", helpText: "Vary times, hold the bag, take the running game away.", weightHints: { pitching_hold_runners: 0.9 } },
 ];
@@ -130,7 +132,7 @@ const PITCHING_SOFTBALL: ReadonlyArray<SubGoal> = [
   { id: "command", label: "Command / zone %", helpText: "Hit your spots — strike one, edges, no give-up pitches.", weightHints: { pitching_command: 0.9 } },
   { id: "velocity", label: "Add velocity", helpText: "Climb the fastball — measured, replay-safe, never overthrown.", weightHints: { pitching_velocity: 0.7, strength_rotational: 0.3 } },
   { id: "secondary_pitch", label: "Develop a secondary pitch", helpText: "Build a true second weapon (drop, rise, change, screw).", weightHints: { pitching_secondary: 0.9 } },
-  { id: "pitch_mix", label: "Sequencing / pitch mix", helpText: "Use what you have on purpose — set up the put-away.", weightHints: { pitching_mix: 0.9 } },
+  { id: "pitch_mix", label: "Sequencing / pitch mix", helpText: "Use what you have on purpose — set up the put-away.", weightHints: { pitching_mix: 0.9 }, retired: true },
   { id: "stamina", label: "Stamina / pitch count", helpText: "Hold velo and command deeper into the circle.", weightHints: { pitching_stamina: 0.7, speed_conditioning: 0.3 } },
 ];
 
@@ -162,6 +164,15 @@ export function subGoalsFor(
     return sport === "softball" ? PITCHING_SOFTBALL : PITCHING_BASEBALL;
   }
   return [];
+}
+
+/** Sub-goals a picker may offer (retired ones hidden). */
+export function offeredSubGoalsFor(
+  sport: Sport,
+  discipline: Discipline,
+  category: CategoryKey,
+): ReadonlyArray<SubGoal> {
+  return subGoalsFor(sport, discipline, category).filter((g) => !g.retired);
 }
 
 /** Look up a single sub-goal by (sport, discipline, category, id). */
