@@ -37,6 +37,7 @@ export interface RecruitingConsentState {
   share_academics: boolean;
   allow_contact: boolean;
   is_under_13: boolean;
+  parent_allowed_scopes: string[];
   guardian_consented_by: string | null;
   guardian_consented_at: string | null;
 }
@@ -86,7 +87,7 @@ export function useRecruitingConsent(athleteId: string | undefined) {
         supabase
           .from("athlete_recruiting_consent")
           .select(
-            "athlete_id, visibility_enabled, parent_authorized, last_changed_at, last_changed_by, engine_version, share_profile, share_metrics, share_video, share_health, share_academics, allow_contact, guardian_consented_by, guardian_consented_at",
+            "athlete_id, visibility_enabled, parent_authorized, last_changed_at, last_changed_by, engine_version, share_profile, share_metrics, share_video, share_health, share_academics, allow_contact, parent_allowed_scopes, guardian_consented_by, guardian_consented_at",
           )
           .eq("athlete_id", athleteId)
           .maybeSingle(),
@@ -119,6 +120,7 @@ export function useRecruitingConsent(athleteId: string | undefined) {
         allow_contact: (row as any)?.allow_contact ?? false,
         // Fail closed: if the age check fails, treat as under 13 for contact.
         is_under_13: u13 === false ? false : true,
+        parent_allowed_scopes: (row as any)?.parent_allowed_scopes ?? [],
         guardian_consented_by: (row as any)?.guardian_consented_by ?? null,
         guardian_consented_at: (row as any)?.guardian_consented_at ?? null,
       };

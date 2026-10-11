@@ -34,7 +34,7 @@ export function GuardianConsentPrompt({ athleteId, asParent = false }: { athlete
       const { error } = await (supabase as any).from("athlete_recruiting_consent").upsert({
         athlete_id: id, visibility_enabled: true, parent_authorized: true,
         guardian_consented_at: now, guardian_consented_by: user!.id,
-        share_profile: true, share_video: true, last_changed_by: user!.id, engine_version: "rr9-1.1.0",
+        share_profile: true, share_video: true, parent_allowed_scopes: ["profile", "video"], last_changed_by: user!.id, engine_version: "rr9-1.1.0",
       }, { onConflict: "athlete_id" });
       if (error) throw error;
     },

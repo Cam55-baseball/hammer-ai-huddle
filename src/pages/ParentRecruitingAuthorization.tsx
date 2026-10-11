@@ -19,6 +19,7 @@ import { useIsAuthorizingParent } from "@/hooks/useParentLink";
 import { useParentRecruitingAuthorization } from "@/hooks/useParentRecruitingAuthorization";
 import { useRecruitingConsentAudit } from "@/hooks/useRecruitingConsent";
 import { toast } from "@/hooks/use-toast";
+import { ParentSharingChecklist } from "@/components/recruiting/ParentSharingChecklist";
 
 export default function ParentRecruitingAuthorization() {
   const { athleteId } = useParams<{ athleteId: string }>();
@@ -144,6 +145,8 @@ export default function ParentRecruitingAuthorization() {
             </dl>
           </CardContent>
         </Card>
+
+        {athleteId && <ParentSharingChecklist athleteId={athleteId} />}
 
         <Card>
           <CardHeader className="pb-2">

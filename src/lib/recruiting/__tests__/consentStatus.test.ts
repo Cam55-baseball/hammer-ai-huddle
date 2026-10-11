@@ -4,6 +4,7 @@ import { scopeVisible, statusLine, CONSENT_SCOPES, type GranularConsent } from "
 const base: GranularConsent = {
   visibility_enabled: true, parent_authorized: false, guardian_consented_at: null, is_minor: true,
   share_profile: true, share_metrics: true, share_video: true, allow_contact: true,
+  parent_allowed_scopes: ["profile", "metrics", "video", "contact"],
 };
 
 describe("granular recruiting consent", () => {
