@@ -1,4 +1,4 @@
-/** Always-visible Done / Skipped / Cut short + "How hard 1–10" for one card. */
+/** Per-exercise outcomes and effort, inside the exercise disclosure. */
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +43,7 @@ export function CardOutcomeLog({ rx, disabled }: { rx: WkRx; disabled?: boolean 
       total_reps_completed: next === "completed" ? rx.total_reps ?? null : null,
       rpe: Number.isFinite(rpe) && rpe >= 1 && rpe <= 10 ? Math.round(rpe) : null,
       notes: null,
-      metrics: { one_tap_outcome: next, cut_short: next === "cut_short" },
+      metrics: { ...latest?.metrics, one_tap_outcome: next, cut_short: next === "cut_short" },
     });
     if (!error) {
       const { error: e2 } = await supabase.from("wk_prescriptions" as any)
@@ -55,6 +55,7 @@ export function CardOutcomeLog({ rx, disabled }: { rx: WkRx; disabled?: boolean 
     setOutcome(next);
     toast.success(next === "skipped" ? "Marked skipped." : next === "cut_short" ? "Logged as cut short." : "Logged — nice work.");
     qc.invalidateQueries({ queryKey: ["wk-rx", user.id, rx.plan_date] });
+    qc.invalidateQueries({ queryKey: ["exercise-log", user.id, rx.id] });
   };
 
   return (

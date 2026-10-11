@@ -199,8 +199,8 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
               <h3 className="text-base font-semibold">Log this work</h3>
               <div ref={setLogHost} className="space-y-4" />
               <p className="text-xs text-muted-foreground">More information for each exercise is below ↓</p>
-              <h3 className="border-t border-border pt-3 text-sm font-semibold">EXERCISES</h3>
             </section>}
+            {!link && <h3 className="mt-3 border-t border-border pt-3 text-sm font-semibold">EXERCISES</h3>}
             {showIntro && intro && (
               <div data-pocket-intro className="mb-3 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm text-foreground animate-in fade-in motion-reduce:animate-none">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">First time here</p>
@@ -220,8 +220,8 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
               </div>
             )}
             <PocketLogContext.Provider value={logHost}><PocketDetailsContext.Provider value={true}>{children({ pocket: true })}</PocketDetailsContext.Provider></PocketLogContext.Provider>
-            {practiceLogging && <section className="mt-4 border-t border-border pt-3" data-card-practice>
-              <h3 className="text-sm font-semibold text-foreground">Log your practice</h3>
+            {practiceLogging && <details className="mt-4 border-t border-border pt-3" data-card-practice>
+              <summary className="min-h-11 cursor-pointer text-sm font-semibold text-foreground">Finish this workout</summary>
               <ol className="my-2 list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
                 <li>Finish the prescribed work. Do not repeat it to make a log.</li>
                 <li>Choose team practice, lesson or own work.</li>
@@ -229,7 +229,7 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
                 <li>Save once. Do not log the same practice again in another card.</li>
               </ol>
               <PracticeLog planDate={planDate} modality={category.toLowerCase()} />
-            </section>}
+            </details>}
             <p className="mt-6 text-[11px] leading-relaxed text-muted-foreground" data-card-disclaimer>
               {CARD_DISCLAIMER}
             </p>

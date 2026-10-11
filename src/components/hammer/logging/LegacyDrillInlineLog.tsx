@@ -67,7 +67,8 @@ export function LegacyDrillInlineLog({
   };
 
   const save = () => {
-    const logged = rounds.map((round) => Object.fromEntries(Object.entries(round).map(([key, value]) => [key, value === "" ? null : Number(value)]))).filter(round => Object.values(round).some(v => typeof v === "number" && v > 0));
+    const timedRepeat = spec.fields.some(f => f.key === "distance") && spec.fields.some(f => f.key === "time");
+    const logged = rounds.map((round) => Object.fromEntries(Object.entries(round).map(([key, value]) => [key, value === "" ? null : Number(value)]))).filter(round => timedRepeat ? typeof round.time === "number" && round.time > 0 : Object.values(round).some(v => typeof v === "number" && v > 0));
     if (!logged.length && !done) return;
     onSave({
       dosage,
