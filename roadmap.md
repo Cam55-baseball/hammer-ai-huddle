@@ -1,4 +1,5 @@
 # NEW ACTIVITY-CARD LAYOUT + OWNER CORRECTION — 2026-10-11 — Ready to publish: no
+- [ ] W1: finish the next uncovered specialized activity pop-up; preserve the 00:54 correction (outcomes/effort/survey inside disclosures), verify phone taps and exact-dose entries.
 - [x] Apply owner correction in the shared prescription/legacy pop-ups: top “Log this work” contains timers, exact-dose entry grids and “More information for each exercise is below ↓”. Done / Skipped / Cut short, How hard and existing exercise survey fields are inside initially closed exercise disclosures, not the top log.
 - [x] Existing card-level practice logging sits once in an initially closed “Finish this workout”; no new session survey or storage scope created.
 - [x] Preserve automatic credit without opening disclosures: complete entries save Done; partial entries save Cut short in existing outcome metrics (existing task/status credit semantics retained). Prefilled sprint distances without measured times no longer count as logged repeats. Outcome saves preserve recorded rounds and measurements.
