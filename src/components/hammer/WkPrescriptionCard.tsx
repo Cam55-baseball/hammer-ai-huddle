@@ -303,10 +303,7 @@ export function WkPrescriptionCard({
             <span className="font-medium">Log this work</span>
             <InlinePrescriptionLog rx={rx} />
             <CardOutcomeLog rx={rx} disabled={missedLocked} />
-            <OptionalSurvey>
-              <LogButton rx={rx} dosageText={dosage} compact />
-              <WkOneTapLog rx={rx} />
-            </OptionalSurvey>
+            <LogButton rx={rx} dosageText={dosage} survey />
           </div>
           {(() => {
             const whyText = String(athleteWhy ?? "").trim();

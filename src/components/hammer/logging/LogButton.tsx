@@ -9,9 +9,10 @@ interface Props {
   rx: WkRx;
   dosageText: string;
   compact?: boolean;
+  survey?: boolean;
 }
 
-export function LogButton({ rx, dosageText, compact }: Props) {
+export function LogButton({ rx, dosageText, compact, survey = false }: Props) {
   const [open, setOpen] = useState(false);
   const { data: latest } = useLatestExerciseLog(rx.id, rx.movement_slug);
   const hasLog = !!latest;
@@ -27,10 +28,10 @@ export function LogButton({ rx, dosageText, compact }: Props) {
           e.stopPropagation();
           setOpen(true);
         }}
-        aria-label={hasLog ? `Edit log for ${rx.movement_name}` : `Log ${rx.movement_name}`}
+        aria-label={survey ? "Survey (optional)" : hasLog ? `Edit log for ${rx.movement_name}` : `Log ${rx.movement_name}`}
       >
         {hasLog ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <ClipboardEdit className="h-3.5 w-3.5" />}
-        {hasLog ? "Logged" : "Log"}
+        {survey ? "Survey (optional)" : hasLog ? "Logged" : "Log"}
       </Button>
       {open && <ExerciseLogSheet open={open} onOpenChange={setOpen} rx={rx} dosageText={dosageText} />}
     </>
