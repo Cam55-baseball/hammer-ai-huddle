@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -9,18 +8,18 @@ import { supabase } from "@/integrations/supabase/client";
  * short-lived signed URL; nothing renders when there is no video.
  */
 export function ExerciseVideo({ slug, url }: { slug?: string | null; url?: string | null }) {
-  const { data: lookedUp } = useQuery({
-    queryKey: ["exercise-video", slug],
-    enabled: Boolean(slug) && !url,
-    staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_exercise_video", { _slug: slug! });
-      if (error) return null;
-      return (data as string | null) ?? null;
-    },
-  });
-  const ref = url ?? lookedUp ?? null;
+  const [ref, setRef] = useState<string | null>(url ?? null);
   const [src, setSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (url) { setRef(url); return; }
+    if (!slug) { setRef(null); return; }
+    supabase.rpc("get_exercise_video", { _slug: slug }).then(({ data, error }) => {
+      if (!cancelled) setRef(error ? null : ((data as string | null) ?? null));
+    });
+    return () => { cancelled = true; };
+  }, [slug, url]);
 
   useEffect(() => {
     let cancelled = false;
