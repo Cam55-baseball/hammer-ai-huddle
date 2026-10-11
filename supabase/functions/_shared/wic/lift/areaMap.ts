@@ -12,7 +12,7 @@ const RULES: Array<[RegExp, Area[]]> = [
   [/hip_thrust|glute_bridge|sled_march|sled/, ["hip_ext"]],
   [/rdl|deadlift|_dl_|good_morning|pull_through/, ["hinge", "hamstring"]],
   [/squat|lunge|step_?up|patrick_step|sissy/, ["squat"]],
-  [/calf|tib|pogo|ankle/, ["calf_foot"]],
+  [/calf|tib|pogo|ankle|toe_walk/, ["calf_foot"]],
   [/hip_rotation|90_90|airplane|hip_er|hip_ir|clam|band_walk|abduct/, ["hip_rotation"]],
   [/press|bench|pushup|dip/, ["upper_push"]],
   [/row|pullup|pulldown|face_pull|pullapart/, ["upper_pull"]],
