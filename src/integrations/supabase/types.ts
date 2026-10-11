@@ -21504,6 +21504,14 @@ export type Database = {
           id: string
         }[]
       }
+      get_warmup_stage_overrides: {
+        Args: never
+        Returns: {
+          slug: string
+          stage: number
+          stage_order: number
+        }[]
+      }
       gp_game_rep_counts: {
         Args: { _user_id: string }
         Returns: {
