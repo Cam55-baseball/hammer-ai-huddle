@@ -4,6 +4,7 @@
 // built today are never touched: a live version takes effect from the next
 // plan build unless the owner explicitly passes apply_today: true.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
+import { computeExerciseStats } from "../_shared/vault/exerciseStats.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -175,6 +176,18 @@ Deno.serve(async (req) => {
       const [{ data: versions, error: ve }, { data: drafts, error: de }] = await Promise.all([vq, dq]);
       if (ve || de) return json({ error: ve?.message ?? de?.message }, 500);
       return json({ versions: versions ?? [], drafts: drafts ?? [] });
+    }
+
+    if (action === "stats") {
+      // Aggregates only — no athlete names or ids leave this function.
+      const [rx, logs, anon] = await Promise.all([
+        admin.from("wk_prescriptions").select("status,plan_date").eq("movement_slug", slug).limit(20000),
+        admin.from("wk_session_logs").select("rpe,metrics").eq("movement_slug", slug).limit(20000),
+        admin.from("anon_training_records").select("delta_2w,delta_4w,delta_8w").eq("movement_slug", slug).limit(20000),
+      ]);
+      const err = rx.error ?? logs.error ?? anon.error;
+      if (err) return json({ error: err.message }, 500);
+      return json(computeExerciseStats({ prescriptions: rx.data ?? [], logs: (logs.data ?? []) as any, anon: (anon.data ?? []) as any }));
     }
 
     return json({ error: "Unknown action" }, 400);

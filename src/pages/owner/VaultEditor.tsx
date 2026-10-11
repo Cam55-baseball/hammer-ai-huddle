@@ -243,6 +243,8 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
       </div>
       {msg && <p className="text-sm" data-vault-msg>{msg}</p>}
 
+      {!isNew && <VaultStats slug={slug} />}
+
       {/* Version history + audit */}
       <div>
         <h3 className="text-sm font-semibold">Version history</h3>
