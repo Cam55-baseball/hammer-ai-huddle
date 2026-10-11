@@ -183,6 +183,13 @@
       "when": 1791759494702,
       "tag": "0025_scouting_v31_phase2_parent_checklist",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1791760619796,
+      "tag": "0026_scouting_v31_phase3_transcripts",
+      "breakpoints": true
     }
   ]
 }

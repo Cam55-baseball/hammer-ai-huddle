@@ -1103,6 +1103,36 @@ export type Database = {
         }
         Relationships: []
       }
+      academic_transcripts: {
+        Row: {
+          athlete_id: string
+          file_path: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          uploaded_at: string
+        }
+        Insert: {
+          athlete_id: string
+          file_path: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          uploaded_at?: string
+        }
+        Update: {
+          athlete_id?: string
+          file_path?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          uploaded_at?: string
+        }
+        Relationships: []
+      }
       activity_card_versions: {
         Row: {
           created_at: string
