@@ -96,11 +96,9 @@ export function ArmThrowsPanel({ source, planDate }: { source: EntrySource; plan
     const rx = prescribed.find((p) => p.throw_type === t)?.count ?? null;
     const count = status === "skipped" ? 0 : sets.reduce((s, x) => s + (Number(x) || 0), 0);
     // One job per throw type so every type's latest value is kept until it syncs.
-    autosave.queue({ kind: "arm", id: `arm:${date}:${source}`, userId: user.id, at: Date.now(), row: { entry_date: date, source: THROW_TYPES[t].source, throw_type: t, count, prescribed: rx, status } });
-    if (Object.keys(next).length > 1) for (const [ot, v] of Object.entries(next)) if (ot !== t) {
-      const oc = v.status === "skipped" ? 0 : v.sets.reduce((s, x) => s + (Number(x) || 0), 0);
-      autosave.queue({ kind: "arm", id: `arm:${date}:${source}:${ot}`, userId: user.id, at: Date.now(), row: { entry_date: date, source: THROW_TYPES[ot as ThrowType].source, throw_type: ot, count: oc, prescribed: prescribed.find((p) => p.throw_type === ot)?.count ?? null, status: v.status } });
-    }
+    // Clearing every box returns the type to "done at the planned number", the ledger's default.
+    const blank = sets.every((x) => x === "");
+    autosave.queue({ kind: "arm", id: `arm:${date}:${t}`, userId: user.id, at: Date.now(), row: { entry_date: date, source: THROW_TYPES[t].source, throw_type: t, count: status === "skipped" ? 0 : blank ? rx ?? 0 : count, prescribed: rx, status } });
   };
 
   const byType = new Map(serverEntries.filter((e) => e.entry_date === date).map((e) => [e.throw_type, e]));

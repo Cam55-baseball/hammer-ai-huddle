@@ -13,17 +13,21 @@ export function useAutosave(jobId: string, onSynced?: () => void) {
   const timer = useRef<number | null>(null);
   const synced = useRef(onSynced);
   synced.current = onSynced;
+  const ids = useRef(new Set<string>([jobId]));
 
   const send = useCallback(async () => {
     if (timer.current) { window.clearTimeout(timer.current); timer.current = null; }
-    if (!pendingFor(jobId)) return;
+    const todo = [...ids.current].filter((id) => pendingFor(id));
+    if (!todo.length) return;
     setState("saving");
-    const ok = await sendJob(jobId);
+    let ok = true;
+    for (const id of todo) ok = (await sendJob(id)) && ok;
     setState(ok ? "saved" : "offline");
     if (ok) synced.current?.();
-  }, [jobId]);
+  }, []);
 
   const queue = useCallback((job: OutboxJob, delayMs = 600) => {
+    ids.current.add(job.id);
     enqueue(job);
     setState("saving");
     if (timer.current) window.clearTimeout(timer.current);
@@ -34,7 +38,7 @@ export function useAutosave(jobId: string, onSynced?: () => void) {
     installOutboxSync();
     const hide = () => { if (document.visibilityState === "hidden") void send(); };
     const online = () => void send();
-    const synced = (e: Event) => { if ((e as CustomEvent).detail?.id === jobId) setState("saved"); };
+    const synced = (e: Event) => { if (ids.current.has((e as CustomEvent).detail?.id) && ![...ids.current].some((id) => pendingFor(id))) setState("saved"); };
     document.addEventListener("visibilitychange", hide);
     window.addEventListener("pagehide", online);
     window.addEventListener("online", online);
@@ -53,6 +57,6 @@ export function useAutosave(jobId: string, onSynced?: () => void) {
 
 export function SavedIndicator({ state }: { state: SaveState }) {
   if (state === "idle") return null;
-  const text = state === "saving" ? "Saving…" : state === "saved" ? "Saved" : "Saved on this device — will sync when you're back online";
+  const text = state === "saving" ? "Saving…" : state === "saved" ? "Saved" : "Saved on this device — it will sync automatically";
   return <p data-autosave-state={state} aria-live="polite" className={`text-[11px] ${state === "offline" ? "text-amber-700 dark:text-amber-300" : "text-muted-foreground"}`}>{state === "saved" ? "✓ " : ""}{text}</p>;
 }
