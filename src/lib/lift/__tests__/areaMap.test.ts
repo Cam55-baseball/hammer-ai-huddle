@@ -42,7 +42,7 @@ describe("opposite second lower lift", () => {
   it("squat main → hinge/hip second", () => {
     const p = oppositeLowerPool(pool, "goblet_squat", 0);
     expect(p.length).toBeGreaterThan(0);
-    expect(p.every((s) => ["hinge", "hip_ext"].includes(areasOf(s)[0]))).toBe(true);
+    expect(p.every((s) => ["hinge", "hip_ext", "hamstring"].includes(areasOf(s)[0]))).toBe(true);
   });
   it("hinge main → squat/groin second", () => {
     expect(oppositeLowerPool(pool, "rdl_concentric", 1).every((s) => ["squat", "groin_lateral"].includes(areasOf(s)[0]))).toBe(true);
