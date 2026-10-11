@@ -162,6 +162,13 @@
       "when": 1791755807174,
       "tag": "0022_scouting_v31_org_guard_email_code",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791757247796,
+      "tag": "0023_sync_follow_denial_in_respond_connection_request",
+      "breakpoints": true
     }
   ]
 }
