@@ -50,6 +50,7 @@ describe("autosave + automatic completion (no Save log, no Completed button)", (
     expect(screen.getByText("Done")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Add set" }));
     fireEvent.change(screen.getByLabelText("Reps 4"), { target: { value: "5" } });
+    expect(screen.getByText("Done · Did more")).toBeInTheDocument();
     expect(document.querySelector("[data-prescribed-vs-done]")?.textContent).toBe("Prescribed: 3 sets × 5 reps · Done: 4 sets, 20 reps total");
     await waitFor(() => expect(lastPayload()?.rounds).toHaveLength(4), { timeout: 2000 });
     expect(lastPayload().did_more).toBe(true);
