@@ -178,7 +178,7 @@ async function seedStaff(admin: any, id: string, sp: StaffPersona) {
         if (!link) {
           await admin.from("parent_athlete_links").insert({
             parent_user_id: id, athlete_user_id: athleteId, relationship: "parent",
-            status: "accepted", accepted_at: new Date().toISOString(),
+            status: "active", accepted_at: new Date().toISOString(),
           });
         }
       }
