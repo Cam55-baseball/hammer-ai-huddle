@@ -1,3 +1,9 @@
+# OWNER QUEUE — 2026-10-11 19:18 UTC
+- [ ] 1. Named `create-checkout` redeploy after clean checks; unpaid player checkout proof, cleanup, full suite, update no-promises report.
+- [ ] 2. Eight plain-language status lines with current evidence and renewal-reminder SQL at the top.
+- [ ] 3. Read-only scouting audit in `docs/owner/scouting-audit.md`; no scouting code, data or switch changes.
+No publish, cron or iOS changes. Prior sections below are historical; current status above supersedes them.
+
 # NO REFUND OR RESULTS PROMISES — 2026-10-11
 **Ready to publish: no — pending clean full-suite proof and checkout metadata deployment authorization. Nothing published; no cron changes.**
 
