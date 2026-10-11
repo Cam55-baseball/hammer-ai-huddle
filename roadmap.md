@@ -1,3 +1,7 @@
+# W3 REMAINING ACTIVITY-CARD CHECK — 2026-10-11 — Ready to publish: no
+- [ ] Confirm dimensional entry semantics against the generator, complete the specialized-panel inventory, and rerun available phone/full-suite proof. Preserve the corrected layout: outcomes, effort and surveys stay inside disclosures.
+- Waiting on owner: affected-player plan access, physical native-device proof, 341 how-to drafts and publication/live-site verification. No publish, deployment, cron or iOS changes; no backend test data.
+
 # W2 EXACT-DOSE ENTRY CHECK — 2026-10-11 — Ready to publish: no
 - [x] W2: fixed total-count precedence in entry grids: total_reps no longer removes distance/time fields from repeats or weight boxes from lifts. Added explicit regressions for 4 × 90 ft with a total count and 3 × 5 with 15 total reps; prescriptions and saved-data/completion rules unchanged.
 - [x] Expanded the 7,168-context, eight-week rendered-grid matrix from lifts alone to seven rotating entry types: lifts, sprints, conditioning, holds, jumps, throws and cross-sport. **0 mismatches** in these synthetic presentation contexts; this is NOT generated-plan or affected-player proof.
