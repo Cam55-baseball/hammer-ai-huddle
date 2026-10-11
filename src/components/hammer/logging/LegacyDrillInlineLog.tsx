@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { createPortal } from "react-dom";
 import { Plus } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { QueryClientContext } from "@tanstack/react-query";
+import { useContext } from "react";
 import { usePocketLogHost } from "../cards/PocketCard";
 import { RestTimer, sprintRestSeconds } from "../cards/RestTimer";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,7 +39,7 @@ export function LegacyDrillInlineLog({
 }) {
   const logHost = usePocketLogHost();
   const { user } = useOptionalAuth();
-  const qc = useQueryClient();
+  const qc = useContext(QueryClientContext) ?? null;
   const spec = useMemo(() => legacyDrillLogSpec(modality, name, dosage), [dosage, modality, name]);
   const initial = useMemo<Draft>(() => Array.from({ length: spec.rows }, () => Object.fromEntries(spec.fields.map((f) => [f.key, f.prefill == null ? "" : String(f.prefill)]))), [spec]);
   const [rounds, setRounds] = useState<Draft>(initial);
@@ -49,7 +50,7 @@ export function LegacyDrillInlineLog({
   const [elapsed, setElapsed] = useState(0);
   const timerStart = useRef<number | null>(null);
   const stopwatch = (modality === "speed" || modality === "conditioning" || modality === "baserunning") && spec.fields.some(f => f.key === "distance");
-  const onSynced = useCallback(() => { qc.invalidateQueries({ queryKey: ["hammer-daily-tasks"] }); }, [qc]);
+  const onSynced = useCallback(() => { qc?.invalidateQueries({ queryKey: ["hammer-daily-tasks"] }); }, [qc]);
   const autosave = useAutosave(`task:${storageKey}`, onSynced);
 
   useEffect(() => {

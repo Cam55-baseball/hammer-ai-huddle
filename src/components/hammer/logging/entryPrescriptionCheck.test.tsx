@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, cleanup } from "@testing-library/react";
-vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: null }) }));
+vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: null }), useOptionalAuth: () => ({ user: null }) }));
 vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: vi.fn() }) }));
 vi.mock("@/hooks/useExerciseLog", () => ({ useLatestExerciseLog: () => ({ data: null }), useSaveExerciseLog: () => ({ mutateAsync: vi.fn(), isPending: false }) }));
 import { InlinePrescriptionLog } from "./InlinePrescriptionLog";
