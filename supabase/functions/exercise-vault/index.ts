@@ -100,7 +100,10 @@ Deno.serve(async (req) => {
           category: String(p.catalog_category ?? p.card_type ?? ""),
           sport_scope: sports.length >= 2 ? "both" : (sports[0] ?? "both"),
           min_age_years: typeof p.min_age === "number" ? p.min_age : 0,
-          season_eligibility: Array.isArray(p.season_phases) ? p.season_phases : null,
+          season_eligibility: Array.isArray(p.season_phases)
+            ? [...new Set((p.season_phases as string[]).flatMap((s) =>
+                s === "off_season" ? ["os_q1", "os_q2", "os_q3", "os_q4"] : [s]))]
+            : null,
           equipment,
           equipment_requirements: equipment.length ? equipment : ["bodyweight"],
           default_sets: typeof p.default_sets === "number" ? p.default_sets : null,
