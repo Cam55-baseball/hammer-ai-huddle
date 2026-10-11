@@ -24,6 +24,8 @@ const SCOPE_HELP: Record<string, string> = {
   profile: "Name, school, position and grad year.",
   metrics: "Test results such as sprint, jump and velocity.",
   video: "Clips you've uploaded.",
+  health: "Injury and health notes. Kept separate from everything else.",
+  academics: "GPA, test scores and transcript you add.",
   contact: "Scouts and coaches may message you.",
 };
 
@@ -51,7 +53,7 @@ export default function RecruitingConsent() {
     <DashboardLayout>
       <div className="mx-auto max-w-2xl space-y-4 p-4">
         <header className="space-y-1">
-          <h1 className="text-xl font-semibold">Recruiting sharing</h1>
+          <h1 className="text-xl font-semibold">Scouting visibility</h1>
           <p className="text-sm text-muted-foreground">You decide what scouts and coaches can see. Nobody else can change this.</p>
         </header>
 
@@ -91,9 +93,11 @@ export default function RecruitingConsent() {
                 <div key={s} className="flex min-h-11 items-center justify-between gap-3 rounded border p-3">
                   <div className="min-w-0">
                     <Label htmlFor={`scope-${s}`} className="text-sm font-medium">{SCOPE_LABEL[s]}</Label>
-                    <p className="text-xs text-muted-foreground">{SCOPE_HELP[s]}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {s === "contact" && consent.is_under_13 ? "Under 13: scouts and coaches can only contact your parent, never you." : SCOPE_HELP[s]}
+                    </p>
                   </div>
-                  <Switch id={`scope-${s}`} className="shrink-0" checked={consent[col]} disabled={isSaving}
+                  <Switch id={`scope-${s}`} className="shrink-0" checked={consent[col]} disabled={isSaving || (s === "contact" && consent.is_under_13)}
                     onCheckedChange={(v) => setScope({ [col]: v }).catch(fail)} />
                 </div>
               );
