@@ -32,6 +32,6 @@ describe("area map", () => {
   });
   it("reports areas today's lists can't reach (library gaps for B3)", () => {
     // Pinned so the gap is visible; B3 adds exercises and this list must shrink to [].
-    expect(unreachableAreas(allPlannerSlugs(), AREAS)).toEqual(["calf_foot", "hip_rotation"]);
+    expect(unreachableAreas(allPlannerSlugs(), AREAS)).toEqual(["hip_rotation", "calf_foot"]);
   });
 });
