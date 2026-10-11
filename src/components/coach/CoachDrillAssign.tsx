@@ -264,6 +264,37 @@ export function CoachDrillAssign() {
                 </SelectContent>
               </Select>
             </div>
+            {safety && !safety.ok && (
+              <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 space-y-2">
+                <p className="text-sm font-medium flex items-center gap-2">
+                  <ShieldAlert className="h-4 w-4 text-destructive" />
+                  Not safe to assign to this player
+                </p>
+                <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
+                  {safety.reasons.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
+                {alternatives.length > 0 && (
+                  <div className="pt-1">
+                    <p className="text-xs font-medium mb-1">Safe alternatives:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {alternatives.map((a) => (
+                        <Button
+                          key={a.id}
+                          size="sm"
+                          variant="secondary"
+                          className="text-xs"
+                          onClick={() => setSelectedDrillId(a.id)}
+                        >
+                          {a.name}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <div>
               <label className="text-sm font-medium mb-1 block">Notes (optional)</label>
               <Textarea
@@ -276,7 +307,10 @@ export function CoachDrillAssign() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAssignDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAssign} disabled={!selectedPlayerId || assignMutation.isPending}>
+            <Button
+              onClick={handleAssign}
+              disabled={!selectedPlayerId || assignMutation.isPending || (safety !== null && !safety.ok)}
+            >
               {assignMutation.isPending ? 'Assigning...' : 'Assign Drill'}
             </Button>
           </DialogFooter>
