@@ -349,7 +349,7 @@ const WARMUP_ACTIVATION: LogTemplate = {
 export function resolveTemplate(rx: WkRx): LogTemplate {
   const slug = (rx.movement_slug ?? "").toLowerCase();
   const unit = (rx.dosage_unit ?? "").toLowerCase();
-  const slot = rx.slot;
+  const slot = rx.slot as string;
   const role = (rx.sequence_role ?? "").toLowerCase();
   const sets = rx.sets ?? 0;
 
