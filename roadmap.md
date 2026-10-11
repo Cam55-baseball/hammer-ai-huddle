@@ -1,3 +1,17 @@
+# OWNER STATUS — 2026-10-11 evening — security fixes
+
+**Ready to publish: no** — security fixes A1–A3 are live in the backend and proven; A4 is partly done; B1–B3 are not finished yet.
+
+- [x] A1 Private media — videos, scout letters, scout videos and avatars are private; raw links refused; allowed viewers play signed links. Proof in `docs/owner/security-fixes.md`.
+- [x] A2 Self-claimed roles blocked (staff roles start pending, owner approves).
+- [x] A3 Self-joined orgs, self-approved follows, forged folder grants blocked; legitimate request/accept flows still pass.
+- [~] A4 Minors — media + contact unified (under-13 hidden, 13–17 parent consent); older session/grade/session-video rules still use the legacy follow check.
+- [ ] Page audit of video screens signed in as a real player and coach (phone screenshots) — not yet run.
+- [ ] B1 Lifting Blueprint coverage minimums, integrated library gaps, remaining lift tags.
+- [ ] B2 Legal signed-in checks (updated terms, teen grace/reminders, new-teen lock, under-13 waiver, health consent, auto-renew, Cancel).
+- [ ] B3 Guarantee app-button recheck.
+- [x] B4 Renewal cron SQL → `docs/owner/renewal-reminders-cron.sql` (not applied).
+
 # OWNER STATUS — 2026-10-11 — current; historical sections below do not override this
 
 a. Owner Exercise Vault — done: owner/admin route is enabled; `StaffOnlyRoute` and backend role checks protect it.

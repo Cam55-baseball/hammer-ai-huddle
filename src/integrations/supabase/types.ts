@@ -794,6 +794,24 @@ export type Database = {
         }
         Relationships: []
       }
+      _snapshot_security_20261011: {
+        Row: {
+          detail: string | null
+          kind: string | null
+          name: string | null
+        }
+        Insert: {
+          detail?: string | null
+          kind?: string | null
+          name?: string | null
+        }
+        Update: {
+          detail?: string | null
+          kind?: string | null
+          name?: string | null
+        }
+        Relationships: []
+      }
       _snapshot_test_plan_20261007b: {
         Row: {
           adaptation: string | null
@@ -21244,6 +21262,15 @@ export type Database = {
         Args: { p_folder_item_id: string; p_user_id: string }
         Returns: boolean
       }
+      can_view_athlete_contact: { Args: { _athlete: string }; Returns: boolean }
+      can_view_athlete_media: {
+        Args: { _athlete: string; _viewer: string }
+        Returns: boolean
+      }
+      can_view_avatar_object: {
+        Args: { _name: string; _viewer: string }
+        Returns: boolean
+      }
       can_view_scout_grade: { Args: { _grade_id: string }; Returns: boolean }
       check_bundle_discount: {
         Args: { p_bundle_id: string; p_code: string }
@@ -21625,6 +21652,7 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      is_staff_library_object: { Args: { _name: string }; Returns: boolean }
       is_system_user: { Args: { _uid: string }; Returns: boolean }
       is_training_intel_owner: { Args: { _user_id: string }; Returns: boolean }
       is_under_13: { Args: { _user_id: string }; Returns: boolean }
