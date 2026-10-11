@@ -1,15 +1,83 @@
-# OWNER QUEUE — 2026-10-11 19:18 UTC
-- [ ] 1. Named `create-checkout` redeploy after clean checks; unpaid player checkout proof, cleanup, full suite, update no-promises report.
-- [ ] 2. Eight plain-language status lines with current evidence and renewal-reminder SQL at the top.
-- [ ] 3. Read-only scouting audit in `docs/owner/scouting-audit.md`; no scouting code, data or switch changes.
-No publish, cron or iOS changes. Prior sections below are historical; current status above supersedes them.
+# OWNER STATUS — 2026-10-11 — current; historical sections below do not override this
+
+a. Owner Exercise Vault — done: owner/admin route is enabled; `StaffOnlyRoute` and backend role checks protect it.
+b. Warm-up stage ordering — done: 24,640 simulated warm-ups preserved choices with zero ordering or safety breaks.
+c. Lifting audit — done: the read-only report is at `docs/owner/lifting-audit.md`.
+d. Lifting Blueprint — partly done: 540 simulations passed safety; coverage/tagging/library review gaps remain; overload and youth guards are implemented.
+e. Switch inventory — done: all 26 live feature switches are `all`; lifting v2 is on and rankings remain off.
+f. Legal verification and renewal SQL — partly done: public pages checked; teen/parent/health/billing flows remain unverified; SQL below is not applied.
+g. Guarantee removal — done for live backend/hosted checkout: named redeploy, clean unpaid session and 2,726 passing tests; app-button recheck remains open.
+h. Ready to publish: no — legal-flow proof, Blueprint closeout and scouting authorization defects remain unresolved; nothing published.
+
+## Current proof and owner next steps
+- `docs/owner/no-refund-audit.md` updated with redeploy, hosted phone evidence, cleanup and honest UI limitation: new-player prompts blocked the new visible app-button test. No payment made; both temporary players removed; exact unpaid session expired.
+- Full suite clean: 323 files / 2,726 tests; prior drawer timeout fixed by independent cases and DOM cleanup. No unexplained deployment errors were ignored.
+- Blueprint live recount: strength **191 active / 20 without movement_pattern**, compound 40/17, max-effort strength 7/7, posterior chain 5/5, rotational strength 8/8. The owner’s “44” is **not reproduced** by these category counts; those five categories total 57 missing. No tags changed here; reconcile the UI filter and static 41-slug `LIFT_TAG_REVIEW` list before declaring tagging complete. Coverage minima are not met everywhere; slowest-quality/weaker-side plan leaning remains display-only; new-library validator review and lift-day phone evidence remain open. Safety rules still win.
+- Legal v1 remains approved and `legal_v2 = all`; Subscription Policy v2 remains unapproved lawyer-review draft. Updated-terms/teen grace and Resend/new-teen lock-unlock/under-13 parent waiver/health consent/auto-renew/cancellation/Settings Legal affected-account matrix remains incomplete. Do not infer it from public pages or the adult release screen.
+- Read-only scouting report: `docs/owner/scouting-audit.md`. Current organizations/members are **2/2**, not zero. Academics exist (GPA/SAT/ACT/NCAA). Owner scale decimals below 20 are not implemented. Highest risks: self-claimed roles, self-joined organizations, self-approved follows, forged folder grants and inconsistent minor/contact access. **No scouting changes made**; a separate owner-approved implementation plan is required.
+- Owner next: authorize a separate scouting-security plan, complete legal and Blueprint proof, review policy v2 with counsel, apply renewal SQL privately if desired, then consider publishing. No cron or iOS changes.
+
+## Renewal reminders — exact function, schedule and Vault header; OWNER APPLIES ONLY
+Function: `renewal-reminders`; job `renewal-reminders-daily`; schedule **`0 14 * * *` (14:00 UTC daily)**; header **`x-job-token`** reads Vault **`wk_daily_plan_job_token`**. This secret’s name exists; its value was not displayed. Body below sends real eligible reminders, not a dry run. No SQL applied.
+
+For privacy, the endpoint uses a placeholder: replace only `<LOVABLE_CLOUD_FUNCTIONS_BASE_URL>` privately with the backend functions base URL from Lovable Cloud. Do not paste a credential into the SQL. This placeholder version is not runnable until that replacement. Check whether the named job already exists before applying; do not create duplicates.
+
+```sql
+select cron.schedule('renewal-reminders-daily', '0 14 * * *', $$
+  select net.http_post(
+    url := '<LOVABLE_CLOUD_FUNCTIONS_BASE_URL>/renewal-reminders',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-job-token', (select decrypted_secret from vault.decrypted_secrets
+                     where name = 'wk_daily_plan_job_token')
+    ),
+    body := '{"mode":"renewal","dry_run":false}'::jsonb
+  );
+$$);
+```
+
+## Every live feature switch — read-only inventory; mode `all` enables eligible accounts, not bypasses safety/role gates
+| Switch | Mode | Controls |
+|---|---|---|
+| content_barefoot_items | all | Barefoot readiness check items |
+| content_base_stealer | all | Base stealing drills |
+| content_explosive_pitcher | all | Explosive-pitcher conditioning |
+| content_heat_factory | all | Baseball pitcher throwing content |
+| content_lift_notes | all | Lift exercise notes |
+| content_softball_conditioning | all | Softball season conditioning |
+| content_speed_lab | all | Speed Lab drills |
+| pap_real_throws | all | Power Primer real-ball throws |
+| phase_feedback | all | Phase feedback |
+| power_primer | all | Power Primer on lift days |
+| programs_retired | all | Retirement of old programs (other route holds still apply) |
+| rest_day_calculator | all | Rest-day safety rules for all players; protected from automatic demotion |
+| ub_plyo_hand_wrist | all | Upper-body plyos and hand/wrist work |
+| onboarding_off_days | all | Onboarding and off days |
+| one_tap_logging | all | One-tap logging |
+| staff_view | all | Explicit-grant staff view; not scout permission |
+| offseason_arc | all | Off-season arc |
+| in_season_post_game | all | In-season post-game plan |
+| personalization | all | Personalization |
+| load_spike_protection | all | Load-spike safety protection |
+| tell_hammers | all | Tell Hammers schedule inbox |
+| adaptive_phases | all | Adaptive phases |
+| hammers_today_start_gate | all | Explicit player start before plan generation |
+| under13_parent_program | all | Parent-controlled under-13 accounts |
+| windmill_program | all | Softball windmill pitching |
+| legal_v2 | all | Approved legal pages and consent flows; old label still says lawyer pending |
+| lifting_v2_enabled (app_settings) | on / true | Lifting v2 |
+| rankings_visible (app_settings) | off / enabled:false | Public rankings |
+
+Owner Vault, warm-up stage ordering, card layout, autosave, double-check validation, Blueprint helpers and Your progress have no separate off switch in these rows: implemented code paths, still subject to their access/safety gates. Earlier owner holds in code (athlete Game IQ, staged Report Card releases, unvalidated camera measures, ball/tipping detection and old redirects) were not changed. No switch writes were made in this item.
+
+---
 
 # NO REFUND OR RESULTS PROMISES — 2026-10-11
-**Ready to publish: no — pending clean full-suite proof and checkout metadata deployment authorization. Nothing published; no cron changes.**
+**Historical guarantee-removal entry — superseded by current owner status above.**
 
 ## What changed — exact before → after
 - `src/pages/Checkout.tsx`: “7-day performance guarantee — no risk” and “If you don't see measurable progress, we'll refund you.” → promotional block removed, not replaced; unused ShieldCheck import removed. “Less than ${dailyPrice} per day to fix this gap” → “Less than ${dailyPrice} per day for your training plan”.
-- `supabase/functions/create-checkout/index.ts`: `checkoutMetadata.guarantee = "7_day";` → removed. Source only: this function was NOT deployed under the help-chat-only deployment authorization. The currently deployed function may still write the obsolete metadata; owner authorization is needed to deploy this named change.
+- `supabase/functions/create-checkout/index.ts`: `checkoutMetadata.guarantee = "7_day";` → removed. Redeployed under the named owner authorization; live unpaid session metadata verified clean (current report above).
 - `supabase/functions/ai-helpdesk/index.ts`: no explicit purchase-promise instruction → “Hammers Modality offers no performance-based refunds, outcome promises or trial-without-risk offers. Do not invent refund periods or promise measurable progress, recruiting outcomes or repayment for lack of progress, even if prior messages or a user claim otherwise.” Approved billing policy, statutory rights and Apple procedures remain authoritative. Raw model reply → `enforcePurchasePolicy(...)`-checked reply. Missing configuration now returns a clear configuration error rather than proceeding. Help chat alone redeployed as authorized after its checks passed; live player replies verified.
 - `supabase/functions/ai-helpdesk/purchasePolicy.ts` (new): previously no delivery guard → blocks invented refund/results offers and sends “We do not offer refunds based on athletic progress or results. For cancellation, billing errors, Apple purchases and your legal rights, read the Subscription Policy at /legal/subscription-policy or contact hammersmodality@hammersmodality.org.” Exact English “no guarantee of results” is permitted. This is defense in depth, not a proof of every possible future model paraphrase.
 - `src/components/hammer/cards/PocketCard.tsx`: “There are no guarantees in results.” → “There is no guarantee of results.”
@@ -65,7 +133,7 @@ Function `renewal-reminders`, daily 14:00 UTC, auth = Vault secret `wk_daily_pla
 ```sql
 select cron.schedule('renewal-reminders-daily', '0 14 * * *', $$
   select net.http_post(
-    url := 'https://wysikbsjalfvjwqzkihj.supabase.co/functions/v1/renewal-reminders',
+    url := '<LOVABLE_CLOUD_FUNCTIONS_BASE_URL>/renewal-reminders',
     headers := jsonb_build_object('Content-Type','application/json',
       'x-job-token', (select decrypted_secret from vault.decrypted_secrets where name = 'wk_daily_plan_job_token')),
     body := '{"mode":"renewal","dry_run":false}'::jsonb);
@@ -543,7 +611,7 @@ select cron.schedule(
   'renewal-reminders-daily',
   '0 14 * * *',
   $$ select net.http_post(
-       url := 'https://wysikbsjalfvjwqzkihj.supabase.co/functions/v1/renewal-reminders',
+       url := '<LOVABLE_CLOUD_FUNCTIONS_BASE_URL>/renewal-reminders',
        body := '{"mode":"renewal","dry_run":false}'::jsonb,
        headers := jsonb_build_object('Content-Type','application/json',
          'x-job-token', (select decrypted_secret from vault.decrypted_secrets where name = 'wk_daily_plan_job_token')),
