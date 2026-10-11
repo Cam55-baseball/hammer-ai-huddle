@@ -23,3 +23,5 @@
 - Problem reports save to `problem_reports` first; `report-problem-mailer` only sends/retries. Why: a broken email key never loses a report.
 
 - 13–17 parent waiver gating lives only in `supabase/functions/_shared/legal/teenWaiverRules.ts` (used by `teen-parent-waiver` and tests); `TeenWaiverGate` wraps only the training-plan routes. Why: one rule source, and non-physical parts of the app stay open.
+
+- Activity pop-ups host each exercise’s entry grid via one shared log portal; exercise disclosures retain outcomes and surveys without duplicating entry state. Why: logs remain visible while information stays closed and per-exercise saving stays canonical.

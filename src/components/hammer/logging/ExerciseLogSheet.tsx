@@ -35,6 +35,13 @@ interface Props {
   dosageText: string;
 }
 
+function LogSurveyWrapper({ children, embedded, open, onOpenChange }: { children: React.ReactNode; embedded: boolean; open: boolean; onOpenChange: (b: boolean) => void }) {
+  return embedded ? <section data-exercise-survey className="space-y-2">{children}</section> : <Sheet open={open} onOpenChange={onOpenChange}>{children}</Sheet>;
+}
+function LogSurveyContent({ children, embedded }: { children: React.ReactNode; embedded: boolean }) {
+  return embedded ? <div>{children}</div> : <SheetContent side="bottom" className="rounded-t-2xl max-h-[92vh] overflow-y-auto">{children}</SheetContent>;
+}
+
 const BAR_FEEL = ["crisp", "heavy", "off"] as const;
 const ARM_FEEL = ["fresh", "normal", "sore"] as const;
 
@@ -190,13 +197,13 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
 
         plan_date: rx.plan_date,
         movement_slug: rx.movement_slug,
-        rounds: roundsToPayload(),
+        rounds: embedded && Array.isArray(latest?.metrics?.rounds) ? latest.metrics.rounds : roundsToPayload(),
         rpe: template.meta.rpe ? rpe : null,
         bar_feel: template.meta.barFeel || template.meta.armFeel ? barFeel : null,
         notes: notes.trim() || null,
         ai_readback: readback,
-        template_id: template.id,
-        field_schema: template.fields.map((f) => ({ key: f.key, label: f.label, unit: f.unit, kind: f.kind })),
+        template_id: embedded ? latest?.metrics?.template_id ?? template.id : template.id,
+        field_schema: embedded ? latest?.metrics?.field_schema ?? null : template.fields.map((f) => ({ key: f.key, label: f.label, unit: f.unit, kind: f.kind })),
       });
       setSavedAt(new Date().toISOString());
       // A log with reps for every prescribed set finishes the lift, exactly
@@ -275,11 +282,9 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
     }
   };
 
-  const Wrapper = ({ children }: { children: React.ReactNode }) => embedded ? <section data-exercise-survey className="space-y-2">{children}</section> : <Sheet open={open} onOpenChange={onOpenChange}>{children}</Sheet>;
-  const Content = ({ children }: { children: React.ReactNode }) => embedded ? <div>{children}</div> : <SheetContent side="bottom" className="rounded-t-2xl max-h-[92vh] overflow-y-auto">{children}</SheetContent>;
   return (
-    <Wrapper>
-      <Content>
+    <LogSurveyWrapper embedded={embedded} open={open} onOpenChange={onOpenChange}>
+      <LogSurveyContent embedded={embedded}>
         {embedded ? <h4 className="text-xs font-semibold">Survey (optional)</h4> : <SheetHeader className="text-left">
           <SheetTitle className="text-base">{rx.movement_name}</SheetTitle>
           <SheetDescription className="text-xs">
@@ -289,9 +294,9 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
         </SheetHeader>}
 
         <div className="mt-4 space-y-4">
-          {template.intro && <p className="text-[11px] text-muted-foreground">{template.intro}</p>}
+          {!embedded && template.intro && <p className="text-[11px] text-muted-foreground">{template.intro}</p>}
 
-          {unilateral && (
+          {!embedded && unilateral && (
             <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-[11px] leading-snug">
               <span className="font-medium">One side at a time.</span> Every round is
               tagged L or R so Hammer can track each limb on its own. Log side one,
@@ -412,7 +417,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
             </Button>
           )}
         </div>
-      </Content>
-    </Wrapper>
+      </LogSurveyContent>
+    </LogSurveyWrapper>
   );
 }

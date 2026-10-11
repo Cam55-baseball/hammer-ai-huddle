@@ -266,7 +266,7 @@ function DrillRow({
     <li data-task-id={taskId} data-task-side={side ?? ""} className={`text-xs rounded-lg border p-3 ${checked ? "opacity-60 border-border/40 bg-muted/20" : "border-border/70 bg-card"}`}>
       <ExerciseDisclosure name={d.name}>
         <div data-prescribed-dose className="text-sm font-semibold whitespace-normal break-words">{d.dosage}</div>
-        <ActivityBasics name={d.name} slug={d.slug} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} repair={legacyRepair(d.dosage, modality)} expanded />
+        <ActivityBasics name={d.name} slug={d.slug} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} repair={legacyRepair(d.dosage, modality)} />
         <LegacyDrillInlineLog
           modality={modality} name={d.name} dosage={d.dosage}
           storageKey={`hammer-block-log-draft:${planDate}:${taskId}:${side ?? ""}`}

@@ -121,7 +121,7 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
       <span className="font-mono text-sm tabular-nums text-foreground" aria-live="polite">{elapsed.toFixed(2)} s</span>
       <span className="text-[11px] text-muted-foreground">Stop fills the next rep's time.</span>
     </div>}
-    {(rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank/.test(rx.movement_slug)) && <RestTimer label="Rest between sets" seconds={rx.rest_seconds} />}
+    {(rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank/.test(rx.movement_slug)) && <RestTimer label="Rest between sets" seconds={(rx as WkRx & { rest_seconds?: number | null }).rest_seconds} />}
     {rx.slot === "speed" && hasTime && <RestTimer label="Rest between sprints" seconds={sprintRestSeconds(rx.distance_feet)} />}
     <div className="grid gap-1.5 px-1 text-[10px] uppercase tracking-wide text-muted-foreground" style={{ gridTemplateColumns: `28px repeat(${spec.fields.length}, minmax(0, 1fr))` }}>
       <span />{spec.fields.map((f) => <span key={f.key}>{f.label}{f.unit ? ` (${f.unit})` : ""}</span>)}
