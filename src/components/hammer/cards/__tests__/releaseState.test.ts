@@ -38,7 +38,7 @@ describe("release line honesty", () => {
 describe("player plan-time wording", () => {
   it("refers to midnight only, never noon or 12 PM", async () => {
     const { RELEASE_LINE } = await import("../ReleaseCountdown");
-    expect(RELEASE_LINE).toContain("midnight");
+    expect(RELEASE_LINE).toBe("Tomorrow's plan becomes visible at midnight");
     expect(RELEASE_LINE).not.toMatch(/noon|12\s*PM|being built/i);
   });
 });

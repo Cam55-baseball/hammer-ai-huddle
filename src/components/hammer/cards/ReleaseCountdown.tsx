@@ -7,7 +7,6 @@
 import { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 
@@ -72,54 +71,12 @@ export function releaseState(nowMs: number, tz: string, tomorrowBuilt: boolean):
   return { kind: "building", ms: Math.max(0, readyAt - nowMs), readyAt };
 }
 
-function hms(ms: number) {
-  const s = Math.floor(ms / 1000);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
-}
-
 export function ReleaseCountdown({ timeZone }: { readonly timeZone?: string }) {
-  const { user } = useAuth();
-  const [profileTz, setProfileTz] = useState<string | null>(null);
-  const tz = timeZone || profileTz || Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const [now, setNow] = useState(() => Date.now());
-  const [built, setBuilt] = useState<boolean | null>(null);
-  const tomorrow = localDateOf(now + msUntilLocalMidnight(now, tz) + 60_000, tz);
-
-  useEffect(() => {
-    void loadSkew();
-    const id = window.setInterval(() => setNow(Date.now() + skewMs), 1000);
-    return () => window.clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    if (!user?.id || timeZone) return;
-    void supabase.from("profiles").select("timezone").eq("id", user.id).maybeSingle()
-      .then(({ data }) => { if (data?.timezone) setProfileTz(String(data.timezone)); });
-  }, [user?.id, timeZone]);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    let alive = true;
-    const check = async () => {
-      const { count } = await supabase.from("wk_prescriptions").select("plan_date", { count: "exact", head: true })
-        .eq("user_id", user.id).eq("plan_date", tomorrow);
-      if (alive) setBuilt((count ?? 0) > 0);
-    };
-    void check();
-    const id = window.setInterval(() => { if (!document.hidden) void check(); }, 60_000);
-    return () => { alive = false; window.clearInterval(id); };
-  }, [user?.id, tomorrow]);
-
-  if (built === null) return null; // never show a countdown before we know a plan exists
-  // Owner rule: plans are delivered at local midnight. The internal pre-build
-  // time is never shown to players.
-  const ms = msUntilLocalMidnight(now, tz);
+  // This fixed delivery notice deliberately reveals no internal build status.
   return (
-    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground" data-release-countdown={built ? "ready" : "building"}>
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground" data-release-countdown>
       <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
       <span>{RELEASE_LINE}</span>
-      <span className="font-mono font-semibold tabular-nums text-foreground" aria-label="Time until midnight">Time until midnight: {hms(ms)}</span>
     </div>
   );
 }
