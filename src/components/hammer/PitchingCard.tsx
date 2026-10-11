@@ -299,7 +299,7 @@ export function PitchingCard() {
         : "Pitcher fielding practice",
       phase: "in",
       sets: 1,
-      reps: kind === "outing" ? ladder.outingPitchCap : kind === "bullpen" ? Math.round(ladder.outingPitchCap * 0.5) : 20,
+      reps: kind === "outing" ? ladder.outingPitchCap : kind === "bullpen" ? Math.round(ladder.outingPitchCap * 0.5) : null, // PFP is record-only: no invented rep target
       tempo: null,
       load_pct: null,
       duration_seconds: null,
