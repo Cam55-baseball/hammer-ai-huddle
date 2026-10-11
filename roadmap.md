@@ -1,4 +1,13 @@
-# OWNER FIXES ROUND 2 — FINAL PROOF (U12, 2026-10-09) — Ready to publish: yes (website; nothing published, no cron changes)
+# OWNER CARD OVERRIDES — 2026-10-11 — Ready to publish: no (verification underway)
+- [ ] Exact midnight wording; pre-build stays internal.
+- [ ] Name-only collapsed exercises on plan and pop-ups; working toggles without jumps or draft loss.
+- [ ] Survey directly below How hard; remove Extra log dropdown, retain fields.
+- [ ] Real-player tap regression and 360/390/393 px screenshots of wording, names, open exercise, instructions and survey.
+## Waiting on owner
+- Review 341 how-to drafts (`docs/owner/basic-how-to-review.tsv`); native-device check requires an installed updated build.
+- Publication and published-site return proof; non-US parent email link remains deferred.
+
+# OWNER FIXES ROUND 2 — FINAL PROOF (U12, 2026-10-09) — Historical proof superseded by October 11 overrides
 - [x] Library audit (976 exercises), before → after repair: 26 text distance vs dose, 10 text time vs dose, 7 saved distance vs the exercise's own name, 1 two actions in one rep = 44 → 0.
 - [x] Live double-check catch list (owner-only): 0 catches so far from plan builds or screens.
 - [x] Rendered-text tests on real plans (no contradictions, wrong units, impossible combinations), PFP and defense audit, 8-week tissue-prep simulation: all pass.
