@@ -776,6 +776,24 @@ export type Database = {
         }
         Relationships: []
       }
+      _snapshot_movement_pattern_20261011: {
+        Row: {
+          movement_category: string | null
+          movement_pattern: string | null
+          slug: string | null
+        }
+        Insert: {
+          movement_category?: string | null
+          movement_pattern?: string | null
+          slug?: string | null
+        }
+        Update: {
+          movement_category?: string | null
+          movement_pattern?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
       _snapshot_test_plan_20261007b: {
         Row: {
           adaptation: string | null
