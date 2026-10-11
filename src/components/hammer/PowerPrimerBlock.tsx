@@ -4,6 +4,7 @@
  * own first sets — sets, reps and % never change here. Display + logging only.
  */
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
@@ -11,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Zap, Lock } from "lucide-react";
 import { RestTimer } from "@/components/hammer/cards/RestTimer";
+import { usePocketLogHost } from "@/components/hammer/cards/PocketCard";
+import { ExerciseDisclosure } from "@/components/hammer/cards/ExerciseDisclosure";
 import { papAlternatives } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
 
 export type PowerPrimerPayload = {
@@ -34,6 +37,7 @@ const UNIT: Record<PowerPrimerPayload["target"], string> = { throw: "mph", bat_s
 function pbKey(t: string) { return `hm.pap.best.${t}`; }
 
 export function PowerPrimerBlock({ pp: base, planDate }: { pp: PowerPrimerPayload; planDate?: string | null }) {
+  const logHost = usePocketLogHost();
   const [primerIdx, setPrimerIdx] = useState(0);
   const [actionIdx, setActionIdx] = useState(0);
   const primerAlts = useMemo(() => base.primer.source === "library" && base.primer.slug ? papAlternatives(base.primer.slug, base.target) : [], [base]);
@@ -62,8 +66,9 @@ export function PowerPrimerBlock({ pp: base, planDate }: { pp: PowerPrimerPayloa
     queryKey: ["pap-best", user?.id, pp.target],
     enabled: !!user && pp.target !== "jump",
     queryFn: async () => {
+      if (!user) return null;
       const { data } = await supabase.from("wk_session_logs" as any).select("metrics")
-        .eq("user_id", user!.id).eq("metrics->>kind", "pap_speed").eq("metrics->>target", pp.target).limit(500);
+        .eq("user_id", user.id).eq("metrics->>kind", "pap_speed").eq("metrics->>target", pp.target).limit(500);
       const vals = ((data as any[]) ?? []).map((r) => Number(r.metrics?.value)).filter((v) => Number.isFinite(v) && v > 0);
       if (!vals.length) return null;
       return lowerFirst ? Math.min(...vals) : Math.max(...vals);
@@ -110,12 +115,25 @@ export function PowerPrimerBlock({ pp: base, planDate }: { pp: PowerPrimerPayloa
     if (why) setStopped(why);
   }
 
-  return (
-    <section data-power-primer className="rounded-lg border border-primary/40 bg-primary/5 p-3 space-y-2">
+  const entries = <section data-power-primer-entries className="space-y-2">
+    <h4 className="flex items-center gap-2 text-sm font-semibold"><Zap className="h-4 w-4 text-primary" />Power Primer: {TARGET_LABEL[pp.target]}</h4>
+    {locked ? (
+      <p className="flex items-center gap-1 text-xs text-muted-foreground"><Lock className="h-3 w-3" /> Max throws unlock after your throwing warm-up.</p>
+    ) : stopped ? (
+      <p data-pap-stopped className="text-xs font-medium">{stopped} Now finish your lift.</p>
+    ) : <>
+      <RestTimer label="Rest after primer" seconds={pp.rest_s[0]} maxSeconds={pp.rest_s[1]} />
       <div className="flex items-center gap-2">
-        <Zap className="h-4 w-4 text-primary" />
-        <h4 className="text-sm font-semibold">Power Primer: {TARGET_LABEL[pp.target]}</h4>
+        {UNIT[pp.target] && <Input inputMode="decimal" className="h-8 w-28 text-xs" placeholder={`Best ${UNIT[pp.target]}`} value={entry} onChange={(e) => setEntry(e.target.value)} aria-label={`Speed (${UNIT[pp.target]})`} />}
+        <Button size="sm" variant="secondary" onClick={logSet}>Round {sets + 1} done</Button>
       </div>
+    </>}
+  </section>;
+
+  return (
+    <section data-power-primer className="border-b border-border py-2">
+      {logHost && createPortal(entries, logHost)}
+      <ExerciseDisclosure name={`Power Primer: ${TARGET_LABEL[pp.target]}`}>
       <p className="text-xs text-muted-foreground">
         Do the primer, rest, then one all-out effort. Repeat. Your lift's sets and weights stay the same. Finish the whole lift after.
       </p>
@@ -133,27 +151,16 @@ export function PowerPrimerBlock({ pp: base, planDate }: { pp: PowerPrimerPayloa
           I finished my full throwing warm-up (arm care + catch ramp)
         </label>
       )}
-      {locked ? (
-        <p className="flex items-center gap-1 text-xs text-muted-foreground"><Lock className="h-3 w-3" /> Max throws unlock after your throwing warm-up.</p>
-      ) : stopped ? (
-        <p data-pap-stopped className="text-xs font-medium">{stopped} Now finish your lift.</p>
-      ) : (
-        <>
-          <RestTimer label="Rest after primer" seconds={pp.rest_s[0]} maxSeconds={pp.rest_s[1]} />
-          <div className="flex items-center gap-2">
-            {UNIT[pp.target] && (
-              <Input inputMode="decimal" className="h-8 w-28 text-xs" placeholder={`Best ${UNIT[pp.target]}`} value={entry} onChange={(e) => setEntry(e.target.value)} aria-label={`Speed (${UNIT[pp.target]})`} />
-            )}
-            <Button size="sm" variant="secondary" onClick={logSet}>Round {sets + 1} done</Button>
-          </div>
+      {!logHost && entries}
+      {!locked && !stopped && (
           <div className="flex flex-wrap gap-1">
             {pp.stop_buttons.map((b) => (
               <Button key={b} size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => setStopped(`${b} — that's your signal to stop.`)}>{b}</Button>
             ))}
           </div>
-        </>
       )}
       {best != null && UNIT[pp.target] && <p className="text-[11px] text-muted-foreground">Personal best: {best} {UNIT[pp.target]}</p>}
+      </ExerciseDisclosure>
     </section>
   );
 }
