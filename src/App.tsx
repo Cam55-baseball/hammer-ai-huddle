@@ -478,17 +478,17 @@ const App = () => {
               <Route path="/owner/open_bundle_builder" element={<BundleBuilder />} />
               <Route path="/owner/open_consultation_flow" element={<ConsultationFlow />} />
               <Route path="/owner/builds" element={<BuildLibrary />} />
-              <Route path="/owner/foundations/traces" element={<FoundationTraceInspector />} />
-              <Route path="/owner/foundations/diagnostics" element={<FoundationDiagnosticsPanel />} />
-              <Route path="/owner/foundations/health" element={<FoundationHealthDashboard />} />
+              <Route path="/owner/foundations/traces" element={<StaffOnlyRoute><FoundationTraceInspector /></StaffOnlyRoute>} />
+              <Route path="/owner/foundations/diagnostics" element={<StaffOnlyRoute><FoundationDiagnosticsPanel /></StaffOnlyRoute>} />
+              <Route path="/owner/foundations/health" element={<StaffOnlyRoute><FoundationHealthDashboard /></StaffOnlyRoute>} />
               <Route path="/owner/alerts" element={<OwnerAlertCenter />} />
               <Route path="/owner/iq-library" element={<IqLibrary />} />
               <Route path="/owner/drill-builder" element={<StaffOnlyRoute><DrillBuilder /></StaffOnlyRoute>} />
-              <Route path="/owner/iq/alignments" element={<IqAlignmentsEditor />} />
+              <Route path="/owner/iq/alignments" element={<StaffOnlyRoute><IqAlignmentsEditor /></StaffOnlyRoute>} />
               <Route path="/owner/iq/combos" element={<IqCombos />} />
-              <Route path="/owner/iq/alignments/audit" element={<IqAlignmentAudit />} />
+              <Route path="/owner/iq/alignments/audit" element={<StaffOnlyRoute><IqAlignmentAudit /></StaffOnlyRoute>} />
               <Route path="/owner/iq/situations" element={<IqSituationsAuthoring />} />
-              <Route path="/owner/workouts/library" element={<WorkoutLibraryViewer />} />
+              <Route path="/owner/workouts/library" element={<StaffOnlyRoute><WorkoutLibraryViewer /></StaffOnlyRoute>} />
               <Route path="/owner/exercise-vault" element={<StaffOnlyRoute><ExerciseVault /></StaffOnlyRoute>} />
               <Route path="/owner/landing-demo" element={<LandingDemoManager />} />
               <Route path="/owner/presentation" element={<StaffOnlyRoute><PresentationDemo /></StaffOnlyRoute>} />
@@ -538,7 +538,7 @@ const App = () => {
               <Route path="/practice" element={<PracticeHub />} />
               <Route path="/progress" element={<ProgressDashboard />} />
               <Route path="/organization" element={<OrganizationDashboard />} />
-              <Route path="/admin-verification" element={<AdminVerification />} />
+              <Route path="/admin-verification" element={<StaffOnlyRoute><AdminVerification /></StaffOnlyRoute>} />
               <Route path="/games" element={<Games />} />
               <Route path="/games/dossiers" element={<Dossiers />} />
               <Route path="/games/reports" element={<GameReports />} />
