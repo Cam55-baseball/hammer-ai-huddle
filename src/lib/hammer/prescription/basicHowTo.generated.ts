@@ -375,7 +375,7 @@ export const BASIC_HOW_TO: Readonly<Record<string, string>> = {
  "incline_dumbbell_hammer_curl": "You need two dumbbells and a bench. One rep is one full repetition of the incline dumbbell hammer curl, then back to the start under control.",
  "incline_dumbbell_press": "You need two dumbbells and a bench. One rep is one full repetition of the incline dumbbell press, then back to the start under control.",
  "incline_pigeon_pose": "You need a bench.  Keep a steady, smooth rhythm until you reach the time or count shown above. One rep is one full repetition of the incline pigeon pose, then back to the start under control.",
- "inning_restart_sim_bb": "You need a barbell. Sit 3– to simulate the between-inning rest, then fire one all-out sprint. Repeat for the number of innings prescribed. One rep is one inning-length rest followed by one all-out sprint.",
+ "inning_restart_sim_bb": "Sit 3– to simulate the between-inning rest, then fire one all-out sprint. Repeat for the number of innings prescribed. One rep is one inning-length rest followed by one all-out sprint.",
  "inning_restart_sim_sb": "Sit 3– to simulate the between-inning rest, then fire one all-out sprint. Repeat for the number of innings prescribed. One rep is one inning-length rest followed by one all-out sprint.",
  "iron_cross": "Do the iron cross exactly as your plan shows. One rep is: do the iron cross exactly as your plan shows, then return to the start under control.",
  "isometric_hold_pull_up": "You need a pull-up bar.  Hold the position for the time shown above; that is one rep. One rep is holding the position for the full time shown, then relaxing.",
