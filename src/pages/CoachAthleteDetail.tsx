@@ -54,8 +54,14 @@ export default function CoachAthleteDetail() {
         .eq("player_id", athleteId)
         .eq("status", "accepted")
         .maybeSingle();
-      if (error) return false;
-      return !!data;
+      if (!error && data) return true;
+      // Org coaches reach their assigned athletes through org_athlete_assignments
+      // (server-checked), not scout_follows — same roster, different doorway.
+      const { data: isCoach } = await supabase.rpc("is_coach_of", {
+        _coach: user.id,
+        _athlete: athleteId,
+      });
+      return isCoach === true;
     },
   });
 
