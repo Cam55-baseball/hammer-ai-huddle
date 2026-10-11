@@ -96,6 +96,14 @@ const activityRows = [
   { ...base, id: "evidence-jump", slot: "speed", movement_slug: "pogo_jumps", movement_name: "Pogo Jumps", sets: 3, reps: 5 },
   { ...base, id: "evidence-throws", slot: "supplemental", movement_slug: "catch_play", movement_name: "Catch Play", sets: 2, reps: 10, dosage_unit: "throws" },
   { ...base, id: "evidence-cross", slot: "cross_sport", movement_slug: "wost_tennis_ball_self_rally", movement_name: "Tennis-Ball Self Rally", sets: 2, reps: 15, total_reps: 30 },
+  // Round 3 proof rows:
+  { ...base, id: "evidence-broadjump", slot: "speed", movement_slug: "broad_jump", movement_name: "Broad Jump", sets: 3, reps: 1, dosage_unit: "feet" },
+  { ...base, id: "evidence-drythrows", slot: "supplemental", movement_slug: "dry_throws", movement_name: "Dry Throws (No Ball)", sets: 2, reps: 10, dosage_unit: "throws" },
+  { ...base, id: "evidence-hitting", slot: "hitting", movement_slug: "tee_line_drives", movement_name: "Tee Work — Line Drives", sets: 4, reps: 5 },
+  { ...base, id: "evidence-baserun", slot: "speed", movement_slug: "home_to_first", movement_name: "Home to First", sets: 4, reps: 1, distance_feet: 90, dosage_unit: "feet" },
+  { ...base, id: "evidence-fielding", slot: "defense", movement_slug: "short_hops", movement_name: "Short Hop Fielding", sets: 3, reps: 10 },
+  // A lift already swapped (reps → seconds hold): the log rows must match the new dose.
+  { ...base, id: "evidence-swapped", slot: "lift", movement_slug: "goblet_squat_hold", movement_name: "Goblet Squat Hold", sets: 3, reps: null, duration_seconds: 30, dosage_unit: "seconds", substituted_from_slug: "trap_bar_deadlift", substitution_reason: "No trap bar at today's gym." },
 ] as WkRx[];
 
 const snapshot = {
