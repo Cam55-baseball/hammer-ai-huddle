@@ -305,7 +305,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
   const topEntries = <section data-pitching-entry-grid className="space-y-2">
     <h4 className="break-words text-sm font-semibold">{rx.movement_name}</h4>
     <p className="text-xs text-muted-foreground">{dosageText}</p>
-    <RoundGrid fields={entryFields} rounds={rounds} onChange={(next) => changeFields(entryFields, next)} minRounds={initialRoundsCount} maxRounds={initialRoundsCount} />
+    <RoundGrid fixedRounds fields={entryFields} rounds={rounds} onChange={(next) => changeFields(entryFields, next)} minRounds={initialRoundsCount} maxRounds={initialRoundsCount} />
     {saveControl}
   </section>;
 
@@ -338,7 +338,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
           )}
 
           {activity && !logHost && topEntries}
-          {activity && extraFields.length > 0 && <RoundGrid fields={extraFields} rounds={rounds} onChange={(next) => changeFields(extraFields, next)} minRounds={initialRoundsCount} maxRounds={initialRoundsCount} />}
+          {activity && extraFields.map((field) => <RoundGrid key={field.key} fixedRounds fields={[field]} rounds={rounds} onChange={(next) => changeFields([field], next)} minRounds={initialRoundsCount} maxRounds={initialRoundsCount} />)}
           {!embedded && !activity && <RoundGrid
             fields={template.fields}
             rounds={rounds}

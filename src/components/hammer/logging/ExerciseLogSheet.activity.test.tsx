@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, within, waitFor } from "@testing-library/re
 import { ExerciseLogSheet } from "./ExerciseLogSheet";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 
-const state = vi.hoisted(() => ({ host: null as HTMLElement | null, save: vi.fn(async () => ({})) }));
+const state = vi.hoisted(() => ({ host: null as HTMLElement | null, save: vi.fn(async (_payload: unknown) => ({})) }));
 vi.mock("@/components/hammer/cards/PocketCard", () => ({ usePocketLogHost: () => state.host }));
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: null }) }));
 vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: vi.fn() }) }));
