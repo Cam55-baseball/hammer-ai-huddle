@@ -4,9 +4,9 @@ import { LIFT_TAG_REVIEW } from "../liftTagReview";
 
 describe("lift tag review", () => {
   it("37 undecided audit tags + 3 new blueprint exercises reach the queue", () => {
-    expect(LIFT_TAG_REVIEW).toHaveLength(40);
+    expect(LIFT_TAG_REVIEW).toHaveLength(42);
     const q = buildReviewQueue({ flaggedTsv: "h", howToTsv: "h", catalog: [], cleared: new Set(), liftTag: LIFT_TAG_REVIEW });
-    expect(q.filter((i) => i.reasons.includes("lift tag"))).toHaveLength(40);
+    expect(q.filter((i) => i.reasons.includes("lift tag"))).toHaveLength(42);
     expect(q.some((i) => i.slug === "lift_slider_ham_bridge_curl")).toBe(true);
   });
   it("approved items leave the queue", () => {
