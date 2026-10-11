@@ -7,7 +7,6 @@
 <!-- LOVABLE:END -->
 - Never publish, deploy, redeploy, or migrate on the agent's initiative or a non-owner's say-so. The only exception is a change the owner explicitly authorizes by name; apply only that named change. Report what actually went live and what still awaits the owner. Why: unauthorized redeploys reached the live app (2026-10-01).
 - The shared empty-upload encouragement is a standalone sibling below the upload card, outside the Report Card access gate. Why: all six analyses show it to every eligible athlete without exposing measurements.
-- Owner drills reach Hammers Today only via `src/lib/prescription/ownerPlanDrills.ts`: one slot swapped per block (skill/warm-up/defense), day rotation, and every declared condition (switched on, required fields, sport, skill, equipment) must hold. Why: owner drills compete without changing block counts or the frozen generator.
 - Analysis findings may influence Hammers Today only through a downstream one-slot skill overlay: top-three ledger priority, 21-day decay, exact fault matching, equipment eligibility, circulation, and no card/dose/duration changes; owner slots are never displaced. Why: findings should shape existing work without becoming a second plan generator.
 - Coach/scout roles suppress unsolicited module advertising even on dual-role accounts, but purchase pages and subscribed module navigation remain accessible on deliberate visits under the storefront gate. Why: staff buy without being sold to.
 - Landing opening: full sequence on first install, skippable short one on later launches; final wipe waits for the landing page. Why: owner's launch identity without an unloaded page.
@@ -21,5 +20,5 @@
 - Anonymous training store: bucketed, week-rounded, no free text, Vault-HMAC key; under-13 needs parent opt-in. Why: lawyer-approved scope.
 - The plan screen shows the device's last saved plan, start flag and access at once, but acts only after this visit's server answer; device copies clear on Sign out. Why: a reload must never flash, rebuild or change the plan.
 - Problem reports save to `problem_reports` first; `report-problem-mailer` only sends/retries. Why: a broken email key never loses a report.
-
 - 13–17 parent waiver gating lives only in `supabase/functions/_shared/legal/teenWaiverRules.ts` (used by `teen-parent-waiver` and tests); `TeenWaiverGate` wraps only the training-plan routes. Why: one rule source, and non-physical parts of the app stay open.
+- Pairings (org/coach/player/scout) only via `connection_requests` + definer RPCs (`send_/respond_connection_request`, `end_connection`, `join_by_invite_code`); org coaches see only `org_athlete_assignments`; unverified non-solo orgs add no athletes. Why: one inbox, server checks, instant revocation.

@@ -16,65 +16,37 @@ export function JoinOrganization() {
   const [loading, setLoading] = useState(false);
   const [found, setFound] = useState<{ id: string; name: string; sport: string } | null>(null);
 
-  const lookupCode = async () => {
-    if (!code.trim()) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('organizations')
-        .select('id, name, sport')
-        .eq('invite_code', code.trim().toUpperCase())
-        .maybeSingle();
-      if (error) throw error;
-      if (!data) {
-        toast({ title: 'Not found', description: 'No organization found with that code.', variant: 'destructive' });
-        return;
-      }
-      setFound(data);
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
+  const REASONS: Record<string, string> = {
+    not_found: 'No team or organization uses that code.',
+    not_verified: 'This organization is waiting for verification, so it can\'t add players yet.',
+    parent_required: 'A parent needs to join for you.',
   };
 
-  const join = async () => {
-    if (!found || !user) return;
+  const lookupCode = async () => {
+    if (!code.trim() || !user) return;
     setLoading(true);
     try {
-      // Check if already a member
-      const { data: existing } = await supabase
-        .from('organization_members')
-        .select('id')
-        .eq('organization_id', found.id)
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (existing) {
-        toast({ title: 'Already a member', description: 'You are already part of this organization.' });
-        setCode('');
-        setFound(null);
+      // The code is checked on the server; organizations are not listed to players.
+      const { data, error } = await supabase.rpc('join_by_invite_code', { _code: code.trim().toUpperCase() });
+      if (error) throw error;
+      const res = data as { ok: boolean; reason?: string; name?: string };
+      if (!res?.ok) {
+        toast({ title: 'Could not join', description: REASONS[res?.reason ?? ''] ?? 'Please check the code.', variant: 'destructive' });
         return;
       }
-
-      const { error } = await supabase.from('organization_members').insert({
-        organization_id: found.id,
-        user_id: user.id,
-        role_in_org: 'player',
-        invitation_status: 'active',
-      });
-      if (error) throw error;
-
-      toast({ title: 'Joined!', description: `You joined ${found.name}.` });
+      setFound({ id: '', name: res.name ?? 'your team', sport: '' });
+      toast({ title: 'Joined!', description: `You joined ${res.name ?? 'the team'}.` });
       queryClient.invalidateQueries({ queryKey: ['org-members'] });
       queryClient.invalidateQueries({ queryKey: ['player-orgs'] });
       setCode('');
-      setFound(null);
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
+
+  const join = async () => { setFound(null); };
 
   return (
     <Card>
@@ -97,7 +69,7 @@ export function JoinOrganization() {
               </Button>
               <Button className="flex-1" onClick={join} disabled={loading}>
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
-                Join
+                Done
               </Button>
             </div>
           </div>
@@ -111,7 +83,7 @@ export function JoinOrganization() {
               maxLength={8}
             />
             <Button onClick={lookupCode} disabled={loading || !code.trim()}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Look Up'}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Join'}
             </Button>
           </div>
         )}

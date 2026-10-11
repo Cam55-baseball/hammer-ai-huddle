@@ -2588,6 +2588,27 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_head_coach: {
+        Row: {
+          athlete_user_id: string
+          coach_user_id: string
+          set_at: string
+          set_by: string
+        }
+        Insert: {
+          athlete_user_id: string
+          coach_user_id: string
+          set_at?: string
+          set_by: string
+        }
+        Update: {
+          athlete_user_id?: string
+          coach_user_id?: string
+          set_at?: string
+          set_by?: string
+        }
+        Relationships: []
+      }
       athlete_height_checks: {
         Row: {
           created_at: string
@@ -4219,6 +4240,69 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      connection_requests: {
+        Row: {
+          created_at: string
+          from_user: string
+          id: string
+          kind: string
+          message: string | null
+          organization_id: string | null
+          responded_at: string | null
+          responded_by: string | null
+          status: string
+          subject_user: string
+          team_id: string | null
+          to_org: boolean
+          to_user: string | null
+        }
+        Insert: {
+          created_at?: string
+          from_user: string
+          id?: string
+          kind: string
+          message?: string | null
+          organization_id?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: string
+          subject_user: string
+          team_id?: string | null
+          to_org?: boolean
+          to_user?: string | null
+        }
+        Update: {
+          created_at?: string
+          from_user?: string
+          id?: string
+          kind?: string
+          message?: string | null
+          organization_id?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: string
+          subject_user?: string
+          team_id?: string | null
+          to_org?: boolean
+          to_user?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connection_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_requests_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "org_teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       consent_records: {
         Row: {
@@ -11245,6 +11329,44 @@ export type Database = {
         }
         Relationships: []
       }
+      org_athlete_assignments: {
+        Row: {
+          assigned_by: string | null
+          athlete_user_id: string
+          coach_user_id: string
+          created_at: string
+          id: string
+          organization_id: string
+          revoked_at: string | null
+        }
+        Insert: {
+          assigned_by?: string | null
+          athlete_user_id: string
+          coach_user_id: string
+          created_at?: string
+          id?: string
+          organization_id: string
+          revoked_at?: string | null
+        }
+        Update: {
+          assigned_by?: string | null
+          athlete_user_id?: string
+          coach_user_id?: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+          revoked_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_athlete_assignments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_standard_criteria: {
         Row: {
           created_at: string
@@ -11331,6 +11453,91 @@ export type Database = {
         }
         Relationships: []
       }
+      org_team_members: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          id: string
+          removed_at: string | null
+          seat: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          removed_at?: string | null
+          seat?: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          removed_at?: string | null
+          seat?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "org_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_teams: {
+        Row: {
+          age_group: string | null
+          archived_at: string | null
+          created_at: string
+          created_by: string
+          id: string
+          invite_code: string | null
+          level: string | null
+          name: string
+          organization_id: string
+          sport: string | null
+        }
+        Insert: {
+          age_group?: string | null
+          archived_at?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          invite_code?: string | null
+          level?: string | null
+          name: string
+          organization_id: string
+          sport?: string | null
+        }
+        Update: {
+          age_group?: string | null
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          invite_code?: string | null
+          level?: string | null
+          name?: string
+          organization_id?: string
+          sport?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_teams_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           id: string
@@ -11377,46 +11584,88 @@ export type Database = {
       }
       organizations: {
         Row: {
+          address: string | null
+          admin_role_title: string | null
           created_at: string
+          email_code_expires_at: string | null
+          email_code_hash: string | null
+          email_verified_at: string | null
           id: string
           invite_code: string | null
           invite_expires_at: string | null
+          is_solo: boolean
           logo_url: string | null
           name: string
+          official_email: string | null
           org_type: string
           owner_user_id: string
+          phone: string | null
+          proof_path: string | null
+          review_note: string | null
+          reviewed_at: string | null
           sport: string
+          submitted_at: string | null
           updated_at: string
+          verification_status: string
           verified: boolean | null
           verified_by: string | null
+          website: string | null
         }
         Insert: {
+          address?: string | null
+          admin_role_title?: string | null
           created_at?: string
+          email_code_expires_at?: string | null
+          email_code_hash?: string | null
+          email_verified_at?: string | null
           id?: string
           invite_code?: string | null
           invite_expires_at?: string | null
+          is_solo?: boolean
           logo_url?: string | null
           name: string
+          official_email?: string | null
           org_type: string
           owner_user_id: string
+          phone?: string | null
+          proof_path?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
           sport: string
+          submitted_at?: string | null
           updated_at?: string
+          verification_status?: string
           verified?: boolean | null
           verified_by?: string | null
+          website?: string | null
         }
         Update: {
+          address?: string | null
+          admin_role_title?: string | null
           created_at?: string
+          email_code_expires_at?: string | null
+          email_code_hash?: string | null
+          email_verified_at?: string | null
           id?: string
           invite_code?: string | null
           invite_expires_at?: string | null
+          is_solo?: boolean
           logo_url?: string | null
           name?: string
+          official_email?: string | null
           org_type?: string
           owner_user_id?: string
+          phone?: string | null
+          proof_path?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
           sport?: string
+          submitted_at?: string | null
           updated_at?: string
+          verification_status?: string
           verified?: boolean | null
           verified_by?: string | null
+          website?: string | null
         }
         Relationships: []
       }
@@ -21227,6 +21476,7 @@ export type Database = {
       }
     }
     Functions: {
+      _gen_code: { Args: never; Returns: string }
       all_checked: { Args: { cb: Json }; Returns: boolean }
       anon_age_band: { Args: { _age: number }; Returns: string }
       anon_pid: { Args: { _user: string }; Returns: string }
@@ -21240,6 +21490,15 @@ export type Database = {
       archive_old_scout_applications: { Args: never; Returns: undefined }
       assert_owns_block: { Args: { _block_id: string }; Returns: undefined }
       assert_self: { Args: { _user_id: string }; Returns: undefined }
+      assign_athletes: {
+        Args: {
+          _assign?: boolean
+          _athletes: string[]
+          _coach: string
+          _organization_id: string
+        }
+        Returns: number
+      }
       attach_session_to_link: {
         Args: { p_link_code: string; p_session_id: string; p_user_id: string }
         Returns: undefined
@@ -21272,6 +21531,7 @@ export type Database = {
         Returns: boolean
       }
       can_view_scout_grade: { Args: { _grade_id: string }; Returns: boolean }
+      cancel_connection_request: { Args: { _id: string }; Returns: undefined }
       check_bundle_discount: {
         Args: { p_bundle_id: string; p_code: string }
         Returns: Json
@@ -21379,6 +21639,15 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      create_solo_team: {
+        Args: {
+          _age_group: string
+          _level?: string
+          _name: string
+          _sport: string
+        }
+        Returns: string
+      }
       cron_call: { Args: { body?: Json; fn: string }; Returns: number }
       delete_child_data: { Args: { _uid: string }; Returns: Json }
       dispatch_standard_match_pings: { Args: never; Returns: Json }
@@ -21394,6 +21663,10 @@ export type Database = {
           returned: number
           served: number
         }[]
+      }
+      end_connection: {
+        Args: { _organization_id?: string; _other: string }
+        Returns: undefined
       }
       expire_ab_link: {
         Args: { p_link_code: string; p_user_id: string }
@@ -21514,6 +21787,10 @@ export type Database = {
           left_n: number
           right_n: number
         }[]
+      }
+      get_org_invite_code: {
+        Args: { _organization_id: string }
+        Returns: string
       }
       get_pending_evaluations: {
         Args: never
@@ -21644,6 +21921,7 @@ export type Database = {
       }
       is_minor: { Args: { _user_id: string }; Returns: boolean }
       is_my_account_paused: { Args: never; Returns: boolean }
+      is_org_admin: { Args: { _org: string; _user: string }; Returns: boolean }
       is_org_coach_or_owner: {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
@@ -21652,10 +21930,16 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      is_org_staff: { Args: { _org: string; _user: string }; Returns: boolean }
       is_staff_library_object: { Args: { _name: string }; Returns: boolean }
       is_system_user: { Args: { _uid: string }; Returns: boolean }
+      is_team_member: {
+        Args: { _team: string; _user: string }
+        Returns: boolean
+      }
       is_training_intel_owner: { Args: { _user_id: string }; Returns: boolean }
       is_under_13: { Args: { _user_id: string }; Returns: boolean }
+      join_by_invite_code: { Args: { _code: string }; Returns: Json }
       ledger_record: {
         Args: {
           p_at: string
@@ -21692,6 +21976,7 @@ export type Database = {
           deleted_count: number
         }[]
       }
+      org_can_add_athletes: { Args: { _org: string }; Returns: boolean }
       owns_scout_grade: { Args: { _grade_id: string }; Returns: boolean }
       recompute_library_video_tier: {
         Args: { p_video_id: string }
@@ -21727,6 +22012,14 @@ export type Database = {
         Args: { _athlete_id: string }
         Returns: boolean
       }
+      respond_connection_request: {
+        Args: { _accept: boolean; _id: string }
+        Returns: Json
+      }
+      review_org_verification: {
+        Args: { _approve: boolean; _note?: string; _organization_id: string }
+        Returns: undefined
+      }
       save_equipment_context: {
         Args: {
           p_equipment: string[]
@@ -21754,6 +22047,20 @@ export type Database = {
         }
       }
       scout_calibration_summary: { Args: never; Returns: Json }
+      send_connection_request: {
+        Args: {
+          _kind: string
+          _message?: string
+          _organization_id?: string
+          _team_id?: string
+          _to_user: string
+        }
+        Returns: string
+      }
+      set_head_coach: {
+        Args: { _athlete: string; _coach: string }
+        Returns: undefined
+      }
       shift_workouts_forward: {
         Args: { p_after_date: string; p_block_id: string; p_days?: number }
         Returns: number
@@ -21772,6 +22079,19 @@ export type Database = {
         }[]
       }
       start_hammers_today: { Args: never; Returns: string }
+      submit_org_for_verification: {
+        Args: {
+          _address: string
+          _admin_role_title: string
+          _official_email: string
+          _organization_id: string
+          _phone: string
+          _proof_path: string
+          _website: string
+        }
+        Returns: undefined
+      }
+      team_org: { Args: { _team: string }; Returns: string }
       tell_hammers_save: {
         Args: {
           p_dates: string[]

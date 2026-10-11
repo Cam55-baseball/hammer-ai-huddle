@@ -113,6 +113,27 @@
       "when": 1791752504248,
       "tag": "0015_minor_aware_linked_coach",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791754540318,
+      "tag": "0016_scouting_v31_phase1_orgs_teams_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791754600566,
+      "tag": "0017_scouting_v31_follow_guard_rpc_path",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791754653873,
+      "tag": "0018_scouting_v31_team_policy_fix",
+      "breakpoints": true
     }
   ]
 }

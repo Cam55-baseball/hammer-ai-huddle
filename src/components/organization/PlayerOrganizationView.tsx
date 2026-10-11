@@ -142,11 +142,8 @@ export function PlayerOrganizationView({ organizationId, roleInOrg, orgName }: P
     if (!user) return;
     setLeaving(true);
     try {
-      const { error } = await supabase
-        .from('organization_members')
-        .delete()
-        .eq('organization_id', organizationId)
-        .eq('user_id', user.id);
+      // Leaving ends team access at once (members, teams and coach assignments).
+      const { error } = await supabase.rpc('end_connection', { _other: user.id, _organization_id: organizationId });
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['player-orgs'] });
       queryClient.invalidateQueries({ queryKey: ['player-teammates'] });
