@@ -2,6 +2,7 @@
  * Owner Exercise Vault — browse & search every exercise that can appear on a card.
  * Owner/admin only (StaffOnlyRoute + RLS). Editing/drafts land in the next step.
  */
+import { LIFT_TAG_REVIEW } from "@/lib/vault/liftTagReview";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,7 +74,7 @@ export default function ExerciseVault() {
       return new Set<string>(data?.slugs ?? []);
     },
   });
-  const queue = useMemo(() => buildReviewQueue({ flaggedTsv: reviewTsv, howToTsv, catalog: data, cleared: cleared ?? new Set(), warmupStage: warmupStageReviewItems(data) }), [data, cleared]);
+  const queue = useMemo(() => buildReviewQueue({ flaggedTsv: reviewTsv, howToTsv, catalog: data, cleared: cleared ?? new Set(), warmupStage: warmupStageReviewItems(data), liftTag: LIFT_TAG_REVIEW }), [data, cleared]);
   const reviewBySlug = useMemo(() => new Map(queue.map((i) => [i.slug, i])), [queue]);
   const NEEDS_REVIEW = reviewBySlug;
   const [approving, setApproving] = useState<string | null>(null);
