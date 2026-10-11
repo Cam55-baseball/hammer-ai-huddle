@@ -51,6 +51,7 @@ export default function ExerciseVault() {
   });
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
   const [f, setF] = useState({ card: "", sport: "", position: "", phase: "", equipment: "", status: "", age: "", review: "" });
   const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }));
 
@@ -80,9 +81,19 @@ export default function ExerciseVault() {
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto p-4 space-y-4">
-        <div>
-          <h1 className="text-2xl font-bold">Exercise Vault</h1>
-          <p className="text-sm text-muted-foreground">Every exercise that can appear on a card. Owner and admin only.</p>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h1 className="text-2xl font-bold">Exercise Vault</h1>
+            <p className="text-sm text-muted-foreground">Every exercise that can appear on a card. Owner and admin only.</p>
+          </div>
+          <button
+            type="button"
+            data-vault-add
+            className="h-9 rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground"
+            onClick={() => { setAdding(true); setSelected(null); }}
+          >
+            Add new exercise
+          </button>
         </div>
         <Input placeholder="Search by name or code" value={q} onChange={(e) => setQ(e.target.value)} />
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
@@ -98,6 +109,15 @@ export default function ExerciseVault() {
         <p className="text-sm text-muted-foreground" data-vault-count>
           {isLoading ? "Loading…" : `Showing ${rows.length} of ${data.length} exercises · ${NEEDS_REVIEW.size} need owner review`}
         </p>
+        {adding && (
+          <VaultEditor
+            isNew
+            slug=""
+            base={{ name: "", category: null, sport_scope: null, min_age_years: null, season_eligibility: null, equipment: [], default_sets: null, default_reps: null, dosage_unit: null }}
+            baseHowTo=""
+            onClose={() => setAdding(false)}
+          />
+        )}
         {selected && (() => {
           const r = data.find((x) => x.slug === selected);
           return r ? (

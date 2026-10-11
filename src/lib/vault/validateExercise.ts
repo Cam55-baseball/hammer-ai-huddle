@@ -27,7 +27,18 @@ export interface VaultExercise {
   arm_weight?: number | null;
   primer_role?: "primer_lift" | "explosive_action" | "none";
   video_url?: string | null;
+  /** Planner (wk_movement_catalog) category — required for brand-new exercises. */
+  catalog_category?: string | null;
 }
+
+/** Canonical wk_movement_catalog categories the plan builder files exercises under. */
+export const CATALOG_CATEGORIES = [
+  "arm_care", "bat_speed", "compound", "conditioning", "cross_sport", "hand_wrist_chain",
+  "kot", "max_effort_strength", "movement_capacity", "movement_patterning", "pap_bridge",
+  "posterior_chain", "rotational_strength", "shoulder_prep", "speed_lab", "speed_mechanics",
+  "sprint_mechanics", "strength", "supplemental", "throwing_plyo", "trunk", "unilateral_lower",
+  "unilateral_pull", "unilateral_push", "upper_body_plyo", "warmup", "windmill_pitching",
+] as const;
 
 const FILLER = [/full, controlled movement from start to finish/i, /smooth, controlled form/i];
 const SERIES = /series|circuit|complex|full chart|routine/i;
@@ -59,9 +70,12 @@ const DOSE_NEEDS: Record<string, Array<keyof VaultExercise>> = {
   swing_count: ["default_sets", "default_reps"],
 };
 
-export function validateExercise(e: VaultExercise): string[] {
+export function validateExercise(e: VaultExercise, opts?: { isNew?: boolean }): string[] {
   const out: string[] = [];
   const t = (s?: string) => (s ?? "").trim();
+  if (opts?.isNew && !(CATALOG_CATEGORIES as readonly string[]).includes(t(e.catalog_category ?? undefined))) {
+    out.push("Pick a planner category (where the plan builder files it).");
+  }
   if (!t(e.name)) out.push("Add a full name.");
   if (!/^[a-z0-9_]+$/.test(e.slug)) out.push("The code may only use lowercase letters, numbers and _.");
   if (!t(e.how_to_one_rep)) out.push('Add "How to do one rep".');

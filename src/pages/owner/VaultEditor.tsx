@@ -11,12 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { validateExercise, MEASURE_TYPES, type VaultExercise } from "@/lib/vault/validateExercise";
+import { validateExercise, MEASURE_TYPES, CATALOG_CATEGORIES, type VaultExercise } from "@/lib/vault/validateExercise";
 import { ExerciseVideo } from "@/components/hammer/cards/ExerciseVideo";
 
 const CARD_TYPES = ["lift", "primer", "conditioning", "recovery", "speed", "warmup", "bat_speed", "throwing", "pitching", "windmill", "defense", "baserunning", "cross_sport", "mobility", "arm_care"];
 const SPORTS = ["baseball", "softball"];
-const PHASES = ["off_season", "pre_season", "in_season", "post_season"];
+// Canonical catalog phase codes — the planner matches these exactly.
+const PHASES = ["os_q1", "os_q2", "os_q3", "os_q4", "pre_season", "in_season", "post_season"];
 const REST_RULES = ["lift_day", "hard_running", "high_jumps", "heavy_bat", "light_bat", "throwing", "none"];
 const PRIMER_ROLES = ["none", "primer_lift", "explosive_action"];
 
@@ -25,6 +26,8 @@ type Props = {
   base: { name: string; category: string | null; sport_scope: string | null; min_age_years: number | null; season_eligibility: string[] | null; equipment: string[] | null; default_sets: number | null; default_reps: number | null; dosage_unit: string | null };
   baseHowTo: string;
   onClose: () => void;
+  /** Brand-new exercise: the slug is editable and make_live enters it into the planner's catalog. */
+  isNew?: boolean;
 };
 
 const toList = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
@@ -39,10 +42,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-export default function VaultEditor({ slug, base, baseHowTo, onClose }: Props) {
+export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, isNew = false }: Props) {
   const qc = useQueryClient();
   const [e, setE] = useState<VaultExercise>({
-    slug,
+    slug: baseSlug,
     name: base.name,
     how_to_one_rep: baseHowTo && baseHowTo !== "— not written yet" ? baseHowTo : "",
     setup: "", steps: "", cue: "", why: "", stop_if: "",
@@ -52,21 +55,24 @@ export default function VaultEditor({ slug, base, baseHowTo, onClose }: Props) {
     measure_type: "reps",
     equipment: base.equipment ?? [],
     card_type: base.category ?? "",
-    sports: base.sport_scope ? [base.sport_scope] : [...SPORTS],
+    sports: base.sport_scope === "both" || !base.sport_scope ? [...SPORTS] : [base.sport_scope],
     season_phases: base.season_eligibility ?? [...PHASES],
     min_age: base.min_age_years ?? null,
     rest_rule: "none",
     arm_weight: null,
     primer_role: "none",
     video_url: null,
+    catalog_category: null,
   });
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const slug = isNew ? e.slug.trim() : baseSlug;
 
-  const problems = useMemo(() => validateExercise(e), [e]);
+  const problems = useMemo(() => validateExercise(e, { isNew }), [e, isNew]);
 
   const { data: history } = useQuery({
     queryKey: ["vault-history", slug],
+    enabled: !isNew || slug.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("exercise-vault", { body: { action: "list", slug } });
       if (error) throw error;
@@ -115,12 +121,25 @@ export default function VaultEditor({ slug, base, baseHowTo, onClose }: Props) {
   return (
     <Card className="p-4 space-y-4" data-vault-editor={slug}>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-lg font-bold">Edit: {base.name}</h2>
+        <h2 className="text-lg font-bold">{isNew ? "Add a new exercise" : `Edit: ${base.name}`}</h2>
         <Button variant="ghost" size="sm" onClick={onClose}>Close</Button>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
+        {isNew && (
+          <Field label="Code (lowercase letters, numbers and _)">
+            <Input value={e.slug} placeholder="e.g. band_face_pull_slow" onChange={(ev) => set("slug", ev.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} />
+          </Field>
+        )}
         <Field label="Full name"><Input value={e.name} onChange={(ev) => set("name", ev.target.value)} /></Field>
+        {isNew && (
+          <Field label="Planner category (where the plan builder files it)">
+            <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={e.catalog_category ?? ""} onChange={(ev) => set("catalog_category", ev.target.value || null)}>
+              <option value="">Pick…</option>
+              {CATALOG_CATEGORIES.map((c) => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
+            </select>
+          </Field>
+        )}
         <Field label="Card type">
           <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={e.card_type} onChange={(ev) => set("card_type", ev.target.value)}>
             <option value="">Pick…</option>
@@ -212,7 +231,7 @@ export default function VaultEditor({ slug, base, baseHowTo, onClose }: Props) {
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2">
-        <Button disabled={busy !== null} onClick={() => call("save_draft", { payload: e, validation: problems, is_new: false })}>
+        <Button disabled={busy !== null} onClick={() => call("save_draft", { payload: e, validation: problems, is_new: isNew })}>
           {busy === "save_draft" ? "Saving…" : "Save draft"}
         </Button>
         <Button variant="default" disabled={busy !== null || problems.length > 0} onClick={() => call("make_live")}>
