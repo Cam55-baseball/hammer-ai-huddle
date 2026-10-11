@@ -27,7 +27,7 @@ const EQUIP: Array<[RegExp, RegExp, RegExp[]]> = [
 ];
 
 const SERIES = /series|circuit|complex|full_chart|routine/i;
-const MOVEMENT_LIST = /\d+\s*movements?\s*×|:\s*[^.]+,[^.]+,|\w+-\w+,[^.]+,|\d+\s+[a-z-]+(?:\s+[a-z-]+)?\s+(?:each|per side|swings|jumps|punches|skips|hops|reps)|\d+\s+each\b|,\s*then\s+/i;
+const MOVEMENT_LIST = /\d+\s*movements?\s*×|:\s*[^.]+,[^.]+,|\w+-\w+,[^.]+,|\d+\s+[a-z-]+(?:\s+[a-z-]+)?\s+(?:each|per side|swings|jumps|punches|skips|hops|reps)|\d+\s+each\b|,\s*then\s+|\b(?:three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty)\s+[a-z-]+[^.]*,[^.]+,/i;
 const REP_DEF = /One rep is|One round is|check-off task|Hold the position/i;
 
 const entries = Object.entries(BASIC_HOW_TO);
