@@ -19,7 +19,7 @@ describe("specialized pitching activity logging", () => {
     const top = within(state.host);
     expect(top.getAllByRole("textbox")).toHaveLength(1);
     fireEvent.change(top.getByRole("textbox"), { target: { value: "27" } });
-    const toggle = v.getByRole("button", { name: "Bullpen", exact: true });
+    const toggle = v.getByRole("button", { name: /^Bullpen$/ });
     fireEvent.click(toggle); fireEvent.click(toggle);
     expect(top.getByRole("textbox")).toHaveValue("27");
     fireEvent.click(top.getByRole("button", { name: "Save log" }));
