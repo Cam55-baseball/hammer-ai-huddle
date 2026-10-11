@@ -195,7 +195,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
     try {
       await save.mutateAsync({
         prescription_id: rx.id,
-
+        outcome: embedded ? latest?.metrics?.one_tap_outcome : undefined,
         plan_date: rx.plan_date,
         movement_slug: rx.movement_slug,
         rounds: embedded && Array.isArray(latest?.metrics?.rounds) ? latest.metrics.rounds : roundsToPayload(),

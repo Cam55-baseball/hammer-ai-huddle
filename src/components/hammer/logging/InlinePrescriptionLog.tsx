@@ -16,7 +16,8 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   const slug = `${rx.movement_slug} ${rx.movement_name}`.toLowerCase();
   const rows = Math.max(1, rx.sets ?? rx.total_reps ?? 1);
   if ((rx.dosage_unit ?? "").toLowerCase() === "throws" || /throw|pitch|bullpen|catch play/.test(slug)) {
-    return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "throws", label: "Throws", prefill: rx.reps ?? rx.total_reps }] };
+    const split = rx.sets && rx.reps && (!rx.total_reps || rx.sets * rx.reps === rx.total_reps);
+    return { rows: split ? rx.sets ?? 1 : 1, fields: [{ key: "throws", label: "Throws", prefill: split ? rx.reps : rx.total_reps ?? rx.reps }] };
   }
   if (rx.total_reps && !/hold|iso|plank/.test(slug)) {
     // Rows must add up to the total shown on the card: sets × reps only when that equals the total.

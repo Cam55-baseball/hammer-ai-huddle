@@ -1247,11 +1247,12 @@ function countLabel(items: ReadonlyArray<unknown>): string | null {
 }
 
 function WarmupCrossoverAddons() {
-  const { grouped } = useHammersToday();
+  const { grouped, snapshotIdentity } = useHammersToday();
+  const { display: seasonLabel } = useCanonicalPhaseDisplay(snapshotIdentity.season_display, snapshotIdentity.season_phase);
   const addons = grouped.warmupAddons ?? [];
   if (!addons.length) return null;
   return <PocketCard id="cross_sport" category="Cross-sport" tone="" planDate={addons[0].plan_date} prescribed countLabel={countLabel(addons)} progress={progressOf(addons)}>
-    {() => <div className="space-y-2">{addons.map(rx => <WkPrescriptionCard key={rx.id} rx={rx} />)}</div>}
+    {() => <div className="space-y-2">{seasonLabel && <Badge variant="outline">Season: {seasonLabel}</Badge>}{addons.map(rx => <WkPrescriptionCard key={rx.id} rx={rx} />)}</div>}
   </PocketCard>;
 }
 
