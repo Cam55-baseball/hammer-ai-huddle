@@ -65,6 +65,11 @@ export function ArmThrowsPanel({ source, planDate, fixture }: { source: EntrySou
     },
   });
 
+  const prescribed = useMemo(() => prescribedThrows(role, primary, secondary), [role, primary, secondary]);
+  const pitches = useMemo(
+    () => Object.entries(pitchLoad.data?.byDate ?? {}).map(([plan_date, n]) => ({ plan_date, pitches: n })),
+    [pitchLoad.data],
+  );
   const [local, setLocal] = useState<Record<string, { sets: string[]; status: "done" | "skipped" }>>(() => {
     try { return JSON.parse(localStorage.getItem(`hm-arm-sets:${date}:${source}`) ?? "{}"); } catch { return {}; }
   });
