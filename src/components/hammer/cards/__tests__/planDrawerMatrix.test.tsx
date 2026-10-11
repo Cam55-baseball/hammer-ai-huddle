@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, fireEvent, within } from "@testing-library/react";
+import { cleanup, render, fireEvent, within } from "@testing-library/react";
 import { ExerciseDisclosure } from "../ExerciseDisclosure";
 import { ActivityBasics } from "../ActivityBasics";
 import { ExerciseInstructions } from "../ExerciseInstructions";
@@ -9,12 +9,16 @@ import { buildWarmup } from "@/lib/hammer/prescription/warmupLibrary";
 import { doseFeet, repairInstruction } from "../../../../../supabase/functions/_shared/wic/integrity/doseIntegrity";
 
 describe("plan-library drawer tap matrix", () => {
-  it("taps every exercise, instructions and directly visible survey questions in selected warm-up and defense plans", () => {
+  const cases = (["baseball", "softball"] as const).flatMap((sport) =>
+    ["off", "pre", "in"].map((seasonPhase) => ({ sport, seasonPhase })),
+  );
+  it.each(cases)("taps every drawer for $sport / $seasonPhase", ({ sport, seasonPhase }) => {
     const positions: DefensePosition[] = ["C", "P", "1B", "2B", "SS", "3B", "LF", "CF", "RF", "OF", "IF", "utility"];
     let tapped = 0;
-    for (const sport of ["baseball", "softball"] as const) {
       const warmup = buildWarmup({ context: "default", lifecycle: "youth", daySeed: 1, gameDay: false, equipment: [], sport });
-      const plans = [warmup.drills, ...positions.flatMap((position) => ["off", "pre", "in"].map((seasonPhase) => selectDefenseDrills({ position, sport, seasonPhase, tier: "developing" })?.drills ?? []))];
+      // Same complete matrix, split into six independently timed cases; the
+      // warm-up is still tested exactly once per sport, as in the original.
+      const plans = [...(seasonPhase === "off" ? [warmup.drills] : []), ...positions.map((position) => selectDefenseDrills({ position, sport, seasonPhase, tier: "developing" })?.drills ?? [])];
       for (const drills of plans) {
         for (const drill of drills) {
           const dosage = drill.dosage ?? "";
@@ -39,11 +43,13 @@ describe("plan-library drawer tap matrix", () => {
           expect(instructions).toHaveAttribute("aria-expanded", "false");
           fireEvent.click(toggle);
           expect(toggle).toHaveAttribute("aria-expanded", "false");
-          view.unmount();
+          // Remove each render's root AND container before the next case. An
+          // unmount alone leaves hundreds of containers until afterEach,
+          // making later role/visibility queries depend on accumulated DOM.
+          cleanup();
           tapped++;
         }
       }
-    }
-    expect(tapped).toBeGreaterThan(100);
+    expect(tapped).toBeGreaterThan(0);
   }, 60000);
 });
