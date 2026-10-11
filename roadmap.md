@@ -1,3 +1,9 @@
+# X3 PITCH-CAP SAFETY IN THE PITCHING LOG — 2026-10-11 — Ready to publish: no
+- [x] Outing/bullpen logs now allow "Add a set" (previously fixed rows) and warn in the log when entered pitches pass today's pitch cap: "over today's pitch cap (N of M pitches)… everything saved as you really did it — stop throwing for today and your coming days will be adjusted." Everything is still recorded; no dose, schema or completion-rule changes.
+- [x] Regression test: 28 + 12 pitches against a 30-pitch cap shows the warning and both rounds save; the existing bullpen schema save is unchanged.
+- [x] Full suite: **305 files / 2,600 tests passed**. No publish, cron or iOS changes; no test data created.
+- Waiting on owner: signed-in player check on a real started plan + page audit, physical iPhone check, 341 how-to drafts, publishing.
+
 # X2 CATCH-PLAY LEDGER VERIFICATION — 2026-10-11 — Ready to publish: no
 - [x] Re-checked the X1 catch-play arm-ledger path with the strict assertion restored: catch play 2 × 10 plus an added set of 10 records exactly 30 throws (prescribed 20) in the arm ledger row, and the added-set lift shows the full "Done · Did more" label with prescribed-vs-done. The X1 softening was a test-setup artifact, not a real bug — no code change needed beyond restoring the strict check.
 - [x] Full suite: **305 files / 2,599 tests passed**. No publish, cron or iOS changes; no test data created.

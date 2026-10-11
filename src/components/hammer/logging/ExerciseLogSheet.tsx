@@ -325,15 +325,34 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
   const saveControl = <SavedIndicator state={autosave.state} />;
   const entryFields = template.fields.filter((field) => !field.optional);
   const extraFields = template.fields.filter((field) => field.optional);
-  const changeFields = (fields: typeof template.fields, next: Round[]) => { edited.current = true; setRounds(rounds.map((round, i) => {
-    const result = { ...round };
-    for (const field of fields) result[field.key] = next[i]?.[field.key] ?? "";
-    return result;
-  })); };
+  // Pitching logs carry a pitch cap (rx.reps). Added rounds are allowed and an
+  // over-cap total shows a safety warning — everything entered is still saved.
+  const isPitching = template.id === "bullpen_pitching" || template.id === "pitching_outing";
+  const pitchCap = isPitching && rx.reps && rx.reps > 0 ? rx.reps : null;
+  const pitchTotal = isPitching
+    ? rounds.reduce((sum, r) => { const n = Number(r.pitches); return sum + (Number.isFinite(n) && n > 0 ? n : 0); }, 0)
+    : 0;
+  const changeFields = (fields: typeof template.fields, next: Round[]) => { edited.current = true; setRounds((prev) => {
+    const merged = prev.map((round, i) => {
+      const result = { ...round };
+      for (const field of fields) result[field.key] = next[i]?.[field.key] ?? "";
+      return result;
+    });
+    // An added or removed row comes through only this grid's fields — keep the
+    // other grids' values by merging lengths instead of replacing the state.
+    if (next.length > prev.length) merged.push(...next.slice(prev.length));
+    else if (next.length < prev.length) merged.length = next.length;
+    return merged;
+  }); };
   const topEntries = <section data-pitching-entry-grid className="space-y-2">
     <h4 className="break-words text-sm font-semibold">{rx.movement_name}</h4>
     <p className="text-xs text-muted-foreground">{dosageText}</p>
-    <RoundGrid fixedRounds fields={entryFields} rounds={rounds} onChange={(next) => changeFields(entryFields, next)} minRounds={initialRoundsCount} maxRounds={initialRoundsCount} />
+    <RoundGrid fixedRounds={!isPitching} fields={entryFields} rounds={rounds} onChange={(next) => changeFields(entryFields, next)} minRounds={initialRoundsCount} maxRounds={isPitching ? 24 : initialRoundsCount} />
+    {pitchCap != null && pitchTotal > pitchCap && (
+      <p className="text-xs font-medium text-destructive" data-testid="pitch-cap-warning">
+        That's over today's pitch cap ({pitchTotal} of {pitchCap} pitches). Everything you entered is saved as you really did it — stop throwing for today and your coming days will be adjusted.
+      </p>
+    )}
     {saveControl}
   </section>;
 
