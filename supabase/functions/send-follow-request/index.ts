@@ -96,6 +96,40 @@ serve(async (req) => {
       throw error;
     }
 
+    // Mirror into the unified Requests inbox (connection_requests) so every
+    // request is answered in one place. Skip if a matching pending request
+    // already exists. Accepting there flips this scout_follows row to accepted.
+    try {
+      const staffId = initiated_by === 'coach' ? user.id : player_id;
+      const playerId = initiated_by === 'coach' ? player_id : user.id;
+      const { data: existing } = await supabase
+        .from("connection_requests")
+        .select("id")
+        .in("kind", ["coach_player", "scout_player"])
+        .eq("status", "pending")
+        .or(`and(from_user.eq.${staffId},to_user.eq.${playerId}),and(from_user.eq.${playerId},to_user.eq.${staffId})`)
+        .limit(1);
+      if (!existing || existing.length === 0) {
+        const { data: staffRole } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", staffId)
+          .in("role", ["scout", "recruiter"])
+          .maybeSingle();
+        const kind = staffRole ? "scout_player" : "coach_player";
+        await supabase.from("connection_requests").insert({
+          kind,
+          from_user: user.id,
+          to_user: player_id,
+          to_org: false,
+          subject_user: playerId,
+        });
+      }
+    } catch (mirrorErr) {
+      // Never fail the follow request because the inbox mirror failed.
+      console.error("connection_requests mirror failed:", mirrorErr);
+    }
+
     console.log("Follow request created:", data);
 
     return new Response(JSON.stringify({ success: true, data }), {
