@@ -1,4 +1,5 @@
 # OWNER CARD OVERRIDES — 2026-10-11 — Ready to publish: no (player/native proof outstanding)
+- [ ] V1 final pass: rerun drawer taps, rendered-text checks, phone screenshots and full suite; finish unblocked presentation issues and retain explicit player/native blockers.
 - [x] Exact line: "Tomorrow's plan becomes visible at midnight". Removed countdown and build-status reads from this notice; pre-build remains unchanged and internal.
 - [x] Prescription and legacy drill names now toggle independent, initially collapsed exercise bodies on plan and pop-ups. Hidden log controls remain mounted to preserve drafts; toggles do not scroll and exclude browser scroll anchoring.
 - [x] Survey (optional) sits directly below How hard; no Extra log dropdown or duplicate one-tap log. Prescription survey opens the existing extra-field sheet; legacy survey exposes notes.
