@@ -4158,6 +4158,36 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_messages: {
+        Row: {
+          athlete_id: string
+          body: string
+          coach_id: string
+          created_at: string
+          id: string
+          parent_copied: boolean
+          parent_only: boolean
+        }
+        Insert: {
+          athlete_id: string
+          body: string
+          coach_id: string
+          created_at?: string
+          id?: string
+          parent_copied?: boolean
+          parent_only?: boolean
+        }
+        Update: {
+          athlete_id?: string
+          body?: string
+          coach_id?: string
+          created_at?: string
+          id?: string
+          parent_copied?: boolean
+          parent_only?: boolean
+        }
+        Relationships: []
+      }
       coach_notifications: {
         Row: {
           coach_user_id: string
@@ -22139,6 +22169,10 @@ export type Database = {
         }
       }
       scout_calibration_summary: { Args: never; Returns: Json }
+      send_coach_message: {
+        Args: { _athlete: string; _body: string }
+        Returns: string
+      }
       send_connection_request: {
         Args: {
           _kind: string
