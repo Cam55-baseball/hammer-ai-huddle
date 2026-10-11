@@ -4,6 +4,9 @@
  * injury substitutions, and a complete/skip control.
  */
 import { useState } from "react";
+import { createPortal } from "react-dom";
+import { PocketCard, usePocketDetails, usePocketLogHost } from "./cards/PocketCard";
+import { ExerciseLogSheet } from "./logging/ExerciseLogSheet";
 import { useCheckedRx } from "@/lib/hammer/prescription/useCheckedRx";
 import { repairInstruction } from "../../../supabase/functions/_shared/wic/integrity/doseIntegrity";
 import { Card } from "@/components/ui/card";

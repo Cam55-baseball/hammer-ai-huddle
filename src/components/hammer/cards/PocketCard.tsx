@@ -23,6 +23,8 @@ import { PracticeLog } from "@/components/hammer/logging/ExtraLogs";
 import { createContext, useContext } from "react";
 
 const PocketDetailsContext = createContext(false);
+const PocketLogContext = createContext<HTMLElement | null>(null);
+export const usePocketLogHost = () => useContext(PocketLogContext);
 export const usePocketDetails = () => useContext(PocketDetailsContext);
 
 export const CARD_DISCLAIMER =
@@ -77,6 +79,7 @@ interface Props {
 }
 
 export function PocketCard({ id, category, focus, tone, planDate, prescribed, countLabel, notPrescribedNote, children, progress, intro, link, onNavigate, practiceLogging = false }: Props) {
+  const [logHost, setLogHost] = useState<HTMLElement | null>(null);
   const [showIntro, setShowIntro] = useState(false);
   const allDone = !!progress && progress.total > 0 && progress.done >= progress.total;
   const [celebrate, setCelebrate] = useState(false);
@@ -188,18 +191,16 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
           <header data-pocket-header className="sticky top-0 z-10 flex shrink-0 items-center gap-2 border-b border-border bg-background pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground" aria-hidden><DomainGlyph domain={domain} className="h-5 w-5" /></span>
             <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{category}{progress && progress.total > 0 ? <span className="tabular-nums"> · {progress.done}/{progress.total} done</span> : null}</p><h2 className="break-words text-base font-bold leading-tight text-foreground">{heading}</h2></div>
-            {locked ? (
-              <Badge variant="secondary" className="gap-1 text-[10px]"><Lock className="h-3 w-3" />Locked in</Badge>
-            ) : (
-              <Button size="sm" className="h-10 px-4 active:scale-95 transition-transform motion-reduce:transition-none" onClick={() => setLocked(true)}>Start</Button>
-            )}
-            {!locked && (
-              <Button size="icon" variant="ghost" className="h-10 w-10" aria-label="Close" onClick={() => close(true)}>
-                <X className="h-4 w-4" />
-              </Button>
-            )}
+            <Button size="sm" aria-pressed={locked} className="h-10 shrink-0 px-3" onClick={() => setLocked(true)}>Start</Button>
+            <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" aria-label="Close" onClick={() => close(true)}><X className="h-4 w-4" /></Button>
           </header>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">
+            {!link && <section data-workout-log className="space-y-3">
+              <h3 className="text-base font-semibold">Log this work</h3>
+              <div ref={setLogHost} className="space-y-4" />
+              <p className="text-xs text-muted-foreground">More information for each exercise is below ↓</p>
+              <h3 className="border-t border-border pt-3 text-sm font-semibold">EXERCISES</h3>
+            </section>}
             {showIntro && intro && (
               <div data-pocket-intro className="mb-3 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm text-foreground animate-in fade-in motion-reduce:animate-none">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">First time here</p>
@@ -218,7 +219,7 @@ export function PocketCard({ id, category, focus, tone, planDate, prescribed, co
                 </Button>
               </div>
             )}
-            <PocketDetailsContext.Provider value={true}>{children({ pocket: true })}</PocketDetailsContext.Provider>
+            <PocketLogContext.Provider value={logHost}><PocketDetailsContext.Provider value={true}>{children({ pocket: true })}</PocketDetailsContext.Provider></PocketLogContext.Provider>
             {practiceLogging && <section className="mt-4 border-t border-border pt-3" data-card-practice>
               <h3 className="text-sm font-semibold text-foreground">Log your practice</h3>
               <ol className="my-2 list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
