@@ -22,6 +22,8 @@ export function formatPrescriptionDose(rx: Pick<WkRx, "sets" | "reps" | "duratio
     parts.push(plural(rx.reps, "rep"));
   }
 
+  if (unit === "seconds" && rx.duration_seconds && rx.sets && rx.sets > 1) parts.push(`${plural(rx.sets, "set")} × ${plural(rx.duration_seconds, "second")}`);
+  if (rx.distance_feet && unit === "feet" && rx.sets) parts.push(plural(rx.sets, "rep"));
   if (rx.distance_feet) parts.push(`${plural(rx.distance_feet, "foot", "feet")} per rep`);
   if (rx.duration_seconds && unit !== "seconds") parts.push(`${plural(rx.duration_seconds, "second")} per rep`);
   if (rx.total_reps && rx.total_reps !== rx.reps) {

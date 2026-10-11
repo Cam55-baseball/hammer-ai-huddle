@@ -1247,57 +1247,12 @@ function countLabel(items: ReadonlyArray<unknown>): string | null {
 }
 
 function WarmupCrossoverAddons() {
-  const { grouped, snapshotIdentity } = useHammersToday();
+  const { grouped } = useHammersToday();
   const addons = grouped.warmupAddons ?? [];
-  // Same season label every other plan card shows — never a fixed string.
-  const { display: seasonLabel } = useCanonicalPhaseDisplay(
-    snapshotIdentity.season_display,
-    snapshotIdentity.season_phase,
-  );
-  const [open, setOpen] = useState<boolean>(true);
-  if (addons.length === 0) return null;
-  return (
-    <Card className="border-rose-400/30 bg-rose-500/5">
-      <Collapsible open={open} onOpenChange={setOpen}>
-        <CollapsibleTrigger asChild>
-          <button
-            type="button"
-            className="w-full text-left"
-            aria-expanded={open}
-          >
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-start justify-between gap-2">
-                <div className="flex items-start gap-2 min-w-0">
-                  <HeartPulse className="h-4 w-4 mt-0.5 text-rose-500 shrink-0" />
-                  <span className="min-w-0 break-words">Finish the warm-up — crossover primer</span>
-                </div>
-                <ChevronDown
-                  className={`h-4 w-4 mt-0.5 shrink-0 text-muted-foreground transition-transform ${
-                    open ? "rotate-180" : ""
-                  }`}
-                />
-              </CardTitle>
-              {seasonLabel && (
-                <div>
-                  <Badge variant="outline" className="text-[10px] whitespace-normal rounded-md">Season: {seasonLabel}</Badge>
-                </div>
-              )}
-              <div className="text-[11px] text-muted-foreground">
-                Short, low-cost coordination drill folded into the warm-up. Frees the nervous system from sport patterns without stealing freshness from the day.
-              </div>
-            </CardHeader>
-          </button>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent className="space-y-2 pt-0">
-            {addons.map((rx) => (
-              <WkPrescriptionCard key={rx.id} rx={rx} />
-            ))}
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
-  );
+  if (!addons.length) return null;
+  return <PocketCard id="cross_sport" category="Cross-sport" tone="" planDate={addons[0].plan_date} prescribed countLabel={countLabel(addons)} progress={progressOf(addons)}>
+    {() => <div className="space-y-2">{addons.map(rx => <WkPrescriptionCard key={rx.id} rx={rx} />)}</div>}
+  </PocketCard>;
 }
 
 

@@ -185,7 +185,8 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
   };
 
   const handleSave = async () => {
-    if (missingSideCount > 0) {
+    if (embedded && !latest) { toast.error("Save your completed entries above first."); return; }
+    if (!embedded && missingSideCount > 0) {
       toast.error(
         `Tag left or right on ${missingSideCount} round${missingSideCount === 1 ? "" : "s"} — side tracking keeps your L/R comparison honest.`,
       );
@@ -198,7 +199,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
         plan_date: rx.plan_date,
         movement_slug: rx.movement_slug,
         rounds: embedded && Array.isArray(latest?.metrics?.rounds) ? latest.metrics.rounds : roundsToPayload(),
-        rpe: template.meta.rpe ? rpe : null,
+        rpe: embedded ? latest?.rpe ?? null : template.meta.rpe ? rpe : null,
         bar_feel: template.meta.barFeel || template.meta.armFeel ? barFeel : null,
         notes: notes.trim() || null,
         ai_readback: readback,
@@ -209,7 +210,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
       // A log with reps for every prescribed set finishes the lift, exactly
       // like the Done button. A partial log leaves the mark untouched.
       let markedDone = false;
-      if (rx.slot === "lift" && rx.status !== "completed" && user?.id &&
+      if (!embedded && rx.slot === "lift" && rx.status !== "completed" && user?.id &&
           isFullLiftLog(roundsToPayload(), initialRoundsCount)) {
         if (rx.status === "missed" && !missedStillEditable(rx.plan_date)) {
           /* past the 7-day window — the log saves, the mark stays */
@@ -226,7 +227,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
 
       // Raw research collection: bank this set's numbers against any standard
       // the movement belongs to. Never rendered, never graded, never a dose.
-      if (measures) {
+      if (!embedded && measures) {
         try {
           recordAttempts.mutate({
             set: { movement_slug: rx.movement_slug, plan_date: rx.plan_date, rounds: roundsToPayload() as any },
@@ -240,7 +241,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
 
       // Did this set clear a standard? Compare the athlete's history against
       // history-plus-this-set. Self-logged, additive, never dose-changing.
-      if (measures && standardRows.length) {
+      if (!embedded && measures && standardRows.length) {
         try {
           const fresh = buildBestIndex([
             { movement_slug: rx.movement_slug, plan_date: rx.plan_date, rounds: roundsToPayload() as any },
@@ -413,7 +414,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
           ) : (
             <Button onClick={handleSave} disabled={save.isPending} className="w-full gap-2" size="lg">
               {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              {save.isPending ? "Saving…" : latest ? "Update log" : "Save log"}
+              {save.isPending ? "Saving…" : embedded ? "Save survey" : latest ? "Update log" : "Save log"}
             </Button>
           )}
         </div>
