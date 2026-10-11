@@ -29,6 +29,10 @@ export interface VaultExercise {
   video_url?: string | null;
   /** Planner (wk_movement_catalog) category — required for brand-new exercises. */
   catalog_category?: string | null;
+  /** Warm-up stage (0 = tissue prep … 9 = prime). Required for every warm-up movement. */
+  warmup_stage?: number | null;
+  /** Optional fine-tuning order inside the stage (1 = first). */
+  warmup_stage_order?: number | null;
 }
 
 /** Canonical wk_movement_catalog categories the plan builder files exercises under. */
@@ -98,6 +102,12 @@ export function validateExercise(e: VaultExercise, opts?: { isNew?: boolean }): 
   }
   if (!e.equipment.length) out.push('List equipment (use "none" if nothing is needed).');
   if (!t(e.card_type)) out.push("Pick a card type.");
+  if (t(e.card_type) === "warmup") {
+    const st = e.warmup_stage;
+    if (!(typeof st === "number" && Number.isInteger(st) && st >= 0 && st <= 9)) out.push("Pick a warm-up stage (every warm-up movement needs one).");
+    const o = e.warmup_stage_order;
+    if (o != null && !(Number.isInteger(o) && o >= 1)) out.push("Order within stage must be a whole number from 1.");
+  }
   if (!e.sports.length) out.push("Pick at least one sport.");
   if (!e.season_phases.length) out.push("Pick at least one season phase.");
   if (e.min_age == null) out.push("Set a minimum age.");

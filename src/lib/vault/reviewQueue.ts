@@ -2,7 +2,7 @@
  * Owner review queue: flagged descriptions, how-to drafts and series lists.
  * An item leaves the queue once the owner approves it or makes an edit live.
  */
-export type ReviewReason = "flagged description" | "how-to draft" | "series list";
+export type ReviewReason = "flagged description" | "how-to draft" | "series list" | "warm-up stage";
 export interface ReviewItem { slug: string; reasons: ReviewReason[]; notes: string[] }
 
 const SERIES = /series|circuit|complex|full chart|routine/i;
@@ -15,6 +15,8 @@ export function buildReviewQueue(input: {
   flaggedTsv: string; howToTsv: string;
   catalog: Array<{ slug: string; name: string }>;
   cleared: ReadonlySet<string>;
+  /** Warm-up movements whose starting stage the owner should confirm. */
+  warmupStage?: ReadonlyArray<{ slug: string; note: string }>;
 }): ReviewItem[] {
   const map = new Map<string, ReviewItem>();
   const add = (slug: string, reason: ReviewReason, note: string) => {
@@ -26,5 +28,6 @@ export function buildReviewQueue(input: {
   for (const r of parseTsv(input.flaggedTsv, 2)) add(r.slug, "flagged description", r.note);
   for (const r of parseTsv(input.howToTsv, 3)) add(r.slug, "how-to draft", r.note);
   for (const c of input.catalog) if (SERIES.test(c.name)) add(c.slug, "series list", "List every movement in the series.");
+  for (const w of input.warmupStage ?? []) add(w.slug, "warm-up stage", w.note);
   return [...map.values()].filter((i) => !input.cleared.has(i.slug)).sort((a, b) => a.slug.localeCompare(b.slug));
 }
