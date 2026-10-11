@@ -619,6 +619,10 @@ const ProfileSetup = () => {
             </div>
 
             <div className={sv(3)}>
+                <div data-testid="open-to-recruiting-note" className="p-3 rounded-lg border border-border bg-muted/20 text-sm space-y-1">
+                  <p className="font-medium text-foreground">Open to recruiting?</p>
+                  <p className="text-muted-foreground">Scouts and coaches see nothing until you choose. After sign-up, open Scouting visibility in your menu to pick exactly what they can see. Under 18, a parent approves first.</p>
+                </div>
                 <div>
                   <Label htmlFor="commitmentStatus">{t('profileSetup.commitmentStatus')}</Label>
                   <Select value={commitmentStatus} onValueChange={setCommitmentStatus}>
