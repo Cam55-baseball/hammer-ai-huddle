@@ -9,10 +9,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Send, CheckCircle2, Dumbbell } from 'lucide-react';
+import { Search, Send, CheckCircle2, Dumbbell, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCoachPlayerPool } from '@/hooks/useCoachPlayerPool';
 import { useAssignDrill, useCoachAssignments } from '@/hooks/useDrillAssignments';
+import {
+  checkDrillSafety,
+  findSafeAlternatives,
+  type DrillSafetyInput,
+  type AthleteSafetyContext,
+} from '@/lib/coach/drillSafety';
 
 const PROGRESSION_LABELS: Record<number, string> = {
   1: 'Tee Ball', 2: 'Youth', 3: 'MS', 4: 'HS', 5: 'College', 6: 'Pro', 7: 'Elite',
