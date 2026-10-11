@@ -19,8 +19,17 @@ export function OrganizationMemberList() {
         .from('profiles_public')
         .select('id, full_name, avatar_url')
         .in('id', userIds);
-      if (!data) return {};
-      return Object.fromEntries(data.map(p => [p.id, p]));
+      const out: Record<string, { full_name?: string | null; avatar_url?: string | null }> =
+        Object.fromEntries((data ?? []).map(p => [p.id, p]));
+      // Organization admins may not see private profiles; fall back to the server-checked roster names.
+      const orgIds = [...new Set(memberList.map((m: any) => m.organization_id))];
+      for (const orgId of orgIds) {
+        const { data: roster } = await supabase.rpc('list_org_roster', { _organization_id: orgId });
+        for (const r of (roster ?? []) as { user_id: string; full_name: string }[]) {
+          if (!out[r.user_id]?.full_name && r.full_name) out[r.user_id] = { ...out[r.user_id], full_name: r.full_name };
+        }
+      }
+      return out;
     },
     enabled: userIds.length > 0,
   });
@@ -44,7 +53,7 @@ export function OrganizationMemberList() {
           <div className="space-y-2">
             {memberList.map((m: any) => {
               const profile = profiles?.[m.user_id];
-              const displayName = profile?.full_name || 'Unknown Player';
+              const displayName = profile?.full_name || 'Name not shared';
               const initials = displayName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
 
               return (
