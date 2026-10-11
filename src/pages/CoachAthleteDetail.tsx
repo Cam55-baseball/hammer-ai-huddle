@@ -1,3 +1,4 @@
+import { CoachMessageBox } from "@/components/coach/CoachMessageBox";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -165,6 +166,8 @@ export default function CoachAthleteDetail() {
             />
           )}
         </div>
+
+        {athleteId && user?.id !== athleteId && rosterAccess === true && <CoachMessageBox athleteId={athleteId} />}
 
         {error && (
           <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">

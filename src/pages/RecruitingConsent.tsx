@@ -1,3 +1,4 @@
+import { CoachMessagesInbox } from "@/components/coach/CoachMessagesInbox";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * Athlete-owned recruiting consent (RR-9 / RR-10, v1.1 granular).
@@ -128,6 +129,7 @@ export default function RecruitingConsent() {
           </CardContent>
         </Card>
         {user && <TranscriptUploadCard userId={user.id} />}
+        {user && <CoachMessagesInbox athleteId={user.id} title="Messages from your coaches" />}
       </div>
     </DashboardLayout>
   );
