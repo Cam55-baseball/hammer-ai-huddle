@@ -1,6 +1,12 @@
 # OWNER STATUS — 2026-10-11 evening — security fixes
 
-**Ready to publish: no** — security fixes A1–A3 are live in the backend and proven; A4 is done (CC1: legacy follow reads made minor-aware, proof in security-fixes.md); B1–B3 are not finished yet.
+**Ready to publish: no** — every security fix (A1–A4) is live in the backend and re-proven (CC6), but the signed-in page check, the upgrade-button tap-through and the legal signed-in checks still need the owner's choice of test accounts, and the Blueprint coverage minimums need the owner's decision.
+
+**Renewal-reminder cron SQL:** `docs/owner/renewal-reminders-cron.sql` (owner reviews and applies; not applied).
+
+**CC6 final proof (21:24–21:35 UTC):** outsider raw link → refused (400); outsider asking for a link → refused (400); allowed viewer → plays (206 video). Pretend sign-in as a plain player (rolled back): self-admin, self-coach, joining a team as coach, self-accepting a follow — all blocked; another player's videos and sessions hidden. Under-13 players reachable by any staff follow: 0. Full suite 2,730/2,730 (324 files), including the 540 eight-week Blueprint simulations with zero rule breaks.
+
+**Waiting on owner:** (1) test accounts — real ones you name, or temporary ones I make and delete — for the page audit, upgrade-button tap-through and legal signed-in checks (updated terms, teen grace/reminders, new-teen lock, under-13 waiver, health consent, auto-renew, Cancel); (2) coverage minimums vs the six-slot day (raise slots, or accept rotating robustness); (3) 79 lift-tag items + 10 unapplied tag suggestions in the Vault; (4) lawyer review of Subscription Policy v2; (5) apply the cron SQL.
 
 - [x] A1 Private media — videos, scout letters, scout videos and avatars are private; raw links refused; allowed viewers play signed links. Proof in `docs/owner/security-fixes.md`.
 - [x] A2 Self-claimed roles blocked (staff roles start pending, owner approves).
@@ -11,8 +17,8 @@
 - [ ] Page audit of video screens signed in as a real player and coach (phone screenshots) — not yet run.
 - [~] B1 Lifting Blueprint coverage minimums, integrated library gaps, remaining lift tags.
   - [x] B1-tags (CC5): 57 active lifts had no movement tag (strength 20, compound 17, max-effort 7, posterior-chain 5, rotational 8). 47 tagged — each checked to leave exercise choice and the double-check's grouping unchanged (backup in _snapshot_movement_pattern_20261011). 10 left untagged on purpose (the tag would regroup them in the double-check): chest passes ×3, band pull-through, snatch, high pulls ×2, jump shrug, mid-thigh pull, reverse fly — suggestions in the Vault queue. Vault "lift tag" queue now 79. 1,134 planner/Vault tests pass.
-  - [ ] B1-coverage: weekly coverage minimums (next).
-  - [ ] B1-library: integrated athletic exercises for remaining gaps.
+  - [ ] B1-coverage: WAITING ON OWNER — minimums cannot all be met inside the six-slot day without breaking a rule (rule wins); choose more slots or a rotating robustness slot.
+  - [ ] B1-library: follows the coverage decision (new exercises only matter once there is a slot for them).
 - [ ] B2 Legal signed-in checks (updated terms, teen grace/reminders, new-teen lock, under-13 waiver, health consent, auto-renew, Cancel).
 - [~] B3 Guarantee app-button recheck — source scan of every screen (CC4): 0 customer-facing guarantee, money-back, risk-free or guaranteed-results wording (only code comments and the banned-phrase list). Visible tap-through of the in-app upgrade buttons as a player waits on the same owner test-account choice as A-audit.
 - [x] B4 Renewal cron SQL → `docs/owner/renewal-reminders-cron.sql` (not applied).
