@@ -14,6 +14,7 @@ import VaultEditor from "./VaultEditor";
 import reviewTsv from "../../../docs/owner/exercise-descriptions-needed.tsv?raw";
 import howToTsv from "../../../docs/owner/basic-how-to-review.tsv?raw";
 import { buildReviewQueue } from "@/lib/vault/reviewQueue";
+import { libraryOnlyRows, warmupStageReviewItems } from "@/lib/vault/warmupStageVault";
 
 type Row = {
   slug: string; name: string; category: string | null; sport_scope: string | null;
@@ -44,7 +45,10 @@ export default function ExerciseVault() {
         .select("slug,name,category,sport_scope,position_scope,min_age_years,season_eligibility,equipment,is_active,dosage_unit,default_sets,default_reps")
         .order("name");
       if (error) throw error;
-      return (data ?? []) as Row[];
+      const rows = (data ?? []) as Row[];
+      // Every warm-up builder movement is taggable, even ones the catalog doesn't list.
+      const extra = libraryOnlyRows(new Set(rows.map((r) => r.slug))) as Row[];
+      return [...rows, ...extra].sort((a, b) => a.name.localeCompare(b.name));
     },
   });
   const [q, setQ] = useState("");
@@ -69,7 +73,7 @@ export default function ExerciseVault() {
       return new Set<string>(data?.slugs ?? []);
     },
   });
-  const queue = useMemo(() => buildReviewQueue({ flaggedTsv: reviewTsv, howToTsv, catalog: data, cleared: cleared ?? new Set() }), [data, cleared]);
+  const queue = useMemo(() => buildReviewQueue({ flaggedTsv: reviewTsv, howToTsv, catalog: data, cleared: cleared ?? new Set(), warmupStage: warmupStageReviewItems(data) }), [data, cleared]);
   const reviewBySlug = useMemo(() => new Map(queue.map((i) => [i.slug, i])), [queue]);
   const NEEDS_REVIEW = reviewBySlug;
   const [approving, setApproving] = useState<string | null>(null);

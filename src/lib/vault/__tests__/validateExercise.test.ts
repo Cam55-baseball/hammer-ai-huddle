@@ -43,7 +43,7 @@ describe("new exercises entering the planner", () => {
   const base = {
     slug: "new_move", name: "Wall Slide Slow", how_to_one_rep: "One rep is one slow slide up the wall.",
     cue: "Ribs down.", stop_if: "You feel pain.", measure_type: "reps", default_sets: 2, default_reps: 8,
-    equipment: ["none"], card_type: "warmup", sports: ["baseball"], season_phases: ["in_season"], min_age: 8, rest_rule: "none",
+    equipment: ["none"], card_type: "warmup", sports: ["baseball"], season_phases: ["in_season"], min_age: 8, rest_rule: "none", warmup_stage: 3,
   };
   it("requires a planner category for a brand-new exercise", () => {
     expect(validateExercise(base, { isNew: true }).join()).toMatch(/planner category/);

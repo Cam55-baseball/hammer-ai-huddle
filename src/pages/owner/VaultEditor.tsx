@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { validateExercise, MEASURE_TYPES, CATALOG_CATEGORIES, type VaultExercise } from "@/lib/vault/validateExercise";
 import { ExerciseVideo } from "@/components/hammer/cards/ExerciseVideo";
+import { WARMUP_STAGES } from "@/lib/hammer/prescription/warmupStages";
+import { defaultWarmupStage, sampleWarmupWith, stageLabel } from "@/lib/vault/warmupStageVault";
 
 const CARD_TYPES = ["lift", "primer", "conditioning", "recovery", "speed", "warmup", "bat_speed", "throwing", "pitching", "windmill", "defense", "baserunning", "cross_sport", "mobility", "arm_care"];
 const SPORTS = ["baseball", "softball"];
@@ -63,6 +65,8 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
     primer_role: "none",
     video_url: null,
     catalog_category: null,
+    warmup_stage: base.category === "warmup" && !isNew ? defaultWarmupStage(baseSlug, base.name) : null,
+    warmup_stage_order: null,
   });
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -146,6 +150,20 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
             {CARD_TYPES.map((c) => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
           </select>
         </Field>
+        {e.card_type === "warmup" && (
+          <>
+            <Field label="Warm-up stage (required)">
+              <select data-vault-warmup-stage className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={e.warmup_stage ?? ""} onChange={(ev) => set("warmup_stage", ev.target.value === "" ? null : Number(ev.target.value))}>
+                <option value="">Pick…</option>
+                {WARMUP_STAGES.map((st) => <option key={st.stage} value={st.stage}>{st.stage} · {st.name}</option>)}
+              </select>
+              {e.warmup_stage != null && <span className="text-[11px]">How warm before this: {WARMUP_STAGES[e.warmup_stage]?.warmth}</span>}
+            </Field>
+            <Field label="Order within stage (optional, 1 = first)">
+              <Input inputMode="numeric" data-vault-warmup-order value={e.warmup_stage_order ?? ""} onChange={(ev) => set("warmup_stage_order", num(ev.target.value))} />
+            </Field>
+          </>
+        )}
         <Field label='How to do one rep'><Textarea rows={3} value={e.how_to_one_rep} onChange={(ev) => set("how_to_one_rep", ev.target.value)} /></Field>
         <Field label="Setup"><Textarea rows={3} value={e.setup} onChange={(ev) => set("setup", ev.target.value)} /></Field>
         <Field label="Steps"><Textarea rows={3} value={e.steps} onChange={(ev) => set("steps", ev.target.value)} /></Field>
@@ -228,6 +246,23 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
           </p>
         </div>
       </div>
+
+      {e.card_type === "warmup" && (
+        <div data-vault-warmup-sample>
+          <h3 className="text-sm font-semibold mb-1">Where it lands in a sample warm-up</h3>
+          {e.warmup_stage == null ? (
+            <p className="text-sm text-destructive">Pick a warm-up stage to see where it lands.</p>
+          ) : (
+            <ol className="w-[360px] max-w-full list-decimal rounded-xl border border-border bg-card p-3 pl-8 text-sm">
+              {sampleWarmupWith(slug, e.name, e.warmup_stage, e.warmup_stage_order ?? null).map((r, i) => (
+                <li key={i} className={r.self ? "font-bold text-primary" : "text-muted-foreground"}>
+                  {r.name} <span className="text-[11px]">— stage {stageLabel(r.stage)}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2">

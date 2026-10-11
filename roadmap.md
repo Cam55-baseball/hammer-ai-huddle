@@ -1,3 +1,14 @@
+# WARM-UP STAGE ORDER — 2026-10-11 — Ready to publish: yes (website; nothing published)
+- [x] Stage scale (10 stages, from what the warm-ups really contain): 0 Tissue prep · 1 Breathe and reset · 2 Joint circles · 3 Mobilize · 4 Activate (incl. arm care) · 5 Coordinate · 6 Movement prep · 7 Build-ups · 8 Elastic hops · 9 Prime — each with a "how warm before this" line.
+- [x] Vault tag: "Warm-up stage" (required for every warm-up movement) + optional "Order within stage". Double-check blocks a warm-up with no stage (Make live stays off); the editor shows where it lands in a sample warm-up. All 121 builder warm-up movements are now listed in the Vault (51 were missing).
+- [x] Planner: movements chosen exactly as before, then sorted by stage → order number → previous order. Hard rules win over any tag: tissue prep rolling then rhythm always first; nothing else can be stage 0; hops/sprints/max efforts can never sit before build-ups. Owner tags take effect from the next plan build.
+- [x] Starting stages: every movement gets its group's stage. 6 unsure ones + 70 catalog warm-up movements the daily builder doesn't use are in "Needs owner review" with a suggested stage (queue now 403), e.g. med-ball rotational toss → suggested 9 Prime.
+- [x] Proof: 8-week simulation, 24,640 warm-ups (11 day types incl. every season type × 5 age bands × 2 sports × 4 roles × 56 days, mixed gear/injury/low-readiness): 100% tissue prep first, 100% non-decreasing stages, 0 rule breaks, movements and doses identical to before. Vault screenshots at phone + desktop (stage tag, block, sample). Full suite 316 files passed (one new failure fixed); build OK. No test data created.
+- Changed order note: build-ups (dry swings, throw prep, crossovers) used to sit at the END, after max-intent pogos/jumps; they now come before them.
+- Throwing ramp/Power Primer gate, age, growth and pain rules untouched (they act on choice, not order).
+
+**Owner next:** confirm the suggested stages in "Needs owner review" (filter reason "warm-up stage"); publish when ready.
+
 # Z10 FINAL PROOF — 2026-10-11 — Ready to publish: yes (website; nothing published)
 - [x] Vault end to end as owner: edit Pallof Press → preview → make live → undo (built-in card back, exercise stays on). Fixed: undoing the first edit of a built-in exercise used to switch it off.
 - [x] New exercise with full tags + video made live → prescribed in a test player's speed block (2 × 8) the same day; its video lookup works.

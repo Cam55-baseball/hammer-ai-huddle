@@ -23,6 +23,8 @@ import { ReleaseCountdown } from "@/components/hammer/cards/ReleaseCountdown";
 import { DayCommandCenter, TodayRhythmProvider } from "@/components/hammer/cards/todayRhythm";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { refreshWarmupStageOverrides } from "@/lib/hammer/prescription/warmupStages";
 import { useHammersTodayStart } from "@/hooks/useHammersTodayStart";
 import { StartHammersTodayCard } from "@/components/hammer/StartHammersTodayCard";
 import { GrowthModeCard, HeightReminderCard } from "@/components/hammer/GrowthModeCard";
@@ -512,6 +514,14 @@ export function HammerDailyPlan({
   let accessRemembered = false;
   try { accessRemembered = !!accessKey && localStorage.getItem(accessKey) === "1"; } catch { /* storage blocked */ }
   const resolvedOpen = gateResolved && !isStaffOnlyRole && hasAccess;
+  // Owner Vault warm-up stage tags: refresh the device copy for the NEXT build only.
+  useEffect(() => {
+    if (!planUser?.id) return;
+    void refreshWarmupStageOverrides(async () => {
+      const { data, error } = await supabase.rpc("get_warmup_stage_overrides");
+      return error ? null : (data as Array<{ slug: string; stage: number; stage_order: number | null }>);
+    });
+  }, [planUser?.id]);
   useEffect(() => {
     if (!accessKey || !gateResolved) return;
     try { if (resolvedOpen) localStorage.setItem(accessKey, "1"); else localStorage.removeItem(accessKey); } catch { /* storage blocked */ }

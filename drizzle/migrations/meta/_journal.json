@@ -71,6 +71,13 @@
       "when": 1791701081626,
       "tag": "0009_exercise_vault_video_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791736025650,
+      "tag": "0010_warmup_stage_overrides",
+      "breakpoints": true
     }
   ]
 }
