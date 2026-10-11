@@ -220,9 +220,9 @@ export function WkLiftsCard({ pocket = false }: { pocket?: boolean } = {}) {
             ) : (
               items.map((rx) => (
                 <div key={rx.id} className="space-y-1">
-                  {(rx.why_payload as any)?.power_primer ? <PowerPrimerBlock pp={(rx.why_payload as any).power_primer} planDate={(rx as any).plan_date ?? null} /> : null}
                   <WkPrescriptionCard rx={rx} phaseDisplay={phaseDisplay} phaseKey={phaseKey} allowSwap
                     extraLogging={rx.load_pct ? <TestedMaxLog movementSlug={rx.movement_slug} movementName={rx.movement_name} /> : null} />
+                  {(rx.why_payload as any)?.power_primer ? <PowerPrimerBlock pp={(rx.why_payload as any).power_primer} planDate={(rx as any).plan_date ?? null} liftName={rx.movement_name} liftSets={Number(rx.sets) || 0} /> : null}
                 </div>
               ))
             )}
