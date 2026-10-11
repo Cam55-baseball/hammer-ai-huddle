@@ -33,7 +33,7 @@ const todayIso = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
-export function ArmThrowsPanel({ source, planDate }: { source: EntrySource; planDate?: string }) {
+export function ArmThrowsPanel({ source, planDate, fixture }: { source: EntrySource; planDate?: string; /** Dev evidence page only: fixed athlete instead of the profile. */ fixture?: { primary: string; age: number; sport?: "baseball" | "softball" } }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const ctx = useHammerAthleteContext();
@@ -41,10 +41,10 @@ export function ArmThrowsPanel({ source, planDate }: { source: EntrySource; plan
   const { isOwner } = useOwnerAccess();
   const date = planDate ?? todayIso();
 
-  const sport = ctx.get<unknown>("sport_primary")?.value === "softball" ? "softball" : "baseball";
-  const primary = ctx.get<unknown>("position_primary")?.value ?? null;
-  const secondary = ctx.get<unknown>("position_secondary")?.value ?? null;
-  const age = ageFrom(ctx.get<string>("date_of_birth")?.value as string | null);
+  const sport = fixture?.sport ?? (ctx.get<unknown>("sport_primary")?.value === "softball" ? "softball" : "baseball");
+  const primary = fixture ? fixture.primary : ctx.get<unknown>("position_primary")?.value ?? null;
+  const secondary = fixture ? null : ctx.get<unknown>("position_secondary")?.value ?? null;
+  const age = fixture ? fixture.age : ageFrom(ctx.get<string>("date_of_birth")?.value as string | null);
   const role = throwRoleFrom(primary, secondary);
 
   const pitchLoad = useRecentPitchingLoad(7);
@@ -86,7 +86,7 @@ export function ArmThrowsPanel({ source, planDate }: { source: EntrySource; plan
 
   const types = enterableTypes(role, source);
   // Position entry is part of 5Tool Player and The Golden 2Way.
-  const entitled = source === "pitching" || isOwner || hasFeatureAccess(modules, "throwing");
+  const entitled = !!fixture || source === "pitching" || isOwner || hasFeatureAccess(modules, "throwing");
   if (!user || types.length === 0 || !entitled) return null;
 
   const write = (t: ThrowType, sets: string[], status: "done" | "skipped") => {

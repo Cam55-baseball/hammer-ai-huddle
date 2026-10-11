@@ -22,6 +22,9 @@ import { ExerciseInstructions } from "@/components/hammer/cards/ExerciseInstruct
 import { PocketCard } from "@/components/hammer/cards/PocketCard";
 import { PowerPrimerBlock } from "@/components/hammer/PowerPrimerBlock";
 import { ExerciseLogSheet } from "@/components/hammer/logging/ExerciseLogSheet";
+import { ArmThrowsPanel } from "@/components/hammer/ArmThrowsPanel";
+import { AuthContext } from "@/contexts/AuthContext";
+import { useContext } from "react";
 
 const base = {
   plan_date: "2026-03-02",
@@ -114,8 +117,13 @@ const snapshot = {
   snapshotIdentity: "evidence",
 } as unknown as never;
 
+/** Fixture player so autosave runs; the proof script answers backend writes locally (no real data). */
+const EVIDENCE_USER = { id: "00000000-0000-4000-8000-0000000e71de", email: "evidence@example.invalid" };
+
 export default function EvidenceCardClarity() {
+  const auth = useContext(AuthContext);
   return (
+    <AuthContext.Provider value={{ ...(auth as any), user: EVIDENCE_USER, session: { user: EVIDENCE_USER } as any, loading: false, isAuthStable: true }}>
     <HammersTodayContext.Provider value={snapshot}>
       <ArmCareBudgetProvider owner="lift">
         <main className="mx-auto max-w-[390px] space-y-4 p-3">
@@ -127,7 +135,10 @@ export default function EvidenceCardClarity() {
           {activityRows.map(rx => rx.id === liftRow.id ? <PocketCard key={rx.id} id={`activity_${rx.id}`} category="Lift" tone="" planDate={rx.plan_date} prescribed countLabel="3 sets × 5 reps">
             {() => <><WkPrescriptionCard rx={rx} allowSwap={false} /><PowerPrimerBlock planDate={rx.plan_date} pp={{ target: "first_step", primer: { source: "lift", name: "Trap Bar Deadlift", reps: [3, 5], heavy: true }, action: { name: "10-yard sprint", reps: [1, 1] }, rest_s: [120, 180], max_sets: 2, max_total_reps: null, half_volume: false, stop: { kind: "sprint", drop_pct: 3 }, stop_buttons: ["Pain"], requires_throwing_warmup: false }} /></>}
           </PocketCard> : <WkPrescriptionCard key={rx.id} rx={rx} allowSwap={false} />)}
-          {[{ id: "warmup", name: "Warm-up", modality: "warmup", drills: [{ name: "Tennis-ball tissue rolling", dosage: "2 minutes" }, { name: "Rhythmic leg swings", dosage: "1 minute" }] }, { id: "recovery", name: "Recovery", modality: "recovery", drills: [{ name: "Easy recovery walk", dosage: "5 minutes" }] }].map(card =>
+          <PocketCard id="throwing-evidence" category="Throwing" tone="" planDate={base.plan_date} prescribed countLabel="Catch play · position throws">
+            {() => <ArmThrowsPanel source="position" planDate={base.plan_date} fixture={{ primary: "SS", age: 12 }} />}
+          </PocketCard>
+          {[{ id: "warmup", name: "Warm-up", modality: "warmup", drills: [{ name: "Tennis-ball tissue rolling", dosage: "2 minutes" }, { name: "Ankle bounces", dosage: "45 seconds" }, { name: "Rhythmic leg swings", dosage: "2 × 30 seconds" }] }, { id: "recovery", name: "Recovery", modality: "recovery", drills: [{ name: "Easy recovery walk", dosage: "5 minutes" }] }].map(card =>
             <PocketCard key={card.id} id={card.id} category={card.name} tone="" planDate={base.plan_date} prescribed countLabel={`${card.drills.length} exercises`}>
               {() => card.drills.map(drill => <ExerciseDisclosure key={drill.name} name={drill.name}>
                 <p data-prescribed-dose>{drill.dosage}</p><ActivityBasics name={drill.name} dosage={drill.dosage} />
@@ -138,5 +149,6 @@ export default function EvidenceCardClarity() {
         </main>
       </ArmCareBudgetProvider>
     </HammersTodayContext.Provider>
+    </AuthContext.Provider>
   );
 }
