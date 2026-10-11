@@ -24,7 +24,7 @@ import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
 import { WkSessionShapeLine } from "@/components/hammer/WkProgressionNote";
-import { RestTimer, sprintRestSeconds } from "@/components/hammer/cards/RestTimer";
+import { sprintRestSeconds } from "@/components/hammer/cards/RestTimer";
 import { SpeedReadinessCheck } from "@/components/hammer/cards/SpeedReadinessCheck";
 import { CardDashboard } from "@/components/hammer/cards/CardDashboard";
 import { SprintStopwatch } from "@/components/hammer/cards/SprintStopwatch";
@@ -89,13 +89,8 @@ export function WkSpeedCard({ pocket = false }: { pocket?: boolean } = {}) {
               />
               {items.map((rx) => (
                 <div key={rx.id} className="space-y-1">
-                  <WkPrescriptionCard rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} />
-                  {sprintRestSeconds(rx.distance_feet) != null && (
-                    <>
-                      <SprintStopwatch cardId={rx.id} distanceFeet={rx.distance_feet} movementSlug={rx.movement_slug} planDate={rx.plan_date} />
-                      <RestTimer label="Sprint rest" seconds={sprintRestSeconds(rx.distance_feet)} />
-                    </>
-                  )}
+                  <WkPrescriptionCard rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase}
+                    extraLogging={sprintRestSeconds(rx.distance_feet) != null ? <SprintStopwatch cardId={rx.id} distanceFeet={rx.distance_feet} movementSlug={rx.movement_slug} planDate={rx.plan_date} /> : null} />
                 </div>
               ))}
               </>
