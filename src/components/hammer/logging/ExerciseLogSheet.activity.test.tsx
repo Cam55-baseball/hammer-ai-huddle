@@ -25,6 +25,6 @@ describe("specialized pitching activity logging", () => {
     expect(top.getByRole("textbox")).toHaveValue("27");
     expect(top.queryByRole("button", { name: /save log/i })).toBeNull();
     await waitFor(() => expect(state.save).toHaveBeenCalled(), { timeout: 3000 });
-    expect(state.save.mock.calls[0]?.[0]).toMatchObject({ prescription_id: rx.id, movement_slug: "bullpen_pen", template_id: "bullpen_pitching", rpe: null, rounds: [{ pitches: 27, strikes: null, first_pitch_strikes: null, peak_velo: null, avg_velo: null }] });
+    expect(state.save.mock.calls.at(-1)?.[0]).toMatchObject({ prescription_id: rx.id, movement_slug: "bullpen_pen", template_id: "bullpen_pitching", rpe: null, rounds: [{ pitches: 27, strikes: null, first_pitch_strikes: null, peak_velo: null, avg_velo: null }] });
   });
 });

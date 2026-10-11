@@ -1426,13 +1426,15 @@ function BlockCard({
   return (
     <div
       id={domId}
-      className={`rounded-lg border p-3 scroll-mt-24 ${STATUS_TONE[block.status]}`}
+      data-block-body={pocketDetails ? "pocket" : "plan"}
+      className={pocketDetails ? "scroll-mt-24" : `rounded-lg border p-3 scroll-mt-24 ${STATUS_TONE[block.status]}`}
     >
       <Collapsible open={pocketDetails || open} onOpenChange={setOpen}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-               <span className="min-w-0"><span className="block text-[10px] font-semibold text-muted-foreground">Today's movement</span><span className="block text-sm font-semibold capitalize">{block.title}</span></span>
+               {/* Inside its pop-up the header already shows the title — never repeat the card. */}
+               {!pocketDetails && <span className="min-w-0"><span className="block text-[10px] font-semibold text-muted-foreground">Today's movement</span><span className="block text-sm font-semibold capitalize">{block.title}</span></span>}
               {block.side && (
                 <Badge variant="outline" className="text-[10px] border-primary/50 text-primary">
                   {block.side === "L" ? "Left" : "Right"}
@@ -1483,7 +1485,7 @@ function BlockCard({
                   Do a light block anyway
                 </Button>
               )}
-            {block.status !== "off-day" && (
+            {block.status !== "off-day" && !(pocketDetails && block.route === "hammer:open-warmup-generator") && (
               <Button
                 size="sm"
                 variant={block.status === "awaiting-input" ? "outline" : "default"}
