@@ -59,6 +59,23 @@ serve(async (req) => {
 
     if (error) throw error;
 
+    // Keep the unified Requests inbox in sync: resolve any matching pending
+    // connection_requests row so it never shows a request already answered here.
+    try {
+      await supabase
+        .from("connection_requests")
+        .update({
+          status: status === "accepted" ? "accepted" : "denied",
+          responded_at: new Date().toISOString(),
+          responded_by: user.id,
+        })
+        .in("kind", ["coach_player", "scout_player"])
+        .eq("status", "pending")
+        .or(`and(from_user.eq.${data.scout_id},to_user.eq.${follow.player_id}),and(from_user.eq.${follow.player_id},to_user.eq.${data.scout_id})`);
+    } catch (mirrorErr) {
+      console.error("connection_requests sync failed:", mirrorErr);
+    }
+
     console.log("Follow request updated:", data);
 
     return new Response(JSON.stringify({ success: true, data }), {
