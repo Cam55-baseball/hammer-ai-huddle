@@ -13,7 +13,7 @@
 - Landing opening: full sequence on first install, skippable short one on later launches; final wipe waits for the landing page. Why: owner's launch identity without an unloaded page.
 - Verify anything a player does signed in as a player (or the affected role), never only as owner/admin. Why: owner accounts skip subscription and access gates; two owner-verified fixes failed for players (2026-10-04).
 - Never prescribe or recommend an athlete action that the affected athlete cannot open; keep unreleased Game IQ suppressed at one presentation switch until its routes open to athletes. Why: inaccessible prescriptions teach players the app is broken.
-- Athlete-facing headings, notices and status lines must make sense to a fourteen-year-old without explanation; translate canonical plan reasons only at the display edge. Why: athletes must know what changed and what to do without guessing or altering the prescription.
+- Athlete-facing headings, notices and status lines must make sense to a 14-year-old; translate plan reasons only at the display edge. Why: athletes must know what changed and what to do without guessing or altering the prescription.
 - Every value shown to an athlete must carry a label saying what kind of thing it is. Why: a bare name leaves athletes guessing what it is.
 - Demo auto-start outcomes and inspector state/events go to console.debug only, never app UI. Why: diagnostics are not for users.
 - No plan is built for an account without `profiles.hammers_today_started_at` while switch `hammers_today_start_gate` is on — enforced in `wk-generate-daily`, and the client mounts no plan provider before the start. `wk-daily-plan-job` builds only missing plans for started players. Why: one start per account, the same on every device.

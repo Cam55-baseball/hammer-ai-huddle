@@ -18,6 +18,8 @@ const corsHeaders = {
 
 /** Switches the rest-day / logging rollout governs. */
 const GOVERNED = ["rest_day_calculator", "one_tap_logging"];
+/** Safety switches the nightly check may never turn down (owner: always "all"). */
+export const SAFETY_LOCKED = new Set(["rest_day_calculator"]);
 
 /**
  * Step 15 item 4 — which switch owns which critical watchdog note. A card that
@@ -101,6 +103,22 @@ serve(async (req) => {
 
       if (!verdict.demoted) {
         actions.push({ feature_key: row.feature_key, demoted: false, mode });
+        continue;
+      }
+
+      // Owner rule 2026-10-11: safety switches stay "all" forever. The nightly
+      // check may raise an alert but never turns a safety rule down.
+      if (SAFETY_LOCKED.has(row.feature_key)) {
+        if (!dryRun) {
+          await supabase.from("owner_alerts").insert({
+            alert_key: `tcs_auto_off_blocked_${row.feature_key}`,
+            severity: "high",
+            title: `${row.label}: nightly check failed (switch kept on)`,
+            detail: { feature_key: row.feature_key, would_have_been: verdict.toMode, reason: verdict.reason },
+            minute_bucket: new Date(Math.floor(Date.now() / 60000) * 60000).toISOString(),
+          });
+        }
+        actions.push({ feature_key: row.feature_key, demoted: false, mode, locked: true, reason: verdict.reason });
         continue;
       }
 
