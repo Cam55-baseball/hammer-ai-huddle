@@ -354,7 +354,7 @@ export function resolveTemplate(rx: WkRx): LogTemplate {
   const sets = rx.sets ?? 0;
 
   // 0. Skill positions: catcher pop time, fielding, baserunning.
-  if (has(slug, /pop_time|catcher_pop|pop_to_second|catchers? Throw/)) return CATCHER_POP;
+  if (has(slug, /pop_time|catcher_pop|pop_to_second|catcher_throw/)) return CATCHER_POP;
   if (slot === "baserunning" || has(slug, /home_to_first|home-to-first|steal|base_steal|baserun|lead_off|first_to_third/)) return BASERUNNING;
   if (slot === "fielding" || slot === "defense" || has(slug, /fielding|ground_ball|glove_work|infield|outfield_drill|defense|defensive/)) return FIELDING;
 
