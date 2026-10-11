@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { OptionalSurvey } from "./OptionalSurvey";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { legacyDrillLogSpec } from "@/lib/hammer/prescription/legacyDrillLog";
@@ -25,6 +27,7 @@ export function LegacyDrillInlineLog({
 }) {
   const [outcome, setOutcome] = useState<"completed" | "skipped" | "cut_short" | null>(completed ? "completed" : null);
   const [hard, setHard] = useState("");
+  const [notes, setNotes] = useState("");
   const spec = useMemo(() => legacyDrillLogSpec(modality, name, dosage), [dosage, modality, name]);
   const initial = useMemo<Draft>(() => Array.from({ length: spec.rows }, () => Object.fromEntries(spec.fields.map((field) => [field.key, field.prefill == null ? "" : String(field.prefill)]))), [spec]);
   const [rounds, setRounds] = useState<Draft>(initial);
@@ -48,6 +51,7 @@ export function LegacyDrillInlineLog({
   const save = () => {
     onSave({
       dosage,
+      notes: notes.trim() || null,
       completed: spec.completion ? done : true,
       rounds: rounds.map((round) => Object.fromEntries(Object.entries(round).map(([key, value]) => [key, value === "" ? null : Number(value)]))),
       fields: spec.fields.map(({ key, label, unit }) => ({ key, label, unit: unit ?? null })),
@@ -92,6 +96,7 @@ export function LegacyDrillInlineLog({
           <span className="shrink-0 font-medium">How hard 1–10</span>
           <Input aria-label="How hard 1–10" inputMode="numeric" value={hard} onChange={(e) => setHard(e.target.value.replace(/[^\d]/g, "").slice(0, 2))} className="h-9 w-20 px-2 text-sm" />
         </label>
+        <OptionalSurvey><label className="block text-xs">Notes (optional)<Textarea value={notes} onChange={(e) => setNotes(e.target.value)} /></label></OptionalSurvey>
       </div>}
     </div>
   );
