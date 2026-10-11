@@ -148,8 +148,8 @@ const sections: LegalSection[] = [
           help.
         </p>
         <p>
-          Grades, measurements, and projections are estimates made for training. They are not
-          guaranteed to be accurate, and they are <strong>not a promise</strong> about recruiting,
+          Grades, measurements, and projections are estimates made for training. They may be
+          inaccurate, and they are <strong>not a promise</strong> about recruiting,
           scholarships, or a professional career.
         </p>
       </>

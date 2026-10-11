@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Check, ShieldCheck, Sparkles, Clock } from "lucide-react";
+import { Check, Sparkles, Clock } from "lucide-react";
 import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
 import { conversionCopy } from "@/demo/prescriptions/conversionCopy";
 import { getDemoAbVariant, tierForVariant } from "@/lib/demoAbVariant";
@@ -559,17 +559,6 @@ const Checkout = () => {
             }} disabled={checkoutLoading || (legalV2.on && !renewOk)} className="w-full mb-3" size="lg">
             {checkoutLoading ? t("subscriptionTiers.processing") : "Start my system now"}
           </Button>
-
-          {/* Risk reversal directly under CTA */}
-          <div className="mb-3 flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3">
-            <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-            <div>
-              <p className="text-sm font-bold">7-day performance guarantee — no risk</p>
-              <p className="text-xs text-muted-foreground">
-                If you don't see measurable progress, we'll refund you.
-              </p>
-            </div>
-          </div>
 
           {/* Single-path lockdown for demo: dialog-based switcher only */}
           {isFromDemo ? (

@@ -1,3 +1,8 @@
+# NO REFUND OR RESULTS PROMISES — 2026-10-11 — In progress; nothing published, no cron changes
+- [ ] Remove promises from app content, translations, help chat, emails, notifications, tour and metadata; record exact before/after wording.
+- [ ] Read approved subscription-policy, subscription-cancellation and terms; prepare lawyer-review v2 drafts only if needed, preserving v1.
+- [ ] Verify repository and live content searches; test checkout and help behavior; redeploy only help chat if needed and proven.
+
 # LEGAL GO-LIVE CHECK — 2026-10-11 — Ready to publish: yes (website; nothing published, no cron applied)
 **Checked live (phone size, signed out):** home page footer lists "Consumer Health Data Privacy Policy"; every /legal page opens with "Version 1 · Effective 2026-10-11"; no "DRAFT" label for players.
 **Fixed:** 10 lawyer drafting notes ("[LAWYER: …]") were showing to players inside Terms, Privacy, Consumer Health Data, Minor Waiver, Adult Release, Child Safety and Subscription Policy. They are now hidden on screen (the approved stored text is unchanged). Tests added.

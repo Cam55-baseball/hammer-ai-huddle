@@ -124,7 +124,6 @@ serve(async (req) => {
     if (pct !== undefined && pct !== null) checkoutMetadata.pct = String(pct);
     if (from) checkoutMetadata.from_slug = String(from);
     if (abVariant) checkoutMetadata.ab_variant = String(abVariant);
-    checkoutMetadata.guarantee = "7_day";
 
     if (tier) {
       // NEW: Tier-based checkout

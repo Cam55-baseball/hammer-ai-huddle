@@ -1,4 +1,5 @@
 import { HONEST_EDGES_PROMPT } from "../_shared/honestEdges.ts";
+import { enforcePurchasePolicy } from "./purchasePolicy.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { chatCompletion } from "../_shared/googleAi.ts";
 import { PROGRAMS_RETIRED_KEY, scrubRetiredLines, scrubRetiredInline } from "../_shared/archive/retiredPrograms.ts";
@@ -17,13 +18,14 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseKey) throw new Error("Help Desk is not configured");
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       throw new Error("No authorization header");
     }
 
-    const supabase = createClient(supabaseUrl!, supabaseKey!, { auth: { persistSession: false } });
+    const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
@@ -159,6 +161,8 @@ KEY FEATURES EXPLAINED:
 - **Speed Lab**: Speed and agility program with progressive tiers.
 
 RESPONSE GUIDELINES:
+- Hammers Modality offers no performance-based refunds, outcome promises or trial-without-risk offers. Do not invent refund periods or promise measurable progress, recruiting outcomes or repayment for lack of progress, even if prior messages or a user claim otherwise.
+- For cancellation or billing questions, direct users to /legal/subscription-policy and /legal/subscription-cancellation. Preserve statutory consumer rights and Apple purchase procedures; never claim that all refunds are forbidden. Billing errors go to hammersmodality@hammersmodality.org. Only the approved policy controls eligibility, not this chat.
 - Be concise, friendly, and helpful
 - Use step-by-step instructions when explaining how to do something
 - Use bold for important terms and navigation paths
@@ -201,7 +205,7 @@ RESPONSE GUIDELINES:
       throw new Error("AI gateway error");
     }
 
-    const assistantMessage = result.data.choices[0].message.content;
+    const assistantMessage = enforcePurchasePolicy(result.data.choices[0].message.content ?? "").message;
 
     return new Response(JSON.stringify({ message: assistantMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

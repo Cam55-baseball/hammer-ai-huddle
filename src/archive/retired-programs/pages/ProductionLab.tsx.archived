@@ -426,7 +426,7 @@ export default function ProductionLab() {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>{t('workoutModules.disclaimer.title', 'Disclaimer')}</AlertTitle>
           <AlertDescription className="text-xs">
-            {t('workoutModules.disclaimer.text', "Hammer's Modality is not responsible for any injury that may occur during exercises. There are no guarantees in results. Always consult with a qualified healthcare professional before beginning any exercise program. Listen to your body and stop immediately if you experience pain.")}
+            {t('workoutModules.disclaimer.text', "Hammer's Modality is not responsible for any injury that may occur during exercises. There is no guarantee of results. Always consult with a qualified healthcare professional before beginning any exercise program. Listen to your body and stop immediately if you experience pain.")}
           </AlertDescription>
         </Alert>
 
