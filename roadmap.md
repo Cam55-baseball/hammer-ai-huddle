@@ -1,6 +1,12 @@
 # OWNER STATUS — 2026-10-11 evening — security fixes
 
-**Ready to publish: no** — security fixes A1–A3 are live in the backend and proven; A4 is done (CC1: legacy follow reads made minor-aware, proof in security-fixes.md); B1–B3 are not finished yet.
+**Ready to publish: no** — every security fix (A1–A4) is live in the backend and re-proven (CC6), but the signed-in page check, the upgrade-button tap-through and the legal signed-in checks still need the owner's choice of test accounts, and the Blueprint coverage minimums need the owner's decision.
+
+**Renewal-reminder cron SQL:** `docs/owner/renewal-reminders-cron.sql` (owner reviews and applies; not applied).
+
+**CC6 final proof (21:24–21:35 UTC):** outsider raw link → refused (400); outsider asking for a link → refused (400); allowed viewer → plays (206 video). Pretend sign-in as a plain player (rolled back): self-admin, self-coach, joining a team as coach, self-accepting a follow — all blocked; another player's videos and sessions hidden. Under-13 players reachable by any staff follow: 0. Full suite 2,730/2,730 (324 files), including the 540 eight-week Blueprint simulations with zero rule breaks.
+
+**Waiting on owner:** (1) test accounts — real ones you name, or temporary ones I make and delete — for the page audit, upgrade-button tap-through and legal signed-in checks (updated terms, teen grace/reminders, new-teen lock, under-13 waiver, health consent, auto-renew, Cancel); (2) coverage minimums vs the six-slot day (raise slots, or accept rotating robustness); (3) 79 lift-tag items + 10 unapplied tag suggestions in the Vault; (4) lawyer review of Subscription Policy v2; (5) apply the cron SQL.
 
 - [x] A1 Private media — videos, scout letters, scout videos and avatars are private; raw links refused; allowed viewers play signed links. Proof in `docs/owner/security-fixes.md`.
 - [x] A2 Self-claimed roles blocked (staff roles start pending, owner approves).
