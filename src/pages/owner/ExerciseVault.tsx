@@ -12,10 +12,8 @@ import { Input } from "@/components/ui/input";
 import { BASIC_HOW_TO } from "@/lib/hammer/prescription/basicHowTo.generated";
 import VaultEditor from "./VaultEditor";
 import reviewTsv from "../../../docs/owner/exercise-descriptions-needed.tsv?raw";
-
-const NEEDS_REVIEW = new Set(
-  reviewTsv.split("\n").slice(1).map((l) => l.split("\t")[0]).filter(Boolean),
-);
+import howToTsv from "../../../docs/owner/basic-how-to-review.tsv?raw";
+import { buildReviewQueue } from "@/lib/vault/reviewQueue";
 
 type Row = {
   slug: string; name: string; category: string | null; sport_scope: string | null;
@@ -62,6 +60,25 @@ export default function ExerciseVault() {
     phase: uniq(data.flatMap((r) => r.season_eligibility ?? [])),
     equipment: uniq(data.flatMap((r) => r.equipment ?? [])),
   }), [data]);
+
+  const { data: cleared, refetch: refetchCleared } = useQuery({
+    queryKey: ["vault-reviewed"],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("exercise-vault", { body: { action: "reviewed" } });
+      if (error) throw error;
+      return new Set<string>(data?.slugs ?? []);
+    },
+  });
+  const queue = useMemo(() => buildReviewQueue({ flaggedTsv: reviewTsv, howToTsv, catalog: data, cleared: cleared ?? new Set() }), [data, cleared]);
+  const reviewBySlug = useMemo(() => new Map(queue.map((i) => [i.slug, i])), [queue]);
+  const NEEDS_REVIEW = reviewBySlug;
+  const [approving, setApproving] = useState<string | null>(null);
+  const approve = async (slug: string) => {
+    setApproving(slug);
+    const { data: d, error } = await supabase.functions.invoke("exercise-vault", { body: { action: "approve_review", slug } });
+    setApproving(null);
+    if (!error && !d?.error) void refetchCleared();
+  };
 
   const rows = data.filter((r) => {
     const s = q.trim().toLowerCase();
@@ -138,6 +155,13 @@ export default function ExerciseVault() {
                 {r.is_active === false && <Badge variant="outline">Status: off</Badge>}
                 {NEEDS_REVIEW.has(r.slug) && <Badge variant="destructive">Needs owner review</Badge>}
               </div>
+              {reviewBySlug.get(r.slug) && (
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs" data-vault-review={r.slug}>
+                  <span className="text-muted-foreground">Review reason: {reviewBySlug.get(r.slug)!.reasons.join(", ")}{reviewBySlug.get(r.slug)!.notes.length ? ` — ${reviewBySlug.get(r.slug)!.notes.join("; ")}` : ""}</span>
+                  <button type="button" data-vault-approve className="h-7 rounded-md border border-border px-2 font-semibold" disabled={approving === r.slug} onClick={(e) => { e.stopPropagation(); void approve(r.slug); }}>{approving === r.slug ? "Approving…" : "Approve as written"}</button>
+                  <button type="button" className="h-7 rounded-md border border-border px-2 font-semibold" onClick={(e) => { e.stopPropagation(); setSelected(r.slug); }}>Edit</button>
+                </div>
+              )}
               <p className="text-sm text-muted-foreground mt-1">How to do one rep: {BASIC_HOW_TO[r.slug] ?? "— not written yet"}</p>
               <p className="text-xs text-muted-foreground mt-1">
                 Default dose: {r.default_sets ?? "–"} × {r.default_reps ?? "–"} {r.dosage_unit ?? ""} · Minimum age: {r.min_age_years ?? "–"} · Equipment: {(r.equipment ?? []).join(", ") || "none"}

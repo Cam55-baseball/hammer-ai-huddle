@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const action = String(body?.action ?? "");
     const slug = String(body?.slug ?? "").trim();
-    if (!slug && action !== "list") return json({ error: "Missing slug" }, 400);
+    if (!slug && action !== "list" && action !== "reviewed") return json({ error: "Missing slug" }, 400);
 
     const audit = (act: string, detail: unknown) =>
       admin.from("exercise_vault_audit").insert({ slug, action: act, actor: u.user.id, detail });
