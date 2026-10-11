@@ -38,6 +38,16 @@ export function GameTotalsHeader({ gameId }: { gameId: string }) {
       return (data ?? []) as Array<{ perspective: string }>;
     },
   });
+  const game = useQuery({
+    queryKey: ["gp-game-date", gameId],
+    queryFn: async () => {
+      const { data } = await gp("gp_games")
+        .select("game_date")
+        .eq("id", gameId)
+        .single();
+      return data as { game_date: string } | null;
+    },
+  });
 
   const t: Totals = {
     pa: 0, ab: 0, h: 0, bb: 0, k: 0, rbi: 0,
@@ -72,6 +82,9 @@ export function GameTotalsHeader({ gameId }: { gameId: string }) {
       )}
       {t.pitchesAsPitcher > 0 && <Stat label="P (mound)" value={t.pitchesAsPitcher} />}
       {t.pitchesAsHitter > 0 && <Stat label="P (seen)" value={t.pitchesAsHitter} />}
+      <span className="ml-auto text-[10px] text-muted-foreground">
+        Source: you logged this game{game.data?.game_date ? ` · ${game.data.game_date}` : ""}
+      </span>
     </div>
   );
 }
