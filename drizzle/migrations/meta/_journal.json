@@ -99,6 +99,13 @@
       "when": 1791752022397,
       "tag": "0013_avatar_read_rule_definer",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791752171441,
+      "tag": "0014_athlete_contact_rule",
+      "breakpoints": true
     }
   ]
 }

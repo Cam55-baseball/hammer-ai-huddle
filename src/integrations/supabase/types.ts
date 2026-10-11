@@ -21262,6 +21262,7 @@ export type Database = {
         Args: { p_folder_item_id: string; p_user_id: string }
         Returns: boolean
       }
+      can_view_athlete_contact: { Args: { _athlete: string }; Returns: boolean }
       can_view_athlete_media: {
         Args: { _athlete: string; _viewer: string }
         Returns: boolean
