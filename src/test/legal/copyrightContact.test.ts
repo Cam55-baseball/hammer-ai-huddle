@@ -12,3 +12,10 @@ describe("copyright page before a DMCA agent is registered", () => {
   });
   it("leaves other documents untouched", () => expect(displayBody("terms", body)).toBe(body));
 });
+import { stripDraftNotes } from "@/lib/legal/legalV2";
+describe("lawyer drafting notes", () => {
+  it("are removed from what readers see", () => {
+    expect(stripDraftNotes("Refunds apply.\n[LAWYER: confirm refund terms.]\nEnd")).toBe("Refunds apply.\n\nEnd".replace("\n\n", "\n\n"));
+    expect(stripDraftNotes("A [OWNER/LAWYER: x] B")).not.toMatch(/LAWYER/);
+  });
+});
