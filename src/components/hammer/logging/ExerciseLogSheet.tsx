@@ -26,8 +26,13 @@ import { buildBestIndex, evaluateStandard, newlyEarned, mergeIndexes } from "@/l
 import { TIER_LABEL } from "@/lib/hammer/standards/catalog";
 import { StandardTargetLine } from "@/components/hammer/standards/StandardTargetLine";
 import { toast } from "sonner";
+import { createPortal } from "react-dom";
+import { usePocketLogHost } from "@/components/hammer/cards/PocketCard";
+import { ExerciseDisclosure } from "@/components/hammer/cards/ExerciseDisclosure";
 
 interface Props {
+  /** Existing specialized log, split visually without switching to survey-only saving. */
+  activity?: boolean;
   embedded?: boolean;
   open: boolean;
   onOpenChange: (b: boolean) => void;
@@ -51,7 +56,8 @@ function toNum(v: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded = false }: Props) {
+export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded = false, activity = false }: Props) {
+  const logHost = usePocketLogHost();
   const { slugs: unilateralSlugs } = useUnilateralMovements();
   const { template, unilateral } = useMemo(
     () => resolveTemplateForRx(rx, unilateralSlugs),
@@ -283,10 +289,32 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
     }
   };
 
+  const saveControl = savedAt ? (
+    <div role="status" className="flex items-center gap-2 text-sm text-primary"><CheckCircle2 className="h-4 w-4" /> Saved.</div>
+  ) : <Button onClick={handleSave} disabled={save.isPending} className="w-full gap-2" size="lg">
+    {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+    {save.isPending ? "Saving…" : embedded ? "Save survey" : latest ? "Update log" : "Save log"}
+  </Button>;
+  const entryFields = template.fields.filter((field) => !field.optional);
+  const extraFields = template.fields.filter((field) => field.optional);
+  const changeFields = (fields: typeof template.fields, next: Round[]) => setRounds(rounds.map((round, i) => {
+    const result = { ...round };
+    for (const field of fields) result[field.key] = next[i]?.[field.key] ?? "";
+    return result;
+  }));
+  const topEntries = <section data-pitching-entry-grid className="space-y-2">
+    <h4 className="break-words text-sm font-semibold">{rx.movement_name}</h4>
+    <p className="text-xs text-muted-foreground">{dosageText}</p>
+    <RoundGrid fields={entryFields} rounds={rounds} onChange={(next) => changeFields(entryFields, next)} minRounds={initialRoundsCount} maxRounds={initialRoundsCount} />
+    {saveControl}
+  </section>;
+
   return (
-    <LogSurveyWrapper embedded={embedded} open={open} onOpenChange={onOpenChange}>
-      <LogSurveyContent embedded={embedded}>
-        {embedded ? <h4 className="text-xs font-semibold">Survey (optional)</h4> : <SheetHeader className="text-left">
+    <LogSurveyWrapper embedded={embedded || activity} open={open} onOpenChange={onOpenChange}>
+      {activity && logHost && createPortal(topEntries, logHost)}
+      <LogSurveyContent embedded={embedded || activity}>
+      <ActivityLogDetails activity={activity} name={rx.movement_name}>
+        {activity ? <p className="text-xs" data-prescribed-dose>{dosageText}</p> : embedded ? <h4 className="text-xs font-semibold">Survey (optional)</h4> : <SheetHeader className="text-left">
           <SheetTitle className="text-base">{rx.movement_name}</SheetTitle>
           <SheetDescription className="text-xs">
             {dosageText}
@@ -309,7 +337,9 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
             <StandardTargetLine rows={standardRows} bodyweightLbs={measures?.bodyweightLbs ?? null} />
           )}
 
-          {!embedded && <RoundGrid
+          {activity && !logHost && topEntries}
+          {activity && extraFields.length > 0 && <RoundGrid fields={extraFields} rounds={rounds} onChange={(next) => changeFields(extraFields, next)} minRounds={initialRoundsCount} maxRounds={initialRoundsCount} />}
+          {!embedded && !activity && <RoundGrid
             fields={template.fields}
             rounds={rounds}
             onChange={setRounds}
@@ -344,7 +374,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
           {!embedded && template.meta.rpe && (
             <div>
               <div className="flex items-center justify-between">
-                <Label className="text-xs uppercase tracking-wide text-muted-foreground">RPE</Label>
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">How hard 1–10</Label>
                 <Badge variant="secondary">{rpe} / 10</Badge>
               </div>
               <Slider value={[rpe]} min={1} max={10} step={1} onValueChange={(v) => setRpe(v[0])} className="mt-2" />
@@ -407,18 +437,14 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
             )}
           </div>
 
-          {savedAt ? (
-            <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4" /> Saved.
-            </div>
-          ) : (
-            <Button onClick={handleSave} disabled={save.isPending} className="w-full gap-2" size="lg">
-              {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              {save.isPending ? "Saving…" : embedded ? "Save survey" : latest ? "Update log" : "Save log"}
-            </Button>
-          )}
+          {saveControl}
         </div>
+      </ActivityLogDetails>
       </LogSurveyContent>
     </LogSurveyWrapper>
   );
+}
+
+function ActivityLogDetails({ activity, name, children }: { activity: boolean; name: string; children: React.ReactNode }) {
+  return activity ? <ExerciseDisclosure name={name}>{children}</ExerciseDisclosure> : <>{children}</>;
 }
