@@ -1,3 +1,26 @@
+# LEGAL GO-LIVE CHECK — 2026-10-11 — Ready to publish: yes (website; nothing published, no cron applied)
+**Checked live (phone size, signed out):** home page footer lists "Consumer Health Data Privacy Policy"; every /legal page opens with "Version 1 · Effective 2026-10-11"; no "DRAFT" label for players.
+**Fixed:** 10 lawyer drafting notes ("[LAWYER: …]") were showing to players inside Terms, Privacy, Consumer Health Data, Minor Waiver, Adult Release, Child Safety and Subscription Policy. They are now hidden on screen (the approved stored text is unchanged). Tests added.
+**Copyright page:** the blank agent placeholder is replaced on screen with "Copyright notices: hammersmodality@hammersmodality.org" until you register a DMCA agent.
+**Not yet walked end to end with test accounts:** updated-terms screen → consent_records, teen 14-day grace + Resend, new-teen lock/unlock after parent signs, under-13 parent waiver, health-data checkbox, checkout auto-renew box, Cancel subscription. Their rule tests pass (15/15 legal tests); a signed-in walk-through needs test accounts created and removed — say the word and it runs next.
+
+## Renewal reminders — cron SQL (you apply; not applied)
+Function `renewal-reminders`, daily 14:00 UTC, auth = Vault secret `wk_daily_plan_job_token` in the `x-job-token` header.
+```sql
+select cron.schedule('renewal-reminders-daily', '0 14 * * *', $$
+  select net.http_post(
+    url := 'https://wysikbsjalfvjwqzkihj.supabase.co/functions/v1/renewal-reminders',
+    headers := jsonb_build_object('Content-Type','application/json',
+      'x-job-token', (select decrypted_secret from vault.decrypted_secrets where name = 'wk_daily_plan_job_token')),
+    body := '{"mode":"renewal","dry_run":false}'::jsonb);
+$$);
+```
+
+## Refund wording — word for word (unchanged; please confirm they match)
+**Checkout:** "7-day performance guarantee — no risk" / "If you don't see measurable progress, we'll refund you."
+**Approved Subscription Policy §6 Refunds:** "We do not give partial refunds for unused time, except where the law requires." / "If you were charged after you cancelled, or charged in error, email us within 60 days and we will refund it." / "Apple purchases are refunded through Apple."
+**They do not match:** the policy has no 7-day progress guarantee. Owner decides which to change.
+
 # SWITCH CHECK BEFORE PUBLISH — 2026-10-11 — Ready to publish: yes (website; nothing published)
 **What turned the rest rules down:** not a test or script. The nightly safety check (`tcs-auto-off`, runs 04:45 UTC) dropped it automatically: Oct 7 04:45 all → pilot ("last night's check did not pass"; the pilot list was empty, so rest rules applied to nobody), then Oct 8 04:45 pilot → self (10 critical watchdog notes; owner only). You set it back to all at Oct 11 18:15.
 **Guard:** the nightly check can no longer turn the rest-day rules down; it now sends an owner alert instead (deployed, dry run shows rest_day_calculator: all). A new test fails if any test or script writes the live switch rows (none do today) or if the guard is removed.
