@@ -1,3 +1,4 @@
+import { CoachMessagesInbox } from "@/components/coach/CoachMessagesInbox";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * RR-10 — Parent recruiting authorization surface.
@@ -147,6 +148,7 @@ export default function ParentRecruitingAuthorization() {
         </Card>
 
         {athleteId && <ParentSharingChecklist athleteId={athleteId} />}
+        {athleteId && isParent && <CoachMessagesInbox athleteId={athleteId} title="Messages from your child's coaches" />}
 
         <Card>
           <CardHeader className="pb-2">
