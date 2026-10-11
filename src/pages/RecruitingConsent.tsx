@@ -16,6 +16,7 @@ import { ShieldCheck, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecruitingConsent, useRecruitingConsentAudit } from "@/hooks/useRecruitingConsent";
 import { toast } from "@/hooks/use-toast";
+import { TranscriptUploadCard } from "@/components/recruiting/TranscriptUploadCard";
 import {
   CONSENT_SCOPES, SCOPE_LABEL, scopeColumn, statusLine, guardianCleared, type GranularConsent,
 } from "@/lib/recruiting/consentStatus";
@@ -126,6 +127,7 @@ export default function RecruitingConsent() {
             )}
           </CardContent>
         </Card>
+        {user && <TranscriptUploadCard userId={user.id} />}
       </div>
     </DashboardLayout>
   );
