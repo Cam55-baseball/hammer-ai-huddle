@@ -16,7 +16,8 @@ import { ExerciseVideo } from "@/components/hammer/cards/ExerciseVideo";
 
 const CARD_TYPES = ["lift", "primer", "conditioning", "recovery", "speed", "warmup", "bat_speed", "throwing", "pitching", "windmill", "defense", "baserunning", "cross_sport", "mobility", "arm_care"];
 const SPORTS = ["baseball", "softball"];
-const PHASES = ["off_season", "pre_season", "in_season", "post_season"];
+// Canonical catalog phase codes — the planner matches these exactly.
+const PHASES = ["os_q1", "os_q2", "os_q3", "os_q4", "pre_season", "in_season", "post_season"];
 const REST_RULES = ["lift_day", "hard_running", "high_jumps", "heavy_bat", "light_bat", "throwing", "none"];
 const PRIMER_ROLES = ["none", "primer_lift", "explosive_action"];
 
