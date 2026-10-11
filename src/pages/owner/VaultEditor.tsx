@@ -243,6 +243,8 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
       </div>
       {msg && <p className="text-sm" data-vault-msg>{msg}</p>}
 
+      {!isNew && <VaultStats slug={slug} />}
+
       {/* Version history + audit */}
       <div>
         <h3 className="text-sm font-semibold">Version history</h3>
@@ -255,5 +257,34 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
         </ul>
       </div>
     </Card>
+  );
+}
+
+function VaultStats({ slug }: { slug: string }) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["vault-stats", slug],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("exercise-vault", { body: { action: "stats", slug } });
+      if (error) throw error;
+      return data as import("../../../supabase/functions/_shared/vault/exerciseStats").ExerciseStats;
+    },
+  });
+  const fmt = (v: number | null, suffix = "") => (v == null ? "No data yet" : `${v > 0 && suffix === " change" ? "+" : ""}${v}${suffix}`);
+  return (
+    <div data-vault-stats>
+      <h3 className="text-sm font-semibold">Stats</h3>
+      {isLoading && <p className="text-xs text-muted-foreground">Loading…</p>}
+      {error && <p className="text-xs text-destructive">Couldn't load stats.</p>}
+      {data && (
+        <dl className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+          <dt className="text-muted-foreground">Times prescribed</dt><dd>{data.timesPrescribed}</dd>
+          <dt className="text-muted-foreground">Completion rate</dt><dd>{data.completionRate == null ? "No data yet" : `${data.completionRate}% (${data.completed} done, ${data.missed} missed)`}</dd>
+          <dt className="text-muted-foreground">Average effort (1–10)</dt><dd>{fmt(data.averageEffort)}{data.effortLogs ? ` · ${data.effortLogs} logs` : ""}</dd>
+          <dt className="text-muted-foreground">Primer quality (1–5)</dt><dd>{fmt(data.averagePrimerQuality)}{data.primerRatings ? ` · ${data.primerRatings} ratings` : ""}</dd>
+          <dt className="text-muted-foreground">Performance change, 2 / 4 / 8 weeks</dt><dd>{[data.performanceChange.w2, data.performanceChange.w4, data.performanceChange.w8].map((v) => (v == null ? "—" : v)).join(" / ")}{data.performanceChange.records ? ` · ${data.performanceChange.records} anonymous records` : " · no anonymous records yet"}</dd>
+        </dl>
+      )}
+    </div>
   );
 }
