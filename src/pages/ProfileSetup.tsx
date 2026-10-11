@@ -315,16 +315,16 @@ const ProfileSetup = () => {
 
       if (profileError) throw profileError;
 
-      // 2. Insert role. Admin/owner can never be self-assigned (privilege
-      // escalation): an admin signup only records the request, and an owner
-      // grants the role from the admin dashboard.
+      // 2. Insert role. Admin/owner can never be self-assigned. Coach, scout and
+      // recruiter are only REQUESTED here (status pending); the owner approves
+      // them from the approval queue. The database rejects anything else.
       if (dbRole !== 'admin') {
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert([{
             user_id: user.id,
             role: dbRole,
-            status: 'active'
+            status: dbRole === 'player' ? 'active' : 'pending'
           }]);
 
         if (roleError) throw roleError;

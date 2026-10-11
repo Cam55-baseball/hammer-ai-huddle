@@ -78,9 +78,10 @@ export const EnhancedVideoPlayer = ({
       if (!videoSrc) return;
       
       try {
-        const response = await fetch(videoSrc, {
-          credentials: 'include',
-        });
+        const { resolveMediaUrl } = await import('@/lib/media/privateMedia');
+        const signed = await resolveMediaUrl(videoSrc);
+        if (!signed) throw new Error('Not allowed to view this video');
+        const response = await fetch(signed);
         
         if (!response.ok) {
           throw new Error('Failed to fetch video');

@@ -12,6 +12,10 @@ restoreNativeSession().finally(async () => {
   ]);
   createRoot(document.getElementById("root")!).render(<App />);
   registerSW();
+  // Private media: stored links play only through short-lived signed URLs.
+  const { installPrivateMediaObserver, installPrivateMediaPatches } = await import("./lib/media/privateMedia");
+  installPrivateMediaPatches();
+  installPrivateMediaObserver();
   const { installNativeStorefront } = await import("./lib/purchase/nativeStorefront");
   installNativeStorefront();
   // iPhone/iPad: finish Apple sign-in returned from the in-app browser sheet.
