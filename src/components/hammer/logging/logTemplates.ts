@@ -299,6 +299,41 @@ const BREATHWORK: LogTemplate = {
   defaultRounds: 1,
 };
 
+const BASERUNNING: LogTemplate = {
+  id: "baserunning_timed",
+  intro: "Home-to-first / steal — log each timed rep.",
+  fields: [
+    { key: "distance", label: "Distance", unit: "ft", kind: "number", step: 5, prefillFromRx: (r) => r.distance_feet ?? undefined },
+    { key: "time", label: "Time", unit: "ss.hh", kind: "time", step: 0.01 },
+    { key: "jump", label: "Reaction / jump", kind: "quality", optional: true },
+  ],
+  meta: { surface: true },
+  defaultRounds: 3,
+};
+
+const FIELDING: LogTemplate = {
+  id: "fielding_reps",
+  intro: "Fielding — reps, clean plays, and throws (throws count toward your arm total).",
+  fields: [
+    { key: "reps", label: "Reps", kind: "number", step: 1, prefillFromRx: (r) => r.reps ?? undefined },
+    { key: "clean", label: "Clean plays", kind: "number", step: 1, optional: true },
+    { key: "throws", label: "Throws", kind: "number", step: 1, optional: true },
+  ],
+  meta: {},
+  defaultRounds: 1,
+};
+
+const CATCHER_POP: LogTemplate = {
+  id: "catcher_pop",
+  intro: "Pop time to second — log each throw.",
+  fields: [
+    { key: "time", label: "Pop time", unit: "ss.hh", kind: "time", step: 0.01 },
+    { key: "throws", label: "Throws", kind: "number", step: 1, optional: true },
+  ],
+  meta: { armFeel: true },
+  defaultRounds: 3,
+};
+
 const WARMUP_ACTIVATION: LogTemplate = {
   id: "warmup_activation",
   intro: "Quick check — how did it prime you?",
@@ -317,6 +352,11 @@ export function resolveTemplate(rx: WkRx): LogTemplate {
   const slot = rx.slot;
   const role = (rx.sequence_role ?? "").toLowerCase();
   const sets = rx.sets ?? 0;
+
+  // 0. Skill positions: catcher pop time, fielding, baserunning.
+  if (has(slug, /pop_time|catcher_pop|pop_to_second|catcher_throw/)) return CATCHER_POP;
+  if (slot === "baserunning" || has(slug, /home_to_first|home-to-first|steal|base_steal|baserun|lead_off|first_to_third/)) return BASERUNNING;
+  if (slot === "fielding" || slot === "defense" || has(slug, /fielding|ground_ball|glove_work|infield|outfield_drill|defense|defensive/)) return FIELDING;
 
   // 1. Bat speed
   if (slot === "bat_speed") {
