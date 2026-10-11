@@ -1,3 +1,11 @@
+# LIFTING BLUEPRINT — 2026-10-11 — IN PROGRESS — Ready to publish: no (nothing published)
+- [x] B1. Rules written down (supabase/functions/_shared/wic/lift/blueprint.ts, 7 tests pass): 11 areas with weekly minimum hard sets (off-season fuller, in-season maintenance floor); lift-day order (warm-up → primer inside main lift → main lower → opposite lower → upper push/pull → athletic strength → robustness → log); isolation (Nordics, Copenhagen, curls, machines) legal only off-season inside "Add size"; overload = reps to the top of the range first, then +5% lower / +2.5% upper rounded down to 5 lb, only after all reps logged at target effort with quality ≥4 and a verified max. Not yet used by the planner.
+- [ ] B2. Wire into the planner: rotate choices across the week to meet minimums (no added sets); remove Copenhagen plank from the trunk finisher outside Add size; apply lift-day order; report rule-blocked gaps.
+- [ ] B3. Library: add integrated groin / under-16 hamstring / outer hip / hip rotation / hip extension / sled exercises with full tags + how-to; tag the untagged lifts (proposals from the audit); unsure ones → "Needs owner review".
+- [ ] B4. Youth bodyweight versions for 13–15; deep knee bending trained progressively (limited only by injury/growth/pain).
+- [ ] B5. Testing battery each phase + "Your progress" in The General from the player's own baselines; plan leans toward slowest-improving quality and left/right imbalances.
+- [ ] B6. Proof: 8-week sims (coverage, 0 violations, no isolation outside Add size, overload only after qualifying logs, in-season freshness, non-lift unchanged), phone screenshots, full suite, page audit.
+
 # LIFTING AUDIT (read-only) — 2026-10-11 — nothing changed — Ready to publish: yes (website; nothing published)
 - Full report: docs/owner/lifting-audit.md
 - Biggest finding: the lift planner's exercise lists contain no hamstring curls or Nordics, no calf/shin work, no adductor or abductor work and no hip rotation work. Real saved plans: 0 of 1,182 lift rows. In 8-week simulations (324 combinations), hamstring knee-bending and calves/feet are under 1 hard set a week for every player; abductors (172), glutes/hip extension (216, all off-season) and adductors (138) are often under too. This is mostly by accident, not a rule.
