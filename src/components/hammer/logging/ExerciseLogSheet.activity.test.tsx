@@ -33,12 +33,13 @@ describe("specialized pitching activity logging", () => {
     const rx = { id: "pitching-outing-2026-10-11", plan_date: "2026-10-11", slot: "cross_sport", sets: 1, reps: 30, movement_slug: "start_pitch", movement_name: "Pitching outing", dosage_unit: "throws", status: "planned" } as WkRx;
     render(<ExerciseLogSheet activity open onOpenChange={() => {}} rx={rx} dosageText="30 pitch cap" />);
     const top = within(state.host);
-    fireEvent.change(top.getByRole("textbox"), { target: { value: "28" } });
+    // Entry grid: innings + pitches per round.
+    fireEvent.change(top.getAllByRole("textbox")[1], { target: { value: "28" } });
     expect(top.queryByTestId("pitch-cap-warning")).toBeNull();
     fireEvent.click(top.getByRole("button", { name: /add a set/i }));
     const boxes = top.getAllByRole("textbox");
-    expect(boxes).toHaveLength(2);
-    fireEvent.change(boxes[1], { target: { value: "12" } });
+    expect(boxes).toHaveLength(4);
+    fireEvent.change(boxes[3], { target: { value: "12" } });
     await waitFor(() => expect(top.getByTestId("pitch-cap-warning").textContent).toContain("40 of 30 pitches"));
     await waitFor(() => expect(state.save).toHaveBeenCalled(), { timeout: 3000 });
     const payload = state.save.mock.calls[state.save.mock.calls.length - 1]?.[0] as any;
