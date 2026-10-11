@@ -1,9 +1,47 @@
-# BATCH DD REPORT — 2026-10-11 22:45 UTC
+# REPORT — 2026-10-11 23:10 UTC
 
-**Ready to publish: no** — Phase 2 is only partly built; legal v2 drafts await lawyer review; earlier owner items below are still open.
+**Ready to publish: no** — Phase 2 is built and proven but its legal wording waits for your lawyer; Phases 3–9 not started.
 
 | Phase | State | Proof | Result |
 |---|---|---|---|
+| Security fixes A1–A4 | Done | CC6 | PASS |
+| 1 Accounts, orgs, teams, Requests inbox | Done | DD7–DD10, test accounts + phone screenshots | PASS |
+| 2 Consent up front | Done in the app; legal wording waits for lawyer | DD11 + this round (below) | PASS |
+| 3 Onboarding fields | Next | — | — |
+| 4–9 | Not started | — | — |
+
+**Phase 2 proof this round** (test accounts signed in through the sign-in API; phone screenshot /tmp/browser/dd13/01_parent_checklist.png):
+- New parent checklist on the parent's scouting page: parent ticks each item (profile, metrics, video, health, academics, contact); health and academics separate, start off.
+- Under 13: parent turned on Scouting visibility + Academics → a coach can see academics only (health, profile, contact all refused); no Contact switch exists; the child's own change was refused ("A parent manages sharing for players under 13").
+- 13–17: parent allowed Profile only; the teen turned on Health and Profile → coach sees Profile, Health refused; the teen trying to edit the parent's list was refused.
+- Existing guardian-approved minors kept exactly what they had (their current items were copied into the parent list).
+- Fixed a bug found in testing: the checklist could undo the parent's "authorize" switch; it now saves only the switch tapped.
+- Full suite 2,738/2,738; build OK. Test sharing reset to off.
+- Messages copied to the parent (and parent-only for under 13) are built in Phase 5 (coach messages), per the plan.
+
+**Done this round, other:**
+- [x] Renewal reminders: owner applied cron "renewal-reminders-daily" (14:00 UTC) after a dry run returned 200 ok, count 0.
+- [x] Test accounts hidden: player search now excludes test/system accounts (search-players redeployed after code check passed; coach search for "Demo" → 0, real players still found). Test-account tool NOT redeployed.
+
+**Waiting on the owner:**
+1. Lawyer review — under-13 scouting wording: `docs/owner/legal-v2-under13-scouting.md` (Child Safety, Privacy §5, Consumer Health Data §5; before/after quoted there).
+2. Lawyer review — Subscription Policy v2, section 6 "Refunds" (the only changes):
+   - REMOVED (v1): "If you were charged after you cancelled, or charged in error, email us within 60 days and we will refund it."
+   - ADDED (v2): "We do not offer refunds based on athletic progress or results."
+   - ADDED (v2): "If you believe you were charged after cancellation or charged in error, email hammersmodality@hammersmodality.org so we can review the charge. This does not limit any refund or other rights required by law."
+3. Lifting Blueprint coverage decision (see below).
+4. Test accounts: keep or delete; OK by name to redeploy the test-account tool.
+5. Vault review queue (79 items + 10 tag suggestions).
+
+**Lifting Blueprint coverage decision:** lift days have six fixed slots (main lower, second lower, push, pull, carry, trunk), so some areas fall short of the weekly minimums — off-season: hamstrings ~0 of 3 sets, hip extension 0–0.7 of 3, hip rotation 1.1 of 2, calves/feet 1.1 of 3, squat in late off-season 1.6 of 6; in-season: hamstrings 0.3, groin 0.5, calves 0.5, power 0.4 (target 1–2). Upper push/pull and trunk are well over.
+- Option A — lower the minimums to what fits: nothing about players' workouts changes; the weak areas stay light.
+- Option B — add one rotating "robustness" slot (hamstring / hip / calf-foot, rotating by day): about 2–3 more sets per lift day; those areas reach their minimums; sessions get a few minutes longer.
+- Option C — off-season gets the robustness slot, in-season doesn't: off-season players get the extra coverage; in-season sessions stay exactly as they are now (2 lift days, ≤13 sets).
+- Recommendation: Option C. It stays inside every existing rule: in-season limits and rest rules untouched, no eccentric overload in-season, only compound/integrated picks (Nordics/Copenhagen still only in off-season "Add size"), age gates and the heavy track apply as now. In-season shortfalls would be accepted as a maintenance floor.
+
+No publish, no cron, no iPhone changes.
+
+---|---|---|---|
 | Security fixes A1–A4 | Done | CC6: raw link refused, allowed viewer plays, role/org/follow bypasses blocked, 0 under-13 staff visibility | PASS |
 | 1 Accounts, orgs, teams, Requests inbox | Done | DD7–DD10 test accounts, phone screenshots: org verify + email code, team + code/QR join, parent answers for under-13 (child's own answer refused), head coach, end connection removes access, org assigns athlete (outsider refused); full suite 2,733/2,733 | PASS |
 | 2 Consent up front | Partly done | DD11: separate Health + Academics switches (off by default), "Scouting visibility" page, under-13 contact locked to parent (screen + server); 48/48 sharing tests; phone screenshot | PASS so far |
