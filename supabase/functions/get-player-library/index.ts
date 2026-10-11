@@ -86,6 +86,19 @@ Deno.serve(async (req) => {
           );
         }
 
+        // Same rule as private media storage: real staff role, no blocks,
+        // never under-13, parent consent for 13–17.
+        const { data: mediaOk, error: mediaErr } = await supabase.rpc('can_view_athlete_media', {
+          _viewer: user.id,
+          _athlete: playerId,
+        });
+        if (mediaErr || mediaOk !== true) {
+          return new Response(
+            JSON.stringify({ videos: [], practices: [], games: [], consentStatus: 'waiting_on_guardian' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
         const gate = await recruitingGate(supabase, user.id, [playerId], 'video');
         if (gate.get(playerId) !== 'visible') {
           return new Response(
