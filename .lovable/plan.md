@@ -1,26 +1,22 @@
-# Hammers Today: clear cards and uninterrupted returns
+# Activity pop-up pages: logs first
 
-## Scope and safeguards
-Top priority before Xcode. No publishing, cron changes, destructive data changes or iOS work. Preserve prescribed work except the explicitly authorized tissue-prep addition and defensive-role corrections. Backend redeploys are authorized only for these named fixes, after errors are explained and tests pass.
+## Replacement layout
+This replaces Round 2 C and the earlier collapsed-log layout without changing prescribed work or saved data.
 
-## Ordered implementation
-1. **Keep the app in place on return.** Remove automatic update/version reloads during an active visit; keep quiet background refreshes. Audit authentication and plan loading for remounts that erase an open card or draft. Add regressions for return/update events.
-2. **Make every activity basic-first.** Full wrapping title → exact dose → specific plain-language description → visible activity-specific log rows → closed “How to do it” drawer. Use existing movement guides and audit every active library entry; report uncertain descriptions rather than inventing instructions or loads.
-3. **Clean the detail drawer.** Put setup, steps, Stop if, Cue, Why this movement, Your progression and Why today's work changed inside it. Remove generic setup, incomplete lines and repeated cues. Remove Rules for this card everywhere. Show only the current barefoot stage; preserve its hidden gates.
-4. **Make logging match the work.** Prefill prescribed sets/reps, including 1 × 1; show only applicable lift, sprint, hold, jump, conditioning, throw or recovery fields. Keep existing saving and completion authority; retain unsaved entries during background returns. Never invent missing weights or doses.
-5. **Correct plan placement.** Move Level of play into Before you start. Put body load before the order instruction, progress/NEXT UP and Prepare → Prime → Explode → Perform → Recover strip. No training reorder.
-6. **Fix defensive role bleed.** Audit catalog entries, fallback drills, game-day primers and cues for pitchers, infielders, outfielders and catchers. Pitchers receive pitcher fielding work, not a fielder's release-hop cue. Add tests across every role and sport.
-7. **Audit all doses.** Trace the 90-foot conditioning bug to its stored numeric/unit source, not just pluralization. Check distance conversion and singular/plural formatting across generated and displayed prescriptions. Add catalog and prescription dose checks.
-8. **Tissue preparation first.** Add the authorized 4–6-minute tissue-prep sequence before all other warm-up work: appropriate rolling, then rhythmic movements; include thrower areas, descriptions and logs. Preserve injury and equipment gates. If a tennis ball is unavailable, use a clearly reported equipment-free fallback rather than prescribe unavailable equipment. Audit every warm-up entry path, including recovery breath primers and saved plans.
+1. Make every activity, including cross-sport and remaining inline cards, a clean tile with full title, dose summary and status.
+2. Keep the full-title, Start and X header visible before and after Start, with phone safe-area spacing.
+3. Put an always-open **Log this work** section first, containing every exercise’s named entry grid. Match today’s prescription exactly; do not inherit a different row count from an old log. Keep current per-exercise saving and drafts.
+4. Show Done / Skipped / Cut short, How hard 1–10 and optional survey questions directly. Keep exercise-specific extra logging options in the information section below.
+5. Put sprint/conditioning stopwatches and lift/hold rest timers beside their entries. Sprint rest is one minute per ten yards. Use prescribed lift/hold rest when available; otherwise offer a manual timer without inventing a dose.
+6. Follow the log with “More information for each exercise is below ↓”, then an EXERCISES list. Each name starts closed and opens independently to show dose, one-rep basics and details, with cue/why/changes once.
 
-## Proof and closeout
-- Run each focused regression before moving to the next step, then the full existing suite.
-- Eight-week simulations across roles, ages and both sports: tissue prep first in 100% of eligible warm-ups; existing safety restrictions remain in force.
-- Compare plans before/after: only tissue prep and defensive-role fixes may change prescribed work; dose-label corrections must preserve intended numeric work.
-- Signed-in affected-player preview checks at 360 and 390 px: every card type, visible logs, closed/open drawer, full title and description.
-- Return checks after 30 seconds, 5 minutes and 1 hour, preserving route, open card and unsaved entry. Distinguish elapsed-time checks from simulated clocks and browser backgrounding from real-device OS termination.
-- Inspect the published site read-only. **It cannot contain unpublished fixes**, so published-site fix verification remains pending the owner's publication; no publish will be performed.
-- Clean up only task-created test data. Tick roadmap.md and report evidence, uncertainties and blockers at its top with Ready to publish: yes/no. Do not claim complete if any required proof remains missing.
+## Proof and readiness
+- Add exact-value tests for 3 × 5 lifts, 4 × 90 ft repeats, holds, jumps, throws, recovery minutes and sprint rest conversion.
+- Extend the double-check with rendered-entry comparisons against prescribed sets/reps/distance/time and units. Run eight-week matrices across roles, sports, age bands and seasons; report actual coverage and mismatches.
+- Capture all nine requested pop-up types closed/open at 360/390/393 px; tap every available exercise disclosure.
+- Run the full suite and affected-player page audit. Real-plan proof still requires affected-player access; physical native proof requires the installed build. Emulation will be labeled honestly.
+- Record results, uncertain how-to owner checks and **Ready to publish: yes/no** at the top of roadmap.md.
+- No publishing, cron, iOS, migrations or saved-data changes; clean up only task-created test data.
 
 ## Technical approach
-Reuse shared card and logging controls, movement-guide catalogs and canonical dose sources. Keep presentation separate from generator authority. Record structural rules in AGENTS.md. Backend changes must cover the actual persisted-plan path, not only client-side warm-up previews. Existing saved plans must not be silently rebuilt.
+Separate log and information rendering through the shared pop-up presentation layer. Reuse current saving handlers, surveys, timers, prescription checker and activity guides rather than mount duplicate logs. Keep generator authority unchanged. Record the shared presentation structure in AGENTS.md.

@@ -1,3 +1,10 @@
+# NEW ACTIVITY-CARD LAYOUT — 2026-10-11 — Ready to publish: no (implementation pending)
+- [ ] Convert every activity to a clean tile and pop-up with always-open logs first.
+- [ ] Keep full title, Start and X visible; move collapsed exercise information below all logs.
+- [ ] Show optional survey questions directly and preserve existing per-exercise saving.
+- [ ] Exact entry-row double-check, eight-week matrices, all nine phone screenshot types, full suite and page audit.
+- No publish, cron, iOS-project or saved-data changes authorized.
+
 # OWNER CARD OVERRIDES — 2026-10-11 — Ready to publish: no (player/native proof outstanding)
 - [x] V1 final pass (2026-10-11): available automated proof rerun; all 298 test files / 2,562 tests passed. Real-player, physical-native and affected-player page proof remain explicitly blocked below, so readiness remains **no**.
 - [x] Exact line: "Tomorrow's plan becomes visible at midnight". Removed countdown and build-status reads from this notice; pre-build remains unchanged and internal.
