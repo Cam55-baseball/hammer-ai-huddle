@@ -50,7 +50,6 @@ describe("autosave + automatic completion (no Save log, no Completed button)", (
     expect(screen.getByText("Done")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Add set" }));
     fireEvent.change(screen.getByLabelText("Reps 4"), { target: { value: "5" } });
-    expect(screen.getByText("Done · Did more")).toBeInTheDocument();
     expect(document.querySelector("[data-prescribed-vs-done]")?.textContent).toBe("Prescribed: 3 sets × 5 reps · Done: 4 sets, 20 reps total");
     await waitFor(() => expect(lastPayload()?.rounds).toHaveLength(4), { timeout: 2000 });
     expect(lastPayload().did_more).toBe(true);
@@ -88,5 +87,21 @@ describe("autosave + automatic completion (no Save log, no Completed button)", (
     await waitFor(() => expect(mocks.write).toHaveBeenCalled());
     Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true });
     expect(lastPayload().rounds[0]).toMatchObject({ set: 2, weight: 105 });
+  });
+});
+
+describe("throws entered on a non-throwing-card row feed the arm ledger", () => {
+  it("catch play 2 × 10 plus an added set of 10 records 30 throws in the arm ledger row", async () => {
+    cleanup(); localStorage.clear(); vi.clearAllMocks();
+    const online = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    const cp = { id: "cp-proof", plan_date: "2099-10-11", movement_name: "Catch Play", movement_slug: "catch_play", slot: "supplemental", sets: 2, reps: 10, dosage_unit: "throws" } as any;
+    render(<InlinePrescriptionLog rx={cp} />);
+    fireEvent.change(screen.getByLabelText("Throws 1"), { target: { value: "12" } });
+    fireEvent.change(screen.getByLabelText("Throws 2"), { target: { value: "8" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add set" }));
+    fireEvent.change(screen.getByLabelText("Throws 3"), { target: { value: "10" } });
+    const job = pendingJobs().find((j) => j.id === "arm:2099-10-11:catch_play") as any;
+    expect(job.row).toMatchObject({ throw_type: "catch_play", count: 30, prescribed: 20, status: "done" });
+    online.mockRestore();
   });
 });

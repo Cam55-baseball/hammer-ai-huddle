@@ -9,6 +9,13 @@ import { Plus } from "lucide-react";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { useLatestExerciseLog } from "@/hooks/useExerciseLog";
 import { TimeField } from "./TimeField";
+import { THROW_TYPES, type ThrowType } from "@/lib/throwing/armLedgerEntry";
+
+/** Throw rows whose exercise IS an arm-ledger throw type feed that ledger row (one row per type per day). */
+export function ledgerThrowType(rx: WkRx): ThrowType | null {
+  const slug = (rx.movement_slug ?? "").toLowerCase();
+  return slug in THROW_TYPES && !slug.startsWith("pap_") ? (slug as ThrowType) : null;
+}
 import { SavedIndicator, useAutosave } from "./useAutosave";
 import { timeKindFor, formatTime } from "@/lib/logging/timeEntry";
 import { AUTO_STATUS_LABEL, autoStatus, type AutoStatus } from "@/lib/logging/autoCompletion";
@@ -147,6 +154,14 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
       },
       credit: credited ? { id: rx.id, plan_date: rx.plan_date, slot: rx.slot, movement_name: rx.movement_name, movement_slug: rx.movement_slug } : null,
     }, delay);
+    const tt = ledgerThrowType(rx);
+    if (tt && spec.fields.some(f => f.key === "throws")) {
+      const total = payload.reduce((a, r) => a + (typeof r.throws === "number" ? r.throws : 0), 0);
+      const planned = spec.rows * (spec.fields[0].prefill ?? 0);
+      // Blank = done at the planned number (ledger rule); entered throws, including added sets, replace it.
+      autosave.queue({ kind: "arm", id: `arm:${rx.plan_date}:${tt}`, userId: user.id, at: Date.now(),
+        row: { entry_date: rx.plan_date, source: THROW_TYPES[tt].source, throw_type: tt, count: payload.length ? total : planned, prescribed: planned || null, status: rx.status === "skipped" ? "skipped" : "done" } }, delay);
+    }
   };
   const edit = (i: number, field: string, value: string, delay?: number) => {
     persist(rounds.map((r, n) => n === i ? { ...r, [field]: value.replace(/[^\d.]/g, ""), [TOUCHED]: "1" } : r), delay);
