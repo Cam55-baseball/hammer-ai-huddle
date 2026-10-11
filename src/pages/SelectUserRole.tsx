@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { User, UserCog, ArrowLeft } from "lucide-react";
+import { User, UserCog, ArrowLeft, Building2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const SelectUserRole = () => {
@@ -16,10 +16,13 @@ const SelectUserRole = () => {
     }
   }, [user, session, loading, isAuthStable, navigate]);
 
-  const handleRoleSelect = (role: 'player' | 'scout') => {
+  const handleRoleSelect = (role: 'player' | 'scout' | 'organization') => {
+    // Display preference only — real staff/org powers come from the approval queue or verification.
     localStorage.setItem('userRole', role);
     
-    if (role === 'scout') {
+    if (role === 'organization') {
+      navigate('/organization');
+    } else if (role === 'scout') {
       // Scouts go to sport selection for application
       navigate('/select-sport-scout');
     } else {
@@ -93,6 +96,26 @@ const SelectUserRole = () => {
               </p>
               <Button size="lg" className="w-full">
                 I'm a Scout/Coach
+              </Button>
+            </div>
+          </Card>
+
+          <Card 
+            className="p-8 cursor-pointer hover:border-primary transition-all hover:shadow-lg md:col-span-2"
+            onClick={() => handleRoleSelect('organization')}
+          >
+            <div className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="p-4 rounded-full bg-primary/10">
+                  <Building2 className="h-12 w-12 text-primary" />
+                </div>
+              </div>
+              <h2 className="text-2xl font-bold mb-2">Organization</h2>
+              <p className="text-muted-foreground mb-6">
+                A team, facility or academy. We verify you before players can join.
+              </p>
+              <Button size="lg" className="w-full">
+                I run an Organization
               </Button>
             </div>
           </Card>
