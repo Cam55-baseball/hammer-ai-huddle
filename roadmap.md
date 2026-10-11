@@ -1,3 +1,11 @@
+# X4 FINAL PROOF — 2026-10-11 — Ready to publish: no
+- [x] Phone proof at 360/390/393 px: **204 checks, 0 failed** — screenshots of every card type's pop-up (closed and one drop-down opened), every drop-down tapped open+closed, no nested/duplicated cards, Start/X visible, warm-up seconds + mm:ss (no decimal minutes), sprint ss.hh filled from the stopwatch, lift added set + "Done · Did more" + prescribed-vs-done, throwing added set + arm-ledger count (84.8 of 40 arm units) + safety warning, autosave surviving pop-up close and backgrounding + app reload. Log `/tmp/browser/x4/phone.log`.
+- [x] Entry-rows-match-dose check: 0 mismatches (synthetic eight-week matrix, in the suite). Rendered-text double-check: passed.
+- [x] No-self-nesting test: passed (fails if any pop-up renders its own or another full card).
+- [x] Full suite: **305 files / 2,600 tests passed**. Build OK.
+- [ ] Page audit: still blocked — the only mintable sign-in is the owner account, which has no started plan, and owner accounts skip the gates the audit must exercise. Needs a player account with a started plan.
+- Waiting on owner: player account with a started plan (page audit + real-plan tap test), physical iPhone check, 341 how-to drafts, publishing. No publish, cron or iOS changes; no test data created.
+
 # X3 PITCH-CAP SAFETY IN THE PITCHING LOG — 2026-10-11 — Ready to publish: no
 - [x] Outing/bullpen logs now allow "Add a set" (previously fixed rows) and warn in the log when entered pitches pass today's pitch cap: "over today's pitch cap (N of M pitches)… everything saved as you really did it — stop throwing for today and your coming days will be adjusted." Everything is still recorded; no dose, schema or completion-rule changes.
 - [x] Regression test: 28 + 12 pitches against a 30-pitch cap shows the warning and both rounds save; the existing bullpen schema save is unchanged.
