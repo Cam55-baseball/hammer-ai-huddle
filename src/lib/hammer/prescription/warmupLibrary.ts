@@ -15,6 +15,7 @@
  *   - Weightless Object Sport Training (WOST) — hand-eye, rhythm, fast-twitch CNS patterning without load
  */
 import { guideFor, type MovementGuide } from "@/lib/hammer/prescription/movementGuide";
+import { sortByWarmupStage } from "./warmupStages";
 
 export type WarmupRole =
   | "breathwork"
@@ -614,6 +615,8 @@ export interface BuildWarmupInput {
   readonly suppressTwitch?: boolean;
   readonly sport?: "baseball" | "softball" | null;
   readonly isThrower?: boolean;
+  /** Sort the chosen movements by warm-up stage (default true). False = the old order, for proofs only. */
+  readonly orderByStage?: boolean;
 }
 
 export interface BuiltWarmupDrill {
@@ -810,7 +813,8 @@ export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
 
   const est = Math.max(8, 5 + Math.round(((drills.length - 1) * 90) / 60));
 
-  return { context: input.context, drills, estMinutes: est, singleLegShare, diagnostics };
+  const ordered = input.orderByStage === false ? drills : sortByWarmupStage(drills, (d) => d.slug, (d) => d.role);
+  return { context: input.context, drills: ordered, estMinutes: est, singleLegShare, diagnostics };
 }
 
 

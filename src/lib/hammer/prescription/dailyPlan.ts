@@ -1,3 +1,4 @@
+import { sortByWarmupStage } from "./warmupStages";
 import type { OutingFacts } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
 /**
  * Hammer Daily Plan — 9-modality orchestrator.
@@ -423,6 +424,12 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
             stopIf: "Lightheaded — stop, breathe normally, then continue.",
           },
         });
+      }
+      // Order only (owner 2026-10-11): sort by warm-up stage; nothing added or removed.
+      {
+        const roleBySlug = new Map(built.drills.map((d) => [d.slug, d.role as string]));
+        const sorted = sortByWarmupStage(drills, (d) => d.slug ?? "", (d) => roleBySlug.get(d.slug ?? "") ?? null);
+        drills.splice(0, drills.length, ...sorted);
       }
       const titleByContext: Record<string, string> = {
         game_day: "Warm-up — game-day neural primer",
