@@ -28,7 +28,7 @@ export const usePocketLogHost = () => useContext(PocketLogContext);
 export const usePocketDetails = () => useContext(PocketDetailsContext);
 
 export const CARD_DISCLAIMER =
-  "Hammer's Modality is not responsible for any injury that may occur during exercises. There are no guarantees in results. Always consult with a qualified healthcare professional before beginning any exercise program. Listen to your body and stop immediately if you experience pain.";
+  "Hammer's Modality is not responsible for any injury that may occur during exercises. There is no guarantee of results. Always consult with a qualified healthcare professional before beginning any exercise program. Listen to your body and stop immediately if you experience pain.";
 
 const OPEN_KEY = "hm_pocket_open";
 const INTRO_KEY = "hm_pocket_intro_seen";

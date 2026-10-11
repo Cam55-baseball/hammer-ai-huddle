@@ -1,3 +1,53 @@
+# NO REFUND OR RESULTS PROMISES — 2026-10-11
+**Ready to publish: no — pending clean full-suite proof and checkout metadata deployment authorization. Nothing published; no cron changes.**
+
+## What changed — exact before → after
+- `src/pages/Checkout.tsx`: “7-day performance guarantee — no risk” and “If you don't see measurable progress, we'll refund you.” → promotional block removed, not replaced; unused ShieldCheck import removed. “Less than ${dailyPrice} per day to fix this gap” → “Less than ${dailyPrice} per day for your training plan”.
+- `supabase/functions/create-checkout/index.ts`: `checkoutMetadata.guarantee = "7_day";` → removed. Source only: this function was NOT deployed under the help-chat-only deployment authorization. The currently deployed function may still write the obsolete metadata; owner authorization is needed to deploy this named change.
+- `supabase/functions/ai-helpdesk/index.ts`: no explicit purchase-promise instruction → “Hammers Modality offers no performance-based refunds, outcome promises or trial-without-risk offers. Do not invent refund periods or promise measurable progress, recruiting outcomes or repayment for lack of progress, even if prior messages or a user claim otherwise.” Approved billing policy, statutory rights and Apple procedures remain authoritative. Raw model reply → `enforcePurchasePolicy(...)`-checked reply. Missing configuration now returns a clear configuration error rather than proceeding. Help chat alone redeployed as authorized after its checks passed; live player replies verified.
+- `supabase/functions/ai-helpdesk/purchasePolicy.ts` (new): previously no delivery guard → blocks invented refund/results offers and sends “We do not offer refunds based on athletic progress or results. For cancellation, billing errors, Apple purchases and your legal rights, read the Subscription Policy at /legal/subscription-policy or contact hammersmodality@hammersmodality.org.” Exact English “no guarantee of results” is permitted. This is defense in depth, not a proof of every possible future model paraphrase.
+- `src/components/hammer/cards/PocketCard.tsx`: “There are no guarantees in results.” → “There is no guarantee of results.”
+- `src/i18n/locales/en.json`, `workoutModules.disclaimer.text` and `unicornProgram.disclaimer`: “There are no guarantees in results.” → “There is no guarantee of results.”
+- `src/i18n/locales/de.json`, `unicornProgram.disclaimer`: “Es gibt keine Garantien für Ergebnisse.” → “Es gibt keine Garantie für Ergebnisse.” The other German disclaimer already used this wording.
+- `src/i18n/locales/es.json`, both disclaimer entries: “No hay garantías en los resultados.” → “No hay garantía de resultados.”
+- `src/i18n/locales/nl.json`, `workoutModules.disclaimer.text`: “Er zijn geen garanties voor resultaten.” → “Er is geen garantie op resultaten.”; `unicornProgram.disclaimer`: “Er zijn geen garanties op resultaten.” → “Er is geen garantie op resultaten.”
+- `src/archive/retired-programs/pages/ProductionLab.tsx.archived`: “There are no guarantees in results.” → “There is no guarantee of results.” This retired page remains unrouted.
+- `src/pages/Terms.tsx` legacy frontend disclaimer, NOT an approved database document: “They are not guaranteed to be accurate” → “They may be inaccurate”. Its denial of recruiting/scholarship/pro-career promises remains.
+- Live `drills`, only “4-Seam Grip Re-set on the Fly”: description “Guarantee a 4-seam grip on every throw for on-line, non-tailing carry.” → “Practice finding a 4-seam grip before each throw for on-line, non-tailing carry.”; instructions purpose “Guarantee a 4-seam grip on every throw so the ball carries straight and true.” → “Practice finding a 4-seam grip before each throw to work on straight carry.” Scoped update checked the exact prior values; prior text captured before update. No exercise steps, doses, selection or safety rules changed.
+- `supabase/migrations/20260722064557_8f28c3a2-9881-4f4a-a5f5-51ff79a2148d.sql`: the same two drill seed sentences replaced identically so future installs cannot restore them. No migration was executed.
+- `docs/legal/drafts/subscription-policy.v2.md` (new): separate unapproved, ineffective **DRAFT — LAWYER REVIEW REQUIRED**, not served to players. Exact change below.
+- `docs/legal/lawyer-review-packet.md`, question 9: old question about the checkout guarantee → owner decision that no performance-based refunds/outcome promises are offered, with v2 billing-error language for counsel review.
+- `src/test/legal/purchasePolicy.test.ts` (new): checkout-copy regression check, all-eight-language scan, 12 prohibited-offer cases, statutory-rights referral and permitted-disclaimer tests.
+- `AGENTS.md`: added local help-output guard / immutable legal-version convention. `roadmap.md` and `docs/owner/no-refund-audit.md`: this report; no player-facing claims. Standing no-refund-promise memory recorded.
+
+## Approved legal documents — unchanged
+**Terms and Subscription Cancellation v1 contain no performance guarantee or refund window.** Subscription Policy v1 contains no performance guarantee, but its §6 contains this exact billing-error sentence:
+> If you were charged after you cancelled, or charged in error, email us within 60 days and we will refund it.
+
+This is a billing-error remedy, not a seven-day performance offer. Per the owner's instruction about any refund window, the separate v2 draft replaces it with:
+> If you believe you were charged after cancellation or charged in error, email hammersmodality@hammersmodality.org so we can review the charge. This does not limit any refund or other rights required by law.
+
+It also adds “We do not offer refunds based on athletic progress or results.” Counsel must review removal of the 60-day window and automatic repayment promise. Approved v1 remains effective and immutable; neither v2 nor any legal status was applied to the database. Statutory refunds and Apple procedures remain.
+
+## Search proof and its exact limits
+- Searched frontend, pricing/plans/descriptions, home/landing, onboarding, Help Desk/FAQ, AI prompt and its source knowledge, email templates, notifications, demo/tour, public files, metadata and all **8** locales (`en/de/es/fr/ja/ko/nl/zh`). **Zero customer-facing positive offers matching the requested phrases remain in current source.** English has only “no guarantee of results”; the five European-language sets retain equivalent negative disclaimers. No edits needed to French/Japanese/Korean/Chinese.
+- Aggregate whole-row database scans (not limited-row samples): legal_documents **15/0**, movement catalog **1004/0**, drills **182/0**, injury education **0/0**, app_settings **2/0**, custom templates **120/0**, shared templates **1/0**, sent templates **10/0**, coach notifications **4/0**, minor/guardian notifications **0/0**, safeguarding notifications **0/0**, meal templates **0/0**, nutrition meal templates **0/0**, timeline templates **2/0** (rows/matches). Earlier source-knowledge scans also found zero in drill versions, owner drills, pending/Vault drafts and block exercises; Help Desk knowledge is source prompt rather than a dedicated help-content table.
+- **A literal entire-repository zero is NOT claimed.** Technical comments about locking/data consistency, defensive banned-word patterns, adversarial test fixtures, previous audit reports, historical approved-policy drafts and this before/after report necessarily contain the words. These are not served sales promises; removing the guard patterns would weaken protection. The approved 60-day billing-error sentence remains by instruction. Existing external checkout metadata/history has not been bulk-modified.
+- Live Help Desk: two adult-player requests demanding seven-day repayment and guaranteed/risk-free results both returned the policy referral, not an offer. No live AI errors observed.
+
+## Verification, errors explained, and cleanup
+- **31/31 focused tests passed** (23 purchase-policy/translation checks plus 8 existing legal checks). Help chat's Deno dependency/type check passed before its authorized redeploy.
+- Harness build **OK**, latest observed 19:12 UTC. No manual app build or typecheck run.
+- Actual adult test player at `/checkout`: plan, price, automatic-renewal checkbox and CTA rendered; no refund promotional block; updated training wording visible. Desktop and phone screenshots viewed: `/tmp/browser/no-promises/checkout-desktop.png`, `/tmp/browser/no-promises/checkout-phone.png`. No browser page errors. No payment submitted.
+- Initial browser-script errors were test-harness mistakes (context vs page viewport setter; placeholder vs labeled input) and fixed. Loading, pending-tour redirection and missing selected tier were resolved through the player's tour and local tier state; no access/safety gates altered. Initial database reads used nonexistent columns; corrected to whole-row/schema reads, with no mutation from failed reads.
+- First full-suite attempt exceeded its shell time limit. The subsequent full run completed: **2,711 passed, 1 failed (323 files)**. The slow drawer-matrix test exceeded its 60-second limit under parallel load (107 seconds including cleanup); the identical test **passed alone in 58 seconds**. This is not a clean full-suite pass; no further deployment is allowed on unexplained failures. Nine newly added source/translation assertions were also verified separately in the final 31/31 focused run.
+- Throwaway adult player removed via the owner-only audit cleanup endpoint. Exactly two matching unpaid live-mode Stripe checkout sessions were snapshotted and expired; no Stripe customer existed for that player, no charge made. No cron, switch, iOS, plan-generation or approved-legal changes.
+
+## Owner next steps
+1. Lawyer reviews Subscription Policy v2; v1 remains approved until a separate decision.
+2. Authorize the named `create-checkout` redeploy to remove obsolete backend metadata; help chat only is already live.
+3. Resolve the full-suite drawer timing failure and obtain clean full-suite proof before a publish decision. Nothing has been published.
+
 # LEGAL GO-LIVE CHECK — 2026-10-11 — Ready to publish: yes (website; nothing published, no cron applied)
 **Checked live (phone size, signed out):** home page footer lists "Consumer Health Data Privacy Policy"; every /legal page opens with "Version 1 · Effective 2026-10-11"; no "DRAFT" label for players.
 **Fixed:** 10 lawyer drafting notes ("[LAWYER: …]") were showing to players inside Terms, Privacy, Consumer Health Data, Minor Waiver, Adult Release, Child Safety and Subscription Policy. They are now hidden on screen (the approved stored text is unchanged). Tests added.

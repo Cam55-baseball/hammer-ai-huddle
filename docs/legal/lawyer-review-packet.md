@@ -20,7 +20,7 @@ Internal: data-inventory.md, wisp.md, data-retention-policy.md, data-breach-resp
 6. COPPA: is the parent sign-up (Parent Promise, typed name, drawn signature, card payment) a valid verifiable parental consent method?
 7. FTC Health Breach Notification Rule: confirm coverage and the notice timelines in the breach plan.
 8. California auto-renewal: are the checkbox wording, yearly renewal email (15–30 days before), and online cancel enough? Monthly plans: reminder needed?
-9. Checkout shows "7-day performance guarantee — no risk"; the refund policy says no partial refunds except where law requires. Which wins?
+9. Owner decision 2026-10-11: no performance-based refunds or outcome promises. Checkout promise removed in source. Review `drafts/subscription-policy.v2.md`: it removes the 60-day billing-error window and automatic repayment promise, preserves statutory rights, and is NOT approved or effective. Approved v1 is unchanged.
 10. Apple-purchased subscriptions: cancel/refund through Apple only — is the notice adequate?
 11. DMCA registered agent: confirm name/address to fill the placeholder.
 12. Retention periods (3 years consent, 5 years anonymous data, 12 months AI chat): acceptable?
