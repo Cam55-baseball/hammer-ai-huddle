@@ -34,3 +34,8 @@ Snapshot first: `public._snapshot_security_20261011` holds every bucket's prior 
 - `is_linked_coach` (used by performance_sessions, vault_scout_grades, hie_snapshots, height checks, limb rows) now requires: accepted follow + active coach/scout/recruiter role + no block + never under-13 + for 13–17 a connected coach or parent-authorized recruiting consent (metrics).
 - `session_videos` coach read and `videos` scout-shared read now use the same `can_view_athlete_media` rule as private storage.
 - Proof: 30 accepted follows → 24 still allowed (6 removed: minors without consent/role); under-13 allowed = 0; 3,000 random non-follow pairs allowed = 0. Full suite 2,730/2,730.
+
+## A4 follow-up (CC2) — coach/scout video library (`get-player-library`)
+- Besides an accepted follow and the recruiting gate, the server now also requires `can_view_athlete_media` (approved staff role, no block, never under-13, parent consent for 13–17). Otherwise it returns an empty library.
+- Redeployed `get-player-library` only (owner-authorized backend redeploy).
+- Proof: no sign-in → refused (400 "No authorization header"); 30 accepted follows → 25 pass the rule, under-13 passing = 0. Full suite 2,730/2,730.
