@@ -1,3 +1,13 @@
+# ROUND 3 — PREMIUM LOGGING / PRIMER IN THE LIFT / REAL DESCRIPTIONS — 2026-10-11 — Ready to publish: no
+- [x] A. Silent autosave: no "Saving…"/"Saved" lines; every change still saves at once (device first, then backend, offline queue). Only a failed send shows a message. Test added; logging tests 34/34 pass.
+- [ ] B. Power Primer inside the lift (lift set → rest → all-out explosive set, required 1–5 quality rating per round, continue at 4–5 with no speed-drop stop (5% throws/swings, 3% sprints) and within caps, stop at ≤3/cap; all existing caps, 1.5 arm weight, 1–2 real-throw days, warm-up gate, day-before-game swap, start-day, age/growth/pain/readiness blocks; plain-words explanation; ratings saved; simulated sequences 5,5,4,3 and 4,4,4,… proof).
+- [ ] C. Alternative swap updates log rows (name, fields, units, prescribed values) at once + test.
+- [ ] D. Measure type for every library exercise (weight×reps, reps, hold s, duration, sprint ss.hh @ distance, jump distance ft+in, jump height in, throws by type, velo mph, bat speed/EV mph, swing count, check-offs incl. Vault button) + build-failing field/measure check. Known: Broad Jump must log distance; dry throws log reps.
+- [ ] E. Speed card: per-rep ss.hh + distance + start type, optional 10/20/30 yd splits, steps per rep, partner timing, PBs/tier updates.
+- [ ] F. Hitting / baserunning / fielding (fielding throws → arm ledger) / catcher pop time / pitching count-strikes-velo logging.
+- [ ] G. Rewrite every "How to do one rep" (629 of the library still use the generic filler line) + build-failing checks (filler phrases, equipment mismatch DB/KB/BB/band/cable/sled/med ball, series without movement list, no rep definition); uncertain ones flagged for owner; 40 random samples here for spot-check.
+- [ ] Proof: phone screenshots 360/390/393, description checks, double-check counts, full suite, page audit (page audit still needs a player account with a started plan).
+
 # X4 FINAL PROOF — 2026-10-11 — Ready to publish: no
 - [x] Phone proof at 360/390/393 px: **204 checks, 0 failed** — screenshots of every card type's pop-up (closed and one drop-down opened), every drop-down tapped open+closed, no nested/duplicated cards, Start/X visible, warm-up seconds + mm:ss (no decimal minutes), sprint ss.hh filled from the stopwatch, lift added set + "Done · Did more" + prescribed-vs-done, throwing added set + arm-ledger count (84.8 of 40 arm units) + safety warning, autosave surviving pop-up close and backgrounding + app reload. Log `/tmp/browser/x4/phone.log`.
 - [x] Entry-rows-match-dose check: 0 mismatches (synthetic eight-week matrix, in the suite). Rendered-text double-check: passed.

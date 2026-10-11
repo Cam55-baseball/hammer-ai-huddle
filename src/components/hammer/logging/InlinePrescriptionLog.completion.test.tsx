@@ -64,7 +64,7 @@ describe("autosave + automatic completion (no Save log, no Completed button)", (
     await new Promise((r) => setTimeout(r, 800));
     expect(mocks.write).not.toHaveBeenCalled();
     expect(pendingJobs().map((j) => j.id)).toContain("exercise_log:lift-proof");
-    expect(screen.getByText(/Saved on this device/)).toBeInTheDocument();
+    expect(screen.getByText(/kept on this phone and will sync/)).toBeInTheDocument();
     online.mockReturnValue(true);
     window.dispatchEvent(new Event("online"));
     await waitFor(() => expect(mocks.write).toHaveBeenCalled());
@@ -104,5 +104,14 @@ describe("throws entered on a non-throwing-card row feed the arm ledger", () => 
     const job = pendingJobs().find((j) => j.id === "arm:2099-10-11:catch_play") as any;
     expect(job.row).toMatchObject({ throw_type: "catch_play", count: 30, prescribed: 20, status: "done" });
     online.mockRestore();
+  });
+});
+
+import { render as render2 } from "@testing-library/react";
+import { SavedIndicator } from "./useAutosave";
+describe("silent autosave", () => {
+  it("shows nothing while saving or after a successful save, and a message only when a save fails", () => {
+    for (const s of ["idle", "saving", "saved"] as const) expect(render2(<SavedIndicator state={s} />).container.textContent).toBe("");
+    expect(render2(<SavedIndicator state="offline" />).container.textContent).toMatch(/Couldn't save/);
   });
 });

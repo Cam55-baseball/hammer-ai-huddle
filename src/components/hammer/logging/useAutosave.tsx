@@ -55,8 +55,8 @@ export function useAutosave(jobId: string, onSynced?: () => void) {
   return { state, queue, flush: send };
 }
 
+/** Silent autosave: nothing shows while saving or after a save; only a failed send is reported. */
 export function SavedIndicator({ state }: { state: SaveState }) {
-  if (state === "idle") return null;
-  const text = state === "saving" ? "Saving…" : state === "saved" ? "Saved" : "Saved on this device — it will sync automatically";
-  return <p data-autosave-state={state} aria-live="polite" className={`text-[11px] ${state === "offline" ? "text-amber-700 dark:text-amber-300" : "text-muted-foreground"}`}>{state === "saved" ? "✓ " : ""}{text}</p>;
+  if (state !== "offline") return <span data-autosave-state={state} hidden />;
+  return <p data-autosave-state={state} role="status" aria-live="polite" className="text-[11px] text-amber-700 dark:text-amber-300">Couldn't save to your account yet — it's kept on this phone and will sync automatically.</p>;
 }
