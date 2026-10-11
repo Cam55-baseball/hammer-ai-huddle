@@ -101,6 +101,8 @@ export function WkPrescriptionCard({
   side?: "L" | "R" | null;
   allowSwap?: boolean;
 }) {
+  const inPocket = usePocketDetails();
+  const logHost = usePocketLogHost();
   // Prescription double-check: every card is repaired before it is shown.
   const rx = useCheckedRx(rawRx);
   const repair = (t: string) => repairInstruction(t, rx, "guide") ?? t;
@@ -292,18 +294,18 @@ export function WkPrescriptionCard({
   const dosage = [baseDose, exec.densityLabel, exec.rirLabel, rx.tempo ? `tempo ${rx.tempo}` : null]
     .filter(Boolean).join(" • ");
 
+  if (!inPocket) return <PocketCard id={`activity_${rx.id}`} category={rx.movement_name} tone="" planDate={rx.plan_date} prescribed countLabel={dosage} progress={{ done: checked ? 1 : 0, total: 1 }}>
+    {() => <WkPrescriptionCard rx={rawRx} phaseDisplay={phaseDisplay} phaseKey={phaseKey} generating={generating} side={side} allowSwap={allowSwap} />}
+  </PocketCard>;
   return (
-    <Card className={`p-3 border ${checked ? "opacity-60" : ""}`}>
+    <div className={`border-b border-border py-2 ${checked ? "opacity-60" : ""}`}>
+      {logHost && createPortal(<section data-exercise-entry-grid className="space-y-2"><h4 className="text-sm font-semibold break-words">{rx.movement_name}</h4><InlinePrescriptionLog rx={rx} /></section>, logHost)}
       <ExerciseDisclosure name={rx.movement_name}>
         <div className="mt-2 space-y-2 text-xs">
           <div className="font-medium text-foreground" data-prescribed-dose>{dosage}</div>
           <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} dosage={dosage} setup={(why as any)?.setup} cue={why.cue} repair={repair} />
-          <div className="rounded border border-border bg-muted/20 p-2 space-y-2" data-visible-log-rows>
-            <span className="font-medium">Log this work</span>
-            <InlinePrescriptionLog rx={rx} />
-            <CardOutcomeLog rx={rx} disabled={missedLocked} />
-            <LogButton rx={rx} dosageText={dosage} survey />
-          </div>
+          <CardOutcomeLog rx={rx} disabled={missedLocked} />
+          <ExerciseLogSheet open onOpenChange={() => {}} rx={rx} dosageText={dosage} embedded />
           {(() => {
             const whyText = String(athleteWhy ?? "").trim();
             const rawToday = String(todayLine ?? "").trim();
@@ -316,7 +318,7 @@ export function WkPrescriptionCard({
               <ExerciseInstructions name={rx.movement_name} slug={rx.movement_slug} dosage={dosage}
                 setup={(why as any)?.setup} cue={why.cue}
                 why={[whyText, today].filter(Boolean).join(" ") || null}
-                changes={changes} repair={repair} />
+                changes={changes} repair={repair} expanded />
             );
           })()}
           {plateau && (
@@ -373,7 +375,7 @@ export function WkPrescriptionCard({
         {allowSwap && <Button variant="outline" size="sm" disabled={!swapAvailable} onClick={() => setSwapOpen(true)}>Alternative</Button>}
         {swapAvailable && <LiftSwapSheet rx={rx} open={swapOpen} onOpenChange={setSwapOpen} />}
       </ExerciseDisclosure>
-    </Card>
+    </div>
   );
 }
 

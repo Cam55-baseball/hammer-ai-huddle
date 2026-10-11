@@ -28,6 +28,7 @@ import { StandardTargetLine } from "@/components/hammer/standards/StandardTarget
 import { toast } from "sonner";
 
 interface Props {
+  embedded?: boolean;
   open: boolean;
   onOpenChange: (b: boolean) => void;
   rx: WkRx;
@@ -43,7 +44,7 @@ function toNum(v: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) {
+export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded = false }: Props) {
   const { slugs: unilateralSlugs } = useUnilateralMovements();
   const { template, unilateral } = useMemo(
     () => resolveTemplateForRx(rx, unilateralSlugs),
@@ -274,16 +275,18 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
     }
   };
 
+  const Wrapper = ({ children }: { children: React.ReactNode }) => embedded ? <section data-exercise-survey className="space-y-2">{children}</section> : <Sheet open={open} onOpenChange={onOpenChange}>{children}</Sheet>;
+  const Content = ({ children }: { children: React.ReactNode }) => embedded ? <div>{children}</div> : <SheetContent side="bottom" className="rounded-t-2xl max-h-[92vh] overflow-y-auto">{children}</SheetContent>;
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl max-h-[92vh] overflow-y-auto">
-        <SheetHeader className="text-left">
+    <Wrapper>
+      <Content>
+        {embedded ? <h4 className="text-xs font-semibold">Survey (optional)</h4> : <SheetHeader className="text-left">
           <SheetTitle className="text-base">{rx.movement_name}</SheetTitle>
           <SheetDescription className="text-xs">
             {dosageText}
             {prevSummary && <span className="block mt-0.5 text-[11px] opacity-80">{prevSummary}</span>}
           </SheetDescription>
-        </SheetHeader>
+        </SheetHeader>}
 
         <div className="mt-4 space-y-4">
           {template.intro && <p className="text-[11px] text-muted-foreground">{template.intro}</p>}
@@ -300,12 +303,12 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
             <StandardTargetLine rows={standardRows} bodyweightLbs={measures?.bodyweightLbs ?? null} />
           )}
 
-          <RoundGrid
+          {!embedded && <RoundGrid
             fields={template.fields}
             rounds={rounds}
             onChange={setRounds}
             highlightMissingSide={hasSide}
-          />
+          />}
 
           {sideSummary && (sideSummary.L || sideSummary.R) && (
             <div className="rounded-lg border bg-muted/30 p-2.5 text-[11px]">
@@ -332,7 +335,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
           )}
 
 
-          {template.meta.rpe && (
+          {!embedded && template.meta.rpe && (
             <div>
               <div className="flex items-center justify-between">
                 <Label className="text-xs uppercase tracking-wide text-muted-foreground">RPE</Label>
@@ -409,7 +412,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText }: Props) 
             </Button>
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+      </Content>
+    </Wrapper>
   );
 }
