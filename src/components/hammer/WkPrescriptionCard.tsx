@@ -191,7 +191,7 @@ export function WkPrescriptionCard({
     }
   };
 
-  const why = rx.why_payload;
+  const why = rx.why_payload ?? {};
   const trainingMethod = readTrainingMethod(why);
   const progressionPayload = ((why as any)?.progression ?? null) as ProgressionPayloadShape | null;
   const storedPhase = why?.phase ?? rx.phase ?? null;

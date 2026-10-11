@@ -31,6 +31,7 @@ const base = {
   sequence_order: 1,
   sequence_role: "compound",
   engine: "lift",
+  why_payload: {},
 } as const;
 
 const progression = {
