@@ -21962,6 +21962,47 @@ export type Database = {
         Args: { p_field: string; p_tiles: Json; p_video: string }
         Returns: number
       }
+      list_my_coaches: {
+        Args: { _athlete?: string }
+        Returns: {
+          coach_id: string
+          coach_name: string
+          is_head: boolean
+          via: string
+        }[]
+      }
+      list_my_requests: {
+        Args: never
+        Returns: {
+          can_answer: boolean
+          created_at: string
+          id: string
+          incoming: boolean
+          kind: string
+          message: string
+          org_name: string
+          other_name: string
+          status: string
+          team_name: string
+        }[]
+      }
+      list_org_pending_verification: {
+        Args: never
+        Returns: {
+          address: string
+          admin_role_title: string
+          email_confirmed: boolean
+          id: string
+          name: string
+          official_email: string
+          org_type: string
+          owner_name: string
+          phone: string
+          proof_path: string
+          submitted_at: string
+          website: string
+        }[]
+      }
       manual_archive_scout_applications: {
         Args: never
         Returns: {

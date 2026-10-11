@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { StaffGettingStarted } from '@/components/staff/StaffGettingStarted';
+import { TeamsCard } from "@/components/organization/TeamsCard";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -264,6 +265,8 @@ export default function CoachDashboard() {
         </div>
 
         <StaffGettingStarted role="coach" />
+
+        <TeamsCard />
 
         {/* Hammer Progress Reports Inbox */}
         <div data-tour="coach-reports"><FollowerReportsInbox role="coach" /></div>
