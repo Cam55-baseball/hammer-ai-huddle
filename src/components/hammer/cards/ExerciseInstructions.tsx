@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -10,18 +9,22 @@ import { ExerciseVideo } from "./ExerciseVideo";
 
 type LiveText = { how_to_one_rep?: string; setup?: string; steps?: string; cue?: string; why?: string; stop_if?: string; movements?: string[] };
 
-/** Vault-created exercises have no entry in the built-in guide file — fetch their live text. */
+/** Vault-created exercises have no entry in the built-in guide file — fetch their live text.
+ *  Plain state (no query client) so a card renders anywhere, including inside other pop-ups. */
+const liveCache = new Map<string, LiveText | null>();
 function useLiveExerciseText(slug: string | null | undefined, needed: boolean) {
-  return useQuery({
-    queryKey: ["exercise-live-text", slug],
-    enabled: needed && !!slug,
-    staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_exercise_live_text", { _slug: slug! });
-      if (error) return null;
-      return (data ?? null) as LiveText | null;
-    },
-  });
+  const key = needed && slug ? slug : null;
+  const [data, setData] = useState<LiveText | null>(() => (key ? liveCache.get(key) ?? null : null));
+  useEffect(() => {
+    if (!key) return;
+    if (liveCache.has(key)) { setData(liveCache.get(key) ?? null); return; }
+    let alive = true;
+    void Promise.resolve(supabase.rpc("get_exercise_live_text", { _slug: key }))
+      .then(({ data, error }) => { const v = error ? null : ((data ?? null) as LiveText | null); liveCache.set(key, v); if (alive) setData(v); })
+      .catch(() => undefined);
+    return () => { alive = false; };
+  }, [key]);
+  return { data };
 }
 
 /** The movement's existing guide, shown inline; never invents or changes a dose. */
