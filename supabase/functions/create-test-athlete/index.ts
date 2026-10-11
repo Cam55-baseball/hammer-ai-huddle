@@ -115,6 +115,76 @@ function personas(): Record<string, Persona> {
     },
   };
 }
+
+// Staff personas for proving the scouting/recruiting flows end to end.
+// Same rules as athletes: allowlist-only, system accounts, owner-only tool.
+interface StaffPersona {
+  email: string; name: string; dob: string;
+  kind: "coach" | "org_owner" | "parent";
+  parentOf?: string; // persona key of the athlete this parent runs
+}
+function staffPersonas(): Record<string, StaffPersona> {
+  return {
+    democoach: {
+      email: "hammersmodality+democoach@gmail.com", name: "Demo — Coach", dob: "1985-03-15", kind: "coach",
+    },
+    demoorg: {
+      email: "hammersmodality+demoorg@gmail.com", name: "Demo — Org Owner", dob: "1980-01-20", kind: "org_owner",
+    },
+    demoparent: {
+      email: "hammersmodality+demoparent@gmail.com", name: "Demo — Parent", dob: "1982-07-04", kind: "parent", parentOf: "demo13",
+    },
+  };
+}
+
+async function seedStaff(admin: any, id: string, sp: StaffPersona) {
+  await admin.from("profiles").update({
+    full_name: sp.name, date_of_birth: sp.dob, is_system_account: true,
+  }).eq("id", id);
+  await admin.from("user_roles").upsert(
+    { user_id: id, role: "player" }, { onConflict: "user_id,role", ignoreDuplicates: true },
+  );
+  if (sp.kind === "coach") {
+    await admin.from("user_roles").upsert(
+      { user_id: id, role: "coach" }, { onConflict: "user_id,role", ignoreDuplicates: true },
+    );
+  }
+  if (sp.kind === "org_owner") {
+    await admin.from("user_roles").upsert(
+      { user_id: id, role: "coach" }, { onConflict: "user_id,role", ignoreDuplicates: true },
+    );
+    const { data: org } = await admin.from("organizations").select("id").eq("owner_user_id", id).maybeSingle();
+    let orgId = org?.id;
+    if (!orgId) {
+      const { data: created, error } = await admin.from("organizations").insert({
+        name: "Demo Organization", sport: "baseball", org_type: "travel", owner_user_id: id,
+        verified: false, verification_status: "unsubmitted", is_solo: false,
+      }).select("id").single();
+      if (error) throw new Error("org: " + error.message);
+      orgId = created.id;
+    }
+    await admin.from("organization_members").upsert(
+      { organization_id: orgId, user_id: id, role_in_org: "owner", status: "active" },
+      { onConflict: "organization_id,user_id", ignoreDuplicates: true },
+    );
+  }
+  if (sp.kind === "parent" && sp.parentOf) {
+    const athleteEmail = personas()[sp.parentOf]?.email;
+    if (athleteEmail) {
+      const athleteId = await findUser(admin, athleteEmail);
+      if (athleteId) {
+        const { data: link } = await admin.from("parent_athlete_links").select("id")
+          .eq("parent_user_id", id).eq("athlete_user_id", athleteId).maybeSingle();
+        if (!link) {
+          await admin.from("parent_athlete_links").insert({
+            parent_user_id: id, athlete_user_id: athleteId, relationship: "parent",
+            status: "accepted", accepted_at: new Date().toISOString(),
+          });
+        }
+      }
+    }
+  }
+}
 const TEST_PITCHER = "test-pitcher-14@hammersmodality.test";
 
 async function findUser(admin: any, email: string): Promise<string | null> {
@@ -202,19 +272,26 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const all = personas();
-    if (body?.list) return json({ personas: Object.fromEntries(Object.entries(all).map(([k, p]) => [k, p.email])), test_pitcher: TEST_PITCHER });
+    const staff = staffPersonas();
+    if (body?.list) return json({
+      personas: Object.fromEntries(Object.entries(all).map(([k, p]) => [k, p.email])),
+      staff: Object.fromEntries(Object.entries(staff).map(([k, p]) => [k, p.email])),
+      test_pitcher: TEST_PITCHER,
+    });
 
     const key: string | null = typeof body?.persona === "string" ? body.persona : null;
     const p = key ? all[key] : null;
-    if (key && !p) return json({ error: "Unknown persona — allowlist only" }, 400);
-    const email = p ? p.email : TEST_PITCHER;
+    const sp = key ? staff[key] : null;
+    if (key && !p && !sp) return json({ error: "Unknown persona — allowlist only" }, 400);
+    if (sp && body?.generate) return json({ error: "Staff personas have no training plan" }, 400);
+    const email = p ? p.email : sp ? sp.email : TEST_PITCHER;
 
     let id = await findUser(admin, email);
     const created = !id;
     if (!id) {
       const { data, error } = await admin.auth.admin.createUser({
         email, password: crypto.randomUUID() + "Aa1!", email_confirm: true,
-        user_metadata: { full_name: p?.name ?? "Test Pitcher (14)", test_account: true, demo_account: !!p },
+        user_metadata: { full_name: p?.name ?? sp?.name ?? "Test Pitcher (14)", test_account: true, demo_account: !!(p || sp) },
       });
       if (error) return json({ error: error.message }, 500);
       id = data.user!.id;
@@ -225,6 +302,7 @@ Deno.serve(async (req) => {
       if (prof?.is_system_account !== true) return json({ error: "Refusing: existing non-system account" }, 409);
     }
     if (p) await seed(admin, id!, p, u.user.id);
+    if (sp) await seedStaff(admin, id!, sp);
 
     if (body?.session) {
       const s = await oneTimeSession(admin, url, email);
