@@ -57,7 +57,7 @@ describe("grade labels", () => {
     player_confirmed: true,
   };
   it("shows the grade line with what was recorded", () => {
-    expect(gradeLine(grade)).toBe("Overall grade: 45 · Position: CF · Type: scout evaluation");
+    expect(gradeLine(grade)).toBe("Overall grade: 45 (Acceptable) · Position: CF · Type: scout evaluation");
   });
   it("says details not recorded when the grade is empty", () => {
     expect(gradeLine({ ...grade, overall_grade: null, position_evaluated: null, grade_type: null }))
