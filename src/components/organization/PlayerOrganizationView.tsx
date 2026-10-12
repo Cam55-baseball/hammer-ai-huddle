@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { Building2, Users, Shield, Calendar, LogOut, Trophy, Megaphone, Pin, TrendingUp, UserCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTeamStats } from '@/hooks/useTeamStats';
+import { FacilitySpaces } from '@/components/organization/FacilitySpaces';
 
 interface Props {
   organizationId: string;
