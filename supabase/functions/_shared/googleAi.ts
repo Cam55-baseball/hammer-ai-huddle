@@ -82,6 +82,8 @@ export interface ChatCompletionResult {
     }>;
   };
   errorBody?: string;
+  /** Token counts reported by the provider (Plan 4 cost tracking). */
+  usage?: { model: string; input_tokens: number; output_tokens: number };
 }
 
 // -----------------------------------------------------------------------------
@@ -345,7 +347,9 @@ async function callGoogle(
       return { ok: false, status: resp.status, provider: "google", data: { choices: [] }, errorBody };
     }
     const json = await resp.json();
-    return { ok: true, status: 200, provider: "google", data: fromGoogleResponse(json) };
+    const um = json?.usageMetadata ?? {};
+    return { ok: true, status: 200, provider: "google", data: fromGoogleResponse(json),
+      usage: { model, input_tokens: um.promptTokenCount ?? 0, output_tokens: (um.candidatesTokenCount ?? 0) + (um.thoughtsTokenCount ?? 0) } };
   } catch (err) {
     return {
       ok: false,
@@ -407,7 +411,8 @@ async function callOpenAI(
       return { ok: false, status: resp.status, provider: "openai", data: { choices: [] }, errorBody };
     }
     const json = await resp.json();
-    return { ok: true, status: 200, provider: "openai", data: json };
+    return { ok: true, status: 200, provider: "openai", data: json,
+      usage: { model: String(json?.model ?? body.model ?? ""), input_tokens: json?.usage?.prompt_tokens ?? 0, output_tokens: json?.usage?.completion_tokens ?? 0 } };
   } catch (err) {
     return {
       ok: false,
