@@ -145,7 +145,7 @@ No publish, no cron, no iPhone changes.
 - [~] Phase 2 Consent up front
   - [x] DD11 sharing checklist: Health and Academics are now their own switches, both off by default (migration `scouting_v31_phase2_health_academics_scopes`; server sharing rule updated). Page renamed "Scouting visibility" (menu too). Under 13: Contact can't be turned on — staff may only contact the parent; the server rule refuses it too. Proof: 4 new rule tests pass (48/48 sharing tests); test player turned on Academics only, reload showed "scouts and coaches can see your academics", Health stayed off (phone screenshot /tmp/browser/dd10/40_scouting_visibility.png); reset afterward.
   - [ ] Teen parent checklist up front (parent ticks the same items, incl. separate health + academics); under-13 parent turns scouting on; parent contact route; new legal versions with changed paragraphs shown here before the owner marks lawyer approval.
-- [ ] Phase 3 Onboarding fields — [ ] Phase 4 Game stats — [ ] Phase 5 Coach tools — [ ] Phase 6 Organization tools — [ ] Phase 7 Scout tools — [ ] Phase 8 The General — [ ] Phase 9 Sponsorship billing
+- [x] Phase 3 Onboarding fields — [x] Phase 4 Game stats — [x] Phase 5 Coach tools — [x] Phase 6 Facility tools — [ ] Phase 7 Scout tools — [ ] Phase 8 The General — [ ] Phase 9 Sponsorship billing
 
 ---
 
