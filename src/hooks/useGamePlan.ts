@@ -1642,7 +1642,10 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     tasks.push({
       id: `ps-${session.id}`,
       titleKey: session.title,
-      descriptionKey: session.start_time ? `${session.start_time}${session.end_time ? ' – ' + session.end_time : ''}` : 'Scheduled Practice',
+      descriptionKey: [
+        session.coach_id && session.created_by !== session.user_id ? 'From Coach' : null,
+        session.start_time ? `${session.start_time}${session.end_time ? ' – ' + session.end_time : ''}` : 'Scheduled Practice',
+      ].filter(Boolean).join(' · '),
       completed: session.status === 'completed',
       icon: PRACTICE_MODULE_ICONS[session.session_module] || Target,
       link: `/practice?module=${session.session_module}&type=${session.session_type}&scheduled=${session.id}`,
