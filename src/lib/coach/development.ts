@@ -176,13 +176,13 @@ export function strengthsAndWeaknesses(reports: DevReport[]): {
     .filter((c) => c.avg > overall + 3)
     .map((c) => ({
       text: `${pretty(c.cat)} is a strength`,
-      evidence: `Average score ${Math.round(c.avg)} across ${c.n} report${c.n === 1 ? "" : "s"}, latest ${c.latest.date} — above this player's own average of ${Math.round(overall)}.`,
+      evidence: `Average score ${Math.round(c.avg)} across ${c.n} report${c.n === 1 ? "" : "s"}, latest ${dateOnly(c.latest.date)} — above this player's own average of ${Math.round(overall)}.`,
     }));
   const weaknesses = catAvg
     .filter((c) => c.avg < overall - 3)
     .map((c) => ({
       text: `${pretty(c.cat)} needs the most work`,
-      evidence: `Average score ${Math.round(c.avg)} across ${c.n} report${c.n === 1 ? "" : "s"}, latest ${c.latest.date} — below this player's own average of ${Math.round(overall)}.`,
+      evidence: `Average score ${Math.round(c.avg)} across ${c.n} report${c.n === 1 ? "" : "s"}, latest ${dateOnly(c.latest.date)} — below this player's own average of ${Math.round(overall)}.`,
     }));
   const note =
     strengths.length === 0 && weaknesses.length === 0
@@ -204,7 +204,7 @@ export function buildConnections(reports: DevReport[], findings: DevFinding[]): 
     if (c.trend === "up" || c.trend === "down") {
       out.push({
         label: "Measured change",
-        text: `${pretty(c.category)} scores went ${c.trend} across the last ${c.reports.length} reports (${c.reports[c.reports.length - 1].date} → ${c.reports[0].date}).`,
+        text: `${pretty(c.category)} scores went ${c.trend} across the last ${c.reports.length} reports (${dateOnly(c.reports[c.reports.length - 1].date)} → ${dateOnly(c.reports[0].date)}).`,
       });
     }
   }
@@ -225,7 +225,7 @@ export function buildConnections(reports: DevReport[], findings: DevFinding[]): 
   for (const i of cleaning) {
     out.push({
       label: "Observed fact",
-      text: `${pretty(i.fault_key)} was not seen in the latest ${pretty(i.category).toLowerCase()} report (${i.last_seen.slice(0, 10)} was the last time it appeared).`,
+      text: `${pretty(i.fault_key)} was not seen in the latest ${pretty(i.category).toLowerCase()} report (${i.last_seen} was the last time it appeared).`,
     });
   }
   if (out.length === 0) {
@@ -243,7 +243,7 @@ export function buildTakeaways(reports: DevReport[], findings: DevFinding[]): Ta
   if (recurring[0]) {
     out.push({
       text: `Keep working on ${pretty(recurring[0].fault_key).toLowerCase()} — it is the most recurring issue.`,
-      evidence: `Seen in ${recurring[0].times_seen} of the last ${recurring[0].reports_checked} ${pretty(recurring[0].category).toLowerCase()} reports; latest ${recurring[0].last_seen.slice(0, 10)}.`,
+      evidence: `Seen in ${recurring[0].times_seen} of the last ${recurring[0].reports_checked} ${pretty(recurring[0].category).toLowerCase()} reports; latest ${recurring[0].last_seen}.`,
       confidence: recurring[0].times_seen >= 3 ? "High" : "Medium",
     });
   }
@@ -251,7 +251,7 @@ export function buildTakeaways(reports: DevReport[], findings: DevFinding[]): Ta
   if (improving) {
     out.push({
       text: `${pretty(improving.category)} is improving — keep the current work going.`,
-      evidence: `Scores rose across the last ${improving.reports.length} reports (${improving.reports[improving.reports.length - 1].date} → ${improving.reports[0].date}).`,
+      evidence: `Scores rose across the last ${improving.reports.length} reports (${dateOnly(improving.reports[improving.reports.length - 1].date)} → ${dateOnly(improving.reports[0].date)}).`,
       confidence: improving.reports.length >= 4 ? "High" : "Medium",
     });
   }
@@ -259,7 +259,7 @@ export function buildTakeaways(reports: DevReport[], findings: DevFinding[]): Ta
   if (slipping && out.length < 3) {
     out.push({
       text: `${pretty(slipping.category)} scores are slipping — worth a look at the next session.`,
-      evidence: `Scores fell across the last ${slipping.reports.length} reports (${slipping.reports[slipping.reports.length - 1].date} → ${slipping.reports[0].date}).`,
+      evidence: `Scores fell across the last ${slipping.reports.length} reports (${dateOnly(slipping.reports[slipping.reports.length - 1].date)} → ${dateOnly(slipping.reports[0].date)}).`,
       confidence: slipping.reports.length >= 4 ? "High" : "Low",
     });
   }

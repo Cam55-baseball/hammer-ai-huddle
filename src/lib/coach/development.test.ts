@@ -79,7 +79,9 @@ describe("strengthsAndWeaknesses", () => {
     expect(weaknesses[0].text).toContain("Hitting");
   });
   it("returns nothing with fewer than 2 scored reports", () => {
-    expect(strengthsAndWeaknesses([rep("a", "2026-10-01", 50)])).toEqual({ strengths: [], weaknesses: [] });
+    const r = strengthsAndWeaknesses([rep("a", "2026-10-01", 50)]);
+    expect(r.strengths).toEqual([]);
+    expect(r.note).toContain("Not enough data");
   });
 });
 
