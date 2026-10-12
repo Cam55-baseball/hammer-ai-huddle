@@ -62,3 +62,17 @@ E. PROOF before "ready":
 - guest mode saving nothing
 - phone screenshots, the full suite, no regressions
 When EVERYTHING (v3.1 and Plan 4) is proven, write docs/owner/publish-checklist.md: a plain step-by-step human verification checklist for the owner, with what he should see on each screen. Then report "Ready to publish: yes".
+
+---
+
+## OWNER UPDATES TO PLAN 4 (2026-10-12 22:36 UTC, saved word for word)
+
+1. GRADES GO BY 5s. On the 20–80 scale, grades are ONLY 20, 25, 30 … 75, 80 (round to the nearest 5). The DECIMAL scale is the owner's own scale, used ONLY below 20 (one decimal, e.g. 12.4).
+   - Bands: Sub Par = below 40 (decimals, 20, 25, 30, 35); Acceptable = 40, 45, 50, 55, 60; Elite = 65, 70, 75, 80.
+   - Fix anywhere the app shows non-5 grades at 20 or above.
+   - Edge tests: 19.9 → Sub Par (decimal), 35 → Sub Par, 40 → Acceptable, 60 → Acceptable, 65 → Elite.
+2. CHECK-INS VISIBLE TO COACHES AND ORGANIZATIONS. A player's check-ins (morning and night check-ins, readiness, sleep, soreness, pain, energy, notes) appear in the Coach View, the Development and Discipline views and the org dashboard for connected coaches and organizations.
+   - ALWAYS visible: whether check-ins were completed, and when (attendance and discipline).
+   - The CONTENTS (readiness, sleep, soreness, pain and other health-type answers) are health data under the approved Consumer Health Data Policy. They show when the player (18+) or parent (minors) has the health-sharing switch ON, and that's already part of the up-front consent at sign-up.
+   - If it's off, show "Shared only with health consent" and an easy prompt for the player or parent to turn it on.
+   - Prove it both ways with test accounts.

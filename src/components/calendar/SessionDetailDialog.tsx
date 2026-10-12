@@ -129,7 +129,7 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
                   {drillBlocks.map((block: any, i: number) => (
                     <div key={i} className="flex items-center justify-between text-sm">
                       <span className="capitalize">{(block.drill_type || block.drill_name || 'Block').replace(/_/g, ' ')}</span>
-                      <span className="text-muted-foreground">{block.volume} reps · {block.execution_grade}/80</span>
+                      <span className="text-muted-foreground">{block.volume} reps · {block.execution_grade != null ? formatGrade(block.execution_grade) : "Not recorded"}/80</span>
                     </div>
                   ))}
                 </div>

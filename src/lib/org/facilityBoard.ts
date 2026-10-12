@@ -46,6 +46,12 @@ export function weekLine(r: FacilityBoardRow): string {
   return `${Math.round((r.week_done / r.week_planned) * 100)}% (${r.week_done} of ${r.week_planned} cards) done in the last 7 days`;
 }
 
+/** Attendance only — check-in contents are health data and stay on the consent-gated player page. */
+export function checkinLine(r: FacilityBoardRow & { checkins_7d?: number | null }): string {
+  if (r.checkins_7d == null) return "Check-ins: Not enough data";
+  return `Check-ins completed: ${r.checkins_7d} of the last 7 days. Answers are on the player's page (shared only with health consent).`;
+}
+
 export function lastActiveLine(r: FacilityBoardRow): string {
   return r.last_active ? `Last activity: ${r.last_active}` : "No activity yet";
 }

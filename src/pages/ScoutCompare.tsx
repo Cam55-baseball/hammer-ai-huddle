@@ -1,3 +1,4 @@
+import { formatGrade } from "@/lib/benchmarks/gradeScale";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueries, useQuery } from "@tanstack/react-query";
@@ -93,7 +94,7 @@ export default function ScoutCompare() {
                     <Line k="Latest test" v={c.latestTest ? `${c.latestTest.type} — ${c.latestTest.values || NM} (${c.latestTest.date})` : NM}
                       src={c.latestTest ? (c.latestTest.verified ? "Source: facility-verified (in person)" : "Source: athlete-entered") : undefined} />
                     <Line k="Tests logged" v={String(c.testCount)} />
-                    <Line k="Latest grade (20–80 scale)" v={c.latestGrade?.grade != null ? `${c.latestGrade.grade} (${c.latestGrade.date ?? "date not recorded"})` : NM}
+                    <Line k="Latest grade (20–80 scale)" v={c.latestGrade?.grade != null ? `${formatGrade(c.latestGrade.grade)} (${c.latestGrade.date ?? "date not recorded"})` : NM}
                       src={c.latestGrade ? `Entered by: ${c.latestGrade.source ?? "not recorded"}` : undefined} />
                   </>)}
                   <Line k="Analysis reports" v={c.reportCount === null ? NOT_SHARED : String(c.reportCount)} />

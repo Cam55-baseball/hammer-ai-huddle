@@ -1,3 +1,4 @@
+import { CoachCheckinSummary } from "@/components/coach/CoachCheckinSummary";
 import { CoachDisciplineTab } from "@/components/coach/CoachDisciplineTab";
 import { CoachMessageBox } from "@/components/coach/CoachMessageBox";
 import { CoachDrillAssign } from "@/components/coach/CoachDrillAssign";
@@ -224,6 +225,7 @@ export default function CoachAthleteDetail() {
           </TabsList>
 
           <TabsContent value="development" className="space-y-4 pt-4">
+            {athleteId && <CoachCheckinSummary athleteId={athleteId} />}
             {athleteId && <CoachDevelopmentTab athleteId={athleteId} />}
           </TabsContent>
 
@@ -244,6 +246,7 @@ export default function CoachAthleteDetail() {
           </TabsContent>
 
           <TabsContent value="discipline" className="space-y-4 pt-4">
+            {athleteId && <CoachCheckinSummary athleteId={athleteId} />}
             {athleteId && <CoachDisciplineTab athleteId={athleteId} />}
           </TabsContent>
           <TabsContent value="grades" className="space-y-4 pt-4">
