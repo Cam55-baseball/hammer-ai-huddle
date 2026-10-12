@@ -11,6 +11,7 @@ import { Check, X, Inbox, Star } from 'lucide-react';
 type Req = {
   id: string; kind: string; incoming: boolean; can_answer: boolean; other_name: string;
   org_name: string | null; team_name: string | null; status: string; message: string | null; created_at: string;
+  for_child?: boolean; child_name?: string | null;
 };
 type Coach = { coach_id: string; coach_name: string; via: string; is_head: boolean };
 
@@ -21,7 +22,13 @@ const KIND_LABEL: Record<string, string> = {
   org_player: 'Join team',
 };
 
-export function describeRequest(r: Pick<Req, 'kind' | 'incoming' | 'other_name' | 'org_name' | 'team_name'>): string {
+export function describeRequest(r: Pick<Req, 'kind' | 'incoming' | 'other_name' | 'org_name' | 'team_name' | 'for_child' | 'child_name'>): string {
+  if (r.for_child) {
+    const child = r.child_name || 'your athlete';
+    if (r.kind === 'scout_player') return r.incoming ? `Scout ${r.other_name} wants to follow ${child}'s profile` : `Scout ${r.other_name} and ${child}`;
+    if (r.kind === 'coach_player') return r.incoming ? `Coach ${r.other_name} wants to connect with ${child}` : `Coach ${r.other_name} and ${child}`;
+    return `${r.other_name} and ${child}`;
+  }
   const where = r.team_name ? `${r.team_name}${r.org_name ? ` (${r.org_name})` : ''}` : r.org_name ?? '';
   if (r.kind === 'org_coach') return r.incoming ? `${r.other_name} — coach staff for ${where}` : `You asked to coach at ${where || r.other_name}`;
   if (r.kind === 'org_player') return r.incoming ? `${r.other_name} — player on ${where}` : `You asked to join ${where || r.other_name}`;
@@ -37,7 +44,7 @@ export default function Requests() {
     queryKey: ['my-requests', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('list_my_requests');
+      const { data, error } = await (supabase as any).rpc('list_my_requests_v2');
       if (error) throw error;
       return (data ?? []) as Req[];
     },
@@ -91,7 +98,8 @@ export default function Requests() {
 
   const list = reqs.data ?? [];
   const waiting = list.filter((r) => r.status === 'pending' && r.incoming);
-  const sent = list.filter((r) => r.status === 'pending' && !r.incoming);
+  const sent = list.filter((r) => r.status === 'pending' && !r.incoming && !r.for_child);
+  const aboutChild = list.filter((r) => r.status === 'pending' && !r.incoming && r.for_child);
   const past = list.filter((r) => r.status !== 'pending').slice(0, 10);
 
   return (
@@ -139,6 +147,20 @@ export default function Requests() {
             <p className="text-xs text-muted-foreground">Your head coach gets your alerts first. It doesn't let them see anything more.</p>
           </CardContent>
         </Card>
+
+        {aboutChild.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-base">Notices about your athlete</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              {aboutChild.map((r) => (
+                <div key={r.id} className="rounded-lg border p-3 text-sm">
+                  <p className="text-xs text-muted-foreground">{KIND_LABEL[r.kind] ?? 'Request'} · waiting for your athlete's answer</p>
+                  <p>{describeRequest(r)}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {sent.length > 0 && (
           <Card>
