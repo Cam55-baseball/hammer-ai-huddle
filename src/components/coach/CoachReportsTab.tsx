@@ -61,13 +61,13 @@ export function CoachReportsTab({ athleteId }: { athleteId: string }) {
 
 export function CoachGradesTab({ athleteId, sport = null }: { athleteId: string; sport?: string | null }) {
   const { data, isLoading, error } = useCoachReports(athleteId);
-  if (isLoading) return <State>Loading grades…</State>;
-  if (error) return <State>Could not load grades.</State>;
-  const grades = data?.grades ?? [];
   const sportQ = useQuery({
     queryKey: ["coach-athlete-sport", athleteId], enabled: !sport,
     queryFn: async () => ((await supabase.from("athlete_mpi_settings").select("sport").eq("user_id", athleteId).maybeSingle()).data as any)?.sport ?? null,
   });
+  if (isLoading) return <State>Loading grades…</State>;
+  if (error) return <State>Could not load grades.</State>;
+  const grades = data?.grades ?? [];
   const athleteSport = sport ?? sportQ.data ?? null;
   return (
     <Card>
