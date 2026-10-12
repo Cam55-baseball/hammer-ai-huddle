@@ -22284,6 +22284,7 @@ export type Database = {
         Args: { _athlete: string; _org: string }
         Returns: Json
       }
+      org_test_ranking: { Args: { _org: string; _test: string }; Returns: Json }
       owns_scout_grade: { Args: { _grade_id: string }; Returns: boolean }
       recompute_library_video_tier: {
         Args: { p_video_id: string }
