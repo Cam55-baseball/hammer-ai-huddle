@@ -16,6 +16,7 @@ import { Building2 } from 'lucide-react';
 import { OrgVerificationForm } from '@/components/organization/OrgVerificationCards';
 import { AssignAthletesCard } from '@/components/organization/AssignAthletesCard';
 import { FacilitySpaces } from '@/components/organization/FacilitySpaces';
+import { useFeatureSwitches } from '@/hooks/useFeatureSwitches';
 
 export default function OrganizationDashboard() {
   const { myOrgs, members } = useOrganization();
@@ -45,14 +46,14 @@ export default function OrganizationDashboard() {
               <TabsTrigger value="members">Members</TabsTrigger>
               <TabsTrigger value="invite">Invite</TabsTrigger>
               <TabsTrigger value="heatmaps">Heat Maps</TabsTrigger>
-              {(activeOrg.org_type === 'facility' || activeOrg.org_type === 'academy') && (
+              {spacesOn && (activeOrg.org_type === 'facility' || activeOrg.org_type === 'academy') && (
                 <TabsTrigger value="spaces">Spaces</TabsTrigger>
               )}
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
 
             {/* Plan v3.1 Phase 6 — facility tools: manage training spaces */}
-            {(activeOrg.org_type === 'facility' || activeOrg.org_type === 'academy') && (
+            {spacesOn && (activeOrg.org_type === 'facility' || activeOrg.org_type === 'academy') && (
               <TabsContent value="spaces">
                 <FacilitySpaces orgId={activeOrg.id} canManage />
               </TabsContent>

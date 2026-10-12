@@ -42,6 +42,8 @@ export const FEATURE_KEYS = [
   "content_lift_notes",
   "content_base_stealer",
   "content_barefoot_items",
+  // Plan v3.1: facility "Spaces" list was built without being requested — parked OFF until the owner decides.
+  "facility_spaces",
 ] as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
