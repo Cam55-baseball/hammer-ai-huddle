@@ -143,6 +143,10 @@ SUBSCRIPTION TIERS:
 - **5Tool Player** ($300/mo) — Hitting + Throwing Analysis, Iron Bambino (Production Lab), Speed Lab, Tex Vision
 - **The Golden 2Way** ($400/mo) — Everything in both tiers + The Unicorn workout system
 
+COACH AND ORGANIZATION PLANS (buy on the website at /staff-plans; the iPhone app says "Subscribe on our website"):
+- **Hammers Coach** ($300/mo) — all analyses for both sports, Tex Vision, Delaycam, pitch tipping, Royal timing, Baserunning IQ, Pick-off Trainer, calendar and messages, testing days, on-the-spot initial assessment, Coach Dashboard, Development and Discipline views for connected players, sending workouts. No personal plans or athlete reports for coach accounts. Fair use: about 30 analyses per hour.
+- **Hammers Organization** ($1,000/mo, 5 coach seats included; extra coach seat $150/mo each) — everything in Coach for every seat, plus facility dashboard, comparisons, growth-vs-game trends, teams, staff seats and org-wide summaries.
+
 ROLE-SPECIFIC FEATURES:
 - **Players**: Access training tiers, video analysis, vault, custom activities
 - **Coaches** (/coach-dashboard): Manage players, share custom activities, view player progress

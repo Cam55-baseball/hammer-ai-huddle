@@ -120,6 +120,9 @@ const SelectUserRole = () => {
             </div>
           </Card>
         </div>
+        <p className="text-center text-sm text-muted-foreground mt-6">
+          {t("staffPlans.roleNote")} · <Link to="/staff-plans" className="text-primary underline">{t("staffPlans.see")}</Link>
+        </p>
       </div>
     </div>
   );

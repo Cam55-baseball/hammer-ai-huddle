@@ -3,6 +3,7 @@ import { mentionsRetired } from "../../supabase/functions/_shared/archive/retire
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { StaffPlansTeaser } from "@/components/staff/StaffPlansTeaser";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Check, Info, Star } from "lucide-react";
@@ -137,6 +138,8 @@ const Pricing = () => {
             );
           })}
         </div>
+
+        <StaffPlansTeaser />
 
         <div className="text-center mt-6">
           <Button variant="ghost" onClick={() => navigate("/dashboard")}>
