@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { RatingAgreement } from "@/components/ratings/RatingAgreement";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   parseReportsPayload,
@@ -81,6 +82,10 @@ export function CoachGradesTab({ athleteId }: { athleteId: string }) {
               <div className="text-xs text-muted-foreground">{gradeSourceLabel(g.grade_source)}</div>
               {g.player_confirmed === false && (
                 <div className="text-xs text-muted-foreground">Not confirmed by the player yet</div>
+              )}
+              {g.overall_grade != null && (
+                <RatingAgreement athleteId={athleteId} sport={null} position={g.position_evaluated}
+                  testKey={g.grade_type ?? "grade"} metricKey="overall_grade" grade={g.overall_grade} />
               )}
             </div>
           ))
