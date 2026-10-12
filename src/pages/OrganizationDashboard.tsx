@@ -16,6 +16,7 @@ import { Building2 } from 'lucide-react';
 import { OrgVerificationForm } from '@/components/organization/OrgVerificationCards';
 import { AssignAthletesCard } from '@/components/organization/AssignAthletesCard';
 import { FacilitySpaces } from '@/components/organization/FacilitySpaces';
+import { FacilityBoard } from '@/components/organization/FacilityBoard';
 import { useFeatureSwitches } from '@/hooks/useFeatureSwitches';
 
 export default function OrganizationDashboard() {
@@ -42,6 +43,7 @@ export default function OrganizationDashboard() {
           <Tabs defaultValue="overview" className="space-y-6">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="players">Players</TabsTrigger>
               <TabsTrigger value="announcements">Announcements</TabsTrigger>
               <TabsTrigger value="roster">Roster</TabsTrigger>
               <TabsTrigger value="members">Members</TabsTrigger>
@@ -67,6 +69,10 @@ export default function OrganizationDashboard() {
                 activeMemberCount={teamStats?.activeMemberCount ?? memberList.length}
                 flaggedCount={teamStats?.flaggedCount ?? 0}
               />
+            </TabsContent>
+
+            <TabsContent value="players">
+              <FacilityBoard orgId={activeOrg.id} />
             </TabsContent>
 
             <TabsContent value="announcements">
