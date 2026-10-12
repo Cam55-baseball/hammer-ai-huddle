@@ -8,7 +8,8 @@
 - Order: build after Plan v3.1 Phase 11 (sponsorship billing). BLOCKED: Phase 11 waits on the owner's 4 answers (price per sponsored player + monthly/yearly; modules covered; grace period; players already paying).
 - Owner decision needed: start Plan 4 now ahead of Phase 11? (Org plan in Plan 4 also includes sponsorship billing, so the same 4 answers are needed there.)
 - Sections pending: A Ratings · B Initial assessment · C Discipline view · D Coach/Org plans + Stripe · E Proof.
-- Ready to publish: no
+- - JJ6: Initial assessment saved progress + checklist card in Before you start + movement and safety check (pain → report-pain screen). Built, code checks clean; phone proof as a player still to do.
+Ready to publish: no
 
 # REPORT — 2026-10-12 18:55 UTC (owner OK: plan builder with Lifting Option B)
 
