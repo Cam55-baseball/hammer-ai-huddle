@@ -145,7 +145,7 @@ function DayRow({ d, name, call }: { d: TestingDay; name: string; call: (fn: str
           <Button size="sm" variant="outline" onClick={() => setMode("skip")}>Skip</Button>
         </div>
       )}
-      {mode === "run" && (
+      {mode === "run" && d.status === "scheduled" && (
         <div className="space-y-2">
           {d.tests.map((t) => (
             <div key={t} className="space-y-1">
