@@ -18,7 +18,7 @@ export interface RecentPitchingLoad {
 
 export interface RawLogRow {
   readonly plan_date: string;
-  readonly template_id: string | null;
+  readonly template_id?: string | null;
   readonly movement_slug: string | null;
   readonly metrics: unknown;
 }
@@ -45,7 +45,7 @@ export function aggregateRecentPitchingLoad(
   let last: RecentPitchingLoad["lastOuting"] = null;
   let weekly = 0;
   for (const r of rows) {
-    const tpl = r.template_id;
+    const tpl = r.movement_slug ?? r.template_id ?? null;
     if (!tpl || !PITCH_TEMPLATES.has(tpl)) continue;
     const pitches = extractPitches(r.metrics);
     if (pitches <= 0) continue;
