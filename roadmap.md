@@ -11,6 +11,38 @@
 - - JJ6: Initial assessment saved progress + checklist card in Before you start + movement and safety check (pain → report-pain screen). Built, code checks clean; phone proof as a player still to do — BLOCKED: signing in as a test player needs owner approval of the sign-in prompt. JJ7: players can no longer mark their own results coach-verified (only the server can set that label). JJ8: sign-in still blocked (approval unavailable). Discipline rules built + 6 tests (completion, missed days, streaks, 7/28/90 windows, links with 'Not enough data' under 8 pairs, never claims cause); JJ9: Coach player page has a Discipline tab (7/28/90-day work done vs set, streak, missed days, most-skipped card type) from a server-checked lookup (connected coaches only). Still to do: links to results, logging consistency, team summary, org view, phone proof.
 Ready to publish: no
 
+# STATUS — 2026-10-12 20:46 UTC (end of JJ batch)
+
+**Ready to publish: no.**
+
+## Plan v3.1
+- Phases 1–10: PASS (proof in earlier reports below). Phase 11 sponsorship billing: NOT STARTED, waits on the owner's 4 answers.
+
+## Plan 4 (docs/owner/plan-4.md)
+- A1 bands: PASS (tests: 39.9 Sub Par, 40/60 Acceptable, 60.1 Elite, 12.4 decimal).
+- A2 band + decimals shown on session, calendar, rankings, MPI card: PASS tests; not phone-checked.
+- A3 "Do you agree?": PASS on phone as Demo Coach (saved with sport + position, rating unchanged). Owner dashboard (/owner/rating-agreement): built, not checked as owner.
+- A4 percentiles: later (needs 50+ players per sport and position).
+- B1 assessment order rules: PASS (8 tests).
+- B2 saved progress, checklist card in Before you start, movement and safety check (pain → report-pain screen): BUILT, not phone-checked (sign-in as a test player needs owner approval). Players cannot self-label results coach-verified. Not yet on the plan itself; coach on-the-spot and under-13 parent flow not built.
+- C1 discipline rules: PASS (6 tests; "Not enough data" under 8 pairs; never claims cause).
+- C2 coach Discipline tab (7/28/90-day done vs set, streak, missed days, most-skipped card type; connected coaches only): BUILT, not phone-checked. Still to do: links to results, logging consistency, team and org summaries.
+- D Coach/Org plans: NOT STARTED. Stripe product/price IDs: none created yet.
+- D fair-use clause: DRAFTED for lawyer review, NOT approved (docs/owner/fair-use-clause-draft.md).
+- D coach logging: proposal written, not built (docs/owner/coach-logging-proposal.md).
+- E full proof list: NOT DONE.
+
+## Next item
+Phone proof of B2 and C2 (needs sign-in approval), then the coach on-the-spot assessment, then D (Stripe products and checkout).
+
+## Waiting on the owner
+1. Approve the sign-in prompt so test player and coach screens can be checked on a phone.
+2. Yes/skip: decimal grade columns for coach and scout grades (a 12.4 is now stored as 12).
+3. Four sponsorship answers: price per sponsored player (monthly/yearly), modules covered, grace period, players already paying.
+4. Lawyer review of the fair-use clause draft.
+5. Choose an option in the coach-logging proposal.
+6. Spaces keep/remove (still off); Vault review queue.
+
 # REPORT — 2026-10-12 18:55 UTC (owner OK: plan builder with Lifting Option B)
 
 **Ready to publish: no.** (Phase 11 still waits on the owner's 4 billing answers.)
