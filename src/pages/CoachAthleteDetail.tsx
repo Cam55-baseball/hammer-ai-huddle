@@ -211,11 +211,16 @@ export default function CoachAthleteDetail() {
             <TabsTrigger value="trends">Trends</TabsTrigger>
             <TabsTrigger value="load">Body load</TabsTrigger>
             <TabsTrigger value="games">Game stats</TabsTrigger>
+            <TabsTrigger value="readiness">Readiness &amp; pain</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
           </TabsList>
 
           <TabsContent value="trends" className="space-y-4 pt-4">
             {athleteId && <CoachTrendsTab athleteId={athleteId} />}
+          </TabsContent>
+
+          <TabsContent value="readiness" className="space-y-4 pt-4">
+            {athleteId && <CoachReadinessTab athleteId={athleteId} />}
           </TabsContent>
 
           <TabsContent value="games" className="space-y-4 pt-4">
