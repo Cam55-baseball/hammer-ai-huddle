@@ -138,6 +138,18 @@ serve(async (req) => {
       profileQuery = profileQuery.in('batting_side', battingSides);
     }
 
+    // Narrow to players with matching tests before the row limit applies.
+    const testDays = Number(recentTestDays) > 0 ? Math.min(Number(recentTestDays), 730) : 0;
+    let testUserIds: string[] | null = null;
+    if (verifiedTestsOnly === true || testDays > 0) {
+      let tq = supabaseAdmin.from('vault_performance_tests').select('user_id').limit(5000);
+      if (verifiedTestsOnly === true) tq = tq.eq('results->>_verified', 'in_person');
+      if (testDays > 0) tq = tq.gte('test_date', new Date(Date.now() - testDays * 86400000).toISOString().slice(0, 10));
+      const { data: tests } = await tq;
+      testUserIds = [...new Set((tests ?? []).map((t: any) => t.user_id as string))];
+      profileQuery = profileQuery.in('id', testUserIds.length ? testUserIds : ['00000000-0000-0000-0000-000000000000']);
+    }
+
     if (Array.isArray(levels) && levels.length > 0) {
       profileQuery = profileQuery.in('experience_level', levels);
     }
@@ -276,15 +288,9 @@ serve(async (req) => {
     filteredProfiles = filteredProfiles.filter(p => gate.get(p.id) === 'visible');
 
     // Test-based filters: only players who share their stats ('metrics') can match.
-    const testDays = Number(recentTestDays) > 0 ? Math.min(Number(recentTestDays), 730) : 0;
-    if ((verifiedTestsOnly === true || testDays > 0) && filteredProfiles.length > 0) {
+    if (testUserIds && filteredProfiles.length > 0) {
       const mGate = await recruitingGate(supabaseAdmin, user.id, filteredProfiles.map(p => p.id), 'metrics');
-      const shared = filteredProfiles.filter(p => mGate.get(p.id) === 'visible').map(p => p.id);
-      let tq = supabaseAdmin.from('vault_performance_tests').select('user_id, test_date, results').in('user_id', shared.length ? shared : ['00000000-0000-0000-0000-000000000000']);
-      if (testDays > 0) tq = tq.gte('test_date', new Date(Date.now() - testDays * 86400000).toISOString().slice(0, 10));
-      const { data: tests } = await tq;
-      const ok = new Set((tests ?? []).filter((t: any) => verifiedTestsOnly !== true || t.results?._verified === 'in_person').map((t: any) => t.user_id));
-      filteredProfiles = filteredProfiles.filter(p => ok.has(p.id));
+      filteredProfiles = filteredProfiles.filter(p => mGate.get(p.id) === 'visible');
     }
 
     const results = filteredProfiles.map(profile => ({
