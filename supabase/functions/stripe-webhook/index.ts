@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { resolveUserId, syncCustomer } from "../_shared/stripeSubscriptionSync.ts";
+import { applyStaffSubscription } from "../_shared/staffPlans.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -166,6 +167,10 @@ async function handleSubscriptionEvent(
   logStep("User resolved", { userId: resolved.userId, via: resolved.via });
 
   await syncCustomer({ supabase: supabaseClient, stripe, customerId, userId: resolved.userId, log: logStep });
+  // Plan 4 D: Coach/Organization plans switch on and off from the same event.
+  if (await applyStaffSubscription(supabaseClient, resolved.userId, customerId, subscription)) {
+    logStep("Staff plan updated", { userId: resolved.userId, status: subscription.status });
+  }
 }
 
 async function handleCheckoutCompleted(
