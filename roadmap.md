@@ -1,3 +1,11 @@
+# REPORT — 2026-10-12 17:20 UTC (II1, step 1)
+
+**Ready to publish: no.** **II1 step 1 PASS: Scout Profile tabs.** The Scout Profile now has Overview, ID and academics, Performance, Reports and video, Six-week recap, Grades, Players Club, plus Game play and stats. Each tab shows only what the family shared (profile / stats / video / academics, minors also need the parent's yes); unshared tabs say "Not shared"; blank profile fields say "Not entered", missing measurements "Not yet measured"; every value carries a source label (athlete-entered, facility-verified (in person), transcript verified, video analysis reports, who entered a grade + date). Server lookup scout_athlete_profile (accepted follow + scout/recruiter role + no block + per-scope sharing). Proof on a phone as the test scout (/tmp/browser/ii1/2.png): player shared profile + stats only → Overview showed real profile, Performance showed "sixty yard dash 7.2 s · facility-verified (in person)", Reports and video + ID and academics said "Not shared". Visibility turned off → refused; outsider refused. Bug fixed during proof (lookup failed on the batting-side field type). All proof data deleted.
+**Next:** Scout Dashboard search filters, then scout comparison 2–4, then Phase 10, then Phase 11.
+**Waiting on the owner:** OK to deploy the plan builder (Option B); keep or remove Spaces (off); Vault review queue.
+
+---
+
 # REPORT — 2026-10-12 17:10 UTC (owner OK: test-account tool)
 
 **Ready to publish: no.** **create-test-athlete REDEPLOYED (owner OK by name) — PASS.** Code check passed first. Proof: removed the test parent ↔ 13-year-old link, ran the tool as the owner (200) → link re-created, active, only that one pair. Non-owner call refused (403), signed-out refused (401). Real users unaffected: parent links for anyone outside the test parent: 0 before, 0 after; the tool only touches the named test personas. Owner has accepted the updated terms on his account (owner item closed). Next item unchanged: Scout Profile remaining tabs.
