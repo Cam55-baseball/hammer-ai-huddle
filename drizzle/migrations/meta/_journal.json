@@ -232,6 +232,13 @@
       "when": 1791767038440,
       "tag": "0032_staff_read_reported_coach_messages",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791767181254,
+      "tag": "0033_coach_tests_and_private_notes",
+      "breakpoints": true
     }
   ]
 }

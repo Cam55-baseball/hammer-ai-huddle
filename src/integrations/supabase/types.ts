@@ -4224,6 +4224,30 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_private_notes: {
+        Row: {
+          athlete_id: string
+          body: string
+          coach_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          athlete_id: string
+          body: string
+          coach_id?: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          athlete_id?: string
+          body?: string
+          coach_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       combine_results: {
         Row: {
           confidence: number | null
@@ -21721,6 +21745,16 @@ export type Database = {
       cleanup_old_weight_history: { Args: never; Returns: undefined }
       cleanup_synthetic_activity_logs: { Args: never; Returns: undefined }
       coach_athlete_glance: { Args: { _athlete: string }; Returns: Json }
+      coach_athlete_tests: {
+        Args: { _athlete: string }
+        Returns: {
+          id: string
+          results: Json
+          sport: string
+          test_date: string
+          test_type: string
+        }[]
+      }
       coach_calibration_summary: { Args: never; Returns: Json }
       combine_evaluator_context: {
         Args: { p_athlete: string; p_sport: string }
