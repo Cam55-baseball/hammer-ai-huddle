@@ -22234,6 +22234,23 @@ export type Database = {
           team_name: string
         }[]
       }
+      list_my_requests_v2: {
+        Args: never
+        Returns: {
+          can_answer: boolean
+          child_name: string
+          created_at: string
+          for_child: boolean
+          id: string
+          incoming: boolean
+          kind: string
+          message: string
+          org_name: string
+          other_name: string
+          status: string
+          team_name: string
+        }[]
+      }
       list_org_pending_verification: {
         Args: never
         Returns: {
