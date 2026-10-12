@@ -21748,6 +21748,7 @@ export type Database = {
       coach_athlete_glance: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_load: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_readiness: { Args: { _athlete: string }; Returns: Json }
+      coach_athlete_reports: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_tests: {
         Args: { _athlete: string }
         Returns: {
