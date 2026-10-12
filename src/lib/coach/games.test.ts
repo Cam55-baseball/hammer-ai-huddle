@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { hittingLine, scoreLine, seasonTotals } from "./games";
+import { hittingLine, scoreLine, seasonTotals, verificationLabel } from "./games";
 
 describe("coach game stats", () => {
   it("walks and hit-by-pitch are not at-bats", () => {
