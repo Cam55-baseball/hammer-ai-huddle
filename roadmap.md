@@ -21,7 +21,7 @@
 **Phases 1–5 re-check against the saved plan — gaps found (to fix and prove, in this order):**
 - [x] Coach View summary card now shows today's status, 7-day completion, top alert, newest test (+ next due), head coach. Proof FF1: roster coach reads it for demo13 (200); same coach refused for a player not on his roster and for the owner (403 ×2); phone screenshot /tmp/browser/ff1/summary.png; 3 new tests pass. (Newest personal best waits on the tests work — no shared PB source yet; shown as newest test.)
 - [ ] Coach View detailed tabs missing: trends vs own baseline, tests, body load + pitch counts, game stats + video, reports, grades, six-week recap, readiness + pain (with consent), private notes.
-- [ ] Messages cannot be reported ("any message can be reported").
+- [x] Any coach message can be reported (Report button on the player's and parent's message lists → existing review queue, which now shows the reported message text to staff only). Proof FF2: coach sent a message to demo13; player filed a report (201); owner/staff could read that message; an outsider read 0 messages and 0 reports; phone screenshot of the parent's list and report window /tmp/browser/ff1/report_dialog.png. Test message + report deleted.
 - [ ] Coach workouts: "schedule a practice" and "whole team" sending not built; practices must count toward workload.
 - [ ] Game stats: no athlete-entered vs coach/organization-verified label or verify action.
 - [ ] Sponsorship-ready data model (organization sponsors an athlete; grace period) not present — needed before Phase 9.
