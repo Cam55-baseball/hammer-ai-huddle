@@ -183,7 +183,7 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>Schedule Practice Session</DialogTitle>
           <DialogDescription>Schedule a session for your players</DialogDescription>
@@ -243,7 +243,7 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
           {/* Assignment Scope */}
           <div className="space-y-1.5">
             <Label>Assign To</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 size="sm"
