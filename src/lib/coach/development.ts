@@ -184,7 +184,11 @@ export function strengthsAndWeaknesses(reports: DevReport[]): {
       text: `${pretty(c.cat)} needs the most work`,
       evidence: `Average score ${Math.round(c.avg)} across ${c.n} report${c.n === 1 ? "" : "s"}, latest ${c.latest.date} — below this player's own average of ${Math.round(overall)}.`,
     }));
-  return { strengths, weaknesses };
+  const note =
+    strengths.length === 0 && weaknesses.length === 0
+      ? "No category stands out yet — scores are similar across categories."
+      : null;
+  return { strengths, weaknesses, note };
 }
 
 /** Labeled connections — each honestly labeled by how strong the evidence is. */
