@@ -1928,6 +1928,51 @@ export type Database = {
           },
         ]
       }
+      ai_usage_log: {
+        Row: {
+          analysis_type: string | null
+          created_at: string
+          estimated_cost_usd: number
+          function_name: string
+          id: string
+          input_tokens: number
+          model: string | null
+          ok: boolean
+          output_tokens: number
+          plan: string
+          provider: string
+          user_id: string | null
+        }
+        Insert: {
+          analysis_type?: string | null
+          created_at?: string
+          estimated_cost_usd?: number
+          function_name: string
+          id?: string
+          input_tokens?: number
+          model?: string | null
+          ok?: boolean
+          output_tokens?: number
+          plan?: string
+          provider: string
+          user_id?: string | null
+        }
+        Update: {
+          analysis_type?: string | null
+          created_at?: string
+          estimated_cost_usd?: number
+          function_name?: string
+          id?: string
+          input_tokens?: number
+          model?: string | null
+          ok?: boolean
+          output_tokens?: number
+          plan?: string
+          provider?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       analysis_fault_findings: {
         Row: {
           correction_key: string | null
@@ -22237,6 +22282,21 @@ export type Database = {
       _testing_day_recipients: {
         Args: { _td: Database["public"]["Tables"]["testing_days"]["Row"] }
         Returns: string[]
+      }
+      ai_cost_summary: {
+        Args: { _days?: number }
+        Returns: {
+          analysis_type: string
+          avg_cost: number
+          avg_input: number
+          avg_output: number
+          calls: number
+          function_name: string
+          model: string
+          plan: string
+          provider: string
+          total_cost: number
+        }[]
       }
       all_checked: { Args: { cb: Json }; Returns: boolean }
       anon_age_band: { Args: { _age: number }; Returns: string }
