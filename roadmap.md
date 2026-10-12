@@ -11,7 +11,8 @@
 | 4 Game stats, location, spray charts | Done | EE6 (below) | PASS |
 | 5 Coach tools (messages, safety-checked workout assignment, summary card + tabs) | Done | EE7–EE9 (below) | PASS |
 | 6 Facility tools | Done | EE10 (below) | PASS |
-| 7 Scout tools | Next | — | — |
+| 5–6 Owner additions (Development tab, testing day, compare by test) | Next — approved 2026-10-12, before Phase 7 | — | — |
+| 7 Scout tools | After the additions | — | — |
 | 8–9 | Not started | — | — |
 
 **Phase 6 proof (EE10) — facility tools:**
