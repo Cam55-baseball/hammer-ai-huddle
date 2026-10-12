@@ -78,7 +78,7 @@ export function InitialAssessmentCard({ sport }: { sport: "baseball" | "softball
     setSaving(false);
     qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] });
   };
-  if (allDone) { void save({ completed_at: new Date().toISOString() }); return null; }
+  if (allDone) return null;
 
   const action = (id: StepId) => {
     switch (id) {
