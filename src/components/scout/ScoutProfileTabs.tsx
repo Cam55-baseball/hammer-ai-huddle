@@ -30,11 +30,11 @@ export function useScoutProfile(athleteId: string) {
   });
 }
 
-function Row({ k, v }: { k: string; v: unknown }) {
+function Row({ k, v, empty = "Not entered" }: { k: string; v: unknown; empty?: string }) {
   return (
     <div className="flex justify-between gap-3 text-sm border-b py-1.5">
       <span className="text-muted-foreground">{k}</span>
-      <span className="text-right">{v === null || v === undefined || v === "" ? NM : String(v)}</span>
+      <span className="text-right">{v === null || v === undefined || v === "" ? empty : String(v)}</span>
     </div>
   );
 }
@@ -105,8 +105,8 @@ export function ScoutTabContents({ q }: { q: ReturnType<typeof useScoutProfile> 
       <TabsContent value="recap">{wrap(!p?.shared.metrics ? <Empty t={NOT_SHARED} /> : !p?.recap ? <Empty t="No six-week recap yet." /> : (
         <div>
           <Row k="Period" v={`${d(p.recap.period_start)} to ${d(p.recap.period_end)}`} />
-          <Row k="Strength change" v={p.recap.strength_change_percent != null ? `${p.recap.strength_change_percent}%` : null} />
-          <Row k="Total weight lifted" v={p.recap.total_weight_lifted != null ? `${p.recap.total_weight_lifted} lb` : null} />
+          <Row k="Strength change" empty={NM} v={p.recap.strength_change_percent != null ? `${p.recap.strength_change_percent}%` : null} />
+          <Row k="Total weight lifted" empty={NM} v={p.recap.total_weight_lifted != null ? `${p.recap.total_weight_lifted} lb` : null} />
           <Src t="Source: the player's logged workouts." />
         </div>))}
       </TabsContent>
