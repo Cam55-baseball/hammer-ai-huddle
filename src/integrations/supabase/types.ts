@@ -21755,6 +21755,20 @@ export type Database = {
           test_type: string
         }[]
       }
+      coach_athlete_trends: {
+        Args: { _athlete: string }
+        Returns: {
+          band_hi: number
+          band_lo: number
+          baseline_median: number
+          computed_at: string
+          metric_key: string
+          n_used: number
+          recent: Json
+          trend: string
+          unit: string
+        }[]
+      }
       coach_calibration_summary: { Args: never; Returns: Json }
       combine_evaluator_context: {
         Args: { p_athlete: string; p_sport: string }

@@ -239,6 +239,13 @@
       "when": 1791767181254,
       "tag": "0033_coach_tests_and_private_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1791769121110,
+      "tag": "0034_coach_athlete_trends",
+      "breakpoints": true
     }
   ]
 }
