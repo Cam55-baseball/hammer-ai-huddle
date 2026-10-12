@@ -288,6 +288,13 @@
       "when": 1791823001007,
       "tag": "0040_testing_days",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1791823184802,
+      "tag": "0041_testing_day_sport_fix",
+      "breakpoints": true
     }
   ]
 }
