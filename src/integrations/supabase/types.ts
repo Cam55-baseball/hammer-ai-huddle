@@ -9137,6 +9137,48 @@ export type Database = {
         }
         Relationships: []
       }
+      initial_assessments: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          last_season_saved_at: string | null
+          last_season_skipped_at: string | null
+          movement_done_at: string | null
+          movement_screen: Json | null
+          pain_flag: boolean
+          recorded_by: string | null
+          recorded_by_label: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          last_season_saved_at?: string | null
+          last_season_skipped_at?: string | null
+          movement_done_at?: string | null
+          movement_screen?: Json | null
+          pain_flag?: boolean
+          recorded_by?: string | null
+          recorded_by_label?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          last_season_saved_at?: string | null
+          last_season_skipped_at?: string | null
+          movement_done_at?: string | null
+          movement_screen?: Json | null
+          pain_flag?: boolean
+          recorded_by?: string | null
+          recorded_by_label?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       injury_education_content: {
         Row: {
           content_json: Json

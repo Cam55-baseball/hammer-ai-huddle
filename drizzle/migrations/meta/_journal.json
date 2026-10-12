@@ -351,6 +351,13 @@
       "when": 1791837410347,
       "tag": "0049_rating_agreements_fill_sport",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1791837603813,
+      "tag": "0050_initial_assessments",
+      "breakpoints": true
     }
   ]
 }
