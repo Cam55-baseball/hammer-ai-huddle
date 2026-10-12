@@ -582,37 +582,37 @@
     "sending": "전송 중...",
     "followRequestPending": "팔로우 요청 대기 중",
     "following": "팔로잉",
-    "throws": "투구",
+    "throws": "던지기",
     "bats": "타격",
-    "right": "오른손",
-    "left": "왼손",
-    "both": "양손",
+    "right": "오른쪽",
+    "left": "왼쪽",
+    "both": "양쪽",
     "switch": "스위치",
     "collegeStatus": "대학 상태",
     "currentlyEnrolled": "현재 재학 중",
     "level": "레벨",
     "professionalPlayer": "프로 선수",
     "status": "상태",
-    "freeAgent": "프리 에이전트",
+    "freeAgent": "자유 계약",
     "internationalPlayer": "국제 선수",
     "team": "팀",
     "playingStyle": "플레이 스타일",
-    "academicCommitment": "학업 및 계약",
+    "academicCommitment": "학업 및 서약",
     "currentlyEnrolledInCollege": "현재 대학 재학 중",
     "positionRole": "포지션/역할",
     "basicInfo": "기본 정보",
     "contactEmail": "연락처 이메일",
-    "experienceCredentials": "경력 및 자격",
+    "experienceCredentials": "경험 및 자격",
     "addCredential": "자격 추가",
     "profilePicture": "프로필 사진",
-    "maxSizeInfo": "최대 크기: 5MB. JPG, PNG 또는 WEBP",
+    "maxSizeInfo": "최대: 5MB. JPG, PNG 또는 WEBP",
     "orEnterImageUrl": "또는 이미지 URL 입력",
     "socialMediaLinks": "소셜 미디어 링크",
     "additionalWebsiteLinks": "추가 웹사이트 링크",
     "website": "웹사이트",
     "saveProfile": "프로필 저장",
-    "openBillingPortal": "결제 포털 열기",
-    "billingPortalUnavailable": "결제 포털 사용 불가",
+    "openBillingPortal": "포털 열기",
+    "billingPortalUnavailable": "포털 사용 불가",
     "accountInformation": "계정 정보",
     "memberSince": "가입일",
     "neverExpires": "만료 없음",
@@ -665,48 +665,12 @@
     "experienceLevel": "경험 수준",
     "teamAffiliation": "팀 소속",
     "yearsAffiliated": "소속 연수",
-    "backToDashboard": "대시보드로 돌아가기",
     "viewingPlayerProfile": "{{name}}의 프로필",
-    "viewingAsOwner": "소유자로 보기",
-    "viewingAsScout": "스카우트로 보기",
-    "viewingAsCoach": "코치로 보기",
-    "viewingProfile": "프로필 보기",
-    "sending": "전송 중...",
-    "followPlayer": "선수 팔로우",
-    "followRequestPending": "팔로우 요청 대기 중",
-    "following": "팔로잉",
-    "experienceCredentials": "경험 및 자격",
-    "throws": "던지기",
-    "bats": "타격",
-    "both": "양쪽",
-    "right": "오른쪽",
-    "left": "왼쪽",
-    "switch": "스위치",
-    "collegeStatus": "대학 상태",
-    "currentlyEnrolled": "현재 재학 중",
-    "status": "상태",
-    "team": "팀",
-    "level": "레벨",
-    "professionalPlayer": "프로 선수",
-    "freeAgent": "자유 계약",
     "playerType": "선수 유형",
-    "internationalPlayer": "국제 선수",
     "years": "년",
-    "basicInfo": "기본 정보",
-    "contactEmail": "연락처 이메일",
-    "addCredential": "자격 추가",
-    "profilePicture": "프로필 사진",
-    "maxSizeInfo": "최대: 5MB. JPG, PNG 또는 WEBP",
-    "orEnterImageUrl": "또는 이미지 URL 입력",
     "primaryPosition": "주 포지션",
     "selectPosition": "포지션 선택",
-    "playingStyle": "플레이 스타일",
-    "academicCommitment": "학업 및 서약",
-    "currentlyEnrolledInCollege": "현재 대학 재학 중",
-    "positionRole": "포지션/역할",
-    "socialMediaLinks": "소셜 미디어 링크",
     "enterHandleOrUrl": "사용자 이름(예: \"username\") 또는 전체 URL 입력",
-    "additionalWebsiteLinks": "추가 웹사이트 링크",
     "addMoreWebsites": "최대 4개의 웹사이트 URL 추가",
     "customizeExperience": "앱 경험 맞춤화",
     "subscriptionStatus": "구독 상태",
@@ -720,8 +684,6 @@
     "subscribeToModules": "모듈 구독",
     "manageSubscriptions": "구독 관리",
     "controlModulesDescription": "각 모듈을 개별적으로 제어 - 언제든지 취소",
-    "cancelAllModules": "모든 모듈 취소",
-    "accountInformation": "계정 정보",
     "accountCreated": "계정 생성일:",
     "unableToLoadProfile": "이 프로필을 로드할 수 없습니다. 권한이 없을 수 있습니다.",
     "followRequestSentTo": "{{name}}에게 팔로우 요청이 전송되었습니다.",
@@ -737,14 +699,6 @@
     "portalBeingSetUp": "포털이 설정 중입니다. 지원팀에 문의하세요.",
     "failedToOpenBillingPortal": "포털을 열 수 없습니다.",
     "selectLevel": "레벨 선택",
-    "website": "웹사이트",
-    "saveProfile": "프로필 저장",
-    "openBillingPortal": "포털 열기",
-    "billingPortalUnavailable": "포털 사용 불가",
-    "neverExpires": "만료 없음",
-    "discount": "할인",
-    "manageModules": "모듈 관리",
-    "noActiveModules": "활성 모듈 없음",
     "public": "공개",
     "contactEmailDescription": "이 이메일은 연락을 위해 모든 사용자에게 표시됩니다",
     "playerBioPrompt": "포함하세요: 연락처 이메일, 키와 체중, 주, 졸업 연도(고교 및 대학), 타격 방향, 포지션, 던지는 손, 팀 소속 또는 자유 계약 상태",
@@ -974,387 +928,6 @@
     "allSports": "모든 스포츠",
     "active": "활성",
     "failedToLoad": "랭킹 로드 실패"
-  },
-  "nutrition": {
-    "goalTypes": {
-      "lose_weight": "체중 감량",
-      "lose_fat": "체지방 감량",
-      "maintain": "유지",
-      "gain_lean_muscle": "근육 증가",
-      "gain_weight": "체중 증가"
-    },
-    "dayTypes": {
-      "rest": "휴식",
-      "training": "훈련",
-      "practice": "연습",
-      "game": "경기",
-      "travel": "이동"
-    },
-    "settings": {
-      "title": "영양 설정",
-      "currentGoal": "현재 목표",
-      "selectGoal": "목표 선택",
-      "updateGoal": "목표 업데이트",
-      "goalUpdated": "목표가 성공적으로 업데이트되었습니다",
-      "editProfile": "프로필 편집",
-      "profileSettingsNote": "프로필 정보를 업데이트해야 하나요?",
-      "calorieAdjustment": "칼로리 조정",
-      "deficit": "부족",
-      "surplus": "잉여"
-    },
-    "saveTip": "팁 저장",
-    "tipSaved": "저장됨",
-    "tipSavedSuccess": "팁이 보관함에 저장되었습니다!",
-    "tipSaveHint": "하트 아이콘을 탭하여 좋아하는 팁을 금고에 저장하세요",
-    "todaysTips": "오늘의 팁",
-    "todaysTipsCount": "오늘의 팁 ({{count}}/2)",
-    "reviewTips": "오늘 본 팁 확인하기",
-    "noTipsYet": "오늘 아직 본 팁이 없습니다",
-    "viewedAt": "{{time}}에 조회함",
-    "title": "Iron Horse 프로덕션",
-    "subtitle": "엘리트 운동선수를 위한 식단 제안",
-    "dailyTip": "오늘의 건강 팁",
-    "newTip": "새 팁 받기",
-    "tipsCollected": "수집한 팁",
-    "percentExplored": "{{percent}}% 팁 탐색 완료",
-    "daysToUnlock": "{{days}}일 후 잠금 해제",
-    "streak": "연속",
-    "currentStreak": "현재 연속",
-    "longestStreak": "최장 연속",
-    "totalVisits": "총 방문",
-    "badges": "배지",
-    "disclaimer": "건강 면책조항",
-    "disclaimerText": "제공된 정보는 교육 목적으로만 제공되며 전문적인 의료 조언을 대체해서는 안 됩니다. 일부 정보는 정확하지 않거나 오래되었을 수 있습니다.",
-    "tipsRemaining": "오늘 남은 팁",
-    "noMoreTips": "오늘의 건강 팁 2개를 모두 수집했습니다! 내일 다시 오세요.",
-    "categoriesTitle": "영양 카테고리",
-    "topicsCount": "({{count}}개 주제)",
-    "dayStreak": "일 연속",
-    "daysStreak": "일 연속",
-    "best": "최고:",
-    "tipsCollectedCount": "수집한 팁",
-    "ofTipsExplored": "탐색한 팁",
-    "tipsExplored": "{{total}}개 팁 중 {{percent}}% 탐색 완료",
-    "milestoneBadges": "마일스톤 배지",
-    "dailyLimitReached": "일일 한도 도달",
-    "noTipsRemaining": "남은 팁 0개",
-    "tipsLeftToday": "오늘 남은 팁",
-    "tipLeftToday": "오늘 남은 팁",
-    "ai": "Hammer",
-    "disclaimerTitle": "중요 건강 면책조항",
-    "educationalPurposes": "여기에 제공된 정보는 교육 목적으로만 제공되며 전문적인 의료 조언을 대체해서는 안 됩니다.",
-    "aiTipsWarning": "Hammer 생성 팁은 부정확할 수 있습니다. 일부 정보는 오래되었거나 잘못되었을 수 있습니다.",
-    "alwaysConsult": "식단이나 건강 루틴을 변경하기 전에 항상 자격을 갖춘 의료 제공자와 상담하세요.",
-    "moreDaysToUnlock": "일 더 필요",
-    "achieved": "달성!",
-    "badgeNames": {
-      "starter": "시작하기",
-      "weekWarrior": "위크 워리어",
-      "ironWill": "아이언 윌",
-      "ironHorse": "아이언 호스",
-      "elite": "엘리트 퍼포머",
-      "legendary": "레전드",
-      "starterDesc": "여정을 시작하세요",
-      "weekWarriorDesc": "7일 연속",
-      "ironWillDesc": "14일 연속",
-      "ironHorseDesc": "30일 연속",
-      "eliteDesc": "60일 연속",
-      "legendaryDesc": "100일 연속"
-    },
-    "categories": {
-      "bloodType": "혈액형 건강",
-      "hydration": "수분 섭취",
-      "mineralization": "미네랄 보충",
-      "recovery": "회복",
-      "bloodFlow": "혈액 순환",
-      "lymphatic": "림프 건강",
-      "vitamins": "비타민",
-      "longevity": "장수",
-      "weightManagement": "체중 관리",
-      "vegan": "비건 가이드",
-      "restrictiveDiets": "제한 식단",
-      "offSeason": "비시즌 준비",
-      "inSeason": "시즌 중 준비",
-      "performance": "퍼포먼스 준비",
-      "inGame": "경기 중 수분 섭취",
-      "supplements": "NSF 보충제",
-      "holistic": "전인적 건강",
-      "bloodTypeDesc": "혈액형에 맞는 영양 최적화",
-      "hydrationDesc": "최고의 퍼포먼스를 위한 수분 섭취 마스터",
-      "mineralizationDesc": "운동 우수성을 위한 필수 미네랄",
-      "recoveryDesc": "세션 간 회복 가속화",
-      "bloodFlowDesc": "더 나은 퍼포먼스를 위한 혈액 순환 개선",
-      "lymphaticDesc": "몸의 디톡스 시스템 지원",
-      "vitaminsDesc": "운동 퍼포먼스를 위한 핵심 비타민",
-      "longevityDesc": "긴 운동 경력을 위한 영양",
-      "weightManagementDesc": "선수를 위한 건강한 체중 전략",
-      "veganDesc": "선수를 위한 식물 기반 영양",
-      "restrictiveDietsDesc": "안전하게 식이 제한 관리",
-      "offSeasonDesc": "비시즌 동안 몸 준비",
-      "inSeasonDesc": "경기 시즌 최고 영양",
-      "performanceDesc": "경기 전 영양 전략",
-      "inGameDesc": "경기 중 수분 유지",
-      "supplementsDesc": "NSF 승인 보충제 가이드",
-      "holisticDesc": "심신 영양 연결",
-      "dailyNutrition": "일일 영양 팁",
-      "dailyNutritionDesc": "더 나은 식사를 위한 빠른 일일 팁"
-    }
-  },
-  "weather": {
-    "title": "날씨와 함께",
-    "subtitle": "모든 경기일 조건을 마스터하세요",
-    "currentConditions": "현재 조건",
-    "feelsLike": "체감 온도",
-    "wind": "바람",
-    "humidity": "습도",
-    "visibility": "가시거리",
-    "uvIndex": "자외선 지수",
-    "forecast": "7일 예보",
-    "drillRecommendations": "훈련 추천",
-    "sportAnalysis": "조건 분석",
-    "baseballAnalysis": "야구 조건 분석",
-    "softballAnalysis": "소프트볼 조건 분석",
-    "enterLocation": "위치 입력",
-    "useMyLocation": "내 위치 사용",
-    "excellent": "최적",
-    "fair": "보통",
-    "notRecommended": "비추천",
-    "tagline": "더 스마트하게 훈련하고, 더 강하게 플레이하세요",
-    "subtitleBaseball": "모든 야구 경기일 조건을 마스터하세요",
-    "subtitleSoftball": "모든 소프트볼 경기일 조건을 마스터하세요",
-    "searchLocation": "위치 검색...",
-    "retry": "다시 시도",
-    "enterLocationPrompt": "날씨 조건과 훈련 추천을 보려면 위에 위치를 입력하세요",
-    "locationDetected": "위치 감지됨",
-    "high": "높음",
-    "moderate": "보통",
-    "low": "낮음",
-    "clear": "맑음",
-    "good": "좋음",
-    "limited": "제한적",
-    "veryHigh": "매우 높음",
-    "ballFlight": "공 비행",
-    "windImpact": "바람 영향",
-    "fieldConditions": "경기장 상태",
-    "tracking": "추적",
-    "uvWarning": "자외선 경고",
-    "recommendation": "추천",
-    "toggleDrills": "훈련 추천 보기",
-    "hideDrills": "훈련 추천 숨기기",
-    "drillRecommendationsTitle": "날씨 기반 훈련 추천",
-    "proTip": "프로 팁:",
-    "prioritizeDrills": "현재 조건에 최적의 훈련 적응을 위해 높은 우선순위 훈련에 먼저 집중하세요.",
-    "toggleForecast": "7일 예보 보기",
-    "hideForecast": "7일 예보 숨기기",
-    "forecastTitle": "7일 훈련 예보",
-    "today": "오늘",
-    "tomorrow": "내일",
-    "trainingExcellent": "최적 - 훈련에 이상적",
-    "trainingFair": "보통 - 조건 모니터링",
-    "trainingPoor": "비추천 - 안전하지 않음",
-    "trainingUnknown": "알 수 없음",
-    "precipitationChance": "강수 확률",
-    "failedToLoadWeather": "날씨 데이터 로딩 실패",
-    "noConditions": "분석할 특정 조건 없음",
-    "sunrise": "일출",
-    "sunset": "일몰",
-    "toggleHourlyForecast": "시간별 예보 표시",
-    "hideHourlyForecast": "시간별 예보 숨기기",
-    "hourlyForecastTitle": "33시간 예보",
-    "now": "지금",
-    "todayMorning": "오늘 오전",
-    "todayAfternoon": "오늘 오후",
-    "todayEvening": "오늘 저녁",
-    "tonight": "오늘 밤",
-    "tomorrowMorning": "내일 오전",
-    "tomorrowAfternoon": "내일 오후",
-    "tomorrowEvening": "내일 저녁",
-    "tomorrowNight": "내일 밤",
-    "swipe": "스와이프",
-    "poor": "나쁨",
-    "gameDayPrep": {
-      "title": "경기일 준비",
-      "show": "경기일 준비",
-      "hide": "준비 숨기기"
-    },
-    "favorites": {
-      "save": "위치 저장",
-      "saved": "위치 저장됨",
-      "removed": "위치 삭제됨",
-      "selectFavorite": "저장됨",
-      "noFavorites": "저장된 위치 없음",
-      "defaultSet": "기본 위치 설정됨",
-      "manage": "저장된 위치",
-      "setDefault": "기본값으로 설정",
-      "rename": "이름 변경",
-      "delete": "삭제",
-      "nameUpdated": "위치 이름 변경됨",
-      "default": "기본값"
-    },
-    "alerts": {
-      "title": "기상 경보",
-      "expires": "만료",
-      "instructions": "안전 지침"
-    },
-    "airQuality": {
-      "title": "대기질",
-      "unavailable": "N/A"
-    }
-  },
-  "scout": {
-    "dashboard": "스카우트 대시보드",
-    "searchPlayers": "선수 검색",
-    "followedPlayers": "팔로우한 선수",
-    "pendingRequests": "대기 중인 요청",
-    "sendFollowRequest": "팔로우 요청 보내기",
-    "followRequestSent": "팔로우 요청 전송됨",
-    "viewVideos": "비디오 보기",
-    "annotateVideo": "비디오 주석",
-    "annotations": "주석",
-    "coachAnnotations": "코치 주석",
-    "myAnnotations": "내 주석",
-    "noAnnotations": "주석 없음",
-    "dashboardDescription": "선수 팔로우 관리 및 새로운 인재 발굴",
-    "allSports": "모든 스포츠",
-    "noFollowingPlayers": "아직 팔로우하는 선수가 없습니다. 선수를 검색하여 로스터를 구축하세요.",
-    "viewProfile": "프로필 보기",
-    "viewLibrary": "라이브러리 보기",
-    "unfollow": "언팔로우",
-    "findPlayers": "선수 찾기",
-    "searchPlayersPlaceholder": "모든 선수 검색...",
-    "minCharactersToSearch": "검색하려면 2자 이상 입력하세요",
-    "searching": "검색 중...",
-    "noPlayersFound": "검색과 일치하는 선수를 찾을 수 없음",
-    "playerFound": "선수 찾음",
-    "playersFound": "선수 찾음",
-    "follow": "팔로우",
-    "pending": "대기 중",
-    "followingStatus": "팔로잉",
-    "unfollowPlayer": "선수 언팔로우",
-    "unfollowConfirmation": "{{name}}을(를) 언팔로우하시겠습니까? 공유된 비디오에 대한 접근 권한을 잃게 됩니다.",
-    "unfollowing": "언팔로우 중...",
-    "unfollowAction": "언팔로우",
-    "followRequestSentDescription": "선수에게 알림이 전송되며 요청을 승인할 수 있습니다.",
-    "unfollowedPlayer": "선수 언팔로우됨",
-    "failedToLoadFollowing": "팔로우 선수 로딩 실패",
-    "failedToSearchPlayers": "선수 검색 실패",
-    "failedToUnfollow": "언팔로우 실패",
-    "advancedFilters": "고급 필터",
-    "clearFilters": "필터 지우기",
-    "primaryPosition": "주 포지션",
-    "throwingSide": "투구 손",
-    "battingSide": "타격 방향",
-    "heightRange": "키 범위",
-    "weightRange": "몸무게 범위",
-    "anyPosition": "모든 포지션",
-    "anyThrowingSide": "모두",
-    "anyBattingSide": "모두",
-    "anyState": "모든 지역",
-    "anyCommitment": "모두",
-    "anyYear": "모든 연도",
-    "showFilters": "필터 보기",
-    "hideFilters": "필터 숨기기",
-    "following": "팔로우 중인 선수"
-  },
-  "subscription": {
-    "title": "구독",
-    "plans": "플랜",
-    "currentPlan": "현재 플랜",
-    "upgrade": "업그레이드",
-    "cancel": "취소",
-    "free": "무료",
-    "pro": "프로",
-    "premium": "프리미엄",
-    "perMonth": "/월",
-    "features": "기능",
-    "selectPlan": "플랜 선택",
-    "checkout": "결제",
-    "paymentSuccess": "결제 성공",
-    "paymentFailed": "결제 실패"
-  },
-  "errors": {
-    "somethingWentWrong": "문제가 발생했습니다",
-    "tryAgain": "다시 시도해 주세요",
-    "notFound": "페이지를 찾을 수 없음",
-    "unauthorized": "인증되지 않음",
-    "forbidden": "접근 금지",
-    "networkError": "네트워크 오류",
-    "serverError": "서버 오류"
-  },
-  "toast": {
-    "profileUpdated": "프로필이 업데이트되었습니다",
-    "videoSaved": "비디오가 라이브러리에 저장되었습니다",
-    "videoDeleted": "비디오가 삭제되었습니다",
-    "annotationSaved": "주석이 저장되었습니다",
-    "followRequestSent": "팔로우 요청이 전송되었습니다",
-    "languageChanged": "언어가 변경되었습니다"
-  },
-  "videoPlayer": {
-    "frameByFrameMode": "프레임별 모드",
-    "scoutViewCapture": "스카우트 뷰 - 주석을 위한 프레임 캡처",
-    "loopStart": "루프 시작",
-    "loopEnd": "루프 종료",
-    "looping": "루프 중: {{start}}초 → {{end}}초",
-    "back": "뒤로",
-    "forward": "앞으로",
-    "capture": "캡처",
-    "mirror": "미러",
-    "fullscreen": "전체 화면",
-    "markLoopStart": "루프 시작 표시",
-    "markLoopEnd": "루프 종료 표시",
-    "clear": "지우기",
-    "start": "시작",
-    "end": "종료",
-    "capturedKeyFrames": "캡처된 키프레임",
-    "downloadAll": "모두 다운로드 ({{count}})",
-    "keyFrameCaptured": "키프레임이 캡처되었습니다!",
-    "videoNotReady": "비디오가 아직 준비되지 않았습니다",
-    "loopStartSet": "루프 시작이 {{time}}초에 설정됨",
-    "loopEndSet": "루프 종료가 {{time}}초에 설정됨",
-    "loopCleared": "루프가 지워졌습니다",
-    "frameDownloaded": "프레임 {{number}}이(가) 다운로드되었습니다!",
-    "annotatedFrameDownloaded": "주석이 달린 프레임 {{number}}이(가) 다운로드되었습니다!",
-    "frameRemoved": "프레임이 제거되었습니다!",
-    "videoOrCanvasNotReady": "비디오 또는 캔버스가 준비되지 않았습니다",
-    "videoNotFullyLoaded": "비디오가 완전히 로드되지 않았습니다. 잠시 기다렸다가 다시 시도하세요.",
-    "canvasContextError": "캔버스 컨텍스트를 가져올 수 없습니다",
-    "failedToDrawFrame": "프레임 그리기에 실패했습니다. 페이지를 새로 고침하고 다시 시도하세요.",
-    "cannotCaptureCors": "보안 제한으로 인해 프레임을 캡처할 수 없습니다. 페이지를 새로 고침하세요.",
-    "failedToCaptureLoading": "프레임 캡처에 실패했습니다. 비디오가 아직 로딩 중일 수 있습니다.",
-    "videoProtected": "비디오가 보호되어 있습니다. 이 비디오에서는 프레임 캡처를 사용할 수 없습니다.",
-    "failedToCapture": "프레임 캡처에 실패했습니다. 다시 시도하세요.",
-    "downloadingFrames": "{{count}}개 프레임 다운로드 중...",
-    "stepBackward": "한 프레임 뒤로",
-    "stepForward": "한 프레임 앞으로"
-  },
-  "tutorial": {
-    "step": "단계 {{current}} / {{total}}",
-    "previous": "이전",
-    "next": "다음",
-    "startCompeting": "경쟁 시작하기",
-    "completed": "튜토리얼 완료!",
-    "failedToComplete": "튜토리얼을 완료할 수 없습니다",
-    "player": {
-      "welcome": { "title": "Hammers Modality에 오신 것을 환영합니다!", "description": "게임을 다음 단계로 끌어올리는 도구를 탐색해 봅시다." },
-      "creator": { "title": "크리에이터 프로필", "description": "훈련 경험을 맞춤화하고 스카우트와 연결하기 위해 프로필을 설정하세요." },
-      "modules": { "title": "훈련 모듈", "description": "타격, 투구, 던지기를 위한 전문 모듈에 액세스하여 특정 기술을 향상시키세요." },
-      "upload": { "title": "비디오 업로드", "description": "훈련 비디오를 업로드하여 Hammer 기반 기술 분석을 받으세요." },
-      "coaching": { "title": "Hammer 코칭", "description": "비디오 분석을 기반으로 상세한 피드백과 드릴 추천을 받으세요." },
-      "library": { "title": "플레이어스 클럽", "description": "개인 라이브러리에 훈련 세션을 저장하고 정리하세요." },
-      "following": { "title": "스카우트 연결", "description": "훈련 진행 상황을 볼 수 있는 스카우트와 코치와 연결하세요." },
-      "ranking": { "title": "순위", "description": "진행 상황을 추적하고 순위에서 다른 선수들과 비교하세요." },
-      "profile": { "title": "프로필 설정", "description": "프로필을 사용자화하고 계정 설정을 관리하세요." }
-    },
-    "scout": {
-      "welcome": { "title": "환영합니다, 스카우트!", "description": "인재를 발굴하고 평가하는 도구를 탐색해 봅시다." },
-      "creator": { "title": "스카우트 프로필", "description": "자격과 소속 조직을 설정하세요." },
-      "discover": { "title": "선수 발굴", "description": "고급 필터를 사용하여 재능 있는 선수를 검색하세요." },
-      "search": { "title": "고급 검색", "description": "포지션, 주, 경험 수준 등으로 선수를 필터링하세요." },
-      "follow": { "title": "선수 팔로우", "description": "선수의 훈련 라이브러리에 액세스하기 위해 팔로우 요청을 보내세요." },
-      "videos": { "title": "비디오 보기", "description": "훈련 세션을 시청하고 선수의 기술을 분석하세요." },
-      "rankings": { "title": "선수 순위", "description": "플랫폼의 모든 선수에 대한 성과 순위를 확인하세요." },
-      "analyze": { "title": "성과 분석", "description": "Hammer 분석을 검토하고 선수 비디오에 자신의 주석을 추가하세요." }
-    }
   },
   "nutrition": {
     "categoryContent": {
@@ -1645,6 +1218,313 @@
       }
     }
   },
+  "weather": {
+    "title": "날씨와 함께",
+    "subtitle": "모든 경기일 조건을 마스터하세요",
+    "currentConditions": "현재 조건",
+    "feelsLike": "체감 온도",
+    "wind": "바람",
+    "humidity": "습도",
+    "visibility": "가시거리",
+    "uvIndex": "자외선 지수",
+    "forecast": "7일 예보",
+    "drillRecommendations": "훈련 추천",
+    "sportAnalysis": "조건 분석",
+    "baseballAnalysis": "야구 조건 분석",
+    "softballAnalysis": "소프트볼 조건 분석",
+    "enterLocation": "위치 입력",
+    "useMyLocation": "내 위치 사용",
+    "excellent": "최적",
+    "fair": "보통",
+    "notRecommended": "비추천",
+    "tagline": "더 스마트하게 훈련하고, 더 강하게 플레이하세요",
+    "subtitleBaseball": "모든 야구 경기일 조건을 마스터하세요",
+    "subtitleSoftball": "모든 소프트볼 경기일 조건을 마스터하세요",
+    "searchLocation": "위치 검색...",
+    "retry": "다시 시도",
+    "enterLocationPrompt": "날씨 조건과 훈련 추천을 보려면 위에 위치를 입력하세요",
+    "locationDetected": "위치 감지됨",
+    "high": "높음",
+    "moderate": "보통",
+    "low": "낮음",
+    "clear": "맑음",
+    "good": "좋음",
+    "limited": "제한적",
+    "veryHigh": "매우 높음",
+    "ballFlight": "공 비행",
+    "windImpact": "바람 영향",
+    "fieldConditions": "경기장 상태",
+    "tracking": "추적",
+    "uvWarning": "자외선 경고",
+    "recommendation": "추천",
+    "toggleDrills": "훈련 추천 보기",
+    "hideDrills": "훈련 추천 숨기기",
+    "drillRecommendationsTitle": "날씨 기반 훈련 추천",
+    "proTip": "프로 팁:",
+    "prioritizeDrills": "현재 조건에 최적의 훈련 적응을 위해 높은 우선순위 훈련에 먼저 집중하세요.",
+    "toggleForecast": "7일 예보 보기",
+    "hideForecast": "7일 예보 숨기기",
+    "forecastTitle": "7일 훈련 예보",
+    "today": "오늘",
+    "tomorrow": "내일",
+    "trainingExcellent": "최적 - 훈련에 이상적",
+    "trainingFair": "보통 - 조건 모니터링",
+    "trainingPoor": "비추천 - 안전하지 않음",
+    "trainingUnknown": "알 수 없음",
+    "precipitationChance": "강수 확률",
+    "failedToLoadWeather": "날씨 데이터 로딩 실패",
+    "noConditions": "분석할 특정 조건 없음",
+    "sunrise": "일출",
+    "sunset": "일몰",
+    "toggleHourlyForecast": "시간별 예보 표시",
+    "hideHourlyForecast": "시간별 예보 숨기기",
+    "hourlyForecastTitle": "33시간 예보",
+    "now": "지금",
+    "todayMorning": "오늘 오전",
+    "todayAfternoon": "오늘 오후",
+    "todayEvening": "오늘 저녁",
+    "tonight": "오늘 밤",
+    "tomorrowMorning": "내일 오전",
+    "tomorrowAfternoon": "내일 오후",
+    "tomorrowEvening": "내일 저녁",
+    "tomorrowNight": "내일 밤",
+    "swipe": "스와이프",
+    "poor": "나쁨",
+    "gameDayPrep": {
+      "title": "경기일 준비",
+      "show": "경기일 준비",
+      "hide": "준비 숨기기"
+    },
+    "favorites": {
+      "save": "위치 저장",
+      "saved": "위치 저장됨",
+      "removed": "위치 삭제됨",
+      "selectFavorite": "저장됨",
+      "noFavorites": "저장된 위치 없음",
+      "defaultSet": "기본 위치 설정됨",
+      "manage": "저장된 위치",
+      "setDefault": "기본값으로 설정",
+      "rename": "이름 변경",
+      "delete": "삭제",
+      "nameUpdated": "위치 이름 변경됨",
+      "default": "기본값"
+    },
+    "alerts": {
+      "title": "기상 경보",
+      "expires": "만료",
+      "instructions": "안전 지침"
+    },
+    "airQuality": {
+      "title": "대기질",
+      "unavailable": "N/A"
+    }
+  },
+  "scout": {
+    "dashboard": "스카우트 대시보드",
+    "searchPlayers": "선수 검색",
+    "followedPlayers": "팔로우한 선수",
+    "pendingRequests": "대기 중인 요청",
+    "sendFollowRequest": "팔로우 요청 보내기",
+    "followRequestSent": "팔로우 요청 전송됨",
+    "viewVideos": "비디오 보기",
+    "annotateVideo": "비디오 주석",
+    "annotations": "주석",
+    "coachAnnotations": "코치 주석",
+    "myAnnotations": "내 주석",
+    "noAnnotations": "주석 없음",
+    "dashboardDescription": "선수 팔로우 관리 및 새로운 인재 발굴",
+    "allSports": "모든 스포츠",
+    "noFollowingPlayers": "아직 팔로우하는 선수가 없습니다. 선수를 검색하여 로스터를 구축하세요.",
+    "viewProfile": "프로필 보기",
+    "viewLibrary": "라이브러리 보기",
+    "unfollow": "언팔로우",
+    "findPlayers": "선수 찾기",
+    "searchPlayersPlaceholder": "모든 선수 검색...",
+    "minCharactersToSearch": "검색하려면 2자 이상 입력하세요",
+    "searching": "검색 중...",
+    "noPlayersFound": "검색과 일치하는 선수를 찾을 수 없음",
+    "playerFound": "선수 찾음",
+    "playersFound": "선수 찾음",
+    "follow": "팔로우",
+    "pending": "대기 중",
+    "followingStatus": "팔로잉",
+    "unfollowPlayer": "선수 언팔로우",
+    "unfollowConfirmation": "{{name}}을(를) 언팔로우하시겠습니까? 공유된 비디오에 대한 접근 권한을 잃게 됩니다.",
+    "unfollowing": "언팔로우 중...",
+    "unfollowAction": "언팔로우",
+    "followRequestSentDescription": "선수에게 알림이 전송되며 요청을 승인할 수 있습니다.",
+    "unfollowedPlayer": "선수 언팔로우됨",
+    "failedToLoadFollowing": "팔로우 선수 로딩 실패",
+    "failedToSearchPlayers": "선수 검색 실패",
+    "failedToUnfollow": "언팔로우 실패",
+    "advancedFilters": "고급 필터",
+    "clearFilters": "필터 지우기",
+    "primaryPosition": "주 포지션",
+    "throwingSide": "투구 손",
+    "battingSide": "타격 방향",
+    "heightRange": "키 범위",
+    "weightRange": "몸무게 범위",
+    "anyPosition": "모든 포지션",
+    "anyThrowingSide": "모두",
+    "anyBattingSide": "모두",
+    "anyState": "모든 지역",
+    "anyCommitment": "모두",
+    "anyYear": "모든 연도",
+    "showFilters": "필터 보기",
+    "hideFilters": "필터 숨기기",
+    "following": "팔로우 중인 선수"
+  },
+  "subscription": {
+    "title": "구독",
+    "plans": "플랜",
+    "currentPlan": "현재 플랜",
+    "upgrade": "업그레이드",
+    "cancel": "취소",
+    "free": "무료",
+    "pro": "프로",
+    "premium": "프리미엄",
+    "perMonth": "/월",
+    "features": "기능",
+    "selectPlan": "플랜 선택",
+    "checkout": "결제",
+    "paymentSuccess": "결제 성공",
+    "paymentFailed": "결제 실패"
+  },
+  "errors": {
+    "somethingWentWrong": "문제가 발생했습니다",
+    "tryAgain": "다시 시도해 주세요",
+    "notFound": "페이지를 찾을 수 없음",
+    "unauthorized": "인증되지 않음",
+    "forbidden": "접근 금지",
+    "networkError": "네트워크 오류",
+    "serverError": "서버 오류"
+  },
+  "toast": {
+    "profileUpdated": "프로필이 업데이트되었습니다",
+    "videoSaved": "비디오가 라이브러리에 저장되었습니다",
+    "videoDeleted": "비디오가 삭제되었습니다",
+    "annotationSaved": "주석이 저장되었습니다",
+    "followRequestSent": "팔로우 요청이 전송되었습니다",
+    "languageChanged": "언어가 변경되었습니다"
+  },
+  "videoPlayer": {
+    "frameByFrameMode": "프레임별 모드",
+    "scoutViewCapture": "스카우트 뷰 - 주석을 위한 프레임 캡처",
+    "loopStart": "루프 시작",
+    "loopEnd": "루프 종료",
+    "looping": "루프 중: {{start}}초 → {{end}}초",
+    "back": "뒤로",
+    "forward": "앞으로",
+    "capture": "캡처",
+    "mirror": "미러",
+    "fullscreen": "전체 화면",
+    "markLoopStart": "루프 시작 표시",
+    "markLoopEnd": "루프 종료 표시",
+    "clear": "지우기",
+    "start": "시작",
+    "end": "종료",
+    "capturedKeyFrames": "캡처된 키프레임",
+    "downloadAll": "모두 다운로드 ({{count}})",
+    "keyFrameCaptured": "키프레임이 캡처되었습니다!",
+    "videoNotReady": "비디오가 아직 준비되지 않았습니다",
+    "loopStartSet": "루프 시작이 {{time}}초에 설정됨",
+    "loopEndSet": "루프 종료가 {{time}}초에 설정됨",
+    "loopCleared": "루프가 지워졌습니다",
+    "frameDownloaded": "프레임 {{number}}이(가) 다운로드되었습니다!",
+    "annotatedFrameDownloaded": "주석이 달린 프레임 {{number}}이(가) 다운로드되었습니다!",
+    "frameRemoved": "프레임이 제거되었습니다!",
+    "videoOrCanvasNotReady": "비디오 또는 캔버스가 준비되지 않았습니다",
+    "videoNotFullyLoaded": "비디오가 완전히 로드되지 않았습니다. 잠시 기다렸다가 다시 시도하세요.",
+    "canvasContextError": "캔버스 컨텍스트를 가져올 수 없습니다",
+    "failedToDrawFrame": "프레임 그리기에 실패했습니다. 페이지를 새로 고침하고 다시 시도하세요.",
+    "cannotCaptureCors": "보안 제한으로 인해 프레임을 캡처할 수 없습니다. 페이지를 새로 고침하세요.",
+    "failedToCaptureLoading": "프레임 캡처에 실패했습니다. 비디오가 아직 로딩 중일 수 있습니다.",
+    "videoProtected": "비디오가 보호되어 있습니다. 이 비디오에서는 프레임 캡처를 사용할 수 없습니다.",
+    "failedToCapture": "프레임 캡처에 실패했습니다. 다시 시도하세요.",
+    "downloadingFrames": "{{count}}개 프레임 다운로드 중...",
+    "stepBackward": "한 프레임 뒤로",
+    "stepForward": "한 프레임 앞으로"
+  },
+  "tutorial": {
+    "step": "단계 {{current}} / {{total}}",
+    "previous": "이전",
+    "next": "다음",
+    "startCompeting": "경쟁 시작하기",
+    "completed": "튜토리얼 완료!",
+    "failedToComplete": "튜토리얼을 완료할 수 없습니다",
+    "player": {
+      "welcome": {
+        "title": "Hammers Modality에 오신 것을 환영합니다!",
+        "description": "게임을 다음 단계로 끌어올리는 도구를 탐색해 봅시다."
+      },
+      "creator": {
+        "title": "크리에이터 프로필",
+        "description": "훈련 경험을 맞춤화하고 스카우트와 연결하기 위해 프로필을 설정하세요."
+      },
+      "modules": {
+        "title": "훈련 모듈",
+        "description": "타격, 투구, 던지기를 위한 전문 모듈에 액세스하여 특정 기술을 향상시키세요."
+      },
+      "upload": {
+        "title": "비디오 업로드",
+        "description": "훈련 비디오를 업로드하여 Hammer 기반 기술 분석을 받으세요."
+      },
+      "coaching": {
+        "title": "Hammer 코칭",
+        "description": "비디오 분석을 기반으로 상세한 피드백과 드릴 추천을 받으세요."
+      },
+      "library": {
+        "title": "플레이어스 클럽",
+        "description": "개인 라이브러리에 훈련 세션을 저장하고 정리하세요."
+      },
+      "following": {
+        "title": "스카우트 연결",
+        "description": "훈련 진행 상황을 볼 수 있는 스카우트와 코치와 연결하세요."
+      },
+      "ranking": {
+        "title": "순위",
+        "description": "진행 상황을 추적하고 순위에서 다른 선수들과 비교하세요."
+      },
+      "profile": {
+        "title": "프로필 설정",
+        "description": "프로필을 사용자화하고 계정 설정을 관리하세요."
+      }
+    },
+    "scout": {
+      "welcome": {
+        "title": "환영합니다, 스카우트!",
+        "description": "인재를 발굴하고 평가하는 도구를 탐색해 봅시다."
+      },
+      "creator": {
+        "title": "스카우트 프로필",
+        "description": "자격과 소속 조직을 설정하세요."
+      },
+      "discover": {
+        "title": "선수 발굴",
+        "description": "고급 필터를 사용하여 재능 있는 선수를 검색하세요."
+      },
+      "search": {
+        "title": "고급 검색",
+        "description": "포지션, 주, 경험 수준 등으로 선수를 필터링하세요."
+      },
+      "follow": {
+        "title": "선수 팔로우",
+        "description": "선수의 훈련 라이브러리에 액세스하기 위해 팔로우 요청을 보내세요."
+      },
+      "videos": {
+        "title": "비디오 보기",
+        "description": "훈련 세션을 시청하고 선수의 기술을 분석하세요."
+      },
+      "rankings": {
+        "title": "선수 순위",
+        "description": "플랫폼의 모든 선수에 대한 성과 순위를 확인하세요."
+      },
+      "analyze": {
+        "title": "성과 분석",
+        "description": "Hammer 분석을 검토하고 선수 비디오에 자신의 주석을 추가하세요."
+      }
+    }
+  },
   "annotation": {
     "title": "프레임 주석 달기",
     "saveAnnotations": "주석 저장",
@@ -1906,42 +1786,490 @@
       "educational": "교육 목적만",
       "athleteFocused": "선수 중심",
       "comprehensiveGuide": "종합 가이드",
-      "categories": { "all": "모든 배지", "injury": "부상 학습", "tiered": "해부학 레벨", "special": "특별 업적" },
+      "categories": {
+        "all": "모든 배지",
+        "injury": "부상 학습",
+        "tiered": "해부학 레벨",
+        "special": "특별 업적"
+      },
       "earned": "획득함",
       "locked": "잠김",
       "safetyDisclaimer": "교육 학습을 완료하여 수여되었습니다. 이 배지는 의료 준비 또는 허가를 나타내지 않습니다. 항상 면허가 있는 전문가와 상담하세요.",
       "legendText": "배지는 교육 콘텐츠를 완료하면 획득됩니다.",
       "items": {
-        "shoulder_scholar": { "name": "어깨 학자", "description": "어깨 부상 교육 완료" },
-        "elbow_expert": { "name": "팔꿈치 전문가", "description": "UCL/전완/굴근 개요 완료" },
-        "hamstring_headliner": { "name": "햄스트링 스페셜리스트", "description": "하체 모듈 완료" },
-        "ankle_analyst": { "name": "발목 분석가", "description": "발목 부상 교육 완료" },
-        "wrist_wizard": { "name": "손목 마법사", "description": "손목과 손 교육 완료" },
-        "back_boss": { "name": "등 보스", "description": "등과 척추 교육 완료" },
-        "bronze_anatomy": { "name": "브론즈 해부학 배지", "description": "3개 부상 학습" },
-        "silver_anatomy": { "name": "실버 해부학 배지", "description": "7개 부상 학습" },
-        "gold_anatomy": { "name": "골드 해부학 배지", "description": "12개 이상 부상 학습" },
-        "elite_recovery": { "name": "엘리트 회복 배지", "description": "전체 Bounce Back Bay 라이브러리 완료" },
-        "diagnostic_detective": { "name": "진단 탐정", "description": "진단 흐름도 퀴즈 통과" },
-        "red_flag_ready": { "name": "경고 신호 준비 완료", "description": "경고 신호 퀴즈 통과" },
-        "pain_scale_pro": { "name": "통증 척도 프로", "description": "통증 인식 섹션 완료" },
-        "recovery_intelligence": { "name": "회복 지능", "description": "모든 회복 방법 교육 완료" },
-        "human_body_mastery": { "name": "인체 마스터리", "description": "모든 섹션을 완전히 완료" }
+        "shoulder_scholar": {
+          "name": "어깨 학자",
+          "description": "어깨 부상 교육 완료"
+        },
+        "elbow_expert": {
+          "name": "팔꿈치 전문가",
+          "description": "UCL/전완/굴근 개요 완료"
+        },
+        "hamstring_headliner": {
+          "name": "햄스트링 스페셜리스트",
+          "description": "하체 모듈 완료"
+        },
+        "ankle_analyst": {
+          "name": "발목 분석가",
+          "description": "발목 부상 교육 완료"
+        },
+        "wrist_wizard": {
+          "name": "손목 마법사",
+          "description": "손목과 손 교육 완료"
+        },
+        "back_boss": {
+          "name": "등 보스",
+          "description": "등과 척추 교육 완료"
+        },
+        "bronze_anatomy": {
+          "name": "브론즈 해부학 배지",
+          "description": "3개 부상 학습"
+        },
+        "silver_anatomy": {
+          "name": "실버 해부학 배지",
+          "description": "7개 부상 학습"
+        },
+        "gold_anatomy": {
+          "name": "골드 해부학 배지",
+          "description": "12개 이상 부상 학습"
+        },
+        "elite_recovery": {
+          "name": "엘리트 회복 배지",
+          "description": "전체 Bounce Back Bay 라이브러리 완료"
+        },
+        "diagnostic_detective": {
+          "name": "진단 탐정",
+          "description": "진단 흐름도 퀴즈 통과"
+        },
+        "red_flag_ready": {
+          "name": "경고 신호 준비 완료",
+          "description": "경고 신호 퀴즈 통과"
+        },
+        "pain_scale_pro": {
+          "name": "통증 척도 프로",
+          "description": "통증 인식 섹션 완료"
+        },
+        "recovery_intelligence": {
+          "name": "회복 지능",
+          "description": "모든 회복 방법 교육 완료"
+        },
+        "human_body_mastery": {
+          "name": "인체 마스터리",
+          "description": "모든 섹션을 완전히 완료"
+        }
       }
     },
-    "allAreas": "모든 부위", "commonSymptoms": "일반적인 증상", "typicalTimeline": "일반적인 기간",
-    "sections": { "diagnosticFlow": { "title": "진단 흐름도", "subtitle": "증상 이해를 위한 안내" }, "painScale": { "title": "통증 척도 시스템", "subtitle": "통증 수준 평가" }, "redFlags": { "title": "경고 신호 확인", "subtitle": "주의가 필요한 경고 신호" }, "injuryHub": { "title": "부상 정보 허브", "subtitle": "야구/소프트볼 일반 부상" }, "returnToPlay": { "title": "복귀 단계", "subtitle": "회복 단계 이해" }, "injuryPrevention": { "title": "부상 예방", "subtitle": "교육을 통한 위험 감소" }, "recoveryMethods": { "title": "회복 방법", "subtitle": "얼음, 열, 회복 원칙" }, "equipmentLibrary": { "title": "장비 라이브러리", "subtitle": "회복 도구와 사용 시기" } },
-    "hurtingVsInjured": { "title": "통증 vs 부상", "subtitle": "정상적인 근육통과 잠재적 부상의 차이 이해", "hurting": { "title": "정상적인 근육통", "description": "이러한 감각은 훈련의 일부입니다:", "sign1": "움직임으로 개선되는 근육통", "sign2": "워밍업 후 줄어드는 가벼운 뻣뻣함", "sign3": "격렬한 훈련 후 일반적인 피로", "sign4": "24-72시간 내에 사라지는 불편함" }, "injured": { "title": "잠재적 부상", "description": "이러한 징후는 더 심각한 것을 나타낼 수 있습니다:", "sign1": "활동 중 날카롭고 갑작스러운 통증", "sign2": "움직임과 함께 악화되는 통증", "sign3": "붓기, 멍 또는 눈에 보이는 변형", "sign4": "체중을 지탱하거나 영향받은 부위를 사용할 수 없음", "sign5": "72시간 이상 지속되는 통증" }, "note": { "title": "기억하세요", "description": "이것은 자가 성찰용이며 진단이 아닙니다. 의심스러우면 항상 의료 전문가와 상담하세요." } },
-    "diagnosticFlow": { "intro": "이 교육용 흐름도를 사용하여 증상에 대해 생각해 보세요.", "step": "단계", "steps": { "symptoms": { "title": "증상 식별", "description": "무엇을 경험하고 있나요?", "q1": "불편함의 정확한 위치는?", "q2": "어떤 종류의 감각인가요?", "q3": "움직임이나 성능에 영향을 주나요?" }, "timing": { "title": "타이밍 고려", "description": "언제 시작되었나요?", "q1": "갑자기 시작되었나요, 점진적으로?", "q2": "이러한 증상이 얼마나 오래 있었나요?", "q3": "지속적인가요 아니면 간헐적인가요?" }, "severity": { "title": "심각도 평가", "description": "증상이 얼마나 심각한가요?", "q1": "정상적인 활동을 계속할 수 있나요?", "q2": "해당 부위가 부어 있거나 변색되었나요?", "q3": "통증이 나아지고 있나요, 악화되고 있나요?" }, "decision": { "title": "옵션 고려", "description": "반성을 바탕으로 다음 경로를 고려하세요:", "outcome1": { "condition": "심각한 증상, 갑작스러운 발병 또는 경고 신호", "action": "신속하게 전문가 평가 받기" }, "outcome2": { "condition": "48-72시간 이상 지속되는 중등도 증상", "action": "전문가 상담 일정 고려" }, "outcome3": { "condition": "휴식으로 개선되는 경미한 증상", "action": "계속 모니터링, 적절하면 RICE 원칙 적용" } } } },
-    "painScale": { "intro": "이 척도를 사용하여 통증 수준에 대해 생각해 보세요.", "noPain": "통증 없음", "worstPain": "최악의 통증", "recommendation": "일반 지침", "levels": { "minimal": { "label": "최소", "description": "일상 활동에 영향을 미치지 않는 거의 느끼지 못하는 불편함.", "recommendation": "인식하면서 정상 활동을 계속해도 일반적으로 안전." }, "mild": { "label": "경미", "description": "느껴지지만 활동에 크게 방해되지 않음.", "recommendation": "강도 조절 고려. 변화 모니터링." }, "moderate": { "label": "중등도", "description": "집중력과 일부 활동에 방해.", "recommendation": "휴식과 활동 감소 고려. 평가가 도움이 될 수 있음." }, "severe": { "label": "심각", "description": "정상 활동 수행 능력에 상당한 영향.", "recommendation": "휴식 권장. 전문가 평가 강력 권고." }, "extreme": { "label": "극심", "description": "정상 기능을 방해하는 압도적인 통증.", "recommendation": "모든 활동 중단. 즉시 전문가 도움 받기." } }, "ranges": { "minimal": "최소", "mild": "경미", "moderate": "중등도", "severe": "심각", "extreme": "극심" } },
-    "redFlags": { "intro": "경험하고 있는 증상을 체크하세요.", "critical": "심각", "high": "높음", "medium": "중간", "items": { "deformity": "눈에 보이는 변형 또는 비정상적인 모양", "numbness": "무감각, 저림 또는 감각 상실", "inability": "체중을 지탱하거나 사지를 사용할 수 없음", "severeSwelling": "심한 또는 빠르게 증가하는 붓기", "popSound": "부상 중 '팝' 소리를 듣거나 느낌", "lockedJoint": "관절이 잠기거나 정상적으로 움직이지 않음", "instability": "관절이 불안정하거나 무너지는 느낌", "worsening": "시간이 지남에 따라 증상이 점진적으로 악화", "nightPain": "수면을 방해하는 상당한 통증", "fever": "발열 또는 감염 징후(열감, 발적)" }, "seekProfessional": "전문가 도움 받기", "stopActivity": "활동 중단", "result": { "critical": { "title": "즉각적인 주의 권장", "description": "하나 이상의 심각한 경고 신호가 있습니다. 가능한 빨리 전문가 평가를 강력히 권장합니다." }, "high": { "title": "전문가 평가 권고", "description": "중요한 경고 신호가 있습니다. 24-48시간 내에 전문가 평가를 고려하세요." }, "moderate": { "title": "면밀히 모니터링", "description": "일부 경고 신호가 있습니다. 증상을 모니터링하고 악화되면 전문가 상담을 고려하세요." }, "clear": { "title": "경고 신호 없음", "description": "현재 선택된 주요 경고 신호가 없습니다. 상태를 계속 모니터링하세요." } }, "disclaimer": { "title": "중요 알림", "description": "이 체크리스트는 교육 목적만입니다. 전문 의료 평가를 대체하지 않습니다." } },
-    "disclaimer": { "title": "중요 의료 면책 조항", "subtitle": "리커버리 베이를 사용하기 전에 주의 깊게 읽어주세요", "points": { "educational": { "title": "교육 목적만", "description": "모든 콘텐츠는 일반 교육 정보입니다." }, "noDiagnosis": { "title": "의료 조언이 아님", "description": "이것은 진단, 치료 또는 재활을 처방하지 않습니다." }, "seekHelp": { "title": "전문가 상담", "description": "부상에 대해서는 항상 면허가 있는 의료 또는 물리치료 전문가와 상담하세요." }, "emergency": { "title": "응급 상황", "description": "심각하거나 악화되는 증상은 즉각적인 전문가 평가가 필요합니다." } }, "fullText": { "para1": "리커버리 베이는 일반적인 스포츠 부상 및 회복 개념에 대한 일반 교육 정보를 제공하도록 설계되었습니다.", "para2": "여기에 제공된 정보는 전문 의료 조언, 진단 또는 치료를 대체하기 위한 것이 아닙니다.", "para3": "설명된 모든 기술, 운동 및 회복 개념은 정보 제공 목적으로만 사용됩니다.", "warning": "⚠️ 심한 통증, 갑작스러운 부상 또는 걱정되는 증상이 있으면 모든 활동을 중단하고 즉시 전문 의료 도움을 받으세요." }, "bottomNote": "리커버리 베이를 사용함으로써 이 면책 조항을 읽고 이해했음을 인정합니다." },
-    "returnToPlay": { "intro": "일반적인 회복 단계를 이해하면 현실적인 기대를 설정하는 데 도움이 됩니다.", "phase": "단계", "keyFocus": "주요 초점 영역", "phases": { "protection": { "title": "보호 및 증상 감소", "description": "초기 단계는 부상 부위 보호와 급성 증상 관리에 초점.", "focus1": "부상 부위 휴식 및 보호", "focus2": "통증과 붓기 감소", "focus3": "추가 부상 방지", "focus4": "허가되면 부드러운 움직임 시작" }, "restore": { "title": "움직임 및 기능 회복", "description": "점진적으로 가동 범위와 기본 기능적 움직임을 회복.", "focus1": "가동 범위 증가", "focus2": "기본 움직임 패턴 회복", "focus3": "가벼운 강화 시작", "focus4": "이동성 제한 해결" }, "strengthen": { "title": "강화 및 통제된 활동", "description": "힘을 기르고 통제된 환경에서 스포츠 관련 동작 시작.", "focus1": "점진적 강화 운동", "focus2": "안정성과 균형 개선", "focus3": "스포츠 특정 움직임 패턴", "focus4": "점진적 부하 진행" }, "return": { "title": "스포츠 복귀", "description": "마지막 단계는 완전한 스포츠 특정 훈련과 경기 복귀를 포함.", "focus1": "완전한 스포츠 특정 훈련", "focus2": "경기 속도 활동", "focus3": "경쟁 준비", "focus4": "지속적인 유지 프로그램" } }, "progressionNote": { "title": "진행은 개인적", "description": "모든 회복은 다릅니다. 진행은 임의의 일정이 아닌 증상과 전문가 평가에 의해 안내되어야 합니다." } },
-    "injuryPrevention": { "intro": "예방 교육은 부상 위험을 줄이는 데 도움이 될 수 있습니다.", "categories": { "warmup": { "title": "워밍업 개념", "subtitle": "활동을 위해 몸 준비", "tip1": "활동 전 동적 스트레칭은 혈류 증가", "tip2": "스포츠 특정 움직임 준비는 관련 근육군 활성화", "tip3": "점진적 강도 진행으로 몸이 적응" }, "strength": { "title": "근력 훈련", "subtitle": "탄력적인 근육과 관절 구축", "tip1": "점진적 과부하는 시간이 지남에 따라 조직 내성 구축", "tip2": "균형 잡힌 훈련은 주동근과 길항근 모두 해결", "tip3": "코어 안정성은 효율적인 움직임 패턴 지원" }, "mobility": { "title": "이동성 및 유연성", "subtitle": "최적의 움직임 품질 유지", "tip1": "관절 이동성 작업은 건강한 움직임 범위 지원", "tip2": "목표 스트레칭은 개인 제한 해결", "tip3": "정기적인 움직임 다양성은 패턴 과부하 방지" }, "sportSpecific": { "title": "스포츠 특정 예방", "subtitle": "야구 및 소프트볼 중심 전략", "tip1": "투구 수 인식은 팔 작업 부하 관리에 도움", "tip2": "적절한 투구 메카닉은 관절 스트레스 감소", "tip3": "포지션 특정 컨디셔닝은 고유한 요구 해결" } }, "patterns": { "title": "일반적인 예방 패턴", "subtitle": "부상 위험을 줄이는 데 도움이 될 수 있는 습관", "pattern1": "충분한 수면은 조직 회복 지원", "pattern2": "적절한 수분 섭취는 조직 건강 유지", "pattern3": "점진적 훈련 진행은 과사용 방지", "pattern4": "몸의 소리를 듣고 경고 신호 존중" } },
-    "recoveryMethods": { "intro": "다양한 회복 방법을 언제 어떻게 사용하는지 이해하면 치유 과정을 지원할 수 있습니다.", "whenToUse": "고려 시기", "ice": { "title": "얼음/냉각 요법", "subtitle": "급성 상황을 위한 냉각 요법", "use1": "급성 부상(처음 24-72시간)", "use2": "활동 후 염증 관리", "use3": "격렬한 훈련 후 붓기 감소", "timing": "일반적으로 15-20분, 적용 사이에 휴식" }, "heat": { "title": "온열 요법", "subtitle": "만성 상태를 위한 열 요법", "use1": "만성 근육 긴장과 뻣뻣함", "use2": "혈류 촉진을 위한 활동 전", "use3": "근육 이완과 편안함", "timing": "일반적으로 15-20분, 급성 부상이나 붓기에는 피함" }, "principles": { "title": "일반적인 회복 원칙", "subtitle": "최적 회복을 위한 기본 개념", "rest": { "title": "휴식과 수면", "description": "양질의 수면은 대부분의 조직 수리가 일어나는 시간입니다. 매일 밤 7-9시간 우선." }, "hydration": { "title": "수분 섭취", "description": "적절한 수분 섭취는 영양소 전달과 조직에서의 노폐물 제거를 지원합니다." } } },
-    "equipmentLibrary": { "intro": "일반적인 회복 장비를 이해하면 의료 전문가와 협력할 때 정보에 입각한 결정을 내리는 데 도움이 됩니다.", "searchPlaceholder": "장비 검색...", "allCategories": "모든 카테고리", "whatItDoes": "기능:", "whenUsed": "일반적인 사용 시기:", "noResults": "검색과 일치하는 장비를 찾을 수 없습니다.", "categories": { "tape": "테이프", "sleeves": "슬리브", "bands": "밴드", "softTissue": "연조직", "supports": "지지대" }, "items": { "kinesioTape": { "name": "키네시오 테이프", "description": "가동 범위를 허용하면서 지지를 제공하는 탄성 치료 테이프.", "usage": "근육 지지, 붓기 감소, 고유감각 피드백에 자주 사용." }, "athleticTape": { "name": "운동용 테이프", "description": "단단한 지지와 관절 안정화를 제공하는 비탄성 테이프.", "usage": "관절 지지, 과도한 움직임 방지, 부상 예방에 사용." }, "compressionSleeve": { "name": "압박 슬리브", "description": "순환을 지원하기 위해 단계적 압박을 제공하는 탄성 슬리브.", "usage": "붓기 감소, 온기 제공, 회복 지원에 사용." }, "kneeSleeve": { "name": "무릎 슬리브", "description": "무릎 지지용으로 특별히 설계된 네오프렌 또는 탄성 슬리브.", "usage": "활동 중 압박, 온기, 고유감각 피드백 제공." }, "resistanceBands": { "name": "저항 밴드", "description": "가변 저항으로 강화 운동에 사용되는 탄성 밴드.", "usage": "재활 운동, 워밍업 루틴, 점진적 강화." }, "therapyBands": { "name": "테라피 밴드", "description": "물리치료 환경에서 일반적으로 사용되는 평평한 탄성 밴드.", "usage": "부드러운 강화, 가동 범위 운동, 재활 프로그램." }, "foamRoller": { "name": "폼 롤러", "description": "셀프 마사지와 근막 이완에 사용되는 원통형 폼 도구.", "usage": "활동 전후 근육 준비, 근육 긴장 감소." }, "massageBall": { "name": "마사지 볼", "description": "목표 연조직 작업에 사용되는 작고 단단한 볼.", "usage": "특정 근육 매듭, 트리거 포인트, 긴장 부위 타겟팅." }, "ankleBrace": { "name": "발목 보호대", "description": "발목 움직임을 제한하고 안정성을 제공하는 지지 장치.", "usage": "부상 예방, 부상 후 지지, 복귀 시 보호." }, "wristSupport": { "name": "손목 지지대", "description": "손목 관절에 지지를 제공하는 랩 또는 보호대.", "usage": "활동 중 손목 지지, 불편함 관리, 부상 예방." } } },
-    "streak": { "dayStreak": "일 연속", "sections": "섹션", "badges": "배지", "best": "최고", "nextBadge": "다음 배지", "keepLearning": "잠금 해제를 위해 계속 학습" },
-    "progress": { "title": "당신의 진행 상황 & 배지", "subtitle": "학습 여정을 추적하고 교육 배지를 획득하세요" },
+    "allAreas": "모든 부위",
+    "commonSymptoms": "일반적인 증상",
+    "typicalTimeline": "일반적인 기간",
+    "sections": {
+      "diagnosticFlow": {
+        "title": "진단 흐름도",
+        "subtitle": "증상 이해를 위한 안내"
+      },
+      "painScale": {
+        "title": "통증 척도 시스템",
+        "subtitle": "통증 수준 평가"
+      },
+      "redFlags": {
+        "title": "경고 신호 확인",
+        "subtitle": "주의가 필요한 경고 신호"
+      },
+      "injuryHub": {
+        "title": "부상 정보 허브",
+        "subtitle": "야구/소프트볼 일반 부상"
+      },
+      "returnToPlay": {
+        "title": "복귀 단계",
+        "subtitle": "회복 단계 이해"
+      },
+      "injuryPrevention": {
+        "title": "부상 예방",
+        "subtitle": "교육을 통한 위험 감소"
+      },
+      "recoveryMethods": {
+        "title": "회복 방법",
+        "subtitle": "얼음, 열, 회복 원칙"
+      },
+      "equipmentLibrary": {
+        "title": "장비 라이브러리",
+        "subtitle": "회복 도구와 사용 시기"
+      }
+    },
+    "hurtingVsInjured": {
+      "title": "통증 vs 부상",
+      "subtitle": "정상적인 근육통과 잠재적 부상의 차이 이해",
+      "hurting": {
+        "title": "정상적인 근육통",
+        "description": "이러한 감각은 훈련의 일부입니다:",
+        "sign1": "움직임으로 개선되는 근육통",
+        "sign2": "워밍업 후 줄어드는 가벼운 뻣뻣함",
+        "sign3": "격렬한 훈련 후 일반적인 피로",
+        "sign4": "24-72시간 내에 사라지는 불편함"
+      },
+      "injured": {
+        "title": "잠재적 부상",
+        "description": "이러한 징후는 더 심각한 것을 나타낼 수 있습니다:",
+        "sign1": "활동 중 날카롭고 갑작스러운 통증",
+        "sign2": "움직임과 함께 악화되는 통증",
+        "sign3": "붓기, 멍 또는 눈에 보이는 변형",
+        "sign4": "체중을 지탱하거나 영향받은 부위를 사용할 수 없음",
+        "sign5": "72시간 이상 지속되는 통증"
+      },
+      "note": {
+        "title": "기억하세요",
+        "description": "이것은 자가 성찰용이며 진단이 아닙니다. 의심스러우면 항상 의료 전문가와 상담하세요."
+      }
+    },
+    "diagnosticFlow": {
+      "intro": "이 교육용 흐름도를 사용하여 증상에 대해 생각해 보세요.",
+      "step": "단계",
+      "steps": {
+        "symptoms": {
+          "title": "증상 식별",
+          "description": "무엇을 경험하고 있나요?",
+          "q1": "불편함의 정확한 위치는?",
+          "q2": "어떤 종류의 감각인가요?",
+          "q3": "움직임이나 성능에 영향을 주나요?"
+        },
+        "timing": {
+          "title": "타이밍 고려",
+          "description": "언제 시작되었나요?",
+          "q1": "갑자기 시작되었나요, 점진적으로?",
+          "q2": "이러한 증상이 얼마나 오래 있었나요?",
+          "q3": "지속적인가요 아니면 간헐적인가요?"
+        },
+        "severity": {
+          "title": "심각도 평가",
+          "description": "증상이 얼마나 심각한가요?",
+          "q1": "정상적인 활동을 계속할 수 있나요?",
+          "q2": "해당 부위가 부어 있거나 변색되었나요?",
+          "q3": "통증이 나아지고 있나요, 악화되고 있나요?"
+        },
+        "decision": {
+          "title": "옵션 고려",
+          "description": "반성을 바탕으로 다음 경로를 고려하세요:",
+          "outcome1": {
+            "condition": "심각한 증상, 갑작스러운 발병 또는 경고 신호",
+            "action": "신속하게 전문가 평가 받기"
+          },
+          "outcome2": {
+            "condition": "48-72시간 이상 지속되는 중등도 증상",
+            "action": "전문가 상담 일정 고려"
+          },
+          "outcome3": {
+            "condition": "휴식으로 개선되는 경미한 증상",
+            "action": "계속 모니터링, 적절하면 RICE 원칙 적용"
+          }
+        }
+      }
+    },
+    "painScale": {
+      "intro": "이 척도를 사용하여 통증 수준에 대해 생각해 보세요.",
+      "noPain": "통증 없음",
+      "worstPain": "최악의 통증",
+      "recommendation": "일반 지침",
+      "levels": {
+        "minimal": {
+          "label": "최소",
+          "description": "일상 활동에 영향을 미치지 않는 거의 느끼지 못하는 불편함.",
+          "recommendation": "인식하면서 정상 활동을 계속해도 일반적으로 안전."
+        },
+        "mild": {
+          "label": "경미",
+          "description": "느껴지지만 활동에 크게 방해되지 않음.",
+          "recommendation": "강도 조절 고려. 변화 모니터링."
+        },
+        "moderate": {
+          "label": "중등도",
+          "description": "집중력과 일부 활동에 방해.",
+          "recommendation": "휴식과 활동 감소 고려. 평가가 도움이 될 수 있음."
+        },
+        "severe": {
+          "label": "심각",
+          "description": "정상 활동 수행 능력에 상당한 영향.",
+          "recommendation": "휴식 권장. 전문가 평가 강력 권고."
+        },
+        "extreme": {
+          "label": "극심",
+          "description": "정상 기능을 방해하는 압도적인 통증.",
+          "recommendation": "모든 활동 중단. 즉시 전문가 도움 받기."
+        }
+      },
+      "ranges": {
+        "minimal": "최소",
+        "mild": "경미",
+        "moderate": "중등도",
+        "severe": "심각",
+        "extreme": "극심"
+      }
+    },
+    "redFlags": {
+      "intro": "경험하고 있는 증상을 체크하세요.",
+      "critical": "심각",
+      "high": "높음",
+      "medium": "중간",
+      "items": {
+        "deformity": "눈에 보이는 변형 또는 비정상적인 모양",
+        "numbness": "무감각, 저림 또는 감각 상실",
+        "inability": "체중을 지탱하거나 사지를 사용할 수 없음",
+        "severeSwelling": "심한 또는 빠르게 증가하는 붓기",
+        "popSound": "부상 중 '팝' 소리를 듣거나 느낌",
+        "lockedJoint": "관절이 잠기거나 정상적으로 움직이지 않음",
+        "instability": "관절이 불안정하거나 무너지는 느낌",
+        "worsening": "시간이 지남에 따라 증상이 점진적으로 악화",
+        "nightPain": "수면을 방해하는 상당한 통증",
+        "fever": "발열 또는 감염 징후(열감, 발적)"
+      },
+      "seekProfessional": "전문가 도움 받기",
+      "stopActivity": "활동 중단",
+      "result": {
+        "critical": {
+          "title": "즉각적인 주의 권장",
+          "description": "하나 이상의 심각한 경고 신호가 있습니다. 가능한 빨리 전문가 평가를 강력히 권장합니다."
+        },
+        "high": {
+          "title": "전문가 평가 권고",
+          "description": "중요한 경고 신호가 있습니다. 24-48시간 내에 전문가 평가를 고려하세요."
+        },
+        "moderate": {
+          "title": "면밀히 모니터링",
+          "description": "일부 경고 신호가 있습니다. 증상을 모니터링하고 악화되면 전문가 상담을 고려하세요."
+        },
+        "clear": {
+          "title": "경고 신호 없음",
+          "description": "현재 선택된 주요 경고 신호가 없습니다. 상태를 계속 모니터링하세요."
+        }
+      },
+      "disclaimer": {
+        "title": "중요 알림",
+        "description": "이 체크리스트는 교육 목적만입니다. 전문 의료 평가를 대체하지 않습니다."
+      }
+    },
+    "disclaimer": {
+      "title": "중요 의료 면책 조항",
+      "subtitle": "리커버리 베이를 사용하기 전에 주의 깊게 읽어주세요",
+      "points": {
+        "educational": {
+          "title": "교육 목적만",
+          "description": "모든 콘텐츠는 일반 교육 정보입니다."
+        },
+        "noDiagnosis": {
+          "title": "의료 조언이 아님",
+          "description": "이것은 진단, 치료 또는 재활을 처방하지 않습니다."
+        },
+        "seekHelp": {
+          "title": "전문가 상담",
+          "description": "부상에 대해서는 항상 면허가 있는 의료 또는 물리치료 전문가와 상담하세요."
+        },
+        "emergency": {
+          "title": "응급 상황",
+          "description": "심각하거나 악화되는 증상은 즉각적인 전문가 평가가 필요합니다."
+        }
+      },
+      "fullText": {
+        "para1": "리커버리 베이는 일반적인 스포츠 부상 및 회복 개념에 대한 일반 교육 정보를 제공하도록 설계되었습니다.",
+        "para2": "여기에 제공된 정보는 전문 의료 조언, 진단 또는 치료를 대체하기 위한 것이 아닙니다.",
+        "para3": "설명된 모든 기술, 운동 및 회복 개념은 정보 제공 목적으로만 사용됩니다.",
+        "warning": "⚠️ 심한 통증, 갑작스러운 부상 또는 걱정되는 증상이 있으면 모든 활동을 중단하고 즉시 전문 의료 도움을 받으세요."
+      },
+      "bottomNote": "리커버리 베이를 사용함으로써 이 면책 조항을 읽고 이해했음을 인정합니다."
+    },
+    "returnToPlay": {
+      "intro": "일반적인 회복 단계를 이해하면 현실적인 기대를 설정하는 데 도움이 됩니다.",
+      "phase": "단계",
+      "keyFocus": "주요 초점 영역",
+      "phases": {
+        "protection": {
+          "title": "보호 및 증상 감소",
+          "description": "초기 단계는 부상 부위 보호와 급성 증상 관리에 초점.",
+          "focus1": "부상 부위 휴식 및 보호",
+          "focus2": "통증과 붓기 감소",
+          "focus3": "추가 부상 방지",
+          "focus4": "허가되면 부드러운 움직임 시작"
+        },
+        "restore": {
+          "title": "움직임 및 기능 회복",
+          "description": "점진적으로 가동 범위와 기본 기능적 움직임을 회복.",
+          "focus1": "가동 범위 증가",
+          "focus2": "기본 움직임 패턴 회복",
+          "focus3": "가벼운 강화 시작",
+          "focus4": "이동성 제한 해결"
+        },
+        "strengthen": {
+          "title": "강화 및 통제된 활동",
+          "description": "힘을 기르고 통제된 환경에서 스포츠 관련 동작 시작.",
+          "focus1": "점진적 강화 운동",
+          "focus2": "안정성과 균형 개선",
+          "focus3": "스포츠 특정 움직임 패턴",
+          "focus4": "점진적 부하 진행"
+        },
+        "return": {
+          "title": "스포츠 복귀",
+          "description": "마지막 단계는 완전한 스포츠 특정 훈련과 경기 복귀를 포함.",
+          "focus1": "완전한 스포츠 특정 훈련",
+          "focus2": "경기 속도 활동",
+          "focus3": "경쟁 준비",
+          "focus4": "지속적인 유지 프로그램"
+        }
+      },
+      "progressionNote": {
+        "title": "진행은 개인적",
+        "description": "모든 회복은 다릅니다. 진행은 임의의 일정이 아닌 증상과 전문가 평가에 의해 안내되어야 합니다."
+      }
+    },
+    "injuryPrevention": {
+      "intro": "예방 교육은 부상 위험을 줄이는 데 도움이 될 수 있습니다.",
+      "categories": {
+        "warmup": {
+          "title": "워밍업 개념",
+          "subtitle": "활동을 위해 몸 준비",
+          "tip1": "활동 전 동적 스트레칭은 혈류 증가",
+          "tip2": "스포츠 특정 움직임 준비는 관련 근육군 활성화",
+          "tip3": "점진적 강도 진행으로 몸이 적응"
+        },
+        "strength": {
+          "title": "근력 훈련",
+          "subtitle": "탄력적인 근육과 관절 구축",
+          "tip1": "점진적 과부하는 시간이 지남에 따라 조직 내성 구축",
+          "tip2": "균형 잡힌 훈련은 주동근과 길항근 모두 해결",
+          "tip3": "코어 안정성은 효율적인 움직임 패턴 지원"
+        },
+        "mobility": {
+          "title": "이동성 및 유연성",
+          "subtitle": "최적의 움직임 품질 유지",
+          "tip1": "관절 이동성 작업은 건강한 움직임 범위 지원",
+          "tip2": "목표 스트레칭은 개인 제한 해결",
+          "tip3": "정기적인 움직임 다양성은 패턴 과부하 방지"
+        },
+        "sportSpecific": {
+          "title": "스포츠 특정 예방",
+          "subtitle": "야구 및 소프트볼 중심 전략",
+          "tip1": "투구 수 인식은 팔 작업 부하 관리에 도움",
+          "tip2": "적절한 투구 메카닉은 관절 스트레스 감소",
+          "tip3": "포지션 특정 컨디셔닝은 고유한 요구 해결"
+        }
+      },
+      "patterns": {
+        "title": "일반적인 예방 패턴",
+        "subtitle": "부상 위험을 줄이는 데 도움이 될 수 있는 습관",
+        "pattern1": "충분한 수면은 조직 회복 지원",
+        "pattern2": "적절한 수분 섭취는 조직 건강 유지",
+        "pattern3": "점진적 훈련 진행은 과사용 방지",
+        "pattern4": "몸의 소리를 듣고 경고 신호 존중"
+      }
+    },
+    "recoveryMethods": {
+      "intro": "다양한 회복 방법을 언제 어떻게 사용하는지 이해하면 치유 과정을 지원할 수 있습니다.",
+      "whenToUse": "고려 시기",
+      "ice": {
+        "title": "얼음/냉각 요법",
+        "subtitle": "급성 상황을 위한 냉각 요법",
+        "use1": "급성 부상(처음 24-72시간)",
+        "use2": "활동 후 염증 관리",
+        "use3": "격렬한 훈련 후 붓기 감소",
+        "timing": "일반적으로 15-20분, 적용 사이에 휴식"
+      },
+      "heat": {
+        "title": "온열 요법",
+        "subtitle": "만성 상태를 위한 열 요법",
+        "use1": "만성 근육 긴장과 뻣뻣함",
+        "use2": "혈류 촉진을 위한 활동 전",
+        "use3": "근육 이완과 편안함",
+        "timing": "일반적으로 15-20분, 급성 부상이나 붓기에는 피함"
+      },
+      "principles": {
+        "title": "일반적인 회복 원칙",
+        "subtitle": "최적 회복을 위한 기본 개념",
+        "rest": {
+          "title": "휴식과 수면",
+          "description": "양질의 수면은 대부분의 조직 수리가 일어나는 시간입니다. 매일 밤 7-9시간 우선."
+        },
+        "hydration": {
+          "title": "수분 섭취",
+          "description": "적절한 수분 섭취는 영양소 전달과 조직에서의 노폐물 제거를 지원합니다."
+        }
+      }
+    },
+    "equipmentLibrary": {
+      "intro": "일반적인 회복 장비를 이해하면 의료 전문가와 협력할 때 정보에 입각한 결정을 내리는 데 도움이 됩니다.",
+      "searchPlaceholder": "장비 검색...",
+      "allCategories": "모든 카테고리",
+      "whatItDoes": "기능:",
+      "whenUsed": "일반적인 사용 시기:",
+      "noResults": "검색과 일치하는 장비를 찾을 수 없습니다.",
+      "categories": {
+        "tape": "테이프",
+        "sleeves": "슬리브",
+        "bands": "밴드",
+        "softTissue": "연조직",
+        "supports": "지지대"
+      },
+      "items": {
+        "kinesioTape": {
+          "name": "키네시오 테이프",
+          "description": "가동 범위를 허용하면서 지지를 제공하는 탄성 치료 테이프.",
+          "usage": "근육 지지, 붓기 감소, 고유감각 피드백에 자주 사용."
+        },
+        "athleticTape": {
+          "name": "운동용 테이프",
+          "description": "단단한 지지와 관절 안정화를 제공하는 비탄성 테이프.",
+          "usage": "관절 지지, 과도한 움직임 방지, 부상 예방에 사용."
+        },
+        "compressionSleeve": {
+          "name": "압박 슬리브",
+          "description": "순환을 지원하기 위해 단계적 압박을 제공하는 탄성 슬리브.",
+          "usage": "붓기 감소, 온기 제공, 회복 지원에 사용."
+        },
+        "kneeSleeve": {
+          "name": "무릎 슬리브",
+          "description": "무릎 지지용으로 특별히 설계된 네오프렌 또는 탄성 슬리브.",
+          "usage": "활동 중 압박, 온기, 고유감각 피드백 제공."
+        },
+        "resistanceBands": {
+          "name": "저항 밴드",
+          "description": "가변 저항으로 강화 운동에 사용되는 탄성 밴드.",
+          "usage": "재활 운동, 워밍업 루틴, 점진적 강화."
+        },
+        "therapyBands": {
+          "name": "테라피 밴드",
+          "description": "물리치료 환경에서 일반적으로 사용되는 평평한 탄성 밴드.",
+          "usage": "부드러운 강화, 가동 범위 운동, 재활 프로그램."
+        },
+        "foamRoller": {
+          "name": "폼 롤러",
+          "description": "셀프 마사지와 근막 이완에 사용되는 원통형 폼 도구.",
+          "usage": "활동 전후 근육 준비, 근육 긴장 감소."
+        },
+        "massageBall": {
+          "name": "마사지 볼",
+          "description": "목표 연조직 작업에 사용되는 작고 단단한 볼.",
+          "usage": "특정 근육 매듭, 트리거 포인트, 긴장 부위 타겟팅."
+        },
+        "ankleBrace": {
+          "name": "발목 보호대",
+          "description": "발목 움직임을 제한하고 안정성을 제공하는 지지 장치.",
+          "usage": "부상 예방, 부상 후 지지, 복귀 시 보호."
+        },
+        "wristSupport": {
+          "name": "손목 지지대",
+          "description": "손목 관절에 지지를 제공하는 랩 또는 보호대.",
+          "usage": "활동 중 손목 지지, 불편함 관리, 부상 예방."
+        }
+      }
+    },
+    "streak": {
+      "dayStreak": "일 연속",
+      "sections": "섹션",
+      "badges": "배지",
+      "best": "최고",
+      "nextBadge": "다음 배지",
+      "keepLearning": "잠금 해제를 위해 계속 학습"
+    },
+    "progress": {
+      "title": "당신의 진행 상황 & 배지",
+      "subtitle": "학습 여정을 추적하고 교육 배지를 획득하세요"
+    },
     "quiz": {
       "title": "지식 확인",
       "description": "{{count}}개의 질문에 답하여 이해도를 테스트하세요",
@@ -1964,9 +2292,21 @@
           "q2": "언제 즉시 의료 도움을 받아야 합니까?",
           "q3": "부상 치료에서 RICE는 무엇을 의미합니까?",
           "options": {
-            "q1": { "a": "통증이 있어도 계속 플레이", "b": "활동을 중단하고 상황을 평가", "c": "즉시 얼음을 적용" },
-            "q2": { "a": "가벼운 불편함을 느낄 때", "b": "눈에 보이는 출혈이 있을 때만", "c": "심한 통증, 변형 또는 기능 상실을 경험할 때" },
-            "q3": { "a": "휴식, 얼음, 압박, 거상", "b": "달리기, 얼음, 압박, 운동", "c": "휴식, 고정, 냉각, 평가" }
+            "q1": {
+              "a": "통증이 있어도 계속 플레이",
+              "b": "활동을 중단하고 상황을 평가",
+              "c": "즉시 얼음을 적용"
+            },
+            "q2": {
+              "a": "가벼운 불편함을 느낄 때",
+              "b": "눈에 보이는 출혈이 있을 때만",
+              "c": "심한 통증, 변형 또는 기능 상실을 경험할 때"
+            },
+            "q3": {
+              "a": "휴식, 얼음, 압박, 거상",
+              "b": "달리기, 얼음, 압박, 운동",
+              "c": "휴식, 고정, 냉각, 평가"
+            }
           }
         },
         "pain-scale": {
@@ -1974,9 +2314,21 @@
           "q2": "통증 척도의 목적은 무엇입니까?",
           "q3": "가벼운 불편함(1-3)은 일반적으로 어떻게 관리해야 합니까?",
           "options": {
-            "q1": { "a": "1 이상의 모든 통증", "b": "통증 수준 7 이상", "c": "레벨 10 통증만" },
-            "q2": { "a": "통증 강도를 일관되게 전달하기 위해", "b": "정확한 부상 진단을 결정하기 위해", "c": "의료 서비스를 피하기 위해" },
-            "q3": { "a": "즉각적인 응급 치료", "b": "완전한 침대 휴식", "c": "모니터링하고, 활동을 조절하고, 예방 조치를 사용" }
+            "q1": {
+              "a": "1 이상의 모든 통증",
+              "b": "통증 수준 7 이상",
+              "c": "레벨 10 통증만"
+            },
+            "q2": {
+              "a": "통증 강도를 일관되게 전달하기 위해",
+              "b": "정확한 부상 진단을 결정하기 위해",
+              "c": "의료 서비스를 피하기 위해"
+            },
+            "q3": {
+              "a": "즉각적인 응급 치료",
+              "b": "완전한 침대 휴식",
+              "c": "모니터링하고, 활동을 조절하고, 예방 조치를 사용"
+            }
           }
         },
         "red-flags": {
@@ -1984,9 +2336,21 @@
           "q2": "무감각이나 따끔거림을 느끼면 어떻게 해야 합니까?",
           "q3": "위험 신호를 인식하는 것이 왜 중요합니까?",
           "options": {
-            "q1": { "a": "체중을 지탱할 수 없거나 심한 변형", "b": "운동 후 가벼운 근육통", "c": "아침에 약간의 뻣뻣함" },
-            "q2": { "a": "무시하고 활동 계속", "b": "개선되는지 일주일 기다리기", "c": "활동을 중단하고 의료 전문가와 상담" },
-            "q3": { "a": "불필요한 휴식을 피하는 데 도움", "b": "신속한 치료가 필요한 잠재적으로 심각한 상태를 나타냄", "c": "스포츠에서 거의 중요하지 않음" }
+            "q1": {
+              "a": "체중을 지탱할 수 없거나 심한 변형",
+              "b": "운동 후 가벼운 근육통",
+              "c": "아침에 약간의 뻣뻣함"
+            },
+            "q2": {
+              "a": "무시하고 활동 계속",
+              "b": "개선되는지 일주일 기다리기",
+              "c": "활동을 중단하고 의료 전문가와 상담"
+            },
+            "q3": {
+              "a": "불필요한 휴식을 피하는 데 도움",
+              "b": "신속한 치료가 필요한 잠재적으로 심각한 상태를 나타냄",
+              "c": "스포츠에서 거의 중요하지 않음"
+            }
           }
         },
         "rtp": {
@@ -1994,9 +2358,21 @@
           "q2": "선수는 언제 다음 단계로 진행할 수 있습니까?",
           "q3": "진행 중 통증이 돌아오면 어떻게 해야 합니까?",
           "options": {
-            "q1": { "a": "통증이 사라지면 즉시 완전한 활동", "b": "휴식 → 가벼운 활동 → 스포츠 특화 → 완전한 경기", "c": "재활을 건너뛰고 경기로 테스트" },
-            "q2": { "a": "증상 증가 없이 각 단계를 완료한 후", "b": "정확히 24시간 후", "c": "동기가 있을 때" },
-            "q3": { "a": "참고 밀어붙이기", "b": "같은 강도로 계속", "c": "이전 단계로 돌아가 재평가" }
+            "q1": {
+              "a": "통증이 사라지면 즉시 완전한 활동",
+              "b": "휴식 → 가벼운 활동 → 스포츠 특화 → 완전한 경기",
+              "c": "재활을 건너뛰고 경기로 테스트"
+            },
+            "q2": {
+              "a": "증상 증가 없이 각 단계를 완료한 후",
+              "b": "정확히 24시간 후",
+              "c": "동기가 있을 때"
+            },
+            "q3": {
+              "a": "참고 밀어붙이기",
+              "b": "같은 강도로 계속",
+              "c": "이전 단계로 돌아가 재평가"
+            }
           }
         },
         "prevention": {
@@ -2004,9 +2380,21 @@
           "q2": "적절한 워밍업이 왜 중요합니까?",
           "q3": "충분한 수면이 부상 위험에 어떻게 영향을 미칩니까?",
           "options": {
-            "q1": { "a": "모든 신체 활동 피하기", "b": "활동 전 진통제 복용", "c": "일관된 워밍업, 근력 훈련 및 적절한 기술" },
-            "q2": { "a": "시간 낭비", "b": "혈류를 증가시키고 근육을 활동에 준비시킴", "c": "프로 선수만을 위한 것" },
-            "q3": { "a": "수면 부족은 부상 위험을 크게 증가시킴", "b": "수면은 부상에 영향을 미치지 않음", "c": "수면이 적을수록 선수가 강해짐" }
+            "q1": {
+              "a": "모든 신체 활동 피하기",
+              "b": "활동 전 진통제 복용",
+              "c": "일관된 워밍업, 근력 훈련 및 적절한 기술"
+            },
+            "q2": {
+              "a": "시간 낭비",
+              "b": "혈류를 증가시키고 근육을 활동에 준비시킴",
+              "c": "프로 선수만을 위한 것"
+            },
+            "q3": {
+              "a": "수면 부족은 부상 위험을 크게 증가시킴",
+              "b": "수면은 부상에 영향을 미치지 않음",
+              "c": "수면이 적을수록 선수가 강해짐"
+            }
           }
         },
         "recovery": {
@@ -2014,9 +2402,21 @@
           "q2": "압박의 주요 이점은 무엇입니까?",
           "q3": "얼음은 일반적으로 얼마나 오래 적용해야 합니까?",
           "options": {
-            "q1": { "a": "부상 후 첫 48-72시간 이내", "b": "일주일 후에만", "c": "부상에 절대 얼음 사용 안 함" },
-            "q2": { "a": "혈류를 증가시킴", "b": "전문적으로 보임", "c": "붓기를 조절하고 지지를 제공" },
-            "q3": { "a": "24시간 연속", "b": "휴식과 함께 한 번에 15-20분", "c": "최대 5분" }
+            "q1": {
+              "a": "부상 후 첫 48-72시간 이내",
+              "b": "일주일 후에만",
+              "c": "부상에 절대 얼음 사용 안 함"
+            },
+            "q2": {
+              "a": "혈류를 증가시킴",
+              "b": "전문적으로 보임",
+              "c": "붓기를 조절하고 지지를 제공"
+            },
+            "q3": {
+              "a": "24시간 연속",
+              "b": "휴식과 함께 한 번에 15-20분",
+              "c": "최대 5분"
+            }
           }
         },
         "equipment": {
@@ -2024,9 +2424,21 @@
           "q2": "저항 밴드는 언제 사용해야 합니까?",
           "q3": "보조기와 지지대가 왜 도움이 됩니까?",
           "options": {
-            "q1": { "a": "근육량을 늘리기 위해", "b": "근막 이완 및 근육 회복", "c": "스트레칭을 완전히 대체하기 위해" },
-            "q2": { "a": "수술 후에만", "b": "재활, 워밍업 및 근력 운동에", "c": "절대 사용 안 함, 위험함" },
-            "q3": { "a": "부상을 즉시 치료함", "b": "적절한 재활을 대체함", "c": "회복 중 안정성과 지지를 제공함" }
+            "q1": {
+              "a": "근육량을 늘리기 위해",
+              "b": "근막 이완 및 근육 회복",
+              "c": "스트레칭을 완전히 대체하기 위해"
+            },
+            "q2": {
+              "a": "수술 후에만",
+              "b": "재활, 워밍업 및 근력 운동에",
+              "c": "절대 사용 안 함, 위험함"
+            },
+            "q3": {
+              "a": "부상을 즉시 치료함",
+              "b": "적절한 재활을 대체함",
+              "c": "회복 중 안정성과 지지를 제공함"
+            }
           }
         }
       }
@@ -2424,58 +2836,214 @@
       "life_mastery": "라이프 마스터리"
     },
     "challenges": {
-      "focus_week": { "title": "집중의 주", "description": "매 연습이나 경기 전 2분간 집중 호흡을 연습하세요." },
-      "leadership_week": { "title": "리더십의 주", "description": "매일 3명의 다른 팀원에게 구체적인 긍정적 피드백을 제공하세요." },
-      "gratitude_week": { "title": "감사의 주", "description": "매일 아침 감사한 것 3가지를 적으세요." },
-      "visualization_week": { "title": "시각화의 주", "description": "연습 전 5분간 완벽한 퍼포먼스를 시각화하세요." },
-      "discipline_week": { "title": "규율의 주", "description": "변명 없이 7일 연속 아침 루틴을 완료하세요." },
-      "encouragement_week": { "title": "격려의 주", "description": "실수한 팀원을 가장 먼저 격려하세요." },
-      "presence_week": { "title": "현존의 주", "description": "연습이나 경기 1시간 전에 휴대폰을 치워두세요." },
-      "accountability_week": { "title": "책임의 주", "description": "이번 주 하나의 목표에 대해 공개적으로 책임지세요." },
-      "calm_week": { "title": "평정의 주", "description": "4-7-8 호흡법을 하루 3번 연습하세요." },
-      "purpose_week": { "title": "목적의 주", "description": "개인 미션 선언문을 작성하고 매일 검토하세요." },
-      "energy_week": { "title": "에너지의 주", "description": "모든 연습에서 가장 먼저 긍정적인 에너지를 가져오세요." },
-      "reset_day": { "title": "리셋 데이", "description": "소셜 미디어에서 24시간 디지털 디톡스를 완료하세요." },
-      "affirmation_week": { "title": "긍정 확언의 주", "description": "매일 아침과 밤에 3가지 긍정적인 확언을 반복하세요." },
-      "confidence_week": { "title": "자신감의 주", "description": "자신감 있는 자세로 걷고 모든 상호작용에서 눈을 맞추세요." },
-      "concentration_week": { "title": "집중력의 주", "description": "싱글태스킹 연습 - 방해 없이 한 번에 한 가지에 집중하세요." },
-      "mental_toughness_week": { "title": "정신적 강인함의 주", "description": "힘들 때 '덤벼라'라고 말하고 밀고 나가세요." },
-      "positive_self_talk_week": { "title": "긍정적 자기 대화의 주", "description": "모든 부정적인 생각을 즉시 긍정적인 것으로 바꾸세요." },
-      "goal_setting_week": { "title": "목표 설정의 주", "description": "매일 하나의 구체적인 목표를 설정하고 진행 상황을 추적하세요." },
-      "pressure_handling_week": { "title": "압박 대처의 주", "description": "매일 시뮬레이션된 압박 조건에서 기술을 연습하세요." },
-      "clutch_mindset_week": { "title": "클러치 마인드셋의 주", "description": "매일 밤 잠자기 전 고압 상황에서의 성공을 시각화하세요." },
-      "competitive_edge_week": { "title": "경쟁 우위의 주", "description": "정규 연습 외에 매일 개선할 추가 사항을 찾으세요." },
-      "mental_reset_week": { "title": "멘탈 리셋의 주", "description": "모든 실수 후 리셋 단어나 제스처를 사용해 마음을 비우세요." },
-      "game_day_focus_week": { "title": "경기일 집중의 주", "description": "경기 전 멘탈 준비 루틴을 만들고 따르세요." },
-      "self_compassion_week": { "title": "자기 연민의 주", "description": "실수했을 때 자신에게 친절하게 - 가혹한 자기 비판 금지." },
-      "mindfulness_week": { "title": "마음챙김의 주", "description": "매일 5분간 조용한 마음챙김 상태로 보내세요." },
-      "stress_release_week": { "title": "스트레스 해소의 주", "description": "매일 밤 잠자기 전 점진적 근육 이완을 연습하세요." },
-      "emotional_control_week": { "title": "감정 조절의 주", "description": "어떤 좌절에 반응하기 전에 멈추고 3번 깊게 숨을 쉬세요." },
-      "joy_week": { "title": "기쁨의 주", "description": "매일 스포츠에서 순수한 기쁨의 순간을 찾고 감사하세요." },
-      "patience_week": { "title": "인내의 주", "description": "매일 하나의 어려운 상황에서 인내를 연습하세요." },
-      "resilience_week": { "title": "회복력의 주", "description": "모든 좌절 후 거기서 배운 것을 적으세요." },
-      "letting_go_week": { "title": "놓아주기의 주", "description": "일기를 통해 매일 하나의 걱정이나 후회를 놓아주세요." },
-      "inner_peace_week": { "title": "내면의 평화의 주", "description": "매일 2분간의 평화로운 침묵으로 시작하고 끝내세요." },
-      "emotional_awareness_week": { "title": "감정 인식의 주", "description": "하루 3번 감정을 체크하고 느끼는 것에 이름을 붙이세요." },
-      "communication_week": { "title": "소통의 주", "description": "적극적 경청 연습 - 응답하기 전에 팀원의 말을 반복하세요." },
-      "mentorship_week": { "title": "멘토링의 주", "description": "매일 더 어리거나 경험이 적은 팀원의 한 가지 기술을 도와주세요." },
-      "team_spirit_week": { "title": "팀 정신의 주", "description": "매일 자신에게 직접적인 이익은 없지만 팀에 도움이 되는 일을 하세요." },
-      "lead_by_example_week": { "title": "모범 보이기의 주", "description": "모든 연습에 가장 먼저 도착하고 가장 마지막에 떠나세요." },
-      "inspire_others_week": { "title": "타인 영감의 주", "description": "매일 팀과 영감을 주는 명언이나 이야기를 공유하세요." },
-      "conflict_resolution_week": { "title": "갈등 해결의 주", "description": "작은 갈등이나 긴장을 직접적이고 건설적으로 다루세요." },
-      "servant_leadership_week": { "title": "섬기는 리더십의 주", "description": "팀원에게 '오늘 어떻게 도와줄까?'라고 묻고 실행하세요." },
-      "positivity_spread_week": { "title": "긍정 전파의 주", "description": "매일 5명의 다른 사람에게 진심 어린 칭찬을 하세요." },
-      "team_culture_week": { "title": "팀 문화의 주", "description": "아무도 보지 않을 때도 팀 가치를 지키세요." },
-      "boundary_week": { "title": "경계의 주", "description": "이번 주 삶에서 건강한 경계를 설정하고 유지하세요." },
-      "habit_stack_week": { "title": "습관 쌓기의 주", "description": "새로운 긍정적 습관을 기존 일상에 붙이세요." },
-      "time_management_week": { "title": "시간 관리의 주", "description": "전날 밤에 구체적인 시간 블록으로 다음 날을 계획하세요." },
-      "sleep_optimization_week": { "title": "수면 최적화의 주", "description": "이번 주 매일 같은 시간에 자고 일어나세요." },
-      "nutrition_focus_week": { "title": "영양 집중의 주", "description": "매 식사에서 단백질, 탄수화물, 채소가 균형 잡힌 식사를 하세요." },
-      "recovery_week": { "title": "회복의 주", "description": "매일 15분을 회복 활동(스트레칭, 폼롤링)에 투자하세요." },
-      "work_life_balance_week": { "title": "일과 삶의 균형의 주", "description": "매일 스포츠 외의 관계에 질 높은 시간을 바치세요." },
-      "digital_detox_week": { "title": "디지털 디톡스의 주", "description": "소셜 미디어를 하루 총 30분으로 제한하세요." },
-      "morning_routine_week": { "title": "아침 루틴의 주", "description": "일관된 30분 아침 루틴을 만들고 따르세요." },
-      "evening_routine_week": { "title": "저녁 루틴의 주", "description": "편안한 30분 저녁 루틴을 만들고 따르세요." }
+      "focus_week": {
+        "title": "집중의 주",
+        "description": "매 연습이나 경기 전 2분간 집중 호흡을 연습하세요."
+      },
+      "leadership_week": {
+        "title": "리더십의 주",
+        "description": "매일 3명의 다른 팀원에게 구체적인 긍정적 피드백을 제공하세요."
+      },
+      "gratitude_week": {
+        "title": "감사의 주",
+        "description": "매일 아침 감사한 것 3가지를 적으세요."
+      },
+      "visualization_week": {
+        "title": "시각화의 주",
+        "description": "연습 전 5분간 완벽한 퍼포먼스를 시각화하세요."
+      },
+      "discipline_week": {
+        "title": "규율의 주",
+        "description": "변명 없이 7일 연속 아침 루틴을 완료하세요."
+      },
+      "encouragement_week": {
+        "title": "격려의 주",
+        "description": "실수한 팀원을 가장 먼저 격려하세요."
+      },
+      "presence_week": {
+        "title": "현존의 주",
+        "description": "연습이나 경기 1시간 전에 휴대폰을 치워두세요."
+      },
+      "accountability_week": {
+        "title": "책임의 주",
+        "description": "이번 주 하나의 목표에 대해 공개적으로 책임지세요."
+      },
+      "calm_week": {
+        "title": "평정의 주",
+        "description": "4-7-8 호흡법을 하루 3번 연습하세요."
+      },
+      "purpose_week": {
+        "title": "목적의 주",
+        "description": "개인 미션 선언문을 작성하고 매일 검토하세요."
+      },
+      "energy_week": {
+        "title": "에너지의 주",
+        "description": "모든 연습에서 가장 먼저 긍정적인 에너지를 가져오세요."
+      },
+      "reset_day": {
+        "title": "리셋 데이",
+        "description": "소셜 미디어에서 24시간 디지털 디톡스를 완료하세요."
+      },
+      "affirmation_week": {
+        "title": "긍정 확언의 주",
+        "description": "매일 아침과 밤에 3가지 긍정적인 확언을 반복하세요."
+      },
+      "confidence_week": {
+        "title": "자신감의 주",
+        "description": "자신감 있는 자세로 걷고 모든 상호작용에서 눈을 맞추세요."
+      },
+      "concentration_week": {
+        "title": "집중력의 주",
+        "description": "싱글태스킹 연습 - 방해 없이 한 번에 한 가지에 집중하세요."
+      },
+      "mental_toughness_week": {
+        "title": "정신적 강인함의 주",
+        "description": "힘들 때 '덤벼라'라고 말하고 밀고 나가세요."
+      },
+      "positive_self_talk_week": {
+        "title": "긍정적 자기 대화의 주",
+        "description": "모든 부정적인 생각을 즉시 긍정적인 것으로 바꾸세요."
+      },
+      "goal_setting_week": {
+        "title": "목표 설정의 주",
+        "description": "매일 하나의 구체적인 목표를 설정하고 진행 상황을 추적하세요."
+      },
+      "pressure_handling_week": {
+        "title": "압박 대처의 주",
+        "description": "매일 시뮬레이션된 압박 조건에서 기술을 연습하세요."
+      },
+      "clutch_mindset_week": {
+        "title": "클러치 마인드셋의 주",
+        "description": "매일 밤 잠자기 전 고압 상황에서의 성공을 시각화하세요."
+      },
+      "competitive_edge_week": {
+        "title": "경쟁 우위의 주",
+        "description": "정규 연습 외에 매일 개선할 추가 사항을 찾으세요."
+      },
+      "mental_reset_week": {
+        "title": "멘탈 리셋의 주",
+        "description": "모든 실수 후 리셋 단어나 제스처를 사용해 마음을 비우세요."
+      },
+      "game_day_focus_week": {
+        "title": "경기일 집중의 주",
+        "description": "경기 전 멘탈 준비 루틴을 만들고 따르세요."
+      },
+      "self_compassion_week": {
+        "title": "자기 연민의 주",
+        "description": "실수했을 때 자신에게 친절하게 - 가혹한 자기 비판 금지."
+      },
+      "mindfulness_week": {
+        "title": "마음챙김의 주",
+        "description": "매일 5분간 조용한 마음챙김 상태로 보내세요."
+      },
+      "stress_release_week": {
+        "title": "스트레스 해소의 주",
+        "description": "매일 밤 잠자기 전 점진적 근육 이완을 연습하세요."
+      },
+      "emotional_control_week": {
+        "title": "감정 조절의 주",
+        "description": "어떤 좌절에 반응하기 전에 멈추고 3번 깊게 숨을 쉬세요."
+      },
+      "joy_week": {
+        "title": "기쁨의 주",
+        "description": "매일 스포츠에서 순수한 기쁨의 순간을 찾고 감사하세요."
+      },
+      "patience_week": {
+        "title": "인내의 주",
+        "description": "매일 하나의 어려운 상황에서 인내를 연습하세요."
+      },
+      "resilience_week": {
+        "title": "회복력의 주",
+        "description": "모든 좌절 후 거기서 배운 것을 적으세요."
+      },
+      "letting_go_week": {
+        "title": "놓아주기의 주",
+        "description": "일기를 통해 매일 하나의 걱정이나 후회를 놓아주세요."
+      },
+      "inner_peace_week": {
+        "title": "내면의 평화의 주",
+        "description": "매일 2분간의 평화로운 침묵으로 시작하고 끝내세요."
+      },
+      "emotional_awareness_week": {
+        "title": "감정 인식의 주",
+        "description": "하루 3번 감정을 체크하고 느끼는 것에 이름을 붙이세요."
+      },
+      "communication_week": {
+        "title": "소통의 주",
+        "description": "적극적 경청 연습 - 응답하기 전에 팀원의 말을 반복하세요."
+      },
+      "mentorship_week": {
+        "title": "멘토링의 주",
+        "description": "매일 더 어리거나 경험이 적은 팀원의 한 가지 기술을 도와주세요."
+      },
+      "team_spirit_week": {
+        "title": "팀 정신의 주",
+        "description": "매일 자신에게 직접적인 이익은 없지만 팀에 도움이 되는 일을 하세요."
+      },
+      "lead_by_example_week": {
+        "title": "모범 보이기의 주",
+        "description": "모든 연습에 가장 먼저 도착하고 가장 마지막에 떠나세요."
+      },
+      "inspire_others_week": {
+        "title": "타인 영감의 주",
+        "description": "매일 팀과 영감을 주는 명언이나 이야기를 공유하세요."
+      },
+      "conflict_resolution_week": {
+        "title": "갈등 해결의 주",
+        "description": "작은 갈등이나 긴장을 직접적이고 건설적으로 다루세요."
+      },
+      "servant_leadership_week": {
+        "title": "섬기는 리더십의 주",
+        "description": "팀원에게 '오늘 어떻게 도와줄까?'라고 묻고 실행하세요."
+      },
+      "positivity_spread_week": {
+        "title": "긍정 전파의 주",
+        "description": "매일 5명의 다른 사람에게 진심 어린 칭찬을 하세요."
+      },
+      "team_culture_week": {
+        "title": "팀 문화의 주",
+        "description": "아무도 보지 않을 때도 팀 가치를 지키세요."
+      },
+      "boundary_week": {
+        "title": "경계의 주",
+        "description": "이번 주 삶에서 건강한 경계를 설정하고 유지하세요."
+      },
+      "habit_stack_week": {
+        "title": "습관 쌓기의 주",
+        "description": "새로운 긍정적 습관을 기존 일상에 붙이세요."
+      },
+      "time_management_week": {
+        "title": "시간 관리의 주",
+        "description": "전날 밤에 구체적인 시간 블록으로 다음 날을 계획하세요."
+      },
+      "sleep_optimization_week": {
+        "title": "수면 최적화의 주",
+        "description": "이번 주 매일 같은 시간에 자고 일어나세요."
+      },
+      "nutrition_focus_week": {
+        "title": "영양 집중의 주",
+        "description": "매 식사에서 단백질, 탄수화물, 채소가 균형 잡힌 식사를 하세요."
+      },
+      "recovery_week": {
+        "title": "회복의 주",
+        "description": "매일 15분을 회복 활동(스트레칭, 폼롤링)에 투자하세요."
+      },
+      "work_life_balance_week": {
+        "title": "일과 삶의 균형의 주",
+        "description": "매일 스포츠 외의 관계에 질 높은 시간을 바치세요."
+      },
+      "digital_detox_week": {
+        "title": "디지털 디톡스의 주",
+        "description": "소셜 미디어를 하루 총 30분으로 제한하세요."
+      },
+      "morning_routine_week": {
+        "title": "아침 루틴의 주",
+        "description": "일관된 30분 아침 루틴을 만들고 따르세요."
+      },
+      "evening_routine_week": {
+        "title": "저녁 루틴의 주",
+        "description": "편안한 30분 저녁 루틴을 만들고 따르세요."
+      }
     },
     "badges": {
       "challenge_starter": "챌린지 스타터",
@@ -3241,75 +3809,198 @@
     },
     "equipment": {
       "hitting": {
-        "bat": { "name": "게임 배트", "description": "주요 게임 배트" },
-        "tee": { "name": "배팅 티", "description": "조절 가능한 높이 선호" },
-        "balls": { "name": "공", "description": "최소 12개" },
-        "barbell": { "name": "바벨 & 플레이트", "description": "복합 리프트용 (20kg 바 + 플레이트)" },
-        "dumbbells": { "name": "덤벨", "description": "다양한 무게 5-35kg 이상" },
-        "trap_bar": { "name": "트랩/헥스 바", "description": "데드리프트용 - 프로그램 필수" },
-        "speed_bat": { "name": "스피드 배트", "description": "오버스피드 훈련용 경량 배트" },
-        "heavy_bat": { "name": "가중 배트", "description": "오버로드 스윙 드릴용" },
-        "resistance_bands": { "name": "저항 밴드", "description": "밴드 스윙과 워밍업용" },
-        "connection_ball": { "name": "연결 볼", "description": "폼볼 또는 스윙 연결 보조" },
-        "swing_analyzer": { "name": "스윙 분석기", "description": "배트 속도 추적 장치" },
-        "plyo_balls": { "name": "플라이오 볼", "description": "파워 드릴용 가중 플라이오 볼" },
-        "net": { "name": "히팅 네트", "description": "스윙 연습용" },
-        "pullup_bar": { "name": "풀업 바", "description": "풀업과 행잉용" },
-        "bench": { "name": "벤치", "description": "벤치 프레스와 보조 운동용" },
-        "cable_machine": { "name": "케이블 머신", "description": "케이블 운동용 (또는 밴드 대체)" },
-        "weighted_bat": { "name": "가중 훈련 배트", "description": "오버로드 스트렝스 훈련용" },
-        "med_ball": { "name": "메디신 볼", "description": "회전 파워 드릴용" },
-        "box": { "name": "플라이오 박스/스텝", "description": "박스 점프와 스텝업용" },
-        "landmine": { "name": "랜드마인 어태치먼트", "description": "랜드마인 프레스와 로테이션용" }
+        "bat": {
+          "name": "게임 배트",
+          "description": "주요 게임 배트"
+        },
+        "tee": {
+          "name": "배팅 티",
+          "description": "조절 가능한 높이 선호"
+        },
+        "balls": {
+          "name": "공",
+          "description": "최소 12개"
+        },
+        "barbell": {
+          "name": "바벨 & 플레이트",
+          "description": "복합 리프트용 (20kg 바 + 플레이트)"
+        },
+        "dumbbells": {
+          "name": "덤벨",
+          "description": "다양한 무게 5-35kg 이상"
+        },
+        "trap_bar": {
+          "name": "트랩/헥스 바",
+          "description": "데드리프트용 - 프로그램 필수"
+        },
+        "speed_bat": {
+          "name": "스피드 배트",
+          "description": "오버스피드 훈련용 경량 배트"
+        },
+        "heavy_bat": {
+          "name": "가중 배트",
+          "description": "오버로드 스윙 드릴용"
+        },
+        "resistance_bands": {
+          "name": "저항 밴드",
+          "description": "밴드 스윙과 워밍업용"
+        },
+        "connection_ball": {
+          "name": "연결 볼",
+          "description": "폼볼 또는 스윙 연결 보조"
+        },
+        "swing_analyzer": {
+          "name": "스윙 분석기",
+          "description": "배트 속도 추적 장치"
+        },
+        "plyo_balls": {
+          "name": "플라이오 볼",
+          "description": "파워 드릴용 가중 플라이오 볼"
+        },
+        "net": {
+          "name": "히팅 네트",
+          "description": "스윙 연습용"
+        },
+        "pullup_bar": {
+          "name": "풀업 바",
+          "description": "풀업과 행잉용"
+        },
+        "bench": {
+          "name": "벤치",
+          "description": "벤치 프레스와 보조 운동용"
+        },
+        "cable_machine": {
+          "name": "케이블 머신",
+          "description": "케이블 운동용 (또는 밴드 대체)"
+        },
+        "weighted_bat": {
+          "name": "가중 훈련 배트",
+          "description": "오버로드 스트렝스 훈련용"
+        },
+        "med_ball": {
+          "name": "메디신 볼",
+          "description": "회전 파워 드릴용"
+        },
+        "box": {
+          "name": "플라이오 박스/스텝",
+          "description": "박스 점프와 스텝업용"
+        },
+        "landmine": {
+          "name": "랜드마인 어태치먼트",
+          "description": "랜드마인 프레스와 로테이션용"
+        }
       },
       "pitching": {
-        "glove": { "name": "투수 글러브", "description": "경기용 투수 글러브" },
-        "balls": { "name": "공", "description": "볼륨 작업을 위해 최소 24개" },
-        "jbands": { "name": "J밴드/저항 밴드", "description": "일일 팔 관리 루틴용" },
-        "weighted_balls": { "name": "가중 야구공", "description": "110g, 140g, 200g, 255g, 310g 세트" },
-        "plyocare_balls": { "name": "플라이오케어 볼", "description": "다양한 무게의 플라이오케어 볼 세트" },
-        "radar_gun": { "name": "레이더 건", "description": "구속 추적 장치" },
-        "mound": { "name": "포터블 마운드", "description": "연습용 포터블 피칭 마운드" },
-        "catcher": { "name": "캐처/네트", "description": "불펜 작업용 캐처 또는 네트" },
-        "barbell": { "name": "바벨 & 플레이트", "description": "복합 리프트용 (20kg 바 + 플레이트)" },
-        "dumbbells": { "name": "덤벨", "description": "다양한 무게 5-35kg 이상" },
-        "trap_bar": { "name": "트랩/헥스 바", "description": "데드리프트용 - 프로그램 필수" },
-        "pullup_bar": { "name": "풀업 바", "description": "풀업과 행잉용" },
-        "bench": { "name": "벤치", "description": "프레스 운동용" },
-        "cable_machine": { "name": "케이블 머신", "description": "케이블 작업용 (또는 밴드 대체)" },
-        "med_ball": { "name": "메디신 볼", "description": "회전 파워 드릴용" },
-        "foam_roller": { "name": "폼 롤러", "description": "회복과 자가 마사지용" },
-        "target": { "name": "피칭 타겟", "description": "커맨드 작업용 타겟" },
-        "towel": { "name": "타월", "description": "타월 드릴과 팔 관리용" },
-        "plyocare": { "name": "플라이오케어 볼", "description": "팔 관리와 벨로시티 훈련용" },
-        "rice_bucket": { "name": "라이스 버킷", "description": "전완과 손 강화용" },
-        "lacrosse_ball": { "name": "라크로스 볼", "description": "트리거 포인트와 근막 릴리스용" }
+        "glove": {
+          "name": "투수 글러브",
+          "description": "경기용 투수 글러브"
+        },
+        "balls": {
+          "name": "공",
+          "description": "볼륨 작업을 위해 최소 24개"
+        },
+        "jbands": {
+          "name": "J밴드/저항 밴드",
+          "description": "일일 팔 관리 루틴용"
+        },
+        "weighted_balls": {
+          "name": "가중 야구공",
+          "description": "110g, 140g, 200g, 255g, 310g 세트"
+        },
+        "plyocare_balls": {
+          "name": "플라이오케어 볼",
+          "description": "다양한 무게의 플라이오케어 볼 세트"
+        },
+        "radar_gun": {
+          "name": "레이더 건",
+          "description": "구속 추적 장치"
+        },
+        "mound": {
+          "name": "포터블 마운드",
+          "description": "연습용 포터블 피칭 마운드"
+        },
+        "catcher": {
+          "name": "캐처/네트",
+          "description": "불펜 작업용 캐처 또는 네트"
+        },
+        "barbell": {
+          "name": "바벨 & 플레이트",
+          "description": "복합 리프트용 (20kg 바 + 플레이트)"
+        },
+        "dumbbells": {
+          "name": "덤벨",
+          "description": "다양한 무게 5-35kg 이상"
+        },
+        "trap_bar": {
+          "name": "트랩/헥스 바",
+          "description": "데드리프트용 - 프로그램 필수"
+        },
+        "pullup_bar": {
+          "name": "풀업 바",
+          "description": "풀업과 행잉용"
+        },
+        "bench": {
+          "name": "벤치",
+          "description": "프레스 운동용"
+        },
+        "cable_machine": {
+          "name": "케이블 머신",
+          "description": "케이블 작업용 (또는 밴드 대체)"
+        },
+        "med_ball": {
+          "name": "메디신 볼",
+          "description": "회전 파워 드릴용"
+        },
+        "foam_roller": {
+          "name": "폼 롤러",
+          "description": "회복과 자가 마사지용"
+        },
+        "target": {
+          "name": "피칭 타겟",
+          "description": "커맨드 작업용 타겟"
+        },
+        "towel": {
+          "name": "타월",
+          "description": "타월 드릴과 팔 관리용"
+        },
+        "plyocare": {
+          "name": "플라이오케어 볼",
+          "description": "팔 관리와 벨로시티 훈련용"
+        },
+        "rice_bucket": {
+          "name": "라이스 버킷",
+          "description": "전완과 손 강화용"
+        },
+        "lacrosse_ball": {
+          "name": "라크로스 볼",
+          "description": "트리거 포인트와 근막 릴리스용"
+        }
       }
     }
   },
   "workoutStreak": {
-    "title": "훈련 연속 기록",
+    "title": "훈련 연속",
     "currentStreak": "현재 연속",
     "longestStreak": "최장 연속",
-    "totalWorkouts": "총 훈련 횟수",
+    "totalWorkouts": "총 운동 수",
     "best": "최고",
-    "total": "총",
+    "total": "합계",
     "dayStreak": "일 연속",
     "daysStreak": "일 연속",
-    "keepGoing": "계속 화이팅!",
-    "newRecord": "신기록!",
-    "milestone10": "🎉 10회 훈련! 습관을 만들고 있어요!",
-    "milestone50": "💪 50회 훈련! 반세기 달성!",
-    "milestone100": "🏆 100회 훈련! 센추리 마일스톤!",
-    "milestone200": "⭐ 200회 훈련! 더블 센추리 챔피언!",
-    "milestone350": "🔥 350회 훈련! 엘리트 헌신!",
-    "milestone500": "👑 500회 훈련! 전설적인 선수!",
-    "milestone700": "💎 700회 훈련! 멈출 수 없는 힘!",
-    "milestone1000": "🏅 1000회 훈련! 명예의 전당!",
-    "milestoneUnlocked": "마일스톤 달성!",
-    "noStreak": "오늘부터 연속 기록을 시작하세요!",
-    "streakBroken": "연속 기록 초기화 - 다시 시작합시다!",
-    "fireUnlocked": "5일에 불꽃이 해금됩니다!",
+    "keepGoing": "계속 하세요!",
+    "newRecord": "새 기록!",
+    "milestone10": "🎉 10회 운동! 습관을 만들고 있어요!",
+    "milestone50": "💪 50회 운동! 반세기 달성!",
+    "milestone100": "🏆 100회 운동! 센추리 마일스톤!",
+    "milestone200": "⭐ 200회 운동! 더블 센추리 챔피언!",
+    "milestone350": "🔥 350회 운동! 엘리트 헌신!",
+    "milestone500": "👑 500회 운동! 전설의 선수!",
+    "milestone700": "💎 700회 운동! 멈출 수 없는 힘!",
+    "milestone1000": "🏅 1000회 운동! 명예의 전당!",
+    "milestoneUnlocked": "마일스톤 해제!",
+    "noStreak": "오늘 연속을 시작하세요!",
+    "streakBroken": "연속 초기화 - 다시 쌓아봐요!",
+    "fireUnlocked": "5일에 불이 해제됩니다!",
     "glowUnlocked": "25일에 불꽃이 빛납니다!"
   },
   "vault": {
@@ -3344,137 +4035,59 @@
       "weekly": "주간"
     },
     "delete": {
-      "success": "항목이 성공적으로 삭제되었습니다"
+      "confirmTitle": "항목을 삭제하시겠습니까?",
+      "confirmMessage": "이 작업은 취소할 수 없습니다. 이 항목이 영구적으로 삭제됩니다.",
+      "success": "항목이 삭제되었습니다"
     },
     "quiz": {
-      "title": "일일 집중 체크",
-      "todayStatus": "오늘의 체크인",
-      "preLift": "훈련 전",
-      "preLiftTitle": "훈련 전 체크인",
-      "morning": "아침",
-      "morningLabel": "아침",
-      "morningTitle": "아침 체크인",
-      "morningTip": "일어난 후 15분 이내에 완료해 보세요",
-      "night": "밤",
-      "nightLabel": "밤",
-      "nightTitle": "저녁 반성",
-      "completed": "완료됨",
-      "notStarted": "시작되지 않음",
-      "saved": "퀴즈가 저장되었습니다!",
-      "error": "퀴즈 저장 실패",
-      "allCompleted": "대단해요! 3개의 일일 체크인을 모두 완료했습니다!",
-      "description": "지금 기분을 평가하세요",
-      "mentalReadiness": "정신적 준비",
-      "emotionalState": "감정 상태",
-      "physicalReadiness": "신체적 준비",
-      "sleepTime": "취침 시간",
-      "wakeTime": "기상 시간",
-      "sleepTimeHint": "몇 시에 잠자리에 들었나요?",
-      "wakeTimeHint": "몇 시에 일어났나요?",
-      "sleepTip": "최상의 결과를 위해 잠자리에 들기 약 1시간 전에 완료하세요",
-      "preLiftTip": "준비 상태가 성과에 어떤 영향을 미치는지 추적하기 위해 훈련 전 현재 상태를 평가하세요",
-      "morningReminderFromNight": "💡 내일: 기상 후 15분 이내에 아침 체크인을 완료하세요!",
-      "pending": "대기 중",
-      "hoursSlept": "수면 시간",
-      "sleepQuality": "수면 품질",
-      "sleepQualityDesc": "어젯밤 수면 품질을 평가하세요",
-      "sleepData": "수면 데이터",
-      "hoursSleptPlaceholder": "예: 7.5",
-      "bedtimeActual": "어젯밤 몇 시에 잠자리에 들었나요?",
-      "wakeTimeActual": "오늘 아침 몇 시에 일어났나요?",
-      "sleepDuration": "{{hours}} 잤습니다",
-      "sleepAnalysis": {
-        "low": {
-          "title": "낮은 에너지",
-          "message": "에너지가 부족할 수 있습니다. 오늘은 회복에 집중하세요. 휴식을 우선시하고 과로를 피하세요."
-        },
-        "moderate-low": {
-          "title": "중저 에너지",
-          "message": "나른함을 느낄 수 있습니다. 수분 섭취와 가벼운 활동을 우선시하세요. 오늘 밤 일찍 자는 것을 고려하세요."
-        },
-        "moderate": {
-          "title": "적당한 에너지",
-          "message": "충분한 휴식을 취했습니다. 중간 강도 훈련을 할 준비가 되었습니다. 자신을 밀어붙이되 몸의 신호를 들으세요."
-        },
-        "good": {
-          "title": "좋은 에너지",
-          "message": "충분히 쉬었습니다! 훈련을 위한 탄탄한 에너지가 있습니다. 높은 성과를 위한 훌륭한 기반입니다."
-        },
-        "optimal": {
-          "title": "최적의 에너지",
-          "message": "훌륭한 회복! 오늘 최고의 에너지 수준입니다. 최고의 퍼포먼스를 위한 준비가 되었습니다."
-        },
-        "excessive": {
-          "title": "과수면 가능성",
-          "message": "너무 많이 자면 졸음이 올 수 있습니다. 가벼운 활동과 움직임이 더 또렷하게 느끼는 데 도움이 됩니다."
-        }
+      "night": {
+        "moodTitle": "하루 끝 기분",
+        "moodPrompt": "오늘 기분이 어땠나요?",
+        "moodLevel1": "매우 낮음",
+        "moodLevel2": "낮음",
+        "moodLevel3": "보통",
+        "moodLevel4": "좋음",
+        "moodLevel5": "매우 좋음",
+        "stressTitle": "하루 끝 스트레스",
+        "stressPrompt": "하루 끝에 얼마나 스트레스를 받았나요?",
+        "stressLevel1": "매우 낮음",
+        "stressLevel2": "낮음",
+        "stressLevel3": "보통",
+        "stressLevel4": "높음",
+        "stressLevel5": "매우 높음"
       },
-      "sleepGoals": {
-        "title": "내일의 수면 목표",
-        "subtitle": "오늘 밤 휴식에 대한 의도를 설정하세요",
-        "bedtimeGoal": "몇 시에 잠자리에 들 계획인가요?",
-        "wakeTimeGoal": "몇 시에 일어날 계획인가요?",
-        "goalDuration": "목표: {{hours}} 수면"
-      },
-      "phoneFree": {
-        "title": "왜 취침 1시간 전 폰 금지인가요?",
-        "blueLight": "생체리듬을 교란하는 블루라이트 노출을 줄입니다",
-        "melatonin": "자연적인 멜라토닌 생성을 개선하여 더 빨리 잠들 수 있습니다",
-        "rem": "기억 통합을 위한 REM 수면 품질을 향상시킵니다",
-        "recovery": "야간 신체 회복과 근육 수리를 가속화합니다",
-        "cortisol": "코르티솔 수치를 낮추어 스트레스와 불안을 줄입니다"
-      },
-      "level1": "매우 낮음",
-      "level2": "낮음",
-      "level3": "보통",
-      "level4": "높음",
-      "level5": "매우 높음",
-      "reflectionTitle": "저녁 반성",
-      "didWell": "오늘 잘한 것은?",
-      "didWellPlaceholder": "잘된 것을 공유하세요...",
-      "couldImprove": "개선할 수 있는 것은?",
-      "couldImprovePlaceholder": "성장 영역에 대해 생각해 보세요...",
-      "learned": "오늘 배운 것은?",
-      "learnedPlaceholder": "교훈이나 통찰력...",
-      "motivation": "무엇이 동기를 부여하나요?",
-      "motivationPlaceholder": "무엇이 당신을 앞으로 나아가게 하나요...",
-      "reflectionPrompts": {
-        "title": "저녁 반성",
-        "didWell": "오늘 잘한 것은?",
-        "improve": "내일 개선할 수 있는 것은?",
-        "learned": "오늘 배운 것은?",
-        "motivation": "무엇이 동기를 부여하나요?"
-      },
-      "submit": "체크인 저장",
-      "submitting": "저장 중...",
-      "morning": {
-        "subtitle": "의도를 설정하세요. 마음을 준비하세요. 실행하세요.",
-        "motivationTitle": "오늘의 동기",
-        "motivationPrompt": "오늘 당신을 움직이게 하는 것은 무엇인가요? '왜'에 연결하세요.",
-        "motivationPlaceholder": "나를 동기부여하는 것은... 오늘 노력하는 이유는...",
-        "wellnessTitle": "정신 웰빙 체크",
-        "wellnessPrompt": "오늘 정신적으로 어떻게 느끼시나요? 생각, 걱정 또는 긍정적인 것들을 공유하세요.",
-        "wellnessPlaceholder": "오늘 내 마음가짐은...\n• 걱정이나 산만함이 있나요?\n• 무엇을 놓아야 할까요?\n• 어떤 긍정적인 생각을 가지고 있나요?",
-        "moodTitle": "기분 체크",
-        "moodPrompt": "오늘 아침 기분이 어떠세요?",
-        "moodLevel1": "매우 낮음", "moodLevel2": "낮음", "moodLevel3": "보통", "moodLevel4": "좋음", "moodLevel5": "최고",
-        "moodDesc1": "힘들고 우울함", "moodDesc2": "약간 부정적", "moodDesc3": "괜찮음", "moodDesc4": "긍정적", "moodDesc5": "최고의 기분, 에너지 넘침",
-        "stressTitle": "스트레스 수준",
-        "stressPrompt": "지금 얼마나 스트레스를 받고 있나요?",
-        "stressLevel1": "매우 낮음", "stressLevel2": "낮음", "stressLevel3": "보통", "stressLevel4": "높음", "stressLevel5": "매우 높음",
-        "stressDesc1": "평온하고 편안함", "stressDesc2": "최소한의 스트레스", "stressDesc3": "약간의 압박, 관리 가능", "stressDesc4": "상당한 스트레스", "stressDesc5": "압도적인 스트레스",
-        "disciplineTitle": "규율 수준",
-        "disciplinePrompt": "무슨 일이 있어도 오늘 실행할 의지가 얼마나 있나요?",
-        "disciplineLevel1": "고군분투",
-        "disciplineLevel2": "흔들림",
-        "disciplineLevel3": "준비됨",
-        "disciplineLevel4": "집중",
-        "disciplineLevel5": "불굴",
-        "disciplineDesc1": "오늘은 동기가 없음",
-        "disciplineDesc2": "약간의 저항",
-        "disciplineDesc3": "나타날 준비됨",
-        "disciplineDesc4": "변명 없음, 방해 없음",
-        "disciplineDesc5": "아무것도 나를 막을 수 없다. 타협 제로."
+      "nightSuccess": {
+        "title": "하루 완료!",
+        "todayHighlights": "오늘의 하이라이트",
+        "checkinsCompleted": "{{count}}/{{total}} 체크인 완료",
+        "workoutsLogged": "{{count}} 운동 기록",
+        "sleepGoalSet": "{{hours}} 시간 수면 목표 설정",
+        "weightTracked": "{{weight}} lbs 기록",
+        "currentStreak": "현재 연속 기록",
+        "days": "일",
+        "tomorrowAwaits": "내일이 기다립니다",
+        "tomorrowIncludes": "내일 아침 일정:",
+        "morningCheckin": "아침 체크인",
+        "scheduledWorkout": "예정된 운동",
+        "mindFuelLesson": "새로운 마인드 연료 레슨",
+        "nutritionTip": "맞춤 영양 팁",
+        "goodnightMessages": {
+          "great": "멋진 하루였어요! 달콤한 꿈 꾸세요, 챔피언.",
+          "stressed": "내일은 새로운 시작입니다. 오늘 밤 푹 쉬세요.",
+          "lowMood": "매일의 해돋이는 새로운 기회를 가져옵니다. 잘 자요.",
+          "perfect": "오늘 정말 잘 했어요! 내일 아침에 만나요!"
+        },
+        "morningBonus": {
+          "title": "아침 체크인 보너스",
+          "subtitle": "기상 후 15분 이내 완료 시:",
+          "keepStreak": "연속 기록 유지하기",
+          "trackWeight": "정확한 아침 체중 기록",
+          "getDailyFocus": "맞춤 일일 집중 받기",
+          "unlockMotivation": "오늘의 동기 잠금 해제"
+        },
+        "sleepCountdown": "{{time}} 후 취침하면 목표 달성",
+        "recapCountdown": "6주 리캡까지 {{days}}일 남음!",
+        "closeButton": "닫고 쉬기"
       }
     },
     "disciplineTrend": {
@@ -3546,57 +4159,6 @@
       "lockedUntil": "잠금 해제 날짜",
       "alreadySet": "목표 이미 설정됨",
       "lockedMessage": "주간 웰니스 목표는 다음 월요일까지 잠겨 있습니다."
-    },
-    "quiz": {
-      "night": {
-        "moodTitle": "하루 끝 기분",
-        "moodPrompt": "오늘 기분이 어땠나요?",
-        "moodLevel1": "매우 낮음",
-        "moodLevel2": "낮음",
-        "moodLevel3": "보통",
-        "moodLevel4": "좋음",
-        "moodLevel5": "매우 좋음",
-        "stressTitle": "하루 끝 스트레스",
-        "stressPrompt": "하루 끝에 얼마나 스트레스를 받았나요?",
-        "stressLevel1": "매우 낮음",
-        "stressLevel2": "낮음",
-        "stressLevel3": "보통",
-        "stressLevel4": "높음",
-        "stressLevel5": "매우 높음"
-      },
-      "nightSuccess": {
-        "title": "하루 완료!",
-        "todayHighlights": "오늘의 하이라이트",
-        "checkinsCompleted": "{{count}}/{{total}} 체크인 완료",
-        "workoutsLogged": "{{count}} 운동 기록",
-        "sleepGoalSet": "{{hours}} 시간 수면 목표 설정",
-        "weightTracked": "{{weight}} lbs 기록",
-        "currentStreak": "현재 연속 기록",
-        "days": "일",
-        "tomorrowAwaits": "내일이 기다립니다",
-        "tomorrowIncludes": "내일 아침 일정:",
-        "morningCheckin": "아침 체크인",
-        "scheduledWorkout": "예정된 운동",
-        "mindFuelLesson": "새로운 마인드 연료 레슨",
-        "nutritionTip": "맞춤 영양 팁",
-        "goodnightMessages": {
-          "great": "멋진 하루였어요! 달콤한 꿈 꾸세요, 챔피언.",
-          "stressed": "내일은 새로운 시작입니다. 오늘 밤 푹 쉬세요.",
-          "lowMood": "매일의 해돋이는 새로운 기회를 가져옵니다. 잘 자요.",
-          "perfect": "오늘 정말 잘 했어요! 내일 아침에 만나요!"
-        },
-        "morningBonus": {
-          "title": "아침 체크인 보너스",
-          "subtitle": "기상 후 15분 이내 완료 시:",
-          "keepStreak": "연속 기록 유지하기",
-          "trackWeight": "정확한 아침 체중 기록",
-          "getDailyFocus": "맞춤 일일 집중 받기",
-          "unlockMotivation": "오늘의 동기 잠금 해제"
-        },
-        "sleepCountdown": "{{time}} 후 취침하면 목표 달성",
-        "recapCountdown": "6주 리캡까지 {{days}}일 남음!",
-        "closeButton": "닫고 쉬기"
-      }
     },
     "freeNote": {
       "title": "빠른 메모",
@@ -4013,11 +4575,6 @@
       "ready": "준비 완료!",
       "daysLeft": "일 남음",
       "keepLogging": "매일 기록하여 요약을 잠금 해제하세요"
-    },
-    "delete": {
-      "confirmTitle": "항목을 삭제하시겠습니까?",
-      "confirmMessage": "이 작업은 취소할 수 없습니다. 이 항목이 영구적으로 삭제됩니다.",
-      "success": "항목이 삭제되었습니다"
     },
     "weekly": {
       "thisWeek": "이번 주",
@@ -4465,31 +5022,6 @@
       "healingTitle": "중요: 이것은 치료가 아닙니다",
       "healingText": "이 콘텐츠는 교육 및 자기 성찰 목적으로만 제공됩니다. 전문 정신 건강 치료를 대체하지 않습니다. 심각한 고통이나 트라우마를 경험하고 있다면 면허가 있는 치료사나 상담사에게 상담하세요."
     }
-  },
-  "workoutStreak": {
-    "title": "훈련 연속",
-    "currentStreak": "현재 연속",
-    "longestStreak": "최장 연속",
-    "totalWorkouts": "총 운동 수",
-    "best": "최고",
-    "total": "합계",
-    "dayStreak": "일 연속",
-    "daysStreak": "일 연속",
-    "keepGoing": "계속 하세요!",
-    "newRecord": "새 기록!",
-    "milestone10": "🎉 10회 운동! 습관을 만들고 있어요!",
-    "milestone50": "💪 50회 운동! 반세기 달성!",
-    "milestone100": "🏆 100회 운동! 센추리 마일스톤!",
-    "milestone200": "⭐ 200회 운동! 더블 센추리 챔피언!",
-    "milestone350": "🔥 350회 운동! 엘리트 헌신!",
-    "milestone500": "👑 500회 운동! 전설의 선수!",
-    "milestone700": "💎 700회 운동! 멈출 수 없는 힘!",
-    "milestone1000": "🏅 1000회 운동! 명예의 전당!",
-    "milestoneUnlocked": "마일스톤 해제!",
-    "noStreak": "오늘 연속을 시작하세요!",
-    "streakBroken": "연속 초기화 - 다시 쌓아봐요!",
-    "fireUnlocked": "5일에 불이 해제됩니다!",
-    "glowUnlocked": "25일에 불꽃이 빛납니다!"
   },
   "fascia": {
     "bodyConnection": {
@@ -5014,78 +5546,9 @@
     }
   },
   "myCustomActivities": {
-    "title": "내 맞춤 활동",
-    "subtitle": "템플릿 관리, 기록 확인 및 진행 상황 추적",
     "tabs": {
-      "templates": "템플릿",
-      "history": "기록",
-      "analytics": "분석",
-      "hydration": "수분",
-      "presets": "프리셋"
-    },
-    "templates": {
-      "title": "활동 템플릿",
-      "create": "새로 만들기",
-      "noTemplates": "템플릿이 없습니다",
-      "noTemplatesHint": "첫 번째 맞춤 활동 템플릿을 만들어 보세요"
-    },
-    "history": {
-      "title": "활동 기록",
-      "noHistory": "활동 기록이 없습니다",
-      "completed": "완료",
-      "filter": "유형별 필터"
-    },
-    "analytics": {
-      "title": "활동 분석",
-      "totalActivities": "총 활동",
-      "completionRate": "완료율",
-      "streak": "현재 연속 일수",
-      "byType": "유형별"
-    },
-    "hydration": {
-      "title": "수분 추적",
-      "settings": "수분 설정",
-      "dailyGoal": "일일 목표",
-      "reminderInterval": "알림 간격",
-      "startTime": "시작 시간",
-      "endTime": "종료 시간",
-      "enabled": "알림 활성화됨",
-      "tracker": "빠른 기록",
-      "todayProgress": "오늘 진행 상황",
-      "addWater": "물 추가"
-    },
-    "presets": {
-      "title": "러닝 프리셋",
-      "categories": {
-        "intervals": "인터벌",
-        "tempo": "템포",
-        "recovery": "회복",
-        "distance": "거리",
-        "speed": "속도"
-      },
-      "usePreset": "사용",
-      "customize": "사용자 정의",
-      "system": "시스템 프리셋",
-      "custom": "사용자 정의 프리셋"
-    },
-    "share": {
-      "title": "템플릿 공유",
-      "noLink": "이 템플릿의 공유 링크를 만드세요",
-      "creating": "생성 중...",
-      "createLink": "링크 만들기",
-      "link": "공유 링크",
-      "public": "공개 접근",
-      "publicDesc": "링크가 있는 누구나 보고 가져올 수 있습니다",
-      "privateDesc": "링크가 현재 비활성화되어 있습니다",
-      "views": "조회수",
-      "delete": "링크 삭제",
-      "preview": "미리보기",
-      "created": "링크가 생성되었습니다!",
-      "error": "링크 생성에 실패했습니다",
-      "deleted": "링크가 삭제되었습니다",
-      "deleteError": "링크 삭제에 실패했습니다",
-      "copied": "링크가 복사되었습니다!",
-      "copyError": "링크 복사에 실패했습니다"
+      "elitePresets": "엘리트 프리셋",
+      "loadDashboard": "부하 대시보드"
     }
   },
   "runningProgress": {
@@ -5461,12 +5924,6 @@
     "useBlockSystem": "블록 빌더 사용",
     "useBlockSystemDesc": "스마트 부하 추적으로 구조화된 블록에 운동 구성"
   },
-  "myCustomActivities": {
-    "tabs": {
-      "elitePresets": "엘리트 프리셋",
-      "loadDashboard": "부하 대시보드"
-    }
-  },
   "speedLab": {
     "title": "Speed Lab",
     "subtitle": "엘리트 스피드를 만들고, 몸을 보호하세요",
@@ -5719,20 +6176,105 @@
   },
   "sportTerms": {
     "baseball": {
-      "pitchTypes": { "fastball": "포심 패스트볼", "secondaryFastball": "투심 패스트볼", "slider": "슬라이더", "changeup": "체인지업", "curveball": "커브볼" },
-      "sessionTypes": { "bullpen": "불펜 세션", "bp": "타격 연습", "scrimmage": "실전 연습", "warmup": "롱토스", "cage": "케이지 훈련" },
-      "metrics": { "spinEfficiency": "회전 효율", "barrelPct": "배럴 %", "commandPct": "커맨드 %", "chaseRate": "체이스율", "whiffRate": "헛스윙율", "exitVelo": "타구 속도", "launchAngle": "발사 각도" },
-      "drillNames": { "moundWork": "마운드 훈련", "longToss": "롱토스", "bp": "BP 라운드", "teeWork": "티 훈련" },
-      "splitLabels": { "overall": "종합", "vsLHP": "vs 좌투수", "vsRHP": "vs 우투수", "home": "홈", "away": "원정" },
-      "heatMapLabels": { "pitchLocation": "투구 위치", "chaseZone": "체이스 존 맵", "barrelZone": "배럴 존", "commandMap": "커맨드 맵", "missCluster": "실투 클러스터" }
+      "pitchTypes": {
+        "fastball": "포심 패스트볼",
+        "secondaryFastball": "투심 패스트볼",
+        "slider": "슬라이더",
+        "changeup": "체인지업",
+        "curveball": "커브볼"
+      },
+      "sessionTypes": {
+        "bullpen": "불펜 세션",
+        "bp": "타격 연습",
+        "scrimmage": "실전 연습",
+        "warmup": "롱토스",
+        "cage": "케이지 훈련"
+      },
+      "metrics": {
+        "spinEfficiency": "회전 효율",
+        "barrelPct": "배럴 %",
+        "commandPct": "커맨드 %",
+        "chaseRate": "체이스율",
+        "whiffRate": "헛스윙율",
+        "exitVelo": "타구 속도",
+        "launchAngle": "발사 각도"
+      },
+      "drillNames": {
+        "moundWork": "마운드 훈련",
+        "longToss": "롱토스",
+        "bp": "BP 라운드",
+        "teeWork": "티 훈련"
+      },
+      "splitLabels": {
+        "overall": "종합",
+        "vsLHP": "vs 좌투수",
+        "vsRHP": "vs 우투수",
+        "home": "홈",
+        "away": "원정"
+      },
+      "heatMapLabels": {
+        "pitchLocation": "투구 위치",
+        "chaseZone": "체이스 존 맵",
+        "barrelZone": "배럴 존",
+        "commandMap": "커맨드 맵",
+        "missCluster": "실투 클러스터"
+      }
     },
     "softball": {
-      "pitchTypes": { "fastball": "패스트볼 (윈드밀)", "circleChange": "서클 체인지", "riseball": "라이즈볼", "dropBall": "드롭볼", "curveball": "커브볼 (12-6 드롭)" },
-      "sessionTypes": { "bullpen": "서클 세션", "bp": "타격 연습", "scrimmage": "실전 연습", "warmup": "롱토스", "cage": "케이지 훈련" },
-      "metrics": { "snapTightness": "스냅 정확도", "sweetSpotPct": "스위트 스팟 %", "locationPct": "위치 %", "chaseRate": "체이스율", "whiffRate": "헛스윙율", "exitVelo": "타구 속도", "launchAngle": "발사 각도" },
-      "drillNames": { "circleWork": "서클 훈련", "longToss": "롱토스", "bp": "BP 라운드", "teeWork": "티 훈련" },
-      "splitLabels": { "overall": "종합", "vsLHP": "vs 좌투수", "vsRHP": "vs 우투수", "home": "홈", "away": "원정" },
-      "heatMapLabels": { "pitchLocation": "투구 위치", "chaseZone": "체이스 존 맵", "sweetSpotZone": "스위트 스팟 존", "locationMap": "위치 맵", "missPattern": "실투 패턴" }
+      "pitchTypes": {
+        "fastball": "패스트볼 (윈드밀)",
+        "circleChange": "서클 체인지",
+        "riseball": "라이즈볼",
+        "dropBall": "드롭볼",
+        "curveball": "커브볼 (12-6 드롭)"
+      },
+      "sessionTypes": {
+        "bullpen": "서클 세션",
+        "bp": "타격 연습",
+        "scrimmage": "실전 연습",
+        "warmup": "롱토스",
+        "cage": "케이지 훈련"
+      },
+      "metrics": {
+        "snapTightness": "스냅 정확도",
+        "sweetSpotPct": "스위트 스팟 %",
+        "locationPct": "위치 %",
+        "chaseRate": "체이스율",
+        "whiffRate": "헛스윙율",
+        "exitVelo": "타구 속도",
+        "launchAngle": "발사 각도"
+      },
+      "drillNames": {
+        "circleWork": "서클 훈련",
+        "longToss": "롱토스",
+        "bp": "BP 라운드",
+        "teeWork": "티 훈련"
+      },
+      "splitLabels": {
+        "overall": "종합",
+        "vsLHP": "vs 좌투수",
+        "vsRHP": "vs 우투수",
+        "home": "홈",
+        "away": "원정"
+      },
+      "heatMapLabels": {
+        "pitchLocation": "투구 위치",
+        "chaseZone": "체이스 존 맵",
+        "sweetSpotZone": "스위트 스팟 존",
+        "locationMap": "위치 맵",
+        "missPattern": "실투 패턴"
+      }
     }
+  },
+  "staffPlans": {
+    "heading": "코치와 단체를 위한 플랜",
+    "coachName": "Hammers Coach",
+    "coachPrice": "월 300달러",
+    "coachLine": "두 종목의 모든 분석과 연결된 선수를 위한 코치 도구",
+    "orgName": "Hammers Organization",
+    "orgPrice": "월 1,000달러 · 코치 좌석 5개 포함 · 추가 좌석 월 150달러",
+    "orgLine": "좌석마다 Coach의 모든 기능, 그리고 시설 대시보드, 팀, 단체 전체 요약",
+    "see": "코치 및 단체 플랜 보기",
+    "roleNote": "Coach 플랜 월 300달러 · Organization 플랜 월 1,000달러"
   }
 }

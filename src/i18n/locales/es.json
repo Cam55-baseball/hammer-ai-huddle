@@ -1710,8 +1710,8 @@
   },
   "scout": {
     "dashboard": "Panel de Scout",
-     "players": "Jugadores",
-     "typeToSearch": "Empieza a escribir para buscar jugadores...",
+    "players": "Jugadores",
+    "typeToSearch": "Empieza a escribir para buscar jugadores...",
     "searchPlayers": "Buscar Jugadores",
     "followedPlayers": "Jugadores Seguidos",
     "pendingRequests": "Solicitudes Pendientes",
@@ -2071,21 +2071,66 @@
       "safetyDisclaimer": "Otorgada por completar el estudio educativo. Esta insignia no indica preparación médica o autorización. Siempre consulta a un profesional con licencia.",
       "legendText": "Las insignias se obtienen completando contenido educativo. Representan adquisición de conocimiento, no autorización médica.",
       "items": {
-        "shoulder_scholar": { "name": "Experto en Hombro", "description": "Completó Educación sobre Lesiones de Hombro" },
-        "elbow_expert": { "name": "Experto en Codo", "description": "Completó Resumen de UCL / Antebrazo / Flexor" },
-        "hamstring_headliner": { "name": "Experto en Isquiotibiales", "description": "Completó Módulo de Extremidades Inferiores" },
-        "ankle_analyst": { "name": "Analista de Tobillo", "description": "Completó Educación sobre Lesiones de Tobillo" },
-        "wrist_wizard": { "name": "Mago de Muñeca", "description": "Completó Educación de Muñeca y Mano" },
-        "back_boss": { "name": "Jefe de Espalda", "description": "Completó Educación de Espalda y Columna" },
-        "bronze_anatomy": { "name": "Insignia de Anatomía Bronce", "description": "Estudió 3 lesiones" },
-        "silver_anatomy": { "name": "Insignia de Anatomía Plata", "description": "Estudió 7 lesiones" },
-        "gold_anatomy": { "name": "Insignia de Anatomía Oro", "description": "Estudió 12+ lesiones" },
-        "elite_recovery": { "name": "Insignia de Recuperación Élite", "description": "Completó toda la biblioteca de Bounce Back Bay" },
-        "diagnostic_detective": { "name": "Detective de Diagnóstico", "description": "Aprobó el cuestionario del diagrama de flujo diagnóstico" },
-        "red_flag_ready": { "name": "Listo para Señales de Alerta", "description": "Aprobó el cuestionario de señales de alerta" },
-        "pain_scale_pro": { "name": "Profesional de Escala de Dolor", "description": "Completó la sección de conciencia del dolor" },
-        "recovery_intelligence": { "name": "Inteligencia de Recuperación", "description": "Completó toda la educación sobre métodos de recuperación" },
-        "human_body_mastery": { "name": "Dominio del Cuerpo Humano", "description": "Terminó cada sección con finalización completa" }
+        "shoulder_scholar": {
+          "name": "Experto en Hombro",
+          "description": "Completó Educación sobre Lesiones de Hombro"
+        },
+        "elbow_expert": {
+          "name": "Experto en Codo",
+          "description": "Completó Resumen de UCL / Antebrazo / Flexor"
+        },
+        "hamstring_headliner": {
+          "name": "Experto en Isquiotibiales",
+          "description": "Completó Módulo de Extremidades Inferiores"
+        },
+        "ankle_analyst": {
+          "name": "Analista de Tobillo",
+          "description": "Completó Educación sobre Lesiones de Tobillo"
+        },
+        "wrist_wizard": {
+          "name": "Mago de Muñeca",
+          "description": "Completó Educación de Muñeca y Mano"
+        },
+        "back_boss": {
+          "name": "Jefe de Espalda",
+          "description": "Completó Educación de Espalda y Columna"
+        },
+        "bronze_anatomy": {
+          "name": "Insignia de Anatomía Bronce",
+          "description": "Estudió 3 lesiones"
+        },
+        "silver_anatomy": {
+          "name": "Insignia de Anatomía Plata",
+          "description": "Estudió 7 lesiones"
+        },
+        "gold_anatomy": {
+          "name": "Insignia de Anatomía Oro",
+          "description": "Estudió 12+ lesiones"
+        },
+        "elite_recovery": {
+          "name": "Insignia de Recuperación Élite",
+          "description": "Completó toda la biblioteca de Bounce Back Bay"
+        },
+        "diagnostic_detective": {
+          "name": "Detective de Diagnóstico",
+          "description": "Aprobó el cuestionario del diagrama de flujo diagnóstico"
+        },
+        "red_flag_ready": {
+          "name": "Listo para Señales de Alerta",
+          "description": "Aprobó el cuestionario de señales de alerta"
+        },
+        "pain_scale_pro": {
+          "name": "Profesional de Escala de Dolor",
+          "description": "Completó la sección de conciencia del dolor"
+        },
+        "recovery_intelligence": {
+          "name": "Inteligencia de Recuperación",
+          "description": "Completó toda la educación sobre métodos de recuperación"
+        },
+        "human_body_mastery": {
+          "name": "Dominio del Cuerpo Humano",
+          "description": "Terminó cada sección con finalización completa"
+        }
       }
     },
     "allAreas": "Todas las Áreas",
@@ -2595,9 +2640,21 @@
           "q2": "¿Cuándo debes buscar atención médica inmediata?",
           "q3": "¿Qué significa RICE en el tratamiento de lesiones?",
           "options": {
-            "q1": { "a": "Continuar jugando a pesar del dolor", "b": "Detener la actividad y evaluar la situación", "c": "Aplicar hielo inmediatamente" },
-            "q2": { "a": "Cuando sientes una molestia menor", "b": "Solo si hay sangrado visible", "c": "Cuando experimentas dolor severo, deformidad o pérdida de función" },
-            "q3": { "a": "Reposo, Hielo, Compresión, Elevación", "b": "Correr, Hielo, Comprimir, Ejercicio", "c": "Reposo, Inmovilizar, Frío, Evaluar" }
+            "q1": {
+              "a": "Continuar jugando a pesar del dolor",
+              "b": "Detener la actividad y evaluar la situación",
+              "c": "Aplicar hielo inmediatamente"
+            },
+            "q2": {
+              "a": "Cuando sientes una molestia menor",
+              "b": "Solo si hay sangrado visible",
+              "c": "Cuando experimentas dolor severo, deformidad o pérdida de función"
+            },
+            "q3": {
+              "a": "Reposo, Hielo, Compresión, Elevación",
+              "b": "Correr, Hielo, Comprimir, Ejercicio",
+              "c": "Reposo, Inmovilizar, Frío, Evaluar"
+            }
           }
         },
         "pain-scale": {
@@ -2605,9 +2662,21 @@
           "q2": "¿Cuál es el propósito de una escala de dolor?",
           "q3": "¿Cómo debe manejarse típicamente la molestia leve (1-3)?",
           "options": {
-            "q1": { "a": "Cualquier dolor por encima de 1", "b": "Nivel de dolor 7 o superior", "c": "Solo dolor nivel 10" },
-            "q2": { "a": "Para comunicar la intensidad del dolor consistentemente", "b": "Para determinar el diagnóstico exacto de la lesión", "c": "Para evitar buscar atención médica" },
-            "q3": { "a": "Atención de emergencia inmediata", "b": "Reposo completo en cama", "c": "Monitorear, modificar actividad y usar medidas preventivas" }
+            "q1": {
+              "a": "Cualquier dolor por encima de 1",
+              "b": "Nivel de dolor 7 o superior",
+              "c": "Solo dolor nivel 10"
+            },
+            "q2": {
+              "a": "Para comunicar la intensidad del dolor consistentemente",
+              "b": "Para determinar el diagnóstico exacto de la lesión",
+              "c": "Para evitar buscar atención médica"
+            },
+            "q3": {
+              "a": "Atención de emergencia inmediata",
+              "b": "Reposo completo en cama",
+              "c": "Monitorear, modificar actividad y usar medidas preventivas"
+            }
           }
         },
         "red-flags": {
@@ -2615,9 +2684,21 @@
           "q2": "¿Qué debes hacer si notas entumecimiento u hormigueo?",
           "q3": "¿Por qué es importante reconocer las señales de alerta?",
           "options": {
-            "q1": { "a": "Incapacidad para soportar peso o deformidad severa", "b": "Dolor muscular leve después del ejercicio", "c": "Ligera rigidez por la mañana" },
-            "q2": { "a": "Ignorarlo y continuar la actividad", "b": "Esperar una semana para ver si mejora", "c": "Detener la actividad y consultar a un profesional médico" },
-            "q3": { "a": "Ayudan a evitar descanso innecesario", "b": "Indican condiciones potencialmente serias que necesitan atención pronta", "c": "Raramente son importantes en deportes" }
+            "q1": {
+              "a": "Incapacidad para soportar peso o deformidad severa",
+              "b": "Dolor muscular leve después del ejercicio",
+              "c": "Ligera rigidez por la mañana"
+            },
+            "q2": {
+              "a": "Ignorarlo y continuar la actividad",
+              "b": "Esperar una semana para ver si mejora",
+              "c": "Detener la actividad y consultar a un profesional médico"
+            },
+            "q3": {
+              "a": "Ayudan a evitar descanso innecesario",
+              "b": "Indican condiciones potencialmente serias que necesitan atención pronta",
+              "c": "Raramente son importantes en deportes"
+            }
           }
         },
         "rtp": {
@@ -2625,9 +2706,21 @@
           "q2": "¿Cuándo puede un atleta progresar a la siguiente fase?",
           "q3": "¿Qué debe suceder si el dolor regresa durante la progresión?",
           "options": {
-            "q1": { "a": "Actividad completa inmediatamente después de que el dolor desaparezca", "b": "Reposo → Actividad ligera → Específico del deporte → Competencia completa", "c": "Saltar la rehabilitación y probar con juego" },
-            "q2": { "a": "Después de completar cada fase sin aumento de síntomas", "b": "Después de exactamente 24 horas", "c": "Cuando se sienta motivado" },
-            "q3": { "a": "Seguir adelante", "b": "Continuar a la misma intensidad", "c": "Regresar a la fase anterior y reevaluar" }
+            "q1": {
+              "a": "Actividad completa inmediatamente después de que el dolor desaparezca",
+              "b": "Reposo → Actividad ligera → Específico del deporte → Competencia completa",
+              "c": "Saltar la rehabilitación y probar con juego"
+            },
+            "q2": {
+              "a": "Después de completar cada fase sin aumento de síntomas",
+              "b": "Después de exactamente 24 horas",
+              "c": "Cuando se sienta motivado"
+            },
+            "q3": {
+              "a": "Seguir adelante",
+              "b": "Continuar a la misma intensidad",
+              "c": "Regresar a la fase anterior y reevaluar"
+            }
           }
         },
         "prevention": {
@@ -2635,9 +2728,21 @@
           "q2": "¿Por qué es importante el calentamiento adecuado?",
           "q3": "¿Cómo afecta el sueño adecuado al riesgo de lesiones?",
           "options": {
-            "q1": { "a": "Evitar toda actividad física", "b": "Tomar medicamentos para el dolor antes de la actividad", "c": "Calentamiento consistente, entrenamiento de fuerza y técnica adecuada" },
-            "q2": { "a": "Es una pérdida de tiempo", "b": "Aumenta el flujo sanguíneo y prepara los músculos para la actividad", "c": "Es solo para atletas profesionales" },
-            "q3": { "a": "El sueño deficiente aumenta significativamente el riesgo de lesiones", "b": "El sueño no tiene efecto en las lesiones", "c": "Menos sueño hace a los atletas más fuertes" }
+            "q1": {
+              "a": "Evitar toda actividad física",
+              "b": "Tomar medicamentos para el dolor antes de la actividad",
+              "c": "Calentamiento consistente, entrenamiento de fuerza y técnica adecuada"
+            },
+            "q2": {
+              "a": "Es una pérdida de tiempo",
+              "b": "Aumenta el flujo sanguíneo y prepara los músculos para la actividad",
+              "c": "Es solo para atletas profesionales"
+            },
+            "q3": {
+              "a": "El sueño deficiente aumenta significativamente el riesgo de lesiones",
+              "b": "El sueño no tiene efecto en las lesiones",
+              "c": "Menos sueño hace a los atletas más fuertes"
+            }
           }
         },
         "recovery": {
@@ -2645,9 +2750,21 @@
           "q2": "¿Cuál es el beneficio principal de la compresión?",
           "q3": "¿Por cuánto tiempo debe aplicarse típicamente el hielo?",
           "options": {
-            "q1": { "a": "Dentro de las primeras 48-72 horas de la lesión", "b": "Solo después de una semana", "c": "Nunca usar hielo en lesiones" },
-            "q2": { "a": "Aumenta el flujo sanguíneo", "b": "Se ve profesional", "c": "Ayuda a controlar la hinchazón y proporciona soporte" },
-            "q3": { "a": "Continuamente por 24 horas", "b": "15-20 minutos a la vez con descansos", "c": "5 minutos máximo" }
+            "q1": {
+              "a": "Dentro de las primeras 48-72 horas de la lesión",
+              "b": "Solo después de una semana",
+              "c": "Nunca usar hielo en lesiones"
+            },
+            "q2": {
+              "a": "Aumenta el flujo sanguíneo",
+              "b": "Se ve profesional",
+              "c": "Ayuda a controlar la hinchazón y proporciona soporte"
+            },
+            "q3": {
+              "a": "Continuamente por 24 horas",
+              "b": "15-20 minutos a la vez con descansos",
+              "c": "5 minutos máximo"
+            }
           }
         },
         "equipment": {
@@ -2655,9 +2772,21 @@
           "q2": "¿Cuándo deben usarse las bandas de resistencia?",
           "q3": "¿Por qué son útiles los soportes y aparatos ortopédicos?",
           "options": {
-            "q1": { "a": "Para construir masa muscular", "b": "Liberación miofascial y recuperación muscular", "c": "Para reemplazar completamente el estiramiento" },
-            "q2": { "a": "Solo después de cirugía", "b": "Para rehabilitación, calentamiento y ejercicios de fuerza", "c": "Nunca, son peligrosas" },
-            "q3": { "a": "Curan las lesiones instantáneamente", "b": "Reemplazan la rehabilitación adecuada", "c": "Proporcionan estabilidad y soporte durante la recuperación" }
+            "q1": {
+              "a": "Para construir masa muscular",
+              "b": "Liberación miofascial y recuperación muscular",
+              "c": "Para reemplazar completamente el estiramiento"
+            },
+            "q2": {
+              "a": "Solo después de cirugía",
+              "b": "Para rehabilitación, calentamiento y ejercicios de fuerza",
+              "c": "Nunca, son peligrosas"
+            },
+            "q3": {
+              "a": "Curan las lesiones instantáneamente",
+              "b": "Reemplazan la rehabilitación adecuada",
+              "c": "Proporcionan estabilidad y soporte durante la recuperación"
+            }
           }
         }
       }
@@ -4286,7 +4415,9 @@
       "weekly": "Semanal"
     },
     "delete": {
-      "success": "Entrada eliminada exitosamente"
+      "confirmTitle": "¿Eliminar entrada?",
+      "confirmMessage": "Esta acción no se puede deshacer. Esta entrada se eliminará permanentemente.",
+      "success": "Entrada eliminada correctamente"
     },
     "quiz": {
       "title": "Chequeo de Enfoque Diario",
@@ -4397,12 +4528,28 @@
         "wellnessPlaceholder": "¿Cómo está mi mentalidad hoy...\n• ¿Alguna preocupación o distracción?\n• ¿Qué necesito dejar ir?\n• ¿Qué pensamientos positivos llevo?",
         "moodTitle": "Chequeo de Ánimo",
         "moodPrompt": "¿Cómo está tu ánimo esta mañana?",
-        "moodLevel1": "Muy Bajo", "moodLevel2": "Bajo", "moodLevel3": "Neutral", "moodLevel4": "Bueno", "moodLevel5": "Excelente",
-        "moodDesc1": "Luchando, sintiéndome mal", "moodDesc2": "Algo de negatividad", "moodDesc3": "Bien, ni bueno ni malo", "moodDesc4": "Sintiéndome positivo", "moodDesc5": "Excelente ánimo, energizado",
+        "moodLevel1": "Muy Bajo",
+        "moodLevel2": "Bajo",
+        "moodLevel3": "Neutral",
+        "moodLevel4": "Bueno",
+        "moodLevel5": "Excelente",
+        "moodDesc1": "Luchando, sintiéndome mal",
+        "moodDesc2": "Algo de negatividad",
+        "moodDesc3": "Bien, ni bueno ni malo",
+        "moodDesc4": "Sintiéndome positivo",
+        "moodDesc5": "Excelente ánimo, energizado",
         "stressTitle": "Nivel de Estrés",
         "stressPrompt": "¿Qué tan estresado te sientes ahora?",
-        "stressLevel1": "Muy Bajo", "stressLevel2": "Bajo", "stressLevel3": "Moderado", "stressLevel4": "Alto", "stressLevel5": "Muy Alto",
-        "stressDesc1": "Calmado y relajado", "stressDesc2": "Estrés mínimo", "stressDesc3": "Algo de presión, manejable", "stressDesc4": "Estrés significativo", "stressDesc5": "Estrés abrumador",
+        "stressLevel1": "Muy Bajo",
+        "stressLevel2": "Bajo",
+        "stressLevel3": "Moderado",
+        "stressLevel4": "Alto",
+        "stressLevel5": "Muy Alto",
+        "stressDesc1": "Calmado y relajado",
+        "stressDesc2": "Estrés mínimo",
+        "stressDesc3": "Algo de presión, manejable",
+        "stressDesc4": "Estrés significativo",
+        "stressDesc5": "Estrés abrumador",
         "disciplineTitle": "Nivel de Disciplina",
         "disciplinePrompt": "¿Qué tan comprometido estás a ejecutar hoy, sin importar qué?",
         "disciplineLevel1": "Luchando",
@@ -4960,11 +5107,6 @@
       "ready": "¡Listo!",
       "daysLeft": "días restantes",
       "keepLogging": "Sigue registrando a diario para desbloquear tu resumen"
-    },
-    "delete": {
-      "confirmTitle": "¿Eliminar entrada?",
-      "confirmMessage": "Esta acción no se puede deshacer. Esta entrada se eliminará permanentemente.",
-      "success": "Entrada eliminada correctamente"
     },
     "weekly": {
       "thisWeek": "Esta semana",
@@ -6010,78 +6152,9 @@
     }
   },
   "myCustomActivities": {
-    "title": "Mis Actividades Personalizadas",
-    "subtitle": "Gestiona plantillas, ve historial y sigue tu progreso",
     "tabs": {
-      "templates": "Plantillas",
-      "history": "Historial",
-      "analytics": "Analíticas",
-      "hydration": "Hidratación",
-      "presets": "Presets"
-    },
-    "templates": {
-      "title": "Plantillas de Actividad",
-      "create": "Crear Nueva",
-      "noTemplates": "Sin plantillas aún",
-      "noTemplatesHint": "Crea tu primera plantilla de actividad personalizada"
-    },
-    "history": {
-      "title": "Historial de Actividades",
-      "noHistory": "Sin historial de actividades",
-      "completed": "Completado",
-      "filter": "Filtrar por tipo"
-    },
-    "analytics": {
-      "title": "Analíticas de Actividades",
-      "totalActivities": "Total de Actividades",
-      "completionRate": "Tasa de Completado",
-      "streak": "Racha Actual",
-      "byType": "Por Tipo"
-    },
-    "hydration": {
-      "title": "Seguimiento de Hidratación",
-      "settings": "Configuración de Hidratación",
-      "dailyGoal": "Meta Diaria",
-      "reminderInterval": "Intervalo de Recordatorio",
-      "startTime": "Hora de Inicio",
-      "endTime": "Hora de Fin",
-      "enabled": "Recordatorios Activados",
-      "tracker": "Registro Rápido",
-      "todayProgress": "Progreso de Hoy",
-      "addWater": "Añadir Agua"
-    },
-    "presets": {
-      "title": "Presets de Carrera",
-      "categories": {
-        "intervals": "Intervalos",
-        "tempo": "Tempo",
-        "recovery": "Recuperación",
-        "distance": "Distancia",
-        "speed": "Velocidad"
-      },
-      "usePreset": "Usar Preset",
-      "customize": "Personalizar",
-      "system": "Preset del Sistema",
-      "custom": "Preset Personalizado"
-    },
-    "share": {
-      "title": "Compartir Plantilla",
-      "noLink": "Crea un enlace para compartir esta plantilla",
-      "creating": "Creando...",
-      "createLink": "Crear Enlace",
-      "link": "Enlace para Compartir",
-      "public": "Acceso Público",
-      "publicDesc": "Cualquiera con el enlace puede ver e importar",
-      "privateDesc": "El enlace está actualmente deshabilitado",
-      "views": "Vistas",
-      "delete": "Eliminar Enlace",
-      "preview": "Vista Previa",
-      "created": "¡Enlace creado!",
-      "error": "Error al crear enlace",
-      "deleted": "Enlace eliminado",
-      "deleteError": "Error al eliminar enlace",
-      "copied": "¡Enlace copiado!",
-      "copyError": "Error al copiar enlace"
+      "elitePresets": "Presets Elite",
+      "loadDashboard": "Panel de Carga"
     }
   },
   "runningProgress": {
@@ -6586,12 +6659,6 @@
     "useBlockSystem": "Usar Constructor por Bloques",
     "useBlockSystemDesc": "Organiza ejercicios en bloques estructurados con seguimiento inteligente de carga"
   },
-  "myCustomActivities": {
-    "tabs": {
-      "elitePresets": "Presets Elite",
-      "loadDashboard": "Panel de Carga"
-    }
-  },
   "speedLab": {
     "title": "Speed Lab",
     "subtitle": "Construye velocidad élite, protege tu cuerpo",
@@ -6844,20 +6911,105 @@
   },
   "sportTerms": {
     "baseball": {
-      "pitchTypes": { "fastball": "Recta de 4 Costuras", "secondaryFastball": "Recta de 2 Costuras", "slider": "Slider", "changeup": "Cambio", "curveball": "Curva" },
-      "sessionTypes": { "bullpen": "Sesión de Bullpen", "bp": "Práctica de Bateo", "scrimmage": "Scrimmage en Vivo", "warmup": "Tiro Largo", "cage": "Trabajo de Jaula" },
-      "metrics": { "spinEfficiency": "Eficiencia de Giro", "barrelPct": "% Barril", "commandPct": "% Comando", "chaseRate": "Tasa de Persecución", "whiffRate": "Tasa de Abanico", "exitVelo": "Velocidad de Salida", "launchAngle": "Ángulo de Lanzamiento" },
-      "drillNames": { "moundWork": "Trabajo de Montículo", "longToss": "Tiro Largo", "bp": "Rondas de BP", "teeWork": "Trabajo de Tee" },
-      "splitLabels": { "overall": "General", "vsLHP": "vs Zurdo", "vsRHP": "vs Derecho", "home": "Local", "away": "Visitante" },
-      "heatMapLabels": { "pitchLocation": "Ubicación del Lanzamiento", "chaseZone": "Zona de Persecución", "barrelZone": "Zona de Barril", "commandMap": "Mapa de Comando", "missCluster": "Grupo de Fallos" }
+      "pitchTypes": {
+        "fastball": "Recta de 4 Costuras",
+        "secondaryFastball": "Recta de 2 Costuras",
+        "slider": "Slider",
+        "changeup": "Cambio",
+        "curveball": "Curva"
+      },
+      "sessionTypes": {
+        "bullpen": "Sesión de Bullpen",
+        "bp": "Práctica de Bateo",
+        "scrimmage": "Scrimmage en Vivo",
+        "warmup": "Tiro Largo",
+        "cage": "Trabajo de Jaula"
+      },
+      "metrics": {
+        "spinEfficiency": "Eficiencia de Giro",
+        "barrelPct": "% Barril",
+        "commandPct": "% Comando",
+        "chaseRate": "Tasa de Persecución",
+        "whiffRate": "Tasa de Abanico",
+        "exitVelo": "Velocidad de Salida",
+        "launchAngle": "Ángulo de Lanzamiento"
+      },
+      "drillNames": {
+        "moundWork": "Trabajo de Montículo",
+        "longToss": "Tiro Largo",
+        "bp": "Rondas de BP",
+        "teeWork": "Trabajo de Tee"
+      },
+      "splitLabels": {
+        "overall": "General",
+        "vsLHP": "vs Zurdo",
+        "vsRHP": "vs Derecho",
+        "home": "Local",
+        "away": "Visitante"
+      },
+      "heatMapLabels": {
+        "pitchLocation": "Ubicación del Lanzamiento",
+        "chaseZone": "Zona de Persecución",
+        "barrelZone": "Zona de Barril",
+        "commandMap": "Mapa de Comando",
+        "missCluster": "Grupo de Fallos"
+      }
     },
     "softball": {
-      "pitchTypes": { "fastball": "Recta (Molino)", "circleChange": "Cambio Circular", "riseball": "Bola Ascendente", "dropBall": "Bola Descendente", "curveball": "Curva (Caída 12-6)" },
-      "sessionTypes": { "bullpen": "Sesión de Círculo", "bp": "Práctica de Bateo", "scrimmage": "Scrimmage en Vivo", "warmup": "Tiro Largo", "cage": "Trabajo de Jaula" },
-      "metrics": { "snapTightness": "Precisión de Snap", "sweetSpotPct": "% Punto Dulce", "locationPct": "% Ubicación", "chaseRate": "Tasa de Persecución", "whiffRate": "Tasa de Abanico", "exitVelo": "Velocidad de Salida", "launchAngle": "Ángulo de Lanzamiento" },
-      "drillNames": { "circleWork": "Trabajo de Círculo", "longToss": "Tiro Largo", "bp": "Rondas de BP", "teeWork": "Trabajo de Tee" },
-      "splitLabels": { "overall": "General", "vsLHP": "vs Zurda", "vsRHP": "vs Derecha", "home": "Local", "away": "Visitante" },
-      "heatMapLabels": { "pitchLocation": "Ubicación del Lanzamiento", "chaseZone": "Zona de Persecución", "sweetSpotZone": "Zona de Punto Dulce", "locationMap": "Mapa de Ubicación", "missPattern": "Patrón de Fallos" }
+      "pitchTypes": {
+        "fastball": "Recta (Molino)",
+        "circleChange": "Cambio Circular",
+        "riseball": "Bola Ascendente",
+        "dropBall": "Bola Descendente",
+        "curveball": "Curva (Caída 12-6)"
+      },
+      "sessionTypes": {
+        "bullpen": "Sesión de Círculo",
+        "bp": "Práctica de Bateo",
+        "scrimmage": "Scrimmage en Vivo",
+        "warmup": "Tiro Largo",
+        "cage": "Trabajo de Jaula"
+      },
+      "metrics": {
+        "snapTightness": "Precisión de Snap",
+        "sweetSpotPct": "% Punto Dulce",
+        "locationPct": "% Ubicación",
+        "chaseRate": "Tasa de Persecución",
+        "whiffRate": "Tasa de Abanico",
+        "exitVelo": "Velocidad de Salida",
+        "launchAngle": "Ángulo de Lanzamiento"
+      },
+      "drillNames": {
+        "circleWork": "Trabajo de Círculo",
+        "longToss": "Tiro Largo",
+        "bp": "Rondas de BP",
+        "teeWork": "Trabajo de Tee"
+      },
+      "splitLabels": {
+        "overall": "General",
+        "vsLHP": "vs Zurda",
+        "vsRHP": "vs Derecha",
+        "home": "Local",
+        "away": "Visitante"
+      },
+      "heatMapLabels": {
+        "pitchLocation": "Ubicación del Lanzamiento",
+        "chaseZone": "Zona de Persecución",
+        "sweetSpotZone": "Zona de Punto Dulce",
+        "locationMap": "Mapa de Ubicación",
+        "missPattern": "Patrón de Fallos"
+      }
     }
+  },
+  "staffPlans": {
+    "heading": "Para entrenadores y organizaciones",
+    "coachName": "Hammers Coach",
+    "coachPrice": "$300 al mes",
+    "coachLine": "Todos los análisis de ambos deportes y herramientas para tus jugadores conectados",
+    "orgName": "Hammers Organization",
+    "orgPrice": "$1,000 al mes · 5 puestos de entrenador incluidos · puesto extra $150 al mes",
+    "orgLine": "Todo lo de Coach para cada puesto, más panel de instalación, equipos y resúmenes de la organización",
+    "see": "Ver planes para entrenadores y organizaciones",
+    "roleNote": "Plan Coach $300/mes · Plan Organization $1,000/mes"
   }
 }

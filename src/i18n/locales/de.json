@@ -16,7 +16,6 @@
     "search": "Suchen",
     "filter": "Filtern",
     "noData": "Keine Daten verfügbar",
-    "noResults": "Keine Ergebnisse gefunden",
     "required": "Erforderlich",
     "optional": "Optional",
     "retry": "Erneut versuchen",
@@ -27,8 +26,7 @@
     "ai": "Hammer",
     "continue": "Weiter",
     "selected": "Ausgewählt",
-    "select": "Auswählen",
-    "add": "Hinzufügen"
+    "select": "Auswählen"
   },
   "auth": {
     "signIn": "Anmelden",
@@ -464,35 +462,6 @@
     "resumed": "Modul fortgesetzt",
     "failedToResume": "Modul konnte nicht fortgesetzt werden"
   },
-  "common": {
-    "save": "Speichern",
-    "cancel": "Abbrechen",
-    "close": "Schließen",
-    "loading": "Laden...",
-    "error": "Fehler",
-    "success": "Erfolg",
-    "confirm": "Bestätigen",
-    "delete": "Löschen",
-    "edit": "Bearbeiten",
-    "view": "Ansehen",
-    "back": "Zurück",
-    "next": "Weiter",
-    "submit": "Absenden",
-    "search": "Suchen",
-    "filter": "Filtern",
-    "noData": "Keine Daten verfügbar",
-    "required": "Erforderlich",
-    "optional": "Optional",
-    "retry": "Erneut versuchen",
-    "searching": "Suche...",
-    "allSports": "Alle Sportarten",
-    "yes": "Ja",
-    "no": "Nein",
-    "ai": "Hammer",
-    "continue": "Weiter",
-    "selected": "Ausgewählt",
-    "select": "Auswählen"
-  },
   "navigation": {
     "menu": "Menü",
     "dashboard": "Dashboard",
@@ -603,22 +572,22 @@
     "editProfile": "Profil bearbeiten",
     "viewProfile": "Profil ansehen",
     "backToDashboard": "Zurück zum Dashboard",
-    "viewingAsOwner": "Ansicht als Eigentümer",
-    "viewingAsScout": "Ansicht als Scout",
-    "viewingAsCoach": "Ansicht als Trainer",
-    "viewingProfile": "Profil ansehen",
+    "viewingAsOwner": "Als Besitzer anzeigen",
+    "viewingAsScout": "Als Scout anzeigen",
+    "viewingAsCoach": "Als Coach anzeigen",
+    "viewingProfile": "Profil anzeigen",
     "followPlayer": "Spieler folgen",
-    "sending": "Senden...",
+    "sending": "Wird gesendet...",
     "followRequestPending": "Folgeanfrage ausstehend",
-    "following": "Folgt",
+    "following": "Folge ich",
     "throws": "Wirft",
     "bats": "Schlägt",
     "right": "Rechts",
     "left": "Links",
     "both": "Beide",
-    "switch": "Beidhändig",
-    "collegeStatus": "Universitätsstatus",
-    "currentlyEnrolled": "Derzeit eingeschrieben",
+    "switch": "Switch",
+    "collegeStatus": "Uni-Status",
+    "currentlyEnrolled": "Aktuell eingeschrieben",
     "level": "Niveau",
     "professionalPlayer": "Profispieler",
     "status": "Status",
@@ -627,21 +596,21 @@
     "team": "Team",
     "playingStyle": "Spielstil",
     "academicCommitment": "Akademisch & Verpflichtung",
-    "currentlyEnrolledInCollege": "Derzeit an Universität eingeschrieben",
+    "currentlyEnrolledInCollege": "Aktuell an Uni eingeschrieben",
     "positionRole": "Position/Rolle",
-    "basicInfo": "Grundinformationen",
+    "basicInfo": "Grundinfo",
     "contactEmail": "Kontakt-E-Mail",
     "experienceCredentials": "Erfahrung & Qualifikationen",
     "addCredential": "Qualifikation hinzufügen",
     "profilePicture": "Profilbild",
-    "maxSizeInfo": "Max. Größe: 5MB. JPG, PNG oder WEBP",
+    "maxSizeInfo": "Max: 5 MB. JPG, PNG oder WEBP",
     "orEnterImageUrl": "Oder Bild-URL eingeben",
-    "socialMediaLinks": "Social-Media-Links",
+    "socialMediaLinks": "Social Media Links",
     "additionalWebsiteLinks": "Zusätzliche Website-Links",
     "website": "Website",
     "saveProfile": "Profil speichern",
-    "openBillingPortal": "Abrechnungsportal öffnen",
-    "billingPortalUnavailable": "Abrechnungsportal nicht verfügbar",
+    "openBillingPortal": "Portal öffnen",
+    "billingPortalUnavailable": "Portal nicht verfügbar",
     "accountInformation": "Kontoinformationen",
     "memberSince": "Mitglied seit",
     "neverExpires": "Läuft nie ab",
@@ -694,48 +663,12 @@
     "experienceLevel": "Erfahrungsstufe",
     "teamAffiliation": "Teamzugehörigkeit",
     "yearsAffiliated": "Jahre zugehörig",
-    "backToDashboard": "Zurück zum Dashboard",
     "viewingPlayerProfile": "{{name}}s Profil",
-    "viewingAsOwner": "Als Besitzer anzeigen",
-    "viewingAsScout": "Als Scout anzeigen",
-    "viewingAsCoach": "Als Coach anzeigen",
-    "viewingProfile": "Profil anzeigen",
-    "sending": "Wird gesendet...",
-    "followPlayer": "Spieler folgen",
-    "followRequestPending": "Folgeanfrage ausstehend",
-    "following": "Folge ich",
-    "experienceCredentials": "Erfahrung & Qualifikationen",
-    "throws": "Wirft",
-    "bats": "Schlägt",
-    "both": "Beide",
-    "right": "Rechts",
-    "left": "Links",
-    "switch": "Switch",
-    "collegeStatus": "Uni-Status",
-    "currentlyEnrolled": "Aktuell eingeschrieben",
-    "status": "Status",
-    "team": "Team",
-    "level": "Niveau",
-    "professionalPlayer": "Profispieler",
-    "freeAgent": "Free Agent",
     "playerType": "Spielertyp",
-    "internationalPlayer": "Internationaler Spieler",
     "years": "Jahre",
-    "basicInfo": "Grundinfo",
-    "contactEmail": "Kontakt-E-Mail",
-    "addCredential": "Qualifikation hinzufügen",
-    "profilePicture": "Profilbild",
-    "maxSizeInfo": "Max: 5 MB. JPG, PNG oder WEBP",
-    "orEnterImageUrl": "Oder Bild-URL eingeben",
     "primaryPosition": "Hauptposition",
     "selectPosition": "Position auswählen",
-    "playingStyle": "Spielstil",
-    "academicCommitment": "Akademisch & Verpflichtung",
-    "currentlyEnrolledInCollege": "Aktuell an Uni eingeschrieben",
-    "positionRole": "Position/Rolle",
-    "socialMediaLinks": "Social Media Links",
     "enterHandleOrUrl": "Geben Sie Ihren Benutzernamen (z.B. \"username\") oder die vollständige URL ein",
-    "additionalWebsiteLinks": "Zusätzliche Website-Links",
     "addMoreWebsites": "Bis zu 4 weitere Website-URLs hinzufügen",
     "customizeExperience": "Passen Sie Ihre Erfahrung an",
     "subscriptionStatus": "Abonnementstatus",
@@ -749,8 +682,6 @@
     "subscribeToModules": "Module abonnieren",
     "manageSubscriptions": "Abonnements verwalten",
     "controlModulesDescription": "Kontrollieren Sie jedes Modul einzeln - jederzeit kündbar",
-    "cancelAllModules": "Alle Module kündigen",
-    "accountInformation": "Kontoinformationen",
     "accountCreated": "Konto erstellt:",
     "unableToLoadProfile": "Profil kann nicht geladen werden. Keine Berechtigung.",
     "followRequestSentTo": "Eine Folgeanfrage wurde an {{name}} gesendet.",
@@ -766,14 +697,6 @@
     "portalBeingSetUp": "Das Portal wird eingerichtet. Kontaktieren Sie den Support.",
     "failedToOpenBillingPortal": "Portal konnte nicht geöffnet werden.",
     "selectLevel": "Niveau auswählen",
-    "website": "Website",
-    "saveProfile": "Profil speichern",
-    "openBillingPortal": "Portal öffnen",
-    "billingPortalUnavailable": "Portal nicht verfügbar",
-    "neverExpires": "Läuft nie ab",
-    "discount": "Rabatt",
-    "manageModules": "Module verwalten",
-    "noActiveModules": "Keine aktiven Module",
     "public": "öffentlich",
     "contactEmailDescription": "Diese E-Mail ist für alle Benutzer sichtbar, um Sie zu kontaktieren",
     "playerBioPrompt": "Bitte angeben: Kontakt-E-Mail, Größe und Gewicht, Bundesland, Abschlussjahr (Schule & Uni), Schlagseite(n), Position(en), Wurfhand, Teamzugehörigkeit oder Free Agent Status",
@@ -1003,461 +926,6 @@
     "allSports": "Alle Sportarten",
     "active": "Aktiv",
     "failedToLoad": "Laden der Ranglisten fehlgeschlagen"
-  },
-  "nutrition": {
-    "goalTypes": {
-      "lose_weight": "Gewicht Verlieren",
-      "lose_fat": "Fett Verlieren",
-      "maintain": "Halten",
-      "gain_lean_muscle": "Muskeln Aufbauen",
-      "gain_weight": "Gewicht Zunehmen"
-    },
-    "dayTypes": {
-      "rest": "Ruhe",
-      "training": "Training",
-      "practice": "Übung",
-      "game": "Spiel",
-      "travel": "Reise"
-    },
-    "settings": {
-      "title": "Ernährungseinstellungen",
-      "currentGoal": "Aktuelles Ziel",
-      "selectGoal": "Wähle Dein Ziel",
-      "updateGoal": "Ziel Aktualisieren",
-      "goalUpdated": "Ziel erfolgreich aktualisiert",
-      "editProfile": "Profil Bearbeiten",
-      "profileSettingsNote": "Profilinformationen aktualisieren?",
-      "calorieAdjustment": "Kalorienanpassung",
-      "deficit": "Defizit",
-      "surplus": "Überschuss"
-    },
-    "saveTip": "Tipp Speichern",
-    "tipSaved": "Gespeichert",
-    "tipSavedSuccess": "Tipp in deinem Tresor gespeichert!",
-    "tipSaveHint": "Tippe auf das Herz-Symbol, um deine Lieblingstipps im Tresor zu speichern",
-    "todaysTips": "Heutige Tipps",
-    "todaysTipsCount": "Heutige Tipps ({{count}}/2)",
-    "reviewTips": "Überprüfen Sie Ihre heutigen Tipps",
-    "noTipsYet": "Noch keine Tipps heute angesehen",
-    "viewedAt": "Gesehen um {{time}}",
-    "title": "Iron Horse Produktion",
-    "subtitle": "Ernährungs- und Ganzheitliche Gesundheit für Spitzensportler",
-    "dailyTip": "Täglicher Gesundheitstipp",
-    "newTip": "Neuer Tipp",
-    "tipsCollected": "Gesammelte Tipps",
-    "percentExplored": "{{percent}}% der Tipps erkundet",
-    "daysToUnlock": "{{days}} Tage zum Freischalten",
-    "streak": "Serie",
-    "currentStreak": "Aktuelle Serie",
-    "longestStreak": "Längste Serie",
-    "totalVisits": "Gesamtbesuche",
-    "badges": "Abzeichen",
-    "disclaimer": "Gesundheitshinweis",
-    "disclaimerText": "Die bereitgestellten Informationen dienen nur zu Bildungszwecken und sollten keine professionelle medizinische Beratung ersetzen. Einige Informationen können ungenau oder veraltet sein.",
-    "tipsRemaining": "Tipps verbleibend heute",
-    "noMoreTips": "Sie haben Ihre 2 Gesundheitstipps für heute gesammelt! Kommen Sie morgen wieder für mehr.",
-    "categoriesTitle": "Ernährungskategorien",
-    "topicsCount": "({{count}} Themen)",
-    "dayStreak": "Tag Serie",
-    "daysStreak": "Tage Serie",
-    "best": "Beste:",
-    "tipsCollectedCount": "Tipps gesammelt",
-    "ofTipsExplored": "der Tipps erkundet",
-    "tipsExplored": "{{percent}}% von {{total}} Tipps erkundet",
-    "milestoneBadges": "Meilenstein-Abzeichen",
-    "dailyLimitReached": "Tageslimit Erreicht",
-    "noTipsRemaining": "0 Tipps verbleibend",
-    "tipsLeftToday": "Tipps verbleibend heute",
-    "tipLeftToday": "Tipp verbleibend heute",
-    "disclaimerTitle": "Wichtiger Gesundheitshinweis",
-    "educationalPurposes": "Die hier bereitgestellten Informationen dienen nur zu Bildungszwecken und sollten keine professionelle medizinische Beratung ersetzen.",
-    "aiTipsWarning": "Hammer-generierte Tipps können Ungenauigkeiten enthalten. Einige Informationen können veraltet oder falsch sein.",
-    "alwaysConsult": "Konsultieren Sie immer einen qualifizierten Gesundheitsdienstleister, bevor Sie Änderungen an Ihrer Ernährung oder Gesundheitsroutine vornehmen.",
-    "moreDaysToUnlock": "mehr Tage zum Freischalten",
-    "achieved": "Erreicht!",
-    "badgeNames": {
-      "starter": "Erste Schritte",
-      "weekWarrior": "Wochen-Krieger",
-      "ironWill": "Eiserner Wille",
-      "ironHorse": "Eisernes Pferd",
-      "elite": "Elite-Performer",
-      "legendary": "Legendär"
-    },
-    "badgeDescriptions": {
-      "starter": "Beginnen Sie Ihre Reise",
-      "weekWarrior": "7-Tage-Serie",
-      "ironWill": "14-Tage-Serie",
-      "ironHorse": "30-Tage-Serie",
-      "elite": "60-Tage-Serie",
-      "legendary": "100-Tage-Serie"
-    },
-    "categories": {
-      "bloodType": "Blutgruppen-Gesundheit",
-      "bloodTypeDesc": "Optimieren Sie die Ernährung basierend auf Ihrer Blutgruppe",
-      "hydration": "Hydratation",
-      "hydrationDesc": "Meistern Sie die richtige Flüssigkeitsaufnahme für Höchstleistung",
-      "mineralization": "Mineralisierung",
-      "mineralizationDesc": "Essentielle Mineralien für sportliche Exzellenz",
-      "recovery": "Erholung",
-      "recoveryDesc": "Beschleunigen Sie die Erholung zwischen den Sitzungen",
-      "bloodFlow": "Blutfluss",
-      "bloodFlowDesc": "Verbessern Sie die Durchblutung für bessere Leistung",
-      "lymphatic": "Lymphatische Gesundheit",
-      "lymphaticDesc": "Unterstützen Sie das Entgiftungssystem Ihres Körpers",
-      "vitamins": "Vitamine",
-      "vitaminsDesc": "Schlüsselvitamine für sportliche Leistung",
-      "longevity": "Langlebigkeit",
-      "longevityDesc": "Ernährung für eine lange sportliche Karriere",
-      "weightManagement": "Gewichtsmanagement",
-      "weightManagementDesc": "Gesunde Gewichtsstrategien für Sportler",
-      "vegan": "Veganer Leitfaden",
-      "veganDesc": "Pflanzenbasierte Ernährung für Sportler",
-      "restrictiveDiets": "Restriktive Diäten",
-      "restrictiveDietsDesc": "Navigieren Sie Ernährungseinschränkungen sicher",
-      "offSeason": "Off-Season-Vorbereitung",
-      "offSeasonDesc": "Bereiten Sie Ihren Körper in der Nebensaison vor",
-      "inSeason": "In-Season-Vorbereitung",
-      "inSeasonDesc": "Optimale Ernährung während des Wettbewerbs",
-      "performance": "Leistungsvorbereitung",
-      "performanceDesc": "Vor-Spiel-Ernährungsstrategien",
-      "inGame": "Im-Spiel-Hydratation",
-      "inGameDesc": "Bleiben Sie während des Wettbewerbs hydratisiert",
-      "supplements": "NSF-Nahrungsergänzungsmittel",
-      "supplementsDesc": "Leitfaden für NSF-zugelassene Nahrungsergänzungsmittel",
-      "holistic": "Ganzheitliche Gesundheit",
-      "holisticDesc": "Körper-Geist-Ernährungsverbindung",
-      "dailyNutrition": "Tägliche Ernährungstipps",
-      "dailyNutritionDesc": "Schnelle tägliche Tipps für besseres Essen"
-    }
-  },
-  "weather": {
-    "title": "Mit den Elementen Spielen",
-    "subtitle": "Meistern Sie jede Spieltag-Bedingung",
-    "tagline": "Trainieren Sie intelligenter, spielen Sie härter",
-    "subtitleBaseball": "Meistern Sie jede Baseball-Spieltag-Bedingung",
-    "subtitleSoftball": "Meistern Sie jede Softball-Spieltag-Bedingung",
-    "currentConditions": "Aktuelle Bedingungen",
-    "feelsLike": "Gefühlt wie",
-    "wind": "Wind",
-    "humidity": "Luftfeuchtigkeit",
-    "visibility": "Sichtweite",
-    "uvIndex": "UV-Index",
-    "forecast": "7-Tage-Vorhersage",
-    "drillRecommendations": "Übungsempfehlungen",
-    "sportAnalysis": "Bedingungsanalyse",
-    "baseballAnalysis": "Baseball-Bedingungsanalyse",
-    "softballAnalysis": "Softball-Bedingungsanalyse",
-    "enterLocation": "Ort eingeben",
-    "useMyLocation": "Meinen Standort Verwenden",
-    "excellent": "Ausgezeichnet",
-    "fair": "Akzeptabel",
-    "notRecommended": "Nicht Empfohlen",
-    "searchLocation": "Beliebigen Ort suchen...",
-    "retry": "Erneut versuchen",
-    "enterLocationPrompt": "Geben Sie oben einen Ort ein, um Wetterbedingungen und Trainingsempfehlungen zu sehen",
-    "locationDetected": "Standort erkannt",
-    "high": "Hoch",
-    "moderate": "Mäßig",
-    "low": "Niedrig",
-    "clear": "Klar",
-    "good": "Gut",
-    "limited": "Eingeschränkt",
-    "veryHigh": "Sehr Hoch",
-    "ballFlight": "Ballflug",
-    "windImpact": "Windauswirkung",
-    "fieldConditions": "Feldbedingungen",
-    "tracking": "Verfolgung",
-    "uvWarning": "UV-Warnung",
-    "recommendation": "Empfehlung",
-    "toggleDrills": "Übungsempfehlungen Anzeigen",
-    "hideDrills": "Übungsempfehlungen Ausblenden",
-    "drillRecommendationsTitle": "Wetterbasierte Übungsempfehlungen",
-    "proTip": "Profi-Tipp:",
-    "prioritizeDrills": "Konzentrieren Sie sich zuerst auf Übungen mit HOHER Priorität für die beste Trainingsanpassung an die aktuellen Bedingungen.",
-    "toggleForecast": "7-Tage-Vorhersage Anzeigen",
-    "hideForecast": "7-Tage-Vorhersage Ausblenden",
-    "forecastTitle": "7-Tage-Trainingsvorhersage",
-    "today": "Heute",
-    "tomorrow": "Morgen",
-    "trainingExcellent": "Ausgezeichnet - Ideal zum Training",
-    "trainingFair": "Akzeptabel - Bedingungen überwachen",
-    "trainingPoor": "Nicht Empfohlen - Unsicher",
-    "trainingUnknown": "Unbekannt",
-    "precipitationChance": "Niederschlagswahrscheinlichkeit",
-    "failedToLoadWeather": "Laden der Wetterdaten fehlgeschlagen",
-    "noConditions": "Keine spezifischen Bedingungen zu analysieren",
-    "sunrise": "Sonnenaufgang",
-    "sunset": "Sonnenuntergang",
-    "toggleHourlyForecast": "Stündliche Vorhersage Anzeigen",
-    "hideHourlyForecast": "Stündliche Vorhersage Ausblenden",
-    "hourlyForecastTitle": "33-Stunden-Vorhersage",
-    "now": "Jetzt",
-    "todayMorning": "Heute Morgen",
-    "todayAfternoon": "Heute Nachmittag",
-    "todayEvening": "Heute Abend",
-    "tonight": "Heute Nacht",
-    "tomorrowMorning": "Morgen Früh",
-    "tomorrowAfternoon": "Morgen Nachmittag",
-    "tomorrowEvening": "Morgen Abend",
-    "tomorrowNight": "Morgen Nacht",
-    "swipe": "Wischen",
-    "poor": "Schlecht",
-    "gameDayPrep": {
-      "title": "Spieltag-Vorbereitung",
-      "show": "Spieltag-Vorbereitung",
-      "hide": "Vorbereitung Ausblenden",
-      "fieldDirection": "Feldrichtung",
-      "selectGameTime": "Spielzeit Auswählen",
-      "now": "Jetzt",
-      "today": "Heute",
-      "tomorrow": "Morgen",
-      "duration": "Dauer",
-      "minutes": "Minuten",
-      "preGameWarmup": "Aufwärmen vor dem Spiel",
-      "sunImpact": "Sonneneinfluss-Analyse",
-      "sunBelowHorizon": "Die Sonne ist zu dieser Zeit unter dem Horizont",
-      "mayHaveSunGlare": "kann Sonne in den Augen haben",
-      "noSunIssues": "Keine signifikanten Blendprobleme erwartet",
-      "north": "Norden",
-      "northeast": "Nordosten",
-      "east": "Osten",
-      "southeast": "Südosten",
-      "south": "Süden",
-      "southwest": "Südwesten",
-      "west": "Westen",
-      "northwest": "Nordwesten",
-      "batter": "Schlagmann",
-      "catcher": "Fänger",
-      "pitcher": "Werfer",
-      "firstBase": "1B",
-      "secondBase": "2B",
-      "shortstop": "SS",
-      "thirdBase": "3B",
-      "leftFielder": "LF",
-      "centerFielder": "CF",
-      "rightFielder": "RF",
-      "outfitRecommendations": "Ausrüstungsempfehlungen",
-      "temperatureGear": "Temperatur",
-      "uvProtection": "UV-Schutz",
-      "windGear": "Wind",
-      "coldWarmupDuration": "20-25 Minuten",
-      "coldWarmupExercise1": "Leichtes Joggen (10 Min) — Körpertemperatur schrittweise erhöhen",
-      "coldWarmupExercise2": "Dynamisches Dehnen (10 Min) — Beinschwünge, Armkreise, hohe Knie",
-      "coldWarmupExercise3": "Wurfprogression — Bei 6m beginnen, Distanz schrittweise erhöhen",
-      "coldWarmupExercise4": "Positionsspezifische Übungen bei reduzierter Intensität",
-      "coldWarmupTip": "Zusätzliche Zeit für kalte Muskeln erforderlich. Fokus auf schrittweise Wärmeerzeugung.",
-      "moderateWarmupDuration": "12-15 Minuten",
-      "moderateWarmupExercise1": "Leichtes Joggen (5 Min) — Einfaches Aufwärmtempo",
-      "moderateWarmupExercise2": "Dynamisches Dehnen (5 Min) — Standardroutine",
-      "moderateWarmupExercise3": "Wurfprogression — Regulärer Distanzaufbau",
-      "moderateWarmupExercise4": "Positionsspezifische Arbeit bei voller Intensität",
-      "moderateWarmupTip": "Ideale Bedingungen für Standard-Aufwärmprotokoll.",
-      "hotWarmupDuration": "8-10 Minuten",
-      "hotWarmupExercise1": "Gehdehnen im Schatten wenn möglich",
-      "hotWarmupExercise2": "Sanfte Bewegungsmuster — Energie sparen",
-      "hotWarmupExercise3": "Minimales Werfen um Energie für das Spiel zu sparen",
-      "hotWarmupExercise4": "Häufige Wasserpausen alle 3-4 Minuten",
-      "hotWarmupTip": "Anstrengung minimieren um Energie zu sparen. Im Schatten bleiben. Ständig hydrieren.",
-      "coldWeatherGear": "Thermische Basisschichten, Fleecejacke, warme Mütze, Schlaghandschuhe empfohlen",
-      "moderateWeatherGear": "Standarduniform, leichte Ärmel optional für Komfort",
-      "hotWeatherGear": "Leichte atmungsaktive Stoffe, Kühltuch, zusätzliche Hydrationsausrüstung",
-      "uvLow": "Kein spezieller UV-Schutz erforderlich",
-      "uvModerate": "Sonnenschutz SPF 30+ und Sonnenbrille empfohlen",
-      "uvHigh": "SPF 50+ unerlässlich, Schutzbrille, sichere Kappe",
-      "uvVeryHigh": "Maximaler Sonnenschutz, direkte Sonneneinstrahlung begrenzen",
-      "uvExtreme": "Mittagssonne wenn möglich meiden, vollständiger UV-Schutz erforderlich",
-      "windLight": "Standardausrüstung ausreichend",
-      "windModerate": "Sichere Kappe, leichte Windjacke für die Dugout",
-      "windStrong": "Winddichte Außenschicht, alle losen Geräte sichern",
-      "copyToClipboard": "Teilen",
-      "copiedToClipboard": "Spieltag-Vorbereitung kopiert!",
-      "precipitationWarning": "Niederschlagswarnung",
-      "precipitationPossible": "Regen möglich — leichte Regenausrüstung einpacken",
-      "precipitationLikely": "Regen wahrscheinlich — Regenjacke, Plane mitbringen und Ausrüstung schützen",
-      "precipitationHigh": "Hohe Regenwahrscheinlichkeit — vollständige Regenvorbereitung empfohlen",
-      "rainChance": "Wahrscheinlichkeit"
-    },
-    "favorites": {
-      "save": "Ort Speichern",
-      "saved": "Ort Gespeichert",
-      "removed": "Ort Entfernt",
-      "selectFavorite": "Gespeichert",
-      "noFavorites": "Keine gespeicherten Orte",
-      "defaultSet": "Standardort festgelegt",
-      "manage": "Gespeicherte Orte",
-      "setDefault": "Als Standard Festlegen",
-      "rename": "Umbenennen",
-      "delete": "Löschen",
-      "nameUpdated": "Ort umbenannt",
-      "default": "Standard"
-    },
-    "alerts": {
-      "title": "Wetterwarnungen",
-      "expires": "Läuft ab",
-      "instructions": "Sicherheitshinweise"
-    },
-    "airQuality": {
-      "title": "Luftqualität",
-      "unavailable": "N/V"
-    }
-  },
-  "scout": {
-    "dashboard": "Scout-Dashboard",
-     "players": "Spieler",
-     "typeToSearch": "Beginnen Sie mit der Eingabe, um Spieler zu suchen...",
-    "searchPlayers": "Spieler Suchen",
-    "followedPlayers": "Verfolgte Spieler",
-    "pendingRequests": "Ausstehende Anfragen",
-    "sendFollowRequest": "Folgeanfrage Senden",
-    "followRequestSent": "Folgeanfrage Gesendet",
-    "viewVideos": "Videos Ansehen",
-    "annotateVideo": "Video Annotieren",
-    "annotations": "Annotationen",
-    "coachAnnotations": "Trainer-Annotationen",
-    "myAnnotations": "Meine Annotationen",
-    "noAnnotations": "Noch keine Annotationen",
-    "dashboardDescription": "Verwalten Sie Ihre Spielerverfolgungen und entdecken Sie neue Talente",
-    "allSports": "Alle Sportarten",
-    "noFollowingPlayers": "Sie folgen noch keinen Spielern. Suchen Sie nach Spielern, um Ihre Liste aufzubauen.",
-    "viewProfile": "Profil Ansehen",
-    "viewLibrary": "Bibliothek Ansehen",
-    "unfollow": "Entfolgen",
-    "findPlayers": "Spieler Finden",
-    "searchPlayersPlaceholder": "Alle Spieler durchsuchen...",
-    "minCharactersToSearch": "Geben Sie mindestens 2 Zeichen ein, um zu suchen",
-    "searching": "Suche...",
-    "noPlayersFound": "Keine Spieler gefunden, die Ihrer Suche entsprechen",
-    "playerFound": "Spieler gefunden",
-    "playersFound": "Spieler gefunden",
-    "follow": "Folgen",
-    "pending": "Ausstehend",
-    "followingStatus": "Folgend",
-    "unfollowPlayer": "Spieler Entfolgen",
-    "unfollowConfirmation": "Sind Sie sicher, dass Sie {{name}} entfolgen möchten? Sie verlieren den Zugriff auf ihre geteilten Videos.",
-    "unfollowing": "Entfolgen...",
-    "unfollowAction": "Entfolgen",
-    "followRequestSentDescription": "Der Spieler wird benachrichtigt und kann Ihre Anfrage genehmigen.",
-    "unfollowedPlayer": "Spieler entfolgt",
-    "failedToLoadFollowing": "Laden der verfolgten Spieler fehlgeschlagen",
-    "failedToSearchPlayers": "Spielersuche fehlgeschlagen",
-    "failedToUnfollow": "Entfolgen fehlgeschlagen",
-    "advancedFilters": "Erweiterte Filter",
-    "clearFilters": "Filter Löschen",
-    "primaryPosition": "Hauptposition",
-    "throwingSide": "Wurfseite",
-    "battingSide": "Schlagseite",
-    "heightRange": "Größenbereich",
-    "weightRange": "Gewichtsbereich",
-    "anyPosition": "Jede Position",
-    "anyThrowingSide": "Alle",
-    "anyBattingSide": "Alle",
-    "anyState": "Jedes Bundesland",
-    "anyCommitment": "Alle",
-    "anyYear": "Jedes Jahr",
-    "showFilters": "Filter Anzeigen",
-    "hideFilters": "Filter Ausblenden",
-    "following": "Gefolgte Spieler"
-  },
-  "subscription": {
-    "title": "Abonnement",
-    "plans": "Pläne",
-    "currentPlan": "Aktueller Plan",
-    "upgrade": "Upgrade",
-    "cancel": "Kündigen",
-    "free": "Kostenlos",
-    "pro": "Pro",
-    "premium": "Premium",
-    "perMonth": "/Monat",
-    "features": "Funktionen",
-    "selectPlan": "Plan Auswählen",
-    "checkout": "Zur Kasse",
-    "paymentSuccess": "Zahlung Erfolgreich",
-    "paymentFailed": "Zahlung Fehlgeschlagen"
-  },
-  "errors": {
-    "somethingWentWrong": "Etwas ist schief gelaufen",
-    "tryAgain": "Bitte versuchen Sie es erneut",
-    "notFound": "Seite nicht gefunden",
-    "unauthorized": "Nicht autorisiert",
-    "forbidden": "Zugriff verboten",
-    "networkError": "Netzwerkfehler",
-    "serverError": "Serverfehler",
-    "failedToLoadRankings": "Laden der Ranglisten fehlgeschlagen"
-  },
-  "toast": {
-    "profileUpdated": "Profil erfolgreich aktualisiert",
-    "videoSaved": "Video in Bibliothek gespeichert",
-    "videoDeleted": "Video gelöscht",
-    "annotationSaved": "Annotation gespeichert",
-    "followRequestSent": "Folgeanfrage gesendet",
-    "languageChanged": "Sprache geändert"
-  },
-  "videoPlayer": {
-    "frameByFrameMode": "Bild-für-Bild-Modus",
-    "scoutViewCapture": "Scout-Ansicht - Bilder zum Annotieren aufnehmen",
-    "loopStart": "Schleifenstart",
-    "loopEnd": "Schleifenende",
-    "looping": "Schleife: {{start}}s → {{end}}s",
-    "back": "Zurück",
-    "forward": "Vor",
-    "capture": "Aufnehmen",
-    "mirror": "Spiegeln",
-    "fullscreen": "Vollbild",
-    "markLoopStart": "Schleifenstart Markieren",
-    "markLoopEnd": "Schleifenende Markieren",
-    "clear": "Löschen",
-    "start": "Start",
-    "end": "Ende",
-    "capturedKeyFrames": "Aufgenommene Schlüsselbilder",
-    "downloadAll": "Alle Herunterladen ({{count}})",
-    "keyFrameCaptured": "Schlüsselbild aufgenommen!",
-    "videoNotReady": "Video noch nicht bereit",
-    "loopStartSet": "Schleifenstart bei {{time}}s gesetzt",
-    "loopEndSet": "Schleifenende bei {{time}}s gesetzt",
-    "loopCleared": "Schleife gelöscht",
-    "frameDownloaded": "Bild {{number}} heruntergeladen!",
-    "annotatedFrameDownloaded": "Annotiertes Bild {{number}} heruntergeladen!",
-    "frameRemoved": "Bild entfernt!",
-    "videoOrCanvasNotReady": "Video oder Canvas nicht bereit",
-    "videoNotFullyLoaded": "Video nicht vollständig geladen. Bitte warten und erneut versuchen.",
-    "canvasContextError": "Canvas-Kontext konnte nicht abgerufen werden",
-    "failedToDrawFrame": "Bildaufnahme fehlgeschlagen. Bitte Seite aktualisieren und erneut versuchen.",
-    "cannotCaptureCors": "Bildaufnahme aufgrund von Sicherheitsbeschränkungen nicht möglich. Bitte Seite aktualisieren.",
-    "failedToCaptureLoading": "Bildaufnahme fehlgeschlagen. Das Video wird möglicherweise noch geladen.",
-    "videoProtected": "Video ist geschützt. Bildaufnahme für dieses Video nicht verfügbar.",
-    "failedToCapture": "Bildaufnahme fehlgeschlagen. Bitte erneut versuchen.",
-    "downloadingFrames": "{{count}} Bild(er) werden heruntergeladen...",
-    "stepBackward": "Ein Bild zurück",
-    "stepForward": "Ein Bild vor"
-  },
-  "tutorial": {
-    "step": "Schritt {{current}} von {{total}}",
-    "previous": "Zurück",
-    "next": "Weiter",
-    "startCompeting": "Anfangen zu Konkurrieren",
-    "completed": "Tutorial abgeschlossen!",
-    "failedToComplete": "Tutorial konnte nicht abgeschlossen werden",
-    "player": {
-      "welcome": { "title": "Willkommen bei Hammers Modality!", "description": "Entdecken Sie die Werkzeuge, die Ihnen helfen, Ihr Spiel auf das nächste Level zu bringen." },
-      "creator": { "title": "Ihr Ersteller-Profil", "description": "Richten Sie Ihr Profil ein, um Ihre Trainingserfahrung zu personalisieren und sich mit Scouts zu verbinden." },
-      "modules": { "title": "Trainingsmodule", "description": "Greifen Sie auf spezialisierte Module für Schlagen, Werfen und Pitchen zu, um spezifische Fähigkeiten zu verbessern." },
-      "upload": { "title": "Video-Upload", "description": "Laden Sie Ihre Trainingsvideos hoch, um Hammer-gestützte Analysen Ihrer Technik zu erhalten." },
-      "coaching": { "title": "Hammer-Coaching", "description": "Erhalten Sie detailliertes Feedback und Übungsempfehlungen basierend auf Ihrer Videoanalyse." },
-      "library": { "title": "Spieler-Club", "description": "Speichern und organisieren Sie Ihre Trainingseinheiten in Ihrer persönlichen Bibliothek." },
-      "following": { "title": "Scout-Verbindung", "description": "Verbinden Sie sich mit Scouts und Trainern, die Ihren Trainingsfortschritt sehen können." },
-      "ranking": { "title": "Ranglisten", "description": "Verfolgen Sie Ihren Fortschritt und vergleichen Sie sich mit anderen Athleten in den Ranglisten." },
-      "profile": { "title": "Profileinstellungen", "description": "Passen Sie Ihr Profil an und verwalten Sie Ihre Kontoeinstellungen." }
-    },
-    "scout": {
-      "welcome": { "title": "Willkommen, Scout!", "description": "Lassen Sie uns die Werkzeuge erkunden, um Talente zu entdecken und zu bewerten." },
-      "creator": { "title": "Ihr Scout-Profil", "description": "Richten Sie Ihre Qualifikationen und Organisationszugehörigkeit ein." },
-      "discover": { "title": "Spieler Entdecken", "description": "Durchsuchen und finden Sie talentierte Spieler mit erweiterten Filtern." },
-      "search": { "title": "Erweiterte Suche", "description": "Filtern Sie Spieler nach Position, Bundesland, Erfahrungsstufe und mehr." },
-      "follow": { "title": "Spielern Folgen", "description": "Senden Sie Folgeanfragen, um Zugang zu den Trainingsbibliotheken der Spieler zu erhalten." },
-      "videos": { "title": "Videos Ansehen", "description": "Schauen Sie sich Trainingseinheiten an und analysieren Sie die Techniken der Spieler." },
-      "rankings": { "title": "Spieler-Ranglisten", "description": "Sehen Sie Leistungsranglisten für alle Spieler auf der Plattform." },
-      "analyze": { "title": "Leistung Analysieren", "description": "Überprüfen Sie Hammer-Analysen und fügen Sie Ihre eigenen Anmerkungen zu Spielervideos hinzu." }
-    }
   },
   "nutrition": {
     "categoryContent": {
@@ -1748,6 +1216,386 @@
       }
     }
   },
+  "weather": {
+    "title": "Mit den Elementen Spielen",
+    "subtitle": "Meistern Sie jede Spieltag-Bedingung",
+    "tagline": "Trainieren Sie intelligenter, spielen Sie härter",
+    "subtitleBaseball": "Meistern Sie jede Baseball-Spieltag-Bedingung",
+    "subtitleSoftball": "Meistern Sie jede Softball-Spieltag-Bedingung",
+    "currentConditions": "Aktuelle Bedingungen",
+    "feelsLike": "Gefühlt wie",
+    "wind": "Wind",
+    "humidity": "Luftfeuchtigkeit",
+    "visibility": "Sichtweite",
+    "uvIndex": "UV-Index",
+    "forecast": "7-Tage-Vorhersage",
+    "drillRecommendations": "Übungsempfehlungen",
+    "sportAnalysis": "Bedingungsanalyse",
+    "baseballAnalysis": "Baseball-Bedingungsanalyse",
+    "softballAnalysis": "Softball-Bedingungsanalyse",
+    "enterLocation": "Ort eingeben",
+    "useMyLocation": "Meinen Standort Verwenden",
+    "excellent": "Ausgezeichnet",
+    "fair": "Akzeptabel",
+    "notRecommended": "Nicht Empfohlen",
+    "searchLocation": "Beliebigen Ort suchen...",
+    "retry": "Erneut versuchen",
+    "enterLocationPrompt": "Geben Sie oben einen Ort ein, um Wetterbedingungen und Trainingsempfehlungen zu sehen",
+    "locationDetected": "Standort erkannt",
+    "high": "Hoch",
+    "moderate": "Mäßig",
+    "low": "Niedrig",
+    "clear": "Klar",
+    "good": "Gut",
+    "limited": "Eingeschränkt",
+    "veryHigh": "Sehr Hoch",
+    "ballFlight": "Ballflug",
+    "windImpact": "Windauswirkung",
+    "fieldConditions": "Feldbedingungen",
+    "tracking": "Verfolgung",
+    "uvWarning": "UV-Warnung",
+    "recommendation": "Empfehlung",
+    "toggleDrills": "Übungsempfehlungen Anzeigen",
+    "hideDrills": "Übungsempfehlungen Ausblenden",
+    "drillRecommendationsTitle": "Wetterbasierte Übungsempfehlungen",
+    "proTip": "Profi-Tipp:",
+    "prioritizeDrills": "Konzentrieren Sie sich zuerst auf Übungen mit HOHER Priorität für die beste Trainingsanpassung an die aktuellen Bedingungen.",
+    "toggleForecast": "7-Tage-Vorhersage Anzeigen",
+    "hideForecast": "7-Tage-Vorhersage Ausblenden",
+    "forecastTitle": "7-Tage-Trainingsvorhersage",
+    "today": "Heute",
+    "tomorrow": "Morgen",
+    "trainingExcellent": "Ausgezeichnet - Ideal zum Training",
+    "trainingFair": "Akzeptabel - Bedingungen überwachen",
+    "trainingPoor": "Nicht Empfohlen - Unsicher",
+    "trainingUnknown": "Unbekannt",
+    "precipitationChance": "Niederschlagswahrscheinlichkeit",
+    "failedToLoadWeather": "Laden der Wetterdaten fehlgeschlagen",
+    "noConditions": "Keine spezifischen Bedingungen zu analysieren",
+    "sunrise": "Sonnenaufgang",
+    "sunset": "Sonnenuntergang",
+    "toggleHourlyForecast": "Stündliche Vorhersage Anzeigen",
+    "hideHourlyForecast": "Stündliche Vorhersage Ausblenden",
+    "hourlyForecastTitle": "33-Stunden-Vorhersage",
+    "now": "Jetzt",
+    "todayMorning": "Heute Morgen",
+    "todayAfternoon": "Heute Nachmittag",
+    "todayEvening": "Heute Abend",
+    "tonight": "Heute Nacht",
+    "tomorrowMorning": "Morgen Früh",
+    "tomorrowAfternoon": "Morgen Nachmittag",
+    "tomorrowEvening": "Morgen Abend",
+    "tomorrowNight": "Morgen Nacht",
+    "swipe": "Wischen",
+    "poor": "Schlecht",
+    "gameDayPrep": {
+      "title": "Spieltag-Vorbereitung",
+      "show": "Spieltag-Vorbereitung",
+      "hide": "Vorbereitung Ausblenden",
+      "fieldDirection": "Feldrichtung",
+      "selectGameTime": "Spielzeit Auswählen",
+      "now": "Jetzt",
+      "today": "Heute",
+      "tomorrow": "Morgen",
+      "duration": "Dauer",
+      "minutes": "Minuten",
+      "preGameWarmup": "Aufwärmen vor dem Spiel",
+      "sunImpact": "Sonneneinfluss-Analyse",
+      "sunBelowHorizon": "Die Sonne ist zu dieser Zeit unter dem Horizont",
+      "mayHaveSunGlare": "kann Sonne in den Augen haben",
+      "noSunIssues": "Keine signifikanten Blendprobleme erwartet",
+      "north": "Norden",
+      "northeast": "Nordosten",
+      "east": "Osten",
+      "southeast": "Südosten",
+      "south": "Süden",
+      "southwest": "Südwesten",
+      "west": "Westen",
+      "northwest": "Nordwesten",
+      "batter": "Schlagmann",
+      "catcher": "Fänger",
+      "pitcher": "Werfer",
+      "firstBase": "1B",
+      "secondBase": "2B",
+      "shortstop": "SS",
+      "thirdBase": "3B",
+      "leftFielder": "LF",
+      "centerFielder": "CF",
+      "rightFielder": "RF",
+      "outfitRecommendations": "Ausrüstungsempfehlungen",
+      "temperatureGear": "Temperatur",
+      "uvProtection": "UV-Schutz",
+      "windGear": "Wind",
+      "coldWarmupDuration": "20-25 Minuten",
+      "coldWarmupExercise1": "Leichtes Joggen (10 Min) — Körpertemperatur schrittweise erhöhen",
+      "coldWarmupExercise2": "Dynamisches Dehnen (10 Min) — Beinschwünge, Armkreise, hohe Knie",
+      "coldWarmupExercise3": "Wurfprogression — Bei 6m beginnen, Distanz schrittweise erhöhen",
+      "coldWarmupExercise4": "Positionsspezifische Übungen bei reduzierter Intensität",
+      "coldWarmupTip": "Zusätzliche Zeit für kalte Muskeln erforderlich. Fokus auf schrittweise Wärmeerzeugung.",
+      "moderateWarmupDuration": "12-15 Minuten",
+      "moderateWarmupExercise1": "Leichtes Joggen (5 Min) — Einfaches Aufwärmtempo",
+      "moderateWarmupExercise2": "Dynamisches Dehnen (5 Min) — Standardroutine",
+      "moderateWarmupExercise3": "Wurfprogression — Regulärer Distanzaufbau",
+      "moderateWarmupExercise4": "Positionsspezifische Arbeit bei voller Intensität",
+      "moderateWarmupTip": "Ideale Bedingungen für Standard-Aufwärmprotokoll.",
+      "hotWarmupDuration": "8-10 Minuten",
+      "hotWarmupExercise1": "Gehdehnen im Schatten wenn möglich",
+      "hotWarmupExercise2": "Sanfte Bewegungsmuster — Energie sparen",
+      "hotWarmupExercise3": "Minimales Werfen um Energie für das Spiel zu sparen",
+      "hotWarmupExercise4": "Häufige Wasserpausen alle 3-4 Minuten",
+      "hotWarmupTip": "Anstrengung minimieren um Energie zu sparen. Im Schatten bleiben. Ständig hydrieren.",
+      "coldWeatherGear": "Thermische Basisschichten, Fleecejacke, warme Mütze, Schlaghandschuhe empfohlen",
+      "moderateWeatherGear": "Standarduniform, leichte Ärmel optional für Komfort",
+      "hotWeatherGear": "Leichte atmungsaktive Stoffe, Kühltuch, zusätzliche Hydrationsausrüstung",
+      "uvLow": "Kein spezieller UV-Schutz erforderlich",
+      "uvModerate": "Sonnenschutz SPF 30+ und Sonnenbrille empfohlen",
+      "uvHigh": "SPF 50+ unerlässlich, Schutzbrille, sichere Kappe",
+      "uvVeryHigh": "Maximaler Sonnenschutz, direkte Sonneneinstrahlung begrenzen",
+      "uvExtreme": "Mittagssonne wenn möglich meiden, vollständiger UV-Schutz erforderlich",
+      "windLight": "Standardausrüstung ausreichend",
+      "windModerate": "Sichere Kappe, leichte Windjacke für die Dugout",
+      "windStrong": "Winddichte Außenschicht, alle losen Geräte sichern",
+      "copyToClipboard": "Teilen",
+      "copiedToClipboard": "Spieltag-Vorbereitung kopiert!",
+      "precipitationWarning": "Niederschlagswarnung",
+      "precipitationPossible": "Regen möglich — leichte Regenausrüstung einpacken",
+      "precipitationLikely": "Regen wahrscheinlich — Regenjacke, Plane mitbringen und Ausrüstung schützen",
+      "precipitationHigh": "Hohe Regenwahrscheinlichkeit — vollständige Regenvorbereitung empfohlen",
+      "rainChance": "Wahrscheinlichkeit"
+    },
+    "favorites": {
+      "save": "Ort Speichern",
+      "saved": "Ort Gespeichert",
+      "removed": "Ort Entfernt",
+      "selectFavorite": "Gespeichert",
+      "noFavorites": "Keine gespeicherten Orte",
+      "defaultSet": "Standardort festgelegt",
+      "manage": "Gespeicherte Orte",
+      "setDefault": "Als Standard Festlegen",
+      "rename": "Umbenennen",
+      "delete": "Löschen",
+      "nameUpdated": "Ort umbenannt",
+      "default": "Standard"
+    },
+    "alerts": {
+      "title": "Wetterwarnungen",
+      "expires": "Läuft ab",
+      "instructions": "Sicherheitshinweise"
+    },
+    "airQuality": {
+      "title": "Luftqualität",
+      "unavailable": "N/V"
+    }
+  },
+  "scout": {
+    "dashboard": "Scout-Dashboard",
+    "players": "Spieler",
+    "typeToSearch": "Beginnen Sie mit der Eingabe, um Spieler zu suchen...",
+    "searchPlayers": "Spieler Suchen",
+    "followedPlayers": "Verfolgte Spieler",
+    "pendingRequests": "Ausstehende Anfragen",
+    "sendFollowRequest": "Folgeanfrage Senden",
+    "followRequestSent": "Folgeanfrage Gesendet",
+    "viewVideos": "Videos Ansehen",
+    "annotateVideo": "Video Annotieren",
+    "annotations": "Annotationen",
+    "coachAnnotations": "Trainer-Annotationen",
+    "myAnnotations": "Meine Annotationen",
+    "noAnnotations": "Noch keine Annotationen",
+    "dashboardDescription": "Verwalten Sie Ihre Spielerverfolgungen und entdecken Sie neue Talente",
+    "allSports": "Alle Sportarten",
+    "noFollowingPlayers": "Sie folgen noch keinen Spielern. Suchen Sie nach Spielern, um Ihre Liste aufzubauen.",
+    "viewProfile": "Profil Ansehen",
+    "viewLibrary": "Bibliothek Ansehen",
+    "unfollow": "Entfolgen",
+    "findPlayers": "Spieler Finden",
+    "searchPlayersPlaceholder": "Alle Spieler durchsuchen...",
+    "minCharactersToSearch": "Geben Sie mindestens 2 Zeichen ein, um zu suchen",
+    "searching": "Suche...",
+    "noPlayersFound": "Keine Spieler gefunden, die Ihrer Suche entsprechen",
+    "playerFound": "Spieler gefunden",
+    "playersFound": "Spieler gefunden",
+    "follow": "Folgen",
+    "pending": "Ausstehend",
+    "followingStatus": "Folgend",
+    "unfollowPlayer": "Spieler Entfolgen",
+    "unfollowConfirmation": "Sind Sie sicher, dass Sie {{name}} entfolgen möchten? Sie verlieren den Zugriff auf ihre geteilten Videos.",
+    "unfollowing": "Entfolgen...",
+    "unfollowAction": "Entfolgen",
+    "followRequestSentDescription": "Der Spieler wird benachrichtigt und kann Ihre Anfrage genehmigen.",
+    "unfollowedPlayer": "Spieler entfolgt",
+    "failedToLoadFollowing": "Laden der verfolgten Spieler fehlgeschlagen",
+    "failedToSearchPlayers": "Spielersuche fehlgeschlagen",
+    "failedToUnfollow": "Entfolgen fehlgeschlagen",
+    "advancedFilters": "Erweiterte Filter",
+    "clearFilters": "Filter Löschen",
+    "primaryPosition": "Hauptposition",
+    "throwingSide": "Wurfseite",
+    "battingSide": "Schlagseite",
+    "heightRange": "Größenbereich",
+    "weightRange": "Gewichtsbereich",
+    "anyPosition": "Jede Position",
+    "anyThrowingSide": "Alle",
+    "anyBattingSide": "Alle",
+    "anyState": "Jedes Bundesland",
+    "anyCommitment": "Alle",
+    "anyYear": "Jedes Jahr",
+    "showFilters": "Filter Anzeigen",
+    "hideFilters": "Filter Ausblenden",
+    "following": "Gefolgte Spieler"
+  },
+  "subscription": {
+    "title": "Abonnement",
+    "plans": "Pläne",
+    "currentPlan": "Aktueller Plan",
+    "upgrade": "Upgrade",
+    "cancel": "Kündigen",
+    "free": "Kostenlos",
+    "pro": "Pro",
+    "premium": "Premium",
+    "perMonth": "/Monat",
+    "features": "Funktionen",
+    "selectPlan": "Plan Auswählen",
+    "checkout": "Zur Kasse",
+    "paymentSuccess": "Zahlung Erfolgreich",
+    "paymentFailed": "Zahlung Fehlgeschlagen"
+  },
+  "errors": {
+    "somethingWentWrong": "Etwas ist schief gelaufen",
+    "tryAgain": "Bitte versuchen Sie es erneut",
+    "notFound": "Seite nicht gefunden",
+    "unauthorized": "Nicht autorisiert",
+    "forbidden": "Zugriff verboten",
+    "networkError": "Netzwerkfehler",
+    "serverError": "Serverfehler",
+    "failedToLoadRankings": "Laden der Ranglisten fehlgeschlagen"
+  },
+  "toast": {
+    "profileUpdated": "Profil erfolgreich aktualisiert",
+    "videoSaved": "Video in Bibliothek gespeichert",
+    "videoDeleted": "Video gelöscht",
+    "annotationSaved": "Annotation gespeichert",
+    "followRequestSent": "Folgeanfrage gesendet",
+    "languageChanged": "Sprache geändert"
+  },
+  "videoPlayer": {
+    "frameByFrameMode": "Bild-für-Bild-Modus",
+    "scoutViewCapture": "Scout-Ansicht - Bilder zum Annotieren aufnehmen",
+    "loopStart": "Schleifenstart",
+    "loopEnd": "Schleifenende",
+    "looping": "Schleife: {{start}}s → {{end}}s",
+    "back": "Zurück",
+    "forward": "Vor",
+    "capture": "Aufnehmen",
+    "mirror": "Spiegeln",
+    "fullscreen": "Vollbild",
+    "markLoopStart": "Schleifenstart Markieren",
+    "markLoopEnd": "Schleifenende Markieren",
+    "clear": "Löschen",
+    "start": "Start",
+    "end": "Ende",
+    "capturedKeyFrames": "Aufgenommene Schlüsselbilder",
+    "downloadAll": "Alle Herunterladen ({{count}})",
+    "keyFrameCaptured": "Schlüsselbild aufgenommen!",
+    "videoNotReady": "Video noch nicht bereit",
+    "loopStartSet": "Schleifenstart bei {{time}}s gesetzt",
+    "loopEndSet": "Schleifenende bei {{time}}s gesetzt",
+    "loopCleared": "Schleife gelöscht",
+    "frameDownloaded": "Bild {{number}} heruntergeladen!",
+    "annotatedFrameDownloaded": "Annotiertes Bild {{number}} heruntergeladen!",
+    "frameRemoved": "Bild entfernt!",
+    "videoOrCanvasNotReady": "Video oder Canvas nicht bereit",
+    "videoNotFullyLoaded": "Video nicht vollständig geladen. Bitte warten und erneut versuchen.",
+    "canvasContextError": "Canvas-Kontext konnte nicht abgerufen werden",
+    "failedToDrawFrame": "Bildaufnahme fehlgeschlagen. Bitte Seite aktualisieren und erneut versuchen.",
+    "cannotCaptureCors": "Bildaufnahme aufgrund von Sicherheitsbeschränkungen nicht möglich. Bitte Seite aktualisieren.",
+    "failedToCaptureLoading": "Bildaufnahme fehlgeschlagen. Das Video wird möglicherweise noch geladen.",
+    "videoProtected": "Video ist geschützt. Bildaufnahme für dieses Video nicht verfügbar.",
+    "failedToCapture": "Bildaufnahme fehlgeschlagen. Bitte erneut versuchen.",
+    "downloadingFrames": "{{count}} Bild(er) werden heruntergeladen...",
+    "stepBackward": "Ein Bild zurück",
+    "stepForward": "Ein Bild vor"
+  },
+  "tutorial": {
+    "step": "Schritt {{current}} von {{total}}",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "startCompeting": "Anfangen zu Konkurrieren",
+    "completed": "Tutorial abgeschlossen!",
+    "failedToComplete": "Tutorial konnte nicht abgeschlossen werden",
+    "player": {
+      "welcome": {
+        "title": "Willkommen bei Hammers Modality!",
+        "description": "Entdecken Sie die Werkzeuge, die Ihnen helfen, Ihr Spiel auf das nächste Level zu bringen."
+      },
+      "creator": {
+        "title": "Ihr Ersteller-Profil",
+        "description": "Richten Sie Ihr Profil ein, um Ihre Trainingserfahrung zu personalisieren und sich mit Scouts zu verbinden."
+      },
+      "modules": {
+        "title": "Trainingsmodule",
+        "description": "Greifen Sie auf spezialisierte Module für Schlagen, Werfen und Pitchen zu, um spezifische Fähigkeiten zu verbessern."
+      },
+      "upload": {
+        "title": "Video-Upload",
+        "description": "Laden Sie Ihre Trainingsvideos hoch, um Hammer-gestützte Analysen Ihrer Technik zu erhalten."
+      },
+      "coaching": {
+        "title": "Hammer-Coaching",
+        "description": "Erhalten Sie detailliertes Feedback und Übungsempfehlungen basierend auf Ihrer Videoanalyse."
+      },
+      "library": {
+        "title": "Spieler-Club",
+        "description": "Speichern und organisieren Sie Ihre Trainingseinheiten in Ihrer persönlichen Bibliothek."
+      },
+      "following": {
+        "title": "Scout-Verbindung",
+        "description": "Verbinden Sie sich mit Scouts und Trainern, die Ihren Trainingsfortschritt sehen können."
+      },
+      "ranking": {
+        "title": "Ranglisten",
+        "description": "Verfolgen Sie Ihren Fortschritt und vergleichen Sie sich mit anderen Athleten in den Ranglisten."
+      },
+      "profile": {
+        "title": "Profileinstellungen",
+        "description": "Passen Sie Ihr Profil an und verwalten Sie Ihre Kontoeinstellungen."
+      }
+    },
+    "scout": {
+      "welcome": {
+        "title": "Willkommen, Scout!",
+        "description": "Lassen Sie uns die Werkzeuge erkunden, um Talente zu entdecken und zu bewerten."
+      },
+      "creator": {
+        "title": "Ihr Scout-Profil",
+        "description": "Richten Sie Ihre Qualifikationen und Organisationszugehörigkeit ein."
+      },
+      "discover": {
+        "title": "Spieler Entdecken",
+        "description": "Durchsuchen und finden Sie talentierte Spieler mit erweiterten Filtern."
+      },
+      "search": {
+        "title": "Erweiterte Suche",
+        "description": "Filtern Sie Spieler nach Position, Bundesland, Erfahrungsstufe und mehr."
+      },
+      "follow": {
+        "title": "Spielern Folgen",
+        "description": "Senden Sie Folgeanfragen, um Zugang zu den Trainingsbibliotheken der Spieler zu erhalten."
+      },
+      "videos": {
+        "title": "Videos Ansehen",
+        "description": "Schauen Sie sich Trainingseinheiten an und analysieren Sie die Techniken der Spieler."
+      },
+      "rankings": {
+        "title": "Spieler-Ranglisten",
+        "description": "Sehen Sie Leistungsranglisten für alle Spieler auf der Plattform."
+      },
+      "analyze": {
+        "title": "Leistung Analysieren",
+        "description": "Überprüfen Sie Hammer-Analysen und fügen Sie Ihre eigenen Anmerkungen zu Spielervideos hinzu."
+      }
+    }
+  },
   "annotation": {
     "title": "Rahmen Annotieren",
     "saveAnnotations": "Annotationen Speichern",
@@ -2020,21 +1868,66 @@
       "safetyDisclaimer": "Verliehen für das Abschließen des Bildungsstudiums. Dieses Abzeichen zeigt keine medizinische Bereitschaft oder Freigabe an. Konsultieren Sie immer einen lizenzierten Fachmann.",
       "legendText": "Abzeichen werden durch das Absolvieren von Bildungsinhalten verdient. Sie repräsentieren Wissenserwerb, keine medizinische Freigabe.",
       "items": {
-        "shoulder_scholar": { "name": "Schulter-Gelehrter", "description": "Schulter-Verletzungsausbildung abgeschlossen" },
-        "elbow_expert": { "name": "Ellbogen-Experte", "description": "UCL / Unterarm / Flexor Übersicht abgeschlossen" },
-        "hamstring_headliner": { "name": "Oberschenkel-Experte", "description": "Unterkörper-Modul abgeschlossen" },
-        "ankle_analyst": { "name": "Knöchel-Analyst", "description": "Knöchel-Verletzungsausbildung abgeschlossen" },
-        "wrist_wizard": { "name": "Handgelenk-Zauberer", "description": "Handgelenk- und Handausbildung abgeschlossen" },
-        "back_boss": { "name": "Rücken-Boss", "description": "Rücken- und Wirbelsäulenausbildung abgeschlossen" },
-        "bronze_anatomy": { "name": "Bronze-Anatomie-Abzeichen", "description": "3 Verletzungen studiert" },
-        "silver_anatomy": { "name": "Silber-Anatomie-Abzeichen", "description": "7 Verletzungen studiert" },
-        "gold_anatomy": { "name": "Gold-Anatomie-Abzeichen", "description": "12+ Verletzungen studiert" },
-        "elite_recovery": { "name": "Elite-Erholungs-Abzeichen", "description": "Gesamte Bounce Back Bay Bibliothek abgeschlossen" },
-        "diagnostic_detective": { "name": "Diagnose-Detektiv", "description": "Diagnose-Flussdiagramm-Quiz bestanden" },
-        "red_flag_ready": { "name": "Warnzeichen-Bereit", "description": "Warnzeichen-Quiz bestanden" },
-        "pain_scale_pro": { "name": "Schmerzskala-Profi", "description": "Schmerzbewusstseins-Abschnitt abgeschlossen" },
-        "recovery_intelligence": { "name": "Erholungs-Intelligenz", "description": "Alle Erholungsmethoden-Ausbildung abgeschlossen" },
-        "human_body_mastery": { "name": "Körperbeherrschung", "description": "Jeden Abschnitt mit vollständigem Abschluss beendet" }
+        "shoulder_scholar": {
+          "name": "Schulter-Gelehrter",
+          "description": "Schulter-Verletzungsausbildung abgeschlossen"
+        },
+        "elbow_expert": {
+          "name": "Ellbogen-Experte",
+          "description": "UCL / Unterarm / Flexor Übersicht abgeschlossen"
+        },
+        "hamstring_headliner": {
+          "name": "Oberschenkel-Experte",
+          "description": "Unterkörper-Modul abgeschlossen"
+        },
+        "ankle_analyst": {
+          "name": "Knöchel-Analyst",
+          "description": "Knöchel-Verletzungsausbildung abgeschlossen"
+        },
+        "wrist_wizard": {
+          "name": "Handgelenk-Zauberer",
+          "description": "Handgelenk- und Handausbildung abgeschlossen"
+        },
+        "back_boss": {
+          "name": "Rücken-Boss",
+          "description": "Rücken- und Wirbelsäulenausbildung abgeschlossen"
+        },
+        "bronze_anatomy": {
+          "name": "Bronze-Anatomie-Abzeichen",
+          "description": "3 Verletzungen studiert"
+        },
+        "silver_anatomy": {
+          "name": "Silber-Anatomie-Abzeichen",
+          "description": "7 Verletzungen studiert"
+        },
+        "gold_anatomy": {
+          "name": "Gold-Anatomie-Abzeichen",
+          "description": "12+ Verletzungen studiert"
+        },
+        "elite_recovery": {
+          "name": "Elite-Erholungs-Abzeichen",
+          "description": "Gesamte Bounce Back Bay Bibliothek abgeschlossen"
+        },
+        "diagnostic_detective": {
+          "name": "Diagnose-Detektiv",
+          "description": "Diagnose-Flussdiagramm-Quiz bestanden"
+        },
+        "red_flag_ready": {
+          "name": "Warnzeichen-Bereit",
+          "description": "Warnzeichen-Quiz bestanden"
+        },
+        "pain_scale_pro": {
+          "name": "Schmerzskala-Profi",
+          "description": "Schmerzbewusstseins-Abschnitt abgeschlossen"
+        },
+        "recovery_intelligence": {
+          "name": "Erholungs-Intelligenz",
+          "description": "Alle Erholungsmethoden-Ausbildung abgeschlossen"
+        },
+        "human_body_mastery": {
+          "name": "Körperbeherrschung",
+          "description": "Jeden Abschnitt mit vollständigem Abschluss beendet"
+        }
       }
     },
     "allAreas": "Alle Bereiche",
@@ -2544,9 +2437,21 @@
           "q2": "Wann sollten Sie sofort einen Arzt aufsuchen?",
           "q3": "Was bedeutet RICE bei der Verletzungsbehandlung?",
           "options": {
-            "q1": { "a": "Trotz Schmerzen weiterspielen", "b": "Aktivität stoppen und Situation bewerten", "c": "Sofort Eis auflegen" },
-            "q2": { "a": "Bei leichtem Unbehagen", "b": "Nur bei sichtbarer Blutung", "c": "Bei starken Schmerzen, Deformität oder Funktionsverlust" },
-            "q3": { "a": "Ruhe, Eis, Kompression, Elevation", "b": "Rennen, Eis, Komprimieren, Übung", "c": "Ruhe, Immobilisieren, Kälte, Evaluieren" }
+            "q1": {
+              "a": "Trotz Schmerzen weiterspielen",
+              "b": "Aktivität stoppen und Situation bewerten",
+              "c": "Sofort Eis auflegen"
+            },
+            "q2": {
+              "a": "Bei leichtem Unbehagen",
+              "b": "Nur bei sichtbarer Blutung",
+              "c": "Bei starken Schmerzen, Deformität oder Funktionsverlust"
+            },
+            "q3": {
+              "a": "Ruhe, Eis, Kompression, Elevation",
+              "b": "Rennen, Eis, Komprimieren, Übung",
+              "c": "Ruhe, Immobilisieren, Kälte, Evaluieren"
+            }
           }
         },
         "pain-scale": {
@@ -2554,9 +2459,21 @@
           "q2": "Was ist der Zweck einer Schmerzskala?",
           "q3": "Wie sollte leichtes Unbehagen (1-3) typischerweise behandelt werden?",
           "options": {
-            "q1": { "a": "Jeder Schmerz über 1", "b": "Schmerzniveau 7 oder höher", "c": "Nur Schmerzniveau 10" },
-            "q2": { "a": "Um Schmerzintensität konsistent zu kommunizieren", "b": "Um die genaue Verletzungsdiagnose zu bestimmen", "c": "Um medizinische Versorgung zu vermeiden" },
-            "q3": { "a": "Sofortige Notfallversorgung", "b": "Vollständige Bettruhe", "c": "Überwachen, Aktivität anpassen und präventive Maßnahmen nutzen" }
+            "q1": {
+              "a": "Jeder Schmerz über 1",
+              "b": "Schmerzniveau 7 oder höher",
+              "c": "Nur Schmerzniveau 10"
+            },
+            "q2": {
+              "a": "Um Schmerzintensität konsistent zu kommunizieren",
+              "b": "Um die genaue Verletzungsdiagnose zu bestimmen",
+              "c": "Um medizinische Versorgung zu vermeiden"
+            },
+            "q3": {
+              "a": "Sofortige Notfallversorgung",
+              "b": "Vollständige Bettruhe",
+              "c": "Überwachen, Aktivität anpassen und präventive Maßnahmen nutzen"
+            }
           }
         },
         "red-flags": {
@@ -2564,9 +2481,21 @@
           "q2": "Was sollten Sie tun, wenn Sie Taubheit oder Kribbeln bemerken?",
           "q3": "Warum ist es wichtig, Warnsignale zu erkennen?",
           "options": {
-            "q1": { "a": "Unfähigkeit Gewicht zu tragen oder schwere Deformität", "b": "Leichter Muskelkater nach dem Training", "c": "Leichte Steifheit am Morgen" },
-            "q2": { "a": "Ignorieren und Aktivität fortsetzen", "b": "Eine Woche warten ob es besser wird", "c": "Aktivität stoppen und medizinischen Fachmann konsultieren" },
-            "q3": { "a": "Sie helfen unnötige Ruhe zu vermeiden", "b": "Sie weisen auf potenziell ernste Zustände hin die schnelle Versorgung benötigen", "c": "Sie sind im Sport selten wichtig" }
+            "q1": {
+              "a": "Unfähigkeit Gewicht zu tragen oder schwere Deformität",
+              "b": "Leichter Muskelkater nach dem Training",
+              "c": "Leichte Steifheit am Morgen"
+            },
+            "q2": {
+              "a": "Ignorieren und Aktivität fortsetzen",
+              "b": "Eine Woche warten ob es besser wird",
+              "c": "Aktivität stoppen und medizinischen Fachmann konsultieren"
+            },
+            "q3": {
+              "a": "Sie helfen unnötige Ruhe zu vermeiden",
+              "b": "Sie weisen auf potenziell ernste Zustände hin die schnelle Versorgung benötigen",
+              "c": "Sie sind im Sport selten wichtig"
+            }
           }
         },
         "rtp": {
@@ -2574,9 +2503,21 @@
           "q2": "Wann kann ein Athlet zur nächsten Phase übergehen?",
           "q3": "Was sollte passieren, wenn Schmerzen während der Progression zurückkehren?",
           "options": {
-            "q1": { "a": "Volle Aktivität sofort nach Abklingen der Schmerzen", "b": "Ruhe → Leichte Aktivität → Sportspezifisch → Voller Wettkampf", "c": "Rehabilitation überspringen und mit Spiel testen" },
-            "q2": { "a": "Nach Abschluss jeder Phase ohne erhöhte Symptome", "b": "Nach genau 24 Stunden", "c": "Wann immer er motiviert ist" },
-            "q3": { "a": "Durchdrücken", "b": "Mit gleicher Intensität fortfahren", "c": "Zur vorherigen Phase zurückkehren und neu bewerten" }
+            "q1": {
+              "a": "Volle Aktivität sofort nach Abklingen der Schmerzen",
+              "b": "Ruhe → Leichte Aktivität → Sportspezifisch → Voller Wettkampf",
+              "c": "Rehabilitation überspringen und mit Spiel testen"
+            },
+            "q2": {
+              "a": "Nach Abschluss jeder Phase ohne erhöhte Symptome",
+              "b": "Nach genau 24 Stunden",
+              "c": "Wann immer er motiviert ist"
+            },
+            "q3": {
+              "a": "Durchdrücken",
+              "b": "Mit gleicher Intensität fortfahren",
+              "c": "Zur vorherigen Phase zurückkehren und neu bewerten"
+            }
           }
         },
         "prevention": {
@@ -2584,9 +2525,21 @@
           "q2": "Warum ist richtiges Aufwärmen wichtig?",
           "q3": "Wie beeinflusst ausreichend Schlaf das Verletzungsrisiko?",
           "options": {
-            "q1": { "a": "Alle körperliche Aktivität vermeiden", "b": "Schmerzmittel vor der Aktivität nehmen", "c": "Konsequentes Aufwärmen, Krafttraining und richtige Technik" },
-            "q2": { "a": "Es ist Zeitverschwendung", "b": "Es erhöht den Blutfluss und bereitet Muskeln auf Aktivität vor", "c": "Es ist nur für Profisportler" },
-            "q3": { "a": "Schlechter Schlaf erhöht das Verletzungsrisiko erheblich", "b": "Schlaf hat keinen Einfluss auf Verletzungen", "c": "Weniger Schlaf macht Athleten stärker" }
+            "q1": {
+              "a": "Alle körperliche Aktivität vermeiden",
+              "b": "Schmerzmittel vor der Aktivität nehmen",
+              "c": "Konsequentes Aufwärmen, Krafttraining und richtige Technik"
+            },
+            "q2": {
+              "a": "Es ist Zeitverschwendung",
+              "b": "Es erhöht den Blutfluss und bereitet Muskeln auf Aktivität vor",
+              "c": "Es ist nur für Profisportler"
+            },
+            "q3": {
+              "a": "Schlechter Schlaf erhöht das Verletzungsrisiko erheblich",
+              "b": "Schlaf hat keinen Einfluss auf Verletzungen",
+              "c": "Weniger Schlaf macht Athleten stärker"
+            }
           }
         },
         "recovery": {
@@ -2594,9 +2547,21 @@
           "q2": "Was ist der Hauptvorteil von Kompression?",
           "q3": "Wie lange sollte Eis typischerweise aufgetragen werden?",
           "options": {
-            "q1": { "a": "Innerhalb der ersten 48-72 Stunden nach der Verletzung", "b": "Erst nach einer Woche", "c": "Niemals Eis bei Verletzungen verwenden" },
-            "q2": { "a": "Es erhöht den Blutfluss", "b": "Es sieht professionell aus", "c": "Es hilft Schwellungen zu kontrollieren und bietet Unterstützung" },
-            "q3": { "a": "Ununterbrochen 24 Stunden", "b": "15-20 Minuten am Stück mit Pausen", "c": "Maximal 5 Minuten" }
+            "q1": {
+              "a": "Innerhalb der ersten 48-72 Stunden nach der Verletzung",
+              "b": "Erst nach einer Woche",
+              "c": "Niemals Eis bei Verletzungen verwenden"
+            },
+            "q2": {
+              "a": "Es erhöht den Blutfluss",
+              "b": "Es sieht professionell aus",
+              "c": "Es hilft Schwellungen zu kontrollieren und bietet Unterstützung"
+            },
+            "q3": {
+              "a": "Ununterbrochen 24 Stunden",
+              "b": "15-20 Minuten am Stück mit Pausen",
+              "c": "Maximal 5 Minuten"
+            }
           }
         },
         "equipment": {
@@ -2604,9 +2569,21 @@
           "q2": "Wann sollten Widerstandsbänder verwendet werden?",
           "q3": "Warum sind Schienen und Stützen hilfreich?",
           "options": {
-            "q1": { "a": "Um Muskelmasse aufzubauen", "b": "Myofasziale Entspannung und Muskelregeneration", "c": "Um Dehnung vollständig zu ersetzen" },
-            "q2": { "a": "Nur nach einer Operation", "b": "Für Rehabilitation, Aufwärmen und Kraftübungen", "c": "Niemals, sie sind gefährlich" },
-            "q3": { "a": "Sie heilen Verletzungen sofort", "b": "Sie ersetzen die richtige Rehabilitation", "c": "Sie bieten Stabilität und Unterstützung während der Genesung" }
+            "q1": {
+              "a": "Um Muskelmasse aufzubauen",
+              "b": "Myofasziale Entspannung und Muskelregeneration",
+              "c": "Um Dehnung vollständig zu ersetzen"
+            },
+            "q2": {
+              "a": "Nur nach einer Operation",
+              "b": "Für Rehabilitation, Aufwärmen und Kraftübungen",
+              "c": "Niemals, sie sind gefährlich"
+            },
+            "q3": {
+              "a": "Sie heilen Verletzungen sofort",
+              "b": "Sie ersetzen die richtige Rehabilitation",
+              "c": "Sie bieten Stabilität und Unterstützung während der Genesung"
+            }
           }
         }
       }
@@ -4235,6 +4212,8 @@
       "weekly": "Wöchentlich"
     },
     "delete": {
+      "confirmTitle": "Eintrag löschen?",
+      "confirmMessage": "Diese Aktion kann nicht rückgängig gemacht werden. Dieser Eintrag wird dauerhaft entfernt.",
       "success": "Eintrag erfolgreich gelöscht"
     },
     "quiz": {
@@ -4346,12 +4325,28 @@
         "wellnessPlaceholder": "Wie ist meine Einstellung heute...\n• Sorgen oder Ablenkungen?\n• Was muss ich loslassen?\n• Welche positiven Gedanken trage ich?",
         "moodTitle": "Stimmungs-Check",
         "moodPrompt": "Wie ist deine Stimmung heute Morgen?",
-        "moodLevel1": "Sehr Niedrig", "moodLevel2": "Niedrig", "moodLevel3": "Neutral", "moodLevel4": "Gut", "moodLevel5": "Ausgezeichnet",
-        "moodDesc1": "Kämpfend, fühle mich schlecht", "moodDesc2": "Etwas Negativität", "moodDesc3": "Okay, weder gut noch schlecht", "moodDesc4": "Fühle mich positiv", "moodDesc5": "Exzellente Stimmung, energiegeladen",
+        "moodLevel1": "Sehr Niedrig",
+        "moodLevel2": "Niedrig",
+        "moodLevel3": "Neutral",
+        "moodLevel4": "Gut",
+        "moodLevel5": "Ausgezeichnet",
+        "moodDesc1": "Kämpfend, fühle mich schlecht",
+        "moodDesc2": "Etwas Negativität",
+        "moodDesc3": "Okay, weder gut noch schlecht",
+        "moodDesc4": "Fühle mich positiv",
+        "moodDesc5": "Exzellente Stimmung, energiegeladen",
         "stressTitle": "Stresslevel",
         "stressPrompt": "Wie gestresst fühlst du dich gerade?",
-        "stressLevel1": "Sehr Niedrig", "stressLevel2": "Niedrig", "stressLevel3": "Moderat", "stressLevel4": "Hoch", "stressLevel5": "Sehr Hoch",
-        "stressDesc1": "Ruhig und entspannt", "stressDesc2": "Minimaler Stress", "stressDesc3": "Etwas Druck, handhabbar", "stressDesc4": "Erheblicher Stress", "stressDesc5": "Überwältigender Stress",
+        "stressLevel1": "Sehr Niedrig",
+        "stressLevel2": "Niedrig",
+        "stressLevel3": "Moderat",
+        "stressLevel4": "Hoch",
+        "stressLevel5": "Sehr Hoch",
+        "stressDesc1": "Ruhig und entspannt",
+        "stressDesc2": "Minimaler Stress",
+        "stressDesc3": "Etwas Druck, handhabbar",
+        "stressDesc4": "Erheblicher Stress",
+        "stressDesc5": "Überwältigender Stress",
         "disciplineTitle": "Disziplin-Level",
         "disciplinePrompt": "Wie verpflichtet bist du, heute durchzuziehen, egal was passiert?",
         "disciplineLevel1": "Kämpfend",
@@ -4909,11 +4904,6 @@
       "ready": "Bereit!",
       "daysLeft": "Tage übrig",
       "keepLogging": "Logge täglich weiter, um dein Recap freizuschalten"
-    },
-    "delete": {
-      "confirmTitle": "Eintrag löschen?",
-      "confirmMessage": "Diese Aktion kann nicht rückgängig gemacht werden. Dieser Eintrag wird dauerhaft entfernt.",
-      "success": "Eintrag erfolgreich gelöscht"
     },
     "weekly": {
       "thisWeek": "Diese Woche",
@@ -5730,78 +5720,9 @@
     }
   },
   "myCustomActivities": {
-    "title": "Meine Benutzerdefinierten Aktivitäten",
-    "subtitle": "Vorlagen verwalten, Verlauf anzeigen und Fortschritt verfolgen",
     "tabs": {
-      "templates": "Vorlagen",
-      "history": "Verlauf",
-      "analytics": "Analytik",
-      "hydration": "Hydration",
-      "presets": "Voreinstellungen"
-    },
-    "templates": {
-      "title": "Aktivitätsvorlagen",
-      "create": "Neu Erstellen",
-      "noTemplates": "Noch keine Vorlagen",
-      "noTemplatesHint": "Erstellen Sie Ihre erste benutzerdefinierte Aktivitätsvorlage"
-    },
-    "history": {
-      "title": "Aktivitätsverlauf",
-      "noHistory": "Kein Aktivitätsverlauf",
-      "completed": "Abgeschlossen",
-      "filter": "Nach Typ filtern"
-    },
-    "analytics": {
-      "title": "Aktivitätsanalyse",
-      "totalActivities": "Gesamtaktivitäten",
-      "completionRate": "Abschlussrate",
-      "streak": "Aktuelle Serie",
-      "byType": "Nach Typ"
-    },
-    "hydration": {
-      "title": "Hydrations-Tracking",
-      "settings": "Hydrations-Einstellungen",
-      "dailyGoal": "Tagesziel",
-      "reminderInterval": "Erinnerungsintervall",
-      "startTime": "Startzeit",
-      "endTime": "Endzeit",
-      "enabled": "Erinnerungen Aktiviert",
-      "tracker": "Schnelles Protokoll",
-      "todayProgress": "Heutiger Fortschritt",
-      "addWater": "Wasser Hinzufügen"
-    },
-    "presets": {
-      "title": "Lauf-Voreinstellungen",
-      "categories": {
-        "intervals": "Intervalle",
-        "tempo": "Tempo",
-        "recovery": "Erholung",
-        "distance": "Distanz",
-        "speed": "Geschwindigkeit"
-      },
-      "usePreset": "Verwenden",
-      "customize": "Anpassen",
-      "system": "System-Voreinstellung",
-      "custom": "Benutzerdefinierte Voreinstellung"
-    },
-    "share": {
-      "title": "Vorlage Teilen",
-      "noLink": "Erstellen Sie einen teilbaren Link für diese Vorlage",
-      "creating": "Erstelle...",
-      "createLink": "Link Erstellen",
-      "link": "Freigabelink",
-      "public": "Öffentlicher Zugang",
-      "publicDesc": "Jeder mit dem Link kann ansehen und importieren",
-      "privateDesc": "Link ist derzeit deaktiviert",
-      "views": "Aufrufe",
-      "delete": "Link Löschen",
-      "preview": "Vorschau",
-      "created": "Link erstellt!",
-      "error": "Fehler beim Erstellen des Links",
-      "deleted": "Link gelöscht",
-      "deleteError": "Fehler beim Löschen des Links",
-      "copied": "Link kopiert!",
-      "copyError": "Fehler beim Kopieren des Links"
+      "elitePresets": "Elite-Presets",
+      "loadDashboard": "Last-Dashboard"
     }
   },
   "runningProgress": {
@@ -6177,12 +6098,6 @@
     "useBlockSystem": "Block-Builder verwenden",
     "useBlockSystemDesc": "Organisieren Sie Übungen in strukturierten Blöcken mit intelligentem Last-Tracking"
   },
-  "myCustomActivities": {
-    "tabs": {
-      "elitePresets": "Elite-Presets",
-      "loadDashboard": "Last-Dashboard"
-    }
-  },
   "speedLab": {
     "title": "Speed Lab",
     "subtitle": "Baue Elite-Geschwindigkeit auf, schütze deinen Körper",
@@ -6435,20 +6350,105 @@
   },
   "sportTerms": {
     "baseball": {
-      "pitchTypes": { "fastball": "4-Naht-Fastball", "secondaryFastball": "2-Naht-Fastball", "slider": "Slider", "changeup": "Changeup", "curveball": "Curveball" },
-      "sessionTypes": { "bullpen": "Bullpen-Sitzung", "bp": "Schlagtraining", "scrimmage": "Live-Scrimmage", "warmup": "Langwurf", "cage": "Käfigarbeit" },
-      "metrics": { "spinEfficiency": "Dreheffizienz", "barrelPct": "Barrel %", "commandPct": "Kommando %", "chaseRate": "Verfolgungsrate", "whiffRate": "Fehlschlagrate", "exitVelo": "Abgangsgeschwindigkeit", "launchAngle": "Startwinkel" },
-      "drillNames": { "moundWork": "Hügelarbeit", "longToss": "Langwurf", "bp": "BP-Runden", "teeWork": "Tee-Arbeit" },
-      "splitLabels": { "overall": "Gesamt", "vsLHP": "vs Linkshänder", "vsRHP": "vs Rechtshänder", "home": "Heim", "away": "Auswärts" },
-      "heatMapLabels": { "pitchLocation": "Wurfposition", "chaseZone": "Verfolgungszone", "barrelZone": "Barrel-Zone", "commandMap": "Kommandokarte", "missCluster": "Fehlschlag-Cluster" }
+      "pitchTypes": {
+        "fastball": "4-Naht-Fastball",
+        "secondaryFastball": "2-Naht-Fastball",
+        "slider": "Slider",
+        "changeup": "Changeup",
+        "curveball": "Curveball"
+      },
+      "sessionTypes": {
+        "bullpen": "Bullpen-Sitzung",
+        "bp": "Schlagtraining",
+        "scrimmage": "Live-Scrimmage",
+        "warmup": "Langwurf",
+        "cage": "Käfigarbeit"
+      },
+      "metrics": {
+        "spinEfficiency": "Dreheffizienz",
+        "barrelPct": "Barrel %",
+        "commandPct": "Kommando %",
+        "chaseRate": "Verfolgungsrate",
+        "whiffRate": "Fehlschlagrate",
+        "exitVelo": "Abgangsgeschwindigkeit",
+        "launchAngle": "Startwinkel"
+      },
+      "drillNames": {
+        "moundWork": "Hügelarbeit",
+        "longToss": "Langwurf",
+        "bp": "BP-Runden",
+        "teeWork": "Tee-Arbeit"
+      },
+      "splitLabels": {
+        "overall": "Gesamt",
+        "vsLHP": "vs Linkshänder",
+        "vsRHP": "vs Rechtshänder",
+        "home": "Heim",
+        "away": "Auswärts"
+      },
+      "heatMapLabels": {
+        "pitchLocation": "Wurfposition",
+        "chaseZone": "Verfolgungszone",
+        "barrelZone": "Barrel-Zone",
+        "commandMap": "Kommandokarte",
+        "missCluster": "Fehlschlag-Cluster"
+      }
     },
     "softball": {
-      "pitchTypes": { "fastball": "Fastball (Windmühle)", "circleChange": "Circle Change", "riseball": "Riseball", "dropBall": "Drop Ball", "curveball": "Curveball (12-6 Drop)" },
-      "sessionTypes": { "bullpen": "Kreis-Sitzung", "bp": "Schlagtraining", "scrimmage": "Live-Scrimmage", "warmup": "Langwurf", "cage": "Käfigarbeit" },
-      "metrics": { "snapTightness": "Snap-Präzision", "sweetSpotPct": "Sweet Spot %", "locationPct": "Standort %", "chaseRate": "Verfolgungsrate", "whiffRate": "Fehlschlagrate", "exitVelo": "Abgangsgeschwindigkeit", "launchAngle": "Startwinkel" },
-      "drillNames": { "circleWork": "Kreisarbeit", "longToss": "Langwurf", "bp": "BP-Runden", "teeWork": "Tee-Arbeit" },
-      "splitLabels": { "overall": "Gesamt", "vsLHP": "vs Linkshänderin", "vsRHP": "vs Rechtshänderin", "home": "Heim", "away": "Auswärts" },
-      "heatMapLabels": { "pitchLocation": "Wurfposition", "chaseZone": "Verfolgungszone", "sweetSpotZone": "Sweet-Spot-Zone", "locationMap": "Standortkarte", "missPattern": "Fehlmuster" }
+      "pitchTypes": {
+        "fastball": "Fastball (Windmühle)",
+        "circleChange": "Circle Change",
+        "riseball": "Riseball",
+        "dropBall": "Drop Ball",
+        "curveball": "Curveball (12-6 Drop)"
+      },
+      "sessionTypes": {
+        "bullpen": "Kreis-Sitzung",
+        "bp": "Schlagtraining",
+        "scrimmage": "Live-Scrimmage",
+        "warmup": "Langwurf",
+        "cage": "Käfigarbeit"
+      },
+      "metrics": {
+        "snapTightness": "Snap-Präzision",
+        "sweetSpotPct": "Sweet Spot %",
+        "locationPct": "Standort %",
+        "chaseRate": "Verfolgungsrate",
+        "whiffRate": "Fehlschlagrate",
+        "exitVelo": "Abgangsgeschwindigkeit",
+        "launchAngle": "Startwinkel"
+      },
+      "drillNames": {
+        "circleWork": "Kreisarbeit",
+        "longToss": "Langwurf",
+        "bp": "BP-Runden",
+        "teeWork": "Tee-Arbeit"
+      },
+      "splitLabels": {
+        "overall": "Gesamt",
+        "vsLHP": "vs Linkshänderin",
+        "vsRHP": "vs Rechtshänderin",
+        "home": "Heim",
+        "away": "Auswärts"
+      },
+      "heatMapLabels": {
+        "pitchLocation": "Wurfposition",
+        "chaseZone": "Verfolgungszone",
+        "sweetSpotZone": "Sweet-Spot-Zone",
+        "locationMap": "Standortkarte",
+        "missPattern": "Fehlmuster"
+      }
     }
+  },
+  "staffPlans": {
+    "heading": "Für Trainer und Organisationen",
+    "coachName": "Hammers Coach",
+    "coachPrice": "300 $ pro Monat",
+    "coachLine": "Alle Analysen für beide Sportarten und Trainer-Tools für deine verbundenen Spieler",
+    "orgName": "Hammers Organization",
+    "orgPrice": "1.000 $ pro Monat · 5 Trainerplätze inklusive · zusätzlicher Platz 150 $ pro Monat",
+    "orgLine": "Alles aus Coach für jeden Platz, plus Anlagen-Übersicht, Teams und Zusammenfassungen",
+    "see": "Pläne für Trainer und Organisationen ansehen",
+    "roleNote": "Coach-Plan 300 $/Monat · Organization-Plan 1.000 $/Monat"
   }
 }
