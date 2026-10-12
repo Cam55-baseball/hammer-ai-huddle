@@ -73,6 +73,19 @@ export default function ModerationQueue() {
     return Array.from(ids);
   }, [reports]);
 
+  const msgIds = useMemo(
+    () => reports.filter((r) => r.content_type === "coach_message" && r.content_id).map((r) => r.content_id as string),
+    [reports],
+  );
+  const { data: msgText = {} } = useQuery({
+    queryKey: ["moderation-coach-messages", msgIds],
+    enabled: msgIds.length > 0,
+    queryFn: async (): Promise<Record<string, string>> => {
+      const { data } = await supabase.from("coach_messages").select("id, body").in("id", msgIds);
+      return Object.fromEntries((data ?? []).map((m) => [m.id, m.body]));
+    },
+  });
+
   const { data: names = {} } = useQuery({
     queryKey: ["moderation-names", userIds],
     enabled: userIds.length > 0,
@@ -207,6 +220,12 @@ export default function ModerationQueue() {
                         <span className="text-foreground">Content:</span> {r.content_type}
                         {r.content_id ? ` · ${r.content_id}` : ""}
                       </div>
+                      {r.content_type === "coach_message" && r.content_id && (
+                        <div className="rounded-md border p-2 text-foreground">
+                          <span className="text-xs text-muted-foreground">Reported message: </span>
+                          {msgText[r.content_id] ?? "Message text not available"}
+                        </div>
+                      )}
                       {r.details && (
                         <div className="rounded-md bg-muted/50 p-2 text-foreground">{r.details}</div>
                       )}
