@@ -21910,6 +21910,7 @@ export type Database = {
       cleanup_old_weight_history: { Args: never; Returns: undefined }
       cleanup_synthetic_activity_logs: { Args: never; Returns: undefined }
       coach_athlete_development: { Args: { _athlete: string }; Returns: Json }
+      coach_athlete_discipline: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_games: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_glance: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_load: { Args: { _athlete: string }; Returns: Json }
