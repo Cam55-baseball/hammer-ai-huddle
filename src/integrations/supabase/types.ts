@@ -22969,6 +22969,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      team_discipline_summary: { Args: { _org?: string }; Returns: Json }
       team_org: { Args: { _team: string }; Returns: string }
       tell_hammers_save: {
         Args: {
