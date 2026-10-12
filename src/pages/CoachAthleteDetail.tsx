@@ -2,6 +2,7 @@ import { CoachMessageBox } from "@/components/coach/CoachMessageBox";
 import { CoachDrillAssign } from "@/components/coach/CoachDrillAssign";
 import { CoachAthleteSummary } from "@/components/coach/CoachAthleteSummary";
 import { CoachTestsTab, CoachPrivateNotes } from "@/components/coach/CoachTestsAndNotes";
+import { CoachTrendsTab } from "@/components/coach/CoachTrendsTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
