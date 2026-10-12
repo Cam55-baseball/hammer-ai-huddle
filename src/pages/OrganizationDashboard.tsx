@@ -1,3 +1,4 @@
+import { TeamDisciplineSummary } from "@/components/coach/TeamDisciplineSummary";
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useOrganization } from '@/hooks/useOrganization';
@@ -79,7 +80,7 @@ export default function OrganizationDashboard() {
             </TabsContent>
 
             <TabsContent value="players">
-              <FacilityBoard orgId={activeOrg.id} />
+              <div className="space-y-4"><FacilityBoard orgId={activeOrg.id} /><TeamDisciplineSummary orgId={activeOrg.id} /></div>
             </TabsContent>
 
             <TabsContent value="compare">
