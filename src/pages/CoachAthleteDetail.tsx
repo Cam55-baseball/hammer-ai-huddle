@@ -6,6 +6,7 @@ import { CoachTrendsTab } from "@/components/coach/CoachTrendsTab";
 import { CoachLoadTab } from "@/components/coach/CoachLoadTab";
 import { CoachGamesTab } from "@/components/coach/CoachGamesTab";
 import { CoachReadinessTab } from "@/components/coach/CoachReadinessTab";
+import { CoachReportsTab, CoachGradesTab, CoachRecapTab } from "@/components/coach/CoachReportsTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -212,6 +213,9 @@ export default function CoachAthleteDetail() {
             <TabsTrigger value="load">Body load</TabsTrigger>
             <TabsTrigger value="games">Game stats</TabsTrigger>
             <TabsTrigger value="readiness">Readiness &amp; pain</TabsTrigger>
+            <TabsTrigger value="reports">Reports</TabsTrigger>
+            <TabsTrigger value="grades">Grades</TabsTrigger>
+            <TabsTrigger value="recap">Six-week recap</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
           </TabsList>
 
