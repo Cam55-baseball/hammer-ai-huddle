@@ -371,6 +371,8 @@ interface Prescription {
 // This local re-export is intentional so any residual reference keeps working
 // while the canonical authority lives in the shared module.
 import { OS_ONLY_ECCENTRIC_SLUGS, IN_SEASON_BLOCKED_SLUGS } from "../_shared/wic/season.ts";
+import { isolationAllowed, robustnessAreas, robustnessPool, ROBUSTNESS_IN_SEASON_SETS, IN_SEASON_SESSION_SET_CAP, AREA_LABEL } from "../_shared/wic/lift/blueprint.ts";
+import { oppositeLowerPool } from "../_shared/wic/lift/areaMap.ts";
 
 // Step 20 C3 — the first request an isolate serves pays for loading the code.
 // That build is not comparable with a warm one, so the watchdog logs it for
@@ -2778,6 +2780,29 @@ const handler = async (req: Request): Promise<Response> => {
         const finisherPool = StrengthEngine.TRUNK_FINISHER_SLUGS.filter((s) => isolationAllowed(s, { phase: phaseRes.phase, goalBlock: sizeBlock }));
         const finisher = pickBestLift(finisherPool, "trunk_finisher") ?? pickFirstLift(finisherPool);
         if (finisher) push("lift", "trunk_finisher", finisher, {}, `Loaded trunk finisher — locks the rotational strength from above.${goalWhy(finisher)}`);
+      }
+
+      // 9) Robustness slot (owner Option B, 2026-10-12) — every lift day, all
+      // year, rotating to the areas the main lifts leave short. In-season:
+      // 1 set each, never on game day or within 48 h of a game/start.
+      const robustFreshBlock = isInSeason && (isGameDay || gameProximity.within48h || gameProximity.primerOnly || gameProximity.removeLift);
+      if (!robustFreshBlock) {
+        const epochDay = Math.floor(Date.parse(planDate + "T00:00:00Z") / 86400000);
+        const robustCtx = { phase: phaseRes.phase, goalBlock: null };
+        for (const area of robustnessAreas(phaseRes.phase, dayOfWeek, epochDay)) {
+          const pool = robustnessPool(area, robustCtx);
+          const pick = pickBestLift(pool, `robustness_${area}`) ?? pickFirstLift(pool);
+          if (!pick) continue;
+          if (isInSeason) {
+            const liftSets = rxs.filter((r: any) => r.slot === "lift").reduce((a: number, r: any) => a + (Number(r.sets) || 0), 0);
+            if (liftSets + ROBUSTNESS_IN_SEASON_SETS > IN_SEASON_SESSION_SET_CAP) {
+              selectionSkips.record({ domain: "lift", requirement: "robustness", reason: "Robustness work was left out today so your in-season lift stays short and fresh." });
+              continue;
+            }
+          }
+          const cap = isInSeason ? ({ dose_cap: { sets: ROBUSTNESS_IN_SEASON_SETS } } as any) : {};
+          push("lift", "supplemental", pick, cap, `Robustness — keeps your ${AREA_LABEL[area].toLowerCase()} strong all year${isInSeason ? " (1 set in-season so you stay fresh)" : ""}.`, { robustness_area: area });
+        }
       }
 
       } // end of the loaded lift block (skipped entirely on a rest day)

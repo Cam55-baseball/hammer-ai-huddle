@@ -274,6 +274,13 @@
       "when": 1791771963151,
       "tag": "0038_coach_athlete_readiness",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1791821988151,
+      "tag": "0039_exclude_system_accounts_from_anon_training",
+      "breakpoints": true
     }
   ]
 }
