@@ -1,4 +1,6 @@
-export function getGradeLabel(score: number): string {
+import { ratingBand } from '@/lib/benchmarks/gradeScale';
+
+function scoutWord(score: number): string {
   if (score >= 70) return 'Elite';
   if (score >= 60) return 'Plus-Plus';
   if (score >= 55) return 'Plus';
@@ -7,4 +9,9 @@ export function getGradeLabel(score: number): string {
   if (score >= 40) return 'Below Average';
   if (score >= 30) return 'Fringe';
   return 'Poor';
+}
+
+/** Scout word plus the Plan 4 band, e.g. "Plus · Acceptable". */
+export function getGradeLabel(score: number): string {
+  return `${scoutWord(score)} · ${ratingBand(score)}`;
 }

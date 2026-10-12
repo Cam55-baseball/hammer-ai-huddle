@@ -3,6 +3,7 @@ import { useDaySessions } from '@/hooks/useDaySessions';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Target } from 'lucide-react';
 import { getGradeLabel } from '@/lib/gradeLabel';
+import { formatGrade } from '@/lib/benchmarks/gradeScale';
 import { generateInsights } from '@/lib/sessionInsights';
 import { SessionDetailDialog } from './SessionDetailDialog';
 import { cn } from '@/lib/utils';
@@ -86,7 +87,7 @@ export function DaySessionsList({ date }: DaySessionsListProps) {
                 </div>
                 {grade != null && (
                   <Badge variant="outline" className="text-xs flex-shrink-0">
-                    {getGradeLabel(grade)} ({Math.round(grade)})
+                    {getGradeLabel(grade)} ({formatGrade(grade)})
                   </Badge>
                 )}
               </div>
