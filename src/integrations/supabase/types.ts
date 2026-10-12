@@ -9563,6 +9563,8 @@ export type Database = {
           movement_done_at: string | null
           movement_screen: Json | null
           pain_flag: boolean
+          parent_present_confirmed_at: string | null
+          recorded_at: string | null
           recorded_by: string | null
           recorded_by_label: string | null
           updated_at: string
@@ -9576,6 +9578,8 @@ export type Database = {
           movement_done_at?: string | null
           movement_screen?: Json | null
           pain_flag?: boolean
+          parent_present_confirmed_at?: string | null
+          recorded_at?: string | null
           recorded_by?: string | null
           recorded_by_label?: string | null
           updated_at?: string
@@ -9589,6 +9593,8 @@ export type Database = {
           movement_done_at?: string | null
           movement_screen?: Json | null
           pain_flag?: boolean
+          parent_present_confirmed_at?: string | null
+          recorded_at?: string | null
           recorded_by?: string | null
           recorded_by_label?: string | null
           updated_at?: string
@@ -22358,6 +22364,15 @@ export type Database = {
         }[]
       }
       coach_calibration_summary: { Args: never; Returns: Json }
+      coach_record_movement_screen: {
+        Args: {
+          _athlete: string
+          _pain: boolean
+          _parent_present?: boolean
+          _screen: Json
+        }
+        Returns: Json
+      }
       combine_evaluator_context: {
         Args: { p_athlete: string; p_sport: string }
         Returns: Json

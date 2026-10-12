@@ -393,6 +393,13 @@
       "when": 1791845377989,
       "tag": "0055_scout_grade_decimals",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1791845508319,
+      "tag": "0056_coach_onspot_assessment",
+      "breakpoints": true
     }
   ]
 }
