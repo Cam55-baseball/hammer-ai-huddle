@@ -16,7 +16,7 @@ export function CoachDisciplineTab({ athleteId }: { athleteId: string }) {
   if (error || !data) return <p className="text-sm text-muted-foreground">Could not load discipline.</p>;
 
   const past: DayRecord[] = data.days.filter((d) => d.date < data.to).map((d) => ({ ...d, logged: d.done > 0 }));
-  const end = past.at(-1)?.date ?? data.to;
+  const end = past[past.length - 1]?.date ?? data.to;
   const pct = (n: 7 | 28 | 90) => { const c = completion(windowDays(past, end, n)); return c === null ? "Not enough data" : `${c}%`; };
 
   return (
