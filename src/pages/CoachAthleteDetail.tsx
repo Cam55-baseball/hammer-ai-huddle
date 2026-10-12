@@ -231,6 +231,18 @@ export default function CoachAthleteDetail() {
             {athleteId && <CoachGamesTab athleteId={athleteId} />}
           </TabsContent>
 
+          <TabsContent value="reports" className="space-y-4 pt-4">
+            {athleteId && <CoachReportsTab athleteId={athleteId} />}
+          </TabsContent>
+
+          <TabsContent value="grades" className="space-y-4 pt-4">
+            {athleteId && <CoachGradesTab athleteId={athleteId} />}
+          </TabsContent>
+
+          <TabsContent value="recap" className="space-y-4 pt-4">
+            {athleteId && <CoachRecapTab athleteId={athleteId} />}
+          </TabsContent>
+
           <TabsContent value="load" className="space-y-4 pt-4">
             {athleteId && <CoachLoadTab athleteId={athleteId} />}
           </TabsContent>
