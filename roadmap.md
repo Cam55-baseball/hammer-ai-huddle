@@ -1,3 +1,191 @@
+# REPORT — 2026-10-12 18:55 UTC (owner OK: plan builder with Lifting Option B)
+
+**Ready to publish: no.** (Phase 11 still waits on the owner's 4 billing answers.)
+
+**PLAN BUILDER DEPLOYED (owner OK by name) — PASS.** Before deploying: the 23 lifting tests passed. Deployed only the plan builder (wk-generate-daily). It is on the shared backend, so the live app now builds plans with Option B. No publish, no cron change, no iOS change.
+Proof on the live builder (real test players, real builder):
+- Off-season lift day (Demo College Outfielder, Fri 2026-10-16, Offseason Q1): robustness exercise added — "Robustness — keeps your hip rotation strong all year" (hip airplane). On Tue 2026-10-13 no extra was added because that day's areas (hip rotation, squat) were already covered by the main lifts (hip airplane, split squat hold); the builder never doubles an exercise. Both days were also trimmed by the existing "easing back in" lifting cap (6 hard sets).
+- In-season lift day, no game near (Demo HS Shortstop, 2026-10-13): robustness added at 1 set each (total-body power: med-ball scoop toss; hamstring: slider bridge curl). Whole lift = 11 sets, under the 13-set in-season cap.
+- Near a game (Demo MLB Outfielder, game day 2026-10-13, game 6 h away): robustness withheld (0 rows), primer-only day.
+- Recovery days (2026-10-14 for both): no robustness, light work only.
+- Daily plan job: 18:40 run OK (0 failed); 18:50 run — the first one to build on the new builder — built 3 plans, 0 failed, 0 worker errors.
+Cleanup: test plans, run rows and build claims made during the check were deleted (0 left) and the four demo players' "started" flag was put back. (A code-checker tool crashed on this machine before deploy; that was a tool crash, not an error in the app code.)
+
+**Next item:** Phase 11 sponsorship billing, once the owner answers the 4 questions below.
+**Waiting on the owner:** the 4 billing answers (price per sponsored player, monthly/yearly; which modules; grace period; players already paying); keep or remove Spaces (off); Vault review queue.
+
+## READ-ONLY ANSWER 1 — What the 6-week test (vault_performance_tests) contains
+
+Nothing changed. The first test is the same list as every later 6-week test. It is built from three things: the sport, the program's sections, and the program's data level (Complete Pitcher = level 2, 5Tool Player = level 3, Golden 2Way = level 4). Sections: Complete Pitcher = Pitching; 5Tool Player = Hitting + Throwing; Golden 2Way = Hitting + Pitching + Throwing. Each section also includes the "general" (whole-athlete) tests. The player picks one section per test. Units: s = seconds, in = inches, ft = feet, mph, deg = degrees.
+### baseball · Complete Pitcher · pitching section (23)
+- speed: 10-Yard Dash (s); 30-Yard Dash (s); 60-Yard Dash (s)
+- power_lower: SL Broad Jump (in); SL Vertical Jump (in); SL Lateral Broad Jump (in); Vertical Jump (in); Standing Broad Jump (in)
+- power_upper: MB Situp Throw (5lb) (ft); Seated Chest Pass (5lb) (ft); MB Rotational Throw (5lb) (ft)
+- throwing_velocity: Long Toss Distance (ft); Pitching Velocity (mph); Position Player Throw Velo (mph)
+- mobility: Single Leg 3x Bound (ft); Shoulder ROM Internal (deg); Shoulder ROM External (deg); Hip Internal Rotation (deg)
+- quickness: 5-10-5 Pro Agility (s); Lateral Shuffle (10yd) (s)
+- fielding: Fielding Exchange Time (s)
+- body_control: SL Balance (Eyes Closed) (s)
+- energy_system: 300yd Shuttle (s)
+
+### baseball · 5Tool Player · hitting section (25)
+- speed: 10-Yard Dash (s); 30-Yard Dash (s); 60-Yard Dash (s)
+- quickness: 5-10-5 Pro Agility (s); Lateral Shuffle (10yd) (s)
+- power_lower: SL Broad Jump (in); SL Lateral Broad Jump (in); Vertical Jump (in); SL Vertical Jump (in); Standing Broad Jump (in)
+- power_upper: MB Situp Throw (5lb) (ft); Seated Chest Pass (5lb) (ft); MB Rotational Throw (5lb) (ft)
+- exit_velocity: Tee Exit Velocity (mph); Max Tee Distance (ft); Bat Speed (mph)
+- throwing_velocity: Position Player Throw Velo (mph); Long Toss Distance (ft)
+- mobility: Single Leg 3x Bound (ft); Hip Internal Rotation (deg); Shoulder ROM Internal (deg); Shoulder ROM External (deg)
+- fielding: Fielding Exchange Time (s)
+- body_control: SL Balance (Eyes Closed) (s)
+- energy_system: 300yd Shuttle (s)
+
+### baseball · 5Tool Player · throwing section (23)
+- speed: 10-Yard Dash (s); 30-Yard Dash (s); 60-Yard Dash (s)
+- quickness: 5-10-5 Pro Agility (s); Lateral Shuffle (10yd) (s)
+- power_lower: SL Broad Jump (in); SL Lateral Broad Jump (in); SL Vertical Jump (in); Vertical Jump (in); Standing Broad Jump (in)
+- power_upper: MB Situp Throw (5lb) (ft); Seated Chest Pass (5lb) (ft); MB Rotational Throw (5lb) (ft)
+- throwing_velocity: Long Toss Distance (ft); Position Player Throw Velo (mph)
+- fielding: Fielding Exchange Time (s); Pop Time (Catchers) (s)
+- mobility: Single Leg 3x Bound (ft); Shoulder ROM Internal (deg); Shoulder ROM External (deg); Hip Internal Rotation (deg)
+- body_control: SL Balance (Eyes Closed) (s)
+- energy_system: 300yd Shuttle (s)
+
+### baseball · Golden 2Way · hitting section (34)
+- speed: 10-Yard Dash (s); 30-Yard Dash (s); 60-Yard Dash (s); 10-30 Split (s); 30-60 Split (s)
+- quickness: 5-10-5 Pro Agility (s); Lateral Shuffle (10yd) (s); First Step (5yd) (s)
+- power_lower: SL Broad Jump (in); SL Lateral Broad Jump (in); Vertical Jump (in); SL Vertical Jump (in); Standing Broad Jump (in)
+- power_upper: MB Situp Throw (5lb) (ft); Seated Chest Pass (5lb) (ft); MB Rotational Throw (5lb) (ft); MB Overhead Throw (5lb) (ft)
+- exit_velocity: Tee Exit Velocity (mph); Max Tee Distance (ft); Bat Speed (mph); Avg Exit Velo (BP, 10 swings) (mph)
+- throwing_velocity: Position Player Throw Velo (mph); Long Toss Distance (ft)
+- mobility: Single Leg 3x Bound (ft); Hip Internal Rotation (deg); Shoulder ROM Internal (deg); Shoulder ROM External (deg); Ankle Dorsiflexion (in)
+- fielding: Fielding Exchange Time (s); 60yd Shuttle (s)
+- body_control: SL Balance (Eyes Closed) (s); Deceleration (10yd stop) (s)
+- energy_system: 300yd Shuttle (s); Sprint Repeatability (6×30yd avg) (s)
+
+### baseball · Golden 2Way · pitching section (32)
+- speed: 10-Yard Dash (s); 30-Yard Dash (s); 60-Yard Dash (s); 10-30 Split (s); 30-60 Split (s)
+- power_lower: SL Broad Jump (in); SL Vertical Jump (in); SL Lateral Broad Jump (in); Vertical Jump (in); Standing Broad Jump (in)
+- power_upper: MB Situp Throw (5lb) (ft); Seated Chest Pass (5lb) (ft); MB Rotational Throw (5lb) (ft); MB Overhead Throw (5lb) (ft)
+- throwing_velocity: Long Toss Distance (ft); Pitching Velocity (mph); Pulldown Velocity (mph); Position Player Throw Velo (mph)
+- mobility: Single Leg 3x Bound (ft); Shoulder ROM Internal (deg); Shoulder ROM External (deg); Hip Internal Rotation (deg); Ankle Dorsiflexion (in)
+- quickness: 5-10-5 Pro Agility (s); Lateral Shuffle (10yd) (s); First Step (5yd) (s)
+- fielding: Fielding Exchange Time (s); 60yd Shuttle (s)
+- body_control: SL Balance (Eyes Closed) (s); Deceleration (10yd stop) (s)
+- energy_system: 300yd Shuttle (s); Sprint Repeatability (6×30yd avg) (s)
+
+### baseball · Golden 2Way · throwing section (31)
+- speed: 10-Yard Dash (s); 30-Yard Dash (s); 60-Yard Dash (s); 10-30 Split (s); 30-60 Split (s)
+- quickness: 5-10-5 Pro Agility (s); Lateral Shuffle (10yd) (s); First Step (5yd) (s)
+- power_lower: SL Broad Jump (in); SL Lateral Broad Jump (in); SL Vertical Jump (in); Vertical Jump (in); Standing Broad Jump (in)
+- power_upper: MB Situp Throw (5lb) (ft); Seated Chest Pass (5lb) (ft); MB Rotational Throw (5lb) (ft); MB Overhead Throw (5lb) (ft)
+- throwing_velocity: Long Toss Distance (ft); Position Player Throw Velo (mph)
+- fielding: Fielding Exchange Time (s); Pop Time (Catchers) (s); 60yd Shuttle (s)
+- mobility: Single Leg 3x Bound (ft); Shoulder ROM Internal (deg); Shoulder ROM External (deg); Hip Internal Rotation (deg); Ankle Dorsiflexion (in)
+- body_control: SL Balance (Eyes Closed) (s); Deceleration (10yd stop) (s)
+- energy_system: 300yd Shuttle (s); Sprint Repeatability (6×30yd avg) (s)
+
+### softball · Complete Pitcher · pitching section (23)
+- speed: 7-Yard Dash (s); 30-Yard Dash (s); 40-Yard Dash (s)
+- power_lower: SL Broad Jump (in); SL Vertical Jump (in); SL Lateral Broad Jump (in); Vertical Jump (in); Standing Broad Jump (in)
+- power_upper: MB Situp Throw (5lb) (ft); Seated Chest Pass (5lb) (ft); MB Rotational Throw (5lb) (ft)
+- throwing_velocity: Long Toss Distance (ft); Pitching Velocity (mph); Position Player Throw Velo (mph)
+- mobility: Single Leg 3x Bound (ft); Shoulder ROM Internal (deg); Shoulder ROM External (deg); Hip Internal Rotation (deg)
+- quickness: 5-10-5 Pro Agility (s); Lateral Shuffle (10yd) (s)
+- fielding: Fielding Exchange Time (s)
+- body_control: SL Balance (Eyes Closed) (s)
+- energy_system: 300yd Shuttle (s)
+
+### softball · 5Tool Player · hitting section (25)
+- speed: 7-Yard Dash (s); 30-Yard Dash (s); 40-Yard Dash (s)
+- quickness: 5-10-5 Pro Agility (s); Lateral Shuffle (10yd) (s)
+- power_lower: SL Broad Jump (in); SL Lateral Broad Jump (in); Vertical Jump (in); SL Vertical Jump (in); Standing Broad Jump (in)
+- power_upper: MB Situp Throw (5lb) (ft); Seated Chest Pass (5lb) (ft); MB Rotational Throw (5lb) (ft)
+- exit_velocity: Tee Exit Velocity (mph); Max Tee Distance (ft); Bat Speed (mph)
+- throwing_velocity: Position Player Throw Velo (mph); Long Toss Distance (ft)
+- mobility: Single Leg 3x Bound (ft); Hip Internal Rotation (deg); Shoulder ROM Internal (deg); Shoulder ROM External (deg)
+- fielding: Fielding Exchange Time (s)
+- body_control: SL Balance (Eyes Closed) (s)
+- energy_system: 300yd Shuttle (s)
+
+### softball · 5Tool Player · throwing section (23)
+- speed: 7-Yard Dash (s); 30-Yard Dash (s); 40-Yard Dash (s)
+- quickness: 5-10-5 Pro Agility (s); Lateral Shuffle (10yd) (s)
+- power_lower: SL Broad Jump (in); SL Lateral Broad Jump (in); SL Vertical Jump (in); Vertical Jump (in); Standing Broad Jump (in)
+- power_upper: MB Situp Throw (5lb) (ft); Seated Chest Pass (5lb) (ft); MB Rotational Throw (5lb) (ft)
+- throwing_velocity: Long Toss Distance (ft); Position Player Throw Velo (mph)
+- fielding: Fielding Exchange Time (s); Pop Time (Catchers) (s)
+- mobility: Single Leg 3x Bound (ft); Shoulder ROM Internal (deg); Shoulder ROM External (deg); Hip Internal Rotation (deg)
+- body_control: SL Balance (Eyes Closed) (s)
+- energy_system: 300yd Shuttle (s)
+
+### softball · Golden 2Way · hitting section (34)
+- speed: 7-Yard Dash (s); 30-Yard Dash (s); 40-Yard Dash (s); 10-30 Split (s); 30-60 Split (s)
+- quickness: 5-10-5 Pro Agility (s); Lateral Shuffle (10yd) (s); First Step (5yd) (s)
+- power_lower: SL Broad Jump (in); SL Lateral Broad Jump (in); Vertical Jump (in); SL Vertical Jump (in); Standing Broad Jump (in)
+- power_upper: MB Situp Throw (5lb) (ft); Seated Chest Pass (5lb) (ft); MB Rotational Throw (5lb) (ft); MB Overhead Throw (5lb) (ft)
+- exit_velocity: Tee Exit Velocity (mph); Max Tee Distance (ft); Bat Speed (mph); Avg Exit Velo (BP, 10 swings) (mph)
+- throwing_velocity: Position Player Throw Velo (mph); Long Toss Distance (ft)
+- mobility: Single Leg 3x Bound (ft); Hip Internal Rotation (deg); Shoulder ROM Internal (deg); Shoulder ROM External (deg); Ankle Dorsiflexion (in)
+- fielding: Fielding Exchange Time (s); 60yd Shuttle (s)
+- body_control: SL Balance (Eyes Closed) (s); Deceleration (10yd stop) (s)
+- energy_system: 300yd Shuttle (s); Sprint Repeatability (6×30yd avg) (s)
+
+### softball · Golden 2Way · pitching section (32)
+- speed: 7-Yard Dash (s); 30-Yard Dash (s); 40-Yard Dash (s); 10-30 Split (s); 30-60 Split (s)
+- power_lower: SL Broad Jump (in); SL Vertical Jump (in); SL Lateral Broad Jump (in); Vertical Jump (in); Standing Broad Jump (in)
+- power_upper: MB Situp Throw (5lb) (ft); Seated Chest Pass (5lb) (ft); MB Rotational Throw (5lb) (ft); MB Overhead Throw (5lb) (ft)
+- throwing_velocity: Long Toss Distance (ft); Pitching Velocity (mph); Pulldown Velocity (mph); Position Player Throw Velo (mph)
+- mobility: Single Leg 3x Bound (ft); Shoulder ROM Internal (deg); Shoulder ROM External (deg); Hip Internal Rotation (deg); Ankle Dorsiflexion (in)
+- quickness: 5-10-5 Pro Agility (s); Lateral Shuffle (10yd) (s); First Step (5yd) (s)
+- fielding: Fielding Exchange Time (s); 60yd Shuttle (s)
+- body_control: SL Balance (Eyes Closed) (s); Deceleration (10yd stop) (s)
+- energy_system: 300yd Shuttle (s); Sprint Repeatability (6×30yd avg) (s)
+
+### softball · Golden 2Way · throwing section (31)
+- speed: 7-Yard Dash (s); 30-Yard Dash (s); 40-Yard Dash (s); 10-30 Split (s); 30-60 Split (s)
+- quickness: 5-10-5 Pro Agility (s); Lateral Shuffle (10yd) (s); First Step (5yd) (s)
+- power_lower: SL Broad Jump (in); SL Lateral Broad Jump (in); SL Vertical Jump (in); Vertical Jump (in); Standing Broad Jump (in)
+- power_upper: MB Situp Throw (5lb) (ft); Seated Chest Pass (5lb) (ft); MB Rotational Throw (5lb) (ft); MB Overhead Throw (5lb) (ft)
+- throwing_velocity: Long Toss Distance (ft); Position Player Throw Velo (mph)
+- fielding: Fielding Exchange Time (s); Pop Time (Catchers) (s); 60yd Shuttle (s)
+- mobility: Single Leg 3x Bound (ft); Shoulder ROM Internal (deg); Shoulder ROM External (deg); Hip Internal Rotation (deg); Ankle Dorsiflexion (in)
+- body_control: SL Balance (Eyes Closed) (s); Deceleration (10yd stop) (s)
+- energy_system: 300yd Shuttle (s); Sprint Repeatability (6×30yd avg) (s)
+
+## READ-ONLY ANSWER 2 — AI cost per video analysis (from the code)
+
+How the AI is called: every analysis goes through one shared caller. It tries Google Gemini first. If Google refuses or fails, it tries OpenAI once (gpt-4o-mini; gpt-4o for "pro" models). That caller has no automatic retries of its own. Note: the code sends "gemini-2.5-flash" requests to Google as **gemini-3.6-flash** (flash-lite too, and pro goes to gemini-3.5-pro), so the real Google rate may not be the 2.5 Flash rate. All prices below use the rates you asked for ($0.30 per 1M input, $2.50 per 1M output). Output includes Gemini's "thinking" tokens, and no output limit is set, so output is the biggest unknown. Token counts are estimates (instructions measured from the code at ~4 characters per token; picture sizes estimated).
+
+**Main video analysis (analyze-video): Hitting, Pitching and Throwing, baseball and softball.**
+- AI calls: 1 per analysis. Re-running the same video with the same version returns the saved result for free (cached).
+- What is sent: 7 pictures from the video (longest side at most 1,280 px) plus the measurements already worked out on the phone. Body tracking (pose) runs on the phone, not on a paid server.
+- Input per call: instructions + rules + answer format ≈ hitting 28k tokens (both sports); baseball pitching ≈ 9.5k; softball pitching ≈ 14.5k; throwing ≈ 10k. Pictures add ≈ 3.6k (7 × ~516) typical, ≈ 7.2k worst.
+- Output per call: ≈ 3–5k typical (scores, feedback, drills, report-card measurements, plus thinking); ≈ 10k worst.
+- Cost (typical / worst incl. a failed Google call that still bills + the OpenAI backup):
+  - Hitting: ≈ $0.019 / ≈ $0.07
+  - Baseball pitching: ≈ $0.014 / ≈ $0.065
+  - Softball pitching: ≈ $0.015 / ≈ $0.067
+  - Throwing (both sports): ≈ $0.014 / ≈ $0.065
+  - (The worst case is mostly OpenAI's picture charge: 7 large pictures on gpt-4o-mini ≈ $0.027, plus ≈ $0.01 text.)
+
+**Base-stealing reaction rep (analyze-base-stealing-rep):** 1 call, 20 pictures + timing text. ≈ 6–21k input, ≈ 1–3k output (with thinking). ≈ $0.007 typical / ≈ $0.08 worst (20 pictures on the OpenAI backup).
+
+**Game Plan at-bat swing (gp-analyze-ab-swing):** 1 call. The whole clip is sent to Gemini (≈ 300 tokens per second of video), plus pitcher/at-bat text. A 10 s clip ≈ 4–5k input, ≈ 2k output ≈ $0.007. Worst: a 60 s clip (≈ 18k) or a non-video file sent as text (up to ≈ 60k tokens) with ≈ 8k output ≈ $0.04. The OpenAI backup can't read video, so a Google failure ends with an error rather than a second paid call.
+
+**Library video tagging (analyze-video-description, owner/admin only):** 1 text-only call, ≈ 1–2k in / ≈ 1k out ≈ $0.003.
+
+**Follow-up after a session (hie-analyze, not per video):** 1 text-only call (measurements only, no pictures) on flash-lite (sent as gemini-3.6-flash). The caller tries up to 3 times. Roughly ≈ $0.005–0.02 per session, up to 3× that in the worst case.
+
+**Not used by players:** live-playback analysis (analyze-realtime-playback) is not called anywhere in the app. Report-card recompute is owner/admin only.
+
+**Other paid services per analysis:**
+- Pose and on-device ball tracking: run on the phone, no per-analysis charge.
+- Pitch velocity (pitch-velocity-measure, owner/admin only, locked): Roboflow hosted ball detection, up to 60 calls per analysis (capped in code). The code doesn't contain Roboflow's price. Assuming about $0.001–0.004 per call, that's about $0.06–0.24 per analysis. Check this against the Roboflow invoice.
+- No other paid model hosts (Replicate, Hugging Face, Modal) are called.
+
+---
+
 # REPORT — 2026-10-12 17:55 UTC (II6, end of batch)
 
 **Ready to publish: no.** Reasons: Phase 11 waits on owner answers; the plan builder (Option B) waits on the owner's OK. (No publish checklist yet; it gets written when the answer becomes yes.)
