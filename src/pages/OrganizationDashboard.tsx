@@ -20,6 +20,7 @@ import { useFeatureSwitches } from '@/hooks/useFeatureSwitches';
 
 export default function OrganizationDashboard() {
   const { myOrgs, members } = useOrganization();
+  const spacesOn = useFeatureSwitches().isEnabled('facility_spaces');
   const { membership, organizationId, roleInOrg, orgName } = usePlayerOrganization();
   const activeOrg = myOrgs.data?.[0];
   const memberList = members.data ?? [];

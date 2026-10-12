@@ -24,6 +24,7 @@ interface Props {
 
 export function PlayerOrganizationView({ organizationId, roleInOrg, orgName }: Props) {
   const { user } = useAuth();
+  const spacesOn = useFeatureSwitches().isEnabled('facility_spaces');
   const queryClient = useQueryClient();
   const [leaving, setLeaving] = useState(false);
   const { data: teamStats } = useTeamStats(organizationId);
