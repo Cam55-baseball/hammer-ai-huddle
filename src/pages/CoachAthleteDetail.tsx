@@ -204,8 +204,13 @@ export default function CoachAthleteDetail() {
             <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
             <TabsTrigger value="tests">Tests</TabsTrigger>
+            <TabsTrigger value="trends">Trends</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="trends" className="space-y-4 pt-4">
+            {athleteId && <CoachTrendsTab athleteId={athleteId} />}
+          </TabsContent>
 
           <TabsContent value="tests" className="space-y-4 pt-4">
             {athleteId && <CoachTestsTab athleteId={athleteId} />}
