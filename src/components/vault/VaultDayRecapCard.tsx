@@ -1,3 +1,4 @@
+import { formatGrade } from "@/lib/benchmarks/gradeScale";
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -710,16 +711,16 @@ export function VaultDayRecapCard({ historyData, isLoading }: VaultDayRecapCardP
                 <CardContent className="p-3">
                   <div className="flex flex-wrap gap-2 text-xs">
                     {grade.hitting_grade && (
-                      <Badge variant="secondary">{t('vault.scoutGrades.hitting')}: {grade.hitting_grade}</Badge>
+                      <Badge variant="secondary">{t('vault.scoutGrades.hitting')}: {grade.hitting_grade != null ? formatGrade(grade.hitting_grade) : "Not entered"}</Badge>
                     )}
                     {grade.power_grade && (
-                      <Badge variant="secondary">{t('vault.scoutGrades.power')}: {grade.power_grade}</Badge>
+                      <Badge variant="secondary">{t('vault.scoutGrades.power')}: {grade.power_grade != null ? formatGrade(grade.power_grade) : "Not entered"}</Badge>
                     )}
                     {grade.speed_grade && (
-                      <Badge variant="secondary">{t('vault.scoutGrades.speed')}: {grade.speed_grade}</Badge>
+                      <Badge variant="secondary">{t('vault.scoutGrades.speed')}: {grade.speed_grade != null ? formatGrade(grade.speed_grade) : "Not entered"}</Badge>
                     )}
                     {grade.defense_grade && (
-                      <Badge variant="secondary">{t('vault.scoutGrades.fielding')}: {grade.defense_grade}</Badge>
+                      <Badge variant="secondary">{t('vault.scoutGrades.fielding')}: {grade.defense_grade != null ? formatGrade(grade.defense_grade) : "Not entered"}</Badge>
                     )}
                   </div>
                 </CardContent>

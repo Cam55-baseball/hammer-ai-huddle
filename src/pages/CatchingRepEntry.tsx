@@ -1,3 +1,4 @@
+import { formatGrade } from "@/lib/benchmarks/gradeScale";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * Evaluator-facing catching rep entry (pre-release, staff-gated route).
@@ -206,7 +207,7 @@ export default function CatchingRepEntry() {
                           </div>
                           {graded && !graded.missing && (
                             <p className="text-sm">
-                              <span className="font-semibold">{graded.grade}</span> on the 20–80
+                              <span className="font-semibold">{formatGrade(graded.grade)}</span> on the 20–80
                               scale.
                             </p>
                           )}

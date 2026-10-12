@@ -1,4 +1,4 @@
-import { ratingBand } from '@/lib/benchmarks/gradeScale';
+import { ratingBand, roundGrade } from '@/lib/benchmarks/gradeScale';
 
 function scoutWord(score: number): string {
   if (score >= 70) return 'Elite';
@@ -13,5 +13,5 @@ function scoutWord(score: number): string {
 
 /** Scout word plus the Plan 4 band, e.g. "Plus · Acceptable". */
 export function getGradeLabel(score: number): string {
-  return `${scoutWord(score)} · ${ratingBand(score)}`;
+  return `${scoutWord(roundGrade(score))} · ${ratingBand(score)}`;
 }

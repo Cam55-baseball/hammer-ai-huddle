@@ -12,3 +12,16 @@ describe("coach readiness", () => {
     expect(painDays([c({ pain_location: ["knee"] }), c({ pain_location: ["hip"] }), c({ entry_date: "2026-10-11" })])).toBe(1);
   });
 });
+
+import { checkinDays } from "./readiness";
+describe("check-in attendance", () => {
+  it("counts distinct check-in days in the window", () => {
+    const done = [
+      { entry_date: "2026-10-12", quiz_type: "morning", completed_at: "" },
+      { entry_date: "2026-10-12", quiz_type: "night", completed_at: "" },
+      { entry_date: "2026-10-06", quiz_type: "morning", completed_at: "" },
+      { entry_date: "2026-10-05", quiz_type: "morning", completed_at: "" },
+    ];
+    expect(checkinDays(done, "2026-10-12", 7)).toBe(2);
+  });
+});

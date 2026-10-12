@@ -1,3 +1,4 @@
+import { formatGrade } from "@/lib/benchmarks/gradeScale";
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -374,7 +375,7 @@ export function VaultPerformanceTestCard({
                             <div key={tool} className="text-center">
                               <p className="text-[10px] text-muted-foreground">{TOOL_LABELS[tool]}</p>
                               <p className={`text-lg font-bold ${grade !== null ? gradeToColor(grade) : 'text-muted-foreground'}`}>
-                                {grade !== null ? grade : '—'}
+                                {grade !== null ? formatGrade(grade) : '—'}
                               </p>
                               {grade !== null && (
                                 <p className="text-[9px] text-muted-foreground">{gradeToLabel(grade)}</p>
@@ -477,7 +478,7 @@ export function VaultPerformanceTestCard({
                         {latestReport.topStrengths.map(s => (
                           <div key={s.key} className="flex justify-between items-center text-xs py-0.5">
                             <span>{s.label}</span>
-                            <span className={`font-medium ${gradeToColor(s.grade)}`}>{s.grade} ({s.gradeLabel})</span>
+                            <span className={`font-medium ${gradeToColor(s.grade)}`}>{formatGrade(s.grade)} ({s.gradeLabel})</span>
                           </div>
                         ))}
                       </div>

@@ -9,7 +9,7 @@
  *   - 50  = professional average, 80 = all-time record (ceiling unchanged).
  *   - below 20 → the scale continues on a shallower tail, one decimal,
  *     clamped at 0.
- *   - at 20 and above → whole numbers (scouting convention).
+ *   - at 20 and above → steps of 5 only (20, 25 … 80), nearest 5 (owner, Plan 4 update 2026-10-12).
  *   - never negative: a negative grade reads as a verdict, not a starting line.
  *
  * ---------------------------------------------------------------------------
@@ -70,7 +70,7 @@ export function isBelowFloor(grade: number): boolean {
 export function roundGrade(value: number): number {
   const clamped = Math.max(GRADE_MIN, Math.min(GRADE_MAX, value));
   if (clamped < MLB_FLOOR_GRADE) return Math.round(clamped * 10) / 10;
-  return Math.round(clamped);
+  return Math.round(clamped / 5) * 5;
 }
 
 /**
@@ -93,18 +93,20 @@ export function extendBelowFloor(
   return Math.max(GRADE_MIN, Math.min(MLB_FLOOR_GRADE, raw));
 }
 
-/** Format for display: "8.4" below the floor, "45" at or above it. */
+/** Format for display: "8.4" below the floor, "45" (nearest 5) at or above it. */
 export function formatGrade(value: number): string {
-  return value < MLB_FLOOR_GRADE ? value.toFixed(1) : String(Math.round(value));
+  const g = roundGrade(value);
+  return g < MLB_FLOOR_GRADE ? g.toFixed(1) : String(g);
 }
 
 /**
  * Plan 4 §A bands — by sport (MLB / AUSL scale), never by age.
- * Sub Par < 40; Acceptable 40–60 inclusive; Elite > 60.
- * Always band the UNROUNDED grade so 60.1 reads Elite.
+ * Bands use the shown grade (nearest 5 at 20+): Sub Par = decimals, 20–35;
+ * Acceptable = 40–60; Elite = 65–80.
  */
 export type RatingBand = "Sub Par" | "Acceptable" | "Elite";
-export function ratingBand(grade: number): RatingBand {
+export function ratingBand(value: number): RatingBand {
+  const grade = roundGrade(value);
   if (grade < 40) return "Sub Par";
   if (grade <= 60) return "Acceptable";
   return "Elite";

@@ -372,6 +372,20 @@
       "when": 1791837907662,
       "tag": "0052_coach_athlete_discipline",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1791844921997,
+      "tag": "0053_coach_readiness_attendance_always",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1791845060145,
+      "tag": "0054_org_board_checkin_attendance",
+      "breakpoints": true
     }
   ]
 }

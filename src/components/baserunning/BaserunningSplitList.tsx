@@ -1,3 +1,4 @@
+import { formatGrade } from "@/lib/benchmarks/gradeScale";
 /**
  * Shared split list — used by both the evaluator entry page and the athlete
  * results page so the two can never describe the same row differently.
@@ -75,7 +76,7 @@ export function BaserunningSplitList({ rows, scaleRows, loading, emptyLabel }: P
 
             {graded && !graded.missing && (
               <p className="text-sm">
-                <span className="font-semibold">{graded.grade}</span> on the 20–80 scale —{' '}
+                <span className="font-semibold">{formatGrade(graded.grade)}</span> on the 20–80 scale —{' '}
                 {gradeSentence(graded.grade)}.
               </p>
             )}

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import {
-  alertLine, headline, lastActiveLine, playerName, testsLine, todayLine, weekLine,
+  alertLine, checkinLine, headline, lastActiveLine, playerName, testsLine, todayLine, weekLine,
   type FacilityBoardRow,
 } from "@/lib/org/facilityBoard";
 
@@ -94,6 +94,7 @@ export function FacilityBoard({ orgId }: { orgId: string }) {
                     <p>{todayLine(r)}</p>
                     <p>{lastActiveLine(r)}</p>
                     <p>{weekLine(r)}</p>
+                    <p>{checkinLine(r as any)}</p>
                     <p>{testsLine(r)}</p>
                     <p>{alertLine(r)}</p>
                     {r.coach_name && <p>Coach: {r.coach_name}</p>}

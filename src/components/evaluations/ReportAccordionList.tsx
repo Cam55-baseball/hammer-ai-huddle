@@ -1,3 +1,4 @@
+import { formatGrade } from "@/lib/benchmarks/gradeScale";
 import {
   Accordion,
   AccordionContent,
@@ -89,7 +90,7 @@ export function ReportAccordionList({
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   {r.overall_grade != null && (
                     <div className="text-right leading-none">
-                      <div className="text-lg font-bold">{r.overall_grade}</div>
+                      <div className="text-lg font-bold">{r.overall_grade != null ? formatGrade(Number(r.overall_grade)) : "Not recorded"}</div>
                       <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
                         OFP
                       </div>

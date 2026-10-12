@@ -32,6 +32,10 @@ Ready to publish: no
 - D coach logging: proposal written, not built (docs/owner/coach-logging-proposal.md).
 - E full proof list: NOT DONE.
 
+## Owner updates to Plan 4 (22:36)
+- U1 grades by 5s: PASS tests (19.9 Sub Par decimal, 35 Sub Par, 40/60 Acceptable, 65 Elite, 47→45, 48→50). All 20–80 grade screens now show steps of 5 (sessions, calendar, scout compare, reports list, vault scout grades and 6-week test card, catching, baserunning). Supersedes A1 "60.1 Elite" (60.1 now shows 60, Acceptable).
+- U2 check-ins for coaches/orgs: PASS on the backend with test accounts (Demo Coach + Demo College Outfielder, temporary link, all undone): health sharing OFF → check-in done shown, answers hidden; ON → answers shown (sleep 7.5 h, pain right elbow 3); a stranger is blocked. Screens: Readiness & pain tab (attendance always + "Shared only with health consent" + "Ask to turn on health sharing" message to player and parent), check-in card on Development and Discipline tabs, org dashboard line (check-in days, answers only on the player page). Not phone-checked (sign-in approval unavailable).
+
 ## Next item
 Phone proof of B2 and C2 (needs sign-in approval), then the coach on-the-spot assessment, then D (Stripe products and checkout).
 
