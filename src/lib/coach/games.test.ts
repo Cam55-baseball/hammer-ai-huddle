@@ -13,7 +13,7 @@ describe("coach game stats", () => {
     expect(scoreLine({ my_score: 5, opp_score: 3 })).toBe("Won 5–3");
   });
   it("totals add up across games", () => {
-    const g = (results: string[], pitches: number) => ({ game_id: "x", game_date: "2026-10-01", opponent: null, my_score: null, opp_score: null, results, rbi: 0, pitches });
+    const g = (results: string[], pitches: number) => ({ game_id: "x", game_date: "2026-10-01", opponent: null, my_score: null, opp_score: null, results, rbi: 0, pitches, verified_at: null, verified_role: null });
     expect(seasonTotals([g(["HR", "FO"], 20), g(["1B", "BB"], 15)])).toEqual({ hits: 2, ab: 3, pitches: 35 });
   });
 });
