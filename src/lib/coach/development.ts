@@ -200,8 +200,6 @@ export function buildConnections(reports: DevReport[], findings: DevFinding[]): 
         label: "Hypothesis to check",
         text: `${pretty(i.fault_key)} appeared for the first time in the latest ${pretty(i.category).toLowerCase()} report — watch the next video to see if it repeats.`,
       });
-    } else if (i.status === "Observed fact" as never) {
-      // unreachable; keeps the union exhaustive
     }
   }
   const cleaning = issues.filter((i) => i.status === "Cleaning up");
