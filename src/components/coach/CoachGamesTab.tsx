@@ -30,7 +30,7 @@ export function CoachGamesTab({ athleteId, canVerify = false }: { athleteId: str
   const t = seasonTotals(data);
   return (
     <div className="space-y-4">
-      <p className="text-xs text-muted-foreground">Last {data.length} logged games. Source: athlete-entered.</p>
+      <p className="text-xs text-muted-foreground">Last {data.length} logged games. Each game is labeled athlete-entered or verified.</p>
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-lg border p-3">
           <p className="text-xs text-muted-foreground">Hits / at-bats</p>
@@ -53,7 +53,18 @@ export function CoachGamesTab({ athleteId, canVerify = false }: { athleteId: str
               <p>Result: {scoreLine(g)}</p>
               <p>Hitting: {hl ?? "No at-bats logged"}</p>
               <p>Pitching: {g.pitches > 0 ? `${g.pitches} pitches` : "No pitches logged"}</p>
-              <p className="text-xs text-muted-foreground">Source: athlete-entered</p>
+              <p className="text-xs text-muted-foreground">{verificationLabel(g)}</p>
+              {canVerify && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  disabled={verify.isPending}
+                  onClick={() => verify.mutate({ gameId: g.game_id, verified: !g.verified_at })}
+                >
+                  {g.verified_at ? "Remove verification" : "Mark verified"}
+                </Button>
+              )}
             </div>
           );
         })}
