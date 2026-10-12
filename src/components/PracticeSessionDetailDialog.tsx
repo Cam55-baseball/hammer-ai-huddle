@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Trophy, Target, ArrowRight, ChevronDown, FileText, Activity } from 'lucide-react';
 import { getGradeLabel } from '@/lib/gradeLabel';
+import { formatGrade } from '@/lib/benchmarks/gradeScale';
 import { useSessionInsights } from '@/hooks/useSessionInsights';
 import { cn } from '@/lib/utils';
 
@@ -154,7 +155,7 @@ export function PracticeSessionDetailDialog({ session, open, onClose }: Practice
               <>
                 <span>·</span>
                 <Badge variant="outline" className="text-xs">
-                  {getGradeLabel(grade)} ({Math.round(grade)})
+                  {getGradeLabel(grade)} ({formatGrade(grade)})
                 </Badge>
               </>
             )}

@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Trophy, Target, ArrowRight } from 'lucide-react';
 import { getGradeLabel } from '@/lib/gradeLabel';
+import { formatGrade } from '@/lib/benchmarks/gradeScale';
 import { generateInsights } from '@/lib/sessionInsights';
 import { SessionVideosDisplay } from '@/components/practice/SessionVideosDisplay';
 import { useCoachingReport } from '@/hooks/useCoachingReport';
@@ -67,7 +68,7 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
               <>
                 <span>·</span>
                 <Badge variant="outline" className="text-xs">
-                  {getGradeLabel(grade)} ({Math.round(grade)})
+                  {getGradeLabel(grade)} ({formatGrade(grade)})
                 </Badge>
               </>
             )}
