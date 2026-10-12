@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TabsContent, TabsTrigger } from "@/components/ui/tabs";
+import { ScoutOverviewSummary } from "@/components/scout/ScoutOverviewSummary";
 
 const NM = "Not yet measured";
 const NOT_SHARED = "Not shared. This family hasn't shared this with you.";
@@ -56,7 +57,7 @@ export function ScoutTabTriggers() {
   return <>{SCOUT_TABS.map(([v, l]) => <TabsTrigger key={v} value={v}>{l}</TabsTrigger>)}</>;
 }
 
-export function ScoutTabContents({ q }: { q: ReturnType<typeof useScoutProfile> }) {
+export function ScoutTabContents({ q, athleteId }: { q: ReturnType<typeof useScoutProfile>; athleteId: string }) {
   const p = q.data;
   const wrap = (node: React.ReactNode) =>
     q.isLoading ? <Empty t="Loading…" /> : q.isError || !p ? <Empty t="Not shared. You're not following this player, or the family hasn't shared their profile." /> : node;
@@ -65,6 +66,8 @@ export function ScoutTabContents({ q }: { q: ReturnType<typeof useScoutProfile> 
     <>
       <TabsContent value="overview">{wrap(!p?.shared.profile ? <Empty t={NOT_SHARED} /> : (
         <div data-testid="scout-overview">
+          {p && <ScoutOverviewSummary athleteId={athleteId} p={p} />}
+          <p className="text-sm font-semibold">Who they are</p>
           <Row k="Name" v={o?.full_name} /><Row k="Sport" v={o?.sport} />
           <Row k="Primary position" v={o?.primary_position} /><Row k="Secondary position" v={o?.secondary_position} />
           <Row k="Bats" v={o?.bats} /><Row k="Throws" v={o?.throws} />
