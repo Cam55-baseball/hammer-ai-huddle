@@ -84,9 +84,11 @@ export default function ScoutCompare() {
               <Card key={c.id} data-testid="scout-compare-col">
                 <CardHeader><CardTitle className="text-base">{c.name}</CardTitle></CardHeader>
                 <CardContent>
-                  <Line k="Position" v={c.position ?? "Not entered"} />
-                  <Line k="Playing level" v={c.level ?? "Not entered"} />
-                  <Line k="Grad year" v={c.gradYear ? String(c.gradYear) : "Not entered"} src="Source: athlete-entered profile" />
+                  {!c.sharedProfile ? <Line k="Profile" v={NOT_SHARED} /> : (<>
+                    <Line k="Position" v={c.position ?? "Not entered"} />
+                    <Line k="Playing level" v={c.level ?? "Not entered"} />
+                    <Line k="Grad year" v={c.gradYear ? String(c.gradYear) : "Not entered"} src="Source: athlete-entered profile" />
+                  </>)}
                   {!c.sharedMetrics ? <Line k="Tests and grades" v={NOT_SHARED} /> : (<>
                     <Line k="Latest test" v={c.latestTest ? `${c.latestTest.type} — ${c.latestTest.values || NM} (${c.latestTest.date})` : NM}
                       src={c.latestTest ? (c.latestTest.verified ? "Source: facility-verified (in person)" : "Source: athlete-entered") : undefined} />

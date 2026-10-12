@@ -11,6 +11,7 @@ export interface CompareColumn {
   position: string | null;
   level: string | null;
   gradYear: number | null;
+  sharedProfile: boolean;
   sharedMetrics: boolean;
   testCount: number;
   latestTest: { type: string; date: string; verified: boolean; values: string } | null;
@@ -33,6 +34,7 @@ export function toColumn(id: string, p: ScoutProfileData | null | undefined): Co
     position: (o?.primary_position as string) || null,
     level: (o?.level as string) || null,
     gradYear: Number.isFinite(gy) && gy > 0 ? gy : null,
+    sharedProfile: !!p?.shared.profile,
     sharedMetrics: !!p?.shared.metrics,
     testCount: tests.length,
     latestTest: t
