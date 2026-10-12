@@ -1,6 +1,6 @@
+import { formatGrade, ratingBand } from "@/lib/benchmarks/gradeScale";
 // Plan v3.1 Phase 5 — coach tabs for video analysis reports, grades and the
-// six-week recap.
-import { formatGrade, ratingBand } from "@/lib/benchmarks/gradeScale"; Everything shown comes from real records; missing data says
+// six-week recap. Everything shown comes from real records; missing data says
 // so plainly and nothing is invented.
 
 export interface CoachReportRow {
