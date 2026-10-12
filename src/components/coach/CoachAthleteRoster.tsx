@@ -3,6 +3,7 @@ import { Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCoachAthleteSummaries } from '@/hooks/useCoachAthleteSummaries';
 import { CoachAthleteScannableCard } from './CoachAthleteScannableCard';
+import { RosterStrengthsToggle } from './RosterStrengthsToggle';
 
 interface Props {
   linkedPlayerIds: string[];
@@ -33,12 +34,14 @@ export function CoachAthleteRoster({ linkedPlayerIds, playerNames }: Props) {
         {isLoading
           ? linkedPlayerIds.slice(0, 3).map((id) => <Skeleton key={id} className="h-32 w-full" />)
           : linkedPlayerIds.map((id) => (
-              <CoachAthleteScannableCard
-                key={id}
-                athleteId={id}
-                name={playerNames[id] ?? 'Athlete'}
-                summary={data?.[id]}
-              />
+              <div key={id} className="space-y-1">
+                <CoachAthleteScannableCard
+                  athleteId={id}
+                  name={playerNames[id] ?? 'Athlete'}
+                  summary={data?.[id]}
+                />
+                <RosterStrengthsToggle athleteId={id} />
+              </div>
             ))}
       </CardContent>
     </Card>
