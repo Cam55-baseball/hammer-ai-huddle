@@ -358,6 +358,13 @@
       "when": 1791837603813,
       "tag": "0050_initial_assessments",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1791837760451,
+      "tag": "0051_initial_assessments_lock_verifier",
+      "breakpoints": true
     }
   ]
 }
