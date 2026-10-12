@@ -130,6 +130,16 @@ export default function CoachAthleteDetail() {
 
   const snap = athleteId && rosterAccess === true ? snapshotAthlete(athleteId, rows) : null;
 
+  // Header shows the player's name (same profile read as the summary card), never the raw ID.
+  const { data: headerName } = useQuery({
+    queryKey: ["coach-athlete-header-name", athleteId],
+    enabled: !!athleteId && rosterAccess === true,
+    queryFn: async () => {
+      const { data } = await supabase.rpc("coach_athlete_glance", { _athlete: athleteId! });
+      return ((data as any)?.profile?.full_name as string | null) ?? null;
+    },
+  });
+
   if (!checkingAccess && rosterAccess === false) {
     return (
       <DashboardLayout>
@@ -164,8 +174,10 @@ export default function CoachAthleteDetail() {
           <Button asChild variant="ghost" size="sm">
             <Link to="/coach/console"><ArrowLeft className="mr-1 h-4 w-4" /> Back to roster</Link>
           </Button>
-          <h1 className="text-xl font-bold">Athlete drilldown</h1>
-          <code className="rounded bg-muted px-2 py-0.5 text-xs">{athleteId}</code>
+          <h1 className="text-xl font-bold">
+            <span className="sr-only">Athlete: </span>
+            {headerName?.trim() || "Athlete"}
+          </h1>
           {athleteId && (
             <SafetyMenu
               reportedUserId={athleteId}

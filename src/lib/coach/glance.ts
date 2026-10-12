@@ -1,5 +1,15 @@
 // Plan v3.1 §4 — summary card wording. Pure; every missing value says so.
+export interface GlanceProfile {
+  full_name: string | null;
+  age: number | null;
+  position: string | null;
+  team: string | null;
+  plan_started_at: string | null;
+  sport: string | null;
+}
+
 export interface Glance {
+  profile?: GlanceProfile | null;
   today_planned: number;
   today_done: number;
   week_planned: number;
