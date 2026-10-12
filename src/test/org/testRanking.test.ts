@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rankRows, rankingWarnings, type TestRankRow, type RankFilters } from "../testRanking";
+import { rankRows, rankingWarnings, type TestRankRow, type RankFilters } from "@/lib/org/testRanking";
 
 const today = new Date("2026-10-12T12:00:00Z");
 const base: RankFilters = { ageGroup: "all", position: "all", level: "all", verifiedOnly: false, lowerIsBetter: false };
