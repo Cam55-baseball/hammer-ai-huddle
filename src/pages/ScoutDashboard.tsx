@@ -515,7 +515,7 @@ export default function ScoutDashboard() {
               <PlayerSearchFilters
                 filters={filters}
                 sportFilter={sportFilter}
-                onFilterChange={setFilters}
+                onFilterChange={(f) => setFilters(f as typeof filters)}
                 onClearFilters={() => setFilters({
                   positions: [],
                   throwingHands: [],
