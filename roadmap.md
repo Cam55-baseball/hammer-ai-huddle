@@ -3,7 +3,9 @@
 **Ready to publish: no.** **II1 step 1 PASS: Scout Profile tabs.** The Scout Profile now has Overview, ID and academics, Performance, Reports and video, Six-week recap, Grades, Players Club, plus Game play and stats. Each tab shows only what the family shared (profile / stats / video / academics, minors also need the parent's yes); unshared tabs say "Not shared"; blank profile fields say "Not entered", missing measurements "Not yet measured"; every value carries a source label (athlete-entered, facility-verified (in person), transcript verified, video analysis reports, who entered a grade + date). Server lookup scout_athlete_profile (accepted follow + scout/recruiter role + no block + per-scope sharing). Proof on a phone as the test scout (/tmp/browser/ii1/2.png): player shared profile + stats only → Overview showed real profile, Performance showed "sixty yard dash 7.2 s · facility-verified (in person)", Reports and video + ID and academics said "Not shared". Visibility turned off → refused; outsider refused. Bug fixed during proof (lookup failed on the batting-side field type). All proof data deleted.
 **II2 PASS — Scout Dashboard search filters:** added Playing level (high school/college/pro), "Only players with a test verified in person", and "Tested within 30/90/365 days"; test filters match only players who share stats with that scout. Proof as test scout (phone + API): College+verified+30 days found the adult test player; Professional didn't; after changing his test to athlete-entered, "verified" no longer found him while "last 30 days" still did. Bug fixed: the 50-row limit could hide matching players. Practice data removed, test account re-hidden.
 
-**Next:** scout comparison 2–4, then Phase 10, then Phase 11. Ready to publish: no.
+**II3 PASS — Scout comparison (2–4):** "Compare players" button on the Scout Dashboard (2+ followed) opens a picker (max 4); each column shows only what that family shared (position, level, grad year, latest test with date + source, tests logged, latest grade with date + who entered it, report count); fairness warnings for different positions/levels, grad years 2+ apart, mixed verified/athlete-entered tests, stats not shared, fewer than 2 tests. Uses the same server-gated scout profile. Proof on phone as test scout: adult player showed 60-yd 7.2 s (2026-10-09, facility-verified), 2 tests; 16-year-old without a parent's yes showed "Not shared" everywhere with a warning; after the adult turned sharing off, his column became "Not shared". 4 new tests. Practice data removed. Phase 9 PASS.
+
+**Next:** Phase 10 (The General's two layers), then Phase 11. Ready to publish: no.
 **Waiting on the owner:** OK to deploy the plan builder (Option B); keep or remove Spaces (off); Vault review queue.
 
 ---
@@ -30,7 +32,7 @@
 - 6 Coach Dashboard/View/Messages: PASS (EE7–EE9, FF1–FF8, GG1–GG3).
 - 7 Coach workouts with safety check: PASS (EE9).
 - 8 Facility dashboard, comparison, trends + owner additions (Development, strengths/weaknesses, testing day, compare by test): PASS (GG5–GG8, HH1–HH5).
-- 9 Scout tools: PARTIAL — Game play and stats tab PASS (HH7–HH8); Scout Profile tabs PASS (II1), search filters PASS (II2); open: scout comparison 2–4.
+- 9 Scout tools: PARTIAL — Game play and stats tab PASS (HH7–HH8); Scout Profile tabs PASS (II1), search filters PASS (II2), scout comparison PASS (II3). Phase 9 PASS.
 - 10 The General two layers: NOT STARTED.
 - 11 Sponsorship billing: NOT STARTED.
 

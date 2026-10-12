@@ -383,7 +383,12 @@ export default function ScoutDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>{t('scout.following')}</span>
-              <Badge variant="secondary">{followingCount}</Badge>
+              <span className="flex items-center gap-2">
+                {followingCount >= 2 && (
+                  <Button size="sm" variant="outline" onClick={() => navigate('/scout-compare')}>Compare players</Button>
+                )}
+                <Badge variant="secondary">{followingCount}</Badge>
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
