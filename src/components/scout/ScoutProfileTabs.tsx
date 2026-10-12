@@ -83,7 +83,7 @@ export function ScoutTabContents({ q }: { q: ReturnType<typeof useScoutProfile> 
       </TabsContent>
       <TabsContent value="performance">{wrap(!p?.shared.metrics ? <Empty t={NOT_SHARED} /> : !p?.tests?.length ? <Empty t={NM} /> : (
         <div className="space-y-2">{p.tests.map((t, i) => {
-          const verified = (t.results as any)?._verified_in_person;
+          const verified = (t.results as any)?._verified === "in_person";
           return (
             <div key={i} className="rounded-lg border p-3 text-sm">
               <div className="flex justify-between"><span className="font-medium">Test: {label(t.test_type)}</span><span className="text-muted-foreground">{d(t.test_date)}</span></div>
