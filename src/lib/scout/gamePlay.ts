@@ -10,7 +10,7 @@ export interface ScoutGame {
   my_score: number | null;
   opp_score: number | null;
   verified_at: string | null;
-  verified_role: string | null;
+  verified_role: "coach" | "organization" | null;
   results: string[];
   rbi: number;
   steals: number;
