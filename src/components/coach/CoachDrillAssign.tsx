@@ -9,10 +9,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Send, CheckCircle2, Dumbbell } from 'lucide-react';
+import { Search, Send, CheckCircle2, Dumbbell, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCoachPlayerPool } from '@/hooks/useCoachPlayerPool';
 import { useAssignDrill, useCoachAssignments } from '@/hooks/useDrillAssignments';
+import {
+  checkDrillSafety,
+  findSafeAlternatives,
+  type DrillSafetyInput,
+  type AthleteSafetyContext,
+} from '@/lib/coach/drillSafety';
 
 const PROGRESSION_LABELS: Record<number, string> = {
   1: 'Tee Ball', 2: 'Youth', 3: 'MS', 4: 'HS', 5: 'College', 6: 'Pro', 7: 'Elite',
@@ -36,6 +42,66 @@ export function CoachDrillAssign() {
         .order('name');
       if (error) throw error;
       return data ?? [];
+    },
+  });
+
+  // Required equipment per drill (for the safety check).
+  const { data: equipRows } = useQuery({
+    queryKey: ['coach-drill-equipment'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('drill_equipment')
+        .select('drill_id, equipment')
+        .eq('required', true);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const safetyDrills: DrillSafetyInput[] = (drills ?? []).map((d) => ({
+    id: d.id,
+    name: d.name,
+    module: d.module ?? null,
+    skill_target: (d as any).skill_target ?? null,
+    sport: d.sport ?? null,
+    progression_level: d.progression_level ?? null,
+    requiredEquipment: (equipRows ?? [])
+      .filter((e) => e.drill_id === d.id)
+      .map((e) => e.equipment),
+  }));
+
+  // Selected player's safety context: age, sport, owned equipment.
+  const { data: athleteCtx } = useQuery({
+    queryKey: ['coach-drill-safety-ctx', selectedPlayerId],
+    enabled: !!selectedPlayerId,
+    queryFn: async (): Promise<AthleteSafetyContext> => {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('date_of_birth')
+        .eq('id', selectedPlayerId)
+        .maybeSingle();
+      const { data: ctx } = await supabase
+        .from('athlete_context')
+        .select('sport_primary')
+        .eq('user_id', selectedPlayerId)
+        .maybeSingle();
+      const { data: eq } = await supabase
+        .from('athlete_equipment_context')
+        .select('equipment')
+        .eq('user_id', selectedPlayerId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      let ageYears: number | null = null;
+      if (prof?.date_of_birth) {
+        const dob = new Date(prof.date_of_birth);
+        ageYears = Math.floor((Date.now() - dob.getTime()) / (365.25 * 86400 * 1000));
+      }
+      return {
+        ageYears,
+        sport: (ctx as any)?.sport_primary ?? null,
+        equipment: (eq?.equipment as string[]) ?? [],
+      };
     },
   });
 
@@ -70,6 +136,15 @@ export function CoachDrillAssign() {
   };
 
   const selectedDrill = drills?.find(d => d.id === selectedDrillId);
+  const selectedSafetyDrill = safetyDrills.find(d => d.id === selectedDrillId);
+  const safety =
+    selectedSafetyDrill && athleteCtx && selectedPlayerId
+      ? checkDrillSafety(selectedSafetyDrill, athleteCtx)
+      : null;
+  const alternatives =
+    safety && !safety.ok && selectedSafetyDrill && athleteCtx
+      ? findSafeAlternatives(safetyDrills, selectedSafetyDrill, athleteCtx)
+      : [];
 
   return (
     <div className="space-y-4">
@@ -194,6 +269,37 @@ export function CoachDrillAssign() {
                 </SelectContent>
               </Select>
             </div>
+            {safety && !safety.ok && (
+              <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 space-y-2">
+                <p className="text-sm font-medium flex items-center gap-2">
+                  <ShieldAlert className="h-4 w-4 text-destructive" />
+                  Not safe to assign to this player
+                </p>
+                <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
+                  {safety.reasons.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
+                {alternatives.length > 0 && (
+                  <div className="pt-1">
+                    <p className="text-xs font-medium mb-1">Safe alternatives:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {alternatives.map((a) => (
+                        <Button
+                          key={a.id}
+                          size="sm"
+                          variant="secondary"
+                          className="text-xs"
+                          onClick={() => setSelectedDrillId(a.id)}
+                        >
+                          {a.name}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <div>
               <label className="text-sm font-medium mb-1 block">Notes (optional)</label>
               <Textarea
@@ -206,7 +312,10 @@ export function CoachDrillAssign() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAssignDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAssign} disabled={!selectedPlayerId || assignMutation.isPending}>
+            <Button
+              onClick={handleAssign}
+              disabled={!selectedPlayerId || assignMutation.isPending || (safety !== null && !safety.ok)}
+            >
               {assignMutation.isPending ? 'Assigning...' : 'Assign Drill'}
             </Button>
           </DialogFooter>

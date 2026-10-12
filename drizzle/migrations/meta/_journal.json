@@ -204,6 +204,13 @@
       "when": 1791762719549,
       "tag": "0028_scouting_v31_phase5_coach_messages",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1791763666272,
+      "tag": "0029_scouting_v31_phase5_org_coach_drill_assign",
+      "breakpoints": true
     }
   ]
 }
