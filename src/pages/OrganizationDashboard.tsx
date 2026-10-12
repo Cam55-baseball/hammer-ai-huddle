@@ -20,6 +20,7 @@ import { FacilityBoard } from '@/components/organization/FacilityBoard';
 import { CompareAthletes } from '@/components/organization/CompareAthletes';
 import { GrowthTrends } from '@/components/organization/GrowthTrends';
 import { TestingDays } from '@/components/organization/TestingDays';
+import { CompareByTest } from "@/components/organization/CompareByTest";
 import { useFeatureSwitches } from '@/hooks/useFeatureSwitches';
 
 export default function OrganizationDashboard() {
@@ -44,7 +45,7 @@ export default function OrganizationDashboard() {
 
         {activeOrg ? (
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList>
+            <TabsList className="w-full justify-start overflow-x-auto">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="players">Players</TabsTrigger>
               <TabsTrigger value="compare">Compare</TabsTrigger>
@@ -82,7 +83,7 @@ export default function OrganizationDashboard() {
             </TabsContent>
 
             <TabsContent value="compare">
-              <CompareAthletes orgId={activeOrg.id} />
+              <div className="space-y-4"><CompareAthletes orgId={activeOrg.id} /><CompareByTest orgId={activeOrg.id} /></div>
             </TabsContent>
             <TabsContent value="trends">
               <GrowthTrends orgId={activeOrg.id} />
