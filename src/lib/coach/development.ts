@@ -59,6 +59,10 @@ export interface Takeaway {
 const pretty = (key: string) =>
   key.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
+/** Date-only form of any ISO date or timestamp. */
+export const dateOnly = (iso: string | null | undefined): string =>
+  iso ? iso.slice(0, 10) : "Not recorded";
+
 function trendOf(scores: number[]): "up" | "down" | "flat" | "unknown" {
   const nums = scores.filter((v) => Number.isFinite(v));
   if (nums.length < 2) return "unknown";
@@ -101,6 +105,8 @@ export function classifyIssues(reports: DevReport[], findings: DevFinding[]): Is
     list.push(f);
     byFault.set(f.fault_key, list);
   }
+  const reportDate = new Map<string, string>();
+  for (const r of reports) reportDate.set(r.id, dateOnly(r.date));
   for (const [faultKey, rows] of byFault) {
     const cat = rows[0].skill_domain || "general";
     const catReports = byCat.get(cat) ?? [];
@@ -114,13 +120,20 @@ export function classifyIssues(reports: DevReport[], findings: DevFinding[]): Is
     if (inNewest && timesSeen <= 1) status = "New";
     else if (inNewest) status = "Recurring";
     else status = "Cleaning up";
+    // Last seen = the date of the newest report that contains this fault,
+    // falling back to the finding's own timestamp.
+    const dated = inRecent
+      .map((f) => reportDate.get(f.video_id!))
+      .filter((d): d is string => !!d)
+      .sort()
+      .pop();
     issues.push({
       fault_key: faultKey,
       category: cat,
       status,
       times_seen: timesSeen,
       reports_checked: catReports.length,
-      last_seen: rows[0].created_at,
+      last_seen: dated ?? dateOnly(rows[0].created_at),
       evidence: rows[0].evidence,
     });
   }
@@ -146,9 +159,11 @@ export function buildCategoryCards(reports: DevReport[], findings: DevFinding[])
 export function strengthsAndWeaknesses(reports: DevReport[]): {
   strengths: { text: string; evidence: string }[];
   weaknesses: { text: string; evidence: string }[];
+  note: string | null;
 } {
   const scored = reports.filter((r) => r.efficiency_score != null);
-  if (scored.length < 2) return { strengths: [], weaknesses: [] };
+  if (scored.length < 2)
+    return { strengths: [], weaknesses: [], note: "Not enough data yet — needs at least 2 scored reports." };
   const byCat = reportsByCategory(scored);
   const catAvg = [...byCat.entries()].map(([cat, reps]) => ({
     cat,
