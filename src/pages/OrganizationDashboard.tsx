@@ -45,8 +45,18 @@ export default function OrganizationDashboard() {
               <TabsTrigger value="members">Members</TabsTrigger>
               <TabsTrigger value="invite">Invite</TabsTrigger>
               <TabsTrigger value="heatmaps">Heat Maps</TabsTrigger>
+              {(activeOrg.org_type === 'facility' || activeOrg.org_type === 'academy') && (
+                <TabsTrigger value="spaces">Spaces</TabsTrigger>
+              )}
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
+
+            {/* Plan v3.1 Phase 6 — facility tools: manage training spaces */}
+            {(activeOrg.org_type === 'facility' || activeOrg.org_type === 'academy') && (
+              <TabsContent value="spaces">
+                <FacilitySpaces orgId={activeOrg.id} canManage />
+              </TabsContent>
+            )}
 
             <TabsContent value="overview">
               <TeamComplianceCard
