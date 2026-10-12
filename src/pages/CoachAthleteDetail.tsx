@@ -135,8 +135,8 @@ export default function CoachAthleteDetail() {
     queryKey: ["coach-athlete-header-name", athleteId],
     enabled: !!athleteId && rosterAccess === true,
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("full_name").eq("id", athleteId!).maybeSingle();
-      return (data?.full_name as string | null) ?? null;
+      const { data } = await supabase.rpc("coach_athlete_glance", { _athlete: athleteId! });
+      return ((data as any)?.profile?.full_name as string | null) ?? null;
     },
   });
 

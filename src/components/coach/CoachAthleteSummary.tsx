@@ -42,34 +42,6 @@ export function CoachAthleteSummary({
   athleteId: string;
   lastActivityAt: string | null;
 }) {
-  const { data: profile } = useQuery({
-    queryKey: ["coach-athlete-summary", athleteId],
-    enabled: !!athleteId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("full_name, date_of_birth, position, team_affiliation, hammers_today_started_at")
-        .eq("id", athleteId)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: ctx } = useQuery({
-    queryKey: ["coach-athlete-summary-sport", athleteId],
-    enabled: !!athleteId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("athlete_context")
-        .select("sport_primary")
-        .eq("user_id", athleteId)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-  });
-
   const { data: glance, isError: glanceError } = useQuery({
     queryKey: ["coach-athlete-glance", athleteId],
     enabled: !!athleteId,
@@ -79,10 +51,15 @@ export function CoachAthleteSummary({
       return data as unknown as Glance;
     },
   });
+  // Name/age/position/team/sport come through the access-checked glance call
+  // (coaches cannot read the profile row directly).
+  const pr = glance?.profile ?? null;
+  const profile = pr ? { full_name: pr.full_name, position: pr.position, team_affiliation: pr.team, hammers_today_started_at: pr.plan_started_at } : null;
+  const ctx = pr ? { sport_primary: pr.sport } : null;
   const fd = (iso: string) => fmtDate(iso) ?? iso;
   const gv = (f: () => string) => (glanceError ? "Not available" : glance ? f() : "Loading…");
 
-  const age = ageFromDob(profile?.date_of_birth);
+  const age = typeof pr?.age === "number" && pr.age >= 0 && pr.age < 120 ? pr.age : null;
   const planStart = fmtDate(profile?.hammers_today_started_at);
   const lastActivity = fmtDate(lastActivityAt);
 
