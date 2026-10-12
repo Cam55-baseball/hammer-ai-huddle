@@ -270,6 +270,7 @@ import DeleteAccountSettings from "./pages/settings/DeleteAccountSettings";
 import AppHandoff from "./pages/AppHandoff";
 import LegalRecords from "./pages/owner/LegalRecords";
 import RatingAgreementDashboard from "./pages/owner/RatingAgreementDashboard";
+import AiCostDashboard from "./pages/owner/AiCostDashboard";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -340,6 +341,7 @@ const App = () => {
               <Route path="/app-handoff" element={<AppHandoff />} />
               <Route path="/owner/legal-records" element={<LegalRecords />} />
               <Route path="/owner/rating-agreement" element={<RatingAgreementDashboard />} />
+              <Route path="/owner/ai-costs" element={<AiCostDashboard />} />
               <Route path="/" element={<Index />} />
               <Route path="/home" element={<Index browse />} />
               {import.meta.env.DEV && (
