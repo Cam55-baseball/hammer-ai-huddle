@@ -43,6 +43,7 @@ import { useScheduleWindow } from "@/hooks/command/useScheduleWindow";
 import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
 import ProgressDashboard from "@/pages/ProgressDashboard";
 import { RecordsShowCard } from "@/components/progress/RecordsShowCard";
+import { MySixWeekRecapCard } from "@/components/progress/MySixWeekRecapCard";
 import { YourProgressCard } from "@/components/progress/YourProgressCard";
 
 interface TopicDef {
@@ -216,6 +217,8 @@ export default function ProgressLanding() {
         <YourProgressCard />
 
         <RecordsShowCard />
+
+        <MySixWeekRecapCard />
 
         <GpInGameSummaryCard />
 

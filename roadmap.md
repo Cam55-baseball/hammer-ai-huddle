@@ -5,7 +5,9 @@
 
 **II3 PASS — Scout comparison (2–4):** "Compare players" button on the Scout Dashboard (2+ followed) opens a picker (max 4); each column shows only what that family shared (position, level, grad year, latest test with date + source, tests logged, latest grade with date + who entered it, report count); fairness warnings for different positions/levels, grad years 2+ apart, mixed verified/athlete-entered tests, stats not shared, fewer than 2 tests. Uses the same server-gated scout profile. Proof on phone as test scout: adult player showed 60-yd 7.2 s (2026-10-09, facility-verified), 2 tests; 16-year-old without a parent's yes showed "Not shared" everywhere with a warning; after the adult turned sharing off, his column became "Not shared". 4 new tests. Practice data removed. Phase 9 PASS.
 
-**Next:** Phase 10 (The General's two layers), then Phase 11. Ready to publish: no.
+**II4 PASS — Phase 10, The General's two layers:** Player view already had progress vs own starting point, personal bests, tests and season position; added "Your six-week recap" card (period, strength change, total weight lifted, source; empty state when none). Scout overview added on top of the Scout Profile Overview tab: strengths/areas to develop with evidence and source, game stats summary (count, latest date, how many verified), latest grade with who/when, six-week recap, report counts — each "Not shared" / "Not yet measured" when true, all from the existing server-gated scout data. Proof on phone: 16-year-old test player saw his recap (4.5%, 12,500 lb); test scout saw Hitting strength / Throwing area to develop with averages and dates, "No games logged yet", grade "Not yet measured", 4 reports. Practice data removed.
+
+**Next:** Phase 11 (sponsorship billing). Ready to publish: no.
 **Waiting on the owner:** OK to deploy the plan builder (Option B); keep or remove Spaces (off); Vault review queue.
 
 ---
