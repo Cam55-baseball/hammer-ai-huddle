@@ -253,6 +253,13 @@
       "when": 1791769566051,
       "tag": "0035_coach_athlete_load",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791769653419,
+      "tag": "0036_coach_athlete_load_fix_slug",
+      "breakpoints": true
     }
   ]
 }
