@@ -15091,6 +15091,42 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_plans: {
+        Row: {
+          current_period_end: string | null
+          extra_seats: number
+          included_seats: number
+          plan: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_period_end?: string | null
+          extra_seats?: number
+          included_seats?: number
+          plan: string
+          status: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_period_end?: string | null
+          extra_seats?: number
+          included_seats?: number
+          plan?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       standard_matches: {
         Row: {
           athlete_user_id: string
@@ -22625,6 +22661,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_staff_plan: {
+        Args: { _plan?: string; _user: string }
         Returns: boolean
       }
       insert_training_block_atomic:
