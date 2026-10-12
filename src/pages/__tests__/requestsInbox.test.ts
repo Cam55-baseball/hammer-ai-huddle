@@ -11,3 +11,10 @@ describe('Requests inbox wording', () => {
       .toBe('Ava — player on 14U (Hawks)');
   });
 });
+
+describe('parent view of a request about their child', () => {
+  it('names the child, never "You asked"', () => {
+    const t = describeRequest({ kind: 'scout_player', incoming: true, other_name: 'Lee', org_name: null, team_name: null, for_child: true, child_name: 'Mia' });
+    expect(t).toBe("Scout Lee wants to follow Mia's profile");
+  });
+});
