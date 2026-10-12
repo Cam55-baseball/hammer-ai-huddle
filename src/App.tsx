@@ -439,11 +439,11 @@ const App = () => {
               <Route path="/cert" element={<RequireCapability capability="wave3_cert"><Wave3CertPath /></RequireCapability>} />
               <Route path="/share" element={<RequireCapability capability="wave3_share"><Wave3ShareConsole /></RequireCapability>} />
               <Route path="/settings/notifications" element={<NotificationsSettings />} />
-              <Route path="/coach/console" element={<CoachConsole />} />
-              <Route path="/coach/athlete/:athleteId" element={<CoachAthleteDetail />} />
+              <Route path="/coach/console" element={<StaffPlanGate><CoachConsole /></StaffPlanGate>} />
+              <Route path="/coach/athlete/:athleteId" element={<StaffPlanGate><CoachAthleteDetail /></StaffPlanGate>} />
               <Route path="/staff-plans" element={<StaffPlans />} />
               <Route path="/digest" element={<AthleteDigest />} />
-              <Route path="/coach/digest" element={<CoachDigest />} />
+              <Route path="/coach/digest" element={<StaffPlanGate><CoachDigest /></StaffPlanGate>} />
               <Route path="/forecast" element={<ForecastSurface />} />
               <Route path="/my-followers" element={<MyFollowers />} />
               <Route path="/analyze/:module" element={<AnalyzeVideo />} />
@@ -521,7 +521,7 @@ const App = () => {
               <Route path="/scout-compare" element={<ScoutCompare />} />
               <Route path="/evaluations" element={<Evaluations />} />
 
-              <Route path="/coach-dashboard" element={<CoachDashboard />} />
+              <Route path="/coach-dashboard" element={<StaffPlanGate><CoachDashboard /></StaffPlanGate>} />
               <Route path="/initialize-owner" element={<InitializeOwner />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/rankings" element={<Rankings />} />
