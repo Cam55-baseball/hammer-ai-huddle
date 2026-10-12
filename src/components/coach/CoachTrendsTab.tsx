@@ -19,7 +19,7 @@ export function CoachTrendsTab({ athleteId }: { athleteId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("coach_athlete_trends", { _athlete: athleteId });
       if (error) throw error;
-      return (data ?? []) as TrendRow[];
+      return (data ?? []) as unknown as TrendRow[];
     },
   });
 
