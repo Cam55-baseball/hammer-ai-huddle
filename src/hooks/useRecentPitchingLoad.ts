@@ -18,10 +18,10 @@ export function useRecentPitchingLoad(days = 7): { data: RecentPitchingLoad | nu
       const fromIso = from.toISOString().slice(0, 10);
       const { data, error } = await (supabase as any)
         .from("wk_session_logs")
-        .select("plan_date, template_id, movement_slug, metrics")
+        .select("plan_date, movement_slug, metrics")
         .eq("user_id", user.id)
         .gte("plan_date", fromIso)
-        .in("template_id", ["bullpen_pitching", "pitching_outing"])
+        .in("movement_slug", ["bullpen_pitching", "pitching_outing"])
         .order("plan_date", { ascending: false });
       if (error) throw error;
       return aggregateRecentPitchingLoad(data ?? []);
