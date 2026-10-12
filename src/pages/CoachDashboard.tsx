@@ -1,4 +1,5 @@
 import { TeamDisciplineSummary } from "@/components/coach/TeamDisciplineSummary";
+import { CoachWeeklySummary } from "@/components/coach/CoachWeeklySummary";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -264,6 +265,7 @@ export default function CoachDashboard() {
             Who needs help · Why · What to run today
           </p>
         </div>
+        <CoachWeeklySummary />
         <TeamDisciplineSummary />
 
         <StaffGettingStarted role="coach" />

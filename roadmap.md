@@ -1,6 +1,33 @@
+# STATUS — 2026-10-12 23:30 UTC (end of KK batch)
+
+**Ready to publish: no.**
+
+## Plan v3.1
+- Phases 1–10: PASS (proof below). Phase 11 sponsorship billing: NOT STARTED — waits on the owner's 4 answers.
+
+## Plan 4
+- A ratings: PASS (grades by 5s at 20+, one decimal below 20, stored exactly in scout grades; bands 19.9/35 Sub Par, 40/60 Acceptable, 65 Elite; "Do you agree?" PASS on phone; owner agreement page built). Percentiles later (50+ per sport/position).
+- B initial assessment: order rules PASS; checklist card + movement/safety check built; coach on-the-spot check + under-13 parent rule PASS on the backend. Not phone-checked as a player.
+- C discipline: PASS on the backend (rules tests, coach tab, logging consistency, links to results with "Not enough data", team + org summaries). Check-ins with health consent PASS both ways.
+- D plans: Stripe LIVE products/prices created — Hammers Coach $300 prod_VQjeb6G4nQbIfZ / price_1UPsB6Gc5QIzbAH6k6wtj6NI · Hammers Organization $1,000 (5 seats) prod_VQjea2xzqwAqvj / price_1UPsB7Gc5QIzbAH6Q42AlTdT · Extra Coach Seat $150 prod_VQje6yyL8w42rs / price_1UPsB8Gc5QIzbAH6l4p2C4oU. Checkout + Manage plan + automatic Stripe updates built and live; coach features locked to the plans behind a switch that is OFF; plans on pricing, upgrade, role choice, help chat, 8 languages (PASS on phone as owner); cost tracking + owner cost page + ~30/hour limit PASS; weekly coach summary PASS on the backend.
+- D NOT DONE: guest mode; cost logging for the smaller AI uses; a real test checkout with a one-time 100% code; seats billed in a real checkout.
+- E full proof list: NOT DONE.
+
+## Next item
+Guest mode (nothing saved, "Invite to Hammers to save this", under-13 parent permission confirm), then the E proof list.
+
+## Waiting on the owner
+1. Phone checks + test checkout: OK to set a known password on the test accounts only, or approve the sign-in prompt in a later round.
+2. When to turn on the switch that locks coach tools to paying plans (existing coaches without a plan lose coach tools then).
+3. Four sponsorship answers (price per sponsored player monthly/yearly; modules covered; grace period; players already paying).
+4. Lawyer review of the fair-use clause draft (docs/owner/fair-use-clause-draft.md) — not shown to players.
+5. Coach-logging option choice (docs/owner/coach-logging-proposal.md).
+6. Rankings/MPI scores on 5s? Spaces stays OFF; Vault review queue.
+
 ## Plan 4 (docs/owner/plan-4.md) — IN PROGRESS (JJ1)
 - [x] KK5 D1 Stripe LIVE products + monthly prices created via API (owner-authorized): Hammers Coach $300 = prod_VQjeb6G4nQbIfZ / price_1UPsB6Gc5QIzbAH6k6wtj6NI · Hammers Organization $1,000 (5 seats) = prod_VQjea2xzqwAqvj / price_1UPsB7Gc5QIzbAH6Q42AlTdT · Extra Coach Seat $150 per seat = prod_VQje6yyL8w42rs / price_1UPsB8Gc5QIzbAH6l4p2C4oU. Checked first: no earlier coach/org products existed.
 - [x] KK5 D2 checkout + plan switch: new /staff-plans page (Coach / Organization with extra-seat count; iPhone app shows "Subscribe on our website"), server checkout create-staff-checkout (promo codes allowed, duplicate plan blocked, under-13 accounts refused) and sync-staff-plan (reads Stripe, turns the plan on/off, opens Manage plan). Deployed (Plan 4 authorization). Tests 3/3 PASS (coach; org = 5 seats + extra seats by quantity; player plans give no staff plan). Live: both refuse signed-out callers (401). NOT yet: a real test checkout with a 100% code (needs a signed-in staff test account — KK2 sign-in block), webhook hook-up, features gated on the plan, links from every pricing screen / sign-up role choice / help chat / 8 translations, guest mode, hourly limit, coach summaries, cost tracking.
+- [x] KK10 D7 weekly coach summary: Coach dashboard card "This week across your players" (players, dates, work done vs set this week and the week before, top 5 issues in video analyses with players/times seen and "What to learn to help them"; says "Not enough data" when true; "Counts show patterns, not causes"). Computed on opening, no new scheduled job. Server-checked (connected players only). PASS as Demo Coach on the backend: 1 player, 0 of 8 exercises this week, week before "Not enough data", issues "Not enough data". Read-only, nothing to clean. Not phone-checked (KK2).
 - [x] KK9 D6 cost tracking + hourly limit: the shared AI caller now reports model and token counts; every main video analysis (analyze-video, all sports/types) logs model, tokens, estimated cost and plan (staff plan or player) to a new owner-only cost log; owner page /owner/ai-costs shows cost per analysis type and per plan for 7/30/90 days (estimates at Gemini $0.30/$2.50 per 1M, OpenAI at its own rates). Hourly fair-use limit: about 30 analyses per account per hour, checked on the server before the AI call (cached re-runs don't count), friendly "take a short break" message. Tests 3/3 PASS (cost math, 29 allowed / 30 blocked). analyze-video redeployed (Plan 4 authorization); its code-check warnings are all in older unchanged lines (pose tiles, report card), not new code. Proof: 30 temporary log rows for Demo HS Shortstop → the server count read 30 (= blocked) and the owner page on a 390px phone showed 30 analyses, $0.0195 each, $0.5844 total; rows deleted (0 left). Not yet: logging for the smaller AI uses (base-stealing, at-bat swing, help chat); a real analysis row (none run since deploy). Next: guest mode, weekly coach summary.
 - [x] KK8 D5 plans on every pricing screen: "For coaches and organizations" box (Coach $300; Organization $1,000 with 5 seats, extra seat $150; link to /staff-plans) on the pricing page and the demo upgrade screen; price line + link under the sign-up role choice; help chat now knows both plans and the website-only rule (redeployed, code check clean); wording in all 8 languages (en, es, fr, de, nl, ja, ko, zh; 9 lines each). PASS on a 390px phone as the owner session: pricing shows the box and button, role choice shows the link, /staff-plans shows both plans (/tmp/browser/kk6_pricing.png). Not yet checked as a player/coach test account (KK2 block). Next: guest mode, hourly limit, weekly coach summary, cost tracking.
 - [x] KK7 D4 coach features follow the plan: Coach dashboard, coach console, coach player pages and coach digest need an active Coach or Organization plan; the Organization dashboard needs the Organization plan; owner/admin always pass; others see "Coach plan needed" + See plans. Behind switch staff_plan_gate, OFF (no row) so existing coaches keep access until the owner turns it on. Tests 5/5 PASS; type check clean. Owner decision: when to turn the switch on (existing coaches without a plan lose coach tools then). Next: plans on every pricing screen, sign-up role choice, help chat, 8 translations.
