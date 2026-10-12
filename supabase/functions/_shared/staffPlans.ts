@@ -16,3 +16,16 @@ export function staffPlanFromItems(items: Array<{ price: { id: string }; quantit
   if (coach) return { plan: "coach" as const, included_seats: 0, extra_seats: 0 };
   return null;
 }
+
+/** Webhook path: writes the Coach/Organization plan for one subscription event. No-op if it holds no staff price. */
+export async function applyStaffSubscription(supabase: any, userId: string, customerId: string, sub: any) {
+  const p = staffPlanFromItems(sub?.items?.data ?? []);
+  if (!p) return false;
+  const end = sub.items.data[0]?.current_period_end ?? sub.current_period_end;
+  await supabase.from("staff_plans").upsert({
+    user_id: userId, plan: p.plan, status: sub.status, extra_seats: p.extra_seats, included_seats: p.included_seats,
+    stripe_customer_id: customerId, stripe_subscription_id: sub.id,
+    current_period_end: end ? new Date(end * 1000).toISOString() : null, updated_at: new Date().toISOString(),
+  });
+  return true;
+}
