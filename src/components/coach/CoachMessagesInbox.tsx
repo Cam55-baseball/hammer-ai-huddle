@@ -37,7 +37,7 @@ export function CoachMessagesInbox({ athleteId, title }: { athleteId: string; ti
                   size="sm"
                   className="h-7 gap-1 px-2 text-xs text-muted-foreground"
                   aria-label="Report this message"
-                  onClick={() => setTarget({ contentType: "coach_message", contentId: m.id, reportedUserId: m.coach_id, label: "This coach message" })}
+                  onClick={() => setTarget({ contentType: "coach_message", contentId: m.id, reportedUserId: m.coach_id, label: "coach message" })}
                 >
                   <Flag className="h-3 w-3" /> Report
                 </Button>
