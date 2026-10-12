@@ -97,3 +97,15 @@ export function extendBelowFloor(
 export function formatGrade(value: number): string {
   return value < MLB_FLOOR_GRADE ? value.toFixed(1) : String(Math.round(value));
 }
+
+/**
+ * Plan 4 §A bands — by sport (MLB / AUSL scale), never by age.
+ * Sub Par < 40; Acceptable 40–60 inclusive; Elite > 60.
+ * Always band the UNROUNDED grade so 60.1 reads Elite.
+ */
+export type RatingBand = "Sub Par" | "Acceptable" | "Elite";
+export function ratingBand(grade: number): RatingBand {
+  if (grade < 40) return "Sub Par";
+  if (grade <= 60) return "Acceptable";
+  return "Elite";
+}
