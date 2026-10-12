@@ -1,3 +1,11 @@
+# REPORT — 2026-10-12 16:35 UTC (HH1, in progress)
+
+**Ready to publish: no.** HH1 step 1 BUILT: Coach Dashboard roster — each player card now has a "Strengths & weaknesses" button; tap loads that player's strengths/weaknesses (same RPC + logic as the Development tab, so the same access limits apply), each with evidence and date, "Not enough data yet" when true, labeled "Source: video analysis reports". Build OK. Proof on a phone screen as the test coach: NOT YET RUN.
+**Still open in Phase 6:** strengths/weaknesses on org comparison, testing day, compare by test. Then under-13 parent switch + contact-the-parent proof, Phases 7–9.
+**Waiting on the owner:** deploy OK for the plan builder; test-account tool redeploy; keep/remove Spaces (OFF); Vault review queue; owner terms not accepted.
+
+---
+
 # REPORT — 2026-10-12 16:25 UTC (owner decisions)
 
 **Ready to publish: no** — the plan-builder change is built and simulated but NOT deployed (see below); Phase 6 owner additions and Phases 7–9 continue.
