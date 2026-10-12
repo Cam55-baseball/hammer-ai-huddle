@@ -3,6 +3,7 @@
 - [x] A2 band + decimal shown on session dialogs, day list, rankings, MPI card (getGradeLabel now "Plus · Acceptable") — PASS tests/typecheck
 - [x] A3 Do you agree?: PASS on 390px phone as Demo Coach (Disagree + note saved with sport=baseball, position CF; rating unchanged; screenshot /tmp/browser/jj4/2.png). Owner dashboard /owner/rating-agreement built; owner-session read not yet checked. Proof rows/grade/link deleted.
 - [ ] OWNER: scout grades are stored as whole numbers (integer columns) → a 12.4 is saved as 12. Fix = add decimal columns alongside + backfill (needs OK; ~26 columns).
+- [~] B1 initial assessment order rules (src/lib/assessment/initialAssessment.ts): 1→2→3 locked, 4–6 any order, step 2 skippable, step 5 = subscribed analyses only (Pitcher=pitching; 5Tool=hitting+throwing; 2Way=all three). 8 tests PASS. Next: saved progress + movement screen + checklist card in Before you start.
 - [ ] · B · C · D · E
 - Order: build after Plan v3.1 Phase 11 (sponsorship billing). BLOCKED: Phase 11 waits on the owner's 4 answers (price per sponsored player + monthly/yearly; modules covered; grace period; players already paying).
 - Owner decision needed: start Plan 4 now ahead of Phase 11? (Org plan in Plan 4 also includes sponsorship billing, so the same 4 answers are needed there.)
