@@ -242,7 +242,7 @@ export default function CoachAthleteDetail() {
           </TabsContent>
 
           <TabsContent value="grades" className="space-y-4 pt-4">
-            {athleteId && <CoachGradesTab athleteId={athleteId} />}
+            {athleteId && <CoachGradesTab athleteId={athleteId} sport={hittingDoctrineSnap?.sport ?? null} />}
           </TabsContent>
 
           <TabsContent value="recap" className="space-y-4 pt-4">
