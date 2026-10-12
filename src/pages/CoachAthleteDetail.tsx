@@ -316,3 +316,7 @@ export default function CoachAthleteDetail() {
             </Card>
           </TabsContent>
         </Tabs>
+      </div>
+    </DashboardLayout>
+  );
+}
