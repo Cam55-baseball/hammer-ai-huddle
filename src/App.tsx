@@ -1,5 +1,6 @@
 // Force rebuild to clear stale module references - Dec 2025
 import { PageFooterReport } from "@/components/support/PageFooterReport";
+import { StaffPlanGate } from "@/components/staff/StaffPlanGate";
 import { RetiredProgramRoute } from "@/components/archive/RetiredProgramRoute";
 import NativeAppleSignIn from "./pages/NativeAppleSignIn";
 import { Suspense, useEffect, ComponentType } from "react";
@@ -552,7 +553,7 @@ const App = () => {
               <Route path="/explosive-conditioning" element={<RetiredProgramRoute />} />
               <Route path="/practice" element={<PracticeHub />} />
               <Route path="/progress" element={<ProgressDashboard />} />
-              <Route path="/organization" element={<OrganizationDashboard />} />
+              <Route path="/organization" element={<StaffPlanGate needsOrg><OrganizationDashboard /></StaffPlanGate>} />
               <Route path="/requests" element={<RequestsPage />} />
               <Route path="/join" element={<JoinTeamPage />} />
               <Route path="/owner/organizations" element={<StaffOnlyRoute><OwnerOrganizationsPage /></StaffOnlyRoute>} />
