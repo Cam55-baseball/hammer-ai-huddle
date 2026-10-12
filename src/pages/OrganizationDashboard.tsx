@@ -17,6 +17,7 @@ import { OrgVerificationForm } from '@/components/organization/OrgVerificationCa
 import { AssignAthletesCard } from '@/components/organization/AssignAthletesCard';
 import { FacilitySpaces } from '@/components/organization/FacilitySpaces';
 import { FacilityBoard } from '@/components/organization/FacilityBoard';
+import { CompareAthletes } from '@/components/organization/CompareAthletes';
 import { useFeatureSwitches } from '@/hooks/useFeatureSwitches';
 
 export default function OrganizationDashboard() {
@@ -44,6 +45,7 @@ export default function OrganizationDashboard() {
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="players">Players</TabsTrigger>
+              <TabsTrigger value="compare">Compare</TabsTrigger>
               <TabsTrigger value="announcements">Announcements</TabsTrigger>
               <TabsTrigger value="roster">Roster</TabsTrigger>
               <TabsTrigger value="members">Members</TabsTrigger>
@@ -73,6 +75,10 @@ export default function OrganizationDashboard() {
 
             <TabsContent value="players">
               <FacilityBoard orgId={activeOrg.id} />
+            </TabsContent>
+
+            <TabsContent value="compare">
+              <CompareAthletes orgId={activeOrg.id} />
             </TabsContent>
 
             <TabsContent value="announcements">

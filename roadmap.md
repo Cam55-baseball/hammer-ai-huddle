@@ -1,3 +1,13 @@
+# REPORT — 2026-10-12 03:05 UTC (GG6)
+
+**Ready to publish: no** — Phase 6 continues (growth vs game trends, owner additions), then Phases 7–9; legal wording waits for the lawyer.
+
+**GG6 DONE — Phase 6 compare athletes in the organization (2026-10-12, PASS).** New "Compare" tab on the Organization Dashboard: org staff pick 2–6 players and see them side by side — name, position, level, age, latest test with its date, tests logged, latest grade with its date and who entered it, last-7-days plan completion, games logged with last date. Fair-comparison warnings appear in plain words when the pick is unfair: different positions, different levels, age gap of 2+ years, or fewer than 2 logged tests ("not enough data yet"). Backed by SECURITY DEFINER RPC org_compare_athletes (org staff only; every picked player must be an active member of that org — ID guessing refused). Warnings computed in src/lib/org/compareAthletes.ts (pure, tested). Proof: org admin got 200 with both test players' real data; 1-player pick rejected ("compare 2 to 6 players"); non-member player refused (403); outsider coach refused (403); phone screenshot shows both players, all three warnings and labeled cards (/tmp/browser/gg6/screenshots/3_compared.png); 8 new tests; full suite 2,804/2,804; build OK; all seeded proof data deleted. Note: fixed two bugs found during proof — the staff check arguments were reversed and the name lookup used the wrong profile key.
+
+**Next item:** Phase 6 continued — growth vs game trends (training + analysis reports + game stats, "these move together", never causal, "not enough data yet"); then the owner additions (Development tab, strengths/weaknesses, testing day, compare by test); then Phases 7–9.
+
+---
+
 # REPORT — 2026-10-12 02:05 UTC (FF8, end of batch)
 
 **Ready to publish: no** — Phase 6 (real), Phases 7–9 and several Phase 1–5 gaps are still open; legal wording waits for the lawyer.
