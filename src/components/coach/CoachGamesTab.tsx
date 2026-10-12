@@ -1,9 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { hittingLine, scoreLine, seasonTotals, type CoachGame } from "@/lib/coach/games";
+import { Button } from "@/components/ui/button";
+import { hittingLine, scoreLine, seasonTotals, verificationLabel, type CoachGame } from "@/lib/coach/games";
 
 /** Coach "Game stats" tab — the player's last 10 logged games. Nothing is estimated. */
-export function CoachGamesTab({ athleteId }: { athleteId: string }) {
+export function CoachGamesTab({ athleteId, canVerify = false }: { athleteId: string; canVerify?: boolean }) {
+  const queryClient = useQueryClient();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["coach-athlete-games", athleteId],
     queryFn: async (): Promise<CoachGame[]> => {
@@ -11,6 +13,13 @@ export function CoachGamesTab({ athleteId }: { athleteId: string }) {
       if (error) throw error;
       return ((data as any)?.games ?? []) as CoachGame[];
     },
+  });
+  const verify = useMutation({
+    mutationFn: async ({ gameId, verified }: { gameId: string; verified: boolean }) => {
+      const { error } = await (supabase as any).rpc("set_game_verification", { _game: gameId, _verified: verified });
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["coach-athlete-games", athleteId] }),
   });
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading game stats…</p>;
