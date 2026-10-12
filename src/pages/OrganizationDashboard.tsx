@@ -45,7 +45,7 @@ export default function OrganizationDashboard() {
 
         {activeOrg ? (
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList>
+            <TabsList className="w-full justify-start overflow-x-auto">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="players">Players</TabsTrigger>
               <TabsTrigger value="compare">Compare</TabsTrigger>
