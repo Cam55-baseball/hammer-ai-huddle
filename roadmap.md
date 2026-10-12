@@ -1,4 +1,5 @@
 ## Plan 4 (docs/owner/plan-4.md) — IN PROGRESS (JJ1)
+- [x] KK5 D1 Stripe LIVE products + monthly prices created via API (owner-authorized): Hammers Coach $300 = prod_VQjeb6G4nQbIfZ / price_1UPsB6Gc5QIzbAH6k6wtj6NI · Hammers Organization $1,000 (5 seats) = prod_VQjea2xzqwAqvj / price_1UPsB7Gc5QIzbAH6Q42AlTdT · Extra Coach Seat $150 per seat = prod_VQje6yyL8w42rs / price_1UPsB8Gc5QIzbAH6l4p2C4oU. Checked first: no earlier coach/org products existed.
 - [x] A1 bands: ratingBand() in gradeScale.ts — PASS, tests 39.9 Sub Par / 40, 60 Acceptable / 60.1 Elite / 12.4 decimal
 - [x] A2 band + decimal shown on session dialogs, day list, rankings, MPI card (getGradeLabel now "Plus · Acceptable") — PASS tests/typecheck
 - [x] A3 Do you agree?: PASS on 390px phone as Demo Coach (Disagree + note saved with sport=baseball, position CF; rating unchanged; screenshot /tmp/browser/jj4/2.png). Owner dashboard /owner/rating-agreement built; owner-session read not yet checked. Proof rows/grade/link deleted.
