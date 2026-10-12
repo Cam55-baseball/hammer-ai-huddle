@@ -1,3 +1,13 @@
+# REPORT — 2026-10-12 03:10 UTC (GG7)
+
+**Ready to publish: no** — Phase 6 continues (owner additions: Development tab, strengths/weaknesses, testing day, compare by test), then Phases 7–9; legal wording waits for the lawyer.
+
+**GG7 DONE — Phase 6 growth vs game trends (2026-10-12, PASS).** New "Trends" tab on the Organization Dashboard: staff pick one player and see how three things moved over the same stretch — training completion (weekly, from the training plan log), video analysis scores (with dates), and game results (wins/losses from the game log). Each series shows a direction arrow, a plain summary and its source with point count. The "How they move together" section pairs the three series: same direction = "these move together", opposite = "these move in opposite directions" — every pair carries the line "this does not show one caused the other" (never causal); any series with fewer than 2 points reads "not enough data yet". Games list shows each game with date, opponent, score, pitch count and "Verified by coach/org" vs "Source: athlete-entered". Backed by SECURITY DEFINER RPC org_growth_trends (org staff only; player must be an active member of that org — ID guessing refused). Trend logic in src/lib/org/growthTrends.ts (pure, tested). Proof: org admin on a phone screen saw the 13-year-old test player's real seeded data — training down over 8 weeks, analysis up over 4 reports, games up over 4 games, with "these move together" on analysis vs games and "opposite directions" on the other two pairs (/tmp/browser/gg7/screenshots/2_trends.png); outsider coach refused (403); 9 new tests; full suite 2,813/2,813; build OK; all seeded proof data deleted.
+
+**Next item:** Phase 6 owner additions — Development tab in Coach View (5 reports per category with trends, recurring/new issues, labeled connections, 1–3 takeaways, development report card), strengths/weaknesses on the Coach Dashboard roster, testing day for facility athletes, compare by test results; then Phases 7–9.
+
+---
+
 # REPORT — 2026-10-12 03:05 UTC (GG6)
 
 **Ready to publish: no** — Phase 6 continues (growth vs game trends, owner additions), then Phases 7–9; legal wording waits for the lawyer.
