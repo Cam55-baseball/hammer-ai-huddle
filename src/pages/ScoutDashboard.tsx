@@ -469,6 +469,14 @@ export default function ScoutDashboard() {
                         <ClipboardCheck className="h-5 w-5 mr-2" />
                         <span>File a report</span>
                       </Button>
+                      <Button
+                        onClick={() => navigate(`/scout-athlete/${player.id}`)}
+                        size="lg"
+                        variant="outline"
+                        className="flex-shrink-0 h-12 px-5 text-base"
+                      >
+                        <span>Game play and stats</span>
+                      </Button>
                       {player.id !== ownerId && (
                         <Button
                           onClick={() => handleUnfollowClick(player)}
