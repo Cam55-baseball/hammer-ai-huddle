@@ -537,6 +537,9 @@ export default function ScoutDashboard() {
                   independentLeague: '',
                   isForeignPlayer: null,
                   sportPreference: null,
+                  levels: [],
+                  verifiedTestsOnly: false,
+                  recentTestDays: "",
                 })}
               />
               
