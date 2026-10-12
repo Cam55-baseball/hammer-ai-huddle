@@ -281,6 +281,13 @@
       "when": 1791821988151,
       "tag": "0039_exclude_system_accounts_from_anon_training",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1791823001007,
+      "tag": "0040_testing_days",
+      "breakpoints": true
     }
   ]
 }
