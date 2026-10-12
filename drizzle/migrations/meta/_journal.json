@@ -267,6 +267,13 @@
       "when": 1791771702328,
       "tag": "0037_coach_athlete_games",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1791771963151,
+      "tag": "0038_coach_athlete_readiness",
+      "breakpoints": true
     }
   ]
 }
