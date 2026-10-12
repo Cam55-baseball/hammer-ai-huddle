@@ -19,7 +19,7 @@
 **Phase 6 relabel:** the earlier "Phase 6 PASS" (Spaces) was the wrong thing. **Real Phase 6 = Organization tools (plan §5) + owner additions: NOT STARTED.**
 
 **Phases 1–5 re-check against the saved plan — gaps found (to fix and prove, in this order):**
-- [ ] Coach View summary card is missing: today's status, 7-day completion, top alert, newest personal best or test, head coach (has only age/sport/position/team/start/last activity).
+- [x] Coach View summary card now shows today's status, 7-day completion, top alert, newest test (+ next due), head coach. Proof FF1: roster coach reads it for demo13 (200); same coach refused for a player not on his roster and for the owner (403 ×2); phone screenshot /tmp/browser/ff1/summary.png; 3 new tests pass. (Newest personal best waits on the tests work — no shared PB source yet; shown as newest test.)
 - [ ] Coach View detailed tabs missing: trends vs own baseline, tests, body load + pitch counts, game stats + video, reports, grades, six-week recap, readiness + pain (with consent), private notes.
 - [ ] Messages cannot be reported ("any message can be reported").
 - [ ] Coach workouts: "schedule a practice" and "whole team" sending not built; practices must count toward workload.

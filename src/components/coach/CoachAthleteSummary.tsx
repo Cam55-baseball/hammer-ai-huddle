@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { type Glance, todayStatus, weekCompletion, topAlert, latestTest, headCoach } from "@/lib/coach/glance";
 
 // Plan v3.1 Phase 5 — coach summary card. Every value is labeled and every
 // missing value says so plainly ("Not shared" / "Not started"); nothing is
@@ -69,6 +70,18 @@ export function CoachAthleteSummary({
     },
   });
 
+  const { data: glance, isError: glanceError } = useQuery({
+    queryKey: ["coach-athlete-glance", athleteId],
+    enabled: !!athleteId,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("coach_athlete_glance", { _athlete: athleteId });
+      if (error) throw error;
+      return data as unknown as Glance;
+    },
+  });
+  const fd = (iso: string) => fmtDate(iso) ?? iso;
+  const gv = (f: () => string) => (glanceError ? "Not available" : glance ? f() : "Loading…");
+
   const age = ageFromDob(profile?.date_of_birth);
   const planStart = fmtDate(profile?.hammers_today_started_at);
   const lastActivity = fmtDate(lastActivityAt);
@@ -86,6 +99,11 @@ export function CoachAthleteSummary({
         </CardTitle>
       </CardHeader>
       <CardContent className="divide-y">
+        <Row label="Today" value={gv(() => todayStatus(glance))} />
+        <Row label="7-day completion" value={gv(() => weekCompletion(glance))} />
+        <Row label="Top alert" value={gv(() => topAlert(glance, fd))} />
+        <Row label="Newest test" value={gv(() => latestTest(glance, fd))} />
+        <Row label="Head coach" value={gv(() => headCoach(glance))} />
         <Row label="Age" value={age !== null ? `${age} years old` : "Not shared"} />
         <Row label="Sport" value={ctx?.sport_primary ? ctx.sport_primary : "Not shared"} />
         <Row label="Position" value={profile?.position?.trim() || "Not shared"} />
