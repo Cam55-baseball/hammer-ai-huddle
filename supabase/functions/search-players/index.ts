@@ -63,6 +63,9 @@ serve(async (req) => {
       independentLeague,
       isForeignPlayer,
       sport,
+      levels,
+      verifiedTestsOnly,
+      recentTestDays,
     } = await req.json();
 
     // Helper to parse height strings like "6'2"" to inches
@@ -90,7 +93,8 @@ serve(async (req) => {
       (typeof isFreeAgent === 'boolean') ||
       mlbAffiliate || independentLeague ||
       (typeof isForeignPlayer === 'boolean') ||
-      (sport === 'baseball' || sport === 'softball');
+      (sport === 'baseball' || sport === 'softball') ||
+      levels?.length > 0 || verifiedTestsOnly === true || Number(recentTestDays) > 0;
 
     // If no query and no filters, return empty
     if ((!query || query.trim().length < 2) && !hasFilters) {
@@ -132,6 +136,10 @@ serve(async (req) => {
     // Apply batting side filter
     if (battingSides && battingSides.length > 0) {
       profileQuery = profileQuery.in('batting_side', battingSides);
+    }
+
+    if (Array.isArray(levels) && levels.length > 0) {
+      profileQuery = profileQuery.in('experience_level', levels);
     }
 
     // Apply state filter
@@ -266,6 +274,18 @@ serve(async (req) => {
     // Child safety: minors appear in search only when guardian-cleared with profile sharing on.
     const gate = await recruitingGate(supabaseAdmin, user.id, filteredProfiles.map(p => p.id), 'profile');
     filteredProfiles = filteredProfiles.filter(p => gate.get(p.id) === 'visible');
+
+    // Test-based filters: only players who share their stats ('metrics') can match.
+    const testDays = Number(recentTestDays) > 0 ? Math.min(Number(recentTestDays), 730) : 0;
+    if ((verifiedTestsOnly === true || testDays > 0) && filteredProfiles.length > 0) {
+      const mGate = await recruitingGate(supabaseAdmin, user.id, filteredProfiles.map(p => p.id), 'metrics');
+      const shared = filteredProfiles.filter(p => mGate.get(p.id) === 'visible').map(p => p.id);
+      let tq = supabaseAdmin.from('vault_performance_tests').select('user_id, test_date, results').in('user_id', shared.length ? shared : ['00000000-0000-0000-0000-000000000000']);
+      if (testDays > 0) tq = tq.gte('test_date', new Date(Date.now() - testDays * 86400000).toISOString().slice(0, 10));
+      const { data: tests } = await tq;
+      const ok = new Set((tests ?? []).filter((t: any) => verifiedTestsOnly !== true || t.results?._verified === 'in_person').map((t: any) => t.user_id));
+      filteredProfiles = filteredProfiles.filter(p => ok.has(p.id));
+    }
 
     const results = filteredProfiles.map(profile => ({
       id: profile.id,
