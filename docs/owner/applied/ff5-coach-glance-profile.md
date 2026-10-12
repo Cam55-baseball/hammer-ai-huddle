@@ -1,0 +1,1 @@
+-- FF5 (2026-10-12): coach_athlete_glance now also returns a 'profile' object (name, age in years, position, team, plan start, sport). Same access check. Applied to Lovable Cloud.
