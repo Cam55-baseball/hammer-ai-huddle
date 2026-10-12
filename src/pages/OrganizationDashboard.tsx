@@ -15,6 +15,7 @@ import { TeamAnnouncements } from '@/components/organization/TeamAnnouncements';
 import { Building2 } from 'lucide-react';
 import { OrgVerificationForm } from '@/components/organization/OrgVerificationCards';
 import { AssignAthletesCard } from '@/components/organization/AssignAthletesCard';
+import { FacilitySpaces } from '@/components/organization/FacilitySpaces';
 
 export default function OrganizationDashboard() {
   const { myOrgs, members } = useOrganization();
