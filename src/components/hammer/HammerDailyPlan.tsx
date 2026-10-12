@@ -175,6 +175,7 @@ function shortSeasonPhase(p: string | null | undefined): "off" | "pre" | "in" | 
   return null;
 }
 import { BeforeYouStartSection } from "@/components/hammer/BeforeYouStartSection";
+import { InitialAssessmentCard } from "@/components/assessment/InitialAssessmentCard";
 import { doseBullets } from "@/lib/hammer/prescription/doseBullets";
 import { DayNoticesDrawerItem } from "@/components/hammer/DayNoticesDrawerItem";
 import { DefensivePrepVideo } from "@/components/hammer/DefensivePrepVideo";
@@ -838,6 +839,7 @@ function HammerDailyPlanBody({
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
         <FinishProfileCard />
+        <InitialAssessmentCard sport={sportIsBaseball ? "baseball" : "softball"} />
         <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
         {splitBaserunning(plan.blocks).mental.map(b => <BlockCard key={`mental-${b.modality}-${b.side ?? "x"}`} block={b} onNavigate={navigate} />)}
         {/* Owner order 2026-10-05: aim (with breath primer) → defensive video → coach advice → why the plan changed.
