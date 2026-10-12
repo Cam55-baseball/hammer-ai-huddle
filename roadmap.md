@@ -1,3 +1,32 @@
+# REPORT — 2026-10-12 17:05 UTC (HH8, end of batch)
+
+**Ready to publish: no.** (Phase 7 in progress; plan-builder deploy awaits the owner.)
+
+**HH8 PASS: Scout "Game play and stats" proven on a phone** as the test coach acting as a scout (temporary scout role): the adult test player's practice game showed hitting (2 at-bats, 1 hit, 1 extra-base hit, 1 walk, 1 strikeout, stolen bases "Not yet measured"), pitching (pitch count 2, top speed 81 mph; innings/hits/runs/walks/strikeouts "Not yet measured"), fielding (1 putout), the batted-ball chart and the pitch-location grid, all labeled "Source: athlete-entered" (/tmp/browser/hh8/2.png). Server refusals proven in HH7 (sharing off, follow removed, outsider). All proof data deleted (game, plays, follow, scout role, sharing row).
+
+**Phases against docs/owner/scouting-plan-v3.1.md:**
+- Security fixes: PASS (CC6).
+- 2 Accounts/orgs/teams/one inbox/head coach: PASS (DD7–DD10).
+- 3 Consent + scouting switch: PASS; under-13 parent switch + contact-the-parent route PASS (HH6).
+- 4 Onboarding + academics/transcripts: PASS (EE1–EE5).
+- 5 Game stats + verification + pitch/spray capture: PASS (EE6, GG4).
+- 6 Coach Dashboard/View/Messages: PASS (EE7–EE9, FF1–FF8, GG1–GG3).
+- 7 Coach workouts with safety check: PASS (EE9).
+- 8 Facility dashboard, comparison, trends + owner additions (Development, strengths/weaknesses, testing day, compare by test): PASS (GG5–GG8, HH1–HH5).
+- 9 Scout tools: PARTIAL — Game play and stats tab PASS (HH7–HH8); open: other Scout Profile tabs, dashboard search filters, scout comparison 2–4.
+- 10 The General two layers: NOT STARTED.
+- 11 Sponsorship billing: NOT STARTED.
+
+**Option B lifting:** built and proven in 8-week simulations (720 combos, 0 rule violations, in-season max 13 sets = cap, slot withheld on all 2,304 near-game days, shortfalls 3,618 → 558; remaining shortfalls blocked by the age and in-season set-cap rules). NOT deployed.
+
+**Legal v2 saved (approved by the owner, effective 2026-10-12):** Subscription Policy v2 (live); Child Safety, Privacy Policy and Consumer Health Data Policy v2 (one-time notice, no forced re-acceptance).
+
+**Next item:** Scout Profile remaining tabs (Overview, ID and academics, Performance, Reports and video, Six-week recap, Grades, Players Club), then dashboard search filters, then scout comparison.
+
+**Waiting on the owner:** OK to deploy the plan builder (Option B); test-account tool redeploy; keep or remove Spaces (off); Vault review queue (79 + 10 tag suggestions); owner's own terms not accepted.
+
+---
+
 # REPORT — 2026-10-12 17:00 UTC (HH7, Phase 7 started)
 
 **Ready to publish: no.** **HH7 PARTIAL: Scout Profile → "Game play and stats" tab.** New Scout Profile page (button "Game play and stats" on each followed player on the Scout Dashboard): last 10 games with hitting (at-bats, hits, extra-base hits, walks, strikeouts, stolen bases), pitching (pitch count, top speed), fielding (putouts, assists, errors), batted-ball chart and pitch-location grid from tapped-in data only; anything not logged (innings, runs, pitcher hits/walks/strikeouts, steals with no base-running logs) says "Not yet measured"; each game labeled athlete-entered or verified. Server rule: scout/recruiter role + accepted follow + no block + family shared "metrics" (minors also need the parent's yes). Server proof PASS (all rolled back, nothing kept): scout saw the practice game; refused when sharing turned off, when the follow was removed, and for an outsider. 4 new tests. NOT yet proven on a phone screen as a scout. Still open in Phase 7: other Scout Profile tabs, dashboard search filters, scout comparison 2–4.
