@@ -20,7 +20,7 @@ export default function ScoutAthleteProfile() {
             <ScoutTabTriggers />
             <TabsTrigger value="games">Game play and stats</TabsTrigger>
           </TabsList>
-          <ScoutTabContents q={q} />
+          <ScoutTabContents q={q} athleteId={athleteId!} />
           <TabsContent value="games"><ScoutGamePlayTab athleteId={athleteId} /></TabsContent>
         </Tabs>
       </div>
