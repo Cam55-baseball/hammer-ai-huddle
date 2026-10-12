@@ -1,3 +1,32 @@
+# REPORT — 2026-10-12 02:05 UTC (FF8, end of batch)
+
+**Ready to publish: no** — Phase 6 (real), Phases 7–9 and several Phase 1–5 gaps are still open; legal wording waits for the lawyer.
+
+| Phase (checked against docs/owner/scouting-plan-v3.1.md) | Result | Proof |
+|---|---|---|
+| Security fixes | PASS | CC6 |
+| 1 Accounts, orgs, teams, Requests inbox | PASS, re-proof on phone pending | DD7–DD10 |
+| 2 Consent up front | PASS in app; legal wording waits for lawyer | DD11–DD13 |
+| 3 Onboarding | PASS | EE1–EE5 |
+| 4 Game stats, location, spray | PASS, missing verified/athlete-entered labels | EE6 |
+| 5 Coach tools | PARTIAL — gaps below | EE7–EE9, FF1–FF8 |
+| 6 Organization tools + owner additions | NOT STARTED (earlier "Spaces" was a misread; now behind switch facility_spaces = OFF) | — |
+| 7–9 | NOT STARTED | — |
+
+**Gaps fixed so far:** summary card (FF1), message reporting (FF2), Tests + Notes tabs (FF3), name in header + profile details for coaches (FF5), Trends tab (FF6), Body load tab (FF7), player-side pitch counts (FF8). Details below.
+
+**Next item:** remaining coach tabs — game stats + video, reports, grades, six-week recap, readiness + pain (with consent).
+
+**Subscription Policy v2, section 6 Refunds (draft for the lawyer, NOT approved):**
+- We do not give partial refunds for unused time, except where the law requires.
+- If you were charged after you cancelled, or charged in error, email us within 60 days and we will refund it. *(kept exactly as v1)*
+- We do not offer refunds based on athletic progress or results. *(the only addition)*
+- Apple purchases are refunded through Apple.
+
+**Waiting on the owner:** lawyer review of docs/owner/legal-v2-under13-scouting.md and the Refunds text; Lifting Blueprint coverage decision (recommend C); test-account tool redeploy OK and keep/delete the test accounts; keep or remove the Spaces feature; Vault review queue (79 + 10 tag suggestions); owner terms not yet accepted in the browser. Done by owner: renewal-reminders-daily cron.
+
+---
+
 # REPORT — 2026-10-12 01:05 UTC (FF1: correction + saved plan)
 
 **Ready to publish: no**
@@ -24,7 +53,7 @@
 - [x] FF5: coach page header shows the player's name, not the ID. Also fixed: the summary card showed "Not shared" for age/sport/position because coaches can't read the profile row — now delivered through the access-checked coach summary call. Proof: test coach, phone 390px, demo13 shows "Demo — 13U Offseason", 13 years old, baseball, CF (/tmp/browser/ff5/header.png). PASS.
 - [x] FF6: new "Trends" tab on the coach's athlete page — each measured metric compared only with the player's own usual range (never other players): baseline line ("Their usual: 1.58–1.66 s (from 12 measurements)"), trend label, plain verdict, up to 5 most recent measurements with dates; empty state "No measurements yet". Access-checked call (player, own coaches only). Proof: test coach, phone 390px, demo13 with seeded ten-yard dash data shows baseline, "Steady vs their usual", verdict and 5 dated measurements (/tmp/browser/ff6/screenshots/trends.png); non-roster RPC call refused (403); proof data deleted after. Full suite 2,763/2,763, build OK. PASS.
 - [x] FF7: new "Body load" tab on the coach's athlete page — last 7 days counted only from what the player actually logged: weekly pitch total (bullpens + outings + game pitches merged by day), throws logged, per-day pitch breakdown ("40 pitches (40 in a game)"), and each arm entry labeled ("Long toss — 30 throws" / "skipped"); empty state says so plainly. Access-checked call (player, own coaches only). Found along the way: the pitch-log query used a column that no longer exists (template_id) — now uses movement_slug; the same stale column in the player-side useRecentPitchingLoad hook means bullpen counts silently fail there too — NOT yet fixed (on the list). Proof: test coach, phone 390px, demo13 with seeded data shows 62 pitches this week, 30 throws, per-day lines (/tmp/browser/ff6/screenshots/load.png); non-roster RPC refused (403); proof data deleted after. Full suite 2,770/2,770, build OK. PASS.
-- [ ] Player-side bug to fix: useRecentPitchingLoad filters wk_session_logs by template_id, a column that no longer exists — bullpen/outing pitch counts silently fail for players. Switch to movement_slug and prove.
+- [x] FF8: player-side bullpen/outing pitch counts fixed (lookup used a removed column; now uses movement_slug). Proof as test player demo13 via sign-in API: old lookup refused (400, column does not exist), new lookup accepted (200; no bullpens logged this week, so empty). New test (pitches counted by movement_slug: 35 + 40) passes; full suite 2,770/2,770 before it, build OK. No test data created. PASS.
 - [ ] Coach View tabs still missing: game stats + video, reports, grades, six-week recap, readiness + pain (with consent).
 - [x] Any coach message can be reported (Report button on the player's and parent's message lists → existing review queue, which now shows the reported message text to staff only). Proof FF2: coach sent a message to demo13; player filed a report (201); owner/staff could read that message; an outsider read 0 messages and 0 reports; phone screenshot of the parent's list and report window /tmp/browser/ff1/report_dialog.png. Test message + report deleted.
 - [ ] Coach workouts: "schedule a practice" and "whole team" sending not built; practices must count toward workload.
