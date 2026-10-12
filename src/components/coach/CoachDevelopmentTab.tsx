@@ -42,7 +42,10 @@ export function CoachDevelopmentTab({ athleteId }: { athleteId: string }) {
   const cards = useMemo(() => (data ? buildCategoryCards(data.reports ?? [], data.findings ?? []) : []), [data]);
   const connections = useMemo(() => (data ? buildConnections(data.reports ?? [], data.findings ?? []) : []), [data]);
   const takeaways = useMemo(() => (data ? buildTakeaways(data.reports ?? [], data.findings ?? []) : []), [data]);
-  const sw = useMemo(() => (data ? strengthsAndWeaknesses(data.reports ?? []) : { strengths: [], weaknesses: [] }), [data]);
+  const sw = useMemo(
+    () => (data ? strengthsAndWeaknesses(data.reports ?? []) : { strengths: [], weaknesses: [], note: null }),
+    [data],
+  );
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
   if (error) return <p className="text-sm text-destructive">Could not load the development view.</p>;
