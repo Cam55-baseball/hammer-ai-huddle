@@ -59,7 +59,7 @@ export function CoachReportsTab({ athleteId }: { athleteId: string }) {
   );
 }
 
-export function CoachGradesTab({ athleteId }: { athleteId: string }) {
+export function CoachGradesTab({ athleteId, sport = null }: { athleteId: string; sport?: string | null }) {
   const { data, isLoading, error } = useCoachReports(athleteId);
   if (isLoading) return <State>Loading grades…</State>;
   if (error) return <State>Could not load grades.</State>;
@@ -84,7 +84,7 @@ export function CoachGradesTab({ athleteId }: { athleteId: string }) {
                 <div className="text-xs text-muted-foreground">Not confirmed by the player yet</div>
               )}
               {g.overall_grade != null && (
-                <RatingAgreement athleteId={athleteId} sport={null} position={g.position_evaluated}
+                <RatingAgreement athleteId={athleteId} sport={sport} position={g.position_evaluated}
                   testKey={g.grade_type ?? "grade"} metricKey="overall_grade" grade={g.overall_grade} />
               )}
             </div>
