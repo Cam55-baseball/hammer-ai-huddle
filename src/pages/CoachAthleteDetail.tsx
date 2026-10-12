@@ -228,7 +228,7 @@ export default function CoachAthleteDetail() {
           </TabsContent>
 
           <TabsContent value="games" className="space-y-4 pt-4">
-            {athleteId && <CoachGamesTab athleteId={athleteId} />}
+            {athleteId && <CoachGamesTab athleteId={athleteId} canVerify={user?.id !== athleteId} />}
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-4 pt-4">

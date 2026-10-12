@@ -17,3 +17,17 @@ describe("coach game stats", () => {
     expect(seasonTotals([g(["HR", "FO"], 20), g(["1B", "BB"], 15)])).toEqual({ hits: 2, ab: 3, pitches: 35 });
   });
 });
+
+describe("verificationLabel", () => {
+  it("labels unverified games as athlete-entered", () => {
+    expect(verificationLabel({ verified_at: null, verified_role: null })).toBe("Source: athlete-entered");
+  });
+  it("labels coach-verified games with the date", () => {
+    expect(verificationLabel({ verified_at: "2026-10-10T09:00:00Z", verified_role: "coach" }))
+      .toBe("Verified by coach on 2026-10-10");
+  });
+  it("labels organization-verified games", () => {
+    expect(verificationLabel({ verified_at: "2026-10-10", verified_role: "organization" }))
+      .toBe("Verified by organization on 2026-10-10");
+  });
+});
