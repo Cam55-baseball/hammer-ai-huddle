@@ -1,5 +1,6 @@
 // Plan v3.1 Phase 5 — coach tabs for video analysis reports, grades and the
-// six-week recap. Everything shown comes from real records; missing data says
+// six-week recap.
+import { formatGrade, ratingBand } from "@/lib/benchmarks/gradeScale"; Everything shown comes from real records; missing data says
 // so plainly and nothing is invented.
 
 export interface CoachReportRow {
@@ -78,7 +79,7 @@ export function gradeSourceLabel(source: string | null): string {
 
 export function gradeLine(g: CoachGradeRow): string {
   const parts: string[] = [];
-  if (g.overall_grade != null) parts.push(`Overall grade: ${g.overall_grade}`);
+  if (g.overall_grade != null) parts.push(`Overall grade: ${formatGrade(g.overall_grade)} (${ratingBand(g.overall_grade)})`);
   if (g.position_evaluated) parts.push(`Position: ${g.position_evaluated}`);
   if (g.grade_type) parts.push(`Type: ${g.grade_type.replace(/_/g, " ")}`);
   return parts.length ? parts.join(" · ") : "Grade details not recorded";
