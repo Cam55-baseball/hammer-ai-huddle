@@ -7,7 +7,7 @@
 
 **II4 PASS — Phase 10, The General's two layers:** Player view already had progress vs own starting point, personal bests, tests and season position; added "Your six-week recap" card (period, strength change, total weight lifted, source; empty state when none). Scout overview added on top of the Scout Profile Overview tab: strengths/areas to develop with evidence and source, game stats summary (count, latest date, how many verified), latest grade with who/when, six-week recap, report counts — each "Not shared" / "Not yet measured" when true, all from the existing server-gated scout data. Proof on phone: 16-year-old test player saw his recap (4.5%, 12,500 lb); test scout saw Hitting strength / Throwing area to develop with averages and dates, "No games logged yet", grade "Not yet measured", 4 reports. Practice data removed.
 
-**Next:** Phase 11 (sponsorship billing). Ready to publish: no.
+**Next:** Phase 11 (sponsorship billing) — BLOCKED on owner answers: (1) price an organization pays per sponsored player, monthly or yearly; (2) which modules a sponsorship covers; (3) grace-period length after a sponsorship ends; (4) if a player already pays, whether we pause their payment, refund the overlap, or start sponsorship at their renewal. Ready to publish: no.
 **Waiting on the owner:** OK to deploy the plan builder (Option B); keep or remove Spaces (off); Vault review queue.
 
 ---
