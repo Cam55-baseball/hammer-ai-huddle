@@ -134,6 +134,7 @@ const HammerRecall = lazyWithRetry(() => import("./pages/HammerRecall"));
 const NotificationsSettings = lazyWithRetry(() => import("./pages/NotificationsSettings"));
 const CoachConsole = lazyWithRetry(() => import("./pages/CoachConsole"));
 const CoachAthleteDetail = lazyWithRetry(() => import("./pages/CoachAthleteDetail"));
+const StaffPlans = lazyWithRetry(() => import("./pages/StaffPlans"));
 const AthleteDigest = lazyWithRetry(() => import("./pages/AthleteDigest"));
 const CoachDigest = lazyWithRetry(() => import("./pages/CoachDigest"));
 const ForecastSurface = lazyWithRetry(() => import("./pages/ForecastSurface"));
@@ -440,6 +441,7 @@ const App = () => {
               <Route path="/settings/notifications" element={<NotificationsSettings />} />
               <Route path="/coach/console" element={<CoachConsole />} />
               <Route path="/coach/athlete/:athleteId" element={<CoachAthleteDetail />} />
+              <Route path="/staff-plans" element={<StaffPlans />} />
               <Route path="/digest" element={<AthleteDigest />} />
               <Route path="/coach/digest" element={<CoachDigest />} />
               <Route path="/forecast" element={<ForecastSurface />} />
