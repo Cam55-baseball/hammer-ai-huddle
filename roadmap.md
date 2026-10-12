@@ -1,6 +1,6 @@
-# REPORT — 2026-10-12 00:20 UTC
+# REPORT — 2026-10-12 00:32 UTC (EE10, end of batch)
 
-**Ready to publish: no** — legal wording waits for your lawyer; the coverage decision and test-account decision are open; Phases 6–9 not started.
+**Ready to publish: no** — legal wording waits for your lawyer; the coverage decision and test-account decision are open; Phases 7–9 not started.
 
 | Phase | State | Proof | Result |
 |---|---|---|---|
@@ -10,8 +10,34 @@
 | 3 Onboarding fields | Done | EE1–EE5 (below) | PASS |
 | 4 Game stats, location, spray charts | Done | EE6 (below) | PASS |
 | 5 Coach tools (messages, safety-checked workout assignment, summary card + tabs) | Done | EE7–EE9 (below) | PASS |
-| 6 Facility tools | Next | — | — |
-| 7–9 | Not started | — | — |
+| 6 Facility tools | Done | EE10 (below) | PASS |
+| 7 Scout tools | Next | — | — |
+| 8–9 | Not started | — | — |
+
+**Phase 6 proof (EE10) — facility tools:**
+- Organizations registered as a Facility or Academy get a "Spaces" tab on their dashboard to list their training spaces (batting cage, pitching mound, field, weight room, track, classroom, other) with optional notes. Closing a space parks it (keeps the record, shows "Closed") instead of deleting it. Players in the organization see the same list read-only on their organization page. An empty list says "No spaces listed yet" — nothing is invented.
+- New table `facility_spaces` (migration scouting_v31_phase6_facility_spaces): only org admins can add/change/close spaces; org members can read their own org's list; everyone else sees nothing.
+- Proven as the test organization on a phone screen (390×844): Spaces tab appears, empty note shows, "Proof Cage 9" added and listed as "Batting cage", then parked with a "Closed" badge (screenshots /tmp/browser/ee9/5_spaces_empty.png, 6_spaces_added.png). An outsider account queried the table directly and got 0 rows. Test space deleted; the demo organization restored to type "travel".
+- Full suite 2,753/2,753; build OK.
+
+**Subscription Policy v2 — exact wording changes for your lawyer (refunds section):**
+- REMOVED: "If you were charged after you cancelled, or charged in error, email us within 60 days and we will refund it."
+- ADDED: "We do not offer refunds based on athletic progress or results."
+- ADDED: "If you believe you were charged after cancellation or charged in error, email hammersmodality@hammersmodality.org so we can review the charge. This does not limit any refund or other rights required by law."
+
+**Lifting Blueprint coverage decision (needs your call):** lift days have six fixed slots (main lower, second lower, push, pull, carry, trunk), so hamstrings, hips, calves/feet and late off-season squats fall short of weekly minimums; in-season hamstrings, groin, calves and power short too.
+- Option A — lower the minimums: sessions stay as they are; some muscles simply get less work than the standard says.
+- Option B — add one rotating robustness slot every lift day: ~2–3 more sets each day, sessions a few minutes longer, all minimums met year-round.
+- Option C — robustness slot off-season only, in-season unchanged (2 lift days, ≤13 sets): minimums met when volume is high, in-season stays exactly as it is now.
+- My recommendation: C. It stays inside every existing rule (in-season limits and rest untouched, Nordics/Copenhagen only in off-season "Add size", age gates apply).
+
+**Waiting on the owner:**
+1. Lawyer review of the under-13 scouting legal drafts (docs/owner/legal-v2-under13-scouting.md) and the Subscription Policy v2 refunds wording above.
+2. The Blueprint coverage decision (A/B/C above).
+3. Test accounts: keep or delete them (democoach, demoorg, demoparent, demo13, demo16ss, democollege, ee5proof — all hidden and excluded from search meanwhile), and OK by name to redeploy the test-account tool.
+4. Vault review queue: 79 items + 10 tag suggestions.
+5. create-checkout authorized redeploy — not yet done.
+6. Owner terms: your own browser sign-in still stops at "Before you keep training".
 
 **Phase 5 proof (EE9) — coach summary card + tabs:**
 - The coach's athlete page is now organized into four tabs — Overview, Training, Messages, Activity — so a coach on a phone reaches everything without a long scroll. Overview opens with a summary card: name, age, sport, position, team, training-plan start, last activity. Every value is labeled; anything the player hasn't shared says "Not shared" instead of showing a blank or a guess.
@@ -119,7 +145,7 @@ No publish, no cron, no iPhone changes.
 - [~] Phase 2 Consent up front
   - [x] DD11 sharing checklist: Health and Academics are now their own switches, both off by default (migration `scouting_v31_phase2_health_academics_scopes`; server sharing rule updated). Page renamed "Scouting visibility" (menu too). Under 13: Contact can't be turned on — staff may only contact the parent; the server rule refuses it too. Proof: 4 new rule tests pass (48/48 sharing tests); test player turned on Academics only, reload showed "scouts and coaches can see your academics", Health stayed off (phone screenshot /tmp/browser/dd10/40_scouting_visibility.png); reset afterward.
   - [ ] Teen parent checklist up front (parent ticks the same items, incl. separate health + academics); under-13 parent turns scouting on; parent contact route; new legal versions with changed paragraphs shown here before the owner marks lawyer approval.
-- [ ] Phase 3 Onboarding fields — [ ] Phase 4 Game stats — [ ] Phase 5 Coach tools — [ ] Phase 6 Organization tools — [ ] Phase 7 Scout tools — [ ] Phase 8 The General — [ ] Phase 9 Sponsorship billing
+- [x] Phase 3 Onboarding fields — [x] Phase 4 Game stats — [x] Phase 5 Coach tools — [x] Phase 6 Facility tools — [ ] Phase 7 Scout tools — [ ] Phase 8 The General — [ ] Phase 9 Sponsorship billing
 
 ---
 

@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { Building2, Users, Shield, Calendar, LogOut, Trophy, Megaphone, Pin, TrendingUp, UserCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTeamStats } from '@/hooks/useTeamStats';
+import { FacilitySpaces } from '@/components/organization/FacilitySpaces';
 
 interface Props {
   organizationId: string;
@@ -182,6 +183,11 @@ export function PlayerOrganizationView({ organizationId, roleInOrg, orgName }: P
           </div>
         </CardContent>
       </Card>
+
+      {/* Plan v3.1 Phase 6 — facilities/academies: players see the space list (read-only) */}
+      {(org?.org_type === 'facility' || org?.org_type === 'academy') && (
+        <FacilitySpaces orgId={organizationId} canManage={false} />
+      )}
 
       {/* Pinned / Recent Announcements */}
       {announcements.length > 0 && (
