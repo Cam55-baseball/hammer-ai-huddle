@@ -8,6 +8,15 @@ export interface CoachGame {
   results: string[];
   rbi: number;
   pitches: number;
+  verified_at: string | null;
+  verified_role: "coach" | "organization" | null;
+}
+
+/** Plan v3.1 Phase 4 — every game stat is labeled athlete-entered or verified. */
+export function verificationLabel(g: Pick<CoachGame, "verified_at" | "verified_role">): string {
+  if (!g.verified_at) return "Source: athlete-entered";
+  const who = g.verified_role === "organization" ? "organization" : "coach";
+  return `Verified by ${who} on ${String(g.verified_at).slice(0, 10)}`;
 }
 
 const HITS = new Set(["1B", "2B", "3B", "HR"]);

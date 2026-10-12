@@ -1,9 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { hittingLine, scoreLine, seasonTotals, type CoachGame } from "@/lib/coach/games";
+import { Button } from "@/components/ui/button";
+import { hittingLine, scoreLine, seasonTotals, verificationLabel, type CoachGame } from "@/lib/coach/games";
 
 /** Coach "Game stats" tab — the player's last 10 logged games. Nothing is estimated. */
-export function CoachGamesTab({ athleteId }: { athleteId: string }) {
+export function CoachGamesTab({ athleteId, canVerify = false }: { athleteId: string; canVerify?: boolean }) {
+  const queryClient = useQueryClient();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["coach-athlete-games", athleteId],
     queryFn: async (): Promise<CoachGame[]> => {
@@ -11,6 +13,13 @@ export function CoachGamesTab({ athleteId }: { athleteId: string }) {
       if (error) throw error;
       return ((data as any)?.games ?? []) as CoachGame[];
     },
+  });
+  const verify = useMutation({
+    mutationFn: async ({ gameId, verified }: { gameId: string; verified: boolean }) => {
+      const { error } = await (supabase as any).rpc("set_game_verification", { _game: gameId, _verified: verified });
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["coach-athlete-games", athleteId] }),
   });
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading game stats…</p>;
@@ -21,7 +30,7 @@ export function CoachGamesTab({ athleteId }: { athleteId: string }) {
   const t = seasonTotals(data);
   return (
     <div className="space-y-4">
-      <p className="text-xs text-muted-foreground">Last {data.length} logged games. Source: athlete-entered.</p>
+      <p className="text-xs text-muted-foreground">Last {data.length} logged games. Each game is labeled athlete-entered or verified.</p>
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-lg border p-3">
           <p className="text-xs text-muted-foreground">Hits / at-bats</p>
@@ -44,7 +53,18 @@ export function CoachGamesTab({ athleteId }: { athleteId: string }) {
               <p>Result: {scoreLine(g)}</p>
               <p>Hitting: {hl ?? "No at-bats logged"}</p>
               <p>Pitching: {g.pitches > 0 ? `${g.pitches} pitches` : "No pitches logged"}</p>
-              <p className="text-xs text-muted-foreground">Source: athlete-entered</p>
+              <p className="text-xs text-muted-foreground">{verificationLabel(g)}</p>
+              {canVerify && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  disabled={verify.isPending}
+                  onClick={() => verify.mutate({ gameId: g.game_id, verified: !g.verified_at })}
+                >
+                  {g.verified_at ? "Remove verification" : "Mark verified"}
+                </Button>
+              )}
             </div>
           );
         })}

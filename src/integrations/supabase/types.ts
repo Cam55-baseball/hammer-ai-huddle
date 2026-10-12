@@ -7959,6 +7959,9 @@ export type Database = {
           updated_at: string
           user_id: string
           venue: string | null
+          verified_at: string | null
+          verified_by: string | null
+          verified_role: string | null
           weather: Json | null
         }
         Insert: {
@@ -7993,6 +7996,9 @@ export type Database = {
           updated_at?: string
           user_id: string
           venue?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          verified_role?: string | null
           weather?: Json | null
         }
         Update: {
@@ -8027,6 +8033,9 @@ export type Database = {
           updated_at?: string
           user_id?: string
           venue?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          verified_role?: string | null
           weather?: Json | null
         }
         Relationships: [
@@ -22276,6 +22285,10 @@ export type Database = {
           _to_user: string
         }
         Returns: string
+      }
+      set_game_verification: {
+        Args: { _game: string; _verified: boolean }
+        Returns: undefined
       }
       set_head_coach: {
         Args: { _athlete: string; _coach: string }

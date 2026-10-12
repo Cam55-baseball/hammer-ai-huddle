@@ -83,7 +83,9 @@ export function GameTotalsHeader({ gameId }: { gameId: string }) {
       {t.pitchesAsPitcher > 0 && <Stat label="P (mound)" value={t.pitchesAsPitcher} />}
       {t.pitchesAsHitter > 0 && <Stat label="P (seen)" value={t.pitchesAsHitter} />}
       <span className="ml-auto text-[10px] text-muted-foreground">
-        Source: you logged this game{game.data?.game_date ? ` · ${game.data.game_date}` : ""}
+        {(game.data as { verified_at?: string | null } | undefined)?.verified_at
+          ? `Verified by your coach on ${String((game.data as { verified_at?: string | null }).verified_at).slice(0, 10)}`
+          : `Source: you logged this game${game.data?.game_date ? ` · ${game.data.game_date}` : ""}`}
       </span>
     </div>
   );
