@@ -1,6 +1,6 @@
 # Subscription, Auto-Renewal, Cancellation & Refund Policy (v2, DRAFT — LAWYER REVIEW REQUIRED)
 
-Status: unapproved; not effective; not served to users. Prepared 2026-10-11 under the owner's no-performance-refund decision. Approved version 1 remains unchanged.
+Status: APPROVED by the lawyer (owner, 2026-10-12). Saved as subscription-policy v2, effective 2026-10-12. Players who accepted v1 do not re-accept.
 
 This policy is written to meet California's Automatic Renewal Law (Bus. & Prof. Code §17600 et seq.) and similar laws in other states and federal rules.
 

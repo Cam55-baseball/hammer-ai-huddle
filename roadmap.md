@@ -15,15 +15,17 @@
 
 **Gaps fixed so far:** summary card (FF1), message reporting (FF2), Tests + Notes tabs (FF3), name in header + profile details for coaches (FF5), Trends tab (FF6), Body load tab (FF7), player-side pitch counts (FF8). Details below.
 
+**Owner update GG (queued, in order):** [ ] remaining coach tabs (game stats + video, reports, grades, six-week recap, readiness + pain with consent); [ ] Phase 4 verification labels (athlete-entered vs coach/org-verified); [ ] real Phase 6 + owner additions (Development tab, strengths/weaknesses, testing day, compare by test); [ ] Phases 7–9. Under-13 scouting wording still NOT approved — not saved. facility_spaces stays OFF.
+
 **Next item:** remaining coach tabs — game stats + video, reports, grades, six-week recap, readiness + pain (with consent).
 
-**Subscription Policy v2, section 6 Refunds (draft for the lawyer, NOT approved):**
+**Subscription Policy v2 — APPROVED by the lawyer and LIVE in the app (GG1, 2026-10-12).** Saved as version 2 (approved, approved by the owner, effective 2026-10-12); version 1 untouched; no re-acceptance needed (the policy is not on the re-accept list). Proof: /legal/subscription-policy on a phone shows "Version 2 · Effective 2026-10-12" and the four Refunds lines (/tmp/browser/gg1/refunds.png). Section 6 Refunds:
 - We do not give partial refunds for unused time, except where the law requires.
 - If you were charged after you cancelled, or charged in error, email us within 60 days and we will refund it. *(kept exactly as v1)*
 - We do not offer refunds based on athletic progress or results. *(the only addition)*
 - Apple purchases are refunded through Apple.
 
-**Waiting on the owner:** lawyer review of docs/owner/legal-v2-under13-scouting.md and the Refunds text; Lifting Blueprint coverage decision (recommend C); test-account tool redeploy OK and keep/delete the test accounts; keep or remove the Spaces feature; Vault review queue (79 + 10 tag suggestions); owner terms not yet accepted in the browser. Done by owner: renewal-reminders-daily cron.
+**Waiting on the owner:** lawyer review of docs/owner/legal-v2-under13-scouting.md; Lifting Blueprint coverage decision (recommend C); test-account tool redeploy OK and keep/delete the test accounts; keep or remove the Spaces feature; Vault review queue (79 + 10 tag suggestions); owner terms not yet accepted in the browser. Done by owner: renewal-reminders-daily cron.
 
 ---
 
