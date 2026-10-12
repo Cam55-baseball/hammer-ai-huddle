@@ -22,10 +22,10 @@ Your plan stays active until the end of the period you already paid for, then st
 
 # 6. Refunds
 - We do not give partial refunds for unused time, except where the law requires.
+- If you were charged after you cancelled, or charged in error, email us within 60 days and we will refund it.
 - We do not offer refunds based on athletic progress or results.
-- If you believe you were charged after cancellation or charged in error, email hammersmodality@hammersmodality.org so we can review the charge. This does not limit any refund or other rights required by law.
 - Apple purchases are refunded through Apple.
-[LAWYER: review removal of the former 60-day billing-error window and automatic repayment promise; confirm billing-error handling, statutory refund rights and any state-specific cooling-off rules before approving v2.]
+[LAWYER: the only change from v1 is the added sentence "We do not offer refunds based on athletic progress or results." The billing-error sentence is kept exactly as in v1.]
 
 # 7. Contact
 Hammers Modality LLC, 15985 Preserve Marketplace #1154, Odessa, FL 33556 — hammersmodality@hammersmodality.org

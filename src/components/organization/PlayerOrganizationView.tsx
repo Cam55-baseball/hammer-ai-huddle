@@ -14,6 +14,7 @@ import { Building2, Users, Shield, Calendar, LogOut, Trophy, Megaphone, Pin, Tre
 import { format } from 'date-fns';
 import { useTeamStats } from '@/hooks/useTeamStats';
 import { FacilitySpaces } from '@/components/organization/FacilitySpaces';
+import { useFeatureSwitches } from '@/hooks/useFeatureSwitches';
 
 interface Props {
   organizationId: string;
@@ -23,6 +24,7 @@ interface Props {
 
 export function PlayerOrganizationView({ organizationId, roleInOrg, orgName }: Props) {
   const { user } = useAuth();
+  const spacesOn = useFeatureSwitches().isEnabled('facility_spaces');
   const queryClient = useQueryClient();
   const [leaving, setLeaving] = useState(false);
   const { data: teamStats } = useTeamStats(organizationId);
@@ -185,7 +187,7 @@ export function PlayerOrganizationView({ organizationId, roleInOrg, orgName }: P
       </Card>
 
       {/* Plan v3.1 Phase 6 — facilities/academies: players see the space list (read-only) */}
-      {(org?.org_type === 'facility' || org?.org_type === 'academy') && (
+      {spacesOn && (org?.org_type === 'facility' || org?.org_type === 'academy') && (
         <FacilitySpaces orgId={organizationId} canManage={false} />
       )}
 

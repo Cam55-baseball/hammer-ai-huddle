@@ -1,3 +1,37 @@
+# REPORT — 2026-10-12 01:05 UTC (FF1: correction + saved plan)
+
+**Ready to publish: no**
+
+**Always build from `docs/owner/scouting-plan-v3.1.md`** (owner plan v3.1 saved verbatim + "Owner additions (Oct 12)").
+
+**Subscription Policy v2 — final draft text of section 6, Refunds (for the lawyer; NOT approved):**
+- We do not give partial refunds for unused time, except where the law requires.
+- If you were charged after you cancelled, or charged in error, email us within 60 days and we will refund it. *(kept exactly as v1)*
+- We do not offer refunds based on athletic progress or results. *(the only addition)*
+- Apple purchases are refunded through Apple.
+
+**Done this turn (FF1):**
+- [x] Plan saved word for word, with the owner additions.
+- [x] Facility "Spaces" parked: new switch `facility_spaces` set to OFF; the tab and the player list are hidden for everyone. Nothing deleted — owner decides.
+- [x] create-checkout redeployed (owner-authorized by name). Test checkout as test player demo16ss: 200, real checkout link returned, no "guarantee" or "7-day" text anywhere in the reply; the code has no such text or metadata.
+- [x] Subscription Policy v2 Refunds section corrected (above).
+
+**Phase 6 relabel:** the earlier "Phase 6 PASS" (Spaces) was the wrong thing. **Real Phase 6 = Organization tools (plan §5) + owner additions: NOT STARTED.**
+
+**Phases 1–5 re-check against the saved plan — gaps found (to fix and prove, in this order):**
+- [ ] Coach View summary card is missing: today's status, 7-day completion, top alert, newest personal best or test, head coach (has only age/sport/position/team/start/last activity).
+- [ ] Coach View detailed tabs missing: trends vs own baseline, tests, body load + pitch counts, game stats + video, reports, grades, six-week recap, readiness + pain (with consent), private notes.
+- [ ] Messages cannot be reported ("any message can be reported").
+- [ ] Coach workouts: "schedule a practice" and "whole team" sending not built; practices must count toward workload.
+- [ ] Game stats: no athlete-entered vs coach/organization-verified label or verify action.
+- [ ] Sponsorship-ready data model (organization sponsors an athlete; grace period) not present — needed before Phase 9.
+- [ ] Confirm the teen parent checklist sits on the same screen as the injury waiver at sign-up (re-prove on phone).
+- [ ] Re-prove with phone screenshots: organization option at sign-up (present on the role screen), solo-coach "Create team" with code/link/QR (present in Teams card), one Requests inbox for all four pairing types incl. deny, head-coach choice + first alerts, academics transcript verification, arm-ledger feed from game pitches.
+
+**Next:** fix the gaps above, then real Phase 6 (facility dashboard one line per player with tap details + team/coach filters; organization comparison 2–6 with dates, verification, fairness warnings; growth vs game trends; Development tab a–e; strengths/weaknesses on roster tap + comparison; testing day; compare by test), then Phases 7–9.
+
+---
+
 # REPORT — 2026-10-12 00:32 UTC (EE10, end of batch)
 
 **Ready to publish: no** — legal wording waits for your lawyer; the coverage decision and test-account decision are open; Phases 7–9 not started.
