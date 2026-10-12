@@ -75,6 +75,9 @@ export default function ScoutDashboard() {
     independentLeague: '',
     isForeignPlayer: null as boolean | null,
     sportPreference: null as 'baseball' | 'softball' | null,
+    levels: [] as string[],
+    verifiedTestsOnly: false,
+    recentTestDays: '',
   });
 
   useEffect(() => {
@@ -212,7 +215,8 @@ export default function ScoutDashboard() {
       filters.mlbAffiliate ||
       filters.independentLeague ||
       filters.isForeignPlayer !== null ||
-      filters.sportPreference !== null;
+      filters.sportPreference !== null ||
+      filters.levels.length > 0 || filters.verifiedTestsOnly || !!filters.recentTestDays;
 
     if (searchTerm.trim().length >= 2 || hasActiveFilters) {
       setSearchLoading(true);
@@ -241,6 +245,9 @@ export default function ScoutDashboard() {
               independentLeague: filters.independentLeague || undefined,
               isForeignPlayer: filters.isForeignPlayer !== null ? filters.isForeignPlayer : undefined,
               sport: filters.sportPreference || undefined,
+              levels: filters.levels.length > 0 ? filters.levels : undefined,
+              verifiedTestsOnly: filters.verifiedTestsOnly || undefined,
+              recentTestDays: filters.recentTestDays || undefined,
             }
           });
 
