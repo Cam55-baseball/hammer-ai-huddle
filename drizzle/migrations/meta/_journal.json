@@ -337,6 +337,13 @@
       "when": 1791825055425,
       "tag": "0047_scout_athlete_profile_type_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1791832626748,
+      "tag": "0048_rating_agreements",
+      "breakpoints": true
     }
   ]
 }

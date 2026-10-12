@@ -13237,6 +13237,48 @@ export type Database = {
         }
         Relationships: []
       }
+      rating_agreements: {
+        Row: {
+          agree: boolean
+          athlete_id: string
+          coach_id: string
+          created_at: string
+          grade: number
+          id: string
+          metric_key: string
+          note: string | null
+          position: string | null
+          sport: string
+          test_key: string
+        }
+        Insert: {
+          agree: boolean
+          athlete_id: string
+          coach_id: string
+          created_at?: string
+          grade: number
+          id?: string
+          metric_key: string
+          note?: string | null
+          position?: string | null
+          sport: string
+          test_key: string
+        }
+        Update: {
+          agree?: boolean
+          athlete_id?: string
+          coach_id?: string
+          created_at?: string
+          grade?: number
+          id?: string
+          metric_key?: string
+          note?: string | null
+          position?: string | null
+          sport?: string
+          test_key?: string
+        }
+        Relationships: []
+      }
       recall_messages: {
         Row: {
           created_at: string
