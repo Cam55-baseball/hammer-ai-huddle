@@ -1,3 +1,10 @@
+# REPORT — 2026-10-12 17:00 UTC (HH7, Phase 7 started)
+
+**Ready to publish: no.** **HH7 PARTIAL: Scout Profile → "Game play and stats" tab.** New Scout Profile page (button "Game play and stats" on each followed player on the Scout Dashboard): last 10 games with hitting (at-bats, hits, extra-base hits, walks, strikeouts, stolen bases), pitching (pitch count, top speed), fielding (putouts, assists, errors), batted-ball chart and pitch-location grid from tapped-in data only; anything not logged (innings, runs, pitcher hits/walks/strikeouts, steals with no base-running logs) says "Not yet measured"; each game labeled athlete-entered or verified. Server rule: scout/recruiter role + accepted follow + no block + family shared "metrics" (minors also need the parent's yes). Server proof PASS (all rolled back, nothing kept): scout saw the practice game; refused when sharing turned off, when the follow was removed, and for an outsider. 4 new tests. NOT yet proven on a phone screen as a scout. Still open in Phase 7: other Scout Profile tabs, dashboard search filters, scout comparison 2–4.
+**Waiting on the owner:** deploy OK for the plan builder; test-account tool redeploy; keep/remove Spaces (OFF); Vault review queue; owner terms not accepted.
+
+---
+
 # REPORT — 2026-10-12 16:35 UTC (HH1, in progress)
 
 **Ready to publish: no.** HH1 step 1 BUILT: Coach Dashboard roster — each player card now has a "Strengths & weaknesses" button; tap loads that player's strengths/weaknesses (same RPC + logic as the Development tab, so the same access limits apply), each with evidence and date, "Not enough data yet" when true, labeled "Source: video analysis reports". Build OK. HH2 PROOF PASS: test coach on a phone screen tapped the button and saw "Strength: Hitting is a strength" and "Weakness: Throwing needs the most work", each with average, report count and date (/tmp/browser/hh2/2.png); access is the same check the Development tab uses (outsiders refused, proven in GG8). Temporary coach link and 4 practice reports deleted.
