@@ -1,6 +1,6 @@
-# REPORT — 2026-10-12 00:10 UTC
+# REPORT — 2026-10-12 00:20 UTC
 
-**Ready to publish: no** — legal wording waits for your lawyer; the coverage decision and test-account decision are open; Phase 5 nearly done (summary card/tabs left); 6–9 not started.
+**Ready to publish: no** — legal wording waits for your lawyer; the coverage decision and test-account decision are open; Phases 6–9 not started.
 
 | Phase | State | Proof | Result |
 |---|---|---|---|
@@ -9,8 +9,14 @@
 | 2 Consent up front | Done in the app; legal wording waits for lawyer | DD11–DD13 | PASS |
 | 3 Onboarding fields | Done | EE1–EE5 (below) | PASS |
 | 4 Game stats, location, spray charts | Done | EE6 (below) | PASS |
-| 5 Coach tools | Messages + safety-checked workout assignment done; coach summary card/tabs left | EE7, EE8 (below) | PASS so far |
-| 6–9 | Not started | — | — |
+| 5 Coach tools (messages, safety-checked workout assignment, summary card + tabs) | Done | EE7–EE9 (below) | PASS |
+| 6 Facility tools | Next | — | — |
+| 7–9 | Not started | — | — |
+
+**Phase 5 proof (EE9) — coach summary card + tabs:**
+- The coach's athlete page is now organized into four tabs — Overview, Training, Messages, Activity — so a coach on a phone reaches everything without a long scroll. Overview opens with a summary card: name, age, sport, position, team, training-plan start, last activity. Every value is labeled; anything the player hasn't shared says "Not shared" instead of showing a blank or a guess.
+- Proven as the test coach on a phone screen (390×844): all four tabs render; the summary card shows "Demo — 13U Offseason", "13 years old", "CF"; sport and team honestly show "Not shared" (the test player genuinely has none); drill assignment sits on Training, the message box on Messages, the event stream on Activity (screenshots /tmp/browser/ee9/).
+- Full suite 2,753/2,753; build OK. demo13 restored to hidden/paused after the proof.
 
 **Phase 5 proof (EE8) — safety-checked coach workout assignment:**
 - The coach's drill-assign tool (was unreachable — not mounted on any page) now sits on the coach's athlete page and checks every pick against the player's age, sport and equipment before it can be sent. Failing picks show plain reasons and offer safe alternatives (same skill work, equipment-free, age-legal); the Assign button stays disabled.

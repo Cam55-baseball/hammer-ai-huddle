@@ -1,5 +1,7 @@
 import { CoachMessageBox } from "@/components/coach/CoachMessageBox";
 import { CoachDrillAssign } from "@/components/coach/CoachDrillAssign";
+import { CoachAthleteSummary } from "@/components/coach/CoachAthleteSummary";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -174,122 +176,146 @@ export default function CoachAthleteDetail() {
           )}
         </div>
 
-        {athleteId && user?.id !== athleteId && rosterAccess === true && <CoachMessageBox athleteId={athleteId} />}
-
-        {/* Plan v3.1 Phase 5 — coach workout assignment, safety-checked against
-            the player's age, sport and equipment before it can be sent. */}
-        {athleteId && user?.id !== athleteId && rosterAccess === true && <CoachDrillAssign />}
-
         {error && (
           <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
             {(error as Error).message}
           </div>
         )}
 
-        {snap && (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3" data-tour="coach-work">
-            {(["readiness", "fatigue", "workload"] as const).map((k) => {
-              const p = snap[k];
-              return (
-                <Card key={k}>
-                  <CardHeader className="pb-2"><CardTitle className="capitalize text-base">{k}</CardTitle></CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-1">
-                      <ConfidencePill confidence={p.confidence} />
-                      <MissingnessChip missingness={p.missingness} />
-                    </div>
-                    <code className="block truncate text-[11px] text-muted-foreground">{p.topicId ?? "—"}</code>
-                    <p className="font-mono text-[10px] text-muted-foreground">{p.occurredAt ?? "—"}</p>
-                    <ReplayDrilldownCTA eventId={p.sourceEventId} />
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+        {/* Plan v3.1 Phase 5 — coach page organized into tabs so a coach on a
+            phone can reach messages, training and activity without a long scroll. */}
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="training">Training</TabsTrigger>
+            <TabsTrigger value="messages">Messages</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+          </TabsList>
 
-        {/* Phase 49: UhrcReportCard, PieV2 hammer-brief, HammerReportCardAggregate, and ReportCardTrendStrip removed (composite/aggregate scores not measurement-backed). PieV2CoachPanel retained (coach-only diagnostic, not athlete-facing). */}
-        {athleteId && <PieV2CoachPanel athleteId={athleteId} />}
-
-
-        {/* Hitting doctrine (P1-P4) — same JSON as athlete surface */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Hitting doctrine (P1-P4)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <HittingDoctrineBlock
-              doctrine={(hittingDoctrineSnap?.hitting_doctrine as any) ?? null}
-              title="Athlete's hitting focus"
-            />
-          </CardContent>
-        </Card>
-
-
-        {/* RR-9 / RR-10 — recruiting surfaces gated by athlete-owned consent + minor protection.
-            Authority lives in `athlete_recruiting_consent`; this surface only projects. */}
-        {athleteId && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between text-base">
-                <span>Recruiting snapshot</span>
-                <Badge variant="outline" className="text-[10px]">RR-9 athlete-controlled</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <RecruitingVisibilityGate
+          <TabsContent value="overview" className="space-y-4 pt-4">
+            {athleteId && (
+              <CoachAthleteSummary
                 athleteId={athleteId}
-                scope="metrics"
-                fallback={
-                  <p className="text-xs text-muted-foreground">
-                    Hidden. Visibility is controlled by the athlete (and parent, for minors)
-                    per RR-9 / RR-10. Recruiting intelligence is unavailable until the athlete
-                    enables visibility in their privacy settings.
-                  </p>
-                }
-              >
-                <div className="space-y-3">
-                  {pieV2Latest && (
-                    <PieV2RecruitingCard
-                      aggregate={pieV2Latest}
-                      trajectories={pieV2Trajectories}
-                      optIn
-                    />
-                  )}
-                  <HittingRecruitingCard
-                    doctrine={(hittingDoctrineSnap?.hitting_doctrine as any) ?? null}
-                  />
-                </div>
-              </RecruitingVisibilityGate>
-            </CardContent>
-          </Card>
-        )}
-
-        <Card data-tour="coach-stream">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              Canonical event stream
-              <Badge variant="outline" className="ml-auto">{rows.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-32 animate-pulse rounded-md bg-muted/40" />
-            ) : rows.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No canonical events in the last 30 days.</p>
-            ) : (
-              <ul className="divide-y">
-                {rows.map((r) => (
-                  <li key={r.event_id} className="flex items-center gap-2 py-2 text-sm">
-                    <code className="flex-1 truncate rounded bg-muted px-1 text-[11px]">{r.topic_id}</code>
-                    <span className="hidden font-mono text-[10px] text-muted-foreground sm:inline">{r.occurred_at}</span>
-                    <ReplayDrilldownCTA eventId={r.event_id} label="" />
-                  </li>
-                ))}
-              </ul>
+                lastActivityAt={rows[0]?.occurred_at ?? null}
+              />
             )}
-          </CardContent>
-        </Card>
+
+            {snap && (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3" data-tour="coach-work">
+                {(["readiness", "fatigue", "workload"] as const).map((k) => {
+                  const p = snap[k];
+                  return (
+                    <Card key={k}>
+                      <CardHeader className="pb-2"><CardTitle className="capitalize text-base">{k}</CardTitle></CardHeader>
+                      <CardContent className="space-y-2">
+                        <div className="flex flex-wrap items-center gap-1">
+                          <ConfidencePill confidence={p.confidence} />
+                          <MissingnessChip missingness={p.missingness} />
+                        </div>
+                        <code className="block truncate text-[11px] text-muted-foreground">{p.topicId ?? "—"}</code>
+                        <p className="font-mono text-[10px] text-muted-foreground">{p.occurredAt ?? "—"}</p>
+                        <ReplayDrilldownCTA eventId={p.sourceEventId} />
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* RR-9 / RR-10 — recruiting surfaces gated by athlete-owned consent + minor protection.
+                Authority lives in `athlete_recruiting_consent`; this surface only projects. */}
+            {athleteId && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center justify-between text-base">
+                    <span>Recruiting snapshot</span>
+                    <Badge variant="outline" className="text-[10px]">RR-9 athlete-controlled</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <RecruitingVisibilityGate
+                    athleteId={athleteId}
+                    scope="metrics"
+                    fallback={
+                      <p className="text-xs text-muted-foreground">
+                        Hidden. Visibility is controlled by the athlete (and parent, for minors)
+                        per RR-9 / RR-10. Recruiting intelligence is unavailable until the athlete
+                        enables visibility in their privacy settings.
+                      </p>
+                    }
+                  >
+                    <div className="space-y-3">
+                      {pieV2Latest && (
+                        <PieV2RecruitingCard
+                          aggregate={pieV2Latest}
+                          trajectories={pieV2Trajectories}
+                          optIn
+                        />
+                      )}
+                      <HittingRecruitingCard
+                        doctrine={(hittingDoctrineSnap?.hitting_doctrine as any) ?? null}
+                      />
+                    </div>
+                  </RecruitingVisibilityGate>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="training" className="space-y-4 pt-4">
+            {/* Plan v3.1 Phase 5 — coach workout assignment, safety-checked against
+                the player's age, sport and equipment before it can be sent. */}
+            {athleteId && user?.id !== athleteId && rosterAccess === true && <CoachDrillAssign />}
+
+            {/* Phase 49: UhrcReportCard, PieV2 hammer-brief, HammerReportCardAggregate, and ReportCardTrendStrip removed (composite/aggregate scores not measurement-backed). PieV2CoachPanel retained (coach-only diagnostic, not athlete-facing). */}
+            {athleteId && <PieV2CoachPanel athleteId={athleteId} />}
+
+            {/* Hitting doctrine (P1-P4) — same JSON as athlete surface */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Hitting doctrine (P1-P4)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <HittingDoctrineBlock
+                  doctrine={(hittingDoctrineSnap?.hitting_doctrine as any) ?? null}
+                  title="Athlete's hitting focus"
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="messages" className="space-y-4 pt-4">
+            {athleteId && user?.id !== athleteId && rosterAccess === true && <CoachMessageBox athleteId={athleteId} />}
+          </TabsContent>
+
+          <TabsContent value="activity" className="space-y-4 pt-4">
+            <Card data-tour="coach-stream">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  Canonical event stream
+                  <Badge variant="outline" className="ml-auto">{rows.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="h-32 animate-pulse rounded-md bg-muted/40" />
+                ) : rows.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No canonical events in the last 30 days.</p>
+                ) : (
+                  <ul className="divide-y">
+                    {rows.map((r) => (
+                      <li key={r.event_id} className="flex items-center gap-2 py-2 text-sm">
+                        <code className="flex-1 truncate rounded bg-muted px-1 text-[11px]">{r.topic_id}</code>
+                        <span className="hidden font-mono text-[10px] text-muted-foreground sm:inline">{r.occurred_at}</span>
+                        <ReplayDrilldownCTA eventId={r.event_id} label="" />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
