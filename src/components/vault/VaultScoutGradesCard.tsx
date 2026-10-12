@@ -435,13 +435,29 @@ export function VaultScoutGradesCard({
                       </Badge>
                     </div>
                     <Slider
-                      value={gradeValues[category] || [50]}
+                      value={[Math.max(20, gradeValues[category]?.[0] || 50)]}
                       onValueChange={(val) => setGradeValues({ ...gradeValues, [category]: val })}
                       min={20}
                       max={80}
                       step={5}
                       className="py-1"
                     />
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <label htmlFor={`below20-${category}`}>Below 20 (decimal grade):</label>
+                      <input
+                        id={`below20-${category}`}
+                        type="number" inputMode="decimal" min={0} max={19.9} step={0.1}
+                        placeholder="e.g. 12.4"
+                        value={(gradeValues[category]?.[0] ?? 50) < 20 ? gradeValues[category]![0] : ''}
+                        onChange={(e) => {
+                          const v = parseFloat(e.target.value);
+                          if (Number.isNaN(v)) return setGradeValues({ ...gradeValues, [category]: [20] });
+                          const c = Math.round(Math.min(19.9, Math.max(0, v)) * 10) / 10;
+                          setGradeValues({ ...gradeValues, [category]: [c] });
+                        }}
+                        className="w-20 rounded border border-input bg-background px-2 py-1 text-foreground"
+                      />
+                    </div>
                     {/* Tick marks showing 5-point increments */}
                     <div className="relative h-6 px-1">
                       {[20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80].map((tick) => {
