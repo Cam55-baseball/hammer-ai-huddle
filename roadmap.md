@@ -1,4 +1,4 @@
-# REPORT — 2026-10-12 00:30 UTC (EE10, end of batch)
+# REPORT — 2026-10-12 00:32 UTC (EE10, end of batch)
 
 **Ready to publish: no** — legal wording waits for your lawyer; the coverage decision and test-account decision are open; Phases 7–9 not started.
 
