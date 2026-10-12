@@ -211,6 +211,13 @@
       "when": 1791763666272,
       "tag": "0029_scouting_v31_phase5_org_coach_drill_assign",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1791764742501,
+      "tag": "0030_scouting_v31_phase6_facility_spaces",
+      "breakpoints": true
     }
   ]
 }
