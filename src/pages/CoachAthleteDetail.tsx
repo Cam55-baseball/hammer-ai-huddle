@@ -5,6 +5,7 @@ import { CoachTestsTab, CoachPrivateNotes } from "@/components/coach/CoachTestsA
 import { CoachTrendsTab } from "@/components/coach/CoachTrendsTab";
 import { CoachLoadTab } from "@/components/coach/CoachLoadTab";
 import { CoachGamesTab } from "@/components/coach/CoachGamesTab";
+import { CoachReadinessTab } from "@/components/coach/CoachReadinessTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
