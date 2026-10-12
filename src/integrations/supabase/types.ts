@@ -22389,6 +22389,7 @@ export type Database = {
         Returns: string
       }
       scout_athlete_game_play: { Args: { _athlete: string }; Returns: Json }
+      scout_athlete_profile: { Args: { _athlete: string }; Returns: Json }
       scout_calibration_summary: { Args: never; Returns: Json }
       scout_can_view_scope: {
         Args: { _athlete: string; _scope: string; _viewer: string }
