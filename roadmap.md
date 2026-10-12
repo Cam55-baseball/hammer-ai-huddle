@@ -1,3 +1,17 @@
+# REPORT — 2026-10-12 03:25 UTC (GG8, end of batch)
+
+**Ready to publish: no** — Phase 6 owner additions continue (strengths/weaknesses on the Coach Dashboard roster + org comparison, testing day, compare by test), then Phases 7–9; legal wording waits for the lawyer.
+
+**GG8 DONE — Phase 6 owner addition: Development tab in Coach View (2026-10-12, PASS).** New "Development" tab on each player's coach page (also open to org admins for rostered players via the same RPC). Four sections, all from real data only: (1) Takeaways — 1–3 plain-language takeaways, each with its evidence and a High/Medium/Low confidence; (2) Development report card — per category the 5 most recent reports with dates, efficiency scores, a trend arrow, and issues classified Recurring (2+ of last 5) / New (first time in latest report) / Cleaning up (absent from the latest report), each with times-seen, last-seen date and the evidence sentence; (3) Strengths & weaknesses — categories above/below the player's own average, each with evidence and date, honest "Not enough data yet" / "No category stands out yet" when true; (4) Connections — every one labeled Observed fact / Measured change / Supported pattern / Hypothesis to check / Not enough data, with the standing line that a connection never means one thing caused another. Backed by SECURITY DEFINER RPC coach_athlete_development (self, connected coach, or org staff of the player's org; everyone else refused). Logic in src/lib/coach/development.ts (pure, 15 tests). Proof: test coach on a phone screen saw the seeded 13-year-old's real development view — early arm Recurring (5 of 5), head drift New, glove-side pull Cleaning up with correct last-seen date, Supported pattern / Hypothesis to check / Observed fact / Measured change connections, two High-confidence takeaways (/tmp/browser/gg8/screenshots/1_development.png); outsider (test parent) refused (403); three bugs found and fixed during proof (raw timestamps shown, wrong last-seen date, false "not enough data" in strengths); full suite 2,828/2,828; build OK; all seeded proof data deleted and the temporary coach link removed.
+
+**Phase check against docs/owner/scouting-plan-v3.1.md:** Security PASS (CC6) · 1 Accounts/orgs/teams PASS (DD7–DD10) · 2 Consent PASS in app, wording with lawyer (DD11–DD13) · 3 Onboarding PASS (EE1–EE5) · 4 Game stats/location/spray PASS incl. verification labels (EE6, GG4) · 5 Coach tools PASS — all tabs built (EE7–EE9, FF1–FF8, GG1–GG3) · 6 Organization tools PARTIAL — facility dashboard PASS (GG5), compare PASS (GG6), growth vs game trends PASS (GG7), Development tab PASS (GG8); still open: strengths/weaknesses on Coach Dashboard roster + org comparison, testing day, compare by test results · 7–9 NOT STARTED.
+
+**Waiting on the owner:** lawyer review of docs/owner/legal-v2-under13-scouting.md (NOT approved, not saved); Blueprint coverage decision (recommend C); test-account tool redeploy OK + keep/delete test accounts; keep or remove Spaces (facility_spaces OFF); Vault review queue 79 + 10 tag suggestions; owner terms not accepted.
+
+**Next item:** Phase 6 owner additions — strengths/weaknesses on the Coach Dashboard roster and org comparison, then testing day for facility athletes, then compare by test results; then Phases 7–9.
+
+---
+
 # REPORT — 2026-10-12 03:10 UTC (GG7)
 
 **Ready to publish: no** — Phase 6 continues (owner additions: Development tab, strengths/weaknesses, testing day, compare by test), then Phases 7–9; legal wording waits for the lawyer.
