@@ -15047,6 +15047,63 @@ export type Database = {
         }
         Relationships: []
       }
+      testing_days: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          created_by: string
+          id: string
+          organization_id: string
+          reminded_3d_at: string | null
+          reminded_day_at: string | null
+          result_test_id: string | null
+          scheduled_for: string
+          skip_reason: string | null
+          status: string
+          tests: string[]
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+          video_url: string | null
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          organization_id: string
+          reminded_3d_at?: string | null
+          reminded_day_at?: string | null
+          result_test_id?: string | null
+          scheduled_for: string
+          skip_reason?: string | null
+          status?: string
+          tests: string[]
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          organization_id?: string
+          reminded_3d_at?: string | null
+          reminded_day_at?: string | null
+          result_test_id?: string | null
+          scheduled_for?: string
+          skip_reason?: string | null
+          status?: string
+          tests?: string[]
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       tex_vision_adaptive_difficulty: {
         Row: {
           accuracy_history: Json | null
@@ -21623,6 +21680,21 @@ export type Database = {
     }
     Functions: {
       _gen_code: { Args: never; Returns: string }
+      _testing_day_can_manage: {
+        Args: { _athlete: string; _org: string }
+        Returns: boolean
+      }
+      _testing_day_notify: {
+        Args: {
+          _td: Database["public"]["Tables"]["testing_days"]["Row"]
+          _title: string
+        }
+        Returns: undefined
+      }
+      _testing_day_recipients: {
+        Args: { _td: Database["public"]["Tables"]["testing_days"]["Row"] }
+        Returns: string[]
+      }
       all_checked: { Args: { cb: Json }; Returns: boolean }
       anon_age_band: { Args: { _age: number }; Returns: string }
       anon_pid: { Args: { _user: string }; Returns: string }
@@ -22226,6 +22298,10 @@ export type Database = {
         }
         Returns: string
       }
+      record_testing_day: {
+        Args: { _id: string; _results: Json; _video_url: string }
+        Returns: string
+      }
       reject_evaluation_attendance: {
         Args: { p_evaluation_id: string }
         Returns: boolean
@@ -22238,6 +22314,10 @@ export type Database = {
           p_video_type?: string
         }
         Returns: string
+      }
+      reschedule_testing_day: {
+        Args: { _date: string; _id: string }
+        Returns: undefined
       }
       resolve_recruiting_scope: {
         Args: { _athlete_id: string; _scope: string }
@@ -22281,6 +22361,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      schedule_testing_day: {
+        Args: {
+          _athlete: string
+          _date: string
+          _org: string
+          _tests: string[]
+        }
+        Returns: string
+      }
       scout_calibration_summary: { Args: never; Returns: Json }
       send_coach_message: {
         Args: { _athlete: string; _body: string }
@@ -22296,6 +22385,7 @@ export type Database = {
         }
         Returns: string
       }
+      send_testing_day_reminders: { Args: { _org: string }; Returns: number }
       set_game_verification: {
         Args: { _game: string; _verified: boolean }
         Returns: undefined
@@ -22307,6 +22397,10 @@ export type Database = {
       shift_workouts_forward: {
         Args: { p_after_date: string; p_block_id: string; p_days?: number }
         Returns: number
+      }
+      skip_testing_day: {
+        Args: { _id: string; _reason: string }
+        Returns: undefined
       }
       staff_athlete_timeline: {
         Args: { p_athlete: string; p_limit?: number }

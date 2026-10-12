@@ -29,7 +29,9 @@ export function CoachTestsTab({ athleteId }: { athleteId: string }) {
           <Card key={t.id}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm capitalize">{t.test_type.replace(/_/g, " ")} test · {fmt(t.test_date)}</CardTitle>
-              <p className="text-xs text-muted-foreground">Source: athlete-entered</p>
+              <p className="text-xs text-muted-foreground">
+                {(t.results as any)?._verified === "in_person" ? "Source: facility-verified (in person)" : "Source: athlete-entered"}
+              </p>
             </CardHeader>
             <CardContent className="divide-y text-sm">
               {rows.length === 0 ? (

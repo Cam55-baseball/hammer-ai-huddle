@@ -19,6 +19,7 @@ import { FacilitySpaces } from '@/components/organization/FacilitySpaces';
 import { FacilityBoard } from '@/components/organization/FacilityBoard';
 import { CompareAthletes } from '@/components/organization/CompareAthletes';
 import { GrowthTrends } from '@/components/organization/GrowthTrends';
+import { TestingDays } from '@/components/organization/TestingDays';
 import { useFeatureSwitches } from '@/hooks/useFeatureSwitches';
 
 export default function OrganizationDashboard() {
@@ -48,6 +49,7 @@ export default function OrganizationDashboard() {
               <TabsTrigger value="players">Players</TabsTrigger>
               <TabsTrigger value="compare">Compare</TabsTrigger>
               <TabsTrigger value="trends">Trends</TabsTrigger>
+              <TabsTrigger value="testing">Testing</TabsTrigger>
               <TabsTrigger value="announcements">Announcements</TabsTrigger>
               <TabsTrigger value="roster">Roster</TabsTrigger>
               <TabsTrigger value="members">Members</TabsTrigger>
@@ -84,6 +86,9 @@ export default function OrganizationDashboard() {
             </TabsContent>
             <TabsContent value="trends">
               <GrowthTrends orgId={activeOrg.id} />
+            </TabsContent>
+            <TabsContent value="testing">
+              <TestingDays orgId={activeOrg.id} />
             </TabsContent>
 
             <TabsContent value="announcements">
