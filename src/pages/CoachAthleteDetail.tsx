@@ -3,6 +3,7 @@ import { CoachDrillAssign } from "@/components/coach/CoachDrillAssign";
 import { CoachAthleteSummary } from "@/components/coach/CoachAthleteSummary";
 import { CoachTestsTab, CoachPrivateNotes } from "@/components/coach/CoachTestsAndNotes";
 import { CoachTrendsTab } from "@/components/coach/CoachTrendsTab";
+import { CoachLoadTab } from "@/components/coach/CoachLoadTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -206,11 +207,16 @@ export default function CoachAthleteDetail() {
             <TabsTrigger value="activity">Activity</TabsTrigger>
             <TabsTrigger value="tests">Tests</TabsTrigger>
             <TabsTrigger value="trends">Trends</TabsTrigger>
+            <TabsTrigger value="load">Body load</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
           </TabsList>
 
           <TabsContent value="trends" className="space-y-4 pt-4">
             {athleteId && <CoachTrendsTab athleteId={athleteId} />}
+          </TabsContent>
+
+          <TabsContent value="load" className="space-y-4 pt-4">
+            {athleteId && <CoachLoadTab athleteId={athleteId} />}
           </TabsContent>
 
           <TabsContent value="tests" className="space-y-4 pt-4">
