@@ -1,3 +1,10 @@
+# REPORT — 2026-10-12 17:10 UTC (owner OK: test-account tool)
+
+**Ready to publish: no.** **create-test-athlete REDEPLOYED (owner OK by name) — PASS.** Code check passed first. Proof: removed the test parent ↔ 13-year-old link, ran the tool as the owner (200) → link re-created, active, only that one pair. Non-owner call refused (403), signed-out refused (401). Real users unaffected: parent links for anyone outside the test parent: 0 before, 0 after; the tool only touches the named test personas. Owner has accepted the updated terms on his account (owner item closed). Next item unchanged: Scout Profile remaining tabs.
+**Waiting on the owner:** OK to deploy the plan builder (Option B); keep or remove Spaces (off); Vault review queue.
+
+---
+
 # REPORT — 2026-10-12 17:05 UTC (HH8, end of batch)
 
 **Ready to publish: no.** (Phase 7 in progress; plan-builder deploy awaits the owner.)
