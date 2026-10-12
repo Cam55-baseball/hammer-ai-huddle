@@ -97,6 +97,20 @@ export async function myConsentStatus(): Promise<Record<string, { document_versi
   return (data as any)?.latest ?? {};
 }
 
+/**
+ * Wording-only updates that never ask anyone to accept again: the newest
+ * version each document still REQUIRES acceptance for. Later versions are
+ * shown with a one-time notice instead (PolicyUpdateNotice).
+ */
+export const ACCEPTANCE_REQUIRED_UP_TO: Record<string, number> = {
+  privacy: 1,
+  "consumer-health-data": 1,
+  "child-safety": 1,
+};
+
+/** One-time, non-blocking "we've updated" notice for these document versions. */
+export const POLICY_NOTICE = { id: "under13-scouting-2026-10-12", slugs: ["privacy", "child-safety", "consumer-health-data"] } as const;
+
 /** Which updated documents this person still has to accept (pure, tested). */
 export function pendingAcceptances(
   latestVersions: Record<string, number>,
@@ -104,8 +118,9 @@ export function pendingAcceptances(
   slugs: readonly string[] = UPDATED_TERMS_SLUGS,
 ): string[] {
   return slugs.filter((s) => {
-    const v = latestVersions[s];
-    if (!v) return false;
+    const latest = latestVersions[s];
+    if (!latest) return false;
+    const v = Math.min(latest, ACCEPTANCE_REQUIRED_UP_TO[s] ?? latest);
     const st = status[s];
     return !st || st.choice !== "accepted" || st.document_version < v;
   });

@@ -113,3 +113,54 @@ export const SLOT_BLOCK: Record<string, LiftBlock> = {
   carry_antirotation: "athletic_strength", trunk_finisher: "robustness",
 };
 export const slotRank = (slot: string) => liftBlockRank(SLOT_BLOCK[slot] ?? "robustness");
+
+/**
+ * Robustness slot (owner decision 2026-10-12, Option B): one rotating slot on
+ * EVERY lift day, all year, aimed at the areas the main lifts leave short.
+ * Integrated athletic movements only — never isolation (Nordics/Copenhagen stay
+ * in the off-season Add size block via isolationAllowed). The caller still runs
+ * every legality gate (age, season, eccentric, equipment) on each candidate.
+ *
+ * Fit:
+ *  - Off-season: a pair of movements at their own catalog sets.
+ *  - In-season: 1 set each (dose_cap), added only while the session stays at or
+ *    under IN_SEASON_SESSION_SET_CAP (no other lift is trimmed — schemes never
+ *    change); skipped on game day and inside 48 h of a game or start. Total-body power is always one of the pair; the
+ *    other is hamstring early in the week, groin or calves (alternating weeks) later.
+ */
+export const ROBUSTNESS_POOLS: Record<Area, string[]> = {
+  hamstring: ["lift_slider_ham_bridge_curl"],
+  hip_ext: ["lift_sl_hip_thrust", "resisted_sled", "glute_bridge", "sp_sled_10y_light"],
+  groin_lateral: ["lift_bw_cossack_squat", "dumbbell_lateral_lunge", "lateral_db_step_up", "lateral_lunge_switch"],
+  calf_foot: ["kot_tibialis_raise", "single_leg_calf_raise_off_block", "slant_board_calf_raise", "fhl_calf_raise"],
+  squat: ["lift_atg_split_squat", "lift_split_squat_iso"],
+  power: ["med_ball_scoop_toss", "med_ball_shot_put", "sp_primary_lead_jump"],
+  hip_rotation: ["lift_hip_airplane", "lift_banded_lateral_squat_walk"],
+  hinge: ["lift_sl_rdl"],
+  trunk: [], upper_push: [], upper_pull: [],
+};
+
+export const ROBUSTNESS_IN_SEASON_SETS = 1;
+export const IN_SEASON_SESSION_SET_CAP = 13;
+
+const OFF_EARLY: Area[][] = [["hamstring", "hip_ext"], ["hamstring", "calf_foot"], ["hip_rotation", "squat"]];
+// Late off-season has one more short area than a pair can hold, so its third
+// day carries three short movements.
+const OFF_LATE: Area[][] = [["squat", "hamstring"], ["squat", "hamstring"], ["hip_ext", "calf_foot", "hip_rotation"]];
+const IN_ROTATE: Area[] = ["groin_lateral", "calf_foot"];
+
+/** Areas the robustness pair targets today. epochDay = days since 1970-01-01 (UTC). */
+export function robustnessAreas(phase: string, dayOfWeek: number, epochDay: number): Area[] {
+  const inS = phase === "in_season" || phase === "post_season";
+  if (inS) {
+    const week = Math.floor(epochDay / 7);
+    return dayOfWeek < 3 ? ["power", "hamstring"] : ["power", IN_ROTATE[week % 2]];
+  }
+  const table = phase === "os_q3" || phase === "os_q4" ? OFF_LATE : OFF_EARLY;
+  return table[((dayOfWeek % 3) + 3) % 3];
+}
+
+/** Candidate slugs for one area, isolation removed for this context. */
+export function robustnessPool(area: Area, ctx: IsolationCtx): string[] {
+  return ROBUSTNESS_POOLS[area].filter((s) => isolationAllowed(s, ctx) && !isIsolation(s));
+}

@@ -257,6 +257,7 @@ const SafetyCenter = lazyWithRetry(() => import("./pages/SafetyCenter"));
 const RelationshipSettings = lazyWithRetry(() => import("./pages/RelationshipSettings"));
 import { DemoGate } from "./components/demo/DemoGate";
 import { LegalV2Gate } from "@/components/legal/LegalV2Gate";
+import { PolicyUpdateNotice } from "@/components/legal/PolicyUpdateNotice";
 import LegalDocumentPage from "./pages/legal/LegalDocumentPage";
 import ParentWaiverSign from "./pages/legal/ParentWaiverSign";
 import { TeenWaiverGate } from "@/components/legal/TeenWaiverGate";
@@ -324,6 +325,7 @@ const App = () => {
               <DemoGate>
               <AccountGate>
               <LegalV2Gate>
+              <PolicyUpdateNotice />
               <Routes>
               <Route path="/legal/:slug" element={<LegalDocumentPage />} />
               <Route path="/parent-sign/:token" element={<ParentWaiverSign />} />

@@ -20,3 +20,13 @@ describe("legal_v2 rules", () => {
     expect(PUBLIC_LEGAL_DOCS.map((d) => d.title)).toContain("Consumer Health Data Privacy Policy");
   });
 });
+
+describe("under-13 scouting wording update (owner 2026-10-12)", () => {
+  it("privacy and consumer health v2 do not force re-acceptance of v1", () => {
+    const st = { privacy: { document_version: 1, choice: "accepted" }, "consumer-health-data": { document_version: 1, choice: "accepted" } };
+    expect(pendingAcceptances({ privacy: 2, "consumer-health-data": 2 }, st, ["privacy", "consumer-health-data"])).toEqual([]);
+  });
+  it("someone who never accepted still has to accept", () => {
+    expect(pendingAcceptances({ privacy: 2 }, {}, ["privacy"])).toEqual(["privacy"]);
+  });
+});

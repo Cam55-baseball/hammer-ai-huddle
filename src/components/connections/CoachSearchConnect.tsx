@@ -48,6 +48,7 @@ export function CoachSearchConnect({ onRequestSent }: CoachSearchConnectProps) {
         .select('id, full_name, avatar_url')
         .in('id', coachIds)
         .ilike('full_name', `%${query}%`)
+        .not('is_system_account', 'is', true) // test accounts never appear in search
         .limit(10);
 
       setResults(profiles ?? []);

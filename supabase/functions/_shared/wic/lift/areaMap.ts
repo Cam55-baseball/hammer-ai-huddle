@@ -17,6 +17,8 @@ const RULES: Array<[RegExp, Area[]]> = [
   [/press|bench|pushup|dip/, ["upper_push"]],
   [/row|pullup|pulldown|face_pull|pullapart/, ["upper_pull"]],
   [/carry|pallof|getup|rollout|dragon|plank|twist|deadbug|mcgill|hip_flexor/, ["trunk"]],
+  // Last so it never re-labels a lift matched above: med-ball throws = power.
+  [/^med_ball_(scoop_toss|shot_put)$/, ["power"]],
 ];
 
 export function areasOf(slug: string): Area[] {

@@ -1,3 +1,21 @@
+# REPORT — 2026-10-12 16:25 UTC (owner decisions)
+
+**Ready to publish: no** — the plan-builder change is built and simulated but NOT deployed (see below); Phase 6 owner additions and Phases 7–9 continue.
+
+**1. Lifting coverage — Option B: BUILT, proven in simulation, awaiting deploy (PASS in sim).** One rotating robustness slot on every lift day, all year (builder step 9, rules in _shared/wic/lift/blueprint.ts). Off-season: a pair of integrated movements at their own catalog sets — early: hamstring+hips / hamstring+calves / hip rotation+squat; late (os_q3–q4): squat+hamstring ×2, then hips+calves+hip rotation. In-season: power + hamstring early week, power + groin/calves (alternating weeks) later, 1 set each. **How it fits in-season:** base in-season lift = 11 sets; the slot adds 2 → 13 = the cap, so nothing was trimmed; if a session is already at the cap the slot drops (never pushes past it). Skipped on game day and within 48 h of a game/start. Nordics/Copenhagen never in the slot. **8-week sims** (720 combos: 3 roles × 2 sports × ages 13/14/16/19 × 6 phases × 3 training ages × goal): 0 rule violations; max in-season session 13; 0 in-season eccentric; overload check 0 bad; shortfalls 3,618 → 558. Off-season ages 14–19: every minimum met. **Still short, with the blocking rule:** age 13 off-season squat/hinge/power (most loaded versions are 14+/16+, age rule wins); in/post-season trunk 1.8/2 and post-season hinge 1.8/2 (in-season set cap full). Games scenario: slot correctly withheld on all 2,304 near-game lift days. Found and fixed: the builder used two lifting rules without importing them (would have crashed the off-season trunk finisher and second-lower pick if deployed). **Waiting on the owner: OK to deploy the plan builder (wk-generate-daily).**
+
+**2. Under-13 scouting legal wording: SAVED (PASS).** Child Safety, Privacy and Consumer Health Data v2 saved, approved = true, approved by the owner, effective 2026-10-12; only the three approved passages changed (verified line diff). No forced re-acceptance (v1 acceptance still counts; 2 new tests). One-time non-blocking notice "We've updated our Privacy Policy" for every signed-in user, with an extra parent line on under-13 accounts; proven on a phone as the 16-year-old test player (shows once, gone after "Got it" + reload; /tmp/browser/notice/1.png); privacy page shows "Version 2 · Effective 2026-10-12". Under-13 scouting stays OFF per account until the parent switch and the contact-the-parent route are proven (next item).
+
+**3. Test accounts: KEPT.** All are system accounts; already hidden from player search; now also hidden from coach search, and excluded from anonymous training data (rule updated; 224 old test-account training rows removed).
+
+**Tests:** 2,835/2,835; build OK.
+
+**Next item:** under-13 parent scouting switch + contact-the-parent route proof → then Phase 6 owner additions (roster strengths/weaknesses, testing day, compare by test) → Phases 7–9.
+
+**Waiting on the owner:** deploy OK for the plan builder; test-account tool redeploy; keep/remove Spaces (OFF); Vault review queue; owner terms not accepted.
+
+---
+
 # REPORT — 2026-10-12 03:25 UTC (GG8, end of batch)
 
 **Ready to publish: no** — Phase 6 owner additions continue (strengths/weaknesses on the Coach Dashboard roster + org comparison, testing day, compare by test), then Phases 7–9; legal wording waits for the lawyer.
