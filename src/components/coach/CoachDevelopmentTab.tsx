@@ -92,7 +92,7 @@ export function CoachDevelopmentTab({ athleteId }: { athleteId: string }) {
               <div className="space-y-1">
                 {c.reports.map((r) => (
                   <p key={r.id} className="text-xs text-muted-foreground">
-                    {r.date} · {r.efficiency_score != null ? `Efficiency score: ${Math.round(r.efficiency_score)}` : "No score"} · Source: video analysis
+                    {dateOnly(r.date)} · {r.efficiency_score != null ? `Efficiency score: ${Math.round(r.efficiency_score)}` : "No score"} · Source: video analysis
                   </p>
                 ))}
               </div>
@@ -124,7 +124,7 @@ export function CoachDevelopmentTab({ athleteId }: { athleteId: string }) {
         <CardHeader><CardTitle>Strengths &amp; weaknesses</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           {sw.strengths.length === 0 && sw.weaknesses.length === 0 && (
-            <p className="text-sm text-muted-foreground">Not enough data yet — needs at least 2 scored reports.</p>
+            <p className="text-sm text-muted-foreground">{sw.note}</p>
           )}
           {sw.strengths.map((s, i) => (
             <div key={`s${i}`} className="rounded-md border p-3">
