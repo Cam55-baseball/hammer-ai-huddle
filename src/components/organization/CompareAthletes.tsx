@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
+import { RosterStrengthsToggle } from "@/components/coach/RosterStrengthsToggle";
 import {
   ageYears, fairnessWarnings, gradeSourceLabel, type ComparedAthlete,
 } from "@/lib/org/compareAthletes";
@@ -139,6 +140,7 @@ export function CompareAthletes({ orgId }: { orgId: string }) {
                       Games logged: {a.game_summary?.games ?? 0}
                       {a.game_summary?.last_game ? ` · last on ${fmtDate(a.game_summary.last_game)}` : ""}
                     </p>
+                    <RosterStrengthsToggle athleteId={a.athlete_id} />
                   </li>
                 );
               })}

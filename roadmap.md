@@ -1,7 +1,8 @@
 # REPORT — 2026-10-12 16:35 UTC (HH1, in progress)
 
 **Ready to publish: no.** HH1 step 1 BUILT: Coach Dashboard roster — each player card now has a "Strengths & weaknesses" button; tap loads that player's strengths/weaknesses (same RPC + logic as the Development tab, so the same access limits apply), each with evidence and date, "Not enough data yet" when true, labeled "Source: video analysis reports". Build OK. HH2 PROOF PASS: test coach on a phone screen tapped the button and saw "Strength: Hitting is a strength" and "Weakness: Throwing needs the most work", each with average, report count and date (/tmp/browser/hh2/2.png); access is the same check the Development tab uses (outsiders refused, proven in GG8). Temporary coach link and 4 practice reports deleted.
-**Still open in Phase 6:** strengths/weaknesses on org comparison, testing day, compare by test. Then under-13 parent switch + contact-the-parent proof, Phases 7–9.
+**HH3 PASS: strengths & weaknesses on org comparison** — same tap button under each compared player; proven as the test org admin on a phone: rich player showed Hitting strength / Throwing weakness with evidence + dates, thin player showed "Not enough data yet" (/tmp/browser/hh3.png); proof memberships + reports deleted.
+**Still open in Phase 6:** testing day, compare by test. Then under-13 parent switch + contact-the-parent proof, Phases 7–9.
 **Waiting on the owner:** deploy OK for the plan builder; test-account tool redeploy; keep/remove Spaces (OFF); Vault review queue; owner terms not accepted.
 
 ---
