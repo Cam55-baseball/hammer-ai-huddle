@@ -13,7 +13,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon, Users, User, Building2 } from 'lucide-react';
-import { useScheduledPracticeSessions, CreateScheduledSession } from '@/hooks/useScheduledPracticeSessions';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,6 +39,11 @@ const SESSION_TYPES = [
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+interface CheckRow {
+  player_id: string; name: string; ok: boolean; reasons: string[];
+  alternative: { intensity?: 'light' | 'standard' | 'high'; throwing?: boolean; date?: string; text: string } | null;
+}
+
 interface LinkedPlayer {
   id: string;
   full_name: string;
@@ -55,7 +61,30 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
   const { t } = useTranslation();
   const { user } = useAuth();
   const { myOrgs, members } = useOrganization();
-  const { createBulkSessions, loading } = useScheduledPracticeSessions();
+  const qc = useQueryClient();
+  const [loading, setLoading] = useState(false);
+  const [intensity, setIntensity] = useState<'light' | 'standard' | 'high'>('standard');
+  const [throwing, setThrowing] = useState(false);
+  const [minutes, setMinutes] = useState('60');
+  const [teamId, setTeamId] = useState<string>('');
+  const [check, setCheck] = useState<{ results: CheckRow[]; refused: { player_id: string; reason: string }[] } | null>(null);
+
+  const teams = useQuery({
+    queryKey: ['coach-schedule-teams', user?.id],
+    enabled: !!user && open,
+    queryFn: async () => {
+      const { data } = await supabase.from('org_teams').select('id, name, organization_id').is('archived_at', null).order('created_at');
+      return (data ?? []) as { id: string; name: string; organization_id: string }[];
+    },
+  });
+  const teamRoster = useQuery({
+    queryKey: ['coach-schedule-roster', teamId],
+    enabled: !!teamId,
+    queryFn: async () => {
+      const { data } = await supabase.from('org_team_members').select('user_id').eq('team_id', teamId).eq('seat', 'player').is('removed_at', null);
+      return ((data ?? []) as { user_id: string }[]).map((r) => r.user_id);
+    },
+  });
 
   const [module, setModule] = useState('hitting');
   const [sessionType, setSessionType] = useState('team_session');
@@ -95,6 +124,7 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
 
   const getTargetPlayerIds = (): string[] => {
     if (scope === 'individual') return selectedPlayerIds;
+    if (scope === 'team') return teamRoster.data ?? [];
     if (scope === 'organization' && activeOrg) {
       return orgMembers
         .filter(m => m.organization_id === activeOrg.id)
@@ -103,53 +133,57 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
     return [];
   };
 
-  const handleSubmit = async () => {
-    if (!user || !selectedDate) return;
-
-    const playerIds = getTargetPlayerIds();
-    if (playerIds.length === 0) return;
-
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
-
-    const resolvedCoachId = user.id;
-
-    const baseSession: Omit<CreateScheduledSession, 'user_id'> & { status?: string; requires_approval?: boolean } = {
-      session_module: module,
-      session_type: sessionType,
-      title,
+  const buildSession = () => {
+    const team = teams.data?.find((t) => t.id === teamId);
+    return {
+      session_module: module, session_type: sessionType, title,
       description: description || undefined,
-      scheduled_date: dateStr,
-      start_time: startTime || undefined,
-      end_time: endTime || undefined,
-      recurring_active: recurringActive,
-      recurring_days: recurringDays,
-      sport,
-      coach_id: resolvedCoachId,
-      assignment_scope: scope,
-      organization_id: scope === 'organization' ? activeOrg?.id : undefined,
-      team_name: sessionType === 'team_session' ? teamName || undefined : undefined,
-      status: 'pending_approval',
-      requires_approval: true,
+      scheduled_date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
+      start_time: startTime || undefined, end_time: endTime || undefined, sport,
+      intensity, throwing, duration_minutes: Number(minutes) || undefined,
+      team_id: scope === 'team' ? teamId : undefined,
+      organization_id: scope === 'organization' ? activeOrg?.id : scope === 'team' ? team?.organization_id : undefined,
+      team_name: scope === 'team' ? team?.name : sessionType === 'team_session' ? teamName || undefined : undefined,
     };
+  };
 
-    const result = await createBulkSessions(playerIds, baseSession);
-    if (result) {
-      onOpenChange(false);
-      onCreated?.();
-      // Reset form
-      setSelectedPlayerIds([]);
-      setDescription('');
-      setRecurringActive(false);
-      setRecurringDays([]);
-      setTeamName('');
-    }
+  const call = async (mode: 'check' | 'schedule') => {
+    const playerIds = getTargetPlayerIds();
+    if (!user || !selectedDate || playerIds.length === 0) return null;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('coach-practice-check', { body: { mode, player_ids: playerIds, session: buildSession() } });
+      if (error || (data as any)?.error) { toast.error((data as any)?.error ?? 'Could not check this practice'); return null; }
+      return data as any;
+    } finally { setLoading(false); }
+  };
+
+  const handleCheck = async () => { const d = await call('check'); if (d) setCheck(d); };
+
+  const handleSubmit = async () => {
+    const d = await call('schedule');
+    if (!d) return;
+    const n = (d.scheduled ?? []).length;
+    const blocked = (d.results ?? []).filter((r: CheckRow) => !r.ok).length + (d.refused ?? []).length;
+    toast.success(`Practice sent to ${n} player(s)${blocked ? ` · ${blocked} not sent (see reasons)` : ''}`);
+    qc.invalidateQueries({ queryKey: ['scheduled-sessions'] });
+    setCheck(d);
+    if (blocked === 0) { onOpenChange(false); onCreated?.(); setCheck(null); setSelectedPlayerIds([]); setDescription(''); }
+  };
+
+  const applyAlternative = (alt: CheckRow['alternative']) => {
+    if (!alt) return;
+    if (alt.intensity) setIntensity(alt.intensity);
+    if (alt.throwing === false) setThrowing(false);
+    if (alt.date) setSelectedDate(new Date(`${alt.date}T12:00:00`));
+    setCheck(null);
   };
 
   const targetCount = getTargetPlayerIds().length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>Schedule Practice Session</DialogTitle>
           <DialogDescription>Schedule a session for your players</DialogDescription>
@@ -209,7 +243,7 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
           {/* Assignment Scope */}
           <div className="space-y-1.5">
             <Label>Assign To</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 size="sm"
@@ -219,6 +253,11 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
               >
                 <User className="h-3.5 w-3.5" /> Individual
               </Button>
+              {(teams.data ?? []).length > 0 && (
+                <Button type="button" size="sm" variant={scope === 'team' ? 'default' : 'outline'} onClick={() => setScope('team')} className="gap-1.5">
+                  <Users className="h-3.5 w-3.5" /> Whole team
+                </Button>
+              )}
               {activeOrg && (
                 <Button
                   type="button"
@@ -255,6 +294,17 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
               {selectedPlayerIds.length > 0 && (
                 <p className="text-xs text-muted-foreground">{selectedPlayerIds.length} player(s) selected</p>
               )}
+            </div>
+          )}
+
+          {scope === 'team' && (
+            <div className="space-y-1.5">
+              <Label>Team</Label>
+              <Select value={teamId} onValueChange={(v) => { setTeamId(v); setCheck(null); }}>
+                <SelectTrigger><SelectValue placeholder="Pick a team" /></SelectTrigger>
+                <SelectContent>{(teams.data ?? []).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
+              </Select>
+              {teamId && <p className="text-xs text-muted-foreground">{(teamRoster.data ?? []).length} player(s) on this team</p>}
             </div>
           )}
 
@@ -298,29 +348,29 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
             </div>
           </div>
 
-          {/* Recurring */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox checked={recurringActive} onCheckedChange={(c) => setRecurringActive(!!c)} />
-              <span className="text-sm font-medium">Repeat Weekly</span>
-            </label>
-            {recurringActive && (
-              <div className="flex gap-1.5 flex-wrap">
-                {DAY_LABELS.map((label, i) => (
-                  <Button
-                    key={i}
-                    type="button"
-                    size="sm"
-                    variant={recurringDays.includes(i) ? 'default' : 'outline'}
-                    className="h-8 w-10 text-xs"
-                    onClick={() => toggleDay(i)}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
-            )}
+          {/* Practice load — counts toward each player's workload */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>How hard</Label>
+              <Select value={intensity} onValueChange={(v) => { setIntensity(v as any); setCheck(null); }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="light">Light</SelectItem>
+                  <SelectItem value="standard">Standard</SelectItem>
+                  <SelectItem value="high">Hard</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Minutes</Label>
+              <Input type="number" min={15} max={240} value={minutes} onChange={(e) => setMinutes(e.target.value)} />
+            </div>
           </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox checked={throwing} onCheckedChange={(c) => { setThrowing(!!c); setCheck(null); }} />
+            <span className="text-sm">Includes throwing</span>
+          </label>
+          <p className="text-xs text-muted-foreground">Practices count toward each player's workload, so their next plan adjusts.</p>
 
           {/* Description */}
           <div className="space-y-1.5">
@@ -328,14 +378,33 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
             <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Add notes for players..." rows={2} />
           </div>
 
+          {check && (
+            <div className="space-y-2 rounded-md border p-3" aria-label="Safety check results">
+              <p className="text-sm font-medium">Safety check</p>
+              {check.results.map((r) => (
+                <div key={r.player_id} className="text-sm">
+                  <p><span className="font-medium">{r.name}:</span> {r.ok ? 'OK to schedule' : 'Not allowed'}</p>
+                  {r.reasons.map((x, i) => <p key={i} className="text-xs text-muted-foreground">Why: {x}</p>)}
+                  {r.alternative && (
+                    <Button type="button" size="sm" variant="outline" className="mt-1 h-auto whitespace-normal text-left" onClick={() => applyAlternative(r.alternative)}>
+                      {r.alternative.text}
+                    </Button>
+                  )}
+                </div>
+              ))}
+              {check.refused.map((r) => <p key={r.player_id} className="text-xs text-muted-foreground">One player: {r.reason}</p>)}
+            </div>
+          )}
+
           {/* Submit */}
-          <Button
-            onClick={handleSubmit}
-            disabled={loading || targetCount === 0 || !selectedDate}
-            className="w-full"
-          >
-            {loading ? 'Scheduling...' : `Schedule for ${targetCount} player(s)`}
-          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" onClick={handleCheck} disabled={loading || targetCount === 0 || !selectedDate}>
+              Check safety
+            </Button>
+            <Button onClick={handleSubmit} disabled={loading || targetCount === 0 || !selectedDate}>
+              {loading ? 'Working...' : `Schedule for ${targetCount}`}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

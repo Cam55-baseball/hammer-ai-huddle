@@ -627,7 +627,7 @@ export function GamePlanCard({ selectedSport, defaultOpen = false }: GamePlanCar
   // Sync ordered tasks with fetched tasks and restore saved order (or locked order)
   useEffect(() => {
     const checkinTasksList = tasks.filter(t => t.section === 'checkin');
-    const trainingTasksList = tasks.filter(t => t.section === 'training');
+    const trainingTasksList = tasks.filter(t => t.section === 'training' || t.section === 'practice');
     const trackingTasksList = tasks.filter(t => t.section === 'tracking');
     const customTasksList = tasks.filter(t => t.section === 'custom');
 
