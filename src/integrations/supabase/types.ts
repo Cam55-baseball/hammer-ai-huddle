@@ -22469,6 +22469,7 @@ export type Database = {
         }
         Returns: Json
       }
+      coach_weekly_summary: { Args: never; Returns: Json }
       combine_evaluator_context: {
         Args: { p_athlete: string; p_sport: string }
         Returns: Json

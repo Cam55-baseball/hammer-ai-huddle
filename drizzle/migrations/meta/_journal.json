@@ -428,6 +428,13 @@
       "when": 1791846980396,
       "tag": "0060_ai_usage_log",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1791847332190,
+      "tag": "0061_coach_weekly_summary",
+      "breakpoints": true
     }
   ]
 }
