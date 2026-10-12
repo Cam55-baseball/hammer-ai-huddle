@@ -21720,6 +21720,7 @@ export type Database = {
       cleanup_old_weight_adjustments: { Args: never; Returns: undefined }
       cleanup_old_weight_history: { Args: never; Returns: undefined }
       cleanup_synthetic_activity_logs: { Args: never; Returns: undefined }
+      coach_athlete_glance: { Args: { _athlete: string }; Returns: Json }
       coach_calibration_summary: { Args: never; Returns: Json }
       combine_evaluator_context: {
         Args: { p_athlete: string; p_sport: string }
