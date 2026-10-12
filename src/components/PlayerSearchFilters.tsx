@@ -30,6 +30,9 @@ interface FilterState {
   independentLeague: string;
   isForeignPlayer: boolean | null;
   sportPreference: 'baseball' | 'softball' | null;
+  levels?: string[];
+  verifiedTestsOnly?: boolean;
+  recentTestDays?: string;
 }
 
 interface PlayerSearchFiltersProps {
@@ -41,6 +44,11 @@ interface PlayerSearchFiltersProps {
 
 const POSITIONS = ["P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF"];
 const THROWING_HANDS = ["R", "L", "B"];
+const LEVELS: { label: string; values: string[] }[] = [
+  { label: "High school", values: ["High School", "high_school"] },
+  { label: "College", values: ["College", "college"] },
+  { label: "Professional", values: ["Professional", "professional"] },
+];
 const BATTING_SIDES = ["R", "L", "B"];
 
 export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onClearFilters }: PlayerSearchFiltersProps) {
@@ -145,6 +153,61 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
               </SelectContent>
             </Select>
           </div>
+
+          {filters.levels !== undefined && (
+            <div>
+              <Label className="text-sm font-semibold mb-2 block">Playing level</Label>
+              <div className="flex flex-wrap gap-3">
+                {LEVELS.map((lv) => {
+                  const on = lv.values.every((v) => filters.levels!.includes(v));
+                  return (
+                    <label key={lv.label} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <Checkbox
+                        checked={on}
+                        onCheckedChange={() =>
+                          onFilterChange({
+                            ...filters,
+                            levels: on
+                              ? filters.levels!.filter((v) => !lv.values.includes(v))
+                              : [...filters.levels!, ...lv.values],
+                          })
+                        }
+                      />
+                      {lv.label}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {filters.verifiedTestsOnly !== undefined && (
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold block">Test results</Label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <Checkbox
+                  checked={filters.verifiedTestsOnly}
+                  onCheckedChange={(c) => onFilterChange({ ...filters, verifiedTestsOnly: c === true })}
+                />
+                Only players with a test verified in person
+              </label>
+              <Select
+                value={filters.recentTestDays || "any"}
+                onValueChange={(v) => onFilterChange({ ...filters, recentTestDays: v === "any" ? "" : v })}
+              >
+                <SelectTrigger aria-label="Tested within">
+                  <SelectValue placeholder="Tested any time" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Tested any time</SelectItem>
+                  <SelectItem value="30">Tested in the last 30 days</SelectItem>
+                  <SelectItem value="90">Tested in the last 90 days</SelectItem>
+                  <SelectItem value="365">Tested in the last year</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Only players who share their stats with you can match these.</p>
+            </div>
+          )}
 
           {/* Position */}
           <div>

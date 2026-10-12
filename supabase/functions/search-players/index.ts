@@ -63,6 +63,9 @@ serve(async (req) => {
       independentLeague,
       isForeignPlayer,
       sport,
+      levels,
+      verifiedTestsOnly,
+      recentTestDays,
     } = await req.json();
 
     // Helper to parse height strings like "6'2"" to inches
@@ -90,7 +93,8 @@ serve(async (req) => {
       (typeof isFreeAgent === 'boolean') ||
       mlbAffiliate || independentLeague ||
       (typeof isForeignPlayer === 'boolean') ||
-      (sport === 'baseball' || sport === 'softball');
+      (sport === 'baseball' || sport === 'softball') ||
+      levels?.length > 0 || verifiedTestsOnly === true || Number(recentTestDays) > 0;
 
     // If no query and no filters, return empty
     if ((!query || query.trim().length < 2) && !hasFilters) {
@@ -132,6 +136,22 @@ serve(async (req) => {
     // Apply batting side filter
     if (battingSides && battingSides.length > 0) {
       profileQuery = profileQuery.in('batting_side', battingSides);
+    }
+
+    // Narrow to players with matching tests before the row limit applies.
+    const testDays = Number(recentTestDays) > 0 ? Math.min(Number(recentTestDays), 730) : 0;
+    let testUserIds: string[] | null = null;
+    if (verifiedTestsOnly === true || testDays > 0) {
+      let tq = supabaseAdmin.from('vault_performance_tests').select('user_id').limit(5000);
+      if (verifiedTestsOnly === true) tq = tq.eq('results->>_verified', 'in_person');
+      if (testDays > 0) tq = tq.gte('test_date', new Date(Date.now() - testDays * 86400000).toISOString().slice(0, 10));
+      const { data: tests } = await tq;
+      testUserIds = [...new Set((tests ?? []).map((t: any) => t.user_id as string))];
+      profileQuery = profileQuery.in('id', testUserIds.length ? testUserIds : ['00000000-0000-0000-0000-000000000000']);
+    }
+
+    if (Array.isArray(levels) && levels.length > 0) {
+      profileQuery = profileQuery.in('experience_level', levels);
     }
 
     // Apply state filter
@@ -266,6 +286,12 @@ serve(async (req) => {
     // Child safety: minors appear in search only when guardian-cleared with profile sharing on.
     const gate = await recruitingGate(supabaseAdmin, user.id, filteredProfiles.map(p => p.id), 'profile');
     filteredProfiles = filteredProfiles.filter(p => gate.get(p.id) === 'visible');
+
+    // Test-based filters: only players who share their stats ('metrics') can match.
+    if (testUserIds && filteredProfiles.length > 0) {
+      const mGate = await recruitingGate(supabaseAdmin, user.id, filteredProfiles.map(p => p.id), 'metrics');
+      filteredProfiles = filteredProfiles.filter(p => mGate.get(p.id) === 'visible');
+    }
 
     const results = filteredProfiles.map(profile => ({
       id: profile.id,
