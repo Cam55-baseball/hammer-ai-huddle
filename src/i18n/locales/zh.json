@@ -577,26 +577,26 @@
     "viewingAsOwner": "以所有者身份查看",
     "viewingAsScout": "以球探身份查看",
     "viewingAsCoach": "以教练身份查看",
-    "viewingProfile": "正在查看资料",
+    "viewingProfile": "查看个人资料",
     "followPlayer": "关注球员",
     "sending": "发送中...",
     "followRequestPending": "关注请求待处理",
-    "following": "关注中",
+    "following": "已关注",
     "throws": "投球",
     "bats": "击球",
     "right": "右",
     "left": "左",
-    "both": "双",
-    "switch": "双打",
+    "both": "两者",
+    "switch": "两侧",
     "collegeStatus": "大学状态",
-    "currentlyEnrolled": "当前在读",
+    "currentlyEnrolled": "目前在读",
     "level": "级别",
     "professionalPlayer": "职业球员",
     "status": "状态",
     "freeAgent": "自由球员",
     "internationalPlayer": "国际球员",
     "team": "球队",
-    "playingStyle": "打法",
+    "playingStyle": "比赛风格",
     "academicCommitment": "学业与承诺",
     "currentlyEnrolledInCollege": "目前在大学就读",
     "positionRole": "位置/角色",
@@ -604,13 +604,13 @@
     "contactEmail": "联系邮箱",
     "experienceCredentials": "经验与资质",
     "addCredential": "添加资质",
-    "profilePicture": "头像",
-    "maxSizeInfo": "最大大小：5MB。JPG、PNG或WEBP",
+    "profilePicture": "个人头像",
+    "maxSizeInfo": "最大: 5MB。JPG、PNG或WEBP",
     "orEnterImageUrl": "或输入图片URL",
     "socialMediaLinks": "社交媒体链接",
     "additionalWebsiteLinks": "其他网站链接",
     "website": "网站",
-    "saveProfile": "保存资料",
+    "saveProfile": "保存个人资料",
     "openBillingPortal": "打开账单门户",
     "billingPortalUnavailable": "账单门户不可用",
     "accountInformation": "账户信息",
@@ -665,48 +665,12 @@
     "experienceLevel": "经验水平",
     "teamAffiliation": "球队隶属",
     "yearsAffiliated": "隶属年数",
-    "backToDashboard": "返回仪表板",
     "viewingPlayerProfile": "{{name}}的个人资料",
-    "viewingAsOwner": "以所有者身份查看",
-    "viewingAsScout": "以球探身份查看",
-    "viewingAsCoach": "以教练身份查看",
-    "viewingProfile": "查看个人资料",
-    "sending": "发送中...",
-    "followPlayer": "关注球员",
-    "followRequestPending": "关注请求待处理",
-    "following": "已关注",
-    "experienceCredentials": "经验与资质",
-    "throws": "投球",
-    "bats": "击球",
-    "both": "两者",
-    "right": "右",
-    "left": "左",
-    "switch": "两侧",
-    "collegeStatus": "大学状态",
-    "currentlyEnrolled": "目前在读",
-    "status": "状态",
-    "team": "球队",
-    "level": "级别",
-    "professionalPlayer": "职业球员",
-    "freeAgent": "自由球员",
     "playerType": "球员类型",
-    "internationalPlayer": "国际球员",
     "years": "年",
-    "basicInfo": "基本信息",
-    "contactEmail": "联系邮箱",
-    "addCredential": "添加资质",
-    "profilePicture": "个人头像",
-    "maxSizeInfo": "最大: 5MB。JPG、PNG或WEBP",
-    "orEnterImageUrl": "或输入图片URL",
     "primaryPosition": "主要位置",
     "selectPosition": "选择位置",
-    "playingStyle": "比赛风格",
-    "academicCommitment": "学业与承诺",
-    "currentlyEnrolledInCollege": "目前在大学就读",
-    "positionRole": "位置/角色",
-    "socialMediaLinks": "社交媒体链接",
     "enterHandleOrUrl": "输入用户名（如\"username\"）或完整URL",
-    "additionalWebsiteLinks": "其他网站链接",
     "addMoreWebsites": "最多添加4个网站URL",
     "customizeExperience": "自定义您的体验",
     "subscriptionStatus": "订阅状态",
@@ -720,8 +684,6 @@
     "subscribeToModules": "订阅模块",
     "manageSubscriptions": "管理订阅",
     "controlModulesDescription": "单独控制每个模块 - 随时取消",
-    "cancelAllModules": "取消所有模块",
-    "accountInformation": "账户信息",
     "accountCreated": "账户创建于:",
     "unableToLoadProfile": "无法加载此个人资料。您可能没有权限。",
     "followRequestSentTo": "已向{{name}}发送关注请求。",
@@ -737,14 +699,6 @@
     "portalBeingSetUp": "门户正在设置中。请联系支持。",
     "failedToOpenBillingPortal": "无法打开门户。",
     "selectLevel": "选择级别",
-    "website": "网站",
-    "saveProfile": "保存个人资料",
-    "openBillingPortal": "打开账单门户",
-    "billingPortalUnavailable": "账单门户不可用",
-    "neverExpires": "永不过期",
-    "discount": "折扣",
-    "manageModules": "管理模块",
-    "noActiveModules": "无活跃模块",
     "public": "公开",
     "contactEmailDescription": "此邮箱将对所有用户可见以便联系您",
     "playerBioPrompt": "请包括：联系邮箱、身高体重、州、毕业年份（高中和大学）、击球侧、位置、投球手、球队隶属或自由球员状态",
@@ -974,391 +928,6 @@
     "allSports": "所有运动",
     "active": "活跃",
     "failedToLoad": "加载排名失败"
-  },
-  "nutrition": {
-    "goalTypes": {
-      "lose_weight": "减重",
-      "lose_fat": "减脂",
-      "maintain": "维持",
-      "gain_lean_muscle": "增肌",
-      "gain_weight": "增重"
-    },
-    "dayTypes": {
-      "rest": "休息",
-      "training": "训练",
-      "practice": "练习",
-      "game": "比赛",
-      "travel": "出行"
-    },
-    "settings": {
-      "title": "营养设置",
-      "currentGoal": "当前目标",
-      "selectGoal": "选择您的目标",
-      "updateGoal": "更新目标",
-      "goalUpdated": "目标更新成功",
-      "editProfile": "编辑个人资料",
-      "profileSettingsNote": "需要更新个人资料信息吗？",
-      "calorieAdjustment": "热量调整",
-      "deficit": "赤字",
-      "surplus": "盈余"
-    },
-    "saveTip": "保存提示",
-    "tipSaved": "已保存",
-    "tipSavedSuccess": "提示已保存到您的保险库！",
-    "tipSaveHint": "点击心形图标将您喜欢的提示保存到宝库",
-    "todaysTips": "今日提示",
-    "todaysTipsCount": "今日提示 ({{count}}/2)",
-    "reviewTips": "查看您今天的提示",
-    "noTipsYet": "今天还没有查看任何提示",
-    "viewedAt": "{{time}}查看",
-    "title": "Iron Horse 生产",
-    "subtitle": "精英运动员的饮食与全面健康建议",
-    "dailyTip": "每日健康提示",
-    "newTip": "新提示",
-    "tipsCollected": "已收集提示",
-    "percentExplored": "已探索{{percent}}%的健康提示",
-    "daysToUnlock": "{{days}}天后解锁",
-    "streak": "连续",
-    "currentStreak": "当前连续",
-    "longestStreak": "最长连续",
-    "totalVisits": "总访问量",
-    "badges": "徽章",
-    "disclaimer": "健康免责声明",
-    "disclaimerText": "所提供的信息仅供教育目的，不应替代专业医疗建议。部分信息可能不准确或已过时。",
-    "tipsRemaining": "今日剩余提示",
-    "noMoreTips": "您今天已收集了2条健康提示！明天再来获取更多。",
-    "categoriesTitle": "营养类别",
-    "topicsCount": "({{count}}个主题)",
-    "dayStreak": "天连续",
-    "daysStreak": "天连续",
-    "best": "最佳:",
-    "tipsCollectedCount": "已收集提示",
-    "ofTipsExplored": "已探索提示",
-    "tipsExplored": "已探索 {{total}} 个提示中的 {{percent}}%",
-    "milestoneBadges": "里程碑徽章",
-    "dailyLimitReached": "已达每日限制",
-    "noTipsRemaining": "剩余0条提示",
-    "tipsLeftToday": "今日剩余提示",
-    "tipLeftToday": "今日剩余提示",
-    "disclaimerTitle": "重要健康免责声明",
-    "educationalPurposes": "此处提供的信息仅供教育目的，不应替代专业医疗建议。",
-    "aiTipsWarning": "Hammer生成的提示可能包含不准确信息。部分信息可能已过时或不正确。",
-    "alwaysConsult": "在对饮食或健康习惯进行任何更改之前，请务必咨询合格的医疗保健提供者。",
-    "moreDaysToUnlock": "天后解锁",
-    "achieved": "已达成！",
-    "badgeNames": {
-      "starter": "起步",
-      "weekWarrior": "周战士",
-      "ironWill": "铁意志",
-      "ironHorse": "铁马",
-      "elite": "精英表演者",
-      "legendary": "传奇"
-    },
-    "badgeDescriptions": {
-      "starter": "开始您的旅程",
-      "weekWarrior": "7天连续",
-      "ironWill": "14天连续",
-      "ironHorse": "30天连续",
-      "elite": "60天连续",
-      "legendary": "100天连续"
-    },
-    "categories": {
-      "bloodType": "血型健康",
-      "bloodTypeDesc": "根据血型优化营养",
-      "hydration": "补水",
-      "hydrationDesc": "掌握适当的液体摄入以达到最佳表现",
-      "mineralization": "矿物质补充",
-      "mineralizationDesc": "运动卓越所需的必要矿物质",
-      "recovery": "恢复",
-      "recoveryDesc": "加速训练间的恢复",
-      "bloodFlow": "血液循环",
-      "bloodFlowDesc": "增强血液循环以提高表现",
-      "lymphatic": "淋巴健康",
-      "lymphaticDesc": "支持身体的排毒系统",
-      "vitamins": "维生素",
-      "vitaminsDesc": "运动表现的关键维生素",
-      "longevity": "长寿",
-      "longevityDesc": "延长运动生涯的营养",
-      "weightManagement": "体重管理",
-      "weightManagementDesc": "运动员的健康体重策略",
-      "vegan": "素食指南",
-      "veganDesc": "运动员的植物性营养",
-      "restrictiveDiets": "限制性饮食",
-      "restrictiveDietsDesc": "安全地处理饮食限制",
-      "offSeason": "休赛期准备",
-      "offSeasonDesc": "在休赛期准备您的身体",
-      "inSeason": "赛季中准备",
-      "inSeasonDesc": "比赛期间的最佳营养",
-      "performance": "表现准备",
-      "performanceDesc": "赛前营养策略",
-      "inGame": "比赛中补水",
-      "inGameDesc": "比赛期间保持水分",
-      "supplements": "NSF补充剂",
-      "supplementsDesc": "NSF批准的补充剂指南",
-      "holistic": "整体健康",
-      "holisticDesc": "身心营养连接",
-      "dailyNutrition": "每日营养提示",
-      "dailyNutritionDesc": "更好饮食的快速每日提示"
-    }
-  },
-  "weather": {
-    "title": "与自然共舞",
-    "subtitle": "掌握每个比赛日的天气条件",
-    "tagline": "更聪明地训练，更强力地比赛",
-    "subtitleBaseball": "掌握每个棒球比赛日的条件",
-    "subtitleSoftball": "掌握每个垒球比赛日的条件",
-    "currentConditions": "当前条件",
-    "feelsLike": "体感温度",
-    "wind": "风力",
-    "humidity": "湿度",
-    "visibility": "能见度",
-    "uvIndex": "紫外线指数",
-    "forecast": "7天预报",
-    "drillRecommendations": "训练建议",
-    "sportAnalysis": "条件分析",
-    "baseballAnalysis": "棒球条件分析",
-    "softballAnalysis": "垒球条件分析",
-    "enterLocation": "输入位置",
-    "useMyLocation": "使用我的位置",
-    "excellent": "极佳",
-    "fair": "一般",
-    "notRecommended": "不推荐",
-    "searchLocation": "搜索任意位置...",
-    "retry": "重试",
-    "enterLocationPrompt": "在上方输入位置以查看天气条件和训练建议",
-    "locationDetected": "位置已检测",
-    "high": "高",
-    "moderate": "中等",
-    "low": "低",
-    "clear": "晴朗",
-    "good": "良好",
-    "limited": "有限",
-    "veryHigh": "非常高",
-    "ballFlight": "球飞行",
-    "windImpact": "风影响",
-    "fieldConditions": "场地条件",
-    "tracking": "追踪",
-    "uvWarning": "紫外线警告",
-    "recommendation": "建议",
-    "toggleDrills": "显示训练建议",
-    "hideDrills": "隐藏训练建议",
-    "drillRecommendationsTitle": "基于天气的训练建议",
-    "proTip": "专业提示:",
-    "prioritizeDrills": "首先专注于高优先级训练，以获得当前条件下的最佳训练适应。",
-    "toggleForecast": "显示7天预报",
-    "hideForecast": "隐藏7天预报",
-    "forecastTitle": "7天训练预报",
-    "today": "今天",
-    "tomorrow": "明天",
-    "trainingExcellent": "极佳 - 理想的训练条件",
-    "trainingFair": "一般 - 监控条件",
-    "trainingPoor": "不推荐 - 不安全",
-    "trainingUnknown": "未知",
-    "precipitationChance": "降水概率",
-    "failedToLoadWeather": "加载天气数据失败",
-    "noConditions": "没有特定条件可分析",
-    "sunrise": "日出",
-    "sunset": "日落",
-    "toggleHourlyForecast": "显示每小时预报",
-    "hideHourlyForecast": "隐藏每小时预报",
-    "hourlyForecastTitle": "33小时预报",
-    "now": "现在",
-    "todayMorning": "今天上午",
-    "todayAfternoon": "今天下午",
-    "todayEvening": "今天傍晚",
-    "tonight": "今晚",
-    "tomorrowMorning": "明天上午",
-    "tomorrowAfternoon": "明天下午",
-    "tomorrowEvening": "明天傍晚",
-    "tomorrowNight": "明晚",
-    "swipe": "滑动",
-    "poor": "差",
-    "gameDayPrep": {
-      "title": "比赛日准备",
-      "show": "比赛日准备",
-      "hide": "隐藏准备"
-    },
-    "favorites": {
-      "save": "保存位置",
-      "saved": "位置已保存",
-      "removed": "位置已删除",
-      "selectFavorite": "已保存",
-      "noFavorites": "没有保存的位置",
-      "defaultSet": "默认位置已设置",
-      "manage": "保存的位置",
-      "setDefault": "设为默认",
-      "rename": "重命名",
-      "delete": "删除",
-      "nameUpdated": "位置已重命名",
-      "default": "默认"
-    },
-    "alerts": {
-      "title": "天气警报",
-      "expires": "过期",
-      "instructions": "安全说明"
-    },
-    "airQuality": {
-      "title": "空气质量",
-      "unavailable": "N/A"
-    }
-  },
-  "scout": {
-    "dashboard": "球探仪表板",
-     "players": "球员",
-     "typeToSearch": "开始输入以搜索球员...",
-    "searchPlayers": "搜索球员",
-    "followedPlayers": "关注的球员",
-    "pendingRequests": "待处理请求",
-    "sendFollowRequest": "发送关注请求",
-    "followRequestSent": "关注请求已发送",
-    "viewVideos": "查看视频",
-    "annotateVideo": "注释视频",
-    "annotations": "注释",
-    "coachAnnotations": "教练注释",
-    "myAnnotations": "我的注释",
-    "noAnnotations": "暂无注释",
-    "dashboardDescription": "管理您的球员关注并发现新人才",
-    "allSports": "所有运动",
-    "noFollowingPlayers": "您尚未关注任何球员。搜索球员以开始建立您的名单。",
-    "viewProfile": "查看资料",
-    "viewLibrary": "查看库",
-    "unfollow": "取消关注",
-    "findPlayers": "找到球员",
-    "searchPlayersPlaceholder": "搜索所有球员...",
-    "minCharactersToSearch": "输入至少2个字符进行搜索",
-    "searching": "搜索中...",
-    "noPlayersFound": "未找到与您搜索匹配的球员",
-    "playerFound": "找到球员",
-    "playersFound": "找到球员",
-    "follow": "关注",
-    "pending": "待处理",
-    "followingStatus": "关注中",
-    "unfollowPlayer": "取消关注球员",
-    "unfollowConfirmation": "您确定要取消关注{{name}}吗？您将失去对其共享视频的访问权限。",
-    "unfollowing": "取消关注中...",
-    "unfollowAction": "取消关注",
-    "followRequestSentDescription": "球员将收到通知，并可以批准您的请求。",
-    "unfollowedPlayer": "已取消关注球员",
-    "failedToLoadFollowing": "加载关注的球员失败",
-    "failedToSearchPlayers": "搜索球员失败",
-    "failedToUnfollow": "取消关注失败",
-    "advancedFilters": "高级筛选",
-    "clearFilters": "清除筛选",
-    "primaryPosition": "主要位置",
-    "throwingSide": "投球侧",
-    "battingSide": "击球侧",
-    "heightRange": "身高范围",
-    "weightRange": "体重范围",
-    "anyPosition": "任何位置",
-    "anyThrowingSide": "任何",
-    "anyBattingSide": "任何",
-    "anyState": "任何州/省",
-    "anyCommitment": "任何",
-    "anyYear": "任何年份",
-    "showFilters": "显示筛选",
-    "hideFilters": "隐藏筛选",
-    "following": "关注的球员"
-  },
-  "subscription": {
-    "title": "订阅",
-    "plans": "计划",
-    "currentPlan": "当前计划",
-    "upgrade": "升级",
-    "cancel": "取消",
-    "free": "免费",
-    "pro": "专业版",
-    "premium": "高级版",
-    "perMonth": "/月",
-    "features": "功能",
-    "selectPlan": "选择计划",
-    "checkout": "结账",
-    "paymentSuccess": "支付成功",
-    "paymentFailed": "支付失败"
-  },
-  "errors": {
-    "somethingWentWrong": "出了点问题",
-    "tryAgain": "请重试",
-    "notFound": "页面未找到",
-    "unauthorized": "未授权",
-    "forbidden": "禁止访问",
-    "networkError": "网络错误",
-    "serverError": "服务器错误",
-    "failedToLoadRankings": "加载排名失败"
-  },
-  "toast": {
-    "profileUpdated": "资料更新成功",
-    "videoSaved": "视频已保存到库",
-    "videoDeleted": "视频已删除",
-    "annotationSaved": "注释已保存",
-    "followRequestSent": "关注请求已发送",
-    "languageChanged": "语言已更改"
-  },
-  "videoPlayer": {
-    "frameByFrameMode": "逐帧模式",
-    "scoutViewCapture": "球探视图 - 捕获帧以进行注释",
-    "loopStart": "循环开始",
-    "loopEnd": "循环结束",
-    "looping": "循环中: {{start}}秒 → {{end}}秒",
-    "back": "后退",
-    "forward": "前进",
-    "capture": "捕获",
-    "mirror": "镜像",
-    "fullscreen": "全屏",
-    "markLoopStart": "标记循环开始",
-    "markLoopEnd": "标记循环结束",
-    "clear": "清除",
-    "start": "开始",
-    "end": "结束",
-    "capturedKeyFrames": "已捕获的关键帧",
-    "downloadAll": "全部下载 ({{count}})",
-    "keyFrameCaptured": "关键帧已捕获！",
-    "videoNotReady": "视频尚未准备好",
-    "loopStartSet": "循环开始已设置为{{time}}秒",
-    "loopEndSet": "循环结束已设置为{{time}}秒",
-    "loopCleared": "循环已清除",
-    "frameDownloaded": "帧{{number}}已下载！",
-    "annotatedFrameDownloaded": "带注释的帧{{number}}已下载！",
-    "frameRemoved": "帧已移除！",
-    "videoOrCanvasNotReady": "视频或画布未准备好",
-    "videoNotFullyLoaded": "视频未完全加载。请稍候再试。",
-    "canvasContextError": "无法获取画布上下文",
-    "failedToDrawFrame": "绘制帧失败。请刷新页面并重试。",
-    "cannotCaptureCors": "由于安全限制无法捕获帧。请刷新页面。",
-    "failedToCaptureLoading": "捕获帧失败。视频可能仍在加载中。",
-    "videoProtected": "视频受保护。此视频无法使用帧捕获功能。",
-    "failedToCapture": "捕获帧失败。请重试。",
-    "downloadingFrames": "正在下载{{count}}个帧...",
-    "stepBackward": "后退一帧",
-    "stepForward": "前进一帧"
-  },
-  "tutorial": {
-    "step": "步骤 {{current}} / {{total}}",
-    "previous": "上一步",
-    "next": "下一步",
-    "startCompeting": "开始竞争",
-    "completed": "教程完成！",
-    "failedToComplete": "无法完成教程",
-    "player": {
-      "welcome": { "title": "欢迎来到Hammers Modality！", "description": "让我们探索帮助您将比赛提升到新水平的工具。" },
-      "creator": { "title": "您的创作者资料", "description": "设置您的个人资料以个性化训练体验并与球探建立联系。" },
-      "modules": { "title": "训练模块", "description": "访问专门的击球、投掷和投球模块来提高特定技能。" },
-      "upload": { "title": "视频上传", "description": "上传您的训练视频以获得Hammer驱动的技术分析。" },
-      "coaching": { "title": "Hammer教练", "description": "根据您的视频分析获得详细的反馈和训练建议。" },
-      "library": { "title": "球员俱乐部", "description": "在您的个人库中保存和整理您的训练课程。" },
-      "following": { "title": "球探连接", "description": "与可以查看您训练进度的球探和教练建立联系。" },
-      "ranking": { "title": "排名", "description": "跟踪您的进步并在排名中与其他运动员进行比较。" },
-      "profile": { "title": "个人资料设置", "description": "自定义您的个人资料并管理您的账户设置。" }
-    },
-    "scout": {
-      "welcome": { "title": "欢迎，球探！", "description": "让我们探索发现和评估人才的工具。" },
-      "creator": { "title": "您的球探资料", "description": "设置您的资质和组织隶属关系。" },
-      "discover": { "title": "发现球员", "description": "使用高级筛选器浏览和搜索有才华的球员。" },
-      "search": { "title": "高级搜索", "description": "按位置、州、经验水平等筛选球员。" },
-      "follow": { "title": "关注球员", "description": "发送关注请求以访问球员的训练库。" },
-      "videos": { "title": "观看视频", "description": "观看训练课程并分析球员的技术。" },
-      "rankings": { "title": "球员排名", "description": "查看平台上所有球员的表现排名。" },
-      "analyze": { "title": "分析表现", "description": "查看Hammer分析并为球员视频添加您自己的注释。" }
-    }
   },
   "nutrition": {
     "categoryContent": {
@@ -1649,6 +1218,316 @@
       }
     }
   },
+  "weather": {
+    "title": "与自然共舞",
+    "subtitle": "掌握每个比赛日的天气条件",
+    "tagline": "更聪明地训练，更强力地比赛",
+    "subtitleBaseball": "掌握每个棒球比赛日的条件",
+    "subtitleSoftball": "掌握每个垒球比赛日的条件",
+    "currentConditions": "当前条件",
+    "feelsLike": "体感温度",
+    "wind": "风力",
+    "humidity": "湿度",
+    "visibility": "能见度",
+    "uvIndex": "紫外线指数",
+    "forecast": "7天预报",
+    "drillRecommendations": "训练建议",
+    "sportAnalysis": "条件分析",
+    "baseballAnalysis": "棒球条件分析",
+    "softballAnalysis": "垒球条件分析",
+    "enterLocation": "输入位置",
+    "useMyLocation": "使用我的位置",
+    "excellent": "极佳",
+    "fair": "一般",
+    "notRecommended": "不推荐",
+    "searchLocation": "搜索任意位置...",
+    "retry": "重试",
+    "enterLocationPrompt": "在上方输入位置以查看天气条件和训练建议",
+    "locationDetected": "位置已检测",
+    "high": "高",
+    "moderate": "中等",
+    "low": "低",
+    "clear": "晴朗",
+    "good": "良好",
+    "limited": "有限",
+    "veryHigh": "非常高",
+    "ballFlight": "球飞行",
+    "windImpact": "风影响",
+    "fieldConditions": "场地条件",
+    "tracking": "追踪",
+    "uvWarning": "紫外线警告",
+    "recommendation": "建议",
+    "toggleDrills": "显示训练建议",
+    "hideDrills": "隐藏训练建议",
+    "drillRecommendationsTitle": "基于天气的训练建议",
+    "proTip": "专业提示:",
+    "prioritizeDrills": "首先专注于高优先级训练，以获得当前条件下的最佳训练适应。",
+    "toggleForecast": "显示7天预报",
+    "hideForecast": "隐藏7天预报",
+    "forecastTitle": "7天训练预报",
+    "today": "今天",
+    "tomorrow": "明天",
+    "trainingExcellent": "极佳 - 理想的训练条件",
+    "trainingFair": "一般 - 监控条件",
+    "trainingPoor": "不推荐 - 不安全",
+    "trainingUnknown": "未知",
+    "precipitationChance": "降水概率",
+    "failedToLoadWeather": "加载天气数据失败",
+    "noConditions": "没有特定条件可分析",
+    "sunrise": "日出",
+    "sunset": "日落",
+    "toggleHourlyForecast": "显示每小时预报",
+    "hideHourlyForecast": "隐藏每小时预报",
+    "hourlyForecastTitle": "33小时预报",
+    "now": "现在",
+    "todayMorning": "今天上午",
+    "todayAfternoon": "今天下午",
+    "todayEvening": "今天傍晚",
+    "tonight": "今晚",
+    "tomorrowMorning": "明天上午",
+    "tomorrowAfternoon": "明天下午",
+    "tomorrowEvening": "明天傍晚",
+    "tomorrowNight": "明晚",
+    "swipe": "滑动",
+    "poor": "差",
+    "gameDayPrep": {
+      "title": "比赛日准备",
+      "show": "比赛日准备",
+      "hide": "隐藏准备"
+    },
+    "favorites": {
+      "save": "保存位置",
+      "saved": "位置已保存",
+      "removed": "位置已删除",
+      "selectFavorite": "已保存",
+      "noFavorites": "没有保存的位置",
+      "defaultSet": "默认位置已设置",
+      "manage": "保存的位置",
+      "setDefault": "设为默认",
+      "rename": "重命名",
+      "delete": "删除",
+      "nameUpdated": "位置已重命名",
+      "default": "默认"
+    },
+    "alerts": {
+      "title": "天气警报",
+      "expires": "过期",
+      "instructions": "安全说明"
+    },
+    "airQuality": {
+      "title": "空气质量",
+      "unavailable": "N/A"
+    }
+  },
+  "scout": {
+    "dashboard": "球探仪表板",
+    "players": "球员",
+    "typeToSearch": "开始输入以搜索球员...",
+    "searchPlayers": "搜索球员",
+    "followedPlayers": "关注的球员",
+    "pendingRequests": "待处理请求",
+    "sendFollowRequest": "发送关注请求",
+    "followRequestSent": "关注请求已发送",
+    "viewVideos": "查看视频",
+    "annotateVideo": "注释视频",
+    "annotations": "注释",
+    "coachAnnotations": "教练注释",
+    "myAnnotations": "我的注释",
+    "noAnnotations": "暂无注释",
+    "dashboardDescription": "管理您的球员关注并发现新人才",
+    "allSports": "所有运动",
+    "noFollowingPlayers": "您尚未关注任何球员。搜索球员以开始建立您的名单。",
+    "viewProfile": "查看资料",
+    "viewLibrary": "查看库",
+    "unfollow": "取消关注",
+    "findPlayers": "找到球员",
+    "searchPlayersPlaceholder": "搜索所有球员...",
+    "minCharactersToSearch": "输入至少2个字符进行搜索",
+    "searching": "搜索中...",
+    "noPlayersFound": "未找到与您搜索匹配的球员",
+    "playerFound": "找到球员",
+    "playersFound": "找到球员",
+    "follow": "关注",
+    "pending": "待处理",
+    "followingStatus": "关注中",
+    "unfollowPlayer": "取消关注球员",
+    "unfollowConfirmation": "您确定要取消关注{{name}}吗？您将失去对其共享视频的访问权限。",
+    "unfollowing": "取消关注中...",
+    "unfollowAction": "取消关注",
+    "followRequestSentDescription": "球员将收到通知，并可以批准您的请求。",
+    "unfollowedPlayer": "已取消关注球员",
+    "failedToLoadFollowing": "加载关注的球员失败",
+    "failedToSearchPlayers": "搜索球员失败",
+    "failedToUnfollow": "取消关注失败",
+    "advancedFilters": "高级筛选",
+    "clearFilters": "清除筛选",
+    "primaryPosition": "主要位置",
+    "throwingSide": "投球侧",
+    "battingSide": "击球侧",
+    "heightRange": "身高范围",
+    "weightRange": "体重范围",
+    "anyPosition": "任何位置",
+    "anyThrowingSide": "任何",
+    "anyBattingSide": "任何",
+    "anyState": "任何州/省",
+    "anyCommitment": "任何",
+    "anyYear": "任何年份",
+    "showFilters": "显示筛选",
+    "hideFilters": "隐藏筛选",
+    "following": "关注的球员"
+  },
+  "subscription": {
+    "title": "订阅",
+    "plans": "计划",
+    "currentPlan": "当前计划",
+    "upgrade": "升级",
+    "cancel": "取消",
+    "free": "免费",
+    "pro": "专业版",
+    "premium": "高级版",
+    "perMonth": "/月",
+    "features": "功能",
+    "selectPlan": "选择计划",
+    "checkout": "结账",
+    "paymentSuccess": "支付成功",
+    "paymentFailed": "支付失败"
+  },
+  "errors": {
+    "somethingWentWrong": "出了点问题",
+    "tryAgain": "请重试",
+    "notFound": "页面未找到",
+    "unauthorized": "未授权",
+    "forbidden": "禁止访问",
+    "networkError": "网络错误",
+    "serverError": "服务器错误",
+    "failedToLoadRankings": "加载排名失败"
+  },
+  "toast": {
+    "profileUpdated": "资料更新成功",
+    "videoSaved": "视频已保存到库",
+    "videoDeleted": "视频已删除",
+    "annotationSaved": "注释已保存",
+    "followRequestSent": "关注请求已发送",
+    "languageChanged": "语言已更改"
+  },
+  "videoPlayer": {
+    "frameByFrameMode": "逐帧模式",
+    "scoutViewCapture": "球探视图 - 捕获帧以进行注释",
+    "loopStart": "循环开始",
+    "loopEnd": "循环结束",
+    "looping": "循环中: {{start}}秒 → {{end}}秒",
+    "back": "后退",
+    "forward": "前进",
+    "capture": "捕获",
+    "mirror": "镜像",
+    "fullscreen": "全屏",
+    "markLoopStart": "标记循环开始",
+    "markLoopEnd": "标记循环结束",
+    "clear": "清除",
+    "start": "开始",
+    "end": "结束",
+    "capturedKeyFrames": "已捕获的关键帧",
+    "downloadAll": "全部下载 ({{count}})",
+    "keyFrameCaptured": "关键帧已捕获！",
+    "videoNotReady": "视频尚未准备好",
+    "loopStartSet": "循环开始已设置为{{time}}秒",
+    "loopEndSet": "循环结束已设置为{{time}}秒",
+    "loopCleared": "循环已清除",
+    "frameDownloaded": "帧{{number}}已下载！",
+    "annotatedFrameDownloaded": "带注释的帧{{number}}已下载！",
+    "frameRemoved": "帧已移除！",
+    "videoOrCanvasNotReady": "视频或画布未准备好",
+    "videoNotFullyLoaded": "视频未完全加载。请稍候再试。",
+    "canvasContextError": "无法获取画布上下文",
+    "failedToDrawFrame": "绘制帧失败。请刷新页面并重试。",
+    "cannotCaptureCors": "由于安全限制无法捕获帧。请刷新页面。",
+    "failedToCaptureLoading": "捕获帧失败。视频可能仍在加载中。",
+    "videoProtected": "视频受保护。此视频无法使用帧捕获功能。",
+    "failedToCapture": "捕获帧失败。请重试。",
+    "downloadingFrames": "正在下载{{count}}个帧...",
+    "stepBackward": "后退一帧",
+    "stepForward": "前进一帧"
+  },
+  "tutorial": {
+    "step": "步骤 {{current}} / {{total}}",
+    "previous": "上一步",
+    "next": "下一步",
+    "startCompeting": "开始竞争",
+    "completed": "教程完成！",
+    "failedToComplete": "无法完成教程",
+    "player": {
+      "welcome": {
+        "title": "欢迎来到Hammers Modality！",
+        "description": "让我们探索帮助您将比赛提升到新水平的工具。"
+      },
+      "creator": {
+        "title": "您的创作者资料",
+        "description": "设置您的个人资料以个性化训练体验并与球探建立联系。"
+      },
+      "modules": {
+        "title": "训练模块",
+        "description": "访问专门的击球、投掷和投球模块来提高特定技能。"
+      },
+      "upload": {
+        "title": "视频上传",
+        "description": "上传您的训练视频以获得Hammer驱动的技术分析。"
+      },
+      "coaching": {
+        "title": "Hammer教练",
+        "description": "根据您的视频分析获得详细的反馈和训练建议。"
+      },
+      "library": {
+        "title": "球员俱乐部",
+        "description": "在您的个人库中保存和整理您的训练课程。"
+      },
+      "following": {
+        "title": "球探连接",
+        "description": "与可以查看您训练进度的球探和教练建立联系。"
+      },
+      "ranking": {
+        "title": "排名",
+        "description": "跟踪您的进步并在排名中与其他运动员进行比较。"
+      },
+      "profile": {
+        "title": "个人资料设置",
+        "description": "自定义您的个人资料并管理您的账户设置。"
+      }
+    },
+    "scout": {
+      "welcome": {
+        "title": "欢迎，球探！",
+        "description": "让我们探索发现和评估人才的工具。"
+      },
+      "creator": {
+        "title": "您的球探资料",
+        "description": "设置您的资质和组织隶属关系。"
+      },
+      "discover": {
+        "title": "发现球员",
+        "description": "使用高级筛选器浏览和搜索有才华的球员。"
+      },
+      "search": {
+        "title": "高级搜索",
+        "description": "按位置、州、经验水平等筛选球员。"
+      },
+      "follow": {
+        "title": "关注球员",
+        "description": "发送关注请求以访问球员的训练库。"
+      },
+      "videos": {
+        "title": "观看视频",
+        "description": "观看训练课程并分析球员的技术。"
+      },
+      "rankings": {
+        "title": "球员排名",
+        "description": "查看平台上所有球员的表现排名。"
+      },
+      "analyze": {
+        "title": "分析表现",
+        "description": "查看Hammer分析并为球员视频添加您自己的注释。"
+      }
+    }
+  },
   "annotation": {
     "title": "标注帧",
     "saveAnnotations": "保存标注",
@@ -1910,31 +1789,91 @@
       "educational": "仅供教育",
       "athleteFocused": "运动员专注",
       "comprehensiveGuide": "综合指南",
-      "categories": { "all": "所有徽章", "injury": "伤病学习", "tiered": "解剖等级", "special": "特殊成就" },
+      "categories": {
+        "all": "所有徽章",
+        "injury": "伤病学习",
+        "tiered": "解剖等级",
+        "special": "特殊成就"
+      },
       "earned": "已获得",
       "locked": "未解锁",
       "safetyDisclaimer": "完成教育学习后授予。此徽章不表示医疗准备或许可。请始终咨询持证专业人士。",
       "legendText": "徽章通过完成教育内容获得。它们代表知识获取，而非医疗许可。",
       "items": {
-        "shoulder_scholar": { "name": "肩部学者", "description": "完成肩部伤病教育" },
-        "elbow_expert": { "name": "肘部专家", "description": "完成UCL/前臂/屈肌概述" },
-        "hamstring_headliner": { "name": "腘绳肌明星", "description": "完成下肢模块" },
-        "ankle_analyst": { "name": "踝部分析师", "description": "完成踝部伤病教育" },
-        "wrist_wizard": { "name": "腕部巫师", "description": "完成腕部和手部教育" },
-        "back_boss": { "name": "背部老板", "description": "完成背部和脊柱教育" },
-        "bronze_anatomy": { "name": "青铜解剖徽章", "description": "学习了3种伤病" },
-        "silver_anatomy": { "name": "白银解剖徽章", "description": "学习了7种伤病" },
-        "gold_anatomy": { "name": "黄金解剖徽章", "description": "学习了12+种伤病" },
-        "elite_recovery": { "name": "精英恢复徽章", "description": "完成整个恢复湾库" },
-        "diagnostic_detective": { "name": "诊断侦探", "description": "通过诊断流程图测验" },
-        "red_flag_ready": { "name": "红旗就绪", "description": "通过红旗测验" },
-        "pain_scale_pro": { "name": "疼痛量表专家", "description": "完成疼痛意识部分" },
-        "recovery_intelligence": { "name": "恢复智慧", "description": "完成所有恢复方法教育" },
-        "human_body_mastery": { "name": "人体掌握", "description": "完成所有部分的全部内容" }
+        "shoulder_scholar": {
+          "name": "肩部学者",
+          "description": "完成肩部伤病教育"
+        },
+        "elbow_expert": {
+          "name": "肘部专家",
+          "description": "完成UCL/前臂/屈肌概述"
+        },
+        "hamstring_headliner": {
+          "name": "腘绳肌明星",
+          "description": "完成下肢模块"
+        },
+        "ankle_analyst": {
+          "name": "踝部分析师",
+          "description": "完成踝部伤病教育"
+        },
+        "wrist_wizard": {
+          "name": "腕部巫师",
+          "description": "完成腕部和手部教育"
+        },
+        "back_boss": {
+          "name": "背部老板",
+          "description": "完成背部和脊柱教育"
+        },
+        "bronze_anatomy": {
+          "name": "青铜解剖徽章",
+          "description": "学习了3种伤病"
+        },
+        "silver_anatomy": {
+          "name": "白银解剖徽章",
+          "description": "学习了7种伤病"
+        },
+        "gold_anatomy": {
+          "name": "黄金解剖徽章",
+          "description": "学习了12+种伤病"
+        },
+        "elite_recovery": {
+          "name": "精英恢复徽章",
+          "description": "完成整个恢复湾库"
+        },
+        "diagnostic_detective": {
+          "name": "诊断侦探",
+          "description": "通过诊断流程图测验"
+        },
+        "red_flag_ready": {
+          "name": "红旗就绪",
+          "description": "通过红旗测验"
+        },
+        "pain_scale_pro": {
+          "name": "疼痛量表专家",
+          "description": "完成疼痛意识部分"
+        },
+        "recovery_intelligence": {
+          "name": "恢复智慧",
+          "description": "完成所有恢复方法教育"
+        },
+        "human_body_mastery": {
+          "name": "人体掌握",
+          "description": "完成所有部分的全部内容"
+        }
       }
     },
-    "streak": { "dayStreak": "连续天数", "sections": "章节", "badges": "徽章", "best": "最佳记录", "nextBadge": "下一个徽章", "keepLearning": "继续学习解锁更多！" },
-    "progress": { "title": "您的进度和徽章", "subtitle": "追踪您的教育之旅" },
+    "streak": {
+      "dayStreak": "连续天数",
+      "sections": "章节",
+      "badges": "徽章",
+      "best": "最佳记录",
+      "nextBadge": "下一个徽章",
+      "keepLearning": "继续学习解锁更多！"
+    },
+    "progress": {
+      "title": "您的进度和徽章",
+      "subtitle": "追踪您的教育之旅"
+    },
     "quiz": {
       "title": "知识检测",
       "description": "回答 {{count}} 个问题测试您的理解",
@@ -1953,39 +1892,228 @@
       "badgeEarned": "获得徽章！",
       "questions": {
         "diagnostic": {
-          "q1": { "question": "诊断流程图的主要目的是什么？", "options": ["提供医疗诊断", "帮助您反思症状", "替代医生就诊", "开处方药"], "correct": 1 },
-          "q2": { "question": "评估症状时应首先考虑什么？", "options": ["服用止痛药", "识别位置和类型", "继续正常活动", "忽视较轻症状"], "correct": 1 },
-          "q3": { "question": "症状何时需要专业评估？", "options": ["仅在骨折时", "当出现严重症状或红旗警告时", "从不", "仅对职业运动员"], "correct": 1 }
+          "q1": {
+            "question": "诊断流程图的主要目的是什么？",
+            "options": [
+              "提供医疗诊断",
+              "帮助您反思症状",
+              "替代医生就诊",
+              "开处方药"
+            ],
+            "correct": 1
+          },
+          "q2": {
+            "question": "评估症状时应首先考虑什么？",
+            "options": [
+              "服用止痛药",
+              "识别位置和类型",
+              "继续正常活动",
+              "忽视较轻症状"
+            ],
+            "correct": 1
+          },
+          "q3": {
+            "question": "症状何时需要专业评估？",
+            "options": [
+              "仅在骨折时",
+              "当出现严重症状或红旗警告时",
+              "从不",
+              "仅对职业运动员"
+            ],
+            "correct": 1
+          }
         },
         "pain-scale": {
-          "q1": { "question": "0-10疼痛量表的目的是什么？", "options": ["诊断伤病", "帮助描述疼痛程度", "确定治疗方案", "测量肌肉力量"], "correct": 1 },
-          "q2": { "question": "疼痛等级4-6表示什么？", "options": ["无痛", "轻度不适", "中度疼痛干扰活动", "需要紧急护理"], "correct": 2 },
-          "q3": { "question": "什么时候应该停止活动？", "options": ["疼痛等级1-2时", "当疼痛干扰您的活动时", "只有达到10级时", "从不，忍痛坚持"], "correct": 1 }
+          "q1": {
+            "question": "0-10疼痛量表的目的是什么？",
+            "options": [
+              "诊断伤病",
+              "帮助描述疼痛程度",
+              "确定治疗方案",
+              "测量肌肉力量"
+            ],
+            "correct": 1
+          },
+          "q2": {
+            "question": "疼痛等级4-6表示什么？",
+            "options": [
+              "无痛",
+              "轻度不适",
+              "中度疼痛干扰活动",
+              "需要紧急护理"
+            ],
+            "correct": 2
+          },
+          "q3": {
+            "question": "什么时候应该停止活动？",
+            "options": [
+              "疼痛等级1-2时",
+              "当疼痛干扰您的活动时",
+              "只有达到10级时",
+              "从不，忍痛坚持"
+            ],
+            "correct": 1
+          }
         },
         "red-flags": {
-          "q1": { "question": "以下哪项被视为危急红旗？", "options": ["轻度肌肉酸痛", "活动后疲劳", "明显变形或无法负重", "轻度僵硬"], "correct": 2 },
-          "q2": { "question": "如果遇到红旗警告症状应该怎么做？", "options": ["继续训练", "寻求专业帮助", "仅冰敷", "等待一周"], "correct": 1 },
-          "q3": { "question": "为什么识别红旗很重要？", "options": ["避免不必要的休息", "防止轻伤变成严重问题", "节省医疗费用", "提高运动表现"], "correct": 1 }
+          "q1": {
+            "question": "以下哪项被视为危急红旗？",
+            "options": [
+              "轻度肌肉酸痛",
+              "活动后疲劳",
+              "明显变形或无法负重",
+              "轻度僵硬"
+            ],
+            "correct": 2
+          },
+          "q2": {
+            "question": "如果遇到红旗警告症状应该怎么做？",
+            "options": [
+              "继续训练",
+              "寻求专业帮助",
+              "仅冰敷",
+              "等待一周"
+            ],
+            "correct": 1
+          },
+          "q3": {
+            "question": "为什么识别红旗很重要？",
+            "options": [
+              "避免不必要的休息",
+              "防止轻伤变成严重问题",
+              "节省医疗费用",
+              "提高运动表现"
+            ],
+            "correct": 1
+          }
         },
         "rtp": {
-          "q1": { "question": "重返赛场阶段的正确顺序是什么？", "options": ["训练、保护、强化、恢复", "保护、恢复、强化、重返", "重返、强化、保护、恢复", "强化、重返、保护、恢复"], "correct": 1 },
-          "q2": { "question": "保护阶段的重点是什么？", "options": ["全强度训练", "休息和防止进一步受伤", "建立最大力量", "比赛准备"], "correct": 1 },
-          "q3": { "question": "为什么恢复时间线因人而异？", "options": ["不同伤病需要不同的愈合时间", "只是借口", "恢复协议总是相同的", "只有年龄有影响"], "correct": 0 }
+          "q1": {
+            "question": "重返赛场阶段的正确顺序是什么？",
+            "options": [
+              "训练、保护、强化、恢复",
+              "保护、恢复、强化、重返",
+              "重返、强化、保护、恢复",
+              "强化、重返、保护、恢复"
+            ],
+            "correct": 1
+          },
+          "q2": {
+            "question": "保护阶段的重点是什么？",
+            "options": [
+              "全强度训练",
+              "休息和防止进一步受伤",
+              "建立最大力量",
+              "比赛准备"
+            ],
+            "correct": 1
+          },
+          "q3": {
+            "question": "为什么恢复时间线因人而异？",
+            "options": [
+              "不同伤病需要不同的愈合时间",
+              "只是借口",
+              "恢复协议总是相同的",
+              "只有年龄有影响"
+            ],
+            "correct": 0
+          }
         },
         "prevention": {
-          "q1": { "question": "什么是有效的热身原则？", "options": ["静态拉伸30分钟", "直接进行全强度训练", "动态拉伸和渐进强度", "完全跳过热身"], "correct": 2 },
-          "q2": { "question": "为什么力量训练有助于预防伤病？", "options": ["让肌肉变大", "为关节和运动建立弹性", "仅用于健美", "对预防无帮助"], "correct": 1 },
-          "q3": { "question": "以下哪项是预防模式？", "options": ["忍痛训练", "尽可能跳过休息", "充足睡眠和渐进训练", "每天最大强度训练"], "correct": 2 }
+          "q1": {
+            "question": "什么是有效的热身原则？",
+            "options": [
+              "静态拉伸30分钟",
+              "直接进行全强度训练",
+              "动态拉伸和渐进强度",
+              "完全跳过热身"
+            ],
+            "correct": 2
+          },
+          "q2": {
+            "question": "为什么力量训练有助于预防伤病？",
+            "options": [
+              "让肌肉变大",
+              "为关节和运动建立弹性",
+              "仅用于健美",
+              "对预防无帮助"
+            ],
+            "correct": 1
+          },
+          "q3": {
+            "question": "以下哪项是预防模式？",
+            "options": [
+              "忍痛训练",
+              "尽可能跳过休息",
+              "充足睡眠和渐进训练",
+              "每天最大强度训练"
+            ],
+            "correct": 2
+          }
         },
         "recovery": {
-          "q1": { "question": "冰敷应何时使用？", "options": ["慢性肌肉紧张", "急性损伤和炎症", "活动前", "始终使用"], "correct": 1 },
-          "q2": { "question": "热敷的主要好处是什么？", "options": ["减轻急性肿胀", "促进血流和放松", "治愈骨折", "替代医疗护理"], "correct": 1 },
-          "q3": { "question": "冰敷或热敷的推荐时间是多久？", "options": ["5分钟", "15-20分钟", "1小时", "整晚"], "correct": 1 }
+          "q1": {
+            "question": "冰敷应何时使用？",
+            "options": [
+              "慢性肌肉紧张",
+              "急性损伤和炎症",
+              "活动前",
+              "始终使用"
+            ],
+            "correct": 1
+          },
+          "q2": {
+            "question": "热敷的主要好处是什么？",
+            "options": [
+              "减轻急性肿胀",
+              "促进血流和放松",
+              "治愈骨折",
+              "替代医疗护理"
+            ],
+            "correct": 1
+          },
+          "q3": {
+            "question": "冰敷或热敷的推荐时间是多久？",
+            "options": [
+              "5分钟",
+              "15-20分钟",
+              "1小时",
+              "整晚"
+            ],
+            "correct": 1
+          }
         },
         "equipment": {
-          "q1": { "question": "肌内效贴的主要用途是什么？", "options": ["完全固定关节", "提供肌肉支撑并允许运动", "替代医疗治疗", "仅美观"], "correct": 1 },
-          "q2": { "question": "泡沫轴通常用于什么？", "options": ["力量训练", "自我按摩和肌肉准备", "关节固定", "紧急护理"], "correct": 1 },
-          "q3": { "question": "护套提供什么好处？", "options": ["完全固定", "加压和支撑", "替代休息", "永久治愈"], "correct": 1 }
+          "q1": {
+            "question": "肌内效贴的主要用途是什么？",
+            "options": [
+              "完全固定关节",
+              "提供肌肉支撑并允许运动",
+              "替代医疗治疗",
+              "仅美观"
+            ],
+            "correct": 1
+          },
+          "q2": {
+            "question": "泡沫轴通常用于什么？",
+            "options": [
+              "力量训练",
+              "自我按摩和肌肉准备",
+              "关节固定",
+              "紧急护理"
+            ],
+            "correct": 1
+          },
+          "q3": {
+            "question": "护套提供什么好处？",
+            "options": [
+              "完全固定",
+              "加压和支撑",
+              "替代休息",
+              "永久治愈"
+            ],
+            "correct": 1
+          }
         }
       }
     },
@@ -1993,30 +2121,401 @@
     "commonSymptoms": "常见症状",
     "typicalTimeline": "典型时间线",
     "sections": {
-      "diagnosticFlow": { "title": "诊断流程图", "subtitle": "了解症状的引导路径" },
-      "painScale": { "title": "疼痛量表系统", "subtitle": "评估和理解您的疼痛程度" },
-      "redFlags": { "title": "红旗快速检查", "subtitle": "需要注意的警告信号" },
-      "injuryHub": { "title": "伤病概览中心", "subtitle": "浏览常见棒球和垒球伤病" },
-      "returnToPlay": { "title": "重返赛场阶段", "subtitle": "了解恢复阶段" },
-      "injuryPrevention": { "title": "伤病预防", "subtitle": "通过教育降低风险" },
-      "recoveryMethods": { "title": "恢复方法", "subtitle": "冰敷、热敷和恢复原则" },
-      "equipmentLibrary": { "title": "设备库", "subtitle": "恢复工具及使用时机" }
+      "diagnosticFlow": {
+        "title": "诊断流程图",
+        "subtitle": "了解症状的引导路径"
+      },
+      "painScale": {
+        "title": "疼痛量表系统",
+        "subtitle": "评估和理解您的疼痛程度"
+      },
+      "redFlags": {
+        "title": "红旗快速检查",
+        "subtitle": "需要注意的警告信号"
+      },
+      "injuryHub": {
+        "title": "伤病概览中心",
+        "subtitle": "浏览常见棒球和垒球伤病"
+      },
+      "returnToPlay": {
+        "title": "重返赛场阶段",
+        "subtitle": "了解恢复阶段"
+      },
+      "injuryPrevention": {
+        "title": "伤病预防",
+        "subtitle": "通过教育降低风险"
+      },
+      "recoveryMethods": {
+        "title": "恢复方法",
+        "subtitle": "冰敷、热敷和恢复原则"
+      },
+      "equipmentLibrary": {
+        "title": "设备库",
+        "subtitle": "恢复工具及使用时机"
+      }
     },
     "hurtingVsInjured": {
       "title": "疼痛 vs. 受伤",
       "subtitle": "理解正常酸痛和潜在伤害之间的区别",
-      "hurting": { "title": "正常酸痛", "description": "这些感觉通常是运动训练的一部分：", "sign1": "运动后改善的肌肉酸痛", "sign2": "热身后减轻的轻微僵硬", "sign3": "高强度训练后的一般疲劳", "sign4": "24-72小时内消退的不适" },
-      "injured": { "title": "潜在伤害", "description": "这些迹象可能表明更严重的问题：", "sign1": "活动中突然的剧烈疼痛", "sign2": "随运动加剧的疼痛", "sign3": "肿胀、瘀伤或明显变形", "sign4": "无法负重或使用受影响区域", "sign5": "持续超过72小时的疼痛" },
-      "note": { "title": "请记住", "description": "这仅供自我反思，不作诊断。有疑问时，请务必咨询医疗专业人员。" }
+      "hurting": {
+        "title": "正常酸痛",
+        "description": "这些感觉通常是运动训练的一部分：",
+        "sign1": "运动后改善的肌肉酸痛",
+        "sign2": "热身后减轻的轻微僵硬",
+        "sign3": "高强度训练后的一般疲劳",
+        "sign4": "24-72小时内消退的不适"
+      },
+      "injured": {
+        "title": "潜在伤害",
+        "description": "这些迹象可能表明更严重的问题：",
+        "sign1": "活动中突然的剧烈疼痛",
+        "sign2": "随运动加剧的疼痛",
+        "sign3": "肿胀、瘀伤或明显变形",
+        "sign4": "无法负重或使用受影响区域",
+        "sign5": "持续超过72小时的疼痛"
+      },
+      "note": {
+        "title": "请记住",
+        "description": "这仅供自我反思，不作诊断。有疑问时，请务必咨询医疗专业人员。"
+      }
     },
-    "diagnosticFlow": { "intro": "使用此教育流程图反思您的症状。", "step": "步骤", "steps": { "symptoms": { "title": "识别您的症状", "description": "您正在经历什么？", "q1": "不适的确切位置？", "q2": "什么类型的感觉？", "q3": "是否影响您的运动？" }, "timing": { "title": "考虑时间", "description": "这是什么时候开始的？", "q1": "突然还是逐渐？", "q2": "持续多长时间？", "q3": "持续还是间歇？" }, "severity": { "title": "评估严重程度", "description": "症状有多严重？", "q1": "能继续正常活动吗？", "q2": "是否肿胀或变色？", "q3": "疼痛是在好转、恶化还是不变？" }, "decision": { "title": "考虑您的选择", "description": "根据您的反思，考虑以下途径：", "outcome1": { "condition": "严重症状或红旗", "action": "及时寻求专业评估" }, "outcome2": { "condition": "中度症状持续超过48-72小时", "action": "考虑安排专业咨询" }, "outcome3": { "condition": "休息后改善的轻微症状", "action": "继续监测" } } } },
-    "painScale": { "intro": "使用此量表反思您的疼痛程度。", "noPain": "无痛", "worstPain": "最剧烈疼痛", "recommendation": "一般指导", "levels": { "minimal": { "label": "极轻", "description": "几乎察觉不到", "recommendation": "可继续活动" }, "mild": { "label": "轻度", "description": "明显但不干扰", "recommendation": "考虑调整强度" }, "moderate": { "label": "中度", "description": "干扰活动", "recommendation": "考虑休息" }, "severe": { "label": "严重", "description": "显著影响", "recommendation": "建议休息和评估" }, "extreme": { "label": "极度", "description": "压倒性疼痛", "recommendation": "立即寻求帮助" } }, "ranges": { "minimal": "极轻", "mild": "轻度", "moderate": "中度", "severe": "严重", "extreme": "极度" } },
-    "redFlags": { "intro": "检查您正在经历的症状。", "critical": "危急", "high": "高", "medium": "中", "items": { "deformity": "明显变形", "numbness": "麻木或刺痛", "inability": "无法负重", "severeSwelling": "严重肿胀", "popSound": "听到砰声", "lockedJoint": "关节锁定", "instability": "关节不稳", "worsening": "症状恶化", "nightPain": "影响睡眠的疼痛", "fever": "发烧或感染迹象" }, "seekProfessional": "寻求专业帮助", "stopActivity": "停止活动", "result": { "critical": { "title": "建议立即就医", "description": "存在危急警告信号" }, "high": { "title": "建议专业评估", "description": "存在重大警告信号" }, "moderate": { "title": "密切监测", "description": "存在一些警告信号" }, "clear": { "title": "未检测到红旗", "description": "继续监测" } }, "disclaimer": { "title": "重要提醒", "description": "此检查清单仅供教育目的。" } },
-    "disclaimer": { "title": "重要医疗免责声明", "subtitle": "使用前请仔细阅读", "points": { "educational": { "title": "仅供教育目的", "description": "所有内容仅供教育信息。" }, "noDiagnosis": { "title": "非医疗建议", "description": "这不诊断或治疗。" }, "seekHelp": { "title": "咨询专业人士", "description": "伤病请咨询专业人士。" }, "emergency": { "title": "紧急情况", "description": "严重症状需立即评估。" } }, "fullText": { "para1": "恢复湾提供运动损伤教育信息。", "para2": "此信息不能替代专业医疗建议。", "para3": "所有技术应在专业指导下进行。", "warning": "⚠️ 严重疼痛请立即寻求医疗帮助。" }, "bottomNote": "使用即表示您已理解此免责声明。" },
-    "returnToPlay": { "intro": "了解恢复阶段。", "phase": "阶段", "keyFocus": "关键重点", "phases": { "protection": { "title": "保护和症状缓解", "description": "保护受伤区域", "focus1": "休息和保护", "focus2": "减轻肿胀", "focus3": "防止进一步受伤", "focus4": "轻柔运动" }, "restore": { "title": "恢复运动", "description": "恢复活动范围", "focus1": "增加活动范围", "focus2": "恢复运动模式", "focus3": "轻度力量训练", "focus4": "解决受限" }, "strengthen": { "title": "强化训练", "description": "增强力量", "focus1": "渐进性练习", "focus2": "提高稳定性", "focus3": "专项运动", "focus4": "增加负荷" }, "return": { "title": "重返运动", "description": "全面训练", "focus1": "专项训练", "focus2": "比赛速度", "focus3": "比赛准备", "focus4": "维护计划" } }, "progressionNote": { "title": "进展因人而异", "description": "恢复应以症状为指导。" } },
-    "injuryPrevention": { "intro": "预防教育降低风险。", "categories": { "warmup": { "title": "热身", "subtitle": "准备身体", "tip1": "动态拉伸", "tip2": "专项准备", "tip3": "渐进强度" }, "strength": { "title": "力量训练", "subtitle": "建立弹性", "tip1": "渐进超负荷", "tip2": "平衡训练", "tip3": "核心稳定" }, "mobility": { "title": "活动度", "subtitle": "运动质量", "tip1": "关节活动", "tip2": "针对性拉伸", "tip3": "变换运动" }, "sportSpecific": { "title": "专项预防", "subtitle": "棒球垒球策略", "tip1": "投球计数", "tip2": "正确机制", "tip3": "位置调节" } }, "patterns": { "title": "预防模式", "subtitle": "降低风险的习惯", "pattern1": "充足睡眠", "pattern2": "适当水分", "pattern3": "渐进训练", "pattern4": "倾听身体" } },
-    "recoveryMethods": { "intro": "了解恢复方法。", "whenToUse": "何时使用", "ice": { "title": "冰敷", "subtitle": "急性情况", "use1": "急性损伤", "use2": "炎症管理", "use3": "减轻肿胀", "timing": "15-20分钟" }, "heat": { "title": "热敷", "subtitle": "慢性状况", "use1": "肌肉紧张", "use2": "促进血流", "use3": "放松", "timing": "15-20分钟" }, "principles": { "title": "恢复原则", "subtitle": "基础概念", "rest": { "title": "休息睡眠", "description": "7-9小时睡眠" }, "hydration": { "title": "水分", "description": "充足液体" } } },
-    "equipmentLibrary": { "intro": "了解恢复设备。", "searchPlaceholder": "搜索...", "allCategories": "所有类别", "whatItDoes": "功能：", "whenUsed": "使用时机：", "noResults": "未找到", "categories": { "tape": "胶带", "sleeves": "护套", "bands": "弹力带", "softTissue": "软组织", "supports": "支撑" }, "items": { "kinesioTape": { "name": "肌内效贴", "description": "弹性治疗胶带", "usage": "肌肉支撑" }, "athleticTape": { "name": "运动胶带", "description": "非弹性胶带", "usage": "关节支撑" }, "compressionSleeve": { "name": "加压护套", "description": "弹性护套", "usage": "减轻肿胀" }, "kneeSleeve": { "name": "护膝", "description": "膝盖护套", "usage": "提供支撑" }, "resistanceBands": { "name": "阻力带", "description": "弹性带", "usage": "康复练习" }, "therapyBands": { "name": "治疗带", "description": "扁平弹性带", "usage": "温和强化" }, "foamRoller": { "name": "泡沫轴", "description": "自我按摩", "usage": "肌肉准备" }, "massageBall": { "name": "按摩球", "description": "针对性按摩", "usage": "触发点" }, "ankleBrace": { "name": "护踝", "description": "踝关节支撑", "usage": "伤病预防" }, "wristSupport": { "name": "护腕", "description": "腕关节支撑", "usage": "活动支撑" } } }
+    "diagnosticFlow": {
+      "intro": "使用此教育流程图反思您的症状。",
+      "step": "步骤",
+      "steps": {
+        "symptoms": {
+          "title": "识别您的症状",
+          "description": "您正在经历什么？",
+          "q1": "不适的确切位置？",
+          "q2": "什么类型的感觉？",
+          "q3": "是否影响您的运动？"
+        },
+        "timing": {
+          "title": "考虑时间",
+          "description": "这是什么时候开始的？",
+          "q1": "突然还是逐渐？",
+          "q2": "持续多长时间？",
+          "q3": "持续还是间歇？"
+        },
+        "severity": {
+          "title": "评估严重程度",
+          "description": "症状有多严重？",
+          "q1": "能继续正常活动吗？",
+          "q2": "是否肿胀或变色？",
+          "q3": "疼痛是在好转、恶化还是不变？"
+        },
+        "decision": {
+          "title": "考虑您的选择",
+          "description": "根据您的反思，考虑以下途径：",
+          "outcome1": {
+            "condition": "严重症状或红旗",
+            "action": "及时寻求专业评估"
+          },
+          "outcome2": {
+            "condition": "中度症状持续超过48-72小时",
+            "action": "考虑安排专业咨询"
+          },
+          "outcome3": {
+            "condition": "休息后改善的轻微症状",
+            "action": "继续监测"
+          }
+        }
+      }
+    },
+    "painScale": {
+      "intro": "使用此量表反思您的疼痛程度。",
+      "noPain": "无痛",
+      "worstPain": "最剧烈疼痛",
+      "recommendation": "一般指导",
+      "levels": {
+        "minimal": {
+          "label": "极轻",
+          "description": "几乎察觉不到",
+          "recommendation": "可继续活动"
+        },
+        "mild": {
+          "label": "轻度",
+          "description": "明显但不干扰",
+          "recommendation": "考虑调整强度"
+        },
+        "moderate": {
+          "label": "中度",
+          "description": "干扰活动",
+          "recommendation": "考虑休息"
+        },
+        "severe": {
+          "label": "严重",
+          "description": "显著影响",
+          "recommendation": "建议休息和评估"
+        },
+        "extreme": {
+          "label": "极度",
+          "description": "压倒性疼痛",
+          "recommendation": "立即寻求帮助"
+        }
+      },
+      "ranges": {
+        "minimal": "极轻",
+        "mild": "轻度",
+        "moderate": "中度",
+        "severe": "严重",
+        "extreme": "极度"
+      }
+    },
+    "redFlags": {
+      "intro": "检查您正在经历的症状。",
+      "critical": "危急",
+      "high": "高",
+      "medium": "中",
+      "items": {
+        "deformity": "明显变形",
+        "numbness": "麻木或刺痛",
+        "inability": "无法负重",
+        "severeSwelling": "严重肿胀",
+        "popSound": "听到砰声",
+        "lockedJoint": "关节锁定",
+        "instability": "关节不稳",
+        "worsening": "症状恶化",
+        "nightPain": "影响睡眠的疼痛",
+        "fever": "发烧或感染迹象"
+      },
+      "seekProfessional": "寻求专业帮助",
+      "stopActivity": "停止活动",
+      "result": {
+        "critical": {
+          "title": "建议立即就医",
+          "description": "存在危急警告信号"
+        },
+        "high": {
+          "title": "建议专业评估",
+          "description": "存在重大警告信号"
+        },
+        "moderate": {
+          "title": "密切监测",
+          "description": "存在一些警告信号"
+        },
+        "clear": {
+          "title": "未检测到红旗",
+          "description": "继续监测"
+        }
+      },
+      "disclaimer": {
+        "title": "重要提醒",
+        "description": "此检查清单仅供教育目的。"
+      }
+    },
+    "disclaimer": {
+      "title": "重要医疗免责声明",
+      "subtitle": "使用前请仔细阅读",
+      "points": {
+        "educational": {
+          "title": "仅供教育目的",
+          "description": "所有内容仅供教育信息。"
+        },
+        "noDiagnosis": {
+          "title": "非医疗建议",
+          "description": "这不诊断或治疗。"
+        },
+        "seekHelp": {
+          "title": "咨询专业人士",
+          "description": "伤病请咨询专业人士。"
+        },
+        "emergency": {
+          "title": "紧急情况",
+          "description": "严重症状需立即评估。"
+        }
+      },
+      "fullText": {
+        "para1": "恢复湾提供运动损伤教育信息。",
+        "para2": "此信息不能替代专业医疗建议。",
+        "para3": "所有技术应在专业指导下进行。",
+        "warning": "⚠️ 严重疼痛请立即寻求医疗帮助。"
+      },
+      "bottomNote": "使用即表示您已理解此免责声明。"
+    },
+    "returnToPlay": {
+      "intro": "了解恢复阶段。",
+      "phase": "阶段",
+      "keyFocus": "关键重点",
+      "phases": {
+        "protection": {
+          "title": "保护和症状缓解",
+          "description": "保护受伤区域",
+          "focus1": "休息和保护",
+          "focus2": "减轻肿胀",
+          "focus3": "防止进一步受伤",
+          "focus4": "轻柔运动"
+        },
+        "restore": {
+          "title": "恢复运动",
+          "description": "恢复活动范围",
+          "focus1": "增加活动范围",
+          "focus2": "恢复运动模式",
+          "focus3": "轻度力量训练",
+          "focus4": "解决受限"
+        },
+        "strengthen": {
+          "title": "强化训练",
+          "description": "增强力量",
+          "focus1": "渐进性练习",
+          "focus2": "提高稳定性",
+          "focus3": "专项运动",
+          "focus4": "增加负荷"
+        },
+        "return": {
+          "title": "重返运动",
+          "description": "全面训练",
+          "focus1": "专项训练",
+          "focus2": "比赛速度",
+          "focus3": "比赛准备",
+          "focus4": "维护计划"
+        }
+      },
+      "progressionNote": {
+        "title": "进展因人而异",
+        "description": "恢复应以症状为指导。"
+      }
+    },
+    "injuryPrevention": {
+      "intro": "预防教育降低风险。",
+      "categories": {
+        "warmup": {
+          "title": "热身",
+          "subtitle": "准备身体",
+          "tip1": "动态拉伸",
+          "tip2": "专项准备",
+          "tip3": "渐进强度"
+        },
+        "strength": {
+          "title": "力量训练",
+          "subtitle": "建立弹性",
+          "tip1": "渐进超负荷",
+          "tip2": "平衡训练",
+          "tip3": "核心稳定"
+        },
+        "mobility": {
+          "title": "活动度",
+          "subtitle": "运动质量",
+          "tip1": "关节活动",
+          "tip2": "针对性拉伸",
+          "tip3": "变换运动"
+        },
+        "sportSpecific": {
+          "title": "专项预防",
+          "subtitle": "棒球垒球策略",
+          "tip1": "投球计数",
+          "tip2": "正确机制",
+          "tip3": "位置调节"
+        }
+      },
+      "patterns": {
+        "title": "预防模式",
+        "subtitle": "降低风险的习惯",
+        "pattern1": "充足睡眠",
+        "pattern2": "适当水分",
+        "pattern3": "渐进训练",
+        "pattern4": "倾听身体"
+      }
+    },
+    "recoveryMethods": {
+      "intro": "了解恢复方法。",
+      "whenToUse": "何时使用",
+      "ice": {
+        "title": "冰敷",
+        "subtitle": "急性情况",
+        "use1": "急性损伤",
+        "use2": "炎症管理",
+        "use3": "减轻肿胀",
+        "timing": "15-20分钟"
+      },
+      "heat": {
+        "title": "热敷",
+        "subtitle": "慢性状况",
+        "use1": "肌肉紧张",
+        "use2": "促进血流",
+        "use3": "放松",
+        "timing": "15-20分钟"
+      },
+      "principles": {
+        "title": "恢复原则",
+        "subtitle": "基础概念",
+        "rest": {
+          "title": "休息睡眠",
+          "description": "7-9小时睡眠"
+        },
+        "hydration": {
+          "title": "水分",
+          "description": "充足液体"
+        }
+      }
+    },
+    "equipmentLibrary": {
+      "intro": "了解恢复设备。",
+      "searchPlaceholder": "搜索...",
+      "allCategories": "所有类别",
+      "whatItDoes": "功能：",
+      "whenUsed": "使用时机：",
+      "noResults": "未找到",
+      "categories": {
+        "tape": "胶带",
+        "sleeves": "护套",
+        "bands": "弹力带",
+        "softTissue": "软组织",
+        "supports": "支撑"
+      },
+      "items": {
+        "kinesioTape": {
+          "name": "肌内效贴",
+          "description": "弹性治疗胶带",
+          "usage": "肌肉支撑"
+        },
+        "athleticTape": {
+          "name": "运动胶带",
+          "description": "非弹性胶带",
+          "usage": "关节支撑"
+        },
+        "compressionSleeve": {
+          "name": "加压护套",
+          "description": "弹性护套",
+          "usage": "减轻肿胀"
+        },
+        "kneeSleeve": {
+          "name": "护膝",
+          "description": "膝盖护套",
+          "usage": "提供支撑"
+        },
+        "resistanceBands": {
+          "name": "阻力带",
+          "description": "弹性带",
+          "usage": "康复练习"
+        },
+        "therapyBands": {
+          "name": "治疗带",
+          "description": "扁平弹性带",
+          "usage": "温和强化"
+        },
+        "foamRoller": {
+          "name": "泡沫轴",
+          "description": "自我按摩",
+          "usage": "肌肉准备"
+        },
+        "massageBall": {
+          "name": "按摩球",
+          "description": "针对性按摩",
+          "usage": "触发点"
+        },
+        "ankleBrace": {
+          "name": "护踝",
+          "description": "踝关节支撑",
+          "usage": "伤病预防"
+        },
+        "wristSupport": {
+          "name": "护腕",
+          "description": "腕关节支撑",
+          "usage": "活动支撑"
+        }
+      }
+    }
   },
   "workoutModules": {
     "day": "第",
@@ -2410,58 +2909,214 @@
       "life_mastery": "生活掌控"
     },
     "challenges": {
-      "focus_week": { "title": "专注周", "description": "每次训练或比赛前进行2分钟的专注呼吸。" },
-      "leadership_week": { "title": "领导力周", "description": "每天给3个不同的队友提供具体的正面反馈。" },
-      "gratitude_week": { "title": "感恩周", "description": "每天早上写下3件你感激的事情。" },
-      "visualization_week": { "title": "可视化周", "description": "训练前花5分钟想象完美的表现。" },
-      "discipline_week": { "title": "纪律周", "description": "连续7天不找借口地完成你的晨间例程。" },
-      "encouragement_week": { "title": "鼓励周", "description": "第一个鼓励犯错的队友。" },
-      "presence_week": { "title": "专注当下周", "description": "训练或比赛前1小时放下手机。" },
-      "accountability_week": { "title": "责任周", "description": "本周公开承诺一个目标并负责到底。" },
-      "calm_week": { "title": "平静周", "description": "每天练习4-7-8呼吸法三次。" },
-      "purpose_week": { "title": "目标周", "description": "写下你的个人使命宣言并每天复习。" },
-      "energy_week": { "title": "能量周", "description": "每次训练时第一个带来积极的能量。" },
-      "reset_day": { "title": "重置日", "description": "完成24小时社交媒体数字排毒。" },
-      "affirmation_week": { "title": "肯定周", "description": "每天早晚重复3次积极的肯定语。" },
-      "confidence_week": { "title": "自信周", "description": "走路姿态自信，每次互动都保持眼神接触。" },
-      "concentration_week": { "title": "专注力周", "description": "练习单任务处理 - 一次只专注一件事，不分心。" },
-      "mental_toughness_week": { "title": "心理韧性周", "description": "当事情变得困难时，说'放马过来'并坚持下去。" },
-      "positive_self_talk_week": { "title": "积极自我对话周", "description": "立即用积极的想法替换每一个消极的想法。" },
-      "goal_setting_week": { "title": "目标设定周", "description": "每天设定一个具体目标并跟踪你的进展。" },
-      "pressure_handling_week": { "title": "压力处理周", "description": "每天在模拟压力条件下练习你的技能。" },
-      "clutch_mindset_week": { "title": "关键时刻心态周", "description": "每晚睡前想象在高压时刻取得成功。" },
-      "competitive_edge_week": { "title": "竞争优势周", "description": "每天找到超越常规训练的额外改进点。" },
-      "mental_reset_week": { "title": "心理重置周", "description": "每次犯错后使用重置词或手势来清空思绪。" },
-      "game_day_focus_week": { "title": "比赛日专注周", "description": "创建并遵循赛前心理准备程序。" },
-      "self_compassion_week": { "title": "自我慈悲周", "description": "犯错时善待自己 - 不要苛责。" },
-      "mindfulness_week": { "title": "正念周", "description": "每天花5分钟进行安静的正念觉察。" },
-      "stress_release_week": { "title": "压力释放周", "description": "每晚睡前练习渐进性肌肉放松。" },
-      "emotional_control_week": { "title": "情绪控制周", "description": "在对任何挫折做出反应之前，暂停并深呼吸3次。" },
-      "joy_week": { "title": "快乐周", "description": "每天在运动中找到并感激一个纯粹快乐的时刻。" },
-      "patience_week": { "title": "耐心周", "description": "每天在一个具有挑战性的情况下练习耐心。" },
-      "resilience_week": { "title": "韧性周", "description": "每次挫折后，写下你从中学到了什么。" },
-      "letting_go_week": { "title": "放手周", "description": "每天通过写日记释放一个担忧或遗憾。" },
-      "inner_peace_week": { "title": "内心平静周", "description": "每天以2分钟的平静沉默开始和结束。" },
-      "emotional_awareness_week": { "title": "情绪意识周", "description": "每天3次检查你的情绪并说出你的感受。" },
-      "communication_week": { "title": "沟通周", "description": "练习积极倾听 - 在回应之前重复队友说的话。" },
-      "mentorship_week": { "title": "指导周", "description": "每天帮助一个更年轻或经验较少的队友提升一项技能。" },
-      "team_spirit_week": { "title": "团队精神周", "description": "每天做一件对团队有益但对自己没有直接好处的事。" },
-      "lead_by_example_week": { "title": "以身作则周", "description": "每次训练第一个到达，最后一个离开。" },
-      "inspire_others_week": { "title": "激励他人周", "description": "每天与团队分享一句励志名言或故事。" },
-      "conflict_resolution_week": { "title": "冲突解决周", "description": "直接和建设性地解决一个小冲突或紧张关系。" },
-      "servant_leadership_week": { "title": "服务型领导周", "description": "问队友'今天我能帮你什么？'并付诸行动。" },
-      "positivity_spread_week": { "title": "传播正能量周", "description": "每天给5个不同的人真诚的赞美。" },
-      "team_culture_week": { "title": "团队文化周", "description": "即使没人看着也要坚守团队价值观。" },
-      "boundary_week": { "title": "界限周", "description": "本周在生活中设定并维持一个健康的界限。" },
-      "habit_stack_week": { "title": "习惯叠加周", "description": "将新的积极习惯附加到现有的日常程序中。" },
-      "time_management_week": { "title": "时间管理周", "description": "前一天晚上用具体的时间块计划第二天。" },
-      "sleep_optimization_week": { "title": "睡眠优化周", "description": "本周每天在同一时间上床睡觉和起床。" },
-      "nutrition_focus_week": { "title": "营养专注周", "description": "每餐都吃含有蛋白质、碳水化合物和蔬菜的均衡膳食。" },
-      "recovery_week": { "title": "恢复周", "description": "每天花15分钟进行恢复活动（拉伸、泡沫轴滚动）。" },
-      "work_life_balance_week": { "title": "工作生活平衡周", "description": "每天把高质量的时间献给运动以外的人际关系。" },
-      "digital_detox_week": { "title": "数字排毒周", "description": "将社交媒体限制在每天总共30分钟。" },
-      "morning_routine_week": { "title": "晨间例程周", "description": "创建并遵循一致的30分钟晨间例程。" },
-      "evening_routine_week": { "title": "晚间例程周", "description": "创建并遵循放松的30分钟晚间例程。" }
+      "focus_week": {
+        "title": "专注周",
+        "description": "每次训练或比赛前进行2分钟的专注呼吸。"
+      },
+      "leadership_week": {
+        "title": "领导力周",
+        "description": "每天给3个不同的队友提供具体的正面反馈。"
+      },
+      "gratitude_week": {
+        "title": "感恩周",
+        "description": "每天早上写下3件你感激的事情。"
+      },
+      "visualization_week": {
+        "title": "可视化周",
+        "description": "训练前花5分钟想象完美的表现。"
+      },
+      "discipline_week": {
+        "title": "纪律周",
+        "description": "连续7天不找借口地完成你的晨间例程。"
+      },
+      "encouragement_week": {
+        "title": "鼓励周",
+        "description": "第一个鼓励犯错的队友。"
+      },
+      "presence_week": {
+        "title": "专注当下周",
+        "description": "训练或比赛前1小时放下手机。"
+      },
+      "accountability_week": {
+        "title": "责任周",
+        "description": "本周公开承诺一个目标并负责到底。"
+      },
+      "calm_week": {
+        "title": "平静周",
+        "description": "每天练习4-7-8呼吸法三次。"
+      },
+      "purpose_week": {
+        "title": "目标周",
+        "description": "写下你的个人使命宣言并每天复习。"
+      },
+      "energy_week": {
+        "title": "能量周",
+        "description": "每次训练时第一个带来积极的能量。"
+      },
+      "reset_day": {
+        "title": "重置日",
+        "description": "完成24小时社交媒体数字排毒。"
+      },
+      "affirmation_week": {
+        "title": "肯定周",
+        "description": "每天早晚重复3次积极的肯定语。"
+      },
+      "confidence_week": {
+        "title": "自信周",
+        "description": "走路姿态自信，每次互动都保持眼神接触。"
+      },
+      "concentration_week": {
+        "title": "专注力周",
+        "description": "练习单任务处理 - 一次只专注一件事，不分心。"
+      },
+      "mental_toughness_week": {
+        "title": "心理韧性周",
+        "description": "当事情变得困难时，说'放马过来'并坚持下去。"
+      },
+      "positive_self_talk_week": {
+        "title": "积极自我对话周",
+        "description": "立即用积极的想法替换每一个消极的想法。"
+      },
+      "goal_setting_week": {
+        "title": "目标设定周",
+        "description": "每天设定一个具体目标并跟踪你的进展。"
+      },
+      "pressure_handling_week": {
+        "title": "压力处理周",
+        "description": "每天在模拟压力条件下练习你的技能。"
+      },
+      "clutch_mindset_week": {
+        "title": "关键时刻心态周",
+        "description": "每晚睡前想象在高压时刻取得成功。"
+      },
+      "competitive_edge_week": {
+        "title": "竞争优势周",
+        "description": "每天找到超越常规训练的额外改进点。"
+      },
+      "mental_reset_week": {
+        "title": "心理重置周",
+        "description": "每次犯错后使用重置词或手势来清空思绪。"
+      },
+      "game_day_focus_week": {
+        "title": "比赛日专注周",
+        "description": "创建并遵循赛前心理准备程序。"
+      },
+      "self_compassion_week": {
+        "title": "自我慈悲周",
+        "description": "犯错时善待自己 - 不要苛责。"
+      },
+      "mindfulness_week": {
+        "title": "正念周",
+        "description": "每天花5分钟进行安静的正念觉察。"
+      },
+      "stress_release_week": {
+        "title": "压力释放周",
+        "description": "每晚睡前练习渐进性肌肉放松。"
+      },
+      "emotional_control_week": {
+        "title": "情绪控制周",
+        "description": "在对任何挫折做出反应之前，暂停并深呼吸3次。"
+      },
+      "joy_week": {
+        "title": "快乐周",
+        "description": "每天在运动中找到并感激一个纯粹快乐的时刻。"
+      },
+      "patience_week": {
+        "title": "耐心周",
+        "description": "每天在一个具有挑战性的情况下练习耐心。"
+      },
+      "resilience_week": {
+        "title": "韧性周",
+        "description": "每次挫折后，写下你从中学到了什么。"
+      },
+      "letting_go_week": {
+        "title": "放手周",
+        "description": "每天通过写日记释放一个担忧或遗憾。"
+      },
+      "inner_peace_week": {
+        "title": "内心平静周",
+        "description": "每天以2分钟的平静沉默开始和结束。"
+      },
+      "emotional_awareness_week": {
+        "title": "情绪意识周",
+        "description": "每天3次检查你的情绪并说出你的感受。"
+      },
+      "communication_week": {
+        "title": "沟通周",
+        "description": "练习积极倾听 - 在回应之前重复队友说的话。"
+      },
+      "mentorship_week": {
+        "title": "指导周",
+        "description": "每天帮助一个更年轻或经验较少的队友提升一项技能。"
+      },
+      "team_spirit_week": {
+        "title": "团队精神周",
+        "description": "每天做一件对团队有益但对自己没有直接好处的事。"
+      },
+      "lead_by_example_week": {
+        "title": "以身作则周",
+        "description": "每次训练第一个到达，最后一个离开。"
+      },
+      "inspire_others_week": {
+        "title": "激励他人周",
+        "description": "每天与团队分享一句励志名言或故事。"
+      },
+      "conflict_resolution_week": {
+        "title": "冲突解决周",
+        "description": "直接和建设性地解决一个小冲突或紧张关系。"
+      },
+      "servant_leadership_week": {
+        "title": "服务型领导周",
+        "description": "问队友'今天我能帮你什么？'并付诸行动。"
+      },
+      "positivity_spread_week": {
+        "title": "传播正能量周",
+        "description": "每天给5个不同的人真诚的赞美。"
+      },
+      "team_culture_week": {
+        "title": "团队文化周",
+        "description": "即使没人看着也要坚守团队价值观。"
+      },
+      "boundary_week": {
+        "title": "界限周",
+        "description": "本周在生活中设定并维持一个健康的界限。"
+      },
+      "habit_stack_week": {
+        "title": "习惯叠加周",
+        "description": "将新的积极习惯附加到现有的日常程序中。"
+      },
+      "time_management_week": {
+        "title": "时间管理周",
+        "description": "前一天晚上用具体的时间块计划第二天。"
+      },
+      "sleep_optimization_week": {
+        "title": "睡眠优化周",
+        "description": "本周每天在同一时间上床睡觉和起床。"
+      },
+      "nutrition_focus_week": {
+        "title": "营养专注周",
+        "description": "每餐都吃含有蛋白质、碳水化合物和蔬菜的均衡膳食。"
+      },
+      "recovery_week": {
+        "title": "恢复周",
+        "description": "每天花15分钟进行恢复活动（拉伸、泡沫轴滚动）。"
+      },
+      "work_life_balance_week": {
+        "title": "工作生活平衡周",
+        "description": "每天把高质量的时间献给运动以外的人际关系。"
+      },
+      "digital_detox_week": {
+        "title": "数字排毒周",
+        "description": "将社交媒体限制在每天总共30分钟。"
+      },
+      "morning_routine_week": {
+        "title": "晨间例程周",
+        "description": "创建并遵循一致的30分钟晨间例程。"
+      },
+      "evening_routine_week": {
+        "title": "晚间例程周",
+        "description": "创建并遵循放松的30分钟晚间例程。"
+      }
     },
     "badges": {
       "challenge_starter": "挑战启动者",
@@ -3227,54 +3882,177 @@
     },
     "equipment": {
       "hitting": {
-        "bat": { "name": "比赛用棒", "description": "你的主要比赛用棒" },
-        "tee": { "name": "击球架", "description": "可调高度优先" },
-        "balls": { "name": "棒球/垒球", "description": "至少12个" },
-        "barbell": { "name": "杠铃和杠铃片", "description": "用于复合举重（20kg杠铃+杠铃片）" },
-        "dumbbells": { "name": "哑铃", "description": "各种重量5-35公斤以上" },
-        "trap_bar": { "name": "六角杠", "description": "用于硬拉 - 项目必需" },
-        "speed_bat": { "name": "速度棒", "description": "超速训练用轻量球棒" },
-        "heavy_bat": { "name": "加重棒", "description": "超负荷挥棒训练用" },
-        "resistance_bands": { "name": "弹力带", "description": "弹力带挥棒和热身用" },
-        "connection_ball": { "name": "连接球", "description": "泡沫球或挥棒连接辅助工具" },
-        "swing_analyzer": { "name": "挥棒分析仪", "description": "球棒速度追踪设备" },
-        "plyo_balls": { "name": "普莱奥球", "description": "力量训练用加重普莱奥球" },
-        "net": { "name": "击球网", "description": "挥棒练习用" },
-        "pullup_bar": { "name": "引体向上杠", "description": "引体向上和悬垂用" },
-        "bench": { "name": "训练凳", "description": "卧推和辅助练习用" },
-        "cable_machine": { "name": "缆绳机", "description": "缆绳练习用（或弹力带替代）" },
-        "weighted_bat": { "name": "加重训练球棒", "description": "超负荷力量训练用" },
-        "med_ball": { "name": "药球", "description": "旋转力量训练用" },
-        "box": { "name": "跳箱/踏板", "description": "箱跳和踏板上步用" },
-        "landmine": { "name": "地雷杠配件", "description": "地雷推举和旋转用" }
+        "bat": {
+          "name": "比赛用棒",
+          "description": "你的主要比赛用棒"
+        },
+        "tee": {
+          "name": "击球架",
+          "description": "可调高度优先"
+        },
+        "balls": {
+          "name": "棒球/垒球",
+          "description": "至少12个"
+        },
+        "barbell": {
+          "name": "杠铃和杠铃片",
+          "description": "用于复合举重（20kg杠铃+杠铃片）"
+        },
+        "dumbbells": {
+          "name": "哑铃",
+          "description": "各种重量5-35公斤以上"
+        },
+        "trap_bar": {
+          "name": "六角杠",
+          "description": "用于硬拉 - 项目必需"
+        },
+        "speed_bat": {
+          "name": "速度棒",
+          "description": "超速训练用轻量球棒"
+        },
+        "heavy_bat": {
+          "name": "加重棒",
+          "description": "超负荷挥棒训练用"
+        },
+        "resistance_bands": {
+          "name": "弹力带",
+          "description": "弹力带挥棒和热身用"
+        },
+        "connection_ball": {
+          "name": "连接球",
+          "description": "泡沫球或挥棒连接辅助工具"
+        },
+        "swing_analyzer": {
+          "name": "挥棒分析仪",
+          "description": "球棒速度追踪设备"
+        },
+        "plyo_balls": {
+          "name": "普莱奥球",
+          "description": "力量训练用加重普莱奥球"
+        },
+        "net": {
+          "name": "击球网",
+          "description": "挥棒练习用"
+        },
+        "pullup_bar": {
+          "name": "引体向上杠",
+          "description": "引体向上和悬垂用"
+        },
+        "bench": {
+          "name": "训练凳",
+          "description": "卧推和辅助练习用"
+        },
+        "cable_machine": {
+          "name": "缆绳机",
+          "description": "缆绳练习用（或弹力带替代）"
+        },
+        "weighted_bat": {
+          "name": "加重训练球棒",
+          "description": "超负荷力量训练用"
+        },
+        "med_ball": {
+          "name": "药球",
+          "description": "旋转力量训练用"
+        },
+        "box": {
+          "name": "跳箱/踏板",
+          "description": "箱跳和踏板上步用"
+        },
+        "landmine": {
+          "name": "地雷杠配件",
+          "description": "地雷推举和旋转用"
+        }
       },
       "pitching": {
-        "glove": { "name": "投手手套", "description": "比赛用投手手套" },
-        "balls": { "name": "棒球/垒球", "description": "大量练习需要至少24个" },
-        "jbands": { "name": "J带/弹力带", "description": "用于日常手臂护理" },
-        "weighted_balls": { "name": "加重棒球", "description": "110g、140g、200g、255g、310g一套" },
-        "plyocare_balls": { "name": "普莱奥球", "description": "各种重量的普莱奥球套装" },
-        "radar_gun": { "name": "测速枪", "description": "球速追踪设备" },
-        "mound": { "name": "便携式投手丘", "description": "练习用便携式投手丘" },
-        "catcher": { "name": "捕手/网", "description": "牛棚练习用捕手或网" },
-        "barbell": { "name": "杠铃和杠铃片", "description": "复合举重用（20kg杠铃+杠铃片）" },
-        "dumbbells": { "name": "哑铃", "description": "各种重量5-35公斤以上" },
-        "trap_bar": { "name": "六角杠", "description": "硬拉用 - 项目必需" },
-        "pullup_bar": { "name": "引体向上杠", "description": "引体向上和悬垂用" },
-        "bench": { "name": "训练凳", "description": "推举练习用" },
-        "cable_machine": { "name": "缆绳机", "description": "缆绳练习用（或弹力带替代）" },
-        "med_ball": { "name": "药球", "description": "旋转力量训练用" },
-        "foam_roller": { "name": "泡沫轴", "description": "恢复和自我按摩用" },
-        "target": { "name": "投球靶", "description": "控球练习用靶" },
-        "towel": { "name": "毛巾", "description": "毛巾训练和手臂护理用" },
-        "plyocare": { "name": "普莱欧球", "description": "手臂护理和速度训练用" },
-        "rice_bucket": { "name": "米桶", "description": "前臂和手部强化用" },
-        "lacrosse_ball": { "name": "长曲棍球", "description": "触发点和筋膜放松用" }
+        "glove": {
+          "name": "投手手套",
+          "description": "比赛用投手手套"
+        },
+        "balls": {
+          "name": "棒球/垒球",
+          "description": "大量练习需要至少24个"
+        },
+        "jbands": {
+          "name": "J带/弹力带",
+          "description": "用于日常手臂护理"
+        },
+        "weighted_balls": {
+          "name": "加重棒球",
+          "description": "110g、140g、200g、255g、310g一套"
+        },
+        "plyocare_balls": {
+          "name": "普莱奥球",
+          "description": "各种重量的普莱奥球套装"
+        },
+        "radar_gun": {
+          "name": "测速枪",
+          "description": "球速追踪设备"
+        },
+        "mound": {
+          "name": "便携式投手丘",
+          "description": "练习用便携式投手丘"
+        },
+        "catcher": {
+          "name": "捕手/网",
+          "description": "牛棚练习用捕手或网"
+        },
+        "barbell": {
+          "name": "杠铃和杠铃片",
+          "description": "复合举重用（20kg杠铃+杠铃片）"
+        },
+        "dumbbells": {
+          "name": "哑铃",
+          "description": "各种重量5-35公斤以上"
+        },
+        "trap_bar": {
+          "name": "六角杠",
+          "description": "硬拉用 - 项目必需"
+        },
+        "pullup_bar": {
+          "name": "引体向上杠",
+          "description": "引体向上和悬垂用"
+        },
+        "bench": {
+          "name": "训练凳",
+          "description": "推举练习用"
+        },
+        "cable_machine": {
+          "name": "缆绳机",
+          "description": "缆绳练习用（或弹力带替代）"
+        },
+        "med_ball": {
+          "name": "药球",
+          "description": "旋转力量训练用"
+        },
+        "foam_roller": {
+          "name": "泡沫轴",
+          "description": "恢复和自我按摩用"
+        },
+        "target": {
+          "name": "投球靶",
+          "description": "控球练习用靶"
+        },
+        "towel": {
+          "name": "毛巾",
+          "description": "毛巾训练和手臂护理用"
+        },
+        "plyocare": {
+          "name": "普莱欧球",
+          "description": "手臂护理和速度训练用"
+        },
+        "rice_bucket": {
+          "name": "米桶",
+          "description": "前臂和手部强化用"
+        },
+        "lacrosse_ball": {
+          "name": "长曲棍球",
+          "description": "触发点和筋膜放松用"
+        }
       }
     }
   },
   "workoutStreak": {
-    "title": "训练连续记录",
+    "title": "训练连续",
     "currentStreak": "当前连续",
     "longestStreak": "最长连续",
     "totalWorkouts": "总训练次数",
@@ -3283,20 +4061,20 @@
     "dayStreak": "天连续",
     "daysStreak": "天连续",
     "keepGoing": "继续加油！",
-    "newRecord": "新纪录！",
+    "newRecord": "新记录！",
     "milestone10": "🎉 10次训练！你正在养成习惯！",
     "milestone50": "💪 50次训练！半个世纪达成！",
-    "milestone100": "🏆 100次训练！世纪里程碑！",
-    "milestone200": "⭐ 200次训练！双世纪冠军！",
-    "milestone350": "🔥 350次训练！精英级奉献！",
+    "milestone100": "🏆 100次训练！百次里程碑！",
+    "milestone200": "⭐ 200次训练！双百冠军！",
+    "milestone350": "🔥 350次训练！精英级别的奉献！",
     "milestone500": "👑 500次训练！传奇运动员！",
-    "milestone700": "💎 700次训练！势不可挡的力量！",
+    "milestone700": "💎 700次训练！势不可挡！",
     "milestone1000": "🏅 1000次训练！名人堂！",
     "milestoneUnlocked": "里程碑解锁！",
-    "noStreak": "今天开始你的连续记录！",
-    "streakBroken": "连续记录重置 - 让我们重新开始！",
-    "fireUnlocked": "5天后解锁火焰！",
-    "glowUnlocked": "25天后火焰发光！"
+    "noStreak": "今天开始你的连续！",
+    "streakBroken": "连续重置 - 让我们重新开始！",
+    "fireUnlocked": "5天解锁火焰！",
+    "glowUnlocked": "25天火焰发光！"
   },
   "vault": {
     "title": "保险库",
@@ -3330,137 +4108,59 @@
       "weekly": "每周"
     },
     "delete": {
+      "confirmTitle": "删除条目？",
+      "confirmMessage": "此操作无法撤消。此条目将被永久删除。",
       "success": "条目删除成功"
     },
     "quiz": {
-      "title": "每日专注检查",
-      "todayStatus": "今日签到",
-      "preLift": "训练前",
-      "preLiftTitle": "训练前签到",
-      "morning": "早晨",
-      "morningLabel": "早晨",
-      "morningTitle": "早晨签到",
-      "morningTip": "尝试在醒来后15分钟内完成",
-      "night": "夜晚",
-      "nightLabel": "夜晚",
-      "nightTitle": "晚间反思",
-      "completed": "已完成",
-      "notStarted": "未开始",
-      "saved": "问卷保存成功！",
-      "error": "保存问卷失败",
-      "allCompleted": "太棒了！您已完成所有3项每日打卡！",
-      "description": "评估你现在的感受",
-      "mentalReadiness": "心理准备",
-      "emotionalState": "情绪状态",
-      "physicalReadiness": "身体准备",
-      "sleepTime": "就寝时间",
-      "wakeTime": "起床时间",
-      "sleepTimeHint": "您几点睡觉？",
-      "wakeTimeHint": "您几点起床？",
-      "sleepTip": "为获得最佳效果，请在睡前约一小时完成",
-      "preLiftTip": "在训练前评估您的当前状态，以跟踪准备情况如何影响表现",
-      "morningReminderFromNight": "💡 明天：请在起床后15分钟内完成您的晨间签到！",
-      "pending": "待完成",
-      "hoursSlept": "睡眠时长",
-      "sleepQuality": "睡眠质量",
-      "sleepQualityDesc": "评价昨晚的睡眠质量",
-      "sleepData": "睡眠数据",
-      "hoursSleptPlaceholder": "例如：7.5",
-      "bedtimeActual": "昨晚几点上床睡觉？",
-      "wakeTimeActual": "今天早上几点起床？",
-      "sleepDuration": "你睡了{{hours}}",
-      "sleepAnalysis": {
-        "low": {
-          "title": "低能量",
-          "message": "能量可能已耗尽。今天专注于恢复。优先休息，避免过度劳累。"
-        },
-        "moderate-low": {
-          "title": "中低能量",
-          "message": "你可能会感到疲倦。优先补水和轻度活动。考虑今晚早点睡觉。"
-        },
-        "moderate": {
-          "title": "中等能量",
-          "message": "休息充足。你已准备好进行中等强度训练。挑战自己，但也要倾听身体。"
-        },
-        "good": {
-          "title": "良好能量",
-          "message": "休息充分！你有充足的训练能量。这是高水平表现的良好基础。"
-        },
-        "optimal": {
-          "title": "最佳能量",
-          "message": "恢复极佳！今天能量水平达到巅峰。你已准备好发挥最佳表现。"
-        },
-        "excessive": {
-          "title": "可能睡眠过多",
-          "message": "睡眠过多可能导致昏沉。轻度活动和运动可以帮助你更加清醒。"
-        }
+      "night": {
+        "moodTitle": "一天结束时的情绪",
+        "moodPrompt": "今天您的情绪如何结束?",
+        "moodLevel1": "非常低",
+        "moodLevel2": "低",
+        "moodLevel3": "一般",
+        "moodLevel4": "好",
+        "moodLevel5": "非常好",
+        "stressTitle": "一天结束时的压力",
+        "stressPrompt": "一天结束时您有多大压力?",
+        "stressLevel1": "非常低",
+        "stressLevel2": "低",
+        "stressLevel3": "中等",
+        "stressLevel4": "高",
+        "stressLevel5": "非常高"
       },
-      "sleepGoals": {
-        "title": "明天的睡眠目标",
-        "subtitle": "设定今晚休息的意图",
-        "bedtimeGoal": "你计划几点睡觉？",
-        "wakeTimeGoal": "你计划几点起床？",
-        "goalDuration": "目标：{{hours}}睡眠"
-      },
-      "phoneFree": {
-        "title": "为什么睡前1小时不用手机？",
-        "blueLight": "减少扰乱生物钟的蓝光暴露",
-        "melatonin": "改善自然褪黑素分泌，更快入睡",
-        "rem": "提高REM睡眠质量，改善记忆巩固",
-        "recovery": "加速夜间身体恢复和肌肉修复",
-        "cortisol": "降低皮质醇水平，减少压力和焦虑"
-      },
-      "level1": "非常低",
-      "level2": "低",
-      "level3": "中等",
-      "level4": "高",
-      "level5": "非常高",
-      "reflectionTitle": "晚间反思",
-      "didWell": "今天我做得好的是什么？",
-      "didWellPlaceholder": "分享进展顺利的事情...",
-      "couldImprove": "我可以改进什么？",
-      "couldImprovePlaceholder": "思考成长领域...",
-      "learned": "今天我学到了什么？",
-      "learnedPlaceholder": "任何经验或见解...",
-      "motivation": "什么在激励我？",
-      "motivationPlaceholder": "是什么驱动你前进...",
-      "reflectionPrompts": {
-        "title": "晚间反思",
-        "didWell": "今天我做得好的是什么？",
-        "improve": "明天我可以改进什么？",
-        "learned": "今天我学到了什么？",
-        "motivation": "什么在激励我？"
-      },
-      "submit": "保存签到",
-      "submitting": "保存中...",
-      "morning": {
-        "subtitle": "设定意图。准备心态。执行。",
-        "motivationTitle": "每日动力",
-        "motivationPrompt": "今天是什么驱动着你？连接你的'为什么'。",
-        "motivationPlaceholder": "激励我的是... 我今天努力的原因是...",
-        "wellnessTitle": "心理健康检查",
-        "wellnessPrompt": "今天你的心理状态如何？分享你的想法、担忧或积极肯定。",
-        "wellnessPlaceholder": "今天我的心态如何...\n• 有什么担忧或分心的事？\n• 我需要放下什么？\n• 我带着什么积极的想法？",
-        "moodTitle": "心情检查",
-        "moodPrompt": "今天早上你的心情怎么样？",
-        "moodLevel1": "非常低", "moodLevel2": "低", "moodLevel3": "一般", "moodLevel4": "好", "moodLevel5": "很棒",
-        "moodDesc1": "挣扎中，感觉沮丧", "moodDesc2": "有些消极", "moodDesc3": "还好，不好不坏", "moodDesc4": "感觉积极", "moodDesc5": "心情极佳，充满能量",
-        "stressTitle": "压力水平",
-        "stressPrompt": "你现在感到多大的压力？",
-        "stressLevel1": "非常低", "stressLevel2": "低", "stressLevel3": "中等", "stressLevel4": "高", "stressLevel5": "非常高",
-        "stressDesc1": "平静放松", "stressDesc2": "最小压力", "stressDesc3": "有些压力，可控", "stressDesc4": "显著压力", "stressDesc5": "压力巨大",
-        "disciplineTitle": "纪律等级",
-        "disciplinePrompt": "无论发生什么，你今天执行的决心有多大？",
-        "disciplineLevel1": "挣扎中",
-        "disciplineLevel2": "动摇中",
-        "disciplineLevel3": "已准备",
-        "disciplineLevel4": "全神贯注",
-        "disciplineLevel5": "不可动摇",
-        "disciplineDesc1": "今天没感觉",
-        "disciplineDesc2": "有些阻力",
-        "disciplineDesc3": "承诺出现",
-        "disciplineDesc4": "没有借口，没有分心",
-        "disciplineDesc5": "没有什么能阻止我。零妥协。"
+      "nightSuccess": {
+        "title": "今日完成！",
+        "todayHighlights": "今日亮点",
+        "checkinsCompleted": "{{count}}/{{total}} 签到已完成",
+        "workoutsLogged": "{{count}} 次锻炼已记录",
+        "sleepGoalSet": "{{hours}} 小时睡眠目标已设定",
+        "weightTracked": "已记录 {{weight}} 磅",
+        "currentStreak": "当前连续记录",
+        "days": "天",
+        "tomorrowAwaits": "明天等着您",
+        "tomorrowIncludes": "您的早晨包括：",
+        "morningCheckin": "晨间签到",
+        "scheduledWorkout": "计划锻炼",
+        "mindFuelLesson": "新的心灵燃料课程",
+        "nutritionTip": "个性化营养建议",
+        "goodnightMessages": {
+          "great": "美好的一天！好梦，冠军。",
+          "stressed": "明天是新的开始。今晚好好休息。",
+          "lowMood": "每一个日出都带来新的机会。睡个好觉。",
+          "perfect": "今天太棒了！明早见！"
+        },
+        "morningBonus": {
+          "title": "晨间签到奖励",
+          "subtitle": "醒来15分钟内完成可以：",
+          "keepStreak": "保持您的连续记录",
+          "trackWeight": "记录准确的晨间体重",
+          "getDailyFocus": "获得您的个性化日常重点",
+          "unlockMotivation": "解锁今天的动力"
+        },
+        "sleepCountdown": "{{time}} 后睡觉可达成目标",
+        "recapCountdown": "您的6周回顾还有 {{days}} 天！",
+        "closeButton": "关闭并休息"
       }
     },
     "disciplineTrend": {
@@ -3532,57 +4232,6 @@
       "lockedUntil": "锁定至",
       "alreadySet": "目标已设定",
       "lockedMessage": "您的每周健康目标已锁定至下周一。"
-    },
-    "quiz": {
-      "night": {
-        "moodTitle": "一天结束时的情绪",
-        "moodPrompt": "今天您的情绪如何结束?",
-        "moodLevel1": "非常低",
-        "moodLevel2": "低",
-        "moodLevel3": "一般",
-        "moodLevel4": "好",
-        "moodLevel5": "非常好",
-        "stressTitle": "一天结束时的压力",
-        "stressPrompt": "一天结束时您有多大压力?",
-        "stressLevel1": "非常低",
-        "stressLevel2": "低",
-        "stressLevel3": "中等",
-        "stressLevel4": "高",
-        "stressLevel5": "非常高"
-      },
-      "nightSuccess": {
-        "title": "今日完成！",
-        "todayHighlights": "今日亮点",
-        "checkinsCompleted": "{{count}}/{{total}} 签到已完成",
-        "workoutsLogged": "{{count}} 次锻炼已记录",
-        "sleepGoalSet": "{{hours}} 小时睡眠目标已设定",
-        "weightTracked": "已记录 {{weight}} 磅",
-        "currentStreak": "当前连续记录",
-        "days": "天",
-        "tomorrowAwaits": "明天等着您",
-        "tomorrowIncludes": "您的早晨包括：",
-        "morningCheckin": "晨间签到",
-        "scheduledWorkout": "计划锻炼",
-        "mindFuelLesson": "新的心灵燃料课程",
-        "nutritionTip": "个性化营养建议",
-        "goodnightMessages": {
-          "great": "美好的一天！好梦，冠军。",
-          "stressed": "明天是新的开始。今晚好好休息。",
-          "lowMood": "每一个日出都带来新的机会。睡个好觉。",
-          "perfect": "今天太棒了！明早见！"
-        },
-        "morningBonus": {
-          "title": "晨间签到奖励",
-          "subtitle": "醒来15分钟内完成可以：",
-          "keepStreak": "保持您的连续记录",
-          "trackWeight": "记录准确的晨间体重",
-          "getDailyFocus": "获得您的个性化日常重点",
-          "unlockMotivation": "解锁今天的动力"
-        },
-        "sleepCountdown": "{{time}} 后睡觉可达成目标",
-        "recapCountdown": "您的6周回顾还有 {{days}} 天！",
-        "closeButton": "关闭并休息"
-      }
     },
     "freeNote": {
       "title": "快速笔记",
@@ -3999,11 +4648,6 @@
       "ready": "准备就绪！",
       "daysLeft": "天剩余",
       "keepLogging": "继续每日记录以解锁您的回顾"
-    },
-    "delete": {
-      "confirmTitle": "删除条目？",
-      "confirmMessage": "此操作无法撤消。此条目将被永久删除。",
-      "success": "条目删除成功"
     },
     "weekly": {
       "thisWeek": "本周",
@@ -4452,31 +5096,6 @@
       "healingText": "此内容仅用于教育和自我反思目的。它不能替代专业的心理健康治疗。如果您正在经历严重的痛苦或创伤，请咨询有执照的治疗师或咨询师。"
     }
   },
-  "workoutStreak": {
-    "title": "训练连续",
-    "currentStreak": "当前连续",
-    "longestStreak": "最长连续",
-    "totalWorkouts": "总训练次数",
-    "best": "最佳",
-    "total": "总计",
-    "dayStreak": "天连续",
-    "daysStreak": "天连续",
-    "keepGoing": "继续加油！",
-    "newRecord": "新记录！",
-    "milestone10": "🎉 10次训练！你正在养成习惯！",
-    "milestone50": "💪 50次训练！半个世纪达成！",
-    "milestone100": "🏆 100次训练！百次里程碑！",
-    "milestone200": "⭐ 200次训练！双百冠军！",
-    "milestone350": "🔥 350次训练！精英级别的奉献！",
-    "milestone500": "👑 500次训练！传奇运动员！",
-    "milestone700": "💎 700次训练！势不可挡！",
-    "milestone1000": "🏅 1000次训练！名人堂！",
-    "milestoneUnlocked": "里程碑解锁！",
-    "noStreak": "今天开始你的连续！",
-    "streakBroken": "连续重置 - 让我们重新开始！",
-    "fireUnlocked": "5天解锁火焰！",
-    "glowUnlocked": "25天火焰发光！"
-  },
   "fascia": {
     "bodyConnection": {
       "title": "身体连接",
@@ -4575,15 +5194,42 @@
         "advanced": "高级",
         "chaos": "混沌模式"
       },
-      "softFocus": { "name": "软焦点", "description": "不固定视线训练周边意识" },
-      "patternSearch": { "name": "图案搜索", "description": "在复杂视觉场景中找到目标" },
-      "peripheralVision": { "name": "周边视觉", "description": "检测视野边缘的运动" },
-      "convergenceDivergence": { "name": "集散训练", "description": "训练眼睛对齐和深度感知" },
-      "nearFarSight": { "name": "远近视", "description": "快速切换不同距离的焦点" },
-      "followTheTarget": { "name": "跟踪目标", "description": "平滑追踪练习" },
-      "whackAMole": { "name": "反应决策", "description": "反应和决策结合" },
-      "meterTiming": { "name": "计时训练", "description": "可变速度的精确计时" },
-      "brockString": { "name": "布洛克绳", "description": "引导式眼睛对齐练习" },
+      "softFocus": {
+        "name": "软焦点",
+        "description": "不固定视线训练周边意识"
+      },
+      "patternSearch": {
+        "name": "图案搜索",
+        "description": "在复杂视觉场景中找到目标"
+      },
+      "peripheralVision": {
+        "name": "周边视觉",
+        "description": "检测视野边缘的运动"
+      },
+      "convergenceDivergence": {
+        "name": "集散训练",
+        "description": "训练眼睛对齐和深度感知"
+      },
+      "nearFarSight": {
+        "name": "远近视",
+        "description": "快速切换不同距离的焦点"
+      },
+      "followTheTarget": {
+        "name": "跟踪目标",
+        "description": "平滑追踪练习"
+      },
+      "whackAMole": {
+        "name": "反应决策",
+        "description": "反应和决策结合"
+      },
+      "meterTiming": {
+        "name": "计时训练",
+        "description": "可变速度的精确计时"
+      },
+      "brockString": {
+        "name": "布洛克绳",
+        "description": "引导式眼睛对齐练习"
+      },
       "locked": "完成上一级别以解锁",
       "start": "开始训练",
       "continue": "继续"
@@ -4973,78 +5619,9 @@
     }
   },
   "myCustomActivities": {
-    "title": "我的自定义活动",
-    "subtitle": "管理模板、查看历史记录并跟踪进度",
     "tabs": {
-      "templates": "模板",
-      "history": "历史",
-      "analytics": "分析",
-      "hydration": "水分",
-      "presets": "预设"
-    },
-    "templates": {
-      "title": "活动模板",
-      "create": "创建新的",
-      "noTemplates": "暂无模板",
-      "noTemplatesHint": "创建您的第一个自定义活动模板"
-    },
-    "history": {
-      "title": "活动历史",
-      "noHistory": "暂无活动历史",
-      "completed": "已完成",
-      "filter": "按类型筛选"
-    },
-    "analytics": {
-      "title": "活动分析",
-      "totalActivities": "总活动数",
-      "completionRate": "完成率",
-      "streak": "当前连续天数",
-      "byType": "按类型"
-    },
-    "hydration": {
-      "title": "水分追踪",
-      "settings": "水分设置",
-      "dailyGoal": "每日目标",
-      "reminderInterval": "提醒间隔",
-      "startTime": "开始时间",
-      "endTime": "结束时间",
-      "enabled": "已启用提醒",
-      "tracker": "快速记录",
-      "todayProgress": "今日进度",
-      "addWater": "添加水量"
-    },
-    "presets": {
-      "title": "跑步预设",
-      "categories": {
-        "intervals": "间歇",
-        "tempo": "节奏",
-        "recovery": "恢复",
-        "distance": "距离",
-        "speed": "速度"
-      },
-      "usePreset": "使用",
-      "customize": "自定义",
-      "system": "系统预设",
-      "custom": "自定义预设"
-    },
-    "share": {
-      "title": "分享模板",
-      "noLink": "为此模板创建可分享链接",
-      "creating": "创建中...",
-      "createLink": "创建链接",
-      "link": "分享链接",
-      "public": "公开访问",
-      "publicDesc": "任何拥有链接的人都可以查看和导入",
-      "privateDesc": "链接当前已禁用",
-      "views": "浏览次数",
-      "delete": "删除链接",
-      "preview": "预览",
-      "created": "链接已创建！",
-      "error": "创建链接失败",
-      "deleted": "链接已删除",
-      "deleteError": "删除链接失败",
-      "copied": "链接已复制！",
-      "copyError": "复制链接失败"
+      "elitePresets": "精英预设",
+      "loadDashboard": "负荷仪表板"
     }
   },
   "runningProgress": {
@@ -5420,12 +5997,6 @@
     "useBlockSystem": "使用区块构建器",
     "useBlockSystemDesc": "通过智能负荷追踪将练习组织成结构化区块"
   },
-  "myCustomActivities": {
-    "tabs": {
-      "elitePresets": "精英预设",
-      "loadDashboard": "负荷仪表板"
-    }
-  },
   "speedLab": {
     "title": "Speed Lab",
     "subtitle": "打造精英速度，保护你的身体",
@@ -5678,20 +6249,105 @@
   },
   "sportTerms": {
     "baseball": {
-      "pitchTypes": { "fastball": "四缝快速球", "secondaryFastball": "二缝快速球", "slider": "滑球", "changeup": "变速球", "curveball": "曲球" },
-      "sessionTypes": { "bullpen": "牛棚练习", "bp": "打击练习", "scrimmage": "实战模拟", "warmup": "远传", "cage": "笼内练习" },
-      "metrics": { "spinEfficiency": "旋转效率", "barrelPct": "甜蜜区率", "commandPct": "控球率", "chaseRate": "追击率", "whiffRate": "挥空率", "exitVelo": "出球速度", "launchAngle": "出球角度" },
-      "drillNames": { "moundWork": "投球丘练习", "longToss": "远传", "bp": "BP轮次", "teeWork": "击球座练习" },
-      "splitLabels": { "overall": "总体", "vsLHP": "对左投", "vsRHP": "对右投", "home": "主场", "away": "客场" },
-      "heatMapLabels": { "pitchLocation": "投球位置", "chaseZone": "追击区图", "barrelZone": "甜蜜区", "commandMap": "控球图", "missCluster": "失误集群" }
+      "pitchTypes": {
+        "fastball": "四缝快速球",
+        "secondaryFastball": "二缝快速球",
+        "slider": "滑球",
+        "changeup": "变速球",
+        "curveball": "曲球"
+      },
+      "sessionTypes": {
+        "bullpen": "牛棚练习",
+        "bp": "打击练习",
+        "scrimmage": "实战模拟",
+        "warmup": "远传",
+        "cage": "笼内练习"
+      },
+      "metrics": {
+        "spinEfficiency": "旋转效率",
+        "barrelPct": "甜蜜区率",
+        "commandPct": "控球率",
+        "chaseRate": "追击率",
+        "whiffRate": "挥空率",
+        "exitVelo": "出球速度",
+        "launchAngle": "出球角度"
+      },
+      "drillNames": {
+        "moundWork": "投球丘练习",
+        "longToss": "远传",
+        "bp": "BP轮次",
+        "teeWork": "击球座练习"
+      },
+      "splitLabels": {
+        "overall": "总体",
+        "vsLHP": "对左投",
+        "vsRHP": "对右投",
+        "home": "主场",
+        "away": "客场"
+      },
+      "heatMapLabels": {
+        "pitchLocation": "投球位置",
+        "chaseZone": "追击区图",
+        "barrelZone": "甜蜜区",
+        "commandMap": "控球图",
+        "missCluster": "失误集群"
+      }
     },
     "softball": {
-      "pitchTypes": { "fastball": "快速球（风车）", "circleChange": "圆形变速球", "riseball": "上升球", "dropBall": "下沉球", "curveball": "曲球（12-6下沉）" },
-      "sessionTypes": { "bullpen": "圆圈练习", "bp": "打击练习", "scrimmage": "实战模拟", "warmup": "远传", "cage": "笼内练习" },
-      "metrics": { "snapTightness": "手腕紧密度", "sweetSpotPct": "甜蜜区率", "locationPct": "位置率", "chaseRate": "追击率", "whiffRate": "挥空率", "exitVelo": "出球速度", "launchAngle": "出球角度" },
-      "drillNames": { "circleWork": "圆圈练习", "longToss": "远传", "bp": "BP轮次", "teeWork": "击球座练习" },
-      "splitLabels": { "overall": "总体", "vsLHP": "对左投", "vsRHP": "对右投", "home": "主场", "away": "客场" },
-      "heatMapLabels": { "pitchLocation": "投球位置", "chaseZone": "追击区图", "sweetSpotZone": "甜蜜区", "locationMap": "位置图", "missPattern": "失误模式" }
+      "pitchTypes": {
+        "fastball": "快速球（风车）",
+        "circleChange": "圆形变速球",
+        "riseball": "上升球",
+        "dropBall": "下沉球",
+        "curveball": "曲球（12-6下沉）"
+      },
+      "sessionTypes": {
+        "bullpen": "圆圈练习",
+        "bp": "打击练习",
+        "scrimmage": "实战模拟",
+        "warmup": "远传",
+        "cage": "笼内练习"
+      },
+      "metrics": {
+        "snapTightness": "手腕紧密度",
+        "sweetSpotPct": "甜蜜区率",
+        "locationPct": "位置率",
+        "chaseRate": "追击率",
+        "whiffRate": "挥空率",
+        "exitVelo": "出球速度",
+        "launchAngle": "出球角度"
+      },
+      "drillNames": {
+        "circleWork": "圆圈练习",
+        "longToss": "远传",
+        "bp": "BP轮次",
+        "teeWork": "击球座练习"
+      },
+      "splitLabels": {
+        "overall": "总体",
+        "vsLHP": "对左投",
+        "vsRHP": "对右投",
+        "home": "主场",
+        "away": "客场"
+      },
+      "heatMapLabels": {
+        "pitchLocation": "投球位置",
+        "chaseZone": "追击区图",
+        "sweetSpotZone": "甜蜜区",
+        "locationMap": "位置图",
+        "missPattern": "失误模式"
+      }
     }
+  },
+  "staffPlans": {
+    "heading": "教练和机构方案",
+    "coachName": "Hammers Coach",
+    "coachPrice": "每月 300 美元",
+    "coachLine": "两项运动的全部分析，以及用于已连接球员的教练工具",
+    "orgName": "Hammers Organization",
+    "orgPrice": "每月 1,000 美元 · 含 5 个教练席位 · 额外席位每月 150 美元",
+    "orgLine": "每个席位享有 Coach 全部功能，另含场馆面板、球队和机构总览",
+    "see": "查看教练和机构方案",
+    "roleNote": "Coach 方案每月 300 美元 · Organization 方案每月 1,000 美元"
   }
 }

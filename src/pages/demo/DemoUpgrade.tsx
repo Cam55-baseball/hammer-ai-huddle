@@ -12,6 +12,7 @@ import { useDemoUrgency, formatMmSs } from '@/hooks/useDemoUrgency';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { StaffPlansTeaser } from '@/components/staff/StaffPlansTeaser';
 
 const SIM_BY_SLUG: Record<string, string> = {
   'hitting-analysis': 'hitting',
@@ -188,6 +189,8 @@ export default function DemoUpgrade() {
           </div>
         </CardContent>
       </Card>
+
+      <StaffPlansTeaser />
 
       <ExitInterceptDialog
         open={exitOpen}

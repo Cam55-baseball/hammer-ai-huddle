@@ -1,6 +1,7 @@
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { User, UserCog, ArrowLeft, Building2 } from "lucide-react";
@@ -8,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const SelectUserRole = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, session, loading, isAuthStable, signOut } = useAuth();
 
   useEffect(() => {
@@ -120,6 +122,9 @@ const SelectUserRole = () => {
             </div>
           </Card>
         </div>
+        <p className="text-center text-sm text-muted-foreground mt-6">
+          {t("staffPlans.roleNote")} · <Link to="/staff-plans" className="text-primary underline">{t("staffPlans.see")}</Link>
+        </p>
       </div>
     </div>
   );

@@ -16,7 +16,6 @@
     "search": "Zoeken",
     "filter": "Filteren",
     "noData": "Geen gegevens beschikbaar",
-    "noResults": "Geen resultaten gevonden",
     "required": "Verplicht",
     "optional": "Optioneel",
     "retry": "Opnieuw proberen",
@@ -27,8 +26,7 @@
     "ai": "Hammer",
     "continue": "Doorgaan",
     "selected": "Geselecteerd",
-    "select": "Selecteren",
-    "add": "Toevoegen"
+    "select": "Selecteren"
   },
   "auth": {
     "signIn": "Inloggen",
@@ -464,35 +462,6 @@
     "resumed": "Module hervat",
     "failedToResume": "Module hervatten mislukt"
   },
-  "common": {
-    "save": "Opslaan",
-    "cancel": "Annuleren",
-    "close": "Sluiten",
-    "loading": "Laden...",
-    "error": "Fout",
-    "success": "Succes",
-    "confirm": "Bevestigen",
-    "delete": "Verwijderen",
-    "edit": "Bewerken",
-    "view": "Bekijken",
-    "back": "Terug",
-    "next": "Volgende",
-    "submit": "Verzenden",
-    "search": "Zoeken",
-    "filter": "Filteren",
-    "noData": "Geen gegevens beschikbaar",
-    "required": "Verplicht",
-    "optional": "Optioneel",
-    "retry": "Opnieuw proberen",
-    "searching": "Zoeken...",
-    "allSports": "Alle Sporten",
-    "yes": "Ja",
-    "no": "Nee",
-    "ai": "Hammer",
-    "continue": "Doorgaan",
-    "selected": "Geselecteerd",
-    "select": "Selecteren"
-  },
   "navigation": {
     "menu": "Menu",
     "dashboard": "Dashboard",
@@ -609,14 +578,14 @@
     "viewingProfile": "Profiel Bekijken",
     "followPlayer": "Speler Volgen",
     "sending": "Verzenden...",
-    "followRequestPending": "Volgverzoek In Behandeling",
+    "followRequestPending": "Volgverzoek in Afwachting",
     "following": "Volgend",
     "throws": "Gooit",
     "bats": "Slaat",
     "right": "Rechts",
     "left": "Links",
     "both": "Beide",
-    "switch": "Switch",
+    "switch": "Wisselend",
     "collegeStatus": "Universiteitsstatus",
     "currentlyEnrolled": "Momenteel Ingeschreven",
     "level": "Niveau",
@@ -629,26 +598,26 @@
     "academicCommitment": "Academisch & Verbintenis",
     "currentlyEnrolledInCollege": "Momenteel ingeschreven op universiteit",
     "positionRole": "Positie/Rol",
-    "basicInfo": "Basisinformatie",
+    "basicInfo": "Basisinfo",
     "contactEmail": "Contact E-mail",
-    "experienceCredentials": "Ervaring & Referenties",
-    "addCredential": "Referentie Toevoegen",
+    "experienceCredentials": "Ervaring & Kwalificaties",
+    "addCredential": "Kwalificatie Toevoegen",
     "profilePicture": "Profielfoto",
-    "maxSizeInfo": "Max. grootte: 5MB. JPG, PNG of WEBP",
+    "maxSizeInfo": "Max: 5MB. JPG, PNG of WEBP",
     "orEnterImageUrl": "Of voer afbeeldings-URL in",
     "socialMediaLinks": "Social Media Links",
     "additionalWebsiteLinks": "Extra Website Links",
     "website": "Website",
     "saveProfile": "Profiel Opslaan",
-    "openBillingPortal": "Factureringsportaal Openen",
-    "billingPortalUnavailable": "Factureringsportaal Niet Beschikbaar",
+    "openBillingPortal": "Portaal Openen",
+    "billingPortalUnavailable": "Portaal Niet Beschikbaar",
     "accountInformation": "Accountinformatie",
     "memberSince": "Lid Sinds",
     "neverExpires": "Verloopt Nooit",
     "discount": "Korting",
     "manageModules": "Modules Beheren",
     "noActiveModules": "Geen actieve modules",
-    "cancelAllModules": "Alle Modules Annuleren",
+    "cancelAllModules": "Alle Modules Opzeggen",
     "personalInfo": "Persoonlijke Informatie",
     "firstName": "Voornaam",
     "lastName": "Achternaam",
@@ -694,48 +663,12 @@
     "experienceLevel": "Ervaringsniveau",
     "teamAffiliation": "Teamaansluiting",
     "yearsAffiliated": "Jaren Aangesloten",
-    "backToDashboard": "Terug naar Dashboard",
     "viewingPlayerProfile": "{{name}}'s Profiel",
-    "viewingAsOwner": "Bekijken als Eigenaar",
-    "viewingAsScout": "Bekijken als Scout",
-    "viewingAsCoach": "Bekijken als Coach",
-    "viewingProfile": "Profiel Bekijken",
-    "sending": "Verzenden...",
-    "followPlayer": "Speler Volgen",
-    "followRequestPending": "Volgverzoek in Afwachting",
-    "following": "Volgend",
-    "experienceCredentials": "Ervaring & Kwalificaties",
-    "throws": "Gooit",
-    "bats": "Slaat",
-    "both": "Beide",
-    "right": "Rechts",
-    "left": "Links",
-    "switch": "Wisselend",
-    "collegeStatus": "Universiteitsstatus",
-    "currentlyEnrolled": "Momenteel Ingeschreven",
-    "status": "Status",
-    "team": "Team",
-    "level": "Niveau",
-    "professionalPlayer": "Professionele Speler",
-    "freeAgent": "Vrije Agent",
     "playerType": "Spelertype",
-    "internationalPlayer": "Internationale Speler",
     "years": "jaren",
-    "basicInfo": "Basisinfo",
-    "contactEmail": "Contact E-mail",
-    "addCredential": "Kwalificatie Toevoegen",
-    "profilePicture": "Profielfoto",
-    "maxSizeInfo": "Max: 5MB. JPG, PNG of WEBP",
-    "orEnterImageUrl": "Of voer afbeeldings-URL in",
     "primaryPosition": "Hoofdpositie",
     "selectPosition": "Selecteer positie",
-    "playingStyle": "Speelstijl",
-    "academicCommitment": "Academisch & Verbintenis",
-    "currentlyEnrolledInCollege": "Momenteel ingeschreven op universiteit",
-    "positionRole": "Positie/Rol",
-    "socialMediaLinks": "Social Media Links",
     "enterHandleOrUrl": "Voer uw gebruikersnaam (bijv. \"username\") of volledige URL in",
-    "additionalWebsiteLinks": "Extra Website Links",
     "addMoreWebsites": "Voeg tot 4 extra website-URL's toe",
     "customizeExperience": "Pas uw ervaring aan",
     "subscriptionStatus": "Abonnementstatus",
@@ -749,8 +682,6 @@
     "subscribeToModules": "Abonneren op Modules",
     "manageSubscriptions": "Abonnementen Beheren",
     "controlModulesDescription": "Beheer elke module afzonderlijk - op elk moment opzegbaar",
-    "cancelAllModules": "Alle Modules Opzeggen",
-    "accountInformation": "Accountinformatie",
     "accountCreated": "Account Aangemaakt:",
     "unableToLoadProfile": "Kan dit profiel niet laden. U heeft mogelijk geen toestemming.",
     "followRequestSentTo": "Een volgverzoek is verzonden naar {{name}}.",
@@ -766,14 +697,6 @@
     "portalBeingSetUp": "Het portaal wordt ingesteld. Neem contact op met support.",
     "failedToOpenBillingPortal": "Kon portaal niet openen.",
     "selectLevel": "Selecteer niveau",
-    "website": "Website",
-    "saveProfile": "Profiel Opslaan",
-    "openBillingPortal": "Portaal Openen",
-    "billingPortalUnavailable": "Portaal Niet Beschikbaar",
-    "neverExpires": "Verloopt Nooit",
-    "discount": "Korting",
-    "manageModules": "Modules Beheren",
-    "noActiveModules": "Geen actieve modules",
     "public": "openbaar",
     "contactEmailDescription": "Dit e-mailadres is zichtbaar voor alle gebruikers om contact met u op te nemen",
     "playerBioPrompt": "Vermeld: Contact-e-mail, Lengte en Gewicht, Provincie, Afstudeerjaar (Middelbaar & Universiteit), Slagkant(en), Positie(s), Werphand(en), Teamaansluiting of Vrije Agent Status",
@@ -1003,391 +926,6 @@
     "allSports": "Alle Sporten",
     "active": "Actief",
     "failedToLoad": "Ranglijsten laden mislukt"
-  },
-  "nutrition": {
-    "goalTypes": {
-      "lose_weight": "Afvallen",
-      "lose_fat": "Vetverbranding",
-      "maintain": "Handhaven",
-      "gain_lean_muscle": "Spieropbouw",
-      "gain_weight": "Aankomen"
-    },
-    "dayTypes": {
-      "rest": "Rust",
-      "training": "Training",
-      "practice": "Oefening",
-      "game": "Wedstrijd",
-      "travel": "Reis"
-    },
-    "settings": {
-      "title": "Voedingsinstellingen",
-      "currentGoal": "Huidig Doel",
-      "selectGoal": "Selecteer Je Doel",
-      "updateGoal": "Doel Bijwerken",
-      "goalUpdated": "Doel succesvol bijgewerkt",
-      "editProfile": "Profiel Bewerken",
-      "profileSettingsNote": "Profielinformatie bijwerken?",
-      "calorieAdjustment": "Calorieaanpassing",
-      "deficit": "tekort",
-      "surplus": "overschot"
-    },
-    "saveTip": "Tip Opslaan",
-    "tipSaved": "Opgeslagen",
-    "tipSavedSuccess": "Tip opgeslagen in je Kluis!",
-    "tipSaveHint": "Tik op het hartpictogram om je favoriete tips in De Kluis op te slaan",
-    "todaysTips": "Tips van Vandaag",
-    "todaysTipsCount": "Tips van Vandaag ({{count}}/2)",
-    "reviewTips": "Bekijk je tips van vandaag",
-    "noTipsYet": "Nog geen tips bekeken vandaag",
-    "viewedAt": "Bekeken om {{time}}",
-    "title": "Iron Horse Productie",
-    "subtitle": "Voedings- en Holistische Gezondheid voor Topsporters",
-    "dailyTip": "Dagelijkse Gezondheidstip",
-    "newTip": "Nieuwe Tip",
-    "tipsCollected": "Verzamelde Tips",
-    "percentExplored": "{{percent}}% van tips verkend",
-    "daysToUnlock": "{{days}} dagen om te ontgrendelen",
-    "streak": "Reeks",
-    "currentStreak": "Huidige Reeks",
-    "longestStreak": "Langste Reeks",
-    "totalVisits": "Totale Bezoeken",
-    "badges": "Badges",
-    "disclaimer": "Gezondheidsverklaring",
-    "disclaimerText": "De verstrekte informatie is alleen voor educatieve doeleinden en mag geen professioneel medisch advies vervangen. Sommige informatie kan onnauwkeurig of verouderd zijn.",
-    "tipsRemaining": "tips over vandaag",
-    "noMoreTips": "U heeft uw 2 gezondheidstips voor vandaag verzameld! Kom morgen terug voor meer.",
-    "categoriesTitle": "Voedingscategorieën",
-    "topicsCount": "({{count}} onderwerpen)",
-    "dayStreak": "Dag Reeks",
-    "daysStreak": "Dagen Reeks",
-    "best": "Beste:",
-    "tipsCollectedCount": "tips verzameld",
-    "ofTipsExplored": "van tips verkend",
-    "tipsExplored": "{{percent}}% van {{total}} tips verkend",
-    "milestoneBadges": "Mijlpaal Badges",
-    "dailyLimitReached": "Dagelijkse Limiet Bereikt",
-    "noTipsRemaining": "0 tips over",
-    "tipsLeftToday": "tips over vandaag",
-    "tipLeftToday": "tip over vandaag",
-    "disclaimerTitle": "Belangrijke Gezondheidsverklaring",
-    "educationalPurposes": "De hier verstrekte informatie is alleen voor educatieve doeleinden en mag geen professioneel medisch advies vervangen.",
-    "aiTipsWarning": "Hammer-gegenereerde tips kunnen onnauwkeurigheden bevatten. Sommige informatie kan verouderd of onjuist zijn.",
-    "alwaysConsult": "Raadpleeg altijd een gekwalificeerde zorgverlener voordat u wijzigingen aanbrengt in uw dieet of gezondheidsroutine.",
-    "moreDaysToUnlock": "meer dagen om te ontgrendelen",
-    "achieved": "Behaald!",
-    "badgeNames": {
-      "starter": "Aan de Start",
-      "weekWarrior": "Week Strijder",
-      "ironWill": "IJzeren Wil",
-      "ironHorse": "IJzeren Paard",
-      "elite": "Elite Performer",
-      "legendary": "Legendarisch"
-    },
-    "badgeDescriptions": {
-      "starter": "Begin uw reis",
-      "weekWarrior": "7 dagen reeks",
-      "ironWill": "14 dagen reeks",
-      "ironHorse": "30 dagen reeks",
-      "elite": "60 dagen reeks",
-      "legendary": "100 dagen reeks"
-    },
-    "categories": {
-      "bloodType": "Bloedgroep Gezondheid",
-      "bloodTypeDesc": "Optimaliseer voeding op basis van uw bloedgroep",
-      "hydration": "Hydratatie",
-      "hydrationDesc": "Beheers de juiste vochtinname voor topprestaties",
-      "mineralization": "Mineralisatie",
-      "mineralizationDesc": "Essentiële mineralen voor atletische excellentie",
-      "recovery": "Herstel",
-      "recoveryDesc": "Versnel herstel tussen sessies",
-      "bloodFlow": "Bloedcirculatie",
-      "bloodFlowDesc": "Verbeter de circulatie voor betere prestaties",
-      "lymphatic": "Lymfegezondheid",
-      "lymphaticDesc": "Ondersteun het detoxsysteem van uw lichaam",
-      "vitamins": "Vitamines",
-      "vitaminsDesc": "Belangrijke vitamines voor atletische prestaties",
-      "longevity": "Levensduur",
-      "longevityDesc": "Voeding voor een lange atletische carrière",
-      "weightManagement": "Gewichtsbeheer",
-      "weightManagementDesc": "Gezonde gewichtsstrategieën voor atleten",
-      "vegan": "Veganistische Gids",
-      "veganDesc": "Plantaardige voeding voor atleten",
-      "restrictiveDiets": "Restrictieve Diëten",
-      "restrictiveDietsDesc": "Navigeer voedingsbeperkingen veilig",
-      "offSeason": "Off-Season Voorbereiding",
-      "offSeasonDesc": "Bereid uw lichaam voor tijdens het tussenseizoen",
-      "inSeason": "In-Season Voorbereiding",
-      "inSeasonDesc": "Optimale voeding tijdens competitie",
-      "performance": "Prestatie Voorbereiding",
-      "performanceDesc": "Pre-game voedingsstrategieën",
-      "inGame": "In-Game Hydratatie",
-      "inGameDesc": "Blijf gehydrateerd tijdens competitie",
-      "supplements": "NSF Supplementen",
-      "supplementsDesc": "NSF-goedgekeurde supplementengids",
-      "holistic": "Holistische Gezondheid",
-      "holisticDesc": "Geest-lichaam voedingsconnectie",
-      "dailyNutrition": "Dagelijkse Voedingstips",
-      "dailyNutritionDesc": "Snelle dagelijkse tips voor beter eten"
-    }
-  },
-  "weather": {
-    "title": "Spelen met de Elementen",
-    "subtitle": "Beheers elke wedstrijddagconditie",
-    "tagline": "Train slimmer, speel harder",
-    "subtitleBaseball": "Beheers elke honkbal wedstrijddagconditie",
-    "subtitleSoftball": "Beheers elke softbal wedstrijddagconditie",
-    "currentConditions": "Huidige Omstandigheden",
-    "feelsLike": "Voelt als",
-    "wind": "Wind",
-    "humidity": "Vochtigheid",
-    "visibility": "Zicht",
-    "uvIndex": "UV-index",
-    "forecast": "7-Daagse Voorspelling",
-    "drillRecommendations": "Oefeningsaanbevelingen",
-    "sportAnalysis": "Conditie Analyse",
-    "baseballAnalysis": "Honkbal Conditie Analyse",
-    "softballAnalysis": "Softbal Conditie Analyse",
-    "enterLocation": "Locatie invoeren",
-    "useMyLocation": "Gebruik Mijn Locatie",
-    "excellent": "Uitstekend",
-    "fair": "Redelijk",
-    "notRecommended": "Niet Aanbevolen",
-    "searchLocation": "Zoek een locatie...",
-    "retry": "Opnieuw proberen",
-    "enterLocationPrompt": "Voer hierboven een locatie in om weersomstandigheden en trainingsaanbevelingen te zien",
-    "locationDetected": "Locatie gedetecteerd",
-    "high": "Hoog",
-    "moderate": "Matig",
-    "low": "Laag",
-    "clear": "Helder",
-    "good": "Goed",
-    "limited": "Beperkt",
-    "veryHigh": "Zeer Hoog",
-    "ballFlight": "Balvlucht",
-    "windImpact": "Windimpact",
-    "fieldConditions": "Veldcondities",
-    "tracking": "Tracking",
-    "uvWarning": "UV-waarschuwing",
-    "recommendation": "Aanbeveling",
-    "toggleDrills": "Toon Oefeningsaanbevelingen",
-    "hideDrills": "Verberg Oefeningsaanbevelingen",
-    "drillRecommendationsTitle": "Weer-gebaseerde Oefeningsaanbevelingen",
-    "proTip": "Pro Tip:",
-    "prioritizeDrills": "Focus eerst op HOGE prioriteit oefeningen voor de beste trainingsaanpassing aan de huidige omstandigheden.",
-    "toggleForecast": "Toon 7-Daagse Voorspelling",
-    "hideForecast": "Verberg 7-Daagse Voorspelling",
-    "forecastTitle": "7-Daagse Trainingsvoorspelling",
-    "today": "Vandaag",
-    "tomorrow": "Morgen",
-    "trainingExcellent": "Uitstekend - Ideaal voor training",
-    "trainingFair": "Redelijk - Monitor omstandigheden",
-    "trainingPoor": "Niet Aanbevolen - Onveilig",
-    "trainingUnknown": "Onbekend",
-    "precipitationChance": "neerslagkans",
-    "failedToLoadWeather": "Laden van weergegevens mislukt",
-    "noConditions": "Geen specifieke omstandigheden om te analyseren",
-    "sunrise": "Zonsopgang",
-    "sunset": "Zonsondergang",
-    "toggleHourlyForecast": "Uurlijkse Voorspelling Tonen",
-    "hideHourlyForecast": "Uurlijkse Voorspelling Verbergen",
-    "hourlyForecastTitle": "33-Uurs Voorspelling",
-    "now": "Nu",
-    "todayMorning": "Vanmorgen",
-    "todayAfternoon": "Vanmiddag",
-    "todayEvening": "Vanavond",
-    "tonight": "Vannacht",
-    "tomorrowMorning": "Morgenochtend",
-    "tomorrowAfternoon": "Morgenmiddag",
-    "tomorrowEvening": "Morgenavond",
-    "tomorrowNight": "Morgennacht",
-    "swipe": "Vegen",
-    "poor": "Slecht",
-    "gameDayPrep": {
-      "title": "Wedstrijddag Voorbereiding",
-      "show": "Wedstrijddag Voorbereiding",
-      "hide": "Voorbereiding Verbergen"
-    },
-    "favorites": {
-      "save": "Locatie Opslaan",
-      "saved": "Locatie Opgeslagen",
-      "removed": "Locatie Verwijderd",
-      "selectFavorite": "Opgeslagen",
-      "noFavorites": "Geen opgeslagen locaties",
-      "defaultSet": "Standaardlocatie ingesteld",
-      "manage": "Opgeslagen Locaties",
-      "setDefault": "Als Standaard Instellen",
-      "rename": "Hernoemen",
-      "delete": "Verwijderen",
-      "nameUpdated": "Locatie hernoemd",
-      "default": "Standaard"
-    },
-    "alerts": {
-      "title": "Weerwaarschuwingen",
-      "expires": "Verloopt",
-      "instructions": "Veiligheidsinstructies"
-    },
-    "airQuality": {
-      "title": "Luchtkwaliteit",
-      "unavailable": "N/B"
-    }
-  },
-  "scout": {
-    "dashboard": "Scout Dashboard",
-     "players": "Spelers",
-     "typeToSearch": "Begin met typen om spelers te zoeken...",
-    "searchPlayers": "Spelers Zoeken",
-    "followedPlayers": "Gevolgde Spelers",
-    "pendingRequests": "Lopende Verzoeken",
-    "sendFollowRequest": "Volgverzoek Sturen",
-    "followRequestSent": "Volgverzoek Verstuurd",
-    "viewVideos": "Video's Bekijken",
-    "annotateVideo": "Video Annoteren",
-    "annotations": "Annotaties",
-    "coachAnnotations": "Coach Annotaties",
-    "myAnnotations": "Mijn Annotaties",
-    "noAnnotations": "Nog geen annotaties",
-    "dashboardDescription": "Beheer uw spelersvolgers en ontdek nieuw talent",
-    "allSports": "Alle Sporten",
-    "noFollowingPlayers": "U volgt nog geen spelers. Zoek naar spelers om uw lijst op te bouwen.",
-    "viewProfile": "Profiel Bekijken",
-    "viewLibrary": "Bibliotheek Bekijken",
-    "unfollow": "Ontvolgen",
-    "findPlayers": "Spelers Vinden",
-    "searchPlayersPlaceholder": "Zoek in alle spelers...",
-    "minCharactersToSearch": "Typ minimaal 2 tekens om te zoeken",
-    "searching": "Zoeken...",
-    "noPlayersFound": "Geen spelers gevonden die overeenkomen met uw zoekopdracht",
-    "playerFound": "speler gevonden",
-    "playersFound": "spelers gevonden",
-    "follow": "Volgen",
-    "pending": "In Behandeling",
-    "followingStatus": "Volgend",
-    "unfollowPlayer": "Speler Ontvolgen",
-    "unfollowConfirmation": "Weet u zeker dat u {{name}} wilt ontvolgen? U verliest de toegang tot hun gedeelde video's.",
-    "unfollowing": "Ontvolgen...",
-    "unfollowAction": "Ontvolgen",
-    "followRequestSentDescription": "De speler wordt op de hoogte gesteld en kan uw verzoek goedkeuren.",
-    "unfollowedPlayer": "Speler ontvolgd",
-    "failedToLoadFollowing": "Laden van gevolgde spelers mislukt",
-    "failedToSearchPlayers": "Zoeken naar spelers mislukt",
-    "failedToUnfollow": "Ontvolgen mislukt",
-    "advancedFilters": "Geavanceerde Filters",
-    "clearFilters": "Filters Wissen",
-    "primaryPosition": "Hoofdpositie",
-    "throwingSide": "Werpkant",
-    "battingSide": "Slagkant",
-    "heightRange": "Lengtebereik",
-    "weightRange": "Gewichtsbereik",
-    "anyPosition": "Elke Positie",
-    "anyThrowingSide": "Alle",
-    "anyBattingSide": "Alle",
-    "anyState": "Elke Provincie",
-    "anyCommitment": "Alle",
-    "anyYear": "Elk Jaar",
-    "showFilters": "Filters Tonen",
-    "hideFilters": "Filters Verbergen",
-    "following": "Gevolgde Spelers"
-  },
-  "subscription": {
-    "title": "Abonnement",
-    "plans": "Plannen",
-    "currentPlan": "Huidig Plan",
-    "upgrade": "Upgraden",
-    "cancel": "Annuleren",
-    "free": "Gratis",
-    "pro": "Pro",
-    "premium": "Premium",
-    "perMonth": "/maand",
-    "features": "Functies",
-    "selectPlan": "Plan Selecteren",
-    "checkout": "Afrekenen",
-    "paymentSuccess": "Betaling Geslaagd",
-    "paymentFailed": "Betaling Mislukt"
-  },
-  "errors": {
-    "somethingWentWrong": "Er is iets misgegaan",
-    "tryAgain": "Probeer het opnieuw",
-    "notFound": "Pagina niet gevonden",
-    "unauthorized": "Niet geautoriseerd",
-    "forbidden": "Toegang geweigerd",
-    "networkError": "Netwerkfout",
-    "serverError": "Serverfout",
-    "failedToLoadRankings": "Laden van ranglijsten mislukt"
-  },
-  "toast": {
-    "profileUpdated": "Profiel succesvol bijgewerkt",
-    "videoSaved": "Video opgeslagen in bibliotheek",
-    "videoDeleted": "Video verwijderd",
-    "annotationSaved": "Annotatie opgeslagen",
-    "followRequestSent": "Volgverzoek verstuurd",
-    "languageChanged": "Taal gewijzigd"
-  },
-  "videoPlayer": {
-    "frameByFrameMode": "Frame-voor-frame modus",
-    "scoutViewCapture": "Scout Weergave - Maak frames om te annoteren",
-    "loopStart": "Lus Start",
-    "loopEnd": "Lus Einde",
-    "looping": "Lus: {{start}}s → {{end}}s",
-    "back": "Terug",
-    "forward": "Vooruit",
-    "capture": "Vastleggen",
-    "mirror": "Spiegelen",
-    "fullscreen": "Volledig Scherm",
-    "markLoopStart": "Markeer Lus Start",
-    "markLoopEnd": "Markeer Lus Einde",
-    "clear": "Wissen",
-    "start": "Start",
-    "end": "Einde",
-    "capturedKeyFrames": "Vastgelegde Sleutelframes",
-    "downloadAll": "Alles Downloaden ({{count}})",
-    "keyFrameCaptured": "Sleutelframe vastgelegd!",
-    "videoNotReady": "Video nog niet klaar",
-    "loopStartSet": "Lus start ingesteld op {{time}}s",
-    "loopEndSet": "Lus einde ingesteld op {{time}}s",
-    "loopCleared": "Lus gewist",
-    "frameDownloaded": "Frame {{number}} gedownload!",
-    "annotatedFrameDownloaded": "Geannoteerd frame {{number}} gedownload!",
-    "frameRemoved": "Frame verwijderd!",
-    "videoOrCanvasNotReady": "Video of canvas niet klaar",
-    "videoNotFullyLoaded": "Video niet volledig geladen. Wacht en probeer opnieuw.",
-    "canvasContextError": "Kon canvas context niet krijgen",
-    "failedToDrawFrame": "Frame tekenen mislukt. Vernieuw de pagina en probeer opnieuw.",
-    "cannotCaptureCors": "Kan frame niet vastleggen vanwege beveiligingsbeperkingen. Vernieuw de pagina.",
-    "failedToCaptureLoading": "Frame vastleggen mislukt. De video is mogelijk nog aan het laden.",
-    "videoProtected": "Video is beveiligd. Frame vastleggen niet beschikbaar voor deze video.",
-    "failedToCapture": "Frame vastleggen mislukt. Probeer opnieuw.",
-    "downloadingFrames": "{{count}} frame(s) downloaden...",
-    "stepBackward": "Eén frame terug",
-    "stepForward": "Eén frame vooruit"
-  },
-  "tutorial": {
-    "step": "Stap {{current}} van {{total}}",
-    "previous": "Vorige",
-    "next": "Volgende",
-    "startCompeting": "Begin met Concurreren",
-    "completed": "Tutorial voltooid!",
-    "failedToComplete": "Tutorial kon niet worden voltooid",
-    "player": {
-      "welcome": { "title": "Welkom bij Hammers Modality!", "description": "Laten we de tools verkennen die je helpen je spel naar het volgende niveau te tillen." },
-      "creator": { "title": "Je Creator Profiel", "description": "Stel je profiel in om je trainingservaring te personaliseren en verbind met scouts." },
-      "modules": { "title": "Trainingsmodules", "description": "Krijg toegang tot gespecialiseerde modules voor slaan, gooien en pitchen om specifieke vaardigheden te verbeteren." },
-      "upload": { "title": "Video Uploaden", "description": "Upload je trainingsvideo's om Hammer-gestuurde analyse van je techniek te krijgen." },
-      "coaching": { "title": "Hammer Coaching", "description": "Ontvang gedetailleerde feedback en oefenaanbevelingen op basis van je videoanalyse." },
-      "library": { "title": "Spelers Club", "description": "Sla je trainingssessies op en organiseer ze in je persoonlijke bibliotheek." },
-      "following": { "title": "Scout Verbinding", "description": "Verbind met scouts en coaches die je trainingsvoortgang kunnen zien." },
-      "ranking": { "title": "Ranglijsten", "description": "Volg je voortgang en vergelijk jezelf met andere atleten in de ranglijsten." },
-      "profile": { "title": "Profiel Instellingen", "description": "Pas je profiel aan en beheer je accountinstellingen." }
-    },
-    "scout": {
-      "welcome": { "title": "Welkom, Scout!", "description": "Laten we de tools verkennen om talent te ontdekken en te evalueren." },
-      "creator": { "title": "Je Scout Profiel", "description": "Stel je kwalificaties en organisatie-affiliatie in." },
-      "discover": { "title": "Ontdek Spelers", "description": "Blader en zoek naar getalenteerde spelers met geavanceerde filters." },
-      "search": { "title": "Geavanceerd Zoeken", "description": "Filter spelers op positie, staat, ervaringsniveau en meer." },
-      "follow": { "title": "Volg Spelers", "description": "Stuur volgverzoeken om toegang te krijgen tot de trainingsbibliotheken van spelers." },
-      "videos": { "title": "Bekijk Video's", "description": "Bekijk trainingssessies en analyseer de technieken van spelers." },
-      "rankings": { "title": "Speler Ranglijsten", "description": "Bekijk prestatieranglijsten voor alle spelers op het platform." },
-      "analyze": { "title": "Analyseer Prestaties", "description": "Bekijk Hammer-analyses en voeg je eigen annotaties toe aan spelervideo's." }
-    }
   },
   "nutrition": {
     "categoryContent": {
@@ -1678,6 +1216,316 @@
       }
     }
   },
+  "weather": {
+    "title": "Spelen met de Elementen",
+    "subtitle": "Beheers elke wedstrijddagconditie",
+    "tagline": "Train slimmer, speel harder",
+    "subtitleBaseball": "Beheers elke honkbal wedstrijddagconditie",
+    "subtitleSoftball": "Beheers elke softbal wedstrijddagconditie",
+    "currentConditions": "Huidige Omstandigheden",
+    "feelsLike": "Voelt als",
+    "wind": "Wind",
+    "humidity": "Vochtigheid",
+    "visibility": "Zicht",
+    "uvIndex": "UV-index",
+    "forecast": "7-Daagse Voorspelling",
+    "drillRecommendations": "Oefeningsaanbevelingen",
+    "sportAnalysis": "Conditie Analyse",
+    "baseballAnalysis": "Honkbal Conditie Analyse",
+    "softballAnalysis": "Softbal Conditie Analyse",
+    "enterLocation": "Locatie invoeren",
+    "useMyLocation": "Gebruik Mijn Locatie",
+    "excellent": "Uitstekend",
+    "fair": "Redelijk",
+    "notRecommended": "Niet Aanbevolen",
+    "searchLocation": "Zoek een locatie...",
+    "retry": "Opnieuw proberen",
+    "enterLocationPrompt": "Voer hierboven een locatie in om weersomstandigheden en trainingsaanbevelingen te zien",
+    "locationDetected": "Locatie gedetecteerd",
+    "high": "Hoog",
+    "moderate": "Matig",
+    "low": "Laag",
+    "clear": "Helder",
+    "good": "Goed",
+    "limited": "Beperkt",
+    "veryHigh": "Zeer Hoog",
+    "ballFlight": "Balvlucht",
+    "windImpact": "Windimpact",
+    "fieldConditions": "Veldcondities",
+    "tracking": "Tracking",
+    "uvWarning": "UV-waarschuwing",
+    "recommendation": "Aanbeveling",
+    "toggleDrills": "Toon Oefeningsaanbevelingen",
+    "hideDrills": "Verberg Oefeningsaanbevelingen",
+    "drillRecommendationsTitle": "Weer-gebaseerde Oefeningsaanbevelingen",
+    "proTip": "Pro Tip:",
+    "prioritizeDrills": "Focus eerst op HOGE prioriteit oefeningen voor de beste trainingsaanpassing aan de huidige omstandigheden.",
+    "toggleForecast": "Toon 7-Daagse Voorspelling",
+    "hideForecast": "Verberg 7-Daagse Voorspelling",
+    "forecastTitle": "7-Daagse Trainingsvoorspelling",
+    "today": "Vandaag",
+    "tomorrow": "Morgen",
+    "trainingExcellent": "Uitstekend - Ideaal voor training",
+    "trainingFair": "Redelijk - Monitor omstandigheden",
+    "trainingPoor": "Niet Aanbevolen - Onveilig",
+    "trainingUnknown": "Onbekend",
+    "precipitationChance": "neerslagkans",
+    "failedToLoadWeather": "Laden van weergegevens mislukt",
+    "noConditions": "Geen specifieke omstandigheden om te analyseren",
+    "sunrise": "Zonsopgang",
+    "sunset": "Zonsondergang",
+    "toggleHourlyForecast": "Uurlijkse Voorspelling Tonen",
+    "hideHourlyForecast": "Uurlijkse Voorspelling Verbergen",
+    "hourlyForecastTitle": "33-Uurs Voorspelling",
+    "now": "Nu",
+    "todayMorning": "Vanmorgen",
+    "todayAfternoon": "Vanmiddag",
+    "todayEvening": "Vanavond",
+    "tonight": "Vannacht",
+    "tomorrowMorning": "Morgenochtend",
+    "tomorrowAfternoon": "Morgenmiddag",
+    "tomorrowEvening": "Morgenavond",
+    "tomorrowNight": "Morgennacht",
+    "swipe": "Vegen",
+    "poor": "Slecht",
+    "gameDayPrep": {
+      "title": "Wedstrijddag Voorbereiding",
+      "show": "Wedstrijddag Voorbereiding",
+      "hide": "Voorbereiding Verbergen"
+    },
+    "favorites": {
+      "save": "Locatie Opslaan",
+      "saved": "Locatie Opgeslagen",
+      "removed": "Locatie Verwijderd",
+      "selectFavorite": "Opgeslagen",
+      "noFavorites": "Geen opgeslagen locaties",
+      "defaultSet": "Standaardlocatie ingesteld",
+      "manage": "Opgeslagen Locaties",
+      "setDefault": "Als Standaard Instellen",
+      "rename": "Hernoemen",
+      "delete": "Verwijderen",
+      "nameUpdated": "Locatie hernoemd",
+      "default": "Standaard"
+    },
+    "alerts": {
+      "title": "Weerwaarschuwingen",
+      "expires": "Verloopt",
+      "instructions": "Veiligheidsinstructies"
+    },
+    "airQuality": {
+      "title": "Luchtkwaliteit",
+      "unavailable": "N/B"
+    }
+  },
+  "scout": {
+    "dashboard": "Scout Dashboard",
+    "players": "Spelers",
+    "typeToSearch": "Begin met typen om spelers te zoeken...",
+    "searchPlayers": "Spelers Zoeken",
+    "followedPlayers": "Gevolgde Spelers",
+    "pendingRequests": "Lopende Verzoeken",
+    "sendFollowRequest": "Volgverzoek Sturen",
+    "followRequestSent": "Volgverzoek Verstuurd",
+    "viewVideos": "Video's Bekijken",
+    "annotateVideo": "Video Annoteren",
+    "annotations": "Annotaties",
+    "coachAnnotations": "Coach Annotaties",
+    "myAnnotations": "Mijn Annotaties",
+    "noAnnotations": "Nog geen annotaties",
+    "dashboardDescription": "Beheer uw spelersvolgers en ontdek nieuw talent",
+    "allSports": "Alle Sporten",
+    "noFollowingPlayers": "U volgt nog geen spelers. Zoek naar spelers om uw lijst op te bouwen.",
+    "viewProfile": "Profiel Bekijken",
+    "viewLibrary": "Bibliotheek Bekijken",
+    "unfollow": "Ontvolgen",
+    "findPlayers": "Spelers Vinden",
+    "searchPlayersPlaceholder": "Zoek in alle spelers...",
+    "minCharactersToSearch": "Typ minimaal 2 tekens om te zoeken",
+    "searching": "Zoeken...",
+    "noPlayersFound": "Geen spelers gevonden die overeenkomen met uw zoekopdracht",
+    "playerFound": "speler gevonden",
+    "playersFound": "spelers gevonden",
+    "follow": "Volgen",
+    "pending": "In Behandeling",
+    "followingStatus": "Volgend",
+    "unfollowPlayer": "Speler Ontvolgen",
+    "unfollowConfirmation": "Weet u zeker dat u {{name}} wilt ontvolgen? U verliest de toegang tot hun gedeelde video's.",
+    "unfollowing": "Ontvolgen...",
+    "unfollowAction": "Ontvolgen",
+    "followRequestSentDescription": "De speler wordt op de hoogte gesteld en kan uw verzoek goedkeuren.",
+    "unfollowedPlayer": "Speler ontvolgd",
+    "failedToLoadFollowing": "Laden van gevolgde spelers mislukt",
+    "failedToSearchPlayers": "Zoeken naar spelers mislukt",
+    "failedToUnfollow": "Ontvolgen mislukt",
+    "advancedFilters": "Geavanceerde Filters",
+    "clearFilters": "Filters Wissen",
+    "primaryPosition": "Hoofdpositie",
+    "throwingSide": "Werpkant",
+    "battingSide": "Slagkant",
+    "heightRange": "Lengtebereik",
+    "weightRange": "Gewichtsbereik",
+    "anyPosition": "Elke Positie",
+    "anyThrowingSide": "Alle",
+    "anyBattingSide": "Alle",
+    "anyState": "Elke Provincie",
+    "anyCommitment": "Alle",
+    "anyYear": "Elk Jaar",
+    "showFilters": "Filters Tonen",
+    "hideFilters": "Filters Verbergen",
+    "following": "Gevolgde Spelers"
+  },
+  "subscription": {
+    "title": "Abonnement",
+    "plans": "Plannen",
+    "currentPlan": "Huidig Plan",
+    "upgrade": "Upgraden",
+    "cancel": "Annuleren",
+    "free": "Gratis",
+    "pro": "Pro",
+    "premium": "Premium",
+    "perMonth": "/maand",
+    "features": "Functies",
+    "selectPlan": "Plan Selecteren",
+    "checkout": "Afrekenen",
+    "paymentSuccess": "Betaling Geslaagd",
+    "paymentFailed": "Betaling Mislukt"
+  },
+  "errors": {
+    "somethingWentWrong": "Er is iets misgegaan",
+    "tryAgain": "Probeer het opnieuw",
+    "notFound": "Pagina niet gevonden",
+    "unauthorized": "Niet geautoriseerd",
+    "forbidden": "Toegang geweigerd",
+    "networkError": "Netwerkfout",
+    "serverError": "Serverfout",
+    "failedToLoadRankings": "Laden van ranglijsten mislukt"
+  },
+  "toast": {
+    "profileUpdated": "Profiel succesvol bijgewerkt",
+    "videoSaved": "Video opgeslagen in bibliotheek",
+    "videoDeleted": "Video verwijderd",
+    "annotationSaved": "Annotatie opgeslagen",
+    "followRequestSent": "Volgverzoek verstuurd",
+    "languageChanged": "Taal gewijzigd"
+  },
+  "videoPlayer": {
+    "frameByFrameMode": "Frame-voor-frame modus",
+    "scoutViewCapture": "Scout Weergave - Maak frames om te annoteren",
+    "loopStart": "Lus Start",
+    "loopEnd": "Lus Einde",
+    "looping": "Lus: {{start}}s → {{end}}s",
+    "back": "Terug",
+    "forward": "Vooruit",
+    "capture": "Vastleggen",
+    "mirror": "Spiegelen",
+    "fullscreen": "Volledig Scherm",
+    "markLoopStart": "Markeer Lus Start",
+    "markLoopEnd": "Markeer Lus Einde",
+    "clear": "Wissen",
+    "start": "Start",
+    "end": "Einde",
+    "capturedKeyFrames": "Vastgelegde Sleutelframes",
+    "downloadAll": "Alles Downloaden ({{count}})",
+    "keyFrameCaptured": "Sleutelframe vastgelegd!",
+    "videoNotReady": "Video nog niet klaar",
+    "loopStartSet": "Lus start ingesteld op {{time}}s",
+    "loopEndSet": "Lus einde ingesteld op {{time}}s",
+    "loopCleared": "Lus gewist",
+    "frameDownloaded": "Frame {{number}} gedownload!",
+    "annotatedFrameDownloaded": "Geannoteerd frame {{number}} gedownload!",
+    "frameRemoved": "Frame verwijderd!",
+    "videoOrCanvasNotReady": "Video of canvas niet klaar",
+    "videoNotFullyLoaded": "Video niet volledig geladen. Wacht en probeer opnieuw.",
+    "canvasContextError": "Kon canvas context niet krijgen",
+    "failedToDrawFrame": "Frame tekenen mislukt. Vernieuw de pagina en probeer opnieuw.",
+    "cannotCaptureCors": "Kan frame niet vastleggen vanwege beveiligingsbeperkingen. Vernieuw de pagina.",
+    "failedToCaptureLoading": "Frame vastleggen mislukt. De video is mogelijk nog aan het laden.",
+    "videoProtected": "Video is beveiligd. Frame vastleggen niet beschikbaar voor deze video.",
+    "failedToCapture": "Frame vastleggen mislukt. Probeer opnieuw.",
+    "downloadingFrames": "{{count}} frame(s) downloaden...",
+    "stepBackward": "Eén frame terug",
+    "stepForward": "Eén frame vooruit"
+  },
+  "tutorial": {
+    "step": "Stap {{current}} van {{total}}",
+    "previous": "Vorige",
+    "next": "Volgende",
+    "startCompeting": "Begin met Concurreren",
+    "completed": "Tutorial voltooid!",
+    "failedToComplete": "Tutorial kon niet worden voltooid",
+    "player": {
+      "welcome": {
+        "title": "Welkom bij Hammers Modality!",
+        "description": "Laten we de tools verkennen die je helpen je spel naar het volgende niveau te tillen."
+      },
+      "creator": {
+        "title": "Je Creator Profiel",
+        "description": "Stel je profiel in om je trainingservaring te personaliseren en verbind met scouts."
+      },
+      "modules": {
+        "title": "Trainingsmodules",
+        "description": "Krijg toegang tot gespecialiseerde modules voor slaan, gooien en pitchen om specifieke vaardigheden te verbeteren."
+      },
+      "upload": {
+        "title": "Video Uploaden",
+        "description": "Upload je trainingsvideo's om Hammer-gestuurde analyse van je techniek te krijgen."
+      },
+      "coaching": {
+        "title": "Hammer Coaching",
+        "description": "Ontvang gedetailleerde feedback en oefenaanbevelingen op basis van je videoanalyse."
+      },
+      "library": {
+        "title": "Spelers Club",
+        "description": "Sla je trainingssessies op en organiseer ze in je persoonlijke bibliotheek."
+      },
+      "following": {
+        "title": "Scout Verbinding",
+        "description": "Verbind met scouts en coaches die je trainingsvoortgang kunnen zien."
+      },
+      "ranking": {
+        "title": "Ranglijsten",
+        "description": "Volg je voortgang en vergelijk jezelf met andere atleten in de ranglijsten."
+      },
+      "profile": {
+        "title": "Profiel Instellingen",
+        "description": "Pas je profiel aan en beheer je accountinstellingen."
+      }
+    },
+    "scout": {
+      "welcome": {
+        "title": "Welkom, Scout!",
+        "description": "Laten we de tools verkennen om talent te ontdekken en te evalueren."
+      },
+      "creator": {
+        "title": "Je Scout Profiel",
+        "description": "Stel je kwalificaties en organisatie-affiliatie in."
+      },
+      "discover": {
+        "title": "Ontdek Spelers",
+        "description": "Blader en zoek naar getalenteerde spelers met geavanceerde filters."
+      },
+      "search": {
+        "title": "Geavanceerd Zoeken",
+        "description": "Filter spelers op positie, staat, ervaringsniveau en meer."
+      },
+      "follow": {
+        "title": "Volg Spelers",
+        "description": "Stuur volgverzoeken om toegang te krijgen tot de trainingsbibliotheken van spelers."
+      },
+      "videos": {
+        "title": "Bekijk Video's",
+        "description": "Bekijk trainingssessies en analyseer de technieken van spelers."
+      },
+      "rankings": {
+        "title": "Speler Ranglijsten",
+        "description": "Bekijk prestatieranglijsten voor alle spelers op het platform."
+      },
+      "analyze": {
+        "title": "Analyseer Prestaties",
+        "description": "Bekijk Hammer-analyses en voeg je eigen annotaties toe aan spelervideo's."
+      }
+    }
+  },
   "annotation": {
     "title": "Frame Annoteren",
     "saveAnnotations": "Annotaties Opslaan",
@@ -1939,31 +1787,91 @@
       "educational": "Alleen Educatief",
       "athleteFocused": "Atleet-Gericht",
       "comprehensiveGuide": "Uitgebreide Gids",
-      "categories": { "all": "Alle Badges", "injury": "Blessure Studie", "tiered": "Anatomie Niveaus", "special": "Speciale Prestatie" },
+      "categories": {
+        "all": "Alle Badges",
+        "injury": "Blessure Studie",
+        "tiered": "Anatomie Niveaus",
+        "special": "Speciale Prestatie"
+      },
       "earned": "Verdiend",
       "locked": "Vergrendeld",
       "safetyDisclaimer": "Toegekend voor educatieve studie. Geen medische goedkeuring. Raadpleeg altijd een professional.",
       "legendText": "Badges worden verdiend door educatieve inhoud te voltooien.",
       "items": {
-        "shoulder_scholar": { "name": "Schouder Geleerde", "description": "Schouderblessure-educatie voltooid" },
-        "elbow_expert": { "name": "Elleboog Expert", "description": "Elleboog overzicht voltooid" },
-        "hamstring_headliner": { "name": "Hamstring Ster", "description": "Onderlichaam module voltooid" },
-        "ankle_analyst": { "name": "Enkel Analist", "description": "Enkelblessure-educatie voltooid" },
-        "wrist_wizard": { "name": "Pols Wizard", "description": "Pols educatie voltooid" },
-        "back_boss": { "name": "Rug Baas", "description": "Rug educatie voltooid" },
-        "bronze_anatomy": { "name": "Bronzen Anatomie Badge", "description": "3 blessures bestudeerd" },
-        "silver_anatomy": { "name": "Zilveren Anatomie Badge", "description": "7 blessures bestudeerd" },
-        "gold_anatomy": { "name": "Gouden Anatomie Badge", "description": "12+ blessures bestudeerd" },
-        "elite_recovery": { "name": "Elite Herstel Badge", "description": "Bibliotheek voltooid" },
-        "diagnostic_detective": { "name": "Diagnose Detective", "description": "Diagnose stroomdiagram quiz geslaagd" },
-        "red_flag_ready": { "name": "Rode Vlag Gereed", "description": "Rode vlag quiz geslaagd" },
-        "pain_scale_pro": { "name": "Pijnschaal Pro", "description": "Pijnbewustzijn voltooid" },
-        "recovery_intelligence": { "name": "Herstel Intelligentie", "description": "Herstelmethoden voltooid" },
-        "human_body_mastery": { "name": "Lichaam Meesterschap", "description": "Alle secties voltooid" }
+        "shoulder_scholar": {
+          "name": "Schouder Geleerde",
+          "description": "Schouderblessure-educatie voltooid"
+        },
+        "elbow_expert": {
+          "name": "Elleboog Expert",
+          "description": "Elleboog overzicht voltooid"
+        },
+        "hamstring_headliner": {
+          "name": "Hamstring Ster",
+          "description": "Onderlichaam module voltooid"
+        },
+        "ankle_analyst": {
+          "name": "Enkel Analist",
+          "description": "Enkelblessure-educatie voltooid"
+        },
+        "wrist_wizard": {
+          "name": "Pols Wizard",
+          "description": "Pols educatie voltooid"
+        },
+        "back_boss": {
+          "name": "Rug Baas",
+          "description": "Rug educatie voltooid"
+        },
+        "bronze_anatomy": {
+          "name": "Bronzen Anatomie Badge",
+          "description": "3 blessures bestudeerd"
+        },
+        "silver_anatomy": {
+          "name": "Zilveren Anatomie Badge",
+          "description": "7 blessures bestudeerd"
+        },
+        "gold_anatomy": {
+          "name": "Gouden Anatomie Badge",
+          "description": "12+ blessures bestudeerd"
+        },
+        "elite_recovery": {
+          "name": "Elite Herstel Badge",
+          "description": "Bibliotheek voltooid"
+        },
+        "diagnostic_detective": {
+          "name": "Diagnose Detective",
+          "description": "Diagnose stroomdiagram quiz geslaagd"
+        },
+        "red_flag_ready": {
+          "name": "Rode Vlag Gereed",
+          "description": "Rode vlag quiz geslaagd"
+        },
+        "pain_scale_pro": {
+          "name": "Pijnschaal Pro",
+          "description": "Pijnbewustzijn voltooid"
+        },
+        "recovery_intelligence": {
+          "name": "Herstel Intelligentie",
+          "description": "Herstelmethoden voltooid"
+        },
+        "human_body_mastery": {
+          "name": "Lichaam Meesterschap",
+          "description": "Alle secties voltooid"
+        }
       }
     },
-    "streak": { "dayStreak": "Dagen Reeks", "sections": "Secties", "badges": "Badges", "best": "Beste", "nextBadge": "Volgende Badge", "keepLearning": "Blijf leren!" },
-    "progress": { "title": "Uw Voortgang & Badges", "subtitle": "Volg uw reis" },
+    "streak": {
+      "dayStreak": "Dagen Reeks",
+      "sections": "Secties",
+      "badges": "Badges",
+      "best": "Beste",
+      "nextBadge": "Volgende Badge",
+      "keepLearning": "Blijf leren!"
+    },
+    "progress": {
+      "title": "Uw Voortgang & Badges",
+      "subtitle": "Volg uw reis"
+    },
     "quiz": {
       "title": "Kennistoets",
       "description": "Beantwoord {{count}} vragen om uw begrip te testen",
@@ -1982,39 +1890,228 @@
       "badgeEarned": "Badge Verdiend!",
       "questions": {
         "diagnostic": {
-          "q1": { "question": "Wat is het hoofddoel van het diagnostisch stroomdiagram?", "options": ["Medische diagnose stellen", "Helpen reflecteren op symptomen", "Doktersbezoek vervangen", "Medicatie voorschrijven"], "correct": 1 },
-          "q2": { "question": "Wat moet u eerst overwegen bij symptomen?", "options": ["Pijnstillers nemen", "Locatie en type identificeren", "Doorgaan met activiteit", "Milde symptomen negeren"], "correct": 1 },
-          "q3": { "question": "Wanneer is professionele evaluatie nodig?", "options": ["Alleen bij breuken", "Bij ernstige symptomen of rode vlaggen", "Nooit", "Alleen voor professionele atleten"], "correct": 1 }
+          "q1": {
+            "question": "Wat is het hoofddoel van het diagnostisch stroomdiagram?",
+            "options": [
+              "Medische diagnose stellen",
+              "Helpen reflecteren op symptomen",
+              "Doktersbezoek vervangen",
+              "Medicatie voorschrijven"
+            ],
+            "correct": 1
+          },
+          "q2": {
+            "question": "Wat moet u eerst overwegen bij symptomen?",
+            "options": [
+              "Pijnstillers nemen",
+              "Locatie en type identificeren",
+              "Doorgaan met activiteit",
+              "Milde symptomen negeren"
+            ],
+            "correct": 1
+          },
+          "q3": {
+            "question": "Wanneer is professionele evaluatie nodig?",
+            "options": [
+              "Alleen bij breuken",
+              "Bij ernstige symptomen of rode vlaggen",
+              "Nooit",
+              "Alleen voor professionele atleten"
+            ],
+            "correct": 1
+          }
         },
         "pain-scale": {
-          "q1": { "question": "Wat is het doel van de 0-10 pijnschaal?", "options": ["Blessures diagnosticeren", "Pijnniveau beschrijven", "Behandeling bepalen", "Spierkracht meten"], "correct": 1 },
-          "q2": { "question": "Wat betekent pijnniveau 4-6?", "options": ["Geen pijn", "Mild ongemak", "Matige pijn die activiteit verstoort", "Noodhulp nodig"], "correct": 2 },
-          "q3": { "question": "Wanneer moet u stoppen met activiteit?", "options": ["Bij niveau 1-2", "Wanneer pijn activiteit verstoort", "Alleen bij niveau 10", "Nooit, doordrukken"], "correct": 1 }
+          "q1": {
+            "question": "Wat is het doel van de 0-10 pijnschaal?",
+            "options": [
+              "Blessures diagnosticeren",
+              "Pijnniveau beschrijven",
+              "Behandeling bepalen",
+              "Spierkracht meten"
+            ],
+            "correct": 1
+          },
+          "q2": {
+            "question": "Wat betekent pijnniveau 4-6?",
+            "options": [
+              "Geen pijn",
+              "Mild ongemak",
+              "Matige pijn die activiteit verstoort",
+              "Noodhulp nodig"
+            ],
+            "correct": 2
+          },
+          "q3": {
+            "question": "Wanneer moet u stoppen met activiteit?",
+            "options": [
+              "Bij niveau 1-2",
+              "Wanneer pijn activiteit verstoort",
+              "Alleen bij niveau 10",
+              "Nooit, doordrukken"
+            ],
+            "correct": 1
+          }
         },
         "red-flags": {
-          "q1": { "question": "Wat wordt beschouwd als een kritieke rode vlag?", "options": ["Milde spierpijn", "Vermoeidheid na activiteit", "Zichtbare misvorming of onvermogen te belasten", "Milde stijfheid"], "correct": 2 },
-          "q2": { "question": "Wat te doen bij rode vlag symptomen?", "options": ["Doorgaan met trainen", "Professionele hulp zoeken", "Alleen ijs aanbrengen", "Een week wachten"], "correct": 1 },
-          "q3": { "question": "Waarom is het herkennen van rode vlaggen belangrijk?", "options": ["Onnodige rust vermijden", "Voorkomen dat kleine blessures ernstig worden", "Medische kosten besparen", "Prestaties verbeteren"], "correct": 1 }
+          "q1": {
+            "question": "Wat wordt beschouwd als een kritieke rode vlag?",
+            "options": [
+              "Milde spierpijn",
+              "Vermoeidheid na activiteit",
+              "Zichtbare misvorming of onvermogen te belasten",
+              "Milde stijfheid"
+            ],
+            "correct": 2
+          },
+          "q2": {
+            "question": "Wat te doen bij rode vlag symptomen?",
+            "options": [
+              "Doorgaan met trainen",
+              "Professionele hulp zoeken",
+              "Alleen ijs aanbrengen",
+              "Een week wachten"
+            ],
+            "correct": 1
+          },
+          "q3": {
+            "question": "Waarom is het herkennen van rode vlaggen belangrijk?",
+            "options": [
+              "Onnodige rust vermijden",
+              "Voorkomen dat kleine blessures ernstig worden",
+              "Medische kosten besparen",
+              "Prestaties verbeteren"
+            ],
+            "correct": 1
+          }
         },
         "rtp": {
-          "q1": { "question": "Wat is de juiste volgorde van terugkeer naar spel?", "options": ["Training, Bescherming, Versterking, Herstel", "Bescherming, Herstel, Versterking, Terugkeer", "Terugkeer, Versterking, Bescherming, Herstel", "Versterking, Terugkeer, Bescherming, Herstel"], "correct": 1 },
-          "q2": { "question": "Waar richt de beschermingsfase zich op?", "options": ["Volledige training", "Rust en verdere schade voorkomen", "Maximale kracht opbouwen", "Wedstrijdvoorbereiding"], "correct": 1 },
-          "q3": { "question": "Waarom variëren hersteltijdlijnen?", "options": ["Verschillende blessures vereisen verschillende genezingstijden", "Het is alleen een excuus", "Protocollen zijn altijd gelijk", "Alleen leeftijd telt"], "correct": 0 }
+          "q1": {
+            "question": "Wat is de juiste volgorde van terugkeer naar spel?",
+            "options": [
+              "Training, Bescherming, Versterking, Herstel",
+              "Bescherming, Herstel, Versterking, Terugkeer",
+              "Terugkeer, Versterking, Bescherming, Herstel",
+              "Versterking, Terugkeer, Bescherming, Herstel"
+            ],
+            "correct": 1
+          },
+          "q2": {
+            "question": "Waar richt de beschermingsfase zich op?",
+            "options": [
+              "Volledige training",
+              "Rust en verdere schade voorkomen",
+              "Maximale kracht opbouwen",
+              "Wedstrijdvoorbereiding"
+            ],
+            "correct": 1
+          },
+          "q3": {
+            "question": "Waarom variëren hersteltijdlijnen?",
+            "options": [
+              "Verschillende blessures vereisen verschillende genezingstijden",
+              "Het is alleen een excuus",
+              "Protocollen zijn altijd gelijk",
+              "Alleen leeftijd telt"
+            ],
+            "correct": 0
+          }
         },
         "prevention": {
-          "q1": { "question": "Wat is een effectief warming-up principe?", "options": ["30 minuten statisch rekken", "Direct volledige intensiteit", "Dynamisch rekken met geleidelijke intensiteit", "Warming-up overslaan"], "correct": 2 },
-          "q2": { "question": "Waarom helpt krachttraining bij preventie?", "options": ["Maakt spieren groter", "Bouwt veerkracht voor gewrichten", "Alleen voor bodybuilding", "Helpt niet bij preventie"], "correct": 1 },
-          "q3": { "question": "Welk is een preventiepatroon?", "options": ["Door pijn trainen", "Rust overslaan", "Voldoende slaap en geleidelijke progressie", "Dagelijks maximale intensiteit"], "correct": 2 }
+          "q1": {
+            "question": "Wat is een effectief warming-up principe?",
+            "options": [
+              "30 minuten statisch rekken",
+              "Direct volledige intensiteit",
+              "Dynamisch rekken met geleidelijke intensiteit",
+              "Warming-up overslaan"
+            ],
+            "correct": 2
+          },
+          "q2": {
+            "question": "Waarom helpt krachttraining bij preventie?",
+            "options": [
+              "Maakt spieren groter",
+              "Bouwt veerkracht voor gewrichten",
+              "Alleen voor bodybuilding",
+              "Helpt niet bij preventie"
+            ],
+            "correct": 1
+          },
+          "q3": {
+            "question": "Welk is een preventiepatroon?",
+            "options": [
+              "Door pijn trainen",
+              "Rust overslaan",
+              "Voldoende slaap en geleidelijke progressie",
+              "Dagelijks maximale intensiteit"
+            ],
+            "correct": 2
+          }
         },
         "recovery": {
-          "q1": { "question": "Wanneer moet ijs worden gebruikt?", "options": ["Chronische spierspanning", "Acute blessures en ontsteking", "Voor activiteit", "Altijd"], "correct": 1 },
-          "q2": { "question": "Wat is het hoofdvoordeel van warmte?", "options": ["Acute zwelling verminderen", "Bloedstroom en ontspanning bevorderen", "Breuken genezen", "Medische zorg vervangen"], "correct": 1 },
-          "q3": { "question": "Wat is de aanbevolen tijd voor ijs/warmte?", "options": ["5 minuten", "15-20 minuten", "1 uur", "Hele nacht"], "correct": 1 }
+          "q1": {
+            "question": "Wanneer moet ijs worden gebruikt?",
+            "options": [
+              "Chronische spierspanning",
+              "Acute blessures en ontsteking",
+              "Voor activiteit",
+              "Altijd"
+            ],
+            "correct": 1
+          },
+          "q2": {
+            "question": "Wat is het hoofdvoordeel van warmte?",
+            "options": [
+              "Acute zwelling verminderen",
+              "Bloedstroom en ontspanning bevorderen",
+              "Breuken genezen",
+              "Medische zorg vervangen"
+            ],
+            "correct": 1
+          },
+          "q3": {
+            "question": "Wat is de aanbevolen tijd voor ijs/warmte?",
+            "options": [
+              "5 minuten",
+              "15-20 minuten",
+              "1 uur",
+              "Hele nacht"
+            ],
+            "correct": 1
+          }
         },
         "equipment": {
-          "q1": { "question": "Wat is het hoofdgebruik van kinesiotape?", "options": ["Gewricht volledig fixeren", "Spierondersteuning met bewegingsvrijheid", "Medische behandeling vervangen", "Alleen esthetisch"], "correct": 1 },
-          "q2": { "question": "Waarvoor wordt een foam roller gebruikt?", "options": ["Krachttraining", "Zelfmassage en spiervoorbereiding", "Gewrichtsfixatie", "Noodgevallen"], "correct": 1 },
-          "q3": { "question": "Welk voordeel bieden compressiemouwen?", "options": ["Volledige immobilisatie", "Compressie en ondersteuning", "Vervangt rust", "Permanente genezing"], "correct": 1 }
+          "q1": {
+            "question": "Wat is het hoofdgebruik van kinesiotape?",
+            "options": [
+              "Gewricht volledig fixeren",
+              "Spierondersteuning met bewegingsvrijheid",
+              "Medische behandeling vervangen",
+              "Alleen esthetisch"
+            ],
+            "correct": 1
+          },
+          "q2": {
+            "question": "Waarvoor wordt een foam roller gebruikt?",
+            "options": [
+              "Krachttraining",
+              "Zelfmassage en spiervoorbereiding",
+              "Gewrichtsfixatie",
+              "Noodgevallen"
+            ],
+            "correct": 1
+          },
+          "q3": {
+            "question": "Welk voordeel bieden compressiemouwen?",
+            "options": [
+              "Volledige immobilisatie",
+              "Compressie en ondersteuning",
+              "Vervangt rust",
+              "Permanente genezing"
+            ],
+            "correct": 1
+          }
         }
       }
     },
@@ -2022,30 +2119,401 @@
     "commonSymptoms": "Symptomen",
     "typicalTimeline": "Tijdlijn",
     "sections": {
-      "diagnosticFlow": { "title": "Diagnostisch Stroomdiagram", "subtitle": "Begrijp uw symptomen" },
-      "painScale": { "title": "Pijnschaal Systeem", "subtitle": "Beoordeel pijnniveaus" },
-      "redFlags": { "title": "Rode Vlag Check", "subtitle": "Waarschuwingssignalen" },
-      "injuryHub": { "title": "Blessure Hub", "subtitle": "Bekijk blessures" },
-      "returnToPlay": { "title": "Terugkeer Fasen", "subtitle": "Herstelfasen" },
-      "injuryPrevention": { "title": "Blessurepreventie", "subtitle": "Verminder risico" },
-      "recoveryMethods": { "title": "Herstelmethoden", "subtitle": "Ijs, warmte, principes" },
-      "equipmentLibrary": { "title": "Apparatuur", "subtitle": "Hersteltools" }
+      "diagnosticFlow": {
+        "title": "Diagnostisch Stroomdiagram",
+        "subtitle": "Begrijp uw symptomen"
+      },
+      "painScale": {
+        "title": "Pijnschaal Systeem",
+        "subtitle": "Beoordeel pijnniveaus"
+      },
+      "redFlags": {
+        "title": "Rode Vlag Check",
+        "subtitle": "Waarschuwingssignalen"
+      },
+      "injuryHub": {
+        "title": "Blessure Hub",
+        "subtitle": "Bekijk blessures"
+      },
+      "returnToPlay": {
+        "title": "Terugkeer Fasen",
+        "subtitle": "Herstelfasen"
+      },
+      "injuryPrevention": {
+        "title": "Blessurepreventie",
+        "subtitle": "Verminder risico"
+      },
+      "recoveryMethods": {
+        "title": "Herstelmethoden",
+        "subtitle": "Ijs, warmte, principes"
+      },
+      "equipmentLibrary": {
+        "title": "Apparatuur",
+        "subtitle": "Hersteltools"
+      }
     },
     "hurtingVsInjured": {
       "title": "Pijn vs. Geblesseerd",
       "subtitle": "Begrijp het verschil",
-      "hurting": { "title": "Normale Spierpijn", "description": "Deel van training:", "sign1": "Spierpijn die verbetert", "sign2": "Stijfheid na opwarmen", "sign3": "Vermoeidheid na training", "sign4": "Verdwijnt binnen 24-72 uur" },
-      "injured": { "title": "Mogelijke Blessure", "description": "Ernstiger:", "sign1": "Scherpe pijn", "sign2": "Pijn wordt erger", "sign3": "Zwelling of blauwe plekken", "sign4": "Kan niet belasten", "sign5": "Langer dan 72 uur" },
-      "note": { "title": "Onthoud", "description": "Alleen zelfreflectie, geen diagnose." }
+      "hurting": {
+        "title": "Normale Spierpijn",
+        "description": "Deel van training:",
+        "sign1": "Spierpijn die verbetert",
+        "sign2": "Stijfheid na opwarmen",
+        "sign3": "Vermoeidheid na training",
+        "sign4": "Verdwijnt binnen 24-72 uur"
+      },
+      "injured": {
+        "title": "Mogelijke Blessure",
+        "description": "Ernstiger:",
+        "sign1": "Scherpe pijn",
+        "sign2": "Pijn wordt erger",
+        "sign3": "Zwelling of blauwe plekken",
+        "sign4": "Kan niet belasten",
+        "sign5": "Langer dan 72 uur"
+      },
+      "note": {
+        "title": "Onthoud",
+        "description": "Alleen zelfreflectie, geen diagnose."
+      }
     },
-    "diagnosticFlow": { "intro": "Reflecteer op symptomen.", "step": "Stap", "steps": { "symptoms": { "title": "Identificeer Symptomen", "description": "Wat ervaart u?", "q1": "Waar?", "q2": "Welk type?", "q3": "Beïnvloedt beweging?" }, "timing": { "title": "Timing", "description": "Wanneer begon het?", "q1": "Plotseling of geleidelijk?", "q2": "Hoe lang?", "q3": "Constant of wisselend?" }, "severity": { "title": "Ernst", "description": "Hoe ernstig?", "q1": "Normale activiteiten mogelijk?", "q2": "Zwelling?", "q3": "Wordt het beter of erger?" }, "decision": { "title": "Opties", "description": "Overweeg:", "outcome1": { "condition": "Ernstige symptomen", "action": "Zoek hulp" }, "outcome2": { "condition": "Matig, 48-72 uur", "action": "Plan consult" }, "outcome3": { "condition": "Mild, verbetert", "action": "Blijf monitoren" } } } },
-    "painScale": { "intro": "Reflecteer op pijn.", "noPain": "Geen Pijn", "worstPain": "Ergste Pijn", "recommendation": "Richtlijn", "levels": { "minimal": { "label": "Minimaal", "description": "Nauwelijks merkbaar", "recommendation": "Ga door" }, "mild": { "label": "Mild", "description": "Merkbaar", "recommendation": "Pas aan" }, "moderate": { "label": "Matig", "description": "Verstoort", "recommendation": "Rust" }, "severe": { "label": "Ernstig", "description": "Significant", "recommendation": "Evaluatie" }, "extreme": { "label": "Extreem", "description": "Overweldigend", "recommendation": "Directe hulp" } }, "ranges": { "minimal": "Minimaal", "mild": "Mild", "moderate": "Matig", "severe": "Ernstig", "extreme": "Extreem" } },
-    "redFlags": { "intro": "Check symptomen.", "critical": "Kritiek", "high": "Hoog", "medium": "Medium", "items": { "deformity": "Misvorming", "numbness": "Gevoelloosheid", "inability": "Kan niet belasten", "severeSwelling": "Ernstige zwelling", "popSound": "Knak gehoord", "lockedJoint": "Geblokkeerd gewricht", "instability": "Instabiel", "worsening": "Wordt erger", "nightPain": "Nachtpijn", "fever": "Koorts" }, "seekProfessional": "Zoek Hulp", "stopActivity": "Stop", "result": { "critical": { "title": "Directe Aandacht", "description": "Kritieke signalen" }, "high": { "title": "Evaluatie Nodig", "description": "Significante signalen" }, "moderate": { "title": "Monitor", "description": "Enkele signalen" }, "clear": { "title": "Geen Rode Vlaggen", "description": "Blijf monitoren" } }, "disclaimer": { "title": "Reminder", "description": "Alleen educatief." } },
-    "disclaimer": { "title": "MEDISCHE DISCLAIMER", "subtitle": "Lees zorgvuldig", "points": { "educational": { "title": "Educatief", "description": "Alleen informatie." }, "noDiagnosis": { "title": "Geen Advies", "description": "Geen diagnose." }, "seekHelp": { "title": "Professionals", "description": "Raadpleeg experts." }, "emergency": { "title": "Noodgevallen", "description": "Directe hulp." } }, "fullText": { "para1": "Educatieve informatie.", "para2": "Geen vervanging medisch advies.", "para3": "Onder begeleiding.", "warning": "⚠️ Ernstige pijn? Zoek hulp." }, "bottomNote": "U begrijpt deze disclaimer." },
-    "returnToPlay": { "intro": "Begrijp herstelfasen.", "phase": "Fase", "keyFocus": "Focus", "phases": { "protection": { "title": "Bescherming", "description": "Bescherm gebied", "focus1": "Rust", "focus2": "Verminder zwelling", "focus3": "Voorkom meer schade", "focus4": "Voorzichtige beweging" }, "restore": { "title": "Herstel Beweging", "description": "Herstel functie", "focus1": "Bewegingsbereik", "focus2": "Basale patronen", "focus3": "Lichte versterking", "focus4": "Mobiliteit" }, "strengthen": { "title": "Versterking", "description": "Bouw kracht", "focus1": "Progressieve oefeningen", "focus2": "Stabiliteit", "focus3": "Sportspecifiek", "focus4": "Geleidelijke belasting" }, "return": { "title": "Terugkeer", "description": "Volledige training", "focus1": "Sportspecifiek", "focus2": "Wedstrijdsnelheid", "focus3": "Competitiegereed", "focus4": "Onderhoud" } }, "progressionNote": { "title": "Individueel", "description": "Elk herstel is anders." } },
-    "injuryPrevention": { "intro": "Preventie-educatie.", "categories": { "warmup": { "title": "Warming-up", "subtitle": "Voorbereiding", "tip1": "Dynamisch rekken", "tip2": "Sportspecifiek", "tip3": "Geleidelijke intensiteit" }, "strength": { "title": "Krachttraining", "subtitle": "Veerkracht", "tip1": "Progressieve overbelasting", "tip2": "Gebalanceerd", "tip3": "Core stabiliteit" }, "mobility": { "title": "Mobiliteit", "subtitle": "Bewegingskwaliteit", "tip1": "Gewrichtsmobiliteit", "tip2": "Gerichte stretching", "tip3": "Bewegingsvariatie" }, "sportSpecific": { "title": "Sportspecifiek", "subtitle": "Honkbal/Softbal", "tip1": "Pitchtelling", "tip2": "Goede mechanica", "tip3": "Positiespecifiek" } }, "patterns": { "title": "Preventiepatronen", "subtitle": "Goede gewoonten", "pattern1": "Voldoende slaap", "pattern2": "Hydratatie", "pattern3": "Geleidelijke progressie", "pattern4": "Luister naar lichaam" } },
-    "recoveryMethods": { "intro": "Herstelmethoden.", "whenToUse": "Wanneer", "ice": { "title": "IJs", "subtitle": "Acute situaties", "use1": "Acute blessures", "use2": "Ontstekingsbeheer", "use3": "Zwellingreductie", "timing": "15-20 min" }, "heat": { "title": "Warmte", "subtitle": "Chronisch", "use1": "Spierspanning", "use2": "Bloedstroom", "use3": "Ontspanning", "timing": "15-20 min" }, "principles": { "title": "Principes", "subtitle": "Basis", "rest": { "title": "Rust & Slaap", "description": "7-9 uur" }, "hydration": { "title": "Hydratatie", "description": "Voldoende vocht" } } },
-    "equipmentLibrary": { "intro": "Herstel apparatuur.", "searchPlaceholder": "Zoeken...", "allCategories": "Alle", "whatItDoes": "Functie:", "whenUsed": "Gebruik:", "noResults": "Niet gevonden", "categories": { "tape": "Tape", "sleeves": "Mouwen", "bands": "Banden", "softTissue": "Zacht Weefsel", "supports": "Ondersteuning" }, "items": { "kinesioTape": { "name": "Kinesio Tape", "description": "Elastische tape", "usage": "Spierondersteuning" }, "athleticTape": { "name": "Sporttape", "description": "Niet-elastisch", "usage": "Gewrichtsondersteuning" }, "compressionSleeve": { "name": "Compressiemouw", "description": "Compressie", "usage": "Zwellingreductie" }, "kneeSleeve": { "name": "Kniemouw", "description": "Knieondersteuning", "usage": "Warmte en compressie" }, "resistanceBands": { "name": "Weerstandsbanden", "description": "Elastische banden", "usage": "Revalidatie" }, "therapyBands": { "name": "Therapiebanden", "description": "Platte banden", "usage": "Versterking" }, "foamRoller": { "name": "Foam Roller", "description": "Zelfmassage", "usage": "Spiervoorbereiding" }, "massageBall": { "name": "Massagebal", "description": "Gericht", "usage": "Triggerpoints" }, "ankleBrace": { "name": "Enkelbrace", "description": "Enkelondersteuning", "usage": "Preventie" }, "wristSupport": { "name": "Polsondersteuning", "description": "Polssteun", "usage": "Ondersteuning" } } }
+    "diagnosticFlow": {
+      "intro": "Reflecteer op symptomen.",
+      "step": "Stap",
+      "steps": {
+        "symptoms": {
+          "title": "Identificeer Symptomen",
+          "description": "Wat ervaart u?",
+          "q1": "Waar?",
+          "q2": "Welk type?",
+          "q3": "Beïnvloedt beweging?"
+        },
+        "timing": {
+          "title": "Timing",
+          "description": "Wanneer begon het?",
+          "q1": "Plotseling of geleidelijk?",
+          "q2": "Hoe lang?",
+          "q3": "Constant of wisselend?"
+        },
+        "severity": {
+          "title": "Ernst",
+          "description": "Hoe ernstig?",
+          "q1": "Normale activiteiten mogelijk?",
+          "q2": "Zwelling?",
+          "q3": "Wordt het beter of erger?"
+        },
+        "decision": {
+          "title": "Opties",
+          "description": "Overweeg:",
+          "outcome1": {
+            "condition": "Ernstige symptomen",
+            "action": "Zoek hulp"
+          },
+          "outcome2": {
+            "condition": "Matig, 48-72 uur",
+            "action": "Plan consult"
+          },
+          "outcome3": {
+            "condition": "Mild, verbetert",
+            "action": "Blijf monitoren"
+          }
+        }
+      }
+    },
+    "painScale": {
+      "intro": "Reflecteer op pijn.",
+      "noPain": "Geen Pijn",
+      "worstPain": "Ergste Pijn",
+      "recommendation": "Richtlijn",
+      "levels": {
+        "minimal": {
+          "label": "Minimaal",
+          "description": "Nauwelijks merkbaar",
+          "recommendation": "Ga door"
+        },
+        "mild": {
+          "label": "Mild",
+          "description": "Merkbaar",
+          "recommendation": "Pas aan"
+        },
+        "moderate": {
+          "label": "Matig",
+          "description": "Verstoort",
+          "recommendation": "Rust"
+        },
+        "severe": {
+          "label": "Ernstig",
+          "description": "Significant",
+          "recommendation": "Evaluatie"
+        },
+        "extreme": {
+          "label": "Extreem",
+          "description": "Overweldigend",
+          "recommendation": "Directe hulp"
+        }
+      },
+      "ranges": {
+        "minimal": "Minimaal",
+        "mild": "Mild",
+        "moderate": "Matig",
+        "severe": "Ernstig",
+        "extreme": "Extreem"
+      }
+    },
+    "redFlags": {
+      "intro": "Check symptomen.",
+      "critical": "Kritiek",
+      "high": "Hoog",
+      "medium": "Medium",
+      "items": {
+        "deformity": "Misvorming",
+        "numbness": "Gevoelloosheid",
+        "inability": "Kan niet belasten",
+        "severeSwelling": "Ernstige zwelling",
+        "popSound": "Knak gehoord",
+        "lockedJoint": "Geblokkeerd gewricht",
+        "instability": "Instabiel",
+        "worsening": "Wordt erger",
+        "nightPain": "Nachtpijn",
+        "fever": "Koorts"
+      },
+      "seekProfessional": "Zoek Hulp",
+      "stopActivity": "Stop",
+      "result": {
+        "critical": {
+          "title": "Directe Aandacht",
+          "description": "Kritieke signalen"
+        },
+        "high": {
+          "title": "Evaluatie Nodig",
+          "description": "Significante signalen"
+        },
+        "moderate": {
+          "title": "Monitor",
+          "description": "Enkele signalen"
+        },
+        "clear": {
+          "title": "Geen Rode Vlaggen",
+          "description": "Blijf monitoren"
+        }
+      },
+      "disclaimer": {
+        "title": "Reminder",
+        "description": "Alleen educatief."
+      }
+    },
+    "disclaimer": {
+      "title": "MEDISCHE DISCLAIMER",
+      "subtitle": "Lees zorgvuldig",
+      "points": {
+        "educational": {
+          "title": "Educatief",
+          "description": "Alleen informatie."
+        },
+        "noDiagnosis": {
+          "title": "Geen Advies",
+          "description": "Geen diagnose."
+        },
+        "seekHelp": {
+          "title": "Professionals",
+          "description": "Raadpleeg experts."
+        },
+        "emergency": {
+          "title": "Noodgevallen",
+          "description": "Directe hulp."
+        }
+      },
+      "fullText": {
+        "para1": "Educatieve informatie.",
+        "para2": "Geen vervanging medisch advies.",
+        "para3": "Onder begeleiding.",
+        "warning": "⚠️ Ernstige pijn? Zoek hulp."
+      },
+      "bottomNote": "U begrijpt deze disclaimer."
+    },
+    "returnToPlay": {
+      "intro": "Begrijp herstelfasen.",
+      "phase": "Fase",
+      "keyFocus": "Focus",
+      "phases": {
+        "protection": {
+          "title": "Bescherming",
+          "description": "Bescherm gebied",
+          "focus1": "Rust",
+          "focus2": "Verminder zwelling",
+          "focus3": "Voorkom meer schade",
+          "focus4": "Voorzichtige beweging"
+        },
+        "restore": {
+          "title": "Herstel Beweging",
+          "description": "Herstel functie",
+          "focus1": "Bewegingsbereik",
+          "focus2": "Basale patronen",
+          "focus3": "Lichte versterking",
+          "focus4": "Mobiliteit"
+        },
+        "strengthen": {
+          "title": "Versterking",
+          "description": "Bouw kracht",
+          "focus1": "Progressieve oefeningen",
+          "focus2": "Stabiliteit",
+          "focus3": "Sportspecifiek",
+          "focus4": "Geleidelijke belasting"
+        },
+        "return": {
+          "title": "Terugkeer",
+          "description": "Volledige training",
+          "focus1": "Sportspecifiek",
+          "focus2": "Wedstrijdsnelheid",
+          "focus3": "Competitiegereed",
+          "focus4": "Onderhoud"
+        }
+      },
+      "progressionNote": {
+        "title": "Individueel",
+        "description": "Elk herstel is anders."
+      }
+    },
+    "injuryPrevention": {
+      "intro": "Preventie-educatie.",
+      "categories": {
+        "warmup": {
+          "title": "Warming-up",
+          "subtitle": "Voorbereiding",
+          "tip1": "Dynamisch rekken",
+          "tip2": "Sportspecifiek",
+          "tip3": "Geleidelijke intensiteit"
+        },
+        "strength": {
+          "title": "Krachttraining",
+          "subtitle": "Veerkracht",
+          "tip1": "Progressieve overbelasting",
+          "tip2": "Gebalanceerd",
+          "tip3": "Core stabiliteit"
+        },
+        "mobility": {
+          "title": "Mobiliteit",
+          "subtitle": "Bewegingskwaliteit",
+          "tip1": "Gewrichtsmobiliteit",
+          "tip2": "Gerichte stretching",
+          "tip3": "Bewegingsvariatie"
+        },
+        "sportSpecific": {
+          "title": "Sportspecifiek",
+          "subtitle": "Honkbal/Softbal",
+          "tip1": "Pitchtelling",
+          "tip2": "Goede mechanica",
+          "tip3": "Positiespecifiek"
+        }
+      },
+      "patterns": {
+        "title": "Preventiepatronen",
+        "subtitle": "Goede gewoonten",
+        "pattern1": "Voldoende slaap",
+        "pattern2": "Hydratatie",
+        "pattern3": "Geleidelijke progressie",
+        "pattern4": "Luister naar lichaam"
+      }
+    },
+    "recoveryMethods": {
+      "intro": "Herstelmethoden.",
+      "whenToUse": "Wanneer",
+      "ice": {
+        "title": "IJs",
+        "subtitle": "Acute situaties",
+        "use1": "Acute blessures",
+        "use2": "Ontstekingsbeheer",
+        "use3": "Zwellingreductie",
+        "timing": "15-20 min"
+      },
+      "heat": {
+        "title": "Warmte",
+        "subtitle": "Chronisch",
+        "use1": "Spierspanning",
+        "use2": "Bloedstroom",
+        "use3": "Ontspanning",
+        "timing": "15-20 min"
+      },
+      "principles": {
+        "title": "Principes",
+        "subtitle": "Basis",
+        "rest": {
+          "title": "Rust & Slaap",
+          "description": "7-9 uur"
+        },
+        "hydration": {
+          "title": "Hydratatie",
+          "description": "Voldoende vocht"
+        }
+      }
+    },
+    "equipmentLibrary": {
+      "intro": "Herstel apparatuur.",
+      "searchPlaceholder": "Zoeken...",
+      "allCategories": "Alle",
+      "whatItDoes": "Functie:",
+      "whenUsed": "Gebruik:",
+      "noResults": "Niet gevonden",
+      "categories": {
+        "tape": "Tape",
+        "sleeves": "Mouwen",
+        "bands": "Banden",
+        "softTissue": "Zacht Weefsel",
+        "supports": "Ondersteuning"
+      },
+      "items": {
+        "kinesioTape": {
+          "name": "Kinesio Tape",
+          "description": "Elastische tape",
+          "usage": "Spierondersteuning"
+        },
+        "athleticTape": {
+          "name": "Sporttape",
+          "description": "Niet-elastisch",
+          "usage": "Gewrichtsondersteuning"
+        },
+        "compressionSleeve": {
+          "name": "Compressiemouw",
+          "description": "Compressie",
+          "usage": "Zwellingreductie"
+        },
+        "kneeSleeve": {
+          "name": "Kniemouw",
+          "description": "Knieondersteuning",
+          "usage": "Warmte en compressie"
+        },
+        "resistanceBands": {
+          "name": "Weerstandsbanden",
+          "description": "Elastische banden",
+          "usage": "Revalidatie"
+        },
+        "therapyBands": {
+          "name": "Therapiebanden",
+          "description": "Platte banden",
+          "usage": "Versterking"
+        },
+        "foamRoller": {
+          "name": "Foam Roller",
+          "description": "Zelfmassage",
+          "usage": "Spiervoorbereiding"
+        },
+        "massageBall": {
+          "name": "Massagebal",
+          "description": "Gericht",
+          "usage": "Triggerpoints"
+        },
+        "ankleBrace": {
+          "name": "Enkelbrace",
+          "description": "Enkelondersteuning",
+          "usage": "Preventie"
+        },
+        "wristSupport": {
+          "name": "Polsondersteuning",
+          "description": "Polssteun",
+          "usage": "Ondersteuning"
+        }
+      }
+    }
   },
   "workoutModules": {
     "day": "Dag",
@@ -2439,58 +2907,214 @@
       "life_mastery": "Levensmeesterschap"
     },
     "challenges": {
-      "focus_week": { "title": "Focus Week", "description": "Oefen 2 minuten gerichte ademhaling voor elke training of wedstrijd." },
-      "leadership_week": { "title": "Leiderschap Week", "description": "Geef dagelijks specifieke positieve feedback aan 3 verschillende teamgenoten." },
-      "gratitude_week": { "title": "Dankbaarheid Week", "description": "Schrijf elke ochtend 3 dingen op waar je dankbaar voor bent." },
-      "visualization_week": { "title": "Visualisatie Week", "description": "Besteed 5 minuten aan het visualiseren van perfecte prestaties voor de training." },
-      "discipline_week": { "title": "Discipline Week", "description": "Voltooi je ochtendroutine 7 dagen op rij zonder excuses." },
-      "encouragement_week": { "title": "Aanmoediging Week", "description": "Wees de eerste die een teamgenoot aanmoedigt die een fout maakt." },
-      "presence_week": { "title": "Aanwezigheid Week", "description": "Leg je telefoon 1 uur voor trainingen of wedstrijden weg." },
-      "accountability_week": { "title": "Verantwoordelijkheid Week", "description": "Maak jezelf deze week publiekelijk verantwoordelijk voor één doel." },
-      "calm_week": { "title": "Kalmte Week", "description": "Oefen de 4-7-8 ademhalingstechniek drie keer per dag." },
-      "purpose_week": { "title": "Doel Week", "description": "Schrijf je persoonlijke missie verklaring en bekijk deze dagelijks." },
-      "energy_week": { "title": "Energie Week", "description": "Wees de eerste die positieve energie brengt naar elke training." },
-      "reset_day": { "title": "Reset Dag", "description": "Voltooi een 24-uurs digitale detox van sociale media." },
-      "affirmation_week": { "title": "Affirmatie Week", "description": "Herhaal 3 positieve affirmaties elke ochtend en avond." },
-      "confidence_week": { "title": "Zelfvertrouwen Week", "description": "Loop met zelfverzekerde houding en maak oogcontact bij elke interactie." },
-      "concentration_week": { "title": "Concentratie Week", "description": "Oefen single-tasking - focus op één ding tegelijk zonder afleiding." },
-      "mental_toughness_week": { "title": "Mentale Kracht Week", "description": "Als het moeilijk wordt, zeg 'kom maar op' en duw door." },
-      "positive_self_talk_week": { "title": "Positieve Zelfspraak Week", "description": "Vervang elke negatieve gedachte onmiddellijk door een positieve." },
-      "goal_setting_week": { "title": "Doelen Stellen Week", "description": "Stel elke dag een specifiek doel en volg je voortgang." },
-      "pressure_handling_week": { "title": "Druk Hanteren Week", "description": "Oefen je vaardigheden dagelijks onder gesimuleerde druk." },
-      "clutch_mindset_week": { "title": "Clutch Mentaliteit Week", "description": "Visualiseer succes in hoge druk momenten voor het slapen elke nacht." },
-      "competitive_edge_week": { "title": "Competitief Voordeel Week", "description": "Vind elke dag iets extra om te verbeteren buiten de reguliere training." },
-      "mental_reset_week": { "title": "Mentale Reset Week", "description": "Gebruik een reset woord of gebaar na elke fout om je geest te legen." },
-      "game_day_focus_week": { "title": "Wedstrijddag Focus Week", "description": "Creëer en volg een mentale voorbereidingsroutine voor de wedstrijd." },
-      "self_compassion_week": { "title": "Zelfcompassie Week", "description": "Behandel jezelf vriendelijk bij fouten - geen harde zelfkritiek." },
-      "mindfulness_week": { "title": "Mindfulness Week", "description": "Besteed elke dag 5 minuten in stille mindful bewustzijn." },
-      "stress_release_week": { "title": "Stress Loslaten Week", "description": "Oefen progressieve spierontspanning voor het slapen elke nacht." },
-      "emotional_control_week": { "title": "Emotionele Controle Week", "description": "Pauzeer en neem 3 diepe ademhalingen voor je reageert op frustratie." },
-      "joy_week": { "title": "Vreugde Week", "description": "Vind en waardeer elke dag een moment van pure vreugde in je sport." },
-      "patience_week": { "title": "Geduld Week", "description": "Oefen elke dag geduld in een uitdagende situatie." },
-      "resilience_week": { "title": "Veerkracht Week", "description": "Na elke tegenslag, schrijf op wat je ervan hebt geleerd." },
-      "letting_go_week": { "title": "Loslaten Week", "description": "Laat elke dag een zorg of spijt los door te journalen." },
-      "inner_peace_week": { "title": "Innerlijke Vrede Week", "description": "Begin en eindig elke dag met 2 minuten vredige stilte." },
-      "emotional_awareness_week": { "title": "Emotioneel Bewustzijn Week", "description": "Check 3 keer per dag je emoties en benoem wat je voelt." },
-      "communication_week": { "title": "Communicatie Week", "description": "Oefen actief luisteren - herhaal wat teamgenoten zeggen voor je reageert." },
-      "mentorship_week": { "title": "Mentorschap Week", "description": "Help elke dag een jongere of minder ervaren teamgenoot met één vaardigheid." },
-      "team_spirit_week": { "title": "Teamgeest Week", "description": "Doe elke dag iets dat het team helpt maar niet direct jezelf." },
-      "lead_by_example_week": { "title": "Leiden Door Voorbeeld Week", "description": "Wees als eerste aanwezig en vertrek als laatste bij elke training." },
-      "inspire_others_week": { "title": "Anderen Inspireren Week", "description": "Deel elke dag een inspirerend citaat of verhaal met je team." },
-      "conflict_resolution_week": { "title": "Conflictoplossing Week", "description": "Pak een klein conflict of spanning direct en constructief aan." },
-      "servant_leadership_week": { "title": "Dienend Leiderschap Week", "description": "Vraag teamgenoten 'hoe kan ik je vandaag helpen?' en voer het uit." },
-      "positivity_spread_week": { "title": "Positiviteit Verspreiden Week", "description": "Geef elke dag 5 oprechte complimenten aan verschillende mensen." },
-      "team_culture_week": { "title": "Teamcultuur Week", "description": "Handhaaf teamwaarden zelfs als niemand kijkt." },
-      "boundary_week": { "title": "Grenzen Week", "description": "Stel en handhaaf deze week een gezonde grens in je leven." },
-      "habit_stack_week": { "title": "Gewoonte Stapelen Week", "description": "Koppel een nieuwe positieve gewoonte aan een bestaande dagelijkse routine." },
-      "time_management_week": { "title": "Tijdbeheer Week", "description": "Plan je volgende dag de avond ervoor met specifieke tijdblokken." },
-      "sleep_optimization_week": { "title": "Slaap Optimalisatie Week", "description": "Ga elke dag deze week op dezelfde tijd naar bed en sta op." },
-      "nutrition_focus_week": { "title": "Voeding Focus Week", "description": "Eet bij elke maaltijd een gebalanceerde maaltijd met eiwitten, koolhydraten en groenten." },
-      "recovery_week": { "title": "Herstel Week", "description": "Besteed dagelijks 15 minuten aan herstelactiviteiten (stretchen, foam rolling)." },
-      "work_life_balance_week": { "title": "Werk-Leven Balans Week", "description": "Wijd elke dag kwaliteitstijd aan relaties buiten je sport." },
-      "digital_detox_week": { "title": "Digitale Detox Week", "description": "Beperk sociale media tot totaal 30 minuten per dag." },
-      "morning_routine_week": { "title": "Ochtendroutine Week", "description": "Creëer en volg een consistente 30-minuten ochtendroutine." },
-      "evening_routine_week": { "title": "Avondroutine Week", "description": "Creëer en volg een ontspannende 30-minuten avondroutine." }
+      "focus_week": {
+        "title": "Focus Week",
+        "description": "Oefen 2 minuten gerichte ademhaling voor elke training of wedstrijd."
+      },
+      "leadership_week": {
+        "title": "Leiderschap Week",
+        "description": "Geef dagelijks specifieke positieve feedback aan 3 verschillende teamgenoten."
+      },
+      "gratitude_week": {
+        "title": "Dankbaarheid Week",
+        "description": "Schrijf elke ochtend 3 dingen op waar je dankbaar voor bent."
+      },
+      "visualization_week": {
+        "title": "Visualisatie Week",
+        "description": "Besteed 5 minuten aan het visualiseren van perfecte prestaties voor de training."
+      },
+      "discipline_week": {
+        "title": "Discipline Week",
+        "description": "Voltooi je ochtendroutine 7 dagen op rij zonder excuses."
+      },
+      "encouragement_week": {
+        "title": "Aanmoediging Week",
+        "description": "Wees de eerste die een teamgenoot aanmoedigt die een fout maakt."
+      },
+      "presence_week": {
+        "title": "Aanwezigheid Week",
+        "description": "Leg je telefoon 1 uur voor trainingen of wedstrijden weg."
+      },
+      "accountability_week": {
+        "title": "Verantwoordelijkheid Week",
+        "description": "Maak jezelf deze week publiekelijk verantwoordelijk voor één doel."
+      },
+      "calm_week": {
+        "title": "Kalmte Week",
+        "description": "Oefen de 4-7-8 ademhalingstechniek drie keer per dag."
+      },
+      "purpose_week": {
+        "title": "Doel Week",
+        "description": "Schrijf je persoonlijke missie verklaring en bekijk deze dagelijks."
+      },
+      "energy_week": {
+        "title": "Energie Week",
+        "description": "Wees de eerste die positieve energie brengt naar elke training."
+      },
+      "reset_day": {
+        "title": "Reset Dag",
+        "description": "Voltooi een 24-uurs digitale detox van sociale media."
+      },
+      "affirmation_week": {
+        "title": "Affirmatie Week",
+        "description": "Herhaal 3 positieve affirmaties elke ochtend en avond."
+      },
+      "confidence_week": {
+        "title": "Zelfvertrouwen Week",
+        "description": "Loop met zelfverzekerde houding en maak oogcontact bij elke interactie."
+      },
+      "concentration_week": {
+        "title": "Concentratie Week",
+        "description": "Oefen single-tasking - focus op één ding tegelijk zonder afleiding."
+      },
+      "mental_toughness_week": {
+        "title": "Mentale Kracht Week",
+        "description": "Als het moeilijk wordt, zeg 'kom maar op' en duw door."
+      },
+      "positive_self_talk_week": {
+        "title": "Positieve Zelfspraak Week",
+        "description": "Vervang elke negatieve gedachte onmiddellijk door een positieve."
+      },
+      "goal_setting_week": {
+        "title": "Doelen Stellen Week",
+        "description": "Stel elke dag een specifiek doel en volg je voortgang."
+      },
+      "pressure_handling_week": {
+        "title": "Druk Hanteren Week",
+        "description": "Oefen je vaardigheden dagelijks onder gesimuleerde druk."
+      },
+      "clutch_mindset_week": {
+        "title": "Clutch Mentaliteit Week",
+        "description": "Visualiseer succes in hoge druk momenten voor het slapen elke nacht."
+      },
+      "competitive_edge_week": {
+        "title": "Competitief Voordeel Week",
+        "description": "Vind elke dag iets extra om te verbeteren buiten de reguliere training."
+      },
+      "mental_reset_week": {
+        "title": "Mentale Reset Week",
+        "description": "Gebruik een reset woord of gebaar na elke fout om je geest te legen."
+      },
+      "game_day_focus_week": {
+        "title": "Wedstrijddag Focus Week",
+        "description": "Creëer en volg een mentale voorbereidingsroutine voor de wedstrijd."
+      },
+      "self_compassion_week": {
+        "title": "Zelfcompassie Week",
+        "description": "Behandel jezelf vriendelijk bij fouten - geen harde zelfkritiek."
+      },
+      "mindfulness_week": {
+        "title": "Mindfulness Week",
+        "description": "Besteed elke dag 5 minuten in stille mindful bewustzijn."
+      },
+      "stress_release_week": {
+        "title": "Stress Loslaten Week",
+        "description": "Oefen progressieve spierontspanning voor het slapen elke nacht."
+      },
+      "emotional_control_week": {
+        "title": "Emotionele Controle Week",
+        "description": "Pauzeer en neem 3 diepe ademhalingen voor je reageert op frustratie."
+      },
+      "joy_week": {
+        "title": "Vreugde Week",
+        "description": "Vind en waardeer elke dag een moment van pure vreugde in je sport."
+      },
+      "patience_week": {
+        "title": "Geduld Week",
+        "description": "Oefen elke dag geduld in een uitdagende situatie."
+      },
+      "resilience_week": {
+        "title": "Veerkracht Week",
+        "description": "Na elke tegenslag, schrijf op wat je ervan hebt geleerd."
+      },
+      "letting_go_week": {
+        "title": "Loslaten Week",
+        "description": "Laat elke dag een zorg of spijt los door te journalen."
+      },
+      "inner_peace_week": {
+        "title": "Innerlijke Vrede Week",
+        "description": "Begin en eindig elke dag met 2 minuten vredige stilte."
+      },
+      "emotional_awareness_week": {
+        "title": "Emotioneel Bewustzijn Week",
+        "description": "Check 3 keer per dag je emoties en benoem wat je voelt."
+      },
+      "communication_week": {
+        "title": "Communicatie Week",
+        "description": "Oefen actief luisteren - herhaal wat teamgenoten zeggen voor je reageert."
+      },
+      "mentorship_week": {
+        "title": "Mentorschap Week",
+        "description": "Help elke dag een jongere of minder ervaren teamgenoot met één vaardigheid."
+      },
+      "team_spirit_week": {
+        "title": "Teamgeest Week",
+        "description": "Doe elke dag iets dat het team helpt maar niet direct jezelf."
+      },
+      "lead_by_example_week": {
+        "title": "Leiden Door Voorbeeld Week",
+        "description": "Wees als eerste aanwezig en vertrek als laatste bij elke training."
+      },
+      "inspire_others_week": {
+        "title": "Anderen Inspireren Week",
+        "description": "Deel elke dag een inspirerend citaat of verhaal met je team."
+      },
+      "conflict_resolution_week": {
+        "title": "Conflictoplossing Week",
+        "description": "Pak een klein conflict of spanning direct en constructief aan."
+      },
+      "servant_leadership_week": {
+        "title": "Dienend Leiderschap Week",
+        "description": "Vraag teamgenoten 'hoe kan ik je vandaag helpen?' en voer het uit."
+      },
+      "positivity_spread_week": {
+        "title": "Positiviteit Verspreiden Week",
+        "description": "Geef elke dag 5 oprechte complimenten aan verschillende mensen."
+      },
+      "team_culture_week": {
+        "title": "Teamcultuur Week",
+        "description": "Handhaaf teamwaarden zelfs als niemand kijkt."
+      },
+      "boundary_week": {
+        "title": "Grenzen Week",
+        "description": "Stel en handhaaf deze week een gezonde grens in je leven."
+      },
+      "habit_stack_week": {
+        "title": "Gewoonte Stapelen Week",
+        "description": "Koppel een nieuwe positieve gewoonte aan een bestaande dagelijkse routine."
+      },
+      "time_management_week": {
+        "title": "Tijdbeheer Week",
+        "description": "Plan je volgende dag de avond ervoor met specifieke tijdblokken."
+      },
+      "sleep_optimization_week": {
+        "title": "Slaap Optimalisatie Week",
+        "description": "Ga elke dag deze week op dezelfde tijd naar bed en sta op."
+      },
+      "nutrition_focus_week": {
+        "title": "Voeding Focus Week",
+        "description": "Eet bij elke maaltijd een gebalanceerde maaltijd met eiwitten, koolhydraten en groenten."
+      },
+      "recovery_week": {
+        "title": "Herstel Week",
+        "description": "Besteed dagelijks 15 minuten aan herstelactiviteiten (stretchen, foam rolling)."
+      },
+      "work_life_balance_week": {
+        "title": "Werk-Leven Balans Week",
+        "description": "Wijd elke dag kwaliteitstijd aan relaties buiten je sport."
+      },
+      "digital_detox_week": {
+        "title": "Digitale Detox Week",
+        "description": "Beperk sociale media tot totaal 30 minuten per dag."
+      },
+      "morning_routine_week": {
+        "title": "Ochtendroutine Week",
+        "description": "Creëer en volg een consistente 30-minuten ochtendroutine."
+      },
+      "evening_routine_week": {
+        "title": "Avondroutine Week",
+        "description": "Creëer en volg een ontspannende 30-minuten avondroutine."
+      }
     },
     "badges": {
       "challenge_starter": "Uitdaging Starter",
@@ -3256,74 +3880,197 @@
     },
     "equipment": {
       "hitting": {
-        "bat": { "name": "Wedstrijd Knuppel", "description": "Je primaire wedstrijd knuppel" },
-        "tee": { "name": "Batting Tee", "description": "Verstelbare hoogte gewenst" },
-        "balls": { "name": "Ballen", "description": "Minimaal 12 ballen" },
-        "barbell": { "name": "Halter & Gewichten", "description": "Voor samengestelde liften (20kg stang + gewichten)" },
-        "dumbbells": { "name": "Dumbbells", "description": "Verschillende gewichten 5-35+ kg" },
-        "trap_bar": { "name": "Trap/Hex Bar", "description": "Voor deadlifts - essentieel voor programma" },
-        "speed_bat": { "name": "Snelheidsknuppel", "description": "Lichte knuppel voor overspeed training" },
-        "heavy_bat": { "name": "Gewogen Knuppel", "description": "Voor overload swing oefeningen" },
-        "resistance_bands": { "name": "Weerstandsbanden", "description": "Voor band swings en warming-up" },
-        "connection_ball": { "name": "Connectie Bal", "description": "Schuimbal of swing connectie hulp" },
-        "swing_analyzer": { "name": "Swing Analyzer", "description": "Knuppelsnelheid tracking apparaat" },
-        "plyo_balls": { "name": "Plyo Ballen", "description": "Gewogen plyo ballen voor kracht oefeningen" },
-        "net": { "name": "Batting Net", "description": "Voor swing praktijk" },
-        "pullup_bar": { "name": "Pull-Up Bar", "description": "Voor pull-ups en hangoefeningen" },
-        "bench": { "name": "Bank", "description": "Voor bankdrukken en ondersteunende oefeningen" },
-        "cable_machine": { "name": "Kabel Machine", "description": "Voor kabel oefeningen (of band alternatief)" },
-        "weighted_bat": { "name": "Verzwaarde Trainingsknuppel", "description": "Voor overload kracht training" },
-        "med_ball": { "name": "Medicijnbal", "description": "Voor rotatie kracht oefeningen" },
-        "box": { "name": "Plyo Box/Step", "description": "Voor box jumps en step-ups" },
-        "landmine": { "name": "Landmine Hulpstuk", "description": "Voor landmine persen en rotaties" }
+        "bat": {
+          "name": "Wedstrijd Knuppel",
+          "description": "Je primaire wedstrijd knuppel"
+        },
+        "tee": {
+          "name": "Batting Tee",
+          "description": "Verstelbare hoogte gewenst"
+        },
+        "balls": {
+          "name": "Ballen",
+          "description": "Minimaal 12 ballen"
+        },
+        "barbell": {
+          "name": "Halter & Gewichten",
+          "description": "Voor samengestelde liften (20kg stang + gewichten)"
+        },
+        "dumbbells": {
+          "name": "Dumbbells",
+          "description": "Verschillende gewichten 5-35+ kg"
+        },
+        "trap_bar": {
+          "name": "Trap/Hex Bar",
+          "description": "Voor deadlifts - essentieel voor programma"
+        },
+        "speed_bat": {
+          "name": "Snelheidsknuppel",
+          "description": "Lichte knuppel voor overspeed training"
+        },
+        "heavy_bat": {
+          "name": "Gewogen Knuppel",
+          "description": "Voor overload swing oefeningen"
+        },
+        "resistance_bands": {
+          "name": "Weerstandsbanden",
+          "description": "Voor band swings en warming-up"
+        },
+        "connection_ball": {
+          "name": "Connectie Bal",
+          "description": "Schuimbal of swing connectie hulp"
+        },
+        "swing_analyzer": {
+          "name": "Swing Analyzer",
+          "description": "Knuppelsnelheid tracking apparaat"
+        },
+        "plyo_balls": {
+          "name": "Plyo Ballen",
+          "description": "Gewogen plyo ballen voor kracht oefeningen"
+        },
+        "net": {
+          "name": "Batting Net",
+          "description": "Voor swing praktijk"
+        },
+        "pullup_bar": {
+          "name": "Pull-Up Bar",
+          "description": "Voor pull-ups en hangoefeningen"
+        },
+        "bench": {
+          "name": "Bank",
+          "description": "Voor bankdrukken en ondersteunende oefeningen"
+        },
+        "cable_machine": {
+          "name": "Kabel Machine",
+          "description": "Voor kabel oefeningen (of band alternatief)"
+        },
+        "weighted_bat": {
+          "name": "Verzwaarde Trainingsknuppel",
+          "description": "Voor overload kracht training"
+        },
+        "med_ball": {
+          "name": "Medicijnbal",
+          "description": "Voor rotatie kracht oefeningen"
+        },
+        "box": {
+          "name": "Plyo Box/Step",
+          "description": "Voor box jumps en step-ups"
+        },
+        "landmine": {
+          "name": "Landmine Hulpstuk",
+          "description": "Voor landmine persen en rotaties"
+        }
       },
       "pitching": {
-        "glove": { "name": "Werper Handschoen", "description": "Wedstrijd-klare werper handschoen" },
-        "balls": { "name": "Ballen", "description": "Minimaal 24 ballen voor volume werk" },
-        "jbands": { "name": "resistance bands/Weerstandsbanden", "description": "Voor dagelijkse armverzorging routine" },
-        "weighted_balls": { "name": "Verzwaarde Ballen", "description": "Set van 110g, 140g, 200g, 255g, 310g" },
-        "plyocare_balls": { "name": "PlyCare Ballen", "description": "PlyCare ball set in verschillende gewichten" },
-        "radar_gun": { "name": "Radar Gun", "description": "Snelheid tracking apparaat" },
-        "mound": { "name": "Draagbare Mound", "description": "Draagbare pitching mound voor oefening" },
-        "catcher": { "name": "Catcher/Net", "description": "Catcher of net voor bullpen werk" },
-        "barbell": { "name": "Halter & Gewichten", "description": "Voor samengestelde liften (20kg stang + gewichten)" },
-        "dumbbells": { "name": "Dumbbells", "description": "Verschillende gewichten 5-35+ kg" },
-        "trap_bar": { "name": "Trap/Hex Bar", "description": "Voor deadlifts - essentieel voor programma" },
-        "pullup_bar": { "name": "Pull-Up Bar", "description": "Voor pull-ups en hangen" },
-        "bench": { "name": "Bank", "description": "Voor pers oefeningen" },
-        "cable_machine": { "name": "Kabel Machine", "description": "Voor kabel werk (of band alternatief)" },
-        "med_ball": { "name": "Medicine Ball", "description": "Voor rotatie kracht oefeningen" },
-        "foam_roller": { "name": "Foam Roller", "description": "Voor herstel en zelf-massage" },
-        "target": { "name": "Pitching Target", "description": "Doel voor commando werk" },
-        "towel": { "name": "Handdoek", "description": "Voor handdoek oefeningen en armverzorging" },
-        "plyocare": { "name": "PlyoCare Ballen", "description": "Voor armverzorging en snelheid training" },
-        "rice_bucket": { "name": "Rijstemmer", "description": "Voor onderarm en hand versterking" },
-        "lacrosse_ball": { "name": "Lacrossebal", "description": "Voor trigger point en fascia release" }
+        "glove": {
+          "name": "Werper Handschoen",
+          "description": "Wedstrijd-klare werper handschoen"
+        },
+        "balls": {
+          "name": "Ballen",
+          "description": "Minimaal 24 ballen voor volume werk"
+        },
+        "jbands": {
+          "name": "resistance bands/Weerstandsbanden",
+          "description": "Voor dagelijkse armverzorging routine"
+        },
+        "weighted_balls": {
+          "name": "Verzwaarde Ballen",
+          "description": "Set van 110g, 140g, 200g, 255g, 310g"
+        },
+        "plyocare_balls": {
+          "name": "PlyCare Ballen",
+          "description": "PlyCare ball set in verschillende gewichten"
+        },
+        "radar_gun": {
+          "name": "Radar Gun",
+          "description": "Snelheid tracking apparaat"
+        },
+        "mound": {
+          "name": "Draagbare Mound",
+          "description": "Draagbare pitching mound voor oefening"
+        },
+        "catcher": {
+          "name": "Catcher/Net",
+          "description": "Catcher of net voor bullpen werk"
+        },
+        "barbell": {
+          "name": "Halter & Gewichten",
+          "description": "Voor samengestelde liften (20kg stang + gewichten)"
+        },
+        "dumbbells": {
+          "name": "Dumbbells",
+          "description": "Verschillende gewichten 5-35+ kg"
+        },
+        "trap_bar": {
+          "name": "Trap/Hex Bar",
+          "description": "Voor deadlifts - essentieel voor programma"
+        },
+        "pullup_bar": {
+          "name": "Pull-Up Bar",
+          "description": "Voor pull-ups en hangen"
+        },
+        "bench": {
+          "name": "Bank",
+          "description": "Voor pers oefeningen"
+        },
+        "cable_machine": {
+          "name": "Kabel Machine",
+          "description": "Voor kabel werk (of band alternatief)"
+        },
+        "med_ball": {
+          "name": "Medicine Ball",
+          "description": "Voor rotatie kracht oefeningen"
+        },
+        "foam_roller": {
+          "name": "Foam Roller",
+          "description": "Voor herstel en zelf-massage"
+        },
+        "target": {
+          "name": "Pitching Target",
+          "description": "Doel voor commando werk"
+        },
+        "towel": {
+          "name": "Handdoek",
+          "description": "Voor handdoek oefeningen en armverzorging"
+        },
+        "plyocare": {
+          "name": "PlyoCare Ballen",
+          "description": "Voor armverzorging en snelheid training"
+        },
+        "rice_bucket": {
+          "name": "Rijstemmer",
+          "description": "Voor onderarm en hand versterking"
+        },
+        "lacrosse_ball": {
+          "name": "Lacrossebal",
+          "description": "Voor trigger point en fascia release"
+        }
       }
     }
   },
   "workoutStreak": {
-    "title": "Training Reeks",
+    "title": "Trainingsreeks",
     "currentStreak": "Huidige Reeks",
     "longestStreak": "Langste Reeks",
-    "totalWorkouts": "Totaal Trainingen",
+    "totalWorkouts": "Totaal Workouts",
     "best": "Beste",
     "total": "Totaal",
     "dayStreak": "dag reeks",
     "daysStreak": "dagen reeks",
-    "keepGoing": "Ga zo door!",
+    "keepGoing": "Blijf doorgaan!",
     "newRecord": "Nieuw Record!",
-    "milestone10": "🎉 10 Trainingen! Je bouwt gewoontes op!",
-    "milestone50": "💪 50 Trainingen! Halve eeuw bereikt!",
-    "milestone100": "🏆 100 Trainingen! Eeuw mijlpaal!",
-    "milestone200": "⭐ 200 Trainingen! Dubbel eeuw kampioen!",
-    "milestone350": "🔥 350 Trainingen! Elite toewijding!",
-    "milestone500": "👑 500 Trainingen! Legendarische atleet!",
-    "milestone700": "💎 700 Trainingen! Onstuitbare kracht!",
-    "milestone1000": "🏅 1000 Trainingen! Hall of Fame!",
+    "milestone10": "🎉 10 Workouts! Je bouwt gewoontes!",
+    "milestone50": "💪 50 Workouts! Halve eeuw bereikt!",
+    "milestone100": "🏆 100 Workouts! Eeuw mijlpaal!",
+    "milestone200": "⭐ 200 Workouts! Dubbele eeuw kampioen!",
+    "milestone350": "🔥 350 Workouts! Elite toewijding!",
+    "milestone500": "👑 500 Workouts! Legendarische atleet!",
+    "milestone700": "💎 700 Workouts! Onstopbare kracht!",
+    "milestone1000": "🏅 1000 Workouts! Hall of Fame!",
     "milestoneUnlocked": "Mijlpaal Ontgrendeld!",
-    "noStreak": "Begin vandaag je reeks!",
-    "streakBroken": "Reeks gereset - laten we opnieuw bouwen!",
+    "noStreak": "Start vandaag je reeks!",
+    "streakBroken": "Reeks gereset - laten we het opbouwen!",
     "fireUnlocked": "Vuur ontgrendelt bij 5 dagen!",
     "glowUnlocked": "Vlam gloeit bij 25 dagen!"
   },
@@ -3359,137 +4106,59 @@
       "weekly": "Wekelijks"
     },
     "delete": {
+      "confirmTitle": "Invoer verwijderen?",
+      "confirmMessage": "Deze actie kan niet ongedaan worden gemaakt. Deze invoer wordt permanent verwijderd.",
       "success": "Invoer succesvol verwijderd"
     },
     "quiz": {
-      "title": "Dagelijkse Focus Check",
-      "todayStatus": "Vandaag's Check-ins",
-      "preLift": "Voor Training",
-      "preLiftTitle": "Check-in Voor Training",
-      "morning": "Ochtend",
-      "morningLabel": "Ochtend",
-      "morningTitle": "Ochtend Check-in",
-      "morningTip": "Probeer binnen 15 minuten na het wakker worden te voltooien",
-      "night": "Nacht",
-      "nightLabel": "Nacht",
-      "nightTitle": "Avond Reflectie",
-      "completed": "Voltooid",
-      "notStarted": "Niet Gestart",
-      "saved": "Quiz succesvol opgeslagen!",
-      "error": "Quiz opslaan mislukt",
-      "allCompleted": "Geweldig! Je hebt alle 3 dagelijkse check-ins voltooid!",
-      "description": "Beoordeel hoe je je nu voelt",
-      "mentalReadiness": "Mentale Gereedheid",
-      "emotionalState": "Emotionele Staat",
-      "physicalReadiness": "Fysieke Gereedheid",
-      "sleepTime": "Slaaptijd",
-      "wakeTime": "Ontwaaktijd",
-      "sleepTimeHint": "Hoe laat ging je naar bed?",
-      "wakeTimeHint": "Hoe laat werd je wakker?",
-      "sleepTip": "Vul dit ongeveer een uur voor het slapen in voor de beste resultaten",
-      "preLiftTip": "Beoordeel je huidige staat voor de training om te volgen hoe paraatheid de prestaties beïnvloedt",
-      "morningReminderFromNight": "💡 Morgen: Voltooi je ochtend check-in binnen 15 minuten na het wakker worden!",
-      "pending": "In afwachting",
-      "hoursSlept": "Uren Geslapen",
-      "sleepQuality": "Slaapkwaliteit",
-      "sleepQualityDesc": "Beoordeel je slaapkwaliteit vannacht",
-      "sleepData": "Slaapgegevens",
-      "hoursSleptPlaceholder": "bijv. 7.5",
-      "bedtimeActual": "Hoe laat ben je gisteravond gaan slapen?",
-      "wakeTimeActual": "Hoe laat ben je vanochtend wakker geworden?",
-      "sleepDuration": "Je hebt {{hours}} geslapen",
-      "sleepAnalysis": {
-        "low": {
-          "title": "Lage Energie",
-          "message": "Energie kan uitgeput zijn. Focus vandaag op herstel. Geef prioriteit aan rust en vermijd overbelasting."
-        },
-        "moderate-low": {
-          "title": "Matig-Lage Energie",
-          "message": "Je voelt je misschien sloom. Geef prioriteit aan hydratatie en lichte activiteit. Overweeg vanavond eerder naar bed te gaan."
-        },
-        "moderate": {
-          "title": "Matige Energie",
-          "message": "Voldoende rust. Je bent klaar voor matige intensiteit training. Push jezelf maar luister naar je lichaam."
-        },
-        "good": {
-          "title": "Goede Energie",
-          "message": "Goed uitgerust! Je hebt stevige energie voor training. Geweldige basis voor topprestaties."
-        },
-        "optimal": {
-          "title": "Optimale Energie",
-          "message": "Uitstekend herstel! Piek energieniveaus vandaag. Je bent klaar voor je beste prestatie."
-        },
-        "excessive": {
-          "title": "Mogelijk Te Lang Geslapen",
-          "message": "Te lang slapen kan sufheid veroorzaken. Lichte activiteit en beweging kunnen je helpen alerter te voelen."
-        }
+      "night": {
+        "moodTitle": "Stemming Einde van de Dag",
+        "moodPrompt": "Hoe was je stemming aan het einde van de dag?",
+        "moodLevel1": "Zeer Laag",
+        "moodLevel2": "Laag",
+        "moodLevel3": "Neutraal",
+        "moodLevel4": "Goed",
+        "moodLevel5": "Zeer Goed",
+        "stressTitle": "Stress Einde van de Dag",
+        "stressPrompt": "Hoe gestrest was je aan het einde van de dag?",
+        "stressLevel1": "Zeer Laag",
+        "stressLevel2": "Laag",
+        "stressLevel3": "Matig",
+        "stressLevel4": "Hoog",
+        "stressLevel5": "Zeer Hoog"
       },
-      "sleepGoals": {
-        "title": "Slaapdoelen voor Morgen",
-        "subtitle": "Stel je intenties voor de nachtrust van vanavond",
-        "bedtimeGoal": "Hoe laat ben je van plan te gaan slapen?",
-        "wakeTimeGoal": "Hoe laat ben je van plan wakker te worden?",
-        "goalDuration": "Doel: {{hours}} slaap"
-      },
-      "phoneFree": {
-        "title": "Waarom 1 uur geen telefoon voor het slapen?",
-        "blueLight": "Vermindert blootstelling aan blauw licht dat je circadiaanse ritme verstoort",
-        "melatonin": "Verbetert de natuurlijke melatonineproductie voor sneller in slaap vallen",
-        "rem": "Verbetert de REM-slaapkwaliteit voor betere geheugenconsolidatie",
-        "recovery": "Versnelt fysiek herstel en spierherstel 's nachts",
-        "cortisol": "Verlaagt cortisolniveaus, vermindert stress en angst"
-      },
-      "level1": "Zeer Laag",
-      "level2": "Laag",
-      "level3": "Matig",
-      "level4": "Hoog",
-      "level5": "Zeer Hoog",
-      "reflectionTitle": "Avond Reflectie",
-      "didWell": "Wat heb ik vandaag goed gedaan?",
-      "didWellPlaceholder": "Deel wat goed ging...",
-      "couldImprove": "Wat kan ik verbeteren?",
-      "couldImprovePlaceholder": "Denk na over groeimogelijkheden...",
-      "learned": "Wat heb ik vandaag geleerd?",
-      "learnedPlaceholder": "Alle lessen of inzichten...",
-      "motivation": "Wat motiveert mij?",
-      "motivationPlaceholder": "Wat drijft je vooruit...",
-      "reflectionPrompts": {
-        "title": "Avond Reflectie",
-        "didWell": "Wat heb ik vandaag goed gedaan?",
-        "improve": "Wat kan ik morgen verbeteren?",
-        "learned": "Wat heb ik vandaag geleerd?",
-        "motivation": "Wat motiveert mij?"
-      },
-      "submit": "Check-in Opslaan",
-      "submitting": "Opslaan...",
-      "morning": {
-        "subtitle": "Stel je intenties. Bereid je geest voor. Voer uit.",
-        "motivationTitle": "Dagelijkse Motivatie",
-        "motivationPrompt": "Wat drijft je vandaag? Verbind met je 'waarom'.",
-        "motivationPlaceholder": "Ik word gemotiveerd door... Mijn reden om vandaag door te zetten is...",
-        "wellnessTitle": "Mentale Welzijnscheck",
-        "wellnessPrompt": "Hoe voel je je mentaal vandaag? Deel gedachten, zorgen of bevestigingen.",
-        "wellnessPlaceholder": "Hoe is mijn mindset vandaag...\n• Zorgen of afleidingen?\n• Wat moet ik loslaten?\n• Welke positieve gedachten draag ik?",
-        "moodTitle": "Stemming Check",
-        "moodPrompt": "Hoe is je stemming vanochtend?",
-        "moodLevel1": "Zeer Laag", "moodLevel2": "Laag", "moodLevel3": "Neutraal", "moodLevel4": "Goed", "moodLevel5": "Uitstekend",
-        "moodDesc1": "Worstelen, voel me down", "moodDesc2": "Wat negativiteit", "moodDesc3": "Oké, niet goed of slecht", "moodDesc4": "Voel me positief", "moodDesc5": "Uitstekende stemming, energiek",
-        "stressTitle": "Stressniveau",
-        "stressPrompt": "Hoe gestrest voel je je nu?",
-        "stressLevel1": "Zeer Laag", "stressLevel2": "Laag", "stressLevel3": "Matig", "stressLevel4": "Hoog", "stressLevel5": "Zeer Hoog",
-        "stressDesc1": "Kalm en ontspannen", "stressDesc2": "Minimale stress", "stressDesc3": "Wat druk, beheersbaar", "stressDesc4": "Aanzienlijke stress", "stressDesc5": "Overweldigende stress",
-        "disciplineTitle": "Discipline Niveau",
-        "disciplinePrompt": "Hoe toegewijd ben je om vandaag uit te voeren, wat er ook gebeurt?",
-        "disciplineLevel1": "Worstelend",
-        "disciplineLevel2": "Wankelend",
-        "disciplineLevel3": "Klaar",
-        "disciplineLevel4": "Gefocust",
-        "disciplineLevel5": "Onbreekbaar",
-        "disciplineDesc1": "Voel het niet vandaag",
-        "disciplineDesc2": "Wat weerstand",
-        "disciplineDesc3": "Toegewijd om te verschijnen",
-        "disciplineDesc4": "Geen excuses, geen afleiding",
-        "disciplineDesc5": "Niets stopt mij. Nul compromis."
+      "nightSuccess": {
+        "title": "Dag Voltooid!",
+        "todayHighlights": "Hoogtepunten van Vandaag",
+        "checkinsCompleted": "{{count}}/{{total}} Check-ins voltooid",
+        "workoutsLogged": "{{count}} training gelogd",
+        "sleepGoalSet": "{{hours}} uur slaapdoel ingesteld",
+        "weightTracked": "{{weight}} lbs bijgehouden",
+        "currentStreak": "Huidige Reeks",
+        "days": "dagen",
+        "tomorrowAwaits": "Morgen Wacht",
+        "tomorrowIncludes": "Je ochtend bevat:",
+        "morningCheckin": "Ochtend Check-in",
+        "scheduledWorkout": "Geplande Training",
+        "mindFuelLesson": "Nieuwe Mind Fuel les",
+        "nutritionTip": "Gepersonaliseerde voedingstip",
+        "goodnightMessages": {
+          "great": "Wat een geweldige dag! Slaap lekker, kampioen.",
+          "stressed": "Morgen is een nieuwe start. Rust diep vannacht.",
+          "lowMood": "Elke zonsopgang brengt nieuwe kansen. Slaap lekker.",
+          "perfect": "Je hebt het vandaag geweldig gedaan! Tot morgenochtend!"
+        },
+        "morningBonus": {
+          "title": "Ochtend Check-in Bonus",
+          "subtitle": "Voltooi binnen 15 min na ontwaken om:",
+          "keepStreak": "Je reeks levend te houden",
+          "trackWeight": "Nauwkeurig ochtendgewicht bij te houden",
+          "getDailyFocus": "Je gepersonaliseerde dagelijkse focus te krijgen",
+          "unlockMotivation": "De motivatie van vandaag te ontgrendelen"
+        },
+        "sleepCountdown": "Slaap over {{time}} om je doel te halen",
+        "recapCountdown": "Je 6-weken recap is over {{days}} dagen!",
+        "closeButton": "Sluiten & Lekker Slapen"
       }
     },
     "disciplineTrend": {
@@ -3561,57 +4230,6 @@
       "lockedUntil": "Vergrendeld tot",
       "alreadySet": "Doelen Al Ingesteld",
       "lockedMessage": "Je wekelijkse welzijn doelen zijn vergrendeld tot volgende maandag."
-    },
-    "quiz": {
-      "night": {
-        "moodTitle": "Stemming Einde van de Dag",
-        "moodPrompt": "Hoe was je stemming aan het einde van de dag?",
-        "moodLevel1": "Zeer Laag",
-        "moodLevel2": "Laag",
-        "moodLevel3": "Neutraal",
-        "moodLevel4": "Goed",
-        "moodLevel5": "Zeer Goed",
-        "stressTitle": "Stress Einde van de Dag",
-        "stressPrompt": "Hoe gestrest was je aan het einde van de dag?",
-        "stressLevel1": "Zeer Laag",
-        "stressLevel2": "Laag",
-        "stressLevel3": "Matig",
-        "stressLevel4": "Hoog",
-        "stressLevel5": "Zeer Hoog"
-      },
-      "nightSuccess": {
-        "title": "Dag Voltooid!",
-        "todayHighlights": "Hoogtepunten van Vandaag",
-        "checkinsCompleted": "{{count}}/{{total}} Check-ins voltooid",
-        "workoutsLogged": "{{count}} training gelogd",
-        "sleepGoalSet": "{{hours}} uur slaapdoel ingesteld",
-        "weightTracked": "{{weight}} lbs bijgehouden",
-        "currentStreak": "Huidige Reeks",
-        "days": "dagen",
-        "tomorrowAwaits": "Morgen Wacht",
-        "tomorrowIncludes": "Je ochtend bevat:",
-        "morningCheckin": "Ochtend Check-in",
-        "scheduledWorkout": "Geplande Training",
-        "mindFuelLesson": "Nieuwe Mind Fuel les",
-        "nutritionTip": "Gepersonaliseerde voedingstip",
-        "goodnightMessages": {
-          "great": "Wat een geweldige dag! Slaap lekker, kampioen.",
-          "stressed": "Morgen is een nieuwe start. Rust diep vannacht.",
-          "lowMood": "Elke zonsopgang brengt nieuwe kansen. Slaap lekker.",
-          "perfect": "Je hebt het vandaag geweldig gedaan! Tot morgenochtend!"
-        },
-        "morningBonus": {
-          "title": "Ochtend Check-in Bonus",
-          "subtitle": "Voltooi binnen 15 min na ontwaken om:",
-          "keepStreak": "Je reeks levend te houden",
-          "trackWeight": "Nauwkeurig ochtendgewicht bij te houden",
-          "getDailyFocus": "Je gepersonaliseerde dagelijkse focus te krijgen",
-          "unlockMotivation": "De motivatie van vandaag te ontgrendelen"
-        },
-        "sleepCountdown": "Slaap over {{time}} om je doel te halen",
-        "recapCountdown": "Je 6-weken recap is over {{days}} dagen!",
-        "closeButton": "Sluiten & Lekker Slapen"
-      }
     },
     "freeNote": {
       "title": "Snelle Notitie",
@@ -4028,11 +4646,6 @@
       "ready": "Klaar!",
       "daysLeft": "dagen over",
       "keepLogging": "Blijf dagelijks loggen om je samenvatting te ontgrendelen"
-    },
-    "delete": {
-      "confirmTitle": "Invoer verwijderen?",
-      "confirmMessage": "Deze actie kan niet ongedaan worden gemaakt. Deze invoer wordt permanent verwijderd.",
-      "success": "Invoer succesvol verwijderd"
     },
     "weekly": {
       "thisWeek": "Deze week",
@@ -4480,31 +5093,6 @@
       "healingTitle": "Belangrijk: Dit is Geen Therapie",
       "healingText": "Deze inhoud is alleen voor educatieve en zelfreflectie doeleinden. Het is geen vervanging voor professionele geestelijke gezondheidszorg. Als je significant leed of trauma ervaart, raadpleeg dan een gediplomeerde therapeut of counselor."
     }
-  },
-  "workoutStreak": {
-    "title": "Trainingsreeks",
-    "currentStreak": "Huidige Reeks",
-    "longestStreak": "Langste Reeks",
-    "totalWorkouts": "Totaal Workouts",
-    "best": "Beste",
-    "total": "Totaal",
-    "dayStreak": "dag reeks",
-    "daysStreak": "dagen reeks",
-    "keepGoing": "Blijf doorgaan!",
-    "newRecord": "Nieuw Record!",
-    "milestone10": "🎉 10 Workouts! Je bouwt gewoontes!",
-    "milestone50": "💪 50 Workouts! Halve eeuw bereikt!",
-    "milestone100": "🏆 100 Workouts! Eeuw mijlpaal!",
-    "milestone200": "⭐ 200 Workouts! Dubbele eeuw kampioen!",
-    "milestone350": "🔥 350 Workouts! Elite toewijding!",
-    "milestone500": "👑 500 Workouts! Legendarische atleet!",
-    "milestone700": "💎 700 Workouts! Onstopbare kracht!",
-    "milestone1000": "🏅 1000 Workouts! Hall of Fame!",
-    "milestoneUnlocked": "Mijlpaal Ontgrendeld!",
-    "noStreak": "Start vandaag je reeks!",
-    "streakBroken": "Reeks gereset - laten we het opbouwen!",
-    "fireUnlocked": "Vuur ontgrendelt bij 5 dagen!",
-    "glowUnlocked": "Vlam gloeit bij 25 dagen!"
   },
   "fascia": {
     "bodyConnection": {
@@ -5029,78 +5617,9 @@
     }
   },
   "myCustomActivities": {
-    "title": "Mijn Aangepaste Activiteiten",
-    "subtitle": "Beheer sjablonen, bekijk geschiedenis en volg je voortgang",
     "tabs": {
-      "templates": "Sjablonen",
-      "history": "Geschiedenis",
-      "analytics": "Analyse",
-      "hydration": "Hydratatie",
-      "presets": "Voorinstellingen"
-    },
-    "templates": {
-      "title": "Activiteit Sjablonen",
-      "create": "Nieuw Maken",
-      "noTemplates": "Nog geen sjablonen",
-      "noTemplatesHint": "Maak je eerste aangepaste activiteitensjabloon"
-    },
-    "history": {
-      "title": "Activiteit Geschiedenis",
-      "noHistory": "Geen activiteit geschiedenis",
-      "completed": "Voltooid",
-      "filter": "Filteren op type"
-    },
-    "analytics": {
-      "title": "Activiteit Analyse",
-      "totalActivities": "Totaal Activiteiten",
-      "completionRate": "Voltooiingspercentage",
-      "streak": "Huidige Reeks",
-      "byType": "Per Type"
-    },
-    "hydration": {
-      "title": "Hydratatie Tracking",
-      "settings": "Hydratatie Instellingen",
-      "dailyGoal": "Dagelijks Doel",
-      "reminderInterval": "Herinnering Interval",
-      "startTime": "Starttijd",
-      "endTime": "Eindtijd",
-      "enabled": "Herinneringen Ingeschakeld",
-      "tracker": "Snel Loggen",
-      "todayProgress": "Voortgang Vandaag",
-      "addWater": "Water Toevoegen"
-    },
-    "presets": {
-      "title": "Hardloop Voorinstellingen",
-      "categories": {
-        "intervals": "Intervallen",
-        "tempo": "Tempo",
-        "recovery": "Herstel",
-        "distance": "Afstand",
-        "speed": "Snelheid"
-      },
-      "usePreset": "Gebruiken",
-      "customize": "Aanpassen",
-      "system": "Systeem Voorinstelling",
-      "custom": "Aangepaste Voorinstelling"
-    },
-    "share": {
-      "title": "Sjabloon Delen",
-      "noLink": "Maak een deelbare link voor dit sjabloon",
-      "creating": "Aanmaken...",
-      "createLink": "Link Maken",
-      "link": "Deellink",
-      "public": "Openbare Toegang",
-      "publicDesc": "Iedereen met de link kan bekijken en importeren",
-      "privateDesc": "Link is momenteel uitgeschakeld",
-      "views": "Weergaven",
-      "delete": "Link Verwijderen",
-      "preview": "Voorbeeld",
-      "created": "Link aangemaakt!",
-      "error": "Kon link niet aanmaken",
-      "deleted": "Link verwijderd",
-      "deleteError": "Kon link niet verwijderen",
-      "copied": "Link gekopieerd!",
-      "copyError": "Kon link niet kopiëren"
+      "elitePresets": "Elite Presets",
+      "loadDashboard": "Belasting Dashboard"
     }
   },
   "runningProgress": {
@@ -5476,12 +5995,6 @@
     "useBlockSystem": "Blok Builder Gebruiken",
     "useBlockSystemDesc": "Organiseer oefeningen in gestructureerde blokken met slimme belastingstracking"
   },
-  "myCustomActivities": {
-    "tabs": {
-      "elitePresets": "Elite Presets",
-      "loadDashboard": "Belasting Dashboard"
-    }
-  },
   "speedLab": {
     "title": "Speed Lab",
     "subtitle": "Bouw elite snelheid, bescherm je lichaam",
@@ -5734,20 +6247,105 @@
   },
   "sportTerms": {
     "baseball": {
-      "pitchTypes": { "fastball": "4-Naad Fastball", "secondaryFastball": "2-Naad Fastball", "slider": "Slider", "changeup": "Changeup", "curveball": "Curveball" },
-      "sessionTypes": { "bullpen": "Bullpen Sessie", "bp": "Slagtraining", "scrimmage": "Live Scrimmage", "warmup": "Langworp", "cage": "Kooi Werk" },
-      "metrics": { "spinEfficiency": "Draai-efficiëntie", "barrelPct": "Barrel %", "commandPct": "Commando %", "chaseRate": "Achtervolgingspercentage", "whiffRate": "Mis-percentage", "exitVelo": "Uitgangssnelheid", "launchAngle": "Lanceerhoek" },
-      "drillNames": { "moundWork": "Heuvelwerk", "longToss": "Langworp", "bp": "BP Rondes", "teeWork": "Tee Werk" },
-      "splitLabels": { "overall": "Totaal", "vsLHP": "vs Linkshandig", "vsRHP": "vs Rechtshandig", "home": "Thuis", "away": "Uit" },
-      "heatMapLabels": { "pitchLocation": "Werplocatie", "chaseZone": "Achtervolgingszone", "barrelZone": "Barrel Zone", "commandMap": "Commandokaart", "missCluster": "Miscluster" }
+      "pitchTypes": {
+        "fastball": "4-Naad Fastball",
+        "secondaryFastball": "2-Naad Fastball",
+        "slider": "Slider",
+        "changeup": "Changeup",
+        "curveball": "Curveball"
+      },
+      "sessionTypes": {
+        "bullpen": "Bullpen Sessie",
+        "bp": "Slagtraining",
+        "scrimmage": "Live Scrimmage",
+        "warmup": "Langworp",
+        "cage": "Kooi Werk"
+      },
+      "metrics": {
+        "spinEfficiency": "Draai-efficiëntie",
+        "barrelPct": "Barrel %",
+        "commandPct": "Commando %",
+        "chaseRate": "Achtervolgingspercentage",
+        "whiffRate": "Mis-percentage",
+        "exitVelo": "Uitgangssnelheid",
+        "launchAngle": "Lanceerhoek"
+      },
+      "drillNames": {
+        "moundWork": "Heuvelwerk",
+        "longToss": "Langworp",
+        "bp": "BP Rondes",
+        "teeWork": "Tee Werk"
+      },
+      "splitLabels": {
+        "overall": "Totaal",
+        "vsLHP": "vs Linkshandig",
+        "vsRHP": "vs Rechtshandig",
+        "home": "Thuis",
+        "away": "Uit"
+      },
+      "heatMapLabels": {
+        "pitchLocation": "Werplocatie",
+        "chaseZone": "Achtervolgingszone",
+        "barrelZone": "Barrel Zone",
+        "commandMap": "Commandokaart",
+        "missCluster": "Miscluster"
+      }
     },
     "softball": {
-      "pitchTypes": { "fastball": "Fastball (Windmolen)", "circleChange": "Circle Change", "riseball": "Riseball", "dropBall": "Drop Ball", "curveball": "Curveball (12-6 Drop)" },
-      "sessionTypes": { "bullpen": "Cirkel Sessie", "bp": "Slagtraining", "scrimmage": "Live Scrimmage", "warmup": "Langworp", "cage": "Kooi Werk" },
-      "metrics": { "snapTightness": "Snap Precisie", "sweetSpotPct": "Sweet Spot %", "locationPct": "Locatie %", "chaseRate": "Achtervolgingspercentage", "whiffRate": "Mis-percentage", "exitVelo": "Uitgangssnelheid", "launchAngle": "Lanceerhoek" },
-      "drillNames": { "circleWork": "Cirkelwerk", "longToss": "Langworp", "bp": "BP Rondes", "teeWork": "Tee Werk" },
-      "splitLabels": { "overall": "Totaal", "vsLHP": "vs Linkshandig", "vsRHP": "vs Rechtshandig", "home": "Thuis", "away": "Uit" },
-      "heatMapLabels": { "pitchLocation": "Werplocatie", "chaseZone": "Achtervolgingszone", "sweetSpotZone": "Sweet Spot Zone", "locationMap": "Locatiekaart", "missPattern": "Mispatroon" }
+      "pitchTypes": {
+        "fastball": "Fastball (Windmolen)",
+        "circleChange": "Circle Change",
+        "riseball": "Riseball",
+        "dropBall": "Drop Ball",
+        "curveball": "Curveball (12-6 Drop)"
+      },
+      "sessionTypes": {
+        "bullpen": "Cirkel Sessie",
+        "bp": "Slagtraining",
+        "scrimmage": "Live Scrimmage",
+        "warmup": "Langworp",
+        "cage": "Kooi Werk"
+      },
+      "metrics": {
+        "snapTightness": "Snap Precisie",
+        "sweetSpotPct": "Sweet Spot %",
+        "locationPct": "Locatie %",
+        "chaseRate": "Achtervolgingspercentage",
+        "whiffRate": "Mis-percentage",
+        "exitVelo": "Uitgangssnelheid",
+        "launchAngle": "Lanceerhoek"
+      },
+      "drillNames": {
+        "circleWork": "Cirkelwerk",
+        "longToss": "Langworp",
+        "bp": "BP Rondes",
+        "teeWork": "Tee Werk"
+      },
+      "splitLabels": {
+        "overall": "Totaal",
+        "vsLHP": "vs Linkshandig",
+        "vsRHP": "vs Rechtshandig",
+        "home": "Thuis",
+        "away": "Uit"
+      },
+      "heatMapLabels": {
+        "pitchLocation": "Werplocatie",
+        "chaseZone": "Achtervolgingszone",
+        "sweetSpotZone": "Sweet Spot Zone",
+        "locationMap": "Locatiekaart",
+        "missPattern": "Mispatroon"
+      }
     }
+  },
+  "staffPlans": {
+    "heading": "Voor coaches en organisaties",
+    "coachName": "Hammers Coach",
+    "coachPrice": "$300 per maand",
+    "coachLine": "Alle analyses voor beide sporten en coachtools voor je gekoppelde spelers",
+    "orgName": "Hammers Organization",
+    "orgPrice": "$1.000 per maand · 5 coachplaatsen inbegrepen · extra plaats $150 per maand",
+    "orgLine": "Alles van Coach voor elke plaats, plus faciliteitsoverzicht, teams en organisatiebrede samenvattingen",
+    "see": "Bekijk plannen voor coaches en organisaties",
+    "roleNote": "Coach-plan $300/maand · Organization-plan $1.000/maand"
   }
 }
