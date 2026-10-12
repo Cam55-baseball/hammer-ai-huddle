@@ -22207,6 +22207,10 @@ export type Database = {
         Returns: Json
       }
       org_facility_board: { Args: { _org: string }; Returns: Json }
+      org_growth_trends: {
+        Args: { _athlete: string; _org: string }
+        Returns: Json
+      }
       owns_scout_grade: { Args: { _grade_id: string }; Returns: boolean }
       recompute_library_video_tier: {
         Args: { p_video_id: string }
