@@ -1,7 +1,8 @@
 ## Plan 4 (docs/owner/plan-4.md) — IN PROGRESS (JJ1)
 - [x] A1 bands: ratingBand() in gradeScale.ts — PASS, tests 39.9 Sub Par / 40, 60 Acceptable / 60.1 Elite / 12.4 decimal
 - [x] A2 band + decimal shown on session dialogs, day list, rankings, MPI card (getGradeLabel now "Plus · Acceptable") — PASS tests/typecheck
-- [~] A3 Do you agree?: built (coach Grades tab Agree/Disagree + note, saved to rating_agreements, never changes the grade; owner page /owner/rating-agreement, lowest agree-rate first by test/metric/sport/position). Unit tests PASS. NOT YET PROVEN: signed-in coach save on phone + owner dashboard read. Sport not on grade rows yet → saved as not_recorded.
+- [x] A3 Do you agree?: PASS on 390px phone as Demo Coach (Disagree + note saved with sport=baseball, position CF; rating unchanged; screenshot /tmp/browser/jj4/2.png). Owner dashboard /owner/rating-agreement built; owner-session read not yet checked. Proof rows/grade/link deleted.
+- [ ] OWNER: scout grades are stored as whole numbers (integer columns) → a 12.4 is saved as 12. Fix = add decimal columns alongside + backfill (needs OK; ~26 columns).
 - [ ] · B · C · D · E
 - Order: build after Plan v3.1 Phase 11 (sponsorship billing). BLOCKED: Phase 11 waits on the owner's 4 answers (price per sponsored player + monthly/yearly; modules covered; grace period; players already paying).
 - Owner decision needed: start Plan 4 now ahead of Phase 11? (Org plan in Plan 4 also includes sponsorship billing, so the same 4 answers are needed there.)
