@@ -1,3 +1,4 @@
+import { CoachDisciplineTab } from "@/components/coach/CoachDisciplineTab";
 import { CoachMessageBox } from "@/components/coach/CoachMessageBox";
 import { CoachDrillAssign } from "@/components/coach/CoachDrillAssign";
 import { CoachAthleteSummary } from "@/components/coach/CoachAthleteSummary";
@@ -207,6 +208,7 @@ export default function CoachAthleteDetail() {
           <TabsList className="grid h-auto w-full grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="development">Development</TabsTrigger>
+            <TabsTrigger value="discipline">Discipline</TabsTrigger>
             <TabsTrigger value="training">Training</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
@@ -241,6 +243,9 @@ export default function CoachAthleteDetail() {
             {athleteId && <CoachReportsTab athleteId={athleteId} />}
           </TabsContent>
 
+          <TabsContent value="discipline" className="space-y-4 pt-4">
+            {athleteId && <CoachDisciplineTab athleteId={athleteId} />}
+          </TabsContent>
           <TabsContent value="grades" className="space-y-4 pt-4">
             {athleteId && <CoachGradesTab athleteId={athleteId} sport={hittingDoctrineSnap?.sport ?? null} />}
           </TabsContent>
