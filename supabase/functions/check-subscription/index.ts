@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { refreshSponsoredAccess } from "../_shared/sponsorship.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -79,6 +80,9 @@ Deno.serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
+
+    // v3.1 Phase 11: sponsorship access (pause end, 14-day grace) is re-checked on every read.
+    try { await refreshSponsoredAccess(serviceClient, user.id); } catch (_) { /* never block the read */ }
 
     // Read from subscriptions table
     const { data: subscription } = await serviceClient
