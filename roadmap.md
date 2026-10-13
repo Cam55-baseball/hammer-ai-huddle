@@ -1,4 +1,7 @@
-# TOP STATUS — OO2, 2026-10-13
+# TOP STATUS — OO3, 2026-10-13
+- [x] On-the-spot assessment PASS (OO3): coach saves with label "Coach-verified · coach · date"; player sees it; player recording for self refused (403); age 11 without parent refused ("Under 13: the parent must be present and agree"), with parent saved + parent time stamped; 11-year-old could not accept a coach request himself ("A parent must answer this request"); age 13+ saves without parent. Test entries deleted, test birthday restored, test connections ended.
+- [ ] Remaining phone checks: under-13 parent steps in the parent's own screens; guest mode end-to-end.
+
 
 **Ready to publish: no.**
 
