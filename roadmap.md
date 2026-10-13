@@ -1,3 +1,34 @@
+# TOP STATUS — PP batch close, 2026-10-13
+
+**Ready to publish: no** — waits on the owner's 3 test checkouts + the under-13 test checkout (verify in Stripe/app, then cancel all 4).
+
+## Audit findings — FIXED (proof)
+- Coach pages crash from first tile attempt — fixed; all coach pages reopened, no crash.
+- History grades whole-number/unlabeled — fixed; 7 test reports showed "17.3 · Sub Par", 40/55 Acceptable, 65/70/80 Elite; test reports deleted.
+- Practice after-session summary + Recent sessions list rounded grades — fixed to the 5s rule + band; build OK (summary phone check rides with next saved practice).
+- Staff-only pages blank 1–2 s — loading spinner (owner-approved).
+- Privacy banner too big — smaller, clear of help button; phone screenshot PASS (owner-approved).
+- Phase unity — all 3 phase readers use the one phase source. PASS.
+- 181 pages opened on phone, no dead pages.
+
+## Waiting on owner approval
+- Live video analyses of every type in each sport (real AI credits).
+- Remove the unused "Recent sessions" practice list.
+
+## Stress tests
+- 8-week plan simulations 720 combinations, 0 rule breaks. PASS
+- Coach logging both options + wrong-player block; check-ins; Discipline; on-the-spot assessment incl. under-13 parent rules; teen parent signature; guest mode. PASS
+- Sponsorship incl. already-paying player, no double charge. PASS
+- Test suite 2,894/2,894; legal 41/41. PASS
+- Live analyses per type/sport: NOT RUN (owner OK needed).
+
+## Dashboard tiles
+- "Hammers Coach" + "Hammers Organization" Elite tiles under merch card: large for coach/org, subtle "For your coach or facility" for players, hidden for scouts; phone screenshots taken. PASS
+
+## Owner's guide
+- Complete in docs/owner/publish-checklist.md, grouped player/parent/coach/organization/scout/owner (what it is, steps, what to see). PASS
+
+---
 # TOP STATUS — PP (owner requests), 2026-10-13
 
 - PP6 (2026-10-13): Practice grade fix: the "Recent sessions" list is not used on any page (dead code, left in place, listed in the audit). The after-practice summary shows only after saving a full practice; build OK, phone check rides with the next live practice test. Owner guide already complete (grouped player/parent/coach/org/scout/owner). Ready to publish: no.
