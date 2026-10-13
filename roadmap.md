@@ -1,5 +1,7 @@
 # TOP STATUS — PP (owner requests), 2026-10-13
 
+- PP3 (2026-10-13): Smaller privacy banner re-checked on phone: text clear of the help button. PASS. Remaining audit items wait on the owner (live analyses = AI credits) or the owner checkouts. Ready to publish: no.
+
 - PP2 (2026-10-13): History grades PASS with 7 test reports (17.3 → "17.3 · Sub Par"; 38/42 → 40 Acceptable; 57 → 55; 63 → 65 Elite; 68 → 70; 80 Elite), test reports deleted. Owner-approved design fixes done: loading spinner on staff-only pages instead of blank; smaller privacy banner. Ready to publish: no (owner checkouts pending).
 
 - PP1 (2026-10-13): History opens on phone as 3 test players, no errors, ~11–13 s on the preview (dev mode, slower than live). Test players have no graded reports, so the 5+-report grade check is still open (needs seeded reports or a live analysis — owner OK for AI credits). Ready to publish: no.
