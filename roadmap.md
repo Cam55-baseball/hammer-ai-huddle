@@ -1,5 +1,7 @@
 # TOP STATUS — PP (owner requests), 2026-10-13
 
+- PP5 (2026-10-13): Unity fix — practice "Recent sessions" list and the after-practice summary rounded grades to whole numbers with no 5s rule; both now use the same grade rule and band as History ("Grade: 45 · Acceptable"). Ready to publish: no.
+
 - PP4 (2026-10-13): Unity check (phase) PASS — the 3 phase readers (season status, 15 screens; phase display, 8; phase state, 4) all go through the one phase source, so no screen can show a different phase. Ready to publish: no.
 
 - PP3 (2026-10-13): Smaller privacy banner re-checked on phone: text clear of the help button. PASS. Remaining audit items wait on the owner (live analyses = AI credits) or the owner checkouts. Ready to publish: no.

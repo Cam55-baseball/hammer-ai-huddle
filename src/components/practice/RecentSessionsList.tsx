@@ -8,6 +8,7 @@ import { generateInsights, getTotalReps } from '@/lib/sessionInsights';
 import { Clock, Loader2, ChevronDown, ChevronRight, Trophy, Target, ArrowRight } from 'lucide-react';
 import { SessionVideosDisplay } from './SessionVideosDisplay';
 import { cn } from '@/lib/utils';
+import { formatGrade, ratingBand } from '@/lib/benchmarks/gradeScale';
 
 interface RecentSessionsListProps {
   sport: string;
@@ -89,7 +90,7 @@ export function RecentSessionsList({ sport, moduleLabel, module }: RecentSession
                       </div>
                       {grade != null && (
                         <Badge variant="outline" className="text-xs">
-                          {getGradeLabel(grade)} ({Math.round(grade)})
+                          Grade: {formatGrade(grade)} · {ratingBand(grade)}
                         </Badge>
                       )}
                     </div>
