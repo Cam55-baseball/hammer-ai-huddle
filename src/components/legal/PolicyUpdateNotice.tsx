@@ -40,7 +40,7 @@ export function PolicyUpdateNotice() {
         <X className="h-4 w-4" />
       </button>
       <p className="pr-6 text-sm font-semibold">We've updated our Privacy Policy</p>
-      <p className="text-xs text-muted-foreground">
+      <p className="pr-14 text-xs text-muted-foreground">
         Clearer rules about scouts and coaches. You don't need to do anything.
       </p>
       {under13 && (
