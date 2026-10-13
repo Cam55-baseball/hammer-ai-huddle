@@ -37,7 +37,7 @@ async function framesFromVideo(file: File, count = 7): Promise<string[]> {
 const Choice = ({ value, set, options }: { value: string; set: (v: string) => void; options: string[] }) => (
   <div className="flex flex-wrap gap-2">
     {options.map((o) => (
-      <Button key={o} type="button" size="sm" variant={value === o ? "default" : "outline"} onClick={() => set(o)} className="capitalize">{o}</Button>
+      <Button key={o} type="button" size="sm" variant={value === o ? "default" : "outline"} onClick={() => set(o)} className="first-letter:uppercase">{o}</Button>
     ))}
   </div>
 );
