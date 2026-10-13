@@ -129,7 +129,7 @@ export function PostSessionSummaryV2({ sessionId, module, sessionType, onDone }:
             </div>
           ) : grade != null ? (
             <div className="mt-4 flex items-baseline gap-3">
-              <span className="text-4xl font-black tracking-tight"><span className="sr-only">Grade: </span>{formatGrade(grade)}</span>
+              <span className="text-4xl font-black tracking-tight"><span className="mr-1 text-sm font-semibold text-muted-foreground">Grade</span>{formatGrade(grade)}</span>
               <Badge variant="outline" className="text-sm font-semibold">
                 {ratingBand(grade)}
               </Badge>
