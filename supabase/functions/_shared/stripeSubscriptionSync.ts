@@ -157,6 +157,8 @@ export async function syncCustomer(opts: SyncOptions): Promise<SyncRow> {
   for (const sub of subs) {
     // Skip canceled subscriptions that are past their period end
     if (sub.status === "canceled" && (sub as any).current_period_end * 1000 < Date.now()) continue;
+    // Sponsorship subscriptions belong to the sponsored player, not the paying organization.
+    if ((sub as any).metadata?.sponsorship_id) continue;
 
     const fullSub = preloaded ? sub : await stripe.subscriptions.retrieve(sub.id);
     const subPeriodEnd = (fullSub as any).current_period_end;

@@ -3,6 +3,7 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { resolveUserId, syncCustomer } from "../_shared/stripeSubscriptionSync.ts";
 import { applyStaffSubscription } from "../_shared/staffPlans.ts";
+import { sponsorshipFromStripe, refreshSponsoredAccess, notifyPlayer } from "../_shared/sponsorship.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -159,6 +160,13 @@ async function handleSubscriptionEvent(
     customerId,
     status: subscription.status
   });
+
+  // v3.1 Phase 11: a sponsorship subscription updates the sponsored player's access instantly.
+  const sponsorshipId = (subscription as any).metadata?.sponsorship_id;
+  if (sponsorshipId) {
+    await applySponsorshipEvent(supabaseClient, stripe, subscription, customerId, sponsorshipId);
+    return;
+  }
 
   const resolved = await resolveUserId({ supabase: supabaseClient, stripe, customerId, subscription, session });
   if (!resolved.userId) {
@@ -374,4 +382,35 @@ function invoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
   const v = a ?? b ?? null;
   if (!v) return null;
   return typeof v === "string" ? v : v.id ?? null;
+}
+
+async function applySponsorshipEvent(supabase: any, stripe: Stripe, sub: Stripe.Subscription, customerId: string, sponsorshipId: string) {
+  const { data: s } = await supabase.from("org_sponsorships").select("*").eq("id", sponsorshipId).maybeSingle();
+  if (!s) { logStep("Sponsorship not found", { sponsorshipId }); return; }
+  const patch: Record<string, unknown> = { ...sponsorshipFromStripe(sub, s), stripe_customer_id: customerId, stripe_subscription_id: sub.id, updated_at: new Date().toISOString() };
+  const firstStart = s.status === "pending" && ["active", "trialing"].includes(sub.status);
+  if (firstStart) {
+    patch.billing_starts_at = new Date(((sub as any).billing_cycle_anchor ?? Math.floor(Date.now() / 1000)) * 1000).toISOString();
+    // Player who already pays: their own plan stops renewing; the org's billing starts when it ends. No refunds, no double charge.
+    const { data: own } = await supabase.from("subscriptions").select("module_subscription_mapping").eq("user_id", s.player_id).maybeSingle();
+    const ids = new Set<string>();
+    for (const e of Object.values<any>(own?.module_subscription_mapping ?? {})) {
+      const sid = String(e?.subscription_id ?? "");
+      if (sid.startsWith("sub_") && !e.cancel_at_period_end) ids.add(sid);
+    }
+    for (const id of ids) {
+      try { await stripe.subscriptions.update(id, { cancel_at_period_end: true, metadata: { ended_for_sponsorship: sponsorshipId } }); }
+      catch (e) { logStep("Could not set player's own plan to end", { id, error: String(e) }); }
+    }
+    if (patch.status === "active" && s.player_own_sub_ends_at && new Date(s.player_own_sub_ends_at).getTime() > Date.now()) patch.status = "scheduled";
+  }
+  await supabase.from("org_sponsorships").update(patch).eq("id", sponsorshipId);
+  await refreshSponsoredAccess(supabase, s.player_id);
+  if (firstStart) {
+    const ownMsg = s.player_own_sub_ends_at
+      ? ` Your own plan won't renew: it ends on ${String(s.player_own_sub_ends_at).slice(0, 10)}, and your organization pays from then. You won't be charged twice.`
+      : "";
+    await notifyPlayer(supabase, s.player_id, s.sponsored_by, `Your organization is now sponsoring your plan.${ownMsg}`);
+  }
+  logStep("Sponsorship updated", { sponsorshipId, status: patch.status });
 }
