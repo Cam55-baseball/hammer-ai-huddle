@@ -13,9 +13,12 @@ Deno.serve(async (req) => {
   const { password } = await req.json().catch(() => ({}));
   if (typeof password !== "string" || password.length < 16) return new Response('{"error":"bad password"}', { status: 400, headers: cors });
   const out: Record<string, string> = {};
+  const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const byEmail = new Map((list?.users ?? []).map((x) => [x.email?.toLowerCase(), x.id]));
   for (const p of PERSONAS) {
     const email = `hammersmodality+${p}@gmail.com`;
-    const { data: prof } = await admin.from("profiles").select("id,is_system_account").eq("email", email).maybeSingle();
+    const id = byEmail.get(email);
+    const { data: prof } = id ? await admin.from("profiles").select("id,is_system_account").eq("id", id).maybeSingle() : { data: null };
     if (!prof) { out[p] = "not found"; continue; }
     if (prof.is_system_account !== true) { out[p] = "skipped (not a test account)"; continue; }
     const { error } = await admin.auth.admin.updateUserById(prof.id, { password });
