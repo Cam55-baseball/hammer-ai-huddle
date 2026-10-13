@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { isNativeIOS } from "@/lib/sponsorshipUi";
+import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 
 const PLANS = [
   { tier: "pitcher", name: "Complete Pitcher", price: "$200/month" },
@@ -24,6 +24,7 @@ export function SponsorshipsCard({ orgId }: { orgId: string }) {
   const [tier, setTier] = useState("5tool");
   const [sport, setSport] = useState("baseball");
   const [busy, setBusy] = useState(false);
+  const { mode } = usePurchaseAvailability();
 
   const { data } = useQuery({
     queryKey: ["org-sponsorships", orgId],
@@ -65,7 +66,7 @@ export function SponsorshipsCard({ orgId }: { orgId: string }) {
         <p className="text-xs text-muted-foreground">
           You choose each player. Price: the player's regular monthly plan. If the player already pays, their own plan ends at the end of the month they paid for and your billing starts then — no double charge.
         </p>
-        {isNativeIOS() ? (
+        {mode === "native-linkout" ? (
           <p className="text-sm">Subscribe on our website to sponsor players.</p>
         ) : (
           <div className="grid gap-2">
