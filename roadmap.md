@@ -3,8 +3,8 @@
 Owner decisions saved word for word to docs/owner/plan-4.md. Queue order: (1) sponsorship billing, (2) coach logging Option 1 then Option 2, (3) fair use.
 - [x] Fair-use clause: final wording saved, marked AWAITING LAWYER APPROVAL, not shown to players. Goes into Terms + checkout acceptance only after the owner confirms the lawyer's approval.
 - [x] 30-per-hour limit: server-side (analyze-video, redeployed); over the limit the saved video waits and runs itself when a slot opens (time shown), never charged. Test 4/4 PASS (resume time = oldest analysis + 1 hour).
-- [ ] Sponsorship billing (Phase 11) — NEXT. Answers now in hand. Proof needs signed-in test checkouts (sign-in block below).
-- [ ] stripe-walkthrough.md — with sponsorship.
+- [x] Sponsorship billing BUILT + live (org-sponsorship, stripe-webhook, check-subscription redeployed): org admin picks each player (never automatic) on Organization → Players → "Sponsor players"; org is the Stripe customer, one subscription per player at the player's regular price, invoice line names the player; already-paying player: own plan set to not renew, org billing anchored to that date ($0 first invoice, no double charge), player messaged; pause = Stripe pause (access through paid period); resume; cancel = 14-day grace + message to choose own plan; access re-checked on every plan read; org's own access never picks up sponsored plans. Rules tests 6/6 PASS; live: signed-out refused (401), unsigned webhook refused. NOT YET PROVEN with real test checkouts (6 flows) — needs a signed-in org test account (sign-in block).
+- [x] docs/owner/stripe-walkthrough.md written.
 - [ ] Coach logging Option 1 (default) + Option 2 lineup mode, wrong-player tests.
 
 
