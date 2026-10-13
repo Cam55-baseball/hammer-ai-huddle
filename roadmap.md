@@ -12,29 +12,37 @@ Owner decisions saved word for word to docs/owner/plan-4.md. Queue order: (1) sp
 - [x] LL6 E proof (owner-checkable part) PASS on a 390px phone as the owner: /owner/rating-agreement opens ("No answers yet." — none saved since cleanup), /owner/ai-costs opens, /coach/guest opens (fixed "13 Or Older" → "13 or older"). Stripe test checkout NOT run: plan checkout asks for a card even with a 100% code (Stripe does this for subscriptions unless told card is optional) — owner choice needed: enter a real card for the test (no charge with the code), or let checkout skip the card when the total is $0. Player/coach/org E items still need test-account sign-in.
 
 
-**Ready to publish: no.**
+**Ready to publish: no.** (publish-checklist.md not written — it waits until every item below is PASS)
 
-## Plan v3.1
-- Phases 1–10: PASS (proof below). Phase 11 sponsorship billing: NOT STARTED — waits on the owner's 4 answers.
+## Plan v3.1 (docs/owner/scouting-plan-v3.1.md)
+- Phases 1–10: PASS (proof below).
+- Phase 11 sponsorship billing: BUILT + live; rules 6/6 PASS; signed-out and unsigned-webhook calls refused. NOT PROVEN with the 6 real test checkouts.
 
-## Plan 4
-- A ratings: PASS (grades by 5s at 20+, one decimal below 20, stored exactly in scout grades; bands 19.9/35 Sub Par, 40/60 Acceptable, 65 Elite; "Do you agree?" PASS on phone; owner agreement page built). Percentiles later (50+ per sport/position).
-- B initial assessment: order rules PASS; checklist card + movement/safety check built; coach on-the-spot check + under-13 parent rule PASS on the backend. Not phone-checked as a player.
-- C discipline: PASS on the backend (rules tests, coach tab, logging consistency, links to results with "Not enough data", team + org summaries). Check-ins with health consent PASS both ways.
-- D plans: Stripe LIVE products/prices created — Hammers Coach $300 prod_VQjeb6G4nQbIfZ / price_1UPsB6Gc5QIzbAH6k6wtj6NI · Hammers Organization $1,000 (5 seats) prod_VQjea2xzqwAqvj / price_1UPsB7Gc5QIzbAH6Q42AlTdT · Extra Coach Seat $150 prod_VQje6yyL8w42rs / price_1UPsB8Gc5QIzbAH6l4p2C4oU. Checkout + Manage plan + automatic Stripe updates built and live; coach features locked to the plans behind a switch that is OFF; plans on pricing, upgrade, role choice, help chat, 8 languages (PASS on phone as owner); cost tracking + owner cost page + ~30/hour limit PASS; weekly coach summary PASS on the backend.
-- D NOT DONE: a real test checkout with a one-time 100% code; seats billed in a real checkout.
-- E full proof list: NOT DONE.
+## Plan 4 (docs/owner/plan-4.md)
+- A ratings: PASS (5s at 20+, one decimal below 20 stored exactly; band edges; "Do you agree?" on phone as Demo Coach; owner agreement page opens on phone as owner). Tool/overall grades shown on 5s (LL3). Percentiles later.
+- B initial assessment: order rules PASS; coach on-the-spot check + under-13 parent rule PASS (backend). NOT phone-checked as a player.
+- C discipline + check-ins: PASS (backend), both health-consent ways.
+- D plans: products/prices live; checkout, Manage plan, Stripe updates, plan lock (switch OFF), pricing screens + 8 languages, cost tracking (all analyses + 5 smaller AI uses), 30/hour limit (paused, never charged), weekly coach summary, guest mode (nothing saved; backend proof) — PASS. NOT DONE: a real test checkout; seats billed in a real checkout.
+- Coach logging Options 1 + 2: BUILT, wrong-player saves blocked (backend + 4 tests). NOT phone-checked.
+- Fair-use clause: final wording, AWAITING LAWYER APPROVAL, hidden from players.
+- E full proof list: owner-checkable part PASS (LL6); the rest NOT DONE (needs sign-in + checkout).
+- Full test suite: 2,893/2,893 PASS (LL3).
+
+## Stripe IDs
+- Hammers Coach $300/mo: prod_VQjeb6G4nQbIfZ / price_1UPsB6Gc5QIzbAH6k6wtj6NI
+- Hammers Organization $1,000/mo (5 seats): prod_VQjea2xzqwAqvj / price_1UPsB7Gc5QIzbAH6Q42AlTdT
+- Extra Coach Seat $150/mo: prod_VQje6yyL8w42rs / price_1UPsB8Gc5QIzbAH6l4p2C4oU
+- Sponsorships use the players' existing plan prices. Owner guide: docs/owner/stripe-walkthrough.md
 
 ## Next item
-Guest mode (nothing saved, "Invite to Hammers to save this", under-13 parent permission confirm), then the E proof list.
+E proof list as players, coach, org and guest + the real test checkouts (sponsorship 6 flows, staff plans, extra seats) — blocked on items 1 and 2 below.
 
 ## Waiting on the owner
-1. Phone checks + test checkout: OK to set a known password on the test accounts only, or approve the sign-in prompt in a later round.
-2. When to turn on the switch that locks coach tools to paying plans (existing coaches without a plan lose coach tools then).
-3. Sponsorship answers — RECEIVED 2026-10-13.
-4. Lawyer review of the fair-use clause draft (docs/owner/fair-use-clause-draft.md) — not shown to players.
-5. Coach logging — DECIDED 2026-10-13: build both, Option 1 default.
-6. Rankings/MPI scores on 5s? Spaces stays OFF; Vault review queue.
+1. Test-account sign-in: OK to set a known password on the test accounts only, or approve the sign-in prompt.
+2. Test checkout: (a) a real card for the test (no charge with the 100% code), or (b) let checkout skip the card when the total is $0.
+3. When to turn on the coach-tools plan switch (coaches without a plan lose coach tools then).
+4. Lawyer review of docs/owner/fair-use-clause-draft.md.
+5. Rankings/MPI scores on 5s? Spaces stays OFF; Vault review queue.
 
 ## Plan 4 (docs/owner/plan-4.md) — IN PROGRESS (JJ1)
 - [x] KK5 D1 Stripe LIVE products + monthly prices created via API (owner-authorized): Hammers Coach $300 = prod_VQjeb6G4nQbIfZ / price_1UPsB6Gc5QIzbAH6k6wtj6NI · Hammers Organization $1,000 (5 seats) = prod_VQjea2xzqwAqvj / price_1UPsB7Gc5QIzbAH6Q42AlTdT · Extra Coach Seat $150 per seat = prod_VQje6yyL8w42rs / price_1UPsB8Gc5QIzbAH6l4p2C4oU. Checked first: no earlier coach/org products existed.
