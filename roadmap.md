@@ -1,3 +1,14 @@
+# TOP STATUS — URGENT test logins, 2026-10-13 22:50 UTC
+
+**Ready to publish: no** — waits on the owner's 3 test checkouts + the under-13 test checkout.
+
+- Cause: the passwords in the first checkout email were replaced by later private resets (owner sign-ins got "invalid login"). Fixed: new strong passwords on the 3 test accounts (player demo16ss, coach democoach, org admin demoorg), stored privately, never printed; one-time tool deleted.
+- Proof: API sign-in 200 for all 3; real form sign-in at phone (390) and desktop (1280) for all 3 — no terms/birthdate/pause/Before-you-start block; each reached its checkout screen (player /pricing, coach + org /staff-plans with Choose buttons). Robot can't open the preview link itself (Lovable sign-in wall), so form tests ran on the same app; owner opens the preview signed in to Lovable.
+- Codes: all 3 still valid, unused, one plan each (Complete Pitcher; Hammers Coach; Org + extra seat), expire Oct 20. Under-13 code still valid, unused, expires Oct 20; throwaway parent email has no account.
+- Emails resent: "[PRIVATE] Hammers test checkouts — UPDATED (use these)" and "[PRIVATE] Hammers under-13 test code — re-checked". One-time mail tool deleted.
+- No grandfathering: staff_plan_gate stays on. Coach notice ready: "Coach tools are now part of the Hammers Coach plan" with Subscribe + "Join through your organization"; phone screenshot PASS as the test coach. Owner/admin unaffected. Goes live when the owner publishes.
+
+---
 # TOP STATUS — PP batch close, 2026-10-13
 
 **Ready to publish: no** — waits on the owner's 3 test checkouts + the under-13 test checkout (verify in Stripe/app, then cancel all 4).
