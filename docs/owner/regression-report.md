@@ -63,3 +63,23 @@ Test org (Demo Org): subscription active → app plan = Organization, status act
   Cleanup: the test sponsorship row was removed, the player's access is back to before (hitting + throwing only), and the test player was removed from the test org (0 players).
 - MM9 missed marking: PASS. Added a throwaway past-dated "scheduled" workout on the test shortstop, ran the training-block job, and it flipped exactly that 1 workout to "missed" (missedMarked: 1, nothing else touched). Test workout and block deleted; counts back to 0.
 - MM9 renewal reminders staff practice run: PASS. Ran as the owner in practice mode (dry run): accepted the staff caller, legal_v2 switch is on, 0 yearly plans renew in the 15–30 day window right now, and nothing was sent. Non-staff refusal (403) was already proven in MM3.
+
+## OO1 — 2026-10-13 (owner answers: yes to all four)
+
+**Stripe guardrail:** before/after snapshots taken. Products 13→13, prices 13→13, webhook 1→1, active subscriptions 81→81 (same per price). No existing coupon or code changed. Added only: coupons jhr3Kgxy, zHf8t0a5, 0iFnOWHK, ADlWH6Ul; 5 promotion codes (promo_1UPxDJGc5QIzbAH66RZeYqZ3, promo_1UPxFZGc5QIzbAH6A6PxW8Rt, promo_1UPxFaGc5QIzbAH6UBRCQRgd, promo_1UPxFbGc5QIzbAH6RGnZ80O0, promo_1UPxFvGc5QIzbAH6GeZTCaCg); test customer cus_VQotOmXkvpZeMW (test shortstop); 2 test subscriptions (both canceled); 2 unpaid diagnostic checkout sessions (expire on their own in 24 h). Code values are not written here.
+
+**"Invalid" code on the checkout page — cause found.** The old code's settings were fine (100% off, once, no product limit, no first-time-customer limit, no expiry; it was simply used up afterwards). A brand-new code AND an existing customer code that real buyers have redeemed 5 times were both rejected as "invalid" in my automated browser, on plain sessions with and without currency conversion. So Stripe refuses codes typed by an automated browser; the codes and app settings are not the problem. Proof on the real page is the owner's real-card test (below).
+
+**Sponsoring a player who already pays: PASS.** Test shortstop got Complete Pitcher via the API with a one-time 100%-off code, no card (invoice $0, paid). App turned it on. The test org then sponsored him: the app saved "starts after own plan" (Nov 13), marked his own plan to end at the end of the paid period (Nov 13), and the org's Stripe subscription has its first bill on Nov 13 with no invoice now — no double charge. Both subscriptions canceled immediately; sponsorship row removed; player removed from the org again; his access back to hitting + throwing.
+
+**Owner checkouts prepared.** 3 one-time 100%-off codes, each limited to its product (Complete Pitcher; Hammers Coach; Hammers Organization + Extra Coach Seat), expire in 7 days. Sent privately to the owner's email (subject "[PRIVATE] Hammers test checkouts") with the preview link and 3 test logins. Waiting for the owner to finish.
+
+**Test password:** new password on the same 12 test-only accounts (system accounts only; real and App Review accounts untouched). One-time tool deployed, used, deleted from backend and code. Kept only in the private work area.
+
+**Phone (390 px) flow checks:**
+- Coach entry, one-player option: wrong player blocked ("Wrong player"), right player saved. PASS.
+- Coach entry, lineup option: wrong jersey blocked ("jersey 9 is not this player"), right jersey saved. PASS.
+- Player sees both entries on Games with "Yes, that's right / Something's wrong", source and date labels, page fits the phone, no errors. PASS.
+- Coach lineup page opens with the lineup. PASS.
+- Test entries, lineup and coach–player connection removed afterwards.
+- Not yet run: under-13 parent flow, check-ins with/without health consent, guest mode on the phone, on-the-spot assessment, Discipline view.
