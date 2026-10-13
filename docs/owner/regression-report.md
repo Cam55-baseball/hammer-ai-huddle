@@ -45,3 +45,5 @@ Test org (Demo Org): subscription active → app plan = Organization, status act
 - Existing data intact (read-only counts): 204 profiles, 191 active subscriptions, 69 consent records.
 - Daily plan job: builds every day 2026-10-07 → 2026-10-12. On 2026-10-11, 8 builds failed with "oppositeLowerPool is not defined". The code now imports it (wk-generate-daily line 375), and all builds on 2026-10-12 succeeded. Not redeployed by me.
 - STILL NOT DONE: 6 sponsorship test checkouts and new one-time 100% codes (owner OK needed), phone proofs signed in as each test account, 8-week plan simulations vs the live builder, checks on missed marking and renewal reminders, publish-checklist.md.
+- MM3 renewal reminders: the job is in place, the legal_v2 switch is ON for everyone, and non-staff callers are refused (403). Dry run by default. No run logs in the recent window, which fits: it only acts on yearly plans renewing in 15–30 days. A staff dry run still needs a signed-in owner or test session (blocked, see MM2).
+- MM3 missed marking: not yet proven. It needs a signed-in player test account (blocked, see MM2).
