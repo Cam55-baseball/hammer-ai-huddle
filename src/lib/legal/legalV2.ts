@@ -103,6 +103,7 @@ export async function myConsentStatus(): Promise<Record<string, { document_versi
  * shown with a one-time notice instead (PolicyUpdateNotice).
  */
 export const ACCEPTANCE_REQUIRED_UP_TO: Record<string, number> = {
+  terms: 1, // v2 adds only the coach/org fair-use section; players do not re-accept (owner 2026-10-13)
   privacy: 1,
   "consumer-health-data": 1,
   "child-safety": 1,

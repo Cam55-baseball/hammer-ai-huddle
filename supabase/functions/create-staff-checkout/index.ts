@@ -28,6 +28,11 @@ Deno.serve(async (req) => {
     const { data: pc } = await admin.from("profiles").select("parent_controlled").eq("id", user.id).maybeSingle();
     if (pc?.parent_controlled) return json({ error: "Coach and Organization plans are for adult staff accounts." }, 403);
 
+    // Fair use (Terms v2 section 15, lawyer-approved 2026-10-13) must be accepted before checkout.
+    const { data: fu } = await admin.from("consent_records").select("id").eq("user_id", user.id)
+      .eq("document_slug", "terms").gte("document_version", 2).eq("choice", "accepted").limit(1);
+    if (!fu?.length) return json({ error: "Please accept the fair-use terms first.", code: "fair_use_required" }, 400);
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2025-08-27.basil" });
     const found = await stripe.customers.list({ email: user.email, limit: 1 });
     const customerId = found.data[0]?.id;
