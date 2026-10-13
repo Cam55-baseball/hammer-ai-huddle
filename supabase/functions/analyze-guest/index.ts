@@ -28,8 +28,8 @@ Deno.serve(async (req) => {
     const staff = r.has("owner") || r.has("admin");
     if (!staff && !r.has("coach")) return json({ error: "Guest mode is for coaches." }, 403);
     if (!staff) {
-      const { data: gate } = await admin.from("app_settings").select("value").eq("key", "staff_plan_gate").maybeSingle();
-      const on = gate?.value === true || (gate?.value as any)?.enabled === true;
+      const { data: gate } = await admin.from("app_settings").select("setting_value").eq("setting_key", "staff_plan_gate").maybeSingle();
+      const on = (gate?.setting_value as any)?.enabled === true;
       if (on) {
         const { data: has } = await admin.rpc("has_staff_plan", { _user: user.id });
         if (!has) return json({ error: "Coach plan needed.", code: "plan_needed" }, 402);
