@@ -1,3 +1,4 @@
+import { StaffPlanTiles } from "@/components/staff/StaffPlanTiles";
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
 import { scrubRetiredFromList } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
@@ -671,6 +672,11 @@ export default function Dashboard() {
 
         {/* Merch always pinned below the Game Plan */}
         {merchSection}
+
+        {/* Coach and Organization plans — prominent for coach/org accounts, a quiet pair for players; never for scouts. */}
+        {!purchaseRoleLoading && canShowPurchaseUI && (isCoach
+          ? <StaffPlanTiles variant="prominent" />
+          : !isScout && <StaffPlanTiles variant="subtle" />)}
       </div>
     </DashboardLayout>
   );
