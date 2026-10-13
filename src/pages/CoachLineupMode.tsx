@@ -27,10 +27,8 @@ export default function CoachLineupMode() {
   const { data: roster } = useQuery({
     queryKey: ["coach-lineup-roster"],
     queryFn: async () => {
-      const { data } = await (supabase as any).rpc("coach_team_discipline", {});
-      const ids: string[] = ((data as any)?.players ?? []).map((p: any) => p.athlete_id ?? p.id).filter(Boolean);
-      const names = new Map<string, string>(((data as any)?.players ?? []).map((p: any) => [p.athlete_id ?? p.id, p.name ?? p.full_name ?? "Player"]));
-      return ids.map((id) => ({ id, name: names.get(id) ?? "Player" }));
+      const { data } = await (supabase as any).rpc("team_discipline_summary", {});
+      return ((data ?? []) as any[]).map((r) => ({ id: r.athlete_id as string, name: (r.name as string) || "Player" }));
     },
   });
   const { data: lineups } = useQuery({
