@@ -1,4 +1,4 @@
-# TOP STATUS — OO1, 2026-10-13
+# TOP STATUS — OO2, 2026-10-13
 
 **Ready to publish: no.**
 
@@ -17,7 +17,7 @@
 - Daily plan job: PASS since 2026-10-12 (Oct 11 failures fixed in current builder).
 - Missed-workout marking: PASS (MM9, throwaway row flipped to missed, removed).
 - Renewal reminders: PASS (staff-only 403 for others; staff dry run 0 due, nothing sent).
-- Phone size (390 px) as player, under-13, coach, org, parent: PASS for opening pages (MM7). Flow-level: coach entries + wrong-player block in both options PASS (OO1); under-13 parent flow, check-ins, guest mode on phone, on-the-spot assessment, Discipline view NOT RUN.
+- Phone size (390 px) as player, under-13, coach, org, parent: PASS for opening pages (MM7). Flow-level: coach entries + wrong-player block in both options PASS (OO1); check-ins with/without health sharing PASS + Discipline view opens PASS (OO2); under-13 parent flow, guest mode on phone, on-the-spot assessment NOT RUN.
 
 ## Reports
 - docs/owner/regression-report.md: IN PROGRESS (MM1–MM9 entries; open items above).
@@ -30,7 +30,7 @@
 - Sponsorships use players' existing plan prices. Test codes HMIOSTEST and HMSPTEST1 used up.
 
 ## Next item
-Remaining phone flow checks: under-13 parent flow, check-ins with/without health consent, guest mode, on-the-spot assessment, Discipline view.
+Remaining phone flow checks: under-13 parent flow, guest mode, on-the-spot assessment.
 
 ## Waiting on the owner
 1. Finish the 3 test checkouts from the private email, then say "done" — I verify in Stripe and cancel all 3.

@@ -83,3 +83,8 @@ Test org (Demo Org): subscription active → app plan = Organization, status act
 - Coach lineup page opens with the lineup. PASS.
 - Test entries, lineup and coach–player connection removed afterwards.
 - Not yet run: under-13 parent flow, check-ins with/without health consent, guest mode on the phone, on-the-spot assessment, Discipline view.
+
+## OO2 — 2026-10-13: check-ins + Discipline on a phone
+- Check-ins with and without health sharing: PASS (adult test player). Sharing off → coach sees only that a morning check-in was done and when, no answers. Health sharing on → coach sees the answers (readiness 4, 8 hours slept). Test check-in deleted, sharing set back to off, coach–player connection ended.
+- Discipline view: coach's player page (390 px) shows the Discipline tab, page fits, no errors; player's Vault shows Check-in, Discipline and Readiness. PASS (page level).
+- Still to run on a phone: under-13 parent steps end to end, guest mode end to end, on-the-spot assessment.
