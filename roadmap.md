@@ -1,4 +1,6 @@
 # TOP STATUS — PP (owner requests), 2026-10-13
+
+- PP1 (2026-10-13): History opens on phone as 3 test players, no errors, ~11–13 s on the preview (dev mode, slower than live). Test players have no graded reports, so the 5+-report grade check is still open (needs seeded reports or a live analysis — owner OK for AI credits). Ready to publish: no.
 **Ready to publish: no** — waiting on the owner's 3 test checkouts and the under-13 test checkout.
 - [x] Test passwords reset privately on the 12 test-only accounts (one-time tool deleted).
 - [x] Under-13 code: 1 fresh one-time 100%-off code (Complete Pitcher only, 7 days), emailed privately with a throwaway parent email and the preview link. [ ] After the owner signs up: cancel that plan and mark the account and consent record TEST and hidden.
