@@ -5,6 +5,7 @@ import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { staffGateAllows } from "@/lib/staffPlanGate";
 import { StaffPlanTiles } from "@/components/staff/StaffPlanTiles";
+import { Button } from "@/components/ui/button";
 
 /** Opens coach tools only with an active Coach/Organization plan once the owner turns the gate switch on. */
 export function StaffPlanGate({ children, needsOrg = false }: { children: ReactNode; needsOrg?: boolean }) {
@@ -36,10 +37,18 @@ export function StaffPlanGate({ children, needsOrg = false }: { children: ReactN
   if (ok) return <>{children}</>;
   return (
     <div className="mx-auto max-w-md p-6 text-center space-y-3">
-      <h1 className="text-xl font-semibold">{needsOrg ? "Organization plan needed" : "Coach plan needed"}</h1>
+      <h1 className="text-xl font-semibold">
+        {needsOrg ? "This part is included with the Hammers Organization plan" : "Coach tools are now part of the Hammers Coach plan"}
+      </h1>
       <p className="text-muted-foreground">
-        {needsOrg ? "This part is included with the Hammers Organization plan." : "Coach tools are included with the Hammers Coach or Organization plan."}
+        {needsOrg
+          ? "Subscribe to the Organization plan, or ask your organization to add you as a coach seat."
+          : "Subscribe to keep using coach tools, or join through your organization if it gives you a coach seat."}
       </p>
+      <div className="flex flex-col gap-2 pt-1">
+        <Button asChild className="h-11 w-full"><Link to="/staff-plans">Subscribe</Link></Button>
+        <Button asChild variant="outline" className="h-11 w-full"><Link to="/join">Join through your organization</Link></Button>
+      </div>
       <div className="text-left pt-2"><StaffPlanTiles variant="prominent" /></div>
     </div>
   );
