@@ -1,5 +1,7 @@
 # STATUS — 2026-10-13 (owner decisions: sponsorship, coach logging, fair use)
 
+- [ ] Stripe guardrail (owner 2026-10-13): only ADD the 3 staff products/prices + sponsorship subscriptions; never change existing products/prices/coupons/promo codes/tax/portal/webhook endpoints or existing subscriptions (except sponsorship takeover); no fee features; before/after Stripe snapshot + list of created objects in docs/owner/regression-report.md.
+- [ ] Owner approvals 2026-10-13: test passwords (DONE, private); fair use in Terms v2 + checkout acceptance (DONE); full regression round + regression-report.md; then publish-checklist.md.
 Owner decisions saved word for word to docs/owner/plan-4.md. Queue order: (1) sponsorship billing, (2) coach logging Option 1 then Option 2, (3) fair use.
 - [x] Fair-use clause: final wording saved, marked AWAITING LAWYER APPROVAL, not shown to players. Goes into Terms + checkout acceptance only after the owner confirms the lawyer's approval.
 - [x] 30-per-hour limit: server-side (analyze-video, redeployed); over the limit the saved video waits and runs itself when a slot opens (time shown), never charged. Test 4/4 PASS (resume time = oldest analysis + 1 hour).
