@@ -39,3 +39,9 @@ Test org (Demo Org): subscription active → app plan = Organization, status act
 - 8-week plan simulations vs the live builder; Hammers Today, logging, autosave, Power Primer, warm-up order, legal screens, under-13/teen consent
 - Data intact counts; daily plan job, missed marking, renewal reminders
 - Full test suite + phone page audit
+
+## MM1 regression round — 2026-10-13
+- Full test suite: 2,892/2,893 on first run. The one failure was the old Terms re-acceptance test, which still expected players to re-accept Terms v2. That contradicts the owner rule (v2 adds only the coach/org fair-use section, so players do not re-accept). Test updated: documents without a cap still ask again, and Terms v2 does not ask players again. Legal tests 41/41 PASS.
+- Existing data intact (read-only counts): 204 profiles, 191 active subscriptions, 69 consent records.
+- Daily plan job: builds every day 2026-10-07 → 2026-10-12. On 2026-10-11, 8 builds failed with "oppositeLowerPool is not defined". The code now imports it (wk-generate-daily line 375), and all builds on 2026-10-12 succeeded. Not redeployed by me.
+- STILL NOT DONE: 6 sponsorship test checkouts and new one-time 100% codes (owner OK needed), phone proofs signed in as each test account, 8-week plan simulations vs the live builder, checks on missed marking and renewal reminders, publish-checklist.md.
