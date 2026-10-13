@@ -1,6 +1,7 @@
 import { guardSignedInNotPaused } from "../_shared/accountPause.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { chatCompletion } from "../_shared/googleAi.ts";
+import { logAiUsageForRequest } from "../_shared/aiUsage.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -146,6 +147,7 @@ If you surface any movement fault in your notes/feedback, express it as a 5-link
       ],
       tool_choice: { type: "function", function: { name: "report_movement_analysis" } },
     });
+    await logAiUsageForRequest(req, "analyze-base-stealing-rep", aiResult);
 
     if (!aiResult.ok) {
       if (aiResult.status === 429) {

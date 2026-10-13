@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { resolveSeasonPhase, getSeasonProfile, type SeasonPhase } from "../_shared/seasonPhase.ts";
 import { deriveHittingDoctrineAttribution } from "../_shared/deriveHittingDoctrine.ts";
 import { chatCompletion } from "../_shared/googleAi.ts";
+import { logAiUsageForRequest } from "../_shared/aiUsage.ts";
 import { humanLabel } from "../_shared/humanLabel.ts";
 
 const corsHeaders = {
@@ -1226,6 +1227,7 @@ Return ONLY the JSON array, no other text.`;
       model: "google/gemini-2.5-flash-lite",
       messages: [{ role: "user", content: prompt }],
     }, { timeoutMs: 60_000 });
+    await logAiUsageForRequest(null, "hie-analyze", aiResp);
 
     if (!aiResp.ok) {
       console.error("AI provider error:", aiResp.status);

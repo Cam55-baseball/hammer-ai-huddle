@@ -3,6 +3,7 @@ import { isAccountPaused, pausedResponse } from "../_shared/accountPause.ts";
 // and inserts proposals into video_tag_suggestions for owner review.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { chatCompletion } from '../_shared/googleAi.ts';
+import { logAiUsageForRequest } from "../_shared/aiUsage.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -135,6 +136,7 @@ Deno.serve(async (req) => {
       }],
       tool_choice: { type: 'function', function: { name: 'propose_tags' } },
     });
+    await logAiUsageForRequest(req, "analyze-video-description", aiResult);
 
     if (!aiResult.ok) {
       console.error('AI provider error', aiResult.provider, aiResult.status, aiResult.errorBody);

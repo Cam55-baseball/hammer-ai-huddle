@@ -2,6 +2,7 @@ import { HONEST_EDGES_PROMPT } from "../_shared/honestEdges.ts";
 import { enforcePurchasePolicy } from "./purchasePolicy.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { chatCompletion } from "../_shared/googleAi.ts";
+import { logAiUsageForRequest } from "../_shared/aiUsage.ts";
 import { PROGRAMS_RETIRED_KEY, scrubRetiredLines, scrubRetiredInline } from "../_shared/archive/retiredPrograms.ts";
 import { isSwitchOnFor } from "../_shared/wic/flags/featureSwitches.ts";
 
@@ -191,6 +192,7 @@ RESPONSE GUIDELINES:
         ...messages,
       ],
     });
+    await logAiUsageForRequest(req, "ai-helpdesk", result);
 
     if (!result.ok) {
       if (result.status === 429) {
