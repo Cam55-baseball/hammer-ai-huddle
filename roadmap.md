@@ -30,7 +30,7 @@
 - Sponsorships use players' existing plan prices. Test codes HMIOSTEST and HMSPTEST1 used up.
 
 ## Next item
-Flow-level phone checks as the test accounts (no owner input needed).
+Flow-level phone checks as the test accounts — BLOCKED (NN1): test password lost again in a work-area reset; needs owner OK to reset it the same way (optionally kept as a private backend secret).
 
 ## Waiting on the owner
 1. Checkout card choice: real card for the test (no charge with the code), or skip the card when the total is $0.
