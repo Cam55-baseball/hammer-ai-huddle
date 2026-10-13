@@ -442,6 +442,13 @@
       "when": 1791850054807,
       "tag": "0062_org_sponsorships",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1791850517630,
+      "tag": "0063_coach_logging",
+      "breakpoints": true
     }
   ]
 }

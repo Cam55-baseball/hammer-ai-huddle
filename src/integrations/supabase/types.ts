@@ -4620,6 +4620,113 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_lineup_players: {
+        Row: {
+          athlete_id: string
+          jersey: string
+          lineup_id: string
+        }
+        Insert: {
+          athlete_id: string
+          jersey: string
+          lineup_id: string
+        }
+        Update: {
+          athlete_id?: string
+          jersey?: string
+          lineup_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_lineup_players_lineup_id_fkey"
+            columns: ["lineup_id"]
+            isOneToOne: false
+            referencedRelation: "coach_lineups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_lineups: {
+        Row: {
+          coach_id: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      coach_logged_entries: {
+        Row: {
+          athlete_id: string
+          coach_id: string
+          coach_label: string
+          created_at: string
+          entry_date: string
+          flag_note: string | null
+          flag_reason: string | null
+          id: string
+          jersey: string | null
+          kind: string
+          lineup_id: string | null
+          mode: string
+          opponent: string | null
+          parent_present_confirmed_at: string | null
+          resolved_at: string | null
+          stats: Json
+          status: string
+        }
+        Insert: {
+          athlete_id: string
+          coach_id: string
+          coach_label: string
+          created_at?: string
+          entry_date: string
+          flag_note?: string | null
+          flag_reason?: string | null
+          id?: string
+          jersey?: string | null
+          kind: string
+          lineup_id?: string | null
+          mode: string
+          opponent?: string | null
+          parent_present_confirmed_at?: string | null
+          resolved_at?: string | null
+          stats?: Json
+          status?: string
+        }
+        Update: {
+          athlete_id?: string
+          coach_id?: string
+          coach_label?: string
+          created_at?: string
+          entry_date?: string
+          flag_note?: string | null
+          flag_reason?: string | null
+          id?: string
+          jersey?: string | null
+          kind?: string
+          lineup_id?: string | null
+          mode?: string
+          opponent?: string | null
+          parent_present_confirmed_at?: string | null
+          resolved_at?: string | null
+          stats?: Json
+          status?: string
+        }
+        Relationships: []
+      }
       coach_messages: {
         Row: {
           athlete_id: string
@@ -22324,6 +22431,10 @@ export type Database = {
       }
     }
     Functions: {
+      _coach_log_throws: {
+        Args: { _athlete: string; _date: string; _sign: number; _stats: Json }
+        Returns: undefined
+      }
       _gen_code: { Args: never; Returns: string }
       _testing_day_can_manage: {
         Args: { _athlete: string; _org: string }
@@ -22517,6 +22628,24 @@ export type Database = {
         }[]
       }
       coach_calibration_summary: { Args: never; Returns: Json }
+      coach_connected_to: {
+        Args: { _athlete: string; _me: string }
+        Returns: boolean
+      }
+      coach_log_entry: {
+        Args: {
+          _athlete: string
+          _confirm_athlete: string
+          _date: string
+          _jersey?: string
+          _kind: string
+          _lineup?: string
+          _opponent: string
+          _parent_present?: boolean
+          _stats: Json
+        }
+        Returns: Json
+      }
       coach_record_movement_screen: {
         Args: {
           _athlete: string
@@ -22526,6 +22655,11 @@ export type Database = {
         }
         Returns: Json
       }
+      coach_save_lineup: {
+        Args: { _name: string; _players: Json }
+        Returns: string
+      }
+      coach_undo_entry: { Args: { _entry: string }; Returns: undefined }
       coach_weekly_summary: { Args: never; Returns: Json }
       combine_evaluator_context: {
         Args: { p_athlete: string; p_sport: string }
@@ -22978,6 +23112,15 @@ export type Database = {
       }
       org_test_ranking: { Args: { _org: string; _test: string }; Returns: Json }
       owns_scout_grade: { Args: { _grade_id: string }; Returns: boolean }
+      player_resolve_coach_entry: {
+        Args: {
+          _confirm: boolean
+          _entry: string
+          _note?: string
+          _reason?: string
+        }
+        Returns: undefined
+      }
       recompute_library_video_tier: {
         Args: { p_video_id: string }
         Returns: undefined
