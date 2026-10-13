@@ -1,6 +1,9 @@
-# TOP STATUS — OO3, 2026-10-13
+# TOP STATUS — OO3 done, 2026-10-13
 - [x] On-the-spot assessment PASS (OO3): coach saves with label "Coach-verified · coach · date"; player sees it; player recording for self refused (403); age 11 without parent refused ("Under 13: the parent must be present and agree"), with parent saved + parent time stamped; 11-year-old could not accept a coach request himself ("A parent must answer this request"); age 13+ saves without parent. Test entries deleted, test birthday restored, test connections ended.
-- [ ] Remaining phone checks: under-13 parent steps in the parent's own screens; guest mode end-to-end.
+- [x] Teen parent-signature flow PASS (OO3): link requested as the 13-year-old test player, parent signed on a 390 px screen (name, relationship, 18+, drawn signature), player's training opened, link can't be reused. Signed record kept (legal record).
+- [x] Guest mode PASS (OO3, 390 px as test coach): under-13 without parent-permission box → Analyze disabled; with box → runs. Full analysis ran; result only on screen, "Guest result — not saved", values labeled; function saves only the coach's own usage row — no player, video or measurements saved. AI honestly flagged the test-pattern clip instead of inventing a read.
+- [ ] Under-13 signup/parent-consent path: switch is OFF (path closed); running it end to end needs the owner to name that switch change.
+- [ ] Owner items: (1) do the 3 test checkouts from the private email, say "done" → I verify in Stripe + app and cancel all 3; (2) Coach/Org plans switch ON only right before publishing.
 
 
 **Ready to publish: no.**
@@ -20,7 +23,7 @@
 - Daily plan job: PASS since 2026-10-12 (Oct 11 failures fixed in current builder).
 - Missed-workout marking: PASS (MM9, throwaway row flipped to missed, removed).
 - Renewal reminders: PASS (staff-only 403 for others; staff dry run 0 due, nothing sent).
-- Phone size (390 px) as player, under-13, coach, org, parent: PASS for opening pages (MM7). Flow-level: coach entries + wrong-player block in both options PASS (OO1); check-ins with/without health sharing PASS + Discipline view opens PASS (OO2); under-13 parent flow, guest mode on phone, on-the-spot assessment NOT RUN.
+- Phone size (390 px) as player, under-13, coach, org, parent: PASS for opening pages (MM7). Flow-level: coach entries + wrong-player block in both options PASS (OO1); check-ins with/without health sharing PASS + Discipline view opens PASS (OO2); on-the-spot assessment + teen parent signature + guest mode PASS (OO3). Only the under-13 signup path (switch OFF) remains, awaiting owner authorization.
 
 ## Reports
 - docs/owner/regression-report.md: IN PROGRESS (MM1–MM9 entries; open items above).
