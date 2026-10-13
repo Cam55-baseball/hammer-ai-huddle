@@ -69,3 +69,21 @@ export async function logAiUsage(admin: any, row: {
     console.warn("[aiUsage] log failed", e instanceof Error ? e.message : e);
   }
 }
+
+/**
+ * Cost logging for the smaller AI uses (help chat, base-stealing reps, at-bat swings, library tagging,
+ * team plans). Finds the signed-in user from the request, if any. analysis_type stays null so these
+ * never count toward the 30-per-hour analysis limit. Never throws.
+ */
+export async function logAiUsageForRequest(req: Request | null, functionName: string, result: Parameters<typeof logAiUsage>[1]["result"]) {
+  try {
+    const { createClient } = await import("npm:@supabase/supabase-js@2.57.2");
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+    let userId: string | null = null;
+    const token = (req?.headers.get("Authorization") ?? "").replace("Bearer ", "");
+    if (token) { const { data } = await admin.auth.getUser(token); userId = data.user?.id ?? null; }
+    await logAiUsage(admin, { userId, functionName, analysisType: null, result });
+  } catch (e) {
+    console.warn("[aiUsage] request log failed", e instanceof Error ? e.message : e);
+  }
+}
