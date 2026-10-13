@@ -52,3 +52,12 @@ Test org (Demo Org): subscription active → app plan = Organization, status act
 - MM7 test password (owner OK 2026-10-13): set again on the 12 test-only accounts (only accounts marked as test accounts). Kept private, not written anywhere. The one-time tool was deleted, both from the backend and from the code.
 - MM7 phone check (390 px), signed in as each test account: Demo HS Shortstop (dashboard, Games), Demo 13U (shows "Parent signature required", correct for under 13), Demo Coach (coach dashboard, Guest analysis, Lineup mode), Demo Org (Organization dashboard, Coach & Org plans), Demo Parent (dashboard). Every page opens and fits the screen with 0 page errors. A small "We've updated our Privacy Policy" notice can be closed and says no action is needed. PASS.
 - STILL OPEN: 6 sponsorship test checkouts (owner OK'd new one-time 100% codes), missed marking, staff dry run of renewal reminders, publish-checklist.md.
+- MM8 sponsorship, live Stripe (owner OK'd one-time 100% codes). Created: coupon nogFab2p (100%, once, up to 6 uses); code HMSPTEST1 (promo_1UPwu1Gc5QIzbAH6NCRcMyaD, now used); test customer cus_VQoctcg7bzwVOU (Demo Organization). My tools couldn't delete the customer. Its only subscription is canceled and was billed $0.
+  1. Sponsor (test org → test shortstop, 5Tool baseball): PASS. The invoice was $300 → $0 paid and named "Baseball 5Tool Player". The app marked the sponsorship active within ~20 s and gave the player 5Tool access.
+  2. Pause: PASS. The player keeps access through the paid date (2026-11-13).
+  3. Resume: PASS. Back to active.
+  4. Cancel: PASS. The player keeps access for 14 days (grace to 2026-10-27).
+  5. A player trying to change the sponsorship: refused (403). PASS.
+  NOTE: Stripe's checkout page rejected the code as "invalid" (seen in a phone-size browser in both EUR and USD). The same code worked when attached to the subscription directly, so step 1 was run through Stripe directly. The app side (Stripe update → access) is proven. The checkout page's code box is NOT proven. Cause not yet known; the code was valid and unused at the time.
+  NOT YET: sponsoring a player who already pays (their own plan ends, then org billing starts). Needs a test player with a paid plan, which would use one more one-time code.
+  Cleanup: the test sponsorship row was removed, the player's access is back to before (hitting + throwing only), and the test player was removed from the test org (0 players).
