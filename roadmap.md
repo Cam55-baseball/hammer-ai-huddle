@@ -1,3 +1,13 @@
+# TOP STATUS — PP (owner requests), 2026-10-13
+**Ready to publish: no** — waiting on the owner's 3 test checkouts and the under-13 test checkout.
+- [x] Test passwords reset privately on the 12 test-only accounts (one-time tool deleted).
+- [x] Under-13 code: 1 fresh one-time 100%-off code (Complete Pitcher only, 7 days), emailed privately with a throwaway parent email and the preview link. [ ] After the owner signs up: cancel that plan and mark the account and consent record TEST and hidden.
+- [x] Dashboard plan tiles: prominent for coach/org (also on the coach "plan needed" page), a quiet pair for players, none for scouts. Phone screenshots taken.
+- [x] Readiness audit written (docs/owner/v1-readiness-audit.md); fixed the coach-page crash and the History grade rounding/bands. Live analyses of every type: need the owner's OK (AI credits).
+- [x] Owner guide added to docs/owner/publish-checklist.md.
+- [x] Test suite 2,894/2,894 PASS.
+- [ ] Owner's 3 test checkouts → verify + cancel.
+
 # TOP STATUS — OO4 (batch closed), 2026-10-13
 - Every check that needs nothing from the owner is DONE and PASS. All remaining items wait on the owner (below).
 - Owner test-checkout email: SENT (OO1) to hammersmodality@hammersmodality.org, subject "[PRIVATE] Hammers test checkouts" — preview link, 3 test logins, 3 product-limited 100%-off codes (expire in 7 days from OO1).

@@ -42,3 +42,44 @@ Plain-English list of what must be true before publishing. Current answer: **Rea
 - Coach and Organization plans switch: `staff_plan_gate` in the backend settings table `app_settings` (not `wk_feature_switches`, not code/env). Was missing (= off); now `{"enabled": true}`. Proven: Pricing, Staff Plans and Demo Upgrade show Coach $300 and Organization $1,000 (+$150 seat) on a phone screen.
 - Under-13 signup switch: `under13_parent_program` in `wk_feature_switches`. Already `all` (on) since 2026-10-06. Proven: signup answers enabled; the under-13 screen offers the parent path and its 3-step intro. Full signup (creates a real account + permanent legal consent record + card payment) not yet run — waiting on owner.
 - Still open: owner's 3 test checkouts.
+
+---
+
+# Owner guide — every feature, how to use it, how to check it
+
+## Player
+- **Dashboard** — the home screen. Steps: sign in. Check: Identity card, Before You Start, then Hammers Today; at the very bottom, a quiet "For your coach or facility" pair.
+- **Hammers Today** — today's training plan. Steps: open Dashboard → Hammers Today. Check: every exercise has sets/reps or time, with labels; it changes when the phase changes.
+- **Video analysis** — upload a clip and get a report card. Steps: pick a module → Upload → wait. Check: grades in 5s (one decimal below 20), a band (Sub Par / Acceptable / Elite), and a date.
+- **History** — every past report, test and grade. Steps: side menu → History. Check: each grade reads "Grade: 45 · Acceptable".
+- **Vault** — check-ins, discipline, readiness, tests. Steps: side menu → Vault. Check: the Check-in, Discipline and Readiness tabs open.
+- **Check-ins** — morning, before training and night questions. Check: coaches see answers only when the player turns health sharing on.
+- **Game logging** — log your own games. Check: entries say "Source: athlete-entered"; coach entries ask "Yes, that's right / Something's wrong".
+- **Initial assessment** — the 6-step starting test. Check: 1→2→3 in order, then 4–6 in any order.
+
+## Parent
+- **Teen waiver (13–17)** — a parent signs before physical training opens. Steps: the player taps "Ask my parent" → the parent opens the email link → signs. Check: "Signed. Thank you."; the player's plan opens; the same link can't be used again.
+- **Under-13 account** — the parent creates and controls it. Steps: Sign up → under-13 birthday → "I'm the parent or guardian — continue" → details → sign → pay. Check: the account opens only after both the signature and the payment.
+- **Parent controls** — pause, withdraw or delete the child's data.
+
+## Coach
+- **Hammers Coach plan ($300/month)** — opens all coach tools. Steps: Dashboard tile "Start Hammers Coach" → checkout. Check: the coach dashboard opens; without a plan, coach pages show the two plan tiles.
+- **Coach dashboard** — the roster with each player's readiness, discipline, development, games and reports.
+- **Game logging, one player at a time** — the page is locked to one player. Check: a save for any other player is refused.
+- **Lineup mode** — tap the jersey number, then confirm the name. Check: the wrong number or name is refused.
+- **On-the-spot assessment** — record a movement check in person. Check: the player sees "Coach-verified"; under 13 needs the parent present.
+- **Guest mode** — analyze a player who has no account. Check: "Guest result — not saved"; nothing is stored.
+- **Weekly summary, calendar, send workouts** — open them from the coach dashboard.
+
+## Organization
+- **Hammers Organization plan ($1,000/month, 5 seats; extra seat $150/month)**. Steps: Dashboard tile "Start Hammers Organization" → pick extra seats → checkout. Check: the seat count matches; the facility dashboard opens.
+- **Add a coach** — invite by code. Check: the coach appears under staff and uses a seat.
+- **Sponsor a player** — the org pays for a player's plan. Check: a player who already pays keeps his own plan to the end of his paid period, then the org's billing starts; there's no double charge.
+
+## Scout
+- **Scout view** — sees only athletes who allow it; minors only with a guardian's OK. Check: no plan advertising is shown to scouts.
+
+## Owner
+- **Switches** — Coach/Org plans (`staff_plan_gate`, in the settings table) and Under-13 (`under13_parent_program`, in the feature-switch list). Both are ON.
+- **Stripe codes** — every test code is one-time, limited to one product, and expires in 7 days.
+- **Before publishing:** finish the 3 test checkouts and the under-13 test checkout, and confirm each one is canceled afterwards.
