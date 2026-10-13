@@ -22,7 +22,7 @@ import { buildFaultFindings } from "../_shared/faultFindings.ts";
 import { constructiveCriticismBlock, improvementsSchema } from "./constructiveCriticism.ts";
 import { doctrineContextBlock } from "./doctrineContext.ts";
 import { scrubFootageClaims } from "./honestyCheck.ts";
-import { analysesLastHour, overHourlyLimit, logAiUsage, HOURLY_LIMIT_MESSAGE } from "../_shared/aiUsage.ts";
+import { analysesLastHour, overHourlyLimit, logAiUsage, HOURLY_LIMIT_MESSAGE, hourlyResumeAt } from "../_shared/aiUsage.ts";
 import { runStoredThrowPitchCards, runAndWritePoseTileFindings } from "../_shared/poseTileFindingsServer.ts";
 
 const corsHeaders = {
@@ -2082,7 +2082,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     // Call AI (Google AI Studio direct, Lovable Gateway fallback) with tool-calling for structured output
     // Plan 4 D fair use: about 30 analyses per account per hour (server-side; cached re-runs don't count).
     if (overHourlyLimit(await analysesLastHour(supabase, userId))) {
-      return new Response(JSON.stringify({ error: HOURLY_LIMIT_MESSAGE, code: "hourly_limit" }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: HOURLY_LIMIT_MESSAGE, code: "hourly_limit", resume_at: await hourlyResumeAt(supabase, userId), video_id: videoId }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const aiResult = await chatCompletion({
       model: "google/gemini-2.5-flash",

@@ -9,7 +9,20 @@ export const AI_RATES: Record<string, { input: number; output: number }> = {
 
 export const HOURLY_ANALYSIS_LIMIT = 30;
 export const HOURLY_LIMIT_MESSAGE =
-  "You've run a lot of analyses this hour. Take a short break and try again in a little while.";
+  "You've reached 30 analyses this hour. Your video is saved and will be analyzed when the hour resets. You won't be charged.";
+
+/** When the oldest analysis in the window leaves it, one slot opens. */
+export function resumeAtFrom(oldestInWindowIso: string | null, now = Date.now()): string {
+  const t = oldestInWindowIso ? new Date(oldestInWindowIso).getTime() + 3600_000 : now + 3600_000;
+  return new Date(Math.max(t, now + 1000)).toISOString();
+}
+
+export async function hourlyResumeAt(admin: any, userId: string): Promise<string> {
+  const since = new Date(Date.now() - 3600_000).toISOString();
+  const { data } = await admin.from("ai_usage_log").select("created_at").eq("user_id", userId)
+    .not("analysis_type", "is", null).gte("created_at", since).order("created_at", { ascending: true }).limit(1).maybeSingle();
+  return resumeAtFrom(data?.created_at ?? null);
+}
 
 export function rateFor(model: string) {
   const m = (model || "").toLowerCase();

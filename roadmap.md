@@ -1,4 +1,12 @@
-# STATUS — 2026-10-12 23:30 UTC (end of KK batch)
+# STATUS — 2026-10-13 (owner decisions: sponsorship, coach logging, fair use)
+
+Owner decisions saved word for word to docs/owner/plan-4.md. Queue order: (1) sponsorship billing, (2) coach logging Option 1 then Option 2, (3) fair use.
+- [x] Fair-use clause: final wording saved, marked AWAITING LAWYER APPROVAL, not shown to players. Goes into Terms + checkout acceptance only after the owner confirms the lawyer's approval.
+- [x] 30-per-hour limit: server-side (analyze-video, redeployed); over the limit the saved video waits and runs itself when a slot opens (time shown), never charged. Test 4/4 PASS (resume time = oldest analysis + 1 hour).
+- [ ] Sponsorship billing (Phase 11) — NEXT. Answers now in hand. Proof needs signed-in test checkouts (sign-in block below).
+- [ ] stripe-walkthrough.md — with sponsorship.
+- [ ] Coach logging Option 1 (default) + Option 2 lineup mode, wrong-player tests.
+
 
 **Ready to publish: no.**
 
@@ -19,9 +27,9 @@ Guest mode (nothing saved, "Invite to Hammers to save this", under-13 parent per
 ## Waiting on the owner
 1. Phone checks + test checkout: OK to set a known password on the test accounts only, or approve the sign-in prompt in a later round.
 2. When to turn on the switch that locks coach tools to paying plans (existing coaches without a plan lose coach tools then).
-3. Four sponsorship answers (price per sponsored player monthly/yearly; modules covered; grace period; players already paying).
+3. Sponsorship answers — RECEIVED 2026-10-13.
 4. Lawyer review of the fair-use clause draft (docs/owner/fair-use-clause-draft.md) — not shown to players.
-5. Coach-logging option choice (docs/owner/coach-logging-proposal.md).
+5. Coach logging — DECIDED 2026-10-13: build both, Option 1 default.
 6. Rankings/MPI scores on 5s? Spaces stays OFF; Vault review queue.
 
 ## Plan 4 (docs/owner/plan-4.md) — IN PROGRESS (JJ1)

@@ -1139,6 +1139,32 @@ export default function AnalyzeVideo() {
 
         const friendly = friendlyRejectReason(rejectReason);
 
+        // Fair use: over 30 analyses this hour → the saved video waits and runs itself at the next opening.
+        let hourly: { resume_at?: string; error?: string } | null = null;
+        try {
+          const resp = (analysisError as any)?.context;
+          if (resp && typeof resp.json === "function") {
+            const b = await resp.clone().json();
+            if (b?.code === "hourly_limit") hourly = b;
+          }
+        } catch { /* ignore */ }
+        if (hourly) {
+          const at = hourly.resume_at ? new Date(hourly.resume_at) : new Date(Date.now() + 3600_000);
+          const when = at.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+          toast.info(`${hourly.error ?? "Analysis paused for this hour."} Starts at about ${when} if this page stays open.`, { duration: 15000 });
+          const body = { videoId: videoData.id, module, sport, userId: user.id, language: i18n.language, frames, frameExtractions, ...(landingFrameIndex !== null && { landingFrameIndex }) };
+          window.setTimeout(async () => {
+            setAnalyzing(true);
+            const { data: d2, error: e2 } = await supabase.functions.invoke("analyze-video", { body });
+            setAnalyzing(false);
+            if (e2) { toast.error(t('videoAnalysis.genericAnalysisError')); return; }
+            setAnalysis(normalizeAnalysisResponse(d2));
+            setAnalysisError(null);
+            toast.success("Your paused analysis is ready.");
+          }, Math.max(1000, at.getTime() - Date.now() + 2000));
+          setAnalyzing(false);
+          return;
+        }
 
         if (analysisError.message?.includes('429') || analysisData?.status === 429) {
           toast.error(t('videoAnalysis.rateLimitError'));
