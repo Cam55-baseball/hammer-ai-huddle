@@ -1,4 +1,4 @@
-# TOP STATUS — MM10, 2026-10-13
+# TOP STATUS — NN2, 2026-10-13
 
 **Ready to publish: no.**
 
@@ -30,7 +30,7 @@
 - Sponsorships use players' existing plan prices. Test codes HMIOSTEST and HMSPTEST1 used up.
 
 ## Next item
-Flow-level phone checks as the test accounts — BLOCKED (NN1): test password lost again in a work-area reset; needs owner OK to reset it the same way (optionally kept as a private backend secret).
+Flow-level phone checks as the test accounts — BLOCKED (NN1/NN2): test password lost again in a work-area reset; needs owner OK to reset it the same way (optionally kept as a private backend secret). No item remains that needs nothing from the owner: every open item needs test-account sign-in or a Stripe checkout decision.
 
 ## Waiting on the owner
 1. Checkout card choice: real card for the test (no charge with the code), or skip the card when the total is $0.
