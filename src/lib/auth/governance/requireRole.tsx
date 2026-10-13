@@ -41,7 +41,13 @@ export function RequireCapability({ capability, children, fallback = "/" }: Prop
     };
   }, [capability]);
 
-  if (allowed === null) return null;
+  if (allowed === null)
+    return (
+      <div role="status" aria-label="Loading" className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
+        <span className="sr-only">Loading…</span>
+      </div>
+    );
   if (!allowed) return <Navigate to={fallback} replace />;
   return <>{children}</>;
 }
