@@ -14,6 +14,7 @@ import { CheckCircle, Loader2, Flame, Trophy, Target, ArrowRight } from 'lucide-
 import { cn } from '@/lib/utils';
 import { VideoMoment } from '@/components/video-suggestions/VideoMoment';
 import { moduleToSkillDomain, mapOutcomeToResult } from '@/lib/analysisToTaxonomy';
+import { formatGrade, ratingBand } from '@/lib/benchmarks/gradeScale';
 
 interface PostSessionSummaryV2Props {
   sessionId: string;
@@ -128,9 +129,9 @@ export function PostSessionSummaryV2({ sessionId, module, sessionType, onDone }:
             </div>
           ) : grade != null ? (
             <div className="mt-4 flex items-baseline gap-3">
-              <span className="text-4xl font-black tracking-tight">{Math.round(grade)}</span>
+              <span className="text-4xl font-black tracking-tight"><span className="sr-only">Grade: </span>{formatGrade(grade)}</span>
               <Badge variant="outline" className="text-sm font-semibold">
-                {getGradeLabel(grade)}
+                {ratingBand(grade)}
               </Badge>
             </div>
           ) : null}
