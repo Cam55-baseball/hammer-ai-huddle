@@ -7,8 +7,11 @@ describe("legal_v2 rules", () => {
   it("asks to accept a document never accepted", () => {
     expect(pendingAcceptances({ terms: 1 }, {}, ["terms"])).toEqual(["terms"]);
   });
-  it("asks again when a newer version exists", () => {
-    expect(pendingAcceptances({ terms: 2 }, { terms: { document_version: 1, choice: "accepted" } }, ["terms"])).toEqual(["terms"]);
+  it("asks again when a newer version exists (documents without a cap)", () => {
+    expect(pendingAcceptances({ eula: 2 }, { eula: { document_version: 1, choice: "accepted" } }, ["eula"])).toEqual(["eula"]);
+  });
+  it("Terms v2 (coach/org fair use) does not make players accept again (owner 2026-10-13)", () => {
+    expect(pendingAcceptances({ terms: 2 }, { terms: { document_version: 1, choice: "accepted" } }, ["terms"])).toEqual([]);
   });
   it("does not ask when the latest version is accepted", () => {
     expect(pendingAcceptances({ terms: 2 }, { terms: { document_version: 2, choice: "accepted" } }, ["terms"])).toEqual([]);
