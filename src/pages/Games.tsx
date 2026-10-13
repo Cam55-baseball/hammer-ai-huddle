@@ -1,3 +1,4 @@
+import { CoachEntriesToConfirm } from "@/components/games/CoachEntriesToConfirm";
 /**
  * Games — V1 of the elite Game Performance hub.
  *
@@ -190,6 +191,8 @@ export default function Games() {
           </Button>
         </div>
       </motion.div>
+
+      <CoachEntriesToConfirm />
 
       {/* Game-day call-to-action — opens today's game directly, or offers to draft one. */}
       {gameDay.isGameToday && <TodayGameCta onOpen={(id) => setOpenSheet(id)} />}

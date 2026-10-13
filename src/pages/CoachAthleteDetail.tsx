@@ -1,3 +1,4 @@
+import { CoachLogForPlayer } from "@/components/coach/CoachLogForPlayer";
 import { CoachCheckinSummary } from "@/components/coach/CoachCheckinSummary";
 import { CoachDisciplineTab } from "@/components/coach/CoachDisciplineTab";
 import { CoachOnSpotAssessment } from "@/components/coach/CoachOnSpotAssessment";
@@ -240,6 +241,7 @@ export default function CoachAthleteDetail() {
           </TabsContent>
 
           <TabsContent value="games" className="space-y-4 pt-4">
+            {athleteId && <CoachLogForPlayer athleteId={athleteId} />}
             {athleteId && <CoachGamesTab athleteId={athleteId} canVerify={user?.id !== athleteId} />}
           </TabsContent>
 
