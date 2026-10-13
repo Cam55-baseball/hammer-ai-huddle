@@ -5,7 +5,6 @@
 // =====================================================================
 
 import { rawToGrade } from '@/lib/gradeEngine';
-import { roundGrade } from '@/lib/benchmarks/gradeScale';
 
 export type ToolName = 'hit' | 'power' | 'run' | 'field' | 'arm';
 
@@ -193,7 +192,7 @@ export function computeToolGrades(
       }
     }
 
-    toolGrades[tool] = count > 0 ? roundGrade(totalGrade / count) : null;
+    toolGrades[tool] = count > 0 ? Math.round(totalGrade / count) : null;
   }
 
   // Compute overall as weighted average of non-null tool grades
@@ -209,7 +208,7 @@ export function computeToolGrades(
     }
   }
 
-  const overall = totalWeight > 0 ? roundGrade(weightedSum / totalWeight) : null;
+  const overall = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : null;
 
   return { ...toolGrades, overall };
 }
