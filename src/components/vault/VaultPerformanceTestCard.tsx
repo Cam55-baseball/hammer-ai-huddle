@@ -355,7 +355,7 @@ export function VaultPerformanceTestCard({
                         <span className="text-sm font-medium">Performance Intelligence</span>
                         {latestReport.toolGrades.overall !== null && (
                           <Badge className="bg-cyan-500/20 text-cyan-600 border-cyan-500/30 text-xs">
-                            Overall: {latestReport.toolGrades.overall}
+                            Overall: {formatGrade(latestReport.toolGrades.overall)}
                           </Badge>
                         )}
                       </div>
@@ -429,7 +429,7 @@ export function VaultPerformanceTestCard({
                             <div className="text-center">
                               <p className="text-[10px] text-muted-foreground">Overall Speed</p>
                               <p className={`text-lg font-bold ${speed.overall !== null ? gradeToColor(speed.overall) : 'text-muted-foreground'}`}>
-                                {speed.overall !== null ? speed.overall : '—'}
+                                {speed.overall !== null ? formatGrade(speed.overall) : '—'}
                               </p>
                             </div>
                           </div>
