@@ -435,6 +435,13 @@
       "when": 1791847332190,
       "tag": "0061_coach_weekly_summary",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1791850054807,
+      "tag": "0062_org_sponsorships",
+      "breakpoints": true
     }
   ]
 }

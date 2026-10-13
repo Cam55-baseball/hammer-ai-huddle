@@ -12020,6 +12020,63 @@ export type Database = {
           },
         ]
       }
+      org_sponsorships: {
+        Row: {
+          billing_starts_at: string | null
+          created_at: string
+          current_period_end: string | null
+          grace_until: string | null
+          id: string
+          organization_id: string
+          paid_through: string | null
+          player_id: string
+          player_own_sub_ends_at: string | null
+          sponsored_by: string
+          sport: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          billing_starts_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          grace_until?: string | null
+          id?: string
+          organization_id: string
+          paid_through?: string | null
+          player_id: string
+          player_own_sub_ends_at?: string | null
+          sponsored_by: string
+          sport: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier: string
+          updated_at?: string
+        }
+        Update: {
+          billing_starts_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          grace_until?: string | null
+          id?: string
+          organization_id?: string
+          paid_through?: string | null
+          player_id?: string
+          player_own_sub_ends_at?: string | null
+          sponsored_by?: string
+          sport?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       org_standard_criteria: {
         Row: {
           created_at: string

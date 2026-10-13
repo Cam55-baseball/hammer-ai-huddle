@@ -1,3 +1,4 @@
+import { SponsorshipsCard } from "@/components/organization/SponsorshipsCard";
 import { TeamDisciplineSummary } from "@/components/coach/TeamDisciplineSummary";
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -80,7 +81,7 @@ export default function OrganizationDashboard() {
             </TabsContent>
 
             <TabsContent value="players">
-              <div className="space-y-4"><FacilityBoard orgId={activeOrg.id} /><TeamDisciplineSummary orgId={activeOrg.id} /></div>
+              <div className="space-y-4"><FacilityBoard orgId={activeOrg.id} /><TeamDisciplineSummary orgId={activeOrg.id} /><SponsorshipsCard orgId={activeOrg.id} /></div>
             </TabsContent>
 
             <TabsContent value="compare">
