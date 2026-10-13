@@ -1,3 +1,47 @@
+# TOP STATUS — MM10, 2026-10-13
+
+**Ready to publish: no.**
+
+## Items (pass/fail + proof)
+- Test passwords on 12 test-only accounts: PASS (MM7; one-time tool deleted; password private, not in any doc).
+- Fair use in Terms v2 + checkout acceptance: PASS (Terms v2 approved_by owner, effective 2026-10-13; v1 untouched; server refuses checkout without acceptance).
+- Organization plan on/off via Stripe: PASS (HMIOSTEST, $1,300 → $0; 5 + 2 seats on, then canceled).
+- Sponsorship sponsor/pause/resume/cancel/player refusal: PASS (MM8, HMSPTEST1, $0; test data cleaned up).
+- Sponsorship code typed on the checkout page: FAIL/open (Stripe page says "invalid"; same code works applied directly).
+- Sponsoring a player who already pays: NOT RUN (needs a paid test player).
+- Player and staff checkouts through the checkout page: NOT RUN (Stripe asks for a card even at $0 — owner choice).
+- 8-week plan simulations vs live builder: PASS (MM4; 720 combinations, 0 rule breaks; only change = approved Robustness slot).
+- Full test suite: PASS 2,894/2,894 (MM5).
+- Legal tests: PASS 41/41; players not asked to re-accept Terms v2.
+- Existing data intact: PASS (204 profiles, 191 active subscriptions, 69 consents).
+- Daily plan job: PASS since 2026-10-12 (Oct 11 failures fixed in current builder).
+- Missed-workout marking: PASS (MM9, throwaway row flipped to missed, removed).
+- Renewal reminders: PASS (staff-only 403 for others; staff dry run 0 due, nothing sent).
+- Phone size (390 px) as player, under-13, coach, org, parent: PASS for opening pages (MM7). Flow-level phone checks (saving coach entries, under-13 parent flow, check-ins, guest mode, wrong-player block): NOT RUN.
+
+## Reports
+- docs/owner/regression-report.md: IN PROGRESS (MM1–MM9 entries; open items above).
+- docs/owner/publish-checklist.md: written (MM9); not signed off.
+
+## Stripe IDs
+- Hammers Coach $300/mo: prod_VQjeb6G4nQbIfZ / price_1UPsB6Gc5QIzbAH6k6wtj6NI
+- Hammers Organization $1,000/mo (5 seats): prod_VQjea2xzqwAqvj / price_1UPsB7Gc5QIzbAH6Q42AlTdT
+- Extra Coach Seat $150/mo: prod_VQje6yyL8w42rs / price_1UPsB8Gc5QIzbAH6l4p2C4oU
+- Sponsorships use players' existing plan prices. Test codes HMIOSTEST and HMSPTEST1 used up.
+
+## Next item
+Flow-level phone checks as the test accounts (no owner input needed).
+
+## Waiting on the owner
+1. Checkout card choice: real card for the test (no charge with the code), or skip the card when the total is $0.
+2. OK to give one test player a paid plan (with a 100%-off code) for the already-paying sponsorship test.
+3. Checkout-page code "invalid": OK to look at the code's settings in Stripe (read only) and, if needed, make a fresh code.
+4. When to turn on the coach-tools plan switch.
+
+Nothing was published, deployed, or changed in schedules or the iPhone app this round.
+
+---
+
 # STATUS — 2026-10-13 (owner decisions: sponsorship, coach logging, fair use)
 
 - [~] Stripe guardrail (snapshot before/after done, nothing existing changed; staff plan on/off PASS) (owner 2026-10-13): only ADD the 3 staff products/prices + sponsorship subscriptions; never change existing products/prices/coupons/promo codes/tax/portal/webhook endpoints or existing subscriptions (except sponsorship takeover); no fee features; before/after Stripe snapshot + list of created objects in docs/owner/regression-report.md.
