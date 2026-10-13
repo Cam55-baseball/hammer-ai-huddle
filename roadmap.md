@@ -1,4 +1,4 @@
-# TOP STATUS — NN2, 2026-10-13
+# TOP STATUS — OO1, 2026-10-13
 
 **Ready to publish: no.**
 
@@ -7,9 +7,9 @@
 - Fair use in Terms v2 + checkout acceptance: PASS (Terms v2 approved_by owner, effective 2026-10-13; v1 untouched; server refuses checkout without acceptance).
 - Organization plan on/off via Stripe: PASS (HMIOSTEST, $1,300 → $0; 5 + 2 seats on, then canceled).
 - Sponsorship sponsor/pause/resume/cancel/player refusal: PASS (MM8, HMSPTEST1, $0; test data cleaned up).
-- Sponsorship code typed on the checkout page: FAIL/open (Stripe page says "invalid"; same code works applied directly).
-- Sponsoring a player who already pays: NOT RUN (needs a paid test player).
-- Player and staff checkouts through the checkout page: NOT RUN (Stripe asks for a card even at $0 — owner choice).
+- Sponsorship code typed on the checkout page: cause found (OO1) — Stripe rejects every code typed by an automated browser, even a code real buyers use; codes are fine. Final proof = owner's real-card checkouts.
+- Sponsoring a player who already pays: PASS (OO1; own plan ends Nov 13, org billing starts Nov 13, no invoice now, both canceled).
+- Player and staff checkouts through the checkout page: WAITING on owner (3 product-limited codes emailed privately; verify + cancel when he says done).
 - 8-week plan simulations vs live builder: PASS (MM4; 720 combinations, 0 rule breaks; only change = approved Robustness slot).
 - Full test suite: PASS 2,894/2,894 (MM5).
 - Legal tests: PASS 41/41; players not asked to re-accept Terms v2.
@@ -17,7 +17,7 @@
 - Daily plan job: PASS since 2026-10-12 (Oct 11 failures fixed in current builder).
 - Missed-workout marking: PASS (MM9, throwaway row flipped to missed, removed).
 - Renewal reminders: PASS (staff-only 403 for others; staff dry run 0 due, nothing sent).
-- Phone size (390 px) as player, under-13, coach, org, parent: PASS for opening pages (MM7). Flow-level phone checks (saving coach entries, under-13 parent flow, check-ins, guest mode, wrong-player block): NOT RUN.
+- Phone size (390 px) as player, under-13, coach, org, parent: PASS for opening pages (MM7). Flow-level: coach entries + wrong-player block in both options PASS (OO1); under-13 parent flow, check-ins, guest mode on phone, on-the-spot assessment, Discipline view NOT RUN.
 
 ## Reports
 - docs/owner/regression-report.md: IN PROGRESS (MM1–MM9 entries; open items above).
@@ -30,15 +30,13 @@
 - Sponsorships use players' existing plan prices. Test codes HMIOSTEST and HMSPTEST1 used up.
 
 ## Next item
-Flow-level phone checks as the test accounts — BLOCKED (NN1/NN2): test password lost again in a work-area reset; needs owner OK to reset it the same way (optionally kept as a private backend secret). No item remains that needs nothing from the owner: every open item needs test-account sign-in or a Stripe checkout decision.
+Remaining phone flow checks: under-13 parent flow, check-ins with/without health consent, guest mode, on-the-spot assessment, Discipline view.
 
 ## Waiting on the owner
-1. Checkout card choice: real card for the test (no charge with the code), or skip the card when the total is $0.
-2. OK to give one test player a paid plan (with a 100%-off code) for the already-paying sponsorship test.
-3. Checkout-page code "invalid": OK to look at the code's settings in Stripe (read only) and, if needed, make a fresh code.
-4. When to turn on the coach-tools plan switch.
+1. Finish the 3 test checkouts from the private email, then say "done" — I verify in Stripe and cancel all 3.
+2. Coach and Organization plans switch: turn on right before publishing, once everything passes.
 
-Nothing was published, deployed, or changed in schedules or the iPhone app this round.
+Nothing was published, and no schedules or iPhone app settings were changed this round.
 
 ---
 
