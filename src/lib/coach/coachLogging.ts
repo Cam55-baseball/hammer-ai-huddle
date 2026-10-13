@@ -1,6 +1,6 @@
 // Coach game and practice logging (owner decision 2026-10-13). The server re-checks all of this.
 export interface LineupSpot { athlete_id: string; jersey: string; name: string }
-export type GuardResult = { ok: true; athleteId: string } | { ok: false; reason: string };
+export type GuardResult = { ok: boolean; athleteId?: string; reason?: string };
 
 /** Option 1: the page is locked to one player; the save must name that same player. */
 export function guardSinglePlayer(lockedId: string | null | undefined, confirmId: string | null | undefined): GuardResult {

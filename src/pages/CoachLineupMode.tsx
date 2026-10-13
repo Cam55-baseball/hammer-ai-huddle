@@ -59,7 +59,7 @@ export default function CoachLineupMode() {
     const { stats, error } = cleanStats(vals);
     if (error) return toast.error(error);
     try {
-      const r = await saveCoachEntry({ athleteId: g.athleteId, confirmId: confirmed!, kind, date: new Date().toISOString().slice(0, 10), opponent, stats, parentPresent: parent, lineupId: lineupId!, jersey: jersey! });
+      const r = await saveCoachEntry({ athleteId: g.athleteId!, confirmId: confirmed!, kind, date: new Date().toISOString().slice(0, 10), opponent, stats, parentPresent: parent, lineupId: lineupId!, jersey: jersey! });
       const who = `#${jersey} ${tapped?.name}`;
       setJersey(null); setConfirmed(null); setVals({}); setParent(false);
       showUndoToast({ label: `Saved for ${who}`, description: r.label, undo: () => undoCoachEntry(r.id) });

@@ -75,7 +75,7 @@ export function CoachLogForPlayer({ athleteId }: { athleteId: string }) {
     if (error) return toast.error(error);
     setBusy(true);
     try {
-      const r = await saveCoachEntry({ athleteId: g.athleteId, confirmId: athleteId, kind, date, opponent, stats, parentPresent: parent });
+      const r = await saveCoachEntry({ athleteId: g.athleteId!, confirmId: athleteId, kind, date, opponent, stats, parentPresent: parent });
       setVals({}); setOpponent("");
       qc.invalidateQueries({ queryKey: ["coach-entries", athleteId] });
       showUndoToast({ label: `Saved for ${head?.name ?? "this player"}`, description: r.label, undo: async () => { await undoCoachEntry(r.id); qc.invalidateQueries({ queryKey: ["coach-entries", athleteId] }); } });
