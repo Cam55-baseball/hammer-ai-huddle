@@ -1,4 +1,6 @@
-# TOP STATUS — OO3 done, 2026-10-13
+# TOP STATUS — OO4 (batch closed), 2026-10-13
+- Every check that needs nothing from the owner is DONE and PASS. All remaining items wait on the owner (below).
+- Owner test-checkout email: SENT (OO1) to hammersmodality@hammersmodality.org, subject "[PRIVATE] Hammers test checkouts" — preview link, 3 test logins, 3 product-limited 100%-off codes (expire in 7 days from OO1).
 - [x] On-the-spot assessment PASS (OO3): coach saves with label "Coach-verified · coach · date"; player sees it; player recording for self refused (403); age 11 without parent refused ("Under 13: the parent must be present and agree"), with parent saved + parent time stamped; 11-year-old could not accept a coach request himself ("A parent must answer this request"); age 13+ saves without parent. Test entries deleted, test birthday restored, test connections ended.
 - [x] Teen parent-signature flow PASS (OO3): link requested as the 13-year-old test player, parent signed on a 390 px screen (name, relationship, 18+, drawn signature), player's training opened, link can't be reused. Signed record kept (legal record).
 - [x] Guest mode PASS (OO3, 390 px as test coach): under-13 without parent-permission box → Analyze disabled; with box → runs. Full analysis ran; result only on screen, "Guest result — not saved", values labeled; function saves only the coach's own usage row — no player, video or measurements saved. AI honestly flagged the test-pattern clip instead of inventing a read.
@@ -26,7 +28,7 @@
 - Phone size (390 px) as player, under-13, coach, org, parent: PASS for opening pages (MM7). Flow-level: coach entries + wrong-player block in both options PASS (OO1); check-ins with/without health sharing PASS + Discipline view opens PASS (OO2); on-the-spot assessment + teen parent signature + guest mode PASS (OO3). Only the under-13 signup path (switch OFF) remains, awaiting owner authorization.
 
 ## Reports
-- docs/owner/regression-report.md: IN PROGRESS (MM1–MM9 entries; open items above).
+- docs/owner/regression-report.md: current through OO3 (MM1–MM9, NN, OO1–OO3 entries); only the owner's checkout results remain to be added.
 - docs/owner/publish-checklist.md: written (MM9); not signed off.
 
 ## Stripe IDs
