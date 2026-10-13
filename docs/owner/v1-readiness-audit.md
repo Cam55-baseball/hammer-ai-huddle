@@ -32,3 +32,5 @@ Method: opened all 181 app pages on a phone-size screen as the test player, then
 - **New coach or organization without a plan:** used to hit a bare "Coach plan needed" page. **Fixed:** that page now shows the two Elite plan tiles with price, value and a Start button.
 - **Scout:** sees no plan advertising (rule kept).
 - **Unfinished feeling:** the privacy-update banner covers the bottom of the dashboard on first visit until it's closed. Shrinking it is a design change, so it's listed for owner approval.
+
+- 2026-10-13: "Recent sessions" practice list (RecentSessionsList) is not shown on any page — unused. Left in place; owner may approve removal.

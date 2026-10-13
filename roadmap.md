@@ -1,5 +1,7 @@
 # TOP STATUS — PP (owner requests), 2026-10-13
 
+- PP6 (2026-10-13): Practice grade fix: the "Recent sessions" list is not used on any page (dead code, left in place, listed in the audit). The after-practice summary shows only after saving a full practice; build OK, phone check rides with the next live practice test. Owner guide already complete (grouped player/parent/coach/org/scout/owner). Ready to publish: no.
+
 - PP5 (2026-10-13): Unity fix — practice "Recent sessions" list and the after-practice summary rounded grades to whole numbers with no 5s rule; both now use the same grade rule and band as History ("Grade: 45 · Acceptable"). Ready to publish: no.
 
 - PP4 (2026-10-13): Unity check (phase) PASS — the 3 phase readers (season status, 15 screens; phase display, 8; phase state, 4) all go through the one phase source, so no screen can show a different phase. Ready to publish: no.
