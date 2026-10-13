@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
-import { Button } from "@/components/ui/button";
 import { staffGateAllows } from "@/lib/staffPlanGate";
+import { StaffPlanTiles } from "@/components/staff/StaffPlanTiles";
 
 /** Opens coach tools only with an active Coach/Organization plan once the owner turns the gate switch on. */
 export function StaffPlanGate({ children, needsOrg = false }: { children: ReactNode; needsOrg?: boolean }) {
@@ -40,7 +40,7 @@ export function StaffPlanGate({ children, needsOrg = false }: { children: ReactN
       <p className="text-muted-foreground">
         {needsOrg ? "This part is included with the Hammers Organization plan." : "Coach tools are included with the Hammers Coach or Organization plan."}
       </p>
-      <Button asChild><Link to="/staff-plans">See plans</Link></Button>
+      <div className="text-left pt-2"><StaffPlanTiles variant="prominent" /></div>
     </div>
   );
 }

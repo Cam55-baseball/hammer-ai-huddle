@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { Archive, Dumbbell, Trophy, FileText, LineChart, ChevronDown, Loader2 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
+import { formatGrade, ratingBand } from '@/lib/benchmarks/gradeScale';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -202,7 +203,7 @@ export default function History() {
                         </p>
                       </div>
                       {(p.effective_grade ?? p.coach_grade) != null && (
-                        <Badge variant="outline">{Math.round((p.effective_grade ?? p.coach_grade)!)}</Badge>
+                        <Badge variant="outline">Grade: {formatGrade((p.effective_grade ?? p.coach_grade)!)} · {ratingBand((p.effective_grade ?? p.coach_grade)!)}</Badge>
                       )}
                     </button>
                   </li>
