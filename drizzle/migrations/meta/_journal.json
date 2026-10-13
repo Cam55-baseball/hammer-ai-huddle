@@ -449,6 +449,13 @@
       "when": 1791850517630,
       "tag": "0063_coach_logging",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1791850620909,
+      "tag": "0064_coach_logging_fix_helpers",
+      "breakpoints": true
     }
   ]
 }
