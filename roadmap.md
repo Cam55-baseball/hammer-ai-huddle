@@ -1,6 +1,8 @@
 # TOP STATUS — Owner approvals round, 2026-10-14 02:45 UTC
 
-**RR1 (02:50 UTC):** Scout wording fixed — Profile no longer shows "Finish your athlete setup" to scouts or coaches; the updated-terms screen is now titled "Before you keep going" for everyone. Still waiting on owner: his 3 test checkouts (unblocks sponsorship + seats-added-later proof, and coach/org-admin full walkthroughs).
+**RR1 (02:50 UTC):** Scout wording fixed — Profile no longer shows "Finish your athlete setup" to scouts or coaches; the updated-terms screen is now titled "Before you keep going" for everyone.
+
+**RR2 (02:55 UTC):** Scout wording PROVEN on screen — the profile's setup cards also showed the player wording to scouts/coaches (two more spots found and fixed: the quick-access banner and the status card). Re-checked signed in as the test scout at phone size: no "athlete setup" wording anywhere on Profile, no page errors (scout/20_profile_wording.png). Build OK. Note: the "Ranked goals" card on Profile still uses player-flavored wording for scouts — cosmetic, not flagged by the owner; left as-is. Still waiting on owner: his 3 test checkouts (unblocks sponsorship + seats-added-later proof, and coach/org-admin full walkthroughs).
 
 **Ready to publish: no** — sponsorship and "extra seats added later" still need a real paid Organization plan to prove on Stripe (see #8).
 
