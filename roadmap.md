@@ -1,5 +1,7 @@
 # TOP STATUS — Owner approvals round, 2026-10-14 02:45 UTC
 
+**RR1 (02:50 UTC):** Scout wording fixed — Profile no longer shows "Finish your athlete setup" to scouts or coaches; the updated-terms screen is now titled "Before you keep going" for everyone. Still waiting on owner: his 3 test checkouts (unblocks sponsorship + seats-added-later proof, and coach/org-admin full walkthroughs).
+
 **Ready to publish: no** — sponsorship and "extra seats added later" still need a real paid Organization plan to prove on Stripe (see #8).
 
 | # | Owner-found fix | Status | Proof |
