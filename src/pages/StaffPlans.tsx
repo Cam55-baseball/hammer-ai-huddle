@@ -33,7 +33,7 @@ export default function StaffPlans() {
     const { data, error } = await supabase.functions.invoke("sync-staff-plan", { body: { portal } });
     if (error || data?.error) { setMsg(data?.error ?? "Could not check your plan."); return; }
     setStatus(data);
-    if (portal && data.portal) window.open(data.portal, "_blank");
+    if (portal && data.portal) window.location.assign(data.portal);
   }
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user?.id]);
 
@@ -56,6 +56,7 @@ export default function StaffPlans() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 p-4">
+      <BackButton />
       <h1 className="text-2xl font-bold">Coach and Organization plans</h1>
       {params.get("status") === "success" && <p className="text-sm" role="status">Thanks! Your plan turns on as soon as payment finishes. Tap "Check my plan" if it isn't on yet.</p>}
       {status?.plan && (

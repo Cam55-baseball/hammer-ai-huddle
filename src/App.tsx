@@ -264,6 +264,7 @@ const RelationshipSettings = lazyWithRetry(() => import("./pages/RelationshipSet
 import { DemoGate } from "./components/demo/DemoGate";
 import { LegalV2Gate } from "@/components/legal/LegalV2Gate";
 import { PolicyUpdateNotice } from "@/components/legal/PolicyUpdateNotice";
+import { GlobalBackFallback } from "@/components/common/GlobalBackFallback";
 import LegalDocumentPage from "./pages/legal/LegalDocumentPage";
 import ParentWaiverSign from "./pages/legal/ParentWaiverSign";
 import { TeenWaiverGate } from "@/components/legal/TeenWaiverGate";
@@ -334,6 +335,7 @@ const App = () => {
               <AccountGate>
               <LegalV2Gate>
               <PolicyUpdateNotice />
+              <GlobalBackFallback />
               <Routes>
               <Route path="/legal/:slug" element={<LegalDocumentPage />} />
               <Route path="/parent-sign/:token" element={<ParentWaiverSign />} />

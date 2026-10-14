@@ -1,4 +1,6 @@
 import { ReactNode, useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { BackButton } from "@/components/common/BackButton";
 import { useTranslation } from "react-i18next";
 import { SidebarProvider, SidebarTrigger, SidebarInset, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
