@@ -23,7 +23,7 @@ const TILES = [
     price: "$1,000",
     per: "per month · 5 coach seats",
     value: "Every coach, team and player in one view.",
-    points: ["Hammers Coach for 5 coaches", "Facility dashboard and teams", "Extra coach seats $150/month"],
+    points: ["Hammers Coach for 5 coaches", "Facility dashboard and teams", "Add extra coach seats any time"],
     cta: "Start Hammers Organization",
   },
 ] as const;

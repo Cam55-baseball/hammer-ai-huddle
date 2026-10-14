@@ -7,6 +7,7 @@
  *    under-13 parents sign it in the parent flow.
  * OFF switch → renders children untouched.
  */
+import { LegalDocLink } from "@/components/legal/LegalDocLink";
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,7 +90,7 @@ function AgreementScreen({ need, onDone }: { need: Need; onDone: () => void }) {
           <section className="space-y-2">
             <h2 className="font-semibold">Updated terms</h2>
             <p className="text-sm text-muted-foreground">We updated these. Tap a name to read it.</p>
-            <ul className="space-y-1">{need.terms.map((s) => <li key={s}><Link className="inline-flex min-h-[44px] items-center text-primary underline" to={`/legal/${s}`} target="_blank">{titles[s] ?? s}</Link></li>)}</ul>
+            <ul className="space-y-1">{need.terms.map((s) => <li key={s}><LegalDocLink slug={s} className="inline-flex min-h-[44px] items-center text-primary underline">{titles[s] ?? s}</LegalDocLink></li>)}</ul>
             <label className="flex min-h-[44px] items-start gap-3 text-sm"><Checkbox checked={accept} onCheckedChange={(v) => setAccept(v === true)} className="mt-0.5" />I have read and agree to the updated documents above.</label>
           </section>
         )}
@@ -97,7 +98,7 @@ function AgreementScreen({ need, onDone }: { need: Need; onDone: () => void }) {
           <section className="space-y-2 rounded-lg border p-3">
             <h2 className="font-semibold">Health information (optional)</h2>
             <p className="text-sm text-muted-foreground">Sleep, pain, injuries, readiness, nutrition and body measurements help us keep your plan safe. It's your choice.</p>
-            <label className="flex min-h-[44px] items-start gap-3 text-sm"><Checkbox checked={health} onCheckedChange={(v) => setHealth(v === true)} className="mt-0.5" /><span>Yes, Hammers Modality may collect and use my health information as described in the <Link to="/legal/consumer-health-data" target="_blank" className="text-primary underline">Consumer Health Data Privacy Policy</Link>.</span></label>
+            <label className="flex min-h-[44px] items-start gap-3 text-sm"><Checkbox checked={health} onCheckedChange={(v) => setHealth(v === true)} className="mt-0.5" /><span>Yes, Hammers Modality may collect and use my health information as described in the <LegalDocLink slug="consumer-health-data">Consumer Health Data Privacy Policy</LegalDocLink>.</span></label>
           </section>
         )}
         {need.release && (
