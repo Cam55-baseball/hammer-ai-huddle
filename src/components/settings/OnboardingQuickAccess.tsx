@@ -13,12 +13,18 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle2, ArrowRight } from "lucide-react";
 import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
 import { useOnboardingAnswerStatus } from "@/hooks/onboarding/useOnboardingAnswerStatus";
+import { useScoutAccess } from "@/hooks/useScoutAccess";
 
 export function OnboardingQuickAccess() {
   const { hasCompletedOnboarding, loading } = useAthleteOnboardingState();
   const answers = useOnboardingAnswerStatus();
+  // Coaches and scouts have no athlete setup flow — never show them this card.
+  const { isScout, isCoach, loading: roleLoading } = useScoutAccess();
 
-  if (loading) {
+  if (loading || roleLoading) {
+    return null;
+  }
+  if (isScout || isCoach) {
     return null;
   }
 
