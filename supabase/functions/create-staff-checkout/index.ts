@@ -3,6 +3,7 @@
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { STAFF_PRICES, MAX_EXTRA_SEATS } from "../_shared/staffPlans.ts";
+import { staffEligibility } from "../_shared/staffEligibility.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -25,8 +26,24 @@ Deno.serve(async (req) => {
     if (plan === "coach" && seats) return json({ error: "Extra seats come with the Organization plan." }, 400);
     if (!Number.isFinite(seats) || seats < 0 || seats > MAX_EXTRA_SEATS) return json({ error: "Extra seats must be 0–100." }, 400);
 
-    const { data: pc } = await admin.from("profiles").select("parent_controlled").eq("id", user.id).maybeSingle();
-    if (pc?.parent_controlled) return json({ error: "Coach and Organization plans are for adult staff accounts." }, 403);
+    const [{ data: pc }, { data: roles }, { data: owned }, { data: adminOf }] = await Promise.all([
+      admin.from("profiles").select("parent_controlled,date_of_birth").eq("id", user.id).maybeSingle(),
+      admin.from("user_roles").select("role,status").eq("user_id", user.id),
+      admin.from("organizations").select("id,verification_status,is_solo").eq("owner_user_id", user.id),
+      admin.from("organization_members").select("organization_id").eq("user_id", user.id).eq("role_in_org", "admin").eq("status", "active"),
+    ]);
+    const roleSet = new Set((roles ?? []).filter((r: any) => !r.status || r.status === "active").map((r: any) => r.role));
+    const realOrgs = (owned ?? []).filter((o: any) => !o.is_solo);
+    const elig = staffEligibility({
+      plan, dob: pc?.date_of_birth ?? null, parentControlled: !!pc?.parent_controlled,
+      isCoach: roleSet.has("coach"),
+      isOrgAdmin: realOrgs.length > 0 || (adminOf ?? []).length > 0,
+      isOwnerOrAdmin: roleSet.has("owner") || roleSet.has("admin"),
+    });
+    if (!elig.ok) {
+      console.log("[create-staff-checkout] refused", { user: user.id, plan, code: elig.code });
+      return json({ error: elig.error, code: elig.code }, 403);
+    }
 
     // Fair use (Terms v2 section 15, lawyer-approved 2026-10-13) must be accepted before checkout.
     const { data: fu } = await admin.from("consent_records").select("id").eq("user_id", user.id)
