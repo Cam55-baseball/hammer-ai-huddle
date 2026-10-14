@@ -1,3 +1,34 @@
+# TOP STATUS — Owner approvals round, 2026-10-14 02:45 UTC
+
+**Ready to publish: no** — sponsorship and "extra seats added later" still need a real paid Organization plan to prove on Stripe (see #8).
+
+| # | Owner-found fix | Status | Proof |
+|---|---|---|---|
+| 1 | Plan tiles regular size for everyone | Done | One size for players, coaches, orgs, scouts; phone screenshots (owner, player, scout walkthroughs) |
+| 2 | Age groups smart text box | Done | Text → editable chips; tests 4/4; now also used in coach search + org coach list |
+| 3 | Coach setup audit | Done | Every answer shown on "Your program" card; ages/levels/team now in coach search ("12U", "high school" find coaches) and the org "Pick a coach" list. Migration applied: 4/4 coach rows kept, every field identical (snapshot _snapshot_coach_context_20261014); signed-out reads refused |
+| 4 | Back everywhere | Done | 177/177 screens as owner and as a player; scout screens all have Back (scout/) |
+| 5 | Legal "Read it" Close + "I've read this" | Done | Close and "I've read this" on every legal page; read saved once per version |
+| 6 | One-time consent | Done | Saved in consent_records per version; shown once (player, teen, scout re-checked) |
+| 7 | Seat number field | Done | − / + plus typing, no leading zeros, every number box; tests 6/6 |
+| 8 | Every purchase reaching Stripe | Partly done | Real Stripe checkout pages, signed in as each test account: Organization + 1 extra seat ($1,150/mo, both items listed) phone + desktop (org-admin/stripe-phone, stripe-desktop); Coach $300 (coach/stripe-phone); player Complete Pitcher $200 phone + desktop (player-college/stripe-phone, stripe-desktop). Fair-use and auto-renew acceptance saved before each. Stripe shows euros only because the test computer is in Europe (USD switch on the page). NOT yet proven on the real page: sponsorship (the test org has no players — unverified orgs can't add any) and extra seats added later (need an active Org plan → Manage plan) |
+| 9 | Live analyses + unused list removed | Done | 6/6 live analyses completed (baseball + softball × hitting, pitching, throwing; 21–38 s each), each with a summary, drills and scorecard in plain words. All 12 test videos (6 refused first tries) and their 25 analysis records deleted (backup kept). "Recent sessions" list removed earlier |
+
+## Walkthroughs (docs/owner/walkthroughs/)
+| Role | Result |
+|---|---|
+| Player, college baseball | Pass (player-college/) |
+| Player, softball (setup 1–12) | Pass (demosbc/setup/) |
+| Pro, softball pro, two-way, ramp-up players | Pass (demomlb/ etc.) |
+| Teen with parent signature | Pass (teen-2way/) |
+| Under-13 player + parent | Pass (demo13/, demoparent) |
+| Scout (new test account, hidden) | Pass (scout/) — updated-terms screen once, then scout dashboard, report, compare, plans, profile, legal all with Back. Note: scout profile says "Finish your athlete setup" (wording for players) |
+| Coach | Partly — Stripe checkout Pass (coach/stripe-phone); full screen walk still to do |
+| Organization admin | Partly — Stripe checkout Pass phone + desktop; sponsorship blocked (no players in the unverified test org) |
+
+Logins/codes: no passwords or codes changed (sign-ins used one-time links from the owner-only test tool) → no email resent.
+
+---
 # TOP STATUS — Owner preview findings round, 2026-10-14 01:25 UTC
 
 **Ready to publish: no** — the new human-walkthrough standard is not yet met (see below).
