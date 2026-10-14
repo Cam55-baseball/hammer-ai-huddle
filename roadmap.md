@@ -1,6 +1,11 @@
-# TOP STATUS — Owner preview findings round, 2026-10-14 01:10 UTC
+# TOP STATUS — Owner preview findings round, 2026-10-14 01:25 UTC
 
 **Ready to publish: no** — the new human-walkthrough standard is not yet met (see below).
+
+## QQ10 — Timed History speed test: PASS
+- 6 temporary test reports (2 of each kind: individual postgame, team postgame, opponent scouting) added to the owner's account, History opened at phone size (390px) signed in as the owner.
+- Result: page and all 6 reports rendered immediately; "Game reports" section showed count 6, each row labeled with date, kind and description; no page errors. Screenshot: docs/owner/walkthroughs/owner-history-speed/01_reports_open.png.
+- Cleanup: all 6 TEST rows deleted (verified by returned IDs). Build OK. No logins or codes changed → no email resent.
 
 ## Fixes (proof)
 1. Dashboard plan tiles — one regular size for every account (players, coaches, orgs, scouts). PASS: phone screenshot as owner (1 tile pair under merch). Role screenshots pending walkthroughs.
