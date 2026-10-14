@@ -11,6 +11,8 @@ import { STAFF_PLAN_COPY } from "@/lib/staffPlans";
 import { Checkbox } from "@/components/ui/checkbox";
 import { recordConsent } from "@/lib/legal/legalV2";
 import { NumberStepper } from "@/components/ui/number-stepper";
+import { LegalDocLink } from "@/components/legal/LegalDocLink";
+import { goToStripe, reportCheckoutError } from "@/lib/purchase/goToStripe";
 import { BackButton } from "@/components/common/BackButton";
 
 /** Terms version that holds the coach/org fair-use section (lawyer-approved 2026-10-13). */
@@ -33,13 +35,13 @@ export default function StaffPlans() {
     const { data, error } = await supabase.functions.invoke("sync-staff-plan", { body: { portal } });
     if (error || data?.error) { setMsg(data?.error ?? "Could not check your plan."); return; }
     setStatus(data);
-    if (portal && data.portal) window.location.assign(data.portal);
+    if (portal && data.portal) goToStripe(data.portal, "staff-portal");
   }
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user?.id]);
 
   async function buy(plan: "coach" | "organization") {
     if (mode === "native-linkout") { await openWebsiteCheckout("/staff-plans"); return; }
-    if (!fairUse) { setMsg("Please accept the fair-use terms first."); return; }
+    if (!fairUse) { setMsg("Tick the box above to accept the fair-use terms, then tap again."); reportCheckoutError("staff", "Tick the fair-use box above first, then tap the plan again."); return; }
     setBusy(plan); setMsg(null);
     try {
       await recordConsent({ slug: "terms", version: FAIR_USE_TERMS_VERSION, choice: "accepted", method: "checkout_checkbox", details: { section: "coach_org_fair_use", plan } });
@@ -48,10 +50,10 @@ export default function StaffPlans() {
     // A failed call returns the reason in the response body; read it so the person sees why.
     let reason: string | undefined = data?.error;
     if (error && !reason) { try { reason = (await (error as any).context?.json?.())?.error; } catch { /* keep generic */ } }
-    if (error || reason) { setBusy(null); setMsg(reason ?? "Checkout could not start."); return; }
+    if (error || reason) { setBusy(null); setMsg(reason ?? "Checkout could not start."); reportCheckoutError("staff", reason ?? "Checkout could not start. Please try again."); return; }
     // Same tab: phones block new windows opened after a wait, which silently skipped Stripe.
-    if (data?.url) window.location.assign(data.url);
-    else { setBusy(null); setMsg("Checkout could not start."); }
+    if (data?.url) { goToStripe(data.url, "staff"); setTimeout(() => setBusy(null), 4000); }
+    else { setBusy(null); setMsg("Checkout could not start."); reportCheckoutError("staff", "Checkout could not start. Please try again."); }
   }
 
   return (
@@ -69,7 +71,7 @@ export default function StaffPlans() {
       {canShowPurchaseUI && mode === "web" && !status?.plan && (
         <label className="flex items-start gap-2 rounded-md border p-3 text-sm">
           <Checkbox checked={fairUse} onCheckedChange={(v) => setFairUse(v === true)} aria-label="Accept fair use terms" />
-          <span>I accept the <a href="/legal/terms" target="_blank" rel="noreferrer" className="underline">Terms</a>, including section 15, fair use: one named person per account or seat, no shared logins, use only for players I coach, no reselling, and up to 30 analyses per hour.</span>
+          <span>I accept the <LegalDocLink slug="terms" className="underline">Terms</LegalDocLink>, including section 15, fair use: one named person per account or seat, no shared logins, use only for players I coach, no reselling, and up to 30 analyses per hour.</span>
         </label>
       )}
       {(["coach", "organization"] as const).map((p) => (
@@ -86,7 +88,7 @@ export default function StaffPlans() {
             </div>
           )}
           {canShowPurchaseUI && !status?.plan && (
-            <Button className="w-full min-h-11" disabled={!!busy || !user || (mode === "web" && !fairUse)} onClick={() => buy(p)}>
+            <Button className="w-full min-h-11" disabled={!!busy || !user} onClick={() => buy(p)}>
               {mode === "native-linkout" ? "Subscribe on our website" : busy === p ? "Opening…" : `Choose ${STAFF_PLAN_COPY[p].name}`}
             </Button>
           )}

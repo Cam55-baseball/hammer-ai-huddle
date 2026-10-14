@@ -41,7 +41,6 @@ export function StaffPlanTiles() {
             <Badge variant="secondary">Elite</Badge>
           </div>
           <p className="mt-2 text-sm text-muted-foreground">{t.value}</p>
-          <p className="mt-2"><span className="text-xs text-muted-foreground">Price: </span><span className="text-xl font-extrabold text-primary">{t.price}</span> <span className="text-xs text-muted-foreground">{t.per}</span></p>
           <ul className="mt-2 space-y-1">
             {t.points.map((p) => (
               <li key={p} className="flex gap-2 text-sm"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{p}</li>

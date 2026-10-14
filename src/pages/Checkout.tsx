@@ -1,3 +1,4 @@
+import { goToStripe, reportCheckoutError } from "@/lib/purchase/goToStripe";
 import { AutoRenewalCheckbox, saveAutoRenewalConsent } from "@/components/legal/AutoRenewalCheckbox";
 import { useLegalV2 } from "@/lib/legal/legalV2";
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
@@ -199,19 +200,7 @@ const Checkout = () => {
     }
   }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, refetch, selectedTier, selectedSport, simId, gap, location.search, toast, status]);
 
-  const redirectToStripe = (url: string) => {
-    try {
-      if (window.top) window.top.location.href = url;
-      else window.location.href = url;
-    } catch {
-      try {
-        window.location.assign(url);
-      } catch {
-        /* fallback */
-      }
-    }
-    setTimeout(() => setShowManualLink(true), 1500);
-  };
+  const redirectToStripe = (url: string) => goToStripe(url, "player");
 
   const handleCreateCheckout = async (opts?: { silent?: boolean }) => {
     // iPhone/iPad, US storefront: checkout happens on our website, same account.
@@ -298,6 +287,7 @@ const Checkout = () => {
         throw new Error("No checkout URL received");
       }
     } catch (error: any) {
+      console.error("[checkout:player]", error);
       if (popupRef.current && !popupRef.current.closed) popupRef.current.close();
       toast({
         title: "Checkout Failed",
@@ -530,7 +520,7 @@ const Checkout = () => {
                 {t("subscriptionTiers.notRedirected")}
               </p>
               <Button asChild className="w-full" variant="secondary">
-                <a href={checkoutUrl} target="_top" rel="noopener noreferrer">
+                <a href={checkoutUrl} target="_blank" rel="noopener">
                   {t("subscriptionTiers.openCheckout")}
                 </a>
               </Button>

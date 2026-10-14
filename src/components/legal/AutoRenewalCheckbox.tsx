@@ -1,6 +1,6 @@
 /** Auto-renewal consent (California ARL): its own unchecked box before checkout; the choice is saved. */
 import { Checkbox } from "@/components/ui/checkbox";
-import { Link } from "react-router-dom";
+import { LegalDocLink } from "@/components/legal/LegalDocLink";
 import { AGREEMENT_SLUGS, autoRenewalSentence, fetchLatestVersions, recordConsent } from "@/lib/legal/legalV2";
 
 export function AutoRenewalCheckbox({ checked, onChange, period, price }: { checked: boolean; onChange: (v: boolean) => void; period: string; price: string }) {
@@ -8,7 +8,7 @@ export function AutoRenewalCheckbox({ checked, onChange, period, price }: { chec
     <div className="mb-3 rounded-lg border p-3">
       <label className="flex min-h-[44px] items-start gap-3 text-sm">
         <Checkbox checked={checked} onCheckedChange={(v) => onChange(v === true)} className="mt-0.5" aria-label="Auto-renewal agreement" />
-        <span>{autoRenewalSentence(period, price)} <Link to="/legal/subscription-policy" target="_blank" className="text-primary underline">Renewal & cancellation policy</Link></span>
+        <span>{autoRenewalSentence(period, price)} <LegalDocLink slug="subscription-policy">Renewal & cancellation policy</LegalDocLink></span>
       </label>
     </div>
   );

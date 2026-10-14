@@ -264,6 +264,7 @@ const RelationshipSettings = lazyWithRetry(() => import("./pages/RelationshipSet
 import { DemoGate } from "./components/demo/DemoGate";
 import { LegalV2Gate } from "@/components/legal/LegalV2Gate";
 import { PolicyUpdateNotice } from "@/components/legal/PolicyUpdateNotice";
+import { StripeHandoffDialog } from "@/components/purchase/StripeHandoffDialog";
 import { GlobalBackFallback } from "@/components/common/GlobalBackFallback";
 import LegalDocumentPage from "./pages/legal/LegalDocumentPage";
 import ParentWaiverSign from "./pages/legal/ParentWaiverSign";
@@ -322,6 +323,7 @@ const App = () => {
       <TooltipProvider>
         <ErrorBoundary>
           <Toaster />
+          <StripeHandoffDialog />
           <Sonner />
           <PWAUpdatePrompt />
           <VideoMomentHost />

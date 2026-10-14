@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { displayBody, fetchLatestDoc, recordConsent, type LegalDoc } from "@/lib/legal/legalV2";
 import { LegalMarkdown } from "@/components/legal/LegalMarkdown";
 import { useOptionalAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
 
 export function LegalDocLink({ slug, children, className }: { slug: string; children: ReactNode; className?: string }) {
   const [open, setOpen] = useState(false);

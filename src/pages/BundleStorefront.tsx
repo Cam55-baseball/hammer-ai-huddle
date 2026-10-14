@@ -1,3 +1,4 @@
+import { goToStripe } from "@/lib/purchase/goToStripe";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 /**
  * Public bundle sales page — /b/:slug
@@ -69,7 +70,7 @@ export default function BundleStorefront() {
     setBuying(true);
     try {
       const url = await startBundleCheckout(bundle.slug, discount?.valid ? discount.code : undefined);
-      window.location.href = url;
+      goToStripe(url, "bundle");
     } catch (err) {
       toast({
         title: 'Could not start checkout',
