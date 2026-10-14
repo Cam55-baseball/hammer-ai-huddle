@@ -776,6 +776,48 @@ export type Database = {
         }
         Relationships: []
       }
+      _snapshot_coach_context_20261014: {
+        Row: {
+          age_groups: string[] | null
+          athlete_count: number | null
+          coaching_philosophy: string | null
+          completed_at: string | null
+          created_at: string | null
+          org_name: string | null
+          primary_disciplines: string[] | null
+          program_name: string | null
+          seasons_run: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          age_groups?: string[] | null
+          athlete_count?: number | null
+          coaching_philosophy?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          org_name?: string | null
+          primary_disciplines?: string[] | null
+          program_name?: string | null
+          seasons_run?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          age_groups?: string[] | null
+          athlete_count?: number | null
+          coaching_philosophy?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          org_name?: string | null
+          primary_disciplines?: string[] | null
+          program_name?: string | null
+          seasons_run?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       _snapshot_movement_pattern_20261011: {
         Row: {
           movement_category: string | null
@@ -22645,6 +22687,16 @@ export type Database = {
           _stats: Json
         }
         Returns: Json
+      }
+      coach_program_summaries: {
+        Args: { _ids: string[] }
+        Returns: {
+          age_groups: string[]
+          org_name: string
+          primary_disciplines: string[]
+          program_name: string
+          user_id: string
+        }[]
       }
       coach_record_movement_screen: {
         Args: {
