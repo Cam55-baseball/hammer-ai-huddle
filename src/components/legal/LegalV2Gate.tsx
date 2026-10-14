@@ -84,7 +84,7 @@ function AgreementScreen({ need, onDone }: { need: Need; onDone: () => void }) {
   return (
     <main className="flex min-h-[100dvh] justify-center bg-background px-5 pb-[calc(1.5rem+var(--safe-bottom,0px))] pt-[calc(1.25rem+var(--safe-top,0px))]">
       <div className="w-full max-w-md space-y-5">
-        <h1 className="text-2xl font-semibold">Before you keep training</h1>
+        <h1 className="text-2xl font-semibold">Before you keep going</h1>
         {need.terms.length > 0 && (
           <section className="space-y-2">
             <h2 className="font-semibold">Updated terms</h2>

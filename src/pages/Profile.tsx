@@ -658,7 +658,7 @@ export default function Profile() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Onboarding quick-access CTA — above the fold, own profile only */}
-      {!viewingOtherProfile && <OnboardingQuickAccess />}
+      {!viewingOtherProfile && currentUserRole !== "scout" && currentUserRole !== "coach" && <OnboardingQuickAccess />}
 
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-4xl font-bold">
