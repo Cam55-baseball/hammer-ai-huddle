@@ -361,7 +361,7 @@ function Frame({ step, total, progress, group, children, onExit }:{step:number;t
     <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_-10%,hsl(var(--primary)/0.16),transparent_42%)]" />
     <div className="relative mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col">
       <header className="mb-4 flex items-center justify-between"><img src={branding.logo} alt={branding.appName} className="h-9 w-9 object-contain"/><span className="text-xs font-medium text-muted-foreground">{group}</span><span className="flex items-center gap-1"><span className="text-xs tabular-nums text-muted-foreground">{step}/{total}</span><Button type="button" variant="ghost" className="h-11 gap-1 px-3 text-xs" aria-label="Save and exit" onClick={onExit}><X className="h-4 w-4"/>Exit</Button></span></header>
-      <p className="-mt-2 mb-3 text-center text-[11px] text-muted-foreground">Your answers are kept if the app closes. Exiting starts setup over.</p>
+      <p className="-mt-2 mb-3 text-center text-[11px] text-muted-foreground">Your answers are kept on this phone if the app closes. Exiting starts setup over.</p>
       <div className="mb-5 h-1 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><div className="h-full rounded-full bg-primary transition-[width] duration-300 motion-reduce:transition-none" style={{width:`${progress}%`}}/></div>
       <section className="relative flex-1 overflow-hidden rounded-lg border border-border/70 bg-card/85 p-5 shadow-[var(--shadow-card)] backdrop-blur-xl sm:p-7">{children}</section>
     </div>
