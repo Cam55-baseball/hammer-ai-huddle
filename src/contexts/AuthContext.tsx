@@ -258,9 +258,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     explicitSignOutPending = true;
     // 'local' signs out this device only. The default ('global') revoked the
     // player's sessions on every other phone, tablet and browser too.
-    const { error } = await supabase.auth.signOut({ scope: 'local' });
-    if (error) explicitSignOutPending = false;
-    else {
+    let { error } = await supabase.auth.signOut({ scope: 'local' });
+    if (error) {
+      // Never leave the old account signed in on this device: drop the saved
+      // sign-in directly so the next sign-in shows the new account.
+      try {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) localStorage.removeItem(k);
+        }
+      } catch { /* storage blocked */ }
+      error = null;
+    }
+    {
       // The device copy of saved plans belongs to this player only.
       try {
         for (let i = localStorage.length - 1; i >= 0; i--) {
