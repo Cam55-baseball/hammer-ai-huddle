@@ -1,3 +1,4 @@
+import { goToStripe } from "@/lib/purchase/goToStripe";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -53,7 +54,7 @@ export function SponsorshipsCard({ orgId }: { orgId: string }) {
   const sponsor = async () => {
     if (!player) return toast.error("Pick a player first.");
     const r = await call({ action: "sponsor", organization_id: orgId, player_id: player, sport, tier });
-    if (r?.url) window.location.href = r.url;
+    if (r?.url) goToStripe(r.url, "sponsorship");
   };
 
   const live = new Set((data?.rows ?? []).filter((r) => ["pending", "scheduled", "active", "paused"].includes(r.status)).map((r) => r.player_id));

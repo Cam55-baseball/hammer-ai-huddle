@@ -1,3 +1,4 @@
+import { LegalDocLink } from "@/components/legal/LegalDocLink";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, useSearchParams, Link } from "react-router-dom";
 
@@ -502,13 +503,13 @@ const Auth = () => {
                 />
                 <Label htmlFor="acceptTerms" className="text-xs font-normal leading-relaxed text-muted-foreground">
                   I agree to the{" "}
-                  <Link to="/terms" target="_blank" className="underline text-foreground">
+                  <LegalDocLink slug="terms" className="underline text-foreground">
                     Terms of Service
-                  </Link>{" "}
+                  </LegalDocLink>{" "}
                   and{" "}
-                  <Link to="/privacy" target="_blank" className="underline text-foreground">
+                  <LegalDocLink slug="privacy" className="underline text-foreground">
                     Privacy Policy
-                  </Link>
+                  </LegalDocLink>
                   , and I understand that abusive behaviour or objectionable content will get my
                   account removed.
                 </Label>

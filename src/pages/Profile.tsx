@@ -1,3 +1,4 @@
+import { goToStripe } from "@/lib/purchase/goToStripe";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { HeightFeetInchesInput } from "@/components/shared/HeightFeetInchesInput";
 import { useEffect, useState } from "react";
@@ -578,7 +579,7 @@ export default function Profile() {
       if (error) throw error;
 
       if (data?.url) {
-        window.location.assign(data.url);
+        goToStripe(data.url, "portal");
         toast({
           title: t('profile.openingBillingPortal'),
           description: t('profile.manageBillingInNewTab'),
