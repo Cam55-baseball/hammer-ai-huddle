@@ -31,7 +31,8 @@ export function UserMenu({ userName, userEmail }: UserMenuProps) {
 
   const handleSignOut = async () => {
     try { await signOut(); } catch { /* AuthContext handles eviction guards */ }
-    navigate("/auth", { replace: true });
+    // Full page load: nothing from the previous account stays in memory.
+    window.location.replace("/auth");
   };
 
   const initials = userName

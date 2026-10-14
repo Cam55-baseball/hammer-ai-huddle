@@ -14,6 +14,7 @@ import { NumberStepper } from "@/components/ui/number-stepper";
 import { LegalDocLink } from "@/components/legal/LegalDocLink";
 import { goToStripe, reportCheckoutError } from "@/lib/purchase/goToStripe";
 import { BackButton } from "@/components/common/BackButton";
+import { SignedInAs } from "@/components/purchase/SignedInAs";
 
 /** Terms version that holds the coach/org fair-use section (lawyer-approved 2026-10-13). */
 const FAIR_USE_TERMS_VERSION = 2;
@@ -66,6 +67,7 @@ export default function StaffPlans() {
     <div className="mx-auto max-w-2xl space-y-4 p-4">
       <BackButton />
       <h1 className="text-2xl font-bold">Coach and Organization plans</h1>
+      <SignedInAs />
       {params.get("status") === "success" && <p className="text-sm" role="status">Thanks! Your plan turns on as soon as payment finishes. Tap "Check my plan" if it isn't on yet.</p>}
       {status?.plan && (
         <Card className="p-4 space-y-2 border-primary">
