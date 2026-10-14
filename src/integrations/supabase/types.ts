@@ -818,6 +818,21 @@ export type Database = {
         }
         Relationships: []
       }
+      _snapshot_live_test_runs_20261014: {
+        Row: {
+          row: Json | null
+          t: string | null
+        }
+        Insert: {
+          row?: Json | null
+          t?: string | null
+        }
+        Update: {
+          row?: Json | null
+          t?: string | null
+        }
+        Relationships: []
+      }
       _snapshot_movement_pattern_20261011: {
         Row: {
           movement_category: string | null
