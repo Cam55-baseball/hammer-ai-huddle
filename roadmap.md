@@ -1,4 +1,4 @@
-# TOP STATUS — Owner preview findings round, 2026-10-13 23:55 UTC
+# TOP STATUS — Owner preview findings round, 2026-10-14 01:10 UTC
 
 **Ready to publish: no** — the new human-walkthrough standard is not yet met (see below).
 
@@ -24,6 +24,7 @@
 - QQ3 Softball player (demosbc): sign-in lands on unfinished setup (1/12) with Exit — expected for this account. Setup run-through still to do.
 - QQ3 Parent (demoparent): dashboard, History, Profile have Back; Plans/Vault send to Start Here (setup unfinished) with Back; Vault lock shows View Pricing + Back. PASS.
 - Player (college, baseball) — player-college/: PASS after 2 fixes. Form sign-in → dashboard; History, Vault, Profile, legal page have Back. FOUND+FIXED: Plans page had no Back (added). FOUND+FIXED: player plan checkout used the same new-window trick that broke the org plan — it never left the app; now same-tab → real checkout.stripe.com page (screenshot 12), Back returns to the app. Privacy notice: "Got it" once, then a fresh sign-in on a new device shows no notice (PASS). Paying itself can't be automated (Stripe refuses robot payments) — owner's checkouts are the final proof.
+- [x] QQ8 Teen (demo2way, 17, two-way) — teen-2way/: PASS. Updated-terms screen appeared once; accepted (consent record saved on this test-only account); fresh routes afterwards show no terms screen. /today shows the parent-signature banner "Parent signature needed in 14 days" with parent email/phone + Send signing link (14-day grace, not a hard block); Back present on /today, /history, /vault; /profile has a visible "Back to Dashboard" header (script's locator just didn't match its label). No page errors. Parent signing-link flow itself was already proven end-to-end in an earlier round (link can't be reused).
 - Remaining: other player programs/sports, teen + parent, under-13 parent, scout; coach + org admin wait until the owner's checkouts are done (their passwords are in his email).
 
 ---
