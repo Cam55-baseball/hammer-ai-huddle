@@ -578,7 +578,7 @@ export default function Profile() {
       if (error) throw error;
 
       if (data?.url) {
-        window.open(data.url, '_blank');
+        window.location.assign(data.url);
         toast({
           title: t('profile.openingBillingPortal'),
           description: t('profile.manageBillingInNewTab'),

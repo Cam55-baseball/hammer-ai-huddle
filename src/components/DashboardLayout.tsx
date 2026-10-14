@@ -93,6 +93,7 @@ function DashboardHeader({ tutorialCompleted, user, onTutorialOpen }: {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user } = useAuth();
+  const { pathname } = useLocation();
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [tutorialCompleted, setTutorialCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -143,6 +144,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <OfflineIndicator />
             <OnboardingResumeBanner />
             <StaffOnboardingResumeBanner />
+            {pathname !== "/dashboard" && <BackButton className="mb-1" />}
             {children}
           </main>
         </SidebarInset>
