@@ -33,11 +33,12 @@ async def main():
         await pg.goto(BASE)
         if sess:
             await pg.evaluate(f"window.localStorage.setItem({json.dumps(sess['storage_key'])},{json.dumps(json.dumps(sess['session']))})")
-        for r in routes():
+        rs = routes()[int(os.environ.get("START", 0)):int(os.environ.get("END", 10**6))]
+        for r in rs:
             try:
                 await pg.goto(BASE + r, wait_until="domcontentloaded")
                 ok = True
-                try: await pg.wait_for_function(CHECK, timeout=15000)  # slow test copy: give each screen time to load
+                try: await pg.wait_for_function(CHECK, timeout=int(os.environ.get("WAIT_MS", 15000)))  # slow test copy: give each screen time to load
                 except Exception: ok = False
                 path = pg.url.replace(BASE, "").split("?")[0]
                 if path in HOME: continue  # redirected home — not a dead end
