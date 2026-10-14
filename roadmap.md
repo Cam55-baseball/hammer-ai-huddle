@@ -1,4 +1,6 @@
-# TOP STATUS — Owner approvals round, 2026-10-14 02:45 UTC
+# TOP STATUS — Owner approvals round, 2026-10-14 03:25 UTC
+
+**RR6 (03:25 UTC):** Final status roll-up (this section). Owner can redo his 3 test checkouts: YES — all 4 codes re-verified on Stripe active, unused, expiring Oct 20; logins unchanged since the "UPDATED (use these)" email.
 
 **RR1 (02:50 UTC):** Scout wording fixed — Profile no longer shows "Finish your athlete setup" to scouts or coaches; the updated-terms screen is now titled "Before you keep going" for everyone.
 
@@ -32,7 +34,7 @@
 | Pro, softball pro, two-way, ramp-up players | Pass (demomlb/ etc.) |
 | Teen with parent signature | Pass (teen-2way/) |
 | Under-13 player + parent | Pass (demo13/, demoparent) |
-| Scout (new test account, hidden) | Pass (scout/) — updated-terms screen once, then scout dashboard, report, compare, plans, profile, legal all with Back. Note: scout profile says "Finish your athlete setup" (wording for players) |
+| Scout (new test account, hidden) | Pass (scout/) — updated-terms screen once, then scout dashboard, report, compare, plans, profile, legal all with Back. Scout wording fixed and re-proven (scout/20_profile_wording.png) |
 | Coach | Pass (coach/ — full screen walk + Stripe checkout) |
 | Organization admin | Pass (org-admin/ — full screen walk + Stripe checkout phone + desktop); sponsorship still blocked (no players in the unverified test org) |
 
