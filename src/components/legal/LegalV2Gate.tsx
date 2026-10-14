@@ -110,6 +110,13 @@ function AgreementScreen({ need, onDone }: { need: Need; onDone: () => void }) {
         )}
         {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
         <Button className="h-12 w-full text-base" disabled={!ok || busy} onClick={save}>{busy ? "Saving…" : "Save and continue"}</Button>
+        <Button
+          variant="ghost"
+          className="h-11 w-full"
+          onClick={async () => { await supabase.auth.signOut({ scope: "local" }); window.location.assign("/"); }}
+        >
+          Not now — sign out
+        </Button>
       </div>
     </main>
   );
