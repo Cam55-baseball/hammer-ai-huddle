@@ -456,6 +456,13 @@
       "when": 1791850620909,
       "tag": "0064_coach_logging_fix_helpers",
       "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1791944965768,
+      "tag": "0065_migration",
+      "breakpoints": true
     }
   ]
 }

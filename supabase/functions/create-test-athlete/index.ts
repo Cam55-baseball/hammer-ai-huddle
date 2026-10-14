@@ -120,7 +120,7 @@ function personas(): Record<string, Persona> {
 // Same rules as athletes: allowlist-only, system accounts, owner-only tool.
 interface StaffPersona {
   email: string; name: string; dob: string;
-  kind: "coach" | "org_owner" | "parent";
+  kind: "coach" | "org_owner" | "parent" | "scout";
   parentOf?: string; // persona key of the athlete this parent runs
 }
 function staffPersonas(): Record<string, StaffPersona> {
@@ -130,6 +130,9 @@ function staffPersonas(): Record<string, StaffPersona> {
     },
     demoorg: {
       email: "hammersmodality+demoorg@gmail.com", name: "Demo — Org Owner", dob: "1980-01-20", kind: "org_owner",
+    },
+    demoscout: {
+      email: "hammersmodality+demoscout@gmail.com", name: "Demo — Scout", dob: "1979-09-09", kind: "scout",
     },
     demoparent: {
       email: "hammersmodality+demoparent@gmail.com", name: "Demo — Parent", dob: "1982-07-04", kind: "parent", parentOf: "demo13",
@@ -147,6 +150,11 @@ async function seedStaff(admin: any, id: string, sp: StaffPersona) {
   if (sp.kind === "coach") {
     await admin.from("user_roles").upsert(
       { user_id: id, role: "coach" }, { onConflict: "user_id,role", ignoreDuplicates: true },
+    );
+  }
+  if (sp.kind === "scout") {
+    await admin.from("user_roles").upsert(
+      { user_id: id, role: "scout", status: "active" }, { onConflict: "user_id,role", ignoreDuplicates: true },
     );
   }
   if (sp.kind === "org_owner") {

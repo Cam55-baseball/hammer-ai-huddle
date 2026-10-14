@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { UserCheck } from 'lucide-react';
+import { fetchCoachPrograms } from '@/lib/coachPrograms';
 
 type Row = { user_id: string; full_name: string; role_in_org: string; assigned_coaches: string[] };
 
@@ -31,6 +32,8 @@ export function AssignAthletesCard({ orgId }: { orgId: string }) {
     },
   });
   const { coaches, athletes } = useMemo(() => splitRoster(q.data ?? []), [q.data]);
+  const progs = useQuery({ queryKey: ['coach-programs', coaches.map((c) => c.user_id).join()], enabled: coaches.length > 0, queryFn: () => fetchCoachPrograms(coaches.map((c) => c.user_id)) });
+  const label = (id: string, name: string) => { const a = progs.data?.get(id)?.age_groups; return a?.length ? `${name} · Coaches: ${a.join(', ')}` : name; };
   const run = useMutation({
     mutationFn: async (assign: boolean) => {
       const { error } = await supabase.rpc('assign_athletes', {
@@ -55,7 +58,7 @@ export function AssignAthletesCard({ orgId }: { orgId: string }) {
       <CardContent className="space-y-3">
         <Select value={coach} onValueChange={setCoach}>
           <SelectTrigger><SelectValue placeholder="Pick a coach" /></SelectTrigger>
-          <SelectContent>{coaches.map((c) => <SelectItem key={c.user_id} value={c.user_id}>{c.full_name}</SelectItem>)}</SelectContent>
+          <SelectContent>{coaches.map((c) => <SelectItem key={c.user_id} value={c.user_id}>{label(c.user_id, c.full_name)}</SelectItem>)}</SelectContent>
         </Select>
         {athletes.length === 0 && <p className="text-sm text-muted-foreground">No athletes in this organization yet.</p>}
         <div className="space-y-1">

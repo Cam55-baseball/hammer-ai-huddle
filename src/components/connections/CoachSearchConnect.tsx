@@ -6,11 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Search, UserPlus, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { fetchCoachPrograms, coachMatchesAges, type CoachProgram } from '@/lib/coachPrograms';
 
 interface CoachResult {
   id: string;
   full_name: string;
   avatar_url: string | null;
+  program?: CoachProgram;
 }
 
 interface CoachSearchConnectProps {
@@ -43,15 +46,18 @@ export function CoachSearchConnect({ onRequestSent }: CoachSearchConnectProps) {
 
       const coachIds = coachRoles.map(r => r.user_id).filter(id => id !== user?.id);
 
+      // Name OR age group / level from the coach's setup answers ("12U", "High school").
+      const programs = await fetchCoachPrograms(coachIds);
+      const byAge = coachIds.filter((id) => coachMatchesAges(programs.get(id), query));
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, full_name, avatar_url')
         .in('id', coachIds)
-        .ilike('full_name', `%${query}%`)
+        .or(`full_name.ilike.%${query.replace(/[,()%]/g, '')}%${byAge.length ? `,id.in.(${byAge.join(',')})` : ''}`)
         .not('is_system_account', 'is', true) // test accounts never appear in search
         .limit(10);
 
-      setResults(profiles ?? []);
+      setResults((profiles ?? []).map((p) => ({ ...p, program: programs.get(p.id) })));
     } catch {
       toast({ title: 'Search failed', variant: 'destructive' });
     } finally {
@@ -94,7 +100,7 @@ export function CoachSearchConnect({ onRequestSent }: CoachSearchConnectProps) {
       <CardContent className="pt-4 space-y-3">
         <div className="flex gap-2">
           <Input
-            placeholder="Search coaches by name..."
+            placeholder="Search coaches by name, age group or level..."
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
@@ -117,7 +123,16 @@ export function CoachSearchConnect({ onRequestSent }: CoachSearchConnectProps) {
                       {coach.full_name?.charAt(0) ?? '?'}
                     </div>
                   )}
-                  <span className="text-sm font-medium">{coach.full_name}</span>
+                  <div className="min-w-0">
+                    <span className="text-sm font-medium">{coach.full_name}</span>
+                    {coach.program?.program_name && <p className="text-xs text-muted-foreground">Team: {coach.program.program_name}</p>}
+                    {!!coach.program?.age_groups?.length && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        <span className="text-xs text-muted-foreground">Coaches:</span>
+                        {coach.program.age_groups.map((a) => <Badge key={a} variant="secondary" className="text-[10px]">{a}</Badge>)}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <Button
                   size="sm"
