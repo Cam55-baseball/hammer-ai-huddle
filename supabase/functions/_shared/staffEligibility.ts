@@ -32,7 +32,7 @@ export function staffEligibility(i: StaffEligibilityInput): StaffEligibility {
     return { ok: false, code: "not_org_admin", error: "The Organization plan is for organization admins. Set up your organization first, then come back to subscribe." };
   }
   if (i.plan === "coach" && !i.isCoach && !i.isOrgAdmin) {
-    return { ok: false, code: "not_coach", error: "The Coach plan is for coach accounts. Choose Coach as your role in setup, then come back to subscribe." };
+    return { ok: false, code: "not_coach", error: "The Coach plan is for approved coach accounts. If you've applied as a coach, you can subscribe as soon as your application is approved." };
   }
   return { ok: true };
 }
