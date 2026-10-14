@@ -2,7 +2,9 @@
 
 **RR1 (02:50 UTC):** Scout wording fixed — Profile no longer shows "Finish your athlete setup" to scouts or coaches; the updated-terms screen is now titled "Before you keep going" for everyone.
 
-**RR2 (02:55 UTC):** Scout wording PROVEN on screen — the profile's setup cards also showed the player wording to scouts/coaches (two more spots found and fixed: the quick-access banner and the status card). Re-checked signed in as the test scout at phone size: no "athlete setup" wording anywhere on Profile, no page errors (scout/20_profile_wording.png). Build OK. Note: the "Ranked goals" card on Profile still uses player-flavored wording for scouts — cosmetic, not flagged by the owner; left as-is. Still waiting on owner: his 3 test checkouts (unblocks sponsorship + seats-added-later proof, and coach/org-admin full walkthroughs).
+**RR2 (02:55 UTC):** Scout wording PROVEN on screen — the profile's setup cards also showed the player wording to scouts/coaches (two more spots found and fixed: the quick-access banner and the status card). Re-checked signed in as the test scout at phone size: no "athlete setup" wording anywhere on Profile, no page errors (scout/20_profile_wording.png). Build OK. Note: the "Ranked goals" card on Profile still uses player-flavored wording for scouts — cosmetic, not flagged by the owner; left as-is.
+
+**RR3 (03:05 UTC):** Coach + org admin full walkthroughs DONE at phone size, signed in as each test account. Coach (coach/00–10): dashboard, coach dashboard, console, lineup, guest, digest, coach setup (6 steps, Save & exit), staff plans, profile, privacy, pricing — every screen has Back/Close, no page errors; coach tools correctly show the "Coach tools are now part of the Hammers Coach plan" notice with Subscribe + "Join through your organization" (test coach has no paid plan). Org admin (org-admin/walk_00–05): dashboard, organization, staff plans, profile, privacy, pricing — all have Back, no errors; /organization correctly shows the Organization-plan gate. Still waiting on owner: his 3 test checkouts (unblocks sponsorship + seats-added-later Stripe proof).
 
 **Ready to publish: no** — sponsorship and "extra seats added later" still need a real paid Organization plan to prove on Stripe (see #8).
 
@@ -27,8 +29,8 @@
 | Teen with parent signature | Pass (teen-2way/) |
 | Under-13 player + parent | Pass (demo13/, demoparent) |
 | Scout (new test account, hidden) | Pass (scout/) — updated-terms screen once, then scout dashboard, report, compare, plans, profile, legal all with Back. Note: scout profile says "Finish your athlete setup" (wording for players) |
-| Coach | Partly — Stripe checkout Pass (coach/stripe-phone); full screen walk still to do |
-| Organization admin | Partly — Stripe checkout Pass phone + desktop; sponsorship blocked (no players in the unverified test org) |
+| Coach | Pass (coach/ — full screen walk + Stripe checkout) |
+| Organization admin | Pass (org-admin/ — full screen walk + Stripe checkout phone + desktop); sponsorship still blocked (no players in the unverified test org) |
 
 Logins/codes: no passwords or codes changed (sign-ins used one-time links from the owner-only test tool) → no email resent.
 
