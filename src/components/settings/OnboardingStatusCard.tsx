@@ -18,6 +18,7 @@ import { useState } from "react";
 import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
 import { useOnboardingAnswerStatus } from "@/hooks/onboarding/useOnboardingAnswerStatus";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
+import { useScoutAccess } from "@/hooks/useScoutAccess";
 
 export function OnboardingStatusCard() {
   const {
@@ -29,6 +30,12 @@ export function OnboardingStatusCard() {
   } = useAthleteOnboardingState();
   const [injuryOpen, setInjuryOpen] = useState(false);
   const answers = useOnboardingAnswerStatus();
+  // Coaches and scouts have no athlete setup flow — never show them this card.
+  const { isScout, isCoach, loading: roleLoading } = useScoutAccess();
+
+  if (roleLoading || isScout || isCoach) {
+    return null;
+  }
 
   return (
     <Card>
