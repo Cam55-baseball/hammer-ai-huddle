@@ -15,6 +15,7 @@ import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 import { BackButton } from "@/components/common/BackButton";
+import { SignedInAs } from "@/components/purchase/SignedInAs";
 
 const Pricing = () => {
   const { canShowPurchaseUI } = usePurchaseAvailability();
@@ -63,6 +64,7 @@ const Pricing = () => {
             <span className="text-primary-foreground font-bold text-2xl">H</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">{t('subscriptionTiers.chooseTrainingTier')}</h1>
+          <div className="mb-2"><SignedInAs /></div>
           <p className="text-muted-foreground">
             {t('subscriptionTiers.eliteTrainingPrograms')}
           </p>

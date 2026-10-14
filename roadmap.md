@@ -1,3 +1,8 @@
+# TEST LOGINS FINAL — 2026-10-14 22:05 UTC
+- Cause: the UPDATED email gave the 16-year-old demo16ss as the test player; the owner's phone stayed signed in as him, so staff plans said "adults 18 and over".
+- Fixed: "[PRIVATE] Hammers test checkouts — FINAL (use these)" sent: player democollege (2005), coach democoach, org admin demoorg; new passwords, each proven by password sign-in; same codes. One-time tool deleted.
+- Sign Out now always clears the saved sign-in (even on a network error) and reloads the page; Pricing and Staff Plans show "Signed in as <email>".
+
 # STAFF CHECKOUT ELIGIBILITY FIX — 2026-10-14 21:55 UTC
 - Cause: checkout refused any account flagged "parent-managed"; it never checked coach role or organization admin status.
 - Fix: new rule (adults 18+ only; Coach plan = approved coach or org admin; Organization plan = org owner/admin; pending orgs may buy, with a note). 8 rule tests pass. Checkout redeployed.
