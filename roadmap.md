@@ -16,6 +16,9 @@
 
 ## Walkthroughs (docs/owner/walkthroughs/)
 - QQ2: test-only passwords reset privately on 9 accounts NOT in the owner's email (demo13, demoparent, democollege, demomlb, demoausl, demosbc, demo2way, demoramp, ee5proof); API sign-in 200 for all 9; one-time tool deleted. Owner's emailed logins untouched → no resend needed.
+- QQ3 Under-13 player (demo13): FOUND+FIXED dead end — "Parent signature required" screen had no way out; added "Not now — sign out" (signs out on this device only, lands on the home page). PASS on phone (demo13/08–09).
+- QQ3 Softball player (demosbc): sign-in lands on unfinished setup (1/12) with Exit — expected for this account. Setup run-through still to do.
+- QQ3 Parent (demoparent): dashboard, History, Profile have Back; Plans/Vault send to Start Here (setup unfinished) with Back; Vault lock shows View Pricing + Back. PASS.
 - Player (college, baseball) — player-college/: PASS after 2 fixes. Form sign-in → dashboard; History, Vault, Profile, legal page have Back. FOUND+FIXED: Plans page had no Back (added). FOUND+FIXED: player plan checkout used the same new-window trick that broke the org plan — it never left the app; now same-tab → real checkout.stripe.com page (screenshot 12), Back returns to the app. Privacy notice: "Got it" once, then a fresh sign-in on a new device shows no notice (PASS). Paying itself can't be automated (Stripe refuses robot payments) — owner's checkouts are the final proof.
 - Remaining: other player programs/sports, teen + parent, under-13 parent, scout; coach + org admin wait until the owner's checkouts are done (their passwords are in his email).
 
