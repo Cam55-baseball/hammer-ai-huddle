@@ -21,16 +21,21 @@ Plain-English list of what must be true before publishing. Current answer: **Rea
 
 ## Still open (must pass before "Ready to publish: yes")
 
-1. **Stripe checkout code box:** the checkout page rejected a valid one-time 100% code as "invalid". Cause unknown. The same code works when attached directly. Needs fixing or a decision.
-2. **Sponsoring a player who already pays:** their own plan should end and org billing start with no double charge. Needs a test player with a paid plan.
-3. **Real player checkout, renewal, cancel, Manage plan:** needs the owner's choice — enter a real card for the test (no charge with a 100% code), or let checkout skip the card when the total is $0.
-4. **Real staff-plan checkout** (Coach $300, Org $1,000, extra seat $150): same card question.
-5. **Flow-level phone proofs** signed in as test accounts: saving coach entries (both options) with the wrong-player block, the under-13 parent flow on the phone, check-ins with and without health consent, the Discipline tab, guest mode end to end.
+1. **Owner's 3 test checkouts** (Complete Pitcher, Hammers Coach, Organization + extra seat, each with its one-time 100% code from the private email). Once the Organization one is done I can prove on Stripe's real page: sponsoring a player, and adding seats later through Manage plan.
+2. **Under-13 full signup** — the owner runs it himself with his card and the 4th code (private email "[PRIVATE] Hammers under-13 test code"). Afterwards: cancel that test subscription and flag the account + consent record as TEST.
+
+## Resolved since 2026-10-13
+
+- **Stripe checkout code box:** not an app problem — Stripe refuses codes typed by an automated browser. The codes' settings were fine; the owner's own typing works.
+- **Sponsoring a player who already pays:** PASS — no double charge; the player's own plan runs to its paid end, then org billing starts. Both test subscriptions canceled.
+- **Coach-tools plan switch:** ON (`staff_plan_gate`). Coaches without a plan see "Coach tools are now part of the Hammers Coach plan" with Subscribe and "Join through your organization". Owner and admins unaffected.
+- **Every purchase path reaches Stripe's real checkout page** (proven signed in as each test account, phone + desktop, screenshots in docs/owner/walkthroughs/): Organization + 1 extra seat ($1,150/mo, both items listed), Coach ($300), Complete Pitcher ($200). Fair-use and auto-renew acceptances are saved before checkout. Cause of the owner's org-plan failure found and fixed: checkout opened in a new window, which phones block silently — now same-tab, with a visible error if checkout can't start.
+- **Live video analyses:** 6/6 completed (baseball + softball × hitting, pitching, throwing; 21–38 s each), each with a plain-words summary, drills and a report card. Test videos and reports deleted (backup kept).
+- **Human walkthroughs at phone size** (screenshots in docs/owner/walkthroughs/): player (college baseball), softball setup all 12 steps, pro/softball-pro/two-way/ramp-up players, teen with parent signature, under-13 player + parent, scout, coach, organization admin — all PASS. Every one of the 177 screens has a visible Back or Close (checked as owner and as player).
+- **Owner-found fixes 1–9:** all done except the sponsorship/seats part of #8 (needs the owner's org checkout). Details at the top of roadmap.md.
 
 ## Owner decisions still waiting
 
-- Test checkout: real card, or skip the card when the total is $0.
-- When to turn on the coach-tools plan switch (coaches without a plan lose coach tools then).
 - Rankings/MPI scores on 5s? Spaces stays OFF; Vault review queue.
 
 ## Leftover test data in Stripe
