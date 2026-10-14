@@ -1,3 +1,9 @@
+# STAFF CHECKOUT ELIGIBILITY FIX — 2026-10-14 21:55 UTC
+- Cause: checkout refused any account flagged "parent-managed"; it never checked coach role or organization admin status.
+- Fix: new rule (adults 18+ only; Coach plan = approved coach or org admin; Organization plan = org owner/admin; pending orgs may buy, with a note). 8 rule tests pass. Checkout redeployed.
+- Proof (same build, phone size): test coach → Hammers Coach Stripe page; test org admin → Organization + 1 seat Stripe page; test player → Complete Pitcher Stripe page; player refused staff plans with a plain reason. Screenshots: docs/owner/walkthroughs/eligibility/.
+- Ready for the owner to retry: yes.
+
 # TOP STATUS — Stripe "nothing takes me to pay" round, 2026-10-14 ~20:30 UTC
 
 **Ready to publish: no** (owner must redo his 3 test checkouts on the preview first).
