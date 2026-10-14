@@ -228,9 +228,7 @@ const Checkout = () => {
     }
 
     setCheckoutLoading(true);
-    if (!opts?.silent) {
-      popupRef.current = window.open("", "_blank", "") || null;
-    }
+    // Same tab only: phones silently block new windows opened after a wait.
 
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -295,14 +293,6 @@ const Checkout = () => {
 
         setTimeout(() => setShowManualLink(true), 2000);
 
-        if (popupRef.current && !popupRef.current.closed) {
-          try {
-            popupRef.current.location.href = data.url;
-            return;
-          } catch {
-            popupRef.current.close();
-          }
-        }
         redirectToStripe(data.url);
       } else {
         throw new Error("No checkout URL received");

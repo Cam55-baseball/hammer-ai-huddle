@@ -14,8 +14,10 @@
 9. Recent sessions list removed (owner-approved). Live analyses of every type — not yet run.
 - Also fixed: scout pending-reviews "Invalid token" (sign-in now passed along); redeployed.
 
-## Walkthroughs (docs/owner/walkthroughs/) — NOT RUN yet
-Player per program/sport, teen + parent, under-13 parent, coach, org admin, scout: all pending. Blocker: the private test-password file was wiped again; resetting changes the logins in the owner's email, so the email will be resent after reset.
+## Walkthroughs (docs/owner/walkthroughs/)
+- QQ2: test-only passwords reset privately on 9 accounts NOT in the owner's email (demo13, demoparent, democollege, demomlb, demoausl, demosbc, demo2way, demoramp, ee5proof); API sign-in 200 for all 9; one-time tool deleted. Owner's emailed logins untouched → no resend needed.
+- Player (college, baseball) — player-college/: PASS after 2 fixes. Form sign-in → dashboard; History, Vault, Profile, legal page have Back. FOUND+FIXED: Plans page had no Back (added). FOUND+FIXED: player plan checkout used the same new-window trick that broke the org plan — it never left the app; now same-tab → real checkout.stripe.com page (screenshot 12), Back returns to the app. Privacy notice: "Got it" once, then a fresh sign-in on a new device shows no notice (PASS). Paying itself can't be automated (Stripe refuses robot payments) — owner's checkouts are the final proof.
+- Remaining: other player programs/sports, teen + parent, under-13 parent, scout; coach + org admin wait until the owner's checkouts are done (their passwords are in his email).
 
 ---
 # TOP STATUS — URGENT test logins, 2026-10-13 22:50 UTC

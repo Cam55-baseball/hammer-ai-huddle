@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
+import { BackButton } from "@/components/common/BackButton";
 
 const Pricing = () => {
   const { canShowPurchaseUI } = usePurchaseAvailability();
@@ -56,6 +57,7 @@ const Pricing = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 pt-safe pb-safe">
       <div className="w-full max-w-5xl">
+        <div className="pt-4"><BackButton /></div>
         <div className="text-center mb-8">
           <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
             <span className="text-primary-foreground font-bold text-2xl">H</span>
