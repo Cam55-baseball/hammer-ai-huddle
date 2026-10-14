@@ -23,8 +23,8 @@ import { ChipMultiSelect } from "@/components/onboarding/staff/ChipMultiSelect";
 import { NotificationsPreferencesPanel } from "@/components/notifications/NotificationsPreferencesPanel";
 import { readDraftSlot, writeDraftSlot, clearDraftSlot } from "@/lib/onboarding/draftStore";
 import { supabase } from "@/integrations/supabase/client";
+import { parseCoachAges } from "@/lib/onboarding/coachAgeParse";
 import {
-  COACH_AGE_GROUPS,
   COACH_DISCIPLINES,
   saveCoachContext,
   positiveIntOrNull,
@@ -55,6 +55,15 @@ export default function CoachOnboarding() {
   const [seasonsRun, setSeasonsRun] = useState("");
   const [athleteCount, setAthleteCount] = useState("");
   const [ageGroups, setAgeGroups] = useState<string[]>([]);
+  const [ageText, setAgeText] = useState("");
+  const [ageTried, setAgeTried] = useState(false);
+  /** Reads the typed answer into chips, keeping any the coach already confirmed. */
+  const readAgeText = () => {
+    setAgeTried(true);
+    const p = parseCoachAges(ageText);
+    const all = [...p.ageGroups, ...p.levels];
+    if (all.length) setAgeGroups((prev) => [...new Set([...prev, ...all])]);
+  };
   const [disciplines, setDisciplines] = useState<string[]>([]);
   const [philosophy, setPhilosophy] = useState("");
 
@@ -282,12 +291,34 @@ export default function CoachOnboarding() {
             Age groups keep every drill and standard we surface to you inside
             safe developmental bands.
           </p>
-          <ChipMultiSelect
-            label="Age groups you coach"
-            options={COACH_AGE_GROUPS}
-            value={ageGroups}
-            onChange={setAgeGroups}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="coach-ages" className="text-xs">Age groups and levels you coach</Label>
+            <Input
+              id="coach-ages"
+              value={ageText}
+              onChange={(e) => setAgeText(e.target.value)}
+              onBlur={readAgeText}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); readAgeText(); } }}
+              placeholder="e.g. 10U–14U, high school, college, pro"
+            />
+            <Button type="button" variant="outline" size="sm" onClick={readAgeText} disabled={!ageText.trim()}>Read my answer</Button>
+            {ageText.trim() && !ageGroups.length && ageTried && (
+              <p className="text-xs text-muted-foreground">We couldn't read that. Try ages like "12U" or "10U–14U", or levels like "high school".</p>
+            )}
+            {ageGroups.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Check these. Tap one to remove it.</p>
+                <div className="flex flex-wrap gap-1.5" aria-label="Age groups and levels">
+                  {ageGroups.map((c) => (
+                    <button key={c} type="button" onClick={() => setAgeGroups(ageGroups.filter((x) => x !== c))}
+                      className="inline-flex min-h-9 items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-3 text-sm" aria-label={`Remove ${c}`}>
+                      {c} <span aria-hidden>×</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <div className="space-y-1">
             <Label htmlFor="coach-count" className="text-xs">Roughly how many athletes? (optional)</Label>
             <Input

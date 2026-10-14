@@ -1,9 +1,22 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { stripLeadingZeros } from "@/lib/numberInput";
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, onChange, onFocus, ...props }, ref) => {
+    const isNum = type === "number";
+    // Number boxes: typing after a 0 must never leave "01" on screen; focusing selects the number so typing replaces it.
+    const handleChange = isNum && onChange
+      ? (e: React.ChangeEvent<HTMLInputElement>) => {
+          const cleaned = stripLeadingZeros(e.target.value);
+          if (cleaned !== e.target.value) e.target.value = cleaned;
+          onChange(e);
+        }
+      : onChange;
+    const handleFocus = isNum
+      ? (e: React.FocusEvent<HTMLInputElement>) => { e.currentTarget.select(); onFocus?.(e); }
+      : onFocus;
     return (
       <input
         type={type}
@@ -12,6 +25,8 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className,
         )}
         ref={ref}
+        onChange={handleChange}
+        onFocus={handleFocus}
         {...props}
       />
     );

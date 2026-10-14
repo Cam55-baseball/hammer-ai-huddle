@@ -1,4 +1,6 @@
 import { ReactNode, useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { BackButton } from "@/components/common/BackButton";
 import { useTranslation } from "react-i18next";
 import { SidebarProvider, SidebarTrigger, SidebarInset, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
@@ -91,6 +93,7 @@ function DashboardHeader({ tutorialCompleted, user, onTutorialOpen }: {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user } = useAuth();
+  const { pathname } = useLocation();
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [tutorialCompleted, setTutorialCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -141,6 +144,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <OfflineIndicator />
             <OnboardingResumeBanner />
             <StaffOnboardingResumeBanner />
+            {pathname !== "/dashboard" && <BackButton className="mb-1" />}
             {children}
           </main>
         </SidebarInset>

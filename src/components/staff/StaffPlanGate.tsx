@@ -49,7 +49,7 @@ export function StaffPlanGate({ children, needsOrg = false }: { children: ReactN
         <Button asChild className="h-11 w-full"><Link to="/staff-plans">Subscribe</Link></Button>
         <Button asChild variant="outline" className="h-11 w-full"><Link to="/join">Join through your organization</Link></Button>
       </div>
-      <div className="text-left pt-2"><StaffPlanTiles variant="prominent" /></div>
+      <div className="text-left pt-2"><StaffPlanTiles /></div>
     </div>
   );
 }

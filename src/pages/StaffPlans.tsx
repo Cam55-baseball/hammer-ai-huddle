@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { STAFF_PLAN_COPY } from "@/lib/staffPlans";
 import { Checkbox } from "@/components/ui/checkbox";
 import { recordConsent } from "@/lib/legal/legalV2";
+import { NumberStepper } from "@/components/ui/number-stepper";
+import { BackButton } from "@/components/common/BackButton";
 
 /** Terms version that holds the coach/org fair-use section (lawyer-approved 2026-10-13). */
 const FAIR_USE_TERMS_VERSION = 2;
@@ -31,7 +33,7 @@ export default function StaffPlans() {
     const { data, error } = await supabase.functions.invoke("sync-staff-plan", { body: { portal } });
     if (error || data?.error) { setMsg(data?.error ?? "Could not check your plan."); return; }
     setStatus(data);
-    if (portal && data.portal) window.open(data.portal, "_blank");
+    if (portal && data.portal) window.location.assign(data.portal);
   }
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user?.id]);
 
@@ -43,13 +45,18 @@ export default function StaffPlans() {
       await recordConsent({ slug: "terms", version: FAIR_USE_TERMS_VERSION, choice: "accepted", method: "checkout_checkbox", details: { section: "coach_org_fair_use", plan } });
     } catch { setBusy(null); setMsg("Could not save your acceptance. Try again."); return; }
     const { data, error } = await supabase.functions.invoke("create-staff-checkout", { body: { plan, extra_seats: plan === "organization" ? seats : 0 } });
-    setBusy(null);
-    if (error || data?.error) setMsg(data?.error ?? "Checkout could not start.");
-    else if (data?.url) window.open(data.url, "_blank");
+    // A failed call returns the reason in the response body; read it so the person sees why.
+    let reason: string | undefined = data?.error;
+    if (error && !reason) { try { reason = (await (error as any).context?.json?.())?.error; } catch { /* keep generic */ } }
+    if (error || reason) { setBusy(null); setMsg(reason ?? "Checkout could not start."); return; }
+    // Same tab: phones block new windows opened after a wait, which silently skipped Stripe.
+    if (data?.url) window.location.assign(data.url);
+    else { setBusy(null); setMsg("Checkout could not start."); }
   }
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 p-4">
+      <BackButton />
       <h1 className="text-2xl font-bold">Coach and Organization plans</h1>
       {params.get("status") === "success" && <p className="text-sm" role="status">Thanks! Your plan turns on as soon as payment finishes. Tap "Check my plan" if it isn't on yet.</p>}
       {status?.plan && (
@@ -73,10 +80,10 @@ export default function StaffPlans() {
             {STAFF_PLAN_COPY[p].includes.map((i) => <li key={i}>{i}</li>)}
           </ul>
           {p === "organization" && mode === "web" && (
-            <label className="flex items-center gap-2 text-sm">Extra coach seats ($150/month each):
-              <input type="number" min={0} max={100} value={seats} onChange={(e) => setSeats(Math.max(0, Math.min(100, Math.floor(Number(e.target.value) || 0))))}
-                className="w-20 rounded border border-input bg-background px-2 py-1" />
-            </label>
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span>Extra coach seats ($150/month each):</span>
+              <NumberStepper label="extra coach seats" value={seats} onChange={setSeats} min={0} max={100} />
+            </div>
           )}
           {canShowPurchaseUI && !status?.plan && (
             <Button className="w-full min-h-11" disabled={!!busy || !user || (mode === "web" && !fairUse)} onClick={() => buy(p)}>

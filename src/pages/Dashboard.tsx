@@ -673,10 +673,8 @@ export default function Dashboard() {
         {/* Merch always pinned below the Game Plan */}
         {merchSection}
 
-        {/* Coach and Organization plans — prominent for coach/org accounts, a quiet pair for players; never for scouts. */}
-        {!purchaseRoleLoading && canShowPurchaseUI && (isCoach
-          ? <StaffPlanTiles variant="prominent" />
-          : !isScout && <StaffPlanTiles variant="subtle" />)}
+        {/* Coach and Organization plans — the same regular-size advertising tiles for every account (owner 2026-10-13). */}
+        {!purchaseRoleLoading && canShowPurchaseUI && <StaffPlanTiles />}
       </div>
     </DashboardLayout>
   );
