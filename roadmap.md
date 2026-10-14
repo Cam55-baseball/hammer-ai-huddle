@@ -1,3 +1,18 @@
+# TOP STATUS — Stripe "nothing takes me to pay" round, 2026-10-14 ~20:30 UTC
+
+**Ready to publish: no** (owner must redo his 3 test checkouts on the preview first).
+
+| Item | Status | Proof |
+|---|---|---|
+| Cause found | Done | Backend log 19:45 UTC: the owner's Complete Pitcher tap DID create a Stripe session, but the app runs inside the editor's preview frame; Stripe refuses to load in a frame and the frame can't move the whole page, so nothing happened. Coach/Org: no backend calls at all — the button stayed greyed out until the fair-use box was ticked, with no message. |
+| Fix: one path to Stripe | Done | New goToStripe: own tab → same-tab jump; in a frame → "Continue to secure checkout" pop-up that opens Stripe in a new tab; if the page doesn't leave in 4 s the same button appears. Used by player plans, Coach/Org, sponsorship, bundles, billing portal. |
+| No silent failures | Done | Every checkout error shows a pop-up and is logged; Coach/Org button no longer greys out — it says "Tick the fair-use box first". |
+| Domains allowed | Done (no change needed) | Checkout functions accept any https origin (preview, hammersmodality.org, hammers-modality.lovable.app). No redeploy. |
+| Back from renewal policy logged out | Done | Policy opened in a new tab; in the editor frame a new tab has no sign-in. All checkout/sign-up/agreement policy links now open as a pop-up with Close and "I've read this"; checkbox stays ticked, same screen, still signed in. |
+| Tile prices | Done | Coach/Org dashboard tiles no longer show prices (the player plan cards don't). |
+| Proof, 12/12 PASS | Done | Player (Complete Pitcher), Coach, Org + 1 seat; own tab and inside a frame; phone + desktop — all reach Stripe's real page. docs/owner/walkthroughs/stripe-handoff/ |
+| Hosted preview link itself | Blocked | Returns 401 to automated tools (Lovable sign-in wall), so tests ran on the same app here, both top-level and framed. Owner to confirm. |
+
 # TOP STATUS — Owner approvals round, 2026-10-14 03:25 UTC
 
 **RR6 (03:25 UTC):** Final status roll-up (this section). Owner can redo his 3 test checkouts: YES — all 4 codes re-verified on Stripe active, unused, expiring Oct 20; logins unchanged since the "UPDATED (use these)" email.
