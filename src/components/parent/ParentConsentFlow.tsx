@@ -114,6 +114,15 @@ export function ParentConsentFlow({ mode, accountEmail, onSigned }: { mode: "sig
             </p>
             <p className="text-sm text-muted-foreground">Nothing is saved until you sign.</p>
             <Button className="h-12 w-full text-base" onClick={() => setStep(1)}>I'm the parent or guardian — continue</Button>
+            {mode !== "signup" && (
+              <Button
+                variant="ghost"
+                className="h-11 w-full"
+                onClick={async () => { await supabase.auth.signOut({ scope: "local" }); window.location.assign("/"); }}
+              >
+                Not now — sign out
+              </Button>
+            )}
           </section>
         )}
 
