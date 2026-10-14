@@ -16,6 +16,9 @@
 
 ## Walkthroughs (docs/owner/walkthroughs/)
 - QQ2: test-only passwords reset privately on 9 accounts NOT in the owner's email (demo13, demoparent, democollege, demomlb, demoausl, demosbc, demo2way, demoramp, ee5proof); API sign-in 200 for all 9; one-time tool deleted. Owner's emailed logins untouched → no resend needed.
+- QQ4 "Before you keep training" (updated terms) screen: FOUND+FIXED dead end — only "Save and continue"; added "Not now — sign out". One-time PASS as demomlb: accepted once → gone; fresh sign-in on a new device → not shown again (demomlb/07–09). demomlb, demoausl, demo2way, demoramp: History/Vault/Profile reachable with Back or the terms screen; each still has unfinished setup (lands on setup 1/12 with Exit).
+- QQ4 Sponsorship + extra seats: both already go same-tab to Stripe (code read); real-page proof needs the org admin login (in the owner's email) → after owner's "done".
+- QQ4 Scout walkthrough BLOCKED: no test scout account exists. Needs owner OK to create one test-only scout account.
 - QQ3 Under-13 player (demo13): FOUND+FIXED dead end — "Parent signature required" screen had no way out; added "Not now — sign out" (signs out on this device only, lands on the home page). PASS on phone (demo13/08–09).
 - QQ3 Softball player (demosbc): sign-in lands on unfinished setup (1/12) with Exit — expected for this account. Setup run-through still to do.
 - QQ3 Parent (demoparent): dashboard, History, Profile have Back; Plans/Vault send to Start Here (setup unfinished) with Back; Vault lock shows View Pricing + Back. PASS.
