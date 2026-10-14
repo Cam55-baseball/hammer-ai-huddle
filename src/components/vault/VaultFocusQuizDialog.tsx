@@ -1408,7 +1408,7 @@ export function VaultFocusQuizDialog({
                     </div>
                     <div className="flex items-center gap-2">
                       <input type="number" min={1} max={35} value={adultCycleDay}
-                        onChange={e => setAdultCycleDay(e.target.value)} placeholder="Day #"
+                        onChange={e => setAdultCycleDay(e.target.value.replace(/^0+(?=\d)/, ""))} placeholder="Day #"
                         className="w-20 h-8 px-2 text-sm rounded-md border border-violet-700/45 bg-violet-700/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-300"
                       />
                       <button type="button" onClick={() => setAdultPeriodActive(!adultPeriodActive)}

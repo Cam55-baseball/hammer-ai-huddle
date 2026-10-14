@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { CoachProgramCard } from "@/components/coach/CoachProgramCard";
 import { TeamDisciplineSummary } from "@/components/coach/TeamDisciplineSummary";
 import { CoachWeeklySummary } from "@/components/coach/CoachWeeklySummary";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
@@ -266,6 +267,7 @@ export default function CoachDashboard() {
             Who needs help · Why · What to run today
           </p>
         </div>
+        <CoachProgramCard />
         <CoachWeeklySummary />
         <TeamDisciplineSummary />
         <Link to="/coach/lineup" className="text-sm underline underline-offset-2">Lineup mode — log a game for several players</Link>

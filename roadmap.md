@@ -1,3 +1,23 @@
+# TOP STATUS — Owner preview findings round, 2026-10-13 23:55 UTC
+
+**Ready to publish: no** — the new human-walkthrough standard is not yet met (see below).
+
+## Fixes (proof)
+1. Dashboard plan tiles — one regular size for every account (players, coaches, orgs, scouts). PASS: phone screenshot as owner (1 tile pair under merch). Role screenshots pending walkthroughs.
+2. Coach setup "Age groups" — smart text box ("10U–14U, high school, college, pro") → editable chips (ages + levels), saved to coach_context.age_groups. Tests 4/4 PASS. Phone check as coach pending.
+3. Coach setup audit — every answer was saved but read nowhere. Now shown on the Coach Dashboard "Your program" card (org, team, seasons, athletes, ages/levels, focus, philosophy) with Edit. Coach search / matching / org views need a backend read rule (migration) — waiting on owner to name it.
+4. Back everywhere — Back on every page inside the main app frame (except Dashboard), Back/Close on Staff Plans and legal pages, plus a safety Back on any screen with none. New automated check tests/e2e/navigation/back_everywhere.py (fails on any screen with no way back) — first full run in progress.
+5. Legal "Read it" — every legal page has Close and "I've read this" (records once per version, returns to where you were). PASS as owner: Close returned to dashboard; already-read shows "Back to where I was".
+6. One-time consent — privacy notice was remembered only on the device (lost on preview sign-in), so it came back. Now saved in consent_records per version and never shown again until a newer version. Tests 3/3 PASS; legal-consent redeployed. The "Updated terms" screen already used consent_records (no change needed).
+7. Extra seat number — − / + stepper with typing; every number box in the app now strips leading zeros. PASS: typed 1 → "1", + → "2". Tests 6/6 PASS.
+8. Stripe, Organization plan — cause: checkout opened in a new window after a wait, which phones block silently (no backend call was logged). Now same-tab to Stripe; real error reasons shown. Same fix on the billing portal. Proof of each purchase path on Stripe's real page pending walkthroughs.
+9. Recent sessions list removed (owner-approved). Live analyses of every type — not yet run.
+- Also fixed: scout pending-reviews "Invalid token" (sign-in now passed along); redeployed.
+
+## Walkthroughs (docs/owner/walkthroughs/) — NOT RUN yet
+Player per program/sport, teen + parent, under-13 parent, coach, org admin, scout: all pending. Blocker: the private test-password file was wiped again; resetting changes the logins in the owner's email, so the email will be resent after reset.
+
+---
 # TOP STATUS — URGENT test logins, 2026-10-13 22:50 UTC
 
 **Ready to publish: no** — waits on the owner's 3 test checkouts + the under-13 test checkout.
