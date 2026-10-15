@@ -41,6 +41,7 @@ import { OwnerEngineSettingsPanel } from "@/components/owner/OwnerEngineSettings
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScoutApplicationCard } from "@/components/ScoutApplicationCard";
+import { OrgVerificationQueue } from "@/components/organization/OrgVerificationCards";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
