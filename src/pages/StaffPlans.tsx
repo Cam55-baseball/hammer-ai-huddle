@@ -33,14 +33,51 @@ export default function StaffPlans() {
   const [needsOrgSetup, setNeedsOrgSetup] = useState(false);
   const navigate = useNavigate();
 
-  async function refresh(portal = false) {
-    if (!user) return;
+  const [result, setResult] = useState<string | null>(null);
+  const dashboardFor = (p: Status["plan"]) => (p === "organization" ? "/organization" : p === "coach" ? "/coach-dashboard" : null);
+
+  /** Reads the plan from Stripe. `show` = the person tapped a button, so always show an answer. */
+  async function refresh(portal = false, show = false): Promise<Status | null> {
+    if (!user) { if (show) reportCheckoutError("staff-plan", "Please sign in first."); return null; }
+    if (show) { setBusy(portal ? "portal" : "check"); setMsg(null); setResult(null); }
     const { data, error } = await supabase.functions.invoke("sync-staff-plan", { body: { portal } });
-    if (error || data?.error) { setMsg(data?.error ?? "Could not check your plan."); return; }
+    let reason: string | undefined = data?.error;
+    if (error && !reason) { try { reason = (await (error as any).context?.json?.())?.error; } catch { /* generic */ } }
+    if (show) setBusy(null);
+    if (error || reason) {
+      const m = reason ?? "Could not check your plan. Please try again.";
+      if (show) { setMsg(m); reportCheckoutError("staff-plan", m); }
+      return null;
+    }
     setStatus(data);
-    if (portal && data.portal) goToStripe(data.portal, "staff-portal");
+    if (show && !portal) {
+      setResult(data.plan
+        ? `${STAFF_PLAN_COPY[data.plan as "coach" | "organization"].name} — active${data.plan === "organization" ? `, ${data.included_seats + data.extra_seats} coach seats (${data.included_seats} included + ${data.extra_seats} extra)` : ""}`
+        : `No active Coach or Organization plan for this account (status: ${data.status}).`);
+    }
+    if (portal) {
+      if (data.portal) goToStripe(data.portal, "staff-portal");
+      else { const m = "No billing account was found for this email yet. Buy a plan first, or sign in with the email you paid with."; setMsg(m); reportCheckoutError("staff-portal", m); }
+    }
+    return data;
   }
-  useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user?.id]);
+  useEffect(() => {
+    if (!user) return;
+    // Back from Stripe after paying: wait for the plan to turn on, then open the right dashboard.
+    if (params.get("status") === "success") {
+      let tries = 0, stop = false;
+      const tick = async () => {
+        const s = await refresh();
+        const to = dashboardFor(s?.plan ?? null);
+        if (to && !stop) { navigate(to, { replace: true }); return; }
+        if (++tries < 6 && !stop) setTimeout(tick, 2500);
+      };
+      tick();
+      return () => { stop = true; };
+    }
+    refresh();
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [user?.id]);
   const [orgPending, setOrgPending] = useState(false);
   useEffect(() => {
     if (!user) return;
