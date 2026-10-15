@@ -1,4 +1,3 @@
-import { RoleEntryLinks } from "@/components/auth/RoleEntryLinks";
 import { LegalFooterLinks } from "@/components/legal/LegalFooterLinks";
 import { BUSINESS_ADDRESS_ONE_LINE } from "@/constants/businessAddress";
 import { Shield, Lock, CheckCircle } from "lucide-react";
@@ -91,7 +90,6 @@ const Index = ({ browse = false }: { browse?: boolean }) => {
                 Get Started
               </Button>
             </div>
-            <RoleEntryLinks className="pt-2" />
           </div>
         </div>
       </section>
