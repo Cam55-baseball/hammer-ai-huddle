@@ -8,7 +8,7 @@ import { useOrganization } from "@/hooks/useOrganization";
 export default function OrganizationSetup() {
   const navigate = useNavigate();
   const org = useOrganization() as any;
-  const hasOrg = !!(org?.myOrgs?.length || org?.organizations?.length || org?.activeOrg);
+  const hasOrg = !!org?.myOrgs?.data?.length;
   return (
     <div className="mx-auto max-w-2xl space-y-4 p-4">
       <BackButton />
