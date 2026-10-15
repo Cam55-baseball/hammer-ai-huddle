@@ -194,6 +194,7 @@ const GoldenTwoWay = lazyWithRetry(() => import("./pages/GoldenTwoWay"));
 const PracticeHub = lazyWithRetry(() => import("./pages/PracticeHub"));
 const ProgressDashboard = lazyWithRetry(() => import("./pages/ProgressLanding"));
 const OrganizationDashboard = lazyWithRetry(() => import("./pages/OrganizationDashboard"));
+const OrganizationSetup = lazyWithRetry(() => import("./pages/OrganizationSetup"));
 const RequestsPage = lazyWithRetry(() => import("./pages/Requests"));
 const JoinTeamPage = lazyWithRetry(() => import("./pages/JoinTeam"));
 const OwnerOrganizationsPage = lazyWithRetry(() => import("./pages/OwnerOrganizations"));
@@ -564,6 +565,7 @@ const App = () => {
               <Route path="/practice" element={<PracticeHub />} />
               <Route path="/progress" element={<ProgressDashboard />} />
               <Route path="/organization" element={<StaffPlanGate needsOrg><OrganizationDashboard /></StaffPlanGate>} />
+              <Route path="/organization/setup" element={<OrganizationSetup />} />
               <Route path="/requests" element={<RequestsPage />} />
               <Route path="/join" element={<JoinTeamPage />} />
               <Route path="/owner/organizations" element={<StaffOnlyRoute><OwnerOrganizationsPage /></StaffOnlyRoute>} />
