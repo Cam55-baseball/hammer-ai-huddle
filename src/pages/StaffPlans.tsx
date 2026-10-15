@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
@@ -30,6 +30,8 @@ export default function StaffPlans() {
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [fairUse, setFairUse] = useState(false);
+  const [needsOrgSetup, setNeedsOrgSetup] = useState(false);
+  const navigate = useNavigate();
 
   async function refresh(portal = false) {
     if (!user) return;
@@ -56,7 +58,9 @@ export default function StaffPlans() {
     const { data, error } = await supabase.functions.invoke("create-staff-checkout", { body: { plan, extra_seats: plan === "organization" ? seats : 0 } });
     // A failed call returns the reason in the response body; read it so the person sees why.
     let reason: string | undefined = data?.error;
-    if (error && !reason) { try { reason = (await (error as any).context?.json?.())?.error; } catch { /* keep generic */ } }
+    let code: string | undefined = data?.code;
+    if (error && !reason) { try { const b = await (error as any).context?.json?.(); reason = b?.error; code = b?.code; } catch { /* keep generic */ } }
+    if (code === "not_org_admin") { setBusy(null); setNeedsOrgSetup(true); setMsg("First set up your organization, then come back here to subscribe."); return; }
     if (error || reason) { setBusy(null); setMsg(reason ?? "Checkout could not start."); reportCheckoutError("staff", reason ?? "Checkout could not start. Please try again."); return; }
     // Same tab: phones block new windows opened after a wait, which silently skipped Stripe.
     if (data?.url) { goToStripe(data.url, "staff"); setTimeout(() => setBusy(null), 4000); }
@@ -106,7 +110,8 @@ export default function StaffPlans() {
         </Card>
       ))}
       <Button variant="ghost" onClick={() => refresh()}>Check my plan</Button>
-      {msg && <p className="text-sm text-destructive">{msg}</p>}
+      {msg && <p className="text-sm text-destructive" role="alert">{msg}</p>}
+      {needsOrgSetup && <Button className="w-full min-h-11" onClick={() => navigate("/organization/setup")}>Set up your organization</Button>}
     </div>
   );
 }
