@@ -140,7 +140,7 @@ export function OwnerOverview({
     {
       show: pendingScoutApplications > 0,
       icon: UserPlus,
-      label: "Scout applications",
+      label: "Approvals waiting (scouts and coaches)",
       count: pendingScoutApplications,
       onClick: () => onJump("scout-applications"),
     },
