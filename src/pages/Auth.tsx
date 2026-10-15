@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, CheckCircle2, UserPlus, LogIn } from "lucide-react";
 import { z } from "zod";
+import { RoleEntryLinks } from "@/components/auth/RoleEntryLinks";
 import { emailSchema } from "@/lib/email";
 import { branding } from "@/branding";
 import { AuthLanguageSelector } from "@/components/AuthLanguageSelector";
@@ -562,7 +563,7 @@ const Auth = () => {
                 type="button"
                 variant="outline"
                 size="lg"
-                onClick={() => navigate("/signup")}
+                onClick={() => navigate("/get-started")}
                 className="w-full border-2 border-primary/60 text-primary hover:bg-primary/10 hover:text-primary hover:border-primary font-semibold"
               >
                 <UserPlus className="h-4 w-4 mr-2" />
@@ -577,6 +578,7 @@ const Auth = () => {
               >
                 Landing Page
               </Button>
+              <RoleEntryLinks className="mt-4" />
             </div>
           ) : !isForgotPassword && !isLogin ? (
             <div className="mt-6">

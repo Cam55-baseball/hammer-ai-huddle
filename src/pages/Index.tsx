@@ -1,3 +1,4 @@
+import { RoleEntryLinks } from "@/components/auth/RoleEntryLinks";
 import { LegalFooterLinks } from "@/components/legal/LegalFooterLinks";
 import { BUSINESS_ADDRESS_ONE_LINE } from "@/constants/businessAddress";
 import { Shield, Lock, CheckCircle } from "lucide-react";
@@ -31,7 +32,7 @@ const Index = ({ browse = false }: { browse?: boolean }) => {
   }, [browse, loading, user, navigate]);
 
   const handleGetStarted = () => {
-    navigate("/auth");
+    navigate("/get-started");
   };
 
   if (loading || (user && !browse)) return <HMLoadingFallback />;
@@ -90,6 +91,7 @@ const Index = ({ browse = false }: { browse?: boolean }) => {
                 Get Started
               </Button>
             </div>
+            <RoleEntryLinks className="pt-2" />
           </div>
         </div>
       </section>

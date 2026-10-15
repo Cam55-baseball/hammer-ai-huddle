@@ -1,3 +1,11 @@
+# STAFF SIGN-UP PATHS — 2026-10-15 02:55 UTC
+- Missing: sign-up only had a player path; coach/scout/org pages existed but nothing led to them, and coach setup required an already-approved coach.
+- Built: "Who are you?" (/get-started) with 5 choices; Coaches / Scouts & Recruiters / Organizations links on home + sign-in; adult account step (/signup/:role); coach setup → application to owner queue → "Application received"; scout application (sport, organization, role, letter) → queue; org register → verification form + email code → pending note → Organization plan.
+- Proof: 3 brand-new accounts via the real form at iPhone size, screenshots in docs/owner/walkthroughs/signup-roles/; owner queue shows coach + scout applications and the org (owner-01/02). All 7 sign-up accounts flagged TEST.
+- [ ] Owner: reject the 3 TEST applications/org in the queues when done looking.
+- [ ] Gap: org team/staff pages still need the Organization plan; org proof-document upload not built.
+Ready for the owner to try: yes.
+
 # EMAIL SIGN-IN FIX — 2026-10-15 02:30 UTC
 - Cause: email boxes kept pasted/autofilled spaces (iPhone adds a trailing space) and phone auto-capitalization; the check rejected the space. "+" was always allowed.
 - Fix: every email box in the app trims spaces/invisible characters, lowercases, no autocapitalize/autocorrect, email keyboard; sign-in, reset and sign-up checks share one rule (src/lib/email.ts). 4 tests pass.

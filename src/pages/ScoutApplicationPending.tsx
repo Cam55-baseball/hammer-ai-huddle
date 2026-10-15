@@ -1,5 +1,6 @@
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
-import { useEffect, useState } from "react";
+import { BackButton } from "@/components/common/BackButton";
+import { useEffect, useState , useRef} from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,6 +13,7 @@ import { CheckCircle, XCircle, Clock } from "lucide-react";
 export default function ScoutApplicationPending() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const approvedTo = useRef("/scout-dashboard");
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const [status, setStatus] = useState<"pending" | "approved" | "rejected" | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,7 +28,7 @@ export default function ScoutApplicationPending() {
     const checkApplicationStatus = async () => {
       const { data, error } = await supabase
         .from("scout_applications")
-        .select("status")
+        .select("status, applying_as")
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -43,12 +45,13 @@ export default function ScoutApplicationPending() {
       }
 
       setStatus(data.status as "pending" | "approved" | "rejected");
+      approvedTo.current = (data as any).applying_as === "coach" ? "/coach-dashboard" : "/scout-dashboard";
       setLoading(false);
 
       // If approved, redirect to dashboard
       if (data.status === "approved") {
         setTimeout(() => {
-          navigate("/scout-dashboard");
+          navigate(approvedTo.current);
         }, 2000);
       }
     };
@@ -71,7 +74,7 @@ export default function ScoutApplicationPending() {
           setStatus(newStatus);
           if (newStatus === "approved") {
             setTimeout(() => {
-              navigate("/scout-dashboard");
+              navigate(approvedTo.current);
             }, 2000);
           }
         }
@@ -87,6 +90,8 @@ export default function ScoutApplicationPending() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4 pt-[calc(1rem+var(--safe-top))] pb-[calc(1rem+var(--safe-bottom))]">
+      <div className="w-full max-w-md space-y-3">
+      <BackButton fallback="/" />
       <Card className="w-full max-w-md text-center">
         <CardHeader>
           {status === "pending" && (
@@ -169,6 +174,7 @@ export default function ScoutApplicationPending() {
           </Button>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

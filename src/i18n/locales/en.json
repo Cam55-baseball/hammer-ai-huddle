@@ -2369,10 +2369,10 @@
   },
   "scoutApplicationPending": {
     "pending": {
-      "title": "Application Under Review",
-      "description": "Your scout/coach application has been submitted successfully",
-      "message": "Your application is being reviewed by the owner. You will receive a notification when a decision is made.",
-      "timeframe": "This typically takes 1-3 business days.",
+      "title": "Application received",
+      "description": "Thanks — your application is in.",
+      "message": "The Hammers team reviews every coach and scout. You'll get a notification when a decision is made. Once approved, your tools open here; coaches can then buy the Hammers Coach plan.",
+      "timeframe": "This usually takes 1–3 business days.",
       "badge": "Pending Review"
     },
     "approved": {

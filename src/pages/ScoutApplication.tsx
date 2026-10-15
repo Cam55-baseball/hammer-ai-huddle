@@ -25,6 +25,8 @@ export default function ScoutApplication() {
     email: user?.email || "",
     sport: localStorage.getItem("scoutSport") || "",
     applyingAs: "scout" as "scout" | "coach",
+    organizationName: "",
+    roleTitle: "",
   });
 
   const [letterFile, setLetterFile] = useState<File | null>(null);
@@ -42,7 +44,11 @@ export default function ScoutApplication() {
       return;
     }
 
-    if (!letterFile || !videoFile) {
+    if (!formData.sport || !formData.organizationName.trim() || !formData.roleTitle.trim()) {
+      toast({ title: "Missing details", description: "Choose your sport and enter your organization and role.", variant: "destructive" });
+      return;
+    }
+    if (!letterFile) {
       toast({
         title: t('scoutApplicationPage.errors.missingFiles'),
         description: t('scoutApplicationPage.errors.missingFilesDesc'),
@@ -56,7 +62,7 @@ export default function ScoutApplication() {
     try {
       // Upload files
       const letterUrl = await uploadScoutLetter(letterFile, user.id);
-      const videoUrl = await uploadScoutVideo(videoFile, user.id);
+      const videoUrl = videoFile ? await uploadScoutVideo(videoFile, user.id) : null;
 
       // Insert application with applying_as field
       const { error } = await supabase
@@ -70,7 +76,9 @@ export default function ScoutApplication() {
           organization_letter_url: letterUrl,
           video_submission_url: videoUrl,
           applying_as: formData.applyingAs,
-        });
+          organization_name: formData.organizationName.trim(),
+          role_title: formData.roleTitle.trim(),
+        } as any);
 
       if (error) throw error;
 
@@ -143,12 +151,22 @@ export default function ScoutApplication() {
 
             <div className="space-y-2">
               <Label htmlFor="sport">{t('scoutApplicationPage.sport')}</Label>
-              <Input
-                id="sport"
-                value={formData.sport}
-                disabled
-                className="bg-muted"
-              />
+              <div className="grid grid-cols-2 gap-2">
+                {["baseball", "softball"].map((sp) => (
+                  <Button key={sp} type="button" className="h-11 capitalize" variant={formData.sport === sp ? "default" : "outline"}
+                    onClick={() => { localStorage.setItem("scoutSport", sp); setFormData({ ...formData, sport: sp }); }}>{sp}</Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="orgName">Organization (school, club or agency) *</Label>
+              <Input id="orgName" value={formData.organizationName} onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })} placeholder="e.g. State University" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="roleTitle">Your role *</Label>
+              <Input id="roleTitle" value={formData.roleTitle} onChange={(e) => setFormData({ ...formData, roleTitle: e.target.value })} placeholder="e.g. Area scout, Recruiting coordinator" />
             </div>
 
             <div className="space-y-3">
@@ -205,13 +223,12 @@ export default function ScoutApplication() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="video">{t('scoutApplicationPage.videoSubmission')} *</Label>
+              <Label htmlFor="video">{t('scoutApplicationPage.videoSubmission')} (optional)</Label>
               <div className="flex items-center gap-2">
                 <Input
                   id="video"
                   type="file"
                   accept=".mp4,.mov,.avi"
-                  required
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file && file.size > 50 * 1024 * 1024) {
@@ -234,7 +251,7 @@ export default function ScoutApplication() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate("/select-sport-scout")}
+                onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/get-started"))}
                 className="flex-1"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
