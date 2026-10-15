@@ -69,7 +69,8 @@ export default function CoachOnboarding() {
 
   useEffect(() => {
     if (roleLoading) return;
-    if (!isCoach) navigate(isScout ? "/onboarding/scout" : "/dashboard", { replace: true });
+    // New coach applicants (from the coach sign-up) fill setup before approval.
+    if (!isCoach && localStorage.getItem("signupRole") !== "coach") navigate(isScout ? "/onboarding/scout" : "/dashboard", { replace: true });
   }, [roleLoading, isCoach, isScout, navigate]);
 
   useEffect(() => {
@@ -178,6 +179,23 @@ export default function CoachOnboarding() {
     try {
       await saveCoachContext(user.id, currentDraft(), { complete: true });
       clearDraftSlot(user.id, DRAFT_SLOT);
+      if (!isCoach) {
+        // Applicant: send the coach application to the owner's existing approval queue.
+        const full = String(user.user_metadata?.full_name ?? "").trim();
+        const [first, ...rest] = full.split(/\s+/);
+        const { data: existing } = await supabase.from("scout_applications").select("id").eq("user_id", user.id).eq("status", "pending").maybeSingle();
+        if (!existing) {
+          const { error } = await supabase.from("scout_applications").insert({
+            user_id: user.id, first_name: first || "Coach", last_name: rest.join(" ") || "-",
+            email: user.email ?? "", sport: localStorage.getItem("scoutSport") || "baseball",
+            applying_as: "coach", organization_name: orgName || null,
+          } as any);
+          if (error) throw error;
+        }
+        localStorage.removeItem("signupRole");
+        navigate("/scout-application-pending", { replace: true });
+        return;
+      }
       setStep(S_DONE);
     } catch (e) {
       toast.error(`Couldn't save your program — ${e instanceof Error ? e.message : String(e)}`);
