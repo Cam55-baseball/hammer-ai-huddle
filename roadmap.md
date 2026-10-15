@@ -1,3 +1,10 @@
+# EMAIL SIGN-IN FIX — 2026-10-15 02:30 UTC
+- Cause: email boxes kept pasted/autofilled spaces (iPhone adds a trailing space) and phone auto-capitalization; the check rejected the space. "+" was always allowed.
+- Fix: every email box in the app trims spaces/invisible characters, lowercases, no autocapitalize/autocorrect, email keyboard; sign-in, reset and sign-up checks share one rule (src/lib/email.ts). 4 tests pass.
+- Proof: phone-size form with " Hammersmodality+demoorg@gmail.com " etc. → cleaned, no "Invalid email address".
+- [ ] OPEN: full password sign-in proof as demoorg/democoach/democollege — private password copies were lost when the work area reset; needs the owner's emailed passwords or OK to reset + resend.
+- Signed in as … line already on Pricing and Staff Plans.
+
 # TEST LOGINS FINAL — 2026-10-14 22:05 UTC
 - Cause: the UPDATED email gave the 16-year-old demo16ss as the test player; the owner's phone stayed signed in as him, so staff plans said "adults 18 and over".
 - Fixed: "[PRIVATE] Hammers test checkouts — FINAL (use these)" sent: player democollege (2005), coach democoach, org admin demoorg; new passwords, each proven by password sign-in; same codes. One-time tool deleted.
