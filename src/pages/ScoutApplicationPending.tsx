@@ -1,4 +1,5 @@
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
+import { BackButton } from "@/components/common/BackButton";
 import { useEffect, useState , useRef} from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -89,6 +90,8 @@ export default function ScoutApplicationPending() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4 pt-[calc(1rem+var(--safe-top))] pb-[calc(1rem+var(--safe-bottom))]">
+      <div className="w-full max-w-md space-y-3">
+      <BackButton fallback="/" />
       <Card className="w-full max-w-md text-center">
         <CardHeader>
           {status === "pending" && (
@@ -171,6 +174,7 @@ export default function ScoutApplicationPending() {
           </Button>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
