@@ -14665,8 +14665,10 @@ export type Database = {
           id: string
           last_name: string
           organization_letter_url: string | null
+          organization_name: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          role_title: string | null
           sport: string
           status: string
           updated_at: string | null
@@ -14681,8 +14683,10 @@ export type Database = {
           id?: string
           last_name: string
           organization_letter_url?: string | null
+          organization_name?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          role_title?: string | null
           sport: string
           status?: string
           updated_at?: string | null
@@ -14697,8 +14701,10 @@ export type Database = {
           id?: string
           last_name?: string
           organization_letter_url?: string | null
+          organization_name?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          role_title?: string | null
           sport?: string
           status?: string
           updated_at?: string | null
