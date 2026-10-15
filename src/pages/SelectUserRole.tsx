@@ -1,5 +1,4 @@
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
-import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -7,23 +6,29 @@ import { Card } from "@/components/ui/card";
 import { User, UserCog, ArrowLeft, Building2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
+/**
+ * The original first sign-up question (Player / Scout-Coach), plus Organization.
+ * Brand-new visitors (signed out) pick here first; the choice decides the rest of sign-up.
+ */
 const SelectUserRole = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { user, session, loading, isAuthStable, signOut } = useAuth();
-
-  useEffect(() => {
-    if (!loading && isAuthStable && !user && !session) {
-      navigate("/auth", { replace: true });
-    }
-  }, [user, session, loading, isAuthStable, navigate]);
+  const { user, loading, signOut } = useAuth();
 
   const handleRoleSelect = (role: 'player' | 'scout' | 'organization') => {
     // Display preference only — real staff/org powers come from the approval queue or verification.
     localStorage.setItem('userRole', role);
-    
+
+    if (!user) {
+      // New visitor: each choice leads to its own sign-up path.
+      if (role === 'organization') navigate('/signup/organization');
+      else if (role === 'scout') navigate('/signup/scout'); // scout application asks scout or coach
+      else navigate('/signup'); // player onboarding (under 13 → parent path)
+      return;
+    }
+
     if (role === 'organization') {
-      navigate('/organization');
+      navigate('/organization/setup');
     } else if (role === 'scout') {
       // Scouts go to sport selection for application
       navigate('/select-sport-scout');
@@ -34,7 +39,7 @@ const SelectUserRole = () => {
   };
 
   const handleBackToSignIn = async () => {
-    await signOut();
+    if (user) await signOut();
     navigate('/auth');
   };
 
@@ -112,9 +117,9 @@ const SelectUserRole = () => {
                   <Building2 className="h-12 w-12 text-primary" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold mb-2">Organization</h2>
+              <h2 className="text-2xl font-bold mb-2">Organization (facility, team, school, academy)</h2>
               <p className="text-muted-foreground mb-6">
-                A team, facility or academy. We verify you before players can join.
+                We verify you before players can join.
               </p>
               <Button size="lg" className="w-full">
                 I run an Organization
