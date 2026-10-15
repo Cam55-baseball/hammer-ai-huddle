@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, CheckCircle2, UserPlus, LogIn } from "lucide-react";
 import { z } from "zod";
+import { emailSchema } from "@/lib/email";
 import { branding } from "@/branding";
 import { AuthLanguageSelector } from "@/components/AuthLanguageSelector";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +24,7 @@ import { Under13Block } from "@/components/auth/Under13Block";
 
 
 const authSchema = z.object({
-  email: z.string().email({ message: "Invalid email address" }),
+  email: emailSchema("Invalid email address"),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
@@ -138,7 +139,7 @@ const Auth = () => {
 
     try {
       if (isForgotPassword) {
-        const validated = z.object({ email: z.string().email() }).parse({ email });
+        const validated = z.object({ email: emailSchema() }).parse({ email });
         const { error } = await resetPassword(validated.email);
 
         if (error) {

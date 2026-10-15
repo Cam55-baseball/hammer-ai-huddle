@@ -1,3 +1,4 @@
+import { isValidEmail, normalizeEmail } from "@/lib/email";
 import { LegalDocLink } from "@/components/legal/LegalDocLink";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
@@ -180,13 +181,13 @@ export default function UnifiedSignupOnboarding() {
 
   const valid = () => {
     const s = screen;
-    if (s === "email" && !z.string().email().safeParse(draft.email).success) return fail("Enter a valid email address.");
+    if (s === "email" && !isValidEmail(draft.email)) return fail("Enter a valid email address.");
     if (s === "password" && draft.password.length < 6) return fail("Use at least 6 characters for your password.");
     if (s === "age") {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.dateOfBirth)) return fail("Enter your date of birth.");
       const y = yearsOldFromDob(draft.dateOfBirth);
       if (y !== null && y < 13) { blockUnder13(); return false; }
-      if (minor && !z.string().email().safeParse(draft.guardianEmail).success) return fail("Enter a valid parent or guardian email.");
+      if (minor && !isValidEmail(draft.guardianEmail)) return fail("Enter a valid parent or guardian email.");
     }
     if (s === "name" && (!draft.firstName.trim() || !draft.lastName.trim())) return fail("Enter your first and last name.");
     if (s === "sport" && (!draft.sport || !draft.position.trim())) return fail("Choose your sport and enter your position.");
