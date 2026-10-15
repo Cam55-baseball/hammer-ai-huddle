@@ -17,7 +17,7 @@ const cors = {
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 
 const CHOICES = new Set(["accepted", "declined", "withdrawn", "signed", "cancelled"]);
-const METHODS = new Set(["checkbox", "typed_signature", "drawn_signature", "toggle", "button", "checkout_checkbox", "updated_terms_screen", "read_confirmation", "notice_acknowledged"]);
+const METHODS = new Set(["checkbox", "typed_signature", "drawn_signature", "toggle", "button", "checkout_checkbox", "updated_terms_screen", "read_confirmation", "notice_acknowledged", "signup_checkbox"]);
 const SLUG = /^[a-z0-9-]{2,64}$/;
 
 Deno.serve(async (req) => {
