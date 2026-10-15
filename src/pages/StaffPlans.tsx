@@ -114,7 +114,10 @@ export default function StaffPlans() {
         <Card className="p-4 space-y-2 border-primary">
           <Badge>Your plan</Badge>
           <p className="text-sm">Plan: {STAFF_PLAN_COPY[status.plan].name}{status.plan === "organization" ? ` · Coach seats: ${status.included_seats} included + ${status.extra_seats} extra` : ""}</p>
-          <Button variant="outline" onClick={() => refresh(true)}>Manage plan</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" className="min-h-11" disabled={!!busy} onClick={() => refresh(true, true)}>{busy === "portal" ? "Opening…" : "Manage my plan"}</Button>
+            {dashboardFor(status.plan) && <Button className="min-h-11" onClick={() => navigate(dashboardFor(status.plan)!)}>{status.plan === "organization" ? "Open Organization dashboard" : "Open Coach Dashboard"}</Button>}
+          </div>
         </Card>
       )}
       {canShowPurchaseUI && mode === "web" && !status?.plan && (
@@ -146,7 +149,13 @@ export default function StaffPlans() {
           )}
         </Card>
       ))}
-      <Button variant="ghost" onClick={() => refresh()}>Check my plan</Button>
+      <Button variant="outline" className="w-full min-h-11" disabled={!!busy} onClick={() => refresh(false, true)}>{busy === "check" ? "Checking…" : "Check my plan"}</Button>
+      {result && (
+        <Card className="p-3 space-y-2" role="status">
+          <p className="text-sm font-medium">Your plan: {result}</p>
+          {dashboardFor(status?.plan ?? null) && <Button className="w-full min-h-11" onClick={() => navigate(dashboardFor(status!.plan)!)}>{status!.plan === "organization" ? "Open Organization dashboard" : "Open Coach Dashboard"}</Button>}
+        </Card>
+      )}
       {msg && <p className="text-sm text-destructive" role="alert">{msg}</p>}
       {needsOrgSetup && <Button className="w-full min-h-11" onClick={() => navigate("/organization/setup")}>Set up your organization</Button>}
     </div>
