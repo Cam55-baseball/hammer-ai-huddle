@@ -41,6 +41,7 @@ import { OwnerEngineSettingsPanel } from "@/components/owner/OwnerEngineSettings
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScoutApplicationCard } from "@/components/ScoutApplicationCard";
+import { OrgVerificationQueue } from "@/components/organization/OrgVerificationCards";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -73,7 +74,7 @@ const sectionLabels: Record<OwnerSection, string> = {
   'builds': 'Builds',
   'users': 'User Management',
   'admin-requests': 'Admin Requests',
-  'scout-applications': 'Scout Applications',
+  'scout-applications': 'Approvals',
   'videos': 'Recent Videos',
   'video-library': 'Video Library Manager',
   'promo-engine': 'Promo Engine',
@@ -1065,74 +1066,52 @@ const OwnerDashboard = () => {
             </Card>
           )}
 
-          {/* Scout Applications Section */}
-          {activeSection === 'scout-applications' && (
-            <Card className="p-5">
-              <Tabs defaultValue="pending" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex">
-                  <TabsTrigger value="pending" className="gap-1">
-                    Pending
-                    <Badge variant="secondary" className="ml-1 h-5 px-1.5">
-                      {scoutApplications.filter(a => a.status === 'pending').length}
-                    </Badge>
-                  </TabsTrigger>
-                  <TabsTrigger value="approved">Approved</TabsTrigger>
-                  <TabsTrigger value="rejected">Rejected</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="pending" className="space-y-3 mt-4">
-                  {scoutApplications.filter(a => a.status === 'pending').length === 0 ? (
-                    <div className="py-8 text-center text-muted-foreground">
-                      <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                      <p>No pending applications</p>
-                    </div>
-                  ) : (
-                    scoutApplications
-                      .filter(a => a.status === 'pending')
-                      .map(app => (
-                        <ScoutApplicationCard 
-                          key={app.id} 
-                          application={app}
-                          onUpdate={loadDashboardData}
-                        />
-                      ))
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="approved" className="space-y-3 mt-4">
-                  {scoutApplications.filter(a => a.status === 'approved').length === 0 ? (
-                    <p className="py-8 text-center text-muted-foreground">No approved applications</p>
-                  ) : (
-                    scoutApplications
-                      .filter(a => a.status === 'approved')
-                      .map(app => (
-                        <ScoutApplicationCard 
-                          key={app.id} 
-                          application={app}
-                          onUpdate={loadDashboardData}
-                        />
-                      ))
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="rejected" className="space-y-3 mt-4">
-                  {scoutApplications.filter(a => a.status === 'rejected').length === 0 ? (
-                    <p className="py-8 text-center text-muted-foreground">No rejected applications</p>
-                  ) : (
-                    scoutApplications
-                      .filter(a => a.status === 'rejected')
-                      .map(app => (
-                        <ScoutApplicationCard 
-                          key={app.id} 
-                          application={app}
-                          onUpdate={loadDashboardData}
-                        />
-                      ))
-                  )}
-                </TabsContent>
-              </Tabs>
-            </Card>
-          )}
+          {/* Approvals: scouts, coaches and organizations in one place */}
+          {activeSection === 'scout-applications' && (() => {
+            const list = (kind: 'scout' | 'coach') => {
+              const apps = scoutApplications.filter(a => (a.applying_as ?? 'scout') === kind);
+              const by = (s: string) => apps.filter(a => a.status === s);
+              return (
+                <Tabs defaultValue="pending" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex">
+                    <TabsTrigger value="pending" className="gap-1">
+                      Pending
+                      <Badge variant="secondary" className="ml-1 h-5 px-1.5">{by('pending').length}</Badge>
+                    </TabsTrigger>
+                    <TabsTrigger value="approved">Approved</TabsTrigger>
+                    <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                  </TabsList>
+                  {(['pending', 'approved', 'rejected'] as const).map(s => (
+                    <TabsContent key={s} value={s} className="space-y-3 mt-4">
+                      {by(s).length === 0 ? (
+                        <div className="py-8 text-center text-muted-foreground">
+                          <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                          <p>No {s} {kind} applications</p>
+                        </div>
+                      ) : by(s).map(app => (
+                        <ScoutApplicationCard key={app.id} application={app} onUpdate={loadDashboardData} />
+                      ))}
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              );
+            };
+            const pend = (k: string) => scoutApplications.filter(a => (a.applying_as ?? 'scout') === k && a.status === 'pending').length;
+            return (
+              <Card className="p-5">
+                <Tabs defaultValue="scouts" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="scouts" className="gap-1">Scouts <Badge variant="secondary" className="ml-1 h-5 px-1.5">{pend('scout')}</Badge></TabsTrigger>
+                    <TabsTrigger value="coaches" className="gap-1">Coaches <Badge variant="secondary" className="ml-1 h-5 px-1.5">{pend('coach')}</Badge></TabsTrigger>
+                    <TabsTrigger value="orgs">Organizations</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="scouts">{list('scout')}</TabsContent>
+                  <TabsContent value="coaches">{list('coach')}</TabsContent>
+                  <TabsContent value="orgs"><OrgVerificationQueue /></TabsContent>
+                </Tabs>
+              </Card>
+            );
+          })()}
 
           {/* Videos Section */}
           {activeSection === 'videos' && (

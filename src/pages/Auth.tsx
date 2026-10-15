@@ -12,7 +12,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, CheckCircle2, UserPlus, LogIn } from "lucide-react";
 import { z } from "zod";
-import { RoleEntryLinks } from "@/components/auth/RoleEntryLinks";
 import { emailSchema } from "@/lib/email";
 import { branding } from "@/branding";
 import { AuthLanguageSelector } from "@/components/AuthLanguageSelector";
@@ -578,7 +577,6 @@ const Auth = () => {
               >
                 Landing Page
               </Button>
-              <RoleEntryLinks className="mt-4" />
             </div>
           ) : !isForgotPassword && !isLogin ? (
             <div className="mt-6">
