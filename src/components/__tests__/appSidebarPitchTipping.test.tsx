@@ -18,6 +18,8 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ signOut: vi.fn() }) }));
+vi.mock("@/hooks/useOrganization", () => ({ useOrganization: () => ({ myOrgs: { data: [] } }) }));
+vi.mock("@/hooks/usePlayerOrganization", () => ({ usePlayerOrganization: () => ({ membership: null, roleInOrg: "player" }) }));
 vi.mock("@/hooks/useOwnerAccess", () => ({ useOwnerAccess: () => ({ isOwner: accessState.isOwner }) }));
 vi.mock("@/hooks/useAdminAccess", () => ({ useAdminAccess: () => ({ isAdmin: accessState.isAdmin }) }));
 vi.mock("@/hooks/useScoutAccess", () => ({ useScoutAccess: () => ({ isScout: false, isCoach: false }) }));
