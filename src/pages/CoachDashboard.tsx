@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { SendAthleteRequest } from "@/components/connections/SendAthleteRequest";
 import { CoachProgramCard } from "@/components/coach/CoachProgramCard";
 import { TeamDisciplineSummary } from "@/components/coach/TeamDisciplineSummary";
 import { CoachWeeklySummary } from "@/components/coach/CoachWeeklySummary";
@@ -267,6 +268,7 @@ export default function CoachDashboard() {
             Who needs help · Why · What to run today
           </p>
         </div>
+        <SendAthleteRequest />
         <CoachProgramCard />
         <CoachWeeklySummary />
         <TeamDisciplineSummary />
