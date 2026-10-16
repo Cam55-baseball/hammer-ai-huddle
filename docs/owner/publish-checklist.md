@@ -88,3 +88,13 @@ Plain-English list of what must be true before publishing. Current answer: **Rea
 - **Switches** — Coach/Org plans (`staff_plan_gate`, in the settings table) and Under-13 (`under13_parent_program`, in the feature-switch list). Both are ON.
 - **Stripe codes** — every test code is one-time, limited to one product, and expires in 7 days.
 - **Before publishing:** finish the 3 test checkouts and the under-13 test checkout, and confirm each one is canceled afterwards.
+
+## Changes 2026-10-14 → 10-16 (how to use, how to check)
+- **Restored sign-up question** — Sign up → "Choose Your Role": Player, Scout/Coach, or Organization. Check: each choice opens its own sign-up.
+- **Coaches without approval** — an adult (18+) is a full coach right after coach setup. Check: no "waiting for approval" step; coach tools still need the Hammers Coach plan.
+- **Organizations active immediately** — Check: after sign-up the org shows "Active — you can add athletes and staff".
+- **Scouts-only approvals** — Owner dashboard → Approvals shows only the Scouts queue. Check: approve/reject works as before.
+- **Request buttons** — Coach Dashboard "Add a player" and Organization dashboard "Add athlete" (search and send, or share team code/QR). Check: the player sees the request in Requests and taps ✓ Accept; the coach list says "Connected"; the athlete appears on the roster.
+- **Plan buttons** — Staff Plans "Check my plan" shows the plan and seats with a button to the right dashboard; "Manage my plan" opens Stripe's billing page (new tab inside the preview).
+- **Side-menu dashboard entries** — "Organization dashboard" and "Coach Dashboard" right under Dashboard on every screen with the menu. Check: from Dashboard, open the menu and tap it.
+- **Test purchases:** all owner test subscriptions found this week are cancelled.

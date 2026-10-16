@@ -96,3 +96,10 @@ Test org (Demo Org): subscription active → app plan = Organization, status act
 - Guest mode (390 px, as test coach): PASS. Under-13 without the parent-permission box: Analyze stays disabled; with the box ticked it runs. A full analysis ran on a throwaway clip: result shows only on that screen, headed "Guest result — not saved", every value labeled ("Form score (0–100)"). The guest function writes only the coach's own usage/cost row — no player, no video, no measurements are saved. The AI honestly reported the clip was a test pattern instead of inventing a reading.
 - Cleanup: test checks deleted, test coach–player connections ended, waiver test used the owner's +demoparent address. The coach's one usage row stays by design (cost tracking).
 - All phone checks from the earlier list are now done.
+
+## VV2 — 2026-10-16: owner's test purchases, side menu, wrap-up
+**Stripe before/after (only new items):**
+- Before: 2 active $0 Organization subscriptions bought this week with the 100% test code — Hammers Organization $1,000 + 1 Extra Coach Seat $150, total charged $0 each. One from the "Hammer Org" account (Oct 15, org "Hammers Org"), one from the "H M" account (Oct 16, org "HM"). Both showed as active in the app (Organization, 5 + 1 seats).
+- After: both cancelled immediately (Oct 16). Nothing renews or charges. No products, prices or codes were changed.
+- Not found in Stripe: a new player purchase (democollege, Complete Pitcher), a new coach purchase (democoach, Hammers Coach), any demoorg purchase, or an under-13 parent sign-up (no new under-13 account exists). Nothing to cancel or flag for those.
+**Side menu:** "Organization dashboard" (org admins and staff) and "Coach Dashboard" (coaches) now sit right under Dashboard. Phone proof: Org dashboard → Dashboard → menu → Organization dashboard → back on the Org dashboard (screenshots in walkthroughs/side-menu/). Coach path not shown — no coach session available here.
