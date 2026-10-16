@@ -23287,6 +23287,17 @@ export type Database = {
         Args: { _athlete: string; _scope: string; _viewer: string }
         Returns: boolean
       }
+      search_athletes_to_connect: {
+        Args: { _organization_id?: string; _q: string }
+        Returns: {
+          full_name: string
+          grad_year: number
+          id: string
+          request_status: string
+          state: string
+          under_18: boolean
+        }[]
+      }
       send_coach_message: {
         Args: { _athlete: string; _body: string }
         Returns: string

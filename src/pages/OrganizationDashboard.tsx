@@ -1,4 +1,5 @@
 import { SponsorshipsCard } from "@/components/organization/SponsorshipsCard";
+import { SendAthleteRequest } from "@/components/connections/SendAthleteRequest";
 import { TeamDisciplineSummary } from "@/components/coach/TeamDisciplineSummary";
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -46,6 +47,8 @@ export default function OrganizationDashboard() {
         </div>
 
         {activeOrg ? (
+          <>
+          <SendAthleteRequest organizationId={activeOrg.id} inviteCode={activeOrg.invite_code} orgName={activeOrg.name} />
           <Tabs defaultValue="overview" className="space-y-6">
             <TabsList className="w-full justify-start overflow-x-auto">
               <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -120,6 +123,7 @@ export default function OrganizationDashboard() {
               <OrganizationRegistration existingOrg={activeOrg} />
             </TabsContent>
           </Tabs>
+          </>
         ) : membership && organizationId ? (
           <PlayerOrganizationView
             organizationId={organizationId}

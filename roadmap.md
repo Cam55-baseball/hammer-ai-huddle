@@ -2193,3 +2193,9 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - [x] C. Alternative button on every exercise (incl. PAP), busy-gym test at phone size — done 2026-10-07: same-or-lower risk check, busy-gym chips, dumbbell/kettlebell equivalents for every barbell/trap-bar lift (2 of 97 left without one), swap proved as test player at 390, test plans removed
 - [x] D. Windmill program: optimize, stress test, switch on (live-proved on hidden softball pitcher at 360/390; fixed builder reading sport from athlete_context — profiles has no sport column, so softball players were built as baseball)
 - [x] Power Primer bests save to the player's account (wk_session_logs metrics.kind pap_speed, record-only); device copy kept as fallback — 2026-10-07, save/read proved as test player
+
+## Request buttons + "approved coach" wording (2026-10-16)
+- [x] Coach Dashboard "Add a player" (search → send request → status list)
+- [x] Organization dashboard "Add athlete" (search + send, or team code / link / QR)
+- [x] Wording: team creation message and Coach plan purchase message (create-staff-checkout redeployed)
+- [ ] iPhone-size proof as test coach / player / org admin / athlete — blocked: no way to sign in as those test accounts from here

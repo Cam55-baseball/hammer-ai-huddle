@@ -30,3 +30,11 @@ describe("staff plan eligibility", () => {
     expect(staffEligibility({ ...base, plan: "organization", isOrgAdmin: true, parentControlled: true }).ok).toBe(false);
   });
 });
+
+describe('coach plan message (owner 2026-10-16: no coach approvals)', () => {
+  it('never tells a non-coach to wait for approval', () => {
+    const r = staffEligibility({ dob: '1990-01-01', plan: 'coach', isCoach: false, isOrgAdmin: false, isOwnerOrAdmin: false, now: new Date('2026-10-16') } as any);
+    expect(r.ok).toBe(false);
+    expect((r as any).error).not.toMatch(/approv/i);
+  });
+});
