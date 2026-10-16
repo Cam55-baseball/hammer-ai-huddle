@@ -44,6 +44,7 @@ export default function ScoutApplication() {
       return;
     }
 
+    if (formData.applyingAs === "coach") { localStorage.setItem("signupRole", "coach"); navigate("/onboarding/coach"); return; }
     if (!formData.sport || !formData.organizationName.trim() || !formData.roleTitle.trim()) {
       toast({ title: "Missing details", description: "Choose your sport and enter your organization and role.", variant: "destructive" });
       return;
@@ -195,6 +196,17 @@ export default function ScoutApplication() {
                 </div>
               </RadioGroup>
             </div>
+
+            {formData.applyingAs === "coach" && (
+              // Owner 2026-10-16: coaches need no approval — go straight to coach setup.
+              <div className="space-y-2 rounded-md bg-muted p-3">
+                <p className="text-sm">Coaches don't need approval. Set up your coach profile, then pick your Coach plan.</p>
+                <Button type="button" className="h-11 w-full"
+                  onClick={() => { localStorage.setItem("signupRole", "coach"); navigate("/onboarding/coach"); }}>
+                  Continue to coach setup
+                </Button>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="letter">{t('scoutApplicationPage.organizationLetter')} *</Label>

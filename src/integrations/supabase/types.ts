@@ -22612,6 +22612,7 @@ export type Database = {
         }
       }
       claim_build_purchases: { Args: never; Returns: number }
+      claim_coach_status: { Args: never; Returns: Json }
       claim_tcs_chunk: {
         Args: { _run_id: string }
         Returns: {

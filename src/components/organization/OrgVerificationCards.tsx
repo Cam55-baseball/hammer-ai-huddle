@@ -8,21 +8,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ShieldCheck } from 'lucide-react';
 
-const STATUS_LABEL: Record<string, string> = {
-  unverified: 'Not verified yet — players can’t join until verified',
-  pending: 'Waiting for review',
-  verified: 'Verified',
-  rejected: 'Not approved — fix the details and send again',
-};
-
-/** Org owner: send the organization for verification. */
+/** Owner 2026-10-16: organizations are active right away; no owner review. */
 export function OrgVerificationForm({ org }: { org: any }) {
   const qc = useQueryClient();
   const [f, setF] = useState({
     address: org.address ?? '', website: org.website ?? '', official_email: org.official_email ?? '',
     phone: org.phone ?? '', admin_role_title: org.admin_role_title ?? '',
   });
-  const status: string = org.verification_status ?? 'unverified';
   const submit = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.rpc('submit_org_for_verification', {
@@ -31,27 +23,27 @@ export function OrgVerificationForm({ org }: { org: any }) {
       });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success('Sent for review'); qc.invalidateQueries(); },
-    onError: (e: any) => toast.error(e.message ?? 'Could not send'),
+    onSuccess: () => { toast.success('Details saved'); qc.invalidateQueries(); },
+    onError: (e: any) => toast.error(e.message ?? 'Could not save'),
   });
   const ready = f.address && f.official_email.includes('@') && f.admin_role_title;
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-base"><ShieldCheck className="h-5 w-5 text-primary" /> Verification</CardTitle>
-        <p className="text-sm">Status: <span className="font-medium">{STATUS_LABEL[status] ?? status}</span></p>
+        <CardTitle className="flex items-center gap-2 text-base"><ShieldCheck className="h-5 w-5 text-primary" /> Organization details</CardTitle>
+        <p className="text-sm">Status: <span className="font-medium">Active — you can add athletes and staff</span></p>
       </CardHeader>
-      {status !== 'verified' && status !== 'pending' && (
+      {!org.official_email && (
         <CardContent className="space-y-2">
           <Input placeholder="Street address" value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} />
           <Input placeholder="Website (optional)" value={f.website} onChange={(e) => setF({ ...f, website: e.target.value })} />
           <Input type="email" placeholder="Official email (on your organization's domain)" value={f.official_email} onChange={(e) => setF({ ...f, official_email: e.target.value })} />
           <Input placeholder="Phone (optional)" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
           <Input placeholder="Your title (e.g. Director)" value={f.admin_role_title} onChange={(e) => setF({ ...f, admin_role_title: e.target.value })} />
-          <Button className="w-full" disabled={!ready || submit.isPending} onClick={() => submit.mutate()}>Send for review</Button>
+          <Button className="w-full" disabled={!ready || submit.isPending} onClick={() => submit.mutate()}>Save details</Button>
         </CardContent>
       )}
-      {org.official_email && !org.email_verified_at && status !== 'verified' && <EmailCodeBox org={org} />}
+      {org.official_email && !org.email_verified_at && <EmailCodeBox org={org} />}
       {org.email_verified_at && <CardContent className="pt-0 text-sm text-muted-foreground">Official email confirmed.</CardContent>}
     </Card>
   );

@@ -1096,19 +1096,11 @@ const OwnerDashboard = () => {
                 </Tabs>
               );
             };
-            const pend = (k: string) => scoutApplications.filter(a => (a.applying_as ?? 'scout') === k && a.status === 'pending').length;
+            // Owner 2026-10-16: only scouts need approval; coaches and organizations are active right away.
             return (
-              <Card className="p-5">
-                <Tabs defaultValue="scouts" className="space-y-4">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="scouts" className="gap-1">Scouts <Badge variant="secondary" className="ml-1 h-5 px-1.5">{pend('scout')}</Badge></TabsTrigger>
-                    <TabsTrigger value="coaches" className="gap-1">Coaches <Badge variant="secondary" className="ml-1 h-5 px-1.5">{pend('coach')}</Badge></TabsTrigger>
-                    <TabsTrigger value="orgs">Organizations</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="scouts">{list('scout')}</TabsContent>
-                  <TabsContent value="coaches">{list('coach')}</TabsContent>
-                  <TabsContent value="orgs"><OrgVerificationQueue /></TabsContent>
-                </Tabs>
+              <Card className="p-5 space-y-3">
+                <h2 className="text-lg font-semibold">Scout applications</h2>
+                {list('scout')}
               </Card>
             );
           })()}

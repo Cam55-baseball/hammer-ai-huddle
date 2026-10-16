@@ -180,20 +180,15 @@ export default function CoachOnboarding() {
       await saveCoachContext(user.id, currentDraft(), { complete: true });
       clearDraftSlot(user.id, DRAFT_SLOT);
       if (!isCoach) {
-        // Applicant: send the coach application to the owner's existing approval queue.
-        const full = String(user.user_metadata?.full_name ?? "").trim();
-        const [first, ...rest] = full.split(/\s+/);
-        const { data: existing } = await supabase.from("scout_applications").select("id").eq("user_id", user.id).eq("status", "pending").maybeSingle();
-        if (!existing) {
-          const { error } = await supabase.from("scout_applications").insert({
-            user_id: user.id, first_name: first || "Coach", last_name: rest.join(" ") || "-",
-            email: user.email ?? "", sport: localStorage.getItem("scoutSport") || "baseball",
-            applying_as: "coach", organization_name: orgName || null,
-          } as any);
-          if (error) throw error;
+        // Owner 2026-10-16: coaches get full coach status right after setup (adults only, no approval).
+        const { data, error } = await supabase.rpc("claim_coach_status" as any);
+        if (error) throw error;
+        if (!(data as any)?.ok) {
+          toast.error("Coach accounts are for adults 18 and over.");
+          return;
         }
         localStorage.removeItem("signupRole");
-        navigate("/scout-application-pending", { replace: true });
+        window.location.assign("/staff-plans"); // full reload so the new coach role is picked up
         return;
       }
       setStep(S_DONE);

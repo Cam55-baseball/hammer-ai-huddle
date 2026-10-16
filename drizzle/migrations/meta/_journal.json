@@ -470,6 +470,13 @@
       "when": 1792031935820,
       "tag": "0066_scout_application_org_role",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1792119284332,
+      "tag": "0067_coach_instant_org_active",
+      "breakpoints": true
     }
   ]
 }
