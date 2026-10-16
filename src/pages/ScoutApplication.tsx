@@ -44,6 +44,7 @@ export default function ScoutApplication() {
       return;
     }
 
+    if (formData.applyingAs === "coach") { localStorage.setItem("signupRole", "coach"); navigate("/onboarding/coach"); return; }
     if (!formData.sport || !formData.organizationName.trim() || !formData.roleTitle.trim()) {
       toast({ title: "Missing details", description: "Choose your sport and enter your organization and role.", variant: "destructive" });
       return;
