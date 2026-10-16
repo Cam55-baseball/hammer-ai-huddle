@@ -1,3 +1,12 @@
+# NO APPROVALS EXCEPT SCOUTS — 2026-10-16 03:20 UTC
+- Coaches: full coach status right after coach setup (adults 18+ only); "Scout/Coach → Coach" goes straight to coach setup; pending coach applications auto-approved (0 were waiting). Child-safety rules unchanged.
+- Organizations: active right away; can add athletes and staff; pending ones auto-activated (0 were waiting); verification notes removed.
+- Approvals in owner dashboard: Scouts only.
+- legal-consent redeployed; new coach's Terms + Privacy saved. 20 staff accounts never had Terms saved; the existing agreement screen asks them once at next sign-in.
+- Proof: docs/owner/walkthroughs/no-approvals/. Test accounts removed.
+- [ ] Not proven: landing on Coach Dashboard after paying (Stripe is live; no real payment made).
+Ready for the owner to try: yes.
+
 # STAFF SIGN-UP PATHS — 2026-10-15 02:55 UTC
 - Missing: sign-up only had a player path; coach/scout/org pages existed but nothing led to them, and coach setup required an already-approved coach.
 - Built: "Who are you?" (/get-started) with 5 choices; Coaches / Scouts & Recruiters / Organizations links on home + sign-in; adult account step (/signup/:role); coach setup → application to owner queue → "Application received"; scout application (sport, organization, role, letter) → queue; org register → verification form + email code → pending note → Organization plan.
