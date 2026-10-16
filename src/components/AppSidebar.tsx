@@ -1,3 +1,5 @@
+import { useOrganization } from '@/hooks/useOrganization';
+import { usePlayerOrganization } from '@/hooks/usePlayerOrganization';
 import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
 import { useState, useEffect, useMemo } from "react";
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
@@ -98,6 +100,9 @@ export function AppSidebar() {
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const { isScout, isCoach, loading: staffRoleLoading, roleCheckFailed } = useScoutAccess();
+  const { myOrgs } = useOrganization();
+  const { membership: orgMembership, roleInOrg } = usePlayerOrganization();
+  const isOrgStaff = (myOrgs.data?.length ?? 0) > 0 || (!!orgMembership && roleInOrg !== 'player');
   // Purchased modules stay navigable for coaches and scouts too; never tease unowned ones.
   const { hasPlayerAccess } = usePlayerModuleAccess();
   const { visible: rankingsVisible, loading: rankingsVisibilityLoading } = useRankingsVisibility();
@@ -182,6 +187,9 @@ export function AppSidebar() {
 
   const mainNavItems = [
     { title: t('navigation.dashboard'), url: "/dashboard", icon: Home },
+    // Always-visible way back to the staff dashboards (owner request 2026-10-16).
+    ...(isOrgStaff ? [{ title: 'Organization dashboard', url: "/organization", icon: Building2 }] : []),
+    ...(isCoach ? [{ title: t('navigation.coachDashboard', 'Coach Dashboard'), url: "/coach-dashboard", icon: UserPlus }] : []),
     ...(isCoach ? [{ title: t('navigation.coachConsole', 'Coach Console'), url: "/coach/console", icon: Users }] : []),
     ...(isCoach ? [{ title: t('navigation.orgDigest', 'Org Digest'), url: "/coach/digest", icon: CalendarDays }] : []),
     ...(!staffRoleLoading && !roleCheckFailed && !(isCoach || isScout) && (hasAnySubscription(modules) || isOwner || isAdmin) ? [{ title: 'My Daily Game Plan', url: "/my-daily-game-plan", icon: ListChecks }] : []),
@@ -193,7 +201,6 @@ export function AppSidebar() {
     { title: t('navigation.bounceBackBay'), url: "/bounce-back-bay", icon: HeartPulse },
     { title: t('navigation.weather'), url: "/weather", icon: Cloud },
     ...(isScout ? [{ title: t('navigation.scoutDashboard'), url: "/scout-dashboard", icon: UserPlus }] : []),
-    ...(isCoach ? [{ title: t('navigation.coachDashboard', 'Coach Dashboard'), url: "/coach-dashboard", icon: UserPlus }] : []),
   ];
 
 
