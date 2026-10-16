@@ -484,6 +484,13 @@
       "when": 1792180907775,
       "tag": "0068_request_buttons_search_and_coach_wording",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1792181072735,
+      "tag": "0069_search_athletes_status_reflects_connection",
+      "breakpoints": true
     }
   ]
 }
