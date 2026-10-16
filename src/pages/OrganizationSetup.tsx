@@ -16,16 +16,13 @@ export default function OrganizationSetup() {
       <h1 className="text-2xl font-bold">Set up your organization</h1>
       {!org ? (
         <>
-          <p className="text-sm text-muted-foreground">Step 2 of 3: name your organization. Next you'll send it for verification.</p>
+          <p className="text-sm text-muted-foreground">Step 2 of 3: name your organization.</p>
           <OrganizationRegistration />
         </>
       ) : (
         <>
-          <p className="text-sm text-muted-foreground">Step 3 of 3: tell us how to verify <span className="font-medium text-foreground">{org.name}</span>.</p>
+          <p className="text-sm text-muted-foreground">Step 3 of 3: <span className="font-medium text-foreground">{org.name}</span> is active. You can add athletes and staff now. Add your contact details below if you like.</p>
           <OrgVerificationForm org={org} />
-          {org.verification_status !== "verified" && (
-            <p className="rounded-md bg-muted p-3 text-sm" role="note">You can set up staff and teams now; athletes can be added once your organization is verified.</p>
-          )}
         </>
       )}
       <Button className="min-h-11 w-full" variant={org ? "default" : "outline"} onClick={() => navigate("/staff-plans")}>
