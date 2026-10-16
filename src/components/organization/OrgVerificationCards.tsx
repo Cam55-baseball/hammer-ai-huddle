@@ -43,7 +43,7 @@ export function OrgVerificationForm({ org }: { org: any }) {
           <Button className="w-full" disabled={!ready || submit.isPending} onClick={() => submit.mutate()}>Save details</Button>
         </CardContent>
       )}
-      {org.official_email && !org.email_verified_at && status !== 'verified' && <EmailCodeBox org={org} />}
+      {org.official_email && !org.email_verified_at && <EmailCodeBox org={org} />}
       {org.email_verified_at && <CardContent className="pt-0 text-sm text-muted-foreground">Official email confirmed.</CardContent>}
     </Card>
   );
