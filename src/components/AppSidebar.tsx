@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
 import { isRetiredRoute } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles, BarChart3, Flame, Building2, Gamepad2, Library, Crown, Bell, Archive, ClipboardList, Camera, Activity, ListChecks } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles, BarChart3, Flame, Building2, Gamepad2, Library, Crown, Bell, Archive, ClipboardList, Camera, Activity, ListChecks, Inbox } from "lucide-react";
 import { hasAnySubscription } from "@/utils/tierAccess";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -19,6 +19,7 @@ import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useVaultPendingStatus } from "@/hooks/useVaultPendingStatus";
+import { usePendingRequests } from "@/hooks/usePendingRequests";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveTier } from "@/utils/tierAccess";
@@ -109,6 +110,7 @@ export function AppSidebar() {
   const { modules } = useSubscription();
   const { retired: programsRetired } = useProgramsRetired();
   const { hasPendingItems, pendingCount } = useVaultPendingStatus();
+  const { pendingCount: pendingRequestCount } = usePendingRequests();
   const { isSoftball } = useSportTheme();
   const [ownerProfile, setOwnerProfile] = useState<OwnerProfile | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -194,6 +196,9 @@ export function AppSidebar() {
     ...(isCoach ? [{ title: t('navigation.orgDigest', 'Org Digest'), url: "/coach/digest", icon: CalendarDays }] : []),
     ...(!staffRoleLoading && !roleCheckFailed && !(isCoach || isScout) && (hasAnySubscription(modules) || isOwner || isAdmin) ? [{ title: 'My Daily Game Plan', url: "/my-daily-game-plan", icon: ListChecks }] : []),
     { title: t('navigation.calendar'), url: "/calendar", icon: CalendarDays },
+    // Always-visible Requests inbox with a waiting-count badge, so a coach or
+    // organization request is impossible to miss (owner request 2026-10-17).
+    { title: t('navigation.requests', 'Requests'), url: "/requests", icon: Inbox, badge: pendingRequestCount },
     { title: 'The General', url: '/progress', icon: BarChart3 },
     ...(hasPlayerAccess ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
     ...(((!rankingsVisibilityLoading && rankingsVisible) || isOwner || isAdmin) ? [{ title: t('navigation.rankings'), url: "/rankings", icon: Trophy }] : []),
@@ -665,6 +670,11 @@ export function AppSidebar() {
                     {isActive(item.url) && <span className="sidebar-active-indicator" />}
                     <item.icon className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
                     <span className="transition-colors duration-200">{item.title}</span>
+                    {'badge' in item && (item as any).badge > 0 && (
+                      <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                        {(item as any).badge > 9 ? '9+' : (item as any).badge}
+                      </span>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
