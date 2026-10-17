@@ -6,8 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Check, X, Users, Star, UserPlus, Ban } from 'lucide-react';
-import { useState } from 'react';
+import { Check, X, Users, Star, UserPlus, Ban, Link2Off, Settings } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useCoachConnections, COACH_CONNECTIONS_KEY } from '@/hooks/useCoachConnections';
 import { FollowRequestsPanel } from '@/components/FollowRequestsPanel';
 import { CoachSearchConnect } from '@/components/connections/CoachSearchConnect';
 import { FolderPermissionMatrix } from '@/components/connections/FolderPermissionMatrix';
@@ -52,6 +55,53 @@ export default function MyConnections() {
   const qc = useQueryClient();
   const [showSearch, setShowSearch] = useState(false);
   const [blockTarget, setBlockTarget] = useState<{ id: string; name: string } | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [params, setParams] = useSearchParams();
+  // Old links land on the matching section: /my-followers → Followers, /requests → Requests.
+  const defaultTab = location.pathname === '/my-followers' ? 'followers' : 'requests';
+  const tab = params.get('tab') ?? defaultTab;
+  const setTab = (v: string) => { const n = new URLSearchParams(params); n.set('tab', v); setParams(n, { replace: true }); };
+
+  // Followers (the old My Followers module): scouts/coaches linked through follows.
+  const followers = useCoachConnections();
+  // Following: people this account follows (for scouts and coaches).
+  const following = useQuery({
+    queryKey: ['my-following', user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('scout_follows')
+        .select('id, player_id, status, created_at')
+        .eq('scout_id', user!.id)
+        .in('status', ['accepted', 'pending'])
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      const ids = (data ?? []).map((r: any) => r.player_id);
+      if (ids.length === 0) return [] as { id: string; name: string; avatar: string | null; status: string }[];
+      const { data: profs } = await supabase.from('profiles').select('id, full_name, avatar_url').in('id', ids);
+      const m = new Map((profs ?? []).map((p: any) => [p.id, p]));
+      return (data ?? []).map((r: any) => ({
+        id: r.id,
+        name: (m.get(r.player_id) as any)?.full_name ?? 'Player',
+        avatar: (m.get(r.player_id) as any)?.avatar_url ?? null,
+        status: r.status as string,
+      }));
+    },
+  });
+  // A follow approved on the Requests tab must show up here right away.
+  useEffect(() => {
+    if (tab === 'followers') { followers.refetch(); following.refetch(); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+  const removeFollower = useMutation({
+    mutationFn: async (followId: string) => {
+      const { error } = await supabase.from('scout_follows').update({ status: 'rejected' }).eq('id', followId).eq('player_id', user!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('Removed — their access is off now'); qc.invalidateQueries({ queryKey: [COACH_CONNECTIONS_KEY] }); },
+    onError: () => toast.error('Could not remove'),
+  });
 
   const reqs = useQuery({
     queryKey: ['my-requests', user?.id],
@@ -176,6 +226,14 @@ export default function MyConnections() {
           <CoachSearchConnect onRequestSent={() => { refresh(); setShowSearch(false); }} />
         )}
 
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="requests">Requests{waiting.length > 0 ? ` (${waiting.length})` : ''}</TabsTrigger>
+            <TabsTrigger value="connections">Coaches</TabsTrigger>
+            <TabsTrigger value="followers">Followers</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="requests" className="space-y-4">
         {/* Scout follow requests (the old followers-module inbox) */}
         <FollowRequestsPanel />
 
@@ -203,6 +261,9 @@ export default function MyConnections() {
           </CardContent>
         </Card>
 
+          </TabsContent>
+
+          <TabsContent value="connections" className="space-y-4">
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base">My coaches</CardTitle></CardHeader>
           <CardContent className="space-y-2">
@@ -236,6 +297,9 @@ export default function MyConnections() {
 
         {/* What each coach can see (from the old followers module) */}
         {coachList.length > 0 && <FolderPermissionMatrix />}
+          </TabsContent>
+
+          <TabsContent value="requests" className="mt-4 space-y-4">
 
         {aboutChild.length > 0 && (
           <Card>
@@ -278,6 +342,64 @@ export default function MyConnections() {
             </CardContent>
           </Card>
         )}
+          </TabsContent>
+
+          <TabsContent value="followers" className="space-y-4">
+            <Card>
+              <CardHeader className="pb-2"><CardTitle className="text-base">Followers ({(followers.data ?? []).filter((f) => f.status === 'accepted').length})</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                {followers.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> :
+                  (followers.data ?? []).filter((f) => f.status === 'accepted').length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No followers yet.</p>
+                ) : (followers.data ?? []).filter((f) => f.status === 'accepted').map((f) => (
+                  <div key={f.id} className="flex items-center justify-between gap-2 rounded-lg border p-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <Avatar name={f.coach_name} url={f.coach_avatar} />
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{f.coach_name}</p>
+                        <p className="text-xs text-muted-foreground">{f.relationship_type === 'linked' ? 'Linked coach' : 'Follower'}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => removeFollower.mutate(f.id)} disabled={removeFollower.isPending}>
+                        <Link2Off className="mr-1 h-3.5 w-3.5" /> Remove
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setBlockTarget({ id: f.coach_id, name: f.coach_name })}>
+                        <Ban className="mr-1 h-3.5 w-3.5" /> Block
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                {(followers.data ?? []).filter((f) => f.status === 'pending' && f.initiated_by === 'player').map((f) => (
+                  <div key={f.id} className="flex items-center gap-3 rounded-lg border p-3">
+                    <Avatar name={f.coach_name} url={f.coach_avatar} />
+                    <p className="flex-1 truncate text-sm">{f.coach_name}</p>
+                    <Badge variant="outline">Waiting for answer</Badge>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {(following.data ?? []).length > 0 && (
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-base">Following ({following.data!.length})</CardTitle></CardHeader>
+                <CardContent className="space-y-2">
+                  {following.data!.map((f) => (
+                    <div key={f.id} className="flex items-center gap-3 rounded-lg border p-3">
+                      <Avatar name={f.name} url={f.avatar} />
+                      <p className="flex-1 truncate font-medium">{f.name}</p>
+                      <Badge variant={f.status === 'accepted' ? 'secondary' : 'outline'}>{f.status === 'accepted' ? 'Following' : 'Waiting for answer'}</Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            <Button variant="outline" className="w-full" onClick={() => navigate('/relationships/settings')}>
+              <Settings className="mr-1 h-4 w-4" /> Manage who has access
+            </Button>
+          </TabsContent>
+        </Tabs>
 
         {blockTarget && (
           <BlockUserDialog
