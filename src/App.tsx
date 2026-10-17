@@ -94,6 +94,7 @@ const ProfileSetup = lazyWithRetry(() => import("./pages/ProfileSetup"));
 const Activate = lazyWithRetry(() => import("./pages/Activate"));
 
 const MyFollowers = lazyWithRetry(() => import("./pages/MyFollowers"));
+const MyConnections = lazyWithRetry(() => import("./pages/MyConnections"));
 const AnalyzeVideo = lazyWithRetry(() => import("./pages/AnalyzeVideo"));
 const PitchVelocityPrep = lazyWithRetry(() => import("./pages/PitchVelocityPrep"));
 const DelayCamPage = lazyWithRetry(() => import("./pages/DelayCamPage"));
@@ -197,7 +198,6 @@ const OrganizationDashboard = lazyWithRetry(() => import("./pages/OrganizationDa
 
 const StaffSignup = lazyWithRetry(() => import("./pages/StaffSignup"));
 const OrganizationSetup = lazyWithRetry(() => import("./pages/OrganizationSetup"));
-const RequestsPage = lazyWithRetry(() => import("./pages/Requests"));
 const JoinTeamPage = lazyWithRetry(() => import("./pages/JoinTeam"));
 const OwnerOrganizationsPage = lazyWithRetry(() => import("./pages/OwnerOrganizations"));
 const AdminVerification = lazyWithRetry(() => import("./pages/AdminVerification"));
@@ -461,7 +461,8 @@ const App = () => {
               <Route path="/coach/guest" element={<StaffPlanGate><CoachGuestMode /></StaffPlanGate>} />
               <Route path="/coach/digest" element={<StaffPlanGate><CoachDigest /></StaffPlanGate>} />
               <Route path="/forecast" element={<ForecastSurface />} />
-              <Route path="/my-followers" element={<MyFollowers />} />
+              <Route path="/my-followers" element={<MyConnections />} />
+              <Route path="/my-connections" element={<MyConnections />} />
               <Route path="/analyze/:module" element={<AnalyzeVideo />} />
               {/* DEVELOPER TEST HARNESS — NOT A PRODUCT FEATURE.
                   /pitch-velocity was built to exercise the Roboflow ball-tracking
@@ -570,7 +571,7 @@ const App = () => {
               <Route path="/progress" element={<ProgressDashboard />} />
               <Route path="/organization" element={<StaffPlanGate needsOrg><OrganizationDashboard /></StaffPlanGate>} />
               <Route path="/organization/setup" element={<OrganizationSetup />} />
-              <Route path="/requests" element={<RequestsPage />} />
+              <Route path="/requests" element={<MyConnections />} />
               <Route path="/join" element={<JoinTeamPage />} />
               <Route path="/owner/organizations" element={<StaffOnlyRoute><OwnerOrganizationsPage /></StaffOnlyRoute>} />
               <Route path="/admin-verification" element={<StaffOnlyRoute><AdminVerification /></StaffOnlyRoute>} />

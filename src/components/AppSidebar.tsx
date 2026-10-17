@@ -196,11 +196,10 @@ export function AppSidebar() {
     ...(isCoach ? [{ title: t('navigation.orgDigest', 'Org Digest'), url: "/coach/digest", icon: CalendarDays }] : []),
     ...(!staffRoleLoading && !roleCheckFailed && !(isCoach || isScout) && (hasAnySubscription(modules) || isOwner || isAdmin) ? [{ title: 'My Daily Game Plan', url: "/my-daily-game-plan", icon: ListChecks }] : []),
     { title: t('navigation.calendar'), url: "/calendar", icon: CalendarDays },
-    // Always-visible Requests inbox with a waiting-count badge, so a coach or
-    // organization request is impossible to miss (owner request 2026-10-17).
-    { title: t('navigation.requests', 'Requests'), url: "/requests", icon: Inbox, badge: pendingRequestCount },
+    // One "My Connections" entry (replaces the old Requests and My Followers
+    // entries) with a badge counting everything waiting (owner request 2026-10-17).
+    { title: t('navigation.myConnections', 'My Connections'), url: "/my-connections", icon: Inbox, badge: pendingRequestCount },
     { title: 'The General', url: '/progress', icon: BarChart3 },
-    ...(hasPlayerAccess ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
     ...(((!rankingsVisibilityLoading && rankingsVisible) || isOwner || isAdmin) ? [{ title: t('navigation.rankings'), url: "/rankings", icon: Trophy }] : []),
     { title: t('navigation.mindFuel'), url: "/mind-fuel", icon: Brain },
     { title: t('navigation.bounceBackBay'), url: "/bounce-back-bay", icon: HeartPulse },
