@@ -74,12 +74,26 @@ export const useSubscription = () => {
         return;
       }
 
+      // Always send the signed-in player's own token. Without it the call can
+      // go out with the public key only, which the backend rejects
+      // ("missing sub claim").
+      const invokeCheck = async () => {
+        const { data: { session: s } } = await supabase.auth.getSession();
+        if (!s?.access_token) return { data: null, error: Object.assign(new Error('401 no session'), { status: 401 }) as any };
+        return supabase.functions.invoke('check-subscription', {
+          headers: { Authorization: `Bearer ${s.access_token}` },
+        });
+      };
+      const isAuthError = (e: any) =>
+        !!e && (e.status === 401 || e.context?.status === 401 ||
+          /Authentication|401|Invalid or expired token|sub claim/i.test(e.message ?? ''));
+
       // First attempt: Call edge function with current session
-      let { data, error } = await supabase.functions.invoke('check-subscription');
+      let { data, error } = await invokeCheck();
       let authFailed = false;
 
       // If we get an auth error (401), try refreshing the session and retry once
-      if (error && (error.message?.includes('Authentication') || error.message?.includes('401') || error.message?.includes('Invalid or expired token'))) {
+      if (isAuthError(error)) {
         console.log('[useSubscription] Auth error detected, attempting token refresh...');
         
         try {
