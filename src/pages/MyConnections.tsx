@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Check, X, Users, Star, UserPlus, Ban, Link2Off, Settings } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCoachConnections, COACH_CONNECTIONS_KEY } from '@/hooks/useCoachConnections';
@@ -89,6 +89,11 @@ export default function MyConnections() {
       }));
     },
   });
+  // A follow approved on the Requests tab must show up here right away.
+  useEffect(() => {
+    if (tab === 'followers') { followers.refetch(); following.refetch(); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
   const removeFollower = useMutation({
     mutationFn: async (followId: string) => {
       const { error } = await supabase.from('scout_follows').update({ status: 'rejected' }).eq('id', followId).eq('player_id', user!.id);
