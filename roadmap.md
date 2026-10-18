@@ -1,3 +1,13 @@
+# AG3 — Oct 18 23:45 UTC — Sub-step 4a DONE: TEST pitcher proof (5 games)
+
+- [x] TEST pitcher (Demo — Pitcher Back From Break) accepted its updated terms/release as a TEST account, then entered 5 marked TEST games ("TEST Owls 1–5", Sep 1–5) × 3 pitches through the actual Games > Pitching screen at 390×844. 0 page errors, no sideways scroll. Evidence: docs/owner/walkthroughs/intelligence/ag3/
+- [x] Game IQ pitching report matches the entered rows: 15 pitches, strike rate 67% (10 of 15), swing-and-miss 100% (5 of 5) "early read", first-pitch strikes "Not entered" (no counts entered); pitcher heat map 5/5/5 in zones 1/5/9 = exactly the taps.
+- [x] Fixed: game reports "Pitcher usage by count" showed a bare "?-?" — now "Count not entered" / "Type not entered".
+- [x] Cleanup: 4 half-finished trial games + 5 pitches from failed attempts deleted by exact id. Kept for later proofs (delete at final cleanup): 5 TEST games, 15 TEST pitches.
+- [ ] Still open in sub-step 4: two-way, softball, new player, parent-run logging, both coach modes.
+- [ ] Carry-over: TEST coaching principle (switched Off) awaits owner OK to lift the append-only guard for deletion.
+- Ready to publish: **no**.
+
 # AG2 — Oct 18 23:20 UTC — Sub-step 3 DONE: Coaching Console phone proof (owner)
 
 - [x] Phone 390×844 as owner, 0 page errors, no sideways scroll. Evidence: docs/owner/walkthroughs/intelligence/ag2/
