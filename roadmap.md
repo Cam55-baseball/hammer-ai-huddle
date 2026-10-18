@@ -1,3 +1,5 @@
+# AF2 — Oct 18 — Game IQ copy still updating; nothing merged. Ready to publish: no.
+
 # AF1 — Oct 18 21:57 UTC — Lineage + positive proof already done (AE10). Game IQ merge running again; Console, five-player proofs, step 8, audit, guide wait on it. Ready to publish: no.
 
 # AE10 — Oct 18 21:52 UTC — Snapshot lineage + positive proof
