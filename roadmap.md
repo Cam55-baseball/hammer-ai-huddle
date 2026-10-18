@@ -1,7 +1,9 @@
-# AD9 — B Game IQ training-session gate correction IN PROGRESS
+# AD9 — Oct 18 20:20 UTC — B Game IQ training-session gate PASS (preview)
 Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
 - [x] Recorded AD9: remove the unrelated training-session milestone from Game IQ maps only; retain subscription access and the classic report gate.
-- [ ] Access regressions and affected-player phone verification.
+- [x] Two fresh affected TEST college-player visits at 390×844: actual heat-map reads 200; all four maps show No data yet, no invented values or training unlock milestone, game-report link opens /games/reports. Zero page exceptions/overflow. Safari-agent Chromium emulation, not physical Safari or populated-cohort certification.
+- [x] Access/report/Growth regressions: 3 files / 7 tests PASS, including subscribed zero-training access, unsubscribed refusal and preserved classic report gate. Latest preview build OK. Evidence: `docs/owner/walkthroughs/intelligence/ad9/`.
+- [x] No TEST entries, measurements, games, consents or connections inserted/deleted; in-memory TEST sessions only, browser contexts closed. Coach subscription untouched and retained active. No publish, redeploy, migration, cron or iOS changes.
 - [ ] B measured-grade/populated five-player/parent/coach proofs, then C → D → E → F. Coach plan stays active.
 
 # AD8 — Oct 18 20:15 UTC — B steal-result honesty PASS (preview)
