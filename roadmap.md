@@ -1,5 +1,6 @@
 # ACTIVE REPORT — Oct 18 owner answers
 Ready to publish: NO — remaining implementation and five-player-type proof are unfinished.
+AB2: step 5 event-source migration applied; pitch/defense/baserun source badges and honest optional pitch fields added. Player phone pitch save/read-back and quick Single→left-field save passed; immutable source check passed; exact test rows removed. Parent-run phone stopped at updated legal gate, not bypassed. Full suite 377/2,973 passed before final hardening; final focused tests 9/9; build OK. Steps 5–8 remain incomplete. Evidence: `docs/owner/walkthroughs/intelligence/ab2/proof-status.md`. No publish/cron/iOS/function redeploy.
 AB1 (14:42 UTC): Completed→Start unlock survived phone reload; temporary assessment removed. Demo Coach checkout still rejects newly added promotion codes (`payment_pages_promotion_code_invalid`) despite valid API reads; no subscription/charge/vote created. Two coupons and three codes added, none edited/deleted; restriction omitted in reads, so none certified Coach-only. Three player types opened Game IQ without overflow; pitcher/softball stop at updated legal acceptance. Hitter/pitcher lack required populated proof cohorts. Details: `docs/owner/walkthroughs/intelligence/ab1/proof-status.md`. Focused tests 12/12; build OK; no live app changes.
 All former approval blockers are answered; no further scoped authorization is required. The only owner action currently needed is applying the written nightly schedule when ready.
 
@@ -20,7 +21,7 @@ All former approval blockers are answered; no further scoped authorization is re
 2. Cards/how-sure PARTIAL proof: existing owner screenshots `Today.png`; five player types not yet passed.
 3. General tabs PARTIAL: existing Today/Performance/GameIQ/Growth screenshots; approved measurement-based grade/source/date rows unfinished; five player types not yet passed.
 4. Learning loop PARTIAL: self recheck works; shared nightly callback deployed and unauthorized calls refused. Exact schedule SQL written, not applied. Authenticated nightly batch/outcome proof unfinished. Prior `loop_Today.png`, `srv_Today.png`, `auto_Today.png`.
-5. Game logging PARTIAL: at-bat Player-entered → Video-tagged saved/read back on the test player's phone (`oct18/video-tagged-player.png`), timestamp bounds enforced, exact test data removed. Parent/coach/teen coverage still unfinished.
+5. Game logging PARTIAL: prior video-tag proof retained. AB2 pitch/defense/baserun event sources added, player phone pitch/quick ball-direction read-backs passed with null missing facts and source-update protection. Parent/coach/teen coverage, import siblings and structured pitcher contact/intent still unfinished.
 6. Game IQ and team post-game screen FAIL/OPEN — unfinished.
 7. Owner Coaching Console FAIL/OPEN — unfinished.
 8. Private population learning FAIL/OPEN — unfinished.
@@ -29,7 +30,8 @@ Full suite PASS: **376 files / 2,969 tests**. Build OK. Full page audit and five
 Live this round: assessment/parent-sharing/video-tag schema changes; `check-subscription`, `parent-consent`, `intel-recheck`, `intel-recheck-job`. No publish, cron changes or iOS edits. Callback bundling issue corrected and successfully deployed.
 
 ## Remaining lean task list
-- [ ] AB2: finish step 5 event provenance and honest pitch entry, verify player/parent-run phone save/read-back, then continue steps 6–8 with populated five-player proof.
+- [x] AB2: pitch/defense/baserun source labels and honest pitch facts; player phone save/read-back; quick ball direction; cleanup and full suite.
+- [ ] Step 5: parent/teen/coach two-option phone logging, remaining import attribution, structured contact/intent detail; parent legal acceptance currently uncompleted. Then steps 6–8 in order with populated five-player proof.
 - [ ] Demo-coach paid-access/vote proof: AB1 checkout rejected all new codes; Stripe rejection root cause unresolved, no bypass. No test subscription to cancel.
 - [x] Re-run existing authorized real clips: 12/12 reports, per-type rates above; private test-report cleanup confirmed.
 - [ ] Restore democoach through a new Stripe 100%-off Coach subscription, prove real agreement votes, cancel only this test subscription.
