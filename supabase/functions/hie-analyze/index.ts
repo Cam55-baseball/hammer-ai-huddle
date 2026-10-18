@@ -1108,7 +1108,7 @@ function computeConfidence(sessionCount: number, dataRecencyDays: number, hasCoa
 // ═══════════════════════════════════════════════════════════════
 
 function computeBeforeAfterTrends(
-  currentComposites: Record<string, number>,
+  currentComposites: Record<string, number | null>,
   mpiScores: any[]
 ): any[] {
   if (mpiScores.length < 2) return [];
