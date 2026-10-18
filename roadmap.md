@@ -1,4 +1,12 @@
-# ACTIVE RUN — AC3, Oct 18 18:17 UTC
+# ACTIVE RUN — AC4, Oct 18 18:23 UTC
+Ready to publish: no — A4, five-player Intelligence proofs, Game IQ, Coaching Console, population learning, final audit, and original HEVC/iPhone Safari/timing certification remain open.
+- [x] A3 / Oct 17 #8 PASS: actual linked TEST parent at 390×844; optional service sharing off → on, authenticated save 200, then a fresh browser context reads on through the real page and permission RPC. Separate health permission stays false; all scout scopes, training opt-in and the existing family link are unchanged. Plain helper wording inspected; no page errors or horizontal overflow.
+- [x] Exact cleanup PASS: fake Parent Promise entered through the app's own signing function, with TEST parent/child names; temporary under-13 scenario restored. Removed that one TEST consent/signature and two new TEST seed height rows, restored original birthday/account flags/subscription expiry. All nine monitored TEST tables match baseline except automatic update timestamps; original family link and consent scopes preserved.
+- [x] Consent safety regression suite: 3 files / 16 tests PASS. Hosted preview latest run succeeded and in sync; no application source changes, publishing, migrations, redeploys, cron or iOS changes. Only authorized temporary TEST data changes occurred.
+Proof: `docs/owner/walkthroughs/intelligence/ac4/{proof-status.md,linked-parent-off.png,linked-parent-on.png,fresh-parent-readback.png}`.
+Next concrete sub-step: A4 populated TEST History and team post-game report; then B–F in owner order.
+
+# PRIOR RUN — AC3, Oct 18 18:17 UTC
 Ready to publish: no — A3/A4, five-player Intelligence proofs, Game IQ, Coaching Console, population learning, final audit, and original HEVC/timing certification remain open.
 - [x] A2 / Oct 17 #7 PASS: affected TEST college player at 390×844; Start disabled before Completed; no optional answers required; Completed survives reload and assessment disappears; Start builds today's real plan; fresh browser context with no plan cache reads the identical 13 saved rows. Server generation 200 and both saved-plan checks 200 / verified=true. No second generation on fresh readback.
 - [x] Exact cleanup PASS: backed up and removed 18 new TEST records (assessment, 13 prescriptions, CNS ledger, generation diagnostic, 2 final-check swaps); restored the original unstarted flag and three changed fields in one existing TEST scheduling record. All eight non-profile table comparisons match baseline, 20 historical prescriptions preserved; profile start restored (automatic update timestamp changes retained).
@@ -24,7 +32,7 @@ Still open in this sub-step: genuine original HEVC (inspected originals were H26
 Ready to publish: no — ordered implementation/proof work remains; no owner-answer blockers remain.
 - [x] A1 / Oct 17 #5 PASS: direct Stripe TEST Coach subscription, zero invoice/no card; real coach-screen Agree + Disagree saved against app-filed TEST evaluation (grade 55 unchanged); owner dashboard shows 50% (1 of 2) and both notes on 390×844. Exact two votes/evaluation/request backed up and removed; temporary connection ended; test subscription canceled. Proof: `docs/owner/walkthroughs/intelligence/a1/{coach-agree.png,coach-disagree.png,owner-votes.png,proof-status.md}`. Focused tests 2 files / 9 PASS; preview build OK. No app deployment/migration/publish/cron/iOS changes.
 - [x] A2: Completed → Start → saved plan read-back; AC3 affected-player phone proof and exact cleanup PASS.
-- [ ] A3: Linked-parent optional-sharing positive path.
+- [x] A3: Linked-parent optional-sharing positive path; AC4 phone save/fresh-context read-back and exact cleanup PASS.
 - [ ] A4: Populated TEST History and team post-game report.
 - [ ] Original phone-format automatic conversion and original HEVC/MOV analysis proof (no manual re-encoding).
 - [ ] B: App-entered, clearly marked TEST five-cohort proof of Intelligence steps 2–5, parent logging and both coach modes.
@@ -57,7 +65,7 @@ Proof paths below are under `docs/owner/walkthroughs/`; previous proof is distin
 5. **PARTLY — Agreement dashboard:** built, `oct17-fixes/agreements.png` (empty/page proof only); real test-coach votes and paid access unfinished.
 6. **DONE — Owner settings:** previous phone proof, `oct17-fixes/settings.png`, `oct17-fixes/costs.png`.
 7. **DONE — Assessment gate:** server incomplete/Completed/existing-start checks PASS; AC3 affected-player phone Completed → Start → fresh-context identical saved-plan readback PASS, `intelligence/ac3/proof-status.md`. Optional answers left blank; exact test state restored.
-8. **PARTLY — Parent sharing/scout visibility:** parent-run save/reload and ordinary-player refusal PASS, `intelligence/oct18/parent-sharing-player.png`; prior scout controls `oct17-fixes/yy2-parent-metrics-readback.png`. Positive linked-parent optional-sharing proof open; health/recruiting rules unchanged.
+8. **DONE — Parent sharing/scout visibility:** parent-run save/reload and ordinary-player refusal PASS, `intelligence/oct18/parent-sharing-player.png`; prior scout controls `oct17-fixes/yy2-parent-metrics-readback.png`. AC4 positive linked-parent optional-sharing phone save/fresh-context read-back PASS, `intelligence/ac4/proof-status.md`; health/recruiting/training rules unchanged, TEST state restored.
 9. **DONE — Physio redo:** previous save/reload/reopen proof, `oct17-fixes/yy1-physio-redo.png`; original test health state restored.
 10. **PARTLY — History/Train next:** previous navigation/empty-state proof, `oct17-fixes/yy4-history.png`, `yy4-game-reports.png`; populated History and approved team-report screen unfinished.
 
@@ -109,7 +117,7 @@ Live this round: assessment/parent-sharing/video-tag schema changes; `check-subs
 - [x] Phone-proof Completed → Start UI and real plan read-back (AC3, 13 identical saved rows in fresh browser context; exact cleanup).
 - [x] AB1 Completed saves with no optional answers; Start disabled beforehand and enabled after reload on the test player's phone. Original assessment absence restored.
 - [x] Add consent-based parent optional sharing; parent-run phone save/reload + player refusal verified.
-- [ ] Linked-parent positive permission/save/reload proof.
+- [x] Linked-parent positive permission/save/reload proof (AC4; 390×844, fresh context, health/scout/training scopes unchanged, exact cleanup).
 - [x] Deploy approved sign-in plan-check fix; authenticated player check returns 200, subscribed=true.
 - [x] Write docs/owner/learning-loop-cron.sql; no schedule changes.
 - [ ] Authenticated nightly callback and populated outcome proof; owner applies schedule afterward.
