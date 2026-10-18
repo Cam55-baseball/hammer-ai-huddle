@@ -1128,8 +1128,10 @@ function computeBeforeAfterTrends(
   ];
 
   areas.forEach(({ key, label }) => {
-    const before = twoWeeksAgo[key] ?? 50;
-    const after = currentComposites[key] ?? 50;
+    const before = twoWeeksAgo[key];
+    const after = currentComposites[key];
+    // Owner rule (no made-up numbers): never assume 50 for a missing score.
+    if (before == null || after == null) return;
     const delta = after - before;
     if (Math.abs(delta) > 1) {
       trends.push({
@@ -1556,15 +1558,23 @@ Deno.serve(async (req) => {
       if (top.zone_details) primaryLimiter += ` — ${top.zone_details}`;
     } else {
       const latestMPI = mpiScores?.[0];
-      const composites: Record<string, number> = {
-        "Batting Quality": latestMPI?.composite_bqi ?? 50,
-        "Fielding Quality": latestMPI?.composite_fqi ?? 50,
-        "Pitching Effectiveness": latestMPI?.composite_pei ?? 50,
-        "Decision Making": latestMPI?.composite_decision ?? 50,
-        "Competitive Execution": latestMPI?.composite_competitive ?? 50,
+      // Owner rule (no made-up numbers): only rank areas that have a real
+      // measured score; missing scores are skipped, never assumed to be 50.
+      const composites: Record<string, number> = {};
+      const raw: Record<string, number | null | undefined> = {
+        "Batting Quality": latestMPI?.composite_bqi,
+        "Fielding Quality": latestMPI?.composite_fqi,
+        "Pitching Effectiveness": latestMPI?.composite_pei,
+        "Decision Making": latestMPI?.composite_decision,
+        "Competitive Execution": latestMPI?.composite_competitive,
       };
+      for (const [label, val] of Object.entries(raw)) {
+        if (val != null) composites[label] = val;
+      }
       const sorted = Object.entries(composites).sort(([, a], [, b]) => a - b);
-      primaryLimiter = `${sorted[0][0]} is your lowest area at ${Math.round(sorted[0][1])}`;
+      primaryLimiter = sorted.length > 0
+        ? `${sorted[0][0]} is your lowest area at ${Math.round(sorted[0][1])}`
+        : "Not enough data yet — log performance sessions so we can find what to work on";
     }
 
     // ── WEAKNESS CLUSTERS ──
