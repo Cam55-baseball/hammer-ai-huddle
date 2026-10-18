@@ -11,6 +11,7 @@
  * Every chart is computed locally from the user's own gp_* data — no
  * server-side aggregation drift to worry about.
  */
+import { pitchTypeLabel } from "@/lib/games/sportRules";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -55,7 +56,7 @@ export default function GameReports() {
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await gp("gp_pitches")
-        .select("perspective,inning,pitch_type,pitch_velo,location,result,batter_handedness,count_balls,count_strikes,gp_games!inner(deleted_at)")
+        .select("perspective,inning,pitch_type,pitch_velo,location,result,batter_handedness,count_balls,count_strikes,gp_games!inner(deleted_at,sport)")
         .eq("user_id", user?.id)
         .is("gp_games.deleted_at", null)
         .limit(5000);
@@ -163,7 +164,7 @@ export default function GameReports() {
       const cnt = p.count_balls == null || p.count_strikes == null
         ? "Count not entered"
         : `Count ${p.count_balls}-${p.count_strikes}`;
-      const t = p.pitch_type ?? "Type not entered";
+      const t = p.pitch_type ? pitchTypeLabel((p as any).gp_games?.sport, p.pitch_type) : "Type not entered";
       map[cnt] ??= {};
       map[cnt][t] = (map[cnt][t] ?? 0) + 1;
     });

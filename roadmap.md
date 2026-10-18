@@ -1,8 +1,14 @@
+# AG5 — Oct 18 23:50 UTC — Sub-step 4c DONE: TEST softball player proof (+2 fixes)
+- [x] FIX: new games took their sport from this phone's theme pick, so the TEST softball catcher's first games saved as baseball and offered baseball pitches (Slider, Four-seam). Both "start a game" paths now use the account's saved sport (src/pages/Games.tsx). Wrong-sport TEST games (3) + pitches deleted by exact ID.
+- [x] FIX: Pitcher usage showed raw codes ("drop × 3"); now sport-correct names ("Dropball × 3") (src/pages/GameReports.tsx). 2 rule tests PASS (src/lib/games/sportPitchLabels.test.ts).
+- [x] Re-proof at 390×844 as demosbc: 3 TEST games ("TEST Hawks 1–3") saved as softball; 9 thrown (Fastball 6, Dropball 3), 6 seen (Fastball 3, Riseball 3); heat map "6 pitches seen"; "Count not entered" for missing counts. 0 page errors, no sideways scroll. Evidence: docs/owner/walkthroughs/intelligence/ag5/
+- [ ] Still open in sub-step 4: new player, parent-run logging, both coach modes. Ready to publish: no.
+
 # AG4 — Oct 18 23:55 UTC — Sub-step 4b DONE: TEST two-way player proof
 - [x] TEST two-way account (demo2way) logged 3 marked TEST games ("TEST Bears 1–3", Sep 1–3) through Games > Pitching at 390×844: 3 pitches thrown + 2 pitches seen per game. Saved: 9 thrown (3 ball / 3 called strike / 3 swing-and-miss), 6 seen (3 ball / 3 swing-and-miss).
 - [x] Game IQ kept both sides separate and honest: Pitching "Pitches logged 9"; hitter heat map "6 pitches seen"; Hitting "Need more data: nothing logged here yet" (no at-bats entered — nothing invented); missing counts say "Count not entered". 0 page errors, no sideways scroll. Evidence: docs/owner/walkthroughs/intelligence/ag4/
 - [x] TEST games/pitches kept for later coach-mode proofs (removed at final cleanup).
-- [ ] Still open in sub-step 4: softball, new player, parent-run logging, both coach modes. Ready to publish: no (remaining proofs).
+- [ ] Still open in sub-step 4: (softball done AG5) new player, parent-run logging, both coach modes. Ready to publish: no (remaining proofs).
 
 # AG3 — Oct 18 23:45 UTC — Sub-step 4a DONE: TEST pitcher proof (5 games)
 
