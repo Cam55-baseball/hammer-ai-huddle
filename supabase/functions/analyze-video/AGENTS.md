@@ -1,0 +1,2 @@
+- Every authorized invocation uses one stable audit run ID across write retries and catch paths. Why: lost responses must not duplicate runs or falsely claim durable logging.
+- Shared audit writes retry once, confirm duplicate IDs by read-back and return persistent failures without stopping report delivery. Why: recover logging without costing the athlete a report.

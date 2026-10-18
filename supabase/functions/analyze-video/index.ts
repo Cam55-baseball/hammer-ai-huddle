@@ -1644,6 +1644,14 @@ Deno.serve(async (req) => {
   let auditSupabase: any = null;
   let authorizedClip = false;
   let auditRecorded = false;
+  const auditRunId = crypto.randomUUID();
+  let auditPersistence: { saved: boolean; error: string | null } = { saved: false, error: null };
+  const recordRun: typeof recordAnalysisRun = async (client, record) => {
+    const result = await recordAnalysisRun(client, { ...record, id: auditRunId });
+    auditRecorded = Boolean(result.id);
+    auditPersistence = { saved: auditRecorded, error: result.error };
+    return result;
+  };
   let reportModule = "video";
   let auditCtx: {
     videoId?: string;
@@ -1749,7 +1757,7 @@ Deno.serve(async (req) => {
     }
     authorizedClip = true;
     if (await isAccountPaused(supabase, userId)) {
-      await recordAnalysisRun(supabase, { video_id: videoId, requested_by: userId, cache_fingerprint_hex: "rejected:account_paused", cache_hit: false, outcome: "rejected", outcome_reason: "account_paused" });
+      await recordRun(supabase, { video_id: videoId, requested_by: userId, cache_fingerprint_hex: "rejected:account_paused", cache_hit: false, outcome: "rejected", outcome_reason: "account_paused" });
       return pausedResponse(corsHeaders);
     }
 
@@ -1787,7 +1795,7 @@ Deno.serve(async (req) => {
     // Reject when the deterministic inputs are not yet captured. The audit
     // row is the contract — we write it before returning.
     if (!videoSha256Hex) {
-      await recordAnalysisRun(supabase, {
+      await recordRun(supabase, {
         video_id: videoId,
         requested_by: userId,
         cache_fingerprint_hex: "rejected:missing_video_sha256",
@@ -1798,7 +1806,6 @@ Deno.serve(async (req) => {
         detector_version: DETECTOR_VERSION,
         metric_engine_version: METRIC_ENGINE_VERSION,
       });
-      auditRecorded = true;
       throw new Error("missing_video_sha256");
     }
     // Unknown frame rate (container timing unreadable): the clip is ACCEPTED
@@ -1823,7 +1830,7 @@ Deno.serve(async (req) => {
     const PHASE1_MAX_DROPPED_RATIO = 0.34;
 
     const writeReject = async (reason: string, detail: string, status = 422) => {
-      await recordAnalysisRun(supabase, {
+      await recordRun(supabase, {
         video_id: videoId,
         requested_by: userId,
         cache_fingerprint_hex: `rejected:${reason}`,
@@ -1836,7 +1843,6 @@ Deno.serve(async (req) => {
         outcome: "rejected",
         outcome_reason: `${reason}:${detail}`,
       });
-      auditRecorded = true;
       throw new Error(`${reason}:${detail}`);
     };
 
@@ -1892,7 +1898,7 @@ Deno.serve(async (req) => {
         .maybeSingle();
       const cachedAi = (videoRow?.ai_analysis ?? null) as Record<string, unknown> | null;
       if (prior && cachedAi && videoRow?.status === "completed") {
-        await recordAnalysisRun(supabase, {
+        await recordRun(supabase, {
           video_id: videoId,
           requested_by: userId,
           cache_fingerprint_hex: cacheFingerprintHex,
@@ -1909,6 +1915,7 @@ Deno.serve(async (req) => {
         const cachedPayload: Record<string, unknown> = {
           success: true,
           replay_cache: true,
+          audit_persistence: auditPersistence,
           cache_fingerprint_hex: cacheFingerprintHex,
           ai_analysis: cachedAi,
           efficiency_score: videoRow.efficiency_score,
@@ -2086,7 +2093,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     // Call AI (Google AI Studio direct, Lovable Gateway fallback) with tool-calling for structured output
     // Plan 4 D fair use: about 30 analyses per account per hour (server-side; cached re-runs don't count).
     if (overHourlyLimit(await analysesLastHour(supabase, userId))) {
-      await recordAnalysisRun(supabase, { video_id: videoId, requested_by: userId, cache_fingerprint_hex: cacheFingerprintHex, cache_hit: false, outcome: "rejected", outcome_reason: "hourly_limit" });
+      await recordRun(supabase, { video_id: videoId, requested_by: userId, cache_fingerprint_hex: cacheFingerprintHex, cache_hit: false, outcome: "rejected", outcome_reason: "hourly_limit" });
       await supabase.from("videos").update({ status: "uploading" }).eq("id", videoId);
       return new Response(JSON.stringify({ error: HOURLY_LIMIT_MESSAGE, code: "hourly_limit", resume_at: await hourlyResumeAt(supabase, userId), video_id: videoId }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -2582,7 +2589,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
 
     if (updateError) {
       console.error("Error updating video:", updateError);
-      await recordAnalysisRun(supabase, {
+      await recordRun(supabase, {
         video_id: videoId,
         requested_by: userId,
         cache_fingerprint_hex: cacheFingerprintHex,
@@ -2595,12 +2602,11 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         outcome: "failed",
         outcome_reason: `videos_update_failed:${updateError.message}`,
       });
-      auditRecorded = true;
       throw updateError;
     }
 
     // Phase 0 audit row — successful analysis.
-    const okAudit = await recordAnalysisRun(supabase, {
+    const okAudit = await recordRun(supabase, {
       video_id: videoId,
       requested_by: userId,
       cache_fingerprint_hex: cacheFingerprintHex,
@@ -2836,6 +2842,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       // Coaching-stage persistence result. `error` non-null means the durable
       // fault rows did NOT land — the surface says so rather than pretending.
       fault_persistence: faultPersistence,
+      audit_persistence: auditPersistence,
     };
 
 
@@ -2856,7 +2863,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     // Phase 0 — write a "failed" audit row when we have enough context.
     if (authorizedClip && auditSupabase && auditCtx.videoId && !auditRecorded) {
       try {
-        await recordAnalysisRun(auditSupabase, {
+        await recordRun(auditSupabase, {
           video_id: auditCtx.videoId,
           requested_by: auditCtx.userId ?? null,
           cache_fingerprint_hex: auditCtx.cacheFingerprintHex ?? "failed:no_fingerprint",
@@ -2880,7 +2887,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       const { error: saveError } = await auditSupabase.from("videos")
         .update({ status: "completed", ai_analysis: report, efficiency_score: null })
         .eq("id", auditCtx.videoId).eq("user_id", auditCtx.userId);
-      return new Response(JSON.stringify({ ...report, saved: !saveError, save_error: saveError ? "Report is shown here but could not be saved. Try again." : null }),
+      return new Response(JSON.stringify({ ...report, audit_persistence: auditPersistence, saved: !saveError, save_error: saveError ? "Report is shown here but could not be saved. Try again." : null }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 

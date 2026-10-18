@@ -1,5 +1,11 @@
 # OWNER FIXES — Oct 17 (received Oct 18)
 
+YY3 continuation: investigate analysis audit persistence first; retain missing footage and role-proof blockers. No publish, cron or iOS changes.
+
+YY3 completed subchecks: audit writes retry once with a stable per-invocation ID, recover committed rows after lost responses, and expose failed persistence without stopping reports. Rejection/catch paths no longer falsely mark failed writes recorded. Five new behavioral tests passed; full suite 368 files / 2,946 tests PASS; deno function validation PASS.
+YY3 redeployed ONLY analyze-video; live player throwing upload saved a readable report plus one ok audit (05:24:25 UTC), AI usage/cost estimate $0.014818. Two separately invoked unreadable-frame checks each returned saved Not measured reports and audit_persistence.saved=true; rejected rows read back. Exact test clip backed up and deleted; remaining count zero; audits/cost rows retained.
+YY3 open: #1 still needs appropriate 12-clip motion proof and historical missing-run attribution; #5 active coach-plan/real feedback proof; #7 named migration approval/new-player Start proof; #8 optional-service consent remains child-session scoped (separate linked-parent writes need server authorization, no client ID shortcut); #10 no demo saved reports for populated walkthrough. No new accounts, Stripe, migration, cron, iOS or publish changes.
+
 YY2 continuation: verify remaining agreement, parent and History flows; no new live changes without named authorization.
 
 YY2 verified: linked parent Settings opens child scouting controls; Metrics saved and survived reload while visibility remained OFF, then original scopes and sharing fields restored. Parent optional service-sharing is child-session only and unproven; #8 stays open.
@@ -22,8 +28,8 @@ YY1 continuation: analysis preflight/retry no-report exits fixed and phone-teste
 
 Constraints: no publish, cron or iOS edits; no unexplained deployment errors; Stripe read-only; preserve safety and measurement honesty; clean test data. Only fix-required backend redeploys authorized; name each actually redeployed.
 
-Current Oct 18 verification: full suite 365 files / 2,937 tests PASS; latest preview build OK.
-Open blockers: #1 requires two suitable real clips for each of six sport/type combinations (12 total); available footage cannot prove those motions. Baseball hitting/pitching/throwing preflight failure reports proven; existing softball test players stop at current legal acceptance, no rules bypassed. #5 coach vote UI proof not performed. #7 server start guard SQL awaits named owner migration approval and new-player completion/start proof. #8 parent-authorized sharing/visibility save proof not performed. #10 populated practice/saved-report/Train-next proof not performed. These remain open, not claimed complete.
+Current Oct 18 verification: YY3 full suite 368 files / 2,946 tests PASS; latest preview build OK.
+Open blockers: #1 requires two suitable clips per sport/type (12 total); existing softball players stop at legal acceptance, no bypass. #5 real coach votes need active plan access. #7 server guard awaits named migration approval and Start proof. #8 scouting save/reload proven; optional service-sharing parent access unproven. #10 populated practice/report/Train-next walkthrough unproven. These remain open.
 YY1 targeted tests: 17/17 PASS including diagnostic-storage retry failure and retaining health answers on save failure. Latest preview build OK. Full-suite result above precedes YY1; it was not rerun this pass.
 YY1 test upload backed up, live fallback tested as the affected player, then deleted via delete-library-session; database read-back count 0. Health profile original state restored. Existing demo accounts retained, no new accounts or low-resolution test uploads created.
 The single test upload was backed up and deleted through the existing cleanup function; original demo player retained. No publish, cron or iOS changes, no Stripe writes, no migration applied.
