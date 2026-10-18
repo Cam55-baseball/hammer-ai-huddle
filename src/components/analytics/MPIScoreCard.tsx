@@ -7,7 +7,8 @@ import { getGradeLabel } from '@/lib/gradeLabel';
 export function MPIScoreCard() {
   const { data: mpi, isLoading } = useMPIScores();
 
-  const score = Math.round(mpi?.adjusted_global_score || 0);
+  const hasScore = mpi?.adjusted_global_score != null;
+  const score = hasScore ? Math.round(mpi!.adjusted_global_score!) : null;
   const TrendIcon = mpi?.trend_direction === 'rising' ? TrendingUp : mpi?.trend_direction === 'dropping' ? TrendingDown : Minus;
   const trendColor = mpi?.trend_direction === 'rising' ? 'text-green-500' : mpi?.trend_direction === 'dropping' ? 'text-red-500' : 'text-muted-foreground';
 
