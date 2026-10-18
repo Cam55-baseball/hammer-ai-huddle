@@ -1,4 +1,7 @@
-# ACTIVE RUN — Oct 18, 17:37 UTC owner clarification
+# ACTIVE RUN — AC1, Oct 18 17:43 UTC
+Phone-format compatibility is the next owner-ordered sub-step; automatic device conversion and original-clip proof in progress.
+
+# Owner clarification — Oct 18 17:37 UTC
 Ready to publish: no — ordered implementation/proof work remains; no owner-answer blockers remain.
 - [x] A1 / Oct 17 #5 PASS: direct Stripe TEST Coach subscription, zero invoice/no card; real coach-screen Agree + Disagree saved against app-filed TEST evaluation (grade 55 unchanged); owner dashboard shows 50% (1 of 2) and both notes on 390×844. Exact two votes/evaluation/request backed up and removed; temporary connection ended; test subscription canceled. Proof: `docs/owner/walkthroughs/intelligence/a1/{coach-agree.png,coach-disagree.png,owner-votes.png,proof-status.md}`. Focused tests 2 files / 9 PASS; preview build OK. No app deployment/migration/publish/cron/iOS changes.
 - [ ] A2: Completed → Start → saved plan read-back.
