@@ -2,6 +2,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { Link } from "react-router-dom";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { OUTCOME_LABEL, type Outcome } from "@/lib/intelligence/learningLoop";
@@ -10,7 +13,10 @@ import { OUTCOME_LABEL, type Outcome } from "@/lib/intelligence/learningLoop";
 export function LearningLoopList() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const key = ["intel-recs", user?.id];
+  const { isOwner } = useOwnerAccess();
+  const { isAdmin } = useAdminAccess();
+  const staff = isOwner || isAdmin;
+  const key = ["intel-recs", user?.id, staff];
   useEffect(() => {
     if (!user?.id) return;
     let active = true;
@@ -24,12 +30,16 @@ export function LearningLoopList() {
     enabled: !!user?.id,
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase.from("intelligence_recommendations")
-        .select("id, area, do_this, followed, outcome, created_at")
+      // Owner/admin also see which principle produced the advice.
+      const cols = staff
+        ? "id, area, do_this, followed, outcome, created_at, principle_version_id, coaching_principle_versions(principle_id, version)"
+        : "id, area, do_this, followed, outcome, created_at";
+      const { data, error } = await (supabase as any).from("intelligence_recommendations")
+        .select(cols)
         .eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
       if (error) throw error;
       // Results are filled only by a server re-check (analysis scores are locked from players).
-      const rows = data ?? [];
+      const rows = (data ?? []) as any[];
       return rows;
     },
   });
@@ -53,6 +63,13 @@ export function LearningLoopList() {
         <Card key={r.id} className="space-y-2 p-3">
           <p className="text-xs text-muted-foreground">Area: {r.area}</p>
           <p className="font-medium">Do this: {r.do_this}</p>
+          {staff && (r.coaching_principle_versions ? (
+            <Link className="text-xs text-primary underline" to={`/owner/coaching-console?principle=${r.coaching_principle_versions.principle_id}`}>
+              Which principle produced this advice (version {r.coaching_principle_versions.version})
+            </Link>
+          ) : (
+            <p className="text-xs text-muted-foreground">Principle: Not linked</p>
+          ))}
           {r.followed == null ? (
             <div className="flex gap-2">
               <span className="self-center text-xs">Did you do it?</span>
