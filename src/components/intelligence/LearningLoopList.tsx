@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
@@ -10,20 +11,35 @@ export function LearningLoopList() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const key = ["intel-recs", user?.id];
-  const { data = [] } = useQuery({
+  useEffect(() => {
+    if (!user?.id) return;
+    let active = true;
+    void supabase.functions.invoke("intel-recheck").then(({ error }) => {
+      if (active && !error) void qc.invalidateQueries({ queryKey: ["intel-recs", user.id] });
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [user?.id, qc]);
+  const { data = [], isLoading, isError } = useQuery({
     queryKey: key,
     enabled: !!user?.id,
     queryFn: async () => {
-      await supabase.functions.invoke("intel-recheck").catch(() => null); // server re-check; never blocks the list
+      if (!user) return [];
       const { data, error } = await supabase.from("intelligence_recommendations")
         .select("id, area, do_this, followed, outcome, created_at")
-        .eq("user_id", user!.id).order("created_at", { ascending: false }).limit(10);
+        .eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
       if (error) throw error;
       // Results are filled only by a server re-check (analysis scores are locked from players).
       const rows = data ?? [];
       return rows;
     },
   });
+  if (isLoading) return null;
+  if (isError) return (
+    <section className="space-y-2" aria-label="Your Do-this list">
+      <h3 className="text-sm font-semibold">Your "Do this" list</h3>
+      <p role="status" className="text-sm text-muted-foreground">We couldn't load your saved advice. Please try again later.</p>
+    </section>
+  );
   if (!data.length) return null;
   const mark = async (id: string, followed: boolean) => {
     await supabase.from("intelligence_recommendations")

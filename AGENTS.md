@@ -13,7 +13,7 @@
 - Verify anything a player does signed in as a player (or the affected role), never only as owner/admin. Why: owner accounts skip gates (2026-10-04).
 - Never prescribe or recommend an athlete action that the affected athlete cannot open; keep unreleased Game IQ suppressed at one presentation switch until its routes open to athletes. Why: inaccessible prescriptions look broken.
 - Athlete-facing headings, notices and status lines must make sense to a 14-year-old; translate plan reasons only at the display edge. Why: athletes must understand without guessing.
-- Every value shown to an athlete must carry a label saying what kind of thing it is. Why: a bare name leaves athletes guessing what it is.
+- Label every athlete-facing value by kind. Why: bare values confuse athletes.
 - Demo auto-start outcomes and inspector state/events go to console.debug only, never app UI. Why: diagnostics are not for users.
 - No plan is built for an account without `profiles.hammers_today_started_at` while switch `hammers_today_start_gate` is on — enforced in `wk-generate-daily`, and the client mounts no plan provider before the start. `wk-daily-plan-job` builds only missing plans for started players. Why: one start per account, the same on every device.
 - Sessions end only by explicit Sign out (`signOut({ scope: 'local' })`) or server end; `/` and `/auth` forward signed-in players after session load; native auth key mirrored to `@capacitor/preferences` (`src/lib/auth/nativeSessionStore.ts`), restored in `main.tsx`. Why: iOS may clear WebView storage.
@@ -26,3 +26,4 @@
 
 - Staff sign-up: `/get-started` → `/signup/:role` (adults, `src/lib/auth/staffSignup.ts`); approvals reuse existing queues. Why: one approval system.
 - Read game-specific AGENTS.md in `src/components/games`, `src/lib/games`, and `supabase/functions/gp-ingest-document` before edits. Why: game rules live with their scope.
+- Advice reads never await rechecks; show read failures. Why: failures are not empty lists.

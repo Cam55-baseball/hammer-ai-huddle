@@ -1,3 +1,12 @@
+# AD4 — Oct 18 19:57 UTC — B no-data player proof PARTIAL; gaps found
+Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
+- [x] Recorded AD4 continuation: begin B with the no-data, unstarted TEST player; keep Coach plan active. A kept empty account is not proof of a genuinely brand-new signup.
+- [x] Two fresh affected-player 390×844 visits: four tabs and game-report navigation inspected, zero page exceptions/tab overflow; readiness Hammers Card honestly says Need more data. Not a new-signup/populated-cohort certification.
+- [ ] B gaps: missing subscribed measured-grade rows; Game IQ training-session threshold; unsupported Growth forecast/zero-denominator comparisons; steal 0% with no attempts. Advice read returns 403 permission denied, not an empty list.
+- [ ] Preview-only advice failure notice/non-blocking recheck added; phone notice still unverified. No permission migration applied. Resolve these B gaps next.
+- [x] Tests 3 files / 9 PASS; preview build OK; Coach phone team-report access PASS, plan active. No TEST game/measurement/consent/connection inputs, zero games confirmed; private session removed. No publish/migration/redeploy/cron/iOS. Evidence: `docs/owner/walkthroughs/intelligence/ad4/`.
+- [ ] Next B proofs: populated hitter, pitcher, two-way, softball; parent-run and both coach logging modes. Then C → D → E → F.
+
 # AD3 — Oct 18 19:47 UTC — Populated team-report phone proof PASS
 Ready to publish: **no** — populated team report now proven; B–F and timing-sensitive/physical-device certification remain open.
 - [x] Recorded AD3 continuation in owner order; retained TEST Coach subscription must stay active until all coach proofs finish.
