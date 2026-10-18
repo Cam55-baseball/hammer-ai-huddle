@@ -31,6 +31,7 @@ import {
 import { SavedReportsPanel } from "@/components/games/reports/SavedReportsPanel";
 import { ScoutingReportPanel } from "@/components/games/reports/ScoutingReportPanel";
 import { LedgerSplitsPanel } from "@/components/games/reports/LedgerSplitsPanel";
+import { baserunningSummary } from "@/lib/games/baserunningSummary";
 
 
 type Side = "all" | "L" | "R" | "S";
@@ -54,8 +55,9 @@ export default function GameReports() {
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await gp("gp_pitches")
-        .select("perspective,inning,pitch_type,pitch_velo,location,result,batter_handedness,count_balls,count_strikes")
-        .eq("user_id", user!.id)
+        .select("perspective,inning,pitch_type,pitch_velo,location,result,batter_handedness,count_balls,count_strikes,gp_games!inner(deleted_at)")
+        .eq("user_id", user?.id)
+        .is("gp_games.deleted_at", null)
         .limit(5000);
       if (error) throw error;
       return (data ?? []) as any[];
@@ -67,8 +69,9 @@ export default function GameReports() {
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await gp("gp_at_bats")
-        .select("result,batting_side,exit_velo,launch_angle,exit_direction,rbi")
-        .eq("user_id", user!.id)
+        .select("result,batting_side,exit_velo,launch_angle,exit_direction,rbi,gp_games!inner(deleted_at)")
+        .eq("user_id", user?.id)
+        .is("gp_games.deleted_at", null)
         .limit(5000);
       if (error) throw error;
       return (data ?? []) as any[];
@@ -80,8 +83,9 @@ export default function GameReports() {
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await gp("gp_defense_plays")
-        .select("position,play_type,result,error_flag")
-        .eq("user_id", user!.id)
+        .select("position,play_type,result,error_flag,gp_games!inner(deleted_at)")
+        .eq("user_id", user?.id)
+        .is("gp_games.deleted_at", null)
         .limit(5000);
       if (error) throw error;
       return (data ?? []) as any[];
@@ -92,9 +96,11 @@ export default function GameReports() {
     queryKey: ["gp-baserun-all", user?.id],
     enabled: !!user,
     queryFn: async () => {
+      if (!user) throw new Error("Sign in first");
       const { data, error } = await gp("gp_baserun_events")
-        .select("event_type,success")
-        .eq("user_id", user!.id)
+        .select("event_type,success,gp_games!inner(deleted_at)")
+        .eq("user_id", user.id)
+        .is("gp_games.deleted_at", null)
         .limit(5000);
       if (error) throw error;
       return (data ?? []) as any[];
@@ -187,16 +193,7 @@ export default function GameReports() {
   }, [defense.data]);
 
   // Baserunning
-  const brStats = useMemo(() => {
-    const total = (baserun.data ?? []).length;
-    const steals = (baserun.data ?? []).filter((b) => b.event_type === "steal");
-    const stealSuccess = steals.filter((b) => b.success === true).length;
-    return {
-      total,
-      steals: steals.length,
-      stealPct: steals.length ? Math.round((stealSuccess / steals.length) * 100) : 0,
-    };
-  }, [baserun.data]);
+  const brStats = useMemo(() => baserunningSummary(baserun.data ?? []), [baserun.data]);
 
   return (
     <div className="container max-w-4xl mx-auto py-8 px-4 space-y-5">
@@ -350,11 +347,23 @@ export default function GameReports() {
           <AccordionItem value="baserun">
             <AccordionTrigger>Baserunning</AccordionTrigger>
             <AccordionContent>
+              {baserun.isError ? (
+                <p role="alert" className="text-sm text-destructive">We couldn't load your baserunning entries. Please try again later.</p>
+              ) : baserun.isPending ? (
+                <p className="text-sm text-muted-foreground">Loading baserunning entries…</p>
+              ) : (
+                <>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 <Stat label="Events" value={String(brStats.total)} />
                 <Stat label="Steal attempts" value={String(brStats.steals)} />
-                <Stat label="Steal %" value={`${brStats.stealPct}%`} />
+                <Stat label="Steal success" value={brStats.stealPct == null ? 'Not enough data' : `${brStats.stealPct}%`} />
               </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {brStats.knownResults} steal attempts with a result · {brStats.missingResults} results not entered
+                {brStats.earlyRead ? ' · early read' : ''}
+              </p>
+                </>
+              )}
             </AccordionContent>
           </AccordionItem>
         )}
@@ -367,7 +376,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <Card className="p-3">
       <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="text-xl font-semibold mt-0.5">{value}</p>
+      <p className={value === 'Not enough data' ? 'text-sm text-muted-foreground mt-0.5' : 'text-xl font-semibold mt-0.5'}>{value}</p>
     </Card>
   );
 }

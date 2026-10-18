@@ -1,3 +1,12 @@
+# AD8 — Oct 18 20:15 UTC — B steal-result honesty PASS (preview)
+Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
+- [x] Game reports no longer show 0% steal success without attempts/entered results. Unknown outcomes leave the denominator; actual zero remains zero. Shows known/missing-result counts and early read below ten known results; failed reads show a notice instead of statistics.
+- [x] Sibling legacy split-view success percentage suppressed: its total-event denominator cannot distinguish unknown outcomes and its view includes removed games. No SQL applied. Live GameReports reads in all four event families now join nondeleted games; frozen reports unchanged.
+- [x] Two fresh affected TEST college-player visits at 390×844 to /games/reports: actual baserun reads 200, zero attempts, Not enough data, zero page exceptions/overflow. Separate browser-only 503 simulation proves the failure notice without fabricated statistics. Safari-agent Chromium emulation, not physical Safari or populated-cohort certification.
+- [x] Game/helper regressions: 11 files / 63 tests PASS (5 new steal-outcome tests). Latest preview build OK. Evidence: `docs/owner/walkthroughs/intelligence/ad8/`.
+- [x] No TEST entries inserted/deleted, no cleanup rows; Coach subscription untouched and retained. No publish, function redeploy, migration, cron or iOS changes.
+- [ ] Next B: measured-grade and Game IQ threshold gaps, then new/populated five-player, parent-run and both coach-mode proofs; C → D → E → F. Legacy baserunning split-view correction/positive certification and timing-sensitive/physical-device certification remain open.
+
 # AD7 — Oct 18 20:11 UTC — B empty-history percentage honesty PASS (preview)
 Ready to publish: **no** — remaining B–F and timing-sensitive/physical-device certification remain open.
 - [x] Completion Rate no longer claims 0% with no recorded activities. Weekly Avg is unavailable without records; vs Average has no percentage or trend arrow with a missing/zero baseline or unlogged today. Genuine recorded zero and signed changes are preserved. Shared LoadDashboard fix also covers WorkloadPanel.
