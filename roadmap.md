@@ -1,4 +1,9 @@
-# ACTIVE RUN — Oct 18, 17:37 UTC owner clarification
+# ACTIVE RUN — AC1, Oct 18 17:43 UTC
+Ready to publish: no — original HEVC/saved-report proof and remaining A–F work are open.
+AC1 partial PASS: automatic private device conversion before preview/probe/upload implemented; original untouched owner MOV selected as TEST college player at 390×844 → readable WebM preview and enabled Analyze. Metadata retains measured 30 fps and 960×560; no forced FPS/interpolation. Upload suite 4 files / 19 tests PASS; preview build OK. Proof: `docs/owner/walkthroughs/intelligence/ac1/proof-status.md`, `player-conversion.png` (footage excluded). No reports/uploads/test rows created; no backend redeploy/migration/publish/cron/iOS changes.
+Still open in this sub-step: genuine original HEVC (inspected originals were H264), exact timestamp/frame parity and saved-report read-back. Continue proof, not an owner-answer blocker. Automatic converter is preview-only, not live.
+
+# Owner clarification — Oct 18 17:37 UTC
 Ready to publish: no — ordered implementation/proof work remains; no owner-answer blockers remain.
 - [x] A1 / Oct 17 #5 PASS: direct Stripe TEST Coach subscription, zero invoice/no card; real coach-screen Agree + Disagree saved against app-filed TEST evaluation (grade 55 unchanged); owner dashboard shows 50% (1 of 2) and both notes on 390×844. Exact two votes/evaluation/request backed up and removed; temporary connection ended; test subscription canceled. Proof: `docs/owner/walkthroughs/intelligence/a1/{coach-agree.png,coach-disagree.png,owner-votes.png,proof-status.md}`. Focused tests 2 files / 9 PASS; preview build OK. No app deployment/migration/publish/cron/iOS changes.
 - [ ] A2: Completed → Start → saved plan read-back.
@@ -12,7 +17,7 @@ Ready to publish: no — ordered implementation/proof work remains; no owner-ans
 - [ ] F: Full page audit, full suite, updated owner guide and final readiness.
 Owner authorizes test-only agreement/waiver/consent acceptance and TEST inputs through app screens or own entry functions. Engine facts/grades/insights must remain evidence-based. Previous consent, populated-cohort and Checkout blockers below are superseded, not renewed requests.
 Cron: owner reports intelligence-learning-loop-nightly installed (04:30 UTC), first call 200. Installation DONE by owner report; actual nightly outcomes still to verify after first nightly run. SQL: `docs/owner/learning-loop-cron.sql`. No agent cron changes.
-This run completed A1 (one concrete sub-step). Next ordered run: A2 Completed → Start → saved plan. No owner-answer blocker remains. Historical status/proof retained below.
+A1 completed previously; AC1 advanced phone formats as newly ordered. Next: finish original-phone saved-report proof, then A2 Completed → Start → saved plan. No owner-answer blocker remains. Historical status/proof retained below.
 
 # PRIOR ACTIVE REPORT — Oct 18 owner answers
 Ready to publish: no — step 5 role/populated proof, complete earlier proof gaps and steps 6–8 remain unfinished.

@@ -32,6 +32,7 @@ import { useSideContext } from "@/contexts/SideContext";
 import { UPLOAD_ERRORS, friendlyRejectReason, friendlyThrownError } from "@/lib/upload/uploadErrorCopy";
 import { describeVideoSaveFailure } from "@/lib/upload/saveFailure";
 import { isAnalysisVideoFile } from "@/lib/upload/analysisVideoFile";
+import { prepareAnalysisVideo } from "@/lib/upload/prepareAnalysisVideo";
 import { unavailableAnalysis } from "../../supabase/functions/_shared/analysisReliability";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
@@ -112,6 +113,9 @@ export default function AnalyzeVideo() {
   const [clipTiles, setClipTiles] = useState<MeasuredClipTiles | null>(null);
   const [preflight, setPreflight] = useState<PreflightVerdict | null>(null);
   const [preflightChecking, setPreflightChecking] = useState(false);
+  const [preparingVideo, setPreparingVideo] = useState(false);
+  const [conversionProgress, setConversionProgress] = useState<number | null>(null);
+  const selectionRef = useRef(0);
 
   const [analyzing, setAnalyzing] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -368,7 +372,7 @@ export default function AnalyzeVideo() {
   // a transient auth/visibility blip cannot kick the user to /auth or /home
   // mid-analysis. Matches the pattern used by SeasonScheduleImporterDialog.
   useEffect(() => {
-    const busy = analyzing || uploading || extractingFrames;
+    const busy = analyzing || uploading || extractingFrames || preparingVideo;
     if (!busy) return;
     noteProtectedEditing(180_000); // refresh every tick up to the edge budget
     const id = window.setInterval(() => noteProtectedEditing(180_000), 10_000);
@@ -376,7 +380,7 @@ export default function AnalyzeVideo() {
       window.clearInterval(id);
       clearProtectedEditing();
     };
-  }, [analyzing, uploading, extractingFrames]);
+  }, [analyzing, uploading, extractingFrames, preparingVideo]);
 
   // Auto-recompute report card ONCE per video when metrics are missing/sparse.
   // Lineage-preserving: only mutates ai_analysis.metrics via the edge function.
@@ -429,7 +433,7 @@ export default function AnalyzeVideo() {
     toast.success(t('videoAnalysis.videoRemoved', "Video removed. Select a new video to analyze."));
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -444,16 +448,32 @@ export default function AnalyzeVideo() {
     }
 
 
-    setVideoFile(file);
-    setVideoPreview(URL.createObjectURL(file));
+    const selection = ++selectionRef.current;
+    setPreparingVideo(true);
+    setConversionProgress(null);
+    let prepared: File;
+    try {
+      prepared = await prepareAnalysisVideo(file, (progress) => {
+        if (selection === selectionRef.current) setConversionProgress(progress);
+      });
+      if (selection !== selectionRef.current) return;
+      if (prepared.size > 52428800) { toast.error(UPLOAD_ERRORS.tooLarge); return; }
+    } catch (error) {
+      if (selection === selectionRef.current) toast.error(error instanceof Error ? error.message : UPLOAD_ERRORS.unreadable);
+      return;
+    } finally {
+      if (selection === selectionRef.current) { setPreparingVideo(false); setConversionProgress(null); }
+    }
+    setVideoFile(prepared);
+    setVideoPreview(URL.createObjectURL(prepared));
     // One-second clip check before analysis (advisory; never blocks).
     setPreflight(null);
     setPreflightChecking(true);
     void (async () => {
       try {
-        const meta = await probeVideoMetadata(file).catch(() => null);
+        const meta = await probeVideoMetadata(prepared).catch(() => null);
         const fps = meta && meta.fps_source === "container" ? meta.fps_true ?? null : null;
-        setPreflight(await runClipPreflight(file, fps));
+        setPreflight(await runClipPreflight(prepared, fps));
       } catch (err) {
         console.warn("[clip-preflight] skipped", err);
       } finally {
@@ -1417,10 +1437,14 @@ export default function AnalyzeVideo() {
                 <input
                   id="video-upload"
                   type="file"
-                  accept="video/mp4,video/quicktime,video/x-msvideo,video/webm"
+                  accept="video/*,.mov,.mp4,.m4v,.avi,.webm,.mkv,.3gp"
                   className="hidden"
                   onChange={handleFileSelect}
+                  disabled={preparingVideo}
                 />
+                {preparingVideo && <p role="status" className="text-sm text-muted-foreground">
+                  {conversionProgress == null ? "Reading your clip…" : `Preparing your clip… ${conversionProgress}%`}
+                </p>}
               </div>
             </Card>
             <div className="mx-auto w-full max-w-xl">
@@ -1581,7 +1605,7 @@ export default function AnalyzeVideo() {
             {!analyzing && !analysis && (
               <Button
                 onClick={handleUploadAndAnalyze}
-                disabled={uploading || extractingFrames || savingProfileSide || (analysisEnabled && !clipSideKnown)}
+                disabled={preparingVideo || uploading || extractingFrames || savingProfileSide || (analysisEnabled && !clipSideKnown)}
                 size="lg"
                 className="w-full"
               >

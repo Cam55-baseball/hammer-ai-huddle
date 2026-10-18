@@ -9,4 +9,8 @@ describe("analysis clip selection", () => {
     expect(isAnalysisVideoFile({ name: "notes.txt", type: "" })).toBe(false);
     expect(isAnalysisVideoFile({ name: "notes.mov", type: "text/plain" })).toBe(false);
   });
+  it("accepts phone M4V and 3GP exports without a MIME type", () => {
+    expect(isAnalysisVideoFile({ name: "camera.m4v", type: "" })).toBe(true);
+    expect(isAnalysisVideoFile({ name: "camera.3gp", type: "application/octet-stream" })).toBe(true);
+  });
 });
