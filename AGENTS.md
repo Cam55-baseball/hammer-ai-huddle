@@ -31,4 +31,3 @@
 
 - Game IQ bypasses training-session gates, not subscriptions; other sections stay gated. Why: games are not training sessions.
 
-- Players read their own report-card measurements only via `get_my_report_card_trend` (metrics only, self); staff use `get_staff_report_card_trend`. Why: stored analyses stay locked; self-view needs no broad grant.
