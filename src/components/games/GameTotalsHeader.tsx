@@ -21,7 +21,7 @@ const OUTS_NOT_AB = new Set(["BB", "HBP", "SAC", "SF"]);
 
 export function GameTotalsHeader({ gameId }: { gameId: string }) {
   const ab = useQuery({
-    queryKey: ["gp-ab", gameId],
+    queryKey: ["gp-ab", gameId, "totals"],
     queryFn: async () => {
       const { data } = await gp("gp_at_bats")
         .select("result,rbi")
@@ -30,7 +30,7 @@ export function GameTotalsHeader({ gameId }: { gameId: string }) {
     },
   });
   const pitches = useQuery({
-    queryKey: ["gp-pitches", gameId],
+    queryKey: ["gp-pitches", gameId, "totals"],
     queryFn: async () => {
       const { data } = await gp("gp_pitches")
         .select("perspective")

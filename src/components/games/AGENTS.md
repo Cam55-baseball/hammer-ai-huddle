@@ -1,0 +1,3 @@
+- Summary queries use a separate suffix under the logger cache prefix. Why: partial summaries must never replace complete saved event rows on reload; prefix invalidation refreshes both.
+- Live game-report sources exclude deleted games and scope to the signed-in athlete; frozen snapshots stay unchanged. Why: removed games must not feed new reports.
+- Pitch intent/contact annotations use dedicated nullable pitch-ledger fields, never movement measurements or parsed historical notes; hard contact is an observation, not a measured threshold. Why: structured facts must not invent measurements.
