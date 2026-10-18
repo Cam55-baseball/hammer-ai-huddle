@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Zap, TrendingUp, TrendingDown, AlertTriangle, Activity, RefreshCw } from 'lucide-react';
 import { format, subDays } from 'date-fns';
+import { recordedChange } from '@/utils/recordedPercentages';
 
 interface LoadDashboardProps {
   className?: string;
@@ -39,10 +40,7 @@ export function LoadDashboard({ className }: LoadDashboardProps) {
   }, [todayLoad, weeklyAverage]);
 
   const todayVsAverage = useMemo(() => {
-    const todayCNS = todayLoad?.cns_load_total || 0;
-    const avgCNS = weeklyAverage?.cnsLoad || 0;
-    if (!avgCNS) return 0;
-    return ((todayCNS - avgCNS) / avgCNS) * 100;
+    return recordedChange(todayLoad?.cns_load_total, weeklyAverage?.cnsLoad);
   }, [todayLoad, weeklyAverage]);
 
   const getLoadStatus = (load: number) => {
@@ -115,7 +113,9 @@ export function LoadDashboard({ className }: LoadDashboardProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">{t('eliteWorkout.load.weeklyAvg', 'Weekly Avg')}</p>
-                <span className="text-3xl font-bold">{Math.round(weeklyAverage?.cnsLoad || 0)}</span>
+                <span className={weeklyAverage == null ? 'text-sm text-muted-foreground' : 'text-3xl font-bold'}>
+                  {weeklyAverage == null ? 'Not enough data' : Math.round(weeklyAverage.cnsLoad)}
+                </span>
               </div>
               <Zap className="h-8 w-8 text-muted-foreground/50" />
             </div>
@@ -130,18 +130,20 @@ export function LoadDashboard({ className }: LoadDashboardProps) {
                 <p className="text-sm text-muted-foreground">{t('eliteWorkout.load.vsAverage', 'vs Average')}</p>
                 <div className="flex items-center gap-1">
                   <span className={cn(
-                    'text-3xl font-bold',
-                    todayVsAverage > 20 ? 'text-red-500' : 
-                    todayVsAverage > 0 ? 'text-amber-500' : 'text-green-500'
+                    todayVsAverage == null ? 'text-sm text-muted-foreground' : 'text-3xl font-bold',
+                    todayVsAverage == null || todayVsAverage === 0 ? 'text-muted-foreground' :
+                    todayVsAverage > 20 ? 'text-destructive' :
+                    todayVsAverage > 0 ? 'text-warning' : 'text-primary'
                   )}>
-                    {todayVsAverage > 0 ? '+' : ''}{Math.round(todayVsAverage)}%
+                    {todayVsAverage == null ? 'Not enough data' : `${todayVsAverage > 0 ? '+' : ''}${Math.round(todayVsAverage)}%`}
                   </span>
                 </div>
               </div>
-              {todayVsAverage > 0 ? (
-                <TrendingUp className={cn('h-8 w-8', todayVsAverage > 20 ? 'text-red-500' : 'text-amber-500')} />
-              ) : (
-                <TrendingDown className="h-8 w-8 text-green-500" />
+              {todayVsAverage != null && todayVsAverage > 0 && (
+                <TrendingUp className={cn('h-8 w-8', todayVsAverage > 20 ? 'text-destructive' : 'text-warning')} />
+              )}
+              {todayVsAverage != null && todayVsAverage < 0 && (
+                <TrendingDown className="h-8 w-8 text-primary" />
               )}
             </div>
           </CardContent>

@@ -1,0 +1,46 @@
+[
+  {
+    "visit": 1,
+    "cards": [
+      {
+        "label": "Completion Rate",
+        "missing_data": true,
+        "percentage": false
+      },
+      {
+        "label": "Weekly Avg",
+        "missing_data": true,
+        "percentage": false
+      },
+      {
+        "label": "vs Average",
+        "missing_data": true,
+        "percentage": false
+      }
+    ],
+    "page_errors": 0,
+    "overflow": false
+  },
+  {
+    "visit": 2,
+    "cards": [
+      {
+        "label": "Completion Rate",
+        "missing_data": true,
+        "percentage": false
+      },
+      {
+        "label": "Weekly Avg",
+        "missing_data": true,
+        "percentage": false
+      },
+      {
+        "label": "vs Average",
+        "missing_data": true,
+        "percentage": false
+      }
+    ],
+    "page_errors": 0,
+    "overflow": false
+  }
+]
