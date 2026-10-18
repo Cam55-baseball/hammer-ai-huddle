@@ -22,6 +22,8 @@ import { showUndoToast } from "@/lib/games/undoToast";
 import { RepCard, RepKeyboardHints } from "./RepCard";
 import { NumberField } from "@/components/games/NumberField";
 import { entrySourceLabel } from "@/lib/intelligence/entrySource";
+import { baserunEntryPayload } from "@/lib/games/fieldEntry";
+import { OptionalFact } from "./OptionalFact";
 
 
 import { pitchTypes } from "@/lib/games/sportRules";
@@ -168,10 +170,10 @@ function RunForm({ sport, onSave, onCancel }: {
 }) {
   const PITCH_TYPES = pitchTypes(sport);
   const [f, setF] = useState<Record<string, any>>({
-    inning: 1, event_type: "steal", base_from: 1, base_to: 2,
-    success: true, lead_steps: "", pitcher_arm_side: "R",
+    inning: "", event_type: "", base_from: "", base_to: "",
+    success: "", lead_steps: "", pitcher_arm_side: "",
     pitcher_time_to_home_sec: "", catcher_pop_time_sec: "",
-    pitch_type_ran_on: "", run_time_sec: "", is_pinch_run: false, notes: "",
+    pitch_type_ran_on: "", run_time_sec: "", is_pinch_run: "", notes: "",
   });
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
 
@@ -179,33 +181,25 @@ function RunForm({ sport, onSave, onCancel }: {
     <Card className="p-4 space-y-3 bg-muted/30">
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <F label="Inning"><NumberField value={f.inning}
-          onValueChange={(v) => set("inning", v ?? 0)} /></F>
+          onValueChange={(v) => set("inning", v ?? "")} /></F>
         <F label="Event">
           <Select value={f.event_type} onValueChange={(v) => set("event_type", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Not entered" /></SelectTrigger>
             <SelectContent>{EVENT_TYPES.map((p) => (<SelectItem key={p} value={p}>{p}</SelectItem>))}</SelectContent>
           </Select>
         </F>
-        <F label="Success">
-          <Select value={String(f.success)} onValueChange={(v) => set("success", v === "true")}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="true">Safe / read it</SelectItem>
-              <SelectItem value="false">Caught / missed</SelectItem>
-            </SelectContent>
-          </Select>
-        </F>
+        <OptionalFact label="Success" value={f.success} onChange={(v) => set("success", v)} />
         <F label="From"><NumberField min={0} max={4} value={f.base_from}
-          onValueChange={(v) => set("base_from", v ?? 0)} /></F>
+          onValueChange={(v) => set("base_from", v ?? "")} /></F>
         <F label="To"><NumberField min={0} max={4} value={f.base_to}
-          onValueChange={(v) => set("base_to", v ?? 0)} /></F>
+          onValueChange={(v) => set("base_to", v ?? "")} /></F>
         <F label="Lead (steps)">
           <NumberField step="0.5" value={f.lead_steps}
             onChange={(e) => set("lead_steps", e.target.value)} />
         </F>
         <F label="Pitcher arm">
           <Select value={f.pitcher_arm_side} onValueChange={(v) => set("pitcher_arm_side", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Not entered" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="L">L</SelectItem><SelectItem value="R">R</SelectItem>
             </SelectContent>
@@ -230,23 +224,12 @@ function RunForm({ sport, onSave, onCancel }: {
             onChange={(e) => set("run_time_sec", e.target.value)} />
         </F>
       </div>
-      <div className="flex items-center gap-2">
-        <input id="pr" type="checkbox" checked={f.is_pinch_run}
-          onChange={(e) => set("is_pinch_run", e.target.checked)} />
-        <Label htmlFor="pr" className="text-xs">Pinch runner</Label>
-      </div>
+      <OptionalFact label="Pinch runner" value={f.is_pinch_run} onChange={(v) => set("is_pinch_run", v)} />
       <F label="Notes"><Textarea rows={2} value={f.notes}
         onChange={(e) => set("notes", e.target.value)} /></F>
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-        <Button size="sm" onClick={() => {
-          const payload: Record<string, any> = { ...f };
-          ["lead_steps","pitcher_time_to_home_sec","catcher_pop_time_sec","run_time_sec"].forEach((k) => {
-            payload[k] = payload[k] === "" ? null : Number(payload[k]);
-          });
-          if (!payload.pitch_type_ran_on) payload.pitch_type_ran_on = null;
-          onSave(payload);
-        }}>Save</Button>
+        <Button size="sm" disabled={!f.event_type} onClick={() => onSave(baserunEntryPayload(f))}>Save</Button>
       </div>
     </Card>
   );

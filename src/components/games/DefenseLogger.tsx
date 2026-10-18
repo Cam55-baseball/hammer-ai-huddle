@@ -21,6 +21,8 @@ import { showUndoToast } from "@/lib/games/undoToast";
 import { RepCard, RepKeyboardHints } from "./RepCard";
 import { NumberField } from "@/components/games/NumberField";
 import { entrySourceLabel } from "@/lib/intelligence/entrySource";
+import { defenseEntryPayload } from "@/lib/games/fieldEntry";
+import { OptionalFact } from "./OptionalFact";
 
 
 const POSITIONS = ["P","C","1B","2B","3B","SS","LF","CF","RF"];
@@ -188,12 +190,12 @@ function DefForm({ onSave, onCancel }: {
   onSave: (r: Record<string, any>) => void; onCancel: () => void;
 }) {
   const [f, setF] = useState<Record<string, any>>({
-    inning: 1, position: "SS", throwing_side: "R", play_type: "",
-    shift: "no_shift", result: "", error_flag: false, assist: false, putout: false,
+    inning: "", position: "", throwing_side: "", play_type: "",
+    shift: "", result: "", error_flag: "", assist: "", putout: "",
     time_to_first_sec: "", pop_time_sec: "", arm_velo: "",
     spray_direction: "", batted_ball_type: "",
     // UI-only extras folded into notes on save (column doesn't exist yet):
-    throw_base: "", route_quality: "", infield_rep_type: "", blocked: false,
+    throw_base: "", route_quality: "", infield_rep_type: "", blocked: "",
     notes: "",
   });
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
@@ -211,16 +213,16 @@ function DefForm({ onSave, onCancel }: {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {/* Always shown */}
         <F label="Inning"><NumberField value={f.inning}
-          onValueChange={(v) => set("inning", v ?? 0)} /></F>
+          onValueChange={(v) => set("inning", v ?? "")} /></F>
         <F label="Position">
           <Select value={f.position} onValueChange={(v) => set("position", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Not entered" /></SelectTrigger>
             <SelectContent>{POSITIONS.map((p) => (<SelectItem key={p} value={p}>{p}</SelectItem>))}</SelectContent>
           </Select>
         </F>
         <F label="Throwing side">
           <Select value={f.throwing_side} onValueChange={(v) => set("throwing_side", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Not entered" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="L">L</SelectItem><SelectItem value="R">R</SelectItem>
             </SelectContent>
@@ -234,7 +236,7 @@ function DefForm({ onSave, onCancel }: {
         </F>
         <F label="Shift">
           <Select value={f.shift} onValueChange={(v) => set("shift", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Not entered" /></SelectTrigger>
             <SelectContent>{SHIFTS.map((s) => (<SelectItem key={s} value={s}>{s}</SelectItem>))}</SelectContent>
           </Select>
         </F>
@@ -314,59 +316,18 @@ function DefForm({ onSave, onCancel }: {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-4">
-        <label className="flex items-center gap-2 text-xs">
-          <input type="checkbox" checked={f.error_flag}
-            onChange={(e) => set("error_flag", e.target.checked)} /> Error
-        </label>
-        <label className="flex items-center gap-2 text-xs">
-          <input type="checkbox" checked={f.assist}
-            onChange={(e) => set("assist", e.target.checked)} /> Assist
-        </label>
-        <label className="flex items-center gap-2 text-xs">
-          <input type="checkbox" checked={f.putout}
-            onChange={(e) => set("putout", e.target.checked)} /> Putout
-        </label>
-        {isCatcher && (
-          <label className="flex items-center gap-2 text-xs">
-            <input type="checkbox" checked={f.blocked}
-              onChange={(e) => set("blocked", e.target.checked)} /> Blocked in dirt
-          </label>
-        )}
+      <div className="grid grid-cols-2 gap-3">
+        <OptionalFact label="Error" value={f.error_flag} onChange={(v) => set("error_flag", v)} />
+        <OptionalFact label="Assist" value={f.assist} onChange={(v) => set("assist", v)} />
+        <OptionalFact label="Putout" value={f.putout} onChange={(v) => set("putout", v)} />
+        {isCatcher && <OptionalFact label="Blocked in dirt" value={f.blocked} onChange={(v) => set("blocked", v)} />}
       </div>
 
       <F label="Notes"><Textarea rows={2} value={f.notes}
         onChange={(e) => set("notes", e.target.value)} /></F>
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-        <Button size="sm" onClick={() => {
-          const payload: Record<string, any> = { ...f };
-          ["time_to_first_sec", "pop_time_sec", "arm_velo"].forEach((k) => {
-            payload[k] = payload[k] === "" ? null : Number(payload[k]);
-          });
-          if (!payload.play_type) payload.play_type = null;
-          // A typed error code ("E6") is the tick — nobody also ticks the box.
-          if (typeof payload.result === "string" && /^e\s*-?\s*[1-9]$/i.test(payload.result.trim())) {
-            payload.error_flag = true;
-          }
-          if (!payload.result) payload.result = null;
-          if (!payload.spray_direction) payload.spray_direction = null;
-          // Fold UI-only extras into notes so we never lose them, since the
-          // dedicated columns aren't part of the canonical schema yet.
-          const extras: string[] = [];
-          if (payload.throw_base) extras.push(`throw→${payload.throw_base}`);
-          if (payload.route_quality) extras.push(`route:${payload.route_quality}`);
-          if (payload.infield_rep_type) extras.push(`rep:${payload.infield_rep_type}`);
-          if (payload.blocked) extras.push("blocked");
-          if (extras.length) {
-            payload.notes = [payload.notes, `[${extras.join(" · ")}]`].filter(Boolean).join(" ");
-          }
-          delete payload.throw_base;
-          delete payload.route_quality;
-          delete payload.infield_rep_type;
-          delete payload.blocked;
-          onSave(payload);
-        }}>Save rep</Button>
+        <Button size="sm" disabled={!f.position} onClick={() => onSave(defenseEntryPayload(f))}>Save rep</Button>
       </div>
     </Card>
   );
