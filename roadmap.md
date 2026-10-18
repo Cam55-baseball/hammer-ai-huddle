@@ -1,3 +1,12 @@
+# AE1 — Oct 18 20:45 UTC — Measured area grades for players (preview + one backend read function)
+Ready to publish: **no** — see AD12 summary; coach/org grade views, populated phone proof, streams 1–3, step 8 and final audit open.
+- [x] Each area row now shows "Grade: NN (band) · from your <area> video, <date>" from the latest measured report-card score, 20–80 by 5s (Sub Par <40, Acceptable 40–60, Elite 65+); no measured score → "Grade: Not yet measured".
+- [x] New self-only read function (migration 0079, owner-authorized release): returns only the caller's own measurements. Live check as TEST college player: own reads 200 (0 analyses), staff read 403, signed-out 401.
+- [x] 10 files / 61 tests PASS (3 new grade-scale rules).
+- [ ] Populated grade phone proof — needs a real analysis on a TEST player (Stream 1).
+- [ ] Coach/org grade views; scouts unchanged (family sharing only).
+- [ ] Streams 1–3, HEVC measurement comparison (blocked: body tracking runs in the browser), step 8, audit, suite, guide. Cancel democoach plan before Nov 18.
+
 # AD13 — Oct 18 20:40 UTC — Owner direction recorded; Report Card released (preview)
 Ready to publish: **no** — see the AD12 summary below plus these new items.
 - [x] Report Card released to everyone (switch on, preview). 9 files / 58 tests PASS.
