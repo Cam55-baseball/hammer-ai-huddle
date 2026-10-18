@@ -34,6 +34,7 @@ Full suite PASS: **381 files / 2,997 tests**. Final focused rerun 18/18 PASS; bu
 Live this round: assessment/parent-sharing/video-tag schema changes; `check-subscription`, `parent-consent`, `intel-recheck`, `intel-recheck-job`. No publish, cron changes or iOS edits. Callback bundling issue corrected and successfully deployed.
 
 ## Remaining lean task list
+- [ ] AB7: remove guessed at-bat facts and require an explicit inning; prove player save/reload, preserve entered zero/No, clean exact fixtures and run tests.
 - [x] AB6: fix guessed defense/running facts; teen phone save/reload/read-back, source labels, exact cleanup, full tests and honest gate/cohort audit.
 - [ ] AB6 continuation: positive parent logging waits on genuine legal acceptance/signature; both coach modes wait on working paid test subscription; genuine 10+ game hitter/5+ report pitcher populations missing. Steps 6–8 remain open in order.
 - [x] AB5: document review/explicit confirmation and reload; duplicate-free retry, cross-player refusal, four-family null facts, exact cleanup.
