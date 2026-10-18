@@ -4,6 +4,7 @@ import {
   locationToZone,
   mapPitchType,
   contactQuality,
+  mapAtBatResult,
 } from "../ingestParsers";
 
 describe("ingestParsers", () => {
@@ -29,8 +30,30 @@ describe("ingestParsers", () => {
     expect(res.source).toBe("hittrax");
     const row = res.rows[0] as any;
     expect(row.kind).toBe("at_bat");
-    expect(row.contact_quality).toBe("barrel");
+    expect(row.result).toBe("2B");
+    expect(row.contact_quality).toBeNull();
     expect(row.exit_direction).toBe("LF");
+  });
+
+  it("normalizes both import siblings without inventing unknown outcomes", () => {
+    expect(mapAtBatResult("Double")).toBe("2B");
+    expect(mapAtBatResult("K_swinging")).toBe("K_swinging");
+    expect(mapAtBatResult("Strikeout")).toBeNull();
+    const known = parseIngestText("Inning,Batter,Result\n1,Test,Walk").rows[0];
+    expect(known.result).toBe("BB");
+    const unknown = parseIngestText("Inning,Batter,Result\n1,Test,Unclear play").rows[0];
+    expect(unknown.result).toBeNull();
+    if (unknown.kind !== "at_bat") throw new Error("Expected at-bat");
+    expect(unknown.notes).toContain("Unmapped imported result: Unclear play");
+  });
+
+  it("never treats a batted-ball type or speed as an observed outcome or quality", () => {
+    const row = parseIngestText("Inning,Velo,LA,Type\n1,97.2,18,Fly ball").rows[0];
+    expect(row.result).toBeNull();
+    if (row.kind !== "at_bat") throw new Error("Expected at-bat");
+    expect(row.contact_quality).toBeNull();
+    expect(row.exit_velo).toBe(97.2);
+    expect(row.launch_angle).toBe(18);
   });
 
   it("flags unknown exports instead of guessing", () => {
