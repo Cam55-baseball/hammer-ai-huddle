@@ -688,19 +688,22 @@ export function buildTeamPostgame(
 
   athletes.forEach((a) => {
     const abs = a.atBats ?? [];
-    const official = abs.filter((x) => !AT_BAT_NON_AB.includes(String(x.result ?? ""))).length;
+    const entered = abs.filter((x) => x.result != null && x.result !== "");
+    const official = entered.filter((x) => !AT_BAT_NON_AB.includes(String(x.result))).length;
     const hits = abs.filter((x) => IN_PLAY_HIT.includes(String(x.result ?? ""))).length;
-    const ks = abs.filter((x) => ["K", "strikeout", "SO"].includes(String(x.result ?? ""))).length;
+    const ks = entered.filter((x) => ["K", "K_swinging", "K_looking", "strikeout", "SO"].includes(String(x.result))).length;
     const bb = abs.filter((x) => ["BB", "walk"].includes(String(x.result ?? ""))).length;
-    const rbi = abs.reduce((s, x) => s + (num(x.rbi) ?? 0), 0);
+    const enteredRbi = abs.map((x) => num(x.rbi)).filter((n): n is number => n != null);
+    const rbi = enteredRbi.length ? enteredRbi.reduce((s, n) => s + n, 0) : "Not entered";
     teamHits += hits;
     teamAb += official;
     teamK += ks;
     teamBb += bb;
     const pitchCount = (a.pitches ?? []).filter((p) => p.perspective === "pitcher").length;
-    const errs = (a.defense ?? []).filter((d) => d.error_flag).length;
-    rows.push([a.athleteName, official, hits, rbi, bb, ks, pitchCount || "—", errs]);
-    if (official > 0 && hits / official >= 0.5) standouts.push(`${a.athleteName}: ${hits}-for-${official}`);
+    const enteredErrors = (a.defense ?? []).filter((d) => typeof d.error_flag === "boolean");
+    const errs = enteredErrors.filter((d) => d.error_flag).length;
+    rows.push([a.athleteName, entered.length ? official : "Not entered", entered.length ? hits : "Not entered", rbi, entered.length ? bb : "Not entered", entered.length ? ks : "Not entered", pitchCount || "Not entered", enteredErrors.length ? errs : "Not entered"]);
+    if (official > 0 && hits / official >= 0.5) standouts.push(`${a.athleteName}: ${hits}-for-${official}${official < MIN_TREND_SAMPLE ? " · early read" : ""}`);
     if (ks >= 3) redFlags.push(`${a.athleteName}: ${ks} strikeouts`);
     if (errs >= 2) redFlags.push(`${a.athleteName}: ${errs} defensive misses`);
     if (pitchCount >= 90) redFlags.push(`${a.athleteName}: ${pitchCount} pitches — check rest requirement`);
@@ -716,8 +719,8 @@ export function buildTeamPostgame(
         a.athleteName,
         ps.length,
         withResult.length ? `${pct(strikes, withResult.length)}${withResult.length < MIN_TREND_SAMPLE ? " (early read)" : ""}` : "Not entered",
-        one(avg(ps.map((p) => num(p.pitch_velo)).filter((n): n is number => n != null)), ""),
-        new Set(ps.map((p) => p.inning)).size,
+        ps.some((p) => num(p.pitch_velo) != null) ? one(avg(ps.map((p) => num(p.pitch_velo)).filter((n): n is number => n != null)), "") : "Not entered",
+        ps.some((p) => num(p.inning) != null) ? new Set(ps.map((p) => num(p.inning)).filter((n) => n != null)).size : "Not entered",
       ] as (string | number)[];
     })
     .filter(Boolean) as (string | number)[][];
@@ -737,13 +740,13 @@ export function buildTeamPostgame(
     sections.push({
       id: "staff",
       title: "Pitching staff",
-      summary: "Usage and pitch counts — rest requirements follow from here.",
+      summary: "Logged pitches only. Missing results and speed stay unentered.",
       table: { columns: ["Pitcher", "Pitches", "Strike%", "Avg velo", "Innings"], rows: staffRows },
     });
   }
   const sourceBullets = athletes
-    .filter((a) => a.sources && a.sources.length)
-    .map((a) => `${a.athleteName} — Logged by: ${a.sources!.join(", ")}`);
+    .filter((a) => a.sources?.length)
+    .map((a) => `${a.athleteName} — Logged by: ${a.sources?.join(", ")}`);
   if (sourceBullets.length) sections.push({ id: "sources", title: "Who logged it", bullets: sourceBullets });
   if (standouts.length) sections.push({ id: "standouts", title: "Standouts", bullets: standouts });
   if (redFlags.length) sections.push({ id: "flags", title: "Red flags", bullets: redFlags });
@@ -761,6 +764,6 @@ export function buildTeamPostgame(
       { label: "Athletes logged", value: String(athletes.length) },
     ],
     sections,
-    nextUp: redFlags.length ? redFlags.slice(0, 3) : ["Nothing structural broke — hold the week's plan."],
+    nextUp: [],
   };
 }
