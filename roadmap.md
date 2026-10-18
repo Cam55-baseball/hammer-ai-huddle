@@ -1,3 +1,9 @@
+# Stream 2 — Oct 18 20:50 UTC — Game IQ step 6 (draft, preview)
+- [x] Player Game IQ reports (hitting, pitching, defense/throwing, baserunning), tap-in heat maps (as hitter / as pitcher) and matchup planner (pitcher hand × pitch type, sample size on every row, early read under 10) built from entered game facts only; replaces the snapshot heat-map card on the Game IQ tab (subscription gate kept). 10 new honesty tests PASS; games + Progress tests 12 files / 70 tests PASS.
+- [x] Phone proof 390×844 as TEST college player, 2 fresh visits each: empty (Need more data / No data yet) and populated with one TEST game (Not entered for blanks, early read labels, tapped zones only); 0 page errors, no sideways scroll. TEST game + 12 event rows deleted, verified. Evidence: `docs/owner/walkthroughs/intelligence/stream2/`.
+- [ ] Open: entry through the Games screen itself (seeded as the TEST player via the backend), coach/team matchup view, softball labels, physical iPhone.
+
+
 # AF6 — Oct 18 21:59 UTC — Combined status
 
 - Report Card: OFF for every role (switch report_card), data kept. PASS — docs/owner/walkthroughs/intelligence/ae9/
