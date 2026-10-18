@@ -1,3 +1,10 @@
+# AD11 — Oct 18 20:30 UTC — B Performance areas: no report-card hint for players PASS (preview)
+Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
+- [x] Fixed AD10 wording that hinted at the unreleased Report Card to players; players see labeled count, last analysis date and "See analysis"; owner/admin keep grade line + report card link.
+- [x] 2 files / 7 tests PASS. Two fresh TEST college-player phone visits: reads 200, honest empty (no analyses), 0 errors, no overflow. Populated list not phone-proven. Evidence: `docs/owner/walkthroughs/intelligence/ad11/`.
+- [x] No TEST data inserted/deleted; Coach plan active and untouched. No publish, redeploy, migration, cron or iOS changes.
+- [ ] Measured 20–80 area grades for players wait on the owner releasing the Report Card. Next B: populated five-player/parent/coach proofs; then C → D → E → F.
+
 # AD10 — Oct 18 20:24 UTC — B Performance areas honesty (preview, test-proven)
 Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
 - [x] "Your areas" rows now show a failure notice when the read fails (was a silent empty list), a labeled "Last analysis" date, and "Grade: on your report card" (scores stay locked from players; no bare or guessed grade).

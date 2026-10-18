@@ -1,0 +1,26 @@
+[
+  {
+    "visit": 1,
+    "areas_shown": false,
+    "areas_text": "",
+    "video_reads": [
+      200,
+      200,
+      200
+    ],
+    "page_errors": 0,
+    "overflow": false
+  },
+  {
+    "visit": 2,
+    "areas_shown": false,
+    "areas_text": "",
+    "video_reads": [
+      200,
+      200,
+      200
+    ],
+    "page_errors": 0,
+    "overflow": false
+  }
+]
