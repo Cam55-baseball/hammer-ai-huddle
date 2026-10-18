@@ -92,6 +92,8 @@ export function MPIBreakdownCard() {
             <Divider />
 
             <Row label="FINAL MPI" value={Math.round(mpi.adjusted_global_score ?? 0).toString()} bold />
+            </>
+            )}
           </CardContent>
         </Card>
       </CollapsibleContent>
