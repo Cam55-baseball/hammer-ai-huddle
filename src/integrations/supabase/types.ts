@@ -22991,6 +22991,16 @@ export type Database = {
       }
       get_exercise_live_text: { Args: { _slug: string }; Returns: Json }
       get_exercise_video: { Args: { _slug: string }; Returns: string }
+      get_my_report_card_trend: {
+        Args: { p_limit?: number; p_module: string }
+        Returns: {
+          ai_analysis: Json
+          created_at: string
+          id: string
+          module: string
+          sport: string
+        }[]
+      }
       get_my_side_split_inputs: {
         Args: never
         Returns: {
