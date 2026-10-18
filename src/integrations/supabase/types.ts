@@ -8246,6 +8246,7 @@ export type Database = {
           count_balls: number | null
           count_strikes: number | null
           created_at: string
+          entry_source: string | null
           exit_direction: string | null
           exit_velo: number | null
           game_id: string
@@ -8279,6 +8280,7 @@ export type Database = {
           count_balls?: number | null
           count_strikes?: number | null
           created_at?: string
+          entry_source?: string | null
           exit_direction?: string | null
           exit_velo?: number | null
           game_id: string
@@ -8312,6 +8314,7 @@ export type Database = {
           count_balls?: number | null
           count_strikes?: number | null
           created_at?: string
+          entry_source?: string | null
           exit_direction?: string | null
           exit_velo?: number | null
           game_id?: string
@@ -8557,6 +8560,7 @@ export type Database = {
           ai_summary: string | null
           created_at: string
           deleted_at: string | null
+          entry_source: string | null
           game_date: string
           game_summary: Json | null
           game_type: string | null
@@ -8594,6 +8598,7 @@ export type Database = {
           ai_summary?: string | null
           created_at?: string
           deleted_at?: string | null
+          entry_source?: string | null
           game_date: string
           game_summary?: Json | null
           game_type?: string | null
@@ -8631,6 +8636,7 @@ export type Database = {
           ai_summary?: string | null
           created_at?: string
           deleted_at?: string | null
+          entry_source?: string | null
           game_date?: string
           game_summary?: Json | null
           game_type?: string | null
