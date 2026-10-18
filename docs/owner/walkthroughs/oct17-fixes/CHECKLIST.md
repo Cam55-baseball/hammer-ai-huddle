@@ -42,3 +42,14 @@ Only analyze-video redeployed. No publish, cron, iOS, migration or Stripe change
 - [x] Full suite: 367 files, 2,941 tests passed; preview build OK.
 
 No YY2 redeploy, publish, cron, iOS, migration, Stripe or new-account changes.
+
+## YY3 continuation
+- [x] Audit retry/identity/error tests: five new behavioral cases passed.
+- [x] Function validation passed; only analyze-video redeployed.
+- [x] Real throwing upload as demo player → readable saved report and ok audit; AI estimated cost $0.014818.
+- [x] Two separate unreadable-frame checks → saved Not measured reports with saved audit status, rejected records read back.
+- [x] Exact test clip backed up and deleted; zero remaining clips. Audits/cost retained.
+- [x] Full suite: 368 files / 2,946 tests passed; preview build OK.
+- [ ] Required 12 suitable clip proof, real coach votes, new-player Start, optional service-sharing parent access and populated History remain open.
+
+No publishing, cron, iOS, migrations, Stripe or new-account changes. Screenshot: yy3-throwing-report.png (phone report).

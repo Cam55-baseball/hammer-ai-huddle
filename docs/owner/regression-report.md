@@ -4,6 +4,14 @@ Started 2026-10-13. Sections marked NOT YET RUN have not been checked.
 
 ## Oct 17 owner fixes — verified Oct 18
 
+### YY3 follow-up
+- Fixed ignored analysis-audit failures: stable invocation UUID through retries/catch paths, one retry, duplicate-commit read-back, and explicit audit_persistence status. Report delivery remains independent of diagnostic storage. Five new behavioral tests cover temporary/persistent failures, lost response, caller identity and missing read-back.
+- Deno validation passed after isolating validator dependencies in /tmp; **redeployed only analyze-video** (source fingerprint 4a20c481b3aa49430bb39296f210f4da3b6d3c61bcc00f0c62ed2146178e2e38).
+- Real signed-in player throwing upload produced readable saved report and ok audit at 05:24:25 UTC, recorded AI estimated cost $0.014818 (18,478 input / 3,710 output tokens). This is still the existing glove-throw footage, not hitting/pitching proof.
+- Two distinct unreadable-frame invocations returned saved Not measured reports, audit_persistence.saved=true and one rejected audit each. Backed up exact clip and removed through existing deletion function; remaining videos zero. Audits/cost records retained, no new test accounts.
+- Verification scripts initially requested score-locked ai_analysis from videos and were denied; corrected cleanup read-back to permitted columns, without changing grants. Saved-report existence confirmed through read-only backend query. Browser also reported existing subscription-fetch and localhost service-worker errors; not attributed to this function or claimed fixed.
+- Full suite: **368 files / 2,946 tests passed**; preview build OK. No publish, cron, iOS, migration or Stripe writes. Other open proof blockers remain in roadmap.
+
 ### YY2 follow-up
 - Parent Account settings lists active, unrevoked linked children and opens existing scouting controls. Verified as parent, not owner; phone screenshots saved. Metrics saved, reloaded and restored; visibility stayed OFF. All original consent choice fields matched final read-back; audit retained.
 - Optional connected-service consent remains separate and child-session scoped; still unproven.
