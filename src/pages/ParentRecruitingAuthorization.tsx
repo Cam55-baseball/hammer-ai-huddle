@@ -21,6 +21,7 @@ import { useParentRecruitingAuthorization } from "@/hooks/useParentRecruitingAut
 import { useRecruitingConsentAudit } from "@/hooks/useRecruitingConsent";
 import { toast } from "@/hooks/use-toast";
 import { ParentSharingChecklist } from "@/components/recruiting/ParentSharingChecklist";
+import { OptionalSharingControl } from "@/components/parent/OptionalSharingControl";
 
 export default function ParentRecruitingAuthorization() {
   const { athleteId } = useParams<{ athleteId: string }>();
@@ -148,6 +149,7 @@ export default function ParentRecruitingAuthorization() {
         </Card>
 
         {athleteId && <ParentSharingChecklist athleteId={athleteId} />}
+        {athleteId && <OptionalSharingControl athleteId={athleteId} />}
         {athleteId && isParent && <CoachMessagesInbox athleteId={athleteId} title="Messages from your child's coaches" />}
 
         <Card>

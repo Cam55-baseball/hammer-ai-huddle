@@ -35,6 +35,7 @@ import { AtBatPitchPanel } from "./AtBatPitchPanel";
 import type { AtBatPitchTally } from "@/hooks/useAtBatPitches";
 import { RepCard, RepKeyboardHints } from "./RepCard";
 import { AbSwingPanel } from "./AbSwingPanel";
+import { AtBatVideoTag } from "./AtBatVideoTag";
 import { usePitcherDossiers } from "@/hooks/useGameDossiers";
 import { NumberField } from "@/components/games/NumberField";
 import { QuickAtBatBar } from "./QuickAtBatBar";
@@ -399,6 +400,7 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
                     gameId={gameId}
                     dossierId={ab.opponent_pitcher_id ?? probable.data ?? null}
                   />
+                  <AtBatVideoTag abId={ab.id} gameId={gameId} />
                 </>
               )}
             </RepCard>

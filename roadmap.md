@@ -1,4 +1,50 @@
-# REPORT — Oct 18, 06:40 UTC (end of queued batch ZZ1–ZZ12)
+# ACTIVE REPORT — Oct 18 owner answers
+Ready to publish: NO — remaining implementation and five-player-type proof are unfinished.
+All former approval blockers are answered; no further scoped authorization is required. The only owner action currently needed is applying the written nightly schedule when ready.
+
+## Oct 17 fixes — current status and proof
+1. Analyses: 12/12 full-pipeline saved reports from real owner footage, **100%**: baseball hitting/pitching/throwing 2/2 each; softball hitting/pitching/throwing 2/2 each. Before: 162/189 successful (85.7%), 9/189 failed without reports (4.8%). Initial unsupported-format attempts showed unsaved Not measured reports and are excluded from the full-pipeline rate. Re-encoded real footage completed; all 12 test copies/reports deleted. Original-format decoding remains a caveat, not a claimed fix.
+2. Duplicate Scout entry: PASS — prior owner-menu proof.
+3. Subscribers placement and breakdown: PASS — prior phone/test proof.
+4. Builders/CMS labels: PASS — prior checks.
+5. Agreement dashboard: PARTIAL — built; democoach checkout and real vote proof still unfinished, not waiting on approval.
+6. Owner settings: PASS — prior phone proof.
+7. Assessment: server enforcement PASS — incomplete blocked, empty-answer Completed accepted, permanent start retained; test state restored. UI completion/start proof remains open.
+8. Parent sharing: parent-run save/reload and unauthorized-player refusal PASS (`parent-sharing-player.png`); linked-parent positive proof remains open. Scout visibility prior proof retained; health/recruiting grants unchanged.
+9. Physio redo: PASS — prior phone proof.
+10. History/Train next: PARTIAL — prior empty-state/navigation checks; populated history and approved team-report screen unfinished.
+
+## Intelligence — implementation / proof
+1. Data lineage PASS: planned/logged CNS and fascial values are rule-generated training exposure, not body measurements; readiness is a composite; weight/sleep/eating are self-entered; no wearable data. `docs/owner/data-lineage.md`.
+2. Cards/how-sure PARTIAL proof: existing owner screenshots `Today.png`; five player types not yet passed.
+3. General tabs PARTIAL: existing Today/Performance/GameIQ/Growth screenshots; approved measurement-based grade/source/date rows unfinished; five player types not yet passed.
+4. Learning loop PARTIAL: self recheck works; shared nightly callback deployed and unauthorized calls refused. Exact schedule SQL written, not applied. Authenticated nightly batch/outcome proof unfinished. Prior `loop_Today.png`, `srv_Today.png`, `auto_Today.png`.
+5. Game logging PARTIAL: at-bat Player-entered → Video-tagged saved/read back on the test player's phone (`oct18/video-tagged-player.png`), timestamp bounds enforced, exact test data removed. Parent/coach/teen coverage still unfinished.
+6. Game IQ and team post-game screen FAIL/OPEN — unfinished.
+7. Owner Coaching Console FAIL/OPEN — unfinished.
+8. Private population learning FAIL/OPEN — unfinished.
+Full suite PASS: **376 files / 2,969 tests**. Build OK. Full page audit and five-player proof remain OPEN. Detailed evidence: `docs/owner/walkthroughs/intelligence/oct18/proof-status.md`.
+
+Live this round: assessment/parent-sharing/video-tag schema changes; `check-subscription`, `parent-consent`, `intel-recheck`, `intel-recheck-job`. No publish, cron changes or iOS edits. Callback bundling issue corrected and successfully deployed.
+
+## Remaining lean task list
+- [x] Re-run existing authorized real clips: 12/12 reports, per-type rates above; private test-report cleanup confirmed.
+- [ ] Restore democoach through a new Stripe 100%-off Coach subscription, prove real agreement votes, cancel only this test subscription.
+- [x] Apply approved initial-assessment server gate; new/existing behavior verified at the server.
+- [ ] Phone-proof Completed → Start UI and real plan read-back.
+- [x] Add consent-based parent optional sharing; parent-run phone save/reload + player refusal verified.
+- [ ] Linked-parent positive permission/save/reload proof.
+- [x] Deploy approved sign-in plan-check fix; authenticated player check returns 200, subscribed=true.
+- [x] Write docs/owner/learning-loop-cron.sql; no schedule changes.
+- [ ] Authenticated nightly callback and populated outcome proof; owner applies schedule afterward.
+- [ ] Measurement-based Performance grades with source/date, honest missing data.
+- [x] Video-tagged at-bat entries and phone source-label proof.
+- [ ] Parent/coach/teen game-logging coverage.
+- [ ] Finish Game IQ including team post-game reports, Coaching Console, private population learning in order.
+- [x] Full suite and cleanup for this round; current report updated.
+- [ ] Five-player-type phone proof and full page audit.
+
+# PRIOR REPORT — Oct 18, 06:40 UTC (end of queued batch ZZ1–ZZ12)
 Ready to publish: NO (player-role proof missing; owner approvals below outstanding).
 
 ## Oct 17 fixes

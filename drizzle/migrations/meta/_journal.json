@@ -512,6 +512,27 @@
       "when": 1792305167338,
       "tag": "0072_game_entry_source_labels",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1792330584425,
+      "tag": "0073_initial_assessment_explicit_start_gate",
+      "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1792330709096,
+      "tag": "0074_parent_optional_sharing_permission",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1792330806865,
+      "tag": "0075_at_bat_video_evidence_tags",
+      "breakpoints": true
     }
   ]
 }
