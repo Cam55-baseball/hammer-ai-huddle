@@ -66,6 +66,9 @@ export interface ReportSnapshot {
 
 /* ---------------------------------------------------------------- helpers */
 
+const NOT_ENTERED = "__not_entered__";
+/** Below this many entered pitches a rate is an early read and never drives a Train next suggestion. */
+export const MIN_TREND_SAMPLE = 10;
 const num = (v: unknown): number | null => {
   const n = typeof v === "number" ? v : parseFloat(String(v ?? ""));
   return Number.isFinite(n) ? n : null;
@@ -246,8 +249,13 @@ export function buildIndividualPostgame(input: BuildIndividualInput): ReportSnap
     });
   }
   if (run.length) {
-    const okRuns = run.filter((r) => r.success).length;
-    headline.push({ label: "Base running", value: `${okRuns}/${run.length}`, detail: "successful" });
+    const knownRuns = run.filter((r) => r.success === true || r.success === false);
+    const okRuns = knownRuns.filter((r) => r.success === true).length;
+    headline.push({
+      label: "Base running",
+      value: knownRuns.length ? `${okRuns}/${knownRuns.length}` : "Not entered",
+      detail: knownRuns.length ? "successful (result entered)" : "result not entered",
+    });
   }
 
   const sections: ReportSection[] = [];
@@ -351,7 +359,7 @@ export function buildIndividualPostgame(input: BuildIndividualInput): ReportSnap
   if (asPitcher.length) {
     const byType: Record<string, { n: number; strikes: number; velos: number[] }> = {};
     asPitcher.forEach((p) => {
-      const t = String(p.pitch_type ?? "unknown");
+      const t = p.pitch_type ? String(p.pitch_type) : NOT_ENTERED;
       byType[t] ??= { n: 0, strikes: 0, velos: [] };
       byType[t].n += 1;
       if (
@@ -363,8 +371,9 @@ export function buildIndividualPostgame(input: BuildIndividualInput): ReportSnap
       const v = num(p.pitch_velo);
       if (v != null) byType[t].velos.push(v);
     });
-    const firstPitch = asPitcher.filter((p) => (p.count_balls ?? 0) === 0 && (p.count_strikes ?? 0) === 0);
-    const fpStrikes = firstPitch.filter((p) => String(p.result ?? "") !== "ball").length;
+    // Only pitches with an entered 0-0 count and an entered result count; blanks are never guessed.
+    const firstPitch = asPitcher.filter((p) => p.count_balls === 0 && p.count_strikes === 0 && p.result != null && p.result !== "");
+    const fpStrikes = firstPitch.filter((p) => String(p.result) !== "ball").length;
     const twoStrike = asPitcher.filter((p) => (p.count_strikes ?? 0) === 2);
     const putaway = twoStrike.filter((p) => isWhiff(p) || String(p.result ?? "") === "called_strike").length;
 
@@ -375,8 +384,10 @@ export function buildIndividualPostgame(input: BuildIndividualInput): ReportSnap
       stats: [
         {
           label: "First-pitch strike",
-          value: pct(fpStrikes, firstPitch.length || 1),
-          detail: `${fpStrikes}/${firstPitch.length}`,
+          value: firstPitch.length ? pct(fpStrikes, firstPitch.length) : "Not entered",
+          detail: firstPitch.length
+            ? `${fpStrikes}/${firstPitch.length}${firstPitch.length < MIN_TREND_SAMPLE ? " · early read" : ""}`
+            : "no 0-0 counts entered",
           tone: firstPitch.length && fpStrikes / firstPitch.length >= 0.6 ? "good" : "watch",
         },
         {
@@ -397,8 +408,8 @@ export function buildIndividualPostgame(input: BuildIndividualInput): ReportSnap
         rows: Object.entries(byType)
           .sort((a, b) => b[1].n - a[1].n)
           .map(([t, s]) => [
-            pitchTypeLabel(sport, t),
-            pitchFamily(sport, t),
+            t === NOT_ENTERED ? "Not entered" : pitchTypeLabel(sport, t),
+            t === NOT_ENTERED ? "—" : pitchFamily(sport, t),
             s.n,
             pct(s.n, asPitcher.length),
             pct(s.strikes, s.n),
@@ -406,7 +417,7 @@ export function buildIndividualPostgame(input: BuildIndividualInput): ReportSnap
           ]),
       },
     });
-    if (firstPitch.length && fpStrikes / firstPitch.length < 0.55) {
+    if (firstPitch.length >= MIN_TREND_SAMPLE && fpStrikes / firstPitch.length < 0.55) {
       nextUp.push("First-pitch strike rate — command block starting every bullpen with 0-0 execution.");
     }
   }
@@ -441,16 +452,19 @@ export function buildIndividualPostgame(input: BuildIndividualInput): ReportSnap
 
   /* ---- base running */
   if (run.length) {
-    const okRuns = run.filter((r) => r.success).length;
+    const knownRuns = run.filter((r) => r.success === true || r.success === false);
+    const okRuns = knownRuns.filter((r) => r.success === true).length;
     sections.push({
       id: "baserunning",
       title: "Base running",
-      summary: `${okRuns}/${run.length} successful.`,
+      summary: knownRuns.length
+        ? `${okRuns}/${knownRuns.length} successful (result entered)${run.length > knownRuns.length ? ` · ${run.length - knownRuns.length} result not entered` : ""}.`
+        : "Result not entered.",
       table: {
         columns: ["Event", "Result", "Ran on", "Time"],
         rows: run.map((r) => [
           String(r.event_type ?? "—").replace(/_/g, " "),
-          r.success ? "success" : "no",
+          r.success === true ? "success" : r.success === false ? "no" : "Not entered",
           pitchTypeLabel(sport, r.pitch_type_ran_on),
           r.run_time_sec != null ? `${r.run_time_sec}s` : "—",
         ]),
