@@ -15,7 +15,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { gp, GP_DOC_BUCKET } from "@/lib/games/ledger";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { DocumentReview } from "./DocumentReview";
+import { documentSelection } from "@/lib/games/documentReview";
 
 interface DraftSummary {
   atBats?: number;
@@ -28,7 +30,27 @@ export function GameDocumentIngest({ gameId, sport }: { gameId: string; sport: s
   const { user } = useAuth();
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
-  const [docs, setDocs] = useState<Array<{ path: string; name: string; summary?: DraftSummary; error?: string }>>([]);
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const { data: docs = [], isLoading, error: loadError } = useQuery<Array<{ id: string; file_url: string | null; parse_status: string; parse_error: string | null; parsed_events: { summary?: DraftSummary; raw?: unknown; added?: number } | null }>>({
+    queryKey: ["gp-documents", gameId, user?.id], enabled: !!user,
+    queryFn: async () => {
+      const result = await gp("gp_documents").select("id,file_url,parse_status,parse_error,parsed_events").eq("game_id", gameId).eq("user_id", user?.id).order("created_at", { ascending: false });
+      if (result.error) throw result.error;
+      return result.data ?? [];
+    },
+    refetchInterval: busy ? 3000 : false,
+  });
+  async function confirm(documentId: string, selection: ReturnType<typeof documentSelection>) {
+    setConfirming(documentId);
+    try {
+      const { data, error } = await (supabase as any).rpc("confirm_game_document", { _document_id: documentId, _selection: selection });
+      if (error) throw error;
+      await Promise.all(["gp-documents", "gp-at-bats", "gp-ab", "gp-pitches", "gp-defense", "gp-baserun"].map(key => qc.invalidateQueries({ queryKey: [key, gameId] })));
+      toast.success(`${data.added} imported entries added.`);
+    } catch {
+      toast.error("Entries were not added. Check the game details and try again.");
+    } finally { setConfirming(null); }
+  }
 
   async function handleFile(file: File) {
     if (!user) return;
@@ -53,7 +75,7 @@ export function GameDocumentIngest({ gameId, sport }: { gameId: string; sport: s
       }).select("id").single();
       if (docRow.error) throw docRow.error;
 
-      setDocs((d) => [...d, { path, name: file.name }]);
+      await qc.invalidateQueries({ queryKey: ["gp-documents", gameId] });
 
       // 45s safety: edge function uses Gemini and may take ~10–30s on big files
       
@@ -62,8 +84,8 @@ export function GameDocumentIngest({ gameId, sport }: { gameId: string; sport: s
       });
       if (error) throw error;
 
-      const summary: DraftSummary = data?.summary ?? {};
-      setDocs((d) => d.map((x) => (x.path === path ? { ...x, summary } : x)));
+      if (data?.error) throw new Error(data.error);
+      await qc.invalidateQueries({ queryKey: ["gp-documents", gameId] });
       qc.invalidateQueries({ queryKey: ["gp-at-bats", gameId] });
       qc.invalidateQueries({ queryKey: ["gp-pitches", gameId] });
       qc.invalidateQueries({ queryKey: ["gp-defense", gameId] });
@@ -71,7 +93,7 @@ export function GameDocumentIngest({ gameId, sport }: { gameId: string; sport: s
       toast.success("Document read — draft saved. No game events added.");
     } catch (e: any) {
       const msg = e?.message ?? "Ingest failed";
-      setDocs((d) => d.map((x) => (x.path === path ? { ...x, error: msg } : x)));
+      await qc.invalidateQueries({ queryKey: ["gp-documents", gameId] });
       toast.error(msg);
     } finally {
       setBusy(false);
@@ -87,7 +109,7 @@ export function GameDocumentIngest({ gameId, sport }: { gameId: string; sport: s
         </div>
         <p className="text-xs text-muted-foreground">
           Scorebook photo · TrackMan PDF/CSV · GameChanger export · Rapsodo CSV. Gemini
-          saves a draft. No game events are added until review is available.
+          saves a draft. Review your entries before adding them to the game.
         </p>
         <label className="block">
           <input
@@ -110,26 +132,31 @@ export function GameDocumentIngest({ gameId, sport }: { gameId: string; sport: s
       </Card>
 
       <div className="space-y-2">
+        {isLoading && <p className="text-xs text-muted-foreground">Loading saved documents…</p>}
+        {loadError && <p className="text-xs text-destructive">Saved documents could not be loaded.</p>}
         {docs.map((d) => (
-          <Card key={d.path} className="p-3 flex items-start gap-2">
-            {d.error ? (
-              <AlertCircle className="h-4 w-4 text-rose-600 mt-0.5" />
-            ) : d.summary ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5" />
+          <Card key={d.id} className="p-3 flex items-start gap-2">
+            {d.parse_status === "failed" ? (
+              <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
+            ) : ["ready", "applied"].includes(d.parse_status) ? (
+              <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
             ) : (
               <Loader2 className="h-4 w-4 animate-spin mt-0.5" />
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{d.name}</p>
-              {d.error && <p className="text-xs text-rose-600">{d.error}</p>}
-              {d.summary && (
+              <p className="text-sm font-medium break-words">{d.file_url?.split("/").pop()?.replace(/^\d+_/, "") ?? "Saved document"}</p>
+              {d.parse_status === "failed" && <p className="text-xs text-destructive">Document could not be read.</p>}
+              {["pending", "parsing"].includes(d.parse_status) && <p className="text-xs text-muted-foreground">Document status: waiting for draft</p>}
+              {d.parse_status === "applied" && <p className="text-xs text-muted-foreground">Document status: confirmed · Imported entries added: {d.parsed_events?.added ?? "Not recorded"}</p>}
+              {d.parse_status === "ready" && d.parsed_events?.summary && (
                 <div className="flex gap-1.5 flex-wrap mt-1">
-                  {d.summary.atBats != null && <Badge variant="secondary">{d.summary.atBats} AB draft</Badge>}
-                  {d.summary.pitches != null && <Badge variant="secondary">{d.summary.pitches} pitches</Badge>}
-                  {d.summary.defense != null && <Badge variant="secondary">{d.summary.defense} defense</Badge>}
-                  {d.summary.baserun != null && <Badge variant="secondary">{d.summary.baserun} baserun</Badge>}
+                  {d.parsed_events.summary.atBats != null && <Badge variant="secondary">{d.parsed_events.summary.atBats} AB draft</Badge>}
+                  {d.parsed_events.summary.pitches != null && <Badge variant="secondary">{d.parsed_events.summary.pitches} pitch drafts</Badge>}
+                  {d.parsed_events.summary.defense != null && <Badge variant="secondary">{d.parsed_events.summary.defense} defense drafts</Badge>}
+                  {d.parsed_events.summary.baserun != null && <Badge variant="secondary">{d.parsed_events.summary.baserun} baserunning drafts</Badge>}
                 </div>
               )}
+              {d.parse_status === "ready" && <DocumentReview raw={d.parsed_events?.raw} busy={confirming === d.id} onConfirm={selection => confirm(d.id, selection)} />}
             </div>
           </Card>
         ))}

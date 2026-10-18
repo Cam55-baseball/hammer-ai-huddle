@@ -13,6 +13,6 @@ describe("document review", () => {
   it("refuses missing required facts instead of supplying them", () => {
     const rows = documentReviewRows({ at_bats: [{ result: "Double" }], pitches: [{ inning: 1 }], defense: [{ inning: 1, position: null }], baserun: [{ inning: 1, event_type: "unknown" }] });
     expect(rows.map(row => row.valid)).toEqual([false, false, false, false]);
-    expect(documentSelection(rows, new Set(rows.map(row => `${row.kind}:${row.index}`)))).at_bats).toEqual([]);
+    expect(documentSelection(rows, new Set(rows.map(row => `${row.kind}:${row.index}`))).at_bats).toEqual([]);
   });
 });
