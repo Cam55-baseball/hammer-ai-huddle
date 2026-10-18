@@ -1,3 +1,10 @@
+# AD10 — Oct 18 20:24 UTC — B Performance areas honesty (preview, test-proven)
+Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
+- [x] "Your areas" rows now show a failure notice when the read fails (was a silent empty list), a labeled "Last analysis" date, and "Grade: on your report card" (scores stay locked from players; no bare or guessed grade).
+- [x] 2 new rule tests PASS (read failure notice; labeled count/date/grade). Not phone-proven this run.
+- [x] No TEST data inserted/deleted; Coach subscription untouched and active. No publish, redeploy, migration, cron or iOS changes.
+- [ ] Next B: measured 20–80 grade with source+date on the row (needs a certified player-readable grade source), phone proof, then populated five-player/parent/coach proofs; C → D → E → F.
+
 # AD9 — Oct 18 20:20 UTC — B Game IQ training-session gate PASS (preview)
 Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
 - [x] Recorded AD9: remove the unrelated training-session milestone from Game IQ maps only; retain subscription access and the classic report gate.
