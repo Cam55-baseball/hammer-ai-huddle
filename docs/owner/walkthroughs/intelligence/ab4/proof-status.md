@@ -11,7 +11,7 @@ Ready to publish: NO.
 - Own explicitly synthetic scorebook photo returns one extracted at-bat in the existing document review buffer. Saved review_status=pending; all four event ledgers remain empty.
 - Player phone photo upload succeeds, displays 1 AB draft, no horizontal overflow, and still adds zero live events.
 - Temporary games, documents, storage files and CSV events/import jobs removed with exact scoping.
-- Build OK. Full suite 379 files / 2,988 tests passed before final status/source fixes; focused 14/14 and live phone checks passed after final fixes.
+- Build OK. Final full suite 379 files / 2,988 tests passed after all fixes; focused 14/14 and live phone checks passed.
 
 ## Bugs diagnosed
 - Vendor Double was stored verbatim, so result title incorrectly claimed no outcome. Canonical exact alias mapping fixes both CSV siblings.
