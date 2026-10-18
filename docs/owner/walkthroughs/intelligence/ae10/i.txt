@@ -1,0 +1,27 @@
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+placeholder visible True Grade: Grade coming with camera measurement
+KEY FINDINGS
+
+TOP TAKEAWAY
+
+Your hands rush past your back elbow instead of letting the elbow drive first.
+
+Keep your hands high above your back elbow when your front heel plants.
+Your Phase 1 — Create Balance setup gives you a solid balanced base.
+Landing sideways in Phase 3 — Load by Stride keeps your weight under control.
+WHAT YOU'RE DOING WELL
+Solid Phase 1 — Create Balance setup with balanced back-leg weight distribution.
+Sideways front-foot landing in Phase 3 — Load by Stride provides a stable base.
+DETAILED ANALYSIS
+
+Starting in Phase 1 — Create Balance, you build a steady foundation with your weight controlled over a balanced back leg. Moving into Phase 2 — Gather, your upper body coiling keeps your core tension locked over that loaded hip. In Phase 3 — Load by Stride, as your front foot lands sideways, your hands drop below your back elbow instead of staying stacked high above i
+report card text False numeric /100 False
+vault line hitting
+10/18/2026
+
+Source: entered by you · 10/18/2026
+
+10-Yard Dash
+1.65 s
+Grade 40 (Acceptable)
+url http://localhost:8080/vault errs []
