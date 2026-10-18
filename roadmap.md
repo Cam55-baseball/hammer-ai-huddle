@@ -1,3 +1,5 @@
+# AF5 — Oct 18 — Game IQ copy still working; nothing merged. Ready to publish: no.
+
 # AF4 — Oct 18 — Game IQ copy still re-applying its changes; nothing merged. Ready to publish: no.
 
 # AF3 — Oct 18 — Game IQ copy update in progress; nothing merged. Ready to publish: no.
