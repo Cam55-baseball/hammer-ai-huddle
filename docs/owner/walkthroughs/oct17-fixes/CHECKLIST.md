@@ -16,7 +16,18 @@ Viewport: 390 × 844. Owner checks used signed-in owner; player checks used the 
 - [ ] New-player completion → Start → persisted Today; server guard pending owner migration authorization.
 - [ ] Coach agreement votes and notes reflected back.
 - [ ] Parent sharing and scouting permission save/read-back.
-- [ ] Completed health profile reopen/edit/save.
+- [x] Completed health profile reopen/edit/save; setup did not auto-open after reload, edited profile saved, original test state restored. Screenshot: yy1-physio-redo.png.
 - [ ] Populated practice details, frozen reports, Train next into Today.
 
 Tests: 365 files, 2,937 tests PASS. No publish, cron, iOS, migration or Stripe changes.
+
+## YY1 continuation
+- [x] Baseball hitting, pitching, throwing low-resolution clips show Not measured plus Retry Analysis (no test upload created).
+- [x] Deployed analyze-video: real throwing upload saved coaching despite pose timeout; AI cost estimate $0.013968 (18,478 input / 3,370 output tokens).
+- [x] Same test clip with three unreadable frames returns HTTP success, Not measured report, saved=true, and a rejected run audit; no AI call or AI charge recorded for preflight rejection.
+- [x] Scoped test clip backup/cleanup; read-back found zero videos. Existing demo account retained.
+- [x] 17 targeted tests passed, preview build OK; prior full-suite result unchanged, not rerun for YY1.
+- [ ] Softball screens: existing test players require current legal agreements. No waiver/consent bypass used.
+- [ ] Required two appropriate clips per sport/type still missing. Do not report 100% general success.
+
+Only analyze-video redeployed. No publish, cron, iOS, migration or Stripe changes.
