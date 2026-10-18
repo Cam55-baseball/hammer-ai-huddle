@@ -1,6 +1,13 @@
-# Publish checklist — 2026-10-13
+# Publish checklist — updated 2026-10-18
 
 Plain-English list of what must be true before publishing. Current answer: **Ready to publish: NO.**
+
+## Current Oct 17 fixes status (supersedes older checks below)
+- Full suite: 2,937/2,937 PASS; preview build OK.
+- Owner menu, Subscribers current-plan grouping, drill activity coverage, read-only settings, Stripe links and analysis-cost screen checked at phone size.
+- Still required: 12 suitable real analysis clips (two per sport/type); coach agreement votes through the real UI; new-player Completed → Start → saved Today flow; parent sharing/scout visibility saves; completed health profile redo; populated History/practice/report/Train-next checks.
+- First-start server guard is staged, not applied; owner must authorize that named migration. No publish, cron or iOS change made.
+- Earlier “6/6 analyses” evidence is historical, not proof for the current Oct 17 request.
 
 ## Proven (PASS)
 
@@ -60,7 +67,7 @@ Plain-English list of what must be true before publishing. Current answer: **Rea
 - **Vault** — check-ins, discipline, readiness, tests. Steps: side menu → Vault. Check: the Check-in, Discipline and Readiness tabs open.
 - **Check-ins** — morning, before training and night questions. Check: coaches see answers only when the player turns health sharing on.
 - **Game logging** — log your own games. Check: entries say "Source: athlete-entered"; coach entries ask "Yes, that's right / Something's wrong".
-- **Initial assessment** — the 6-step starting test. Check: 1→2→3 in order, then 4–6 in any order.
+- **Initial assessment** — optional starting checklist. Every answer/test can be skipped; tap Completed, then Start to build Today. Existing started players stay unlocked. Server enforcement and new-player proof remain pending.
 
 ## Parent
 - **Teen waiver (13–17)** — a parent signs before physical training opens. Steps: the player taps "Ask my parent" → the parent opens the email link → signs. Check: "Signed. Thank you."; the player's plan opens; the same link can't be used again.

@@ -2,6 +2,22 @@
 
 Started 2026-10-13. Sections marked NOT YET RUN have not been checked.
 
+## Oct 17 owner fixes — verified Oct 18
+
+- Full suite final run: **365 files, 2,937 tests passed**. Initial run had six failures in old test setup/source-string matching; corrected and full suite rerun passed. Preview build OK.
+- Phone checks (390 × 844): owner menu Settings, Drill CMS, Drill Builder, Subscribers, agreements, analysis costs and History calendar; no horizontal overflow. Screenshots: `walkthroughs/oct17-fixes/`.
+- Removed duplicate owner menu links; Subscribers now groups only current player tiers, Coach, Organization with seats and sponsorships.
+- Drill Builder: analysis/skill/warm-up/defense drill catalog; CMS: traditional library with positions, tags and pending review. Hitting/pitching/throwing overlap; no merge performed.
+- Analysis changes: empty-MIME phone exports accepted; pose timeout continues to coaching; authenticated pose calls; retry then alternate model; missingness report returned when analysis fails; unsaved reports say so; missingness report never suggests fabricated drills. Unknown AI usage/cost logs use -1 because columns reject null; screen labels unknown costs.
+- Real upload proof: one source clip was blocked during browser decode; transcoded WebM of the same source produced a saved report despite pose timeout. It shows a glove throw, not a swing; it **does not prove hitting measurements**. Before/after tested clip: 0/1 → 1/1 readable reports, NOT a general success rate. Required 12 suitable real clips still unproven.
+- Single test upload backed up and deleted via existing delete-library-session; read-back found zero matching videos. Audit/cost records retained. No new accounts deleted because the existing demo account was reused.
+- Optional assessment: explicit Completed save unlocks client Start; optional checklist entries remain open; already-started accounts are not relocked. Server enforcement SQL staged at `docs/pending-owner-apply/initial-assessment-start-gate.sql`, not applied. End-to-end new-player Start remains unproven.
+- Parent sharing text omits PitchLab and links existing scouting permission controls. Physio waits for profile loading before auto-opening; existing Edit Health Profile retained. Actual parent saves and completed-profile redo remain unproven.
+- History now loads saved composites, offers calendar date pickers, searches recaps, opens the selected frozen report, and links Train next to Today; Standards Board moved to The General. Populated player-flow proof remains open.
+- No publish, cron, iOS, migration or Stripe writes. No manual backend redeploy was performed in this verification pass; automatic function rollout status was not separately verified.
+
+**Ready to publish: NO** — see current blockers at the top of roadmap.md.
+
 ## 1. Stripe — before and after (owner guardrail 2026-10-13)
 
 Read-only snapshots taken by an owner-only reader (no writes to Stripe).
