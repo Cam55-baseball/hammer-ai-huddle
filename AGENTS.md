@@ -4,7 +4,6 @@
 - Read nested AGENTS.md before edits: `src/lib/{intelligence,biomech,reportCard,prescription,tour,upload}`, `src/lib/hammer/prescription` (warm-up), `src/components/{parent,hammer/cards}`, `supabase/functions/{_shared/wic,wk-daily-plan-job}`, `src/archive/retired-programs`; also settings, ratings, analyze-video.
 <!-- LOVABLE:BEGIN -->
 - Throwing uses a separate conservative overhand gate and one pose runner for both sports, never mound or AI-vision values. Why: field throws lack a windup and batting clips can mimic a throw.
-- Summary queries use a separate suffix under the logger cache prefix. Why: partial summary projections must never replace complete saved event rows on reload.
 <!-- LOVABLE:END -->
 - No publish/deploy/redeploy/migration without named owner authorization; apply only that change and report live/pending status. Why: unauthorized redeploys went live.
 - The shared empty-upload encouragement is a standalone sibling below the upload card, outside the Report Card access gate. Why: shown to all eligible athletes without exposing measurements.
@@ -26,7 +25,4 @@
 - Staff plan purchase eligibility lives only in `supabase/functions/_shared/staffEligibility.ts` (used by create-staff-checkout and tests). Why: one rule for age, coach role and org-admin status.
 
 - Staff sign-up: `/get-started` → `/signup/:role` (adults, `src/lib/auth/staffSignup.ts`); approvals reuse existing queues. Why: one approval system.
-- Live game-report sources exclude deleted games and scope to the signed-in athlete; frozen snapshots stay unchanged. Why: removed games must not feed new reports.
-
-
-- Pitch intent/contact annotations use dedicated nullable fields on the existing pitch ledger, never movement measurements or parsed historical notes; hard contact is an observation, not a measured threshold. Why: future Game IQ needs structured facts without invented measurements.
+- Read game-specific AGENTS.md in `src/components/games` and `src/lib/games` before edits. Why: game rules live with their scope.
