@@ -9,7 +9,7 @@ import { SmartWeekPlan } from '@/components/hie/SmartWeekPlan';
 import { ProofCard } from '@/components/hie/ProofCard';
 import { RiskAlertsCard } from '@/components/hie/RiskAlertsCard';
 import { ProProbabilityCard } from '@/components/analytics/ProProbabilityCard';
-import { HeatMapDashboard } from '@/components/heatmaps/HeatMapDashboard';
+import { GameIqReports } from '@/components/games/GameIqReports';
 import { AskHammerPanel } from '@/components/analytics/AskHammerPanel';
 import { DataBuildingGate } from '@/components/analytics/DataBuildingGate';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -234,14 +234,7 @@ Confidence: ${snapshot.development_confidence}%
               </Card>
             </section>
             <Advanced hasAdvancedAccess={hasAdvancedAccess} requireTrainingHistory={false}>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Heat maps (from your real logged pitches and balls in play)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <HeatMapDashboard />
-                </CardContent>
-              </Card>
+              <GameIqReports />
             </Advanced>
           </TabsContent>
 

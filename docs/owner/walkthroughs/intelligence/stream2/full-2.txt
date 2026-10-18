@@ -1,0 +1,115 @@
+Hitting
+Hit rate (hits per official at-bat)
+50% (9 of 18)
+from 18 official at-bats
+Walks
+3
+from 21 plate appearances with a result
+Strikeouts
+4
+from 21 plate appearances with a result
+Hard contact (you marked solid or barrel)
+100% (1 of 1)
+from 1 at-bats with contact marked · early read
+Plate appearances missing a result
+1
+Pitching
+Pitches logged
+2
+Strike rate
+100% (1 of 1)
+from 1 pitches with a result · early read
+Swing-and-miss rate (of swings)
+Not entered
+First-pitch strikes
+100% (1 of 1)
+from 1 0-0 pitches with a result · early read
+Pitches missing a result
+1
+Defense and throwing
+Plays logged
+2
+Plays without an error
+100% (2 of 2)
+from 2 plays with error marked · early read
+Putouts
+1
+from 2 plays with putout marked · early read
+Assists (throw-outs)
+0
+from 2 plays with assist marked · early read
+Baserunning
+Running plays logged
+2
+Steal attempts
+2
+Steal success
+100%
+from 1 steals with a result · early read
+Steals missing a result
+1
+Heat maps (from the spots you tapped)
+
+Pitches you saw (as hitter)
+
+0
+pitches
+0
+pitches
+0
+pitches
+0
+pitches
+1
+pitches
+0
+pitches
+0
+pitches
+0
+pitches
+0
+pitches
+
+Tapped locations: 2 (outside the zone: 1) · early read
+
+Pitches you threw (as pitcher)
+
+1
+pitches
+0
+pitches
+0
+pitches
+0
+pitches
+0
+pitches
+0
+pitches
+0
+pitches
+0
+pitches
+0
+pitches
+
+Tapped locations: 1 (outside the zone: 0) · early read
+
+Matchup planner
+
+vs RHP · slider
+
+Pitches seen: 1 · early read
+
+Swing rate: 100% (1 of 1)
+
+Miss rate (of swings): 100% (1 of 1)
+
+vs RHP · fastball
+
+Pitches seen: 1 · early read
+
+Swing rate: 0% (0 of 1)
+
+Miss rate (of swings): Not entered
