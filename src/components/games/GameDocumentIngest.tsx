@@ -49,7 +49,7 @@ export function GameDocumentIngest({ gameId, sport }: { gameId: string; sport: s
         source: "upload",
         file_url: `${GP_DOC_BUCKET}://${path}`,
         file_mime: file.type || null,
-        parse_status: "uploaded",
+        parse_status: "pending",
       }).select("id").single();
       if (docRow.error) throw docRow.error;
 

@@ -101,7 +101,8 @@ serve(async (req) => {
     base64 = btoa(base64);
 
     // 2. call gemini
-    await admin.from("gp_documents").update({ parse_status: "processing" }).eq("id", documentId);
+    const started = await admin.from("gp_documents").update({ parse_status: "parsing" }).eq("id", documentId);
+    if (started.error) throw started.error;
     const ai = await chatCompletion({
       model: "google/gemini-2.5-flash",
       messages: [{
@@ -117,14 +118,15 @@ serve(async (req) => {
     }, { timeoutMs: 90_000 });
     if (!ai.ok) {
       await admin.from("gp_documents").update({
-        parse_status: "error", parse_error: `ai ${ai.status}`,
+        parse_status: "failed", parse_error: `ai ${ai.status}`,
       }).eq("id", documentId);
       throw new Error(`AI provider ${ai.status}: ${(ai.errorBody ?? "").slice(0, 400)}`);
     }
     const raw = ai.data.choices?.[0]?.message?.content ?? "";
     const cleaned = String(raw).replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
-    let parsed: any = {};
-    try { parsed = JSON.parse(cleaned); } catch { parsed = {}; }
+    let parsed: any;
+    try { parsed = JSON.parse(cleaned); } catch { throw new Error("Couldn't read the document. Please try a clearer image."); }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Document result was not readable");
     const atBats = Array.isArray(parsed.at_bats) ? parsed.at_bats : [];
     const pitches = Array.isArray(parsed.pitches) ? parsed.pitches : [];
     const defense = Array.isArray(parsed.defense) ? parsed.defense : [];
@@ -137,7 +139,7 @@ serve(async (req) => {
       defense: defense.length, baserun: baserun.length,
     };
     const saved = await admin.from("gp_documents").update({
-      parse_status: "processed",
+      parse_status: "ready",
       parsed_events: { summary, failures: 0, raw: parsed, review_status: "pending" },
     }).eq("id", documentId);
 
