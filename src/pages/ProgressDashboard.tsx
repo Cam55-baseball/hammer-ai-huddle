@@ -39,6 +39,7 @@ import { HammersCard } from '@/components/intelligence/HammersCard';
 import { howSureFor } from '@/lib/intelligence/howSure';
 import { useReadinessState } from '@/hooks/useReadinessState';
 import { PerformanceAreaRows } from '@/components/intelligence/PerformanceAreaRows';
+import { LearningLoopList } from '@/components/intelligence/LearningLoopList';
 import { HealthFlagsCard } from '@/components/intelligence/HealthFlagsCard';
 
 function PracticeIntelligenceCard() {
@@ -164,6 +165,7 @@ Confidence: ${snapshot.development_confidence}%
           </TabsList>
 
           <TabsContent value="today" className="space-y-6">
+            <LearningLoopList />
             <ReadinessTodayCard />
             {today}
             <section id="body" className="scroll-mt-20">
