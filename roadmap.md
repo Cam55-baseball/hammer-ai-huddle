@@ -31,6 +31,7 @@ Full suite PASS: **376 files / 2,969 tests**. Build OK. Full page audit and five
 Live this round: assessment/parent-sharing/video-tag schema changes; `check-subscription`, `parent-consent`, `intel-recheck`, `intel-recheck-job`. No publish, cron changes or iOS edits. Callback bundling issue corrected and successfully deployed.
 
 ## Remaining lean task list
+- [ ] AB4: finish next step 5 import/role coverage gaps; verify saved results on phone, clean exact test data, then continue steps 6–8.
 - [x] AB2: pitch/defense/baserun source labels and honest pitch facts; player phone save/read-back; quick ball direction; cleanup and full suite.
 - [x] AB3: structured pitcher contact/intent and tracked-data import labels; player phone save/read-back, source protections, summary-cache regression, full suite, exact cleanup.
 - [ ] Step 5: parent/teen/coach two-option phone logging; document-import authorization review; parent legal acceptance currently uncompleted. Then steps 6–8 in order with populated five-player proof.
