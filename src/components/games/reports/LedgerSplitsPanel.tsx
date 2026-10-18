@@ -117,7 +117,9 @@ export function LedgerSplitsPanel({ sport }: { sport?: string | null }) {
         label: r.split_value,
         n: Number(r.n ?? 0),
         cells: [
-          { label: "Success%", value: fmtPct(rate(r.successes, r.n)) },
+          // This legacy view supplies total events, not known outcomes, and
+          // includes deleted games. It cannot certify a success percentage.
+          { label: "Success%", value: null },
           {
             label: "Run time",
             value: hasEnough(r.run_time_n, MIN_MEASURE_N) ? fmtNum(r.avg_run_time_sec) : null,
@@ -245,6 +247,7 @@ export function LedgerSplitsPanel({ sport }: { sport?: string | null }) {
               rows={runRows}
               emptyLabel="No baserunning events logged yet."
             />
+            <p className="text-xs text-muted-foreground mt-2">Success rate: Not enough data. This breakdown doesn't separate unentered results; see the logged-result summary below.</p>
           </AccordionContent>
         </AccordionItem>
       </Accordion>

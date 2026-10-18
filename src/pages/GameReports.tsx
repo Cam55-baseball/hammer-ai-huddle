@@ -55,8 +55,9 @@ export default function GameReports() {
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await gp("gp_pitches")
-        .select("perspective,inning,pitch_type,pitch_velo,location,result,batter_handedness,count_balls,count_strikes")
+        .select("perspective,inning,pitch_type,pitch_velo,location,result,batter_handedness,count_balls,count_strikes,gp_games!inner(deleted_at)")
         .eq("user_id", user?.id)
+        .is("gp_games.deleted_at", null)
         .limit(5000);
       if (error) throw error;
       return (data ?? []) as any[];
@@ -68,8 +69,9 @@ export default function GameReports() {
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await gp("gp_at_bats")
-        .select("result,batting_side,exit_velo,launch_angle,exit_direction,rbi")
+        .select("result,batting_side,exit_velo,launch_angle,exit_direction,rbi,gp_games!inner(deleted_at)")
         .eq("user_id", user?.id)
+        .is("gp_games.deleted_at", null)
         .limit(5000);
       if (error) throw error;
       return (data ?? []) as any[];
@@ -81,8 +83,9 @@ export default function GameReports() {
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await gp("gp_defense_plays")
-        .select("position,play_type,result,error_flag")
+        .select("position,play_type,result,error_flag,gp_games!inner(deleted_at)")
         .eq("user_id", user?.id)
+        .is("gp_games.deleted_at", null)
         .limit(5000);
       if (error) throw error;
       return (data ?? []) as any[];
@@ -95,8 +98,9 @@ export default function GameReports() {
     queryFn: async () => {
       if (!user) throw new Error("Sign in first");
       const { data, error } = await gp("gp_baserun_events")
-        .select("event_type,success")
+        .select("event_type,success,gp_games!inner(deleted_at)")
         .eq("user_id", user.id)
+        .is("gp_games.deleted_at", null)
         .limit(5000);
       if (error) throw error;
       return (data ?? []) as any[];
