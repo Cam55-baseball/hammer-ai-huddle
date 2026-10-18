@@ -1,3 +1,14 @@
+# AE8 — Oct 18 20:56 UTC — Combined status
+- Stream 1 (TEST players, parent/coach logging): hitter data entered (14 TEST games, 42 at-bats, 8 tapped directions — keep until final cleanup). Pitcher, two-way, softball, new player, parent-run, both coach modes: NOT STARTED. Field picker tap/keyboard fix done (1 rule test PASS), phone re-check OPEN.
+- Stream 2 (Game IQ step 6): built in draft, rule tests PASS; merge into main IN PROGRESS. Populated phone proofs OPEN.
+- Stream 3 (Coaching Console step 7): built in draft; merge waits on Stream 2. Badge cut-offs await owner (Seen = 3 players, Proven = 10 players ≥60%).
+- Five-player proofs: new — FAIL/not run; hitter — data ready, proof OPEN (docs/owner/walkthroughs/intelligence/ae3/); pitcher, two-way, softball — NOT STARTED.
+- Step 8 population learning: NOT STARTED. Full page audit, full suite, owner's guide: NOT STARTED.
+- HEVC from deployed pipeline: BLOCKED — body tracking runs in the player's browser, no backend step can run it. Gap 0.333 ms (HEVC) / 5.3 ms (H264); effect UNVERIFIED.
+- Nightly learning loop: active, 0 runs recorded; first run Oct 19 04:30 UTC — result NOT YET AVAILABLE.
+- TEST Coach $0 plan: active; cancel before Nov 18.
+- Ready to publish: **no** — merges unfinished, five-player proofs, step 8, audit and suite not done.
+
 # AE7 — Oct 18 — Stream 2 merge still running; Stream 3 merge, proofs, step 8, audit and guide wait on it. Ready to publish: no.
 
 # AE6 — Oct 18 — Stream 2 merge still in progress (draft updating to main before acceptance). Stream 3 merge held until Stream 2 lands to avoid overlapping changes. Ready to publish: no.
