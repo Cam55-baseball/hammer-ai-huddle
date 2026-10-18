@@ -235,8 +235,12 @@ export function buildIndividualPostgame(input: BuildIndividualInput): ReportSnap
     headline.push({
       label: "Pitches",
       value: String(asPitcher.length),
-      detail: `Strike ${pct(strikes, asPitcher.length)}`,
-      tone: strikes / asPitcher.length >= 0.62 ? "good" : "watch",
+      detail: (() => {
+        const n = asPitcher.filter((p) => p.result != null && p.result !== "").length;
+        if (!n) return "Strike%: result not entered";
+        return `Strike ${pct(strikes, n)} of ${n} with a result${n < MIN_TREND_SAMPLE ? " · early read" : ""}`;
+      })(),
+      tone: undefined,
     });
   }
   if (def.length) {
@@ -392,8 +396,8 @@ export function buildIndividualPostgame(input: BuildIndividualInput): ReportSnap
         },
         {
           label: "Put-away (2K)",
-          value: pct(putaway, twoStrike.length || 1),
-          detail: `${putaway}/${twoStrike.length}`,
+          value: twoStrike.length ? pct(putaway, twoStrike.length) : "Not entered",
+          detail: twoStrike.length ? `${putaway}/${twoStrike.length}` : "no 2-strike counts entered",
         },
         {
           label: "Velo (peak)",
