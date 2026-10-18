@@ -1,4 +1,13 @@
-# ACTIVE RUN — AC7, Oct 18 18:58 UTC
+# ACTIVE RUN — AC8, Oct 18 19:05 UTC
+Ready to publish: no — team post-game report screen missing, the individual report fills in unentered values, plus B–F and HEVC/iPhone Safari/timing certification remain open.
+- [ ] A4 team post-game report FAIL: there's no team/coach report screen; a coach opening a player's game report just sits on "Building the report…". Needs to be built (Game IQ step 6).
+- [ ] Engine honesty bug found: the individual post-game report shows unentered pitch types as "unknown 100%", a steal with no result as unsuccessful, and a Train next suggestion from 2 pitches without "early read". Fix next.
+- [x] PASS: the player's own report counted all entered events correctly on a phone; no page errors or sideways scrolling.
+- [x] Exact cleanup PASS: 9 TEST rows backed up and deleted, zero remaining; no connections created.
+Proof: `docs/owner/walkthroughs/intelligence/ac8/proof-status.md` + screenshots.
+Next concrete sub-step: fix the post-game report honesty bug, then build the team post-game report.
+
+# PRIOR RUN — AC7, Oct 18 18:58 UTC
 Ready to publish: no — A4 team post-game report, five-player Intelligence proofs, Game IQ, Coaching Console, population learning, final audit, and original HEVC/iPhone Safari/timing certification remain open.
 - [x] A4 History labels PASS on phone (390×844, TEST player): line 1 "Opponent: …", line 2 "Date: … · Status: …", no empty Type, "2 saved" badge; fresh-context reload read-back; no page errors or sideways scrolling.
 - [x] Exact cleanup PASS: 2 TEST games backed up and deleted; History sources back to zero baseline.
