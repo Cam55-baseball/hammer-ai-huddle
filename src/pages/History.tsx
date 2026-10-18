@@ -233,9 +233,10 @@ export default function History() {
                     <div className="min-w-0">
                       <p className="truncate font-medium">
                         {g.opponent_team ? `Opponent: ${g.opponent_team}` : 'Opponent: Not entered'}
-...
+                      </p>
+                      <p className="text-xs capitalize text-muted-foreground">
                         {[`Date: ${g.game_date ?? 'Not entered'}`, g.game_type ? `Type: ${g.game_type.replace(/_/g, ' ')}` : null, `Status: ${g.status ?? 'Not entered'}`].filter(Boolean).join(' · ')}
-                        {g.my_score != null && g.opp_score != null ? ` · ${g.my_score}–${g.opp_score}` : ''}
+                        {g.my_score != null && g.opp_score != null ? ` · Score: ${g.my_score}–${g.opp_score}` : ''}
                       </p>
                     </div>
                     <Button asChild size="sm" variant="outline">
