@@ -27,3 +27,5 @@
 - Staff sign-up: `/get-started` → `/signup/:role` (adults, `src/lib/auth/staffSignup.ts`); approvals reuse existing queues. Why: one approval system.
 - Read nested AGENTS.md in settings, ratings and analyze-video.
 - Live game-report sources exclude deleted games and scope to the signed-in athlete; frozen snapshots stay unchanged. Why: removed games must not feed new reports.
+
+- Learning-loop outcomes are set only by `intel-recheck` on the server; players can read labels, never the stored scores. Why: analysis scores are locked from players.
