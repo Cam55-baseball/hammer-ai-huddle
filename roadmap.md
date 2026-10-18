@@ -1,4 +1,11 @@
-# ACTIVE RUN — AC8, Oct 18 19:05 UTC
+# ACTIVE RUN — AC9, Oct 18 18:42 UTC
+Ready to publish: no — phone re-proof of the report fix, team post-game report screen, B–F, and HEVC/iPhone Safari/timing certification remain open.
+- [x] Post-game report honesty fix: a blank pitch type shows "Not entered" (not "unknown"); a steal with no result shows "Not entered" and is left out of the success rate; pitches with no entered count no longer count as first pitches; under 10 first pitches the rate is marked "early read" and never creates a Train next suggestion.
+- [x] New honesty tests: 5 PASS; all game tests 9 files / 45 PASS. No backend, publish, cron or iOS changes; no test data created.
+- [ ] Phone re-proof of the fixed report as a TEST player — next.
+Next concrete sub-step: phone re-proof of the fixed report, then build the team post-game report.
+
+# PRIOR RUN — AC8, Oct 18 19:05 UTC
 Ready to publish: no — team post-game report screen missing, the individual report fills in unentered values, plus B–F and HEVC/iPhone Safari/timing certification remain open.
 - [ ] A4 team post-game report FAIL: there's no team/coach report screen; a coach opening a player's game report just sits on "Building the report…". Needs to be built (Game IQ step 6).
 - [ ] Engine honesty bug found: the individual post-game report shows unentered pitch types as "unknown 100%", a steal with no result as unsuccessful, and a Train next suggestion from 2 pitches without "early read". Fix next.
