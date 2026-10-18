@@ -2,12 +2,12 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { canSeeReportCard, REPORT_CARD_RELEASED_TO_ALL_USERS } from "../visibility";
 
-describe("report card visibility (pre-release lock)", () => {
-  it("stays locked until the owner releases it", () => {
-    expect(REPORT_CARD_RELEASED_TO_ALL_USERS).toBe(false);
+describe("report card visibility (released Oct 18)", () => {
+  it("is released to everyone by the owner", () => {
+    expect(REPORT_CARD_RELEASED_TO_ALL_USERS).toBe(true);
   });
-  it("blocks every non-admin, non-owner user", () => {
-    expect(canSeeReportCard({ isOwner: false, isAdmin: false })).toBe(false);
+  it("shows to players who are neither owner nor admin", () => {
+    expect(canSeeReportCard({ isOwner: false, isAdmin: false })).toBe(true);
   });
   it("allows owner and admin", () => {
     expect(canSeeReportCard({ isOwner: true, isAdmin: false })).toBe(true);
