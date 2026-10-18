@@ -9891,6 +9891,48 @@ export type Database = {
         }
         Relationships: []
       }
+      intelligence_recommendations: {
+        Row: {
+          area: string
+          baseline_value: number | null
+          checked_at: string | null
+          created_at: string
+          do_this: string
+          followed: boolean | null
+          followed_at: string | null
+          id: string
+          outcome: string | null
+          recheck_value: number | null
+          user_id: string
+        }
+        Insert: {
+          area: string
+          baseline_value?: number | null
+          checked_at?: string | null
+          created_at?: string
+          do_this: string
+          followed?: boolean | null
+          followed_at?: string | null
+          id?: string
+          outcome?: string | null
+          recheck_value?: number | null
+          user_id: string
+        }
+        Update: {
+          area?: string
+          baseline_value?: number | null
+          checked_at?: string | null
+          created_at?: string
+          do_this?: string
+          followed?: boolean | null
+          followed_at?: string | null
+          id?: string
+          outcome?: string | null
+          recheck_value?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       iq_actor_context_shifts: {
         Row: {
           coaching_note: string
