@@ -1,3 +1,13 @@
+# AD13 — Oct 18 20:40 UTC — Owner direction recorded; Report Card released (preview)
+Ready to publish: **no** — see the AD12 summary below plus these new items.
+- [x] Report Card released to everyone (switch on, preview). 9 files / 58 tests PASS.
+- [ ] Measured 20–80 area grade with source + date on each area row (players/coaches/orgs; scouts only via family sharing) — NOT built yet; phone proof waits on the TEST college player having a real analysis.
+- [ ] Stream 1: five TEST player types with app-entered data, parent-run logging, both coach modes.
+- [ ] Stream 2: Game IQ step 6 reports, tap-in heat maps, matchup planner.
+- [ ] Stream 3: Owner's Coaching Console (step 7).
+- [ ] HEVC vs H264 measurements — BLOCKED: body tracking runs in the browser, not on the backend; no deployed pipeline can run it. Needs a machine with real graphics or a real phone.
+- [ ] Then step 8, full page audit, full suite, owner's guide, Ready to publish. Cancel democoach's $0 plan before Nov 18.
+
 # STATUS SUMMARY — AD12, Oct 18 20:35 UTC
 Ready to publish: **no** — the five player-type proofs, parent-run and both coach logging modes, most of Game IQ (step 6), the Owner's Coaching Console (7), population learning (8) and the final full-page audit/full suite are not done; HEVC timing-sensitive measurements and a real iPhone are unproven; the nightly learning check hasn't run yet.
 
