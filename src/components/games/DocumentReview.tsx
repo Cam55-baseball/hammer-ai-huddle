@@ -18,7 +18,7 @@ export function DocumentReview({ raw, busy, onConfirm }: { raw: unknown; busy: b
           {names[row.kind]} {row.index + 1}
         </label>
         <p className="text-xs text-muted-foreground">Logged by: Imported</p>
-        {Object.entries(row.facts).map(([field, value]) => <p key={field} className="text-xs break-words"><span className="text-muted-foreground">{labels[field] ?? field.replaceAll("_", " ")}: </span>{value == null ? "Not recorded" : typeof value === "object" ? JSON.stringify(value) : String(value)}</p>)}
+        {Object.entries(row.facts).map(([field, value]) => <p key={field} className="text-xs break-words"><span className="text-muted-foreground">{labels[field] ?? field.replace(/_/g, " ")}: </span>{value == null ? "Not recorded" : typeof value === "object" ? JSON.stringify(value) : String(value)}</p>)}
         {!row.valid && <p className="text-xs text-destructive">Missing required game details — this entry cannot be added.</p>}
       </div>;
     })}
