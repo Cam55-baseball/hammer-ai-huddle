@@ -2,6 +2,10 @@
 
 YY4 continuation: check remaining nonempty-analysis paths first, then populated History proof; preserve consent/access gates and existing data. No publish, cron, iOS, migration or Stripe changes.
 
+YY4 verified: empty legacy analysis objects cannot replay success; readable coaching stays eligible without scores (three tests). Only analyze-video redeployed after clean Deno validation. Real player upload: ok audit 05:39:42 UTC; identical request replayed readable report with saved cache_hit audit 05:40:06 UTC. Exact clip backed up/deleted, count zero; audits retained.
+YY4 History preview fix: deleted games excluded from opponent choices, scouting inputs and individual direct links (three tests). Phone player History/reports open with Back and no overflow, but empty-state access is not populated proof. No current team-postgame creation UI exists; all-three-kind proof stays open. No invented practices/games/snapshots/share links added.
+YY4 full suite 369 files / 2,952 tests PASS; build OK. Blockers #1 suitable 12 clips/historical attribution; #5 active coach plan/real votes; #7 named migration approval/Start proof; #8 parent-authorized optional sharing; #10 populated History/team-report creation path. No publish, cron, iOS, migrations, Stripe or new-account changes.
+
 YY3 continuation: investigate analysis audit persistence first; retain missing footage and role-proof blockers. No publish, cron or iOS changes.
 
 YY3 completed subchecks: audit writes retry once with a stable per-invocation ID, recover committed rows after lost responses, and expose failed persistence without stopping reports. Rejection/catch paths no longer falsely mark failed writes recorded. Five new behavioral tests passed; full suite 368 files / 2,946 tests PASS; deno function validation PASS.
@@ -30,7 +34,7 @@ YY1 continuation: analysis preflight/retry no-report exits fixed and phone-teste
 
 Constraints: no publish, cron or iOS edits; no unexplained deployment errors; Stripe read-only; preserve safety and measurement honesty; clean test data. Only fix-required backend redeploys authorized; name each actually redeployed.
 
-Current Oct 18 verification: YY3 full suite 368 files / 2,946 tests PASS; latest preview build OK.
+Current Oct 18 verification: YY4 full suite 369 files / 2,952 tests PASS; latest preview build OK.
 Open blockers: #1 requires two suitable clips per sport/type (12 total); existing softball players stop at legal acceptance, no bypass. #5 real coach votes need active plan access. #7 server guard awaits named migration approval and Start proof. #8 scouting save/reload proven; optional service-sharing parent access unproven. #10 populated practice/report/Train-next walkthrough unproven. These remain open.
 YY1 targeted tests: 17/17 PASS including diagnostic-storage retry failure and retaining health answers on save failure. Latest preview build OK. Full-suite result above precedes YY1; it was not rerun this pass.
 YY1 test upload backed up, live fallback tested as the affected player, then deleted via delete-library-session; database read-back count 0. Health profile original state restored. Existing demo accounts retained, no new accounts or low-resolution test uploads created.

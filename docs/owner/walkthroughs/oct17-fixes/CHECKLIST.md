@@ -53,3 +53,16 @@ No YY2 redeploy, publish, cron, iOS, migration, Stripe or new-account changes.
 - [ ] Required 12 suitable clip proof, real coach votes, new-player Start, optional service-sharing parent access and populated History remain open.
 
 No publishing, cron, iOS, migrations, Stripe or new-account changes. Screenshot: yy3-throwing-report.png (phone report).
+
+## YY4 continuation
+- [x] Empty stored-report refusal / scoreless readable coaching: three tests.
+- [x] Clean validation; only analyze-video redeployed.
+- [x] Real player upload and readable replay; ok/cache_hit audit read-back.
+- [x] Exact test clip backed up/deleted, count zero; audits retained.
+- [x] Removed-game filters across three report readers: three tests.
+- [x] Phone History/reports, Back, no overflow (yy4-history.png, yy4-game-reports.png).
+- [x] Full suite 369 files / 2,952 tests passed; build OK.
+- [ ] Populated History/all report kinds: no team-postgame creation UI; no fabricated snapshots added.
+- [ ] Suitable 12 clips, coach votes, Start and optional sharing remain open in roadmap.
+
+No publish, cron, iOS, migrations, Stripe or new-account changes.
