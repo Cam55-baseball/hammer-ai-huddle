@@ -1,3 +1,15 @@
+# AF7 — Oct 18 23:00 UTC — Sub-step 1 DONE: filler numbers replaced with "Not enough data" (owner-approved redeploy)
+
+- [x] hie-analyze: Movement score now computed ONLY when both stride steps and effort (RPE) were entered — the assumed 70/5 are gone. Missing either → null.
+- [x] hie-analyze: no more invented "lowest area at 50" — primary limiter reads "Not enough data yet — log performance sessions…", weakness clusters say "Not enough data yet", before/after trends skip missing scores instead of assuming 50.
+- [x] nightly-mpi-process: provisional players get NO number (was flat 50 for MPI + all 5 parts). Scores stay null.
+- [x] Display: PlayerSnapshotCard, MPIScoreCard, MPIBreakdownCard show "Not enough data" for empty scores instead of 0/—. Rankings already filtered empty scores.
+- [x] Typecheck clean; focused tests PASS (13 tests). Both functions redeployed (owner-approved), no errors in function logs.
+- [x] LIVE PROOF as TEST college player: fresh analysis returned movement/transfer/decision/MPI all empty, limiter "Not enough data yet", zero invented 50s. Phone 390×844: The General shows "Readiness score: Not enough data" and "Pitching — Not enough data yet" (evidence /tmp/browser/af-movement/shots/). Snapshot card itself sits behind the training-history gate for this player — display change verified by typecheck/tests, not screenshot.
+- [ ] Found, NOT changed (needs owner decision): the plan builder internally assumes readiness 70 when no check-in exists — shapes plan intensity, never displayed. Noted in docs/owner/data-lineage.md.
+- Next: (2) Game IQ phone proofs with the TEST hitter's 14 games, (3) Coaching Console phone proofs (badge cut-offs approved: Seen = 3 players, Proven = 10 players ≥60%), (4) remaining five-player proofs, (5) population learning, (6) page audit + full suite + owner's guide + Ready to publish.
+- Ready to publish: **no** — Game IQ/Console phone proofs, five-player proofs, step 8 and audit still open.
+
 # Stream 3 — Owner's Coaching Console (draft, Oct 18 20:50 UTC)
 - [x] Built (draft): owner/admin page /owner/coaching-console + owner menu entry; principle text, sport/area/situation/when/when-not/connected work, evidence (experience/study/Hammers pattern), On/Off switch, follow-through + outcome counts ("Need more data" when none), badges, version history, Edit = new version; owner/admin see "Which principle produced this advice" on saved advice.
 - [x] Rule tests PASS (switched off = not in use; edit never overwrites; badges need real outcomes). Build OK. Owner phone 390×844: page opens, no errors/overflow, shows "We couldn't load your principles" because its tables apply only when the draft is accepted. Evidence: `docs/owner/walkthroughs/intelligence/stream3/`.
