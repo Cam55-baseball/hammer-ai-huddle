@@ -1,6 +1,6 @@
 /**
  * No dead ends: on any screen that has no visible way back (Back, Close, Cancel, Exit,
- * or a Dashboard link — the sidebar menu doesn't count), show a small fixed Back button.
+ * or a Dashboard link — the sidebar menu doesn't count), show a Back row in document flow.
  * The automated navigation test (tests/e2e/navigation/back_everywhere.py) uses the same rule.
  */
 import { useEffect, useState } from "react";
@@ -34,7 +34,7 @@ export function GlobalBackFallback() {
   }, [pathname]);
   if (!show) return null;
   return (
-    <div data-global-back className="fixed left-2 top-[calc(0.5rem+var(--safe-top,0px))] z-[60] rounded-full border bg-background/95 shadow-md backdrop-blur">
+    <div data-global-back className="px-2 pt-safe pb-2">
       <BackButton fallback={user ? "/dashboard" : "/"} className="ml-0 px-3" />
     </div>
   );
