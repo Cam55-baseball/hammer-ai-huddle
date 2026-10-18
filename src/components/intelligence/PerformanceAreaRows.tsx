@@ -6,9 +6,12 @@ import { Card } from "@/components/ui/card";
 import { buildAreaRows, type AreaVideo } from "@/lib/intelligence/areaRows";
 import { isEarlyRead } from "@/lib/intelligence/howSure";
 
+const fmtDate = (iso: string) =>
+  new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+
 export function PerformanceAreaRows() {
   const { user } = useAuth();
-  const { data: rows = [] } = useQuery({
+  const { data: rows = [], isError } = useQuery({
     queryKey: ["perf-area-rows", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
@@ -19,6 +22,13 @@ export function PerformanceAreaRows() {
       return buildAreaRows((data ?? []) as AreaVideo[]);
     },
   });
+  if (isError) {
+    return (
+      <p role="alert" className="text-sm text-muted-foreground">
+        We couldn't load your areas. Please try again later.
+      </p>
+    );
+  }
   if (!rows.length) return null;
   return (
     <section className="space-y-2" aria-label="Your areas">
@@ -30,6 +40,8 @@ export function PerformanceAreaRows() {
             <p className="text-xs text-muted-foreground">
               Analyses: {r.count}{isEarlyRead(r.count) ? " · early read" : ""}
             </p>
+            <p className="text-xs text-muted-foreground">Last analysis: {fmtDate(r.lastAt)}</p>
+            <p className="text-xs text-muted-foreground">Grade: on your report card</p>
           </div>
           <Link to={`/analyze/${r.area.toLowerCase()}`} className="text-xs text-primary underline">See report card</Link>
         </Card>
