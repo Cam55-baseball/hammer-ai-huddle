@@ -1,7 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { hasStructuredAnalysis, reliableAnalysis, unavailableAnalysis } from "../../../supabase/functions/_shared/analysisReliability";
+import { hasReadableReport, hasStructuredAnalysis, reliableAnalysis, unavailableAnalysis } from "../../../supabase/functions/_shared/analysisReliability";
 const valid = { choices: [{ message: { tool_calls: [{ function: { arguments: JSON.stringify({ feedback: "Visible movement", summary: ["Clip checked"], efficiency_score: 0, drills: [] }) } }] } }] };
 describe("analysis completion", () => {
+  it("refuses empty or unreadable stored reports for replay", () => {
+    for (const report of [null, {}, [], { summary: [], feedback: "Checked", drills: [] },
+      { summary: ["Checked"], feedback: "  ", drills: [] }, { summary: ["  "], feedback: "Checked", drills: [] },
+      { summary: ["Checked"], feedback: "Checked" }]) {
+      expect(hasReadableReport(report)).toBe(false);
+    }
+  });
+  it("accepts readable stored coaching without inventing a score", () => {
+    expect(hasReadableReport({ summary: ["Clip checked"], feedback: "Visible movement", drills: [] })).toBe(true);
+  });
+  it("preserves honest missing-measurement reports as readable results", () => {
+    expect(hasReadableReport(unavailableAnalysis("throwing", "pose"))).toBe(true);
+  });
   it("never invents measurements or grades when a stage fails", () => {
     for (const sport of ["baseball", "softball"]) for (const type of ["hitting", "pitching", "throwing"]) {
       const report = unavailableAnalysis(type, `${sport}:pose`);

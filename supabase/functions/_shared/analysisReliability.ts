@@ -9,15 +9,22 @@ export function unavailableAnalysis(module: string, stage: string) {
   };
 }
 
+/** Saved reports omit scores; missing measurements must not invalidate readable coaching. */
+export function hasReadableReport(data: unknown): boolean {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return false;
+  const report = data as Record<string, unknown>;
+  return typeof report.feedback === "string" && report.feedback.trim().length > 0 &&
+    Array.isArray(report.summary) && report.summary.some((s: unknown) => typeof s === "string" && s.trim().length > 0) &&
+    Array.isArray(report.drills);
+}
+
 export function hasStructuredAnalysis(data: unknown): boolean {
   try {
     const d = data as { choices?: Array<{ message?: { tool_calls?: Array<{ function?: { arguments?: string } }> } }> };
     const args = d?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
     if (!args) return false;
     const report = JSON.parse(args);
-    return typeof report.feedback === "string" && report.feedback.trim().length > 0 &&
-      Array.isArray(report.summary) && report.summary.some((s: unknown) => typeof s === "string" && s.trim()) &&
-      typeof report.efficiency_score === "number" && Number.isFinite(report.efficiency_score) && Array.isArray(report.drills);
+    return hasReadableReport(report) && typeof report.efficiency_score === "number" && Number.isFinite(report.efficiency_score);
   } catch { return false; }
 }
 

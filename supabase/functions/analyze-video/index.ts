@@ -17,7 +17,7 @@ import {
 } from "../_shared/biomechFingerprint.ts";
 import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalysisRun.ts";
 import { chatCompletion } from "../_shared/googleAi.ts";
-import { hasStructuredAnalysis, reliableAnalysis, unavailableAnalysis } from "../_shared/analysisReliability.ts";
+import { hasReadableReport, hasStructuredAnalysis, reliableAnalysis, unavailableAnalysis } from "../_shared/analysisReliability.ts";
 import { canSeeScoredGrading, stripScoredGrading } from "../_shared/scoredGradingGate.ts";
 import { buildFaultFindings } from "../_shared/faultFindings.ts";
 import { constructiveCriticismBlock, improvementsSchema } from "./constructiveCriticism.ts";
@@ -1897,7 +1897,7 @@ Deno.serve(async (req) => {
         .limit(1)
         .maybeSingle();
       const cachedAi = (videoRow?.ai_analysis ?? null) as Record<string, unknown> | null;
-      if (prior && cachedAi && videoRow?.status === "completed") {
+      if (prior && hasReadableReport(cachedAi) && videoRow?.status === "completed") {
         await recordRun(supabase, {
           video_id: videoId,
           requested_by: userId,

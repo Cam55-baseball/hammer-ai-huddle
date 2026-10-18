@@ -1,2 +1,3 @@
 - Every authorized invocation uses one stable audit run ID across write retries and catch paths. Why: lost responses must not duplicate runs or falsely claim durable logging.
 - Shared audit writes retry once, confirm duplicate IDs by read-back and return persistent failures without stopping report delivery. Why: recover logging without costing the athlete a report.
+- Replay only stored reports with readable feedback, at least one meaningful summary entry and a drills array; do not require a score. Why: empty legacy objects must rerun while missing measurements never erase readable coaching.
