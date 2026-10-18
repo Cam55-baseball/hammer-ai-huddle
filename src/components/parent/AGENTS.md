@@ -1,0 +1,1 @@
+- Optional service sharing uses the authenticated `set_parent_optional_sharing` RPC for both linked parents and parent-run accounts; it never enables health or recruiting scopes. Why: one consent-checked write path prevents client-supplied child IDs from widening authority.

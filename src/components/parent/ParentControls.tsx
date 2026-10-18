@@ -64,7 +64,11 @@ export function ParentControls({ userId }: { userId: string }) {
   };
   const share = async (yes: boolean) => {
     setBusy("share");
-    try { await callParentConsent("sharing", { optional_sharing: yes }); await q.refetch(); }
+    try {
+      const { error } = await supabase.rpc("set_parent_optional_sharing", { _athlete: userId, _enabled: yes });
+      if (error) throw error;
+      await q.refetch();
+    }
     catch { setResult("Couldn't save sharing permission. Try again."); }
     finally { setBusy(null); }
   };

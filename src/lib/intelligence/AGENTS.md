@@ -1,1 +1,3 @@
 - Learning-loop outcomes are set only by `intel-recheck` (server); players read labels, never stored scores. Why: analysis scores are locked from players.
+- Nightly rechecks reuse the server comparison helper and require the plan job's Vault token; schedules remain owner-applied SQL only. Why: unattended checks must preserve the same outcome rules and expose no athlete data.
+- At-bat video tags use `tag_at_bat_video` with an owned saved clip and bounded timestamp; the database validates the evidence on every source write. Why: a source label must have evidence without inventing game details or AI verification.

@@ -255,10 +255,15 @@ Deno.serve(async (req) => {
     }
 
     if (action === "sharing") {
-      const yes = body?.optional_sharing === true;
-      const { error } = await admin.from("parent_consents").update({ optional_sharing: yes, optional_sharing_at: new Date().toISOString() })
-        .eq("child_user_id", user.id).is("withdrawn_at", null);
-      return error ? json({ error: "failed" }, 500) : json({ ok: true, optional_sharing: yes });
+      const parsed = z.object({ optional_sharing: z.boolean(), athlete_id: z.string().uuid().optional() }).safeParse(body);
+      if (!parsed.success) return json({ error: "invalid" }, 400);
+      const caller = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
+        global: { headers: { Authorization: auth } }, auth: { persistSession: false },
+      });
+      const { data, error } = await caller.rpc("set_parent_optional_sharing", {
+        _athlete: parsed.data.athlete_id ?? user.id, _enabled: parsed.data.optional_sharing,
+      });
+      return error ? json({ error: "Active parent permission is required." }, 403) : json({ ok: true, optional_sharing: data });
     }
 
     if (action === "training") {

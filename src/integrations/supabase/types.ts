@@ -8269,6 +8269,8 @@ export type Database = {
           rbi: number | null
           result: string | null
           runners_on: string | null
+          source_video_id: string | null
+          source_video_seconds: number | null
           updated_at: string
           user_id: string
         }
@@ -8303,6 +8305,8 @@ export type Database = {
           rbi?: number | null
           result?: string | null
           runners_on?: string | null
+          source_video_id?: string | null
+          source_video_seconds?: number | null
           updated_at?: string
           user_id: string
         }
@@ -8337,6 +8341,8 @@ export type Database = {
           rbi?: number | null
           result?: string | null
           runners_on?: string | null
+          source_video_id?: string | null
+          source_video_seconds?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -8353,6 +8359,13 @@ export type Database = {
             columns: ["opponent_pitcher_id"]
             isOneToOne: false
             referencedRelation: "gp_pitcher_dossiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gp_at_bats_source_video_id_fkey"
+            columns: ["source_video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
             referencedColumns: ["id"]
           },
         ]
@@ -23234,6 +23247,14 @@ export type Database = {
       }
       org_test_ranking: { Args: { _org: string; _test: string }; Returns: Json }
       owns_scout_grade: { Args: { _grade_id: string }; Returns: boolean }
+      parent_optional_sharing: {
+        Args: { _athlete: string }
+        Returns: {
+          health_allowed: boolean
+          optional_sharing: boolean
+          signed_at: string
+        }[]
+      }
       player_resolve_coach_entry: {
         Args: {
           _confirm: boolean
@@ -23369,6 +23390,10 @@ export type Database = {
         Args: { _athlete: string; _coach: string }
         Returns: undefined
       }
+      set_parent_optional_sharing: {
+        Args: { _athlete: string; _enabled: boolean }
+        Returns: boolean
+      }
       shift_workouts_forward: {
         Args: { p_after_date: string; p_block_id: string; p_days?: number }
         Returns: number
@@ -23401,6 +23426,10 @@ export type Database = {
           _proof_path: string
           _website: string
         }
+        Returns: undefined
+      }
+      tag_at_bat_video: {
+        Args: { _ab: string; _seconds: number; _video: string }
         Returns: undefined
       }
       team_discipline_summary: { Args: { _org?: string }; Returns: Json }

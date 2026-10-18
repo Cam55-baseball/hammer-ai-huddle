@@ -1,4 +1,18 @@
-# REPORT — Oct 18, 06:40 UTC (end of queued batch ZZ1–ZZ12)
+# ACTIVE — Oct 18 owner answers, 13:34 UTC
+Ready to publish: NO — implementation and affected-player proof remain unfinished.
+All nine former approval blockers are answered. Do not ask again for migration/redeploy or kept-test-account password proof approval within this scope.
+- [ ] Re-run existing authorized real clips (2/type/sport where available), synthetic only where absent; per-type rates, private test-report cleanup.
+- [ ] Restore democoach through a new Stripe 100%-off Coach subscription, prove real agreement votes, cancel only this test subscription.
+- [ ] Apply approved initial-assessment server gate and prove new/existing-player behavior.
+- [ ] Add consent-based linked-parent optional-sharing permission and prove save/reload + refusal.
+- [ ] Deploy approved sign-in plan-check fix and prove sign-in.
+- [ ] Write docs/owner/learning-loop-cron.sql; no schedule changes.
+- [ ] Measurement-based Performance grades with source/date, honest missing data.
+- [ ] Finish video-tagged entries and phone-proof at-bat source labels.
+- [ ] Finish Game IQ including team post-game reports, Coaching Console, private population learning in order.
+- [ ] Five-player-type phone proof, full suite/page audit, cleanup and updated item-by-item report.
+
+# PRIOR REPORT — Oct 18, 06:40 UTC (end of queued batch ZZ1–ZZ12)
 Ready to publish: NO (player-role proof missing; owner approvals below outstanding).
 
 ## Oct 17 fixes
