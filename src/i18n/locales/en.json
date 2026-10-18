@@ -7039,22 +7039,22 @@
       "switchMode": "Switch View"
     },
     "load": {
-      "cns": "CNS Load",
-      "fascial": "Fascial Bias",
+      "cns": "Training exposure (points)",
+      "fascial": "Exercise type mix",
       "compression": "Compression",
       "elastic": "Elastic",
       "glide": "Glide",
       "volume": "Volume",
       "recoveryDebt": "Recovery Debt",
-      "dashboard": "Load Dashboard",
-      "weeklyOverview": "7-day training load overview",
-      "todayCNS": "Today's CNS",
+      "dashboard": "Training exposure",
+      "weeklyOverview": "Points from the exercises you logged — not a body measurement",
+      "todayCNS": "Today's training exposure",
       "weeklyAvg": "Weekly Avg",
       "vsAverage": "vs Average",
-      "cnsHistory": "CNS Load History",
-      "fascialBreakdown": "Fascial Load Breakdown",
+      "cnsHistory": "Training exposure history (logged days only)",
+      "fascialBreakdown": "Exercise type mix (not a body measurement)",
       "noData": "No load data yet",
-      "noFascialData": "Complete workouts to see fascial load data"
+      "noFascialData": "Log workouts to see your exercise type mix"
     },
     "warnings": {
       "cns_overlap": "High CNS load detected",
