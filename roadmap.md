@@ -2270,3 +2270,5 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - [x] Organization dashboard "Add athlete" (search + send, or team code / link / QR)
 - [x] Wording: team creation message and Coach plan purchase message (create-staff-checkout redeployed)
 - [ ] iPhone-size proof as test coach / player / org admin / athlete — blocked: no way to sign in as those test accounts from here
+
+- Intelligence step 4 (ZZ6) IN PROGRESS: new private table for "Do this" items (each player sees/edits only their own); Today shows "Your Do this list" with Did you do it? Yes/Not yet; results It worked / No change / Got worse are set only from a real re-measure (change under 3 = No change; no re-test = no result). Phone-proved: tapped Yes, saved, shows "Waiting for your next re-test"; test row removed. OPEN: the coaching engine creating items automatically, and the nightly re-check filling results (needs a scheduled job — owner applies cron).
