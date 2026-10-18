@@ -105,8 +105,8 @@ describe("card gate — no cross-contamination", () => {
     const card = readFileSync("src/components/report-card/hammer/HammerReportCard.tsx", "utf8");
     expect(card).toMatch(/scored\?\.card === "hitting" && \([\s\S]*?PHASE_EXPLAINER\.map/);
     const panel = readFileSync("src/components/analyze/AnalysisResultsPanel.tsx", "utf8");
-    expect(panel.indexOf("{recommendations &&")).toBeGreaterThan(panel.indexOf("feedbackParagraphs.map"));
-    expect(panel.indexOf("{recommendations &&")).toBeLessThan(panel.indexOf("yourPrescription"));
+    expect(panel.indexOf("recommendations &&")).toBeGreaterThan(panel.indexOf("feedbackParagraphs.map"));
+    expect(panel.indexOf("recommendations &&")).toBeLessThan(panel.indexOf("yourPrescription"));
   });
 
   it("the measured report card never consumes another discipline's readings", () => {

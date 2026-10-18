@@ -40,6 +40,7 @@ vi.mock("@/hooks/useSubscription", () => ({
 vi.mock("@/hooks/useVaultPendingStatus", () => ({
   useVaultPendingStatus: () => ({ hasPendingItems: false, pendingCount: 0 }),
 }));
+vi.mock("@/hooks/usePendingRequests", () => ({ usePendingRequests: () => ({ pendingCount: 0, loading: false }) }));
 vi.mock("@/contexts/SportThemeContext", () => ({ useSportTheme: () => ({ isSoftball: false }) }));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
