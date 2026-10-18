@@ -8885,13 +8885,16 @@ export type Database = {
         Row: {
           at_bat_id: string | null
           batter_handedness: string | null
+          contact_quality: string | null
           count_balls: number | null
           count_strikes: number | null
           created_at: string
           entry_source: string | null
           game_id: string
+          hard_hit: boolean | null
           id: string
           inning: number | null
+          intent_location: Json | null
           location: Json | null
           notes: string | null
           opponent_hitter_name: string | null
@@ -8903,18 +8906,22 @@ export type Database = {
           pitcher_arm_slot: string | null
           pitcher_throws: string | null
           result: string | null
+          spray_bucket: string | null
           user_id: string
         }
         Insert: {
           at_bat_id?: string | null
           batter_handedness?: string | null
+          contact_quality?: string | null
           count_balls?: number | null
           count_strikes?: number | null
           created_at?: string
           entry_source?: string | null
           game_id: string
+          hard_hit?: boolean | null
           id?: string
           inning?: number | null
+          intent_location?: Json | null
           location?: Json | null
           notes?: string | null
           opponent_hitter_name?: string | null
@@ -8926,18 +8933,22 @@ export type Database = {
           pitcher_arm_slot?: string | null
           pitcher_throws?: string | null
           result?: string | null
+          spray_bucket?: string | null
           user_id: string
         }
         Update: {
           at_bat_id?: string | null
           batter_handedness?: string | null
+          contact_quality?: string | null
           count_balls?: number | null
           count_strikes?: number | null
           created_at?: string
           entry_source?: string | null
           game_id?: string
+          hard_hit?: boolean | null
           id?: string
           inning?: number | null
+          intent_location?: Json | null
           location?: Json | null
           notes?: string | null
           opponent_hitter_name?: string | null
@@ -8949,6 +8960,7 @@ export type Database = {
           pitcher_arm_slot?: string | null
           pitcher_throws?: string | null
           result?: string | null
+          spray_bucket?: string | null
           user_id?: string
         }
         Relationships: [

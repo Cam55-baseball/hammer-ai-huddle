@@ -540,6 +540,13 @@
       "when": 1792334707661,
       "tag": "0076_game_event_source_provenance",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1792335468334,
+      "tag": "0077_structured_pitch_details_and_import_labels",
+      "breakpoints": true
     }
   ]
 }
