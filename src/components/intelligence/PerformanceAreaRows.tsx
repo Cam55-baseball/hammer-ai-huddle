@@ -5,12 +5,18 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { buildAreaRows, type AreaVideo } from "@/lib/intelligence/areaRows";
 import { isEarlyRead } from "@/lib/intelligence/howSure";
+import { canSeeReportCard } from "@/lib/reportCard/visibility";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 
 export function PerformanceAreaRows() {
   const { user } = useAuth();
+  const { isOwner } = useOwnerAccess();
+  const { isAdmin } = useAdminAccess();
+  const showCard = canSeeReportCard({ isOwner, isAdmin });
   const { data: rows = [], isError } = useQuery({
     queryKey: ["perf-area-rows", user?.id],
     enabled: !!user?.id,
@@ -41,9 +47,9 @@ export function PerformanceAreaRows() {
               Analyses: {r.count}{isEarlyRead(r.count) ? " · early read" : ""}
             </p>
             <p className="text-xs text-muted-foreground">Last analysis: {fmtDate(r.lastAt)}</p>
-            <p className="text-xs text-muted-foreground">Grade: on your report card</p>
+            {showCard && <p className="text-xs text-muted-foreground">Grade: on the report card</p>}
           </div>
-          <Link to={`/analyze/${r.area.toLowerCase()}`} className="text-xs text-primary underline">See report card</Link>
+          <Link to={`/analyze/${r.area.toLowerCase()}`} className="text-xs text-primary underline">{showCard ? "See report card" : "See analysis"}</Link>
         </Card>
       ))}
       <Link to="/vault" className="text-xs text-primary underline">See tests</Link>
