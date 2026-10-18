@@ -28,9 +28,13 @@ export function useReportCardTrend(module: string | null, limit = 8, userIdOverr
     staleTime: 60_000,
     queryFn: async (): Promise<TrendEntry[]> => {
       // Stored analyses are locked to owner/admin (score lock-down 2026-10-03).
-      const { data, error } = await (supabase.rpc as any)("get_staff_report_card_trend", {
-        p_user_id: targetUserId!, p_module: module, p_limit: limit,
-      });
+      // Self reads use the self-only RPC (metrics only); others need staff.
+      const isSelf = !userIdOverride || userIdOverride === user?.id;
+      const { data, error } = isSelf
+        ? await (supabase.rpc as any)("get_my_report_card_trend", { p_module: module, p_limit: limit })
+        : await (supabase.rpc as any)("get_staff_report_card_trend", {
+            p_user_id: targetUserId!, p_module: module, p_limit: limit,
+          });
       if (error) return [];
 
       const rows = (data ?? []) as Array<{
