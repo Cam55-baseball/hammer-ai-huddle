@@ -8,6 +8,7 @@
 export type AnalysisOutcome = "ok" | "cache_hit" | "rejected" | "failed";
 
 export interface AnalysisRunRecord {
+  id?: string;
   video_id: string;
   requested_by?: string | null;
   cache_fingerprint_hex: string;
@@ -32,7 +33,7 @@ export interface AnalysisRunRecord {
 export async function recordAnalysisRun(supabase: any, rec: AnalysisRunRecord): Promise<{ id: string | null; error: string | null }> {
   const payload = {
     // Keep one identity across retries, including a response lost after commit.
-    id: crypto.randomUUID(),
+    id: rec.id ?? crypto.randomUUID(),
     video_id: rec.video_id,
     requested_by: rec.requested_by ?? null,
     cache_fingerprint_hex: rec.cache_fingerprint_hex,

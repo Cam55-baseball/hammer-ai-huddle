@@ -30,4 +30,13 @@ describe("analysis audit persistence", () => {
     expect(await recordAnalysisRun(c.db, record)).toEqual({ id: null, error: "denied" });
     expect(c.insert).toHaveBeenCalledTimes(2);
   });
+  it("preserves the caller's run identity across outcome paths", async () => {
+    const c = client([{ data: { id: "invocation-id" }, error: null }]);
+    await recordAnalysisRun(c.db, { ...record, id: "invocation-id" });
+    expect(c.insert).toHaveBeenCalledWith(expect.objectContaining({ id: "invocation-id", outcome: "ok" }));
+  });
+  it("does not claim success when the insert has no read-back row", async () => {
+    const c = client([{ data: null, error: null }, { data: null, error: null }]);
+    expect(await recordAnalysisRun(c.db, record)).toEqual({ id: null, error: "Audit insert returned no row" });
+  });
 });

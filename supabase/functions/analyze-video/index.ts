@@ -1644,9 +1644,10 @@ Deno.serve(async (req) => {
   let auditSupabase: any = null;
   let authorizedClip = false;
   let auditRecorded = false;
+  const auditRunId = crypto.randomUUID();
   let auditPersistence: { saved: boolean; error: string | null } = { saved: false, error: null };
   const recordRun: typeof recordAnalysisRun = async (client, record) => {
-    const result = await recordAnalysisRun(client, record);
+    const result = await recordAnalysisRun(client, { ...record, id: auditRunId });
     auditRecorded = Boolean(result.id);
     auditPersistence = { saved: auditRecorded, error: result.error };
     return result;
