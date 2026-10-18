@@ -1,4 +1,12 @@
-# ACTIVE RUN — AC2, Oct 18 18:11 UTC
+# ACTIVE RUN — AC3, Oct 18 18:17 UTC
+Ready to publish: no — A3/A4, five-player Intelligence proofs, Game IQ, Coaching Console, population learning, final audit, and original HEVC/timing certification remain open.
+- [x] A2 / Oct 17 #7 PASS: affected TEST college player at 390×844; Start disabled before Completed; no optional answers required; Completed survives reload and assessment disappears; Start builds today's real plan; fresh browser context with no plan cache reads the identical 13 saved rows. Server generation 200 and both saved-plan checks 200 / verified=true. No second generation on fresh readback.
+- [x] Exact cleanup PASS: backed up and removed 18 new TEST records (assessment, 13 prescriptions, CNS ledger, generation diagnostic, 2 final-check swaps); restored the original unstarted flag and three changed fields in one existing TEST scheduling record. All eight non-profile table comparisons match baseline, 20 historical prescriptions preserved; profile start restored (automatic update timestamp changes retained).
+- [x] Assessment regression suite: 2 files / 11 tests PASS; no browser page errors or horizontal overflow. No application source changes, publishing, migrations, redeploys, cron changes, or iOS changes.
+Proof: `docs/owner/walkthroughs/intelligence/ac3/{proof-status.md,before-completed.png,completed-unlocked.png,saved-plan-readback.png}`.
+Next concrete sub-step: A3 linked-parent optional-sharing positive path. HEVC/iPhone Safari and exact timing coverage remain explicitly open, not silently certified.
+
+# PRIOR RUN — AC2, Oct 18 18:11 UTC
 Ready to publish: no — original HEVC/iPhone-format and timing certification plus remaining A–F work are open.
 - [x] AC2 concrete proof: original unchanged owner MOV → automatic conversion → actual TEST-player Analyze → completed saved report → fresh Players Club View read-back at 390×844. Sharing off; screenshot excludes footage. Proof: `docs/owner/walkthroughs/intelligence/ac2/{proof-status.md,saved-report.png}`.
 - [x] Conversion count proof: 557 original / 557 converted frames, 30 fps, 960×560. Maximum relative timestamp difference 5.333 ms — not exact equivalence; broader timing proof stays open.
@@ -15,7 +23,7 @@ Still open in this sub-step: genuine original HEVC (inspected originals were H26
 # Owner clarification — Oct 18 17:37 UTC
 Ready to publish: no — ordered implementation/proof work remains; no owner-answer blockers remain.
 - [x] A1 / Oct 17 #5 PASS: direct Stripe TEST Coach subscription, zero invoice/no card; real coach-screen Agree + Disagree saved against app-filed TEST evaluation (grade 55 unchanged); owner dashboard shows 50% (1 of 2) and both notes on 390×844. Exact two votes/evaluation/request backed up and removed; temporary connection ended; test subscription canceled. Proof: `docs/owner/walkthroughs/intelligence/a1/{coach-agree.png,coach-disagree.png,owner-votes.png,proof-status.md}`. Focused tests 2 files / 9 PASS; preview build OK. No app deployment/migration/publish/cron/iOS changes.
-- [ ] A2: Completed → Start → saved plan read-back.
+- [x] A2: Completed → Start → saved plan read-back; AC3 affected-player phone proof and exact cleanup PASS.
 - [ ] A3: Linked-parent optional-sharing positive path.
 - [ ] A4: Populated TEST History and team post-game report.
 - [ ] Original phone-format automatic conversion and original HEVC/MOV analysis proof (no manual re-encoding).
@@ -48,7 +56,7 @@ Proof paths below are under `docs/owner/walkthroughs/`; previous proof is distin
 4. **DONE — Builders/CMS labels:** previous checks, `oct17-fixes/builder.png`, `oct17-fixes/cms.png`; not merged.
 5. **PARTLY — Agreement dashboard:** built, `oct17-fixes/agreements.png` (empty/page proof only); real test-coach votes and paid access unfinished.
 6. **DONE — Owner settings:** previous phone proof, `oct17-fixes/settings.png`, `oct17-fixes/costs.png`.
-7. **PARTLY — Assessment gate:** server incomplete/Completed/existing-start checks PASS; Completed unlock survives phone reload, `intelligence/ab1/assessment-before.png`, `assessment-completed.png`. Start → real saved-plan read-back not yet proven; state restored.
+7. **DONE — Assessment gate:** server incomplete/Completed/existing-start checks PASS; AC3 affected-player phone Completed → Start → fresh-context identical saved-plan readback PASS, `intelligence/ac3/proof-status.md`. Optional answers left blank; exact test state restored.
 8. **PARTLY — Parent sharing/scout visibility:** parent-run save/reload and ordinary-player refusal PASS, `intelligence/oct18/parent-sharing-player.png`; prior scout controls `oct17-fixes/yy2-parent-metrics-readback.png`. Positive linked-parent optional-sharing proof open; health/recruiting rules unchanged.
 9. **DONE — Physio redo:** previous save/reload/reopen proof, `oct17-fixes/yy1-physio-redo.png`; original test health state restored.
 10. **PARTLY — History/Train next:** previous navigation/empty-state proof, `oct17-fixes/yy4-history.png`, `yy4-game-reports.png`; populated History and approved team-report screen unfinished.
@@ -98,7 +106,7 @@ Live this round: assessment/parent-sharing/video-tag schema changes; `check-subs
 - [x] Re-run existing authorized real clips: 12/12 reports, per-type rates above; private test-report cleanup confirmed.
 - [ ] Restore democoach through a new Stripe 100%-off Coach subscription, prove real agreement votes, cancel only this test subscription.
 - [x] Apply approved initial-assessment server gate; new/existing behavior verified at the server.
-- [ ] Phone-proof Completed → Start UI and real plan read-back.
+- [x] Phone-proof Completed → Start UI and real plan read-back (AC3, 13 identical saved rows in fresh browser context; exact cleanup).
 - [x] AB1 Completed saves with no optional answers; Start disabled beforehand and enabled after reload on the test player's phone. Original assessment absence restored.
 - [x] Add consent-based parent optional sharing; parent-run phone save/reload + player refusal verified.
 - [ ] Linked-parent positive permission/save/reload proof.
@@ -202,7 +210,7 @@ YY1 continuation: analysis preflight/retry no-report exits fixed and phone-teste
 - [x] 4. Accurately label Drill Builders and Drill CMS activity coverage; overlap documented; not merged.
 - [ ] 5. Complete owner rating agreement dashboard with rates, recent notes and test coach votes.
 - [x] 6. Settings: read-only app switches, billing product/price links, analysis cost summary (phone proof; Stripe read only).
-- [ ] 7. New-player optional assessment above Today: explicit Completed tap unlocks Start; existing started players unaffected; save answers and generate today's plan on Start.
+- [x] 7. New-player optional assessment above Today: explicit Completed tap unlocks Start; existing started players unaffected; save answers and generate today's plan on Start. AC3 affected-player fresh saved-plan readback PASS.
 - [ ] 8. Plain parent sharing wording without PitchLab; scout visibility in same area.
 - [x] 9. Physio setup once and redo anytime: setup saved, reload stayed closed, Edit Health Profile reopened and saved; failed saves now retain answers. Exact test profile restored.
 - [ ] 10. History: Standards drawer in The General; full practice details; date pickers; all report kinds; trace Train next into Today.
