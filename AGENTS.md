@@ -10,9 +10,9 @@
 - Analysis findings may influence Hammers Today only through a downstream one-slot skill overlay: top-three ledger priority, 21-day decay, exact fault matching, equipment eligibility, circulation, and no card/dose/duration changes; owner slots are never displaced. Why: findings should shape existing work without becoming a second plan generator.
 - Coach/scout roles suppress unsolicited module advertising even on dual-role accounts, but purchase pages and subscribed module navigation remain accessible on deliberate visits under the storefront gate. Why: staff buy without being sold to.
 - Landing opening: full sequence on first install, skippable short one on later launches; final wipe waits for the landing page. Why: owner's launch identity without an unloaded page.
-- Verify anything a player does signed in as a player (or the affected role), never only as owner/admin. Why: owner accounts skip gates (2026-10-04).
+- Verify as the affected role, never only owner/admin. Why: owners skip gates.
 - Never prescribe or recommend an athlete action that the affected athlete cannot open; keep unreleased Game IQ suppressed at one presentation switch until its routes open to athletes. Why: inaccessible prescriptions look broken.
-- Athlete-facing headings, notices and status lines must make sense to a 14-year-old; translate plan reasons only at the display edge. Why: athletes must understand without guessing.
+- Athlete wording must make sense to a 14-year-old; translate plan reasons at the display edge. Why: no guessing.
 - Label every athlete-facing value by kind. Why: bare values confuse athletes.
 - Demo auto-start outcomes and inspector state/events go to console.debug only, never app UI. Why: diagnostics are not for users.
 - No plan is built for an account without `profiles.hammers_today_started_at` while switch `hammers_today_start_gate` is on — enforced in `wk-generate-daily`, and the client mounts no plan provider before the start. `wk-daily-plan-job` builds only missing plans for started players. Why: one start per account, the same on every device.
@@ -25,6 +25,8 @@
 - Staff plan purchase eligibility lives only in `supabase/functions/_shared/staffEligibility.ts` (used by create-staff-checkout and tests). Why: one rule for age, coach role and org-admin status.
 
 - Staff sign-up: `/get-started` → `/signup/:role` (adults, `src/lib/auth/staffSignup.ts`); approvals reuse existing queues. Why: one approval system.
-- Read scoped game/dashboard AGENTS.md before edits. Why: local rules.
+- Read scoped AGENTS.md before edits. Why: local rules.
 - Display rates use recordedPercentages helpers. Why: missing/zero denominators and unlogged current values are not percentages.
 - Advice reads never await rechecks; show read failures. Why: failures are not empty lists.
+
+- Game IQ bypasses training-session gates, not subscriptions; other sections stay gated. Why: games are not training sessions.

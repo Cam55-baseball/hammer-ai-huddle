@@ -103,9 +103,8 @@ function ReadinessTodayCard() {
   );
 }
 
-function Advanced({ hasAdvancedAccess, children }: { hasAdvancedAccess: boolean; children: React.ReactNode }) {
-  return (
-    <DataBuildingGate>
+export function Advanced({ hasAdvancedAccess, requireTrainingHistory = true, children }: { hasAdvancedAccess: boolean; requireTrainingHistory?: boolean; children: React.ReactNode }) {
+  const content = (
       <div className="space-y-6">
         {hasAdvancedAccess ? children : (
           <UpgradePrompt
@@ -115,8 +114,8 @@ function Advanced({ hasAdvancedAccess, children }: { hasAdvancedAccess: boolean;
           />
         )}
       </div>
-    </DataBuildingGate>
   );
+  return requireTrainingHistory ? <DataBuildingGate>{content}</DataBuildingGate> : content;
 }
 
 export interface GeneralExtras {
@@ -234,7 +233,7 @@ Confidence: ${snapshot.development_confidence}%
                 <Link to="/games/reports" className="font-semibold text-primary underline-offset-4 hover:underline">Open game reports</Link>
               </Card>
             </section>
-            <Advanced hasAdvancedAccess={hasAdvancedAccess}>
+            <Advanced hasAdvancedAccess={hasAdvancedAccess} requireTrainingHistory={false}>
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Heat maps (from your real logged pitches and balls in play)</CardTitle>
