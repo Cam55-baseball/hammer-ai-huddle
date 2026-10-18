@@ -18,8 +18,8 @@ export function LoadDashboard({ className }: LoadDashboardProps) {
   const { todayLoad, weeklyAverage, loading } = useLoadTracking();
 
   const chartData = useMemo(() => {
-    // For now, create mock chart data based on weekly average
-    // In production, this would fetch 7 days of historical data
+    // Only today's logged value is real here; earlier days are left empty
+    // (never invented). Fascial "load" is tag counting, not a body measurement.
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = subDays(new Date(), 6 - i);
       const isToday = i === 6;
@@ -27,11 +27,11 @@ export function LoadDashboard({ className }: LoadDashboardProps) {
       return {
         date: format(date, 'EEE'),
         fullDate: format(date, 'yyyy-MM-dd'),
-        cns: isToday ? (todayLoad?.cns_load_total || 0) : Math.round((weeklyAverage?.cnsLoad || 0) * (0.7 + Math.random() * 0.6)),
-        volume: isToday ? (todayLoad?.volume_load || 0) : Math.round((weeklyAverage?.volumeLoad || 0) * (0.7 + Math.random() * 0.6)),
-        compression: Math.round(Math.random() * 30),
-        elastic: Math.round(Math.random() * 40),
-        glide: Math.round(Math.random() * 20),
+        cns: isToday ? (todayLoad?.cns_load_total || 0) : null,
+        volume: isToday ? (todayLoad?.volume_load || 0) : null,
+        compression: isToday ? (todayLoad?.fascial_load as any)?.compression ?? null : null,
+        elastic: isToday ? (todayLoad?.fascial_load as any)?.elastic ?? null : null,
+        glide: isToday ? (todayLoad?.fascial_load as any)?.glide ?? null : null,
       };
     });
     
