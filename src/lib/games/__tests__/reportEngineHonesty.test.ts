@@ -41,6 +41,25 @@ describe("post-game report never fills in unentered values", () => {
 
 import { buildTeamPostgame } from "../reportEngine";
 describe("team post-game report", () => {
+  it("counts the swinging and looking strikeouts entered through the app", () => {
+    const r = buildTeamPostgame(game, "Team", [{ athleteId: "a", athleteName: "TEST", atBats: [{ result: "1B" }, { result: "BB" }, { result: "K_swinging" }, { result: "K_looking" }], pitches: [], defense: [], baserun: [] }]);
+    expect(r.headline[0].value).toBe("1-for-3");
+    expect(r.headline[0].detail).toBe("1 BB · 2 K");
+    expect(r.sections[0].table?.rows[0][5]).toBe(2);
+  });
+  it("does not invent RBI, defensive errors, innings, velocity or an at-bat from missing fields", () => {
+    const r = buildTeamPostgame(game, "Team", [{ athleteId: "a", athleteName: "TEST", atBats: [{ result: null }], pitches: [{ perspective: "pitcher" }], defense: [{ error_flag: null }], baserun: [] }]);
+    const row = r.sections[0].table?.rows[0];
+    expect(row?.[1]).toBe("Not entered");
+    expect(row?.[3]).toBe("Not entered");
+    expect(row?.[7]).toBe("Not entered");
+    expect(r.sections.find((s) => s.id === "staff")?.table?.rows[0].slice(2)).toEqual(["Not entered", "Not entered", "Not entered"]);
+  });
+  it("thin game data never certifies mechanics or authors plan advice", () => {
+    const r = buildTeamPostgame(game, "Team", [{ athleteId: "a", athleteName: "TEST", atBats: [{ result: "1B" }], pitches: [], defense: [], baserun: [] }]);
+    expect(r.nextUp).toEqual([]);
+    expect(r.sections.find((s) => s.id === "standouts")?.bullets).toEqual(["TEST: 1-for-1 · early read"]);
+  });
   it("pitches with no entered result never count as strikes, and sources are listed", () => {
     const r: any = buildTeamPostgame(game, "Team", [
       { athleteId: "a", athleteName: "P1", atBats: [], defense: [], baserun: [],
