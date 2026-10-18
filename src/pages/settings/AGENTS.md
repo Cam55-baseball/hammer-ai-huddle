@@ -1,0 +1,1 @@
+- Parent settings reuse active, unrevoked useParentLinks and the existing recruiting authorization page, not child-session consent writes. Why: preserve parent authority boundaries.

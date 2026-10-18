@@ -31,3 +31,14 @@ Tests: 365 files, 2,937 tests PASS. No publish, cron, iOS, migration or Stripe c
 - [ ] Required two appropriate clips per sport/type still missing. Do not report 100% general success.
 
 Only analyze-video redeployed. No publish, cron, iOS, migration or Stripe changes.
+
+## YY2 continuation
+- [x] Linked parent Account settings → child scouting controls (390 × 844).
+- [x] Metrics sharing saved and read back after reload, visibility stayed OFF; original scopes and choices restored.
+- [ ] Optional connected-service sharing remains untested, separate from scouting scopes.
+- [ ] Coach votes: test coach has no active Coach plan; gated screen captured, no bypass.
+- [x] Agreement rounding tests (63→65; 18.44→18.4).
+- [ ] Populated History: demo player has no practices/reports; no invented records added.
+- [x] Full suite: 367 files, 2,941 tests passed; preview build OK.
+
+No YY2 redeploy, publish, cron, iOS, migration, Stripe or new-account changes.
