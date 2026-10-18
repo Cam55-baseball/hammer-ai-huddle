@@ -4,3 +4,4 @@
 - Defense and running forms require only position/event choice; optional observations use explicit unknown/yes/no values and shared payload normalization. Why: untouched controls must never record invented outcomes, hands, innings or bases.
 
 - At-bat writers require an explicitly entered inning/result and normalize optional facts through atBatEntryPayload; empty pitch lists never overwrite a manually entered or unknown count. Why: prior innings, probable opponents and empty lists are not evidence for this at-bat.
+- Post-game reports count only entered facts: blank pitch types, counts and run results show "Not entered" and leave denominators; rates under MIN_TREND_SAMPLE are an "early read" and never drive Train next. Why: reports must never fill in what nobody logged.
