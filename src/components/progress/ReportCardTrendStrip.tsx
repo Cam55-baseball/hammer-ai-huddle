@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { useReportCardTrend, type TrendEntry } from "@/hooks/useReportCardTrend";
 import { cn } from "@/lib/utils";
+import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { Sparkles, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 const GRADE_VAR: Record<string, { base: string; glow: string }> = {
@@ -24,7 +25,19 @@ interface Props {
  * is derived from `ai_analysis.metrics`; missing metrics render as a muted
  * "—" chip rather than fabricating a grade.
  */
-export function ReportCardTrendStrip({ module, title = "Report card trend", userIdOverride }: Props) {
+export function ReportCardTrendStrip(props: Props) {
+  // report_card switch off: no video-based grades anywhere (owner, Oct 18).
+  if (!videoGradesShown()) {
+    return (
+      <Card className="p-3">
+        <p className="text-xs text-muted-foreground">Video grades: {VIDEO_GRADE_PLACEHOLDER}</p>
+      </Card>
+    );
+  }
+  return <ReportCardTrendStripInner {...props} />;
+}
+
+function ReportCardTrendStripInner({ module, title = "Report card trend", userIdOverride }: Props) {
   const reduce = useReducedMotion();
   const { data = [], isLoading } = useReportCardTrend(module, 8, userIdOverride);
 
