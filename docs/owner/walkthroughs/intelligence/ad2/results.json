@@ -1,0 +1,77 @@
+{
+  "checks": [
+    {
+      "page": "coach-required",
+      "persona": "democollege",
+      "heading": {
+        "x": 24,
+        "y": 80,
+        "width": 342,
+        "height": 56
+      },
+      "back": {
+        "x": 16,
+        "y": 24,
+        "width": 77.875,
+        "height": 44
+      },
+      "overlap": false,
+      "back_destination": "/dashboard"
+    },
+    {
+      "page": "organization-required",
+      "persona": "democoach",
+      "heading": {
+        "x": 24,
+        "y": 80,
+        "width": 342,
+        "height": 56
+      },
+      "back": {
+        "x": 16,
+        "y": 24,
+        "width": 77.875,
+        "height": 44
+      },
+      "overlap": false,
+      "back_destination": "/dashboard"
+    },
+    {
+      "page": "staff-plans",
+      "persona": "democoach",
+      "heading": {
+        "x": 16,
+        "y": 76,
+        "width": 358,
+        "height": 32
+      },
+      "back": {
+        "x": 8,
+        "y": 16,
+        "width": 77.875,
+        "height": 44
+      },
+      "overlap": false,
+      "back_destination": "/dashboard"
+    },
+    {
+      "page": "coach-active",
+      "persona": "democoach",
+      "heading": {
+        "x": 49,
+        "y": 85,
+        "width": 292,
+        "height": 28
+      },
+      "back": {
+        "x": 32,
+        "y": 16,
+        "width": 83.875,
+        "height": 36
+      },
+      "overlap": false,
+      "back_destination": "/dashboard"
+    }
+  ],
+  "page_errors": 0
+}

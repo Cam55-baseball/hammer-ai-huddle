@@ -1,0 +1,275 @@
+{
+  "checks": [
+    {
+      "route": "/organization",
+      "width": 390,
+      "floating": true,
+      "position": "static",
+      "back": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 52,
+        "top": 0,
+        "right": 390,
+        "bottom": 52,
+        "left": 0
+      },
+      "heading": null,
+      "overflow": false
+    },
+    {
+      "route": "/staff-plans",
+      "width": 390,
+      "floating": false,
+      "position": null,
+      "back": null,
+      "heading": {
+        "x": 16,
+        "y": 76,
+        "width": 358,
+        "height": 32,
+        "top": 76,
+        "right": 374,
+        "bottom": 108,
+        "left": 16
+      },
+      "overflow": false
+    },
+    {
+      "route": "/coach/team-report",
+      "width": 390,
+      "floating": false,
+      "position": null,
+      "back": null,
+      "heading": {
+        "x": 49,
+        "y": 85,
+        "width": 292,
+        "height": 28,
+        "top": 85,
+        "right": 341,
+        "bottom": 113,
+        "left": 49
+      },
+      "overflow": false
+    },
+    {
+      "route": "/pricing",
+      "width": 390,
+      "floating": false,
+      "position": null,
+      "back": null,
+      "heading": {
+        "x": 16,
+        "y": 124,
+        "width": 358,
+        "height": 80,
+        "top": 124,
+        "right": 374,
+        "bottom": 204,
+        "left": 16
+      },
+      "overflow": false
+    },
+    {
+      "route": "/join",
+      "width": 390,
+      "floating": false,
+      "position": null,
+      "back": null,
+      "heading": null,
+      "overflow": false
+    },
+    {
+      "route": "/get-started",
+      "width": 390,
+      "floating": false,
+      "position": null,
+      "back": null,
+      "heading": {
+        "x": 16,
+        "y": 64,
+        "width": 358,
+        "height": 80,
+        "top": 64,
+        "right": 374,
+        "bottom": 144,
+        "left": 16
+      },
+      "overflow": false
+    },
+    {
+      "route": "/organization/setup",
+      "width": 390,
+      "floating": false,
+      "position": null,
+      "back": null,
+      "heading": {
+        "x": 16,
+        "y": 60,
+        "width": 358,
+        "height": 32,
+        "top": 60,
+        "right": 374,
+        "bottom": 92,
+        "left": 16
+      },
+      "overflow": false
+    },
+    {
+      "route": "/legal/privacy",
+      "width": 390,
+      "floating": false,
+      "position": null,
+      "back": null,
+      "heading": {
+        "x": 16,
+        "y": 77,
+        "width": 358,
+        "height": 36,
+        "top": 77,
+        "right": 374,
+        "bottom": 113,
+        "left": 16
+      },
+      "overflow": false
+    },
+    {
+      "route": "/organization",
+      "width": 1280,
+      "floating": false,
+      "position": null,
+      "back": null,
+      "heading": {
+        "x": 440,
+        "y": 80,
+        "width": 400,
+        "height": 56,
+        "top": 80,
+        "right": 840,
+        "bottom": 136,
+        "left": 440
+      },
+      "overflow": false
+    },
+    {
+      "route": "/staff-plans",
+      "width": 1280,
+      "floating": false,
+      "position": null,
+      "back": null,
+      "heading": {
+        "x": 320,
+        "y": 76,
+        "width": 640,
+        "height": 32,
+        "top": 76,
+        "right": 960,
+        "bottom": 108,
+        "left": 320
+      },
+      "overflow": false
+    },
+    {
+      "route": "/coach/team-report",
+      "width": 1280,
+      "floating": false,
+      "position": null,
+      "back": null,
+      "heading": {
+        "x": 241,
+        "y": 85,
+        "width": 798,
+        "height": 28,
+        "top": 85,
+        "right": 1039,
+        "bottom": 113,
+        "left": 241
+      },
+      "overflow": false
+    },
+    {
+      "route": "/pricing",
+      "width": 1280,
+      "floating": false,
+      "position": null,
+      "back": null,
+      "heading": {
+        "x": 128,
+        "y": 444,
+        "width": 1024,
+        "height": 40,
+        "top": 444,
+        "right": 1152,
+        "bottom": 484,
+        "left": 128
+      },
+      "overflow": false
+    },
+    {
+      "route": "/join",
+      "width": 1280,
+      "floating": false,
+      "position": null,
+      "back": null,
+      "heading": null,
+      "overflow": false
+    },
+    {
+      "route": "/get-started",
+      "width": 1280,
+      "floating": false,
+      "position": null,
+      "back": null,
+      "heading": {
+        "x": 192,
+        "y": 528,
+        "width": 896,
+        "height": 40,
+        "top": 528,
+        "right": 1088,
+        "bottom": 568,
+        "left": 192
+      },
+      "overflow": false
+    },
+    {
+      "route": "/organization/setup",
+      "width": 1280,
+      "floating": false,
+      "position": null,
+      "back": null,
+      "heading": {
+        "x": 320,
+        "y": 60,
+        "width": 640,
+        "height": 32,
+        "top": 60,
+        "right": 960,
+        "bottom": 92,
+        "left": 320
+      },
+      "overflow": false
+    },
+    {
+      "route": "/legal/privacy",
+      "width": 1280,
+      "floating": false,
+      "position": null,
+      "back": null,
+      "heading": {
+        "x": 272,
+        "y": 77,
+        "width": 736,
+        "height": 36,
+        "top": 77,
+        "right": 1008,
+        "bottom": 113,
+        "left": 272
+      },
+      "overflow": false
+    }
+  ],
+  "page_errors": 0
+}
