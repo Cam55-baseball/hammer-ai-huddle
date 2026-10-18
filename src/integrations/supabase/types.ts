@@ -22825,6 +22825,10 @@ export type Database = {
         Args: { p_evaluation_id: string }
         Returns: boolean
       }
+      confirm_game_document: {
+        Args: { _document_id: string; _selection: Json }
+        Returns: Json
+      }
       create_ab_link: {
         Args: { p_link_code: string; p_sport: string; p_user_id: string }
         Returns: {
