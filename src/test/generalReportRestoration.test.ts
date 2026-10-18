@@ -10,10 +10,10 @@ describe("owner's classic General report restoration", () => {
     expect(dashboard).toMatch(/<DataBuildingGate>[\s\S]*hasAdvancedAccess[\s\S]*<UhrcAthleteSection\s*\/>[\s\S]*<PlayerSnapshotCard/);
     expect(dashboard.match(/<UhrcAthleteSection\s*\/>/g)).toHaveLength(1);
   });
-  it("keeps the season counter and classic view", () => {
+  it("keeps the season counter and puts every section in the owner's four tabs", () => {
     expect(landing).toContain("<SeasonCounter />");
-    expect(landing).toContain("All sections (classic view)");
-    expect(landing).toContain("<ProgressDashboard />");
+    expect(landing).toContain("<ProgressDashboard");
+    for (const tab of ["Today", "Performance", "Game IQ", "Growth"]) expect(dashboard).toContain(`>${tab}</TabsTrigger>`);
   });
   it("keeps clarified day wording and excludes extra-load wording", () => {
     for (const file of ["src/components/vault/quiz/MorningDayIntent.tsx", "src/components/game-plan/DayControlCard.tsx", "src/components/game-plan/DayStateBanner.tsx"]) {
