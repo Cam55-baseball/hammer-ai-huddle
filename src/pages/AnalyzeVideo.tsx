@@ -37,7 +37,7 @@ import { unavailableAnalysis } from "../../supabase/functions/_shared/analysisRe
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
 import { ReportCardAccessGate } from "@/components/report-card/hammer/ReportCardAccessGate";
-import { canSeeReportCard } from "@/lib/reportCard/visibility";
+import { canSeeReportCard, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
