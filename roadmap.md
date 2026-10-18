@@ -1,3 +1,13 @@
+# AG2 — Oct 18 23:20 UTC — Sub-step 3 DONE: Coaching Console phone proof (owner)
+
+- [x] Phone 390×844 as owner, 0 page errors, no sideways scroll. Evidence: docs/owner/walkthroughs/intelligence/ag2/
+- [x] Saved a TEST principle → Version 1, badge "Hammers belief", "Advice given 0 · Followed 0", "Results: Need more data" (no invented outcomes).
+- [x] Edit saved Version 2; both versions listed in history (old kept). Switch turned Off; survived reload.
+- [x] Badge cut-offs match owner approval (Seen = worked for 3 players; Proven = 10 players ≥60%); 3 rule tests PASS.
+- [ ] Cleanup blocked by design: the append-only guard refused deleting the TEST principle's versions. It stays switched OFF (Hammers never uses it), text starts "TEST —". Removing it needs owner OK to lift the guard for that one row.
+- Next: (4) remaining five-player proofs, (5) population learning, (6) audit + full suite + guide.
+- Ready to publish: **no**.
+
 # AG1 — Oct 18 23:15 UTC — Sub-step 2 DONE: Game IQ phone proofs with the TEST hitter's 14 games
 
 - [x] Phone 390×844 as TEST college player, 0 page errors. Evidence: docs/owner/walkthroughs/intelligence/ag1/
