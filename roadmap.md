@@ -1,4 +1,12 @@
-# ACTIVE RUN — AC5, Oct 18 18:40 UTC
+# ACTIVE RUN — AC6, Oct 18 18:50 UTC
+Ready to publish: no — History label phone re-proof, A4 team post-game report, five-player Intelligence proofs, Game IQ, Coaching Console, population learning, final audit, and original HEVC/iPhone Safari/timing certification remain open.
+- [ ] History labels FAIL on phone: Date/Status were hidden because the AC5 edit merged them into the cut-off opponent line. Fixed now: Date/Type/Status on their own second line, score labeled "Score:". Phone re-proof needed next.
+- [x] PASS: "Opponent:" and "2 saved" visible; fresh-context reload read-back; no page errors or sideways scrolling.
+- [x] Exact cleanup PASS: 4 TEST games created across 2 attempts, all backed up and deleted; History sources back to zero baseline.
+Proof: `docs/owner/walkthroughs/intelligence/ac6/proof-status.md`.
+Next concrete sub-step: phone re-proof of the History labels, then the A4 team post-game report.
+
+# PRIOR RUN — AC5, Oct 18 18:40 UTC
 Ready to publish: no — A4 team post-game report and label re-proof, five-player Intelligence proofs, Game IQ, Coaching Console, population learning, final audit, and original HEVC/iPhone Safari/timing certification remain open.
 - [x] A4 part 1 History PASS: TEST college player entered 2 TEST games through the app's own game screen at 390×844; History showed both; a fresh browser context read both back after reload. No page errors, no sideways scrolling.
 - [x] Label gap found and fixed: game rows now show "Opponent:", "Date:", "Type:" (only if entered), "Status:", and counts read "N saved". Build check passed; phone re-proof of the new labels is still open.
