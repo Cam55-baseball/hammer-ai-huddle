@@ -50,3 +50,14 @@ describe("team post-game report", () => {
     expect(r.sections.find((s: any) => s.id === "sources").bullets[0]).toBe("P1 — Logged by: Player-entered");
   });
 });
+
+describe("pitch headline", () => {
+  it("strike% uses only pitches with a result, and put-away with no 2-strike counts is Not entered", () => {
+    const r = build({ pitches: [
+      { perspective: "pitcher", inning: 1, result: "called_strike" },
+      { perspective: "pitcher", inning: 1, result: null },
+    ] });
+    expect(r.headline.find((h: any) => h.label === "Pitches").detail).toBe("Strike 100% of 1 with a result · early read");
+    expect(section(r, "pitching").stats[1].value).toBe("Not entered");
+  });
+});

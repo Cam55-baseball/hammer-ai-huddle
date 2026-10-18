@@ -1,3 +1,41 @@
+# STATUS SUMMARY — AC12, Oct 18 18:52 UTC
+Ready to publish: **no** — the team game report isn't proven on a phone (the TEST coach's plan is canceled, so coach screens are locked); the five-player proofs, Game IQ, Coaching Console, population learning and the final audit aren't done; genuine HEVC iPhone clips haven't been tested.
+
+## Oct 17 fixes
+- #1 Analysis reliability — PASS: 12/12 real owner clips, 2 per type per sport, readable reports (small sample). Proof: roadmap AB rounds, `docs/owner/walkthroughs/intelligence/ac2/`.
+- #2 Duplicate Scout entry removed — PASS (owner menu proof).
+- #3 Subscribers in owner dashboard — PASS.
+- #4 Drill Builders / Drill CMS labels — PASS.
+- #5 Coach "Do you agree?" dashboard with real test-coach votes — PASS. `a1/`.
+- #6 Owner settings — PASS.
+- #7 New-player Completed → Start → saved plan — PASS. `ac3/`.
+- #8 Linked-parent optional sharing — PASS. `ac4/`.
+- #9 Physio setup/redo — PASS.
+- #10 History + team post-game report — History PASS (`ac5/`, `ac7/`); player game report honesty fixed and PASS (`ac10/`); team report built (AC11) but phone proof FAIL/blocked (`ac12/`).
+
+## Hammers Intelligence steps
+- 1 Data lineage — PASS (doc).
+- 2 Hammers Card / How sure — built; five-player phone proof open.
+- 3 Four tabs — built, owner-session phone proof; five-player proof open.
+- 4 Learning loop — built; nightly job applied by owner (first call 200); first scheduled-run outcome not yet checked.
+- 5 Game logging with "Logged by" — built and phone-proven for a player; parent-run and both coach modes not yet proven.
+- 6 Game IQ — player game report fixed (AC9/AC10/AC12: blanks show "Not entered", thin data "early read"); team report built; hitter/pitcher/defense/baserunning reports, heat maps and matchup planner open.
+- 7 Owner's Coaching Console — not started.
+- 8 Population learning with privacy — not started.
+
+## Phone video formats
+- On-upload conversion built (AC1). The owner's original iPhone .MOV analyzed end to end with no manual re-encoding (AC2, `ac2/`). All 30 owner originals checked were H264 — no HEVC clip has been found yet, so HEVC and real iPhone Safari are unproven. Frame timing is close but not exact (5.3 ms gap).
+
+## Five-player proofs
+- Not done: new player, hitter 10+ games, pitcher 5+ reports, two-way, softball. Only the TEST college player has been used so far.
+
+## AC12 run
+- [ ] Team report phone proof FAIL: democoach's Coach plan is canceled, so /coach screens show the plan page. Not bypassed. Needs the owner-approved test plan method again (direct Stripe test subscription, then cancel).
+- [x] Found and fixed: player report showed "Strike 50%" counting a pitch with no result, and "Put-away 0%" with no 2-strike counts. Now: strike % only from pitches with a result (early read under 10), put-away "Not entered". 7 honesty tests PASS; game tests 9 files PASS; build OK.
+- [ ] Open: the floating Back button overlaps the heading on the coach plan page (phone).
+- [x] Cleanup PASS: 6 TEST rows backed up and deleted, zero remaining; no connections made.
+Next: re-activate the TEST coach plan (approved method), prove the team report on a phone, cancel; then B.
+
 # ACTIVE RUN — AC11, Oct 18 18:47 UTC
 Ready to publish: no — phone proof of the team report, B–F, and HEVC/iPhone Safari/timing certification remain open.
 - [x] Team game report screen built: Coach Console → "Team game report" button. Pick a date (and opponent if several); shows lineup, pitching staff, standouts, red flags and a "Who logged it" list, built only from games the coach's linked players logged. Blank pitch results never count as strikes; under 10 pitches marked "early read"; no games → "Need more data".
