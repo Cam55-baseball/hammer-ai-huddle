@@ -14,8 +14,9 @@ export function LearningLoopList() {
     queryKey: key,
     enabled: !!user?.id,
     queryFn: async () => {
+      await supabase.functions.invoke("intel-recheck").catch(() => null); // server re-check; never blocks the list
       const { data, error } = await supabase.from("intelligence_recommendations")
-        .select("id, area, do_this, followed, outcome, created_at, baseline_value")
+        .select("id, area, do_this, followed, outcome, created_at")
         .eq("user_id", user!.id).order("created_at", { ascending: false }).limit(10);
       if (error) throw error;
       // Results are filled only by a server re-check (analysis scores are locked from players).
