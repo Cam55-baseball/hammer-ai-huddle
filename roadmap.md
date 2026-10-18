@@ -1,6 +1,6 @@
 # ACTIVE RUN — Oct 18, 17:37 UTC owner clarification
 Ready to publish: no — ordered implementation/proof work remains; no owner-answer blockers remain.
-- [ ] A1: Direct Stripe TEST Coach subscription → test-user consent → real Agree/Disagree + notes → owner dashboard read-back on 390×844 → exact vote cleanup → cancel this test subscription.
+- [x] A1 / Oct 17 #5 PASS: direct Stripe TEST Coach subscription, zero invoice/no card; real coach-screen Agree + Disagree saved against app-filed TEST evaluation (grade 55 unchanged); owner dashboard shows 50% (1 of 2) and both notes on 390×844. Exact two votes/evaluation/request backed up and removed; temporary connection ended; test subscription canceled. Proof: `docs/owner/walkthroughs/intelligence/a1/{coach-agree.png,coach-disagree.png,owner-votes.png,proof-status.md}`. Focused tests 2 files / 9 PASS; preview build OK. No app deployment/migration/publish/cron/iOS changes.
 - [ ] A2: Completed → Start → saved plan read-back.
 - [ ] A3: Linked-parent optional-sharing positive path.
 - [ ] A4: Populated TEST History and team post-game report.
@@ -12,7 +12,7 @@ Ready to publish: no — ordered implementation/proof work remains; no owner-ans
 - [ ] F: Full page audit, full suite, updated owner guide and final readiness.
 Owner authorizes test-only agreement/waiver/consent acceptance and TEST inputs through app screens or own entry functions. Engine facts/grades/insights must remain evidence-based. Previous consent, populated-cohort and Checkout blockers below are superseded, not renewed requests.
 Cron: owner reports intelligence-learning-loop-nightly installed (04:30 UTC), first call 200. Installation DONE by owner report; actual nightly outcomes still to verify after first nightly run. SQL: `docs/owner/learning-loop-cron.sql`. No agent cron changes.
-Current action: A1. No publish or iOS changes. Historical status/proof retained below.
+This run completed A1 (one concrete sub-step). Next ordered run: A2 Completed → Start → saved plan. No owner-answer blocker remains. Historical status/proof retained below.
 
 # PRIOR ACTIVE REPORT — Oct 18 owner answers
 Ready to publish: no — step 5 role/populated proof, complete earlier proof gaps and steps 6–8 remain unfinished.
