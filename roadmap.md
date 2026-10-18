@@ -1,5 +1,7 @@
 # OWNER FIXES — Oct 17 (received Oct 18)
 
+YY1 continuation: analysis preflight/retry no-report exits fixed and phone-tested. Only analyze-video redeployed; live throwing report and saved unreadable-frame fallback verified. Original 12-clip proof remains mandatory; no substitute footage relabeled.
+
 - [ ] 1. Analysis reliability first: reproduce every type/sport with two real clips each, repair failures, nonempty honest fallback reports, retry/backup model, outcome/cost logging, phone proof and before/after rates.
 - [x] 2. Remove duplicate owner Scout application entry (owner menu proof saved).
 - [x] 3. Move Subscribers into owner dashboard; current plan breakdown only (tier/staff/sponsorship test passes, phone view checked).
@@ -8,13 +10,15 @@
 - [x] 6. Settings: read-only app switches, billing product/price links, analysis cost summary (phone proof; Stripe read only).
 - [ ] 7. New-player optional assessment above Today: explicit Completed tap unlocks Start; existing started players unaffected; save answers and generate today's plan on Start.
 - [ ] 8. Plain parent sharing wording without PitchLab; scout visibility in same area.
-- [ ] 9. Confirm physio setup once and redo anytime; repair if needed.
+- [x] 9. Physio setup once and redo anytime: setup saved, reload stayed closed, Edit Health Profile reopened and saved; failed saves now retain answers. Exact test profile restored.
 - [ ] 10. History: Standards drawer in The General; full practice details; date pickers; all report kinds; trace Train next into Today.
 
 Constraints: no publish, cron or iOS edits; no unexplained deployment errors; Stripe read-only; preserve safety and measurement honesty; clean test data. Only fix-required backend redeploys authorized; name each actually redeployed.
 
 Current Oct 18 verification: full suite 365 files / 2,937 tests PASS; latest preview build OK.
-Open blockers: #1 requires two suitable real clips for each of six sport/type combinations (12 total); available footage cannot prove those motions. #5 coach vote UI proof not performed. #7 server start guard SQL awaits named owner migration approval and new-player completion/start proof. #8 parent-authorized sharing/visibility save proof not performed. #9 completed-profile reopen/edit proof not performed. #10 populated practice/saved-report/Train-next proof not performed. Code and phone screen checks exist for these items, but they are not marked complete.
+Open blockers: #1 requires two suitable real clips for each of six sport/type combinations (12 total); available footage cannot prove those motions. Baseball hitting/pitching/throwing preflight failure reports proven; existing softball test players stop at current legal acceptance, no rules bypassed. #5 coach vote UI proof not performed. #7 server start guard SQL awaits named owner migration approval and new-player completion/start proof. #8 parent-authorized sharing/visibility save proof not performed. #10 populated practice/saved-report/Train-next proof not performed. These remain open, not claimed complete.
+YY1 targeted tests: 17/17 PASS including diagnostic-storage retry failure and retaining health answers on save failure. Latest preview build OK. Full-suite result above precedes YY1; it was not rerun this pass.
+YY1 test upload backed up, live fallback tested as the affected player, then deleted via delete-library-session; database read-back count 0. Health profile original state restored. Existing demo accounts retained, no new accounts or low-resolution test uploads created.
 The single test upload was backed up and deleted through the existing cleanup function; original demo player retained. No publish, cron or iOS changes, no Stripe writes, no migration applied.
 
 # NO APPROVALS EXCEPT SCOUTS — 2026-10-16 03:20 UTC

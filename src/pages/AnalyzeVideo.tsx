@@ -471,6 +471,14 @@ export default function AnalyzeVideo() {
     setShowSideOverride(false);
   };
 
+  const showUnavailableReport = (stage: string, reason?: string) => {
+    const report = unavailableAnalysis(module ?? "video", stage);
+    setAnalysis({ ...report, ...(reason ? { feedback: `Not measured: ${reason}` } : {}), saved: false });
+    setAnalysisError(null);
+    setUploading(false);
+    setAnalyzing(false);
+  };
+
   const handleUploadAndAnalyze = async () => {
     if (!videoFile || !user) return;
 
@@ -537,12 +545,7 @@ export default function AnalyzeVideo() {
     }
 
     setUploading(true);
-    const missingReport = (stage: string) => {
-      setAnalysis({ ...unavailableAnalysis(module ?? "video", stage), saved: false });
-      setAnalysisError(null);
-      setUploading(false);
-      setAnalyzing(false);
-    };
+    const missingReport = showUnavailableReport;
 
     // ===== PHASE 0/1 — Deterministic probe (sha256 + true fps + dimensions) =====
     // Probe FIRST so deterministic frame selection can use fps_true.
@@ -565,22 +568,22 @@ export default function AnalyzeVideo() {
       const { MIN_WIDTH, MIN_HEIGHT, MIN_FPS, MIN_DURATION_SEC, MAX_DURATION_SEC, fpsFloorVerdict } = await import("@/lib/biomech/videoAcceptance");
       if (probed.width < MIN_WIDTH || probed.height < MIN_HEIGHT) {
         toast.error(UPLOAD_ERRORS.tooSmall);
-        setUploading(false);
+        missingReport("resolution", UPLOAD_ERRORS.tooSmall);
         return;
       }
       if (fpsFloorVerdict(probed).reject) {
         toast.error(UPLOAD_ERRORS.lowFps);
-        setUploading(false);
+        missingReport("frame_rate", UPLOAD_ERRORS.lowFps);
         return;
       }
       if (probed.duration_sec < MIN_DURATION_SEC) {
         toast.error(UPLOAD_ERRORS.tooShort);
-        setUploading(false);
+        missingReport("duration", UPLOAD_ERRORS.tooShort);
         return;
       }
       if (probed.duration_sec > MAX_DURATION_SEC) {
         toast.error(UPLOAD_ERRORS.tooLong);
-        setUploading(false);
+        missingReport("duration", UPLOAD_ERRORS.tooLong);
         return;
       }
     }
@@ -1172,12 +1175,12 @@ export default function AnalyzeVideo() {
             setAnalyzing(true);
             const { data: d2, error: e2 } = await supabase.functions.invoke("analyze-video", { body });
             setAnalyzing(false);
-            if (e2) { toast.error(t('videoAnalysis.genericAnalysisError')); return; }
+            if (e2) { showUnavailableReport("scheduled_retry"); toast.error(t('videoAnalysis.genericAnalysisError')); return; }
             setAnalysis(normalizeAnalysisResponse(d2));
             setAnalysisError(null);
             toast.success("Your paused analysis is ready.");
           }, Math.max(1000, at.getTime() - Date.now() + 2000));
-          setAnalyzing(false);
+          missingReport("hourly_limit", `Your clip is saved. Analysis is waiting until about ${when}. Keep this page open for the retry.`);
           return;
         }
 
@@ -1192,7 +1195,7 @@ export default function AnalyzeVideo() {
         } else {
           toast.error(t('videoAnalysis.genericAnalysisError'));
         }
-        setAnalyzing(false);
+        missingReport("analysis_request", friendly ?? "This check did not finish. Retry your saved clip.");
         return;
       }
 
@@ -1303,7 +1306,7 @@ export default function AnalyzeVideo() {
         ? UPLOAD_ERRORS.frameExtractionFailed
         : friendlyThrownError(frameError));
 
-      setAnalyzing(false);
+      showUnavailableReport("retry_frames");
       return;
     }
 
@@ -1326,7 +1329,7 @@ export default function AnalyzeVideo() {
 
       if (analysisError) {
         console.error("Retry analysis error:", analysisError);
-        setAnalysisError(analysisError);
+        showUnavailableReport("retry_request");
         
         if (analysisError.message?.includes('429') || analysisData?.status === 429) {
           toast.error(t('videoAnalysis.rateLimitError'));
@@ -1348,7 +1351,7 @@ export default function AnalyzeVideo() {
       toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
     } catch (error: any) {
       console.error("Retry error:", error);
-      setAnalysisError(error);
+      showUnavailableReport("retry_request");
       toast.error(friendlyThrownError(error));
     } finally {
       setAnalyzing(false);
@@ -1680,6 +1683,7 @@ export default function AnalyzeVideo() {
             {analysis && (
               <div className="space-y-4">
                 {analysis.saved === false && <p role="alert" className="text-sm text-destructive">{analysis.save_error ?? "This report is shown here but hasn't been saved. Try the clip again."}</p>}
+                {analysis.report_status === "not_measured" && <Button variant="outline" disabled={uploading || analyzing} onClick={currentVideoId ? handleRetryAnalysis : handleUploadAndAnalyze}>{t('videoAnalysis.retryAnalysis')}</Button>}
                 {showReportCard && (
                   <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
                 )}

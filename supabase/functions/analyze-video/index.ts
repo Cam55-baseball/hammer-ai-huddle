@@ -1747,8 +1747,11 @@ Deno.serve(async (req) => {
     if (callerError || !caller?.user || !videoRow || caller.user.id !== userId || videoRow.user_id !== userId || videoRow.module !== module || videoRow.sport !== sport) {
       return new Response(JSON.stringify({ error: "Video access denied" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    if (await isAccountPaused(supabase, userId)) return pausedResponse(corsHeaders);
     authorizedClip = true;
+    if (await isAccountPaused(supabase, userId)) {
+      await recordAnalysisRun(supabase, { video_id: videoId, requested_by: userId, cache_fingerprint_hex: "rejected:account_paused", cache_hit: false, outcome: "rejected", outcome_reason: "account_paused" });
+      return pausedResponse(corsHeaders);
+    }
 
     const videoSha256Hex = (videoRow?.sha256_hex as string | null) ?? null;
     const fpsTrue = videoRow?.fps_true == null ? null : Number(videoRow.fps_true);
@@ -1795,10 +1798,8 @@ Deno.serve(async (req) => {
         detector_version: DETECTOR_VERSION,
         metric_engine_version: METRIC_ENGINE_VERSION,
       });
-      return new Response(
-        JSON.stringify({ error: "missing_video_sha256", detail: "videos.sha256_hex must be populated before analysis (Phase 0 contract)." }),
-        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      auditRecorded = true;
+      throw new Error("missing_video_sha256");
     }
     // Unknown frame rate (container timing unreadable): the clip is ACCEPTED
     // and analysed. fps stays null — never guessed. Metrics that need a
@@ -1835,10 +1836,8 @@ Deno.serve(async (req) => {
         outcome: "rejected",
         outcome_reason: `${reason}:${detail}`,
       });
-      return new Response(
-        JSON.stringify({ error: reason, detail }),
-        { status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      auditRecorded = true;
+      throw new Error(`${reason}:${detail}`);
     };
 
     if (fpsTrue != null && Number.isFinite(fpsTrue) && fpsTrue < PHASE1_MIN_FPS - 0.5) {
@@ -2248,7 +2247,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         }
       ],
       tool_choice: { type: "function", function: { name: "return_analysis" } }
-    }, { timeoutMs: 40_000 }), (result) => logAiUsage(supabase, { userId, functionName: "analyze-video", analysisType: `${sport}_${module}`, result }));
+    }, { timeoutMs: 40_000, allowFallback: false }), (result) => logAiUsage(supabase, { userId, functionName: "analyze-video", analysisType: `${sport}_${module}`, result }));
     if (!aiResult.ok) {
       const errorText = aiResult.errorBody || "";
       console.error("AI provider error:", aiResult.provider, aiResult.status, errorText);

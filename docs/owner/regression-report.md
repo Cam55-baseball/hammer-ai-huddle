@@ -4,6 +4,17 @@ Started 2026-10-13. Sections marked NOT YET RUN have not been checked.
 
 ## Oct 17 owner fixes — verified Oct 18
 
+### YY1 follow-up (04:48–05:07 UTC)
+- Fixed no-report exits in resolution/FPS/duration preflight, request failures, manual retry frame/request failures and delayed hourly retry; Not measured reports retain a working retry button.
+- Rejected authorized clips now save missingness reports instead of leaving videos unfinished. Account-pause requests write rejected audit only after ownership validation. Unauthorized requests still return denied, never access the clip.
+- Explicit retry wrapper disables hidden provider fallback so each returned provider attempt reaches usage logging; diagnostics failures no longer stop retries.
+- **Redeployed only analyze-video**, successful deployment and subsequent real player upload verified. Saved throwing report at 04:58:44 UTC, audit outcome ok, known estimated AI cost $0.013968. Tested unreadable frames at 05:01:47 UTC: report_status not_measured, saved true, rejected audit; no AI invocation for this rejected input.
+- Database evidence disproves a current total logging stoppage: video_analysis_runs has requested_at (not created_at), latest runs now recorded; ai_usage_log was 7 analyze-video attempts before this test, then 8. Early preflight rejects and upload-only/pose work do not invoke AI; therefore counts are not expected to match. Historical missing runs' exact cause remains unproven.
+- Phone preflight reports proven for all three baseball types. Softball test personas require legal acceptance; no bypass performed. Available clips still insufficient for required 12-run appropriate-motion proof.
+- Health setup bug fixed: saveProfile returned failure without throwing, so the dialog incorrectly closed. Failed saves now retain inputs and show a clear message; successful setup saves once, reload stays closed, Edit Health Profile opens and saves. Original test profile restored.
+- Exact throwing clip backed up and cleaned through existing deletion function; read-back count zero. Audit/cost rows retained; no new test accounts.
+- Targeted tests 17/17 passed; latest preview build OK. Full suite was not rerun after YY1 (prior 2,937 pass stands as historical evidence).
+
 - Full suite final run: **365 files, 2,937 tests passed**. Initial run had six failures in old test setup/source-string matching; corrected and full suite rerun passed. Preview build OK.
 - Phone checks (390 × 844): owner menu Settings, Drill CMS, Drill Builder, Subscribers, agreements, analysis costs and History calendar; no horizontal overflow. Screenshots: `walkthroughs/oct17-fixes/`.
 - Removed duplicate owner menu links; Subscribers now groups only current player tiers, Coach, Organization with seats and sponsorships.

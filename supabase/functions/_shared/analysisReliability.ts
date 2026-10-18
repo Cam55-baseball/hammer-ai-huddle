@@ -25,14 +25,17 @@ export async function reliableAnalysis<T extends { ok: boolean; status: number; 
   call: (model: string) => Promise<T>, record: (result: T) => Promise<void>,
 ): Promise<T> {
   let result = await call("google/gemini-2.5-flash");
-  await record(result);
+  const recordSafely = async (attempt: T) => {
+    try { await record(attempt); } catch { console.warn("[analysis] usage logging failed; report retry continues"); }
+  };
+  await recordSafely(result);
   if (result.ok && hasStructuredAnalysis(result.data)) return result;
   if ([400, 401, 402, 403].includes(result.status)) return result;
   result = await call("google/gemini-2.5-flash");
-  await record(result);
+  await recordSafely(result);
   if (result.ok && hasStructuredAnalysis(result.data)) return result;
   if ([400, 401, 402, 403].includes(result.status)) return result;
   result = await call("openai/gpt-4o-mini");
-  await record(result);
+  await recordSafely(result);
   return result;
 }
