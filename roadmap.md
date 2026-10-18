@@ -1,3 +1,15 @@
+# QUEUED — HAMMERS INTELLIGENCE PLAN (owner-approved Oct 18; source docs/owner/hammers-intelligence-plan.md)
+Starts after My Connections + Oct 17 list (Oct 17 items 1,5,7,8,10 await owner OK). Ready to publish: no.
+- [ ] 1. Data lineage (CNS, fascial, readiness, body weight, sleep, nutrition) → docs/owner/data-lineage.md
+- [ ] 2. Hammers Card + How-sure dots
+- [ ] 3. The General four tabs (Today / Performance / Game IQ / Growth)
+- [ ] 4. Learning loop
+- [ ] 5. Game logging as events (players, parents, coaches)
+- [ ] 6. Game IQ reports + matchup planner
+- [ ] 7. Owner's Coaching Console
+- [ ] 8. Population learning with privacy protections
+- [ ] Proof: 5 player types on phone, screenshots docs/owner/walkthroughs/intelligence/, full suite + page audit
+
 # OWNER FIXES — Oct 17 (received Oct 18)
 
 ## YY5 FINAL STATUS (Oct 18, 05:55 UTC)
