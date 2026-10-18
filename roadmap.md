@@ -33,6 +33,7 @@ Full suite PASS: **380 files / 2,991 tests**. Build OK. Full page audit and five
 Live this round: assessment/parent-sharing/video-tag schema changes; `check-subscription`, `parent-consent`, `intel-recheck`, `intel-recheck-job`. No publish, cron changes or iOS edits. Callback bundling issue corrected and successfully deployed.
 
 ## Remaining lean task list
+- [ ] AB6: continue step 5 affected-role logging proof without bypassing consent or paid access; record exact blockers, clean fixtures, then proceed to steps 6–8.
 - [x] AB5: document review/explicit confirmation and reload; duplicate-free retry, cross-player refusal, four-family null facts, exact cleanup.
 - [ ] AB5 continuation: remaining parent/teen/both-coach consent-gated logging and populated cohort proof, then steps 6–8.
 - [x] AB4: import result consistency, document ownership gate + honest saved draft, live API/player phone proof, exact cleanup.
