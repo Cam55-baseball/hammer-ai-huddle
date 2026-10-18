@@ -1,3 +1,33 @@
+# REPORT — Oct 18, 06:40 UTC (end of queued batch ZZ1–ZZ12)
+Ready to publish: NO (player-role proof missing; owner approvals below outstanding).
+
+## Oct 17 fixes
+1. Analyses always produce a report — PARTLY DONE. Retry + backup model, "Not measured" fallback, run/cost logging. Success rate: before 162/189 ok (85.7%), 9 failed with no report (4.8%); after 8 runs, 4 ok + 3 deliberate unreadable-clip "Not measured" reports, 0 failed (100% produced a report, small sample). OPEN: 12 real clips (2 per type per sport).
+2. Duplicate Scout application entry — DONE (owner menu proof).
+3. Subscribers moved + plan breakdown — DONE (test + phone view).
+4. Drill Builders / CMS labels — DONE.
+5. Agreement dashboard — BUILT; OPEN: no real coach votes.
+6. Owner settings switches/billing/AI costs — DONE (phone proof).
+7. New-player assessment gate — BUILT in app; OPEN: server enforcement needs approved database change.
+8. Parent sharing / scout visibility — scout visibility DONE; OPEN: parent optional sharing needs a new server permission.
+9. Physio redo — DONE (phone proof).
+10. History + Train next — DONE for fixes; OPEN: no populated history proof; no team post-game report screen.
+
+## Hammers Intelligence steps (screenshots in docs/owner/walkthroughs/intelligence/)
+1. Data lineage — PASS (doc). CNS/fascial load = rule-based training exposure, not body measurements; readiness = composite; weight/sleep/eating = self-entered; no wearable data.
+2. Hammers Card + How-sure dots — PASS on owner account (Today.png).
+3. Four tabs, readiness, health flags, Performance rows — PASS on owner account (Today/Performance/GameIQ/Growth.png, hash_Growth.png, rows_Performance.png). Grades per area need owner OK on a server-side source.
+4. Learning loop — PASS on owner account (loop_Today.png, srv_Today.png, auto_Today.png). OPEN: nightly re-check needs owner to switch on a scheduled job.
+5. Game logging source labels — PARTIAL: games list (games_logged_by.png) + each at-bat. OPEN: video-tagged entries; at-bat screen not phone-proved (no at-bats on owner account).
+6. Game IQ reports + matchup planner — NOT STARTED.
+7. Owner's Coaching Console — NOT STARTED.
+8. Population learning with privacy — NOT STARTED.
+Proof as the 5 player types — FAIL/OPEN: signing in as players needs owner approval each session.
+
+## Waiting on owner
+12 test clips; coach plan or real coach votes; DB change for #7; parent sharing permission for #8; team post-game screen decision; sign-in plan-check fix deploy; nightly job for step 4; player sign-in approvals for proof; grade source for Performance rows.
+No publish, cron, or iOS changes in this batch.
+
 # QUEUED — HAMMERS INTELLIGENCE PLAN (owner-approved Oct 18; source docs/owner/hammers-intelligence-plan.md)
 ZZ1: Oct 17 list remaining items all await owner OK, so the plan started.
 Starts after My Connections + Oct 17 list (Oct 17 items 1,5,7,8,10 await owner OK). Ready to publish: no.
