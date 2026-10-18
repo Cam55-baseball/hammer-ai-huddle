@@ -1,0 +1,71 @@
+{
+  "identity": true,
+  "before_counts": {
+    "gp_games": 0,
+    "gp_reports": 0,
+    "performance_sessions": 0,
+    "monthly_reports": 0
+  },
+  "populated": true,
+  "labels_initial": {
+    "rows": [
+      {
+        "opponent": 1,
+        "text": "Opponent: TEST AC7 History 1\n\nDate: 2026-10-18 \u00b7 Status: Draft\n\nReport",
+        "labels": true,
+        "type_absent": true,
+        "no_empty_separator": true
+      },
+      {
+        "opponent": 2,
+        "text": "Opponent: TEST AC7 History 2\n\nDate: 2026-10-18 \u00b7 Status: Draft\n\nReport",
+        "labels": true,
+        "type_absent": true,
+        "no_empty_separator": true
+      }
+    ],
+    "badge": "Games\n2 saved"
+  },
+  "overflow_initial": {
+    "viewport": 390,
+    "scroll": 390,
+    "body": 390
+  },
+  "labels_fresh": {
+    "rows": [
+      {
+        "opponent": 1,
+        "text": "Opponent: TEST AC7 History 1\n\nDate: 2026-10-18 \u00b7 Status: Draft\n\nReport",
+        "labels": true,
+        "type_absent": true,
+        "no_empty_separator": true
+      },
+      {
+        "opponent": 2,
+        "text": "Opponent: TEST AC7 History 2\n\nDate: 2026-10-18 \u00b7 Status: Draft\n\nReport",
+        "labels": true,
+        "type_absent": true,
+        "no_empty_separator": true
+      }
+    ],
+    "badge": "Games\n2 saved"
+  },
+  "fresh_readback": true,
+  "overflow_fresh": {
+    "viewport": 390,
+    "scroll": 390,
+    "body": 390
+  },
+  "created": 2,
+  "backed_up": 2,
+  "deleted": 2,
+  "remaining": 0,
+  "after_counts": {
+    "gp_games": 0,
+    "gp_reports": 0,
+    "performance_sessions": 0,
+    "monthly_reports": 0
+  },
+  "page_errors": [],
+  "http_errors": []
+}
