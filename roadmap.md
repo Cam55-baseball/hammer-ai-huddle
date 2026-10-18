@@ -1,8 +1,10 @@
-# AD7 — Oct 18 20:09 UTC — B empty-history percentages IN PROGRESS
+# AD7 — Oct 18 20:11 UTC — B empty-history percentage honesty PASS (preview)
 Ready to publish: **no** — remaining B–F and timing-sensitive/physical-device certification remain open.
-- [ ] Remove undefined completion percentages and training-exposure comparisons; prove the affected player's Growth screen at phone size.
-- [ ] Run focused rule tests, check diagnostics, record evidence and cleanup status.
-- TEST Coach plan retained; no publish, redeploy, migration, cron or iOS changes.
+- [x] Completion Rate no longer claims 0% with no recorded activities. Weekly Avg is unavailable without records; vs Average has no percentage or trend arrow with a missing/zero baseline or unlogged today. Genuine recorded zero and signed changes are preserved. Shared LoadDashboard fix also covers WorkloadPanel.
+- [x] Two fresh affected TEST college-player visits at 390×844: actual Growth cards show Not enough data; no fabricated percentage, page exceptions or sideways scrolling. Safari-agent Chromium emulation only, not physical Safari; populated cohorts remain unproven.
+- [x] Focused regressions: 3 files / 12 tests PASS, including 6 percentage rules. Latest preview build OK. Evidence: `docs/owner/walkthroughs/intelligence/ad7/`.
+- [x] No TEST entries, measurements, consents, games or connections inserted; no cleanup rows. TEST Coach subscription untouched and kept active. No publish, redeploy, migration, cron or iOS changes.
+- [ ] Next B: remaining measured-grade/Game IQ/steal-attempt honesty gaps, then genuinely new/populated five-player, parent-run and both coach logging proofs; then C → D → E → F. Timing-sensitive/physical-device certification remains open.
 
 # AD6 — Oct 18 20:08 UTC — B Growth forecast honesty PASS (preview)
 Ready to publish: **no** — remaining B–F and timing-sensitive/physical-device certification remain open.
