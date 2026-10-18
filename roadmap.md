@@ -1,4 +1,13 @@
-# ACTIVE RUN — AC1, Oct 18 17:43 UTC
+# ACTIVE RUN — AC2, Oct 18 18:11 UTC
+Ready to publish: no — original HEVC/iPhone-format and timing certification plus remaining A–F work are open.
+- [x] AC2 concrete proof: original unchanged owner MOV → automatic conversion → actual TEST-player Analyze → completed saved report → fresh Players Club View read-back at 390×844. Sharing off; screenshot excludes footage. Proof: `docs/owner/walkthroughs/intelligence/ac2/{proof-status.md,saved-report.png}`.
+- [x] Conversion count proof: 557 original / 557 converted frames, 30 fps, 960×560. Maximum relative timestamp difference 5.333 ms — not exact equivalence; broader timing proof stays open.
+- [x] Exact test cleanup: 1 video, 1 run, 7 extraction rows, 2 storage objects removed after snapshots; zero-row readback, owner original preserved. Upload regression suite 4 files / 19 tests PASS.
+- [ ] HEVC originals: 30 inspected authorized original MOVs were H264, not HEVC. Actual iPhone performance and all-format certification remain open; no substitute footage or fabricated proof.
+Dense pose timed out on sandbox software graphics; numeric measurements remained missing, visual feedback saved. This proves report delivery, not measured biomechanics accuracy. No new source changes or unexplained runtime exceptions. No publish/redeploy/migration/cron/iOS changes.
+Next concrete application sub-step: A2 Completed → Start → saved plan read-back; keep HEVC/timing coverage explicitly open.
+
+# PRIOR RUN — AC1, Oct 18 17:43 UTC
 Ready to publish: no — original HEVC/saved-report proof and remaining A–F work are open.
 AC1 partial PASS: automatic private device conversion before preview/probe/upload implemented; original untouched owner MOV selected as TEST college player at 390×844 → readable WebM preview and enabled Analyze. Metadata retains measured 30 fps and 960×560; no forced FPS/interpolation. Upload suite 4 files / 19 tests PASS; preview build OK. Proof: `docs/owner/walkthroughs/intelligence/ac1/proof-status.md`, `player-conversion.png` (footage excluded). No reports/uploads/test rows created; no backend redeploy/migration/publish/cron/iOS changes.
 Still open in this sub-step: genuine original HEVC (inspected originals were H264), exact timestamp/frame parity and saved-report read-back. Continue proof, not an owner-answer blocker. Automatic converter is preview-only, not live.
