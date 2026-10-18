@@ -9,12 +9,15 @@
  *
  * Detail is optional; the rep is not.
  */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Minus, Plus, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { FieldDirectionPicker } from "./FieldDirectionPicker";
 import { quickAtBatPayload } from "@/lib/games/pitchEntry";
+import { validAtBatInning } from "@/lib/games/atBatEntry";
+import { NumberField } from "./NumberField";
+import { Label } from "@/components/ui/label";
 
 const QUICK_RESULTS: ReadonlyArray<{ code: string; label: string; tone: string }> = [
   { code: "1B", label: "1B · Single", tone: "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300" },
@@ -35,65 +38,25 @@ export function QuickAtBatBar({
   onQuickSave,
   onOpenFullForm,
   submitting,
-  defaultInning = 1,
+  defaultInning,
 }: {
   onQuickSave: (row: Record<string, any>) => void;
   onOpenFullForm: () => void;
   submitting?: boolean;
-  /** Highest inning already used in this game — never a blind 1. */
+  /** Only supply a current inning explicitly confirmed by the logger. */
   defaultInning?: number;
 }) {
-  const [inning, setInning] = useState(defaultInning);
-  const [touched, setTouched] = useState(false);
+  const [inning, setInning] = useState<number | "">(defaultInning ?? "");
   const [direction, setDirection] = useState<string | null>(null);
   const [showDirection, setShowDirection] = useState(false);
-
-  // Follow the game forward until the user takes over the control.
-  useEffect(() => {
-    if (!touched) setInning(defaultInning);
-  }, [defaultInning, touched]);
-
 
   return (
     <Card className="p-3 space-y-2.5 border-primary/30">
       <div className="rounded-md bg-primary/5 border border-primary/25 p-2.5 space-y-1.5">
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wide text-primary">
-              Inning you are batting in
-            </span>
-            <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                size="icon"
-                variant="outline"
-                className="h-8 w-8"
-                aria-label="Previous inning"
-                onClick={() => {
-                  setTouched(true);
-                  setInning((i) => Math.max(1, i - 1));
-                }}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <span className="min-w-[5.5rem] text-center text-lg font-mono font-bold">
-                Inning {inning}
-              </span>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-8 gap-1 px-2 text-[11px]"
-                aria-label="Next inning"
-                onClick={() => {
-                  setTouched(true);
-                  setInning((i) => Math.min(30, i + 1));
-                }}
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Next inning
-              </Button>
-            </div>
+          <div className="space-y-1">
+            <Label htmlFor="quick-ab-inning">Inning</Label>
+            <NumberField id="quick-ab-inning" aria-label="Quick at-bat inning" min={1} max={30} value={inning} onValueChange={(value) => setInning(value ?? "")} />
           </div>
           <Button type="button" size="sm" variant="ghost" onClick={onOpenFullForm} className="gap-1.5">
             <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -101,8 +64,7 @@ export function QuickAtBatBar({
           </Button>
         </div>
         <p className="text-[11px] text-muted-foreground">
-          Starts at the last inning you logged. Move it forward before your next at-bat so the
-          game reads correctly.
+          Inning: {validAtBatInning(inning) ? inning : "Not entered"}
         </p>
       </div>
 
@@ -118,9 +80,9 @@ export function QuickAtBatBar({
             type="button"
             size="sm"
             variant="ghost"
-            disabled={submitting}
+            disabled={submitting || !validAtBatInning(inning)}
             onClick={() => {
-              onQuickSave(quickAtBatPayload(inning, r.code, direction));
+              onQuickSave(quickAtBatPayload(Number(inning), r.code, direction));
               setDirection(null);
             }}
             className={`h-auto min-h-[3rem] whitespace-normal py-1.5 text-[11px] font-semibold leading-tight ${r.tone}`}

@@ -89,7 +89,7 @@ export function AtBatPitchPanel({ gameId, atBatId, inning, sport, onTerminal, on
 
   // Count always syncs upward — result and count are separate concerns.
   useEffect(() => {
-    if (!list.data) return;
+    if (!list.data?.length) return;
     onTally?.(tally);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tally.balls, tally.strikes, list.data]);

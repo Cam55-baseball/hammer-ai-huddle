@@ -39,6 +39,8 @@ import { AtBatVideoTag } from "./AtBatVideoTag";
 import { usePitcherDossiers } from "@/hooks/useGameDossiers";
 import { NumberField } from "@/components/games/NumberField";
 import { QuickAtBatBar } from "./QuickAtBatBar";
+import { OptionalFact } from "./OptionalFact";
+import { atBatEntryPayload, validAtBatInning } from "@/lib/games/atBatEntry";
 import { FieldDirectionPicker } from "./FieldDirectionPicker";
 import { FieldHelp } from "./TabIntro";
 import {
@@ -107,6 +109,7 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
 
   const add = useMutation({
     mutationFn: async (row: Record<string, any>) => {
+      if (!user) throw new Error("Sign in to save an at-bat.");
       // Snapshot pitcher archetype so historical lookups stay stable even if dossier later changes.
       let pitcher_archetype_snapshot: string | null = null;
       if (row.opponent_pitcher_id) {
@@ -114,7 +117,7 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
         pitcher_archetype_snapshot = (match as any)?.archetype ?? null;
       }
       const { data, error } = await gp("gp_at_bats")
-        .insert({ ...row, pitcher_archetype_snapshot, user_id: user!.id, game_id: gameId })
+        .insert({ ...row, pitcher_archetype_snapshot, user_id: user.id, game_id: gameId })
         .select("id")
         .single();
       if (error) throw error;
@@ -220,12 +223,6 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
 
   const items = list.data ?? [];
 
-  /** Highest inning already used in this game — the honest starting point. */
-  const latestInning = items.reduce(
-    (max, r) => (typeof r.inning === "number" && r.inning > max ? r.inning : max),
-    1
-  );
-
   /** How many at-bats in a row are already saved to a given inning. */
   const streakIn = (inning: number) => {
     let n = 0;
@@ -237,6 +234,7 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
   };
 
   const saveAtBat = (row: Record<string, any>) => {
+    if (!validAtBatInning(row.inning)) { toast.error("Enter the inning (1–30)."); return; }
     const inning = Number(row.inning);
     if (Number.isFinite(inning) && streakIn(inning) >= 2) {
       const ok = window.confirm(
@@ -278,7 +276,6 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
           onQuickSave={saveAtBat}
           onOpenFullForm={() => setShowNew(true)}
           submitting={add.isPending}
-          defaultInning={latestInning}
         />
       )}
 
@@ -288,10 +285,8 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
           onCancel={() => setShowNew(false)}
           onSave={saveAtBat}
           submitting={add.isPending}
-          defaultInning={latestInning}
 
           pitcherOptions={pitcherOptions as any[]}
-          defaultPitcherId={probable.data ?? null}
         />
       )}
 
@@ -429,7 +424,7 @@ function AtBatForm({
   submitting,
   pitcherOptions = [],
   defaultPitcherId = null,
-  defaultInning = 1,
+  defaultInning = undefined,
 }: {
   sport: string;
   onSave: (row: Record<string, any>) => void;
@@ -440,20 +435,20 @@ function AtBatForm({
   defaultInning?: number;
 }) {
   const [f, setF] = useState<Record<string, any>>({
-    inning: defaultInning,
-    batting_side: "R",
+    inning: defaultInning ?? "",
+    batting_side: "",
     position_played: "",
     result: "",
-    count_balls: 0,
-    count_strikes: 0,
+    count_balls: "",
+    count_strikes: "",
     contact_quality: "",
     exit_direction: "",
     runners_on: "",
-    outs: 0,
-    rbi: 0,
-    lob: 0,
+    outs: "",
+    rbi: "",
+    lob: "",
     h1_time_sec: "",
-    is_pinch_hit: false,
+    is_pinch_hit: "",
     notes: "",
     opponent_pitcher_id: defaultPitcherId ?? "",
   });
@@ -497,23 +492,18 @@ function AtBatForm({
   }, []);
 
   const submit = () => {
-    const payload: Record<string, any> = { ...f };
-    ["h1_time_sec"].forEach((k) => {
-      payload[k] = payload[k] === "" ? null : Number(payload[k]);
-    });
-    if (!payload.result) payload.result = null;
-    if (!payload.position_played) payload.position_played = null;
-    if (!payload.contact_quality) payload.contact_quality = null;
-    if (!payload.exit_direction) payload.exit_direction = null;
-    if (!payload.opponent_pitcher_id) payload.opponent_pitcher_id = null;
-    onSave(payload);
+    try {
+      onSave(atBatEntryPayload(f));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Check the at-bat details.");
+    }
   };
 
 
   return (
     <Card ref={containerRef} className="p-4 space-y-3 bg-muted/30">
       <div className="space-y-1">
-        <p className="text-sm font-medium">Full at-bat form — every field is optional except the result</p>
+        <p className="text-sm font-medium">Full at-bat form — inning and result required</p>
         <FieldHelp>
           Fill in as much or as little as you want. Anything you skip stays empty rather than
           being guessed.
@@ -542,12 +532,13 @@ function AtBatForm({
         <Field label="Inning" help="Which inning you batted in.">
           <NumberField
             value={f.inning}
-            onValueChange={(v) => set("inning", v ?? 0)}
+            min={1} max={30}
+            onValueChange={(v) => set("inning", v ?? "")}
           />
         </Field>
         <Field label="Which side of the plate you batted from" help="Left-handed or right-handed for this at-bat.">
           <Select value={f.batting_side} onValueChange={(v) => set("batting_side", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Not entered" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="L">L — batted left-handed</SelectItem>
               <SelectItem value="R">R — batted right-handed</SelectItem>
@@ -582,14 +573,14 @@ function AtBatForm({
           help="Only needed if you don't log the pitches — once you log pitches, the count is filled in from them."
         >
           <NumberField min={0} max={4} value={f.count_balls}
-            onValueChange={(v) => set("count_balls", v ?? 0)} />
+            onValueChange={(v) => set("count_balls", v ?? "")} />
         </Field>
         <Field
           label="Strikes in the count"
           help="Only needed if you don't log the pitches — once you log pitches, the count is filled in from them."
         >
           <NumberField min={0} max={3} value={f.count_strikes}
-            onValueChange={(v) => set("count_strikes", v ?? 0)} />
+            onValueChange={(v) => set("count_strikes", v ?? "")} />
         </Field>
 
         <Field label="How well you hit it" help="Contact quality — how cleanly the ball came off the bat.">
@@ -608,25 +599,25 @@ function AtBatForm({
 
         <Field label="Outs when you came up" help="How many outs the team already had (0, 1 or 2).">
           <NumberField min={0} max={2} value={f.outs}
-            onValueChange={(v) => set("outs", v ?? 0)} />
+            onValueChange={(v) => set("outs", v ?? "")} />
         </Field>
         <Field
           label="Which bases had runners on them"
-          help="Type the base numbers, e.g. 1,3 means a runner on first base and a runner on third base. Leave blank if the bases were empty."
+          help="Type the base numbers, e.g. 1,3 means a runner on first base and a runner on third base. Leave blank if not entered. Type none if the bases were empty."
         >
           <Input placeholder="e.g. 1,3" value={f.runners_on}
             onChange={(e) => set("runners_on", e.target.value)} />
         </Field>
         <Field label="Runs you drove in (RBI)" help="How many teammates scored because of your at-bat.">
           <NumberField min={0} value={f.rbi}
-            onValueChange={(v) => set("rbi", v ?? 0)} />
+            onValueChange={(v) => set("rbi", v ?? "")} />
         </Field>
         <Field
           label="Runners you left on base (LOB)"
           help="Runners who were still standing on base when your at-bat ended without scoring."
         >
           <NumberField min={0} value={f.lob}
-            onValueChange={(v) => set("lob", v ?? 0)} />
+            onValueChange={(v) => set("lob", v ?? "")} />
         </Field>
         <Field
           label="Home-to-first run time (seconds)"
@@ -647,17 +638,7 @@ function AtBatForm({
         />
       </div>
 
-      <div className="flex items-center gap-2">
-        <input
-          id="ph"
-          type="checkbox"
-          checked={f.is_pinch_hit}
-          onChange={(e) => set("is_pinch_hit", e.target.checked)}
-        />
-        <Label htmlFor="ph" className="text-xs">
-          Pinch hit (PH) — you batted in place of a teammate
-        </Label>
-      </div>
+      <OptionalFact label="Pinch hit — you batted in place of a teammate" value={f.is_pinch_hit} onChange={(value) => set("is_pinch_hit", value)} />
       <Field label="Your own notes" help="Anything you want to remember, in your own words.">
         <Textarea
           rows={2}
@@ -667,7 +648,7 @@ function AtBatForm({
       </Field>
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-        <Button size="sm" onClick={submit} disabled={submitting}>
+        <Button size="sm" onClick={submit} disabled={submitting || !validAtBatInning(f.inning) || !f.result}>
           Save at-bat
         </Button>
       </div>
