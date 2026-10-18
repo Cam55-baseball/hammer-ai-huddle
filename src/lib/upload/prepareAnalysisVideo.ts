@@ -1,4 +1,5 @@
-import coreWasm from "@/assets/ffmpeg-core.wasm.asset.json";
+import coreWasmURL from "@ffmpeg/core/wasm?url";
+import coreURL from "@ffmpeg/core?url";
 import converterWorkerURL from "@ffmpeg/ffmpeg/worker?worker&url";
 
 /** Decode an actual frame, not just a header or canPlayType claim. */
@@ -40,8 +41,8 @@ export async function prepareAnalysisVideo(original: File, onProgress: (progress
     converter.on("progress", ({ progress }) => onProgress(Math.max(0, Math.min(99, Math.round(progress * 100)))));
     await converter.load({
       classWorkerURL: converterWorkerURL,
-      coreURL: new URL("/video-converter/ffmpeg-core.js", window.location.origin).href,
-      wasmURL: new URL(coreWasm.url, window.location.origin).href,
+      coreURL: new URL(coreURL, window.location.origin).href,
+      wasmURL: new URL(coreWasmURL, window.location.origin).href,
     });
     await converter.writeFile(input, new Uint8Array(await original.arrayBuffer()));
     const code = await converter.exec(analysisConversionArgs(input, "analysis.mp4"), 180_000);
