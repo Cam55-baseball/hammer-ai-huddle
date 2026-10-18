@@ -1,7 +1,10 @@
-# AD5 — Oct 18 19:58 UTC — B saved-advice access proof IN PROGRESS
+# AD5 — Oct 18 20:05 UTC — B empty saved-advice access + failure notice PASS
 Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
 - [x] Recorded AD5: resolve the saved-advice read failure as one concrete B sub-step; keep TEST Coach plan active.
-- [ ] Inspect live column permissions and self-only rules, correct only the authorized Intelligence access fault if needed, prove the affected TEST player on a 390×844 screen, and clean up exact TEST inputs.
+- [x] Live permissions are already correct: player-readable advice columns return 200; locked baseline/recheck score reads intentionally return 403. Self-only read/update policies and RLS remain intact. No permission migration needed or applied; AD4's broad diagnostic read was not evidence the current explicit app query fails.
+- [x] Two fresh affected TEST college-player phone-size visits: actual saved-advice reads 200, zero advice rows, no failure notice, no page exceptions or horizontal overflow. This proves empty reads only, NOT populated advice/follow-through or new signup.
+- [x] Browser-only simulated 503 on Today: saved-advice failure notice visible on 390×844; real readiness remains visible below it. Outcome/recheck regressions 2 files / 4 tests PASS; latest preview build OK. Evidence: `docs/owner/walkthroughs/intelligence/ad5/`.
+- [x] No TEST games, advice, measurements, consents or connections inserted; no data cleanup needed. TEST session used in memory only, browser contexts closed. Coach subscription untouched and retained active. No publish, migration, redeploy, cron or iOS changes.
 - [ ] Other B no-data gaps and cohort/role proofs remain open; continue B → C → D → E → F. No publish, cron or iOS changes.
 
 # AD4 — Oct 18 19:57 UTC — B no-data player proof PARTIAL; gaps found
@@ -9,7 +12,7 @@ Ready to publish: **no** — B–F and timing-sensitive/physical-device certific
 - [x] Recorded AD4 continuation: begin B with the no-data, unstarted TEST player; keep Coach plan active. A kept empty account is not proof of a genuinely brand-new signup.
 - [x] Two fresh affected-player 390×844 visits: four tabs and game-report navigation inspected, zero page exceptions/tab overflow; readiness Hammers Card honestly says Need more data. Not a new-signup/populated-cohort certification.
 - [ ] B gaps: missing subscribed measured-grade rows; Game IQ training-session threshold; unsupported Growth forecast/zero-denominator comparisons; steal 0% with no attempts. Advice read returns 403 permission denied, not an empty list.
-- [ ] Preview-only advice failure notice/non-blocking recheck added; phone notice still unverified. No permission migration applied. Resolve these B gaps next.
+- [x] Preview-only advice failure notice/non-blocking recheck added; phone notice verified in AD5. No permission migration needed: current safe app read returns 200; locked-score diagnostic 403 is intentional. Other B gaps remain open.
 - [x] Tests 3 files / 9 PASS; preview build OK; Coach phone team-report access PASS, plan active. No TEST game/measurement/consent/connection inputs, zero games confirmed; private session removed. No publish/migration/redeploy/cron/iOS. Evidence: `docs/owner/walkthroughs/intelligence/ad4/`.
 - [ ] Next B proofs: populated hitter, pitcher, two-way, softball; parent-run and both coach logging modes. Then C → D → E → F.
 
