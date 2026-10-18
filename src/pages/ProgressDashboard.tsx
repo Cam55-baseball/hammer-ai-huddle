@@ -33,6 +33,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Activity, Lightbulb, TrendingUp, ChevronDown, HeartPulse } from 'lucide-react';
 import { useState } from 'react';
 import { StandardsBoard } from '@/components/hammer/standards/StandardsBoard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Link } from 'react-router-dom';
+import { HammersCard } from '@/components/intelligence/HammersCard';
+import { howSureFor } from '@/lib/intelligence/howSure';
+import { useReadinessState } from '@/hooks/useReadinessState';
 
 function PracticeIntelligenceCard() {
   const { data: mpi } = useMPIScores();
@@ -69,13 +74,65 @@ function PracticeIntelligenceCard() {
   );
 }
 
-export default function ProgressDashboard() {
+const HASH_TAB: Record<string, GeneralTab> = {
+  '#body': 'today',
+  '#performance-context': 'performance',
+  '#game-iq': 'game-iq',
+  '#growth': 'growth',
+};
+type GeneralTab = 'today' | 'performance' | 'game-iq' | 'growth';
+
+function ReadinessTodayCard() {
+  const r = useReadinessState();
+  if (r.loading) return null;
+  const has = r.hasSignal && r.score !== null;
+  const word = r.state === 'green' ? 'Good to go' : r.state === 'yellow' ? 'Take it a bit easier' : r.state === 'red' ? 'Low today' : '';
+  return (
+    <HammersCard
+      title="Ready today"
+      weSee={has ? `Readiness score: ${Math.round(r.score as number)} of 100 — ${word}` : 'Readiness score: Not enough data'}
+      because={has ? `From ${r.sources.length} recent check-in source${r.sources.length === 1 ? '' : 's'}: ${r.sources.map((s) => s.name).join(', ')}.` : undefined}
+      howSure={has ? howSureFor({ samples: r.sources.length, repeatsTogether: true }) : 'need_more_data'}
+      samples={has ? r.sources.length : undefined}
+      doThis={has ? (r.state === 'red' ? 'Follow today’s plan as written — it already accounts for this.' : 'Do today’s plan. Sleep well tonight.') : 'Do your morning check-in tomorrow.'}
+      checkBack="Tomorrow morning, after your check-in."
+    />
+  );
+}
+
+function Advanced({ hasAdvancedAccess, children }: { hasAdvancedAccess: boolean; children: React.ReactNode }) {
+  return (
+    <DataBuildingGate>
+      <div className="space-y-6">
+        {hasAdvancedAccess ? children : (
+          <UpgradePrompt
+            featureName="Advanced Performance Insights"
+            featureDescription="Unlock your development analysis, prescriptive actions, readiness tracking, and full intelligence engine."
+            variant="full"
+          />
+        )}
+      </div>
+    </DataBuildingGate>
+  );
+}
+
+export interface GeneralExtras {
+  /** Owner-kept landing pieces (season counter, etc.) shown above the tabs. */
+  header?: React.ReactNode;
+  today?: React.ReactNode;
+  performance?: React.ReactNode;
+  gameIq?: React.ReactNode;
+  growth?: React.ReactNode;
+}
+
+export default function ProgressDashboard({ header, today, performance, gameIq, growth }: GeneralExtras = {}) {
   const { modules } = useSubscription();
   const { isOwner } = useOwnerAccess();
   const { snapshot } = useHIESnapshot();
   const hasAdvancedAccess = isOwner || modules.length > 0;
   const selectedSport = (localStorage.getItem('selectedSport') as 'baseball' | 'softball') || 'baseball';
   const [bodyOpen, setBodyOpen] = useState(false);
+  const [tab, setTab] = useState<GeneralTab>(() => HASH_TAB[typeof window !== 'undefined' ? window.location.hash : ''] ?? 'today');
 
   const dashboardContext = snapshot ? `
 MPI Score: ${snapshot.mpi_score ?? 'N/A'}
@@ -88,125 +145,118 @@ Confidence: ${snapshot.development_confidence}%
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Authoritative passive verdict — sourced from useDailyOutcome */}
         <DailyOutcomeInlineBanner />
 
         <div>
           <h1 className="text-3xl font-bold text-foreground">The General</h1>
-          <p className="text-muted-foreground">Diagnose → Prescribe → Guide → Verify</p>
+          <p className="text-muted-foreground">Where you are, what to do next, and how you'll know it worked.</p>
         </div>
+        {header}
 
+        <Tabs value={tab} onValueChange={(v) => setTab(v as GeneralTab)} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 h-auto">
+            <TabsTrigger value="today" className="py-2">Today</TabsTrigger>
+            <TabsTrigger value="performance" className="py-2">Performance</TabsTrigger>
+            <TabsTrigger value="game-iq" className="py-2">Game IQ</TabsTrigger>
+            <TabsTrigger value="growth" className="py-2">Growth</TabsTrigger>
+          </TabsList>
 
-        {/* Performance context — real evidence only; moved from Before You Start (owner 2026-10-05). */}
-        <section id="performance-context" className="scroll-mt-20"><HumanPerformanceCard /></section>
-
-
-        {/* Body today — moved from Dashboard. Collapsible to preserve focus. */}
-        <section id="body" className="scroll-mt-20">
-          <Collapsible open={bodyOpen} onOpenChange={setBodyOpen}>
-            <Card className="border-primary/20">
-              <CollapsibleTrigger asChild>
-                <button
-                  type="button"
-                  className="w-full flex items-center justify-between gap-3 px-4 sm:px-6 py-4 text-left hover:bg-muted/40 transition-colors rounded-t-lg"
-                  aria-expanded={bodyOpen}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="p-2 rounded-full bg-primary/10 shrink-0">
-                      <HeartPulse className="h-5 w-5 text-primary" />
+          <TabsContent value="today" className="space-y-6">
+            <ReadinessTodayCard />
+            {today}
+            <section id="body" className="scroll-mt-20">
+              <Collapsible open={bodyOpen} onOpenChange={setBodyOpen}>
+                <Card className="border-primary/20">
+                  <CollapsibleTrigger asChild>
+                    <button
+                      type="button"
+                      className="w-full flex items-center justify-between gap-3 px-4 sm:px-6 py-4 text-left hover:bg-muted/40 transition-colors rounded-t-lg"
+                      aria-expanded={bodyOpen}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="p-2 rounded-full bg-primary/10 shrink-0">
+                          <HeartPulse className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-base sm:text-lg">How your body is doing today</h3>
+                          <p className="text-xs text-muted-foreground">Readiness, workload and recovery.</p>
+                        </div>
+                      </div>
+                      <ChevronDown className={`h-5 w-5 text-muted-foreground shrink-0 transition-transform ${bodyOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="px-2 sm:px-4 pb-4 pt-2 border-t border-border/40">
+                      <CommandCenterSection defaultSignalsOpen={false} />
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-base sm:text-lg">How your body is doing today</h3>
-                      <p className="text-xs text-muted-foreground">
-                        Readiness, fatigue, workload, recovery — the full organism picture.
-                      </p>
-                    </div>
-                  </div>
-                  <ChevronDown className={`h-5 w-5 text-muted-foreground shrink-0 transition-transform ${bodyOpen ? 'rotate-180' : ''}`} />
-                </button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="px-2 sm:px-4 pb-4 pt-2 border-t border-border/40">
-                  <CommandCenterSection defaultSignalsOpen={false} />
-                </div>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-        </section>
-
-        {/* Digest + Forecast — relocated from Dashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <WeeklyDigestPreview />
-          <ForecastPreview />
-        </div>
-
-        {/* Always-visible top sections */}
-        <NNSuggestionPanel />
-        <PracticeIntelligenceCard />
-        {/* Phase 49: ReportCardTrendStrip removed (composite trend not measurement-backed). */}
-        <DualStreakDisplay />
-        <ActivityAnalytics selectedSport={selectedSport} />
-        <LoadDashboard />
-        <Collapsible>
-          <CollapsibleTrigger className="flex w-full items-center justify-between border-b py-4 text-left font-semibold">Standards Board<ChevronDown className="h-4 w-4" /></CollapsibleTrigger>
-          <CollapsibleContent className="pt-3"><StandardsBoard /></CollapsibleContent>
-        </Collapsible>
-
-
-        <DataBuildingGate>
-          <div className="space-y-6">
-            {hasAdvancedAccess ? (
-              <>
-                {/* Section 0: Universal Hammers Report Card — classic view; clip reports stay in analyses. */}
-                <UhrcAthleteSection />
-
-                {/* Section 1: Player Snapshot */}
-                <PlayerSnapshotCard />
-
-                {/* Section 2: What's Holding You Back (detailed drill-down) */}
-                <WeaknessClusterCard />
-
-                {/* Section 3 moved: prescriptions now live inside the video
-                    analysis report (AnalysisPrescriptionSection). */}
-
-                {/* Section 4: Today's Readiness */}
-                <ReadinessCard />
-                <ReadinessBreakdownCard />
-
-                {/* Risk Alerts */}
-                <RiskAlertsCard />
-
-                {/* Ask Hammer AI Chat */}
-                <AskHammerPanel dashboardContext={dashboardContext} />
-
-                {/* Section 5: Smart Week Plan */}
-                <SmartWeekPlan />
-
-                {/* Section 6: Proof It's Working */}
-                <ProofCard />
-
-                {/* Pro Probability - kept but gated */}
-                <ProProbabilityCard />
-
-                {/* Heat Maps */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Performance Heat Maps</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <HeatMapDashboard />
-                  </CardContent>
+                  </CollapsibleContent>
                 </Card>
-              </>
-            ) : (
-              <UpgradePrompt
-                featureName="Advanced Performance Insights"
-                featureDescription="Unlock your development analysis, prescriptive actions, readiness tracking, and full intelligence engine."
-                variant="full"
-              />
-            )}
-          </div>
-        </DataBuildingGate>
+              </Collapsible>
+            </section>
+            <NNSuggestionPanel />
+            <WeeklyDigestPreview />
+            <Advanced hasAdvancedAccess={hasAdvancedAccess}>
+              <SmartWeekPlan />
+              <ReadinessCard />
+              <ReadinessBreakdownCard />
+              <AskHammerPanel dashboardContext={dashboardContext} />
+            </Advanced>
+          </TabsContent>
+
+          <TabsContent value="performance" className="space-y-6">
+            {performance}
+            <section id="performance-context" className="scroll-mt-20"><HumanPerformanceCard /></section>
+            <Card className="p-4 flex items-center justify-between gap-3">
+              <p className="text-base text-foreground">Your test results live in the Vault.</p>
+              <Link to="/vault" className="font-semibold text-primary underline-offset-4 hover:underline">See tests</Link>
+            </Card>
+            <Collapsible>
+              <CollapsibleTrigger className="flex w-full items-center justify-between border-b py-4 text-left font-semibold">Standards Board<ChevronDown className="h-4 w-4" /></CollapsibleTrigger>
+              <CollapsibleContent className="pt-3"><StandardsBoard /></CollapsibleContent>
+            </Collapsible>
+            <Advanced hasAdvancedAccess={hasAdvancedAccess}>
+              <UhrcAthleteSection />
+              <PlayerSnapshotCard />
+              <ProProbabilityCard />
+            </Advanced>
+          </TabsContent>
+
+          <TabsContent value="game-iq" className="space-y-6">
+            {gameIq}
+            <section id="game-iq" className="scroll-mt-20">
+              <Card className="p-4 flex items-center justify-between gap-3">
+                <p className="text-base text-foreground">Your game reports and logged games.</p>
+                <Link to="/games/reports" className="font-semibold text-primary underline-offset-4 hover:underline">Open game reports</Link>
+              </Card>
+            </section>
+            <Advanced hasAdvancedAccess={hasAdvancedAccess}>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Heat maps (from your real logged pitches and balls in play)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <HeatMapDashboard />
+                </CardContent>
+              </Card>
+            </Advanced>
+          </TabsContent>
+
+          <TabsContent value="growth" className="space-y-6">
+            {growth}
+            <section id="growth" className="scroll-mt-20 space-y-6">
+              <ForecastPreview />
+              <PracticeIntelligenceCard />
+              <DualStreakDisplay />
+              <ActivityAnalytics selectedSport={selectedSport} />
+              <LoadDashboard />
+            </section>
+            <Advanced hasAdvancedAccess={hasAdvancedAccess}>
+              <WeaknessClusterCard />
+              <ProofCard />
+              <RiskAlertsCard />
+            </Advanced>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

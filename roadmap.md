@@ -3,7 +3,7 @@ ZZ1: Oct 17 list remaining items all await owner OK, so the plan started.
 Starts after My Connections + Oct 17 list (Oct 17 items 1,5,7,8,10 await owner OK). Ready to publish: no.
 - [x] 1. Data lineage written (docs/owner/data-lineage.md): CNS + fascial load are rule-based units, not body measurements → show only as "training exposure"; weight/sleep/eating are real self-entries; no wearable data. (Doc step; screen proof comes with step 3.)
 - [~] 2. Hammers Card + How-sure dots built (src/components/intelligence/HammersCard.tsx, rules in src/lib/intelligence/howSure.ts, 5 tests). Phone proof pending: it first appears on screen in step 3.
-- [ ] 3. The General four tabs (Today / Performance / Game IQ / Growth)
+- [~] 3. The General four tabs built (Today / Performance / Game IQ / Growth); every old section kept, moved into a tab; readiness Hammers Card on Today ("Need more data" shown honestly); "See tests" → Vault; Game reports link. Fixed: workload chart was drawing made-up random numbers for past days and fascial bars — now only real logged values, relabelled "Training exposure" / "Exercise type mix (not a body measurement)". Phone proof (owner session, no overflow, no errors): docs/owner/walkthroughs/intelligence/{Today,Performance,GameIQ,Growth}.png. Full suite 2,956/2,957 then old "classic view" test updated to the four-tab rule (passes). OPEN: proof as the 5 player types; one-grade-per-area Performance rows; health flags with "Please talk to a professional" (no real repeated-pain source wired yet); readiness chip on the identity card.
 - [ ] 4. Learning loop
 - [ ] 5. Game logging as events (players, parents, coaches)
 - [ ] 6. Game IQ reports + matchup planner
