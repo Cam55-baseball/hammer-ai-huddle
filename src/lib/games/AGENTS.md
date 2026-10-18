@@ -8,3 +8,4 @@
 - Team post-game report (/coach/team-report) reads linked players games via existing is_coach_of read policies and lists every entry source; blank results never count. Why: coach sees only permitted, entered facts.
 - Team reports count canonical at-bat result codes and preserve unentered optional totals; observations never certify mechanics or author plan advice. Why: app-entered facts and absence of observations cannot justify invented results or training decisions.
 - Aggregate steal-success displays use baserunningSummary and recordedRate, counting only explicit boolean outcomes; sample labels use entered-result counts. Why: unknown outcomes are not failures or evidence.
+- Legacy baserunning split-view success percentages stay suppressed until their known-result denominator and live-game scope are certified; live GameReports event reads join nondeleted games. Why: aggregate totals cannot establish outcomes or revive removed games.
