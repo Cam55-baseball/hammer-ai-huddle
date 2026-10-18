@@ -1,3 +1,9 @@
+# AD8 — Oct 18 20:14 UTC — B steal-result honesty IN PROGRESS
+Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
+- [ ] Remove fabricated steal-success percentages from missing attempts/results; show entered-result counts, early-read labels and read failures.
+- [ ] Prove the affected player's real empty report on a phone-size screen; test mixed/unknown outcomes, check diagnostics and save evidence.
+- TEST Coach subscription retained; no publish, redeploy, migration, cron or iOS changes.
+
 # AD7 — Oct 18 20:11 UTC — B empty-history percentage honesty PASS (preview)
 Ready to publish: **no** — remaining B–F and timing-sensitive/physical-device certification remain open.
 - [x] Completion Rate no longer claims 0% with no recorded activities. Weekly Avg is unavailable without records; vs Average has no percentage or trend arrow with a missing/zero baseline or unlogged today. Genuine recorded zero and signed changes are preserved. Shared LoadDashboard fix also covers WorkloadPanel.
