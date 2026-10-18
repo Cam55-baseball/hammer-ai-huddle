@@ -1,3 +1,8 @@
+# AG7 — Oct 18 23:58 UTC — Sub-step 4e BLOCKED: parent-run logging proof
+- [x] Checked: the backend already labels games "Parent-entered" when the player's account is parent-run (the label rule exists; nothing to build).
+- [ ] BLOCKED: no parent-run TEST account can be opened for a proof. demo13 stops at "Parent signature required" (needs a parent signature + card payment — not bypassed). The only other parent-run TEST account ("TEST Apple Review Child (12)") needs owner approval to sign in as it, which isn't available in a queued run. Needs owner: approve signing in as that TEST account, or say how a TEST 12U account may pass its parent payment step.
+- [ ] Still open in sub-step 4: both coach modes (next). Ready to publish: no.
+
 # AG6 — Oct 18 23:55 UTC — Sub-step 4d DONE: TEST new player (no games) proof
 - [x] TEST adult with 0 games (demomlb) at 390×844: Game IQ Hitting and Pitching both "Need more data: nothing logged here yet"; Game reports: "Pitch heat map (0 pitches seen)", "No at-bats yet.", "No pitcher-perspective pitches yet.", "0 steal attempts". No numbers invented, 0 page errors, no sideways scroll. Evidence: docs/owner/walkthroughs/intelligence/ag6/
 - [x] Under-13 TEST (demo13) correctly stops at "Parent signature required" before any app screen (needs parent signature + payment — not bypassed).
