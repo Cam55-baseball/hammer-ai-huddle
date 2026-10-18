@@ -144,7 +144,7 @@ describe("report_card switch off (owner, Oct 18)", () => {
     expect(sw2.strengths).toEqual([]);
     expect(sw2.weaknesses).toEqual([]);
     expect(sw2.note).toBe("Video grades: Grade coming with camera measurement.");
-    expect(JSON.stringify(buildCategoryCards(reps as any, []))).not.toMatch(/"up"/);
+    expect(buildCategoryCards(reps as any, []).every((c) => c.trend === "unknown")).toBe(true);
     sw.on = true;
   });
 });
