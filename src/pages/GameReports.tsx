@@ -160,8 +160,10 @@ export default function GameReports() {
     const rows = (pitches.data ?? []).filter((p) => p.perspective === "pitcher");
     const map: Record<string, Record<string, number>> = {};
     rows.forEach((p) => {
-      const cnt = `${p.count_balls ?? "?"}-${p.count_strikes ?? "?"}`;
-      const t = p.pitch_type ?? "?";
+      const cnt = p.count_balls == null || p.count_strikes == null
+        ? "Count not entered"
+        : `Count ${p.count_balls}-${p.count_strikes}`;
+      const t = p.pitch_type ?? "Type not entered";
       map[cnt] ??= {};
       map[cnt][t] = (map[cnt][t] ?? 0) + 1;
     });
