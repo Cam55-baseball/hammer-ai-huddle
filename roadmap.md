@@ -1,3 +1,5 @@
+# AE6 — Oct 18 — Stream 2 merge still in progress (draft updating to main before acceptance). Stream 3 merge held until Stream 2 lands to avoid overlapping changes. Ready to publish: no.
+
 # AE5 — Oct 18 — Stream 2 (Game IQ reports, heat maps, matchup planner) draft accepted into the main app (queued after this run). Next: accept Stream 3 Console, then phone-prove Game IQ with the TEST hitter data. Ready to publish: no.
 
 # AE4 — Oct 18 — Field direction picker fixed: labels no longer block taps; every spot reachable by keyboard (Enter/Space), named for screen readers; 1 rule test PASS. Drafts still unaccepted; Stream 1 pitcher/two-way/softball/new/parent/coach modes OPEN. Ready to publish: no.
