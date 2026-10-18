@@ -348,7 +348,7 @@ export default function Games() {
  */
 function TodayGameCta({ onOpen }: { onOpen: (id: string) => void }) {
   const { user } = useAuth();
-  const { sport: athleteSport } = useSportTheme();
+  const athleteSport = useAccountSport(true);
 
   const qc = useQueryClient();
   const today = new Date().toISOString().slice(0, 10);
@@ -452,21 +452,7 @@ function NewGameDialog({
   onSubmit: (v: { date: string; sport: string; opponent: string }) => void;
   pending: boolean;
 }) {
-  const { sport: themeSport } = useSportTheme();
-  // The account's saved sport wins over this device's theme pick, so a
-  // softball player on a fresh phone never starts a game as baseball.
-  const { data: savedSport } = useQuery({
-    queryKey: ["my-saved-sport"],
-    enabled: open,
-    staleTime: 5 * 60_000,
-    queryFn: async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return null;
-      const { data } = await supabase.from("athlete_mpi_settings").select("sport").eq("user_id", u.user.id).maybeSingle();
-      return (data?.sport as string | null) ?? null;
-    },
-  });
-  const athleteSport = savedSport ?? themeSport;
+  const athleteSport = useAccountSport(open);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [sport, setSport] = useState(athleteSport === "softball" ? "softball" : "baseball");
   useEffect(() => {
@@ -529,4 +515,22 @@ function NewGameDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+/** The account's saved sport wins over this device's theme pick, so a
+ *  softball player on a fresh phone never starts a game as baseball. */
+function useAccountSport(enabled: boolean): string {
+  const { sport: themeSport } = useSportTheme();
+  const { data: savedSport } = useQuery({
+    queryKey: ["my-saved-sport"],
+    enabled,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return null;
+      const { data } = await supabase.from("athlete_mpi_settings").select("sport").eq("user_id", u.user.id).maybeSingle();
+      return (data?.sport as string | null) ?? null;
+    },
+  });
+  return savedSport ?? themeSport;
 }
