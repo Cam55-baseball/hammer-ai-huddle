@@ -547,6 +547,13 @@
       "when": 1792335468334,
       "tag": "0077_structured_pitch_details_and_import_labels",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1792337815920,
+      "tag": "0078_confirm_game_document_review",
+      "breakpoints": true
     }
   ]
 }
