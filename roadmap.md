@@ -1,3 +1,9 @@
+# AD6 — Oct 18 20:05 UTC — B Growth forecast honesty IN PROGRESS
+Ready to publish: **no** — remaining B–F and timing-sensitive/physical-device certification remain open.
+- [x] Recorded AD6: remove unsupported future-progress claims from Growth as one concrete B sub-step; retain the TEST Coach plan.
+- [ ] Replace day-tone guesses with an honest progress-check Hammers Card; verify the affected no-data TEST player on a phone-size screen and run a confidence regression.
+- [ ] Zero-denominator comparisons, measured grades, Game IQ threshold, steal attempts and cohort/role proofs remain for subsequent B runs; then C → D → E → F.
+
 # AD5 — Oct 18 20:05 UTC — B empty saved-advice access + failure notice PASS
 Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
 - [x] Recorded AD5: resolve the saved-advice read failure as one concrete B sub-step; keep TEST Coach plan active.
