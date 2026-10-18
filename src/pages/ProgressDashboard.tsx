@@ -116,7 +116,16 @@ function Advanced({ hasAdvancedAccess, children }: { hasAdvancedAccess: boolean;
   );
 }
 
-export default function ProgressDashboard() {
+export interface GeneralExtras {
+  /** Owner-kept landing pieces (season counter, etc.) shown above the tabs. */
+  header?: React.ReactNode;
+  today?: React.ReactNode;
+  performance?: React.ReactNode;
+  gameIq?: React.ReactNode;
+  growth?: React.ReactNode;
+}
+
+export default function ProgressDashboard({ header, today, performance, gameIq, growth }: GeneralExtras = {}) {
   const { modules } = useSubscription();
   const { isOwner } = useOwnerAccess();
   const { snapshot } = useHIESnapshot();
@@ -142,6 +151,7 @@ Confidence: ${snapshot.development_confidence}%
           <h1 className="text-3xl font-bold text-foreground">The General</h1>
           <p className="text-muted-foreground">Where you are, what to do next, and how you'll know it worked.</p>
         </div>
+        {header}
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as GeneralTab)} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 h-auto">
@@ -153,6 +163,7 @@ Confidence: ${snapshot.development_confidence}%
 
           <TabsContent value="today" className="space-y-6">
             <ReadinessTodayCard />
+            {today}
             <section id="body" className="scroll-mt-20">
               <Collapsible open={bodyOpen} onOpenChange={setBodyOpen}>
                 <Card className="border-primary/20">
@@ -193,6 +204,7 @@ Confidence: ${snapshot.development_confidence}%
           </TabsContent>
 
           <TabsContent value="performance" className="space-y-6">
+            {performance}
             <section id="performance-context" className="scroll-mt-20"><HumanPerformanceCard /></section>
             <Card className="p-4 flex items-center justify-between gap-3">
               <p className="text-base text-foreground">Your test results live in the Vault.</p>
@@ -210,6 +222,7 @@ Confidence: ${snapshot.development_confidence}%
           </TabsContent>
 
           <TabsContent value="game-iq" className="space-y-6">
+            {gameIq}
             <section id="game-iq" className="scroll-mt-20">
               <Card className="p-4 flex items-center justify-between gap-3">
                 <p className="text-base text-foreground">Your game reports and logged games.</p>
@@ -229,6 +242,7 @@ Confidence: ${snapshot.development_confidence}%
           </TabsContent>
 
           <TabsContent value="growth" className="space-y-6">
+            {growth}
             <section id="growth" className="scroll-mt-20 space-y-6">
               <ForecastPreview />
               <PracticeIntelligenceCard />

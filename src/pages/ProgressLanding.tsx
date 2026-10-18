@@ -200,85 +200,44 @@ export default function ProgressLanding() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">The General</h1>
-          <p className="text-muted-foreground">
-            Pick a topic to see your data, what correlates, and ask Hammer.
-            {sport ? ` Ordered for your ${sport} profile.` : ""}
-          </p>
-        </div>
-        <SeasonCounter />
-        <YourProgressionCard />
-
-        <TopicButtonGrid tiles={tiles} onSelect={handleSelect} />
-
-        <YourProgressCard />
-
-        <RecordsShowCard />
-
-        <MySixWeekRecapCard />
-
-        <GpInGameSummaryCard />
-
-        <DriftMarkersCard />
-
-        {GAME_IQ_AVAILABLE_TO_ATHLETES && <IqInsightCard />}
-
-        <SideSplitsSection />
-
-        <div className="space-y-3">
-          {ranked.map((r, idx) => {
-            const def = TOPIC_DEFS[r.id];
-            return (
-              <TopicPanel
-                key={r.id}
-                id={r.id}
-                title={def.title}
-                subtitle={def.subtitle}
-                icon={def.icon}
-                priorityBadge={`Priority #${idx + 1}`}
-                open={openId === r.id}
-                onOpenChange={(o) => setOpenId(o ? r.id : null)}
-                snapshot={def.render()}
-                hammerFocus={def.hammerFocus}
-              />
-            );
-          })}
-        </div>
-
-        <section id="classic-view" className="scroll-mt-20">
-          <Collapsible open={classicOpen} onOpenChange={setClassicOpen}>
-            <Card className="border-border/40">
-              <CollapsibleTrigger asChild>
-                <button
-                  type="button"
-                  className="w-full flex items-center justify-between gap-3 px-4 sm:px-6 py-3 text-left hover:bg-muted/40 transition-colors"
-                  aria-expanded={classicOpen}
-                >
-                  <div>
-                    <h3 className="font-semibold text-sm">All sections (classic view)</h3>
-                    <p className="text-[11px] text-muted-foreground">
-                      Every legacy dashboard widget, unchanged.
-                    </p>
-                  </div>
-                  <ChevronDown
-                    className={`h-4 w-4 text-muted-foreground transition-transform ${
-                      classicOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="border-t border-border/40">
-                  <ProgressDashboard />
-                </div>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-        </section>
-      </div>
-    </DashboardLayout>
+    <ProgressDashboard
+      header={<SeasonCounter />}
+      today={<DriftMarkersCard />}
+      performance={
+        <>
+          <YourProgressionCard />
+          <TopicButtonGrid tiles={tiles} onSelect={handleSelect} />
+          <YourProgressCard />
+          <RecordsShowCard />
+          <SideSplitsSection />
+          <div className="space-y-3">
+            {ranked.map((r, idx) => {
+              const def = TOPIC_DEFS[r.id];
+              return (
+                <TopicPanel
+                  key={r.id}
+                  id={r.id}
+                  title={def.title}
+                  subtitle={def.subtitle}
+                  icon={def.icon}
+                  priorityBadge={`Priority #${idx + 1}`}
+                  open={openId === r.id}
+                  onOpenChange={(o) => setOpenId(o ? r.id : null)}
+                  snapshot={def.render()}
+                  hammerFocus={def.hammerFocus}
+                />
+              );
+            })}
+          </div>
+        </>
+      }
+      gameIq={
+        <>
+          <GpInGameSummaryCard />
+          {GAME_IQ_AVAILABLE_TO_ATHLETES && <IqInsightCard />}
+        </>
+      }
+      growth={<MySixWeekRecapCard />}
+    />
   );
 }
