@@ -18,6 +18,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { startHeartbeat } from "../_shared/withHeartbeat.ts";
 import { chatCompletion } from "../_shared/googleAi.ts";
+import { ownsImport } from "./ownership.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -55,18 +56,19 @@ serve(async (req) => {
   const hb = startHeartbeat("gp-ingest-document", { intervalMs: 8_000 });
   try {
     const { documentId, gameId, sport, bucket, path } = await req.json();
-    if (!documentId || !gameId || !bucket || !path) {
+    if (![documentId, gameId, bucket, path].every((value) => typeof value === "string" && value.length > 0)) {
       await hb.fail(new Error("missing fields"));
       return json({ error: "missing fields" }, 400);
     }
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const ANON = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!SUPABASE_URL || !SERVICE || !ANON) return json({ error: "Service not configured" }, 500);
     const OPENAI = Deno.env.get("OPENAI_API_KEY");
     const GOOGLE = Deno.env.get("GOOGLE_AI_API_KEY");
-    if (!OPENAI && !GOOGLE) return json({ error: "AI service not configured" }, 500);
 
     const auth = req.headers.get("Authorization") ?? "";
-    const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    const userClient = createClient(SUPABASE_URL, ANON, {
       global: { headers: { Authorization: auth } },
     });
     const { data: who } = await userClient.auth.getUser();
@@ -75,10 +77,21 @@ serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE);
 
+    const [documentResult, gameResult] = await Promise.all([
+      admin.from("gp_documents").select("user_id,game_id,file_url").eq("id", documentId).eq("user_id", user.id).maybeSingle(),
+      admin.from("gp_games").select("user_id,deleted_at").eq("id", gameId).eq("user_id", user.id).maybeSingle(),
+    ]);
+    if (documentResult.error || gameResult.error) return json({ error: "Couldn't check this import" }, 500);
+    if (!ownsImport(user.id, gameId, bucket, path, documentResult.data, gameResult.data)) {
+      return json({ error: "This document is not available for this game" }, 403);
+    }
+    if (!OPENAI && !GOOGLE) return json({ error: "AI service not configured" }, 500);
+
     // 1. download
     const dl = await admin.storage.from(bucket).download(path);
     if (dl.error) throw dl.error;
-    const buf = new Uint8Array(await dl.data!.arrayBuffer());
+    if (!dl.data) throw new Error("Document download returned no file");
+    const buf = new Uint8Array(await dl.data.arrayBuffer());
     const mime = (dl.data as any).type || "application/octet-stream";
     let base64 = "";
     const chunk = 0x8000;
@@ -122,6 +135,7 @@ serve(async (req) => {
     if (atBats.length) inserts.push(admin.from("gp_at_bats").insert(
       atBats.map((a: any) => ({
         user_id: user.id, game_id: gameId,
+        entry_source: "imported",
         inning: a.inning ?? null,
         ab_order: a.pa_no ?? null,
         result: a.result ?? null,
@@ -135,6 +149,7 @@ serve(async (req) => {
     if (pitches.length) inserts.push(admin.from("gp_pitches").insert(
       pitches.map((p: any) => ({
         user_id: user.id, game_id: gameId,
+        entry_source: "imported",
         inning: p.inning ?? null,
         pitch_no: p.pitch_no ?? null,
         pitch_type: p.pitch_type ?? null,
@@ -148,6 +163,7 @@ serve(async (req) => {
     if (defense.length) inserts.push(admin.from("gp_defense_plays").insert(
       defense.map((d: any) => ({
         user_id: user.id, game_id: gameId,
+        entry_source: "imported",
         inning: d.inning ?? null,
         position: d.position ?? null,
         play_type: d.play_type ?? null,
@@ -158,6 +174,7 @@ serve(async (req) => {
     if (baserun.length) inserts.push(admin.from("gp_baserun_events").insert(
       baserun.map((b: any) => ({
         user_id: user.id, game_id: gameId,
+        entry_source: "imported",
         inning: b.inning ?? null,
         event_type: b.event_type ?? null,
         base_from: b.from_base ?? null,
@@ -167,7 +184,7 @@ serve(async (req) => {
       }))
     ));
     const results = await Promise.allSettled(inserts);
-    const failed = results.filter((r) => r.status === "rejected");
+    const failed = results.filter((r) => r.status === "rejected" || r.value?.error);
 
     const summary = {
       atBats: atBats.length, pitches: pitches.length,
@@ -179,7 +196,8 @@ serve(async (req) => {
     }).eq("id", documentId);
 
     await hb.success({ ...summary, failures: failed.length, document_id: documentId });
-    return json({ summary, failures: failed.length });
+    if (failed.length) return json({ error: "Some imported events could not be saved. Check this game before retrying.", summary, failures: failed.length }, 422);
+    return json({ summary, failures: 0 });
   } catch (e) {
     console.error("[gp-ingest-document]", e);
     await hb.fail(e, { document_id: undefined });

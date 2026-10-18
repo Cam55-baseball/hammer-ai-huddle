@@ -1,0 +1,2 @@
+- Before any privileged storage or event access, verify the caller owns both saved document and non-deleted game, and pin bucket/path to the saved document. Why: authentication alone must never authorize arbitrary storage or cross-player writes.
+- Every extracted event is Imported; inspect returned database errors, not only rejected promises. Why: provenance and save failures must remain honest.
