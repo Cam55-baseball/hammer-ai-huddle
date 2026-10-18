@@ -8376,6 +8376,7 @@ export type Database = {
           base_to: number | null
           catcher_pop_time_sec: number | null
           created_at: string
+          entry_source: string | null
           event_type: string
           game_id: string
           id: string
@@ -8395,6 +8396,7 @@ export type Database = {
           base_to?: number | null
           catcher_pop_time_sec?: number | null
           created_at?: string
+          entry_source?: string | null
           event_type: string
           game_id: string
           id?: string
@@ -8414,6 +8416,7 @@ export type Database = {
           base_to?: number | null
           catcher_pop_time_sec?: number | null
           created_at?: string
+          entry_source?: string | null
           event_type?: string
           game_id?: string
           id?: string
@@ -8444,6 +8447,7 @@ export type Database = {
           assist: boolean | null
           batted_ball_type: string | null
           created_at: string
+          entry_source: string | null
           error_flag: boolean | null
           game_id: string
           id: string
@@ -8465,6 +8469,7 @@ export type Database = {
           assist?: boolean | null
           batted_ball_type?: string | null
           created_at?: string
+          entry_source?: string | null
           error_flag?: boolean | null
           game_id: string
           id?: string
@@ -8486,6 +8491,7 @@ export type Database = {
           assist?: boolean | null
           batted_ball_type?: string | null
           created_at?: string
+          entry_source?: string | null
           error_flag?: boolean | null
           game_id?: string
           id?: string
@@ -8882,6 +8888,7 @@ export type Database = {
           count_balls: number | null
           count_strikes: number | null
           created_at: string
+          entry_source: string | null
           game_id: string
           id: string
           inning: number | null
@@ -8904,6 +8911,7 @@ export type Database = {
           count_balls?: number | null
           count_strikes?: number | null
           created_at?: string
+          entry_source?: string | null
           game_id: string
           id?: string
           inning?: number | null
@@ -8926,6 +8934,7 @@ export type Database = {
           count_balls?: number | null
           count_strikes?: number | null
           created_at?: string
+          entry_source?: string | null
           game_id?: string
           id?: string
           inning?: number | null

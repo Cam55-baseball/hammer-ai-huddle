@@ -25,6 +25,7 @@ export interface GpPitchRow {
   count_balls: number | null;
   count_strikes: number | null;
   notes: string | null;
+  entry_source?: string | null;
   created_at: string;
 }
 
@@ -36,9 +37,10 @@ export function useGamePitches(gameId: string | null) {
     queryKey: ["gp-pitches", gameId],
     enabled: !!user && !!gameId,
     queryFn: async () => {
+      if (!user || !gameId) throw new Error("Open your game first");
       const { data, error } = await gp("gp_pitches")
         .select("*")
-        .eq("game_id", gameId!)
+        .eq("game_id", gameId)
         .order("inning", { ascending: true })
         .order("pitch_no", { ascending: true });
       if (error) throw error;
@@ -48,9 +50,10 @@ export function useGamePitches(gameId: string | null) {
 
   const add = useMutation({
     mutationFn: async (row: Partial<GpPitchRow> & { perspective: "pitcher" | "hitter" }) => {
+      if (!user || !gameId) throw new Error("Sign in and open your game first");
       const { error } = await gp("gp_pitches").insert({
         ...row,
-        user_id: user!.id,
+        user_id: user.id,
         game_id: gameId,
       });
       if (error) throw error;

@@ -108,6 +108,7 @@ export function DataIngestPanel({ gameId, sport }: { gameId: string; sport?: str
           count_balls: p.count_balls,
           count_strikes: p.count_strikes,
           opponent_hitter_name: p.opponent_hitter_name,
+          entry_source: "imported",
           notes: `Imported from ${SOURCE_LABELS[result.source]}`,
         }));
         for (let i = 0; i < rows.length; i += 200) {

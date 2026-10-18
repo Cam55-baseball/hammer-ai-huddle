@@ -29,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { pitchTypes, pitchTypeLabel } from "@/lib/games/sportRules";
 import { describePitch, pitchResultPlain } from "@/lib/games/glossary";
 import { FieldHelp } from "./TabIntro";
+import { entrySourceLabel } from "@/lib/intelligence/entrySource";
 
 interface Props {
   gameId: string;
@@ -363,6 +364,7 @@ export function AtBatPitchPanel({ gameId, atBatId, inning, sport, onTerminal, on
                     #{p.pitch_no ?? idx + 1}
                   </span>
                   <span>{pitchResultPlain(p.result) ?? "Result not recorded"}</span>
+                  <span className="text-muted-foreground">Logged by: {entrySourceLabel(p.entry_source)}</span>
                   <span className="text-muted-foreground">
                     {p.pitch_type ? pitchTypeLabel(sport, p.pitch_type) : "type not recorded"}
                   </span>
