@@ -117,7 +117,7 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
         pitcher_archetype_snapshot = (match as any)?.archetype ?? null;
       }
       const { data, error } = await gp("gp_at_bats")
-        .insert({ ...row, pitcher_archetype_snapshot, user_id: user.id, game_id: gameId })
+        .insert({ ...atBatEntryPayload(row), pitcher_archetype_snapshot, user_id: user.id, game_id: gameId })
         .select("id")
         .single();
       if (error) throw error;
