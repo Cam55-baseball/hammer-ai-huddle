@@ -2,7 +2,7 @@
 ZZ1: Oct 17 list remaining items all await owner OK, so the plan started.
 Starts after My Connections + Oct 17 list (Oct 17 items 1,5,7,8,10 await owner OK). Ready to publish: no.
 - [x] 1. Data lineage written (docs/owner/data-lineage.md): CNS + fascial load are rule-based units, not body measurements → show only as "training exposure"; weight/sleep/eating are real self-entries; no wearable data. (Doc step; screen proof comes with step 3.)
-- [ ] 2. Hammers Card + How-sure dots
+- [~] 2. Hammers Card + How-sure dots built (src/components/intelligence/HammersCard.tsx, rules in src/lib/intelligence/howSure.ts, 5 tests). Phone proof pending: it first appears on screen in step 3.
 - [ ] 3. The General four tabs (Today / Performance / Game IQ / Growth)
 - [ ] 4. Learning loop
 - [ ] 5. Game logging as events (players, parents, coaches)
