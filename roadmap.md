@@ -1,3 +1,9 @@
+# AD4 — Oct 18 19:49 UTC — B new-player Intelligence phone proof in progress
+Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
+- [x] Recorded AD4 continuation: begin B with the no-data, unstarted TEST player; keep Coach plan active. A kept empty account is not proof of a genuinely brand-new signup.
+- [ ] Prove Today / Performance / Game IQ / Growth and recommendation empty states as the affected TEST player at 390×844, then record any gaps without inventing data.
+- [ ] Next B proofs: populated hitter, pitcher, two-way, softball; parent-run and both coach logging modes. Then C → D → E → F.
+
 # AD3 — Oct 18 19:47 UTC — Populated team-report phone proof PASS
 Ready to publish: **no** — populated team report now proven; B–F and timing-sensitive/physical-device certification remain open.
 - [x] Recorded AD3 continuation in owner order; retained TEST Coach subscription must stay active until all coach proofs finish.
