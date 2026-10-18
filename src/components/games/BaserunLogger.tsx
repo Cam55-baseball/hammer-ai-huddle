@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { showUndoToast } from "@/lib/games/undoToast";
 import { RepCard, RepKeyboardHints } from "./RepCard";
 import { NumberField } from "@/components/games/NumberField";
+import { entrySourceLabel } from "@/lib/intelligence/entrySource";
 
 
 import { pitchTypes } from "@/lib/games/sportRules";
@@ -48,9 +49,10 @@ export function BaserunLogger({ gameId, sport }: { gameId: string; sport?: strin
 
   const add = useMutation({
     mutationFn: async (row: Record<string, any>) => {
+      if (!user) throw new Error("Sign in first");
       const { data, error } = await (supabase as any)
         .from("gp_baserun_events")
-        .insert({ ...row, user_id: user!.id, game_id: gameId })
+        .insert({ ...row, user_id: user.id, game_id: gameId })
         .select("id")
         .single();
       if (error) throw error;
@@ -134,6 +136,7 @@ export function BaserunLogger({ gameId, sport }: { gameId: string; sport?: strin
               </span>
             }
             badges={[
+              { label: `Logged by: ${entrySourceLabel(r.entry_source)}`, variant: "outline" as const },
               { label: `Inn ${r.inning ?? "?"}` },
               ...(r.base_from != null && r.base_to != null
                 ? [{ label: `${r.base_from}→${r.base_to}`, variant: "secondary" as const }]

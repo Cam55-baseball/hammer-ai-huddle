@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { showUndoToast } from "@/lib/games/undoToast";
 import { RepCard, RepKeyboardHints } from "./RepCard";
 import { NumberField } from "@/components/games/NumberField";
+import { entrySourceLabel } from "@/lib/intelligence/entrySource";
 
 
 const POSITIONS = ["P","C","1B","2B","3B","SS","LF","CF","RF"];
@@ -53,9 +54,10 @@ export function DefenseLogger({ gameId }: { gameId: string }) {
 
   const add = useMutation({
     mutationFn: async (row: Record<string, any>) => {
+      if (!user) throw new Error("Sign in first");
       const { data, error } = await (supabase as any)
         .from("gp_defense_plays")
-        .insert({ ...row, user_id: user!.id, game_id: gameId })
+        .insert({ ...row, user_id: user.id, game_id: gameId })
         .select("id")
         .single();
       if (error) throw error;
@@ -147,6 +149,7 @@ export function DefenseLogger({ gameId }: { gameId: string }) {
             repNumber={idx + 1}
             title={p.play_type ?? "—"}
             badges={[
+              { label: `Logged by: ${entrySourceLabel(p.entry_source)}`, variant: "outline" as const },
               { label: `Inn ${p.inning ?? "?"}` },
               { label: p.position, variant: "secondary" },
               ...(p.shift && p.shift !== "no_shift" ? [{ label: `shift: ${p.shift}` }] : []),

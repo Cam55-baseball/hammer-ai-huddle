@@ -29,6 +29,7 @@ Full suite PASS: **376 files / 2,969 tests**. Build OK. Full page audit and five
 Live this round: assessment/parent-sharing/video-tag schema changes; `check-subscription`, `parent-consent`, `intel-recheck`, `intel-recheck-job`. No publish, cron changes or iOS edits. Callback bundling issue corrected and successfully deployed.
 
 ## Remaining lean task list
+- [ ] AB2: finish step 5 event provenance and honest pitch entry, verify player/parent-run phone save/read-back, then continue steps 6–8 with populated five-player proof.
 - [ ] Demo-coach paid-access/vote proof: AB1 checkout rejected all new codes; Stripe rejection root cause unresolved, no bypass. No test subscription to cancel.
 - [x] Re-run existing authorized real clips: 12/12 reports, per-type rates above; private test-report cleanup confirmed.
 - [ ] Restore democoach through a new Stripe 100%-off Coach subscription, prove real agreement votes, cancel only this test subscription.
