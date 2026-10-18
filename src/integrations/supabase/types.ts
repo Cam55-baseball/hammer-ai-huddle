@@ -4874,6 +4874,92 @@ export type Database = {
         }
         Relationships: []
       }
+      coaching_principle_versions: {
+        Row: {
+          applies_when: string | null
+          area: string
+          body: string
+          connected_work: string | null
+          created_at: string
+          created_by: string
+          evidence_kind: string
+          evidence_note: string | null
+          id: string
+          not_when: string | null
+          principle_id: string
+          situation: string | null
+          sport: string
+          version: number
+        }
+        Insert: {
+          applies_when?: string | null
+          area: string
+          body: string
+          connected_work?: string | null
+          created_at?: string
+          created_by: string
+          evidence_kind?: string
+          evidence_note?: string | null
+          id?: string
+          not_when?: string | null
+          principle_id: string
+          situation?: string | null
+          sport?: string
+          version: number
+        }
+        Update: {
+          applies_when?: string | null
+          area?: string
+          body?: string
+          connected_work?: string | null
+          created_at?: string
+          created_by?: string
+          evidence_kind?: string
+          evidence_note?: string | null
+          id?: string
+          not_when?: string | null
+          principle_id?: string
+          situation?: string | null
+          sport?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_principle_versions_principle_id_fkey"
+            columns: ["principle_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_principles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coaching_principles: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string
+          current_version: number
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by: string
+          current_version?: number
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string
+          current_version?: number
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       combine_results: {
         Row: {
           confidence: number | null
@@ -9942,6 +10028,7 @@ export type Database = {
           followed_at: string | null
           id: string
           outcome: string | null
+          principle_version_id: string | null
           recheck_value: number | null
           user_id: string
         }
@@ -9955,6 +10042,7 @@ export type Database = {
           followed_at?: string | null
           id?: string
           outcome?: string | null
+          principle_version_id?: string | null
           recheck_value?: number | null
           user_id: string
         }
@@ -9968,10 +10056,19 @@ export type Database = {
           followed_at?: string | null
           id?: string
           outcome?: string | null
+          principle_version_id?: string | null
           recheck_value?: number | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "intelligence_recommendations_principle_version_id_fkey"
+            columns: ["principle_version_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_principle_versions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       iq_actor_context_shifts: {
         Row: {
@@ -23281,6 +23378,34 @@ export type Database = {
         Returns: Json
       }
       org_test_ranking: { Args: { _org: string; _test: string }; Returns: Json }
+      owner_principle_stats: {
+        Args: never
+        Returns: {
+          advice: number
+          followed: number
+          got_worse: number
+          no_change: number
+          players_followed: number
+          players_worked: number
+          principle_id: string
+          worked: number
+        }[]
+      }
+      owner_save_principle: {
+        Args: {
+          _applies_when: string
+          _area: string
+          _body: string
+          _connected_work: string
+          _evidence_kind: string
+          _evidence_note: string
+          _not_when: string
+          _principle: string
+          _situation: string
+          _sport: string
+        }
+        Returns: string
+      }
       owns_scout_grade: { Args: { _grade_id: string }; Returns: boolean }
       parent_optional_sharing: {
         Args: { _athlete: string }
