@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import { pitchEntryPayload, quickAtBatPayload } from "../pitchEntry";
 
 describe("game pitch facts", () => {
+  it("does not turn blank or invalid numeric input into a measurement", () => {
+    expect(pitchEntryPayload({ pitch_velo: "  ", inning: "unknown" }, "pitcher", { zone: null })).toMatchObject({ pitch_velo: null, inning: null });
+  });
   it("records only an explicitly tapped ball-in-play direction", () => {
     expect(quickAtBatPayload(2, "1B", "LF")).toEqual({ inning: 2, result: "1B", exit_direction: "LF" });
     expect(quickAtBatPayload(2, "GO", null).exit_direction).toBeNull();

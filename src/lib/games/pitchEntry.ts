@@ -12,7 +12,9 @@ export function pitchEntryPayload(
   const optional = ["inning", "pitch_no", "count_balls", "count_strikes", "pitch_velo"];
   const payload: Record<string, unknown> = { ...fields, perspective };
   for (const key of optional) {
-    payload[key] = fields[key] === "" || fields[key] == null ? null : Number(fields[key]);
+    const raw = fields[key];
+    const number = typeof raw === "number" || (typeof raw === "string" && raw.trim() !== "") ? Number(raw) : NaN;
+    payload[key] = Number.isFinite(number) ? number : null;
   }
   for (const key of ["pitch_type", "result", "pitcher_arm_slot", "pitcher_throws", "batter_handedness", "opponent_hitter_name", "notes"]) {
     payload[key] = fields[key] || null;
