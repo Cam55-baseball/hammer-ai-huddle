@@ -67,8 +67,15 @@ export function FieldDirectionPicker({ value, onChange, size = 220 }: Props) {
           return (
             <g
               key={d.code}
+              role="button"
+              tabIndex={0}
+              aria-label={`${d.code} — ${d.plain}`}
+              aria-pressed={on}
               onClick={() => onChange(on ? null : d.code)}
-              className="cursor-pointer"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onChange(on ? null : d.code); }
+              }}
+              className="cursor-pointer focus:outline-none [&:focus-visible>circle]:stroke-primary"
             >
               <title>{`${d.code} — ${d.plain}: ${d.help}`}</title>
               <circle
