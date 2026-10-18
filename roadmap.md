@@ -1,12 +1,15 @@
 # ACTIVE RUN — Oct 18 19:28 UTC owner continuation
-- [ ] Restore democoach's authorized $0 Stripe Coach plan; KEEP ACTIVE until all coach proofs finish, cancel only at the end.
+Ready to publish: **no** — HEVC conversion/timing proof, Back overlap fixes, populated team report, five-player/role proofs, remaining Game IQ, Owner Console, population learning and final audit remain open.
+- [x] Restored democoach's authorized $0 Stripe Coach plan through the existing real Coach price, fresh 100%-off one-use coupon and direct subscription API. Invoice due/paid/remaining all $0; no card. Webhook-written app plan ACTIVE. KEEP ACTIVE across runs; cancel only after every coach proof finishes.
+- [x] Phone access proof: affected TEST coach, 390×844, actual team-report page opens without the purchase gate; honest empty state, no page errors/sideways scrolling. This proves access only, NOT a populated team report. `docs/owner/walkthroughs/intelligence/coach-retained/`.
+- [ ] Final cancellation of retained TEST subscription `sub_1URzmWGc5QIzbAH6jYDB20g3`, only after team report, both coach logging modes, Development/Discipline and Coach Console proofs. First period ends **2026-11-18 19:30 UTC**; one-time discount covers initial invoice only, so cancellation must precede renewal. No automatic cancellation or schedule change applied.
 - [ ] Generate libx265 iPhone-like HEVC MOV from owner H264 original; prove automatic conversion/full analysis with mobile Safari user agent; quantify timing and measurement impact.
 - [ ] Fix coach plan floating Back overlap and inspect sibling floating Back controls on phones.
 - [ ] Then team report phone proof → B five-player/parent/both-coach proofs → C Game IQ → D Owner Console → E private population learning → F audit/suite/guide.
-No publishing, cron changes or iOS changes. Current concrete sub-step: restore and retain TEST Coach plan.
+No publishing, migrations, redeployments, cron or iOS changes this run. No game/analysis/consent/connection test inputs created; the authorized TEST billing objects remain intentionally active/retained. Next concrete sub-step: HEVC phone-context conversion/full analysis/timing proof, then Back overlap checks, then populated team report in owner order.
 
 # STATUS SUMMARY — AC12, Oct 18 18:52 UTC
-Ready to publish: **no** — the team game report isn't proven on a phone (the TEST coach's plan is canceled, so coach screens are locked); the five-player proofs, Game IQ, Coaching Console, population learning and the final audit aren't done; genuine HEVC iPhone clips haven't been tested.
+Ready to publish: **no** — populated team game report, five-player proofs, Game IQ, Coaching Console, population learning and final audit remain open; HEVC and physical iPhone Safari haven't been tested. Prior canceled-plan blocker is resolved by the retained TEST plan above.
 
 ## Oct 17 fixes
 - #1 Analysis reliability — PASS: 12/12 real owner clips, 2 per type per sport, readable reports (small sample). Proof: roadmap AB rounds, `docs/owner/walkthroughs/intelligence/ac2/`.
@@ -18,7 +21,7 @@ Ready to publish: **no** — the team game report isn't proven on a phone (the T
 - #7 New-player Completed → Start → saved plan — PASS. `ac3/`.
 - #8 Linked-parent optional sharing — PASS. `ac4/`.
 - #9 Physio setup/redo — PASS.
-- #10 History + team post-game report — History PASS (`ac5/`, `ac7/`); player game report honesty fixed and PASS (`ac10/`); team report built (AC11) but phone proof FAIL/blocked (`ac12/`).
+- #10 History + team post-game report — History PASS (`ac5/`, `ac7/`); player game report honesty fixed and PASS (`ac10/`); team report phone access PASS (`coach-retained/`), populated linked-player proof still OPEN. Prior plan blocker (`ac12/`) resolved.
 
 ## Hammers Intelligence steps
 - 1 Data lineage — PASS (doc).
