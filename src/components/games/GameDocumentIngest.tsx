@@ -56,12 +56,10 @@ export function GameDocumentIngest({ gameId, sport }: { gameId: string; sport: s
       setDocs((d) => [...d, { path, name: file.name }]);
 
       // 45s safety: edge function uses Gemini and may take ~10–30s on big files
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 45_000);
+      
       const { data, error } = await supabase.functions.invoke("gp-ingest-document", {
-        body: { documentId: docRow.data!.id, gameId, sport, bucket: GP_DOC_BUCKET, path },
+        body: { documentId: docRow.data?.id, gameId, sport, bucket: GP_DOC_BUCKET, path },
       });
-      clearTimeout(timer);
       if (error) throw error;
 
       const summary: DraftSummary = data?.summary ?? {};
@@ -70,7 +68,7 @@ export function GameDocumentIngest({ gameId, sport }: { gameId: string; sport: s
       qc.invalidateQueries({ queryKey: ["gp-pitches", gameId] });
       qc.invalidateQueries({ queryKey: ["gp-defense", gameId] });
       qc.invalidateQueries({ queryKey: ["gp-baserun", gameId] });
-      toast.success("Draft extracted — review each tab to confirm.");
+      toast.success("Document read — draft saved. No game events added.");
     } catch (e: any) {
       const msg = e?.message ?? "Ingest failed";
       setDocs((d) => d.map((x) => (x.path === path ? { ...x, error: msg } : x)));
@@ -89,7 +87,7 @@ export function GameDocumentIngest({ gameId, sport }: { gameId: string; sport: s
         </div>
         <p className="text-xs text-muted-foreground">
           Scorebook photo · TrackMan PDF/CSV · GameChanger export · Rapsodo CSV. Gemini
-          drafts at-bats / pitches / defense — you confirm by inning. Nothing is auto-final.
+          saves a draft. No game events are added until review is available.
         </p>
         <label className="block">
           <input

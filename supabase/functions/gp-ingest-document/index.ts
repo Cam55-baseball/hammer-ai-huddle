@@ -8,8 +8,8 @@
  *  1. Download the file from storage as base64.
  *  2. Send to Gemini 2.0 Flash via Lovable AI Gateway with a strict JSON
  *     schema asking it to extract at-bats, pitches, defense, baserun events.
- *  3. Insert as DRAFT rows (status='draft') so the loggers show them but the
- *     user must confirm each inning before they count.
+ *  3. Store extraction only in the saved document review buffer.
+ *     Unconfirmed extraction never enters the live event ledger.
  *  4. Stamp gp_documents.status='processed', extraction JSON, and counts.
  */
 // @ts-nocheck
@@ -130,74 +130,20 @@ serve(async (req) => {
     const defense = Array.isArray(parsed.defense) ? parsed.defense : [];
     const baserun = Array.isArray(parsed.baserun) ? parsed.baserun : [];
 
-    // 3. insert drafts — map to ACTUAL gp_* columns.
-    const inserts: Promise<any>[] = [];
-    if (atBats.length) inserts.push(admin.from("gp_at_bats").insert(
-      atBats.map((a: any) => ({
-        user_id: user.id, game_id: gameId,
-        entry_source: "imported",
-        inning: a.inning ?? null,
-        ab_order: a.pa_no ?? null,
-        result: a.result ?? null,
-        rbi: a.rbi ?? null,
-        exit_velo: a.exit_velo_mph ?? null,
-        launch_angle: a.launch_angle_deg ?? null,
-        batting_side: a.batter_handedness ?? null,
-        notes: a.notes ?? null,
-      }))
-    ));
-    if (pitches.length) inserts.push(admin.from("gp_pitches").insert(
-      pitches.map((p: any) => ({
-        user_id: user.id, game_id: gameId,
-        entry_source: "imported",
-        inning: p.inning ?? null,
-        pitch_no: p.pitch_no ?? null,
-        pitch_type: p.pitch_type ?? null,
-        pitch_velo: p.pitch_velo ?? null,
-        result: p.result ?? null,
-        perspective: p.perspective === "pitcher" ? "pitcher" : "hitter",
-        location: p.zone ? { zone: p.zone } : null,
-        notes: "ai_draft",
-      }))
-    ));
-    if (defense.length) inserts.push(admin.from("gp_defense_plays").insert(
-      defense.map((d: any) => ({
-        user_id: user.id, game_id: gameId,
-        entry_source: "imported",
-        inning: d.inning ?? null,
-        position: d.position ?? null,
-        play_type: d.play_type ?? null,
-        result: d.result ?? null,
-        notes: d.notes ?? null,
-      }))
-    ));
-    if (baserun.length) inserts.push(admin.from("gp_baserun_events").insert(
-      baserun.map((b: any) => ({
-        user_id: user.id, game_id: gameId,
-        entry_source: "imported",
-        inning: b.inning ?? null,
-        event_type: b.event_type ?? null,
-        base_from: b.from_base ?? null,
-        base_to: b.to_base ?? null,
-        success: b.result === "safe" ? true : b.result === "out" ? false : null,
-        notes: b.notes ?? null,
-      }))
-    ));
-    const results = await Promise.allSettled(inserts);
-    const failed = results.filter((r) => r.status === "rejected" || r.value?.error);
-
+    // Extraction stays on the existing document as a review buffer, never
+    // in the live event ledger before explicit confirmation.
     const summary = {
       atBats: atBats.length, pitches: pitches.length,
       defense: defense.length, baserun: baserun.length,
     };
-    await admin.from("gp_documents").update({
-      parse_status: failed.length ? "partial" : "processed",
-      parsed_events: { summary, failures: failed.length, raw: parsed },
+    const saved = await admin.from("gp_documents").update({
+      parse_status: "processed",
+      parsed_events: { summary, failures: 0, raw: parsed, review_status: "pending" },
     }).eq("id", documentId);
 
-    await hb.success({ ...summary, failures: failed.length, document_id: documentId });
-    if (failed.length) return json({ error: "Some imported events could not be saved. Check this game before retrying.", summary, failures: failed.length }, 422);
-    return json({ summary, failures: 0 });
+    if (saved.error) throw saved.error;
+    await hb.success({ ...summary, failures: 0, document_id: documentId });
+    return json({ summary, failures: 0, review_status: "pending" });
   } catch (e) {
     console.error("[gp-ingest-document]", e);
     await hb.fail(e, { document_id: undefined });
