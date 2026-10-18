@@ -132,14 +132,14 @@ export function BaserunLogger({ gameId, sport }: { gameId: string; sport?: strin
             repNumber={idx + 1}
             title={
               <span className="flex items-center gap-1.5">
-                {r.event_type}
+                Event: {String(r.event_type).replace(/_/g, " ")}
                 {r.success === true && <Check className="h-3.5 w-3.5 text-emerald-600" />}
                 {r.success === false && <XIcon className="h-3.5 w-3.5 text-rose-600" />}
               </span>
             }
             badges={[
               { label: `Logged by: ${entrySourceLabel(r.entry_source)}`, variant: "outline" as const },
-              { label: `Inn ${r.inning ?? "?"}` },
+              { label: `Inning: ${r.inning ?? "Not entered"}` },
               ...(r.base_from != null && r.base_to != null
                 ? [{ label: `${r.base_from}→${r.base_to}`, variant: "secondary" as const }]
                 : []),

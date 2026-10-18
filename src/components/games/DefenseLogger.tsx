@@ -149,11 +149,11 @@ export function DefenseLogger({ gameId }: { gameId: string }) {
             key={p.id}
             accent="defense"
             repNumber={idx + 1}
-            title={p.play_type ?? "—"}
+            title={p.play_type ? `Play: ${p.play_type.replace(/_/g, " ")}` : "Play type: Not entered"}
             badges={[
               { label: `Logged by: ${entrySourceLabel(p.entry_source)}`, variant: "outline" as const },
-              { label: `Inn ${p.inning ?? "?"}` },
-              { label: p.position, variant: "secondary" },
+              { label: `Inning: ${p.inning ?? "Not entered"}` },
+              { label: `Position: ${p.position}`, variant: "secondary" },
               ...(p.shift && p.shift !== "no_shift" ? [{ label: `shift: ${p.shift}` }] : []),
               ...(p.error_flag ? [{ label: "Error", variant: "destructive" as const }] : []),
             ]}
