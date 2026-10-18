@@ -135,6 +135,7 @@ const CoachOnboarding = lazyWithRetry(() => import("./pages/CoachOnboarding"));
 const HammerRecall = lazyWithRetry(() => import("./pages/HammerRecall"));
 const NotificationsSettings = lazyWithRetry(() => import("./pages/NotificationsSettings"));
 const CoachConsole = lazyWithRetry(() => import("./pages/CoachConsole"));
+const CoachTeamReport = lazyWithRetry(() => import("./pages/CoachTeamReport"));
 const CoachAthleteDetail = lazyWithRetry(() => import("./pages/CoachAthleteDetail"));
 const StaffPlans = lazyWithRetry(() => import("./pages/StaffPlans"));
 const AthleteDigest = lazyWithRetry(() => import("./pages/AthleteDigest"));
@@ -454,6 +455,7 @@ const App = () => {
               <Route path="/share" element={<RequireCapability capability="wave3_share"><Wave3ShareConsole /></RequireCapability>} />
               <Route path="/settings/notifications" element={<NotificationsSettings />} />
               <Route path="/coach/console" element={<StaffPlanGate><CoachConsole /></StaffPlanGate>} />
+              <Route path="/coach/team-report" element={<StaffPlanGate><CoachTeamReport /></StaffPlanGate>} />
               <Route path="/coach/athlete/:athleteId" element={<StaffPlanGate><CoachAthleteDetail /></StaffPlanGate>} />
               <Route path="/staff-plans" element={<StaffPlans />} />
               <Route path="/digest" element={<AthleteDigest />} />

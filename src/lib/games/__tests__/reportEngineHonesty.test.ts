@@ -38,3 +38,15 @@ describe("post-game report never fills in unentered values", () => {
     expect(JSON.stringify(r)).toContain("First-pitch strike rate —");
   });
 });
+
+import { buildTeamPostgame } from "../reportEngine";
+describe("team post-game report", () => {
+  it("pitches with no entered result never count as strikes, and sources are listed", () => {
+    const r: any = buildTeamPostgame(game, "Team", [
+      { athleteId: "a", athleteName: "P1", atBats: [], defense: [], baserun: [],
+        pitches: [{ perspective: "pitcher", inning: 1, result: null } as any], sources: ["Player-entered"] },
+    ]);
+    expect(r.sections.find((s: any) => s.id === "staff").table.rows[0][2]).toBe("Not entered");
+    expect(r.sections.find((s: any) => s.id === "sources").bullets[0]).toBe("P1 — Logged by: Player-entered");
+  });
+});

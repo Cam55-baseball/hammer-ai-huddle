@@ -9,6 +9,8 @@ import { ReadinessDistributionStrip } from "@/components/coach-console/Readiness
 import { OverrideVisibilityQueue } from "@/components/coach-console/OverrideVisibilityQueue";
 import { useCoachRosterRows } from "@/hooks/coach/useCoachRosterRows";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { Users, AlertTriangle, EyeOff } from "lucide-react";
 import { useMemo } from "react";
 
@@ -35,6 +37,9 @@ export default function CoachConsole() {
               is lineage-drillable to <code className="rounded bg-muted px-1 text-xs">/replay/:eventId</code>.
             </p>
           </div>
+          <Button asChild size="sm" variant="outline">
+            <Link to="/coach/team-report">Team game report</Link>
+          </Button>
           <div className="ml-auto flex flex-wrap gap-2">
             <Badge variant="outline" className="gap-1"><Users className="h-3 w-3" /> {roster.length} roster</Badge>
             <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" /> {escalations.length} escalations</Badge>
