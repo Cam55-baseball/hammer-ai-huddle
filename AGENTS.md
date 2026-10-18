@@ -27,5 +27,5 @@
 - Staff sign-up: `/get-started` → `/signup/:role` (adults, `src/lib/auth/staffSignup.ts`); approvals reuse existing queues. Why: one approval system.
 - Advice reads never await rechecks; show read failures. Why: failure is not empty.
 
-- Game IQ bypasses training-session gates, not subscriptions; other sections stay gated. Why: games are not training sessions.
+- Game IQ skips training-session gates, not subscriptions. Why: games are not training.
 
