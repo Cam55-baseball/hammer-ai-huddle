@@ -1,5 +1,6 @@
 # ACTIVE REPORT — Oct 18 owner answers
 Ready to publish: NO — step 5 role coverage and populated five-player proof, then steps 6–8 remain unfinished.
+AB6: fixed guessed defense/running defaults; optional observations now stay unknown, required position/event choices are explicit, and outcomes preserve Not entered/Yes/No. Teen phone UI-created game → defense/running save → fresh navigation/reload → Player-entered read-back PASS with untouched facts null, zero overflow/page errors. Exact synthetic game/events removed and zero counts verified. Parent/pitcher/softball updated agreements and both coach paid-plan gates remain intact; successful role proofs blocked. All five kept player cohorts have zero saved games/reports, so no genuine populated-cohort claim. Full suite 381 files / 2,997 tests PASS; final focused 18/18 PASS; build OK. Preview-only; no backend/Stripe/publish/cron/iOS changes. Evidence: `docs/owner/walkthroughs/intelligence/ab6/proof-status.md`.
 AB5: document drafts now reload from saved documents; explicit selected-entry review confirms through caller-RLS atomic RPC, with source/date audit on the same buffer. Player phone photo upload → draft → reload → checkbox → confirmation → reload → Imported Double read-back PASS. Empty/duplicate/out-of-range selections refused and partial insert rollback PASS; all four families preserve null missing facts; unknown at-bat result remains null with raw notes. Concurrent retry and ready/applied re-extraction protection PASS; signed-out and cross-player confirmation refused. Exact synthetic fixtures/files/events removed. Authorized migration 0078 + scoped gp-ingest-document redeploy LIVE; frontend preview only. Full suite 380 files / 2,991 tests PASS; build OK. Parent/teen/both coach coverage and populated cohorts remain open before steps 6–8. Evidence: `docs/owner/walkthroughs/intelligence/ab5/proof-status.md`.
 AB4: fixed CSV outcome normalization on both HitTrax/GameChanger paths (Double → 2B); unknown outcomes stay null with raw notes; speed/angle no longer invent contact quality. Player phone Imported + Double read-back passed. Document importer now checks owned document/game/storage before download, saves extraction only to the existing review buffer, and uses valid source/status labels. Scoped gp-ingest-document redeploy LIVE; own synthetic photo extraction + phone upload passed, zero live events; wrong object/bucket/missing document and signed-out requests refused. Exact test games/documents/files removed. Final full suite 379 files / 2,988 tests PASS; focused 14/14 PASS and live phone proof after corrections; build OK. Document confirmation/reload UI and parent/teen/both-coach proof remain OPEN, then steps 6–8. No publish/cron/iOS. Evidence: `docs/owner/walkthroughs/intelligence/ab4/proof-status.md`.
 AB3: structured pitch contact/direction/hard-contact observation and intended location now save separately; missing hard-contact stays unknown. Tracked-data at-bats retain Imported. Found and fixed summary-cache collision that hid saved pitch details after reopening; regression test retained. Player phone save→fresh navigation→read-back passed; imported at-bat badge passed; forged coach verification normalized and video tag without evidence refused. Exact temporary game/events/import job removed. Full suite 378 files / 2,978 tests PASS; build OK. Authorized additive schema live, frontend preview only; no publish/cron/iOS/function redeploy. Evidence: `docs/owner/walkthroughs/intelligence/ab3/proof-status.md`. Parent/teen/both-coach paths and five populated cohorts remain unverified.
@@ -28,11 +29,13 @@ All former approval blockers are answered; no further scoped authorization is re
 6. Game IQ and team post-game screen FAIL/OPEN — unfinished.
 7. Owner Coaching Console FAIL/OPEN — unfinished.
 8. Private population learning FAIL/OPEN — unfinished.
-Full suite PASS: **380 files / 2,991 tests**. Build OK. Full page audit and five-player proof remain OPEN. Detailed evidence: `docs/owner/walkthroughs/intelligence/oct18/proof-status.md`.
+Full suite PASS: **381 files / 2,997 tests**. Final focused rerun 18/18 PASS; build OK. Full page audit and five-player proof remain OPEN. Latest evidence: `docs/owner/walkthroughs/intelligence/ab6/proof-status.md`.
 
 Live this round: assessment/parent-sharing/video-tag schema changes; `check-subscription`, `parent-consent`, `intel-recheck`, `intel-recheck-job`. No publish, cron changes or iOS edits. Callback bundling issue corrected and successfully deployed.
 
 ## Remaining lean task list
+- [x] AB6: fix guessed defense/running facts; teen phone save/reload/read-back, source labels, exact cleanup, full tests and honest gate/cohort audit.
+- [ ] AB6 continuation: positive parent logging waits on genuine legal acceptance/signature; both coach modes wait on working paid test subscription; genuine 10+ game hitter/5+ report pitcher populations missing. Steps 6–8 remain open in order.
 - [x] AB5: document review/explicit confirmation and reload; duplicate-free retry, cross-player refusal, four-family null facts, exact cleanup.
 - [ ] AB5 continuation: remaining parent/teen/both-coach consent-gated logging and populated cohort proof, then steps 6–8.
 - [x] AB4: import result consistency, document ownership gate + honest saved draft, live API/player phone proof, exact cleanup.
@@ -53,7 +56,8 @@ Live this round: assessment/parent-sharing/video-tag schema changes; `check-subs
 - [ ] Authenticated nightly callback and populated outcome proof; owner applies schedule afterward.
 - [ ] Measurement-based Performance grades with source/date, honest missing data.
 - [x] Video-tagged at-bat entries and phone source-label proof.
-- [ ] Parent/coach/teen game-logging coverage.
+- [x] Teen phone UI-created game with defense/running source-label save/reload and unknown-fact proof (AB6 synthetic fixtures, cleaned).
+- [ ] Parent/coach positive game-logging coverage; consent/signature and paid subscription blockers unchanged.
 - [ ] Finish Game IQ including team post-game reports, Coaching Console, private population learning in order.
 - [x] Full suite and cleanup for this round; current report updated.
 - [ ] Five-player-type phone proof and full page audit.
