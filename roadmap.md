@@ -1,3 +1,17 @@
+# AF6 — Oct 18 21:59 UTC — Combined status
+
+- Report Card: OFF for every role (switch report_card), data kept. PASS — docs/owner/walkthroughs/intelligence/ae9/
+- MPI/Movement/Transfer lineage: done — docs/owner/data-lineage.md. Transfer hidden (hand-timed video). MPI, Movement, Decision Speed stay with source + date. DECISION NEEDED: Movement fills missing stride 70 / effort 5, starter MPI flat 50 — fix ("Not enough data") needs owner-approved redeploy of hie-analyze + nightly-mpi-process.
+- Positive proof (TEST college player, phone-size): Vault 10-yd 1.65 s · Grade 40 (Acceptable) · Source: entered by you · 10/18/2026; analysis findings + "Grade coming with camera measurement". PASS — ae10/. 5 test analyses deleted; sprint entry kept until final cleanup.
+- Stream 2 Game IQ: built in draft, rule tests PASS; merge STILL RUNNING (AF1–AF6 idle). Phone proofs OPEN.
+- Stream 3 Coaching Console: built in draft; merge waits on Game IQ. Badge cut-offs await owner.
+- Stream 1 / five-player proofs: hitter data entered (ae3/); pitcher, two-way, softball, new player, parent-run, both coach modes NOT STARTED.
+- Step 8, full page audit, full suite after merges, owner's guide: NOT STARTED.
+- HEVC vs H264 measurements: BLOCKED (body tracking runs in browser).
+- Nightly learning loop: first run Oct 19 04:30 UTC — pending.
+- TEST Coach $0 plan active; cancel before Nov 18.
+- Ready to publish: **no** — Game IQ/Console not merged, five-player proofs, step 8, audit not done, MPI/Movement filler numbers unresolved.
+
 # AF5 — Oct 18 — Game IQ copy still working; nothing merged. Ready to publish: no.
 
 # AF4 — Oct 18 — Game IQ copy still re-applying its changes; nothing merged. Ready to publish: no.
