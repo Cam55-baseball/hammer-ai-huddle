@@ -38,6 +38,7 @@ import { Link } from 'react-router-dom';
 import { HammersCard } from '@/components/intelligence/HammersCard';
 import { howSureFor } from '@/lib/intelligence/howSure';
 import { useReadinessState } from '@/hooks/useReadinessState';
+import { HealthFlagsCard } from '@/components/intelligence/HealthFlagsCard';
 
 function PracticeIntelligenceCard() {
   const { data: mpi } = useMPIScores();
@@ -242,6 +243,7 @@ Confidence: ${snapshot.development_confidence}%
           </TabsContent>
 
           <TabsContent value="growth" className="space-y-6">
+            <HealthFlagsCard />
             {growth}
             <section id="growth" className="scroll-mt-20 space-y-6">
               <ForecastPreview />
