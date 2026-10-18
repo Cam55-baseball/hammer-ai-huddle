@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { roundGrade } from "@/lib/benchmarks/gradeScale";
 
 interface Props { athleteId: string; sport: string | null; position: string | null; testKey: string; metricKey: string; grade: number }
 
@@ -18,7 +19,7 @@ export function RatingAgreement(p: Props) {
     setState("saving");
     const { error } = await supabase.from("rating_agreements").insert({
       coach_id: user.id, athlete_id: p.athleteId, sport: p.sport ?? "not_recorded", position: p.position,
-      test_key: p.testKey, metric_key: p.metricKey, grade: Math.round(p.grade * 10) / 10, agree: choice, note: note.trim() || null,
+      test_key: p.testKey, metric_key: p.metricKey, grade: roundGrade(p.grade), agree: choice, note: note.trim() || null,
     });
     setState(error ? "error" : "saved");
   };
