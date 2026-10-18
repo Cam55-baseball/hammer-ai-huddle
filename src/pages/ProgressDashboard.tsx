@@ -32,6 +32,7 @@ import { ForecastPreview } from '@/components/dashboard/ForecastPreview';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Activity, Lightbulb, TrendingUp, ChevronDown, HeartPulse } from 'lucide-react';
 import { useState } from 'react';
+import { StandardsBoard } from '@/components/hammer/standards/StandardsBoard';
 
 function PracticeIntelligenceCard() {
   const { data: mpi } = useMPIScores();
@@ -146,6 +147,10 @@ Confidence: ${snapshot.development_confidence}%
         <DualStreakDisplay />
         <ActivityAnalytics selectedSport={selectedSport} />
         <LoadDashboard />
+        <Collapsible>
+          <CollapsibleTrigger className="flex w-full items-center justify-between border-b py-4 text-left font-semibold">Standards Board<ChevronDown className="h-4 w-4" /></CollapsibleTrigger>
+          <CollapsibleContent className="pt-3"><StandardsBoard /></CollapsibleContent>
+        </Collapsible>
 
 
         <DataBuildingGate>

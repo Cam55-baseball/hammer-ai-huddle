@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { isSwitchOnFor } from "../../supabase/functions/_shared/wic/flags/featureSwitches";
+import { useQuery } from "@tanstack/react-query";
+import { assessmentStartAllowed } from "@/lib/assessment/startGate";
 
 /**
  * Once-per-account "Start Hammers Today Plan" state.
@@ -20,6 +22,16 @@ export function useHammersTodayStart() {
   const [startedAt, setStartedAt] = useState<string | null>(() => readCache(cacheKey));
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const assessment = useQuery({
+    queryKey: ["assessment-start", user?.id], enabled: !!user?.id && !startedAt,
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase.from("initial_assessments").select("completed_at").eq("user_id", user.id).maybeSingle();
+      if (error) throw error;
+      return data?.completed_at ?? null;
+    },
+  });
+  const assessmentReady = assessmentStartAllowed(startedAt, assessment.data ?? null);
 
   useEffect(() => {
     let alive = true;
@@ -45,6 +57,7 @@ export function useHammersTodayStart() {
 
   const start = useCallback(async () => {
     if (starting || startedAt) return;
+    if (!assessmentReady) { setError("Tap Completed on your initial assessment first."); return; }
     setStarting(true);
     setError(null);
     const { data, error: rpcErr } = await (supabase as any).rpc("start_hammers_today");
@@ -56,7 +69,7 @@ export function useHammersTodayStart() {
     const at = String(data ?? new Date().toISOString());
     setStartedAt(at);
     try { if (user?.id) localStorage.setItem(`hm.htstart.${user.id}`, at); } catch { /* storage blocked */ }
-  }, [starting, startedAt, user?.id]);
+  }, [starting, startedAt, user?.id, assessmentReady]);
 
-  return { loading, gateOn, startedAt, needsStart: gateOn && !startedAt, start, starting, error };
+  return { loading, gateOn, startedAt, needsStart: gateOn && !startedAt, start, starting, error, assessmentReady };
 }

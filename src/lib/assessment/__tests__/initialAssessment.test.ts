@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { assessmentSteps, requiredAnalyses, assessmentComplete, type AssessmentInput } from "../initialAssessment";
 const base: AssessmentInput = { onboardingDone: false, lastSeasonDoneOrSkipped: false, movementScreenDone: false, s2Done: false, analysesDone: [], sixWeekTestDone: false, modules: ["baseball_pitcher"] };
-describe("initial assessment order", () => {
-  it("step 2 is locked until step 1 is done", () => expect(assessmentSteps(base)[2]).toBe("locked"));
-  it("step 3 is locked until step 2 is done or skipped", () => expect(assessmentSteps({ ...base, onboardingDone: true })[3]).toBe("locked"));
-  it("steps 4-6 are locked until 1-3 are done", () => {
+describe("optional initial assessment", () => {
+  it("stats may be opened without finishing profile", () => expect(assessmentSteps(base)[2]).toBe("open"));
+  it("movement check may be opened without stats", () => expect(assessmentSteps({ ...base, onboardingDone: true })[3]).toBe("open"));
+  it("all optional tests remain accessible without answers", () => {
     const s = assessmentSteps({ ...base, onboardingDone: true, lastSeasonDoneOrSkipped: true });
-    expect([s[4], s[5], s[6]]).toEqual(["locked", "locked", "locked"]);
+    expect([s[4], s[5], s[6]]).toEqual(["open", "open", "open"]);
   });
   it("steps 4-6 open together in any order after 1-3", () => {
     const s = assessmentSteps({ ...base, onboardingDone: true, lastSeasonDoneOrSkipped: true, movementScreenDone: true, sixWeekTestDone: true });

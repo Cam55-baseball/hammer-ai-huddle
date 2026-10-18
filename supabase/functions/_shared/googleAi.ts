@@ -299,6 +299,12 @@ export async function chatCompletion(
   const timeoutMs = opts.timeoutMs ?? 60_000;
   const allowFallback = opts.allowFallback ?? true;
 
+  if (req.model.startsWith("openai/")) {
+    const key = Deno.env.get("OPENAI_API_KEY");
+    if (!key) return { ok: false, status: 500, provider: "none", data: { choices: [] }, errorBody: "backup_credentials_unavailable" };
+    return await callOpenAI(req, key, timeoutMs);
+  }
+
   const googleKey = Deno.env.get("GOOGLE_AI_API_KEY");
   if (googleKey) {
     const google = await callGoogle(req, googleKey, timeoutMs);

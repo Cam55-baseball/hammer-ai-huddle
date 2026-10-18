@@ -38,6 +38,7 @@ import { VideoLibraryManager } from "@/components/owner/VideoLibraryManager";
 import { PromoEngineTab } from "@/components/promo-engine/PromoEngineTab";
 import { DrillCmsManager } from "@/components/owner/DrillCmsManager";
 import { OwnerEngineSettingsPanel } from "@/components/owner/OwnerEngineSettingsPanel";
+import { OwnerSettingsOverview } from "@/components/owner/OwnerSettingsOverview";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScoutApplicationCard } from "@/components/ScoutApplicationCard";
@@ -1231,6 +1232,8 @@ const OwnerDashboard = () => {
 
           {/* Settings Section */}
           {activeSection === 'settings' && (
+            <div className="space-y-6">
+            <OwnerSettingsOverview />
             <Card className="p-5">
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
@@ -1250,6 +1253,7 @@ const OwnerDashboard = () => {
                 </div>
               </div>
             </Card>
+            </div>
           )}
 
           {/* Video Library Manager Section */}

@@ -44,7 +44,7 @@ export interface AnalysisImprovement {
 }
 
 export interface AnalysisResultData {
-  efficiency_score: number;
+  efficiency_score: number | null;
   summary?: string[];
   feedback: string;
   positives?: string[];
@@ -121,6 +121,7 @@ export function AnalysisResultsPanel({
 
 }: Props) {
   const { t } = useTranslation();
+  const notMeasured = (analysis as { report_status?: string }).report_status === "not_measured";
 
   const summary = analysis.summary ?? [];
   const [topTakeaway, ...restFindings] = summary;
@@ -223,10 +224,10 @@ export function AnalysisResultsPanel({
         </RevealSection>
       )}
 
-      {recommendations && <RevealSection order={5}>{recommendations}</RevealSection>}
+      {!notMeasured && recommendations && <RevealSection order={5}>{recommendations}</RevealSection>}
 
       {/* ── 6 · YOUR PRESCRIPTION (drills) ───────────────────────────── */}
-      {((analysis.drills && analysis.drills.length > 0) || prescriptionExtra) && (
+      {!notMeasured && ((analysis.drills && analysis.drills.length > 0) || prescriptionExtra) && (
         <RevealSection order={6}>
           <Card className="space-y-5 p-5 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">

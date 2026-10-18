@@ -35,18 +35,21 @@ export function InitialAssessmentCard({ sport }: { sport: "baseball" | "softball
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [painOpen, setPainOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const { data } = useQuery({
+  const { data, error: loadError, isLoading: assessmentLoading } = useQuery({
     queryKey: ["initial-assessment", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const uid = user!.id;
+      if (!user) throw new Error("Sign in first");
+      const uid = user.id;
       const [row, s2, vids, tests] = await Promise.all([
         supabase.from("initial_assessments").select("*").eq("user_id", uid).maybeSingle(),
         supabase.from("tex_vision_s2_diagnostics").select("user_id", { count: "exact", head: true }).eq("user_id", uid).not("completed_at", "is", null),
         supabase.from("videos").select("module").eq("user_id", uid).not("ai_analysis", "is", null).limit(200),
         supabase.from("vault_performance_tests").select("user_id", { count: "exact", head: true }).eq("user_id", uid),
       ]);
+      if (row.error) throw row.error;
       return {
         row: row.data,
         s2: (s2.count ?? 0) > 0,
@@ -56,7 +59,10 @@ export function InitialAssessmentCard({ sport }: { sport: "baseball" | "softball
     },
   });
 
-  if (!user || !data || !initialized || loading || data.row?.completed_at) return null;
+  if (!user) return null;
+  if (loadError) return <p role="alert" className="text-sm text-destructive">Couldn't load your initial assessment. Reload and try again.</p>;
+  if (!data || !initialized || loading || assessmentLoading) return <p className="text-sm text-muted-foreground">Loading your initial assessment…</p>;
+  if (data.row?.completed_at) return null;
 
   const sportModules = modules.filter((m) => m.startsWith(sport));
   const input = {
@@ -70,15 +76,17 @@ export function InitialAssessmentCard({ sport }: { sport: "baseball" | "softball
   };
   const steps = assessmentSteps(input);
   const need = requiredAnalyses(sportModules);
-  const allDone = Object.values(steps).every((s) => s === "done");
 
   const save = async (patch: Record<string, unknown>) => {
     setSaving(true);
-    await supabase.from("initial_assessments").upsert({ user_id: user.id, updated_at: new Date().toISOString(), ...patch });
+    setSaveError(null);
+    const { error } = await supabase.from("initial_assessments").upsert({ user_id: user.id, updated_at: new Date().toISOString(), ...patch });
     setSaving(false);
+    if (error) { setSaveError("Couldn't save your assessment. Try again."); return false; }
     qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] });
+    qc.invalidateQueries({ queryKey: ["assessment-start", user.id] });
+    return true;
   };
-  if (allDone) return null;
 
   const action = (id: StepId) => {
     switch (id) {
@@ -99,14 +107,13 @@ export function InitialAssessmentCard({ sport }: { sport: "baseball" | "softball
     }
   };
 
-  const screenReady = MOVES.every((m) => answers[m.key]);
   const anyPain = MOVES.some((m) => answers[m.key] === "pain");
 
   return (
     <Card className="p-4 space-y-3">
       <div>
         <h3 className="font-semibold">Initial assessment</h3>
-        <p className="text-sm text-muted-foreground">Do steps 1, 2 and 3 in order. Then do 4, 5 and 6 in any order.</p>
+        <p className="text-sm text-muted-foreground">Every answer and test is optional. Tap Completed when you're ready to start your plan.</p>
       </div>
       <ol className="space-y-2">
         {([1, 2, 3, 4, 5, 6] as StepId[]).map((id) => (
@@ -115,8 +122,7 @@ export function InitialAssessmentCard({ sport }: { sport: "baseball" | "softball
               {steps[id] === "done" ? <CheckCircle2 className="h-4 w-4 text-primary" /> : steps[id] === "locked" ? <Lock className="h-4 w-4 text-muted-foreground" /> : <Circle className="h-4 w-4" />}
               <span>Step {id}: {STEP_LABELS[id]}{id === 5 && need.length ? ` (${need.join(", ")})` : ""}</span>
             </span>
-            {steps[id] === "open" && action(id)}
-            {steps[id] === "locked" && <span className="text-xs text-muted-foreground">Locked</span>}
+            {steps[id] !== "done" && action(id)}
           </li>
         ))}
       </ol>
@@ -137,13 +143,19 @@ export function InitialAssessmentCard({ sport }: { sport: "baseball" | "softball
             </div>
           ))}
           {anyPain && <p className="text-sm text-destructive">You said something hurt. Please report it so your plan stays safe.</p>}
-          <Button disabled={!screenReady || saving} onClick={async () => {
-            await save({ movement_screen: answers, movement_done_at: new Date().toISOString(), pain_flag: anyPain });
+          <Button disabled={saving} onClick={async () => {
+            const saved = await save({ movement_screen: answers, movement_done_at: new Date().toISOString(), pain_flag: anyPain });
+            if (!saved) return;
             setScreenOpen(false);
             if (anyPain) setPainOpen(true);
           }}>Save check</Button>
         </div>
       )}
+      <Button className="w-full" disabled={saving} onClick={async () => {
+        const saved = await save({ completed_at: new Date().toISOString(), ...(Object.keys(answers).length ? { movement_screen: answers, movement_done_at: new Date().toISOString(), pain_flag: anyPain } : {}) });
+        if (saved && anyPain) setPainOpen(true);
+      }}>Completed</Button>
+      {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
       <ReportInjuryDialog open={painOpen} onOpenChange={setPainOpen} />
     </Card>
   );

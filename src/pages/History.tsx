@@ -18,8 +18,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { PracticeSessionDetailDialog } from '@/components/PracticeSessionDetailDialog';
-import { StandardsBoard } from '@/components/hammer/standards/StandardsBoard';
 import { InjuryContinuityCard } from '@/components/injury/InjuryContinuityCard';
+import { HistoryDatePicker } from '@/lib/history/historyDatePicker';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ReportView } from '@/components/games/reports/ReportView';
+import type { ReportRecord } from '@/hooks/useHistoryRecords';
 
 import {
   usePracticeHistory,
@@ -82,6 +85,7 @@ export default function History() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [selectedPractice, setSelectedPractice] = useState<any>(null);
+  const [selectedReport, setSelectedReport] = useState<ReportRecord | null>(null);
 
   const practices = usePracticeHistory(userId, !!touched.practices);
   const games = useGameHistory(userId, !!touched.games);
@@ -122,8 +126,8 @@ export default function History() {
   );
 
   const recapRows = useMemo(
-    () => (recaps.data ?? []).filter((r) => inRange(r.report_period_end, from, to)),
-    [recaps.data, from, to],
+    () => (recaps.data ?? []).filter((r) => inRange(r.report_period_end, from, to) && (!q || `recap progress report ${r.report_period_start} ${r.report_period_end} ${r.status}`.toLowerCase().includes(q))),
+    [recaps.data, from, to, q],
   );
 
   const toggle = (key: string) => (next: boolean) => {
@@ -156,10 +160,10 @@ export default function History() {
             onChange={(e) => setQuery(e.target.value)}
             className="sm:max-w-xs"
           />
-          <div className="flex items-center gap-2">
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-40" />
+          <div className="flex flex-wrap items-center gap-2">
+            <HistoryDatePicker label="From date" value={from} onChange={setFrom} />
             <span className="text-muted-foreground">→</span>
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-40" />
+            <HistoryDatePicker label="To date" value={to} onChange={setTo} />
             {(from || to || query) && (
               <Button variant="ghost" size="sm" onClick={() => { setFrom(''); setTo(''); setQuery(''); }}>
                 Clear
@@ -171,7 +175,6 @@ export default function History() {
         <div className="space-y-3">
           <InjuryContinuityCard userId={userId} />
 
-          <StandardsBoard />
 
 
           <HistorySection
@@ -181,7 +184,7 @@ export default function History() {
             open={!!open.practices}
             onOpenChange={toggle('practices')}
           >
-            {practices.isLoading ? (
+            {practices.error ? <Empty label="Couldn't load practice sessions. Reload and try again." /> : practices.isLoading ? (
               <Busy />
             ) : practiceRows.length === 0 ? (
               <Empty label="No practice sessions yet." />
@@ -219,7 +222,7 @@ export default function History() {
             open={!!open.games}
             onOpenChange={toggle('games')}
           >
-            {games.isLoading ? (
+            {games.error ? <Empty label="Couldn't load games. Reload and try again." /> : games.isLoading ? (
               <Busy />
             ) : gameRows.length === 0 ? (
               <Empty label="No games logged yet." />
@@ -252,7 +255,7 @@ export default function History() {
             open={!!open.reports}
             onOpenChange={toggle('reports')}
           >
-            {reports.isLoading ? (
+            {reports.error ? <Empty label="Couldn't load reports. Reload and try again." /> : reports.isLoading ? (
               <Busy />
             ) : reportRows.length === 0 ? (
               <Empty label="No saved reports yet." />
@@ -268,9 +271,7 @@ export default function History() {
                         {r.share_token && !r.share_revoked ? ' · shared' : ''}
                       </p>
                     </div>
-                    <Button asChild size="sm" variant="outline">
-                      <Link to={r.game_id ? `/games/${r.game_id}/report` : '/games/reports'}>Open</Link>
-                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setSelectedReport(r)}>Open</Button>
                   </li>
                 ))}
               </ul>
@@ -284,7 +285,7 @@ export default function History() {
             open={!!open.recaps}
             onOpenChange={toggle('recaps')}
           >
-            {recaps.isLoading ? (
+            {recaps.error ? <Empty label="Couldn't load recaps. Reload and try again." /> : recaps.isLoading ? (
               <Busy />
             ) : recapRows.length === 0 ? (
               <Empty label="No recaps generated yet." />
@@ -313,6 +314,12 @@ export default function History() {
           open={!!selectedPractice}
           onClose={() => setSelectedPractice(null)}
         />
+        <Dialog open={!!selectedReport} onOpenChange={(open) => { if (!open) setSelectedReport(null); }}>
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+            <DialogHeader><DialogTitle>{selectedReport?.title ?? "Saved report"}</DialogTitle></DialogHeader>
+            {selectedReport?.snapshot ? <ReportView snapshot={selectedReport.snapshot} /> : <p className="text-sm text-muted-foreground">This saved report has no content. Open Game reports to check it.</p>}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

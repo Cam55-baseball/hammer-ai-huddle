@@ -4,26 +4,34 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useIsStaff } from "@/lib/legal/useIsStaff";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
-const money = (n: number) => `$${Number(n).toFixed(4)}`;
+const money = (n: number) => n == null || Number(n) < 0 ? "Unknown" : `$${Number(n).toFixed(4)}`;
 
 export default function AiCostDashboard() {
-  const staff = useIsStaff();
+  const { isOwner: staff, loading } = useOwnerAccess();
   const [days, setDays] = useState(30);
   const q = useQuery({
     queryKey: ["owner-ai-costs", days], enabled: staff,
-    queryFn: async () => ((await (supabase as any).rpc("ai_cost_summary", { _days: days })).data ?? []) as any[],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("ai_cost_summary", { _days: days });
+      if (error) throw error;
+      const { count, error: unknownError } = await supabase.from("ai_usage_log").select("id", { count: "exact", head: true }).gte("created_at", new Date(Date.now() - days * 86400000).toISOString()).lt("estimated_cost_usd", 0);
+      if (unknownError) throw unknownError;
+      return { rows: data ?? [], unknown: count ?? 0 };
+    },
   });
+  if (loading) return <p className="p-6 text-sm">Loading…</p>;
   if (!staff) return <p className="p-6 text-sm text-muted-foreground">Owners only.</p>;
-  const rows = q.data ?? [];
+  const rows = q.data?.rows ?? [];
   const byPlan = new Map<string, { calls: number; cost: number }>();
   for (const r of rows) {
     const p = byPlan.get(r.plan) ?? { calls: 0, cost: 0 };
-    p.calls += Number(r.calls); p.cost += Number(r.total_cost); byPlan.set(r.plan, p);
+    p.calls += Number(r.calls); p.cost = p.cost < 0 || Number(r.total_cost) < 0 ? -1 : p.cost + Number(r.total_cost); byPlan.set(r.plan, p);
   }
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-4">
+    <DashboardLayout><div className="mx-auto max-w-3xl space-y-4 p-4">
       <h1 className="text-xl font-semibold">AI cost per analysis</h1>
       <p className="text-sm text-muted-foreground">
         Estimated from token counts (Gemini $0.30 in / $2.50 out per 1M tokens; OpenAI backup at its own rates). Check against the real bills.
@@ -31,6 +39,8 @@ export default function AiCostDashboard() {
       <div className="flex gap-2">
         {[7, 30, 90].map((d) => <Button key={d} size="sm" variant={d === days ? "default" : "outline"} onClick={() => setDays(d)}>Last {d} days</Button>)}
       </div>
+      {q.error && <p role="alert" className="text-sm text-destructive">Couldn't load analysis costs. Try again.</p>}
+      {!!q.data?.unknown && <p className="text-sm text-muted-foreground">Unknown costs: {q.data.unknown} calls. Totals may be incomplete; compare with service bills.</p>}
       {q.isLoading ? <p className="text-sm">Loading…</p> : rows.length === 0 ? <p className="text-sm text-muted-foreground">No analyses logged yet.</p> : (
         <>
           <Card>
@@ -51,6 +61,6 @@ export default function AiCostDashboard() {
           ))}
         </>
       )}
-    </div>
+    </div></DashboardLayout>
   );
 }

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { SubscriberManagementTable } from "@/components/SubscriberManagementTable";
+import { subscriberBreakdown } from "@/lib/owner/subscriberBreakdown";
 
 interface ModuleStats {
   module: string;
@@ -58,39 +59,18 @@ export default function Subscribers() {
     try {
       const { data: activeSubscriptions, error: subsError } = await supabase
         .from("subscriptions")
-        .select("subscribed_modules, status")
+        .select("user_id, tier, subscribed_modules, status")
         .eq("status", "active");
 
       if (subsError) throw subsError;
 
-      const moduleCount: Record<string, number> = {};
-
-      activeSubscriptions?.forEach((sub) => {
-        sub.subscribed_modules?.forEach((module: string) => {
-          if (!moduleCount[module]) {
-            moduleCount[module] = 0;
-          }
-          moduleCount[module]++;
-        });
-      });
-
-      const totalActive = activeSubscriptions?.length || 0;
-
-      setStats({
-        totalActiveSubscribers: totalActive,
-        moduleBreakdown: Object.entries(moduleCount).map(([module, count]) => {
-          const [sport, moduleName] = module.includes("_") 
-            ? module.split("_") 
-            : ["baseball", module];
-          
-          return {
-            module: `${sport.charAt(0).toUpperCase() + sport.slice(1)} - ${moduleName.charAt(0).toUpperCase() + moduleName.slice(1)}`,
-            rawModule: module, // Keep raw module as unique key
-            count,
-            percentage: totalActive > 0 ? (count / totalActive) * 100 : 0,
-          };
-        }),
-      });
+      const [staff, sponsored] = await Promise.all([
+        supabase.from("staff_plans").select("user_id, plan, included_seats, extra_seats").in("status", ["active", "trialing"]),
+        supabase.from("org_sponsorships").select("player_id, tier").eq("status", "active"),
+      ]);
+      if (staff.error) throw staff.error;
+      if (sponsored.error) throw sponsored.error;
+      setStats(subscriberBreakdown(activeSubscriptions ?? [], staff.data ?? [], sponsored.data ?? []));
     } catch (error) {
       console.error("Error fetching subscription stats:", error);
       toast({
@@ -242,8 +222,8 @@ export default function Subscribers() {
         {filteredStats.moduleBreakdown.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Module Subscriptions</CardTitle>
-              <CardDescription>Breakdown of subscribers by training module</CardDescription>
+              <CardTitle>Current plans</CardTitle>
+              <CardDescription>Player plans, Coach, Organization seats and sponsorships</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">

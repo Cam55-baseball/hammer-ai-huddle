@@ -8,6 +8,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import type { ReportSnapshot } from '@/lib/games/reportEngine';
 
 export interface PracticeRecord {
   id: string;
@@ -19,6 +20,7 @@ export interface PracticeRecord {
   drill_blocks: unknown;
   notes: string | null;
   sport: string | null;
+  composite_indexes: unknown;
 }
 
 export interface GameRecord {
@@ -34,6 +36,7 @@ export interface GameRecord {
 }
 
 export interface ReportRecord {
+  snapshot: ReportSnapshot;
   id: string;
   created_at: string;
   title: string;
@@ -65,7 +68,7 @@ export function usePracticeHistory(userId: string | null, enabled: boolean, limi
     queryFn: async (): Promise<PracticeRecord[]> => {
       const { data, error } = await supabase
         .from('performance_sessions')
-        .select('id, session_date, module, session_type, effective_grade, coach_grade, drill_blocks, notes, sport')
+        .select('id, session_date, module, session_type, effective_grade, coach_grade, drill_blocks, notes, sport, composite_indexes')
         .eq('user_id', userId!)
         .is('deleted_at', null)
         .order('session_date', { ascending: false })
@@ -101,12 +104,12 @@ export function useReportHistory(userId: string | null, enabled: boolean, limit 
     queryFn: async (): Promise<ReportRecord[]> => {
       const { data, error } = await supabase
         .from('gp_reports')
-        .select('id, created_at, title, subtitle, report_kind, game_id, share_token, share_expires_at, share_revoked')
+        .select('id, created_at, title, subtitle, report_kind, game_id, share_token, share_expires_at, share_revoked, snapshot')
         .eq('user_id', userId!)
         .order('created_at', { ascending: false })
         .limit(limit);
       if (error) throw error;
-      return (data ?? []) as ReportRecord[];
+      return (data ?? []) as unknown as ReportRecord[];
     },
   });
 }

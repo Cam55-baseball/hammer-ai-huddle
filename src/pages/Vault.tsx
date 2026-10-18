@@ -119,7 +119,7 @@ export default function Vault() {
     deleteRecap,
   } = useVault();
 
-  const { setupCompleted } = usePhysioProfile();
+  const { setupCompleted, isLoading: physioLoading } = usePhysioProfile();
   const { regulationScore, regulationColor, triggerReportGeneration } = usePhysioDailyReport();
   const [intakeOpen, setIntakeOpen] = useState(false);
   const [editPhysioOpen, setEditPhysioOpen] = useState(false);
@@ -242,8 +242,8 @@ export default function Vault() {
 
   // Auto-open intake dialog when physio setup not completed
   useEffect(() => {
-    if (hasAccess && !setupCompleted) setIntakeOpen(true);
-  }, [hasAccess, setupCompleted]);
+    if (hasAccess && !physioLoading && !setupCompleted) setIntakeOpen(true);
+  }, [hasAccess, setupCompleted, physioLoading]);
 
   // Legacy functions removed - using shared useRecapCountdown hook instead
 

@@ -1,7 +1,7 @@
 /**
  * Plan 4 §B — one-time initial assessment.
- * Steps 1 → 2 → 3 unlock in order; 4, 5 and 6 open together after step 3,
- * in any order. Step 2 (last season's stats) may be skipped.
+ * Suggested checklist only. Every item is optional; explicit completion
+ * is persisted separately and is the only first-start requirement.
  * Step 5 = one analysis for each module INCLUDED in the subscription only.
  * Baserunning IQ and Game IQ are never part of it.
  */
@@ -46,14 +46,13 @@ export function assessmentSteps(i: AssessmentInput): Record<StepId, StepState> {
     6: i.sixWeekTestDone,
   };
   const st = (id: StepId, unlocked: boolean): StepState => (done[id] ? "done" : unlocked ? "open" : "locked");
-  const after3 = done[1] && done[2] && done[3];
   return {
     1: st(1, true),
-    2: st(2, done[1]),
-    3: st(3, done[1] && done[2]),
-    4: st(4, after3),
-    5: st(5, after3),
-    6: st(6, after3),
+    2: st(2, true),
+    3: st(3, true),
+    4: st(4, true),
+    5: st(5, true),
+    6: st(6, true),
   };
 }
 

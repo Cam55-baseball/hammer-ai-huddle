@@ -59,12 +59,14 @@ export async function logAiUsage(admin: any, row: {
       const { data } = await admin.from("staff_plans").select("plan,status").eq("user_id", row.userId).maybeSingle();
       if (data && ["active", "trialing"].includes(data.status)) plan = data.plan;
     }
-    const u = row.result.usage ?? { model: "", input_tokens: 0, output_tokens: 0 };
-    await admin.from("ai_usage_log").insert({
+    const u = row.result.usage;
+    const { error } = await admin.from("ai_usage_log").insert({
       user_id: row.userId, function_name: row.functionName, analysis_type: row.analysisType ?? null,
-      provider: row.result.provider, model: u.model || null, input_tokens: u.input_tokens, output_tokens: u.output_tokens,
-      estimated_cost_usd: estimateCostUsd(u.model, u.input_tokens, u.output_tokens), plan, ok: row.result.ok,
+      // Existing columns are NOT NULL. -1 explicitly means unknown, not zero.
+      provider: row.result.provider, model: u?.model || null, input_tokens: u?.input_tokens ?? -1, output_tokens: u?.output_tokens ?? -1,
+      estimated_cost_usd: u ? estimateCostUsd(u.model, u.input_tokens, u.output_tokens) : -1, plan, ok: row.result.ok,
     });
+    if (error) console.warn("[aiUsage] insert failed", error.message);
   } catch (e) {
     console.warn("[aiUsage] log failed", e instanceof Error ? e.message : e);
   }

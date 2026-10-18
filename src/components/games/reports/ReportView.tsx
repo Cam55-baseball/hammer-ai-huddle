@@ -11,6 +11,8 @@ import { StrikeZoneGrid, type Zone } from "@/components/games/StrikeZoneGrid";
 import { SprayChart } from "@/components/games/SprayChart";
 import { cn } from "@/lib/utils";
 import type { ReportSnapshot, ReportSection, StatLine } from "@/lib/games/reportEngine";
+import { Button } from "@/components/ui/button";
+import { useOptionalAuth } from "@/hooks/useAuth";
 
 const toneClass: Record<string, string> = {
   good: "text-emerald-600 dark:text-emerald-400",
@@ -120,6 +122,7 @@ function SectionBlock({ section }: { section: ReportSection }) {
 }
 
 export function ReportView({ snapshot }: { snapshot: ReportSnapshot }) {
+  const { user } = useOptionalAuth();
   return (
     <div className="mx-auto max-w-3xl space-y-6 print:max-w-none">
       <header className="space-y-2">
@@ -149,6 +152,7 @@ export function ReportView({ snapshot }: { snapshot: ReportSnapshot }) {
               <li key={i}>{n}</li>
             ))}
           </ul>
+          {user && <Button asChild variant="outline" className="print:hidden"><a href="/today#hammer-plan">Open Hammers Today</a></Button>}
         </Card>
       )}
 

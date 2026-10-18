@@ -12,7 +12,7 @@ import { buildPoseTileFindings } from "./faultFindings.ts";
 
 async function gunzipIfNeeded(buf: Uint8Array): Promise<string> {
   if (buf[0] === 0x1f && buf[1] === 0x8b) {
-    const ds = new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip")));
+    const ds = new Response(new Blob([new Uint8Array(buf).buffer]).stream().pipeThrough(new DecompressionStream("gzip")));
     return await ds.text();
   }
   return new TextDecoder().decode(buf);
@@ -37,14 +37,16 @@ export async function runAndWritePoseTileFindings(admin: any, a: {
   if (error || !data) return { ok: false, reason: `landmark_download_failed:${error?.message ?? "no data"}`, written: 0 };
   const text = await gunzipIfNeeded(new Uint8Array(await data.arrayBuffer()));
   const movement = checkStoredLandmarkMovement(text);
-  if (movement.status === "refused") return { ok: true, written: 0, verdicts: {}, refused: movement.reason };
+  if (movement.status === "refused") return { ok: true, written: 0, verdicts: {}, refused: "reason" in movement ? movement.reason : "body_not_tracked" };
   const out = runHittingTilesFromText(text, a.side, a.athleteHeightIn);
   // Athlete ledger: pose + card tile values. Owner tiles 19/20 are staff-only and never recorded here.
   for (const [field, tiles] of [["hitting_pose_tiles_deterministic", out.pose], ["hitting_card_tiles_deterministic", out.card]] as const) {
     const { error: le } = await admin.rpc("ledger_record_tiles", { p_video: a.videoId, p_field: field, p_tiles: { ...tiles, version: out.engine_version } });
     if (le) console.error("[ledger] hitting tiles not recorded:", le.message);
   }
-  const rows = buildPoseTileFindings({ userId: a.userId, videoId: a.videoId, runId: a.runId, sport: a.sport, verdicts: out.verdicts, engineVersion: out.engine_version });
+  const verdicts: Record<string, "pass" | "fail" | null> = {};
+  for (const [key, value] of Object.entries(out.verdicts)) verdicts[key] = value === "pass" || value === "fail" ? value : null;
+  const rows = buildPoseTileFindings({ userId: a.userId, videoId: a.videoId, runId: a.runId, sport: a.sport, verdicts, engineVersion: out.engine_version });
   if (rows.length) {
     const { error: e } = await admin.from("analysis_fault_findings").insert(rows);
     if (e) return { ok: false, reason: `insert_failed:${e.message}`, written: 0, verdicts: out.verdicts };
@@ -62,7 +64,7 @@ export async function runStoredThrowPitchCards(admin: any, a: { module: string; 
   if (error || !data) return { ok: false as const, reason: `landmark_download_failed:${error?.message ?? "no data"}` };
   const text = await gunzipIfNeeded(new Uint8Array(await data.arrayBuffer()));
   const movement = checkStoredLandmarkMovement(text);
-  if (movement.status === "refused") return { ok: true as const, refused: movement.reason, fields: {} };
+  if (movement.status === "refused") return { ok: true as const, refused: "reason" in movement ? movement.reason : "body_not_tracked", fields: {} };
   if (a.module === "throwing") return { ok: true as const, fields: { throwing_tiles_deterministic: runThrowingTilesFromText(text, a.side) } };
   if (a.sport === "softball") return { ok: true as const, fields: { softball_pitching_tiles_deterministic: runSoftballPitchingFromText(text, a.side, a.pitchType ?? null) } };
   const p = runPitchingFromText(text, a.side, a.athleteHeightIn);

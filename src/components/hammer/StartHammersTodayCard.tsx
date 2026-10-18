@@ -14,12 +14,13 @@ interface Props {
   onStart: () => void;
   starting: boolean;
   error: string | null;
+  locked?: boolean;
 }
 
 const ROLE_LABEL = { pitcher: "Pitcher", position: "Position player", two_way: "2-Way player" } as const;
 
 /** Shown once per account, where the Hammers Today plan normally appears. */
-export function StartHammersTodayCard({ onStart, starting, error }: Props) {
+export function StartHammersTodayCard({ onStart, starting, error, locked }: Props) {
   const { user } = useAuth();
   const { positions } = useAthletePositions();
   const [sport, setSport] = useState<string | null>(null);
@@ -41,11 +42,11 @@ export function StartHammersTodayCard({ onStart, starting, error }: Props) {
   }, [user?.id]);
 
   const growth = useGrowthMode().data ?? null;
-  return <StartHammersTodayCardView onStart={onStart} starting={starting} error={error} positions={positions} sport={sport} age={age} growth={growth} />;
+  return <StartHammersTodayCardView onStart={onStart} starting={starting} error={error} locked={locked} positions={positions} sport={sport} age={age} growth={growth} />;
 }
 
 /** Presentational card — the same view the player sees, from explicit player facts. */
-export function StartHammersTodayCardView({ onStart, starting, error, positions, sport, age, growth = null }: Props & { positions: readonly string[]; sport: string | null; age: number | null; growth?: GrowthModeState | null }) {
+export function StartHammersTodayCardView({ onStart, starting, error, locked, positions, sport, age, growth = null }: Props & { positions: readonly string[]; sport: string | null; age: number | null; growth?: GrowthModeState | null }) {
   const items = startPlanItems({ positions, sport, age, growthActive: !!growth?.active });
   const role = playerRole(positions);
   const sportLabel = sport ? sport.charAt(0).toUpperCase() + sport.slice(1) : null;
@@ -56,11 +57,12 @@ export function StartHammersTodayCardView({ onStart, starting, error, positions,
         <Button
           size="lg"
           onClick={onStart}
-          disabled={starting}
+          disabled={starting || locked}
           className="h-16 w-full gap-2 rounded-xl text-lg font-bold shadow-lg"
         >
           {starting ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Play className="h-5 w-5 fill-current" /> Start Hammers Today Plan</>}
         </Button>
+        {locked && <p className="text-sm text-muted-foreground">Tap Completed on your initial assessment above to unlock Start.</p>}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         {growth?.active && <GrowthModeCardView state={growth} />}
 
