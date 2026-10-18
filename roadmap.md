@@ -1,5 +1,7 @@
 # OWNER FIXES — Oct 17 (received Oct 18)
 
+YY2 continuation: verify remaining agreement, parent and History flows; no new live changes without named authorization.
+
 YY1 continuation: analysis preflight/retry no-report exits fixed and phone-tested. Only analyze-video redeployed; live throwing report and saved unreadable-frame fallback verified. Original 12-clip proof remains mandatory; no substitute footage relabeled.
 
 - [ ] 1. Analysis reliability first: reproduce every type/sport with two real clips each, repair failures, nonempty honest fallback reports, retry/backup model, outcome/cost logging, phone proof and before/after rates.
