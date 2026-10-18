@@ -1,0 +1,46 @@
+{
+  "checks": [
+    {
+      "tab": "Today",
+      "visit": 1,
+      "overflow": false
+    },
+    {
+      "tab": "Performance",
+      "visit": 1,
+      "overflow": false
+    },
+    {
+      "tab": "Game IQ",
+      "visit": 1,
+      "overflow": false
+    },
+    {
+      "tab": "Growth",
+      "visit": 1,
+      "overflow": false
+    },
+    {
+      "tab": "Today",
+      "visit": 2,
+      "overflow": false
+    },
+    {
+      "tab": "Performance",
+      "visit": 2,
+      "overflow": false
+    },
+    {
+      "tab": "Game IQ",
+      "visit": 2,
+      "overflow": false
+    },
+    {
+      "tab": "Growth",
+      "visit": 2,
+      "overflow": false
+    }
+  ],
+  "page_errors": 0,
+  "scope": "Kept unstarted TEST college player with no saved games, not new signup"
+}
