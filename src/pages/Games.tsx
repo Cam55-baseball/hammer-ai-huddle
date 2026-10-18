@@ -452,7 +452,21 @@ function NewGameDialog({
   onSubmit: (v: { date: string; sport: string; opponent: string }) => void;
   pending: boolean;
 }) {
-  const { sport: athleteSport } = useSportTheme();
+  const { sport: themeSport } = useSportTheme();
+  // The account's saved sport wins over this device's theme pick, so a
+  // softball player on a fresh phone never starts a game as baseball.
+  const { data: savedSport } = useQuery({
+    queryKey: ["my-saved-sport"],
+    enabled: open,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return null;
+      const { data } = await supabase.from("athlete_mpi_settings").select("sport").eq("user_id", u.user.id).maybeSingle();
+      return (data?.sport as string | null) ?? null;
+    },
+  });
+  const athleteSport = savedSport ?? themeSport;
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [sport, setSport] = useState(athleteSport === "softball" ? "softball" : "baseball");
   useEffect(() => {
