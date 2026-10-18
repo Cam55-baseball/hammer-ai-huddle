@@ -37,7 +37,7 @@ Plain-English list of what must be true before publishing. Current answer: **Rea
 - **Sponsoring a player who already pays:** PASS — no double charge; the player's own plan runs to its paid end, then org billing starts. Both test subscriptions canceled.
 - **Coach-tools plan switch:** ON (`staff_plan_gate`). Coaches without a plan see "Coach tools are now part of the Hammers Coach plan" with Subscribe and "Join through your organization". Owner and admins unaffected.
 - **Every purchase path reaches Stripe's real checkout page** (proven signed in as each test account, phone + desktop, screenshots in docs/owner/walkthroughs/): Organization + 1 extra seat ($1,150/mo, both items listed), Coach ($300), Complete Pitcher ($200). Fair-use and auto-renew acceptances are saved before checkout. Cause of the owner's org-plan failure found and fixed: checkout opened in a new window, which phones block silently — now same-tab, with a visible error if checkout can't start.
-- **Live video analyses:** 6/6 completed (baseball + softball × hitting, pitching, throwing; 21–38 s each), each with a plain-words summary, drills and a report card. Test videos and reports deleted (backup kept).
+- **Live video analyses:** 6/6 completed (baseball + softball × hitting, pitching, throwing; 21–38 s each), each with a plain-words summary and drills (Report Card is now off for everyone — owner, Oct 18). Test videos and reports deleted (backup kept).
 - **Human walkthroughs at phone size** (screenshots in docs/owner/walkthroughs/): player (college baseball), softball setup all 12 steps, pro/softball-pro/two-way/ramp-up players, teen with parent signature, under-13 player + parent, scout, coach, organization admin — all PASS. Every one of the 177 screens has a visible Back or Close (checked as owner and as player).
 - **Owner-found fixes 1–9:** all done except the sponsorship/seats part of #8 (needs the owner's org checkout). Details at the top of roadmap.md.
 
@@ -62,7 +62,8 @@ Plain-English list of what must be true before publishing. Current answer: **Rea
 ## Player
 - **Dashboard** — the home screen. Steps: sign in. Check: Identity card, Before You Start, then Hammers Today; at the very bottom, a quiet "For your coach or facility" pair.
 - **Hammers Today** — today's training plan. Steps: open Dashboard → Hammers Today. Check: every exercise has sets/reps or time, with labels; it changes when the phase changes.
-- **Video analysis** — upload a clip and get a report card. Steps: pick a module → Upload → wait. Check: grades in 5s (one decimal below 20), a band (Sub Par / Acceptable / Elite), and a date.
+- **Video analysis** — upload a clip and get the analysis. Steps: pick a module → Upload → wait. Check: findings are labeled Estimated / Not measured, and no video-based number grade shows anywhere — it reads "Grade coming with camera measurement". The Report Card is off for everyone until camera measurement exists.
+- **Test results** — entered tests (sprint, jumps, verified maxes, radar or sensor speeds) still show their number, 20–80 grade and band, with source and date.
 - **History** — every past report, test and grade. Steps: side menu → History. Check: each grade reads "Grade: 45 · Acceptable".
 - **Vault** — check-ins, discipline, readiness, tests. Steps: side menu → Vault. Check: the Check-in, Discipline and Readiness tabs open.
 - **Check-ins** — morning, before training and night questions. Check: coaches see answers only when the player turns health sharing on.
