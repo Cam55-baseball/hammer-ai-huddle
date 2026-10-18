@@ -554,6 +554,13 @@
       "when": 1792337815920,
       "tag": "0078_confirm_game_document_review",
       "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1792355817341,
+      "tag": "0079_self_report_card_trend",
+      "breakpoints": true
     }
   ]
 }

@@ -7,6 +7,7 @@ let result: { data: unknown; error: unknown } = { data: [], error: null };
 let staff = false;
 vi.mock("@/hooks/useOwnerAccess", () => ({ useOwnerAccess: () => ({ isOwner: staff }) }));
 vi.mock("@/hooks/useAdminAccess", () => ({ useAdminAccess: () => ({ isAdmin: false }) }));
+vi.mock("@/hooks/useReportCardTrend", () => ({ useReportCardTrend: () => ({ isLoading: false, data: [{ createdAt: "2026-10-01T12:00:00Z", grade: { score: 50 } }] }) }));
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "u1" } }) }));
 vi.mock("@/integrations/supabase/client", () => {
   const chain: any = { select: () => chain, eq: () => chain, order: () => chain, limit: () => Promise.resolve(result) };
@@ -37,7 +38,7 @@ describe("PerformanceAreaRows", () => {
     staff = true;
     result = { data: [{ module: "hitting", created_at: "2026-10-01T12:00:00Z" }], error: null };
     view();
-    expect(await screen.findByText("Grade: on the report card")).toBeTruthy();
+    expect(await screen.findByText(/Grade: 50 \(Acceptable\) · from your hitting video/)).toBeTruthy();
     expect(screen.getByText("See report card")).toBeTruthy();
     staff = false;
   });

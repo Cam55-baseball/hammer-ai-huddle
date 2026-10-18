@@ -8,6 +8,8 @@ import { isEarlyRead } from "@/lib/intelligence/howSure";
 import { canSeeReportCard } from "@/lib/reportCard/visibility";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { useReportCardTrend } from "@/hooks/useReportCardTrend";
+import { areaGrade } from "@/lib/intelligence/areaGrade";
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
@@ -47,12 +49,25 @@ export function PerformanceAreaRows() {
               Analyses: {r.count}{isEarlyRead(r.count) ? " · early read" : ""}
             </p>
             <p className="text-xs text-muted-foreground">Last analysis: {fmtDate(r.lastAt)}</p>
-            {showCard && <p className="text-xs text-muted-foreground">Grade: on the report card</p>}
+            {showCard && <AreaGradeLine area={r.area} />}
           </div>
           <Link to={`/analyze/${r.area.toLowerCase()}`} className="text-xs text-primary underline">{showCard ? "See report card" : "See analysis"}</Link>
         </Card>
       ))}
       <Link to="/vault" className="text-xs text-primary underline">See tests</Link>
     </section>
+  );
+}
+
+function AreaGradeLine({ area }: { area: string }) {
+  const { data, isLoading } = useReportCardTrend(area.toLowerCase(), 8);
+  if (isLoading) return null;
+  const latest = (data ?? []).find((e) => e.grade);
+  if (!latest?.grade) return <p className="text-xs text-muted-foreground">Grade: Not yet measured</p>;
+  const g = areaGrade(latest.grade.score);
+  return (
+    <p className="text-xs text-muted-foreground">
+      Grade: {g.grade} ({g.band}) · from your {area.toLowerCase()} video, {fmtDate(latest.createdAt)}
+    </p>
   );
 }
