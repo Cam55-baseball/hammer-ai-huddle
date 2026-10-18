@@ -1,5 +1,21 @@
 # OWNER FIXES — Oct 17 (received Oct 18)
 
+## YY5 FINAL STATUS (Oct 18, 05:55 UTC)
+1. Analyses always produce a report — PARTLY DONE. Retry + backup model, "Not measured" fallback, run/cost logging, empty-report replay blocked; real player throwing upload + 2 unreadable-clip fallbacks proven on phone. OPEN: 2 real clips per type per sport (12) never supplied.
+2. Duplicate Scout application entry — DONE (owner menu proof).
+3. Subscribers moved + plan breakdown — DONE (test + phone view).
+4. Drill Builders / CMS labels — DONE.
+5. Agreement dashboard — BUILT, OPEN: no real coach votes (demo coach has no active Coach plan; no bypass used).
+6. Owner settings switches/billing/AI costs — DONE (phone proof, Stripe read-only).
+7. New-player assessment gate — BUILT in app, OPEN: server enforcement needs a database change.
+8. Parent sharing / scout visibility — Scout visibility DONE (parent save/reload proven). OPEN: parent-controlled optional sharing needs a new server permission.
+9. Physio redo — DONE (health-profile saving fixed, phone proof).
+10. History + Train next — Fixes DONE (removed games excluded, Train next link always shown). OPEN: no populated demo history; team-postgame report has no creation screen.
+
+Analysis success rate (reports saved / runs): before Oct 17 — 162 ok, 14 rejected, 9 failed of 189 (85.7% ok, 4.8% failed with no report). After fixes — 8 runs, 4 ok, 3 rejected (deliberate unreadable-clip tests, each still saved a "Not measured" report), 0 failed: 100% produced a report. Sample is small.
+
+NEEDS OWNER OK: (a) 12 real test clips (2 per analysis type per sport) for #1; (b) an active Coach plan for the demo coach, or real coach votes, for #5; (c) approval of the named database change for the #7 server gate; (d) approval of a new parent permission for #8 optional sharing; (e) whether to build a team-postgame report screen for #10; (f) separately, the sign-in plan-check (401) fix is not deployed. Nothing published; no cron, iOS, migration or Stripe changes.
+
 YY4 continuation: check remaining nonempty-analysis paths first, then populated History proof; preserve consent/access gates and existing data. No publish, cron, iOS, migration or Stripe changes.
 
 YY4 verified: empty legacy analysis objects cannot replay success; readable coaching stays eligible without scores (three tests). Only analyze-video redeployed after clean Deno validation. Real player upload: ok audit 05:39:42 UTC; identical request replayed readable report with saved cache_hit audit 05:40:06 UTC. Exact clip backed up/deleted, count zero; audits retained.
