@@ -48,7 +48,7 @@ function HistorySection({ title, icon, count, open, onOpenChange, children }: Se
           <div className="flex items-center gap-2 font-semibold">
             {icon}
             <span>{title}</span>
-            {count != null && <Badge variant="secondary">{count}</Badge>}
+            {count != null && <Badge variant="secondary">{count} saved</Badge>}
           </div>
           <ChevronDown className={cn('h-4 w-4 transition-transform', open && 'rotate-180')} />
         </CollapsibleTrigger>
@@ -232,10 +232,9 @@ export default function History() {
                   <li key={g.id} className="flex items-center justify-between gap-3 py-3">
                     <div className="min-w-0">
                       <p className="truncate font-medium">
-                        {g.opponent_team ? `vs ${g.opponent_team}` : 'Game'}
-                      </p>
-                      <p className="text-xs capitalize text-muted-foreground">
-                        {g.game_date} · {(g.game_type ?? '').replace(/_/g, ' ')} · {g.status}
+                        {g.opponent_team ? `Opponent: ${g.opponent_team}` : 'Opponent: Not entered'}
+...
+                        {[`Date: ${g.game_date ?? 'Not entered'}`, g.game_type ? `Type: ${g.game_type.replace(/_/g, ' ')}` : null, `Status: ${g.status ?? 'Not entered'}`].filter(Boolean).join(' · ')}
                         {g.my_score != null && g.opp_score != null ? ` · ${g.my_score}–${g.opp_score}` : ''}
                       </p>
                     </div>
