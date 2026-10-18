@@ -1,8 +1,10 @@
-# AD2 — Oct 18 — Back-button phone fix in progress
-Ready to publish: **no** — Back overlap proof in progress; populated team report, B–F and timing-sensitive/physical-device certification remain open.
+# AD2 — Oct 18 19:43 UTC — Back-button phone fix PASS
+Ready to publish: **no** — Back overlap fixed and phone-proven; populated team report, B–F and timing-sensitive/physical-device certification remain open.
 - [x] Recorded the queued continuation; retained TEST Coach plan stays active throughout all coach proofs.
 - [x] Coach/Organization plan-required screen now has its own Back control above the heading, rather than relying on the floating fallback. Access and purchase rules unchanged.
-- [ ] Verify both plan-required headings, the actual staff purchase page and sibling floating controls on a phone; record screenshots and Back navigation outcome.
+- [x] Real signed-in TEST college/coach proof at 390×844: Coach-required and Organization-required headings, actual staff purchase page, and active Coach team-report access. Back clears every heading, no duplicate fallback/sideways scrolling/page exceptions; Back navigates to dashboard. Coach plan remained active.
+- [x] Shared fallback changed from fixed overlay to document-flow row, preventing the same heading-overlap category on sibling screens. Inspected eight addresses at phone and desktop sizes (16 visits), with no page exceptions/overflow; observed fallback during Organization loading in normal flow. These visits are navigation checks, not feature or populated-report certification.
+- [x] Existing plan-gate tests: 1 file / 5 PASS. Latest preview build OK. Evidence: `docs/owner/walkthroughs/intelligence/ad2/`. No test games, reports, votes, consents or connections created; no subscription change. No publish, backend redeploy/migration, cron or iOS changes. Frontend fix is preview-only.
 - [ ] Next: populated team report proof → B → C → D → E → F.
 
 # AD1 — Oct 18 19:37 UTC — HEVC phone-context analysis proof
@@ -21,7 +23,7 @@ Ready to publish: **no** — HEVC conversion/timing proof, Back overlap fixes, p
 - [x] Phone access proof: affected TEST coach, 390×844, actual team-report page opens without the purchase gate; honest empty state, no page errors/sideways scrolling. This proves access only, NOT a populated team report. `docs/owner/walkthroughs/intelligence/coach-retained/`.
 - [ ] Final cancellation of retained TEST subscription `sub_1URzmWGc5QIzbAH6jYDB20g3`, only after team report, both coach logging modes, Development/Discipline and Coach Console proofs. First period ends **2026-11-18 19:30 UTC**; one-time discount covers initial invoice only, so cancellation must precede renewal. No automatic cancellation or schedule change applied.
 - [x] Generate libx265 iPhone-like HEVC MOV and prove conversion/completed analysis/mobile-user-agent saved readback (AD1). Timing gap quantified; measurement parity remains open because no dense-pose measurements completed.
-- [ ] Fix coach plan floating Back overlap and inspect sibling floating Back controls on phones.
+- [x] Fix coach plan floating Back overlap and inspect sibling floating Back controls on phones (AD2).
 - [ ] Then team report phone proof → B five-player/parent/both-coach proofs → C Game IQ → D Owner Console → E private population learning → F audit/suite/guide.
 No publishing, migrations, redeployments, cron or iOS changes this run. No game/analysis/consent/connection test inputs created; the authorized TEST billing objects remain intentionally active/retained. Next concrete sub-step: HEVC phone-context conversion/full analysis/timing proof, then Back overlap checks, then populated team report in owner order.
 
