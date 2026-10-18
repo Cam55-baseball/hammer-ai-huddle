@@ -1,0 +1,13 @@
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+democollege /dashboard -> /dashboard hits [] placeholder False errs 0
+democollege /progress -> /progress hits [] placeholder False errs 0
+democollege /vault -> /vault hits [] placeholder False errs 0
+democollege /players-club -> /players-club hits [] placeholder False errs 0
+democollege /history -> /history hits [] placeholder False errs 0
+democollege /games/reports -> /games/reports hits [] placeholder False errs 0
+democoach /coach-dashboard -> /coach-dashboard hits [] placeholder False errs 0
+democoach /coach/athlete/db9cc8ef-5b00-48f1-b113-24b7790e4660 -> /coach/athlete/db9cc8ef-5b00-48f1-b113-24b7790e4660 hits [] placeholder False errs 0
+democoach /coach/team-report -> /coach/team-report hits [] placeholder False errs 0
+demoscout /scout-dashboard -> /scout-dashboard hits [] placeholder False errs 0
+demoscout /scout-athlete/db9cc8ef-5b00-48f1-b113-24b7790e4660 -> /scout-athlete/db9cc8ef-5b00-48f1-b113-24b7790e4660 hits [] placeholder False errs 0
+demoscout /scout-compare -> /scout-compare hits [] placeholder False errs 0
