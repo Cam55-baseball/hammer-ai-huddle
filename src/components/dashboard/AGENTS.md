@@ -1,0 +1,1 @@
+- Growth's forecast preview is an uncertified Hammers Card, not a day-tone projection or forecast-page shortcut. Why: readiness and schedule signals do not establish future growth or justify changing training.

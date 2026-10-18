@@ -1,3 +1,12 @@
+# AD6 — Oct 18 20:08 UTC — B Growth forecast honesty PASS (preview)
+Ready to publish: **no** — remaining B–F and timing-sensitive/physical-device certification remain open.
+- [x] Recorded AD6: remove unsupported future-progress claims from Growth as one concrete B sub-step; retain the TEST Coach plan.
+- [x] Replaced Growth's day-tone future guesses (including 48h recovery/output promises and steady-week fallback) with an uncertified progress-check Hammers Card. Removed its unsupported /forecast shortcut; existing runtime projections and direct forecast page untouched, not certified here.
+- [x] Two fresh affected empty TEST college-player visits at 390×844: Future progress/Need more data, all five Hammers Card fields, no forecast shortcut, no page exceptions or sideways scrolling. Phone-size Safari-agent Chromium emulation only, not physical Safari. Evidence: `docs/owner/walkthroughs/intelligence/ad6/`.
+- [x] Confidence/dashboard regressions 3 files / 9 tests PASS. Test compatibility error traced to Array.at under the configured target and changed to indexed access; latest build check recorded in proof status.
+- [x] No TEST data inserted, no cleanup rows or persisted sessions; Coach subscription untouched. Preview-only presentation change; no publish, migration, redeploy, cron or iOS changes.
+- [ ] Zero-denominator comparisons, measured grades, Game IQ threshold, steal attempts and cohort/role proofs remain for subsequent B runs; then C → D → E → F.
+
 # AD5 — Oct 18 20:05 UTC — B empty saved-advice access + failure notice PASS
 Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
 - [x] Recorded AD5: resolve the saved-advice read failure as one concrete B sub-step; keep TEST Coach plan active.
