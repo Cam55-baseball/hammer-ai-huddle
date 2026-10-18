@@ -13,6 +13,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Minus, Plus, SlidersHorizontal } from "lucide-react";
+import { FieldDirectionPicker } from "./FieldDirectionPicker";
+import { quickAtBatPayload } from "@/lib/games/pitchEntry";
 
 const QUICK_RESULTS: ReadonlyArray<{ code: string; label: string; tone: string }> = [
   { code: "1B", label: "1B · Single", tone: "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300" },
@@ -43,6 +45,8 @@ export function QuickAtBatBar({
 }) {
   const [inning, setInning] = useState(defaultInning);
   const [touched, setTouched] = useState(false);
+  const [direction, setDirection] = useState<string | null>(null);
+  const [showDirection, setShowDirection] = useState(false);
 
   // Follow the game forward until the user takes over the control.
   useEffect(() => {
@@ -103,6 +107,10 @@ export function QuickAtBatBar({
       </div>
 
 
+      <Button type="button" variant="outline" size="sm" onClick={() => setShowDirection((open) => !open)} aria-expanded={showDirection}>
+        Where the ball went (optional)
+      </Button>
+      {showDirection && <FieldDirectionPicker value={direction} onChange={setDirection} size={200} />}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
         {QUICK_RESULTS.map((r) => (
           <Button
@@ -111,7 +119,10 @@ export function QuickAtBatBar({
             size="sm"
             variant="ghost"
             disabled={submitting}
-            onClick={() => onQuickSave({ inning, result: r.code })}
+            onClick={() => {
+              onQuickSave(quickAtBatPayload(inning, r.code, direction));
+              setDirection(null);
+            }}
             className={`h-auto min-h-[3rem] whitespace-normal py-1.5 text-[11px] font-semibold leading-tight ${r.tone}`}
           >
             {r.label}

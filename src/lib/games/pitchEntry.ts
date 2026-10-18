@@ -1,4 +1,9 @@
 /** Optional game facts stay missing until the logger explicitly enters them. */
+const BALL_IN_PLAY_RESULTS = new Set(["1B", "2B", "3B", "HR", "GO", "FO", "LO", "E"]);
+export function quickAtBatPayload(inning: number, result: string, direction: string | null) {
+  return { inning, result, exit_direction: BALL_IN_PLAY_RESULTS.has(result) ? direction : null };
+}
+
 export function pitchEntryPayload(
   fields: Record<string, unknown>,
   perspective: "pitcher" | "hitter",
