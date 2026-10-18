@@ -26,7 +26,7 @@ import { NumberField } from "@/components/games/NumberField";
 import { pitchTypes, armSlots } from "@/lib/games/sportRules";
 import { pitchEntryPayload } from "@/lib/games/pitchEntry";
 import { entrySourceLabel } from "@/lib/intelligence/entrySource";
-import { pitchTypeLabel, pitchResultPlain } from "@/lib/games/glossary";
+import { pitchResultPlain } from "@/lib/games/glossary";
 
 const CONTACTS = ["weak","medium","hard","barrel","mishit"];
 const SPRAY = ["pull_air","pull_ground","center_air","center_ground","oppo_air","oppo_ground"];
