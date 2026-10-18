@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { buildAreaRows, type AreaVideo } from "@/lib/intelligence/areaRows";
-import { earlyRead } from "@/lib/intelligence/howSure";
+import { isEarlyRead } from "@/lib/intelligence/howSure";
 
 export function PerformanceAreaRows() {
   const { user } = useAuth();
@@ -31,7 +31,7 @@ export function PerformanceAreaRows() {
             <div>
               <p className="font-semibold">{r.area}</p>
               <p className="text-xs text-muted-foreground">
-                {r.count} {r.count === 1 ? "analysis" : "analyses"}{earlyRead(r.count) ? " · early read" : ""}
+                {r.count} {r.count === 1 ? "analysis" : "analyses"}{isEarlyRead(r.count) ? " · early read" : ""}
               </p>
             </div>
             <div className="text-right">
