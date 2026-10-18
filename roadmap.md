@@ -1,3 +1,5 @@
+# AE7 — Oct 18 — Stream 2 merge still running; Stream 3 merge, proofs, step 8, audit and guide wait on it. Ready to publish: no.
+
 # AE6 — Oct 18 — Stream 2 merge still in progress (draft updating to main before acceptance). Stream 3 merge held until Stream 2 lands to avoid overlapping changes. Ready to publish: no.
 
 # AE5 — Oct 18 — Stream 2 (Game IQ reports, heat maps, matchup planner) draft accepted into the main app (queued after this run). Next: accept Stream 3 Console, then phone-prove Game IQ with the TEST hitter data. Ready to publish: no.
