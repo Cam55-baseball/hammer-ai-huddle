@@ -105,6 +105,7 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [profileDob, setProfileDob] = useState<Date | undefined>(undefined);
   const [profileSex, setProfileSex] = useState<string | null>(null);
 
@@ -188,6 +189,7 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
 
   const handleSaveAndClose = async () => {
     setSaving(true);
+    setSaveError(null);
     try {
       const isFemaleAdult = biologicalSex === 'female' && enableAdult && isAdultEligible;
 
@@ -212,20 +214,34 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
         profileData.setup_completed = true;
       }
 
-      await saveProfile(profileData);
+      const saved = await saveProfile(profileData);
+      if (!saved.success) {
+        setSaveError("Couldn't save your health profile. Your answers are still here. Try again.");
+        return;
+      }
       if (enableAdult && isAdultEligible) {
-        await enableAdultFeatures();
+        const enabled = await enableAdultFeatures();
+        if (!enabled.success) {
+          setSaveError("Your health profile was saved, but the optional tracking setting wasn't. Try again.");
+          return;
+        }
       }
 
       // Sync biological_sex to profiles.sex if not already set
       if (!isEditMode && biologicalSex && user && !profileSex) {
-        await supabase
+        const { error } = await supabase
           .from('profiles')
           .update({ sex: biologicalSex })
           .eq('id', user.id);
+        if (error) {
+          setSaveError("Your health profile was saved, but your main profile couldn't be updated. Try again.");
+          return;
+        }
       }
 
       onOpenChange(false);
+    } catch {
+      setSaveError("Couldn't save your health profile. Your answers are still here. Try again.");
     } finally {
       setSaving(false);
     }
@@ -491,6 +507,7 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
         )}
 
         {/* Navigation */}
+        {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
         <div className="flex gap-2 mt-4">
           {step > 1 && (
             <Button variant="outline" onClick={() => setStep(step - 1)} className="flex-1">
