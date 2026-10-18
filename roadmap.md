@@ -1,10 +1,16 @@
+# AG4 — Oct 18 23:55 UTC — Sub-step 4b DONE: TEST two-way player proof
+- [x] TEST two-way account (demo2way) logged 3 marked TEST games ("TEST Bears 1–3", Sep 1–3) through Games > Pitching at 390×844: 3 pitches thrown + 2 pitches seen per game. Saved: 9 thrown (3 ball / 3 called strike / 3 swing-and-miss), 6 seen (3 ball / 3 swing-and-miss).
+- [x] Game IQ kept both sides separate and honest: Pitching "Pitches logged 9"; hitter heat map "6 pitches seen"; Hitting "Need more data: nothing logged here yet" (no at-bats entered — nothing invented); missing counts say "Count not entered". 0 page errors, no sideways scroll. Evidence: docs/owner/walkthroughs/intelligence/ag4/
+- [x] TEST games/pitches kept for later coach-mode proofs (removed at final cleanup).
+- [ ] Still open in sub-step 4: softball, new player, parent-run logging, both coach modes. Ready to publish: no (remaining proofs).
+
 # AG3 — Oct 18 23:45 UTC — Sub-step 4a DONE: TEST pitcher proof (5 games)
 
 - [x] TEST pitcher (Demo — Pitcher Back From Break) accepted its updated terms/release as a TEST account, then entered 5 marked TEST games ("TEST Owls 1–5", Sep 1–5) × 3 pitches through the actual Games > Pitching screen at 390×844. 0 page errors, no sideways scroll. Evidence: docs/owner/walkthroughs/intelligence/ag3/
 - [x] Game IQ pitching report matches the entered rows: 15 pitches, strike rate 67% (10 of 15), swing-and-miss 100% (5 of 5) "early read", first-pitch strikes "Not entered" (no counts entered); pitcher heat map 5/5/5 in zones 1/5/9 = exactly the taps.
 - [x] Fixed: game reports "Pitcher usage by count" showed a bare "?-?" — now "Count not entered" / "Type not entered".
 - [x] Cleanup: 4 half-finished trial games + 5 pitches from failed attempts deleted by exact id. Kept for later proofs (delete at final cleanup): 5 TEST games, 15 TEST pitches.
-- [ ] Still open in sub-step 4: two-way, softball, new player, parent-run logging, both coach modes.
+- [x] two-way (AG4). Still open in sub-step 4: softball, new player, parent-run logging, both coach modes.
 - [ ] Carry-over: TEST coaching principle (switched Off) awaits owner OK to lift the append-only guard for deletion.
 - Ready to publish: **no**.
 
