@@ -1,3 +1,10 @@
+# AE2 — Oct 18 20:42 UTC — Parallel streams started
+Ready to publish: **no** — streams running; proofs, step 8 and final audit open.
+- [x] Stream 2 (Game IQ reports, tap-in heat maps, matchup planner) running in its own draft copy.
+- [x] Stream 3 (Owner's Coaching Console) running in its own draft copy.
+- [ ] Stream 1 (five TEST players, parent-run and both coach logging) stays in the main project — it needs the real TEST accounts, which drafts don't have.
+- [ ] Drafts are accepted only after their proofs pass; then five-player proofs on the combined app.
+
 # AE1 — Oct 18 20:45 UTC — Measured area grades for players (preview + one backend read function)
 Ready to publish: **no** — see AD12 summary; coach/org grade views, populated phone proof, streams 1–3, step 8 and final audit open.
 - [x] Each area row now shows "Grade: NN (band) · from your <area> video, <date>" from the latest measured report-card score, 20–80 by 5s (Sub Par <40, Acceptable 40–60, Elite 65+); no measured score → "Grade: Not yet measured".
