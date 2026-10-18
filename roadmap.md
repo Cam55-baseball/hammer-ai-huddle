@@ -1,3 +1,5 @@
+# AF1 — Oct 18 21:57 UTC — Lineage + positive proof already done (AE10). Game IQ merge running again; Console, five-player proofs, step 8, audit, guide wait on it. Ready to publish: no.
+
 # AE10 — Oct 18 21:52 UTC — Snapshot lineage + positive proof
 - Lineage written: docs/owner/data-lineage.md. Transfer comes from hand-timed video playback → hidden ("Grade coming with camera measurement"). MPI (sessions + coach/scout grades), Movement (entered speed sessions + effort) and Decision Speed (vision drills) stay, now with a source line and updated date. Found, not fixed (needs approved redeploy): Movement assumes 70 / effort 5 when data is missing; starter MPI is a flat 50.
 - Positive proof PASS (390×844, iPhone Safari agent): TEST college player entered a 10-yd dash 1.65 s in the Vault → "1.65 s · Grade 40 (Acceptable) · Source: entered by you · 10/18/2026". Real hitting analysis on an owner original MOV → findings shown, "Grade: Grade coming with camera measurement", no Report Card, no /100. Proof: docs/owner/walkthroughs/intelligence/ae10/.
