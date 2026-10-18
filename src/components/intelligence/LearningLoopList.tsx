@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { OUTCOME_LABEL, type Outcome } from "@/lib/intelligence/learningLoop";
+import { judgeOutcome, OUTCOME_LABEL, type Outcome } from "@/lib/intelligence/learningLoop";
 
 /** "Your Do-this list": did you do it, and what happened when we re-checked. */
 export function LearningLoopList() {
@@ -15,10 +15,24 @@ export function LearningLoopList() {
     enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase.from("intelligence_recommendations")
-        .select("id, area, do_this, followed, outcome, created_at")
+        .select("id, area, do_this, followed, outcome, created_at, baseline_value")
         .eq("user_id", user!.id).order("created_at", { ascending: false }).limit(10);
       if (error) throw error;
-      return data ?? [];
+      const rows = data ?? [];
+      // Re-check: the first scored analysis in the same area after the advice was given.
+      for (const r of rows) {
+        if (!r.followed || r.outcome || r.baseline_value == null) continue;
+        const { data: v } = await supabase.from("videos").select("efficiency_score, created_at")
+          .eq("user_id", user!.id).eq("module", r.area.toLowerCase()).not("efficiency_score", "is", null)
+          .gt("created_at", r.created_at).order("created_at").limit(1);
+        const recheck = v?.[0]?.efficiency_score ?? null;
+        const outcome = judgeOutcome(Number(r.baseline_value), recheck);
+        if (!outcome) continue;
+        const { error: e } = await supabase.from("intelligence_recommendations")
+          .update({ recheck_value: recheck, outcome, checked_at: new Date().toISOString() }).eq("id", r.id);
+        if (!e) r.outcome = outcome;
+      }
+      return rows;
     },
   });
   if (!data.length) return null;
