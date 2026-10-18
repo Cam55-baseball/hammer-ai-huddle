@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -86,7 +87,7 @@ export function PlayerSnapshotCard() {
           </div>
           {snapshot.transfer_score != null && (
             <div className="text-center">
-              <div className="text-sm font-medium">{snapshot.transfer_score}</div>
+              <div className="text-sm font-medium">{videoGradesShown() ? snapshot.transfer_score : <span className="text-xs font-normal text-muted-foreground">{VIDEO_GRADE_PLACEHOLDER}</span>}</div>
               <div className="text-xs text-muted-foreground">Transfer</div>
             </div>
           )}
@@ -103,6 +104,10 @@ export function PlayerSnapshotCard() {
             </div>
           )}
         </div>
+
+        <p className="text-[11px] text-muted-foreground">
+          Source: MPI — your logged sessions and coach/scout grades · Movement — your entered speed sessions and effort · Decision Speed — your vision drills. Updated {new Date(snapshot.computed_at).toLocaleDateString()}.
+        </p>
 
         {snapshot.primary_limiter && (
           <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3">

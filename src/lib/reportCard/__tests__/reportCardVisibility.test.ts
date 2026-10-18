@@ -17,7 +17,8 @@ describe("report_card switch (owner turned OFF Oct 18)", () => {
   });
   it("analysis page renders the toggle and card only behind the gate", () => {
     const src = readFileSync("src/pages/AnalyzeVideo.tsx", "utf8");
-    expect(src).toMatch(/showReportCard\s*&&\s*\(\s*<AnalysisToggle/);
+    expect(src).toMatch(/showReportCard\s*\?\s*\(\s*<AnalysisToggle/);
+    expect(src).toContain('Grade: {VIDEO_GRADE_PLACEHOLDER}');
     expect(src).toMatch(/showReportCard\s*&&\s*analysisView === "report_card"/);
     expect(src).toMatch(/<ReportCardAccessGate>\s*<HammerReportCard/);
   });

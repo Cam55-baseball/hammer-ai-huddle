@@ -1,4 +1,5 @@
 import { formatGrade } from "@/lib/benchmarks/gradeScale";
+import { bandFor } from "@/lib/intelligence/areaGrade";
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -700,6 +701,7 @@ export function VaultPerformanceTestCard({
                               {new Date(test.test_date).toLocaleDateString()}
                             </div>
                           </div>
+                          <p className="text-[10px] text-muted-foreground mb-1">Source: entered by you · {new Date(test.test_date).toLocaleDateString()}</p>
                           <div className="grid grid-cols-2 gap-2">
                             {Object.entries(test.results)
                               .filter(([key]) => !key.startsWith('_'))
@@ -712,9 +714,9 @@ export function VaultPerformanceTestCard({
                                       {def?.label || t(`vault.performance.metrics.${key}`)}
                                     </span>
                                     <div className="flex items-center gap-1">
-                                      <span className="font-medium">{value}</span>
+                                      <span className="font-medium">{value}{def?.unit ? ` ${def.unit}` : ""}</span>
                                       {grade && (
-                                        <span className={`text-[10px] font-bold ${gradeToColor(grade)}`}>{grade}</span>
+                                        <span className={`text-[10px] font-bold ${gradeToColor(grade)}`}>Grade {grade} ({bandFor(grade)})</span>
                                       )}
                                       {getTrendIcon(key)}
                                     </div>

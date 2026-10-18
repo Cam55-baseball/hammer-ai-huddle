@@ -1,3 +1,11 @@
+# AE10 — Oct 18 21:52 UTC — Snapshot lineage + positive proof
+- Lineage written: docs/owner/data-lineage.md. Transfer comes from hand-timed video playback → hidden ("Grade coming with camera measurement"). MPI (sessions + coach/scout grades), Movement (entered speed sessions + effort) and Decision Speed (vision drills) stay, now with a source line and updated date. Found, not fixed (needs approved redeploy): Movement assumes 70 / effort 5 when data is missing; starter MPI is a flat 50.
+- Positive proof PASS (390×844, iPhone Safari agent): TEST college player entered a 10-yd dash 1.65 s in the Vault → "1.65 s · Grade 40 (Acceptable) · Source: entered by you · 10/18/2026". Real hitting analysis on an owner original MOV → findings shown, "Grade: Grade coming with camera measurement", no Report Card, no /100. Proof: docs/owner/walkthroughs/intelligence/ae10/.
+- Vault test rows now use the owner bands (Sub Par / Acceptable / Elite) + unit + source line; analysis screen shows the placeholder.
+- Cleanup: 5 TEST analyses (exact IDs) deleted, 0 remain. TEST sprint entry kept for five-player proofs (Vault locks for 6 weeks) — delete at final cleanup.
+- Full suite 393 files / 3,045 tests PASS; build OK.
+- Game IQ merge failed earlier ("project busy") — retried this run. Ready to publish: **no**.
+
 # AE9 — Oct 18 21:10 UTC — Report Card turned OFF for everyone (owner reversal)
 - Switch `report_card` = off (src/lib/reportCard/visibility.ts) for every role, staff screens included. Data kept; nothing deleted.
 - Video-based numeric grades removed: General "Your areas" rows, video library/session badges, comparisons, coach Development + Reports tabs, Scout Profile reports, report-card trend strip, Hammers Report Card composite/pillars, owner/admin video scores and averages, module average score. Placeholder: "Grade coming with camera measurement". Qualitative findings unchanged.

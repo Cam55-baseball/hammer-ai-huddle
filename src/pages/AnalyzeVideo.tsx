@@ -37,7 +37,7 @@ import { unavailableAnalysis } from "../../supabase/functions/_shared/analysisRe
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
 import { ReportCardAccessGate } from "@/components/report-card/hammer/ReportCardAccessGate";
-import { canSeeReportCard } from "@/lib/reportCard/visibility";
+import { canSeeReportCard, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFramesDeterministic, calculateLandingFrameIndex } from "@/lib/frameExtraction";
 import { probeVideoMetadata } from "@/lib/biomech/probeVideoMetadata";
@@ -1708,8 +1708,10 @@ export default function AnalyzeVideo() {
               <div className="space-y-4">
                 {analysis.saved === false && <p role="alert" className="text-sm text-destructive">{analysis.save_error ?? "This report is shown here but hasn't been saved. Try the clip again."}</p>}
                 {analysis.report_status === "not_measured" && <Button variant="outline" disabled={uploading || analyzing} onClick={currentVideoId ? handleRetryAnalysis : handleUploadAndAnalyze}>{t('videoAnalysis.retryAnalysis')}</Button>}
-                {showReportCard && (
+                {showReportCard ? (
                   <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
+                ) : (
+                  <p className="text-sm text-muted-foreground" data-testid="video-grade-placeholder">Grade: {VIDEO_GRADE_PLACEHOLDER}</p>
                 )}
 
                 {showReportCard && analysisView === "report_card" ? (
