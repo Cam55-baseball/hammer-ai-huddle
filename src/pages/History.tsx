@@ -20,6 +20,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { PracticeSessionDetailDialog } from '@/components/PracticeSessionDetailDialog';
 import { InjuryContinuityCard } from '@/components/injury/InjuryContinuityCard';
 import { HistoryDatePicker } from '@/lib/history/historyDatePicker';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ReportView } from '@/components/games/reports/ReportView';
+import type { ReportRecord } from '@/hooks/useHistoryRecords';
 
 import {
   usePracticeHistory,
@@ -82,6 +85,7 @@ export default function History() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [selectedPractice, setSelectedPractice] = useState<any>(null);
+  const [selectedReport, setSelectedReport] = useState<ReportRecord | null>(null);
 
   const practices = usePracticeHistory(userId, !!touched.practices);
   const games = useGameHistory(userId, !!touched.games);
@@ -267,9 +271,7 @@ export default function History() {
                         {r.share_token && !r.share_revoked ? ' · shared' : ''}
                       </p>
                     </div>
-                    <Button asChild size="sm" variant="outline">
-                      <Link to={r.game_id ? `/games/${r.game_id}/report` : '/games/reports'}>Open</Link>
-                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setSelectedReport(r)}>Open</Button>
                   </li>
                 ))}
               </ul>
@@ -312,6 +314,12 @@ export default function History() {
           open={!!selectedPractice}
           onClose={() => setSelectedPractice(null)}
         />
+        <Dialog open={!!selectedReport} onOpenChange={(open) => { if (!open) setSelectedReport(null); }}>
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+            <DialogHeader><DialogTitle>{selectedReport?.title ?? "Saved report"}</DialogTitle></DialogHeader>
+            {selectedReport?.snapshot ? <ReportView snapshot={selectedReport.snapshot} /> : <p className="text-sm text-muted-foreground">This saved report has no content. Open Game reports to check it.</p>}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
