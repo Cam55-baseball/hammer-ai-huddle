@@ -27,9 +27,12 @@ export function useIndividualReport(gameId?: string) {
     queryKey: ["gp-report-individual", gameId, user?.id],
     enabled: !!gameId && !!user,
     queryFn: async (): Promise<ReportSnapshot> => {
+      if (!user || !gameId) throw new Error("Sign in and choose a game first");
       const { data: game, error } = await gp("gp_games")
         .select("*")
-        .eq("id", gameId!)
+        .eq("id", gameId)
+        .eq("user_id", user.id)
+        .is("deleted_at", null)
         .maybeSingle();
       if (error) throw error;
       if (!game) throw new Error("Game not found");
@@ -70,13 +73,15 @@ export function useScoutingReport(opponent?: string, sport?: string) {
     queryKey: ["gp-report-scouting", opponent, sport, user?.id],
     enabled: !!opponent && !!user,
     queryFn: async (): Promise<ReportSnapshot> => {
+      if (!user || !opponent) throw new Error("Sign in and choose an opponent first");
       const [dossiers, hitters, games] = await Promise.all([
         gp("gp_pitcher_dossiers").select("*").eq("user_id", user!.id).then((r: any) => r.data ?? []),
         gp("gp_opponent_hitters").select("*").eq("user_id", user!.id).then((r: any) => r.data ?? []),
         gp("gp_games")
           .select("id,sport,opponent_team")
-          .eq("user_id", user!.id)
-          .eq("opponent_team", opponent!)
+          .eq("user_id", user.id)
+          .eq("opponent_team", opponent)
+          .is("deleted_at", null)
           .then((r: any) => r.data ?? []),
       ]);
       const gameIds = games.map((g: any) => g.id);
