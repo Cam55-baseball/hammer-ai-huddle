@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -78,7 +79,7 @@ export function PlayerComparisonTool({ playerNames = {} }: PlayerComparisonToolP
             <CompareMetric label="MPI Score" a={snapA.mpi_score} b={snapB.mpi_score} />
             <CompareMetric label="Readiness" a={snapA.readiness_score} b={snapB.readiness_score} />
             <CompareMetric label="Confidence" a={snapA.development_confidence} b={snapB.development_confidence} />
-            <CompareMetric label="Transfer" a={snapA.transfer_score} b={snapB.transfer_score} />
+            {videoGradesShown() ? <CompareMetric label="Transfer" a={snapA.transfer_score} b={snapB.transfer_score} /> : <p className="text-xs text-center text-muted-foreground">Transfer: {VIDEO_GRADE_PLACEHOLDER}</p>}
             <CompareMetric label="Decision" a={snapA.decision_speed_index} b={snapB.decision_speed_index} />
             <CompareMetric label="Movement" a={snapA.movement_efficiency_score} b={snapB.movement_efficiency_score} />
 

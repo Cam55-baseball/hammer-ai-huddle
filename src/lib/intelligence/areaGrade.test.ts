@@ -10,3 +10,13 @@ describe("areaGrade", () => {
     expect(areaGrade(75).band).toBe("Elite");
   });
 });
+
+import { bandFor } from "./areaGrade";
+describe("bandFor (owner bands)", () => {
+  it("Sub Par below 40, Acceptable 40–60, Elite 65+", () => {
+    expect(bandFor(35)).toBe("Sub Par");
+    expect(bandFor(40)).toBe("Acceptable");
+    expect(bandFor(60)).toBe("Acceptable");
+    expect(bandFor(65)).toBe("Elite");
+  });
+});
