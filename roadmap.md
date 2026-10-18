@@ -1,3 +1,43 @@
+# STATUS SUMMARY — AD12, Oct 18 20:35 UTC
+Ready to publish: **no** — the five player-type proofs, parent-run and both coach logging modes, most of Game IQ (step 6), the Owner's Coaching Console (7), population learning (8) and the final full-page audit/full suite are not done; HEVC timing-sensitive measurements and a real iPhone are unproven; the nightly learning check hasn't run yet.
+
+## AD12 sub-step — nightly learning check status (read-only)
+- [x] Job `intelligence-learning-loop-nightly` is active, schedule 04:30 UTC daily, **zero runs recorded yet** (applied after today's 04:30). First scheduled run: Oct 19 04:30 UTC. Outcome NOT proven — check after that time. No cron changes made.
+
+## Oct 17 fixes
+- #1 Analysis reliability — PASS (12/12 owner clips, small sample). `docs/owner/walkthroughs/intelligence/ac2/`, AB rounds.
+- #2 Duplicate Scout entry removed — PASS.
+- #3 Subscribers in owner dashboard — PASS.
+- #4 Drill Builders / Drill CMS labels — PASS.
+- #5 Coach agree/disagree votes — PASS. `docs/owner/walkthroughs/intelligence/a1/`
+- #6 Owner settings — PASS.
+- #7 Completed → Start → saved plan — PASS. `docs/owner/walkthroughs/intelligence/ac3/`
+- #8 Linked-parent optional sharing — PASS. `docs/owner/walkthroughs/intelligence/ac4/`
+- #9 Physio setup/redo — PASS.
+- #10 History + team post-game report — PASS. `docs/owner/walkthroughs/intelligence/ac5/`, `docs/owner/walkthroughs/intelligence/ac7/`, `docs/owner/walkthroughs/intelligence/ac10/`, `docs/owner/walkthroughs/intelligence/ad3/`
+
+## Hammers Intelligence steps
+- 1 Data lineage — PASS (doc `docs/owner/hammers-intelligence-plan.md`).
+- 2 Hammers Card / How sure — built; empty-state honesty PASS for TEST college player (`docs/owner/walkthroughs/intelligence/ad5/`–`docs/owner/walkthroughs/intelligence/ad8/`, `docs/owner/walkthroughs/intelligence/ad11/`). Five-player proof OPEN.
+- 3 Four tabs — built; Game IQ access fix PASS (`docs/owner/walkthroughs/intelligence/ad9/`); Performance areas honesty PASS (`docs/owner/walkthroughs/intelligence/ad11/`). Five-player proof OPEN. Measured 20–80 area grades for players wait on the owner releasing the Report Card.
+- 4 Learning loop — built; nightly job active, first run pending (above).
+- 5 Game logging "Logged by" — PASS for player-entered (`docs/owner/walkthroughs/intelligence/ad3/`, `games_logged_by.png`); parent-run and both coach modes OPEN.
+- 6 Game IQ — player report + team report PASS (`docs/owner/walkthroughs/intelligence/ac10/`, `docs/owner/walkthroughs/intelligence/ad3/`); steal honesty PASS (`docs/owner/walkthroughs/intelligence/ad8/`); hitter/pitcher/defense/baserunning populated reports, real tap-in heat maps, matchup planner OPEN.
+- 7 Owner's Coaching Console — NOT STARTED.
+- 8 Population learning with privacy — NOT STARTED.
+
+## Phone video formats
+- Original owner iPhone MOV (H264): converted on upload and analyzed end to end — PASS (`docs/owner/walkthroughs/intelligence/ac2/`).
+- Generated HEVC .mov (libx265/hvc1): conversion, completed report, saved read-back — PASS (`docs/owner/walkthroughs/intelligence/ad1/`). Timing gap 0.333 ms (HEVC); 5.3 ms on the earlier H264 run. Dense body tracking timed out in the sandbox, so effect on measurements is UNVERIFIED.
+- iPhone-Safari: phone-size screen with Safari user agent — PASS; real iPhone/Safari engine — NOT tested.
+- Back button overlap fix — PASS (`docs/owner/walkthroughs/intelligence/ad2/`).
+
+## Five-player proofs
+- New player: empty-state checks only (`docs/owner/walkthroughs/intelligence/ad4/`–`docs/owner/walkthroughs/intelligence/ad11/`, via TEST college player). Hitter 10+ games, pitcher 5+ reports, two-way, softball: NOT STARTED.
+
+## Billing
+- TEST Coach $0 plan active (retained until coach proofs end; renews Nov 18 — cancel before).
+
 # AD11 — Oct 18 20:30 UTC — B Performance areas: no report-card hint for players PASS (preview)
 Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
 - [x] Fixed AD10 wording that hinted at the unreleased Report Card to players; players see labeled count, last analysis date and "See analysis"; owner/admin keep grade line + report card link.
