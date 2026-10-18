@@ -9,7 +9,6 @@ import { YourProgressionCard } from "@/components/progress/YourProgressionCard";
  */
 import { SeasonCounter } from '@/components/progress/SeasonCounter';
 import { useMemo, useState } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
 import {
   Activity,
   HeartPulse,
@@ -17,12 +16,6 @@ import {
   Target,
   ChevronDown,
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { TopicButtonGrid, type TopicTile } from "@/components/progress/TopicButtonGrid";
 import { TopicPanel } from "@/components/progress/TopicPanel";
 import { GpInGameSummaryCard } from "@/components/progress/GpInGameSummaryCard";
@@ -138,7 +131,6 @@ export default function ProgressLanding() {
   const schedule = useScheduleWindow();
   const { data: rows = [] } = useAthleteCommandRows({ days: 30, limit: 500 });
   const [openId, setOpenId] = useState<ProgressTopicId | null>(null);
-  const [classicOpen, setClassicOpen] = useState(false);
 
   const sport = ctx.get<string>("sport_primary")?.value ?? null;
   const position = ctx.get<string>("position_primary")?.value ?? null;
