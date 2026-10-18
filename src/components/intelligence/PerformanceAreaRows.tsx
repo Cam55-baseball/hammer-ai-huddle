@@ -31,7 +31,7 @@ export function PerformanceAreaRows() {
               Analyses: {r.count}{isEarlyRead(r.count) ? " · early read" : ""}
             </p>
           </div>
-          <Link to="/analyze" className="text-xs text-primary underline">See report card</Link>
+          <Link to={`/analyze/${r.area.toLowerCase()}`} className="text-xs text-primary underline">See report card</Link>
         </Card>
       ))}
       <Link to="/vault" className="text-xs text-primary underline">See tests</Link>
