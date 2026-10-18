@@ -52,6 +52,12 @@ export function MPIBreakdownCard() {
             <CardTitle className="text-xs font-medium text-muted-foreground">MPI Calculation Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-3 space-y-0">
+            {mpi.adjusted_global_score == null ? (
+              <p className="text-xs text-muted-foreground py-1">
+                Not enough data — log performance sessions to build your MPI breakdown.
+              </p>
+            ) : (
+            <>
             <Row label="Raw Composite Score" value={rawComposite.toFixed(1)} />
             <Row label="BQI (25%)" value={(mpi.composite_bqi ?? 0).toFixed(1)} indent />
             <Row label="FQI (15%)" value={(mpi.composite_fqi ?? 0).toFixed(1)} indent />
