@@ -30,9 +30,11 @@ export function PostGameLogPrompt() {
     queryKey: ["gp-pending-log", user?.id],
     enabled: !!user,
     queryFn: async () => {
+      if (!user) return [];
       const { data: games, error } = await gp("gp_games")
         .select("id, game_date, opponent_team, status, sport")
-        .eq("user_id", user!.id)
+        .eq("user_id", user.id)
+        .is("deleted_at", null)
         .gte("game_date", isoDaysAgo(LOOKBACK_DAYS))
         .lte("game_date", isoDaysAgo(0))
         .order("game_date", { ascending: false });
@@ -40,16 +42,19 @@ export function PostGameLogPrompt() {
       const rows = (games ?? []) as any[];
       if (rows.length === 0) return [];
 
-      // A game counts as logged once it has at least one at-bat OR one pitch.
+      // Any of the four event families counts; missing query results are not evidence.
       const ids = rows.map((g) => g.id);
-      const [{ data: abs }, { data: pitches }] = await Promise.all([
+      const results = await Promise.all([
         gp("gp_at_bats").select("game_id").in("game_id", ids),
         gp("gp_pitches").select("game_id").in("game_id", ids),
+        gp("gp_defense_plays").select("game_id").in("game_id", ids),
+        gp("gp_baserun_events").select("game_id").in("game_id", ids),
       ]);
-      const logged = new Set<string>([
-        ...((abs ?? []) as any[]).map((r) => r.game_id),
-        ...((pitches ?? []) as any[]).map((r) => r.game_id),
-      ]);
+      const failed = results.find((result) => result.error);
+      if (failed) throw failed.error;
+      const logged = new Set<string>(results.flatMap((result) =>
+        ((result.data ?? []) as { game_id: string }[]).map((r) => r.game_id)
+      ));
       return rows.filter((g) => !logged.has(g.id) || g.status !== "final");
     },
     staleTime: 60_000,
@@ -67,8 +72,7 @@ export function PostGameLogPrompt() {
             {games.length === 1 ? "You played — log it" : `${games.length} games still open`}
           </p>
           <p className="text-xs text-muted-foreground">
-            Reps you don't log can't show up in your splits or move your training. Even
-            just the results takes under a minute.
+            Save your game results, then mark the game final.
           </p>
         </div>
       </div>

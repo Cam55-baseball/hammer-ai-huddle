@@ -1,4 +1,5 @@
 - Summary queries use a separate suffix under the logger cache prefix. Why: partial summaries must never replace complete saved event rows on reload; prefix invalidation refreshes both.
 - Document review reloads the saved document buffer and confirms selected rows through a caller-RLS atomic RPC; document locking and applied status make retries idempotent. Why: drafts never count before review or double-count after retries.
 - Live game-report sources exclude deleted games and scope to the signed-in athlete; frozen snapshots stay unchanged. Why: removed games must not feed new reports.
+- Post-game reminders count all four event families and stop on failed reads. Why: defense/running-only games are logged too, and a failed request is not evidence of missing entries.
 - Pitch intent/contact annotations use dedicated nullable pitch-ledger fields, never movement measurements or parsed historical notes; hard contact is an observation, not a measured threshold. Why: structured facts must not invent measurements.
