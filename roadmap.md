@@ -1,4 +1,11 @@
-# ACTIVE RUN — AC6, Oct 18 18:50 UTC
+# ACTIVE RUN — AC7, Oct 18 18:58 UTC
+Ready to publish: no — A4 team post-game report, five-player Intelligence proofs, Game IQ, Coaching Console, population learning, final audit, and original HEVC/iPhone Safari/timing certification remain open.
+- [x] A4 History labels PASS on phone (390×844, TEST player): line 1 "Opponent: …", line 2 "Date: … · Status: …", no empty Type, "2 saved" badge; fresh-context reload read-back; no page errors or sideways scrolling.
+- [x] Exact cleanup PASS: 2 TEST games backed up and deleted; History sources back to zero baseline.
+Proof: `docs/owner/walkthroughs/intelligence/ac7/{proof-status.md,history-populated.png,history-fresh-reload.png}`.
+Next concrete sub-step: A4 team post-game report screen.
+
+# PRIOR RUN — AC6, Oct 18 18:50 UTC
 Ready to publish: no — History label phone re-proof, A4 team post-game report, five-player Intelligence proofs, Game IQ, Coaching Console, population learning, final audit, and original HEVC/iPhone Safari/timing certification remain open.
 - [ ] History labels FAIL on phone: Date/Status were hidden because the AC5 edit merged them into the cut-off opponent line. Fixed now: Date/Type/Status on their own second line, score labeled "Score:". Phone re-proof needed next.
 - [x] PASS: "Opponent:" and "2 saved" visible; fresh-context reload read-back; no page errors or sideways scrolling.
