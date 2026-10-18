@@ -664,6 +664,8 @@ export interface TeamAthleteInput {
   pitches: PitchRow[];
   defense: DefenseRow[];
   baserun: BaserunRow[];
+  /** Plain source labels ("Player-entered", "Coach-entered", …) for every entry used. */
+  sources?: string[];
 }
 
 export function buildTeamPostgame(
@@ -704,11 +706,12 @@ export function buildTeamPostgame(
     .map((a) => {
       const ps = (a.pitches ?? []).filter((p) => p.perspective === "pitcher");
       if (!ps.length) return null;
-      const strikes = ps.filter((p) => String(p.result ?? "") !== "ball").length;
+      const withResult = ps.filter((p) => p.result != null && p.result !== "");
+      const strikes = withResult.filter((p) => String(p.result) !== "ball").length;
       return [
         a.athleteName,
         ps.length,
-        pct(strikes, ps.length),
+        withResult.length ? `${pct(strikes, withResult.length)}${withResult.length < MIN_TREND_SAMPLE ? " (early read)" : ""}` : "Not entered",
         one(avg(ps.map((p) => num(p.pitch_velo)).filter((n): n is number => n != null)), ""),
         new Set(ps.map((p) => p.inning)).size,
       ] as (string | number)[];
@@ -734,6 +737,10 @@ export function buildTeamPostgame(
       table: { columns: ["Pitcher", "Pitches", "Strike%", "Avg velo", "Innings"], rows: staffRows },
     });
   }
+  const sourceBullets = athletes
+    .filter((a) => a.sources && a.sources.length)
+    .map((a) => `${a.athleteName} — Logged by: ${a.sources!.join(", ")}`);
+  if (sourceBullets.length) sections.push({ id: "sources", title: "Who logged it", bullets: sourceBullets });
   if (standouts.length) sections.push({ id: "standouts", title: "Standouts", bullets: standouts });
   if (redFlags.length) sections.push({ id: "flags", title: "Red flags", bullets: redFlags });
 
