@@ -1,5 +1,6 @@
 # ACTIVE REPORT — Oct 18 owner answers
 Ready to publish: NO — remaining implementation and five-player-type proof are unfinished.
+AB1 (14:42 UTC): Completed→Start unlock survived phone reload; temporary assessment removed. Demo Coach checkout still rejects newly added promotion codes (`payment_pages_promotion_code_invalid`) despite valid API reads; no subscription/charge/vote created. Two coupons and three codes added, none edited/deleted; restriction omitted in reads, so none certified Coach-only. Three player types opened Game IQ without overflow; pitcher/softball stop at updated legal acceptance. Hitter/pitcher lack required populated proof cohorts. Details: `docs/owner/walkthroughs/intelligence/ab1/proof-status.md`. Focused tests 12/12; build OK; no live app changes.
 All former approval blockers are answered; no further scoped authorization is required. The only owner action currently needed is applying the written nightly schedule when ready.
 
 ## Oct 17 fixes — current status and proof
@@ -28,11 +29,12 @@ Full suite PASS: **376 files / 2,969 tests**. Build OK. Full page audit and five
 Live this round: assessment/parent-sharing/video-tag schema changes; `check-subscription`, `parent-consent`, `intel-recheck`, `intel-recheck-job`. No publish, cron changes or iOS edits. Callback bundling issue corrected and successfully deployed.
 
 ## Remaining lean task list
-- [ ] AB1: continue demo-coach paid-access/vote proof first, then remaining answered blockers and Intelligence steps 5–8; no publish/cron/iOS changes.
+- [ ] Demo-coach paid-access/vote proof: AB1 checkout rejected all new codes; Stripe rejection root cause unresolved, no bypass. No test subscription to cancel.
 - [x] Re-run existing authorized real clips: 12/12 reports, per-type rates above; private test-report cleanup confirmed.
 - [ ] Restore democoach through a new Stripe 100%-off Coach subscription, prove real agreement votes, cancel only this test subscription.
 - [x] Apply approved initial-assessment server gate; new/existing behavior verified at the server.
 - [ ] Phone-proof Completed → Start UI and real plan read-back.
+- [x] AB1 Completed saves with no optional answers; Start disabled beforehand and enabled after reload on the test player's phone. Original assessment absence restored.
 - [x] Add consent-based parent optional sharing; parent-run phone save/reload + player refusal verified.
 - [ ] Linked-parent positive permission/save/reload proof.
 - [x] Deploy approved sign-in plan-check fix; authenticated player check returns 200, subscribed=true.
@@ -44,6 +46,7 @@ Live this round: assessment/parent-sharing/video-tag schema changes; `check-subs
 - [ ] Finish Game IQ including team post-game reports, Coaching Console, private population learning in order.
 - [x] Full suite and cleanup for this round; current report updated.
 - [ ] Five-player-type phone proof and full page audit.
+- [ ] AB1 five-player cohort proof: three Game IQ access checks passed; pitcher/softball legal gates uncompleted, hitter lacks 10+ games and pitcher lacks 5+ reports. No invented cohort data.
 
 # PRIOR REPORT — Oct 18, 06:40 UTC (end of queued batch ZZ1–ZZ12)
 Ready to publish: NO (player-role proof missing; owner approvals below outstanding).
