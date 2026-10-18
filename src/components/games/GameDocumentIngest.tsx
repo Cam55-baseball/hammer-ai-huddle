@@ -46,7 +46,7 @@ export function GameDocumentIngest({ gameId, sport }: { gameId: string; sport: s
       const docRow = await gp("gp_documents").insert({
         user_id: user.id,
         game_id: gameId,
-        source: "upload",
+        source: file.type.startsWith("image/") ? "photo" : "other",
         file_url: `${GP_DOC_BUCKET}://${path}`,
         file_mime: file.type || null,
         parse_status: "pending",
