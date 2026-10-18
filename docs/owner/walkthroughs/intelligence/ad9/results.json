@@ -1,0 +1,22 @@
+[
+  {
+    "visit": 1,
+    "maps_visible": true,
+    "map_reads": [
+      200
+    ],
+    "page_errors": 0,
+    "overflow": false,
+    "no_training_milestone": true
+  },
+  {
+    "visit": 2,
+    "maps_visible": true,
+    "map_reads": [
+      200
+    ],
+    "page_errors": 0,
+    "overflow": false,
+    "no_training_milestone": true
+  }
+]
