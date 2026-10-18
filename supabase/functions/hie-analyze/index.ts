@@ -1588,21 +1588,33 @@ Deno.serve(async (req) => {
 
     if (weaknessClusters.length === 0) {
       const latestMPI = mpiScores?.[0];
+      // Owner rule (no made-up numbers): only list areas with a real measured
+      // score. If none exist, say so instead of inventing weaknesses.
       const compositeList = [
-        { key: "composite_bqi", label: "Batting Quality", val: latestMPI?.composite_bqi ?? 50 },
-        { key: "composite_fqi", label: "Fielding Quality", val: latestMPI?.composite_fqi ?? 50 },
-        { key: "composite_pei", label: "Pitching Effectiveness", val: latestMPI?.composite_pei ?? 50 },
-        { key: "composite_decision", label: "Decision Making", val: latestMPI?.composite_decision ?? 50 },
-        { key: "composite_competitive", label: "Competitive Execution", val: latestMPI?.composite_competitive ?? 50 },
-      ].sort((a, b) => a.val - b.val);
+        { key: "composite_bqi", label: "Batting Quality", val: latestMPI?.composite_bqi },
+        { key: "composite_fqi", label: "Fielding Quality", val: latestMPI?.composite_fqi },
+        { key: "composite_pei", label: "Pitching Effectiveness", val: latestMPI?.composite_pei },
+        { key: "composite_decision", label: "Decision Making", val: latestMPI?.composite_decision },
+        { key: "composite_competitive", label: "Competitive Execution", val: latestMPI?.composite_competitive },
+      ].filter((c) => c.val != null)
+       .sort((a, b) => (a.val as number) - (b.val as number));
 
-      compositeList.slice(0, 3).forEach((c) => {
+      if (compositeList.length === 0) {
         weaknessClusters.push({
-          area: c.key, issue: `${c.label} needs improvement`, why: `Score at ${Math.round(c.val)}/100`,
-          impact: c.val < 35 ? "high" : c.val < 45 ? "medium" : "low",
-          data_points: { score: Math.round(c.val) },
+          area: "data", issue: "Not enough data yet",
+          why: "Log performance sessions so we can see what to work on",
+          impact: "low", data_points: {},
         });
-      });
+      } else {
+        compositeList.slice(0, 3).forEach((c) => {
+          const v = c.val as number;
+          weaknessClusters.push({
+            area: c.key, issue: `${c.label} needs improvement`, why: `Score at ${Math.round(v)}/100`,
+            impact: v < 35 ? "high" : v < 45 ? "medium" : "low",
+            data_points: { score: Math.round(v) },
+          });
+        });
+      }
     }
 
     // ── READINESS (must be computed before prescription engine needs it) ──
@@ -1792,12 +1804,14 @@ Deno.serve(async (req) => {
     const mpiScore = latestMPI?.adjusted_global_score ?? null;
 
     // ── BEFORE/AFTER TRENDS ──
-    const currentComposites: Record<string, number> = {
-      composite_bqi: latestMPI?.composite_bqi ?? 50,
-      composite_fqi: latestMPI?.composite_fqi ?? 50,
-      composite_pei: latestMPI?.composite_pei ?? 50,
-      composite_decision: latestMPI?.composite_decision ?? 50,
-      composite_competitive: latestMPI?.composite_competitive ?? 50,
+    // Owner rule (no made-up numbers): missing composites stay null and are
+    // skipped by computeBeforeAfterTrends — never assumed to be 50.
+    const currentComposites: Record<string, number | null> = {
+      composite_bqi: latestMPI?.composite_bqi ?? null,
+      composite_fqi: latestMPI?.composite_fqi ?? null,
+      composite_pei: latestMPI?.composite_pei ?? null,
+      composite_decision: latestMPI?.composite_decision ?? null,
+      composite_competitive: latestMPI?.composite_competitive ?? null,
     };
     const beforeAfterTrends = computeBeforeAfterTrends(currentComposites, mpiScores ?? []);
 
