@@ -1,4 +1,5 @@
 import { formatGrade, ratingBand } from "@/lib/benchmarks/gradeScale";
+import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 // Plan v3.1 Phase 5 — coach tabs for video analysis reports, grades and the
 // six-week recap. Everything shown comes from real records; missing data says
 // so plainly and nothing is invented.
@@ -67,6 +68,7 @@ export function reportDateLabel(r: CoachReportRow): string {
 }
 
 export function reportScoreLabel(r: CoachReportRow): string {
+  if (!videoGradesShown()) return `Grade: ${VIDEO_GRADE_PLACEHOLDER}`;
   if (r.efficiency_score == null) return "Score: not recorded";
   return `Efficiency score: ${r.efficiency_score}`;
 }

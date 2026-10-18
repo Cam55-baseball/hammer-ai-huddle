@@ -27,19 +27,21 @@ describe("PerformanceAreaRows", () => {
     view();
     expect(await screen.findByText("We couldn't load your areas. Please try again later.")).toBeTruthy();
   });
-  it("labels the analysis count and last analysis date, now that the report card is released", async () => {
+  it("labels the analysis count and date and shows no video grade while the report card is off", async () => {
     result = { data: [{ module: "hitting", created_at: "2026-10-01T12:00:00Z" }], error: null };
     view();
     expect(await screen.findByText(/Analyses: 1 · early read/)).toBeTruthy();
     expect(screen.getByText(/Last analysis:/)).toBeTruthy();
-    expect(screen.getByText("See report card")).toBeTruthy();
+    expect(screen.getByText("Grade: Grade coming with camera measurement")).toBeTruthy();
+    expect(screen.getByText("See analysis")).toBeTruthy();
+    expect(screen.queryByText(/Grade: 50/)).toBeNull();
   });
-  it("shows the report card grade line to staff too", async () => {
+  it("shows no video grade to staff either", async () => {
     staff = true;
     result = { data: [{ module: "hitting", created_at: "2026-10-01T12:00:00Z" }], error: null };
     view();
-    expect(await screen.findByText(/Grade: 50 \(Acceptable\) · from your hitting video/)).toBeTruthy();
-    expect(screen.getByText("See report card")).toBeTruthy();
+    expect(await screen.findByText("Grade: Grade coming with camera measurement")).toBeTruthy();
+    expect(screen.queryByText(/Grade: 50/)).toBeNull();
     staff = false;
   });
 });

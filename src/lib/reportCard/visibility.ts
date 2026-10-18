@@ -1,16 +1,30 @@
 /**
- * REPORT CARD RELEASE SWITCH — owner ruling 2026-10-01; RELEASED to everyone by owner 2026-10-18.
+ * REPORT CARD SWITCH (`report_card`) — owner ruling 2026-10-18 (reversal):
+ * OFF for every role (players, parents, coaches, organizations, scouts, and
+ * owner/admin screens too). The Report Card states specific numbers and the
+ * owner allows no estimates on it; it stays off until camera measurement
+ * (computer vision) exists. Stored data is kept — nothing is deleted.
  *
- * While `false`, the Report Card (toggle and card, all six analyses) is
- * visible ONLY to owner and admin. Everyone else sees the Analysis alone,
- * with no toggle and no hint a report card exists.
+ * While off, no screen may show a numeric grade that comes from video
+ * analysis; show VIDEO_GRADE_PLACEHOLDER instead. Entered test measurements
+ * (sprint, jumps, verified maxes, radar/sensor) and human coach/scout grades
+ * are not affected.
  *
- * Flip to `true` only when the owner says the report card is ready.
- * Do not flip it on your own.
+ * Only the owner turns this on.
  */
-export const REPORT_CARD_RELEASED_TO_ALL_USERS = true;
+export type SwitchMode = "on" | "off";
+export const REPORT_CARD_SWITCH: SwitchMode = "off";
 
-export function canSeeReportCard(roles: { isOwner: boolean; isAdmin: boolean }): boolean {
-  if (REPORT_CARD_RELEASED_TO_ALL_USERS) return true;
-  return roles.isOwner === true || roles.isAdmin === true;
+/** Text shown wherever a video-based grade would have appeared. */
+export const VIDEO_GRADE_PLACEHOLDER = "Grade coming with camera measurement";
+
+/** True only when the owner has turned the report_card switch on. */
+export function videoGradesShown(): boolean {
+  return REPORT_CARD_SWITCH === "on";
+}
+
+// `roles` is kept for call-site compatibility; while the switch is off it
+// grants nothing to anyone.
+export function canSeeReportCard(_roles?: { isOwner: boolean; isAdmin: boolean }): boolean {
+  return videoGradesShown();
 }

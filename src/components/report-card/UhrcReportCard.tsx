@@ -13,6 +13,7 @@
  *     id is available.
  */
 import { useState } from "react";
+import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -64,7 +65,7 @@ export function UhrcReportCard({
             <span>
               Composite{" "}
               <strong className="text-foreground">
-                {report.composite != null ? Math.round(report.composite) : "—"}
+                {!videoGradesShown() ? VIDEO_GRADE_PLACEHOLDER : report.composite != null ? Math.round(report.composite) : "—"}
               </strong>
             </span>
             <Badge variant="outline" className="text-[10px]">
@@ -94,7 +95,7 @@ export function UhrcReportCard({
                 {tierBadge(p.tier)}
               </div>
               <div className="mt-1 text-2xl font-semibold">
-                {p.score != null ? Math.round(p.score) : "—"}
+                {!videoGradesShown() ? <span className="text-xs font-normal text-muted-foreground">{VIDEO_GRADE_PLACEHOLDER}</span> : p.score != null ? Math.round(p.score) : "—"}
               </div>
               <div className="text-[11px] text-muted-foreground">
                 {p.contributions.filter((c) => !c.missing).length}/{p.contributions.length} signals

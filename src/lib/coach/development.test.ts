@@ -1,3 +1,9 @@
+import { vi } from "vitest";
+const sw = vi.hoisted(() => ({ on: true }));
+vi.mock("@/lib/reportCard/visibility", () => ({
+  videoGradesShown: () => sw.on,
+  VIDEO_GRADE_PLACEHOLDER: "Grade coming with camera measurement",
+}));
 import { describe, it, expect } from "vitest";
 import {
   reportsByCategory,
@@ -123,5 +129,22 @@ describe("buildTakeaways", () => {
   });
   it("is honest when there is no data", () => {
     expect(buildTakeaways([], [])[0].text).toContain("Not enough data");
+  });
+});
+
+describe("report_card switch off (owner, Oct 18)", () => {
+  it("shows no video-score strengths, weaknesses or trend", () => {
+    sw.on = false;
+    const reps = [
+      { id: "a", date: "2026-10-01", module: "hitting", efficiency_score: 40 },
+      { id: "b", date: "2026-10-05", module: "hitting", efficiency_score: 70 },
+      { id: "c", date: "2026-10-06", module: "pitching", efficiency_score: 50 },
+    ];
+    const sw2 = strengthsAndWeaknesses(reps as any);
+    expect(sw2.strengths).toEqual([]);
+    expect(sw2.weaknesses).toEqual([]);
+    expect(sw2.note).toBe("Video grades: Grade coming with camera measurement.");
+    expect(buildCategoryCards(reps as any, []).every((c) => c.trend === "unknown")).toBe(true);
+    sw.on = true;
   });
 });

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -95,7 +96,7 @@ export function CoachDevelopmentTab({ athleteId }: { athleteId: string }) {
               <div className="space-y-1">
                 {c.reports.map((r) => (
                   <p key={r.id} className="text-xs text-muted-foreground">
-                    {dateOnly(r.date)} · {r.efficiency_score != null ? `Efficiency score: ${Math.round(r.efficiency_score)}` : "No score"} · Source: video analysis
+                    {dateOnly(r.date)} · {!videoGradesShown() ? `Grade: ${VIDEO_GRADE_PLACEHOLDER}` : r.efficiency_score != null ? `Efficiency score: ${Math.round(r.efficiency_score)}` : "No score"} · Source: video analysis
                   </p>
                 ))}
               </div>

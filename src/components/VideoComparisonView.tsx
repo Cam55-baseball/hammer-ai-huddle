@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -272,7 +273,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                   <div className="flex items-center gap-2">
                     <Badge>{video1.sport}</Badge>
                     <Badge variant="outline">{video1.module}</Badge>
-                    {video1.efficiency_score !== undefined && (
+                    {videoGradesShown() && video1.efficiency_score !== undefined && (
                       <Badge variant="secondary">{video1.efficiency_score}%</Badge>
                     )}
                   </div>
@@ -345,7 +346,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                   <div className="flex items-center gap-2">
                     <Badge>{video2.sport}</Badge>
                     <Badge variant="outline">{video2.module}</Badge>
-                    {video2.efficiency_score !== undefined && (
+                    {videoGradesShown() && video2.efficiency_score !== undefined && (
                       <Badge variant="secondary">{video2.efficiency_score}%</Badge>
                     )}
                   </div>

@@ -1,3 +1,9 @@
+import { vi } from "vitest";
+const sw = vi.hoisted(() => ({ on: true }));
+vi.mock("@/lib/reportCard/visibility", () => ({
+  videoGradesShown: () => sw.on,
+  VIDEO_GRADE_PLACEHOLDER: "Grade coming with camera measurement",
+}));
 import { describe, it, expect } from "vitest";
 import {
   parseReportsPayload,
@@ -82,5 +88,13 @@ describe("recapLines", () => {
       "Period: 2026-08-31 to 2026-10-11",
       "Strength change: 4%",
     ]);
+  });
+});
+
+describe("report_card switch off (owner, Oct 18)", () => {
+  it("never shows a video efficiency number", () => {
+    sw.on = false;
+    expect(reportScoreLabel(report)).toBe("Grade: Grade coming with camera measurement");
+    sw.on = true;
   });
 });

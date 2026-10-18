@@ -1,4 +1,5 @@
 import { StaffPlanTiles } from "@/components/staff/StaffPlanTiles";
+import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
 import { scrubRetiredFromList } from "../../supabase/functions/_shared/archive/retiredPrograms";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
@@ -387,7 +388,7 @@ export default function Dashboard() {
     if (!hasAccess) return null;
     
     // Show if there's progress data
-    if (moduleProgress?.average_efficiency_score !== null && 
+    if (videoGradesShown() && moduleProgress?.average_efficiency_score !== null && 
         moduleProgress?.average_efficiency_score !== undefined) {
       return (
         <div className="w-full px-4 py-2 bg-primary/5 rounded-lg border border-primary/20">

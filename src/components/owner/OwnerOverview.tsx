@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { videoGradesShown } from "@/lib/reportCard/visibility";
 import { Button } from "@/components/ui/button";
 import {
   Users,
@@ -156,7 +157,7 @@ export function OwnerOverview({
     { label: "Users", value: totalUsers, icon: Users, tint: "bg-primary/5 border-primary/20", iconColor: "text-primary" },
     { label: "Active Subs", value: activeSubscriptions, icon: CreditCard, tint: "bg-emerald-500/5 border-emerald-500/20", iconColor: "text-emerald-600 dark:text-emerald-400" },
     { label: "Videos", value: totalVideosAnalyzed, icon: VideoIcon, tint: "bg-blue-500/5 border-blue-500/20", iconColor: "text-blue-600 dark:text-blue-400" },
-    { label: "Avg Score", value: `${avgScore}%`, icon: Target, tint: "bg-amber-500/5 border-amber-500/20", iconColor: "text-amber-600 dark:text-amber-400" },
+    { label: "Avg Score", value: videoGradesShown() ? `${avgScore}%` : "Off", icon: Target, tint: "bg-amber-500/5 border-amber-500/20", iconColor: "text-amber-600 dark:text-amber-400" },
   ];
 
   const activity: ActivityItem[] = [

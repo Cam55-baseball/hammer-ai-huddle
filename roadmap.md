@@ -1,3 +1,12 @@
+# AE9 — Oct 18 21:10 UTC — Report Card turned OFF for everyone (owner reversal)
+- Switch `report_card` = off (src/lib/reportCard/visibility.ts) for every role, staff screens included. Data kept; nothing deleted.
+- Video-based numeric grades removed: General "Your areas" rows, video library/session badges, comparisons, coach Development + Reports tabs, Scout Profile reports, report-card trend strip, Hammers Report Card composite/pillars, owner/admin video scores and averages, module average score. Placeholder: "Grade coming with camera measurement". Qualitative findings unchanged.
+- Kept: entered test numbers, human coach/scout 20–80 grades, "Do you agree?" buttons (not touched).
+- Tests: 2 test files updated + new off-switch rules; full suite 393 files / 3,044 tests PASS. Owner's guide (docs/owner/publish-checklist.md) updated.
+- Phone check (390×844, iPhone Safari agent, emulation): TEST player (6 screens), TEST coach (3), TEST scout (3) — no Report Card, no video grade, 0 page errors. Proof: docs/owner/walkthroughs/intelligence/ae9/.
+- OPEN: placeholder and a test-based grade not yet shown with real data — no TEST player has a saved analysis or an entered test. HIE snapshot scores (MPI, movement) left as-is: their video share isn't traced yet.
+- Drafts: Game IQ merge still running; Console waits. Ready to publish: **no**.
+
 # AE8 — Oct 18 20:56 UTC — Combined status
 - Stream 1 (TEST players, parent/coach logging): hitter data entered (14 TEST games, 42 at-bats, 8 tapped directions — keep until final cleanup). Pitcher, two-way, softball, new player, parent-run, both coach modes: NOT STARTED. Field picker tap/keyboard fix done (1 rule test PASS), phone re-check OPEN.
 - Stream 2 (Game IQ step 6): built in draft, rule tests PASS; merge into main IN PROGRESS. Populated phone proofs OPEN.
