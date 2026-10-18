@@ -1,3 +1,8 @@
+# AD3 — Oct 18 19:44 UTC — Populated team-report proof in progress
+Ready to publish: **no** — proving the remaining populated team report before B–F; timing-sensitive/physical-device certification remains open.
+- [x] Recorded AD3 continuation in owner order; retained TEST Coach subscription must stay active until all coach proofs finish.
+- [ ] Enter a marked TEST game through the player screen, read the populated team report as the linked TEST coach on a phone and on a fresh visit, then snapshot and clean up exact TEST inputs.
+
 # AD2 — Oct 18 19:43 UTC — Back-button phone fix PASS
 Ready to publish: **no** — Back overlap fixed and phone-proven; populated team report, B–F and timing-sensitive/physical-device certification remain open.
 - [x] Recorded the queued continuation; retained TEST Coach plan stays active throughout all coach proofs.
