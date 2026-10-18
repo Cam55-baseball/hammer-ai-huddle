@@ -10,20 +10,28 @@ export function LearningLoopList() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const key = ["intel-recs", user?.id];
-  const { data = [] } = useQuery({
+  const { data = [], isLoading, isError } = useQuery({
     queryKey: key,
     enabled: !!user?.id,
     queryFn: async () => {
+      if (!user) return [];
       await supabase.functions.invoke("intel-recheck").catch(() => null); // server re-check; never blocks the list
       const { data, error } = await supabase.from("intelligence_recommendations")
         .select("id, area, do_this, followed, outcome, created_at")
-        .eq("user_id", user!.id).order("created_at", { ascending: false }).limit(10);
+        .eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
       if (error) throw error;
       // Results are filled only by a server re-check (analysis scores are locked from players).
       const rows = data ?? [];
       return rows;
     },
   });
+  if (isLoading) return null;
+  if (isError) return (
+    <section className="space-y-2" aria-label="Your Do-this list">
+      <h3 className="text-sm font-semibold">Your "Do this" list</h3>
+      <p role="status" className="text-sm text-muted-foreground">We couldn't load your saved advice. Please try again later.</p>
+    </section>
+  );
   if (!data.length) return null;
   const mark = async (id: string, followed: boolean) => {
     await supabase.from("intelligence_recommendations")
