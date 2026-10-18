@@ -1,3 +1,5 @@
+# AE4 — Oct 18 — Field direction picker fixed: labels no longer block taps; every spot reachable by keyboard (Enter/Space), named for screen readers; 1 rule test PASS. Drafts still unaccepted; Stream 1 pitcher/two-way/softball/new/parent/coach modes OPEN. Ready to publish: no.
+
 # AE3 — Oct 18 21:05 UTC — Streams 2 & 3 built in drafts; Stream 1 hitter data entered
 Ready to publish: **no** — drafts not accepted; proofs, step 8, final audit open.
 - [x] Stream 2 draft (Game IQ): four reports, tap-in heat maps, matchup planner with sample sizes + early read; 10 new rule tests, 70 game/Progress tests PASS; phone proof empty + one TEST game (cleaned up). Open: busy heat-map squares re-check on phone, coach/team planner, softball wording.
