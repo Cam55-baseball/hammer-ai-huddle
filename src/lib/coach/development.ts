@@ -1,3 +1,4 @@
+import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 // Development tab logic (PLAN v3.1 Phase 6 owner addition).
 // Everything is derived from real analysis reports and fault findings only.
 // Connections are always labeled by strength: Observed fact / Measured change /
@@ -148,7 +149,7 @@ export function buildCategoryCards(reports: DevReport[], findings: DevFinding[])
     cards.push({
       category: cat,
       reports: reps,
-      trend: trendOf(reps.map((r) => r.efficiency_score).filter((s): s is number => s != null)),
+      trend: trendOf((videoGradesShown() ? reps : []).map((r) => r.efficiency_score).filter((s): s is number => s != null)),
       issues: issues.filter((i) => i.category === cat),
     });
   }
@@ -161,6 +162,7 @@ export function strengthsAndWeaknesses(reports: DevReport[]): {
   weaknesses: { text: string; evidence: string }[];
   note: string | null;
 } {
+  if (!videoGradesShown()) return { strengths: [], weaknesses: [], note: `Video grades: ${VIDEO_GRADE_PLACEHOLDER}.` };
   const scored = reports.filter((r) => r.efficiency_score != null);
   if (scored.length < 2)
     return { strengths: [], weaknesses: [], note: "Not enough data yet — needs at least 2 scored reports." };

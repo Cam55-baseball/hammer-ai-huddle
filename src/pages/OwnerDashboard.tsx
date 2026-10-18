@@ -1,4 +1,5 @@
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
+import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { VIDEO_PUBLIC_COLUMNS, withStaffScores } from "@/lib/reportCard/staffVideoScores";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -528,7 +529,7 @@ const OwnerDashboard = () => {
   const activeSubscriptions = subscriptions.filter((s) => s.status === "active").length;
   const totalVideosAnalyzed = videos.length;
   const avgScore =
-    videos.length > 0
+    !videoGradesShown() ? 0 : videos.length > 0
       ? Math.round(
           videos
             .filter((v) => v.efficiency_score)
@@ -1127,7 +1128,7 @@ const OwnerDashboard = () => {
                             <Badge variant={video.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
                               {video.status}
                             </Badge>
-                            {video.efficiency_score && (
+                            {videoGradesShown() && video.efficiency_score && (
                               <span className="text-sm text-muted-foreground">
                                 Score: {video.efficiency_score}/100
                               </span>

@@ -1,4 +1,5 @@
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
+import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { VIDEO_PUBLIC_COLUMNS, withStaffScores } from "@/lib/reportCard/staffVideoScores";
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -245,7 +246,7 @@ const AdminDashboard = () => {
                             {video.sport} - {video.module}
                           </p>
                           <p className="text-sm text-muted-foreground">Status: {video.status}</p>
-                          {video.efficiency_score && (
+                          {videoGradesShown() && video.efficiency_score && (
                             <p className="text-sm">Score: {video.efficiency_score}/100</p>
                           )}
                           <p className="text-xs text-muted-foreground mt-1">
@@ -403,7 +404,7 @@ const AdminDashboard = () => {
               <Card className="p-6">
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">Avg Score</h3>
                 <p className="text-3xl font-bold">
-                  {videos.length > 0
+                  {!videoGradesShown() ? "—" : videos.length > 0
                     ? Math.round(
                         videos
                           .filter((v) => v.efficiency_score)
