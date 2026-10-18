@@ -1,3 +1,10 @@
+# ACTIVE RUN — Oct 18 19:28 UTC owner continuation
+- [ ] Restore democoach's authorized $0 Stripe Coach plan; KEEP ACTIVE until all coach proofs finish, cancel only at the end.
+- [ ] Generate libx265 iPhone-like HEVC MOV from owner H264 original; prove automatic conversion/full analysis with mobile Safari user agent; quantify timing and measurement impact.
+- [ ] Fix coach plan floating Back overlap and inspect sibling floating Back controls on phones.
+- [ ] Then team report phone proof → B five-player/parent/both-coach proofs → C Game IQ → D Owner Console → E private population learning → F audit/suite/guide.
+No publishing, cron changes or iOS changes. Current concrete sub-step: restore and retain TEST Coach plan.
+
 # STATUS SUMMARY — AC12, Oct 18 18:52 UTC
 Ready to publish: **no** — the team game report isn't proven on a phone (the TEST coach's plan is canceled, so coach screens are locked); the five-player proofs, Game IQ, Coaching Console, population learning and the final audit aren't done; genuine HEVC iPhone clips haven't been tested.
 
