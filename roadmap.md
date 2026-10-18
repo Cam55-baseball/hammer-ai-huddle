@@ -1,4 +1,11 @@
-# ACTIVE RUN — AC10, Oct 18 18:50 UTC
+# ACTIVE RUN — AC11, Oct 18 18:47 UTC
+Ready to publish: no — phone proof of the team report, B–F, and HEVC/iPhone Safari/timing certification remain open.
+- [x] Team game report screen built: Coach Console → "Team game report" button. Pick a date (and opponent if several); shows lineup, pitching staff, standouts, red flags and a "Who logged it" list, built only from games the coach's linked players logged. Blank pitch results never count as strikes; under 10 pitches marked "early read"; no games → "Need more data".
+- [x] Tests: 6 report honesty tests PASS. No backend changes (uses the existing linked-coach read permission), no publish/cron/iOS; no test data created.
+- [ ] Phone proof as the TEST coach with a linked TEST player — next.
+Next concrete sub-step: phone proof of the team game report, then B.
+
+# PRIOR RUN — AC10, Oct 18 18:50 UTC
 Ready to publish: no — team post-game report screen, B–F, and HEVC/iPhone Safari/timing certification remain open.
 - [x] Fixed post-game report PASS on phone (390×844, TEST player): blank pitch type shows "Not entered"; steal with no result shows "Not entered", not 0/1; first-pitch strike "Not entered"; no first-pitch Train next suggestion; counts match; fresh-context reload read-back; no page errors or sideways scrolling.
 - [x] Exact cleanup PASS: 7 TEST rows backed up and deleted, zero remaining.
