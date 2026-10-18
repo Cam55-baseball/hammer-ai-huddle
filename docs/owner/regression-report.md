@@ -4,6 +4,14 @@ Started 2026-10-13. Sections marked NOT YET RUN have not been checked.
 
 ## Oct 17 owner fixes — verified Oct 18
 
+### YY4 follow-up
+- Empty legacy cache objects now fall through to fresh analysis; readable coaching does not require a score (three new tests).
+- Clean Deno validation; **only analyze-video redeployed**, source 0250b52e729ca977ab7cf6a7fabf79832e91d533da75ffbbfbc92b7824aef1ba. Real player phone upload saved ok audit 05:39:42 UTC; same captured request replayed readable feedback/summary, replay_cache=true and audit_persistence.saved=true; cache_hit audit 05:40:06 UTC. Empty-cache refusal covered by tests, not corruption of real data.
+- Script first stopped before upload; cleanup then lost in-memory owner session across navigation. Resumed exact-ID cleanup via existing owner-only test-session flow: clip backed up/deleted, count zero; audits retained. No new accounts.
+- Deleted games no longer enter opponent choices, scouting inputs or individual direct-link reports (three tests). Frozen snapshots untouched. Phone player History/reports and Back open without horizontal overflow; empty-state check is not populated proof.
+- Team-postgame has no current creation UI; all-three-kind proof remains open. No fabricated practices/games/snapshots/share links added.
+- Full suite **369 files / 2,952 tests passed**; build OK. Phone screenshots yy4-*.png in walkthroughs/oct17-fixes/. No publish, cron, iOS, migrations or Stripe writes. Existing subscription-fetch/service-worker telemetry not claimed fixed; remaining checklist blockers stay open.
+
 ### YY3 follow-up
 - Fixed ignored analysis-audit failures: stable invocation UUID through retries/catch paths, one retry, duplicate-commit read-back, and explicit audit_persistence status. Report delivery remains independent of diagnostic storage. Five new behavioral tests cover temporary/persistent failures, lost response, caller identity and missing read-back.
 - Deno validation passed after isolating validator dependencies in /tmp; **redeployed only analyze-video** (source fingerprint 4a20c481b3aa49430bb39296f210f4da3b6d3c61bcc00f0c62ed2146178e2e38).

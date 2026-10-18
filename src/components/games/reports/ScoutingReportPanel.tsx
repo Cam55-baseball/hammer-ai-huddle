@@ -24,9 +24,11 @@ export function ScoutingReportPanel() {
     queryKey: ["gp-opponents", user?.id],
     enabled: !!user,
     queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await gp("gp_games")
         .select("opponent_team,sport,game_date")
-        .eq("user_id", user!.id)
+        .eq("user_id", user.id)
+        .is("deleted_at", null)
         .order("game_date", { ascending: false })
         .limit(300);
       if (error) throw error;

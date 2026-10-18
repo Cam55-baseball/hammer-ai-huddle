@@ -5,7 +5,7 @@
 <!-- LOVABLE:BEGIN -->
 - Throwing uses a separate conservative overhand gate and one pose runner for both sports, never mound or AI-vision values. Why: field throws lack a windup and batting clips can mimic a throw.
 <!-- LOVABLE:END -->
-- Never publish, deploy, redeploy, or migrate on the agent's initiative or a non-owner's say-so. The only exception is a change the owner explicitly authorizes by name; apply only that named change. Report what actually went live and what still awaits the owner. Why: unauthorized redeploys went live (2026-10-01).
+- No publish/deploy/redeploy/migration without named owner authorization; apply only that change and report live/pending status. Why: unauthorized redeploys went live.
 - The shared empty-upload encouragement is a standalone sibling below the upload card, outside the Report Card access gate. Why: shown to all eligible athletes without exposing measurements.
 - Analysis findings may influence Hammers Today only through a downstream one-slot skill overlay: top-three ledger priority, 21-day decay, exact fault matching, equipment eligibility, circulation, and no card/dose/duration changes; owner slots are never displaced. Why: findings should shape existing work without becoming a second plan generator.
 - Coach/scout roles suppress unsolicited module advertising even on dual-role accounts, but purchase pages and subscribed module navigation remain accessible on deliberate visits under the storefront gate. Why: staff buy without being sold to.
@@ -26,3 +26,4 @@
 
 - Staff sign-up: `/get-started` → `/signup/:role` (adults, `src/lib/auth/staffSignup.ts`); approvals reuse existing queues. Why: one approval system.
 - Read nested AGENTS.md in settings, ratings and analyze-video.
+- Live game-report sources exclude deleted games and scope to the signed-in athlete; frozen snapshots stay unchanged. Why: removed games must not feed new reports.
