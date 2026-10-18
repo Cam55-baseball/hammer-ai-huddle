@@ -1,3 +1,28 @@
+# STATUS — Oct 19 00:05 UTC (end of AG batch)
+**Ready to publish: NO** — parent-run logging proof blocked (needs owner), coach-entered mode and player-side "verified" label unproven, population learning / full page audit / full suite / owner guide not started this batch, nightly learning run outcome unproven.
+
+| Item | Result | Proof |
+|---|---|---|
+| Filler numbers → "Not enough data" + 2 redeploys | PASS (TEST college player, phone) | earlier AF entry below |
+| Game IQ phone proofs (TEST hitter, 14 games) | PASS | docs/owner/walkthroughs/intelligence/ag1/ |
+| Coaching Console phone proof | PASS — TEST principle left OFF, undeletable by safeguard (owner answer needed) | .../ag2/ |
+| Five-player: pitcher | PASS | .../ag3/ |
+| Five-player: two-way | PASS | .../ag4/ |
+| Five-player: softball | PASS after 2 fixes (game sport, pitch names) | .../ag5/ |
+| Five-player: new player | PASS (under-13 correctly gated) | .../ag6/ |
+| Parent-run logging | BLOCKED — no openable parent-run TEST account; owner approval needed | .../ag7 entry |
+| Coach mode: verify | PASS — coach marked a TEST game verified on phone; saved as Coach-verified | .../ag8/ |
+| Coach mode: coach-entered | NOT RUN | — |
+| Player sees "verified" on postgame report | FAIL/OPEN — postgame report doesn't show it (shown on game sheet header only) | .../ag8/player.png |
+| Postgame "Plate discipline" % on 2 pitches | OPEN — shows 50%/100% without "early read" | .../ag8/player.png |
+| Population learning + privacy | NOT STARTED | — |
+| Full page audit / full suite | NOT RUN this batch (last full suite: 393 files / 3,044 checks PASS; new softball rule tests 2/2 PASS) | — |
+| Owner's guide | NOT STARTED | — |
+| democoach $0 Coach plan | ACTIVE — cancel before Nov 18 after last coach proof | — |
+
+# AG8 — Oct 19 00:05 UTC — Sub-step 4f: coach verify mode PASS
+- [x] democoach ↔ demo2way connected via normal request/accept; on 390×844 coach opened Game stats, tapped "Mark verified" on "TEST Bears 3" → "Verified by coach on 2026-10-18"; game saved as Coach-verified. 0 page errors. Connection ended afterwards (confirmed removed). Verified TEST game kept for final cleanup.
+
 # AG7 — Oct 18 23:58 UTC — Sub-step 4e BLOCKED: parent-run logging proof
 - [x] Checked: the backend already labels games "Parent-entered" when the player's account is parent-run (the label rule exists; nothing to build).
 - [ ] BLOCKED: no parent-run TEST account can be opened for a proof. demo13 stops at "Parent signature required" (needs a parent signature + card payment — not bypassed). The only other parent-run TEST account ("TEST Apple Review Child (12)") needs owner approval to sign in as it, which isn't available in a queued run. Needs owner: approve signing in as that TEST account, or say how a TEST 12U account may pass its parent payment step.
