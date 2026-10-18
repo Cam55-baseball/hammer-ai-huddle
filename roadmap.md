@@ -1,4 +1,20 @@
-# ACTIVE REPORT — Oct 18 owner answers
+# ACTIVE RUN — Oct 18, 17:37 UTC owner clarification
+Ready to publish: no — ordered implementation/proof work remains; no owner-answer blockers remain.
+- [x] A1 / Oct 17 #5 PASS: direct Stripe TEST Coach subscription, zero invoice/no card; real coach-screen Agree + Disagree saved against app-filed TEST evaluation (grade 55 unchanged); owner dashboard shows 50% (1 of 2) and both notes on 390×844. Exact two votes/evaluation/request backed up and removed; temporary connection ended; test subscription canceled. Proof: `docs/owner/walkthroughs/intelligence/a1/{coach-agree.png,coach-disagree.png,owner-votes.png,proof-status.md}`. Focused tests 2 files / 9 PASS; preview build OK. No app deployment/migration/publish/cron/iOS changes.
+- [ ] A2: Completed → Start → saved plan read-back.
+- [ ] A3: Linked-parent optional-sharing positive path.
+- [ ] A4: Populated TEST History and team post-game report.
+- [ ] Original phone-format automatic conversion and original HEVC/MOV analysis proof (no manual re-encoding).
+- [ ] B: App-entered, clearly marked TEST five-cohort proof of Intelligence steps 2–5, parent logging and both coach modes.
+- [ ] C: Four Game IQ reports, tap-based heat maps, matchup sample sizes/early read, team report.
+- [ ] D: Owner principles/evidence/use/outcomes/badges/versioning/on-off/advice provenance.
+- [ ] E: Minimum-sample/private population learning, no reverse-identification.
+- [ ] F: Full page audit, full suite, updated owner guide and final readiness.
+Owner authorizes test-only agreement/waiver/consent acceptance and TEST inputs through app screens or own entry functions. Engine facts/grades/insights must remain evidence-based. Previous consent, populated-cohort and Checkout blockers below are superseded, not renewed requests.
+Cron: owner reports intelligence-learning-loop-nightly installed (04:30 UTC), first call 200. Installation DONE by owner report; actual nightly outcomes still to verify after first nightly run. SQL: `docs/owner/learning-loop-cron.sql`. No agent cron changes.
+This run completed A1 (one concrete sub-step). Next ordered run: A2 Completed → Start → saved plan. No owner-answer blocker remains. Historical status/proof retained below.
+
+# PRIOR ACTIVE REPORT — Oct 18 owner answers
 Ready to publish: no — step 5 role/populated proof, complete earlier proof gaps and steps 6–8 remain unfinished.
 AB8 COMPLETE (this scoped continuation, not the whole plan): post-game reminders now count all four event families, exclude removed games, scope to the signed-in player and stop on failed reads. Signed-in teen phone dashboard reload shows only the empty synthetic game, not final defense-only/removed games; no overflow/page errors. Exact synthetic entries removed with zero-row confirmation. Focused 14/14 and full suite **384 files / 3,007 tests PASS**; build OK. Screenshot and details: `docs/owner/walkthroughs/intelligence/ab8/{reminder-phone.png,proof-status.md}`. Preview-only; no migration, redeploy, Stripe, publish, cron or iOS changes.
 AB7: quick/full at-bat writers now require an explicit inning/result and normalize optional facts to null; no previous inning or probable pitcher assumed. Phone proof found database defaults inventing RBI/LOB/pinch-hit in quick saves — corrected with shared normalization before insert. Empty pitch panels no longer overwrite unknown/manual counts. Player phone quick Single, full Walk, explicit zero/No Fly out → fresh navigation/reload/source-label read-back PASS; exact synthetic game/events removed with zero-row confirmation, no overflow/page errors. Full suite 383 files / 3,002 tests PASS; build OK. Parent/legal, both coach paid-plan, and genuine populated-cohort proof still blocked; steps 6–8 remain open in order. Preview-only; no migration/deploy/Stripe/publish/cron/iOS change. Evidence: `docs/owner/walkthroughs/intelligence/ab7/proof-status.md`.
