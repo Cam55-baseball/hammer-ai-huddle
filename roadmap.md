@@ -1,3 +1,9 @@
+# AD9 — B Game IQ training-session gate correction IN PROGRESS
+Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
+- [x] Recorded AD9: remove the unrelated training-session milestone from Game IQ maps only; retain subscription access and the classic report gate.
+- [ ] Access regressions and affected-player phone verification.
+- [ ] B measured-grade/populated five-player/parent/coach proofs, then C → D → E → F. Coach plan stays active.
+
 # AD8 — Oct 18 20:15 UTC — B steal-result honesty PASS (preview)
 Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
 - [x] Game reports no longer show 0% steal success without attempts/entered results. Unknown outcomes leave the denominator; actual zero remains zero. Shows known/missing-result counts and early read below ten known results; failed reads show a notice instead of statistics.
