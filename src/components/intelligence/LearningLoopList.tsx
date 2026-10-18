@@ -15,10 +15,12 @@ export function LearningLoopList() {
     enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase.from("intelligence_recommendations")
-        .select("id, area, do_this, followed, outcome, created_at")
+        .select("id, area, do_this, followed, outcome, created_at, baseline_value")
         .eq("user_id", user!.id).order("created_at", { ascending: false }).limit(10);
       if (error) throw error;
-      return data ?? [];
+      // Results are filled only by a server re-check (analysis scores are locked from players).
+      const rows = data ?? [];
+      return rows;
     },
   });
   if (!data.length) return null;
