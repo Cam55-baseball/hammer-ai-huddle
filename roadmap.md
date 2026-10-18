@@ -1,3 +1,18 @@
+# OWNER FIXES — Oct 17 (received Oct 18)
+
+- [ ] 1. Analysis reliability first: reproduce every type/sport with two real clips each, repair failures, nonempty honest fallback reports, retry/backup model, outcome/cost logging, phone proof and before/after rates.
+- [ ] 2. Remove duplicate owner Scout application entry.
+- [ ] 3. Move Subscribers into owner dashboard; current plan breakdown only.
+- [ ] 4. Accurately label Drill Builders and Drill CMS activity coverage; report overlap, do not merge.
+- [ ] 5. Complete owner rating agreement dashboard with rates, recent notes and test coach votes.
+- [ ] 6. Settings: read-only app switches, billing product/price links, analysis cost summary.
+- [ ] 7. New-player optional assessment above Today: explicit Completed tap unlocks Start; existing started players unaffected; save answers and generate today's plan on Start.
+- [ ] 8. Plain parent sharing wording without PitchLab; scout visibility in same area.
+- [ ] 9. Confirm physio setup once and redo anytime; repair if needed.
+- [ ] 10. History: Standards drawer in The General; full practice details; date pickers; all report kinds; trace Train next into Today.
+
+Constraints: no publish, cron or iOS edits; no unexplained deployment errors; Stripe read-only; preserve safety and measurement honesty; clean test data. Only fix-required backend redeploys authorized; name each actually redeployed.
+
 # NO APPROVALS EXCEPT SCOUTS — 2026-10-16 03:20 UTC
 - Coaches: full coach status right after coach setup (adults 18+ only); "Scout/Coach → Coach" goes straight to coach setup; pending coach applications auto-approved (0 were waiting). Child-safety rules unchanged.
 - Organizations: active right away; can add athletes and staff; pending ones auto-activated (0 were waiting); verification notes removed.

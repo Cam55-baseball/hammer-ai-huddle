@@ -31,6 +31,8 @@ import { noteProtectedEditing, clearProtectedEditing } from "@/lib/auth/protecte
 import { useSideContext } from "@/contexts/SideContext";
 import { UPLOAD_ERRORS, friendlyRejectReason, friendlyThrownError } from "@/lib/upload/uploadErrorCopy";
 import { describeVideoSaveFailure } from "@/lib/upload/saveFailure";
+import { isAnalysisVideoFile } from "@/lib/upload/analysisVideoFile";
+import { unavailableAnalysis } from "../../supabase/functions/_shared/analysisReliability";
 import { AnalysisToggle, type AnalysisView } from "@/components/report-card/hammer/AnalysisToggle";
 import { HammerReportCard } from "@/components/report-card/hammer/HammerReportCard";
 import { ReportCardAccessGate } from "@/components/report-card/hammer/ReportCardAccessGate";
@@ -115,7 +117,10 @@ export default function AnalyzeVideo() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<{
-    efficiency_score: number;
+    efficiency_score: number | null;
+    report_status?: string;
+    saved?: boolean;
+    save_error?: string | null;
     summary?: string[];
     feedback: string;
     positives?: string[];
@@ -428,7 +433,7 @@ export default function AnalyzeVideo() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("video/")) {
+    if (!isAnalysisVideoFile(file)) {
       toast.error(UPLOAD_ERRORS.notAVideo);
       return;
     }
@@ -532,6 +537,12 @@ export default function AnalyzeVideo() {
     }
 
     setUploading(true);
+    const missingReport = (stage: string) => {
+      setAnalysis({ ...unavailableAnalysis(module ?? "video", stage), saved: false });
+      setAnalysisError(null);
+      setUploading(false);
+      setAnalyzing(false);
+    };
 
     // ===== PHASE 0/1 — Deterministic probe (sha256 + true fps + dimensions) =====
     // Probe FIRST so deterministic frame selection can use fps_true.
@@ -543,7 +554,7 @@ export default function AnalyzeVideo() {
     } catch (probeErr) {
       console.error("[ANALYSIS] probe failed", probeErr);
       toast.error(UPLOAD_ERRORS.unreadable);
-      setUploading(false);
+      missingReport("video_decode");
       return;
     }
 
@@ -613,6 +624,8 @@ export default function AnalyzeVideo() {
       // `runTempoPipeline` (D-3 → D-5 → D-6) untouched.
       try {
         setUploadStage('Finding your body in the clip…');
+        const poseStarted = Date.now();
+        const checkPoseBudget = () => { if (Date.now() - poseStarted > 45_000) throw new Error("pose_timeout: measurements unavailable; continue coaching"); };
     denseRun = await captureDenseLandmarkSeries({
           videoFile,
           video_sha256_hex: probed.sha256_hex,
@@ -624,8 +637,9 @@ export default function AnalyzeVideo() {
           landingTimeSec: landingTime ?? null,
           fps_source: fpsTrue == null ? "unknown" : "container",
           fps_playback: probed.fps_playback.status === "ok" ? probed.fps_playback.fps : null,
-          onScoutProgress: (d, n) => { if (d === n) setUploadStage('Tracking your movement…'); },
+          onScoutProgress: (d, n) => { checkPoseBudget(); if (d === n) setUploadStage('Tracking your movement…'); },
           onProgress: (d, n) => {
+            checkPoseBudget();
             const f = d / n;
             if (d % 10 === 0) console.log('[D-POSE] dense progress', d, n);
             setUploadStage(f < 0.33 ? 'Tracking your movement — just started…' : f < 0.66 ? 'Tracking your movement — about halfway…' : 'Tracking your movement — nearly done…');
@@ -785,7 +799,7 @@ export default function AnalyzeVideo() {
         toast.error(friendlyThrownError(frameError) === UPLOAD_ERRORS.generic
           ? UPLOAD_ERRORS.frameExtractionFailed
           : friendlyThrownError(frameError));
-        setUploading(false);
+        missingReport("frame_extraction");
         return;
       }
 
@@ -1104,6 +1118,7 @@ export default function AnalyzeVideo() {
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
         "analyze-video",
         {
+          headers: { Authorization: `Bearer ${liveSession.access_token}` },
           body: {
             videoId: videoData.id,
             module,
@@ -1193,7 +1208,7 @@ export default function AnalyzeVideo() {
 
     } catch (error: any) {
       console.error("Error:", error);
-      setAnalysisError(error);
+      missingReport("upload_or_save");
       if (!error?.userNotified) toast.error(friendlyThrownError(error));
       setAnalyzing(false);
     } finally {
@@ -1664,6 +1679,7 @@ export default function AnalyzeVideo() {
 
             {analysis && (
               <div className="space-y-4">
+                {analysis.saved === false && <p role="alert" className="text-sm text-destructive">{analysis.save_error ?? "This report is shown here but hasn't been saved. Try the clip again."}</p>}
                 {showReportCard && (
                   <AnalysisToggle value={analysisView} onChange={setAnalysisView} />
                 )}

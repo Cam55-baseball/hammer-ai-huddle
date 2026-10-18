@@ -369,8 +369,6 @@ export function AppSidebar() {
     { title: t('navigation.myCustomActivities'), url: "/my-custom-activities", icon: LayoutGrid },
     ...(isOwner ? [
       { title: t('navigation.ownerDashboard'), url: "/owner", icon: Shield },
-      { title: t('navigation.scoutApplications'), url: "/owner?tab=scout-applications", icon: UserPlus },
-      { title: t('navigation.subscribers'), url: "/subscribers", icon: Users2 }
     ] : []),
     ...(isAdmin ? [{ title: t('navigation.adminDashboard'), url: "/admin", icon: Users }] : []),
     ...(isAdmin || isOwner ? [{ title: "Training Intelligence", url: "/admin/training-intelligence", icon: Activity }] : []),

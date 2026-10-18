@@ -219,6 +219,7 @@ export default function DrillBuilder() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h1 className="text-2xl font-bold">Drill Builder</h1>
+            <p className="text-sm text-muted-foreground">Activity types: baseball and softball hitting, pitching and throwing; Hammers Today skill, warm-up and defense; defensive library.</p>
             <p className="text-sm text-muted-foreground">Create and edit drills for every place they appear. Usage counts show how often drills are used, not whether they work.</p>
           </div>
           <div className="flex gap-2">

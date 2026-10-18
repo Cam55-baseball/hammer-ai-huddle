@@ -17,6 +17,7 @@ import {
 } from "../_shared/biomechFingerprint.ts";
 import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalysisRun.ts";
 import { chatCompletion } from "../_shared/googleAi.ts";
+import { hasStructuredAnalysis, reliableAnalysis, unavailableAnalysis } from "../_shared/analysisReliability.ts";
 import { canSeeScoredGrading, stripScoredGrading } from "../_shared/scoredGradingGate.ts";
 import { buildFaultFindings } from "../_shared/faultFindings.ts";
 import { constructiveCriticismBlock, improvementsSchema } from "./constructiveCriticism.ts";
@@ -1641,6 +1642,9 @@ Deno.serve(async (req) => {
   // block can still write a "failed" video_analysis_runs row.
   // deno-lint-ignore no-explicit-any
   let auditSupabase: any = null;
+  let authorizedClip = false;
+  let auditRecorded = false;
+  let reportModule = "video";
   let auditCtx: {
     videoId?: string;
     userId?: string;
@@ -1653,6 +1657,7 @@ Deno.serve(async (req) => {
     // Validate input
     const body = await req.json();
     const { videoId, module, sport, userId, frames: rawFrames, landingFrameIndex: rawLandingFrameIndex, frameExtractions, captureFps, ballTrackingEligible } = requestSchema.parse(body);
+    reportModule = module;
     auditCtx.videoId = videoId;
     auditCtx.userId = userId;
 
@@ -1709,11 +1714,10 @@ Deno.serve(async (req) => {
     console.log(`[ANALYZE-VIDEO] frameExtractions: ${frameExtractions?.length ?? 0}`);
 
 
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    if (!OPENAI_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error("Missing required environment variables");
     }
 
@@ -1744,6 +1748,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Video access denied" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     if (await isAccountPaused(supabase, userId)) return pausedResponse(corsHeaders);
+    authorizedClip = true;
 
     const videoSha256Hex = (videoRow?.sha256_hex as string | null) ?? null;
     const fpsTrue = videoRow?.fps_true == null ? null : Number(videoRow.fps_true);
@@ -1962,7 +1967,7 @@ Deno.serve(async (req) => {
       : '';
     
     // Get system prompt based on module and sport + universal cause→effect contract
-    const moduleDomain: any = module === 'hitting' ? 'hitting' : module === 'pitching' ? 'pitching' : module === 'fielding' ? 'defense' : module === 'baserunning' ? 'baserunning' : 'hitting';
+    const moduleDomain = module === 'pitching' ? 'pitching' : module === 'throwing' ? 'defense' : 'hitting';
     const causalSuffix = `\n\n=== UNIVERSAL CAUSE→EFFECT CONTRACT (MANDATORY) ===
 Every fault you surface in feedback/drill recommendations MUST be expressed as a 5-link causal chain (TRIGGER → CAUSE → MECHANISM → RESULT → FIX) plus a 4-step roadmap with the appropriate domain ladder. Two registers: athlete voice + a one-line "Coach's note:" with the technical mechanism. Multi-violation diagnoses stack chains in phase order. Severity model: NN hard cap 50, NN soft cap 70, standard cap 80, secondary 75/85, two-or-more 65, elite +5. Domain for this analysis: ${moduleDomain}.
 === END CONTRACT ===`;
@@ -2082,10 +2087,12 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     // Call AI (Google AI Studio direct, Lovable Gateway fallback) with tool-calling for structured output
     // Plan 4 D fair use: about 30 analyses per account per hour (server-side; cached re-runs don't count).
     if (overHourlyLimit(await analysesLastHour(supabase, userId))) {
+      await recordAnalysisRun(supabase, { video_id: videoId, requested_by: userId, cache_fingerprint_hex: cacheFingerprintHex, cache_hit: false, outcome: "rejected", outcome_reason: "hourly_limit" });
+      await supabase.from("videos").update({ status: "uploading" }).eq("id", videoId);
       return new Response(JSON.stringify({ error: HOURLY_LIMIT_MESSAGE, code: "hourly_limit", resume_at: await hourlyResumeAt(supabase, userId), video_id: videoId }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const aiResult = await chatCompletion({
-      model: "google/gemini-2.5-flash",
+    const aiResult = await reliableAnalysis((model) => chatCompletion({
+      model,
       // Determinism lock: same video → same scores. Do not relax.
       temperature: 0,
       messages: [
@@ -2241,9 +2248,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         }
       ],
       tool_choice: { type: "function", function: { name: "return_analysis" } }
-    }, { timeoutMs: 120_000 });
-
-    await logAiUsage(supabase, { userId, functionName: "analyze-video", analysisType: `${sport}_${module}`, result: aiResult });
+    }, { timeoutMs: 40_000 }), (result) => logAiUsage(supabase, { userId, functionName: "analyze-video", analysisType: `${sport}_${module}`, result }));
     if (!aiResult.ok) {
       const errorText = aiResult.errorBody || "";
       console.error("AI provider error:", aiResult.provider, aiResult.status, errorText);
@@ -2279,6 +2284,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     }
 
     const data = aiResult.data;
+    if (!hasStructuredAnalysis(data)) throw new Error("coaching_output_unreadable");
     console.log(`[ANALYZE-VIDEO] AI provider=${aiResult.provider}`);
 
 
@@ -2326,7 +2332,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     if (toolCalls && toolCalls.length > 0) {
       try {
         const analysisArgs = JSON.parse(toolCalls[0].function.arguments);
-        efficiency_score = Math.round(analysisArgs.efficiency_score || 75);
+        efficiency_score = Math.round(analysisArgs.efficiency_score);
         originalAiScore = efficiency_score;
         summary = analysisArgs.summary || [];
         feedback = analysisArgs.feedback || "No feedback available";
@@ -2345,7 +2351,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         }
         if (analysisArgs.metrics && typeof analysisArgs.metrics === "object") {
           metrics = analysisArgs.metrics;
-          console.log(`[REPORT-CARD] Captured metrics for ${reportCardContract?.id ?? "unknown"}: ${Object.keys(metrics).length} keys`);
+          console.log(`[REPORT-CARD] Captured metrics for ${reportCardContract?.id ?? "unknown"}: ${Object.keys(analysisArgs.metrics).length} keys`);
         }
 
         // ===== PASS-2 RETIRED (Phase 0 contract — G-2) =====
@@ -2498,6 +2504,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         }
       } catch (parseError) {
         console.error("Error parsing tool call arguments:", parseError);
+        throw parseError;
       }
     } else {
       // Fallback to text parsing if no tool calls
@@ -2589,6 +2596,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         outcome: "failed",
         outcome_reason: `videos_update_failed:${updateError.message}`,
       });
+      auditRecorded = true;
       throw updateError;
     }
 
@@ -2610,6 +2618,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       },
       outcome: "ok",
     });
+    auditRecorded = !!okAudit.id;
 
     // Phase 1 — persist per-frame deterministic extraction audit.
     if (okAudit.id && frameExtractions && frameExtractions.length > 0) {
@@ -2846,7 +2855,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     console.error("analyze-video error:", error);
 
     // Phase 0 — write a "failed" audit row when we have enough context.
-    if (auditSupabase && auditCtx.videoId) {
+    if (authorizedClip && auditSupabase && auditCtx.videoId && !auditRecorded) {
       try {
         await recordAnalysisRun(auditSupabase, {
           video_id: auditCtx.videoId,
@@ -2864,6 +2873,16 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       } catch (auditErr) {
         console.error("[analyze-video] audit-row write failed:", auditErr);
       }
+    }
+
+    // A missingness report belongs only to the verified owner of this clip.
+    if (authorizedClip && auditSupabase && auditCtx.videoId) {
+      const report = unavailableAnalysis(reportModule, "analysis");
+      const { error: saveError } = await auditSupabase.from("videos")
+        .update({ status: "completed", ai_analysis: report, efficiency_score: null })
+        .eq("id", auditCtx.videoId).eq("user_id", auditCtx.userId);
+      return new Response(JSON.stringify({ ...report, saved: !saveError, save_error: saveError ? "Report is shown here but could not be saved. Try again." : null }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Return validation errors with 400 status

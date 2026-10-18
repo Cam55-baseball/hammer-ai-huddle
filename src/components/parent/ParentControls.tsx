@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { callParentConsent, TRAINING_OPT_IN_TEXT } from "@/lib/parent/parentConsent";
+import { Link } from "react-router-dom";
 
 const STORED = [
   "Child's first name or nickname, birthdate, height and weight",
@@ -63,7 +64,9 @@ export function ParentControls({ userId }: { userId: string }) {
   };
   const share = async (yes: boolean) => {
     setBusy("share");
-    try { await callParentConsent("sharing", { optional_sharing: yes }); await q.refetch(); } finally { setBusy(null); }
+    try { await callParentConsent("sharing", { optional_sharing: yes }); await q.refetch(); }
+    catch { setResult("Couldn't save sharing permission. Try again."); }
+    finally { setBusy(null); }
   };
 
   return (
@@ -79,9 +82,10 @@ export function ParentControls({ userId }: { userId: string }) {
       <details className="rounded-lg border p-3 text-sm"><summary className="cursor-pointer font-medium">What's stored about your child</summary>
         <ul className="mt-2 list-disc space-y-1 pl-5">{STORED.map((s) => <li key={s}>{s}</li>)}</ul></details>
       <div className="flex items-center justify-between gap-3 rounded-lg border p-3 text-sm">
-        <span>Optional sharing (for example PitchLab)</span>
+        <span>Optional sharing with connected services. This does not make your child's profile visible to scouts.</span>
         <Switch checked={!!c.optional_sharing} disabled={!!c.withdrawn_at || busy === "share"} onCheckedChange={share} aria-label="Optional sharing" />
       </div>
+      <Button asChild variant="outline" className="h-auto min-h-11 w-full whitespace-normal"><Link to={`/parent/athletes/${userId}/recruiting`}>Scouting visibility — choose what scouts can see</Link></Button>
       <div className="flex items-start justify-between gap-3 rounded-lg border p-3 text-sm">
         <span className="leading-6">{TRAINING_OPT_IN_TEXT}</span>
         <Switch checked={!!c.training_opt_in} disabled={!!c.withdrawn_at || busy === "training"} onCheckedChange={training} aria-label="Help improve Hammers Modality" />

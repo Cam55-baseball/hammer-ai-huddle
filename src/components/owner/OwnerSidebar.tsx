@@ -98,6 +98,7 @@ const GROUPS: SidebarGroup[] = [
     items: [
       { id: "builds", label: "Builds", icon: Package },
       { id: "subscriptions", label: "Subscriptions", icon: CreditCard },
+      { id: "subscriptions", label: "Subscribers", icon: Users, href: "/subscribers" },
     ],
   },
   {
@@ -106,6 +107,8 @@ const GROUPS: SidebarGroup[] = [
     items: [
       { id: "engine-settings", label: "Engine Settings", icon: Settings },
       { id: "settings", label: "Settings", icon: Settings },
+      { id: "settings", label: 'Do you agree?', icon: UserCog, href: "/owner/rating-agreement" },
+      { id: "settings", label: "Cost per analysis", icon: CreditCard, href: "/owner/ai-costs" },
       { id: "player-search", label: "Player Search", icon: Search },
     ],
   },

@@ -610,7 +610,7 @@ function StartGate({ beforeStartPortalTarget }: { beforeStartPortalTarget?: HTML
     );
   }
   if (start.needsStart) {
-    return <StartHammersTodayCard onStart={start.start} starting={start.starting} error={start.error} />;
+    return <div className="space-y-4"><InitialAssessmentCard sport={localStorage.getItem("selectedSport") === "softball" ? "softball" : "baseball"} /><StartHammersTodayCard onStart={start.start} starting={start.starting} error={start.error} locked={!start.assessmentReady} /></div>;
   }
   return (
     <HammersTodayProvider>
@@ -839,7 +839,6 @@ function HammerDailyPlanBody({
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
         <FinishProfileCard />
-        <InitialAssessmentCard sport={sportIsBaseball ? "baseball" : "softball"} />
         <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
         {splitBaserunning(plan.blocks).mental.map(b => <BlockCard key={`mental-${b.modality}-${b.side ?? "x"}`} block={b} onNavigate={navigate} />)}
         {/* Owner order 2026-10-05: aim (with breath primer) → defensive video → coach advice → why the plan changed.

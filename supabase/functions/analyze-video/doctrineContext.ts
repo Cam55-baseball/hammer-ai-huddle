@@ -26,7 +26,7 @@ export function doctrineSources(module: string, sport: string): Array<keyof type
 export function doctrineContextBlock(module: string, sport: string): string {
   const parts = doctrineSources(module, sport)
     .map((k) => DOCTRINE[k])
-    .filter((t): t is string => typeof t === "string" && t.length > 0);
+    .filter((t) => typeof t === "string" && t.length > 0);
   if (parts.length === 0) return "";
   return `\n\n=== FULL OWNER DOCTRINE FOR THIS ANALYSIS TYPE ===\n${parts.join("\n\n---\n\n")}\n${RULES}\n=== END DOCTRINE ===`;
 }

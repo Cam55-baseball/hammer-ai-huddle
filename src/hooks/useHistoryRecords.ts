@@ -19,6 +19,7 @@ export interface PracticeRecord {
   drill_blocks: unknown;
   notes: string | null;
   sport: string | null;
+  composite_indexes: unknown;
 }
 
 export interface GameRecord {
@@ -65,7 +66,7 @@ export function usePracticeHistory(userId: string | null, enabled: boolean, limi
     queryFn: async (): Promise<PracticeRecord[]> => {
       const { data, error } = await supabase
         .from('performance_sessions')
-        .select('id, session_date, module, session_type, effective_grade, coach_grade, drill_blocks, notes, sport')
+        .select('id, session_date, module, session_type, effective_grade, coach_grade, drill_blocks, notes, sport, composite_indexes')
         .eq('user_id', userId!)
         .is('deleted_at', null)
         .order('session_date', { ascending: false })
