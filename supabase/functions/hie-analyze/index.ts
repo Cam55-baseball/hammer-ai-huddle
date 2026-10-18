@@ -1719,26 +1719,26 @@ Deno.serve(async (req) => {
     const developmentConfidence = computeConfidence(sessionCount, dataRecencyDays, settings?.coach_validation_met ?? false);
 
     // ── MODULE INTEGRATION: Speed Lab → Movement Efficiency ──
+    // Owner rule (no made-up numbers): only score when BOTH stride steps and
+    // effort (RPE) were actually entered. Missing either input → null, shown
+    // as "Not enough data". Never fall back to assumed values (70 / 5).
     let movementEfficiencyScore: number | null = null;
     if (speedSessions && speedSessions.length > 0) {
       const rpes = speedSessions.filter((s: any) => s.rpe != null).map((s: any) => s.rpe);
-      const avgRpe = rpes.length > 0 ? rpes.reduce((a: number, b: number) => a + b, 0) / rpes.length : 5;
-      let strideEfficiency = 70;
       const stepsData = speedSessions.filter((s: any) => s.steps_per_rep);
-      if (stepsData.length > 0) {
-        const allSteps: number[] = [];
-        stepsData.forEach((s: any) => {
-          if (typeof s.steps_per_rep === 'object') {
-            Object.values(s.steps_per_rep).forEach((v: any) => { if (typeof v === 'number') allSteps.push(v); });
-          }
-        });
-        if (allSteps.length > 0) {
-          const avgSteps = allSteps.reduce((a, b) => a + b, 0) / allSteps.length;
-          strideEfficiency = Math.min(100, Math.max(0, 100 - (avgSteps - 3) * 10));
+      const allSteps: number[] = [];
+      stepsData.forEach((s: any) => {
+        if (typeof s.steps_per_rep === 'object') {
+          Object.values(s.steps_per_rep).forEach((v: any) => { if (typeof v === 'number') allSteps.push(v); });
         }
+      });
+      if (rpes.length > 0 && allSteps.length > 0) {
+        const avgRpe = rpes.reduce((a: number, b: number) => a + b, 0) / rpes.length;
+        const avgSteps = allSteps.reduce((a, b) => a + b, 0) / allSteps.length;
+        const strideEfficiency = Math.min(100, Math.max(0, 100 - (avgSteps - 3) * 10));
+        movementEfficiencyScore = Math.round(strideEfficiency * 0.6 + (10 - avgRpe) * 4);
+        movementEfficiencyScore = Math.min(100, Math.max(0, movementEfficiencyScore));
       }
-      movementEfficiencyScore = Math.round(strideEfficiency * 0.6 + (10 - avgRpe) * 4);
-      movementEfficiencyScore = Math.min(100, Math.max(0, movementEfficiencyScore));
     }
 
     // ── MODULE INTEGRATION: Royal Timing → Transfer Score ──
