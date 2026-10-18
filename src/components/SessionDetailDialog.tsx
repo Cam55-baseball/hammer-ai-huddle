@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadOptimizedThumbnail, uploadThumbnailSizes } from '@/lib/uploadHelpers';
@@ -423,7 +424,7 @@ export function SessionDetailDialog({
           <div className="flex gap-2 flex-wrap">
             <Badge variant="outline">{session.sport}</Badge>
             <Badge variant="outline">{session.module}</Badge>
-            {session.efficiency_score !== undefined && (
+            {videoGradesShown() && session.efficiency_score !== undefined && (
               <ReportCardAccessGate>
                 <Badge>{t('sessionDetail.efficiency')}: {session.efficiency_score}%</Badge>
               </ReportCardAccessGate>

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { supabase } from "@/integrations/supabase/client";
 import { TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import { ScoutOverviewSummary } from "@/components/scout/ScoutOverviewSummary";
@@ -100,7 +101,7 @@ export function ScoutTabContents({ q, athleteId }: { q: ReturnType<typeof useSco
           <p className="text-sm">Analysis reports: {p.reports.length}</p>
           {p.reports.map((r, i) => (
             <div key={i} className="rounded-lg border p-3 text-sm flex justify-between">
-              <span>Skill: {r.module ?? NM}</span><span>Score: {r.efficiency_score ?? NM} · {d(r.created_at)}</span>
+              <span>Skill: {r.module ?? NM}</span><span>Grade: {videoGradesShown() ? (r.efficiency_score ?? NM) : VIDEO_GRADE_PLACEHOLDER} · {d(r.created_at)}</span>
             </div>))}
           <Src t="Source: video analysis reports." />
         </div>))}

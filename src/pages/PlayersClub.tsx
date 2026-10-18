@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
 import { useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
@@ -298,7 +299,7 @@ export default function PlayersClub() {
             <div className="flex gap-2 flex-wrap">
               <Badge variant="outline" className="capitalize">{session.sport}</Badge>
               <Badge variant="outline" className="capitalize">{session.module}</Badge>
-              {session.efficiency_score !== undefined && (
+              {videoGradesShown() && session.efficiency_score !== undefined && (
                 <Badge variant="secondary">{session.efficiency_score}%</Badge>
               )}
             </div>
@@ -476,7 +477,7 @@ export default function PlayersClub() {
                             <div className="flex flex-wrap gap-2 items-center text-xs text-muted-foreground">
                               <Badge variant="outline" className="capitalize text-xs">{item.sport}</Badge>
                               <Badge variant="outline" className="capitalize text-xs">{item.module}</Badge>
-                              {item.efficiency_score !== undefined && (
+                              {videoGradesShown() && item.efficiency_score !== undefined && (
                                 <Badge variant="secondary" className="text-xs">{item.efficiency_score}%</Badge>
                               )}
                             </div>
