@@ -128,6 +128,7 @@ export function DataIngestPanel({ gameId, sport }: { gameId: string; sport?: str
           launch_angle: a.launch_angle,
           exit_direction: a.exit_direction,
           contact_quality: a.contact_quality,
+          entry_source: "imported",
           pitch_type: a.pitch_type,
           pitch_velo: a.pitch_velo,
           notes: [a.notes, `Imported from ${SOURCE_LABELS[result.source]}`]

@@ -27,3 +27,5 @@
 - Staff sign-up: `/get-started` → `/signup/:role` (adults, `src/lib/auth/staffSignup.ts`); approvals reuse existing queues. Why: one approval system.
 - Live game-report sources exclude deleted games and scope to the signed-in athlete; frozen snapshots stay unchanged. Why: removed games must not feed new reports.
 
+
+- Pitch intent/contact annotations use dedicated nullable fields on the existing pitch ledger, never movement measurements or parsed historical notes; hard contact is an observation, not a measured threshold. Why: future Game IQ needs structured facts without invented measurements.

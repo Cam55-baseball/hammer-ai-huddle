@@ -125,6 +125,10 @@ function PitchCard({ p, idx, onDelete }: { p: GpPitchRow; idx: number; onDelete:
         <>
           {p.pitch_velo != null && <span>Pitch speed: {p.pitch_velo} mph</span>}
           {p.result && <span>Result: {pitchResultPlain(p.result) ?? p.result}</span>}
+          {p.contact_quality && <span>Contact observed: {p.contact_quality}</span>}
+          {p.spray_bucket && <span>Ball direction: {p.spray_bucket.replace(/_/g, " ")}</span>}
+          {p.hard_hit != null && <span>Hard contact observed: {p.hard_hit ? "Yes" : "No"}</span>}
+          {p.intent_location && <span>Intended location: {p.intent_location.zone != null ? `Zone ${p.intent_location.zone}` : p.intent_location.outZone}</span>}
           {p.opponent_hitter_name && <span>vs {p.opponent_hitter_name}</span>}
         </>
       }
@@ -164,7 +168,7 @@ function PitchForm({
     notes: "",
     contact: "",
     spray: "",
-    hard_hit: false,
+    hard_hit: "",
   });
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
   const isPitcher = perspective === "pitcher";
@@ -185,12 +189,12 @@ function PitchForm({
                   checked={showIntent}
                   onCheckedChange={(v) => setShowIntent(Boolean(v))}
                 />
-                Log intent zone
+                Intended location (optional)
               </label>
               {showIntent && (
                 <>
                   <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                    Intent
+                    Intended location
                   </div>
                   <StrikeZoneGrid value={intentZone} onChange={setIntentZone} size={140} />
                 </>
@@ -217,7 +221,7 @@ function PitchForm({
             <Select value={f.result} onValueChange={(v) => set("result", v)}>
               <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
               <SelectContent>
-                {RESULTS.map((r) => (<SelectItem key={r} value={r}>{r}</SelectItem>))}
+                {RESULTS.map((r) => (<SelectItem key={r} value={r}>{pitchResultPlain(r) ?? r}</SelectItem>))}
               </SelectContent>
             </Select>
           </F>
@@ -265,7 +269,7 @@ function PitchForm({
                   </SelectContent>
                 </Select>
               </F>
-              <F label="Spray">
+              <F label="Ball direction">
                 <Select value={f.spray} onValueChange={(v) => set("spray", v)}>
                   <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                   <SelectContent>
@@ -273,14 +277,15 @@ function PitchForm({
                   </SelectContent>
                 </Select>
               </F>
-              <F label="Hard hit?">
-                <label className="flex items-center gap-2 h-9">
-                  <Checkbox
-                    checked={f.hard_hit}
-                    onCheckedChange={(v) => set("hard_hit", Boolean(v))}
-                  />
-                  <span className="text-xs text-muted-foreground">≥ hard / barrel</span>
-                </label>
+              <F label="Hard contact observed?">
+                <Select value={typeof f.hard_hit === "boolean" ? String(f.hard_hit) : "unknown"} onValueChange={(v) => set("hard_hit", v === "unknown" ? "" : v === "true")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unknown">Not entered</SelectItem>
+                    <SelectItem value="true">Yes</SelectItem>
+                    <SelectItem value="false">No</SelectItem>
+                  </SelectContent>
+                </Select>
               </F>
             </>
           )}
@@ -292,24 +297,7 @@ function PitchForm({
       <div className="flex justify-end gap-2 mt-3">
         <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
         <Button size="sm" disabled={saving} onClick={async () => {
-          const extras: string[] = [];
-          if (isPitcher && showIntent && (intentZone.zone || intentZone.outZone)) {
-            const intentLabel = intentZone.zone ?? intentZone.outZone;
-            const actualLabel = zoneVal.zone ?? zoneVal.outZone ?? "—";
-            extras.push(`intent:${intentLabel}→actual:${actualLabel}`);
-          }
-          if (isPitcher && showHitterOutcomes) {
-            if (f.contact) extras.push(`contact:${f.contact}`);
-            if (f.spray) extras.push(`spray:${f.spray}`);
-            if (f.hard_hit) extras.push("hard_hit");
-          }
-          const mergedNotes = extras.length
-            ? [f.notes, `[${extras.join(" · ")}]`].filter(Boolean).join(" ")
-            : f.notes;
-          const payload = pitchEntryPayload({ ...f, notes: mergedNotes }, perspective, zoneVal);
-          delete payload.contact;
-          delete payload.spray;
-          delete payload.hard_hit;
+          const payload = pitchEntryPayload(f, perspective, zoneVal, showIntent ? intentZone : undefined);
           try { await onSave(payload); } catch { /* Keep the unsaved form; the mutation reports the error. */ }
         }}>{saving ? "Saving…" : "Save pitch"}</Button>
       </div>

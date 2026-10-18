@@ -26,6 +26,10 @@ export interface GpPitchRow {
   count_strikes: number | null;
   notes: string | null;
   entry_source?: string | null;
+  contact_quality?: string | null;
+  spray_bucket?: string | null;
+  hard_hit?: boolean | null;
+  intent_location?: { zone?: number | null; outZone?: string | null } | null;
   created_at: string;
 }
 

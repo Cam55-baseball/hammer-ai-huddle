@@ -2,6 +2,17 @@ import { describe, expect, it } from "vitest";
 import { pitchEntryPayload, quickAtBatPayload } from "../pitchEntry";
 
 describe("game pitch facts", () => {
+  it("stores pitcher observations and intent separately from actual location", () => {
+    expect(pitchEntryPayload({ result: "in_play", contact: "hard", spray: "pull_ground", hard_hit: true, notes: "My observation" }, "pitcher", { zone: 7 }, { zone: 3 })).toMatchObject({ contact_quality: "hard", spray_bucket: "pull_ground", hard_hit: true, intent_location: { zone: 3 }, location: { zone: 7 }, notes: "My observation" });
+  });
+  it("keeps unentered hard contact unknown and preserves an explicit no", () => {
+    expect(pitchEntryPayload({ result: "in_play", hard_hit: "" }, "pitcher", { zone: null }).hard_hit).toBeNull();
+    expect(pitchEntryPayload({ result: "in_play", hard_hit: false }, "pitcher", { zone: null }).hard_hit).toBe(false);
+  });
+  it("does not save hidden contact or intent selections for another result or perspective", () => {
+    expect(pitchEntryPayload({ result: "ball", contact: "hard", spray: "pull_ground", hard_hit: true }, "pitcher", { zone: null })).toMatchObject({ contact_quality: null, spray_bucket: null, hard_hit: null, intent_location: null });
+    expect(pitchEntryPayload({ result: "in_play", contact: "hard", hard_hit: true }, "hitter", { zone: null }, { zone: 3 })).toMatchObject({ contact_quality: null, hard_hit: null, intent_location: null });
+  });
   it("does not turn blank or invalid numeric input into a measurement", () => {
     expect(pitchEntryPayload({ pitch_velo: "  ", inning: "unknown" }, "pitcher", { zone: null })).toMatchObject({ pitch_velo: null, inning: null });
   });
