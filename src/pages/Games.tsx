@@ -1,3 +1,4 @@
+import { entrySourceLabel } from "@/lib/intelligence/entrySource";
 import { CoachEntriesToConfirm } from "@/components/games/CoachEntriesToConfirm";
 /**
  * Games — V1 of the elite Game Performance hub.
@@ -63,6 +64,7 @@ interface GameRow {
   my_score: number | null;
   opp_score: number | null;
   philosophy_verdict: string | null;
+  entry_source?: string | null;
 }
 
 export default function Games() {
@@ -89,7 +91,7 @@ export default function Games() {
       const { data, error } = await (supabase as any)
         .from("gp_games")
         .select(
-          "id, game_date, sport, opponent_team, status, game_type, my_positions, my_score, opp_score, philosophy_verdict",
+          "id, game_date, sport, opponent_team, status, game_type, my_positions, my_score, opp_score, philosophy_verdict, entry_source",
         )
         .is("deleted_at", null)
         .eq("user_id", user!.id)
@@ -298,6 +300,7 @@ export default function Games() {
                     ? ` · ${g.my_score}-${g.opp_score}`
                     : ""}
                 </p>
+                <p className="text-xs text-muted-foreground">Logged by: {entrySourceLabel(g.entry_source)}</p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 <Button
