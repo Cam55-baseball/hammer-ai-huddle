@@ -1,3 +1,9 @@
+# AG6 — Oct 18 23:55 UTC — Sub-step 4d DONE: TEST new player (no games) proof
+- [x] TEST adult with 0 games (demomlb) at 390×844: Game IQ Hitting and Pitching both "Need more data: nothing logged here yet"; Game reports: "Pitch heat map (0 pitches seen)", "No at-bats yet.", "No pitcher-perspective pitches yet.", "0 steal attempts". No numbers invented, 0 page errors, no sideways scroll. Evidence: docs/owner/walkthroughs/intelligence/ag6/
+- [x] Under-13 TEST (demo13) correctly stops at "Parent signature required" before any app screen (needs parent signature + payment — not bypassed).
+- [x] No test data created this step.
+- [ ] Still open in sub-step 4: parent-run logging, both coach modes. Ready to publish: no.
+
 # AG5 — Oct 18 23:50 UTC — Sub-step 4c DONE: TEST softball player proof (+2 fixes)
 - [x] FIX: new games took their sport from this phone's theme pick, so the TEST softball catcher's first games saved as baseball and offered baseball pitches (Slider, Four-seam). Both "start a game" paths now use the account's saved sport (src/pages/Games.tsx). Wrong-sport TEST games (3) + pitches deleted by exact ID.
 - [x] FIX: Pitcher usage showed raw codes ("drop × 3"); now sport-correct names ("Dropball × 3") (src/pages/GameReports.tsx). 2 rule tests PASS (src/lib/games/sportPitchLabels.test.ts).
