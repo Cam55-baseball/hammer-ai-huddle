@@ -1,7 +1,12 @@
-# AD3 — Oct 18 19:44 UTC — Populated team-report proof in progress
-Ready to publish: **no** — proving the remaining populated team report before B–F; timing-sensitive/physical-device certification remains open.
+# AD3 — Oct 18 19:47 UTC — Populated team-report phone proof PASS
+Ready to publish: **no** — populated team report now proven; B–F and timing-sensitive/physical-device certification remain open.
 - [x] Recorded AD3 continuation in owner order; retained TEST Coach subscription must stay active until all coach proofs finish.
-- [ ] Enter a marked TEST game through the player screen, read the populated team report as the linked TEST coach on a phone and on a fresh visit, then snapshot and clean up exact TEST inputs.
+- [x] Affected TEST college player entered a marked game, single, walk, swinging strikeout and blank-detail pitch through the app. Connected with the existing request/accept RPCs; affected TEST coach read the populated report in two fresh 390×844 contexts.
+- [x] Proof found and fixed missed canonical strikeouts, invented zero optional totals and unsupported mechanics/plan advice. Correct report: 1-for-2, 1 BB, 1 K, one player/one pitch; missing RBI/errors/results/velocity/innings stay Not entered; source Player-entered; thin standout early read. No page exceptions or page overflow.
+- [x] Game regressions: 9 files / 52 tests PASS, including 10 report-honesty tests; latest preview build OK. Evidence: `docs/owner/walkthroughs/intelligence/ad3/`.
+- [x] Exact cleanup: snapshotted/deleted five TEST game/event rows and one temporary TEST request, verified zero; temporary link ended and existing rejected status restored. Fresh coach visit shows empty report with plan access still active. No subscription changes.
+- [x] No publish, redeploy, migration, cron or iOS changes. Engine fix is preview-only; only authorized TEST-data actions reached the live backend.
+- [ ] Next: B — five-player Intelligence 2–5 including parent-run and both coach logging modes; then C → D → E → F. Coach plan stays active until all coach proofs end.
 
 # AD2 — Oct 18 19:43 UTC — Back-button phone fix PASS
 Ready to publish: **no** — Back overlap fixed and phone-proven; populated team report, B–F and timing-sensitive/physical-device certification remain open.
@@ -45,7 +50,7 @@ Ready to publish: **no** — populated team game report, five-player proofs, Gam
 - #7 New-player Completed → Start → saved plan — PASS. `ac3/`.
 - #8 Linked-parent optional sharing — PASS. `ac4/`.
 - #9 Physio setup/redo — PASS.
-- #10 History + team post-game report — History PASS (`ac5/`, `ac7/`); player game report honesty fixed and PASS (`ac10/`); team report phone access PASS (`coach-retained/`), populated linked-player proof still OPEN. Prior plan blocker (`ac12/`) resolved.
+- #10 History + team post-game report — History PASS (`ac5/`, `ac7/`); player game report honesty fixed and PASS (`ac10/`); populated linked-player team report PASS (`ad3/`), including fresh signed-in coach phone readback and exact TEST cleanup. Coach plan retained for remaining proofs.
 
 ## Hammers Intelligence steps
 - 1 Data lineage — PASS (doc).
@@ -53,7 +58,7 @@ Ready to publish: **no** — populated team game report, five-player proofs, Gam
 - 3 Four tabs — built, owner-session phone proof; five-player proof open.
 - 4 Learning loop — built; nightly job applied by owner (first call 200); first scheduled-run outcome not yet checked.
 - 5 Game logging with "Logged by" — built and phone-proven for a player; parent-run and both coach modes not yet proven.
-- 6 Game IQ — player game report fixed (AC9/AC10/AC12: blanks show "Not entered", thin data "early read"); team report built; hitter/pitcher/defense/baserunning reports, heat maps and matchup planner open.
+- 6 Game IQ — player game report fixed (AC9/AC10/AC12: blanks show "Not entered", thin data "early read"); populated team report phone-proven (AD3); hitter/pitcher/defense/baserunning reports, heat maps and matchup planner open.
 - 7 Owner's Coaching Console — not started.
 - 8 Population learning with privacy — not started.
 
