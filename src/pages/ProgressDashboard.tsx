@@ -38,6 +38,7 @@ import { Link } from 'react-router-dom';
 import { HammersCard } from '@/components/intelligence/HammersCard';
 import { howSureFor } from '@/lib/intelligence/howSure';
 import { useReadinessState } from '@/hooks/useReadinessState';
+import { PerformanceAreaRows } from '@/components/intelligence/PerformanceAreaRows';
 import { HealthFlagsCard } from '@/components/intelligence/HealthFlagsCard';
 
 function PracticeIntelligenceCard() {
@@ -205,6 +206,7 @@ Confidence: ${snapshot.development_confidence}%
           </TabsContent>
 
           <TabsContent value="performance" className="space-y-6">
+            <PerformanceAreaRows />
             {performance}
             <section id="performance-context" className="scroll-mt-20"><HumanPerformanceCard /></section>
             <Card className="p-4 flex items-center justify-between gap-3">
