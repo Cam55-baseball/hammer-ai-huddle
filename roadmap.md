@@ -1,6 +1,7 @@
 # QUEUED — HAMMERS INTELLIGENCE PLAN (owner-approved Oct 18; source docs/owner/hammers-intelligence-plan.md)
+ZZ1: Oct 17 list remaining items all await owner OK, so the plan started.
 Starts after My Connections + Oct 17 list (Oct 17 items 1,5,7,8,10 await owner OK). Ready to publish: no.
-- [ ] 1. Data lineage (CNS, fascial, readiness, body weight, sleep, nutrition) → docs/owner/data-lineage.md
+- [x] 1. Data lineage written (docs/owner/data-lineage.md): CNS + fascial load are rule-based units, not body measurements → show only as "training exposure"; weight/sleep/eating are real self-entries; no wearable data. (Doc step; screen proof comes with step 3.)
 - [ ] 2. Hammers Card + How-sure dots
 - [ ] 3. The General four tabs (Today / Performance / Game IQ / Growth)
 - [ ] 4. Learning loop
