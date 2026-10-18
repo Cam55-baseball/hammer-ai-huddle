@@ -1,3 +1,9 @@
+# AD7 — Oct 18 20:09 UTC — B empty-history percentages IN PROGRESS
+Ready to publish: **no** — remaining B–F and timing-sensitive/physical-device certification remain open.
+- [ ] Remove undefined completion percentages and training-exposure comparisons; prove the affected player's Growth screen at phone size.
+- [ ] Run focused rule tests, check diagnostics, record evidence and cleanup status.
+- TEST Coach plan retained; no publish, redeploy, migration, cron or iOS changes.
+
 # AD6 — Oct 18 20:08 UTC — B Growth forecast honesty PASS (preview)
 Ready to publish: **no** — remaining B–F and timing-sensitive/physical-device certification remain open.
 - [x] Recorded AD6: remove unsupported future-progress claims from Growth as one concrete B sub-step; retain the TEST Coach plan.

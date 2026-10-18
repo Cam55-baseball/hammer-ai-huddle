@@ -25,5 +25,6 @@
 - Staff plan purchase eligibility lives only in `supabase/functions/_shared/staffEligibility.ts` (used by create-staff-checkout and tests). Why: one rule for age, coach role and org-admin status.
 
 - Staff sign-up: `/get-started` → `/signup/:role` (adults, `src/lib/auth/staffSignup.ts`); approvals reuse existing queues. Why: one approval system.
-- Read scoped AGENTS.md in game directories and `src/components/dashboard` before edits. Why: scoped rules stay with their code.
+- Read scoped game/dashboard AGENTS.md before edits. Why: local rules.
+- Display rates use recordedPercentages helpers. Why: missing/zero denominators and unlogged current values are not percentages.
 - Advice reads never await rechecks; show read failures. Why: failures are not empty lists.

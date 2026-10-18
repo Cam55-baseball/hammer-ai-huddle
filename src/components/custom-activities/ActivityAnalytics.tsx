@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { TrendingUp, Target, Flame, Clock, Footprints } from 'lucide-react';
 import { RunningProgressSummary } from './RunningProgressSummary';
+import { recordedRate } from '@/utils/recordedPercentages';
 
 interface ActivityAnalyticsProps {
   selectedSport: 'baseball' | 'softball';
@@ -17,7 +18,7 @@ interface ActivityAnalyticsProps {
 interface AnalyticsData {
   totalActivities: number;
   completedActivities: number;
-  completionRate: number;
+  completionRate: number | null;
   totalDuration: number;
   byType: Record<string, { total: number; completed: number }>;
   weeklyData: { day: string; completed: number; scheduled: number }[];
@@ -121,7 +122,7 @@ export function ActivityAnalytics({ selectedSport }: ActivityAnalyticsProps) {
         setAnalytics({
           totalActivities: filteredLogs.length,
           completedActivities: completedCount,
-          completionRate: filteredLogs.length > 0 ? (completedCount / filteredLogs.length) * 100 : 0,
+          completionRate: recordedRate(completedCount, filteredLogs.length),
           totalDuration,
           byType,
           weeklyData,
@@ -173,10 +174,12 @@ export function ActivityAnalytics({ selectedSport }: ActivityAnalyticsProps) {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">{t('myCustomActivities.analytics.completionRate', 'Completion Rate')}</p>
-                <p className="text-2xl font-bold">{analytics.completionRate.toFixed(0)}%</p>
+                <p className={analytics.completionRate == null ? 'text-sm text-muted-foreground' : 'text-2xl font-bold'}>
+                  {analytics.completionRate == null ? 'Not enough data' : `${analytics.completionRate.toFixed(0)}%`}
+                </p>
               </div>
             </div>
-            <Progress value={analytics.completionRate} className="mt-3" />
+            {analytics.completionRate != null && <Progress value={analytics.completionRate} className="mt-3" />}
           </CardContent>
         </Card>
 
