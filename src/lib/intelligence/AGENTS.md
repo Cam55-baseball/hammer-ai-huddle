@@ -1,0 +1,1 @@
+- Learning-loop outcomes are set only by `intel-recheck` (server); players read labels, never stored scores. Why: analysis scores are locked from players.

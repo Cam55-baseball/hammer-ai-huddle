@@ -498,6 +498,13 @@
       "when": 1792304217067,
       "tag": "0070_intelligence_recommendations",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1792304530177,
+      "tag": "0071_intel_recs_lock_scores",
+      "breakpoints": true
     }
   ]
 }
