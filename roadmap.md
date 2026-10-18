@@ -1,4 +1,12 @@
-# ACTIVE RUN — AC4, Oct 18 18:23 UTC
+# ACTIVE RUN — AC5, Oct 18 18:40 UTC
+Ready to publish: no — A4 team post-game report and label re-proof, five-player Intelligence proofs, Game IQ, Coaching Console, population learning, final audit, and original HEVC/iPhone Safari/timing certification remain open.
+- [x] A4 part 1 History PASS: TEST college player entered 2 TEST games through the app's own game screen at 390×844; History showed both; a fresh browser context read both back after reload. No page errors, no sideways scrolling.
+- [x] Label gap found and fixed: game rows now show "Opponent:", "Date:", "Type:" (only if entered), "Status:", and counts read "N saved". Build check passed; phone re-proof of the new labels is still open.
+- [x] Exact cleanup PASS: 2 TEST game rows backed up and deleted; zero-row readback; all four History sources back to baseline. Focused tests 2 files / 4 PASS.
+Proof: `docs/owner/walkthroughs/intelligence/ac5/{proof-status.md,history-populated.png,history-fresh-reload.png}`.
+Next concrete sub-step: re-prove History labels, then A4 team post-game report; then B–F.
+
+# PRIOR RUN — AC4, Oct 18 18:23 UTC
 Ready to publish: no — A4, five-player Intelligence proofs, Game IQ, Coaching Console, population learning, final audit, and original HEVC/iPhone Safari/timing certification remain open.
 - [x] A3 / Oct 17 #8 PASS: actual linked TEST parent at 390×844; optional service sharing off → on, authenticated save 200, then a fresh browser context reads on through the real page and permission RPC. Separate health permission stays false; all scout scopes, training opt-in and the existing family link are unchanged. Plain helper wording inspected; no page errors or horizontal overflow.
 - [x] Exact cleanup PASS: fake Parent Promise entered through the app's own signing function, with TEST parent/child names; temporary under-13 scenario restored. Removed that one TEST consent/signature and two new TEST seed height rows, restored original birthday/account flags/subscription expiry. All nine monitored TEST tables match baseline except automatic update timestamps; original family link and consent scopes preserved.
