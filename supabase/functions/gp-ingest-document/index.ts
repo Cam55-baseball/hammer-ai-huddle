@@ -8,8 +8,8 @@
  *  1. Download the file from storage as base64.
  *  2. Send to Gemini 2.0 Flash via Lovable AI Gateway with a strict JSON
  *     schema asking it to extract at-bats, pitches, defense, baserun events.
- *  3. Insert as DRAFT rows (status='draft') so the loggers show them but the
- *     user must confirm each inning before they count.
+ *  3. Store extraction only in the saved document review buffer.
+ *     Unconfirmed extraction never enters the live event ledger.
  *  4. Stamp gp_documents.status='processed', extraction JSON, and counts.
  */
 // @ts-nocheck
@@ -18,6 +18,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { startHeartbeat } from "../_shared/withHeartbeat.ts";
 import { chatCompletion } from "../_shared/googleAi.ts";
+import { ownsImport } from "./ownership.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -55,18 +56,19 @@ serve(async (req) => {
   const hb = startHeartbeat("gp-ingest-document", { intervalMs: 8_000 });
   try {
     const { documentId, gameId, sport, bucket, path } = await req.json();
-    if (!documentId || !gameId || !bucket || !path) {
+    if (![documentId, gameId, bucket, path].every((value) => typeof value === "string" && value.length > 0)) {
       await hb.fail(new Error("missing fields"));
       return json({ error: "missing fields" }, 400);
     }
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const ANON = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!SUPABASE_URL || !SERVICE || !ANON) return json({ error: "Service not configured" }, 500);
     const OPENAI = Deno.env.get("OPENAI_API_KEY");
     const GOOGLE = Deno.env.get("GOOGLE_AI_API_KEY");
-    if (!OPENAI && !GOOGLE) return json({ error: "AI service not configured" }, 500);
 
     const auth = req.headers.get("Authorization") ?? "";
-    const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    const userClient = createClient(SUPABASE_URL, ANON, {
       global: { headers: { Authorization: auth } },
     });
     const { data: who } = await userClient.auth.getUser();
@@ -75,10 +77,21 @@ serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE);
 
+    const [documentResult, gameResult] = await Promise.all([
+      admin.from("gp_documents").select("user_id,game_id,file_url").eq("id", documentId).eq("user_id", user.id).maybeSingle(),
+      admin.from("gp_games").select("user_id,deleted_at").eq("id", gameId).eq("user_id", user.id).maybeSingle(),
+    ]);
+    if (documentResult.error || gameResult.error) return json({ error: "Couldn't check this import" }, 500);
+    if (!ownsImport(user.id, gameId, bucket, path, documentResult.data, gameResult.data)) {
+      return json({ error: "This document is not available for this game" }, 403);
+    }
+    if (!OPENAI && !GOOGLE) return json({ error: "AI service not configured" }, 500);
+
     // 1. download
     const dl = await admin.storage.from(bucket).download(path);
     if (dl.error) throw dl.error;
-    const buf = new Uint8Array(await dl.data!.arrayBuffer());
+    if (!dl.data) throw new Error("Document download returned no file");
+    const buf = new Uint8Array(await dl.data.arrayBuffer());
     const mime = (dl.data as any).type || "application/octet-stream";
     let base64 = "";
     const chunk = 0x8000;
@@ -88,7 +101,8 @@ serve(async (req) => {
     base64 = btoa(base64);
 
     // 2. call gemini
-    await admin.from("gp_documents").update({ parse_status: "processing" }).eq("id", documentId);
+    const started = await admin.from("gp_documents").update({ parse_status: "parsing" }).eq("id", documentId);
+    if (started.error) throw started.error;
     const ai = await chatCompletion({
       model: "google/gemini-2.5-flash",
       messages: [{
@@ -104,82 +118,34 @@ serve(async (req) => {
     }, { timeoutMs: 90_000 });
     if (!ai.ok) {
       await admin.from("gp_documents").update({
-        parse_status: "error", parse_error: `ai ${ai.status}`,
+        parse_status: "failed", parse_error: `ai ${ai.status}`,
       }).eq("id", documentId);
       throw new Error(`AI provider ${ai.status}: ${(ai.errorBody ?? "").slice(0, 400)}`);
     }
     const raw = ai.data.choices?.[0]?.message?.content ?? "";
     const cleaned = String(raw).replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
-    let parsed: any = {};
-    try { parsed = JSON.parse(cleaned); } catch { parsed = {}; }
+    let parsed: any;
+    try { parsed = JSON.parse(cleaned); } catch { throw new Error("Couldn't read the document. Please try a clearer image."); }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Document result was not readable");
     const atBats = Array.isArray(parsed.at_bats) ? parsed.at_bats : [];
     const pitches = Array.isArray(parsed.pitches) ? parsed.pitches : [];
     const defense = Array.isArray(parsed.defense) ? parsed.defense : [];
     const baserun = Array.isArray(parsed.baserun) ? parsed.baserun : [];
 
-    // 3. insert drafts — map to ACTUAL gp_* columns.
-    const inserts: Promise<any>[] = [];
-    if (atBats.length) inserts.push(admin.from("gp_at_bats").insert(
-      atBats.map((a: any) => ({
-        user_id: user.id, game_id: gameId,
-        inning: a.inning ?? null,
-        ab_order: a.pa_no ?? null,
-        result: a.result ?? null,
-        rbi: a.rbi ?? null,
-        exit_velo: a.exit_velo_mph ?? null,
-        launch_angle: a.launch_angle_deg ?? null,
-        batting_side: a.batter_handedness ?? null,
-        notes: a.notes ?? null,
-      }))
-    ));
-    if (pitches.length) inserts.push(admin.from("gp_pitches").insert(
-      pitches.map((p: any) => ({
-        user_id: user.id, game_id: gameId,
-        inning: p.inning ?? null,
-        pitch_no: p.pitch_no ?? null,
-        pitch_type: p.pitch_type ?? null,
-        pitch_velo: p.pitch_velo ?? null,
-        result: p.result ?? null,
-        perspective: p.perspective === "pitcher" ? "pitcher" : "hitter",
-        location: p.zone ? { zone: p.zone } : null,
-        notes: "ai_draft",
-      }))
-    ));
-    if (defense.length) inserts.push(admin.from("gp_defense_plays").insert(
-      defense.map((d: any) => ({
-        user_id: user.id, game_id: gameId,
-        inning: d.inning ?? null,
-        position: d.position ?? null,
-        play_type: d.play_type ?? null,
-        result: d.result ?? null,
-        notes: d.notes ?? null,
-      }))
-    ));
-    if (baserun.length) inserts.push(admin.from("gp_baserun_events").insert(
-      baserun.map((b: any) => ({
-        user_id: user.id, game_id: gameId,
-        inning: b.inning ?? null,
-        event_type: b.event_type ?? null,
-        base_from: b.from_base ?? null,
-        base_to: b.to_base ?? null,
-        success: b.result === "safe" ? true : b.result === "out" ? false : null,
-        notes: b.notes ?? null,
-      }))
-    ));
-    const results = await Promise.allSettled(inserts);
-    const failed = results.filter((r) => r.status === "rejected");
-
+    // Extraction stays on the existing document as a review buffer, never
+    // in the live event ledger before explicit confirmation.
     const summary = {
       atBats: atBats.length, pitches: pitches.length,
       defense: defense.length, baserun: baserun.length,
     };
-    await admin.from("gp_documents").update({
-      parse_status: failed.length ? "partial" : "processed",
-      parsed_events: { summary, failures: failed.length, raw: parsed },
+    const saved = await admin.from("gp_documents").update({
+      parse_status: "ready",
+      parsed_events: { summary, failures: 0, raw: parsed, review_status: "pending" },
     }).eq("id", documentId);
 
-    await hb.success({ ...summary, failures: failed.length, document_id: documentId });
-    return json({ summary, failures: failed.length });
+    if (saved.error) throw saved.error;
+    await hb.success({ ...summary, failures: 0, document_id: documentId });
+    return json({ summary, failures: 0, review_status: "pending" });
   } catch (e) {
     console.error("[gp-ingest-document]", e);
     await hb.fail(e, { document_id: undefined });

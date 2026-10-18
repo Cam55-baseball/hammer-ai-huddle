@@ -1,2 +1,3 @@
 - Live game-report sources exclude deleted games and scope to the signed-in athlete; frozen snapshots stay unchanged. Why: removed games must not feed new reports.
 - Pitch intent/contact annotations use dedicated nullable pitch-ledger fields, never movement measurements or parsed historical notes; hard contact is an observation, not a measured threshold. Why: structured facts must not invent measurements.
+- Imports map only exact known result aliases to ledger codes; unknown outcomes stay null with raw text in notes, and speed/angle never invent contact quality. Why: imported facts must remain queryable without guessed outcomes.

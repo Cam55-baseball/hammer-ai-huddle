@@ -25,4 +25,4 @@
 - Staff plan purchase eligibility lives only in `supabase/functions/_shared/staffEligibility.ts` (used by create-staff-checkout and tests). Why: one rule for age, coach role and org-admin status.
 
 - Staff sign-up: `/get-started` → `/signup/:role` (adults, `src/lib/auth/staffSignup.ts`); approvals reuse existing queues. Why: one approval system.
-- Read game-specific AGENTS.md in `src/components/games` and `src/lib/games` before edits. Why: game rules live with their scope.
+- Read game-specific AGENTS.md in `src/components/games`, `src/lib/games`, and `supabase/functions/gp-ingest-document` before edits. Why: game rules live with their scope.

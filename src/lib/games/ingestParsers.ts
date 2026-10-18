@@ -21,6 +21,24 @@ export type IngestSource =
   | "manual_paste"
   | "other";
 
+/** Exact result vocabulary only; never infer an outcome from a description. */
+export function mapAtBatResult(raw: string | null): string | null {
+  if (!raw) return null;
+  const codes: Record<string, string> = {
+    "1b": "1B", single: "1B", "2b": "2B", double: "2B",
+    "3b": "3B", triple: "3B", hr: "HR", homerun: "HR",
+    bb: "BB", walk: "BB", hbp: "HBP", hitbypitch: "HBP",
+    kswinging: "K_swinging", strikeoutswinging: "K_swinging",
+    klooking: "K_looking", strikeoutlooking: "K_looking",
+    fo: "FO", flyout: "FO", go: "GO", groundout: "GO",
+    lo: "LO", lineout: "LO", po: "PO", popout: "PO",
+    fc: "FC", fielderschoice: "FC", sac: "SAC", sacrificebunt: "SAC",
+    sf: "SF", sacrificefly: "SF", e: "E", error: "E",
+    roe: "ROE", reachedonerror: "ROE",
+  };
+  return codes[raw.trim().toLowerCase().replace(/[^a-z0-9]/g, "")] ?? null;
+}
+
 export interface ParsedPitch {
   kind: "pitch";
   inning: number | null;
@@ -350,18 +368,20 @@ function parseHitTrax(headers: string[], body: string[][]): ParseResult {
       continue;
     }
     const dir = toNum(pick(map, r, "Dir", "Direction"));
+    const rawResult = pick(map, r, "Res", "Result");
+    const result = mapAtBatResult(rawResult);
     rows.push({
       kind: "at_bat",
       inning: toInt(pick(map, r, "Inning")),
-      result: pick(map, r, "Res", "Result", "Type"),
+      result,
       exit_velo: ev == null ? null : Math.round(ev * 10) / 10,
       launch_angle: la == null ? null : Math.round(la * 10) / 10,
       exit_direction:
         dir == null ? null : dir < -12 ? "LF" : dir < -4 ? "LCF" : dir <= 4 ? "CF" : dir <= 12 ? "RCF" : "RF",
-      contact_quality: contactQuality(ev, la),
+      contact_quality: null,
       pitch_type: mapPitchType(pick(map, r, "Pitch", "Pitch Type")),
       pitch_velo: toNum(pick(map, r, "Pitch Velo", "PitchVelo")),
-      notes: pick(map, r, "Notes"),
+      notes: [pick(map, r, "Notes"), rawResult && !result ? `Unmapped imported result: ${rawResult}` : null].filter(Boolean).join(" · ") || null,
     });
   }
   return { source: "hittrax", recognized: true, rows, skipped, warnings: [], headers };
@@ -372,22 +392,22 @@ function parseGameChanger(headers: string[], body: string[][]): ParseResult {
   const rows: ParsedRow[] = [];
   let skipped = 0;
   for (const r of body) {
-    const result = pick(map, r, "Result", "Event", "Play");
-    if (!result) {
+    const rawResult = pick(map, r, "Result", "Event", "Play");
+    if (!rawResult) {
       skipped++;
       continue;
     }
     rows.push({
       kind: "at_bat",
       inning: toInt(pick(map, r, "Inning", "Inn")),
-      result,
+      result: mapAtBatResult(rawResult),
       exit_velo: toNum(pick(map, r, "Exit Velocity", "EV")),
       launch_angle: toNum(pick(map, r, "Launch Angle", "LA")),
       exit_direction: pick(map, r, "Hit Location", "Direction"),
       contact_quality: null,
       pitch_type: mapPitchType(pick(map, r, "Pitch Type")),
       pitch_velo: toNum(pick(map, r, "Pitch Velocity")),
-      notes: pick(map, r, "Description", "Batter"),
+      notes: [pick(map, r, "Description", "Batter"), !mapAtBatResult(rawResult) ? `Unmapped imported result: ${rawResult}` : null].filter(Boolean).join(" · ") || null,
     });
   }
   return { source: "gamechanger", recognized: true, rows, skipped, warnings: [], headers };

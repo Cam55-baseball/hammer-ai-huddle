@@ -1,0 +1,2 @@
+- Before any privileged storage or event access, verify the caller owns both saved document and non-deleted game, and pin bucket/path to the saved document. Why: authentication alone must never authorize arbitrary storage or cross-player writes.
+- Extraction stays in the existing document review buffer, never live events before explicit confirmation; use the saved schema's pending/parsing/ready/failed/applied statuses and inspect returned database errors. Why: unreviewed drafts must never count as athlete facts.
