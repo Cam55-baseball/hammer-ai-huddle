@@ -66,7 +66,11 @@ export function PlayerSnapshotCard() {
       <CardContent className="space-y-4">
         <div className="flex items-center gap-4 flex-wrap">
           <div className="text-center">
-            <div className="text-4xl font-bold text-primary">{snapshot.mpi_score?.toFixed(1) ?? '—'}</div>
+            {snapshot.mpi_score != null ? (
+              <div className="text-4xl font-bold text-primary">{snapshot.mpi_score.toFixed(1)}</div>
+            ) : (
+              <div className="text-sm font-medium text-muted-foreground">Not enough data</div>
+            )}
             <div className="text-xs text-muted-foreground">MPI Score</div>
           </div>
           <div className="text-center">
@@ -97,9 +101,14 @@ export function PlayerSnapshotCard() {
               <div className="text-xs text-muted-foreground">Decision Speed</div>
             </div>
           )}
-          {snapshot.movement_efficiency_score != null && (
+          {snapshot.movement_efficiency_score != null ? (
             <div className="text-center">
               <div className="text-sm font-medium">{snapshot.movement_efficiency_score}</div>
+              <div className="text-xs text-muted-foreground">Movement</div>
+            </div>
+          ) : (
+            <div className="text-center">
+              <div className="text-xs font-medium text-muted-foreground">Not enough data</div>
               <div className="text-xs text-muted-foreground">Movement</div>
             </div>
           )}

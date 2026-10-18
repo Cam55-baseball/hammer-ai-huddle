@@ -9,9 +9,9 @@ Traced from the code that writes each number (`hie-analyze` builds the snapshot;
 | **Transfer** | Royal Timing sessions: times a person clocks by hand while watching a video; score = 100 − timing spread. | **Yes — the times come from video playback.** | Hidden: "Grade coming with camera measurement". |
 | Decision Speed | Tex Vision drills: reaction time and accuracy. | No. | Stays, with source line. |
 
-## Problems found (not fixed — need the owner's decision; the fixes need a backend redeploy)
-1. **Movement fills in guesses**: with no step data it assumes a stride efficiency of 70, and with no effort entries an effort of 5. Those are made-up inputs.
-2. **MPI starter score**: players with no performance sessions but a few other logs get a "provisional" MPI of exactly 50 (and 50 for every part). That number isn't measured.
+## Problems found — FIXED Oct 18 (owner-approved redeploy of hie-analyze + nightly-mpi-process)
+1. **Movement no longer fills in guesses**: the score is only computed when BOTH stride steps and effort (RPE) were actually entered. Missing either → no score, shown as "Not enough data". The assumed 70 / 5 are gone.
+2. **MPI starter score removed**: players with no performance sessions get no number at all (was a flat 50 for every part). Surfaces show "Not enough data". The analysis no longer invents "lowest area at 50" weaknesses either — it says "Not enough data yet".
 3. Movement and MPI are formulas over entered data, not single measurements, so they don't get a 20–80 grade with a band.
 
-Suggested fix: show "Not enough data" instead of the assumed 70 / 5 and the starter 50. That needs an approved redeploy of the two backend functions.
+Verified live Oct 18 as the TEST college player: movement, transfer, decision speed and MPI all came back empty, the limiter read "Not enough data yet", and no made-up 50s appeared. One remaining internal default (not a shown number): the plan builder assumes readiness 70 when no check-in exists — it shapes plan intensity, never displays. Flagged for the owner's decision.

@@ -314,11 +314,12 @@ serve(async (req) => {
           const totalAlt = altInputs.custom_activity_logs + altInputs.tex_vision_sessions + altInputs.vault_focus_quizzes;
           if (totalAlt < PROVISIONAL_MIN) continue;
 
-          // Neutral baseline composites — surfaces a snapshot without inventing performance data.
-          const provisionalScore = 50;
+          // Owner rule (no made-up numbers): a provisional athlete has no
+          // measured performance data, so no score is invented. All scores
+          // stay null and surfaces show "Not enough data".
           await supabase.from('mpi_scores').upsert({
             user_id: uid, sport, calculation_date: today,
-            adjusted_global_score: provisionalScore,
+            adjusted_global_score: null,
             global_rank: null, global_percentile: null, total_athletes_in_pool: null,
             pro_probability: null, pro_probability_capped: false,
             trend_direction: 'stable', trend_delta_30d: 0,
@@ -326,8 +327,8 @@ serve(async (req) => {
             // No corroborating evidence exists for a provisional athlete — an
             // integrity score of 100 would be fabricated. Leave it unscored.
             integrity_score: null,
-            composite_bqi: 50, composite_fqi: 50, composite_pei: 50,
-            composite_decision: 50, composite_competitive: 50,
+            composite_bqi: null, composite_fqi: null, composite_pei: null,
+            composite_decision: null, composite_competitive: null,
             development_prompts: [{
               area: 'data_collection',
               message: 'Log a few performance sessions to unlock your full ranking and personalized insights.',

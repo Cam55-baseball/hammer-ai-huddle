@@ -1108,7 +1108,7 @@ function computeConfidence(sessionCount: number, dataRecencyDays: number, hasCoa
 // ═══════════════════════════════════════════════════════════════
 
 function computeBeforeAfterTrends(
-  currentComposites: Record<string, number>,
+  currentComposites: Record<string, number | null>,
   mpiScores: any[]
 ): any[] {
   if (mpiScores.length < 2) return [];
@@ -1128,8 +1128,10 @@ function computeBeforeAfterTrends(
   ];
 
   areas.forEach(({ key, label }) => {
-    const before = twoWeeksAgo[key] ?? 50;
-    const after = currentComposites[key] ?? 50;
+    const before = twoWeeksAgo[key];
+    const after = currentComposites[key];
+    // Owner rule (no made-up numbers): never assume 50 for a missing score.
+    if (before == null || after == null) return;
     const delta = after - before;
     if (Math.abs(delta) > 1) {
       trends.push({
@@ -1556,15 +1558,23 @@ Deno.serve(async (req) => {
       if (top.zone_details) primaryLimiter += ` — ${top.zone_details}`;
     } else {
       const latestMPI = mpiScores?.[0];
-      const composites: Record<string, number> = {
-        "Batting Quality": latestMPI?.composite_bqi ?? 50,
-        "Fielding Quality": latestMPI?.composite_fqi ?? 50,
-        "Pitching Effectiveness": latestMPI?.composite_pei ?? 50,
-        "Decision Making": latestMPI?.composite_decision ?? 50,
-        "Competitive Execution": latestMPI?.composite_competitive ?? 50,
+      // Owner rule (no made-up numbers): only rank areas that have a real
+      // measured score; missing scores are skipped, never assumed to be 50.
+      const composites: Record<string, number> = {};
+      const raw: Record<string, number | null | undefined> = {
+        "Batting Quality": latestMPI?.composite_bqi,
+        "Fielding Quality": latestMPI?.composite_fqi,
+        "Pitching Effectiveness": latestMPI?.composite_pei,
+        "Decision Making": latestMPI?.composite_decision,
+        "Competitive Execution": latestMPI?.composite_competitive,
       };
+      for (const [label, val] of Object.entries(raw)) {
+        if (val != null) composites[label] = val;
+      }
       const sorted = Object.entries(composites).sort(([, a], [, b]) => a - b);
-      primaryLimiter = `${sorted[0][0]} is your lowest area at ${Math.round(sorted[0][1])}`;
+      primaryLimiter = sorted.length > 0
+        ? `${sorted[0][0]} is your lowest area at ${Math.round(sorted[0][1])}`
+        : "Not enough data yet — log performance sessions so we can find what to work on";
     }
 
     // ── WEAKNESS CLUSTERS ──
@@ -1578,21 +1588,33 @@ Deno.serve(async (req) => {
 
     if (weaknessClusters.length === 0) {
       const latestMPI = mpiScores?.[0];
+      // Owner rule (no made-up numbers): only list areas with a real measured
+      // score. If none exist, say so instead of inventing weaknesses.
       const compositeList = [
-        { key: "composite_bqi", label: "Batting Quality", val: latestMPI?.composite_bqi ?? 50 },
-        { key: "composite_fqi", label: "Fielding Quality", val: latestMPI?.composite_fqi ?? 50 },
-        { key: "composite_pei", label: "Pitching Effectiveness", val: latestMPI?.composite_pei ?? 50 },
-        { key: "composite_decision", label: "Decision Making", val: latestMPI?.composite_decision ?? 50 },
-        { key: "composite_competitive", label: "Competitive Execution", val: latestMPI?.composite_competitive ?? 50 },
-      ].sort((a, b) => a.val - b.val);
+        { key: "composite_bqi", label: "Batting Quality", val: latestMPI?.composite_bqi },
+        { key: "composite_fqi", label: "Fielding Quality", val: latestMPI?.composite_fqi },
+        { key: "composite_pei", label: "Pitching Effectiveness", val: latestMPI?.composite_pei },
+        { key: "composite_decision", label: "Decision Making", val: latestMPI?.composite_decision },
+        { key: "composite_competitive", label: "Competitive Execution", val: latestMPI?.composite_competitive },
+      ].filter((c) => c.val != null)
+       .sort((a, b) => (a.val as number) - (b.val as number));
 
-      compositeList.slice(0, 3).forEach((c) => {
+      if (compositeList.length === 0) {
         weaknessClusters.push({
-          area: c.key, issue: `${c.label} needs improvement`, why: `Score at ${Math.round(c.val)}/100`,
-          impact: c.val < 35 ? "high" : c.val < 45 ? "medium" : "low",
-          data_points: { score: Math.round(c.val) },
+          area: "data", issue: "Not enough data yet",
+          why: "Log performance sessions so we can see what to work on",
+          impact: "low", data_points: {},
         });
-      });
+      } else {
+        compositeList.slice(0, 3).forEach((c) => {
+          const v = c.val as number;
+          weaknessClusters.push({
+            area: c.key, issue: `${c.label} needs improvement`, why: `Score at ${Math.round(v)}/100`,
+            impact: v < 35 ? "high" : v < 45 ? "medium" : "low",
+            data_points: { score: Math.round(v) },
+          });
+        });
+      }
     }
 
     // ── READINESS (must be computed before prescription engine needs it) ──
@@ -1719,26 +1741,26 @@ Deno.serve(async (req) => {
     const developmentConfidence = computeConfidence(sessionCount, dataRecencyDays, settings?.coach_validation_met ?? false);
 
     // ── MODULE INTEGRATION: Speed Lab → Movement Efficiency ──
+    // Owner rule (no made-up numbers): only score when BOTH stride steps and
+    // effort (RPE) were actually entered. Missing either input → null, shown
+    // as "Not enough data". Never fall back to assumed values (70 / 5).
     let movementEfficiencyScore: number | null = null;
     if (speedSessions && speedSessions.length > 0) {
       const rpes = speedSessions.filter((s: any) => s.rpe != null).map((s: any) => s.rpe);
-      const avgRpe = rpes.length > 0 ? rpes.reduce((a: number, b: number) => a + b, 0) / rpes.length : 5;
-      let strideEfficiency = 70;
       const stepsData = speedSessions.filter((s: any) => s.steps_per_rep);
-      if (stepsData.length > 0) {
-        const allSteps: number[] = [];
-        stepsData.forEach((s: any) => {
-          if (typeof s.steps_per_rep === 'object') {
-            Object.values(s.steps_per_rep).forEach((v: any) => { if (typeof v === 'number') allSteps.push(v); });
-          }
-        });
-        if (allSteps.length > 0) {
-          const avgSteps = allSteps.reduce((a, b) => a + b, 0) / allSteps.length;
-          strideEfficiency = Math.min(100, Math.max(0, 100 - (avgSteps - 3) * 10));
+      const allSteps: number[] = [];
+      stepsData.forEach((s: any) => {
+        if (typeof s.steps_per_rep === 'object') {
+          Object.values(s.steps_per_rep).forEach((v: any) => { if (typeof v === 'number') allSteps.push(v); });
         }
+      });
+      if (rpes.length > 0 && allSteps.length > 0) {
+        const avgRpe = rpes.reduce((a: number, b: number) => a + b, 0) / rpes.length;
+        const avgSteps = allSteps.reduce((a, b) => a + b, 0) / allSteps.length;
+        const strideEfficiency = Math.min(100, Math.max(0, 100 - (avgSteps - 3) * 10));
+        movementEfficiencyScore = Math.round(strideEfficiency * 0.6 + (10 - avgRpe) * 4);
+        movementEfficiencyScore = Math.min(100, Math.max(0, movementEfficiencyScore));
       }
-      movementEfficiencyScore = Math.round(strideEfficiency * 0.6 + (10 - avgRpe) * 4);
-      movementEfficiencyScore = Math.min(100, Math.max(0, movementEfficiencyScore));
     }
 
     // ── MODULE INTEGRATION: Royal Timing → Transfer Score ──
@@ -1782,12 +1804,14 @@ Deno.serve(async (req) => {
     const mpiScore = latestMPI?.adjusted_global_score ?? null;
 
     // ── BEFORE/AFTER TRENDS ──
-    const currentComposites: Record<string, number> = {
-      composite_bqi: latestMPI?.composite_bqi ?? 50,
-      composite_fqi: latestMPI?.composite_fqi ?? 50,
-      composite_pei: latestMPI?.composite_pei ?? 50,
-      composite_decision: latestMPI?.composite_decision ?? 50,
-      composite_competitive: latestMPI?.composite_competitive ?? 50,
+    // Owner rule (no made-up numbers): missing composites stay null and are
+    // skipped by computeBeforeAfterTrends — never assumed to be 50.
+    const currentComposites: Record<string, number | null> = {
+      composite_bqi: latestMPI?.composite_bqi ?? null,
+      composite_fqi: latestMPI?.composite_fqi ?? null,
+      composite_pei: latestMPI?.composite_pei ?? null,
+      composite_decision: latestMPI?.composite_decision ?? null,
+      composite_competitive: latestMPI?.composite_competitive ?? null,
     };
     const beforeAfterTrends = computeBeforeAfterTrends(currentComposites, mpiScores ?? []);
 
