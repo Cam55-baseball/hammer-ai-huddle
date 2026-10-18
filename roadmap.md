@@ -1,3 +1,9 @@
+# AD5 — Oct 18 19:58 UTC — B saved-advice access proof IN PROGRESS
+Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
+- [x] Recorded AD5: resolve the saved-advice read failure as one concrete B sub-step; keep TEST Coach plan active.
+- [ ] Inspect live column permissions and self-only rules, correct only the authorized Intelligence access fault if needed, prove the affected TEST player on a 390×844 screen, and clean up exact TEST inputs.
+- [ ] Other B no-data gaps and cohort/role proofs remain open; continue B → C → D → E → F. No publish, cron or iOS changes.
+
 # AD4 — Oct 18 19:57 UTC — B no-data player proof PARTIAL; gaps found
 Ready to publish: **no** — B–F and timing-sensitive/physical-device certification remain open.
 - [x] Recorded AD4 continuation: begin B with the no-data, unstarted TEST player; keep Coach plan active. A kept empty account is not proof of a genuinely brand-new signup.
