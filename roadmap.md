@@ -1,4 +1,11 @@
-# ACTIVE RUN — AC9, Oct 18 18:42 UTC
+# ACTIVE RUN — AC10, Oct 18 18:50 UTC
+Ready to publish: no — team post-game report screen, B–F, and HEVC/iPhone Safari/timing certification remain open.
+- [x] Fixed post-game report PASS on phone (390×844, TEST player): blank pitch type shows "Not entered"; steal with no result shows "Not entered", not 0/1; first-pitch strike "Not entered"; no first-pitch Train next suggestion; counts match; fresh-context reload read-back; no page errors or sideways scrolling.
+- [x] Exact cleanup PASS: 7 TEST rows backed up and deleted, zero remaining.
+Proof: `docs/owner/walkthroughs/intelligence/ac10/{proof-status.md,player-individual-report.png,player-fresh-reload.png}`.
+Next concrete sub-step: build the team post-game report screen (coach view from logged events with source labels).
+
+# PRIOR RUN — AC9, Oct 18 18:42 UTC
 Ready to publish: no — phone re-proof of the report fix, team post-game report screen, B–F, and HEVC/iPhone Safari/timing certification remain open.
 - [x] Post-game report honesty fix: a blank pitch type shows "Not entered" (not "unknown"); a steal with no result shows "Not entered" and is left out of the success rate; pitches with no entered count no longer count as first pitches; under 10 first pitches the rate is marked "early read" and never creates a Train next suggestion.
 - [x] New honesty tests: 5 PASS; all game tests 9 files / 45 PASS. No backend, publish, cron or iOS changes; no test data created.
