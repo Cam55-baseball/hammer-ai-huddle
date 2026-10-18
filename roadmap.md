@@ -1,5 +1,7 @@
 # OWNER FIXES — Oct 17 (received Oct 18)
 
+YY4 continuation: check remaining nonempty-analysis paths first, then populated History proof; preserve consent/access gates and existing data. No publish, cron, iOS, migration or Stripe changes.
+
 YY3 continuation: investigate analysis audit persistence first; retain missing footage and role-proof blockers. No publish, cron or iOS changes.
 
 YY3 completed subchecks: audit writes retry once with a stable per-invocation ID, recover committed rows after lost responses, and expose failed persistence without stopping reports. Rejection/catch paths no longer falsely mark failed writes recorded. Five new behavioral tests passed; full suite 368 files / 2,946 tests PASS; deno function validation PASS.
