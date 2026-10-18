@@ -144,14 +144,14 @@ export function ReportView({ snapshot }: { snapshot: ReportSnapshot }) {
         </Card>
       )}
 
-      {snapshot.nextUp.length > 0 && (
+      {(snapshot.nextUp.length > 0 || user) && (
         <Card className="space-y-2 border-primary/40 p-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide">Train next</h2>
-          <ul className="list-disc space-y-1 pl-5 text-sm">
+          {snapshot.nextUp.length > 0 && <ul className="list-disc space-y-1 pl-5 text-sm">
             {snapshot.nextUp.map((n, i) => (
               <li key={i}>{n}</li>
             ))}
-          </ul>
+          </ul>}
           {user && <Button asChild variant="outline" className="print:hidden"><a href="/today#hammer-plan">Open Hammers Today</a></Button>}
         </Card>
       )}

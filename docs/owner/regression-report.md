@@ -4,6 +4,13 @@ Started 2026-10-13. Sections marked NOT YET RUN have not been checked.
 
 ## Oct 17 owner fixes — verified Oct 18
 
+### YY2 follow-up
+- Parent Account settings lists active, unrevoked linked children and opens existing scouting controls. Verified as parent, not owner; phone screenshots saved. Metrics saved, reloaded and restored; visibility stayed OFF. All original consent choice fields matched final read-back; audit retained.
+- Optional connected-service consent remains separate and child-session scoped; still unproven.
+- Agreement feedback now stores the same nearest-five grade displayed to coaches; tests verify 63→65 and 18.44→18.4. Real votes blocked by test coach's inactive plan; no access/billing bypass.
+- Train next retains Today button for signed-in reports without suggestions; no suggestions invented. Populated History proof remains open: demo player has zero practices/reports.
+- Full suite: **367 files / 2,941 tests passed**. Preview build OK. No YY2 redeploy, publish, cron, iOS, migration or Stripe writes. No new accounts; parent test choices restored.
+
 ### YY1 follow-up (04:48–05:07 UTC)
 - Fixed no-report exits in resolution/FPS/duration preflight, request failures, manual retry frame/request failures and delayed hourly retry; Not measured reports retain a working retry button.
 - Rejected authorized clips now save missingness reports instead of leaving videos unfinished. Account-pause requests write rejected audit only after ownership validation. Unauthorized requests still return denied, never access the clip.

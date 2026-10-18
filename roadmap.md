@@ -1,5 +1,12 @@
 # OWNER FIXES — Oct 17 (received Oct 18)
 
+YY2 continuation: verify remaining agreement, parent and History flows; no new live changes without named authorization.
+
+YY2 verified: linked parent Settings opens child scouting controls; Metrics saved and survived reload while visibility remained OFF, then original scopes and sharing fields restored. Parent optional service-sharing is child-session only and unproven; #8 stays open.
+YY2 coach proof blocked by demo coach's inactive Coach plan; no billing/access bypass. Agreement save uses display rounding (63→65, 18.44→18.4), tested; #5 still needs real votes/notes read-back.
+YY2 History: selected frozen snapshots and practice details wired; Train next retains Today button without suggestions. Demo player has zero practices/reports, so populated proof remains open (#10).
+YY2 full suite: 367 files / 2,941 tests PASS. Preview build OK. No redeploys, publishing, cron, iOS, migrations, Stripe writes or new test accounts. Parent test choices restored; audit retained.
+
 YY1 continuation: analysis preflight/retry no-report exits fixed and phone-tested. Only analyze-video redeployed; live throwing report and saved unreadable-frame fallback verified. Original 12-clip proof remains mandatory; no substitute footage relabeled.
 
 - [ ] 1. Analysis reliability first: reproduce every type/sport with two real clips each, repair failures, nonempty honest fallback reports, retry/backup model, outcome/cost logging, phone proof and before/after rates.

@@ -1,0 +1,1 @@
+- Agreement feedback stores the shared rounded grade the coach sees, without updating athlete ratings. Why: feedback and display must match.
