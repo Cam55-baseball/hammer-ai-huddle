@@ -1,0 +1,1 @@
+- Display rates use recordedPercentages helpers. Why: missing/zero denominators and unlogged current values are not percentages.
