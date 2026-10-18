@@ -1,3 +1,15 @@
+# AG1 — Oct 18 23:15 UTC — Sub-step 2 DONE: Game IQ phone proofs with the TEST hitter's 14 games
+
+- [x] Phone 390×844 as TEST college player, 0 page errors. Evidence: docs/owner/walkthroughs/intelligence/ag1/
+- [x] Game IQ tab: hitting report populated from the 42 real plate appearances ("Hard contact: Not entered", "0 missing a result"); Pitching / Defense / Baserunning honestly say "Need more data: nothing logged here yet".
+- [x] Entered 9 test pitches through the app's At-Bats pitch panel (strike-zone taps); 4 saved with locations (a walk's auto-pitches and post-in-play taps don't persist — by design, at-bat already complete). Heat map populated from exactly those 4: "Tapped locations: 4 (outside the zone: 1) · early read"; pitcher heat map "No data yet".
+- [x] Matchup planner populated: "Pitcher hand not entered · pitch type not entered", "Pitches seen: 4 · early read", swing rate 75% (3 of 4), miss rate 33% (1 of 3) — verified against the database rows, math correct.
+- [x] Game reports page: hitting outcomes 1B×11 2B×5 FO×5 BB×5 LO×4 K_looking×4 GO×4 K_swinging×4 (= 42), "No pitcher-perspective pitches yet", Defense 0 plays, steal success "Not enough data".
+- [ ] Kept for later proofs (delete at final cleanup): 14 TEST games, 42 at-bats, 4 TEST pitches, 1 vault sprint entry.
+- [ ] Open: pitcher 5+ reports, two-way, softball, new player, parent-run logging, both coach modes; coach/team matchup view; softball labels; physical iPhone.
+- Next: (3) Coaching Console phone proofs, then (4) remaining five-player proofs, (5) population learning, (6) page audit + full suite + owner's guide.
+- Ready to publish: **no** — Console proofs, five-player proofs, step 8 and audit still open.
+
 # AF7 — Oct 18 23:00 UTC — Sub-step 1 DONE: filler numbers replaced with "Not enough data" (owner-approved redeploy)
 
 - [x] hie-analyze: Movement score now computed ONLY when both stride steps and effort (RPE) were entered — the assumed 70/5 are gone. Missing either → null.
