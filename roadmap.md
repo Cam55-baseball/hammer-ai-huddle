@@ -28,6 +28,7 @@ Full suite PASS: **376 files / 2,969 tests**. Build OK. Full page audit and five
 Live this round: assessment/parent-sharing/video-tag schema changes; `check-subscription`, `parent-consent`, `intel-recheck`, `intel-recheck-job`. No publish, cron changes or iOS edits. Callback bundling issue corrected and successfully deployed.
 
 ## Remaining lean task list
+- [ ] AB1: continue demo-coach paid-access/vote proof first, then remaining answered blockers and Intelligence steps 5–8; no publish/cron/iOS changes.
 - [x] Re-run existing authorized real clips: 12/12 reports, per-type rates above; private test-report cleanup confirmed.
 - [ ] Restore democoach through a new Stripe 100%-off Coach subscription, prove real agreement votes, cancel only this test subscription.
 - [x] Apply approved initial-assessment server gate; new/existing behavior verified at the server.
