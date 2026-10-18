@@ -1,3 +1,9 @@
+# Stream 3 — Owner's Coaching Console (draft, Oct 18 20:50 UTC)
+- [x] Built (draft): owner/admin page /owner/coaching-console + owner menu entry; principle text, sport/area/situation/when/when-not/connected work, evidence (experience/study/Hammers pattern), On/Off switch, follow-through + outcome counts ("Need more data" when none), badges, version history, Edit = new version; owner/admin see "Which principle produced this advice" on saved advice.
+- [x] Rule tests PASS (switched off = not in use; edit never overwrites; badges need real outcomes). Build OK. Owner phone 390×844: page opens, no errors/overflow, shows "We couldn't load your principles" because its tables apply only when the draft is accepted. Evidence: `docs/owner/walkthroughs/intelligence/stream3/`.
+- [ ] Not live until draft accepted (owner-only tables, append-only versions, advice link column, owner-only stats). After accept: save/edit/switch/link proof on a phone.
+- [ ] The advice engine does not read principles yet, and coach "Do you agree?" votes don't feed in yet. Badge thresholds (3 players seen, 10 players + 60% worked proven) are proposed — owner to confirm.
+
 # Stream 2 — Oct 18 20:50 UTC — Game IQ step 6 (draft, preview)
 - [x] Player Game IQ reports (hitting, pitching, defense/throwing, baserunning), tap-in heat maps (as hitter / as pitcher) and matchup planner (pitcher hand × pitch type, sample size on every row, early read under 10) built from entered game facts only; replaces the snapshot heat-map card on the Game IQ tab (subscription gate kept). 10 new honesty tests PASS; games + Progress tests 12 files / 70 tests PASS.
 - [x] Phone proof 390×844 as TEST college player, 2 fresh visits each: empty (Need more data / No data yet) and populated with one TEST game (Not entered for blanks, early read labels, tapped zones only); 0 page errors, no sideways scroll. TEST game + 12 event rows deleted, verified. Evidence: `docs/owner/walkthroughs/intelligence/stream2/`.
