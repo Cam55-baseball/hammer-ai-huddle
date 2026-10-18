@@ -24,6 +24,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { NumberField } from "@/components/games/NumberField";
 
 import { pitchTypes, armSlots } from "@/lib/games/sportRules";
+import { pitchEntryPayload } from "@/lib/games/pitchEntry";
+import { entrySourceLabel } from "@/lib/intelligence/entrySource";
+import { pitchTypeLabel, pitchResultPlain } from "@/lib/games/glossary";
 
 const CONTACTS = ["weak","medium","hard","barrel","mishit"];
 const SPRAY = ["pull_air","pull_ground","center_air","center_ground","oppo_air","oppo_ground"];
@@ -36,7 +39,7 @@ export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }
   const ARM_SLOTS = armSlots(sport);
   const { list, add, del } = useGamePitches(gameId);
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"pitcher" | "hitter">("hitter");
+  const [tab, setTab] = useState<"pitcher" | "hitter">("pitcher");
   const [show, setShow] = useState(false);
 
   const rows = (list.data ?? []).filter((p) => p.perspective === tab);
@@ -84,7 +87,8 @@ export function PitchLogger({ gameId, sport }: { gameId: string; sport: string }
               sport={sport}
               perspective={tab}
               onCancel={() => setShow(false)}
-              onSave={(row) => { add.mutate(row); setShow(false); }}
+              saving={add.isPending}
+              onSave={async (row) => { await add.mutateAsync(row); setShow(false); }}
             />
           )}
 
@@ -109,8 +113,9 @@ function PitchCard({ p, idx, onDelete }: { p: GpPitchRow; idx: number; onDelete:
     <RepCard
       accent="pitching"
       repNumber={idx}
-      title={p.pitch_type || "—"}
+      title={p.pitch_type || "Pitch type not entered"}
       badges={[
+        { label: `Logged by: ${entrySourceLabel(p.entry_source)}`, variant: "outline" as const },
         { label: `Inn ${p.inning ?? "?"}` },
         ...(p.pitch_no != null ? [{ label: `P${p.pitch_no}`, variant: "secondary" as const }] : []),
         ...(p.location?.zone != null ? [{ label: `Z${p.location.zone}` }] : []),
@@ -118,8 +123,8 @@ function PitchCard({ p, idx, onDelete }: { p: GpPitchRow; idx: number; onDelete:
       ]}
       meta={
         <>
-          {p.pitch_velo != null && <span>{p.pitch_velo} mph</span>}
-          {p.result && <span>{p.result}</span>}
+          {p.pitch_velo != null && <span>Pitch speed: {p.pitch_velo} mph</span>}
+          {p.result && <span>Result: {pitchResultPlain(p.result) ?? p.result}</span>}
           {p.opponent_hitter_name && <span>vs {p.opponent_hitter_name}</span>}
         </>
       }
@@ -131,30 +136,31 @@ function PitchCard({ p, idx, onDelete }: { p: GpPitchRow; idx: number; onDelete:
 
 
 function PitchForm({
-  sport, perspective, onSave, onCancel,
+  sport, perspective, onSave, onCancel, saving,
 }: {
   sport: string;
   perspective: "pitcher" | "hitter";
-  onSave: (row: any) => void;
+  onSave: (row: any) => Promise<void>;
   onCancel: () => void;
+  saving: boolean;
 }) {
   const PITCH_TYPES = pitchTypes(sport);
   const ARM_SLOTS = armSlots(sport);
-  const [zoneVal, setZoneVal] = useState<{ zone: Zone | null; outZone?: OutZone }>({ zone: 5 });
-  const [intentZone, setIntentZone] = useState<{ zone: Zone | null; outZone?: OutZone }>({ zone: 5 });
+  const [zoneVal, setZoneVal] = useState<{ zone: Zone | null; outZone?: OutZone }>({ zone: null });
+  const [intentZone, setIntentZone] = useState<{ zone: Zone | null; outZone?: OutZone }>({ zone: null });
   const [showIntent, setShowIntent] = useState(false);
   const [f, setF] = useState<Record<string, any>>({
-    inning: 1,
-    pitch_no: 1,
+    inning: "",
+    pitch_no: "",
     pitch_type: "",
     pitch_velo: "",
     result: "",
     pitcher_arm_slot: "",
-    pitcher_throws: "R",
-    batter_handedness: "R",
+    pitcher_throws: "",
+    batter_handedness: "",
     opponent_hitter_name: "",
-    count_balls: 0,
-    count_strikes: 0,
+    count_balls: "",
+    count_strikes: "",
     notes: "",
     contact: "",
     spray: "",
@@ -194,9 +200,9 @@ function PitchForm({
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <F label="Inn"><NumberField value={f.inning}
-            onValueChange={(v) => set("inning", v ?? 0)} /></F>
+            onValueChange={(v) => set("inning", v ?? "")} /></F>
           <F label="Pitch #"><NumberField value={f.pitch_no}
-            onValueChange={(v) => set("pitch_no", v ?? 0)} /></F>
+            onValueChange={(v) => set("pitch_no", v ?? "")} /></F>
           <F label="Type">
             <Select value={f.pitch_type} onValueChange={(v) => set("pitch_type", v)}>
               <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
@@ -216,9 +222,9 @@ function PitchForm({
             </Select>
           </F>
           <F label="Balls"><NumberField min={0} max={4} value={f.count_balls}
-            onValueChange={(v) => set("count_balls", v ?? 0)} /></F>
+            onValueChange={(v) => set("count_balls", v ?? "")} /></F>
           <F label="Strikes"><NumberField min={0} max={3} value={f.count_strikes}
-            onValueChange={(v) => set("count_strikes", v ?? 0)} /></F>
+            onValueChange={(v) => set("count_strikes", v ?? "")} /></F>
           <F label="Pitcher throws">
             <Select value={f.pitcher_throws} onValueChange={(v) => set("pitcher_throws", v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -285,7 +291,7 @@ function PitchForm({
       </div>
       <div className="flex justify-end gap-2 mt-3">
         <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-        <Button size="sm" onClick={() => {
+        <Button size="sm" disabled={saving} onClick={async () => {
           const extras: string[] = [];
           if (isPitcher && showIntent && (intentZone.zone || intentZone.outZone)) {
             const intentLabel = intentZone.zone ?? intentZone.outZone;
@@ -300,22 +306,12 @@ function PitchForm({
           const mergedNotes = extras.length
             ? [f.notes, `[${extras.join(" · ")}]`].filter(Boolean).join(" ")
             : f.notes;
-          const payload: Record<string, any> = {
-            ...f,
-            perspective,
-            pitch_velo: f.pitch_velo === "" ? null : Number(f.pitch_velo),
-            pitch_type: f.pitch_type || null,
-            result: f.result || null,
-            pitcher_arm_slot: f.pitcher_arm_slot || null,
-            opponent_hitter_name: f.opponent_hitter_name || null,
-            notes: mergedNotes || null,
-            location: zoneVal.zone || zoneVal.outZone ? zoneVal : null,
-          };
+          const payload = pitchEntryPayload({ ...f, notes: mergedNotes }, perspective, zoneVal);
           delete payload.contact;
           delete payload.spray;
           delete payload.hard_hit;
-          onSave(payload);
-        }}>Save pitch</Button>
+          try { await onSave(payload); } catch { /* Keep the unsaved form; the mutation reports the error. */ }
+        }}>{saving ? "Saving…" : "Save pitch"}</Button>
       </div>
     </Card>
   );
