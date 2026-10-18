@@ -6,6 +6,7 @@ import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { staffGateAllows } from "@/lib/staffPlanGate";
 import { StaffPlanTiles } from "@/components/staff/StaffPlanTiles";
 import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/common/BackButton";
 
 /** Opens coach tools only with an active Coach/Organization plan once the owner turns the gate switch on. */
 export function StaffPlanGate({ children, needsOrg = false }: { children: ReactNode; needsOrg?: boolean }) {
@@ -37,6 +38,7 @@ export function StaffPlanGate({ children, needsOrg = false }: { children: ReactN
   if (ok) return <>{children}</>;
   return (
     <div className="mx-auto max-w-md p-6 text-center space-y-3">
+      <div className="text-left"><BackButton /></div>
       <h1 className="text-xl font-semibold">
         {needsOrg ? "This part is included with the Hammers Organization plan" : "Coach tools are now part of the Hammers Coach plan"}
       </h1>

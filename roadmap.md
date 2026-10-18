@@ -1,3 +1,10 @@
+# AD2 — Oct 18 — Back-button phone fix in progress
+Ready to publish: **no** — Back overlap proof in progress; populated team report, B–F and timing-sensitive/physical-device certification remain open.
+- [x] Recorded the queued continuation; retained TEST Coach plan stays active throughout all coach proofs.
+- [x] Coach/Organization plan-required screen now has its own Back control above the heading, rather than relying on the floating fallback. Access and purchase rules unchanged.
+- [ ] Verify both plan-required headings, the actual staff purchase page and sibling floating controls on a phone; record screenshots and Back navigation outcome.
+- [ ] Next: populated team report proof → B → C → D → E → F.
+
 # AD1 — Oct 18 19:37 UTC — HEVC phone-context analysis proof
 Ready to publish: **no** — generated HEVC conversion and completed saved-report readback PASS; timing-sensitive measurement parity remains unverified (pose timeout), followed by Back overlap fixes, populated team report and B–F.
 - [x] Created clearly marked TEST HEVC `.mov` with libx265/hvc1 from an authorized owner H264 original; original untouched. All 265 frames retained; H264→HEVC relative timestamps identical.
