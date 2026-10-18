@@ -2,7 +2,7 @@
  * gp-ingest-document — multimodal AI extraction.
  *
  * Input  : { documentId, gameId, sport, bucket, path }
- * Output : { summary: { atBats, pitches, defense, baserun }, draftIds: { ... } }
+ * Output : { summary: { atBats, pitches, defense, baserun }, review_status: "pending" }
  *
  * Pipeline:
  *  1. Download the file from storage as base64.
@@ -10,7 +10,7 @@
  *     schema asking it to extract at-bats, pitches, defense, baserun events.
  *  3. Store extraction only in the saved document review buffer.
  *     Unconfirmed extraction never enters the live event ledger.
- *  4. Stamp gp_documents.status='processed', extraction JSON, and counts.
+ *  4. Stamp gp_documents.parse_status='ready', extraction JSON, and counts.
  */
 // @ts-nocheck
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
@@ -78,12 +78,15 @@ serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE);
 
     const [documentResult, gameResult] = await Promise.all([
-      admin.from("gp_documents").select("user_id,game_id,file_url").eq("id", documentId).eq("user_id", user.id).maybeSingle(),
+      admin.from("gp_documents").select("user_id,game_id,file_url,parse_status").eq("id", documentId).eq("user_id", user.id).maybeSingle(),
       admin.from("gp_games").select("user_id,deleted_at").eq("id", gameId).eq("user_id", user.id).maybeSingle(),
     ]);
     if (documentResult.error || gameResult.error) return json({ error: "Couldn't check this import" }, 500);
     if (!ownsImport(user.id, gameId, bucket, path, documentResult.data, gameResult.data)) {
       return json({ error: "This document is not available for this game" }, 403);
+    }
+    if (!["pending", "failed"].includes(documentResult.data?.parse_status)) {
+      return json({ error: "This document already has a draft or is being read" }, 409);
     }
     if (!OPENAI && !GOOGLE) return json({ error: "AI service not configured" }, 500);
 
@@ -101,8 +104,9 @@ serve(async (req) => {
     base64 = btoa(base64);
 
     // 2. call gemini
-    const started = await admin.from("gp_documents").update({ parse_status: "parsing" }).eq("id", documentId);
+    const started = await admin.from("gp_documents").update({ parse_status: "parsing", parse_error: null }).eq("id", documentId).in("parse_status", ["pending", "failed"]).select("id");
     if (started.error) throw started.error;
+    if (!started.data?.length) return json({ error: "This document is already being read" }, 409);
     const ai = await chatCompletion({
       model: "google/gemini-2.5-flash",
       messages: [{
