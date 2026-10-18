@@ -1,5 +1,7 @@
 # OWNER FIXES — Oct 17 (received Oct 18)
 
+YY1 continuation: analysis preflight and retry no-report exits identified; close those first, then validate remaining items. Original 12-clip proof remains mandatory; no substitute footage relabeled.
+
 - [ ] 1. Analysis reliability first: reproduce every type/sport with two real clips each, repair failures, nonempty honest fallback reports, retry/backup model, outcome/cost logging, phone proof and before/after rates.
 - [x] 2. Remove duplicate owner Scout application entry (owner menu proof saved).
 - [x] 3. Move Subscribers into owner dashboard; current plan breakdown only (tier/staff/sponsorship test passes, phone view checked).

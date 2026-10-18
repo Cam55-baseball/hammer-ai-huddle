@@ -25,4 +25,13 @@ describe("analysis completion", () => {
   it("does not accept malformed report JSON as a successful report", () => {
     expect(hasStructuredAnalysis({ choices: [{ message: { tool_calls: [{ function: { arguments: "not json" } }] } }] })).toBe(false);
   });
+  it("still retries and returns the backup report when diagnostic storage fails", async () => {
+    const models: string[] = [];
+    const result = await reliableAnalysis(async (model) => {
+      models.push(model);
+      return { ok: true, status: 200, data: models.length === 3 ? valid : {} };
+    }, async () => { throw new Error("diagnostic storage unavailable"); });
+    expect(models).toEqual(["google/gemini-2.5-flash", "google/gemini-2.5-flash", "openai/gpt-4o-mini"]);
+    expect(hasStructuredAnalysis(result.data)).toBe(true);
+  });
 });
