@@ -1,5 +1,7 @@
 # OWNER FIXES — Oct 17 (received Oct 18)
 
+YY3 continuation: investigate analysis audit persistence first; retain missing footage and role-proof blockers. No publish, cron or iOS changes.
+
 YY2 continuation: verify remaining agreement, parent and History flows; no new live changes without named authorization.
 
 YY2 verified: linked parent Settings opens child scouting controls; Metrics saved and survived reload while visibility remained OFF, then original scopes and sharing fields restored. Parent optional service-sharing is child-session only and unproven; #8 stays open.

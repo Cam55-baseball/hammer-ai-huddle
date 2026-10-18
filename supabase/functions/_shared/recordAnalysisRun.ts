@@ -31,6 +31,8 @@ export interface AnalysisRunRecord {
 // deno-lint-ignore no-explicit-any
 export async function recordAnalysisRun(supabase: any, rec: AnalysisRunRecord): Promise<{ id: string | null; error: string | null }> {
   const payload = {
+    // Keep one identity across retries, including a response lost after commit.
+    id: crypto.randomUUID(),
     video_id: rec.video_id,
     requested_by: rec.requested_by ?? null,
     cache_fingerprint_hex: rec.cache_fingerprint_hex,
@@ -50,19 +52,30 @@ export async function recordAnalysisRun(supabase: any, rec: AnalysisRunRecord): 
     outcome: rec.outcome,
     outcome_reason: rec.outcome_reason ?? null,
   };
-  try {
+  let lastError = "unknown";
+  for (let attempt = 0; attempt < 2; attempt++) {
+   try {
     const { data, error } = await supabase
       .from("video_analysis_runs")
       .insert(payload)
       .select("id")
       .single();
     if (error) {
+      // A retry may encounter the row committed by the previous request.
+      if (error.code === "23505") {
+        const existing = await supabase.from("video_analysis_runs").select("id").eq("id", payload.id).maybeSingle();
+        if (!existing.error && existing.data?.id === payload.id) return { id: payload.id, error: null };
+      }
+      lastError = error.message;
       console.error("[recordAnalysisRun] insert error", error.message);
-      return { id: null, error: error.message };
+      continue;
     }
-    return { id: data?.id ?? null, error: null };
+    if (data?.id) return { id: data.id, error: null };
+    lastError = "Audit insert returned no row";
   } catch (e) {
     console.error("[recordAnalysisRun] threw", (e as Error)?.message);
-    return { id: null, error: (e as Error)?.message ?? "unknown" };
+    lastError = (e as Error)?.message ?? "unknown";
+   }
   }
+  return { id: null, error: lastError };
 }
