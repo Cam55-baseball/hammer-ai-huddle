@@ -12,9 +12,9 @@ Ready to publish: no — A2–F and original phone-format proof remain unfinishe
 - Focused tests: 2 files / 9 tests PASS. Latest preview signal: build OK.
 
 ## Cleanup and scope
-- Privately backed up exact two votes, one evaluation and temporary request before removal. Zero-row read-back required for each.
+- Privately backed up exact two votes, one evaluation and temporary request before removal. Confirmed zero remaining votes, evaluations and temporary requests through three separate reads.
 - TEST connection ended via canonical app action, restoring prior rejected connection state; no unrelated connection or real request changed.
-- Only the new TEST subscription canceled immediately, no proration/final invoice; no card charge. Added coupon/customer retained under Stripe add-only guardrail.
+- Only the new TEST subscription canceled immediately, no proration/final invoice; no card charge. Backend staff-plan read-back confirms canceled. Added coupon/customer retained under Stripe add-only guardrail.
 - No source behavior changed, no migration/function redeployment/publish/schedule/iOS edits. Test accounts remain kept.
 
 ## Next
