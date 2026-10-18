@@ -1,3 +1,11 @@
+# AE3 — Oct 18 21:05 UTC — Streams 2 & 3 built in drafts; Stream 1 hitter data entered
+Ready to publish: **no** — drafts not accepted; proofs, step 8, final audit open.
+- [x] Stream 2 draft (Game IQ): four reports, tap-in heat maps, matchup planner with sample sizes + early read; 10 new rule tests, 70 game/Progress tests PASS; phone proof empty + one TEST game (cleaned up). Open: busy heat-map squares re-check on phone, coach/team planner, softball wording.
+- [x] Stream 3 draft (Coaching Console): principles, evidence, on/off, follow-through, badges, versions, advice link (owner/admin only); rule tests PASS. Saving works only after the draft is accepted. Open: advice doesn't read principles yet; coach votes not linked; owner to confirm badge cut-offs (Seen = 3 players it worked for; Proven = 10 players, ≥60%).
+- [x] Stream 1: TEST college player now has 14 marked TEST games (opponent "TEST Hawks N", Sep 1–14), 42 at-bats entered through the actual Games screen on a 390×844 screen, 8 with tapped ball direction. Kept for proofs; delete at final cleanup (plus 3 empty trial games dated Sep 1).
+- [ ] Found: ball-direction spots on the field picker are hard to tap (labels sit over the circles) and can't be reached by keyboard. Fix next.
+- [ ] Stream 1 remaining: pitcher 5+ reports, two-way, softball, new player, parent-run, both coach modes.
+
 # AE2 — Oct 18 20:42 UTC — Parallel streams started
 Ready to publish: **no** — streams running; proofs, step 8 and final audit open.
 - [x] Stream 2 (Game IQ reports, tap-in heat maps, matchup planner) running in its own draft copy.
