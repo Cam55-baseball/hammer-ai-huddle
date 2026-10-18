@@ -1,3 +1,4 @@
+import { entrySourceLabel } from "@/lib/intelligence/entrySource";
 /**
  * AtBatLogger — V2 with inline pitch coupling + keyboard shortcuts + undo.
  *
@@ -320,6 +321,7 @@ export function AtBatLogger({ gameId, sport }: { gameId: string; sport: string }
               }
               badges={[
                 { label: `Inning ${ab.inning ?? "not set"}` },
+                { label: `Logged by: ${entrySourceLabel((ab as any).entry_source)}`, variant: "outline" as const },
                 ...(ab.result ? [{ label: ab.result, variant: "outline" as const }] : []),
                 ...(ab.batting_side
                   ? [{ label: `Batted ${ab.batting_side === "L" ? "left" : "right"}-handed`, variant: "secondary" as const }]
