@@ -1,3 +1,8 @@
+# AJ1 — Oct 19 05:16 UTC — Wrap-up re-check
+**Ready to publish: NO.** Reason: the owner's own checkouts (Complete Pitcher, Coach, Organization) and the under-13 signup are still open; HEVC body-tracking impact stays unverified until one real iPhone clip is uploaded after publish.
+- [x] Cancellations re-read: the only active staff plan is Coach H (not a TEST account); democoach and TEST Child plans stay cancelled.
+- [x] Nightly run (AI4), cron audit (docs/owner/cron-audit.md, nothing changed), owner/admin-only proofs (AI5), page audits (AI1), guide/switch list (AI5) all stand. Latest preview build OK.
+
 # AI5 — Oct 19 05:15 UTC — Owner correction: Game IQ + Report Card internal-only
 **Ready to publish: NO.** Reason: the owner's own checkouts (Complete Pitcher, Coach, Organization) and the under-13 signup on the checklist are still open; HEVC body-tracking impact stays unverified until one real iPhone clip is uploaded after publish.
 - [x] Game IQ switch back OFF; owner/admin only with "Internal — not released" (tab, reports, heat maps, matchup planner, Game IQ 101, links/cards). PASS on phone: TEST player/coach/scout see none (pages send them to the dashboard); owner sees it labeled. Evidence: docs/owner/walkthroughs/intelligence/ai5/.
