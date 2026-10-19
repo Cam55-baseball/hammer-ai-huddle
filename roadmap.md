@@ -19,7 +19,7 @@
 | Five-player: two-way | PASS | .../ag4/ |
 | Five-player: softball | PASS after 2 fixes (game sport, pitch names) | .../ag5/ |
 | Five-player: new player | PASS (under-13 correctly gated) | .../ag6/ |
-| Parent-run logging | BLOCKED — no openable parent-run TEST account; owner approval needed | .../ag7 entry |
+| Parent-run logging | PASS — fresh under-13 TEST account, real signup + Parent Promise + $0 plan, game labeled Parent-entered on phone | .../ag9/ |
 | Coach mode: verify | PASS — coach marked a TEST game verified on phone; saved as Coach-verified | .../ag8/ |
 | Coach mode: coach-entered | NOT RUN | — |
 | Player sees "verified" on postgame report | FAIL/OPEN — postgame report doesn't show it (shown on game sheet header only) | .../ag8/player.png |
