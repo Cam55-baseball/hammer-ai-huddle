@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
-  EVIDENCE_LABEL, badgeFor, latestVersion,
+  EVIDENCE_LABEL, badgeFor, latestVersion, SMALL_GROUP_NOTE,
   type EvidenceKind, type Principle, type PrincipleStats, type PrincipleVersion,
 } from "@/lib/intelligence/principles";
 
@@ -42,7 +42,7 @@ export default function CoachingConsole() {
       const [p, v, s] = await Promise.all([
         db.from("coaching_principles").select("id, active, current_version").order("created_at", { ascending: false }),
         db.from("coaching_principle_versions").select("*").order("version", { ascending: true }),
-        db.rpc("owner_principle_stats"),
+        db.rpc("owner_principle_population_stats"),
       ]);
       if (p.error) throw p.error;
       if (v.error) throw v.error;
@@ -145,11 +145,15 @@ export default function CoachingConsole() {
                   <Switch id={`on-${p.id}`} checked={p.active} onCheckedChange={(c) => toggle(p.id, c)} aria-label="Hammers uses it" />
                   <Label htmlFor={`on-${p.id}`}>Hammers uses it: {p.active ? "On" : "Off"}</Label>
                 </div>
+                {s?.hidden_small_group ? (
+                  <p className="text-sm text-muted-foreground">{SMALL_GROUP_NOTE}</p>
+                ) : (
+                  <p className="text-sm">
+                    Advice given: {s?.advice ?? 0} · Followed: {s?.followed ?? 0} · Players who followed: {s?.players_followed ?? 0}
+                  </p>
+                )}
                 <p className="text-sm">
-                  Advice given: {s?.advice ?? 0} · Followed: {s?.followed ?? 0} · Players who followed: {s?.players_followed ?? 0}
-                </p>
-                <p className="text-sm">
-                  Results: {s && s.worked + s.no_change + s.got_worse > 0
+                  Results: {s && s.worked != null && s.worked + (s.no_change ?? 0) + (s.got_worse ?? 0) > 0
                     ? `It worked ${s.worked} · No change ${s.no_change} · Got worse ${s.got_worse}`
                     : "Need more data"}
                 </p>

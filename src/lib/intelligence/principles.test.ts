@@ -28,3 +28,15 @@ describe("coaching principles", () => {
     expect(badgeFor({ ...base, worked: 10, players_worked: 10, no_change: 10 })).toBe("Seen in Hammers players");
   });
 });
+
+describe("population learning privacy", () => {
+  it("counts hidden for a small group never earn a badge", () => {
+    const hidden = { advice: null, followed: null, players_followed: null, worked: null, no_change: null, got_worse: null, players_worked: null, hidden_small_group: true };
+    expect(badgeFor(hidden)).toBe("Hammers belief");
+  });
+  it("the privacy floor is 3 players", async () => {
+    const { PRIVACY_MIN_PLAYERS, SMALL_GROUP_NOTE } = await import("./principles");
+    expect(PRIVACY_MIN_PLAYERS).toBe(3);
+    expect(SMALL_GROUP_NOTE).toContain("Fewer than 3 players");
+  });
+});

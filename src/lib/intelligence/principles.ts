@@ -24,9 +24,15 @@ export interface PrincipleVersion {
 export interface Principle { id: string; active: boolean; current_version: number }
 
 export interface PrincipleStats {
-  advice: number; followed: number; players_followed: number;
-  worked: number; no_change: number; got_worse: number; players_worked: number;
+  advice: number | null; followed: number | null; players_followed: number | null;
+  worked: number | null; no_change: number | null; got_worse: number | null; players_worked: number | null;
+  /** True when fewer than PRIVACY_MIN_PLAYERS players are involved; the server hid the counts. */
+  hidden_small_group?: boolean;
 }
+
+/** Population learning never shows counts from fewer than this many players (no reverse-identification). TEST accounts are left out server-side. */
+export const PRIVACY_MIN_PLAYERS = 3;
+export const SMALL_GROUP_NOTE = `Fewer than ${PRIVACY_MIN_PLAYERS} players so far — numbers hidden to protect privacy`;
 
 /** Only switched-on principles may guide advice. */
 export function principlesInUse<T extends Principle>(list: T[]): T[] {
@@ -46,7 +52,7 @@ export function latestVersion(history: PrincipleVersion[]): PrincipleVersion | n
   return history.reduce<PrincipleVersion | null>((m, v) => (!m || v.version > m.version ? v : m), null);
 }
 
-// Proposed badge thresholds — owner to confirm.
+// Badge thresholds — owner-approved.
 export const SEEN_MIN_PLAYERS = 3;
 export const PROVEN_MIN_PLAYERS = 10;
 export const PROVEN_MIN_WORKED_SHARE = 0.6;
@@ -54,9 +60,10 @@ export const PROVEN_MIN_WORKED_SHARE = 0.6;
 export type Badge = "Hammers belief" | "Seen in Hammers players" | "Proven at Hammers";
 
 export function badgeFor(s: PrincipleStats | null | undefined): Badge {
-  if (!s) return "Hammers belief";
-  const judged = s.worked + s.no_change + s.got_worse;
-  if (s.players_worked >= PROVEN_MIN_PLAYERS && judged > 0 && s.worked / judged >= PROVEN_MIN_WORKED_SHARE) {
+  if (!s || s.players_worked == null) return "Hammers belief";
+  const worked = s.worked ?? 0;
+  const judged = worked + (s.no_change ?? 0) + (s.got_worse ?? 0);
+  if (s.players_worked >= PROVEN_MIN_PLAYERS && judged > 0 && worked / judged >= PROVEN_MIN_WORKED_SHARE) {
     return "Proven at Hammers";
   }
   if (s.players_worked >= SEEN_MIN_PLAYERS) return "Seen in Hammers players";
