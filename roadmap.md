@@ -30,8 +30,8 @@
 | Parent-run logging | PASS — fresh under-13 TEST account, real signup + Parent Promise + $0 plan, game labeled Parent-entered on phone | .../ag9/ |
 | Coach mode: verify | PASS — coach marked a TEST game verified on phone; saved as Coach-verified | .../ag8/ |
 | Coach mode: coach-entered | NOT RUN | — |
-| Player sees "verified" on postgame report | FAIL/OPEN — postgame report doesn't show it (shown on game sheet header only) | .../ag8/player.png |
-| Postgame "Plate discipline" % on 2 pitches | OPEN — shows 50%/100% without "early read" | .../ag8/player.png |
+| Player sees "verified" on postgame report | PASS — subtitle shows "Verified by coach on <date>" | .../ah1/ |
+| Postgame "Plate discipline" % on 2 pitches | PASS — "early read" labels on every small-sample rate | .../ah1/ |
 | Population learning + privacy | NOT STARTED | — |
 | Full page audit / full suite | NOT RUN this batch (last full suite: 393 files / 3,044 checks PASS; new softball rule tests 2/2 PASS) | — |
 | Owner's guide | NOT STARTED | — |
