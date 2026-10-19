@@ -35,6 +35,8 @@ Plain-English list of what must be true before publishing. Current answer: **Rea
 
 ## Still open (must pass before "Ready to publish: yes")
 
+0. **Game IQ who-sees-it:** app has it ON for every player (earlier owner order). Latest note says owner/admin only. Owner to confirm one.
+
 1. **Owner's 3 test checkouts** (Complete Pitcher, Hammers Coach, Organization + extra seat, each with its one-time 100% code from the private email). Once the Organization one is done I can prove on Stripe's real page: sponsoring a player, and adding seats later through Manage plan.
 2. **Under-13 full signup** — the owner runs it himself with his card and the 4th code (private email "[PRIVATE] Hammers under-13 test code"). Afterwards: cancel that test subscription and flag the account + consent record as TEST.
 
@@ -53,6 +55,9 @@ Plain-English list of what must be true before publishing. Current answer: **Rea
 - Rankings/MPI scores on 5s? Spaces stays OFF; Vault review queue.
 
 ## Leftover test data in Stripe
+
+- Oct 19: democoach Coach plan and TEST Child plan cancelled through the app's own cancel function; both show cancelled, no modules.
+- Nightly learning run Oct 19 04:30: succeeded (nothing to learn yet). Scheduled-jobs review: docs/owner/cron-audit.md.
 
 - Test customer for the Demo Organization (plan canceled, charged $0). My tools can't delete customers; you can delete it in Stripe if you like.
 
