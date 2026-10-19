@@ -20,7 +20,7 @@ import { TopicButtonGrid, type TopicTile } from "@/components/progress/TopicButt
 import { TopicPanel } from "@/components/progress/TopicPanel";
 import { GpInGameSummaryCard } from "@/components/progress/GpInGameSummaryCard";
 import { IqInsightCard } from "@/components/progress/IqInsightCard";
-import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
+import { useGameIqAccess } from "@/hooks/useGameIqAccess";
 import { SideSplitsSection } from "@/components/progress/SideSplitsSection";
 import { DriftMarkersCard } from "@/components/progress/DriftMarkersCard";
 import { PitchingPanel } from "@/components/progress/panels/PitchingPanel";
@@ -127,6 +127,7 @@ const TOPIC_DEFS: Record<ProgressTopicId, TopicDef> = {
 };
 
 export default function ProgressLanding() {
+  const { allowed: gameIqOk } = useGameIqAccess();
   const ctx = useHammerAthleteContext();
   const schedule = useScheduleWindow();
   const { data: rows = [] } = useAthleteCommandRows({ days: 30, limit: 500 });
@@ -226,7 +227,7 @@ export default function ProgressLanding() {
       gameIq={
         <>
           <GpInGameSummaryCard />
-          {GAME_IQ_AVAILABLE_TO_ATHLETES && <IqInsightCard />}
+          {gameIqOk && <IqInsightCard />}
         </>
       }
       growth={<MySixWeekRecapCard />}

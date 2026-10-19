@@ -1,6 +1,6 @@
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
 import { isRetiredRoute } from "../../supabase/functions/_shared/archive/retiredPrograms";
-import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
+import { useGameIqAccess } from "@/hooks/useGameIqAccess";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Target, Dumbbell, ArrowRight, Zap, Crosshair, Brain } from "lucide-react";
@@ -51,6 +51,7 @@ const ALL_TILES = [
 ] as const;
 
 export default function CompletePitcher() {
+  const { allowed: gameIqOk } = useGameIqAccess();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { retired: programsRetired } = useProgramsRetired();
@@ -74,7 +75,7 @@ export default function CompletePitcher() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {tiles
             .filter(tile => {
-              if (tile.key === 'pitcher-iq' && !GAME_IQ_AVAILABLE_TO_ATHLETES) return false;
+              if (tile.key === 'pitcher-iq' && !gameIqOk) return false;
               if ('baseballOnly' in tile && tile.baseballOnly) return selectedSport === 'baseball';
               return true;
             })
