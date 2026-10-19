@@ -1,3 +1,21 @@
+# AJ2 — Oct 19 05:17 UTC — Final wrap-up summary
+**Ready to publish: NO.** Reason: the owner's own checkouts (Complete Pitcher, Coach, Organization) and the under-13 signup are still open; HEVC body-tracking impact is unverified until one real iPhone clip is uploaded after publish.
+
+| Item | Result | Proof |
+|---|---|---|
+| Game IQ owner/admin only, "Internal — not released" | PASS | Phone: TEST player/coach/scout see none, owner sees it labeled — docs/owner/walkthroughs/intelligence/ai5/ |
+| Report Card owner/admin only; others see "Grade coming with camera measurement" | PASS | Rule tests (reportCardVisibility, PerformanceAreaRows); AI5 |
+| Entered test results keep number, grade, source, date | PASS | Oct 18 phone proof (1.65 s sprint, Grade 40) |
+| Page audit as TEST player and TEST coach | PASS | 186 pages each at 390×844 — docs/owner/walkthroughs/intelligence/ai1/ |
+| Nightly learning run 04:30 UTC | PASS (0 players to learn from) | AI4 |
+| HEVC conversion | Timing PASS (0.333 ms max gap); body-tracking impact UNVERIFIED | docs/owner/walkthroughs/intelligence/ai2/ |
+| TEST data cleanup | PASS | AI3 backup tags AI3_20261019_0405_*; zero remaining |
+| democoach $0 Coach plan | CANCELLED | App's owner cancel function; re-read AJ1: canceled |
+| TEST Child $0 plan | CANCELLED | App's owner cancel function; inactive, no modules |
+| Cron audit (read-only, nothing changed) | DONE | docs/owner/cron-audit.md |
+| Owner's guide + switch inventory | DONE | docs/owner/publish-checklist.md — Report Card + Game IQ internal-only, facility spaces off, others unchanged |
+| Preview build | OK | latest build log |
+
 # AJ1 — Oct 19 05:16 UTC — Wrap-up re-check
 **Ready to publish: NO.** Reason: the owner's own checkouts (Complete Pitcher, Coach, Organization) and the under-13 signup are still open; HEVC body-tracking impact stays unverified until one real iPhone clip is uploaded after publish.
 - [x] Cancellations re-read: the only active staff plan is Coach H (not a TEST account); democoach and TEST Child plans stay cancelled.
