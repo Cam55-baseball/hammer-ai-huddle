@@ -28,4 +28,5 @@
 - Advice reads never await rechecks; show read failures. Why: failure is not empty.
 
 - Game IQ skips training-session gates, not subscriptions. Why: games are not training.
+- Game IQ availability uses one shared presentation switch; subscription checks remain separate. Why: navigation and route access must agree.
 
