@@ -1,6 +1,13 @@
-# Publish checklist — updated 2026-10-18
+# Publish checklist — updated 2026-10-19
 
 Plain-English list of what must be true before publishing. Current answer: **Ready to publish: NO.**
+
+## Latest AI3 status — Oct 19 04:05 UTC
+- Scoped final-stretch inputs cleaned up after a timestamped private backup: 29 TEST games, 52 pitches, 42 at-bats, two coach entries and the retained sprint. Their remaining counts are zero. Phone check as the TEST college player shows empty Games and Game Reports.
+- TEST Child is now marked as a system TEST account and excluded from rankings. Account and legal consents stay; TEST coaching principle stays OFF, Version 2, with the safeguard untouched.
+- Still pending: first nightly result after 04:30 UTC, final retained-TEST exclusion sweep, confirmed live TEST subscription identities and cancellation at the very end, and final switch verification. Earlier billing notes conflict, so no plan was canceled in AI3.
+- HEVC conversion is proven; camera measurement impact is not. The owner iPhone live-check note below remains required.
+- Older dated sections below are historical evidence, not a claim that every current publishing check passed.
 
 ## Current Oct 17 fixes status (supersedes older checks below)
 - Full suite: 2,937/2,937 PASS; preview build OK.

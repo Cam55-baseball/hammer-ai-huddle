@@ -1,3 +1,13 @@
+# AI3 — Oct 19 04:05 UTC — Scoped TEST-input cleanup
+**Ready to publish: NO.** Nightly outcome still awaits 04:30 UTC; final subscription cancellation and switch verification remain pending. HEVC measurement impact remains unverified.
+- [x] Saved timestamped private backup in existing `_snapshot_live_test_runs_20261014`, tags `AI3_20261019_0405_*`: 29 marked TEST games, 52 pitches, 42 at-bats, 2 coach entries, the retained 1.65 s sprint and child exclusion settings.
+- [x] Removed only those backed-up game inputs, coach entries and sprint; fresh counts confirm zero remaining for each scoped set. No real game, owner video, account or legal consent deleted.
+- [x] Corrected TEST Child exclusion: `profiles.is_system_account=true`, `athlete_mpi_settings.admin_ranking_excluded=true`, `ranking_eligible=false`. Earlier claimed exclusion was incomplete; live read now confirms all three.
+- [x] Protected TEST coaching principle remains OFF, Version 2 and TEST-labeled; append-only safeguard untouched.
+- [x] Phone proof as kept TEST college player at 390×844: Games says no games logged; `/games/reports` has no at-bats/pitches and says Not enough data for steal success. Evidence: `docs/owner/walkthroughs/intelligence/ai3/`.
+- [ ] After 04:30 UTC: verify nightly job history and learning tables; no schedule changes.
+- [ ] Final retained TEST-data/exclusion sweep, exact live subscription identification/cancellation at the very end, switch inventory and checklist reconciliation. Subscription IDs in earlier notes conflict; verify against live billing before canceling anything.
+
 # AI2 — Oct 19 04:00 UTC — HEVC real-upload comparison
 **Ready to publish: NO.** First nightly outcome cannot be checked before 04:30 UTC; final TEST cleanup, plan cancellation and inventory verification remain pending. HEVC measurement impact is explicitly unverified, not a pass.
 - [x] Real upload on 390×844 Chromium with mobile Safari user agent as the kept TEST pitcher (the TEST college player correctly cannot open pitching). Owner IMG_7346.mov original H.264 and generated HEVC equivalent both automatically converted to WebM and completed saved qualitative analysis; both show "Grade coming with camera measurement".
