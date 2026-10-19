@@ -152,7 +152,7 @@ export const useSubscription = () => {
         const delay = 500 * retries; // 500ms, 1000ms, 1500ms
         console.warn(`[useSubscription] Function not found (404). Retry ${retries}/3 after ${delay}ms...`);
         await new Promise((r) => setTimeout(r, delay));
-        const retry404 = await supabase.functions.invoke('check-subscription');
+        const retry404 = await invokeCheck();
         data = retry404.data;
         error = retry404.error;
       }
