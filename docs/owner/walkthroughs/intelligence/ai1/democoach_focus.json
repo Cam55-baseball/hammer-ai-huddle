@@ -1,0 +1,18 @@
+[
+  {
+    "requested": "/progress",
+    "actual": "/progress",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nBack\nTODAY:\nSTANDARD NOT MET\nThe General\n\nWhere you are, what to do next, and how you'll know it worked.\n\nSeason\n\nIn-Season \u2014 Strength Primer\n\nToday\nPerformance\nGame IQ\nGrowth\nGame IQ\nOpen game reports\n\nYour game reports and logged games.\n"
+  },
+  {
+    "requested": "/coach/team-report",
+    "actual": "/coach/team-report",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nPrint / PDF\nTeam game report\n\nBuilt only from games your linked players logged. Nothing is filled in.\n\nGame date\nNeed more data: none of your linked players logged a game on this date.\nReport a problem"
+  }
+]
