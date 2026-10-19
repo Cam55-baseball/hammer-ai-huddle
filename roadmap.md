@@ -1,5 +1,14 @@
-# STATUS — Oct 19 00:50 UTC (AH1)
-**Ready to publish: NO** — coach-entered mode, population learning, full audit/suite, owner guide, nightly learning run still open.
+# STATUS — Oct 19 01:25 UTC (AH2)
+**Ready to publish: NO** — population learning, full audit/suite, owner guide, nightly learning run still open.
+
+# AH2 — Oct 19 01:25 UTC — Sub-step 4: coach-entered mode PASS
+- [x] democoach ↔ demo2way connected via normal send/respond connection request.
+- [x] 390×844 as the TEST coach: Game stats → "Log for this player" → "TEST Coach Log 1" (3 AB, 1 H, 1 BB) saved; list shows "Source: Coach-entered · Demo — Coach · Oct 19, 2026 · Waiting for the player to confirm".
+- [x] As the TEST player: Games shows "Your coach logged these — is this right?"; tapped "Yes, that's right"; coach view now reads "Confirmed by the player".
+- [x] Flag path: second TEST entry ("TEST Coach Log 2") flagged by the player as "Numbers are wrong" → status flagged (kept out of ratings).
+- [x] 0 page errors, no sideways scroll. Connection ended afterwards. Evidence: docs/owner/walkthroughs/intelligence/ah2/
+- [ ] Cleanup at the end: coach entries 4902b012-0074-4ab9-b34a-e4cc3a89ba1b and d0ce51fc-cb03-4826-8b1c-5acd55abc147. democoach $0 plan stays ACTIVE until the final step.
+- [ ] Next: population learning with privacy.
 
 # AH1 — Oct 19 00:50 UTC — Sub-step 3 DONE: both honesty fixes, proven on phone
 - [x] Player post-game report now shows the source line: "Verified by coach on 2026-10-19" when verified, else "Logged by: Parent-entered" etc. (src/lib/games/reportEngine.ts — GameRow carries verified_at/verified_role/entry_source; subtitle line).
@@ -29,7 +38,7 @@
 | Five-player: new player | PASS (under-13 correctly gated) | .../ag6/ |
 | Parent-run logging | PASS — fresh under-13 TEST account, real signup + Parent Promise + $0 plan, game labeled Parent-entered on phone | .../ag9/ |
 | Coach mode: verify | PASS — coach marked a TEST game verified on phone; saved as Coach-verified | .../ag8/ |
-| Coach mode: coach-entered | NOT RUN | — |
+| Coach mode: coach-entered | PASS — coach logged for connected TEST player, player confirmed one / flagged one, source "Coach-entered · Demo — Coach · <date>" | .../ah2/ |
 | Player sees "verified" on postgame report | PASS — subtitle shows "Verified by coach on <date>" | .../ah1/ |
 | Postgame "Plate discipline" % on 2 pitches | PASS — "early read" labels on every small-sample rate | .../ah1/ |
 | Population learning + privacy | NOT STARTED | — |
