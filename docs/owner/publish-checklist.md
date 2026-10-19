@@ -112,7 +112,7 @@ Plain-English list of what must be true before publishing. Current answer: **Rea
 ## Owner guide update — 2026-10-19 (AH7)
 
 - **Report Card: OFF for everyone.** One switch (`report_card`, set in the app code). Wherever a video-based grade would show, players, coaches and scouts see "Grade coming with camera measurement". Tests you enter (sprint, jumps, radar velocity, verified maxes) still show their number, 20–80 grade, band, source and date. Human coach/scout grades are unchanged. How to check: open the Vault and a video analysis as a TEST player.
-- **Game IQ:** shows game reports, a pitch heat map and a matchup planner, all built from games and pitches that were logged. Nothing logged → "Need more data". Missing counts → "Count not entered". Small samples → "early read". Every report shows who logged the game (Player-, Parent- or Coach-entered) or "Verified by coach on date". Still hidden from athletes by one code switch until you release it.
+- **Game IQ: ON for athletes.** Shows game reports, a pitch heat map and a matchup planner, all built from games and pitches that were logged. Nothing logged → "Need more data". Missing counts → "Count not entered". Small samples → "early read". Every report shows who logged the game (Player-, Parent- or Coach-entered) or "Verified by coach on date". Subscription checks remain separate.
 - **Coaching Console (owner only):** add, edit (versions are kept, never overwritten) and switch off coaching principles. Badges: Seen = worked for 3 players; Proven = 10 players with at least 60% success. With fewer than 3 players the numbers stay hidden for privacy, and TEST accounts are never counted. Principles can't be deleted (that safeguard stays on).
 - **My Connections:** coaches, players, orgs and scouts connect only through a request the other person accepts. Either side can end the connection, and that takes effect instantly. A coach can log a game for a connected player; the player then taps "Yes, that's right" or flags it, and flagged games stay out of ratings.
 
@@ -120,5 +120,11 @@ Plain-English list of what must be true before publishing. Current answer: **Rea
 
 - **Backend switches:** everything is `all` (on), except `facility_spaces`, which is `off` and should stay off until scouting/facility phase proofs.
 - **Backend settings:** `staff_plan_gate` on; `lifting_v2_enabled` on; `rankings_visible` off (intended until you decide).
-- **App code constants:** `REPORT_CARD_SWITCH` = off (your Oct 18 decision); `GAME_IQ_AVAILABLE_TO_ATHLETES` = false (stays off until Game IQ opens to athletes); `TIPPING_DETECTION_ENABLED`, `ON_DEVICE_BALL_DETECTOR_ENABLED`, `ROOT_EVIDENCE_ENABLED` and all 10 `MEDIAPIPE_*` measurement switches = false (stay off until camera measurement exists); `US_ONLY_APP_STORE_RELEASE` = false (Option B storefront detection).
+- **App code constants:** `REPORT_CARD_SWITCH` = off (your Oct 18 decision); `GAME_IQ_AVAILABLE_TO_ATHLETES` = true (owner-authorized athlete release, phone proof AI1); `TIPPING_DETECTION_ENABLED`, `ON_DEVICE_BALL_DETECTOR_ENABLED`, `ROOT_EVIDENCE_ENABLED` and all 10 `MEDIAPIPE_*` measurement switches = false (stay off until camera measurement exists); `US_ONLY_APP_STORE_RELEASE` = false (Option B storefront detection).
 - **Scheduled job:** `intelligence-learning-loop-nightly` is scheduled (04:30 UTC) but has not run yet.
+
+## HEVC check — AI2, Oct 19 04:00 UTC
+
+- Real phone-size preview upload completed for the owner H.264 clip and a generated HEVC equivalent as the TEST pitcher. Both converted automatically to WebM and produced qualitative findings with the grade placeholder. All 507 frames preserved; duration 16.9 seconds, 30 fps; maximum timestamp gap 0.333 ms. Conversion tests passed 2/2.
+- Dense body tracking timed out on both formats in headless Chromium with mobile Safari user agent. Measurement impact remains unverified; this is not physical iPhone proof. This check's three TEST reports and storage copies were removed; the original owner clip stays untouched.
+- **Owner live check after publish:** upload one original HEVC clip on your iPhone and confirm it completes analysis without manual conversion; camera measurements remain off and their accuracy is not certified by this preview check.

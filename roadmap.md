@@ -1,3 +1,13 @@
+# AI2 — Oct 19 04:00 UTC — HEVC real-upload comparison
+**Ready to publish: NO.** First nightly outcome cannot be checked before 04:30 UTC; final TEST cleanup, plan cancellation and inventory verification remain pending. HEVC measurement impact is explicitly unverified, not a pass.
+- [x] Real upload on 390×844 Chromium with mobile Safari user agent as the kept TEST pitcher (the TEST college player correctly cannot open pitching). Owner IMG_7346.mov original H.264 and generated HEVC equivalent both automatically converted to WebM and completed saved qualitative analysis; both show "Grade coming with camera measurement".
+- [x] Timestamp proof from actual uploaded converted files: original + HEVC + converted files each 507 frames, 16.9 seconds, 30 fps; maximum gap against original = 0.000333 seconds (0.333 ms), zero gap between paired converted timestamp sequences. No dropped or added frames.
+- [x] Honest limitation: dense body tracking hit `pose_timeout` on BOTH formats; seven analysis frames extracted on both. Numeric measurement impact cannot be compared; no physical iPhone/Safari claim. Owner live-check note added to publish checklist.
+- [x] Cleanup: snapshotted then removed only this run's three TEST analysis rows (one earlier H.264 trial plus final pair) and their three storage objects; confirmed zero remaining rows and storage cleanup HTTP 200. Original owner upload preserved.
+- [x] Existing conversion tests PASS 2/2; phone evidence and timing report: docs/owner/walkthroughs/intelligence/ai2/.
+- [ ] After 04:30 UTC: check nightly job history and learning tables without changing schedule.
+- [ ] Final cleanup of earlier TEST inputs, cancel TEST subscriptions at the end, refresh/verify full switch inventory. Guide now correctly says Game IQ ON; remaining settings not reverified this step.
+
 # AI1 — Oct 19 03:32 UTC — Final stretch
 **Ready to publish: NO.** Nightly result (04:30 UTC), HEVC measurement check and final cleanup/cancellation are still pending. This is a static-address smoke audit, not a repeat of every populated workflow or parameterized page.
 - [x] Reconcile current code with owner authorization: athlete Game IQ switch ON (the current checkout still had it OFF).
