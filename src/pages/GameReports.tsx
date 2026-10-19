@@ -33,6 +33,7 @@ import { SavedReportsPanel } from "@/components/games/reports/SavedReportsPanel"
 import { ScoutingReportPanel } from "@/components/games/reports/ScoutingReportPanel";
 import { LedgerSplitsPanel } from "@/components/games/reports/LedgerSplitsPanel";
 import { baserunningSummary } from "@/lib/games/baserunningSummary";
+import { MIN_N, hasEnough } from "@/lib/games/reader";
 
 
 type Side = "all" | "L" | "R" | "S";
