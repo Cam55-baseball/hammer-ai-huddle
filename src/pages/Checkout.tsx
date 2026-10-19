@@ -250,7 +250,22 @@ const Checkout = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // 409 = the player already owns this plan. Not a failure: send them to manage it.
+        let body: any = null;
+        try { body = await (error as any).context?.json?.(); } catch { /* ignore */ }
+        if ((error as any).context?.status === 409 || body?.already_subscribed) {
+          if (popupRef.current && !popupRef.current.closed) popupRef.current.close();
+          toast({
+            title: "You already have this plan",
+            description: body?.error || "Manage it from your account settings.",
+          });
+          window.dispatchEvent(new Event("hammers:subscription-refresh"));
+          navigate("/dashboard");
+          return;
+        }
+        throw error;
+      }
 
       if (data?.url) {
         if (user) {
