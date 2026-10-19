@@ -1,5 +1,14 @@
-# STATUS — Oct 19 00:05 UTC (end of AG batch)
-**Ready to publish: NO** — parent-run logging proof blocked (needs owner), coach-entered mode and player-side "verified" label unproven, population learning / full page audit / full suite / owner guide not started this batch, nightly learning run outcome unproven.
+# STATUS — Oct 19 00:40 UTC (AG9)
+**Ready to publish: NO** — coach-entered mode, honesty fixes (player-side "verified", small-sample "early read"), population learning, full audit/suite, owner guide, nightly learning run still open.
+
+# AG9 — Oct 19 00:40 UTC — Sub-step 1 DONE: parent-run logging proof (fresh under-13 TEST account)
+- [x] Fresh under-13 parent-run TEST account created through the REAL signup at 390×844: under-13 birthdate → parent path → Parent Notice + Parent Promise signed as the TEST parent (typed name + drawn signature, marked TEST). Account: "TEST Child" (id 2e9062a6-1944-47a6-8028-bacc2c4d0f46), parent_controlled=true.
+- [x] Parent payment step passed with the approved test method: $0 subscription created through the billing API (one-time 100%-off coupon, no card, no Checkout page; metadata test_only + owner authorization). Account unlocked (parent_consent_ok=true, payment confirmed 00:33 UTC).
+- [x] Accepted the updated-terms screen as the TEST user.
+- [x] Parent-run logging proven on phone: created game "TEST Parent Log 1" + 1 pitch (ball) through the real Games screen; both saved with source parent_entered; games list shows "Logged by: Parent-entered". 0 page errors, no sideways scroll. Evidence: docs/owner/walkthroughs/intelligence/ag9/
+- [x] Hidden from everything: ranking_eligible=false, admin_ranking_excluded=true; name prefixed TEST.
+- [ ] Cleanup at the very end: cancel sub_1US4VuGc5QIzbAH6IaIm8cNP (customer cus_VT0WDvT8NUdlq3), delete TEST game 697874dc-9201-496f-bd61-5b8e899ccd23 + pitch 8546cb5f-eeda-412b-b1a8-30f7152e102e, then the account.
+- [ ] Owner answers applied: TEST coaching principle stays OFF (safeguard untouched — nothing to do); next sub-steps: honesty fixes (verified label + small-sample early read), coach-entered proof.
 
 | Item | Result | Proof |
 |---|---|---|
