@@ -8,10 +8,13 @@
 import { useNavigate } from "react-router-dom";
 import { Trophy } from "lucide-react";
 import { useGpSignal } from "@/hooks/useGpSignal";
+import { useGameIqAccess } from "@/hooks/useGameIqAccess";
 
 export function GpInGameAdvisoryStrip() {
   const signal = useGpSignal(7);
   const navigate = useNavigate();
+  const { allowed: gameIqOk } = useGameIqAccess();
+  if (!gameIqOk) return null;
 
   if (signal.loading || signal.advisories.length === 0) return null;
 

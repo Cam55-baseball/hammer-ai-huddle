@@ -1,3 +1,4 @@
+import { useGameIqAccess } from "@/hooks/useGameIqAccess";
 import { entrySourceLabel } from "@/lib/intelligence/entrySource";
 import { CoachEntriesToConfirm } from "@/components/games/CoachEntriesToConfirm";
 /**
@@ -68,6 +69,7 @@ interface GameRow {
 }
 
 export default function Games() {
+  const { allowed: gameIqOk } = useGameIqAccess();
   const { user } = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -235,18 +237,18 @@ export default function Games() {
             else setNewDialogOpen(true);
           }}
         />
-        <HelperTile
+        {gameIqOk && <HelperTile
           icon={<Users className="h-5 w-5" />}
-          title="Scouting profiles"
+          title="Scouting profiles (Internal — not released)"
           desc="Saved pages for pitchers you've faced and hitters you've pitched to. Pre-game plan + post-game notes that come back next time you see them."
           onClick={() => navigate("/games/dossiers")}
-        />
-        <HelperTile
+        />}
+        {gameIqOk && <HelperTile
           icon={<BarChart3 className="h-5 w-5" />}
-          title="Reports"
+          title="Reports (Internal — not released)"
           desc="Pick a topic — hitting, pitching, defense, baserunning — and Hammer builds the dashboard for it."
           onClick={() => navigate("/games/reports")}
-        />
+        />}
       </div>
 
       {/* Game list */}
@@ -303,7 +305,7 @@ export default function Games() {
                 <p className="text-xs text-muted-foreground">Logged by: {entrySourceLabel(g.entry_source)}</p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <Button
+{gameIqOk && (<Button
                   variant="ghost"
                   size="sm"
                   onClick={(e) => {
@@ -312,7 +314,7 @@ export default function Games() {
                   }}
                 >
                   Report
-                </Button>
+                </Button>)}
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
               </div>
             </div>

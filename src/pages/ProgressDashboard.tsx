@@ -10,6 +10,8 @@ import { ProofCard } from '@/components/hie/ProofCard';
 import { RiskAlertsCard } from '@/components/hie/RiskAlertsCard';
 import { ProProbabilityCard } from '@/components/analytics/ProProbabilityCard';
 import { GameIqReports } from '@/components/games/GameIqReports';
+import { useGameIqAccess } from '@/hooks/useGameIqAccess';
+import { InternalLabel } from '@/components/InternalLabel';
 import { AskHammerPanel } from '@/components/analytics/AskHammerPanel';
 import { DataBuildingGate } from '@/components/analytics/DataBuildingGate';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -134,7 +136,9 @@ export default function ProgressDashboard({ header, today, performance, gameIq, 
   const hasAdvancedAccess = isOwner || modules.length > 0;
   const selectedSport = (localStorage.getItem('selectedSport') as 'baseball' | 'softball') || 'baseball';
   const [bodyOpen, setBodyOpen] = useState(false);
-  const [tab, setTab] = useState<GeneralTab>(() => HASH_TAB[typeof window !== 'undefined' ? window.location.hash : ''] ?? 'today');
+  const { allowed: gameIqOk, internal: gameIqInternal } = useGameIqAccess();
+  const [rawTab, setTab] = useState<GeneralTab>(() => HASH_TAB[typeof window !== 'undefined' ? window.location.hash : ''] ?? 'today');
+  const tab: GeneralTab = rawTab === 'game-iq' && !gameIqOk ? 'today' : rawTab;
 
   const dashboardContext = snapshot ? `
 MPI Score: ${snapshot.mpi_score ?? 'N/A'}
@@ -156,10 +160,10 @@ Confidence: ${snapshot.development_confidence}%
         {header}
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as GeneralTab)} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsList className={`grid w-full ${gameIqOk ? "grid-cols-4" : "grid-cols-3"} h-auto`}>
             <TabsTrigger value="today" className="py-2">Today</TabsTrigger>
             <TabsTrigger value="performance" className="py-2">Performance</TabsTrigger>
-            <TabsTrigger value="game-iq" className="py-2">Game IQ</TabsTrigger>
+            {gameIqOk && <TabsTrigger value="game-iq" className="py-2">Game IQ</TabsTrigger>}
             <TabsTrigger value="growth" className="py-2">Growth</TabsTrigger>
           </TabsList>
 
@@ -225,7 +229,8 @@ Confidence: ${snapshot.development_confidence}%
             </Advanced>
           </TabsContent>
 
-          <TabsContent value="game-iq" className="space-y-6">
+          {gameIqOk && <TabsContent value="game-iq" className="space-y-6">
+            {gameIqInternal && <InternalLabel />}
             {gameIq}
             <section id="game-iq" className="scroll-mt-20">
               <Card className="p-4 flex items-center justify-between gap-3">
@@ -236,7 +241,7 @@ Confidence: ${snapshot.development_confidence}%
             <Advanced hasAdvancedAccess={hasAdvancedAccess} requireTrainingHistory={false}>
               <GameIqReports />
             </Advanced>
-          </TabsContent>
+          </TabsContent>}
 
           <TabsContent value="growth" className="space-y-6">
             <HealthFlagsCard />

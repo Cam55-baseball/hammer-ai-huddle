@@ -1,0 +1,150 @@
+{
+ "owner": {
+  "progress": {
+   "url": "/progress",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "iq": {
+   "url": "/iq",
+   "game_iq_tab": 0,
+   "internal_label": 1,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "reports": {
+   "url": "/games/reports",
+   "game_iq_tab": 0,
+   "internal_label": 1,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "dossiers": {
+   "url": "/games/dossiers",
+   "game_iq_tab": 0,
+   "internal_label": 1,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "games": {
+   "url": "/games",
+   "game_iq_tab": 0,
+   "internal_label": 2,
+   "reports_tile": true,
+   "coming_soon": false
+  }
+ },
+ "democollege": {
+  "progress": {
+   "url": "/progress",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "iq": {
+   "url": "/dashboard",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "reports": {
+   "url": "/dashboard",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "dossiers": {
+   "url": "/dashboard",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "games": {
+   "url": "/games",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  }
+ },
+ "democoach": {
+  "progress": {
+   "url": "/progress",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "iq": {
+   "url": "/dashboard",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "reports": {
+   "url": "/dashboard",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "dossiers": {
+   "url": "/dashboard",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "games": {
+   "url": "/games",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  }
+ },
+ "demoscout": {
+  "progress": {
+   "url": "/progress",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "iq": {
+   "url": "/dashboard",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "reports": {
+   "url": "/dashboard",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "dossiers": {
+   "url": "/dashboard",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  },
+  "games": {
+   "url": "/games",
+   "game_iq_tab": 0,
+   "internal_label": 0,
+   "reports_tile": false,
+   "coming_soon": false
+  }
+ }
+}

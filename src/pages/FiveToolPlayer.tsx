@@ -1,6 +1,6 @@
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
 import { isRetiredRoute } from "../../supabase/functions/_shared/archive/retiredPrograms";
-import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
+import { useGameIqAccess } from "@/hooks/useGameIqAccess";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Target, Dumbbell, Eye, Zap, ArrowRight, Footprints, Brain } from "lucide-react";
@@ -120,6 +120,7 @@ const ALL_TILES = [
 ];
 
 export default function FiveToolPlayer() {
+  const { allowed: gameIqOk } = useGameIqAccess();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { retired: programsRetired } = useProgramsRetired();
@@ -128,7 +129,7 @@ export default function FiveToolPlayer() {
 
   const filteredTiles = tiles.filter(
     (tile) =>
-      (tile.key !== 'game-iq' || GAME_IQ_AVAILABLE_TO_ATHLETES) &&
+      (tile.key !== 'game-iq' || gameIqOk) &&
       (!tile.baseballOnly || selectedSport === "baseball") &&
       (!tile.softballOnly || selectedSport === "softball")
   );

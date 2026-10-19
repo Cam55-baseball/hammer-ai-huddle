@@ -35,7 +35,6 @@ Plain-English list of what must be true before publishing. Current answer: **Rea
 
 ## Still open (must pass before "Ready to publish: yes")
 
-0. **Game IQ who-sees-it:** app has it ON for every player (earlier owner order). Latest note says owner/admin only. Owner to confirm one.
 
 1. **Owner's 3 test checkouts** (Complete Pitcher, Hammers Coach, Organization + extra seat, each with its one-time 100% code from the private email). Once the Organization one is done I can prove on Stripe's real page: sponsoring a player, and adding seats later through Manage plan.
 2. **Under-13 full signup** — the owner runs it himself with his card and the 4th code (private email "[PRIVATE] Hammers under-13 test code"). Afterwards: cancel that test subscription and flag the account + consent record as TEST.
@@ -74,7 +73,7 @@ Plain-English list of what must be true before publishing. Current answer: **Rea
 ## Player
 - **Dashboard** — the home screen. Steps: sign in. Check: Identity card, Before You Start, then Hammers Today; at the very bottom, a quiet "For your coach or facility" pair.
 - **Hammers Today** — today's training plan. Steps: open Dashboard → Hammers Today. Check: every exercise has sets/reps or time, with labels; it changes when the phase changes.
-- **Video analysis** — upload a clip and get the analysis. Steps: pick a module → Upload → wait. Check: findings are labeled Estimated / Not measured, and no video-based number grade shows anywhere — it reads "Grade coming with camera measurement". The Report Card is off for everyone until camera measurement exists.
+- **Video analysis** — upload a clip and get the analysis. Steps: pick a module → Upload → wait. Check: findings are labeled Estimated / Not measured, and no video-based number grade shows anywhere — it reads "Grade coming with camera measurement". The Report Card is internal-only: owner and admin see it marked "Internal — not released"; everyone else never sees it.
 - **Test results** — entered tests (sprint, jumps, verified maxes, radar or sensor speeds) still show their number, 20–80 grade and band, with source and date.
 - **History** — every past report, test and grade. Steps: side menu → History. Check: each grade reads "Grade: 45 · Acceptable".
 - **Vault** — check-ins, discipline, readiness, tests. Steps: side menu → Vault. Check: the Check-in, Discipline and Readiness tabs open.
@@ -123,8 +122,8 @@ Plain-English list of what must be true before publishing. Current answer: **Rea
 
 ## Owner guide update — 2026-10-19 (AH7)
 
-- **Report Card: OFF for everyone.** One switch (`report_card`, set in the app code). Wherever a video-based grade would show, players, coaches and scouts see "Grade coming with camera measurement". Tests you enter (sprint, jumps, radar velocity, verified maxes) still show their number, 20–80 grade, band, source and date. Human coach/scout grades are unchanged. How to check: open the Vault and a video analysis as a TEST player.
-- **Game IQ: ON for athletes.** Shows game reports, a pitch heat map and a matchup planner, all built from games and pitches that were logged. Nothing logged → "Need more data". Missing counts → "Count not entered". Small samples → "early read". Every report shows who logged the game (Player-, Parent- or Coach-entered) or "Verified by coach on date". Subscription checks remain separate.
+- **Report Card: INTERNAL ONLY (owner + admin, labeled "Internal — not released").** One switch (`report_card`, off). Players, parents, coaches, organizations and scouts see "Grade coming with camera measurement" wherever a video-based grade would show. Entered tests (sprint, jumps, radar velocity, verified maxes) still show number, 20–80 grade, band, source and date. Human coach/scout grades unchanged. Only the owner releases it.
+- **Game IQ: INTERNAL ONLY (owner + admin, labeled "Internal — not released").** Switch `GAME_IQ_AVAILABLE_TO_ATHLETES` = off (owner turned it off: defective). Covers the General's Game IQ tab, game reports, heat maps, matchup planner (scouting profiles), Game IQ 101 and all their links/cards. Players, parents, coaches, organizations and scouts see none of it — no empty tab, no "coming soon"; game logging in Game Hub itself stays. Only the owner releases it. Proof: walkthroughs/intelligence/ai5.
 - **Coaching Console (owner only):** add, edit (versions are kept, never overwritten) and switch off coaching principles. Badges: Seen = worked for 3 players; Proven = 10 players with at least 60% success. With fewer than 3 players the numbers stay hidden for privacy, and TEST accounts are never counted. Principles can't be deleted (that safeguard stays on).
 - **My Connections:** coaches, players, orgs and scouts connect only through a request the other person accepts. Either side can end the connection, and that takes effect instantly. A coach can log a game for a connected player; the player then taps "Yes, that's right" or flags it, and flagged games stay out of ratings.
 

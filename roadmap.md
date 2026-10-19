@@ -1,10 +1,17 @@
+# AI5 — Oct 19 05:15 UTC — Owner correction: Game IQ + Report Card internal-only
+**Ready to publish: NO.** Reason: the owner's own checkouts (Complete Pitcher, Coach, Organization) and the under-13 signup on the checklist are still open; HEVC body-tracking impact stays unverified until one real iPhone clip is uploaded after publish.
+- [x] Game IQ switch back OFF; owner/admin only with "Internal — not released" (tab, reports, heat maps, matchup planner, Game IQ 101, links/cards). PASS on phone: TEST player/coach/scout see none (pages send them to the dashboard); owner sees it labeled. Evidence: docs/owner/walkthroughs/intelligence/ai5/.
+- [x] Report Card owner/admin only with the same label; everyone else unchanged. Rule tests PASS.
+- [x] Switch inventory + owner's guide updated (both internal-only until the owner releases them).
+- [x] Earlier items stand: page audits as TEST player/coach PASS (ai1), nightly run PASS (0 to learn), HEVC timing PASS / measurement unverified, TEST data cleaned, democoach + TEST Child plans cancelled, cron audit written (nothing changed).
+
 # AI4 — Oct 19 05:10 UTC — Final stretch wrap-up
 **Ready to publish: NO.** Reason: (1) your note asks for Game IQ to be owner-and-admin-only, but the earlier owner order (and the app now) has Game IQ ON for every player — I did not change it; please say which is right; (2) owner's own checkouts (Complete Pitcher, Coach, Organization) and the under-13 signup from the checklist are still open; (3) HEVC body-tracking impact is unverified until one real iPhone HEVC clip is uploaded after publish.
 
 | Item | Result | Proof |
 |---|---|---|
 | Report Card OFF for every role (owner/admin too) + "Grade coming with camera measurement" | PASS | `REPORT_CARD_SWITCH = "off"`; phone proofs player/coach/scout (Oct 18) |
-| Game IQ for athletes | ON (not owner-only) — see reason (1) | `GAME_IQ_AVAILABLE_TO_ATHLETES = true`; AI1 phone proof TEST hitter + new player |
+| Game IQ for athletes | superseded by AI5: internal-only | `GAME_IQ_AVAILABLE_TO_ATHLETES = true`; AI1 phone proof TEST hitter + new player |
 | Page audit as TEST player and TEST coach | PASS | 186 pages each at 390×844, no errors — walkthroughs/intelligence/ai1 |
 | HEVC conversion | PASS timing (0.333 ms max gap); measurement impact UNVERIFIED | ai2 |
 | Nightly learning run 04:30 UTC | PASS — succeeded, finished complete | Processed 0 players, 0 checked, 0 pending: the advice table has 3 entries, none marked followed yet, so nothing to learn from |

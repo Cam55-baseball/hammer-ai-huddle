@@ -1,6 +1,6 @@
 import { useProgramsRetired } from "@/hooks/useProgramsRetired";
 import { isRetiredRoute } from "../../supabase/functions/_shared/archive/retiredPrograms";
-import { GAME_IQ_AVAILABLE_TO_ATHLETES } from "@/lib/hammer/athleteFeatureAvailability";
+import { useGameIqAccess } from "@/hooks/useGameIqAccess";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Target, Dumbbell, Eye, ArrowRight, Brain } from "lucide-react";
@@ -50,6 +50,7 @@ const ALL_TILES = [
 ] as const;
 
 export default function CompleteHitter() {
+  const { allowed: gameIqOk } = useGameIqAccess();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { retired: programsRetired } = useProgramsRetired();
@@ -71,7 +72,7 @@ export default function CompleteHitter() {
 
         {/* Selection Tiles */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {tiles.filter(tile => tile.key !== 'hitter-iq' || GAME_IQ_AVAILABLE_TO_ATHLETES).map((tile) => {
+          {tiles.filter(tile => tile.key !== 'hitter-iq' || gameIqOk).map((tile) => {
             const Icon = tile.icon;
             const route = tile.getRoute(selectedSport);
 

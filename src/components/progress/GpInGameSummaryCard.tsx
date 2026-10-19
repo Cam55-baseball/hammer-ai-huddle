@@ -8,10 +8,13 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useGpSignal } from "@/hooks/useGpSignal";
+import { useGameIqAccess } from "@/hooks/useGameIqAccess";
 
 export function GpInGameSummaryCard() {
   const signal = useGpSignal(7);
   const navigate = useNavigate();
+  const { allowed: gameIqOk } = useGameIqAccess();
+  if (!gameIqOk) return null;
 
   if (signal.loading) return null;
   if (signal.atBats === 0 && signal.pitchesSeen === 0 && signal.defensivePlays === 0) {
