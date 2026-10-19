@@ -305,7 +305,7 @@ export default function Games() {
                 <p className="text-xs text-muted-foreground">Logged by: {entrySourceLabel(g.entry_source)}</p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <Button
+{gameIqOk && (<Button
                   variant="ghost"
                   size="sm"
                   onClick={(e) => {
@@ -314,7 +314,7 @@ export default function Games() {
                   }}
                 >
                   Report
-                </Button>
+                </Button>)}
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
               </div>
             </div>
