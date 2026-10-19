@@ -1,0 +1,554 @@
+[
+  {
+    "requested": "/",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practi"
+  },
+  {
+    "requested": "/admin-verification",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes"
+  },
+  {
+    "requested": "/admin/engine-health",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practi"
+  },
+  {
+    "requested": "/admin/engine-settings",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes"
+  },
+  {
+    "requested": "/admin/training-intelligence",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/auth",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practi"
+  },
+  {
+    "requested": "/baserunning/splits/entry",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/calendar",
+    "actual": "/calendar",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nCALENDAR\n\nView and manage your schedule\n\nSchedule\nImport schedule\nAdd Event\nOctober 2026\nToday\nView day\nSUN\nMON\nTUE\nWED\nTHU\nFRI\nSAT\n27\n28\n29\n30\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\nFilter:\nMeals\nWorkouts\nActivities\nMy Daily Game Plan\nEvents\nManual\nSessions\nGame/Rest Day\nActivity\nMe"
+  },
+  {
+    "requested": "/catching/reps/entry",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practi"
+  },
+  {
+    "requested": "/cert",
+    "actual": "/cert",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nDemo\nStart Here\nBack\nCoach certification\n1. Foundations\nOpen\n2. Organism literacy\nOpen\n3. Replay & lineage\nOpen\n4. Coaching translation\nOpen\nReport a problem"
+  },
+  {
+    "requested": "/coach-compliance",
+    "actual": "/coach-dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nCoach Intelligence Hub\n\nWho needs help \u00b7 Why \u00b7 What to run today\n\nAdd players\nAdd a player\n\nRequests you sent\n\nNo requests sent yet.\n\nTeam discipline \u2014 last 28 days\n\nLoading\u2026\n\nLineup mode \u2014 log a game for several playersGuest analysis \u2014 a player without an account (nothing saved)\nGetting started as a coach\n\nFour steps. You don'"
+  },
+  {
+    "requested": "/coach-dashboard",
+    "actual": "/coach-dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nBack\nCoach Intelligence Hub\n\nWho needs help \u00b7 Why \u00b7 What to run today\n\nAdd players\nAdd a player\n\nRequests you sent\n\nDemo \u2014 13U Offseason\nWaiting for answer\nDemo \u2014 Two-Way\nConnected\nDemo \u2014 Two-Way\nConnected\nDemo \u2014 HS Shortstop\nConnected\nDem"
+  },
+  {
+    "requested": "/coach/digest",
+    "actual": "/coach/digest",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nDemo\nStart Here\nBack\nOrganization Digest\n\nDeterministic roster-wide organism change. Lineage-cited. No rankings.\n\n0 athletes\nReport a problem"
+  },
+  {
+    "requested": "/coach/guest",
+    "actual": "/coach/guest",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "\u2190 Coach dashboard\nGuest analysis\n\nFor a player without a Hammers account. Nothing is saved \u2014 not the video, not the result. It shows only on this screen.\n\nSport\nbaseball\nsoftball\nWhat the video shows\nhitting\npitching\nthrowing\nPlayer's age\n13 or older\nUnder 13\nVideo (one rep)\nAnalyze (nothing is saved)\nReport a problem"
+  },
+  {
+    "requested": "/complete-hitter",
+    "actual": "/complete-hitter",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\n\nComplete Hitter isn't available on your account yet.\n\nReport a problem"
+  },
+  {
+    "requested": "/dashboard",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practi"
+  },
+  {
+    "requested": "/defense/plays/entry",
+    "actual": "/defense/plays/entry",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nDefensive Play Entry\n\nManual play logging for coaches. Every play recorded here is marked evaluator-entered \u2014 camera-measured plays will only ever come from the video pipeline.\n\nAthlete\n\nPaste the athlete ID whose defense you are logging.\n\nAthlete ID\nLoad athlete\nReport a problem"
+  },
+  {
+    "requested": "/delaycam",
+    "actual": "/delaycam",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nDelayCam \u2014 Hitting\n\nA live camera that plays back a few seconds behind. Take your rep, turn around, and watch yourself do it. No scoring, no report \u2014 just your own eyes on your own swing or delivery.\n\nDelayCam \u2014 watch yourself back\n\nLive camera that plays back 1\u201355 seconds behind. Record the whole session, then watch it all bac"
+  },
+  {
+    "requested": "/dev/analysis-results-preview",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes"
+  },
+  {
+    "requested": "/dev/tour-preview",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/evaluations/compare",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/evaluations/prospects",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes"
+  },
+  {
+    "requested": "/explosive-conditioning",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practi"
+  },
+  {
+    "requested": "/finish-profile",
+    "actual": "/finish-profile",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nBody measurements\n\nLimb lengths help pick the lifts that fit your body. Estimates are fine \u2014 skip any you don't know.\n\nHeight (in)\nWeight (lb)\nWingspan (in)\n\nArms out wide, fingertip to fingertip.\n\nArm length (in)\n\nShoulder joint to wrist crease.\n\nForearm (in)\n\nInside elbow crease to wrist crease.\n\nThigh bone (in)\n\nHip joint to knee joint, sit"
+  },
+  {
+    "requested": "/game-scoring",
+    "actual": "/games",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back to menu\nGames\n\nYour performance ledger. Every at-bat, pitch, defensive play and steal lives here \u2014 and it drives Hammer's daily plan, your roadmap, and your dashboards.\n\nNew game\nAll games\nHammer document import\n\nDrop a Trackman / GameChanger / Rapsodo file or a scorebook photo \u2014 Hammer drafts the events, you confirm by inning.\n\nScouting profi"
+  },
+  {
+    "requested": "/games",
+    "actual": "/games",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back to menu\nGames\n\nYour performance ledger. Every at-bat, pitch, defensive play and steal lives here \u2014 and it drives Hammer's daily plan, your roadmap, and your dashboards.\n\nNew game\nAll games\nHammer document import\n\nDrop a Trackman / GameChanger / Rapsodo file or a scorebook photo \u2014 Hammer drafts the events, you confirm by inning.\n\nScouting profi"
+  },
+  {
+    "requested": "/my-custom-activities",
+    "actual": "/my-custom-activities",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nMy Custom Activities\n\nManage templates, view history, and track your progress\n\n0\n/ 100 oz\nAll Types\nCreate New\nReport a problem"
+  },
+  {
+    "requested": "/my-daily-game-plan",
+    "actual": "/my-daily-game-plan",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nBack\nReport a problem"
+  },
+  {
+    "requested": "/nutrition-hub",
+    "actual": "/nutrition-hub",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nBack\nReport a problem"
+  },
+  {
+    "requested": "/onboarding/flow",
+    "actual": "/signup",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "About you\n1/12\nExit\n\nYour answers are kept on this phone if the app closes. Exiting starts setup over.\n\nABOUT YOU\n\nWhat should we call you?\nFirst name\nLast name\nNext\nReport a problem"
+  },
+  {
+    "requested": "/ops/deployment",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses"
+  },
+  {
+    "requested": "/ops/drift",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/ops/health",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/owner",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practi"
+  },
+  {
+    "requested": "/owner/ai-costs",
+    "actual": "/owner/ai-costs",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\n\nOwners only.\n\nReport a problem"
+  },
+  {
+    "requested": "/owner/builds",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practi"
+  },
+  {
+    "requested": "/owner/coaching-console",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/owner/drill-builder",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/owner/exercise-vault",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes"
+  },
+  {
+    "requested": "/owner/foundations/diagnostics",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/owner/foundations/health",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/owner/foundations/traces",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/owner/iq-library",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practi"
+  },
+  {
+    "requested": "/owner/iq/alignments",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/owner/iq/alignments/audit",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/owner/moderation",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/owner/open_bundle_builder",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/owner/open_consultation_flow",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes"
+  },
+  {
+    "requested": "/owner/open_program_builder",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/owner/organizations",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/owner/presentation",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes"
+  },
+  {
+    "requested": "/owner/problem-reports",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/owner/rating-agreement",
+    "actual": "/owner/rating-agreement",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\n\nOwners only.\n\nReport a problem"
+  },
+  {
+    "requested": "/owner/transcripts",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses"
+  },
+  {
+    "requested": "/owner/workouts/library",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/pitch-velocity",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  },
+  {
+    "requested": "/pitching/tell-report",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes"
+  },
+  {
+    "requested": "/production-lab",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practi"
+  },
+  {
+    "requested": "/production-studio",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practi"
+  },
+  {
+    "requested": "/profile",
+    "actual": "/profile",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back to Dashboard\nD\u2014C\nProfile\nD\u2014C\nDemo \u2014 Coach\n\nhammersmodality+democoach@gmail.com\n\nRanked goals\n\nLoading\u2026\n\nSet goals\nDelayCam sessions\n\nYour recent recorded sessions and what we measured from them.\n\nPeople & access\n\nInvite a parent, and control what each linked person can see.\n\nInvite a parent\nManage who has access\nSubscription Status\nNo Active S"
+  },
+  {
+    "requested": "/profile-setup",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practi"
+  },
+  {
+    "requested": "/progress",
+    "actual": "/progress",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nThe General\n\nWhere you are, what to do next, and how you'll know it worked.\n\nSeason\n\nIn-Season \u2014 Strength Primer\n\nToday\nPerformance\nGame IQ\nGrowth\nHow your body is doing today\n\nReadiness, workload and recovery.\n\nWEEKLY RECAP\nFull recap\nReport a problem"
+  },
+  {
+    "requested": "/recruiting/standards",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practi"
+  },
+  {
+    "requested": "/royal-timing",
+    "actual": "/royal-timing",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nBack\nReport a problem"
+  },
+  {
+    "requested": "/runtime/illness",
+    "actual": "/runtime/illness",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nIllness\n\nWe never diagnose. Logged severity drives a survivability ceiling until you log a resolved event.\n\nNo active illness logged.\nReport a problem"
+  },
+  {
+    "requested": "/speed-lab",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practi"
+  },
+  {
+    "requested": "/tex-vision",
+    "actual": "/tex-vision",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\n\nThis isn't available on your account yet.\n\nReport a problem"
+  },
+  {
+    "requested": "/the-unicorn",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nLet's level the playing field!\nOfficial Merch\nNEW\n\nRep the brand with official Hammers Modality gear, apparel, and accessories\n\n\u26a1 Exclusive designs for dedicated athletes\nShop Now\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practi"
+  },
+  {
+    "requested": "/throwing/reps/entry",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your coach setupTell us who you work for and what you evaluate \u2014 under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 Coach\n\nDemo \u2014 Coach's teams\nLet's level the playing field!\nGame plan in use?\nYes\nShow plan\nCOACH GAME PLAN\nMON, OCT 19\n\u2022\nDaily Overview\n0\nACTION ITEMS\n0 pending\n\nGame plan hidden. Nothing pending ri"
+  }
+]

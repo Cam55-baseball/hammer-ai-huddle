@@ -1,0 +1,1490 @@
+[
+  {
+    "requested": "/",
+    "actual": "/",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HAMMERS\nMODALITY\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/.lovable/oauth/consent",
+    "actual": "/.lovable/oauth/consent",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Connect an app to Hammers Modality\n\nCould not process this request: Missing authorization_id\n\nReport a problem"
+  },
+  {
+    "requested": "/5tool-player",
+    "actual": "/5tool-player",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\n5Tool Player\n\nComplete hitting, throwing, strength, speed, and vision training\n\nComplete Hitter\n\nHitting mechanics, strength and vision in one program \u2014 included\n\nStart Training\nComplete Player\n\nSpeed and throwing in one program \u2014 included\n\nStart Training\nHitting Analysis\n\nAnalyze swing mechanics, bat path, and timing\n\nStart Tr"
+  },
+  {
+    "requested": "/__evidence/arm-care",
+    "actual": "/__evidence/arm-care",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Arm care library \u2014 isolated render\nReport a problem\nArm Care Library\n\nElite arm care built from Jaeger, XBand, Jobes, Crossover Symmetry, Cressey, Driveline, and windmill-specific work.\n\nAll methods\nBand Series\nCross-Band Series\nClassic Shoulder Set\nCrossover Bands\nShoulder Prep\nWeighted-Ball Care\nShoulder Tube\nIsometrics\nWindmill (Softball)\nForear"
+  },
+  {
+    "requested": "/__evidence/card-clarity",
+    "actual": "/__evidence/card-clarity",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/__evidence/execution",
+    "actual": "/__evidence/execution",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/__evidence/roadmap-closeout",
+    "actual": "/__evidence/roadmap-closeout",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/__evidence/safe-session",
+    "actual": "/__evidence/safe-session",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Safe Session\nSafe session today\n\nWe couldn't build your full session today. Here's a session that keeps you moving.\n\nTell us this happened\n\nCat Cow\n\nCAT COW\n\u00b7 1 minute total\n\u00b7 0/1 done\n\nHip Circle\n\nHIP CIRCLE\n\u00b7 1 minute total\n\u00b7 0/1 done\n\nLateral Leg Swing\n\nLATERAL LEG SWING\n\u00b7 1 minute total\n\u00b7 0/1 done\n\nSquat Toe Touch\n\nSQUAT TOE TOUCH\n\u00b7 1 minute to"
+  },
+  {
+    "requested": "/__evidence/schedule-notice",
+    "actual": "/__evidence/schedule-notice",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Schedule notice \u2014 isolated render\n\nLighter today \u2014 you have a game Friday 6pm.\n\n\u2022 Lighter today \u2014 you have a game Friday 6pm. Nothing above a primer until it's played (30h out).\n\u2022 That game has no start time on it, so we assumed 6pm. Add the real time and this adjusts.\nNo game then\nLift anyway\nReport a problem"
+  },
+  {
+    "requested": "/__evidence/start-card",
+    "actual": "/__evidence/start-card",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Start Hammers Today Plan\n\nHAMMERS TODAY\n\nA new plan for you every day\n\nBuilt around your season, your position and how you feel. Rest days are built in. Tap once to start \u2014 you never have to do it again.\n\nYour plan includes\nSport: Baseball\nRole: Pitcher\nWarm-up\nGet your body ready before anything hard.\nPitching & arm care\nThrowing and arm care buil"
+  },
+  {
+    "requested": "/accept-parent-invite",
+    "actual": "/accept-parent-invite",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "This invite link is invalid or has expired.\nAccept invite\n\nThis invite link is invalid or has expired.\n\nReport a problem"
+  },
+  {
+    "requested": "/account-deleted",
+    "actual": "/account-deleted",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Your account has been deleted\n\nYour profile, videos, report cards, grades, training history and saved plans have been permanently removed, and any active subscription has been cancelled. You have been signed out.\n\nBack to home\nReport a problem"
+  },
+  {
+    "requested": "/activate",
+    "actual": "/activate",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nActivate your access\nChoose Your Access\n\nGet full access instantly or continue with free tools. Upgrade anytime.\n\nComplete Pitcher\nFOR SERIOUS ARMS\n\nOwn the Mound. Command Every Pitch.\n\nDevelop elite arm strength and pitch command\nFollow a proven system trusted by college-level pitchers\nTurn bullpens into game-day dominance\n$200\n/month\nUnlock "
+  },
+  {
+    "requested": "/admin",
+    "actual": "/",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/admin-verification",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/admin/engine-health",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/admin/engine-settings",
+    "actual": "/admin/engine-settings",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/admin/periodization",
+    "actual": "/admin/periodization",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Owner access required\n\nPeriodization tuning is restricted to platform owners. Contact your administrator if you need to adjust engine dosing.\n\nBack\nReport a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/admin/training-intelligence",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/app-handoff",
+    "actual": "/app-handoff",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nThis link has expired\n\nClose this window and tap the button in the app again.\n\nReport a problem"
+  },
+  {
+    "requested": "/athlete/recruiting-consent",
+    "actual": "/athlete/recruiting-consent",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/auth",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/auth/callback",
+    "actual": "/auth/callback",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\n\nSigning you in\u2026\n\nReport a problem"
+  },
+  {
+    "requested": "/auth/native-apple",
+    "actual": "/~oauth/initiate?provider=apple&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fauth%2Fnative-apple%3Fdone%3D1&state=9131bed49846c3c876e6896bddf53f05",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "404\n\nOops! Page not found\n\nReturn to Home\nReport a problem"
+  },
+  {
+    "requested": "/base-stealing",
+    "actual": "/base-stealing",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nBase Stealing\n\nReaction training \u2014 Baseball only\n\nSession Mode\nManual Entry Mode\n\nHammer analyzes video for precise timing\n\nFront Camera Setup\n\nYour front camera will be used so you can confirm you're in frame before starting. Position your device so the camera captures at least 3 steps of movement in each direction from your l"
+  },
+  {
+    "requested": "/baserunning-iq",
+    "actual": "/baserunning-iq",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nBaserunning IQ\n\nLearn elite baserunning decisions and test your game IQ\n\nSchedule\nROOKIE\n0 pts\n\n0% to 100 pts\n\nReport a problem"
+  },
+  {
+    "requested": "/baserunning/splits",
+    "actual": "/baserunning/splits",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nMy Baserunning Splits\n\nEvery split recorded about your running. Home-to-first times carry their 20\u201380 equivalent; the other splits are timed but not yet scale-anchored, so they show the raw number only.\n\nSplit log\n\nNewest first.\n\nLoading splits\u2026\nReport a problem"
+  },
+  {
+    "requested": "/baserunning/splits/entry",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/bounce-back-bay",
+    "actual": "/bounce-back-bay",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nBounce Back Bay\n\nInjury Education for Athletes\n\nLearn to recognize, understand, and respond to common sports injuries. Educational content to help you make informed decisions about your health.\n\nEducational Only\nAthlete-Focused\nComprehensive Guide\nYour Progress & Badges\n\nTrack your educational journey\n\nHurting vs. Injured\n\nUnde"
+  },
+  {
+    "requested": "/calendar",
+    "actual": "/calendar",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/catching/reps/entry",
+    "actual": "/catching/reps/entry",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/cert",
+    "actual": "/cert",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nLoading\u2026\nReport a problem"
+  },
+  {
+    "requested": "/checkout",
+    "actual": "/checkout",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/coach-compliance",
+    "actual": "/coach-dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/coach-dashboard",
+    "actual": "/coach-dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/coach/console",
+    "actual": "/coach/console",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/coach/digest",
+    "actual": "/coach/digest",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/coach/guest",
+    "actual": "/coach/guest",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/coach/lineup",
+    "actual": "/coach/lineup",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/coach/team-report",
+    "actual": "/coach/team-report",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nCoach tools are now part of the Hammers Coach plan\n\nSubscribe to keep using coach tools, or join through your organization if it gives you a coach seat.\n\nSubscribe\nJoin through your organization\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practices\nReadiness and discipline views\nStart Ham"
+  },
+  {
+    "requested": "/combine/entry",
+    "actual": "/combine/entry",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nCombine \u2014 coming soon\n\nThe Combine module (athlete results and evaluator paperwork) is still being finished. It's closed to everyone for now so no partial data gets recorded. It will unlock automatically the moment it's ready \u2014 nothing extra to buy or turn on.\n\nBack\nReport a problem"
+  },
+  {
+    "requested": "/combine/results",
+    "actual": "/combine/results",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nBack\nCombine \u2014 coming soon\n\nThe Combine module (athlete results and evaluator paperwork) is still being finished. It's closed to everyone for now so no partial data gets recorded. It will unlock automatically the moment it's ready \u2014 nothing extra to buy"
+  },
+  {
+    "requested": "/coming-soon",
+    "actual": "/coming-soon",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nBack\nExciting Updates Coming Soon!\n\nAdvanced metric measuring are under construction!\n\nWe're working hard to bring you powerful new analytics. Your training data is being captured now for seamless integration when these features launch!\n\nProfessional Sc"
+  },
+  {
+    "requested": "/command",
+    "actual": "/command",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/complete-hitter",
+    "actual": "/complete-hitter",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/complete-pitcher",
+    "actual": "/complete-pitcher",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nComplete Pitcher\n\nMaster pitching mechanics and arm strength in one program\n\nPitching Analysis\n\nAnalyze delivery mechanics, arm action, and sequencing\n\nExplore\nPitcher Game IQ\n\nPFP, pickoffs, bunt coverage, 1st-and-3rd defense \u2014 every pitch, every play\n\nExplore\nPick-Off Trainer\n\nSharpen pick-off timing and decision-making with "
+  },
+  {
+    "requested": "/complete-player",
+    "actual": "/complete-player",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/complete-profile",
+    "actual": "/complete-profile",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nWhat should we call you?\n\nApple keeps your name private unless you share it, so we don't have it yet. Add it once and you're done.\n\nFull name\nContinue\nReport a problem"
+  },
+  {
+    "requested": "/dashboard",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/defense/plays",
+    "actual": "/defense/plays",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nMy Defensive Plays\n\nEvery play logged about your defense, with the inputs it was judged on and the runner grade the play would have beaten.\n\nLog a play\nDefense grade\n\nYour recorded plays rolled into one 20\u201380 grade, weighted toward recent reps.\n\nLoading your plays\u2026\n\nPlay log\n\nNewest first.\n\nReport a problem"
+  },
+  {
+    "requested": "/defense/plays/entry",
+    "actual": "/defense/plays/entry",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/delaycam",
+    "actual": "/delaycam",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/demo",
+    "actual": "/demo",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Dashboard\n\n0% \u00b7 2 tiers \u00b7 2 category \u00b7 4 features\n\nSkip\nExit\nPick a Path\n\nTap any tier to preview every feature inside it. Nothing saves \u2014 it's all for show.\n\n5 Tool Player\n\nHit. Run. Field. Throw. Recover.\n\n$300/mo\nComplete Pitcher\n\nCommand the mound.\n\n$200/mo\nThe Golden 2-Way\n\nDo it all. The Unicorn path.\n\n$400/mo\nReport a problem"
+  },
+  {
+    "requested": "/demo/upgrade",
+    "actual": "/demo/upgrade",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo Home\n\n0% \u00b7 2 tiers \u00b7 2 category \u00b7 4 features\n\nSkip\nExit\nYour analysis is saved for the next 10:00\n\nYOU JUST UNCOVERED A MODERATE GAP IN YOUR HITTING PERFORMANCE\n\nYou're close \u2014 this is the missing piece\n\nTargeted system mapped to your result. Close the gap in weeks, not months.\n\nYOU'RE UNLOCKING:\n\nFull personalized system (based on your result"
+  },
+  {
+    "requested": "/dev/analysis-results-preview",
+    "actual": "/dev/analysis-results-preview",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/dev/tour-preview",
+    "actual": "/dev/tour-preview",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/digest",
+    "actual": "/digest",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nYour week\n\nA simple story of how your body did this week.\n\nExplain simply\n\n2026-10-12 \u2192 2026-10-19\n\n0 events\n\nReport a problem"
+  },
+  {
+    "requested": "/drill-library",
+    "actual": "/drill-library",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nReport a problem"
+  },
+  {
+    "requested": "/evaluations",
+    "actual": "/evaluations",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/evaluations/compare",
+    "actual": "/evaluations/compare",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/evaluations/prospects",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/explosive-conditioning",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/finish-profile",
+    "actual": "/finish-profile",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/forecast",
+    "actual": "/forecast",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nWhat\u2019s likely next\n\nIf your current patterns continue. Not a prediction \u2014 a calm picture of where you\u2019re heading.\n\nReport a problem"
+  },
+  {
+    "requested": "/game-scoring",
+    "actual": "/games",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back to menu\nGames\n\nYour performance ledger. Every at-bat, pitch, defensive play and steal lives here \u2014 and it drives Hammer's daily plan, your roadmap, and your dashboards.\n\nNew game\nAll games\nHammer document import\n\nDrop a Trackman / GameChanger / Rapsodo file or a scorebook photo \u2014 Hammer drafts the events, you confirm by inning.\n\nScouting profi"
+  },
+  {
+    "requested": "/games",
+    "actual": "/games",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back to menu\nGames\n\nYour performance ledger. Every at-bat, pitch, defensive play and steal lives here \u2014 and it drives Hammer's daily plan, your roadmap, and your dashboards.\n\nNew game\nAll games\nHammer document import\n\nDrop a Trackman / GameChanger / Rapsodo file or a scorebook photo \u2014 Hammer drafts the events, you confirm by inning.\n\nScouting profi"
+  },
+  {
+    "requested": "/games/dossiers",
+    "actual": "/games/dossiers",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Dossiers\n\nPitchers and hitters you've faced. Plans persist across games \u2014 review pregame, update postgame.\n\nAll sports\nPitchers (0)\nHitters (0)\nNew pitcher\nReport a problem"
+  },
+  {
+    "requested": "/games/reports",
+    "actual": "/games/reports",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Game reports\n\nAuto-built from every event you've logged. Switch sides to keep switch-hitter / -thrower differentials honest.\n\nREPORT ON\nEverything (full dashboard)\nSIDE FILTER\nAll sides\n\nThese splits are computed in the database from your logged reps. Nothing is estimated or filled in. Every line shows its sample size, and anything under 10 reps st"
+  },
+  {
+    "requested": "/get-started",
+    "actual": "/get-started",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "H\nWelcome! Choose Your Role\n\nAre you here to train or to coach?\n\nBack to Sign In\nPlayer\n\nGet personalized training and improve your skills\n\nI'm a Player\nScout/Coach\n\nFind and evaluate talented players\n\nI'm a Scout/Coach\nOrganization (facility, team, school, academy)\n\nWe verify you before players can join.\n\nI run an Organization\n\nCoach plan $300/mon"
+  },
+  {
+    "requested": "/golden-2way",
+    "actual": "/golden-2way",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nThe Golden 2Way\n\nComplete 2-way athlete development \u2014 hitting, pitching, throwing and speed\n\nComplete Hitter\n\nHitting mechanics, strength and vision in one program \u2014 included\n\nStart Training\nComplete Player\n\nSpeed and throwing in one program \u2014 included\n\nStart Training\nHitting Analysis\n\nAnalyze swing mechanics, bat path, and tim"
+  },
+  {
+    "requested": "/hammer/recall",
+    "actual": "/hammer/recall",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nToday\nAsk Hammer \u2014 Recall & Clarity\n\nOne ongoing conversation that remembers what you've asked. Hammer answers from your own records and says so when it doesn't know.\n\nTry one of these, or ask your own question:\n\nWhat's on my plan right now, and what have I already finished today?\nHow did my last game go, and what did I write about it?\nWhat ha"
+  },
+  {
+    "requested": "/help-desk",
+    "actual": "/help-desk",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nHelp Desk\n\nFind answers, learn features, and get help navigating the app.\n\nQuick Navigation\n\nDashboard\n\nMy Activities\n\nProfile\n\nRankings\n\nFrequently Asked Questions\nGETTING STARTED\nHow do I set up my profile?\nHow do I choose my sport?\nTRAINING MODULES\nHow do I analyze a video?\nHow does Tex Vision work?\nCUSTOM ACTIVITIES & MY DA"
+  },
+  {
+    "requested": "/history",
+    "actual": "/history",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/home",
+    "actual": "/home",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "H\nHammers Modality\n\ud83c\uddfa\ud83c\uddf8\nDashboard\nElite Training for Champions.\nHammer Powered Results\n\nTransform your game with advanced motion capture, real-time analytics, and professional development tools used by elite athletes worldwide.\n\nGet Started\nPowered by Innovation\n\nIndustry-leading technology for baseball and softball athletes\n\n\ud83d\udcc5\nA Plan That Moves With"
+  },
+  {
+    "requested": "/initialize-owner",
+    "actual": "/initialize-owner",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "H\nInitialize Owner Account\n\n\u26a0\ufe0f This can only be done once. Use with caution.\n\nYour Email\n\nThis must be an email that's already registered in the system\n\nSecret Key\n\nThe OWNER_INIT_KEY configured in Supabase secrets\n\nInitialize Owner Account\n\u2190 Back to Home\nReport a problem"
+  },
+  {
+    "requested": "/iq",
+    "actual": "/iq",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/iq/review",
+    "actual": "/iq/review",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nDemo\nStart Here\nBack\nBack\nReview queue\n\nDecayed situations resurface here. Knock them down to lock in mastery.\n\nNothing due and no published situations matched. Stay sharp \u2014 check back soon.\nReport a problem"
+  },
+  {
+    "requested": "/join",
+    "actual": "/join",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\n\nNo invite code in this link.\n\nGo to my team\nReport a problem"
+  },
+  {
+    "requested": "/learn",
+    "actual": "/learn",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nEducation\n\nPlain-language explainers for athletes, coaches, and families. No gamification.\n\nWhat readiness means\nFor athletes\nFatigue, in plain language\nFor athletes\nHow we show uncertainty\nFor families\nWhy replay matters\nFor coaches\nReading the lineage trail\nFor coaches\nReport a problem"
+  },
+  {
+    "requested": "/learn/pitch-tipping",
+    "actual": "/learn/pitch-tipping",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nBack\nPitch Tipping 101\n\nA hitter's guide to spotting what a pitcher is about to throw \u2014 before they throw it.\n\nWhat is pitch tipping?\n\nSometimes a pitcher does something a little different depending on which pitch they're about to throw. Maybe their glo"
+  },
+  {
+    "requested": "/mind-fuel",
+    "actual": "/mind-fuel",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/my-connections",
+    "actual": "/my-connections",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nMy Connections\nFind Coach\nRequests\nCoaches\nFollowers\nWaiting for you (0)\n\nLoading\u2026\n\nReport a problem"
+  },
+  {
+    "requested": "/my-custom-activities",
+    "actual": "/my-custom-activities",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/my-daily-game-plan",
+    "actual": "/my-daily-game-plan",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/my-followers",
+    "actual": "/my-followers",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nMy Connections\nFind Coach\nRequests\nCoaches\nFollowers\nFollowers (0)\n\nLoading\u2026\n\nManage who has access\nReport a problem"
+  },
+  {
+    "requested": "/nutrition",
+    "actual": "/nutrition",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/nutrition-hub",
+    "actual": "/nutrition-hub",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/onboarding/athlete",
+    "actual": "/onboarding/athlete",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "WELCOME TO YOUR ORGANISM\n\nFirst-run setup\nSave & exit\n1\nWelcome\n2\nProfile\n3\nBody\n4\nEquipment\n5\nHealth check\n6\nFuel & recovery\n7\nRank goals\n8\nMental & career\n9\nConnections\n10\nSchedule today\n11\nConfirm\n12\nNotifications\n13\nReview\n14\nDone\n\nSwipe to see all steps \u2192\n\nYour organism is the source of truth.\n\nEvery readiness, fatigue, and recovery signal you"
+  },
+  {
+    "requested": "/onboarding/coach",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/onboarding/flow",
+    "actual": "/signup",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "About you\n1/12\nExit\n\nYour answers are kept on this phone if the app closes. Exiting starts setup over.\n\nABOUT YOU\n\nWhat should we call you?\nFirst name\nLast name\nNext\nReport a problem"
+  },
+  {
+    "requested": "/onboarding/scout",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/ops/deployment",
+    "actual": "/ops/deployment",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nLoading\u2026\nReport a problem"
+  },
+  {
+    "requested": "/ops/drift",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/ops/health",
+    "actual": "/",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/ops/replay",
+    "actual": "/ops/replay",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nLoading\u2026\nReport a problem"
+  },
+  {
+    "requested": "/organization",
+    "actual": "/organization",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/organization/setup",
+    "actual": "/organization/setup",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nSet up your organization\n\nStep 2 of 3: name your organization.\n\nRegister Organization\nTeam\nBaseball\nRegister\nContinue to Organization plan\nReport a problem"
+  },
+  {
+    "requested": "/owner",
+    "actual": "/owner",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/owner/ai-costs",
+    "actual": "/owner/ai-costs",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\n\nOwners only.\n\nReport a problem"
+  },
+  {
+    "requested": "/owner/alerts",
+    "actual": "/owner/alerts",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Owner only\n\nThis page is restricted to owners.\n\nReport a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/owner/builds",
+    "actual": "/owner/builds",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/owner/coaching-console",
+    "actual": "/owner/coaching-console",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/owner/drill-builder",
+    "actual": "/owner/drill-builder",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/owner/exercise-vault",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/owner/foundations/diagnostics",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/owner/foundations/health",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/owner/foundations/traces",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/owner/iq-library",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/owner/iq/alignments",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/owner/iq/alignments/audit",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/owner/iq/combos",
+    "actual": "/owner/iq/combos",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nOwner access required.\nReport a problem"
+  },
+  {
+    "requested": "/owner/iq/situations",
+    "actual": "/owner/iq/situations",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nOwner access required.\nReport a problem"
+  },
+  {
+    "requested": "/owner/landing-demo",
+    "actual": "/owner/landing-demo",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/owner/legal-records",
+    "actual": "/owner/legal-records",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Owners and admins only.\n\nReport a problem"
+  },
+  {
+    "requested": "/owner/moderation",
+    "actual": "/owner/moderation",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/owner/open_bundle_builder",
+    "actual": "/owner/open_bundle_builder",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/owner/open_consultation_flow",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/owner/open_program_builder",
+    "actual": "/owner/open_program_builder",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/owner/organizations",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/owner/presentation",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/owner/problem-reports",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/owner/rating-agreement",
+    "actual": "/owner/rating-agreement",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\n\nOwners only.\n\nReport a problem"
+  },
+  {
+    "requested": "/owner/transcripts",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/owner/workouts/library",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/parent-invite",
+    "actual": "/parent-invite",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Parents\n\nAdd a parent to your circle. They'll see what helps them support you \u2014 nothing more. You can remove access any time.\n\nYou stay in control\n\nThey see your scope-appropriate signal \u2014 not raw data.\nRecruiter outreach and pressure stay behind protections.\nYou can remove their access in one tap, any time.\nParent's email (optional)\nCreate invite "
+  },
+  {
+    "requested": "/parent/athletes",
+    "actual": "/parent/athletes",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nBack\nLinked athletes\n\nAthletes you authorize. Recruiting visibility for a minor remains hidden until you explicitly authorize it.\n\nAthletes\n\nYou are not yet linked to any athlete. Linking happens through the parent invite flow initiated by the athlete o"
+  },
+  {
+    "requested": "/pickoff-trainer",
+    "actual": "/pickoff-trainer",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nBack\nPick-Off Trainer\n\nTrain decision-making on pick-off attempts with randomized signals.\n\nSession Setup\nBase Target\nSelect base\nSignaling System\nStandard Color\nEven / Odd System\nSignal Guide\nGreen = Pitch\nRed = Pick-Off\nDistraction flashes \u2014 ignore these\n\nWhen the final signal appears, perform the action physically. Then log "
+  },
+  {
+    "requested": "/pitch-velocity",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/pitching/tell-report",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/players-club",
+    "actual": "/players-club",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/practice",
+    "actual": "/practice",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/pricing",
+    "actual": "/pricing",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nH\nChoose Your Training Tier\n\nSigned in as hammersmodality+democollege@gmail.com (Demo \u2014 College Outfielder)\n\nElite training programs for baseball and softball athletes\n\nBaseball\nSoftball\nPrices shown before promotions. Apply promo codes (including 100% off) during checkout.\nComplete Pitcher\n$200/month\nPitching Analysis\nAsk the Coach\nVault Acce"
+  },
+  {
+    "requested": "/privacy",
+    "actual": "/privacy",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Privacy Policy\n\nLast updated: June 28, 2025\n\nThis page explains what we collect, why we collect it, and what you can do about it. We have written it in plain English because many of our users are young athletes.\n\nWHAT IS ON THIS PAGE\n1. Who we are and how to reach us\n2. What we collect\n3. Body-position and measurement data\n4. AI analysis\n5. Improvi"
+  },
+  {
+    "requested": "/production-lab",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/production-studio",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/profile",
+    "actual": "/profile",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/profile-setup",
+    "actual": "/",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "H\nCreate Your Profile\n\nTell us about yourself to personalize your experience\n\nRole\n\nSport\n\nYou can add training modules anytime from the dashboard\n\nFirst Name *\nLast Name *\nDate of Birth *\nSelect your date of birth\n\nRequired \u2014 used across the app for age-based features.\n\nProfile Picture\n\nMax size: 5MB\n\nBio (Optional)\n\n0/500 characters\n\nExperience &"
+  },
+  {
+    "requested": "/progress",
+    "actual": "/progress",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/purchase-complete",
+    "actual": "/purchase-complete",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nPayment received\n\nReturn to the Hammers Modality app \u2014 it will confirm your purchase and open your dashboard.\n\nReport a problem"
+  },
+  {
+    "requested": "/rankings",
+    "actual": "/rankings",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nRankings are temporarily unavailable\n\nRankings have been temporarily hidden by the team. Please check back later.\n\nReport a problem"
+  },
+  {
+    "requested": "/recruiting/standards",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/relational",
+    "actual": "/relational",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/relational/demo",
+    "actual": "/relational/demo",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Meet the athlete\nintro\n\nOne athlete. Three hundred and thirty days. Everything you see is reconstructed from a single source of truth.\n\nBegin\nBack\nBegin\nReport a problem"
+  },
+  {
+    "requested": "/relationships/settings",
+    "actual": "/relationships/settings",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "People in your circle\n\nPause or remove access at any time.\n\nBlocked users\n\nBlocked people cannot see your profile or shared work, and cannot send you a link.\n\nReport a problem"
+  },
+  {
+    "requested": "/requests",
+    "actual": "/requests",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nMy Connections\nFind Coach\nRequests\nCoaches\nFollowers\nWaiting for you (0)\n\nLoading\u2026\n\nReport a problem"
+  },
+  {
+    "requested": "/reset-password",
+    "actual": "/reset-password",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nH\nReset Your Password\n\nEnter your new password below\n\nNew Password\nConfirm Password\nUpdate Password\nReport a problem"
+  },
+  {
+    "requested": "/royal-timing",
+    "actual": "/royal-timing",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nReport a problem"
+  },
+  {
+    "requested": "/runtime/cycle",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/runtime/environment",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/runtime/illness",
+    "actual": "/",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/runtime/perception",
+    "actual": "/",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/runtime/position",
+    "actual": "/",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/runtime/rtp",
+    "actual": "/",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/safety",
+    "actual": "/safety",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Safety\n\nThings flagged for a calm second look.\n\nReport a problem"
+  },
+  {
+    "requested": "/scout-application",
+    "actual": "/scout-application",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Scout/Coach Application\n\nSubmit your credentials for owner review\n\nFirst Name *\nLast Name *\nEmail *\nSport\nBaseball\nSoftball\nOrganization (school, club or agency) *\nYour role *\nI am applying as a: *\n\nSelect whether you are applying as a scout or a coach\n\nScout\nCoach\nOrganization Letter (PDF, JPG, PNG - Max 5MB) *\nVideo Submission (MP4, MOV, AVI - Ma"
+  },
+  {
+    "requested": "/scout-application-pending",
+    "actual": "/scout-application",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/scout-compare",
+    "actual": "/scout-compare",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Scout Dashboard\nCompare players\n\nPick 2 to 4 players you follow. You only see what each family shared.\n\nPlayers you follow (0 of 4 picked)\n\nYou're not following any players yet.\n\nPick at least 2 players to compare.\n\nReport a problem"
+  },
+  {
+    "requested": "/scout-dashboard",
+    "actual": "/scout-application",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Scout/Coach Application\n\nSubmit your credentials for owner review\n\nFirst Name *\nLast Name *\nEmail *\nSport\nBaseball\nSoftball\nOrganization (school, club or agency) *\nYour role *\nI am applying as a: *\n\nSelect whether you are applying as a scout or a coach\n\nScout\nCoach\nOrganization Letter (PDF, JPG, PNG - Max 5MB) *\nVideo Submission (MP4, MOV, AVI - Ma"
+  },
+  {
+    "requested": "/scout-evaluation",
+    "actual": "/scout-evaluation",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nBack\nEvaluator access required\n\nFiling a scouting report requires an active scout or coach role on this account.\n\nGo back\nReport a problem"
+  },
+  {
+    "requested": "/select-modules",
+    "actual": "/select-modules",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "H\nSelect Your Training Tier\n\nChoose the tier that matches your training goals\n\nBaseball\nSoftball\nComplete Pitcher\n\n$200/month\n\nPitching Analysis\nAsk the Coach\nVault Access\nPopular\n5Tool Player\n\n$300/month\n\nComplete Hitter (included)\nComplete Player: Speed & Throwing (included)\nHitting Analysis\nThrowing Analysis\nTex Vision\nAsk the Coach\nVault Access"
+  },
+  {
+    "requested": "/select-sport",
+    "actual": "/select-user-role",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "H\nWelcome! Choose Your Role\n\nAre you here to train or to coach?\n\nBack to Sign In\nPlayer\n\nGet personalized training and improve your skills\n\nI'm a Player\nScout/Coach\n\nFind and evaluate talented players\n\nI'm a Scout/Coach\nOrganization (facility, team, school, academy)\n\nWe verify you before players can join.\n\nI run an Organization\n\nCoach plan $300/mon"
+  },
+  {
+    "requested": "/select-sport-scout",
+    "actual": "/select-sport-scout",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Which Sport Do You Coach/Scout?\n\nSelect the sport you'll be working with\n\n\u26be\nBaseball\n\nScout and coach baseball players\n\n\ud83e\udd4e\nSoftball\n\nScout and coach softball players\n\nBack\nContinue\nReport a problem"
+  },
+  {
+    "requested": "/select-user-role",
+    "actual": "/select-user-role",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "H\nWelcome! Choose Your Role\n\nAre you here to train or to coach?\n\nBack to Sign In\nPlayer\n\nGet personalized training and improve your skills\n\nI'm a Player\nScout/Coach\n\nFind and evaluate talented players\n\nI'm a Scout/Coach\nOrganization (facility, team, school, academy)\n\nWe verify you before players can join.\n\nI run an Organization\n\nCoach plan $300/mon"
+  },
+  {
+    "requested": "/settings/account",
+    "actual": "/settings/account",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nAccount settings\nDanger zone\n\nPermanently delete your account and everything in it. This cannot be undone.\n\nDelete my account\nReport a problem"
+  },
+  {
+    "requested": "/settings/legal",
+    "actual": "/settings/legal",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nLegal & privacy\nSubscription\n\nCancel online here. Your plan stays active until the end of the period you already paid for. Bought on iPhone? Cancel in your Apple ID subscriptions.\n\nCancel subscription\nYour choices\n\nHealth information\n\nLets us use sleep, pain, injuries, readiness, nutrition and body measurements to keep your plan safe.\n\nShare h"
+  },
+  {
+    "requested": "/settings/notifications",
+    "actual": "/settings/notifications",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nNotifications\n\nChoose how you want to be alerted to escalations. Every notification links back to the source event so you can audit the lineage.\n\nLoading preferences\u2026\nReport a problem"
+  },
+  {
+    "requested": "/share",
+    "actual": "/",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/signup",
+    "actual": "/signup",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "About you\n1/12\nExit\n\nYour answers are kept on this phone if the app closes. Exiting starts setup over.\n\nABOUT YOU\n\nWhat should we call you?\nFirst name\nLast name\nNext\nReport a problem"
+  },
+  {
+    "requested": "/softball-stealing",
+    "actual": "/softball-stealing",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/speed-lab",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/staff-plans",
+    "actual": "/staff-plans",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nCoach and Organization plans\n\nSigned in as hammersmodality+democollege@gmail.com (Demo \u2014 College Outfielder)\n\nI accept the Terms, including section 15, fair use: one named person per account or seat, no shared logins, use only for players I coach, no reselling, and up to 30 analyses per hour.\nHammers Coach\n\nPrice: $300/month\n\nUnlimited analyse"
+  },
+  {
+    "requested": "/staff/training",
+    "actual": "/staff/training",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/start-here",
+    "actual": "/start-here",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/subscribers",
+    "actual": "/subscribers",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem\nHM\nHM\nLoading"
+  },
+  {
+    "requested": "/success",
+    "actual": "/success",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nPayment Successful\n\nThank you \u2014 your purchase is confirmed.\n\nBack to Dashboard\nReport a problem"
+  },
+  {
+    "requested": "/support",
+    "actual": "/support",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Support\n\nNeed a hand? Start here. Most questions are answered below, and a real person reads every email.\n\nGet help\n\nEmail hammersmodality@hammersmodality.org for anything, including privacy questions. We usually reply within 3 to 5 business days.\n\nTell us your account email, what you were doing, and what happened. Screenshots help a lot.\n\nMailing "
+  },
+  {
+    "requested": "/terms",
+    "actual": "/terms",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Terms of Service\n\nLast updated: June 28, 2025\n\nThese are the rules for using the app, written in plain English.\n\nWHAT IS ON THIS PAGE\n1. Accepting these terms\n2. Your account\n3. Subscriptions and billing\n4. Zero tolerance for abuse and objectionable content\n5. What you can and cannot do\n6. Your content stays yours\n7. Your privacy\n8. Important safet"
+  },
+  {
+    "requested": "/tex-vision",
+    "actual": "/tex-vision",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/the-unicorn",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/throwing/reps/entry",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/timeline",
+    "actual": "/timeline",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/today",
+    "actual": "/today",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nReport a problem"
+  },
+  {
+    "requested": "/training-block",
+    "actual": "/training-block",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nHammer Workout Plan\n\nBuild a 6-week training block or generate a one-off workout for any day.\n\n6-Week Block\nDaily Plan\nTraining Preferences\nPrimary Goal\nSelect a goal\nAvailable Days\nSun\nMon\nTue\nWed\nThu\nFri\nSat\nExperience Level\nIntermediate (1-3 years)\nAvailable Equipment\nBarbell\nDumbbells\nKettlebells\nBands\nPull-Up Bar\nBench\nCab"
+  },
+  {
+    "requested": "/vault",
+    "actual": "/vault",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "HM\nHM\nLoading"
+  },
+  {
+    "requested": "/video-library",
+    "actual": "/video-library",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Report a problem"
+  },
+  {
+    "requested": "/weather",
+    "actual": "/weather",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nPlaying The Elements\n\nMaster every game-day condition \u2022 Train smarter, play harder\n\nReport a problem"
+  }
+]

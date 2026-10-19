@@ -1,5 +1,15 @@
+# AI1 — Oct 19 03:32 UTC — Final stretch
+**Ready to publish: NO.** Nightly result (04:30 UTC), HEVC measurement check and final cleanup/cancellation are still pending. This is a static-address smoke audit, not a repeat of every populated workflow or parameterized page.
+- [x] Reconcile current code with owner authorization: athlete Game IQ switch ON (the current checkout still had it OFF).
+- [x] Removed stale Coming soon labels from released Game IQ navigation. Release rule test 1/1 PASS; preview build OK at 03:22 UTC.
+- [x] Phone audit as TEST college player and TEST coach: 186 static addresses per role at 390×844; no page exceptions, horizontal overflow or NaN/undefined/broken-text markers. Loading-only screens rechecked (107 player, 69 coach). Expected access denials/redirects recorded, not claimed as accessible pages. Parameterized routes were not included.
+- [x] Positive loaded-page check: TEST college player opened The General → Game IQ with populated hitting data; TEST coach opened team report and saw honest no-linked-games state. Evidence: docs/owner/walkthroughs/intelligence/ai1/ (JSON route outcomes and phone screenshots). Sessions restored through owner-only TEST account function, no approval blocker. No new game/analysis inputs or connections were added; TEST persona seed refresh occurs when requesting these sessions.
+- [ ] Nightly learning run: scheduled 04:30 UTC; cannot verify before that time; no schedule changes.
+- [ ] HEVC measurement comparison through upload; honest limitation if headless tracking cannot run.
+- [ ] Final TEST cleanup, cancel TEST plans at the very end, refresh guide and switch inventory.
+
 # STATUS — Oct 19 01:55 UTC (AH7, end of batch)
-**Ready to publish: NO.** Still open: (1) the full page audit as a TEST player and TEST coach, which needs owner sign-in approval; (2) the first nightly learning run, which hasn't happened yet; (3) final TEST-data cleanup and cancelling democoach's $0 plan; (4) HEVC measurement impact is unverified.
+**Historical AH7 status (superseded by AI1 above).** The role-specific static-address audit is now complete; nightly result, cleanup and HEVC measurement impact remain open.
 
 | Item | Result | Proof |
 |---|---|---|

@@ -1,0 +1,858 @@
+[
+  {
+    "requested": "/",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/__evidence/card-clarity",
+    "actual": "/__evidence/card-clarity",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Step 21 \u2014 card clarity\nTomorrow's plan becomes visible at midnight\n\nBullpen\n\nBULLPEN\n\u00b7 30 pitches \u00b7 80% intent\n\nLift\n\nLIFT\n\u00b7 3 sets \u00d7 5 reps\n\nFly 20\n\nFLY 20\n\u00b7 4 reps \u00d7 60 feet per rep\n\u00b7 0/1 done\n\nRepeated 90-Foot Sprints (Baseball)\n\nREPEATED 90-FOOT SPRINTS (BASEBALL)\n\u00b7 4 reps \u00d7 90 feet per rep\n\u00b7 0/1 done\n\nPlank Hold\n\nPLANK HOLD\n\u00b7 3 sets \u00d7 30 secon"
+  },
+  {
+    "requested": "/__evidence/execution",
+    "actual": "/__evidence/execution",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Execution layer\n\nDB Split Squat\n\nDB SPLIT SQUAT\n\u00b7 3 sets \u00d7 10 reps \u2022 Inside 8 min \u2022 1\u20133 reps in reserve\n\u00b7 0/1 done\n\nDB Split Squat (in-season)\n\nDB SPLIT SQUAT (IN-SEASON)\n\u00b7 3 sets \u00d7 10 reps \u2022 3 reps in reserve\n\u00b7 0/1 done\n\nTrap Bar Deadlift\n\nTRAP BAR DEADLIFT\n\u00b7 4 sets \u00d7 3 reps\n\u00b7 0/1 done\n\nMed Ball Shot Put\n\nMED BALL SHOT PUT\n\u00b7 1 set \u00d7 1 rep \u00d7 60 rep"
+  },
+  {
+    "requested": "/__evidence/roadmap-closeout",
+    "actual": "/__evidence/roadmap-closeout",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Saved Stage 4 notice \u00b7 2026-09-09\n\nNo recent-load notice saved for this day.\n\nWhat matters most to you?\n\nTap these in order, most important first. Your plan leans toward the top ones. You still train all of them.\n\nSpeed\nSprint, acceleration, base-running quickness\nPower\nStrength, jump, rotational force\nThrowing\nArm health, velocity, command\nHitting"
+  },
+  {
+    "requested": "/admin",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Access Denied\nYou do not have admin privileges.\nReport a problem\nHM\nHM\nLoading\nNotification Access DeniedYou do not have admin privileges."
+  },
+  {
+    "requested": "/admin-verification",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/admin/engine-health",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/admin/engine-settings",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/admin/periodization",
+    "actual": "/admin/periodization",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Owner access required\n\nPeriodization tuning is restricted to platform owners. Contact your administrator if you need to adjust engine dosing.\n\nBack\nReport a problem"
+  },
+  {
+    "requested": "/admin/training-intelligence",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/athlete/recruiting-consent",
+    "actual": "/athlete/recruiting-consent",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nBack\nScouting visibility\n\nYou decide what scouts and coaches can see. Nobody else can change this.\n\nRight now, no scout or coach can see anything.\n\nShare with scouts and coaches\nWhat to share\nProfile\n\nName, school, position and grad year.\n\nMetrics\n\nTest"
+  },
+  {
+    "requested": "/auth",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/auth/callback",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/baserunning/splits/entry",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/calendar",
+    "actual": "/calendar",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nCALENDAR\n\nView and manage your schedule\n\nSchedule\nImport schedule\nAdd Event\nOctober 2026\nToday\nView day\nSUN\nMON\nTUE\nWED\nTHU\nFRI\nSAT\n27\n28\n29\n30\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\nFilter:\nMeals\nWorkouts\nActivities\nMy Daily Game Plan\nEvents\nManual\nSessions\nGame/Rest Day\nActivity\nMe"
+  },
+  {
+    "requested": "/catching/reps/entry",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/cert",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/checkout",
+    "actual": "/checkout",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nNo Tier Selected\n\nPlease select a training tier from the pricing page.\n\nView Pricing\nReport a problem"
+  },
+  {
+    "requested": "/coach-compliance",
+    "actual": "/coach-dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nCoach tools are now part of the Hammers Coach plan\n\nSubscribe to keep using coach tools, or join through your organization if it gives you a coach seat.\n\nSubscribe\nJoin through your organization\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practices\nReadiness and discipline views\nStart Ham"
+  },
+  {
+    "requested": "/coach-dashboard",
+    "actual": "/coach-dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nCoach tools are now part of the Hammers Coach plan\n\nSubscribe to keep using coach tools, or join through your organization if it gives you a coach seat.\n\nSubscribe\nJoin through your organization\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practices\nReadiness and discipline views\nStart Ham"
+  },
+  {
+    "requested": "/coach/console",
+    "actual": "/coach/console",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nCoach tools are now part of the Hammers Coach plan\n\nSubscribe to keep using coach tools, or join through your organization if it gives you a coach seat.\n\nSubscribe\nJoin through your organization\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practices\nReadiness and discipline views\nStart Ham"
+  },
+  {
+    "requested": "/coach/digest",
+    "actual": "/coach/digest",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nCoach tools are now part of the Hammers Coach plan\n\nSubscribe to keep using coach tools, or join through your organization if it gives you a coach seat.\n\nSubscribe\nJoin through your organization\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practices\nReadiness and discipline views\nStart Ham"
+  },
+  {
+    "requested": "/coach/guest",
+    "actual": "/coach/guest",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nCoach tools are now part of the Hammers Coach plan\n\nSubscribe to keep using coach tools, or join through your organization if it gives you a coach seat.\n\nSubscribe\nJoin through your organization\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practices\nReadiness and discipline views\nStart Ham"
+  },
+  {
+    "requested": "/coach/lineup",
+    "actual": "/coach/lineup",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nCoach tools are now part of the Hammers Coach plan\n\nSubscribe to keep using coach tools, or join through your organization if it gives you a coach seat.\n\nSubscribe\nJoin through your organization\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practices\nReadiness and discipline views\nStart Ham"
+  },
+  {
+    "requested": "/command",
+    "actual": "/command",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nHow your body is doing today\n\nMonday, Oct 19\n\nLive\nReady Today\n\nHow ready you are to train today\n\n\u2014\nNo info yet\nWhy?\nEnergy Drain\n\nHow tired your body looks today\n\n\u2014\nNo info yet\nWhy?\nStress Load\n\nHow much load you've been carrying (last 7 days)\n\n\u2014\nNo info yet\nWhy?\nRecovery\n\nHow well you're bouncing back\n\n\u2014\nNo info yet\nWhy?\nHide"
+  },
+  {
+    "requested": "/complete-hitter",
+    "actual": "/complete-hitter",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nDemo\nStart Here\nBack\nComplete Hitter\n\nMaster hitting mechanics, strength training, and vision in one program\n\nHitting Analysis\n\nAnalyze swing mechanics, bat path, and timing\n\nExplore\nHitter Game IQ\n\nApproach by count, situational hitting, hit-and-run, squeezes\n\nExplore\nTex Vision\n\nTrain your eyes to track pitches like a pro\n\nExplore\nPitch Tipp"
+  },
+  {
+    "requested": "/complete-player",
+    "actual": "/complete-player",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nComplete Player\n\nMaster speed training and throwing mechanics in one program\n\nThrowing Analysis\n\nAnalyze arm action, footwork, and energy transfer\n\nExplore\nBase Stealing\n\nReaction training for explosive steals\n\nExplore\nReport a problem"
+  },
+  {
+    "requested": "/dashboard",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/defense/plays/entry",
+    "actual": "/defense/plays/entry",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nDefensive Play Entry\n\nLog a play from your own defense. Hand-timed entries are marked as such \u2014 camera-measured plays only ever come from the video pipeline.\n\nThe play\n\nLeave anything you did not measure blank \u2014 a missing input stays missing rather than being estimated.\n\nLinked at-bat\nNot linked to an at-bat\n\nLoading at-bats\u2026\n\n"
+  },
+  {
+    "requested": "/delaycam",
+    "actual": "/delaycam",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nDelayCam \u2014 Hitting\n\nA live camera that plays back a few seconds behind. Take your rep, turn around, and watch yourself do it. No scoring, no report \u2014 just your own eyes on your own swing or delivery.\n\nDelayCam \u2014 watch yourself back\n\nLive camera that plays back 1\u201355 seconds behind. Record the whole session, then watch it all bac"
+  },
+  {
+    "requested": "/dev/analysis-results-preview",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analys"
+  },
+  {
+    "requested": "/dev/tour-preview",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/drill-library",
+    "actual": "/drill-library",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nBack\nReport a problem"
+  },
+  {
+    "requested": "/evaluations",
+    "actual": "/evaluations",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nEvaluations\n\nOfficial scouting reports \u2014 always attributed, always player-confirmed.\n\nRunning average\n\nNo confirmed evaluations yet. Once you confirm you attended an evaluation, it starts counting toward this summary.\n\nWho has evaluated me\n\nEvery official grade is attributed. Pick an evaluator to open their full report.\n\nNo con"
+  },
+  {
+    "requested": "/evaluations/compare",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/evaluations/prospects",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analys"
+  },
+  {
+    "requested": "/explosive-conditioning",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/finish-profile",
+    "actual": "/finish-profile",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nBody measurements\n\nLimb lengths help pick the lifts that fit your body. Estimates are fine \u2014 skip any you don't know.\n\nHeight (in)\nWeight (lb)\nWingspan (in)\n\nArms out wide, fingertip to fingertip.\n\nArm length (in)\n\nShoulder joint to wrist crease.\n\nForearm (in)\n\nInside elbow crease to wrist crease.\n\nThigh bone (in)\n\nHip joint to knee joint, sit"
+  },
+  {
+    "requested": "/history",
+    "actual": "/history",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nHistory\n\nPractices, games, reports and recaps \u2014 everything without video, kept in one tidy place. Videos live in Players Club.\n\nFrom date\n\u2192\nTo date\nPractice sessions\nGames\nGame reports\nRecaps & progress reports\nReport a problem"
+  },
+  {
+    "requested": "/iq",
+    "actual": "/iq",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nGame IQ 101\n\nEvery pitch. Every position. Ball \u00b7 Bag \u00b7 Backup.\n\n0\nIQ SCORE\n0\nTOUCHED\n0\nDUE NOW\nAll\nDefense\nOffense\nPitching\nRun\nReport a problem"
+  },
+  {
+    "requested": "/mind-fuel",
+    "actual": "/mind-fuel",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\n\ud83d\udd25\nMind Fuel\n\nDaily Mental Mastery for Elite Athletes\n\nOverview\nEmotional Awareness\nStress Management\nMindfulness\nCognitive Skills\nResilience\nHealing\nEducation\nCrisis Support\nJournal\nInsights\nCreate the Standard\nAcronym\nM.A.P.\n\nMindset. Action. Purpose.\n\nThe three pillars of elite performance\n\nMental Mastery Badges\n0 / 20\nStreak"
+  },
+  {
+    "requested": "/my-custom-activities",
+    "actual": "/my-custom-activities",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nMy Custom Activities\n\nManage templates, view history, and track your progress\n\n0\n/ 100 oz\nAll Types\nCreate New\nReport a problem"
+  },
+  {
+    "requested": "/my-daily-game-plan",
+    "actual": "/my-daily-game-plan",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nBack\nReport a problem"
+  },
+  {
+    "requested": "/nutrition",
+    "actual": "/nutrition",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nIron Horse Production\n\nDietary & Holistic Health for Elite Athletes\n\nMilestone Badges\n3 days to unlock \ud83c\udf31\n\ud83c\udf31\n\u26a1\n\ud83d\udcaa\n\ud83c\udfc7\n\ud83c\udfc6\n\ud83d\udc51\nNutrition Categories\n(19 topics)\nBlood Type Health\nHydration\nMineralization\nRecovery\nBlood Flow\nLymphatic Health\nVitamins\nDaily Nutrition Tips\nLongevity\nWeight Management\nVegan Guidance\nRestrictive Diets\nOff-Seas"
+  },
+  {
+    "requested": "/nutrition-hub",
+    "actual": "/nutrition-hub",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nBack\nReport a problem"
+  },
+  {
+    "requested": "/onboarding/coach",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/onboarding/scout",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/ops/deployment",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/ops/drift",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/ops/health",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/ops/replay",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/organization",
+    "actual": "/organization",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nBack\nThis part is included with the Hammers Organization plan\n\nSubscribe to the Organization plan, or ask your organization to add you as a coach seat.\n\nSubscribe\nJoin through your organization\nHammers Coach\nElite\n\nRun your whole roster from one screen.\n\nUnlimited video analyses\nLog games and practices\nReadiness and discipline views\nStart Hamm"
+  },
+  {
+    "requested": "/owner",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/owner/ai-costs",
+    "actual": "/owner/ai-costs",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\n\nOwners only.\n\nReport a problem"
+  },
+  {
+    "requested": "/owner/alerts",
+    "actual": "/owner/alerts",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nOwner only\n\nThis page is restricted to owners.\n\nReport a problem"
+  },
+  {
+    "requested": "/owner/builds",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/owner/coaching-console",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/owner/drill-builder",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/owner/exercise-vault",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/owner/foundations/diagnostics",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/owner/foundations/health",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/owner/foundations/traces",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching"
+  },
+  {
+    "requested": "/owner/iq-library",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/owner/iq/alignments",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/owner/iq/alignments/audit",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/owner/landing-demo",
+    "actual": "/owner/landing-demo",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\n\nOwner access required.\n\nReport a problem"
+  },
+  {
+    "requested": "/owner/moderation",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/owner/open_bundle_builder",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nCoach Hammer \u00b7 today's plan\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis,"
+  },
+  {
+    "requested": "/owner/open_consultation_flow",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/owner/open_program_builder",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/owner/organizations",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/owner/presentation",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/owner/problem-reports",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/owner/rating-agreement",
+    "actual": "/owner/rating-agreement",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\n\nOwners only.\n\nReport a problem"
+  },
+  {
+    "requested": "/owner/transcripts",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis, Tex Vision\n\nStart Training\n"
+  },
+  {
+    "requested": "/owner/workouts/library",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nLoading your initial assessment\u2026\n\nStart Hammers Today Plan\n\nTap Completed on you"
+  },
+  {
+    "requested": "/pitch-velocity",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/pitching/tell-report",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/players-club",
+    "actual": "/players-club",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nPlayers Club\n\nYour personal training session library\n\nPractices, games, reports and recaps live in\nHistory \u2192\nGame Hub \u2192\nAll Sports\nAll Modules\nReport a problem"
+  },
+  {
+    "requested": "/practice",
+    "actual": "/practice",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nPractice Intelligence\n\nLog your practice here \u2014 pick a module below to get started\n\nSchedule\nStart Hitting Session\nSolo Work\nSelf-directed skill work\nTeam Session\nOrganized team training\nLesson\n1-on-1 or small group instruction\nLive At-Bats\nIntra-squad or simulated game reps\nReport a problem"
+  },
+  {
+    "requested": "/production-lab",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis, Tex Vision\n\nStart Training\n"
+  },
+  {
+    "requested": "/production-studio",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis, Tex Vision\n\nStart Training\n"
+  },
+  {
+    "requested": "/profile",
+    "actual": "/profile",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back to Dashboard\nD\u2014CO\nProfile\nD\u2014CO\nDemo \u2014 College Outfielder\n\nhammersmodality+democollege@gmail.com\n\nPrimary Position\n\nRF\n\nRanked goals\n\nLoading\u2026\n\nSet goals\nDelayCam sessions\n\nYour recent recorded sessions and what we measured from them.\n\nPeople & access\n\nInvite a parent, and control what each linked person can see.\n\nInvite a parent\nManage who has"
+  },
+  {
+    "requested": "/progress",
+    "actual": "/progress",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nThe General\n\nWhere you are, what to do next, and how you'll know it worked.\n\nSeason\n\nOffseason Q1 \u2014 Strength & Capacity\n\nToday\nPerformance\nGame IQ\nGrowth\nHow your body is doing today\n\nReadiness, workload and recovery.\n\nWEEKLY RECAP\nFull recap\nReport a problem"
+  },
+  {
+    "requested": "/recruiting/standards",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/relational",
+    "actual": "/relational",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Your circle\n\nThe people, signals, and steps that shape your week.\n\nStage pending\nLoad: not capped\nRecruiting paused\n\nORGANISM STATE\n\nContinue \u2192\nHammer\n\nNo conversation yet. When you write, I will remember.\n\nSend\nParent view\nProtected first\n\nRecruiter outreach, performance pressure, and exposure stay behind protections. You see everything before the"
+  },
+  {
+    "requested": "/royal-timing",
+    "actual": "/royal-timing",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nBack\nReport a problem"
+  },
+  {
+    "requested": "/runtime/cycle",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/runtime/environment",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/runtime/illness",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/runtime/perception",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis, Tex Vision\n\nStart Training\n"
+  },
+  {
+    "requested": "/runtime/position",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/runtime/rtp",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/scout-application-pending",
+    "actual": "/scout-application",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Scout/Coach Application\n\nSubmit your credentials for owner review\n\nFirst Name *\nLast Name *\nEmail *\nSport\nBaseball\nSoftball\nOrganization (school, club or agency) *\nYour role *\nI am applying as a: *\n\nSelect whether you are applying as a scout or a coach\n\nScout\nCoach\nOrganization Letter (PDF, JPG, PNG - Max 5MB) *\nVideo Submission (MP4, MOV, AVI - Ma"
+  },
+  {
+    "requested": "/share",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/softball-stealing",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nFinish your setupWe never auto-fill on your behalf. Takes under a minute.\nResume\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nYOUR CURRENT STANDING\nBUILDING\n0\nConsistency\n0\ndays meeting your standard\n0\nactive days\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n"
+  },
+  {
+    "requested": "/speed-lab",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis, Tex Vision\n\nStart Training\n"
+  },
+  {
+    "requested": "/staff/training",
+    "actual": "/staff/training",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nStaff View\n\nRead-only. Training information only, exactly as the app recorded it.\n\nSave as PDF\nPeople who can see my training\nSearch\n\nNobody has access right now.\n\nNo athlete has given you access yet.\nReport a problem"
+  },
+  {
+    "requested": "/start-here",
+    "actual": "/start-here",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Start Here\n\nStep 1 of 3\n\nJust let me explore\nHitting Analysis\n\nFrame-by-frame swing breakdown.\n\nPITCH TYPE\n\nFastball\nCurveball\nChangeup\nSlider\n\nCONTACT ZONE\n\nInside\nMiddle\nOutside\nSimulated swing result\nLine Drive\n\nEXIT VELO\n\n98 mph\n\nLAUNCH ANGLE\n\n14 \u00b0\n\nSWING IQ\n\n97 /100\n\nElite path\nYour swing\n\nBat path score 99/100\n\nWHERE YOU STAND\n\nSEVERITY\n\nMino"
+  },
+  {
+    "requested": "/subscribers",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Access Denied\nOnly owners can view subscriber analytics.\nHM\nHM\nLoading\nNotification Access DeniedOnly owners can view subscriber analytics."
+  },
+  {
+    "requested": "/tex-vision",
+    "actual": "/tex-vision",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nTex Vision\n\nNeuro-Visual Training System\n\nTrain your eyes and brain for faster reactions and better tracking\n\nTraining Streak\n0 days\nCurrent Streak\n0 days\nLongest Streak\n0\nsessions\n0 / 2+\nToday's Drills\nDrill Library\n16 drills\n\nSelect a drill to begin your neuro-visual training\n\nAll\nFocus\nTracking\nReaction\nCoordination\nBeginner"
+  },
+  {
+    "requested": "/the-unicorn",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis, Tex Vision\n\nStart Training\n"
+  },
+  {
+    "requested": "/throwing/reps/entry",
+    "actual": "/dashboard",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nTraining Dashboard\n\nWelcome back, Demo \u2014 College Outfielder\n\nLet's level the playing field!\nHammers Today Plan\n\nBuilt from your latest organism data \u2014 never random.\n\nBaseball\nSoftball\nRefresh\nComplete Pitcher\n\nPitching Analysis, Ask the Coach\n\nUNLOCK NOW!\nUnlocked\n5Tool Player\n\nHitting, Throwing Analysis, Tex Vision\n\nStart Training\n"
+  },
+  {
+    "requested": "/timeline",
+    "actual": "/timeline",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nASB Event Timeline\n\nRead-only view of your canonical ASB event ledger. Every event exposes its raw payload, confidence, missingness, engine_version, state snapshot, and full lineage graph one click away. No aggregation, no summary, no abstraction.\n\nEvents\nReport a problem"
+  },
+  {
+    "requested": "/today",
+    "actual": "/today",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Back\nDemo\nStart Here\nBack\nREADINESS\n\u2014\nFATIGUE\n\u2014\nRECOVERY\n\u2014\nHow your body is doing today\n\nMonday, Oct 19\n\nLive\nReady Today\n\nHow ready you are to train today\n\nLog today's day type and one training session to unlock readiness.\n\u2014\nNo info yet\nWhy?\nEnergy Drain\n\nHow tired your body looks today\n\nFatigue appears after your first completed session.\n\u2014\nNo inf"
+  },
+  {
+    "requested": "/vault",
+    "actual": "/vault",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Demo\nStart Here\nBack\nLoading...\nReport a problem"
+  },
+  {
+    "requested": "/video-library",
+    "actual": "/video-library",
+    "overflow": false,
+    "errors": [],
+    "broken": [],
+    "text_excerpt": "Video Library\n\nSearch our curated training video collection\n\nBrowse\nSaved\nNewest\nAll Sports\nAll Categories\nBaserunning\nCatcher\nCatching\nCoaching Concepts\nCorner Infield\nFielding\nFirst Base\nGame IQ\nHitting\nInfield\nMental Game\nMiddle Infield\nMobility\nOutfield\nPitcher\nPitching\nPractice Design\nRecovery\nSecond Base\nShortstop\nStrength\nThird Base\nThrowing"
+  }
+]
