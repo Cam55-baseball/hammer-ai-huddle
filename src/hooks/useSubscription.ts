@@ -92,6 +92,25 @@ export const useSubscription = () => {
       let { data, error } = await invokeCheck();
       let authFailed = false;
 
+      // A 401 during sign-out is expected: the session ended while this check
+      // was in flight. Stop quietly instead of refreshing a dead session.
+      if (isAuthError(error)) {
+        const { data: { session: still } } = await supabase.auth.getSession();
+        if (!still) {
+          setSubscriptionData({
+            subscribed: false,
+            modules: [],
+            module_details: {},
+            subscription_end: null,
+            loading: false,
+            initialized: true,
+            has_discount: false,
+            discount_percent: null,
+          });
+          return;
+        }
+      }
+
       // If we get an auth error (401), try refreshing the session and retry once
       if (isAuthError(error)) {
         console.log('[useSubscription] Auth error detected, attempting token refresh...');
@@ -103,7 +122,7 @@ export const useSubscription = () => {
             console.log('[useSubscription] Token refreshed successfully, retrying edge function...');
             
             // Retry with refreshed token
-            const retryResult = await supabase.functions.invoke('check-subscription');
+            const retryResult = await invokeCheck();
             
             data = retryResult.data;
             error = retryResult.error;
