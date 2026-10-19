@@ -241,7 +241,7 @@ Confidence: ${snapshot.development_confidence}%
             <Advanced hasAdvancedAccess={hasAdvancedAccess} requireTrainingHistory={false}>
               <GameIqReports />
             </Advanced>
-          </TabsContent>
+          </TabsContent>}
 
           <TabsContent value="growth" className="space-y-6">
             <HealthFlagsCard />
