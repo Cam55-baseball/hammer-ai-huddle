@@ -111,8 +111,8 @@ const ALL_TILES = [
   {
     key: "game-iq",
     icon: Brain,
-    label: "Game IQ 101 (Coming soon)",
-    description: "Coming soon — this module is under construction.",
+    label: "Game IQ 101",
+    description: "Game situations",
     getRoute: (sport: string) => `/iq?sport=${sport}`,
     baseballOnly: false,
     softballOnly: false,
