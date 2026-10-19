@@ -4,7 +4,8 @@
 # AH4/AH5 — Oct 19 01:45 UTC — Full page audit (owner view)
 - [x] Crawled all 186 app pages on a 390×844 phone as the owner account: 0 page errors, 0 sideways scroll, no broken text (NaN / undefined / [object Object] / "Something went wrong").
 - [ ] OPEN: same crawl as a TEST player and TEST coach — signing in as those accounts needs owner approval, unavailable in queued runs. Owners skip gates, so this does not prove player/coach views.
-- [x] No code or data changes this step. Next: full suite.
+- [x] No code or data changes this step.
+- [x] AH6 full suite PASS: 397 files / 3,067 checks. Next: owner guide update.
 
 # AH3 — Oct 19 01:30 UTC — Step 8: population learning with privacy
 - [x] New owner-only server function owner_principle_population_stats (migration 0081, additive; old function untouched): leaves out TEST / ranking-excluded accounts; hides every count when fewer than 3 players are involved (no reverse-identification) and flags it.
@@ -56,7 +57,7 @@
 | Postgame "Plate discipline" % on 2 pitches | PASS — "early read" labels on every small-sample rate | .../ah1/ |
 | Population learning + privacy | PASS (rules) — 3-player privacy floor, TEST accounts excluded, owner-only; no real outcomes yet so badges read "Hammers belief" | .../ah2/6_console_population.png |
 | Full page audit (owner) | PASS — 186 pages at 390×844: 0 page errors, 0 sideways scroll, no NaN/undefined/[object Object]/"Something went wrong". Player/coach-role crawl OPEN (needs owner approval to sign in as TEST accounts in a queued run) | — |
-| Full suite | NOT RUN this batch (last full suite: 393 files / 3,044 checks PASS; new softball rule tests 2/2 PASS) | — |
+| Full suite | PASS 2026-10-19 (AH6): 397 files / 3,067 checks, 0 failures | — |
 | Owner's guide | NOT STARTED | — |
 | democoach $0 Coach plan | ACTIVE — cancel before Nov 18 after last coach proof | — |
 
