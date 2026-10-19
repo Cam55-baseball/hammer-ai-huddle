@@ -95,6 +95,9 @@ export interface GameRow {
   game_type?: string | null;
   status?: string | null;
   result?: string | null;
+  verified_at?: string | null;
+  verified_role?: "coach" | "organization" | null;
+  entry_source?: string | null;
 }
 
 export interface AtBatRow {
@@ -284,22 +287,25 @@ export function buildIndividualPostgame(input: BuildIndividualInput): ReportSnap
     });
 
     const chaseRate = swings.length ? chases.length / swings.length : 0;
+    const earlyRead = asHitter.length < MIN_TREND_SAMPLE;
+    const early = earlyRead ? " · early read" : "";
     sections.push({
       id: "discipline",
       title: "Plate discipline",
       summary: zoneEmphasis(sport),
       stats: [
         { label: "Pitches seen", value: String(asHitter.length) },
-        { label: "Swing rate", value: pct(swings.length, asHitter.length) },
+        { label: "Swing rate", value: pct(swings.length, asHitter.length), detail: earlyRead ? `early read — ${asHitter.length} of ${MIN_TREND_SAMPLE} pitches` : undefined },
         {
           label: "Chase rate",
           value: pct(chases.length, swings.length || 1),
-          detail: `${chases.length} chases`,
+          detail: `${chases.length} chases${early}`,
           tone: chaseRate > 0.3 ? "bad" : chaseRate > 0.2 ? "watch" : "good",
         },
         {
           label: "Whiff rate",
           value: pct(whiffs.length, swings.length || 1),
+          detail: earlyRead ? `early read — ${swings.length} swings` : undefined,
           tone: swings.length && whiffs.length / swings.length > 0.3 ? "watch" : undefined,
         },
       ],
@@ -308,7 +314,7 @@ export function buildIndividualPostgame(input: BuildIndividualInput): ReportSnap
         : undefined,
       bullets: countBullets(asHitter),
     });
-    if (chaseRate > 0.25) {
+    if (!earlyRead && chaseRate > 0.25) {
       nextUp.push(
         sport === "softball"
           ? "Chase control on the rise lane — take-to-hit reps with the top of the zone as the hard line."
