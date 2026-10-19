@@ -1,3 +1,19 @@
+# AI4 — Oct 19 05:10 UTC — Final stretch wrap-up
+**Ready to publish: NO.** Reason: (1) your note asks for Game IQ to be owner-and-admin-only, but the earlier owner order (and the app now) has Game IQ ON for every player — I did not change it; please say which is right; (2) owner's own checkouts (Complete Pitcher, Coach, Organization) and the under-13 signup from the checklist are still open; (3) HEVC body-tracking impact is unverified until one real iPhone HEVC clip is uploaded after publish.
+
+| Item | Result | Proof |
+|---|---|---|
+| Report Card OFF for every role (owner/admin too) + "Grade coming with camera measurement" | PASS | `REPORT_CARD_SWITCH = "off"`; phone proofs player/coach/scout (Oct 18) |
+| Game IQ for athletes | ON (not owner-only) — see reason (1) | `GAME_IQ_AVAILABLE_TO_ATHLETES = true`; AI1 phone proof TEST hitter + new player |
+| Page audit as TEST player and TEST coach | PASS | 186 pages each at 390×844, no errors — walkthroughs/intelligence/ai1 |
+| HEVC conversion | PASS timing (0.333 ms max gap); measurement impact UNVERIFIED | ai2 |
+| Nightly learning run 04:30 UTC | PASS — succeeded, finished complete | Processed 0 players, 0 checked, 0 pending: the advice table has 3 entries, none marked followed yet, so nothing to learn from |
+| TEST data cleanup | PASS | ai3 (29 games, 52 pitches, 42 at-bats, 2 coach entries, sprint; backup kept) |
+| democoach $0 Coach plan cancelled | PASS | App's owner cancel function; Coach plan now "canceled", player modules empty |
+| TEST Child $0 plan cancelled | PASS | App's owner cancel function; plan inactive, modules empty |
+| Cron audit (read-only, nothing changed) | DONE | docs/owner/cron-audit.md — 05:00 timeouts: nightly-mpi-process (work finished, 12 s) and engine-auto-recovery (finish unproven) |
+| Switch inventory | Report Card off, Game IQ on for athletes, facility spaces off, all others unchanged | publish-checklist.md |
+
 # AI3 — Oct 19 04:05 UTC — Scoped TEST-input cleanup
 **Ready to publish: NO.** Nightly outcome still awaits 04:30 UTC; final subscription cancellation and switch verification remain pending. HEVC measurement impact remains unverified.
 - [x] Saved timestamped private backup in existing `_snapshot_live_test_runs_20261014`, tags `AI3_20261019_0405_*`: 29 marked TEST games, 52 pitches, 42 at-bats, 2 coach entries, the retained 1.65 s sprint and child exclusion settings.
