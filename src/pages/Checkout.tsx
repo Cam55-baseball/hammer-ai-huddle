@@ -46,7 +46,7 @@ const Checkout = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
-  const { refetch, loading: subLoading } = useSubscription();
+  const { refetch, loading: subLoading, modules: ownedModules } = useSubscription();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { isAdmin, loading: adminLoading } = useAdminAccess();
   const { toast } = useToast();
@@ -203,6 +203,12 @@ const Checkout = () => {
   const redirectToStripe = (url: string) => goToStripe(url, "player");
 
   const handleCreateCheckout = async (opts?: { silent?: boolean }) => {
+    // Already own this plan? Don't ask the server (it would refuse with 409).
+    if (selectedTier && selectedSport && ownedModules.includes(`${selectedSport}_${selectedTier}`)) {
+      toast({ title: "You already have this plan", description: "Manage it from your account settings." });
+      navigate("/dashboard");
+      return;
+    }
     // iPhone/iPad, US storefront: checkout happens on our website, same account.
     if (purchaseMode === "native-linkout") {
       setCheckoutLoading(true);
