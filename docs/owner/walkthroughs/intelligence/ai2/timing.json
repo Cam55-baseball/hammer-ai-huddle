@@ -1,0 +1,23 @@
+[
+  {
+    "id": "56a8f684-8699-4952-b12a-dd870b343850",
+    "frame_count": 507,
+    "max_timestamp_gap_seconds": 0.00033300000000124896,
+    "duration": 16.9,
+    "fps": 30
+  },
+  {
+    "id": "c79debc8-57f1-4632-91ed-dceb9241ac0c",
+    "frame_count": 507,
+    "max_timestamp_gap_seconds": 0.00033300000000124896,
+    "duration": 16.9,
+    "fps": 30
+  },
+  {
+    "id": "fc0c4f98-5aa2-410c-ba49-1f3112b2527d",
+    "frame_count": 507,
+    "max_timestamp_gap_seconds": 0.00033300000000124896,
+    "duration": 16.9,
+    "fps": 30
+  }
+]
