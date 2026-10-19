@@ -1,5 +1,13 @@
-# STATUS — Oct 19 00:40 UTC (AG9)
-**Ready to publish: NO** — coach-entered mode, honesty fixes (player-side "verified", small-sample "early read"), population learning, full audit/suite, owner guide, nightly learning run still open.
+# STATUS — Oct 19 00:50 UTC (AH1)
+**Ready to publish: NO** — coach-entered mode, population learning, full audit/suite, owner guide, nightly learning run still open.
+
+# AH1 — Oct 19 00:50 UTC — Sub-step 3 DONE: both honesty fixes, proven on phone
+- [x] Player post-game report now shows the source line: "Verified by coach on 2026-10-19" when verified, else "Logged by: Parent-entered" etc. (src/lib/games/reportEngine.ts — GameRow carries verified_at/verified_role/entry_source; subtitle line).
+- [x] Small-sample rates labeled "early read" everywhere: individual postgame plate discipline (Swing/Chase/Whiff + detail lines), aggregate Game Reports page discipline section ("Early read — 2 of 10 pitches seen…"), and tiny-sample chase rates no longer author a "Train next" suggestion (gated at MIN_TREND_SAMPLE=10). Team report already labeled early reads (verified in code).
+- [x] Tests: src/lib/games/reportHonesty.test.ts — 5/5 PASS (verified label, logged-by label, early read below floor, label drops at floor, no chase suggestion from tiny samples).
+- [x] Phone proof at 390×844 as the TEST parent-run player: post-game report shows "Verified by coach on 2026-10-19"; plate discipline shows "early read — 2 of 10 pitches", "1 chases · early read", "early read — 1 swings"; aggregate page shows the early-read note. 0 page errors. Evidence: docs/owner/walkthroughs/intelligence/ah1/
+- [x] Build OK (00:44 UTC). No publish, cron or iOS changes.
+- [ ] Cleanup note: TEST game 697874dc now carries verified_at + 3 pitches (test input) — deleted at final cleanup with the account.
 
 # AG9 — Oct 19 00:40 UTC — Sub-step 1 DONE: parent-run logging proof (fresh under-13 TEST account)
 - [x] Fresh under-13 parent-run TEST account created through the REAL signup at 390×844: under-13 birthdate → parent path → Parent Notice + Parent Promise signed as the TEST parent (typed name + drawn signature, marked TEST). Account: "TEST Child" (id 2e9062a6-1944-47a6-8028-bacc2c4d0f46), parent_controlled=true.
