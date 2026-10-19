@@ -502,6 +502,11 @@ export function buildIndividualPostgame(input: BuildIndividualInput): ReportSnap
   }
 
   const g = input.game;
+  const sourceLine = g.verified_at
+    ? `Verified by ${g.verified_role === "organization" ? "organization" : "coach"} on ${String(g.verified_at).slice(0, 10)}`
+    : g.entry_source
+      ? `Logged by: ${ENTRY_SOURCE_LABEL[g.entry_source] ?? "Source unknown"}`
+      : null;
   return {
     kind: "individual_postgame",
     sport,
@@ -511,6 +516,7 @@ export function buildIndividualPostgame(input: BuildIndividualInput): ReportSnap
       g.opponent_team ? `vs ${g.opponent_team}` : "",
       g.home_away ? `(${g.home_away})` : "",
       g.venue ?? "",
+      sourceLine ?? "",
     ]
       .filter(Boolean)
       .join(" · "),
