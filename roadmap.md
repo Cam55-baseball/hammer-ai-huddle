@@ -1,3 +1,24 @@
+# STATUS — Oct 19 01:55 UTC (AH7, end of batch)
+**Ready to publish: NO.** Still open: (1) the full page audit as a TEST player and TEST coach, which needs owner sign-in approval; (2) the first nightly learning run, which hasn't happened yet; (3) final TEST-data cleanup and cancelling democoach's $0 plan; (4) HEVC measurement impact is unverified.
+
+| Item | Result | Proof |
+|---|---|---|
+| Filler numbers → "Not enough data" + redeploy | PASS | earlier batch, TEST college player |
+| Report Card OFF + placeholder; test grades with source/date | PASS | docs/owner/data-lineage.md, phone proof |
+| Game IQ phone proofs | PASS | walkthroughs/intelligence/ag1 |
+| Coaching Console | PASS (TEST principle OFF, safeguard kept) | ag2 |
+| Pitcher / two-way / softball / new player | PASS / PASS / PASS after 2 fixes / PASS | ag3–ag6 |
+| Parent-run logging | PASS | ag9 |
+| Coach verify + player sees "Verified by coach"; "early read" for small samples | PASS | ag8, ah1 |
+| Coach-entered (confirm on phone; flag saved directly, not through the screen) | PASS | ah2 |
+| Population learning privacy (3-player floor, TEST excluded, owner only) | PASS on rule tests; no real data yet | ah3 |
+| Full page audit | Owner PASS (186 pages); player/coach OPEN | AH5 |
+| Full suite | PASS: 397 files / 3,067 checks | AH6 |
+| Owner guide | UPDATED | docs/owner/publish-checklist.md (2026-10-19) |
+| Switch inventory | DONE; every switch matches its intended state | publish-checklist.md |
+| First nightly learning run | NOT YET RUN (first one is 04:30 UTC Oct 19) | backend job history |
+| democoach $0 plan | ACTIVE; cancel at the very end, before Nov 18 | — |
+
 # STATUS — Oct 19 01:45 UTC (AH5)
 **Ready to publish: NO** — full audit/suite, owner guide, nightly learning run still open.
 

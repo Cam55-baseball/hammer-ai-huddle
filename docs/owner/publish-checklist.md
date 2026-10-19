@@ -106,3 +106,19 @@ Plain-English list of what must be true before publishing. Current answer: **Rea
 - **Plan buttons** — Staff Plans "Check my plan" shows the plan and seats with a button to the right dashboard; "Manage my plan" opens Stripe's billing page (new tab inside the preview).
 - **Side-menu dashboard entries** — "Organization dashboard" and "Coach Dashboard" right under Dashboard on every screen with the menu. Check: from Dashboard, open the menu and tap it.
 - **Test purchases:** all owner test subscriptions found this week are cancelled.
+
+---
+
+## Owner guide update — 2026-10-19 (AH7)
+
+- **Report Card: OFF for everyone.** One switch (`report_card`, set in the app code). Wherever a video-based grade would show, players, coaches and scouts see "Grade coming with camera measurement". Tests you enter (sprint, jumps, radar velocity, verified maxes) still show their number, 20–80 grade, band, source and date. Human coach/scout grades are unchanged. How to check: open the Vault and a video analysis as a TEST player.
+- **Game IQ:** shows game reports, a pitch heat map and a matchup planner, all built from games and pitches that were logged. Nothing logged → "Need more data". Missing counts → "Count not entered". Small samples → "early read". Every report shows who logged the game (Player-, Parent- or Coach-entered) or "Verified by coach on date". Still hidden from athletes by one code switch until you release it.
+- **Coaching Console (owner only):** add, edit (versions are kept, never overwritten) and switch off coaching principles. Badges: Seen = worked for 3 players; Proven = 10 players with at least 60% success. With fewer than 3 players the numbers stay hidden for privacy, and TEST accounts are never counted. Principles can't be deleted (that safeguard stays on).
+- **My Connections:** coaches, players, orgs and scouts connect only through a request the other person accepts. Either side can end the connection, and that takes effect instantly. A coach can log a game for a connected player; the player then taps "Yes, that's right" or flags it, and flagged games stay out of ratings.
+
+## Switch inventory — 2026-10-19 (intended = current)
+
+- **Backend switches:** everything is `all` (on), except `facility_spaces`, which is `off` and should stay off until scouting/facility phase proofs.
+- **Backend settings:** `staff_plan_gate` on; `lifting_v2_enabled` on; `rankings_visible` off (intended until you decide).
+- **App code constants:** `REPORT_CARD_SWITCH` = off (your Oct 18 decision); `GAME_IQ_AVAILABLE_TO_ATHLETES` = false (stays off until Game IQ opens to athletes); `TIPPING_DETECTION_ENABLED`, `ON_DEVICE_BALL_DETECTOR_ENABLED`, `ROOT_EVIDENCE_ENABLED` and all 10 `MEDIAPIPE_*` measurement switches = false (stay off until camera measurement exists); `US_ONLY_APP_STORE_RELEASE` = false (Option B storefront detection).
+- **Scheduled job:** `intelligence-learning-loop-nightly` is scheduled (04:30 UTC) but has not run yet.
