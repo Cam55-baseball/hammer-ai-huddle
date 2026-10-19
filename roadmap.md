@@ -1,3 +1,10 @@
+# AI1 — Oct 19 03:10 UTC — Final stretch
+- [x] Reconcile current code with owner authorization: athlete Game IQ switch ON (the current checkout still had it OFF).
+- [ ] Phone audit as TEST college player and TEST coach; authenticated screens and redirects recorded separately.
+- [ ] Nightly learning run: scheduled 04:30 UTC; cannot verify before that time; no schedule changes.
+- [ ] HEVC measurement comparison through upload; honest limitation if headless tracking cannot run.
+- [ ] Final TEST cleanup, cancel TEST plans at the very end, refresh guide and switch inventory.
+
 # STATUS — Oct 19 01:55 UTC (AH7, end of batch)
 **Ready to publish: NO.** Still open: (1) the full page audit as a TEST player and TEST coach, which needs owner sign-in approval; (2) the first nightly learning run, which hasn't happened yet; (3) final TEST-data cleanup and cancelling democoach's $0 plan; (4) HEVC measurement impact is unverified.
 
