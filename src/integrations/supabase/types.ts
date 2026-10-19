@@ -23378,6 +23378,20 @@ export type Database = {
         Returns: Json
       }
       org_test_ranking: { Args: { _org: string; _test: string }; Returns: Json }
+      owner_principle_population_stats: {
+        Args: never
+        Returns: {
+          advice: number
+          followed: number
+          got_worse: number
+          hidden_small_group: boolean
+          no_change: number
+          players_followed: number
+          players_worked: number
+          principle_id: string
+          worked: number
+        }[]
+      }
       owner_principle_stats: {
         Args: never
         Returns: {
