@@ -1,5 +1,13 @@
-# STATUS — Oct 19 01:25 UTC (AH2)
-**Ready to publish: NO** — population learning, full audit/suite, owner guide, nightly learning run still open.
+# STATUS — Oct 19 01:30 UTC (AH3)
+**Ready to publish: NO** — full audit/suite, owner guide, nightly learning run still open.
+
+# AH3 — Oct 19 01:30 UTC — Step 8: population learning with privacy
+- [x] New owner-only server function owner_principle_population_stats (migration 0081, additive; old function untouched): leaves out TEST / ranking-excluded accounts; hides every count when fewer than 3 players are involved (no reverse-identification) and flags it.
+- [x] Coaching Console uses it: small groups show "Fewer than 3 players so far — numbers hidden to protect privacy"; hidden counts can never earn a badge.
+- [x] Rule tests: principles.test.ts 5/5 PASS (hidden counts → "Hammers belief"; privacy floor = 3).
+- [x] Access proof: TEST coach call → refused (not authorized); owner call → empty list (no real-player advice outcomes yet).
+- [x] Phone 390×844 as owner: TEST principle shows "Hammers belief", "Results: Need more data"; 0 page errors, no sideways scroll.
+- [ ] Not provable yet: the floor on real data — no real players have followed principle-linked advice. Next: full page audit.
 
 # AH2 — Oct 19 01:25 UTC — Sub-step 4: coach-entered mode PASS
 - [x] democoach ↔ demo2way connected via normal send/respond connection request.
@@ -41,7 +49,7 @@
 | Coach mode: coach-entered | PASS — coach logged for connected TEST player, player confirmed one / flagged one, source "Coach-entered · Demo — Coach · <date>" | .../ah2/ |
 | Player sees "verified" on postgame report | PASS — subtitle shows "Verified by coach on <date>" | .../ah1/ |
 | Postgame "Plate discipline" % on 2 pitches | PASS — "early read" labels on every small-sample rate | .../ah1/ |
-| Population learning + privacy | NOT STARTED | — |
+| Population learning + privacy | PASS (rules) — 3-player privacy floor, TEST accounts excluded, owner-only; no real outcomes yet so badges read "Hammers belief" | .../ah2/6_console_population.png |
 | Full page audit / full suite | NOT RUN this batch (last full suite: 393 files / 3,044 checks PASS; new softball rule tests 2/2 PASS) | — |
 | Owner's guide | NOT STARTED | — |
 | democoach $0 Coach plan | ACTIVE — cancel before Nov 18 after last coach proof | — |
