@@ -147,10 +147,11 @@ export default function CoachingConsole() {
                 </div>
                 {s?.hidden_small_group ? (
                   <p className="text-sm text-muted-foreground">{SMALL_GROUP_NOTE}</p>
-                ) : null}
-                <p className="text-sm">
-                  Advice given: {s?.advice ?? 0} · Followed: {s?.followed ?? 0} · Players who followed: {s?.players_followed ?? 0}
-                </p>
+                ) : (
+                  <p className="text-sm">
+                    Advice given: {s?.advice ?? 0} · Followed: {s?.followed ?? 0} · Players who followed: {s?.players_followed ?? 0}
+                  </p>
+                )}
                 <p className="text-sm">
                   Results: {s && s.worked != null && s.worked + (s.no_change ?? 0) + (s.got_worse ?? 0) > 0
                     ? `It worked ${s.worked} · No change ${s.no_change} · Got worse ${s.got_worse}`
