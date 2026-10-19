@@ -5,7 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { buildAreaRows, type AreaVideo } from "@/lib/intelligence/areaRows";
 import { isEarlyRead } from "@/lib/intelligence/howSure";
-import { canSeeReportCard, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
+import { canSeeReportCard, videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visibility";
+import { InternalLabel } from "@/components/InternalLabel";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useReportCardTrend } from "@/hooks/useReportCardTrend";
@@ -49,7 +50,7 @@ export function PerformanceAreaRows() {
               Analyses: {r.count}{isEarlyRead(r.count) ? " · early read" : ""}
             </p>
             <p className="text-xs text-muted-foreground">Last analysis: {fmtDate(r.lastAt)}</p>
-            {showCard ? <AreaGradeLine area={r.area} /> : <p className="text-xs text-muted-foreground">Grade: {VIDEO_GRADE_PLACEHOLDER}</p>}
+            {showCard ? <div>{!videoGradesShown() && <InternalLabel />}<AreaGradeLine area={r.area} /></div> : <p className="text-xs text-muted-foreground">Grade: {VIDEO_GRADE_PLACEHOLDER}</p>}
           </div>
           <Link to={`/analyze/${r.area.toLowerCase()}`} className="text-xs text-primary underline">{showCard ? "See report card" : "See analysis"}</Link>
         </Card>
