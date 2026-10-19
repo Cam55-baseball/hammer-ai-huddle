@@ -13,6 +13,7 @@
 import { asGameSport, pitchTypeLabel, pitchFamily, zoneEmphasis, type GameSport } from "./sportRules";
 import { zoneLabels, type ZoneId } from "./zoneMath";
 import { sprayBalls, type SprayBall } from "./spray";
+import { ENTRY_SOURCE_LABEL } from "@/lib/intelligence/entrySource";
 
 export type ReportKind = "individual_postgame" | "team_postgame" | "opponent_scouting";
 

@@ -291,6 +291,14 @@ export default function GameReports() {
                 <Stat label="Whiff %" value={`${discipline.whiffPct}%`} />
                 <Stat label="Contact %" value={`${discipline.contactPct}%`} />
               </div>
+              {discipline.total > 0 && !hasEnough(discipline.total) && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Early read — {discipline.total} of {MIN_N} pitches seen. These rates move a lot until you've logged more.
+                </p>
+              )}
+              {discipline.total === 0 && (
+                <p className="text-xs text-muted-foreground mt-2">No pitches seen logged yet — nothing to rate.</p>
+              )}
             </AccordionContent>
           </AccordionItem>
         )}
