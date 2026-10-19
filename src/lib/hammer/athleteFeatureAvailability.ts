@@ -6,3 +6,7 @@
  * Only the owner turns this on. Subscription checks remain separate.
  */
 export const GAME_IQ_AVAILABLE_TO_ATHLETES = false;
+
+export function gameIqVisible(roles: { isOwner: boolean; isAdmin: boolean }): boolean {
+  return GAME_IQ_AVAILABLE_TO_ATHLETES || roles.isOwner || roles.isAdmin;
+}

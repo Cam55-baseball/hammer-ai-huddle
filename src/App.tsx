@@ -580,9 +580,9 @@ const App = () => {
               <Route path="/owner/organizations" element={<StaffOnlyRoute><OwnerOrganizationsPage /></StaffOnlyRoute>} />
               <Route path="/admin-verification" element={<StaffOnlyRoute><AdminVerification /></StaffOnlyRoute>} />
               <Route path="/games" element={<Games />} />
-              <Route path="/games/dossiers" element={<Dossiers />} />
-              <Route path="/games/reports" element={<GameReports />} />
-              <Route path="/games/:gameId/report" element={<GameReportView />} />
+              <Route path="/games/dossiers" element={<GameIqLock><Dossiers /></GameIqLock>} />
+              <Route path="/games/reports" element={<GameIqLock><GameReports /></GameIqLock>} />
+              <Route path="/games/:gameId/report" element={<GameIqLock><GameReportView /></GameIqLock>} />
               <Route path="/r/:token" element={<SharedReport />} />
               <Route path="/admin/periodization" element={<AdminPeriodization />} />
               <Route path="/game-scoring" element={<Navigate to="/games" replace />} />

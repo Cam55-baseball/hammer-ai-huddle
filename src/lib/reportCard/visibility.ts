@@ -1,7 +1,7 @@
 /**
  * REPORT CARD SWITCH (`report_card`) — owner ruling 2026-10-18 (reversal):
- * OFF for every role (players, parents, coaches, organizations, scouts, and
- * owner/admin screens too). The Report Card states specific numbers and the
+ * OFF for players, parents, coaches, organizations and scouts. Owner/admin see
+ * it with an "Internal — not released" label (correction 2026-10-19). The Report Card states specific numbers and the
  * owner allows no estimates on it; it stays off until camera measurement
  * (computer vision) exists. Stored data is kept — nothing is deleted.
  *
@@ -23,8 +23,9 @@ export function videoGradesShown(): boolean {
   return REPORT_CARD_SWITCH === "on";
 }
 
-// `roles` is kept for call-site compatibility; while the switch is off it
-// grants nothing to anyone.
-export function canSeeReportCard(_roles?: { isOwner: boolean; isAdmin: boolean }): boolean {
-  return videoGradesShown();
+// Owner correction 2026-10-19: while the switch is off, owner and admin
+// still see the Report Card, marked "Internal — not released". Everyone else
+// sees nothing from it.
+export function canSeeReportCard(roles?: { isOwner: boolean; isAdmin: boolean }): boolean {
+  return videoGradesShown() || !!roles?.isOwner || !!roles?.isAdmin;
 }
