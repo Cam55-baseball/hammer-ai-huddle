@@ -797,13 +797,18 @@ function HammerDailyPlanBody({
   const influencedServeKey = influencedDrillIds.join("|");
   // Save the final plan snapshot so an authorized coach sees these exact cards.
   // Self-scoped write; failures are diagnostics only and never block the plan.
-  const snapshotKey = useMemo(() => JSON.stringify(planSnapshotPayload(plan, sportKey, localIso())), [plan, sportKey]);
+  const { user: snapshotUser } = useAuth();
+  const snapshotDate = useMemo(() => {
+    const n = new Date();
+    return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+  }, [plan]);
+  const snapshotKey = useMemo(() => JSON.stringify(planSnapshotPayload(plan, sportKey, snapshotDate)), [plan, sportKey, snapshotDate]);
   const snapshotSaved = useRef("");
   useEffect(() => {
-    if (!user?.id || !snapshotKey || snapshotSaved.current === snapshotKey) return;
+    if (!snapshotUser?.id || !snapshotKey || snapshotSaved.current === snapshotKey) return;
     snapshotSaved.current = snapshotKey;
-    void savePlanSnapshot(user.id, plan, sportKey, localIso());
-  }, [user?.id, snapshotKey, plan, sportKey]);
+    void savePlanSnapshot(snapshotUser.id, plan, sportKey, snapshotDate);
+  }, [snapshotUser?.id, snapshotKey, plan, sportKey, snapshotDate]);
   useEffect(() => {
     if (!influencedServeKey || influencedLoggedServe.current === influencedServeKey) return;
     influencedLoggedServe.current = influencedServeKey;
