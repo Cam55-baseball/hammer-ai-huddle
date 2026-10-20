@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { CATEGORY_KEYS, CATEGORY_LABELS, CATEGORY_DESCRIPTIONS, normalizeCategoryOrder, type CategoryKey } from "@/lib/hammer/goals/categoryGoals";
 import { useContext } from "react";
 import { HammersTodayContext } from "@/components/hammer/HammersTodayProvider";
+import { goalReaskDue, GOAL_REASK_TEXT } from "@/lib/hammer/goalReask";
 
 const HIDE = "hm.rankGoalsHidden.";
 
@@ -38,15 +39,17 @@ export function RankGoalsPromptCard({ forceOpen = false }: { forceOpen?: boolean
     },
   });
 
-  if (!q.data || (q.data.ranked && !forceOpen) || (hidden && !forceOpen)) return null;
+  const updatedAt = typeof q.data?.raw?.updatedAt === "string" ? (q.data.raw.updatedAt as string) : null;
+  const reask = !!q.data?.ranked && goalReaskDue({ today, lastConfirmedAt: updatedAt, hasGoals: true });
+  if (!q.data || (q.data.ranked && !reask && !forceOpen) || (hidden && !forceOpen)) return null;
 
   const tap = (k: CategoryKey) => setOrder((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k]));
-  const save = async () => {
-    if (order.length !== CATEGORY_KEYS.length) return;
+  const save = async (picked: CategoryKey[] = order) => {
+    if (picked.length !== CATEGORY_KEYS.length) return;
     setSaving(true);
     const base = q.data!.raw && typeof q.data!.raw === "object" ? q.data!.raw : { version: 2 };
     const { error } = await supabase.from("athlete_context").upsert(
-      { user_id: user!.id, category_goals: { ...base, version: (base as any).version ?? 2, categoryOrder: order, updatedAt: new Date().toISOString() } as never },
+      { user_id: user!.id, category_goals: { ...base, version: (base as any).version ?? 2, categoryOrder: picked, updatedAt: new Date().toISOString() } as never },
       { onConflict: "user_id" },
     );
     setSaving(false);
@@ -63,6 +66,7 @@ export function RankGoalsPromptCard({ forceOpen = false }: { forceOpen?: boolean
           <ListOrdered className="h-5 w-5 text-primary shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-semibold">What matters most to you?</p>
+            {reask && <p className="text-xs font-medium" data-testid="goal-reask-text">{GOAL_REASK_TEXT}</p>}
             <p className="text-xs text-muted-foreground">Tap these in order, most important first. Your plan leans toward the top ones. You still train all of them.</p>
           </div>
         </div>
@@ -83,9 +87,10 @@ export function RankGoalsPromptCard({ forceOpen = false }: { forceOpen?: boolean
           })}
         </div>
         <div className="flex gap-2">
-          <Button size="sm" className="flex-1" disabled={order.length !== CATEGORY_KEYS.length || saving} onClick={save}>
+          <Button size="sm" className="flex-1" disabled={order.length !== CATEGORY_KEYS.length || saving} onClick={() => save()}>
             {order.length === CATEGORY_KEYS.length ? "Save my order" : "Tap all five"}
           </Button>
+          {reask && q.data.ranked && order.length === 0 && <Button size="sm" variant="outline" disabled={saving} onClick={() => save([...q.data!.ranked!])}>Keep my order</Button>}
           {order.length > 0 && <Button size="sm" variant="outline" onClick={() => setOrder([])} aria-label="Start over"><RotateCcw className="h-4 w-4" /></Button>}
           {!forceOpen && <Button size="sm" variant="ghost" onClick={() => { try { localStorage.setItem(hideKey, "1"); } catch { /* ignore */ } setHidden(true); }}>Later</Button>}
         </div>
