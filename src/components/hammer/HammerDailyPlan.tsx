@@ -113,6 +113,7 @@ import { PracticeLogPromptCard } from "@/components/hammer/PracticeLogPromptCard
 import { AnalysisRecordingPrompts } from "@/components/hammer/AnalysisRecordingPrompts";
 import { analysisGoalOrder } from "@/lib/hammer/analysisGoalOrder";
 import { hittingMechanicsGoal } from "@/lib/hammer/goals/mechanicsGoal";
+import { planSnapshotPayload, savePlanSnapshot } from "@/lib/hammer/planSnapshot";
 import { useCategoryPracticeLoad } from '@/hooks/useCategoryPracticeLoad';
 import { RoyalTimingReminder } from "@/components/hammer/RoyalTimingReminder";
 import { DelaycamReminder } from "@/components/hammer/DelaycamReminder";
