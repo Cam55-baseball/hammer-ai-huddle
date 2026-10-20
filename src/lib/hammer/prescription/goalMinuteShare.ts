@@ -41,27 +41,31 @@ export function goalMinuteShare(
   if (has(second) && second !== top) wanted.set(second, base(second) * SECOND_GOAL_BOOST);
 
   // Each boost is funded only by categories ranked below the boosted one,
-  // taken from the lowest-ranked first, down to their minimums only.
+  // taken from the lowest-ranked first, down to their minimums only. The
+  // second-ranked goal funds the top goal only as a last resort — its own
+  // boost is protected unless the top goal cannot be funded otherwise.
   const spare = new Map(rows.map(r => [r.category, Math.max(0, clean(r.baseMin) - clean(r.minMin))]));
   const rankOf = (c: string) => { const i = ranked.indexOf(c); return i === -1 ? ranked.length : i; };
 
   for (const [category, want] of wanted) {
     const funders = rows
       .filter(r => r.category !== category && rankOf(r.category) > rankOf(category) && (spare.get(r.category) ?? 0) > 0)
-      .sort((a, b) => rankOf(b.category) - rankOf(a.category));
-    let available = funders.reduce((sum, r) => sum + (spare.get(r.category) ?? 0), 0);
+      .sort((a, b) => {
+        const aSecond = a.category === second ? 1 : 0;
+        const bSecond = b.category === second ? 1 : 0;
+        return aSecond - bSecond || rankOf(b.category) - rankOf(a.category);
+      });
+    const available = funders.reduce((sum, r) => sum + (spare.get(r.category) ?? 0), 0);
     const grant = Math.min(want, available);
     if (grant <= 0) continue;
     result[category] = (result[category] ?? base(category)) + grant;
     // Take the grant proportionally from funders' spare minutes.
-    const totalSpare = available;
     for (const f of funders) {
       const fSpare = spare.get(f.category) ?? 0;
-      const take = Math.min(fSpare, (grant * fSpare) / totalSpare);
+      const take = Math.min(fSpare, (grant * fSpare) / available);
       spare.set(f.category, fSpare - take);
       result[f.category] = Math.max(clean(rows.find(r => r.category === f.category)?.minMin ?? 0), result[f.category]! - take);
     }
-    available -= grant;
   }
   // Round to whole minutes without dropping any category below its minimum.
   for (const row of rows) {
