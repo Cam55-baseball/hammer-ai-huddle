@@ -3,3 +3,4 @@
 - Practice load is projected from exact logged category/sport/date with unknown minutes/intensity preserved; schedules never stand in for actual work. Why: category isolation and honest workload require source records, not estimates.
 - Practice-dose adjustments require structured sets and the row's explicit floor; missing floors leave volume unchanged, and no skill is reopened or global workload-high set. Why: minimums, lifting and earlier safety decisions outrank reductions.
 - Cross-reference (mixedSignals) only informs one category's priority/Because and never authors work; other categories' signals are ignored. Why: no category spill-over.
+- Practice streaks reach ready skill cards through practicePlanContext after safety processing; missing row minima keep doses unchanged. Why: real logged context must be visible without guessed reductions.

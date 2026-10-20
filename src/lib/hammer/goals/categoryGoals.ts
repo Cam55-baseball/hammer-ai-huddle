@@ -203,7 +203,7 @@ export function normalizeCategoryGoalsV2(raw: unknown): CategoryGoalsPayloadV2 |
     : undefined;
   const hasAny =
     !!(baseball?.position || baseball?.pitcher || softball?.position || softball?.pitcher);
-  if (!hasAny) return null;
+  if (!hasAny && !categoryOrder) return null;
   return {
     version: 2,
     ...(baseball ? { baseball } : {}),
@@ -298,7 +298,7 @@ function v2ToV1(v2: CategoryGoalsPayloadV2): CategoryGoalsPayload {
     accept("pitcher", "softball", v2.softball.pitcher);
   }
 
-  const ordered = (Object.keys(score) as CategoryKey[]).sort((a, b) => {
+  const ordered = v2.categoryOrder ? [...v2.categoryOrder] : (Object.keys(score) as CategoryKey[]).sort((a, b) => {
     if (score[b] !== score[a]) return score[b] - score[a];
     return CATEGORY_KEYS.indexOf(a) - CATEGORY_KEYS.indexOf(b);
   });

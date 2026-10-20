@@ -16,6 +16,9 @@ import reviewTsv from "../../../docs/owner/exercise-descriptions-needed.tsv?raw"
 import howToTsv from "../../../docs/owner/basic-how-to-review.tsv?raw";
 import { buildReviewQueue } from "@/lib/vault/reviewQueue";
 import { libraryOnlyRows, warmupStageReviewItems } from "@/lib/vault/warmupStageVault";
+import { FIELD_RUNNING_DRILLS } from '@/data/drills/fieldRunningDrills';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 type Row = {
   slug: string; name: string; category: string | null; sport_scope: string | null;
@@ -118,6 +121,16 @@ export default function ExerciseVault() {
           </button>
         </div>
         <Input placeholder="Search by name or code" value={q} onChange={(e) => setQ(e.target.value)} />
+        <section className="space-y-2 border-b border-border pb-4" aria-label="Fielding and baserunning issue drills">
+          <h2 className="font-semibold">Fielding and baserunning issue drills</h2>
+          {FIELD_RUNNING_DRILLS.filter(drill => !q.trim() || `${drill.name} ${drill.violationKeys.join(' ')}`.toLowerCase().includes(q.trim().toLowerCase())).map(drill =>
+            <div key={drill.id} className="space-y-2 border-b border-border py-3">
+              <div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-semibold">{drill.name}</h3><Badge variant="secondary">Needs owner review</Badge></div>
+              <p className="text-xs text-muted-foreground">Sport: {drill.sports.join(', ')} · Category: {drill.category} · Issue tags: {drill.violationKeys.join(', ')}</p>
+              <ol className="list-decimal space-y-1 pl-5 text-sm">{drill.steps.map((step, index) => <li key={index}>{step}</li>)}</ol>
+              <Button asChild size="sm" variant="outline"><Link to={`/owner/drill-builder?drill=${encodeURIComponent(drill.id)}`}>Edit drill and issue tags</Link></Button>
+            </div>)}
+        </section>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
           <Select label="Card type" value={f.card} onChange={set("card")} options={opts.card} />
           <Select label="Sport" value={f.sport} onChange={set("sport")} options={opts.sport} />

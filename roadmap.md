@@ -1,3 +1,30 @@
+# AR1 — Parallel owner priority pass — Oct 20, 15:41 UTC
+
+**Ready to publish: NO.** Preview-only; no deploy, migration, switch, cron or iOS changes. No test records, consent acceptances, saved answers or drill edits created; all phone edits were discarded. Practice card was not re-proven.
+
+- [ ] AR1: complete safe execution blocks and affected-player phone proof.
+  - [x] Existing skill stage metadata is visible inside exercise details; existing dose, exercise/task identity and log grid unchanged. Both-sport × three-season eight-week builder tests pass.
+  - [ ] Positive athlete phone proof still pending: existing Apple TEST account stopped at required updated consent (not bypassed/accepted); college TEST athlete requires its own session and declared equipment. No claim of full-go acceptance.
+- [ ] AR1: resolve canonical coach plan source/access, then build and prove coach/org section without scouts.
+  - Read-only parallel audit confirms no canonical final skill-plan sharing RPC/persistence or verified training-sharing authorization. Do not reconstruct from lift rows or add a pretend completed section. Shared final-plan contract and coach/org-only server consent/revocation checks required.
+- [ ] AR1: finish own-category editable issue tags and fix drills.
+  - [x] Four standard proposals (fielding funnel/exchange; separate baseball/softball read-and-reset) now in the shared catalog and Exercise Vault, labeled Needs owner review, linked to the existing editable drill/tag store.
+  - [x] Fielding and baserunning have exact own-category matcher routes and placements; overlays preserve displaced reps, prep/full-go/log and missing-equipment gates. Missing canonical sport/module scope fails closed; four concrete sport/category tests cover positive scope, wrong sport and missing scope. No new athlete faults authored.
+  - [x] Owner phone 390×844: Vault → edit fielding tags → toggle bobble → close without save; zero page errors/overflow. Evidence `/tmp/browser/ar1/vault-issue-proposals.png`, `editable-fielding-tags.png`.
+  - [ ] Canonical sport/module issue source and affected-athlete swaps/resolution phone acceptance still pending; legacy wk_fault_signals has no sport column. Do not treat another sport's evidence as this sport's fault.
+- [ ] AR1: wire practice, mixed signals, goal shares and comparable learning outcomes into actual plans.
+  - [x] Actual logged three-day practice streak now adds a same-category Because to ready skill cards after safety processing. Actual-builder tests for both sports preserve every dose/minute/status and exclude wrong-sport logs. No ~30% reduction claimed: current skill rows have no explicit minima.
+  - [x] Fixed saved V2 categoryOrder being ignored (including ranking-only payloads); actual builder honors saved Fielding #1. Goal save invalidates the canonical envelope; error states are visible and phone actions wrap.
+  - [ ] Dose cuts/minute shares require explicit legal row minima/maxima; cross-reference needs exact sport-scoped comparable fault records; learning source has no sport/plan-task link, outcomes remain server-only. No guessed adapters added.
+- [ ] AR1: owner questions, testing details and 12-week re-ask phone proof.
+  - [x] Six full-go questions (two sports × three subscriptions, age bands in every question) prefill existing versioned principle form; saved answer identity uses existing situation, no parallel question store.
+  - [x] Owner phone 390×844: six questions render, chosen answer prefills correctly, zero page errors/overflow; no answer saved. Evidence `/tmp/browser/ar1/owner-questions.png`, `owner-answer-draft.png`.
+  - [x] Athlete testing-day notice opens read-only date/tests/status details and existing connections contact page; staff alone records results. No time, location or contact fields invented.
+  - [ ] Durable owner answer save/readback and actual engine use, testing-day athlete phone proof, 84-day re-ask save/readback still pending. TEST consent was not changed to manufacture proof.
+- [ ] AR1: six eight-week cohorts with screenshots and fresh full suite after integration.
+  - [x] Full suite after catalog/planner integrations: 431 files / 3,428 tests passed (`/tmp/ar1-full-suite.log`); final subsequent UI changes have focused checks, final suite rerun below.
+  - [ ] Subscription-qualified six-cohort change/resolution screenshot acceptance remains open; existing sport/season builder runs are not that proof.
+
 # Owner priority pass — Oct 20, 14:43 UTC
 
 **Ready to publish: NO.** No publish, cron or iOS changes. Practice-card proof is complete; do not repeat it. This section supersedes older "next step" instructions below.

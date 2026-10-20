@@ -16,6 +16,7 @@
 import type { VideoCategory, VideoSport } from "@/lib/videoCategoricalTaxonomy";
 import type { PieV2SignalId } from "@/lib/pieV2/types";
 import { DOCTRINE_DRILLS } from "./doctrineDrills";
+import { FIELD_RUNNING_DRILLS } from './fieldRunningDrills';
 
 /** Teaching level — matches the existing feel → iso → constraint → transfer ladder. */
 export type EliteDrillLevel = "feel" | "iso" | "constraint" | "transfer" | "timing";
@@ -23,7 +24,7 @@ export type EliteDrillLevel = "feel" | "iso" | "constraint" | "transfer" | "timi
 export interface EliteDrill {
   id: string;
   name: string;
-  category: Extract<VideoCategory, "hitting" | "throwing" | "pitching">;
+  category: Extract<VideoCategory, "hitting" | "throwing" | "pitching" | "fielding" | "baserunning">;
   /** Sports this drill is legal for. */
   sports: VideoSport[];
   /** Constrained sub-skill from the video taxonomy for this sport/category. */
@@ -554,4 +555,4 @@ export function eliteDrillsForCategory(
   );
 }
 
-export const ELITE_DRILL_CATALOG: EliteDrill[] = [...BASE_DRILLS, ...DOCTRINE_DRILLS];
+export const ELITE_DRILL_CATALOG: EliteDrill[] = [...BASE_DRILLS, ...DOCTRINE_DRILLS, ...FIELD_RUNNING_DRILLS];

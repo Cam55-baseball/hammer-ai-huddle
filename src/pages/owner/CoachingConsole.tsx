@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { OWNER_QUESTIONS, questionSituation, type OwnerQuestion } from '@/lib/intelligence/ownerQuestions';
 import {
   EVIDENCE_LABEL, badgeFor, latestVersion, SMALL_GROUP_NOTE,
   type EvidenceKind, type Principle, type PrincipleStats, type PrincipleVersion,
@@ -84,10 +85,41 @@ export default function CoachingConsole() {
     window.scrollTo({ top: 0 });
   };
 
+  const answerQuestion = (question: OwnerQuestion, answer: string) => {
+    const previous = latestVersion((data?.versions ?? []).filter(v => v.situation === questionSituation(question.id)));
+    setEditing(previous?.principle_id ?? null);
+    setForm({ ...EMPTY, body: answer, sport: question.sport, area: question.area,
+      situation: questionSituation(question.id),
+      applies_when: `${question.subscription}; ages 13–15, 16–17 and adults, as specified in the answer`,
+      not_when: 'Never override pain, equipment, subscription, rest, throwing or game-day rules.',
+      evidence_note: question.question });
+    setSaveError(null);
+    document.getElementById('cp-body')?.focus();
+  };
+
   return (
     <div className="mx-auto max-w-2xl space-y-4 p-4 pt-16">
       <h1 className="text-2xl font-bold">Coaching Console</h1>
       <p className="text-sm text-muted-foreground">Teach Hammers what you believe. Edits make a new version; old versions are kept.</p>
+
+      <section className="space-y-3 border-b border-border pb-4" aria-label="Questions for the owner">
+        <h2 className="text-lg font-semibold">Questions for the owner</h2>
+        {isLoading ? <p className="text-sm text-muted-foreground">Loading saved answers…</p> : isError ?
+          <p role="alert" className="text-sm text-destructive">Couldn't check saved answers. Try again later.</p> :
+          OWNER_QUESTIONS.map(question => {
+            const answer = latestVersion((data?.versions ?? []).filter(v => v.situation === questionSituation(question.id)));
+            return <div key={question.id} className="space-y-2 border-b border-border py-3">
+              <div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{question.sport} · {question.subscription}</Badge>
+                <Badge variant="secondary">{answer ? `Answered · version ${answer.version}` : 'Needs an answer'}</Badge></div>
+              <p className="text-sm font-medium">{question.question}</p>
+              {answer && <p className="break-words text-sm text-muted-foreground">Current answer: {answer.body}</p>}
+              <div className="flex flex-col gap-2">
+                {question.options.map(option => <Button key={option} variant="outline" className="h-auto min-h-11 justify-start whitespace-normal text-left" onClick={() => answerQuestion(question, option)}>{option}</Button>)}
+                <Button variant="ghost" className="justify-start" onClick={() => answerQuestion(question, answer?.body ?? '')}>Write my answer</Button>
+              </div>
+            </div>;
+          })}
+      </section>
 
       <Card className="space-y-3 p-4" aria-label="Write a principle">
         <h2 className="font-semibold">{editing ? "Edit principle (saves a new version)" : "Write a principle"}</h2>
