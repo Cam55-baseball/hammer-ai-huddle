@@ -277,12 +277,12 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("scheduled_practice_sessions")
-        .select("id")
+        .select("scheduled_date, recurring_active, recurring_days")
         .eq("user_id", user!.id)
-        .eq("scheduled_date", planDate)
-        .limit(1);
+        .or(`scheduled_date.eq.${planDate},and(recurring_active.eq.true,scheduled_date.lte.${planDate})`)
+        .limit(50);
       if (error) throw error;
-      return (data ?? []).length > 0;
+      return (data ?? []).some((r: any) => practiceAppliesOnDate(r, planDate));
     },
   });
 
