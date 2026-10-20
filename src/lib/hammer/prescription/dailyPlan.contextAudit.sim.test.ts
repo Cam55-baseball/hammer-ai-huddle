@@ -104,3 +104,47 @@ describe("audit: pain → plan", () => {
     expect(br(ctx(BASE)).title).toBe("Baserunning — game scenarios");
   });
 });
+
+// ── Audit: video analyses → plan (applyFaultPlanInfluence on a real built plan) ──
+import { applyFaultPlanInfluence } from "@/lib/prescription/applyFaultPlanInfluence";
+import type { EliteDrill } from "@/data/drills/eliteDrillCatalog";
+import type { RankedFault } from "@/lib/wic/faultLedger/ranking";
+
+const fixDrill: EliteDrill = {
+  id: "sim.hit.front_side", name: "Front-Side Hold", category: "hitting", sports: ["baseball"],
+  subSkill: "Sequence", level: "feel", fixes: "Early opening", setup: "Open space",
+  steps: ["Move"], cues: ["Hold the front side"], dosage: "3 x 6", equipment: [],
+  violationKeys: ["front_shoulder_opens_early"], pieV2Signals: [], movementPatterns: [],
+};
+const fault = (cleared: boolean): RankedFault[] => [{
+  rootPatternId: "trunk_rotates_before_front_foot_plant", family: null, score: 1,
+  sources: ["video_analysis"], disciplines: ["hitting"], totalSampleSize: 1,
+  latestObservedAt: "2026-06-01T00:00:00.000Z", says: "Recent finding", fades: [], clearedByCleanClips: cleared,
+  signals: [{ id: "s1", user_id: "a1", source: "video_analysis", fault_key: "front_shoulder_opens_early",
+    root_pattern_id: "trunk_rotates_before_front_foot_plant", discipline: "hitting", confidence: 0.7,
+    sample_size: 1, severity: 0.46, evidence: "Opened early", observed_at: "2026-06-01T00:00:00.000Z" }],
+}];
+const withAnalysis = (cleared: boolean) => applyFaultPlanInfluence({
+  blocks: plan(null).blocks, rankedFaults: fault(cleared), sport: "baseball", ownedEquipment: new Set(),
+  catalog: [fixDrill], circulation: { servedToUser: {}, usage: {} }, now: DAY,
+});
+
+describe("audit: video analyses → plan", () => {
+  const base = plan(null);
+  const baseHit = hit(base);
+  it("a planted hitting fault swaps exactly one hitting drill, same count and minutes", () => {
+    const h = withAnalysis(false).find((b) => b.modality === "hitting")!;
+    const changed = h.drills.filter((d, i) => d.name !== baseHit.drills[i]?.name);
+    expect(changed.map((d) => d.name)).toEqual(["Front-Side Hold"]);
+    expect(h.drills).toHaveLength(baseHit.drills.length);
+    expect(h.durationMin).toBe(baseHit.durationMin);
+  });
+  it("a fault cleared by clean clips rotates out (no swap)", () => {
+    const h = withAnalysis(true).find((b) => b.modality === "hitting")!;
+    expect(h.drills.map((d) => d.name)).toEqual(baseHit.drills.map((d) => d.name));
+  });
+  it("lifting is identical with or without an analysis finding", () => {
+    const s = (bs: ReadonlyArray<typeof baseHit>) => bs.find((b) => b.modality === "strength")?.drills;
+    expect(s(withAnalysis(false))).toEqual(s(base.blocks));
+  });
+});
