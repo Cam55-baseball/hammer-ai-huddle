@@ -1,4 +1,5 @@
 /** Questions use the existing principle situation as their durable identity. */
+import type { Principle, PrincipleVersion } from './principles';
 export interface OwnerQuestion {
   id: string;
   sport: 'baseball' | 'softball';
@@ -21,3 +22,17 @@ export const OWNER_QUESTIONS: readonly OwnerQuestion[] = (['baseball', 'softball
   })));
 
 export const questionSituation = (id: string) => `Owner question: ${id}`;
+
+/** Only the current version of one exact principle answers this question.
+ * Cross-principle version numbers are unrelated; ambiguity is not an answer.
+ */
+export function currentQuestionAnswer(question: OwnerQuestion, principles: readonly Principle[], versions: readonly PrincipleVersion[]) {
+  const matches = principles.flatMap(principle => {
+    const current = versions.filter(v => v.principle_id === principle.id && v.version === principle.current_version);
+    if (current.length !== 1) return [];
+    const version = current[0];
+    return version.situation === questionSituation(question.id) && version.sport === question.sport && version.area === question.area
+      ? [{ principle, version }] : [];
+  });
+  return matches.length === 1 ? matches[0] : null;
+}
