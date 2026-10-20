@@ -52,7 +52,7 @@ export function goalMinuteShare(
     let available = funders.reduce((sum, r) => sum + (spare.get(r.category) ?? 0), 0);
     const grant = Math.min(want, available);
     if (grant <= 0) continue;
-    result[category] = base(category) + grant;
+    result[category] = (result[category] ?? base(category)) + grant;
     // Take the grant proportionally from funders' spare minutes.
     const totalSpare = available;
     for (const f of funders) {
