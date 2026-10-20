@@ -18,14 +18,19 @@ export function structureSkillSession(steps: readonly DrillStep[], options: Skil
   if (options.skill === 'hitting') return sort([...steps]);
   const clearSpace = options.owned.has('field') || options.owned.has('open_space');
   const canExecute = clearSpace && !options.recoveryDay && options.injuryRegions.length === 0;
+  const eligible = (step: DrillStep) => step.prescriptionOrigin !== 'owner' &&
+    (options.skill === 'baserunning' ? step.executionKind === 'baserunning_scenarios'
+      : options.owned.has('glove') && options.owned.has('ball') && step.executionKind === 'fielding_reads');
   let executionIndex = -1;
-  if (canExecute && options.skill === 'baserunning') {
-    executionIndex = steps.findIndex((step, index) => index > 0 && step.executionKind === 'baserunning_scenarios' && step.prescriptionOrigin !== 'owner');
-  } else if (canExecute && options.owned.has('glove') && options.owned.has('ball')) {
-    executionIndex = steps.findIndex((step, index) => index > 0 && step.executionKind === 'fielding_reads' && step.prescriptionOrigin !== 'owner');
+  if (canExecute && (options.skill === 'baserunning' || options.skill === 'defense')) {
+    // Prefer a later drill so the first stays prep; when the only eligible rep
+    // leads the session (pitcher fielding), promote it and prep moves to the next.
+    executionIndex = steps.findIndex((step, index) => index > 0 && eligible(step));
+    if (executionIndex === -1 && steps.length > 1 && eligible(steps[0]!)) executionIndex = 0;
   }
+  const prepIndex = executionIndex === 0 ? 1 : 0;
   const structured = steps.map((step, index): DrillStep => {
-    if (index !== executionIndex) return { ...step, stage: index === 0 ? 'prep' : 'drills' };
+    if (index !== executionIndex) return { ...step, stage: index === prepIndex ? 'prep' : 'drills' };
     const executionCue = options.skill === 'baserunning'
       ? options.sport === 'softball'
         ? 'Use these same scenario reps at game speed on a safe field. Leave the base only when the pitch is released; read the ball, then commit. No extra sprints or slides.'
