@@ -1,4 +1,8 @@
-# AK6 — Oct 20 — Assessment Mode + Hammers Today prompts
+# AK7 — Oct 20 — final batch closeout in progress
+- [ ] Finish safe remaining prompt adapters and verify assessment/prompt behavior; record proof per item, cadence proposals, live switch states and publish readiness here.
+- No publish, cron or iOS changes. Unapproved cadences remain OFF; no invented completion or role bypass.
+
+## AK6 evidence
 - [x] AK6 practice-report honesty corrected: shared canonical entered-log projection replaces AI generation and bypasses old AI caches without deleting them. Self-owned, non-deleted source checked before live response. Derived composites never become independent evidence, fault fixes, transfer claims or rep allocations. Entered grade/count/date/source stay.
 - [x] AK6 sibling fallback views corrected through generateInsights: saved summary, calendar/list/details and practice detail no longer infer faults, wins, cues or elite tags from composites; session video suggestions no longer treat low composite indexes as movement faults.
 - [x] AK6 phone PASS as TEST college player, Chromium 390×844: real Tee → entered execution score 6 → Solid → Confirm → Save showed Grade 60 / Acceptable, one logged rep, entered execution grade 60, athlete-entered source/date, “Mechanics: Not measured”. No invented diagnosis or rep split. Evidence: docs/owner/walkthroughs/assessment/ak6/.
