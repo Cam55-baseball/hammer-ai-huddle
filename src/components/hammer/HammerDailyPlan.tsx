@@ -111,6 +111,7 @@ import { WkConditioningCard } from "@/components/hammer/WkConditioningCard";
 import { GameLogPromptCard } from "@/components/hammer/GameLogPromptCard";
 import { PracticeLogPromptCard } from "@/components/hammer/PracticeLogPromptCard";
 import { AnalysisRecordingPrompts } from "@/components/hammer/AnalysisRecordingPrompts";
+import { analysisGoalOrder } from "@/lib/hammer/analysisGoalOrder";
 import { useCategoryPracticeLoad } from '@/hooks/useCategoryPracticeLoad';
 import { RoyalTimingReminder } from "@/components/hammer/RoyalTimingReminder";
 import { DelaycamReminder } from "@/components/hammer/DelaycamReminder";
@@ -862,7 +863,7 @@ function HammerDailyPlanBody({
         {practiceLoadHistory.error && <p role="alert" className="text-sm text-destructive">Couldn't check your logged practice workload. Your saved plan has not been changed.</p>}
         <RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} />
         <DelaycamReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} offSeason={shortSeasonPhase(resolvedPhase) === 'off'} />
-        <AnalysisRecordingPrompts prescribed={plan.blocks.filter(b => prescribedToday(b)).flatMap(b => {
+        <AnalysisRecordingPrompts goalOrder={analysisGoalOrder(ctx.get<unknown>('category_goals')?.value, sportKey)} prescribed={plan.blocks.filter(b => prescribedToday(b)).flatMap(b => {
           // Exact module route only: arm care/throwing must not invent a pitching session.
           const module = new URL(b.route, window.location.origin).searchParams.get("module");
           return module === "hitting" || module === "pitching" || module === "throwing" ? [module] : [];
