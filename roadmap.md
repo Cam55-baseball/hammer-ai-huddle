@@ -1,3 +1,12 @@
+# AS6 — Owner unblock decisions — Oct 20, 22:34 UTC
+
+These decisions supersede older blocker descriptions and minute-share/severity requests below.
+- [ ] Weekly skill blocks: preserve ladder baseline; one extra top-goal block when legal; second goal first on shared days; explicit Because when caps prevent the extra; eight-week six-cohort comparison.
+- [ ] Redeploy ONLY intel-recheck-job with comparable evidence judge; verify existing nightly run without changing cron.
+- [ ] TEST real-form phone proofs: democoach, demoorg, players; one hidden/stat-excluded TEST ADMIN for admin-only surfaces; scramble every proof password; never touch real owner.
+- [x] Delaycam severity path explicitly skipped by owner; recurrence/mechanics/off-season cadence retained.
+- [ ] Finish accepted coach plan, execution, mixed signals, aged day-84 and testing details proofs; fresh full suite; honest final status.
+
 # AS5 — Owner decisions build — Oct 20, 20:43 UTC
 
 **Ready to publish: NO.** Preview builds OK (20:42 UTC); full suite **450 files / 3,642 tests PASS** (`/tmp/as5-full-suite.log`).
