@@ -19,4 +19,7 @@ describe('majorMechanicalFlag', () => {
     expect(majorMechanicalFlag([{ date: '2026-10-01', issues: [{ key: 'cast', severe: true }] }])).toBe(true);
     expect(majorMechanicalFlag([r('bad', 'late'), r('bad', 'late'), r('2026-10-01', 'late', 'late', 'late')])).toBe(false);
   });
+  it('impossible calendar dates cannot establish three matching reports', () => {
+    expect(majorMechanicalFlag([r('2026-02-30', 'late'), r('2026-02-31', 'late'), r('2026-10-01', 'late')])).toBe(false);
+  });
 });

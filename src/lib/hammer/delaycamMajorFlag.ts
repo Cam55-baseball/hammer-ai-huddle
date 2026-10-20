@@ -10,7 +10,12 @@ export interface AnalysisReportIssues {
 
 export function majorMechanicalFlag(reports: ReadonlyArray<AnalysisReportIssues>): boolean {
   const last5 = [...reports]
-    .filter(r => /^\d{4}-\d{2}-\d{2}/.test(r.date))
+    .filter(r => {
+      const date = r.date.slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+      const parsed = Date.parse(r.date);
+      return Number.isFinite(parsed) && new Date(parsed).toISOString().slice(0, 10) === date;
+    })
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 5);
   const counts = new Map<string, number>();
