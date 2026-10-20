@@ -15,7 +15,7 @@ import { useVault } from "@/hooks/useVault";
 import { AssessmentMode } from "./AssessmentMode";
 import { AssessmentProfileReview } from "./AssessmentProfileReview";
 import { parseSeasonStats } from "@/lib/assessment/seasonStats";
-import { assessmentSteps, requiredAnalyses, type AnalysisModule, type StepId, type StepProgress } from "@/lib/assessment/initialAssessment";
+import { assessmentSteps, requiredAnalyses, shouldFinalizeAssessment, type AnalysisModule, type StepId, type StepProgress } from "@/lib/assessment/initialAssessment";
 const EmbeddedAnalysis = lazy(() => import("@/pages/AnalyzeVideo"));
 const MOVES = [
   { key: "hip", label: "Hip rotation (turn each hip in and out)" },
@@ -40,6 +40,7 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const hydrated = useRef(false);
+  const finalizing = useRef(false);
   const q = useQuery({
     queryKey: ["initial-assessment", user?.id, sport], enabled: !!user,
     queryFn: async () => {
@@ -68,12 +69,16 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
   const save = async (patch: Record<string, unknown>) => {
     if (!user) return false;
     setSaving(true); setSaveError(null);
-    const { error } = await supabase.from("initial_assessments").upsert({ user_id: user.id, updated_at: new Date().toISOString(), ...patch });
-    setSaving(false);
-    if (error) { setSaveError("Couldn't save your assessment. Try again."); return false; }
-    await qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] });
-    await qc.invalidateQueries({ queryKey: ["assessment-start", user.id] });
-    return true;
+    try {
+      const { error } = await supabase.from("initial_assessments").upsert({ user_id: user.id, updated_at: new Date().toISOString(), ...patch });
+      if (error) throw error;
+      await qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] });
+      await qc.invalidateQueries({ queryKey: ["assessment-start", user.id] });
+      return true;
+    } catch {
+      setSaveError("Couldn't save your assessment. Try again.");
+      return false;
+    } finally { setSaving(false); }
   };
   useEffect(() => {
     if (!autoOpen || !q.data || q.data.row?.completed_at || q.data.profile?.hammers_today_started_at) return;
@@ -81,6 +86,17 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
     if (!q.data.row?.mode_opened_at) void save({ mode_opened_at: new Date().toISOString() });
   }, [autoOpen, !!q.data]);
   const close = () => { setOpen(false); onClose?.(); };
+  useEffect(() => {
+    if (!q.data || !initialized || saving || saveError || finalizing.current || q.data.profile?.hammers_today_started_at) return;
+    const row = q.data.row;
+    const input = { onboardingDone: false, lastSeasonDoneOrSkipped: !!(row?.last_season_saved_at || row?.last_season_skipped_at), movementScreenDone: !!row?.movement_done_at, s2Done: q.data.s2, analysesDone: q.data.analyses, sixWeekTestDone: q.data.tests, modules: modules.filter(m => m.startsWith(`${sport}_`)), progress: (row?.step_progress ?? {}) as StepProgress };
+    if (!shouldFinalizeAssessment(input, row?.completed_at)) return;
+    finalizing.current = true;
+    void save({ completed_at: new Date().toISOString() }).then(saved => {
+      if (saved) close();
+      else finalizing.current = false;
+    });
+  }, [q.data, initialized, modules, sport, saving, saveError]);
   if (!user) return null;
   if (q.error) return <p role="alert" className="text-sm text-destructive">Couldn't load your assessment. Reload and try again.</p>;
   if (!q.data || !initialized) return <p className="text-sm text-muted-foreground">Loading your assessment…</p>;

@@ -1,7 +1,7 @@
 - Service-role functions returning athlete data to a non-self viewer must pass `_shared/recruitingGate.ts`. Why: service role skips RLS.
 - `create-test-athlete` is owner-only and the only way to run the real generator as the demo test pitcher. Why: no approval-free session mint exists for other users.
 - Every measurement goes through `public.ledger_record` (source triggers + `ledger_record_tiles`); triggers swallow their own errors. Why: new measurements join baselines by declaring themselves; recording must never cost a clip.
-- Read scoped subdirectory AGENTS.md before edits. Assessment uses canonical answer forms and source-query refreshes, never parallel answers. Why: local rules and measurement ownership must hold.
+- Subdirectories have scoped AGENTS.md to read before edits. Assessment uses canonical answer forms and source-query refreshes, never parallel answers. Why: local rules and measurement ownership must hold.
 <!-- LOVABLE:BEGIN -->
 - Throwing uses a separate conservative overhand gate and one pose runner for both sports, never mound or AI-vision values. Why: field throws lack a windup and batting clips can mimic a throw.
 <!-- LOVABLE:END -->

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { assessmentSteps, requiredAnalyses, assessmentComplete, type AssessmentInput } from "../initialAssessment";
+import { assessmentSteps, requiredAnalyses, assessmentComplete, shouldFinalizeAssessment, type AssessmentInput } from "../initialAssessment";
 const base: AssessmentInput = { onboardingDone: false, lastSeasonDoneOrSkipped: false, movementScreenDone: false, s2Done: false, analysesDone: [], sixWeekTestDone: false, modules: ["baseball_pitcher"] };
 describe("optional initial assessment", () => {
   it("step 2 follows step 1", () => expect(assessmentSteps(base)[2]).toBe("locked"));
@@ -30,4 +30,20 @@ describe("only subscribed analyses", () => {
   it("5Tool needs hitting and throwing", () => expect(requiredAnalyses(["softball_5tool"])).toEqual(["hitting", "throwing"]));
   it("Golden 2Way needs all three", () => expect(requiredAnalyses(["baseball_golden2way"])).toEqual(["hitting", "pitching", "throwing"]));
   it("complete once every step is done", () => expect(assessmentComplete({ onboardingDone: true, lastSeasonDoneOrSkipped: true, movementScreenDone: true, s2Done: true, analysesDone: ["pitching"], sixWeekTestDone: true, modules: ["baseball_pitcher"] })).toBe(true));
+});
+
+describe("last embedded save finishes assessment", () => {
+  const ready: AssessmentInput = { ...base, progress: { 1: "skipped", 2: "skipped", 3: "skipped", 4: "skipped", 5: "skipped" } };
+  it("six-week save finalizes without a Mark complete tap", () => {
+    expect(shouldFinalizeAssessment(ready, null)).toBe(false);
+    expect(shouldFinalizeAssessment({ ...ready, sixWeekTestDone: true }, null)).toBe(true);
+  });
+  it("final S2 save finishes after five other steps", () => {
+    const input = { ...base, progress: { 1: "skipped", 2: "skipped", 3: "skipped", 5: "skipped", 6: "skipped" } as const };
+    expect(shouldFinalizeAssessment(input, null)).toBe(false);
+    expect(shouldFinalizeAssessment({ ...input, s2Done: true }, null)).toBe(true);
+  });
+  it("finished assessment never requests another completion write", () => {
+    expect(shouldFinalizeAssessment({ ...ready, sixWeekTestDone: true }, "2026-10-20T02:04:00Z")).toBe(false);
+  });
 });

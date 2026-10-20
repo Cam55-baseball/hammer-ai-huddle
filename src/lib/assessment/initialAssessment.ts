@@ -65,3 +65,8 @@ export function assessmentSteps(i: AssessmentInput): Record<StepId, StepState> {
 export function assessmentComplete(i: AssessmentInput): boolean {
   return Object.values(assessmentSteps(i)).every((s) => s === "done");
 }
+
+/** Result saves can finish the last step without another navigation tap. */
+export function shouldFinalizeAssessment(i: AssessmentInput, completedAt: string | null | undefined): boolean {
+  return !completedAt && assessmentComplete(i);
+}
