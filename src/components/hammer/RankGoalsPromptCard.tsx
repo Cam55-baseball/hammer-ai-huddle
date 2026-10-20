@@ -12,13 +12,18 @@ import { ListOrdered, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { CATEGORY_KEYS, CATEGORY_LABELS, CATEGORY_DESCRIPTIONS, normalizeCategoryOrder, type CategoryKey } from "@/lib/hammer/goals/categoryGoals";
+import { CATEGORY_KEYS, CATEGORY_LABELS, CATEGORY_DESCRIPTIONS, normalizeCategoryOrder, normalizeCategoryGoals, type CategoryKey } from "@/lib/hammer/goals/categoryGoals";
 import { confirmCategoryOrder } from '@/lib/hammer/goals/confirmCategoryOrder';
 import { goalReaskDue, goalCalendarDate, GOAL_REASK_TEXT } from "@/lib/hammer/goalReask";
 
 const HIDE = "hm.rankGoalsHidden.";
 
 export function RankGoalsPromptCard({ forceOpen = false }: { forceOpen?: boolean }) {
+  const { user } = useAuth();
+  return <GoalOrderConfirmation key={`${user?.id ?? 'signed-out'}.${goalCalendarDate(new Date())}`} forceOpen={forceOpen} />;
+}
+
+function GoalOrderConfirmation({ forceOpen }: { forceOpen: boolean }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [order, setOrder] = useState<CategoryKey[]>([]);
@@ -36,14 +41,14 @@ export function RankGoalsPromptCard({ forceOpen = false }: { forceOpen?: boolean
       const { data, error } = await supabase.from("athlete_context").select("category_goals").eq("user_id", user.id).maybeSingle();
       if (error) throw error;
       const raw = (data as { category_goals?: Record<string, unknown> | null } | null)?.category_goals ?? null;
-      return { raw, ranked: normalizeCategoryOrder(raw?.categoryOrder) };
+      return { raw, ranked: normalizeCategoryGoals(raw)?.goals.map(goal => goal.category) ?? normalizeCategoryOrder(raw?.categoryOrder) };
     },
   });
 
   const updatedAt = typeof q.data?.raw?.updatedAt === "string" ? (q.data.raw.updatedAt as string) : null;
   const reask = !!q.data?.ranked && goalReaskDue({ today, lastConfirmedAt: updatedAt, hasGoals: true });
-  if (q.error) return <p role="alert" className="text-sm text-destructive">Couldn't load your saved goal order. Try again later.</p>;
-  if (!q.data || (q.data.ranked && !reask && !forceOpen) || (hidden && !forceOpen)) return null;
+  if (q.error && !q.data) return <div><p role="alert" className="text-sm text-destructive">Couldn't load your saved goal order.</p><Button variant="outline" size="sm" onClick={() => void q.refetch()}>Try again</Button></div>;
+  if (!q.data || (!saveError && ((q.data.ranked && !reask && !forceOpen) || (hidden && !forceOpen)))) return null;
 
   const tap = (k: CategoryKey) => setOrder((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k]));
   const save = async (picked: CategoryKey[] = order) => {
@@ -51,19 +56,23 @@ export function RankGoalsPromptCard({ forceOpen = false }: { forceOpen?: boolean
     setSaving(true);
     setSaveError(null);
     try {
+      const expected = confirmCategoryOrder(q.data.raw, picked, new Date().toISOString());
       const { error } = await supabase.from("athlete_context").upsert(
-        { user_id: user.id, category_goals: confirmCategoryOrder(q.data.raw, picked, new Date().toISOString()) as never },
+        { user_id: user.id, category_goals: expected as never },
         { onConflict: "user_id" },
       );
       if (error) throw error;
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["goal-ranking", user.id] }),
-        qc.invalidateQueries({ queryKey: ["hammer-context-envelope", user.id] }),
-      ]);
+      await qc.invalidateQueries({ queryKey: ["goal-ranking", user.id], refetchType: 'none' });
+      const readback = await q.refetch({ throwOnError: true });
+      if (readback.data?.raw?.updatedAt !== expected.updatedAt ||
+          readback.data?.ranked?.join(',') !== picked.join(',')) {
+        throw new Error('Saved goal confirmation does not match readback');
+      }
+      await qc.invalidateQueries({ queryKey: ["hammer-context-envelope", user.id] });
       setOrder([]);
       toast.success("Saved. Your plan will lean toward what you ranked first.");
     } catch {
-      setSaveError("Couldn't save your goal order. Please try again.");
+      setSaveError("Couldn't confirm your saved goal order. Please try again.");
     } finally {
       setSaving(false);
     }

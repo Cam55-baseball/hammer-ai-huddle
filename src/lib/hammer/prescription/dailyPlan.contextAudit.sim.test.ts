@@ -250,16 +250,23 @@ describe("audit: games → drill choice (chase)", () => {
 describe("execution: hitting session structure", () => {
   const h = (gear: string[], phase = "in") => hit(buildHammerDailyPlan(
     ctx({ ...BASE, season_phase: phase, equipment_effective: gear }), NORMAL_SIGNAL, null, null, undefined, DAY));
-  it("with a net: prep first, a full-go round with counts and intent, log last", () => {
+  it.each(['baseball', 'softball'])("%s: every phase exercises real hitting days with prep, full-go and log", sport => {
     for (const phase of ["in", "off", "pre"]) {
-      const blk = h(["tee", "gamer_bat", "net"], phase);
-      if (blk.status !== "ready" || blk.drills.length === 0) continue; // not a hitting day in that phase
-      const stages = h(["tee", "gamer_bat", "net"], phase).drills.map((d) => d.stage);
-      expect(stages[0]).toBe("prep");
-      expect(stages).toContain("full_go");
-      expect(stages[stages.length - 1]).toBe("log");
-      const fg = h(["tee", "gamer_bat", "net"], phase).drills.find((d) => d.stage === "full_go")!;
-      expect(fg.cue).toContain("every swing with intent");
+      const hittingDays = Array.from({ length: 7 }, (_, offset) => {
+        const date = new Date(2026, 5, 3 + offset);
+        return buildHammerDailyPlan(ctx({ ...BASE, sport_primary: sport, season_phase: phase,
+          equipment_effective: ['tee', 'gamer_bat', 'net'] }), NORMAL_SIGNAL, null, null, undefined, date)
+          .blocks.find(block => block.modality === 'hitting');
+      }).filter(block => block?.status === 'ready');
+      expect(hittingDays.length, `${sport}/${phase}: fixture must exercise execution`).toBeGreaterThan(0);
+      for (const blk of hittingDays) {
+        expect(blk?.drills.length).toBeGreaterThan(0);
+        const stages = blk?.drills.map(d => d.stage) ?? [];
+        expect(stages[0]).toBe('prep');
+        expect(stages).toContain('full_go');
+        expect(stages[stages.length - 1]).toBe('log');
+        expect(blk?.drills.find(d => d.stage === 'full_go')?.cue).toContain('every swing with intent');
+      }
     }
   });
   it("in-season with a net is a real hitting day (structure is exercised)", () => {

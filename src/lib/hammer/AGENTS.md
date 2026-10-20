@@ -9,4 +9,5 @@
 - Analysis reminder goal priority uses canonical saved category order scoped to sport with exact category/module matches; throwing never implies pitching. Why: reminder emphasis cannot create category spill-over.
 - Analysis reminder rotation orders eligible modules by canonical recording age before issue and goal tie-breakers. Why: persistent priorities must not starve another subscribed skill or require a parallel rotation store.
 - Goal re-ask uses device calendar days from canonical saved updatedAt and rejects invalid dates; elapsed hours never delay day 84. Why: the weekly reminder must align with the player's day.
-- Goal confirmations preserve sport choices and legacy intents, update canonical ranks/date and await self-scoped readback; cards never generate plans. Why: a saved ranking must reach planning without rebuilding today's work.
+- Goal confirmations preserve sport choices/legacy intents and verify canonical ranks/date from a successful self-scoped refetch before success; drafts reset across accounts/days, cards never generate. Why: invalidation alone cannot prove a saved ranking or carry another player's choices.
+- Testing-day details resolve only from the current successful self/date notice read; unavailable data is visible failure. Why: a stale dialog must not preserve a cancelled day or another player's schedule.
