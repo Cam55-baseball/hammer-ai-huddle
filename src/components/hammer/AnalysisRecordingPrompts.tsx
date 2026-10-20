@@ -42,6 +42,6 @@ export function AnalysisRecordingPrompts({ prescribed }: { prescribed: readonly 
   return <>{due.map(module => <div key={module} className="flex flex-wrap items-center gap-3 border-b border-border py-3">
     <Camera className="h-5 w-5 shrink-0 text-primary" />
     <p className="min-w-0 flex-1 text-sm font-semibold">Record your {module} analysis</p>
-    <Button size="sm" onClick={() => navigate(`/analyze?module=${module}&sport=${sport}`)}>Record analysis</Button>
+    <Button size="sm" onClick={() => navigate(`/analyze/${module}?sport=${sport}`)}>Record analysis</Button>
   </div>)}</>;
 }
