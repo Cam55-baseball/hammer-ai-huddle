@@ -70,7 +70,7 @@ describe('read-only athlete testing-day details', () => {
     rerender(tree());
     await screen.findByTestId('testing-day-notice');
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(state.scopes.at(-1)?.[0]).toEqual(['athlete_id', 'test-athlete-b']);
+    expect(state.scopes[state.scopes.length - 1]?.[0]).toEqual(['athlete_id', 'test-athlete-b']);
   });
 
   it.each(['failed', 'missing'])('a %s refresh hides stale details and shows a source error', async mode => {

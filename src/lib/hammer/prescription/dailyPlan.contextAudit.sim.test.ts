@@ -264,7 +264,7 @@ describe("execution: hitting session structure", () => {
         const stages = blk?.drills.map(d => d.stage) ?? [];
         expect(stages[0]).toBe('prep');
         expect(stages).toContain('full_go');
-        expect(stages.at(-1)).toBe('log');
+        expect(stages[stages.length - 1]).toBe('log');
         expect(blk?.drills.find(d => d.stage === 'full_go')?.cue).toContain('every swing with intent');
       }
     }
