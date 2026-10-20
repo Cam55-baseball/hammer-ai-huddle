@@ -52,6 +52,12 @@ export function latestVersion(history: PrincipleVersion[]): PrincipleVersion | n
   return history.reduce<PrincipleVersion | null>((m, v) => (!m || v.version > m.version ? v : m), null);
 }
 
+/** Declared current version only; uncommitted future history is not current advice. */
+export function declaredPrincipleVersion(principle: Principle, versions: readonly PrincipleVersion[]): PrincipleVersion | null {
+  const matches = versions.filter(v => v.principle_id === principle.id && v.version === principle.current_version);
+  return matches.length === 1 ? matches[0] : null;
+}
+
 // Badge thresholds — owner-approved.
 export const SEEN_MIN_PLAYERS = 3;
 export const PROVEN_MIN_PLAYERS = 10;

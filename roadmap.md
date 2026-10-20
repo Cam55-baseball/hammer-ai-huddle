@@ -1,3 +1,14 @@
+# AR7 — Parallel owner priority pass — Oct 20, 17:15 UTC
+
+**Ready to publish: NO.** No live, cron or iOS changes; do not repeat the completed practice-card proof.
+
+- [x] Parallel streams investigated execution/logging, owner answers and goal confirmation. Fixed owner list/edit selecting highest history instead of declared current; shared resolver with question readback, ambiguous-current editing blocked, saved timestamp/history link, failed writes retain drafts. Exact question-identity save + append-only readback tests pass. No prose made executable.
+- [x] Fixed real legacy goal confirmation losing selected order in canonical planning: preserve intents/notes/sport choices and update V1 ranks. Goal card awaits self-keyed readback and no longer generates a plan; returned/thrown failures keep old confirmation and permit retry. Production component Keep my order and reversed-order save/readback tests pass.
+- [x] Execution investigation checked proposed display sort against actual builder: all three skill paths already sort through structureSkillSession. No redundant reorder or invented dose/work added; complete live execution acceptance remains open.
+- [x] Focused **6 files / 36 tests**, final component rerun **2 files / 7 tests**, fresh final full suite **443 files / 3,588 tests PASS** (`/tmp/ar7-final-full-suite.log`); preview **OK 17:21:27 UTC** after test selector type correction. Details `docs/owner/ar7-context-proof.md`.
+- [x] Phone draft-only production goal card at existing `/__evidence/roadmap-closeout`, 390×844: five real draft selections, Save enabled, no page errors/overflow, screenshot `/tmp/browser/ar7/goal-order-draft-phone.png` inspected. No Save clicked; not hosted/dashboard/day-84 acceptance. No TEST/backend writes or cleanup needed; TEST Coach plan untouched.
+- [ ] Remaining blockers: coach final-plan read + verified training consent; explicit skill floors/minute envelopes; comparable mixed evidence/server learning outcomes; typed executable owner answers; complete position/pitching execution and severe/mechanics sources; affected owner/coach/org and positive athlete/day-84/testing-day/hosted six-cohort acceptance. Injected player assessment remains unfinished. No live changes.
+
 # AR6 — Parallel owner priority pass — Oct 20, 17:06 UTC
 
 **Ready to publish: NO.** No live, cron or iOS changes; completed practice-card proof will not be repeated.
