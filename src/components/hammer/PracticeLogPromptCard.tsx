@@ -5,7 +5,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { localIso } from "@/hooks/usePitcherSchedule";
 import { supabase } from "@/integrations/supabase/client";
-import { practicesDueToday, completedPracticeIds, type PracticePromptSource } from "@/lib/hammer/calendarPromptRules";
+import { practicesDueToday, completedPracticeIds, calendarPracticesDueToday, completedCalendarPracticeIds, type PracticePromptSource } from "@/lib/hammer/calendarPromptRules";
 import { requiredAnalyses } from "@/lib/assessment/initialAssessment";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ export function PracticeLogPromptCard() {
   const today = localIso();
   const q = useQuery({ queryKey: ["practice-log-prompt", user?.id, sport, today], enabled: !!user,
     queryFn: async () => {
-      if (!user) return { rows: [], completed: new Set<string>() };
+      if (!user) throw new Error("Sign in first");
       const { data, error } = await supabase.from("scheduled_practice_sessions")
         .select("id,scheduled_date,status,recurring_active,recurring_days,sport,session_module,title,requires_approval")
         .eq("user_id", user.id).eq("sport", sport)
@@ -29,12 +29,22 @@ export function PracticeLogPromptCard() {
         .select("session_date,sport,module,fatigue_state_at_session,deleted_at")
         .eq("user_id", user.id).eq("sport", sport).eq("session_date", today).is("deleted_at", null);
       if (logs.error) throw logs.error;
-      return { rows: data as PracticePromptSource[], completed: completedPracticeIds(logs.data ?? [], today, sport) };
+      const calendar = await supabase.from("calendar_events")
+        .select("id,event_date,event_type,sport,title,deleted_at,ignored_for_training,related_id")
+        .eq("user_id", user.id).eq("sport", sport).eq("event_date", today)
+        .eq("event_type", "practice").is("deleted_at", null).eq("ignored_for_training", false);
+      if (calendar.error) throw calendar.error;
+      return { rows: data as PracticePromptSource[], completed: completedPracticeIds(logs.data ?? [], today, sport), calendar: calendar.data ?? [], calendarCompleted: completedCalendarPracticeIds(logs.data ?? [], today, sport) };
     },
   });
   if (q.error) return <p role="alert" className="text-sm text-destructive">Couldn't check today's practices.</p>;
   const due = practicesDueToday(q.data?.rows ?? [], today, sport, requiredAnalyses(modules.filter(m => m.startsWith(`${sport}_`))), q.data?.completed);
-  return <>{due.map(row => <Card key={row.id} className="border-primary/30"><CardContent className="flex flex-wrap items-center gap-3 p-4">
+  const calendarDue = calendarPracticesDueToday(q.data?.calendar ?? [], today, sport, new Set((q.data?.rows ?? []).map(row => row.id)), q.data?.calendarCompleted);
+  return <>{calendarDue.map(row => <Card key={`calendar-${row.id}`} className="border-primary/30"><CardContent className="flex flex-wrap items-center gap-3 p-4">
+    <ClipboardList className="h-5 w-5 shrink-0 text-primary" />
+    <div className="min-w-0 flex-1"><p className="text-sm font-semibold">Practice today — log it</p><p className="text-xs text-muted-foreground">{row.title}</p></div>
+    <Button size="sm" onClick={() => navigate(`/practice?calendar=${encodeURIComponent(row.id)}`)}>Log practice</Button>
+  </CardContent></Card>)}{due.map(row => <Card key={row.id} className="border-primary/30"><CardContent className="flex flex-wrap items-center gap-3 p-4">
     <ClipboardList className="h-5 w-5 shrink-0 text-primary" />
     <div className="min-w-0 flex-1"><p className="text-sm font-semibold">Practice today — log it</p><p className="text-xs text-muted-foreground">{row.title}</p></div>
     <Button size="sm" onClick={() => navigate(`/practice?scheduled=${encodeURIComponent(row.id)}&module=${encodeURIComponent(row.session_module)}`)}>Log practice</Button>

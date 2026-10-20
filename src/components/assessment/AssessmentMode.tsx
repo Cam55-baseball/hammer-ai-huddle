@@ -2,7 +2,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { STEP_LABELS, type StepId, type StepState } from "@/lib/assessment/initialAssessment";
+import { STEP_LABELS, previousAssessmentStep, type StepId, type StepState } from "@/lib/assessment/initialAssessment";
 
 export function AssessmentMode({ open, onClose, step, steps, busy, error, onNavigate, onRecord, children }: {
   open: boolean; onClose: () => void; step: StepId; steps: Record<StepId, StepState>;
@@ -11,6 +11,7 @@ export function AssessmentMode({ open, onClose, step, steps, busy, error, onNavi
 }) {
   const done = Object.values(steps).filter(s => s === "done").length;
   const next = Math.min(step + 1, 6) as StepId;
+  const previous = previousAssessmentStep(step, steps);
   const content = useRef<HTMLElement | null>(null);
   useEffect(() => { if (open) content.current?.scrollTo({ top: 0 }); }, [step, open]);
   return <Dialog open={open} onOpenChange={value => { if (!value) onClose(); }}>
@@ -33,7 +34,7 @@ export function AssessmentMode({ open, onClose, step, steps, busy, error, onNavi
       </main>
       <footer className="shrink-0 border-t border-border bg-background px-5 pt-4 pb-[calc(1rem+var(--safe-bottom))] sm:px-10">
         <div className="mx-auto grid max-w-3xl grid-cols-2 gap-2 sm:grid-cols-4">
-          <Button variant="outline" disabled={busy || step === 1} onClick={() => onNavigate((step - 1) as StepId)}><ArrowLeft className="mr-2 h-4 w-4" />Back</Button>
+          <Button variant="outline" disabled={busy || previous === null} onClick={() => { if (previous !== null) onNavigate(previous); }}><ArrowLeft className="mr-2 h-4 w-4" />Back</Button>
           <Button variant="outline" disabled={busy} onClick={() => onRecord("skipped")}>Skip</Button>
           <Button disabled={busy} onClick={() => onRecord("done")}><Check className="mr-2 h-4 w-4" />Mark complete</Button>
           <Button variant="outline" disabled={busy || step === 6 || steps[next] === "locked"} onClick={() => onNavigate(next)}>Next<ArrowRight className="ml-2 h-4 w-4" /></Button>
