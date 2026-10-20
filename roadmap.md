@@ -1,3 +1,21 @@
+# Owner priority pass — Oct 20, 14:43 UTC
+
+**Ready to publish: NO.** No publish, cron or iOS changes. Practice-card proof is complete; do not repeat it. This section supersedes older "next step" instructions below.
+
+- [ ] Complete remaining safe full-go sessions: fielding, baserunning, off-season hitting; preserve lifting, doses and existing gates.
+  - [x] Preview implementation: existing fielding/read reps and five baserunning scenarios gain equipment/pain/recovery/schedule-gated execution instructions; softball leaves on pitch release. No extra physical reps, throws or minutes; actuals use existing logging grids.
+  - [x] Off-season hitting contrast now precedes its existing full-go round; analysis and game-pattern swaps preserve prep, execution and logging slots.
+  - [x] Eight-week actual-builder checks across both sports × three phases plus schedule checks passed. Not the subscription/evidence six-cohort acceptance proof.
+  - [x] TEST college-player phone: real dashboard and fielding details opened at 390×844 with zero page errors; this player has no declared equipment, so positive full-go phone proof is still pending. No test rows added; temporary password scrambled.
+  - [ ] Positive equipment-qualified fielding/running phone proof and all subscription acceptance runs remain open.
+- [ ] Build shared coach plan context from actual prescribed work, with coach/org access and consent, no scouts; prove affected-role phone views.
+  - Investigation: skill plan is currently client-computed, not stored in wk_prescriptions (those are lifts/conditioning). No verified shared full-plan read exists. Do not invent a coach plan from lift rows; canonical shared persistence/access work remains open, with any live schema/function apply awaiting exact owner authorization.
+- [ ] Finish issue-tagged own-category drills + Vault tags, practice-load wiring, mixed signals, learning-loop tracking and all affected Because lines.
+- [ ] Finish owner questions, goal minute share, 12-week re-ask phone proof and testing-day details.
+- [x] Reminder cards and exact Royal/Delaycam explanations phone-proven; plan_prompts_v2 live ON. Mechanics/major-flag cadence wiring remains open.
+- [ ] Run actual eight-week six-cohort changes/resolution with screenshots, and a fresh full suite after integration.
+  - [x] Full suite after this implementation: 428 files / 3,419 tests passed (`/tmp/priority-full-suite.log`). Final overall integration acceptance is still pending.
+
 # AQ5 — Scheduled-practice read fixed
 
 **Ready to publish: NO.** Preview-only code fix; no publish, cron, iOS or switch changes.

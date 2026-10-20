@@ -107,7 +107,8 @@ export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): Readonl
     if (!sourceSignal) return block;
 
     const replacementIndex = block.drills.findIndex(
-      (drill) => (drill as InfluencedDrillStep).prescriptionOrigin !== "owner",
+      (drill) => (drill as InfluencedDrillStep).prescriptionOrigin !== "owner" &&
+        (drill.stage === undefined || drill.stage === "drills"),
     );
     if (replacementIndex < 0) return block;
     const displaced = block.drills[replacementIndex];
@@ -118,6 +119,7 @@ export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): Readonl
       dosage: match.drill.dosage,
       cue: match.drill.cues[0],
       equipmentNote: match.drill.equipment.length ? match.drill.equipment.join(", ") : undefined,
+      stage: "drills",
       prescriptionOrigin: "analysis",
       analysisInfluence: {
         version: "analysis-slot-v1",
