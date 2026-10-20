@@ -28,17 +28,19 @@ export function GameLogPromptCard() {
   const [, bump] = useState(0);
 
   const q = useQuery({
-    queryKey: ["game-log-prompt", user?.id, today],
+    queryKey: ["game-log-prompt", user?.id, sport, today],
     enabled: !!user,
     queryFn: async () => {
+      if (!user) return { games: [], calendar: [], pitchingToday: false };
       const db = supabase as any;
       const [gp, cal, po] = await Promise.all([
-        db.from("gp_games").select("id, game_date, status, opponent_team").eq("user_id", user!.id).is("deleted_at", null)
-          .in("game_date", [yesterday, today]).eq("ignored_for_training", false),
-        db.from("calendar_events").select("id, title, event_date, event_type").eq("user_id", user!.id)
-          .in("event_date", [yesterday, today]).eq("event_type", "game"),
-        db.from("pitcher_outings").select("id, planned_date").eq("user_id", user!.id).eq("status", "planned").eq("planned_date", today),
+        db.from("gp_games").select("id, game_date, status, opponent_team").eq("user_id", user.id).eq("sport", sport).is("deleted_at", null)
+          .in("game_date", [yesterday, today]).eq("ignored_for_training", false).not("status", "in", "(canceled,cancelled,rescheduled)"),
+        db.from("calendar_events").select("id, title, event_date, event_type").eq("user_id", user.id).eq("sport", sport).is("deleted_at", null)
+          .in("event_date", [yesterday, today]).eq("event_type", "game").eq("ignored_for_training", false),
+        db.from("pitcher_outings").select("id, planned_date").eq("user_id", user.id).eq("status", "planned").eq("planned_date", today),
       ]);
+      for (const result of [gp, cal, po]) if (result.error) throw result.error;
       return {
         games: (gp.data ?? []) as G[],
         calendar: (cal.data ?? []) as Array<{ id: string; title: string | null; event_date: string }>,
@@ -47,6 +49,7 @@ export function GameLogPromptCard() {
     },
   });
 
+  if (q.error) return <p role="alert" className="text-sm text-destructive">Couldn't check today's games.</p>;
   if (!q.data) return null;
   const { games, calendar, pitchingToday } = q.data;
   const logged = (g: G) => g.status === "final";
@@ -60,9 +63,10 @@ export function GameLogPromptCard() {
   const yAsked = (() => { try { return localStorage.getItem(yKey) === "1"; } catch { return false; } })();
 
   const openLogger = async (date: string, existing?: G) => {
+    if (!user) return;
     if (existing) { navigate(`/games?game=${existing.id}`); return; }
     const { data, error } = await (supabase as any).from("gp_games")
-      .insert({ user_id: user!.id, game_date: date, sport: sport === "softball" ? "softball" : "baseball", status: "draft" }).select("id").single();
+      .insert({ user_id: user.id, game_date: date, sport: sport === "softball" ? "softball" : "baseball", status: "draft" }).select("id").single();
     if (error) { toast.error(`Couldn't start the game log: ${error.message}`); return; }
     qc.invalidateQueries({ queryKey: ["game-log-prompt"] });
     navigate(`/games?game=${data.id}`);
@@ -77,11 +81,10 @@ export function GameLogPromptCard() {
     <Card className="border-primary/40 bg-primary/5" data-testid="game-log-prompt">
       <CardContent className="p-3 space-y-3">
         {showToday && (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Trophy className="h-5 w-5 text-primary shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold">{pitchingToday ? "You're pitching today" : "Game today"}</p>
-              <p className="text-xs text-muted-foreground">Log it after you play. It's how your plan learns what the game took out of you.</p>
+              <p className="text-sm font-semibold">Game today — log it after the game</p>
             </div>
             <Button size="sm" onClick={() => openLogger(today, todayGame)}>Log game</Button>
           </div>
