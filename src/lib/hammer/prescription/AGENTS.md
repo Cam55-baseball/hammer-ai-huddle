@@ -8,3 +8,4 @@
 - Fielding execution uses explicit catalog non-throwing read metadata, never name-pattern eligibility; prep/owner slots and existing stop rules remain protected. Why: a fielding stage cannot grant new throwing work.
 - Running execution likewise requires catalog scenario identity, not matching names; doses and first/owner slots stay fixed. Why: renamed or analysis-selected drills cannot grant game-speed permission.
 - Practice source reads reject caps/missing data; conflicting same-ID records contribute no load in either order. Why: incomplete or ambiguous history cannot invent weekly totals or streaks.
+- Extra weekly goal blocks count included scheduled lifting and speed days as well as ladder skill days against availability, and use only an existing phase-template slot. Why: skill-only counts understate the athlete's full training week.

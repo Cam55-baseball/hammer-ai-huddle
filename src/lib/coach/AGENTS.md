@@ -1,0 +1,1 @@
+- Coach plan presentation filters saved blocks through visibleCoachPlanBlocks using the central athlete Game IQ release switch, regardless of viewer role. Why: historical snapshots must not prescribe inaccessible work to an athlete.
