@@ -6,3 +6,4 @@
 - Royal timing reminders read canonical sport-scoped timing sessions behind plan_prompts_v2, on existing hitting days only. Why: no parallel completion store or invented training day.
 - Delaycam reminders use canonical hitting recording end dates, selected-sport hitting access and prescribed hitting days behind plan_prompts_v2. Why: neither another skill nor processing success defines using the delayed mirror.
 - Analysis reminder goal priority uses canonical saved category order scoped to sport with exact category/module matches; throwing never implies pitching. Why: reminder emphasis cannot create category spill-over.
+- Analysis reminder rotation orders eligible modules by canonical recording age before issue and goal tie-breakers. Why: persistent priorities must not starve another subscribed skill or require a parallel rotation store.

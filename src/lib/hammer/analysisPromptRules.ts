@@ -19,9 +19,10 @@ const daysBetween = (from: string, to: string) => Math.floor((Date.parse(to) - D
 /**
  * Owner cadence (Oct 20): record at least one analysis EVERY week.
  * One reminder at most: if any included module was recorded in the last 7 days
- * nothing is due. Otherwise pick the module that matters most right now —
- * flagged issue first, then goal weight, then the one recorded longest ago
- * (never recorded counts as oldest) — so every module rotates in.
+ * nothing is due. Otherwise rotate to the module recorded longest ago
+ * (never recorded counts as oldest), using flagged issues then goal weight
+ * to choose between equally old modules. Persistent priorities cannot starve
+ * another included module; canonical recordings are the rotation history.
  * Only shown on a day that already has that skill. Invalid dates never count as
  * a recording and never make a module due on their own.
  */
@@ -49,7 +50,7 @@ export function analysesDueToday(input: AnalysisPromptInput): AnalysisModule[] {
     return d === null ? Number.MAX_SAFE_INTEGER : daysBetween(d, input.today);
   };
   const [pick] = [...candidates].sort((a, b) =>
-    Number(flagged.has(b)) - Number(flagged.has(a)) || goalRank(a) - goalRank(b) || age(b) - age(a));
+    age(b) - age(a) || Number(flagged.has(b)) - Number(flagged.has(a)) || goalRank(a) - goalRank(b));
   return [pick];
 }
 
