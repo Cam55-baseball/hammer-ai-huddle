@@ -4,6 +4,7 @@
  * Usage counts are "used / repeated", never "effective".
  */
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
@@ -101,6 +102,7 @@ function availableFaultKeys(placements: string[]): string[] {
 }
 
 export default function DrillBuilder() {
+  const [params] = useSearchParams();
   const [rows, setRows] = useState<OwnerDrillRow[]>([]);
   const [usage, setUsage] = useState<Record<string, { completed: number; returned: number }>>({});
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -112,6 +114,12 @@ export default function DrillBuilder() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const id = params.get('drill');
+    const drill = ELITE_DRILL_CATALOG.find(item => item.id === id);
+    if (drill) setDraft(fromBuiltIn(drill));
+  }, [params]);
 
   useEffect(() => {
     if (!videoFile) { setLocalVideoUrl(null); return; }
@@ -219,7 +227,7 @@ export default function DrillBuilder() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h1 className="text-2xl font-bold">Drill Builder</h1>
-            <p className="text-sm text-muted-foreground">Activity types: baseball and softball hitting, pitching and throwing; Hammers Today skill, warm-up and defense; defensive library.</p>
+            <p className="text-sm text-muted-foreground">Activity types: baseball and softball hitting, pitching, throwing, fielding and baserunning; Hammers Today skill, warm-up and defense; defensive library.</p>
             <p className="text-sm text-muted-foreground">Create and edit drills for every place they appear. Usage counts show how often drills are used, not whether they work.</p>
           </div>
           <div className="flex gap-2">
@@ -267,6 +275,7 @@ export default function DrillBuilder() {
                     <div className="text-sm font-medium">{ov?.name ?? d.name}{ov && <Badge variant="outline" className="ml-1 text-[10px]">Edited</Badge>}</div>
                     <div className="text-xs text-muted-foreground">{(ov?.fault_keys ?? d.violationKeys).join(", ")}</div>
                     <UsageLine id={d.id} />
+                    {d.ownerReview === 'pending_owner_review' && !ov && <Badge variant="secondary">Needs owner review</Badge>}
                     <Badge variant="outline">{readiness(view)}</Badge>
                   </div>
                   <div className="flex items-center gap-2">

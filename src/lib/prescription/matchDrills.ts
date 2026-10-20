@@ -51,7 +51,9 @@ function moduleToCategory(module?: string | null): EliteDrill["category"] | null
   const m = (module ?? "").toLowerCase();
   if (m.includes("hit") || m.includes("bat") || m.includes("swing")) return "hitting";
   if (m.includes("pitch")) return "pitching";
-  if (m.includes("throw") || m.includes("field") || m.includes("catch")) return "throwing";
+  if (m === 'fielding' || m === 'defense') return 'fielding';
+  if (m === 'running' || m === 'baserunning') return 'baserunning';
+  if (m.includes("throw") || m.includes("catch")) return "throwing";
   return null;
 }
 

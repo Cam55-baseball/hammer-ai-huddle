@@ -1,5 +1,6 @@
 import { sortByWarmupStage } from "./warmupStages";
 import { structureSkillSession } from './skillSessionStructure';
+import { applyPracticePlanContext } from './practicePlanContext';
 import { categoryPracticeLoads, type PracticeLoadRecord, type CategoryPracticeLoad } from './categoryPracticeLoad';
 import type { OutingFacts } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
 /**
@@ -2324,13 +2325,14 @@ export function buildHammerDailyPlan(
     new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []),
   );
   // Defense renders on every day type; then the structural no-blank-card backstop.
-  const blocks = ensureRenderable(
+  const practiceLoad = categoryPracticeLoads(roadmapInputs.practiceRecords ?? [], today.toLocaleDateString('en-CA'), sportRaw ?? '');
+  const blocks = applyPracticePlanContext(ensureRenderable(
     applyDefenseAlwaysVisible(
       biasedBlocks,
       preModulationOriginals,
       roadmapInputs.defenseFullOverride === true,
     ),
-  );
+  ), practiceLoad);
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
     // eslint-disable-next-line no-console
@@ -2354,7 +2356,7 @@ export function buildHammerDailyPlan(
   }
   return {
     blocks,
-    practiceLoad: categoryPracticeLoads(roadmapInputs.practiceRecords ?? [], today.toLocaleDateString('en-CA'), sportRaw ?? ''),
+    practiceLoad,
     seasonPhase: proj.seasonPhase,
     missingnessCount: blocks.filter((b) => b.status === "awaiting-input").length,
     speedFocus: speed,

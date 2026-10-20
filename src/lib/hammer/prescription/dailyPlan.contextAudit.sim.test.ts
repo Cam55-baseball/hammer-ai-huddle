@@ -237,6 +237,24 @@ describe("execution: hitting session structure", () => {
 
 // ── AO5: real goal ranking (category_goals) → card order ──
 describe("audit: ranked category goals → day order", () => {
+  it('the actual plan honors a saved V2 category order with no sub-goals yet', () => {
+    const p = buildHammerDailyPlan(ctx({ ...BASE,
+      category_goals: { version: 2, categoryOrder: ['fielding', 'hitting', 'throwing', 'speed', 'power'], updatedAt: '2026-06-01T00:00:00Z' },
+      equipment_effective: ['field', 'glove', 'ball', 'tee', 'gamer_bat', 'net'],
+    }), NORMAL_SIGNAL, null, null, undefined, DAY);
+    const fieldingIndex = p.blocks.findIndex(block => block.modality === 'defense');
+    const hittingIndex = p.blocks.findIndex(block => block.modality === 'hitting');
+    expect(fieldingIndex).toBeGreaterThanOrEqual(0);
+    expect(hittingIndex).toBeGreaterThan(fieldingIndex);
+    const reversed = buildHammerDailyPlan(ctx({ ...BASE,
+      category_goals: { version: 2, categoryOrder: ['hitting', 'fielding', 'throwing', 'speed', 'power'], updatedAt: '2026-06-01T00:00:00Z' },
+      equipment_effective: ['field', 'glove', 'ball', 'tee', 'gamer_bat', 'net'],
+    }), NORMAL_SIGNAL, null, null, undefined, DAY);
+    const reversedHittingIndex = reversed.blocks.findIndex(block => block.modality === 'hitting');
+    const reversedFieldingIndex = reversed.blocks.findIndex(block => block.modality === 'defense');
+    expect(reversedHittingIndex).toBeLessThan(reversedFieldingIndex);
+    expect(reversed.blocks.find(block => block.modality === 'strength')?.drills).toEqual(p.blocks.find(block => block.modality === 'strength')?.drills);
+  });
   const ranked = (order: string[]) => ({ version: 1, updatedAt: "2026-06-01T00:00:00.000Z",
     goals: order.map((category, i) => ({ category, rank: i + 1, intent: null })) });
   const at = (order: string[]) => buildHammerDailyPlan(

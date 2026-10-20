@@ -274,6 +274,7 @@ function DrillRow({
   return (
     <li data-task-id={taskId} data-task-side={side ?? ""} className={`text-xs rounded-lg border p-3 ${checked ? "opacity-60 border-border/40 bg-muted/20" : "border-border/70 bg-card"}`}>
       <ExerciseDisclosure name={d.name}>
+        {d.stage && <p className="text-xs font-medium text-primary">Session step: {({ prep: 'Get ready', drills: 'Skill drills', full_go: 'Game-speed execution', log: 'Record what you did' })[d.stage]}</p>}
         <div data-prescribed-dose className="text-sm font-semibold whitespace-normal break-words">{d.dosage}</div>
         <ActivityBasics name={d.name} slug={d.slug} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} repair={legacyRepair(d.dosage, modality)} />
         <LegacyDrillInlineLog

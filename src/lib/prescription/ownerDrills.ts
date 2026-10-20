@@ -42,6 +42,10 @@ export const ANALYSIS_PLACEMENTS: Array<{ id: Placement; label: string }> = [
   { id: "analysis:softball:pitching", label: "Softball windmill analysis" },
   { id: "analysis:baseball:throwing", label: "Baseball throwing analysis" },
   { id: "analysis:softball:throwing", label: "Softball throwing analysis" },
+  { id: "analysis:baseball:fielding", label: "Baseball fielding issue drills" },
+  { id: "analysis:softball:fielding", label: "Softball fielding issue drills" },
+  { id: "analysis:baseball:baserunning", label: "Baseball baserunning issue drills" },
+  { id: "analysis:softball:baserunning", label: "Softball baserunning issue drills" },
 ];
 export const OTHER_PLACEMENTS: Array<{ id: Placement; label: string }> = [
   { id: "hammers_today:skill", label: "Hammers Today — skill block" },

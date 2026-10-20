@@ -32,6 +32,8 @@ export interface FaultPlanInfluenceInput {
   readonly catalog: ReadonlyArray<EliteDrill>;
   readonly circulation: CirculationInput;
   readonly now?: Date;
+  /** Canonical source-record provenance, never inferred from the selected sport. */
+  readonly signalScopes?: Readonly<Record<string, { sport: 'baseball' | 'softball'; module: string }>>;
 }
 
 function isOwnerDrill(drill: EliteDrill): drill is OwnerDrill {
@@ -70,7 +72,7 @@ function disciplinesForBlock(block: PrescribedBlock): Discipline[] {
   if (block.modality === "baserunning") return ["running"];
   return [];
 }
-const MODULE_FOR: Record<string, string> = { hitting: "hitting", throwing: "throwing", pitching: "pitching", fielding: "fielding", running: "running" };
+const MODULE_FOR: Record<string, string> = { hitting: "hitting", throwing: "throwing", pitching: "pitching", fielding: "fielding", running: "baserunning" };
 
 export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): ReadonlyArray<PrescribedBlock> {
   const now = input.now ?? new Date();
@@ -84,7 +86,12 @@ export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): Readonl
     const block = disciplines.reduce((b, d) => withCleanClipNote(b, d, input.rankedFaults), original);
     if (priorities.length === 0 || catalog.length === 0) return block;
     const signals = priorities.flatMap((priority) => priority.signals
-      .filter((signal) => disciplines.includes(signal.discipline) && PLAN_SIGNAL_SOURCES.has(signal.source))
+      .filter((signal) => {
+        if (!disciplines.includes(signal.discipline) || !PLAN_SIGNAL_SOURCES.has(signal.source)) return false;
+        if (signal.discipline !== 'fielding' && signal.discipline !== 'running') return true;
+        const scope = input.signalScopes?.[signal.id];
+        return scope?.sport === input.sport && scope.module === (signal.discipline === 'running' ? 'baserunning' : 'fielding');
+      })
       .map((signal) => ({ signal, priority })));
     if (signals.length === 0) return block;
 
@@ -95,7 +102,7 @@ export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): Readonl
     // skill's own category. Fielding and running have no category of their own
     // yet, so they swap nothing rather than borrow a throwing drill.
     const [match] = matchPrescriptionDrills({
-      catalog: catalog.filter((d) => (d.category as string) === discipline),
+      catalog: catalog.filter((d) => d.category === (discipline === 'running' ? 'baserunning' : discipline)),
       circulation: input.circulation,
       faultKeys,
       module: MODULE_FOR[discipline],
@@ -116,7 +123,7 @@ export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): Readonl
       name: match.drill.name,
       slug: match.drill.id,
       setup: match.drill.setup || undefined,
-      dosage: match.drill.dosage,
+      dosage: discipline === 'fielding' || discipline === 'running' ? displaced.dosage : match.drill.dosage,
       cue: match.drill.cues[0],
       equipmentNote: match.drill.equipment.length ? match.drill.equipment.join(", ") : undefined,
       stage: "drills",

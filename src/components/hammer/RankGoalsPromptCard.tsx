@@ -33,7 +33,9 @@ export function RankGoalsPromptCard({ forceOpen = false }: { forceOpen?: boolean
     queryKey: ["goal-ranking", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase.from("athlete_context").select("category_goals").eq("user_id", user!.id).maybeSingle();
+      if (!user) throw new Error('Sign in first');
+      const { data, error } = await supabase.from("athlete_context").select("category_goals").eq("user_id", user.id).maybeSingle();
+      if (error) throw error;
       const raw = (data as { category_goals?: Record<string, unknown> | null } | null)?.category_goals ?? null;
       return { raw, ranked: normalizeCategoryOrder(raw?.categoryOrder) };
     },
@@ -41,21 +43,23 @@ export function RankGoalsPromptCard({ forceOpen = false }: { forceOpen?: boolean
 
   const updatedAt = typeof q.data?.raw?.updatedAt === "string" ? (q.data.raw.updatedAt as string) : null;
   const reask = !!q.data?.ranked && goalReaskDue({ today, lastConfirmedAt: updatedAt, hasGoals: true });
+  if (q.error) return <p role="alert" className="text-sm text-destructive">Couldn't load your saved goal order. Try again later.</p>;
   if (!q.data || (q.data.ranked && !reask && !forceOpen) || (hidden && !forceOpen)) return null;
 
   const tap = (k: CategoryKey) => setOrder((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k]));
   const save = async (picked: CategoryKey[] = order) => {
-    if (picked.length !== CATEGORY_KEYS.length) return;
+    if (!user || !q.data || picked.length !== CATEGORY_KEYS.length) return;
     setSaving(true);
-    const base = q.data!.raw && typeof q.data!.raw === "object" ? q.data!.raw : { version: 2 };
+    const base = q.data.raw && typeof q.data.raw === "object" ? q.data.raw : { version: 2 };
     const { error } = await supabase.from("athlete_context").upsert(
-      { user_id: user!.id, category_goals: { ...base, version: (base as any).version ?? 2, categoryOrder: picked, updatedAt: new Date().toISOString() } as never },
+      { user_id: user.id, category_goals: { ...base, version: (base as any).version ?? 2, categoryOrder: picked, updatedAt: new Date().toISOString() } as never },
       { onConflict: "user_id" },
     );
     setSaving(false);
     if (error) { toast.error(`Couldn't save your ranking: ${error.message}`); return; }
     toast.success("Saved. Your plan will lean toward what you ranked first.");
     qc.invalidateQueries({ queryKey: ["goal-ranking"] });
+    qc.invalidateQueries({ queryKey: ["hammer-context-envelope", user.id] });
     try { plan?.generate?.(); } catch { /* next open picks it up */ }
   };
 
@@ -70,27 +74,28 @@ export function RankGoalsPromptCard({ forceOpen = false }: { forceOpen?: boolean
             <p className="text-xs text-muted-foreground">Tap these in order, most important first. Your plan leans toward the top ones. You still train all of them.</p>
           </div>
         </div>
+        {reask && q.data.ranked && <p className="break-words text-xs text-muted-foreground">Current order: {q.data.ranked.map(key => CATEGORY_LABELS[key]).join(' → ')}</p>}
         <div className="space-y-1.5">
           {CATEGORY_KEYS.map((k) => {
             const pos = order.indexOf(k);
             return (
-              <button key={k} type="button" onClick={() => tap(k)}
-                className={`w-full flex items-center gap-3 rounded-md border px-3 py-2 text-left ${pos >= 0 ? "border-primary bg-primary/10" : "border-border"}`}
+              <Button key={k} type="button" variant="outline" onClick={() => tap(k)}
+                className={`h-auto min-h-11 w-full justify-start gap-3 whitespace-normal px-3 py-2 text-left ${pos >= 0 ? "border-primary bg-primary/10" : "border-border"}`}
                 aria-label={`${CATEGORY_LABELS[k]}${pos >= 0 ? `, ranked ${pos + 1}` : ""}`}>
                 <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${pos >= 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{pos >= 0 ? pos + 1 : ""}</span>
                 <span className="min-w-0">
                   <span className="block text-sm font-medium">{CATEGORY_LABELS[k]}</span>
-                  <span className="block text-[11px] text-muted-foreground truncate">{CATEGORY_DESCRIPTIONS[k]}</span>
+                  <span className="block break-words text-[11px] text-muted-foreground">{CATEGORY_DESCRIPTIONS[k]}</span>
                 </span>
-              </button>
+              </Button>
             );
           })}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button size="sm" className="flex-1" disabled={order.length !== CATEGORY_KEYS.length || saving} onClick={() => save()}>
             {order.length === CATEGORY_KEYS.length ? "Save my order" : "Tap all five"}
           </Button>
-          {reask && q.data.ranked && order.length === 0 && <Button size="sm" variant="outline" disabled={saving} onClick={() => save([...q.data!.ranked!])}>Keep my order</Button>}
+          {reask && q.data.ranked && order.length === 0 && <Button size="sm" variant="outline" disabled={saving} onClick={() => { const ranked = q.data?.ranked; if (ranked) void save([...ranked]); }}>Keep my order</Button>}
           {order.length > 0 && <Button size="sm" variant="outline" onClick={() => setOrder([])} aria-label="Start over"><RotateCcw className="h-4 w-4" /></Button>}
           {!forceOpen && <Button size="sm" variant="ghost" onClick={() => { try { localStorage.setItem(hideKey, "1"); } catch { /* ignore */ } setHidden(true); }}>Later</Button>}
         </div>
