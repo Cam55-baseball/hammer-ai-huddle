@@ -109,3 +109,34 @@ describe('AR4: six subscription-qualified eight-week actual-builder cohorts (not
     });
   }
 });
+
+describe('AT1: ranked weekly skill blocks through the actual builder, both sports over eight weeks', () => {
+  for (const sport of ['baseball', 'softball']) {
+    it(`${sport}: changing top goal changes scheduled blocks and second-goal slots without changing lifting`, () => {
+      const ranked = (order: string[]) => ({ version: 1, updatedAt: '2026-10-20',
+        goals: order.map((category, i) => ({ category, rank: i + 1, intent: null })) });
+      let baselineDefense = 0, goalDefense = 0, sharedHittingFirst = 0;
+      for (let n = 0; n < 56; n++) {
+        const today = new Date(2026, 5, 7 + n);
+        const make = (goals?: unknown) => context(sport, 'SS', 'off', {
+          lifecycle_band: 'adult', ...(goals ? { category_goals: goals } : {}),
+        });
+        const base = buildHammerDailyPlan(make(), NORMAL_SIGNAL, null, null, undefined, today);
+        const next = buildHammerDailyPlan(make(ranked(['fielding', 'hitting', 'throwing', 'speed', 'power'])), NORMAL_SIGNAL, null, null, undefined, today);
+        baselineDefense += Number(base.microcycle.perModality.defense.scheduled);
+        goalDefense += Number(next.microcycle.perModality.defense.scheduled);
+        for (const modality of ['hitting', 'throwing', 'defense', 'baserunning'] as const) {
+          if (base.microcycle.perModality[modality].scheduled) expect(next.microcycle.perModality[modality].scheduled).toBe(true);
+        }
+        expect(next.blocks.find(b => b.modality === 'strength')).toEqual(base.blocks.find(b => b.modality === 'strength'));
+        expect(next.microcycle.perModality.strength).toEqual(base.microcycle.perModality.strength);
+        const skills = next.blocks.filter(b => b.status === 'ready' && ['hitting', 'defense', 'throwing', 'baserunning'].includes(b.modality));
+        if (skills.some(b => b.modality === 'hitting') && skills.length > 1) {
+          expect(skills[0].modality).toBe('hitting'); sharedHittingFirst++;
+        }
+      }
+      expect(goalDefense - baselineDefense).toBe(8);
+      expect(sharedHittingFirst).toBeGreaterThan(0);
+    });
+  }
+});
