@@ -31,10 +31,19 @@ export function categoryPracticeLoads(records: readonly PracticeLoadRecord[], to
   const now = dayNumber(today);
   if (!Number.isFinite(now)) return [];
   const unique = new Map<string, PracticeLoadRecord>();
+  const conflicts = new Set<string>();
   for (const record of records) {
-    const age = now - dayNumber(record.date);
-    if (record.deleted || record.sport !== sport || !record.category || !CATEGORIES.includes(record.category) || !(age >= 1 && age <= 7)) continue;
+    if (!record.id.trim()) continue;
+    const previous = unique.get(record.id);
+    if (previous && (previous.date !== record.date || previous.sport !== record.sport || previous.category !== record.category ||
+      previous.minutes !== record.minutes || previous.intensity !== record.intensity || Boolean(previous.deleted) !== Boolean(record.deleted))) {
+      conflicts.add(record.id);
+    }
     unique.set(record.id, record);
+  }
+  for (const [id, record] of unique) {
+    const age = now - dayNumber(record.date);
+    if (conflicts.has(id) || record.deleted || record.sport !== sport || !record.category || !CATEGORIES.includes(record.category) || !(age >= 1 && age <= 7)) unique.delete(id);
   }
   return CATEGORIES.flatMap(category => {
     const rows = [...unique.values()].filter(row => row.category === category);
