@@ -86,8 +86,13 @@ describe("audit: readiness → plan", () => {
   it("low readiness as {score} turns speed into recover-instead", () => {
     expect(speed(ctx({ ...BASE, readiness: { score: 0.3 } })).ctaLabel).toBe("Recover instead");
   });
-  it("GAP 8 confirmed: the same low readiness as a bare number is ignored by speed", () => {
-    expect(speed(ctx({ ...BASE, readiness: 0.3 })).ctaLabel).not.toBe("Recover instead");
+  it("gap 8 fixed: the same low readiness as a bare number also turns speed into recover-instead", () => {
+    expect(speed(ctx({ ...BASE, readiness: 0.3 })).ctaLabel).toBe("Recover instead");
+  });
+  it("normal readiness (bare number or {score}) does not trigger recovery", () => {
+    expect(speed(ctx({ ...BASE, readiness: 0.8 })).ctaLabel).not.toBe("Recover instead");
+    expect(speed(ctx({ ...BASE, readiness: { score: 0.8 } })).ctaLabel).not.toBe("Recover instead");
+    expect(speed(ctx(BASE)).ctaLabel).not.toBe("Recover instead");
   });
 });
 
