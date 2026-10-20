@@ -1,6 +1,11 @@
 # AS1 — Owner decisions build — Oct 20, 20:05 UTC
 
-**Ready to publish: NO.** Preview builds OK; fresh full suite 447 files / 3,621 tests PASS (19:57 UTC).
+**Ready to publish: NO.** Preview builds OK; fresh full suite 449 files / 3,633 tests PASS (20:14 UTC).
+
+AS1 second pass (20:15 UTC):
+- [x] Mixed signals WIRED on Today: real two-source adapter (latest fresh same-sport clip findings vs last-7-day game ledger at existing whiff/chase/miscue thresholds); the "Mixed signals … keeping the safer plan" line appears only on genuine disagreement, hitting + fielding (`categorySignalEvidence.ts`, 9 tests).
+- [x] Owner questions → rules: `active_principle_picks` RPC (migration 0084, active principles at declared current version, any signed-in player); structured connected_work = one drill slug per line; linked drills lead the work list for their exact sport + category with a Because line, doses untouched (`principlePicks.ts`, 4 tests; console field hint added). Verified live: non-owner read returns rows/empty, no error.
+- [x] Coach plan RPC verified live: self without plan → "unavailable"; non-coach viewer → "denied". Positive accepted-link proof needs TEST coach/athlete sessions (approval-required mints) — next run.
 
 AS1 progress this run (supersedes matching AR8 rows below):
 - [x] Practice → next-day same-category reduction WIRED: heavy stretch cuts drill sets ~30%, floor 50% of prescribed sets, whole sets only, reps/prep/full-go/log/lifting untouched; unparseable doses never guessed (`practicePlanContext.ts`, 10 tests).
