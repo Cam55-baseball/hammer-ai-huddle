@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -11,6 +11,8 @@ export function AssessmentMode({ open, onClose, step, steps, busy, error, onNavi
 }) {
   const done = Object.values(steps).filter(s => s === "done").length;
   const next = Math.min(step + 1, 6) as StepId;
+  const content = useRef<HTMLElement | null>(null);
+  useEffect(() => { if (open) content.current?.scrollTo({ top: 0 }); }, [step, open]);
   return <Dialog open={open} onOpenChange={value => { if (!value) onClose(); }}>
     <DialogContent aria-describedby="assessment-description" className="inset-0 left-0 top-0 z-50 flex h-[100dvh] max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 [&>button]:hidden">
       <header className="shrink-0 border-b border-border bg-background px-5 pb-5 pt-[calc(1.25rem+var(--safe-top))] sm:px-10">
@@ -22,7 +24,7 @@ export function AssessmentMode({ open, onClose, step, steps, busy, error, onNavi
           {([1,2,3,4,5,6] as StepId[]).map(id => <Button key={id} variant="ghost" aria-label={`Step ${id}: ${STEP_LABELS[id]}`} disabled={steps[id] === "locked"} onClick={() => onNavigate(id)} className={`h-2 min-w-0 rounded-sm p-0 ${steps[id] === "done" ? "bg-primary" : id === step ? "bg-foreground" : "bg-muted"}`} />)}
         </div>
       </header>
-      <main className="min-h-0 flex-1 overflow-y-auto px-5 py-8 sm:px-10">
+      <main ref={content} className="min-h-0 flex-1 overflow-y-auto px-5 py-8 sm:px-10">
         <div className="mx-auto max-w-3xl space-y-7">
           <div><DialogTitle className="text-3xl font-semibold leading-tight sm:text-4xl">{STEP_LABELS[step]}</DialogTitle><DialogDescription id="assessment-description" className="mt-3 text-base">Your choice. Save what you know, or skip this step.</DialogDescription></div>
           {children}
