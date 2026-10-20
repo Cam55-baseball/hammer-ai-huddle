@@ -2,6 +2,12 @@
 
 **Ready to publish: NO. Context-unity answer: NOT YET PROVEN.** Finish the open assessment/prompt work below first; then perform a read-only input→plan audit before changing plan behavior. Backend redeploys authorized for this request only; no publish, cron or iOS changes. Existing lifting scheme, safety/rest/phase/equipment/subscription rules remain unchanged; no invented measurements or faults.
 
+### This run — prerequisite consistency correction
+- [x] Found and corrected due-performance history shared across sports in `useScheduledPriorityTasks`: selected sport is now in the query key and canonical performance-table filter. Skill reminder access uses only that sport's included modules; Complete Pitcher/5Tool/Golden 2Way × both sports covered. Account-only photo/wellness/scout schemas remain account-scoped, not assigned invented sport fields.
+- [x] 34 focused tests PASS: ten sport/tier access assertions, actual hook baseball→softball query/cache regression, existing date/game/practice matrices. Preview build OK. No lifting, plan selection/dose, backend, switch, cron, iOS or publish change.
+- [ ] Phone proof of this exact due-reminder change remains open: real TEST player opened Vault/morning check-in at 390×844, but health setup covered the screen; no health answers saved solely for a screenshot. No new TEST rows created. Unit/hook proof is not claimed as end-to-end phone proof.
+- [ ] Context-unity trace/build/six-cohort next-plan proofs **not started**, preserving the requested prerequisite order. Existing assessment/prompt gaps remain explicitly open below.
+
 - [ ] Prerequisite: finish assessment mode and prompts, or isolate owner-blocked items under Waiting on owner with exact blocker; do not claim finished while original proofs/adapters remain open.
 - [ ] Read-only trace in `docs/owner/plan-context-audit.md`: latest module analyses/issues/scores, games/stats, practice, tests/PBs, readiness/check-ins, pain, coach notes/From Coach, goals, limb proportions, phase/schedule → selection/drills/dose/focus/Smart Week/prompts/nothing, each sport × subscription; concrete simulations and blunt gaps.
 - [ ] Implement missing bounded analysis→editable issue-tagged skill drills, games→honest weekly focus, practice→canonical workload/emphasis, evidence convergence/conflict and plain Because lines, with learning lineage; never alter lifting schemes or use video numeric grades as measurement evidence.
@@ -11,6 +17,7 @@
 ## Waiting on owner — prerequisite decisions/access
 - New prompt cadences: confirm or reject the proposed analysis/Delaycam/Royal/Tex Vision defaults below; `plan_prompts_v2` stays OFF meanwhile.
 - TEST staff role proof: approved TEST-coach/organization session required for cross-athlete assessment and Discipline/onlooker proof; never substitute owner access.
+- Testing-day athlete action: current schedule is athlete-readable but only staff may record verified results; no athlete testing-day destination exists. Implement a read-only details/contact action before offering a daily-plan button; do not route to self Vault entry and falsely mark staff testing complete.
 
 # AK7 — Oct 20, 03:10 UTC — final batch status
 

@@ -2,6 +2,13 @@
 
 Read-only audit of pre-change prompt behavior. No cadence, dose, rest rule, switch or scheduled job was changed by this audit. A separate module is not proof of a daily-plan prompt.
 
+## Oct 20 prerequisite consistency correction — after AK7
+- `useScheduledPriorityTasks` previously shared its performance-test history query across selected sports and checked entitlement across all sport modules. It now keys/filters canonical performance reads by selected sport and uses `priorityAccess` for sport-scoped Complete Pitcher/5Tool/Golden 2Way access. Photo/wellness/scout records have no sport column and remain account-scoped; no invented field.
+- Ten concrete access tests plus a real hook baseball→softball read/cache regression PASS: a locked baseball test no longer suppresses a missing softball baseline. 34 focused tests PASS including existing calendar/date/game matrices; preview build OK. No dose/cadence/lifting change.
+- Real TEST phone Vault/morning check-in opened at 390×844, but health setup covered the target strip. Exact reminder phone proof remains unverified; no health answers fabricated, no records saved. No backend deploy/migration, publish, cron, iOS or switch changes.
+- Remaining testing-day gap: schedule SELECT allows self athlete, while verified result writes stay staff-only. No current athlete testing-day destination was found; a read-only details/contact view is required before attaching an actionable daily-plan reminder. Opening self Vault entry must not count as a verified staff testing day.
+- Owner's context-unity audit/build is queued after assessment/prompts, not claimed started or proven. Current readiness remains NO.
+
 ## AK7 current status — Oct 20, 03:10 UTC
 
 This opening audit table below is historical pre-change behavior. The current authoritative item-by-item status, cadence proposals and live switch readback are at the top of `roadmap.md`. Ready to publish: **NO**.
