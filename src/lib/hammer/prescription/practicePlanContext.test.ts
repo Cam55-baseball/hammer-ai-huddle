@@ -4,6 +4,7 @@ import { NORMAL_SIGNAL } from './scheduleContext';
 import type { ContextVariable, HammerAthleteContext } from '../context/athleteContext';
 import { applyPracticePlanContext, reduceDosageForPractice } from './practicePlanContext';
 import { categoryPracticeLoads } from './categoryPracticeLoad';
+import { reducedSetsWithinFloor } from './practiceDoseAdjustment';
 
 describe('reduceDosageForPractice (owner: ~30% less, never below half the prescribed sets, whole sets, reps unchanged)', () => {
   it('cuts leading set counts by about 30% with the half-dose floor', () => {
