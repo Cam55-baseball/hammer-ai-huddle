@@ -40,29 +40,28 @@ export function goalMinuteShare(
   const wanted = new Map<string, number>([[top, base(top) * TOP_GOAL_BOOST]]);
   if (has(second) && second !== top) wanted.set(second, base(second) * SECOND_GOAL_BOOST);
 
-  // Fund from the lowest-ranked categories first, down to their minimums only.
-  const funders = rows
-    .filter(r => r.category !== top && r.category !== second)
-    .map(r => ({ category: r.category, spare: Math.max(0, clean(r.baseMin) - clean(r.minMin)) }))
-    .filter(r => r.spare > 0)
-    .sort((a, b) => ranked.indexOf(b.category) - ranked.indexOf(a.category));
-  let available = funders.reduce((sum, r) => sum + r.spare, 0);
+  // Each boost is funded only by categories ranked below the boosted one,
+  // taken from the lowest-ranked first, down to their minimums only.
+  const spare = new Map(rows.map(r => [r.category, Math.max(0, clean(r.baseMin) - clean(r.minMin))]));
+  const rankOf = (c: string) => { const i = ranked.indexOf(c); return i === -1 ? ranked.length : i; };
 
   for (const [category, want] of wanted) {
+    const funders = rows
+      .filter(r => r.category !== category && rankOf(r.category) > rankOf(category) && (spare.get(r.category) ?? 0) > 0)
+      .sort((a, b) => rankOf(b.category) - rankOf(a.category));
+    let available = funders.reduce((sum, r) => sum + (spare.get(r.category) ?? 0), 0);
     const grant = Math.min(want, available);
     if (grant <= 0) continue;
-    available -= grant;
     result[category] = base(category) + grant;
     // Take the grant proportionally from funders' spare minutes.
-    let remaining = grant;
-    const totalSpare = funders.reduce((sum, r) => sum + r.spare, 0);
+    const totalSpare = available;
     for (const f of funders) {
-      if (remaining <= 0 || totalSpare <= 0) break;
-      const take = Math.min(f.spare, (grant * f.spare) / totalSpare);
-      f.spare -= take;
+      const fSpare = spare.get(f.category) ?? 0;
+      const take = Math.min(fSpare, (grant * fSpare) / totalSpare);
+      spare.set(f.category, fSpare - take);
       result[f.category] = Math.max(clean(rows.find(r => r.category === f.category)?.minMin ?? 0), result[f.category]! - take);
-      remaining -= take;
     }
+    available -= grant;
   }
   // Round to whole minutes without dropping any category below its minimum.
   for (const row of rows) {
