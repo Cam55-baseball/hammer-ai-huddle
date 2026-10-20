@@ -1,0 +1,2 @@
+- Practice logging projects non-deleted canonical performance sessions; never add workout denominators or completed doses. Why: logging is not proof of workout completion.
+- Coach practice reads require self or linked-coach eligibility and table RLS; denied/unavailable reads stay distinct from empty. Why: the Discipline RPC grants broader access than the session table.

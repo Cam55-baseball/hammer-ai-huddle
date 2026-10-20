@@ -50,6 +50,7 @@ export interface DrillBlock {
 const SESSION_KEYS = [
   ['recent-sessions'], ['day-sessions'], ['calendar'],
   ['fatigue-state'], ['latest-session-ts'],
+  ['practice-log-prompt'], ['coach-discipline-practice'],
 ];
 
 const ANALYTICS_KEYS = [
@@ -298,6 +299,7 @@ export function usePerformanceSession() {
       .eq('id', sessionId)
       .eq('user_id', user?.id);
     if (error) throw error;
+    invalidateKeys(SESSION_KEYS);
   };
 
   return { createSession, deleteSession, saving };
