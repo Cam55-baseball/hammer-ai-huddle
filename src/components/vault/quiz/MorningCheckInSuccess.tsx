@@ -9,6 +9,7 @@ import { useAthleteCommandRows } from '@/hooks/command/useAthleteCommandRows';
 import { deriveTodaysStandard } from '@/lib/standard/todaysStandard';
 import { getTodayDate } from '@/utils/dateUtils';
 import { ScheduledPriorityStrip } from '@/components/hammer/ScheduledPriorityStrip';
+import { TestingDayNotice } from '@/components/hammer/TestingDayNotice';
 import { TexVisionS2Priority } from '@/components/hammer/TexVisionS2Priority';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -70,7 +71,7 @@ export function MorningCheckInSuccess({ onClose }: { onClose: () => void }) {
       </motion.section>
        <motion.section {...rise} transition={{ ...rise.transition, delay: reducedMotion ? 0 : 0.18 }} className="daily-success-section border-l-2 border-l-primary" aria-label="Due today">
         <div className="mb-3 flex items-center gap-2 text-primary"><CalendarCheck className="h-4 w-4" aria-hidden /><h3 className="text-xs font-bold uppercase">Due today</h3></div>
-        <div className="peer space-y-2 empty:hidden"><ScheduledPriorityStrip /><TexVisionS2Priority /></div>
+        <div className="peer space-y-2 empty:hidden"><TestingDayNotice /><ScheduledPriorityStrip /><TexVisionS2Priority /></div>
         <p className="hidden text-sm text-muted-foreground peer-empty:block" data-testid="due-today-empty">Nothing is due today. Your full plan is next.</p>
       </motion.section>
       <Button className="min-h-12 w-full gap-2 text-base font-bold" onClick={onClose}>Continue to today <ArrowRight className="h-4 w-4" aria-hidden /></Button>
