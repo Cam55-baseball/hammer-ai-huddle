@@ -7,24 +7,25 @@ import { CATEGORY_KEYS, CATEGORY_LABELS, normalizeCategoryGoals } from '@/lib/ha
 const state = vi.hoisted(() => ({
   raw: null as Record<string, unknown> | null,
   writes: [] as Array<{ user_id: string; category_goals: Record<string, unknown> }>,
-  fail: false, thrown: false, reads: 0, invoke: vi.fn(),
+  fail: false, thrown: false, reads: 0, invoke: vi.fn(), readFailure: false, stale: false,
+  userId: 'test-goal-player', success: vi.fn(),
 }));
-vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'test-goal-player' } }) }));
-vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: state.userId } }) }));
+vi.mock('sonner', () => ({ toast: { success: state.success, error: vi.fn() } }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {
   functions: { invoke: state.invoke },
   from: (table: string) => {
     expect(table).toBe('athlete_context');
     return {
       select: () => ({ eq: (key: string, id: string) => {
-        expect([key, id]).toEqual(['user_id', 'test-goal-player']);
-        return { maybeSingle: async () => { state.reads++; return { data: { category_goals: state.raw }, error: null }; } };
+        expect([key, id]).toEqual(['user_id', state.userId]);
+        return { maybeSingle: async () => { state.reads++; return { data: { category_goals: state.raw }, error: state.readFailure ? new Error('read unavailable') : null }; } };
       } }),
       upsert: async (value: typeof state.writes[number], options: unknown) => {
         expect(options).toEqual({ onConflict: 'user_id' });
         if (state.thrown) throw new Error('network unavailable');
         if (state.fail) return { error: { message: 'write failed' } };
-        state.writes.push(value); state.raw = value.category_goals;
+        state.writes.push(value); if (!state.stale) state.raw = value.category_goals;
         return { error: null };
       },
     };
@@ -42,6 +43,7 @@ describe('real goal confirmation save and canonical readback', () => {
   beforeEach(() => {
     localStorage.clear(); state.writes = []; state.fail = false; state.thrown = false; state.reads = 0;
     state.invoke.mockReset();
+    state.readFailure = false; state.stale = false; state.userId = 'test-goal-player'; state.success.mockReset();
     state.raw = { version: 2, categoryOrder: [...CATEGORY_KEYS], updatedAt: '2020-01-01T23:59:00Z',
       baseball: { position: { hitting: [{ id: 'barrel_control', rank: 'primary' }] } },
       softball: { position: { fielding: [{ id: 'first_step', rank: 'primary' }] } } };
@@ -95,5 +97,40 @@ describe('real goal confirmation save and canonical readback', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Keep my order' }));
     await waitFor(() => expect(screen.queryByTestId('rank-goals-prompt')).toBeNull());
     expect(state.writes).toHaveLength(1);
+  });
+
+  it.each(['stale', 'failed'])('does not announce success after a %s readback and allows retry', async mode => {
+    const { client } = mount();
+    await screen.findByRole('button', { name: 'Keep my order' });
+    for (const category of [...CATEGORY_KEYS].reverse()) fireEvent.click(screen.getByRole('button', { name: CATEGORY_LABELS[category] }));
+    state.stale = mode === 'stale'; state.readFailure = mode === 'failed';
+    fireEvent.click(screen.getByRole('button', { name: 'Save my order' }));
+    await screen.findByRole('alert');
+    expect(state.success).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Fielding, ranked 1' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Save my order' }).hasAttribute('disabled')).toBe(false);
+    state.stale = false; state.readFailure = false;
+    fireEvent.click(screen.getByRole('button', { name: 'Save my order' }));
+    await waitFor(() => expect(state.success).toHaveBeenCalledTimes(1));
+    expect(client.getQueryData(['goal-ranking', state.userId])).toMatchObject({ ranked: [...CATEGORY_KEYS].reverse(), raw: state.raw });
+  });
+
+  it('reads a legacy canonical rank without a top-level categoryOrder', async () => {
+    state.raw = { version: 1, updatedAt: '2020-01-01', goals: CATEGORY_KEYS.map((category, index) => ({ category, rank: index + 1, intent: null })) };
+    mount();
+    fireEvent.click(await screen.findByRole('button', { name: 'Keep my order' }));
+    await waitFor(() => expect(state.success).toHaveBeenCalledTimes(1));
+    expect(normalizeCategoryGoals(state.raw)?.goals.map(goal => goal.category)).toEqual(CATEGORY_KEYS);
+  });
+
+  it('clears an unsaved draft and Later state when the signed-in player changes', async () => {
+    const { rerender, client } = mount();
+    fireEvent.click(await screen.findByRole('button', { name: 'Fielding' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Later' }));
+    state.userId = 'another-test-player';
+    rerender(<QueryClientProvider client={client}><RankGoalsPromptCard /></QueryClientProvider>);
+    await screen.findByRole('button', { name: 'Fielding' });
+    expect(screen.queryByRole('button', { name: 'Fielding, ranked 1' })).toBeNull();
+    expect(state.writes).toHaveLength(0);
   });
 });

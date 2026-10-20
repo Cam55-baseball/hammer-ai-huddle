@@ -253,13 +253,14 @@ describe("execution: hitting session structure", () => {
   it("with a net: prep first, a full-go round with counts and intent, log last", () => {
     for (const phase of ["in", "off", "pre"]) {
       const blk = h(["tee", "gamer_bat", "net"], phase);
-      if (blk.status !== "ready" || blk.drills.length === 0) continue; // not a hitting day in that phase
-      const stages = h(["tee", "gamer_bat", "net"], phase).drills.map((d) => d.stage);
+      expect(blk.status, `${phase}: fixture must exercise a hitting day`).toBe('ready');
+      expect(blk.drills.length, `${phase}: fixture cannot skip execution`).toBeGreaterThan(0);
+      const stages = blk.drills.map((d) => d.stage);
       expect(stages[0]).toBe("prep");
       expect(stages).toContain("full_go");
       expect(stages[stages.length - 1]).toBe("log");
-      const fg = h(["tee", "gamer_bat", "net"], phase).drills.find((d) => d.stage === "full_go")!;
-      expect(fg.cue).toContain("every swing with intent");
+      const fg = blk.drills.find((d) => d.stage === "full_go");
+      expect(fg?.cue).toContain("every swing with intent");
     }
   });
   it("in-season with a net is a real hitting day (structure is exercised)", () => {
