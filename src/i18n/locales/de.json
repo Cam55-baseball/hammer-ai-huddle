@@ -1,4 +1,9 @@
 {
+  "royalTiming": {
+    "explanation": "Royal timing zeigt dir das Timing in allen Bereichen deines Spiels. Ob du rechtzeitig vollständig ausgeholt hast oder deinen Fuß schon aufgesetzt hast und bereit bist, den Ball rechtzeitig zu sehen. Es kann dir zeigen, ob dein Antritt beim Stehlen einer Base oder beim Reagieren in der Verteidigung gut, auf Elite-Niveau oder sehr schlecht war. Es kann dir zeigen, wie lange du gebraucht hast, um den Ball zu deinem Ziel zu bringen, ab dem Moment, in dem er in der Verteidigung deinen Handschuh trifft. Es kann dir deine Zeit bis zur ersten Base zeigen. Profiteams nutzen dieses Werkzeug oft. Es hilft dir, in allen Bereichen häufiger rechtzeitig zu sein, denn Timing bedeutet alles in einem Spiel, in dem es auf jeden Zentimeter ankommt.",
+    "reminder": "Mach heute eine Runde Royal timing.",
+    "open": "Royal timing öffnen"
+  },
   "common": {
     "save": "Speichern",
     "cancel": "Abbrechen",

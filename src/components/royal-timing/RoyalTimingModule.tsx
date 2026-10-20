@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import { RoyalTimingExplanation } from './RoyalTimingExplanation';
 import { loadSharedHistory, recordSharedExchange } from "@/lib/hammer/oneConversation";
 import { useQueryClient } from '@tanstack/react-query';
 import { Crown, Play, Pause, SkipBack, SkipForward, Camera, Timer, Loader2, Send, Sparkles, ChevronLeft, ChevronRight, Save } from 'lucide-react';
@@ -28,6 +30,7 @@ import type { RoyalTimingSession } from '@/hooks/useRoyalTimingSessions';
 type VideoMode = 'single' | 'comparison';
 
 export function RoyalTimingModule() {
+  const { t } = useTranslation();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -334,14 +337,18 @@ export function RoyalTimingModule() {
   return (
     <div className="space-y-4 md:space-y-6 p-3 md:p-6 pb-24 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Crown className="h-8 w-8 text-primary" />
-        <div>
+      <div className="flex flex-wrap items-center gap-3">
+        <Crown className="h-8 w-8 shrink-0 text-primary" />
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold text-foreground">Royal Timing</h1>
-          <p className="text-sm text-muted-foreground">Video-based timing audit & comparison system</p>
         </div>
         <Badge variant="outline" className="ml-auto capitalize">{selectedSport}</Badge>
       </div>
+      <div data-testid="royal-timing-intro"><RoyalTimingExplanation /></div>
+      <details className="text-sm">
+        <summary className="cursor-pointer text-foreground">{t('common.help', { defaultValue: 'Help' })}</summary>
+        <div className="pt-3"><RoyalTimingExplanation /></div>
+      </details>
 
       {/* Session Library */}
       <RoyalTimingLibrary onLoadSession={handleLoadSession} />
