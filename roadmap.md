@@ -1,4 +1,5 @@
 # AK1 — Oct 20 — Assessment Mode + Hammers Today prompts
+- [ ] Queued continuation: embed existing body/equipment/goals review, verify actual saved test completion and expand phone proofs; then complete prompt adapters and simulations. Preserve all open items below until proved.
 **Ready to publish: NO.** Assessment foundations are proven, but the full requested assessment, sharing and prompt matrix remain incomplete. No publish, function redeploy, cron or iOS changes. Additive assessment fields and the new OFF switch are live; frontend changes are preview-only.
 
 | AK1 item | Status and proof |
