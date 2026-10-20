@@ -1,3 +1,11 @@
+# AP4 — Analysis reminder rotation under persistent priorities
+
+**Ready to publish: NO.** No publish, cron, iOS, migration or redeploy; reminders remain OFF pending integration and phone proofs.
+
+- [x] Concrete sub-step: canonical recording age now leads weekly analysis rotation, with open issues and saved goal order breaking equal-age ties. A persistent top goal/flag cannot repeatedly select its module while another eligible module waits. No new completion store or training day.
+- [ ] Proof pending: focused reminder tests, six eight-week persistent-priority cohort runs and preview health check. These are rule simulations, not actual player phone proof.
+- [ ] Open-fault sport-scoped wiring, Delaycam mechanics inputs, activation and actual-player Today phone proof remain open; other owner queue unchanged. No athlete sessions, lifting or TEST data changed.
+
 # AP3 — Analysis reminder goal priority
 
 **Ready to publish: NO.** No publish, cron, iOS, migration or redeploy; reminders remain OFF pending completed integration/proofs.
