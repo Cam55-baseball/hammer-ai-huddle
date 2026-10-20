@@ -79,7 +79,9 @@ export function LearningLoopList() {
           ) : (
             <p className="text-xs">
               Did it: {r.followed ? "Yes" : "Not yet"} · Result:{" "}
-              {r.outcome ? OUTCOME_LABEL[r.outcome as Outcome] : "Waiting for your next re-test"}
+              {r.outcome
+                ? COMPARABLE_OUTCOME_LABEL[judgedOutcomeFromRecheck(r)]
+                : "Waiting for your next re-test"}
             </p>
           )}
         </Card>
