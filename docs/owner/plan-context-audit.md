@@ -50,7 +50,8 @@ Method: built today's local plan for baseball and softball × off/pre/in season 
 | Pitching — baseball | Arm care → toss/long toss → **flat-ground command set** (30 pre / 20 in) | **No bullpen with pitch count or pitch design, no live at-bats** in the local plan |
 | Pitching — softball | Windmill prep → toss → circle/K-drills → **bullpen build 30** (pre) | No live at-bats; pitch design not named; in-season bullpen to confirm |
 | Throwing — position players | Arm care → toss → routine ground-ball throws + double-play reps | Mostly present at moderate %; no game-speed throws from position after fungo |
-| Fielding | Off on this weekday — not yet sampled | Pending: sample a defense day |
+| Fielding (AM1) | Off-season: DP pivots, backhands, slow rollers, deep-hole throws, relays, pop-up calls (softball: slap-bunt reads). In-season: 2–5 primer reps only | **No live fungo / game-speed ground balls off a bat**, no live reads; in-season is primers only |
 | Baserunning | Lead/secondary footwork, pickoff reads, first-to-third scenarios | **No live jumps, reads off a live pitcher or timed steals** |
-| Off-season Wednesday | All skill blocks off that day | Pending: sample off-season skill days |
-Next: sample defense and off-season days plus the server path, then add a prep → issue drills → full-go → log structure within phase/schedule/throw/arm-ledger rules.
+| Off-season hitting (AM1) | Dry swings → tee 30 → film | **No machine, flips, BP or live at all** without a machine; off-season hitting is drill-only |
+| Server plan (AM1) | wk-generate-daily reads bullpen outings and an `is_bullpen_day` flag but authors no bullpen, BP or live at-bat work | Execution must be added in the local skill blocks or an explicit server step |
+**Audit complete (AM1):** full-go execution is missing or partial in every skill session. Next: add a prep → issue drills → full-go → log structure within phase/schedule/throw/arm-ledger rules.
