@@ -1,3 +1,11 @@
+# AR5 — Parallel owner priority pass — Oct 20, 16:57 UTC
+
+**Ready to publish: NO.** No publish/deploy/migration/switch/cron/iOS changes; completed practice-card proof is not repeated.
+
+- [ ] Advance comparable mixed-signal context with canonical evidence and no dose/category invention.
+- [ ] Advance supported practice/learning links and goal follow-up proof in parallel; identify exact remaining blockers.
+- [ ] Run focused tests and fresh full suite, verify preview health, record proof and exact TEST cleanup if used.
+
 # AR4 — Parallel owner priority pass — Oct 20, 16:43 UTC
 
 **Ready to publish: NO.** No publish, deploy, migration, switch, cron or iOS changes. Completed practice-card proof is not repeated.
