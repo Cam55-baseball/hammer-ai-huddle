@@ -61,7 +61,7 @@ export function goalMinuteShare(
     result[category] = (result[category] ?? base(category)) + grant;
     // Take proportionally from lower categories first; the second-ranked goal
     // covers only the shortfall, so its own boost survives when others can pay.
-    const takeFrom = (pool: readonly typeof funders, amount: number) => {
+    const takeFrom = (pool: readonly CategoryMinutes[], amount: number) => {
       const poolSpare = pool.reduce((sum, r) => sum + (spare.get(r.category) ?? 0), 0);
       if (poolSpare <= 0) return 0;
       let taken = 0;
