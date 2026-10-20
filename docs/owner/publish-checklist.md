@@ -1,6 +1,8 @@
 # Publish checklist — updated 2026-10-20
 
-## AK1 Assessment Mode and plan prompts — in progress
+## AK1–AK2 Assessment Mode and plan prompts — in progress
+- AK2 phone PASS: five explicit skips followed by an embedded TEST sprint save finishes Assessment Mode automatically, removes the guard, enables Start and stays finished after reload. TEST entry removed and original progress restored with readback. 59 focused tests pass; 12 sport/tier eight-week practice/reminder-completion matrices. Evidence: `docs/owner/walkthroughs/assessment/ak2/`.
+- Recurring practice completion now projects exact schedule ID/local date/module from the canonical practice log. Implementation/rule tests pass; actual scheduled save-to-reminder phone proof remains pending. No extra dose, cadence or completion store.
 - Assessment Mode foundation is in preview: one screen per step, embedded S2/analysis/Vault entry, saved skips/navigation, X and Continue guard. TEST college phone proof shows both hitting and throwing buttons and completion enables Start. Evidence: `docs/owner/walkthroughs/assessment/ak1/`.
 - Continuation phone proof: body/equipment/goals open within profile check; real S2 start reaches test instructions; embedded TEST 1.65-second sprint saves, reads back with source/date/Grade 40/Acceptable and advances step 6. TEST entry removed after snapshot; progress restored. 44 focused tests pass, including six sport/tier 56-day practice matrices. Evidence: `docs/owner/walkthroughs/assessment/ak1-continuation/`. This does not prove all eight S2 subtests or the full prompt matrix.
 - Backend assessment navigation fields were added without removing data. `plan_prompts_v2` is OFF, buildable=false, awaiting owner cadence confirmation. Existing calendar game prompt stays on; subscribed scheduled-practice reminder is added to the one plan, with real PracticeHub completion, not tap-as-completion.

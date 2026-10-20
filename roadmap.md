@@ -1,20 +1,22 @@
 # AK2 — Oct 20 — Assessment Mode + Hammers Today prompts
-- [ ] AK2: persist completion when the final embedded result is saved; link recurring practice reminders to their actual dated session logs; run focused tests and phone proof, then clean only task-created TEST records.
+- [x] AK2 assessment completion: final embedded TEST sprint save closes the mode, saves completed_at, removes the guard and enables Start; reload stays completed. 390×844 proof: docs/owner/walkthroughs/assessment/ak2/.
+- [x] AK2 practice rule implementation: exact schedule-ID/local-date/module metadata in canonical practice logs clears that occurrence only; 12 sport/tier eight-week rule matrices pass. Real scheduled-practice save-to-reminder phone proof remains open.
+- [x] AK2 cleanup: new TEST sprint snapshotted privately, exact ID/user delete, zero remaining; original assessment fields restored and read back. No practice result or plan generated.
 - [x] Queued continuation sub-step: body/equipment/goals open inside profile check; real embedded TEST sprint saved/read back and step 6 refreshed; active S2 instructions reached; TEST entry snapshotted/deleted and progress restored. Evidence: docs/owner/walkthroughs/assessment/ak1-continuation/.
 **Ready to publish: NO.** Assessment foundations are proven, but the full requested assessment, sharing and prompt matrix remain incomplete. No publish, function redeploy, cron or iOS changes. Additive assessment fields and the new OFF switch are live; frontend changes are preview-only.
 
-| AK1 item | Status and proof |
+| AK1–AK2 item | Status and proof |
 |---|---|
 | Step 5 missing buttons | FIXED for TEST college phone: hitting + throwing simultaneously. Six tier/sport rule checks pass; remaining program/sport phone proofs pending. |
 | Full-screen embedded foundation | PASS phone: body/equipment/goals inside profile, active S2 instructions, analysis surface; embedded TEST sprint save/readback advances step 6. Full S2/analysis submissions pending. |
-| X / guard / skips / unlock | PASS 390×844: X → Continue guard; explicit skips → guard gone, Start enabled. Start not clicked; generation readback pending. |
+| X / guard / skips / unlock | PASS 390×844: X → Continue guard; five explicit skips + final embedded result save → guard gone, completed_at persisted, Start enabled and reload stays complete. Start not clicked; generation readback pending. |
 | Once-only post-payment wiring | Implemented and rule-tested; timer race removed; actual $0 payment proof pending. |
 | Prompt audit | DONE: docs/owner/plan-prompts-audit.md; includes actual existing game, Tex Vision and morning-check-in due prompts. |
-| Calendar prompts | Game enabled; practice reminder handles accepted/pending/declined assignments and later recurring weeks. Practice phone completion, calendar-only bridge and occurrence completion still pending. |
+| Calendar prompts | Game enabled; practice reminder handles approvals and recurring weeks. Exact dated canonical session link implemented/tested for occurrence completion; phone save-to-reminder and calendar-only bridge pending. |
 | New cadences | Database plan_prompts_v2 read back OFF/buildable=false. No new cadence running; adapters awaiting implementation/approval. |
-| Tests | Continuation: 44/44 focused checks, six files; preview build OK. Six sport/tier practice matrices × 56 days pass; full non-lifting matrix pending. Earlier 52-check run is historical. |
-| TEST cleanup | Continuation: one new TEST sprint snapshotted and deleted by exact ID/user; assessment progress restored with matching readback. No clips/games/payments or legal records changed. |
-| Phone evidence | docs/owner/walkthroughs/assessment/ak1/README.md and seven screenshots, with explicit limitations. |
+| Tests | AK2: 59/59 focused checks, six files; preview build OK. 12 sport/tier eight-week practice/reminder-completion matrices pass; full non-lifting matrix pending. |
+| TEST cleanup | AK2 new TEST sprint snapshotted and deleted by exact ID/user, remaining count 0; original assessment fields restored with matching readback. No clips/games/payments or legal records changed. |
+| Phone evidence | docs/owner/walkthroughs/assessment/ak1/, ak1-continuation/ and ak2/; Chromium phone emulation, not physical Safari. |
 
 ## Proposed new cadences — waiting on owner confirmation
 These are proposals, not active training rules. New prompt types must remain behind `plan_prompts_v2` OFF until confirmed; existing prescription/rest rules still win.
@@ -30,10 +32,12 @@ These are proposals, not active training rules. New prompt types must remain beh
 - [ ] A2–A4: full-screen embedded Assessment Mode; saved steps, ordered 1–3 then flexible 4–6, Back/Next/Skip/Mark complete/X.
   - [x] Profile's body/equipment/goals review stays embedded; successful Vault save refreshes step 6; invalid season answers do not save invented values.
 - [ ] A5–A6: once after successful payment before dashboard; closed-mode mission guard; permanent completion and Start unlock.
+  - [x] Final embedded result persists completion without a further Mark complete tap; reload proof and enabled Start. Actual payment and plan generation still open.
 - [ ] A7: shared coach/org assessment mode with current permissions.
 - [ ] A8: six program/sport phone proofs, $0 payment, embedded S2/analysis, completion → The General → Start; scoped cleanup.
 - [x] B1: read-only prompt audit in docs/owner/plan-prompts-audit.md.
 - [ ] B2–B3: existing-plan calendar game/practice cards enabled; due/prescribed prompt gaps implemented behind plan_prompts_v2 OFF; canonical completion integration.
+  - [x] Recurring-practice occurrence identity carried in canonical performance session, projected by reminder rules; no parallel completion store. End-to-end scheduled save proof pending.
 - [ ] B4: eight-week player-type simulation and phone evidence; refresh guide and readiness.
   - [x] Six sport/tier × 56-day subscribed-practice rule simulations; approval and recurring-week regression tests. Remaining prompt types still open.
 
