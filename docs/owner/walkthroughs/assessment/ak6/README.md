@@ -1,0 +1,10 @@
+# AK6 — practice report honesty correction
+
+- Real isolated TEST college player, Chromium phone emulation 390×844, not physical Safari or owner bypass.
+- Tee → right-hand → Center of plate → entered execution score 6 → Solid contact → Confirm Rep → Save Session. `practice-honest.png` shows Grade 60 / Acceptable, one logged rep, entered execution grade 60, source/date, mechanics “Not measured”; no invented faults or prescription.
+- Live `session-insights` authenticated call using the app-refreshed session returned 200; `live-report.json` records entered values with empty fault/fix/transfer lists and null progression/rep allocation. An initial standalone expired saved-token call returned 401; normal app refresh succeeded without changing auth rules.
+- Canonical logged-practice projection shared by live handler and RLS-protected client reads. Old report caches remain stored but are never read as evidence. Handler checks own non-deleted source first. AI report generation and its separate rep allocation removed.
+- Deterministic fallback call sites (summary, calendar/detail/list, practice detail) no longer infer faults, wins, cues or elite labels from composites. Saved-session video matching no longer invents movement faults from low indexes. Real entered grades and other source records remain intact.
+- Ten new concrete honesty tests; 80 focused tests pass. Full suite 404 files / 3,150 tests pass. Preview build OK before named function deploy; source SHA-256: `21cb10b6fb884e7de210f10ea414c4faf660a1ca2b7548cf1ab3a379ea9221e8`.
+- Private 13-table snapshots before/after proof. Exact TEST session, two ledger entries, daily log and dirty marker removed; original MPI streak and HIE values restored; only updated_at trigger values differ. No AI report created, no calendar/payment/assessment/plan/legal writes.
+- Ready to publish: NO. Other assessment/payment/S2/analysis/sharing/Start, reminder-to-save, coach Discipline/learning and full non-lifting matrix remain unfinished. Unapproved cadence switch stays OFF; Game IQ/Report Card internal-only. Only session-insights redeployed under Oct 19 authorization; no publish, migration, cron or iOS change.
