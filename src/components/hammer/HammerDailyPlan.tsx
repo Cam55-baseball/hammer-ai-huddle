@@ -774,7 +774,8 @@ function HammerDailyPlanBody({
     // asked to stick from now on.
     const influencedBlocks = applyFaultPlanInfluence({
       blocks: base.blocks,
-      rankedFaults: accessiblePlanFaults(faultContext.isError ? [] : faultContext.data?.rankedFaults ?? [], modules, sportKey),
+      rankedFaults: accessiblePlanFaults(faultContext.isError ? [] : faultContext.data?.rankedFaults ?? [], modules, sportKey,
+        { clips: faultContext.isError ? [] : faultContext.data?.clips ?? [] }),
       signalScopes: faultContext.isError ? {} : faultContext.data?.signalScopes ?? {},
       sport: ctx.get<unknown>("sport_primary")?.value === "softball" ? "softball" : "baseball",
       ownedEquipment: new Set(projectedAthlete.equipmentList),

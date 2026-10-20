@@ -16,7 +16,7 @@ describe('real plan fault source read', () => {
     const chains = [result(), result(), result()];
     chains.forEach(c => mocks.from.mockReturnValueOnce(c));
     const query = usePlanFaultContext('softball') as unknown as { queryFn: () => Promise<unknown> };
-    await expect(query.queryFn()).resolves.toEqual({ rankedFaults: [], signalScopes: {} });
+    await expect(query.queryFn()).resolves.toEqual({ rankedFaults: [], signalScopes: {}, clips: [] });
     chains.forEach(c => expect(c.eq).toHaveBeenCalledWith('user_id', 'u'));
     expect(chains[2].eq).toHaveBeenCalledWith('sport', 'softball');
     expect(chains[2].eq).toHaveBeenCalledWith('status', 'completed');
