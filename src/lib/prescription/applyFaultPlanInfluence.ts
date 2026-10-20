@@ -91,8 +91,11 @@ export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): Readonl
     // Highest-priority finding's skill picks the drill library; a skill with no library (e.g. running) honestly swaps nothing.
     const discipline = signals[0].signal.discipline;
     const faultKeys = [...new Set(signals.filter(({ signal }) => signal.discipline === discipline).map(({ signal }) => signal.fault_key))];
+    // No category spill-over (owner rule Oct 20): only drills from the flagged
+    // skill's own category. Fielding and running have no category of their own
+    // yet, so they swap nothing rather than borrow a throwing drill.
     const [match] = matchPrescriptionDrills({
-      catalog,
+      catalog: catalog.filter((d) => (d.category as string) === discipline),
       circulation: input.circulation,
       faultKeys,
       module: MODULE_FOR[discipline],

@@ -1,3 +1,15 @@
+# AN9 — Oct 20, 04:02 UTC — owner decisions (Oct 20, 03:58) + first sub-step
+
+**Ready to publish: NO.** Nothing published, no cron or iOS change. Preview-only.
+
+| Owner decision | Status / proof |
+|---|---|
+| 1. No category spill-over (binding) | DONE + test: `noCategorySpill.test.ts` — 60 runs (baseball/softball × SS/P × off/pre/in × 5 flag kinds, 14 days each). It FOUND real spill: fielding flags put a throwing drill on the fielding card, running flags could pull a fielding/throwing drill. FIXED: a flag only takes drills from its own category; fielding and running now swap nothing until they have their own fix drills. 99 checks PASS. (Daily plan takes no subscription, so this covers every subscription.) |
+| 2. plan_prompts_v2 ON with owner cadences (analysis weekly rotating module; Royal timing every 2–3 weeks with explanation; Delaycam 2–3×/week for major mechanical flags/mechanics goal/off-season, else weekly, with phone/TV note; others unchanged; one card, one button; completion → Discipline + learning loop) | Not started |
+| 3. "Questions for the owner" in Coaching Console (text + multi-choice answers → versioned principles; owner notes anytime; seeded with full-go questions per subscription/sport/age) | Not started |
+| 4. Goal weighting (first/best slot + larger weekly share, minimums kept, existing rules first; goals easy to change in Profile/Settings; re-ask every 12 weeks; 8-week sims + phone) | Not started |
+| 5. Proof for all + links a–e, execution blocks, coach section | Open (see AN8 table below) |
+
 # AN8 — Oct 20, 03:56 UTC — batch proof per item
 
 **Ready to publish: NO.** No publish, deploy, migration, cron or iOS change in AN1–AN8; everything is preview-only. 337 plan checks PASS (43 files); preview build OK.
