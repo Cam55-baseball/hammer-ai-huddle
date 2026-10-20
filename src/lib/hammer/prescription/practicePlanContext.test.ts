@@ -62,7 +62,7 @@ describe('practice history reaches the actual plan without guessed dose floors',
     expect(result[0].drills).toEqual(pitching.drills);
     expect(result.slice(1)).toEqual([throwing, closed, strength]);
   });
-  for (const sport of ['baseball', 'softball']) it(`${sport}: three fielding days annotate only ready fielding and preserve all work`, () => {
+  for (const sport of ['baseball', 'softball']) it(`${sport}: three fielding days lighten only ready fielding drills within their floors`, () => {
     const records = [1, 2, 3].map(day => ({ id: String(day), date: `2026-06-0${day}`, sport, category: 'fielding', minutes: null, intensity: null }));
     const ctx = context(sport), day = new Date(2026, 5, 4);
     const before = buildHammerDailyPlan(ctx, NORMAL_SIGNAL, null, null, undefined, day);
@@ -70,18 +70,32 @@ describe('practice history reaches the actual plan without guessed dose floors',
     const fielding = after.blocks.find(block => block.modality === 'defense');
     expect(fielding?.status).toBe('ready');
     expect(fielding?.because?.length).toBe(1);
+    const source = before.blocks.find(block => block.modality === 'defense');
+    // Prep, full-go and log stages are never cut; drill-stage sets never drop below half.
+    fielding?.drills.forEach((drill, i) => {
+      const original = source?.drills[i];
+      if ((drill.stage ?? 'drills') !== 'drills') expect(drill).toEqual(original);
+      const sets = /^(\d+)\s*(?:x|×)/i.exec(original?.dosage ?? '');
+      if (sets) {
+        const cut = /^(\d+)/.exec(drill.dosage);
+        expect(Number(cut?.[1])).toBeGreaterThanOrEqual(Math.ceil(Number(sets[1]) * 0.5));
+        expect(Number(cut?.[1])).toBeLessThanOrEqual(Number(sets[1]));
+      } else expect(drill.dosage).toBe(original?.dosage);
+    });
     for (const block of before.blocks) {
       const next = after.blocks.find(row => row.modality === block.modality && row.side === block.side);
-      expect(next?.drills).toEqual(block.drills);
       expect(next?.durationMin).toBe(block.durationMin);
       expect(next?.status).toBe(block.status);
-      if (block.modality !== 'defense') expect(next?.because).toEqual(block.because);
+      if (block.modality !== 'defense') {
+        expect(next?.drills).toEqual(block.drills);
+        expect(next?.because).toEqual(block.because);
+      }
     }
     const wrongSport = buildHammerDailyPlan(ctx, NORMAL_SIGNAL, null, null, undefined, day,
       { practiceRecords: records.map(record => ({ ...record, sport: sport === 'baseball' ? 'softball' : 'baseball' })) });
     expect(wrongSport.blocks).toEqual(before.blocks);
   });
-  for (const sport of ['baseball', 'softball']) it(`${sport}: off-season hitting streak preserves full-go, logging and all other categories`, () => {
+  for (const sport of ['baseball', 'softball']) it(`${sport}: off-season hitting streak cuts drill sets within floors, keeps full-go, logging and all other categories`, () => {
     const ctx = context(sport);
     let hittingDays = 0;
     for (let n = 0; n < 56; n++) {
@@ -94,13 +108,22 @@ describe('practice history reaches the actual plan without guessed dose floors',
       const after = buildHammerDailyPlan(ctx, NORMAL_SIGNAL, null, null, undefined, day, { practiceRecords: records });
       for (const block of before.blocks) {
         const next = after.blocks.find(row => row.modality === block.modality && row.side === block.side);
-        expect(next?.drills).toEqual(block.drills);
         expect(next?.durationMin).toBe(block.durationMin);
         expect(next?.status).toBe(block.status);
         if (block.modality === 'hitting' && block.status === 'ready') {
           expect(next?.because?.length).toBe((block.because?.length ?? 0) + 1);
           expect(next?.drills.some(row => row.stage === 'full_go')).toBe(true);
           expect(next?.drills[next.drills.length - 1]?.stage).toBe('log');
+          // Full-go and log work keep their exact dosage; drill-stage sets stay at or above half.
+          next?.drills.forEach((drill, i) => {
+            const original = block.drills[i];
+            if ((drill.stage ?? 'drills') !== 'drills') expect(drill.dosage).toBe(original?.dosage);
+            const sets = /^(\d+)\s*(?:x|×)/i.exec(original?.dosage ?? '');
+            if (sets) {
+              const cut = /^(\d+)/.exec(drill.dosage);
+              expect(Number(cut?.[1])).toBeGreaterThanOrEqual(Math.ceil(Number(sets[1]) * 0.5));
+            }
+          });
           hittingDays++;
         } else expect(next).toEqual(block);
       }
