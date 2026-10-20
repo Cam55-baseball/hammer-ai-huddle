@@ -17,6 +17,28 @@ function context(sport: string, phase: string, injuries: string[] = []): HammerA
 }
 
 describe('actual plan execution structure and schedule protection', () => {
+  for (const sport of ['baseball', 'softball']) {
+    it(`${sport}: missing equipment keeps the existing hitting dose and needs no tee, ball or partner`, () => {
+      const base = context(sport, 'off');
+      const ctx: HammerAthleteContext = { ...base, get<T>(key: string) {
+        if (key === 'equipment_effective') return undefined;
+        return base.get<T>(key);
+      } };
+      let days = 0;
+      for (let n = 0; n < 7; n++) {
+        const plan = buildHammerDailyPlan(ctx, NORMAL_SIGNAL, null, null, undefined, new Date(2026, 5, 1 + n));
+        const hitting = plan.blocks.find(block => block.modality === 'hitting' && block.status === 'ready');
+        if (!hitting) continue;
+        expect(hitting.drills.map(row => row.stage)).toEqual(['prep', 'drills', 'full_go', 'log']);
+        expect(hitting.drills.map(row => row.dosage)).toEqual(['3 rounds of 10', '20 swings', '15 swings', 'best 5 swings']);
+        expect(hitting.drills[2].setup).toContain('No ball, tee or partner is needed');
+        expect(hitting.drills[2].stopIf).toContain('Hand or wrist pain');
+        expect(hitting.drills.some(row => row.name.includes('toss') || row.name.includes('Tee'))).toBe(false);
+        days++;
+      }
+      expect(days).toBeGreaterThan(0);
+    });
+  }
   for (const sport of ['baseball', 'softball']) for (const phase of ['in', 'off', 'pre']) {
     it(`${sport}/${phase}: eight weeks exercise actual scheduled running and hitting work`, () => {
       let runningDays = 0, hittingDays = 0;
