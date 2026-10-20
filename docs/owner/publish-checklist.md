@@ -1,6 +1,8 @@
 # Publish checklist — updated 2026-10-20
 
-## AK1–AK2 Assessment Mode and plan prompts — in progress
+## AK1–AK3 Assessment Mode and plan prompts — in progress
+- AK3 phone PASS as TEST college player: Back 6→5→4, active baseball 5Tool hitting + throwing buttons, final embedded TEST sprint save auto-finishes and reload stays finished. Source records no longer auto-complete unvisited S2/Vault steps. New test removed by exact ID/user; original assessment restored/read back. Evidence: `docs/owner/walkthroughs/assessment/ak3/`.
+- AK3: calendar-only practice prompt implemented with exact dated canonical session identity and linked-event deduplication, no new dose/cadence. Full suite **3,132/3,132** PASS (402 files), focused 73 PASS, preview build OK. Real practice reminder-to-save phone proof and learning readback remain pending.
 - AK2 phone PASS: five explicit skips followed by an embedded TEST sprint save finishes Assessment Mode automatically, removes the guard, enables Start and stays finished after reload. TEST entry removed and original progress restored with readback. 59 focused tests pass; 12 sport/tier eight-week practice/reminder-completion matrices. Evidence: `docs/owner/walkthroughs/assessment/ak2/`.
 - Recurring practice completion now projects exact schedule ID/local date/module from the canonical practice log. Implementation/rule tests pass; actual scheduled save-to-reminder phone proof remains pending. No extra dose, cadence or completion store.
 - Assessment Mode foundation is in preview: one screen per step, embedded S2/analysis/Vault entry, saved skips/navigation, X and Continue guard. TEST college phone proof shows both hitting and throwing buttons and completion enables Start. Evidence: `docs/owner/walkthroughs/assessment/ak1/`.

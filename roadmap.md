@@ -1,5 +1,9 @@
 # AK3 — Oct 20 — Assessment Mode + Hammers Today prompts
-- [ ] AK3: prevent old S2/Vault records completing unvisited steps; retain automatic completion from new embedded saves; verify Back and sport-specific active subscription buttons; continue calendar-practice prompt gap and phone proofs, with scoped cleanup.
+- [x] AK3 assessment: old S2/Vault records cannot complete unvisited steps; successful embedded saves record navigation completion. Back finds the nearest earlier unlocked step. Step-5 buttons use the saved active subscription scoped to this sport, not owner bypass modules.
+- [x] AK3 phone PASS as TEST college player, 390×844: Back 6→5→4, hitting + throwing buttons, final embedded save→close→Start available→reload still finished. New TEST sprint snapshotted/deleted by exact ID/user; zero remaining, original assessment fields restored/read back. Evidence: docs/owner/walkthroughs/assessment/ak3/.
+- [x] AK3 calendar-only bridge implemented/tested: today's same-sport non-deleted/non-ignored practice opens normal module selection; canonical calendar_practice metadata clears only its dated event. Linked scheduled/calendar rows are deduplicated; no invented module/dose or extra completion store.
+- [x] AK3 tests: 73 focused PASS; full suite 402 files / 3,132 tests PASS; preview build OK.
+- [ ] AK3 practice proof continuation: real calendar/scheduled reminder→saved session→reminder disappears and Discipline/learning readback still pending. Setup and rep-entry screen reached only; no practice measurements created.
 - [x] AK2 assessment completion: final embedded TEST sprint save closes the mode, saves completed_at, removes the guard and enables Start; reload stays completed. 390×844 proof: docs/owner/walkthroughs/assessment/ak2/.
 - [x] AK2 practice rule implementation: exact schedule-ID/local-date/module metadata in canonical practice logs clears that occurrence only; 12 sport/tier eight-week rule matrices pass. Real scheduled-practice save-to-reminder phone proof remains open.
 - [x] AK2 cleanup: new TEST sprint snapshotted privately, exact ID/user delete, zero remaining; original assessment fields restored and read back. No practice result or plan generated.
@@ -13,9 +17,9 @@
 | X / guard / skips / unlock | PASS 390×844: X → Continue guard; five explicit skips + final embedded result save → guard gone, completed_at persisted, Start enabled and reload stays complete. Start not clicked; generation readback pending. |
 | Once-only post-payment wiring | Implemented and rule-tested; timer race removed; actual $0 payment proof pending. |
 | Prompt audit | DONE: docs/owner/plan-prompts-audit.md; includes actual existing game, Tex Vision and morning-check-in due prompts. |
-| Calendar prompts | Game enabled; practice reminder handles approvals and recurring weeks. Exact dated canonical session link implemented/tested for occurrence completion; phone save-to-reminder and calendar-only bridge pending. |
+| Calendar prompts | Game enabled; practice reminder handles approvals/recurring weeks and calendar-only events. Exact canonical dated completion and deduplication rule-tested; real save-to-reminder phone proof pending. |
 | New cadences | Database plan_prompts_v2 read back OFF/buildable=false. No new cadence running; adapters awaiting implementation/approval. |
-| Tests | AK2: 59/59 focused checks, six files; preview build OK. 12 sport/tier eight-week practice/reminder-completion matrices pass; full non-lifting matrix pending. |
+| Tests | AK3: 73 focused PASS; full suite 402 files / 3,132 PASS; preview build OK. Practice eight-week rules pass; full non-lifting matrix pending. |
 | TEST cleanup | AK2 new TEST sprint snapshotted and deleted by exact ID/user, remaining count 0; original assessment fields restored with matching readback. No clips/games/payments or legal records changed. |
 | Phone evidence | docs/owner/walkthroughs/assessment/ak1/, ak1-continuation/ and ak2/; Chromium phone emulation, not physical Safari. |
 
@@ -39,6 +43,7 @@ These are proposals, not active training rules. New prompt types must remain beh
 - [x] B1: read-only prompt audit in docs/owner/plan-prompts-audit.md.
 - [ ] B2–B3: existing-plan calendar game/practice cards enabled; due/prescribed prompt gaps implemented behind plan_prompts_v2 OFF; canonical completion integration.
   - [x] Recurring-practice occurrence identity carried in canonical performance session, projected by reminder rules; no parallel completion store. End-to-end scheduled save proof pending.
+  - [x] Calendar-only practice bridge and exact canonical dated completion metadata implemented; linked events deduplicated. End-to-end save proof pending.
 - [ ] B4: eight-week player-type simulation and phone evidence; refresh guide and readiness.
   - [x] Six sport/tier × 56-day subscribed-practice rule simulations; approval and recurring-week regression tests. Remaining prompt types still open.
 
