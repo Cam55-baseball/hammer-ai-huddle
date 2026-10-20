@@ -79,9 +79,11 @@ describe("analysis influence reaches every skill card", () => {
     expect(after.drills[0].name).toBe("Pitch Fix");
     expect(after.because?.[0]).toContain("Pitch Fix");
   });
-  it("a fielding finding swaps one drill on the defense card", () => {
+  it("no spill-over: a fielding finding never borrows a throwing drill for the defense card", () => {
     const d = { ...drill, id: "f1", name: "Glove Fix", category: "throwing" as const, violationKeys: ["glove_late"] };
-    expect(run("defense", sig("fielding", "glove_late"), d).drills[0].name).toBe("Glove Fix");
+    const after = run("defense", sig("fielding", "glove_late"), d);
+    expect(after.drills.map((x) => x.name)).not.toContain("Glove Fix");
+    expect(after.because).toBeUndefined();
   });
   it("a running finding with no running drill library changes nothing (never invents a drill)", () => {
     const before = { ...block(), modality: "baserunning" as const };
