@@ -28,5 +28,9 @@ export function adjustDoseForPractice(dose: PracticeDose, loads: readonly Catego
   if (!Number.isInteger(dose.sets) || dose.sets <= dose.minimumSets) {
     return { ...unchanged, recoveryPriority: true, because, sourceIds: load.sourceIds, outcome: 'at-minimum' };
   }
-  return { dose: { ...dose, sets: dose.sets - 1 }, recoveryPriority: true, because, sourceIds: load.sourceIds, outcome: 'reduced' };
+  // Owner Oct 20: about 30% less same-category work, at least half the
+  // prescribed dose and the explicit row floor. Whole sets, reps unchanged.
+  const sets = Math.max(dose.minimumSets, Math.ceil(dose.sets * 0.5), Math.round(dose.sets * 0.7));
+  if (sets >= dose.sets) return { ...unchanged, recoveryPriority: true, because, sourceIds: load.sourceIds, outcome: 'at-minimum' };
+  return { dose: { ...dose, sets }, recoveryPriority: true, because, sourceIds: load.sourceIds, outcome: 'reduced' };
 }

@@ -34,4 +34,30 @@ describe('practice history reaches the actual plan without guessed dose floors',
       { practiceRecords: records.map(record => ({ ...record, sport: sport === 'baseball' ? 'softball' : 'baseball' })) });
     expect(wrongSport.blocks).toEqual(before.blocks);
   });
+  for (const sport of ['baseball', 'softball']) it(`${sport}: off-season hitting streak preserves full-go, logging and all other categories`, () => {
+    const ctx = context(sport);
+    let hittingDays = 0;
+    for (let n = 0; n < 56; n++) {
+      const day = new Date(2026, 5, 1 + n);
+      const records = [1,2,3].map(offset => {
+        const date = new Date(day); date.setDate(date.getDate() - offset);
+        return { id: `${n}-${offset}`, date: date.toISOString().slice(0,10), sport, category: 'hitting', minutes: 40, intensity: 8 };
+      });
+      const before = buildHammerDailyPlan(ctx, NORMAL_SIGNAL, null, null, undefined, day);
+      const after = buildHammerDailyPlan(ctx, NORMAL_SIGNAL, null, null, undefined, day, { practiceRecords: records });
+      for (const block of before.blocks) {
+        const next = after.blocks.find(row => row.modality === block.modality && row.side === block.side);
+        expect(next?.drills).toEqual(block.drills);
+        expect(next?.durationMin).toBe(block.durationMin);
+        expect(next?.status).toBe(block.status);
+        if (block.modality === 'hitting' && block.status === 'ready') {
+          expect(next?.because?.length).toBe((block.because?.length ?? 0) + 1);
+          expect(next?.drills.some(row => row.stage === 'full_go')).toBe(true);
+          expect(next?.drills.at(-1)?.stage).toBe('log');
+          hittingDays++;
+        } else expect(next).toEqual(block);
+      }
+    }
+    expect(hittingDays).toBeGreaterThan(0);
+  });
 });

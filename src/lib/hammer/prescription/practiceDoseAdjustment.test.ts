@@ -35,6 +35,21 @@ describe('same-category practice dose with explicit minimum', () => {
     const loads = categoryPracticeLoads(records('hitting').slice(1), '2026-10-20', 'baseball');
     expect(adjustDoseForPractice(dose('hitting'),loads).outcome).toBe('unchanged');
   });
+  it('the owner 30% target reduces ten sets to seven with unchanged reps', () => {
+    const loads = categoryPracticeLoads(records('hitting'), '2026-10-20', 'baseball');
+    const result = adjustDoseForPractice({ ...dose('hitting'), sets: 10 }, loads);
+    expect(result.dose.sets).toBe(7);
+    expect(result.dose.repsPerSet).toBe(10);
+  });
+  it('the owner 50% floor keeps at least half with whole-set rounding', () => {
+    const loads = categoryPracticeLoads(records('hitting'), '2026-10-20', 'baseball');
+    expect(adjustDoseForPractice({ ...dose('hitting'), sets: 2, minimumSets: 1 }, loads).dose.sets).toBe(1);
+    expect(adjustDoseForPractice({ ...dose('hitting'), sets: 3, minimumSets: 1 }, loads).dose.sets).toBe(2);
+  });
+  it('an explicit nine-set minimum outranks a seven-set target and preserves the block', () => {
+    const loads = categoryPracticeLoads(records('hitting'), '2026-10-20', 'baseball');
+    expect(adjustDoseForPractice({ ...dose('hitting'), sets: 10, minimumSets: 9 }, loads).dose.sets).toBe(9);
+  });
   for (const sport of ['baseball','softball']) for (const subscription of ['5Tool','Complete Pitcher','Golden 2Way']) it(`${sport} ${subscription}: eight-week dose-contract run`, () => {
     const history: PracticeLoadRecord[] = []; let reductions = 0;
     for (let day=0;day<56;day++) {
