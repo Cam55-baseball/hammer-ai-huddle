@@ -10,12 +10,12 @@ const fielding: DrillStep[] = [{ name: 'Footwork', dosage: '10 reps' }, { name: 
 
 describe('existing-rep execution structure', () => {
   for (const sport of ['baseball', 'softball'] as const) {
-    it(`${sport}: baserunning keeps 5 scenario reps, prep first and actuals last`, () => {
+    it(`${sport}: baserunning keeps 5 scenario reps and adds no logging exercise`, () => {
       const result = structureSkillSession(running, options('baserunning', sport));
       expect(result[0].stage).toBe('prep');
       expect(result.find(row => row.stage === 'full_go')?.dosage).toBe('5 reps');
       expect(result.filter(row => row.stage !== 'log').map(row => row.dosage)).toEqual(['10 reps', '10 reps', '5 reps']);
-      expect(result[result.length - 1]?.stage).toBe('log');
+      expect(result).toHaveLength(3);
     });
     it(`${sport}: fielding preserves all reps and adds no throwing dose`, () => {
       const result = structureSkillSession(fielding, options('defense', sport));

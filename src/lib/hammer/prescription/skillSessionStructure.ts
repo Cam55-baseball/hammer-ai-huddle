@@ -35,7 +35,6 @@ export function structureSkillSession(steps: readonly DrillStep[], options: Skil
       cue: [step.cue, 'Every rep with intent; reset fully between reps.'].filter(Boolean).join(' '),
       stopIf: 'Pain, slipping, slower reactions or loss of control — stop the game-speed round.' };
   });
-  structured.push({ name: options.skill === 'defense' ? 'Log fielding reps and any throws you actually made' : 'Log scenario reps and the decisions you actually made',
-    dosage: 'Record actual reps; no extra reps', stage: 'log', cue: 'Count only what you did. Leave unmeasured times blank.' });
+  // Actuals are entered in the existing session grid, not a fake zero-dose exercise.
   return sort(structured);
 }
