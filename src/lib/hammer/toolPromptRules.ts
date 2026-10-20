@@ -52,7 +52,7 @@ export function delaycamDue(i: DelaycamPromptInput): boolean {
 }
 
 export const ROYAL_TIMING_WHY =
-  "Royal timing trains when to start your swing. You watch real pitches and tap when you'd start. It helps you be on time more often against fast and slow pitches.";
+  "Royal timing shows you timing in all areas of your game. If you're fully loaded on time or if you have your foot down ready to see the ball in time. It can show you the jump you had was good, elite or very bad when stealing a base or reacting on defense. It can show you how long you took to get the ball to your target from the time it hits your glove on defense. It can show you your time to first base. Pro teams use this tool often. It helps you be on time more often in all areas because timing means everything in a game of inches.";
 export const DELAYCAM_WHY =
   "Delaycam shows your swing back a few seconds later, so you can see what you just did and fix it on the next rep. It works on your phone, or cast it to a big TV.";
 export const ROYAL_TIMING_PROMPT = "Do a Royal timing round today.";

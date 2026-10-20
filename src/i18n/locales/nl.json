@@ -1,4 +1,9 @@
 {
+  "royalTiming": {
+    "explanation": "Royal timing laat je de timing zien in alle onderdelen van je spel. Of je op tijd volledig geladen bent, of je voet al op de grond staat zodat je de bal op tijd kunt zien. Het kan je laten zien of je start goed, van eliteniveau of heel slecht was bij het stelen van een honk of het reageren in de verdediging. Het kan je laten zien hoelang je nodig had om de bal bij je doel te krijgen vanaf het moment dat de bal je handschoen raakt in de verdediging. Het kan je tijd naar het eerste honk laten zien. Profteams gebruiken dit hulpmiddel vaak. Het helpt je in alle onderdelen vaker op tijd te zijn, want timing betekent alles in een spel waarin elke centimeter telt.",
+    "reminder": "Doe vandaag een ronde Royal timing.",
+    "open": "Royal timing openen"
+  },
   "common": {
     "save": "Opslaan",
     "cancel": "Annuleren",

@@ -1,4 +1,9 @@
 {
+  "royalTiming": {
+    "explanation": "Royal timing te muestra el tiempo en todas las áreas de tu juego. Si estás completamente cargado a tiempo o si ya tienes el pie apoyado, listo para ver la pelota a tiempo. Puede mostrarte si tu salida fue buena, de nivel élite o muy mala al robar una base o reaccionar en defensa. Puede mostrarte cuánto tardaste en hacer llegar la pelota a tu objetivo desde el momento en que entra en tu guante en defensa. Puede mostrarte tu tiempo hasta primera base. Los equipos profesionales usan esta herramienta a menudo. Te ayuda a llegar a tiempo más seguido en todas las áreas, porque el tiempo lo es todo en un juego que se decide por pulgadas.",
+    "reminder": "Haz una ronda de Royal timing hoy.",
+    "open": "Abrir Royal timing"
+  },
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",

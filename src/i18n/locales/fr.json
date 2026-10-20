@@ -1,4 +1,9 @@
 {
+  "royalTiming": {
+    "explanation": "Royal timing te montre le timing dans tous les aspects de ton jeu. Si tu es complètement armé à temps ou si ton pied est déjà posé, prêt à voir la balle à temps. Il peut te montrer si ton départ était bon, de niveau élite ou très mauvais lorsque tu voles une base ou réagis en défense. Il peut te montrer combien de temps tu as mis à envoyer la balle à ta cible à partir du moment où elle arrive dans ton gant en défense. Il peut te montrer ton temps jusqu'à la première base. Les équipes professionnelles utilisent souvent cet outil. Il t'aide à être à l'heure plus souvent dans tous les aspects, car le timing fait toute la différence dans un jeu qui se joue à quelques centimètres.",
+    "reminder": "Fais une séance de Royal timing aujourd'hui.",
+    "open": "Ouvrir Royal timing"
+  },
   "common": {
     "save": "Enregistrer",
     "cancel": "Annuler",
