@@ -4,3 +4,4 @@
 - Periodic reminders use promptDueRules calendar dates and fail visibly on source-read errors. Why: unavailable history is not a missing baseline or a new due date.
 - Due performance history and skill entitlement checks scope to the selected sport; photo/wellness and scout-grade records remain account-scoped where their schemas have no sport. Why: one sport's tests or subscription cannot suppress/unlock another sport's reminder, and missing columns must not be invented.
 - Royal timing reminders read canonical sport-scoped timing sessions behind plan_prompts_v2, on existing hitting days only. Why: no parallel completion store or invented training day.
+- Delaycam reminders use canonical hitting recording end dates, selected-sport hitting access and prescribed hitting days behind plan_prompts_v2. Why: neither another skill nor processing success defines using the delayed mirror.
