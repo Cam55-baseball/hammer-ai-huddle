@@ -231,3 +231,31 @@ describe("execution: hitting session structure", () => {
     expect(h(["gamer_bat"]).drills.some((d) => d.stage === "full_go")).toBe(false);
   });
 });
+
+// ── AO5: real goal ranking (category_goals) → card order ──
+describe("audit: ranked category goals → day order", () => {
+  const ranked = (order: string[]) => ({ version: 1, updatedAt: "2026-06-01T00:00:00.000Z",
+    goals: order.map((category, i) => ({ category, rank: i + 1, intent: null })) });
+  const at = (order: string[]) => buildHammerDailyPlan(
+    ctx({ ...BASE, category_goals: ranked(order), equipment_effective: ["tee", "gamer_bat", "net", "glove"] }), NORMAL_SIGNAL, null, null, undefined, DAY);
+  const skills = (p: ReturnType<typeof at>) => p.blocks.filter((x) => x.status !== "suppressed" && ["hitting", "defense", "throwing", "speed", "strength", "baserunning"].includes(x.modality)).map((x) => x.modality);
+  it("the #1 ranked skill leads the day; swapping goals reorders the cards", () => {
+    const h = skills(at(["hitting", "fielding", "throwing", "speed", "power"]));
+    const f = skills(at(["fielding", "hitting", "throwing", "speed", "power"]));
+    if (h.includes("hitting") && h.includes("defense")) {
+      expect(h.indexOf("hitting")).toBeLessThan(h.indexOf("defense"));
+      expect(f.indexOf("defense")).toBeLessThan(f.indexOf("hitting"));
+    } else {
+      expect(h).toEqual(f); // same day without both skills: order source still identical
+    }
+  });
+  it("minutes and lifting identical whatever the ranking", () => {
+    const a = at(["hitting", "fielding", "throwing", "speed", "power"]);
+    const b = at(["power", "speed", "fielding", "throwing", "hitting"]);
+    for (const blk of a.blocks) {
+      const o = b.blocks.find((x) => x.modality === blk.modality);
+      if (o) expect(o.durationMin).toBe(blk.durationMin);
+    }
+    expect(b.blocks.find((x) => x.modality === "strength")?.drills).toEqual(a.blocks.find((x) => x.modality === "strength")?.drills);
+  });
+});

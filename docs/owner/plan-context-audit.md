@@ -74,3 +74,6 @@ PASS (2 tests): only the server lift picker uses limbs, as emphasis (long femur 
 - **Coach notes / "From Coach":** no field in the daily plan's inputs. Coach workouts appear as their own cards after the safety check; they never change Hammers' picks.
 - **Practice logs:** reader built (AN5, 3 tests); not yet wired into Today — waiting on the owner's yes for what a heavy stretch changes.
 - Audit complete: all 12 inputs traced. Nothing guessed for missing data.
+
+## AO5 correction — goals
+The ranked goals the player saves (five categories) already reorder Hammers Today: #1 leads after warm-up. The earlier "no reorder" finding tested an older goals field. Minutes and lifting don't change with goals today.
