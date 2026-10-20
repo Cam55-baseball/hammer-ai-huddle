@@ -22,7 +22,7 @@
   - [x] Athlete testing-day notice opens read-only date/tests/status details and existing connections contact page; staff alone records results. No time, location or contact fields invented.
   - [ ] Durable owner answer save/readback and actual engine use, testing-day athlete phone proof, 84-day re-ask save/readback still pending. TEST consent was not changed to manufacture proof.
 - [ ] AR1: six eight-week cohorts with screenshots and fresh full suite after integration.
-  - [x] Full suite after catalog/planner integrations: 431 files / 3,428 tests passed (`/tmp/ar1-full-suite.log`); final subsequent UI changes have focused checks, final suite rerun below.
+  - [x] Final fresh full suite: 431 files / 3,429 tests passed (`/tmp/ar1-final-full-suite.log`); latest preview build OK. Intermediate added-test failures corrected (off-day copy assumption and syntax); corrected actual-builder + scope checks also passed 27/27.
   - [ ] Subscription-qualified six-cohort change/resolution screenshot acceptance remains open; existing sport/season builder runs are not that proof.
 
 # Owner priority pass — Oct 20, 14:43 UTC
