@@ -1,3 +1,11 @@
+# AP7 — Mixed signals rule (link d)
+
+**Ready to publish: NO.** Preview-only rule; no publish, cron, iOS, switch or data changes. Reminders still OFF, waiting on owner (AP6).
+
+- [x] Concrete sub-step: crossReference(category, signals) — video/games/practice signals for ONE category only. Two sources agree → raise priority + "Because your video and your games both show …". Conflict → "Mixed signals: … We're keeping the safer plan." Other categories ignored (no spill-over); good news or empty text changes nothing; it never picks drills.
+- [x] Proof: 4 tests PASS.
+- [ ] Not wired into Today yet (needs sport-scoped video signals; ledger has no sport field). No athlete-facing change.
+
 # AP6 — Reminder activation (staged attempt)
 
 **Ready to publish: NO.** No publish, cron, iOS, migration or redeploy. plan_prompts_v2 is OFF (same as before).
