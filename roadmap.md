@@ -1,3 +1,10 @@
+# AT2 — Continued approved work — Oct 20
+
+- [ ] Complete substantive coach-plan data/display gaps with canonical evidence and tests.
+- [ ] Investigate and close narrowly scoped TEST ADMIN visibility gaps without altering normal connection search.
+- [ ] Continue affected-role phone acceptance, exact cleanup, and fresh relevant tests.
+- [ ] Record remaining hosted proofs and future nightly run honestly; no publish/cron/iOS changes.
+
 # AT1 — Continued approved proofs — Oct 20, 23:03 UTC
 
 - [x] Strengthened extra-block availability to count lifting/speed too; regression passes. Actual-builder eight-week both-sport hitting-first adds 8 slots, second fielding leads shared days, skill baselines and lifting doses/status/duration/stop rules unchanged. Targeted 3 files / 24 tests PASS. Full subscription-scoped goal acceptance remains open.
