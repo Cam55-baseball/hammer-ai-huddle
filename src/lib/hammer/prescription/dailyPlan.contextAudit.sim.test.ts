@@ -170,3 +170,14 @@ describe("audit: goals → plan", () => {
     expect(order(b)).toEqual(order(a));
   });
 });
+
+// ── Audit: season phase → plan ──
+describe("audit: season phase → plan", () => {
+  const atPhase = (phase: string) => buildHammerDailyPlan(
+    ctx({ ...BASE, season_phase: phase, equipment_effective: ["tee", "gamer_bat"] }), NORMAL_SIGNAL, null, null, undefined, DAY);
+  it("off-season and in-season build different hitting work (warm-up title same on a speed day)", () => {
+    const off = atPhase("off"), inn = atPhase("in");
+    const t = (p: typeof off, m: string) => p.blocks.find((b) => b.modality === m);
+    expect(t(off, "hitting")?.drills.map((d) => d.name)).not.toEqual(t(inn, "hitting")?.drills.map((d) => d.name));
+  });
+});
