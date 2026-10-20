@@ -1,3 +1,13 @@
+# AS5 — Owner decisions build — Oct 20, 20:43 UTC
+
+**Ready to publish: NO.** Preview builds OK (20:42 UTC); full suite **450 files / 3,642 tests PASS** (`/tmp/as5-full-suite.log`).
+
+AS5 this run:
+- [x] Practice dose-reduction rule consolidated to one engine: `reducedSetsWithinFloor` in `practiceDoseAdjustment.ts` is now the single source of the owner ~30%/half-dose/whole-sets rule; the wired display-string path (`practicePlanContext.reduceDosageForPractice`) and the structured path (`adjustDoseForPractice`) both call it. New agreement test proves both paths produce identical set counts for 1–12 sets and that an explicit row minimum outranks the half-dose floor. 30 targeted tests pass.
+- [x] Delaycam cadence confirmed fully wired: `DelaycamReminder` itself reads the last 5 completed hitting analyses + fault findings and computes the 3-of-5 recurrence flag via `recurringHittingMechanics`; `delaycamWeeklyTarget` gives 2–3×/week when major flag OR top-three mechanics goal OR off-season, else weekly. Only the severe path stays open (no canonical severity field; not invented).
+- [ ] Hosted owner save/readback proof BLOCKED: the injected preview session is a plain player (no owner/admin role), so `owner_save_principle` correctly refused with 403 — the guard works, but the positive proof needs the owner account's session (mint requires approval, unavailable).
+- [ ] Remaining blockers unchanged: hosted TEST coach/athlete proofs need session-mint approval; minute-share wiring needs an owner decision on where weekly skill minutes live; server recheck judge fix needs a function redeploy (not authorized).
+
 # AS4 — Owner decisions build — Oct 20, 20:33 UTC
 
 **Ready to publish: NO.** Preview builds OK (20:32 UTC); targeted suite green.

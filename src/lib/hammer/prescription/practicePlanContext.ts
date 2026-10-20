@@ -1,5 +1,6 @@
 import type { DrillStep, PrescribedBlock } from './dailyPlan';
 import type { CategoryPracticeLoad } from './categoryPracticeLoad';
+import { reducedSetsWithinFloor } from './practiceDoseAdjustment';
 
 /**
  * Owner rule (Oct 20): after a heavy practice stretch, the next day's
@@ -12,7 +13,9 @@ export function reduceDosageForPractice(dosage: string): string {
   const m = /^(\d+)\s*(?:x|×)\s*(\d+)/i.exec(dosage);
   if (!m) return dosage;
   const sets = parseInt(m[1], 10);
-  const reduced = Math.max(Math.ceil(sets * 0.5), Math.round(sets * 0.7));
+  // Same owner rule as the structured path; display rows declare no explicit
+  // minimum, so the floor is half the prescribed sets.
+  const reduced = reducedSetsWithinFloor(sets, null);
   if (reduced >= sets) return dosage;
   return dosage.replace(/^(\d+)/, String(reduced));
 }
