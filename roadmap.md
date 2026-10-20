@@ -1,3 +1,10 @@
+# AT3 — Continued approved work — Oct 20
+
+- [ ] Prove day-84 ranking confirmation on the real TEST athlete phone screen with canonical save/readback and restore the original ranking.
+- [ ] Extend actual-builder eight-week acceptance across subscription/sport cohorts; preserve baseline blocks, caps, rest and lifting.
+- [ ] Audit dedicated TEST ADMIN exclusion without breaking deliberate demo-athlete discovery; implement only a safe scoped change if identified.
+- [ ] Run relevant checks and record actual remaining hosted proofs; no publish, cron or iOS changes; nightly run remains future.
+
 # AT2 — Continued approved work — Oct 20
 
 - [x] Coach saved reasons + last-seven-days snapshot view implemented via existing gated date RPC; same-sport only, no reconstructed missing days; player/date expansion isolation, release filtering, returned health redaction, failure and Need more data states covered.
