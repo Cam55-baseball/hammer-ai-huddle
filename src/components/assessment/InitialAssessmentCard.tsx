@@ -45,7 +45,7 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
       const [row, s2, vids, tests, prof] = await Promise.all([
         supabase.from("initial_assessments").select("*").eq("user_id", uid).maybeSingle(),
         supabase.from("tex_vision_s2_diagnostics").select("user_id", { count: "exact", head: true }).eq("user_id", uid).eq("sport", sport).not("completed_at", "is", null),
-        supabase.from("videos").select("module").eq("user_id", uid).eq("sport", sport).not("ai_analysis", "is", null).limit(200),
+        supabase.from("videos").select("module").eq("user_id", uid).eq("sport", sport).not("analysis_public", "is", null).limit(200),
         supabase.from("vault_performance_tests").select("user_id", { count: "exact", head: true }).eq("user_id", uid).eq("sport", sport),
         supabase.from("profiles").select("full_name,position,hammers_today_started_at").eq("id", uid).maybeSingle(),
       ]);
