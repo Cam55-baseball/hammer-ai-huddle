@@ -1,6 +1,7 @@
 # Owner additions — Oct 20, 03:27 UTC — coaches see the same context; full-go execution in every skill session
 - [ ] Coach "Hammers' plan for this player" (today/week work + Because, issue drills, summaries, ways to improve, what worked); no Development-tab duplication; coach notes and safe From Coach kept; scouts excluded.
 - [x] AL7 execution audit started (read-only sim, local plan): hitting has only one machine round — no flips/BP/live ABs; baseball pitching has no bullpen/live ABs; baserunning has no live jumps/steals. Details in docs/owner/plan-context-audit.md.
+- [x] AM3 goals simulation PASS (3 tests): goals never change minutes or lifting; finding — putting defense before hitting does not reorder cards.
 - [x] AM2 video-analysis simulation PASS (3 tests): planted hitting fault swaps exactly one hitting drill, same count/minutes; cleared fault rotates out; lifting identical.
 - [x] AM1 audit finished: fielding has no live fungo (in-season primers only); off-season hitting is dry swings + tee only; server plan authors no bullpen/BP/live work.
 - [ ] Build prep → issue drills → full-go → log for hitting, pitching, fielding/throwing, baserunning, softball equivalents; volumes by phase/schedule; throw rules + arm ledger; execution logged.
@@ -27,7 +28,7 @@
 | Readiness / check-ins | Recover-first day; server load cap | PASS AL4; number-format bug FIXED AL5 |
 | Pain / injury | Swaps/suppresses drills (e.g. knee → leg-protected baserunning) | PASS AL4 |
 | Coach notes / From Coach | Nothing | Not yet |
-| Goals | Card order, focus lines, legal-pick bias; never dose | Not yet |
+| Goals | Legal-pick bias/focus lines; never dose; swapping goal order does NOT reorder cards | PASS AM3 |
 | Limb proportions | Drill swaps and cues; never dose | Not yet |
 | Phase / schedule | Everything (warm-up, strength, skills, week) | Not yet |
 | Smart Week | Separate; ignores games, season, injury, subscription, goals, limbs, sport | — |
@@ -39,7 +40,7 @@
 - Built: athlete testing-day notice (AL1, read-only); low-readiness consistency fix (AL5).
 
 ## Simulation proofs
-- `src/lib/hammer/prescription/dailyPlan.contextAudit.sim.test.ts` 10 PASS (games, readiness, pain, video analyses; lifting identical). All 257 plan-engine tests PASS. Testing-day rule 4 PASS.
+- `src/lib/hammer/prescription/dailyPlan.contextAudit.sim.test.ts` 13 PASS (games, readiness, pain, video analyses, goals; lifting identical). All 257 plan-engine tests PASS. Testing-day rule 4 PASS.
 - Not done: 8-week six-cohort runs, phone "Because" screenshots, full suite this batch.
 
 ## Next (in order)

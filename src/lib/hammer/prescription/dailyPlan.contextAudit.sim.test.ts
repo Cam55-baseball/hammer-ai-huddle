@@ -148,3 +148,25 @@ describe("audit: video analyses → plan", () => {
     expect(s(withAnalysis(false))).toEqual(s(base.blocks));
   });
 });
+
+// ── Audit: goals → plan ──
+describe("audit: goals → plan", () => {
+  const withGoals = (g: string[]) => buildHammerDailyPlan(
+    ctx({ ...BASE, development_priorities: g, equipment_effective: ["tee", "gamer_bat"] }), NORMAL_SIGNAL, null, null, undefined, DAY);
+  const a = withGoals(["hitting", "defense"]);
+  const b = withGoals(["defense", "hitting"]);
+  it("goals never change dose: same modalities get the same minutes", () => {
+    for (const blk of a.blocks) {
+      const other = b.blocks.find((x) => x.modality === blk.modality);
+      if (other) expect(other.durationMin).toBe(blk.durationMin);
+    }
+  });
+  it("lifting is identical whatever the goals", () => {
+    const s = (p: typeof a) => p.blocks.find((x) => x.modality === "strength")?.drills;
+    expect(s(b)).toEqual(s(a));
+  });
+  it("finding: reordering the same two goals does not reorder cards today", () => {
+    const order = (p: typeof a) => p.blocks.filter((x) => x.status !== "suppressed").map((x) => x.modality);
+    expect(order(b)).toEqual(order(a));
+  });
+});
