@@ -123,6 +123,7 @@ describe('AT1: ranked weekly skill blocks through the actual builder, both sport
         });
         const base = buildHammerDailyPlan(make(), NORMAL_SIGNAL, null, null, undefined, today);
         const next = buildHammerDailyPlan(make(ranked(['fielding', 'hitting', 'throwing', 'speed', 'power'])), NORMAL_SIGNAL, null, null, undefined, today);
+        if (n === 0) console.debug('AT1 goal diagnostic', next.blocks.map(b => [b.modality, b.status, b.because]), next.weeklyTemplate.priorityDayOrder?.defense);
         baselineDefense += Number(base.microcycle.perModality.defense.scheduled);
         goalDefense += Number(next.microcycle.perModality.defense.scheduled);
         for (const modality of ['hitting', 'throwing', 'defense', 'baserunning'] as const) {
