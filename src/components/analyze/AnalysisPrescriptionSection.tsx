@@ -141,7 +141,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
     [snapshot],
   );
 
-  const { catalog, historyCatalog, circulation, log, markDone, userId } = useDrillCirculation();
+  const { catalog, historyCatalog, circulation, log, markDone, userId, ready, error: circulationError } = useDrillCirculation();
   const frozenKey = historyKey ? `rx.frozen.v1:${userId ?? "anon"}:${historyKey}` : null;
   const live = useMemo(
     () =>
@@ -161,6 +161,7 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
   // History stays intact: once a video's prescription is shown, the same drills
   // are shown for that video forever — even if a drill is later switched off.
   const matches = useMemo(() => {
+    if (!ready) return [];
     if (!frozenKey) return live;
     try {
       const raw = localStorage.getItem(frozenKey);
@@ -174,12 +175,12 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
       }
     } catch { /* storage unavailable — live list */ }
     return live;
-  }, [frozenKey, live, historyCatalog]);
+  }, [frozenKey, live, historyCatalog, ready]);
 
   const fallback = useMemo(
     // Maintenance work only when the clip genuinely had no faults.
-    () => (matches.length === 0 && !(faultKeys?.length) ? maintenanceDrills(module, sport) : []),
-    [matches.length, faultKeys, module, sport],
+    () => (ready && matches.length === 0 && !(faultKeys?.length) ? maintenanceDrills(module, sport) : []),
+    [matches.length, faultKeys, module, sport, ready],
   );
 
   // Record each drill served once per screen, so rotation can move on next time.
@@ -268,6 +269,8 @@ export function AnalysisPrescriptionSection({ module, sport, violations, faultKe
     </>
   );
 
+  if (circulationError) return <p role="alert" className="text-sm text-destructive">Couldn't check your drill choices. Try again later.</p>;
+  if (!ready) return <p role="status" className="text-sm text-muted-foreground">Checking your drill choices…</p>;
   if (embedded) return body;
 
   return (

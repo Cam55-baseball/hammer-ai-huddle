@@ -774,7 +774,7 @@ function HammerDailyPlanBody({
     // asked to stick from now on.
     const influencedBlocks = applyFaultPlanInfluence({
       blocks: base.blocks,
-      rankedFaults: accessiblePlanFaults(faultContext.isError ? [] : faultContext.data?.rankedFaults ?? [], modules, sportKey,
+      rankedFaults: accessiblePlanFaults(faultContext.isError || !drillCirculation.ready ? [] : faultContext.data?.rankedFaults ?? [], modules, sportKey,
         { clips: faultContext.isError ? [] : faultContext.data?.clips ?? [] }),
       signalScopes: faultContext.isError ? {} : faultContext.data?.signalScopes ?? {},
       sport: ctx.get<unknown>("sport_primary")?.value === "softball" ? "softball" : "baseball",
@@ -783,7 +783,7 @@ function HammerDailyPlanBody({
       circulation: drillCirculation.circulation,
     });
     return { ...base, blocks: applyAdjustments(influencedBlocks, planAdjust.adjustments) };
-  }, [rawPlan, cnsHigh, planAdjust.adjustments, faultContext.data, faultContext.isError, projectedAthlete.equipmentList, ctx, drillCirculation.catalog, drillCirculation.circulation, modules, sportKey]);
+  }, [rawPlan, cnsHigh, planAdjust.adjustments, faultContext.data, faultContext.isError, projectedAthlete.equipmentList, ctx, drillCirculation.catalog, drillCirculation.circulation, drillCirculation.ready, modules, sportKey]);
 
   const influencedDrillIds = useMemo(
     () => plan.blocks.flatMap((block) => block.drills)
@@ -865,6 +865,7 @@ function HammerDailyPlanBody({
         </ErrorBoundary>
         <TexVisionWork />
         {faultContext.isError && <p role="alert" className="text-sm text-destructive">Couldn't check your analysis history. No analysis drill changes were applied.</p>}
+        {drillCirculation.error && <p role="alert" className="text-sm text-destructive">Couldn't check your drill choices. No analysis drill changes were applied.</p>}
         {practiceLoadHistory.error && <p role="alert" className="text-sm text-destructive">Couldn't check your logged practice workload. Your saved plan has not been changed.</p>}
         <RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} />
         <DelaycamReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} offSeason={shortSeasonPhase(resolvedPhase) === 'off'} />
