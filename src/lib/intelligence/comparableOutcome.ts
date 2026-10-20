@@ -75,14 +75,12 @@ export function judgedOutcomeFromRecheck(row: {
   checked_at?: string | null;
   minimal_change?: number | null;
 }): ComparableOutcome {
-  let daysAfter: number | null = null;
-  if (row.followed_at && row.checked_at) {
-    const from = Date.parse(row.followed_at);
-    const to = Date.parse(row.checked_at);
-    if (Number.isFinite(from) && Number.isFinite(to) && to >= from) {
-      daysAfter = Math.round((to - from) / 86_400_000);
-    }
-  }
+  // The 2–4 week window must be verifiable; an unknown window is not comparable.
+  if (!row.followed_at || !row.checked_at) return "need_more_data";
+  const from = Date.parse(row.followed_at);
+  const to = Date.parse(row.checked_at);
+  if (!Number.isFinite(from) || !Number.isFinite(to) || to < from) return "need_more_data";
+  const daysAfter = Math.round((to - from) / 86_400_000);
   return judgeComparableOutcome({
     before: row.baseline_value,
     after: row.recheck_value,
