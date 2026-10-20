@@ -53,7 +53,7 @@ describe('practice history reaches the actual plan without guessed dose floors',
         if (block.modality === 'hitting' && block.status === 'ready') {
           expect(next?.because?.length).toBe((block.because?.length ?? 0) + 1);
           expect(next?.drills.some(row => row.stage === 'full_go')).toBe(true);
-          expect(next?.drills.at(-1)?.stage).toBe('log');
+          expect(next?.drills[next.drills.length - 1]?.stage).toBe('log');
           hittingDays++;
         } else expect(next).toEqual(block);
       }
