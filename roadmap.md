@@ -1,9 +1,13 @@
 # AT2 — Continued approved work — Oct 20
 
-- [ ] Complete substantive coach-plan data/display gaps with canonical evidence and tests.
-- [ ] Investigate and close narrowly scoped TEST ADMIN visibility gaps without altering normal connection search.
-- [ ] Continue affected-role phone acceptance, exact cleanup, and fresh relevant tests.
-- [ ] Record remaining hosted proofs and future nightly run honestly; no publish/cron/iOS changes.
+- [x] Coach saved reasons + last-seven-days snapshot view implemented via existing gated date RPC; same-sport only, no reconstructed missing days; player/date expansion isolation, release filtering, returned health redaction, failure and Need more data states covered.
+- [x] Real democoach/TEST athlete phone proof: 8 saved reasons, gated today plan, expanded/collapsed history with honest empty state, outcomes Need more data, no overflow/Game IQ. Exact TEST request snapshotted/ended/removed; passwords scrambled; Coach service stays active.
+- [x] Final actual-builder snapshot stages/doses/reasons + coach scope/revocation tests added: focused 5 files / 13 PASS. Full suite initial three contention timeouts independently rechecked 19 PASS; final bounded-concurrency suite **456 files / 3,665 PASS** (`/tmp/at2-final-full-suite.log`), preview build OK.
+- [ ] Dedicated TEST ADMIN universal visibility exclusion remains open after read-only audit; system marker cannot be broadened without breaking deliberate demo exact-email connections. No live change applied.
+- [ ] Positive saved multi-day hosted history, current evidence Because/execution, six-week summaries/practice ideas/assigned-org scope, measured Report Card/Vault save, execution/mixed-signals/testing-day and hosted six-cohort acceptance remain open.
+- [ ] Actual nightly outcome proof awaits Oct 21 04:30 UTC; still future. No publish/deploy/migration/cron/iOS changes.
+
+**Ready to publish: NO.** Evidence `docs/owner/at2-proof.md`, `/tmp/browser/at2/`, final suite log above.
 
 # AT1 — Continued approved proofs — Oct 20, 23:03 UTC
 
