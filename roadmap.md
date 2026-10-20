@@ -1,3 +1,11 @@
+# AR6 — Parallel owner priority pass — Oct 20, 17:06 UTC
+
+**Ready to publish: NO.** No live, cron or iOS changes; completed practice-card proof will not be repeated.
+
+- [ ] Strengthen real practice-load provenance and athlete-readable context without inventing floors or changing volume.
+- [ ] Advance existing execution and coach/learning paths in independent streams, implementing only source-supported changes.
+- [ ] Run targeted proofs and fresh full suite; record affected-player phone checks honestly and clean any exact TEST writes.
+
 # AR5 — Parallel owner priority pass — Oct 20, 16:57 UTC
 
 **Ready to publish: NO.** No publish/deploy/migration/switch/cron/iOS changes; completed practice-card proof is not repeated.
