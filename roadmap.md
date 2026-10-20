@@ -16,8 +16,9 @@ AS1 progress this run (supersedes matching AR8 rows below):
 - [x] Coach "Hammers' plan for this player" BUILT: athlete app saves the exact final plan snapshot after all overlays; `coach_athlete_plan` RPC answers only accepted coach / org-staff (is_coach_of), scouts denied, health lines omitted without health sharing; card on the coach Development tab. Migration 0083 applied (owner-named change). TEST coach phone proof pending.
 - [ ] Mixed signals evidence wiring (comparable game/practice/video reads into Today).
 - [ ] Owner questions → structured picks + drill weighting; hosted owner save/readback.
-- [ ] Hosted proofs: TEST coach section, day-84 re-ask, testing-day details, six-cohort screenshots.
-- [ ] Minute-share applied to real weekly rows; pitching live-execution phone proof.
+- [ ] Hosted proofs: TEST coach section, day-84 re-ask, testing-day details, six-cohort screenshots. BLOCKED: per-user session mints need owner approval, which is unavailable in this context (`lovable auth-session --user` refused). Verified instead live: RPC denial paths (non-coach → "denied", self without plan → "unavailable") and the Demo /today phone surface renders clean with no page errors.
+- [ ] Minute-share applied to real weekly rows. BLOCKED by design: no weekly skill-minute budget or per-category floors exist — daily block minutes are fixed per focus (12–30 min). Helper is built and tested; wiring it would require inventing floors, which the engine must not do. Needs an owner decision on where weekly minutes live.
+- [ ] Pitching live-execution phone proof. BLOCKED: needs a TEST athlete with a started plan (session mint unavailable). Simulation suite proves the blocks across cohorts (planSixCohort, contextAudit).
 
 # AR8 — Final batch pass — Oct 20, 17:27 UTC
 
