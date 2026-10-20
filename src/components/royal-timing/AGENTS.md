@@ -1,0 +1,1 @@
+- Intro, help and reminders render RoyalTimingExplanation using the same locale key. Why: owner wording must remain complete and consistent.

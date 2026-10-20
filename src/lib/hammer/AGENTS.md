@@ -3,3 +3,4 @@
 - New analysis reminders use analysisPromptRules and only explicit ready-block module routes, subscription and canonical clip dates; plan_prompts_v2 must resolve ON before reads/render. Why: a reminder cannot author a training day, infer pitching from arm care or run an unapproved cadence.
 - Periodic reminders use promptDueRules calendar dates and fail visibly on source-read errors. Why: unavailable history is not a missing baseline or a new due date.
 - Due performance history and skill entitlement checks scope to the selected sport; photo/wellness and scout-grade records remain account-scoped where their schemas have no sport. Why: one sport's tests or subscription cannot suppress/unlock another sport's reminder, and missing columns must not be invented.
+- Royal timing reminders read canonical sport-scoped timing sessions behind plan_prompts_v2, on existing hitting days only. Why: no parallel completion store or invented training day.

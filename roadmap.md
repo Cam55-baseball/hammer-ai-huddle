@@ -1,3 +1,13 @@
+# Owner wording — Oct 20, 04:33 UTC — Royal timing + queued reminder integration
+
+**Ready to publish: NO.** Preview-only; no publish, backend redeploy, cron, iOS or switch-mode changes.
+
+- [x] Record the owner's exact Royal timing explanation; English unchanged, complete translations in en/es/fr/de/ja/zh/nl/ko. Shared explanation in reminder, module intro, help and purchase-gate description.
+- [x] Next queued concrete sub-step: Royal timing reminder reads canonical sport-scoped sessions, follows existing 14-day rule, requires an already-prescribed hitting day, subscription and plan_prompts_v2. No invented history or extra session; read errors visible.
+- [ ] Verify reminder and intro on an iPhone-size screen; distinguish isolated layout proof from affected-player end-to-end proof.
+- [ ] Run relevant cadence tests and check current preview errors.
+- Remaining queue unchanged: Delaycam/analysis adapters and switch activation; links a–e; execution remainder; coach section; owner questions; weekly goal minute share; six-cohort real-plan simulations and phone proofs.
+
 # AO7 — Oct 20, 04:13 UTC — batch proof per item (AN9–AO7)
 
 **Ready to publish: NO.** No publish, deploy, migration, cron or iOS change this batch; all preview-only. 395 plan/prescription checks PASS (45 files).
