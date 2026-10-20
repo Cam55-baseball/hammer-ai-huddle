@@ -21,7 +21,7 @@ export function PracticeLogPromptCard() {
     queryFn: async () => {
       if (!user) return [];
       const { data, error } = await supabase.from("scheduled_practice_sessions")
-        .select("id,scheduled_date,status,recurring_active,recurring_days,sport,session_module,title")
+        .select("id,scheduled_date,status,recurring_active,recurring_days,sport,session_module,title,requires_approval")
         .eq("user_id", user.id).eq("sport", sport)
         .or(`scheduled_date.eq.${today},recurring_active.eq.true`).limit(200);
       if (error) throw error;

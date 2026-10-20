@@ -13,6 +13,8 @@ import { S2CognitionDiagnostics } from "@/components/tex-vision/S2CognitionDiagn
 import { VaultPerformanceTestCard } from "@/components/vault/VaultPerformanceTestCard";
 import { useVault } from "@/hooks/useVault";
 import { AssessmentMode } from "./AssessmentMode";
+import { AssessmentProfileReview } from "./AssessmentProfileReview";
+import { parseSeasonStats } from "@/lib/assessment/seasonStats";
 import { assessmentSteps, requiredAnalyses, type AnalysisModule, type StepId, type StepProgress } from "@/lib/assessment/initialAssessment";
 const EmbeddedAnalysis = lazy(() => import("@/pages/AnalyzeVideo"));
 const MOVES = [
@@ -48,7 +50,7 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
         supabase.from("tex_vision_s2_diagnostics").select("user_id", { count: "exact", head: true }).eq("user_id", uid).eq("sport", sport).not("completed_at", "is", null),
         supabase.from("videos").select("module").eq("user_id", uid).eq("sport", sport).not("analysis_public", "is", null).limit(200),
         supabase.from("vault_performance_tests").select("user_id", { count: "exact", head: true }).eq("user_id", uid).eq("sport", sport),
-        supabase.from("profiles").select("full_name,position,hammers_today_started_at").eq("id", uid).maybeSingle(),
+        supabase.from("profiles").select("full_name,position,hammers_today_started_at,throwing_hand,batting_side,date_of_birth").eq("id", uid).maybeSingle(),
       ]);
       for (const result of [row, s2, vids, tests, prof]) if (result.error) throw result.error;
       return { row: row.data, s2: (s2.count ?? 0) > 0, analyses: [...new Set((vids.data ?? []).map(v => v.module))] as AnalysisModule[], tests: (tests.count ?? 0) > 0, profile: prof.data };
@@ -92,15 +94,21 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
   const count = Object.values(steps).filter(s => s === "done").length;
   const navigateStep = (id: StepId) => { if (steps[id] === "locked") return; setAnalysisModule(null); setStep(id); void save({ current_step: id }); };
   const record = async (state: "done" | "skipped") => {
+    if (saving) return;
     const at = new Date().toISOString();
     const patch: Record<string, unknown> = {};
+    const seasonStats = parseSeasonStats(stats);
+    if (state === "done" && step === 2 && !seasonStats) {
+      setSaveError("Use zero or a positive number, or leave the answer blank.");
+      return;
+    }
     if (state === "done" && step === 1) {
       const { error } = await supabase.from("profiles").update({ full_name: profile.full_name || null, position: profile.position || null }).eq("id", user.id);
       if (error) { setSaveError("Couldn't save your profile. Try again."); return; }
     }
     if (step === 2) {
       if (state === "skipped") patch.last_season_skipped_at = at;
-      else { patch.last_season_saved_at = at; patch.last_season_stats = Object.fromEntries(Object.entries(stats).filter(([,v]) => v !== "").map(([k,v]) => [k, Number(v)])); }
+      else { patch.last_season_saved_at = at; patch.last_season_stats = seasonStats; }
     }
     const anyPain = MOVES.some(m => answers[m.key] === "pain");
     if (step === 3 && anyPain) patch.pain_flag = true;
@@ -125,12 +133,12 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
       <Button onClick={() => setOpen(true)}>Continue<ArrowRight className="ml-2 h-4 w-4" /></Button>
     </Card>
     <AssessmentMode open={open} onClose={close} step={step} steps={steps} busy={saving} error={saveError} onNavigate={navigateStep} onRecord={state => { void record(state); }}>
-      {step === 1 && <div className="space-y-5">{(["full_name", "position"] as const).map(key => <div key={key} className="space-y-2"><Label htmlFor={`assessment-${key}`}>{key === "full_name" ? "Your name" : "Position"}</Label><Input id={`assessment-${key}`} value={profile[key]} onChange={e => setProfile({ ...profile, [key]: e.target.value })} /></div>)}</div>}
+      {step === 1 && <AssessmentProfileReview profile={profile} onChange={setProfile} />}
       {step === 2 && <div className="space-y-5"><p className="text-sm text-muted-foreground">Player-reported · last season. Leave anything you don't know blank.</p>{[["games", "Games played"],["at_bats", "At-bats"],["hits", "Hits"],["innings_pitched", "Innings pitched"]].map(([key,label]) => <div key={key} className="space-y-2"><Label htmlFor={`assessment-${key}`}>{label}</Label><Input id={`assessment-${key}`} type="number" min="0" step="any" value={stats[key] ?? ""} onChange={e => setStats({ ...stats, [key]: e.target.value })} /></div>)}</div>}
       {step === 3 && <div className="space-y-6"><p className="text-sm text-muted-foreground">Move slowly. Stop if it hurts.</p>{MOVES.map(m => <div key={m.key} className="space-y-3"><p className="font-medium">{m.label}</p><div className="flex flex-wrap gap-2">{(["easy", "hard", "pain"] as Answer[]).map(a => <Button key={a} variant={answers[m.key] === a ? "default" : "outline"} onClick={() => { setAnswers({ ...answers, [m.key]: a }); if (a === "pain") setPainOpen(true); }}>{a === "easy" ? "Easy" : a === "hard" ? "Hard / tight" : "It hurt"}</Button>)}</div></div>)}</div>}
       {step === 4 && <S2CognitionDiagnostics sport={sport} embedded onSaved={() => { void qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] }); }} />}
-      {step === 5 && <div className="space-y-5"><div className="flex flex-wrap gap-3">{need.map(module => <Button key={module} variant={analysisModule === module ? "default" : "outline"} onClick={() => setAnalysisModule(module)}>Record {module}</Button>)}</div>{!need.length && <p className="text-sm text-muted-foreground">No analysis modules are included in this sport's subscription.</p>}{analysisModule && <Suspense fallback={<p>Opening your analysis…</p>}><EmbeddedAnalysis key={`${sport}-${analysisModule}`} assessment={{ module: analysisModule, sport, onDone: () => setAnalysisModule(null) }} /></Suspense>}</div>}
-      {step === 6 && <VaultPerformanceTestCard tests={vault.performanceTests.filter(t => t.sport === sport)} subscribedModules={need} sport={sport} autoOpen onSave={(type, results, sides) => vault.savePerformanceTest(type, results, sides, sport)} />}
+      {step === 5 && <div className="space-y-5"><div className="flex flex-wrap gap-3">{need.map(module => <Button key={module} variant={analysisModule === module ? "default" : "outline"} onClick={() => setAnalysisModule(module)}>Record {module}</Button>)}</div>{!need.length && <p className="text-sm text-muted-foreground">No analysis modules are included in this sport's subscription.</p>}{analysisModule && <Suspense fallback={<p>Opening your analysis…</p>}><EmbeddedAnalysis key={`${sport}-${analysisModule}`} assessment={{ module: analysisModule, sport, onDone: () => { setAnalysisModule(null); void qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] }); } }} /></Suspense>}</div>}
+      {step === 6 && <VaultPerformanceTestCard tests={vault.performanceTests.filter(t => t.sport === sport)} subscribedModules={need} sport={sport} userProfile={{ throwing_hand: data.profile?.throwing_hand ?? undefined, batting_side: data.profile?.batting_side ?? undefined, primary_position: data.profile?.position ?? undefined, date_of_birth: data.profile?.date_of_birth ?? undefined }} autoOpen onSave={async (type, results, sides) => { const result = await vault.savePerformanceTest(type, results, sides, sport); if (result.success) await qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] }); return result; }} />}
     </AssessmentMode>
     <ReportInjuryDialog assessment open={painOpen} onOpenChange={setPainOpen} />
   </>;
