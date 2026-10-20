@@ -22,7 +22,7 @@ export function GameIqLock({ children }: { children: ReactNode }) {
   if (!allowed) return <Navigate to="/dashboard" replace />;
   return (
     <>
-      {internal && <div className="fixed top-2 right-2 z-50"><InternalLabel /></div>}
+      {internal && <div className="flex justify-end px-4 py-2 pt-16"><InternalLabel /></div>}
       {children}
     </>
   );

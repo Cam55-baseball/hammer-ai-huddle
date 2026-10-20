@@ -66,4 +66,18 @@ describe('weekly goal blocks — owner replacement, both sports and six cohorts 
     expect(weeklyGoalBlocks(template, { hitting: 3 }, p, 'SS', included).template).toBe(template);
     expect(weeklyGoalBlocks(template, { defense: 2 }, projection('baseball', order), 'SS', new Set(['throwing'])).targets.defense).toBe(2);
   });
+  it('counts existing lift and sprint days against weekly availability before adding a skill block', () => {
+    const p = projection('baseball', order, { weekly_availability_days: 3 });
+    const original = resolveWeeklyTemplate(p);
+    const template = { ...original, perModality: { ...original.perModality,
+      defense: [1, 2, 3] as const, hitting: [1, 2, 3] as const,
+      strength: [4] as const, speed: [5] as const },
+      priorityDayOrder: { ...original.priorityDayOrder, defense: [1, 2, 3] as const, hitting: [1, 2, 3] as const } };
+    const baseline = { defense: 2, hitting: 3 };
+    const skillOnly = weeklyGoalBlocks(template, baseline, p, 'SS', new Set(['defense', 'hitting']));
+    expect(skillOnly.targets.defense).toBe(3);
+    const fullWeek = weeklyGoalBlocks(template, baseline, p, 'SS', new Set(['defense', 'hitting', 'strength', 'speed']));
+    expect(fullWeek.targets).toEqual(baseline);
+    expect(fullWeek.template).toBe(template);
+  });
 });

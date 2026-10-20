@@ -109,3 +109,39 @@ describe('AR4: six subscription-qualified eight-week actual-builder cohorts (not
     });
   }
 });
+
+describe('AT1: ranked weekly skill blocks through the actual builder, both sports over eight weeks', () => {
+  for (const sport of ['baseball', 'softball']) {
+    it(`${sport}: changing top goal changes scheduled blocks and second-goal slots without changing lifting`, () => {
+      const ranked = (order: string[]) => ({ version: 1, updatedAt: '2026-10-20',
+        goals: order.map((category, i) => ({ category, rank: i + 1, intent: null })) });
+      let baselineHitting = 0, goalHitting = 0, sharedFieldingFirst = 0;
+      for (let n = 0; n < 56; n++) {
+        const today = new Date(2026, 5, 7 + n);
+        const make = (goals?: unknown) => context(sport, 'SS', 'off', {
+          lifecycle_band: 'adult', ...(goals ? { category_goals: goals } : {}),
+        });
+        const base = buildHammerDailyPlan(make(), NORMAL_SIGNAL, null, null, undefined, today);
+        const next = buildHammerDailyPlan(make(ranked(['hitting', 'fielding', 'throwing', 'speed', 'power'])), NORMAL_SIGNAL, null, null, undefined, today);
+        baselineHitting += Number(base.microcycle.perModality.hitting.scheduled);
+        goalHitting += Number(next.microcycle.perModality.hitting.scheduled);
+        for (const modality of ['hitting', 'throwing', 'defense', 'baserunning'] as const) {
+          if (base.microcycle.perModality[modality].scheduled) expect(next.microcycle.perModality[modality].scheduled).toBe(true);
+        }
+        const beforeLift = base.blocks.find(b => b.modality === 'strength');
+        const afterLift = next.blocks.find(b => b.modality === 'strength');
+        expect(afterLift?.drills).toEqual(beforeLift?.drills);
+        expect(afterLift?.durationMin).toBe(beforeLift?.durationMin);
+        expect(afterLift?.status).toBe(beforeLift?.status);
+        expect(afterLift?.stopRules).toEqual(beforeLift?.stopRules);
+        expect(next.microcycle.perModality.strength).toEqual(base.microcycle.perModality.strength);
+        const skills = next.blocks.filter(b => b.status === 'ready' && ['hitting', 'defense', 'throwing', 'baserunning'].includes(b.modality));
+        if (skills.some(b => b.modality === 'defense') && skills.length > 1) {
+          expect(skills[0].modality).toBe('defense'); sharedFieldingFirst++;
+        }
+      }
+      expect(goalHitting - baselineHitting).toBe(8);
+      expect(sharedFieldingFirst).toBeGreaterThan(0);
+    });
+  }
+});
