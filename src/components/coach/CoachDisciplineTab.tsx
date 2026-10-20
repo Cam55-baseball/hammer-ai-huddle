@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { practiceLogging } from "@/lib/discipline/practiceLogging";
+import { practiceLogging, type PracticeLog } from "@/lib/discipline/practiceLogging";
 import { completion, currentStreak, missedDays, windowDays, loggingConsistency, adherenceLinks, type DayRecord } from "@/lib/discipline/discipline";
 
 export function CoachDisciplineTab({ athleteId }: { athleteId: string }) {
@@ -26,13 +26,17 @@ export function CoachDisciplineTab({ athleteId }: { athleteId: string }) {
         if (access.error) throw access.error;
         if (!access.data) return null;
       }
-      const logs = await supabase.from("performance_sessions")
-        .select("id,session_date,session_type,deleted_at")
-        .eq("user_id", athleteId).gte("session_date", data.from).lte("session_date", data.to)
-        .in("session_type", ["solo_work", "team_session", "lesson", "live_abs"]).is("deleted_at", null)
-        .order("session_date", { ascending: true });
-      if (logs.error) throw logs.error;
-      return logs.data;
+      const all: PracticeLog[] = [];
+      for (let offset = 0; ; offset += 1000) {
+        const logs = await supabase.from("performance_sessions")
+          .select("id,session_date,session_type,deleted_at")
+          .eq("user_id", athleteId).gte("session_date", data.from).lte("session_date", data.to)
+          .in("session_type", ["solo_work", "team_session", "lesson", "live_abs"]).is("deleted_at", null)
+          .order("session_date", { ascending: true }).order("id", { ascending: true }).range(offset, offset + 999);
+        if (logs.error) throw logs.error;
+        all.push(...logs.data);
+        if (logs.data.length < 1000) return all;
+      }
     },
   });
   const trends = useQuery({
