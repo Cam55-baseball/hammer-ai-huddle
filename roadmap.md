@@ -1,11 +1,19 @@
 # AS6 — Owner unblock decisions — Oct 20, 22:34 UTC
 
 These decisions supersede older blocker descriptions and minute-share/severity requests below.
-- [ ] Weekly skill blocks: preserve ladder baseline; one extra top-goal block when legal; second goal first on shared days; explicit Because when caps prevent the extra; eight-week six-cohort comparison.
-- [ ] Redeploy ONLY intel-recheck-job with comparable evidence judge; verify existing nightly run without changing cron.
-- [ ] TEST real-form phone proofs: democoach, demoorg, players; one hidden/stat-excluded TEST ADMIN for admin-only surfaces; scramble every proof password; never touch real owner.
+- [x] Weekly skill block implementation + eight-week scheduler comparison (8 tests): actual-builder integration, baseline preserved, top extra within existing phase days, second first on shared skill days, lifting unchanged. Full hosted six-cohort and future-cap acceptance still open.
+- [x] Redeploy ONLY intel-recheck-job with shared comparable judge and job-local provenance adapter; live deployment succeeded, invalid-token call 401. No other deployment.
+- [ ] Verify next existing nightly run (Oct 21 04:30 UTC); it has not happened yet. Current followed/pending advice count zero; no invented outcome proof.
+- [x] TEST phone form sign-ins proved: college athlete, democoach, demoorg, one clearly named/stat-excluded TEST ADMIN; passwords scrambled, real owner untouched.
+- [ ] Universal TEST ADMIN list hiding: exact-email search exception / staff-list paths not yet closed; no visibility guarantee claimed.
 - [x] Delaycam severity path explicitly skipped by owner; recurrence/mechanics/off-season cadence retained.
-- [ ] Finish accepted coach plan, execution, mixed signals, aged day-84 and testing details proofs; fresh full suite; honest final status.
+- [x] Day-84 dashboard phone proof: aged valid TEST order, Keep my order saved/read back, prompt disappeared; original ranking restored.
+- [x] TEST ADMIN console version 1 → version 2 hosted save/readback phone proof; proof principle parked inactive, immutable history retained.
+- [ ] Accepted coach/org positive phone plan: actual democoach plan is canceled, demoorg plan is none; no gate bypass. Exact proof connections ended/removed. Restore authorized TEST service access through its real subscription path, then finish.
+- [ ] Finish execution, mixed-signal, testing-day and hosted six-cohort screenshots; Game IQ/Report Card internal + Vault review queue TEST ADMIN proofs.
+- [x] Fresh full suite **452 files / 3,653 tests PASS**; preview build OK. Evidence: `docs/owner/as6-unblock-proof.md`, `/tmp/as6-full-suite.log`, `/tmp/browser/as6/`.
+
+**Ready to publish: NO.** No publish/cron/iOS changes. Sign-in and minute definitions are no longer blockers; remaining acceptance and tonight's not-yet-run check are not complete.
 
 # AS5 — Owner decisions build — Oct 20, 20:43 UTC
 

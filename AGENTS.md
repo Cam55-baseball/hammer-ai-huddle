@@ -25,7 +25,7 @@
 - Staff plan purchase eligibility lives only in `supabase/functions/_shared/staffEligibility.ts` (used by create-staff-checkout and tests). Why: one rule for age, coach role and org-admin status.
 
 - Staff sign-up: `/get-started` → `/signup/:role` (adults, `src/lib/auth/staffSignup.ts`); approvals reuse existing queues. Why: one approval system.
-- Advice reads never await rechecks; show read failures. Why: failure is not empty.
+- Shared outcome arithmetic serves app/job; reads never await rechecks. Why: one judge, visible failures.
 - Weekly goals use microcycle blocks, never minutes or lifting. Read scoped rules. Why: baseline and safety win.
 
 - Game IQ skips training-session gates, not subscriptions. Why: games are not training.
