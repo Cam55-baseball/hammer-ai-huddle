@@ -91,6 +91,18 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
           ))}
         </ul>
       )}
+      {outcomesQuery.data?.state === "ok" && outcomesQuery.data.rows.length > 0 && (
+        <div className="space-y-1 border-t border-border pt-3">
+          <h4 className="text-xs font-semibold">What worked lately</h4>
+          <ul className="space-y-1">
+            {outcomesQuery.data.rows.map((o, i) => (
+              <li key={`${o.area}-${i}`} className="text-xs text-muted-foreground">
+                {o.doThis} ({o.area}) — {o.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </section>
   );
 }
