@@ -9,10 +9,13 @@ describe("calendar practice prompts", () => {
   it("another sport cannot create a prompt", () => expect(practicesDueToday([row], "2026-10-20", "softball", ["hitting"])).toEqual([]));
   it("unavailable modules cannot create a prompt", () => expect(practicesDueToday([row], "2026-10-20", "baseball", ["pitching"])).toEqual([]));
   it("pending approval never prompts a player to start", () => {
-    expect(practicesDueToday([{ ...row, requires_approval: true, status: "pending" }], "2026-10-20", "baseball", ["hitting"])).toEqual([]);
+    expect(practicesDueToday([{ ...row, requires_approval: true, status: "pending_approval" }], "2026-10-20", "baseball", ["hitting"])).toEqual([]);
   });
   it("approved practice may appear", () => {
-    expect(practicesDueToday([{ ...row, requires_approval: true, status: "approved" }], "2026-10-20", "baseball", ["hitting"])).toHaveLength(1);
+    expect(practicesDueToday([{ ...row, requires_approval: true, status: "scheduled" }], "2026-10-20", "baseball", ["hitting"])).toHaveLength(1);
+  });
+  it("declined practice never appears", () => {
+    expect(practicesDueToday([{ ...row, status: "rejected" }], "2026-10-20", "baseball", ["hitting"])).toEqual([]);
   });
   it("a completed recurring occurrence does not cancel later weeks", () => {
     const recurring = { ...row, status: "completed", recurring_active: true, recurring_days: [2] };
