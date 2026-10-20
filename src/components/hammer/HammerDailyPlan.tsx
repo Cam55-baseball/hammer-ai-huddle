@@ -114,6 +114,8 @@ import { AnalysisRecordingPrompts } from "@/components/hammer/AnalysisRecordingP
 import { analysisGoalOrder } from "@/lib/hammer/analysisGoalOrder";
 import { hittingMechanicsGoal } from "@/lib/hammer/goals/mechanicsGoal";
 import { planSnapshotPayload, savePlanSnapshot } from "@/lib/hammer/planSnapshot";
+import { categorySignalEvidence } from "@/lib/hammer/prescription/categorySignalEvidence";
+import { crossReference } from "@/lib/hammer/prescription/mixedSignals";
 import { useCategoryPracticeLoad } from '@/hooks/useCategoryPracticeLoad';
 import { RoyalTimingReminder } from "@/components/hammer/RoyalTimingReminder";
 import { DelaycamReminder } from "@/components/hammer/DelaycamReminder";
@@ -784,8 +786,23 @@ function HammerDailyPlanBody({
       catalog: drillCirculation.catalog,
       circulation: drillCirculation.circulation,
     });
-    return { ...base, blocks: applyAdjustments(influencedBlocks, planAdjust.adjustments) };
-  }, [rawPlan, cnsHigh, planAdjust.adjustments, faultContext.data, faultContext.isError, projectedAthlete.equipmentList, ctx, drillCirculation.catalog, drillCirculation.circulation, drillCirculation.ready, modules, sportKey]);
+    const adjusted = applyAdjustments(influencedBlocks, planAdjust.adjustments);
+    // Mixed signals (owner rule): when two real sources disagree about a
+    // category, say so on that category's card and keep the safer plan.
+    const signals = categorySignalEvidence(
+      faultContext.isError ? [] : faultContext.data?.clips ?? [],
+      { whiffPct: gpForPlan.whiffPct, chasePct: gpForPlan.chasePct, miscueClusters: gpForPlan.miscueClusters },
+    );
+    const withMixed = adjusted.map((block) => {
+      if (block.status !== "ready") return block;
+      const category = block.modality === "hitting" ? "hitting" : block.modality === "defense" ? "fielding" : null;
+      if (!category) return block;
+      const xr = crossReference(category, signals);
+      if (xr.kind !== "mixed" || block.because.includes(xr.because)) return block;
+      return { ...block, because: [...block.because, xr.because] };
+    });
+    return { ...base, blocks: withMixed };
+  }, [rawPlan, cnsHigh, planAdjust.adjustments, faultContext.data, faultContext.isError, projectedAthlete.equipmentList, ctx, drillCirculation.catalog, drillCirculation.circulation, drillCirculation.ready, modules, sportKey, gpForPlan]);
 
   const influencedDrillIds = useMemo(
     () => plan.blocks.flatMap((block) => block.drills)
