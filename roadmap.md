@@ -1,3 +1,12 @@
+# AQ3 — TEST-player Today reminder check
+
+**Ready to publish: NO.** No publish, cron, iOS or code changes. plan_prompts_v2 back OFF.
+
+- [x] As TEST college player (API sign-in, 390×844): skipped remaining assessment steps through the app; Hammers Today plan shows, including a Hitting card and Throwing.
+- [x] TEST player has no Royal timing, Delaycam or saved videos, so all three reminders should be due.
+- [ ] FAIL: none of the three reminder cards appears, and none of their history reads runs, so something upstream (switch, subscription or "hitting today" check) stays false. Cause not yet found. Also seen: one 400 error reading scheduled practice sessions.
+- [ ] Next: find and fix the cause, re-check on phone, then switch ON. TEST player's skipped assessment is test data (kept so the plan can show).
+
 # AQ2 — TEST-player sign-in + reminder phone check
 
 **Ready to publish: NO.** No publish, cron, iOS or code changes. plan_prompts_v2 back OFF.
