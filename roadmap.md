@@ -1,3 +1,12 @@
+# AP6 — Reminder activation (staged attempt)
+
+**Ready to publish: NO.** No publish, cron, iOS, migration or redeploy. plan_prompts_v2 is OFF (same as before).
+
+- [x] Snapshot before change: mode off, empty allowlist, created 2026-10-20 01:43 UTC.
+- [x] Staged step: set plan_prompts_v2 to pilot for the TEST college player only (narrower than the owner-approved ON), to phone-prove the three reminder cards on a real Today before turning it on for everyone.
+- [ ] Phone proof BLOCKED: signing the preview in as the TEST player needs an approval this run can't get; owner-approved API sign-in covers democoach/demoorg only. Switch returned to off with empty allowlist right away; no player saw anything.
+- [ ] Needs owner: approve signing in as the TEST college player (same API password method as democoach), or say to switch ON for everyone without that phone proof.
+
 # AP5 — Delaycam mechanics inputs (audit)
 
 **Ready to publish: NO.** No app, publish, cron, iOS, migration or redeploy changes; reminders remain OFF.
