@@ -1,3 +1,36 @@
+# AL6 — Oct 20, 03:24 UTC — plan-context batch status
+
+**Ready to publish: NO.** Context-unity answer: **PARTLY — not yet one context-aware system.** No publish, deploy, migration, cron or iOS change in AL1–AL6; all changes preview-only.
+
+## Trace audit findings (full table: docs/owner/plan-context-audit.md)
+| Input | What it changes in Hammers Today today | Simulated? |
+|---|---|---|
+| Video analysis issues | One hitting/throwing drill swap with its usual dose; server biases legal picks | Not yet |
+| Video analysis scores | Nothing (correct: no estimates) | — |
+| Game logs/stats | Card order + one cue line only (chase/whiff 7 days, fielding errors); never drills or dose; thin samples ignored; strikeout rate dropped | PASS AL3 |
+| Practice logs | Nothing in Today (Smart Week only) | Not yet |
+| Tests / PBs | Nothing in Today; strength awards fetched, unused | Not yet |
+| Readiness / check-ins | Recover-first day; server load cap | PASS AL4; number-format bug FIXED AL5 |
+| Pain / injury | Swaps/suppresses drills (e.g. knee → leg-protected baserunning) | PASS AL4 |
+| Coach notes / From Coach | Nothing | Not yet |
+| Goals | Card order, focus lines, legal-pick bias; never dose | Not yet |
+| Limb proportions | Drill swaps and cues; never dose | Not yet |
+| Phase / schedule | Everything (warm-up, strength, skills, week) | Not yet |
+| Smart Week | Separate; ignores games, season, injury, subscription, goals, limbs, sport | — |
+
+**Per subscription:** the daily plan itself takes no subscription; differences come from access (Base Stealer: 5Tool yes, Golden 2Way except start/primer/flush days, Complete Pitcher no) and server bat-speed/velocity rules. **Per sport:** baseball/softball switch the warm-up, throwing and defense drill libraries; Smart Week receives no sport. Simulations so far are baseball 5Tool-style only — **six-cohort coverage not done.**
+
+## Links built
+- None of the owner's links a–e (analysis→issue-tagged drills, games→drill choice with "early read", practice→workload, mixed signals, "Because" lines + learning tracking) are built yet.
+- Built: athlete testing-day notice (AL1, read-only); low-readiness consistency fix (AL5).
+
+## Simulation proofs
+- `src/lib/hammer/prescription/dailyPlan.contextAudit.sim.test.ts` 7 PASS (games, readiness, pain; lifting identical). All 257 plan-engine tests PASS. Testing-day rule 4 PASS.
+- Not done: 8-week six-cohort runs, phone "Because" screenshots, full suite this batch.
+
+## Next (in order)
+1. Simulate remaining rows. 2. Build links a–e under existing dose/rest/phase/equipment rules, lifting unchanged. 3. Six 8-week cohorts + phone proofs. Owner-blocked: cadence confirmation (plan_prompts_v2 OFF), TEST coach/organization session.
+
 # Owner context-unity request — Oct 20, 03:12 UTC — queued after assessment/prompts
 
 **Ready to publish: NO. Context-unity answer: NOT YET PROVEN.** Finish the open assessment/prompt work below first; then perform a read-only input→plan audit before changing plan behavior. Backend redeploys authorized for this request only; no publish, cron or iOS changes. Existing lifting scheme, safety/rest/phase/equipment/subscription rules remain unchanged; no invented measurements or faults.
