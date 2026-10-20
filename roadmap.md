@@ -6,7 +6,7 @@
 |---|---|---|
 | Assessment mode | AK1–AK7: six-step mode, step-5 buttons from the subscription, opens after payment, X + guard card, completion; six phone proofs at 390×844; full suite 406 files / 3,170 tests | Done (preview) |
 | Prompts + cadence table | Audit in docs/owner/plan-prompts-audit.md; game/practice cards built; cadence table below, plan_prompts_v2 OFF | Waiting on owner to confirm cadences |
-| Plan-context audit | Trace in docs/owner/plan-context-audit.md; 14 simulation checks PASS (games, readiness, pain, video analyses, goals, season); readiness bug fixed (AL5) | Partial: practice logs, tests/PBs, coach notes, limb proportions not simulated |
+| Plan-context audit | Trace in docs/owner/plan-context-audit.md; 14 simulation checks PASS (games, readiness, pain, video analyses, goals, season); readiness bug fixed (AL5) | Partial: practice logs, tests/PBs, coach notes not simulated (limbs PASS AM5) |
 | Links a–e | None built (issue-tagged drills, games→drills, practice→workload, mixed signals, Because lines) | Not started |
 | Coach section | Not built — depends on links a–e | Not started; needs TEST coach + org admin sign-in approval |
 | Execution blocks | Audit done (AL7/AM1): full-go work missing or partial in every skill session | Fixes not started |
@@ -16,6 +16,7 @@ Findings this batch: analysis only changes hitting/throwing (never pitching, fie
 # Owner additions — Oct 20, 03:27 UTC — coaches see the same context; full-go execution in every skill session
 - [ ] Coach "Hammers' plan for this player" (today/week work + Because, issue drills, summaries, ways to improve, what worked); no Development-tab duplication; coach notes and safe From Coach kept; scouts excluded.
 - [x] AL7 execution audit started (read-only sim, local plan): hitting has only one machine round — no flips/BP/live ABs; baseball pitching has no bullpen/live ABs; baserunning has no live jumps/steals. Details in docs/owner/plan-context-audit.md.
+- [x] AM5 limb-proportions simulation PASS (2 tests). Owner Oct 20 03:38: TEST coach/org sign-ins approved via API password sign-in; goal-order proposal sent, awaiting yes.
 - [x] AM4 season simulation PASS: off vs in season changes hitting drills; speed-day warm-up unchanged.
 - [x] AM3 goals simulation PASS (3 tests): goals never change minutes or lifting; finding — putting defense before hitting does not reorder cards.
 - [x] AM2 video-analysis simulation PASS (3 tests): planted hitting fault swaps exactly one hitting drill, same count/minutes; cleared fault rotates out; lifting identical.
@@ -45,7 +46,7 @@ Findings this batch: analysis only changes hitting/throwing (never pitching, fie
 | Pain / injury | Swaps/suppresses drills (e.g. knee → leg-protected baserunning) | PASS AL4 |
 | Coach notes / From Coach | Nothing | Not yet |
 | Goals | Legal-pick bias/focus lines; never dose; swapping goal order does NOT reorder cards | PASS AM3 |
-| Limb proportions | Drill swaps and cues; never dose | Not yet |
+| Limb proportions | Server lift emphasis only (long femur → more single-leg/trap-bar, long arms → DB/neutral press); local Today ignores it; no data → no tilt | PASS AM5 |
 | Phase / schedule | Skill drills change off vs in season; speed-day warm-up stays the same | PASS AM4 |
 | Smart Week | Separate; ignores games, season, injury, subscription, goals, limbs, sport | — |
 
