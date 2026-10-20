@@ -50,8 +50,14 @@ describe("calendar practice prompts", () => {
   });
   it("a completed recurring occurrence does not cancel later weeks", () => {
     const recurring = { ...row, status: "completed", recurring_active: true, recurring_days: [2] };
-    expect(practicesDueToday([recurring], "2026-10-20", "baseball", ["hitting"])).toEqual([]);
+    expect(practicesDueToday([recurring], "2026-10-20", "baseball", ["hitting"])).toEqual([recurring]);
     expect(practicesDueToday([recurring], "2026-10-27", "baseball", ["hitting"])).toEqual([recurring]);
+  });
+  it("a recurring first occurrence requires its non-deleted dated session, not row status", () => {
+    const recurring = { ...row, status: "completed", recurring_active: true, recurring_days: [2] };
+    const log: PracticeCompletionSource = { session_date: "2026-10-20", sport: "baseball", module: "hitting", deleted_at: null, fatigue_state_at_session: { scheduled_practice: { id: row.id, date: "2026-10-20", module: "hitting" } } };
+    expect(practicesDueToday([recurring], "2026-10-20", "baseball", ["hitting"], completedPracticeIds([log], "2026-10-20", "baseball"))).toEqual([]);
+    expect(practicesDueToday([recurring], "2026-10-20", "baseball", ["hitting"], completedPracticeIds([{ ...log, deleted_at: "2026-10-20" }], "2026-10-20", "baseball"))).toEqual([recurring]);
   });
   it("eight-week Tuesday recurrence yields exactly eight reminders", () => {
     const recurring = { ...row, recurring_active: true, recurring_days: [2] };

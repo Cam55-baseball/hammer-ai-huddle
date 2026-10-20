@@ -1,4 +1,13 @@
-# AK3 — Oct 20 — Assessment Mode + Hammers Today prompts
+# AK4 — Oct 20 — Assessment Mode + Hammers Today prompts
+- [x] AK4 six phone button proofs PASS, 390×844, isolated TEST college player with saved active entitlements: baseball/softball 5Tool hitting+throwing, Complete Pitcher pitching, Golden 2Way hitting+pitching+throwing. Evidence: docs/owner/walkthroughs/assessment/ak4/. No mocked responses; this proves subscription-to-buttons, not payment.
+- [x] AK4 recurring reminder correction: row-level completed status cannot hide the first recurring occurrence without its exact non-deleted dated session. Regression and twelve eight-week practice matrices pass; 71 tests across five files PASS, preview build OK.
+- [x] AK4 cleanup: original subscribed_modules and assessment progress restored/read back; system TEST isolation retained. Database triggers advance updated_at on restoration. No practice, S2, analysis, payment or plan result created.
+- [ ] AK4 real practice reminder → saved canonical session → reminder disappears → Discipline/learning readback; exact TEST cleanup after proof.
+- [ ] AK4 shared coach/org assessment: investigate and implement the smallest safe reuse of embedded mode under existing permissions.
+- AK4 audit findings: coach_athlete_discipline currently counts wk_prescriptions/wk_session_logs only, not performance_sessions; the practice-to-Discipline bridge is missing. Coach on-the-spot still uses the movement RPC only; self-scoped canonical S2/Vault/analysis writes cannot safely become cross-athlete writes just by changing user ID. Both remain implementation work, not permission bypasses.
+- AK4 standing limits: no publish, cron or iOS changes; retain internal-only Game IQ/Report Card and OFF unapproved prompt cadences.
+
+## AK3 completed foundation
 - [x] AK3 assessment: old S2/Vault records cannot complete unvisited steps; successful embedded saves record navigation completion. Back finds the nearest earlier unlocked step. Step-5 buttons use the saved active subscription scoped to this sport, not owner bypass modules.
 - [x] AK3 phone PASS as TEST college player, 390×844: Back 6→5→4, hitting + throwing buttons, final embedded save→close→Start available→reload still finished. New TEST sprint snapshotted/deleted by exact ID/user; zero remaining, original assessment fields restored/read back. Evidence: docs/owner/walkthroughs/assessment/ak3/.
 - [x] AK3 calendar-only bridge implemented/tested: today's same-sport non-deleted/non-ignored practice opens normal module selection; canonical calendar_practice metadata clears only its dated event. Linked scheduled/calendar rows are deduplicated; no invented module/dose or extra completion store.
@@ -12,7 +21,7 @@
 
 | AK1–AK2 item | Status and proof |
 |---|---|
-| Step 5 missing buttons | FIXED for TEST college phone: hitting + throwing simultaneously. Six tier/sport rule checks pass; remaining program/sport phone proofs pending. |
+| Step 5 missing buttons | PASS AK4: all three programs × both sports, real saved active TEST entitlements and phone screenshots. Complete Pitcher currently includes pitching only; no extra entitlement was invented. |
 | Full-screen embedded foundation | PASS phone: body/equipment/goals inside profile, active S2 instructions, analysis surface; embedded TEST sprint save/readback advances step 6. Full S2/analysis submissions pending. |
 | X / guard / skips / unlock | PASS 390×844: X → Continue guard; five explicit skips + final embedded result save → guard gone, completed_at persisted, Start enabled and reload stays complete. Start not clicked; generation readback pending. |
 | Once-only post-payment wiring | Implemented and rule-tested; timer race removed; actual $0 payment proof pending. |

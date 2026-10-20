@@ -54,7 +54,6 @@ export function practicesDueToday(rows: readonly PracticePromptSource[], today: 
     && !completedIds.has(`${row.id}:${row.session_module}`)
     && row.status !== "pending_approval" && row.status !== "rejected"
     && !(row.requires_approval && !["scheduled", "completed"].includes(row.status ?? ""))
-    && !(row.status === "completed" && row.scheduled_date === today)
     && !(row.status === "completed" && !row.recurring_active)
     && row.status !== "cancelled" && row.status !== "canceled" && row.status !== "rescheduled"
     && (row.scheduled_date === today || (row.recurring_active && row.scheduled_date <= today && row.recurring_days?.includes(weekday))));
