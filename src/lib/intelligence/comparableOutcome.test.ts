@@ -83,12 +83,12 @@ describe("judgedOutcomeFromRecheck (client re-judgment of a stored server row)",
     })).toBe("need_more_data");
   });
 
-  it("missing or unparseable dates never guess", () => {
-    expect(judgedOutcomeFromRecheck({ baseline_value: 60, recheck_value: 70 })).toBe("worked"); // no window known: judge the pair
+  it("missing or unparseable dates never guess — the window must be verifiable", () => {
+    expect(judgedOutcomeFromRecheck({ baseline_value: 60, recheck_value: 70 })).toBe("need_more_data");
     expect(judgedOutcomeFromRecheck({
       baseline_value: 60, recheck_value: 70,
       followed_at: "not-a-date", checked_at: iso(t0),
-    })).toBe("worked");
+    })).toBe("need_more_data");
     expect(judgedOutcomeFromRecheck({ baseline_value: null, recheck_value: 70 })).toBe("need_more_data");
   });
 });
