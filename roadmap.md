@@ -1,3 +1,19 @@
+# AS1 — Owner decisions build — Oct 20, 20:05 UTC
+
+**Ready to publish: NO.** Preview builds OK; fresh full suite 447 files / 3,621 tests PASS (19:57 UTC).
+
+AS1 progress this run (supersedes matching AR8 rows below):
+- [x] Practice → next-day same-category reduction WIRED: heavy stretch cuts drill sets ~30%, floor 50% of prescribed sets, whole sets only, reps/prep/full-go/log/lifting untouched; unparseable doses never guessed (`practicePlanContext.ts`, 10 tests).
+- [x] Goal minute-share helper: top +25%, second +10%, funded from lower-ranked categories, floors win, totals conserved (`goalMinuteShare.ts`, 7 tests). Not yet applied to real plan rows.
+- [x] Comparable-outcome judge for What worked / mixed signals: same athlete/sport/category/measure, 2–4 weeks, ≥2 observations, per-test minimal change else 3%, owner labels (`comparableOutcome.ts`, 7 tests). Evidence wiring open.
+- [x] Delaycam mechanics goal wired: hitting in top-three ranked goals reaches DelaycamReminder (`mechanicsGoal.ts`, 6 tests). Severe path still open (no canonical severity column; not invented).
+- [x] Fielding execution gap closed: pitcher PFP identities added; first-drill promotion fixed so all nine positions both sports get game-speed reads off/pre-season, no added throws (129 structure tests).
+- [x] Coach "Hammers' plan for this player" BUILT: athlete app saves the exact final plan snapshot after all overlays; `coach_athlete_plan` RPC answers only accepted coach / org-staff (is_coach_of), scouts denied, health lines omitted without health sharing; card on the coach Development tab. Migration 0083 applied (owner-named change). TEST coach phone proof pending.
+- [ ] Mixed signals evidence wiring (comparable game/practice/video reads into Today).
+- [ ] Owner questions → structured picks + drill weighting; hosted owner save/readback.
+- [ ] Hosted proofs: TEST coach section, day-84 re-ask, testing-day details, six-cohort screenshots.
+- [ ] Minute-share applied to real weekly rows; pitching live-execution phone proof.
+
 # AR8 — Final batch pass — Oct 20, 17:27 UTC
 
 **Ready to publish: NO.** No publish, deployment, migration, switch, cron or iOS changes.
