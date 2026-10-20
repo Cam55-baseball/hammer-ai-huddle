@@ -30,7 +30,7 @@ describe('AR4: six subscription-qualified eight-week actual-builder cohorts (not
     it(`${sport}/${tier}: exact access, actual changes, clean resolution, schedule, pain and lifting invariance`, () => {
       expect(priorityAccess(modules, sport)).toEqual(expected);
       expect(priorityAccess([`${other}_golden2way`], sport)).toEqual({ hasPitching: false, hasHitting: false, hasThrowing: false });
-      let swaps = 0, practiceDays = 0, protectedDays = 0;
+      let swaps = 0, practiceDays = 0, protectedDays = 0, scheduledProtectedDays = 0;
       for (let n = 0; n < 56; n++) {
         const date = new Date(2026, 5, 1 + n);
         const phase = n < 28 ? 'off' : 'in';
@@ -80,7 +80,11 @@ describe('AR4: six subscription-qualified eight-week actual-builder cohorts (not
         const protectedPlan = buildHammerDailyPlan(make({ injury_history: ['knee'], readiness: 0.3 }), NORMAL_SIGNAL, null, null, undefined, date);
         const run = protectedPlan.blocks.find(block => block.modality === 'baserunning');
         expect(run?.drills.some(row => row.stage === 'full_go')).toBe(false);
-        expect(run?.title).toContain('leg-protected');
+        expect(run).toBeDefined();
+        if (run?.status === 'ready') {
+          expect(run.drills.map(row => row.dosage)).toEqual(['10 min', '10 reps']);
+          scheduledProtectedDays++;
+        }
         protectedDays++;
         const tapered = buildHammerDailyPlan(make(), { ...NORMAL_SIGNAL, postureToday: 'taper', isGameTomorrow: true }, null, null, undefined, date);
         tapered.blocks.filter(block => block.modality === 'defense' || block.modality === 'baserunning')
@@ -90,6 +94,7 @@ describe('AR4: six subscription-qualified eight-week actual-builder cohorts (not
       else expect(swaps).toBe(0);
       expect(practiceDays).toBeGreaterThan(0);
       expect(protectedDays).toBe(56);
+      expect(scheduledProtectedDays).toBeGreaterThan(0);
     });
     it(`${sport}/${tier}: unentitled priorities and fades cannot crowd out eligible analysis slots`, () => {
       const ranked = (discipline: RankedFault['signals'][number]['discipline']): RankedFault => ({ rootPatternId: discipline,

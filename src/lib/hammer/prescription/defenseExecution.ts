@@ -21,6 +21,8 @@ const FIELDING_READS = new Set([
   'Slow-roller barehand',
   'Slap read + barehand',
   'Slap barehand primer',
+  'Slap-bunt charge',
+  'Pop-up communication — infield fly rule reps',
   'Backhand at the line',
   'Backhand down the line',
   'In-between hop reads',
