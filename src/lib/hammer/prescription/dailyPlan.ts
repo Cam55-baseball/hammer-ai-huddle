@@ -154,7 +154,7 @@ export interface PrescribedBlock {
   readonly cleanClipNote?: string;
   /** Plain "Because" lines naming the real signal that changed this card (link e). Never invented. */
   readonly because?: ReadonlyArray<string>;
-  /** Read-only trace of actual same-category practice inputs; never a dose or outcome. */
+  /** Trace of actual same-category practice inputs; doseChanged is true only when the drill floor rule really cut sets. */
   readonly practiceContext?: {
     readonly category: string;
     readonly sourceIds: readonly string[];
@@ -164,7 +164,7 @@ export interface PrescribedBlock {
     readonly missingMinutes: number;
     readonly missingIntensity: number;
     readonly consecutiveDays: number;
-    readonly doseChanged: false;
+    readonly doseChanged: boolean;
   };
   readonly phase: BlockPhase;
   readonly steps: ReadonlyArray<string>;
