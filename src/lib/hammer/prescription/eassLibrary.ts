@@ -229,9 +229,9 @@ function positionSkillBaseball(pos: EassPosition, inSeason: boolean): EassDrill[
   switch (pos) {
     case "pitcher":
       return [
-        { name: "Flat-ground command set", category: "position_skill", intensity: "high", overloadClass: "regulation",
-          dosage: inSeason ? "20 throws to a target at 75%" : "30 throws, focus pitch + secondary at 80%",
-          cue: "miss small, finish the pitch out front",
+        { name: "Full-go: command bullpen with counts (mound or flat ground)", category: "position_skill", intensity: "high", overloadClass: "regulation",
+          dosage: inSeason ? "20 pitches to a target at 75%" : "30 pitches, focus pitch + secondary at 80%",
+          cue: "call every pitch and play counts (start 1-1, 2-2); every pitch with intent; miss small, finish out front; write down your pitch count and strikes",
           stopIf: "command falls off or velo drops noticeably — stop" },
       ];
     case "catcher":
@@ -280,9 +280,9 @@ function positionSkillSoftball(pos: EassPosition, inSeason: boolean): EassDrill[
       { name: "K-drill (windmill mechanics)", category: "windmill_circle", intensity: "moderate", overloadClass: "regulation",
         dosage: "2x10 K-drill reps per set",
         cue: "back leg drives, front leg posts, arm circles behind — sequence not simultaneous" },
-      { name: "Bullpen build (windmill)", category: "position_skill", intensity: "high", overloadClass: "regulation",
+      { name: "Full-go: bullpen with counts (windmill)", category: "position_skill", intensity: "high", overloadClass: "regulation",
         dosage: inSeason ? "20 pitches at 75% mixing rise/drop/change" : "30 pitches building spin efficiency",
-        cue: "spin first, velo second — the movement earns you the velo",
+        cue: "full-go: call every pitch and play counts (start 1-1, 2-2); every pitch with intent — spin first, velo second; write down your pitch count and strikes",
         stopIf: "wrist / elbow / shoulder / lat / hip complaint — stop" },
     ];
   }
