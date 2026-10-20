@@ -1,6 +1,13 @@
 # AK5 — Oct 20 — Assessment Mode + Hammers Today prompts
 - [ ] AK5 practice completion: real saved-session phone proof, permission-safe Discipline readback, exact TEST cleanup; do not count unscheduled practice as prescribed work.
 - [ ] AK5 carry forward shared assessment, payment/S2/analysis/sharing/Start proofs and OFF-gated adapters; unapproved cadences remain OFF.
+- [x] AK5 real practice save PASS at 390×844 as TEST college player: Tee → execution score 6 → Solid contact → Confirm Rep → Save Session → saved summary and canonical readback (one rep, one session). This was a direct PracticeHub save, not reminder-to-save proof.
+- [x] AK5 practice-to-Discipline logging bridge implemented: non-deleted canonical practices add logging evidence and a separately labeled count/date, never workout dose completion or denominators. Self/linked-coach eligibility + existing RLS, paginated reads, unavailable ≠ zero. Save/delete invalidate the projection; no new storage or permissions.
+- [x] AK5 79 focused tests PASS (five files), including seven logging rules and twelve eight-week practice matrices; preview build OK after replacing unsupported Array.at.
+- [x] AK5 TEST cleanup PASS: privately snapshotted before/after, exact new session/ledger/daily-log/report/dirty marker removed; original MPI streak and HIE snapshot values restored. Only existing updated_at triggers differ. No payment, calendar, assessment, legal or plan rows changed.
+- [ ] AK5 coach phone readback BLOCKED: kept TEST coach session mint required approval unavailable in this queued context; player is denied the staff page. Not verified as owner or via fake role.
+- [ ] AK5 honesty BLOCKER: one entered tee rep generated “late visual pickup” and “ineffective decision timing” with high confidence in session-insights; neither was measured. Saved-report phone evidence: docs/owner/walkthroughs/assessment/ak5/. Fix the canonical report generator and sibling report surfaces before release; no deployment attempted.
+**Ready to publish: NO.** Practice save proved, but generated practice advice invents faults; coach Discipline and actual reminder/sharing/payment/S2/analysis/Start/full prompt proofs remain open. No publish, backend deploy, migration, cron or iOS change.
 
 ## AK4 completed and pending
 - [x] AK4 six phone button proofs PASS, 390×844, isolated TEST college player with saved active entitlements: baseball/softball 5Tool hitting+throwing, Complete Pitcher pitching, Golden 2Way hitting+pitching+throwing. Evidence: docs/owner/walkthroughs/assessment/ak4/. No mocked responses; this proves subscription-to-buttons, not payment.
