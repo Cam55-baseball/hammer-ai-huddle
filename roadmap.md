@@ -1,4 +1,8 @@
-# AK4 — Oct 20 — Assessment Mode + Hammers Today prompts
+# AK5 — Oct 20 — Assessment Mode + Hammers Today prompts
+- [ ] AK5 practice completion: real saved-session phone proof, permission-safe Discipline readback, exact TEST cleanup; do not count unscheduled practice as prescribed work.
+- [ ] AK5 carry forward shared assessment, payment/S2/analysis/sharing/Start proofs and OFF-gated adapters; unapproved cadences remain OFF.
+
+## AK4 completed and pending
 - [x] AK4 six phone button proofs PASS, 390×844, isolated TEST college player with saved active entitlements: baseball/softball 5Tool hitting+throwing, Complete Pitcher pitching, Golden 2Way hitting+pitching+throwing. Evidence: docs/owner/walkthroughs/assessment/ak4/. No mocked responses; this proves subscription-to-buttons, not payment.
 - [x] AK4 recurring reminder correction: row-level completed status cannot hide the first recurring occurrence without its exact non-deleted dated session. Regression and twelve eight-week practice matrices pass; 71 tests across five files PASS, preview build OK.
 - [x] AK4 cleanup: original subscribed_modules and assessment progress restored/read back; system TEST isolation retained. Database triggers advance updated_at on restoration. No practice, S2, analysis, payment or plan result created.
