@@ -5,7 +5,7 @@
 - [x] Record the owner's exact Royal timing explanation; English unchanged, complete translations in en/es/fr/de/ja/zh/nl/ko. Shared explanation in reminder, module intro, help and purchase-gate description.
 - [x] Next queued concrete sub-step: Royal timing reminder reads canonical sport-scoped sessions, follows existing 14-day rule, requires an already-prescribed hitting day, subscription and plan_prompts_v2. No invented history or extra session; read errors visible.
 - [x] Phone layout proof at 390×844: signed-in `/royal-timing` intro and expanded help display the complete exact English text, no horizontal overflow; isolated production reminder displays the complete text and working button, no overflow or runtime errors. Screenshots inspected under `/tmp/browser/royal-wording/`. Reminder is NOT claimed as real-player Today end-to-end proof: switch remains OFF; no saved history or dates faked.
-- [x] Existing reminder/goal rules: 24 tests PASS (Royal timing/Delaycam 8, analysis 12, goal re-ask 4); preview build OK. New reminder adapter permission/history tests added; result recorded below after running.
+- [x] 28 tests PASS: Royal timing/Delaycam 8, analysis 12, goal re-ask 4, new reminder adapter 4 (no off-day read, switch/subscription gating, exact player/sport read, visible read failure without a due card). Latest preview build OK at 04:39:02 UTC.
 - No TEST data created; nothing to clean up. All eight locale entries parse; English source checked against the owner's full text.
 - Remaining queue unchanged: Delaycam/analysis adapters and switch activation; links a–e; execution remainder; coach section; owner questions; weekly goal minute share; six-cohort real-plan simulations and phone proofs.
 
