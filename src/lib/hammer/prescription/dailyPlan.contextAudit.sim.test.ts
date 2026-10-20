@@ -242,7 +242,6 @@ describe("audit: ranked category goals → day order", () => {
   it("the #1 ranked skill leads the day; swapping goals reorders the cards", () => {
     const h = skills(at(["hitting", "fielding", "throwing", "speed", "power"]));
     const f = skills(at(["fielding", "hitting", "throwing", "speed", "power"]));
-    console.log('AO5 order', h.join(','), '|', f.join(','));
     if (h.includes("hitting") && h.includes("defense")) {
       expect(h.indexOf("hitting")).toBeLessThan(h.indexOf("defense"));
       expect(f.indexOf("defense")).toBeLessThan(f.indexOf("hitting"));
