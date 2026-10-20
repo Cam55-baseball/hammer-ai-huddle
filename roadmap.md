@@ -1,3 +1,13 @@
+# AR2 — Parallel owner priority pass — Oct 20, 16:18 UTC
+
+**Ready to publish: NO.** No publish, deploy, migration, switch, cron or iOS changes. Practice-card proof remains complete and will not be repeated.
+
+- [ ] Connect major analysis flags and mechanics goals to the existing Delaycam cadence using canonical sport/category reports; prove scope, severity, repetition and access rules.
+- [ ] Advance canonical coach-plan sharing without inventing plans, consent or scout access; record any server-source blocker.
+- [ ] Advance execution/practice boundaries only where explicit dose authority exists; preserve lifting and full-go.
+- [ ] Complete affected-player phone checks where authorized TEST setup permits; clean exact temporary data.
+- [ ] Run changed checks and a fresh full suite, update evidence and remaining blockers here.
+
 # AR1 — Parallel owner priority pass — Oct 20, 15:41 UTC
 
 **Ready to publish: NO.** Preview-only; no deploy, migration, switch, cron or iOS changes. No test records, consent acceptances, saved answers or drill edits created; all phone edits were discarded. Practice card was not re-proven.
