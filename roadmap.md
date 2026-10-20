@@ -1,3 +1,13 @@
+# AP2 — Delaycam reminder adapter
+
+**Ready to publish: NO.** No publish, cron or iOS changes; plan_prompts_v2 remains OFF until all reminder wiring and phone proofs are ready.
+
+- [x] Independent concrete sub-step: Delaycam card connected to Today on existing hitting days, with phone/TV explanation and one button to the selected sport's hitting tool. Reads canonical recording end dates for the signed-in athlete/sport/hitting only, fails visibly on read errors, and requires hitting entitlement. Processing failure does not erase actual mirror use.
+- [x] Proof: 33 tests PASS across Delaycam adapter (5), Royal adapter (4), cadence rules (8) and practice adjustment (16). Preview build OK 04:47:41 UTC. At 390×844 the hitting destination opens with its heading and no horizontal overflow; screenshot inspected. This proves the destination only, not a real-player Today reminder or camera capture.
+- [ ] Phone reminder-card and real-player Today completion proof pending; switch still OFF. No TEST data created or passwords changed.
+- [ ] Major-mechanical-flag and mechanics-goal inputs remain unwired (not guessed); off-season already comes from the resolved phase. Reminder activation and Discipline/learning-loop integration remain open.
+- [ ] AP1 follow-up investigation confirms no authoritative local skill dose floors. Volume adjustment cannot be wired by guessing minima or parsing dose text; structured category envelopes remain required. No training amounts or lifting changed.
+
 # AP1 — Oct 20 — same-category practice-dose rule
 
 **Ready to publish: NO.** No publish, cron or iOS changes.
