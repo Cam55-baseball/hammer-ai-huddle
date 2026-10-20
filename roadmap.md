@@ -1,4 +1,5 @@
-# AK1 — Oct 20 — Assessment Mode + Hammers Today prompts
+# AK2 — Oct 20 — Assessment Mode + Hammers Today prompts
+- [ ] AK2: persist completion when the final embedded result is saved; link recurring practice reminders to their actual dated session logs; run focused tests and phone proof, then clean only task-created TEST records.
 - [x] Queued continuation sub-step: body/equipment/goals open inside profile check; real embedded TEST sprint saved/read back and step 6 refreshed; active S2 instructions reached; TEST entry snapshotted/deleted and progress restored. Evidence: docs/owner/walkthroughs/assessment/ak1-continuation/.
 **Ready to publish: NO.** Assessment foundations are proven, but the full requested assessment, sharing and prompt matrix remain incomplete. No publish, function redeploy, cron or iOS changes. Additive assessment fields and the new OFF switch are live; frontend changes are preview-only.
 
