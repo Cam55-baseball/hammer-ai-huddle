@@ -79,6 +79,8 @@ export interface S2DiagnosticResult {
 
 interface S2CognitionDiagnosticsProps {
   sport?: string;
+  embedded?: boolean;
+  onSaved?: () => void;
 }
 
 type TestPhase = 
@@ -104,7 +106,7 @@ const initialScores = {
   fatigue_index: 0,
 };
 
-export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagnosticsProps) => {
+export const S2CognitionDiagnostics = ({ sport = 'baseball', embedded = false, onSaved }: S2CognitionDiagnosticsProps) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [latestResult, setLatestResult] = useState<S2DiagnosticResult | null>(null);
@@ -240,6 +242,7 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
       setTestPhase('results');
       setCanTakeTest(false);
       setDaysUntilNextTest(112);
+      onSaved?.();
     } catch (error) {
       console.error('Error saving S2 diagnostic:', error);
     }
@@ -250,8 +253,10 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
   const confirmAndStartTest = async () => {
     setShowStartConfirmation(false);
     try {
-      await document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
+      if (!embedded) {
+        await document.documentElement.requestFullscreen();
+        setIsFullscreen(true);
+      }
     } catch (err) {
       console.log('Fullscreen not available:', err);
     }
@@ -329,6 +334,7 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
   if (testPhase !== 'intro' && testPhase !== 'results') {
     return (
       <FullscreenTestWrapper
+        embedded={embedded}
         showCancel={true}
         showCancelConfirmation={showCancelConfirmation}
         onCancelClick={handleCancelClick}
@@ -370,6 +376,7 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
 
     return (
       <FullscreenTestWrapper
+        embedded={embedded}
         showCancel={false}
         showCancelConfirmation={showCancelConfirmation}
         onCancelClick={handleCancelClick}

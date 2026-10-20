@@ -2,10 +2,17 @@ import { describe, it, expect } from "vitest";
 import { assessmentSteps, requiredAnalyses, assessmentComplete, type AssessmentInput } from "../initialAssessment";
 const base: AssessmentInput = { onboardingDone: false, lastSeasonDoneOrSkipped: false, movementScreenDone: false, s2Done: false, analysesDone: [], sixWeekTestDone: false, modules: ["baseball_pitcher"] };
 describe("optional initial assessment", () => {
-  it("stats may be opened without finishing profile", () => expect(assessmentSteps(base)[2]).toBe("open"));
-  it("movement check may be opened without stats", () => expect(assessmentSteps({ ...base, onboardingDone: true })[3]).toBe("open"));
-  it("all optional tests remain accessible without answers", () => {
+  it("step 2 follows step 1", () => expect(assessmentSteps(base)[2]).toBe("locked"));
+  it("step 3 follows steps 1 and 2", () => expect(assessmentSteps({ ...base, onboardingDone: true })[3]).toBe("locked"));
+  it("tests wait until step 3 is done or skipped", () => {
     const s = assessmentSteps({ ...base, onboardingDone: true, lastSeasonDoneOrSkipped: true });
+    expect([s[4], s[5], s[6]]).toEqual(["locked", "locked", "locked"]);
+  });
+  it("skipping all six counts as completion without invented results", () => {
+    expect(assessmentComplete({ ...base, progress: { 1: "skipped", 2: "skipped", 3: "skipped", 4: "skipped", 5: "skipped", 6: "skipped" } })).toBe(true);
+  });
+  it("skipped foundations unlock 4–6 together", () => {
+    const s = assessmentSteps({ ...base, progress: { 1: "skipped", 2: "skipped", 3: "skipped" } });
     expect([s[4], s[5], s[6]]).toEqual(["open", "open", "open"]);
   });
   it("steps 4-6 open together in any order after 1-3", () => {
@@ -14,6 +21,11 @@ describe("optional initial assessment", () => {
   });
 });
 describe("only subscribed analyses", () => {
+  for (const sport of ["baseball", "softball"]) {
+    it(`${sport} 5Tool includes both analyses`, () => expect(requiredAnalyses([`${sport}_5tool`])).toEqual(["hitting", "throwing"]));
+    it(`${sport} Complete Pitcher includes pitching`, () => expect(requiredAnalyses([`${sport}_pitcher`])).toEqual(["pitching"]));
+    it(`${sport} Golden 2Way includes all three`, () => expect(requiredAnalyses([`${sport}_golden2way`])).toEqual(["hitting", "pitching", "throwing"]));
+  }
   it("Complete Pitcher needs pitching only", () => expect(requiredAnalyses(["baseball_pitcher"])).toEqual(["pitching"]));
   it("5Tool needs hitting and throwing", () => expect(requiredAnalyses(["softball_5tool"])).toEqual(["hitting", "throwing"]));
   it("Golden 2Way needs all three", () => expect(requiredAnalyses(["baseball_golden2way"])).toEqual(["hitting", "pitching", "throwing"]));
