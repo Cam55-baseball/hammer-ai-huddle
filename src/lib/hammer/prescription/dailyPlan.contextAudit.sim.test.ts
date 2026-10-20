@@ -189,3 +189,22 @@ describe("audit: season phase → plan", () => {
     expect(t(off, "hitting")?.drills.map((d) => d.name)).not.toEqual(t(inn, "hitting")?.drills.map((d) => d.name));
   });
 });
+
+describe("audit: games → drill choice (chase)", () => {
+  const withGear = (gear: string[]) => buildHammerDailyPlan(
+    ctx({ ...BASE, equipment_effective: gear }), NORMAL_SIGNAL, null,
+    gp({ chasePct: 40, atBats: 12, pitchesSeen: 50 }), undefined, DAY);
+  const baseH = (gear: string[]) => hit(buildHammerDailyPlan(ctx({ ...BASE, equipment_effective: gear }), NORMAL_SIGNAL, null, null, undefined, DAY));
+  it("chasing with a net swaps one hitting drill to Two-Ball Recognition, same count and minutes", () => {
+    const gear = ["tee", "gamer_bat", "net"];
+    const h = hit(withGear(gear));
+    console.log("CHASE_DRILLS", JSON.stringify(h.drills.map((d) => d.name)), JSON.stringify(baseH(gear).drills.map((d) => d.name)));
+    expect(h.drills.map((d) => d.name)).toContain("Two-Ball Recognition");
+    expect(h.drills).toHaveLength(baseH(gear).drills.length);
+    expect(h.durationMin).toBe(baseH(gear).durationMin);
+    expect(h.because?.some((l) => l.includes("Two-Ball Recognition") && l.includes("(early read)"))).toBe(true);
+  });
+  it("no net → no swap (never prescribe missing equipment)", () => {
+    expect(hit(withGear(["tee", "gamer_bat"])).drills.map((d) => d.name)).not.toContain("Two-Ball Recognition");
+  });
+});
