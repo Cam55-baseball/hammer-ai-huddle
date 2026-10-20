@@ -1,3 +1,25 @@
+# AO7 — Oct 20, 04:13 UTC — batch proof per item (AN9–AO7)
+
+**Ready to publish: NO.** No publish, deploy, migration, cron or iOS change this batch; all preview-only. 395 plan/prescription checks PASS (45 files).
+
+| Item | Proof | Status |
+|---|---|---|
+| No category spill-over | noCategorySpill.test.ts: 60 runs (both sports × SS/P × off/pre/in × 5 flag kinds × 14 days); found + fixed fielding/running flags borrowing throwing drills | Done |
+| Link a — video issues → drills | Own-category one-drill swap for hitting/throwing/pitching; fielding + baserunning swap nothing (no fix drills of their own) | Partial: editable issue tags in Exercise Vault; fielding/running fix drills needed |
+| Link b — games | Real-number Because + "(early read)"; chase → Two-Ball Recognition with a net | Partial: whiff/error drills need owner tags |
+| Link c — practice logs | Reader built (3 tests) | Not wired |
+| Link d — mixed signals | — | Not started |
+| Link e — Because + learning loop | Because lines on video/game swaps and the #1 goal | Learning-loop tracking not started |
+| Execution blocks | Hitting + pitching full-go with counts and logging; sore-arm bullpen removed | Fielding, baserunning, off-season hitting open |
+| Coach section | — | Not started (democoach/demoorg API sign-in approved) |
+| Cadences on (plan_prompts_v2) | Weekly analysis rotation (12 tests, 6 cohorts × 8 weeks); Royal timing every 14 days + Delaycam 2–3/wk or 1/wk with plain explanations (8 tests) | Rules done; cards/explanations not on Today yet; switch still OFF |
+| Owner tune-up questions | — | Not started (needs a new saved table; will only create it as part of this owner-approved item) |
+| Goal weighting | Day order already follows the saved ranking (2 sims; earlier finding corrected); minute-share rule built (3 tests) | Weekly minute share not wired |
+| 12-week re-ask | Rule (4 tests) + Today card reopens after 84 days with "Keep my order"; Profile goal editor exists and restarts the 12 weeks on save | Phone proof pending (no TEST ranking 12+ weeks old; not faked) |
+| Simulations | Context audit 22 sims PASS; all 12 inputs traced | 8-week six-cohort plan runs + phone screenshots not done |
+
+**Waiting on owner:** practice-workload wiring yes; fix drills for whiff, fielding errors and baserunning; testing-day details view; check the Royal timing explanation wording.
+
 # AN9 — Oct 20, 04:02 UTC — owner decisions (Oct 20, 03:58) + first sub-step
 
 **Ready to publish: NO.** Nothing published, no cron or iOS change. Preview-only.
