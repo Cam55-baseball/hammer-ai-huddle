@@ -11,6 +11,7 @@
  * handles the awaiting-input state).
  */
 import type { DrillStep } from "./dailyPlan";
+import { defenseExecutionKind } from './defenseExecution';
 import {
   guideForDefense,
   tierNoteForDefense,
@@ -139,7 +140,7 @@ function gateForInjury(
 type CatalogKey = `${DefensePosition}:${DefenseSport}:${DefensePhase}`;
 
 function d(name: string, dosage: string, cue?: string, setup?: string, stopIf?: string): DrillStep {
-  return setup ? { name, dosage, cue, setup, stopIf } : { name, dosage, cue, stopIf };
+  return { name, dosage, cue, setup, stopIf, executionKind: defenseExecutionKind(name) };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

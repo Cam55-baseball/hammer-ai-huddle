@@ -116,6 +116,8 @@ export interface DrillStep {
   readonly equipmentNote?: string;
   /** Session structure: prep → drills → full-go execution → log. */
   readonly stage?: "prep" | "drills" | "full_go" | "log";
+  /** Catalog-declared existing non-throwing reps, not inferred from an exercise name. */
+  readonly executionKind?: 'fielding_reads';
   readonly guide?: import("./movementGuide").MovementGuide;
   /** Keeps owner routing and downstream analysis overlays auditable. */
   readonly prescriptionOrigin?: "owner" | "analysis";
@@ -1203,12 +1205,12 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       const runningSport = normalizeSport(ctx.get<unknown>('sport_primary')?.value ?? null) === 'softball' ? 'softball' : 'baseball';
       const drills: DrillStep[] = structureSkillSession(inSeason
         ? [
-            { name: "Pickoff reads", dosage: "8 reps", cue: "first move = first step" },
+            { name: runningSport === 'softball' ? 'Pitch-release reads' : "Pickoff reads", dosage: "8 reps", cue: runningSport === 'softball' ? 'Stay on the base until the pitch is released; then read and move.' : "first move = first step" },
             { name: "First-to-third / tag-up scenarios", dosage: "5 reps" },
           ]
         : [
-            { name: "Lead + secondary footwork", dosage: "10 reps", cue: "balanced lead, no lean" },
-            { name: "Pickoff reads (with partner if possible)", dosage: "10 reps" },
+            { name: runningSport === 'softball' ? 'Release + first-step footwork' : "Lead + secondary footwork", dosage: "10 reps", cue: runningSport === 'softball' ? 'Start on the base; leave only when the pitch is released.' : "balanced lead, no lean" },
+            { name: runningSport === 'softball' ? 'Pitch-release reads (with partner if possible)' : "Pickoff reads (with partner if possible)", dosage: "10 reps" },
             { name: "First-to-third / tag-up scenarios", dosage: "5 reps" },
           ], { skill: 'baserunning', sport: runningSport, owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []), injuryRegions, recoveryDay: recoverDay || !skillExecutionAllowed });
       return {

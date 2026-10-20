@@ -5,3 +5,4 @@
 - Bounded practice-dose targets use whole sets near 70% of the current legal dose, never below half or the explicit row minimum, with reps unchanged; only post-safety ready skill rows may call it. Why: the owner reduction must preserve full-go availability and never undo freshness or lifting protections.
 - Cross-reference (mixedSignals) only informs one category's priority/Because and never authors work; other categories' signals are ignored. Why: no category spill-over.
 - Practice streaks reach ready skill cards through practicePlanContext after safety processing; missing row minima keep doses unchanged. Why: real logged context must be visible without guessed reductions.
+- Fielding execution uses explicit catalog non-throwing read metadata, never name-pattern eligibility; prep/owner slots and existing stop rules remain protected. Why: a fielding stage cannot grant new throwing work.

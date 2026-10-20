@@ -29,3 +29,11 @@ Phone checks as affected TEST coach and org admin, unrelated/revoked staff denia
 ## Current blockers
 
 No secure endpoint currently returns the final athlete skill plan under verified training-sharing consent. A durable canonical final-plan source and exact server access implementation are prerequisites. Live schema/function application requires named owner authorization for that change. No placeholder UI or alternate plan store was added in AR2.
+
+## AR4 source and permission trace
+
+The final display source is `src/components/hammer/HammerDailyPlan.tsx`: after the daily builder it applies the CNS phase clamp, canonical analysis overlay and athlete adjustments. The shared source must be captured after these, not merely after `buildHammerDailyPlan`. Canonical task completion is read through `useHammerDailyTasks` with the prescription date and side identity; a served drill is not completed work.
+
+`CoachAthleteDetail.tsx` and `CoachDevelopmentTab.tsx` are the existing presentation targets. Parent training opt-in / anonymous-training consent in `parent-consent` does not establish coach training-plan sharing. The general recruiting gate is necessary for service-role reads but insufficient to authorize these plans. No existing verified endpoint was found that combines final skill source, coach/org-context authorization and training-sharing consent.
+
+Do not widen an existing report endpoint, reuse health consent as training consent, display a projected week as completed prescriptions, or render lifting rows as the athlete's skill plan. Coach implementation remains blocked on the exact canonical capture and consent/read contract; no duplicate plan storage, speculative permission logic, live function changes or placeholder coach UI were added.

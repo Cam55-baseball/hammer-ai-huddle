@@ -64,10 +64,13 @@ function withCleanClipNote(block: PrescribedBlock, discipline: Discipline, ranke
   return note ? { ...block, cleanClipNote: note } : block;
 }
 
-/** Every skill card a video finding may shape. Pitching findings land on the throwing card (where pitching work lives). */
+/** Exact category only: an overhand throwing card is not a pitching prescription. */
 function disciplinesForBlock(block: PrescribedBlock): Discipline[] {
   if (block.modality === "hitting") return ["hitting"];
-  if (block.modality === "throwing") return ["throwing", "pitching"];
+  if (block.modality === "throwing") {
+    const module = new URL(block.route, 'https://local.invalid').searchParams.get('module');
+    return module === 'pitching' ? ['pitching'] : ['throwing'];
+  }
   if (block.modality === "defense") return ["fielding"];
   if (block.modality === "baserunning") return ["running"];
   return [];

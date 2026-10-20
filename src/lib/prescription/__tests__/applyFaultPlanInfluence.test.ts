@@ -92,14 +92,26 @@ describe("analysis influence reaches every skill card", () => {
     signals: [{ ...ranked[0].signals[0], discipline, fault_key: key }],
   }];
   const run = (modality: PrescribedBlock["modality"], r: RankedFault[], d: EliteDrill) =>
-    applyFaultPlanInfluence({ blocks: [{ ...block(), modality }], rankedFaults: r, sport: "baseball",
+    applyFaultPlanInfluence({ blocks: [{ ...block(), modality, route: `/practice?module=${r[0].signals[0].discipline}` }], rankedFaults: r, sport: "baseball",
       ownedEquipment: new Set(), catalog: [d], circulation: { servedToUser: {}, usage: {} },
       now: new Date("2026-10-03T00:00:00.000Z") })[0];
-  it("a pitching finding swaps one drill on the throwing card", () => {
+  it("a pitching finding swaps one drill only on an explicit pitching prescription", () => {
     const d = { ...drill, id: "p1", name: "Pitch Fix", category: "pitching" as const, violationKeys: ["early_trunk_rotation"] };
     const after = run("throwing", sig("pitching", "early_trunk_rotation"), d);
     expect(after.drills[0].name).toBe("Pitch Fix");
     expect(after.because?.[0]).toContain("Pitch Fix");
+  });
+  it('a pitching finding cannot prescribe a mound drill in overhand throwing work', () => {
+    const before = { ...block(), modality: 'throwing' as const, route: '/practice?module=throwing' };
+    const [after] = applyFaultPlanInfluence({ blocks: [before], rankedFaults: sig('pitching', 'early_trunk_rotation'), sport: 'baseball',
+      ownedEquipment: new Set(), catalog: [{ ...drill, category: 'pitching', violationKeys: ['early_trunk_rotation'] }], circulation: { servedToUser: {}, usage: {} } });
+    expect(after).toEqual(before);
+  });
+  for (const sport of ['baseball', 'softball'] as const) it(`${sport}: overhand throwing findings cannot change pitching work`, () => {
+    const before = { ...block(), modality: 'throwing' as const, route: '/practice?module=pitching' };
+    const [after] = applyFaultPlanInfluence({ blocks: [before], rankedFaults: sig('throwing', 'early_trunk_rotation'), sport,
+      ownedEquipment: new Set(), catalog: [{ ...drill, sports: [sport], category: 'throwing', violationKeys: ['early_trunk_rotation'] }], circulation: { servedToUser: {}, usage: {} } });
+    expect(after).toEqual(before);
   });
   it("no spill-over: a fielding finding never borrows a throwing drill for the defense card", () => {
     const d = { ...drill, id: "f1", name: "Glove Fix", category: "throwing" as const, violationKeys: ["glove_late"] };

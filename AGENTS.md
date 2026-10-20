@@ -7,7 +7,7 @@
 <!-- LOVABLE:END -->
 - No publish/deploy/redeploy/migration without named owner authorization; apply only that change and report live/pending status. Why: unauthorized redeploys went live.
 - The shared empty-upload encouragement is a standalone sibling below the upload card, outside the Report Card access gate. Why: shown to all eligible athletes without exposing measurements.
-- Analysis findings may influence Hammers Today only through a downstream one-slot skill overlay: top-three ledger priority, 21-day decay, exact fault matching, equipment eligibility, circulation, and no card/dose/duration changes; owner slots are never displaced. Why: findings should shape existing work without becoming a second plan generator.
+- Today analysis uses selected-sport planAnalysisAccess, top-three ledger priority, 21-day decay, exact category/fault, equipment and circulation; swaps one slot, never owner/card/dose/duration. Fielding execution uses catalog metadata. Why: context selects existing work, not a second generator.
 - Coach/scout roles suppress unsolicited module advertising even on dual-role accounts, but purchase pages and subscribed module navigation remain accessible on deliberate visits under the storefront gate. Why: staff buy without being sold to.
 - Landing opening: full sequence on first install, skippable short one on later launches; final wipe waits for the landing page. Why: owner's launch identity without an unloaded page.
 - Verify as the affected role, never only owner/admin. Why: owners skip gates.
