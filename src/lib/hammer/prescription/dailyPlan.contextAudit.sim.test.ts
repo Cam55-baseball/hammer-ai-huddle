@@ -115,6 +115,7 @@ describe("audit: pain → plan", () => {
 import { applyFaultPlanInfluence } from "@/lib/prescription/applyFaultPlanInfluence";
 import type { EliteDrill } from "@/data/drills/eliteDrillCatalog";
 import type { RankedFault } from "@/lib/wic/faultLedger/ranking";
+import { planFaultContext } from '@/lib/prescription/planFaultContext';
 
 const fixDrill: EliteDrill = {
   id: "sim.hit.front_side", name: "Front-Side Hold", category: "hitting", sports: ["baseball"],
@@ -133,6 +134,40 @@ const fault = (cleared: boolean): RankedFault[] => [{
 const withAnalysis = (cleared: boolean) => applyFaultPlanInfluence({
   blocks: plan(null).blocks, rankedFaults: fault(cleared), sport: "baseball", ownedEquipment: new Set(),
   catalog: [fixDrill], circulation: { servedToUser: {}, usage: {} }, now: DAY,
+});
+
+describe('AR3: scoped canonical evidence through eight-week actual builders', () => {
+  for (const sport of ['baseball', 'softball'] as const) {
+    it(`${sport}: one-slot change and clean resolution preserve all prescribed doses for eight weeks`, () => {
+      let changed = 0;
+      for (let day = 0; day < 56; day++) {
+        const date = new Date(2026, 5, 3 + day);
+        const observed = date.toISOString();
+        const base = buildHammerDailyPlan(ctx({ ...BASE, sport_primary: sport, equipment_effective: ['tee', 'gamer_bat', 'net'] }), NORMAL_SIGNAL, null, null, undefined, date);
+        const signal = { ...fault(false)[0].signals[0], observed_at: observed };
+        const finding = { id: 'f', user_id: 'a1', sport, skill_domain: 'hitting', fault_key: signal.fault_key,
+          root_pattern_key: signal.root_pattern_id, created_at: observed, video_id: 'v' };
+        const clip = { video_id: 'v', user_id: 'a1', sport, module: 'hitting', created_at: observed, violations: null };
+        const scoped = planFaultContext([signal], [finding], [clip], 'a1', sport, date.getTime());
+        const apply = (context: typeof scoped) => applyFaultPlanInfluence({ blocks: base.blocks, ...context, sport, ownedEquipment: new Set(),
+          catalog: [{ ...fixDrill, sports: [sport] }], circulation: { servedToUser: {}, usage: {} }, now: date });
+        const next = apply(scoped);
+        expect(next).toHaveLength(base.blocks.length);
+        next.forEach((block, index) => {
+          expect(block.drills.map(d => d.dosage)).toEqual(base.blocks[index].drills.map(d => d.dosage));
+          expect(block.durationMin).toBe(base.blocks[index].durationMin);
+          expect(block.status).toBe(base.blocks[index].status);
+          if (block.modality !== 'hitting') expect(block).toEqual(base.blocks[index]);
+          if (block.drills.some(d => d.slug === fixDrill.id)) changed++;
+        });
+        const clean = [1, 2].map(n => ({ ...clip, video_id: `clean-${n}`, created_at: new Date(date.getTime() + n * 86400000).toISOString(),
+          violations: { [signal.fault_key]: false } }));
+        const cleared = planFaultContext([signal], [finding], [clip, ...clean], 'a1', sport, date.getTime() + 2 * 86400000);
+        expect(apply(cleared).map(b => b.drills)).toEqual(base.blocks.map(b => b.drills));
+      }
+      expect(changed).toBeGreaterThan(0);
+    });
+  }
 });
 
 describe("audit: video analyses → plan", () => {

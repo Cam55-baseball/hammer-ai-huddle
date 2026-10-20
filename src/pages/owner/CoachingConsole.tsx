@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { OWNER_QUESTIONS, questionSituation, type OwnerQuestion } from '@/lib/intelligence/ownerQuestions';
+import { OWNER_QUESTIONS, questionSituation, currentQuestionAnswer, type OwnerQuestion } from '@/lib/intelligence/ownerQuestions';
 import {
   EVIDENCE_LABEL, badgeFor, latestVersion, SMALL_GROUP_NOTE,
   type EvidenceKind, type Principle, type PrincipleStats, type PrincipleVersion,
@@ -86,8 +86,8 @@ export default function CoachingConsole() {
   };
 
   const answerQuestion = (question: OwnerQuestion, answer: string) => {
-    const previous = latestVersion((data?.versions ?? []).filter(v => v.situation === questionSituation(question.id)));
-    setEditing(previous?.principle_id ?? null);
+    const previous = currentQuestionAnswer(question, data?.principles ?? [], data?.versions ?? []);
+    setEditing(previous?.principle.id ?? null);
     setForm({ ...EMPTY, body: answer, sport: question.sport, area: question.area,
       situation: questionSituation(question.id),
       applies_when: `${question.subscription}; ages 13–15, 16–17 and adults, as specified in the answer`,
@@ -107,10 +107,11 @@ export default function CoachingConsole() {
         {isLoading ? <p className="text-sm text-muted-foreground">Loading saved answers…</p> : isError ?
           <p role="alert" className="text-sm text-destructive">Couldn't check saved answers. Try again later.</p> :
           OWNER_QUESTIONS.map(question => {
-            const answer = latestVersion((data?.versions ?? []).filter(v => v.situation === questionSituation(question.id)));
+            const saved = currentQuestionAnswer(question, data?.principles ?? [], data?.versions ?? []);
+            const answer = saved?.version;
             return <div key={question.id} className="space-y-2 border-b border-border py-3">
               <div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{question.sport} · {question.subscription}</Badge>
-                <Badge variant="secondary">{answer ? `Answered · version ${answer.version}` : 'Needs an answer'}</Badge></div>
+                <Badge variant="secondary">{answer ? `Answered · version ${answer.version} · ${saved?.principle.active ? 'On' : 'Off'}` : 'Needs an answer'}</Badge></div>
               <p className="text-sm font-medium">{question.question}</p>
               {answer && <p className="break-words text-sm text-muted-foreground">Current answer: {answer.body}</p>}
               <div className="flex flex-col gap-2">

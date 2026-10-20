@@ -123,7 +123,7 @@ export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): Readonl
       name: match.drill.name,
       slug: match.drill.id,
       setup: match.drill.setup || undefined,
-      dosage: discipline === 'fielding' || discipline === 'running' ? displaced.dosage : match.drill.dosage,
+      dosage: displaced.dosage,
       cue: match.drill.cues[0],
       equipmentNote: match.drill.equipment.length ? match.drill.equipment.join(", ") : undefined,
       stage: "drills",

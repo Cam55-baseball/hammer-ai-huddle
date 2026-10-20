@@ -1,3 +1,11 @@
+# AR3 — Parallel owner priority pass — Oct 20, 16:29 UTC
+
+**Ready to publish: NO.** No publish, deploy, migration, switch, cron or iOS changes; do not repeat completed practice-card proof.
+
+- [ ] Connect canonical sport/category analysis evidence to actual plan overlays and mixed-signal reasoning without altering doses or owner slots.
+- [ ] Advance owner question answer save/readback and existing engine consumption without interpreting prose as training rules.
+- [ ] Run changed behavior tests, check preview health, and update evidence and remaining blockers; no fabricated athlete phone proof or TEST writes.
+
 # AR2 — Parallel owner priority pass — Oct 20, 16:18 UTC
 
 **Ready to publish: NO.** No publish, deploy, migration, switch, cron or iOS changes. Practice-card proof remains complete and will not be repeated.

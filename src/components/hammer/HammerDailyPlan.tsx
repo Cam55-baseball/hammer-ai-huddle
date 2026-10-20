@@ -167,7 +167,7 @@ import { positionLabel, positionShort } from "@/lib/drills/positionLabels";
 import { PositionPickerDialog } from "@/components/hammer/PositionPickerDialog";
 import { announceAthleteContextChanged } from "@/lib/hammer/context/contextRefresh";
 import { Repeat } from "lucide-react";
-import { useFaultLedger } from "@/hooks/useFaultLedger";
+import { usePlanFaultContext } from "@/hooks/usePlanFaultContext";
 import { useDrillCirculation } from "@/hooks/useDrillCirculation";
 import { projectEnvelope } from "@/lib/hammer/context/decisionFilters";
 import { applyFaultPlanInfluence } from "@/lib/prescription/applyFaultPlanInfluence";
@@ -700,7 +700,7 @@ function HammerDailyPlanBody({
     (pitcherSchedule.facts.startsToday || pitcherSchedule.facts.startsTomorrow || pitcherSchedule.facts.pitchedYesterday);
   const hasBaseStealer = has5Tool || (hasG2W && !g2wPitchingDay);
   const planAdjust = usePlanAdjustments(bodyPlanDate);
-  const { data: rankedFaults = [] } = useFaultLedger();
+  const faultContext = usePlanFaultContext(sportKey);
   const drillCirculation = useDrillCirculation();
   const influencedLoggedServe = useRef<string | null>(null);
   // Game-day defense override — athlete-owned, one tap, resets each day.
@@ -773,14 +773,15 @@ function HammerDailyPlanBody({
     // asked to stick from now on.
     const influencedBlocks = applyFaultPlanInfluence({
       blocks: base.blocks,
-      rankedFaults,
+      rankedFaults: faultContext.isError ? [] : faultContext.data?.rankedFaults ?? [],
+      signalScopes: faultContext.isError ? {} : faultContext.data?.signalScopes ?? {},
       sport: ctx.get<unknown>("sport_primary")?.value === "softball" ? "softball" : "baseball",
       ownedEquipment: new Set(projectedAthlete.equipmentList),
       catalog: drillCirculation.catalog,
       circulation: drillCirculation.circulation,
     });
     return { ...base, blocks: applyAdjustments(influencedBlocks, planAdjust.adjustments) };
-  }, [rawPlan, cnsHigh, planAdjust.adjustments, rankedFaults, projectedAthlete.equipmentList, ctx, drillCirculation.catalog, drillCirculation.circulation]);
+  }, [rawPlan, cnsHigh, planAdjust.adjustments, faultContext.data, faultContext.isError, projectedAthlete.equipmentList, ctx, drillCirculation.catalog, drillCirculation.circulation]);
 
   const influencedDrillIds = useMemo(
     () => plan.blocks.flatMap((block) => block.drills)
@@ -861,6 +862,7 @@ function HammerDailyPlanBody({
           <DayNoticesDrawerItem />
         </ErrorBoundary>
         <TexVisionWork />
+        {faultContext.isError && <p role="alert" className="text-sm text-destructive">Couldn't check your analysis history. No analysis drill changes were applied.</p>}
         {practiceLoadHistory.error && <p role="alert" className="text-sm text-destructive">Couldn't check your logged practice workload. Your saved plan has not been changed.</p>}
         <RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} />
         <DelaycamReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} offSeason={shortSeasonPhase(resolvedPhase) === 'off'} />

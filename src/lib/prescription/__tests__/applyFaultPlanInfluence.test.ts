@@ -43,6 +43,7 @@ describe("analysis influence on Hammers Today", () => {
     expect(after.drills).toHaveLength(before.drills.length);
     expect(after.durationMin).toBe(before.durationMin);
     expect(after.drills[0].name).toBe("Analysis Match");
+    expect(after.drills[0].dosage).toBe("1");
     expect(after.drills[1].name).toBe("Owner");
     expect(after.drills[0].analysisInfluence?.faultKey).toBe("front_shoulder_opens_early");
   });
@@ -76,6 +77,7 @@ describe('execution protected from analysis overlays', () => {
     expect(after.drills[0]).toBe(before.drills[0]);
     expect(after.drills[1].name).toBe('Analysis Match');
     expect(after.drills[1].stage).toBe('drills');
+    expect(after.drills[1].dosage).toBe('10 reps');
     expect(after.drills[2]).toBe(before.drills[2]);
     expect(after.drills[3]).toBe(before.drills[3]);
   });
