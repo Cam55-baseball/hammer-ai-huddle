@@ -59,3 +59,6 @@ Method: built today's local plan for baseball and softball × off/pre/in season 
 
 ## AM2 simulation — video analyses (Oct 20)
 PASS (3 tests, dailyPlan.contextAudit.sim.test.ts): a planted hitting fault replaces exactly one hitting drill (count and minutes unchanged); a fault cleared by clean clips rotates out; lifting identical. Gap: the overlay only touches hitting/throwing cards — pitching, fielding and baserunning cards never change from an analysis.
+
+## AM3 simulation — goals (Oct 20)
+PASS (3 tests): minutes and lifting identical regardless of goals. Finding: swapping goal order (hitting,defense → defense,hitting) leaves card order unchanged — goal ranking does not steer the day's order.

@@ -165,9 +165,8 @@ describe("audit: goals → plan", () => {
     const s = (p: typeof a) => p.blocks.find((x) => x.modality === "strength")?.drills;
     expect(s(b)).toEqual(s(a));
   });
-  it("reports what goals change (order / focus lines)", () => {
+  it("finding: reordering the same two goals does not reorder cards today", () => {
     const order = (p: typeof a) => p.blocks.filter((x) => x.status !== "suppressed").map((x) => x.modality);
-    console.log("GOALS_ORDER", JSON.stringify(order(a)), JSON.stringify(order(b)));
-    expect(order(a).length).toBeGreaterThan(0);
+    expect(order(b)).toEqual(order(a));
   });
 });
