@@ -1,3 +1,11 @@
+# AQ5 — Scheduled-practice read fixed
+
+**Ready to publish: NO.** Preview-only code fix; no publish, cron, iOS or switch changes.
+
+- [x] Today asked for practices by a date field that doesn't exist (400), so a scheduled practice day was never noticed on the screen. Now uses the real scheduled date.
+- [x] Proof: as TEST college player at 390×844, the read returns 200 (was 400), no other errors, plan still shows.
+- [ ] Note: recurring (weekly repeat) practices are still not counted by this read; follow-up.
+
 # AQ4 — Reminder cards proven; plan_prompts_v2 ON
 
 **Ready to publish: NO** (rest of queue open). Switch change is live (one backend); no publish, cron, iOS or code changes.
