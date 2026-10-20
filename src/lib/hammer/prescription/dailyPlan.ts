@@ -111,6 +111,8 @@ export interface DrillStep {
   readonly stopIf?: string;
   /** Athlete-facing "You need:" line when the drill requires equipment. */
   readonly equipmentNote?: string;
+  /** Session structure: prep → drills → full-go execution → log. */
+  readonly stage?: "prep" | "drills" | "full_go" | "log";
   readonly guide?: import("./movementGuide").MovementGuide;
   /** Keeps owner routing and downstream analysis overlays auditable. */
   readonly prescriptionOrigin?: "owner" | "analysis";
@@ -229,7 +231,7 @@ function hittingDrillsForEquipment(
   const heavy = seasonPhase === "off";
   const has = (t: string) => owned.has(t);
   const drills: DrillStep[] = [
-    { name: "Dry swings — barrel path", dosage: inSeason ? "2 rounds of 8" : "3 rounds of 10", cue: "shoulder-to-shoulder hold, no hand push" },
+    { name: "Dry swings — barrel path", dosage: inSeason ? "2 rounds of 8" : "3 rounds of 10", cue: "shoulder-to-shoulder hold, no hand push", stage: "prep" },
   ];
   if (has("tee")) {
     drills.push({
@@ -247,16 +249,18 @@ function hittingDrillsForEquipment(
   }
   if (has("pitching_machine")) {
     drills.push({
-      name: "Machine round — timing and pitch recognition",
+      name: "Full-go: machine at-bats with counts",
       dosage: inSeason ? "15 swings" : heavy ? "40 swings" : "25 swings",
-      cue: "set the machine to game speed, track every pitch — even no-swings",
+      cue: "game speed; play each at-bat from a count (start 1-1, 2-2); every swing with intent; track every pitch — even no-swings",
+      stage: "full_go",
       equipmentNote: "Pitching machine",
     });
   } else if (has("net")) {
     drills.push({
-      name: "Cage round — game-quality swings",
+      name: "Full-go: cage at-bats with counts",
       dosage: inSeason ? "10 swings (quality > volume)" : heavy ? "40 swings" : "25 swings",
-      cue: "compete on every pitch",
+      cue: "game speed; play each round from a count (start 1-1, 2-2); every swing with intent — compete on every pitch",
+      stage: "full_go",
     });
   }
   if (has("overload_bat") || has("underload_bat")) {
@@ -274,8 +278,8 @@ function hittingDrillsForEquipment(
   if (has("bat_sensor")) {
     drills.push({ name: "Log bat speed on your best round", dosage: "1 round", equipmentNote: "Bat sensor" });
   }
-  drills.push({ name: "Film 5 swings and tag them", dosage: "best 5 swings" });
-  return drills;
+  drills.push({ name: "Log it: film 5 swings and tag them, write your swing count", dosage: "best 5 swings", stage: "log" });
+  return drills.map((d) => (d.stage ? d : { ...d, stage: "drills" as const }));
 }
 
 function goalLine(proj: AthleteContextProjection): string | null {
