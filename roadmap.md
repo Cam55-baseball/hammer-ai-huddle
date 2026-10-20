@@ -10,7 +10,8 @@
 
 - [ ] Prerequisite: finish assessment mode and prompts, or isolate owner-blocked items under Waiting on owner with exact blocker; do not claim finished while original proofs/adapters remain open.
 - [x] AL2 read-only trace written to `docs/owner/plan-context-audit.md` (code-path table + 9 blunt gaps; answer: PARTLY). Per-input simulations still owed.
-- [x] AL3 games-row simulation PASS (3 tests): cue + order only, drills/dose/lifting unchanged, thin sample ignored. Remaining rows: analysis, practice, tests, readiness, pain, coach notes, goals, limbs, phase.
+- [x] AL3 games-row simulation PASS (3 tests): cue + order only, drills/dose/lifting unchanged, thin sample ignored. - [x] AL4 readiness + pain simulations PASS; gap 8 (bare-number readiness ignored) confirmed, fix pending.
+  Remaining rows: analysis, practice, tests, coach notes, goals, limbs, phase.
 - [ ] Original trace scope remainder: per-input simulations for: latest module analyses/issues/scores, games/stats, practice, tests/PBs, readiness/check-ins, pain, coach notes/From Coach, goals, limb proportions, phase/schedule → selection/drills/dose/focus/Smart Week/prompts/nothing, each sport × subscription; concrete simulations and blunt gaps.
 - [ ] Implement missing bounded analysis→editable issue-tagged skill drills, games→honest weekly focus, practice→canonical workload/emphasis, evidence convergence/conflict and plain Because lines, with learning lineage; never alter lifting schemes or use video numeric grades as measurement evidence.
 - [ ] Prove six eight-week cohorts: each input changes actual next-plan drills/focus where legally eligible, rotates out when resolved, zero rule violations, identical lifting scheme; real affected-role phone Because proofs, full suite, exact TEST cleanup.

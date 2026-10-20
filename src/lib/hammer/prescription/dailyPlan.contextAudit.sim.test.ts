@@ -92,9 +92,10 @@ describe("audit: readiness → plan", () => {
 });
 
 describe("audit: pain → plan", () => {
-  it("knee injury swaps heavy lifts for sub-max with a stop rule", () => {
-    const s = strength(ctx({ ...BASE, injury_history: ["knee"] }));
-    expect(JSON.stringify(s.drills)).toContain("sub-max");
-    expect(JSON.stringify(strength(ctx(BASE)).drills)).not.toContain("sub-max");
+  const br = (c: HammerAthleteContext) =>
+    buildHammerDailyPlan(c, NORMAL_SIGNAL, null, null, undefined, DAY).blocks.find((b) => b.modality === "baserunning")!;
+  it("knee injury turns baserunning into leg-protected IQ work; no knee keeps game scenarios", () => {
+    expect(br(ctx({ ...BASE, injury_history: ["knee"] })).title).toBe("Baserunning — IQ only (leg-protected)");
+    expect(br(ctx(BASE)).title).toBe("Baserunning — game scenarios");
   });
 });
