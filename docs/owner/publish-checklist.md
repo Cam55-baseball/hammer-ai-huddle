@@ -2,8 +2,9 @@
 
 ## AK1 Assessment Mode and plan prompts — in progress
 - Assessment Mode foundation is in preview: one screen per step, embedded S2/analysis/Vault entry, saved skips/navigation, X and Continue guard. TEST college phone proof shows both hitting and throwing buttons and completion enables Start. Evidence: `docs/owner/walkthroughs/assessment/ak1/`.
+- Continuation phone proof: body/equipment/goals open within profile check; real S2 start reaches test instructions; embedded TEST 1.65-second sprint saves, reads back with source/date/Grade 40/Acceptable and advances step 6. TEST entry removed after snapshot; progress restored. 44 focused tests pass, including six sport/tier 56-day practice matrices. Evidence: `docs/owner/walkthroughs/assessment/ak1-continuation/`. This does not prove all eight S2 subtests or the full prompt matrix.
 - Backend assessment navigation fields were added without removing data. `plan_prompts_v2` is OFF, buildable=false, awaiting owner cadence confirmation. Existing calendar game prompt stays on; subscribed scheduled-practice reminder is added to the one plan, with real PracticeHub completion, not tap-as-completion.
-- Not ready: all-program/all-sport/$0 payment proof, completed embedded tests/analysis, coach/org shared mode, General/onlooker results, Start-to-saved-plan proof, remaining prompt adapters and full eight-week simulation. These are not covered by earlier final-stretch proofs.
+- Not ready: all-program/all-sport/$0 payment proof, fully completed S2 and embedded analysis, coach/org shared mode, General/onlooker results, Start-to-saved-plan proof, remaining prompt adapters and full eight-week simulation. These are not covered by earlier final-stretch proofs.
 - Game IQ and Report Card remain owner/admin-only, labeled Internal — not released. No publish, function redeploy, cron or iOS change in AK1.
 
 Plain-English list of what must be true before publishing. Current answer: **Ready to publish: NO.**
