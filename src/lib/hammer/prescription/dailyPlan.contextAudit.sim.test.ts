@@ -215,6 +215,7 @@ describe("execution: hitting session structure", () => {
   it("with a net: prep first, a full-go round with counts and intent, log last", () => {
     for (const phase of ["in", "off", "pre"]) {
       const stages = h(["tee", "gamer_bat", "net"], phase).drills.map((d) => d.stage);
+      console.log("STG", phase, JSON.stringify(h(["tee", "gamer_bat", "net"], phase).drills.map((d) => [d.name, d.stage])));
       expect(stages[0]).toBe("prep");
       expect(stages).toContain("full_go");
       expect(stages[stages.length - 1]).toBe("log");
