@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   judgeComparableOutcome,
+  judgedOutcomeFromRecheck,
   normalVariationBand,
   COMPARABLE_OUTCOME_LABEL,
   RECHECK_MIN_DAYS,
