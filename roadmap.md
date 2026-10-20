@@ -1,11 +1,16 @@
 # AT1 — Continued approved proofs — Oct 20, 23:03 UTC
 
-- [ ] Audit and strengthen weekly-block actual-builder safety/baseline proof across eight weeks.
-- [ ] Finish TEST ADMIN internal-screen phone checks; investigate universal TEST-list exclusion.
-- [ ] Restore only the previously authorized $0 TEST Coach service through Stripe, then prove accepted coach plan without bypassing access.
+- [x] Strengthened extra-block availability to count lifting/speed too; regression passes. Actual-builder eight-week both-sport hitting-first adds 8 slots, second fielding leads shared days, skill baselines and lifting doses/status/duration/stop rules unchanged. Targeted 3 files / 24 tests PASS. Full subscription-scoped goal acceptance remains open.
+- [x] TEST ADMIN Game IQ internal label + Vault Needs owner review queue phone reads verified; fixed overlapping internal label and rechecked. No horizontal overflow.
+- [ ] Universal TEST ADMIN list hiding / measured Report Card / review save-readback remain open; exact-email discovery exception and admin-search-users require targeted backend exclusion.
+- [x] Restored authorized TEST Coach through real Stripe at 0 cents paid, webhook app plan ACTIVE. Keep active through all remaining coach proofs. Accepted coach Development plan phone read successful; unreleased Game IQ from old snapshots removed and regression/phone recheck pass.
+- [ ] Coach full scope: current final Because/execution/weekly summaries/What worked and assigned org admin proofs remain open; snapshot read alone is not full closeout.
 - [ ] Continue execution/mixed-signals/testing details and six-cohort phone proofs with exact cleanup.
-- [ ] Check the named recheck's deployed state; next scheduled run remains pending until Oct 21 04:30 UTC; no redeploy or schedule change needed just for repetition.
-- [ ] Run relevant changed tests and fresh full suite; update readiness with actual remaining checks.
+- [x] Existing nightly schedule re-read active 04:30 UTC, unchanged. Named function not redeployed again.
+- [ ] Actual next nightly run still pending until Oct 21 04:30 UTC; cannot verify a future run.
+- [x] Full suite after source changes 453 files / 3,655 tests PASS; final suite rerun after adding actual-builder tests pending below.
+
+**Ready to publish: NO.** Evidence `docs/owner/at1-proof.md`, `/tmp/browser/at1/`, `/tmp/at1-builder.log`. TEST passwords scrambled, exact temporary relationship removed. No publish/deploy/cron/iOS changes this run.
 
 # AS6 — Owner unblock decisions — Oct 20, 22:34 UTC
 
