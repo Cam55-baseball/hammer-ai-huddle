@@ -1,3 +1,12 @@
+# AP1 — Oct 20 — same-category practice-dose rule
+
+**Ready to publish: NO.** No publish, cron or iOS changes.
+
+- [x] AP1 concrete sub-step: structured practice-dose reduction after 3+ consecutive same-category practice days; at most one complete set removed, unchanged reps, explicit minimum respected, earlier safety reductions retained. Pitching never reduces throwing; lifting unchanged. Rest priority and source IDs returned for the affected category only.
+- [ ] Tests and preview verification pending this run. Rule not connected to player prescriptions: local skill drills have text doses without authoritative floor metadata. Never guess floors or parse first numbers to manufacture a reduction.
+- [ ] Next integration: supply existing row-specific floors and apply the adjustment, then real-player phone proof. Long/high-intensity thresholds and rest/body-load integration remain open. Eight-week tests in this sub-step cover the dose contract, not actual plan changes.
+- No TEST rows created. Remaining answered queue below is still open.
+
 # Owner answers — Oct 20, 04:39 UTC — approvals + practice workload sub-step
 
 **Ready to publish: NO.** No publish, cron or iOS changes. Existing lifting scheme and all safety rules stay.
