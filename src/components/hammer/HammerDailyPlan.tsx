@@ -759,6 +759,7 @@ function HammerDailyPlanBody({
   // Prefer actuals over prescribed so the clamp reflects what the athlete did.
   const totalCns = wkRx.effectiveCnsTotal ?? 0;
   const cnsHigh = totalCns >= 7;
+  const principlePicks = usePrinciplePicks();
   const plan = useMemo(() => {
     const base = cnsHigh
       ? {
