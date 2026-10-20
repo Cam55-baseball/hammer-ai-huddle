@@ -28,6 +28,7 @@ describe('actual plan execution structure and schedule protection', () => {
             const full = block.drills.find(row => row.stage === 'full_go');
             expect(full).toBeDefined();
             expect(full?.dosage).toBe('5 reps');
+            expect(full?.executionKind).toBe('baserunning_scenarios');
             if (sport === 'softball') expect(full?.setup).toContain('only when the pitch is released');
             runningDays++;
           }
