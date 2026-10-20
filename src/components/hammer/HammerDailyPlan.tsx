@@ -794,6 +794,15 @@ function HammerDailyPlanBody({
     [plan.blocks],
   );
   const influencedServeKey = influencedDrillIds.join("|");
+  // Save the final plan snapshot so an authorized coach sees these exact cards.
+  // Self-scoped write; failures are diagnostics only and never block the plan.
+  const snapshotKey = useMemo(() => JSON.stringify(planSnapshotPayload(plan, sportKey, localIso())), [plan, sportKey]);
+  const snapshotSaved = useRef("");
+  useEffect(() => {
+    if (!user?.id || !snapshotKey || snapshotSaved.current === snapshotKey) return;
+    snapshotSaved.current = snapshotKey;
+    void savePlanSnapshot(user.id, plan, sportKey, localIso());
+  }, [user?.id, snapshotKey, plan, sportKey]);
   useEffect(() => {
     if (!influencedServeKey || influencedLoggedServe.current === influencedServeKey) return;
     influencedLoggedServe.current = influencedServeKey;
