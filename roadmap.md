@@ -1,4 +1,8 @@
-# AK5 — Oct 20 — Assessment Mode + Hammers Today prompts
+# AK6 — Oct 20 — Assessment Mode + Hammers Today prompts
+- [ ] Correct practice-report evidence at generation, cache read and fallback views; preserve entered scores, forbid inferred faults or independent rep prescriptions. Prove on phone and clean exact TEST inputs.
+- [ ] Continue remaining assessment/payment/sharing/coach and prompt proofs after the honesty blocker; unapproved cadences remain OFF.
+
+## AK5 status
 - [ ] AK5 practice completion: real saved-session phone proof, permission-safe Discipline readback, exact TEST cleanup; do not count unscheduled practice as prescribed work.
 - [ ] AK5 carry forward shared assessment, payment/S2/analysis/sharing/Start proofs and OFF-gated adapters; unapproved cadences remain OFF.
 - [x] AK5 real practice save PASS at 390×844 as TEST college player: Tee → execution score 6 → Solid contact → Confirm Rep → Save Session → saved summary and canonical readback (one rep, one session). This was a direct PracticeHub save, not reminder-to-save proof.
