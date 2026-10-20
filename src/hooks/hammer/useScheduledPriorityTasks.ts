@@ -17,6 +17,8 @@ import { useRecapCountdown } from "@/hooks/useRecapCountdown";
 import { getVaultSectionUrl, getVaultRecapUrl } from "@/utils/vaultNavigation";
 import { startOfWeek, format } from "date-fns";
 import { Camera, Activity, Star, Target, FileText, type LucideIcon } from "lucide-react";
+import { promptDue, promptDaysPast } from "@/lib/hammer/promptDueRules";
+import { localIso } from "@/hooks/usePitcherSchedule";
 
 export interface ScheduledPriorityTask {
   id: string;
@@ -30,15 +32,11 @@ export interface ScheduledPriorityTask {
 }
 
 function isDue(nextDate: string | null | undefined, hasHistory: boolean): boolean {
-  if (!hasHistory) return true;
-  if (!nextDate) return true;
-  return new Date(nextDate) <= new Date();
+  return promptDue(nextDate, hasHistory, localIso());
 }
 
 function daysPast(nextDate: string | null | undefined): number {
-  if (!nextDate) return 0;
-  const diff = Date.now() - new Date(nextDate).getTime();
-  return diff > 0 ? Math.floor(diff / 86400000) : 0;
+  return promptDaysPast(nextDate, localIso());
 }
 
 export function useScheduledPriorityTasks() {
@@ -58,12 +56,13 @@ export function useScheduledPriorityTasks() {
     (m) => m.includes("throwing") || m.includes("5tool") || m.includes("golden2way"),
   );
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["hammer-scheduled-priority", user?.id],
     enabled: !!user?.id,
     staleTime: 5 * 60_000,
     queryFn: async () => {
-      const uid = user!.id;
+      if (!user) throw new Error("Sign in first");
+      const uid = user.id;
       const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
 
       const [perf, photos, grades, pitchGrades, wellness] = await Promise.all([
@@ -100,6 +99,11 @@ export function useScheduledPriorityTasks() {
           .eq("week_start_date", weekStart)
           .maybeSingle(),
       ]);
+
+      // A failed source read is not a missing baseline or a due test.
+      for (const result of [perf, photos, grades, pitchGrades, wellness]) {
+        if (result.error) throw result.error;
+      }
 
       return {
         perfNext: perf.data?.[0]?.next_entry_date ?? null,
@@ -149,7 +153,7 @@ export function useScheduledPriorityTasks() {
       out.push({
         id: "performance",
         title: "Re-test your performance numbers",
-        detail: "Beat your last marks — the plan re-scales off these results.",
+        detail: "Enter the results you measure today.",
         cadence: "Every 6 weeks",
         link: getVaultSectionUrl("performance-tests"),
         icon: Activity,
@@ -196,5 +200,5 @@ export function useScheduledPriorityTasks() {
     return out.sort((a, b) => Number(b.overdue) - Number(a.overdue));
   }, [data, recap.canGenerateRecap, recap.hasMissedRecap, hasHitting, hasThrowing, hasPitching]);
 
-  return { tasks, loading: isLoading || recap.loading };
+  return { tasks: error ? [] : tasks, loading: isLoading || recap.loading, error };
 }

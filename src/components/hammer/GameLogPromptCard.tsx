@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { localIso, shiftIso } from "@/hooks/usePitcherSchedule";
 import { useSportTheme } from "@/contexts/SportThemeContext";
+import { gamePromptVisibility } from "@/lib/hammer/promptDueRules";
 
 interface G { id: string; game_date: string; status: string | null; opponent_team: string | null }
 const ASKED = "hm.gameLogAsked.";
@@ -73,8 +74,9 @@ export function GameLogPromptCard() {
   };
   const markAsked = () => { try { localStorage.setItem(yKey, "1"); } catch { /* ignore */ } bump((n) => n + 1); };
 
-  const showToday = todayHas && !todayDone;
-  const showYesterday = yUnlogged && !yAsked;
+  const visibility = gamePromptVisibility({ todayScheduled: todayHas, todayLogged: todayDone, yesterdayScheduled: yUnlogged, yesterdayLogged: false, yesterdayAsked: yAsked });
+  const showToday = visibility.today;
+  const showYesterday = visibility.yesterday;
   if (!showToday && !showYesterday) return null;
 
   return (
