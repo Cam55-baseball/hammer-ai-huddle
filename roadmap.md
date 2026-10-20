@@ -9,7 +9,8 @@
 - [ ] Context-unity trace/build/six-cohort next-plan proofs **not started**, preserving the requested prerequisite order. Existing assessment/prompt gaps remain explicitly open below.
 
 - [ ] Prerequisite: finish assessment mode and prompts, or isolate owner-blocked items under Waiting on owner with exact blocker; do not claim finished while original proofs/adapters remain open.
-- [ ] Read-only trace in `docs/owner/plan-context-audit.md`: latest module analyses/issues/scores, games/stats, practice, tests/PBs, readiness/check-ins, pain, coach notes/From Coach, goals, limb proportions, phase/schedule → selection/drills/dose/focus/Smart Week/prompts/nothing, each sport × subscription; concrete simulations and blunt gaps.
+- [x] AL2 read-only trace written to `docs/owner/plan-context-audit.md` (code-path table + 9 blunt gaps; answer: PARTLY). Per-input simulations still owed.
+- [ ] Original trace scope remainder: per-input simulations for: latest module analyses/issues/scores, games/stats, practice, tests/PBs, readiness/check-ins, pain, coach notes/From Coach, goals, limb proportions, phase/schedule → selection/drills/dose/focus/Smart Week/prompts/nothing, each sport × subscription; concrete simulations and blunt gaps.
 - [ ] Implement missing bounded analysis→editable issue-tagged skill drills, games→honest weekly focus, practice→canonical workload/emphasis, evidence convergence/conflict and plain Because lines, with learning lineage; never alter lifting schemes or use video numeric grades as measurement evidence.
 - [ ] Prove six eight-week cohorts: each input changes actual next-plan drills/focus where legally eligible, rotates out when resolved, zero rule violations, identical lifting scheme; real affected-role phone Because proofs, full suite, exact TEST cleanup.
 - [ ] Update audit, owner documentation and this roadmap with implemented/live/pending status and proof per item.
