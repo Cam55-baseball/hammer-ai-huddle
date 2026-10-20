@@ -6,7 +6,7 @@
 - [x] Proof: as TEST college player at 390×844, the read returns 200 (was 400), no other errors, plan still shows.
 - [x] AQ6: weekly repeating practices now count too (same rule as the calendar; 5 checks pass; proven as TEST player with a temporary Tuesday repeat, then removed).
 - [x] AQ7: phone re-proof after fix — Tuesday repeat read returns it, no page errors; cancelled/rescheduled practices now skipped to match the plan builder. Test practice removed.
-- [ ] AQ8: phone proof that a weekly-repeat practice shows the "Practice today — log it" card.
+- [x] AQ8: phone proof (390×844, TEST college player): a Tuesday weekly-repeat practice shows "Practice today — log it" with its title and a Log practice button; no page errors. Test practice removed.
 
 # AQ4 — Reminder cards proven; plan_prompts_v2 ON
 
