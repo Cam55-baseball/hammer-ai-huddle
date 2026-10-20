@@ -112,6 +112,7 @@ export default function PracticeHub() {
   const [step, setStep] = useState<FlowStep>('select_type');
   const [sessionType, setSessionType] = useState<string | null>(null);
   const [scheduledId, setScheduledId] = useState<string | null>(searchParams.get('scheduled') || null);
+  const calendarPracticeId = searchParams.get('calendar');
   const [sessionConfig, setSessionConfig] = useState<SessionConfig | null>(null);
   const [notes, setNotes] = useState('');
   const [feelings, setFeelings] = useState<FeelingState>({ body: 3, mind: 3 });
@@ -393,6 +394,7 @@ export default function PracticeHub() {
           indoor_outdoor: sessionConfig.indoor_outdoor,
           rep_source: sessionConfig.rep_source,
           ...(scheduledId ? { scheduled_practice: { id: scheduledId, date: sessionDate, module: activeModule } } : {}),
+          ...(calendarPracticeId ? { calendar_practice: { id: calendarPracticeId, date: sessionDate, module: activeModule } } : {}),
         },
         link_code: sessionConfig.link_code,
         micro_layer_data: reps.length > 0 ? reps : undefined,

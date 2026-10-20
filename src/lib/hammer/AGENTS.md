@@ -1,1 +1,2 @@
 - Practice reminder completion projects exact schedule ID, local date and module from the canonical performance session's scheduled_practice metadata; never create a separate completion store. Why: completing one recurring occurrence must not erase another or an unrelated session.
+- Calendar-only practice reminders use calendar_practice identity in that same canonical session, never mark a scheduled row or invent its module; linked calendar/scheduled rows render once. Why: generic calendar events are logging intentions, not training prescriptions.
