@@ -1,6 +1,10 @@
-# AS1 — Owner decisions build — Oct 20, 20:05 UTC
+# AS3 — Owner decisions build — Oct 20, 20:28 UTC
 
-**Ready to publish: NO.** Preview builds OK; fresh full suite 449 files / 3,633 tests PASS (20:14 UTC).
+**Ready to publish: NO.** Preview builds OK (20:27 UTC); targeted suite green.
+
+AS3 this run:
+- [x] What worked / learning loop shows owner-rule results on the athlete's "Do this" list: the card now re-judges each stored re-check with the owner rules (per-measure minimal change else 3% relative band, verifiable 14–28 day window, labels "It worked" / "No change" / "Got worse" / "Need more data") instead of trusting the server's fixed-band verdict; missing or unverifiable windows never guess (`comparableOutcome.ts::judgedOutcomeFromRecheck`, 11 tests; `LearningLoopList.tsx` reads baseline/recheck/dates). Server-side judge still uses the old fixed band — correcting it needs a function redeploy, which is not authorized.
+- [ ] Remaining blockers unchanged: hosted TEST coach/athlete proofs need session-mint approval (unavailable); minute-share wiring needs an owner decision on where weekly skill minutes live; Delaycam severe path needs a canonical severity field (not invented).
 
 AS1 second pass (20:15 UTC):
 - [x] Mixed signals WIRED on Today: real two-source adapter (latest fresh same-sport clip findings vs last-7-day game ledger at existing whiff/chase/miscue thresholds); the "Mixed signals … keeping the safer plan" line appears only on genuine disagreement, hitting + fielding (`categorySignalEvidence.ts`, 9 tests).
