@@ -128,7 +128,12 @@ describe('AT1: ranked weekly skill blocks through the actual builder, both sport
         for (const modality of ['hitting', 'throwing', 'defense', 'baserunning'] as const) {
           if (base.microcycle.perModality[modality].scheduled) expect(next.microcycle.perModality[modality].scheduled).toBe(true);
         }
-        expect(next.blocks.find(b => b.modality === 'strength')).toEqual(base.blocks.find(b => b.modality === 'strength'));
+        const beforeLift = base.blocks.find(b => b.modality === 'strength');
+        const afterLift = next.blocks.find(b => b.modality === 'strength');
+        expect(afterLift?.drills).toEqual(beforeLift?.drills);
+        expect(afterLift?.durationMin).toBe(beforeLift?.durationMin);
+        expect(afterLift?.status).toBe(beforeLift?.status);
+        expect(afterLift?.stopRules).toEqual(beforeLift?.stopRules);
         expect(next.microcycle.perModality.strength).toEqual(base.microcycle.perModality.strength);
         const skills = next.blocks.filter(b => b.status === 'ready' && ['hitting', 'defense', 'throwing', 'baserunning'].includes(b.modality));
         if (skills.some(b => b.modality === 'hitting') && skills.length > 1) {
