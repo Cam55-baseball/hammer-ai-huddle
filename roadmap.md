@@ -1,3 +1,28 @@
+# AP batch summary — Oct 20, 04:58 UTC
+
+**Ready to publish: NO.** No publish, cron, iOS, migration or redeploy this batch. plan_prompts_v2 OFF.
+
+AP8 sub-step: fresh proof run — 517 plan/reminder tests PASS (63 files). Full suite not re-run this batch.
+
+| Item | Status / proof |
+|---|---|
+| No category spill-over | Done; spill test across skills, both sports, 3 phases PASS. |
+| a. Video → drills + editable tags | Hitting/throwing/pitching swap one own-skill drill with Because. Fielding/baserunning fix drills + editable Vault tags + "Needs owner review" NOT built. |
+| b. Games → focus | Because with real numbers + "(early read)"; chase → drill. Whiff/error drills pending (same as a). |
+| c. Practice → workload | Source + same-category dose rule built (108 tests); NOT applied to plans — no real per-drill minimums exist. |
+| d. Mixed signals | Rule built (4 tests); not on Today (video issues lack a sport). |
+| e. Learning-loop tracking | Not started. |
+| Execution blocks | Hitting + pitching full-go done; fielding, baserunning, off-season hitting open. |
+| Coach section | Not started. |
+| Cadences | Analysis (weekly, rotation fixed, goal order wired), Royal timing (14 days), Delaycam (1/week; 2–3 off-season) cards on Today behind switch; 34+ tests. Switch OFF: TEST-player phone proof blocked on sign-in approval (AP6). Delaycam mechanics goal / "major" flag need owner definition (AP5). |
+| Owner questions section | Not started (table approved, not created). |
+| Goal weighting | Day order follows goal ranking (proved); weekly minute share rule built, not hooked in. |
+| 12-week re-ask | On Today with "Keep my order"; phone proof (aged TEST ranking) not done. |
+| 8-week runs | Rule-level 8-week runs per subscription/sport PASS; real six-cohort plan runs + phone screenshots not done. |
+| Royal timing wording | Done: exact text, 8 languages, phone-proofed on intro + help + reminder card layout. |
+
+Waiting on owner: TEST-player sign-in approval (or ON without phone proof); what counts as a mechanics goal and a "major" flag.
+
 # AP7 — Mixed signals rule (link d)
 
 **Ready to publish: NO.** Preview-only rule; no publish, cron, iOS, switch or data changes. Reminders still OFF, waiting on owner (AP6).
