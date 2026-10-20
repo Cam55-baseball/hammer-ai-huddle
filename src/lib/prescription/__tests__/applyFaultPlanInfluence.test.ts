@@ -64,6 +64,26 @@ describe("analysis influence on Hammers Today", () => {
     expect(after).toBe(before);
   });
 });
+describe('execution protected from analysis overlays', () => {
+  it('preserves prep, full-go and logging while replacing one issue slot', () => {
+    const before = { ...block(), drills: [
+      { name: 'Prep', dosage: '8 reps', stage: 'prep' as const },
+      { name: 'Issue slot', dosage: '10 reps', stage: 'drills' as const },
+      { name: 'Compete', dosage: '40 swings', stage: 'full_go' as const },
+      { name: 'Actuals', dosage: 'Record count', stage: 'log' as const },
+    ] };
+    const [after] = apply([before]);
+    expect(after.drills[0]).toBe(before.drills[0]);
+    expect(after.drills[1].name).toBe('Analysis Match');
+    expect(after.drills[1].stage).toBe('drills');
+    expect(after.drills[2]).toBe(before.drills[2]);
+    expect(after.drills[3]).toBe(before.drills[3]);
+  });
+  it('does nothing when only a full-go slot exists', () => {
+    const before = { ...block(), drills: [{ name: 'Compete', dosage: '40 swings', stage: 'full_go' as const }] };
+    expect(apply([before])[0]).toBe(before);
+  });
+});
 describe("analysis influence reaches every skill card", () => {
   const sig = (discipline: RankedFault["signals"][number]["discipline"], key: string): RankedFault[] => [{
     ...ranked[0], disciplines: [discipline],

@@ -201,6 +201,9 @@ describe("audit: games → drill choice (chase)", () => {
     console.log("CHASE_DRILLS", JSON.stringify(h.drills.map((d) => d.name)), JSON.stringify(baseH(gear).drills.map((d) => d.name)));
     expect(h.drills.map((d) => d.name)).toContain("Two-Ball Recognition");
     expect(h.drills).toHaveLength(baseH(gear).drills.length);
+    expect(h.drills[0]).toEqual(baseH(gear).drills[0]);
+    expect(h.drills.find(d => d.stage === 'full_go')).toEqual(baseH(gear).drills.find(d => d.stage === 'full_go'));
+    expect(h.drills[h.drills.length - 1]).toEqual(baseH(gear).drills[baseH(gear).drills.length - 1]);
     expect(h.durationMin).toBe(baseH(gear).durationMin);
     expect(h.because?.some((l) => l.includes("Two-Ball Recognition") && l.includes("(early read)"))).toBe(true);
   });

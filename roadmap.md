@@ -1,3 +1,14 @@
+# Owner priority pass — Oct 20, 14:43 UTC
+
+**Ready to publish: NO.** No publish, cron or iOS changes. Practice-card proof is complete; do not repeat it. This section supersedes older "next step" instructions below.
+
+- [ ] Complete remaining safe full-go sessions: fielding, baserunning, off-season hitting; preserve lifting, doses and existing gates.
+- [ ] Build shared coach plan context from actual prescribed work, with coach/org access and consent, no scouts; prove affected-role phone views.
+- [ ] Finish issue-tagged own-category drills + Vault tags, practice-load wiring, mixed signals, learning-loop tracking and all affected Because lines.
+- [ ] Finish owner questions, goal minute share, 12-week re-ask phone proof and testing-day details.
+- [x] Reminder cards and exact Royal/Delaycam explanations phone-proven; plan_prompts_v2 live ON. Mechanics/major-flag cadence wiring remains open.
+- [ ] Run actual eight-week six-cohort changes/resolution with screenshots, and a fresh full suite after integration.
+
 # AQ5 — Scheduled-practice read fixed
 
 **Ready to publish: NO.** Preview-only code fix; no publish, cron, iOS or switch changes.

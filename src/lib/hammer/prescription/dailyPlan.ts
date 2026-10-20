@@ -1,4 +1,5 @@
 import { sortByWarmupStage } from "./warmupStages";
+import { structureSkillSession } from './skillSessionStructure';
 import { categoryPracticeLoads, type PracticeLoadRecord, type CategoryPracticeLoad } from './categoryPracticeLoad';
 import type { OutingFacts } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
 /**
@@ -202,6 +203,7 @@ const ALL_MODALITIES: ModalityKey[] = [
 ];
 
 interface BuilderArgs {
+  readonly skillExecutionAllowed?: boolean;
   readonly pitcherOutings?: OutingFacts | null;
   readonly modality: ModalityKey;
   readonly ctx: HammerAthleteContext;
@@ -300,7 +302,7 @@ function drillsToChecklist(drills: ReadonlyArray<DrillStep>): string[] {
   return drills.map((d) => `${d.name} — ${d.dosage}`);
 }
 
-function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings }: BuilderArgs): PrescribedBlock {
+function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOverride, pitcherOutings, skillExecutionAllowed = true }: BuilderArgs): PrescribedBlock {
   const declaredPos =
     firstPositionToken(ctx.get<unknown>("position_primary")?.value) ??
     firstPositionToken(ctx.get<unknown>("position")?.value) ??
@@ -850,7 +852,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       // EQUIPMENT LAW: what the athlete declared actually changes the drills.
       const declaredDrills = ownedHitting.size > 0 ? hittingDrillsForEquipment(ownedHitting, seasonPhase) : null;
       // Owner-approved narrow addition: swap one slot for an eligible owner drill.
-      const drills: DrillStep[] = mergeOwnerSlotDrills<DrillStep>(declaredDrills ?? (equipmentUnknown
+      const drills: DrillStep[] = structureSkillSession(mergeOwnerSlotDrills<DrillStep>(declaredDrills ?? (equipmentUnknown
         ? [
             { name: "Dry swings — barrel path", dosage: "3 rounds of 10", cue: "shoulder-to-shoulder hold, no hand push" },
             { name: "Tee work (or a towel drill if you have no tee)", dosage: "20 swings", cue: "hit the back of the ball, finish balanced" },
@@ -875,7 +877,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
               { name: "Front toss — sequence drill", dosage: "15 swings" },
               { name: "Live BP or machine", dosage: "25 swings" },
               { name: "Video + tag in PIE", dosage: "best 5 swings flagged" },
-            ]), ["hammers_today:skill"], { sport: normalizeSport(ctx.get<unknown>("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: ownedHitting, skill: "hitting" });
+            ]), ["hammers_today:skill"], { sport: normalizeSport(ctx.get<unknown>("sport_primary")?.value ?? null) === "softball" ? "softball" : "baseball", owned: ownedHitting, skill: "hitting" }), { skill: 'hitting', sport: normalizeSport(ctx.get<unknown>("sport_primary")?.value ?? null) === 'softball' ? 'softball' : 'baseball', owned: ownedHitting, injuryRegions, recoveryDay: recoverDay });
       return {
         modality,
         title: equipmentUnknown
@@ -1108,12 +1110,13 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       // nothing (unknown position + heavy injury gating). Never fabricate —
       // just keep the modality visible with a "come back tomorrow" note.
       // Owner-approved narrow addition: swap one slot for a switched-on owner drill.
-      const drills: DrillStep[] = mergeOwnerSlotDrills(prescription?.drills
+      const ownedDefense = new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []);
+      const drills: DrillStep[] = structureSkillSession(mergeOwnerSlotDrills(prescription?.drills
         ? [...prescription.drills]
         : [
             { name: "Pre-pitch + first-step reads", dosage: "20 reps", cue: "low athletic stance, weight on balls of feet" },
             { name: "Glove work — 4 corners", dosage: "15 reps", cue: "field through the ball, don't stab" },
-          ], ["hammers_today:defense", "defensive_library"], { sport: defenseSport, owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []) });
+          ], ["hammers_today:defense", "defensive_library"], { sport: defenseSport, owned: ownedDefense }), { skill: 'defense', sport: defenseSport, owned: ownedDefense, injuryRegions, recoveryDay: recoverDay || tournamentToday || !skillExecutionAllowed });
       const cues = prescription?.cues ?? ["Field through the ball.", "Footwork before glove."];
       const stopRules = prescription?.stopRules ?? ["Knee, ankle, or hip pain — stop and update Hammer."];
       const durationMin = prescription?.durationMin ?? (inSeason ? 15 : offSeason ? 35 : 25);
@@ -1196,7 +1199,8 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         };
       }
       const inSeason = seasonPhase === "in";
-      const drills: DrillStep[] = inSeason
+      const runningSport = normalizeSport(ctx.get<unknown>('sport_primary')?.value ?? null) === 'softball' ? 'softball' : 'baseball';
+      const drills: DrillStep[] = structureSkillSession(inSeason
         ? [
             { name: "Pickoff reads", dosage: "8 reps", cue: "first move = first step" },
             { name: "First-to-third / tag-up scenarios", dosage: "5 reps" },
@@ -1205,7 +1209,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
             { name: "Lead + secondary footwork", dosage: "10 reps", cue: "balanced lead, no lean" },
             { name: "Pickoff reads (with partner if possible)", dosage: "10 reps" },
             { name: "First-to-third / tag-up scenarios", dosage: "5 reps" },
-          ];
+          ], { skill: 'baserunning', sport: runningSport, owned: new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []), injuryRegions, recoveryDay: recoverDay || !skillExecutionAllowed });
       return {
         modality,
         title: inSeason ? "Baserunning — game scenarios" : "Baserunning IQ",
@@ -1862,9 +1866,9 @@ function applyGpSignalBias(
     ) {
       const pick = GAME_PATTERN_DRILL.chase;
       const hasGear = pick.equipment.every((e) => ownedEquipment.has(e));
-      const idx = drills.findIndex((d) => (d as { prescriptionOrigin?: string }).prescriptionOrigin !== "owner");
+      const idx = drills.findIndex((d) => d.prescriptionOrigin !== "owner" && (d.stage === undefined || d.stage === "drills"));
       if (hasGear && idx >= 0 && !drills.some((d) => d.name === pick.name)) {
-        drills = drills.map((d, i) => (i === idx ? { name: pick.name, dosage: pick.dosage, cue: pick.cue, equipmentNote: pick.equipment.join(", ") } : d));
+        drills = drills.map((d, i) => (i === idx ? { name: pick.name, dosage: pick.dosage, cue: pick.cue, equipmentNote: pick.equipment.join(", "), stage: 'drills' as const } : d));
         because.push(`Because in your last 7 days of games you chased ${gp.chasePct}% of pitches out of the zone over ${gp.atBats} at-bats${hitRead}. "${pick.name}" works on it today.`);
         biased.add("hitting");
         tags.push(`gp:chase_drill:${gp.chasePct}`);
@@ -2252,7 +2256,7 @@ export function buildHammerDailyPlan(
 
   const positionOverrideArg = roadmapInputs.positionOverride ?? null;
   const firstPass = ALL_MODALITIES.map((m) =>
-    builder({ modality: m, ctx, proj, speed, positionOverride: positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings }),
+    builder({ modality: m, ctx, proj, speed, positionOverride: positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings, skillExecutionAllowed: scheduleSignal.postureToday === 'normal' }),
   );
   // Warm-up bias is derived from the slots that actually landed in today's
   // plan — a lift day gets lift prep, a speed day gets speed prep. Priority
