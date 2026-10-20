@@ -1,3 +1,12 @@
+# AQ2 — TEST-player sign-in + reminder phone check
+
+**Ready to publish: NO.** No publish, cron, iOS or code changes. plan_prompts_v2 back OFF.
+
+- [x] API password sign-in as TEST college player works (200); preview loaded with that session at 390×844.
+- [x] Switch set to pilot for that TEST player only, then returned to off.
+- [ ] Reminder cards not visible: this player's Hammers Today is locked behind the initial assessment (1 of 6 done), so no plan → no reminders. Correct behavior, not a bug.
+- [ ] Next: finish/skip the TEST player's assessment (test data), re-run this check, then switch ON.
+
 # Owner answers — Oct 20, 05:02 UTC + AQ1
 
 **Ready to publish: NO.** No publish, cron, iOS, switch or data changes.
