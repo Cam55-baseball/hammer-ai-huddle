@@ -20,6 +20,16 @@ describe('reduceDosageForPractice (owner: ~30% less, never below half the prescr
     expect(reduceDosageForPractice('3 rounds of 10')).toBe('3 rounds of 10');
     expect(reduceDosageForPractice('')).toBe('');
   });
+  it('uses the same owner rule as the structured dose path (one engine)', () => {
+    for (const sets of [1, 2, 3, 4, 5, 7, 10, 12]) {
+      const display = reduceDosageForPractice(`${sets} x 10`);
+      const structured = reducedSetsWithinFloor(sets, null);
+      expect(display).toBe(`${structured} x 10`);
+    }
+    // An explicit row minimum outranks the half-dose floor on both paths.
+    expect(reducedSetsWithinFloor(10, 9)).toBe(9);
+    expect(reducedSetsWithinFloor(10, null)).toBe(7);
+  });
 });
 
 const context = (sport: string): HammerAthleteContext => {
