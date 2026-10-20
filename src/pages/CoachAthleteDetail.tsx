@@ -227,6 +227,7 @@ export default function CoachAthleteDetail() {
           </TabsList>
 
           <TabsContent value="development" className="space-y-4 pt-4">
+            {athleteId && <CoachPlanCard athleteId={athleteId} />}
             {athleteId && <CoachCheckinSummary athleteId={athleteId} />}
             {athleteId && <CoachDevelopmentTab athleteId={athleteId} />}
             {athleteId && <CoachOnSpotAssessment athleteId={athleteId} />}
