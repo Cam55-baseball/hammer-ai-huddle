@@ -1,3 +1,36 @@
+# AN8 — Oct 20, 03:56 UTC — batch proof per item
+
+**Ready to publish: NO.** No publish, deploy, migration, cron or iOS change in AN1–AN8; everything is preview-only. 337 plan checks PASS (43 files); preview build OK.
+
+| Item | Proof | Status |
+|---|---|---|
+| Link a — video issues → drills | Every skill except baserunning: one drill swaps, same count/minutes; cleared fault rotates out (AN1–AN2, AM2) | Partial: editable issue tags in Exercise Vault not built; no baserunning fix drills exist |
+| Link b — games → focus/drills | Real-number Because + "(early read)" under 20 ABs/15 plays (AN3); chase ≥32% → Two-Ball Recognition if net (AN4) | Partial: whiff/error drills wait on owner tagging |
+| Link c — practice logs → workload | Reader built, 3 tests (AN5) | Waiting on owner yes to wire it |
+| Link d — mixed signals | — | Not started |
+| Link e — Because + learning loop | Because lines on video, game and swap cards (AN1–AN4) | Learning-loop outcome tracking not started |
+| Execution blocks | Hitting prep→drills→full-go at-bats with counts→log (AN6); pitching full-go bullpen with counts, sore-arm bullpen removed (AN7) | Fielding, baserunning, off-season hitting open |
+| Coach section | — (depends on links a–e) | Not started; democoach/demoorg API sign-in approved |
+| Full context audit | All 12 inputs traced (AN8): tests/PBs and coach notes have no way into Today; practice logs reader only | Done |
+| Simulations | 16 context sims PASS (games, readiness, pain, video, goals, season, limbs) | 8-week six-cohort runs + phone screenshots not done |
+
+## Cadence table (proposed, plan_prompts_v2 OFF until owner confirms)
+| Prompt | Proposed frequency | When it shows |
+|---|---|---|
+| Analysis recording | Every 6 weeks per skill | Only on a day with that skill; a new clip restarts the 6 weeks |
+| Delaycam | Once a week | A day that already has hitting |
+| Royal timing | Once a week | A day that already has hitting |
+| Tex Vision | Daily pick (as today) | Its checklist; no new reminder |
+| Testing days | 3 days before + on the day | Invited, not skipped (needs read-only details view) |
+| Pick-off | When plan picks pick-off | Never an extra session |
+| Base Stealer | No separate reminder | Inside Speed card on allowed days |
+| Baserunning IQ | Short daily lesson | "Before you start"; hidden while Game IQ unreleased |
+
+## Goal-order proposal (not built until owner says yes)
+#1 goal gets the first skill slot after warm-up; on multi-skill days ~60% of skill minutes to #1 and 40% to #2 inside each skill's season min/max; lower goals keep their regular days and minimums; throw limits, rest, injury, pre-game days and lifting stay ahead of goal order; affected cards say "Because: hitting is your #1 goal."
+
+**Waiting on owner:** cadences; goal-order yes; practice-workload wiring yes; fix drills for whiff/fielding errors; testing-day details view.
+
 # AM4 — Oct 20, 03:31 UTC — batch proof per item
 
 **Ready to publish: NO.** No publish, deploy, migration, cron or iOS change in AL1–AM4; everything is preview-only.
