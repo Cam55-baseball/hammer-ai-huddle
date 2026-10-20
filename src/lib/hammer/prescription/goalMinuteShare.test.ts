@@ -33,9 +33,9 @@ describe("goal minute-share (owner: top +25%, second +10%, funded from lower cat
       { category: "fielding", baseMin: 40, minMin: 40 },
     ];
     const out = goalMinuteShare(tight, ["hitting", "throwing", "fielding"]);
-    // Only 5 spare minutes exist, so hitting gets +5, not +25; throwing gets nothing.
+    // Only 5 spare minutes exist (throwing, down to its floor), so hitting gets +5, not +25.
     expect(out.hitting).toBe(105);
-    expect(out.throwing).toBe(60);
+    expect(out.throwing).toBe(55);
     expect(out.fielding).toBe(40);
   });
 

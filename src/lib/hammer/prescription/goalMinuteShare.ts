@@ -59,13 +59,24 @@ export function goalMinuteShare(
     const grant = Math.min(want, available);
     if (grant <= 0) continue;
     result[category] = (result[category] ?? base(category)) + grant;
-    // Take the grant proportionally from funders' spare minutes.
-    for (const f of funders) {
-      const fSpare = spare.get(f.category) ?? 0;
-      const take = Math.min(fSpare, (grant * fSpare) / available);
-      spare.set(f.category, fSpare - take);
-      result[f.category] = Math.max(clean(rows.find(r => r.category === f.category)?.minMin ?? 0), result[f.category]! - take);
-    }
+    // Take proportionally from lower categories first; the second-ranked goal
+    // covers only the shortfall, so its own boost survives when others can pay.
+    const takeFrom = (pool: readonly typeof funders, amount: number) => {
+      const poolSpare = pool.reduce((sum, r) => sum + (spare.get(r.category) ?? 0), 0);
+      if (poolSpare <= 0) return 0;
+      let taken = 0;
+      for (const f of pool) {
+        const fSpare = spare.get(f.category) ?? 0;
+        const take = Math.min(fSpare, (amount * fSpare) / poolSpare);
+        spare.set(f.category, fSpare - take);
+        result[f.category] = Math.max(clean(rows.find(r => r.category === f.category)?.minMin ?? 0), result[f.category]! - take);
+        taken += take;
+      }
+      return taken;
+    };
+    const primary = funders.filter(f => f.category !== second);
+    const taken = takeFrom(primary, grant);
+    if (taken < grant - 1e-9) takeFrom(funders.filter(f => f.category === second), grant - taken);
   }
   // Round to whole minutes without dropping any category below its minimum.
   for (const row of rows) {
