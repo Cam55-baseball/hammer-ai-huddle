@@ -1,4 +1,5 @@
 import { sortByWarmupStage } from "./warmupStages";
+import { categoryPracticeLoads, type PracticeLoadRecord, type CategoryPracticeLoad } from './categoryPracticeLoad';
 import type { OutingFacts } from "../../../../supabase/functions/_shared/wic/pitching/outingFacts";
 /**
  * Hammer Daily Plan — 9-modality orchestrator.
@@ -1421,6 +1422,7 @@ import {
 } from "@/lib/hammer/prescription/scheduleContext";
 
 export interface HammerDailyPlanResult {
+  readonly practiceLoad?: ReadonlyArray<CategoryPracticeLoad>;
   readonly blocks: ReadonlyArray<PrescribedBlock>;
   readonly seasonPhase: string | null;
   readonly missingnessCount: number;
@@ -2182,6 +2184,7 @@ function scaleDosageLabel(dosage: string, scale: number): string {
 
 
 export interface RoadmapInputs {
+  readonly practiceRecords?: ReadonlyArray<PracticeLoadRecord>;
   readonly pitcherOutings?: OutingFacts | null;
   readonly recentCompletions?: RecentCompletions;
   readonly phaseStartedAt?: string | null;
@@ -2347,6 +2350,7 @@ export function buildHammerDailyPlan(
   }
   return {
     blocks,
+    practiceLoad: categoryPracticeLoads(roadmapInputs.practiceRecords ?? [], today.toLocaleDateString('en-CA'), sportRaw ?? ''),
     seasonPhase: proj.seasonPhase,
     missingnessCount: blocks.filter((b) => b.status === "awaiting-input").length,
     speedFocus: speed,

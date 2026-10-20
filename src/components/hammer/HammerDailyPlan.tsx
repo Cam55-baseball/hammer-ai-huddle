@@ -111,6 +111,7 @@ import { WkConditioningCard } from "@/components/hammer/WkConditioningCard";
 import { GameLogPromptCard } from "@/components/hammer/GameLogPromptCard";
 import { PracticeLogPromptCard } from "@/components/hammer/PracticeLogPromptCard";
 import { AnalysisRecordingPrompts } from "@/components/hammer/AnalysisRecordingPrompts";
+import { useCategoryPracticeLoad } from '@/hooks/useCategoryPracticeLoad';
 import { RoyalTimingReminder } from "@/components/hammer/RoyalTimingReminder";
 import { RankGoalsPromptCard } from "@/components/hammer/RankGoalsPromptCard";
 import { usePitcherSchedule } from "@/hooks/usePitcherSchedule";
@@ -689,6 +690,7 @@ function HammerDailyPlanBody({
   const hasG2W = modules.includes(`${sportKey}_golden2way`);
 
   const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
+  const practiceLoadHistory = useCategoryPracticeLoad(sportKey, bodyPlanDate);
   const pitcherSchedule = usePitcherSchedule(bodyPlanDate);
   // Golden 2Way: position days only — not a start day, the primer day before, or the flush day after.
   const g2wPitchingDay = !!pitcherSchedule.facts &&
@@ -737,9 +739,10 @@ function HammerDailyPlanBody({
           positionOverride: planAdjust.positionWorked,
           defenseFullOverride,
           pitcherOutings: pitcherSchedule.facts,
+          practiceRecords: practiceLoadHistory.data,
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
@@ -855,6 +858,7 @@ function HammerDailyPlanBody({
           <DayNoticesDrawerItem />
         </ErrorBoundary>
         <TexVisionWork />
+        {practiceLoadHistory.error && <p role="alert" className="text-sm text-destructive">Couldn't check your logged practice workload. Your saved plan has not been changed.</p>}
         <RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} />
         <AnalysisRecordingPrompts prescribed={plan.blocks.filter(b => prescribedToday(b)).flatMap(b => {
           // Exact module route only: arm care/throwing must not invent a pitching session.

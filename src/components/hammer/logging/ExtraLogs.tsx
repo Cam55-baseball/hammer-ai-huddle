@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
+import { useSportTheme } from '@/contexts/SportThemeContext';
 
 const today = () => new Date().toLocaleDateString("en-CA");
 
@@ -65,6 +66,8 @@ const KINDS = [["team_practice", "Team practice"], ["lesson", "Lesson"], ["own_w
 
 export function PracticeLog({ planDate, modality }: { planDate?: string; modality?: string } = {}) {
   const { user } = useOptionalAuth();
+  const { sport } = useSportTheme();
+  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<(typeof KINDS)[number][0]>("team_practice");
   const [mins, setMins] = useState("");
@@ -79,11 +82,12 @@ export function PracticeLog({ planDate, modality }: { planDate?: string; modalit
       user_id: user.id, plan_date: planDate ?? today(), movement_slug: `practice_${kind}`, prescription_id: null,
       duration_seconds_completed: Math.round(m * 60), load_used: null,
       rpe: Number.isFinite(h) && h >= 1 && h <= 10 ? Math.round(h) : null,
-      metrics: { kind: "practice", practice_kind: kind, modality: modality ?? null },
+      metrics: { kind: "practice", practice_kind: kind, modality: modality ?? null, sport },
     });
     setBusy(false);
     if (error) { toast.error("Couldn't save — try again."); return; }
     toast.success("Practice logged.");
+    qc.invalidateQueries({ queryKey: ['category-practice-load', user.id] });
     setOpen(false); setMins(""); setHard("");
   };
   if (!open) return <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setOpen(true)}>Log a practice</Button>;
