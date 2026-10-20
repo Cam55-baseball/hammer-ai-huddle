@@ -1,7 +1,7 @@
 import { CATEGORY_LABELS, modalityToCategory, rankedCategories } from '../goals/categoryGoals';
 import type { AthleteContextProjection } from '../context/decisionFilters';
 import { SKILL_MODALITIES, resolveSkillDaysTarget, type SkillModality } from '../roadmap/skillFrequencyLadder';
-import { resolveSkillDays, type SkillDayTargets, type WeeklyTemplate } from './weeklyMicrocycle';
+import { resolveSkillDays, SCHEDULABLE_MODALITIES, type SkillDayTargets, type WeeklyTemplate } from './weeklyMicrocycle';
 
 /** Reuses existing legal template slots; never creates minutes, throwing doses or a rest-day slot. */
 export function weeklyGoalBlocks(
@@ -25,8 +25,11 @@ export function weeklyGoalBlocks(
   const existing = resolveSkillDays(template, modality, current).days;
   // New effort must fit an existing training day AND the modality's phase template.
   // Recovery/rest days and earned overflow are not an extra-goal entitlement.
-  const trainingDays = new Set(SKILL_MODALITIES.filter(m => included.has(m))
-    .flatMap(m => resolveSkillDays(template, m, baseline[m] ?? 0).days));
+  const trainingDays = new Set(SCHEDULABLE_MODALITIES.filter(m => included.has(m))
+    .flatMap(m => {
+      const skill = SKILL_MODALITIES.find(s => s === m);
+      return skill ? resolveSkillDays(template, skill, baseline[skill] ?? 0).days : template.perModality[m];
+    }));
   const availability = proj.weeklyAvailabilityDays;
   const extra = template.perModality[modality].find(d => !existing.includes(d) && trainingDays.has(d));
   const protectedContext = proj.workloadHigh || (proj.readinessScore !== null && proj.readinessScore < 0.5)

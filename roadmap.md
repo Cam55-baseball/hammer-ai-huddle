@@ -1,3 +1,12 @@
+# AT1 — Continued approved proofs — Oct 20, 23:03 UTC
+
+- [ ] Audit and strengthen weekly-block actual-builder safety/baseline proof across eight weeks.
+- [ ] Finish TEST ADMIN internal-screen phone checks; investigate universal TEST-list exclusion.
+- [ ] Restore only the previously authorized $0 TEST Coach service through Stripe, then prove accepted coach plan without bypassing access.
+- [ ] Continue execution/mixed-signals/testing details and six-cohort phone proofs with exact cleanup.
+- [ ] Check the named recheck's deployed state; next scheduled run remains pending until Oct 21 04:30 UTC; no redeploy or schedule change needed just for repetition.
+- [ ] Run relevant changed tests and fresh full suite; update readiness with actual remaining checks.
+
 # AS6 — Owner unblock decisions — Oct 20, 22:34 UTC
 
 These decisions supersede older blocker descriptions and minute-share/severity requests below.

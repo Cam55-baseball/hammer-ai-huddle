@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { localIso } from "@/hooks/usePitcherSchedule";
 import { mapCoachOutcomes } from "@/lib/intelligence/coachOutcomes";
+import { visibleCoachPlanBlocks } from '@/lib/coach/visiblePlanBlocks';
 
 interface PlanDrill { name: string; dosage: string; stage: string | null; cue: string | null }
 interface PlanBlock {
@@ -58,7 +59,7 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
     );
   }
 
-  const blocks = (plan.blocks ?? []).filter((b) => b.status === "ready");
+  const blocks = visibleCoachPlanBlocks(plan.blocks ?? []);
   return (
     <section className="space-y-3 rounded-xl border border-border p-4" aria-label="Hammers' plan for this player">
       <div className="flex items-baseline justify-between gap-2">
