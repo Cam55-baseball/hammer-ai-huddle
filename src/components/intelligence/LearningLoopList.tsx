@@ -7,7 +7,7 @@ import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { OUTCOME_LABEL, type Outcome } from "@/lib/intelligence/learningLoop";
+import { COMPARABLE_OUTCOME_LABEL, judgedOutcomeFromRecheck } from "@/lib/intelligence/comparableOutcome";
 
 /** "Your Do-this list": did you do it, and what happened when we re-checked. */
 export function LearningLoopList() {
