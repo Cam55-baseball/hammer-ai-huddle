@@ -2,11 +2,18 @@
 
 **Ready to publish: NO.** No publish, deploy, migration, switch, cron or iOS changes. Practice-card proof remains complete and will not be repeated.
 
-- [ ] Connect major analysis flags and mechanics goals to the existing Delaycam cadence using canonical sport/category reports; prove scope, severity, repetition and access rules.
-- [ ] Advance canonical coach-plan sharing without inventing plans, consent or scout access; record any server-source blocker.
-- [ ] Advance execution/practice boundaries only where explicit dose authority exists; preserve lifting and full-go.
-- [ ] Complete affected-player phone checks where authorized TEST setup permits; clean exact temporary data.
-- [ ] Run changed checks and a fresh full suite, update evidence and remaining blockers here.
+- [ ] Complete major analysis flags and mechanics goals in Delaycam.
+  - [x] Preview adapter joins last five distinct completed selected-sport hitting videos to their durable mechanical taxonomy findings. Three matching reports raise the in-season cadence; clean clips stay in the denominator. Duplicate runs/other sports/modules/orphans/unscoped findings cannot count. Source failures show an error, not invented normal cadence. No new training day/dose.
+  - [x] Impossible report dates rejected. Hosted schema read confirms sport/module fields; all 567 existing findings have sport tags (read-only; no backfill).
+  - [ ] Severe path lacks a canonical severe field; never inferred from grades/prose. Mechanics-goal catalog has outcomes, not explicit mechanics/delivery/swing-cleanup picks. Neither source falsely claimed wired.
+- [x] Advance coach sharing boundary: `docs/owner/coach-plan-sharing-contract.md` specifies final skill source, coach/org relationship + training consent + health redaction + scout exclusion and acceptance requirements.
+  - [ ] Section still NOT built: no secure final-skill-plan endpoint or verified training-sharing permission. Lift rows alone are not that plan. No alternate plan, placeholder UI or client-authorized access added.
+- [x] Bounded practice-dose helper now targets whole sets near 70%, never below 50% or explicit minimum; unchanged reps. Concrete 10→7, 2→1, 3→2 and minimum 9 tests pass. Missing floors/earlier safety/non-ready/lifting stay unchanged.
+  - [x] Actual eight-week off-season builders in both sports prove hitting practice Because + full-go/log remain, every dose/minute/status and other category unchanged.
+  - [ ] Helper still NOT applied to real skill cards: no explicit legal row minima. Long/high-intensity threshold, goal-minute envelopes and comparable learning wiring remain open; no guessed amounts.
+- [ ] Affected-player phone proof blocked this run: supported private TEST password reset is not currently deployed; existing session helpers use magic links (persona helper also reseeds). Neither used to bypass approved API-password method. No owner screenshot claimed as athlete proof. No TEST data/password/consent/equipment/answer changes; nothing to clean up.
+- [x] Fresh full suite: **432 files / 3,446 tests PASS**, `/tmp/ar2-full-suite.log`; focused 6 files / 86 tests PASS, `/tmp/ar2-focused.log`. Preview build OK 16:23:10 UTC. Old query mock and unsupported test `.at()` corrected before full run. No publish/deploy/migration/switch/cron/iOS changes.
+- [ ] Remaining acceptance: athlete/coach/org phone checks; canonical coach sharing; legal skill floors/goal minute shares; severe/mechanics sources; issue swaps/resolution; mixed signals/learning outcomes; owner answer engine use; testing-day/12-week re-ask save/readback; six subscription-qualified eight-week change/resolution cohorts.
 
 # AR1 — Parallel owner priority pass — Oct 20, 15:41 UTC
 
