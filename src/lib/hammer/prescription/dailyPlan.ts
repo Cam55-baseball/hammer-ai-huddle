@@ -1788,9 +1788,19 @@ export interface GpSignalForPlan {
  * is preserved; no block is removed; no volume ceiling is exceeded
  * (we add cues, not extra drill sets).
  */
+/**
+ * Games → drill (link b). Only explicit, owner-reviewable pattern→drill pairs;
+ * a pattern with no pair keeps cue + Because only (never invent a drill).
+ * Chase → Two-Ball Recognition (catalog: "late decisions and chasing out of the zone").
+ */
+const GAME_PATTERN_DRILL = {
+  chase: { name: "Two-Ball Recognition", dosage: "3 x 10", cue: "See it early, decide once", equipment: ["net"] },
+} as const;
+
 function applyGpSignalBias(
   blocks: ReadonlyArray<PrescribedBlock>,
   gp: GpSignalForPlan | null,
+  ownedEquipment: ReadonlySet<string> = new Set(),
 ): { blocks: ReadonlyArray<PrescribedBlock>; tags: string[] } {
   if (!gp) return { blocks, tags: [] };
   // Confidence floor: skip entirely if the window is too thin to act on.
@@ -1839,8 +1849,23 @@ function applyGpSignalBias(
       biased.add("defense");
       tags.push(`gp:def:${lead.position}`);
     }
-    if (extraCues.length === 0) return b;
-    return { ...b, cues: [...b.cues, ...extraCues], because: [...(b.because ?? []), ...because] };
+    let drills = b.drills;
+    if (
+      b.modality === "hitting" && b.status === "ready" && enoughHittingSignal &&
+      gp.chasePct !== null && gp.chasePct >= 32
+    ) {
+      const pick = GAME_PATTERN_DRILL.chase;
+      const hasGear = pick.equipment.every((e) => ownedEquipment.has(e));
+      const idx = drills.findIndex((d) => (d as { prescriptionOrigin?: string }).prescriptionOrigin !== "owner");
+      if (hasGear && idx >= 0 && !drills.some((d) => d.name === pick.name)) {
+        drills = drills.map((d, i) => (i === idx ? { name: pick.name, dosage: pick.dosage, cue: pick.cue, equipmentNote: pick.equipment.join(", ") } : d));
+        because.push(`Because in your last 7 days of games you chased ${gp.chasePct}% of pitches out of the zone over ${gp.atBats} at-bats${hitRead}. "${pick.name}" works on it today.`);
+        biased.add("hitting");
+        tags.push(`gp:chase_drill:${gp.chasePct}`);
+      }
+    }
+    if (extraCues.length === 0 && drills === b.drills) return b;
+    return { ...b, drills, cues: [...b.cues, ...extraCues], because: [...(b.because ?? []), ...because] };
   });
 
   if (biased.size === 0) return { blocks: annotated, tags };
@@ -2283,7 +2308,10 @@ export function buildHammerDailyPlan(
     roadmapInputs.defenseFullOverride === true,
   );
   const sided = applySideBias(modulated, sideBias);
-  const { blocks: biasedBlocks, tags: gpBiasTags } = applyGpSignalBias(sided, gpSignal);
+  const { blocks: biasedBlocks, tags: gpBiasTags } = applyGpSignalBias(
+    sided, gpSignal,
+    new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []),
+  );
   // Defense renders on every day type; then the structural no-blank-card backstop.
   const blocks = ensureRenderable(
     applyDefenseAlwaysVisible(
