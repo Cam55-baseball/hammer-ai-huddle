@@ -1,3 +1,4 @@
+import { practiceAppliesOnDate } from "@/lib/hammer/practiceAppliesOnDate";
 /**
  * useWkDailyPrescriptions — fetch + lazy-generate today's elite Lift/Speed plan.
  *
