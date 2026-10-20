@@ -18,7 +18,7 @@ export function completedPracticeIds(logs: readonly PracticeCompletionSource[], 
     if (!metadata || typeof metadata !== "object" || !("scheduled_practice" in metadata)) continue;
     const source = metadata.scheduled_practice;
     if (!source || typeof source !== "object" || !("id" in source) || !("date" in source) || !("module" in source)) continue;
-    if (typeof source.id === "string" && source.date === today && source.module === log.module) ids.add(source.id);
+    if (typeof source.id === "string" && source.date === today && source.module === log.module) ids.add(`${source.id}:${log.module}`);
   }
   return ids;
 }
@@ -26,7 +26,7 @@ export function completedPracticeIds(logs: readonly PracticeCompletionSource[], 
 export function practicesDueToday(rows: readonly PracticePromptSource[], today: string, sport: string, allowedModules: readonly string[], completedIds: ReadonlySet<string> = new Set()) {
   const weekday = new Date(`${today}T12:00:00`).getDay();
   return rows.filter(row => row.sport === sport && allowedModules.includes(row.session_module)
-    && !completedIds.has(row.id)
+    && !completedIds.has(`${row.id}:${row.session_module}`)
     && row.status !== "pending_approval" && row.status !== "rejected"
     && !(row.requires_approval && !["scheduled", "completed"].includes(row.status ?? ""))
     && !(row.status === "completed" && row.scheduled_date === today)

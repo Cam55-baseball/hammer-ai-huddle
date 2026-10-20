@@ -44,5 +44,9 @@ describe("dated recurring practice completion", () => {
   it("unlinked practice cannot clear a scheduled reminder", () => expect(completedPracticeIds([{ ...log, fatigue_state_at_session: {} }], "2026-10-27", "baseball").size).toBe(0));
   it("wrong sport never clears a reminder", () => expect(completedPracticeIds([log], "2026-10-27", "softball").size).toBe(0));
   it("mismatched module never clears a reminder", () => expect(completedPracticeIds([{ ...log, module: "pitching" }], "2026-10-27", "baseball").size).toBe(0));
+  it("a different logged module with the same schedule ID cannot clear hitting", () => {
+    const ids = completedPracticeIds([{ ...log, module: "pitching", fatigue_state_at_session: { scheduled_practice: { id: "practice", date: "2026-10-27", module: "pitching" } } }], "2026-10-27", "baseball");
+    expect(practicesDueToday([recurring], "2026-10-27", "baseball", ["hitting"], ids)).toHaveLength(1);
+  });
   it("deleted practice never clears a reminder", () => expect(completedPracticeIds([{ ...log, deleted_at: "2026-10-27T12:00:00Z" }], "2026-10-27", "baseball").size).toBe(0));
 });
