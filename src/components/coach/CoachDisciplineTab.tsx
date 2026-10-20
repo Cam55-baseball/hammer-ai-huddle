@@ -70,7 +70,7 @@ export function CoachDisciplineTab({ athleteId }: { athleteId: string }) {
         {practice.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : practice.error || practice.data === null ?
           <p role="alert" className="text-sm text-muted-foreground">Practice logs unavailable for this view.</p> : <>
             <p className="text-sm">Practice sessions: {projected.sessions} · {data.from} to {data.to}</p>
-            <p className="text-sm">Latest practice date: {projected.dates.at(-1) ?? "Not entered"}</p>
+            <p className="text-sm">Latest practice date: {projected.dates[projected.dates.length - 1] ?? "Not entered"}</p>
             <p className="text-xs text-muted-foreground">Source: the player's saved practice logs. Practice logging does not mark a workout complete.</p>
           </>}
       </Card>
