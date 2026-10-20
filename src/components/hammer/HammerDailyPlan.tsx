@@ -110,6 +110,7 @@ import { WkLiftsCard } from "@/components/hammer/WkLiftsCard";
 import { WkConditioningCard } from "@/components/hammer/WkConditioningCard";
 import { GameLogPromptCard } from "@/components/hammer/GameLogPromptCard";
 import { PracticeLogPromptCard } from "@/components/hammer/PracticeLogPromptCard";
+import { AnalysisRecordingPrompts } from "@/components/hammer/AnalysisRecordingPrompts";
 import { RankGoalsPromptCard } from "@/components/hammer/RankGoalsPromptCard";
 import { usePitcherSchedule } from "@/hooks/usePitcherSchedule";
 import { PitcherScheduleGate } from "@/components/hammer/pitching/PitcherScheduleCard";
@@ -853,6 +854,11 @@ function HammerDailyPlanBody({
           <DayNoticesDrawerItem />
         </ErrorBoundary>
         <TexVisionWork />
+        <AnalysisRecordingPrompts prescribed={plan.blocks.filter(b => prescribedToday(b)).flatMap(b => {
+          // Exact module route only: arm care/throwing must not invent a pitching session.
+          const module = new URL(b.route, window.location.origin).searchParams.get("module");
+          return module === "hitting" || module === "pitching" || module === "throwing" ? [module] : [];
+        })} />
         {/* 6. Non-physical prescribed blocks: mental / vision work + eating plan */}
         {plan.blocks
           .filter((b) => prescribedToday(b) && PRE_START_MODALITIES.has(b.modality) && (b.modality !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES))
