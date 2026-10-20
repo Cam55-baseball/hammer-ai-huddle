@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { practicesDueToday, type PracticePromptSource } from "./calendarPromptRules";
+import { practicesDueToday, completedPracticeIds, type PracticePromptSource, type PracticeCompletionSource } from "./calendarPromptRules";
 const row: PracticePromptSource = { id: "practice", scheduled_date: "2026-10-20", status: "scheduled", recurring_active: false, recurring_days: null, sport: "baseball", session_module: "hitting", title: "Team practice" };
 describe("calendar practice prompts", () => {
   it("only today's event appears", () => expect(practicesDueToday([row], "2026-10-21", "baseball", ["hitting"])).toEqual([]));
@@ -31,4 +31,18 @@ describe("calendar practice prompts", () => {
     expect(hits.reduce((a,b) => a+b,0)).toBe(8);
     expect(hits.slice(0,7)).toEqual([1,0,0,0,0,0,0]);
   });
+});
+
+describe("dated recurring practice completion", () => {
+  const log: PracticeCompletionSource = { session_date: "2026-10-27", sport: "baseball", module: "hitting", deleted_at: null, fatigue_state_at_session: { scheduled_practice: { id: "practice", date: "2026-10-27", module: "hitting" } } };
+  const recurring = { ...row, status: "completed", recurring_active: true, recurring_days: [2] };
+  it("a later logged occurrence clears only that day's reminder", () => {
+    const ids = completedPracticeIds([log], "2026-10-27", "baseball");
+    expect(practicesDueToday([recurring], "2026-10-27", "baseball", ["hitting"], ids)).toEqual([]);
+    expect(practicesDueToday([recurring], "2026-11-03", "baseball", ["hitting"], completedPracticeIds([log], "2026-11-03", "baseball"))).toHaveLength(1);
+  });
+  it("unlinked practice cannot clear a scheduled reminder", () => expect(completedPracticeIds([{ ...log, fatigue_state_at_session: {} }], "2026-10-27", "baseball").size).toBe(0));
+  it("wrong sport never clears a reminder", () => expect(completedPracticeIds([log], "2026-10-27", "softball").size).toBe(0));
+  it("mismatched module never clears a reminder", () => expect(completedPracticeIds([{ ...log, module: "pitching" }], "2026-10-27", "baseball").size).toBe(0));
+  it("deleted practice never clears a reminder", () => expect(completedPracticeIds([{ ...log, deleted_at: "2026-10-27T12:00:00Z" }], "2026-10-27", "baseball").size).toBe(0));
 });

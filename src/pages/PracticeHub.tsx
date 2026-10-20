@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
+import { localIso } from '@/hooks/usePitcherSchedule';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -54,6 +56,7 @@ export default function PracticeHub() {
   const { createSession, saving } = usePerformanceSession();
   const { toast } = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const { updateStatus } = useScheduledPracticeSessions();
@@ -365,10 +368,11 @@ export default function PracticeHub() {
     }
 
     try {
+      const sessionDate = localIso();
       const result = await createSession({
         sport: sportKey,
         session_type: sessionType,
-        session_date: new Date().toISOString().split('T')[0],
+        session_date: sessionDate,
         season_context: sessionConfig.season_context,
         season_context_overridden: sessionConfig.season_context_overridden ?? false,
         drill_blocks: drillBlocks,
@@ -388,6 +392,7 @@ export default function PracticeHub() {
           environment: sessionConfig.environment,
           indoor_outdoor: sessionConfig.indoor_outdoor,
           rep_source: sessionConfig.rep_source,
+          ...(scheduledId ? { scheduled_practice: { id: scheduledId, date: sessionDate, module: activeModule } } : {}),
         },
         link_code: sessionConfig.link_code,
         micro_layer_data: reps.length > 0 ? reps : undefined,
@@ -430,6 +435,7 @@ export default function PracticeHub() {
       if (scheduledId) {
         await updateStatus(scheduledId, 'completed');
       }
+      void queryClient.invalidateQueries({ queryKey: ['practice-log-prompt'] });
     } catch {
       // Error toast handled by hook
     }

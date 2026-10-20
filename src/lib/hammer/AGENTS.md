@@ -1,0 +1,1 @@
+- Practice reminder completion projects exact schedule ID, local date and module from the canonical performance session's scheduled_practice metadata; never create a separate completion store. Why: completing one recurring occurrence must not erase another or an unrelated session.

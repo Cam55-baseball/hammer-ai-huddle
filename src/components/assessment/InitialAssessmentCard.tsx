@@ -87,7 +87,7 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
   }, [autoOpen, !!q.data]);
   const close = () => { setOpen(false); onClose?.(); };
   useEffect(() => {
-    if (!q.data || !initialized || saving || finalizing.current || q.data.profile?.hammers_today_started_at) return;
+    if (!q.data || !initialized || saving || saveError || finalizing.current || q.data.profile?.hammers_today_started_at) return;
     const row = q.data.row;
     const input = { onboardingDone: false, lastSeasonDoneOrSkipped: !!(row?.last_season_saved_at || row?.last_season_skipped_at), movementScreenDone: !!row?.movement_done_at, s2Done: q.data.s2, analysesDone: q.data.analyses, sixWeekTestDone: q.data.tests, modules: modules.filter(m => m.startsWith(`${sport}_`)), progress: (row?.step_progress ?? {}) as StepProgress };
     if (!shouldFinalizeAssessment(input, row?.completed_at)) return;
@@ -96,7 +96,7 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
       if (saved) close();
       else finalizing.current = false;
     });
-  }, [q.data, initialized, modules, sport, saving]);
+  }, [q.data, initialized, modules, sport, saving, saveError]);
   if (!user) return null;
   if (q.error) return <p role="alert" className="text-sm text-destructive">Couldn't load your assessment. Reload and try again.</p>;
   if (!q.data || !initialized) return <p className="text-sm text-muted-foreground">Loading your assessment…</p>;
