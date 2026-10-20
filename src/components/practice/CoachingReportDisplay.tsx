@@ -21,7 +21,7 @@ export function CoachingReportDisplay({ report, isGenerating, error }: CoachingR
         <CardContent className="pt-5 space-y-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Generating elite coaching analysis…
+            Loading saved practice…
           </div>
           <Skeleton className="h-20 w-full" />
           <Skeleton className="h-16 w-full" />
@@ -35,7 +35,7 @@ export function CoachingReportDisplay({ report, isGenerating, error }: CoachingR
     return (
       <Card className="border-destructive/20">
         <CardContent className="pt-4 text-sm text-muted-foreground">
-          Coaching analysis unavailable — using standard insights.
+          Saved practice details unavailable.
         </CardContent>
       </Card>
     );
@@ -71,6 +71,8 @@ export function CoachingReportDisplay({ report, isGenerating, error }: CoachingR
           </div>
         )}
       </SectionCard>
+
+      <p className="text-sm text-muted-foreground">Mechanics: Not measured. Not enough data to name a fault.</p>
 
       {/* 2. Root Cause Analysis */}
       {report.rootCauseAnalysis.length > 0 && (
