@@ -19,6 +19,9 @@ DP = `src/lib/hammer/prescription/dailyPlan.ts` · WK = `supabase/functions/wk-g
 | Limb proportions | B + D (swaps, cues, legal-pick bonus); no dose | No | No | DP:744-747, 985-997, WK:2097-2201 |
 | Phase / schedule | A/B/C/D across warm-up, strength, skills, microcycle | **No** | Yes (seasonal tip, intent, weekly strip) | DP:435-880, WK:780-907 |
 
+## Simulations done
+- AL3 games row CONFIRMED by `src/lib/hammer/prescription/dailyPlan.contextAudit.sim.test.ts` (3 PASS): 35% whiff over 10 at-bats moves hitting first and adds a cue; drills and minutes unchanged; 3 at-bats changes nothing; lifting identical.
+
 ## Subscription × sport
 - Local planner receives no subscription argument; differences come from access gates (Base Stealer: 5Tool yes, Golden 2Way except start/primer/flush days, Complete Pitcher no — `HammerDailyPlan.tsx:685-695`).
 - Server bat-speed work and velocity caps are subscription-aware (WK:2871-2889, 4955-4970).
