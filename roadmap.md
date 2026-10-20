@@ -1,6 +1,10 @@
-# AS3 — Owner decisions build — Oct 20, 20:28 UTC
+# AS4 — Owner decisions build — Oct 20, 20:33 UTC
 
-**Ready to publish: NO.** Preview builds OK (20:27 UTC); targeted suite green.
+**Ready to publish: NO.** Preview builds OK (20:32 UTC); targeted suite green.
+
+AS4 this run:
+- [x] Coach "What worked lately" BUILT and live: `coach_athlete_outcomes` RPC (migration 0085) answers only the athlete or an accepted coach/org-staff (is_coach_of), scouts and everyone else denied; health-bearing advice lines omitted unless health sharing is on; latest 6 followed, judged recommendations. Coach Development tab card shows each advice with its owner-rule label via `mapCoachOutcomes` (`coachOutcomes.ts`, 4 tests). Verified live: non-coach viewer → "denied"; self → "ok" empty. Positive accepted-link phone proof still needs TEST session mints (approval unavailable).
+- [ ] Remaining blockers unchanged: hosted TEST coach/athlete proofs need session-mint approval; minute-share wiring needs an owner decision on where weekly skill minutes live; Delaycam severe path needs a canonical severity field; server recheck judge fix needs a function redeploy (not authorized).
 
 AS3 this run:
 - [x] What worked / learning loop shows owner-rule results on the athlete's "Do this" list: the card now re-judges each stored re-check with the owner rules (per-measure minimal change else 3% relative band, verifiable 14–28 day window, labels "It worked" / "No change" / "Got worse" / "Need more data") instead of trusting the server's fixed-band verdict; missing or unverifiable windows never guess (`comparableOutcome.ts::judgedOutcomeFromRecheck`, 11 tests; `LearningLoopList.tsx` reads baseline/recheck/dates). Server-side judge still uses the old fixed band — correcting it needs a function redeploy, which is not authorized.

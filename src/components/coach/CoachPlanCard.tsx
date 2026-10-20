@@ -8,6 +8,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { localIso } from "@/hooks/usePitcherSchedule";
+import { mapCoachOutcomes } from "@/lib/intelligence/coachOutcomes";
 
 interface PlanDrill { name: string; dosage: string; stage: string | null; cue: string | null }
 interface PlanBlock {
@@ -29,6 +30,16 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
       const { data, error } = await supabase.rpc("coach_athlete_plan", { _athlete: athleteId, _date: today });
       if (error) throw error;
       return data as unknown as CoachPlan;
+    },
+  });
+  // "What worked" — recent judged outcomes, same accepted-connection gate.
+  const outcomesQuery = useQuery({
+    queryKey: ["coach-athlete-outcomes", athleteId],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("coach_athlete_outcomes", { _athlete: athleteId });
+      if (error) throw error;
+      return mapCoachOutcomes(data);
     },
   });
 
@@ -79,6 +90,18 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
             </li>
           ))}
         </ul>
+      )}
+      {outcomesQuery.data?.state === "ok" && outcomesQuery.data.rows.length > 0 && (
+        <div className="space-y-1 border-t border-border pt-3">
+          <h4 className="text-xs font-semibold">What worked lately</h4>
+          <ul className="space-y-1">
+            {outcomesQuery.data.rows.map((o, i) => (
+              <li key={`${o.area}-${i}`} className="text-xs text-muted-foreground">
+                {o.doThis} ({o.area}) — {o.label}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </section>
   );
