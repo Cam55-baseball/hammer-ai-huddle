@@ -1,3 +1,12 @@
+# AP5 — Delaycam mechanics inputs (audit)
+
+**Ready to publish: NO.** No app, publish, cron, iOS, migration or redeploy changes; reminders remain OFF.
+
+- [x] Concrete sub-step: traced both Delaycam "2–3 times a week" inputs. (1) Mechanics goal: the saved goal catalog has no mechanics goal (hitting goals are bat speed, hard contact, plate discipline, power; sub-goals like barrel control are outcomes, not mechanics). Treating any of them as "mechanics" would be a guess, so the input stays off. (2) Major mechanical flag: the ranked issue list has no sport field and no "major" level the owner has defined, so it cannot be scoped to the selected sport without borrowing another sport's flags. Input stays off.
+- [x] Result today: players get Delaycam once a week, and 2–3 times a week in the off-season (season already comes from the real phase). Nothing invented.
+- [ ] Needs owner: (a) which goal(s) count as a "mechanics goal" (or add one); (b) what makes a mechanical flag "major" (e.g. seen in 3+ clips, or top-ranked). Seed both into "Questions for the owner" when that section is built. Sport field on issue signals is still needed for (b).
+- [ ] Still open: activation and real-player Today phone proof; other owner queue unchanged. No TEST data touched.
+
 # AP4 — Analysis reminder rotation under persistent priorities
 
 **Ready to publish: NO.** No publish, cron, iOS, migration or redeploy; reminders remain OFF pending integration and phone proofs.
