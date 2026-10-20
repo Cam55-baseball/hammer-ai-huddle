@@ -1,3 +1,11 @@
+# AR8 — Final batch pass — Oct 20, 17:27 UTC
+
+**Ready to publish: NO.** No publish, deployment, migration, switch, cron or iOS changes.
+
+- [ ] Finish source-supported skill execution, goal confirmation and testing-day readback sub-steps from independent investigations.
+- [ ] Run focused checks, final full suite and applicable phone checks; distinguish hosted acceptance from component tests.
+- [ ] Replace this checklist with the complete Done / Partly / Not started status table and proof paths before stopping.
+
 # AR7 — Parallel owner priority pass — Oct 20, 17:15 UTC
 
 **Ready to publish: NO.** No live, cron or iOS changes; do not repeat the completed practice-card proof.
