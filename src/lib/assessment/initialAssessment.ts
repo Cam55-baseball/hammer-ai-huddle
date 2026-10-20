@@ -1,7 +1,7 @@
 /**
  * Plan 4 §B — one-time initial assessment.
- * Suggested checklist only. Every item is optional; explicit completion
- * is persisted separately and is the only first-start requirement.
+ * Embedded six-step mode. Answers are optional; done/skipped navigation
+ * is persisted separately and never invents test results.
  * Step 5 = one analysis for each module INCLUDED in the subscription only.
  * Baserunning IQ and Game IQ are never part of it.
  */
@@ -28,7 +28,7 @@ export const STEP_LABELS: Record<StepId, string> = {
   2: "Last season's stats (optional, player-reported)",
   3: "Movement and safety check",
   4: "Tex Vision S2 test",
-  5: "One video analysis for each part of your plan",
+  5: "Your first analyses",
   6: "First 6-week test",
 };
 

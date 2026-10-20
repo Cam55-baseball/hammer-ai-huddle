@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { InitialAssessmentCard } from "@/components/assessment/InitialAssessmentCard";
+import { assessmentEntryAllowed } from "@/lib/assessment/entryRules";
 
 export default function AssessmentEntry() {
   const { user } = useAuth();
@@ -23,7 +24,7 @@ export default function AssessmentEntry() {
   }});
   useEffect(() => {
     if (!q.data || admitted) return;
-    if (q.data.started || q.data.assessment?.completed_at || q.data.assessment?.mode_opened_at || !q.data.paid) navigate("/dashboard", { replace: true });
+    if (!assessmentEntryAllowed({ paid: q.data.paid, started: !!q.data.started, completed: !!q.data.assessment?.completed_at, opened: !!q.data.assessment?.mode_opened_at })) navigate("/dashboard", { replace: true });
     else setAdmitted(true);
   }, [q.data, admitted, navigate]);
   if (q.error) return <p role="alert" className="p-6 text-destructive">Couldn't load your assessment. Please try again.</p>;

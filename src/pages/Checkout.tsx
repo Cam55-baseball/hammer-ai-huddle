@@ -174,7 +174,7 @@ const Checkout = () => {
         }
       }, 800);
 
-      setTimeout(() => {
+      const returnTimer = setTimeout(() => {
         clearInterval(stepTimer);
         // Confirmed entitlement is handled by the watcher; never mount the
         // dashboard while a first purchase is still being confirmed.
@@ -187,7 +187,7 @@ const Checkout = () => {
         }
         navigate(dest, { replace: true });
       }, 2500);
-      return;
+      return () => { clearInterval(stepTimer); clearTimeout(returnTimer); };
     } else if (status === "cancel" || status === "cancelled") {
       localStorage.removeItem("pendingModuleActivation");
       toast({
