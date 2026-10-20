@@ -8,6 +8,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { localIso } from "@/hooks/usePitcherSchedule";
+import { mapCoachOutcomes } from "@/lib/intelligence/coachOutcomes";
 
 interface PlanDrill { name: string; dosage: string; stage: string | null; cue: string | null }
 interface PlanBlock {
