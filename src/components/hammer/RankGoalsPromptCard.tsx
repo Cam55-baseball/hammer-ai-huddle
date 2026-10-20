@@ -15,7 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { CATEGORY_KEYS, CATEGORY_LABELS, CATEGORY_DESCRIPTIONS, normalizeCategoryOrder, type CategoryKey } from "@/lib/hammer/goals/categoryGoals";
 import { useContext } from "react";
 import { HammersTodayContext } from "@/components/hammer/HammersTodayProvider";
-import { goalReaskDue, GOAL_REASK_TEXT } from "@/lib/hammer/goalReask";
+import { goalReaskDue, goalCalendarDate, GOAL_REASK_TEXT } from "@/lib/hammer/goalReask";
 
 const HIDE = "hm.rankGoalsHidden.";
 
@@ -25,7 +25,7 @@ export function RankGoalsPromptCard({ forceOpen = false }: { forceOpen?: boolean
   const plan = useContext(HammersTodayContext);
   const [order, setOrder] = useState<CategoryKey[]>([]);
   const [saving, setSaving] = useState(false);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = goalCalendarDate(new Date());
   const hideKey = `${HIDE}${user?.id}.${today}`;
   const [hidden, setHidden] = useState(() => { try { return localStorage.getItem(hideKey) === "1"; } catch { return false; } });
 

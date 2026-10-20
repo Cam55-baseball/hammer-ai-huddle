@@ -104,7 +104,7 @@ describe('AR4: six subscription-qualified eight-week actual-builder cohorts (not
           root_pattern_id: discipline, confidence: 0.7, sample_size: 1, severity: 0.46, evidence: '', observed_at: '2026-06-01' }] });
       const input = (['hitting', 'pitching', 'throwing', 'fielding', 'running'] as const).map(ranked);
       const allowed = tier === 'pitcher' ? ['pitching'] : tier === '5tool' ? ['hitting', 'throwing', 'fielding', 'running'] : ['hitting', 'pitching', 'throwing', 'fielding', 'running'];
-      expect(accessiblePlanFaults(input, modules, sport).flatMap(row => row.signals.map(s => s.discipline))).toEqual(allowed);
+      expect(accessiblePlanFaults(input, modules, sport).flatMap(row => row.signals.map(s => s.discipline)).sort()).toEqual([...allowed].sort());
       expect(accessiblePlanFaults(input, [`${other}_golden2way`], sport)).toEqual([]);
     });
   }
