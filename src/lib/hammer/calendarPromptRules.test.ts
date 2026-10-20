@@ -8,6 +8,17 @@ describe("calendar practice prompts", () => {
   it("cancelled practices disappear", () => expect(practicesDueToday([{ ...row, status: "cancelled" }], "2026-10-20", "baseball", ["hitting"])).toEqual([]));
   it("another sport cannot create a prompt", () => expect(practicesDueToday([row], "2026-10-20", "softball", ["hitting"])).toEqual([]));
   it("unavailable modules cannot create a prompt", () => expect(practicesDueToday([row], "2026-10-20", "baseball", ["pitching"])).toEqual([]));
+  it("pending approval never prompts a player to start", () => {
+    expect(practicesDueToday([{ ...row, requires_approval: true, status: "pending" }], "2026-10-20", "baseball", ["hitting"])).toEqual([]);
+  });
+  it("approved practice may appear", () => {
+    expect(practicesDueToday([{ ...row, requires_approval: true, status: "approved" }], "2026-10-20", "baseball", ["hitting"])).toHaveLength(1);
+  });
+  it("a completed recurring occurrence does not cancel later weeks", () => {
+    const recurring = { ...row, status: "completed", recurring_active: true, recurring_days: [2] };
+    expect(practicesDueToday([recurring], "2026-10-20", "baseball", ["hitting"])).toEqual([]);
+    expect(practicesDueToday([recurring], "2026-10-27", "baseball", ["hitting"])).toEqual([recurring]);
+  });
   it("eight-week Tuesday recurrence yields exactly eight reminders", () => {
     const recurring = { ...row, recurring_active: true, recurring_days: [2] };
     const hits = Array.from({ length: 56 }, (_, day) => {
