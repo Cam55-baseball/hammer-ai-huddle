@@ -3,7 +3,9 @@
 **Ready to publish: NO.** No publish, cron or iOS changes. Existing lifting scheme and all safety rules stay.
 
 - [x] Record approvals: practice workload; proposed same-category fix drills + editable issue tags in Needs owner review; athlete testing-day details/contact; owner questions table/section; finish reminder cards then plan_prompts_v2 ON; TEST ranking aged 85 days for re-ask phone proof.
-- [ ] Current concrete sub-step: connect real practice minutes/intensity and same-category consecutive-day signals to the plan, preserving category floors and lifting.
+- [x] Source sub-step: plan now receives exact sport/category practice history and projects seven-day minutes, entered intensity-minutes, missing values and 3+ consecutive-day signal. Practice Hub has no saved minutes/intensity fields: those remain unknown; schedule durations are NOT substituted. Existing practice logger now saves sport and refreshes this read. Legacy logs without sport remain excluded rather than borrowing another sport.
+- [ ] Volume/recovery wiring NOT complete: category-specific dose floors and long/high-intensity thresholds must use existing dose authority, not guessed text reductions; lifting and all existing prescriptions remain unchanged this run. Actual totals currently feed the returned plan context only, not rest/body-load governors. This is not claimed as completed practice → workload behavior.
+- [ ] Phone and six-cohort actual-plan workload proofs pending; new projection checks cover eight weeks in each sport, not changed prescriptions. No TEST rows created.
 - [ ] Following sub-steps: Vault reviewed fix drills/tags; testing-day details; owner questions; finish reminder adapters and activate switch; mixed signals; learning outcomes; weekly goal share; remaining execution; coach section; re-ask phone proof; six-cohort simulations; full suite.
 - No owner-decision blocker remains for the above. Proof and live/pending status recorded after this sub-step.
 

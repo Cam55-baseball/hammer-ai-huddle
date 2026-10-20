@@ -858,6 +858,7 @@ function HammerDailyPlanBody({
           <DayNoticesDrawerItem />
         </ErrorBoundary>
         <TexVisionWork />
+        {practiceLoadHistory.error && <p role="alert" className="text-sm text-destructive">Couldn't check your logged practice workload. Your saved plan has not been changed.</p>}
         <RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} />
         <AnalysisRecordingPrompts prescribed={plan.blocks.filter(b => prescribedToday(b)).flatMap(b => {
           // Exact module route only: arm care/throwing must not invent a pitching session.

@@ -20,4 +20,20 @@ describe('same-category actual practice load', () => {
   it('an older three-day stretch expires rather than reducing an unrelated next day', () => {
     expect(categoryPracticeLoads([row('1','2026-10-18'),row('2','2026-10-17'),row('3','2026-10-16')], '2026-10-20','baseball')[0]?.heavyStretch).toBe(false);
   });
+  for (const sport of ['baseball','softball']) {
+    it(`${sport}: eight weeks keep category totals isolated and clear the streak after a rest day`, () => {
+      const records: PracticeLoadRecord[] = [];
+      for (let n=0;n<56;n++) {
+        const date = new Date('2026-06-01T12:00:00Z'); date.setUTCDate(date.getUTCDate()+n);
+        const today = date.toISOString().slice(0,10);
+        const load = categoryPracticeLoads(records,today,sport);
+        if (n % 7 === 3) {
+          expect(load.find(r=>r.category==='hitting')?.heavyStretch).toBe(true);
+          expect(load.some(r=>r.category==='throwing')).toBe(false);
+        }
+        if (n % 7 === 4) expect(load.find(r=>r.category==='hitting')?.heavyStretch).toBe(false);
+        if (n % 7 < 3) records.push(row(String(n),today,'hitting',sport));
+      }
+    });
+  }
 });
