@@ -171,6 +171,7 @@ import { usePlanFaultContext } from "@/hooks/usePlanFaultContext";
 import { useDrillCirculation } from "@/hooks/useDrillCirculation";
 import { projectEnvelope } from "@/lib/hammer/context/decisionFilters";
 import { applyFaultPlanInfluence } from "@/lib/prescription/applyFaultPlanInfluence";
+import { accessiblePlanFaults } from '@/lib/hammer/planAnalysisAccess';
 
 function shortSeasonPhase(p: string | null | undefined): "off" | "pre" | "in" | "post" | null {
   if (!p) return null;
@@ -773,7 +774,7 @@ function HammerDailyPlanBody({
     // asked to stick from now on.
     const influencedBlocks = applyFaultPlanInfluence({
       blocks: base.blocks,
-      rankedFaults: faultContext.isError ? [] : faultContext.data?.rankedFaults ?? [],
+      rankedFaults: accessiblePlanFaults(faultContext.isError ? [] : faultContext.data?.rankedFaults ?? [], modules, sportKey),
       signalScopes: faultContext.isError ? {} : faultContext.data?.signalScopes ?? {},
       sport: ctx.get<unknown>("sport_primary")?.value === "softball" ? "softball" : "baseball",
       ownedEquipment: new Set(projectedAthlete.equipmentList),
@@ -781,7 +782,7 @@ function HammerDailyPlanBody({
       circulation: drillCirculation.circulation,
     });
     return { ...base, blocks: applyAdjustments(influencedBlocks, planAdjust.adjustments) };
-  }, [rawPlan, cnsHigh, planAdjust.adjustments, faultContext.data, faultContext.isError, projectedAthlete.equipmentList, ctx, drillCirculation.catalog, drillCirculation.circulation]);
+  }, [rawPlan, cnsHigh, planAdjust.adjustments, faultContext.data, faultContext.isError, projectedAthlete.equipmentList, ctx, drillCirculation.catalog, drillCirculation.circulation, modules, sportKey]);
 
   const influencedDrillIds = useMemo(
     () => plan.blocks.flatMap((block) => block.drills)
