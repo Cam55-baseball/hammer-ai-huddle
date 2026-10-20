@@ -32,8 +32,8 @@ export function LearningLoopList() {
       if (!user) return [];
       // Owner/admin also see which principle produced the advice.
       const cols = staff
-        ? "id, area, do_this, followed, outcome, created_at, principle_version_id, coaching_principle_versions(principle_id, version)"
-        : "id, area, do_this, followed, outcome, created_at";
+        ? "id, area, do_this, followed, outcome, created_at, baseline_value, recheck_value, followed_at, checked_at, principle_version_id, coaching_principle_versions(principle_id, version)"
+        : "id, area, do_this, followed, outcome, created_at, baseline_value, recheck_value, followed_at, checked_at";
       const { data, error } = await (supabase as any).from("intelligence_recommendations")
         .select(cols)
         .eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
