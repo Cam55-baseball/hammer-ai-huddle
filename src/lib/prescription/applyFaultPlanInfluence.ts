@@ -62,11 +62,15 @@ function withCleanClipNote(block: PrescribedBlock, discipline: Discipline, ranke
   return note ? { ...block, cleanClipNote: note } : block;
 }
 
-function disciplineForBlock(block: PrescribedBlock): Discipline | null {
-  if (block.modality === "hitting") return "hitting";
-  if (block.modality === "throwing") return "throwing";
-  return null;
+/** Every skill card a video finding may shape. Pitching findings land on the throwing card (where pitching work lives). */
+function disciplinesForBlock(block: PrescribedBlock): Discipline[] {
+  if (block.modality === "hitting") return ["hitting"];
+  if (block.modality === "throwing") return ["throwing", "pitching"];
+  if (block.modality === "defense") return ["fielding"];
+  if (block.modality === "baserunning") return ["running"];
+  return [];
 }
+const MODULE_FOR: Record<string, string> = { hitting: "hitting", throwing: "throwing", pitching: "pitching", fielding: "fielding", running: "running" };
 
 export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): ReadonlyArray<PrescribedBlock> {
   const now = input.now ?? new Date();
@@ -75,21 +79,23 @@ export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): Readonl
   const catalog = eligibleCatalog(input.catalog, input.ownedEquipment);
 
   return input.blocks.map((original) => {
-    const discipline = disciplineForBlock(original);
-    if (!discipline || original.status !== "ready" || original.drills.length === 0) return original;
-    const block = withCleanClipNote(original, discipline, input.rankedFaults);
+    const disciplines = disciplinesForBlock(original);
+    if (disciplines.length === 0 || original.status !== "ready" || original.drills.length === 0) return original;
+    const block = disciplines.reduce((b, d) => withCleanClipNote(b, d, input.rankedFaults), original);
     if (priorities.length === 0 || catalog.length === 0) return block;
     const signals = priorities.flatMap((priority) => priority.signals
-      .filter((signal) => signal.discipline === discipline && PLAN_SIGNAL_SOURCES.has(signal.source))
+      .filter((signal) => disciplines.includes(signal.discipline) && PLAN_SIGNAL_SOURCES.has(signal.source))
       .map((signal) => ({ signal, priority })));
     if (signals.length === 0) return block;
 
-    const faultKeys = [...new Set(signals.map(({ signal }) => signal.fault_key))];
+    // Highest-priority finding's skill picks the drill library; a skill with no library (e.g. running) honestly swaps nothing.
+    const discipline = signals[0].signal.discipline;
+    const faultKeys = [...new Set(signals.filter(({ signal }) => signal.discipline === discipline).map(({ signal }) => signal.fault_key))];
     const [match] = matchPrescriptionDrills({
       catalog,
       circulation: input.circulation,
       faultKeys,
-      module: discipline,
+      module: MODULE_FOR[discipline],
       sport: input.sport,
       max: 1,
     });

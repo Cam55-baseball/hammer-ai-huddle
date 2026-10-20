@@ -64,3 +64,30 @@ describe("analysis influence on Hammers Today", () => {
     expect(after).toBe(before);
   });
 });
+describe("analysis influence reaches every skill card", () => {
+  const sig = (discipline: RankedFault["signals"][number]["discipline"], key: string): RankedFault[] => [{
+    ...ranked[0], disciplines: [discipline],
+    signals: [{ ...ranked[0].signals[0], discipline, fault_key: key }],
+  }];
+  const run = (modality: PrescribedBlock["modality"], r: RankedFault[], d: EliteDrill) =>
+    applyFaultPlanInfluence({ blocks: [{ ...block(), modality }], rankedFaults: r, sport: "baseball",
+      ownedEquipment: new Set(), catalog: [d], circulation: { servedToUser: {}, usage: {} },
+      now: new Date("2026-10-03T00:00:00.000Z") })[0];
+  it("a pitching finding swaps one drill on the throwing card", () => {
+    const d = { ...drill, id: "p1", name: "Pitch Fix", category: "pitching" as const, violationKeys: ["early_trunk_rotation"] };
+    const after = run("throwing", sig("pitching", "early_trunk_rotation"), d);
+    expect(after.drills[0].name).toBe("Pitch Fix");
+    expect(after.because?.[0]).toContain("Pitch Fix");
+  });
+  it("a fielding finding swaps one drill on the defense card", () => {
+    const d = { ...drill, id: "f1", name: "Glove Fix", category: "throwing" as const, violationKeys: ["glove_late"] };
+    expect(run("defense", sig("fielding", "glove_late"), d).drills[0].name).toBe("Glove Fix");
+  });
+  it("a running finding with no running drill library changes nothing (never invents a drill)", () => {
+    const before = { ...block(), modality: "baserunning" as const };
+    const [after] = applyFaultPlanInfluence({ blocks: [before], rankedFaults: sig("running", "late_jump"), sport: "baseball",
+      ownedEquipment: new Set(), catalog: [drill], circulation: { servedToUser: {}, usage: {} } });
+    expect(after.drills).toEqual(before.drills);
+    expect(after.because).toBeUndefined();
+  });
+});
