@@ -145,6 +145,8 @@ export interface PrescribedBlock {
   readonly roadmapReason: string;
   /** Stage 2: why drills for a fault eased — a newer clip genuinely checked it and didn't see it. */
   readonly cleanClipNote?: string;
+  /** Plain "Because" lines naming the real signal that changed this card (link e). Never invented. */
+  readonly because?: ReadonlyArray<string>;
   readonly phase: BlockPhase;
   readonly steps: ReadonlyArray<string>;
   readonly drills: ReadonlyArray<DrillStep>;

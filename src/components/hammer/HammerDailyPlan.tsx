@@ -1485,6 +1485,13 @@ function BlockCard({
                 <p className="text-[11px] text-foreground">{block.cleanClipNote}</p>
               </div>
             )}
+            {block.because && block.because.length > 0 && (
+              <div className="mt-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-1" data-testid="because-lines">
+                {block.because.map((line) => (
+                  <p key={line} className="text-[11px] text-foreground">{line}</p>
+                ))}
+              </div>
+            )}
             {block.roadmapReason && !block.why.includes(block.roadmapReason) && (
               <p className="text-[11px] text-muted-foreground/80 mt-0.5 italic">
                 {block.roadmapReason}

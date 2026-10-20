@@ -138,10 +138,12 @@ describe("audit: video analyses → plan", () => {
     expect(changed.map((d) => d.name)).toEqual(["Front-Side Hold"]);
     expect(h.drills).toHaveLength(baseHit.drills.length);
     expect(h.durationMin).toBe(baseHit.durationMin);
+    expect(h.because).toEqual(['Because your video from Jun 1 showed: Recent finding. "Front-Side Hold" works on it today.']);
   });
   it("a fault cleared by clean clips rotates out (no swap)", () => {
     const h = withAnalysis(true).find((b) => b.modality === "hitting")!;
     expect(h.drills.map((d) => d.name)).toEqual(baseHit.drills.map((d) => d.name));
+    expect(h.because).toBeUndefined();
   });
   it("lifting is identical with or without an analysis finding", () => {
     const s = (bs: ReadonlyArray<typeof baseHit>) => bs.find((b) => b.modality === "strength")?.drills;

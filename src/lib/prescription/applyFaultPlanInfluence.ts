@@ -124,10 +124,14 @@ export function applyFaultPlanInfluence(input: FaultPlanInfluenceInput): Readonl
     const drills = block.drills.slice();
     drills[replacementIndex] = replacement;
     const checklist = drills.map((drill) => `${drill.name} — ${drill.dosage}`);
+    const seen = new Date(sourceSignal.signal.observed_at);
+    const when = Number.isNaN(seen.getTime()) ? "your latest video" : `your video from ${seen.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+    const because = `Because ${when} showed: ${sourceSignal.priority.says}. "${match.drill.name}" works on it today.`;
     return {
       ...block,
       drills,
       steps: checklist,
+      because: [...(block.because ?? []), because],
       roadmapReason: `${block.roadmapReason} Recent analysis shaped one existing drill slot.`,
       gamePlanTemplate: block.gamePlanTemplate ? { ...block.gamePlanTemplate, checklist } : null,
     };

@@ -16,6 +16,7 @@ Findings this batch: analysis only changes hitting/throwing (never pitching, fie
 # Owner additions — Oct 20, 03:27 UTC — coaches see the same context; full-go execution in every skill session
 - [ ] Coach "Hammers' plan for this player" (today/week work + Because, issue drills, summaries, ways to improve, what worked); no Development-tab duplication; coach notes and safe From Coach kept; scouts excluded.
 - [x] AL7 execution audit started (read-only sim, local plan): hitting has only one machine round — no flips/BP/live ABs; baseball pitching has no bullpen/live ABs; baserunning has no live jumps/steals. Details in docs/owner/plan-context-audit.md.
+- [x] AN1 link e started: video-analysis drill swaps now carry a plain "Because your video from <date> showed: … " line on the card; none when the fault is cleared. 320 plan tests PASS. Phone proof pending (needs a real finding on a TEST account).
 - [x] AM5 limb-proportions simulation PASS (2 tests). Owner Oct 20 03:38: TEST coach/org sign-ins approved via API password sign-in; goal-order proposal sent, awaiting yes.
 - [x] AM4 season simulation PASS: off vs in season changes hitting drills; speed-day warm-up unchanged.
 - [x] AM3 goals simulation PASS (3 tests): goals never change minutes or lifting; finding — putting defense before hitting does not reorder cards.
