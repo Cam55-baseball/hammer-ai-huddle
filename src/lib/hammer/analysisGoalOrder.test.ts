@@ -3,7 +3,7 @@ import { analysisGoalOrder } from './analysisGoalOrder';
 describe('analysis reminders follow exact goal categories', () => {
   for (const sport of ['baseball', 'softball'] as const) {
     it(`${sport}: saved category order changes reminder priority`, () => {
-      const raw = { version: 2, [sport]: { position: { hitting: [{ id: 'contact_quality', rank: 'primary' }] } }, updatedAt: '2026-10-20', categoryOrder: ['throwing', 'hitting', 'speed', 'power', 'fielding'] };
+      const raw = { version: 2, [sport]: { position: { hitting: [{ id: 'barrel_control', rank: 'primary' }] } }, updatedAt: '2026-10-20', categoryOrder: ['throwing', 'hitting', 'speed', 'power', 'fielding'] };
       expect(analysisGoalOrder(raw, sport)).toEqual(['throwing', 'hitting']);
       expect(analysisGoalOrder({ ...raw, categoryOrder: ['hitting', 'throwing', 'speed', 'power', 'fielding'] }, sport)).toEqual(['hitting', 'throwing']);
     });
