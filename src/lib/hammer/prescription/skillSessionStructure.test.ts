@@ -6,7 +6,7 @@ const options = (skill: SkillSessionOptions['skill'], sport: SkillSessionOptions
   skill, sport, owned: new Set(['field', 'glove', 'ball']), injuryRegions: [], recoveryDay: false,
 });
 const running: DrillStep[] = [{ name: 'Lead footwork', dosage: '10 reps' }, { name: 'Pickoff reads', dosage: '10 reps' }, { name: 'First-to-third / tag-up scenarios', dosage: '5 reps' }];
-const fielding: DrillStep[] = [{ name: 'Footwork', dosage: '10 reps' }, { name: 'Backhand reads', dosage: '3×8' }];
+const fielding: DrillStep[] = [{ name: 'Footwork', dosage: '10 reps' }, { name: 'Backhand reads', dosage: '3×8', executionKind: 'fielding_reads' }];
 
 describe('existing-rep execution structure', () => {
   for (const sport of ['baseball', 'softball'] as const) {
@@ -39,5 +39,18 @@ describe('existing-rep execution structure', () => {
     const contrast: DrillStep = { name: 'Contrast', dosage: '3 rounds', stage: 'drills' };
     const log: DrillStep = { name: 'Actuals', dosage: 'Record count', stage: 'log' };
     expect(structureSkillSession([prep, compete, contrast, log], options('hitting'))).toEqual([prep, contrast, compete, log]);
+  });
+  it('a throwing name alone never grants game-speed fielding permission', () => {
+    const rows: DrillStep[] = [{ name: 'Prep', dosage: '10 reps' }, { name: 'Backhand & throw across body', dosage: '3×8' }];
+    expect(structureSkillSession(rows, options('defense')).some(row => row.stage === 'full_go')).toBe(false);
+  });
+  it('existing stop conditions survive execution instructions', () => {
+    const result = structureSkillSession([fielding[0], { ...fielding[1], stopIf: 'Dizziness — stop.' }], options('defense'));
+    expect(result.find(row => row.stage === 'full_go')?.stopIf).toContain('Dizziness — stop.');
+  });
+  it('owner and first prep slots never become execution', () => {
+    const rows = fielding.map(row => ({ ...row, executionKind: 'fielding_reads' as const, prescriptionOrigin: 'owner' as const }));
+    expect(structureSkillSession(rows, options('defense')).some(row => row.stage === 'full_go')).toBe(false);
+    expect(structureSkillSession([fielding[1]], options('defense'))[0].stage).toBe('prep');
   });
 });
