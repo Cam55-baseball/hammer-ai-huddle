@@ -12,7 +12,7 @@ export function AssessmentMode({ open, onClose, step, steps, busy, error, onNavi
   const done = Object.values(steps).filter(s => s === "done").length;
   const next = Math.min(step + 1, 6) as StepId;
   return <Dialog open={open} onOpenChange={value => { if (!value) onClose(); }}>
-    <DialogContent aria-describedby="assessment-description" className="inset-0 left-0 top-0 z-[210] flex h-[100dvh] max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 [&>button]:hidden">
+    <DialogContent aria-describedby="assessment-description" className="inset-0 left-0 top-0 z-50 flex h-[100dvh] max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 [&>button]:hidden">
       <header className="shrink-0 border-b border-border bg-background px-5 pb-5 pt-[calc(1.25rem+var(--safe-top))] sm:px-10">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
           <div><p className="text-xs font-semibold uppercase text-primary">Assessment Mode</p><p className="mt-1 text-sm text-muted-foreground">Step {step} of 6 · {done} of 6 done</p></div>
