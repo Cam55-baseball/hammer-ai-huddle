@@ -1802,6 +1802,10 @@ function applyGpSignalBias(
   const annotated = blocks.map((b) => {
     if (b.status === "suppressed") return b;
     const extraCues: string[] = [];
+    const because: string[] = [];
+    // Sample-size honesty: a real pattern on a small sample is labeled an early read.
+    const hitRead = gp.atBats < 20 ? " (early read)" : "";
+    const defRead = gp.defensivePlays < 15 ? " (early read)" : "";
     if (
       b.modality === "game_iq" &&
       enoughHittingSignal &&
@@ -1809,6 +1813,7 @@ function applyGpSignalBias(
       gp.chasePct >= 32
     ) {
       extraCues.push(`Last 7d chase ${gp.chasePct}% — bias pitch-recognition reps today.`);
+      because.push(`Because in your last 7 days of games you chased ${gp.chasePct}% of pitches out of the zone over ${gp.atBats} at-bats${hitRead}.`);
       biased.add("game_iq");
       tags.push(`gp:chase:${gp.chasePct}`);
     }
@@ -1819,6 +1824,7 @@ function applyGpSignalBias(
       gp.whiffPct >= 28
     ) {
       extraCues.push(`Last 7d whiff ${gp.whiffPct}% on swings — bat-path / contact emphasis.`);
+      because.push(`Because in your last 7 days of games you missed on ${gp.whiffPct}% of your swings over ${gp.atBats} at-bats${hitRead}.`);
       biased.add("hitting");
       tags.push(`gp:whiff:${gp.whiffPct}`);
     }
@@ -1829,11 +1835,12 @@ function applyGpSignalBias(
     ) {
       const lead = gp.miscueClusters[0];
       extraCues.push(`${lead.errors} errors at ${lead.position} in last 7d — first-step / glove-side reps.`);
+      because.push(`Because you made ${lead.errors} errors at ${lead.position} in your last 7 days of games (${gp.defensivePlays} plays)${defRead}.`);
       biased.add("defense");
       tags.push(`gp:def:${lead.position}`);
     }
     if (extraCues.length === 0) return b;
-    return { ...b, cues: [...b.cues, ...extraCues] };
+    return { ...b, cues: [...b.cues, ...extraCues], because: [...(b.because ?? []), ...because] };
   });
 
   if (biased.size === 0) return { blocks: annotated, tags };

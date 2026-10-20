@@ -65,10 +65,16 @@ describe("audit: games → plan", () => {
     expect(p.blocks.find((b) => b.status !== "suppressed")!.modality).toBe("hitting");
     expect(hit(p).drills).toEqual(hit(base).drills);
     expect(hit(p).durationMin).toBe(hit(base).durationMin);
+    expect(hit(p).because).toEqual(["Because in your last 7 days of games you missed on 35% of your swings over 10 at-bats (early read)."]);
+  });
+  it("20+ at-bats drops the early-read label", () => {
+    const p = plan(gp({ whiffPct: 35, atBats: 24, pitchesSeen: 90 }));
+    expect(hit(p).because?.[0]).not.toContain("early read");
   });
   it("thin sample (3 at-bats) changes nothing", () => {
     const p = plan(gp({ whiffPct: 60, atBats: 3, pitchesSeen: 10 }));
     expect(hit(p).cues).toEqual(hit(base).cues);
+    expect(hit(p).because).toBeUndefined();
     expect(p.blocks.map((b) => b.modality)).toEqual(base.blocks.map((b) => b.modality));
   });
   it("lifting block is identical with or without a game pattern", () => {
