@@ -1,6 +1,7 @@
 # Owner additions — Oct 20, 03:27 UTC — coaches see the same context; full-go execution in every skill session
 - [ ] Coach "Hammers' plan for this player" (today/week work + Because, issue drills, summaries, ways to improve, what worked); no Development-tab duplication; coach notes and safe From Coach kept; scouts excluded.
 - [x] AL7 execution audit started (read-only sim, local plan): hitting has only one machine round — no flips/BP/live ABs; baseball pitching has no bullpen/live ABs; baserunning has no live jumps/steals. Details in docs/owner/plan-context-audit.md.
+- [x] AM2 video-analysis simulation PASS (3 tests): planted hitting fault swaps exactly one hitting drill, same count/minutes; cleared fault rotates out; lifting identical.
 - [x] AM1 audit finished: fielding has no live fungo (in-season primers only); off-season hitting is dry swings + tee only; server plan authors no bullpen/BP/live work.
 - [ ] Build prep → issue drills → full-go → log for hitting, pitching, fielding/throwing, baserunning, softball equivalents; volumes by phase/schedule; throw rules + arm ledger; execution logged.
 - [ ] Proof: 8-week sims per subscription × sport with execution blocks; phone hitting + pitching sessions with Because; coach section on phone as democoach for TEST hitter and TEST pitcher.
@@ -18,7 +19,7 @@
 ## Trace audit findings (full table: docs/owner/plan-context-audit.md)
 | Input | What it changes in Hammers Today today | Simulated? |
 |---|---|---|
-| Video analysis issues | One hitting/throwing drill swap with its usual dose; server biases legal picks | Not yet |
+| Video analysis issues | One hitting/throwing drill swap with its usual dose; server biases legal picks; cleared faults rotate out | PASS AM2 (pitching cards not touched by this overlay) |
 | Video analysis scores | Nothing (correct: no estimates) | — |
 | Game logs/stats | Card order + one cue line only (chase/whiff 7 days, fielding errors); never drills or dose; thin samples ignored; strikeout rate dropped | PASS AL3 |
 | Practice logs | Nothing in Today (Smart Week only) | Not yet |
@@ -38,7 +39,7 @@
 - Built: athlete testing-day notice (AL1, read-only); low-readiness consistency fix (AL5).
 
 ## Simulation proofs
-- `src/lib/hammer/prescription/dailyPlan.contextAudit.sim.test.ts` 7 PASS (games, readiness, pain; lifting identical). All 257 plan-engine tests PASS. Testing-day rule 4 PASS.
+- `src/lib/hammer/prescription/dailyPlan.contextAudit.sim.test.ts` 10 PASS (games, readiness, pain, video analyses; lifting identical). All 257 plan-engine tests PASS. Testing-day rule 4 PASS.
 - Not done: 8-week six-cohort runs, phone "Because" screenshots, full suite this batch.
 
 ## Next (in order)
