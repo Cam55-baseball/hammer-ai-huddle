@@ -516,8 +516,10 @@ export function buildEassPrescription(ctx: EassContext): EassPrescription {
   const tennisBall = isSoftball ? TENNIS_BALL_SOFTBALL : TENNIS_BALL_BASEBALL;
   const underload = isSoftball ? UNDERLOAD_SOFTBALL : UNDERLOAD_BASEBALL;
   const regulation = isSoftball ? regulationSoftball(inSeason) : regulationBaseball(inSeason, isPitcher);
-  const positionSkill = isSoftball ? positionSkillSoftball(ctx.position, inSeason)
-                                   : positionSkillBaseball(ctx.position, inSeason);
+  // A sore arm never gets full-go work: athlete-reported pain outranks the plan.
+  const positionSkill = (isSoftball ? positionSkillSoftball(ctx.position, inSeason)
+                                    : positionSkillBaseball(ctx.position, inSeason))
+    .filter((d) => !(ctx.armSore && d.name.startsWith("Full-go")));
 
   // Position players: shorter band prep (halve dosage 2x→1x), no underload, no long-toss, no intent, no overload.
   const scaledPrep = isPositionPlayer
