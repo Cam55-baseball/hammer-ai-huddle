@@ -15,6 +15,16 @@ export interface PracticeDoseAdjustment {
   sourceIds: readonly string[];
   outcome: 'unchanged' | 'reduced' | 'at-minimum' | 'missing-floor';
 }
+/**
+ * Owner Oct 20 rule, single source: about 30% less same-category work —
+ * whole sets near 70% of the prescribed sets, never below half and never
+ * below the row's explicit minimum. Reps are never touched here.
+ */
+export function reducedSetsWithinFloor(sets: number, minimumSets: number | null): number {
+  const floor = minimumSets !== null && Number.isInteger(minimumSets) && minimumSets >= 1 ? minimumSets : 0;
+  return Math.max(floor, Math.ceil(sets * 0.5), Math.round(sets * 0.7));
+}
+
 export function adjustDoseForPractice(dose: PracticeDose, loads: readonly CategoryPracticeLoad[]): PracticeDoseAdjustment {
   const unchanged: PracticeDoseAdjustment = { dose, recoveryPriority: false, because: null, sourceIds: [], outcome: 'unchanged' };
   if (dose.category === 'strength' || dose.category === 'recovery' || dose.status !== 'ready') return unchanged;
@@ -30,7 +40,7 @@ export function adjustDoseForPractice(dose: PracticeDose, loads: readonly Catego
   }
   // Owner Oct 20: about 30% less same-category work, at least half the
   // prescribed dose and the explicit row floor. Whole sets, reps unchanged.
-  const sets = Math.max(dose.minimumSets, Math.ceil(dose.sets * 0.5), Math.round(dose.sets * 0.7));
+  const sets = reducedSetsWithinFloor(dose.sets, dose.minimumSets);
   if (sets >= dose.sets) return { ...unchanged, recoveryPriority: true, because, sourceIds: load.sourceIds, outcome: 'at-minimum' };
   return { dose: { ...dose, sets }, recoveryPriority: true, because, sourceIds: load.sourceIds, outcome: 'reduced' };
 }
