@@ -1,3 +1,12 @@
+# AR4 — Parallel owner priority pass — Oct 20, 16:43 UTC
+
+**Ready to publish: NO.** No publish, deploy, migration, switch, cron or iOS changes. Completed practice-card proof is not repeated.
+
+- [ ] Advance missing execution structure without inventing volume or overriding safety/equipment rules.
+- [ ] Advance coach sharing from the canonical skill plan only; keep permissions and health redaction intact.
+- [ ] Add subscription-qualified six-cohort actual-builder proof and advance comparable context where supported.
+- [ ] Run changed tests and fresh full suite, verify preview health, record proof and blockers; clean exact TEST data if used.
+
 # AR3 — Parallel owner priority pass — Oct 20, 16:29 UTC
 
 **Ready to publish: NO.** No publish, deploy, migration, switch, cron or iOS changes; do not repeat completed practice-card proof.
