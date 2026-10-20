@@ -1,3 +1,17 @@
+# Owner context-unity request — Oct 20, 03:12 UTC — queued after assessment/prompts
+
+**Ready to publish: NO. Context-unity answer: NOT YET PROVEN.** Finish the open assessment/prompt work below first; then perform a read-only input→plan audit before changing plan behavior. Backend redeploys authorized for this request only; no publish, cron or iOS changes. Existing lifting scheme, safety/rest/phase/equipment/subscription rules remain unchanged; no invented measurements or faults.
+
+- [ ] Prerequisite: finish assessment mode and prompts, or isolate owner-blocked items under Waiting on owner with exact blocker; do not claim finished while original proofs/adapters remain open.
+- [ ] Read-only trace in `docs/owner/plan-context-audit.md`: latest module analyses/issues/scores, games/stats, practice, tests/PBs, readiness/check-ins, pain, coach notes/From Coach, goals, limb proportions, phase/schedule → selection/drills/dose/focus/Smart Week/prompts/nothing, each sport × subscription; concrete simulations and blunt gaps.
+- [ ] Implement missing bounded analysis→editable issue-tagged skill drills, games→honest weekly focus, practice→canonical workload/emphasis, evidence convergence/conflict and plain Because lines, with learning lineage; never alter lifting schemes or use video numeric grades as measurement evidence.
+- [ ] Prove six eight-week cohorts: each input changes actual next-plan drills/focus where legally eligible, rotates out when resolved, zero rule violations, identical lifting scheme; real affected-role phone Because proofs, full suite, exact TEST cleanup.
+- [ ] Update audit, owner documentation and this roadmap with implemented/live/pending status and proof per item.
+
+## Waiting on owner — prerequisite decisions/access
+- New prompt cadences: confirm or reject the proposed analysis/Delaycam/Royal/Tex Vision defaults below; `plan_prompts_v2` stays OFF meanwhile.
+- TEST staff role proof: approved TEST-coach/organization session required for cross-athlete assessment and Discipline/onlooker proof; never substitute owner access.
+
 # AK7 — Oct 20, 03:10 UTC — final batch status
 
 **Ready to publish: NO.** This batch improved and proved the self-player assessment foundation and due prompts, but did not finish the full original scope. No publish, backend deploy/migration, cron or iOS changes in AK7. AK6's practice-report correction remains live; AK7 changes are preview-only.
