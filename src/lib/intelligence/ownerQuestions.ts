@@ -1,5 +1,5 @@
 /** Questions use the existing principle situation as their durable identity. */
-import type { Principle, PrincipleVersion } from './principles';
+import { declaredPrincipleVersion, type Principle, type PrincipleVersion } from './principles';
 export interface OwnerQuestion {
   id: string;
   sport: 'baseball' | 'softball';
@@ -28,9 +28,8 @@ export const questionSituation = (id: string) => `Owner question: ${id}`;
  */
 export function currentQuestionAnswer(question: OwnerQuestion, principles: readonly Principle[], versions: readonly PrincipleVersion[]) {
   const matches = principles.flatMap(principle => {
-    const current = versions.filter(v => v.principle_id === principle.id && v.version === principle.current_version);
-    if (current.length !== 1) return [];
-    const version = current[0];
+    const version = declaredPrincipleVersion(principle, versions);
+    if (!version) return [];
     return version.situation === questionSituation(question.id) && version.sport === question.sport && version.area === question.area
       ? [{ principle, version }] : [];
   });

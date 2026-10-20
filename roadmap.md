@@ -1,3 +1,11 @@
+# AR7 — Parallel owner priority pass — Oct 20, 17:15 UTC
+
+**Ready to publish: NO.** No live, cron or iOS changes; do not repeat the completed practice-card proof.
+
+- [ ] Advance source-supported execution/logging and owner-answer integration in parallel streams.
+- [ ] Prove actual 12-week goal confirmation save/readback without inventing player state.
+- [ ] Run focused checks and fresh full suite, document remaining acceptance blockers and clean exact test writes.
+
 # AR6 — Parallel owner priority pass — Oct 20, 17:06 UTC
 
 **Ready to publish: NO.** No live, cron or iOS changes; completed practice-card proof will not be repeated.

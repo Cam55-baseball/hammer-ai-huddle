@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { OWNER_QUESTIONS, questionSituation, currentQuestionAnswer, type OwnerQuestion } from '@/lib/intelligence/ownerQuestions';
 import {
-  EVIDENCE_LABEL, badgeFor, latestVersion, SMALL_GROUP_NOTE,
+  EVIDENCE_LABEL, badgeFor, declaredPrincipleVersion, SMALL_GROUP_NOTE,
   type EvidenceKind, type Principle, type PrincipleStats, type PrincipleVersion,
 } from "@/lib/intelligence/principles";
 
@@ -58,15 +58,19 @@ export default function CoachingConsole() {
 
   const save = async () => {
     setSaving(true); setSaveError(null);
+    try {
     const { error } = await db.rpc("owner_save_principle", {
       _principle: editing, _body: form.body, _sport: form.sport, _area: form.area,
       _situation: form.situation || null, _applies_when: form.applies_when || null,
       _not_when: form.not_when || null, _connected_work: form.connected_work || null,
       _evidence_kind: form.evidence_kind, _evidence_note: form.evidence_note || null,
     });
-    setSaving(false);
-    if (error) { setSaveError("We couldn't save this principle. Please try again."); return; }
-    setForm(EMPTY); setEditing(null); refresh();
+    if (error) throw error;
+    await refresh();
+    setForm(EMPTY); setEditing(null);
+    } catch {
+      setSaveError("We couldn't save this principle. Please try again.");
+    } finally { setSaving(false); }
   };
 
   const toggle = async (id: string, active: boolean) => {
@@ -113,7 +117,11 @@ export default function CoachingConsole() {
               <div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{question.sport} · {question.subscription}</Badge>
                 <Badge variant="secondary">{answer ? `Answered · version ${answer.version} · ${saved?.principle.active ? 'On' : 'Off'}` : 'Needs an answer'}</Badge></div>
               <p className="text-sm font-medium">{question.question}</p>
-              {answer && <p className="break-words text-sm text-muted-foreground">Current answer: {answer.body}</p>}
+              {answer && <>
+                <p className="break-words text-sm text-muted-foreground">Current answer: {answer.body}</p>
+                <p className="text-xs text-muted-foreground">Saved: {Number.isFinite(Date.parse(answer.created_at)) ? new Date(answer.created_at).toLocaleString() : 'Date unavailable'}</p>
+                <a className="text-sm text-primary underline" href={`#principle-${saved.principle.id}`}>Review answer and versions</a>
+              </>}
               <div className="flex flex-col gap-2">
                 {question.options.map(option => <Button key={option} variant="outline" className="h-auto min-h-11 justify-start whitespace-normal text-left" onClick={() => answerQuestion(question, option)}>{option}</Button>)}
                 <Button variant="ghost" className="justify-start" onClick={() => answerQuestion(question, answer?.body ?? '')}>Write my answer</Button>
@@ -160,8 +168,8 @@ export default function CoachingConsole() {
         <section className="space-y-3" aria-label="Your principles">
           {data.principles.map((p) => {
             const history = data.versions.filter((v) => v.principle_id === p.id);
-            const cur = latestVersion(history);
-            if (!cur) return null;
+            const cur = declaredPrincipleVersion(p, history);
+            if (!cur) return <p key={p.id} role="alert" className="text-sm text-destructive">Couldn't identify the current principle version. Editing is unavailable.</p>;
             const s = data.stats.get(p.id);
             return (
               <Card key={p.id} id={`principle-${p.id}`} className={`space-y-2 p-4 ${focus === p.id ? "ring-2 ring-primary" : ""}`}>

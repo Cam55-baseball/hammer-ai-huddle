@@ -13,8 +13,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { CATEGORY_KEYS, CATEGORY_LABELS, CATEGORY_DESCRIPTIONS, normalizeCategoryOrder, type CategoryKey } from "@/lib/hammer/goals/categoryGoals";
-import { useContext } from "react";
-import { HammersTodayContext } from "@/components/hammer/HammersTodayProvider";
+import { confirmCategoryOrder } from '@/lib/hammer/goals/confirmCategoryOrder';
 import { goalReaskDue, goalCalendarDate, GOAL_REASK_TEXT } from "@/lib/hammer/goalReask";
 
 const HIDE = "hm.rankGoalsHidden.";
@@ -22,9 +21,9 @@ const HIDE = "hm.rankGoalsHidden.";
 export function RankGoalsPromptCard({ forceOpen = false }: { forceOpen?: boolean }) {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const plan = useContext(HammersTodayContext);
   const [order, setOrder] = useState<CategoryKey[]>([]);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const today = goalCalendarDate(new Date());
   const hideKey = `${HIDE}${user?.id}.${today}`;
   const [hidden, setHidden] = useState(() => { try { return localStorage.getItem(hideKey) === "1"; } catch { return false; } });
@@ -48,19 +47,26 @@ export function RankGoalsPromptCard({ forceOpen = false }: { forceOpen?: boolean
 
   const tap = (k: CategoryKey) => setOrder((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k]));
   const save = async (picked: CategoryKey[] = order) => {
-    if (!user || !q.data || picked.length !== CATEGORY_KEYS.length) return;
+    if (!user || !q.data || saving || picked.length !== CATEGORY_KEYS.length) return;
     setSaving(true);
-    const base = q.data.raw && typeof q.data.raw === "object" ? q.data.raw : { version: 2 };
-    const { error } = await supabase.from("athlete_context").upsert(
-      { user_id: user.id, category_goals: { ...base, version: (base as any).version ?? 2, categoryOrder: picked, updatedAt: new Date().toISOString() } as never },
-      { onConflict: "user_id" },
-    );
-    setSaving(false);
-    if (error) { toast.error(`Couldn't save your ranking: ${error.message}`); return; }
-    toast.success("Saved. Your plan will lean toward what you ranked first.");
-    qc.invalidateQueries({ queryKey: ["goal-ranking"] });
-    qc.invalidateQueries({ queryKey: ["hammer-context-envelope", user.id] });
-    try { plan?.generate?.(); } catch { /* next open picks it up */ }
+    setSaveError(null);
+    try {
+      const { error } = await supabase.from("athlete_context").upsert(
+        { user_id: user.id, category_goals: confirmCategoryOrder(q.data.raw, picked, new Date().toISOString()) as never },
+        { onConflict: "user_id" },
+      );
+      if (error) throw error;
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["goal-ranking", user.id] }),
+        qc.invalidateQueries({ queryKey: ["hammer-context-envelope", user.id] }),
+      ]);
+      setOrder([]);
+      toast.success("Saved. Your plan will lean toward what you ranked first.");
+    } catch {
+      setSaveError("Couldn't save your goal order. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -79,7 +85,7 @@ export function RankGoalsPromptCard({ forceOpen = false }: { forceOpen?: boolean
           {CATEGORY_KEYS.map((k) => {
             const pos = order.indexOf(k);
             return (
-              <Button key={k} type="button" variant="outline" onClick={() => tap(k)}
+              <Button key={k} type="button" variant="outline" disabled={saving} onClick={() => tap(k)}
                 className={`h-auto min-h-11 w-full justify-start gap-3 whitespace-normal px-3 py-2 text-left ${pos >= 0 ? "border-primary bg-primary/10" : "border-border"}`}
                 aria-label={`${CATEGORY_LABELS[k]}${pos >= 0 ? `, ranked ${pos + 1}` : ""}`}>
                 <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${pos >= 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{pos >= 0 ? pos + 1 : ""}</span>
@@ -91,13 +97,14 @@ export function RankGoalsPromptCard({ forceOpen = false }: { forceOpen?: boolean
             );
           })}
         </div>
+        {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
         <div className="flex flex-wrap gap-2">
           <Button size="sm" className="flex-1" disabled={order.length !== CATEGORY_KEYS.length || saving} onClick={() => save()}>
             {order.length === CATEGORY_KEYS.length ? "Save my order" : "Tap all five"}
           </Button>
           {reask && q.data.ranked && order.length === 0 && <Button size="sm" variant="outline" disabled={saving} onClick={() => { const ranked = q.data?.ranked; if (ranked) void save([...ranked]); }}>Keep my order</Button>}
-          {order.length > 0 && <Button size="sm" variant="outline" onClick={() => setOrder([])} aria-label="Start over"><RotateCcw className="h-4 w-4" /></Button>}
-          {!forceOpen && <Button size="sm" variant="ghost" onClick={() => { try { localStorage.setItem(hideKey, "1"); } catch { /* ignore */ } setHidden(true); }}>Later</Button>}
+          {order.length > 0 && <Button size="sm" variant="outline" disabled={saving} onClick={() => setOrder([])} aria-label="Start over"><RotateCcw className="h-4 w-4" /></Button>}
+          {!forceOpen && <Button size="sm" variant="ghost" disabled={saving} onClick={() => { try { localStorage.setItem(hideKey, "1"); } catch { /* ignore */ } setHidden(true); }}>Later</Button>}
         </div>
       </CardContent>
     </Card>
