@@ -107,6 +107,12 @@ describe("analysis influence reaches every skill card", () => {
       ownedEquipment: new Set(), catalog: [{ ...drill, category: 'pitching', violationKeys: ['early_trunk_rotation'] }], circulation: { servedToUser: {}, usage: {} } });
     expect(after).toEqual(before);
   });
+  for (const sport of ['baseball', 'softball'] as const) it(`${sport}: overhand throwing findings cannot change pitching work`, () => {
+    const before = { ...block(), modality: 'throwing' as const, route: '/practice?module=pitching' };
+    const [after] = applyFaultPlanInfluence({ blocks: [before], rankedFaults: sig('throwing', 'early_trunk_rotation'), sport,
+      ownedEquipment: new Set(), catalog: [{ ...drill, sports: [sport], category: 'throwing', violationKeys: ['early_trunk_rotation'] }], circulation: { servedToUser: {}, usage: {} } });
+    expect(after).toEqual(before);
+  });
   it("no spill-over: a fielding finding never borrows a throwing drill for the defense card", () => {
     const d = { ...drill, id: "f1", name: "Glove Fix", category: "throwing" as const, violationKeys: ["glove_late"] };
     const after = run("defense", sig("fielding", "glove_late"), d);
