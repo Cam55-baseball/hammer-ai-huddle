@@ -9893,8 +9893,11 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string
+          current_step: number
           last_season_saved_at: string | null
           last_season_skipped_at: string | null
+          last_season_stats: Json | null
+          mode_opened_at: string | null
           movement_done_at: string | null
           movement_screen: Json | null
           pain_flag: boolean
@@ -9902,14 +9905,18 @@ export type Database = {
           recorded_at: string | null
           recorded_by: string | null
           recorded_by_label: string | null
+          step_progress: Json
           updated_at: string
           user_id: string
         }
         Insert: {
           completed_at?: string | null
           created_at?: string
+          current_step?: number
           last_season_saved_at?: string | null
           last_season_skipped_at?: string | null
+          last_season_stats?: Json | null
+          mode_opened_at?: string | null
           movement_done_at?: string | null
           movement_screen?: Json | null
           pain_flag?: boolean
@@ -9917,14 +9924,18 @@ export type Database = {
           recorded_at?: string | null
           recorded_by?: string | null
           recorded_by_label?: string | null
+          step_progress?: Json
           updated_at?: string
           user_id: string
         }
         Update: {
           completed_at?: string | null
           created_at?: string
+          current_step?: number
           last_season_saved_at?: string | null
           last_season_skipped_at?: string | null
+          last_season_stats?: Json | null
+          mode_opened_at?: string | null
           movement_done_at?: string | null
           movement_screen?: Json | null
           pain_flag?: boolean
@@ -9932,6 +9943,7 @@ export type Database = {
           recorded_at?: string | null
           recorded_by?: string | null
           recorded_by_label?: string | null
+          step_progress?: Json
           updated_at?: string
           user_id?: string
         }
