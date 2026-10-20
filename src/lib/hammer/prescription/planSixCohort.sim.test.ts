@@ -86,8 +86,8 @@ describe('AR4: six subscription-qualified eight-week actual-builder cohorts (not
         tapered.blocks.filter(block => block.modality === 'defense' || block.modality === 'baserunning')
           .forEach(block => expect(block.drills.some(row => row.stage === 'full_go')).toBe(false));
       }
-      expect(swaps).toBe(expected.hasHitting ? swaps : 0);
       if (expected.hasHitting) expect(swaps).toBeGreaterThan(0);
+      else expect(swaps).toBe(0);
       expect(practiceDays).toBeGreaterThan(0);
       expect(protectedDays).toBe(56);
     });

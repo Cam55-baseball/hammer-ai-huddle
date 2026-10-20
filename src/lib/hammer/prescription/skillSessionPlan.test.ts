@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildHammerDailyPlan } from './dailyPlan';
+import { selectDefenseDrills } from './defenseLibrary';
+import { structureSkillSession } from './skillSessionStructure';
 import { NORMAL_SIGNAL } from './scheduleContext';
 import type { ContextVariable, HammerAthleteContext } from '@/lib/hammer/context/athleteContext';
 
@@ -53,5 +55,56 @@ describe('actual plan execution structure and schedule protection', () => {
         }
       });
     }
+  }
+});
+
+describe('AR4: catalog-declared fielding execution across positions', () => {
+  for (const sport of ['baseball', 'softball'] as const) for (const phase of ['off', 'pre', 'in'] as const) {
+    for (const position of ['C', 'P', '1B', '2B', 'SS', '3B', 'LF', 'CF', 'RF']) {
+      it(`${sport}/${phase}/${position}: eligible reads retain doses, prep and stop conditions`, () => {
+        const selected = selectDefenseDrills({ position, sport, seasonPhase: phase, injuryRegions: [], tier: 'developing' });
+        expect(selected).not.toBeNull();
+        if (!selected) return;
+        const structured = structureSkillSession(selected.drills, { skill: 'defense', sport,
+          owned: new Set(['field', 'glove', 'ball']), injuryRegions: [], recoveryDay: false });
+        expect(structured).toHaveLength(selected.drills.length);
+        expect(structured[0].stage).toBe('prep');
+        for (const row of selected.drills) {
+          const result = structured.find(step => step.name === row.name);
+          expect(result?.dosage).toBe(row.dosage);
+          if (row.stopIf) expect(result?.stopIf).toContain(row.stopIf);
+        }
+        const expected = selected.drills.find((row, index) => index > 0 && row.executionKind === 'fielding_reads');
+        const execution = structured.filter(row => row.stage === 'full_go');
+        expect(execution.map(row => row.name)).toEqual(expected ? [expected.name] : []);
+        if (phase !== 'in' && position !== 'P') expect(execution).toHaveLength(1);
+      });
+    }
+    it(`${sport}/${phase}: actual ready first-base card has non-throwing game-speed reads`, () => {
+      let days = 0;
+      const original = context(sport, phase);
+      const variables = original.variables.map(row => row.key === 'position_primary' ? { ...row, value: '1B' } : row);
+      const c: HammerAthleteContext = { ...original, variables, get<T>(key: string) { return variables.find(row => row.key === key) as ContextVariable<T> | undefined; } };
+      for (let n = 0; n < 14; n++) {
+        const plan = buildHammerDailyPlan(c, NORMAL_SIGNAL, null, null, undefined, new Date(2026, 5, 1 + n));
+        const block = plan.blocks.find(row => row.modality === 'defense' && row.status === 'ready');
+        if (!block) continue;
+        expect(block.drills.some(row => row.stage === 'full_go' && row.executionKind === 'fielding_reads')).toBe(true);
+        days++;
+      }
+      expect(days).toBeGreaterThan(0);
+    });
+    if (sport === 'softball') it(`${phase}: actual running prep never asks for an early lead-off`, () => {
+      let days = 0;
+      for (let n = 0; n < 14; n++) {
+        const plan = buildHammerDailyPlan(context(sport, phase), NORMAL_SIGNAL, null, null, undefined, new Date(2026, 5, 1 + n));
+        const block = plan.blocks.find(row => row.modality === 'baserunning' && row.status === 'ready');
+        if (!block) continue;
+        expect(block.drills[0].cue).toContain('pitch is released');
+        expect(block.drills.some(row => /Lead \+ secondary/.test(row.name))).toBe(false);
+        days++;
+      }
+      expect(days).toBeGreaterThan(0);
+    });
   }
 });
