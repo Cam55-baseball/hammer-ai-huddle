@@ -1,3 +1,11 @@
+# AP3 — Analysis reminder goal priority
+
+**Ready to publish: NO.** No publish, cron, iOS, migration or redeploy; reminders remain OFF pending completed integration/proofs.
+
+- [x] Concrete sub-step: weekly analysis adapter receives the player's saved category order, scoped to the selected sport for V2 goals. Hitting/throwing exact matches only; throwing never invents pitching priority. Reads wait for subscription and an included prescribed skill; query identity includes the current included modules.
+- [ ] Tests and preview verification pending. Open-fault priority not wired: existing ranked ledger has no sport field, so it must not silently borrow another sport's flags. Explicit pitching-goal mapping, starvation-free rotation with persistent goal/flag priorities, Delaycam mechanics inputs, activation and phone Today proof remain open.
+- No athlete sessions, doses, lifting or TEST data changed. AP1 minimum-envelope gap remains open; remaining owner queue unchanged.
+
 # AP2 — Delaycam reminder adapter
 
 **Ready to publish: NO.** No publish, cron or iOS changes; plan_prompts_v2 remains OFF until all reminder wiring and phone proofs are ready.

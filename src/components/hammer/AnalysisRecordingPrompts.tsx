@@ -12,19 +12,19 @@ import { analysesDueToday, analysisPromptText } from '@/lib/hammer/analysisPromp
 import { Button } from '@/components/ui/button';
 
 /** Read-only adapter; caller supplies existing prescribed modules, never a new plan. */
-export function AnalysisRecordingPrompts({ prescribed }: { prescribed: readonly AnalysisModule[] }) {
+export function AnalysisRecordingPrompts({ prescribed, goalOrder = [] }: { prescribed: readonly AnalysisModule[]; goalOrder?: readonly AnalysisModule[] }) {
   const { user } = useAuth();
-  const { modules } = useSubscription();
+  const { modules, loading: subscriptionLoading } = useSubscription();
   const { sport } = useSportTheme();
   const switches = useFeatureSwitches();
   const navigate = useNavigate();
-  const enabled = !switches.loading && switches.isEnabled('plan_prompts_v2');
+  const included = requiredAnalyses(modules.filter(module => module.startsWith(`${sport}_`)));
+  const enabled = !switches.loading && switches.isEnabled('plan_prompts_v2') && !subscriptionLoading && included.some(module => prescribed.includes(module));
   const query = useQuery({
-    queryKey: ['analysis-recording-prompts', user?.id, sport], enabled: enabled && Boolean(user),
+    queryKey: ['analysis-recording-prompts', user?.id, sport, included.join(',')], enabled: enabled && Boolean(user),
     queryFn: async () => {
       if (!user) throw new Error('Sign in first');
       const latest: Partial<Record<AnalysisModule, string>> = {};
-      const included = requiredAnalyses(modules.filter(module => module.startsWith(`${sport}_`)));
       await Promise.all(included.map(async module => {
         const result = await supabase.from('videos').select('created_at').eq('user_id', user.id)
           .eq('sport', sport).eq('module', module).not('analysis_public', 'is', null)
@@ -38,7 +38,7 @@ export function AnalysisRecordingPrompts({ prescribed }: { prescribed: readonly 
   if (!enabled) return null;
   if (query.error) return <p role="alert" className="text-sm text-destructive">Couldn't check your saved analyses.</p>;
   if (!query.data || query.isLoading) return null;
-  const due = analysesDueToday({ enabled, today: localIso(), included: requiredAnalyses(modules.filter(module => module.startsWith(`${sport}_`))), prescribed, latest: query.data });
+  const due = analysesDueToday({ enabled, today: localIso(), included, prescribed, latest: query.data, goalOrder });
   return <>{due.map(module => <div key={module} className="flex flex-wrap items-center gap-3 border-b border-border py-3">
     <Camera className="h-5 w-5 shrink-0 text-primary" />
     <p className="min-w-0 flex-1 text-sm font-semibold">{analysisPromptText(module)}</p>
