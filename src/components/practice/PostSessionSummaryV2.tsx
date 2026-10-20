@@ -158,9 +158,8 @@ export function PostSessionSummaryV2({ sessionId, module, sessionType, onDone }:
       {/* Hammer Video Suggestions — Session Mode */}
       {hasScores && (() => {
         const skillDomain = moduleToSkillDomain(module) || 'hitting';
-        const movements = Object.entries(composites)
-          .filter(([, v]) => (v as number) < 60)
-          .map(([k]) => k.toLowerCase().replace(/[^a-z]+/g, '_'));
+        // Entered execution indexes do not identify movement faults.
+        const movements: string[] = [];
         const results: string[] = [];
         drillBlocks.forEach((b: any) => {
           (b.outcomes || b.reps || []).forEach((r: any) => {

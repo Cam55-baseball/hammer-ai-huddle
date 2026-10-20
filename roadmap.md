@@ -1,4 +1,15 @@
-# AK5 — Oct 20 — Assessment Mode + Hammers Today prompts
+# AK6 — Oct 20 — Assessment Mode + Hammers Today prompts
+- [x] AK6 practice-report honesty corrected: shared canonical entered-log projection replaces AI generation and bypasses old AI caches without deleting them. Self-owned, non-deleted source checked before live response. Derived composites never become independent evidence, fault fixes, transfer claims or rep allocations. Entered grade/count/date/source stay.
+- [x] AK6 sibling fallback views corrected through generateInsights: saved summary, calendar/list/details and practice detail no longer infer faults, wins, cues or elite tags from composites; session video suggestions no longer treat low composite indexes as movement faults.
+- [x] AK6 phone PASS as TEST college player, Chromium 390×844: real Tee → entered execution score 6 → Solid → Confirm → Save showed Grade 60 / Acceptable, one logged rep, entered execution grade 60, athlete-entered source/date, “Mechanics: Not measured”. No invented diagnosis or rep split. Evidence: docs/owner/walkthroughs/assessment/ak6/.
+- [x] AK6 authorized session-insights-only redeploy LIVE; app-refreshed TEST-player call 200 confirmed values 1/60 with empty faults/fixes and no dose. First standalone call used expired saved token (401); using the app's refreshed session passed. No auth weakening.
+- [x] AK6 80 focused tests PASS; full suite 404 files / 3,150 tests PASS; preview build OK. Ten new honesty tests preserve entered values, reject missing/invalid values and forbid fallback faults across six modules.
+- [x] AK6 cleanup PASS after private 13-table before/after snapshots: exact new session, ledger rows, daily log and dirty marker removed; original MPI streak/HIE values restored. Only timestamp triggers differ; no new report cache was created.
+- [ ] Continue remaining assessment/payment/sharing/coach and prompt proofs after the honesty blocker; unapproved cadences remain OFF.
+- [ ] Remaining real reminder→save→disappearance→coach Discipline/learning readback; TEST-coach session approval remains unavailable in this queued context. No owner-role substitute.
+**Ready to publish: NO.** AK5 practice-report blocker resolved live; remaining full assessment/payment/S2/analysis/sharing/Start and prompt proofs/adapters are unfinished. Game IQ/Report Card remain internal-only; plan_prompts_v2 OFF. No publish, cron, migration or iOS change; only named session-insights redeployed under Oct 19 authorization.
+
+## AK5 status
 - [ ] AK5 practice completion: real saved-session phone proof, permission-safe Discipline readback, exact TEST cleanup; do not count unscheduled practice as prescribed work.
 - [ ] AK5 carry forward shared assessment, payment/S2/analysis/sharing/Start proofs and OFF-gated adapters; unapproved cadences remain OFF.
 - [x] AK5 real practice save PASS at 390×844 as TEST college player: Tee → execution score 6 → Solid contact → Confirm Rep → Save Session → saved summary and canonical readback (one rep, one session). This was a direct PracticeHub save, not reminder-to-save proof.

@@ -1,0 +1,2 @@
+- Practice reports project canonical entered logs through `_shared/practiceReport.ts`, never AI caches, inferred faults, composite-as-evidence or new doses. Why: a scored rep is not an independent mechanical observation.
+- Authorize the non-deleted source session before returning its report; use caller-scoped access, not service role. Why: cached reports cannot bypass ownership or deletion.
