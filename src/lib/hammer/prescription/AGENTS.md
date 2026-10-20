@@ -6,3 +6,5 @@
 - Cross-reference (mixedSignals) only informs one category's priority/Because and never authors work; other categories' signals are ignored. Why: no category spill-over.
 - Actual practice reaches ready skill cards through practicePlanContext after safety, with source IDs, entered load and missingness; streaks add Because and missing minima keep doses unchanged. Why: auditable context is not a guessed reduction or learning outcome.
 - Fielding execution uses explicit catalog non-throwing read metadata, never name-pattern eligibility; prep/owner slots and existing stop rules remain protected. Why: a fielding stage cannot grant new throwing work.
+- Running execution likewise requires catalog scenario identity, not matching names; doses and first/owner slots stay fixed. Why: renamed or analysis-selected drills cannot grant game-speed permission.
+- Practice source reads reject caps/missing data; conflicting same-ID records contribute no load in either order. Why: incomplete or ambiguous history cannot invent weekly totals or streaks.
