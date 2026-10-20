@@ -1,4 +1,5 @@
 import { sortByWarmupStage } from "./warmupStages";
+import { weeklyGoalBlocks, secondGoalFirst } from './weeklyGoalBlocks';
 import { structureSkillSession } from './skillSessionStructure';
 import { applyPracticePlanContext } from './practicePlanContext';
 import { categoryPracticeLoads, type PracticeLoadRecord, type CategoryPracticeLoad } from './categoryPracticeLoad';
@@ -2265,14 +2266,15 @@ export function buildHammerDailyPlan(
   );
 
   // Resolve the weekly microcycle NEXT so we can thread its label into blocks.
-  const weeklyTemplate = resolveWeeklyTemplate(proj);
-  const microcycle = applyMicrocycle(weeklyTemplate, today, skillTargets);
-  const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today, skillTargets);
-
   const positionOverrideArg = roadmapInputs.positionOverride ?? null;
   const firstPass = ALL_MODALITIES.map((m) =>
     builder({ modality: m, ctx, proj, speed, positionOverride: positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings, skillExecutionAllowed: scheduleSignal.postureToday === 'normal' }),
   );
+  const goalWeek = weeklyGoalBlocks(resolveWeeklyTemplate(proj), skillTargets, proj, positionRaw,
+    new Set(firstPass.filter(b => b.status === 'ready').map(b => b.modality)));
+  const weeklyTemplate = goalWeek.template;
+  const microcycle = applyMicrocycle(weeklyTemplate, today, goalWeek.targets);
+  const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today, goalWeek.targets);
   // Warm-up bias is derived from the slots that actually landed in today's
   // plan — a lift day gets lift prep, a speed day gets speed prep. Priority
   // mirrors CNS cost: speed > lift > throwing > hitting. When nothing
@@ -2340,13 +2342,19 @@ export function buildHammerDailyPlan(
   );
   // Defense renders on every day type; then the structural no-blank-card backstop.
   const practiceLoad = categoryPracticeLoads(roadmapInputs.practiceRecords ?? [], today.toLocaleDateString('en-CA'), sportRaw ?? '');
-  const blocks = applyPracticePlanContext(ensureRenderable(
+  const practiced = applyPracticePlanContext(ensureRenderable(
     applyDefenseAlwaysVisible(
       biasedBlocks,
       preModulationOriginals,
       roadmapInputs.defenseFullOverride === true,
     ),
   ), practiceLoad);
+  const blocks = secondGoalFirst(practiced.map(b => {
+    if (!goalWeek.reason || (goalWeek.modality ? b.modality !== goalWeek.modality : modalityToCategory(b.modality) !== proj.categoryGoals?.goals.find(g => g.rank === 1)?.category)) return b;
+    const reason = scheduleSignal.postureToday !== 'normal' || b.status !== 'ready'
+      ? `${goalWeek.reason} Today's safety and schedule rules still decide whether you train.` : goalWeek.reason;
+    return { ...b, because: [...(b.because ?? []), reason] };
+  }), proj);
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
     // eslint-disable-next-line no-console

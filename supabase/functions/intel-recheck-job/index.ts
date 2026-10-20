@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2.118.0/cors";
-import { recheckPlayer } from "../_shared/intelligence/recheck.ts";
+import { recheckComparablePlayer } from "./comparableRecheck.ts";
 
 // Same Vault credential as the existing plan job. Never store or log the raw token.
 const TOKEN_DIGEST = "92a0d7f956decec62aeaf2c309a150a936afda73572d8755f9b3999fc91325c9";
@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
         if (Date.now() >= deadline) break;
         if (visited.has(row.user_id)) continue;
         visited.add(row.user_id);
-        const results = await recheckPlayer(sb, row.user_id);
+        const results = await recheckComparablePlayer(sb, row.user_id);
         players++; checked += results.filter((r) => r.outcome != null).length;
         pending += results.filter((r) => r.outcome == null).length;
       }

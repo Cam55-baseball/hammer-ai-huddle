@@ -1,0 +1,19 @@
+# AS6 unblock proof — 2026-10-20
+
+## Completed
+- Weekly goal blocks are wired into the actual daily builder's existing microcycle. Ladder targets remain baseline; an extra top-goal slot uses an existing phase-template training day at activation intensity, with availability, injury, readiness, parent, pitcher/youth ceiling checks. Second-ranked skill goes first on shared ready skill slots without moving lifting/anchors. No minute allocator is called.
+- Eight-week scheduler comparisons: six sport/subscription-labelled cohorts, 16 baseline fielding slots versus 24 with fielding first; changing first goal to hitting gives hitting 4 versus baseline 3 weekly targets. These are deterministic simulations, not hosted six-cohort acceptance or proof of subscription entitlement filtering in this new helper. Existing actual-builder six-cohort suite also passes.
+- `intel-recheck-job` alone deployed, source hash `287146747c5eed4097c9e06f29915c7eeceb951d53369fdd206762ab4ea54f52`. Shared client/server arithmetic; job-local adapter requires an unambiguous existing baseline clip and distinct same-user/sport/module efficiency measure at 14–28 days. Missing/ambiguous/capped evidence stays pending. Actual observation date is persisted, not execution time. Other recommendation types lack a declared measure/source contract and are not invented.
+- Real phone-form password sign-ins worked for kept TEST college athlete, democoach, demoorg and one new TEST ADMIN. One-time passwords were scrambled in `finally` after every attempt. No real-owner account touched.
+- Aged valid TEST ranking by 85 days: dashboard showed exact 12-week prompt; Keep my order saved/read back and prompt disappeared. Original `category_goals` restored. Screenshot `/tmp/browser/as6/day84-before.png` inspected.
+- TEST ADMIN console: required documents accepted as TEST only; saved principle version 1, edited to version 2 with readback. Screenshot `/tmp/browser/as6/admin-principle.png` inspected. Proof principle parked inactive; immutable versions retained, no fake rule left active.
+- Full suite: **452 files / 3,653 tests PASS**, `/tmp/as6-full-suite.log`; preview newest entry **build OK**.
+
+## Live checks and remaining work
+- Existing cron remains active at 04:30 UTC. Previous Oct 19/20 SQL enqueue runs succeeded; this is not HTTP outcome proof. Next existing run is Oct 21 04:30 UTC, after this turn. No schedule changes or manual cron call. Current followed/pending recommendation count is zero. Named function unauthenticated call returned 401; live positive judge write and next-run result remain unproved.
+- Democoach accepted the TEST adult player's request through canonical send/respond RPCs, but phone route is blocked by its actual **canceled** Coach plan. Demoorg Organization plan status is **none**. No bypass or false subscription activation. Exact temporary requests snapshotted, ended through `end_connection`, and removed; no accepted TEST link left by this proof.
+- TEST ADMIN is `is_system_account=true`, ranking-ineligible and ranking-excluded. Universal “hidden from every list” is NOT established: existing exact-email connection search exception and some staff lists still need a scoped fix. It has no athlete data, connections or generated plans. Owner/admin-only Game IQ, Report Card and Vault review proofs remain open.
+- Testing-day details, positive coach/org plans, execution cards, mixed signals and hosted six-cohort screenshots remain open; sign-in is no longer their blocker.
+- Weekly block helper does not claim independent full-week future arm-ledger/day-cap projection; current downstream safety still wins. Full actual-builder goal-order/cap acceptance across six cohorts remains required before readiness.
+
+**Ready to publish: NO.** No publish, cron or iOS changes. Only the explicitly named function deployed.
