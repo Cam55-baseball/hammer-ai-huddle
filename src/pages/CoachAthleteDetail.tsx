@@ -1,5 +1,6 @@
 import { CoachLogForPlayer } from "@/components/coach/CoachLogForPlayer";
 import { CoachCheckinSummary } from "@/components/coach/CoachCheckinSummary";
+import { CoachPlanCard } from "@/components/coach/CoachPlanCard";
 import { CoachDisciplineTab } from "@/components/coach/CoachDisciplineTab";
 import { CoachOnSpotAssessment } from "@/components/coach/CoachOnSpotAssessment";
 import { CoachMessageBox } from "@/components/coach/CoachMessageBox";
