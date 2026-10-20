@@ -61,3 +61,32 @@ export function judgeComparableOutcome(m: ComparableMeasure): ComparableOutcome 
   if (Math.abs(diff) <= band) return "no_change";
   return diff > 0 ? "worked" : "got_worse";
 }
+
+/**
+ * Re-judge a stored intelligence_recommendations row under the owner rules.
+ * The server judge uses a fixed absolute band and no time window, so the
+ * client re-derives the label from the stored before/after values and dates.
+ * A missing window or missing values is "Need more data" — never a guess.
+ */
+export function judgedOutcomeFromRecheck(row: {
+  baseline_value?: number | null;
+  recheck_value?: number | null;
+  followed_at?: string | null;
+  checked_at?: string | null;
+  minimal_change?: number | null;
+}): ComparableOutcome {
+  let daysAfter: number | null = null;
+  if (row.followed_at && row.checked_at) {
+    const from = Date.parse(row.followed_at);
+    const to = Date.parse(row.checked_at);
+    if (Number.isFinite(from) && Number.isFinite(to) && to >= from) {
+      daysAfter = Math.round((to - from) / 86_400_000);
+    }
+  }
+  return judgeComparableOutcome({
+    before: row.baseline_value,
+    after: row.recheck_value,
+    daysAfter,
+    minimalChange: row.minimal_change,
+  });
+}
