@@ -55,3 +55,7 @@ Method: built today's local plan for baseball and softball × off/pre/in season 
 | Off-season hitting (AM1) | Dry swings → tee 30 → film | **No machine, flips, BP or live at all** without a machine; off-season hitting is drill-only |
 | Server plan (AM1) | wk-generate-daily reads bullpen outings and an `is_bullpen_day` flag but authors no bullpen, BP or live at-bat work | Execution must be added in the local skill blocks or an explicit server step |
 **Audit complete (AM1):** full-go execution is missing or partial in every skill session. Next: add a prep → issue drills → full-go → log structure within phase/schedule/throw/arm-ledger rules.
+
+
+## AM2 simulation — video analyses (Oct 20)
+PASS (3 tests, dailyPlan.contextAudit.sim.test.ts): a planted hitting fault replaces exactly one hitting drill (count and minutes unchanged); a fault cleared by clean clips rotates out; lifting identical. Gap: the overlay only touches hitting/throwing cards — pitching, fielding and baserunning cards never change from an analysis.
