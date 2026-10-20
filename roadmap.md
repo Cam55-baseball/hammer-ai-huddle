@@ -6,6 +6,7 @@
 - [x] Proof: as TEST college player at 390×844, the read returns 200 (was 400), no other errors, plan still shows.
 - [x] AQ6: weekly repeating practices now count too (same rule as the calendar; 5 checks pass; proven as TEST player with a temporary Tuesday repeat, then removed).
 - [x] AQ7: phone re-proof after fix — Tuesday repeat read returns it, no page errors; cancelled/rescheduled practices now skipped to match the plan builder. Test practice removed.
+- [x] AQ8 finding: on the phone, a practice day has no label of its own — the client day type only changes Speed/Bat Speed on game days. Practice-day effects on the plan come from the plan builder, which already counted weekly repeats. No change made; adding a visible "Practice today" line needs an owner yes.
 
 # AQ4 — Reminder cards proven; plan_prompts_v2 ON
 
