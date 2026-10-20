@@ -41,3 +41,16 @@ DP = `src/lib/hammer/prescription/dailyPlan.ts` · WK = `supabase/functions/wk-g
 
 ## Next steps (in order)
 Per-input simulations confirming each row; then links a–e under existing dose/rest/phase/equipment rules, lifting unchanged; six 8-week cohorts; phone Because proofs.
+
+## Full-go execution audit (owner addition 2, AL7 — read-only simulation)
+Method: built today's local plan for baseball and softball × off/pre/in season × shortstop/pitcher on a fixed Wednesday with tee, bat and machine (`buildHammerDailyPlan`). Server-generated work in wk-generate-daily not yet included.
+| Session | What is there | Full-go execution missing |
+|---|---|---|
+| Hitting (both sports) | Dry swings → tee → **one machine round** (25 pre / 15 in) → film 5 | No flips/front toss, no BP, no live at-bats with counts/intent; no "every swing with intent" cue; execution swings not logged as a separate part |
+| Pitching — baseball | Arm care → toss/long toss → **flat-ground command set** (30 pre / 20 in) | **No bullpen with pitch count or pitch design, no live at-bats** in the local plan |
+| Pitching — softball | Windmill prep → toss → circle/K-drills → **bullpen build 30** (pre) | No live at-bats; pitch design not named; in-season bullpen to confirm |
+| Throwing — position players | Arm care → toss → routine ground-ball throws + double-play reps | Mostly present at moderate %; no game-speed throws from position after fungo |
+| Fielding | Off on this weekday — not yet sampled | Pending: sample a defense day |
+| Baserunning | Lead/secondary footwork, pickoff reads, first-to-third scenarios | **No live jumps, reads off a live pitcher or timed steals** |
+| Off-season Wednesday | All skill blocks off that day | Pending: sample off-season skill days |
+Next: sample defense and off-season days plus the server path, then add a prep → issue drills → full-go → log structure within phase/schedule/throw/arm-ledger rules.

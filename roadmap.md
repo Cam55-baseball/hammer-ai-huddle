@@ -1,3 +1,9 @@
+# Owner additions — Oct 20, 03:27 UTC — coaches see the same context; full-go execution in every skill session
+- [ ] Coach "Hammers' plan for this player" (today/week work + Because, issue drills, summaries, ways to improve, what worked); no Development-tab duplication; coach notes and safe From Coach kept; scouts excluded.
+- [x] AL7 execution audit started (read-only sim, local plan): hitting has only one machine round — no flips/BP/live ABs; baseball pitching has no bullpen/live ABs; baserunning has no live jumps/steals. Details in docs/owner/plan-context-audit.md.
+- [ ] Finish audit (defense days, off-season days, server plan), then build prep → issue drills → full-go → log for hitting, pitching, fielding/throwing, baserunning, softball equivalents; volumes by phase/schedule; throw rules + arm ledger; execution logged.
+- [ ] Proof: 8-week sims per subscription × sport with execution blocks; phone hitting + pitching sessions with Because; coach section on phone as democoach for TEST hitter and TEST pitcher.
+
 # Owner addition — Oct 20, 03:26 UTC — coaches see the plan too (queued with plan-context links)
 - [ ] Coach View section "Hammers' plan for this player" (Development tab neighbor): focus + same Because lines; issues → drills with dates/done and Recurring/New/Cleaning up; per-skill summary + six-week total with How-sure dots; ways to improve + "Try in practice" (2–3); What worked (It worked/No change/Got worse).
 - [ ] Rules: existing consents (health only with health-sharing on), scouts excluded, org admin only for rostered players, reads the plan's own data, "Need more data"/"early read" when thin.
