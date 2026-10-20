@@ -7,7 +7,6 @@ const FIELDING_READS = new Set([
   'Blocking recovery to ball',
   'Block-and-recover',
   'Blocking — screwball/drop',
-  'Slapper block-and-recover',
   'Comebacker glove work',
   'Cover 1B on 3-6-1 / 3-6-3',
   'Cover 1B on 3-6-1',
