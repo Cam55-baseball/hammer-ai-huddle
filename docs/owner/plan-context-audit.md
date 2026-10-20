@@ -68,3 +68,9 @@ PASS: off-season vs in-season changes the hitting drills; the speed-day warm-up 
 
 ## AM5 simulation — limb proportions (Oct 20)
 PASS (2 tests): only the server lift picker uses limbs, as emphasis (long femur → single-leg/trap-bar more often; long arms → dumbbell/neutral presses). The local Today plan ignores limbs. Missing measurements give no tilt.
+
+## AN8 — Oct 20 — last three inputs (structural check)
+- **Tests / PBs:** the daily plan's inputs (athlete context + roadmap inputs) have no field for entered tests or personal bests. Today cannot use them. Server lift loads use verified maxes only (unchanged).
+- **Coach notes / "From Coach":** no field in the daily plan's inputs. Coach workouts appear as their own cards after the safety check; they never change Hammers' picks.
+- **Practice logs:** reader built (AN5, 3 tests); not yet wired into Today — waiting on the owner's yes for what a heavy stretch changes.
+- Audit complete: all 12 inputs traced. Nothing guessed for missing data.
