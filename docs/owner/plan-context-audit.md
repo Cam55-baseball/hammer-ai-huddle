@@ -36,7 +36,7 @@ DP = `src/lib/hammer/prescription/dailyPlan.ts` · WK = `supabase/functions/wk-g
 5. No consistent "Because" line per affected card; no learning-loop tracking of whether it helped (link e).
 6. Smart Week ignores games, season, injury, subscription, goals, limbs and sport.
 7. Server fatigue answer fetched but unused (WK:761-774); strength-award floor fetched but never enforced (WK:1864-1872).
-8. Readiness shape: DP checks `.score < 0.4` while `decisionFilters.ts:138-146` accepts number or `{score}` — needs verification.
+8. **FIXED AL5** — Readiness shape: DP checks `.score < 0.4` while `decisionFilters.ts:138-146` accepts number or `{score}` — needs verification.
 9. Coach notes unused.
 
 ## Next steps (in order)

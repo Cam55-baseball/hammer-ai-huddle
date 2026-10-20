@@ -312,9 +312,15 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
   const anthro = buildAnthroProfile(ctx.get<unknown>("anthropometrics")?.value);
   const anthroSignal = hasAnyAnthroSignal(anthro);
 
-  const recoverDay =
-    typeof (readiness as { score?: number })?.score === "number" &&
-    (readiness as { score: number }).score < 0.4;
+  // Readiness may arrive as a bare number or { score }; read both the same way
+  // decisionFilters does so a low score is never silently ignored.
+  const readinessScore =
+    typeof readiness === "number"
+      ? readiness
+      : typeof (readiness as { score?: number } | null)?.score === "number"
+        ? (readiness as { score: number }).score
+        : null;
+  const recoverDay = readinessScore !== null && readinessScore < 0.4;
   const youthScale =
     lifecycleBand === "u10" || lifecycleBand === "u12" || lifecycleBand === "u14";
   const lowAvail = typeof availDays === "number" && availDays <= 2;
