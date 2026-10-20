@@ -250,7 +250,9 @@ describe("audit: ranked category goals → day order", () => {
       category_goals: { version: 2, categoryOrder: ['hitting', 'fielding', 'throwing', 'speed', 'power'], updatedAt: '2026-06-01T00:00:00Z' },
       equipment_effective: ['field', 'glove', 'ball', 'tee', 'gamer_bat', 'net'],
     }), NORMAL_SIGNAL, null, null, undefined, DAY);
-    expect(reversed.blocks.findIndex(block => block.modality === 'hitting')).toBeLessThan(reversed.blocks.findIndex(block => block.modality === 'defense')));
+    const reversedHittingIndex = reversed.blocks.findIndex(block => block.modality === 'hitting');
+    const reversedFieldingIndex = reversed.blocks.findIndex(block => block.modality === 'defense');
+    expect(reversedHittingIndex).toBeLessThan(reversedFieldingIndex);
     expect(reversed.blocks.find(block => block.modality === 'strength')?.drills).toEqual(p.blocks.find(block => block.modality === 'strength')?.drills);
   });
   const ranked = (order: string[]) => ({ version: 1, updatedAt: "2026-06-01T00:00:00.000Z",
