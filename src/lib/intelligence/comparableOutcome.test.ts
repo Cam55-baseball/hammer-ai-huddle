@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   judgeComparableOutcome,
+  judgedOutcomeFromRecheck,
   normalVariationBand,
   COMPARABLE_OUTCOME_LABEL,
   RECHECK_MIN_DAYS,
@@ -52,5 +53,42 @@ describe("comparable outcome (owner rule: same athlete/sport/category/measure, 2
     expect(COMPARABLE_OUTCOME_LABEL.no_change).toBe("No change");
     expect(COMPARABLE_OUTCOME_LABEL.got_worse).toBe("Got worse");
     expect(COMPARABLE_OUTCOME_LABEL.need_more_data).toBe("Need more data");
+  });
+});
+
+describe("judgedOutcomeFromRecheck (client re-judgment of a stored server row)", () => {
+  const day = 86_400_000;
+  const t0 = Date.parse("2026-09-01T12:00:00Z");
+  const iso = (ms: number) => new Date(ms).toISOString();
+
+  it("re-judges with the owner rules, not the server's fixed band", () => {
+    // Server band (3 units) would call +2.5 "No change"; 3% of 60 = 1.8, so it worked.
+    expect(judgedOutcomeFromRecheck({
+      baseline_value: 60, recheck_value: 62.5,
+      followed_at: iso(t0), checked_at: iso(t0 + 21 * day),
+    })).toBe("worked");
+  });
+
+  it("a re-check inside 2 weeks is Need more data even when the server stored an outcome", () => {
+    expect(judgedOutcomeFromRecheck({
+      baseline_value: 60, recheck_value: 70,
+      followed_at: iso(t0), checked_at: iso(t0 + 5 * day),
+    })).toBe("need_more_data");
+  });
+
+  it("a re-check past 4 weeks is Need more data", () => {
+    expect(judgedOutcomeFromRecheck({
+      baseline_value: 60, recheck_value: 70,
+      followed_at: iso(t0), checked_at: iso(t0 + 40 * day),
+    })).toBe("need_more_data");
+  });
+
+  it("missing or unparseable dates never guess — the window must be verifiable", () => {
+    expect(judgedOutcomeFromRecheck({ baseline_value: 60, recheck_value: 70 })).toBe("need_more_data");
+    expect(judgedOutcomeFromRecheck({
+      baseline_value: 60, recheck_value: 70,
+      followed_at: "not-a-date", checked_at: iso(t0),
+    })).toBe("need_more_data");
+    expect(judgedOutcomeFromRecheck({ baseline_value: null, recheck_value: 70 })).toBe("need_more_data");
   });
 });
