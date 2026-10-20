@@ -8,7 +8,7 @@
 - [ ] Continue execution/mixed-signals/testing details and six-cohort phone proofs with exact cleanup.
 - [x] Existing nightly schedule re-read active 04:30 UTC, unchanged. Named function not redeployed again.
 - [ ] Actual next nightly run still pending until Oct 21 04:30 UTC; cannot verify a future run.
-- [x] Full suite after source changes 453 files / 3,655 tests PASS; final suite rerun after adding actual-builder tests pending below.
+- [x] Final fresh full suite **453 files / 3,657 tests PASS**, including actual-builder additions (`/tmp/at1-final-full-suite.log`); latest preview build OK.
 
 **Ready to publish: NO.** Evidence `docs/owner/at1-proof.md`, `/tmp/browser/at1/`, `/tmp/at1-builder.log`. TEST passwords scrambled, exact temporary relationship removed. No publish/deploy/cron/iOS changes this run.
 

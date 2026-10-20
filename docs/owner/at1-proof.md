@@ -10,7 +10,7 @@
 - Actual builder eight-week tests in both sports: hitting-first adds exactly **8** scheduled hitting days; second-ranked fielding leads shared ready skill slots; every existing baseline skill day remains; lifting drills, duration, status and stop rules are unchanged. Uses existing Build-rung off-season slots. A first attempt asking for extra fielding failed correctly because that rung already uses all phase-template fielding slots; changed test case to the allowed hitting slot, not engine permissions.
 - Existing six subscription-qualified eight-week actual-builder simulations continue passing (access, fault change/clean resolution, wrong-sport isolation, practice context, injury and game-eve protections). These are deterministic simulations, not hosted six-cohort screenshots.
 - Targeted final checks: **3 files / 24 tests PASS**, `/tmp/at1-builder.log`.
-- First fresh full suite after source changes: **453 files / 3,655 tests PASS**, `/tmp/at1-full-suite.log`. Final suite after adding actual-builder tests recorded separately in roadmap.
+- Final fresh full suite after actual-builder additions: **453 files / 3,657 tests PASS**, `/tmp/at1-final-full-suite.log`; preview build OK.
 
 ## Cleanup and limits
 - TEST passwords scrambled after each phone proof. Exact TEST AT1 coaching request snapshotted, connection ended via canonical RPC, exact request removed. No real owner login or data changed. No athlete plan generated or fabricated for proof.
