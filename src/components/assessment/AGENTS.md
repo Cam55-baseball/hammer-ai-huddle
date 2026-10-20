@@ -1,0 +1,3 @@
+- Assessment Mode embeds canonical S2, analysis and Vault test flows; only navigation status enters step_progress. Why: skips must never fabricate results or duplicate measurements.
+- Confirmed player purchases enter AssessmentEntry before the dashboard; mode_opened_at and completed_at govern once-only presentation. Why: return URLs cannot grant access or reopen finished assessments.
+- Coach/org writes must retain existing connected-athlete, parent-presence and sharing checks. Why: embedding a form never authorizes cross-athlete access.

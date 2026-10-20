@@ -38,13 +38,14 @@ export function PurchaseConfirmationWatcher() {
   const unlocked = useRef(false);
 
   const goDashboard = useCallback(() => {
+    const purchase = getPendingPurchase();
     clearPendingPurchase();
     confirmStart.current = null;
     wantsDashboard.current = false;
     unlocked.current = false;
     setPhase("idle");
     window.dispatchEvent(new Event("hammers:subscription-refresh"));
-    navigate("/dashboard", { replace: true });
+    navigate(`/assessment?sport=${purchase?.sport === "softball" ? "softball" : "baseball"}`, { replace: true });
   }, [navigate]);
 
   const check = useCallback(async () => {
@@ -80,12 +81,8 @@ export function PurchaseConfirmationWatcher() {
         unlocked.current = true;
         // Warm the subscription state so the side menu is ready on arrival.
         window.dispatchEvent(new Event("hammers:subscription-refresh"));
-        if (wantsDashboard.current) {
-          toast({ title: "Purchase confirmed", description: "Your plan is unlocked." });
-          goDashboard();
-        } else {
-          setPhase("returned");
-        }
+        toast({ title: "Purchase confirmed", description: "Your plan is unlocked." });
+        goDashboard();
         return;
       }
       if (expired) { clearPendingPurchase(); setPhase("idle"); return; }

@@ -176,10 +176,9 @@ const Checkout = () => {
 
       setTimeout(() => {
         clearInterval(stepTimer);
-        const ctx = simId || searchParams.get("sim") || "";
-        const dest = ctx
-          ? `/select-modules?context=${encodeURIComponent(ctx)}&from=demo${gap ? `&gap=${encodeURIComponent(gap)}` : ""}`
-          : "/dashboard";
+        // Confirmed entitlement is handled by the watcher; never mount the
+        // dashboard while a first purchase is still being confirmed.
+        const dest = `/assessment?sport=${selectedSport}`;
         // Came from the iPhone/iPad app: hand the person straight back to it.
         if (sessionStorage.getItem(FROM_APP_KEY) === "1") {
           sessionStorage.removeItem(FROM_APP_KEY);
