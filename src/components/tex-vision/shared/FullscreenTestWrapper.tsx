@@ -13,6 +13,7 @@ import {
 import { X, AlertTriangle } from 'lucide-react';
 
 interface FullscreenTestWrapperProps {
+  embedded?: boolean;
   children: React.ReactNode;
   showCancel?: boolean;
   showCancelConfirmation: boolean;
@@ -22,6 +23,7 @@ interface FullscreenTestWrapperProps {
 }
 
 export const FullscreenTestWrapper = ({
+  embedded = false,
   children,
   showCancel = true,
   showCancelConfirmation,
@@ -29,7 +31,7 @@ export const FullscreenTestWrapper = ({
   onConfirmCancel,
   onCancelConfirmationChange,
 }: FullscreenTestWrapperProps) => (
-  <div className="fixed inset-0 z-50 bg-black flex flex-col p-4 pt-[calc(1rem+var(--safe-top))] pb-[calc(1rem+var(--safe-bottom))] overflow-auto">
+  <div className={embedded ? "relative flex min-h-80 flex-col bg-background p-2" : "fixed inset-0 z-50 bg-background flex flex-col p-4 pt-[calc(1rem+var(--safe-top))] pb-[calc(1rem+var(--safe-bottom))] overflow-auto"}>
     {showCancel && (
       <div className="flex justify-end mb-4">
         <Button variant="destructive" size="sm" onClick={onCancelClick} className="flex items-center gap-2">

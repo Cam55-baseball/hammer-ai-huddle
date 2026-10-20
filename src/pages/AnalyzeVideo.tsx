@@ -1,5 +1,5 @@
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
-import { useEffect, useState, useRef } from "react";
+import { Fragment, useEffect, useState, useRef } from "react";
 import { runClipPreflight, type PreflightVerdict } from "@/lib/biomech/pose/clipPreflight";
 import { ClipPreflightCard } from "@/components/analyze/ClipPreflightCard";
 import { UploadAnalysisReport } from "@/components/analyze/UploadAnalysisReport";
@@ -93,11 +93,12 @@ function normalizeAnalysisResponse(data: any) {
 }
 
 
-export default function AnalyzeVideo() {
+export default function AnalyzeVideo({ assessment }: { assessment?: { module: "hitting" | "throwing" | "pitching"; sport: "baseball" | "softball"; onDone: () => void } } = {}) {
   const { t } = useTranslation();
-  const { module } = useParams<{ module: string }>();
+  const { module: routeModule } = useParams<{ module: string }>();
+  const module = assessment?.module ?? routeModule;
   const [searchParams] = useSearchParams();
-  const sport = searchParams.get("sport") || (localStorage.getItem('selectedSport') as string) || "baseball";
+  const sport = assessment?.sport ?? searchParams.get("sport") ?? localStorage.getItem('selectedSport') ?? "baseball";
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const queryClient = useQueryClient();
   const { modules: subscribedModules, loading: subLoading, initialized, refetch, hasAccessForSport } = useSubscription();
@@ -338,7 +339,8 @@ export default function AnalyzeVideo() {
       if (hasAccessForSport(module as string, sport, isOwner || isAdmin)) return;
       console.warn('AnalyzeVideo — access denied after grace window', { sport, module, subscribedModules });
       toast.error(t('errors.noModuleAccess', "You don't have access to this module. Please subscribe."));
-      navigate("/dashboard", { replace: true });
+      if (assessment) assessment.onDone();
+      else navigate("/dashboard", { replace: true });
     }, 400);
     return () => clearTimeout(t2);
   }, [authLoading, subLoading, initialized, isAuthStable, user, session, subscribedModules, module, sport, isOwner, isAdmin, hasAccessForSport, navigate, t]);
@@ -357,7 +359,7 @@ export default function AnalyzeVideo() {
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
     setLandingTime(null);
-    if (module && sport) {
+    if (module && sport && !assessment) {
       toast.info(t('videoAnalysis.switchedContext', { sport, module, defaultValue: 'Switched to {{sport}} - {{module}}. Upload space cleared.' }));
     }
   }, [module, sport, t]);
@@ -1381,9 +1383,10 @@ export default function AnalyzeVideo() {
   };
 
   if (authLoading || subLoading || !initialized)  return <HMLoadingFallback />;
+  const Layout = assessment ? Fragment : DashboardLayout;
 
   return (
-    <DashboardLayout>
+    <Layout>
       <div
         className="space-y-4 sm:space-y-6 overflow-x-hidden max-w-full analysis-zoomable"
         data-protected-editing="true"
@@ -1400,10 +1403,10 @@ export default function AnalyzeVideo() {
                 <span className="hidden sm:inline">{t('videoAnalysis.deleteVideo')}</span>
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={goBack} className="flex-1 sm:flex-initial">
+            {!assessment && <Button variant="outline" size="sm" onClick={goBack} className="flex-1 sm:flex-initial">
               <ArrowLeft className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">{t('videoAnalysis.back')}</span>
-            </Button>
+            </Button>}
           </div>
         </div>
 
@@ -1411,6 +1414,7 @@ export default function AnalyzeVideo() {
             lives in DelayCam. */}
         {!videoPreview && (
           <div className="space-y-4">
+            {assessment && <HighFpsCapture module={assessment.module} sport={assessment.sport} />}
             <PitchingFilmingGuide />
             <Card data-tour="upload" className="mx-auto max-w-xl p-6 sm:p-8 text-center border-dashed border-2">
               <div className="flex flex-col items-center space-y-3">
@@ -1656,7 +1660,7 @@ export default function AnalyzeVideo() {
                       <span className="hidden xs:inline">{t('videoAnalysis.saveToLibrary')}</span>
                       <span className="xs:hidden">{t('videoAnalysis.saveToLibrary')}</span>
                     </Button>
-                    <Button onClick={() => navigate('/dashboard')} variant="outline" className="w-full xs:flex-1">
+                    <Button onClick={() => assessment ? assessment.onDone() : navigate('/dashboard')} variant="outline" className="w-full xs:flex-1">
                       <Home className="h-4 w-4 xs:hidden" />
                       <span className="hidden xs:inline">{t('videoAnalysis.returnToDashboard')}</span>
                       <span className="xs:hidden">{t('navigation.dashboard')}</span>
@@ -1737,7 +1741,7 @@ export default function AnalyzeVideo() {
                     savedDrillIds={savedDrillIds}
                     onSaveDrill={handleSaveDrill}
                     onSaveToLibrary={() => setSaveDialogOpen(true)}
-                    onReturnToDashboard={() => navigate('/dashboard')}
+                    onReturnToDashboard={() => assessment ? assessment.onDone() : navigate('/dashboard')}
                     hideGeneratedDrills={matchPrescriptionDrills({
                       faultKeys: (analysis.improvements ?? []).map((i) => i.fault_key ?? "").filter(Boolean),
                       violations: analysis.violations_detected ?? null,
@@ -1792,6 +1796,6 @@ export default function AnalyzeVideo() {
           module={module || ''}
         />
       )}
-    </DashboardLayout>
+    </Layout>
   );
 }

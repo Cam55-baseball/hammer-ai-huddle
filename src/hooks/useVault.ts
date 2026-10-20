@@ -1049,10 +1049,11 @@ export function useVault() {
   const savePerformanceTest = useCallback(async (
     testType: string, 
     results: Record<string, number>,
-    handedness?: { throwing?: string; batting?: string }
+    handedness?: { throwing?: string; batting?: string },
+    sport: 'baseball' | 'softball' = 'baseball'
   ) => {
     if (!user) return { success: false };
-    const lastTest = performanceTests.find(t => t.test_type === testType);
+    const lastTest = performanceTests.find(t => t.test_type === testType && t.sport === sport);
     // Calculate next entry date (6 weeks from now)
     const nextEntryDate = new Date();
     nextEntryDate.setDate(nextEntryDate.getDate() + 42); // 6 weeks = 42 days
@@ -1076,14 +1077,14 @@ export function useVault() {
       const position = mpiSettings?.primary_position || 'UT';
       const dob = mpiSettings?.date_of_birth;
       const age = dob ? Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 86400000)) : null;
-      const tg = computeToolGrades(results, position, 'baseball', age);
+      const tg = computeToolGrades(results, position, sport, age);
       toolGradesPayload = { hit: tg.hit, power: tg.power, run: tg.run, field: tg.field, arm: tg.arm, overall: tg.overall };
     } catch (e) {
       console.warn('Tool grade computation failed, saving without:', e);
     }
 
     const { error } = await supabase.from('vault_performance_tests').insert({
-      user_id: user.id, test_type: testType, sport: 'baseball', module: testType, 
+      user_id: user.id, test_type: testType, sport, module: testType,
       results: enhancedResults, previous_results: lastTest?.results || null,
       next_entry_date: nextEntryDate.toISOString().split('T')[0],
       schema_version: 2,

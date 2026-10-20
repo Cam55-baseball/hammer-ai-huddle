@@ -174,21 +174,9 @@ const Checkout = () => {
         }
       }, 800);
 
-      setTimeout(() => {
-        clearInterval(stepTimer);
-        const ctx = simId || searchParams.get("sim") || "";
-        const dest = ctx
-          ? `/select-modules?context=${encodeURIComponent(ctx)}&from=demo${gap ? `&gap=${encodeURIComponent(gap)}` : ""}`
-          : "/dashboard";
-        // Came from the iPhone/iPad app: hand the person straight back to it.
-        if (sessionStorage.getItem(FROM_APP_KEY) === "1") {
-          sessionStorage.removeItem(FROM_APP_KEY);
-          window.location.href = PURCHASE_RETURN_URL;
-          return;
-        }
-        navigate(dest, { replace: true });
-      }, 2500);
-      return;
+      // The app-wide watcher owns onward navigation after confirmed access.
+      // No timer may send a paid player to the dashboard before that answer.
+      return () => clearInterval(stepTimer);
     } else if (status === "cancel" || status === "cancelled") {
       localStorage.removeItem("pendingModuleActivation");
       toast({

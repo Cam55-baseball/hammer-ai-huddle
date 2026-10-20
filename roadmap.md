@@ -1,3 +1,38 @@
+# AK1 — Oct 20 — Assessment Mode + Hammers Today prompts
+**Ready to publish: NO.** Assessment foundations are proven, but the full requested assessment, sharing and prompt matrix remain incomplete. No publish, function redeploy, cron or iOS changes. Additive assessment fields and the new OFF switch are live; frontend changes are preview-only.
+
+| AK1 item | Status and proof |
+|---|---|
+| Step 5 missing buttons | FIXED for TEST college phone: hitting + throwing simultaneously. Six tier/sport rule checks pass; remaining program/sport phone proofs pending. |
+| Full-screen embedded foundation | PASS phone: profile, movement, S2 intro, analysis camera/upload surface and six-week entry; actual S2/analysis submissions pending. |
+| X / guard / skips / unlock | PASS 390×844: X → Continue guard; explicit skips → guard gone, Start enabled. Start not clicked; generation readback pending. |
+| Once-only post-payment wiring | Implemented and rule-tested; timer race removed; actual $0 payment proof pending. |
+| Prompt audit | DONE: docs/owner/plan-prompts-audit.md; includes actual existing game, Tex Vision and morning-check-in due prompts. |
+| Calendar prompts | Game remains enabled with sport/cancellation filtering; scheduled-practice card added; dedicated phone completion + full calendar practice bridge pending. |
+| New cadences | Database plan_prompts_v2 read back OFF/buildable=false. No new cadence running; adapters awaiting implementation/approval. |
+| Tests | 52/52 focused checks, seven files; preview build OK. Eight-week Tuesday practice recurrence = 8 reminders; full player matrix pending. |
+| TEST cleanup | Progress snapshotted privately and restored; readback empty progress, step 1, no presentation/completion timestamp. No clips/games/tests/payments created. |
+| Phone evidence | docs/owner/walkthroughs/assessment/ak1/README.md and seven screenshots, with explicit limitations. |
+
+## Proposed new cadences — waiting on owner confirmation
+These are proposals, not active training rules. New prompt types must remain behind `plan_prompts_v2` OFF until confirmed; existing prescription/rest rules still win.
+
+| Prompt | Proposed default if no existing cadence | State |
+|---|---|---|
+| Record an included analysis | Every 6 weeks, on an eligible module day | Awaiting audit + owner confirmation |
+| Delaycam | Once weekly on a prescribed hitting day | Awaiting audit + owner confirmation |
+| Royal timing | Once weekly on a prescribed hitting day | Awaiting audit + owner confirmation |
+| Tex Vision | Keep existing daily selection; no extra session. Any new reminder cadence needs confirmation | Existing path retained; new cadence OFF |
+
+- [ ] A1 BUG FIRST: show every subscription-included step-5 analysis button, both sports; entitlement tests and phone proof.
+- [ ] A2–A4: full-screen embedded Assessment Mode; saved steps, ordered 1–3 then flexible 4–6, Back/Next/Skip/Mark complete/X.
+- [ ] A5–A6: once after successful payment before dashboard; closed-mode mission guard; permanent completion and Start unlock.
+- [ ] A7: shared coach/org assessment mode with current permissions.
+- [ ] A8: six program/sport phone proofs, $0 payment, embedded S2/analysis, completion → The General → Start; scoped cleanup.
+- [x] B1: read-only prompt audit in docs/owner/plan-prompts-audit.md.
+- [ ] B2–B3: existing-plan calendar game/practice cards enabled; due/prescribed prompt gaps implemented behind plan_prompts_v2 OFF; canonical completion integration.
+- [ ] B4: eight-week player-type simulation and phone evidence; refresh guide and readiness.
+
 # AJ2 — Oct 19 05:17 UTC — Final wrap-up summary
 **Ready to publish: NO.** Reason: the owner's own checkouts (Complete Pitcher, Coach, Organization) and the under-13 signup are still open; HEVC body-tracking impact is unverified until one real iPhone clip is uploaded after publish.
 

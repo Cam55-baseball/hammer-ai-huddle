@@ -90,6 +90,7 @@ const SelectSport = lazyWithRetry(() => import("./pages/SelectSport"));
 const SelectModules = lazyWithRetry(() => import("./pages/SelectModules"));
 const Pricing = lazyWithRetry(() => import("./pages/Pricing"));
 const Checkout = lazyWithRetry(() => import("./pages/Checkout"));
+const AssessmentEntry = lazyWithRetry(() => import("./pages/AssessmentEntry"));
 const ProfileSetup = lazyWithRetry(() => import("./pages/ProfileSetup"));
 const Activate = lazyWithRetry(() => import("./pages/Activate"));
 
@@ -558,6 +559,7 @@ const App = () => {
               <Route path="/production-lab" element={<RetiredProgramRoute />} />
               <Route path="/production-studio" element={<RetiredProgramRoute />} />
               <Route path="/vault" element={<Vault />} />
+              <Route path="/assessment" element={<AssessmentEntry />} />
               <Route path="/tex-vision" element={<SoftballLock feature="tex_vision"><TexVision /></SoftballLock>} />
               <Route path="/coming-soon" element={<ComingSoon />} />
               <Route path="/my-custom-activities" element={<MyCustomActivities />} />

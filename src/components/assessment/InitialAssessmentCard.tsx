@@ -1,22 +1,20 @@
-/**
- * Plan 4 §B — "Initial assessment" checklist. Shows in Before you start
- * until every step is done. Reads only real saved records; nothing inferred.
- */
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Circle, Lock } from "lucide-react";
+import { ArrowRight, ClipboardCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ReportInjuryDialog } from "@/components/hammer/ReportInjuryDialog";
-import {
-  STEP_LABELS, assessmentSteps, requiredAnalyses, type AnalysisModule, type StepId,
-} from "@/lib/assessment/initialAssessment";
-
+import { S2CognitionDiagnostics } from "@/components/tex-vision/S2CognitionDiagnostics";
+import { VaultPerformanceTestCard } from "@/components/vault/VaultPerformanceTestCard";
+import { useVault } from "@/hooks/useVault";
+import { AssessmentMode } from "./AssessmentMode";
+import { assessmentSteps, requiredAnalyses, type AnalysisModule, type StepId, type StepProgress } from "@/lib/assessment/initialAssessment";
+const EmbeddedAnalysis = lazy(() => import("@/pages/AnalyzeVideo"));
 const MOVES = [
   { key: "hip", label: "Hip rotation (turn each hip in and out)" },
   { key: "shoulder", label: "Shoulder rotation (arm up at 90°, rotate back and forward)" },
@@ -25,138 +23,115 @@ const MOVES = [
 ] as const;
 type Answer = "easy" | "hard" | "pain";
 
-export function InitialAssessmentCard({ sport }: { sport: "baseball" | "softball" }) {
+export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sport: "baseball" | "softball"; autoOpen?: boolean; onClose?: () => void }) {
   const { user } = useAuth();
-  const nav = useNavigate();
   const qc = useQueryClient();
   const { modules, initialized } = useSubscription();
-  const { hasCompletedOnboarding, loading } = useAthleteOnboardingState();
-  const [screenOpen, setScreenOpen] = useState(false);
+  const vault = useVault();
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<StepId>(1);
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
+  const [profile, setProfile] = useState({ full_name: "", position: "" });
+  const [stats, setStats] = useState<Record<string, string>>({});
+  const [analysisModule, setAnalysisModule] = useState<AnalysisModule | null>(null);
   const [painOpen, setPainOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-
-  const { data, error: loadError, isLoading: assessmentLoading } = useQuery({
-    queryKey: ["initial-assessment", user?.id],
-    enabled: !!user,
+  const hydrated = useRef(false);
+  const q = useQuery({
+    queryKey: ["initial-assessment", user?.id, sport], enabled: !!user,
     queryFn: async () => {
       if (!user) throw new Error("Sign in first");
       const uid = user.id;
-      const [row, s2, vids, tests] = await Promise.all([
+      const [row, s2, vids, tests, prof] = await Promise.all([
         supabase.from("initial_assessments").select("*").eq("user_id", uid).maybeSingle(),
-        supabase.from("tex_vision_s2_diagnostics").select("user_id", { count: "exact", head: true }).eq("user_id", uid).not("completed_at", "is", null),
-        supabase.from("videos").select("module").eq("user_id", uid).not("ai_analysis", "is", null).limit(200),
-        supabase.from("vault_performance_tests").select("user_id", { count: "exact", head: true }).eq("user_id", uid),
+        supabase.from("tex_vision_s2_diagnostics").select("user_id", { count: "exact", head: true }).eq("user_id", uid).eq("sport", sport).not("completed_at", "is", null),
+        supabase.from("videos").select("module").eq("user_id", uid).eq("sport", sport).not("analysis_public", "is", null).limit(200),
+        supabase.from("vault_performance_tests").select("user_id", { count: "exact", head: true }).eq("user_id", uid).eq("sport", sport),
+        supabase.from("profiles").select("full_name,position,hammers_today_started_at").eq("id", uid).maybeSingle(),
       ]);
-      if (row.error) throw row.error;
-      return {
-        row: row.data,
-        s2: (s2.count ?? 0) > 0,
-        analyses: [...new Set((vids.data ?? []).map((v: any) => String(v.module)))] as AnalysisModule[],
-        tests: (tests.count ?? 0) > 0,
-      };
+      for (const result of [row, s2, vids, tests, prof]) if (result.error) throw result.error;
+      return { row: row.data, s2: (s2.count ?? 0) > 0, analyses: [...new Set((vids.data ?? []).map(v => v.module))] as AnalysisModule[], tests: (tests.count ?? 0) > 0, profile: prof.data };
     },
   });
-
-  if (!user) return null;
-  if (loadError) return <p role="alert" className="text-sm text-destructive">Couldn't load your initial assessment. Reload and try again.</p>;
-  if (!data || !initialized || loading || assessmentLoading) return <p className="text-sm text-muted-foreground">Loading your initial assessment…</p>;
-  if (data.row?.completed_at) return null;
-
-  const sportModules = modules.filter((m) => m.startsWith(sport));
-  const input = {
-    onboardingDone: hasCompletedOnboarding,
-    lastSeasonDoneOrSkipped: !!(data.row?.last_season_saved_at || data.row?.last_season_skipped_at),
-    movementScreenDone: !!data.row?.movement_done_at,
-    s2Done: data.s2,
-    analysesDone: data.analyses,
-    sixWeekTestDone: data.tests,
-    modules: sportModules,
-  };
-  const steps = assessmentSteps(input);
-  const need = requiredAnalyses(sportModules);
-
+  useEffect(() => {
+    if (!q.data || hydrated.current) return;
+    hydrated.current = true;
+    setStep(Math.min(6, Math.max(1, q.data.row?.current_step ?? 1)) as StepId);
+    setAnswers((q.data.row?.movement_screen ?? {}) as Record<string, Answer>);
+    setProfile({ full_name: q.data.profile?.full_name ?? "", position: q.data.profile?.position ?? "" });
+    const savedStats = q.data.row?.last_season_stats as Record<string, unknown> | null;
+    setStats(Object.fromEntries(Object.entries(savedStats ?? {}).map(([k,v]) => [k, String(v)])));
+  }, [q.data]);
   const save = async (patch: Record<string, unknown>) => {
-    setSaving(true);
-    setSaveError(null);
+    if (!user) return false;
+    setSaving(true); setSaveError(null);
     const { error } = await supabase.from("initial_assessments").upsert({ user_id: user.id, updated_at: new Date().toISOString(), ...patch });
     setSaving(false);
     if (error) { setSaveError("Couldn't save your assessment. Try again."); return false; }
-    qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] });
-    qc.invalidateQueries({ queryKey: ["assessment-start", user.id] });
+    await qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] });
+    await qc.invalidateQueries({ queryKey: ["assessment-start", user.id] });
     return true;
   };
-
-  const action = (id: StepId) => {
-    switch (id) {
-      case 1: return <Button size="sm" onClick={() => nav("/onboarding/flow")}>Finish profile</Button>;
-      case 2: return (
-        <div className="flex gap-2">
-          <Button size="sm" onClick={() => nav("/vault")}>Add stats</Button>
-          <Button size="sm" variant="outline" disabled={saving} onClick={() => save({ last_season_skipped_at: new Date().toISOString() })}>Skip</Button>
-        </div>
-      );
-      case 3: return <Button size="sm" onClick={() => setScreenOpen(true)}>Start check</Button>;
-      case 4: return <Button size="sm" onClick={() => nav("/tex-vision")}>Open Tex Vision</Button>;
-      case 5: {
-        const next = need.find((m) => !data.analyses.includes(m));
-        return next ? <Button size="sm" onClick={() => nav(`/analyze/${next}`)}>Record {next}</Button> : null;
-      }
-      case 6: return <Button size="sm" onClick={() => nav("/vault")}>Open 6-week test</Button>;
+  useEffect(() => {
+    if (!autoOpen || !q.data || q.data.row?.completed_at || q.data.profile?.hammers_today_started_at) return;
+    setOpen(true);
+    if (!q.data.row?.mode_opened_at) void save({ mode_opened_at: new Date().toISOString() });
+  }, [autoOpen, !!q.data]);
+  const close = () => { setOpen(false); onClose?.(); };
+  if (!user) return null;
+  if (q.error) return <p role="alert" className="text-sm text-destructive">Couldn't load your assessment. Reload and try again.</p>;
+  if (!q.data || !initialized) return <p className="text-sm text-muted-foreground">Loading your assessment…</p>;
+  if (q.data.row?.completed_at || q.data.profile?.hammers_today_started_at) return null;
+  const data = q.data;
+  const sportModules = modules.filter(m => m.startsWith(`${sport}_`));
+  const need = requiredAnalyses(sportModules);
+  const progress = (data.row?.step_progress ?? {}) as StepProgress;
+  const input = { onboardingDone: false, lastSeasonDoneOrSkipped: !!(data.row?.last_season_saved_at || data.row?.last_season_skipped_at), movementScreenDone: !!data.row?.movement_done_at, s2Done: data.s2, analysesDone: data.analyses, sixWeekTestDone: data.tests, modules: sportModules, progress };
+  const steps = assessmentSteps(input);
+  const count = Object.values(steps).filter(s => s === "done").length;
+  const navigateStep = (id: StepId) => { if (steps[id] === "locked") return; setAnalysisModule(null); setStep(id); void save({ current_step: id }); };
+  const record = async (state: "done" | "skipped") => {
+    const at = new Date().toISOString();
+    const patch: Record<string, unknown> = {};
+    if (state === "done" && step === 1) {
+      const { error } = await supabase.from("profiles").update({ full_name: profile.full_name || null, position: profile.position || null }).eq("id", user.id);
+      if (error) { setSaveError("Couldn't save your profile. Try again."); return; }
     }
+    if (step === 2) {
+      if (state === "skipped") patch.last_season_skipped_at = at;
+      else { patch.last_season_saved_at = at; patch.last_season_stats = Object.fromEntries(Object.entries(stats).filter(([,v]) => v !== "").map(([k,v]) => [k, Number(v)])); }
+    }
+    const anyPain = MOVES.some(m => answers[m.key] === "pain");
+    if (step === 3 && anyPain) patch.pain_flag = true;
+    if (step === 3 && state === "done") {
+      // Missing answers are not evidence of a painless screen. The athlete
+      // may still explicitly skip; only actual answers populate safety data.
+      Object.assign(patch, { movement_screen: answers, ...(MOVES.every(m => answers[m.key]) ? { movement_done_at: at } : {}), ...(anyPain ? { pain_flag: true } : {}) });
+    }
+    const updated = { ...progress, [step]: state };
+    const after = assessmentSteps({ ...input, progress: updated });
+    const finished = Object.values(after).every(s => s === "done");
+    const next = ([1,2,3,4,5,6] as StepId[]).find(id => after[id] === "open") ?? step;
+    const saved = await save({ ...patch, step_progress: updated, current_step: next, ...(finished ? { completed_at: at } : {}) });
+    if (!saved) return;
+    if (step === 3 && anyPain) setPainOpen(true);
+    if (finished) close(); else { setStep(next); setAnalysisModule(null); }
   };
-
-  const anyPain = MOVES.some((m) => answers[m.key] === "pain");
-
-  return (
-    <Card className="p-4 space-y-3">
-      <div>
-        <h3 className="font-semibold">Initial assessment</h3>
-        <p className="text-sm text-muted-foreground">Every answer and test is optional. Tap Completed when you're ready to start your plan.</p>
-      </div>
-      <ol className="space-y-2">
-        {([1, 2, 3, 4, 5, 6] as StepId[]).map((id) => (
-          <li key={id} className="flex items-center justify-between gap-2">
-            <span className="flex items-center gap-2 text-sm">
-              {steps[id] === "done" ? <CheckCircle2 className="h-4 w-4 text-primary" /> : steps[id] === "locked" ? <Lock className="h-4 w-4 text-muted-foreground" /> : <Circle className="h-4 w-4" />}
-              <span>Step {id}: {STEP_LABELS[id]}{id === 5 && need.length ? ` (${need.join(", ")})` : ""}</span>
-            </span>
-            {steps[id] !== "done" && action(id)}
-          </li>
-        ))}
-      </ol>
-
-      {screenOpen && (
-        <div className="space-y-3 rounded-md border p-3">
-          <p className="text-sm">Do each move slowly. Stop if it hurts.</p>
-          {MOVES.map((m) => (
-            <div key={m.key} className="space-y-1">
-              <p className="text-sm font-medium">{m.label}</p>
-              <div className="flex gap-2">
-                {(["easy", "hard", "pain"] as Answer[]).map((a) => (
-                  <Button key={a} size="sm" variant={answers[m.key] === a ? "default" : "outline"} onClick={() => setAnswers({ ...answers, [m.key]: a })}>
-                    {a === "easy" ? "Easy" : a === "hard" ? "Hard / tight" : "It hurt"}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          ))}
-          {anyPain && <p className="text-sm text-destructive">You said something hurt. Please report it so your plan stays safe.</p>}
-          <Button disabled={saving} onClick={async () => {
-            const saved = await save({ movement_screen: answers, movement_done_at: new Date().toISOString(), pain_flag: anyPain });
-            if (!saved) return;
-            setScreenOpen(false);
-            if (anyPain) setPainOpen(true);
-          }}>Save check</Button>
-        </div>
-      )}
-      <Button className="w-full" disabled={saving} onClick={async () => {
-        const saved = await save({ completed_at: new Date().toISOString(), ...(Object.keys(answers).length ? { movement_screen: answers, movement_done_at: new Date().toISOString(), pain_flag: anyPain } : {}) });
-        if (saved && anyPain) setPainOpen(true);
-      }}>Completed</Button>
-      {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
-      <ReportInjuryDialog open={painOpen} onOpenChange={setPainOpen} />
+  return <>
+    <Card className="flex flex-wrap items-center gap-4 border-primary/30 p-4">
+      <ClipboardCheck className="h-6 w-6 shrink-0 text-primary" />
+      <div className="min-w-0 flex-1"><h3 className="font-semibold">Initial assessment · {count} of 6 done</h3><p className="text-sm text-muted-foreground">Your plan unlocks when you finish or skip all six steps.</p></div>
+      <Button onClick={() => setOpen(true)}>Continue<ArrowRight className="ml-2 h-4 w-4" /></Button>
     </Card>
-  );
+    <AssessmentMode open={open} onClose={close} step={step} steps={steps} busy={saving} error={saveError} onNavigate={navigateStep} onRecord={state => { void record(state); }}>
+      {step === 1 && <div className="space-y-5">{(["full_name", "position"] as const).map(key => <div key={key} className="space-y-2"><Label htmlFor={`assessment-${key}`}>{key === "full_name" ? "Your name" : "Position"}</Label><Input id={`assessment-${key}`} value={profile[key]} onChange={e => setProfile({ ...profile, [key]: e.target.value })} /></div>)}</div>}
+      {step === 2 && <div className="space-y-5"><p className="text-sm text-muted-foreground">Player-reported · last season. Leave anything you don't know blank.</p>{[["games", "Games played"],["at_bats", "At-bats"],["hits", "Hits"],["innings_pitched", "Innings pitched"]].map(([key,label]) => <div key={key} className="space-y-2"><Label htmlFor={`assessment-${key}`}>{label}</Label><Input id={`assessment-${key}`} type="number" min="0" step="any" value={stats[key] ?? ""} onChange={e => setStats({ ...stats, [key]: e.target.value })} /></div>)}</div>}
+      {step === 3 && <div className="space-y-6"><p className="text-sm text-muted-foreground">Move slowly. Stop if it hurts.</p>{MOVES.map(m => <div key={m.key} className="space-y-3"><p className="font-medium">{m.label}</p><div className="flex flex-wrap gap-2">{(["easy", "hard", "pain"] as Answer[]).map(a => <Button key={a} variant={answers[m.key] === a ? "default" : "outline"} onClick={() => { setAnswers({ ...answers, [m.key]: a }); if (a === "pain") setPainOpen(true); }}>{a === "easy" ? "Easy" : a === "hard" ? "Hard / tight" : "It hurt"}</Button>)}</div></div>)}</div>}
+      {step === 4 && <S2CognitionDiagnostics sport={sport} embedded onSaved={() => { void qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] }); }} />}
+      {step === 5 && <div className="space-y-5"><div className="flex flex-wrap gap-3">{need.map(module => <Button key={module} variant={analysisModule === module ? "default" : "outline"} onClick={() => setAnalysisModule(module)}>Record {module}</Button>)}</div>{!need.length && <p className="text-sm text-muted-foreground">No analysis modules are included in this sport's subscription.</p>}{analysisModule && <Suspense fallback={<p>Opening your analysis…</p>}><EmbeddedAnalysis key={`${sport}-${analysisModule}`} assessment={{ module: analysisModule, sport, onDone: () => setAnalysisModule(null) }} /></Suspense>}</div>}
+      {step === 6 && <VaultPerformanceTestCard tests={vault.performanceTests.filter(t => t.sport === sport)} subscribedModules={need} sport={sport} autoOpen onSave={(type, results, sides) => vault.savePerformanceTest(type, results, sides, sport)} />}
+    </AssessmentMode>
+    <ReportInjuryDialog assessment open={painOpen} onOpenChange={setPainOpen} />
+  </>;
 }
