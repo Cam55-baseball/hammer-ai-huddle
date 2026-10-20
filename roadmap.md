@@ -1,3 +1,25 @@
+# AK1 — Oct 20 — Assessment Mode + Hammers Today prompts
+**Ready to publish: NO.** This request is in progress; no publish, cron or iOS changes.
+
+## Proposed new cadences — waiting on owner confirmation
+These are proposals, not active training rules. New prompt types must remain behind `plan_prompts_v2` OFF until confirmed; existing prescription/rest rules still win.
+
+| Prompt | Proposed default if no existing cadence | State |
+|---|---|---|
+| Record an included analysis | Every 6 weeks, on an eligible module day | Awaiting audit + owner confirmation |
+| Delaycam | Once weekly on a prescribed hitting day | Awaiting audit + owner confirmation |
+| Royal timing | Once weekly on a prescribed hitting day | Awaiting audit + owner confirmation |
+| Tex Vision | Twice weekly, only eligible prescribed days | Awaiting audit + owner confirmation |
+
+- [ ] A1 BUG FIRST: show every subscription-included step-5 analysis button, both sports; entitlement tests and phone proof.
+- [ ] A2–A4: full-screen embedded Assessment Mode; saved steps, ordered 1–3 then flexible 4–6, Back/Next/Skip/Mark complete/X.
+- [ ] A5–A6: once after successful payment before dashboard; closed-mode mission guard; permanent completion and Start unlock.
+- [ ] A7: shared coach/org assessment mode with current permissions.
+- [ ] A8: six program/sport phone proofs, $0 payment, embedded S2/analysis, completion → The General → Start; scoped cleanup.
+- [ ] B1: read-only prompt audit in docs/owner/plan-prompts-audit.md.
+- [ ] B2–B3: existing-plan calendar game/practice cards enabled; due/prescribed prompt gaps implemented behind plan_prompts_v2 OFF; canonical completion integration.
+- [ ] B4: eight-week player-type simulation and phone evidence; refresh guide and readiness.
+
 # AJ2 — Oct 19 05:17 UTC — Final wrap-up summary
 **Ready to publish: NO.** Reason: the owner's own checkouts (Complete Pitcher, Coach, Organization) and the under-13 signup are still open; HEVC body-tracking impact is unverified until one real iPhone clip is uploaded after publish.
 

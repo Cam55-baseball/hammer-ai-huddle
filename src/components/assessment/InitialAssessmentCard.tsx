@@ -100,8 +100,9 @@ export function InitialAssessmentCard({ sport }: { sport: "baseball" | "softball
       case 3: return <Button size="sm" onClick={() => setScreenOpen(true)}>Start check</Button>;
       case 4: return <Button size="sm" onClick={() => nav("/tex-vision")}>Open Tex Vision</Button>;
       case 5: {
-        const next = need.find((m) => !data.analyses.includes(m));
-        return next ? <Button size="sm" onClick={() => nav(`/analyze/${next}`)}>Record {next}</Button> : null;
+        return <div className="flex flex-wrap gap-2">
+          {need.map((module) => <Button key={module} size="sm" onClick={() => nav(`/analyze/${module}`)}>Record {module}</Button>)}
+        </div>;
       }
       case 6: return <Button size="sm" onClick={() => nav("/vault")}>Open 6-week test</Button>;
     }
@@ -117,12 +118,12 @@ export function InitialAssessmentCard({ sport }: { sport: "baseball" | "softball
       </div>
       <ol className="space-y-2">
         {([1, 2, 3, 4, 5, 6] as StepId[]).map((id) => (
-          <li key={id} className="flex items-center justify-between gap-2">
+          <li key={id} className="flex flex-wrap items-center justify-between gap-2">
             <span className="flex items-center gap-2 text-sm">
               {steps[id] === "done" ? <CheckCircle2 className="h-4 w-4 text-primary" /> : steps[id] === "locked" ? <Lock className="h-4 w-4 text-muted-foreground" /> : <Circle className="h-4 w-4" />}
               <span>Step {id}: {STEP_LABELS[id]}{id === 5 && need.length ? ` (${need.join(", ")})` : ""}</span>
             </span>
-            {steps[id] !== "done" && action(id)}
+            {(steps[id] !== "done" || id === 5) && action(id)}
           </li>
         ))}
       </ol>
