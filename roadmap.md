@@ -1,4 +1,9 @@
-# AK3 — Oct 20 — Assessment Mode + Hammers Today prompts
+# AK4 — Oct 20 — Assessment Mode + Hammers Today prompts
+- [ ] AK4 real practice reminder → saved canonical session → reminder disappears → Discipline/learning readback; exact TEST cleanup after proof.
+- [ ] AK4 shared coach/org assessment: investigate and implement the smallest safe reuse of embedded mode under existing permissions.
+- AK4 standing limits: no publish, cron or iOS changes; retain internal-only Game IQ/Report Card and OFF unapproved prompt cadences.
+
+## AK3 completed foundation
 - [x] AK3 assessment: old S2/Vault records cannot complete unvisited steps; successful embedded saves record navigation completion. Back finds the nearest earlier unlocked step. Step-5 buttons use the saved active subscription scoped to this sport, not owner bypass modules.
 - [x] AK3 phone PASS as TEST college player, 390×844: Back 6→5→4, hitting + throwing buttons, final embedded save→close→Start available→reload still finished. New TEST sprint snapshotted/deleted by exact ID/user; zero remaining, original assessment fields restored/read back. Evidence: docs/owner/walkthroughs/assessment/ak3/.
 - [x] AK3 calendar-only bridge implemented/tested: today's same-sport non-deleted/non-ignored practice opens normal module selection; canonical calendar_practice metadata clears only its dated event. Linked scheduled/calendar rows are deduplicated; no invented module/dose or extra completion store.
