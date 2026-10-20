@@ -1,6 +1,62 @@
-# AK7 — Oct 20 — final batch closeout in progress
-- [ ] Finish safe remaining prompt adapters and verify assessment/prompt behavior; record proof per item, cadence proposals, live switch states and publish readiness here.
-- No publish, cron or iOS changes. Unapproved cadences remain OFF; no invented completion or role bypass.
+# AK7 — Oct 20, 03:10 UTC — final batch status
+
+**Ready to publish: NO.** This batch improved and proved the self-player assessment foundation and due prompts, but did not finish the full original scope. No publish, backend deploy/migration, cron or iOS changes in AK7. AK6's practice-report correction remains live; AK7 changes are preview-only.
+
+## Proof per assessment item
+| Item | Status / proof |
+|---|---|
+| Step-5 subscription buttons | PASS AK4: all three programs × baseball/softball using real saved TEST subscriptions. AK7 reconfirmed 5Tool hitting + throwing on phone; no entitlement invented. |
+| Full-focus six-step mode, Back/Next/Skip/Complete/X | Implemented; prior AK1–AK4 phone navigation tests stand. AK7 X→guard, embedded step switching and Skip completion PASS at 390×844. |
+| Profile, optional stats, movement/safety | Embedded; AK1 profile forms and AK7 optional skip flow proven. No blank answer becomes a safety result. |
+| Embedded S2 | Entry proven; AK7 added fail-closed history read and explicit save/retry failure states. Phone injected-read-error proof: no Start, Try again restores normal entry. **All eight real subtest saves still unproven**; no fabricated score. |
+| Embedded analyses | AK7 opened hitting recording/upload inside assessment on the real TEST phone. **Real embedded owner-clip submit/result readback still pending**. |
+| Embedded six-week test | PASS AK1–AK3 real entered sprint→source/date/Grade 40/Acceptable→auto completion; exact TEST entries cleaned. |
+| Payment auto-open once before dashboard | Source entry guard + five tests PASS. **No actual $0 checkout/payment handoff proof**. A saved active subscription or return URL is not payment proof. |
+| X + mission guard locks Today | AK7 phone PASS: X retains guard and disabled Start; resumes inside assessment. |
+| Completion disappears, reload permanent, Start unlocks | AK7 explicit skips close assessment, remove guard, enable Start; reload stays completed. **Start→saved plan not executed**; once-account state must not be reset casually for cleanup. |
+| The General / agreed onlookers readback | **Pending real submitted result + approved onlooker session**. No self proof presented as coach/scout proof. |
+| Coach/org on-the-spot shared embedded mode | **Not finished**: current canonical self forms cannot write another athlete safely; permission/parent/sharing-aware server submission and approved staff proof required. No bypass added. |
+| Tests and cleanup | 111 focused PASS; full suite **406 files / 3,170 tests PASS**. Preview build OK. AK7 assessment progress privately snapshotted, restored and read back exactly; no new result, clip, payment, plan, legal or Start record created. Evidence: `docs/owner/walkthroughs/assessment/ak7/`. Chromium phone emulation, not physical iPhone. |
+
+## Prompt audit / completion status
+| Item | Status / proof |
+|---|---|
+| Calendar games / practices | ON in existing plan. Practice exact dated/source/module and recurring occurrence matrices PASS; AK7 adds eight-week game/final-log/once-only follow-up simulations for six sport/tier cohorts. Real reminder→save→disappearance still pending. |
+| Record analysis | AK7 read-only adapter implemented **behind OFF plan_prompts_v2**. Requires included sport module, explicit ready-block module route and saved canonical clip date; no invented pitching from arm care. Six cohort × 56-day proposal tests PASS including OFF suppression. No new dose/day. |
+| Delaycam / Royal timing | **Missing daily-plan adapters**; proposals below remain OFF. Existing plan supplies no verified exact module session prescription source to adapt without authoring extra work. Need approved cadence and safe existing-plan task integration; not complete. |
+| Tex Vision sessions / S2 | Existing vision selection retained, no duplication/new session; S2 112-day lock test PASS. Full session-completion phone proof pending. |
+| Check-ins / tests / recap | Existing prompts retained. AK7 due-task reads now fail visibly, never pretend an unavailable read is a missing baseline. Local-date comparisons honor 42-day performance / 112-day S2 tests; eight-week test-lock simulation PASS. |
+| Testing days | Staff scheduler exists; **athlete daily-plan bridge unfinished**. Do not label self-entered Vault data as staff-verified testing-day completion. |
+| Pick-off Trainer | Generator eligibility exists; **prescribed-day trainer adapter/proof unfinished**, not a new cadence. |
+| Base Stealer / Baserunning IQ | Existing physical/mental blocks retained; standalone trainer integration and completion proof unfinished. Unreleased Game IQ surfaces remain suppressed. |
+| Discipline / learning | AK5 canonical practice attendance projection implemented; real practice saves AK5/AK6 passed. **Coach role readback and learning outcomes unverified**; TEST-coach approval needed. Prompt tap never success or completion. |
+| Complete 8-week non-lifting simulation | **Partial, not complete**: six cohort practice/game/analysis matrices and performance/S2 locks PASS; missing adapters cannot be simulated as delivered. |
+
+## Proposed cadence table — owner confirmation required
+| Prompt | Proposed default | Current state |
+|---|---|---|
+| Record included analysis | Every 42 days, only on an explicitly prescribed eligible module day; saved canonical clip resets reminder | Adapter implemented, OFF; not approved |
+| Delaycam | Once weekly on an existing prescribed hitting day; no additional session/dose | Adapter unfinished, OFF; not approved |
+| Royal timing | Once weekly on an existing prescribed hitting day; no additional session/dose | Adapter unfinished, OFF; not approved |
+| Tex Vision | Retain current daily selection/checklist; no extra session or new cadence | Existing path retained; new cadence OFF |
+| Games / practices | Player's actual calendar dates only | ON; no proposed new cadence |
+| Performance tests / S2 / recap | Keep canonical next-entry / next-test / cycle dates (42 / 112 days as applicable) | Existing rules; no replacement cadence |
+
+## Switch states — read back Oct 20, 03:10 UTC
+| Switch / presentation gate | Current state |
+|---|---|
+| plan_prompts_v2 | Backend **off**, buildable=false; unchanged |
+| hammers_today_start_gate | Backend **all**, buildable=true; unchanged |
+| Calendar game/practice cards | Enabled existing plan presentations; not controlled by new-cadence switch |
+| report_card / REPORT_CARD_SWITCH | Code **off** for non-owner/admin; owner/admin internal label; retained data |
+| GAME_IQ_AVAILABLE_TO_ATHLETES | Code **false**; owner/admin internal label, no athlete/staff advertising |
+| facility_spaces | Backend **off**, unchanged |
+| Other feature-switch rows | 26 of 28 rows **all**; the only off rows are facility_spaces + plan_prompts_v2. Evidence switches.json; settings-table switches not freshly checked in AK7. |
+
+- [x] AK7 preview improvements, phone navigation/error recovery, focused/full tests, exact progress restoration, audit/cadence/switch/readiness report.
+- [ ] Full payment/S2/analysis/General/Start end-to-end and coach/org shared mode — unfinished implementation/proof; staff session approval and safe cross-athlete submission required.
+- [ ] Delaycam/Royal/testing-day/pickoff/trainer adapters + full eight-week matrix — unfinished; new cadence confirmation required, keep OFF.
+- [ ] Real reminder→saved log→disappearance→coach Discipline/learning — approved TEST staff session needed; learning success cannot be fabricated.
 
 ## AK6 evidence
 - [x] AK6 practice-report honesty corrected: shared canonical entered-log projection replaces AI generation and bypasses old AI caches without deleting them. Self-owned, non-deleted source checked before live response. Derived composites never become independent evidence, fault fixes, transfer claims or rep allocations. Entered grade/count/date/source stay.

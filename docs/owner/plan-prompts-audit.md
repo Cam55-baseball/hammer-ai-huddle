@@ -2,6 +2,18 @@
 
 Read-only audit of pre-change prompt behavior. No cadence, dose, rest rule, switch or scheduled job was changed by this audit. A separate module is not proof of a daily-plan prompt.
 
+## AK7 current status — Oct 20, 03:10 UTC
+
+This opening audit table below is historical pre-change behavior. The current authoritative item-by-item status, cadence proposals and live switch readback are at the top of `roadmap.md`. Ready to publish: **NO**.
+
+- Calendar game/practice prompts are enabled. Scheduled and calendar practice identity/deduplication tests remain passing; eight-week game/final-log/once-only follow-up rules now cover all six sport/tier cohorts. This is not real reminder-to-save-to-coach proof.
+- Analysis recording adapter now exists in Before you start, but **plan_prompts_v2 is OFF/buildable=false**. Reads/render occur only when enabled. The six-week proposal requires the sport's included module, explicit ready-block module route and latest canonical `videos.analysis_public` clip date. Arm care never implies a pitching session. Six × 56-day simulations prove entitlement/day/date/OFF behavior; owner confirmation remains required.
+- Existing performance/photo/self-grade/wellness sources now throw on failed reads and show an unavailable message. Failure cannot produce a missing-baseline prompt. Calendar-day comparisons remove UTC-hour drift; existing 42-day performance and 112-day S2 test locks covered. Saved history lacking a due date no longer invents one. Due rows wrap instead of truncating on phone.
+- Canonical embedded S2 now blocks Start after failed history read and exposes save retry rather than hiding a failure; phone read-error/retry proof passed. This does not prove all eight S2 saves.
+- Delaycam and Royal timing daily-plan adapters are **not finished**; proposed once-weekly hitting-day cadences remain OFF. Tex Vision retains existing selection/checklist without adding sessions. Testing-day athlete bridge, pickoff prescribed-day adapter and standalone Base Stealer/Baserunning IQ integration remain unfinished; existing blocks stay.
+- Discipline attendance bridge exists, but approved TEST-coach role readback, actual reminder disappearance, successful learning outcomes and complete non-lifting eight-week matrix are still unverified. No prompt tap is learning success.
+- AK7 111 focused tests PASS; full suite 406 files / 3,170 tests PASS. Phone 390×844 real TEST player; progress snapshot restored/read back, zero new results or plans. No backend deploy/migration, publish, cron or iOS changes.
+
 | Item | Appears in Hammers Today? | When and where | Canonical completion / gap |
 |---|---|---|---|
 | Scheduled game | Yes | `GameLogPromptCard`, within the plan's pocket flow; games/calendar/planned pitcher outing today; one yesterday follow-up | Opens `gp_games`; final status stops the prompt. Calendar cancellation/deletion and sport filtering need tightening. |
