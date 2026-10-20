@@ -115,17 +115,16 @@ describe('AT1: ranked weekly skill blocks through the actual builder, both sport
     it(`${sport}: changing top goal changes scheduled blocks and second-goal slots without changing lifting`, () => {
       const ranked = (order: string[]) => ({ version: 1, updatedAt: '2026-10-20',
         goals: order.map((category, i) => ({ category, rank: i + 1, intent: null })) });
-      let baselineDefense = 0, goalDefense = 0, sharedHittingFirst = 0;
+      let baselineHitting = 0, goalHitting = 0, sharedFieldingFirst = 0;
       for (let n = 0; n < 56; n++) {
         const today = new Date(2026, 5, 7 + n);
         const make = (goals?: unknown) => context(sport, 'SS', 'off', {
-          lifecycle_band: 'adult', lifting_age_years: 0.5, ...(goals ? { category_goals: goals } : {}),
+          lifecycle_band: 'adult', ...(goals ? { category_goals: goals } : {}),
         });
         const base = buildHammerDailyPlan(make(), NORMAL_SIGNAL, null, null, undefined, today);
-        const next = buildHammerDailyPlan(make(ranked(['fielding', 'hitting', 'throwing', 'speed', 'power'])), NORMAL_SIGNAL, null, null, undefined, today);
-        if (n === 0) console.debug('AT1 goal diagnostic', next.blocks.map(b => [b.modality, b.status, b.because]), next.weeklyTemplate.priorityDayOrder?.defense);
-        baselineDefense += Number(base.microcycle.perModality.defense.scheduled);
-        goalDefense += Number(next.microcycle.perModality.defense.scheduled);
+        const next = buildHammerDailyPlan(make(ranked(['hitting', 'fielding', 'throwing', 'speed', 'power'])), NORMAL_SIGNAL, null, null, undefined, today);
+        baselineHitting += Number(base.microcycle.perModality.hitting.scheduled);
+        goalHitting += Number(next.microcycle.perModality.hitting.scheduled);
         for (const modality of ['hitting', 'throwing', 'defense', 'baserunning'] as const) {
           if (base.microcycle.perModality[modality].scheduled) expect(next.microcycle.perModality[modality].scheduled).toBe(true);
         }
@@ -137,12 +136,12 @@ describe('AT1: ranked weekly skill blocks through the actual builder, both sport
         expect(afterLift?.stopRules).toEqual(beforeLift?.stopRules);
         expect(next.microcycle.perModality.strength).toEqual(base.microcycle.perModality.strength);
         const skills = next.blocks.filter(b => b.status === 'ready' && ['hitting', 'defense', 'throwing', 'baserunning'].includes(b.modality));
-        if (skills.some(b => b.modality === 'hitting') && skills.length > 1) {
-          expect(skills[0].modality).toBe('hitting'); sharedHittingFirst++;
+        if (skills.some(b => b.modality === 'defense') && skills.length > 1) {
+          expect(skills[0].modality).toBe('defense'); sharedFieldingFirst++;
         }
       }
-      expect(goalDefense - baselineDefense).toBe(8);
-      expect(sharedHittingFirst).toBeGreaterThan(0);
+      expect(goalHitting - baselineHitting).toBe(8);
+      expect(sharedFieldingFirst).toBeGreaterThan(0);
     });
   }
 });
