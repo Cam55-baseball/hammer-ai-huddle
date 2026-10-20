@@ -1,3 +1,12 @@
+# Owner answers — Oct 20, 04:39 UTC — approvals + practice workload sub-step
+
+**Ready to publish: NO.** No publish, cron or iOS changes. Existing lifting scheme and all safety rules stay.
+
+- [x] Record approvals: practice workload; proposed same-category fix drills + editable issue tags in Needs owner review; athlete testing-day details/contact; owner questions table/section; finish reminder cards then plan_prompts_v2 ON; TEST ranking aged 85 days for re-ask phone proof.
+- [ ] Current concrete sub-step: connect real practice minutes/intensity and same-category consecutive-day signals to the plan, preserving category floors and lifting.
+- [ ] Following sub-steps: Vault reviewed fix drills/tags; testing-day details; owner questions; finish reminder adapters and activate switch; mixed signals; learning outcomes; weekly goal share; remaining execution; coach section; re-ask phone proof; six-cohort simulations; full suite.
+- No owner-decision blocker remains for the above. Proof and live/pending status recorded after this sub-step.
+
 # Owner wording — Oct 20, 04:33 UTC — Royal timing + queued reminder integration
 
 **Ready to publish: NO.** Preview-only; no publish, backend redeploy, cron, iOS or switch-mode changes.
