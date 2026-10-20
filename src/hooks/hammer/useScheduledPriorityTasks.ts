@@ -19,6 +19,8 @@ import { startOfWeek, format } from "date-fns";
 import { Camera, Activity, Star, Target, FileText, type LucideIcon } from "lucide-react";
 import { promptDue, promptDaysPast } from "@/lib/hammer/promptDueRules";
 import { localIso } from "@/hooks/usePitcherSchedule";
+import { useSportTheme } from "@/contexts/SportThemeContext";
+import { priorityAccess } from "@/lib/hammer/priorityAccess";
 
 export interface ScheduledPriorityTask {
   id: string;
@@ -42,22 +44,15 @@ function daysPast(nextDate: string | null | undefined): number {
 export function useScheduledPriorityTasks() {
   const { user } = useAuth();
   const { modules } = useSubscription();
+  const { sport } = useSportTheme();
   const recap = useRecapCountdown();
 
   // Subscription modules are stored as `<sport>_<module>` keys (e.g. "baseball_hitting"),
   // with tier bundles granting several at once — match the same way the Vault does.
-  const hasPitching = modules.some(
-    (m) => m.includes("pitching") || m.includes("pitcher") || m.includes("golden2way"),
-  );
-  const hasHitting = modules.some(
-    (m) => m.includes("hitting") || m.includes("5tool") || m.includes("golden2way"),
-  );
-  const hasThrowing = modules.some(
-    (m) => m.includes("throwing") || m.includes("5tool") || m.includes("golden2way"),
-  );
+  const { hasPitching, hasHitting, hasThrowing } = priorityAccess(modules, sport);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["hammer-scheduled-priority", user?.id],
+    queryKey: ["hammer-scheduled-priority", user?.id, sport],
     enabled: !!user?.id,
     staleTime: 5 * 60_000,
     queryFn: async () => {
@@ -70,6 +65,7 @@ export function useScheduledPriorityTasks() {
           .from("vault_performance_tests")
           .select("next_entry_date")
           .eq("user_id", uid)
+          .eq("sport", sport)
           .order("test_date", { ascending: false })
           .limit(1),
         supabase
