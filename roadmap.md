@@ -1,3 +1,12 @@
+# AQ4 — Reminder cards proven; plan_prompts_v2 ON
+
+**Ready to publish: NO** (rest of queue open). Switch change is live (one backend); no publish, cron, iOS or code changes.
+
+- [x] Cause of AQ3 "missing": not a bug. The three cards live inside "Before you start", which is closed by default; closed content isn't loaded.
+- [x] Phone proof 390×844 as TEST college player (API sign-in) after tapping Show: Royal timing card with the owner's exact wording + "Open Royal timing"; "Use Delaycam during today's hitting." with phone/TV explanation + "Open Delaycam"; "Record this week's swing so you can see how you're evolving." + "Record analysis". Screenshots /tmp/browser/aq1/card*.png.
+- [x] plan_prompts_v2 switched ON for everyone (mode all), as owner approved. Temp password file deleted.
+- [ ] Open: 400 on scheduled practice sessions read (separate); completion → Discipline/learning loop; rest of owner queue.
+
 # AQ3 — TEST-player Today reminder check
 
 **Ready to publish: NO.** No publish, cron, iOS or code changes. plan_prompts_v2 back OFF.
