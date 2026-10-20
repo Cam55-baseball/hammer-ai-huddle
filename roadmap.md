@@ -1,4 +1,5 @@
-# AK2 — Oct 20 — Assessment Mode + Hammers Today prompts
+# AK3 — Oct 20 — Assessment Mode + Hammers Today prompts
+- [ ] AK3: prevent old S2/Vault records completing unvisited steps; retain automatic completion from new embedded saves; verify Back and sport-specific active subscription buttons; continue calendar-practice prompt gap and phone proofs, with scoped cleanup.
 - [x] AK2 assessment completion: final embedded TEST sprint save closes the mode, saves completed_at, removes the guard and enables Start; reload stays completed. 390×844 proof: docs/owner/walkthroughs/assessment/ak2/.
 - [x] AK2 practice rule implementation: exact schedule-ID/local-date/module metadata in canonical practice logs clears that occurrence only; 12 sport/tier eight-week rule matrices pass. Real scheduled-practice save-to-reminder phone proof remains open.
 - [x] AK2 cleanup: new TEST sprint snapshotted privately, exact ID/user delete, zero remaining; original assessment fields restored and read back. No practice result or plan generated.

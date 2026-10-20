@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, ClipboardCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,7 +14,7 @@ import { useVault } from "@/hooks/useVault";
 import { AssessmentMode } from "./AssessmentMode";
 import { AssessmentProfileReview } from "./AssessmentProfileReview";
 import { parseSeasonStats } from "@/lib/assessment/seasonStats";
-import { assessmentSteps, requiredAnalyses, shouldFinalizeAssessment, type AnalysisModule, type StepId, type StepProgress } from "@/lib/assessment/initialAssessment";
+import { assessmentModules, assessmentSteps, requiredAnalyses, shouldFinalizeAssessment, type AnalysisModule, type StepId, type StepProgress } from "@/lib/assessment/initialAssessment";
 const EmbeddedAnalysis = lazy(() => import("@/pages/AnalyzeVideo"));
 const MOVES = [
   { key: "hip", label: "Hip rotation (turn each hip in and out)" },
@@ -28,7 +27,6 @@ type Answer = "easy" | "hard" | "pain";
 export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sport: "baseball" | "softball"; autoOpen?: boolean; onClose?: () => void }) {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const { modules, initialized } = useSubscription();
   const vault = useVault();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<StepId>(1);
@@ -46,15 +44,16 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
     queryFn: async () => {
       if (!user) throw new Error("Sign in first");
       const uid = user.id;
-      const [row, s2, vids, tests, prof] = await Promise.all([
+      const [row, s2, vids, tests, prof, subscription] = await Promise.all([
         supabase.from("initial_assessments").select("*").eq("user_id", uid).maybeSingle(),
         supabase.from("tex_vision_s2_diagnostics").select("user_id", { count: "exact", head: true }).eq("user_id", uid).eq("sport", sport).not("completed_at", "is", null),
         supabase.from("videos").select("module").eq("user_id", uid).eq("sport", sport).not("analysis_public", "is", null).limit(200),
         supabase.from("vault_performance_tests").select("user_id", { count: "exact", head: true }).eq("user_id", uid).eq("sport", sport),
         supabase.from("profiles").select("full_name,position,hammers_today_started_at,throwing_hand,batting_side,date_of_birth").eq("id", uid).maybeSingle(),
+        supabase.from("subscriptions").select("status,subscribed_modules").eq("user_id", uid).maybeSingle(),
       ]);
-      for (const result of [row, s2, vids, tests, prof]) if (result.error) throw result.error;
-      return { row: row.data, s2: (s2.count ?? 0) > 0, analyses: [...new Set((vids.data ?? []).map(v => v.module))] as AnalysisModule[], tests: (tests.count ?? 0) > 0, profile: prof.data };
+      for (const result of [row, s2, vids, tests, prof, subscription]) if (result.error) throw result.error;
+      return { row: row.data, s2: (s2.count ?? 0) > 0, analyses: [...new Set((vids.data ?? []).map(v => v.module))] as AnalysisModule[], tests: (tests.count ?? 0) > 0, profile: prof.data, modules: assessmentModules(subscription.data, sport) };
     },
   });
   useEffect(() => {
@@ -87,28 +86,34 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
   }, [autoOpen, !!q.data]);
   const close = () => { setOpen(false); onClose?.(); };
   useEffect(() => {
-    if (!q.data || !initialized || saving || saveError || finalizing.current || q.data.profile?.hammers_today_started_at) return;
+    if (!q.data || saving || saveError || finalizing.current || q.data.profile?.hammers_today_started_at) return;
     const row = q.data.row;
-    const input = { onboardingDone: false, lastSeasonDoneOrSkipped: !!(row?.last_season_saved_at || row?.last_season_skipped_at), movementScreenDone: !!row?.movement_done_at, s2Done: q.data.s2, analysesDone: q.data.analyses, sixWeekTestDone: q.data.tests, modules: modules.filter(m => m.startsWith(`${sport}_`)), progress: (row?.step_progress ?? {}) as StepProgress };
+    const input = { onboardingDone: false, lastSeasonDoneOrSkipped: !!(row?.last_season_saved_at || row?.last_season_skipped_at), movementScreenDone: !!row?.movement_done_at, s2Done: q.data.s2, analysesDone: q.data.analyses, sixWeekTestDone: q.data.tests, modules: q.data.modules, progress: (row?.step_progress ?? {}) as StepProgress };
     if (!shouldFinalizeAssessment(input, row?.completed_at)) return;
     finalizing.current = true;
     void save({ completed_at: new Date().toISOString() }).then(saved => {
       if (saved) close();
       else finalizing.current = false;
     });
-  }, [q.data, initialized, modules, sport, saving, saveError]);
+  }, [q.data, saving, saveError]);
   if (!user) return null;
   if (q.error) return <p role="alert" className="text-sm text-destructive">Couldn't load your assessment. Reload and try again.</p>;
-  if (!q.data || !initialized) return <p className="text-sm text-muted-foreground">Loading your assessment…</p>;
+  if (!q.data) return <p className="text-sm text-muted-foreground">Loading your assessment…</p>;
   if (q.data.row?.completed_at || q.data.profile?.hammers_today_started_at) return null;
   const data = q.data;
-  const sportModules = modules.filter(m => m.startsWith(`${sport}_`));
+  const sportModules = data.modules;
   const need = requiredAnalyses(sportModules);
   const progress = (data.row?.step_progress ?? {}) as StepProgress;
   const input = { onboardingDone: false, lastSeasonDoneOrSkipped: !!(data.row?.last_season_saved_at || data.row?.last_season_skipped_at), movementScreenDone: !!data.row?.movement_done_at, s2Done: data.s2, analysesDone: data.analyses, sixWeekTestDone: data.tests, modules: sportModules, progress };
   const steps = assessmentSteps(input);
   const count = Object.values(steps).filter(s => s === "done").length;
   const navigateStep = (id: StepId) => { if (steps[id] === "locked") return; setAnalysisModule(null); setStep(id); void save({ current_step: id }); };
+  // Only a successful embedded submission (or explicit navigation action)
+  // records these steps. Pre-existing results remain available, not completion.
+  const embeddedSaved = async (id: 4 | 6) => {
+    const saved = await save({ step_progress: { ...progress, [id]: "done" } });
+    if (saved) await qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] });
+  };
   const record = async (state: "done" | "skipped") => {
     if (saving) return;
     const at = new Date().toISOString();
@@ -152,9 +157,9 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
       {step === 1 && <AssessmentProfileReview profile={profile} onChange={setProfile} />}
       {step === 2 && <div className="space-y-5"><p className="text-sm text-muted-foreground">Player-reported · last season. Leave anything you don't know blank.</p>{[["games", "Games played"],["at_bats", "At-bats"],["hits", "Hits"],["innings_pitched", "Innings pitched"]].map(([key,label]) => <div key={key} className="space-y-2"><Label htmlFor={`assessment-${key}`}>{label}</Label><Input id={`assessment-${key}`} type="number" min="0" step="any" value={stats[key] ?? ""} onChange={e => setStats({ ...stats, [key]: e.target.value })} /></div>)}</div>}
       {step === 3 && <div className="space-y-6"><p className="text-sm text-muted-foreground">Move slowly. Stop if it hurts.</p>{MOVES.map(m => <div key={m.key} className="space-y-3"><p className="font-medium">{m.label}</p><div className="flex flex-wrap gap-2">{(["easy", "hard", "pain"] as Answer[]).map(a => <Button key={a} variant={answers[m.key] === a ? "default" : "outline"} onClick={() => { setAnswers({ ...answers, [m.key]: a }); if (a === "pain") setPainOpen(true); }}>{a === "easy" ? "Easy" : a === "hard" ? "Hard / tight" : "It hurt"}</Button>)}</div></div>)}</div>}
-      {step === 4 && <S2CognitionDiagnostics sport={sport} embedded onSaved={() => { void qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] }); }} />}
+      {step === 4 && <S2CognitionDiagnostics sport={sport} embedded onSaved={() => { void embeddedSaved(4); }} />}
       {step === 5 && <div className="space-y-5"><div className="flex flex-wrap gap-3">{need.map(module => <Button key={module} variant={analysisModule === module ? "default" : "outline"} onClick={() => setAnalysisModule(module)}>Record {module}</Button>)}</div>{!need.length && <p className="text-sm text-muted-foreground">No analysis modules are included in this sport's subscription.</p>}{analysisModule && <Suspense fallback={<p>Opening your analysis…</p>}><EmbeddedAnalysis key={`${sport}-${analysisModule}`} assessment={{ module: analysisModule, sport, onDone: () => { setAnalysisModule(null); void qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] }); } }} /></Suspense>}</div>}
-      {step === 6 && <VaultPerformanceTestCard tests={vault.performanceTests.filter(t => t.sport === sport)} subscribedModules={need} sport={sport} userProfile={{ throwing_hand: data.profile?.throwing_hand ?? undefined, batting_side: data.profile?.batting_side ?? undefined, primary_position: data.profile?.position ?? undefined, date_of_birth: data.profile?.date_of_birth ?? undefined }} autoOpen onSave={async (type, results, sides) => { const result = await vault.savePerformanceTest(type, results, sides, sport); if (result.success) await qc.invalidateQueries({ queryKey: ["initial-assessment", user.id] }); return result; }} />}
+      {step === 6 && <VaultPerformanceTestCard tests={vault.performanceTests.filter(t => t.sport === sport)} subscribedModules={need} sport={sport} userProfile={{ throwing_hand: data.profile?.throwing_hand ?? undefined, batting_side: data.profile?.batting_side ?? undefined, primary_position: data.profile?.position ?? undefined, date_of_birth: data.profile?.date_of_birth ?? undefined }} autoOpen onSave={async (type, results, sides) => { const result = await vault.savePerformanceTest(type, results, sides, sport); if (result.success) await embeddedSaved(6); return result; }} />}
     </AssessmentMode>
     <ReportInjuryDialog assessment open={painOpen} onOpenChange={setPainOpen} />
   </>;

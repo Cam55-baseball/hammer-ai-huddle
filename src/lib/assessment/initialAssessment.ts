@@ -37,15 +37,28 @@ export function requiredAnalyses(modules: readonly string[]): AnalysisModule[] {
   return (["hitting", "pitching", "throwing"] as const).filter((f) => hasFeatureAccess(m, f));
 }
 
+/** Use this assessment's sport and the saved active entitlement, never a role bypass. */
+export function assessmentModules(subscription: { status: string; subscribed_modules: readonly string[] | null } | null | undefined, sport: "baseball" | "softball"): string[] {
+  return subscription?.status === "active" ? (subscription.subscribed_modules ?? []).filter(m => m.startsWith(`${sport}_`)) : [];
+}
+
+export function previousAssessmentStep(step: StepId, steps: Record<StepId, StepState>): StepId | null {
+  for (let id = step - 1; id >= 1; id--) {
+    const candidate = id as StepId;
+    if (steps[candidate] !== "locked") return candidate;
+  }
+  return null;
+}
+
 export function assessmentSteps(i: AssessmentInput): Record<StepId, StepState> {
   const need = requiredAnalyses(i.modules);
   const done: Record<StepId, boolean> = {
     1: i.onboardingDone,
     2: i.lastSeasonDoneOrSkipped,
     3: i.movementScreenDone,
-    4: i.s2Done,
+    4: false,
     5: need.every((m) => i.analysesDone.includes(m)),
-    6: i.sixWeekTestDone,
+    6: false,
   };
   for (const id of [1, 2, 3, 4, 5, 6] as StepId[]) {
     if (i.progress?.[id]) done[id] = true;
