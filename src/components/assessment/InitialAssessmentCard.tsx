@@ -132,6 +132,6 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
       {step === 5 && <div className="space-y-5"><div className="flex flex-wrap gap-3">{need.map(module => <Button key={module} variant={analysisModule === module ? "default" : "outline"} onClick={() => setAnalysisModule(module)}>Record {module}</Button>)}</div>{!need.length && <p className="text-sm text-muted-foreground">No analysis modules are included in this sport's subscription.</p>}{analysisModule && <Suspense fallback={<p>Opening your analysis…</p>}><EmbeddedAnalysis key={`${sport}-${analysisModule}`} assessment={{ module: analysisModule, sport, onDone: () => setAnalysisModule(null) }} /></Suspense>}</div>}
       {step === 6 && <VaultPerformanceTestCard tests={vault.performanceTests.filter(t => t.sport === sport)} subscribedModules={need} sport={sport} autoOpen onSave={(type, results, sides) => vault.savePerformanceTest(type, results, sides, sport)} />}
     </AssessmentMode>
-    <ReportInjuryDialog open={painOpen} onOpenChange={setPainOpen} />
+    <ReportInjuryDialog assessment open={painOpen} onOpenChange={setPainOpen} />
   </>;
 }

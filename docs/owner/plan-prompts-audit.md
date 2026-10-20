@@ -10,7 +10,7 @@ Read-only audit of pre-change prompt behavior. No cadence, dose, rest rule, swit
 | Delaycam | Not established | Own `/delaycam` session flow | Separate session saves; no shared plan recording cadence found. |
 | Royal timing | Not established | Own `/royal-timing` session flow | Royal timing session saves exist; no shared plan cadence found. |
 | Tex Vision session | Yes, conditional | `TexVisionWork` in Before you start: existing daily selection, incomplete eligible drill, S2 baseline present and not due | Tex Vision checklist/session completion; read-only recommendation adds no extra session. No invented new cadence needed for this existing path. |
-| Tex Vision S2 | Yes | `TexVisionS2Priority`: sport-specific saved `next_test_date`, 16 weeks, or absent baseline; surfaced through plan's check-in/start context | `tex_vision_s2_diagnostics`; embedded assessment must retain its 112-day retest lock. |
+| Tex Vision S2 | Yes | `TexVisionS2Priority`: sport-specific saved `next_test_date`, 16 weeks, or absent baseline; mounted in `MorningCheckInSuccess` after the morning check-in | `tex_vision_s2_diagnostics`; embedded assessment must retain its 112-day retest lock. |
 | Check-ins | Yes | `HammerCheckInCard`: morning, pre-workout and night positions in the plan | Existing Vault/check-in records feed readiness. Skipping never creates a completed measurement. |
 | Performance tests | Yes | `useScheduledPriorityTasks` → `ScheduledPriorityStrip`, after morning check-in, saved `next_entry_date` or missing baseline | Vault performance-test writes; 42-day cadence. Existing due reminders include overdue items. |
 | Six-week recap | Yes | Same priority strip, `useRecapCountdown` at closed/missed cycle | Existing recap record; no new cycle authority. |
@@ -33,4 +33,4 @@ Discipline and learning are different: attendance/completion may be projected fr
 
 ## Implementation status
 
-Audit complete; dedicated practice cards, source-completion projections, guarded new prompt adapters and the eight-week proof remain pending. Proposed defaults are at the top of roadmap.md; they are not active rules. `plan_prompts_v2` must remain OFF until owner confirmation. Existing game and Tex Vision prompts are already present and must not be duplicated.
+Audit complete. A dedicated practice prompt now reads today's scheduled/recurring subscribed practice and opens the existing PracticeHub with its schedule reference. PracticeHub writes actual session results and marks the source complete; a tap alone does not mark it done. Existing game prompt now scopes sport and excludes canceled/deleted calendar entries. The full calendar-event practice bridge, Discipline/learning projection, guarded new prompt adapters and complete eight-week player matrix remain pending. `plan_prompts_v2` exists in the database as OFF, buildable=false; new cadences are not running. Existing game and Tex Vision prompts are not duplicated.

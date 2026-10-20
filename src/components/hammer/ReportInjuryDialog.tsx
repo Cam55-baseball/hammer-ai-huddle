@@ -37,6 +37,7 @@ interface Props {
   prefillRegion?: ReportInjuryRegionKey | null;
   prefillNote?: string;
   onReported?: (eventId: string) => void;
+  assessment?: boolean;
 }
 
 const SEVERITY_OPTIONS: Array<{
@@ -56,6 +57,7 @@ export function ReportInjuryDialog({
   prefillRegion = null,
   prefillNote = "",
   onReported,
+  assessment = false,
 }: Props) {
   const { user } = useOptionalAuth();
   const qc = useQueryClient();
@@ -120,7 +122,7 @@ export function ReportInjuryDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !busy && onOpenChange(v)}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className={assessment ? "z-[220] max-w-md max-h-[90vh] overflow-y-auto" : "max-w-md max-h-[90vh] overflow-y-auto"}>
         <DialogHeader>
           <DialogTitle className="text-base">Report an injury</DialogTitle>
           <DialogDescription className="text-xs">
