@@ -1,54 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { CoachingReport } from '@/lib/coachingReportTypes';
+import { loggedPracticeReport } from '../../supabase/functions/_shared/practiceReport';
 
-interface UseCoachingReportResult {
-  report: CoachingReport | null;
-  isGenerating: boolean;
-  error: string | null;
-}
-
-export function useCoachingReport(sessionId: string | null, hasScores: boolean): UseCoachingReportResult {
+export function useCoachingReport(sessionId: string | null, hasScores: boolean) {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['coaching-report', sessionId],
+    queryKey: ['logged-practice-report', sessionId],
     queryFn: async (): Promise<CoachingReport | null> => {
       if (!sessionId) return null;
-
-      // Check cache first
-      const { data: cached } = await supabase
-        .from('session_insights')
-        .select('report')
-        .eq('session_id', sessionId)
-        .maybeSingle();
-
-      if (cached?.report && typeof cached.report === 'object' && Object.keys(cached.report as object).length > 0) {
-        return cached.report as unknown as CoachingReport;
-      }
-
-      // Call edge function to generate
-      const { data: fnData, error: fnError } = await supabase.functions.invoke('session-insights', {
-        body: { session_id: sessionId },
-      });
-
-      if (fnError) {
-        console.error('Coaching report generation failed:', fnError);
-        throw new Error(fnError.message || 'Failed to generate coaching report');
-      }
-
-      if (fnData?.report) {
-        return fnData.report as CoachingReport;
-      }
-
-      return null;
+      const result = await supabase.from('performance_sessions')
+        .select('session_date,coach_id,drill_blocks').eq('id', sessionId).is('deleted_at', null).maybeSingle();
+      if (result.error) throw new Error('Practice log unavailable');
+      if (!result.data) return null;
+      // RLS-authorized source only: old AI cache is never evidence.
+      return loggedPracticeReport(result.data);
     },
-    enabled: !!sessionId && hasScores,
-    staleTime: Infinity, // Cached reports don't change
+    enabled: Boolean(sessionId) && hasScores,
+    staleTime: 0,
     retry: 1,
   });
-
-  return {
-    report: data ?? null,
-    isGenerating: isLoading,
-    error: error ? (error as Error).message : null,
-  };
+  return { report: data ?? null, isGenerating: isLoading, error: error ? error.message : null };
 }
