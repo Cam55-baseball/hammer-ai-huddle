@@ -32,9 +32,6 @@ export function analysesDueToday(input: AnalysisPromptInput): AnalysisModule[] {
     const v = input.latest[m];
     return v && Number.isFinite(Date.parse(v)) ? v.slice(0, 10) : null;
   };
-  if (included.some((m) => input.latest[m] && !valid(m))) {
-    // A broken source date is unknown, not "never recorded": fail closed for that module.
-  }
   const recentWeek = included.some((m) => {
     const d = valid(m);
     return d !== null && daysBetween(d, input.today) < WEEK_DAYS;

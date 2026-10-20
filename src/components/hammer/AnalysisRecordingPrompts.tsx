@@ -8,7 +8,7 @@ import { useFeatureSwitches } from '@/hooks/useFeatureSwitches';
 import { localIso } from '@/hooks/usePitcherSchedule';
 import { supabase } from '@/integrations/supabase/client';
 import { requiredAnalyses, type AnalysisModule } from '@/lib/assessment/initialAssessment';
-import { analysesDueToday } from '@/lib/hammer/analysisPromptRules';
+import { analysesDueToday, analysisPromptText } from '@/lib/hammer/analysisPromptRules';
 import { Button } from '@/components/ui/button';
 
 /** Read-only adapter; caller supplies existing prescribed modules, never a new plan. */
@@ -41,7 +41,7 @@ export function AnalysisRecordingPrompts({ prescribed }: { prescribed: readonly 
   const due = analysesDueToday({ enabled, today: localIso(), included: requiredAnalyses(modules.filter(module => module.startsWith(`${sport}_`))), prescribed, latest: query.data });
   return <>{due.map(module => <div key={module} className="flex flex-wrap items-center gap-3 border-b border-border py-3">
     <Camera className="h-5 w-5 shrink-0 text-primary" />
-    <p className="min-w-0 flex-1 text-sm font-semibold">Record your {module} analysis</p>
+    <p className="min-w-0 flex-1 text-sm font-semibold">{analysisPromptText(module)}</p>
     <Button size="sm" onClick={() => navigate(`/analyze/${module}?sport=${sport}`)}>Record analysis</Button>
   </div>)}</>;
 }
