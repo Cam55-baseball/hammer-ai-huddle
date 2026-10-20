@@ -147,7 +147,7 @@ export default function CoachingConsole() {
         <div className="space-y-1"><Label htmlFor="cp-sit">Situation</Label><Input id="cp-sit" value={form.situation} onChange={set("situation")} /></div>
         <div className="space-y-1"><Label htmlFor="cp-when">When it applies</Label><Input id="cp-when" value={form.applies_when} onChange={set("applies_when")} /></div>
         <div className="space-y-1"><Label htmlFor="cp-not">When it doesn't</Label><Input id="cp-not" value={form.not_when} onChange={set("not_when")} /></div>
-        <div className="space-y-1"><Label htmlFor="cp-work">Connected drills or exercises</Label><Input id="cp-work" value={form.connected_work} onChange={set("connected_work")} /></div>
+        <div className="space-y-1"><Label htmlFor="cp-work">Connected drills or exercises</Label><Input id="cp-work" value={form.connected_work} onChange={set("connected_work")} /><p className="text-xs text-muted-foreground">One drill slug per line (e.g. tee-work). Linked drills lead the work list for this sport and category; doses never change.</p></div>
         <div className="space-y-1"><Label htmlFor="cp-ev">Evidence</Label>
           <select id="cp-ev" className="h-10 w-full rounded-md border bg-background px-2" value={form.evidence_kind} onChange={set("evidence_kind")}>
             {(Object.keys(EVIDENCE_LABEL) as EvidenceKind[]).map((k) => <option key={k} value={k}>{EVIDENCE_LABEL[k]}</option>)}

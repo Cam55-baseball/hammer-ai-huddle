@@ -114,6 +114,10 @@ import { AnalysisRecordingPrompts } from "@/components/hammer/AnalysisRecordingP
 import { analysisGoalOrder } from "@/lib/hammer/analysisGoalOrder";
 import { hittingMechanicsGoal } from "@/lib/hammer/goals/mechanicsGoal";
 import { planSnapshotPayload, savePlanSnapshot } from "@/lib/hammer/planSnapshot";
+import { categorySignalEvidence } from "@/lib/hammer/prescription/categorySignalEvidence";
+import { crossReference } from "@/lib/hammer/prescription/mixedSignals";
+import { usePrinciplePicks } from "@/hooks/usePrinciplePicks";
+import { principleDrillBoosts } from "@/lib/intelligence/principlePicks";
 import { useCategoryPracticeLoad } from '@/hooks/useCategoryPracticeLoad';
 import { RoyalTimingReminder } from "@/components/hammer/RoyalTimingReminder";
 import { DelaycamReminder } from "@/components/hammer/DelaycamReminder";
@@ -757,6 +761,7 @@ function HammerDailyPlanBody({
   // Prefer actuals over prescribed so the clamp reflects what the athlete did.
   const totalCns = wkRx.effectiveCnsTotal ?? 0;
   const cnsHigh = totalCns >= 7;
+  const principlePicks = usePrinciplePicks();
   const plan = useMemo(() => {
     const base = cnsHigh
       ? {
@@ -784,8 +789,38 @@ function HammerDailyPlanBody({
       catalog: drillCirculation.catalog,
       circulation: drillCirculation.circulation,
     });
-    return { ...base, blocks: applyAdjustments(influencedBlocks, planAdjust.adjustments) };
-  }, [rawPlan, cnsHigh, planAdjust.adjustments, faultContext.data, faultContext.isError, projectedAthlete.equipmentList, ctx, drillCirculation.catalog, drillCirculation.circulation, drillCirculation.ready, modules, sportKey]);
+    const adjusted = applyAdjustments(influencedBlocks, planAdjust.adjustments);
+    // Mixed signals (owner rule): when two real sources disagree about a
+    // category, say so on that category's card and keep the safer plan.
+    const signals = categorySignalEvidence(
+      faultContext.isError ? [] : faultContext.data?.clips ?? [],
+      { whiffPct: gpForPlan.whiffPct, chasePct: gpForPlan.chasePct, miscueClusters: gpForPlan.miscueClusters },
+    );
+    const withMixed = adjusted.map((block) => {
+      if (block.status !== "ready") return block;
+      const category = block.modality === "hitting" ? "hitting" : block.modality === "defense" ? "fielding" : null;
+      if (!category) return block;
+      const xr = crossReference(category, signals);
+      if (xr.kind !== "mixed" || block.because.includes(xr.because)) return block;
+      return { ...block, because: [...block.because, xr.because] };
+    });
+    // Owner principle picks: linked drills lead the work list for their exact
+    // sport + category. Order only — never the dose, never another category.
+    const picks = principlePicks.data ?? [];
+    const withPicks = picks.length === 0 ? withMixed : withMixed.map((block) => {
+      if (block.status !== "ready") return block;
+      const category = block.modality === "hitting" ? "hitting" : block.modality === "throwing" ? "throwing" : block.modality === "defense" ? "fielding" : null;
+      if (!category) return block;
+      const work = block.drills.filter((d) => (d.stage ?? "drills") === "drills");
+      const boosted = work.filter((d) => d.slug && principleDrillBoosts(picks, d.slug, sportKey, category).length > 0);
+      if (boosted.length === 0 || work[0]?.slug === boosted[0]?.slug) return block;
+      const rest = block.drills.filter((d) => !boosted.includes(d));
+      const insertAt = block.drills.findIndex((d) => (d.stage ?? "drills") === "drills");
+      const drills = [...rest.slice(0, insertAt), ...boosted, ...rest.slice(insertAt)];
+      return { ...block, drills, because: [...block.because, `Your coach's saved guidance puts ${boosted[0]!.name} first.`] };
+    });
+    return { ...base, blocks: withPicks };
+  }, [rawPlan, cnsHigh, planAdjust.adjustments, faultContext.data, faultContext.isError, projectedAthlete.equipmentList, ctx, drillCirculation.catalog, drillCirculation.circulation, drillCirculation.ready, modules, sportKey, gpForPlan, principlePicks.data]);
 
   const influencedDrillIds = useMemo(
     () => plan.blocks.flatMap((block) => block.drills)

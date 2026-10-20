@@ -22739,6 +22739,18 @@ export type Database = {
         Args: { _td: Database["public"]["Tables"]["testing_days"]["Row"] }
         Returns: string[]
       }
+      active_principle_picks: {
+        Args: never
+        Returns: {
+          applies_when: string
+          area: string
+          connected_work: string
+          id: string
+          not_when: string
+          situation: string
+          sport: string
+        }[]
+      }
       ai_cost_summary: {
         Args: { _days?: number }
         Returns: {
