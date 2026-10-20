@@ -2,8 +2,25 @@ import { describe, expect, it } from 'vitest';
 import { buildHammerDailyPlan } from './dailyPlan';
 import { NORMAL_SIGNAL } from './scheduleContext';
 import type { ContextVariable, HammerAthleteContext } from '../context/athleteContext';
-import { applyPracticePlanContext } from './practicePlanContext';
+import { applyPracticePlanContext, reduceDosageForPractice } from './practicePlanContext';
 import { categoryPracticeLoads } from './categoryPracticeLoad';
+
+describe('reduceDosageForPractice (owner: ~30% less, never below half the prescribed sets, whole sets, reps unchanged)', () => {
+  it('cuts leading set counts by about 30% with the half-dose floor', () => {
+    expect(reduceDosageForPractice('10 x 5')).toBe('7 x 5');
+    expect(reduceDosageForPractice('3 x 8')).toBe('2 x 8');
+    expect(reduceDosageForPractice('2 x 10')).toBe('1 x 10');
+  });
+  it('never goes below half the prescribed sets and never below one set', () => {
+    expect(reduceDosageForPractice('1 x 10')).toBe('1 x 10');
+    expect(reduceDosageForPractice('4 x 12')).toBe('3 x 12');
+  });
+  it('unparseable dosages stay unchanged rather than being guessed', () => {
+    expect(reduceDosageForPractice('20 swings')).toBe('20 swings');
+    expect(reduceDosageForPractice('3 rounds of 10')).toBe('3 rounds of 10');
+    expect(reduceDosageForPractice('')).toBe('');
+  });
+});
 
 const context = (sport: string): HammerAthleteContext => {
   const values = { sport_primary: sport, position_primary: 'SS', lifecycle_band: 'u18', season_phase: 'off',
