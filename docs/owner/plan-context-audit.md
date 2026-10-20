@@ -21,6 +21,7 @@ DP = `src/lib/hammer/prescription/dailyPlan.ts` · WK = `supabase/functions/wk-g
 
 ## Simulations done
 - AL3 games row CONFIRMED by `src/lib/hammer/prescription/dailyPlan.contextAudit.sim.test.ts` (3 PASS): 35% whiff over 10 at-bats moves hitting first and adds a cue; drills and minutes unchanged; 3 at-bats changes nothing; lifting identical.
+- AL4 readiness row CONFIRMED (low `{score}` readiness → speed "Recover instead"); **gap 8 CONFIRMED**: the same readiness stored as a bare number is ignored by the daily plan while other filters treat it as low. Pain row CONFIRMED (knee → baserunning "IQ only (leg-protected)").
 
 ## Subscription × sport
 - Local planner receives no subscription argument; differences come from access gates (Base Stealer: 5Tool yes, Golden 2Way except start/primer/flush days, Complete Pitcher no — `HammerDailyPlan.tsx:685-695`).

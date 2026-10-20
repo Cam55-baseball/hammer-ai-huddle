@@ -76,3 +76,26 @@ describe("audit: games → plan", () => {
     expect(s(plan(gp({ whiffPct: 35, atBats: 10 })))?.drills).toEqual(s(base)?.drills);
   });
 });
+
+const speed = (c: HammerAthleteContext) =>
+  buildHammerDailyPlan(c, NORMAL_SIGNAL, null, null, undefined, DAY).blocks.find((b) => b.modality === "speed")!;
+const strength = (c: HammerAthleteContext) =>
+  buildHammerDailyPlan(c, NORMAL_SIGNAL, null, null, undefined, DAY).blocks.find((b) => b.modality === "strength")!;
+
+describe("audit: readiness → plan", () => {
+  it("low readiness as {score} turns speed into recover-instead", () => {
+    expect(speed(ctx({ ...BASE, readiness: { score: 0.3 } })).ctaLabel).toBe("Recover instead");
+  });
+  it("GAP 8 confirmed: the same low readiness as a bare number is ignored by speed", () => {
+    expect(speed(ctx({ ...BASE, readiness: 0.3 })).ctaLabel).not.toBe("Recover instead");
+  });
+});
+
+describe("audit: pain → plan", () => {
+  const br = (c: HammerAthleteContext) =>
+    buildHammerDailyPlan(c, NORMAL_SIGNAL, null, null, undefined, DAY).blocks.find((b) => b.modality === "baserunning")!;
+  it("knee injury turns baserunning into leg-protected IQ work; no knee keeps game scenarios", () => {
+    expect(br(ctx({ ...BASE, injury_history: ["knee"] })).title).toBe("Baserunning — IQ only (leg-protected)");
+    expect(br(ctx(BASE)).title).toBe("Baserunning — game scenarios");
+  });
+});
