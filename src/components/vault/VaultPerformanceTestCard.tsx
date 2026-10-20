@@ -57,7 +57,8 @@ interface VaultPerformanceTestCardProps {
 const LOCK_PERIOD_WEEKS = 6;
 const DECIMAL_REGEX = /^\d*\.?\d*$/;
 
-function StableDecimalInput({ value, onChange, placeholder = '0', className = '' }: {
+function StableDecimalInput({ id, value, onChange, placeholder = '0', className = '' }: {
+  id?: string;
   value: string;
   onChange: (val: string) => void;
   placeholder?: string;
@@ -65,6 +66,7 @@ function StableDecimalInput({ value, onChange, placeholder = '0', className = ''
 }) {
   return (
     <Input
+      id={id}
       type="text"
       inputMode="decimal"
       value={value}
