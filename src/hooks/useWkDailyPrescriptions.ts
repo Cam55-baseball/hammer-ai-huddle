@@ -280,6 +280,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
         .from("scheduled_practice_sessions")
         .select("scheduled_date, recurring_active, recurring_days")
         .eq("user_id", user!.id)
+        .not("status", "in", "(canceled,cancelled,rescheduled)")
         .or(`scheduled_date.eq.${planDate},and(recurring_active.eq.true,scheduled_date.lte.${planDate})`)
         .limit(50);
       if (error) throw error;
