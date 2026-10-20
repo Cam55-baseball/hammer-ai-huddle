@@ -1,3 +1,9 @@
+# Owner addition — Oct 20, 03:26 UTC — coaches see the plan too (queued with plan-context links)
+- [ ] Coach View section "Hammers' plan for this player" (Development tab neighbor): focus + same Because lines; issues → drills with dates/done and Recurring/New/Cleaning up; per-skill summary + six-week total with How-sure dots; ways to improve + "Try in practice" (2–3); What worked (It worked/No change/Got worse).
+- [ ] Rules: existing consents (health only with health-sharing on), scouts excluded, org admin only for rostered players, reads the plan's own data, "Need more data"/"early read" when thin.
+- [ ] Depends on plan-context links a–e (Because lines and issue→drill records don't exist yet; showing them now would be invented). Existing Development tab already labels findings Recurring/New — reuse it.
+- [ ] Proof: phone as TEST coach (TEST hitter 10+ games, TEST pitcher 5+ reports), org admin, new-player empty state. Needs approved TEST-coach and org-admin sign-ins.
+
 # AL6 — Oct 20, 03:24 UTC — plan-context batch status
 
 **Ready to publish: NO.** Context-unity answer: **PARTLY — not yet one context-aware system.** No publish, deploy, migration, cron or iOS change in AL1–AL6; all changes preview-only.
