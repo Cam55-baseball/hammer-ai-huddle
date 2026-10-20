@@ -8,3 +8,4 @@
 - Delaycam recurrence joins distinct completed sport/module videos to their durable mechanical taxonomy findings, including clean clips in the last-five denominator; absent severity is never inferred. Why: repeated findings must count reports, not re-runs or another sport's evidence.
 - Analysis reminder goal priority uses canonical saved category order scoped to sport with exact category/module matches; throwing never implies pitching. Why: reminder emphasis cannot create category spill-over.
 - Analysis reminder rotation orders eligible modules by canonical recording age before issue and goal tie-breakers. Why: persistent priorities must not starve another subscribed skill or require a parallel rotation store.
+- Goal re-ask uses device calendar days from canonical saved updatedAt and rejects invalid dates; elapsed hours never delay day 84. Why: the weekly reminder must align with the player's day.

@@ -28,5 +28,5 @@ export function planFaultContext(signals: readonly FaultSignal[], findings: read
     scopes[signal.id] = { sport, module };
     return true;
   });
-  return { rankedFaults: rankFaults(accepted, now, ownClips), signalScopes: scopes };
+  return { rankedFaults: rankFaults(accepted, now, ownClips), signalScopes: scopes, clips: ownClips };
 }

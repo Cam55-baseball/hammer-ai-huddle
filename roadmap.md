@@ -1,3 +1,15 @@
+# AR5 — Parallel owner priority pass — Oct 20, 16:57 UTC
+
+**Ready to publish: NO.** No publish/deploy/migration/switch/cron/iOS changes; completed practice-card proof is not repeated.
+
+- [x] Closed partial-group subscription priority leakage: `planAnalysisAccess` now re-ranks eligible signals with canonical owned/sport-scoped clips, recomputing score/sample/wording/latest date/clear state and sorting before top-three slots. Unsubscribed pitching can no longer inflate hitting, nor hitting inflate Complete Pitcher; partially faded groups without canonical clips fail closed. Eight concrete both-sport tests plus six 56-day actual-builder regressions pass.
+- [x] Real ready skill cards now retain exact logged-practice `practiceContext` source IDs, category, actual totals and missingness, including single sessions; streak Because remains. No dose, duration, full-go, strength/recovery or outcome change. Exact pitching/throwing isolation and actual-builder tests pass. This is provenance wiring, not the blocked ~30% reduction or learning outcome implementation.
+- [x] Fixed 12-week timing to device calendar days: late-night confirmation no longer delays day 84; invalid/rolled dates and future confirmations never become due. Canonical saved `category_goals.updatedAt` remains the only confirmation source. Three new boundary tests pass.
+- [x] Parallel source investigations recorded in `docs/owner/ar5-context-proof.md`: no audited mechanical-key mapping exists for game results or practice performance; no explicit actual skill-dose minima; outcomes remain server comparative rechecks, never served usage/check-offs. No fabricated mixed verdict, floor or result.
+- [x] Focused **6 files / 44 tests PASS**, `/tmp/ar5-focused.log`; fresh full suite **437 files / 3,558 tests PASS**, `/tmp/ar5-full-suite.log`; automatic preview build OK. Initial focused failure was a synthetic equal-score order expectation, corrected to compare exact accessible membership while new tests assert real re-ranking order.
+- [ ] Positive goal/plan phone save-readback blocked by actual injected player's initial assessment **1/6**, shown at `/dashboard`, 390×844; screenshot `/tmp/browser/ar5/dashboard-phone.png` visually checked, no page errors/overflow. `/today` is a separate runtime surface, not the goal card. No TEST session/password/timestamp/assessment/consent/backend writes; no TEST cleanup required.
+- [ ] Remaining: coach canonical final source + verified training-sharing consent; explicit skill floors for reductions/goal-minute share; comparable mixed outcomes and server learning integration; typed owner answers/severe/mechanics inputs; complete position/pitching execution; owner/coach/org/athlete phone proofs, testing-day/12-week save-readback and hosted six-cohort acceptance. No publish/deploy/migration/switch/cron/iOS changes; TEST Coach subscription untouched.
+
 # AR4 — Parallel owner priority pass — Oct 20, 16:43 UTC
 
 **Ready to publish: NO.** No publish, deploy, migration, switch, cron or iOS changes. Completed practice-card proof is not repeated.
