@@ -14,6 +14,8 @@ import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { FROM_APP_KEY } from "@/pages/AppHandoff";
+import { PURCHASE_RETURN_URL } from "@/lib/purchase/websiteHandoff";
 import {
   clearPendingPurchase,
   getPendingPurchase,
@@ -45,6 +47,11 @@ export function PurchaseConfirmationWatcher() {
     unlocked.current = false;
     setPhase("idle");
     window.dispatchEvent(new Event("hammers:subscription-refresh"));
+    if (sessionStorage.getItem(FROM_APP_KEY) === "1") {
+      sessionStorage.removeItem(FROM_APP_KEY);
+      window.location.href = PURCHASE_RETURN_URL;
+      return;
+    }
     navigate(`/assessment?sport=${purchase?.sport === "softball" ? "softball" : "baseball"}`, { replace: true });
   }, [navigate]);
 

@@ -1053,7 +1053,7 @@ export function useVault() {
     sport: 'baseball' | 'softball' = 'baseball'
   ) => {
     if (!user) return { success: false };
-    const lastTest = performanceTests.find(t => t.test_type === testType);
+    const lastTest = performanceTests.find(t => t.test_type === testType && t.sport === sport);
     // Calculate next entry date (6 weeks from now)
     const nextEntryDate = new Date();
     nextEntryDate.setDate(nextEntryDate.getDate() + 42); // 6 weeks = 42 days

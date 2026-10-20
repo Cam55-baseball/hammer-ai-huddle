@@ -339,7 +339,8 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       if (hasAccessForSport(module as string, sport, isOwner || isAdmin)) return;
       console.warn('AnalyzeVideo — access denied after grace window', { sport, module, subscribedModules });
       toast.error(t('errors.noModuleAccess', "You don't have access to this module. Please subscribe."));
-      navigate("/dashboard", { replace: true });
+      if (assessment) assessment.onDone();
+      else navigate("/dashboard", { replace: true });
     }, 400);
     return () => clearTimeout(t2);
   }, [authLoading, subLoading, initialized, isAuthStable, user, session, subscribedModules, module, sport, isOwner, isAdmin, hasAccessForSport, navigate, t]);

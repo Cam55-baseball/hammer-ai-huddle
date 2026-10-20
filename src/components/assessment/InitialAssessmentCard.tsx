@@ -101,7 +101,11 @@ export function InitialAssessmentCard({ sport, autoOpen = false, onClose }: { sp
       else { patch.last_season_saved_at = at; patch.last_season_stats = Object.fromEntries(Object.entries(stats).filter(([,v]) => v !== "").map(([k,v]) => [k, Number(v)])); }
     }
     const anyPain = MOVES.some(m => answers[m.key] === "pain");
-    if (step === 3 && state === "done") Object.assign(patch, { movement_screen: answers, movement_done_at: at, pain_flag: anyPain });
+    if (step === 3 && state === "done") {
+      // Missing answers are not evidence of a painless screen. The athlete
+      // may still explicitly skip; only actual answers populate safety data.
+      Object.assign(patch, { movement_screen: answers, ...(MOVES.every(m => answers[m.key]) ? { movement_done_at: at } : {}), ...(anyPain ? { pain_flag: true } : {}) });
+    }
     const updated = { ...progress, [step]: state };
     const after = assessmentSteps({ ...input, progress: updated });
     const finished = Object.values(after).every(s => s === "done");

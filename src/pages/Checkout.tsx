@@ -174,20 +174,9 @@ const Checkout = () => {
         }
       }, 800);
 
-      const returnTimer = setTimeout(() => {
-        clearInterval(stepTimer);
-        // Confirmed entitlement is handled by the watcher; never mount the
-        // dashboard while a first purchase is still being confirmed.
-        const dest = `/assessment?sport=${selectedSport}`;
-        // Came from the iPhone/iPad app: hand the person straight back to it.
-        if (sessionStorage.getItem(FROM_APP_KEY) === "1") {
-          sessionStorage.removeItem(FROM_APP_KEY);
-          window.location.href = PURCHASE_RETURN_URL;
-          return;
-        }
-        navigate(dest, { replace: true });
-      }, 2500);
-      return () => { clearInterval(stepTimer); clearTimeout(returnTimer); };
+      // The app-wide watcher owns onward navigation after confirmed access.
+      // No timer may send a paid player to the dashboard before that answer.
+      return () => clearInterval(stepTimer);
     } else if (status === "cancel" || status === "cancelled") {
       localStorage.removeItem("pendingModuleActivation");
       toast({
