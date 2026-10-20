@@ -112,6 +112,8 @@ import { GameLogPromptCard } from "@/components/hammer/GameLogPromptCard";
 import { PracticeLogPromptCard } from "@/components/hammer/PracticeLogPromptCard";
 import { AnalysisRecordingPrompts } from "@/components/hammer/AnalysisRecordingPrompts";
 import { analysisGoalOrder } from "@/lib/hammer/analysisGoalOrder";
+import { hittingMechanicsGoal } from "@/lib/hammer/goals/mechanicsGoal";
+import { planSnapshotPayload, savePlanSnapshot } from "@/lib/hammer/planSnapshot";
 import { useCategoryPracticeLoad } from '@/hooks/useCategoryPracticeLoad';
 import { RoyalTimingReminder } from "@/components/hammer/RoyalTimingReminder";
 import { DelaycamReminder } from "@/components/hammer/DelaycamReminder";
@@ -793,6 +795,20 @@ function HammerDailyPlanBody({
     [plan.blocks],
   );
   const influencedServeKey = influencedDrillIds.join("|");
+  // Save the final plan snapshot so an authorized coach sees these exact cards.
+  // Self-scoped write; failures are diagnostics only and never block the plan.
+  const { user: snapshotUser } = useAuth();
+  const snapshotDate = useMemo(() => {
+    const n = new Date();
+    return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+  }, [plan]);
+  const snapshotKey = useMemo(() => JSON.stringify(planSnapshotPayload(plan, sportKey, snapshotDate)), [plan, sportKey, snapshotDate]);
+  const snapshotSaved = useRef("");
+  useEffect(() => {
+    if (!snapshotUser?.id || !snapshotKey || snapshotSaved.current === snapshotKey) return;
+    snapshotSaved.current = snapshotKey;
+    void savePlanSnapshot(snapshotUser.id, plan, sportKey, snapshotDate);
+  }, [snapshotUser?.id, snapshotKey, plan, sportKey, snapshotDate]);
   useEffect(() => {
     if (!influencedServeKey || influencedLoggedServe.current === influencedServeKey) return;
     influencedLoggedServe.current = influencedServeKey;
@@ -868,7 +884,7 @@ function HammerDailyPlanBody({
         {drillCirculation.error && <p role="alert" className="text-sm text-destructive">Couldn't check your drill choices. No analysis drill changes were applied.</p>}
         {practiceLoadHistory.error && <p role="alert" className="text-sm text-destructive">Couldn't check your logged practice workload. Your saved plan has not been changed.</p>}
         <RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} />
-        <DelaycamReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} offSeason={shortSeasonPhase(resolvedPhase) === 'off'} />
+        <DelaycamReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} offSeason={shortSeasonPhase(resolvedPhase) === 'off'} mechanicsGoal={hittingMechanicsGoal(ctx.get<unknown>('category_goals')?.value, sportKey)} />
         <AnalysisRecordingPrompts goalOrder={analysisGoalOrder(ctx.get<unknown>('category_goals')?.value, sportKey)} prescribed={plan.blocks.filter(b => prescribedToday(b)).flatMap(b => {
           // Exact module route only: arm care/throwing must not invent a pitching session.
           const module = new URL(b.route, window.location.origin).searchParams.get("module");

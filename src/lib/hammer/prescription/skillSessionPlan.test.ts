@@ -75,10 +75,14 @@ describe('AR4: catalog-declared fielding execution across positions', () => {
           expect(result?.dosage).toBe(row.dosage);
           if (row.stopIf) expect(result?.stopIf).toContain(row.stopIf);
         }
-        const expected = selected.drills.find((row, index) => index > 0 && row.executionKind === 'fielding_reads');
+        const later = selected.drills.find((row, index) => index > 0 && row.executionKind === 'fielding_reads');
+        const expected = later ?? (selected.drills.length > 1 && selected.drills[0]?.executionKind === 'fielding_reads' ? selected.drills[0] : undefined);
         const execution = structured.filter(row => row.stage === 'full_go');
         expect(execution.map(row => row.name)).toEqual(expected ? [expected.name] : []);
-        if (phase !== 'in' && position !== 'P') expect(execution).toHaveLength(1);
+        if (phase !== 'in') expect(execution).toHaveLength(1);
+        // Prep always leads, even when the promoted rep was the first drill.
+        expect(structured[0].stage).toBe('prep');
+        expect(execution[0] ? structured.indexOf(execution[0]) : 1).toBeGreaterThan(0);
       });
     }
     it(`${sport}/${phase}: actual ready first-base card has non-throwing game-speed reads`, () => {

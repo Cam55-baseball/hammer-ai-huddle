@@ -582,6 +582,13 @@
       "when": 1792459976621,
       "tag": "0082_assessment_mode_progress",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1792526001929,
+      "tag": "0083_coach_athlete_plan_sharing",
+      "breakpoints": true
     }
   ]
 }

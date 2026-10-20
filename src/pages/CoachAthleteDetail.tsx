@@ -1,5 +1,6 @@
 import { CoachLogForPlayer } from "@/components/coach/CoachLogForPlayer";
 import { CoachCheckinSummary } from "@/components/coach/CoachCheckinSummary";
+import { CoachPlanCard } from "@/components/coach/CoachPlanCard";
 import { CoachDisciplineTab } from "@/components/coach/CoachDisciplineTab";
 import { CoachOnSpotAssessment } from "@/components/coach/CoachOnSpotAssessment";
 import { CoachMessageBox } from "@/components/coach/CoachMessageBox";
@@ -227,6 +228,7 @@ export default function CoachAthleteDetail() {
           </TabsList>
 
           <TabsContent value="development" className="space-y-4 pt-4">
+            {athleteId && <CoachPlanCard athleteId={athleteId} />}
             {athleteId && <CoachCheckinSummary athleteId={athleteId} />}
             {athleteId && <CoachDevelopmentTab athleteId={athleteId} />}
             {athleteId && <CoachOnSpotAssessment athleteId={athleteId} />}
