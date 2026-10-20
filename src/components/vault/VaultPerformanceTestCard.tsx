@@ -109,6 +109,7 @@ export function VaultPerformanceTestCard({
   const [battingSide, setBattingSide] = useState<string>(userProfile?.batting_side || '');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [showReport, setShowReport] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const age = calculateAge(userProfile?.date_of_birth);
   const position = userProfile?.primary_position;
@@ -193,17 +194,26 @@ export function VaultPerformanceTestCard({
       if (value && !isNaN(parseFloat(value))) results[key] = parseFloat(value);
     });
 
-    if (Object.keys(results).length === 0) return;
+    if (Object.keys(results).length === 0) {
+      setSaveError("Enter at least one measured result before saving.");
+      return;
+    }
 
     const handedness = (throwingHand || battingSide)
       ? { throwing: throwingHand || undefined, batting: battingSide || undefined }
       : undefined;
 
     setSaving(true);
-    const result = await onSave(selectedModule, results, handedness);
-    if (result.success) setJustSaved(true);
-    setTestResults({});
-    setSaving(false);
+    setSaveError(null);
+    try {
+      const result = await onSave(selectedModule, results, handedness);
+      if (result.success) { setJustSaved(true); setTestResults({}); }
+      else setSaveError("Your results weren't saved. Your entries are still here — try again.");
+    } catch {
+      setSaveError("Your results weren't saved. Your entries are still here — try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const toggleCategory = (cat: string) => {
@@ -296,7 +306,7 @@ export function VaultPerformanceTestCard({
   const renderRegularInput = (metric: MetricDefinition) => (
     <div key={metric.key} className="space-y-1">
       <div className="flex items-center gap-1">
-        <Label className="text-xs">{metric.label} ({metric.unit})</Label>
+        <Label htmlFor={`performance-${metric.key}`} className="text-xs">{metric.label} ({metric.unit})</Label>
         {prioritizedKeys.has(metric.key) && <Badge className="text-[10px] px-1 py-0 bg-amber-500/20 text-amber-600 border-amber-500/30">Focus</Badge>}
         {reducedKeys.has(metric.key) && <Badge variant="outline" className="text-[10px] px-1 py-0">Stable</Badge>}
       </div>
@@ -304,6 +314,7 @@ export function VaultPerformanceTestCard({
         <p className="text-[10px] text-muted-foreground leading-tight">{metric.instructions}</p>
       )}
       <StableDecimalInput
+        id={`performance-${metric.key}`}
         value={testResults[metric.key] || ''}
         onChange={(v) => setTestResults({ ...testResults, [metric.key]: v })}
         className="h-8"
@@ -407,7 +418,8 @@ export function VaultPerformanceTestCard({
 
                     {/* Speed Summary — sport-normalized acceleration / max speed / overall */}
                     {(() => {
-                      const speed: SpeedSubscores = computeSpeedSubscores(latestTest!.results, sport, age);
+                        if (!latestTest) return null;
+                        const speed: SpeedSubscores = computeSpeedSubscores(latestTest.results, sport, age);
                       if (speed.accel === null && speed.maxSpeed === null && speed.overall === null) return null;
                       const accelLabel = sport === 'baseball' ? '10yd' : '7yd';
                       const maxLabel = sport === 'baseball' ? '60yd' : '40yd';
@@ -626,14 +638,14 @@ export function VaultPerformanceTestCard({
                       return (
                         <Collapsible key={category} open={isExpanded} onOpenChange={() => toggleCategory(category)}>
                           <CollapsibleTrigger asChild>
-                            <div className="flex items-center justify-between p-2 rounded-lg bg-muted/20 border border-border/50 cursor-pointer hover:bg-muted/40 transition-colors">
+                            <Button variant="ghost" className="flex h-auto w-full items-center justify-between p-2 rounded-lg bg-muted/20 border border-border/50 hover:bg-muted/40 transition-colors">
                               <div className="flex items-center gap-2">
                                 <span className="text-xs font-medium">{CATEGORY_LABELS[category]}</span>
                                 <Badge variant="outline" className="text-[10px]">{metrics.length}</Badge>
                                 {hasPrioritized && <Badge className="text-[10px] px-1 py-0 bg-amber-500/20 text-amber-600 border-amber-500/30">Focus</Badge>}
                               </div>
                               <ChevronDown className={`h-3 w-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                            </div>
+                            </Button>
                           </CollapsibleTrigger>
                           <CollapsibleContent>
                             <div className="space-y-2 pt-2">
@@ -671,6 +683,7 @@ export function VaultPerformanceTestCard({
                 <Button onClick={handleSave} disabled={saving || !selectedModule} size="sm" className="w-full">
                   {saving ? t('common.loading') : t('vault.performance.save')}
                 </Button>
+                {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
               </div>
             )}
 
