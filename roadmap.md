@@ -1,3 +1,11 @@
+# Owner answers — Oct 20, 05:02 UTC + AQ1
+
+**Ready to publish: NO.** No publish, cron, iOS, switch or data changes.
+
+- [x] Recorded: TEST sign-in approved permanently (API password method); Delaycam mechanics-goal + major-flag definitions; practice cut ~30%, floor 50%, full-go kept, same category only, game-eve rules win; tag sport + module on every video issue, then mixed signals on Today.
+- [x] AQ1 sub-step: majorMechanicalFlag rule (3+ of last 5 reports or any severe; broken dates ignored). 4 tests PASS. Not yet wired (needs per-sport report reads).
+- [ ] Next: mechanics-goal rule + wire both into Delaycam; practice 30% cut; sport/module on video issues + mixed signals on Today; TEST-player reminder phone proof then plan_prompts_v2 ON; fix drills + Vault tags; learning loop; coach section; execution blocks; weekly goal share; owner questions; re-ask proof; six-cohort runs; full suite.
+
 # AP batch summary — Oct 20, 04:58 UTC
 
 **Ready to publish: NO.** No publish, cron, iOS, migration or redeploy this batch. plan_prompts_v2 OFF.
