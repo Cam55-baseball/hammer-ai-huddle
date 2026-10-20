@@ -62,3 +62,6 @@ PASS (3 tests, dailyPlan.contextAudit.sim.test.ts): a planted hitting fault repl
 
 ## AM3 simulation — goals (Oct 20)
 PASS (3 tests): minutes and lifting identical regardless of goals. Finding: swapping goal order (hitting,defense → defense,hitting) leaves card order unchanged — goal ranking does not steer the day's order.
+
+## AM4 simulation — season phase (Oct 20)
+PASS: off-season vs in-season changes the hitting drills; the speed-day warm-up title stays the same.

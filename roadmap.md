@@ -1,6 +1,22 @@
+# AM4 — Oct 20, 03:31 UTC — batch proof per item
+
+**Ready to publish: NO.** No publish, deploy, migration, cron or iOS change in AL1–AM4; everything is preview-only.
+
+| Item | Proof | Status |
+|---|---|---|
+| Assessment mode | AK1–AK7: six-step mode, step-5 buttons from the subscription, opens after payment, X + guard card, completion; six phone proofs at 390×844; full suite 406 files / 3,170 tests | Done (preview) |
+| Prompts + cadence table | Audit in docs/owner/plan-prompts-audit.md; game/practice cards built; cadence table below, plan_prompts_v2 OFF | Waiting on owner to confirm cadences |
+| Plan-context audit | Trace in docs/owner/plan-context-audit.md; 14 simulation checks PASS (games, readiness, pain, video analyses, goals, season); readiness bug fixed (AL5) | Partial: practice logs, tests/PBs, coach notes, limb proportions not simulated |
+| Links a–e | None built (issue-tagged drills, games→drills, practice→workload, mixed signals, Because lines) | Not started |
+| Coach section | Not built — depends on links a–e | Not started; needs TEST coach + org admin sign-in approval |
+| Execution blocks | Audit done (AL7/AM1): full-go work missing or partial in every skill session | Fixes not started |
+
+Findings this batch: analysis only changes hitting/throwing (never pitching, fielding, baserunning); goal order doesn't reorder the day; speed-day warm-up is the same in and off season.
+
 # Owner additions — Oct 20, 03:27 UTC — coaches see the same context; full-go execution in every skill session
 - [ ] Coach "Hammers' plan for this player" (today/week work + Because, issue drills, summaries, ways to improve, what worked); no Development-tab duplication; coach notes and safe From Coach kept; scouts excluded.
 - [x] AL7 execution audit started (read-only sim, local plan): hitting has only one machine round — no flips/BP/live ABs; baseball pitching has no bullpen/live ABs; baserunning has no live jumps/steals. Details in docs/owner/plan-context-audit.md.
+- [x] AM4 season simulation PASS: off vs in season changes hitting drills; speed-day warm-up unchanged.
 - [x] AM3 goals simulation PASS (3 tests): goals never change minutes or lifting; finding — putting defense before hitting does not reorder cards.
 - [x] AM2 video-analysis simulation PASS (3 tests): planted hitting fault swaps exactly one hitting drill, same count/minutes; cleared fault rotates out; lifting identical.
 - [x] AM1 audit finished: fielding has no live fungo (in-season primers only); off-season hitting is dry swings + tee only; server plan authors no bullpen/BP/live work.
@@ -30,7 +46,7 @@
 | Coach notes / From Coach | Nothing | Not yet |
 | Goals | Legal-pick bias/focus lines; never dose; swapping goal order does NOT reorder cards | PASS AM3 |
 | Limb proportions | Drill swaps and cues; never dose | Not yet |
-| Phase / schedule | Everything (warm-up, strength, skills, week) | Not yet |
+| Phase / schedule | Skill drills change off vs in season; speed-day warm-up stays the same | PASS AM4 |
 | Smart Week | Separate; ignores games, season, injury, subscription, goals, limbs, sport | — |
 
 **Per subscription:** the daily plan itself takes no subscription; differences come from access (Base Stealer: 5Tool yes, Golden 2Way except start/primer/flush days, Complete Pitcher no) and server bat-speed/velocity rules. **Per sport:** baseball/softball switch the warm-up, throwing and defense drill libraries; Smart Week receives no sport. Simulations so far are baseball 5Tool-style only — **six-cohort coverage not done.**
@@ -40,7 +56,7 @@
 - Built: athlete testing-day notice (AL1, read-only); low-readiness consistency fix (AL5).
 
 ## Simulation proofs
-- `src/lib/hammer/prescription/dailyPlan.contextAudit.sim.test.ts` 13 PASS (games, readiness, pain, video analyses, goals; lifting identical). All 257 plan-engine tests PASS. Testing-day rule 4 PASS.
+- `src/lib/hammer/prescription/dailyPlan.contextAudit.sim.test.ts` 14 PASS (games, readiness, pain, video analyses, goals, season; lifting identical). All 257 plan-engine tests PASS. Testing-day rule 4 PASS.
 - Not done: 8-week six-cohort runs, phone "Because" screenshots, full suite this batch.
 
 ## Next (in order)
