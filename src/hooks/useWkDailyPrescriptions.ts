@@ -279,7 +279,7 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
         .from("scheduled_practice_sessions")
         .select("id")
         .eq("user_id", user!.id)
-        .eq("session_date", planDate)
+        .eq("scheduled_date", planDate)
         .limit(1);
       if (error) throw error;
       return (data ?? []).length > 0;
