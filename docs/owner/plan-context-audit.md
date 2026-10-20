@@ -65,3 +65,6 @@ PASS (3 tests): minutes and lifting identical regardless of goals. Finding: swap
 
 ## AM4 simulation — season phase (Oct 20)
 PASS: off-season vs in-season changes the hitting drills; the speed-day warm-up title stays the same.
+
+## AM5 simulation — limb proportions (Oct 20)
+PASS (2 tests): only the server lift picker uses limbs, as emphasis (long femur → single-leg/trap-bar more often; long arms → dumbbell/neutral presses). The local Today plan ignores limbs. Missing measurements give no tilt.
