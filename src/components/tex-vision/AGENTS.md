@@ -1,0 +1,1 @@
+- S2 history failures block starting/retesting; failed result saves retain scores for explicit retry and never report completion. Why: unavailable history is not a fresh baseline and a failed write is not a completed test.

@@ -9,12 +9,14 @@ import { ChevronRight, CalendarCheck } from "lucide-react";
 import { useOpenedOnceToday } from "@/hooks/useOpenedOnceToday";
 import { useScheduledPriorityTasks } from "@/hooks/hammer/useScheduledPriorityTasks";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export function ScheduledPriorityStrip() {
   const navigate = useNavigate();
-  const { tasks, loading } = useScheduledPriorityTasks();
+  const { tasks, loading, error } = useScheduledPriorityTasks();
   const { shouldGlow, markOpened } = useOpenedOnceToday("scheduled-priority");
 
+  if (error) return <p role="alert" className="text-sm text-destructive">Couldn't check your due tests. Try again later.</p>;
   if (loading || tasks.length === 0) return null;
 
   const go = (link: string) => {
@@ -40,16 +42,16 @@ export function ScheduledPriorityStrip() {
         {tasks.map((task) => {
           const Icon = task.icon;
           return (
-            <button
+            <Button variant="ghost"
               key={task.id}
               type="button"
               onClick={() => go(task.link)}
-              className="flex w-full items-center gap-2.5 rounded-md border border-border/60 bg-card px-2.5 py-2 text-left transition-colors hover:border-primary/40 hover:bg-accent"
+              className="flex h-auto w-full items-center gap-2.5 whitespace-normal rounded-md border border-border/60 bg-card px-2.5 py-2 text-left transition-colors hover:border-primary/40 hover:bg-accent"
             >
               <Icon className="h-4 w-4 shrink-0 text-primary" />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium">{task.title}</div>
-                <div className="truncate text-[11px] text-muted-foreground">{task.detail}</div>
+                <div className="break-words text-sm font-medium">{task.title}</div>
+                <div className="break-words text-[11px] text-muted-foreground">{task.detail}</div>
               </div>
               <span
                 className={cn(
@@ -62,7 +64,7 @@ export function ScheduledPriorityStrip() {
                 {task.overdue ? "Overdue" : task.cadence}
               </span>
               <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-            </button>
+            </Button>
           );
         })}
       </div>

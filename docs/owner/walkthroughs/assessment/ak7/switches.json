@@ -1,0 +1,144 @@
+{
+  "rows": [
+    {
+      "buildable": true,
+      "feature_key": "adaptive_phases",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "content_barefoot_items",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "content_base_stealer",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "content_explosive_pitcher",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "content_heat_factory",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "content_lift_notes",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "content_softball_conditioning",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "content_speed_lab",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "facility_spaces",
+      "mode": "off"
+    },
+    {
+      "buildable": true,
+      "feature_key": "hammers_today_start_gate",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "in_season_post_game",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "legal_v2",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "load_spike_protection",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "offseason_arc",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "onboarding_off_days",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "one_tap_logging",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "pap_real_throws",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "personalization",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "phase_feedback",
+      "mode": "all"
+    },
+    {
+      "buildable": false,
+      "feature_key": "plan_prompts_v2",
+      "mode": "off"
+    },
+    {
+      "buildable": true,
+      "feature_key": "power_primer",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "programs_retired",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "rest_day_calculator",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "staff_view",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "tell_hammers",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "ub_plyo_hand_wrist",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "under13_parent_program",
+      "mode": "all"
+    },
+    {
+      "buildable": true,
+      "feature_key": "windmill_program",
+      "mode": "all"
+    }
+  ]
+}

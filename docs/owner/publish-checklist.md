@@ -1,6 +1,11 @@
 # Publish checklist — updated 2026-10-20
 
 ## AK1–AK6 Assessment Mode and plan prompts — in progress
+### AK7 final batch status — Oct 20
+- Ready to publish: **NO**. Current consolidated item-by-item proof, cadence proposals, switch readback and missing implementation/proofs are at the top of `roadmap.md`; older status sections are historical, not current readiness.
+- AK7 phone as real TEST player: X/guard/disabled Start, embedded hitting upload, S2 failed history read→no new test→retry, explicit skip completion→no guard→Start enabled→reload stays finished. Original progress restored/read back; no Start/result/payment/plan created. Evidence: `walkthroughs/assessment/ak7/`.
+- New analysis recording adapter stays OFF behind plan_prompts_v2; only canonical clip dates, included sport modules and explicit ready-block routes can yield a reminder. Existing due tests now use local calendar dates and show read failures instead of fabricating missing baselines. Full suite 3,170 tests / 406 files PASS; 111 focused PASS; preview build OK.
+- Full $0 payment/S2/analysis submission/General/onlooker/Start proof, safe coach/org shared mode, Delaycam/Royal/testing-day/pickoff adapters, real reminder/coach/learning readback and full non-lifting matrix remain unfinished. No publish, deployment, migration, cron or iOS change in AK7.
 - AK6 supersedes the AK5 practice-report honesty blocker: `session-insights` LIVE now returns only canonical entered-log values, never cached AI faults, causal claims, fixes or independent dose. Source ownership/non-deletion checked first. Shared projection used by client source reads; old cache rows kept but ignored. Sibling deterministic fallback views no longer invent mechanics or elite labels from composites; low composite indexes no longer become video movement faults.
 - AK6 phone PASS, real TEST player at 390×844: one tee rep saved, Grade 60 / Acceptable retained, execution grade/count/source/date visible, mechanics “Not measured”. App-refreshed authenticated live report 200 has no faults/fixes/dose. New TEST session/ledger/daily-log/dirty marker removed after snapshot; original streak/HIE restored, timestamp triggers differ. Evidence: `docs/owner/walkthroughs/assessment/ak6/`.
 - AK6 full suite 3,150 tests / 404 files PASS; 80 focused PASS; preview build OK. Only named `session-insights` redeployed under Oct 19 authorization; no publish/cron/migration/iOS changes. Remaining assessment and prompt proofs still make readiness NO.
@@ -147,11 +152,11 @@ Plain-English list of what must be true before publishing. Current answer: **Rea
 - **Coaching Console (owner only):** add, edit (versions are kept, never overwritten) and switch off coaching principles. Badges: Seen = worked for 3 players; Proven = 10 players with at least 60% success. With fewer than 3 players the numbers stay hidden for privacy, and TEST accounts are never counted. Principles can't be deleted (that safeguard stays on).
 - **My Connections:** coaches, players, orgs and scouts connect only through a request the other person accepts. Either side can end the connection, and that takes effect instantly. A coach can log a game for a connected player; the player then taps "Yes, that's right" or flags it, and flagged games stay out of ratings.
 
-## Switch inventory — 2026-10-19 (intended = current)
+## Switch inventory — 2026-10-20 (AK7 readback)
 
-- **Backend switches:** everything is `all` (on), except `facility_spaces`, which is `off` and should stay off until scouting/facility phase proofs.
+- **Backend feature-switch readback:** 28 rows; 26 `all` (on). `facility_spaces` is off; `plan_prompts_v2` is off/buildable=false awaiting cadence approval. `hammers_today_start_gate` is all/buildable=true. No switch changed in AK7.
 - **Backend settings:** `staff_plan_gate` on; `lifting_v2_enabled` on; `rankings_visible` off (intended until you decide).
-- **App code constants:** `REPORT_CARD_SWITCH` = off (your Oct 18 decision); `GAME_IQ_AVAILABLE_TO_ATHLETES` = true (owner-authorized athlete release, phone proof AI1); `TIPPING_DETECTION_ENABLED`, `ON_DEVICE_BALL_DETECTOR_ENABLED`, `ROOT_EVIDENCE_ENABLED` and all 10 `MEDIAPIPE_*` measurement switches = false (stay off until camera measurement exists); `US_ONLY_APP_STORE_RELEASE` = false (Option B storefront detection).
+- **App code constants:** `REPORT_CARD_SWITCH` = off; `GAME_IQ_AVAILABLE_TO_ATHLETES` = false. Both are owner/admin internal-only, labeled “Internal — not released”; no release authorized. Camera-measurement and storefront constants remain unchanged; not re-audited by AK7.
 - **Scheduled job:** `intelligence-learning-loop-nightly` is scheduled (04:30 UTC) but has not run yet.
 
 ## HEVC check — AI2, Oct 19 04:00 UTC

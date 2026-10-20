@@ -111,6 +111,8 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball', embedded = false, o
   const { user } = useAuth();
   const [latestResult, setLatestResult] = useState<S2DiagnosticResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [historyError, setHistoryError] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const [testPhase, setTestPhase] = useState<TestPhase>('intro');
   const [testScores, setTestScores] = useState(initialScores);
   const [canTakeTest, setCanTakeTest] = useState(true);
@@ -121,6 +123,9 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball', embedded = false, o
 
   const fetchLatestResult = useCallback(async () => {
     if (!user) return;
+    setLoading(true);
+    setHistoryError(false);
+    setCanTakeTest(false);
     try {
       const { data, error } = await supabase
         .from('tex_vision_s2_diagnostics')
@@ -149,8 +154,12 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball', embedded = false, o
           setDaysUntilNextTest(Math.max(0, daysRemaining));
           setCanTakeTest(daysRemaining <= 0);
         }
+      } else {
+        setLatestResult(null);
+        setCanTakeTest(true);
       }
     } catch (error) {
+      setHistoryError(true);
       console.error('Error fetching S2 diagnostic:', error);
     } finally {
       setLoading(false);
@@ -185,6 +194,7 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball', embedded = false, o
 
   const saveResults = async (finalScores: typeof testScores) => {
     if (!user) return;
+    setSaveError(false);
 
     const scores = Object.values(finalScores);
     const overallScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
@@ -244,13 +254,15 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball', embedded = false, o
       setDaysUntilNextTest(112);
       onSaved?.();
     } catch (error) {
+      setSaveError(true);
       console.error('Error saving S2 diagnostic:', error);
     }
   };
 
-  const handleStartClick = () => setShowStartConfirmation(true);
+  const handleStartClick = () => { if (canTakeTest && !historyError) setShowStartConfirmation(true); };
 
   const confirmAndStartTest = async () => {
+    if (!canTakeTest || historyError) return;
     setShowStartConfirmation(false);
     try {
       if (!embedded) {
@@ -318,6 +330,16 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball', embedded = false, o
       </Card>
     );
   }
+
+  if (historyError) return <Alert variant="destructive"><AlertDescription className="space-y-3">
+    <p>Couldn't check your last S2 test. No new test has started.</p>
+    <Button variant="outline" onClick={() => { void fetchLatestResult(); }}>Try again</Button>
+  </AlertDescription></Alert>;
+
+  if (saveError) return <Alert variant="destructive"><AlertDescription className="space-y-3">
+    <p>Your S2 results haven't saved. Keep this screen open and try again.</p>
+    <Button variant="outline" onClick={() => { void saveResults(testScores); }}>Retry save</Button>
+  </AlertDescription></Alert>;
 
   // Render active test phases
   const testComponents: Record<Exclude<TestPhase, 'intro' | 'results'>, JSX.Element> = {
