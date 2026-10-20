@@ -5,6 +5,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 vi.mock("@/hooks/useHIESnapshot", () => ({
   useHIESnapshot: () => ({ snapshot: null, loading: false }),
@@ -14,9 +15,9 @@ import { AnalysisPrescriptionSection } from "../AnalysisPrescriptionSection";
 
 function renderSection(module: string, sport: string, violations: Record<string, boolean>) {
   return render(
-    <MemoryRouter>
+    <QueryClientProvider client={new QueryClient()}><MemoryRouter>
       <AnalysisPrescriptionSection module={module} sport={sport} violations={violations} />
-    </MemoryRouter>,
+    </MemoryRouter></QueryClientProvider>,
   );
 }
 

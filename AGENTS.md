@@ -26,7 +26,7 @@
 
 - Staff sign-up: `/get-started` → `/signup/:role` (adults, `src/lib/auth/staffSignup.ts`); approvals reuse existing queues. Why: one approval system.
 - Advice reads never await rechecks; show read failures. Why: failure is not empty.
-- Read scoped AGENTS.md. Practice-dose rules require explicit floors (prescription module). Why: no guessed minimums.
+- Prescription AGENTS govern explicit floors, execution IDs and complete reads. Why: no guessed doses or failed-source evidence.
 
 - Game IQ skips training-session gates, not subscriptions. Why: games are not training.
 - Game IQ availability uses one shared presentation switch (`GAME_IQ_AVAILABLE_TO_ATHLETES`, read via `useGameIqAccess`); owner/admin always see it labeled internal; subscription checks remain separate. Why: navigation and route access must agree.

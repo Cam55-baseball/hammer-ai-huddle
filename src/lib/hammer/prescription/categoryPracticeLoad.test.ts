@@ -17,6 +17,27 @@ describe('same-category actual practice load', () => {
   it('three sessions on one day are not three consecutive practice days', () => {
     expect(categoryPracticeLoads([row('1','2026-10-19'),row('2','2026-10-19'),row('3','2026-10-19')], '2026-10-20','baseball')[0]?.heavyStretch).toBe(false);
   });
+  for (const sport of ['baseball', 'softball']) {
+    it(`${sport}: conflicting copies cannot invent load, a streak, or restore a deleted session in either order`, () => {
+      const original = row('conflict', '2026-10-19', 'hitting', sport);
+      const alternatives = [
+        { ...original, minutes: 80 }, { ...original, intensity: 10 },
+        { ...original, date: '2026-10-18' }, { ...original, category: 'fielding' },
+        { ...original, sport: sport === 'baseball' ? 'softball' : 'baseball' },
+        { ...original, deleted: true },
+      ];
+      for (const alternative of alternatives) for (const copies of [[original, alternative], [alternative, original]]) {
+        const result = categoryPracticeLoads([...copies, row('known', '2026-10-18', 'hitting', sport)], '2026-10-20', sport);
+        expect(result).toHaveLength(1);
+        expect(result[0]).toMatchObject({ sessions: 1, minutes: 40, intensityMinutes: 320, consecutiveDays: 0, heavyStretch: false, sourceIds: ['known'] });
+      }
+    });
+  }
+  it('blank identities cannot supply load and identical repeated reads count once', () => {
+    const original = row('known', '2026-10-19');
+    expect(categoryPracticeLoads([row(' ', '2026-10-19'), original, { ...original }], '2026-10-20', 'baseball')[0])
+      .toMatchObject({ sessions: 1, minutes: 40, intensityMinutes: 320, sourceIds: ['known'] });
+  });
   it('an older three-day stretch expires rather than reducing an unrelated next day', () => {
     expect(categoryPracticeLoads([row('1','2026-10-18'),row('2','2026-10-17'),row('3','2026-10-16')], '2026-10-20','baseball')[0]?.heavyStretch).toBe(false);
   });

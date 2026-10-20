@@ -1,3 +1,14 @@
+# AR6 — Parallel owner priority pass — Oct 20, 17:06 UTC
+
+**Ready to publish: NO.** No live, cron or iOS changes; completed practice-card proof will not be repeated.
+
+- [x] Strengthened real practice-load provenance: complete self/sport/seven-day source reads, visible cap/missing/source failures, order-independent rejection of conflicting IDs (including deleted copies), identical-copy dedupe, blank-ID rejection. Exact hook scope tests and unchanged actual-plan work pass; no invented floor, load threshold or ~30% reduction.
+- [x] Running full-go now requires `baserunning_scenarios` metadata on the two existing five-rep rows, not matching names. Both-sport/three-phase 56-day actual plans and first/owner/other-skill/injury/equipment/recovery/schedule protections pass; no added reps or throws.
+- [x] Parallel coach/learning investigation yielded a real drill-history defect: reader now self-query-keyed, rejects missing/capped/failed owner/usage/engagement reads, blocks new analysis substitutions visibly in Today and reports, and chooses latest completion regardless of read order. Tests reject stale-account circulation and failed cached refreshes. Usage never becomes a learning result; coach permissions/storage remain unchanged.
+- [x] Targeted runs **3 files / 22 tests** and **8 files / 162 tests PASS**; fresh full suite **441 files / 3,581 tests PASS**, `/tmp/ar6-full-suite.log`; automatic preview build **OK 17:10:20 UTC**. Details in `docs/owner/ar6-context-proof.md`.
+- [x] Phone blocked-state check as real injected player: `/dashboard`, 390×844, initial assessment **1/6**, no page errors/overflow; screenshot `/tmp/browser/ar6/dashboard-phone.png` inspected after launch finished. No TEST/backend/assessment/consent/password/timestamp writes; no fixtures to clean; TEST Coach subscription untouched.
+- [ ] Positive plan/goal/coach/owner phone acceptance remains blocked by unfinished injected-player assessment and missing authorized coach final-plan/training-sharing source. Practice reductions/goal-minute shares need explicit real row floors; mixed signals/learning need comparable canonical outcomes. Full position/pitching execution, severe/mechanics inputs, typed owner answers, testing-day/12-week save-readback and hosted six-cohort acceptance remain open. No live changes.
+
 # AR5 — Parallel owner priority pass — Oct 20, 16:57 UTC
 
 **Ready to publish: NO.** No publish/deploy/migration/switch/cron/iOS changes; completed practice-card proof is not repeated.

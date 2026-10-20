@@ -5,7 +5,7 @@ import type { DrillStep } from './dailyPlan';
 const options = (skill: SkillSessionOptions['skill'], sport: SkillSessionOptions['sport'] = 'baseball'): SkillSessionOptions => ({
   skill, sport, owned: new Set(['field', 'glove', 'ball']), injuryRegions: [], recoveryDay: false,
 });
-const running: DrillStep[] = [{ name: 'Lead footwork', dosage: '10 reps' }, { name: 'Pickoff reads', dosage: '10 reps' }, { name: 'First-to-third / tag-up scenarios', dosage: '5 reps' }];
+const running: DrillStep[] = [{ name: 'Lead footwork', dosage: '10 reps' }, { name: 'Pickoff reads', dosage: '10 reps' }, { name: 'First-to-third / tag-up scenarios', dosage: '5 reps', executionKind: 'baserunning_scenarios' }];
 const fielding: DrillStep[] = [{ name: 'Footwork', dosage: '10 reps' }, { name: 'Backhand reads', dosage: '3×8', executionKind: 'fielding_reads' }];
 
 describe('existing-rep execution structure', () => {
@@ -44,6 +44,23 @@ describe('existing-rep execution structure', () => {
     const rows: DrillStep[] = [{ name: 'Prep', dosage: '10 reps' }, { name: 'Backhand & throw across body', dosage: '3×8' }];
     expect(structureSkillSession(rows, options('defense')).some(row => row.stage === 'full_go')).toBe(false);
   });
+  for (const sport of ['baseball', 'softball'] as const) {
+    it(`${sport}: scenario names alone cannot grant execution, while renamed catalog scenarios keep exactly five reps`, () => {
+      const untagged = running.map(row => ({ ...row, executionKind: undefined }));
+      expect(structureSkillSession(untagged, options('baserunning', sport)).some(row => row.stage === 'full_go')).toBe(false);
+      const renamed = running.map(row => row.executionKind ? { ...row, name: 'Live base decision', stopIf: 'Dizziness — stop.' } : row);
+      const result = structureSkillSession(renamed, options('baserunning', sport));
+      expect(result.filter(row => row.stage === 'full_go').map(row => [row.name, row.dosage])).toEqual([['Live base decision', '5 reps']]);
+      expect(result.find(row => row.stage === 'full_go')?.stopIf).toContain('Dizziness — stop.');
+      expect(result.map(row => row.dosage)).toEqual(running.map(row => row.dosage));
+    });
+    it(`${sport}: owner and prep scenario identities never promote, nor does a fielding identity grant running permission`, () => {
+      expect(structureSkillSession(running.map(row => ({ ...row, prescriptionOrigin: 'owner' as const })), options('baserunning', sport)).some(row => row.stage === 'full_go')).toBe(false);
+      expect(structureSkillSession([running[2]], options('baserunning', sport))[0].stage).toBe('prep');
+      expect(structureSkillSession(fielding, options('baserunning', sport)).some(row => row.stage === 'full_go')).toBe(false);
+      expect(structureSkillSession(running, options('defense', sport)).some(row => row.stage === 'full_go')).toBe(false);
+    });
+  }
   it('existing stop conditions survive execution instructions', () => {
     const result = structureSkillSession([fielding[0], { ...fielding[1], stopIf: 'Dizziness — stop.' }], options('defense'));
     expect(result.find(row => row.stage === 'full_go')?.stopIf).toContain('Dizziness — stop.');

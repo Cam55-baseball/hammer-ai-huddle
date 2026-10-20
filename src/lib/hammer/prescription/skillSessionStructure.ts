@@ -20,7 +20,7 @@ export function structureSkillSession(steps: readonly DrillStep[], options: Skil
   const canExecute = clearSpace && !options.recoveryDay && options.injuryRegions.length === 0;
   let executionIndex = -1;
   if (canExecute && options.skill === 'baserunning') {
-    executionIndex = steps.findIndex((step, index) => index > 0 && /first-to-third|tag-up scenarios/i.test(step.name) && step.prescriptionOrigin !== 'owner');
+    executionIndex = steps.findIndex((step, index) => index > 0 && step.executionKind === 'baserunning_scenarios' && step.prescriptionOrigin !== 'owner');
   } else if (canExecute && options.owned.has('glove') && options.owned.has('ball')) {
     executionIndex = steps.findIndex((step, index) => index > 0 && step.executionKind === 'fielding_reads' && step.prescriptionOrigin !== 'owner');
   }

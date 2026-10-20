@@ -1,83 +1,64 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { ELITE_DRILL_CATALOG, type EliteDrill } from "@/data/drills/eliteDrillCatalog";
-import { mergeCatalog, type CirculationInput, type OwnerDrillRow } from "@/lib/prescription/ownerDrills";
+import { mergeCatalog, type CirculationInput } from "@/lib/prescription/ownerDrills";
+import { DRILL_HISTORY_LIMIT, readDrillCirculation } from '@/lib/prescription/drillCirculationRead';
 
-/** Loads owner drills + usage totals + this athlete's serve history. Failures degrade to the built-in catalog. */
+/** Self-keyed, complete owner/rotation reads. A failure cannot revive switched-off built-ins. */
 export function useDrillCirculation() {
   const { user } = useOptionalAuth();
-  const [rows, setRows] = useState<OwnerDrillRow[]>([]);
-  const [usage, setUsage] = useState<CirculationInput["usage"]>({});
-  const [served, setServed] = useState<Record<string, number>>({});
-  const [completedOn, setCompletedOn] = useState<Record<string, string>>({});
+  const qc = useQueryClient();
+  const queryKey = ['drill-circulation', user?.id ?? null];
+  const query = useQuery({
+    queryKey,
+    enabled: Boolean(user),
+    queryFn: async () => {
+      if (!user) throw new Error('Sign in first');
+      return readDrillCirculation({
+        owner: supabase.from('owner_drills').select('*').limit(DRILL_HISTORY_LIMIT),
+        usage: supabase.rpc('drill_usage_totals'),
+        events: supabase.from('drill_engagement').select('drill_id,event,created_at').eq('user_id', user.id)
+          .in('event', ['served', 'completed']).limit(DRILL_HISTORY_LIMIT),
+      });
+    },
+  });
+  const ready = !user || query.isSuccess;
+  const rows = query.data?.rows ?? [];
+  const completedOn = query.data?.completedOn ?? {};
 
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const db = supabase as any;
-        const [{ data: r }, { data: u }, { data: e }] = await Promise.all([
-          // Load switched-off rows too: an inactive override is how the owner
-          // removes a built-in drill (mergeCatalog drops it). Filtering them out
-          // here left switched-off built-ins in the prescription.
-          db.from("owner_drills").select("*"),
-          db.rpc("drill_usage_totals"),
-          db.from("drill_engagement").select("drill_id,event,created_at").eq("user_id", user.id).in("event", ["served", "completed"]),
-        ]);
-        if (cancelled) return;
-        setRows((r ?? []) as OwnerDrillRow[]);
-        const us: CirculationInput["usage"] = {};
-        for (const x of (u ?? []) as Array<{ drill_id: string; completed: number; returned: number }>) {
-          us[x.drill_id] = { completed: Number(x.completed), returned: Number(x.returned) };
-        }
-        setUsage(us);
-        const sv: Record<string, number> = {};
-        const done: Record<string, string> = {};
-        for (const x of (e ?? []) as Array<{ drill_id: string; event: string; created_at: string }>) {
-          if (x.event === "served") sv[x.drill_id] = (sv[x.drill_id] ?? 0) + 1;
-          else done[x.drill_id] = x.created_at.slice(0, 10);
-        }
-        setServed(sv);
-        setCompletedOn(done);
-      } catch {
-        /* built-in catalog stays */
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [user]);
-
-  const catalog: EliteDrill[] = useMemo(() => mergeCatalog(ELITE_DRILL_CATALOG, rows), [rows]);
+  const catalog: EliteDrill[] = useMemo(() => ready ? mergeCatalog(ELITE_DRILL_CATALOG, rows) : [], [ready, rows]);
   /** Every drill ever defined, switched off or not — for showing past prescriptions intact. */
   const historyCatalog: EliteDrill[] = useMemo(
-    () => mergeCatalog(ELITE_DRILL_CATALOG, rows.map((r) => ({ ...r, active: true }))),
-    [rows],
+    () => ready ? mergeCatalog(ELITE_DRILL_CATALOG, rows.map((r) => ({ ...r, active: true }))) : [],
+    [ready, rows],
   );
-  const circulation: CirculationInput = useMemo(() => ({ servedToUser: served, usage }), [served, usage]);
+  const circulation: CirculationInput = useMemo(() => ({ servedToUser: ready ? query.data?.served ?? {} : {}, usage: ready ? query.data?.usage ?? {} : {} }), [ready, query.data]);
 
   const log = useCallback(
     (drillIds: string[], event: "served" | "opened" | "completed" | "returned") => {
-      if (!user || drillIds.length === 0) return;
+      if (!user || !ready || drillIds.length === 0) return;
       void (supabase as any)
         .from("drill_engagement")
         .insert(drillIds.map((drill_id) => ({ user_id: user.id, drill_id, event })))
         .then(() => undefined, () => undefined);
     },
-    [user],
+    [user, ready],
   );
 
   /** Done → "completed"; done again on a later day → also "returned". */
   const markDone = useCallback(
     (drillId: string) => {
+      if (!user || !ready) return;
       const today = new Date().toISOString().slice(0, 10);
       const prev = completedOn[drillId];
       log([drillId], "completed");
       if (prev && prev !== today) log([drillId], "returned");
-      setCompletedOn((c) => ({ ...c, [drillId]: today }));
+      qc.setQueryData<Awaited<ReturnType<typeof readDrillCirculation>>>(queryKey, data => data ? { ...data, completedOn: { ...data.completedOn, [drillId]: today } } : data);
     },
-    [completedOn, log],
+    [completedOn, log, user, ready, qc, queryKey],
   );
 
-  return { catalog, historyCatalog, circulation, log, markDone, userId: user?.id ?? null };
+  return { catalog, historyCatalog, circulation, log, markDone, ready, error: query.error, userId: user?.id ?? null };
 }
