@@ -9,7 +9,9 @@ describe('analysis reminders follow exact goal categories', () => {
     });
   }
   it('another sport cannot supply goal priority', () => {
-    expect(analysisGoalOrder({ version: 2, baseball: { position: {} }, categoryOrder: ['hitting', 'throwing', 'speed', 'power', 'fielding'], updatedAt: '2026-10-20' }, 'softball')).toEqual([]);
+    const raw = { version: 2, baseball: { position: { hitting: [{ id: 'barrel_control', rank: 'primary' }] } }, categoryOrder: ['hitting', 'throwing', 'speed', 'power', 'fielding'], updatedAt: '2026-10-20' };
+    expect(analysisGoalOrder(raw, 'baseball')).toEqual(['hitting', 'throwing']);
+    expect(analysisGoalOrder(raw, 'softball')).toEqual([]);
   });
   it('throwing priority never becomes pitching priority', () => {
     const goals = ['throwing', 'hitting', 'fielding', 'speed', 'power'].map((category, i) => ({ category, rank: i + 1, intent: null }));
