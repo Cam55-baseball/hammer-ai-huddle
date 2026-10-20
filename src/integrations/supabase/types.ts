@@ -3506,6 +3506,39 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_plan_snapshots: {
+        Row: {
+          created_at: string
+          engine_version: string | null
+          id: string
+          payload: Json
+          plan_date: string
+          sport: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          engine_version?: string | null
+          id?: string
+          payload: Json
+          plan_date: string
+          sport: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          engine_version?: string | null
+          id?: string
+          payload?: Json
+          plan_date?: string
+          sport?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       athlete_professional_status: {
         Row: {
           ausl_seasons_completed: number | null
@@ -22690,6 +22723,7 @@ export type Database = {
         Returns: undefined
       }
       _gen_code: { Args: never; Returns: string }
+      _plan_line_is_health: { Args: { _t: string }; Returns: boolean }
       _testing_day_can_manage: {
         Args: { _athlete: string; _org: string }
         Returns: boolean
@@ -22856,6 +22890,10 @@ export type Database = {
       coach_athlete_games: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_glance: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_load: { Args: { _athlete: string }; Returns: Json }
+      coach_athlete_plan: {
+        Args: { _athlete: string; _date: string }
+        Returns: Json
+      }
       coach_athlete_readiness: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_reports: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_tests: {
