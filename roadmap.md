@@ -13,7 +13,8 @@
 - [ ] Implement missing bounded analysis→editable issue-tagged skill drills, games→honest weekly focus, practice→canonical workload/emphasis, evidence convergence/conflict and plain Because lines, with learning lineage; never alter lifting schemes or use video numeric grades as measurement evidence.
 - [ ] Prove six eight-week cohorts: each input changes actual next-plan drills/focus where legally eligible, rotates out when resolved, zero rule violations, identical lifting scheme; real affected-role phone Because proofs, full suite, exact TEST cleanup.
 - [ ] Update audit, owner documentation and this roadmap with implemented/live/pending status and proof per item.
-- [ ] Testing-day athlete action: current schedule is athlete-readable but only staff may record verified results; implement the missing read-only details/contact destination before offering a daily-plan button. This is implementation work, not an owner decision; self Vault entry cannot mark staff testing complete.
+- [x] AL1 testing-day athlete bridge (read-only): morning check-in "Due today" shows "Testing day today" with the scheduled test names and "Your coach records the results" — no button, no self-completion; read failure shows an error, never "nothing due". 4 rule tests PASS (exact date, recorded/skipped hidden, empty tests hidden, bad date rejected).
+- [ ] AL1 phone proof of the testing-day notice: needs a staff-scheduled TEST testing day (organization staff session not approved); not claimed.
 
 ## Waiting on owner — prerequisite decisions/access
 - New prompt cadences: confirm or reject the proposed analysis/Delaycam/Royal/Tex Vision defaults below; `plan_prompts_v2` stays OFF meanwhile.
