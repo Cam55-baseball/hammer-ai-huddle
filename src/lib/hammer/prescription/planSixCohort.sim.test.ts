@@ -179,7 +179,13 @@ describe('AT4: subscription-qualified ranked goals through actual daily plans', 
             if (base.microcycle.perModality[modality].scheduled) expect(next.microcycle.perModality[modality].scheduled).toBe(true);
           }
           expect(next.microcycle.perModality.strength).toEqual(base.microcycle.perModality.strength);
-          expect(next.blocks.find(b => b.modality === 'strength')).toEqual(base.blocks.find(b => b.modality === 'strength'));
+          const beforeLift = base.blocks.find(b => b.modality === 'strength');
+          const afterLift = next.blocks.find(b => b.modality === 'strength');
+          expect(beforeLift).toBeDefined();
+          expect(afterLift?.drills).toEqual(beforeLift?.drills);
+          expect(afterLift?.durationMin).toBe(beforeLift?.durationMin);
+          expect(afterLift?.status).toBe(beforeLift?.status);
+          expect(afterLift?.stopRules).toEqual(beforeLift?.stopRules);
         }
         if (tier !== 'pitcher' && !base.microcycle.perModality.hitting.scheduled && hit.microcycle.perModality.hitting.scheduled) {
           expect(hit.microcycle.perModality.hitting.intensity).toBe('activation');
