@@ -339,6 +339,7 @@ type SequenceRole =
   | "bat_speed"
   | "conditioning"
   | "cross_sport"
+  | "mobility"
   | "ub_primer";
 
 interface Prescription {
@@ -1570,7 +1571,8 @@ const handler = async (req: Request): Promise<Response> => {
         }
         const templateClass = phaseTemplateClassFor(phaseRes.phase);
         const order = { none: 0, L: 1, M: 2, H: 3 } as const;
-        const capped = order[d.allowedClass] > order[templateClass]
+        const decisionRank = d.allowedClass === "none" ? order.none : d.allowedClass === "L" ? order.L : d.allowedClass === "M" ? order.M : d.allowedClass === "H" ? order.H : undefined;
+        const capped = decisionRank != null && decisionRank > order[templateClass]
           ? templateClass
           : d.allowedClass;
         tcsAdjust = applyDecision({
@@ -4763,7 +4765,6 @@ const handler = async (req: Request): Promise<Response> => {
         userId: user.id,
         planDate,
         allowedClass: (tcsAdjust?.allowedClass ?? "H") as "none" | "L" | "M" | "H",
-        liftCount: rows.filter((r: any) => r.slot === "lift").length,
         // Step 17 item B — class against class. With the calculator off there
         // is no ceiling, so nothing is blocked and nothing can be violated.
         blockedClasses: tcsAdjust ? (tcsAdjust.blockedIntensityClasses ?? []) : [],
