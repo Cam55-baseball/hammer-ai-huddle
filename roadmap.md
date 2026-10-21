@@ -1,5 +1,7 @@
 # Oct 21 — Named live implementation authorization
 
+**Simple Swap (owner reset 18:00 UTC):** built and deployed: `plan-swap` options/swap (same category/family/intent/unit, gear, age, season, injury; replaces today's row, writes `swap_log`, "always" writes `athlete_equipment_memory`); new Swap sheet ("What's missing today?" checkboxes + one line, 1–3 choices with reasons, "No safe swap found for this one; skip it today"). 5 tests pass. **Not Done:** phone proof (TEST player sign-in blocked this run), every-card mount audit, plan-build avoidance of "always missing" gear, removal of up-front equipment questions; TEST player's Oct 21 plan has no machine/barbell/field/foam-roller rows for the four named cases. Items 7–12 not started this run.
+
 **AV8 (last of batch) status check:** no new mounted change this turn; nothing deployed, migrated, published, cron or iOS. Status table below re-confirmed: **0 of 11 approved items Done** (Done = mounted in the real app and proven on a phone). Next build step is the atomic plan-swap certifier (fresh reads under `wk_lock_plan_day`, `checkSwapCatalogPair`, row + memory + log in one transaction, idempotent request ID, readback) before any of the four positive phone swaps can count.
 
 **Ready to publish: no** — saving a Swap is not built, the four saved Swap phone proofs, both-sport base-counter and full-go actual-plan proofs, mixed-signal/testing-day cases and the nightly pair are all unfinished, and the latest full test run did not finish inside the time limit.
