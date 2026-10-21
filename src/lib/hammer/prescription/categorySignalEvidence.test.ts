@@ -23,28 +23,28 @@ describe("category signal evidence", () => {
   });
 
   it("games reuse the existing whiff/chase thresholds", () => {
-    const bad = categorySignalEvidence([], { whiffPct: 31, chasePct: 10, miscueClusters: [] }, NOW);
+    const bad = categorySignalEvidence([], { atBats: 6, pitchesSeen: 20, whiffPct: 31, chasePct: 10, miscueClusters: [] }, NOW);
     expect(bad[0]).toMatchObject({ category: "hitting", source: "games", direction: "needs-work" });
-    const clean = categorySignalEvidence([], { whiffPct: 12, chasePct: 20, miscueClusters: [] }, NOW);
+    const clean = categorySignalEvidence([], { atBats: 6, pitchesSeen: 20, whiffPct: 12, chasePct: 20, miscueClusters: [] }, NOW);
     expect(clean[0]).toMatchObject({ category: "hitting", source: "games", direction: "looks-good" });
     expect(GAME_WHIFF_NEEDS_WORK).toBe(30);
     expect(GAME_CHASE_NEEDS_WORK).toBe(35);
   });
 
   it("no game sample means no game signal", () => {
-    expect(categorySignalEvidence([], { whiffPct: null, chasePct: null, miscueClusters: [] }, NOW)).toEqual([]);
+    expect(categorySignalEvidence([], { atBats: 6, pitchesSeen: 20, whiffPct: null, chasePct: null, miscueClusters: [] }, NOW)).toEqual([]);
     expect(categorySignalEvidence([], null, NOW)).toEqual([]);
   });
 
   it("miscue clusters are a fielding needs-work game signal", () => {
-    const s = categorySignalEvidence([], { whiffPct: null, chasePct: null, miscueClusters: [{ position: "SS", errors: 3 }] }, NOW);
+    const s = categorySignalEvidence([], { atBats: 6, pitchesSeen: 20, whiffPct: null, chasePct: null, miscueClusters: [{ position: "SS", errors: 3 }] }, NOW);
     expect(s[0]).toMatchObject({ category: "fielding", source: "games", direction: "needs-work" });
   });
 
   it("video findings plus clean games produce a mixed cross-reference", () => {
     const s = categorySignalEvidence(
       [{ module: "hitting", created_at: daysAgo(2), violations: { late: true } }],
-      { whiffPct: 10, chasePct: 15, miscueClusters: [] },
+      { atBats: 6, pitchesSeen: 20, whiffPct: 10, chasePct: 15, miscueClusters: [] },
       NOW,
     );
     const xr = crossReference("hitting", s);
@@ -55,7 +55,7 @@ describe("category signal evidence", () => {
   it("agreeing sources never produce a mixed line", () => {
     const s = categorySignalEvidence(
       [{ module: "hitting", created_at: daysAgo(2), violations: { late: true } }],
-      { whiffPct: 40, chasePct: 10, miscueClusters: [] },
+      { atBats: 6, pitchesSeen: 20, whiffPct: 40, chasePct: 10, miscueClusters: [] },
       NOW,
     );
     expect(crossReference("hitting", s).kind).toBe("agree");
@@ -64,7 +64,7 @@ describe("category signal evidence", () => {
   it("one category's signals never leak into another", () => {
     const s = categorySignalEvidence(
       [{ module: "fielding", created_at: daysAgo(2), violations: { x: true } }],
-      { whiffPct: 10, chasePct: 15, miscueClusters: [] },
+      { atBats: 6, pitchesSeen: 20, whiffPct: 10, chasePct: 15, miscueClusters: [] },
       NOW,
     );
     expect(crossReference("hitting", s).kind).toBe("none");
@@ -76,7 +76,7 @@ describe("category signal evidence", () => {
   });
   it("explicit false findings cannot be counted as problems", () => {
     const signals = categorySignalEvidence([{ module: "hitting", created_at: daysAgo(2), violations: { early_shoulder_rotation: false, hands_pass_elbow_early: false } }],
-      { whiffPct: 40, chasePct: null, miscueClusters: [] }, NOW);
+      { atBats: 6, pitchesSeen: 20, whiffPct: 40, chasePct: null, miscueClusters: [] }, NOW);
     expect(signals[0].direction).toBe('looks-good');
     expect(crossReference('hitting', signals).kind).toBe('mixed');
   });
@@ -87,6 +87,24 @@ describe("category signal evidence", () => {
   });
   it("future recording dates and invalid game percentages cannot fabricate a disagreement", () => {
     expect(categorySignalEvidence([{ module: "hitting", created_at: daysAgo(-1), violations: { late: true } }],
-      { whiffPct: NaN, chasePct: 101, miscueClusters: [{ position: 'SS', errors: -1 }] }, NOW)).toEqual([]);
+      { atBats: 6, pitchesSeen: 20, whiffPct: NaN, chasePct: 101, miscueClusters: [{ position: 'SS', errors: -1 }] }, NOW)).toEqual([]);
   });
+  it("zero or missing samples never manufacture mixed signals from stored 0%", () => {
+    const clip = [{ module: "hitting", created_at: daysAgo(2), violations: { late: true } }];
+    for (const sample of [{}, { atBats: 0, pitchesSeen: 0 }, { atBats: 5, pitchesSeen: 19 },
+      { atBats: NaN, pitchesSeen: -1 }]) {
+      const signals = categorySignalEvidence(clip, { whiffPct: 0, chasePct: 0, miscueClusters: [], ...sample }, NOW);
+      expect(signals.filter(signal => signal.source === "games")).toEqual([]);
+      expect(crossReference("hitting", signals).kind).toBe("none");
+    }
+  });
+  it("the existing 6-AB or 20-pitch floor admits real sampled 0% without inventing a new threshold", () => {
+    for (const sample of [{ atBats: 6, pitchesSeen: 0 }, { atBats: 0, pitchesSeen: 20 }]) {
+      const signals = categorySignalEvidence([{ module: "hitting", created_at: daysAgo(2), violations: { late: true } }],
+        { ...sample, whiffPct: 0, chasePct: 0, miscueClusters: [] }, NOW);
+      expect(signals.find(signal => signal.source === "games")?.direction).toBe("looks-good");
+      expect(crossReference("hitting", signals).kind).toBe("mixed");
+    }
+  });
+
 });
