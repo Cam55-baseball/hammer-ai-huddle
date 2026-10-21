@@ -44,6 +44,9 @@ export function usePlanAdjustments(planDate: string) {
   const save = useCallback(
     async (adj: PlanAdjustment) => {
       if (!user) throw new Error("You need to be signed in to change your plan.");
+      if (adj.action !== "position_worked") {
+        throw new Error("This drill's replacement needs a safety check before it can be saved. Your original session is unchanged.");
+      }
       const { error: err } = await supabase.from("athlete_plan_adjustments").insert({
         user_id: user.id,
         plan_date: planDate,
