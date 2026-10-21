@@ -1,5 +1,6 @@
 import { sortByWarmupStage } from "./warmupStages";
 import { weeklyGoalBlocks, secondGoalFirst } from './weeklyGoalBlocks';
+import { priorityAccess } from '../priorityAccess';
 import { structureSkillSession } from './skillSessionStructure';
 import { applyPracticePlanContext } from './practicePlanContext';
 import { categoryPracticeLoads, type PracticeLoadRecord, type CategoryPracticeLoad } from './categoryPracticeLoad';
@@ -2219,6 +2220,8 @@ export interface RoadmapInputs {
   readonly positionOverride?: string | null;
   /** Athlete tapped "run full defense anyway" on a game day. */
   readonly defenseFullOverride?: boolean;
+  /** Current subscription modules; an explicit empty list permits no purchased skill boost. */
+  readonly subscriptionModules?: readonly string[];
 }
 
 export function buildHammerDailyPlan(
@@ -2273,8 +2276,14 @@ export function buildHammerDailyPlan(
   const firstPass = ALL_MODALITIES.map((m) =>
     builder({ modality: m, ctx, proj, speed, positionOverride: positionOverrideArg, pitcherOutings: roadmapInputs.pitcherOutings, skillExecutionAllowed: scheduleSignal.postureToday === 'normal' }),
   );
+  const goalAccess = roadmapInputs.subscriptionModules === undefined ? null
+    : priorityAccess(roadmapInputs.subscriptionModules, normalizeSport(sportRaw) === 'softball' ? 'softball' : 'baseball');
+  const goalEligible = (modality: string) => !goalAccess ||
+    (modality === 'hitting' ? goalAccess.hasHitting
+      : modality === 'throwing' ? goalAccess.hasThrowing || goalAccess.hasPitching
+        : modality === 'defense' || modality === 'baserunning' ? goalAccess.hasThrowing : true);
   const goalWeek = weeklyGoalBlocks(resolveWeeklyTemplate(proj), skillTargets, proj, positionRaw,
-    new Set(firstPass.filter(b => b.status === 'ready').map(b => b.modality)));
+    new Set(firstPass.filter(b => b.status === 'ready' && goalEligible(b.modality)).map(b => b.modality)));
   const weeklyTemplate = goalWeek.template;
   const microcycle = applyMicrocycle(weeklyTemplate, today, goalWeek.targets);
   const weeklyRoadmap = projectWeeklyRoadmap(weeklyTemplate, today, goalWeek.targets);
