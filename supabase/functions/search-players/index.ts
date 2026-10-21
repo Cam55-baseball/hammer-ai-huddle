@@ -1,4 +1,5 @@
 import { recruitingGate } from '../_shared/recruitingGate.ts';
+import { TEST_ADMIN_PROOF_ID } from '../_shared/testAdminExclusion.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
 
@@ -115,8 +116,8 @@ serve(async (req) => {
       .from('profiles')
       .select('id, full_name, avatar_url, position, throwing_hand, batting_side, height, weight, state, high_school_grad_year, college_grad_year, commitment_status, enrolled_in_college, is_professional, is_free_agent, mlb_affiliate, independent_league, is_foreign_player')
       .neq('id', user.id)
-      // Test and system accounts never appear in real searches.
-      .or('is_system_account.is.null,is_system_account.eq.false');
+      // Hide only the proof administrator; consent gates still govern demo athletes.
+      .neq('id', TEST_ADMIN_PROOF_ID);
 
     // Apply name search if provided
     if (query && query.trim().length >= 2) {
