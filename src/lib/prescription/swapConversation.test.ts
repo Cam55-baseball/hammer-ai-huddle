@@ -49,4 +49,11 @@ describe("three-question Swap contract", () => {
     expect(swapEquipmentMemory(draft, ["foam_roller"]).equipment).toEqual([]);
     expect(confirmedSwapAvailability(draft).have).toEqual([]);
   });
+  it("dumbbell aliases cannot be both missing and available, including a crafted ready draft", () => {
+    const next = answerSwapConversation(startSwapConversation("athlete", "rx", "2026-10-21"), { step: "missing", items: ["db"] });
+    expect(next.lacks).toEqual(["dumbbell"]);
+    expect(() => answerSwapConversation(next, { step: "available", items: ["dumbbells"] })).toThrow(/cannot/);
+    expect(() => confirmedSwapAvailability({ ...ready(), have: ["db"], lacks: ["dumbbells"] })).toThrow(/availability/);
+    expect(() => confirmedSwapAvailability({ ...ready(), lacks: [] })).toThrow(/availability/);
+  });
 });

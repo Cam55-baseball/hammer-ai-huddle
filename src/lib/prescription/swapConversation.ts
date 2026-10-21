@@ -1,5 +1,5 @@
 import { EQUIPMENT_VOCABULARY } from "../hammer/context/equipmentVocabulary";
-import type { SwapAvailability } from "./universalSwapCandidates";
+import { normalizeSwapEquipment, type SwapAvailability } from "./universalSwapCandidates";
 
 export type SwapMemoryScope = "today" | "always";
 export interface SwapConversation {
@@ -13,8 +13,7 @@ export interface SwapConversation {
   scope: SwapMemoryScope | null;
 }
 
-const key = (value: string) => value.trim().toLowerCase().replace(/[\s-]+/g, "_");
-const tokens = (values: readonly string[]) => [...new Set(values.map(key))];
+const tokens = (values: readonly string[]) => [...new Set(values.map(normalizeSwapEquipment))];
 const known = new Set(EQUIPMENT_VOCABULARY.map(value => value.token));
 
 export function startSwapConversation(ownerId: string, prescriptionId: string, planDate: string): SwapConversation {
@@ -48,7 +47,10 @@ export function answerSwapConversation(draft: SwapConversation, answer:
 
 export function confirmedSwapAvailability(draft: SwapConversation): SwapAvailability {
   if (draft.step !== "ready" || !draft.scope) throw new Error("Finish the three swap questions first.");
-  return { have: [...draft.have], lacks: [...draft.lacks], confirmed: true };
+  const have = tokens(draft.have), lacks = tokens(draft.lacks);
+  if (!lacks.length || [...have, ...lacks].some(item => !item || item.length > 80) || have.length > 40 || lacks.length > 40 ||
+      have.some(item => lacks.includes(item))) throw new Error("Check your availability answers before saving.");
+  return { have, lacks, confirmed: true };
 }
 
 /** Canonical inventory patch for the future atomic server boundary. No write or success claim here.
