@@ -63,4 +63,9 @@ describe("universal Swap catalog preview", () => {
     expect(hasSwapRequirements(["db"], { confirmed: true, have: ["dumbbells"], lacks: ["dumbbell"] })).toBe(false);
     expect(hasSwapRequirements([], { confirmed: true, have: [], lacks: [] })).toBe(true);
   });
+  it("invalid dose fields and non-finite minimum ages cannot become a preview prescription", () => {
+    expect(previewUniversalSwap(row, { ...dose, reps: Number.NaN }, [flips], context).blocked).toBe(true);
+    expect(previewUniversalSwap(row, { ...dose, dosage_unit: null }, [flips], context).blocked).toBe(true);
+    expect(previewUniversalSwap(row, dose, [{ ...flips, min_age_years: Number.NaN }], context).candidates).toEqual([]);
+  });
 });

@@ -1,5 +1,5 @@
 import { eligibleSwapCandidate, type SwapEligibilityFacts } from "./swapEligibility";
-import { sameDoseSwap, type SwapDose } from "./sameDoseSwap";
+import { recordedSwapDose, sameDoseSwap, type SwapDose } from "./sameDoseSwap";
 
 /** Catalog-backed previews only. A server must certify and atomically save the chosen row. */
 export interface UniversalSwapMovement extends SwapEligibilityFacts {
@@ -56,6 +56,8 @@ export function previewUniversalSwap(
   context: UniversalSwapContext,
 ): { candidates: Array<{ movement: UniversalSwapMovement; dose: SwapDose; reason: string }>; blocked: boolean } {
   const intent = original.primary_adaptation?.trim();
+  try { recordedSwapDose(dose); } catch { return { candidates: [], blocked: true }; }
+  if (!dose.dosage_unit?.trim()) return { candidates: [], blocked: true };
   if (!context.sessionAllowed || !context.availability.confirmed || context.injuryRestrictions === null ||
       context.ageYears === null || !Number.isFinite(context.ageYears) || context.ageYears < 0 ||
       !intent || original.is_active !== true || original.movement_category !== context.category) {
@@ -72,6 +74,7 @@ export function previewUniversalSwap(
         seen.has(movement.slug) || counts.get(movement.slug) !== 1 ||
         movement.primary_adaptation?.trim() !== intent || movement.min_age_years === null ||
         movement.min_age_years === undefined || movement.min_age_years > context.ageYears ||
+        !Number.isFinite(movement.min_age_years) || movement.min_age_years < 0 ||
         movement.contraindications === null || movement.contraindications === undefined ||
         movement.contraindications.some(value => restrictions.has(normalize(value))) ||
         !hasSwapRequirements(movement.equipment_requirements, context.availability) ||
