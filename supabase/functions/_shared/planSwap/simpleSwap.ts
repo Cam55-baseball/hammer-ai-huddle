@@ -39,7 +39,7 @@ export function qualifies(source: Row, target: Row, missing: string[], player: S
   if (contra.some((c: string) => player.injuries.some(i => i.includes(c) || c.includes(i)))) return false;
   const legality = target.season_legality;
   if (legality && typeof legality === "object" && legality[player.phase] === false) return false;
-  if (!isMovementSeasonLegal(seasonContextFromPhase(player.phase as any), target).legal) return false;
+  if (!isMovementSeasonLegal(seasonContextFromPhase(player.phase as any), target as any).legal) return false;
   return true;
 }
 
