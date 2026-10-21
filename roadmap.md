@@ -1,3 +1,12 @@
+# AU2 — Approved open-item continuation — Oct 21
+
+**Ready to publish: no.** No publish, cron or iOS changes. No unrelated access migration authorized.
+
+- [ ] Advance safe Swap certification and exact original-receipt preservation; retain equipment questions until a working replacement is proved.
+- [ ] Investigate and close remaining TEST ADMIN public-list exclusions without hiding deliberate demo accounts.
+- [ ] Run changed-rule regressions and phone checks; record exact proof boundaries and cleanup.
+- [ ] Refresh status table and retain the actual 04:30 nightly result (successful empty run; no positive outcome invented).
+
 # AU1 — Substantial parallel continuation — Oct 21
 
 **Ready to publish: no.** No publish, cron or iOS changes. Required Oct 21 rest/Swap redeploy authorization remains limited to that work; no unrelated pending migration is authorized by this queue.
