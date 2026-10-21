@@ -1,8 +1,12 @@
 # AT4 — Continued approved work — Oct 21
 
-- [ ] Close the actual-builder product-qualified eight-week goal checks; verify baseline slots, second-slot ordering and unchanged lifting.
-- [ ] Advance canonical coach evidence/history or complete execution phone acceptance using only real saved plan data; clean exact TEST changes.
-- [ ] Run changed tests and current app checks; record completed proof and remaining work. No publish, cron or iOS changes; no unapproved live changes.
+- [x] Actual-builder goal boosts now receive selected-sport subscription modules; six 56-day cohorts prove included hitting +8 slots, excluded/opposite-sport/empty +0, baseline retained, fielding already-full phase capped, second slot order and unchanged lifting. Focused 3 files / 142 PASS.
+- [x] Positive real democoach saved-week phone proof: genuine Oct 20 snapshot, 11 reasons, health-private notice, honest outcomes; collapse and revoked-read denial verified. Exact TEST request snapshotted/removed, passwords scrambled; Coach service active.
+- [x] Actual TEST athlete capped-goal Because phone proof; original goals restored exactly and dashboard reloaded, no invented available days. Screenshot `/tmp/browser/at4/goal-because.png` inspected.
+- [x] Fresh complete coverage across interrupted runs plus bounded remainder: **456 unique files / 3,679 tests PASS**, latest preview build OK; exact goals/request cleanup checked. No publish/deploy/migration/cron/iOS changes.
+- [ ] Coach six-week summaries/practice ideas lack a verified canonical read contract; assigned-org proof remains open. Full baseline product gating, hosted six-cohort, complete execution/mixed-signals/testing-day/Report Card/Vault proofs and protected TEST ADMIN exclusion remain open. Nightly proof waits for Oct 21 04:30 UTC.
+
+**Ready to publish: NO.** Evidence `docs/owner/at4-proof.md`.
 
 # AT3 — Continued approved work — Oct 20
 
