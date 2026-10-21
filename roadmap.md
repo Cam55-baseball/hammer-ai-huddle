@@ -1,3 +1,11 @@
+# AU5 — Approved open-item continuation — Oct 21
+
+**Ready to publish: no.** No publish, cron or iOS changes; no new permission migration assumed authorized.
+
+- [ ] Build the next canonical universal Swap step with exact intent/dose and explicit today/always answers; no unchecked save fallback.
+- [ ] Run changed-path tests and relevant phone checks; retain honest hosted-proof boundaries and clean exact TEST data.
+- [ ] Refresh the open-item status table, actual nightly result and remaining authorization/proof blockers.
+
 # AU4 — Approved open-item continuation — Oct 21
 
 **Ready to publish: no.** No publish, cron or iOS changes.
