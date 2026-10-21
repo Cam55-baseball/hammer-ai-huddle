@@ -18,22 +18,13 @@ describe("alternative swap keeps log rows in sync", () => {
     expect([d.sets, d.reps, d.dosage_unit]).toEqual([3, 5, "reps"]);
   });
 
-  it("reps → seconds swap adopts the replacement's seconds and drops stale rep values", () => {
-    const d = projectedDose(rx({}), cand({ slug: "copenhagen_hold", dosage_unit: "seconds", default_sets: 3, default_duration_seconds: 20 }), "equipment_unavailable");
-    expect(d.dosage_unit).toBe("seconds");
-    expect(d.duration_seconds).toBe(20);
-    expect(d.reps).toBeNull();
-    expect(d.total_reps).toBeNull();
-    // The log rows rendered from the swapped row must be seconds rows, not rep rows.
-    const spec = inlineLogSpec(rx({ movement_slug: "copenhagen_hold", movement_name: "Copenhagen Hold", dosage_unit: "seconds", duration_seconds: d.duration_seconds, reps: d.reps as any, total_reps: d.total_reps as any }));
-    expect(spec.fields.map((f) => f.key)).toEqual(["time"]);
-    expect(spec.fields[0].prefill).toBe(20);
-    expect(spec.rows).toBe(3);
+  it("reps → seconds is rejected instead of authoring a different dose", () => {
+    expect(() => projectedDose(rx({}), cand({ slug: "copenhagen_hold", dosage_unit: "seconds", default_sets: 3, default_duration_seconds: 20 }), "equipment_unavailable")).toThrow();
   });
 
-  it("time_restriction still trims sets to the lighter default", () => {
+  it("time_restriction keeps the original four sets rather than silently trimming", () => {
     const d = projectedDose(rx({ sets: 4 }), cand({ slug: "goblet_squat", dosage_unit: "reps", default_sets: 2 }), "time_restriction");
-    expect(d.sets).toBe(2);
+    expect(d.sets).toBe(4);
   });
 
   it("the swapped row's log spec matches the projected dose exactly (rows = sets, prefill = per-set value)", () => {
