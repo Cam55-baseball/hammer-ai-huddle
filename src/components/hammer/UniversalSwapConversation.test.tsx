@@ -77,4 +77,15 @@ describe("staged Swap conversation safety", () => {
     expect(onSaved).not.toHaveBeenCalled();
     expect(screen.getByRole("checkbox", { name: "pitching machine" })).not.toBeChecked();
   });
+  it("closing and reopening the same saved version does not unlock an uncertain write", async () => {
+    const transport = vi.fn().mockRejectedValue(new Error("Timeout"));
+    const props = { open: true, onOpenChange: vi.fn(), expected, original, catalog: [flips], context, transport, onSaved: vi.fn() };
+    const { rerender } = render(<UniversalSwapConversation {...props} />);
+    answers(); fireEvent.click(screen.getByRole("button", { name: "Partner flips" }));
+    await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
+    rerender(<UniversalSwapConversation {...props} open={false} />);
+    rerender(<UniversalSwapConversation {...props} />);
+    expect(screen.getByRole("button", { name: "Partner flips" })).toBeDisabled();
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
 });

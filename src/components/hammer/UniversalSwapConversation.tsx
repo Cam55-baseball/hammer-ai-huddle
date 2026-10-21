@@ -25,7 +25,7 @@ interface Props {
  */
 export function UniversalSwapConversation(props: Props) {
   const visit = `${props.expected.user_id}:${props.expected.id}:${props.expected.plan_date}:${props.expected.updated_at}`;
-  return <SwapVisit key={`${visit}:${props.open}`} {...props} />;
+  return <SwapVisit key={visit} {...props} />;
 }
 
 function SwapVisit({ open, onOpenChange, expected, original, catalog, context, transport, onSaved }: Props) {
@@ -38,9 +38,9 @@ function SwapVisit({ open, onOpenChange, expected, original, catalog, context, t
   const saving = useRef(false);
   const attempted = useRef(false);
   useEffect(() => {
-    active.current = true;
+    active.current = open;
     return () => { active.current = false; };
-  }, []);
+  }, [open]);
   const [savedReason, setSavedReason] = useState<string | null>(null);
   const requirements = [...new Set((draft.step === "missing" ? original.equipment_requirements ?? [] :
     catalog.filter(row => row.primary_adaptation === original.primary_adaptation && row.movement_category === context.category)
