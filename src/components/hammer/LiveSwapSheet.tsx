@@ -43,7 +43,16 @@ export function LiveSwapSheet({ rx, open, onOpenChange }: {
           action: "interpret", prescriptionId: rx.id, planDate: rx.plan_date, message,
           expected: data.expected, catalogFingerprint: data.catalogFingerprint,
         } });
-        if (error || answer?.error) throw new Error(answer?.error ?? "I couldn't read that answer. Nothing was saved.");
+        if (error || answer?.error) {
+          let reason = typeof answer?.error === "string" ? answer.error : "I couldn't read that answer. Nothing was saved.";
+          // Function HTTP failures carry their safe athlete-facing reason in
+          // the response, not in the successful invocation's data field.
+          if (error?.context instanceof Response) {
+            const refused = await error.context.clone().json().catch(() => null);
+            if (typeof refused?.error === "string") reason = refused.error;
+          }
+          throw new Error(reason);
+        }
         if (!Array.isArray(answer?.have) || !Array.isArray(answer?.lacks) || answer.memorySaved !== false || answer.prescriptionChanged !== false) {
           throw new Error("I couldn't check that answer. Nothing was saved.");
         }
