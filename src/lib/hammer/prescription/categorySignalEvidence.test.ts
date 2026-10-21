@@ -12,7 +12,7 @@ describe("category signal evidence", () => {
   });
 
   it("a fresh clean clip is a looks-good video signal", () => {
-    const s = categorySignalEvidence([{ module: "hitting", created_at: daysAgo(3), violations: { late: false } }], null, NOW);
+    const s = categorySignalEvidence([{ module: "hitting", created_at: daysAgo(3), violations: { early_shoulder_rotation: false } }], null, NOW);
     expect(s[0]).toMatchObject({ category: "hitting", source: "video", direction: "looks-good" });
   });
 
@@ -75,10 +75,15 @@ describe("category signal evidence", () => {
     }
   });
   it("explicit false findings cannot be counted as problems", () => {
-    const signals = categorySignalEvidence([{ module: "hitting", created_at: daysAgo(2), violations: { late: false, chase: false } }],
+    const signals = categorySignalEvidence([{ module: "hitting", created_at: daysAgo(2), violations: { early_shoulder_rotation: false, hands_pass_elbow_early: false } }],
       { whiffPct: 40, chasePct: null, miscueClusters: [] }, NOW);
     expect(signals[0].direction).toBe('looks-good');
     expect(crossReference('hitting', signals).kind).toBe('mixed');
+  });
+  it("mandatory unassessed false placeholders never claim a clean hitting video", () => {
+    expect(categorySignalEvidence([{ module: 'hitting', created_at: daysAgo(2), violations: {
+      shoulders_not_aligned: false, back_leg_not_facing_target: false,
+    } }], null, NOW)).toEqual([]);
   });
   it("future recording dates and invalid game percentages cannot fabricate a disagreement", () => {
     expect(categorySignalEvidence([{ module: "hitting", created_at: daysAgo(-1), violations: { late: true } }],

@@ -7,6 +7,7 @@
  * A signal is only emitted from real evidence; missing data emits nothing.
  */
 import type { CategorySignal } from "./mixedSignals";
+import { isAssessedBy } from "@/lib/wic/faultLedger/cleanClipFade";
 
 export interface SignalClip {
   readonly module: string | null;
@@ -45,9 +46,11 @@ function latestClip(clips: readonly SignalClip[], modules: readonly string[], no
 
 function measuredDirection(clip: SignalClip): "needs-work" | "looks-good" | null {
   if (!clip.violations) return null;
-  const measured = Object.values(clip.violations).filter((value): value is boolean => typeof value === "boolean");
-  if (!measured.length) return null;
-  return measured.some(value => value) ? "needs-work" : "looks-good";
+  const answers = Object.entries(clip.violations);
+  if (answers.some(([, value]) => value === true)) return "needs-work";
+  // Some analyzer false fields are mandatory placeholders, not assessments.
+  // Reuse the canonical assessed-fault contract rather than treating those as clean.
+  return answers.some(([fault, value]) => value === false && !!clip.module && isAssessedBy(clip.module, fault)) ? "looks-good" : null;
 }
 
 export function categorySignalEvidence(
