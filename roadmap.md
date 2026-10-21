@@ -1,3 +1,31 @@
+# AU1 — Substantial parallel continuation — Oct 21
+
+**Ready to publish: no.** No publish, cron or iOS changes. Required Oct 21 rest/Swap redeploy authorization remains limited to that work; no unrelated pending migration is authorized by this queue.
+
+| Requested stream | Status | Proof / acceptance remaining |
+|---|---|---|
+| Conditioning base-counter rest | Partly | Shared count + auto-start + real TEST-form phone/component proof passed; actual saved double row unchanged. Current-plan-route / complete both-sport conversion remain. `docs/owner/au1-proof.md` |
+| Every-card AI Swap + equipment questions | Partly | Existing alternatives hardened for exact dose/phase/category and truthful save/Undo; AI conversation/server certification/memory/four proofs not built. Questions retained. `sameDoseSwap.test.ts`; `au1-proof.md` |
+| Coach six-week summaries / practice ideas | Partly | Pure 42-day same-sport saved-work/issue-drill projection + tests built; not wired through known legacy scout-access gap. Named access correction authorization/hosted proof required. `sixWeekPlanSummary.test.ts`; `au1-proof.md` |
+| Pitching / fielding / baserunning execution | Partly | Complete legal full-go affected-player acceptance |
+| Mixed signals / testing-day details | Partly | Missing/false/future evidence honesty fixed; notice added to actual Today area. Positive genuine hosted phone cases remain. `categorySignalEvidence.test.ts`; `TestingDayNotice.test.tsx` |
+| TEST ADMIN owner screens | Partly | Remaining positive read/save proofs and universal list exclusion |
+| Oct 21 04:30 nightly outcome | Partly | Scheduled job succeeded; matching callback HTTP 200 complete, players 0 / checked 0 / pending 0. Genuine positive judging remains unproved: no followed eligible evidence. `docs/owner/au1-proof.md` |
+
+**Nightly result:** Oct 21 04:30 UTC job and callback proved without triggering/changing either. Returned `complete`, 0 players, 0 checked, 0 pending; canonical readback confirms no new outcomes. This is a successful empty run, not evidence that a real before/after pair was judged.
+
+**Final fresh suite:** 460 files / 3,726 tests PASS; latest preview build OK. `/tmp/au1-final-full-{0,1,2,3}.log`; `docs/owner/au1-proof.md`. TEST passwords scrambled, private files removed, saved conditioning row unchanged, Coach service retained. No publish/deploy/migration/cron/iOS changes.
+
+- [x] Shared conditioning session rest + automatic clock; real TEST phone/component single and actual saved-double proof, unchanged row readback; current-plan route remains open.
+- [x] Harden existing alternatives: exact dose/unit, phase/category, complete Undo receipt, self/date/stale-row scope and truthful save result.
+- [x] Fix mixed-signal missingness/false/future/placeholder handling; mount testing-day notice in actual Today area; regressions pass.
+- [x] Build/test six-week saved-plan projection and exact issue-linked practice-idea projection; deliberately not wired before server-access correction.
+- [ ] Build certified every-card AI Swap, scoped availability memory and four phone proofs before removing equipment questions.
+- [ ] Build coach six-week summaries and issue-linked practice ideas using existing authorized data only.
+- [ ] Advance full-go execution, mixed-signal/testing-day and TEST ADMIN acceptance with exact TEST cleanup.
+- [x] Read actual Oct 21 04:30 job + matching callback/readback: HTTP 200 complete, zero eligible work; positive comparable outcome remains open, not fabricated.
+- [x] Final full suite 460 files / 3,726 PASS, clean preview, exact TEST cleanup and refreshed statuses/proof paths.
+
 # AT7 — Owner Oct 21 rest and smart substitution
 
 **Ready to publish: no.** Owner Camryn Williams authorized this round's necessary backend redeploys only; no publish, cron or iOS changes. Earlier open items below remain open, not superseded by this new scope.

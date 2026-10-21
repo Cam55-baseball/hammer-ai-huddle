@@ -3,6 +3,7 @@ import { visibleCoachPlanBlocks } from './visiblePlanBlocks';
 
 export interface SavedPlanDrill {
   name: string; dosage: string; stage: string | null; cue: string | null;
+  slug?: string | null; prescriptionOrigin?: string | null;
 }
 export interface SavedPlanBlock {
   modality: string; title: string; status: string; durationMin: number | null;

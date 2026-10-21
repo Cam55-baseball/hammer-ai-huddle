@@ -47,11 +47,11 @@ export function fmtClock(totalSec: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-export function RestTimer({ seconds: base, maxSeconds, label = "Rest" }: { seconds?: number | null; maxSeconds?: number | null; label?: string }) {
+export function RestTimer({ seconds: base, maxSeconds, label = "Rest", initialStartedAt = null }: { seconds?: number | null; maxSeconds?: number | null; label?: string; initialStartedAt?: number | null }) {
   const [extra, setExtra] = useState(0);
   const seconds = typeof base === "number" ? base + extra : base;
   const canAdd = typeof base === "number" && maxSeconds != null && base + extra + 30 <= maxSeconds;
-  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [startedAt, setStartedAt] = useState<number | null>(initialStartedAt);
   const [now, setNow] = useState(Date.now());
   const buzzed = useRef(false);
 

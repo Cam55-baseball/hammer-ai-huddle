@@ -1,5 +1,5 @@
 # Hammers Today cards
-- Run rest uses `_shared/wic/runRest.ts`; PAP keeps lift-to-action rest separate from after-sprint rest, and conditioning counters accept declared base-route reps only. Why: one rest rule without changing lifting or granting new running work.
+- Run rest uses `_shared/wic/runRest.ts`; PAP keeps lift-to-action rest separate from after-sprint rest, and conditioning counters accept declared base-route reps only, sharing session state through `ConditioningRestProvider` across log portals. Why: changing exercise pop-ups must not reset bases or rest, change lifting or grant new running work.
 
 - Today card grouping is a presentation-only partition preserving original drill objects and completion keys; popup details use a shared context. Why: grouping must not author training or duplicate logging.
 - Hammers Today 'Next up', day ring and stage story come only from `todayRhythm.tsx`, fed by progress the cards already compute. Why: the visual rhythm must never author, reorder or change training.

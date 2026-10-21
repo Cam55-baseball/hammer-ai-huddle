@@ -16,6 +16,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
+import { recordedSwapDose, sameDoseSwap } from "@/lib/prescription/sameDoseSwap";
+import { isEccentricOverloadPhaseIllegal } from "../../supabase/functions/_shared/wic/season";
 
 export type SwapReason =
   | "equipment_unavailable"
@@ -98,7 +100,7 @@ const CATALOG_COLS =
  * never land somewhere the certified resolver would have refused.
  */
 function deriveLadder(self: FamilyRow, members: FamilyRow[], phase: string | null): Ladder {
-  const legal = (c: FamilyRow) => (phase && c.season_legality ? c.season_legality[phase] !== false : true);
+  const legal = (c: FamilyRow) => !!phase && !isEccentricOverloadPhaseIllegal(c, phase) && c.season_legality?.[phase] === true;
   const usable = members.filter((c) => c.slug !== self.slug && legal(c));
   const lowEquip = (c: FamilyRow) => {
     const req = (c.equipment_requirements ?? []).map((s) => String(s).toLowerCase());
@@ -168,8 +170,10 @@ export function useSwapLadder(rx: WkRx | null, enabled: boolean) {
       const anchor = rows.find((r) => r.slug === (rx?.substituted_from_slug ?? rx?.movement_slug));
       for (const row of allowed) {
         const isOriginal = row.slug === rx?.substituted_from_slug;
+        if (!isOriginal && (!rx?.phase || isEccentricOverloadPhaseIllegal(row, rx.phase) || row.season_legality?.[rx.phase] !== true)) continue;
+        if (!isOriginal && (!rx?.dosage_unit || !row.dosage_unit || row.dosage_unit.toLowerCase() !== rx.dosage_unit.toLowerCase())) continue;
         if (!isOriginal && anchor && row.slug !== rx?.movement_slug && !isSameOrLowerRisk(anchor, row)) continue;
-        if (!isOriginal && category && row.movement_category && row.movement_category !== category) continue;
+        if (!isOriginal && (!category || row.movement_category !== category)) continue;
         options[row.slug] = row;
       }
       // Busy gym: barbell / trap-bar lifts also get pattern equivalents that need neither.
@@ -190,7 +194,9 @@ export function useSwapLadder(rx: WkRx | null, enabled: boolean) {
           const ageCap = Math.max(Number(anchor.min_age_years ?? 0), playerAge ?? 0);
           const picked: string[] = [];
           for (const r of (eqRows ?? []) as unknown as FamilyRow[]) {
-            if (rx?.phase && r.season_legality && r.season_legality[rx.phase] === false) continue;
+            if (!rx?.phase || isEccentricOverloadPhaseIllegal(r, rx.phase) || r.season_legality?.[rx.phase] !== true) continue;
+            if (!rx.dosage_unit || !r.dosage_unit || r.dosage_unit.toLowerCase() !== rx.dosage_unit.toLowerCase()) continue;
+            if (!category || r.movement_category !== category) continue;
             if (!isSameOrLowerRisk({ ...anchor, min_age_years: ageCap }, r)) continue;
             options[r.slug] = r; picked.push(r.slug);
           }
@@ -225,29 +231,9 @@ interface ApplyArgs {
   reason: SwapReason;
 }
 
-/** Dose carried over from the prescription; "short on time" trims sets to the
- *  replacement's own default when that default is lighter. */
-export function projectedDose(rx: WkRx, candidate: SwapCandidate, reason: SwapReason) {
-  let sets = rx.sets;
-  if (reason === "time_restriction" && candidate.default_sets && sets && candidate.default_sets < sets) {
-    sets = candidate.default_sets;
-  }
-  // The log rows are built from the dose fields, so a swap must carry a dose
-  // that matches the replacement's own measure type. When the unit changes
-  // (e.g. reps → seconds), adopt the candidate's defaults for the new unit
-  // and clear the old unit's values — never show stale prescribed numbers.
-  const unit = (candidate.dosage_unit ?? rx.dosage_unit ?? "reps").toLowerCase();
-  const sameUnit = unit === (rx.dosage_unit ?? "reps").toLowerCase();
-  return {
-    sets: sets ?? candidate.default_sets,
-    reps: sameUnit ? rx.reps : candidate.default_reps,
-    duration_seconds: unit === "seconds" ? (sameUnit ? rx.duration_seconds : candidate.default_duration_seconds) : null,
-    distance_feet: sameUnit ? rx.distance_feet : candidate.default_distance_feet,
-    total_reps: sameUnit ? rx.total_reps : candidate.default_total_reps,
-    dosage_unit: candidate.dosage_unit ?? rx.dosage_unit,
-    tempo: rx.tempo,
-    load_pct: rx.load_pct,
-  };
+/** Owner Oct 21: an alternative never changes dose, including short-on-time requests. */
+export function projectedDose(rx: WkRx, candidate: SwapCandidate, _reason: SwapReason) {
+  return sameDoseSwap(rx, candidate);
 }
 
 export function describeDose(d: ReturnType<typeof projectedDose>): string {
@@ -274,26 +260,21 @@ export function useLiftSubstitution(planDate: string) {
 
   const apply = useMutation({
     mutationFn: async ({ rx, candidate, reason }: ApplyArgs) => {
+      if (!user?.id) throw new Error("Sign in to change your plan.");
       const dose = projectedDose(rx, candidate, reason);
       const why = { ...(rx.why_payload ?? {}) } as Record<string, unknown>;
       why.athlete_substitution = {
         from_slug: rx.movement_slug,
         from_name: rx.movement_name,
         from_sets: rx.sets,
-        from_dose: {
-          reps: rx.reps,
-          duration_seconds: rx.duration_seconds,
-          distance_feet: rx.distance_feet,
-          total_reps: rx.total_reps,
-          dosage_unit: rx.dosage_unit,
-        },
+        from_dose: sameDoseSwap(rx, { dosage_unit: rx.dosage_unit }),
         to_slug: candidate.slug,
         reason,
         reason_label: SWAP_REASON_LABEL[reason],
         at: new Date().toISOString(),
       };
       if (candidate.cue) why.cue = candidate.cue;
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("wk_prescriptions" as any)
         .update({
           movement_slug: candidate.slug,
@@ -308,8 +289,14 @@ export function useLiftSubstitution(planDate: string) {
           substitution_reason: `Swapped — ${SWAP_REASON_LABEL[reason]}`,
           why_payload: why,
         })
-        .eq("id", rx.id);
+        .eq("id", rx.id)
+        .eq("user_id", user.id)
+        .eq("plan_date", rx.plan_date)
+        .eq("movement_slug", rx.movement_slug)
+        .eq("status", rx.status)
+        .select("id,movement_slug");
       if (error) throw error;
+      if (!Array.isArray(data) || data.length !== 1) throw new Error("Your plan changed before this alternative was saved. Reload your plan.");
     },
     onSuccess: () => {
       invalidate();
@@ -320,31 +307,30 @@ export function useLiftSubstitution(planDate: string) {
 
   const undo = useMutation({
     mutationFn: async ({ rx, original }: { rx: WkRx; original: SwapCandidate }) => {
+      if (!user?.id) throw new Error("Sign in to change your plan.");
       const why = { ...(rx.why_payload ?? {}) } as Record<string, unknown>;
       const swapMeta = why.athlete_substitution as Record<string, any> | undefined;
-      const fromDose = (swapMeta?.from_dose ?? {}) as Record<string, unknown>;
+      const fromDose = recordedSwapDose(swapMeta?.from_dose);
       delete why.athlete_substitution;
       if (original.cue) why.cue = original.cue;
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("wk_prescriptions" as any)
         .update({
           movement_slug: original.slug,
           movement_name: original.name,
-          sets:
-            (swapMeta?.from_sets as number | undefined) ??
-            original.default_sets ??
-            rx.sets,
-          reps: (fromDose.reps as number | null | undefined) ?? original.default_reps ?? null,
-          duration_seconds: (fromDose.duration_seconds as number | null | undefined) ?? original.default_duration_seconds ?? null,
-          distance_feet: (fromDose.distance_feet as number | null | undefined) ?? original.default_distance_feet ?? null,
-          total_reps: (fromDose.total_reps as number | null | undefined) ?? original.default_total_reps ?? null,
-          dosage_unit: (fromDose.dosage_unit as string | null | undefined) ?? original.dosage_unit ?? null,
+          ...fromDose,
           substituted_from_slug: null,
           substitution_reason: null,
           why_payload: why,
         })
-        .eq("id", rx.id);
+        .eq("id", rx.id)
+        .eq("user_id", user.id)
+        .eq("plan_date", rx.plan_date)
+        .eq("movement_slug", rx.movement_slug)
+        .eq("status", rx.status)
+        .select("id,movement_slug");
       if (error) throw error;
+      if (!Array.isArray(data) || data.length !== 1) throw new Error("Your plan changed before Undo was saved. Reload your plan.");
     },
     onSuccess: () => {
       invalidate();
