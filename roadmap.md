@@ -1,3 +1,9 @@
+# AT4 — Continued approved work — Oct 21
+
+- [ ] Close the actual-builder product-qualified eight-week goal checks; verify baseline slots, second-slot ordering and unchanged lifting.
+- [ ] Advance canonical coach evidence/history or complete execution phone acceptance using only real saved plan data; clean exact TEST changes.
+- [ ] Run changed tests and current app checks; record completed proof and remaining work. No publish, cron or iOS changes; no unapproved live changes.
+
 # AT3 — Continued approved work — Oct 20
 
 - [x] Day-84 phone confirmation on real TEST dashboard: explicit ranked TEST setup aged 85 days, Keep my order canonical readback + reload proved, original sport/ranking payload restored exactly, password scrambled. Screenshots `/tmp/browser/at3/day84-before.png`, `day84-confirmed.png` inspected.
