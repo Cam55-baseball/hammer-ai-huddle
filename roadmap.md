@@ -1,3 +1,13 @@
+# AT5 — Continued approved work — Oct 21
+
+- [x] Parallel audits plus actual phone exposed unknown-equipment fielding; fixed catalog gear gate, visible confirmation, no completion or schedule/rest override; duplicated/unjoined/cross-category coach findings no longer inflate issue labels.
+- [x] Real TEST athlete fielding stop/confirmation phone proof and democoach saved history/read revocation; screenshots inspected, no equipment/completions fabricated. Exact already-revoked TEST requests snapshotted/removed/absence checked; passwords scrambled; Coach service stays active.
+- [x] Fresh final-code suite in four disjoint bounded batches: **456 files / 3,693 tests PASS**; preview build OK. Evidence `docs/owner/at5-proof.md`.
+- [ ] Hosted coach reads found broad scout/legacy access; narrow three-RPC correction staged only in `docs/owner/at5-coach-training-access.pending.sql`, awaiting named owner authorization and affected-role proof. Six-week sport/window/health-aware summaries/practice ideas and assigned-org acceptance remain open.
+- [ ] Complete gear-confirmed pitching/all-position fielding/baserunning, hosted six-cohort, mixed-signals/testing-day/Report Card/Vault proofs and universal TEST ADMIN exclusion; nightly proof awaits Oct 21 04:30 UTC. No publish/deploy/migration/cron/iOS changes.
+
+**Ready to publish: NO.**
+
 # AT4 — Continued approved work — Oct 21
 
 - [x] Actual-builder goal boosts now receive selected-sport subscription modules; six 56-day cohorts prove included hitting +8 slots, excluded/opposite-sport/empty +0, baseline retained, fielding already-full phase capped, second slot order and unchanged lifting. Focused 3 files / 142 PASS.

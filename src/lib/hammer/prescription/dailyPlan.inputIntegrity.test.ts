@@ -1,9 +1,8 @@
 /**
  * INPUT-INTEGRITY LAW regression tests.
  *
- * A Today card may never render as a request for information, and it may
- * never render empty. Every card must prescribe, and state its assumption
- * when part of the athlete's context is missing.
+ * Cards remain readable with missing context, but equipment gates never
+ * fabricate gear or let an athlete override into unequipped field work.
  */
 import { describe, expect, it } from "vitest";
 import { buildHammerDailyPlan } from "./dailyPlan";
@@ -124,7 +123,7 @@ describe("training-day cards (microcycle scheduled)", () => {
 describe("game-day defense", () => {
   it("renders a pregame primer with drills instead of disappearing", () => {
     const plan = buildHammerDailyPlan(
-      NO_EQUIPMENT_NO_HISTORY,
+      ctx({ sport_primary: 'baseball', position_primary: 'SS', equipment_effective: ['field', 'glove', 'ball'], season_phase: 'in', weekly_availability_days: 6 }),
       gameDay("game"),
       null,
       null,
@@ -140,7 +139,7 @@ describe("game-day defense", () => {
 
   it("runs full defense when the athlete overrides", () => {
     const plan = buildHammerDailyPlan(
-      NO_EQUIPMENT_NO_HISTORY,
+      ctx({ sport_primary: 'baseball', position_primary: 'SS', equipment_effective: ['field', 'glove', 'ball'], season_phase: 'in', weekly_availability_days: 6 }),
       gameDay("game"),
       null,
       null,
@@ -152,6 +151,15 @@ describe("game-day defense", () => {
     expect(defense!.gameDayPrimer).toBeFalsy();
     expect(defense!.drills.length).toBeGreaterThan(0);
     expect(defense!.why).toMatch(/full defense anyway/i);
+  });
+  for (const posture of ['game', 'tournament'] as const) it(`${posture}: override cannot invent missing fielding gear`, () => {
+    const plan = buildHammerDailyPlan(NO_EQUIPMENT_NO_HISTORY, gameDay(posture), null, null, undefined,
+      new Date('2026-06-10T12:00:00Z'), { defenseFullOverride: true });
+    const defense = plan.blocks.find(b => b.modality === 'defense');
+    expect(defense?.status).toBe('awaiting-input');
+    expect(defense?.drills).toEqual([]);
+    expect(defense?.gameDayPrimer).not.toBe(true);
+    expect(defense?.gamePlanTemplate).toBeNull();
   });
 });
 

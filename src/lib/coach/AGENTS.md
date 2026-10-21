@@ -1,2 +1,4 @@
 - Coach plan presentation filters saved blocks through visibleCoachPlanBlocks using the central athlete Game IQ release switch, regardless of viewer role. Why: historical snapshots must not prescribe inaccessible work to an athlete.
 - Recent-week work reads only dated snapshots through coach_athlete_plan on deliberate expansion, scoped to the current athlete and sport; reasons use only the returned redacted fields. Why: roadmap slots are not completed work, and history needs the same connection/health gate as today.
+- Development issue labels group exact category/fault pairs and count distinct joined recent report IDs only. Why: duplicate findings, unmatched records and another skill cannot fabricate recurrence or cleaning-up evidence.
+- Coach training RPC hardening is staged in docs/owner/at5-coach-training-access.pending.sql and is not live. Why: training cannot trust legacy follow helpers that also admit scouts or unassigned organizational staff.

@@ -5,3 +5,4 @@
 - Release presentation uses local midnight only; pre-build state never supplies athlete-facing times. Why: preparation time is not delivery time.
 - Activity pop-ups host each exercise’s entry grid and its timers via one shared log portal; exercise disclosures retain outcomes, surveys and specialized extra logging without duplicating entry state or timers in parent panels. Why: logs remain visible while information stays closed and per-exercise saving stays canonical.
 - Power-primer round recording and rest timers use the same pop-up log host, while its warm-up lock and safety controls remain in its disclosure. Why: relocating controls must not create new lift sets, bypass safety or change record-only saving.
+- Input-confirmation plan cards remain visible separately from prescribedToday; reminders, counts and completion still require ready drill work. Why: an equipment gate must be actionable without becoming a training prescription.

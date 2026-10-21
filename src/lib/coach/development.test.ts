@@ -40,6 +40,28 @@ describe("reportsByCategory", () => {
 });
 
 describe("classifyIssues", () => {
+  it('counts duplicate findings from one report once, not as recurring evidence', () => {
+    const issues = classifyIssues(reports, [
+      find('a', 'r5', 'timing', '2026-10-10'),
+      find('b', 'r5', 'timing', '2026-10-10'),
+    ]);
+    expect(issues[0].times_seen).toBe(1);
+    expect(issues[0].status).toBe('New');
+  });
+  it('keeps the same fault key isolated between pitching and hitting', () => {
+    const issues = classifyIssues([...reports, rep('h1', '2026-10-10', null, 'hitting')], [
+      find('p1', 'r5', 'timing', '2026-10-10'),
+      find('p2', 'r4', 'timing', '2026-10-03'),
+      find('h1', 'h1', 'timing', '2026-10-10', 'hitting'),
+    ]);
+    expect(issues.find(i => i.category === 'pitching')?.times_seen).toBe(2);
+    expect(issues.find(i => i.category === 'pitching')?.status).toBe('Recurring');
+    expect(issues.find(i => i.category === 'hitting')?.times_seen).toBe(1);
+    expect(issues.find(i => i.category === 'hitting')?.status).toBe('New');
+  });
+  it('does not call an unjoined or older-than-window finding cleaning up', () => {
+    expect(classifyIssues(reports, [find('a', 'unknown', 'timing', '2026-10-10')])).toEqual([]);
+  });
   it("marks a fault in 2+ of the last 5 as Recurring", () => {
     const issues = classifyIssues(reports, [
       find("f1", "r5", "early_arm", "2026-10-10T00:00:00Z"),
