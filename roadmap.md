@@ -1,5 +1,17 @@
 # Current publish gate — Oct 21
 
+**Owner update 23:56 UTC — new ordered gate supersedes all historical deferred-live statuses.**
+- [ ] 1. Four real-plan Swap phone proofs, then swap_v2 ALL and normal-player proof.
+- [ ] 2. Three-role phone regression including autosave and Stripe handoff.
+- [ ] 3. All remaining feature proofs on real TEST plans; one proof document per item.
+- [ ] 4. Three-role page audit, bounded suite and preview; account for uncollected tests.
+- [ ] 5. Fresh full switch inventory matching the updated owner states.
+- [ ] 6. Update owner guide with Swap how-to and how-to-check.
+- [ ] 7. Cancel demoorg plan only at the end, scoped TEST cleanup, exact readiness table.
+
+Work starts with Swap; do not mark historical passes as fresh proof.
+
+
 **Final continuation — Oct 21, Camryn Williams.**
 
 **Ready to publish: NO.** Exact blockers: the real coach detail page still fails both canonical audit-event writes (403 / 42501); the safe server append fix requires named authorization for a hosted change. The paired Swap phone proof lacks an ordinary, non-allowlisted authorized TEST player with a started plan, and the owner has not finished the initial assessment. Active purchase/session and native handoff paths still lack genuine verification state. No failure is hidden and no consent or event-read permission was widened.
