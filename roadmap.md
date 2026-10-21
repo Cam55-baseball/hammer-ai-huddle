@@ -1,6 +1,6 @@
 # Oct 21 — Named live implementation authorization
 
-**AV6 in progress:** move saved-dose/context validation into the shared server boundary, bind mounted Swap answers to the exact saved prescription and catalog, and reject changes before/after AI interpretation. This is a no-write prerequisite, not atomic save certification; phone acceptance and tests pending.
+**AV6 live sub-step:** shared server/client saved-dose/context validation; mounted Swap now pins the complete prescription/catalog before and after inference. Actual TEST 390×844 phone flow: current answer HTTP 200, stale dose and changed choices HTTP 409 with exact refusal shown; saved prescriptions unchanged. This is a no-write prerequisite, not atomic certification/save. `docs/owner/av6-proof.md`
 
 **AV5 live sub-step:** applied shared transaction-held athlete/day locking to both actual plan persistence paths, closing a prerequisite for safe concurrent Swap certification. Hosted definitions and service-only permissions checked; actual TEST phone plan verified HTTP 200 and mounted Swap opened with unchanged saved rows. Atomic certification/saving and all four positive swaps remain unfinished. No publish, cron or iOS changes. `docs/owner/av5-proof.md`
 
@@ -10,7 +10,7 @@
 |---|---|---|
 | Coach training gate + mounted six-week summary/practice ideas | Partly | AT5 applied; summary mounted. Live dated reads now require canonical athlete sport; democoach 390×844 phone sign-in/readback confirmed softball and windmill work, with unconnected/revoked reads denied. Requested 14-game hitter, pitcher, assigned-org/scout proofs and positive saved practice ideas remain. `docs/owner/av3-proof.md`, `docs/owner/oct21-live-implementation-proof.md` |
 | TEST ADMIN hidden lists/statistics + owner-screen proofs | Partly | Exact exclusions applied to six hosted RPCs, owner dashboard aggregates, owner search and coach roster/pool. Player search deployed and checked as democoach at 390×844; legitimate demos remain. Prior TEST ADMIN internal-screen proofs retained. Owner-only search correctly refuses admin; exhaustive every-list audit remains. `docs/owner/av1-proof.md`, `docs/owner/av2-proof.md` |
-| Universal plan-swap / AI / memory / log / every-card mount / question replacement | Partly | Named storage applied with self-only reads/server writes. Real saved exercise Swap mounts the three-question conversation and deployed AI interpretation; 390×844 TEST phone input correctly identified missing medicine ball/available bat, HTTP 200, no prescription or memory writes. Atomic certifier/save/Undo, complete every-card/coach coverage and all positive saves remain unfinished; questions retained until replacement works. `docs/owner/av4-proof.md`, `docs/owner/av3-proof.md`, `docs/owner/au5-atomic-swap-contract.md` |
+| Universal plan-swap / AI / memory / log / every-card mount / question replacement | Partly | Named storage applied with self-only reads/server writes. Real three-question Swap interpretation now pins exact saved work/catalog around AI; current phone request HTTP 200, stale dose/catalog HTTP 409 with visible refusals. No prescription or memory writes. Atomic certifier/save/Undo, every-card/coach coverage and all positive saves remain unfinished; questions retained until replacement works. `docs/owner/av6-proof.md`, `docs/owner/au5-atomic-swap-contract.md` |
 | Machine → partner flips saved phone swap + memory | Not started | No successful production universal swap. `docs/owner/oct21-live-implementation-proof.md` |
 | No barbell saved phone swap + memory | Not started | No successful production universal swap. `docs/owner/oct21-live-implementation-proof.md` |
 | No open field saved phone swap + memory | Not started | Safe equal-intent/distance confirmed-space metadata and production swap remain. `docs/owner/oct21-live-implementation-proof.md` |
@@ -22,7 +22,7 @@
 
 **Nightly outcome:** last recorded Oct 21 04:30 callback HTTP 200, players/checked/pending 0/0/0 (empty, not positive). Next scheduled outcome is not claimed early. No cron changes or manual trigger.
 
-**Validation:** AV5 fresh full suite **481 files / 3,839 tests PASS**; preview build OK at 16:48:15 UTC. Both hosted plan writers contain the shared transaction lock; authenticated/anonymous execution denied, service execution allowed. Actual 390×844 TEST phone saved-plan verification HTTP 200, mounted Swap opens, saved rows unchanged; TEST password scrambled. Direct two-session SQL contention check was denied by the read-only query role, so actual contention timing remains unproved. `docs/owner/av5-proof.md`
+**Validation:** AV6 full suite **482 files / 3,844 tests PASS**; final changed-path **2 files / 14 tests PASS**; preview build OK at 17:13:06 UTC. Server check passed before only `plan-swap` redeployment; real 390×844 TEST phone current/stale-dose/stale-catalog requests verified with visible results and unchanged prescriptions. TEST password scrambled. AV5 shared lock installation retained; actual contention timing remains unproved. `docs/owner/av6-proof.md`, `docs/owner/av5-proof.md`
 
 - [x] Apply named AT5 migration and mount coach six-week summary in the actual coach page.
 - [x] Prove real coach saved-plan reads and immediate revocation; preserve health redaction.
@@ -37,6 +37,7 @@
 - [ ] Implement atomic universal Swap/AI/memory/log, mount every card and coach-sent work, complete four saved/readback phone cases, then remove replaced questions.
 - [x] Deploy authenticated self-scoped AI availability interpretation and prove it mounted through actual TEST player phone exercise UI; preserve explicit no-write/no-save state.
 - [x] Apply shared transaction-held athlete/day lock to both actual plan persistence paths; verify hosted installation, service-only access and real TEST phone plan continuity.
+- [x] Share saved-dose/context server/client validators and pin mounted AI interpretation to exact work/catalog; prove current acceptance and stale-dose/catalog refusal through real TEST phone UI without training writes.
 - [x] Save/readback declared softball base routes; deploy sport-matching route selection and generator counters.
 - [x] Resolve TEST softball assessment through six explicit UI skips and start its actual Today plan without inventing measurements.
 - [ ] Obtain eligible conditioning/execution days; prove both-sport base-counter conditioning and all three execution roles on actual plan routes.
