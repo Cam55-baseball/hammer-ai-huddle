@@ -32,7 +32,7 @@ export function WkWindmillCard() {
           {(summary.reasons ?? []).map((r: string, i: number) => <div key={i} className="text-muted-foreground">• {r}</div>)}
         </div>
       )}
-      {items.map((rx: any) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} allowSwap={false} />)}
+      {items.map((rx: any) => <WkPrescriptionCard key={rx.id} rx={rx} phaseDisplay={label} phaseKey={snapshotIdentity.season_phase} />)}
       <p className="text-[11px] text-muted-foreground">Stop and tell a coach if your shoulder, elbow or forearm hurts.</p>
       <WkCardCompletion modality="windmill" modalityLabel="Windmill pitching" items={items} />
     </div>

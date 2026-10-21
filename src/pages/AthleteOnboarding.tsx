@@ -113,7 +113,7 @@ export default function AthleteOnboarding() {
       [STEP_DONE]: "neutral",
       [STEP_PROFILE]: answerStatus.byKey.profile,
       [STEP_ANTHRO]: answerStatus.byKey.anthropometrics,
-      [STEP_EQUIPMENT]: answerStatus.byKey.equipment,
+      [STEP_EQUIPMENT]: "neutral",
       [STEP_GOALS]: answerStatus.byKey.goals,
       [STEP_FUEL]: answerStatus.byKey.fuel,
       [STEP_MENTAL]: answerStatus.byKey.mental,
@@ -230,6 +230,11 @@ export default function AthleteOnboarding() {
     })();
   }, [searchParams, user?.id, redoRequested]);
 
+  // A resumed draft never lands on the retired up-front equipment step.
+  useEffect(() => {
+    if (step === STEP_EQUIPMENT && editReturnTo === null) setStep(STEP_INJURY);
+  }, [step, editReturnTo]);
+
   // Continuously persist step + dayType so refresh/close never loses progress.
   useEffect(() => {
     if (!user?.id || !urlRoutedRef.current) return;
@@ -278,7 +283,8 @@ export default function AthleteOnboarding() {
       setStep(target);
       return;
     }
-    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+    // Owner Oct 21: no up-front equipment question; Swap asks on the card.
+    setStep((s) => { const n = Math.min(s + 1, STEPS.length - 1); return n === STEP_EQUIPMENT ? STEP_EQUIPMENT + 1 : n; });
   };
   const goBack = () => {
     if (editReturnTo !== null) {
@@ -288,7 +294,7 @@ export default function AthleteOnboarding() {
       setStep(target);
       return;
     }
-    setStep((s) => Math.max(s - 1, 0));
+    setStep((s) => { const n = Math.max(s - 1, 0); return n === STEP_EQUIPMENT ? STEP_EQUIPMENT - 1 : n; });
   };
 
   /** Review → Edit jump. Adds a return marker so save bounces back here. */
@@ -540,7 +546,7 @@ export default function AthleteOnboarding() {
         <AnthropometricsStep onContinue={goNext} onBack={goBack} />
       )}
 
-      {step === STEP_EQUIPMENT && (
+      {step === STEP_EQUIPMENT && editReturnTo !== null && (
         <EquipmentStep onContinue={goNext} onBack={goBack} />
       )}
 
