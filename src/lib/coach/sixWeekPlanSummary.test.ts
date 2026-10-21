@@ -7,6 +7,14 @@ const block: SavedPlanBlock = { modality: 'hitting', title: 'Hitting', status: '
 const plan = (date: string, overrides: Partial<SavedCoachPlan> = {}): SavedCoachPlan => ({ state: 'ok', sport: 'baseball',
   plan_date: date, health_shared: false, blocks: [block], ...overrides });
 describe('six-week saved-plan projection', () => {
+  it('keeps each issue-selected prescription dose and dated reason instead of spreading the latest dose across history', () => {
+    const olderDrill = { ...block.drills[0], slug: 'old_flips', dosage: '12 swings' };
+    const rows = sixWeekPlanSummary([plan('2026-10-19', { blocks: [{ ...block, because: ['Older saved issue'], drills: [olderDrill] }] }),
+      plan('2026-10-20')], 'baseball', '2026-10-21');
+    expect(rows[0].savedPlanDays).toBe(2);
+    expect(rows[0].practiceIdeas.map(idea => [idea.drill.dosage, idea.date, idea.reasons])).toEqual([
+      ['20 swings', '2026-10-20', ['Saved swing issue']], ['12 swings', '2026-10-19', ['Older saved issue']]]);
+  });
   it('uses exactly 42 calendar dates including today', () => {
     const dates = sixWeekPlanDates('2026-10-21');
     expect(dates.length).toBe(42);

@@ -1,3 +1,11 @@
+# AU8 — Last batch continuation — Oct 21
+
+**Ready to publish: no.** No publish, cron or iOS changes.
+
+- [ ] Build the staged six-week coach summary/practice-ideas display without widening reads or permissions.
+- [ ] Close Swap's same-version close/reopen response gap and test the visit boundary.
+- [ ] Run changed-path/full tests, inspect phone presentation, retain honest conditioning/Swap/nightly proof limits, and update the top status table.
+
 # AU7 — Approved open-item continuation — Oct 21
 
 **Ready to publish: no.** No publish, cron or iOS changes; no live permission/schema changes.

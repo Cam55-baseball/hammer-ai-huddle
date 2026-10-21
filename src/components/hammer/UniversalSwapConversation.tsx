@@ -37,8 +37,14 @@ function SwapVisit({ open, onOpenChange, expected, original, catalog, context, t
   const active = useRef(true);
   const saving = useRef(false);
   const attempted = useRef(false);
+  const openEpoch = useRef(0);
   useEffect(() => {
+    openEpoch.current += 1;
     active.current = open;
+    if (!open && !attempted.current) {
+      setDraft(startSwapConversation(expected.user_id, expected.id, expected.plan_date));
+      setSelected([]); setError(null); setSavedReason(null);
+    }
     return () => { active.current = false; };
   }, [open]);
   const [savedReason, setSavedReason] = useState<string | null>(null);
@@ -67,20 +73,25 @@ function SwapVisit({ open, onOpenChange, expected, original, catalog, context, t
     if (!transport || saving.current || attempted.current || !preview?.candidates.some(value => value.movement.slug === slug)) return;
     saving.current = true;
     attempted.current = true;
+    const requestEpoch = openEpoch.current;
     setPending(true); setError(null);
     try {
       const result = await commitAtomicSwap(draft, expected, slug, crypto.randomUUID(), transport);
-      if (!active.current) return;
+      if (!active.current || requestEpoch !== openEpoch.current) {
+        setUncertain(true);
+        setError("Your plan may have changed while Swap was closed. Reload your plan before trying again.");
+        return;
+      }
       setSavedReason(result.reason);
       onSaved();
     } catch {
-      if (active.current) {
+      if (active.current || requestEpoch !== openEpoch.current) {
         setUncertain(true);
         setError("I couldn't confirm what saved. Reload your plan before trying again.");
       }
     } finally {
       saving.current = false;
-      if (active.current) setPending(false);
+      setPending(false);
     }
   };
 
