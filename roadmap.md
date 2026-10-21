@@ -1,3 +1,24 @@
+# AU1 — Substantial parallel continuation — Oct 21
+
+**Ready to publish: no.** No publish, cron or iOS changes. Required Oct 21 rest/Swap redeploy authorization remains limited to that work; no unrelated pending migration is authorized by this queue.
+
+| Requested stream | Status at start | Acceptance remaining |
+|---|---|---|
+| Conditioning base-counter rest | Partly | Both-sport declared routes, shared session count and actual TEST phone proof |
+| Every-card AI Swap + equipment questions | Not started | Certified same-category/intent/dose swaps, reason/memory readback, four phone proofs; questions stay until safe replacement works |
+| Coach six-week summaries / practice ideas | Not started | Canonical consented reads and affected-coach acceptance; pending access correction not applied |
+| Pitching / fielding / baserunning execution | Partly | Complete legal full-go affected-player acceptance |
+| Mixed signals / testing-day details | Partly | Positive genuine hosted phone cases |
+| TEST ADMIN owner screens | Partly | Remaining positive read/save proofs and universal list exclusion |
+| Oct 21 04:30 nightly outcome | Not started | Scheduled run is future at 03:59 UTC; enqueue is not a judged outcome |
+
+- [ ] Finish conditioning session rest and phone acceptance; preserve all existing dose/safety rules.
+- [ ] Build certified every-card AI Swap, scoped availability memory and four phone proofs before removing equipment questions.
+- [ ] Build coach six-week summaries and issue-linked practice ideas using existing authorized data only.
+- [ ] Advance full-go execution, mixed-signal/testing-day and TEST ADMIN acceptance with exact TEST cleanup.
+- [ ] Read the actual 04:30 run and judged outcome after it happens, without calling or changing the job.
+- [ ] Run relevant tests, inspect preview health, and refresh statuses and proof paths before stopping.
+
 # AT7 — Owner Oct 21 rest and smart substitution
 
 **Ready to publish: no.** Owner Camryn Williams authorized this round's necessary backend redeploys only; no publish, cron or iOS changes. Earlier open items below remain open, not superseded by this new scope.
