@@ -13,7 +13,7 @@
 | 8 | TEST admin + owner screens | Partly | Exclusions applied; Console/Questions/Vault/Game IQ proved. Every-list audit + Report Card phone check open. `docs/owner/av1-proof.md`, `av2-proof.md` |
 | 9 | Softball 60-ft base routes + base counter | Partly | Routes saved. No eligible TEST player has a base-route day (only the Apple-review child, untouched). `docs/owner/au1-proof.md` |
 | 10 | Full-go execution | Partly | Builder change tested; no full-go rows in any plan Oct 21–22. |
-| 11 | Mixed signals + testing day | Partly | Zero testing days exist; TEST org lacks Organization plan (no bypass). |
+| 11 | Mixed signals + testing day | Partly | Testing day **Done** on phone (`docs/owner/testing-day-proof.md`). Mixed signals blocked: TEST player has no hitting video analysis in 21 days and no games; needs a real swing clip. Cleanup pending: cancel demoorg sub, remove membership + testing day. |
 | 12 | Nightly followed rec + re-test pair | Not started | Not entered this run; tonight's 04:30 run will have no positive pair. |
 
 **Full suite (Oct 21 18:25–18:32 UTC, 4 bounded batches): 482 files / 3,848 tests PASS** (110/630, 117/1100, 112/791, 143/1327; logs /tmp/b0–b3.log).
