@@ -23869,6 +23869,10 @@ export type Database = {
       wk_fielding_generic_fault: { Args: { p_group: string }; Returns: string }
       wk_fielding_position_group: { Args: { p_pos: string }; Returns: string }
       wk_fielding_root_pattern: { Args: { p_fault: string }; Returns: string }
+      wk_lock_plan_day: {
+        Args: { p_date: string; p_user: string }
+        Returns: undefined
+      }
       wk_mark_missed_lifts: { Args: never; Returns: Json }
       wk_persist_prescriptions_atomic: {
         Args: { p_date: string; p_diag: Json; p_rows: Json; p_user: string }

@@ -645,6 +645,13 @@
       "when": 1792599813577,
       "tag": "0091_plan_swap_explicit_client_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1792601275513,
+      "tag": "0092_shared_plan_day_transaction_lock",
+      "breakpoints": true
     }
   ]
 }
