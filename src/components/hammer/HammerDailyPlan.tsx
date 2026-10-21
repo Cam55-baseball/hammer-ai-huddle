@@ -141,7 +141,7 @@ import { readPitcherProfile, shouldShowPitchingCard } from "@/lib/hammer/pitchin
 import { CardDashboard } from "@/components/hammer/cards/CardDashboard";
 
 import { PlanStreakStrip } from "@/components/hammer/cards/PlanStreakStrip";
-import { prescribedToday, splitBaserunning, groupPhysicalBaserunning } from "@/components/hammer/cards/todayPresentation";
+import { prescribedToday, visiblePlanCard, splitBaserunning, groupPhysicalBaserunning } from "@/components/hammer/cards/todayPresentation";
 import { ExerciseDisclosure } from "@/components/hammer/cards/ExerciseDisclosure";
 import { ExerciseInstructions } from "@/components/hammer/cards/ExerciseInstructions";
 import { ActivityBasics } from "@/components/hammer/cards/ActivityBasics";
@@ -1064,7 +1064,7 @@ function HammerDailyPlanBody({
           const WK_OWNED = new Set(["speed", "bat_speed", "strength", "lift", "lifts", "conditioning", "cross_sport"]);
           const allOtherBlocks = plan.blocks.filter(
             (b) =>
-              prescribedToday(b) && b.modality !== "baserunning" && b.modality !== "warmup" &&
+              visiblePlanCard(b) && b.modality !== "baserunning" && b.modality !== "warmup" &&
               !WK_OWNED.has(b.modality) &&
               !PRE_START_MODALITIES.has(b.modality) && (b.modality !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES),
           );

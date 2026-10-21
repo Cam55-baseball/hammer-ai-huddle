@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { prescribedToday, splitBaserunning, groupPhysicalBaserunning } from "./todayPresentation";
+import { prescribedToday, visiblePlanCard, splitBaserunning, groupPhysicalBaserunning } from "./todayPresentation";
 import { rulesForCard } from "./CardRules";
 import type { PrescribedBlock } from "@/lib/hammer/prescription/dailyPlan";
 import { buildHammerDailyPlan } from "@/lib/hammer/prescription/dailyPlan";
@@ -14,6 +14,13 @@ const block = (status: PrescribedBlock["status"] = "ready") => ({
 } as PrescribedBlock);
 
 describe("Today presentation — no prescription bleed", () => {
+  it('keeps equipment confirmation visible without granting training or completion', () => {
+    const waiting = { ...block('awaiting-input'), drills: [] };
+    expect(visiblePlanCard(waiting)).toBe(true);
+    expect(prescribedToday(waiting)).toBe(false);
+    expect(visiblePlanCard(block('suppressed'))).toBe(false);
+    expect(visiblePlanCard(block('off-day'))).toBe(false);
+  });
   it("preserves actual eight-week builder prescriptions across sports, phases and eligibility", () => {
     for (const sport of ["baseball", "softball"]) {
       for (const phase of ["in", "off", "pre"]) {

@@ -4,6 +4,11 @@ export function prescribedToday(block: PrescribedBlock): boolean {
   return block.status === "ready" && block.drills.length > 0;
 }
 
+/** Input prompts are visible, but never counted as prescribed/completable work. */
+export function visiblePlanCard(block: PrescribedBlock): boolean {
+  return prescribedToday(block) || block.status === 'awaiting-input';
+}
+
 /** Partition existing drills without changing a single instruction, dose or task key. */
 export function splitBaserunning(blocks: readonly PrescribedBlock[]) {
   const mental: PrescribedBlock[] = [];
