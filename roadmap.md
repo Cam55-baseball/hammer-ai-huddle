@@ -1,3 +1,5 @@
+**Oct 21 19:10 UTC:** app built real Oct 23–24 plans for TEST player (Oct 22 already built). Oct 23 has open-field base route `bases_1st_3rd`; Swap with field missing → live 200, no safe choice (none in catalog). Still no machine/barbell/foam-roller rows. TEST pitcher builds refused: not started (needs Start tap). Stripe org plan, testing day, mixed signals, nightly pair not done this run.
+
 # Status — Oct 21 18:33 UTC (Done = mounted in the real app and proven on a phone)
 
 | # | Item | Status | Proof / blocker |
