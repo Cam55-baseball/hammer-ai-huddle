@@ -16,6 +16,8 @@ export interface SignalClip {
 }
 
 export interface GameSignalSummary {
+  readonly atBats?: number;
+  readonly pitchesSeen?: number;
   readonly whiffPct: number | null;
   readonly chasePct: number | null;
   readonly miscueClusters: ReadonlyArray<{ position: string; errors: number }>;
@@ -76,7 +78,12 @@ export function categorySignalEvidence(
   // Game signals: existing thresholds only, and only with a real sample.
   if (games) {
     const validPercent = (value: number | null) => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100;
-    if (validPercent(games.whiffPct) || validPercent(games.chasePct)) {
+    // Same existing minimum as game-plan influence: 6 ABs or 20 pitches.
+    // Missing/invalid counts cannot turn a stored 0% into clean evidence.
+    const count = (value: number | undefined) => typeof value === "number" && Number.isInteger(value) && value >= 0;
+    const enoughSample = (count(games.atBats) && (games.atBats ?? 0) >= 6) ||
+      (count(games.pitchesSeen) && (games.pitchesSeen ?? 0) >= 20);
+    if (enoughSample && (validPercent(games.whiffPct) || validPercent(games.chasePct))) {
       const whiffBad = validPercent(games.whiffPct) && (games.whiffPct ?? 0) > GAME_WHIFF_NEEDS_WORK;
       const chaseBad = validPercent(games.chasePct) && (games.chasePct ?? 0) > GAME_CHASE_NEEDS_WORK;
       if (whiffBad || chaseBad) {
