@@ -23296,6 +23296,10 @@ export type Database = {
         Args: { p_coach_id: string; p_folder_id: string }
         Returns: boolean
       }
+      folder_owned_by_current_user: {
+        Args: { p_folder_id: string }
+        Returns: boolean
+      }
       followed_player_consent_status: {
         Args: { _player_id: string }
         Returns: string
@@ -23326,6 +23330,17 @@ export type Database = {
       }
       get_exercise_live_text: { Args: { _slug: string }; Returns: Json }
       get_exercise_video: { Args: { _slug: string }; Returns: string }
+      get_my_plan_clip_evidence: {
+        Args: { p_sport: string }
+        Returns: {
+          created_at: string
+          id: string
+          module: string
+          sport: string
+          user_id: string
+          violations: Json
+        }[]
+      }
       get_my_report_card_trend: {
         Args: { p_limit?: number; p_module: string }
         Returns: {
@@ -23483,6 +23498,7 @@ export type Database = {
       }
       is_minor: { Args: { _user_id: string }; Returns: boolean }
       is_my_account_paused: { Args: never; Returns: boolean }
+      is_my_account_under_13: { Args: never; Returns: boolean }
       is_org_admin: { Args: { _org: string; _user: string }; Returns: boolean }
       is_org_coach_or_owner: {
         Args: { _org_id: string; _user_id: string }
@@ -23840,6 +23856,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      swap_v2_enabled: { Args: never; Returns: boolean }
       tag_at_bat_video: {
         Args: { _ab: string; _seconds: number; _video: string }
         Returns: undefined

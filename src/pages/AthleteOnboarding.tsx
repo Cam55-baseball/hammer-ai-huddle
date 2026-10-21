@@ -2,6 +2,7 @@ import { useMemo, useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
+import { useSwapV2 } from "@/hooks/useSwapV2";
 import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
 import { useAthleteEvents } from "@/hooks/useAthleteEvents";
 import { supabase } from "@/integrations/supabase/client";
@@ -103,6 +104,7 @@ export default function AthleteOnboarding() {
   const { hasScheduleEvent, hasCompletedOnboarding, loading: stateLoading } = useAthleteOnboardingState();
   const { createEvent } = useAthleteEvents();
   const answerStatus = useOnboardingAnswerStatus();
+  const swapV2 = useSwapV2();
 
   /** Answer-derived chip status per step index (navigation-only steps are neutral). */
   const stepStatus = useMemo(() => {
@@ -113,7 +115,7 @@ export default function AthleteOnboarding() {
       [STEP_DONE]: "neutral",
       [STEP_PROFILE]: answerStatus.byKey.profile,
       [STEP_ANTHRO]: answerStatus.byKey.anthropometrics,
-      [STEP_EQUIPMENT]: "neutral",
+      [STEP_EQUIPMENT]: swapV2.enabled ? "neutral" : answerStatus.byKey.equipment,
       [STEP_GOALS]: answerStatus.byKey.goals,
       [STEP_FUEL]: answerStatus.byKey.fuel,
       [STEP_MENTAL]: answerStatus.byKey.mental,
@@ -123,7 +125,7 @@ export default function AthleteOnboarding() {
       [STEP_NOTIFICATIONS]: answerStatus.byKey.notifications,
     };
     return m;
-  }, [answerStatus.byKey]);
+  }, [answerStatus.byKey, swapV2.enabled]);
 
   const [step, setStep] = useState(0);
   /** When set, the next save returns to STEP_REVIEW instead of advancing linearly. */
@@ -232,8 +234,8 @@ export default function AthleteOnboarding() {
 
   // A resumed draft never lands on the retired up-front equipment step.
   useEffect(() => {
-    if (step === STEP_EQUIPMENT && editReturnTo === null) setStep(STEP_INJURY);
-  }, [step, editReturnTo]);
+    if (swapV2.enabled && step === STEP_EQUIPMENT && editReturnTo === null) setStep(STEP_INJURY);
+  }, [step, editReturnTo, swapV2.enabled]);
 
   // Continuously persist step + dayType so refresh/close never loses progress.
   useEffect(() => {
@@ -284,7 +286,7 @@ export default function AthleteOnboarding() {
       return;
     }
     // Owner Oct 21: no up-front equipment question; Swap asks on the card.
-    setStep((s) => { const n = Math.min(s + 1, STEPS.length - 1); return n === STEP_EQUIPMENT ? STEP_EQUIPMENT + 1 : n; });
+    setStep((s) => { const n = Math.min(s + 1, STEPS.length - 1); return swapV2.enabled && n === STEP_EQUIPMENT ? STEP_EQUIPMENT + 1 : n; });
   };
   const goBack = () => {
     if (editReturnTo !== null) {
@@ -294,7 +296,7 @@ export default function AthleteOnboarding() {
       setStep(target);
       return;
     }
-    setStep((s) => { const n = Math.max(s - 1, 0); return n === STEP_EQUIPMENT ? STEP_EQUIPMENT - 1 : n; });
+    setStep((s) => { const n = Math.max(s - 1, 0); return swapV2.enabled && n === STEP_EQUIPMENT ? STEP_EQUIPMENT - 1 : n; });
   };
 
   /** Review → Edit jump. Adds a return marker so save bounces back here. */

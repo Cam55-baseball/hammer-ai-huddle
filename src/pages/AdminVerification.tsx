@@ -24,11 +24,16 @@ export default function AdminVerification() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('verified_stat_profiles')
-        .select('*, profiles:user_id(full_name, date_of_birth, position, team_affiliation, state, experience_level)')
+        .select('*')
         .eq('admin_verified', false)
         .order('created_at', { ascending: true });
       if (error) throw error;
-      return data ?? [];
+      if (!data?.length) return [];
+      const { data: profiles, error: profileError } = await supabase.from('profiles')
+        .select('id, full_name, date_of_birth, team_affiliation, state, experience_level')
+        .in('id', data.map(row => row.user_id));
+      if (profileError) throw profileError;
+      return data.map(row => ({ ...row, profiles: profiles?.find(profile => profile.id === row.user_id) ?? null }));
     },
   });
 
@@ -37,11 +42,15 @@ export default function AdminVerification() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('verified_stat_profiles')
-        .select('*, profiles:user_id(full_name)')
+        .select('*')
         .eq('admin_verified', true)
         .order('verified_at', { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      if (!data?.length) return [];
+      const { data: profiles, error: profileError } = await supabase.from('profiles')
+        .select('id, full_name').in('id', data.map(row => row.user_id));
+      if (profileError) throw profileError;
+      return data.map(row => ({ ...row, profiles: profiles?.find(profile => profile.id === row.user_id) ?? null }));
     },
   });
 

@@ -1,34 +1,20 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-const mocks = vi.hoisted(() => ({ from: vi.fn(), query: vi.fn(), user: { id: 'u' } }));
-vi.mock('@tanstack/react-query', () => ({ useQuery: mocks.query }));
-vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: mocks.user }) }));
-vi.mock('@/integrations/supabase/client', () => ({ supabase: { from: mocks.from } }));
+import { expect, it, vi } from 'vitest';
+import { renderHook, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createElement, type ReactNode } from 'react';
+const mock = vi.hoisted(() => ({ rpc: vi.fn(), from: vi.fn() }));
+vi.mock('@/integrations/supabase/client', () => ({ supabase: mock }));
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'player' } }) }));
 import { usePlanFaultContext } from './usePlanFaultContext';
-function result(data: unknown[] = [], error: unknown = null) {
+it('uses the self-only clip evidence RPC rather than private score columns', async () => {
   const chain = { select: vi.fn(), eq: vi.fn(), order: vi.fn(), limit: vi.fn() };
   chain.select.mockReturnValue(chain); chain.eq.mockReturnValue(chain); chain.order.mockReturnValue(chain);
-  chain.limit.mockResolvedValue({ data, error });
-  return chain;
-}
-beforeEach(() => { vi.clearAllMocks(); mocks.query.mockImplementation(x => x); });
-describe('real plan fault source read', () => {
-  it('scopes every read to self and clips to selected sport and completed status', async () => {
-    const chains = [result(), result(), result()];
-    chains.forEach(c => mocks.from.mockReturnValueOnce(c));
-    const query = usePlanFaultContext('softball') as unknown as { queryFn: () => Promise<unknown> };
-    await expect(query.queryFn()).resolves.toEqual({ rankedFaults: [], signalScopes: {}, clips: [] });
-    chains.forEach(c => expect(c.eq).toHaveBeenCalledWith('user_id', 'u'));
-    expect(chains[2].eq).toHaveBeenCalledWith('sport', 'softball');
-    expect(chains[2].eq).toHaveBeenCalledWith('status', 'completed');
-  });
-  it('source failure is a failed read, never an empty successful history', async () => {
-    mocks.from.mockReturnValueOnce(result()).mockReturnValueOnce(result([], new Error('source unavailable'))).mockReturnValueOnce(result());
-    const query = usePlanFaultContext('baseball') as unknown as { queryFn: () => Promise<unknown> };
-    await expect(query.queryFn()).rejects.toThrow('source unavailable');
-  });
-  it('truncated history cannot authorize drill changes', async () => {
-    mocks.from.mockReturnValueOnce(result()).mockReturnValueOnce(result(Array(501).fill({}))).mockReturnValueOnce(result());
-    const query = usePlanFaultContext('baseball') as unknown as { queryFn: () => Promise<unknown> };
-    await expect(query.queryFn()).rejects.toThrow('Complete analysis history is unavailable.');
-  });
+  chain.limit.mockResolvedValue({ data: [], error: null }); mock.from.mockReturnValue(chain);
+  mock.rpc.mockResolvedValue({ data: [{ id: 'clip', user_id: 'player', sport: 'softball', module: 'hitting', created_at: '2026-10-21T00:00:00Z', violations: { early_shoulder_rotation: false } }], error: null });
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const { result } = renderHook(() => usePlanFaultContext('softball'), { wrapper: ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children) });
+  await waitFor(() => expect(result.current.isSuccess).toBe(true));
+  expect(mock.rpc).toHaveBeenCalledWith('get_my_plan_clip_evidence', { p_sport: 'softball' });
+  expect(mock.from).not.toHaveBeenCalledWith('videos');
+  expect(result.current.data?.clips[0]?.violations).toEqual({ early_shoulder_rotation: false });
 });

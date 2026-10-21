@@ -76,7 +76,7 @@ export function useReadinessState(): ReadinessResult {
           .maybeSingle(),
         (supabase as any)
           .from('vault_focus_quizzes')
-          .select('focus_score, created_at')
+          .select('created_at')
           .eq('user_id', user.id)
           .gte('created_at', since)
           .order('created_at', { ascending: false })
@@ -119,17 +119,8 @@ export function useReadinessState(): ReadinessResult {
           capturedAt: physioRes.data.created_at,
         });
       }
-      if (
-        focusRes.data?.focus_score != null &&
-        isFresh(focusRes.data.created_at, FOCUS_MAX_AGE_MS)
-      ) {
-        sources.push({
-          name: 'Focus Quiz',
-          score: Number(focusRes.data.focus_score),
-          weight: 0.15,
-          capturedAt: focusRes.data.created_at,
-        });
-      }
+      // The quiz stores individual answers, not a verified composite focus score.
+      // Never synthesize one from another field or invent a missing measurement.
 
       // Confidence is computed from RAW (pre-renormalized) weights so a single
       // low-weight source doesn't artificially look "100% confident".
@@ -172,7 +163,7 @@ export function useReadinessState(): ReadinessResult {
   const hasSignal = score !== null && confidence >= 0.3;
 
   return {
-    state: hasSignal ? stateFor(score!) : 'unknown',
+    state: hasSignal && score !== null ? stateFor(score) : 'unknown',
     score: hasSignal ? score : null,
     sources,
     confidence,

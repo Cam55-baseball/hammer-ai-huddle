@@ -180,7 +180,7 @@ export default function AdminTrainingIntelligence() {
       supabase
         .from("wk_movement_catalog")
         .select(
-          "id, slug, name, bucket, sub_bucket, ub_tier, family, athlete_cue, coach_cue, min_age_years, min_training_age_years, season_eligibility, equipment_requirements, regression_slug",
+          "id, slug, name, bucket, sub_bucket, ub_tier, family, athlete_cue:cue, coach_cue, min_age_years, min_training_age_years, season_eligibility, equipment_requirements, regression_slug",
         )
         .eq("is_active", false)
         .order("bucket")

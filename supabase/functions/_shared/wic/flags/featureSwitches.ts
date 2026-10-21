@@ -34,6 +34,7 @@ export const FEATURE_KEYS = [
   "hammers_today_start_gate",
   // Missing/off row means no new unapproved prompt cadence is active.
   "plan_prompts_v2",
+  "swap_v2",
   "power_primer",
   "pap_real_throws",
   "windmill_program",

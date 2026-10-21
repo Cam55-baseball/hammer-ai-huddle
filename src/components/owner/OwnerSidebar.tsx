@@ -226,7 +226,7 @@ export const OwnerSidebar = ({
     const isPinned = pinned.includes(item.id);
 
     return (
-      <div key={`${opts.pinned ? "pin-" : ""}${item.id}`} className="group/item relative">
+      <div key={`${opts.pinned ? "pin-" : ""}${item.href ?? item.id}`} className="group/item relative">
         <button
           onClick={() => handleSectionClick(item.id, item.href)}
           className={cn(

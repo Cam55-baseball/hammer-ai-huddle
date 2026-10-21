@@ -7,7 +7,7 @@ import { useMindFuelDailyTasks, DailyTask, TaskId } from '@/hooks/useMindFuelDai
 import { useMindFuelEducationProgress, EducationType, EducationItem } from '@/hooks/useMindFuelEducationProgress';
 import { cn } from '@/lib/utils';
 import { WellnessModule } from './wellness-hub/WellnessHubNav';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface MindFuelDailyChecklistProps {
   onModuleChange: (module: WellnessModule) => void;
@@ -42,7 +42,7 @@ export default function MindFuelDailyChecklist({
   const [orderedTasks, setOrderedTasks] = useState<DailyTask[]>([]);
   const [orderedEducation, setOrderedEducation] = useState<EducationItem[]>([]);
 
-  const educationItems = getEducationItems();
+  const educationItems = useMemo(() => getEducationItems(), [getEducationItems]);
   const { completed: eduCompleted, total: eduTotal, allComplete: eduAllComplete } = totalEducationProgress();
 
   // Sync ordered tasks with fetched tasks and restore saved order

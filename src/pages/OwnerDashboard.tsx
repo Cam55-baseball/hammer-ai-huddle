@@ -250,7 +250,7 @@ const OwnerDashboard = () => {
         supabase.from("subscriptions").select("*").neq("user_id", TEST_ADMIN_PROOF_ID),
         supabase
           .from("user_roles")
-          .select("user_id, role, status, created_at, profiles(full_name)")
+          .select("user_id, role, status, created_at")
           .eq("role", "admin")
           .neq("user_id", TEST_ADMIN_PROOF_ID)
           .eq("status", "pending")
@@ -274,7 +274,7 @@ const OwnerDashboard = () => {
           role: req.role,
           status: req.status,
           created_at: req.created_at,
-          full_name: req.profiles?.full_name || 'Unknown User'
+          full_name: usersResponse.data?.find(profile => profile.id === req.user_id)?.full_name || 'Unknown User'
         }));
         setAdminRequests(requests);
       }

@@ -41,6 +41,7 @@ import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_s
 // the documented mapping, so the ceiling always compares like with like.
 import { resolveIntensityClass } from "../_shared/wic/catalog/safetyAudit.ts";
 import { resolveFeatures, isSwitchOnFor } from "../_shared/wic/flags/featureSwitches.ts";
+import { swapV2Allowed } from "../_shared/swapV2Access.ts";
 import { cancelledDates, dayEffect, type TimelineEntry } from "../_shared/wic/schedule/timeline.ts";
 // Step 18 — offseason arc (§7) and in-season post-game plan (§9). Both gated.
 import {
@@ -1190,12 +1191,18 @@ const handler = async (req: Request): Promise<Response> => {
     // option without it. Read failure → catalog unchanged.
     let alwaysMissing = new Set<string>();
     try {
+      const [{ data: swapRow }, { data: swapRoles }] = await Promise.all([
+        admin.from("wk_feature_switches").select("feature_key, mode, allowlist, updated_by").eq("feature_key", "swap_v2").maybeSingle(),
+        admin.from("user_roles").select("role").eq("user_id", user.id).eq("status", "active").in("role", ["owner", "admin"]),
+      ]);
+      if (swapV2Allowed(swapRow, user.id, (swapRoles ?? []).length > 0)) {
       const { data: memRows } = await admin.from("athlete_equipment_memory")
         .select("confirmed_have, confirmed_lacks, created_at").eq("user_id", user.id).eq("scope", "always")
         .order("created_at", { ascending: true }).limit(200);
       for (const r of (memRows ?? []) as any[]) {
         for (const g of r.confirmed_lacks ?? []) alwaysMissing.add(String(g).toLowerCase());
         for (const g of r.confirmed_have ?? []) alwaysMissing.delete(String(g).toLowerCase());
+      }
       }
     } catch { alwaysMissing = new Set(); }
     const needsMissing = (m: any) => [...(m.equipment_requirements ?? []), ...(m.equipment ?? [])]

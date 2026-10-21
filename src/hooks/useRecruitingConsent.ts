@@ -94,7 +94,9 @@ export function useRecruitingConsent(athleteId: string | undefined) {
         fetchIsMinor(athleteId),
         fetchResolvedVisibility(athleteId),
       ]);
-      const { data: u13 } = await supabase.rpc("is_under_13" as any, { _user_id: athleteId });
+      const { data: u13 } = athleteId === user?.id
+        ? await supabase.rpc("is_my_account_under_13")
+        : { data: true }; // Unknown cross-user age remains protection-first.
 
       // RLS may legitimately deny non-self viewers when visibility is off —
       // that is the fail-closed signal. Translate to a closed state.
