@@ -10,10 +10,10 @@
 - Today analysis uses selected-sport planAnalysisAccess and re-ranks partial groups from canonical clips; top-three, 21-day decay, exact faults, equipment and circulation; swaps one slot, never owner/card/dose/duration. Fielding uses catalog metadata. Why: no inherited forbidden evidence or second generator.
 - Coach/scout roles suppress unsolicited module advertising even on dual-role accounts, but purchase pages and subscribed module navigation remain accessible on deliberate visits under the storefront gate. Why: staff buy without being sold to.
 - Landing opening: full sequence on first install, skippable short one on later launches; final wipe waits for the landing page. Why: owner's launch identity without an unloaded page.
-- Verify as the affected role, never only owner/admin. Why: owners skip gates.
+- Verify as the affected role, not only owner/admin. Why: owners skip gates.
 - Never prescribe or recommend an athlete action that the affected athlete cannot open; keep unreleased Game IQ suppressed at one presentation switch until its routes open to athletes. Why: inaccessible prescriptions look broken.
 - Use 14-year-old wording; translate plan reasons at display and label every athlete-facing value by kind. Why: no guessing or bare values.
-- Demo auto-start outcomes and inspector state/events go to console.debug only, never app UI. Why: diagnostics are not for users.
+- Demo auto-start outcomes and inspector state/events: console.debug only, never app UI. Why: diagnostics aren't for users.
 - With `hammers_today_start_gate` on, `wk-generate-daily` requires `profiles.hammers_today_started_at`; client mounts no plan provider before start. `wk-daily-plan-job` builds only missing plans for started players. Why: one start per account across devices.
 - Sessions end only by explicit Sign out (`signOut({ scope: 'local' })`) or server end; `/` and `/auth` forward signed-in players after session load; native auth key mirrored to `@capacitor/preferences` (`src/lib/auth/nativeSessionStore.ts`), restored in `main.tsx`. Why: iOS may clear WebView storage.
 - Anonymous training store: bucketed, week-rounded, no free text, Vault-HMAC key; under-13 needs parent opt-in. Why: lawyer-approved scope.
@@ -28,7 +28,7 @@
 - Weekly goals use microcycle blocks, not minutes/lifting. Read subdirectory AGENTS.md. Why: baseline and safety win.
 
 - Game IQ uses `useGameIqAccess` and its shared switch; owner/admin see internal labels. It skips training gates, never subscriptions. Why: navigation and access agree.
-- plan-swap interprets gear, never saves without certification; see prescription AGENTS.md. Why: AI has no training authority.
-- Coach summaries use gated reads; see coach AGENTS.md. Why: no wider access.
+- Swap shares `_shared/planSwap` dose/context and pins row/catalog around AI; no uncertified saves. See prescription AGENTS.md. Why: stale safety.
+- Coach summaries: gated reads; see coach AGENTS.md. Why: no wider access.
 - TEST admin exclusion uses one exact shared ID, never all system accounts. Why: demo connections stay usable.
 
