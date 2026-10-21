@@ -1,6 +1,6 @@
 # Oct 21 — Named live implementation authorization
 
-**AV3 verified sub-steps:** corrected the live coach reader to select only the player's canonical sport; democoach phone sign-in confirmed softball windmill work and denied unconnected/revoked reads. Applied named Swap memory/log storage with self-only read policies and verified no anonymous access or client writes. Universal certification and positive Swap proofs remain unfinished. No publish, cron or iOS changes. `docs/owner/av3-proof.md`
+**AV4 in progress:** continue named-authorized real Swap certification and remaining actual phone acceptance flows in parallel. No publish, cron or iOS changes. AV3 verified sport/access/storage evidence retained in `docs/owner/av3-proof.md`.
 
 **Ready to publish: no.** AT5 coaching migration applied; coach summary mounted in the real app. No publish, cron or iOS changes. All remaining named work is authorized; authorization is not a blocker.
 
