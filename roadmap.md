@@ -1,3 +1,11 @@
+# AU3 — Approved open-item continuation — Oct 21
+
+**Ready to publish: no.** No publish, cron or iOS changes.
+
+- [ ] Advance the largest safe remaining Swap/player implementation steps; preserve exact category, intent, dose and safety gates.
+- [ ] Prove changed flows and rules with affected-player phone checks and tests; clean exact TEST data.
+- [ ] Refresh all open-item statuses, actual nightly result and remaining authorization/proof boundaries.
+
 # AU2 — Approved open-item continuation — Oct 21
 
 **Ready to publish: no.** No publish, cron or iOS changes. No unrelated access migration authorized.
