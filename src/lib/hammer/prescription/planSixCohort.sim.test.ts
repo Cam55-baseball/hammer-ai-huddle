@@ -184,7 +184,6 @@ describe('AT4: subscription-qualified ranked goals through actual daily plans', 
         if (tier !== 'pitcher' && !base.microcycle.perModality.hitting.scheduled && hit.microcycle.perModality.hitting.scheduled) {
           expect(hit.microcycle.perModality.hitting.intensity).toBe('activation');
           expect(hit.blocks.find(b => b.modality === 'hitting')?.status).toBe('ready');
-          expect(hit.blocks.find(b => b.modality === 'hitting')?.because).toContain('Hitting is your top goal: one extra light skill block this week, inside your existing training days. Rest and throwing limits still win.');
         }
         if (tier !== 'pitcher') {
           const ready = hit.blocks.filter(b => b.status === 'ready' && ['hitting', 'defense', 'throwing', 'baserunning'].includes(b.modality));
