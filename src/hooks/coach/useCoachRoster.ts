@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { TEST_ADMIN_PROOF_ID } from "@/lib/testAdminExclusion";
 
 export type RosterSource = "mpi" | "organization" | "scout_follow";
 
@@ -32,7 +33,7 @@ export function useCoachRoster() {
       const map = new Map<string, RosterAthlete>();
 
       const addAthlete = (id: string, source: RosterSource) => {
-        if (!id || id === coachId) return;
+        if (!id || id === coachId || id === TEST_ADMIN_PROOF_ID) return;
         const existing = map.get(id);
         if (existing) {
           if (!existing.sources.includes(source)) existing.sources.push(source);

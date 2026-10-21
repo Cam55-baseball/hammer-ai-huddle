@@ -1,6 +1,6 @@
 # Oct 21 — Named live implementation authorization
 
-**AV1 (15:40 UTC):** applied exact TEST ADMIN list/statistics exclusions, declared both-sport conditioning routes and deployed their generator wiring. Internal Report Card now mounts for staff without invented training history; real TEST ADMIN phone proof passed. Universal Swap and remaining positive athlete acceptance are still open. No publish, cron or iOS changes.
+**AV2 in progress:** continue the named authorization with real atomic Swap storage and mounted phone flows; finish remaining conditioning and coach acceptance where eligible. AV1 exclusions, routes and internal administrator views remain proved. No publish, cron or iOS changes.
 
 **Ready to publish: no.** AT5 coaching migration applied; coach summary mounted in the real app. No publish, cron or iOS changes. All remaining named work is authorized; authorization is not a blocker.
 
