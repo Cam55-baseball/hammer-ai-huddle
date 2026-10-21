@@ -3,6 +3,7 @@ import { HumanPerformanceCard } from '@/components/hpi/HumanPerformanceCard';
 import { PlayerSnapshotCard } from '@/components/hie/PlayerSnapshotCard';
 import { WeaknessClusterCard } from '@/components/hie/WeaknessClusterCard';
 import { UhrcAthleteSection } from '@/components/report-card/UhrcAthleteSection';
+import { ReportCardAccessGate } from '@/components/report-card/hammer/ReportCardAccessGate';
 import { ReadinessCard } from '@/components/hie/ReadinessCard';
 import { ReadinessBreakdownCard } from '@/components/hie/ReadinessBreakdownCard';
 import { SmartWeekPlan } from '@/components/hie/SmartWeekPlan';
@@ -222,8 +223,11 @@ Confidence: ${snapshot.development_confidence}%
               <CollapsibleTrigger className="flex w-full items-center justify-between border-b py-4 text-left font-semibold">Standards Board<ChevronDown className="h-4 w-4" /></CollapsibleTrigger>
               <CollapsibleContent className="pt-3"><StandardsBoard /></CollapsibleContent>
             </Collapsible>
-            <Advanced hasAdvancedAccess={hasAdvancedAccess}>
+            <ReportCardAccessGate>
+              <InternalLabel />
               <UhrcAthleteSection />
+            </ReportCardAccessGate>
+            <Advanced hasAdvancedAccess={hasAdvancedAccess}>
               <PlayerSnapshotCard />
               <ProProbabilityCard />
             </Advanced>

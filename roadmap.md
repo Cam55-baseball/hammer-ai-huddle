@@ -1,5 +1,7 @@
 # Oct 21 — Named live implementation authorization
 
+**AV1 in progress (15:10 UTC):** continue named live work in parallel: exact TEST ADMIN exclusions, universal Swap certification, and declared softball conditioning routes. No publish, cron or iOS changes; phone acceptance remains mandatory.
+
 **Ready to publish: no.** AT5 coaching migration applied; coach summary mounted in the real app. No publish, cron or iOS changes. All remaining named work is authorized; authorization is not a blocker.
 
 | Approved item | Status | Proof path / remaining acceptance |

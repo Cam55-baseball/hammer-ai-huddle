@@ -1,0 +1,2 @@
+ALTER TABLE public.wk_movement_catalog ADD COLUMN IF NOT EXISTS base_route jsonb;
+COMMENT ON COLUMN public.wk_movement_catalog.base_route IS 'Explicit catalog route: sport, bases_per_rep, base_distance_feet. No route inferred from names or pitcher-distance sprints.';

@@ -102,12 +102,14 @@ const NO_SCHEDULE_LINE = "Add your pitching days so this can line up with your o
 
 export function selectConditioning(input: ConditioningSelectionInput): ConditioningSelection {
   const pos = aerobicPositionDrill(positionDrillSlug(input.position));
+  const sportPosition = input.sport === "softball" && pos === "bases_1st_3rd" ? "bases_double_sb" : pos;
   const base = (path: ConditioningPath, templateId: ConditioningTemplateId, slugs: string[], why: string, fallback = false): ConditioningSelection => {
     const dial = input.dialDownReasons.length > 0 && slugs.some((x) => ALACTIC.has(x));
     return {
       path, templateId,
       // Dialing down swaps the hard sprint for an easy flush — same count.
-      slugs: dial ? slugs.map((x) => (ALACTIC.has(x) ? DIAL_DOWN_SWAP : x)).filter((x, i, a) => a.indexOf(x) === i) : slugs,
+      slugs: (dial ? slugs.map((x) => (ALACTIC.has(x) ? DIAL_DOWN_SWAP : x)).filter((x, i, a) => a.indexOf(x) === i) : slugs)
+        .map(x => x === pos ? sportPosition : x),
       why: [why, dial && slugs.some((x) => ALACTIC.has(x)) ? dialLine(input.dialDownReasons) : null].filter(Boolean).join(" "),
       fallback, dialedDown: dial,
     };
@@ -151,7 +153,7 @@ export function selectConditioning(input: ConditioningSelectionInput): Condition
   }
   switch (input.phase) {
     case "offseason":
-      return base("offseason", "cond.repeated_sprint", [repeatSprint(input.sport), "bases_home_2nd"],
+      return base("offseason", "cond.repeated_sprint", [repeatSprint(input.sport), sb ? "bases_double_sb" : "bases_home_2nd"],
         "Off-season: build your engine with hard sprints and full rest between them.");
     case "preseason":
       return base("preseason", "cond.practice_day", [inningRestart(input.sport), pos],

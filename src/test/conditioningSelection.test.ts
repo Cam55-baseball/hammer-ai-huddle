@@ -20,7 +20,7 @@ const sel = (o: Partial<ConditioningSelectionInput>) => selectConditioning({ ...
 const CATALOG = new Set([
   "bases_1st_3rd", "bases_home_2nd", "catcher_up_downs", "mif_turn_and_fire", "of_read_and_go",
   "pitcher_field_and_cover", "if_lateral_repeat", "inning_restart_sim_bb", "inning_restart_sim_sb",
-  "repeat_43ft_sb", "repeat_90ft_bb", "rc_easy_flush", "rc_long_reach_walk", "rc_travel_reset", "rc_breathing_reset",
+  "repeat_43ft_sb", "repeat_90ft_bb", "bases_double_sb", "rc_easy_flush", "rc_long_reach_walk", "rc_travel_reset", "rc_breathing_reset",
   "pc_ankle_pogos_bb", "pc_buildup_strides_bb", "pc_pretension_hold_bb", "rp_ready_series_bb",
   "sp_drive_bounds_sb", "sp_stride_stick_sb", "sp_arm_circle_rhythm_sb", "rp_ready_series_sb",
 ]);
@@ -35,6 +35,8 @@ describe("conditioning selection paths", () => {
   it("softball uses softball distances", () => {
     expect(sel({ sport: "softball" }).slugs[0]).toBe("repeat_43ft_sb");
     expect(sel({ sport: "softball", phase: "preseason" }).slugs[0]).toBe("inning_restart_sim_sb");
+    expect(sel({ sport: "softball" }).slugs[1]).toBe("bases_double_sb");
+    expect(sel({ sport: "softball", position: null, phase: "in_season" }).slugs[1]).toBe("bases_double_sb");
   });
   it("preseason: practice-day game-effort work", () => {
     const s = sel({ phase: "preseason" });

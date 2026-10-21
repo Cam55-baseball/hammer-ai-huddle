@@ -21034,6 +21034,7 @@ export type Database = {
         Row: {
           aliases: string[] | null
           arm_care_category: string | null
+          base_route: Json | null
           bat_compatible: boolean | null
           bat_speed_adaptation: string | null
           bat_speed_category: string | null
@@ -21141,6 +21142,7 @@ export type Database = {
         Insert: {
           aliases?: string[] | null
           arm_care_category?: string | null
+          base_route?: Json | null
           bat_compatible?: boolean | null
           bat_speed_adaptation?: string | null
           bat_speed_category?: string | null
@@ -21248,6 +21250,7 @@ export type Database = {
         Update: {
           aliases?: string[] | null
           arm_care_category?: string | null
+          base_route?: Json | null
           bat_compatible?: boolean | null
           bat_speed_adaptation?: string | null
           bat_speed_category?: string | null

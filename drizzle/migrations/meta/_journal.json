@@ -610,6 +610,20 @@
       "when": 1792593599922,
       "tag": "0086_at5_coach_training_access",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1792595539525,
+      "tag": "0087_conditioning_declared_base_routes",
+      "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1792595650612,
+      "tag": "0088_exact_test_admin_list_stat_exclusion",
+      "breakpoints": true
     }
   ]
 }

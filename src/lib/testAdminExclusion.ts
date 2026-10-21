@@ -1,0 +1,1 @@
+export { TEST_ADMIN_PROOF_ID, excludeTestAdmin } from "../../supabase/functions/_shared/testAdminExclusion";

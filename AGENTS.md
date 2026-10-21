@@ -15,7 +15,7 @@
 - Athlete wording must make sense to a 14-year-old; translate plan reasons at the display edge. Why: no guessing.
 - Label every athlete-facing value by kind. Why: bare values confuse athletes.
 - Demo auto-start outcomes and inspector state/events go to console.debug only, never app UI. Why: diagnostics are not for users.
-- No plan is built for an account without `profiles.hammers_today_started_at` while switch `hammers_today_start_gate` is on — enforced in `wk-generate-daily`, and the client mounts no plan provider before the start. `wk-daily-plan-job` builds only missing plans for started players. Why: one start per account, the same on every device.
+- With `hammers_today_start_gate` on, `wk-generate-daily` requires `profiles.hammers_today_started_at`; client mounts no plan provider before start. `wk-daily-plan-job` builds only missing plans for started players. Why: one start per account across devices.
 - Sessions end only by explicit Sign out (`signOut({ scope: 'local' })`) or server end; `/` and `/auth` forward signed-in players after session load; native auth key mirrored to `@capacitor/preferences` (`src/lib/auth/nativeSessionStore.ts`), restored in `main.tsx`. Why: iOS may clear WebView storage.
 - Anonymous training store: bucketed, week-rounded, no free text, Vault-HMAC key; under-13 needs parent opt-in. Why: lawyer-approved scope.
 - The plan screen shows the device's last saved plan, start flag and access at once, but acts only after this visit's server answer; device copies clear on Sign out. Why: a reload must never flash, rebuild or change the plan.
@@ -31,4 +31,5 @@
 - Game IQ uses `useGameIqAccess` and its shared switch; owner/admin see internal labels. It skips training gates, never subscriptions. Why: navigation and access agree.
 - Swap needs intent/gear and atomic certification; see prescription AGENTS.md. Why: names cannot prescribe.
 - Coach summaries use gated reads; see coach AGENTS.md. Why: no wider access.
+- TEST admin exclusion uses one exact shared ID, never all system accounts. Why: demo connections stay usable.
 
