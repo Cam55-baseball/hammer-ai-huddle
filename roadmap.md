@@ -1,26 +1,26 @@
 # Oct 21 — Named live implementation authorization
 
-**AV2 in progress:** continue the named authorization with real atomic Swap storage and mounted phone flows; finish remaining conditioning and coach acceptance where eligible. AV1 exclusions, routes and internal administrator views remain proved. No publish, cron or iOS changes.
+**AV2 completed sub-steps:** exact TEST administrator exclusions added to coach roster/pool and deployed player search; real democoach phone searches retain demo athletes and omit the proof administrator. TEST softball completed explicit assessment skips and started its actual plan; current conditioning is recovery-only, not base-counter acceptance. Universal Swap remains unfinished. No publish, cron or iOS changes. `docs/owner/av2-proof.md`
 
 **Ready to publish: no.** AT5 coaching migration applied; coach summary mounted in the real app. No publish, cron or iOS changes. All remaining named work is authorized; authorization is not a blocker.
 
 | Approved item | Status | Proof path / remaining acceptance |
 |---|---|---|
 | Coach training gate + mounted six-week summary/practice ideas | Partly | AT5 applied; real democoach 390×844 summary reads two saved dates; unconnected/revoked reads denied and health lines remain gated. Requested 14-game hitter, pitcher, assigned-org/scout proofs and positive saved practice ideas remain. `docs/owner/oct21-live-implementation-proof.md` |
-| TEST ADMIN hidden lists/statistics + owner-screen proofs | Partly | Exact exclusions applied to six hosted RPCs, owner dashboard aggregates and owner search. Real TEST ADMIN 390×844 Coaching Console/questions, Vault queue, internal Game IQ and internal Report Card visible. Owner-only search correctly refuses admin; exhaustive every-list audit remains. `docs/owner/av1-proof.md` |
+| TEST ADMIN hidden lists/statistics + owner-screen proofs | Partly | Exact exclusions applied to six hosted RPCs, owner dashboard aggregates, owner search and coach roster/pool. Player search deployed and checked as democoach at 390×844; legitimate demos remain. Prior TEST ADMIN internal-screen proofs retained. Owner-only search correctly refuses admin; exhaustive every-list audit remains. `docs/owner/av1-proof.md`, `docs/owner/av2-proof.md` |
 | Universal plan-swap / AI / memory / log / every-card mount / question replacement | Partly | Existing foundation only; production transaction, AI connection and memory/log schema remain implementation work, fully authorized. Equipment questions retained until positive replacements work. `docs/owner/au5-atomic-swap-contract.md` |
 | Machine → partner flips saved phone swap + memory | Not started | No successful production universal swap. `docs/owner/oct21-live-implementation-proof.md` |
 | No barbell saved phone swap + memory | Not started | No successful production universal swap. `docs/owner/oct21-live-implementation-proof.md` |
 | No open field saved phone swap + memory | Not started | Safe equal-intent/distance confirmed-space metadata and production swap remain. `docs/owner/oct21-live-implementation-proof.md` |
 | No foam roller saved phone swap + memory | Not started | No successful production universal swap. `docs/owner/oct21-live-implementation-proof.md` |
-| Conditioning base-counter / softball declared 60-foot routes | Partly | Declared softball 60/120/180/240-foot routes saved/read back; sport-matching generator and selection deployed. Existing timer phone proof retained; actual-plan conditioning acceptance remains: baseball currently recovery day, softball has unfinished assessment. 43-foot repeat unchanged. `docs/owner/au1-proof.md`, `docs/owner/av1-proof.md` |
+| Conditioning base-counter / softball declared 60-foot routes | Partly | Declared softball 60/120/180/240-foot routes saved/read back; sport-matching generator and selection deployed. Existing timer phone proof retained. Softball assessment explicitly skipped through real UI and actual plan started; its current conditioning is recovery-only, with no base route. Baseball currently recovery day. Both-sport actual-plan base-counter acceptance remains. 43-foot repeat unchanged. `docs/owner/au1-proof.md`, `docs/owner/av2-proof.md` |
 | Full-go pitching / fielding / baserunning | Partly | Actual pitching builder now preserves source-owned full-go stage and existing dose; both-sport regressions pass. Actual-plan phone cases remain. `docs/owner/oct21-live-implementation-proof.md` |
 | Mixed signals + testing-day details | Partly | Canonical callers retained; app-entered hosted cases and phone notices/details remain. `docs/owner/au7-proof.md` |
 | Nightly positive recommendation/re-test pair | Not started | App-entered followed recommendation/comparable re-test not prepared; tomorrow's result not yet available. `docs/owner/oct21-live-implementation-proof.md` |
 
 **Nightly outcome:** last recorded Oct 21 04:30 callback HTTP 200, players/checked/pending 0/0/0 (empty, not positive). Next scheduled outcome is not claimed early. No cron changes or manual trigger.
 
-**Validation:** fresh full suite **475 files / 3,822 tests PASS**; final baseball route fallback then passed **36 tests** (one new test; final full suite not rerun). Server checks clean, latest preview `build OK` 15:40:20 UTC. Actual baseball saved-plan verification HTTP 200, verified true. TEST passwords scrambled, no proof measurements/history invented. `docs/owner/av1-proof.md`
+**Validation:** fresh full suite **477 files / 3,825 tests PASS**; player-search server check passed, authorized deployment succeeded and live coach phone searches read back. Latest preview `build OK` 15:50:51 UTC. Prior actual baseball saved-plan verification HTTP 200, verified true retained. TEST passwords scrambled; authorized softball assessment skips/start remain, no measurements/history invented. `docs/owner/av2-proof.md`
 
 - [x] Apply named AT5 migration and mount coach six-week summary in the actual coach page.
 - [x] Prove real coach saved-plan reads and immediate revocation; preserve health redaction.
@@ -29,9 +29,11 @@
 - [ ] Finish requested coach hitter/pitcher and assigned-org/scout proofs with actual eligible saved plans.
 - [x] Apply exact TEST ADMIN exclusions to six hosted lists/statistics RPCs, owner dashboard/search; finish actual internal Report Card phone proof.
 - [ ] Complete exhaustive every-list/statistics TEST ADMIN audit; preserve owner-only search authorization.
+- [x] Replace blanket player-search system filtering with exact TEST ADMIN exclusion; test coach roster/pool sources and prove real democoach phone searches preserve demos.
 - [ ] Implement atomic universal Swap/AI/memory/log, mount every card and coach-sent work, complete four saved/readback phone cases, then remove replaced questions.
 - [x] Save/readback declared softball base routes; deploy sport-matching route selection and generator counters.
-- [ ] Complete softball assessment through real UI, obtain eligible conditioning/execution days, prove both-sport conditioning and all three execution roles on actual plan routes.
+- [x] Resolve TEST softball assessment through six explicit UI skips and start its actual Today plan without inventing measurements.
+- [ ] Obtain eligible conditioning/execution days; prove both-sport base-counter conditioning and all three execution roles on actual plan routes.
 - [ ] Enter genuine TEST mixed-signal/testing-day/re-test cases through the app, prove notices/details, and report next scheduled nightly outcome after it happens.
 
 # AU8 — Last batch continuation — Oct 21 (historical)
