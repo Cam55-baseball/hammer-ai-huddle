@@ -28,7 +28,7 @@
 - Weekly goals use microcycle blocks, not minutes/lifting. Read subdirectory AGENTS.md. Why: baseline and safety win.
 
 - Game IQ uses `useGameIqAccess` and its shared switch; owner/admin see internal labels. It skips training gates, never subscriptions. Why: navigation and access agree.
-- Swap needs intent/gear and atomic certification; see prescription AGENTS.md. Why: names cannot prescribe.
+- plan-swap interprets gear, never saves without certification; see prescription AGENTS.md. Why: AI has no training authority.
 - Coach summaries use gated reads; see coach AGENTS.md. Why: no wider access.
 - TEST admin exclusion uses one exact shared ID, never all system accounts. Why: demo connections stay usable.
 

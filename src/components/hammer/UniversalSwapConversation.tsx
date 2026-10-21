@@ -7,6 +7,7 @@ import { equipmentLabel } from "@/lib/hammer/context/equipmentVocabulary";
 import { answerSwapConversation, startSwapConversation, type SwapConversation } from "@/lib/prescription/swapConversation";
 import { commitAtomicSwap, type AtomicSwapSnapshot, type AtomicSwapTransport } from "@/lib/prescription/atomicSwap";
 import { previewUniversalSwap, type UniversalSwapContext, type UniversalSwapMovement } from "@/lib/prescription/universalSwapCandidates";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Props {
   open: boolean;
@@ -17,6 +18,7 @@ interface Props {
   context: Omit<UniversalSwapContext, "availability">;
   /** Absence blocks all writes. Never substitute the existing direct-write alternative hook. */
   transport?: AtomicSwapTransport;
+  interpret?: (message: string) => Promise<{ have: string[]; lacks: string[] }>;
   onSaved: () => void;
 }
 
@@ -28,12 +30,15 @@ export function UniversalSwapConversation(props: Props) {
   return <SwapVisit key={visit} {...props} />;
 }
 
-function SwapVisit({ open, onOpenChange, expected, original, catalog, context, transport, onSaved }: Props) {
+function SwapVisit({ open, onOpenChange, expected, original, catalog, context, transport, interpret, onSaved }: Props) {
   const [draft, setDraft] = useState<SwapConversation>(() => startSwapConversation(expected.user_id, expected.id, expected.plan_date));
   const [selected, setSelected] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [uncertain, setUncertain] = useState(false);
+  const [message, setMessage] = useState("");
+  const [reading, setReading] = useState(false);
+  const [understood, setUnderstood] = useState<{ have: string[]; lacks: string[] } | null>(null);
   const active = useRef(true);
   const saving = useRef(false);
   const attempted = useRef(false);
@@ -41,9 +46,11 @@ function SwapVisit({ open, onOpenChange, expected, original, catalog, context, t
   useEffect(() => {
     openEpoch.current += 1;
     active.current = open;
+    setReading(false);
     if (!open && !attempted.current) {
       setDraft(startSwapConversation(expected.user_id, expected.id, expected.plan_date));
       setSelected([]); setError(null); setSavedReason(null);
+      setMessage(""); setUnderstood(null);
     }
     return () => { active.current = false; };
   }, [open]);
@@ -58,14 +65,27 @@ function SwapVisit({ open, onOpenChange, expected, original, catalog, context, t
     try {
       if (draft.step !== "missing" && draft.step !== "available") return;
       setDraft(answerSwapConversation(draft, { step: draft.step, items: selected }));
-      setSelected([]); setError(null);
+      setSelected(draft.step === "missing" ? understood?.have ?? [] : []); setError(null);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Check your answer."); }
   };
+  const readAnswer = async () => {
+    if (!interpret || reading || !message.trim()) return;
+    const epoch = openEpoch.current;
+    setReading(true); setError(null);
+    try {
+      const answer = await interpret(message);
+      if (!active.current || openEpoch.current !== epoch) return;
+      setUnderstood(answer); setSelected(answer.lacks);
+    } catch (cause) {
+      if (active.current && openEpoch.current === epoch) setError(cause instanceof Error ? cause.message : "I couldn't read that answer. Choose the listed items.");
+    } finally { if (active.current && openEpoch.current === epoch) setReading(false); }
+  };
   const close = (next: boolean) => {
-    if (pending) return;
+    if (pending || reading) return;
     if (!next) {
       setDraft(startSwapConversation(expected.user_id, expected.id, expected.plan_date));
       setSelected([]); setError(null); setSavedReason(null);
+      setMessage(""); setUnderstood(null);
     }
     onOpenChange(next);
   };
@@ -106,6 +126,14 @@ function SwapVisit({ open, onOpenChange, expected, original, catalog, context, t
           {draft.step === "missing" || draft.step === "available" ? <>
             <p className="text-xs text-muted-foreground">Question {draft.step === "missing" ? "1" : "2"} of 3</p>
             <h2 className="text-sm font-semibold">{draft.step === "missing" ? "What is missing today?" : "What can you use safely today?"}</h2>
+            {draft.step === "missing" && interpret && <div className="space-y-2">
+              <Textarea aria-label="Tell Hammers what you have today" value={message} maxLength={600}
+                onChange={event => setMessage(event.target.value)} placeholder="I don't have a barbell today, but I have dumbbells." disabled={reading} />
+              <Button variant="outline" disabled={reading || !message.trim()} onClick={() => void readAnswer()}>
+                {reading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Read my answer
+              </Button>
+              {understood && <p role="status" className="text-sm">I understood these missing items: {understood.lacks.map(equipmentLabel).join(", ")}. Check your selections below.</p>}
+            </div>}
             <div className="space-y-2">
               {requirements.filter(item => draft.step === "missing" || !draft.lacks.includes(item)).map(item =>
                 <label key={item} className="flex min-h-11 items-center gap-3 rounded-md border border-border p-3 text-sm">
@@ -115,8 +143,8 @@ function SwapVisit({ open, onOpenChange, expected, original, catalog, context, t
                 </label>)}
             </div>
             <div className="flex flex-wrap gap-2">
-              {draft.step === "available" && <Button variant="ghost" onClick={() => { setDraft(startSwapConversation(expected.user_id, expected.id, expected.plan_date)); setSelected([]); setError(null); }}><ArrowLeft className="mr-2 h-4 w-4" />Start again</Button>}
-              <Button disabled={draft.step === "missing" && selected.length === 0} onClick={advance}>
+              {draft.step === "available" && <Button variant="ghost" onClick={() => { setDraft(startSwapConversation(expected.user_id, expected.id, expected.plan_date)); setSelected([]); setError(null); setUnderstood(null); }}><ArrowLeft className="mr-2 h-4 w-4" />Start again</Button>}
+              <Button disabled={reading || (draft.step === "missing" && selected.length === 0)} onClick={advance}>
                 {draft.step === "available" && !selected.length ? "None of these" : "Continue"}<ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -132,7 +160,7 @@ function SwapVisit({ open, onOpenChange, expected, original, catalog, context, t
               {pending ? <Loader2 className="mr-2 h-4 w-4 shrink-0 animate-spin" /> : <Repeat2 className="mr-2 h-4 w-4 shrink-0" />}{movement.name}
             </Button>)}
             <p className="text-sm text-muted-foreground">{!transport ? "Swap saving is not available yet. Your session and equipment memory are unchanged." : !preview?.candidates.length ? "Your session is unchanged. Don't replace it with different work." : "Your answer will be saved with the checked replacement."}</p>
-            <Button variant="ghost" disabled={pending || uncertain} onClick={() => { setDraft(startSwapConversation(expected.user_id, expected.id, expected.plan_date)); setSelected([]); setError(null); }}><ArrowLeft className="mr-2 h-4 w-4" />Start again</Button>
+            <Button variant="ghost" disabled={pending || uncertain} onClick={() => { setDraft(startSwapConversation(expected.user_id, expected.id, expected.plan_date)); setSelected([]); setError(null); setUnderstood(null); }}><ArrowLeft className="mr-2 h-4 w-4" />Start again</Button>
           </>}
         </>}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}

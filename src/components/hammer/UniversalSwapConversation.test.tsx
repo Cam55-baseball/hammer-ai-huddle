@@ -30,6 +30,18 @@ function answers() {
   fireEvent.click(screen.getByRole("button", { name: "Always" }));
 }
 describe("staged Swap conversation safety", () => {
+  it("AI-interpreted availability is reviewed through the same three questions, never saved automatically", async () => {
+    const interpret = vi.fn().mockResolvedValue({ have: ["partner"], lacks: ["pitching_machine"] });
+    const onSaved = vi.fn();
+    render(<UniversalSwapConversation open onOpenChange={vi.fn()} expected={expected} original={original} catalog={[flips]} context={context} interpret={interpret} onSaved={onSaved} />);
+    fireEvent.change(screen.getByRole("textbox", { name: "Tell Hammers what you have today" }), { target: { value: "No machine today; I have a partner." } });
+    fireEvent.click(screen.getByRole("button", { name: "Read my answer" }));
+    await waitFor(() => expect(screen.getByRole("checkbox", { name: "pitching machine" })).toBeChecked());
+    expect(interpret).toHaveBeenCalledWith("No machine today; I have a partner.");
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByRole("checkbox", { name: "partner" })).toBeChecked();
+    expect(onSaved).not.toHaveBeenCalled();
+  });
   it("a parent-closed unanswered visit never reuses prior availability on reopen", () => {
     const props = { open: true, onOpenChange: vi.fn(), expected, original, catalog: [flips], context, onSaved: vi.fn() };
     const { rerender } = render(<UniversalSwapConversation {...props} />);

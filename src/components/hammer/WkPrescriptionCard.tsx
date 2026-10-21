@@ -15,7 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ShieldCheck, CheckCircle2, Info, Repeat2, Loader2 } from "lucide-react";
-import { LiftSwapSheet, LiftSwapUndoChip } from "@/components/hammer/LiftSwapSheet";
+import { LiftSwapUndoChip } from "@/components/hammer/LiftSwapSheet";
+import { LiveSwapSheet } from "@/components/hammer/LiveSwapSheet";
 import { useSwapLadder } from "@/hooks/useLiftSubstitution";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -381,8 +382,8 @@ export function WkPrescriptionCard({
           )}
         </div>
         {extraLogging}
-        {allowSwap && <Button variant="outline" size="sm" disabled={!swapAvailable} onClick={() => setSwapOpen(true)}>Alternative</Button>}
-        {swapAvailable && <LiftSwapSheet rx={rx} open={swapOpen} onOpenChange={setSwapOpen} />}
+        {allowSwap && <Button variant="outline" size="sm" disabled={!["planned", "pending"].includes(rx.status)} onClick={() => setSwapOpen(true)}><Repeat2 className="mr-2 h-3.5 w-3.5" />Swap</Button>}
+        {allowSwap && swapOpen && <LiveSwapSheet rx={rawRx} open={swapOpen} onOpenChange={setSwapOpen} />}
       </ExerciseDisclosure>
     </div>
   );
