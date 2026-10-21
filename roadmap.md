@@ -20,7 +20,7 @@
 
 **Nightly outcome:** last recorded Oct 21 04:30 callback HTTP 200, players/checked/pending 0/0/0 (empty, not positive). Next scheduled outcome is not claimed early. No cron changes or manual trigger.
 
-**Validation:** fresh full suite **475 files / 3,822 tests PASS**; final baseball route fallback then passed **36 tests** (one new test; final full suite not rerun). Server checks clean, latest preview `build OK` 15:28:10 UTC. Actual baseball saved-plan verification HTTP 200, verified true. TEST passwords scrambled, no proof measurements/history invented. `docs/owner/av1-proof.md`
+**Validation:** fresh full suite **475 files / 3,822 tests PASS**; final baseball route fallback then passed **36 tests** (one new test; final full suite not rerun). Server checks clean, latest preview `build OK` 15:40:20 UTC. Actual baseball saved-plan verification HTTP 200, verified true. TEST passwords scrambled, no proof measurements/history invented. `docs/owner/av1-proof.md`
 
 - [x] Apply named AT5 migration and mount coach six-week summary in the actual coach page.
 - [x] Prove real coach saved-plan reads and immediate revocation; preserve health redaction.
