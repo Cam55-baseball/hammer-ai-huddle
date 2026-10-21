@@ -1,3 +1,5 @@
+**Oct 21 19:45 UTC:** Item 7 hitter phone-proven (democoach connected via app request; six-week summary opens); pitcher blocked (14, no parent permission, no plans). Item 8 Done: list audit + internal Report Card phone-proven. Item 12 blocked: players get 403 on intelligence_recommendations (no grant; migration needs owner's yes) and re-test needs 14–28 days. TEST player's Oct 21 plan has "Mobility + foam roll" → foam-roller Swap case possible. Cleanup adds: democoach↔TEST hitter connection. `docs/owner/coach-summary-admin-proof.md`
+
 **Oct 21 19:35 UTC:** Base counter: real baseball base-route row exists (TEST player, Oct 23, `bases_1st_3rd`, 90 ft, 2 bases/rep). Phone proof must wait until Oct 23 — moving the phone's clock forward signs the player out. No softball base-route or full-go rows in any buildable TEST plan.
 
 **Oct 21 19:20 UTC:** Start refused for TEST pitcher + runners ("Tap Completed on your initial assessment first"); runners also have no active modules → no builds. TEST player has no saved equipment, builder picks gear-free lifts though catalog has 57 barbell/16 machine/2 foam-roller movements. swap_log still empty; four Swap proofs not run.
@@ -9,12 +11,12 @@
 | # | Item | Status | Proof / blocker |
 |---|---|---|---|
 | 1–6 | Simple Swap | Partly | Live; only "No safe swap" outcomes phone-proved. No TEST plan has machine/barbell/open-field/foam-roller rows. `docs/owner/simple-swap-proof.md` |
-| 7 | Coach six-week summary | Partly | Applied + mounted; democoach phone proof of hitter/pitcher saved plans open. `docs/owner/av3-proof.md` |
-| 8 | TEST admin + owner screens | Partly | Exclusions applied; Console/Questions/Vault/Game IQ proved. Every-list audit + Report Card phone check open. `docs/owner/av1-proof.md`, `av2-proof.md` |
+| 7 | Coach six-week summary | Partly | Hitter phone-proven as democoach; pitcher blocked (under 18 without parent permission, no plans). `docs/owner/coach-summary-admin-proof.md` |
+| 8 | TEST admin + owner screens | **Done** | List audit + Report Card phone check done. `docs/owner/coach-summary-admin-proof.md` |
 | 9 | Softball 60-ft base routes + base counter | Partly | Routes saved. No eligible TEST player has a base-route day (only the Apple-review child, untouched). `docs/owner/au1-proof.md` |
 | 10 | Full-go execution | Partly | Builder change tested; no full-go rows in any plan Oct 21–22. |
 | 11 | Mixed signals + testing day | Partly | Testing day **Done** on phone (`docs/owner/testing-day-proof.md`). Mixed signals blocked: TEST player has no hitting video analysis in 21 days and no games; needs a real swing clip. Cleanup pending: cancel demoorg sub, remove membership + testing day. |
-| 12 | Nightly followed rec + re-test pair | Not started | Not entered this run; tonight's 04:30 run will have no positive pair. |
+| 12 | Nightly followed rec + re-test pair | Blocked | Players get 403 on saved advice (no grant; migration needs owner's yes); re-test needs 14–28 days after following. |
 
 **Full suite (Oct 21 18:25–18:32 UTC, 4 bounded batches): 482 files / 3,848 tests PASS** (110/630, 117/1100, 112/791, 143/1327; logs /tmp/b0–b3.log).
 
