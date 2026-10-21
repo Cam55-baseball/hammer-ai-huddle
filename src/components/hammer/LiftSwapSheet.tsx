@@ -1,8 +1,8 @@
 /**
  * LiftSwapSheet — athlete-facing substitution picker for a single lift.
  *
- * Options come strictly from the generator-certified substitution ladder
- * stored on the prescription row, filtered to the same movement category.
+ * Existing alternatives are display-filtered against catalog safety facts.
+ * This picker is not the universal AI Swap or fresh server certification.
  * Choosing one rewrites that row in place (see `useLiftSubstitution`).
  */
 import {
@@ -34,7 +34,7 @@ interface Props {
 }
 
 export function LiftSwapSheet({ rx, open, onOpenChange }: Props) {
-  const { ladder, options, isLoading } = useSwapLadder(rx, open);
+  const { ladder, options, isLoading, error } = useSwapLadder(rx, open);
   const { apply } = useLiftSubstitution(rx.plan_date);
   const [missing, setMissing] = useState<string[]>([]);
   const needs = (c: SwapCandidate, key: string) => (c.equipment_requirements ?? []).some((e) => String(e).toLowerCase().replace(/[\s-]+/g, "_").includes(key));
@@ -57,7 +57,7 @@ export function LiftSwapSheet({ rx, open, onOpenChange }: Props) {
         <SheetHeader className="text-left">
           <SheetTitle className="text-base">Alternatives for {rx.movement_name}</SheetTitle>
           <SheetDescription className="text-xs">
-            Same kind of exercise, same job, same or lower risk. Your sets and reps carry over.
+            Your sets, reps and rest stay the same.
           </SheetDescription>
         </SheetHeader>
 
@@ -76,9 +76,11 @@ export function LiftSwapSheet({ rx, open, onOpenChange }: Props) {
             <div className="flex items-center gap-2 py-6 text-xs text-muted-foreground">
               <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading alternatives…
             </div>
+          ) : error ? (
+            <p role="alert" className="py-6 text-xs text-destructive">Couldn't check alternatives. Your session is unchanged. Close this and try again.</p>
           ) : groups.length === 0 ? (
             <p className="py-6 text-xs text-muted-foreground">
-              No safe alternative for this exercise today. Ask Hammer on the card if you need a different option.
+              No checked alternative is available for this exercise today. Your session is unchanged.
             </p>
           ) : (
             groups.map((g) => (
@@ -94,8 +96,10 @@ export function LiftSwapSheet({ rx, open, onOpenChange }: Props) {
                     reason={g.reason}
                     pending={apply.isPending}
                     onPick={async () => {
-                      await apply.mutateAsync({ rx, candidate: c, reason: g.reason });
-                      onOpenChange(false);
+                      try {
+                        await apply.mutateAsync({ rx, candidate: c, reason: g.reason });
+                        onOpenChange(false);
+                      } catch { /* Mutation presents the failure; keep the picker open. */ }
                     }}
                   />
                 ))}
@@ -130,11 +134,12 @@ function SwapRow({
     .filter((e) => !AMBIENT_EQUIPMENT.has(String(e).trim().toLowerCase().replace(/[\s-]+/g, "_")));
   const perSide = matchesUnilateralSlug(candidate.slug);
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
       onClick={onPick}
       disabled={pending}
-      className="w-full rounded-md border p-2.5 text-left hover:border-primary/40 hover:bg-muted/40 transition-colors disabled:opacity-60"
+      className="h-auto w-full flex-col items-stretch whitespace-normal p-2.5 text-left"
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium break-words">{candidate.name}</span>
@@ -160,7 +165,7 @@ function SwapRow({
           <Badge variant="outline" className="text-[10px]">No equipment needed</Badge>
         )}
       </div>
-    </button>
+    </Button>
   );
 }
 

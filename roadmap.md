@@ -1,3 +1,30 @@
+# AU2 — Approved open-item continuation — Oct 21
+
+**Ready to publish: no.** No publish, cron or iOS changes. No unrelated access migration authorized.
+
+| Approved open item | Status | Proof / remaining acceptance |
+|---|---|---|
+| Conditioning base-counter rest | Partly | AU1 shared counter/auto-start/real saved double proof. AU2 actual phone plan visit found unfinished TEST assessment and no Oct 21 plan; gate unchanged. Both-sport current-plan acceptance remains. `docs/owner/au1-proof.md`; `docs/owner/au2-proof.md` |
+| Every-card AI Swap + equipment questions | Partly | Existing real alternative save/Undo phone proof, exact first receipt, sport/family/full-season/training-age checks and stale-write regressions complete. AI conversation/atomic current certification/today-always memory/four proofs remain; questions retained. `docs/owner/au2-proof.md` |
+| Coach six-week summaries / practice ideas | Partly | Pure authorized-snapshot projection built/tested; live wiring awaits named staged-access-correction authorization and coach/org phone proofs. `sixWeekPlanSummary.test.ts`; `docs/owner/au1-proof.md` |
+| Pitching / fielding / baserunning full-go | Partly | Complete legal full-go affected-player acceptance remains. `docs/owner/au1-proof.md` |
+| Mixed signals / testing-day details | Partly | Honesty fixes and actual Today notice built; genuine positive hosted cases remain. `categorySignalEvidence.test.ts`; `TestingDayNotice.test.tsx` |
+| TEST ADMIN owner screens / hidden lists | Partly | Independent sibling audit completed; dedicated protected exclusion still needs an authorized server change, preserving exact-email demo connections. Remaining owner-screen proofs open. `docs/owner/au2-proof.md` |
+| 04:30 nightly learning outcome | Partly | Actual Oct 21 scheduled job/callback HTTP 200 complete, 0 players / checked / pending. Successful empty run, not positive outcome proof. `docs/owner/au1-proof.md` |
+
+**Nightly result:** Oct 21 04:30 UTC: successful scheduled job and callback, `complete`, 0 players / checked / pending; no positive outcome invented, no manual run or schedule change.
+
+**Fresh full suite:** 464 distinct files / **3,749 tests PASS**; latest preview build OK. `/tmp/au2-full-{0,1,2,3}.log`; `/tmp/au2-test-manifest.json`; `docs/owner/au2-proof.md`. Exact saved TEST row restored (only automatic updated timestamp changed), passwords scrambled, private credentials removed, Coach service retained.
+
+- [x] Preserve exact first-prescription receipt across swaps and Undo; reject marked work and stale receipt writes.
+- [x] Tighten existing alternative display checks (family/category/sport/unit/active/full season/training age/risk) and failed-refetch behavior; no server-certification claim.
+- [x] Real TEST password-form phone proof of existing alternative save and visible Undo/readback on actual saved row; current-plan/AI-four-proof boundaries explicitly retained.
+- [x] Investigate protected TEST ADMIN hiding and name affected sibling boundaries without breaking deliberate demo connections.
+- [x] Changed-rule regressions, fresh full suite, clean preview, exact TEST cleanup and refreshed status/nightly result.
+- [ ] Universal AI Swap + atomic current safety/memory + four phone proofs before removing equipment questions.
+- [ ] Coach live summary wiring and protected TEST ADMIN list correction wait on named server-change authorization; no unrelated migration applied.
+- [ ] Finish current-plan both-sport conditioning, full-go/mixed-signals/testing-day/remaining TEST ADMIN acceptance; positive nightly judgment requires real eligible evidence.
+
 # AU1 — Substantial parallel continuation — Oct 21
 
 **Ready to publish: no.** No publish, cron or iOS changes. Required Oct 21 rest/Swap redeploy authorization remains limited to that work; no unrelated pending migration is authorized by this queue.
