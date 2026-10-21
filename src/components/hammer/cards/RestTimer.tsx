@@ -8,11 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { Play, RotateCcw, Square, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-/** Owner rule: sprint rest = 1 minute per 10 yards. */
-export function sprintRestSeconds(distanceFeet: number | null | undefined): number | null {
-  if (!distanceFeet || distanceFeet <= 0) return null;
-  return Math.ceil(distanceFeet / 3 / 10) * 60;
-}
+export { sprintRestSeconds } from "../../../../supabase/functions/_shared/wic/runRest";
 
 /**
  * Owner-approved rest bands (Round 8 master plan). HT's prescribed rest wins when present.
@@ -67,7 +63,8 @@ export function RestTimer({ seconds: base, maxSeconds, label = "Rest" }: { secon
 
   const elapsed = startedAt == null ? 0 : (now - startedAt) / 1000;
   const countdown = typeof seconds === "number" && seconds > 0;
-  const left = countdown ? seconds! - elapsed : 0;
+  const target = typeof seconds === "number" ? seconds : 0;
+  const left = countdown ? target - elapsed : 0;
   const finished = countdown && startedAt != null && left <= 0;
 
   useEffect(() => {
@@ -81,13 +78,13 @@ export function RestTimer({ seconds: base, maxSeconds, label = "Rest" }: { secon
   const stop = () => setStartedAt(null);
 
   return (
-    <div data-rest-timer className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2 py-1.5 text-xs">
+    <div data-rest-timer className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/40 px-2 py-1.5 text-xs">
       <Timer className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
       <span className="text-muted-foreground">
-        {countdown ? `${label} time (${fmtClock(seconds!)}):` : `${label} so far:`}
+        {countdown ? `${label} time (${fmtClock(target)}):` : `${label} so far:`}
       </span>
       <span className="font-mono font-semibold text-foreground" aria-live="polite">
-        {finished ? "Go — rest done" : fmtClock(countdown ? (startedAt == null ? seconds! : left) : elapsed)}
+        {finished ? "Go — rest done" : fmtClock(countdown ? (startedAt == null ? target : left) : elapsed)}
       </span>
       <div className="ml-auto flex gap-1">
         {canAdd && (
