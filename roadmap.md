@@ -2,9 +2,27 @@
 
 **Ready to publish: no.** No publish, cron or iOS changes.
 
-- [ ] Advance safe Swap certification and unchanged-dose save boundaries.
-- [ ] Run changed-path tests and phone checks where applicable; clean exact TEST data.
-- [ ] Update open-item table, nightly result and remaining proof boundaries.
+| Approved open item | Status | Proof / remaining acceptance |
+|---|---|---|
+| Conditioning base-counter rest | Partly | Existing shared counter/saved-double proof retained; both-sport actual-plan acceptance open. `docs/owner/au1-proof.md` |
+| Every-card AI Swap + equipment questions | Partly | AU4 exact-dose/context conditional writes, changed-first-receipt rejection, actual TEST saved-row save/Undo phone proof complete. Fresh server certification, AI/memory and four positive phone proofs remain; questions retained. `docs/owner/au4-proof.md` |
+| Coach six-week summaries / practice ideas | Partly | Authorized projection tested; live wiring waits for named staged access-correction authorization and coach/org proof. `docs/owner/au1-proof.md` |
+| Pitching / fielding / baserunning full-go | Partly | Execution regressions pass; eligible actual-plan phone cases remain. `docs/owner/au3-proof.md` |
+| Mixed signals / testing-day details | Partly | Rules/notice built; genuine positive linked cases remain. `docs/owner/au1-proof.md` |
+| TEST ADMIN owner screens / hidden lists | Partly | Sibling audit complete; staged server-exclusion authorization and remaining proofs open. `docs/owner/au2-proof.md` |
+| 04:30 nightly learning outcome | Partly | Recorded actual HTTP 200 empty run; no positive eligible comparable pair. `docs/owner/au1-proof.md` |
+
+**Nightly result:** Oct 21 04:30 UTC recorded successful empty scheduled run; players / checked / pending = 0. No new trigger, schedule change or fabricated positive outcome.
+
+**Fresh suite:** 467 files / **3,772 tests PASS**; latest preview build OK. Actual saved-row phone Swap/Undo passed; TEST restored and password scrambled; private credentials removed. `docs/owner/au4-proof.md`.
+
+- [x] Advance unchanged-dose conditional save/Undo boundaries; compare dose/context and reject another visit's day.
+- [x] Reject stale first receipts after any legitimate dose change; missing/non-finite recorded dose fails before writes.
+- [x] Actual TEST saved-row phone save/readback/Undo; 36 changed-path tests, fresh full suite and exact cleanup.
+- [x] Refresh open statuses, actual nightly result and proof boundaries.
+- [ ] Universal server certification + AI + today/always memory + four positive phone proofs; missing canonical intent remains unresolved, questions retained.
+- [ ] Coach live wiring and TEST ADMIN server-exclusion corrections await named staged server-change authorization.
+- [ ] Eligible actual-plan full-go, both-sport conditioning, genuine mixed signals/testing day, owner screens and positive nightly evidence remain.
 
 # AU3 — Approved open-item continuation — Oct 21
 
