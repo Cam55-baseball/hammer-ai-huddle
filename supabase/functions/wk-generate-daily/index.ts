@@ -13,6 +13,7 @@
 //
 // Idempotent for (user_id, plan_date, sequence_field).
 import { checkPrescription } from "../_shared/wic/integrity/doseIntegrity.ts";
+import { BASE_REST_TEXT, prescribedBases, sprintRestSeconds, sprintRestWhy } from "../_shared/wic/runRest.ts";
 import { gameFlushFor } from "../_shared/wic/conditioning/gameFlush.ts";
 import { proportionProfile, proportionBonus, proportionWhy } from "../_shared/wic/lift/proportionEmphasis.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
@@ -2480,6 +2481,12 @@ const handler = async (req: Request): Promise<Response> => {
           why: movementWhy || slotContext || null,
           session_context: slotContext || null,
           cue: s.movement.cue,
+          ...(slot === "speed" && typeof distanceFeet === "number" && !/jump|bound|hop|pogo|landing/i.test(s.movement.slug) ? {
+            run_rest: { version: "owner_20261021", seconds: sprintRestSeconds(distanceFeet), why: sprintRestWhy(distanceFeet) },
+          } : {}),
+          ...(slot === "conditioning" && prescribedBases(s.movement.slug, distanceFeet) ? {
+            base_running_rest: { version: "owner_20261021", bases_per_rep: prescribedBases(s.movement.slug, distanceFeet), between_reps_s: 30, home_plate_s: 300, cycle_bases: 4, text: BASE_REST_TEXT },
+          } : {}),
           rep_rule: resolvedDose
             ? `${resolvedDose.envelope.sets[0]}-${resolvedDose.envelope.sets[1]} sets × ${resolvedDose.envelope.reps[0]}-${resolvedDose.envelope.reps[1]} reps — ${resolvedDose.phase} ${resolvedDose.group} envelope (${DOSAGE_DOCTRINE_VERSION}).`
             : `Total-dose movement — measured in ${dosageUnit}, not sets × reps.`,

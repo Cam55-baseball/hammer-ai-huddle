@@ -18,6 +18,16 @@ afterEach(() => { cleanup(); state.host?.remove(); state.host = null; localStora
 vi.mock("@/lib/logging/logOutbox", () => ({ enqueue: vi.fn(), sendJob: vi.fn(async () => true) }));
 
 describe("power primer built into the lift", () => {
+  it("keeps lift rest at 120s and rests 60s after a prescribed 10-yard run set", () => {
+    render(<PowerPrimerBlock pp={{ ...pp, action: { ...pp.action, distance_feet: 30 } }} liftSets={2} />);
+    const host = state.host;
+    if (!host) throw new Error("Missing log host");
+    const top = within(host);
+    expect(top.getByText("Rest after the lift set time (2:00):")).toBeVisible();
+    fireEvent.click(top.getByRole("button", { name: "5/5 Felt excellent" }));
+    expect(top.getByText("Rest after this run set time (1:00):")).toBeVisible();
+    expect(host.querySelectorAll("[data-primer-lift-set]").length).toBe(2);
+  });
   it("interleaves lift sets with rated all-out sets and stops after a 3/5", () => {
     const v = render(<PowerPrimerBlock pp={{ ...pp, max_sets: 4 }} planDate="2026-10-11" liftName="Trap Bar Deadlift" liftSets={4} />);
     const top = within(state.host!);
