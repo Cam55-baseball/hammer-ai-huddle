@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { sprintRestSeconds, conditioningRestAfterRep, prescribedBases } from "../../../../supabase/functions/_shared/wic/runRest";
+import { sprintRestSeconds, conditioningRestAfterRep, prescribedBases, declaredRouteBases } from "../../../../supabase/functions/_shared/wic/runRest";
 
 describe("owner Oct 21 speed rest", () => {
   it("10 yards rests 1 minute", () => expect(sprintRestSeconds(30)).toBe(60));
@@ -12,6 +12,23 @@ describe("owner Oct 21 speed rest", () => {
 });
 
 describe("owner Oct 21 conditioning rest", () => {
+  for (const bases of [1, 2, 3, 4] as const) {
+    it(`softball ${bases} bases uses declared 60-foot base paths`, () => {
+      const route = { sport: "softball", bases_per_rep: bases, base_distance_feet: 60 };
+      expect(declaredRouteBases(route, "softball", 60 * bases)).toBe(bases);
+      expect(declaredRouteBases(route, "baseball", 60 * bases)).toBeNull();
+      expect(declaredRouteBases(route, "softball", 43)).toBeNull();
+    });
+  }
+  it("rejects mismatched or undeclared softball base paths", () => {
+    expect(declaredRouteBases({ sport: "softball", bases_per_rep: 2, base_distance_feet: 90 }, "softball", 180)).toBeNull();
+    expect(prescribedBases("bases_home_2nd", 180, null, "softball")).toBeNull();
+  });
+  it("baseball double uses two declared 90-foot bases", () => {
+    const route = { sport: "baseball", bases_per_rep: 2, base_distance_feet: 90 };
+    expect(declaredRouteBases(route, "baseball", 180)).toBe(2);
+    expect(declaredRouteBases(route, "baseball", 120)).toBeNull();
+  });
   it("single then double then single gives 30s, 30s, 300s and resets", () => {
     const single = conditioningRestAfterRep(0, 1);
     expect(single).toEqual({ bases: 1, reachedHome: false, seconds: 30 });

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { TEST_ADMIN_PROOF_ID } from "../_shared/testAdminExclusion.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -58,7 +59,8 @@ serve(async (req) => {
     // Get all profiles first
     let profileQuery = supabaseClient
       .from("profiles")
-      .select("id, full_name, first_name, last_name");
+      .select("id, full_name, first_name, last_name")
+      .neq("id", TEST_ADMIN_PROOF_ID);
 
     // Apply search filter if provided
     if (searchQuery && searchQuery.trim() !== "") {

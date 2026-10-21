@@ -13,7 +13,7 @@
 //
 // Idempotent for (user_id, plan_date, sequence_field).
 import { checkPrescription } from "../_shared/wic/integrity/doseIntegrity.ts";
-import { BASE_REST_TEXT, prescribedBases, sprintRestSeconds, sprintRestWhy } from "../_shared/wic/runRest.ts";
+import { BASE_REST_TEXT, prescribedBases, sprintRestSeconds, sprintRestWhy, type DeclaredBaseRoute } from "../_shared/wic/runRest.ts";
 import { gameFlushFor } from "../_shared/wic/conditioning/gameFlush.ts";
 import { proportionProfile, proportionBonus, proportionWhy } from "../_shared/wic/lift/proportionEmphasis.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
@@ -268,6 +268,7 @@ interface MovementRow {
   speed_category?: string | null;
   bat_speed_category?: string | null;
   conditioning_category?: string | null;
+  base_route?: DeclaredBaseRoute | null;
   cross_sport_category?: string | null;
   arm_care_category?: string | null;
 
@@ -2403,6 +2404,12 @@ const handler = async (req: Request): Promise<Response> => {
       });
       let durationSeconds = durationDose;
       let distanceFeet = distanceDose;
+      // Declared base paths supply distance only to newly built rep-based conditioning.
+      // No saved day is rebuilt, and the 43-foot pitcher-distance sprint stays unchanged.
+      if (slot === "conditioning" && distanceFeet == null && s.movement.base_route?.sport === sport) {
+        distanceFeet = s.movement.default_distance_feet ??
+          s.movement.base_route.bases_per_rep * s.movement.base_route.base_distance_feet;
+      }
       let totalReps = totalDose;
       let dosageUnit = dosageUnitRaw;
       // Unit routing — a total-dose movement must never carry its dose in the
@@ -2486,8 +2493,8 @@ const handler = async (req: Request): Promise<Response> => {
           ...(slot === "speed" && typeof distanceFeet === "number" && !/jump|bound|hop|pogo|landing/i.test(s.movement.slug) ? {
             run_rest: { version: "owner_20261021", seconds: sprintRestSeconds(distanceFeet), why: sprintRestWhy(distanceFeet) },
           } : {}),
-          ...(slot === "conditioning" && prescribedBases(s.movement.slug, distanceFeet) ? {
-            base_running_rest: { version: "owner_20261021", bases_per_rep: prescribedBases(s.movement.slug, distanceFeet), between_reps_s: 30, home_plate_s: 300, cycle_bases: 4, text: BASE_REST_TEXT },
+          ...(slot === "conditioning" && prescribedBases(s.movement.slug, distanceFeet, s.movement.base_route, sport) ? {
+            base_running_rest: { version: "owner_20261021", bases_per_rep: prescribedBases(s.movement.slug, distanceFeet, s.movement.base_route, sport), between_reps_s: 30, home_plate_s: 300, cycle_bases: 4, text: BASE_REST_TEXT },
           } : {}),
           rep_rule: resolvedDose
             ? `${resolvedDose.envelope.sets[0]}-${resolvedDose.envelope.sets[1]} sets × ${resolvedDose.envelope.reps[0]}-${resolvedDose.envelope.reps[1]} reps — ${resolvedDose.phase} ${resolvedDose.group} envelope (${DOSAGE_DOCTRINE_VERSION}).`

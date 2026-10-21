@@ -8,4 +8,5 @@
 
 - Analysis screen shows only the clip's own analysis type: Analysis view is the default, Report Card is a separate toggle (HammerReportCard only); no athlete-wide cross-skill findings and no category scoring on it. Why: a cross-skill box put pitching findings on hitting clips (2026-10-01).
 - Classic General mounts `UhrcAthleteSection` behind existing access gates; video reports stay separate. Why: restore the canonical card without changing scoring or access.
+- General's internal Report Card mounts through `ReportCardAccessGate`, outside training-history/subscription milestones; other advanced panels retain those milestones. Why: owner/admin review must not require fabricated athlete history, and non-staff must see no internal card.
 - Players read their own report-card measurements only via `get_my_report_card_trend` (metrics only, self); staff use `get_staff_report_card_trend`. Why: stored analyses stay locked; self-view needs no broad grant.

@@ -1,0 +1,191 @@
+[map[args:_athlete uuid definition:CREATE OR REPLACE FUNCTION public.list_my_coaches(_athlete uuid DEFAULT NULL::uuid)
+ RETURNS TABLE(coach_id uuid, coach_name text, via text, is_head boolean)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  WITH me AS (SELECT coalesce(_athlete, auth.uid()) AS a),
+  ok AS (SELECT (SELECT a FROM me) = auth.uid() OR public.is_authorizing_parent(auth.uid(), (SELECT a FROM me)) AS v),
+  c AS (
+    SELECT sf.scout_id AS coach_id, 'Direct' AS via FROM public.scout_follows sf, me
+      WHERE sf.player_id = me.a AND sf.status='accepted' AND sf.relationship_type='linked'
+    UNION
+    SELECT x.coach_user_id, o.name FROM public.org_athlete_assignments x JOIN public.organizations o ON o.id=x.organization_id, me
+      WHERE x.athlete_user_id = me.a AND x.revoked_at IS NULL
+  )
+  SELECT c.coach_id, coalesce(nullif(btrim(p.full_name),''),'Coach'), min(c.via),
+         EXISTS (SELECT 1 FROM public.athlete_head_coach h, me WHERE h.athlete_user_id=me.a AND h.coach_user_id=c.coach_id)
+  FROM c JOIN public.profiles p ON p.id=c.coach_id, ok
+  WHERE ok.v AND public.is_coach_of(c.coach_id, (SELECT a FROM me))
+  GROUP BY c.coach_id, p.full_name;
+$function$
+ proname:list_my_coaches] map[args: definition:CREATE OR REPLACE FUNCTION public.list_my_requests_v2()
+ RETURNS TABLE(id uuid, kind text, incoming boolean, can_answer boolean, for_child boolean, child_name text, other_name text, org_name text, team_name text, status text, message text, created_at timestamp with time zone)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  SELECT r.id, r.kind,
+    (r.to_user = auth.uid() OR (r.to_org AND public.is_org_admin(auth.uid(), r.organization_id))
+      OR (r.to_user IS NOT NULL AND public.is_under_13(r.to_user) AND public.is_authorizing_parent(auth.uid(), r.to_user))) AS incoming,
+    (r.status = 'pending' AND (
+       (NOT r.to_org AND r.to_user = auth.uid() AND NOT public.is_under_13(auth.uid()))
+       OR (NOT r.to_org AND public.is_under_13(r.to_user) AND public.is_authorizing_parent(auth.uid(), r.to_user))
+       OR (r.to_org AND public.is_org_admin(auth.uid(), r.organization_id)))) AS can_answer,
+    (r.from_user <> auth.uid() AND coalesce(r.to_user,'00000000-0000-0000-0000-000000000000'::uuid) <> auth.uid()
+      AND (public.is_authorizing_parent(auth.uid(), r.to_user) OR public.is_authorizing_parent(auth.uid(), r.from_user))) AS for_child,
+    (SELECT coalesce(nullif(btrim(c.full_name),''),'your athlete') FROM public.profiles c
+       WHERE c.id = CASE WHEN public.is_authorizing_parent(auth.uid(), r.to_user) THEN r.to_user ELSE r.from_user END) AS child_name,
+    coalesce(nullif(btrim(p.full_name),''), 'Someone') AS other_name,
+    o.name, t.name, r.status, r.message, r.created_at
+  FROM public.connection_requests r
+  LEFT JOIN public.profiles p ON p.id = CASE
+      WHEN r.from_user = auth.uid() THEN coalesce(r.to_user, r.subject_user)
+      WHEN public.is_authorizing_parent(auth.uid(), r.from_user) THEN coalesce(r.to_user, r.subject_user)
+      ELSE r.from_user END
+  LEFT JOIN public.organizations o ON o.id = r.organization_id
+  LEFT JOIN public.org_teams t ON t.id = r.team_id
+  WHERE auth.uid() IS NOT NULL AND (r.from_user = auth.uid() OR r.to_user = auth.uid()
+     OR (r.to_org AND public.is_org_admin(auth.uid(), r.organization_id))
+     OR (r.to_user IS NOT NULL AND public.is_authorizing_parent(auth.uid(), r.to_user))
+     OR public.is_authorizing_parent(auth.uid(), r.from_user))
+  ORDER BY (r.status = 'pending') DESC, r.created_at DESC
+  LIMIT 100;
+$function$
+ proname:list_my_requests_v2] map[args:_organization_id uuid definition:CREATE OR REPLACE FUNCTION public.list_org_roster(_organization_id uuid)
+ RETURNS TABLE(user_id uuid, full_name text, role_in_org text, assigned_coaches uuid[])
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  SELECT m.user_id, coalesce(nullif(btrim(p.full_name),''),'Member'), m.role_in_org,
+    coalesce(array(SELECT a.coach_user_id FROM public.org_athlete_assignments a
+      WHERE a.organization_id=m.organization_id AND a.athlete_user_id=m.user_id AND a.revoked_at IS NULL), '{}')
+  FROM public.organization_members m LEFT JOIN public.profiles p ON p.id=m.user_id
+  WHERE m.organization_id=_organization_id AND m.status='active' AND m.removed_at IS NULL
+    AND public.is_org_admin(auth.uid(), _organization_id)
+  ORDER BY m.role_in_org, p.full_name;
+$function$
+ proname:list_org_roster] map[args: definition:CREATE OR REPLACE FUNCTION public.owner_principle_population_stats()
+ RETURNS TABLE(principle_id uuid, advice integer, followed integer, players_followed integer, worked integer, no_change integer, got_worse integer, players_worked integer, hidden_small_group boolean)
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE k constant int := 3;
+BEGIN
+  IF NOT (public.has_role(auth.uid(), 'owner') OR public.has_role(auth.uid(), 'admin')) THEN
+    RAISE EXCEPTION 'not authorized' USING ERRCODE = '42501';
+  END IF;
+  RETURN QUERY
+  WITH r AS (
+    SELECT v.principle_id, rec.*
+    FROM public.intelligence_recommendations rec
+    JOIN public.coaching_principle_versions v ON v.id = rec.principle_version_id
+    WHERE NOT EXISTS (SELECT 1 FROM public.athlete_mpi_settings s WHERE s.user_id = rec.user_id AND s.admin_ranking_excluded IS TRUE)
+  ), agg AS (
+    SELECT r.principle_id,
+      count(r.id)::int a, count(r.id) FILTER (WHERE r.followed)::int f,
+      count(DISTINCT r.user_id) FILTER (WHERE r.followed)::int pf,
+      count(r.id) FILTER (WHERE r.outcome='worked')::int w,
+      count(r.id) FILTER (WHERE r.outcome='no_change')::int nc,
+      count(r.id) FILTER (WHERE r.outcome='got_worse')::int gw,
+      count(DISTINCT r.user_id) FILTER (WHERE r.outcome='worked')::int pw,
+      count(DISTINCT r.user_id)::int pa
+    FROM r GROUP BY r.principle_id
+  )
+  SELECT agg.principle_id,
+    CASE WHEN pa >= k THEN a END, CASE WHEN pf >= k THEN f END, CASE WHEN pf >= k THEN pf END,
+    CASE WHEN pf >= k THEN w END, CASE WHEN pf >= k THEN nc END, CASE WHEN pf >= k THEN gw END,
+    CASE WHEN pw >= k THEN pw END,
+    (pa < k OR pf < k)
+  FROM agg;
+END $function$
+ proname:owner_principle_population_stats] map[args:_q text, _organization_id uuid definition:CREATE OR REPLACE FUNCTION public.search_athletes_to_connect(_q text, _organization_id uuid DEFAULT NULL::uuid)
+ RETURNS TABLE(id uuid, full_name text, grad_year integer, state text, under_18 boolean, request_status text)
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE v_uid uuid := auth.uid(); v_q text := lower(btrim(coalesce(_q,''))); v_year int; v_kind text;
+BEGIN
+  IF v_uid IS NULL THEN RAISE EXCEPTION 'Sign in first'; END IF;
+  IF _organization_id IS NOT NULL THEN
+    IF NOT public.is_org_admin(v_uid, _organization_id) THEN RAISE EXCEPTION 'Only organization admins can add athletes'; END IF;
+    v_kind := 'org_player';
+  ELSE
+    IF NOT public.user_has_role(v_uid,'coach'::app_role) THEN RAISE EXCEPTION 'Only coach accounts can send this request'; END IF;
+    v_kind := 'coach_player';
+  END IF;
+  IF length(v_q) < 2 THEN RETURN; END IF;
+  IF v_q ~ '^\d{4}$' THEN v_year := v_q::int; END IF;
+  RETURN QUERY
+  WITH m AS (
+    SELECT p.id, p.full_name, coalesce(p.high_school_grad_year, p.graduation_year, p.college_grad_year) AS gy, p.state
+    FROM public.profiles p LEFT JOIN auth.users u ON u.id = p.id
+    WHERE p.id <> v_uid AND p.account_paused_at IS NULL
+      AND (lower(u.email) = v_q OR lower(p.contact_email) = v_q
+           OR (coalesce(p.is_system_account,false) = false AND (
+                p.full_name ILIKE '%' || replace(replace(v_q,'%',''),'_','') || '%'
+                OR (v_year IS NOT NULL AND v_year IN (p.high_school_grad_year, p.graduation_year, p.college_grad_year)))))
+      AND NOT public.user_has_role(p.id,'coach'::app_role)
+      AND NOT public.user_has_role(p.id,'scout'::app_role)
+      AND NOT public.is_blocked_pair(v_uid, p.id)
+      AND (public.is_minor(p.id) = false OR public.is_coach_of(v_uid, p.id) OR public.resolve_recruiting_scope(p.id,'profile'))
+    LIMIT 20
+  ), s AS (
+    SELECT m.*,
+      CASE WHEN _organization_id IS NULL THEN EXISTS (SELECT 1 FROM public.scout_follows f WHERE f.scout_id=v_uid AND f.player_id=m.id AND f.status='accepted')
+           ELSE EXISTS (SELECT 1 FROM public.organization_members om WHERE om.organization_id=_organization_id AND om.user_id=m.id AND om.status='active') END AS connected,
+      (SELECT cr.status FROM public.connection_requests cr
+         WHERE cr.from_user = v_uid AND cr.subject_user = m.id AND cr.kind = v_kind
+           AND (_organization_id IS NULL OR cr.organization_id = _organization_id)
+         ORDER BY cr.created_at DESC LIMIT 1) AS last_status
+    FROM m
+  )
+  SELECT s.id, s.full_name, s.gy, s.state, public.is_minor(s.id),
+    CASE WHEN s.connected THEN 'accepted' WHEN s.last_status = 'pending' THEN 'pending'
+         WHEN s.last_status = 'denied' THEN 'denied' ELSE NULL END
+  FROM s;
+END $function$
+ proname:search_athletes_to_connect] map[args:_org uuid definition:CREATE OR REPLACE FUNCTION public.team_discipline_summary(_org uuid DEFAULT NULL::uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE _me uuid := auth.uid(); _ids uuid[];
+BEGIN
+  IF _me IS NULL THEN RAISE EXCEPTION 'not authorized' USING ERRCODE='42501'; END IF;
+  IF _org IS NOT NULL THEN
+    IF NOT public.is_org_admin(_me, _org) THEN RAISE EXCEPTION 'not authorized' USING ERRCODE='42501'; END IF;
+    SELECT array_agg(DISTINCT user_id) INTO _ids FROM organization_members
+      WHERE organization_id = _org AND status='active' AND role_in_org='player' AND removed_at IS NULL;
+  ELSE
+    SELECT array_agg(DISTINCT c) INTO _ids FROM (
+      SELECT user_id c FROM athlete_mpi_settings WHERE primary_coach_id = _me OR _me = ANY(coalesce(secondary_coach_ids,'{}'))
+      UNION SELECT player_id FROM scout_follows WHERE scout_id = _me AND status='accepted'
+      UNION SELECT athlete_user_id FROM org_athlete_assignments WHERE coach_user_id = _me AND revoked_at IS NULL
+      UNION SELECT om.user_id FROM organization_members om WHERE om.status='active' AND om.role_in_org='player' AND public.is_org_admin(_me, om.organization_id)
+    ) s WHERE public.is_coach_of(_me, c) OR public.is_linked_coach(_me, c);
+  END IF;
+  RETURN coalesce((
+    WITH rx AS (
+      SELECT p.user_id, p.plan_date, EXISTS (SELECT 1 FROM wk_session_logs l WHERE l.prescription_id = p.id) done
+      FROM wk_prescriptions p
+      WHERE p.user_id = ANY(coalesce(_ids,'{}')) AND p.plan_date BETWEEN current_date - 28 AND current_date - 1
+    ), d AS (
+      SELECT user_id, plan_date, count(*) n, count(*) FILTER (WHERE done) k FROM rx GROUP BY 1,2
+    )
+    SELECT jsonb_agg(jsonb_build_object(
+      'athlete_id', u, 'name', coalesce(pr.full_name,'Player'),
+      'set_7', (SELECT sum(n) FROM d WHERE user_id=u AND plan_date >= current_date-7),
+      'done_7', (SELECT sum(k) FROM d WHERE user_id=u AND plan_date >= current_date-7),
+      'set_28', (SELECT sum(n) FROM d WHERE user_id=u), 'done_28', (SELECT sum(k) FROM d WHERE user_id=u),
+      'days_set_28', (SELECT count(*) FROM d WHERE user_id=u),
+      'days_logged_28', (SELECT count(*) FROM d WHERE user_id=u AND k>0),
+      'missed_28', (SELECT count(*) FROM d WHERE user_id=u AND k=0)) ORDER BY pr.full_name)
+    FROM unnest(coalesce(_ids,'{}')) u LEFT JOIN profiles pr ON pr.id = u
+  ), '[]'::jsonb);
+END $function$
+ proname:team_discipline_summary]]

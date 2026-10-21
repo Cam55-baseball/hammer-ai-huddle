@@ -50,6 +50,7 @@ import { Badge } from "@/components/ui/badge";
 import { OwnerSidebar, type OwnerSection } from "@/components/owner/OwnerSidebar";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { TEST_ADMIN_PROOF_ID } from "@/lib/testAdminExclusion";
 
 interface UserProfile {
   id: string;
@@ -243,19 +244,21 @@ const OwnerDashboard = () => {
   const loadDashboardData = async () => {
     try {
       const [usersResponse, rolesResponse, videosResponse, subsResponse, adminReqResponse, scoutAppResponse] = await Promise.all([
-        supabase.from("profiles").select("id, full_name, created_at").order("created_at", { ascending: false }),
-        supabase.from("user_roles").select("user_id, role, status"),
-        supabase.from("videos").select(VIDEO_PUBLIC_COLUMNS).order("created_at", { ascending: false }).limit(10).then(async (r) => ({ ...r, data: r.data ? await withStaffScores(r.data as any) : r.data })),
-        supabase.from("subscriptions").select("*"),
+        supabase.from("profiles").select("id, full_name, created_at").neq("id", TEST_ADMIN_PROOF_ID).order("created_at", { ascending: false }),
+        supabase.from("user_roles").select("user_id, role, status").neq("user_id", TEST_ADMIN_PROOF_ID),
+        supabase.from("videos").select(VIDEO_PUBLIC_COLUMNS).neq("user_id", TEST_ADMIN_PROOF_ID).order("created_at", { ascending: false }).limit(10).then(async (r) => ({ ...r, data: r.data ? await withStaffScores(r.data as any) : r.data })),
+        supabase.from("subscriptions").select("*").neq("user_id", TEST_ADMIN_PROOF_ID),
         supabase
           .from("user_roles")
           .select("user_id, role, status, created_at, profiles(full_name)")
           .eq("role", "admin")
+          .neq("user_id", TEST_ADMIN_PROOF_ID)
           .eq("status", "pending")
           .order("created_at", { ascending: false }),
         supabase
           .from("scout_applications")
           .select("*")
+          .neq("user_id", TEST_ADMIN_PROOF_ID)
           .order("created_at", { ascending: false }),
       ]);
 
@@ -279,6 +282,7 @@ const OwnerDashboard = () => {
       const { data: moduleSubs } = await supabase
         .from("subscriptions")
         .select("subscribed_modules")
+        .neq("user_id", TEST_ADMIN_PROOF_ID)
         .eq("status", "active");
 
       const moduleCount = { hitting: 0, pitching: 0, throwing: 0 };
@@ -466,6 +470,7 @@ const OwnerDashboard = () => {
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, full_name, avatar_url')
+        .neq('id', TEST_ADMIN_PROOF_ID)
         .ilike('full_name', `%${searchTerm}%`)
         .limit(10);
 
