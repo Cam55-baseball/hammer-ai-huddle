@@ -1,3 +1,28 @@
+# AU5 — Approved open-item continuation — Oct 21
+
+**Ready to publish: no.** No publish, cron or iOS changes; no new permission migration assumed authorized.
+
+| Approved open item | Status | Proof / remaining acceptance |
+|---|---|---|
+| Conditioning base-counter rest | Partly | Shared counter/saved-row phone proof retained; both-sport actual-plan acceptance needs eligible plans. `docs/owner/au1-proof.md` |
+| Every-card AI Swap + equipment questions | Partly | Three-question sheet, confirmed today/always memory contract and single-transaction adapter built/tested; real TEST staged phone no-write check passed. Server/AI connection, four positive saves and question removal remain. `docs/owner/au5-proof.md` |
+| Coach six-week summaries / practice ideas | Partly | Projection tested; independent audit confirms wider reads wait for the named staged AT5 gate authorization and affected coach/org proofs. `docs/owner/au5-proof.md` |
+| Pitching / fielding / baserunning full-go | Partly | Execution regressions pass; eligible actual-plan phone cases remain. `docs/owner/au3-proof.md` |
+| Mixed signals / testing-day details | Partly | Rules/notice built; genuine linked hosted cases remain. `docs/owner/au1-proof.md` |
+| TEST ADMIN owner screens / hidden lists | Partly | Sibling audit complete; staged exclusion authorization and remaining proofs open. `docs/owner/au2-proof.md` |
+| 04:30 nightly learning outcome | Partly | Actual recorded HTTP 200 empty run, no eligible positive comparable pair. `docs/owner/au1-proof.md` |
+
+**Nightly result:** recorded Oct 21 04:30 UTC successful empty callback; players / checked / pending = 0. No manual trigger or schedule change; not positive learning proof.
+
+**Fresh suite:** 470 files / **3,786 tests PASS**; latest preview build OK. TEST phone three-question/no-write proof passed; exact saved prescription/memory unchanged, passwords scrambled and private credentials removed. `docs/owner/au5-proof.md`.
+
+- [x] Build staged three-question universal Swap sheet, explicit today/always draft/memory and single-transaction/no-fallback adapter.
+- [x] Run changed-path tests, staged real-TEST phone no-write check and fresh full suite; exact cleanup.
+- [x] Refresh open statuses, actual nightly result and concrete transaction/authorization/proof boundaries.
+- [ ] Universal server certification/atomic memory + AI connection + four positive phone swaps, then equipment-question removal; named schema/permission authorization and canonical safety metadata remain required.
+- [ ] Coach six-week live reads and TEST ADMIN protected exclusion wait for named staged server authorization.
+- [ ] Eligible actual-plan full-go, both-sport conditioning, genuine mixed signals/testing day, owner screens and positive nightly evidence remain.
+
 # AU4 — Approved open-item continuation — Oct 21
 
 **Ready to publish: no.** No publish, cron or iOS changes.
