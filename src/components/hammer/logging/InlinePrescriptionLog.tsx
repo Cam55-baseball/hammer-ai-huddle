@@ -2,6 +2,8 @@ import { jumpMeasure } from "@/lib/logging/measureType";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RestTimer, sprintRestSeconds, liftRestBand } from "../cards/RestTimer";
+import { ConditioningBaseRest } from "../cards/ConditioningBaseRest";
+import { prescribedBases, sprintRestWhy } from "../../../../supabase/functions/_shared/wic/runRest";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { missedStillEditable } from "@/lib/wic/execution/liftCompletion";
@@ -227,6 +229,9 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
   const stopwatch = isStopwatchTime(rx, spec);
   const hasTime = stopwatch;
   const restBand = liftRestBand(rx);
+  const isSprint = (rx.slot === "speed" && hasTime) || ((rx.slot === "lift" || rx.slot === "supplemental") && /sprint/.test(rx.movement_slug.toLowerCase()));
+  const sprintSeconds = isSprint ? sprintRestSeconds(rx.distance_feet) : null;
+  const basesPerRep = rx.slot === "conditioning" ? prescribedBases(rx.movement_slug, rx.distance_feet) : null;
   const startedAt = useRef<number | null>(null);
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -253,8 +258,9 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
       <span className="font-mono text-sm tabular-nums text-foreground" aria-live="polite">{elapsed.toFixed(2)} s</span>
       <span className="text-[11px] text-muted-foreground">Stop fills the next rep's time.</span>
     </div>}
-    {(rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank/.test(rx.movement_slug)) && <RestTimer label="Rest between sets" seconds={restBand.min} maxSeconds={restBand.max} />}
-    {rx.slot === "speed" && hasTime && <RestTimer label="Rest between sprints" seconds={sprintRestSeconds(rx.distance_feet)} />}
+    {!isSprint && (rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank/.test(rx.movement_slug)) && <RestTimer label="Rest between sets" seconds={restBand.min} maxSeconds={restBand.max} />}
+    {isSprint && <><RestTimer label="Rest after each run set" seconds={sprintSeconds} /><p className="text-xs text-muted-foreground">{sprintRestWhy(rx.distance_feet) ?? "Run distance not entered — rest time is not yet set."}</p></>}
+    {basesPerRep && <ConditioningBaseRest basesPerRep={basesPerRep} />}
     <div className="grid gap-1.5 px-1 text-[10px] uppercase tracking-wide text-muted-foreground" style={{ gridTemplateColumns: `28px repeat(${spec.fields.length}, minmax(0, 1fr))` }}>
       <span>Set</span>{spec.fields.map((f) => <span key={f.key}>{f.label}{f.unit && f.key !== "time" ? ` (${f.unit})` : ""}{f.key === "time" && f.prefill ? ` · target ${formatTime(timeKindFor({ stopwatch, targetSeconds: f.prefill }), f.prefill)}` : ""}</span>)}
     </div>

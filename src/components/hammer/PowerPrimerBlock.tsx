@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Zap, Lock } from "lucide-react";
 import { RestTimer } from "@/components/hammer/cards/RestTimer";
+import { sprintRestSeconds, sprintRestWhy } from "../../../supabase/functions/_shared/wic/runRest";
 import { usePocketLogHost } from "@/components/hammer/cards/PocketCard";
 import { ExerciseDisclosure } from "@/components/hammer/cards/ExerciseDisclosure";
 import { papAlternatives } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
@@ -24,7 +25,7 @@ import { enqueue, sendJob } from "@/lib/logging/logOutbox";
 export type PowerPrimerPayload = {
   target: "throw" | "bat_speed" | "first_step" | "jump";
   primer: { source: "lift" | "library"; slug?: string; name: string; reps: [number, number]; heavy: boolean; cue?: string };
-  action: { slug?: string; name: string; reps: [number, number]; oz?: number | null; lb?: number | null; real_throw?: boolean; cue?: string };
+  action: { slug?: string; name: string; reps: [number, number]; oz?: number | null; lb?: number | null; real_throw?: boolean; cue?: string; distance_feet?: number | null };
   rest_s: [number, number];
   max_sets: number;
   max_total_reps: number | null;
@@ -87,6 +88,8 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets }: { p
     return Number.isFinite(v) && v > 0 ? v : null;
   }, [pp.target, st.done, accountBest]);
   const locked = pp.requires_throwing_warmup && !warm;
+  // rest_s stays the lift-to-action interval. Sprint recovery is separate.
+  const sprintFeet = pp.stop.kind === "sprint" ? pp.action.distance_feet ?? (pp.action.slug === "pap_a_10yd_steal" || pp.action.slug === "pap_a_10yd_infield" ? 30 : null) : null;
 
   function rate(i: number, rating: number) {
     const v = Number(entry);
@@ -131,7 +134,8 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets }: { p
         <div role="group" aria-label={`Rate explosive set ${i + 1}`} className="flex flex-wrap gap-1">
           {QUALITY.map((q) => <Button key={q.value} size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() => rate(i, q.value)}>{q.value}/5 {q.label}</Button>)}
         </div>
-      </> : <p data-primer-rating={r.rating} className="text-[11px]">Rated {r.rating}/5 — {QUALITY.find((q) => q.value === r.rating)?.label}{r.value != null ? ` · ${r.value} ${UNIT[pp.target]}` : ""}</p>}
+      </> : <><p data-primer-rating={r.rating} className="text-[11px]">Rated {r.rating}/5 — {QUALITY.find((q) => q.value === r.rating)?.label}{r.value != null ? ` · ${r.value} ${UNIT[pp.target]}` : ""}</p>{pp.stop.kind === "sprint" && <RestTimer label="Rest after this run set" seconds={sprintRestSeconds(sprintFeet)} />}</>}
+      {pp.stop.kind === "sprint" && <p className="text-xs text-muted-foreground">{sprintRestWhy(sprintFeet) ?? "Run distance not entered — rest time is not yet set."}</p>}
     </li>);
   }
 
