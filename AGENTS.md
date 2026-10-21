@@ -32,4 +32,5 @@
 - Today clip evidence uses the self-only sport-scoped RPC, never private `videos.ai_analysis`; advice reads server outcome labels, never stored scores. Why: player reads must preserve measurement privacy.
 - Coach summaries: gated reads; see coach AGENTS.md. Why: no wider access.
 - TEST admin exclusion uses one exact shared ID, never all system accounts. Why: demo connections stay usable.
+- Scout profile reads preflight the existing server-owned scope judge and key caches by viewer; the profile RPC still rechecks access. Why: unshared visits avoid denied data requests without weakening consent or hiding failures.
 

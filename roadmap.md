@@ -1,5 +1,7 @@
 # Current publish gate — Oct 21
 
+**22:48 UTC continuation (Camryn Williams):** complete only the six ordered publish gates; refresh the phone evidence, finish reachable real-record pages, rerun the full suite in bounded batches, verify switches and live-check guide. No publish, cron or iOS changes.
+
 **Ready to publish: NO** — current paired Swap phone proof incomplete (owner has no started plan; expanded TEST row's Swap is disabled because already completed); every-page proof incomplete (dynamic/lifecycle paths lack real-record checks); repeated hosted 503/schema-cache/fetch errors not stability-certified, despite clean final smoke and static-page rechecks. No publish, cron or iOS changes. Current owner guide and complete switch inventory: `docs/owner/publish-checklist.md`.
 
 | Ordered gate | Status | Proof / blocker |
