@@ -652,6 +652,13 @@
       "when": 1792601275513,
       "tag": "0092_shared_plan_day_transaction_lock",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1792605695196,
+      "tag": "0093_simple_swap_log",
+      "breakpoints": true
     }
   ]
 }
