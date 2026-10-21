@@ -28,7 +28,8 @@
 - Weekly goals use microcycle blocks, not minutes/lifting. Read subdirectory AGENTS.md. Why: baseline and safety win.
 
 - Game IQ uses `useGameIqAccess` and its shared switch; owner/admin see internal labels. It skips training gates, never subscriptions. Why: navigation and access agree.
-- Swap shares `_shared/planSwap` dose/context and pins row/catalog around AI; no uncertified saves. See prescription AGENTS.md. Why: stale safety.
+- Swap uses the server `swap_v2_enabled` gate for UI, saves, memory and equipment prompts; legacy behavior remains outside it. Why: unproven swaps stay limited to authorized accounts.
+- Today clip evidence uses the self-only sport-scoped RPC, never private `videos.ai_analysis`; advice reads server outcome labels, never stored scores. Why: player reads must preserve measurement privacy.
 - Coach summaries: gated reads; see coach AGENTS.md. Why: no wider access.
 - TEST admin exclusion uses one exact shared ID, never all system accounts. Why: demo connections stay usable.
 

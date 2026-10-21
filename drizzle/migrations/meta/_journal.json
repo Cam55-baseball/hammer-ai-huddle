@@ -659,6 +659,34 @@
       "when": 1792605695196,
       "tag": "0093_simple_swap_log",
       "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1792612221771,
+      "tag": "0094_swap_v2_release_gate",
+      "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1792614275554,
+      "tag": "0095_break_folder_permission_policy_recursion",
+      "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1792615395016,
+      "tag": "0096_self_plan_clip_evidence",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1792618480523,
+      "tag": "0097_self_consent_age_and_advice_labels",
+      "breakpoints": true
     }
   ]
 }

@@ -15,7 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ShieldCheck, CheckCircle2, Info, Repeat2, Loader2 } from "lucide-react";
-import { LiftSwapUndoChip } from "@/components/hammer/LiftSwapSheet";
+import { LiftSwapSheet, LiftSwapUndoChip } from "@/components/hammer/LiftSwapSheet";
+import { useSwapV2 } from "@/hooks/useSwapV2";
 import { LiveSwapSheet } from "@/components/hammer/LiveSwapSheet";
 import { useSwapLadder } from "@/hooks/useLiftSubstitution";
 import { supabase } from "@/integrations/supabase/client";
@@ -111,6 +112,7 @@ export function WkPrescriptionCard({
   const rx = useCheckedRx(rawRx);
   const repair = (t: string) => repairInstruction(t, rx, "guide") ?? t;
   const [swapOpen, setSwapOpen] = useState(false);
+  const swapV2 = useSwapV2();
   // Availability is resolved against the certified ladder (or, for rows that
   // predate substitution families, the identical catalog-derived ladder).
   const swapLadder = useSwapLadder(allowSwap ? rx : null, allowSwap);
@@ -335,7 +337,7 @@ export function WkPrescriptionCard({
               No new best on this lift in 3 sessions.{swapAvailable ? " Try a different lift of the same kind — tap Alternative. Your sets and reps stay the same." : " Keep your form clean — progress will come."}
             </p>
           )}
-          {allowSwap && rx.substituted_from_slug && <LiftSwapUndoChip rx={rx} />}
+          {allowSwap && !swapV2.enabled && rx.substituted_from_slug && <LiftSwapUndoChip rx={rx} />}
         </div>
 
         <div className="mt-2 space-y-2 text-xs">
@@ -382,8 +384,8 @@ export function WkPrescriptionCard({
           )}
         </div>
         {extraLogging}
-        {allowSwap && <Button variant="outline" size="sm" disabled={!["planned", "pending"].includes(rx.status)} onClick={() => setSwapOpen(true)}><Repeat2 className="mr-2 h-3.5 w-3.5" />Swap</Button>}
-        {allowSwap && swapOpen && <LiveSwapSheet rx={rawRx} open={swapOpen} onOpenChange={setSwapOpen} />}
+        {allowSwap && !swapV2.loading && (swapV2.enabled || swapAvailable) && <Button variant="outline" size="sm" disabled={!["planned", "pending"].includes(rx.status)} onClick={() => setSwapOpen(true)}><Repeat2 className="mr-2 h-3.5 w-3.5" />{swapV2.enabled ? "Swap" : "Alternative"}</Button>}
+        {allowSwap && swapOpen && (swapV2.enabled ? <LiveSwapSheet rx={rawRx} open={swapOpen} onOpenChange={setSwapOpen} /> : <LiftSwapSheet rx={rawRx} open={swapOpen} onOpenChange={setSwapOpen} />)}
       </ExerciseDisclosure>
     </div>
   );

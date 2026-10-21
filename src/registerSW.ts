@@ -35,7 +35,7 @@ export function registerSW() {
   if (!('serviceWorker' in navigator)) return;
 
   // Editor preview / iframe: hard-disable any SW so the live preview is never stale.
-  if (isInIframe() || isPreviewHost()) {
+  if (import.meta.env.DEV || isInIframe() || isPreviewHost()) {
     navigator.serviceWorker.getRegistrations().then((rs) => {
       rs.forEach((r) => r.unregister().catch(() => undefined));
     });

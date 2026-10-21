@@ -7,7 +7,7 @@ import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { COMPARABLE_OUTCOME_LABEL, judgedOutcomeFromRecheck } from "@/lib/intelligence/comparableOutcome";
+import { COMPARABLE_OUTCOME_LABEL } from "@/lib/intelligence/comparableOutcome";
 
 /** "Your Do-this list": did you do it, and what happened when we re-checked. */
 export function LearningLoopList() {
@@ -32,8 +32,8 @@ export function LearningLoopList() {
       if (!user) return [];
       // Owner/admin also see which principle produced the advice.
       const cols = staff
-        ? "id, area, do_this, followed, outcome, created_at, baseline_value, recheck_value, followed_at, checked_at, principle_version_id, coaching_principle_versions(principle_id, version)"
-        : "id, area, do_this, followed, outcome, created_at, baseline_value, recheck_value, followed_at, checked_at";
+        ? "id, area, do_this, followed, outcome, created_at, followed_at, checked_at, principle_version_id, coaching_principle_versions(principle_id, version)"
+        : "id, area, do_this, followed, outcome, created_at, followed_at, checked_at";
       const { data, error } = await (supabase as any).from("intelligence_recommendations")
         .select(cols)
         .eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
@@ -80,7 +80,7 @@ export function LearningLoopList() {
             <p className="text-xs">
               Did it: {r.followed ? "Yes" : "Not yet"} · Result:{" "}
               {r.outcome
-                ? COMPARABLE_OUTCOME_LABEL[judgedOutcomeFromRecheck(r)]
+                ? COMPARABLE_OUTCOME_LABEL[r.outcome as keyof typeof COMPARABLE_OUTCOME_LABEL] ?? COMPARABLE_OUTCOME_LABEL.need_more_data
                 : "Waiting for your next re-test"}
             </p>
           )}

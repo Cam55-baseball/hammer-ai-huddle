@@ -6,11 +6,13 @@ import { Label } from "@/components/ui/label";
 import { AnthropometricsStep } from "@/components/onboarding/steps/AnthropometricsStep";
 import { EquipmentStep } from "@/components/onboarding/steps/EquipmentStep";
 import { CategoryGoalsStep } from "@/components/onboarding/steps/CategoryGoalsStep";
+import { useSwapV2 } from "@/hooks/useSwapV2";
 type Profile = { full_name: string; position: string };
 type Section = "body" | "equipment" | "goals";
 /** Existing self-scoped answer forms, not assessment-only copies. */
 export function AssessmentProfileReview({ profile, onChange }: { profile: Profile; onChange: (profile: Profile) => void }) {
   const [section, setSection] = useState<Section | null>(null);
+  const swapV2 = useSwapV2();
   const back = () => setSection(null);
   if (section) return <div className="space-y-5">
     <Button variant="ghost" onClick={back}><ArrowLeft className="mr-2 h-4 w-4" />Profile check</Button>
@@ -24,7 +26,7 @@ export function AssessmentProfileReview({ profile, onChange }: { profile: Profil
       <Input id={`assessment-${key}`} value={profile[key]} onChange={e => onChange({ ...profile, [key]: e.target.value })} />
     </div>)}
     <div className="divide-y divide-border border-y border-border">
-      {([["body", "Body measurements"], ["goals", "Your goals"]] as const).map(([key, label]) => <Button key={key} variant="ghost" className="h-14 w-full justify-between rounded-none" onClick={() => setSection(key)}>{label}<ChevronRight className="h-4 w-4" /></Button>)}
+      {([["body", "Body measurements"], ...(!swapV2.enabled ? [["equipment", "Equipment"] as const] : []), ["goals", "Your goals"]] as const).map(([key, label]) => <Button key={key} variant="ghost" className="h-14 w-full justify-between rounded-none" onClick={() => setSection(key)}>{label}<ChevronRight className="h-4 w-4" /></Button>)}
     </div>
   </div>;
 }

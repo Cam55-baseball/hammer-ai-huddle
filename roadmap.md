@@ -1,4 +1,25 @@
-**Oct 21 19:45 UTC:** Item 7 hitter phone-proven (democoach connected via app request; six-week summary opens); pitcher blocked (14, no parent permission, no plans). Item 8 Done: list audit + internal Report Card phone-proven. Item 12 blocked: players get 403 on intelligence_recommendations (no grant; migration needs owner's yes) and re-test needs 14–28 days. TEST player's Oct 21 plan has "Mobility + foam roll" → foam-roller Swap case possible. Cleanup adds: democoach↔TEST hitter connection. `docs/owner/coach-summary-admin-proof.md`
+# Current publish gate — Oct 21
+
+**Ready to publish: NO** — every-page proof is incomplete (27 parameterized/wildcard paths plus five lifecycle/auth paths unverified); repeated hosted 503/schema-cache/fetch errors are not stability-certified, despite clean final smoke and static-page rechecks. No publish, cron or iOS changes. Current owner guide and complete switch inventory: `docs/owner/publish-checklist.md`.
+
+| Ordered gate | Status | Proof / blocker |
+|---|---|---|
+| 1. Swap v2 restricted; legacy behavior restored | Implemented; earlier phone check | OFF for ordinary players; active owner/admin and 14 TEST exceptions. Save, equipment-memory use and onboarding/assessment question removal gated. |
+| 2. Three-role phone smoke | PASS final retry | College player/democoach/demoorg dashboards, connections, Staff Plans check, legal Close actions; autosave persists; Stripe reached without payment. Earlier intermittent failures retained in evidence. |
+| 3. Every-page audit | Partial | 182 static paths × 3 roles visited, failures rechecked clean; 27 dynamic/wildcard and 5 lifecycle paths lack real-record walkthroughs. Repeated hosted failures remain unexplained at infrastructure level. |
+| 4. Full tests + preview | PASS | 486 files / 3,862 app tests; bounded final batch completed by retaining 107 passing files and rerunning remaining 14. Five Deno files / 28 tests pass. Preview build OK 22:21:42 UTC. |
+| 5. Switch inventory | Verified | Required states match: report card/Game IQ internal, spaces/rankings/Swap off, prompts/lifting/staff gate on, legal all. `plan_prompts_v2` buildable=false is edit-only; runtime mode all is ON. |
+| 6. Post-publish guide | Done | Expected outcomes for every deferred live feature proof recorded. |
+
+- [x] Gate new Swap in client, save endpoint, memory use and equipment-question presentation.
+- [x] Run bounded full suite, Deno tests, static phone audit and final three-role smoke.
+- [x] Record every switch and the owner's live-check expectations.
+- [x] Restore TEST log value; snapshot/remove exact temporary testing day, org membership and 19:20 duplicate coach request; preserve older connections and canceled $0 plan.
+- [ ] Finish real-record dynamic/lifecycle page audit and certify hosted requests stable before declaring release-ready.
+
+Historical 12-item feature status: only item 8 Done; items 1–6 Swap, 7 coach pitcher, 9 both-sport counters, 10 full-go, 11 mixed signals, 12 real nightly pair remain partial/unproven and are explicitly deferred to authorized live checks. Item 12's player label-read permission failure is fixed; genuine 14–28-day re-test still required. Earlier entries below are historical, not current release readiness.
+
+**Oct 21 19:45 UTC (historical):** Item 7 hitter phone-proven (democoach connected via app request; six-week summary opens); pitcher blocked (14, no parent permission, no plans). Item 8 Done: list audit + internal Report Card phone-proven. Item 12 blocked: players get 403 on intelligence_recommendations (no grant; migration needs owner's yes) and re-test needs 14–28 days. TEST player's Oct 21 plan has "Mobility + foam roll" → foam-roller Swap case possible. Cleanup adds: democoach↔TEST hitter connection. `docs/owner/coach-summary-admin-proof.md`
 
 **Oct 21 19:35 UTC:** Base counter: real baseball base-route row exists (TEST player, Oct 23, `bases_1st_3rd`, 90 ft, 2 bases/rep). Phone proof must wait until Oct 23 — moving the phone's clock forward signs the player out. No softball base-route or full-go rows in any buildable TEST plan.
 

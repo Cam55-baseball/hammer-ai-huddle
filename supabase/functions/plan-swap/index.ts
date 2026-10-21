@@ -27,6 +27,8 @@ Deno.serve(async req => {
   const { data: identity, error: authError } = await client.auth.getUser(auth.slice(7));
   if (authError || !identity.user) return reply({ error: "Sign in to use Swap." }, 401);
   const uid = identity.user.id;
+  const { data: swapEnabled, error: gateError } = await client.rpc("swap_v2_enabled");
+  if (gateError || swapEnabled !== true) return reply({ error: "Use the existing alternatives on your plan." }, 403);
   try {
     const input = bodySchema.safeParse(await req.json());
     if (!input.success) return reply({ error: "Check your Swap answer. Nothing was saved." }, 400);

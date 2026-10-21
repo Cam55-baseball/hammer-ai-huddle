@@ -1,4 +1,50 @@
-# Publish checklist — updated 2026-10-20
+# Publish checklist — updated 2026-10-21
+
+## Current publish gate — Oct 21
+
+**Ready to publish: NO.** Static-page checks and smoke rechecks are clean after fixes, but the requested *every-page* audit is not complete: 27 parameterized/wildcard routes and five auth/handoff/success paths were not exercised with real records. Intermittent hosted 503/schema-cache and failed-fetch errors also occurred repeatedly; the final smoke passed, but the underlying intermittent failure is not resolved or certified stable. No publishing, cron or iOS changes.
+
+| Gate | Status | Evidence / remaining requirement |
+|---|---|---|
+| 1. Restrict new Swap; retain old behavior | Implemented; earlier phone proof | `swap_v2` OFF, 14 named TEST exceptions plus active owner/admin; server save and generator equipment-memory reads gated; ordinary players retain legacy alternatives and equipment questions. Four positive Swap proofs remain live-only. |
+| 2. Phone regression smoke | PASS on final retry | College player, democoach, demoorg: dashboard, connections, Staff Plans → Check my plan, coach/org dashboards; nine legal documents opened/closed for each. Named exercise autosave read back after reload; original TEST value restored. Player checkout reached Stripe, no payment. Prior failed retries remain recorded, not erased. |
+| 3. Every-page audit | Partial — release blocker | 182 concrete paths × three roles = 546 visits; failing static paths rechecked clean after fixes. Parameterized/wildcard and excluded lifecycle paths remain unverified. Owner pages denied to other roles are access proofs, not populated owner-page proofs. |
+| 4. Full suite + preview build | PASS | 486 app files, 3,862 tests passed across bounded runs; last batch interrupted, 107 passing files retained and exact remaining 14 files rerun (42 tests). Five Deno files: 28/28 passed with `--node-modules-dir=none`. Latest preview build OK, 22:21:42 UTC. |
+| 5. Switch inventory | Verified below | `plan_prompts_v2` really resolves ON: mode all; buildable=false disables owner editing only, not runtime. |
+| 6. Owner's live-check guide | Updated below | Remaining feature proofs moved to explicit post-publish checks; this does not waive the unfinished release audit. |
+
+### Switch inventory — live readback Oct 21
+
+All 28 `wk_feature_switches` rows, with no undisclosed mode changes:
+
+- **OFF:** `facility_spaces`; `swap_v2` (14 named TEST allowlist exceptions and active owner/admin).
+- **ALL / runtime ON, buildable=false:** `plan_prompts_v2`. Its reminder consumers use the shared mode resolver; this column is an owner-edit lock, not a runtime OFF gate.
+- **ALL / buildable=true:** `adaptive_phases`, `content_barefoot_items`, `content_base_stealer`, `content_explosive_pitcher`, `content_heat_factory`, `content_lift_notes`, `content_softball_conditioning`, `content_speed_lab`, `hammers_today_start_gate`, `in_season_post_game`, `legal_v2`, `load_spike_protection`, `offseason_arc`, `onboarding_off_days`, `one_tap_logging`, `pap_real_throws`, `personalization`, `phase_feedback`, `power_primer`, `programs_retired`, `rest_day_calculator`, `staff_view`, `tell_hammers`, `ub_plyo_hand_wrist`, `under13_parent_program`, `windmill_program`.
+- **All three stored app settings:** `lifting_v2_enabled=true`; `staff_plan_gate={enabled:true}`; `rankings_visible={enabled:false}`. `training_intel_v1` absent → OFF.
+- **Code release controls:** `REPORT_CARD_SWITCH=off`, `GAME_IQ_AVAILABLE_TO_ATHLETES=false`: active owner/admin internal-only, labeled “Internal — not released”. `US_ONLY_APP_STORE_RELEASE=false` retains real storefront detection, not unrestricted native checkout. `TIPPING_DETECTION_ENABLED=false`, `ROOT_EVIDENCE_ENABLED=false`, `ON_DEVICE_BALL_DETECTOR_ENABLED=false`.
+- **All camera metric switches OFF:** `MEDIAPIPE_SHOULDER_TILT_ENABLED`, `MEDIAPIPE_HIP_DRIFT_ENABLED`, `MEDIAPIPE_PELVIS_ROTATION_ENABLED`, `MEDIAPIPE_LEAD_ELBOW_ENABLED`, `MEDIAPIPE_BACK_KNEE_FLEX_ENABLED`, `MEDIAPIPE_HEAD_POST_LANDING_ENABLED`, `MEDIAPIPE_HEAD_MOVEMENT_ENABLED`, `MEDIAPIPE_HANDS_STAY_UP_ENABLED`, `MEDIAPIPE_ENERGY_ANGLE_ENABLED`.
+- **Parked UI, all false:** `sidebarGameIq101`, `landingComingSoonBox`, `landingTeaserCards`, `progressGameIqTile`. Delaycam splitter: `staff_validation`; tempo and shoulder tilt: `staff_validation`; stride, ball/bat speed, contact time and hitting mechanics: `not_released`. Owner Fast Mode is a local display preference, default false, not a release/permission switch.
+
+### After publishing: live checks
+
+Use authorized TEST accounts only. Keep Swap OFF for ordinary players; release it only after all four positive cases pass. No fabricated clips, measures or plan rows.
+
+- **Machine → partner flips (today):** on a naturally built machine drill, missing machine offers legal partner flips; save once, reload: replacement and reason remain, same dose, one swap log; no permanent missing-machine memory.
+- **No barbell (always):** legal same-intent alternative saves with unchanged dose; reload retains it; missing-barbell memory exists and the next real plan avoids barbell work.
+- **No open field / no foam roller:** each naturally prescribed row offers only qualifying choices; save/reload retains choice, reason and correct today/always memory. “No safe swap found” is an honest refusal, not a successful positive proof; never force an invalid choice.
+- **Base counters:** baseball uses 90-ft bases; softball uses 60-ft bases. Each real route counts its declared bases per rep; four accumulated bases triggers the long reset.
+- **Full-go:** real pitcher, fielder and baserunner plans show the full-go execution stage with the original prescribed amount; logging survives reload.
+- **Mixed signals:** genuine recent analyzed clip and comparable game entries disagree about the same sport/skill; Today shows the notice, never invented faults or thresholds.
+- **Testing day:** schedule through the Organization dashboard; player opens the notice and details, sees date, tests and entered time/location, or the honest “Not entered” message. A fresh $0 test org plan may be needed; cancel at the end.
+- **Coach summary:** democoach opens both authorized TEST hitter and pitcher; “Hammers' plan for this player” and six-week summary show actual saved days, preserving parent/health permissions.
+- **Nightly pair:** player follows real saved advice, then enters a comparable genuine re-test 14–28 days later; the next normal 04:30 UTC run records its outcome and the player reads it. Do not backdate or manually trigger cron.
+- **Real iPhone upload:** use one original HEVC clip; analysis completes without manual conversion. Camera measurements stay unreleased.
+
+### Cleanup and change disclosure
+
+- Demo Organization's $0 subscription remains canceled from the prior run. Snapshotted temporary testing day, temporary org membership and only the 19:20 duplicate coach request removed; exact-ID readback confirms zero. Older coach relationship preserved. TEST autosave input restored to its original 3 reps.
+- Hosted migrations 0094–0097 applied for the named Swap gate, folder permission-loop fix, self-only canonical plan evidence, and self-only age/advice-label reads. Scores remain private. These are live backend changes; frontend fixes remain in preview until an explicit publish.
+- Earlier dated sections below are historical and do not override this release-gate status.
 
 ## AK1–AK6 Assessment Mode and plan prompts — in progress
 ### AK7 final batch status — Oct 20

@@ -26,6 +26,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { refreshWarmupStageOverrides } from "@/lib/hammer/prescription/warmupStages";
 import { useHammersTodayStart } from "@/hooks/useHammersTodayStart";
+import { useSwapV2 } from "@/hooks/useSwapV2";
 import { StartHammersTodayCard } from "@/components/hammer/StartHammersTodayCard";
 import { GrowthModeCard, HeightReminderCard } from "@/components/hammer/GrowthModeCard";
 import { DailyIntentHeader } from "@/components/hammer/DailyIntentHeader";
@@ -641,6 +642,7 @@ function HammerDailyPlanBody({
   beforeStartPortalTarget?: HTMLElement | null;
 }) {
   const ctx = useHammerAthleteContext();
+  const swapV2 = useSwapV2();
   const projectedAthlete = useMemo(() => projectEnvelope(ctx), [ctx]);
   const { isSwitchHitter, isAmbidextrousThrower } = useSideContext();
   const navigate = useNavigate();
@@ -1068,6 +1070,7 @@ function HammerDailyPlanBody({
           const allOtherBlocks = plan.blocks.filter(
             (b) =>
               visiblePlanCard(b) && b.modality !== "baserunning" && b.modality !== "warmup" &&
+              !(swapV2.enabled && b.modality === "defense" && b.status === "awaiting-input" && b.missing.includes("equipment_access")) &&
               !WK_OWNED.has(b.modality) &&
               !PRE_START_MODALITIES.has(b.modality) && (b.modality !== 'game_iq' || GAME_IQ_AVAILABLE_TO_ATHLETES),
           );

@@ -16,16 +16,14 @@ export function usePlanFaultContext(sport: 'baseball' | 'softball') {
           .eq('user_id', user.id).eq('source', 'video_analysis').order('observed_at', { ascending: false }).limit(501),
         supabase.from('analysis_fault_findings').select('id,user_id,sport,skill_domain,fault_key,root_pattern_key,created_at,video_id')
           .eq('user_id', user.id).order('created_at', { ascending: false }).limit(501),
-        supabase.from('videos').select('id,user_id,sport,module,created_at,ai_analysis')
-          .eq('user_id', user.id).eq('sport', sport).eq('status', 'completed').order('created_at', { ascending: false }).limit(501),
+        supabase.rpc('get_my_plan_clip_evidence', { p_sport: sport }),
       ]);
       if (signals.error) throw signals.error;
       if (findings.error) throw findings.error;
       if (clips.error) throw clips.error;
       if ([signals.data, findings.data, clips.data].some(rows => (rows?.length ?? 0) >= 501)) throw new Error('Complete analysis history is unavailable.');
       const evidence: PlanClip[] = (clips.data ?? []).map(c => {
-        const analysis = c.ai_analysis && typeof c.ai_analysis === 'object' && !Array.isArray(c.ai_analysis) ? c.ai_analysis : null;
-        const violations = analysis?.violations_detected;
+        const violations = c.violations;
         return { video_id: c.id, user_id: c.user_id, sport: c.sport, module: c.module, created_at: c.created_at,
           violations: violations && typeof violations === 'object' && !Array.isArray(violations) ? violations : null };
       });

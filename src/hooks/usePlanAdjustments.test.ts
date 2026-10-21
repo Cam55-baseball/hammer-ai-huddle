@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-const mocks = vi.hoisted(() => ({ from: vi.fn(), insert: vi.fn() }));
-vi.mock("@/hooks/useAuth", () => ({ useOptionalAuth: () => ({ user: { id: "test-player" } }) }));
+const mocks = vi.hoisted(() => ({ from: vi.fn(), insert: vi.fn(), user: { id: "test-player" } }));
+vi.mock("@/hooks/useAuth", () => ({ useOptionalAuth: () => ({ user: mocks.user }) }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: mocks.from } }));
 import { usePlanAdjustments } from "./usePlanAdjustments";
 
