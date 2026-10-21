@@ -160,16 +160,10 @@ export function detectRequiredGear(d: SwapSubject): string | null {
 
 /** Same-purpose alternatives, least gear-dependent first. */
 export function suggestAlternatives(d: SwapSubject): SwapCandidate[] {
-  const h = haystack(d);
-  const out: SwapCandidate[] = [];
-  for (const rule of RULES) {
-    if (!rule.match.some((m) => h.includes(m))) continue;
-    for (const alt of rule.alternatives) {
-      if (out.some((o) => o.name === alt.name)) continue;
-      out.push({ ...alt, dosage: d.dosage });
-    }
-  }
-  return out;
+  // Names and copied dosage text cannot establish equivalent intent or safety.
+  // These old hardcoded suggestions are not canonical prescriptions.
+  void d;
+  return [];
 }
 
 export interface PlanAdjustment {
@@ -196,8 +190,8 @@ interface AdjustableBlock {
 }
 
 /**
- * Apply saved adjustments to generated blocks. Swaps replace the drill and
- * label it; "unavailable with no alternative" removes it and says why.
+ * Legacy name-only adjustments are notices, never prescription authority.
+ * Keep the original complete session until a server-certified replacement exists.
  */
 export function applyAdjustments<T extends AdjustableBlock>(
   blocks: readonly T[],
@@ -207,31 +201,19 @@ export function applyAdjustments<T extends AdjustableBlock>(
   const byKey = new Map<string, PlanAdjustment>();
   for (const a of adjustments) {
     if (a.action === "position_worked" || !a.original_key) continue;
-    byKey.set(a.original_key, a);
+    if (!byKey.has(a.original_key)) byKey.set(a.original_key, a);
   }
   if (byKey.size === 0) return blocks as T[];
 
   return blocks.map((b) => {
     let touched = false;
     const notes: string[] = [];
-    const drills = b.drills.flatMap((d) => {
+    const drills = b.drills.map((d) => {
       const adj = byKey.get(drillKey(b.modality, d));
-      if (!adj) return [d];
+      if (!adj || adj.modality !== b.modality) return d;
       touched = true;
-      if (!adj.replacement_name) {
-        notes.push(`${d.name} was left out — you told me you can't do it${adj.reason ? ` (${adj.reason})` : ""}.`);
-        return [];
-      }
-      notes.push(`${adj.replacement_name} replaces ${d.name} — swapped by you.`);
-      return [
-        {
-          ...d,
-          name: adj.replacement_name,
-          dosage: adj.replacement_dosage ?? d.dosage,
-          slug: undefined,
-          equipmentNote: undefined,
-        },
-      ];
+      notes.push(`${d.name}: your earlier change needs a safety check. The original work is kept; don't do it if the needed gear or safe space is missing.`);
+      return d;
     });
     if (!touched) return b;
     return {
