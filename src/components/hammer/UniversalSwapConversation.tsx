@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Loader2, Repeat2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,6 +33,14 @@ function SwapVisit({ open, onOpenChange, expected, original, catalog, context, t
   const [selected, setSelected] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [uncertain, setUncertain] = useState(false);
+  const active = useRef(true);
+  const saving = useRef(false);
+  const attempted = useRef(false);
+  useEffect(() => {
+    active.current = open;
+    return () => { active.current = false; };
+  }, [open]);
   const [savedReason, setSavedReason] = useState<string | null>(null);
   const requirements = [...new Set((draft.step === "missing" ? original.equipment_requirements ?? [] :
     catalog.filter(row => row.primary_adaptation === original.primary_adaptation && row.movement_category === context.category)
@@ -56,14 +64,24 @@ function SwapVisit({ open, onOpenChange, expected, original, catalog, context, t
     onOpenChange(next);
   };
   const save = async (slug: string) => {
-    if (!transport || pending || !preview?.candidates.some(value => value.movement.slug === slug)) return;
+    if (!transport || saving.current || attempted.current || !preview?.candidates.some(value => value.movement.slug === slug)) return;
+    saving.current = true;
+    attempted.current = true;
     setPending(true); setError(null);
     try {
       const result = await commitAtomicSwap(draft, expected, slug, crypto.randomUUID(), transport);
+      if (!active.current) return;
       setSavedReason(result.reason);
       onSaved();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Couldn't confirm the swap. Reload your plan."); }
-    finally { setPending(false); }
+    } catch {
+      if (active.current) {
+        setUncertain(true);
+        setError("I couldn't confirm what saved. Reload your plan before trying again.");
+      }
+    } finally {
+      saving.current = false;
+      if (active.current) setPending(false);
+    }
   };
 
   return <Sheet open={open} onOpenChange={close}>
@@ -99,11 +117,11 @@ function SwapVisit({ open, onOpenChange, expected, original, catalog, context, t
             </div>
           </> : <>
             <h2 className="text-sm font-semibold">{preview?.candidates.length ? "Same training job, same amount of work" : "No checked replacement available"}</h2>
-            {preview?.candidates.map(({ movement }) => <Button key={movement.slug} variant="outline" className="h-auto min-h-11 w-full justify-start whitespace-normal text-left" disabled={pending || !transport} onClick={() => void save(movement.slug)}>
+            {preview?.candidates.map(({ movement }) => <Button key={movement.slug} variant="outline" className="h-auto min-h-11 w-full justify-start whitespace-normal text-left" disabled={pending || uncertain || !transport} onClick={() => void save(movement.slug)}>
               {pending ? <Loader2 className="mr-2 h-4 w-4 shrink-0 animate-spin" /> : <Repeat2 className="mr-2 h-4 w-4 shrink-0" />}{movement.name}
             </Button>)}
             <p className="text-sm text-muted-foreground">{!transport ? "Swap saving is not available yet. Your session and equipment memory are unchanged." : !preview?.candidates.length ? "Your session is unchanged. Don't replace it with different work." : "Your answer will be saved with the checked replacement."}</p>
-            <Button variant="ghost" disabled={pending} onClick={() => { setDraft(startSwapConversation(expected.user_id, expected.id, expected.plan_date)); setSelected([]); setError(null); }}><ArrowLeft className="mr-2 h-4 w-4" />Start again</Button>
+            <Button variant="ghost" disabled={pending || uncertain} onClick={() => { setDraft(startSwapConversation(expected.user_id, expected.id, expected.plan_date)); setSelected([]); setError(null); }}><ArrowLeft className="mr-2 h-4 w-4" />Start again</Button>
           </>}
         </>}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}

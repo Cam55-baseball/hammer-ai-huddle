@@ -1,7 +1,8 @@
 import { recordedSwapDose, type SwapDose } from "./sameDoseSwap";
 import { confirmedSwapAvailability, requireSwapVisit, type SwapConversation } from "./swapConversation";
+import { requireSwapSavedContext, unchangedSwapContext, type SwapSavedContext } from "./swapSnapshot";
 
-export interface AtomicSwapSnapshot extends SwapDose {
+export interface AtomicSwapSnapshot extends SwapDose, SwapSavedContext {
   id: string;
   user_id: string;
   plan_date: string;
@@ -33,9 +34,12 @@ export type AtomicSwapTransport = (request: AtomicSwapRequest) => Promise<Atomic
  */
 export async function commitAtomicSwap(draft: SwapConversation, expected: AtomicSwapSnapshot,
   candidateSlug: string, requestId: string, transport: AtomicSwapTransport): Promise<AtomicSwapResult> {
+  // The transport or caller may mutate its objects while we await; guards use a private snapshot.
+  expected = structuredClone(expected);
   requireSwapVisit(draft, expected.user_id, expected.id, expected.plan_date);
   const dose = recordedSwapDose(expected);
-  if (!candidateSlug.trim() || candidateSlug === expected.movement_slug || !requestId.trim() || !expected.updated_at ||
+  requireSwapSavedContext(expected);
+  if (!candidateSlug.trim() || candidateSlug === expected.movement_slug || !requestId.trim() || !Number.isFinite(Date.parse(expected.updated_at)) ||
       !["planned", "pending"].includes(expected.status)) throw new Error("Your session is unchanged. Reload your plan.");
   const availability = confirmedSwapAvailability(draft);
   if (!draft.scope) throw new Error("Choose just today or always.");
@@ -44,11 +48,13 @@ export async function commitAtomicSwap(draft: SwapConversation, expected: Atomic
   const saved = result.row;
   if (result.state !== "saved" || result.requestId !== requestId || !result.memorySaved || !result.reason.trim() ||
       !saved || saved.id !== expected.id || saved.user_id !== expected.user_id || saved.plan_date !== expected.plan_date ||
-      saved.movement_slug !== candidateSlug || saved.status !== expected.status || !saved.updated_at) {
+      saved.movement_slug !== candidateSlug || saved.status !== expected.status ||
+      !Number.isFinite(Date.parse(saved.updated_at)) || Date.parse(saved.updated_at) <= Date.parse(expected.updated_at)) {
     throw new Error("I couldn't confirm the swap and memory together. Reload your plan before trying again.");
   }
   const returnedDose = recordedSwapDose(saved);
-  if (Object.keys(dose).some(field => dose[field as keyof SwapDose] !== returnedDose[field as keyof SwapDose])) {
+  if (Object.keys(dose).some(field => dose[field as keyof SwapDose] !== returnedDose[field as keyof SwapDose]) ||
+      !unchangedSwapContext(expected, saved)) {
     throw new Error("The returned swap changed the work. Reload your plan; don't start this replacement.");
   }
   return result;
