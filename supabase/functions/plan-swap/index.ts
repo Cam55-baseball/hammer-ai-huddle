@@ -4,6 +4,7 @@ import { z } from "npm:zod@3.25.76";
 import { chatCompletion } from "../_shared/googleAi.ts";
 import { validateAvailabilityInterpretation } from "./conversation.ts";
 import { requireMatchedSwapVisit, swapCatalogFingerprint } from "../_shared/planSwap/visit.ts";
+import { requireSwapCatalogSource } from "../_shared/planSwap/catalogGate.ts";
 
 const bodySchema = z.object({
   action: z.literal("interpret"), prescriptionId: z.string().uuid(),
@@ -37,6 +38,8 @@ Deno.serve(async req => {
     const { data: source, error: sourceError } = await client.from("wk_movement_catalog")
       .select("*").eq("slug", rx.movement_slug).maybeSingle();
     if (sourceError || !source || source.is_active !== true) return reply({ error: "The original exercise could not be checked." }, 409);
+    try { requireSwapCatalogSource(source, rx); }
+    catch { return reply({ error: "This exercise's replacement details could not be checked. Your session is unchanged." }, 409); }
     let allowed = (source.equipment_requirements ?? []) as string[];
     let familyRows: unknown[] = [];
     if (source.substitution_family && source.movement_category) {
@@ -71,6 +74,8 @@ Deno.serve(async req => {
     }
     try { requireMatchedSwapVisit(expected, freshRx.data, identity.user.id, prescriptionId, planDate); }
     catch { return reply({ error: "Your exercise changed while I checked. Reload your plan. Nothing was saved." }, 409); }
+    try { requireSwapCatalogSource(freshSource.data, freshRx.data); }
+    catch { return reply({ error: "This exercise's replacement details changed. Reload your plan. Nothing was saved." }, 409); }
     if (await swapCatalogFingerprint(freshSource.data, freshFamily.data ?? []) !== catalogFingerprint) {
       return reply({ error: "The exercise choices changed while I checked. Reload your plan. Nothing was saved." }, 409);
     }
