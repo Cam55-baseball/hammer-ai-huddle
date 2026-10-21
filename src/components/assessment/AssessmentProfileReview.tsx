@@ -24,7 +24,7 @@ export function AssessmentProfileReview({ profile, onChange }: { profile: Profil
       <Input id={`assessment-${key}`} value={profile[key]} onChange={e => onChange({ ...profile, [key]: e.target.value })} />
     </div>)}
     <div className="divide-y divide-border border-y border-border">
-      {([["body", "Body measurements"], ["equipment", "Your equipment"], ["goals", "Your goals"]] as const).map(([key, label]) => <Button key={key} variant="ghost" className="h-14 w-full justify-between rounded-none" onClick={() => setSection(key)}>{label}<ChevronRight className="h-4 w-4" /></Button>)}
+      {([["body", "Body measurements"], ["goals", "Your goals"]] as const).map(([key, label]) => <Button key={key} variant="ghost" className="h-14 w-full justify-between rounded-none" onClick={() => setSection(key)}>{label}<ChevronRight className="h-4 w-4" /></Button>)}
     </div>
   </div>;
 }

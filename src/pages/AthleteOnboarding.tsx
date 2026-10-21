@@ -113,7 +113,7 @@ export default function AthleteOnboarding() {
       [STEP_DONE]: "neutral",
       [STEP_PROFILE]: answerStatus.byKey.profile,
       [STEP_ANTHRO]: answerStatus.byKey.anthropometrics,
-      [STEP_EQUIPMENT]: answerStatus.byKey.equipment,
+      [STEP_EQUIPMENT]: "neutral",
       [STEP_GOALS]: answerStatus.byKey.goals,
       [STEP_FUEL]: answerStatus.byKey.fuel,
       [STEP_MENTAL]: answerStatus.byKey.mental,
