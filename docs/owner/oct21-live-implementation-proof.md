@@ -24,6 +24,8 @@ The existing clearly named TEST ADMIN was reused; no duplicate admin or real own
 
 Changed-path run: five files / 137 tests passed (coach card/summary, six-week arithmetic, EASS actual builder, skillSessionPlan). A first edit mistakenly put stage mapping in the warm-up mapper; it was corrected in the EASS mapper, tests rerun, and preview returned `build OK` at 14:44:05 UTC. No unexplained build error remains.
 
+Fresh full coverage: 473 files / 3,812 tests passed across bounded runs. Initial full run reached 366 files / 3,478 passed tests before the 600-second command limit. Remaining 107 files covered 334 tests; one adjustment-hook loading wait timed out under contention, then its isolated two-test file passed unchanged (1 worker). This is bounded complete coverage, not a single uninterrupted green suite. Latest preview `build OK`: 14:56:30 UTC.
+
 ## Not accepted yet
 
 - Requested TEST hitter with 14 games and TEST pitcher coach proofs, assigned-org and scout-specific hosted checks. The inspected system TEST pitcher profiles have no saved snapshots; the inspected game table did not identify a 14-game TEST hitter. No synthetic six-week history was created.

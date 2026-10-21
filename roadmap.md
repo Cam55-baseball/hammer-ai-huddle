@@ -18,7 +18,7 @@
 
 **Nightly outcome:** last recorded Oct 21 04:30 callback HTTP 200, players/checked/pending 0/0/0 (empty, not positive). Next scheduled outcome is not claimed early. No cron changes or manual trigger.
 
-**Validation:** changed-path five files / 137 tests PASS; preview `build OK` after correcting the misplaced warm-up mapping. Prior full suite: 473 files / 3,808 PASS, not represented as a fresh full run after these edits. Proof connections revoked, TEST passwords scrambled; no fabricated measurements, history or outcomes.
+**Validation:** fresh complete coverage **473 files / 3,812 tests PASS** in bounded runs (366 files / 3,478 tests before command limit; remaining 107 files / 334 tests, with one loading-wait timing failure passing unchanged in isolation). Changed-path five files / 137 tests PASS. Preview `build OK` at 14:56:30 UTC. Proof connections revoked, TEST passwords scrambled; no fabricated measurements, history or outcomes.
 
 - [x] Apply named AT5 migration and mount coach six-week summary in the actual coach page.
 - [x] Prove real coach saved-plan reads and immediate revocation; preserve health redaction.
