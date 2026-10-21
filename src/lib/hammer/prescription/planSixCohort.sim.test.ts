@@ -145,3 +145,66 @@ describe('AT1: ranked weekly skill blocks through the actual builder, both sport
     });
   }
 });
+
+describe('AT4: subscription-qualified ranked goals through actual daily plans', () => {
+  for (const sport of ['baseball', 'softball'] as const) for (const tier of ['pitcher', '5tool', 'golden2way'] as const) {
+    it(`${sport}/${tier}: actual slots retain baselines/lifting; included hitting adds eight slots and full fielding phase stays capped`, () => {
+      const modules = [`${sport}_${tier}`];
+      const other = sport === 'baseball' ? 'softball' : 'baseball';
+      const totals = { baseHit: 0, hit: 0, baseField: 0, field: 0, wrongHit: 0, emptyHit: 0 };
+      let shared = 0;
+      const ranked = (order: string[]) => ({ version: 1, updatedAt: '2026-10-20',
+        goals: order.map((category, index) => ({ category, rank: index + 1, intent: null })) });
+      for (let n = 0; n < 56; n++) {
+        const today = new Date(2026, 5, 7 + n);
+        const make = (order?: string[]) => context(sport, tier === 'pitcher' ? 'P' : 'SS', 'off', {
+          lifecycle_band: 'adult', ...(order ? { category_goals: ranked(order) } : {}),
+        });
+        const build = (order?: string[], subscriptionModules = modules) => buildHammerDailyPlan(
+          make(order), NORMAL_SIGNAL, null, null, undefined, today, { subscriptionModules });
+        const hitOrder = ['hitting', 'fielding', 'throwing', 'speed', 'power'];
+        const base = build();
+        const hit = build(hitOrder);
+        const field = build(['fielding', 'hitting', 'throwing', 'speed', 'power']);
+        const wrong = build(hitOrder, [`${other}_golden2way`]);
+        const empty = build(hitOrder, []);
+        totals.baseHit += Number(base.microcycle.perModality.hitting.scheduled);
+        totals.hit += Number(hit.microcycle.perModality.hitting.scheduled);
+        totals.baseField += Number(base.microcycle.perModality.defense.scheduled);
+        totals.field += Number(field.microcycle.perModality.defense.scheduled);
+        totals.wrongHit += Number(wrong.microcycle.perModality.hitting.scheduled);
+        totals.emptyHit += Number(empty.microcycle.perModality.hitting.scheduled);
+        for (const next of [hit, field, wrong, empty]) {
+          for (const modality of ['hitting', 'throwing', 'defense', 'baserunning'] as const) {
+            if (base.microcycle.perModality[modality].scheduled) expect(next.microcycle.perModality[modality].scheduled).toBe(true);
+          }
+          expect(next.microcycle.perModality.strength).toEqual(base.microcycle.perModality.strength);
+          const beforeLift = base.blocks.find(b => b.modality === 'strength');
+          const afterLift = next.blocks.find(b => b.modality === 'strength');
+          expect(beforeLift).toBeDefined();
+          expect(afterLift?.drills).toEqual(beforeLift?.drills);
+          expect(afterLift?.durationMin).toBe(beforeLift?.durationMin);
+          expect(afterLift?.status).toBe(beforeLift?.status);
+          expect(afterLift?.stopRules).toEqual(beforeLift?.stopRules);
+        }
+        if (tier !== 'pitcher' && !base.microcycle.perModality.hitting.scheduled && hit.microcycle.perModality.hitting.scheduled) {
+          expect(hit.microcycle.perModality.hitting.intensity).toBe('activation');
+          expect(hit.blocks.find(b => b.modality === 'hitting')?.status).toBe('ready');
+        }
+        if (tier !== 'pitcher') {
+          const ready = hit.blocks.filter(b => b.status === 'ready' && ['hitting', 'defense', 'throwing', 'baserunning'].includes(b.modality));
+          if (ready.length > 1 && ready.some(b => b.modality === 'defense')) {
+            expect(ready[0].modality).toBe('defense'); shared++;
+          }
+        }
+      }
+      expect(totals.hit - totals.baseHit).toBe(tier === 'pitcher' ? 0 : 8);
+      // This actual builder resolves the build rung: all three legal fielding
+      // phase slots are already occupied, so a top goal cannot add a fourth.
+      expect(totals.field - totals.baseField).toBe(0);
+      expect(totals.wrongHit).toBe(totals.baseHit);
+      expect(totals.emptyHit).toBe(totals.baseHit);
+      if (tier !== 'pitcher') expect(shared).toBeGreaterThan(0);
+    });
+  }
+});

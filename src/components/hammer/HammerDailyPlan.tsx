@@ -750,9 +750,10 @@ function HammerDailyPlanBody({
           defenseFullOverride,
           pitcherOutings: pitcherSchedule.facts,
           practiceRecords: practiceLoadHistory.data,
+          subscriptionModules: modules,
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a

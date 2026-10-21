@@ -1,0 +1,21 @@
+# AT4 — Actual product goal eligibility and positive saved-week coach proof
+
+## Completed
+
+- The actual daily builder previously passed every ready modality into weeklyGoalBlocks without subscription input. The athlete caller now supplies its current modules; the builder intersects ready modalities with selected-sport priorityAccess for purchased goal boosts. Hitting requires hitting, throwing requires throwing or pitching, fielding/baserunning require throwing/player access. Explicit empty or opposite-sport modules grant no purchased skill boost. Omitted modules preserve existing generic builder behavior. This change gates extra goal blocks, not all baseline cards or all routes; no broader entitlement guarantee claimed.
+- Six actual-builder cohorts (baseball/softball × Pitcher/5Tool/Golden 2Way), 56 days each, compare baseline, hitting-first, fielding-first, opposite-sport and empty-module inputs. Included hitting adds exactly eight scheduled slots; Pitcher/empty/opposite-sport hitting adds zero. Every baseline skill schedule retained, added hitting slots activation and ready, second fielding leads shared ready days, lifting drills/doses/status/duration/stop rules and microcycle identical. Actual builder resolves build rung here: all three fielding phase slots are already occupied, so fielding-first correctly adds zero rather than inventing a fourth slot. Earlier scheduler foundation fixtures demonstrating +8 fielding remain separate coverage.
+- Targeted safety/product checks: 3 files / 142 tests PASS, `/tmp/at4-focused.log`.
+- Real athlete phone: temporary complete TEST ranking, real password form sign-in, actual hitting card. Device timezone America/Los_Angeles still Oct 20; real account limits refuse an extra block. Screenshot `/tmp/browser/at4/goal-because.png` inspected: “Hitting is your top goal. An extra weekly skill block cannot fit the current phase, rest or day limits; your baseline stays.” No invented favorable availability or completion. Original ranking restored exactly, dashboard reloaded to save the original current plan, password scrambled. Log `goal-phone.log`.
+- Real democoach phone, accepted coaching connection via canonical send/respond RPCs, Development → Hammers' plan → Saved work — last 7 days. Today plus genuine Oct 20 saved snapshot shown; no copied/backdated snapshot inserted. Eleven reason lines, one prior saved day, health-private notice, honest Need more data outcomes, no athlete Game IQ, no overflow; normal history collapse works. Screenshot `/tmp/browser/at4/coach-plan.png` inspected. Log `coach-history.log`.
+- Canonical end_connection revocation verified: coach_athlete_plan subsequently returns denied. Exact request snapshotted then deleted by ID and TEST message; absence verified. Both TEST passwords scrambled; Coach subscription left active.
+- Fresh coverage completed across interrupted runs and final bounded remainder: **456 unique files / 3,679 tests PASS**. The first full run exceeded shell time before its final summary; recovery initially failed to parse terminal formatting and unnecessarily repeated files. Final stripped-log aggregation plus a 94-file remainder covers all 456 files once in the reported count. Logs `/tmp/at4-full-suite.log`, `/tmp/at4-suite-remainder.log`, `/tmp/at4-last-tests.log`, `/tmp/at4-final-remainder.log`. Not claimed as one uninterrupted full-suite run. Latest preview build OK.
+
+## Remaining
+
+- Six-week coach summaries and issue-linked practice ideas: canonical checked-in read contract is not established; no inferred summary/drill or alternate athlete-record read added. Assigned-org proof remains open.
+- Full baseline product gating, hosted six-cohort screenshots, complete pitching/fielding/baserunning execution, mixed-signals/testing-day details, measured Report Card/Vault save proofs and protected universal TEST ADMIN exclusion remain open.
+- Actual nightly outcome proof waits for Oct 21 04:30 UTC (still future during this run); schedule untouched.
+
+No publish, deployment, migration, cron or iOS changes. No measurement/completion records invented. All exact AT4 TEST changes cleaned, except genuine athlete plan snapshots saved by normal app use, which remain canonical history.
+
+**Ready to publish: NO.**
