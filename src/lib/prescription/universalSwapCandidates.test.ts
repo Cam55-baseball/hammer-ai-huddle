@@ -5,6 +5,7 @@ import type { SwapDose } from "./sameDoseSwap";
 const dose: SwapDose = { sets: 3, reps: 10, duration_seconds: null, distance_feet: null,
   total_reps: 30, dosage_unit: "reps", tempo: null, load_pct: null };
 const row: UniversalSwapMovement = { slug: "machine", name: "Angled machine fastballs", is_active: true,
+  cns_cost: 1, volume_cost: 1, contacts_per_rep: 0,
   movement_category: "hitting", substitution_family: "timing", primary_adaptation: "ball_timing",
   dosage_unit: "reps", equipment_requirements: ["pitching_machine"], min_age_years: 13,
   contraindications: [], sport_scope: "baseball", season_legality: { os_q1: true }, training_age_legality: { beginner: true } };
@@ -67,5 +68,20 @@ describe("universal Swap catalog preview", () => {
     expect(previewUniversalSwap(row, { ...dose, reps: Number.NaN }, [flips], context).blocked).toBe(true);
     expect(previewUniversalSwap(row, { ...dose, dosage_unit: null }, [flips], context).blocked).toBe(true);
     expect(previewUniversalSwap(row, dose, [{ ...flips, min_age_years: Number.NaN }], context).candidates).toEqual([]);
+  });
+  it("expired source sport, season, injury and unit legality cannot anchor a replacement", () => {
+    for (const patch of [{ sport_scope: "softball" }, { season_legality: { os_q1: false } },
+      { training_age_legality: { beginner: false } }, { contraindications: ["shoulder"] }, { dosage_unit: "seconds" }]) {
+      expect(previewUniversalSwap({ ...row, ...patch }, dose, [flips], { ...context, injuryRestrictions: ["shoulder"] }).blocked).toBe(true);
+    }
+  });
+  it("same 30 swings and intent cannot hide higher CNS, volume or contacts", () => {
+    for (const patch of [{ cns_cost: 2 }, { volume_cost: 2 }, { contacts_per_rep: 1 }, { cns_cost: null }]) {
+      expect(previewUniversalSwap(row, dose, [{ ...flips, ...patch }], context).candidates).toEqual([]);
+    }
+    expect(previewUniversalSwap({ ...row, volume_cost: undefined }, dose, [flips], context).blocked).toBe(true);
+  });
+  it("contradictory aliases cannot unlock even an equipment-free candidate", () => {
+    expect(hasSwapRequirements([], { confirmed: true, have: ["db"], lacks: ["dumbbells"] })).toBe(false);
   });
 });

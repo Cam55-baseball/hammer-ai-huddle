@@ -1,3 +1,11 @@
+# AU7 — Approved open-item continuation — Oct 21
+
+**Ready to publish: no.** No publish, cron or iOS changes; no live permission/schema changes.
+
+- [ ] Require explicit catalog workload and source legality for universal previews; no missing-as-zero costs.
+- [ ] Advance an independent testing-day correctness sub-step if evidence identifies one.
+- [ ] Run relevant tests/proofs, clean exact TEST data and refresh the top status table.
+
 # AU6 — Approved open-item continuation — Oct 21
 
 **Ready to publish: no.** No publish, cron or iOS changes; no live schema or permission changes.

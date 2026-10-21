@@ -1,8 +1,9 @@
 import { eligibleSwapCandidate, type SwapEligibilityFacts } from "./swapEligibility";
 import { recordedSwapDose, sameDoseSwap, type SwapDose } from "./sameDoseSwap";
+import { sameOrLowerSwapWorkload, type SwapWorkloadFacts } from "./swapWorkload";
 
 /** Catalog-backed previews only. A server must certify and atomically save the chosen row. */
-export interface UniversalSwapMovement extends SwapEligibilityFacts {
+export interface UniversalSwapMovement extends SwapEligibilityFacts, SwapWorkloadFacts {
   name: string;
   primary_adaptation: string | null;
   equipment_requirements: string[] | null;
@@ -31,6 +32,7 @@ export function hasSwapRequirements(requirements: readonly string[] | null, avai
   if (!availability.confirmed || requirements === null) return false;
   const have = new Set(availability.have.map(normalize));
   const lacks = new Set(availability.lacks.map(normalize));
+  if ([...have].some(key => !key || lacks.has(key)) || [...lacks].some(key => !key)) return false;
   return requirements.every(raw => {
     const key = normalize(raw);
     return key.length > 0 && !lacks.has(key) && (NO_GEAR.has(key) || have.has(key));
@@ -60,10 +62,15 @@ export function previewUniversalSwap(
   if (!dose.dosage_unit?.trim()) return { candidates: [], blocked: true };
   if (!context.sessionAllowed || !context.availability.confirmed || context.injuryRestrictions === null ||
       context.ageYears === null || !Number.isFinite(context.ageYears) || context.ageYears < 0 ||
-      !intent || original.is_active !== true || original.movement_category !== context.category) {
+      !intent || original.is_active !== true || original.movement_category !== context.category ||
+      !sameOrLowerSwapWorkload(original, original) ||
+      !eligibleSwapCandidate(original, original, { ...context, unit: dose.dosage_unit }) ||
+      original.min_age_years == null || !Number.isFinite(original.min_age_years) || original.min_age_years < 0 ||
+      original.min_age_years > context.ageYears || original.contraindications == null) {
     return { candidates: [], blocked: true };
   }
   const restrictions = new Set(context.injuryRestrictions.map(normalize));
+  if (original.contraindications.some(value => restrictions.has(normalize(value)))) return { candidates: [], blocked: true };
   const candidates: Array<{ movement: UniversalSwapMovement; dose: SwapDose; reason: string }> = [];
   const seen = new Set<string>();
   // Duplicate catalog identities are ambiguous, even when one of the rows looks valid.
@@ -77,6 +84,7 @@ export function previewUniversalSwap(
         !Number.isFinite(movement.min_age_years) || movement.min_age_years < 0 ||
         movement.contraindications === null || movement.contraindications === undefined ||
         movement.contraindications.some(value => restrictions.has(normalize(value))) ||
+        !sameOrLowerSwapWorkload(original, movement) ||
         !hasSwapRequirements(movement.equipment_requirements, context.availability) ||
         !eligibleSwapCandidate(original, movement, { ...context, unit: dose.dosage_unit })) continue;
     seen.add(movement.slug);
