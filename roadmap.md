@@ -1,3 +1,11 @@
+# AU4 — Approved open-item continuation — Oct 21
+
+**Ready to publish: no.** No publish, cron or iOS changes.
+
+- [ ] Advance safe Swap certification and unchanged-dose save boundaries.
+- [ ] Run changed-path tests and phone checks where applicable; clean exact TEST data.
+- [ ] Update open-item table, nightly result and remaining proof boundaries.
+
 # AU3 — Approved open-item continuation — Oct 21
 
 **Ready to publish: no.** No publish, cron or iOS changes.
