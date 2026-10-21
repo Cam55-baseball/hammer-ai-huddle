@@ -2,9 +2,26 @@
 
 **Ready to publish: no.** No publish, cron or iOS changes; no live schema or permission changes.
 
-- [ ] Advance complete saved-context validation and in-flight Swap visit/retry boundaries.
-- [ ] Test concrete safety rules and check the affected-player phone flow; clean exact TEST data.
-- [ ] Update open-item statuses, nightly result and remaining blockers.
+| Approved open item | Status | Proof / remaining acceptance |
+|---|---|---|
+| Conditioning base-counter rest | Partly | Existing phone proof retained; both-sport actual-plan acceptance open. `docs/owner/au1-proof.md` |
+| Every-card AI Swap + equipment questions | Partly | Complete context/rest validation, stale version refusal, late-account response protection and uncertain-save retry lock tested. Staged TEST phone no-write proof passed; server/AI, four positive saves and question removal open. `docs/owner/au6-proof.md` |
+| Coach six-week summaries / practice ideas | Partly | Tested projection; named staged access authorization and coach/org live proof remain. `docs/owner/au5-proof.md` |
+| Pitching / fielding / baserunning full-go | Partly | Execution regressions retained; eligible actual-plan phone cases remain. `docs/owner/au3-proof.md` |
+| Mixed signals / testing-day details | Partly | Rules and notice built; genuine linked hosted cases remain. `docs/owner/au1-proof.md` |
+| TEST ADMIN owner screens / hidden lists | Partly | Boundary audit retained; staged exclusion authorization and proofs remain. `docs/owner/au2-proof.md` |
+| 04:30 nightly learning outcome | Partly | Recorded HTTP 200, 0 players / checked / pending; no positive comparable pair. `docs/owner/au1-proof.md` |
+
+**Nightly result:** Oct 21 04:30 recorded successful empty callback, 0/0/0; no new run claimed or triggered, no schedule change.
+
+**Fresh suite:** **471 files / 3,795 tests PASS** (469 test files plus two previously covered spec files); latest preview build OK. Real TEST phone staged no-write check passed; exact prescription/memory unchanged; password scrambled and private credentials removed. `docs/owner/au6-proof.md`.
+
+- [x] Advance complete saved-context validation and in-flight Swap visit/retry boundaries.
+- [x] Test concrete safety rules and check the affected-player staged phone flow; clean exact TEST data.
+- [x] Update open-item statuses, nightly result and remaining blockers.
+- [ ] Universal server certification/atomic memory and AI connection, four positive phone saves, then equipment-question replacement: canonical safety/memory authority and named live permission/schema authorization remain required.
+- [ ] Coach six-week live reads and TEST ADMIN exclusion: named staged server authorization and affected-role proofs remain.
+- [ ] Actual-plan full-go/both-sport conditioning and genuine mixed signals/testing day/owner/positive nightly evidence remain unproved.
 
 # AU5 — Approved open-item continuation — Oct 21
 
