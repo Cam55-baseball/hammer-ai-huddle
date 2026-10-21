@@ -8,9 +8,7 @@ interface Props {
   state: 'ready' | 'loading' | 'error';
 }
 
-/** Staged display only. Callers must supply freshly authorized, redacted snapshots.
- * Not mounted in CoachPlanCard until the existing server access correction is proved.
- */
+/** Callers supply freshly authorized, redacted snapshots from the coaching RPC. */
 export function CoachSixWeekSummary({ plans, sport, today, state }: Props) {
   if (state === 'loading') return <p role="status" className="text-sm text-muted-foreground">Loading saved plans…</p>;
   if (state === 'error') return <p role="alert" className="text-sm text-destructive">Couldn't load the six-week summary.</p>;

@@ -22722,6 +22722,7 @@ export type Database = {
         Args: { _athlete: string; _date: string; _sign: number; _stats: Json }
         Returns: undefined
       }
+      _coach_training_access: { Args: { _athlete: string }; Returns: boolean }
       _gen_code: { Args: never; Returns: string }
       _plan_line_is_health: { Args: { _t: string }; Returns: boolean }
       _testing_day_can_manage: {

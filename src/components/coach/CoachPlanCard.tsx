@@ -14,6 +14,8 @@ import { localIso } from "@/hooks/usePitcherSchedule";
 import { mapCoachOutcomes } from "@/lib/intelligence/coachOutcomes";
 import { visibleCoachPlanBlocks } from '@/lib/coach/visiblePlanBlocks';
 import { previousPlanDates, savedTrainingHistory, savedPlanReasons, type SavedCoachPlan, type SavedPlanBlock } from '@/lib/coach/planHistory';
+import { sixWeekPlanDates } from '@/lib/coach/sixWeekPlanSummary';
+import { CoachSixWeekSummary } from './CoachSixWeekSummary';
 
 function SavedWork({ blocks }: { blocks: SavedPlanBlock[] }) {
   return <ul className="space-y-3">
@@ -35,6 +37,8 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
   const [historyFor, setHistoryFor] = useState<string | null>(null);
   const historyKey = `${athleteId}:${today}`;
   const historyOpen = historyFor === historyKey;
+  const [summaryFor, setSummaryFor] = useState<string | null>(null);
+  const summaryOpen = summaryFor === historyKey;
   const query = useQuery({
     queryKey: ["coach-athlete-plan", athleteId, today],
     staleTime: 60_000,
@@ -56,6 +60,27 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
         if (!row || row.state === 'denied') throw new Error('Plan sharing unavailable');
         return row;
       }));
+      return savedTrainingHistory(rows, query.data?.sport);
+    },
+  });
+  const summaryQuery = useQuery({
+    queryKey: ['coach-athlete-six-week-plans', athleteId, today, query.data?.sport],
+    enabled: summaryOpen && query.data?.state === 'ok',
+    staleTime: 0,
+    queryFn: async () => {
+      const rows: SavedCoachPlan[] = [];
+      // Bound concurrency; every dated read applies the current coaching and health gate.
+      const dates = sixWeekPlanDates(today);
+      for (let offset = 0; offset < dates.length; offset += 6) {
+        const batch = await Promise.all(dates.slice(offset, offset + 6).map(async date => {
+          const { data, error } = await supabase.rpc('coach_athlete_plan', { _athlete: athleteId, _date: date });
+          if (error) throw error;
+          const row = data as unknown as SavedCoachPlan;
+          if (!row || row.state === 'denied') throw new Error('Plan sharing unavailable');
+          return row;
+        }));
+        rows.push(...batch);
+      }
       return savedTrainingHistory(rows, query.data?.sport);
     },
   });
@@ -111,6 +136,16 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
             <h4 className="text-xs font-semibold">Saved plan · {day.plan_date}</h4>
             {day.blocks.length ? <SavedWork blocks={day.blocks} /> : <p className="text-xs text-muted-foreground">No training prescribed in this saved plan.</p>}
           </div>))}
+      </div>
+      <div className="border-t border-border pt-3 space-y-3">
+        <Button variant="ghost" size="sm" aria-expanded={summaryOpen} onClick={() => setSummaryFor(summaryOpen ? null : historyKey)}>
+          {summaryOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}Six-week summary and practice ideas
+        </Button>
+        {summaryOpen && plan.sport && <CoachSixWeekSummary
+          plans={summaryQuery.isFetching || summaryQuery.error ? [] : summaryQuery.data ?? []}
+          sport={plan.sport} today={today}
+          state={summaryQuery.error ? 'error' : summaryQuery.isFetching || !summaryQuery.data ? 'loading' : 'ready'}
+        />}
       </div>
       {outcomesQuery.error && <p role="alert" className="text-xs text-destructive">Couldn't load what worked lately.</p>}
       {outcomesQuery.data?.state === 'ok' && outcomesQuery.data.rows.length === 0 && <div className="border-t border-border pt-3 space-y-1">
