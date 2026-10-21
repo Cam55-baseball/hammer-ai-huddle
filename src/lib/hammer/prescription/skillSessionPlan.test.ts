@@ -30,7 +30,8 @@ describe('actual plan execution structure and schedule protection', () => {
           const defense = plan.blocks.find(row => row.modality === 'defense');
           expect(defense?.drills).toEqual([]);
           expect(defense?.gamePlanTemplate).toBeNull();
-          expect(defense?.status).not.toBe('ready');
+          expect(defense?.status).toBe('awaiting-input');
+          expect(defense?.offDayOverridable).not.toBe(true);
         }
       });
     }

@@ -2139,6 +2139,7 @@ function applyDefenseAlwaysVisible(
 ): ReadonlyArray<PrescribedBlock> {
   return blocks.map((b) => {
     if (b.modality !== "defense") return b;
+    if (b.status === 'awaiting-input') return b;
     if (b.gameDayPrimer) return b;
     const original = originals.get(blockKey(b));
     const restingToday = b.status === "off-day" || b.status === "suppressed" || b.drills.length === 0;
@@ -2195,6 +2196,7 @@ function ensureRenderable(
   blocks: ReadonlyArray<PrescribedBlock>,
 ): ReadonlyArray<PrescribedBlock> {
   return blocks.map((b) => {
+    if (b.status === 'awaiting-input') return b;
     const hasBody = b.drills.length > 0 || b.steps.length > 0;
     if (hasBody && b.title.trim() !== "" && b.why.trim() !== "") return b;
     const label = labelForModality(b.modality);
