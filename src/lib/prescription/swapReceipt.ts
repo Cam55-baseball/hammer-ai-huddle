@@ -28,6 +28,10 @@ export function swapOrigin(rx: SwapDose & {
       throw new Error("The original instructions were not saved. Your session is unchanged.");
     }
     const dose = recordedSwapDose(receipt.from_dose);
+    const current = recordedSwapDose(rx);
+    if (Object.keys(dose).some(key => current[key as keyof SwapDose] !== dose[key as keyof SwapDose])) {
+      throw new Error("The work changed after the original swap. Your session is unchanged. Reload your plan.");
+    }
     return { from_slug: receipt.from_slug, from_name: receipt.from_name, from_sets: dose.sets,
       from_dose: dose, from_cue: receipt.from_cue as string | null, from_cue_present: receipt.from_cue_present };
   }
@@ -36,7 +40,7 @@ export function swapOrigin(rx: SwapDose & {
     throw new Error("The exercise instructions could not be saved. Your session is unchanged.");
   }
   return { from_slug: rx.movement_slug, from_name: rx.movement_name, from_sets: rx.sets,
-    from_dose: sameDoseSwap(rx, { dosage_unit: rx.dosage_unit }), from_cue: typeof cue === "string" ? cue : null,
+    from_dose: sameDoseSwap(recordedSwapDose(rx), { dosage_unit: rx.dosage_unit }), from_cue: typeof cue === "string" ? cue : null,
     from_cue_present: !!rx.why_payload && Object.prototype.hasOwnProperty.call(rx.why_payload, "cue") };
 }
 

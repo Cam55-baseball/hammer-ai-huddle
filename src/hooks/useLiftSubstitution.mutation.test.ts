@@ -113,6 +113,14 @@ describe("actual existing Swap mutation boundary", () => {
     }
     expect(chain.update).not.toHaveBeenCalled();
   });
+  it("refuses both chained Swap and Undo when current work no longer matches the first receipt", async () => {
+    const { chain, apply, undo } = setup();
+    const changed = { ...rx, sets: 3, substituted_from_slug: "original", movement_slug: "replacement",
+      why_payload: { athlete_substitution: swapOrigin(rx) } };
+    await expect(apply({ rx: changed, candidate, reason: "equipment_unavailable" })).rejects.toThrow(/work changed/);
+    await expect(undo({ rx: changed, original: { ...candidate, slug: "original" } })).rejects.toThrow(/work changed/);
+    expect(chain.update).not.toHaveBeenCalled();
+  });
   it("does not write marked work or another signed-out account", async () => {
     const { apply, undo } = setup();
     await expect(apply({ rx: { ...rx, status: "completed" }, candidate, reason: "equipment_unavailable" })).rejects.toThrow(/already been marked/);
