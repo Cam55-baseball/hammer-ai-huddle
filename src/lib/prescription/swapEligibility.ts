@@ -12,16 +12,18 @@ export interface SwapEligibilityFacts extends RiskFacts {
   season_eligibility?: string[] | null;
   phase_allow?: string[] | null;
   is_eccentric_dominant?: boolean | null;
+  sport_scope: string | null;
 }
 
 /** Display prefilter only; fresh server certification is still required for universal Swap. */
 export function eligibleSwapCandidate(anchor: SwapEligibilityFacts, candidate: SwapEligibilityFacts, context: {
   category: string | null; unit: string | null; phase: string | null;
-  trainingAge: string | null; approvedEquivalent?: boolean;
+  trainingAge: string | null; sport?: string | null; approvedEquivalent?: boolean;
 }): boolean {
   const { category, unit, phase, trainingAge } = context;
   if (!category || !unit?.trim() || !phase || !trainingAge) return false;
   if (candidate.is_active !== true || candidate.movement_category !== category) return false;
+  if (candidate.sport_scope !== "both" && (!context.sport || candidate.sport_scope !== context.sport)) return false;
   if (!context.approvedEquivalent && (!anchor.substitution_family || candidate.substitution_family !== anchor.substitution_family)) return false;
   if (candidate.dosage_unit?.trim().toLowerCase() !== unit.trim().toLowerCase()) return false;
   if (candidate.season_legality?.[phase] !== true || candidate.training_age_legality?.[trainingAge] !== true) return false;

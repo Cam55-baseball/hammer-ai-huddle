@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { eligibleSwapCandidate, type SwapEligibilityFacts } from "./swapEligibility";
-const source: SwapEligibilityFacts = { slug: "squat", is_active: true, movement_category: "squat",
+const source: SwapEligibilityFacts = { slug: "squat", is_active: true, sport_scope: "both", movement_category: "squat",
   substitution_family: "squat", dosage_unit: "reps", season_legality: { os_q1: true, in_season: true, post_season: true },
   training_age_legality: { beginner: true }, min_age_years: 13, equipment_requirements: ["barbell"] };
 const target = { ...source, slug: "goblet", equipment_requirements: ["db"] };
@@ -30,5 +30,12 @@ describe("Swap display eligibility", () => {
   });
   it("never changes distance work to timed work even for an approved equivalent", () => {
     expect(eligibleSwapCandidate(source, { ...target, dosage_unit: "seconds" }, { ...context, unit: "feet", approvedEquivalent: true })).toBe(false);
+  });
+  it("never swaps baseball work to softball work or guesses a missing sport", () => {
+    expect(eligibleSwapCandidate(source, { ...target, sport_scope: "softball" }, { ...context, sport: "baseball" })).toBe(false);
+    expect(eligibleSwapCandidate(source, { ...target, sport_scope: "baseball" }, { ...context, sport: "softball" })).toBe(false);
+    expect(eligibleSwapCandidate(source, { ...target, sport_scope: "baseball" }, context)).toBe(false);
+    expect(eligibleSwapCandidate(source, { ...target, sport_scope: "softball" }, { ...context, sport: "softball" })).toBe(true);
+    expect(eligibleSwapCandidate(source, { ...target, sport_scope: null }, context)).toBe(false);
   });
 });

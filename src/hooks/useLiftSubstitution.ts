@@ -92,10 +92,11 @@ interface FamilyRow extends SwapCandidate, Omit<RiskFacts, "equipment_requiremen
   season_eligibility: string[] | null;
   phase_allow: string[] | null;
   is_eccentric_dominant: boolean | null;
+  sport_scope: string | null;
 }
 
 const CATALOG_COLS =
-  "slug, name, is_active, movement_category, substitution_family, season_legality, season_eligibility, phase_allow, is_eccentric_dominant, training_age_legality, default_sets, default_reps, default_duration_seconds, default_distance_feet, default_total_reps, dosage_unit, equipment_requirements, cue, min_age_years, plyo_tier, ub_tier, eccentric_overload, contraindications";
+  "slug, name, is_active, sport_scope, movement_category, substitution_family, season_legality, season_eligibility, phase_allow, is_eccentric_dominant, training_age_legality, default_sets, default_reps, default_duration_seconds, default_distance_feet, default_total_reps, dosage_unit, equipment_requirements, cue, min_age_years, plyo_tier, ub_tier, eccentric_overload, contraindications";
 
 /**
  * Mirror of `_shared/wic/lift/substitutions.ts::resolveSubstitutionLadder`.
@@ -134,22 +135,25 @@ function deriveLadder(self: FamilyRow, members: FamilyRow[], phase: string | nul
  * to generation.
  */
 export function useSwapLadder(rx: WkRx | null, enabled: boolean) {
+  const { user } = useAuth();
   const stored = rx ? readLadder(rx) : {};
   const storedSlugs = ladderSlugs(stored);
   const govCategory = rx ? governanceCategory(rx) : null;
   const needsFallback = storedSlugs.length === 0;
 
   const query = useQuery({
-    queryKey: needsFallback
-      ? ["wk-swap-family", govCategory, rx?.movement_slug, rx?.phase]
-      : ["wk-swap-options", rx?.id, storedSlugs.join(",")],
-    enabled: enabled && !!rx,
+    queryKey: [needsFallback ? "wk-swap-family" : "wk-swap-options", user?.id, rx?.id,
+      govCategory, rx?.movement_slug, rx?.substituted_from_slug, rx?.phase, rx?.dosage_unit,
+      rx?.why_payload?.training_age_context?.classification,
+      rx?.why_payload?.athlete_context?.identity.sport, storedSlugs.join(",")],
+    enabled: enabled && !!rx && !!user,
     staleTime: 5 * 60_000,
     queryFn: async (): Promise<{ ladder: Ladder; options: Record<string, SwapCandidate> }> => {
       // Non-lift cards carry no lift_governance: read the category off the catalog row itself.
       let category = govCategory;
       if (!category && rx?.movement_slug) {
-        const { data: selfRow } = await supabase.from("wk_movement_catalog" as any).select("movement_category").eq("slug", rx.movement_slug).maybeSingle();
+        const { data: selfRow, error: selfError } = await supabase.from("wk_movement_catalog" as any).select("movement_category").eq("slug", rx.movement_slug).maybeSingle();
+        if (selfError) throw selfError;
         category = ((selfRow as any)?.movement_category as string | null) ?? null;
       }
       if (needsFallback && !category) return { ladder: {}, options: {} };
@@ -174,7 +178,8 @@ export function useSwapLadder(rx: WkRx | null, enabled: boolean) {
       // Risk is judged against the ORIGINAL prescription (so swapping twice can't creep up).
       const anchor = rows.find((r) => r.slug === (rx?.substituted_from_slug ?? rx?.movement_slug));
       const eligibilityContext = { category, unit: rx?.dosage_unit ?? null, phase: rx?.phase ?? null,
-        trainingAge: rx?.why_payload?.training_age_context?.classification ?? null };
+        trainingAge: rx?.why_payload?.training_age_context?.classification ?? null,
+        sport: rx?.why_payload?.athlete_context?.identity.sport ?? null };
       for (const row of allowed) {
         const isOriginal = row.slug === rx?.substituted_from_slug;
         if (!isOriginal && (!anchor || !eligibleSwapCandidate(anchor, row, eligibilityContext))) continue;
