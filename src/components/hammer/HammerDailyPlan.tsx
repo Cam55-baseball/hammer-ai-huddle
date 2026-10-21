@@ -1185,6 +1185,11 @@ function HammerDailyPlanBody({
               )}
               {otherBlocks.map((b) => {
                 const adj = adaptive.find((a) => a.modality === b.modality);
+                if (b.status === 'awaiting-input') return <BlockCard
+                  key={`${b.modality}-${b.side ?? 'x'}`}
+                  block={b}
+                  onNavigate={r => navigate(r)}
+                />;
                 return (
                   <PocketCard
                     key={`${b.modality}-${b.side ?? "x"}`}
