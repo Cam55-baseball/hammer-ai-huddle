@@ -2,17 +2,20 @@
 
 **Ready to publish: no.** No publish, cron or iOS changes. Required Oct 21 rest/Swap redeploy authorization remains limited to that work; no unrelated pending migration is authorized by this queue.
 
-| Requested stream | Status at start | Acceptance remaining |
+| Requested stream | Status | Proof / acceptance remaining |
 |---|---|---|
-| Conditioning base-counter rest | Partly | Both-sport declared routes, shared session count and actual TEST phone proof |
-| Every-card AI Swap + equipment questions | Not started | Certified same-category/intent/dose swaps, reason/memory readback, four phone proofs; questions stay until safe replacement works |
-| Coach six-week summaries / practice ideas | Not started | Canonical consented reads and affected-coach acceptance; pending access correction not applied |
+| Conditioning base-counter rest | Partly | Shared count + auto-start + real TEST-form phone/component proof passed; actual saved double row unchanged. Current-plan-route / complete both-sport conversion remain. `docs/owner/au1-proof.md` |
+| Every-card AI Swap + equipment questions | Partly | Existing alternatives hardened for exact dose/phase/category and truthful save/Undo; AI conversation/server certification/memory/four proofs not built. Questions retained. `sameDoseSwap.test.ts`; `au1-proof.md` |
+| Coach six-week summaries / practice ideas | Partly | Pure 42-day same-sport saved-work/issue-drill projection + tests built; not wired through known legacy scout-access gap. Named access correction authorization/hosted proof required. `sixWeekPlanSummary.test.ts`; `au1-proof.md` |
 | Pitching / fielding / baserunning execution | Partly | Complete legal full-go affected-player acceptance |
-| Mixed signals / testing-day details | Partly | Positive genuine hosted phone cases |
+| Mixed signals / testing-day details | Partly | Missing/false/future evidence honesty fixed; notice added to actual Today area. Positive genuine hosted phone cases remain. `categorySignalEvidence.test.ts`; `TestingDayNotice.test.tsx` |
 | TEST ADMIN owner screens | Partly | Remaining positive read/save proofs and universal list exclusion |
 | Oct 21 04:30 nightly outcome | Not started | Scheduled run is future at 03:59 UTC; enqueue is not a judged outcome |
 
-- [ ] Finish conditioning session rest and phone acceptance; preserve all existing dose/safety rules.
+- [x] Shared conditioning session rest + automatic clock; real TEST phone/component single and actual saved-double proof, unchanged row readback; current-plan route remains open.
+- [x] Harden existing alternatives: exact dose/unit, phase/category, complete Undo receipt, self/date/stale-row scope and truthful save result.
+- [x] Fix mixed-signal missingness/false/future/placeholder handling; mount testing-day notice in actual Today area; regressions pass.
+- [x] Build/test six-week saved-plan projection and exact issue-linked practice-idea projection; deliberately not wired before server-access correction.
 - [ ] Build certified every-card AI Swap, scoped availability memory and four phone proofs before removing equipment questions.
 - [ ] Build coach six-week summaries and issue-linked practice ideas using existing authorized data only.
 - [ ] Advance full-go execution, mixed-signal/testing-day and TEST ADMIN acceptance with exact TEST cleanup.
