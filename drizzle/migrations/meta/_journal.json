@@ -624,6 +624,20 @@
       "when": 1792595650612,
       "tag": "0088_exact_test_admin_list_stat_exclusion",
       "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1792599051476,
+      "tag": "0089_coach_plan_canonical_sport",
+      "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1792599290319,
+      "tag": "0090_plan_swap_memory_and_log",
+      "breakpoints": true
     }
   ]
 }

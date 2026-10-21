@@ -1,6 +1,6 @@
 # Oct 21 — Named live implementation authorization
 
-**AV2 completed sub-steps:** exact TEST administrator exclusions added to coach roster/pool and deployed player search; real democoach phone searches retain demo athletes and omit the proof administrator. TEST softball completed explicit assessment skips and started its actual plan; current conditioning is recovery-only, not base-counter acceptance. Universal Swap remains unfinished. No publish, cron or iOS changes. `docs/owner/av2-proof.md`
+**AV3 in progress:** continue named-authorized live Swap persistence and actual testing-day/coach phone flows in parallel. No publish, cron or iOS changes. AV2 evidence retained in `docs/owner/av2-proof.md`.
 
 **Ready to publish: no.** AT5 coaching migration applied; coach summary mounted in the real app. No publish, cron or iOS changes. All remaining named work is authorized; authorization is not a blocker.
 
