@@ -13,7 +13,7 @@ const source = { slug: "source", name: "Source", is_active: true, movement_categ
 const target = { ...source, slug: "target", name: "Target", equipment_requirements: [] };
 const rx = { id: "row", movement_slug: "source", phase: "os_q1", dosage_unit: "reps", why_payload: {
   training_age_context: { classification: "beginner" }, lift_governance: { movement_category: "carry",
-    substitution_ladder: { equipment_unavailable: ["target"] } } } } as WkRx;
+    substitution_ladder: { equipment_unavailable: ["target"] } } } } as unknown as WkRx;
 function chain(data: unknown, error: unknown = null) {
   const c = { select: vi.fn(), in: vi.fn(), eq: vi.fn(), then: (resolve: (value: unknown) => unknown) => Promise.resolve({ data, error }).then(resolve) };
   c.select.mockReturnValue(c); c.in.mockReturnValue(c); c.eq.mockReturnValue(c); return c;
