@@ -796,7 +796,8 @@ function HammerDailyPlanBody({
     // category, say so on that category's card and keep the safer plan.
     const signals = categorySignalEvidence(
       faultContext.isError ? [] : faultContext.data?.clips ?? [],
-      { whiffPct: gpForPlan.whiffPct, chasePct: gpForPlan.chasePct, miscueClusters: gpForPlan.miscueClusters },
+      { whiffPct: gpForPlan.whiffPct, chasePct: gpForPlan.chasePct, miscueClusters: gpForPlan.miscueClusters,
+        atBats: gpForPlan.atBats, pitchesSeen: gpForPlan.pitchesSeen },
     );
     const withMixed = adjusted.map((block) => {
       if (block.status !== "ready") return block;

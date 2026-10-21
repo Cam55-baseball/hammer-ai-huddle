@@ -6,6 +6,7 @@ import type { AtomicSwapSnapshot } from "@/lib/prescription/atomicSwap";
 
 vi.mock("@/hooks/useCloseOnBack", () => ({ useCloseOnBack: vi.fn() }));
 const original: UniversalSwapMovement = { slug: "machine", name: "Angled machine fastballs", primary_adaptation: "timing",
+  cns_cost: 1, volume_cost: 1, contacts_per_rep: 0,
   is_active: true, movement_category: "hitting", substitution_family: "timing", dosage_unit: "reps",
   season_legality: { os_q1: true }, training_age_legality: { beginner: true }, sport_scope: "baseball",
   min_age_years: 13, contraindications: [], equipment_requirements: ["pitching_machine"] };
