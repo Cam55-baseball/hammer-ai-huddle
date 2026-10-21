@@ -1,3 +1,5 @@
+**Oct 21 19:35 UTC:** Base counter: real baseball base-route row exists (TEST player, Oct 23, `bases_1st_3rd`, 90 ft, 2 bases/rep). Phone proof must wait until Oct 23 — moving the phone's clock forward signs the player out. No softball base-route or full-go rows in any buildable TEST plan.
+
 **Oct 21 19:20 UTC:** Start refused for TEST pitcher + runners ("Tap Completed on your initial assessment first"); runners also have no active modules → no builds. TEST player has no saved equipment, builder picks gear-free lifts though catalog has 57 barbell/16 machine/2 foam-roller movements. swap_log still empty; four Swap proofs not run.
 
 **Oct 21 19:10 UTC:** app built real Oct 23–24 plans for TEST player (Oct 22 already built). Oct 23 has open-field base route `bases_1st_3rd`; Swap with field missing → live 200, no safe choice (none in catalog). Still no machine/barbell/foam-roller rows. TEST pitcher builds refused: not started (needs Start tap). Stripe org plan, testing day, mixed signals, nightly pair not done this run.
