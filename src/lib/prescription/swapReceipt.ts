@@ -36,8 +36,8 @@ export function swapOrigin(rx: SwapDose & {
     throw new Error("The exercise instructions could not be saved. Your session is unchanged.");
   }
   return { from_slug: rx.movement_slug, from_name: rx.movement_name, from_sets: rx.sets,
-    from_dose: sameDoseSwap(rx, { dosage_unit: rx.dosage_unit }), from_cue: cue ?? null,
-    from_cue_present: !!rx.why_payload && Object.hasOwn(rx.why_payload, "cue") };
+    from_dose: sameDoseSwap(rx, { dosage_unit: rx.dosage_unit }), from_cue: typeof cue === "string" ? cue : null,
+    from_cue_present: !!rx.why_payload && Object.prototype.hasOwnProperty.call(rx.why_payload, "cue") };
 }
 
 export function restoreSwapInstructions(why: Record<string, unknown>, origin: SwapOrigin): Record<string, unknown> {
