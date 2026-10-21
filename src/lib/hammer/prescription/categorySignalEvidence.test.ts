@@ -12,7 +12,7 @@ describe("category signal evidence", () => {
   });
 
   it("a fresh clean clip is a looks-good video signal", () => {
-    const s = categorySignalEvidence([{ module: "hitting", created_at: daysAgo(3), violations: {} }], null, NOW);
+    const s = categorySignalEvidence([{ module: "hitting", created_at: daysAgo(3), violations: { late: false } }], null, NOW);
     expect(s[0]).toMatchObject({ category: "hitting", source: "video", direction: "looks-good" });
   });
 
@@ -63,10 +63,25 @@ describe("category signal evidence", () => {
 
   it("one category's signals never leak into another", () => {
     const s = categorySignalEvidence(
-      [{ module: "fielding", created_at: daysAgo(2), violations: { x: 1 } }],
+      [{ module: "fielding", created_at: daysAgo(2), violations: { x: true } }],
       { whiffPct: 10, chasePct: 15, miscueClusters: [] },
       NOW,
     );
     expect(crossReference("hitting", s).kind).toBe("none");
+  });
+  it("missing, empty or unmeasured video evidence never claims the video looked clean", () => {
+    for (const violations of [null, {}, { late: null }, { late: "not measured" }]) {
+      expect(categorySignalEvidence([{ module: "hitting", created_at: daysAgo(2), violations }], null, NOW)).toEqual([]);
+    }
+  });
+  it("explicit false findings cannot be counted as problems", () => {
+    const signals = categorySignalEvidence([{ module: "hitting", created_at: daysAgo(2), violations: { late: false, chase: false } }],
+      { whiffPct: 40, chasePct: null, miscueClusters: [] }, NOW);
+    expect(signals[0].direction).toBe('looks-good');
+    expect(crossReference('hitting', signals).kind).toBe('mixed');
+  });
+  it("future recording dates and invalid game percentages cannot fabricate a disagreement", () => {
+    expect(categorySignalEvidence([{ module: "hitting", created_at: daysAgo(-1), violations: { late: true } }],
+      { whiffPct: NaN, chasePct: 101, miscueClusters: [{ position: 'SS', errors: -1 }] }, NOW)).toEqual([]);
   });
 });

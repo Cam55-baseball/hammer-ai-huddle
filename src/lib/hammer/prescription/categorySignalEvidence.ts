@@ -36,14 +36,18 @@ function latestClip(clips: readonly SignalClip[], modules: readonly string[], no
     .filter((c) => c.module && modules.includes(c.module))
     .filter((c) => {
       const t = Date.parse(c.created_at);
-      return Number.isFinite(t) && now.getTime() - t <= CLIP_FRESH_DAYS * 86400 * 1000;
+      const age = now.getTime() - t;
+      return Number.isFinite(t) && age >= 0 && age <= CLIP_FRESH_DAYS * 86400 * 1000;
     })
     .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
   return fresh[0] ?? null;
 }
 
-function hasFindings(clip: SignalClip): boolean {
-  return !!clip.violations && Object.keys(clip.violations).length > 0;
+function measuredDirection(clip: SignalClip): "needs-work" | "looks-good" | null {
+  if (!clip.violations) return null;
+  const measured = Object.values(clip.violations).filter((value): value is boolean => typeof value === "boolean");
+  if (!measured.length) return null;
+  return measured.some(value => value) ? "needs-work" : "looks-good";
 }
 
 export function categorySignalEvidence(
@@ -57,8 +61,10 @@ export function categorySignalEvidence(
   for (const [category, modules] of Object.entries(CATEGORY_MODULES)) {
     const clip = latestClip(clips, modules, now);
     if (!clip) continue;
+    const direction = measuredDirection(clip);
+    if (!direction) continue;
     signals.push(
-      hasFindings(clip)
+      direction === "needs-work"
         ? { category, source: "video", direction: "needs-work", says: `issues on your latest ${modules[0]} video` }
         : { category, source: "video", direction: "looks-good", says: `your latest ${modules[0]} video looked clean` },
     );
@@ -66,9 +72,10 @@ export function categorySignalEvidence(
 
   // Game signals: existing thresholds only, and only with a real sample.
   if (games) {
-    if (games.whiffPct != null || games.chasePct != null) {
-      const whiffBad = games.whiffPct != null && games.whiffPct > GAME_WHIFF_NEEDS_WORK;
-      const chaseBad = games.chasePct != null && games.chasePct > GAME_CHASE_NEEDS_WORK;
+    const validPercent = (value: number | null) => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100;
+    if (validPercent(games.whiffPct) || validPercent(games.chasePct)) {
+      const whiffBad = validPercent(games.whiffPct) && (games.whiffPct ?? 0) > GAME_WHIFF_NEEDS_WORK;
+      const chaseBad = validPercent(games.chasePct) && (games.chasePct ?? 0) > GAME_CHASE_NEEDS_WORK;
       if (whiffBad || chaseBad) {
         const parts = [
           whiffBad ? `whiff rate ${games.whiffPct}%` : null,
@@ -79,8 +86,8 @@ export function categorySignalEvidence(
         signals.push({ category: "hitting", source: "games", direction: "looks-good", says: "your contact and pitch selection in games" });
       }
     }
-    if (games.miscueClusters.length > 0) {
-      const top = games.miscueClusters[0]!;
+    const top = games.miscueClusters.find(cluster => cluster.position.trim() && Number.isInteger(cluster.errors) && cluster.errors > 0);
+    if (top) {
       signals.push({ category: "fielding", source: "games", direction: "needs-work", says: `${top.errors} errors at ${top.position} in the last week` });
     }
   }
