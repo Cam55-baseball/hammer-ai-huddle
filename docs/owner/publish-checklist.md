@@ -2,16 +2,24 @@
 
 ## Current publish gate — Oct 21
 
-**Ready to publish: NO — 23:35 UTC.** The ordinary-player/owner paired Swap proof is incomplete: owner has no started plan and democollege is allowlisted, so cannot prove legacy behavior. Real coach-detail pages produce 42501 errors when canonical `coach.review.opened` and `relational.exposure.gate_blocked` events are written; these failures have not been hidden or access widened. Remaining token/purchase/native lifecycle pages lack genuine state. Intermittent fetch failures appeared in real-record audits despite clean fresh smoke. No publish, deployment, migration, cron or iOS changes this continuation.
+**Final continuation — Oct 21, Camryn Williams.**
 
-| Gate | Status | Evidence / remaining requirement |
+**Ready to publish: NO.** Exact blockers: the real coach detail page still fails both canonical audit-event writes (403 / 42501); the safe server append fix requires named authorization for a hosted change. The paired Swap phone proof lacks an ordinary, non-allowlisted authorized TEST player with a started plan, and the owner has not finished the initial assessment. Active purchase/session and native handoff paths still lack genuine verification state. No failure is hidden and no consent or event-read permission was widened.
+
+| Ordered gate | Status | Evidence / remaining requirement |
 |---|---|---|
-| 1. Restrict new Swap; retain old behavior | Implemented; current paired phone proof incomplete | `swap_v2` OFF, 14 named TEST exceptions plus active owner/admin; server save and generator equipment-memory reads gated; ordinary players retain legacy alternatives and equipment questions. Latest TEST expanded card shows Swap (completed row disabled); owner has no started plan for a sheet check. Earlier evidence is not a substitute for this requested paired acceptance. Four positive Swap proofs remain live-only. |
-| 2. Phone regression smoke | PASS fresh sequential retry | College/democoach/demoorg dashboards, connections, Staff Plans → Check my plan; coach/org dashboards and 27 legal open/close checks, no console errors. Card logs 3→6 reps, reload reads 6, then restored to 3. Stripe checkout reached; no payment. |
-| 3. Every-page audit | Partial / FAIL — release blocker | Prior 546 static visits plus 56 slow real-record visits. Scout profile now preflights the existing server scope judge, preserving server rechecks; all three roles rechecked without denied data requests. Coach audit-event writes still fail with 42501. Lifecycle/token paths remain unverified; no fabricated tokens or initialization actions. |
-| 4. Full suite + preview build | PASS | Final code: 487 files / 3,865 tests in five sequential bounded batches; six Deno files / 33 tests and outside-runner injury file / 10 tests PASS. Preview build OK 23:27:49 UTC. Focused scout tests included in final full run. |
-| 5. Switch inventory | Verified below | `plan_prompts_v2` really resolves ON: mode all; buildable=false disables owner editing only, not runtime. |
-| 6. Owner's live-check guide | Updated below | Remaining feature proofs moved to explicit post-publish checks; this does not waive the unfinished release audit. |
+| 1. Swap restriction + paired phone proof | Implemented / proof BLOCKED | Live switch OFF; owner/admin and 14 TEST exceptions. Both started demo players are exceptions. The two other started system accounts are the protected Apple-review child and Hammers Modality, neither repurposed. Owner assessment remains 1/6; no invented plan or switch change. |
+| 2. Three-role phone regression smoke | PASS | Fresh sequential college/democoach/demoorg dashboard, connections, Staff Plans check, coach/org dashboards and 27 legal open/close checks: zero console errors. Prior autosave readback/restoration and Stripe checkout-without-payment retained. |
+| 3. Every-page audit | Partial / FAIL | Real coach athlete detail reproduces two denied event inserts. Fresh real owner recall/thread and replay open cleanly; replay honestly says Uncertifiable. Real owner prescription opens No active session, not a populated-session proof. Recall and no-session purchase page checked for all three roles without errors. Successful purchase/native handoff and owner initialization not fabricated. |
+| 4. Full suite + preview | PASS | After payment-page correction: 488 files / 3,868 app tests in five sequential bounded batches. Six server files / 33 tests PASS with required env permission; outside-folder injury file / 10 PASS. Preview build OK 23:47:22 UTC. |
+| 5. Switch inventory | Verified | Fresh live readback: all 28 database switches and all three app settings match the inventory below. Report Card/Game IQ owner/admin-only; spaces/rankings/Swap OFF; prompts/lifting/staff gate ON; legal ALL. No mode change. |
+| 6. Owner's live-check guide | Done | Existing post-publish expectations retained, including all four positive Swap cases before broader enablement. |
+
+This continuation fixed the unsupported `/success` payment-success claim: only a recorded purchase shows success/access; missing or failed confirmation stays explicit. Three purchase-evidence tests pass, and owner/player/coach phone screenshots confirm the corrected state. No payment was made.
+
+`docs/owner/coach-audit-events.pending.sql` stages a narrowly scoped server append RPC plus the missing registrations for `coach.review.opened` and `relational.exposure.gate_blocked`; hosted readback confirms both topics and the old rr9 engine version are absent. It preserves self-only generic inserts and all athlete-data read policies, derives caller/payload server-side and checks current coach linkage/blocking or recruiting denial. **Not applied, not wired, not role-tested; named owner authorization required.**
+
+Private evidence: `/tmp/browser/gate-finish`; final test logs: `/tmp/publish-gate-finish/after-fix`. No new TEST data, subscription, relationship, measurement or plan was created; no cleanup mutation needed. The canceled demoorg plan stays canceled and earlier exact cleanup remains complete. No publish, deployment, migration, cron or iOS change.
 
 ### Switch inventory — live readback Oct 21
 

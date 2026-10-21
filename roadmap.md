@@ -1,25 +1,30 @@
 # Current publish gate — Oct 21
 
-**23:35 UTC continuation (Camryn Williams):** five sequential test batches complete after the scout-page fix: 487 files / 3,865 tests PASS; six Deno files / 33 tests and outside-runner injury tests / 10 PASS. Fresh three-role phone smoke is clean, autosave 3→6 survives reload then restores to 3, checkout reaches Stripe without payment. No publish, deployment, migration, cron or iOS changes this continuation.
+**Final continuation — Oct 21, Camryn Williams.**
 
-**Ready to publish: NO** — paired ordinary-player/owner Swap phone proof still incomplete: owner has no started plan, and democollege is an explicit exception, not a legacy-player proof. Coach detail writes `coach.review.opened` and `relational.exposure.gate_blocked` fail with 42501 under current hosted event policies; these real failures were not hidden or permissions widened. Token/purchase/native lifecycle pages still lack valid real state; intermittent fetch failures also appeared during real-record audits. Current owner guide and switch inventory: `docs/owner/publish-checklist.md`.
+**Ready to publish: NO.** Exact blockers: the real coach detail page still fails both canonical audit-event writes (403 / 42501); the safe server append fix requires named authorization for a hosted change. The paired Swap phone proof lacks an ordinary, non-allowlisted authorized TEST player with a started plan, and the owner has not finished the initial assessment. Active purchase/session and native handoff paths still lack genuine verification state. No failure is hidden and no consent or event-read permission was widened.
 
-| Ordered gate | Status | Proof / blocker |
+| Ordered gate | Status | Evidence / remaining requirement |
 |---|---|---|
-| 1. Swap v2 restricted; legacy behavior restored | Implemented; paired phone proof incomplete | OFF for ordinary players; active owner/admin and 14 TEST exceptions. Save, equipment-memory use and onboarding/assessment question removal gated. Current owner sheet lacks a started plan; TEST expanded completed row shows disabled Swap. |
-| 2. Three-role phone smoke | PASS fresh sequential retry | College/democoach/demoorg dashboards, connections, Staff Plans check and 27 legal open/close checks, no console errors. Real card autosave survives reload; restored to 3 reps. Stripe reached, no payment. |
-| 3. Every-page audit | Partial / FAIL | Prior 546 static visits retained; 56 additional real-record visits at 18 seconds per page. Scout denied-data reads fixed in preview and all three roles rechecked clean. Coach canonical audit-event inserts still return 42501; lifecycle/token pages remain unverified. |
-| 4. Full tests + preview | PASS | After final code fix: 487 files / 3,865 tests in five sequential bounded batches, all pass; six Deno files / 33 and outside-runner injury file / 10 pass. Preview build OK 23:27:49 UTC. |
-| 5. Switch inventory | Verified | Required states match: report card/Game IQ internal, spaces/rankings/Swap off, prompts/lifting/staff gate on, legal all. `plan_prompts_v2` buildable=false is edit-only; runtime mode all is ON. |
-| 6. Post-publish guide | Done | Expected outcomes for every deferred live feature proof recorded. |
+| 1. Swap restriction + paired phone proof | Implemented / proof BLOCKED | Live switch OFF; owner/admin and 14 TEST exceptions. Both started demo players are exceptions. The two other started system accounts are the protected Apple-review child and Hammers Modality, neither repurposed. Owner assessment remains 1/6; no invented plan or switch change. |
+| 2. Three-role phone regression smoke | PASS | Fresh sequential college/democoach/demoorg dashboard, connections, Staff Plans check, coach/org dashboards and 27 legal open/close checks: zero console errors. Prior autosave readback/restoration and Stripe checkout-without-payment retained. |
+| 3. Every-page audit | Partial / FAIL | Real coach athlete detail reproduces two denied event inserts. Fresh real owner recall/thread and replay open cleanly; replay honestly says Uncertifiable. Real owner prescription opens No active session, not a populated-session proof. Recall and no-session purchase page checked for all three roles without errors. Successful purchase/native handoff and owner initialization not fabricated. |
+| 4. Full suite + preview | PASS | After payment-page correction: 488 files / 3,868 app tests in five sequential bounded batches. Six server files / 33 tests PASS with required env permission; outside-folder injury file / 10 PASS. Preview build OK 23:47:22 UTC. |
+| 5. Switch inventory | Verified | Fresh live readback: all 28 database switches and all three app settings match the inventory below. Report Card/Game IQ owner/admin-only; spaces/rankings/Swap OFF; prompts/lifting/staff gate ON; legal ALL. No mode change. |
+| 6. Owner's live-check guide | Done | Existing post-publish expectations retained, including all four positive Swap cases before broader enablement. |
 
-- [x] Gate new Swap in client, save endpoint, memory use and equipment-question presentation.
-- [x] Run bounded full suite, Deno tests, static phone audit and final three-role smoke.
-- [x] Record every switch and the owner's live-check expectations.
-- [x] Restore TEST log value; snapshot/remove exact temporary testing day, org membership and 19:20 duplicate coach request; preserve older connections and canceled $0 plan.
-- [ ] Finish paired owner/ordinary-player Swap phone proof (owner started plan and suitable non-allowlisted TEST session needed).
-- [ ] Repair canonical coach audit-event write authorization without weakening access or hiding failures, then rerun coach pages; no hosted change applied this continuation.
-- [ ] Finish remaining lifecycle/token pages with genuine existing state and certify intermittent requests stable.
+This continuation fixed the unsupported `/success` payment-success claim: only a recorded purchase shows success/access; missing or failed confirmation stays explicit. Three purchase-evidence tests pass, and owner/player/coach phone screenshots confirm the corrected state. No payment was made.
+
+`docs/owner/coach-audit-events.pending.sql` stages a narrowly scoped server append RPC plus the missing registrations for `coach.review.opened` and `relational.exposure.gate_blocked`; hosted readback confirms both topics and the old rr9 engine version are absent. It preserves self-only generic inserts and all athlete-data read policies, derives caller/payload server-side and checks current coach linkage/blocking or recruiting denial. **Not applied, not wired, not role-tested; named owner authorization required.**
+
+Private evidence: `/tmp/browser/gate-finish`; final test logs: `/tmp/publish-gate-finish/after-fix`. No new TEST data, subscription, relationship, measurement or plan was created; no cleanup mutation needed. The canceled demoorg plan stays canceled and earlier exact cleanup remains complete. No publish, deployment, migration, cron or iOS change.
+
+- [x] Refresh bounded full suite, extra server tests, phone smoke and switch inventory.
+- [x] Correct and phone-recheck the unsupported purchase confirmation.
+- [x] Stage the minimal coach audit fix without applying it.
+- [ ] Apply/wire/role-test the coach audit fix — blocked on named hosted-change authorization.
+- [ ] Finish owner/ordinary-player Swap pair — blocked on genuine owner plan and suitable authorized non-exception TEST player.
+- [ ] Certify populated session, confirmed purchase and native lifecycle paths — blocked on genuine existing state/native environment.
 
 Historical 12-item feature status: only item 8 Done; items 1–6 Swap, 7 coach pitcher, 9 both-sport counters, 10 full-go, 11 mixed signals, 12 real nightly pair remain partial/unproven and are explicitly deferred to authorized live checks. Item 12's player label-read permission failure is fixed; genuine 14–28-day re-test still required. Earlier entries below are historical, not current release readiness.
 
