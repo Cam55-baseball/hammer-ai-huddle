@@ -52,4 +52,8 @@ describe("server Swap catalog necessary conditions", () => {
       expect(() => checkSwapCatalogPair(source, { ...target, ...patch }, saved, facts)).toThrow();
     }
   });
+  it("restriction spelling cannot hide a declared injury conflict", () => {
+    expect(() => checkSwapCatalogPair(source, { ...target, contraindications: ["Shoulder-Pain"] }, saved,
+      { ...facts, injuryRestrictions: ["shoulder pain"] })).toThrow();
+  });
 });

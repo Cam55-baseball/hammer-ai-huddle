@@ -4,6 +4,7 @@ import { isMovementSeasonLegal, seasonContextFromPhase } from "../wic/season.ts"
 type Row = Record<string, unknown>;
 const nonempty = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0;
 const cost = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value) && value >= 0;
+const restrictionKey = (value: string) => value.trim().toLowerCase().replace(/[\s-]+/g, "_");
 const costs = ["cns_cost", "volume_cost", "contacts_per_rep", "joint_stress", "recovery_window_hours"] as const;
 
 /** Catalog identity precondition only. No athlete safety, access or save authority. */
@@ -44,6 +45,7 @@ export function checkSwapCatalogPair(source: Row, target: Row, saved: Row, facts
       !cost(facts.ageYears) || !cost(facts.trainingAgeYears) ||
       !Array.isArray(facts.injuryRestrictions) || !facts.injuryRestrictions.every(nonempty) ||
       typeof facts.gameDay !== "boolean" || typeof facts.practiceDay !== "boolean") throw new Error("Missing current catalog-check facts.");
+  const restrictions = new Set(facts.injuryRestrictions.map(restrictionKey));
   if (source.slug === target.slug || target.is_active !== true || target.superseded_by !== null ||
       !nonempty(target.slug) || !nonempty(target.name) ||
       ["movement_category", "substitution_family", "primary_adaptation"].some(key => source[key] !== target[key]) ||
@@ -57,7 +59,7 @@ export function checkSwapCatalogPair(source: Row, target: Row, saved: Row, facts
         !cost(row.min_age_years) || row.min_age_years > facts.ageYears ||
         !cost(row.min_training_age_years) || row.min_training_age_years > facts.trainingAgeYears ||
         !Array.isArray(row.contraindications) || !row.contraindications.every(nonempty) ||
-        row.contraindications.some(value => facts.injuryRestrictions.includes(value)) ||
+        row.contraindications.some(value => restrictions.has(restrictionKey(value))) ||
         season?.[facts.phase] !== true || training?.[facts.trainingAge] !== true ||
         typeof row.eccentric_overload !== "boolean" || typeof row.is_eccentric_dominant !== "boolean" ||
         (facts.gameDay && row.game_day_legal !== true) || (facts.practiceDay && row.practice_day_legal !== true) ||
