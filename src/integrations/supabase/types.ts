@@ -15979,6 +15979,45 @@ export type Database = {
         }
         Relationships: []
       }
+      swap_log: {
+        Row: {
+          created_at: string
+          from_slug: string
+          id: string
+          missing_items: string[]
+          plan_date: string
+          prescription_id: string
+          reason: string
+          scope: string
+          to_slug: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_slug: string
+          id?: string
+          missing_items?: string[]
+          plan_date: string
+          prescription_id: string
+          reason: string
+          scope: string
+          to_slug: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          from_slug?: string
+          id?: string
+          missing_items?: string[]
+          plan_date?: string
+          prescription_id?: string
+          reason?: string
+          scope?: string
+          to_slug?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tcs_runner_auth: {
         Row: {
           created_at: string
