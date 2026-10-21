@@ -22,3 +22,23 @@ export function sameDoseSwap<T extends SwapDose>(original: T, candidate: { dosag
     dosage_unit: original.dosage_unit, tempo: original.tempo, load_pct: original.load_pct,
   };
 }
+
+/** Null is recorded absence, not permission to substitute a catalog default. */
+export function recordedSwapDose(receipt: unknown): SwapDose {
+  if (!receipt || typeof receipt !== 'object') throw new Error('The original dose was not saved. Your session is unchanged.');
+  const row = receipt as Record<string, unknown>;
+  const numeric = ['sets', 'reps', 'duration_seconds', 'distance_feet', 'total_reps', 'load_pct'] as const;
+  const text = ['dosage_unit', 'tempo'] as const;
+  for (const key of numeric) {
+    if (!(key in row) || (row[key] !== null && (typeof row[key] !== 'number' || !Number.isFinite(row[key])))) {
+      throw new Error('The original dose is incomplete. Your session is unchanged.');
+    }
+  }
+  for (const key of text) if (!(key in row) || (row[key] !== null && typeof row[key] !== 'string')) {
+    throw new Error('The original dose is incomplete. Your session is unchanged.');
+  }
+  return { sets: row.sets as number | null, reps: row.reps as number | null,
+    duration_seconds: row.duration_seconds as number | null, distance_feet: row.distance_feet as number | null,
+    total_reps: row.total_reps as number | null, load_pct: row.load_pct as number | null,
+    dosage_unit: row.dosage_unit as string | null, tempo: row.tempo as string | null };
+}
