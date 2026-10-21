@@ -870,10 +870,13 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       // Owner-approved narrow addition: swap one slot for an eligible owner drill.
       const drills: DrillStep[] = structureSkillSession(mergeOwnerSlotDrills<DrillStep>(declaredDrills ?? (equipmentUnknown
         ? [
-            { name: "Dry swings — barrel path", dosage: "3 rounds of 10", cue: "shoulder-to-shoulder hold, no hand push" },
-            { name: "Tee work (or a towel drill if you have no tee)", dosage: "20 swings", cue: "hit the back of the ball, finish balanced" },
-            { name: "Self-toss or front toss if someone can throw", dosage: "15 swings", cue: "see it deep, hands stay back" },
-            { name: "Film 5 swings on your phone and tag them", dosage: "best 5 swings" },
+            { name: "Dry swings — barrel path", dosage: "3 rounds of 10", cue: "shoulder-to-shoulder hold, no hand push", stage: "prep" },
+            { name: "Dry swing drill — balanced finish", dosage: "20 swings", cue: "keep the barrel on path, finish balanced", stage: "drills" },
+            { name: "Game-speed dry swings with counts", dosage: "15 swings", stage: "full_go",
+              setup: "Use your bat in a clear, safe space. Picture an at-bat starting 1-1, then 2-2. No ball, tee or partner is needed. Use these same 15 swings; do not add more.",
+              cue: "Every swing with intent; see an imaginary pitch, decide, then swing. Reset fully between swings.",
+              stopIf: "Hand or wrist pain, unsafe space or loss of balance — stop the game-speed round." },
+            { name: "Film 5 swings on your phone and tag them", dosage: "best 5 swings", stage: "log" },
           ]
         : inSeason
         ? [

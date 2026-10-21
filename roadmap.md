@@ -1,3 +1,14 @@
+# AT3 — Continued approved work — Oct 20
+
+- [x] Day-84 phone confirmation on real TEST dashboard: explicit ranked TEST setup aged 85 days, Keep my order canonical readback + reload proved, original sport/ranking payload restored exactly, password scrambled. Screenshots `/tmp/browser/at3/day84-before.png`, `day84-confirmed.png` inspected.
+- [x] Added six actual-product/sport eight-week scheduler checks: entitlement linkage, included hitting/fielding +8 blocks, excluded skills unchanged, baseline retention, second-slot priority, phase activation and strength equality. Full actual-builder product gating / hosted cohort acceptance remains open, not claimed by these checks.
+- [x] Fixed real unknown-equipment hitting branch: no unentered tee/ball/partner requirement; same existing doses/duration, prep → skill → game-speed dry swings → log, explicit stops. Both-sport regression and real phone game-speed screenshot pass. Throwing/RF fielding phone open/close reads verified, not full execution closeout.
+- [x] Fresh suite **456 files / 3,673 tests PASS**, `/tmp/at3-full-suite.log`; latest preview build OK. No publish/deploy/migration/cron/iOS changes; TEST ranking/password cleanup verified.
+- [ ] TEST ADMIN universal exclusion remains open after sibling-path audit: protected dedicated exclusion needed without breaking exact-email demo athlete connections; no broad filter applied.
+- [ ] Hosted six-cohort / full builder product acceptance, multi-day saved history / org scope / summaries, complete pitching-fielding-baserunning execution, mixed signals/testing-day details, measured Report Card/Vault save proofs remain open. Actual nightly outcome waits for Oct 21 04:30 UTC.
+
+**Ready to publish: NO.** Evidence `docs/owner/at3-proof.md`.
+
 # AT2 — Continued approved work — Oct 20
 
 - [x] Coach saved reasons + last-seven-days snapshot view implemented via existing gated date RPC; same-sport only, no reconstructed missing days; player/date expansion isolation, release filtering, returned health redaction, failure and Need more data states covered.

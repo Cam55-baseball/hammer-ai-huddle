@@ -4,6 +4,8 @@ import { projectEnvelope } from '../context/decisionFilters';
 import { resolveWeeklyTemplate, applyMicrocycle } from './weeklyMicrocycle';
 import { SKILL_MODALITIES, resolveSkillDaysTarget } from '../roadmap/skillFrequencyLadder';
 import type { HammerAthleteContext, ContextVariable } from '../context/athleteContext';
+import { priorityAccess } from '../priorityAccess';
+import { entitlementsFor } from '@/constants/entitlements';
 
 function projection(sport: string, order: string[], extra: Record<string, unknown> = {}) {
   const values = { sport_primary: sport, season_phase: 'off', lifecycle_band: 'adult', lifting_age_years: 2,
@@ -80,4 +82,70 @@ describe('weekly goal blocks — owner replacement, both sports and six cohorts 
     expect(fullWeek.targets).toEqual(baseline);
     expect(fullWeek.template).toBe(template);
   });
+
+  for (const sport of ['baseball', 'softball'] as const) for (const tier of ['pitcher', '5tool', 'golden2way'] as const) {
+    it(`${sport}/${tier}: actual product access bounds goal blocks for all eight weeks`, () => {
+      const modules = [`${sport}_${tier}`];
+      const access = priorityAccess(modules, sport);
+      const entitlements = entitlementsFor(modules);
+      expect(access.hasHitting).toBe(entitlements.has('complete_hitter'));
+      expect(access.hasPitching).toBe(entitlements.has('complete_pitcher'));
+      expect(access.hasThrowing).toBe(entitlements.has('complete_player'));
+      const allowed = new Set<string>(['strength', 'speed']);
+      if (access.hasHitting) allowed.add('hitting');
+      if (access.hasThrowing || access.hasPitching) allowed.add('throwing');
+      if (access.hasThrowing) { allowed.add('defense'); allowed.add('baserunning'); }
+      const position = tier === 'pitcher' ? 'P' : 'SS';
+      let baseHits = 0, topHits = 0, baseDefense = 0, topDefense = 0;
+      let secondFirst = 0;
+      for (let week = 0; week < 8; week++) {
+        const p = projection(sport, ['hitting', 'fielding', 'throwing', 'speed', 'power']);
+        const baseline = Object.fromEntries(SKILL_MODALITIES.map(m => [m, resolveSkillDaysTarget('foundation', m, position)]));
+        const template = resolveWeeklyTemplate(p);
+        const hittingFirst = weeklyGoalBlocks(template, baseline, p, position, allowed);
+        const fieldingFirst = weeklyGoalBlocks(template, baseline, projection(sport, order), position, allowed);
+        for (const m of SKILL_MODALITIES) {
+          expect(hittingFirst.targets[m]).toBeGreaterThanOrEqual(baseline[m]);
+          expect(fieldingFirst.targets[m]).toBeGreaterThanOrEqual(baseline[m]);
+          if (!allowed.has(m)) {
+            expect(hittingFirst.targets[m]).toBe(baseline[m]);
+            expect(fieldingFirst.targets[m]).toBe(baseline[m]);
+          }
+        }
+        for (let day = 0; day < 7; day++) {
+          const date = new Date(2026, 5, 7 + week * 7 + day);
+          const base = applyMicrocycle(template, date, baseline);
+          const hit = applyMicrocycle(hittingFirst.template, date, hittingFirst.targets);
+          const field = applyMicrocycle(fieldingFirst.template, date, fieldingFirst.targets);
+          baseHits += Number(base.perModality.hitting.scheduled);
+          topHits += Number(hit.perModality.hitting.scheduled);
+          baseDefense += Number(base.perModality.defense.scheduled);
+          topDefense += Number(field.perModality.defense.scheduled);
+          for (const after of [hit, field]) {
+            expect(after.perModality.strength).toEqual(base.perModality.strength);
+            for (const m of SKILL_MODALITIES) if (base.perModality[m].scheduled) expect(after.perModality[m].scheduled).toBe(true);
+          }
+          if (hit.perModality.hitting.scheduled && !base.perModality.hitting.scheduled) {
+            expect(hit.perModality.hitting.intensity).toBe('activation');
+            expect(template.perModality.hitting).toContain(day);
+          }
+          const blocks = SKILL_MODALITIES.filter(m => allowed.has(m) && hit.perModality[m].scheduled)
+            .map(modality => ({ modality, status: 'ready' }));
+          if (blocks.length > 1 && blocks.some(b => b.modality === 'defense')) {
+            expect(secondGoalFirst(blocks, p)[0]?.modality).toBe('defense'); secondFirst++;
+          }
+        }
+      }
+      expect(topHits - baseHits).toBe(access.hasHitting ? 8 : 0);
+      expect(topDefense - baseDefense).toBe(access.hasThrowing ? 8 : 0);
+      if (access.hasThrowing) expect(secondFirst).toBeGreaterThan(0);
+      else expect(secondFirst).toBe(0);
+      const opposite = sport === 'baseball' ? 'softball' : 'baseball';
+      expect(priorityAccess([`${opposite}_${tier}`], sport)).toEqual({ hasPitching: false, hasHitting: false, hasThrowing: false });
+      const unavailable = weeklyGoalBlocks(resolveWeeklyTemplate(projection(sport, order)),
+        { defense: 2 }, projection(sport, order), position, new Set(['strength', 'speed']));
+      expect(unavailable.targets.defense).toBe(2);
+      expect(unavailable.modality).toBeNull();
+    });
+  }
 });
