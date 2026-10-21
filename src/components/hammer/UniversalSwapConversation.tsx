@@ -46,6 +46,7 @@ function SwapVisit({ open, onOpenChange, expected, original, catalog, context, t
   useEffect(() => {
     openEpoch.current += 1;
     active.current = open;
+    setReading(false);
     if (!open && !attempted.current) {
       setDraft(startSwapConversation(expected.user_id, expected.id, expected.plan_date));
       setSelected([]); setError(null); setSavedReason(null);
@@ -142,7 +143,7 @@ function SwapVisit({ open, onOpenChange, expected, original, catalog, context, t
                 </label>)}
             </div>
             <div className="flex flex-wrap gap-2">
-              {draft.step === "available" && <Button variant="ghost" onClick={() => { setDraft(startSwapConversation(expected.user_id, expected.id, expected.plan_date)); setSelected([]); setError(null); }}><ArrowLeft className="mr-2 h-4 w-4" />Start again</Button>}
+              {draft.step === "available" && <Button variant="ghost" onClick={() => { setDraft(startSwapConversation(expected.user_id, expected.id, expected.plan_date)); setSelected([]); setError(null); setUnderstood(null); }}><ArrowLeft className="mr-2 h-4 w-4" />Start again</Button>}
               <Button disabled={reading || (draft.step === "missing" && selected.length === 0)} onClick={advance}>
                 {draft.step === "available" && !selected.length ? "None of these" : "Continue"}<ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -159,7 +160,7 @@ function SwapVisit({ open, onOpenChange, expected, original, catalog, context, t
               {pending ? <Loader2 className="mr-2 h-4 w-4 shrink-0 animate-spin" /> : <Repeat2 className="mr-2 h-4 w-4 shrink-0" />}{movement.name}
             </Button>)}
             <p className="text-sm text-muted-foreground">{!transport ? "Swap saving is not available yet. Your session and equipment memory are unchanged." : !preview?.candidates.length ? "Your session is unchanged. Don't replace it with different work." : "Your answer will be saved with the checked replacement."}</p>
-            <Button variant="ghost" disabled={pending || uncertain} onClick={() => { setDraft(startSwapConversation(expected.user_id, expected.id, expected.plan_date)); setSelected([]); setError(null); }}><ArrowLeft className="mr-2 h-4 w-4" />Start again</Button>
+            <Button variant="ghost" disabled={pending || uncertain} onClick={() => { setDraft(startSwapConversation(expected.user_id, expected.id, expected.plan_date)); setSelected([]); setError(null); setUnderstood(null); }}><ArrowLeft className="mr-2 h-4 w-4" />Start again</Button>
           </>}
         </>}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
