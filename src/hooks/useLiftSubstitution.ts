@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
-import { sameDoseSwap } from "@/lib/prescription/sameDoseSwap";
+import { recordedSwapDose, sameDoseSwap } from "@/lib/prescription/sameDoseSwap";
 import { swapOrigin, restoreSwapInstructions, requireUnmarkedSwap } from "@/lib/prescription/swapReceipt";
 import { eligibleSwapCandidate } from "@/lib/prescription/swapEligibility";
 import { isEccentricOverloadPhaseIllegal } from "../../supabase/functions/_shared/wic/season";
@@ -256,9 +256,29 @@ export function useLiftSubstitution(planDate: string) {
     if (user?.id) qc.invalidateQueries({ queryKey: ["wk-rx", user.id, planDate] });
   };
 
+  // Receipts alone do not catch a dose/rest edit made by another visit or the generator.
+  // Every field we retain/overwrite must still match the row the athlete saw.
+  const matchPrescription = (query: any, rx: WkRx) => {
+    for (const field of ["sets", "reps", "duration_seconds", "distance_feet", "total_reps",
+      "dosage_unit", "tempo", "load_pct", "rest_seconds", "intensity", "substituted_from_slug",
+      "substitution_reason", "movement_name", "slot", "phase", "sequence_order", "sequence_role"] as const) {
+      const value = rx[field];
+      // Older payloads may omit optional context; never pretend an omitted dose is saved.
+      if (value === undefined) continue;
+      query = value === null ? query.is(field, null) : query.eq(field, value);
+    }
+    return query;
+  };
+
+  const requireVisit = (rx: WkRx) => {
+    if (rx.plan_date !== planDate) throw new Error("This exercise belongs to a different day's plan. Reload your plan.");
+    recordedSwapDose(rx);
+  };
+
   const apply = useMutation({
     mutationFn: async ({ rx, candidate, reason }: ApplyArgs) => {
       if (!user?.id) throw new Error("Sign in to change your plan.");
+      requireVisit(rx);
       requireUnmarkedSwap(rx.status);
       const dose = projectedDose(rx, candidate, reason);
       const why = { ...(rx.why_payload ?? {}) } as Record<string, unknown>;
@@ -294,6 +314,7 @@ export function useLiftSubstitution(planDate: string) {
         .eq("movement_slug", rx.movement_slug)
         .eq("status", rx.status);
       update = rx.why_payload === null ? update.is("why_payload", null) : update.eq("why_payload", JSON.stringify(rx.why_payload));
+      update = matchPrescription(update, rx);
       const { data, error } = await update.select("id,movement_slug");
       if (error) throw error;
       if (!Array.isArray(data) || data.length !== 1) throw new Error("Your plan changed before this alternative was saved. Reload your plan.");
@@ -308,6 +329,7 @@ export function useLiftSubstitution(planDate: string) {
   const undo = useMutation({
     mutationFn: async ({ rx, original }: { rx: WkRx; original: SwapCandidate }) => {
       if (!user?.id) throw new Error("Sign in to change your plan.");
+      requireVisit(rx);
       requireUnmarkedSwap(rx.status);
       const origin = swapOrigin({ ...rx, why_payload: rx.why_payload });
       if (!rx.substituted_from_slug || original.slug !== origin.from_slug) throw new Error("The original exercise could not be matched. Your session is unchanged.");
@@ -328,6 +350,7 @@ export function useLiftSubstitution(planDate: string) {
         .eq("movement_slug", rx.movement_slug)
         .eq("status", rx.status);
       update = rx.why_payload === null ? update.is("why_payload", null) : update.eq("why_payload", JSON.stringify(rx.why_payload));
+      update = matchPrescription(update, rx);
       const { data, error } = await update.select("id,movement_slug");
       if (error) throw error;
       if (!Array.isArray(data) || data.length !== 1) throw new Error("Your plan changed before Undo was saved. Reload your plan.");
