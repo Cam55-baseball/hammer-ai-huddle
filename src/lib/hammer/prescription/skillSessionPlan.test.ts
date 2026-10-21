@@ -17,6 +17,29 @@ function context(sport: string, phase: string, injuries: string[] = []): HammerA
 }
 
 describe('actual plan execution structure and schedule protection', () => {
+  for (const sport of ['baseball', 'softball']) for (const phase of ['off', 'pre', 'in']) {
+    it(`${sport}/${phase}: confirmed gear without a position cannot authorize fielding throws or override`, () => {
+      const base = context(sport, phase);
+      const ctx: HammerAthleteContext = { ...base, get<T>(key: string) {
+        if (key === 'position_primary') return undefined;
+        return base.get<T>(key);
+      } };
+      for (const signal of [NORMAL_SIGNAL, { ...NORMAL_SIGNAL, postureToday: 'game' as const }]) {
+        for (let n = 0; n < 7; n++) {
+          const plan = buildHammerDailyPlan(ctx, signal, null, null, undefined, new Date(2026, 5, 1 + n));
+          const defense = plan.blocks.find(row => row.modality === 'defense');
+          expect(defense).toBeDefined();
+          expect(defense?.status).toBe('awaiting-input');
+          expect(defense?.drills).toEqual([]);
+          expect(defense?.gamePlanTemplate).toBeNull();
+          expect(defense?.offDayOverridable).not.toBe(true);
+          expect(defense?.missingContextKeys).toEqual(['position_primary']);
+          const knownPlan = buildHammerDailyPlan(base, signal, null, null, undefined, new Date(2026, 5, 1 + n));
+          expect(plan.blocks.find(row => row.modality === 'strength')).toEqual(knownPlan.blocks.find(row => row.modality === 'strength'));
+        }
+      }
+    });
+  }
   for (const sport of ['baseball', 'softball']) {
     for (const gear of [[], ['field', 'glove'], ['field', 'ball'], ['glove', 'ball']]) {
       it(`${sport}: incomplete fielding gear ${gear.join('/')} cannot prescribe any catalog reps`, () => {
