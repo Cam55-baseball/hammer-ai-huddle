@@ -1,5 +1,10 @@
 # Oct 21 — Named live implementation authorization
 
+**AV8 (last of batch) status check:** no new mounted change this turn; nothing deployed, migrated, published, cron or iOS. Status table below re-confirmed: **0 of 11 approved items Done** (Done = mounted in the real app and proven on a phone). Next build step is the atomic plan-swap certifier (fresh reads under `wk_lock_plan_day`, `checkSwapCatalogPair`, row + memory + log in one transaction, idempotent request ID, readback) before any of the four positive phone swaps can count.
+
+**Ready to publish: no** — saving a Swap is not built, the four saved Swap phone proofs, both-sport base-counter and full-go actual-plan proofs, mixed-signal/testing-day cases and the nightly pair are all unfinished, and the latest full test run did not finish inside the time limit.
+
+
 **AV7 live sub-step:** mounted/server shared catalog-source gate rejects retired, incomplete or dose-conflicting source metadata before interpreting availability; only `plan-swap` redeployed. Actual TEST 390×844 phone flow returned live HTTP 200 with unchanged prescription/memory, and browser-isolated retired-source data produced a visible refusal in the real Swap sheet. Pure source/target catalog/workload necessary conditions added and tested, not save authority. Atomic saving/four positive swaps remain unfinished. `docs/owner/av7-proof.md`
 
 **AV6 live sub-step:** shared server/client saved-dose/context validation; mounted Swap now pins the complete prescription/catalog before and after inference. Actual TEST 390×844 phone flow: current answer HTTP 200, stale dose and changed choices HTTP 409 with exact refusal shown; saved prescriptions unchanged. This is a no-write prerequisite, not atomic certification/save. `docs/owner/av6-proof.md`
