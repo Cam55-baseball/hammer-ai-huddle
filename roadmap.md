@@ -20,7 +20,7 @@
 
 **Nightly outcome:** last recorded Oct 21 04:30 callback HTTP 200, players/checked/pending 0/0/0 (empty, not positive). Next scheduled outcome is not claimed early. No cron changes or manual trigger.
 
-**Validation:** fresh full suite **479 files / 3,830 tests PASS** (967 + 976 + 985 + 902). Initial third-group waitFor timing failure passed individually and in a complete bounded rerun; no files omitted. Preview build OK; live coach canonical-sport definition and Swap grants/policies read back. TEST player/coach passwords scrambled, temporary coaching connection ended and revocation checked; no measurements or practice ideas invented. `docs/owner/av3-proof.md`
+**Validation:** AV4 changed-path **6 files / 42 tests PASS**, isolated server type validation PASS, preview build OK at 16:40:05 UTC; live AI phone response HTTP 200 and exact no-write readback. Last full suite remains AV3 **479 files / 3,830 tests PASS**, not a fresh AV4 result. TEST player password scrambled; no training/gear/measurement writes. `docs/owner/av4-proof.md`, `docs/owner/av3-proof.md`
 
 - [x] Apply named AT5 migration and mount coach six-week summary in the actual coach page.
 - [x] Prove real coach saved-plan reads and immediate revocation; preserve health redaction.

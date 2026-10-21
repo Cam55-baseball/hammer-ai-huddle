@@ -23,4 +23,4 @@ Requested 14-game hitter/pitcher, organization testing-day, positive mixed-signa
 
 ## Validation
 
-Server `deno check` passed with isolated dependencies; initial local dependency-resolution error was environment configuration, resolved with an isolated auto-install config. Changed-path tests and current preview are checked separately. AI refusal tests cover unknown equipment, contradictions and missing absent-item evidence. No unexplained server error preceded deployment.
+Server `deno check` passed with isolated dependencies; initial local dependency-resolution error was environment configuration, resolved with an isolated auto-install config. Changed-path tests: **6 files / 42 tests PASS**; preview build OK at 16:40:05 UTC. AI refusal tests cover unknown equipment, contradictions and missing absent-item evidence; reviewed answers remain three-question drafts, never automatic writes. No unexplained server error preceded deployment.
