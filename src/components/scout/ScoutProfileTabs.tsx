@@ -3,6 +3,7 @@ import { videoGradesShown, VIDEO_GRADE_PLACEHOLDER } from "@/lib/reportCard/visi
 import { supabase } from "@/integrations/supabase/client";
 import { TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import { ScoutOverviewSummary } from "@/components/scout/ScoutOverviewSummary";
+import { useAuth } from "@/hooks/useAuth";
 
 const NM = "Not yet measured";
 const NOT_SHARED = "Not shared. This family hasn't shared this with you.";
@@ -21,10 +22,23 @@ export interface ScoutProfileData {
 }
 
 export function useScoutProfile(athleteId: string) {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: ["scout-profile", athleteId],
+    queryKey: ["scout-profile", user?.id, athleteId],
+    enabled: !!user?.id && !!athleteId,
     retry: false,
-    queryFn: async (): Promise<ScoutProfileData> => {
+    queryFn: async (): Promise<ScoutProfileData | null> => {
+      if (!user?.id || !athleteId) return null;
+      // Ask the same server-owned scope judge as the profile RPC. A deliberate
+      // visit without sharing is an empty view, not a denied data request.
+      const scopes = await Promise.all(["profile", "metrics", "video", "academics"].map(async (scope) => {
+        const { data, error } = await supabase.rpc("scout_can_view_scope", {
+          _viewer: user.id, _athlete: athleteId, _scope: scope,
+        });
+        if (error) throw error;
+        return data === true;
+      }));
+      if (!scopes.some(Boolean)) return null;
       const { data, error } = await (supabase as any).rpc("scout_athlete_profile", { _athlete: athleteId });
       if (error) throw error;
       return data as ScoutProfileData;
@@ -61,7 +75,7 @@ export function ScoutTabTriggers() {
 export function ScoutTabContents({ q, athleteId }: { q: ReturnType<typeof useScoutProfile>; athleteId: string }) {
   const p = q.data;
   const wrap = (node: React.ReactNode) =>
-    q.isLoading ? <Empty t="Loading…" /> : q.isError || !p ? <Empty t="Not shared. You're not following this player, or the family hasn't shared their profile." /> : node;
+    q.isLoading ? <Empty t="Loading…" /> : q.isError ? <Empty t="We couldn't check what's shared. Please try again." /> : !p ? <Empty t="Not shared. You're not following this player, or the family hasn't shared their profile." /> : node;
   const o = p?.overview;
   return (
     <>
