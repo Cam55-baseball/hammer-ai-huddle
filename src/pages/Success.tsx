@@ -43,10 +43,12 @@ export default function Success() {
   const sessionId = params.get('session_id') ?? '';
   const buildIdParam = params.get('build') ?? '';
 
-  const [status, setStatus] = useState<Status>(sessionId ? 'loading' : 'ready');
+  const [status, setStatus] = useState<Status>(sessionId ? 'loading' : 'pending');
   const [purchase, setPurchase] = useState<Purchase | null>(null);
 
   useEffect(() => {
+    setPurchase(null);
+    setStatus(sessionId ? 'loading' : 'pending');
     if (!sessionId) return;
     let cancelled = false;
     (async () => {
@@ -94,7 +96,7 @@ export default function Success() {
     if (status === 'pending') {
       return (
         <p className="text-sm text-muted-foreground">
-          Your payment was received. Confirmation is still processing — refresh in a moment.
+          We haven’t confirmed a purchase here. Check your receipt or return to your plan.
         </p>
       );
     }
@@ -102,7 +104,7 @@ export default function Success() {
     if (status === 'error') {
       return (
         <p className="text-sm text-destructive">
-          We couldn’t load your purchase details. Your payment is safe — please refresh.
+          We couldn’t confirm your purchase. Please refresh or check your receipt.
         </p>
       );
     }
@@ -124,7 +126,7 @@ export default function Success() {
     }
 
     return (
-      <p className="text-muted-foreground">Thank you — your purchase is confirmed.</p>
+      <p className="text-muted-foreground">No confirmed purchase is available here.</p>
     );
   };
 
@@ -142,7 +144,7 @@ export default function Success() {
           <div className="flex justify-center">
             <CheckCircle2 className="h-14 w-14 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold">Payment Successful</h1>
+          <h1 className="text-3xl font-bold">{status === 'ready' && purchase ? 'Payment Successful' : 'Purchase confirmation'}</h1>
           {renderBody()}
           {buildIdParam && (
             <p className="text-[11px] font-mono text-muted-foreground break-all pt-2">
