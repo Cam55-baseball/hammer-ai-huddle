@@ -1,3 +1,32 @@
+# AU8 — Last batch continuation — Oct 21
+
+**Ready to publish: no.** No publish, deployment, migration, cron or iOS changes.
+
+| Approved open item | Status | Proof path / remaining acceptance |
+|---|---|---|
+| Conditioning base-counter rest | Partly | Single/double phone proofs retained: 30 seconds, then 300 seconds/reset; real saved-row readback unchanged, not actual-plan-route acceptance. Both-sport proof open; softball 43-foot repeat is not a declared base route. `docs/owner/au1-proof.md`, `docs/owner/au8-proof.md` |
+| Every-card AI Swap / equipment-question replacement | Partly | Preview safety, exact-dose alternative save/Undo and staged no-write phone checks exist; same-version close/reopen protection added. Server/AI and all four positive Swap/memory proofs remain. `docs/owner/au4-proof.md`, `docs/owner/au7-proof.md`, `docs/owner/au8-proof.md` |
+| Machine → flips phone save + memory | Not started | Catalog/unit example only, no successful hosted universal Swap. `docs/owner/au5-atomic-swap-contract.md` |
+| No barbell phone save + memory | Not started | Real saved lift used for staged negative check; no successful universal Swap. `docs/owner/au7-proof.md` |
+| No open field phone save + memory | Not started | Missing certified equal-intent/distance safe-space metadata; cannot substitute marches/jumps as sprint-distance work. `docs/owner/au1-proof.md` |
+| No foam roller phone save + memory | Not started | No successful hosted universal Swap. `docs/owner/au5-atomic-swap-contract.md` |
+| Coach six-week summaries / practice ideas | Partly | Staged display built, exact dated dose/reason tests and phone/desktop honest empty-state checks pass; unmounted pending named access-correction authorization and coach/org proofs. `docs/owner/au8-proof.md` |
+| Pitching / fielding / baserunning full-go | Partly | Execution regressions retained; eligible actual-plan phone cases remain. `docs/owner/au3-proof.md` |
+| Mixed signals / testing-day details | Partly | Canonical rules/caller and notice tests pass; genuine linked hosted cases remain. `docs/owner/au7-proof.md`, `docs/owner/au1-proof.md` |
+| TEST ADMIN owner screens / hidden lists | Partly | Boundary audit retained; staged exclusion authorization and affected-role proofs remain. `docs/owner/au2-proof.md` |
+| 04:30 nightly learning outcome | Partly | Recorded successful callback HTTP 200, players/checked/pending 0/0/0; no positive comparable pair and no newer run claimed. `docs/owner/au1-proof.md` |
+
+**Nightly result:** recorded Oct 21 04:30 scheduled callback succeeded but was empty; not positive learning proof. No manual trigger or cron change.
+
+**Fresh suite:** **473 files / 3,808 tests PASS**, bounded batches 988 + 1,045 + 906 + 869, no prior files omitted; preview build OK. Initial concurrent run hit worker/test timeouts; all files rerun successfully with bounded workers. TEST password scrambled after each phone attempt, private credentials removed, no training/gear/connection writes.
+
+- [x] Build staged six-week coach summary/practice-ideas display without widening reads or permissions.
+- [x] Close Swap's same-version close/reopen response gap and test the visit boundary.
+- [x] Run changed-path/full tests, inspect phone presentation and update the top proof/status table.
+- [ ] Universal server certification/AI/atomic memory + four positive phone saves and question replacement: implementation and canonical metadata remain, with named schema/permission authorization before applying.
+- [ ] Coach wider reads and TEST ADMIN exclusion: named staged access authorization and affected-role proof remain.
+- [ ] Actual-plan full-go/both-sport conditioning, genuine mixed-signal/testing-day/owner cases and positive nightly evidence remain unproved; do not manufacture athlete evidence to close them.
+
 # AU7 — Approved open-item continuation — Oct 21
 
 **Ready to publish: no.** No publish, cron or iOS changes; no live permission/schema changes.

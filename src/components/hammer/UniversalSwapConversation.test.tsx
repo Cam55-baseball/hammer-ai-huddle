@@ -30,6 +30,32 @@ function answers() {
   fireEvent.click(screen.getByRole("button", { name: "Always" }));
 }
 describe("staged Swap conversation safety", () => {
+  it("a parent-closed unanswered visit never reuses prior availability on reopen", () => {
+    const props = { open: true, onOpenChange: vi.fn(), expected, original, catalog: [flips], context, onSaved: vi.fn() };
+    const { rerender } = render(<UniversalSwapConversation {...props} />);
+    answers();
+    rerender(<UniversalSwapConversation {...props} open={false} />);
+    rerender(<UniversalSwapConversation {...props} />);
+    expect(screen.getByRole('checkbox', { name: 'pitching machine' })).not.toBeChecked();
+    expect(screen.queryByRole('button', { name: 'Partner flips' })).toBeNull();
+  });
+  it("a prior open visit cannot notify success after closing and reopening the same version", async () => {
+    let finish: (() => void) | undefined;
+    const transport = vi.fn().mockImplementation(request => new Promise(resolve => {
+      finish = () => resolve({ state: 'saved', requestId: request.requestId, memorySaved: true,
+        reason: 'Same 30 swings.', row: { ...expected, movement_slug: 'flips', updated_at: '2026-10-21T05:01:00Z' } });
+    }));
+    const onSaved = vi.fn();
+    const props = { open: true, onOpenChange: vi.fn(), expected, original, catalog: [flips], context, transport, onSaved };
+    const { rerender } = render(<UniversalSwapConversation {...props} />);
+    answers(); fireEvent.click(screen.getByRole('button', { name: 'Partner flips' }));
+    rerender(<UniversalSwapConversation {...props} open={false} />);
+    rerender(<UniversalSwapConversation {...props} />);
+    await act(async () => { finish?.(); });
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Partner flips' })).toBeDisabled();
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
   it("answers all three questions but cannot save without the certified transaction", () => {
     const onSaved = vi.fn();
     render(<UniversalSwapConversation open onOpenChange={vi.fn()} expected={expected} original={original} catalog={[flips]} context={context} onSaved={onSaved} />);
