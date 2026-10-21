@@ -122,6 +122,7 @@ import { useCategoryPracticeLoad } from '@/hooks/useCategoryPracticeLoad';
 import { RoyalTimingReminder } from "@/components/hammer/RoyalTimingReminder";
 import { DelaycamReminder } from "@/components/hammer/DelaycamReminder";
 import { RankGoalsPromptCard } from "@/components/hammer/RankGoalsPromptCard";
+import { TestingDayNotice } from "@/components/hammer/TestingDayNotice";
 import { usePitcherSchedule } from "@/hooks/usePitcherSchedule";
 import { PitcherScheduleGate } from "@/components/hammer/pitching/PitcherScheduleCard";
 import { GpInGameAdvisoryStrip } from "@/components/hammer/GpInGameAdvisoryStrip";
@@ -916,6 +917,7 @@ function HammerDailyPlanBody({
           <DayNoticesDrawerItem />
         </ErrorBoundary>
         <TexVisionWork />
+        <ErrorBoundary><TestingDayNotice /></ErrorBoundary>
         {faultContext.isError && <p role="alert" className="text-sm text-destructive">Couldn't check your analysis history. No analysis drill changes were applied.</p>}
         {drillCirculation.error && <p role="alert" className="text-sm text-destructive">Couldn't check your drill choices. No analysis drill changes were applied.</p>}
         {practiceLoadHistory.error && <p role="alert" className="text-sm text-destructive">Couldn't check your logged practice workload. Your saved plan has not been changed.</p>}
