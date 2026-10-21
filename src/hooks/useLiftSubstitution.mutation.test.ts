@@ -15,9 +15,9 @@ import { useLiftSubstitution, type SwapCandidate } from "./useLiftSubstitution";
 const rx = { id: "row", plan_date: "2026-10-21", movement_slug: "original", movement_name: "Original",
   substituted_from_slug: null, status: "planned", sets: 4, reps: 5, total_reps: 20,
   duration_seconds: null, distance_feet: null, tempo: "3010", load_pct: 70,
-  dosage_unit: "reps", rest_seconds: 180, intensity: "RPE 7", substitution_reason: null,
-  slot: "lift", phase: "os_q1", sequence_order: 1, sequence_role: "compound",
-  why_payload: { cue: "Original cue" } } as WkRx;
+  dosage_unit: "reps", intensity_mode: "intent", density_target_seconds: 180, rir_low: 2, rir_high: 3, substitution_reason: null,
+  slot: "lift", phase: "os_q1", sequence_order: 1, sequence_role: "compound_lower",
+  why_payload: { cue: "Original cue", rest_seconds: 180 } } as unknown as WkRx;
 const candidate: SwapCandidate = { slug: "replacement", name: "Replacement", cue: null, dosage_unit: "reps",
   movement_category: "squat", default_sets: 2, default_reps: 8, default_duration_seconds: null,
   default_distance_feet: null, default_total_reps: null, equipment_requirements: [] };
@@ -75,16 +75,18 @@ describe("actual existing Swap mutation boundary", () => {
       tempo: "3010", load_pct: 70, dosage_unit: "reps" })) expect(chain.eq).toHaveBeenCalledWith(field, value);
     for (const field of ["duration_seconds", "distance_feet"]) expect(chain.is).toHaveBeenCalledWith(field, null);
   });
-  it("guards 180-second rest, intensity, slot and sequence without rewriting their values", async () => {
+  it("guards saved density/intensity and the 180-second rest payload without rewriting their values", async () => {
     const { chain, apply } = setup();
     await apply({ rx, candidate, reason: "equipment_unavailable" });
-    for (const [field, value] of Object.entries({ rest_seconds: 180, intensity: "RPE 7", slot: "lift",
-      phase: "os_q1", sequence_order: 1, sequence_role: "compound", movement_name: "Original" })) {
+    for (const [field, value] of Object.entries({ density_target_seconds: 180, intensity_mode: "intent", rir_low: 2, rir_high: 3, slot: "lift",
+      phase: "os_q1", sequence_order: 1, sequence_role: "compound_lower", movement_name: "Original" })) {
       expect(chain.eq).toHaveBeenCalledWith(field, value);
       if (field !== "movement_name") expect(chain.update.mock.calls[0][0]).not.toHaveProperty(field);
     }
     expect(chain.is).toHaveBeenCalledWith("substituted_from_slug", null);
     expect(chain.is).toHaveBeenCalledWith("substitution_reason", null);
+    expect(chain.eq).toHaveBeenCalledWith("why_payload", JSON.stringify(rx.why_payload));
+    expect(chain.update.mock.calls[0][0].why_payload.rest_seconds).toBe(180);
   });
   it("Undo also refuses concurrent dose/rest edits and compares the currently displayed replacement", async () => {
     const origin = swapOrigin(rx);
@@ -93,7 +95,7 @@ describe("actual existing Swap mutation boundary", () => {
     const { chain, undo } = setup([]);
     await expect(undo({ rx: second, original: { ...candidate, slug: "original" } })).rejects.toThrow(/plan changed/);
     expect(chain.eq).toHaveBeenCalledWith("sets", 4);
-    expect(chain.eq).toHaveBeenCalledWith("rest_seconds", 180);
+    expect(chain.eq).toHaveBeenCalledWith("density_target_seconds", 180);
     expect(chain.eq).toHaveBeenCalledWith("substituted_from_slug", "original");
   });
   it("rejects a different day's plan before an apply or Undo write", async () => {

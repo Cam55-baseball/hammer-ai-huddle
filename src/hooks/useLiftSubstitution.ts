@@ -259,10 +259,12 @@ export function useLiftSubstitution(planDate: string) {
   // Receipts alone do not catch a dose/rest edit made by another visit or the generator.
   // Every field we retain/overwrite must still match the row the athlete saw.
   const matchPrescription = (query: any, rx: WkRx) => {
+    const row = rx as unknown as Record<string, unknown>;
     for (const field of ["sets", "reps", "duration_seconds", "distance_feet", "total_reps",
-      "dosage_unit", "tempo", "load_pct", "rest_seconds", "intensity", "substituted_from_slug",
+      "dosage_unit", "tempo", "load_pct", "intensity_mode", "density_target_seconds", "rir_low", "rir_high",
+      "intent_tag", "execution_note", "per_side", "open_ended", "set_range_max", "substituted_from_slug",
       "substitution_reason", "movement_name", "slot", "phase", "sequence_order", "sequence_role"] as const) {
-      const value = rx[field];
+      const value = row[field];
       // Older payloads may omit optional context; never pretend an omitted dose is saved.
       if (value === undefined) continue;
       query = value === null ? query.is(field, null) : query.eq(field, value);
