@@ -1,3 +1,15 @@
+# AT7 — Owner Oct 21 rest and smart substitution
+
+**Ready to publish: no.** Owner Camryn Williams authorized this round's necessary backend redeploys only; no publish, cron or iOS changes. Earlier open items below remain open, not superseded by this new scope.
+
+- [ ] Short complete audit: equipment questions and existing swaps/alternatives, with replacement paths and no duplicates.
+- [ ] Speed/PAP sprint rest: distance-derived seconds capped at 300, matching timers, reasons and prescription; concrete 10/30/50/60-yard tests.
+- [ ] Conditioning base counter and 30-second / four-base 300-second timer; sequence tests. Interpret the isolated “3 seconds” as 30 seconds pending owner confirmation.
+- [ ] Smart Swap across all exercise/drill cards and coach workouts: short AI conversation, same category/intent/dose and every existing safety gate; saved replacement/reason plus today/always equipment memory.
+- [ ] Replace up-front equipment questions only once working Swap paths preserve access and existing equipment memory.
+- [ ] Affected TEST athlete iPhone-size end-to-end proofs: machine→flips, no barbell, no open field, no foam roller; save/readback and exact TEST cleanup.
+- [ ] Relevant regressions, fresh full suite, clean preview, authorized required backend live proof; top status/readiness and remaining blockers updated.
+
 # AT6 — Final batch continuation — Oct 21
 
 **Ready to publish: no.** This table supersedes older status/blocker tables below. Done applies only to the named proved scope; Partly does not mean hosted acceptance is complete.
