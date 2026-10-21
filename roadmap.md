@@ -2,9 +2,26 @@
 
 **Ready to publish: no.** No publish, cron or iOS changes; no live permission/schema changes.
 
-- [ ] Require explicit catalog workload and source legality for universal previews; no missing-as-zero costs.
-- [ ] Advance an independent testing-day correctness sub-step if evidence identifies one.
-- [ ] Run relevant tests/proofs, clean exact TEST data and refresh the top status table.
+| Approved open item | Status | Proof / remaining acceptance |
+|---|---|---|
+| Conditioning base-counter rest | Partly | Existing proof retained; both-sport actual-plan acceptance open. `docs/owner/au1-proof.md` |
+| Every-card AI Swap + equipment questions | Partly | Source legality and explicit per-channel workload preview checks, alias contradiction refusal built/tested; staged affected-player phone check passed. Server/AI, four positive saves and question replacement remain. `docs/owner/au7-proof.md` |
+| Coach six-week summaries / practice ideas | Partly | Projection tested; named staged access authorization and affected-role live reads remain. `docs/owner/au5-proof.md` |
+| Pitching / fielding / baserunning full-go | Partly | Execution tests retained; eligible actual-plan phone cases remain. `docs/owner/au3-proof.md` |
+| Mixed signals / testing-day details | Partly | Fixed false hitting disagreement from absent/thin game samples using existing 6-AB/20-pitch floor; caller wired and tests pass. Genuine linked hosted proof remains; details audit found no new defect. `docs/owner/au7-proof.md` |
+| TEST ADMIN owner screens / hidden lists | Partly | Boundary audit retained; staged exclusion authorization and remaining proofs open. `docs/owner/au2-proof.md` |
+| 04:30 nightly learning outcome | Partly | Recorded HTTP 200, 0/0/0; no positive comparable pair. `docs/owner/au1-proof.md` |
+
+**Nightly result:** recorded Oct 21 04:30 callback successful and empty (players / checked / pending = 0); no newer result claimed, manual trigger or schedule change.
+
+**Fresh suite:** **472 files / 3,804 tests PASS**; latest preview build OK. Real TEST staged phone no-write check passed; exact prescription/memory unchanged; password scrambled and private credentials removed. `docs/owner/au7-proof.md`.
+
+- [x] Require explicit catalog workload and source legality for universal previews; no missing-as-zero costs.
+- [x] Advance independent mixed-signal sample correctness fix; testing-day audit found no new defect.
+- [x] Run relevant tests/proofs, clean exact TEST data and refresh the top status table.
+- [ ] Universal server atomic certification/current safety/memory and AI connection, four positive phone saves and equipment-question replacement remain; canonical metadata and named permission/schema authorization required before application.
+- [ ] Coach six-week live reads and TEST ADMIN exclusion await named staged authorization/affected-role proofs.
+- [ ] Actual-plan full-go/both-sport conditioning, genuine mixed signals/testing day/owner-screen and positive nightly evidence remain unproved.
 
 # AU6 — Approved open-item continuation — Oct 21
 
