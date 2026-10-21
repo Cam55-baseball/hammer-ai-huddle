@@ -81,7 +81,7 @@ describe("actual existing Swap mutation boundary", () => {
     for (const [field, value] of Object.entries({ rest_seconds: 180, intensity: "RPE 7", slot: "lift",
       phase: "os_q1", sequence_order: 1, sequence_role: "compound", movement_name: "Original" })) {
       expect(chain.eq).toHaveBeenCalledWith(field, value);
-      expect(chain.update.mock.calls[0][0]).not.toHaveProperty(field === "movement_name" ? "unused" : field);
+      if (field !== "movement_name") expect(chain.update.mock.calls[0][0]).not.toHaveProperty(field);
     }
     expect(chain.is).toHaveBeenCalledWith("substituted_from_slug", null);
     expect(chain.is).toHaveBeenCalledWith("substitution_reason", null);
