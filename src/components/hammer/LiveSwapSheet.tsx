@@ -8,6 +8,7 @@ import type { AtomicSwapSnapshot } from "@/lib/prescription/atomicSwap";
 import type { UniversalSwapMovement } from "@/lib/prescription/universalSwapCandidates";
 import { UniversalSwapConversation } from "./UniversalSwapConversation";
 import { swapCatalogFingerprint } from "../../../supabase/functions/_shared/planSwap/visit";
+import { requireSwapCatalogSource } from "../../../supabase/functions/_shared/planSwap/catalogGate";
 
 /** Actual saved-row conversation. No legacy write fallback and no model-issued save. */
 export function LiveSwapSheet({ rx, open, onOpenChange }: {
@@ -23,6 +24,7 @@ export function LiveSwapSheet({ rx, open, onOpenChange }: {
       const { data: original, error: originalError } = await supabase.from("wk_movement_catalog").select("*")
         .eq("slug", row.movement_slug).maybeSingle();
       if (originalError || !original) throw new Error("I couldn't check the original exercise.");
+      requireSwapCatalogSource(original, row);
       let catalog: UniversalSwapMovement[] = [];
       if (original.substitution_family && original.movement_category) {
         const { data: family, error: familyError } = await supabase.from("wk_movement_catalog").select("*")

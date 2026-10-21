@@ -1,5 +1,7 @@
 # Oct 21 — Named live implementation authorization
 
+**AV7 live sub-step:** mounted/server shared catalog-source gate rejects retired, incomplete or dose-conflicting source metadata before interpreting availability; only `plan-swap` redeployed. Actual TEST 390×844 phone flow returned live HTTP 200 with unchanged prescription/memory, and browser-isolated retired-source data produced a visible refusal in the real Swap sheet. Pure source/target catalog/workload necessary conditions added and tested, not save authority. Atomic saving/four positive swaps remain unfinished. `docs/owner/av7-proof.md`
+
 **AV6 live sub-step:** shared server/client saved-dose/context validation; mounted Swap now pins the complete prescription/catalog before and after inference. Actual TEST 390×844 phone flow: current answer HTTP 200, stale dose and changed choices HTTP 409 with exact refusal shown; saved prescriptions unchanged. This is a no-write prerequisite, not atomic certification/save. `docs/owner/av6-proof.md`
 
 **AV5 live sub-step:** applied shared transaction-held athlete/day locking to both actual plan persistence paths, closing a prerequisite for safe concurrent Swap certification. Hosted definitions and service-only permissions checked; actual TEST phone plan verified HTTP 200 and mounted Swap opened with unchanged saved rows. Atomic certification/saving and all four positive swaps remain unfinished. No publish, cron or iOS changes. `docs/owner/av5-proof.md`
@@ -22,7 +24,7 @@
 
 **Nightly outcome:** last recorded Oct 21 04:30 callback HTTP 200, players/checked/pending 0/0/0 (empty, not positive). Next scheduled outcome is not claimed early. No cron changes or manual trigger.
 
-**Validation:** AV6 full suite **482 files / 3,844 tests PASS**; final changed-path **2 files / 14 tests PASS**; preview build OK at 17:13:06 UTC. Server check passed before only `plan-swap` redeployment; real 390×844 TEST phone current/stale-dose/stale-catalog requests verified with visible results and unchanged prescriptions. TEST password scrambled. AV5 shared lock installation retained; actual contention timing remains unproved. `docs/owner/av6-proof.md`, `docs/owner/av5-proof.md`
+**Validation:** AV7 final changed-path **4 files / 33 tests PASS**; server check passed before only `plan-swap` redeployment; preview build OK at 17:21:26 UTC. Actual TEST 390×844 phone interpretation and retired-source refusal verified, saved rows unchanged and TEST password scrambled. Full-suite attempt timed out at 600 seconds without final summary—not claimed passed; previous AV6 full-suite result retained separately. AV5 lock contention timing remains unproved. `docs/owner/av7-proof.md`, `docs/owner/av6-proof.md`, `docs/owner/av5-proof.md`
 
 - [x] Apply named AT5 migration and mount coach six-week summary in the actual coach page.
 - [x] Prove real coach saved-plan reads and immediate revocation; preserve health redaction.
@@ -38,6 +40,7 @@
 - [x] Deploy authenticated self-scoped AI availability interpretation and prove it mounted through actual TEST player phone exercise UI; preserve explicit no-write/no-save state.
 - [x] Apply shared transaction-held athlete/day lock to both actual plan persistence paths; verify hosted installation, service-only access and real TEST phone plan continuity.
 - [x] Share saved-dose/context server/client validators and pin mounted AI interpretation to exact work/catalog; prove current acceptance and stale-dose/catalog refusal through real TEST phone UI without training writes.
+- [x] Mount shared catalog-source identity/dose gate in real Swap and hosted interpreter; prove current live interpretation and retired-source client refusal on phone. Pure candidate catalog/workload checks remain staged prerequisites, not atomic certification.
 - [x] Save/readback declared softball base routes; deploy sport-matching route selection and generator counters.
 - [x] Resolve TEST softball assessment through six explicit UI skips and start its actual Today plan without inventing measurements.
 - [ ] Obtain eligible conditioning/execution days; prove both-sport base-counter conditioning and all three execution roles on actual plan routes.
