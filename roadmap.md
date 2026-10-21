@@ -2,9 +2,9 @@
 
 **Ready to publish: no.** Owner Camryn Williams authorized this round's necessary backend redeploys only; no publish, cron or iOS changes. Earlier open items below remain open, not superseded by this new scope.
 
-- [ ] Short complete audit: equipment questions and existing swaps/alternatives, with replacement paths and no duplicates.
-- [ ] Speed/PAP sprint rest: distance-derived seconds capped at 300, matching timers, reasons and prescription; concrete 10/30/50/60-yard tests.
-- [ ] Conditioning base counter and 30-second / four-base 300-second timer; sequence tests. Interpret the isolated “3 seconds” as 30 seconds pending owner confirmation.
+- [x] Short complete audit: `docs/owner/oct21-equipment-swap-audit.md`.
+- [x] Speed/PAP sprint rest code: shared capped rule, timers/Why/plan text; PAP lift-to-action rest unchanged. 10/30/50/60 yd tests pass. Backend payload change NOT yet redeployed; no phone proof yet.
+- [x] Conditioning base counter code for declared base routes only; sequence tests pass. “3 seconds” treated as 30 seconds — owner to confirm. No phone proof yet.
 - [ ] Smart Swap across all exercise/drill cards and coach workouts: short AI conversation, same category/intent/dose and every existing safety gate; saved replacement/reason plus today/always equipment memory.
 - [ ] Replace up-front equipment questions only once working Swap paths preserve access and existing equipment memory.
 - [ ] Affected TEST athlete iPhone-size end-to-end proofs: machine→flips, no barbell, no open field, no foam roller; save/readback and exact TEST cleanup.
