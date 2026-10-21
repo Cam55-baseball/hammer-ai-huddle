@@ -1,3 +1,11 @@
+# AU6 — Approved open-item continuation — Oct 21
+
+**Ready to publish: no.** No publish, cron or iOS changes; no live schema or permission changes.
+
+- [ ] Advance complete saved-context validation and in-flight Swap visit/retry boundaries.
+- [ ] Test concrete safety rules and check the affected-player phone flow; clean exact TEST data.
+- [ ] Update open-item statuses, nightly result and remaining blockers.
+
 # AU5 — Approved open-item continuation — Oct 21
 
 **Ready to publish: no.** No publish, cron or iOS changes; no new permission migration assumed authorized.

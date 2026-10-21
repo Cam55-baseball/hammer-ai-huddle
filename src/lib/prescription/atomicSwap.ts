@@ -1,7 +1,8 @@
 import { recordedSwapDose, type SwapDose } from "./sameDoseSwap";
 import { confirmedSwapAvailability, requireSwapVisit, type SwapConversation } from "./swapConversation";
+import { requireSwapSavedContext, unchangedSwapContext, type SwapSavedContext } from "./swapSnapshot";
 
-export interface AtomicSwapSnapshot extends SwapDose {
+export interface AtomicSwapSnapshot extends SwapDose, SwapSavedContext {
   id: string;
   user_id: string;
   plan_date: string;
@@ -35,6 +36,7 @@ export async function commitAtomicSwap(draft: SwapConversation, expected: Atomic
   candidateSlug: string, requestId: string, transport: AtomicSwapTransport): Promise<AtomicSwapResult> {
   requireSwapVisit(draft, expected.user_id, expected.id, expected.plan_date);
   const dose = recordedSwapDose(expected);
+  requireSwapSavedContext(expected);
   if (!candidateSlug.trim() || candidateSlug === expected.movement_slug || !requestId.trim() || !expected.updated_at ||
       !["planned", "pending"].includes(expected.status)) throw new Error("Your session is unchanged. Reload your plan.");
   const availability = confirmedSwapAvailability(draft);
@@ -48,7 +50,8 @@ export async function commitAtomicSwap(draft: SwapConversation, expected: Atomic
     throw new Error("I couldn't confirm the swap and memory together. Reload your plan before trying again.");
   }
   const returnedDose = recordedSwapDose(saved);
-  if (Object.keys(dose).some(field => dose[field as keyof SwapDose] !== returnedDose[field as keyof SwapDose])) {
+  if (Object.keys(dose).some(field => dose[field as keyof SwapDose] !== returnedDose[field as keyof SwapDose]) ||
+      !unchangedSwapContext(expected, saved)) {
     throw new Error("The returned swap changed the work. Reload your plan; don't start this replacement.");
   }
   return result;
