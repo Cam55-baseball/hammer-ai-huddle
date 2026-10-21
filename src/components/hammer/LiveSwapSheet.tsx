@@ -7,6 +7,7 @@ import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import type { AtomicSwapSnapshot } from "@/lib/prescription/atomicSwap";
 import type { UniversalSwapMovement } from "@/lib/prescription/universalSwapCandidates";
 import { UniversalSwapConversation } from "./UniversalSwapConversation";
+import { swapCatalogFingerprint } from "../../../supabase/functions/_shared/planSwap/visit";
 
 /** Actual saved-row conversation. No legacy write fallback and no model-issued save. */
 export function LiveSwapSheet({ rx, open, onOpenChange }: {
@@ -29,7 +30,8 @@ export function LiveSwapSheet({ rx, open, onOpenChange }: {
         if (familyError) throw new Error("I couldn't check the replacement exercises.");
         catalog = (family ?? []) as unknown as UniversalSwapMovement[];
       }
-      return { expected: row as unknown as AtomicSwapSnapshot, original: original as unknown as UniversalSwapMovement, catalog };
+      return { expected: row as unknown as AtomicSwapSnapshot, original: original as unknown as UniversalSwapMovement, catalog,
+        catalogFingerprint: await swapCatalogFingerprint(original, catalog) };
     } });
   if (query.isSuccess && query.data) {
     const data = query.data;
@@ -39,6 +41,7 @@ export function LiveSwapSheet({ rx, open, onOpenChange }: {
       interpret={async message => {
         const { data: answer, error } = await supabase.functions.invoke("plan-swap", { body: {
           action: "interpret", prescriptionId: rx.id, planDate: rx.plan_date, message,
+          expected: data.expected, catalogFingerprint: data.catalogFingerprint,
         } });
         if (error || answer?.error) throw new Error(answer?.error ?? "I couldn't read that answer. Nothing was saved.");
         if (!Array.isArray(answer?.have) || !Array.isArray(answer?.lacks) || answer.memorySaved !== false || answer.prescriptionChanged !== false) {

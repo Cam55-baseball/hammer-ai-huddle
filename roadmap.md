@@ -1,5 +1,7 @@
 # Oct 21 — Named live implementation authorization
 
+**AV6 in progress:** move saved-dose/context validation into the shared server boundary, bind mounted Swap answers to the exact saved prescription and catalog, and reject changes before/after AI interpretation. This is a no-write prerequisite, not atomic save certification; phone acceptance and tests pending.
+
 **AV5 live sub-step:** applied shared transaction-held athlete/day locking to both actual plan persistence paths, closing a prerequisite for safe concurrent Swap certification. Hosted definitions and service-only permissions checked; actual TEST phone plan verified HTTP 200 and mounted Swap opened with unchanged saved rows. Atomic certification/saving and all four positive swaps remain unfinished. No publish, cron or iOS changes. `docs/owner/av5-proof.md`
 
 **Ready to publish: no.** AT5 coaching migration applied; coach summary mounted in the real app. No publish, cron or iOS changes. All remaining named work is authorized; authorization is not a blocker.
