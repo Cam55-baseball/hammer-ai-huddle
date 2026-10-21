@@ -1,3 +1,19 @@
+# Status — Oct 21 18:33 UTC (Done = mounted in the real app and proven on a phone)
+
+| # | Item | Status | Proof / blocker |
+|---|---|---|---|
+| 1–6 | Simple Swap | Partly | Live; only "No safe swap" outcomes phone-proved. No TEST plan has machine/barbell/open-field/foam-roller rows. `docs/owner/simple-swap-proof.md` |
+| 7 | Coach six-week summary | Partly | Applied + mounted; democoach phone proof of hitter/pitcher saved plans open. `docs/owner/av3-proof.md` |
+| 8 | TEST admin + owner screens | Partly | Exclusions applied; Console/Questions/Vault/Game IQ proved. Every-list audit + Report Card phone check open. `docs/owner/av1-proof.md`, `av2-proof.md` |
+| 9 | Softball 60-ft base routes + base counter | Partly | Routes saved. No eligible TEST player has a base-route day (only the Apple-review child, untouched). `docs/owner/au1-proof.md` |
+| 10 | Full-go execution | Partly | Builder change tested; no full-go rows in any plan Oct 21–22. |
+| 11 | Mixed signals + testing day | Partly | Zero testing days exist; TEST org lacks Organization plan (no bypass). |
+| 12 | Nightly followed rec + re-test pair | Not started | Not entered this run; tonight's 04:30 run will have no positive pair. |
+
+**Full suite (Oct 21 18:25–18:32 UTC, 4 bounded batches): 482 files / 3,848 tests PASS** (110/630, 117/1100, 112/791, 143/1327; logs /tmp/b0–b3.log).
+
+**Ready to publish: no** — 0 of 12 items Done; every item lacks its phone proof because the needed real plan days, organization plan or app-entered data do not exist and are not fabricated.
+
 # Oct 21 — Named live implementation authorization
 
 **Simple Swap:** built and live (every saved-exercise card, gear sheet, filtered 1–3 choices, one-call save + swap_log + "always" memory, builds honor always-missing, onboarding/assessment equipment step removed). Phone-proved the live flow (TEST player, 390×844) only to "No safe swap" outcomes; **four positive saves not proven** — TEST plan has no machine/barbell/field/foam-roller rows. Coach-sent workouts and the fielding "Confirm my equipment" card still open. `docs/owner/simple-swap-proof.md`
