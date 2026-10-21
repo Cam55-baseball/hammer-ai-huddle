@@ -148,7 +148,7 @@ describe('AT1: ranked weekly skill blocks through the actual builder, both sport
 
 describe('AT4: subscription-qualified ranked goals through actual daily plans', () => {
   for (const sport of ['baseball', 'softball'] as const) for (const tier of ['pitcher', '5tool', 'golden2way'] as const) {
-    it(`${sport}/${tier}: eight weeks of actual slots preserve baselines and lifting; only included goals add eight slots`, () => {
+    it(`${sport}/${tier}: actual slots retain baselines/lifting; included hitting adds eight slots and full fielding phase stays capped`, () => {
       const modules = [`${sport}_${tier}`];
       const other = sport === 'baseball' ? 'softball' : 'baseball';
       const totals = { baseHit: 0, hit: 0, baseField: 0, field: 0, wrongHit: 0, emptyHit: 0 };
@@ -199,7 +199,9 @@ describe('AT4: subscription-qualified ranked goals through actual daily plans', 
         }
       }
       expect(totals.hit - totals.baseHit).toBe(tier === 'pitcher' ? 0 : 8);
-      expect(totals.field - totals.baseField).toBe(tier === 'pitcher' ? 0 : 8);
+      // This actual builder resolves the build rung: all three legal fielding
+      // phase slots are already occupied, so a top goal cannot add a fourth.
+      expect(totals.field - totals.baseField).toBe(0);
       expect(totals.wrongHit).toBe(totals.baseHit);
       expect(totals.emptyHit).toBe(totals.baseHit);
       if (tier !== 'pitcher') expect(shared).toBeGreaterThan(0);
