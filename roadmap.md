@@ -15,12 +15,14 @@
 | 8 | TEST admin + owner screens | **Done** | List audit + Report Card phone check done. `docs/owner/coach-summary-admin-proof.md` |
 | 9 | Softball 60-ft base routes + base counter | Partly | Routes saved. No eligible TEST player has a base-route day (only the Apple-review child, untouched). `docs/owner/au1-proof.md` |
 | 10 | Full-go execution | Partly | Builder change tested; no full-go rows in any plan Oct 21–22. |
-| 11 | Mixed signals + testing day | Partly | Testing day **Done** on phone (`docs/owner/testing-day-proof.md`). Mixed signals blocked: TEST player has no hitting video analysis in 21 days and no games; needs a real swing clip. Cleanup pending: cancel demoorg sub, remove membership + testing day. |
+| 11 | Mixed signals + testing day | Partly | Testing day **Done** on phone (`docs/owner/testing-day-proof.md`). Mixed signals blocked: TEST player has no hitting video analysis in 21 days and no games; needs a real swing clip. Org plan canceled 19:35 UTC; remove membership + testing day pending. |
 | 12 | Nightly followed rec + re-test pair | Blocked | Players get 403 on saved advice (no grant; migration needs owner's yes); re-test needs 14–28 days after following. |
 
-**Full suite (Oct 21 18:25–18:32 UTC, 4 bounded batches): 482 files / 3,848 tests PASS** (110/630, 117/1100, 112/791, 143/1327; logs /tmp/b0–b3.log).
+**Full suite (Oct 21 19:29–19:40 UTC, 4 bounded batches): 484 files / 3,857 tests; 3,856 passed, 1 failed under load** (`usePlanAdjustments.test.ts` waited too briefly while all batches ran at once; passes alone 2/2). Logs /tmp/s0–s3.log.
+**The 5 "uncollected" files** are server tests written for Deno (programGate, guestMode, aiUsage, sponsorship, doctrineFixtures), not the app runner: run with Deno, 28/28 pass. Also outside the runner: `tests/normalizers.injury.spec.ts` (10/10 pass with a one-off setting) and 3 Playwright browser scripts (not run).
+**demoorg $0 plan canceled** 19:35 UTC (Stripe status canceled; app reads canceled). Testing day + membership + democoach↔hitter link still to remove.
 
-**Ready to publish: no** — 0 of 12 items Done; every item lacks its phone proof because the needed real plan days, organization plan or app-entered data do not exist and are not fabricated.
+**Ready to publish: no** — 1 of 12 items Done (item 8). The rest lack phone proofs; item 12 also needs the owner's yes on a permission fix.
 
 # Oct 21 — Named live implementation authorization
 
