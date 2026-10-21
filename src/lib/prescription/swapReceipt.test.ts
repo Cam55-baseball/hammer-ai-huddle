@@ -38,4 +38,15 @@ describe("Swap preserves the first prescription", () => {
     expect(() => requireUnmarkedSwap("planned")).not.toThrow();
     expect(() => requireUnmarkedSwap("pending")).not.toThrow();
   });
+  it("a later generator dose cannot be overwritten by an older first-swap receipt", () => {
+    const origin = swapOrigin(rx);
+    for (const patch of [{ sets: 3 }, { reps: 6 }, { total_reps: 24 }, { duration_seconds: 60 },
+      { distance_feet: 90 }, { tempo: "2010" }, { load_pct: 60 }, { dosage_unit: "seconds" }]) {
+      expect(() => swapOrigin({ ...rx, ...patch, substituted_from_slug: "original",
+        why_payload: { athlete_substitution: origin } })).toThrow(/work changed/);
+    }
+  });
+  it("first receipts require all eight saved fields, not catalog defaults or missing data", () => {
+    expect(() => swapOrigin({ ...rx, sets: Number.NaN })).toThrow(/dose is incomplete/);
+  });
 });
