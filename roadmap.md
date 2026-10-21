@@ -1,5 +1,7 @@
 # Oct 21 — Named live implementation authorization
 
+**AV7 in progress:** continue universal Swap certification prerequisites and real mounted phone proof under Camryn Williams' named authorization; no publish, cron or iOS changes. Saving remains blocked until full atomic certification is implemented and proved.
+
 **AV6 live sub-step:** shared server/client saved-dose/context validation; mounted Swap now pins the complete prescription/catalog before and after inference. Actual TEST 390×844 phone flow: current answer HTTP 200, stale dose and changed choices HTTP 409 with exact refusal shown; saved prescriptions unchanged. This is a no-write prerequisite, not atomic certification/save. `docs/owner/av6-proof.md`
 
 **AV5 live sub-step:** applied shared transaction-held athlete/day locking to both actual plan persistence paths, closing a prerequisite for safe concurrent Swap certification. Hosted definitions and service-only permissions checked; actual TEST phone plan verified HTTP 200 and mounted Swap opened with unchanged saved rows. Atomic certification/saving and all four positive swaps remain unfinished. No publish, cron or iOS changes. `docs/owner/av5-proof.md`
