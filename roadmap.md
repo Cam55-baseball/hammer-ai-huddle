@@ -1,10 +1,10 @@
 # Current publish gate — Oct 21
 
-**Ready to publish: NO** — every-page proof is incomplete (27 parameterized/wildcard paths plus five lifecycle/auth paths unverified); repeated hosted 503/schema-cache/fetch errors are not stability-certified, despite clean final smoke and static-page rechecks. No publish, cron or iOS changes. Current owner guide and complete switch inventory: `docs/owner/publish-checklist.md`.
+**Ready to publish: NO** — current paired Swap phone proof incomplete (owner has no started plan; expanded TEST row's Swap is disabled because already completed); every-page proof incomplete (dynamic/lifecycle paths lack real-record checks); repeated hosted 503/schema-cache/fetch errors not stability-certified, despite clean final smoke and static-page rechecks. No publish, cron or iOS changes. Current owner guide and complete switch inventory: `docs/owner/publish-checklist.md`.
 
 | Ordered gate | Status | Proof / blocker |
 |---|---|---|
-| 1. Swap v2 restricted; legacy behavior restored | Implemented; earlier phone check | OFF for ordinary players; active owner/admin and 14 TEST exceptions. Save, equipment-memory use and onboarding/assessment question removal gated. |
+| 1. Swap v2 restricted; legacy behavior restored | Implemented; paired phone proof incomplete | OFF for ordinary players; active owner/admin and 14 TEST exceptions. Save, equipment-memory use and onboarding/assessment question removal gated. Current owner sheet lacks a started plan; TEST expanded completed row shows disabled Swap. |
 | 2. Three-role phone smoke | PASS final retry | College player/democoach/demoorg dashboards, connections, Staff Plans check, legal Close actions; autosave persists; Stripe reached without payment. Earlier intermittent failures retained in evidence. |
 | 3. Every-page audit | Partial | 182 static paths × 3 roles visited, failures rechecked clean; 27 dynamic/wildcard and 5 lifecycle paths lack real-record walkthroughs. Repeated hosted failures remain unexplained at infrastructure level. |
 | 4. Full tests + preview | PASS | 486 files / 3,862 app tests; bounded final batch completed by retaining 107 passing files and rerunning remaining 14. Five Deno files / 28 tests pass. Preview build OK 22:21:42 UTC. |
@@ -15,7 +15,7 @@
 - [x] Run bounded full suite, Deno tests, static phone audit and final three-role smoke.
 - [x] Record every switch and the owner's live-check expectations.
 - [x] Restore TEST log value; snapshot/remove exact temporary testing day, org membership and 19:20 duplicate coach request; preserve older connections and canceled $0 plan.
-- [ ] Finish real-record dynamic/lifecycle page audit and certify hosted requests stable before declaring release-ready.
+- [ ] Finish paired owner/ordinary-player Swap phone proof (owner started plan needed), real-record dynamic/lifecycle page audit (existing records/tokens needed), and certify hosted requests stable before declaring release-ready.
 
 Historical 12-item feature status: only item 8 Done; items 1–6 Swap, 7 coach pitcher, 9 both-sport counters, 10 full-go, 11 mixed signals, 12 real nightly pair remain partial/unproven and are explicitly deferred to authorized live checks. Item 12's player label-read permission failure is fixed; genuine 14–28-day re-test still required. Earlier entries below are historical, not current release readiness.
 

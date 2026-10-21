@@ -2,11 +2,11 @@
 
 ## Current publish gate — Oct 21
 
-**Ready to publish: NO.** Static-page checks and smoke rechecks are clean after fixes, but the requested *every-page* audit is not complete: 27 parameterized/wildcard routes and five auth/handoff/success paths were not exercised with real records. Intermittent hosted 503/schema-cache and failed-fetch errors also occurred repeatedly; the final smoke passed, but the underlying intermittent failure is not resolved or certified stable. No publishing, cron or iOS changes.
+**Ready to publish: NO.** Current owner Swap-sheet phone proof is incomplete (owner has not completed assessment/started a plan); expanded TEST exercise shows Swap but is already completed, so its action is correctly disabled. Static-page checks and smoke rechecks are clean after fixes, but the requested *every-page* audit is not complete: parameterized/wildcard routes and five auth/handoff/success paths were not all exercised with real records. Intermittent hosted 503/schema-cache and failed-fetch errors also occurred repeatedly; the final smoke passed, but the underlying intermittent failure is not resolved or certified stable. No publishing, cron or iOS changes.
 
 | Gate | Status | Evidence / remaining requirement |
 |---|---|---|
-| 1. Restrict new Swap; retain old behavior | Implemented; earlier phone proof | `swap_v2` OFF, 14 named TEST exceptions plus active owner/admin; server save and generator equipment-memory reads gated; ordinary players retain legacy alternatives and equipment questions. Four positive Swap proofs remain live-only. |
+| 1. Restrict new Swap; retain old behavior | Implemented; current paired phone proof incomplete | `swap_v2` OFF, 14 named TEST exceptions plus active owner/admin; server save and generator equipment-memory reads gated; ordinary players retain legacy alternatives and equipment questions. Latest TEST expanded card shows Swap (completed row disabled); owner has no started plan for a sheet check. Earlier evidence is not a substitute for this requested paired acceptance. Four positive Swap proofs remain live-only. |
 | 2. Phone regression smoke | PASS on final retry | College player, democoach, demoorg: dashboard, connections, Staff Plans → Check my plan, coach/org dashboards; nine legal documents opened/closed for each. Named exercise autosave read back after reload; original TEST value restored. Player checkout reached Stripe, no payment. Prior failed retries remain recorded, not erased. |
 | 3. Every-page audit | Partial — release blocker | 182 concrete paths × three roles = 546 visits; failing static paths rechecked clean after fixes. Parameterized/wildcard and excluded lifecycle paths remain unverified. Owner pages denied to other roles are access proofs, not populated owner-page proofs. |
 | 4. Full suite + preview build | PASS | 486 app files, 3,862 tests passed across bounded runs; last batch interrupted, 107 passing files retained and exact remaining 14 files rerun (42 tests). Five Deno files: 28/28 passed with `--node-modules-dir=none`. Latest preview build OK, 22:21:42 UTC. |
@@ -44,6 +44,7 @@ Use authorized TEST accounts only. Keep Swap OFF for ordinary players; release i
 
 - Demo Organization's $0 subscription remains canceled from the prior run. Snapshotted temporary testing day, temporary org membership and only the 19:20 duplicate coach request removed; exact-ID readback confirms zero. Older coach relationship preserved. TEST autosave input restored to its original 3 reps.
 - Hosted migrations 0094–0097 applied for the named Swap gate, folder permission-loop fix, self-only canonical plan evidence, and self-only age/advice-label reads. Scores remain private. These are live backend changes; frontend fixes remain in preview until an explicit publish.
+- Hosted health readback: database and connection pool up, memory 58%, disk 41%, 22/60 connections; historical disk-I/O budget alert at 21:03 UTC, not proof of current exhaustion. This explains a possible pressure signal, not the repeated failures' confirmed root cause. Final preview build OK at 22:42:11 UTC.
 - Earlier dated sections below are historical and do not override this release-gate status.
 
 ## AK1–AK6 Assessment Mode and plan prompts — in progress
