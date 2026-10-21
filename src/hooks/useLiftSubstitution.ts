@@ -1,22 +1,23 @@
 /**
- * useLiftSubstitution — turns the generator-certified substitution ladder on a
- * lift prescription into a real, athlete-facing swap.
+ * useLiftSubstitution — existing athlete alternatives, with display safety checks.
  *
  * Zero parallel storage: options come from `why_payload.lift_governance
  * .substitution_ladder` (already resolved, season/training-age legal at
  * generation time) and the swap writes back to the same `wk_prescriptions`
  * row using its existing `substituted_from_slug` / `substitution_reason`
  * columns. No generator, validator or dosage-doctrine behaviour changes —
- * a swap can only land inside the ladder the backend already certified.
+ * These checks are NOT fresh server certification for the universal AI Swap.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { isSameOrLowerRisk, loadTier, type RiskFacts } from "@/lib/prescription/alternativeRisk";
+import { loadTier, type RiskFacts } from "@/lib/prescription/alternativeRisk";
 import { busyGymEquivalents } from "@/lib/prescription/busyGymEquivalents";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
-import { recordedSwapDose, sameDoseSwap } from "@/lib/prescription/sameDoseSwap";
+import { sameDoseSwap } from "@/lib/prescription/sameDoseSwap";
+import { swapOrigin, restoreSwapInstructions, requireUnmarkedSwap } from "@/lib/prescription/swapReceipt";
+import { eligibleSwapCandidate } from "@/lib/prescription/swapEligibility";
 import { isEccentricOverloadPhaseIllegal } from "../../supabase/functions/_shared/wic/season";
 
 export type SwapReason =
@@ -84,13 +85,17 @@ export function governanceCategory(rx: WkRx): string | null {
 
 /** Catalog fields needed to re-derive a ladder with the backend's own rules. */
 interface FamilyRow extends SwapCandidate, Omit<RiskFacts, "equipment_requirements"> {
+  is_active: boolean | null;
   substitution_family: string | null;
   season_legality: Record<string, boolean> | null;
   training_age_legality: Record<string, boolean> | null;
+  season_eligibility: string[] | null;
+  phase_allow: string[] | null;
+  is_eccentric_dominant: boolean | null;
 }
 
 const CATALOG_COLS =
-  "slug, name, movement_category, substitution_family, season_legality, training_age_legality, default_sets, default_reps, default_duration_seconds, default_distance_feet, default_total_reps, dosage_unit, equipment_requirements, cue, min_age_years, plyo_tier, ub_tier, eccentric_overload, contraindications";
+  "slug, name, is_active, movement_category, substitution_family, season_legality, season_eligibility, phase_allow, is_eccentric_dominant, training_age_legality, default_sets, default_reps, default_duration_seconds, default_distance_feet, default_total_reps, dosage_unit, equipment_requirements, cue, min_age_years, plyo_tier, ub_tier, eccentric_overload, contraindications";
 
 /**
  * Mirror of `_shared/wic/lift/substitutions.ts::resolveSubstitutionLadder`.
@@ -161,19 +166,18 @@ export function useSwapLadder(rx: WkRx | null, enabled: boolean) {
         const self = rows.find((r) => r.slug === rx?.movement_slug);
         if (!self) return { ladder: {}, options: {} };
         const family = self.substitution_family;
-        allowed = rows.filter((r) => (family ? r.substitution_family === family : true));
+        allowed = family ? rows.filter((r) => r.substitution_family === family) : [];
         ladder = deriveLadder(self, allowed, rx?.phase ?? null);
       }
 
       const options: Record<string, SwapCandidate> = {};
       // Risk is judged against the ORIGINAL prescription (so swapping twice can't creep up).
       const anchor = rows.find((r) => r.slug === (rx?.substituted_from_slug ?? rx?.movement_slug));
+      const eligibilityContext = { category, unit: rx?.dosage_unit ?? null, phase: rx?.phase ?? null,
+        trainingAge: rx?.why_payload?.training_age_context?.classification ?? null };
       for (const row of allowed) {
         const isOriginal = row.slug === rx?.substituted_from_slug;
-        if (!isOriginal && (!rx?.phase || isEccentricOverloadPhaseIllegal(row, rx.phase) || row.season_legality?.[rx.phase] !== true)) continue;
-        if (!isOriginal && (!rx?.dosage_unit || !row.dosage_unit || row.dosage_unit.toLowerCase() !== rx.dosage_unit.toLowerCase())) continue;
-        if (!isOriginal && anchor && row.slug !== rx?.movement_slug && !isSameOrLowerRisk(anchor, row)) continue;
-        if (!isOriginal && (!category || row.movement_category !== category)) continue;
+        if (!isOriginal && (!anchor || !eligibleSwapCandidate(anchor, row, eligibilityContext))) continue;
         options[row.slug] = row;
       }
       // Busy gym: barbell / trap-bar lifts also get pattern equivalents that need neither.
@@ -181,23 +185,12 @@ export function useSwapLadder(rx: WkRx | null, enabled: boolean) {
       if (anchor && loadTier(anchor.equipment_requirements) >= 2) {
         const eq = busyGymEquivalents(anchorSlug);
         if (eq.length) {
-          const [{ data: eqRows }, { data: auth }] = await Promise.all([
-            supabase.from("wk_movement_catalog" as any).select(CATALOG_COLS).in("slug", eq).eq("is_active", true),
-            supabase.auth.getUser(),
-          ]);
-          let playerAge: number | null = null;
-          if (auth?.user?.id) {
-            const { data: prof } = await supabase.from("profiles").select("date_of_birth").eq("id", auth.user.id).maybeSingle();
-            const dob = (prof as any)?.date_of_birth as string | null;
-            if (dob) playerAge = Math.floor((Date.now() - Date.parse(dob)) / (365.25 * 86_400_000));
-          }
-          const ageCap = Math.max(Number(anchor.min_age_years ?? 0), playerAge ?? 0);
+          const { data: eqRows, error: eqError } = await supabase.from("wk_movement_catalog" as any)
+            .select(CATALOG_COLS).in("slug", eq).eq("is_active", true);
+          if (eqError) throw eqError;
           const picked: string[] = [];
           for (const r of (eqRows ?? []) as unknown as FamilyRow[]) {
-            if (!rx?.phase || isEccentricOverloadPhaseIllegal(r, rx.phase) || r.season_legality?.[rx.phase] !== true) continue;
-            if (!rx.dosage_unit || !r.dosage_unit || r.dosage_unit.toLowerCase() !== rx.dosage_unit.toLowerCase()) continue;
-            if (!category || r.movement_category !== category) continue;
-            if (!isSameOrLowerRisk({ ...anchor, min_age_years: ageCap }, r)) continue;
+            if (!eligibleSwapCandidate(anchor, r, { ...eligibilityContext, approvedEquivalent: true })) continue;
             options[r.slug] = r; picked.push(r.slug);
           }
           if (picked.length) {
@@ -209,13 +202,13 @@ export function useSwapLadder(rx: WkRx | null, enabled: boolean) {
     },
   });
 
-  const ladder = query.data?.ladder ?? (needsFallback ? {} : stored);
-  const options = query.data?.options ?? {};
+  const ladder = query.isSuccess ? query.data?.ladder ?? {} : {};
+  const options = query.isSuccess ? query.data?.options ?? {} : {};
   const hasOptions = SWAP_REASON_ORDER.some((r) =>
     (ladder[r] ?? []).some((s) => options[s] && s !== rx?.movement_slug),
   );
 
-  return { ladder, options, hasOptions, isLoading: query.isLoading, isFetched: query.isFetched };
+  return { ladder, options, hasOptions, isLoading: query.isLoading, isFetched: query.isFetched, error: query.error };
 }
 
 /** Back-compat accessor used by the Undo chip: catalog rows only. */
@@ -261,20 +254,19 @@ export function useLiftSubstitution(planDate: string) {
   const apply = useMutation({
     mutationFn: async ({ rx, candidate, reason }: ApplyArgs) => {
       if (!user?.id) throw new Error("Sign in to change your plan.");
+      requireUnmarkedSwap(rx.status);
       const dose = projectedDose(rx, candidate, reason);
       const why = { ...(rx.why_payload ?? {}) } as Record<string, unknown>;
       why.athlete_substitution = {
-        from_slug: rx.movement_slug,
-        from_name: rx.movement_name,
-        from_sets: rx.sets,
-        from_dose: sameDoseSwap(rx, { dosage_unit: rx.dosage_unit }),
+        ...swapOrigin({ ...rx, why_payload: rx.why_payload }),
         to_slug: candidate.slug,
         reason,
         reason_label: SWAP_REASON_LABEL[reason],
         at: new Date().toISOString(),
       };
-      if (candidate.cue) why.cue = candidate.cue;
-      const { data, error } = await supabase
+      if (candidate.cue !== null) why.cue = candidate.cue;
+      else delete why.cue;
+      let update = supabase
         .from("wk_prescriptions" as any)
         .update({
           movement_slug: candidate.slug,
@@ -285,6 +277,8 @@ export function useLiftSubstitution(planDate: string) {
           distance_feet: dose.distance_feet,
           total_reps: dose.total_reps,
           dosage_unit: dose.dosage_unit,
+          tempo: dose.tempo,
+          load_pct: dose.load_pct,
           substituted_from_slug: rx.substituted_from_slug ?? rx.movement_slug,
           substitution_reason: `Swapped — ${SWAP_REASON_LABEL[reason]}`,
           why_payload: why,
@@ -293,8 +287,9 @@ export function useLiftSubstitution(planDate: string) {
         .eq("user_id", user.id)
         .eq("plan_date", rx.plan_date)
         .eq("movement_slug", rx.movement_slug)
-        .eq("status", rx.status)
-        .select("id,movement_slug");
+        .eq("status", rx.status);
+      update = rx.why_payload === null ? update.is("why_payload", null) : update.eq("why_payload", JSON.stringify(rx.why_payload));
+      const { data, error } = await update.select("id,movement_slug");
       if (error) throw error;
       if (!Array.isArray(data) || data.length !== 1) throw new Error("Your plan changed before this alternative was saved. Reload your plan.");
     },
@@ -308,17 +303,16 @@ export function useLiftSubstitution(planDate: string) {
   const undo = useMutation({
     mutationFn: async ({ rx, original }: { rx: WkRx; original: SwapCandidate }) => {
       if (!user?.id) throw new Error("Sign in to change your plan.");
-      const why = { ...(rx.why_payload ?? {}) } as Record<string, unknown>;
-      const swapMeta = why.athlete_substitution as Record<string, any> | undefined;
-      const fromDose = recordedSwapDose(swapMeta?.from_dose);
-      delete why.athlete_substitution;
-      if (original.cue) why.cue = original.cue;
-      const { data, error } = await supabase
+      requireUnmarkedSwap(rx.status);
+      const origin = swapOrigin({ ...rx, why_payload: rx.why_payload });
+      if (!rx.substituted_from_slug || original.slug !== origin.from_slug) throw new Error("The original exercise could not be matched. Your session is unchanged.");
+      const why = restoreSwapInstructions(rx.why_payload ?? {}, origin);
+      let update = supabase
         .from("wk_prescriptions" as any)
         .update({
-          movement_slug: original.slug,
-          movement_name: original.name,
-          ...fromDose,
+          movement_slug: origin.from_slug,
+          movement_name: origin.from_name,
+          ...origin.from_dose,
           substituted_from_slug: null,
           substitution_reason: null,
           why_payload: why,
@@ -327,8 +321,9 @@ export function useLiftSubstitution(planDate: string) {
         .eq("user_id", user.id)
         .eq("plan_date", rx.plan_date)
         .eq("movement_slug", rx.movement_slug)
-        .eq("status", rx.status)
-        .select("id,movement_slug");
+        .eq("status", rx.status);
+      update = rx.why_payload === null ? update.is("why_payload", null) : update.eq("why_payload", JSON.stringify(rx.why_payload));
+      const { data, error } = await update.select("id,movement_slug");
       if (error) throw error;
       if (!Array.isArray(data) || data.length !== 1) throw new Error("Your plan changed before Undo was saved. Reload your plan.");
     },
