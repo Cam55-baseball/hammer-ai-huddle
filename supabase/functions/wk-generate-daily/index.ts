@@ -1184,7 +1184,26 @@ const handler = async (req: Request): Promise<Response> => {
       };
       return [...rows].sort((a, b) => rank(a) - rank(b));
     };
-    const libBase = equipmentUnknown ? gearFreeFirst(catalog ?? []) : (catalog ?? []);
+    const libBase0 = equipmentUnknown ? gearFreeFirst(catalog ?? []) : (catalog ?? []);
+    // Simple Swap "always missing" memory: drop movements needing gear the
+    // player said is always missing, only when the same family still has an
+    // option without it. Read failure → catalog unchanged.
+    let alwaysMissing = new Set<string>();
+    try {
+      const { data: memRows } = await admin.from("athlete_equipment_memory")
+        .select("confirmed_have, confirmed_lacks, created_at").eq("user_id", user.id).eq("scope", "always")
+        .order("created_at", { ascending: true }).limit(200);
+      for (const r of (memRows ?? []) as any[]) {
+        for (const g of r.confirmed_lacks ?? []) alwaysMissing.add(String(g).toLowerCase());
+        for (const g of r.confirmed_have ?? []) alwaysMissing.delete(String(g).toLowerCase());
+      }
+    } catch { alwaysMissing = new Set(); }
+    const needsMissing = (m: any) => [...(m.equipment_requirements ?? []), ...(m.equipment ?? [])]
+      .some((g: unknown) => alwaysMissing.has(String(g).toLowerCase()));
+    const libBase = alwaysMissing.size === 0 ? libBase0 : libBase0.filter((m: any) => {
+      if (!needsMissing(m)) return true;
+      return !libBase0.some((o: any) => o !== m && o.substitution_family && o.substitution_family === m.substitution_family && !needsMissing(o));
+    });
     // -------- Upper-Body Plyo v1 — live legality filter (E2E WP4 item 1) --------
     // Filter-only, gated by ub_plyo_hand_wrist: removes U2/U3 rows the athlete is
     // not cleared for today (phase, age, training age, growth, earned history,
