@@ -1091,30 +1091,22 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         missingContextKeys: ['equipment_effective'], gamePlanTemplate: null,
       };
       if (!pos) {
-        // Fallback plan — never a blank card. Every position needs first-step
-        // reads, glove work, a clean exchange, and an accurate throw, so we
-        // prescribe those and invite the athlete to make it specific.
-        const generalDrills: DrillStep[] = [
-          { name: "Ready position + first-step reads", dosage: "3 x 8 reps", cue: "weight on the balls of your feet, small hop as the ball is released" },
-          { name: "Short-hop glove work", dosage: "3 x 10 reps", cue: "field through the ball, soft hands out front" },
-          { name: "Glove-to-hand exchange", dosage: "3 x 10 reps", cue: "four seams, hands to the center of your chest" },
-          { name: "Accuracy throws to a target", dosage: "2 x 10 throws", cue: "throw through the target, not at it" },
-        ];
+        // Keep the confirmation visible without inventing generic throws or
+        // doses outside the position-specific catalog and arm-work rules.
         return {
           modality,
           title: "Defense — general fundamentals",
-          why: "Footwork, hands, exchange, and throw accuracy carry over to every position.",
-          roadmapReason:
-            "Fallback plan — I don't know which position you play yet, so this is the defensive work every position needs. Tell me your position and I'll make it specific.",
+          why: "Your fielding position has not been confirmed.",
+          roadmapReason: "Choose your position before starting so your fielding work fits your role.",
           phase: "skill",
-          steps: drillsToSteps(generalDrills),
-          drills: generalDrills,
-          cues: ["Field through the ball.", "Footwork before glove."],
-          stopRules: ["Knee, ankle, hip, or shoulder pain — stop and update Hammer."],
-          durationMin: 20,
+          steps: ["Confirm your fielding position before starting."],
+          drills: [],
+          cues: [],
+          stopRules: ["Do not start fielding or throwing until your position is confirmed."],
+          durationMin: null,
           route: "#hammer-onboarding",
           ctaLabel: "Set my position",
-          status: "ready",
+          status: "awaiting-input",
           missing: ["position_primary"],
           missingContextKeys: ["position_primary"],
           gamePlanTemplate: null,

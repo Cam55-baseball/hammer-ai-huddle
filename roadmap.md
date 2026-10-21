@@ -1,3 +1,54 @@
+# AT6 — Final batch continuation — Oct 21
+
+**Ready to publish: no.** This table supersedes older status/blocker tables below. Done applies only to the named proved scope; Partly does not mean hosted acceptance is complete.
+
+| Approved item | Status | Current result / remaining work | Proof paths |
+|---|---|---|---|
+| Embedded six-step Assessment Mode | Done | Existing scoped assessment guards and prior phone acceptance retained. | AK1–AK7 below; `src/lib/assessment/__tests__/`; AT6 full suite |
+| Trace audit of Today inputs | Done | Audit complete; not a claim that every input influences the plan. | `docs/owner/plan-context-audit.md` |
+| No category spill-over / sport-subscription evidence gates | Done | Own-category substitutions, canonical sport/module eligibility and preserved doses tested. | `src/lib/hammer/prescription/noCategorySpill.test.ts`; `planSixCohort.sim.test.ts`; AR3–AR6 below |
+| Analysis → own-category drills and Because | Partly | Canonical ranking, resolution, access/gear/circulation guards tested; complete fielding/running swaps and affected-player acceptance open. | `docs/owner/ar5-context-proof.md`; `ar6-context-proof.md`; `dailyPlan.contextAudit.sim.test.ts` |
+| Fielding/running fix drills and editable tags | Partly | Catalog proposals and Vault editor exist; owner review and genuine swap/resolution save proofs open. | AR1 below; `src/data/drills/fieldRunningDrills.ts`; `src/lib/prescription/__tests__/fieldRunningDrills.test.ts` |
+| Game logs → focus with early-read uncertainty | Partly | Supported game evidence/priority wired; full whiff/error/running mappings and hosted acceptance not complete. | `docs/owner/plan-context-audit.md`; `dailyPlan.contextAudit.sim.test.ts`; `categorySignalEvidence.test.ts` |
+| Logged practice → same-category load/reduction | Partly | Shared reduction and floor rule wired/tested, lifting/full-go preserved; full affected-player reduction/weekly-floor acceptance open. | `docs/owner/as5-proof.md` if present; AS1/AS5 below; `practiceDoseAdjustment.test.ts`; `practicePlanContext.test.ts` |
+| Mixed signals on Today | Partly | Real same-sport video/game disagreement adapter wired; positive conflicted-card and complete comparable-source acceptance open. | AS1 below; `src/lib/hammer/prescription/categorySignalEvidence.test.ts`; `mixedSignals.test.ts` |
+| Learning loop / What worked | Partly | Shared comparable judge, athlete labels and coach honest-empty view tested; genuine comparative hosted readback/nightly result open. | `src/lib/intelligence/comparableOutcome.ts`; `docs/owner/as6-unblock-proof.md`; `at5-proof.md` |
+| Because on every affected card | Partly | Supported reasons and saved coach history proved; full remaining evidence/execution paths not accepted. | `docs/owner/at4-proof.md`; `at5-proof.md`; AR5/AR6 proofs |
+| Hitting/off-season execution | Partly | Equipment-free game-speed phone step with unchanged 15 swings verified; complete gear-qualified live progression open. | `docs/owner/at3-proof.md`; `at6-proof.md`; `/tmp/browser/at6/hitting-execution.png` |
+| Pitching execution and logs | Partly | Existing arm/rest protection and simulation checks pass; genuine gear-confirmed live-execution phone acceptance open. | AL/AM below; `src/components/hammer/PitchingCard.tsx`; `docs/owner/ar8-context-proof.md` |
+| All-position fielding/throwing execution | Partly | Catalog-declared reads and gear gate tested; AT6 removes unknown-role generic throws; complete legal live-throw/position phone acceptance open. | `docs/owner/at5-proof.md`; `at6-proof.md`; `skillSessionPlan.test.ts` |
+| Baserunning / softball equivalents | Partly | Tagged five-rep scenarios and softball release reads tested; full live steals/reads affected-player acceptance open. | `skillSessionPlan.test.ts`; `docs/owner/ar6-context-proof.md` |
+| Coach current focus, today work and saved week | Partly | democoach phone Because/history/revocation read proved; hosted broad legacy/scout access found, narrow correction not live. | `docs/owner/at2-proof.md`; `at4-proof.md`; `at5-proof.md` |
+| Coach training authorization / scout exclusion / assigned org | Partly | Three-RPC correction staged; named application authorization and affected-role proof required. | `docs/owner/at5-coach-training-access.pending.sql`; `at5-proof.md` |
+| Six-week skill summaries and issue-linked practice ideas | Not started | Canonical sport/window/health-aware read contract missing; no inferred totals or ideas produced. | `docs/owner/coach-plan-sharing-contract.md`; `at4-proof.md`; `at5-proof.md` |
+| Coach notes and safe From Coach workouts | Done | Existing features retained; no separate planner or widened permissions introduced. | `src/lib/coach/__tests__/drillSafety.test.ts`; AR/owner additions below |
+| Rotating analysis / Royal timing reminders | Done | Prior TEST phone acceptance; current switch and schedules untouched. | AQ4 below; `analysisPromptRules.test.ts`; reminder tests |
+| Exact Royal timing explanation | Done | Exact owner English and eight translations, reminder/intro phone proof complete. | AO/AQ wording proofs below; `src/components/royal-timing/RoyalTimingExplanation.tsx` |
+| Delaycam recurrence / mechanics-goal / off-season cadence | Done | Wired cadence; severe path explicitly skipped by owner, not still a blocker. | AS5/AS6 below; `delaycamMajorFlag.test.ts`; `DelaycamReminder.test.tsx` |
+| Calendar logging reminders / practice card | Done | Exact/recurring date and completion phone proof complete; not repeated. | AQ5–AQ8 below; practice reminder completion tests |
+| Reminder completion → Discipline / comparative learning | Partly | Canonical completion identity exists; full positive completion/comparative-learning acceptance open. | Scoped hammer AGENTS; AQ4; `docs/owner/ar8-context-proof.md` |
+| Owner questions / versioned principles guiding picks | Partly | TEST ADMIN versioned hosted save/readback and structured pick rules proved; complete live drill-choice/Because acceptance open. | `docs/owner/as6-unblock-proof.md`; `principlePicks.test.ts`; `ownerQuestions.test.ts` |
+| Ranked goals / Profile editing / weekly skill blocks | Partly | Real canonical ranking plus six eight-week subscription-qualified block comparisons pass; Profile edit/full hosted six-cohort acceptance open. Percentage minute-share superseded. | `docs/owner/at3-proof.md`; `at4-proof.md`; `weeklyGoalBlocks.test.ts`; `dailyPlan.contextAudit.sim.test.ts` |
+| 12-week goal confirmation | Done | Aged TEST ranking, real phone Keep my order/save/readback/reload proved; original restored. | `docs/owner/at3-proof.md`; `/tmp/browser/at3/day84-confirmed.png` |
+| Athlete testing-day details/contact | Partly | Self/date/read-only/stale cancellation rules tested; genuine hosted day/details phone acceptance open. | `src/components/hammer/TestingDayNotice.test.tsx`; `testingDayNotice.test.ts`; AR8 proof |
+| Tests/PBs/readiness/pain/coach inputs unified | Partly | Existing safety/provenance retained; all audited input links not yet complete. | `docs/owner/plan-context-audit.md`; `dailyPlan.contextAudit.sim.test.ts` |
+| Eight-week six-cohort hosted plan changes/resolution | Partly | Actual-builder/scheduler simulations prove scope, baselines/caps/lifting; six genuine hosted cohort screenshots/results open. | `docs/owner/at4-proof.md`; `planSixCohort.sim.test.ts`; `weeklyGoalBlocks.test.ts` |
+| Internal Report Card measured proof / Vault save-readback | Partly | Internal labels/queue reads proved; genuine measurement-bearing view and review-save readback open. Athlete release remains OFF. | `docs/owner/at1-proof.md`; `as6-unblock-proof.md` |
+| Universal TEST ADMIN list exclusion | Partly | TEST marker/stats exclusion present; exact-email/staff/service-role list sibling exclusion still unimplemented. | `docs/owner/at1-proof.md`; `at2-proof.md`; `at3-proof.md` |
+| Nightly comparable outcome acceptance | Partly | Authorized named redeploy done; schedule reads pass; Oct 21 job/outcome proof still future and lacks eligible followed evidence. | `docs/owner/as6-unblock-proof.md`; `at6-proof.md` |
+| Fresh full suite / clean preview | Done | 456 files / 3,699 tests PASS; latest preview build OK. Not overall acceptance. | `/tmp/at6-fresh-{a,b,c,d}.log`; `/tmp/at6-test-manifest.json`; `docs/owner/at6-proof.md` |
+| TEST cleanup / Coach service retained | Done | Only temporary TEST password used/scrambled; no new rows, equipment, position, goals or completions written; Coach service untouched. | `/tmp/browser/at6/execution.log`; `docs/owner/at6-proof.md` |
+
+**Nightly recheck result (Oct 21, before 04:30 UTC):** existing job active at 04:30 UTC, unchanged. Latest execution Oct 20 04:30 UTC succeeded (`1 row`), which proves enqueue only—not outcome judging. Oct 21 run has not happened; recent function logs absent; 0 followed/pending recommendations and 0 checked since the named redeploy. Outcome proof remains pending; no manual call, invented measurement or cron change.
+
+- [x] Parallel execution/status audits; practice-card proof not repeated.
+- [x] Removed untracked generic unknown-position fielding throw fallback; six both-sport/three-phase regressions plus unchanged strength comparison pass.
+- [x] Real TEST player phone execution/gear gate inspected, no overflow/page errors, password scrambled; no fabricated gear, position or work. Unknown-position case has builder proof only, not hosted acceptance.
+- [x] Fresh final-code full coverage and clean preview checked; no publish/deploy/migration/cron/iOS changes.
+- [x] Top status table, nightly result and readiness refreshed; evidence `docs/owner/at6-proof.md`.
+- [ ] Apply/prove named coach-access correction only after explicit authorization; canonical six-week summaries/practice ideas, assigned-org proof and protected TEST ADMIN exclusion remain open.
+- [ ] Complete remaining genuine execution/cohort/mixed-signal/testing-day/measurement/review acceptance and actual nightly outcome after its scheduled time. No work runs after this turn.
+
 # AT5 — Continued approved work — Oct 21
 
 - [x] Parallel audits plus actual phone exposed unknown-equipment fielding; fixed catalog gear gate, visible confirmation, no completion or schedule/rest override; duplicated/unjoined/cross-category coach findings no longer inflate issue labels.
