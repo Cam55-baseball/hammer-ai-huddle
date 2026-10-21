@@ -28,6 +28,6 @@
 - Shared outcome arithmetic serves app/job; reads never await rechecks. Why: one judge, visible failures.
 - Weekly goals use microcycle blocks, not minutes/lifting. Read subdirectory AGENTS.md. Why: baseline and safety win.
 
-- Game IQ skips training-session gates, not subscriptions. Why: games are not training.
-- Game IQ availability uses one shared presentation switch (`GAME_IQ_AVAILABLE_TO_ATHLETES`, read via `useGameIqAccess`); owner/admin always see it labeled internal; subscription checks remain separate. Why: navigation and route access must agree.
+- Game IQ uses `useGameIqAccess` and its shared switch; owner/admin see internal labels. It skips training gates, never subscriptions. Why: navigation and access agree.
+- Swap previews need canonical intent and confirmed gear; name-only edits never prescribe. See prescription AGENTS.md. Why: universal Swap needs fresh atomic server certification.
 
