@@ -130,7 +130,9 @@ export function useOnboardingAnswerStatus(): OnboardingAnswerStatus {
   byKey.injury = hasAnyValue(slot("injury-intake")) ? "answered" : "open";
   byKey.notifications = hasNotificationsPref ? "answered" : "open";
 
-  const values = Object.values(byKey);
+  // Equipment is no longer asked up front (Swap asks on the card); it stays
+  // readable as saved memory but never counts as an open question.
+  const values = Object.entries(byKey).filter(([k]) => k !== "equipment").map(([, v]) => v);
   return {
     byKey,
     answeredCount: values.filter((v) => v === "answered").length,
