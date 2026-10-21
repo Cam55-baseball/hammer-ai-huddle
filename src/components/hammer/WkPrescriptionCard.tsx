@@ -43,6 +43,7 @@ import { ActivityBasics } from "./cards/ActivityBasics";
 import { formatPrescriptionDose } from "@/lib/hammer/prescription/formatPrescriptionDose";
 import { ExerciseDisclosure } from "./cards/ExerciseDisclosure";
 import { InlinePrescriptionLog } from "@/components/hammer/logging/InlinePrescriptionLog";
+import { BASE_REST_TEXT, prescribedBases, sprintRestWhy } from "../../../supabase/functions/_shared/wic/runRest";
 
 const SLOT_TONE: Record<WkRx["slot"], string> = {
   lift: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
@@ -295,6 +296,10 @@ export function WkPrescriptionCard({
   const baseDose = formatPrescriptionDose(rx);
   const dosage = [baseDose, exec.densityLabel, exec.rirLabel, rx.tempo ? `tempo ${rx.tempo}` : null]
     .filter(Boolean).join(" • ");
+  const runRestText = rx.slot === "conditioning" && prescribedBases(rx.movement_slug, rx.distance_feet)
+    ? BASE_REST_TEXT
+    : rx.slot === "speed" || ((rx.slot === "lift" || rx.slot === "supplemental") && /sprint/i.test(rx.movement_slug))
+      ? sprintRestWhy(rx.distance_feet) : null;
 
   if (!inPocket) return <PocketCard id={`activity_${rx.id}`} category={rx.movement_name} tone="" planDate={rx.plan_date} prescribed countLabel={dosage} progress={{ done: checked ? 1 : 0, total: 1 }}>
     {() => <WkPrescriptionCard rx={rawRx} extraLogging={extraLogging} phaseDisplay={phaseDisplay} phaseKey={phaseKey} generating={generating} side={side} allowSwap={allowSwap} />}
@@ -305,6 +310,7 @@ export function WkPrescriptionCard({
       <ExerciseDisclosure name={rx.movement_name}>
         <div className="mt-2 space-y-2 text-xs">
           <div className="font-medium text-foreground" data-prescribed-dose>{dosage}</div>
+          {runRestText && <p className="text-xs text-muted-foreground">{runRestText}</p>}
           <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} dosage={dosage} setup={(why as any)?.setup} cue={why.cue} repair={repair} />
           <CardOutcomeLog rx={rx} disabled={missedLocked} />
           <ExerciseLogSheet open onOpenChange={() => {}} rx={rx} dosageText={dosage} embedded />

@@ -1,3 +1,28 @@
+# AT7 — Owner Oct 21 rest and smart substitution
+
+**Ready to publish: no.** Owner Camryn Williams authorized this round's necessary backend redeploys only; no publish, cron or iOS changes. Earlier open items below remain open, not superseded by this new scope.
+
+| Oct 21 approved item | Status | Proof / remaining scope |
+|---|---|---|
+| Equipment questions / alternatives audit | Done | `docs/owner/oct21-equipment-swap-audit.md` |
+| Speed and PAP after-run rest | Partly | Capped rule + real 20-yard TEST phone timer pass; PAP lift rest unchanged. Missing-distance / all-path acceptance remains. `docs/owner/at7-rest-proof.md` |
+| Conditioning four-base rest | Partly | Arithmetic and counter tests pass for declared base routes; complete both-sport prescription conversion and phone acceptance remain. |
+| AI Swap, reason and today/always memory | Not started | Existing ladders audited; safe server-certified every-card replacement and persistence not built. |
+| Remove up-front equipment questions | Not started | Sequenced after working safe Swap; saved facts retained. |
+| Four requested swapped-session phone proofs | Not started | AI Swap not built; no replacement/save-readback success claimed. |
+| Fresh full suite / preview | Done | 458 files / 3,710 tests PASS; clean preview. `/tmp/at7-full-{0,1,2,3}.log` |
+
+**Nightly recheck:** AT6 result below unchanged; Oct 21 04:30 UTC run remains future during this pass, not proved. **Ready to publish: no.**
+
+- [x] Short complete audit: `docs/owner/oct21-equipment-swap-audit.md`.
+- [x] Speed/PAP sprint rest code: shared capped rule, timers/Why/plan text; PAP lift-to-action rest unchanged. 10/30/50/60 yd tests pass. Authorized wk-generate-daily redeployed after clean server check; actual TEST 20-yard phone timer and live verify_saved 200 proved.
+- [x] Conditioning base counter code for declared base routes only; sequence tests pass. “3 seconds” treated as 30 seconds — owner to confirm. No phone proof yet.
+- [ ] Smart Swap across all exercise/drill cards and coach workouts: short AI conversation, same category/intent/dose and every existing safety gate; saved replacement/reason plus today/always equipment memory.
+- [ ] Replace up-front equipment questions only once working Swap paths preserve access and existing equipment memory.
+- [ ] Affected TEST athlete iPhone-size end-to-end proofs: machine→flips, no barbell, no open field, no foam roller; save/readback and exact TEST cleanup.
+- [x] Relevant regressions, fresh full suite 458 files / 3,710 PASS, clean preview, authorized daily-plan read proof; status and limitations `docs/owner/at7-rest-proof.md`.
+- [ ] Full base-running conditioning / conditioning phone acceptance; every-card AI Swap and four saved replacements remain implementation work, not credential blockers. No work runs after this turn.
+
 # AT6 — Final batch continuation — Oct 21
 
 **Ready to publish: no.** This table supersedes older status/blocker tables below. Done applies only to the named proved scope; Partly does not mean hosted acceptance is complete.

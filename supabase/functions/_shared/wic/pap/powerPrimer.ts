@@ -1,4 +1,5 @@
 import { PITCH_SMART_BANDS, bandIndex, restDaysFor, pitchSmartApplies } from "../phases/youthThrowing.ts";
+import { sprintRestSeconds } from "../runRest.ts";
 // Power Primer (PAP) block — owner approved 2026-10-07.
 // Pure. Builds ONE primer block for a lift card: primer set → rest → max-intent
 // action, repeated until the stop rule or the cap; then the lift ALWAYS continues.
@@ -32,6 +33,7 @@ export interface LibraryItem {
   isPress?: boolean;
   isHinge?: boolean;
   isSprint?: boolean;
+  distanceFeet?: number;
   isSwing?: boolean;
   cue: string;
 }
@@ -65,8 +67,8 @@ export const PAP_LIBRARY: readonly LibraryItem[] = [
   A({ slug: "pap_a_swing_light", name: "Max swings, bat 20% lighter", targets: ["bat_speed"], heavy: false, minAge: 11, growthOk: true, painBlocks: [], equipment: ["light_bat", "bat"], countWeight: 0, isSwing: true, cue: "3–5 swings, all-out speed, full finish." }),
   A({ slug: "pap_a_swing_game", name: "Max swings, game bat", targets: ["bat_speed"], heavy: false, minAge: 9, growthOk: true, painBlocks: [], equipment: ["bat"], countWeight: 0, isSwing: true, cue: "3–5 swings, all-out speed, full finish." }),
   // ---- actions: first step ----
-  A({ slug: "pap_a_10yd_steal", name: "10-yd start from a steal stance", targets: ["first_step"], heavy: false, minAge: 9, growthOk: true, painBlocks: ["leg"], equipment: [], countWeight: 0, isSprint: true, cue: "Crossover and go. 100% intent. Walk back slowly." }),
-  A({ slug: "pap_a_10yd_infield", name: "10-yd start from an infield ready stance", targets: ["first_step"], heavy: false, minAge: 9, growthOk: true, painBlocks: ["leg"], equipment: [], countWeight: 0, isSprint: true, cue: "Drop step or crossover, explode out." }),
+  A({ slug: "pap_a_10yd_steal", name: "10-yd start from a steal stance", targets: ["first_step"], heavy: false, minAge: 9, growthOk: true, painBlocks: ["leg"], equipment: [], countWeight: 0, isSprint: true, distanceFeet: 30, cue: "Crossover and go. 100% intent. After each run set, rest 1 minute." }),
+  A({ slug: "pap_a_10yd_infield", name: "10-yd start from an infield ready stance", targets: ["first_step"], heavy: false, minAge: 9, growthOk: true, painBlocks: ["leg"], equipment: [], countWeight: 0, isSprint: true, distanceFeet: 30, cue: "Drop step or crossover, explode out. After each run set, rest 1 minute." }),
   A({ slug: "pap_a_sl_lateral_broad", name: "Single-leg lateral broad jump (stick it)", targets: ["first_step", "jump"], heavy: false, minAge: 11, growthOk: false, painBlocks: ["leg"], equipment: [], countWeight: 0, cue: "Push sideways off one leg, land soft and hold." }),
   // ---- actions: jump / med ball (no doubling fallback) ----
   A({ slug: "pap_a_broad_jump", name: "Standing broad jump (stick it)", targets: ["jump"], heavy: false, minAge: 9, growthOk: false, painBlocks: ["leg"], equipment: [], countWeight: 0, cue: "Swing, jump far, land soft." }),
@@ -134,7 +136,7 @@ export interface PapBlock {
   version: string;
   target: PapTarget;
   primer: { source: "lift" | "library"; slug: string; name: string; reps: [number, number]; heavy: boolean; cue: string };
-  action: { slug: string; name: string; reps: [number, number]; oz: number | null; lb: number | null; count_weight: number; real_throw: boolean; cue: string };
+  action: { slug: string; name: string; reps: [number, number]; oz: number | null; lb: number | null; count_weight: number; real_throw: boolean; cue: string; distance_feet: number | null; rest_after_run_s: number | null };
   rest_s: [number, number];
   max_sets: number;
   /** Real baseball/4 oz/plyo throws: hard per-session total. */
@@ -288,7 +290,7 @@ function build(target: PapTarget, i: PapInput, heavyOk: boolean, half: boolean, 
     version: PAP_VERSION,
     target,
     primer,
-    action: { slug: action.slug, name: action.name, reps, oz: action.oz ?? null, lb: action.lb ?? null, count_weight: action.countWeight, real_throw: realThrow, cue: action.cue },
+    action: { slug: action.slug, name: action.name, reps, oz: action.oz ?? null, lb: action.lb ?? null, count_weight: action.countWeight, real_throw: realThrow, cue: action.cue, distance_feet: action.distanceFeet ?? null, rest_after_run_s: action.isSprint ? sprintRestSeconds(action.distanceFeet) : null },
     rest_s: rest,
     max_sets: maxSets,
     max_total_reps: maxTotal,
