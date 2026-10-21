@@ -1,3 +1,5 @@
+**Oct 21 19:45 UTC:** Item 7 hitter phone-proven (democoach connected via app request; six-week summary opens); pitcher blocked (14, no parent permission, no plans). Item 8 Done: list audit + internal Report Card phone-proven. Item 12 blocked: players get 403 on intelligence_recommendations (no grant; migration needs owner's yes) and re-test needs 14–28 days. TEST player's Oct 21 plan has "Mobility + foam roll" → foam-roller Swap case possible. Cleanup adds: democoach↔TEST hitter connection. `docs/owner/coach-summary-admin-proof.md`
+
 **Oct 21 19:35 UTC:** Base counter: real baseball base-route row exists (TEST player, Oct 23, `bases_1st_3rd`, 90 ft, 2 bases/rep). Phone proof must wait until Oct 23 — moving the phone's clock forward signs the player out. No softball base-route or full-go rows in any buildable TEST plan.
 
 **Oct 21 19:20 UTC:** Start refused for TEST pitcher + runners ("Tap Completed on your initial assessment first"); runners also have no active modules → no builds. TEST player has no saved equipment, builder picks gear-free lifts though catalog has 57 barbell/16 machine/2 foam-roller movements. swap_log still empty; four Swap proofs not run.
