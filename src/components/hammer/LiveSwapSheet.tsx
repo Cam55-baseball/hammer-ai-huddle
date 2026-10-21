@@ -1,69 +1,91 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
-import type { AtomicSwapSnapshot } from "@/lib/prescription/atomicSwap";
-import type { UniversalSwapMovement } from "@/lib/prescription/universalSwapCandidates";
-import { UniversalSwapConversation } from "./UniversalSwapConversation";
-import { swapCatalogFingerprint } from "../../../supabase/functions/_shared/planSwap/visit";
-import { requireSwapCatalogSource } from "../../../supabase/functions/_shared/planSwap/catalogGate";
 
-/** Actual saved-row conversation. No legacy write fallback and no model-issued save. */
+type Choice = { slug: string; name: string; reason: string };
+
+async function callSwap(body: Record<string, unknown>) {
+  const { data, error } = await supabase.functions.invoke("plan-swap", { body });
+  if (error || data?.error) {
+    let reason = typeof data?.error === "string" ? data.error : "Swap couldn't finish. Nothing was saved.";
+    if (error && (error as any).context instanceof Response) {
+      const r = await (error as any).context.clone().json().catch(() => null);
+      if (typeof r?.error === "string") reason = r.error;
+    }
+    throw new Error(reason);
+  }
+  return data;
+}
+
+/** Simple Swap: what's missing → 1–3 safe choices → one save. */
 export function LiveSwapSheet({ rx, open, onOpenChange }: {
   rx: WkRx; open: boolean; onOpenChange: (open: boolean) => void;
 }) {
-  const { user } = useAuth();
-  const query = useQuery({ queryKey: ["plan-swap-visit", user?.id, rx.id, open], enabled: open && !!user,
-    staleTime: 0, queryFn: async () => {
-      if (!user) throw new Error("Sign in to use Swap.");
-      const { data: row, error } = await supabase.from("wk_prescriptions").select("*")
-        .eq("id", rx.id).eq("user_id", user.id).eq("plan_date", rx.plan_date).maybeSingle();
-      if (error || !row) throw new Error("Reload your plan. This exercise could not be checked.");
-      const { data: original, error: originalError } = await supabase.from("wk_movement_catalog").select("*")
-        .eq("slug", row.movement_slug).maybeSingle();
-      if (originalError || !original) throw new Error("I couldn't check the original exercise.");
-      requireSwapCatalogSource(original, row);
-      let catalog: UniversalSwapMovement[] = [];
-      if (original.substitution_family && original.movement_category) {
-        const { data: family, error: familyError } = await supabase.from("wk_movement_catalog").select("*")
-          .eq("substitution_family", original.substitution_family).eq("movement_category", original.movement_category).eq("is_active", true);
-        if (familyError) throw new Error("I couldn't check the replacement exercises.");
-        catalog = (family ?? []) as unknown as UniversalSwapMovement[];
-      }
-      return { expected: row as unknown as AtomicSwapSnapshot, original: original as unknown as UniversalSwapMovement, catalog,
-        catalogFingerprint: await swapCatalogFingerprint(original, catalog) };
-    } });
-  if (query.isSuccess && query.data) {
-    const data = query.data;
-    return <UniversalSwapConversation open={open} onOpenChange={onOpenChange} {...data}
-      context={{ category: data.original.movement_category, phase: data.expected.phase, trainingAge: null,
-        sport: null, ageYears: null, injuryRestrictions: null, sessionAllowed: false }}
-      interpret={async message => {
-        const { data: answer, error } = await supabase.functions.invoke("plan-swap", { body: {
-          action: "interpret", prescriptionId: rx.id, planDate: rx.plan_date, message,
-          expected: data.expected, catalogFingerprint: data.catalogFingerprint,
-        } });
-        if (error || answer?.error) {
-          let reason = typeof answer?.error === "string" ? answer.error : "I couldn't read that answer. Nothing was saved.";
-          // Function HTTP failures carry their safe athlete-facing reason in
-          // the response, not in the successful invocation's data field.
-          if (error?.context instanceof Response) {
-            const refused = await error.context.clone().json().catch(() => null);
-            if (typeof refused?.error === "string") reason = refused.error;
-          }
-          throw new Error(reason);
-        }
-        if (!Array.isArray(answer?.have) || !Array.isArray(answer?.lacks) || answer.memorySaved !== false || answer.prescriptionChanged !== false) {
-          throw new Error("I couldn't check that answer. Nothing was saved.");
-        }
-        return { have: answer.have as string[], lacks: answer.lacks as string[] };
-      }} onSaved={() => {}} />;
-  }
+  const qc = useQueryClient();
+  const [gear, setGear] = useState<string[] | null>(null);
+  const [missing, setMissing] = useState<string[]>([]);
+  const [note, setNote] = useState("");
+  const [choices, setChoices] = useState<Choice[] | null>(null);
+  const [scope, setScope] = useState<"today" | "always">("today");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [done, setDone] = useState<string | null>(null);
+  const ids = { prescriptionId: rx.id, planDate: rx.plan_date };
+
+  useEffect(() => {
+    if (!open) return;
+    setGear(null); setMissing([]); setNote(""); setChoices(null); setErr(null); setDone(null); setScope("today");
+    callSwap({ action: "options", ...ids, missing: [] }).then(d => setGear(d.gear ?? [])).catch(e => setErr(e.message));
+  }, [open, rx.id]);
+
+  const find = async () => {
+    setBusy(true); setErr(null);
+    try { const d = await callSwap({ action: "options", ...ids, missing, note: note || undefined });
+      setMissing(d.missing ?? missing); setChoices(d.choices ?? []); }
+    catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
+  };
+  const pick = async (c: Choice) => {
+    setBusy(true); setErr(null);
+    try { const d = await callSwap({ action: "swap", ...ids, missing, note: note || undefined, toSlug: c.slug, scope });
+      setDone(`${d.reason}${d.memorySaved ? " · We'll remember this is missing." : ""}`);
+      qc.invalidateQueries(); }
+    catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
+  };
+  const label = (g: string) => g.replace(/_/g, " ");
+
   return <Sheet open={open} onOpenChange={onOpenChange}><SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
     <SheetHeader><SheetTitle>Swap {rx.movement_name}</SheetTitle></SheetHeader>
-    {query.isError ? <p role="alert" className="py-4 text-sm text-destructive">{query.error.message}</p> :
-      <p className="flex items-center gap-2 py-4 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Checking your saved exercise…</p>}
+    <div className="space-y-4 py-4">
+      {done ? <><p role="status" className="text-sm">Swapped. {done}</p>
+        <Button className="w-full" onClick={() => onOpenChange(false)}>Done</Button></> :
+      gear === null && !err ? <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Checking this exercise…</p> :
+      <>
+        {gear && <fieldset className="space-y-2">
+          <legend className="text-sm font-medium">What's missing today?</legend>
+          {gear.length === 0 && <p className="text-sm text-muted-foreground">This one needs no gear. Tell us below what's in the way.</p>}
+          {gear.map(g => <label key={g} className="flex items-center gap-2 text-sm">
+            <Checkbox checked={missing.includes(g)} onCheckedChange={v => setMissing(m => v ? [...m, g] : m.filter(x => x !== g))} />{label(g)}
+          </label>)}
+          <Input aria-label="Anything else missing?" placeholder="Anything else? (optional)" value={note} maxLength={300} onChange={e => setNote(e.target.value)} />
+        </fieldset>}
+        {choices === null ? <Button className="w-full" disabled={busy || !gear} onClick={find}>Find a swap</Button> :
+          choices.length === 0 ? <p className="text-sm">No safe swap found for this one; skip it today.</p> :
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Is this missing just today, or always?</p>
+            <div className="flex gap-2">
+              <Button size="sm" variant={scope === "today" ? "default" : "outline"} onClick={() => setScope("today")}>Just today</Button>
+              <Button size="sm" variant={scope === "always" ? "default" : "outline"} onClick={() => setScope("always")}>Always</Button>
+            </div>
+            {choices.map(c => <Button key={c.slug} variant="outline" className="h-auto w-full justify-start whitespace-normal text-left" disabled={busy} onClick={() => pick(c)}>{c.reason}</Button>)}
+          </div>}
+      </>}
+      {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
+    </div>
   </SheetContent></Sheet>;
 }
