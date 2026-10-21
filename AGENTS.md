@@ -30,5 +30,5 @@
 
 - Game IQ uses `useGameIqAccess` and its shared switch; owner/admin see internal labels. It skips training gates, never subscriptions. Why: navigation and access agree.
 - Swap needs intent/gear and atomic certification; see prescription AGENTS.md. Why: names cannot prescribe.
-- CoachSixWeekSummary is read-free/staged; see coach AGENTS.md. Why: no wider access.
+- Coach summaries use gated reads; see coach AGENTS.md. Why: no wider access.
 

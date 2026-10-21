@@ -49,4 +49,24 @@ describe('coach saved-plan scope', () => {
     await client.invalidateQueries({ queryKey: ['coach-athlete-plan', 'test-a'] });
     await waitFor(() => expect(screen.queryByRole('region', { name: "Hammers' plan for this player" })).toBeNull());
   });
+  it('reads exactly 42 dates including today for the current player only after opening the six-week summary', async () => {
+    mount();
+    const toggle = await screen.findByRole('button', { name: 'Six-week summary and practice ideas' });
+    expect(state.calls.filter(call => call.name === 'coach_athlete_plan')).toHaveLength(1);
+    fireEvent.click(toggle);
+    await waitFor(() => expect(state.calls.filter(call => call.name === 'coach_athlete_plan')).toHaveLength(43));
+    const reads = state.calls.filter(call => call.name === 'coach_athlete_plan').slice(1);
+    expect(reads[0].args).toEqual({ _athlete: 'test-a', _date: '2026-10-20' });
+    expect(reads[41].args).toEqual({ _athlete: 'test-a', _date: '2026-09-09' });
+    expect(new Set(reads.map(call => call.args._date)).size).toBe(42);
+    expect(reads.every(call => call.args._athlete === 'test-a')).toBe(true);
+  });
+  it('does not reuse the six-week reads for a different athlete', async () => {
+    const { rerender, tree } = mount();
+    fireEvent.click(await screen.findByRole('button', { name: 'Six-week summary and practice ideas' }));
+    await waitFor(() => expect(state.calls.filter(call => call.name === 'coach_athlete_plan')).toHaveLength(43));
+    rerender(tree('test-b'));
+    await screen.findByRole('button', { name: 'Six-week summary and practice ideas' });
+    expect(state.calls.filter(call => call.name === 'coach_athlete_plan' && call.args._athlete === 'test-b')).toHaveLength(1);
+  });
 });

@@ -1011,6 +1011,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         slug: (d as { slug?: string }).slug,
         setup: d.setup,
         dosage: d.dosage,
+        stage: d.stage ?? (d.intensity === 'prep' ? 'prep' : 'drills'),
         cue: d.cue,
         stopIf: d.stopIf,
         guide: _guideForMovement((d as { slug?: string }).slug) ?? _guideForMovement(d.name) ?? undefined,
