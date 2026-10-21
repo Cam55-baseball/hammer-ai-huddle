@@ -29,5 +29,6 @@
 - Weekly goals use microcycle blocks, not minutes/lifting. Read subdirectory AGENTS.md. Why: baseline and safety win.
 
 - Game IQ uses `useGameIqAccess` and its shared switch; owner/admin see internal labels. It skips training gates, never subscriptions. Why: navigation and access agree.
-- Swap previews need canonical intent and confirmed gear; name-only edits never prescribe. See prescription AGENTS.md. Why: universal Swap needs fresh atomic server certification.
+- Swap needs intent/gear and atomic certification; see prescription AGENTS.md. Why: names cannot prescribe.
+- CoachSixWeekSummary is read-free/staged; see coach AGENTS.md. Why: no wider access.
 
