@@ -2407,7 +2407,8 @@ const handler = async (req: Request): Promise<Response> => {
       // Declared base paths supply distance only to newly built rep-based conditioning.
       // No saved day is rebuilt, and the 43-foot pitcher-distance sprint stays unchanged.
       if (slot === "conditioning" && distanceFeet == null && s.movement.base_route?.sport === sport) {
-        distanceFeet = s.movement.default_distance_feet;
+        distanceFeet = s.movement.default_distance_feet ??
+          s.movement.base_route.bases_per_rep * s.movement.base_route.base_distance_feet;
       }
       let totalReps = totalDose;
       let dosageUnit = dosageUnitRaw;

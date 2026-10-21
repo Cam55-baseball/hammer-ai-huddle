@@ -24,6 +24,11 @@ describe("owner Oct 21 conditioning rest", () => {
     expect(declaredRouteBases({ sport: "softball", bases_per_rep: 2, base_distance_feet: 90 }, "softball", 180)).toBeNull();
     expect(prescribedBases("bases_home_2nd", 180, null, "softball")).toBeNull();
   });
+  it("baseball double uses two declared 90-foot bases", () => {
+    const route = { sport: "baseball", bases_per_rep: 2, base_distance_feet: 90 };
+    expect(declaredRouteBases(route, "baseball", 180)).toBe(2);
+    expect(declaredRouteBases(route, "baseball", 120)).toBeNull();
+  });
   it("single then double then single gives 30s, 30s, 300s and resets", () => {
     const single = conditioningRestAfterRep(0, 1);
     expect(single).toEqual({ bases: 1, reachedHome: false, seconds: 30 });
