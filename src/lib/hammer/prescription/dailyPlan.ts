@@ -1084,7 +1084,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         why: 'Fielding equipment has not been confirmed.',
         roadmapReason: `Your fielding work needs ${missingGear.join(', ')}. Confirm what you have before starting.`,
         because: ['Your saved equipment list does not include everything this fielding session needs.'],
-        phase: 'skill', steps: [], drills: [], cues: [],
+        phase: 'skill', steps: ['Confirm your fielding equipment before starting.'], drills: [], cues: [],
         stopRules: ['Do not start fielding or throwing without the listed equipment and safe space.'],
         durationMin: null, route: '#hammer-onboarding', ctaLabel: 'Confirm my equipment',
         status: 'awaiting-input', missing: ['equipment_access'],
@@ -1618,6 +1618,7 @@ function suppressBlock(
   rationale: string,
   opts?: { keepActivation?: boolean },
 ): PrescribedBlock {
+  if (b.status === 'awaiting-input') return b;
   const keep = opts?.keepActivation === true;
   return {
     ...b,
@@ -1716,6 +1717,7 @@ function applyScheduleModulation(
               ? suppressBlock(b, rationale)
               : suppressBlock(b, rationale, { keepActivation: true });
           case "defense": {
+            if (b.status === 'awaiting-input') return b;
             const original = originals?.get(blockKey(b));
             if (defenseFullOverride) {
               return annotate(
