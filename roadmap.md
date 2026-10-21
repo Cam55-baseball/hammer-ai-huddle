@@ -10,7 +10,11 @@
 | Pitching / fielding / baserunning execution | Partly | Complete legal full-go affected-player acceptance |
 | Mixed signals / testing-day details | Partly | Missing/false/future evidence honesty fixed; notice added to actual Today area. Positive genuine hosted phone cases remain. `categorySignalEvidence.test.ts`; `TestingDayNotice.test.tsx` |
 | TEST ADMIN owner screens | Partly | Remaining positive read/save proofs and universal list exclusion |
-| Oct 21 04:30 nightly outcome | Not started | Scheduled run is future at 03:59 UTC; enqueue is not a judged outcome |
+| Oct 21 04:30 nightly outcome | Partly | Scheduled job succeeded; matching callback HTTP 200 complete, players 0 / checked 0 / pending 0. Genuine positive judging remains unproved: no followed eligible evidence. `docs/owner/au1-proof.md` |
+
+**Nightly result:** Oct 21 04:30 UTC job and callback proved without triggering/changing either. Returned `complete`, 0 players, 0 checked, 0 pending; canonical readback confirms no new outcomes. This is a successful empty run, not evidence that a real before/after pair was judged.
+
+**Final fresh suite:** 460 files / 3,726 tests PASS; latest preview build OK. `/tmp/au1-final-full-{0,1,2,3}.log`; `docs/owner/au1-proof.md`. TEST passwords scrambled, private files removed, saved conditioning row unchanged, Coach service retained. No publish/deploy/migration/cron/iOS changes.
 
 - [x] Shared conditioning session rest + automatic clock; real TEST phone/component single and actual saved-double proof, unchanged row readback; current-plan route remains open.
 - [x] Harden existing alternatives: exact dose/unit, phase/category, complete Undo receipt, self/date/stale-row scope and truthful save result.
@@ -19,8 +23,8 @@
 - [ ] Build certified every-card AI Swap, scoped availability memory and four phone proofs before removing equipment questions.
 - [ ] Build coach six-week summaries and issue-linked practice ideas using existing authorized data only.
 - [ ] Advance full-go execution, mixed-signal/testing-day and TEST ADMIN acceptance with exact TEST cleanup.
-- [ ] Read the actual 04:30 run and judged outcome after it happens, without calling or changing the job.
-- [ ] Run relevant tests, inspect preview health, and refresh statuses and proof paths before stopping.
+- [x] Read actual Oct 21 04:30 job + matching callback/readback: HTTP 200 complete, zero eligible work; positive comparable outcome remains open, not fabricated.
+- [x] Final full suite 460 files / 3,726 PASS, clean preview, exact TEST cleanup and refreshed statuses/proof paths.
 
 # AT7 — Owner Oct 21 rest and smart substitution
 
