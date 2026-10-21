@@ -1070,6 +1070,26 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
     }
 
     case "defense": {
+      const ownedDefense = new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []);
+      // This catalog includes catching/throwing and live-field work. Merely
+      // declining to promote full_go does not make its existing reps gear-free.
+      const missingGear = [
+        ...(!ownedDefense.has('field') && !ownedDefense.has('open_space') ? ['safe field space'] : []),
+        ...(!ownedDefense.has('glove') ? ['glove'] : []),
+        ...(!ownedDefense.has('ball') ? ['ball'] : []),
+      ];
+      if (missingGear.length) return {
+        modality,
+        title: pos ? `Defense — ${pos}` : 'Defense — general fundamentals',
+        why: 'Fielding equipment has not been confirmed.',
+        roadmapReason: `Your fielding work needs ${missingGear.join(', ')}. Confirm what you have before starting.`,
+        because: ['Your saved equipment list does not include everything this fielding session needs.'],
+        phase: 'skill', steps: [], drills: [], cues: [],
+        stopRules: ['Do not start fielding or throwing without the listed equipment and safe space.'],
+        durationMin: null, route: '#hammer-onboarding', ctaLabel: 'Confirm my equipment',
+        status: 'awaiting-input', missing: ['equipment_access'],
+        missingContextKeys: ['equipment_effective'], gamePlanTemplate: null,
+      };
       if (!pos) {
         // Fallback plan — never a blank card. Every position needs first-step
         // reads, glove work, a clean exchange, and an accurate throw, so we
@@ -1130,7 +1150,6 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
       // nothing (unknown position + heavy injury gating). Never fabricate —
       // just keep the modality visible with a "come back tomorrow" note.
       // Owner-approved narrow addition: swap one slot for a switched-on owner drill.
-      const ownedDefense = new Set((proj as unknown as { equipmentList?: ReadonlyArray<string> }).equipmentList ?? []);
       const drills: DrillStep[] = structureSkillSession(mergeOwnerSlotDrills(prescription?.drills
         ? [...prescription.drills]
         : [

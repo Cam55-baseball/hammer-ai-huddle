@@ -18,6 +18,24 @@ function context(sport: string, phase: string, injuries: string[] = []): HammerA
 
 describe('actual plan execution structure and schedule protection', () => {
   for (const sport of ['baseball', 'softball']) {
+    for (const gear of [[], ['field', 'glove'], ['field', 'ball'], ['glove', 'ball']]) {
+      it(`${sport}: incomplete fielding gear ${gear.join('/')} cannot prescribe any catalog reps`, () => {
+        const base = context(sport, 'off');
+        const ctx: HammerAthleteContext = { ...base, get<T>(key: string) {
+          if (key === 'equipment_effective') return { ...base.variables[0], key, value: gear } as ContextVariable<T>;
+          return base.get<T>(key);
+        } };
+        for (let n = 0; n < 7; n++) {
+          const plan = buildHammerDailyPlan(ctx, NORMAL_SIGNAL, null, null, undefined, new Date(2026, 5, 1 + n));
+          const defense = plan.blocks.find(row => row.modality === 'defense');
+          expect(defense?.drills).toEqual([]);
+          expect(defense?.gamePlanTemplate).toBeNull();
+          expect(defense?.status).not.toBe('ready');
+        }
+      });
+    }
+  }
+  for (const sport of ['baseball', 'softball']) {
     it(`${sport}: missing equipment keeps the existing hitting dose and needs no tee, ball or partner`, () => {
       const base = context(sport, 'off');
       const ctx: HammerAthleteContext = { ...base, get<T>(key: string) {

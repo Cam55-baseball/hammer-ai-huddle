@@ -100,15 +100,18 @@ export function reportsByCategory(reports: DevReport[]): Map<string, DevReport[]
 export function classifyIssues(reports: DevReport[], findings: DevFinding[]): Issue[] {
   const byCat = reportsByCategory(reports);
   const issues: Issue[] = [];
+  // A fault key can recur in different skills; never merge their evidence.
   const byFault = new Map<string, DevFinding[]>();
   for (const f of findings) {
-    const list = byFault.get(f.fault_key) ?? [];
+    const key = JSON.stringify([f.skill_domain || 'general', f.fault_key]);
+    const list = byFault.get(key) ?? [];
     list.push(f);
-    byFault.set(f.fault_key, list);
+    byFault.set(key, list);
   }
   const reportDate = new Map<string, string>();
   for (const r of reports) reportDate.set(r.id, dateOnly(r.date));
-  for (const [faultKey, rows] of byFault) {
+  for (const rows of byFault.values()) {
+    const faultKey = rows[0].fault_key;
     const cat = rows[0].skill_domain || "general";
     const catReports = byCat.get(cat) ?? [];
     if (catReports.length === 0) continue;
@@ -116,7 +119,9 @@ export function classifyIssues(reports: DevReport[], findings: DevFinding[]): Is
     const inRecent = rows.filter((f) => f.video_id && recentIds.has(f.video_id));
     const newestReportId = catReports[0]?.id;
     const inNewest = inRecent.some((f) => f.video_id === newestReportId);
-    const timesSeen = inRecent.length > 0 ? inRecent.length : rows.length;
+    // Re-runs and duplicate finding rows are still one assessed report.
+    if (inRecent.length === 0) continue;
+    const timesSeen = new Set(inRecent.map(f => f.video_id)).size;
     let status: IssueStatus;
     if (inNewest && timesSeen <= 1) status = "New";
     else if (inNewest) status = "Recurring";
@@ -124,7 +129,7 @@ export function classifyIssues(reports: DevReport[], findings: DevFinding[]): Is
     // Last seen = the date of the newest report that contains this fault,
     // falling back to the finding's own timestamp.
     const dated = inRecent
-      .map((f) => reportDate.get(f.video_id!))
+      .map((f) => f.video_id ? reportDate.get(f.video_id) : undefined)
       .filter((d): d is string => !!d)
       .sort()
       .pop();

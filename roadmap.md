@@ -1,3 +1,9 @@
+# AT5 — Continued approved work — Oct 21
+
+- [ ] Audit canonical coach summary/practice-idea reads and full-speed execution independently; implement the largest safe confirmed gap.
+- [ ] Prove the affected real TEST phone flow, preserve genuine evidence, and restore exact temporary TEST changes/passwords.
+- [ ] Run relevant tests and fresh complete coverage in bounded batches; record remaining blockers. No publish, cron or iOS changes; nightly proof still awaits 04:30 UTC.
+
 # AT4 — Continued approved work — Oct 21
 
 - [x] Actual-builder goal boosts now receive selected-sport subscription modules; six 56-day cohorts prove included hitting +8 slots, excluded/opposite-sport/empty +0, baseline retained, fielding already-full phase capped, second slot order and unchanged lifting. Focused 3 files / 142 PASS.
