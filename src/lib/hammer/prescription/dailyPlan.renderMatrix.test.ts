@@ -64,7 +64,7 @@ const BASE = {
 };
 
 /** Canonical envelope shape: `value` IS the declared inventory array. */
-const OWNER_EQUIPMENT = ["gamer_bat", "overload_bat", "underload_bat", "tee", "pitching_machine"];
+const OWNER_EQUIPMENT = ["gamer_bat", "overload_bat", "underload_bat", "tee", "pitching_machine", 'field', 'glove', 'ball'];
 
 const CONTEXTS: ReadonlyArray<[string, HammerAthleteContext]> = [
   ["nothing known", ctx({ ...BASE, equipment_effective: null, lifting_age_years: null, position_primary: null })],
