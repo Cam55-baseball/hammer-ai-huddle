@@ -24,23 +24,26 @@ import { useGpSignal } from "@/hooks/useGpSignal";
 import { useCanonicalPhaseDisplay } from "@/hooks/useCanonicalPhaseDisplay";
 import { WkCardFailureNotice } from "@/components/hammer/WkCardFailureNotice";
 import { WkCardCompletion } from "@/components/hammer/WkCardCompletion";
+import { ConditioningRestProvider } from "@/components/hammer/cards/ConditioningRestContext";
 
 export function WkConditioningCard({ pocket = false }: { pocket?: boolean } = {}) {
   const gp = useGpSignal();
   const { grouped, generate, generating, isLoading, failed, failureReason, retry, snapshotIdentity } = useHammersToday();
-  const entry = getCard("conditioning")!;
+  const entry = getCard("conditioning");
   const { display: label } = useCanonicalPhaseDisplay(
     snapshotIdentity.season_display,
     snapshotIdentity.season_phase,
   );
   const [open, setOpen] = useState<boolean>(pocket);
 
+  if (!entry) return null;
   if (gp.gameToday) return null;
 
   const items = grouped.conditioningCard;
   if (!isLoading && items.length === 0 && !failed) return null;
 
   return (
+    <ConditioningRestProvider key={`${snapshotIdentity.generation_id}:${items.map(rx => `${rx.id}:${rx.movement_slug}`).join(",")}`}>
     <Card
       className="border-emerald-500/30"
       data-card-type={entry.cardType}
@@ -94,5 +97,6 @@ export function WkConditioningCard({ pocket = false }: { pocket?: boolean } = {}
         </CollapsibleContent>
       </Collapsible>
     </Card>
+    </ConditioningRestProvider>
   );
 }
