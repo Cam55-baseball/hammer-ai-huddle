@@ -1,15 +1,15 @@
 # Current publish gate — Oct 21
 
-**22:48 UTC continuation (Camryn Williams):** complete only the six ordered publish gates; refresh the phone evidence, finish reachable real-record pages, rerun the full suite in bounded batches, verify switches and live-check guide. No publish, cron or iOS changes.
+**23:35 UTC continuation (Camryn Williams):** five sequential test batches complete after the scout-page fix: 487 files / 3,865 tests PASS; six Deno files / 33 tests and outside-runner injury tests / 10 PASS. Fresh three-role phone smoke is clean, autosave 3→6 survives reload then restores to 3, checkout reaches Stripe without payment. No publish, deployment, migration, cron or iOS changes this continuation.
 
-**Ready to publish: NO** — current paired Swap phone proof incomplete (owner has no started plan; expanded TEST row's Swap is disabled because already completed); every-page proof incomplete (dynamic/lifecycle paths lack real-record checks); repeated hosted 503/schema-cache/fetch errors not stability-certified, despite clean final smoke and static-page rechecks. No publish, cron or iOS changes. Current owner guide and complete switch inventory: `docs/owner/publish-checklist.md`.
+**Ready to publish: NO** — paired ordinary-player/owner Swap phone proof still incomplete: owner has no started plan, and democollege is an explicit exception, not a legacy-player proof. Coach detail writes `coach.review.opened` and `relational.exposure.gate_blocked` fail with 42501 under current hosted event policies; these real failures were not hidden or permissions widened. Token/purchase/native lifecycle pages still lack valid real state; intermittent fetch failures also appeared during real-record audits. Current owner guide and switch inventory: `docs/owner/publish-checklist.md`.
 
 | Ordered gate | Status | Proof / blocker |
 |---|---|---|
 | 1. Swap v2 restricted; legacy behavior restored | Implemented; paired phone proof incomplete | OFF for ordinary players; active owner/admin and 14 TEST exceptions. Save, equipment-memory use and onboarding/assessment question removal gated. Current owner sheet lacks a started plan; TEST expanded completed row shows disabled Swap. |
-| 2. Three-role phone smoke | PASS final retry | College player/democoach/demoorg dashboards, connections, Staff Plans check, legal Close actions; autosave persists; Stripe reached without payment. Earlier intermittent failures retained in evidence. |
-| 3. Every-page audit | Partial | 182 static paths × 3 roles visited, failures rechecked clean; 27 dynamic/wildcard and 5 lifecycle paths lack real-record walkthroughs. Repeated hosted failures remain unexplained at infrastructure level. |
-| 4. Full tests + preview | PASS | 486 files / 3,862 app tests; bounded final batch completed by retaining 107 passing files and rerunning remaining 14. Five Deno files / 28 tests pass. Preview build OK 22:21:42 UTC. |
+| 2. Three-role phone smoke | PASS fresh sequential retry | College/democoach/demoorg dashboards, connections, Staff Plans check and 27 legal open/close checks, no console errors. Real card autosave survives reload; restored to 3 reps. Stripe reached, no payment. |
+| 3. Every-page audit | Partial / FAIL | Prior 546 static visits retained; 56 additional real-record visits at 18 seconds per page. Scout denied-data reads fixed in preview and all three roles rechecked clean. Coach canonical audit-event inserts still return 42501; lifecycle/token pages remain unverified. |
+| 4. Full tests + preview | PASS | After final code fix: 487 files / 3,865 tests in five sequential bounded batches, all pass; six Deno files / 33 and outside-runner injury file / 10 pass. Preview build OK 23:27:49 UTC. |
 | 5. Switch inventory | Verified | Required states match: report card/Game IQ internal, spaces/rankings/Swap off, prompts/lifting/staff gate on, legal all. `plan_prompts_v2` buildable=false is edit-only; runtime mode all is ON. |
 | 6. Post-publish guide | Done | Expected outcomes for every deferred live feature proof recorded. |
 
@@ -17,7 +17,9 @@
 - [x] Run bounded full suite, Deno tests, static phone audit and final three-role smoke.
 - [x] Record every switch and the owner's live-check expectations.
 - [x] Restore TEST log value; snapshot/remove exact temporary testing day, org membership and 19:20 duplicate coach request; preserve older connections and canceled $0 plan.
-- [ ] Finish paired owner/ordinary-player Swap phone proof (owner started plan needed), real-record dynamic/lifecycle page audit (existing records/tokens needed), and certify hosted requests stable before declaring release-ready.
+- [ ] Finish paired owner/ordinary-player Swap phone proof (owner started plan and suitable non-allowlisted TEST session needed).
+- [ ] Repair canonical coach audit-event write authorization without weakening access or hiding failures, then rerun coach pages; no hosted change applied this continuation.
+- [ ] Finish remaining lifecycle/token pages with genuine existing state and certify intermittent requests stable.
 
 Historical 12-item feature status: only item 8 Done; items 1–6 Swap, 7 coach pitcher, 9 both-sport counters, 10 full-go, 11 mixed signals, 12 real nightly pair remain partial/unproven and are explicitly deferred to authorized live checks. Item 12's player label-read permission failure is fixed; genuine 14–28-day re-test still required. Earlier entries below are historical, not current release readiness.
 
