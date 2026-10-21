@@ -95,7 +95,7 @@ describe("category signal evidence", () => {
       { atBats: NaN, pitchesSeen: -1 }]) {
       const signals = categorySignalEvidence(clip, { whiffPct: 0, chasePct: 0, miscueClusters: [], ...sample }, NOW);
       expect(signals.filter(signal => signal.source === "games")).toEqual([]);
-      expect(crossReference("hitting", signals).kind).toBe("none");
+      expect(crossReference("hitting", signals).kind).toBe("single");
     }
   });
   it("the existing 6-AB or 20-pitch floor admits real sampled 0% without inventing a new threshold", () => {
