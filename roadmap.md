@@ -1,6 +1,6 @@
 # Oct 21 — Named live implementation authorization
 
-**AV4 live sub-step:** deployed `plan-swap` availability interpretation and mounted its three-question conversation on actual saved exercise cards; real TEST player phone UI returned HTTP 200 with correct explicit missing/have items and no writes. Atomic saving and the four positive swaps remain unfinished. No publish, cron or iOS changes. `docs/owner/av4-proof.md`
+**AV5 live sub-step:** applied shared transaction-held athlete/day locking to both actual plan persistence paths, closing a prerequisite for safe concurrent Swap certification. Hosted definitions and service-only permissions checked; actual TEST phone plan verified HTTP 200 and mounted Swap opened with unchanged saved rows. Atomic certification/saving and all four positive swaps remain unfinished. No publish, cron or iOS changes. `docs/owner/av5-proof.md`
 
 **Ready to publish: no.** AT5 coaching migration applied; coach summary mounted in the real app. No publish, cron or iOS changes. All remaining named work is authorized; authorization is not a blocker.
 
@@ -20,7 +20,7 @@
 
 **Nightly outcome:** last recorded Oct 21 04:30 callback HTTP 200, players/checked/pending 0/0/0 (empty, not positive). Next scheduled outcome is not claimed early. No cron changes or manual trigger.
 
-**Validation:** AV4 changed-path **6 files / 42 tests PASS**, isolated server type validation PASS, preview build OK at 16:40:05 UTC; live AI phone response HTTP 200 and exact no-write readback. Last full suite remains AV3 **479 files / 3,830 tests PASS**, not a fresh AV4 result. TEST player password scrambled; no training/gear/measurement writes. `docs/owner/av4-proof.md`, `docs/owner/av3-proof.md`
+**Validation:** AV5 fresh full suite **481 files / 3,839 tests PASS**; preview build OK at 16:48:15 UTC. Both hosted plan writers contain the shared transaction lock; authenticated/anonymous execution denied, service execution allowed. Actual 390×844 TEST phone saved-plan verification HTTP 200, mounted Swap opens, saved rows unchanged; TEST password scrambled. Direct two-session SQL contention check was denied by the read-only query role, so actual contention timing remains unproved. `docs/owner/av5-proof.md`
 
 - [x] Apply named AT5 migration and mount coach six-week summary in the actual coach page.
 - [x] Prove real coach saved-plan reads and immediate revocation; preserve health redaction.
@@ -34,6 +34,7 @@
 - [x] Replace blanket player-search system filtering with exact TEST ADMIN exclusion; test coach roster/pool sources and prove real democoach phone searches preserve demos.
 - [ ] Implement atomic universal Swap/AI/memory/log, mount every card and coach-sent work, complete four saved/readback phone cases, then remove replaced questions.
 - [x] Deploy authenticated self-scoped AI availability interpretation and prove it mounted through actual TEST player phone exercise UI; preserve explicit no-write/no-save state.
+- [x] Apply shared transaction-held athlete/day lock to both actual plan persistence paths; verify hosted installation, service-only access and real TEST phone plan continuity.
 - [x] Save/readback declared softball base routes; deploy sport-matching route selection and generator counters.
 - [x] Resolve TEST softball assessment through six explicit UI skips and start its actual Today plan without inventing measurements.
 - [ ] Obtain eligible conditioning/execution days; prove both-sport base-counter conditioning and all three execution roles on actual plan routes.
