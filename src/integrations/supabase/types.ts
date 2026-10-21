@@ -3065,6 +3065,64 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_equipment_memory: {
+        Row: {
+          confirmed_have: string[]
+          confirmed_lacks: string[]
+          created_at: string
+          equipment_context_id: string | null
+          id: string
+          plan_date: string
+          request_id: string
+          scope: string
+          user_id: string
+        }
+        Insert: {
+          confirmed_have?: string[]
+          confirmed_lacks?: string[]
+          created_at?: string
+          equipment_context_id?: string | null
+          id?: string
+          plan_date: string
+          request_id: string
+          scope: string
+          user_id: string
+        }
+        Update: {
+          confirmed_have?: string[]
+          confirmed_lacks?: string[]
+          created_at?: string
+          equipment_context_id?: string | null
+          id?: string
+          plan_date?: string
+          request_id?: string
+          scope?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_equipment_memory_equipment_context_id_fkey"
+            columns: ["equipment_context_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_equipment_context"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_equipment_memory_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_equipment_memory_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       athlete_events: {
         Row: {
           created_at: string | null
@@ -13581,6 +13639,80 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      plan_swap_log: {
+        Row: {
+          after_row: Json
+          before_row: Json
+          certification: Json
+          created_at: string
+          equipment_memory_id: string
+          id: string
+          plan_date: string
+          prescription_id: string
+          reason: string
+          request_fingerprint: string
+          request_id: string
+          user_id: string
+        }
+        Insert: {
+          after_row: Json
+          before_row: Json
+          certification: Json
+          created_at?: string
+          equipment_memory_id: string
+          id?: string
+          plan_date: string
+          prescription_id: string
+          reason: string
+          request_fingerprint: string
+          request_id: string
+          user_id: string
+        }
+        Update: {
+          after_row?: Json
+          before_row?: Json
+          certification?: Json
+          created_at?: string
+          equipment_memory_id?: string
+          id?: string
+          plan_date?: string
+          prescription_id?: string
+          reason?: string
+          request_fingerprint?: string
+          request_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_swap_log_equipment_memory_id_fkey"
+            columns: ["equipment_memory_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_equipment_memory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_swap_log_prescription_id_fkey"
+            columns: ["prescription_id"]
+            isOneToOne: false
+            referencedRelation: "wk_prescriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_swap_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_swap_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       planned_off_days: {
         Row: {
