@@ -23947,6 +23947,44 @@ export type Database = {
         }
         Returns: string
       }
+      wk_save_block_day: {
+        Args: {
+          p_date: string
+          p_engine: string
+          p_payload: Json
+          p_sport: string
+        }
+        Returns: undefined
+      }
+      wk_swap_block_atomic: {
+        Args: {
+          p_date: string
+          p_expected: Json
+          p_id: string
+          p_index: number
+          p_missing: string[]
+          p_modality: string
+          p_reason: string
+          p_replacement: Json
+          p_scope: string
+          p_sport: string
+          p_user: string
+        }
+        Returns: Json
+      }
+      wk_swap_item_atomic: {
+        Args: {
+          p_date: string
+          p_expected: Json
+          p_id: string
+          p_missing: string[]
+          p_reason: string
+          p_scope: string
+          p_target: string
+          p_user: string
+        }
+        Returns: Json
+      }
       wk_upsert_fault_signal: {
         Args: {
           p_confidence: number

@@ -1,9 +1,11 @@
-# Current publish gate — Oct 21
+# Current publish gate — Oct 22 finish line
+
+**02:09 UTC owner scope:** stop catalog-wide corrections (retain 134); known + common gear and free text; existing atomic item/block day saves; deterministic 1–2 item no-field speed mix; four real unfinished phone proofs → ALL/normal player → two-pass stability → final guide/scoped cleanup. No new proof documents before finalization; no publish/cron/iOS.
 
 **Controlling owner update — October 22, 01:13 UTC:** catalog gear corrections (all exercises/drills, snapshot, change record and Needs owner review), block Swap persistence and personalized speed mixes are now explicitly authorized. One proof document total: `docs/owner/simple-swap-proof.md`. No publish/cron/iOS changes; never fabricate measurements/insights; preserve passed checks.
 **October 22, 01:55 UTC continuation request:** continue unfinished items; only after positive Swap proofs run the two-pass stability gate and finalize the checklist. Retain passed evidence.
 **October 22, 02:00 UTC continuation:** finish remaining Swap work before stability/final checklist/cleanup; preserve previous passes and never count preparation as saved phone proof.
-- [ ] A. Correct catalog gear with complete change record and owner-review queue.
+- [x] A. Retain completed catalog corrections; remaining catalog review deferred by owner. Common gear must remain available regardless of labels.
   - [x] First 110 supported workout catalog corrections applied with before/after audit; owner review reopened and phone-checked.
   - [x] Goblet squat corrected to dumbbell OR kettlebell; shared Swap/build gear checks tested.
   - [x] Fifteen additional explicit OR-setup corrections; safe-space/reactive-ball requirements preserved; owner editor retains groups; 62 focused tests pass.
@@ -12,7 +14,7 @@
   - [x] Tibialis wall OR tib bar and wickets hurdles OR towel labels audited/read back (132 workout rows); 21 sport-library declarations corrected and queued with before/after records; phone review inspected, no owner approval.
   - [x] Ten further explicit elite/sport drill requirements corrected, audit readback and phone owner-review check verified; 4 files / 52 tests pass. Workout total unchanged at 132; elite total 8, sport total 26.
   - [x] Two more workout labels corrected live with audit/readback (134 total); four elite declarations strengthened (10 distinct elite IDs total). Farmer handles and pitching rubber recognized as declared inventory; 5 files / 46 tests pass; owner phone review inspected, no approval.
-  - [ ] Complete remaining ambiguous setups and drill libraries; do not mark A complete yet.
+  - Remaining ambiguous setups and drill libraries deferred to Vault review per 02:09 owner decision.
 - [ ] B. Save block-item swaps in today's canonical saved plan.
   - [x] Bundle the existing block builder without browser/auth dependencies; share exact envelope projection; six sport/gear parity cases and missingness preservation pass.
   - [ ] Hydrate every canonical input, atomically persist source/replacement/log/inventory/memory, mount saved block readback and role-test before counting any save.

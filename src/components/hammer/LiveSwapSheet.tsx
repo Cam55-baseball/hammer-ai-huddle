@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
+import { swapGearList } from "../../../supabase/functions/_shared/planSwap/commonGear";
 
 type Choice = { slug: string; name: string; reason: string };
 
@@ -24,8 +25,9 @@ async function callSwap(body: Record<string, unknown>) {
 }
 
 /** Simple Swap: what's missing → 1–3 safe choices → one save. */
-export function LiveSwapSheet({ rx, open, onOpenChange }: {
-  rx: WkRx; open: boolean; onOpenChange: (open: boolean) => void;
+export function LiveSwapSheet({ rx, open, onOpenChange, block }: {
+  rx: Pick<WkRx, "id" | "plan_date" | "movement_name">; open: boolean; onOpenChange: (open: boolean) => void;
+  block?: { modality: string; index: number; sport: "baseball" | "softball" };
 }) {
   const qc = useQueryClient();
   const [gear, setGear] = useState<string[] | null>(null);
@@ -36,12 +38,13 @@ export function LiveSwapSheet({ rx, open, onOpenChange }: {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
-  const ids = { prescriptionId: rx.id, planDate: rx.plan_date };
+  const ids = { prescriptionId: rx.id, planDate: rx.plan_date, ...(block ? { block } : {}) };
 
   useEffect(() => {
     if (!open) return;
     setGear(null); setMissing([]); setNote(""); setChoices(null); setErr(null); setDone(null); setScope("today");
-    callSwap({ action: "options", ...ids, missing: [] }).then(d => setGear(d.gear ?? [])).catch(e => setErr(e.message));
+    setGear(swapGearList([]));
+    callSwap({ action: "options", ...ids, missing: [] }).then(d => setGear(swapGearList(d.gear ?? []))).catch(e => setErr(e.message));
   }, [open, rx.id]);
 
   const find = async () => {
@@ -57,7 +60,7 @@ export function LiveSwapSheet({ rx, open, onOpenChange }: {
       qc.invalidateQueries(); }
     catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   };
-  const label = (g: string) => g.replace(/_/g, " ");
+  const label = (g: string) => ({ dumbbell: "Dumbbells", pitching_machine: "Machine", open_field: "Field space", baseballs: "Ball type: baseball", softballs: "Ball type: softball" }[g] ?? g.replace(/_/g, " "));
 
   return <Sheet open={open} onOpenChange={onOpenChange}><SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
     <SheetHeader><SheetTitle>Swap {rx.movement_name}</SheetTitle></SheetHeader>
@@ -68,11 +71,10 @@ export function LiveSwapSheet({ rx, open, onOpenChange }: {
       <>
         {gear && <fieldset className="space-y-2">
           <legend className="text-sm font-medium">What's missing today?</legend>
-          {gear.length === 0 && <p className="text-sm text-muted-foreground">This one needs no gear. Tell us below what's in the way.</p>}
           {gear.map(g => <label key={g} className="flex items-center gap-2 text-sm">
             <Checkbox checked={missing.includes(g)} onCheckedChange={v => setMissing(m => v ? [...m, g] : m.filter(x => x !== g))} />{label(g)}
           </label>)}
-          <Input aria-label="Anything else missing?" placeholder="Anything else? (optional)" value={note} maxLength={300} onChange={e => setNote(e.target.value)} />
+          <Input aria-label="Anything else missing?" placeholder="Anything else missing?" value={note} maxLength={300} onChange={e => setNote(e.target.value)} />
         </fieldset>}
         {choices === null ? <Button className="w-full" disabled={busy || !gear} onClick={find}>Find a swap</Button> :
           choices.length === 0 ? <p className="text-sm">No safe swap found for this one; skip it today.</p> :
