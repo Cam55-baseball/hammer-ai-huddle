@@ -37,7 +37,7 @@ export function chooseNoFieldMix(input: NoFieldInputs): { items: SpeedMixItem[];
   if (input.goal === "max_velocity") return refused;
   if (input.spaceYards == null || !Number.isFinite(input.spaceYards) || input.spaceYards < 10) return refused;
   const yards = Math.min(15, Math.floor(input.spaceYards));
-  const pool = [SPEED_SWAP_CATALOG[0]];
+  const pool: Array<(typeof SPEED_SWAP_CATALOG)[number]> = [SPEED_SWAP_CATALOG[0]];
   // Competitive/recovery phases keep the already-legal plain acceleration; never add resisted novelty.
   const addResistance = input.phase !== "in_season" && input.phase !== "post_season";
   const alternate = addResistance ? input.hill ? SPEED_SWAP_CATALOG[1] : input.sled ? SPEED_SWAP_CATALOG[2] : input.band ? SPEED_SWAP_CATALOG[3] : null : null;
