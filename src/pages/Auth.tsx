@@ -21,6 +21,7 @@ import { AppleSignInButton } from "@/components/auth/AppleSignInButton";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { isSignupDeviceLocked, lockSignupDevice } from "@/lib/auth/under13Lock";
 import { Under13Block } from "@/components/auth/Under13Block";
+import { isNativeWebsiteLink, openWebsitePlans } from "@/lib/purchase/websiteHandoff";
 
 
 const authSchema = z.object({
@@ -577,6 +578,17 @@ const Auth = () => {
               >
                 Landing Page
               </Button>
+              {isNativeWebsiteLink() && (
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  onClick={() => openWebsitePlans()}
+                  className="w-full mt-2"
+                >
+                  Subscribe on our website
+                </Button>
+              )}
             </div>
           ) : !isForgotPassword && !isLogin ? (
             <div className="mt-6">

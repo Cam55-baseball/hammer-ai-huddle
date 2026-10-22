@@ -16,9 +16,11 @@ import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
 import { PurchaseUnavailable } from "@/components/purchase/PurchaseUnavailable";
 import { BackButton } from "@/components/common/BackButton";
 import { SignedInAs } from "@/components/purchase/SignedInAs";
+import { openWebsiteCheckout } from "@/lib/purchase/websiteHandoff";
+import { toast } from "sonner";
 
 const Pricing = () => {
-  const { canShowPurchaseUI } = usePurchaseAvailability();
+  const { canShowPurchaseUI, mode } = usePurchaseAvailability();
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,6 +43,11 @@ const Pricing = () => {
 
   const handleSelectTier = (tierKey: string) => {
     localStorage.setItem('selectedSport', selectedSport);
+    // iPhone/iPad: plans are bought only on our website (Stripe), in Safari.
+    if (mode === "native-linkout") {
+      void openWebsiteCheckout("/pricing").catch(() => toast.error("Couldn't open the website. Please try again."));
+      return;
+    }
     navigate("/checkout", { 
       state: { tier: tierKey, sport: selectedSport } 
     });
@@ -136,7 +143,7 @@ const Pricing = () => {
                   size="lg"
                   variant={isBestValue ? "default" : isMostPopular ? "default" : "outline"}
                 >
-                  {t('subscriptionTiers.startTraining')}
+                  {mode === "native-linkout" ? "Subscribe on our website" : t('subscriptionTiers.startTraining')}
                 </Button>
               </Card>
             );
