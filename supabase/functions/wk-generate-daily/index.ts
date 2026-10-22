@@ -42,6 +42,7 @@ import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_s
 import { resolveIntensityClass } from "../_shared/wic/catalog/safetyAudit.ts";
 import { resolveFeatures, isSwitchOnFor } from "../_shared/wic/flags/featureSwitches.ts";
 import { swapV2Allowed } from "../_shared/swapV2Access.ts";
+import { avoidsMissingGear } from "../_shared/planSwap/simpleSwap.ts";
 import { cancelledDates, dayEffect, type TimelineEntry } from "../_shared/wic/schedule/timeline.ts";
 // Step 18 — offseason arc (§7) and in-season post-game plan (§9). Both gated.
 import {
@@ -1187,8 +1188,8 @@ const handler = async (req: Request): Promise<Response> => {
     };
     const libBase0 = equipmentUnknown ? gearFreeFirst(catalog ?? []) : (catalog ?? []);
     // Simple Swap "always missing" memory: drop movements needing gear the
-    // player said is always missing, only when the same family still has an
-    // option without it. Read failure → catalog unchanged.
+    // player said is always missing, even when no same-family fallback exists.
+    // Existing legal selection/fallback rules still decide the work and dose.
     let alwaysMissing = new Set<string>();
     try {
       const [{ data: swapRow }, { data: swapRoles }] = await Promise.all([
@@ -1196,21 +1197,17 @@ const handler = async (req: Request): Promise<Response> => {
         admin.from("user_roles").select("role").eq("user_id", user.id).eq("status", "active").in("role", ["owner", "admin"]),
       ]);
       if (swapV2Allowed(swapRow, user.id, (swapRoles ?? []).length > 0)) {
-      const { data: memRows } = await admin.from("athlete_equipment_memory")
+      const { data: memRows, error: memoryError } = await admin.from("athlete_equipment_memory")
         .select("confirmed_have, confirmed_lacks, created_at").eq("user_id", user.id).eq("scope", "always")
         .order("created_at", { ascending: true }).limit(200);
+      if (memoryError) throw new Error("Couldn't check remembered missing equipment. Please try building your plan again.");
       for (const r of (memRows ?? []) as any[]) {
         for (const g of r.confirmed_lacks ?? []) alwaysMissing.add(String(g).toLowerCase());
         for (const g of r.confirmed_have ?? []) alwaysMissing.delete(String(g).toLowerCase());
       }
       }
-    } catch { alwaysMissing = new Set(); }
-    const needsMissing = (m: any) => [...(m.equipment_requirements ?? []), ...(m.equipment ?? [])]
-      .some((g: unknown) => alwaysMissing.has(String(g).toLowerCase()));
-    const libBase = alwaysMissing.size === 0 ? libBase0 : libBase0.filter((m: any) => {
-      if (!needsMissing(m)) return true;
-      return !libBase0.some((o: any) => o !== m && o.substitution_family && o.substitution_family === m.substitution_family && !needsMissing(o));
-    });
+    } catch (error) { throw error; }
+    const libBase = alwaysMissing.size === 0 ? libBase0 : libBase0.filter(m => avoidsMissingGear(m, alwaysMissing));
     // -------- Upper-Body Plyo v1 — live legality filter (E2E WP4 item 1) --------
     // Filter-only, gated by ub_plyo_hand_wrist: removes U2/U3 rows the athlete is
     // not cleared for today (phase, age, training age, growth, earned history,
