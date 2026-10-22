@@ -1,5 +1,8 @@
 # Current publish gate — Oct 22 finish line
 
+**02:56 UTC owner addition:** owner applied nullable block receipt ID; pending migration superseded, never re-run it. Finish current foam-roller proof, remaining Swap proofs and ALL; add Vault automation before final stability/checklist/cleanup.
+- [ ] G. Vault auto ID/slug/version/timestamps; editable category/subtype/measure/dose and safety defaults; shared gear mapping with flagged unknowns; confirmed same-category alternatives and analysis tags; validation/review queue; TEST-admin name/how-to/dose creation → player plan → Swap → normal log proof in final checklist only.
+
 **02:09 UTC owner scope:** stop catalog-wide corrections (retain 134); known + common gear and free text; existing atomic item/block day saves; deterministic 1–2 item no-field speed mix; four real unfinished phone proofs → ALL/normal player → two-pass stability → final guide/scoped cleanup. No new proof documents before finalization; no publish/cron/iOS.
 
 **Controlling owner update — October 22, 01:13 UTC:** catalog gear corrections (all exercises/drills, snapshot, change record and Needs owner review), block Swap persistence and personalized speed mixes are now explicitly authorized. One proof document total: `docs/owner/simple-swap-proof.md`. No publish/cron/iOS changes; never fabricate measurements/insights; preserve passed checks.
