@@ -112,6 +112,7 @@ export interface DrillStep {
   readonly slug?: string;
   readonly setup?: string;
   readonly dosage: string;
+  readonly speedMix?: ReadonlyArray<{ slug: string; name: string; category: "speed"; intent: "acceleration" | "max_velocity"; reps: number; distanceYards: number; restSeconds: number; cue?: string }>;
   readonly cue?: string;
   readonly stopIf?: string;
   /** Athlete-facing "You need:" line when the drill requires equipment. */

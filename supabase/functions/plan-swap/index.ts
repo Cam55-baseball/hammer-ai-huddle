@@ -6,6 +6,7 @@ import { blockKnownGear, blockSwapChoices } from "../_shared/planSwap/blockSwap.
 import { injuryWords, requiredGear, swapChoices, swapMemoryAnswer, rememberedMissingGear, type SwapPlayer } from "../_shared/planSwap/simpleSwap.ts";
 
 const base = { prescriptionId: z.string().uuid(), planDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  speedSetup: z.object({ spaceYards: z.number().finite().min(0).max(200).nullable(), hill: z.boolean(), sled: z.boolean(), band: z.boolean(), treadmill: z.boolean() }).strict().optional(),
   block: z.object({ modality: z.string().max(40), index: z.number().int().min(0), sport: z.enum(["baseball", "softball"]) }).optional(),
   missing: z.array(z.string().min(1).max(60)).max(40), note: z.string().max(300).optional() };
 const bodySchema = z.discriminatedUnion("action", [
@@ -48,18 +49,41 @@ Deno.serve(async req => {
       const [{ data: inventory, error: inventoryError }, { data: memory, error: memoryError }, { data: context, error: contextError }] = await Promise.all([
         client.from("athlete_equipment_context").select("equipment,valid_until,created_at").eq("user_id", uid).order("created_at", { ascending: false }),
         client.from("athlete_equipment_memory").select("confirmed_have,confirmed_lacks").eq("user_id", uid).or(`scope.eq.always,plan_date.eq.${body.planDate}`).order("created_at", { ascending: true }),
-        client.from("athlete_context").select("injury_history,sport_primary").eq("user_id", uid).maybeSingle(),
+        client.from("athlete_context").select("injury_history,sport_primary,season_phase").eq("user_id", uid).maybeSingle(),
       ]);
       if (inventoryError || memoryError || contextError) return reply({ error: "We couldn't check your saved answers. Nothing was saved." }, 503);
-      if (context?.sport_primary !== location.sport || injuryWords(context?.injury_history).length) return reply({ gear: swapGearList([]), choices: [] });
+      const knownGear = blockKnownGear(source, location.modality, location.sport);
+      const missing = missingGearAnswer(body.missing, body.note, knownGear);
+      if (context?.sport_primary !== location.sport || injuryWords(context?.injury_history).length) {
+        return body.action === "options" ? reply({ gear: swapGearList(knownGear), missing, choices: [] }) : reply({ error: "No safe swap found for this one; skip it today." }, 409);
+      }
       const owned = new Set<string>((inventory ?? []).find(r => !r.valid_until || Date.parse(r.valid_until) > Date.now())?.equipment ?? []);
       for (const answer of memory ?? []) {
         for (const g of answer.confirmed_have ?? []) owned.add(g);
         for (const g of answer.confirmed_lacks ?? []) owned.delete(g);
       }
-      const knownGear = blockKnownGear(source, location.modality, location.sport);
-      const missing = missingGearAnswer(body.missing, body.note, knownGear);
-      const choices = blockSwapChoices(source, location.modality, location.sport, [...owned], [...missing, ...rememberedMissingGear(memory ?? [])]);
+      let speedInputs;
+      if (location.modality === "speed" && body.speedSetup) {
+        const [{ data: profile, error: profileError }, { data: ledger, error: ledgerError }, { data: ready, error: readyError }, { data: day, error: dayError }] = await Promise.all([
+          client.from("profiles").select("date_of_birth").eq("id", uid).maybeSingle(),
+          client.from("wk_cns_ledger").select("units_spent,units_cap").eq("user_id", uid).eq("ledger_date", body.planDate).maybeSingle(),
+          client.from("asb_events").select("payload").eq("athlete_id", uid).eq("topic_id", "behavioral.readiness")
+            .gte("occurred_at", `${body.planDate}T00:00:00Z`).lt("occurred_at", `${body.planDate}T23:59:59.999Z`).order("occurred_at", { ascending: false }).limit(1).maybeSingle(),
+          client.from("athlete_daily_log").select("injury_mode,day_status").eq("user_id", uid).eq("entry_date", body.planDate).maybeSingle(),
+        ]);
+        if (profileError || ledgerError || readyError || dayError) return reply({ error: "We couldn't check today's readiness and running load. Nothing was saved." }, 503);
+        const score = (ready?.payload as any)?.score;
+        const born = profile?.date_of_birth ? Date.parse(profile.date_of_birth) : NaN;
+        // These are this player's declared Today facts, never assumed saved equipment.
+        for (const [item, available] of [["hill", body.speedSetup.hill], ["sled", body.speedSetup.sled], ["bands", body.speedSetup.band]] as const) {
+          if (available && !missing.includes(item)) owned.add(item);
+        }
+        speedInputs = { ...body.speedSetup, readiness: day?.injury_mode || ["rest", "injury", "off"].includes(day?.day_status ?? "") ? "stop" as const :
+          typeof score === "number" && score > 4 && score <= 10 ? "ready" as const : null,
+          cnsLoad: ledger?.units_spent ?? null, cnsCap: ledger?.units_cap ?? null, phase: context?.season_phase ?? "",
+          injuries: injuryWords(context?.injury_history), ageYears: Number.isFinite(born) ? Math.floor((Date.now() - born) / 31_557_600_000) : null };
+      }
+      const choices = blockSwapChoices(source, location.modality, location.sport, [...owned], [...missing, ...rememberedMissingGear(memory ?? [])], speedInputs);
       if (body.action === "options") return reply({ gear: swapGearList(knownGear), missing, choices });
       const chosen = choices.find(choice => choice.slug === body.toSlug);
       if (!chosen) return reply({ error: "No safe swap found for this one; skip it today." }, 409);

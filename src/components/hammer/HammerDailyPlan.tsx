@@ -299,7 +299,12 @@ function DrillRow({
     <li data-task-id={taskId} data-task-side={side ?? ""} className={`text-xs rounded-lg border p-3 ${checked ? "opacity-60 border-border/40 bg-muted/20" : "border-border/70 bg-card"}`}>
       <ExerciseDisclosure name={d.name}>
         {d.stage && <p className="text-xs font-medium text-primary">Session step: {({ prep: 'Get ready', drills: 'Skill drills', full_go: 'Game-speed execution', log: 'Record what you did' })[d.stage]}</p>}
-        <div data-prescribed-dose className="text-sm font-semibold whitespace-normal break-words">{d.dosage}</div>
+        <div data-prescribed-dose className="text-sm font-semibold whitespace-normal break-words">{d.speedMix?.length ? `${d.speedMix.reduce((sum, item) => sum + item.reps, 0)} acceleration reps total` : d.dosage}</div>
+        {d.speedMix?.map(item => <div key={item.slug} className="mt-2 border-l-2 border-primary pl-3">
+          <p className="font-medium">{item.name}</p>
+          <p>{item.reps} reps × {item.distanceYards} yards · Rest: {item.restSeconds} seconds after each rep</p>
+          <p className="text-muted-foreground">{item.cue}</p>
+        </div>)}
         <ActivityBasics name={d.name} slug={d.slug} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} repair={legacyRepair(d.dosage, modality)} />
         <LegacyDrillInlineLog
           modality={modality} name={d.name} dosage={d.dosage}

@@ -37,4 +37,19 @@ describe("saved machine block alternatives", () => {
     expect(choice?.replacement.dosage).toBe("10 min focus areas");
     expect(blockSwapChoices(source, "throwing", "baseball", [], ["foam_roller"])).toEqual([]);
   });
+  it("saves the no-field mix within the original item and retains its total reps and stage", () => {
+    const source = { name: "10-yard starts", dosage: "7 x 10 yards @ 100%", stage: "drills" };
+    const inputs = { spaceYards: 15, hill: true, sled: false, band: false, treadmill: false, readiness: "ready" as const, cnsLoad: 2, cnsCap: 4, phase: "os_q1", injuries: [], ageYears: 19 };
+    const choice = blockSwapChoices(source, "speed", "baseball", ["hill"], ["open_field"], inputs)[0];
+    expect(choice?.replacement.dosage).toBe(source.dosage);
+    expect(choice?.replacement.stage).toBe("drills");
+    expect(choice?.replacement.speedMix).toMatchObject([{ reps: 4, restSeconds: 120, category: "speed" }, { reps: 3, restSeconds: 120, category: "speed" }]);
+    expect(blockSwapChoices({ name: "Flying 20s", dosage: "7 x 20 yards @ 100%" }, "speed", "baseball", ["hill"], ["open_field"], inputs)).toEqual([]);
+  });
+  it("does not grant speed intent to an unknown drill or a missing hill", () => {
+    const inputs = { spaceYards: 10, hill: true, sled: false, band: false, treadmill: false, readiness: "ready" as const, cnsLoad: 2, cnsCap: 4, phase: "os_q1", injuries: [], ageYears: 19 };
+    expect(blockSwapChoices({ name: "Unknown run", dosage: "6 x 10 yards" }, "speed", "baseball", ["hill"], ["open_field"], inputs)).toEqual([]);
+    const choice = blockSwapChoices({ name: "10-yard starts", dosage: "6 x 10 yards" }, "speed", "baseball", ["hill"], ["open_field", "hill"], inputs)[0];
+    expect(choice?.replacement.speedMix).toMatchObject([{ slug: "swap_short_acceleration", reps: 6, restSeconds: 60 }]);
+  });
 });
