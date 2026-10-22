@@ -102,7 +102,7 @@ export function getStorefrontCountry(): string | null {
  *
  * Guarded by src/lib/purchase/__tests__/purchaseGate.test.ts.
  */
-export const US_ONLY_APP_STORE_RELEASE = false; // Option B (2026-10-08): real StoreKit storefront detection; unknown = hidden.
+export const US_ONLY_APP_STORE_RELEASE = true; // Owner, 2026-10-22: app is listed on the US App Store only; StoreKit "USA" or no answer = website link shown; any other reported storefront = hidden.
 
 export function getPurchaseAvailability(
   opts: { usOnlyRelease?: boolean } = {},
