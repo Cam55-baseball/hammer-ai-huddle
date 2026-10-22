@@ -301,6 +301,9 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
         <Button variant="default" disabled={busy !== null || problems.length > 0} onClick={() => call("make_live")}>
           {busy === "make_live" ? "Making live…" : "Make live (from next plan)"}
         </Button>
+        {isNew && <Button variant="outline" disabled={busy !== null || problems.length > 0} onClick={() => call("make_live", { test_only: true })}>
+          Make live for TEST accounts only
+        </Button>}
         <Button variant="outline" disabled={busy !== null || !live} onClick={() => call("undo")}>
           {busy === "undo" ? "Undoing…" : "Undo last live"}
         </Button>

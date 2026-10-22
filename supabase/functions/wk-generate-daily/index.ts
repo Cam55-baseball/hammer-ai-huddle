@@ -436,8 +436,9 @@ async function loadMovementCatalog(
       }
     } catch { /* fall through to the database */ }
   }
+  // Swap-only no-field sprints (swap_*) are chosen by Swap, never prescribed by the builder.
   const res = await admin.from("wk_movement_catalog").select("*")
-    .or(`sport_scope.eq.both,sport_scope.eq.${sport}`);
+    .or(`sport_scope.eq.both,sport_scope.eq.${sport}`).not("slug", "like", "swap\\_%");
   if (!res.error && Array.isArray(res.data)) {
     catalogCache.set(sport, { at: Date.now(), rows: res.data });
     if (storage) {
@@ -1153,13 +1154,16 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     // -------- Load phase block + catalog + feature flags --------
-    const [{ data: blocks, error: blocksErr }, { data: catalog, error: catErr }, { data: liftingFlagRow }] = await Promise.all([
+    const [{ data: blocks, error: blocksErr }, { data: catalogRaw, error: catErr }, { data: liftingFlagRow }] = await Promise.all([
       admin.from("wk_periodization_blocks").select("*").eq("phase", phaseRes.phase).maybeSingle() as unknown as Promise<{ data: BlockRow | null; error: any }>,
       loadMovementCatalog(admin as any, sport) as unknown as Promise<{ data: MovementRow[] | null; error: any }>,
       admin.from("app_settings").select("setting_value").eq("setting_key", "lifting_v2_enabled").maybeSingle(),
     ]);
     if (blocksErr) throw blocksErr;
     if (catErr) throw catErr;
+    // TEST-only Vault items reach only their listed accounts; Swap-only sprints are never built in.
+    const catalog = (catalogRaw ?? []).filter((m: any) => !String(m.slug ?? "").startsWith("swap_")
+      && (!Array.isArray(m.visible_to) || m.visible_to.includes(user.id)));
     // Wave rebuild gate. Anything other than a literal `true` reads as off, so
     // a missing row, a null or a malformed value can never turn a dose change on.
     const liftingV2Enabled = (liftingFlagRow as any)?.setting_value === true

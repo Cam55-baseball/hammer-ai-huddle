@@ -110,7 +110,7 @@ Deno.serve(async req => {
       client.from("athlete_context").select("season_phase, injury_history, sport_primary").eq("user_id", uid).maybeSingle(),
       client.from("profiles").select("date_of_birth").eq("id", uid).maybeSingle(),
       source.substitution_family ? client.from("wk_movement_catalog").select("*")
-        .eq("substitution_family", source.substitution_family).eq("movement_category", source.movement_category).eq("is_active", true)
+        .eq("substitution_family", source.substitution_family).eq("movement_category", source.movement_category).eq("is_active", true).or(`visible_to.is.null,visible_to.cs.{${uid}}`)
         : Promise.resolve({ data: [] as any[] }),
       client.from("athlete_equipment_context").select("scope,equipment,valid_until,created_at").eq("user_id", uid).order("created_at", { ascending: false }),
       client.from("athlete_equipment_memory").select("scope,plan_date,confirmed_have,confirmed_lacks,created_at").eq("user_id", uid)
@@ -131,6 +131,28 @@ Deno.serve(async req => {
       ageYears: dob ? Math.floor((Date.now() - dob.getTime()) / 31_557_600_000) : null,
       injuries: injuryWords(ctx?.injury_history ?? null), availableGear: [...available] };
     const choices = swapChoices(source, family ?? [], rx, knownMissing, player);
+    // No open field on a single-row sprint → the deterministic no-field mix, same intent and reps.
+    if (body.speedSetup && source.category === "speed_lab" && knownMissing.includes("open_field")) {
+      const [{ data: ledger, error: ledgerError }, { data: ready, error: readyError }, { data: day, error: dayError }] = await Promise.all([
+        client.from("wk_cns_ledger").select("units_spent,units_cap").eq("user_id", uid).eq("ledger_date", body.planDate).maybeSingle(),
+        client.from("asb_events").select("payload").eq("athlete_id", uid).eq("topic_id", "behavioral.readiness")
+          .gte("occurred_at", `${body.planDate}T00:00:00Z`).lt("occurred_at", `${body.planDate}T23:59:59.999Z`).order("occurred_at", { ascending: false }).limit(1).maybeSingle(),
+        client.from("athlete_daily_log").select("injury_mode,day_status").eq("user_id", uid).eq("entry_date", body.planDate).maybeSingle(),
+      ]);
+      if (ledgerError || readyError || dayError) return reply({ error: "We couldn't check today's readiness and running load. Nothing was saved." }, 503);
+      const score = (ready?.payload as any)?.score;
+      const speed = speedRowSwap(source, rx, knownMissing, { ...body.speedSetup,
+        readiness: day?.injury_mode || ["rest", "injury", "off"].includes(day?.day_status ?? "") ? "stop" : typeof score === "number" && score > 4 && score <= 10 ? "ready" : null,
+        cnsLoad: ledger?.units_spent ?? null, cnsCap: ledger?.units_cap ?? null, phase: player.phase, injuries: player.injuries, ageYears: player.ageYears });
+      if (body.action === "options") return reply({ gear, missing, choices: speed ? [{ slug: speed.slug, name: speed.name, reason: speed.reason }] : [] });
+      if (!speed || speed.slug !== body.toSlug) return reply({ error: "No safe swap found for this one; skip it today." }, 409);
+      const { data: result, error: saveError } = await admin.rpc("wk_swap_speed_item_atomic", {
+        p_user: uid, p_date: body.planDate, p_id: rx.id, p_expected: rx, p_target: speed.slug, p_reason: speed.reason,
+        p_missing: missing, p_scope: body.scope, p_total_reps: speed.totalReps, p_distance_feet: speed.distanceFeet, p_note: speed.note,
+      });
+      if (saveError || !result?.saved) return reply({ error: "Your plan changed or the save couldn't finish. Nothing was saved; reload and try again." }, 409);
+      return reply({ saved: result.saved, reason: speed.reason, memorySaved: result.memorySaved });
+    }
     if (body.action === "options") return reply({ gear, missing, choices });
 
     const chosen = choices.find(c => c.slug === body.toSlug);

@@ -21307,6 +21307,7 @@ export type Database = {
           unilateral: boolean | null
           updated_at: string
           variant: string | null
+          visible_to: string[] | null
           volume_cost: number | null
           why_prescribed: string
           wic_metadata_complete: boolean | null
@@ -21416,6 +21417,7 @@ export type Database = {
           unilateral?: boolean | null
           updated_at?: string
           variant?: string | null
+          visible_to?: string[] | null
           volume_cost?: number | null
           why_prescribed: string
           wic_metadata_complete?: boolean | null
@@ -21525,6 +21527,7 @@ export type Database = {
           unilateral?: boolean | null
           updated_at?: string
           variant?: string | null
+          visible_to?: string[] | null
           volume_cost?: number | null
           why_prescribed?: string
           wic_metadata_complete?: boolean | null
@@ -23981,6 +23984,22 @@ export type Database = {
           p_reason: string
           p_scope: string
           p_target: string
+          p_user: string
+        }
+        Returns: Json
+      }
+      wk_swap_speed_item_atomic: {
+        Args: {
+          p_date: string
+          p_distance_feet: number
+          p_expected: Json
+          p_id: string
+          p_missing: string[]
+          p_note: string
+          p_reason: string
+          p_scope: string
+          p_target: string
+          p_total_reps: number
           p_user: string
         }
         Returns: Json

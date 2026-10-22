@@ -10,6 +10,8 @@ import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { swapGearList } from "../../../supabase/functions/_shared/planSwap/commonGear";
 
 type Choice = { slug: string; name: string; reason: string };
+/** Reads a Swap save can change: today's lifts/drills, saved blocks, plan changes and gear. */
+export const SWAP_REFRESH = /^(wk-rx|saved-block-day|hammer-daily-plan|wk-plan-changes|athlete-equipment)/;
 
 async function callSwap(body: Record<string, unknown>) {
   const { data, error } = await supabase.functions.invoke("plan-swap", { body });
@@ -42,7 +44,8 @@ export function LiveSwapSheet({ rx, open, onOpenChange, block }: {
   const [available, setAvailable] = useState<string[]>([]);
   const [gearWarning, setGearWarning] = useState(false);
   const ids = { prescriptionId: rx.id, planDate: rx.plan_date, ...(block ? { block } : {}) };
-  const noField = block?.modality === "speed" && missing.includes("open_field");
+  const isSpeedRow = !block && /^sp_/.test(rx.movement_slug ?? "");
+  const noField = (block?.modality === "speed" || isSpeedRow) && missing.includes("open_field");
   const speedSetup = noField ? { spaceYards: spaceYards.trim() ? Number(spaceYards) : null,
     hill: available.includes("hill"), sled: available.includes("sled"), band: available.includes("bands"), treadmill: available.includes("treadmill") } : undefined;
 
@@ -66,7 +69,8 @@ export function LiveSwapSheet({ rx, open, onOpenChange, block }: {
     setBusy(true); setErr(null);
     try { const d = await callSwap({ action: "swap", ...ids, missing, note: note || undefined, toSlug: c.slug, scope, ...(speedSetup ? { speedSetup } : {}) });
       setDone(`${d.reason}${d.memorySaved ? " · We'll remember this is missing." : ""}`);
-      qc.invalidateQueries(); }
+      // Refresh only the plan and gear reads a Swap changes — refetching every query stalled phones for 10–30 s.
+      qc.invalidateQueries({ predicate: q => SWAP_REFRESH.test(String(q.queryKey[0] ?? "")) }); }
     catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   };
   const label = (g: string) => ({ dumbbell: "Dumbbells", pitching_machine: "Machine", open_field: "Field space", baseballs: "Ball type: baseball", softballs: "Ball type: softball" }[g] ?? g.replace(/_/g, " "));

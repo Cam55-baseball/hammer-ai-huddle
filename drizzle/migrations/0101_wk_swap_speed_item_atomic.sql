@@ -1,0 +1,24 @@
+CREATE OR REPLACE FUNCTION public.wk_swap_speed_item_atomic(p_user uuid, p_date date, p_id uuid, p_expected jsonb, p_target text, p_reason text, p_missing text[], p_scope text, p_total_reps integer, p_distance_feet integer, p_note text)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
+AS $function$
+DECLARE r public.wk_prescriptions; t public.wk_movement_catalog; v_memory boolean:=false;
+BEGIN
+  PERFORM public.wk_lock_plan_day(p_user,p_date);
+  IF p_scope NOT IN ('today','always') OR nullif(trim(p_reason),'') IS NULL OR p_target NOT LIKE 'swap\_%' OR coalesce(p_total_reps,0) < 1 OR coalesce(p_distance_feet,0) < 30 THEN RAISE EXCEPTION 'Invalid swap'; END IF;
+  SELECT * INTO r FROM public.wk_prescriptions WHERE id=p_id AND user_id=p_user AND plan_date=p_date FOR UPDATE;
+  IF NOT FOUND OR r.status NOT IN ('planned','pending') OR to_jsonb(r)<>p_expected THEN RAISE EXCEPTION 'Plan changed'; END IF;
+  IF p_total_reps <> coalesce(r.total_reps, r.reps, r.sets) THEN RAISE EXCEPTION 'Dose changed'; END IF;
+  IF EXISTS(SELECT 1 FROM public.wk_session_logs WHERE prescription_id=p_id) OR EXISTS(SELECT 1 FROM public.hammer_daily_task_completions WHERE user_id=p_user AND plan_date=p_date AND task_id=p_id::text AND completed) THEN RAISE EXCEPTION 'Already started'; END IF;
+  SELECT * INTO t FROM public.wk_movement_catalog WHERE slug=p_target AND is_active IS TRUE AND superseded_by IS NULL AND category='speed_lab';
+  IF NOT FOUND THEN RAISE EXCEPTION 'Unavailable target'; END IF;
+  UPDATE public.wk_prescriptions SET movement_slug=t.slug,movement_name=t.name,substituted_from_slug=coalesce(substituted_from_slug,r.movement_slug),substitution_reason=p_reason,
+    sets=p_total_reps,reps=NULL,total_reps=p_total_reps,distance_feet=p_distance_feet,dosage_unit='feet',execution_note=p_note,updated_at=clock_timestamp() WHERE id=p_id RETURNING * INTO r;
+  INSERT INTO public.swap_log(user_id,plan_date,prescription_id,from_slug,to_slug,reason,missing_items,scope) VALUES(p_user,p_date,p_id,p_expected->>'movement_slug',t.slug,p_reason,coalesce(p_missing,'{}'),p_scope);
+  IF cardinality(coalesce(p_missing,'{}'))>0 THEN
+    INSERT INTO public.athlete_equipment_memory(user_id,request_id,scope,plan_date,confirmed_have,confirmed_lacks) VALUES(p_user,gen_random_uuid(),p_scope,p_date,'{}',p_missing);
+    v_memory:=true;
+  END IF;
+  RETURN jsonb_build_object('saved',to_jsonb(r),'memorySaved',v_memory);
+END $function$;
+REVOKE ALL ON FUNCTION public.wk_swap_speed_item_atomic(uuid,date,uuid,jsonb,text,text,text[],text,integer,integer,text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.wk_swap_speed_item_atomic(uuid,date,uuid,jsonb,text,text,text[],text,integer,integer,text) TO service_role;
