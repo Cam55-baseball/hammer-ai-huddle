@@ -57,6 +57,7 @@ export const EQUIPMENT_VOCABULARY: ReadonlyArray<EquipmentTokenDef> = [
   { token: "radar", label: "radar gun", phrases: ["radar gun", "pocket radar", "stalker gun", "radar"] },
   { token: "bat_sensor", label: "bat sensor", phrases: ["blast motion", "bat sensor", "diamond kinetics", "swing sensor"] },
   { token: "mound", label: "a pitching mound", phrases: ["pitching mound", "portable mound", "bullpen mound", "mound"] },
+  { token: "pitching_rubber", label: "a pitching rubber", phrases: ["pitching rubber", "pitcher's rubber", "pitchers rubber"] },
   { token: "turf", label: "turf or hitting mat", phrases: ["turf mat", "hitting mat", "artificial turf", "turf"] },
   { token: "wall", label: "a throwing wall", phrases: ["throwing wall", "brick wall", "wall"] },
   { token: "field", label: "a field", phrases: ["a field", "the field", "diamond", "field"] },
