@@ -30,4 +30,11 @@ describe("saved machine block alternatives", () => {
   it("does not create a fallback from an unknown drill name", () => {
     expect(blockSwapChoices({name: "Unknown foam roller work", dosage: "8 reps"}, "recovery", "baseball", [], ["foam_roller"])).toEqual([]);
   });
+  it("keeps the real recovery block's full time without a foam roller", () => {
+    const source = { name: "Mobility + foam roll", dosage: "10 min focus areas" };
+    const choice = blockSwapChoices(source, "recovery", "baseball", [], ["foam_roller"])[0];
+    expect(choice?.slug).toBe("recovery_gentle_mobility");
+    expect(choice?.replacement.dosage).toBe("10 min focus areas");
+    expect(blockSwapChoices(source, "throwing", "baseball", [], ["foam_roller"])).toEqual([]);
+  });
 });

@@ -4,6 +4,7 @@ import { ownsAllGear, avoidsMissingGear } from "./simpleSwap.ts";
 
 type Drill = { name: string; slug?: string | null; dosage: string; stage?: string | null; cue?: string | null; swapReason?: string };
 export function blockKnownGear(source: Drill, modality: string, sport: "baseball" | "softball"): string[] {
+  if (modality === "recovery" && source.name === "Mobility + foam roll") return ["foam_roller"];
   if (modality === "warmup" || modality === "recovery") {
     return warmupCatalog.find(drill => drill.slug === source.slug || drill.name === source.name)?.equipment ?? [];
   }
@@ -13,6 +14,14 @@ export function blockKnownGear(source: Drill, modality: string, sport: "baseball
   return [];
 }
 export function blockSwapChoices(source: Drill, modality: string, sport: "baseball" | "softball", owned: string[], missing: string[]) {
+  if (modality === "recovery" && source.name === "Mobility + foam roll" && missing.includes("foam_roller")) {
+    const reason = `Because the foam roller is missing, gentle mobility keeps your ${source.dosage} without equipment.`;
+    return [{ slug: "recovery_gentle_mobility", name: "Gentle mobility", reason,
+      replacement: { ...source, slug: "recovery_gentle_mobility", name: "Gentle mobility",
+        cue: "Move gently through the same focus areas; breathe slowly and stay in a comfortable range.",
+        setup: "Clear floor space. No foam roller needed.", stopIf: "Sharp pain, numbness or a pinching joint — stop.",
+        guide: null, equipmentNote: null, swapReason: reason } }];
+  }
   if (modality === "warmup" || modality === "recovery") {
     const original = warmupCatalog.find(drill => drill.slug === source.slug || drill.name === source.name);
     const sibling = original?.fallbackSlug ? warmupCatalog.find(drill => drill.slug === original.fallbackSlug) : undefined;
