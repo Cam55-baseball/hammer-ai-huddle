@@ -45,6 +45,7 @@ import dashboardHero2 from "@/assets/dashboard-hero-1.jpg";
 import dashboardHero3 from "@/assets/dashboard-hero-2.jpg";
 import dashboardHero4 from "@/assets/dashboard-hero-3.jpg";
 import { usePurchaseAvailability } from "@/hooks/usePurchaseAvailability";
+import { openWebsiteCheckout } from "@/lib/purchase/websiteHandoff";
 
 type ModuleType = "hitting" | "pitching" | "throwing" | "pitcher" | "5tool" | "golden2way";
 type SportType = "baseball" | "softball";
@@ -118,7 +119,7 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { modules: subscribedModules, module_details, loading: subLoading, refetch, hasAccessForSport, getModuleDetails, onModulesChange, enableFastPolling } = useSubscription();
-  const { canShowPurchaseUI, isStaffAccount, roleLoading: purchaseRoleLoading } = usePurchaseAvailability();
+  const { canShowPurchaseUI, mode: purchaseMode, isStaffAccount, roleLoading: purchaseRoleLoading } = usePurchaseAvailability();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const { isScout, isCoach, loading: scoutLoading } = useScoutAccess();
@@ -489,6 +490,18 @@ export default function Dashboard() {
                   </Button>
                 ) : !canShowPurchaseUI ? (
                   <p className="text-xs text-muted-foreground">Not available on your account yet</p>
+                ) : purchaseMode === "native-linkout" ? (
+                  <Button
+                    className="w-full h-11 font-semibold"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void openWebsiteCheckout("/pricing").catch(() =>
+                        toast.error("Couldn't open the website. Please try again."),
+                      );
+                    }}
+                  >
+                    Subscribe on our website
+                  </Button>
                 ) : (
                   <Button
                     className="w-full h-12 font-bold uppercase tracking-wide text-primary-foreground border-0

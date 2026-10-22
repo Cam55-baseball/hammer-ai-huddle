@@ -14,15 +14,19 @@ afterEach(() => {
 });
 
 describe("purchase gate — Option B, US storefront only", () => {
-  it("no longer assumes a US-only listing", () => {
-    expect(US_ONLY_APP_STORE_RELEASE).toBe(false);
+  it("owner 2026-10-22: the app is a US-only App Store release", () => {
+    expect(US_ONLY_APP_STORE_RELEASE).toBe(true);
   });
   it("web is unchanged", () => {
     expect(getPurchaseAvailability()).toMatchObject({ canShowPurchaseUI: true, isNative: false, mode: "web" });
   });
-  it("native with unknown storefront shows nothing to buy", () => {
+  it("native with NO storefront answer still shows the website link", () => {
     w.__HAMMERS_NATIVE__ = true;
-    expect(getPurchaseAvailability()).toMatchObject({ canShowPurchaseUI: false, mode: "hidden" });
+    expect(getPurchaseAvailability()).toMatchObject({ canShowPurchaseUI: true, mode: "native-linkout", storefront: null });
+  });
+  it("without the US-only release, no storefront answer hides purchases", () => {
+    w.__HAMMERS_NATIVE__ = true;
+    expect(getPurchaseAvailability({ usOnlyRelease: false })).toMatchObject({ canShowPurchaseUI: false, mode: "hidden" });
   });
   it("StoreKit 'USA' shows the website link-out", () => {
     w.__HAMMERS_NATIVE__ = true;

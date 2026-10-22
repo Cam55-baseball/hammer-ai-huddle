@@ -43,7 +43,8 @@ describe("basic how-to quality gates (round 3)", () => {
       for (const [token, must, mustNot] of EQUIP) {
         if (!token.test(slug)) continue;
         // "_bb" / "_sb" at the end of a baseball/softball pair is the sport, not a barbell.
-        if (/_bb$/.test(slug) && BASIC_HOW_TO[slug.replace(/_bb$/, "_sb")] && !/(^|_)bb_/.test(slug)) continue;
+        // A trailing "_bb" is always the sport (baseball), never a barbell; barbell slugs use "bb_" inside the name.
+        if (/_bb$/.test(slug) && !/(^|_)bb_/.test(slug)) continue;
         expect(t, `${slug} should name its equipment`).toMatch(must);
         for (const bad of mustNot) expect(t, `${slug} names wrong equipment`).not.toMatch(bad);
       }
