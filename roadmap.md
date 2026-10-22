@@ -2,6 +2,7 @@
 
 **Controlling owner update — October 22, 01:13 UTC:** catalog gear corrections (all exercises/drills, snapshot, change record and Needs owner review), block Swap persistence and personalized speed mixes are now explicitly authorized. One proof document total: `docs/owner/simple-swap-proof.md`. No publish/cron/iOS changes; never fabricate measurements/insights; preserve passed checks.
 **October 22, 01:55 UTC continuation request:** continue unfinished items; only after positive Swap proofs run the two-pass stability gate and finalize the checklist. Retain passed evidence.
+**October 22, 02:00 UTC continuation:** finish remaining Swap work before stability/final checklist/cleanup; preserve previous passes and never count preparation as saved phone proof.
 - [ ] A. Correct catalog gear with complete change record and owner-review queue.
   - [x] First 110 supported workout catalog corrections applied with before/after audit; owner review reopened and phone-checked.
   - [x] Goblet squat corrected to dumbbell OR kettlebell; shared Swap/build gear checks tested.
