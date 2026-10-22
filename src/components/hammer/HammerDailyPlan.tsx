@@ -848,7 +848,7 @@ function HammerDailyPlanBody({
 
   const savedDay = useQuery({ queryKey: ["saved-block-day", bodyUser?.id, bodyPlanDate], enabled: swapV2.enabled && !!bodyUser,
     queryFn: async () => {
-      const { data, error } = await supabase.from("athlete_plan_snapshots").select("payload,sport").eq("user_id", bodyUser?.id ?? "").eq("plan_date", bodyPlanDate);
+      const { data, error } = await supabase.from("athlete_plan_snapshots").select("id,payload,sport").eq("user_id", bodyUser?.id ?? "").eq("plan_date", bodyPlanDate);
       if (error) throw error;
       return data;
     } });
