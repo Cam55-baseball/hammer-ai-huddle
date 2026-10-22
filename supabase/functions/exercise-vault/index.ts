@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
           throw_count: "throws", velocity: "mph", bat_speed: "mph", exit_velocity: "mph",
           swing_count: "swings", check_off: "checkoff",
         };
-        const row = {
+        const row: Record<string, any> = {
           slug,
           name: String(p.name ?? slug),
           category: String(p.catalog_category ?? p.card_type ?? ""),
@@ -138,6 +138,17 @@ Deno.serve(async (req) => {
           ...(p.training_age_legality && typeof p.training_age_legality === "object"
             ? { training_age_legality: p.training_age_legality } : {}),
         };
+        if (typeof p.swap_like === "string" && p.swap_like) {
+          const { data: like } = await admin.from("wk_movement_catalog")
+            .select("category,family,substitution_family,movement_category,intensity_class").eq("slug", p.swap_like).maybeSingle();
+          if (!like || like.category !== row.category) return json({ error: "Swap alternative must be an existing item in the same category." }, 400);
+          Object.assign(row, { family: like.family, substitution_family: like.substitution_family, movement_category: like.movement_category,
+            intensity_class: (typeof p.intensity_class === "string" && p.intensity_class) || like.intensity_class });
+        } else if (typeof p.intensity_class === "string" && p.intensity_class) Object.assign(row, { intensity_class: p.intensity_class });
+        const tags = Array.isArray(p.issue_tags) ? (p.issue_tags as string[]).map(String).filter(Boolean) : [];
+        if (tags.length) Object.assign(row, { troubleshooting_tags: tags });
+        const flags = Array.isArray(p.injury_flags) ? (p.injury_flags as string[]).map(String).filter(Boolean) : [];
+        if (flags.length) Object.assign(row, { contraindications: [...(row.contraindications ?? []), ...flags] });
         const { error: ce } = await admin.from("wk_movement_catalog").upsert(row, { onConflict: "slug" });
         if (ce) return json({ error: `Catalog entry failed: ${ce.message}` }, 500);
       }
