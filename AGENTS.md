@@ -43,4 +43,5 @@
 - Catalog alternative gear uses complete groups in equipment_alternatives; all mandatory gear plus one complete group must be available. Why: dumbbell-or-kettlebell must not require both or silently accept neither.
 - Sport drill-library equipment is adapted through `sportDrillGear` to the shared saved-plan gear judge. Why: mandatory and complete alternative groups must have identical availability semantics across libraries and Swap.
 - Server block generation bundles the existing pure daily-plan builder through `scripts/build-hammer-block-bundle.mjs`, rejecting browser/auth dependencies and injecting owner drills/stage tags. Why: block Swap must reuse the same generator rather than accept client snapshots or create a second builder.
+- Athlete envelope projection lives in the hook-free `contextProjection` module and is re-exported by `athleteContext`. Why: browser and server block builders must preserve identical confidence, missingness and lineage without importing React or auth.
 

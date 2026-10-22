@@ -2,3 +2,4 @@
 export { buildHammerDailyPlan } from "./dailyPlan";
 export { setOwnerPlanDrills } from "@/lib/prescription/ownerPlanDrills";
 export { setWarmupStageOverrides } from "./warmupStages";
+export { contextFromEnvelope } from "../context/contextProjection";
