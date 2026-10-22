@@ -1,3 +1,4 @@
+import { catalogVisibilityFilter } from "@/lib/catalog/testOnlyVisibility";
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 // Staff View (v1.2 §D3) — read-only, printable, behind the staff_view switch.
 // Everything on this page comes from rows the app already stored. Nothing is
@@ -227,7 +228,8 @@ export default function StaffView() {
       const { data: cat } = await supabase
         .from("wk_movement_catalog")
         .select("slug, bucket")
-        .in("slug", slugs);
+        .in("slug", slugs)
+        .or(catalogVisibilityFilter(user?.id));
       setBuckets(
         Object.fromEntries((cat ?? []).map((c) => [c.slug as string, (c.bucket as string) ?? "Other"])),
       );

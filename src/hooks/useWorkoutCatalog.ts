@@ -1,3 +1,4 @@
+import { catalogVisibilityFilter } from "@/lib/catalog/testOnlyVisibility";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -34,11 +35,13 @@ export function useWorkoutCatalog() {
   return useQuery({
     queryKey: ["wk_movement_catalog", "viewer"],
     queryFn: async () => {
+      const { data: auth } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from("wk_movement_catalog")
         .select(
           "id,slug,name,category,movement_category,source_philosophy,cue,why_prescribed,primary_adaptation,equipment,phase_allow,season_eligibility,season_legality,training_age_legality,cns_cost,recovery_window_hours,pap_classification,movement_velocity,game_day_legal,practice_day_legal,min_age_years,default_sets,default_reps,is_eccentric_dominant,eccentric_overload,governance_version",
         )
+        .or(catalogVisibilityFilter(auth.user?.id))
         .order("category", { ascending: true })
         .order("name", { ascending: true });
       if (error) throw error;
