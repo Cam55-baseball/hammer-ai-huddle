@@ -51,12 +51,15 @@ export function swapDifficultyJumps(catalog: ReadonlyArray<Record<string, any>>)
     const k = `${r.movement_category}|${r.substitution_family}`;
     groups.set(k, [...(groups.get(k) ?? []), r]);
   }
-  const out: Array<{ slug: string; note: string }> = [];
+  const partners = new Map<string, { name: string; others: string[] }>();
+  const note = (r: Record<string, any>, other: string) => {
+    const e = partners.get(r.slug) ?? { name: r.name, others: [] };
+    e.others.push(other); partners.set(r.slug, e);
+  };
   for (const rows of groups.values()) for (const a of rows) for (const b of rows) {
-    if (a.slug < b.slug && isDifficultyJump(a, b)) {
-      const note = `Swap pair ${a.name} ↔ ${b.name} differs by more than one difficulty level; Swap won't offer it until reviewed.`;
-      out.push({ slug: a.slug, note }, { slug: b.slug, note });
-    }
+    if (a.slug < b.slug && isDifficultyJump(a, b)) { note(a, b.name); note(b, a.name); }
   }
+  const out = [...partners.entries()].map(([slug, e]) => ({ slug,
+    note: `Swap won't offer ${e.others.length} partner${e.others.length === 1 ? "" : "s"} more than one difficulty level away (e.g. ${e.others.slice(0, 3).join(", ")}) until reviewed.` }));
   return out;
 }
