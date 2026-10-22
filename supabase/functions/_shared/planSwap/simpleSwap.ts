@@ -105,7 +105,10 @@ function doseText(rx: Row): string {
 }
 
 export function swapChoices(source: Row, family: Row[], rx: Row, missing: string[], player: SwapPlayer): SwapChoice[] {
-  const lacking = missing.map(m => m.replace(/_/g, " ")).join(", ");
+  // Name only the missing gear this exercise actually uses; other remembered gaps stay off its reason.
+  const used = new Set([...((source.equipment_requirements ?? []) as string[]), ...(((source.equipment_alternatives ?? []) as string[][]).flat())].map(g => String(g).toLowerCase()));
+  const named = missing.filter(m => used.has(m.toLowerCase()));
+  const lacking = (named.length ? named : missing).map(m => m.replace(/_/g, " ")).join(" or ");
   return family.filter(t => {
     if (!qualifies(source, t, missing, player)) return false;
     // A route carries work and rest identity as well as a distance; keep both.
