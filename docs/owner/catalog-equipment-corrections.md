@@ -119,7 +119,7 @@ Both `equipment` and `equipment_requirements` corrected together. Each row retai
 | Single-Arm DB Chest Press (`sa_db_chest_press`) | Not declared | dumbbell | Single-Arm DB Chest Press; One DB, brace hard to resist rotation, press to full lockout. |
 | Incline Bench — Double Eccentric (`incline_bench_double_ecc`) | barbell, rack | barbell, rack, bench | Incline Bench — Double Eccentric; Bar to upper chest under 4s, press halfway, lower 3s, drive to top. |
 
-## Full-catalog coverage and unresolved setup variants
+## Initial full-catalog coverage and unresolved setup variants (historical; later corrections below)
 
 Read all 1,008 workout catalog entries. This batch is **not** a claim that every exercise and every drill now has complete gear metadata. Some names/how-to texts explicitly allow alternative implements; those must be represented as alternatives, never mislabeled as requiring both. Generic or contradictory setup instructions are not evidence. The separate drill libraries and their generated block identities still need completion.
 
@@ -160,3 +160,33 @@ Read all 1,008 workout catalog entries. This batch is **not** a claim that every
 | `wost_scarf_cross_body_catch` | Scarf or light cloth napkin; missing prop, but neither item alone is mandatory. |
 
 Excluded from the evidence-supported batch after review: `apt_reset` (floor cue cannot establish wall), `hwc_wrist_pogo_incline` (wall/bench variant not both), `wu_jband_full_warmup` (specific bands versus general band needs reconciliation), `band_resisted_swings` (retired drill with contradictory inherited med-ball/bat tags). No activation or deletion.
+
+
+## Applied batch 2 — explicit gear alternatives (16 distinct exercises)
+
+New catalog `equipment_alternatives` stores complete options: AND inside an option, OR between options, always alongside mandatory requirements. Every intermediate correction also retains before/after in the existing Vault audit. Final requirements below supersede the historical unresolved table.
+
+| Slug | Previous required gear | Final mandatory gear | Complete alternative groups | Evidence |
+|---|---|---|---|---|
+| goblet_squat | barbell, rack | none | dumbbell OR kettlebell | DB/kettlebell tight to chest |
+| ac_recovery_wall_hang | wall, bodyweight | none | pull_up_bar OR wall | Hang from bar or reach up on wall |
+| gap_band_march_heavy | bands, open_space | bands, open_space | partner OR anchor | Loop band around waist with partner or anchor behind; preserve safe marching space |
+| bs_mb_rebounder_rapid_fire | reactive_med_ball, rebounder | reactive_med_ball | rebounder OR wall | Reactive med ball into rebounder or hard wall |
+| lift_couch_stretch_loaded | bench | none | couch OR bench | Rear foot up on couch or bench |
+| lift_suitcase_carry | dumbbell | none | dumbbell OR kettlebell | One heavy DB or KB |
+| lift_waiter_carry | dumbbell | none | dumbbell OR kettlebell | One DB or KB pressed overhead |
+| lift_turkish_getup | kettlebell | none | kettlebell OR dumbbell | KB or DB overhead in one hand |
+| bs_mb_step_behind_side_toss | med_ball, wall | med_ball | wall OR partner | Step-behind into wall or partner |
+| lift_reverse_hyper | reverse_hyper | none | reverse_hyper OR bench | Reverse-hyper machine or bench |
+| wu_forearm_pump | bodyweight | none | bands OR light_dumbbell | Light dumbbell or a band in movement guide |
+| ws_reverse_hyper | reverse_hyper | none | bench OR reverse_hyper | Bench or reverse hyper |
+| bs_mb_chest_pass_rotation | med_ball, wall | med_ball | partner OR wall | Face partner or wall |
+| kot_ankle_pogo | vest | none | weighted_vest OR dumbbell | Small vest or DBs |
+| heavy_russian_twist | none | none | dumbbell OR plates | DB or plate |
+| wost_scarf_cross_body_catch | none | none | scarf OR light_cloth_napkin | Silk scarf or light cloth napkin |
+
+Intermediate labels explicitly retained in the audit: rebounder initially mapped to net, then corrected to rebounder; generic med_ball restored to reactive_med_ball; band march open_space restored after alternate-support correction. No ordinary net is accepted as a rebounder and no marching-space requirement is waived.
+
+Goblet phone check (390×844): Needs owner review present; “You need a dumbbell or kettlebell”; Gear options dumbbell OR kettlebell; no page errors. These are catalog/review checks, not positive real-player Swap proofs. Owner editor retains alternative groups in draft payloads and displays one complete option per line. 62 affected tests passed; preview build OK. Authorized catalog/Swap services deployed; no publishing, schedules, iOS, athlete measurements or TEST records changed.
+
+Remaining catalog scope is still open: unspecified glute bridge/hip-thrust load and support, weighted-pullup load capability, space-specific alternatives, and the drill libraries identified by read-only audit. No fabricated gear-free classification and no retired-drill activation.
