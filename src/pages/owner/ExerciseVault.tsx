@@ -14,7 +14,7 @@ import { BASIC_HOW_TO } from "@/lib/hammer/prescription/basicHowTo.generated";
 import VaultEditor from "./VaultEditor";
 import reviewTsv from "../../../docs/owner/exercise-descriptions-needed.tsv?raw";
 import howToTsv from "../../../docs/owner/basic-how-to-review.tsv?raw";
-import { buildReviewQueue } from "@/lib/vault/reviewQueue";
+import { swapDifficultyJumps, buildReviewQueue } from "@/lib/vault/reviewQueue";
 import { libraryOnlyRows, warmupStageReviewItems } from "@/lib/vault/warmupStageVault";
 import { FIELD_RUNNING_DRILLS } from '@/data/drills/fieldRunningDrills';
 import { ELITE_DRILL_CATALOG } from '@/data/drills/eliteDrillCatalog';
@@ -58,7 +58,7 @@ export default function ExerciseVault() {
     queryKey: ["exercise-vault", "catalog"],
     queryFn: async () => {
       const { data, error } = await supabase.from("wk_movement_catalog")
-        .select("slug,name,category,sport_scope,position_scope,min_age_years,season_eligibility,equipment,equipment_alternatives,is_active,dosage_unit,default_sets,default_reps")
+        .select("slug,name,category,sport_scope,position_scope,min_age_years,season_eligibility,equipment,equipment_alternatives,is_active,dosage_unit,default_sets,default_reps,cns_cost,training_age_legality,substitution_family,movement_category")
         .order("name");
       if (error) throw error;
       const rows = (data ?? []) as unknown as Row[];
@@ -89,7 +89,7 @@ export default function ExerciseVault() {
       return { slugs: new Set<string>(data?.slugs ?? []), equipmentReview: (data?.equipmentReview ?? []) as Array<{ slug: string; note: string }> };
     },
   });
-  const queue = useMemo(() => buildReviewQueue({ flaggedTsv: reviewTsv, howToTsv, catalog: data, cleared: cleared?.slugs ?? new Set(), equipmentReview: cleared?.equipmentReview, warmupStage: warmupStageReviewItems(data), liftTag: LIFT_TAG_REVIEW }), [data, cleared]);
+  const queue = useMemo(() => buildReviewQueue({ flaggedTsv: reviewTsv, howToTsv, catalog: data, cleared: cleared?.slugs ?? new Set(), equipmentReview: cleared?.equipmentReview, warmupStage: warmupStageReviewItems(data), liftTag: LIFT_TAG_REVIEW, difficultyJumps: swapDifficultyJumps(data) }), [data, cleared]);
   const reviewBySlug = useMemo(() => new Map(queue.map((i) => [i.slug, i])), [queue]);
   const NEEDS_REVIEW = reviewBySlug;
   const [approving, setApproving] = useState<string | null>(null);
