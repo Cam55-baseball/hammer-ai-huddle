@@ -24,6 +24,7 @@ type Row = {
   slug: string; name: string; category: string | null; sport_scope: string | null;
   position_scope: string[] | null; min_age_years: number | null; season_eligibility: string[] | null;
   equipment: string[] | null; is_active: boolean | null; dosage_unit: string | null;
+  equipment_alternatives?: string[][];
   default_sets: number | null; default_reps: number | null;
 };
 
@@ -46,10 +47,10 @@ export default function ExerciseVault() {
     queryKey: ["exercise-vault", "catalog"],
     queryFn: async () => {
       const { data, error } = await supabase.from("wk_movement_catalog")
-        .select("slug,name,category,sport_scope,position_scope,min_age_years,season_eligibility,equipment,is_active,dosage_unit,default_sets,default_reps")
+        .select("slug,name,category,sport_scope,position_scope,min_age_years,season_eligibility,equipment,equipment_alternatives,is_active,dosage_unit,default_sets,default_reps")
         .order("name");
       if (error) throw error;
-      const rows = (data ?? []) as Row[];
+      const rows = (data ?? []) as unknown as Row[];
       // Every warm-up builder movement is taggable, even ones the catalog doesn't list.
       const extra = libraryOnlyRows(new Set(rows.map((r) => r.slug))) as Row[];
       return [...rows, ...extra].sort((a, b) => a.name.localeCompare(b.name));
