@@ -88,6 +88,6 @@ Deno.serve(async req => {
     }
     return reply({ saved: updated, reason: chosen.reason, memorySaved });
   } catch {
-    return reply({ error: "Swap couldn't finish. Nothing was saved." }, 500);
+    return reply({ error: "Swap couldn't finish. Reload your plan to check whether the exercise changed before trying again." }, 500);
   }
 });
