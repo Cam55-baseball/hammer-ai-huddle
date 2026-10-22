@@ -108,6 +108,7 @@ Deno.serve(async (req) => {
             : null,
           equipment,
           equipment_requirements: equipment.length ? equipment : ["bodyweight"],
+          equipment_alternatives: Array.isArray(p.equipment_alternatives) ? p.equipment_alternatives : [],
           default_sets: typeof p.default_sets === "number" ? p.default_sets : null,
           default_reps: typeof p.default_reps === "number" ? p.default_reps : null,
           default_duration_seconds: typeof p.default_seconds === "number" ? p.default_seconds : null,

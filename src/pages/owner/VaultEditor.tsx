@@ -25,7 +25,7 @@ const PRIMER_ROLES = ["none", "primer_lift", "explosive_action"];
 
 type Props = {
   slug: string;
-  base: { name: string; category: string | null; sport_scope: string | null; min_age_years: number | null; season_eligibility: string[] | null; equipment: string[] | null; default_sets: number | null; default_reps: number | null; dosage_unit: string | null };
+  base: { name: string; category: string | null; sport_scope: string | null; min_age_years: number | null; season_eligibility: string[] | null; equipment: string[] | null; equipment_alternatives?: string[][]; default_sets: number | null; default_reps: number | null; dosage_unit: string | null };
   baseHowTo: string;
   onClose: () => void;
   /** Brand-new exercise: the slug is editable and make_live enters it into the planner's catalog. */
@@ -56,6 +56,7 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
     default_seconds: null, default_distance_ft: null, default_load_pct: null,
     measure_type: "reps",
     equipment: base.equipment ?? [],
+    equipment_alternatives: base.equipment_alternatives ?? [],
     card_type: base.category ?? "",
     sports: base.sport_scope === "both" || !base.sport_scope ? [...SPORTS] : [base.sport_scope],
     season_phases: base.season_eligibility ?? [...PHASES],
@@ -185,6 +186,7 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
           </select>
         </Field>
         <Field label="Equipment (comma-separated, or none)"><Input value={e.equipment.join(", ")} onChange={(ev) => set("equipment", toList(ev.target.value))} /></Field>
+        <Field label="Gear options (one complete comma-separated option per line)"><Textarea value={e.equipment_alternatives?.map(group => group.join(", ")).join("\n") ?? ""} onChange={ev => set("equipment_alternatives", ev.target.value.split("\n").filter(line => line.trim()).map(toList))} /></Field>
         <Field label="Sports (comma-separated)"><Input value={e.sports.join(", ")} onChange={(ev) => set("sports", toList(ev.target.value))} /></Field>
         <Field label="Season phases (comma-separated)"><Input value={e.season_phases.join(", ")} onChange={(ev) => set("season_phases", toList(ev.target.value))} /></Field>
         <Field label="Rest-rule category">

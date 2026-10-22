@@ -11,6 +11,10 @@ const ok: VaultExercise = {
 
 describe("vault validator", () => {
   it("passes a complete exercise", () => expect(validateExercise(ok)).toEqual([]));
+  it("retains complete either-or gear without requiring both implements", () => {
+    expect(validateExercise({ ...ok, equipment: [], equipment_alternatives: [["dumbbell"], ["kettlebell"]] })).toEqual([]);
+    expect(validateExercise({ ...ok, equipment: [], equipment_alternatives: [[]] }).join()).toContain("nonempty");
+  });
   it("blocks an incomplete exercise", () => {
     const p = validateExercise({ ...ok, name: "", stop_if: "", sports: [], default_reps: null });
     expect(p.length).toBeGreaterThanOrEqual(4);
