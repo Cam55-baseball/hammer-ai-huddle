@@ -34,6 +34,14 @@ export interface VaultExercise {
   warmup_stage?: number | null;
   /** Optional fine-tuning order inside the stage (1 = first). */
   warmup_stage_order?: number | null;
+  /** Existing same-category catalog slug whose Swap family this item joins (owner-confirmed). */
+  swap_like?: string | null;
+  /** Video-analysis issue tags this item addresses. */
+  issue_tags?: string[];
+  /** low | moderate | high | maximal — saved with the item for the plan builder. */
+  intensity_class?: string | null;
+  /** Injury areas this item must not be prescribed around (e.g. elbow, hamstring). */
+  injury_flags?: string[];
 }
 
 /** Canonical wk_movement_catalog categories the plan builder files exercises under. */

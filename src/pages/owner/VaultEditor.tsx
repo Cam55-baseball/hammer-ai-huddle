@@ -3,7 +3,7 @@
  * Draft → double-check validator → phone-size preview → Make live → Undo.
  * Talks to the owner/admin-only exercise-vault function.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -67,6 +67,7 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
     min_age: base.min_age_years ?? (isNew ? OWNER_DEFAULTS.min_age : null),
     rest_rule: "none",
     arm_weight: isNew ? OWNER_DEFAULTS.arm_weight : null,
+    intensity_class: isNew ? OWNER_DEFAULTS.intensity_class : null,
     primer_role: "none",
     video_url: null,
     catalog_category: isNew ? OWNER_DEFAULTS.catalog_category : null,
@@ -79,6 +80,13 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
   const slug = isNew ? e.slug.trim() : baseSlug;
 
   const problems = useMemo(() => validateExercise(e, { isNew }), [e, isNew]);
+  const [sameCategory, setSameCategory] = useState<{ slug: string; name: string }[]>([]);
+  useEffect(() => {
+    const cat = e.catalog_category ?? base.category;
+    if (!cat) { setSameCategory([]); return; }
+    supabase.from("wk_movement_catalog").select("slug,name").eq("category", cat).eq("is_active", true).order("name").limit(300)
+      .then(({ data }) => setSameCategory(((data ?? []) as { slug: string; name: string }[]).filter(r => r.slug !== baseSlug)));
+  }, [e.catalog_category, base.category, baseSlug]);
   const mappedGear = useMemo(() => ownerGear(e.equipment), [e.equipment]);
 
   const { data: history } = useQuery({
@@ -200,6 +208,19 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
             {REST_RULES.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
           </select>
         </Field>
+        <Field label="Swap alternative (same category — owner confirms)">
+          <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={e.swap_like ?? ""} onChange={(ev) => set("swap_like", ev.target.value || null)}>
+            <option value="">None yet</option>
+            {sameCategory.map((r) => <option key={r.slug} value={r.slug}>{r.name}</option>)}
+          </select>
+        </Field>
+        <Field label="Issue tags it fixes (comma-separated)"><Input value={(e.issue_tags ?? []).join(", ")} onChange={(ev) => set("issue_tags", toList(ev.target.value))} /></Field>
+        <Field label="Intensity">
+          <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={e.intensity_class ?? ""} onChange={(ev) => set("intensity_class", ev.target.value || null)}>
+            {["", "low", "moderate", "high", "maximal"].map((r) => <option key={r} value={r}>{r || "Not set"}</option>)}
+          </select>
+        </Field>
+        <Field label="Avoid with injury to (comma-separated)"><Input value={(e.injury_flags ?? []).join(", ")} onChange={(ev) => set("injury_flags", toList(ev.target.value))} /></Field>
         <Field label="Arm-ledger weight (throws)"><Input inputMode="decimal" value={e.arm_weight ?? ""} onChange={(ev) => set("arm_weight", num(ev.target.value))} /></Field>
         <Field label="Power Primer role">
           <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={e.primer_role} onChange={(ev) => set("primer_role", ev.target.value as VaultExercise["primer_role"])}>
