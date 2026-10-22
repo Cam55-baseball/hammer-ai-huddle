@@ -11,7 +11,14 @@
 
 Work starts with Swap; do not mark historical passes as fresh proof.
 
-**Latest continuation — October 22, 00:24 UTC: Ready to publish: NO.** Fixed sport and base-route Swap eligibility; only authorized `plan-swap` redeployed. Eleven affected files / 75 tests pass; preview build OK 00:21:32 UTC. Real 390×844 TEST sheet returned HTTP 200 safe refusal; screenshot reviewed, zero saved Swaps read back. Hosted catalog has no pitching-machine source and no field-free conditioning alternative; real October 22–24 plans still lack barbell. Machine/recovery projected blocks still lack canonical saved source rows and verified equivalent metadata. No fabricated rows or snapshot-authorized shortcuts. OFF with existing exceptions confirmed. Details: `docs/owner/simple-swap-proof.md`.
+**Latest continuation — October 22, 00:40 UTC: Ready to publish: NO.** Found and fixed a plan-builder gap: it never looked at saved gear when choosing exercises (TEST college has barbell/rack/bench/cable, yet got rings, chains and dumbbell lifts). Plans now pick among exercises the player has gear for whenever one is legal; otherwise the earlier choice stands, so no role goes empty. Only the authorized `wk-generate-daily` and `plan-swap` were redeployed; 9 files / 113 tests pass. Real app rebuild as TEST college (Oct 22–24, `ok: true`): Oct 23 lifts changed and now include two "barbell + rack" rows — but they are "DB Bench Press" and "Lat Pulldown". 31 catalog rows share one bulk `{barbell,rack}` tag, several plainly wrong by their own names. A "no barbell" Swap on a dumbbell exercise would be a fake proof, so none was run. Staged, not applied: `docs/owner/catalog-gear-tags.pending.sql` (snapshot + name-stated corrections only) — needs named owner authorization. Swap proofs still 0/4.
+
+| Ordered gate | Current status |
+|---|---|
+| 1. Four Swap proofs, then ALL | 0/4; barbell case needs the catalog gear-tag fix (owner yes); machine/recovery block saves and field-free alternative still missing |
+| 2–7 | Waiting on step 1 (not advanced out of order) |
+
+**October 22, 00:24 UTC: Ready to publish: NO.** Fixed sport and base-route Swap eligibility; only authorized `plan-swap` redeployed. Eleven affected files / 75 tests pass; preview build OK 00:21:32 UTC. Real 390×844 TEST sheet returned HTTP 200 safe refusal; screenshot reviewed, zero saved Swaps read back. Hosted catalog has no pitching-machine source and no field-free conditioning alternative; real October 22–24 plans still lack barbell. Machine/recovery projected blocks still lack canonical saved source rows and verified equivalent metadata. No fabricated rows or snapshot-authorized shortcuts. OFF with existing exceptions confirmed. Details: `docs/owner/simple-swap-proof.md`.
 
 | Ordered gate | Current status |
 |---|---|
