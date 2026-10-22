@@ -63,6 +63,17 @@ describe("parseEquipmentStatement", () => {
 });
 
 describe("honest reporting of unrecognised items", () => {
+  it("retains a declared partner and treadmill without assuming either exists", () => {
+    const parsed = parseEquipmentStatement("I have a partner and a treadmill");
+    expect(parsed.have).toEqual(["partner", "treadmill"]);
+    expect(mergeEquipment([], parsed)).toEqual(["partner", "treadmill"]);
+    expect(parseEquipmentStatement("I have a tee").have).not.toContain("partner");
+  });
+  it("remembers the corrected safety bar and pull-up support requirements", () => {
+    const parsed = parseEquipmentStatement("I have a safety squat bar and a pull-up bar");
+    expect(parsed.have).toContain("safety_bar");
+    expect(parsed.have).toContain("pull_up_bar");
+  });
   it("saves the machine and never drops it", () => {
     const p = parseEquipmentStatement("I have a machine, regular bat, heavy bat, light bat, and tee");
     expect([...p.have].sort()).toEqual(
