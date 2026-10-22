@@ -42,7 +42,7 @@ import { applyDecision, phaseTemplateClassFor, type TcsApplyResult } from "../_s
 import { resolveIntensityClass } from "../_shared/wic/catalog/safetyAudit.ts";
 import { resolveFeatures, isSwitchOnFor } from "../_shared/wic/flags/featureSwitches.ts";
 import { swapV2Allowed } from "../_shared/swapV2Access.ts";
-import { avoidsMissingGear, rememberedMissingGear } from "../_shared/planSwap/simpleSwap.ts";
+import { avoidsMissingGear, ownsAllGear, rememberedMissingGear } from "../_shared/planSwap/simpleSwap.ts";
 import { cancelledDates, dayEffect, type TimelineEntry } from "../_shared/wic/schedule/timeline.ts";
 // Step 18 — offseason arc (§7) and in-season post-game plan (§9). Both gated.
 import {
@@ -2179,13 +2179,20 @@ const handler = async (req: Request): Promise<Response> => {
       domain?: EngineDomain,
       rotateKey?: string,
     ): MovementRow | undefined => {
-      const cands: Array<{ item: MovementRow; score: number }> = [];
+      let cands: Array<{ item: MovementRow; score: number }> = [];
       slugs.forEach((slug, i) => {
         const m = lib.find((x) => x.slug === slug);
         if (!eligibleWith(m, domain ? { domain } : undefined)) return;
         cands.push({ item: m as MovementRow, score: scoreCandidate(m, i) });
       });
       if (!cands.length) return undefined;
+      // Prescribe best first with the player's own saved gear: when any legal
+      // candidate needs only gear they said they have, pick among those. If none
+      // does, the earlier choice stands unchanged (never an empty role).
+      if (!equipmentUnknown) {
+        const owned = cands.filter((c) => ownsAllGear(c.item as any, declaredEquipment, UNIVERSAL_GEAR));
+        if (owned.length) cands = owned;
+      }
       // Non-lift slots keep strict rank-1 behaviour — this pass changes lifts only.
       if (!rotateKey) {
         return cands.reduce((a, b) => (b.score > a.score ? b : a), cands[0]).item;

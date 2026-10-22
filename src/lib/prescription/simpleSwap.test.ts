@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { swapChoices, qualifies, swapMemoryAnswer, avoidsMissingGear, rememberedMissingGear } from "../../../supabase/functions/_shared/planSwap/simpleSwap";
+import { swapChoices, qualifies, swapMemoryAnswer, avoidsMissingGear, rememberedMissingGear, ownsAllGear } from "../../../supabase/functions/_shared/planSwap/simpleSwap";
 
 const src = { slug: "machine", name: "Machine", is_active: true, superseded_by: null, movement_category: "hitting",
   substitution_family: "timing", primary_adaptation: "ball_timing", dosage_unit: "reps", sport_scope: "both", equipment_requirements: ["pitching_machine"] };
@@ -74,5 +74,12 @@ describe("simple Swap", () => {
     expect(swapChoices(from, [to], { ...rx, distance_feet: 120 }, [], player)).toHaveLength(1);
     expect(swapChoices(from, [to], { ...rx, distance_feet: 180 }, [], player)).toEqual([]);
     expect(swapChoices(from, [{ ...to, base_route: { sport: "baseball", bases_per_rep: 2, base_distance_feet: 90 } }], { ...rx, distance_feet: 120 }, [], player)).toEqual([]);
+  });
+  it("prefers lifts the player owns gear for: barbell + rack yes, rings no", () => {
+    const owned = ["barbell", "plates", "squat_rack"];
+    expect(ownsAllGear({ equipment_requirements: ["barbell", "rack"] }, owned)).toBe(true);
+    expect(ownsAllGear({ equipment_requirements: ["rings"] }, owned)).toBe(false);
+    expect(ownsAllGear({ equipment_requirements: ["floor"] }, owned, ["floor"])).toBe(true);
+    expect(ownsAllGear({ equipment_requirements: [] }, [])).toBe(true);
   });
 });

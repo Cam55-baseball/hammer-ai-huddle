@@ -13,8 +13,14 @@ export function swapMemoryAnswer(userId: string, requestId: string, planDate: st
 
 const key = (v: string) => v.trim().toLowerCase().replace(/[\s-]+/g, "_");
 const IGNORED = new Set(["none", "bodyweight", ""]);
-const ALIASES: Record<string, string> = { bat: "gamer_bat", cable: "cable_stack", band: "bands", dumbbells: "dumbbell", db: "dumbbell", kb: "kettlebell", medicine_ball: "med_ball" };
+const ALIASES: Record<string, string> = { bat: "gamer_bat", cable: "cable_stack", band: "bands", dumbbells: "dumbbell", db: "dumbbell", kb: "kettlebell", medicine_ball: "med_ball", plate: "plates", rack: "squat_rack", pins: "safety_pins" };
 const gearKey = (value: string) => ALIASES[key(value)] ?? key(value);
+
+/** True when every item a movement needs is in the player's saved gear (or needs no gear). */
+export function ownsAllGear(row: Row, owned: Iterable<string>, universal: Iterable<string> = []): boolean {
+  const have = new Set([...owned, ...universal].map(gearKey));
+  return requiredGear(row).every(g => have.has(gearKey(g)));
+}
 
 export function rememberedMissingGear(answers: Array<{ confirmed_have: string[]; confirmed_lacks: string[] }>): Set<string> {
   const missing = new Set<string>();
