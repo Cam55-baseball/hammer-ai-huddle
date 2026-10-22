@@ -436,8 +436,9 @@ async function loadMovementCatalog(
       }
     } catch { /* fall through to the database */ }
   }
+  // Swap-only no-field sprints (swap_*) are chosen by Swap, never prescribed by the builder.
   const res = await admin.from("wk_movement_catalog").select("*")
-    .or(`sport_scope.eq.both,sport_scope.eq.${sport}`);
+    .or(`sport_scope.eq.both,sport_scope.eq.${sport}`).not("slug", "like", "swap\\_%");
   if (!res.error && Array.isArray(res.data)) {
     catalogCache.set(sport, { at: Date.now(), rows: res.data });
     if (storage) {
