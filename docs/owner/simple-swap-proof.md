@@ -1,8 +1,16 @@
 # Simple Swap — proof (Oct 21)
 
-## Current owner gate — October 22, 00:17 UTC
+## Current owner gate — October 22, 00:24 UTC
 
 **Not proven. Do not set `swap_v2` to ALL.** The owner now requires all four positive real-plan phone proofs before broader enablement; earlier deferred-live wording below is historical.
+
+### Latest continuation — sport and route safety
+- Fixed candidate checks: replacements require canonical selected sport (unknown sport refuses). Source/target base routes use existing `declaredRouteBases` against saved distance and preserve bases per rep. No catalog rows or plan entries invented.
+- Only authorized `plan-swap` redeployed. Eleven affected files / 75 tests pass, including two baseball 90-foot bases and two softball 60-foot bases. Preview build OK at 00:21:32 UTC.
+- Real 390×844 TEST sheet: Resist-Turning Press, missing med ball → HTTP 200, empty choices, visible safe refusal; screenshot reviewed. Not a positive proof. Hosted readback: zero saved Swaps for October 22–24; no memory written by this check.
+- Hosted catalog confirms zero active pitching-machine entries; all conditioning-family alternatives require field. Foam-roller entries are isolated thoracic/lat work, not the combined projected recovery source. Actual TEST plans still contain no barbell source.
+- Independent saved-path investigation: legitimate block swaps require canonical server-generated rows through existing prescription persistence, then existing read/render/Swap. The automatically refreshed client coach snapshot cannot authorize a save; missing equivalence/safety metadata cannot be invented.
+- Swap remains OFF with existing exceptions. Steps 2–7 wait on step 1; no fresh full-suite or feature proof claimed. No new Swap/Organization data; no publish, cron, migration or iOS change.
 
 ### Work and verified evidence this continuation
 - TEST college equipment was saved through the actual 390×844 review screen, including barbell, cable stack, foam roller and field. Existing saved answers were retained.

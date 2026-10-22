@@ -11,6 +11,20 @@
 
 Work starts with Swap; do not mark historical passes as fresh proof.
 
+**Latest continuation — October 22, 00:24 UTC: Ready to publish: NO.** Fixed sport and base-route Swap eligibility; only authorized `plan-swap` redeployed. Eleven affected files / 75 tests pass; preview build OK 00:21:32 UTC. Real 390×844 TEST sheet returned HTTP 200 safe refusal; screenshot reviewed, zero saved Swaps read back. Hosted catalog has no pitching-machine source and no field-free conditioning alternative; real October 22–24 plans still lack barbell. Machine/recovery projected blocks still lack canonical saved source rows and verified equivalent metadata. No fabricated rows or snapshot-authorized shortcuts. OFF with existing exceptions confirmed. Details: `docs/owner/simple-swap-proof.md`.
+
+| Ordered gate | Current status |
+|---|---|
+| 1. Four Swap proofs, then ALL | 0/4 positive saves; canonical machine/recovery sources, verified alternatives and barbell source missing |
+| 2. Regression smoke | Waiting on step 1 |
+| 3. Remaining feature proofs | Waiting on step 1 |
+| 4. Page audit/full suite | Not rerun; 75 affected checks pass; preview clean |
+| 5. Full switch inventory | Not refreshed; Swap OFF readback confirmed |
+| 6. Owner guide | Pending ordered refresh |
+| 7. Final cleanup | Pending unfinished proofs; no new Swap/Organization data this continuation |
+
+No publish, cron, migration or iOS changes this continuation. TEST equipment remains for authorized unfinished proofs.
+
 **October 22, 00:17 UTC — current continuation: Ready to publish: NO.** Step 1 remains incomplete; steps 2–7 were not advanced out of order. Real TEST college equipment review saved and October 22–24 app builds requested again with the supported equipment-change reason; all returned `ok: true`. None supplied the required barbell source. Machine hitting and foam-roll recovery are projected block drills: the present `plan-swap` accepts only saved workout prescriptions, and legacy block adjustments intentionally cannot replace them. The generated drills lack canonical source slugs; machine/flip catalogs lack explicit equivalent swap intent and complete safety metadata, and a mutable coach snapshot cannot authorize their replacement. October 23's real field route has no declared safe field-free alternative. Four positive saved/readback/memory proofs: 0/4. Live readback: `swap_v2 = off` with existing exceptions, not ALL; up-front question removal remains gated.
 
 Only the authorized Swap services `plan-swap` and `wk-generate-daily` were redeployed: scoped Today/Always records, inventory-checked alternatives, unconditional Always-missing filtering and chronological normalized equipment answers. Focused checks: 11 files / 72 tests pass; preview build OK at 00:13:31 UTC. Fresh real 390×844 sheet/options request returned HTTP 200 and a visible safe refusal; no positive save or memory readback was claimed. Details: `docs/owner/simple-swap-proof.md`. TEST equipment remains for the authorized unfinished proofs; no new organization subscription or swap data was created. No publish, cron, iOS or migration change.

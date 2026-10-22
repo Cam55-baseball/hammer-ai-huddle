@@ -54,7 +54,7 @@ Deno.serve(async req => {
       }
     }
     const [{ data: ctx, error: ctxError }, { data: profile, error: profileError }, { data: family, error: familyError }, { data: inventory, error: inventoryError }, { data: memory, error: memoryError }] = await Promise.all([
-      client.from("athlete_context").select("season_phase, injury_history").eq("user_id", uid).maybeSingle(),
+      client.from("athlete_context").select("season_phase, injury_history, sport_primary").eq("user_id", uid).maybeSingle(),
       client.from("profiles").select("date_of_birth").eq("id", uid).maybeSingle(),
       source.substitution_family ? client.from("wk_movement_catalog").select("*")
         .eq("substitution_family", source.substitution_family).eq("movement_category", source.movement_category).eq("is_active", true)
@@ -74,6 +74,7 @@ Deno.serve(async req => {
     const knownMissing = [...new Set([...missing, ...rememberedMissingGear(memory ?? [])])];
     const dob = profile?.date_of_birth ? new Date(profile.date_of_birth) : null;
     const player: SwapPlayer = { phase: rx.phase ?? ctx?.season_phase ?? "",
+      sport: ctx?.sport_primary === "baseball" || ctx?.sport_primary === "softball" ? ctx.sport_primary : null,
       ageYears: dob ? Math.floor((Date.now() - dob.getTime()) / 31_557_600_000) : null,
       injuries: injuryWords(ctx?.injury_history ?? null), availableGear: [...available] };
     const choices = swapChoices(source, family ?? [], rx, knownMissing, player);
