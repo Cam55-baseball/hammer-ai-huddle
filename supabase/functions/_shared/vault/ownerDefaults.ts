@@ -25,7 +25,7 @@ export function ownerIdentity(id: string) {
 export const OWNER_DEFAULTS = {
   default_sets: 2, default_reps: 8, measure_type: "reps",
   card_type: "warmup", catalog_category: "movement_patterning", warmup_stage: 3,
-  min_age: 13, rest_rule: "none", arm_weight: 0, primer_role: "none" as const,
+  intensity_class: "low", min_age: 13, rest_rule: "none", arm_weight: 0, primer_role: "none" as const,
   cue: "Follow the written movement and stay in a comfortable range.",
   stop_if: "Pain, numbness, dizziness or loss of control — stop.",
 };

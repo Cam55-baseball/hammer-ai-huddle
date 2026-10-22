@@ -38,7 +38,7 @@ export interface VaultExercise {
   swap_like?: string | null;
   /** Video-analysis issue tags this item addresses. */
   issue_tags?: string[];
-  /** low | moderate | high | max — saved with the item for the plan builder. */
+  /** low | moderate | high | maximal — saved with the item for the plan builder. */
   intensity_class?: string | null;
   /** Injury areas this item must not be prescribed around (e.g. elbow, hamstring). */
   injury_flags?: string[];

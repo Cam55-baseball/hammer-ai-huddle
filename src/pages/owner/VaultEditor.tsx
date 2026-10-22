@@ -67,6 +67,7 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
     min_age: base.min_age_years ?? (isNew ? OWNER_DEFAULTS.min_age : null),
     rest_rule: "none",
     arm_weight: isNew ? OWNER_DEFAULTS.arm_weight : null,
+    intensity_class: isNew ? OWNER_DEFAULTS.intensity_class : null,
     primer_role: "none",
     video_url: null,
     catalog_category: isNew ? OWNER_DEFAULTS.catalog_category : null,
@@ -216,7 +217,7 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
         <Field label="Issue tags it fixes (comma-separated)"><Input value={(e.issue_tags ?? []).join(", ")} onChange={(ev) => set("issue_tags", toList(ev.target.value))} /></Field>
         <Field label="Intensity">
           <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={e.intensity_class ?? ""} onChange={(ev) => set("intensity_class", ev.target.value || null)}>
-            {["", "low", "moderate", "high", "max"].map((r) => <option key={r} value={r}>{r || "Default (low)"}</option>)}
+            {["", "low", "moderate", "high", "maximal"].map((r) => <option key={r} value={r}>{r || "Not set"}</option>)}
           </select>
         </Field>
         <Field label="Avoid with injury to (comma-separated)"><Input value={(e.injury_flags ?? []).join(", ")} onChange={(ev) => set("injury_flags", toList(ev.target.value))} /></Field>
