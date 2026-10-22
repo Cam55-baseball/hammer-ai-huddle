@@ -21307,6 +21307,7 @@ export type Database = {
           unilateral: boolean | null
           updated_at: string
           variant: string | null
+          visible_to: string[] | null
           volume_cost: number | null
           why_prescribed: string
           wic_metadata_complete: boolean | null
@@ -21416,6 +21417,7 @@ export type Database = {
           unilateral?: boolean | null
           updated_at?: string
           variant?: string | null
+          visible_to?: string[] | null
           volume_cost?: number | null
           why_prescribed: string
           wic_metadata_complete?: boolean | null
@@ -21525,6 +21527,7 @@ export type Database = {
           unilateral?: boolean | null
           updated_at?: string
           variant?: string | null
+          visible_to?: string[] | null
           volume_cost?: number | null
           why_prescribed?: string
           wic_metadata_complete?: boolean | null

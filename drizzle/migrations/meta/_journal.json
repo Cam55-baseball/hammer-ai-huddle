@@ -715,6 +715,13 @@
       "when": 1792643469082,
       "tag": "0101_wk_swap_speed_item_atomic",
       "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1792643574735,
+      "tag": "0102_catalog_visible_to",
+      "breakpoints": true
     }
   ]
 }

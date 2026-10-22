@@ -1,0 +1,2 @@
+ALTER TABLE public.wk_movement_catalog ADD COLUMN IF NOT EXISTS visible_to uuid[] DEFAULT NULL;
+COMMENT ON COLUMN public.wk_movement_catalog.visible_to IS 'NULL = every player. Otherwise only these accounts may be prescribed or swapped to this item (Vault TEST-only live).';
