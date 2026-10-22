@@ -307,7 +307,7 @@ function DrillRow({
           completed={checked}
           taskSync={{ planDate, seed }}
         />
-        <ExerciseInstructions name={d.name} slug={d.slug} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} repair={legacyRepair(d.dosage, modality)} expanded />
+        <ExerciseInstructions name={d.name} slug={d.slug} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} changes={"swapReason" in d && typeof d.swapReason === "string" ? [d.swapReason] : undefined} repair={legacyRepair(d.dosage, modality)} expanded />
         {adjustApi && <Button type="button" variant="outline" size="sm" disabled={checked || (swapV2.enabled && !savedLocation)} onClick={() => setAdjustOpen(true)} aria-label={`Swap or skip ${d.name}`}><Repeat className="mr-1 h-3 w-3" />{swapV2.enabled ? "Swap" : "Can't do it"}</Button>}
         {swapV2.enabled && savedLocation && adjustOpen ? <LiveSwapSheet open={adjustOpen} onOpenChange={setAdjustOpen}
           rx={{ id: savedLocation.row.id, plan_date: planDate, movement_name: d.name }}
