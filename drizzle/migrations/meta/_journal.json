@@ -708,6 +708,13 @@
       "when": 1792635196003,
       "tag": "0100_swap_block_existing_json_day_update",
       "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1792643469082,
+      "tag": "0101_wk_swap_speed_item_atomic",
+      "breakpoints": true
     }
   ]
 }
