@@ -41,4 +41,5 @@
 - Catalog equipment corrections retain before/after values in the existing Vault audit and reopen its review queue until a later owner approval. Why: historical text approvals cannot silently approve newly corrected gear.
 - Built-in drill equipment corrections use the same Vault audit and approval lifecycle, with review links to Drill Builder. Why: static review badges cannot track a later owner approval or reopen after another correction.
 - Catalog alternative gear uses complete groups in equipment_alternatives; all mandatory gear plus one complete group must be available. Why: dumbbell-or-kettlebell must not require both or silently accept neither.
+- Sport drill-library equipment is adapted through `sportDrillGear` to the shared saved-plan gear judge. Why: mandatory and complete alternative groups must have identical availability semantics across libraries and Swap.
 

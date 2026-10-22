@@ -8,6 +8,8 @@ export interface DrillDefinition {
   defaultReps: number;
   intensity: 'low' | 'medium' | 'high';
   equipmentNeeded: string[];
+  /** All mandatory gear plus one complete group; OR between groups, AND within. */
+  equipmentAlternatives?: string[][];
   /** Hitting 1-2-3-4 phases this drill trains. Only applies to module === 'hitting'. */
   phasesTrained?: HittingPhaseId[];
   /** What cause this drill removes (cause→effect coaching). Hitting only. */
