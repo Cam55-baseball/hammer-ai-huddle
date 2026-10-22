@@ -10,6 +10,8 @@ import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { swapGearList } from "../../../supabase/functions/_shared/planSwap/commonGear";
 
 type Choice = { slug: string; name: string; reason: string };
+/** Reads a Swap save can change: today's lifts/drills, saved blocks, plan changes and gear. */
+export const SWAP_REFRESH = /^(wk-rx|saved-block-day|hammer-daily-plan|wk-plan-changes|athlete-equipment)/;
 
 async function callSwap(body: Record<string, unknown>) {
   const { data, error } = await supabase.functions.invoke("plan-swap", { body });
