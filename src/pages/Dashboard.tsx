@@ -496,7 +496,7 @@ export default function Dashboard() {
                     onClick={(e) => {
                       e.stopPropagation();
                       void openWebsiteCheckout("/pricing").catch(() =>
-                        toast({ title: "Couldn't open the website", description: "Please try again.", variant: "destructive" }),
+                        toast.error("Couldn't open the website. Please try again."),
                       );
                     }}
                   >
