@@ -280,8 +280,8 @@ function DrillRow({
       return data;
     } });
   const savedLocation = savedBlock.data?.map(row => {
-    const payload = row.payload as unknown as { blocks: Array<{ modality: string; drills: Array<{ name: string; slug?: string | null }> }> };
-    const block = payload.blocks.find(b => b.modality === modality);
+    const payload = row.payload as unknown as { blocks?: Array<{ modality: string; drills: Array<{ name: string; slug?: string | null }> }> };
+    const block = payload.blocks?.find(b => b.modality === modality);
     const index = block?.drills.findIndex(item => item.name === d.name && item.slug === (d.slug ?? null)) ?? -1;
     return { row, index };
   }).find(location => location.index >= 0);
@@ -855,7 +855,7 @@ function HammerDailyPlanBody({
   const plan = swapV2.enabled && savedPayload?.blocks?.some(block => block.drills.some(drill => "swapReason" in drill))
     ? { ...computedPlan, blocks: computedPlan.blocks.map(block => {
       const saved = savedPayload.blocks?.find(item => item.modality === block.modality);
-      return saved ? { ...block, drills: saved.drills } : block;
+      return saved && block.status === "ready" ? { ...block, drills: saved.drills } : block;
     }) } : computedPlan;
 
   const influencedDrillIds = useMemo(
@@ -869,16 +869,15 @@ function HammerDailyPlanBody({
   // Save the final plan snapshot so an authorized coach sees these exact cards.
   // Self-scoped write; failures are diagnostics only and never block the plan.
   const { user: snapshotUser } = useAuth();
-  const snapshotDate = useMemo(() => {
-    const n = new Date();
-    return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
-  }, [plan]);
+  const snapshotDate = bodyPlanDate;
   const snapshotKey = useMemo(() => JSON.stringify(planSnapshotPayload(plan, sportKey, snapshotDate)), [plan, sportKey, snapshotDate]);
   const snapshotSaved = useRef("");
   useEffect(() => {
     if (!snapshotUser?.id || !snapshotKey || snapshotSaved.current === snapshotKey) return;
     snapshotSaved.current = snapshotKey;
-    void savePlanSnapshot(snapshotUser.id, plan, sportKey, snapshotDate);
+    void savePlanSnapshot(snapshotUser.id, plan, sportKey, snapshotDate).then(() => {
+      void queryClient.invalidateQueries({ queryKey: ["saved-block-day", snapshotUser.id, snapshotDate] });
+    });
   }, [snapshotUser?.id, snapshotKey, plan, sportKey, snapshotDate]);
   useEffect(() => {
     if (!influencedServeKey || influencedLoggedServe.current === influencedServeKey) return;

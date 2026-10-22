@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3.25.76";
 import { missingGearAnswer, swapGearList } from "../_shared/planSwap/commonGear.ts";
-import { blockSwapChoices } from "../_shared/planSwap/blockSwap.ts";
+import { blockKnownGear, blockSwapChoices } from "../_shared/planSwap/blockSwap.ts";
 import { injuryWords, requiredGear, swapChoices, swapMemoryAnswer, rememberedMissingGear, type SwapPlayer } from "../_shared/planSwap/simpleSwap.ts";
 
 const base = { prescriptionId: z.string().uuid(), planDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -57,9 +57,10 @@ Deno.serve(async req => {
         for (const g of answer.confirmed_have ?? []) owned.add(g);
         for (const g of answer.confirmed_lacks ?? []) owned.delete(g);
       }
-      const missing = missingGearAnswer(body.missing, body.note, ["partner"]);
+      const knownGear = blockKnownGear(source, location.modality, location.sport);
+      const missing = missingGearAnswer(body.missing, body.note, knownGear);
       const choices = blockSwapChoices(source, location.modality, location.sport, [...owned], [...missing, ...rememberedMissingGear(memory ?? [])]);
-      if (body.action === "options") return reply({ gear: swapGearList(["partner"]), missing, choices });
+      if (body.action === "options") return reply({ gear: swapGearList(knownGear), missing, choices });
       const chosen = choices.find(choice => choice.slug === body.toSlug);
       if (!chosen) return reply({ error: "No safe swap found for this one; skip it today." }, 409);
       const { data: result, error: saveError } = await admin.rpc("wk_swap_block_atomic", {
