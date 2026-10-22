@@ -110,7 +110,7 @@ Deno.serve(async req => {
       client.from("athlete_context").select("season_phase, injury_history, sport_primary").eq("user_id", uid).maybeSingle(),
       client.from("profiles").select("date_of_birth").eq("id", uid).maybeSingle(),
       source.substitution_family ? client.from("wk_movement_catalog").select("*")
-        .eq("substitution_family", source.substitution_family).eq("movement_category", source.movement_category).eq("is_active", true)
+        .eq("substitution_family", source.substitution_family).eq("movement_category", source.movement_category).eq("is_active", true).or(`visible_to.is.null,visible_to.cs.{${uid}}`)
         : Promise.resolve({ data: [] as any[] }),
       client.from("athlete_equipment_context").select("scope,equipment,valid_until,created_at").eq("user_id", uid).order("created_at", { ascending: false }),
       client.from("athlete_equipment_memory").select("scope,plan_date,confirmed_have,confirmed_lacks,created_at").eq("user_id", uid)

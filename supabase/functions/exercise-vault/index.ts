@@ -149,10 +149,16 @@ Deno.serve(async (req) => {
         if (tags.length) Object.assign(row, { troubleshooting_tags: tags });
         const flags = Array.isArray(p.injury_flags) ? (p.injury_flags as string[]).map(String).filter(Boolean) : [];
         if (flags.length) Object.assign(row, { contraindications: [...(row.contraindications ?? []), ...flags] });
+        if (body?.test_only === true) {
+          const { data: sw } = await admin.from("wk_feature_switches").select("allowlist").eq("feature_key", "swap_v2").maybeSingle();
+          const testIds = (sw?.allowlist ?? []) as string[];
+          if (!testIds.length) return json({ error: "No TEST accounts are listed. Nothing went live." }, 400);
+          Object.assign(row, { visible_to: testIds });
+        } else Object.assign(row, { visible_to: null });
         const { error: ce } = await admin.from("wk_movement_catalog").upsert(row, { onConflict: "slug" });
         if (ce) return json({ error: `Catalog entry failed: ${ce.message}` }, 500);
       }
-      await audit("make_live", { version: (cur?.[0]?.version ?? 0) + 1, apply_today: applyToday, is_new: Boolean(draft.is_new) });
+      await audit("make_live", { version: (cur?.[0]?.version ?? 0) + 1, apply_today: applyToday, is_new: Boolean(draft.is_new), test_only: body?.test_only === true });
       return json({ ok: true });
     }
 
