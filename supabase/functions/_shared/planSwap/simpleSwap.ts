@@ -4,6 +4,12 @@ type Row = Record<string, any>;
 export interface SwapPlayer { phase: string; ageYears: number | null; injuries: string[] }
 export interface SwapChoice { slug: string; name: string; reason: string }
 
+/** Today answers stay dated; only Always answers affect later plan builds. */
+export function swapMemoryAnswer(userId: string, requestId: string, planDate: string, scope: "today" | "always", missing: string[]) {
+  return { user_id: userId, request_id: requestId, scope, plan_date: planDate,
+    confirmed_have: [] as string[], confirmed_lacks: [...new Set(missing)] };
+}
+
 const key = (v: string) => v.trim().toLowerCase().replace(/[\s-]+/g, "_");
 const IGNORED = new Set(["none", "bodyweight", ""]);
 

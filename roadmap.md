@@ -1,5 +1,21 @@
 # Current publish gate — Oct 21
 
+**Owner update 23:56 UTC — new ordered gate supersedes all historical deferred-live statuses.**
+- [ ] 1. Four real-plan Swap phone proofs, then swap_v2 ALL and normal-player proof.
+- [ ] 2. Three-role phone regression including autosave and Stripe handoff.
+- [ ] 3. All remaining feature proofs on real TEST plans; one proof document per item.
+- [ ] 4. Three-role page audit, bounded suite and preview; account for uncollected tests.
+- [ ] 5. Fresh full switch inventory matching the updated owner states.
+- [ ] 6. Update owner guide with Swap how-to and how-to-check.
+- [ ] 7. Cancel demoorg plan only at the end, scoped TEST cleanup, exact readiness table.
+
+Work starts with Swap; do not mark historical passes as fresh proof.
+
+**October 22, 00:08 UTC — current continuation: Ready to publish: NO.** Step 1 remains incomplete; steps 2–7 were not advanced out of order. Real TEST college equipment review saved and October 22–24 app builds requested with the supported equipment-change reason. None supplied the required barbell source. Machine hitting and foam-roll recovery are projected block drills: the present `plan-swap` accepts only saved workout prescriptions, and legacy block adjustments intentionally cannot replace them. October 23's real field route has no declared safe field-free alternative. Four positive saved/readback/memory proofs: 0/4. `swap_v2` was not changed to ALL; up-front question removal remains gated.
+
+Only `plan-swap` was redeployed for scoped Today/Always missing-equipment records and honest partial-save errors. Focused checks: 11 files / 67 tests pass; preview build OK. Real 390×844 sheet/options request returned HTTP 200 and a visible safe refusal; no positive save or memory readback was claimed. Details: `docs/owner/simple-swap-proof.md`. TEST equipment remains for the authorized unfinished proofs; no new organization subscription or swap data was created. No publish, cron, iOS or migration change.
+
+
 **Final continuation — Oct 21, Camryn Williams.**
 
 **Ready to publish: NO.** Exact blockers: the real coach detail page still fails both canonical audit-event writes (403 / 42501); the safe server append fix requires named authorization for a hosted change. The paired Swap phone proof lacks an ordinary, non-allowlisted authorized TEST player with a started plan, and the owner has not finished the initial assessment. Active purchase/session and native handoff paths still lack genuine verification state. No failure is hidden and no consent or event-read permission was widened.
