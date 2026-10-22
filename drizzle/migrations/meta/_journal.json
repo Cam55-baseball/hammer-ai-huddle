@@ -701,6 +701,13 @@
       "when": 1792635049944,
       "tag": "0099_swap_existing_day_atomic_save",
       "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1792635196003,
+      "tag": "0100_swap_block_existing_json_day_update",
+      "breakpoints": true
     }
   ]
 }
