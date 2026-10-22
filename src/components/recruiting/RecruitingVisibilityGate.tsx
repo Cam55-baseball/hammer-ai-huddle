@@ -66,9 +66,10 @@ export function RecruitingVisibilityGate({ athleteId, children, fallback = null,
         athleteId,
         viewerId: user?.id ?? null,
         reason,
+        scope: scope ?? null,
       });
     }
-  }, [allowed, athleteId, consent, isLoading, user?.id]);
+  }, [allowed, athleteId, consent, isLoading, user?.id, scope]);
 
   if (isLoading || (scope && scopeQ.isLoading)) return null;
   if (!allowed) return <>{fallback}</>;
