@@ -36,4 +36,15 @@ describe('final athlete plan snapshot', () => {
     const plan = buildHammerDailyPlan(ctx, NORMAL_SIGNAL, null, null, undefined, new Date(2026, 9, 19));
     expect(planSnapshotPayload({ ...plan, blocks: [] }, 'softball', '2026-10-19').blocks).toEqual([]);
   });
+  it('round-trips the saved speed mix without changing the original seven-rep slot', () => {
+    const plan = buildHammerDailyPlan(ctx, NORMAL_SIGNAL, null, null, undefined, new Date(2026, 9, 19));
+    const block = plan.blocks[0];
+    if (!block) throw new Error('Expected a builder block');
+    const mix = [{ slug: 'swap_short_acceleration', name: 'Short-space accelerations', category: 'speed' as const, intent: 'acceleration' as const, reps: 4, distanceYards: 15, restSeconds: 120 },
+      { slug: 'swap_hill_acceleration', name: 'Hill accelerations', category: 'speed' as const, intent: 'acceleration' as const, reps: 3, distanceYards: 15, restSeconds: 120 }];
+    const saved = planSnapshotPayload({ ...plan, blocks: [{ ...block, modality: 'speed', drills: [{ name: 'Acceleration mix', slug: 'swap_acceleration_mix', dosage: '7 x 10 yards @ 100%', speedMix: mix }] }] }, 'softball', '2026-10-19');
+    const roundTrip = JSON.parse(JSON.stringify(saved));
+    expect(roundTrip.blocks[0].drills[0].speedMix).toEqual(mix);
+    expect(roundTrip.blocks[0].drills[0].dosage).toBe('7 x 10 yards @ 100%');
+  });
 });
