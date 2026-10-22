@@ -1,6 +1,7 @@
 # Current publish gate — Oct 22 finish line
 
 **02:56 UTC owner addition:** owner applied nullable block receipt ID; pending migration superseded, never re-run it. Finish current foam-roller proof, remaining Swap proofs and ALL; add Vault automation before final stability/checklist/cleanup.
+- Foam-roller proof: saved through phone UI, reloaded Gentle mobility with unchanged 10-minute dose; canonical swap_log and Today missing-roller memory confirmed. Saved Because display repaired. Vault auto identity/editable creation defaults and common gear mapping started; remaining proofs and server Vault validation/integration still open.
 - [ ] G. Vault auto ID/slug/version/timestamps; editable category/subtype/measure/dose and safety defaults; shared gear mapping with flagged unknowns; confirmed same-category alternatives and analysis tags; validation/review queue; TEST-admin name/how-to/dose creation → player plan → Swap → normal log proof in final checklist only.
 
 **02:09 UTC owner scope:** stop catalog-wide corrections (retain 134); known + common gear and free text; existing atomic item/block day saves; deterministic 1–2 item no-field speed mix; four real unfinished phone proofs → ALL/normal player → two-pass stability → final guide/scoped cleanup. No new proof documents before finalization; no publish/cron/iOS.
