@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { swapChoices, qualifies } from "../../../supabase/functions/_shared/planSwap/simpleSwap";
+import { swapChoices, qualifies, swapMemoryAnswer } from "../../../supabase/functions/_shared/planSwap/simpleSwap";
 
 const src = { slug: "machine", name: "Machine", is_active: true, superseded_by: null, movement_category: "hitting",
   substitution_family: "timing", primary_adaptation: "ball_timing", dosage_unit: "reps", equipment_requirements: ["pitching_machine"] };
@@ -8,6 +8,14 @@ const rx = { sets: 3, reps: 10, total_reps: 30, dosage_unit: "reps" };
 const p = { phase: "os_q1", ageYears: 15, injuries: [] as string[] };
 
 describe("simple Swap", () => {
+  it("records missing machine equipment for today without making it permanent", () => {
+    expect(swapMemoryAnswer("player", "request", "2026-10-22", "today", ["pitching_machine"]))
+      .toEqual({ user_id: "player", request_id: "request", plan_date: "2026-10-22", scope: "today", confirmed_have: [], confirmed_lacks: ["pitching_machine"] });
+  });
+  it("records no-barbell Always answers for later plan builds", () => {
+    expect(swapMemoryAnswer("player", "request", "2026-10-22", "always", ["barbell"]))
+      .toEqual({ user_id: "player", request_id: "request", plan_date: "2026-10-22", scope: "always", confirmed_have: [], confirmed_lacks: ["barbell"] });
+  });
   it("machine → partner flips keeps the same 30 swings", () => {
     expect(swapChoices(src, [src, flips], rx, ["pitching_machine"], p)[0].reason).toBe("Partner flips: same 30 reps, no pitching machine needed");
   });

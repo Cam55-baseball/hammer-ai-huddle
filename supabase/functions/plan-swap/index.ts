@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3.25.76";
 import { chatCompletion } from "../_shared/googleAi.ts";
-import { injuryWords, requiredGear, swapChoices, type SwapPlayer } from "../_shared/planSwap/simpleSwap.ts";
+import { injuryWords, requiredGear, swapChoices, swapMemoryAnswer, type SwapPlayer } from "../_shared/planSwap/simpleSwap.ts";
 
 const base = { prescriptionId: z.string().uuid(), planDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   missing: z.array(z.string().min(1).max(60)).max(12), note: z.string().max(300).optional() };
@@ -76,12 +76,14 @@ Deno.serve(async req => {
     }).eq("id", rx.id).eq("user_id", uid).eq("movement_slug", rx.movement_slug).in("status", ["planned", "pending"])
       .select("id, movement_slug, movement_name, substitution_reason").maybeSingle();
     if (upErr || !updated) return reply({ error: "Your plan changed. Reload and try again. Nothing was saved." }, 409);
-    await admin.from("swap_log").insert({ user_id: uid, plan_date: body.planDate, prescription_id: rx.id,
+    const { error: logErr } = await admin.from("swap_log").insert({ user_id: uid, plan_date: body.planDate, prescription_id: rx.id,
       from_slug: rx.movement_slug, to_slug: target.slug, reason: chosen.reason, missing_items: missing, scope: body.scope });
+    if (logErr) return reply({ error: "Your exercise changed, but its Swap record couldn't save. Reload your plan; don't repeat the swap." }, 500);
     let memorySaved = false;
-    if (body.scope === "always" && missing.length) {
-      const { error: memErr } = await admin.from("athlete_equipment_memory").insert({ user_id: uid,
-        request_id: crypto.randomUUID(), scope: "always", plan_date: body.planDate, confirmed_have: [], confirmed_lacks: missing });
+    if (missing.length) {
+      const { error: memErr } = await admin.from("athlete_equipment_memory").insert(
+        swapMemoryAnswer(uid, crypto.randomUUID(), body.planDate, body.scope, missing));
+      if (memErr) return reply({ error: "Your exercise changed, but we couldn't remember the missing equipment. Reload your plan; don't repeat the swap." }, 500);
       memorySaved = !memErr;
     }
     return reply({ saved: updated, reason: chosen.reason, memorySaved });
