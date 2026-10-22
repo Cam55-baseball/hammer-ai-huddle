@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { speedRowSwap, type SpeedFacts } from "./speedRowSwap";
+import { speedRowSwap, type SpeedFacts } from "@/../supabase/functions/_shared/planSwap/speedRowSwap";
 
 const facts: SpeedFacts = { spaceYards: 15, hill: true, sled: false, band: false, treadmill: false, readiness: "ready", cnsLoad: 2, cnsCap: 10, phase: "os_q2", injuries: [], ageYears: 20 };
 const source = { slug: "sp_sport_stance_start", category: "speed_lab", speed_category: "acceleration" };
 const rx = { sets: 3, reps: null, total_reps: null, distance_feet: 60, intent_tag: null };
 
 describe("speedRowSwap", () => {
-  it("keeps the 3 acceleration reps and applies 1 min per 10 yd rest", () => {
+  it("keeps the 3 acceleration reps and applies the rest rule (15 yd → 2 min)", () => {
     const c = speedRowSwap(source, rx, ["open_field"], facts)!;
     expect(c.slug).toBe("swap_hill_acceleration");
     expect(c.totalReps).toBe(3);
     expect(c.distanceFeet).toBe(45);
-    expect(c.restSeconds).toBe(90);
+    expect(c.restSeconds).toBe(120);
     expect(c.reason).toMatch(/^Because/);
   });
   it("uses short accelerations when the hill is missing", () => {
