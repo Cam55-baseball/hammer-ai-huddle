@@ -32,6 +32,6 @@ export const softballDrills: DrillDefinition[] = [
   { id: 'ground_ball_work', name: 'Ground Ball Work', module: 'fielding', description: 'Fielding ground balls with proper footwork', defaultReps: 20, intensity: 'medium', equipmentNeeded: ['glove', 'softballs'] },
   { id: 'slapper_defense', name: 'Slapper Defense', module: 'fielding', description: 'Infield defense against slap hitters', defaultReps: 15, intensity: 'high', equipmentNeeded: ["glove", "softballs", "bat", "partner"] },
   // Baserunning
-  { id: 'home_to_home', name: 'Home-to-Home', module: 'baserunning', description: 'Full circuit baserunning (60ft bases)', defaultReps: 3, intensity: 'high', equipmentNeeded: ['bases'] },
-  { id: 'home_to_first', name: 'Home-to-1st', module: 'baserunning', description: 'Timed sprint to first base', defaultReps: 5, intensity: 'high', equipmentNeeded: ['bases', 'stopwatch'] },
+  { id: 'home_to_home', name: 'Home-to-Home', module: 'baserunning', description: 'Full circuit baserunning (60ft bases)', defaultReps: 3, intensity: 'high', equipmentNeeded: ["bases", "field"] },
+  { id: 'home_to_first', name: 'Home-to-1st', module: 'baserunning', description: 'Timed sprint to first base', defaultReps: 5, intensity: 'high', equipmentNeeded: ["bases", "stopwatch", "field"] },
 ];

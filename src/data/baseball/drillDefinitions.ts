@@ -48,7 +48,7 @@ export const baseballDrills: DrillDefinition[] = [
   { id: 'fly_ball_reads', name: 'Fly Ball Reads', module: 'fielding', description: 'Reading fly balls off the bat for routes', defaultReps: 15, intensity: 'medium', equipmentNeeded: ["glove", "baseballs", "bat", "partner"] },
   { id: 'double_play_turns', name: 'Double Play Turns', module: 'fielding', description: 'Middle infield double play pivot and feed', defaultReps: 15, intensity: 'high', equipmentNeeded: ["glove", "baseballs", "partner"] },
   // Baserunning
-  { id: 'sixty_yard', name: '60-Yard Dash', module: 'baserunning', description: 'Timed 60-yard dash for speed evaluation', defaultReps: 3, intensity: 'high', equipmentNeeded: ['stopwatch'] },
-  { id: 'lead_off_drill', name: 'Lead-Off Drill', module: 'baserunning', description: 'Primary and secondary lead-off technique', defaultReps: 10, intensity: 'medium', equipmentNeeded: ['bases'] },
-  { id: 'first_to_third', name: 'First-to-Third', module: 'baserunning', description: 'Baserunning from first to third on a single', defaultReps: 5, intensity: 'high', equipmentNeeded: ['bases'] },
+  { id: 'sixty_yard', name: '60-Yard Dash', module: 'baserunning', description: 'Timed 60-yard dash for speed evaluation', defaultReps: 3, intensity: 'high', equipmentNeeded: ["stopwatch", "field"] },
+  { id: 'lead_off_drill', name: 'Lead-Off Drill', module: 'baserunning', description: 'Primary and secondary lead-off technique', defaultReps: 10, intensity: 'medium', equipmentNeeded: ["bases", "field"] },
+  { id: 'first_to_third', name: 'First-to-Third', module: 'baserunning', description: 'Baserunning from first to third on a single', defaultReps: 5, intensity: 'high', equipmentNeeded: ["bases", "field"] },
 ];
