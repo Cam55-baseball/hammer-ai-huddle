@@ -85,7 +85,7 @@ export const EQUIPMENT_VOCABULARY: ReadonlyArray<EquipmentTokenDef> = [
   { token: "beanbag", label: "a beanbag", phrases: ["beanbag", "bean bag"] },
   { token: "coin", label: "a coin", phrases: ["a coin", "my coin"] },
   { token: "metronome", label: "a metronome", phrases: ["metronome"] },
-  { token: "light_bat", label: "a light bat", phrases: ["light bat"] },
+  { token: "light_bat", label: "a light bat", phrases: ["shadow-tap bat"] },
   { token: "towel", label: "a towel", phrases: ["towel"] },
   { token: "boards", label: "bench-press boards", phrases: ["bench-press boards", "bench press boards"] },
 
