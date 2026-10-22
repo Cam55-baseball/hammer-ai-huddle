@@ -15,6 +15,15 @@ const IGNORED = new Set(["none", "bodyweight", ""]);
 const ALIASES: Record<string, string> = { bat: "gamer_bat", cable: "cable_stack", band: "bands", dumbbells: "dumbbell", db: "dumbbell", kb: "kettlebell", medicine_ball: "med_ball" };
 const gearKey = (value: string) => ALIASES[key(value)] ?? key(value);
 
+export function rememberedMissingGear(answers: Array<{ confirmed_have: string[]; confirmed_lacks: string[] }>): Set<string> {
+  const missing = new Set<string>();
+  for (const answer of answers) {
+    for (const item of answer.confirmed_lacks) missing.add(gearKey(item));
+    for (const item of answer.confirmed_have) missing.delete(gearKey(item));
+  }
+  return missing;
+}
+
 /** A remembered unavailable item never becomes legal merely because its family has no fallback. */
 export function avoidsMissingGear(row: Row, missing: Iterable<string>): boolean {
   const lacks = new Set([...missing].map(gearKey));

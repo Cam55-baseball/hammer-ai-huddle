@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { swapChoices, qualifies, swapMemoryAnswer, avoidsMissingGear } from "../../../supabase/functions/_shared/planSwap/simpleSwap";
+import { swapChoices, qualifies, swapMemoryAnswer, avoidsMissingGear, rememberedMissingGear } from "../../../supabase/functions/_shared/planSwap/simpleSwap";
 
 const src = { slug: "machine", name: "Machine", is_active: true, superseded_by: null, movement_category: "hitting",
   substitution_family: "timing", primary_adaptation: "ball_timing", dosage_unit: "reps", equipment_requirements: ["pitching_machine"] };
@@ -31,6 +31,12 @@ describe("simple Swap", () => {
   it("Always no barbell excludes a barbell row even when no family fallback exists", () => {
     expect(avoidsMissingGear({ equipment_requirements: ["barbell"], substitution_family: null }, ["barbell"])).toBe(false);
     expect(avoidsMissingGear({ equipment_requirements: ["bodyweight"] }, ["barbell"])).toBe(true);
+  });
+  it("a later confirmed equipment answer replaces the earlier missing answer", () => {
+    expect([...rememberedMissingGear([
+      { confirmed_lacks: ["cable"], confirmed_have: [] },
+      { confirmed_lacks: [], confirmed_have: ["cable_stack"] },
+    ])]).toEqual([]);
   });
   it("refuses a choice that needs the missing item", () => {
     expect(qualifies(src, { ...flips, equipment_requirements: ["pitching_machine"] }, ["pitching_machine"], p)).toBe(false);

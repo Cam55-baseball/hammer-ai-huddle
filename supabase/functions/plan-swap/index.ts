@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3.25.76";
 import { chatCompletion } from "../_shared/googleAi.ts";
-import { injuryWords, requiredGear, swapChoices, swapMemoryAnswer, type SwapPlayer } from "../_shared/planSwap/simpleSwap.ts";
+import { injuryWords, requiredGear, swapChoices, swapMemoryAnswer, rememberedMissingGear, type SwapPlayer } from "../_shared/planSwap/simpleSwap.ts";
 
 const base = { prescriptionId: z.string().uuid(), planDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   missing: z.array(z.string().min(1).max(60)).max(12), note: z.string().max(300).optional() };
@@ -71,7 +71,7 @@ Deno.serve(async req => {
       for (const g of answer.confirmed_have ?? []) available.add(g);
       for (const g of answer.confirmed_lacks ?? []) available.delete(g);
     }
-    const knownMissing = [...new Set([...missing, ...(memory ?? []).flatMap(answer => answer.confirmed_lacks ?? [])])];
+    const knownMissing = [...new Set([...missing, ...rememberedMissingGear(memory ?? [])])];
     const dob = profile?.date_of_birth ? new Date(profile.date_of_birth) : null;
     const player: SwapPlayer = { phase: rx.phase ?? ctx?.season_phase ?? "",
       ageYears: dob ? Math.floor((Date.now() - dob.getTime()) / 31_557_600_000) : null,
