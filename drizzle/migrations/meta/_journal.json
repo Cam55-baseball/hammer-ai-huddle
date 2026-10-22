@@ -694,6 +694,13 @@
       "when": 1792632232527,
       "tag": "0098_catalog_equipment_alternatives",
       "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1792635049944,
+      "tag": "0099_swap_existing_day_atomic_save",
+      "breakpoints": true
     }
   ]
 }
