@@ -10,8 +10,8 @@ Purchases: Hammers Modality is a multiplatform training service sold only on the
 Where to find the "Subscribe on our website" button:
 1. Sign-in screen (before signing in): scroll below "Landing Page" and tap **Subscribe on our website** — Safari opens hammersmodality.org/pricing.
 2. Signed in as the adult demo player: on the **Training Dashboard**, scroll to the plan tiles (Complete Pitcher, 5Tool Player, Golden 2Way). On any plan that isn't unlocked, tap **Subscribe on our website** — Safari opens our website signed into the same account.
-3. Menu (top left) → **Pricing** (or tap a locked plan tile's title): each plan shows **Subscribe on our website**.
-4. Coach plans: go to **Staff Plans** (hammersmodality.org path /staff-plans in the app; Menu → Staff Plans for coach accounts): each plan shows **Subscribe on our website**.
+3. Pricing: tap the title area of a locked plan tile on the Training Dashboard: each plan shows **Subscribe on our website**.
+4. Coach plans: at the bottom of **Pricing**, tap the coach plans link (or the coach plan tiles at the bottom of the Training Dashboard) to open **Staff Plans**; each plan shows **Subscribe on our website**.
 People who bought on the website sign in and use what they paid for.
 
 Sign-in: everything happens inside the app. Sign in with Apple opens in an in-app sheet and returns to the app.
