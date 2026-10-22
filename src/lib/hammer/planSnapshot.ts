@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { ENGINE_CONTRACT } from "@/data/ENGINE_CONTRACT";
 import type { HammerDailyPlanResult } from "@/lib/hammer/prescription/dailyPlan";
 
@@ -38,7 +39,7 @@ export function planSnapshotPayload(plan: HammerDailyPlanResult, sport: string, 
 export async function savePlanSnapshot(userId: string, plan: HammerDailyPlanResult, sport: string, planDate: string): Promise<void> {
   const { error } = await supabase.rpc("wk_save_block_day", {
     p_date: planDate, p_sport: sport, p_engine: ENGINE_CONTRACT.version,
-    p_payload: planSnapshotPayload(plan, sport, planDate),
+    p_payload: JSON.parse(JSON.stringify(planSnapshotPayload(plan, sport, planDate))) as Json,
   });
   if (error) console.debug("[plan-snapshot] save failed", error.message);
 }
