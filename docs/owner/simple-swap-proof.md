@@ -7,7 +7,7 @@ Six further source-supported corrections: two live workout rows (134 distinct to
 | A. All equipment labels | Partial: original load/support descriptions and multisport complete alternative groups unresolved. |
 | B. Saved block swaps | Unfinished: shared core builder is portable but final UI overlays/hydration and atomic saved/readback path are not connected. Investigation confirms automatic client coach snapshots are not save authority and have no app read path. |
 | C. Personalized no-field speed mix | Unimplemented: canonical athlete inputs, intent/dose/rest-preserving combination and saved readback remain required. |
-| D. Four proofs, ALL, normal player | 0/4 positive saved proofs; ALL and normal-player proof not passed. |
+| D. Four proofs, ALL, normal player | 0/4 positive saved proofs; 02:06 UTC live readback OFF with existing 14 TEST exceptions. Zero new swap_log or equipment-memory rows since 02:00 UTC. |
 | E. Two-pass stability | Not started because D has not passed; no fifteen-minute stability claim. |
 | F. Final checklist / scoped TEST cleanup | Checklist updated but not final; this run created no athlete TEST records. Earlier authorized proof inputs retained until unfinished proofs and cleanup. |
 
