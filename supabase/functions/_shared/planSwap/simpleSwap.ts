@@ -13,7 +13,7 @@ export function swapMemoryAnswer(userId: string, requestId: string, planDate: st
 
 const key = (v: string) => v.trim().toLowerCase().replace(/[\s-]+/g, "_");
 const IGNORED = new Set(["none", "bodyweight", ""]);
-const ALIASES: Record<string, string> = { bat: "gamer_bat", cable: "cable_stack", band: "bands", dumbbells: "dumbbell", db: "dumbbell", kb: "kettlebell", medicine_ball: "med_ball", plate: "plates", rack: "squat_rack", pins: "safety_pins", smith: "smith_machine", light_bat: "underload_bat" };
+const ALIASES: Record<string, string> = { bat: "gamer_bat", cable: "cable_stack", band: "bands", dumbbells: "dumbbell", db: "dumbbell", kb: "kettlebell", medicine_ball: "med_ball", plate: "plates", rack: "squat_rack", pins: "safety_pins", smith: "smith_machine", light_bat: "underload_bat", pullup_bar: "pull_up_bar" };
 const gearKey = (value: string) => ALIASES[key(value)] ?? key(value);
 
 /** Complete alternative groups are OR; items inside a group are AND. Malformed groups fail closed. */
@@ -25,16 +25,18 @@ function equipmentGroups(row: Row): string[][] | null {
   return value.map(group => group.map(gearKey));
 }
 
-function mandatoryGear(row: Row): string[] {
-  return [...new Set([...(row.equipment_requirements ?? []), ...(row.equipment ?? [])]
-    .filter((g: unknown): g is string => typeof g === "string").map(key))].filter(g => !IGNORED.has(g));
+function mandatoryGear(row: Row): string[] | null {
+  const arrays = [row.equipment_requirements ?? [], row.equipment ?? []];
+  if (arrays.some(value => !Array.isArray(value) || value.some(g => typeof g !== "string" || !g.trim()))) return null;
+  return [...new Set(arrays.flat().map(gearKey))].filter(g => !IGNORED.has(g));
 }
 
 /** True when every item a movement needs is in the player's saved gear (or needs no gear). */
 export function ownsAllGear(row: Row, owned: Iterable<string>, universal: Iterable<string> = []): boolean {
   const have = new Set([...owned, ...universal].map(gearKey));
   const groups = equipmentGroups(row);
-  return groups !== null && mandatoryGear(row).every(g => have.has(gearKey(g))) &&
+  const mandatory = mandatoryGear(row);
+  return groups !== null && mandatory !== null && mandatory.every(g => have.has(g)) &&
     (groups.length === 0 || groups.some(group => group.every(g => IGNORED.has(g) || have.has(g))));
 }
 
@@ -51,13 +53,14 @@ export function rememberedMissingGear(answers: Array<{ confirmed_have: string[];
 export function avoidsMissingGear(row: Row, missing: Iterable<string>): boolean {
   const lacks = new Set([...missing].map(gearKey));
   const groups = equipmentGroups(row);
-  return groups !== null && mandatoryGear(row).every(g => !lacks.has(gearKey(g))) &&
+  const mandatory = mandatoryGear(row);
+  return groups !== null && mandatory !== null && mandatory.every(g => !lacks.has(g)) &&
     (groups.length === 0 || groups.some(group => group.every(g => !lacks.has(g))));
 }
 
 /** Gear a card needs, shown as checkboxes. */
 export function requiredGear(row: Row): string[] {
-  return [...new Set([...mandatoryGear(row), ...(equipmentGroups(row)?.flat() ?? [])])].filter(g => !IGNORED.has(g));
+  return [...new Set([...(mandatoryGear(row) ?? []), ...(equipmentGroups(row)?.flat() ?? [])])].filter(g => !IGNORED.has(g));
 }
 
 /** Collect injury words from any saved shape (strings, arrays, objects). */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { swapChoices, qualifies, swapMemoryAnswer, avoidsMissingGear, rememberedMissingGear, ownsAllGear } from "../../../supabase/functions/_shared/planSwap/simpleSwap";
+import { swapChoices, qualifies, swapMemoryAnswer, avoidsMissingGear, rememberedMissingGear, ownsAllGear, requiredGear } from "../../../supabase/functions/_shared/planSwap/simpleSwap";
 
 const src = { slug: "machine", name: "Machine", is_active: true, superseded_by: null, movement_category: "hitting",
   substitution_family: "timing", primary_adaptation: "ball_timing", dosage_unit: "reps", sport_scope: "both", equipment_requirements: ["pitching_machine"] };
@@ -8,6 +8,19 @@ const rx = { sets: 3, reps: 10, total_reps: 30, dosage_unit: "reps" };
 const p = { phase: "os_q1", sport: "baseball" as const, ageYears: 15, injuries: [] as string[], availableGear: ["partner"] };
 
 describe("simple Swap", () => {
+  it("rejects malformed mandatory gear rather than dropping it or throwing", () => {
+    for (const equipment of ["barbell", 42, {}, [null], [""], ["barbell", 2]]) {
+      expect(ownsAllGear({ equipment }, ["barbell"])).toBe(false);
+      expect(avoidsMissingGear({ equipment }, [])).toBe(false);
+    }
+  });
+  it("normalizes pull-up bar ownership, missing answers and checkboxes together", () => {
+    const row = { equipment: ["pullup_bar"], equipment_alternatives: [["weight_belt"], ["dumbbell"]] };
+    expect(ownsAllGear(row, ["pull_up_bar", "dumbbell"])).toBe(true);
+    expect(ownsAllGear(row, ["dumbbell"])).toBe(false);
+    expect(avoidsMissingGear(row, ["pull_up_bar"])).toBe(false);
+    expect(requiredGear(row)).toEqual(["pull_up_bar", "weight_belt", "dumbbell"]);
+  });
   it("goblet squats use a dumbbell OR kettlebell, never a barbell or both implements", () => {
     const goblet = { equipment: [], equipment_requirements: [], equipment_alternatives: [["dumbbell"], ["kettlebell"]] };
     expect(ownsAllGear(goblet, ["dumbbell"])).toBe(true);
