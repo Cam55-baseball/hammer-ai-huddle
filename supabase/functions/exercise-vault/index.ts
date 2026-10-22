@@ -6,11 +6,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { computeExerciseStats } from "../_shared/vault/exerciseStats.ts";
 import { pendingEquipmentReviews } from "../_shared/vault/equipmentReview.ts";
+import { validateExercise, type VaultExercise } from "../_shared/vault/validateExercise.ts";
+import { ownerGear } from "../_shared/vault/ownerDefaults.ts";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const cors = corsHeaders;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -19,7 +19,9 @@ Deno.serve(async (req) => {
   try {
     const auth = req.headers.get("Authorization");
     if (!auth) return json({ error: "Missing Authorization" }, 401);
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const url = Deno.env.get("SUPABASE_URL"), service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!url || !service) return json({ error: "Vault is unavailable." }, 503);
+    const admin = createClient(url, service);
     const { data: u } = await admin.auth.getUser(auth.replace("Bearer ", ""));
     if (!u?.user) return json({ error: "Unauthorized" }, 401);
     const [{ data: isOwner }, { data: isAdmin }] = await Promise.all([
@@ -39,10 +41,16 @@ Deno.serve(async (req) => {
     if (action === "save_draft") {
       const payload = body?.payload;
       if (!payload || typeof payload !== "object") return json({ error: "Missing payload" }, 400);
-      const validation = Array.isArray(body?.validation) ? body.validation : [];
+      if (!Array.isArray(payload.equipment) || payload.equipment.some((item: unknown) => typeof item !== "string") ||
+          !Array.isArray(payload.sports) || !Array.isArray(payload.season_phases) || typeof payload.name !== "string" || typeof payload.how_to_one_rep !== "string") {
+        return json({ error: "Check the exercise fields." }, 400);
+      }
+      const mapped = ownerGear(payload.equipment);
+      const normalized = { ...payload, slug, equipment: mapped.equipment } as VaultExercise;
+      const validation = [...validateExercise(normalized, { isNew: Boolean(body?.is_new) }), ...mapped.unknown.map(item => `Equipment needs owner review: ${item}`)];
       const row = {
         slug,
-        payload,
+        payload: normalized,
         validation,
         is_new: Boolean(body?.is_new),
         status: "draft",
@@ -56,6 +64,7 @@ Deno.serve(async (req) => {
         : await admin.from("exercise_vault_drafts").insert(row);
       if (error) return json({ error: error.message }, 500);
       await audit("save_draft", { is_new: row.is_new, problems: validation.length });
+      if (mapped.unknown.length) await audit("equipment_corrected", { note: `Unknown equipment: ${mapped.unknown.join(", ")}`, after: mapped.equipment });
       return json({ ok: true });
     }
 
@@ -63,8 +72,10 @@ Deno.serve(async (req) => {
       const { data: draft } = await admin.from("exercise_vault_drafts")
         .select("*").eq("slug", slug).eq("status", "draft").maybeSingle();
       if (!draft) return json({ error: "No draft to make live" }, 404);
-      if (Array.isArray(draft.validation) && draft.validation.length > 0) {
-        return json({ error: "Draft still has validation problems", problems: draft.validation }, 400);
+      const livePayload = draft.payload as VaultExercise;
+      const liveProblems = [...validateExercise(livePayload, { isNew: Boolean(draft.is_new) }), ...ownerGear(livePayload.equipment).unknown.map(item => `Equipment needs owner review: ${item}`)];
+      if (liveProblems.length > 0) {
+        return json({ error: "Draft still has validation problems", problems: liveProblems }, 400);
       }
       const { data: cur } = await admin.from("exercise_vault_versions")
         .select("version,payload").eq("slug", slug).is("undone_at", null)

@@ -15,6 +15,9 @@ import { validateExercise, MEASURE_TYPES, CATALOG_CATEGORIES, type VaultExercise
 import { ExerciseVideo } from "@/components/hammer/cards/ExerciseVideo";
 import { WARMUP_STAGES } from "@/lib/hammer/prescription/warmupStages";
 import { defaultWarmupStage, sampleWarmupWith, stageLabel } from "@/lib/vault/warmupStageVault";
+import { COMMON_SWAP_GEAR } from "../../../supabase/functions/_shared/planSwap/commonGear";
+import { ownerGear, ownerIdentity, OWNER_DEFAULTS } from "../../../supabase/functions/_shared/vault/ownerDefaults";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const CARD_TYPES = ["lift", "primer", "conditioning", "recovery", "speed", "warmup", "bat_speed", "throwing", "pitching", "windmill", "defense", "baserunning", "cross_sport", "mobility", "arm_care"];
 const SPORTS = ["baseball", "softball"];
@@ -46,34 +49,37 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, isNew = false }: Props) {
   const qc = useQueryClient();
+  const [identity] = useState(() => ownerIdentity(crypto.randomUUID()));
   const [e, setE] = useState<VaultExercise>({
-    slug: baseSlug,
+    slug: isNew ? identity.slug : baseSlug,
     name: base.name,
     how_to_one_rep: baseHowTo && baseHowTo !== "— not written yet" ? baseHowTo : "",
     setup: "", steps: "", cue: "", why: "", stop_if: "",
     movements: [],
-    default_sets: base.default_sets, default_reps: base.default_reps,
+    default_sets: base.default_sets ?? (isNew ? OWNER_DEFAULTS.default_sets : null), default_reps: base.default_reps ?? (isNew ? OWNER_DEFAULTS.default_reps : null),
     default_seconds: null, default_distance_ft: null, default_load_pct: null,
     measure_type: "reps",
-    equipment: base.equipment ?? [],
+    equipment: base.equipment?.length ? base.equipment : isNew ? ["none"] : [],
     equipment_alternatives: base.equipment_alternatives ?? [],
-    card_type: base.category ?? "",
+    card_type: base.category ?? (isNew ? OWNER_DEFAULTS.card_type : ""),
     sports: base.sport_scope === "both" || !base.sport_scope ? [...SPORTS] : [base.sport_scope],
     season_phases: base.season_eligibility ?? [...PHASES],
-    min_age: base.min_age_years ?? null,
+    min_age: base.min_age_years ?? (isNew ? OWNER_DEFAULTS.min_age : null),
     rest_rule: "none",
-    arm_weight: null,
+    arm_weight: isNew ? OWNER_DEFAULTS.arm_weight : null,
     primer_role: "none",
     video_url: null,
-    catalog_category: null,
-    warmup_stage: base.category === "warmup" && !isNew ? defaultWarmupStage(baseSlug, base.name) : null,
+    catalog_category: isNew ? OWNER_DEFAULTS.catalog_category : null,
+    warmup_stage: isNew ? OWNER_DEFAULTS.warmup_stage : base.category === "warmup" ? defaultWarmupStage(baseSlug, base.name) : null,
     warmup_stage_order: null,
+    ...(isNew ? { cue: OWNER_DEFAULTS.cue, stop_if: OWNER_DEFAULTS.stop_if } : {}),
   });
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const slug = isNew ? e.slug.trim() : baseSlug;
 
   const problems = useMemo(() => validateExercise(e, { isNew }), [e, isNew]);
+  const mappedGear = useMemo(() => ownerGear(e.equipment), [e.equipment]);
 
   const { data: history } = useQuery({
     queryKey: ["vault-history", slug],
@@ -131,11 +137,7 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {isNew && (
-          <Field label="Code (lowercase letters, numbers and _)">
-            <Input value={e.slug} placeholder="e.g. band_face_pull_slow" onChange={(ev) => set("slug", ev.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} />
-          </Field>
-        )}
+        {isNew && <p className="text-xs text-muted-foreground break-all">Automatic ID: {identity.id} · Code: {e.slug}</p>}
         <Field label="Full name"><Input value={e.name} onChange={(ev) => set("name", ev.target.value)} /></Field>
         {isNew && (
           <Field label="Planner category (where the plan builder files it)">
@@ -185,7 +187,11 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
             {MEASURE_TYPES.map((m) => <option key={m} value={m}>{m.replace(/_/g, " ")}</option>)}
           </select>
         </Field>
-        <Field label="Equipment (comma-separated, or none)"><Input value={e.equipment.join(", ")} onChange={(ev) => set("equipment", toList(ev.target.value))} /></Field>
+        <fieldset className="space-y-2"><legend className="text-xs text-muted-foreground">Equipment</legend>
+          <div className="grid grid-cols-2 gap-2">{COMMON_SWAP_GEAR.map(gear => <label key={gear} className="flex items-center gap-2 text-xs"><Checkbox checked={e.equipment.includes(gear)} onCheckedChange={checked => set("equipment", checked ? [...e.equipment.filter(item => item !== "none"), gear] : e.equipment.filter(item => item !== gear))} />{gear.replace(/_/g, " ")}</label>)}</div>
+          <Field label="Other equipment (comma-separated, or none)"><Input value={e.equipment.join(", ")} onChange={(ev) => set("equipment", toList(ev.target.value))} onBlur={() => set("equipment", mappedGear.equipment)} /></Field>
+          {mappedGear.unknown.length > 0 && <p className="text-xs text-destructive">Needs owner review: {mappedGear.unknown.join(", ")}</p>}
+        </fieldset>
         <Field label="Gear options (one complete comma-separated option per line)"><Textarea value={e.equipment_alternatives?.map(group => group.join(", ")).join("\n") ?? ""} onChange={ev => set("equipment_alternatives", ev.target.value.split("\n").filter(line => line.trim()).map(toList))} /></Field>
         <Field label="Sports (comma-separated)"><Input value={e.sports.join(", ")} onChange={(ev) => set("sports", toList(ev.target.value))} /></Field>
         <Field label="Season phases (comma-separated)"><Input value={e.season_phases.join(", ")} onChange={(ev) => set("season_phases", toList(ev.target.value))} /></Field>
