@@ -27,6 +27,8 @@ interface Persona {
   season: "off_season" | "in_season"; inStart: string; inEnd: string;
   tier: "pitcher" | "5tool" | "golden2way"; events: Ev[]; arm: Arm[]; timeline?: { tag: string; s: number; e: number; summary: string }[];
   heights?: { d: number; in: number }[];
+  /** TEST-only starting gear answers, written once as the player's saved equipment. */
+  equipment?: string[];
 }
 
 const TODAY = () => new Date().toISOString().slice(0, 10);
@@ -69,6 +71,13 @@ function personas(): Record<string, Persona> {
       email: "hammersmodality+democollege@gmail.com", name: "Demo — College Outfielder", dob: "2005-08-01", sport: "baseball",
       position: "RF", level: "d1", season: "off_season", inStart: weeks18, inEnd: add(weeks18, 120), tier: "5tool",
       events: [], arm: [],
+    },
+    // Swap proof player: off-season college outfielder with the gear each Swap proof needs.
+    demoswap: {
+      email: "hammersmodality+demoswap@gmail.com", name: "Demo — Swap Proof Outfielder", dob: "2005-03-01", sport: "baseball",
+      position: "CF", level: "d1", season: "off_season", inStart: weeks18, inEnd: add(weeks18, 120), tier: "5tool",
+      events: [], arm: [],
+      equipment: ["pitching_machine", "partner", "bat", "gamer_bat", "baseballs", "ball", "net", "tee", "barbell", "plates", "squat_rack", "bench", "hill", "bands", "open_space", "field", "foam_roller"],
     },
     demomlb: {
       email: "hammersmodality+demomlb@gmail.com", name: "Demo — MLB Outfielder", dob: "1998-06-01", sport: "baseball",
