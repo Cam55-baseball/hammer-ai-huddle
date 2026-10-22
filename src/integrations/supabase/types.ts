@@ -15986,7 +15986,7 @@ export type Database = {
           id: string
           missing_items: string[]
           plan_date: string
-          prescription_id: string
+          prescription_id: string | null
           reason: string
           scope: string
           to_slug: string
@@ -15998,7 +15998,7 @@ export type Database = {
           id?: string
           missing_items?: string[]
           plan_date: string
-          prescription_id: string
+          prescription_id?: string | null
           reason: string
           scope: string
           to_slug: string
@@ -16010,7 +16010,7 @@ export type Database = {
           id?: string
           missing_items?: string[]
           plan_date?: string
-          prescription_id?: string
+          prescription_id?: string | null
           reason?: string
           scope?: string
           to_slug?: string
