@@ -28,4 +28,9 @@ describe("deterministic no-field mix", () => {
     expect(chooseNoFieldMix({ ...input, hill: false, band: true }).items[1].slug).toBe("swap_band_acceleration");
     expect(chooseNoFieldMix({ ...input, totalReps: 1 }).items.map(item => item.reps)).toEqual([1]);
   });
+  it("respects the saved CNS cap and rejects unknown phases", () => {
+    expect(chooseNoFieldMix({ ...input, cnsCap: 1 }).items).toEqual([]);
+    expect(chooseNoFieldMix({ ...input, phase: "unknown" }).items).toEqual([]);
+    expect(chooseNoFieldMix({ ...input, phase: "in_season" }).items.map(item => item.reps)).toEqual([7]);
+  });
 });

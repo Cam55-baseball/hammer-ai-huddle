@@ -288,26 +288,32 @@ function DrillRow({
   const tasks = useHammerDailyTasks(planDate);
   const taskId = makeBlockTaskId(modality, d.slug ?? d.name);
   const checked = tasks.isDone(taskId, side);
+  const displayDose = d.speedMix?.length ? d.speedMix.map(item => `${item.name}: ${item.reps} reps × ${item.distanceYards} yards; rest ${item.restSeconds} seconds after each rep`).join(". ") : d.dosage;
   const seed = {
     taskId,
     source: "block_drill" as const,
     sourceRef: modality,
     side,
-    payload: { name: d.name, dosage: d.dosage, slug: d.slug ?? null, side },
+    payload: { name: d.name, dosage: displayDose, slug: d.slug ?? null, side },
   };
   return (
     <li data-task-id={taskId} data-task-side={side ?? ""} className={`text-xs rounded-lg border p-3 ${checked ? "opacity-60 border-border/40 bg-muted/20" : "border-border/70 bg-card"}`}>
       <ExerciseDisclosure name={d.name}>
         {d.stage && <p className="text-xs font-medium text-primary">Session step: {({ prep: 'Get ready', drills: 'Skill drills', full_go: 'Game-speed execution', log: 'Record what you did' })[d.stage]}</p>}
-        <div data-prescribed-dose className="text-sm font-semibold whitespace-normal break-words">{d.dosage}</div>
-        <ActivityBasics name={d.name} slug={d.slug} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} repair={legacyRepair(d.dosage, modality)} />
+        <div data-prescribed-dose className="text-sm font-semibold whitespace-normal break-words">{d.speedMix?.length ? `${d.speedMix.reduce((sum, item) => sum + item.reps, 0)} acceleration reps total` : d.dosage}</div>
+        {d.speedMix?.map(item => <div key={item.slug} className="mt-2 border-l-2 border-primary pl-3">
+          <p className="font-medium">{item.name}</p>
+          <p>{item.reps} reps × {item.distanceYards} yards · Rest: {item.restSeconds} seconds after each rep</p>
+          <p className="text-muted-foreground">{item.cue}</p>
+        </div>)}
+        <ActivityBasics name={d.name} slug={d.slug} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={displayDose} repair={d.speedMix?.length ? undefined : legacyRepair(d.dosage, modality)} />
         <LegacyDrillInlineLog
-          modality={modality} name={d.name} dosage={d.dosage}
+          modality={modality} name={d.name} dosage={displayDose}
           storageKey={`hammer-block-log-draft:${planDate}:${taskId}:${side ?? ""}`}
           completed={checked}
           taskSync={{ planDate, seed }}
         />
-        <ExerciseInstructions name={d.name} slug={d.slug} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} changes={"swapReason" in d && typeof d.swapReason === "string" ? [d.swapReason] : undefined} repair={legacyRepair(d.dosage, modality)} expanded />
+        <ExerciseInstructions name={d.name} slug={d.slug} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={displayDose} changes={"swapReason" in d && typeof d.swapReason === "string" ? [d.swapReason] : undefined} repair={d.speedMix?.length ? undefined : legacyRepair(d.dosage, modality)} expanded />
         {adjustApi && <Button type="button" variant="outline" size="sm" disabled={checked || (swapV2.enabled && !savedLocation)} onClick={() => setAdjustOpen(true)} aria-label={`Swap or skip ${d.name}`}><Repeat className="mr-1 h-3 w-3" />{swapV2.enabled ? "Swap" : "Can't do it"}</Button>}
         {swapV2.enabled && savedLocation && adjustOpen ? <LiveSwapSheet open={adjustOpen} onOpenChange={setAdjustOpen}
           rx={{ id: savedLocation.row.id, plan_date: planDate, movement_name: d.name }}

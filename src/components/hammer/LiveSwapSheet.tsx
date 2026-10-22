@@ -38,24 +38,33 @@ export function LiveSwapSheet({ rx, open, onOpenChange, block }: {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  const [spaceYards, setSpaceYards] = useState("");
+  const [available, setAvailable] = useState<string[]>([]);
+  const [gearWarning, setGearWarning] = useState(false);
   const ids = { prescriptionId: rx.id, planDate: rx.plan_date, ...(block ? { block } : {}) };
+  const noField = block?.modality === "speed" && missing.includes("open_field");
+  const speedSetup = noField ? { spaceYards: spaceYards.trim() ? Number(spaceYards) : null,
+    hill: available.includes("hill"), sled: available.includes("sled"), band: available.includes("bands"), treadmill: available.includes("treadmill") } : undefined;
 
   useEffect(() => {
     if (!open) return;
-    setGear(null); setMissing([]); setNote(""); setChoices(null); setErr(null); setDone(null); setScope("today");
+    let active = true;
+    setMissing([]); setNote(""); setChoices(null); setErr(null); setDone(null); setScope("today");
+    setSpaceYards(""); setAvailable([]); setGearWarning(false);
     setGear(swapGearList([]));
-    callSwap({ action: "options", ...ids, missing: [] }).then(d => setGear(swapGearList(d.gear ?? []))).catch(e => setErr(e.message));
-  }, [open, rx.id]);
+    callSwap({ action: "options", ...ids, missing: [] }).then(d => { if (active) setGear(swapGearList(d.gear ?? [])); }).catch(() => { if (active) setGearWarning(true); });
+    return () => { active = false; };
+  }, [open, rx.id, rx.plan_date, block?.modality, block?.index, block?.sport]);
 
   const find = async () => {
     setBusy(true); setErr(null);
-    try { const d = await callSwap({ action: "options", ...ids, missing, note: note || undefined });
+    try { const d = await callSwap({ action: "options", ...ids, missing, note: note || undefined, ...(speedSetup ? { speedSetup } : {}) });
       setMissing(d.missing ?? missing); setChoices(d.choices ?? []); }
     catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   };
   const pick = async (c: Choice) => {
     setBusy(true); setErr(null);
-    try { const d = await callSwap({ action: "swap", ...ids, missing, note: note || undefined, toSlug: c.slug, scope });
+    try { const d = await callSwap({ action: "swap", ...ids, missing, note: note || undefined, toSlug: c.slug, scope, ...(speedSetup ? { speedSetup } : {}) });
       setDone(`${d.reason}${d.memorySaved ? " · We'll remember this is missing." : ""}`);
       qc.invalidateQueries(); }
     catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
@@ -72,9 +81,17 @@ export function LiveSwapSheet({ rx, open, onOpenChange, block }: {
         {gear && <fieldset className="space-y-2">
           <legend className="text-sm font-medium">What's missing today?</legend>
           {gear.map(g => <label key={g} className="flex items-center gap-2 text-sm">
-            <Checkbox checked={missing.includes(g)} onCheckedChange={v => setMissing(m => v ? [...m, g] : m.filter(x => x !== g))} />{label(g)}
+            <Checkbox checked={missing.includes(g)} onCheckedChange={v => { setMissing(m => v ? [...m, g] : m.filter(x => x !== g)); setChoices(null); setErr(null); }} />{label(g)}
           </label>)}
-          <Input aria-label="Anything else missing?" placeholder="Anything else missing?" value={note} maxLength={300} onChange={e => setNote(e.target.value)} />
+          <Input aria-label="Anything else missing?" placeholder="Anything else missing?" value={note} maxLength={300} onChange={e => { setNote(e.target.value); setChoices(null); }} />
+        </fieldset>}
+        {gearWarning && <p className="text-sm text-muted-foreground">The item's gear couldn't load. You can still tell us what's missing.</p>}
+        {noField && <fieldset className="space-y-2">
+          <legend className="text-sm font-medium">What safe running space do you have today?</legend>
+          <Input aria-label="Clear running space in yards" placeholder="Clear running space (yards)" type="number" min={0} max={200} value={spaceYards} onChange={e => { setSpaceYards(e.target.value); setChoices(null); }} />
+          {["hill", "sled", "bands", "treadmill"].map(item => <label key={item} className="flex items-center gap-2 text-sm">
+            <Checkbox checked={available.includes(item)} disabled={missing.includes(item)} onCheckedChange={value => { setAvailable(items => value ? [...items, item] : items.filter(i => i !== item)); setChoices(null); }} />{label(item)} available
+          </label>)}
         </fieldset>}
         {choices === null ? <Button className="w-full" disabled={busy || !gear} onClick={find}>Find a swap</Button> :
           choices.length === 0 ? <p className="text-sm">No safe swap found for this one; skip it today.</p> :
