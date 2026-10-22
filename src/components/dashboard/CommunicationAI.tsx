@@ -127,9 +127,14 @@ export function CommunicationAI({ className }: Props) {
 
   const step = useMemo<CoachHammerStep | null>(() => {
     if (aiStep) return aiStep;
-    if (error) return deriveFallbackStep(!!rows?.length, unackedCount ?? 0);
-    return null;
-  }, [aiStep, error, rows, unackedCount]);
+    // Collapsed card stays visible before the first open (no AI call until then).
+    if (!everOpened && !error && rows?.length && !unackedCount) {
+      return { tier: "optimization", tierLabel: "Open", title: "See your next best step.", analysis: "",
+        instruction: "Open this card and Coach Hammer reads today's signals.", why: "", ctaLabel: "Do Check-In", ctaRoute: "/check-in" } as CoachHammerStep;
+    }
+    if (everOpened && !error && aiLoading) return null;
+    return deriveFallbackStep(!!rows?.length, unackedCount ?? 0);
+  }, [aiStep, aiLoading, error, everOpened, rows, unackedCount]);
 
   if (!user || rowsLoading || (aiLoading && !step)) {
     return (

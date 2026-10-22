@@ -15,10 +15,15 @@ describe("deterministic no-field mix", () => {
   it("never relabels acceleration or tempo as max velocity", () => {
     expect(chooseNoFieldMix({ ...input, goal: "max_velocity" }).items).toEqual([]);
   });
-  it("blocks speed work for stop, unknown readiness or heavy CNS load", () => {
+  it("blocks speed work for stop, unknown readiness or unknown CNS load", () => {
     expect(chooseNoFieldMix({ ...input, readiness: "stop" }).items).toEqual([]);
     expect(chooseNoFieldMix({ ...input, readiness: null }).items).toEqual([]);
-    expect(chooseNoFieldMix({ ...input, cnsLoad: 7 }).items).toEqual([]);
+    expect(chooseNoFieldMix({ ...input, cnsLoad: null }).items).toEqual([]);
+  });
+  it("a full day keeps only the plain short sprint with the same reps", () => {
+    const full = chooseNoFieldMix({ ...input, cnsLoad: 7 });
+    expect(full.items.map(i => [i.slug, i.reps])).toEqual([["swap_short_acceleration", 7]]);
+    expect(full.because).toContain("plain short sprint");
   });
   it("does not assume safe space or dismiss injury flags", () => {
     expect(chooseNoFieldMix({ ...input, spaceYards: null }).items).toEqual([]);
@@ -29,7 +34,7 @@ describe("deterministic no-field mix", () => {
     expect(chooseNoFieldMix({ ...input, totalReps: 1 }).items.map(item => item.reps)).toEqual([1]);
   });
   it("respects the saved CNS cap and rejects unknown phases", () => {
-    expect(chooseNoFieldMix({ ...input, cnsCap: 1 }).items).toEqual([]);
+    expect(chooseNoFieldMix({ ...input, cnsCap: 1 }).items.map(i => i.slug)).toEqual(["swap_short_acceleration"]);
     expect(chooseNoFieldMix({ ...input, phase: "unknown" }).items).toEqual([]);
     expect(chooseNoFieldMix({ ...input, phase: "in_season" }).items.map(item => item.reps)).toEqual([7]);
   });

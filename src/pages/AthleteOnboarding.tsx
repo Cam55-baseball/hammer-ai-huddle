@@ -406,6 +406,7 @@ export default function AthleteOnboarding() {
     <AthleteOnboardingShell
       stepIndex={step}
       steps={STEPS}
+      hiddenSteps={swapV2.enabled ? [STEP_EQUIPMENT] : undefined}
       onBack={step > 0 ? goBack : undefined}
       onJumpToStep={(i) => setStep(i)}
       stepStatus={answerStatus.loading ? undefined : stepStatus}

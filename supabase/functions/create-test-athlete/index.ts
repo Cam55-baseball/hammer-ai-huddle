@@ -79,6 +79,13 @@ function personas(): Record<string, Persona> {
       events: [], arm: [],
       equipment: ["pitching_machine", "partner", "bat", "gamer_bat", "baseballs", "ball", "net", "tee", "barbell", "plates", "squat_rack", "bench", "hill", "bands", "open_space", "field", "foam_roller"],
     },
+    // Second Swap proof player: fresh running load for the no-open-field sprint mix (hill + bands).
+    demoswap2: {
+      email: "hammersmodality+demoswap2@gmail.com", name: "Demo — Swap Proof Sprinter", dob: "2005-03-01", sport: "baseball",
+      position: "CF", level: "d1", season: "off_season", inStart: weeks18, inEnd: add(weeks18, 120), tier: "5tool",
+      events: [], arm: [],
+      equipment: ["pitching_machine", "partner", "bat", "gamer_bat", "baseballs", "ball", "net", "tee", "barbell", "plates", "squat_rack", "bench", "hill", "bands", "open_space", "field", "foam_roller", "dumbbells"],
+    },
     demomlb: {
       email: "hammersmodality+demomlb@gmail.com", name: "Demo — MLB Outfielder", dob: "1998-06-01", sport: "baseball",
       position: "LF", level: "mlb", professional: true, season: "in_season", inStart: "2026-03-26", inEnd: add(t, 9), tier: "5tool",

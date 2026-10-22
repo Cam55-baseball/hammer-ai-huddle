@@ -4,6 +4,7 @@ import { z } from "npm:zod@3.25.76";
 import { missingGearAnswer, swapGearList } from "../_shared/planSwap/commonGear.ts";
 import { blockKnownGear, blockSwapChoices } from "../_shared/planSwap/blockSwap.ts";
 import { injuryWords, requiredGear, swapChoices, swapMemoryAnswer, rememberedMissingGear, type SwapPlayer } from "../_shared/planSwap/simpleSwap.ts";
+import { speedRowSwap } from "../_shared/planSwap/speedRowSwap.ts";
 
 const base = { prescriptionId: z.string().uuid(), planDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   speedSetup: z.object({ spaceYards: z.number().finite().min(0).max(200).nullable(), hill: z.boolean(), sled: z.boolean(), band: z.boolean(), treadmill: z.boolean() }).strict().optional(),
@@ -144,7 +145,7 @@ Deno.serve(async req => {
       const speed = speedRowSwap(source, rx, knownMissing, { ...body.speedSetup,
         readiness: day?.injury_mode || ["rest", "injury", "off"].includes(day?.day_status ?? "") ? "stop" : typeof score === "number" && score > 4 && score <= 10 ? "ready" : null,
         cnsLoad: ledger?.units_spent ?? null, cnsCap: ledger?.units_cap ?? null, phase: player.phase, injuries: player.injuries, ageYears: player.ageYears });
-      if (body.action === "options") return reply({ gear, missing, choices: speed ? [{ slug: speed.slug, name: speed.name, reason: speed.reason }] : [] });
+      if (body.action === "options") return reply({ gear, missing, choices: speed ? [{ slug: speed.slug, name: speed.name, reason: speed.reason, note: speed.note }] : [] });
       if (!speed || speed.slug !== body.toSlug) return reply({ error: "No safe swap found for this one; skip it today." }, 409);
       const { data: result, error: saveError } = await admin.rpc("wk_swap_speed_item_atomic", {
         p_user: uid, p_date: body.planDate, p_id: rx.id, p_expected: rx, p_target: speed.slug, p_reason: speed.reason,
@@ -165,7 +166,8 @@ Deno.serve(async req => {
     });
     if (saveError || !result?.saved) return reply({ error: "Your plan changed or the save couldn't finish. Nothing was saved; reload and try again." }, 409);
     return reply({ saved: result.saved, reason: chosen.reason, memorySaved: result.memorySaved });
-  } catch {
+  } catch (e) {
+    console.error("[plan-swap] unexpected", e instanceof Error ? `${e.message} ${e.stack?.split("\n")[1] ?? ""}` : String(e));
     return reply({ error: "Swap couldn't finish. Reload your plan to check whether the exercise changed before trying again." }, 500);
   }
 });

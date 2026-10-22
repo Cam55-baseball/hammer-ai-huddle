@@ -9,6 +9,8 @@ export type StepChipStatus = "answered" | "open" | "neutral";
 interface Props {
   stepIndex: number;
   steps: string[];
+  /** Step indexes kept for numbering but not shown (e.g. a retired step). */
+  hiddenSteps?: number[];
   children: ReactNode;
   /** Optional draft-persist hook called when the user clicks the header Save & exit. */
   onSaveAndExit?: () => void | Promise<void>;
@@ -36,6 +38,7 @@ interface Props {
 export function AthleteOnboardingShell({
   stepIndex,
   steps,
+  hiddenSteps,
   children,
   onSaveAndExit,
   onBack,
@@ -114,6 +117,7 @@ export function AthleteOnboardingShell({
           aria-label="Onboarding steps"
         >
           {steps.map((label, i) => {
+            if (hiddenSteps?.includes(i)) return null;
             const status = stepStatus?.[i];
             const answered = status ? status === "answered" : i < stepIndex;
             const neutral = status === "neutral";

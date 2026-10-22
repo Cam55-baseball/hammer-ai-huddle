@@ -46,6 +46,7 @@ import { formatPrescriptionDose } from "@/lib/hammer/prescription/formatPrescrip
 import { ExerciseDisclosure } from "./cards/ExerciseDisclosure";
 import { InlinePrescriptionLog } from "@/components/hammer/logging/InlinePrescriptionLog";
 import { BASE_REST_TEXT, prescribedBases, sprintRestWhy } from "../../../supabase/functions/_shared/wic/runRest";
+import { SPEED_SWAP_CATALOG } from "../../../supabase/functions/_shared/planSwap/speedSwapCatalog";
 
 const SLOT_TONE: Record<WkRx["slot"], string> = {
   lift: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
@@ -197,7 +198,10 @@ export function WkPrescriptionCard({
     }
   };
 
-  const why = rx.why_payload ?? {};
+  // A swapped row keeps the original's why_payload; never show its setup/cue/why for the new item.
+  const swappedIn = !!rx.substituted_from_slug;
+  const swapCue = swappedIn ? SPEED_SWAP_CATALOG.find((item) => item.slug === rx.movement_slug)?.cue : undefined;
+  const why = swappedIn ? ({ cue: swapCue } as NonNullable<typeof rx.why_payload>) : (rx.why_payload ?? {});
   const trainingMethod = readTrainingMethod(why);
   const progressionPayload = ((why as any)?.progression ?? null) as ProgressionPayloadShape | null;
   const storedPhase = why?.phase ?? rx.phase ?? null;
@@ -210,7 +214,7 @@ export function WkPrescriptionCard({
     ? `Updating your plan to match ${phaseDisplay ?? "your current phase"}…`
     : phaseMismatch
     ? `This movement was generated under an older season setting. Hammer is rebuilding today's plan so it matches ${phaseDisplay ?? "your current phase"}.`
-    : cleanAthleteCopy(rx.why_v2?.why_exercise ?? why?.why ?? null);
+    : swappedIn ? null : cleanAthleteCopy(rx.why_v2?.why_exercise ?? why?.why ?? null);
   const todayLine = phaseMismatch || (generating && rawMismatch)
     ? null
     : cleanAthleteCopy(rx.why_v2?.why_today ?? null);

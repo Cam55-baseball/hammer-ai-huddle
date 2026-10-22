@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { swapGearList } from "../../../supabase/functions/_shared/planSwap/commonGear";
 
-type Choice = { slug: string; name: string; reason: string };
+type Choice = { slug: string; name: string; reason: string; note?: string };
 /** Reads a Swap save can change: today's lifts/drills, saved blocks, plan changes and gear. */
 export const SWAP_REFRESH = /^(wk-rx|saved-block-day|hammer-daily-plan|wk-plan-changes|athlete-equipment)/;
 
@@ -105,7 +105,7 @@ export function LiveSwapSheet({ rx, open, onOpenChange, block }: {
               <Button size="sm" variant={scope === "today" ? "default" : "outline"} onClick={() => setScope("today")}>Just today</Button>
               <Button size="sm" variant={scope === "always" ? "default" : "outline"} onClick={() => setScope("always")}>Always</Button>
             </div>
-            {choices.map(c => <Button key={c.slug} variant="outline" className="h-auto w-full justify-start whitespace-normal text-left" disabled={busy} onClick={() => pick(c)}>{c.reason}</Button>)}
+            {choices.map(c => <Button key={c.slug} variant="outline" className="h-auto w-full justify-start whitespace-normal text-left" disabled={busy} onClick={() => pick(c)}>{c.note ? <span className="space-y-1"><span className="block font-medium">{c.name}</span><span className="block text-xs">Dose: {c.note}</span><span className="block text-xs text-muted-foreground">{c.reason}</span></span> : c.reason}</Button>)}
           </div>}
       </>}
       {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
