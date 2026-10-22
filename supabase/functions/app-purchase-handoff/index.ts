@@ -2,6 +2,7 @@
 // checkout, so the purchase lands on the SAME account. The caller must be
 // signed in; the token is minted for that caller's own email only.
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { purchaseHandoffLanding } from "../_shared/purchaseHandoffLanding.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -21,7 +22,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const rawNext = typeof body?.next === "string" ? body.next : "/checkout";
-    const next = /^\/(checkout|pricing|select-modules)(\?[^\s#]*)?$/.test(rawNext) ? rawNext : "/checkout";
+    const next = purchaseHandoffLanding(rawNext);
 
     const { data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email: u.user.email });
     const th = (data as any)?.properties?.hashed_token;

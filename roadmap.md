@@ -1,5 +1,7 @@
 # Current publish gate — Oct 22 finish line
 
+- Oct 22 23:05 UTC owner Apple scope: set iOS build 6 (marketing 1.0 unchanged); allow Staff Plans handoff landing only and redeploy app-purchase-handoff; verify phone/no-storefront landing, full bounded suite and preview. No publish or cron changes.
+
 **15:50 UTC owner decisions:** 8 TEST events kept (cleanup complete, excluded); US-only website link always shown and opens Safari; suite + build pass — Ready to publish: YES.
 
 **02:56 UTC owner addition:** owner applied nullable block receipt ID; pending migration superseded, never re-run it. Finish current foam-roller proof, remaining Swap proofs and ALL; add Vault automation before final stability/checklist/cleanup.
