@@ -182,8 +182,9 @@ export default function ExerciseVault() {
               )}
               <p className="text-sm text-muted-foreground mt-1">How to do one rep: {BASIC_HOW_TO[r.slug] ?? "— not written yet"}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Default dose: {r.default_sets ?? "–"} × {r.default_reps ?? "–"} {r.dosage_unit ?? ""} · Minimum age: {r.min_age_years ?? "–"} · Equipment: {(r.equipment ?? []).join(", ") || "none"}
+                Default dose: {r.default_sets ?? "–"} × {r.default_reps ?? "–"} {r.dosage_unit ?? ""} · Minimum age: {r.min_age_years ?? "–"} · Equipment: {(r.equipment ?? []).join(", ") || (Array.isArray(r.equipment_alternatives) && r.equipment_alternatives.length ? "choose one below" : "none")}
               </p>
+              {Array.isArray(r.equipment_alternatives) && r.equipment_alternatives.length > 0 && <p className="text-xs text-muted-foreground mt-1">Gear options: {r.equipment_alternatives.map((group: string[]) => group.join(" + ")).join(" OR ")}</p>}
             </Card>
           ))}
           {rows.length > 200 && <p className="text-xs text-muted-foreground">Narrow the search to see the remaining {rows.length - 200}.</p>}
