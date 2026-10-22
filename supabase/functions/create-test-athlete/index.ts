@@ -258,6 +258,10 @@ async function seed(admin: any, id: string, p: Persona, ownerId: string) {
     const { data: ex } = await admin.from("athlete_height_checks").select("id").eq("user_id", id).eq("measured_on", d).maybeSingle();
     if (!ex) await admin.from("athlete_height_checks").insert({ user_id: id, measured_on: d, inches: h.in, source: "demo_seed" });
   }
+  if (p.equipment?.length) {
+    const { data: gear } = await admin.from("athlete_equipment_context").select("id").eq("user_id", id).eq("scope", "persistent").limit(1);
+    if (!gear?.length) await admin.from("athlete_equipment_context").insert({ user_id: id, scope: "persistent", equipment: p.equipment, source: "onboarding_self_report" });
+  }
   // Owner staff access so Staff View and its PDF export work for every demo athlete.
   await admin.from("wk_staff_access").upsert(
     { staff_user_id: ownerId, athlete_user_id: id, granted_by: id, label: "Investor demo", revoked_at: null },
