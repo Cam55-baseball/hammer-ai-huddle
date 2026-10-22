@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
+import { purchaseHandoffLanding } from "../../supabase/functions/_shared/purchaseHandoffLanding";
 
 export const FROM_APP_KEY = "hm_from_app";
 
@@ -23,7 +24,7 @@ export default function AppHandoff() {
     const th = sp.get("th");
     const uid = sp.get("uid");
     const nextRaw = sp.get("next") ?? "/checkout";
-    const next = /^\/(checkout|pricing|select-modules)/.test(nextRaw) ? nextRaw : "/checkout";
+    const next = purchaseHandoffLanding(nextRaw);
     (async () => {
       try {
         if (!th || !uid) throw new Error("missing");

@@ -1,5 +1,7 @@
 # Current publish gate — Oct 22 finish line
 
+- Oct 22 23:05 UTC owner Apple scope COMPLETE: iOS Debug/Release build 6, marketing 1.0 unchanged (repo previously had 1, not 5); app-purchase-handoff redeployed, live same-account token lands on preview /staff-plans at 390×844 with no storefront, no page errors. Full suite: 500 app files / 3,965 tests plus 33 server and 10 outside-folder tests PASS (4,008 total); preview build OK 23:09:02 UTC. Ready to publish: YES. No publish or cron changes; physical Safari/Xcode archive not tested, published website awaits owner's publish.
+
 **15:50 UTC owner decisions:** 8 TEST events kept (cleanup complete, excluded); US-only website link always shown and opens Safari; suite + build pass — Ready to publish: YES.
 
 **02:56 UTC owner addition:** owner applied nullable block receipt ID; pending migration superseded, never re-run it. Finish current foam-roller proof, remaining Swap proofs and ALL; add Vault automation before final stability/checklist/cleanup.
