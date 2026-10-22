@@ -1,4 +1,19 @@
-## Latest continuation — October 22, 01:59 UTC — Ready to publish: NO.
+## Latest continuation — October 22, 02:05 UTC — Ready to publish: NO.
+
+Six further source-supported corrections: two live workout rows (134 distinct total), four elite updates (10 distinct elite IDs total; 26 sport-library IDs unchanged), before/after Vault audit records retained and review reopened. Farmer handles and pitching rubber are recognized declared inventory. Five affected files / **46 tests pass**; preview build OK 02:04:15 UTC. Phone owner-review screenshots inspected, zero page errors; no review approved. These are catalog checks, not athlete Swap proofs.
+
+| Ordered gate | Status / exact remaining requirement |
+|---|---|
+| A. All equipment labels | Partial: original load/support descriptions and multisport complete alternative groups unresolved. |
+| B. Saved block swaps | Unfinished: shared core builder is portable but final UI overlays/hydration and atomic saved/readback path are not connected. Investigation confirms automatic client coach snapshots are not save authority and have no app read path. |
+| C. Personalized no-field speed mix | Unimplemented: canonical athlete inputs, intent/dose/rest-preserving combination and saved readback remain required. |
+| D. Four proofs, ALL, normal player | 0/4 positive saved proofs; ALL and normal-player proof not passed. |
+| E. Two-pass stability | Not started because D has not passed; no fifteen-minute stability claim. |
+| F. Final checklist / scoped TEST cleanup | Checklist updated but not final; this run created no athlete TEST records. Earlier authorized proof inputs retained until unfinished proofs and cleanup. |
+
+Exact reason for NO: catalog completion, authoritative atomic block saves, personalized speed mix and all four positive athlete proofs are unfinished; Swap ALL and stability cannot be certified. No publish, cron, iOS, schema migration or manual function deployment. Evidence `/tmp/browser/swap-oct22-run4`, `/tmp/swap-oct22-run4/final-label-tests.log`. Prior passes retained.
+
+## Previous continuation — October 22, 01:59 UTC — Ready to publish: NO.
 
 Ten further explicit drill requirements corrected in preview, with canonical before/after audit readback reopening owner review: wall/net, partner, timed exchanges, fence/net, delivery timer, and five baseball/softball full-distance running setups. Workout corrections remain 132; elite corrections total eight; sport-library corrections total 26. No owner approval. Actual owner review at 390×844 shows Quick-Exchange Ladder and Home-to-Home corrected and pending review; screenshots inspected, zero page errors. Four focused files / **52 tests pass** (ten added equipment tests); preview build OK 01:57:51 UTC. Private evidence: `/tmp/browser/swap-oct22-run3`; affected tests `/tmp/swap-oct22-run3/labels-tests.log`.
 

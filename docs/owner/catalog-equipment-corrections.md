@@ -276,3 +276,20 @@ Ten further built-in declarations corrected in preview, with before/after record
 | sport.softball.home_to_first | bases, stopwatch | bases, stopwatch, field | Timed first-base sprint. |
 
 Phone-size owner review verified Quick-Exchange Ladder and Home-to-Home; screenshots inspected, zero page errors. Four focused files / **52 tests pass**, including ten added equipment checks. Preview build OK 01:57:51 UTC. Private evidence: `/tmp/browser/swap-oct22-run3`; test log `/tmp/swap-oct22-run3/labels-tests.log`. These are gear/review checks, not any of the four athlete saved Swap proofs. All-catalog coverage is still incomplete; multisport ball setups and original loaded/support instructions remain unresolved.
+
+## Applied batch 6 — October 22, 02:05 UTC
+
+Two workout rows corrected live with full before/after audit records and owner review reopened; **134 distinct workout corrections**. Four further elite declarations updated in preview (two newly corrected IDs, two strengthened prior corrections), bringing distinct elite corrections to **10**; sport-library total remains **26**. No owner approval performed.
+
+| ID | Before | After | Evidence |
+|---|---|---|---|
+| lift_banded_lateral_squat_walk | equipment empty; requirements mini_band | equipment and requirements mini_band | Original cue: band just above knees; half-squat sideways steps. |
+| lift_farmer_carry | equipment empty; requirements dumbbell | mandatory empty; dumbbell OR farmer_handles | Original cue explicitly says heavy DBs OR handles. |
+| elite.pitch.hershiser_separation | fence, net | fence, net, baseballs | Baseball-only drill adds light throws. |
+| elite.pitch.walking_windup_tempo | net, stopwatch | net, stopwatch, baseballs, pitching_rubber | Baseball-only delivery begins three steps behind rubber. |
+| elite.pitch.windmill_k_position | net | net, softballs | Softball-only bottom-half light throw. |
+| elite.pitch.windmill_drive_leg | net | net, pitching_rubber | Source explicitly starts at rubber; marking implement unspecified and not guessed. |
+
+Farmer handles and pitching rubber now parse as declared inventory without assuming dumbbells or a mound. Five affected files / **46 tests pass**; preview build OK 02:04:15 UTC. Phone-sized owner review inspected for Farmer's Carry and Windmill K-Position Hold: pending badges visible, zero page errors. Private evidence `/tmp/browser/swap-oct22-run4`; tests `/tmp/swap-oct22-run4/final-label-tests.log`.
+
+Earlier failed correction statements rolled back without any catalog change; successful corrections above retain audit before/after values. No schema change or manual function deployment. All-catalog coverage still partial: glute bridge/hip-thrust load and support, generic weighted-pullup loading, deficit push-up support and multisport complete-group drill setups lack source-complete declarations. Generated gear preambles are not independent evidence.
