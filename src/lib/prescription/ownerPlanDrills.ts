@@ -8,7 +8,6 @@
  * rotating through eligible drills by day so none monopolises the block and a
  * newly switched-on drill is served within (pool size) days.
  */
-import { supabase } from "@/integrations/supabase/client";
 import type { OwnerDrillRow } from "./ownerDrills";
 
 export type PlanSlot = "hammers_today:skill" | "hammers_today:warmup" | "hammers_today:defense" | "defensive_library";
@@ -28,6 +27,7 @@ export function loadOwnerPlanDrills(): Promise<void> {
   if (!loading) {
     loading = (async () => {
       try {
+        const { supabase } = await import("@/integrations/supabase/client");
         const { data } = await (supabase as any).from("owner_drills").select("*").eq("active", true);
         rows = (data ?? []) as OwnerDrillRow[];
       } catch {
