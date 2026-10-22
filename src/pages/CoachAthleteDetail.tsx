@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { CoachLogForPlayer } from "@/components/coach/CoachLogForPlayer";
 import { CoachCheckinSummary } from "@/components/coach/CoachCheckinSummary";
 import { CoachPlanCard } from "@/components/coach/CoachPlanCard";
