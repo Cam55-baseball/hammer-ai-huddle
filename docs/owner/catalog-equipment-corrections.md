@@ -257,3 +257,22 @@ The following **21 sport-library records** have before/after snapshots in the ex
 | softball / slapper_defense | glove, softballs | glove, softballs, bat, partner | none | Defense against slap hitters. |
 
 Owner Vault merges these declarations into the canonical pending review list and offers the existing Approve as written action; no agent approval. Phone screenshots inspected at `/tmp/browser/swap-oct22-run2/flips-review.png` and `mirror-review.png`, 390×844, zero page errors. Both-sport partner and OR-group availability tests pass. Ground-ball work and underspecified loaded/support setups were not guessed. All-catalog completion remains open.
+
+## Applied batch 5 — October 22, 01:59 UTC
+
+Ten further built-in declarations corrected in preview, with before/after records read back from the existing Vault audit and owner review reopened. No owner approval; no drill removed, dose changed or athlete evidence created. Workout catalog total remains **132**; corrected elite declarations total **8**, sport-library declarations **26**.
+
+| Drill ID | Before | After | Existing setup evidence |
+|---|---|---|---|
+| elite.throw.wall_arm_action | none, net | wall, net | Stand beside wall; later light throw into net. |
+| elite.throw.figure_eight_connection | none | partner | Partner at 30 ft. |
+| elite.throw.quick_exchange_ladder | glove | glove, partner, stopwatch | Partner at 45 ft; timed exchange throws. |
+| elite.pitch.hershiser_separation | none, net | fence, net | Pitcher beside fence; retain net for throw stage. |
+| elite.pitch.walking_windup_tempo | net | net, stopwatch | Time each delivery for consistency. |
+| sport.baseball.sixty_yard | stopwatch | stopwatch, field | Full-distance timed dash. |
+| sport.baseball.lead_off_drill | bases | bases, field | Lead-off on base path. |
+| sport.baseball.first_to_third | bases | bases, field | Full first-to-third route. |
+| sport.softball.home_to_home | bases | bases, field | Full 60-ft-base circuit. |
+| sport.softball.home_to_first | bases, stopwatch | bases, stopwatch, field | Timed first-base sprint. |
+
+Phone-size owner review verified Quick-Exchange Ladder and Home-to-Home; screenshots inspected, zero page errors. Four focused files / **52 tests pass**, including ten added equipment checks. Preview build OK 01:57:51 UTC. Private evidence: `/tmp/browser/swap-oct22-run3`; test log `/tmp/swap-oct22-run3/labels-tests.log`. These are gear/review checks, not any of the four athlete saved Swap proofs. All-catalog coverage is still incomplete; multisport ball setups and original loaded/support instructions remain unresolved.

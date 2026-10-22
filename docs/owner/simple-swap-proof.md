@@ -1,4 +1,21 @@
-## Latest continuation — October 22, 01:52 UTC — Ready to publish: NO.
+## Latest continuation — October 22, 01:59 UTC — Ready to publish: NO.
+
+Ten further explicit drill requirements corrected in preview, with canonical before/after audit readback reopening owner review: wall/net, partner, timed exchanges, fence/net, delivery timer, and five baseball/softball full-distance running setups. Workout corrections remain 132; elite corrections total eight; sport-library corrections total 26. No owner approval. Actual owner review at 390×844 shows Quick-Exchange Ladder and Home-to-Home corrected and pending review; screenshots inspected, zero page errors. Four focused files / **52 tests pass** (ten added equipment tests); preview build OK 01:57:51 UTC. Private evidence: `/tmp/browser/swap-oct22-run3`; affected tests `/tmp/swap-oct22-run3/labels-tests.log`.
+
+Fresh live readback confirms Swap **OFF** with existing exceptions. These catalog/review checks are not athlete saved Swap proofs. No athlete measurements, insights or TEST rows created; no cleanup mutation needed this run. No publish, deployment, schema migration, schedule or iOS change. Existing passes retained.
+
+| Ordered gate | Status / exact remaining requirement |
+|---|---|
+| A. All equipment labels | Partial; unresolved original load/support and multisport alternative declarations must not be guessed. |
+| B. Saved block swaps | Existing builder portable; canonical hydration, atomic plan/log/inventory/memory transaction and mounted readback remain unconnected. Generic six-week training-block tables are not authority for the displayed daily plan. |
+| C. Personalized no-field speed mix | Not implemented. Requires canonical readiness/load/CNS, confirmed space and actual accomplishments. |
+| D. Four proofs then ALL | **0/4**; OFF readback confirmed. No positive saved/memory/readback proof claimed. |
+| E. Two-pass stability | Not started: four-proof and ALL prerequisites incomplete. |
+| F. Final checklist/cleanup | Not final; no new TEST data this run. |
+
+Exact reason for NO: required catalog completion, atomic saved block swaps, personalized speed mixes and four positive athlete proofs are unfinished; ALL/normal-player and stability acceptance cannot pass yet.
+
+## Previous continuation — October 22, 01:52 UTC
 
 **This continuation:** two further workout labels corrected with before/after audit readback (132 distinct workout rows total); 21 sport-library labels corrected in preview and recorded in the existing Vault audit, all reopening owner review. Phone-size owner Vault shows both sports' flips requiring a partner and hip-load feedback accepting mirror OR phone; screenshots inspected, zero page errors. No owner approval performed.
 

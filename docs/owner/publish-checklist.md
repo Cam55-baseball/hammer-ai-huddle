@@ -6,8 +6,8 @@
 
 | Gate | Current status |
 |---|---|
-| Four Swap proofs | 0/4 positive saved phone proofs; catalog gear correction awaits named authorization, machine/recovery saved-block path missing, no verified field-free equivalent |
-| Swap ALL and normal-player check | Pending successful Swap proofs; last verified state OFF with authorized exceptions |
+| Four Swap proofs | 0/4 positive saved phone proofs; catalog corrections authorized and partial (132 workout, eight elite, 26 sport-library); atomic machine/recovery saved-block path and personalized field-free mix unfinished |
+| Swap ALL and normal-player check | Pending successful Swap proofs; fresh October 22 01:59 UTC readback OFF with authorized exceptions |
 | Previously passed checks | Retained with their dated evidence; no unnecessary repeat |
 | Quiet period | Not started; requires Swap work finished and no running tests or database changes |
 | Phone smoke, pass 1 | Pending quiet period; TEST college player, democoach, demoorg |
