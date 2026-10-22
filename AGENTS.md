@@ -29,6 +29,7 @@
 
 - Game IQ uses `useGameIqAccess` and its shared switch; owner/admin see internal labels. It skips training gates, never subscriptions. Why: navigation and access agree.
 - Swap uses the server `swap_v2_enabled` gate for UI, saves, memory and equipment prompts; legacy behavior remains outside it. Why: unproven swaps stay limited to authorized accounts.
+- `wk-generate-daily` `pickBest` narrows legal candidates to those passing `ownsAllGear` (saved gear + universal gear) when any exists, else keeps the prior pick. Why: prescribe with the player's own gear first without ever emptying a role; catalog gear tags must be accurate for this to help.
 - Simple Swap records missing gear through `swapMemoryAnswer` for both dated Today and persistent Always scope, and reports partial save failures honestly. Why: a changed prescription must never imply that unavailable equipment was remembered when its write failed.
 - Simple Swap checks replacement requirements against current canonical inventory and dated/persistent missing answers; chronological answers share normalized gear identities, and the daily generator excludes remembered missing requirements even without a family fallback. Why: a missing item or unknown partner must never be assumed available to satisfy a Swap proof.
 - Simple Swap uses the saved athlete sport and canonical declaredRouteBases for both source and target; a base-route replacement keeps the same bases and recorded distance. Why: category/family/reps equality cannot authorize another sport or change conditioning rest and route work.
