@@ -68,7 +68,10 @@ Deno.serve(async req => {
         p_modality: location.modality, p_index: location.index, p_expected: source,
         p_replacement: chosen.replacement, p_reason: chosen.reason, p_missing: missing, p_scope: body.scope,
       });
-      if (saveError || !result?.saved) return reply({ error: "Your plan changed or the save couldn't finish. Nothing was saved." }, 409);
+      if (saveError || !result?.saved) {
+        console.error("[plan-swap] block transaction failed", saveError?.code, saveError?.message);
+        return reply({ error: "Your plan changed or the save couldn't finish. Nothing was saved." }, 409);
+      }
       return reply({ saved: result.saved, memorySaved: result.memorySaved, reason: chosen.reason });
     }
     const { data: rx } = await client.from("wk_prescriptions").select("*")
