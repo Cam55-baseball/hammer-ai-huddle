@@ -44,7 +44,8 @@ export function LiveSwapSheet({ rx, open, onOpenChange, block }: {
   const [available, setAvailable] = useState<string[]>([]);
   const [gearWarning, setGearWarning] = useState(false);
   const ids = { prescriptionId: rx.id, planDate: rx.plan_date, ...(block ? { block } : {}) };
-  const noField = block?.modality === "speed" && missing.includes("open_field");
+  const isSpeedRow = !block && /^sp_/.test(rx.movement_slug ?? "");
+  const noField = (block?.modality === "speed" || isSpeedRow) && missing.includes("open_field");
   const speedSetup = noField ? { spaceYards: spaceYards.trim() ? Number(spaceYards) : null,
     hill: available.includes("hill"), sled: available.includes("sled"), band: available.includes("bands"), treadmill: available.includes("treadmill") } : undefined;
 
