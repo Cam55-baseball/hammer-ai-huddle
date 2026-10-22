@@ -1,7 +1,7 @@
 import { isMovementSeasonLegal, seasonContextFromPhase } from "../wic/season.ts";
 
 type Row = Record<string, any>;
-export interface SwapPlayer { phase: string; ageYears: number | null; injuries: string[] }
+export interface SwapPlayer { phase: string; ageYears: number | null; injuries: string[]; availableGear: string[] }
 export interface SwapChoice { slug: string; name: string; reason: string }
 
 /** Today answers stay dated; only Always answers affect later plan builds. */
@@ -12,6 +12,23 @@ export function swapMemoryAnswer(userId: string, requestId: string, planDate: st
 
 const key = (v: string) => v.trim().toLowerCase().replace(/[\s-]+/g, "_");
 const IGNORED = new Set(["none", "bodyweight", ""]);
+const ALIASES: Record<string, string> = { bat: "gamer_bat", cable: "cable_stack", band: "bands", dumbbells: "dumbbell", db: "dumbbell", kb: "kettlebell", medicine_ball: "med_ball" };
+const gearKey = (value: string) => ALIASES[key(value)] ?? key(value);
+
+export function rememberedMissingGear(answers: Array<{ confirmed_have: string[]; confirmed_lacks: string[] }>): Set<string> {
+  const missing = new Set<string>();
+  for (const answer of answers) {
+    for (const item of answer.confirmed_lacks) missing.add(gearKey(item));
+    for (const item of answer.confirmed_have) missing.delete(gearKey(item));
+  }
+  return missing;
+}
+
+/** A remembered unavailable item never becomes legal merely because its family has no fallback. */
+export function avoidsMissingGear(row: Row, missing: Iterable<string>): boolean {
+  const lacks = new Set([...missing].map(gearKey));
+  return requiredGear(row).every(g => !lacks.has(gearKey(g)));
+}
 
 /** Gear a card needs, shown as checkboxes. */
 export function requiredGear(row: Row): string[] {
@@ -36,8 +53,9 @@ export function qualifies(source: Row, target: Row, missing: string[], player: S
     if (!target[f] || target[f] !== source[f]) return false;
   }
   if ((target.primary_adaptation ?? null) !== (source.primary_adaptation ?? null)) return false;
-  const missingKeys = new Set(missing.map(key));
-  if (requiredGear(target).some(g => missingKeys.has(g))) return false;
+  if (!avoidsMissingGear(target, missing)) return false;
+  const available = new Set(player.availableGear.map(gearKey));
+  if (requiredGear(target).some(g => !available.has(gearKey(g)))) return false;
   if (typeof target.min_age_years === "number") {
     if (player.ageYears == null || player.ageYears < target.min_age_years) return false;
   }

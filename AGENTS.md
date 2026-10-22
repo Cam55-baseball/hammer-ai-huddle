@@ -30,6 +30,7 @@
 - Game IQ uses `useGameIqAccess` and its shared switch; owner/admin see internal labels. It skips training gates, never subscriptions. Why: navigation and access agree.
 - Swap uses the server `swap_v2_enabled` gate for UI, saves, memory and equipment prompts; legacy behavior remains outside it. Why: unproven swaps stay limited to authorized accounts.
 - Simple Swap records missing gear through `swapMemoryAnswer` for both dated Today and persistent Always scope, and reports partial save failures honestly. Why: a changed prescription must never imply that unavailable equipment was remembered when its write failed.
+- Simple Swap checks replacement requirements against current canonical inventory and dated/persistent missing answers; chronological answers share normalized gear identities, and the daily generator excludes remembered missing requirements even without a family fallback. Why: a missing item or unknown partner must never be assumed available to satisfy a Swap proof.
 - Today clip evidence uses the self-only sport-scoped RPC, never private `videos.ai_analysis`; advice reads server outcome labels, never stored scores. Why: player reads must preserve measurement privacy.
 - Coach summaries: gated reads; see coach AGENTS.md. Why: no wider access.
 - TEST admin exclusion uses one exact shared ID, never all system accounts. Why: demo connections stay usable.

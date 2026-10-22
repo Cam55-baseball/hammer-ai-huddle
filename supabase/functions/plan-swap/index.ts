@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3.25.76";
 import { chatCompletion } from "../_shared/googleAi.ts";
-import { injuryWords, requiredGear, swapChoices, swapMemoryAnswer, type SwapPlayer } from "../_shared/planSwap/simpleSwap.ts";
+import { injuryWords, requiredGear, swapChoices, swapMemoryAnswer, rememberedMissingGear, type SwapPlayer } from "../_shared/planSwap/simpleSwap.ts";
 
 const base = { prescriptionId: z.string().uuid(), planDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   missing: z.array(z.string().min(1).max(60)).max(12), note: z.string().max(300).optional() };
@@ -53,18 +53,30 @@ Deno.serve(async req => {
         } catch { /* ignore unreadable note; checkboxes stand */ }
       }
     }
-    const [{ data: ctx }, { data: profile }, { data: family }] = await Promise.all([
+    const [{ data: ctx, error: ctxError }, { data: profile, error: profileError }, { data: family, error: familyError }, { data: inventory, error: inventoryError }, { data: memory, error: memoryError }] = await Promise.all([
       client.from("athlete_context").select("season_phase, injury_history").eq("user_id", uid).maybeSingle(),
       client.from("profiles").select("date_of_birth").eq("id", uid).maybeSingle(),
       source.substitution_family ? client.from("wk_movement_catalog").select("*")
         .eq("substitution_family", source.substitution_family).eq("movement_category", source.movement_category).eq("is_active", true)
         : Promise.resolve({ data: [] as any[] }),
+      client.from("athlete_equipment_context").select("scope,equipment,valid_until,created_at").eq("user_id", uid).order("created_at", { ascending: false }),
+      client.from("athlete_equipment_memory").select("scope,plan_date,confirmed_have,confirmed_lacks,created_at").eq("user_id", uid)
+        .or(`scope.eq.always,plan_date.eq.${body.planDate}`).order("created_at", { ascending: true }),
     ]);
+    if (ctxError || profileError || familyError || inventoryError || memoryError) return reply({ error: "We couldn't check your saved equipment and safety answers. Nothing was saved." }, 503);
+    const liveInventory = (inventory ?? []).filter(r => !r.valid_until || new Date(r.valid_until).getTime() > Date.now());
+    const equipment = ["session", "temporary", "persistent", "inferred"].map(scope => liveInventory.find(r => r.scope === scope)).find(Boolean);
+    const available = new Set<string>(equipment?.equipment ?? []);
+    for (const answer of memory ?? []) {
+      for (const g of answer.confirmed_have ?? []) available.add(g);
+      for (const g of answer.confirmed_lacks ?? []) available.delete(g);
+    }
+    const knownMissing = [...new Set([...missing, ...rememberedMissingGear(memory ?? [])])];
     const dob = profile?.date_of_birth ? new Date(profile.date_of_birth) : null;
     const player: SwapPlayer = { phase: rx.phase ?? ctx?.season_phase ?? "",
       ageYears: dob ? Math.floor((Date.now() - dob.getTime()) / 31_557_600_000) : null,
-      injuries: injuryWords(ctx?.injury_history ?? null) };
-    const choices = swapChoices(source, family ?? [], rx, missing, player);
+      injuries: injuryWords(ctx?.injury_history ?? null), availableGear: [...available] };
+    const choices = swapChoices(source, family ?? [], rx, knownMissing, player);
     if (body.action === "options") return reply({ gear, missing, choices });
 
     const chosen = choices.find(c => c.slug === body.toSlug);
