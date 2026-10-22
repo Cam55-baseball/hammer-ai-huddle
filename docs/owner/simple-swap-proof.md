@@ -1,4 +1,21 @@
-## Latest continuation — October 22, 01:37 UTC — Ready to publish: NO.
+## Latest continuation — October 22, 01:52 UTC — Ready to publish: NO.
+
+**This continuation:** two further workout labels corrected with before/after audit readback (132 distinct workout rows total); 21 sport-library labels corrected in preview and recorded in the existing Vault audit, all reopening owner review. Phone-size owner Vault shows both sports' flips requiring a partner and hip-load feedback accepting mirror OR phone; screenshots inspected, zero page errors. No owner approval performed.
+
+The same daily block builder is now bundled without browser/auth dependencies; the exact envelope projection is shared with the phone app, not rewritten. Six both-sport/equipment parity cases plus missingness preservation passed. Two bounded affected runs total **8 distinct files / 68 distinct tests passed** (33 and 52, with 17 repeated); preview build OK 01:51:19 UTC. This is preparation for canonical server block saving, **not a mounted block Swap or an athlete proof**. No manual function deployment or schema migration this continuation. Shared-function endpoint verification remains pending.
+
+| Ordered gate | Current status / blocker |
+|---|---|
+| A. All equipment labels | Partial: 132 workout corrections; 3 elite and 21 sport-library corrections queued. Unspecified loaded/support setups and remaining library declarations still unresolved; no guessed gear. |
+| B. Saved block swaps | Shared existing builder and context are server-portable and parity-checked; canonical input hydration, atomic persistence and mounted readback are not connected. The present single-exercise save still separates plan/log/memory writes and must not be extended as block authority. |
+| C. Personalized no-field speed mix | Not implemented; requires canonical readiness/load/CNS, confirmed space and recent accomplishment inputs. |
+| D. Four positive proofs then ALL | **0/4**; Swap remains restricted, not ALL. No positive save/memory/readback claimed. |
+| E. Stability | Not started; requires four proofs and ALL first. |
+| F. Final checklist/cleanup | Pending prerequisite work; no new athlete measurements, insight or TEST records created this continuation. |
+
+Exact readiness reason: complete labels, atomic block saves, personalized speed mixes and all four real-player saves are unfinished; the required ALL/normal-player and stability checks therefore cannot count as passed. Publishing, schedules and iOS untouched. Earlier passes retained.
+
+## Previous continuation — October 22, 01:37 UTC
 
 01:39 UTC follow-up: four workout corrections applied this continuation, bringing total to 130; three built-in drills corrected in preview with before/after Vault audit records. Owner review reads canonical pending records and uses existing approval; no agent approval. Latest phone queue/pull-up readback screenshots inspected, zero page errors; 45 distinct focused tests pass across bounded runs; preview build OK 01:38:32 UTC. Shared gear-safety changes still pending deployment/affected-player verification. Status: A partial; B/C unimplemented; D 0/4 and restricted; E/F waiting. No new TEST records to clean.
 
