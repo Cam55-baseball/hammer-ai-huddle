@@ -18,6 +18,8 @@ import { buildReviewQueue } from "@/lib/vault/reviewQueue";
 import { libraryOnlyRows, warmupStageReviewItems } from "@/lib/vault/warmupStageVault";
 import { FIELD_RUNNING_DRILLS } from '@/data/drills/fieldRunningDrills';
 import { ELITE_DRILL_CATALOG } from '@/data/drills/eliteDrillCatalog';
+import { baseballDrills } from '@/data/baseball/drillDefinitions';
+import { softballDrills } from '@/data/softball/drillDefinitions';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -30,6 +32,14 @@ type Row = {
 };
 
 const uniq = (xs: (string | null | undefined)[]) => [...new Set(xs.filter(Boolean) as string[])].sort();
+
+const reviewDrills = [
+  ...ELITE_DRILL_CATALOG.map(drill => ({ id: drill.id, name: drill.name, equipment: drill.equipment,
+    equipmentAlternatives: [] as string[][], sports: drill.sports, setup: drill.setup, editable: true })),
+  ...([['baseball', baseballDrills], ['softball', softballDrills]] as const).flatMap(([sport, drills]) =>
+    drills.map(drill => ({ id: `sport.${sport}.${drill.id}`, name: drill.name, equipment: drill.equipmentNeeded,
+      equipmentAlternatives: drill.equipmentAlternatives ?? [], sports: [sport], setup: drill.description, editable: false }))),
+];
 
 function Select({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: string[] }) {
   return (
@@ -135,12 +145,13 @@ export default function ExerciseVault() {
         </section>
         <section className="space-y-2 border-b border-border pb-4" aria-label="Drill equipment corrections awaiting review">
           <h2 className="font-semibold">Drill equipment corrections — Needs owner review</h2>
-          {ELITE_DRILL_CATALOG.filter(drill => cleared?.equipmentReview.some(row => row.slug === drill.id) && !FIELD_RUNNING_DRILLS.some(row => row.id === drill.id) && (!q.trim() || `${drill.name} ${drill.id}`.toLowerCase().includes(q.trim().toLowerCase()))).map(drill =>
+          {reviewDrills.filter(drill => cleared?.equipmentReview.some(row => row.slug === drill.id) && !FIELD_RUNNING_DRILLS.some(row => row.id === drill.id) && (!q.trim() || `${drill.name} ${drill.id}`.toLowerCase().includes(q.trim().toLowerCase()))).map(drill =>
             <div key={drill.id} className="space-y-2 border-b border-border py-3">
               <div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-semibold">{drill.name}</h3><Badge variant="secondary">Needs owner review</Badge></div>
               <p className="text-xs text-muted-foreground">Equipment: {drill.equipment.join(', ')} · Sport: {drill.sports.join(', ')}</p>
+              {drill.equipmentAlternatives.length > 0 && <p className="text-xs text-muted-foreground">Gear options: {drill.equipmentAlternatives.map(group => group.join(' + ')).join(' OR ')}</p>}
               <p className="text-sm">{drill.setup}</p>
-              <Button asChild size="sm" variant="outline"><Link to={`/owner/drill-builder?drill=${encodeURIComponent(drill.id)}`}>Review drill equipment</Link></Button>
+              {drill.editable && <Button asChild size="sm" variant="outline"><Link to={`/owner/drill-builder?drill=${encodeURIComponent(drill.id)}`}>Review drill equipment</Link></Button>}
               <Button size="sm" variant="outline" disabled={approving === drill.id} onClick={() => void approve(drill.id)}>{approving === drill.id ? 'Approving…' : 'Approve as written'}</Button>
             </div>)}
         </section>

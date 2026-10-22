@@ -220,3 +220,40 @@ Shared gear validation now rejects malformed mandatory arrays instead of droppin
 | rc_easy_flush | [] / null / [] | none | bike OR open_space | movementGuide 450–455: bike or flat outdoor walk |
 
 Both live corrections retain snapshots and reopen review; **130 distinct workout corrections total**. Three built-in drill before/after records also saved in the same Vault audit; the preview's review list reads those records and lets the owner approve through the existing approval action. Phone-size owner check: Towel Extension queue visible, pull-up bar + belt OR dumbbell visible, zero page errors. Screens inspected: `/tmp/browser/swap-gear-final/drill-review.png`, `pullup-review.png`. No review was approved by the agent. 45 distinct affected tests pass across the bounded runs (43 + two review-queue tests); preview build OK 01:38:32 UTC. This is owner review verification, not an athlete Swap proof. The latest shared-function changes remain pending deployment and affected-player endpoint verification.
+
+## Applied batch 4 — October 22, 01:52 UTC
+
+Two workout corrections retain before/after audit snapshots and reopen owner review; live readback confirmed, **132 distinct workout rows total**.
+
+| Slug | Before mandatory gear | After mandatory gear | Complete alternatives | Source |
+|---|---|---|---|---|
+| kot_tibialis_raise | tib_bar | none | wall OR tib_bar | Existing heel-planted toe-raise guide explicitly permits wall or tib bar. |
+| wu_wickets_low | hurdles | open_space | hurdles OR towel | Warm-up library describes mini hurdles or rolled towels in a straight running lane. |
+
+The following **21 sport-library records** have before/after snapshots in the existing Vault audit under `sport.<sport>.<id>`. Changed declarations are in the preview, not a claimed published frontend. Complete groups mean all mandatory gear plus one whole option, never both options or neither.
+
+| Sport / drill ID | Before gear | After mandatory gear | Complete alternatives | Evidence |
+|---|---|---|---|---|
+| baseball / bp_rounds | bat, baseballs, cage/field | bat, baseballs, partner | cage OR field | Overhand live pitching; preserve declared cage/field choices. |
+| baseball / machine_bp | bat, baseballs, machine | bat, baseballs, pitching_machine | none | Pitching-machine description; normalize machine identity. |
+| baseball / front_toss | bat, baseballs, L-screen | bat, baseballs, screen, partner | none | Underhand front toss; preserve screen and require feeder. |
+| baseball / flip_drill | bat, baseballs | bat, baseballs, partner | none | Side flips require feeder. |
+| baseball / live_abs | bat, helmet, baseballs | bat, helmet, baseballs, partner | none | Live at-bats against a pitcher. |
+| baseball / soft_toss | bat, baseballs | bat, baseballs, partner | none | Front or side toss. |
+| baseball / hip_load_iso | bat, mirror or phone | bat | mirror OR phone | Mirror or video feedback. |
+| baseball / elbow_first_fulcrum | bat, tee, baseballs | bat, baseballs | tee OR partner + screen | Tee or front toss; front-toss setup retains protected feeder. |
+| baseball / catch_the_ball | bat, baseballs | bat, baseballs, partner | none | Soft-toss focus. |
+| baseball / fly_ball_reads | glove, baseballs | glove, baseballs, bat, partner | none | Reads off the bat. |
+| baseball / double_play_turns | glove, baseballs | glove, baseballs, partner | none | Pivot and feed. |
+| softball / power_line | softballs, tape/chalk | softballs | tape OR chalk | Preserve declared line-marking alternatives. |
+| softball / bp_rounds | bat, softballs, cage/field | bat, softballs, partner | cage OR field | Overhand live pitching; preserve declared space alternatives. |
+| softball / machine_bp | bat, softballs, machine | bat, softballs, pitching_machine | none | Pitching-machine description. |
+| softball / front_toss | bat, softballs, L-screen | bat, softballs, screen, partner | none | Underhand front toss and protected feeder. |
+| softball / flip_drill | bat, softballs | bat, softballs, partner | none | Side flips. |
+| softball / live_abs | bat, helmet, softballs | bat, helmet, softballs, partner | none | Against a pitcher. |
+| softball / hip_load_iso | bat, mirror or phone | bat | mirror OR phone | Mirror or video feedback. |
+| softball / elbow_first_fulcrum | bat, tee, softballs | bat, softballs | tee OR partner + screen | Tee or protected front-toss setup. |
+| softball / catch_the_ball | bat, softballs | bat, softballs, partner | none | Soft-toss focus. |
+| softball / slapper_defense | glove, softballs | glove, softballs, bat, partner | none | Defense against slap hitters. |
+
+Owner Vault merges these declarations into the canonical pending review list and offers the existing Approve as written action; no agent approval. Phone screenshots inspected at `/tmp/browser/swap-oct22-run2/flips-review.png` and `mirror-review.png`, 390×844, zero page errors. Both-sport partner and OR-group availability tests pass. Ground-ball work and underspecified loaded/support setups were not guessed. All-catalog completion remains open.
