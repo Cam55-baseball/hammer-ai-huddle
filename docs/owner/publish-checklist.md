@@ -1,4 +1,31 @@
-# Publish checklist — updated 2026-10-21
+# Publish checklist — updated 2026-10-22
+
+## Controlling verdict criteria — owner update October 22, 00:59 UTC
+
+**Ready to publish: NO.** The four positive saved/readback Swap phone proofs are still incomplete and Swap remains restricted. Stability has not been verified; its required observation period starts only after the Swap work. This checklist is not final yet. Historical passes below are retained, not rerun or represented as new evidence.
+
+| Gate | Current status |
+|---|---|
+| Four Swap proofs | 0/4 positive saved phone proofs; catalog gear correction awaits named authorization, machine/recovery saved-block path missing, no verified field-free equivalent |
+| Swap ALL and normal-player check | Pending successful Swap proofs; last verified state OFF with authorized exceptions |
+| Previously passed checks | Retained with their dated evidence; no unnecessary repeat |
+| Quiet period | Not started; requires Swap work finished and no running tests or database changes |
+| Phone smoke, pass 1 | Pending quiet period; TEST college player, democoach, demoorg |
+| Phone smoke, pass 2 | Pending; repeat the same three roles fifteen minutes after pass 1 |
+| Last-hour backend logs | Pending stability observation; no new 5xx errors required |
+| Final guide and scoped cleanup | Pending; no final readiness claim or publication |
+
+### Stability verified — exact acceptance
+
+1. Finish Swap proof work first. Wait until no tests or database changes are running.
+2. Run the existing real-UI phone smoke as TEST college player, democoach and demoorg. Include a real report, a coach-side player profile and a real game; empty lists or invented records do not count. Retain sign-in, Today plan, autosave/readback, legal open/close, Connections, role dashboards, Staff Plans check and Stripe checkout without payment.
+3. Repeat the same three-role smoke fifteen minutes apart; record both timestamps, actual record pages and observed results.
+4. Both passes must have no 503 or schema-cache errors. Check backend logs covering the last hour and require no new 5xx errors. Record the log window and any coverage limitation; missing logs are not a clean result.
+5. When the Swap proofs pass, `swap_v2 = all` is confirmed and this stability check passes, report **Ready to publish: YES** with the status table and make this checklist final. Do not rerun other already-passed items. This does not authorize publishing.
+
+### Owner-managed schedules — reported, not independently verified here
+
+Camryn Williams reports personally applying a two-minute wait to every scheduled job calling a backend function and removing `training-block-daily-check` (retired programs). No schedules were changed by this continuation. These reported changes supersede the old five-second caller-wait inventory; they do not establish that backend execution failures are resolved.
 
 ## Current publish gate — Oct 21
 
