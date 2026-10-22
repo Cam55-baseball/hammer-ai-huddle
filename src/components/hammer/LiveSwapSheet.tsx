@@ -25,8 +25,9 @@ async function callSwap(body: Record<string, unknown>) {
 }
 
 /** Simple Swap: what's missing → 1–3 safe choices → one save. */
-export function LiveSwapSheet({ rx, open, onOpenChange }: {
-  rx: WkRx; open: boolean; onOpenChange: (open: boolean) => void;
+export function LiveSwapSheet({ rx, open, onOpenChange, block }: {
+  rx: Pick<WkRx, "id" | "plan_date" | "movement_name">; open: boolean; onOpenChange: (open: boolean) => void;
+  block?: { modality: string; index: number; sport: "baseball" | "softball" };
 }) {
   const qc = useQueryClient();
   const [gear, setGear] = useState<string[] | null>(null);
@@ -37,7 +38,7 @@ export function LiveSwapSheet({ rx, open, onOpenChange }: {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
-  const ids = { prescriptionId: rx.id, planDate: rx.plan_date };
+  const ids = { prescriptionId: rx.id, planDate: rx.plan_date, ...(block ? { block } : {}) };
 
   useEffect(() => {
     if (!open) return;

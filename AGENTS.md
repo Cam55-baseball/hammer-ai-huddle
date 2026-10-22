@@ -1,4 +1,5 @@
 - Service-role functions returning athlete data to a non-self viewer must pass `_shared/recruitingGate.ts`. Why: service role skips RLS.
+- Item and block Swap saves use plan-swap and the existing wk day lock to commit saved work, log and memory together; block display reads the saved day JSON. Why: reloads must preserve the exact chosen item without partial saves.
 - `create-test-athlete` is owner-only and the only way to run the real generator as the demo test pitcher. Why: no approval-free session mint exists for other users.
 - Every measurement goes through `public.ledger_record` (source triggers + `ledger_record_tiles`); triggers swallow their own errors. Why: new measurements join baselines by declaring themselves; recording must never cost a clip.
 - Read scoped AGENTS.md before edits; assessment uses canonical forms/refreshes. Practice reports share `_shared/practiceReport.ts`, never AI cache or inferred faults. Why: one source, no invented evidence.

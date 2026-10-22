@@ -2,9 +2,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3.25.76";
 import { missingGearAnswer, swapGearList } from "../_shared/planSwap/commonGear.ts";
+import { blockSwapChoices } from "../_shared/planSwap/blockSwap.ts";
 import { injuryWords, requiredGear, swapChoices, swapMemoryAnswer, rememberedMissingGear, type SwapPlayer } from "../_shared/planSwap/simpleSwap.ts";
 
 const base = { prescriptionId: z.string().uuid(), planDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  block: z.object({ modality: z.string().max(40), index: z.number().int().min(0), sport: z.enum(["baseball", "softball"]) }).optional(),
   missing: z.array(z.string().min(1).max(60)).max(40), note: z.string().max(300).optional() };
 const bodySchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("options"), ...base }).strict(),
@@ -34,6 +36,40 @@ Deno.serve(async req => {
     const input = bodySchema.safeParse(await req.json());
     if (!input.success) return reply({ error: "Check your Swap answer. Nothing was saved." }, 400);
     const body = input.data;
+    if (body.block) {
+      const location = body.block;
+      const { data: snapshot, error: snapshotError } = await client.from("athlete_plan_snapshots").select("*")
+        .eq("id", body.prescriptionId).eq("user_id", uid).eq("plan_date", body.planDate).eq("sport", location.sport).maybeSingle();
+      if (snapshotError || !snapshot) return reply({ error: "Reload your plan. Nothing was saved." }, 409);
+      const payload = snapshot.payload as any;
+      const block = payload?.blocks?.find((b: any) => b.modality === location.modality);
+      const source = block?.drills?.[location.index];
+      if (!source || block.status !== "ready") return reply({ error: "This item can't be changed." }, 409);
+      const [{ data: inventory, error: inventoryError }, { data: memory, error: memoryError }, { data: context, error: contextError }] = await Promise.all([
+        client.from("athlete_equipment_context").select("equipment,valid_until,created_at").eq("user_id", uid).order("created_at", { ascending: false }),
+        client.from("athlete_equipment_memory").select("confirmed_have,confirmed_lacks").eq("user_id", uid).or(`scope.eq.always,plan_date.eq.${body.planDate}`).order("created_at", { ascending: true }),
+        client.from("athlete_context").select("injury_history,sport_primary").eq("user_id", uid).maybeSingle(),
+      ]);
+      if (inventoryError || memoryError || contextError) return reply({ error: "We couldn't check your saved answers. Nothing was saved." }, 503);
+      if (context?.sport_primary !== location.sport || injuryWords(context?.injury_history).length) return reply({ gear: swapGearList([]), choices: [] });
+      const owned = new Set<string>((inventory ?? []).find(r => !r.valid_until || Date.parse(r.valid_until) > Date.now())?.equipment ?? []);
+      for (const answer of memory ?? []) {
+        for (const g of answer.confirmed_have ?? []) owned.add(g);
+        for (const g of answer.confirmed_lacks ?? []) owned.delete(g);
+      }
+      const missing = missingGearAnswer(body.missing, body.note, ["partner"]);
+      const choices = blockSwapChoices(source, location.modality, location.sport, [...owned], [...missing, ...rememberedMissingGear(memory ?? [])]);
+      if (body.action === "options") return reply({ gear: swapGearList(["partner"]), missing, choices });
+      const chosen = choices.find(choice => choice.slug === body.toSlug);
+      if (!chosen) return reply({ error: "No safe swap found for this one; skip it today." }, 409);
+      const { data: result, error: saveError } = await admin.rpc("wk_swap_block_atomic", {
+        p_user: uid, p_date: body.planDate, p_id: snapshot.id, p_sport: location.sport,
+        p_modality: location.modality, p_index: location.index, p_expected: source,
+        p_replacement: chosen.replacement, p_reason: chosen.reason, p_missing: missing, p_scope: body.scope,
+      });
+      if (saveError || !result?.saved) return reply({ error: "Your plan changed or the save couldn't finish. Nothing was saved." }, 409);
+      return reply({ saved: result.saved, memorySaved: result.memorySaved, reason: chosen.reason });
+    }
     const { data: rx } = await client.from("wk_prescriptions").select("*")
       .eq("id", body.prescriptionId).eq("user_id", uid).eq("plan_date", body.planDate).maybeSingle();
     if (!rx || !["planned", "pending"].includes(rx.status)) return reply({ error: "Reload your plan. This exercise can't be changed." }, 409);

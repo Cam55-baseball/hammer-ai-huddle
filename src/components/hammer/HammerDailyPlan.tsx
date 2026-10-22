@@ -27,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { refreshWarmupStageOverrides } from "@/lib/hammer/prescription/warmupStages";
 import { useHammersTodayStart } from "@/hooks/useHammersTodayStart";
 import { useSwapV2 } from "@/hooks/useSwapV2";
+import { LiveSwapSheet } from "@/components/hammer/LiveSwapSheet";
 import { StartHammersTodayCard } from "@/components/hammer/StartHammersTodayCard";
 import { GrowthModeCard, HeightReminderCard } from "@/components/hammer/GrowthModeCard";
 import { DailyIntentHeader } from "@/components/hammer/DailyIntentHeader";
@@ -39,7 +40,7 @@ import {
   recordPhaseSignature,
   loadEngagement,
 } from "@/lib/hammer/prescription/dailyEngagement";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -270,6 +271,20 @@ function DrillRow({
 }) {
   const [adjustOpen, setAdjustOpen] = useState(false);
   const adjustApi = usePlanAdjustApi();
+  const swapV2 = useSwapV2();
+  const { user: swapUser } = useAuth();
+  const savedBlock = useQuery({ queryKey: ["saved-block-day", swapUser?.id, planDate], enabled: swapV2.enabled && !!swapUser,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("athlete_plan_snapshots").select("id,sport,payload").eq("user_id", swapUser?.id ?? "").eq("plan_date", planDate);
+      if (error) throw error;
+      return data;
+    } });
+  const savedLocation = savedBlock.data?.map(row => {
+    const payload = row.payload as unknown as { blocks: Array<{ modality: string; drills: Array<{ name: string; slug?: string | null }> }> };
+    const block = payload.blocks.find(b => b.modality === modality);
+    const index = block?.drills.findIndex(item => item.name === d.name && item.slug === (d.slug ?? null)) ?? -1;
+    return { row, index };
+  }).find(location => location.index >= 0);
   const tasks = useHammerDailyTasks(planDate);
   const taskId = makeBlockTaskId(modality, d.slug ?? d.name);
   const checked = tasks.isDone(taskId, side);
@@ -293,8 +308,11 @@ function DrillRow({
           taskSync={{ planDate, seed }}
         />
         <ExerciseInstructions name={d.name} slug={d.slug} guideOverride={d.guide} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={d.dosage} repair={legacyRepair(d.dosage, modality)} expanded />
-        {adjustApi && <Button type="button" variant="outline" size="sm" onClick={() => setAdjustOpen(true)} aria-label={`Swap or skip ${d.name}`}><Repeat className="mr-1 h-3 w-3" />Can't do it</Button>}
-        {adjustApi && <DrillAdjustDialog open={adjustOpen} onOpenChange={setAdjustOpen} modality={modality} drill={d} onSave={adjustApi.save} />}
+        {adjustApi && <Button type="button" variant="outline" size="sm" disabled={checked || (swapV2.enabled && !savedLocation)} onClick={() => setAdjustOpen(true)} aria-label={`Swap or skip ${d.name}`}><Repeat className="mr-1 h-3 w-3" />{swapV2.enabled ? "Swap" : "Can't do it"}</Button>}
+        {swapV2.enabled && savedLocation && adjustOpen ? <LiveSwapSheet open={adjustOpen} onOpenChange={setAdjustOpen}
+          rx={{ id: savedLocation.row.id, plan_date: planDate, movement_name: d.name }}
+          block={{ modality, index: savedLocation.index, sport: savedLocation.row.sport === "softball" ? "softball" : "baseball" }} /> :
+          !swapV2.enabled && adjustApi && <DrillAdjustDialog open={adjustOpen} onOpenChange={setAdjustOpen} modality={modality} drill={d} onSave={adjustApi.save} />}
       </ExerciseDisclosure>
     </li>
   );
@@ -766,7 +784,7 @@ function HammerDailyPlanBody({
   const totalCns = wkRx.effectiveCnsTotal ?? 0;
   const cnsHigh = totalCns >= 7;
   const principlePicks = usePrinciplePicks();
-  const plan = useMemo(() => {
+  const computedPlan = useMemo(() => {
     const base = cnsHigh
       ? {
           ...rawPlan,
@@ -826,6 +844,19 @@ function HammerDailyPlanBody({
     });
     return { ...base, blocks: withPicks };
   }, [rawPlan, cnsHigh, planAdjust.adjustments, faultContext.data, faultContext.isError, projectedAthlete.equipmentList, ctx, drillCirculation.catalog, drillCirculation.circulation, drillCirculation.ready, modules, sportKey, gpForPlan, principlePicks.data]);
+
+  const savedDay = useQuery({ queryKey: ["saved-block-day", bodyUser?.id, bodyPlanDate], enabled: swapV2.enabled && !!bodyUser,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("athlete_plan_snapshots").select("payload,sport").eq("user_id", bodyUser?.id ?? "").eq("plan_date", bodyPlanDate);
+      if (error) throw error;
+      return data;
+    } });
+  const savedPayload = savedDay.data?.find(row => row.sport === sportKey)?.payload as unknown as { blocks?: Array<{ modality: string; drills: DrillStep[] }> } | undefined;
+  const plan = swapV2.enabled && savedPayload?.blocks?.some(block => block.drills.some(drill => "swapReason" in drill))
+    ? { ...computedPlan, blocks: computedPlan.blocks.map(block => {
+      const saved = savedPayload.blocks?.find(item => item.modality === block.modality);
+      return saved ? { ...block, drills: saved.drills } : block;
+    }) } : computedPlan;
 
   const influencedDrillIds = useMemo(
     () => plan.blocks.flatMap((block) => block.drills)

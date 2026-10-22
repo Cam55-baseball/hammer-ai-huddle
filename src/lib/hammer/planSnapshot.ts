@@ -23,6 +23,7 @@ export function planSnapshotPayload(plan: HammerDailyPlanResult, sport: string, 
       because: [...(b.because ?? [])],
       roadmapReason: b.roadmapReason,
       drills: b.drills.map((d) => ({
+        ...d,
         name: d.name,
         slug: d.slug ?? null,
         dosage: d.dosage,
@@ -35,13 +36,9 @@ export function planSnapshotPayload(plan: HammerDailyPlanResult, sport: string, 
 }
 
 export async function savePlanSnapshot(userId: string, plan: HammerDailyPlanResult, sport: string, planDate: string): Promise<void> {
-  const { error } = await supabase.from("athlete_plan_snapshots").upsert({
-    user_id: userId,
-    plan_date: planDate,
-    sport,
-    engine_version: ENGINE_CONTRACT.version,
-    payload: planSnapshotPayload(plan, sport, planDate),
-    updated_at: new Date().toISOString(),
-  }, { onConflict: "user_id,plan_date,sport" });
+  const { error } = await supabase.rpc("wk_save_block_day", {
+    p_date: planDate, p_sport: sport, p_engine: ENGINE_CONTRACT.version,
+    p_payload: planSnapshotPayload(plan, sport, planDate),
+  });
   if (error) console.debug("[plan-snapshot] save failed", error.message);
 }
