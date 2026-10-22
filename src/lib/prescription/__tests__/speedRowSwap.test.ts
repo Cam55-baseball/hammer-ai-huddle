@@ -27,3 +27,13 @@ describe("speedRowSwap", () => {
     expect(speedRowSwap(source, rx, ["open_field"], { ...facts, readiness: null })).toBeNull();
   });
 });
+
+import { missingGearAnswer } from "../../../../supabase/functions/_shared/planSwap/commonGear";
+describe("common gear answers", () => {
+  it("'bands' also marks the item's own 'band' label missing", () => {
+    expect(missingGearAnswer(["bands"], undefined, ["band"])).toEqual(["bands", "band"]);
+  });
+  it("'field space' marks the item's 'field' missing", () => {
+    expect(missingGearAnswer(["open_field"], undefined, ["field"])).toEqual(["open_field", "field"]);
+  });
+});
