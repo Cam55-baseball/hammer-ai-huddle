@@ -211,3 +211,12 @@ Three built-in drill corrections are in the preview and flagged Needs owner revi
 Audit proposals were not applied blindly: Walk-Away specifies a feeder rather than a machine; Stride-Line says board OR rope OR towel, not all three. Multi-sport ball requirements need sport-aware complete groups. Their unresolved requirements remain open. Loaded tibialis raise, underspecified hip thrusts, weighted pull-up variants and deficit push-up cannot be certified from generic instructions alone. Retired band_resisted_swings remains untouched.
 
 Shared gear validation now rejects malformed mandatory arrays instead of dropping values or throwing, and normalizes pullup_bar/pull_up_bar consistently for ownership, missing memory and checkboxes. These latest shared-function changes are local/pending deployment. Five focused files / 43 tests pass; preview build OK. Existing earlier passes retained.
+
+### Source-guide follow-up — 01:38 UTC
+
+| Slug | Before equipment / requirements / alternatives | After mandatory gear | Alternatives | Evidence |
+|---|---|---|---|---|
+| pc_pretension_hold_bb | [] / null / [] | bodyweight | none | movementGuide 370–374: standing split-stance reach, arms overhead *like* grabbing a bar; actual barbell was only in generated copy |
+| rc_easy_flush | [] / null / [] | none | bike OR open_space | movementGuide 450–455: bike or flat outdoor walk |
+
+Both live corrections retain snapshots and reopen review; **130 distinct workout corrections total**. Three built-in drill before/after records also saved in the same Vault audit; the preview's review list reads those records and lets the owner approve through the existing approval action. Phone-size owner check: Towel Extension queue visible, pull-up bar + belt OR dumbbell visible, zero page errors. Screens inspected: `/tmp/browser/swap-gear-final/drill-review.png`, `pullup-review.png`. No review was approved by the agent. 45 distinct affected tests pass across the bounded runs (43 + two review-queue tests); preview build OK 01:38:32 UTC. This is owner review verification, not an athlete Swap proof. The latest shared-function changes remain pending deployment and affected-player endpoint verification.
