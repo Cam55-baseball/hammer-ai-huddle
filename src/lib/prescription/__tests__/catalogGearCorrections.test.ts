@@ -21,8 +21,10 @@ describe("source-supported drill equipment corrections", () => {
     ["elite.throw.wall_arm_action", ["wall", "net"]],
     ["elite.throw.figure_eight_connection", ["partner"]],
     ["elite.throw.quick_exchange_ladder", ["glove", "partner", "stopwatch"]],
-    ["elite.pitch.hershiser_separation", ["fence", "net"]],
-    ["elite.pitch.walking_windup_tempo", ["net", "stopwatch"]],
+    ["elite.pitch.hershiser_separation", ["fence", "net", "baseballs"]],
+    ["elite.pitch.walking_windup_tempo", ["net", "stopwatch", "baseballs", "pitching_rubber"]],
+    ["elite.pitch.windmill_k_position", ["net", "softballs"]],
+    ["elite.pitch.windmill_drive_leg", ["net", "pitching_rubber"]],
   ])("%s retains its explicitly required setup", (id, equipment) => {
     expect(ELITE_DRILL_CATALOG.find(d => d.id === id)?.equipment).toEqual(equipment);
   });

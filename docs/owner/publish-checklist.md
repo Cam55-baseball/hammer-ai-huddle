@@ -2,18 +2,20 @@
 
 ## Controlling verdict criteria — owner update October 22, 00:59 UTC
 
-**Ready to publish: NO.** The four positive saved/readback Swap phone proofs are still incomplete and Swap remains restricted. Stability has not been verified; its required observation period starts only after the Swap work. This checklist is not final yet. Historical passes below are retained, not rerun or represented as new evidence.
+**Ready to publish: NO — updated October 22, 02:05 UTC.** Catalog completion, saved block swaps and the personalized speed mix remain unfinished; the four positive saved/readback Swap phone proofs are still incomplete and Swap remains restricted. Stability has not been verified; its required observation period starts only after the Swap work. This checklist is not final yet. Historical passes below are retained, not rerun or represented as new evidence.
 
 | Gate | Current status |
 |---|---|
-| Four Swap proofs | 0/4 positive saved phone proofs; catalog corrections authorized and partial (132 workout, eight elite, 26 sport-library); atomic machine/recovery saved-block path and personalized field-free mix unfinished |
-| Swap ALL and normal-player check | Pending successful Swap proofs; fresh October 22 01:59 UTC readback OFF with authorized exceptions |
+| Four Swap proofs | 0/4 positive saved phone proofs; catalog corrections authorized and partial (134 workout, ten elite, 26 sport-library); atomic machine/recovery saved-block path and personalized field-free mix unfinished |
+| Swap ALL and normal-player check | Pending successful Swap proofs; fresh October 22 02:06 UTC readback OFF with existing 14 authorized TEST exceptions |
 | Previously passed checks | Retained with their dated evidence; no unnecessary repeat |
 | Quiet period | Not started; requires Swap work finished and no running tests or database changes |
 | Phone smoke, pass 1 | Pending quiet period; TEST college player, democoach, demoorg |
 | Phone smoke, pass 2 | Pending; repeat the same three roles fifteen minutes after pass 1 |
 | Last-hour backend logs | Pending stability observation; no new 5xx errors required |
 | Final guide and scoped cleanup | Pending; no final readiness claim or publication |
+
+Latest affected verification: five files / 46 tests pass; preview build OK 02:04:15 UTC; corrected owner review phone checks inspected with zero page errors. No new athlete TEST records this continuation. This is not a stability smoke or successful athlete Swap save. Existing proof inputs remain retained until proofs and scoped cleanup; never remove legal consents or unrelated accounts.
 
 ### Stability verified — exact acceptance
 
