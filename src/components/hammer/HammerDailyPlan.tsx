@@ -661,6 +661,7 @@ function HammerDailyPlanBody({
 }) {
   const ctx = useHammerAthleteContext();
   const swapV2 = useSwapV2();
+  const queryClient = useQueryClient();
   const projectedAthlete = useMemo(() => projectEnvelope(ctx), [ctx]);
   const { isSwitchHitter, isAmbidextrousThrower } = useSideContext();
   const navigate = useNavigate();
