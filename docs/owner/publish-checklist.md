@@ -2,7 +2,7 @@
 
 ## Controlling verdict criteria — owner update October 22, 00:59 UTC
 
-**Ready to publish: NO — updated October 22, 06:30 UTC.** All four Swap phone proofs passed and Swap is on for everyone. Both stability phone passes were clean, but two required parts are missing: (1) no real report exists for the TEST college player (Reports and Six-week recap are empty; the team report reads Game IQ games, which are internal-only), and (2) the last-hour backend logs could not be read (queries returned no rows at all), and missing logs are not a clean result. TEST cleanup is held until stability passes, because the retry needs the same TEST records.
+**Ready to publish: NO — final check October 22, 14:38 UTC.** The requested real analysis, new-player check-in and two qualifying stability passes are now proven. Scoped operational TEST cleanup is complete, but eight snapshotted TEST events are protected by the immutable ASB ledger's delete trigger and were not removed or bypassed. Full cleanup cannot be claimed. The known direct-database visibility gap for TEST-only catalog rows remains unmodified; the TEST drill itself has now been removed. No publish, cron or iOS change.
 
 | Gate | Current status |
 |---|---|
@@ -17,12 +17,21 @@
 | TEST-only items hidden | App lists and Swap filtered; direct database reads by signed-in users still possible (needs owner-approved database change) |
 | Coach view records | Routed to the approved server check; role/denial matrix passed |
 | Alternative quality | Same pattern first, same-or-easier, never more than one level; 194 larger-jump pairs in Vault review |
-| Phone smoke, pass 1 | 06:05:59-06:07:45 UTC: college player, democoach, demoorg; no 5xx, no page errors, no 503/schema-cache; coach profile shows the confirmed TEST game |
-| Phone smoke, pass 2 | 06:21:43-06:23:56 UTC: same roles plus /games; same clean result |
+| Phone smoke, pass 1 | 14:18:26–14:20:20 UTC, 390×844: TEST college, democoach, demoorg; saved real analysis opened in Players Club, linked coach profile opened with confirmed game; no page errors or 5xx. Canceled organization correctly shows its subscription gate, not a populated dashboard. Prior legal/autosave/checkout proofs retained. |
+| Phone smoke, pass 2 | 14:33:54–14:35:45 UTC: same roles and record views; 15 min 28 sec between first player observations; no page errors or 5xx/503/schema-cache. An extra clean pass at 14:31 was too early and is not the qualifying pass. |
 | Real game | TEST game logged by democoach on the coach screen and confirmed by the player on /games (entry b172dea2-39a7-4e0b-a6ed-1e0482d86338) |
-| Real report | MISSING: no report with real data for the TEST player |
-| Last-hour backend logs | NOT READABLE: log queries returned no rows |
-| TEST cleanup | Held until stability passes |
+| Real report | PASS: one real hitting analysis on approved owner clip, video 92123f9e-eb32-495b-a25e-9bbace5baaf2; completed 14:09, saved report/feedback/drill read from Players Club on both passes. Camera tracking was insufficient; no measurement success claimed. TEST upload/report deleted afterward; original owner video retained. |
+| New-player Coach Hammer | PASS: fresh democheckin, 390×844; Coach Hammer → Do Check-In opens Quick Check-In with readiness slider and Next/Skip; no prior check-in needed. |
+| Last-hour backend logs | PASS: working function_edge_logs query grouped status codes, 91 returned calls, all 200 (latest query observed 14:30:05–14:35:39 within requested last-hour filter). Coverage is only rows actually returned, not an assertion about unobserved calls. Database net._http_response: five calls after 14:15, including 14:15 and 14:30 jobs, all 200, no timeout/error. Older 5-second timeouts predate the fix; cron_call readback confirms 120000 ms. |
+| TEST cleanup | Operational rows removed after protected timestamped snapshots (199 rows total): 123 prescriptions, two saved plan snapshots, six Swap receipts/memories, two gear contexts, TEST catalog drill and Vault records, ten CNS rows, fourteen diagnostics and twelve final-check records. Three temporary TEST profiles parked; standing accounts preserved. TEST analysis/upload deleted, original owner clip preserved. Eight immutable TEST ASB events remain snapshotted; no trigger disabled. No new audit TEST events were committed. |
+
+### Owner-confirmed sprint rule
+
+At or above the running-load cap, Swap offers only a plain shorter sprint with the same reps and saved rest, never added hill/band work or load; cap-equality and speed-row tests: 16 PASS, named plan-swap redeploy completed.
+
+### Final cleanup limitation
+
+The eight retained event IDs are 50089d47-1515-4bdb-a24c-5b4799fbd51b, bf3d7f03-7a7c-4430-bb19-daa21d589319, 8af132f5-e070-4270-8006-c85cfc318603, daa693db-5fa4-4474-ab12-ac2dfc43aeff, bb778567-2570-498a-b992-dac3b2119550, e2fb9612-7cb7-48e7-9577-1e332cbcacc9, 739ca004-8ab3-4cb3-ae02-0303c0c4a31e and c618e731-f632-4b48-b581-41fd6c79f46b. Canonical history is append-only; cleanup requires an owner-approved history-retention decision, not disabling that safeguard. Backups use existing protected _snapshot_live_test_runs_20261014 tags finish_20261022_1436 and finish_20261022_1438. Preview build OK 14:35:48 UTC. Named create-test-athlete redeploy adds only the blank check-in TEST persona. No release action taken.
 
 ### Stability verified — exact acceptance
 

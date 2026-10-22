@@ -73,6 +73,11 @@ function personas(): Record<string, Persona> {
       events: [], arm: [],
     },
     // Swap proof player: off-season college outfielder with the gear each Swap proof needs.
+    democheckin: {
+      email: "hammersmodality+democheckin@gmail.com", name: "TEST — New Player Check-In", dob: "2005-03-01", sport: "baseball",
+      position: "CF", level: "d1", season: "off_season", inStart: weeks18, inEnd: add(weeks18, 120), tier: "5tool",
+      events: [], arm: [],
+    },
     demoswap: {
       email: "hammersmodality+demoswap@gmail.com", name: "Demo — Swap Proof Outfielder", dob: "2005-03-01", sport: "baseball",
       position: "CF", level: "d1", season: "off_season", inStart: weeks18, inEnd: add(weeks18, 120), tier: "5tool",

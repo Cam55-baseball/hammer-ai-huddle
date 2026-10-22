@@ -41,7 +41,7 @@ export function chooseNoFieldMix(input: NoFieldInputs): { items: SpeedMixItem[];
   // Competitive/recovery phases keep the already-legal plain acceleration; never add resisted novelty.
   // Today's saved load at/over its cap keeps the plain short sprint only: same reps, shorter
   // distance, so the swap never adds running load to the day.
-  const overCap = input.cnsCap == null ? input.cnsLoad >= 7 : input.cnsLoad > input.cnsCap;
+  const overCap = input.cnsCap == null ? input.cnsLoad >= 7 : input.cnsLoad >= input.cnsCap;
   const addResistance = !overCap && input.phase !== "in_season" && input.phase !== "post_season";
   const alternate = addResistance ? input.hill ? SPEED_SWAP_CATALOG[1] : input.sled ? SPEED_SWAP_CATALOG[2] : input.band ? SPEED_SWAP_CATALOG[3] : null : null;
   if (alternate) pool.push(alternate);

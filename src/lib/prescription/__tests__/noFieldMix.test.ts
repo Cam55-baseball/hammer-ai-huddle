@@ -38,4 +38,9 @@ describe("deterministic no-field mix", () => {
     expect(chooseNoFieldMix({ ...input, phase: "unknown" }).items).toEqual([]);
     expect(chooseNoFieldMix({ ...input, phase: "in_season" }).items.map(item => item.reps)).toEqual([7]);
   });
+  it("at the owner's saved running-load cap offers no hill or band work", () => {
+    const result = chooseNoFieldMix({ ...input, cnsLoad: 3, cnsCap: 3, hill: true, band: true });
+    expect(result.items.map(item => [item.slug, item.reps, item.distanceYards, item.restSeconds]))
+      .toEqual([["swap_short_acceleration", 7, 15, 120]]);
+  });
 });
