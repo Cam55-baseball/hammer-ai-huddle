@@ -104,6 +104,31 @@ function doseText(rx: Row): string {
   return "same amount";
 }
 
+/**
+ * Difficulty level for Swap: the catalog's CNS cost, one level higher when the
+ * movement is closed to beginners. Null when the catalog doesn't say.
+ */
+export function difficultyLevel(row: Row): number | null {
+  const cns = typeof row.cns_cost === "number" ? row.cns_cost : null;
+  if (cns == null) return null;
+  const gate = row.training_age_legality;
+  return cns + (gate && typeof gate === "object" && gate.beginner === false ? 1 : 0);
+}
+
+/** A pair that crosses more than one difficulty level needs owner review before Swap may offer it. */
+export function isDifficultyJump(source: Row, target: Row): boolean {
+  const a = difficultyLevel(source), b = difficultyLevel(target);
+  return a != null && b != null && Math.abs(b - a) > 1;
+}
+
+/** Same movement family first, then same-or-easier, then closest level. */
+function rankKey(source: Row, t: Row): [number, number, number] {
+  const samePattern = source.movement_pattern && t.movement_pattern === source.movement_pattern ? 0 : 1;
+  const a = difficultyLevel(source), b = difficultyLevel(t);
+  const harder = a != null && b != null && b > a ? 1 : 0;
+  return [samePattern, harder, a != null && b != null ? Math.abs(b - a) : 9];
+}
+
 export function swapChoices(source: Row, family: Row[], rx: Row, missing: string[], player: SwapPlayer): SwapChoice[] {
   // Name only the missing gear this exercise actually uses; other remembered gaps stay off its reason.
   const used = new Set([...((source.equipment_requirements ?? []) as string[]), ...(((source.equipment_alternatives ?? []) as string[][]).flat())].map(g => String(g).toLowerCase()));
@@ -118,8 +143,12 @@ export function swapChoices(source: Row, family: Row[], rx: Row, missing: string
       const toBases = declaredRouteBases(t.base_route, player.sport, rx.distance_feet);
       if (fromBases == null || fromBases !== toBases) return false;
     }
+    // Never offer a jump of more than one level; those pairs wait in owner review.
+    if (isDifficultyJump(source, t)) return false;
     return true;
-  }).slice(0, 3).map(t => ({
+  }).map(t => ({ t, k: rankKey(source, t) }))
+    .sort((x, y) => x.k[0] - y.k[0] || x.k[1] - y.k[1] || x.k[2] - y.k[2] || String(x.t.slug).localeCompare(String(y.t.slug)))
+    .map(x => x.t).slice(0, 3).map(t => ({
     slug: t.slug, name: t.name,
     reason: `${t.name}: same ${doseText(rx)}${lacking ? `, no ${lacking} needed` : ""}`,
   }));

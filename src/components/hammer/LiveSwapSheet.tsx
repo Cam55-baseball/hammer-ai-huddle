@@ -28,7 +28,7 @@ async function callSwap(body: Record<string, unknown>) {
 
 /** Simple Swap: what's missing → 1–3 safe choices → one save. */
 export function LiveSwapSheet({ rx, open, onOpenChange, block }: {
-  rx: Pick<WkRx, "id" | "plan_date" | "movement_name">; open: boolean; onOpenChange: (open: boolean) => void;
+  rx: Pick<WkRx, "id" | "plan_date" | "movement_name"> & { movement_slug?: string | null }; open: boolean; onOpenChange: (open: boolean) => void;
   block?: { modality: string; index: number; sport: "baseball" | "softball" };
 }) {
   const qc = useQueryClient();

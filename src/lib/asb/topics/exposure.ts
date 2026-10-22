@@ -60,27 +60,20 @@ interface GateBlockedInput {
     | "unauthenticated";
 }
 
-export async function emitExposureGateBlocked(input: GateBlockedInput) {
-  const event_id = crypto.randomUUID();
-  const now = new Date().toISOString();
-  await emitAsbEvent({
-    event_id,
-    athlete_id: input.athleteId,
-    topic_id: "relational.exposure.gate_blocked",
-    actor_role: "system",
-    actor_id: input.viewerId,
-    occurred_at: now,
-    ingested_at: now,
-    effective_at: now,
-    valid_from: now,
-    payload: {
-      reason: input.reason,
-      viewer_id: input.viewerId,
-      engine_version: ENGINE_VERSION,
-    },
-    engine_version: ENGINE_VERSION,
-    idempotency_key: `rr9.gate_blocked.${input.athleteId}.${event_id}`,
-    causality_refs: [],
-    lineage_refs: [],
-  });
+/**
+ * Cross-athlete denial audit goes ONLY through the server-authored
+ * `record_view_audit_event` RPC (owner-approved Oct 22). The server decides
+ * whether visibility is actually blocked; client reason is never stored.
+ */
+export async function emitExposureGateBlocked(input: GateBlockedInput & { scope?: string | null }) {
+  if (!input.viewerId) return null; // unauthenticated viewers cannot write audit rows
+  const { supabase } = await import("@/integrations/supabase/client");
+  const { data, error } = await supabase.rpc("record_view_audit_event", {
+    _athlete: input.athleteId,
+    _topic: "relational.exposure.gate_blocked",
+    _event_id: crypto.randomUUID(),
+    _scope: input.scope ?? null,
+  } as never);
+  if (error) console.debug("[view-audit] gate_blocked not recorded", error.message);
+  return (data as string | null) ?? null;
 }

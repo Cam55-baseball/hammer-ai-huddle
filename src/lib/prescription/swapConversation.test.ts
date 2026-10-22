@@ -30,7 +30,12 @@ describe("three-question Swap contract", () => {
     draft = answerSwapConversation(draft, { step: "available", items: ["partner"] });
     draft = answerSwapConversation(draft, { step: "scope", scope: "always" });
     expect(confirmedSwapAvailability(draft).have).toEqual(["partner"]);
-    expect(() => swapEquipmentMemory(draft, [])).toThrow(/checked memory field/);
+    // Partner is now a saved gear token (owner Oct 22 setup); an unmapped fact still can't be saved silently.
+    let runway = startSwapConversation("athlete", "rx", "2026-10-21");
+    runway = answerSwapConversation(runway, { step: "missing", items: ["pitching_machine"] });
+    runway = answerSwapConversation(runway, { step: "available", items: ["measured_runway_60ft"] });
+    runway = answerSwapConversation(runway, { step: "scope", scope: "always" });
+    expect(() => swapEquipmentMemory(runway, [])).toThrow(/checked memory field/);
   });
   it("rejects contradictions, blank answers and another athlete, exercise or day", () => {
     const draft = startSwapConversation("athlete", "rx", "2026-10-21");

@@ -23715,6 +23715,15 @@ export type Database = {
         Args: { _id: string; _results: Json; _video_url: string }
         Returns: string
       }
+      record_view_audit_event: {
+        Args: {
+          _athlete: string
+          _event_id: string
+          _scope?: string
+          _topic: string
+        }
+        Returns: string
+      }
       reject_evaluation_attendance: {
         Args: { p_evaluation_id: string }
         Returns: boolean

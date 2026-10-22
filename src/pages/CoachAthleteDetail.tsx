@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { CoachLogForPlayer } from "@/components/coach/CoachLogForPlayer";
 import { CoachCheckinSummary } from "@/components/coach/CoachCheckinSummary";
 import { CoachPlanCard } from "@/components/coach/CoachPlanCard";
@@ -36,7 +37,6 @@ import { usePitchingV2Trends } from "@/hooks/usePitchingV2Trends";
 import { trajectoriesAll } from "@/lib/pieV2/longitudinal";
 import { snapshotAthlete } from "@/lib/coach/projections";
 import type { AsbEventRow } from "@/hooks/useAsbTimeline";
-import { useEmitOnce } from "@/hooks/useEmitObservability";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { SafetyMenu } from "@/components/safety/SafetyMenu";
 import { isBlockedPair } from "@/lib/safety/blocks";
@@ -79,24 +79,26 @@ export default function CoachAthleteDetail() {
     },
   });
 
-  // RFL-005 — emit canonical coach.review.opened once per (coach, athlete) per day.
-  // Gated on roster access so unauthorized opens never emit.
-  useEmitOnce(
-    user?.id && athleteId && rosterAccess === true && user.id !== athleteId
-      ? `coach_review:${user.id}:${athleteId}`
-      : null,
-    user?.id && athleteId && rosterAccess === true && user.id !== athleteId
-      ? {
-          topic: "coach.review.opened",
-          athleteId,
-          actorId: user.id,
-          actorRole: "coach",
-          payload: { surface: "coach_athlete_detail" },
-        }
-      : null,
-  );
-
-
+  // RFL-005 — coach.review.opened recorded only via the server-authored
+  // record_view_audit_event RPC, which rechecks the live coach connection
+  // and dedupes per (coach, athlete, UTC day).
+  const viewAuditSent = useRef<string | null>(null);
+  useEffect(() => {
+    if (!user?.id || !athleteId || rosterAccess !== true || user.id === athleteId) return;
+    const key = `${user.id}:${athleteId}`;
+    if (viewAuditSent.current === key) return;
+    viewAuditSent.current = key;
+    void supabase
+      .rpc("record_view_audit_event", {
+        _athlete: athleteId,
+        _topic: "coach.review.opened",
+        _event_id: crypto.randomUUID(),
+        _scope: null,
+      } as never)
+      .then(({ error }) => {
+        if (error) console.debug("[view-audit] review_opened not recorded", error.message);
+      });
+  }, [user?.id, athleteId, rosterAccess]);
 
   // ── HITTING DOCTRINE (single source of truth — same JSON read by athlete) ──
   const { data: hittingDoctrineSnap } = useQuery({
