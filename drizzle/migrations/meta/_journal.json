@@ -687,6 +687,13 @@
       "when": 1792618480523,
       "tag": "0097_self_consent_age_and_advice_labels",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1792632232527,
+      "tag": "0098_catalog_equipment_alternatives",
+      "breakpoints": true
     }
   ]
 }

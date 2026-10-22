@@ -1,3 +1,18 @@
+## Latest continuation — October 22, 01:30 UTC — Ready to publish: NO.
+
+Named equipment authorization acted on: 110 first-batch gear corrections plus 16 explicit OR-setup corrections, every change snapshotted in the existing Vault audit and recorded in `catalog-equipment-corrections.md`. Changed entries reopen owner review despite older approvals. Phone owner Vault shows corrected DB Bench and Goblet Squat requirements; Goblet displays dumbbell OR kettlebell; no page errors. Shared Swap/build gear checks reject missing or malformed alternatives; owner editor retains groups. Seven affected files / 62 tests pass; preview build OK. Authorized `exercise-vault`, `plan-swap`, `wk-generate-daily` deployed. No publish, schedules or iOS change, no new athlete measurements, insights or TEST data.
+
+| Ordered gate | Current status |
+|---|---|
+| A. All catalog equipment | Partial: 126 distinct workout rows corrected; remaining ambiguous setups and drill libraries unfinished |
+| B. Saved block swaps | Not implemented: identified shared-builder extraction and server canonical input path; client presentation snapshots are not authority |
+| C. Personalized no-field speed mix | Not implemented; intent, dose, readiness/load/CNS and real accomplishments must remain canonical |
+| D. Four positive phone proofs then ALL | 0/4; Swap remains restricted, not ALL |
+| E. Two quiet-period smokes + last-hour logs | Not started; waiting on four Swap proofs |
+| F. Final guide/switch/cleanup | Pending; no new TEST data to clean this continuation |
+
+These catalog phone checks do not stand in for athlete saved/readback/memory proofs. Historical evidence below remains historical.
+
 ## Latest continuation — October 22, 00:40 UTC — Ready to publish: NO.
 
  Found and fixed a plan-builder gap: it never looked at saved gear when choosing exercises (TEST college has barbell/rack/bench/cable, yet got rings, chains and dumbbell lifts). Plans now pick among exercises the player has gear for whenever one is legal; otherwise the earlier choice stands, so no role goes empty. Only the authorized `wk-generate-daily` and `plan-swap` were redeployed; 9 files / 113 tests pass. Real app rebuild as TEST college (Oct 22–24, `ok: true`): Oct 23 lifts changed and now include two "barbell + rack" rows — but they are "DB Bench Press" and "Lat Pulldown". 31 catalog rows share one bulk `{barbell,rack}` tag, several plainly wrong by their own names. A "no barbell" Swap on a dumbbell exercise would be a fake proof, so none was run. Staged, not applied: `docs/owner/catalog-gear-tags.pending.sql` (snapshot + name-stated corrections only) — needs named owner authorization. Swap proofs still 0/4.

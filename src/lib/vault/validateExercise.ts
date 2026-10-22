@@ -19,6 +19,7 @@ export interface VaultExercise {
   default_load_pct?: number | null;
   measure_type: string;
   equipment: string[];
+  equipment_alternatives?: string[][];
   card_type: string;
   sports: string[];
   season_phases: string[];
@@ -100,7 +101,8 @@ export function validateExercise(e: VaultExercise, opts?: { isNew?: boolean }): 
   for (const [nameTok, must] of EQUIP) {
     if (nameTok.test(e.name) && !must.test(text)) out.push(`The name says ${must.source.split("|")[0]} but the description doesn't.`);
   }
-  if (!e.equipment.length) out.push('List equipment (use "none" if nothing is needed).');
+  if (!e.equipment.length && !(e.equipment_alternatives?.length)) out.push('List equipment (use "none" if nothing is needed).');
+  if (e.equipment_alternatives?.some(group => !group.length || group.some(item => !item.trim()))) out.push("Each gear option needs a complete, nonempty list.");
   if (!t(e.card_type)) out.push("Pick a card type.");
   if (t(e.card_type) === "warmup") {
     const st = e.warmup_stage;

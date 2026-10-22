@@ -24,6 +24,7 @@ type Row = {
   slug: string; name: string; category: string | null; sport_scope: string | null;
   position_scope: string[] | null; min_age_years: number | null; season_eligibility: string[] | null;
   equipment: string[] | null; is_active: boolean | null; dosage_unit: string | null;
+  equipment_alternatives?: string[][];
   default_sets: number | null; default_reps: number | null;
 };
 
@@ -46,10 +47,10 @@ export default function ExerciseVault() {
     queryKey: ["exercise-vault", "catalog"],
     queryFn: async () => {
       const { data, error } = await supabase.from("wk_movement_catalog")
-        .select("slug,name,category,sport_scope,position_scope,min_age_years,season_eligibility,equipment,is_active,dosage_unit,default_sets,default_reps")
+        .select("slug,name,category,sport_scope,position_scope,min_age_years,season_eligibility,equipment,equipment_alternatives,is_active,dosage_unit,default_sets,default_reps")
         .order("name");
       if (error) throw error;
-      const rows = (data ?? []) as Row[];
+      const rows = (data ?? []) as unknown as Row[];
       // Every warm-up builder movement is taggable, even ones the catalog doesn't list.
       const extra = libraryOnlyRows(new Set(rows.map((r) => r.slug))) as Row[];
       return [...rows, ...extra].sort((a, b) => a.name.localeCompare(b.name));
@@ -74,10 +75,10 @@ export default function ExerciseVault() {
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("exercise-vault", { body: { action: "reviewed" } });
       if (error) throw error;
-      return new Set<string>(data?.slugs ?? []);
+      return { slugs: new Set<string>(data?.slugs ?? []), equipmentReview: (data?.equipmentReview ?? []) as Array<{ slug: string; note: string }> };
     },
   });
-  const queue = useMemo(() => buildReviewQueue({ flaggedTsv: reviewTsv, howToTsv, catalog: data, cleared: cleared ?? new Set(), warmupStage: warmupStageReviewItems(data), liftTag: LIFT_TAG_REVIEW }), [data, cleared]);
+  const queue = useMemo(() => buildReviewQueue({ flaggedTsv: reviewTsv, howToTsv, catalog: data, cleared: cleared?.slugs ?? new Set(), equipmentReview: cleared?.equipmentReview, warmupStage: warmupStageReviewItems(data), liftTag: LIFT_TAG_REVIEW }), [data, cleared]);
   const reviewBySlug = useMemo(() => new Map(queue.map((i) => [i.slug, i])), [queue]);
   const NEEDS_REVIEW = reviewBySlug;
   const [approving, setApproving] = useState<string | null>(null);
@@ -182,8 +183,9 @@ export default function ExerciseVault() {
               )}
               <p className="text-sm text-muted-foreground mt-1">How to do one rep: {BASIC_HOW_TO[r.slug] ?? "— not written yet"}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Default dose: {r.default_sets ?? "–"} × {r.default_reps ?? "–"} {r.dosage_unit ?? ""} · Minimum age: {r.min_age_years ?? "–"} · Equipment: {(r.equipment ?? []).join(", ") || "none"}
+                Default dose: {r.default_sets ?? "–"} × {r.default_reps ?? "–"} {r.dosage_unit ?? ""} · Minimum age: {r.min_age_years ?? "–"} · Equipment: {(r.equipment ?? []).join(", ") || (Array.isArray(r.equipment_alternatives) && r.equipment_alternatives.length ? "choose one below" : "none")}
               </p>
+              {Array.isArray(r.equipment_alternatives) && r.equipment_alternatives.length > 0 && <p className="text-xs text-muted-foreground mt-1">Gear options: {r.equipment_alternatives.map((group: string[]) => group.join(" + ")).join(" OR ")}</p>}
             </Card>
           ))}
           {rows.length > 200 && <p className="text-xs text-muted-foreground">Narrow the search to see the remaining {rows.length - 200}.</p>}

@@ -21238,6 +21238,7 @@ export type Database = {
           elastic_profile: string | null
           energy_system: string | null
           equipment: string[] | null
+          equipment_alternatives: Json
           equipment_requirements: string[] | null
           evidence_grade: string | null
           evidence_note: string | null
@@ -21346,6 +21347,7 @@ export type Database = {
           elastic_profile?: string | null
           energy_system?: string | null
           equipment?: string[] | null
+          equipment_alternatives?: Json
           equipment_requirements?: string[] | null
           evidence_grade?: string | null
           evidence_note?: string | null
@@ -21454,6 +21456,7 @@ export type Database = {
           elastic_profile?: string | null
           energy_system?: string | null
           equipment?: string[] | null
+          equipment_alternatives?: Json
           equipment_requirements?: string[] | null
           evidence_grade?: string | null
           evidence_note?: string | null

@@ -1,8 +1,20 @@
 # Current publish gate — Oct 21
 
+**Controlling owner update — October 22, 01:13 UTC:** catalog gear corrections (all exercises/drills, snapshot, change record and Needs owner review), block Swap persistence and personalized speed mixes are now explicitly authorized. One proof document total: `docs/owner/simple-swap-proof.md`. No publish/cron/iOS changes; never fabricate measurements/insights; preserve passed checks.
+- [ ] A. Correct catalog gear with complete change record and owner-review queue.
+  - [x] First 110 supported workout catalog corrections applied with before/after audit; owner review reopened and phone-checked.
+  - [x] Goblet squat corrected to dumbbell OR kettlebell; shared Swap/build gear checks tested.
+  - [x] Fifteen additional explicit OR-setup corrections; safe-space/reactive-ball requirements preserved; owner editor retains groups; 62 focused tests pass.
+  - [ ] Complete remaining ambiguous setups and drill libraries; do not mark A complete yet.
+- [ ] B. Save block-item swaps in today's canonical saved plan.
+- [ ] C. Player-specific no-field speed mix preserving intent/dose/rest and explaining Because.
+- [ ] D. Four positive unfinished real-plan phone proofs, then Swap ALL and normal-player proof.
+- [ ] E. Quiet-period three-role phone smoke twice fifteen minutes apart and last-hour logs.
+- [ ] F. Final switch/readiness table, final owner guide and scoped TEST cleanup.
+
 **Controlling owner update — October 22, 00:59 UTC:** retain already-passed items. After Swap proof work, with no tests or database changes running, run the three-role real phone smoke twice fifteen minutes apart (TEST college player, democoach, demoorg), including a real report, coach-side player profile and game. Both passes require no 503/schema-cache errors; last-hour backend logs require no new 5xx errors. Swap proofs passed + confirmed Swap ALL + this stability check passed yields YES and a final owner checklist. No publish, schedule or iOS changes. Owner reports two-minute waits applied to scheduled backend callers and retired `training-block-daily-check` removed; not independently verified in this continuation.
 
-**Current verdict: NO.** Swap positive proofs remain 0/4; Swap is not ALL. Stability observation has not started because its Swap prerequisite is incomplete. Existing dated passes are retained. Catalog equipment corrections still await named authorization; saved machine/recovery block swaps and a verified field-free equivalent remain unresolved. No tests, database changes or new TEST records were created by this criteria update.
+**Current verdict: NO.** Swap positive proofs remain 0/4; Swap is not ALL. Stability observation has not started because its Swap prerequisite is incomplete. Existing dated passes are retained. First 126 distinct catalog gear corrections are live with audit snapshots and owner review; all-catalog completion, saved block swaps and personalized no-field mixes remain open. No publishing, schedule or iOS changes.
 
 **Owner update 23:56 UTC — new ordered gate supersedes all historical deferred-live statuses.**
 - [ ] 1. Four real-plan Swap phone proofs, then swap_v2 ALL and normal-player proof.

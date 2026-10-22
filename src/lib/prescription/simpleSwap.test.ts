@@ -8,6 +8,20 @@ const rx = { sets: 3, reps: 10, total_reps: 30, dosage_unit: "reps" };
 const p = { phase: "os_q1", sport: "baseball" as const, ageYears: 15, injuries: [] as string[], availableGear: ["partner"] };
 
 describe("simple Swap", () => {
+  it("goblet squats use a dumbbell OR kettlebell, never a barbell or both implements", () => {
+    const goblet = { equipment: [], equipment_requirements: [], equipment_alternatives: [["dumbbell"], ["kettlebell"]] };
+    expect(ownsAllGear(goblet, ["dumbbell"])).toBe(true);
+    expect(ownsAllGear(goblet, ["kettlebell"])).toBe(true);
+    expect(ownsAllGear(goblet, ["barbell", "rack"])).toBe(false);
+    expect(avoidsMissingGear(goblet, ["barbell"])).toBe(true);
+    expect(avoidsMissingGear(goblet, ["dumbbell", "kettlebell"])).toBe(false);
+  });
+  it("never fills an alternative group with items the player said are missing", () => {
+    const target = { ...flips, equipment_requirements: [], equipment_alternatives: [["dumbbell"], ["kettlebell"]] };
+    expect(qualifies(src, target, ["dumbbell"], { ...p, availableGear: ["dumbbell"] })).toBe(false);
+    expect(qualifies(src, target, ["dumbbell"], { ...p, availableGear: ["kettlebell"] })).toBe(true);
+    expect(ownsAllGear({ equipment_alternatives: [[]] }, [])).toBe(false);
+  });
   it("records missing machine equipment for today without making it permanent", () => {
     expect(swapMemoryAnswer("player", "request", "2026-10-22", "today", ["pitching_machine"]))
       .toEqual({ user_id: "player", request_id: "request", plan_date: "2026-10-22", scope: "today", confirmed_have: [], confirmed_lacks: ["pitching_machine"] });
