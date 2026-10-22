@@ -2,20 +2,27 @@
 
 ## Controlling verdict criteria — owner update October 22, 00:59 UTC
 
-**Ready to publish: NO — updated October 22, 02:05 UTC.** Catalog completion, saved block swaps and the personalized speed mix remain unfinished; the four positive saved/readback Swap phone proofs are still incomplete and Swap remains restricted. Stability has not been verified; its required observation period starts only after the Swap work. This checklist is not final yet. Historical passes below are retained, not rerun or represented as new evidence.
+**Ready to publish: NO — updated October 22, 06:30 UTC.** All four Swap phone proofs passed and Swap is on for everyone. Both stability phone passes were clean, but two required parts are missing: (1) no real report exists for the TEST college player (Reports and Six-week recap are empty; the team report reads Game IQ games, which are internal-only), and (2) the last-hour backend logs could not be read (queries returned no rows at all), and missing logs are not a clean result. TEST cleanup is held until stability passes, because the retry needs the same TEST records.
 
 | Gate | Current status |
 |---|---|
-| Four Swap proofs | 0/4 positive saved phone proofs; catalog corrections authorized and partial (134 workout, ten elite, 26 sport-library); atomic machine/recovery saved-block path and personalized field-free mix unfinished |
-| Swap ALL and normal-player check | Pending successful Swap proofs; fresh October 22 02:06 UTC readback OFF with existing 14 authorized TEST exceptions |
-| Previously passed checks | Retained with their dated evidence; no unnecessary repeat |
-| Quiet period | Not started; requires Swap work finished and no running tests or database changes |
-| Phone smoke, pass 1 | Pending quiet period; TEST college player, democoach, demoorg |
-| Phone smoke, pass 2 | Pending; repeat the same three roles fifteen minutes after pass 1 |
-| Last-hour backend logs | Pending stability observation; no new 5xx errors required |
-| Final guide and scoped cleanup | Pending; no final readiness claim or publication |
-
-Latest affected verification: five files / 46 tests pass; preview build OK 02:04:15 UTC; corrected owner review phone checks inspected with zero page errors. No new athlete TEST records this continuation. This is not a stability smoke or successful athlete Swap save. Existing proof inputs remain retained until proofs and scoped cleanup; never remove legal consents or unrelated accounts.
+| Swap proof 1: no foam roller | PASS (earlier run; saved, reloaded, reason, log, memory) |
+| Swap proof 2: machine to partner | PASS (demoswap; 40 swings kept; saved, reloaded, reason, log, Today memory) |
+| Swap proof 3: no barbell, Always | PASS (demoswap; Landmine Press to Single-Arm DB Bench 1x8; later builds had no barbell lifts) |
+| Swap proof 4: no open field sprint | PASS Oct 22 on phone as demoswap2: Sport-Stance Reactive Start to Short-space accelerations, 1 rep kept, 15 yd, 2-min rest, "Because" shown after reload; swap_log d1bde62e-7c37-425a-95b6-f8755527af48; open_field remembered for today. Today's running load was already full (7 of 3), so the mix kept a plain short sprint instead of adding hill or band work. The card now shows the swapped exercise's own how-to text. |
+| Swap ALL | DONE Oct 22 05:58 UTC; change and reason in switch history |
+| Up-front equipment step | Removed from the setup steps and profile review while Swap is on; saved answers stay as starting memory |
+| Normal-player check | PASS: TEST College Outfielder (taken off the old Swap test list) sees Swap on a Today exercise; setup shows no Equipment step |
+| TEST drill in a plan | Not picked on two real training days (Oct 28, Oct 31); not picked in demoswap2's Oct 22 plan; stopped as instructed |
+| TEST-only items hidden | App lists and Swap filtered; direct database reads by signed-in users still possible (needs owner-approved database change) |
+| Coach view records | Routed to the approved server check; role/denial matrix passed |
+| Alternative quality | Same pattern first, same-or-easier, never more than one level; 194 larger-jump pairs in Vault review |
+| Phone smoke, pass 1 | 06:05:59-06:07:45 UTC: college player, democoach, demoorg; no 5xx, no page errors, no 503/schema-cache; coach profile shows the confirmed TEST game |
+| Phone smoke, pass 2 | 06:21:43-06:23:56 UTC: same roles plus /games; same clean result |
+| Real game | TEST game logged by democoach on the coach screen and confirmed by the player on /games (entry b172dea2-39a7-4e0b-a6ed-1e0482d86338) |
+| Real report | MISSING: no report with real data for the TEST player |
+| Last-hour backend logs | NOT READABLE: log queries returned no rows |
+| TEST cleanup | Held until stability passes |
 
 ### Stability verified — exact acceptance
 
