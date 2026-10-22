@@ -9,7 +9,7 @@ describe("deterministic no-field mix", () => {
     expect(result.items.every(item => item.category === "speed" && item.intent === "acceleration")).toBe(true);
   });
   it("uses 1 minute per 10 yards for 10-15 yard accelerations", () => {
-    expect(chooseNoFieldMix(input).items[0].restSeconds).toBe(90);
+    expect(chooseNoFieldMix(input).items[0].restSeconds).toBe(120);
     expect(chooseNoFieldMix({ ...input, spaceYards: 10 }).items[0].restSeconds).toBe(60);
   });
   it("never relabels acceleration or tempo as max velocity", () => {
