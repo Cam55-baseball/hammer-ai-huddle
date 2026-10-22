@@ -5,6 +5,7 @@
 // plan build unless the owner explicitly passes apply_today: true.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { computeExerciseStats } from "../_shared/vault/exerciseStats.ts";
+import { pendingEquipmentReviews } from "../_shared/vault/equipmentReview.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -191,11 +192,12 @@ Deno.serve(async (req) => {
 
     if (action === "reviewed") {
       const [{ data: a, error: ae }, { data: v, error: vErr }] = await Promise.all([
-        admin.from("exercise_vault_audit").select("slug").eq("action", "review_approved").limit(5000),
+        admin.from("exercise_vault_audit").select("slug,action,at").in("action", ["review_approved", "equipment_corrected", "make_live"]).order("at", { ascending: false }).limit(5000),
         admin.from("exercise_vault_versions").select("slug").is("undone_at", null).limit(5000),
       ]);
-      if (ae || vErr) return json({ error: (ae ?? vErr)!.message }, 500);
-      return json({ slugs: [...new Set([...(a ?? []), ...(v ?? [])].map((r: any) => r.slug))] });
+      const reviewError = ae ?? vErr;
+      if (reviewError) return json({ error: reviewError.message }, 500);
+      return json({ slugs: [...new Set([...(a ?? []).filter(row => row.action === "review_approved"), ...(v ?? [])].map((r: any) => r.slug))], equipmentReview: pendingEquipmentReviews(a ?? []) });
     }
 
     if (action === "stats") {

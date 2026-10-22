@@ -2,7 +2,7 @@
  * Owner review queue: flagged descriptions, how-to drafts and series lists.
  * An item leaves the queue once the owner approves it or makes an edit live.
  */
-export type ReviewReason = "flagged description" | "how-to draft" | "series list" | "warm-up stage" | "lift tag";
+export type ReviewReason = "flagged description" | "how-to draft" | "series list" | "warm-up stage" | "lift tag" | "equipment correction";
 export interface ReviewItem { slug: string; reasons: ReviewReason[]; notes: string[] }
 
 const SERIES = /series|circuit|complex|full chart|routine/i;
@@ -19,6 +19,7 @@ export function buildReviewQueue(input: {
   warmupStage?: ReadonlyArray<{ slug: string; note: string }>;
   /** Lifts whose movement tag the owner should decide (Lifting Blueprint). */
   liftTag?: ReadonlyArray<{ slug: string; note: string }>;
+  equipmentReview?: ReadonlyArray<{ slug: string; note: string }>;
 }): ReviewItem[] {
   const map = new Map<string, ReviewItem>();
   const add = (slug: string, reason: ReviewReason, note: string) => {
@@ -32,5 +33,7 @@ export function buildReviewQueue(input: {
   for (const c of input.catalog) if (SERIES.test(c.name)) add(c.slug, "series list", "List every movement in the series.");
   for (const w of input.warmupStage ?? []) add(w.slug, "warm-up stage", w.note);
   for (const w of input.liftTag ?? []) add(w.slug, "lift tag", w.note);
-  return [...map.values()].filter((i) => !input.cleared.has(i.slug)).sort((a, b) => a.slug.localeCompare(b.slug));
+  for (const w of input.equipmentReview ?? []) add(w.slug, "equipment correction", w.note);
+  const pendingGear = new Set(input.equipmentReview?.map(row => row.slug));
+  return [...map.values()].filter((i) => !input.cleared.has(i.slug) || pendingGear.has(i.slug)).sort((a, b) => a.slug.localeCompare(b.slug));
 }

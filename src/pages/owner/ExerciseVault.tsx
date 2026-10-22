@@ -74,10 +74,10 @@ export default function ExerciseVault() {
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("exercise-vault", { body: { action: "reviewed" } });
       if (error) throw error;
-      return new Set<string>(data?.slugs ?? []);
+      return { slugs: new Set<string>(data?.slugs ?? []), equipmentReview: (data?.equipmentReview ?? []) as Array<{ slug: string; note: string }> };
     },
   });
-  const queue = useMemo(() => buildReviewQueue({ flaggedTsv: reviewTsv, howToTsv, catalog: data, cleared: cleared ?? new Set(), warmupStage: warmupStageReviewItems(data), liftTag: LIFT_TAG_REVIEW }), [data, cleared]);
+  const queue = useMemo(() => buildReviewQueue({ flaggedTsv: reviewTsv, howToTsv, catalog: data, cleared: cleared?.slugs ?? new Set(), equipmentReview: cleared?.equipmentReview, warmupStage: warmupStageReviewItems(data), liftTag: LIFT_TAG_REVIEW }), [data, cleared]);
   const reviewBySlug = useMemo(() => new Map(queue.map((i) => [i.slug, i])), [queue]);
   const NEEDS_REVIEW = reviewBySlug;
   const [approving, setApproving] = useState<string | null>(null);
