@@ -17,10 +17,25 @@ describe("source-supported drill equipment corrections", () => {
     const drill = ELITE_DRILL_CATALOG.find(d => d.id === "elite.pitch.head_stability_target");
     expect(drill?.equipment).toEqual(["net", "tape", "partner", "phone"]);
   });
+  it.each([
+    ["elite.throw.wall_arm_action", ["wall", "net"]],
+    ["elite.throw.figure_eight_connection", ["partner"]],
+    ["elite.throw.quick_exchange_ladder", ["glove", "partner", "stopwatch"]],
+    ["elite.pitch.hershiser_separation", ["fence", "net"]],
+    ["elite.pitch.walking_windup_tempo", ["net", "stopwatch"]],
+  ])("%s retains its explicitly required setup", (id, equipment) => {
+    expect(ELITE_DRILL_CATALOG.find(d => d.id === id)?.equipment).toEqual(equipment);
+  });
 });
 
 for (const [sport, drills, balls] of [["baseball", baseballDrills, "baseballs"], ["softball", softballDrills, "softballs"]] as const) {
   describe(`${sport} declared equipment`, () => {
+    it.each(sport === "baseball" ? ["sixty_yard", "lead_off_drill", "first_to_third"] : ["home_to_home", "home_to_first"])("%s cannot prescribe full-distance running without a field", (id) => {
+      const drill = drills.find(d => d.id === id);
+      if (!drill) throw new Error("Missing catalog drill");
+      expect(ownsSportDrillGear(drill, ["bases", "stopwatch"])).toBe(false);
+      expect(ownsSportDrillGear(drill, ["bases", "stopwatch", "field"])).toBe(true);
+    });
     it("partner flips cannot be supplied without a partner", () => {
       const drill = drills.find(d => d.id === "flip_drill");
       if (!drill) throw new Error("Missing catalog drill");
