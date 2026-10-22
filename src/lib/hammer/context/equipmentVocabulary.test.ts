@@ -63,6 +63,12 @@ describe("parseEquipmentStatement", () => {
 });
 
 describe("honest reporting of unrecognised items", () => {
+  it("retains explicitly declared farmer handles without assuming dumbbells", () => {
+    const parsed = parseEquipmentStatement("I have farmer handles");
+    expect(parsed.have).toEqual(["farmer_handles"]);
+    expect(mergeEquipment([], parsed)).toEqual(["farmer_handles"]);
+    expect(parsed.unrecognized).toEqual([]);
+  });
   it("retains a declared partner and treadmill without assuming either exists", () => {
     const parsed = parseEquipmentStatement("I have a partner and a treadmill");
     expect(parsed.have).toEqual(["partner", "treadmill"]);

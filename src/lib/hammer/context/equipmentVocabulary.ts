@@ -25,6 +25,7 @@ export const EQUIPMENT_VOCABULARY: ReadonlyArray<EquipmentTokenDef> = [
   { token: "squat_rack", label: "squat rack", phrases: ["squat rack", "power rack", "rack"] },
   { token: "bench", label: "bench", phrases: ["bench press", "flat bench", "bench"] },
   { token: "dumbbell", label: "dumbbells", phrases: ["dumbbells", "dumbbell", "db's", "dbs"] },
+  { token: "farmer_handles", label: "farmer's carry handles", phrases: ["farmer handles", "farmer's carry handles", "farmers carry handles", "farmer carry handles"] },
   { token: "kettlebell", label: "kettlebells", phrases: ["kettlebells", "kettlebell", "kettle bell"] },
   { token: "trap_bar", label: "trap bar", phrases: ["trap bar", "hex bar"] },
   { token: "cable_stack", label: "cable machine", phrases: ["cable machine", "cable stack", "cables"] },
