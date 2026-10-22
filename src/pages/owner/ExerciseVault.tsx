@@ -135,12 +135,13 @@ export default function ExerciseVault() {
         </section>
         <section className="space-y-2 border-b border-border pb-4" aria-label="Drill equipment corrections awaiting review">
           <h2 className="font-semibold">Drill equipment corrections — Needs owner review</h2>
-          {ELITE_DRILL_CATALOG.filter(drill => drill.ownerReview === 'pending_owner_review' && !FIELD_RUNNING_DRILLS.some(row => row.id === drill.id) && ['elite.throw.long_toss_pulldown_ladder', 'elite.pitch.towel_extension', 'elite.pitch.head_stability_target'].includes(drill.id) && (!q.trim() || `${drill.name} ${drill.id}`.toLowerCase().includes(q.trim().toLowerCase()))).map(drill =>
+          {ELITE_DRILL_CATALOG.filter(drill => cleared?.equipmentReview.some(row => row.slug === drill.id) && !FIELD_RUNNING_DRILLS.some(row => row.id === drill.id) && (!q.trim() || `${drill.name} ${drill.id}`.toLowerCase().includes(q.trim().toLowerCase()))).map(drill =>
             <div key={drill.id} className="space-y-2 border-b border-border py-3">
               <div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-semibold">{drill.name}</h3><Badge variant="secondary">Needs owner review</Badge></div>
               <p className="text-xs text-muted-foreground">Equipment: {drill.equipment.join(', ')} · Sport: {drill.sports.join(', ')}</p>
               <p className="text-sm">{drill.setup}</p>
               <Button asChild size="sm" variant="outline"><Link to={`/owner/drill-builder?drill=${encodeURIComponent(drill.id)}`}>Review drill equipment</Link></Button>
+              <Button size="sm" variant="outline" disabled={approving === drill.id} onClick={() => void approve(drill.id)}>{approving === drill.id ? 'Approving…' : 'Approve as written'}</Button>
             </div>)}
         </section>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
