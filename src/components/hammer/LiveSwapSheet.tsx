@@ -66,7 +66,8 @@ export function LiveSwapSheet({ rx, open, onOpenChange, block }: {
     setBusy(true); setErr(null);
     try { const d = await callSwap({ action: "swap", ...ids, missing, note: note || undefined, toSlug: c.slug, scope, ...(speedSetup ? { speedSetup } : {}) });
       setDone(`${d.reason}${d.memorySaved ? " · We'll remember this is missing." : ""}`);
-      qc.invalidateQueries(); }
+      // Refresh only the plan and gear reads a Swap changes — refetching every query stalled phones for 10–30 s.
+      qc.invalidateQueries({ predicate: q => SWAP_REFRESH.test(String(q.queryKey[0] ?? "")) }); }
     catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   };
   const label = (g: string) => ({ dumbbell: "Dumbbells", pitching_machine: "Machine", open_field: "Field space", baseballs: "Ball type: baseball", softballs: "Ball type: softball" }[g] ?? g.replace(/_/g, " "));
