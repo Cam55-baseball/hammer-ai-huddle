@@ -1,6 +1,7 @@
 # Current publish gate — Oct 21
 
 **Controlling owner update — October 22, 01:13 UTC:** catalog gear corrections (all exercises/drills, snapshot, change record and Needs owner review), block Swap persistence and personalized speed mixes are now explicitly authorized. One proof document total: `docs/owner/simple-swap-proof.md`. No publish/cron/iOS changes; never fabricate measurements/insights; preserve passed checks.
+**October 22, 01:55 UTC continuation request:** continue unfinished items; only after positive Swap proofs run the two-pass stability gate and finalize the checklist. Retain passed evidence.
 - [ ] A. Correct catalog gear with complete change record and owner-review queue.
   - [x] First 110 supported workout catalog corrections applied with before/after audit; owner review reopened and phone-checked.
   - [x] Goblet squat corrected to dumbbell OR kettlebell; shared Swap/build gear checks tested.
@@ -8,6 +9,7 @@
   - [x] Two further documented OR setups applied with snapshots/readback (128 distinct workout rows total); three built-in drill labels corrected and queued in preview; latest 43 focused tests pass.
   - [x] Standing hold and easy-flush source setups corrected with snapshots (130 workout rows total); drill review uses canonical audit status and approval; phone check clean, 45 distinct affected tests pass across bounded runs.
   - [x] Tibialis wall OR tib bar and wickets hurdles OR towel labels audited/read back (132 workout rows); 21 sport-library declarations corrected and queued with before/after records; phone review inspected, no owner approval.
+  - [x] Ten further explicit elite/sport drill requirements corrected, audit readback and phone owner-review check verified; 4 files / 52 tests pass. Workout total unchanged at 132; elite total 8, sport total 26.
   - [ ] Complete remaining ambiguous setups and drill libraries; do not mark A complete yet.
 - [ ] B. Save block-item swaps in today's canonical saved plan.
   - [x] Bundle the existing block builder without browser/auth dependencies; share exact envelope projection; six sport/gear parity cases and missingness preservation pass.
@@ -19,7 +21,7 @@
 
 **Controlling owner update — October 22, 00:59 UTC:** retain already-passed items. After Swap proof work, with no tests or database changes running, run the three-role real phone smoke twice fifteen minutes apart (TEST college player, democoach, demoorg), including a real report, coach-side player profile and game. Both passes require no 503/schema-cache errors; last-hour backend logs require no new 5xx errors. Swap proofs passed + confirmed Swap ALL + this stability check passed yields YES and a final owner checklist. No publish, schedule or iOS changes. Owner reports two-minute waits applied to scheduled backend callers and retired `training-block-daily-check` removed; not independently verified in this continuation.
 
-**Current verdict: NO (01:52 UTC).** Swap positive proofs remain 0/4; Swap is not ALL. Stability observation has not started because its Swap prerequisite is incomplete. Existing dated passes are retained. 132 distinct workout catalog corrections are live with audit snapshots and owner review; three elite and 21 sport-library drill corrections are in preview with saved audit records. Shared block-builder/context extraction is parity-checked but not connected to canonical saved blocks. All-catalog completion, atomic saved swaps and personalized no-field mixes remain open. Eight distinct affected files / 68 distinct tests pass across bounded runs; preview build OK 01:51:19 UTC. No publishing, schedule or iOS changes; no new TEST data created.
+**Current verdict: NO (01:59 UTC).** Swap positive proofs remain 0/4; fresh switch readback confirms OFF with existing exceptions, not ALL. Stability observation has not started because its Swap prerequisite is incomplete. Existing dated passes retained. 132 workout corrections live; eight elite and 26 sport-library corrections in preview with canonical audit records reopening owner review. Ten further requirements corrected this run; phone owner-review screenshots inspected, zero page errors; four focused files / 52 tests pass; preview build OK 01:57:51 UTC. Shared block builder remains preparation, not saved block authority. All-catalog completion, atomic block saves and personalized no-field mixes remain open. No publish, deployment, schema migration, schedule or iOS change; no new TEST data created.
 
 **Latest continuation — 01:37 UTC:** 128 distinct workout corrections now live; three built-in drill corrections in preview, Needs owner review. Gear-array validation and pull-up aliases strengthened locally; 43 focused tests pass and preview clean. All-catalog scope remains open: multi-sport/OR drill setups and underspecified loaded/support variants must not be guessed. B–F remain waiting in order; no new TEST data, publish, schedule or iOS changes.
 
