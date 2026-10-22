@@ -1,7 +1,8 @@
 import { isMovementSeasonLegal, seasonContextFromPhase } from "../wic/season.ts";
+import { declaredRouteBases } from "../wic/runRest.ts";
 
 type Row = Record<string, any>;
-export interface SwapPlayer { phase: string; ageYears: number | null; injuries: string[]; availableGear: string[] }
+export interface SwapPlayer { phase: string; sport: "baseball" | "softball" | null; ageYears: number | null; injuries: string[]; availableGear: string[] }
 export interface SwapChoice { slug: string; name: string; reason: string }
 
 /** Today answers stay dated; only Always answers affect later plan builds. */
@@ -49,6 +50,7 @@ export function injuryWords(value: unknown): string[] {
 /** Same category, family, intent and unit; gear available; legal for age/season/injury. */
 export function qualifies(source: Row, target: Row, missing: string[], player: SwapPlayer): boolean {
   if (!target || target.slug === source.slug || target.is_active !== true || target.superseded_by != null) return false;
+  if (!player.sport || (target.sport_scope !== "both" && target.sport_scope !== player.sport)) return false;
   for (const f of ["movement_category", "substitution_family", "dosage_unit"]) {
     if (!target[f] || target[f] !== source[f]) return false;
   }
@@ -78,7 +80,17 @@ function doseText(rx: Row): string {
 
 export function swapChoices(source: Row, family: Row[], rx: Row, missing: string[], player: SwapPlayer): SwapChoice[] {
   const lacking = missing.map(m => m.replace(/_/g, " ")).join(", ");
-  return family.filter(t => qualifies(source, t, missing, player)).slice(0, 3).map(t => ({
+  return family.filter(t => {
+    if (!qualifies(source, t, missing, player)) return false;
+    // A route carries work and rest identity as well as a distance; keep both.
+    if (source.base_route != null || t.base_route != null) {
+      if (!player.sport) return false;
+      const fromBases = declaredRouteBases(source.base_route, player.sport, rx.distance_feet);
+      const toBases = declaredRouteBases(t.base_route, player.sport, rx.distance_feet);
+      if (fromBases == null || fromBases !== toBases) return false;
+    }
+    return true;
+  }).slice(0, 3).map(t => ({
     slug: t.slug, name: t.name,
     reason: `${t.name}: same ${doseText(rx)}${lacking ? `, no ${lacking} needed` : ""}`,
   }));

@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { swapChoices, qualifies, swapMemoryAnswer, avoidsMissingGear, rememberedMissingGear } from "../../../supabase/functions/_shared/planSwap/simpleSwap";
 
 const src = { slug: "machine", name: "Machine", is_active: true, superseded_by: null, movement_category: "hitting",
-  substitution_family: "timing", primary_adaptation: "ball_timing", dosage_unit: "reps", equipment_requirements: ["pitching_machine"] };
+  substitution_family: "timing", primary_adaptation: "ball_timing", dosage_unit: "reps", sport_scope: "both", equipment_requirements: ["pitching_machine"] };
 const flips = { ...src, slug: "flips", name: "Partner flips", equipment_requirements: ["partner"] };
 const rx = { sets: 3, reps: 10, total_reps: 30, dosage_unit: "reps" };
-const p = { phase: "os_q1", ageYears: 15, injuries: [] as string[], availableGear: ["partner"] };
+const p = { phase: "os_q1", sport: "baseball" as const, ageYears: 15, injuries: [] as string[], availableGear: ["partner"] };
 
 describe("simple Swap", () => {
   it("records missing machine equipment for today without making it permanent", () => {
@@ -51,5 +51,28 @@ describe("simple Swap", () => {
   });
   it("never allows eccentric overload in season", () => {
     expect(qualifies(src, { ...flips, eccentric_overload: true }, [], { ...p, phase: "in_season" })).toBe(false);
+  });
+  it("keeps baseball and softball replacements in the player's selected sport", () => {
+    expect(qualifies(src, { ...flips, sport_scope: "softball" }, [], p)).toBe(false);
+    expect(qualifies(src, { ...flips, sport_scope: "baseball" }, [], { ...p, sport: "softball" })).toBe(false);
+    expect(qualifies(src, flips, [], { ...p, sport: null })).toBe(false);
+  });
+  it("preserves baseball's two 90-foot bases per rep and rejects changed route work", () => {
+    const route = { sport: "baseball", bases_per_rep: 2, base_distance_feet: 90 };
+    const from = { ...src, base_route: route };
+    const to = { ...flips, base_route: route };
+    const dose = { ...rx, distance_feet: 180 };
+    expect(swapChoices(from, [to], dose, [], p)).toHaveLength(1);
+    expect(swapChoices(from, [{ ...to, base_route: { ...route, bases_per_rep: 1 } }], dose, [], p)).toEqual([]);
+    expect(swapChoices(from, [flips], dose, [], p)).toEqual([]);
+  });
+  it("keeps softball's two 60-foot bases and never accepts baseball's 180-foot route", () => {
+    const route = { sport: "softball", bases_per_rep: 2, base_distance_feet: 60 };
+    const from = { ...src, base_route: route };
+    const to = { ...flips, base_route: route };
+    const player = { ...p, sport: "softball" as const };
+    expect(swapChoices(from, [to], { ...rx, distance_feet: 120 }, [], player)).toHaveLength(1);
+    expect(swapChoices(from, [to], { ...rx, distance_feet: 180 }, [], player)).toEqual([]);
+    expect(swapChoices(from, [{ ...to, base_route: { sport: "baseball", bases_per_rep: 2, base_distance_feet: 90 } }], { ...rx, distance_feet: 120 }, [], player)).toEqual([]);
   });
 });
