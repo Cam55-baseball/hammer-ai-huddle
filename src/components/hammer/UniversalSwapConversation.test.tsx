@@ -25,7 +25,7 @@ afterEach(cleanup);
 function answers() {
   fireEvent.click(screen.getByRole("checkbox", { name: "pitching machine" }));
   fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-  for (const label of ["partner", "front toss screen", "balls", "net or cage"]) fireEvent.click(screen.getByRole("checkbox", { name: label }));
+  for (const label of ["a partner", "front toss screen", "balls", "net or cage"]) fireEvent.click(screen.getByRole("checkbox", { name: label }));
   fireEvent.click(screen.getByRole("button", { name: "Continue" }));
   fireEvent.click(screen.getByRole("button", { name: "Always" }));
 }
@@ -39,7 +39,7 @@ describe("staged Swap conversation safety", () => {
     await waitFor(() => expect(screen.getByRole("checkbox", { name: "pitching machine" })).toBeChecked());
     expect(interpret).toHaveBeenCalledWith("No machine today; I have a partner.");
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByRole("checkbox", { name: "partner" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "a partner" })).toBeChecked();
     expect(onSaved).not.toHaveBeenCalled();
   });
   it("a parent-closed unanswered visit never reuses prior availability on reopen", () => {
