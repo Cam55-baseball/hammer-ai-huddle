@@ -190,3 +190,24 @@ Intermediate labels explicitly retained in the audit: rebounder initially mapped
 Goblet phone check (390×844): Needs owner review present; “You need a dumbbell or kettlebell”; Gear options dumbbell OR kettlebell; no page errors. These are catalog/review checks, not positive real-player Swap proofs. Owner editor retains alternative groups in draft payloads and displays one complete option per line. 62 affected tests passed; preview build OK. Authorized catalog/Swap services deployed; no publishing, schedules, iOS, athlete measurements or TEST records changed.
 
 Remaining catalog scope is still open: unspecified glute bridge/hip-thrust load and support, weighted-pullup load capability, space-specific alternatives, and the drill libraries identified by read-only audit. No fabricated gear-free classification and no retired-drill activation.
+
+## Applied batch 3 — October 22, 01:36 UTC
+
+Two additional workout rows are live with read-back-confirmed before/after snapshots in `exercise_vault_audit`; both reopen owner review. Total distinct workout corrections: **128**.
+
+| Slug | Before requirements | After mandatory requirements | Alternative groups | Evidence |
+|---|---|---|---|---|
+| lift_weighted_pullup_full | pullup_bar, weight_belt | pull_up_bar | weight_belt OR dumbbell | Own cue: weight belt or DB between feet; dead hang |
+| lift_dynamic_effort_squat | barbell, bands, squat_rack | barbell, squat_rack | bands OR chains | Own cue: 50–60% 1RM with bands or chains |
+
+Three built-in drill corrections are in the preview and flagged Needs owner review in the Drill Builder and Exercise Vault; no published frontend change is claimed.
+
+| Drill ID | Before | After | Evidence |
+|---|---|---|---|
+| elite.throw.long_toss_pulldown_ladder | none | baseballs, partner, field | Baseball-only throws; partner throwing on marked field |
+| elite.pitch.towel_extension | none | glove, towel, partner | Partner holds glove; athlete holds towel |
+| elite.pitch.head_stability_target | net | net, tape, partner, phone | Target taped behind net; partner films from front |
+
+Audit proposals were not applied blindly: Walk-Away specifies a feeder rather than a machine; Stride-Line says board OR rope OR towel, not all three. Multi-sport ball requirements need sport-aware complete groups. Their unresolved requirements remain open. Loaded tibialis raise, underspecified hip thrusts, weighted pull-up variants and deficit push-up cannot be certified from generic instructions alone. Retired band_resisted_swings remains untouched.
+
+Shared gear validation now rejects malformed mandatory arrays instead of dropping values or throwing, and normalizes pullup_bar/pull_up_bar consistently for ownership, missing memory and checkboxes. These latest shared-function changes are local/pending deployment. Five focused files / 43 tests pass; preview build OK. Existing earlier passes retained.

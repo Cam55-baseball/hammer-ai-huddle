@@ -17,6 +17,7 @@ import howToTsv from "../../../docs/owner/basic-how-to-review.tsv?raw";
 import { buildReviewQueue } from "@/lib/vault/reviewQueue";
 import { libraryOnlyRows, warmupStageReviewItems } from "@/lib/vault/warmupStageVault";
 import { FIELD_RUNNING_DRILLS } from '@/data/drills/fieldRunningDrills';
+import { ELITE_DRILL_CATALOG } from '@/data/drills/eliteDrillCatalog';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -130,6 +131,16 @@ export default function ExerciseVault() {
               <p className="text-xs text-muted-foreground">Sport: {drill.sports.join(', ')} · Category: {drill.category} · Issue tags: {drill.violationKeys.join(', ')}</p>
               <ol className="list-decimal space-y-1 pl-5 text-sm">{drill.steps.map((step, index) => <li key={index}>{step}</li>)}</ol>
               <Button asChild size="sm" variant="outline"><Link to={`/owner/drill-builder?drill=${encodeURIComponent(drill.id)}`}>Edit drill and issue tags</Link></Button>
+            </div>)}
+        </section>
+        <section className="space-y-2 border-b border-border pb-4" aria-label="Drill equipment corrections awaiting review">
+          <h2 className="font-semibold">Drill equipment corrections — Needs owner review</h2>
+          {ELITE_DRILL_CATALOG.filter(drill => drill.ownerReview === 'pending_owner_review' && !FIELD_RUNNING_DRILLS.some(row => row.id === drill.id) && ['elite.throw.long_toss_pulldown_ladder', 'elite.pitch.towel_extension', 'elite.pitch.head_stability_target'].includes(drill.id) && (!q.trim() || `${drill.name} ${drill.id}`.toLowerCase().includes(q.trim().toLowerCase()))).map(drill =>
+            <div key={drill.id} className="space-y-2 border-b border-border py-3">
+              <div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-semibold">{drill.name}</h3><Badge variant="secondary">Needs owner review</Badge></div>
+              <p className="text-xs text-muted-foreground">Equipment: {drill.equipment.join(', ')} · Sport: {drill.sports.join(', ')}</p>
+              <p className="text-sm">{drill.setup}</p>
+              <Button asChild size="sm" variant="outline"><Link to={`/owner/drill-builder?drill=${encodeURIComponent(drill.id)}`}>Review drill equipment</Link></Button>
             </div>)}
         </section>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">

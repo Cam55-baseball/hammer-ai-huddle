@@ -1,4 +1,8 @@
-## Latest continuation — October 22, 01:30 UTC — Ready to publish: NO.
+## Latest continuation — October 22, 01:37 UTC — Ready to publish: NO.
+
+Two additional workout OR corrections applied and audit snapshots read back (128 total); three documented built-in drill labels corrected and queued Needs owner review in preview. Mandatory gear now fails closed on malformed arrays; pull-up aliases match inventory and missing memory. Latest five focused files / 43 tests pass; preview build OK. Shared-function safety changes pending deployment; no athlete Swap save or memory proof claimed. All-catalog correction remains incomplete because multi-sport OR setups and unspecified loaded/support variants are not evidence-complete. Block saves and personalized mixes remain unimplemented; positive phone proofs 0/4; Swap restricted; stability/final guide/cleanup wait in order. No new TEST data, publishing, schedules or iOS changes.
+
+## Previous continuation — October 22, 01:30 UTC — Ready to publish: NO.
 
 Named equipment authorization acted on: 110 first-batch gear corrections plus 16 explicit OR-setup corrections, every change snapshotted in the existing Vault audit and recorded in `catalog-equipment-corrections.md`. Changed entries reopen owner review despite older approvals. Phone owner Vault shows corrected DB Bench and Goblet Squat requirements; Goblet displays dumbbell OR kettlebell; no page errors. Shared Swap/build gear checks reject missing or malformed alternatives; owner editor retains groups. Seven affected files / 62 tests pass; preview build OK. Authorized `exercise-vault`, `plan-swap`, `wk-generate-daily` deployed. No publish, schedules or iOS change, no new athlete measurements, insights or TEST data.
 
