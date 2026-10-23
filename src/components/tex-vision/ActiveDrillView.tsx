@@ -204,7 +204,7 @@ export default function ActiveDrillView({
     
     // Calculate drill duration
     const durationSeconds = drillStartTime.current > 0 
-      ? Math.floor((Date.now() - drillStartTime.current) / 1000) 
+      ? Math.round((Date.now() - drillStartTime.current) / 10) / 100
       : 60; // Default if timer wasn't set
     
     // Validate completion requirements

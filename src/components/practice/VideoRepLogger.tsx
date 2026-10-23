@@ -5,6 +5,7 @@ import { Play, Pause, Upload, Video, ChevronLeft, ChevronRight, Rewind, FastForw
 import { VideoRepMarker, type RepMarker } from './VideoRepMarker';
 import { RepScorer, type ScoredRep } from './RepScorer';
 import type { SessionConfig } from './SessionConfigPanel';
+import { clockHundredths } from '@/lib/logging/elapsedClock';
 
 interface VideoRepLoggerProps {
   module: string;
@@ -14,10 +15,7 @@ interface VideoRepLoggerProps {
 }
 
 function formatTime(sec: number): string {
-  if (!isFinite(sec) || sec < 0) return '0:00.00';
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}:${s < 10 ? '0' : ''}${s.toFixed(2)}`;
+  return clockHundredths(sec);
 }
 
 function clampTime(t: number, dur: number): number {
