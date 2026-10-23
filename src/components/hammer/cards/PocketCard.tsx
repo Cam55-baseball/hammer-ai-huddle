@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { PracticeLog } from "@/components/hammer/logging/ExtraLogs";
 import { createContext, useContext } from "react";
+import { FocusSession } from "./FocusSession";
 
 const PocketDetailsContext = createContext(false);
 const PocketLogContext = createContext<HTMLElement | null>(null);
@@ -203,6 +204,7 @@ function PocketCardShell({ id, category, focus, tone, planDate, prescribed, coun
             <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" aria-label="Close" onClick={() => close(true)}><X className="h-4 w-4" /></Button>
           </header>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">
+            <FocusSession active={locked} storageKey={`hm-focus:${planDate}:${id}`} onExit={() => close(true)}>
             {!link && <section data-workout-log className="space-y-3">
               <h3 className="text-base font-semibold">Log this work</h3>
               <div ref={setLogHost} className="space-y-4" />
@@ -242,6 +244,7 @@ function PocketCardShell({ id, category, focus, tone, planDate, prescribed, coun
               {CARD_DISCLAIMER}
             </p>
             <div className="mt-2 flex justify-center"><ReportProblemButton className="h-7 text-[12px]" card={heading} planDate={planDate} /></div>
+            </FocusSession>
           </div>
           <footer className="flex items-center justify-between gap-2 border-t border-border px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
             <Button variant="ghost" size="sm" className="h-11" onClick={() => setConfirmDiscard(true)}>
