@@ -22,6 +22,7 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [awaitingManualRest, setAwaitingManualRest] = useState(false);
   const conditioning = useConditioningRest();
   const all = [...entries.current.values()];
   const current = cursor.exerciseId ? all.find(entry => entry.id === cursor.exerciseId) : all[cursor.exercise];
@@ -46,7 +47,7 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
   }, [active, cursor.restingUntil, advance]);
   const save = async (exit: boolean) => {
     if (!current || busy) { if (exit) onExit(); return; }
-    setBusy(true); setError(null);
+    setBusy(true); setError(null); setAwaitingManualRest(false);
     try {
       await current.save(cursor.row);
       if (exit) { onExit(); return; }
@@ -60,13 +61,13 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
         const now = Date.now();
         setCursor(prior => ({ ...prior, restStartedAt: now, restSeconds: seconds, restingUntil: now + seconds * 1000 }));
       } else if (seconds === 0) advance();
-      else setError("Rest time is not specified for this activity. Finish your rest, then continue.");
+      else { setAwaitingManualRest(true); setError("Rest time is not specified for this activity. Finish your rest, then continue."); }
     } catch { setError("Couldn't save this set. Your entries are still here; try again."); }
     finally { setBusy(false); }
   };
   const skip = async () => {
     if (!current || busy) return;
-    setBusy(true); setError(null);
+    setBusy(true); setError(null); setAwaitingManualRest(false);
     try { await current.save(cursor.row); advance(); }
     catch { setError("Couldn't save your entries. Try again before skipping."); }
     finally { setBusy(false); }
@@ -80,7 +81,7 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
         {current && cursor.restingUntil == null && <>
           <Button size="sm" disabled={busy || !current.ready[cursor.row]} onClick={() => void save(false)}>Next</Button>
           <Button size="sm" variant="outline" disabled={busy} onClick={() => void skip()}>Skip</Button>
-          {error && current.restSeconds == null && <Button size="sm" variant="outline" onClick={() => { setError(null); advance(); }}>Rest finished</Button>}
+          {awaitingManualRest && <Button size="sm" variant="outline" onClick={() => { setError(null); setAwaitingManualRest(false); advance(); }}>Rest finished</Button>}
         </>}
         <Button size="sm" variant="outline" disabled={busy} onClick={() => void save(true)}>Save &amp; exit</Button>
       </div>
