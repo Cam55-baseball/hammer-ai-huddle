@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Save, Trash2, Dumbbell, Timer, Footprints } from 'lucide-react';
 import { ActivityFolderItem } from '@/types/activityFolder';
+import { useFocusExercise, FocusDurationTimer } from '@/components/hammer/cards/FocusSession';
+import type { Exercise } from '@/types/customActivity';
 
 interface SetRow {
   set: number;
@@ -30,6 +32,7 @@ interface FolderItemPerformanceLoggerProps {
   compact?: boolean;
   exerciseId?: string;
   exerciseName?: string;
+  prescription?: Exercise;
 }
 
 type InputMode = 'weight_reps' | 'duration' | 'flexible';
@@ -54,10 +57,12 @@ function getDefaultSet(mode: InputMode, setNum: number): SetRow {
   return { ...base, weight: undefined, reps: undefined, time: undefined, distance: undefined };
 }
 
-export function FolderItemPerformanceLogger({ item, performanceData, onSave, compact, exerciseId, exerciseName }: FolderItemPerformanceLoggerProps) {
-  const mode = getInputMode(item.item_type);
+export function FolderItemPerformanceLogger({ item, performanceData, onSave, compact, exerciseId, exerciseName, prescription }: FolderItemPerformanceLoggerProps) {
+  const mode = prescription?.duration != null ? 'duration' : prescription ? 'weight_reps' : getInputMode(item.item_type);
   const [sets, setSets] = useState<SetRow[]>([]);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const prescribedRows = Math.max(1, prescription?.sets ?? 1);
 
   useEffect(() => {
     // If scoped to a specific exercise, load from exerciseSets map
@@ -68,9 +73,9 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
     if (scopedData?.sets && scopedData.sets.length > 0) {
       setSets(scopedData.sets);
     } else {
-      setSets([getDefaultSet(mode, 1)]);
+      setSets(Array.from({ length: prescribedRows }, (_, index) => getDefaultSet(mode, index + 1)));
     }
-  }, [performanceData, mode, exerciseId]);
+  }, [performanceData, mode, exerciseId, prescribedRows]);
 
   const addSet = () => {
     const lastSet = sets[sets.length - 1];
@@ -90,7 +95,7 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
     setSets(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
   };
 
-  const handleSave = async () => {
+  const persist = async () => {
     setSaving(true);
     try {
       if (exerciseId) {
@@ -105,27 +110,41 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
           },
         } as any);
       } else {
-        await onSave({ sets });
+        await onSave({ ...(performanceData || {}), sets });
       }
     } finally {
       setSaving(false);
     }
   };
 
+  const handleSave = async () => {
+    setError(null);
+    try { await persist(); }
+    catch { setError("Couldn't save your sets. Your entries are still here; try again."); }
+  };
+  const focus = useFocusExercise({ id: `coach:${item.id}:${exerciseId ?? 'item'}`, name: exerciseName ?? item.title,
+    rows: prescribedRows, ready: Array.from({ length: prescribedRows }, (_, index) => {
+      const row = sets[index];
+      return row != null && [row.reps, row.time, row.distance, row.steps, row.force_lbs].some(value => value != null && value > 0);
+    }), restSeconds: prescription?.rest ?? null, save: persist });
+
   const hasSomeData = sets.some(s => s.weight || s.reps || s.time || s.distance || s.steps || s.force_lbs);
 
   return (
-    <div className="space-y-2 mt-2">
+    <div className={focus.visible ? 'space-y-2 mt-2' : 'hidden'}>
       <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
         {mode === 'weight_reps' && <Dumbbell className="h-3 w-3" />}
         {mode === 'duration' && <Timer className="h-3 w-3" />}
         {mode === 'flexible' && <Footprints className="h-3 w-3" />}
-        <span>{exerciseName ? `${exerciseName} — Log Sets` : 'Log Sets'}</span>
+        <span>{exerciseName ? `${exerciseName} — Log Sets (instructions below)` : 'Log Sets'}</span>
       </div>
+
+      {focus.active && prescription?.duration != null && prescription.duration > 0 && <FocusDurationTimer key={focus.row} target={prescription.duration} onDone={seconds => updateSet(focus.row, 'time', seconds)} />}
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
       <div className="space-y-1.5">
         {sets.map((set, index) => (
-          <div key={index} className="space-y-1">
+          <div key={index} data-entry-row={index < prescribedRows ? 'prescribed' : 'added'} className={focus.active && index !== focus.row ? 'hidden' : 'space-y-1'}>
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-[10px] text-muted-foreground w-4 text-center shrink-0">{set.set}</span>
 
@@ -178,15 +197,15 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
                     min="0"
                     inputMode="decimal"
                     placeholder="Sec"
-                    value={set.time ?? ''}
-                    onChange={e => updateSet(index, 'time', e.target.value ? parseFloat(e.target.value) : undefined)}
+                    value={set.time != null && set.time_unit !== 'sec' ? Number((set.time * 60).toFixed(2)) : set.time ?? ''}
+                    onChange={e => setSets(prev => prev.map((row, i) => i === index ? { ...row, time: e.target.value ? parseFloat(e.target.value) : undefined, time_unit: 'sec' } : row))}
                     className="h-7 w-16 text-xs px-1.5 min-w-0"
                   />
                   <span className="text-[10px] text-muted-foreground">sec</span>
                 </div>
               )}
 
-              {sets.length > 1 && (
+              {!focus.active && sets.length > 1 && (
                 <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeSet(index)}>
                   <Trash2 className="h-3 w-3 text-destructive" />
                 </Button>
@@ -234,7 +253,12 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
         ))}
       </div>
 
-      <div className="flex items-center gap-2">
+      {focus.active && prescription && <div className="text-sm text-muted-foreground space-y-1">
+        {prescription.duration != null && <p>Time target: {prescription.duration.toFixed(2)} sec</p>}
+        {prescription.reps != null && <p>Reps target: {prescription.reps}</p>}
+        {prescription.notes && <p>{prescription.notes}</p>}
+      </div>}
+      <div className={focus.active ? 'hidden' : 'flex items-center gap-2'}>
         <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addSet}>
           <Plus className="h-3 w-3" /> Set
         </Button>
