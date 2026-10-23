@@ -74,7 +74,7 @@ const DURATION_RE =
 export function timedMobilityMeasure(text: string): "hold_seconds" | "duration" | null {
   const normalized = norm(text);
   // "Hold then explode/release" is an explosive rep with a pause — counted, not timed.
-  if (HOLD_RE.test(normalized) && !/explode|release/.test(normalized)) return "hold_seconds";
+  if (HOLD_RE.test(normalized) && !/explode|release|shoulder tap|drag through|leg lift|reach/.test(normalized)) return "hold_seconds";
   return DURATION_RE.test(normalized) ? "duration" : null;
 }
 
@@ -130,7 +130,7 @@ export function measureTypeFor(input: MeasureInput): MeasureType {
   if (slot === "speed" || SPRINT_RE.test(text)) return "sprint_time";
 
   // Holds and longer efforts.
-  if (HOLD_RE.test(text) && !/explode|release/.test(text)) return "hold_seconds";
+  if (HOLD_RE.test(text) && !/explode|release|shoulder tap|drag through|leg lift|reach/.test(text)) return "hold_seconds";
   if (DURATION_RE.test(text)) return "duration";
 
   // Lifts.

@@ -92,3 +92,10 @@ describe("upper-body power codes are not swings", () => {
     expect(measureTypeFor({ slug: "bp_rounds" })).toBe("swing_count");
   });
 });
+
+describe("moving plank variations count reps", () => {
+  it.each(["tall_plank_shoulder_tap", "plank_drag_through", "plank_with_reach", "lift_side_plank_leg_lift", "bs_side_plank_rot_reach"])("%s", slug => {
+    expect(measureTypeFor({ slug })).toBe("reps");
+  });
+  it("a still plank stays a hold", () => expect(measureTypeFor({ slug: "four_way_plank" })).toBe("hold_seconds"));
+});
