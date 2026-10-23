@@ -21,6 +21,7 @@ import { prescribedBases } from "../../../../supabase/functions/_shared/wic/runR
 import { ExerciseTools } from "../cards/ExerciseTools";
 import { pendingFor } from "@/lib/logging/logOutbox";
 import { DistanceField } from "./DistanceField";
+import { ToolSessionWindow } from "../cards/ToolSessionWindow";
 
 type Draft = Record<string, string>[];
 const TOUCHED = "_t";
@@ -162,6 +163,7 @@ export function LegacyDrillInlineLog({
     {logged.length > 0 && primary && <p data-prescribed-vs-done className="text-[11px] text-muted-foreground">Prescribed: {spec.rows} {spec.rows === 1 ? "set" : "sets"}{primary.prefill ? ` × ${primary.key === "time" ? formatTime(kindFor(primary.prefill), primary.prefill) : `${primary.prefill} ${primary.label.toLowerCase()}`}` : ""} · Done: {logged.length} {logged.length === 1 ? "set" : "sets"}</p>}
     <SavedIndicator state={autosave.state} />
     <ExerciseTools module={modality} exerciseId={storageKey} planDate={taskSync?.planDate ?? new Date().toLocaleDateString("en-CA")} />
+    {focus.active && ["throwing", "pitching", "hitting", "baserunning"].includes(modality) && user && <ToolSessionWindow label="Practice session log" route={`/practice?module=${modality}&drill_type=${encodeURIComponent(name)}`} kind="practice" />}
     {focus.active && <ActivityBasics name={name} dosage={dosage} setup={setup} cue={cue} stopIf={stopIf} />}
     </div>
   </section>;

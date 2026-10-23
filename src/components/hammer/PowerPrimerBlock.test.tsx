@@ -23,9 +23,9 @@ describe("power primer built into the lift", () => {
     const host = state.host;
     if (!host) throw new Error("Missing log host");
     const top = within(host);
-    expect(top.getByText("Rest after the lift set time (2:00):")).toBeVisible();
+    expect(top.getByText("Rest after the lift set time (2:00.00):")).toBeVisible();
     fireEvent.click(top.getByRole("button", { name: "5/5 Felt excellent" }));
-    expect(top.getByText("Rest after this run set time (1:00):")).toBeVisible();
+    expect(top.getByText("Rest after this run set time (1:00.00):")).toBeVisible();
     expect(host.querySelectorAll("[data-primer-lift-set]").length).toBe(2);
   });
   it("interleaves lift sets with rated all-out sets and stops after a 3/5", () => {

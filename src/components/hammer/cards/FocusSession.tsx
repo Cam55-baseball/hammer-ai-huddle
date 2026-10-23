@@ -89,6 +89,11 @@ export function useFocusExercise(entry: Exercise) {
   return { active: context?.active ?? false, visible: !context?.active || context.currentId === entry.id, row: context?.cursor.row ?? 0, resting: context?.cursor.restingUntil != null };
 }
 
+export function useFocusState() {
+  const context = useContext(Context);
+  return { active: context?.active ?? false, currentId: context?.currentId, row: context?.cursor.row ?? 0 };
+}
+
 export function FocusDurationTimer({ target, onDone }: { target: number; onDone: (seconds: number) => void }) {
   const [start, setStart] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());

@@ -210,8 +210,8 @@ function PocketCardShell({ id, category, focus, tone, planDate, prescribed, coun
               <div ref={setLogHost} className="space-y-4" />
               <p className="text-xs text-muted-foreground">More information for each exercise is below ↓</p>
             </section>}
-            {!link && <h3 className="mt-3 border-t border-border pt-3 text-sm font-semibold">EXERCISES</h3>}
-            {showIntro && intro && (
+            {!link && !locked && <h3 className="mt-3 border-t border-border pt-3 text-sm font-semibold">EXERCISES</h3>}
+            {showIntro && intro && !locked && (
               <div data-pocket-intro className="mb-3 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm text-foreground animate-in fade-in motion-reduce:animate-none">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">First time here</p>
                 <p className="mt-1 leading-snug">{intro}</p>
