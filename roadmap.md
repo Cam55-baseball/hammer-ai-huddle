@@ -1,5 +1,20 @@
 # Current publish gate — Oct 23 Hammers Today cleanup
 
+## OWNER DECISIONS — exercises whose log type and category disagree (Oct 23, 21:55 run)
+Found by checking every library exercise's category against how it is logged. Nothing changed; pick A or B per row.
+
+| Exercise | What it is now | Option A | Option B |
+|---|---|---|---|
+| Walking Lunge (`walking_lunge`) | Strength, logged as time | Keep time | Log reps per leg |
+| Rear-Foot-Raised Resist-Turning Press (`lift_rfess_pallof`) | Strength, logged as a hold (seconds) | Keep hold seconds | Log press reps |
+| Banded Lateral Squat Walk (`lift_banded_lateral_squat_walk`) | Strength, logged as time | Keep time | Log steps each way |
+| Elephant Walk (`lift_elephant_walk`) | Strength, logged as time | Keep time | Log steps |
+| Farmer Carry on Toes (`lift_farmer_toe_walk`) | Strength, logged as time | Keep time | Log distance (yards) |
+
+The other 13 flagged rows (wall sits, iso squats, iso split squats, Copenhagen plank, pull-up hold, etc.) are true holds filed under Strength; they stay timed and need no decision.
+
+- [ ] Oct 23 cleanup run 9, 21:55: owner decisions table written (5 exercises). Phone proofs for items 2, 5, 8–12, 14 not run this turn; status table below unchanged. No deploy/migration/publish/cron/iOS.
+
 ## Oct 23 Hammers Today clean-up — status (end of run 8, 20:30 UTC)
 
 Items 1–14 are the owner's sections A–E split into steps. Proof paths are sandbox screenshots/logs.
