@@ -48,7 +48,7 @@ export function fmtClock(totalSec: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}.${String(cs % 100).padStart(2, "0")}`;
 }
 
-export function RestTimer({ seconds: base, maxSeconds, label = "Rest", initialStartedAt = null }: { seconds?: number | null; maxSeconds?: number | null; label?: string; initialStartedAt?: number | null }) {
+export function RestTimer({ seconds: base, maxSeconds, label = "Rest", initialStartedAt = null, managed = false }: { seconds?: number | null; maxSeconds?: number | null; label?: string; initialStartedAt?: number | null; managed?: boolean }) {
   const [extra, setExtra] = useState(0);
   const seconds = typeof base === "number" ? base + extra : base;
   const canAdd = typeof base === "number" && maxSeconds != null && base + extra + 30 <= maxSeconds;
@@ -87,7 +87,7 @@ export function RestTimer({ seconds: base, maxSeconds, label = "Rest", initialSt
       <span className="font-mono font-semibold text-foreground" aria-live="polite">
         {finished ? "Go — rest done" : fmtClock(countdown ? (startedAt == null ? target : left) : elapsed)}
       </span>
-      <div className="ml-auto flex gap-1">
+      {!managed && <div className="ml-auto flex gap-1">
         {canAdd && (
           <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() => setExtra((e) => e + 30)} aria-label="Add 30 seconds">+30 s</Button>
         )}
@@ -101,7 +101,7 @@ export function RestTimer({ seconds: base, maxSeconds, label = "Rest", initialSt
             <Button size="sm" variant="outline" className="h-7 px-2" onClick={stop} aria-label="Stop timer"><Square className="h-3 w-3" /></Button>
           </>
         )}
-      </div>
+      </div>}
     </div>
   );
 }

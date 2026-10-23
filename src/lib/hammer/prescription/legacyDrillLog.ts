@@ -19,12 +19,15 @@ function firstNumber(text: string, pattern: RegExp): number | null {
 
 /** Presentation-only parser for the dose already authored by the plan. */
 export function legacyDrillLogSpec(modality: string, name: string, dosage: string): LegacyDrillLogSpec {
-  const text = `${name} ${dosage}`.toLowerCase().replace(/×/g, "x");
-  const sets = firstNumber(text, /\b(\d+)\s*(?:sets?\s*)?x\s*\d+/) ?? 1;
-  const multiplied = firstNumber(text, /\b\d+\s*(?:sets?\s*)?x\s*(\d+)/);
+  // Names can contain distances or timing examples; only the authored dose sets targets.
+  const text = dosage.toLowerCase().replace(/×/g, "x");
+  const activity = `${name} ${dosage}`.toLowerCase();
+  const sets = firstNumber(text, /\b(\d+)\s*(?:sets?\s*)?x\s*\d+/) ?? firstNumber(text, /\b(\d+)\s*(?:rounds?|sets?)\s+(?:of|at)\b/) ?? 1;
+  const multiplied = firstNumber(text, /\b\d+\s*(?:sets?\s*)?x\s*(\d+(?:\.\d+)?)/);
   const reps = firstNumber(text, /\b(\d+)\s*(?:reps?|contacts?|catches?|swings?|steps?|runs?|trips?|bursts?|rounds?|ladders?)\b/) ?? multiplied;
-  const seconds = firstNumber(text, /\b(\d+(?:\.\d+)?)\s*(?:seconds?|secs?|s)\b/);
-  const minutes = firstNumber(text, /\b(\d+(?:\.\d+)?)\s*(?:minutes?|mins?)\b/);
+  const targetText = text.replace(/rest\s*:?\s*\d+(?:\.\d+)?\s*(?:seconds?|secs?|s|minutes?|mins?)\b/g, "");
+  const seconds = firstNumber(targetText, /\b(\d+(?:\.\d+)?)\s*(?:seconds?|secs?|s)\b/);
+  const minutes = firstNumber(targetText, /\b(\d+(?:\.\d+)?)\s*(?:minutes?|mins?)\b/);
   const feet = firstNumber(text, /\b(\d+(?:\.\d+)?)\s*(?:feet|foot|ft)\b/);
   const yards = firstNumber(text, /\b(\d+(?:\.\d+)?)\s*(?:yards?|yds?)\b/);
   const distance = feet ?? (yards == null ? null : yards * 3);
@@ -35,7 +38,10 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
     // Time is entered in real segments (s / mm:ss) and stored in seconds — never decimal minutes.
     return { rows: Math.max(1, sets), completion: true, fields: [{ key: "time", label: "Time", unit: "s", prefill: seconds ?? (minutes == null ? null : Math.round(minutes * 6000) / 100) }] };
   }
-  if (modality === "throwing" || /throw|pitch|bullpen|catch play|plyo ball/.test(text)) {
+  if (/pop[_ -]?time|pop to (2b|second)/.test(name.toLowerCase())) {
+    return { rows: sets, completion: false, fields: [{ key: "time", label: "Pop time", unit: "ss.hh", prefill: seconds }] };
+  }
+  if (modality === "throwing" || modality === "pitching" || /throw|pitch|bullpen|catch play|plyo ball/.test(activity)) {
     return { rows: sets, completion: false, fields: [{ key: "throws", label: "Throws", prefill: reps }] };
   }
   if (modality === "conditioning" || modality === "baserunning") {
@@ -47,5 +53,5 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
   if (seconds != null) {
     return { rows: sets, completion: false, fields: [{ key: "time", label: "Seconds", unit: "s", prefill: seconds }] };
   }
-  return { rows: sets, completion: false, fields: [{ key: "reps", label: /swing|contact|hit/.test(text) ? "Swings" : "Reps", prefill: reps }] };
+  return { rows: sets, completion: false, fields: [{ key: "reps", label: /swing|contact|hit/.test(activity) ? "Swings" : "Reps", prefill: reps }] };
 }

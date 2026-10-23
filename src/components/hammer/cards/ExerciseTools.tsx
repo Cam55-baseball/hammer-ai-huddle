@@ -7,7 +7,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { priorityAccess } from "@/lib/hammer/priorityAccess";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Video, Check } from "lucide-react";
 import { ToolSessionWindow } from "./ToolSessionWindow";
 
@@ -24,7 +24,6 @@ function SignedInExerciseTools({ module, exerciseId, planDate, userId }: { modul
   const { modules, loading } = useSubscription();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [used, setUsed] = useState(false);
   const [started, setStarted] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +31,19 @@ function SignedInExerciseTools({ module, exerciseId, planDate, userId }: { modul
   const access = priorityAccess(modules, sport);
   const eligible = clipModule === "hitting" ? access.hasHitting : clipModule === "pitching" ? access.hasPitching : clipModule === "throwing" ? access.hasThrowing : false;
   const key = `hm-tool:${userId}:${sport}:${planDate}:${exerciseId}`;
-  useEffect(() => { setUsed(localStorage.getItem(key) === "1"); setStarted(null); setError(null); }, [key]);
+  useEffect(() => { setStarted(null); setError(null); }, [key]);
+  const usage = useQuery({
+    queryKey: ["exercise-delaycam-usage", userId, sport, clipModule, planDate, exerciseId],
+    enabled: !!clipModule && eligible && !loading,
+    queryFn: async () => {
+      const result = await supabase.from("delaycam_sessions").select("id,summary")
+        .eq("user_id", userId).eq("sport", sport).eq("module", clipModule ?? "hitting")
+        .contains("summary", { exercise_id: exerciseId, plan_date: planDate }).not("ended_at", "is", null);
+      if (result.error) throw result.error;
+      return result.data.length > 0;
+    },
+  });
+  const used = usage.data === true;
   if (!clipModule || !eligible || loading) return null;
   const checkOff = async () => {
     if (!started || saving) return;
@@ -48,8 +59,10 @@ function SignedInExerciseTools({ module, exerciseId, planDate, userId }: { modul
     });
     setSaving(false);
     if (result.error) { setError("Couldn't save Delaycam usage. Try checking it off again."); return; }
-    localStorage.setItem(key, "1"); setUsed(true);
-    await qc.invalidateQueries({ queryKey: ["delaycam-reminder", userId, sport, clipModule] });
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["exercise-delaycam-usage", userId, sport, clipModule, planDate, exerciseId] }),
+      qc.invalidateQueries({ queryKey: ["delaycam-reminder", userId, sport, clipModule] }),
+    ]);
   };
   return <div className="space-y-2" data-exercise-tools>
     <div className="flex flex-wrap gap-2">
@@ -57,14 +70,18 @@ function SignedInExerciseTools({ module, exerciseId, planDate, userId }: { modul
       <ToolSessionWindow label="Record Royal timing" route="/royal-timing" kind="timing" />
       {clipModule === "hitting" && <ToolSessionWindow label="Tex Vision session" route="/tex-vision" kind="vision" />}
       {clipModule === "pitching" && sport === "baseball" && <ToolSessionWindow label="Pick-off Trainer" route="/pickoff-trainer" kind="practice" />}
-      {started && !used && !open && <Button size="sm" variant="outline" disabled={saving} onClick={() => void checkOff()}>I used Delaycam</Button>}
+      {started && !used && <Button size="sm" variant="outline" disabled={saving || usage.isPending} onClick={() => void checkOff()}>I used Delaycam</Button>}
       {used && <span className="flex items-center gap-1 text-xs text-primary"><Check className="h-4 w-4" />Delaycam used</span>}
     </div>
     {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
+    {usage.isError && <p role="alert" className="text-xs text-destructive">Couldn't check your saved Delaycam usage.</p>}
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="z-[70] max-h-[95dvh] w-[calc(100%-1rem)] overflow-y-auto p-3">
         <DialogHeader><DialogTitle>Delaycam</DialogTitle></DialogHeader>
         <Suspense fallback={<p className="text-sm text-muted-foreground">Opening camera…</p>}><DelayCam module={clipModule} sport={sport} /></Suspense>
+        {!used && <Button variant="outline" disabled={saving || usage.isPending} onClick={() => void checkOff()}>I used Delaycam</Button>}
+        {used && <p className="text-sm text-primary">Delaycam used</p>}
+        {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
         <Button variant="outline" onClick={() => setOpen(false)}>Return to exercise</Button>
       </DialogContent>
     </Dialog>

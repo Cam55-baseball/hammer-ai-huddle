@@ -1093,8 +1093,7 @@ function HammerDailyPlanBody({
         <GpInGameAdvisoryStrip />
 
 
-        {/* Step 21E3 — the day's reason lives in the header, not on movements. */}
-        <WkSeasonReplanNote />
+        {/* All day-change reasons live once in the closed Before you start drawer. */}
 
         <div className="rounded-md border border-primary/20 bg-primary/5 px-2 py-1.5 text-[11px] text-muted-foreground">
           <span className="font-medium text-foreground">Do in this order:</span>{" "}

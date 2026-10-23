@@ -3,6 +3,7 @@ import { Play, Pause, SkipBack, SkipForward, Camera, Upload, X, ChevronLeft, Che
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { clockHundredths } from '@/lib/logging/elapsedClock';
 
 interface VideoPlayerProps {
   label: string;
@@ -17,10 +18,7 @@ interface VideoPlayerProps {
 }
 
 function formatSec(s: number): string {
-  if (!isFinite(s) || s < 0) return '0:00.0';
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  return `${m}:${sec < 10 ? '0' : ''}${sec.toFixed(1)}`;
+  return clockHundredths(s);
 }
 
 function clampTime(t: number, dur: number): number {

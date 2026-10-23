@@ -259,7 +259,7 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     if (!running) { startedAt.current = Date.now(); setElapsed(0); setRunning(true); return; }
     setRunning(false);
     const secs = String(Math.round((Date.now() - (startedAt.current ?? Date.now())) / 10) / 100);
-    const i = rounds.findIndex((r) => !r.time);
+    const i = focus.active ? focus.row : rounds.findIndex((r) => !r.time);
     if (i >= 0) edit(i, "time", secs, 0);
   };
   const primary = spec.fields.find(f => f.key !== "weight" && f.key !== "time" && f.key !== "distance") ?? spec.fields.find(f => f.key === "time") ?? spec.fields[0];
@@ -267,7 +267,8 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
   const unitWord = primary.key === "time" ? "" : ` ${primary.label.toLowerCase()}`;
   const fmt = (v: number) => primary.key === "time" ? formatTime(timeKindFor({ stopwatch, targetSeconds: primary.prefill }), v) : String(v);
   const showDone = !(primary.key === "time" && stopwatch);
-  return <div className="space-y-2" data-inline-prescription-log hidden={!focus.visible || (focus.active && focus.resting)}>
+  return <div className="space-y-2" data-inline-prescription-log hidden={!focus.visible}>
+    <div className="space-y-2" hidden={focus.active && focus.resting}>
     <h4 className="text-sm font-semibold break-words">{rx.movement_name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>
     {focus.active && !stopwatch && spec.fields.some(f => f.key === "time" && (f.prefill ?? 0) > 0) && <FocusDurationTimer key={focus.row} target={spec.fields.find(f => f.key === "time")?.prefill ?? 0} onDone={value => edit(focus.row, "time", String(value), 0)} />}
     {hasTime && <div className="flex items-center gap-2" data-rep-timer>
@@ -288,8 +289,6 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
         : f.unit === "ft + in" ? <DistanceField key={f.key} label={`${f.label} ${i + 1}`} value={round[f.key] ?? ""} onChange={v => edit(i, f.key, v)} onBlur={() => touch(i)} />
         : <Input key={f.key} aria-label={`${f.label} ${i + 1}`} inputMode={f.key === "weight" || f.key === "distance" ? "decimal" : "numeric"} value={round[f.key] ?? ""} placeholder={f.prefill != null ? String(f.prefill) : undefined} onFocus={() => touch(i)} onChange={(e) => edit(i, f.key, e.target.value)} onBlur={() => touch(i)} className="h-9 px-2 text-sm" />)}
     </div>)}
-    <ExerciseTools module={rx.slot} exerciseId={rx.id} planDate={rx.plan_date} />
-    {focus.active && ["throwing", "pitching", "hitting", "baserunning"].includes(rx.slot) && user && <ToolSessionWindow label="Practice session log" route={`/practice?module=${rx.slot}&drill_type=${encodeURIComponent(rx.movement_slug)}`} kind="practice" />}
     {focus.active && <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} cue={rx.why_payload?.cue} />}
     <div className="flex flex-wrap items-center justify-between gap-2">
       <Button type="button" size="sm" variant="outline" className="h-9" onClick={addSet}><Plus className="mr-1 h-3.5 w-3.5" />Add set</Button>
@@ -297,5 +296,11 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     </div>
     {entered.length > 0 && <p data-prescribed-vs-done className="text-[11px] text-muted-foreground">Prescribed: {spec.rows} {spec.rows === 1 ? "set" : "sets"}{primary.prefill ? ` × ${fmt(primary.prefill)}${unitWord}` : ""} · Done: {entered.length} {entered.length === 1 ? "set" : "sets"}{showDone && doneTotal ? `, ${fmt(doneTotal)}${unitWord} total` : ""}</p>}
     <SavedIndicator state={autosave.state} />
+    </div>
+    <ExerciseTools module={rx.slot} exerciseId={rx.id} planDate={rx.plan_date} />
+    {focus.active && ["throwing", "pitching", "hitting", "baserunning"].includes(rx.slot) && user && <ToolSessionWindow label="Practice session log" route={`/practice?module=${rx.slot}&drill_type=${encodeURIComponent(rx.movement_slug)}`} kind="practice" onPracticeSaved={count => {
+      const field = spec.fields.find(f => ["throws", "swings", "reps"].includes(f.key));
+      if (field) edit(focus.row, field.key, String(count), 0);
+    }} />}
   </div>;
 }

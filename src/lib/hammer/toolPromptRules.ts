@@ -42,7 +42,8 @@ export function delaycamWeeklyTarget(i: Pick<DelaycamPromptInput, "majorMechanic
 /** Due while uses in the last 7 days are below target, with a day's gap after a use. */
 export function delaycamDue(i: DelaycamPromptInput): boolean {
   if (!i.enabled || !i.skillToday) return false;
-  const ages = i.uses.map((u) => daysSince(u, i.today));
+  // Several exercises may use the mirror on one training day; that is one weekly use day.
+  const ages = [...new Set(i.uses.map(u => u.slice(0, 10)))].map((u) => daysSince(u, i.today));
   if (ages.some((a) => a === null || Number.isNaN(a))) return false;
   const week = (ages as number[]).filter((a) => a >= 0 && a < 7);
   if (week.some((a) => a === 0)) return false;

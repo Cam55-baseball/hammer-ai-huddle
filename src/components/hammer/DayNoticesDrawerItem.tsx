@@ -7,8 +7,9 @@ import { DayNoticesCard } from "@/components/hammer/DayNoticesCard";
 import { isDayStatementNotAReduction } from "@/components/hammer/WkPrescriptionCard";
 
 export function DayNoticesDrawerItem() {
-  const { reductions, planDate } = useHammersToday();
+  const { reductions, planDate, replanReason, planChangeNotes } = useHammersToday();
   const notices = (reductions ?? []).filter((r) => !isDayStatementNotAReduction(r?.detail));
-  if (notices.length === 0) return null;
-  return <DayNoticesCard notices={notices} planDate={planDate ?? new Date().toISOString().slice(0, 10)} />;
+  const extraLines = [replanReason, ...(planChangeNotes ?? []).map(note => note.text)].filter((line): line is string => typeof line === "string" && line.trim().length > 0);
+  if (notices.length === 0 && extraLines.length === 0) return null;
+  return <DayNoticesCard notices={notices} extraLines={extraLines} planDate={planDate ?? new Date().toISOString().slice(0, 10)} />;
 }

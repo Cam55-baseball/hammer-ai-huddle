@@ -27,6 +27,10 @@ describe("Royal timing: every 2–3 weeks", () => {
 
 describe("Delaycam: 2–3/week for mechanics players, at least 1/week otherwise", () => {
   const base = { enabled: true, skillToday: true, majorMechanicalFlag: false, mechanicsGoal: false, offSeason: false };
+  it("several checked-off exercises on one day never satisfy three weekly use days", () => {
+    expect(delaycamDue({ ...base, mechanicsGoal: true, today: iso(4), uses: [iso(0), iso(0), iso(0)] })).toBe(true);
+    expect(delaycamDue({ ...base, mechanicsGoal: true, today: iso(6), uses: [iso(0), iso(2), iso(4)] })).toBe(false);
+  });
   const perWeek = (uses: string[]) => Array.from({ length: 8 }, (_, w) => uses.filter((u) => u >= iso(w * 7) && u < iso(w * 7 + 7)).length);
   it("everyone else: once a week", () => {
     const uses = run((u, t) => delaycamDue({ ...base, today: t, uses: u }));

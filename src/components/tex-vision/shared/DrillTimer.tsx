@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { clockHundredths, elapsedHundredths } from '@/lib/logging/elapsedClock';
 
 interface DrillTimerProps {
   initialSeconds?: number;
@@ -48,11 +49,11 @@ export function DrillTimer({
 
   // Sync autoStart prop changes to internal state (e.g., after countdown completes)
   useEffect(() => {
-    if (autoStart && !isRunning) {
+    if (autoStart && !hasStarted) {
       setIsRunning(true);
       setHasStarted(true);
     }
-  }, [autoStart, isRunning]);
+  }, [autoStart, hasStarted]);
 
   // Sync external pause state - NEW
   useEffect(() => {
@@ -77,21 +78,21 @@ export function DrillTimer({
     let interval: NodeJS.Timeout | null = null;
     
     if (isRunning) {
+      const start = Date.now();
+      const initial = seconds;
+      let finished = false;
       interval = setInterval(() => {
-        setSeconds((prev) => {
-          const next = mode === 'countdown' ? prev - 1 : prev + 1;
-          // Use refs to call callbacks - prevents interval reset on parent re-renders
-          onTickRef.current?.(next);
-          
-          if (mode === 'countdown' && next <= 0) {
-            setIsRunning(false);
-            onCompleteRef.current?.();
-            return 0;
-          }
-          
-          return next;
-        });
-      }, 1000);
+        if (finished) return;
+        const elapsed = elapsedHundredths(start, Date.now());
+        const next = mode === 'countdown' ? Math.max(0, initial - elapsed) : initial + elapsed;
+        setSeconds(next);
+        onTickRef.current?.(next);
+        if (mode === 'countdown' && next <= 0) {
+          finished = true;
+          setIsRunning(false);
+          onCompleteRef.current?.();
+        }
+      }, 10);
     }
     
     return () => {
@@ -117,11 +118,7 @@ export function DrillTimer({
     onPauseChange?.(true); // NEW - notify parent
   }, [mode, initialSeconds, onPauseChange]);
 
-  const formatTime = (secs: number) => {
-    const mins = Math.floor(secs / 60);
-    const remainingSecs = secs % 60;
-    return `${mins}:${remainingSecs.toString().padStart(2, '0')}`;
-  };
+  const formatTime = clockHundredths;
 
   const circumference = 2 * Math.PI * 20;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
@@ -129,7 +126,7 @@ export function DrillTimer({
   return (
     <div className={cn("flex items-center gap-2", className)}>
       {/* Circular progress timer */}
-      <div className="relative h-12 w-12">
+      <div className="relative h-16 w-16 shrink-0">
         <svg className="h-12 w-12 -rotate-90" viewBox="0 0 44 44">
           <circle
             cx="22"
@@ -164,6 +161,7 @@ export function DrillTimer({
             variant="ghost"
             size="icon"
             onClick={handleStart}
+            aria-label="Start timer"
             className="h-8 w-8 rounded-full bg-tex-vision-primary/20 hover:bg-tex-vision-primary/30 text-tex-vision-primary-light"
           >
             <Play className="h-4 w-4" />
@@ -173,6 +171,7 @@ export function DrillTimer({
             variant="ghost"
             size="icon"
             onClick={handlePause}
+            aria-label="Pause timer"
             className="h-8 w-8 rounded-full bg-tex-vision-timing/20 hover:bg-tex-vision-timing/30 text-tex-vision-timing"
           >
             <Pause className="h-4 w-4" />
@@ -184,6 +183,7 @@ export function DrillTimer({
             variant="ghost"
             size="icon"
             onClick={handleReset}
+            aria-label="Reset timer"
             className="h-8 w-8 rounded-full bg-tex-vision-primary/10 hover:bg-tex-vision-primary/20 text-tex-vision-text-muted"
           >
             <RotateCcw className="h-3.5 w-3.5" />

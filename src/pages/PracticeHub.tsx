@@ -36,6 +36,7 @@ import { useSessionDefaults } from '@/hooks/useSessionDefaults';
 import { useSwitchHitterProfile } from '@/hooks/useSwitchHitterProfile';
 import { useLiveRepBroadcast } from '@/hooks/useLiveRepBroadcast';
 import { PartnerRepsFeed } from '@/components/practice/PartnerRepsFeed';
+import { PRACTICE_WINDOW_SAVED, PRACTICE_MODULES, PRACTICE_TYPES } from '@/lib/hammer/practiceWindow';
 
 const modules = [
   { id: 'hitting', icon: Target, label: 'Hitting' },
@@ -65,6 +66,7 @@ export default function PracticeHub() {
   const prescribedDrillType = searchParams.get('drill_type');
   const prescribedModule = searchParams.get('module');
   const prescribedConstraints = searchParams.get('constraints');
+  const todayWindow = useRef(searchParams.get('today_window'));
 
   const [activeModule, setActiveModule] = useState(prescribedModule || searchParams.get('module') || 'hitting');
   const [prescribedBanner, setPrescribedBanner] = useState<string | null>(null);
@@ -234,7 +236,7 @@ export default function PracticeHub() {
   useEffect(() => {
     const urlType = searchParams.get('type');
     const urlModule = searchParams.get('module');
-    if (urlModule && urlType && step === 'select_type') {
+    if (urlModule && urlType && PRACTICE_MODULES.some(module => module === urlModule) && PRACTICE_TYPES.some(type => type === urlType) && step === 'select_type') {
       setActiveModule(urlModule);
       handleSelectType(urlType);
       // Clear params to avoid re-triggering
@@ -395,6 +397,7 @@ export default function PracticeHub() {
           rep_source: sessionConfig.rep_source,
           ...(scheduledId ? { scheduled_practice: { id: scheduledId, date: sessionDate, module: activeModule } } : {}),
           ...(calendarPracticeId ? { calendar_practice: { id: calendarPracticeId, date: sessionDate, module: activeModule } } : {}),
+          ...(todayWindow.current ? { today_exercise: { token: todayWindow.current, drill_type: prescribedDrillType } } : {}),
         },
         link_code: sessionConfig.link_code,
         micro_layer_data: reps.length > 0 ? reps : undefined,
@@ -433,6 +436,9 @@ export default function PracticeHub() {
       // Transition to summary instead of resetting
       setSavedSessionId(result.id);
       setStep('session_summary');
+      if (todayWindow.current && window.parent !== window) {
+        window.parent.postMessage({ type: PRACTICE_WINDOW_SAVED, token: todayWindow.current, sessionId: result.id }, window.location.origin);
+      }
       // Mark scheduled session as completed
       if (scheduledId) {
         await updateStatus(scheduledId, 'completed');
