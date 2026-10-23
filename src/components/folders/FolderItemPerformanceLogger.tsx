@@ -91,16 +91,22 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
 
   const addSet = () => {
     const lastSet = sets[sets.length - 1];
-    setSets(prev => [...prev, {
-      ...getDefaultSet(mode, prev.length + 1),
+    const next = [...rowsRef.current, {
+      ...getDefaultSet(mode, rowsRef.current.length + 1),
       unit: lastSet?.unit || 'lbs',
       weight: lastSet?.weight,
-    }]);
+    }];
+    rowsRef.current = next;
+    dirty.current = true;
+    setSets(next);
   };
 
   const removeSet = (index: number) => {
     if (sets.length <= 1) return;
-    setSets(prev => prev.filter((_, i) => i !== index).map((s, i) => ({ ...s, set: i + 1 })));
+    const next = rowsRef.current.filter((_, i) => i !== index).map((s, i) => ({ ...s, set: i + 1 }));
+    rowsRef.current = next;
+    dirty.current = true;
+    setSets(next);
   };
 
   const persist = async () => {
