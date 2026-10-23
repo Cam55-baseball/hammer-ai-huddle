@@ -88,6 +88,8 @@ export function usePerformanceSession() {
     fatigue_state?: any;
     micro_layer_data?: any;
     link_code?: string;
+    /** Notify an embedded logger after canonical recording; report calculation is not a save barrier. */
+    onRecorded?: (sessionId: string) => void;
     /**
      * Optional PIE V2 Advanced Mechanics panel value (baseball pitching only).
      * When present, drives the PIE V2 capture → score → aggregate → emit →
@@ -228,6 +230,8 @@ export function usePerformanceSession() {
           });
         }
       }
+
+      data.onRecorded?.(session.id);
 
       // Latest-wins: tag this calculation
       const calcId = crypto.randomUUID();
