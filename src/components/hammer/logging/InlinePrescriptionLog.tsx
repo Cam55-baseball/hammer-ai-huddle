@@ -298,6 +298,9 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     <SavedIndicator state={autosave.state} />
     </div>
     <ExerciseTools module={rx.slot} exerciseId={rx.id} planDate={rx.plan_date} />
-    {focus.active && ["throwing", "pitching", "hitting", "baserunning"].includes(rx.slot) && user && <ToolSessionWindow label="Practice session log" route={`/practice?module=${rx.slot}&drill_type=${encodeURIComponent(rx.movement_slug)}`} kind="practice" />}
+    {focus.active && ["throwing", "pitching", "hitting", "baserunning"].includes(rx.slot) && user && <ToolSessionWindow label="Practice session log" route={`/practice?module=${rx.slot}&drill_type=${encodeURIComponent(rx.movement_slug)}`} kind="practice" onPracticeSaved={count => {
+      const field = spec.fields.find(f => ["throws", "swings", "reps"].includes(f.key));
+      if (field) edit(focus.row, field.key, String(count), 0);
+    }} />}
   </div>;
 }

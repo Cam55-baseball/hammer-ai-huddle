@@ -166,7 +166,10 @@ export function LegacyDrillInlineLog({
     {focus.active && <ActivityBasics name={name} dosage={dosage} setup={setup} cue={cue} stopIf={stopIf} />}
     </div>
     <ExerciseTools module={modality} exerciseId={storageKey} planDate={taskSync?.planDate ?? new Date().toLocaleDateString("en-CA")} />
-    {focus.active && ["throwing", "pitching", "hitting", "baserunning"].includes(modality) && user && <ToolSessionWindow label="Practice session log" route={`/practice?module=${modality}&drill_type=${encodeURIComponent(name)}`} kind="practice" />}
+    {focus.active && ["throwing", "pitching", "hitting", "baserunning"].includes(modality) && user && <ToolSessionWindow label="Practice session log" route={`/practice?module=${modality}&drill_type=${encodeURIComponent(name)}`} kind="practice" onPracticeSaved={count => {
+      const field = spec.fields.find(f => f.key === "throws" || f.key === "reps");
+      if (field) edit(focus.row, field.key, String(count), 0);
+    }} />}
     </div>
   </section>;
   return (

@@ -17,10 +17,10 @@ interface VideoPlayerProps {
 }
 
 function formatSec(s: number): string {
-  if (!isFinite(s) || s < 0) return '0:00.0';
+  if (!isFinite(s) || s < 0) return '0:00.00';
   const m = Math.floor(s / 60);
   const sec = s % 60;
-  return `${m}:${sec < 10 ? '0' : ''}${sec.toFixed(1)}`;
+  return `${m}:${sec < 10 ? '0' : ''}${sec.toFixed(2)}`;
 }
 
 function clampTime(t: number, dur: number): number {
