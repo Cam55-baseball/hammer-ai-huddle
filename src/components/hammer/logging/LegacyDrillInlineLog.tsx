@@ -15,6 +15,13 @@ import { AUTO_STATUS_LABEL, autoStatus } from "@/lib/logging/autoCompletion";
 import { formatTime, timeKindFor } from "@/lib/logging/timeEntry";
 import { TimeField } from "./TimeField";
 import { SavedIndicator, useAutosave } from "./useAutosave";
+import { useFocusExercise, FocusDurationTimer } from "../cards/FocusSession";
+import { ActivityBasics } from "../cards/ActivityBasics";
+import { prescribedBases } from "../../../../supabase/functions/_shared/wic/runRest";
+import { ExerciseTools } from "../cards/ExerciseTools";
+import { pendingFor } from "@/lib/logging/logOutbox";
+import { DistanceField } from "./DistanceField";
+import { ToolSessionWindow } from "../cards/ToolSessionWindow";
 
 type Draft = Record<string, string>[];
 const TOUCHED = "_t";
@@ -24,13 +31,14 @@ const TOUCHED = "_t";
  * completion is automatic from the entries; Skip is the only explicit choice.
  */
 export function LegacyDrillInlineLog({
-  modality, name, dosage, storageKey, completed, onSave, onOutcome, taskSync,
+  modality, name, dosage, storageKey, completed, onSave, onOutcome, taskSync, setup, cue, stopIf,
 }: {
   modality: string;
   name: string;
   dosage: string;
   storageKey: string;
   completed: boolean;
+  setup?: string; cue?: string; stopIf?: string;
   /** Called after each change with the log (for callers without taskSync). */
   onSave?: (log: Record<string, unknown>) => void;
   onOutcome?: (outcome: "completed" | "skipped" | "cut_short", how_hard: number | null) => void;
@@ -49,7 +57,7 @@ export function LegacyDrillInlineLog({
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const timerStart = useRef<number | null>(null);
-  const stopwatch = (modality === "speed" || modality === "conditioning" || modality === "baserunning") && spec.fields.some(f => f.key === "distance");
+  const stopwatch = (modality === "speed" || modality === "conditioning" || modality === "baserunning") && spec.fields.some(f => f.key === "distance") && spec.fields.some(f => f.key === "time");
   const onSynced = useCallback(() => { qc?.invalidateQueries({ queryKey: ["hammer-daily-tasks"] }); }, [qc]);
   const autosave = useAutosave(`task:${storageKey}`, onSynced);
 
@@ -121,19 +129,30 @@ export function LegacyDrillInlineLog({
   const logged = entered(rounds);
   const primary = spec.fields[0];
   const kindFor = (target: number | null) => timeKindFor({ stopwatch, targetSeconds: target });
+  const distance = spec.fields.find(f => f.key === "distance")?.prefill;
+  const explicitRest = dosage.match(/rest\s*:?\s*(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?)/i);
+  const rest = explicitRest ? Number(explicitRest[1]) * (/min/i.test(explicitRest[2]) ? 60 : 1) : null;
+  const focus = useFocusExercise({ id: storageKey, name, rows: spec.rows, ready: rounds.map(row => entered([row]).length > 0),
+    restSeconds: modality === "speed" && stopwatch ? sprintRestSeconds(distance) : rest,
+    bases: modality === "conditioning" ? prescribedBases(name, distance) : null,
+    save: async () => { if (!(await autosave.flush())) throw new Error("Save pending"); },
+  });
   const entries = <section data-exercise-entry-grid className="space-y-2">
-    {logHost && <h4 className="text-sm font-semibold">{name}</h4>}
+    <div hidden={!focus.visible || (focus.active && focus.resting)} className="space-y-2">
+    {logHost && <h4 className="text-sm font-semibold">{name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>}
+    {focus.active && !stopwatch && spec.fields.some(f => f.key === "time" && (f.prefill ?? 0) > 0) && <FocusDurationTimer key={focus.row} target={spec.fields.find(f => f.key === "time")?.prefill ?? 0} onDone={value => edit(focus.row, "time", String(value), 0)} />}
     {stopwatch && <div data-rep-timer className="flex items-center gap-2"><Button type="button" size="sm" variant="outline" onClick={stopwatchTap}>{running ? "Stop stopwatch" : "Start stopwatch"}</Button><span className="font-mono text-xs">{elapsed.toFixed(2)} s</span><span className="text-[11px] text-muted-foreground">Stop fills the next time.</span></div>}
-    {(modality === "speed" || modality === "conditioning") && <RestTimer label="Rest between repeats" seconds={modality === "speed" ? sprintRestSeconds(spec.fields.find(f => f.key === "distance")?.prefill) : null} />}
+    {!focus.active && (modality === "speed" || modality === "conditioning") && <RestTimer label="Rest between repeats" seconds={modality === "speed" ? sprintRestSeconds(spec.fields.find(f => f.key === "distance")?.prefill) : null} />}
     <div className="grid gap-1.5 px-1 text-[10px] uppercase text-muted-foreground" style={{ gridTemplateColumns: cols }}>
       <span>Set</span>
       {spec.fields.map((f) => <span key={f.key}>{f.label}{f.unit && f.key !== "time" ? ` (${f.unit})` : ""}{f.key === "time" && f.prefill ? ` · target ${formatTime(kindFor(f.prefill), f.prefill)}` : ""}</span>)}
     </div>
     {rounds.map((round, index) => (
-      <div key={index} data-entry-row={index < spec.rows ? "prescribed" : "added"} className="grid items-center gap-1.5" style={{ gridTemplateColumns: cols }}>
+      <div key={index} data-entry-row={index < spec.rows ? "prescribed" : "added"} className={`${focus.active && index !== focus.row ? "hidden" : "grid"} items-center gap-1.5`} style={{ gridTemplateColumns: cols }}>
         <span className="text-center text-[11px] text-muted-foreground">{index + 1}{index >= spec.rows ? "+" : ""}</span>
         {spec.fields.map((f) => f.key === "time"
           ? <TimeField key={f.key} kind={kindFor(f.prefill)} label={`${f.label} ${index + 1}`} value={round[f.key] ?? ""} target={f.prefill} onChange={(v) => edit(index, f.key, v)} onBlur={() => touch(index)} />
+          : f.unit === "ft + in" ? <DistanceField key={f.key} label={`${f.label} ${index + 1}`} value={round[f.key] ?? ""} onChange={v => edit(index, f.key, v)} onBlur={() => touch(index)} />
           : <Input key={f.key} aria-label={`${f.label} ${index + 1}`} inputMode={f.key === "distance" ? "decimal" : "numeric"} value={round[f.key] ?? ""} placeholder={f.prefill != null ? String(f.prefill) : undefined} onFocus={() => touch(index)} onChange={(e) => edit(index, f.key, e.target.value)} onBlur={() => touch(index)} className="h-9 px-2 text-sm" />)}
       </div>
     ))}
@@ -143,6 +162,10 @@ export function LegacyDrillInlineLog({
     </div>
     {logged.length > 0 && primary && <p data-prescribed-vs-done className="text-[11px] text-muted-foreground">Prescribed: {spec.rows} {spec.rows === 1 ? "set" : "sets"}{primary.prefill ? ` × ${primary.key === "time" ? formatTime(kindFor(primary.prefill), primary.prefill) : `${primary.prefill} ${primary.label.toLowerCase()}`}` : ""} · Done: {logged.length} {logged.length === 1 ? "set" : "sets"}</p>}
     <SavedIndicator state={autosave.state} />
+    <ExerciseTools module={modality} exerciseId={storageKey} planDate={taskSync?.planDate ?? new Date().toLocaleDateString("en-CA")} />
+    {focus.active && ["throwing", "pitching", "hitting", "baserunning"].includes(modality) && user && <ToolSessionWindow label="Practice session log" route={`/practice?module=${modality}&drill_type=${encodeURIComponent(name)}`} kind="practice" />}
+    {focus.active && <ActivityBasics name={name} dosage={dosage} setup={setup} cue={cue} stopIf={stopIf} />}
+    </div>
   </section>;
   return (
     <div className="mt-2 space-y-2 rounded border border-border bg-muted/20 p-2" data-legacy-drill-log>

@@ -18,12 +18,13 @@ export function useAutosave(jobId: string, onSynced?: () => void) {
   const send = useCallback(async () => {
     if (timer.current) { window.clearTimeout(timer.current); timer.current = null; }
     const todo = [...ids.current].filter((id) => pendingFor(id));
-    if (!todo.length) return;
+    if (!todo.length) return true;
     setState("saving");
     let ok = true;
     for (const id of todo) ok = (await sendJob(id)) && ok;
     setState(ok ? "saved" : "offline");
     if (ok) synced.current?.();
+    return ok && ![...ids.current].some((id) => pendingFor(id));
   }, []);
 
   const queue = useCallback((job: OutboxJob, delayMs = 600) => {

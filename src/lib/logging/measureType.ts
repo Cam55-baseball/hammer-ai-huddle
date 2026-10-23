@@ -68,7 +68,14 @@ const SPRINT_RE =
 const HOLD_RE = /\bhold|plank|iso(lometric)?\b|wall sit|dead hang|hollow|l[- ]?sit|side bridge|pallof/;
 
 const DURATION_RE =
-  /\bmobility|flow|stretch|foam roll|breath|meditat|walk|jog|bike|row erg|recovery|flush|cool ?down|warm ?up circuit|yoga|soft tissue|massage/;
+  /\bmobility|flow|stretch|foam roll|breath|meditat|walk|jog|bike|row erg|recovery|flush|cool ?down|warm ?up circuit|yoga|soft tissue|massage|ankle circles?|joint circles?|\bcars\b/;
+
+/** Static/mobility work cannot become a race merely because it is in a speed slot. */
+export function timedMobilityMeasure(text: string): "hold_seconds" | "duration" | null {
+  const normalized = norm(text);
+  if (HOLD_RE.test(normalized)) return "hold_seconds";
+  return DURATION_RE.test(normalized) ? "duration" : null;
+}
 
 const VELOCITY_RE = /\bvelo\b|velocity|radar|mph/;
 const BAT_SPEED_RE = /bat speed/;
@@ -93,6 +100,8 @@ export function measureTypeFor(input: MeasureInput): MeasureType {
   // Distance / height jumps win over any unit — a jump never logs time.
   const jm = jumpMeasure(text);
   if (jm) return jm;
+  const timed = timedMobilityMeasure(text);
+  if (timed && !THROW_RE.test(text) && !SWING_RE.test(text) && !/sprint|dash|shuttle|sled/.test(text)) return timed;
 
   // Explicit dosage units win.
   if (unit === "throws" || unit === "pitches") return "throws";

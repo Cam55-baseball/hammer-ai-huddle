@@ -9,6 +9,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useIdentityState } from '@/hooks/useIdentityState';
 import { useDayState } from '@/hooks/useDayState';
 import { AdaptivePhaseStrip } from '@/components/hammer/AdaptivePhaseStrip';
+import { CommunicationAI } from '@/components/dashboard/CommunicationAI';
+import { PlanStreakStrip } from '@/components/hammer/cards/PlanStreakStrip';
 import { ScheduleDropdownWrapper } from '@/components/hammer/ScheduleDropdownWrapper';
 import { useBehavioralEvents, type BehavioralEvent } from '@/hooks/useBehavioralEvents';
 import { useHIESnapshot } from '@/hooks/useHIESnapshot';
@@ -306,6 +308,7 @@ export function IdentityCommandCard({ className }: Props) {
             )}
           </div>
         </button>
+        <div className="px-4 pb-3"><PlanStreakStrip /></div>
 
 
 
@@ -316,6 +319,7 @@ export function IdentityCommandCard({ className }: Props) {
 
               <div className="space-y-3">
                 <AdaptivePhaseStrip />
+                <CommunicationAI />
                 <Link to="/hammer/recall" className="flex min-h-12 w-full items-center justify-between gap-3 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-left hover:bg-primary/10" data-testid="identity-recall">
                   <div className="min-w-0">
                     <div className="text-xs font-bold uppercase text-primary">Ask Hammer</div>

@@ -11,6 +11,12 @@ const VALID: MeasureType[] = [
 ];
 
 describe("measureTypeFor — every library exercise resolves", () => {
+  it.each(["frog_stretch", "glute_bridge_walkout", "seated_ankle_circles"])("%s is a duration even inside speed", slug => {
+    expect(measureTypeFor({ slug, slot: "speed" })).toBe("duration");
+    const spec = inlineLogSpec({ movement_slug: slug, movement_name: slug, slot: "speed", sets: 1, duration_seconds: 30 } as unknown as WkRx);
+    expect(spec.fields.map(f => f.key)).toEqual(["time"]);
+    expect(spec.fields[0].prefill).toBe(30);
+  });
   it("resolves a valid measure type for every catalog slug (build fails otherwise)", () => {
     const unresolved: string[] = [];
     for (const row of catalog as { slug: string }[]) {

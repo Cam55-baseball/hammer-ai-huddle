@@ -191,6 +191,7 @@ function shortSeasonPhase(p: string | null | undefined): "off" | "pre" | "in" | 
   return null;
 }
 import { BeforeYouStartSection } from "@/components/hammer/BeforeYouStartSection";
+import { TimingStudyMoments } from "@/components/hammer/TimingStudyMoments";
 import { InitialAssessmentCard } from "@/components/assessment/InitialAssessmentCard";
 import { doseBullets } from "@/lib/hammer/prescription/doseBullets";
 import { DayNoticesDrawerItem } from "@/components/hammer/DayNoticesDrawerItem";
@@ -309,6 +310,7 @@ function DrillRow({
         <ActivityBasics name={d.name} slug={d.slug} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={displayDose} repair={d.speedMix?.length ? undefined : legacyRepair(d.dosage, modality)} />
         <LegacyDrillInlineLog
           modality={modality} name={d.name} dosage={displayDose}
+          setup={d.setup} cue={d.cue} stopIf={d.stopIf}
           storageKey={`hammer-block-log-draft:${planDate}:${taskId}:${side ?? ""}`}
           completed={checked}
           taskSync={{ planDate, seed }}
@@ -943,6 +945,8 @@ function HammerDailyPlanBody({
       </ErrorBoundary>
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
+        <WeeklyBodyLoadBar />
+        <WkRestDayBanner />
         <FinishProfileCard />
         <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
         {splitBaserunning(plan.blocks).mental.map(b => <BlockCard key={`mental-${b.modality}-${b.side ?? "x"}`} block={b} onNavigate={navigate} />)}
@@ -956,13 +960,15 @@ function HammerDailyPlanBody({
         <ErrorBoundary>
           <DayNoticesDrawerItem />
         </ErrorBoundary>
-        <TexVisionWork />
         <ErrorBoundary><TestingDayNotice /></ErrorBoundary>
         {faultContext.isError && <p role="alert" className="text-sm text-destructive">Couldn't check your analysis history. No analysis drill changes were applied.</p>}
         {drillCirculation.error && <p role="alert" className="text-sm text-destructive">Couldn't check your drill choices. No analysis drill changes were applied.</p>}
         {practiceLoadHistory.error && <p role="alert" className="text-sm text-destructive">Couldn't check your logged practice workload. Your saved plan has not been changed.</p>}
         <RoyalTimingReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} />
-        <DelaycamReminder skillToday={plan.blocks.some(b => prescribedToday(b) && b.modality === 'hitting')} offSeason={shortSeasonPhase(resolvedPhase) === 'off'} mechanicsGoal={hittingMechanicsGoal(ctx.get<unknown>('category_goals')?.value, sportKey)} />
+        <TimingStudyMoments sport={sportKey} position={ctx.get<string>('position_primary')?.value ?? null}
+          savedGoals={ctx.get<unknown>('category_goals')?.value}
+          flags={faultContext.data?.rankedFaults.flatMap(f => f.signals.map(s => s.fault_key)) ?? []}
+          roles={plan.blocks.filter(prescribedToday).flatMap(b => b.modality === 'hitting' ? ['hitter' as const] : b.modality === 'baserunning' ? ['baserunner' as const] : new URL(b.route, window.location.origin).searchParams.get('module') === 'pitching' ? ['pitcher' as const] : [])} />
         <AnalysisRecordingPrompts goalOrder={analysisGoalOrder(ctx.get<unknown>('category_goals')?.value, sportKey)} prescribed={plan.blocks.filter(b => prescribedToday(b)).flatMap(b => {
           // Exact module route only: arm care/throwing must not invent a pitching session.
           const module = new URL(b.route, window.location.origin).searchParams.get("module");
@@ -985,7 +991,6 @@ function HammerDailyPlanBody({
           })}
         {/* Quarter / phase + weekly rhythm context */}
         <WeeklyRoadmapStrip plan={plan} />
-        <RampLines />
       </BeforeYouStartSection>
     <Card id="hammer-plan" className="scroll-mt-24">
       <CardHeader className="pb-2" data-tour="today-plan-heading" data-tour-context>
@@ -1087,7 +1092,6 @@ function HammerDailyPlanBody({
 
         <GpInGameAdvisoryStrip />
 
-        <WeeklyBodyLoadBar />
 
         {/* Step 21E3 — the day's reason lives in the header, not on movements. */}
         <WkSeasonReplanNote />
@@ -1128,10 +1132,7 @@ function HammerDailyPlanBody({
              <TodayRhythmProvider planDate={pocketDate}>
               <WkSafePlanNotice />
               <TrendDeloadNotice />
-              <ReleaseCountdown />
-              <PlanStreakStrip />
               <DayCommandCenter />
-              <WkRestDayBanner />
               <WkSomethingOffRow />
               <HammerCheckInCard
                 quizType="morning"

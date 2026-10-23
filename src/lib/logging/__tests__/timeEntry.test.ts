@@ -2,6 +2,14 @@ import { describe, it, expect } from "vitest";
 import { formatTime, fromSegments, timeKindFor, toSegments } from "../timeEntry";
 
 describe("real time entry — no decimal minutes", () => {
+  it("preserves 1.47 seconds for holds and hundredths in longer durations", () => {
+    expect(fromSegments("seconds", ["1.47"])).toBe(1.47);
+    expect(toSegments("seconds", 1.47)).toEqual(["1.47"]);
+    expect(formatTime("seconds", 1.47)).toBe("1.47 s");
+    expect(fromSegments("mmss", ["2", "01.47"])).toBe(121.47);
+    expect(toSegments("mmss", 121.47)).toEqual(["2", "01.47"]);
+    expect(fromSegments("hmmss", ["1", "02", "01.47"])).toBe(3721.47);
+  });
   it("picks seconds for short holds, mm:ss for longer efforts, h:mm:ss past an hour, ss.hh for stopwatch times", () => {
     expect(timeKindFor({ stopwatch: false, targetSeconds: 45 })).toBe("seconds");
     expect(timeKindFor({ stopwatch: false, targetSeconds: 90 })).toBe("seconds");

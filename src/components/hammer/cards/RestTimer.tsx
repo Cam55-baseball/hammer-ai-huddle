@@ -43,8 +43,9 @@ export function restWhyLine(b: RestBand): string {
 }
 
 export function fmtClock(totalSec: number) {
-  const s = Math.max(0, Math.round(totalSec));
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  const cs = Math.max(0, Math.round(totalSec * 100));
+  const s = Math.floor(cs / 100);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}.${String(cs % 100).padStart(2, "0")}`;
 }
 
 export function RestTimer({ seconds: base, maxSeconds, label = "Rest", initialStartedAt = null }: { seconds?: number | null; maxSeconds?: number | null; label?: string; initialStartedAt?: number | null }) {
@@ -57,7 +58,7 @@ export function RestTimer({ seconds: base, maxSeconds, label = "Rest", initialSt
 
   useEffect(() => {
     if (startedAt == null) return;
-    const id = setInterval(() => setNow(Date.now()), 250);
+    const id = setInterval(() => setNow(Date.now()), 10);
     return () => clearInterval(id);
   }, [startedAt]);
 

@@ -1,4 +1,6 @@
-# Current publish gate — Oct 22 finish line
+# Current publish gate — Oct 23 Hammers Today cleanup
+
+- [ ] Oct 23 owner cleanup: B layout implemented/phone drawer check; C canonical focus/save-before-rest built with safety controls retained; D real 1.47 account save/reload and ft/in/mobility tests PASS; 505 app files/3,977 tests + 33 server checks PASS, preview OK; exact precision TEST log/completion snapshotted/removed and status restored. OPEN: all-card practice/video progression, tool completion/weekly usage, five populated player plans/specific studies, complete catalog/time-target audit. Guide/current NO verdict in existing publish checklist; no publish/cron/iOS.
 
 - Oct 22 23:05 UTC owner Apple scope COMPLETE: iOS Debug/Release build 6, marketing 1.0 unchanged (repo previously had 1, not 5); app-purchase-handoff redeployed, live same-account token lands on preview /staff-plans at 390×844 with no storefront, no page errors. Full suite: 500 app files / 3,965 tests plus 33 server and 10 outside-folder tests PASS (4,008 total); preview build OK 23:09:02 UTC. Ready to publish: YES. No publish or cron changes; physical Safari/Xcode archive not tested, published website awaits owner's publish.
 

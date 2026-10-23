@@ -722,6 +722,13 @@
       "when": 1792643574735,
       "tag": "0102_catalog_visible_to",
       "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1792781176730,
+      "tag": "0103_today_log_hundredth_precision",
+      "breakpoints": true
     }
   ]
 }

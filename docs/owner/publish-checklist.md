@@ -1,4 +1,29 @@
-# Publish checklist — updated 2026-10-22
+# Publish checklist — updated 2026-10-23
+
+## Oct 23 Hammers Today cleanup — current gate
+
+**Ready to publish: NO.** The cleanup is partially implemented, not fully proven. Earlier release verdicts below are historical and do not certify these changes.
+
+| Owner request | Current result |
+|---|---|
+| Before you start / identity relocation | Implemented; 390×844 phone checks show Before you start openable with the plan closed. Load and deduplicated closed changes drawer moved; identity hosts rewards, phase/ramp information and Coach Hammer. Full identity placement proof still incomplete. |
+| Guided focus | Canonical inline, legacy and specialized activity rows register a focus cursor. Next awaits all linked autosave jobs before rest; Skip flushes existing entries and never claims skipped work complete. Canonical conditioning base cycle tested (30 / 300 seconds). Existing safety disclosures and PAP controls remain available. All-card/practice/video progression is NOT complete or proven. |
+| Embedded tools | Delaycam overlay and explicit self-reported usage check-off implemented; Royal Timing, Tex Vision and Pick-off open existing same-origin screens. Canonical completion integration and real recorded-video / return-to-exercise / weekly usage phone proof remain open. No completion is inferred from closing a window. |
+| Timing study | Defender, baserunner, hitter and both sports' pitcher examples implemented; saved sport/discipline goals and completed-game caught-steal reads wired. Five-role specificity proof and recorded-analysis study are still open. |
+| Units / precision | Broad jump ft/in controls and mobility-versus-stopwatch resolver tests pass. Real TEST hold entered as 1.47, saved as `duration_seconds_precise=1.47` and `metrics.rounds.time=1.47`, reloaded as 1.47 on phone. Legacy integer projection retained additively. Full catalog/time-display audit and declared hold targets still open. |
+| Five player types | Signed-in phone visits: demo16ss, democollege, demo2way, demoramp, demoausl. Only democollege had mounted prescribed cards; warm-up, conditioning, lift and recovery focus were opened. Four empty/gated visits do NOT count as five populated-plan proofs. |
+| Tests / preview | Final bounded app suite: 505 files, 3,977 tests passed. Existing server tests: 33 passed with `--no-check`; initial remote package type-resolution step failed, not a behavioral failure. Preview build OK at 18:48:13 UTC. Browser injury suite and full E2E scope not rerun. |
+| Cleanup | Exact precision log e6eec51c-5c16-4038-94f3-fc4010cf4283 and completion da78e889-2ac7-4fb8-9a04-bcb37e3b1e87 snapshotted in existing protected snapshot store, removed; prescription 897292f6-bd93-4e19-a68b-6ed32c31a7a1 restored to planned. Log-zero/status readback verified. Standing TEST profiles and plans not reseeded by session-only sign-in. |
+
+### Owner's guide — implemented behavior, not a completion claim
+
+- Open Before you start independently of the Today plan; load and plan changes are inside it.
+- Open identity for phase/return-to-training and Coach Hammer; rewards remain visible when identity is closed.
+- Open a training card and press Start for guided rows. Timer items wait for Start timer; entries autosave. Next saves before rest, and Save & exit preserves entered work. Skip never counts unperformed work as complete.
+- Use Delaycam from an eligible exercise and return to that exercise; its explicit check-off is a usage record, never an analysis result. End-to-end weekly usage proof is still pending.
+- Enter jump distance in feet and inches; timed fields retain hundredths. The precise duration column is live under the owner's migration authorization; website changes remain preview-only until separately published.
+
+No publishing, schedule changes or iOS changes. Necessary `create-test-athlete` session-only redeploy and additive duration migration applied within the named cleanup authorization.
 
 ## Controlling verdict criteria — owner update October 22, 00:59 UTC
 

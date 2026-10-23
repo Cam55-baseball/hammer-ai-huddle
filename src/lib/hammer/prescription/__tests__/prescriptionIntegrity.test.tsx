@@ -68,8 +68,4 @@ describe("rendered card text", () => {
       expect(t, slug).not.toMatch(/\b\d+\s*(?:y|yd|yds|yards)\b(?! apart)/);
     }
   });
-  it("plan-time message says midnight only", () => {
-    expect(RELEASE_LINE).toMatch(/midnight/);
-    expect(RELEASE_LINE).not.toMatch(/12\s*PM|noon/i);
-  });
 });

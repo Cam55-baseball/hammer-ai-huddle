@@ -21,6 +21,7 @@ import { ExerciseDisclosure } from "@/components/hammer/cards/ExerciseDisclosure
 import { papAlternatives } from "../../../supabase/functions/_shared/wic/pap/powerPrimer";
 import { QUALITY, primerState, type PrimerRound } from "@/lib/prescription/primerRounds";
 import { enqueue, sendJob } from "@/lib/logging/logOutbox";
+import { useFocusState } from "@/components/hammer/cards/FocusSession";
 
 export type PowerPrimerPayload = {
   target: "throw" | "bat_speed" | "first_step" | "jump";
@@ -49,6 +50,7 @@ export const PRIMER_EXPLAINER = [
 
 export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets }: { pp: PowerPrimerPayload; planDate?: string | null; liftName?: string; liftSets?: number }) {
   const logHost = usePocketLogHost();
+  const focus = useFocusState();
   const [actionIdx, setActionIdx] = useState(0);
   const actionAlts = useMemo(() => base.action.slug ? papAlternatives(base.action.slug, base.target) : [], [base]);
   const pp: PowerPrimerPayload = useMemo(() => {

@@ -22000,6 +22000,7 @@ export type Database = {
           created_at: string
           distance_feet_completed: number | null
           duration_seconds_completed: number | null
+          duration_seconds_precise: number | null
           id: string
           load_used: number | null
           metrics: Json
@@ -22020,6 +22021,7 @@ export type Database = {
           created_at?: string
           distance_feet_completed?: number | null
           duration_seconds_completed?: number | null
+          duration_seconds_precise?: number | null
           id?: string
           load_used?: number | null
           metrics?: Json
@@ -22040,6 +22042,7 @@ export type Database = {
           created_at?: string
           distance_feet_completed?: number | null
           duration_seconds_completed?: number | null
+          duration_seconds_precise?: number | null
           id?: string
           load_used?: number | null
           metrics?: Json

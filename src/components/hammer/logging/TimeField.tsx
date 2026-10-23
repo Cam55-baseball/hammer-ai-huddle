@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { formatTime, fromSegments, toSegments, type TimeKind } from "@/lib/logging/timeEntry";
+import { cleanNumberText } from "@/lib/numberInput";
 
 const SEPARATOR: Record<TimeKind, string[]> = { seconds: [], mmss: [":"], hmmss: [":", ":"], sshh: ["."] };
 const SEG_LABEL: Record<TimeKind, string[]> = { seconds: ["seconds"], mmss: ["minutes", "seconds"], hmmss: ["hours", "minutes", "seconds"], sshh: ["seconds", "hundredths"] };
@@ -20,8 +21,9 @@ export function TimeField({ kind, value, target, label, onChange, onBlur }: {
   }, [value, kind]);
   const guide = toSegments(kind, target ?? null);
   const set = (i: number, raw: string) => {
-    const max = kind === "seconds" ? 4 : i === 0 && kind !== "sshh" ? 3 : 2;
-    const next = segs.map((s, n) => n === i ? raw.replace(/\D/g, "").slice(0, max) : s);
+    const fractional = kind === "seconds" || (kind !== "sshh" && i === segs.length - 1);
+    const max = fractional ? 8 : i === 0 ? 4 : 2;
+    const next = segs.map((s, n) => n === i ? cleanNumberText(raw, fractional).slice(0, max) : s);
     setSegs(next);
     const secs = fromSegments(kind, next);
     onChange(secs == null ? "" : String(secs));
@@ -29,7 +31,7 @@ export function TimeField({ kind, value, target, label, onChange, onBlur }: {
   return <div className="flex items-center gap-0.5" data-time-field={kind} role="group" aria-label={label}>
     {segs.map((s, i) => <span key={i} className="flex items-center gap-0.5">
       {i > 0 && <span className="text-sm font-semibold text-muted-foreground">{SEPARATOR[kind][i - 1]}</span>}
-      <Input aria-label={`${label} ${SEG_LABEL[kind][i]}`} inputMode="numeric" pattern="[0-9]*" value={s}
+      <Input aria-label={`${label} ${SEG_LABEL[kind][i]}`} inputMode={kind === "seconds" || (kind !== "sshh" && i === segs.length - 1) ? "decimal" : "numeric"} value={s}
         placeholder={guide[i] || (kind === "seconds" ? "0" : "00")}
         onChange={(e) => set(i, e.target.value)} onBlur={onBlur}
         className="h-9 w-full min-w-[2.5rem] px-1 text-center text-sm tabular-nums" />

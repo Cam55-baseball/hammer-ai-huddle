@@ -8,10 +8,10 @@ describe("base-running rest counter", () => {
     render(<ConditioningBaseRest basesPerRep={2} />);
     fireEvent.click(screen.getByRole("button", { name: "Finished this running rep" }));
     expect(screen.getByText(/Base count: 2 of 4/)).toBeVisible();
-    expect(screen.getByText("Rest between reps time (0:30):")).toBeVisible();
+    expect(screen.getByText("Rest between reps time (0:30.00):")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Finished this running rep" }));
     expect(screen.getByText(/Base count: 0 of 4 — home reached/)).toBeVisible();
-    expect(screen.getByText("Rest at home plate time (5:00):")).toBeVisible();
+    expect(screen.getByText("Rest at home plate time (5:00.00):")).toBeVisible();
   });
   it("single, double, single across exercises share 30, 30, 300 seconds and zero bases", () => {
     let state = nextConditioningRest({ bases: 0, rest: null }, 1, 1000);
@@ -34,7 +34,7 @@ describe("base-running rest counter", () => {
     vi.setSystemTime(new Date('2026-10-21T04:00:05Z'));
     rerender(tree(2));
     expect(screen.getByText(/Base count: 1 of 4/)).toBeVisible();
-    expect(screen.getByText('0:25')).toBeVisible();
+    expect(screen.getByText('0:25.00')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Finished this running rep' }));
     expect(screen.getByText(/Base count: 3 of 4/)).toBeVisible();
   });

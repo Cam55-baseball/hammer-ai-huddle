@@ -1,11 +1,13 @@
 import { useId, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useFocusState } from "./FocusSession";
 
 /** Log drafts stay mounted; toggles never force scrolling or share parent state. */
 export function ExerciseDisclosure({ name, children }: { name: string; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const bodyId = useId();
+  const focus = useFocusState();
   return <div data-exercise-disclosure data-state={open ? "open" : "closed"} className="[overflow-anchor:none]">
     <Button type="button" variant="ghost" data-exercise-toggle aria-expanded={open} aria-controls={bodyId}
       onClick={() => setOpen((value) => !value)}

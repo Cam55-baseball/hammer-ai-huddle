@@ -1,3 +1,4 @@
+import { jumpMeasure } from "@/lib/logging/measureType";
 export type LegacyLogField = {
   key: "reps" | "throws" | "distance" | "time";
   label: string;
@@ -27,10 +28,12 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
   const feet = firstNumber(text, /\b(\d+(?:\.\d+)?)\s*(?:feet|foot|ft)\b/);
   const yards = firstNumber(text, /\b(\d+(?:\.\d+)?)\s*(?:yards?|yds?)\b/);
   const distance = feet ?? (yards == null ? null : yards * 3);
+  const jump = jumpMeasure(name);
+  if (jump) return { rows: Math.max(1, sets), completion: false, fields: [{ key: "distance", label: jump === "jump_distance" ? "Jump distance" : "Jump height", unit: jump === "jump_distance" ? "ft + in" : "in", prefill: null }] };
 
   if (["warmup", "mobility", "recovery", "arm_care"].includes(modality)) {
     // Time is entered in real segments (s / mm:ss) and stored in seconds — never decimal minutes.
-    return { rows: Math.max(1, sets), completion: true, fields: [{ key: "time", label: "Time", unit: "s", prefill: seconds ?? (minutes == null ? null : Math.round(minutes * 60)) }] };
+    return { rows: Math.max(1, sets), completion: true, fields: [{ key: "time", label: "Time", unit: "s", prefill: seconds ?? (minutes == null ? null : Math.round(minutes * 6000) / 100) }] };
   }
   if (modality === "throwing" || /throw|pitch|bullpen|catch play|plyo ball/.test(text)) {
     return { rows: sets, completion: false, fields: [{ key: "throws", label: "Throws", prefill: reps }] };
