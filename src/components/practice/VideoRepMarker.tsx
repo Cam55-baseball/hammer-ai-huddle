@@ -129,8 +129,8 @@ export function VideoRepMarker({ videoRef, markers, onMarkersChange, duration, c
               )}
               onClick={() => jumpToMarker(m)}
             >
-              #{i + 1} {m.start_time_sec.toFixed(1)}s
-              {m.end_time_sec && ` → ${m.end_time_sec.toFixed(1)}s`}
+              #{i + 1} {m.start_time_sec.toFixed(2)}s
+              {m.end_time_sec && ` → ${m.end_time_sec.toFixed(2)}s`}
               {!m.locked && (
                 <button
                   onClick={e => { e.stopPropagation(); removeMarker(i); }}

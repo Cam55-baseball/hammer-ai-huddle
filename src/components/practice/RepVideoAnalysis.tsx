@@ -135,7 +135,7 @@ export function RepVideoAnalysis({
                 value={[currentTime]}
                 min={0}
                 max={duration || 1}
-                step={0.033}
+                step={0.01}
                 onValueChange={([v]) => {
                   if (videoRef.current) {
                     videoRef.current.currentTime = v;
@@ -197,7 +197,7 @@ export function RepVideoAnalysis({
             <div className="flex flex-wrap gap-1">
               {annotations.map((a, i) => (
                 <Badge key={a.id} variant="outline" className="text-[10px]">
-                  {a.type} @ {a.timestamp_sec.toFixed(1)}s
+                  {a.type} @ {a.timestamp_sec.toFixed(2)}s
                   {a.label && ` — ${a.label}`}
                 </Badge>
               ))}
