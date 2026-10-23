@@ -58,7 +58,7 @@ describe("resolveTemplate — skill position logging (Round 3 F)", () => {
     { movement_slug: "home_to_first", slot: "baserunning" },
     { movement_slug: "catcher_pop_time", slot: "skill" },
     { movement_slug: "breathwork", slot: "cross_sport" },
-  ])("$movement_slug accepts hundredths for every timed field", prescription => {
+  ] satisfies Partial<WkRx>[])("$movement_slug accepts hundredths for every timed field", prescription => {
     const template = resolveTemplate(rx(prescription));
     const times = template.fields.filter(field => field.kind === "time");
     expect(times.length).toBeGreaterThan(0);
