@@ -4,7 +4,8 @@ import { timingStudy, type TimingStudyRole } from "@/lib/hammer/timingStudy";
 import { useQuery } from "@tanstack/react-query";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import { gp } from "@/lib/games/ledger";
-export function TimingStudyMoments({ sport, position, flags = [], goals = [], roles }: { sport: "baseball" | "softball"; position: string | null; flags?: string[]; goals?: string[]; roles: TimingStudyRole[] }) {
+import { getV2 } from "@/lib/hammer/goals/categoryGoals";
+export function TimingStudyMoments({ sport, position, flags = [], goals = [], savedGoals, roles }: { sport: "baseball" | "softball"; position: string | null; flags?: string[]; goals?: string[]; savedGoals?: unknown; roles: TimingStudyRole[] }) {
   const navigate = useNavigate();
   const { user } = useOptionalAuth();
   const steals = useQuery({ queryKey: ["timing-study-steals", user?.id, sport], enabled: !!user, staleTime: 60000, queryFn: async () => {
@@ -21,7 +22,10 @@ export function TimingStudyMoments({ sport, position, flags = [], goals = [], ro
   return <section className="space-y-3 border-b border-border py-3" aria-label="Royal timing study">
     <h3 className="text-sm font-semibold">Royal timing study</h3>
     {applicable.map(role => {
-      const study = timingStudy({ role, sport, flags, goals, caughtStealing: steals.data === true });
+      const selected = getV2(savedGoals)?.[sport];
+      const pane = role === "pitcher" ? selected?.pitcher : selected?.position;
+      const category = role === "pitcher" ? "pitching" : role === "defender" ? "fielding" : role === "baserunner" ? "speed" : "hitting";
+      const study = timingStudy({ role, sport, flags, goals: [...goals, ...(pane?.[category] ?? []).map(pick => pick.id)], caughtStealing: steals.data === true });
       return <div key={role} className="space-y-1"><p className="text-xs font-semibold capitalize">{role}</p><p className="text-xs text-muted-foreground">{study.reason}</p><ul className="list-disc space-y-1 pl-4 text-sm">{study.examples.map(example => <li key={example}>{example}</li>)}</ul></div>;
     })}
     {steals.isError && <p role="alert" className="text-xs text-destructive">Couldn't check your recent games. These are position examples, not game findings.</p>}

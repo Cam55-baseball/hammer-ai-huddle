@@ -33,7 +33,7 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
 
   if (["warmup", "mobility", "recovery", "arm_care"].includes(modality)) {
     // Time is entered in real segments (s / mm:ss) and stored in seconds — never decimal minutes.
-    return { rows: Math.max(1, sets), completion: true, fields: [{ key: "time", label: "Time", unit: "s", prefill: seconds ?? (minutes == null ? null : Math.round(minutes * 60)) }] };
+    return { rows: Math.max(1, sets), completion: true, fields: [{ key: "time", label: "Time", unit: "s", prefill: seconds ?? (minutes == null ? null : Math.round(minutes * 6000) / 100) }] };
   }
   if (modality === "throwing" || /throw|pitch|bullpen|catch play|plyo ball/.test(text)) {
     return { rows: sets, completion: false, fields: [{ key: "throws", label: "Throws", prefill: reps }] };
