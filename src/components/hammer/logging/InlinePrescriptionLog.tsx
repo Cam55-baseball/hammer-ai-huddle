@@ -1,4 +1,6 @@
-import { jumpMeasure } from "@/lib/logging/measureType";
+import { jumpMeasure, timedMobilityMeasure } from "@/lib/logging/measureType";
+import { useFocusExercise, FocusDurationTimer } from "../cards/FocusSession";
+import { ActivityBasics } from "../cards/ActivityBasics";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RestTimer, sprintRestSeconds, liftRestBand } from "../cards/RestTimer";
@@ -69,6 +71,9 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   }
   if (jump === "jump_height") {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "height", label: "Jump height", unit: "in" }] };
+  }
+  if (timedMobilityMeasure(slug) && !/throw|pitch|sprint|sled/.test(slug)) {
+    return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: "Time target", unit: "s", prefill: rx.duration_seconds ?? ((rx.dosage_unit ?? "").toLowerCase() === "seconds" ? rx.reps : null) }] };
   }
   if (rx.total_reps && !rx.distance_feet && !rx.duration_seconds && rx.slot !== "lift" && rx.slot !== "supplemental" && !/hold|iso|plank/.test(slug)) {
     // Rows must add up to the total shown on the card: sets × reps only when that equals the total.
@@ -232,6 +237,12 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
   const isSprint = (rx.slot === "speed" && hasTime) || ((rx.slot === "lift" || rx.slot === "supplemental") && /sprint/.test(rx.movement_slug.toLowerCase()));
   const sprintSeconds = isSprint ? sprintRestSeconds(rx.distance_feet) : null;
   const basesPerRep = rx.slot === "conditioning" ? prescribedBases(rx.movement_slug, rx.distance_feet) : null;
+  const focus = useFocusExercise({ id: `rx:${rx.id}`, name: rx.movement_name, rows: spec.rows,
+    ready: rounds.map((round, i) => enteredPrescriptionRounds([round], spec, { requireTouch: true }).length > 0 && i < spec.rows),
+    restSeconds: isSprint ? sprintSeconds : (rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank|throw|pitch/.test(rx.movement_slug)) ? restBand.min : null,
+    bases: basesPerRep,
+    save: async () => { await autosave.flush(); },
+  });
   const startedAt = useRef<number | null>(null);
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -252,7 +263,8 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
   const unitWord = primary.key === "time" ? "" : ` ${primary.label.toLowerCase()}`;
   const fmt = (v: number) => primary.key === "time" ? formatTime(timeKindFor({ stopwatch, targetSeconds: primary.prefill }), v) : String(v);
   const showDone = !(primary.key === "time" && stopwatch);
-  return <div className="space-y-2" data-inline-prescription-log>
+  return <div className="space-y-2" data-inline-prescription-log hidden={!focus.visible || (focus.active && focus.resting)}>
+    {focus.active && !stopwatch && spec.fields.some(f => f.key === "time" && (f.prefill ?? 0) > 0) && <FocusDurationTimer key={focus.row} target={spec.fields.find(f => f.key === "time")?.prefill ?? 0} onDone={value => edit(focus.row, "time", String(value), 0)} />}
     {hasTime && <div className="flex items-center gap-2" data-rep-timer>
       <Button type="button" size="sm" variant={running ? "default" : "outline"} className="h-9 min-w-[96px]" onClick={toggleTimer}>{running ? "Stop timer" : "Start timer"}</Button>
       <span className="font-mono text-sm tabular-nums text-foreground" aria-live="polite">{elapsed.toFixed(2)} s</span>
@@ -264,12 +276,13 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     <div className="grid gap-1.5 px-1 text-[10px] uppercase tracking-wide text-muted-foreground" style={{ gridTemplateColumns: `28px repeat(${spec.fields.length}, minmax(0, 1fr))` }}>
       <span>Set</span>{spec.fields.map((f) => <span key={f.key}>{f.label}{f.unit && f.key !== "time" ? ` (${f.unit})` : ""}{f.key === "time" && f.prefill ? ` · target ${formatTime(timeKindFor({ stopwatch, targetSeconds: f.prefill }), f.prefill)}` : ""}</span>)}
     </div>
-    {rounds.map((round, i) => <div key={i} data-entry-row={i < spec.rows ? "prescribed" : "added"} className="grid items-center gap-1.5" style={{ gridTemplateColumns: `28px repeat(${spec.fields.length}, minmax(0, 1fr))` }}>
+    {rounds.map((round, i) => <div key={i} hidden={focus.active && i !== focus.row} data-entry-row={i < spec.rows ? "prescribed" : "added"} className={`${focus.active && i !== focus.row ? "hidden" : "grid"} items-center gap-1.5`} style={{ gridTemplateColumns: `28px repeat(${spec.fields.length}, minmax(0, 1fr))` }}>
       <span className="text-center text-[11px] text-muted-foreground">{i + 1}{i >= spec.rows ? "+" : ""}</span>
       {spec.fields.map((f) => f.key === "time"
         ? <TimeField key={f.key} kind={timeKindFor({ stopwatch, targetSeconds: f.prefill })} label={`${f.label} ${i + 1}`} value={round[f.key] ?? ""} target={f.prefill} onChange={(v) => edit(i, f.key, v)} onBlur={() => touch(i)} />
         : <Input key={f.key} aria-label={`${f.label} ${i + 1}`} inputMode={f.key === "weight" || f.key === "distance" ? "decimal" : "numeric"} value={round[f.key] ?? ""} placeholder={f.prefill != null ? String(f.prefill) : undefined} onFocus={() => touch(i)} onChange={(e) => edit(i, f.key, e.target.value)} onBlur={() => touch(i)} className="h-9 px-2 text-sm" />)}
     </div>)}
+    {focus.active && <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} setup={rx.why_payload?.setup as string | undefined} cue={rx.why_payload?.cue} />}
     <div className="flex flex-wrap items-center justify-between gap-2">
       <Button type="button" size="sm" variant="outline" className="h-9" onClick={addSet}><Plus className="mr-1 h-3.5 w-3.5" />Add set</Button>
       {status && <span data-auto-status={status} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status === "cut_short" || status === "missed" ? "bg-muted text-foreground" : "bg-primary/15 text-primary"}`}>{AUTO_STATUS_LABEL[status]}</span>}

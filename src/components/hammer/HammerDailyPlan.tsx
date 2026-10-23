@@ -309,6 +309,7 @@ function DrillRow({
         <ActivityBasics name={d.name} slug={d.slug} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={displayDose} repair={d.speedMix?.length ? undefined : legacyRepair(d.dosage, modality)} />
         <LegacyDrillInlineLog
           modality={modality} name={d.name} dosage={displayDose}
+          setup={d.setup} cue={d.cue} stopIf={d.stopIf}
           storageKey={`hammer-block-log-draft:${planDate}:${taskId}:${side ?? ""}`}
           completed={checked}
           taskSync={{ planDate, seed }}
