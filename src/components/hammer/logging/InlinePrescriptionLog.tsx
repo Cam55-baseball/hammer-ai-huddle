@@ -29,6 +29,8 @@ import { SavedIndicator, useAutosave } from "./useAutosave";
 import { timeKindFor, formatTime } from "@/lib/logging/timeEntry";
 import { AUTO_STATUS_LABEL, autoStatus, type AutoStatus } from "@/lib/logging/autoCompletion";
 
+/** Moving plank / pause-then-explode work is counted, not timed (matches measureType). */
+const MOVING_HOLD_RE = /explode|release|shoulder.tap|drag.through|leg.lift|reach/;
 type Field = { key: string; label: string; unit?: string; prefill?: number | null };
 type Draft = Record<string, string>[];
 
@@ -79,12 +81,12 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   if (timedMobilityMeasure(slug) && !/throw|pitch|sprint|sled/.test(slug)) {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: "Seconds", unit: "s", prefill: rx.duration_seconds ?? ((rx.dosage_unit ?? "").toLowerCase() === "seconds" ? rx.reps : null) }] };
   }
-  if (rx.total_reps && !rx.distance_feet && !rx.duration_seconds && rx.slot !== "lift" && rx.slot !== "supplemental" && !/hold|iso|plank/.test(slug)) {
+  if (rx.total_reps && !rx.distance_feet && !rx.duration_seconds && rx.slot !== "lift" && rx.slot !== "supplemental" && (!/hold|iso|plank/.test(slug) || MOVING_HOLD_RE.test(slug))) {
     // Rows must add up to the total shown on the card: sets × reps only when that equals the total.
     const split = rx.sets && rx.reps && rx.sets * rx.reps === rx.total_reps;
     return { rows: split ? rx.sets ?? 1 : 1, fields: [{ key: "reps", label: "Reps", prefill: split ? rx.reps : rx.total_reps }] };
   }
-  if ((rx.dosage_unit ?? "").toLowerCase() === "seconds" || /hold|iso|plank/.test(slug)) {
+  if ((rx.dosage_unit ?? "").toLowerCase() === "seconds" || (/hold|iso|plank/.test(slug) && !MOVING_HOLD_RE.test(slug))) {
     // A time target comes only from a declared duration (or reps declared in seconds) — never a rep count.
     const declared = rx.duration_seconds ?? ((rx.dosage_unit ?? "").toLowerCase() === "seconds" ? rx.reps : null);
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: "Seconds", unit: "s", prefill: declared }] };
