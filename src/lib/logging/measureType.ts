@@ -73,14 +73,15 @@ const DURATION_RE =
 /** Static/mobility work cannot become a race merely because it is in a speed slot. */
 export function timedMobilityMeasure(text: string): "hold_seconds" | "duration" | null {
   const normalized = norm(text);
-  if (HOLD_RE.test(normalized)) return "hold_seconds";
+  // "Hold then explode/release" is an explosive rep with a pause — counted, not timed.
+  if (HOLD_RE.test(normalized) && !/explode|release/.test(normalized)) return "hold_seconds";
   return DURATION_RE.test(normalized) ? "duration" : null;
 }
 
 const VELOCITY_RE = /\bvelo\b|velocity|radar|mph/;
 const BAT_SPEED_RE = /bat speed/;
 const EXIT_VELO_RE = /exit velo|exit velocity|\bev\b/;
-const SWING_RE = /\bswing|tee work|front toss|soft toss|bp\b|batting practice|dry hack|hitting/;
+const SWING_RE = /\bswing|tee work|front toss|soft toss|\bbp\b|batting practice|dry hack|hitting/;
 
 const CHECKOFF_RE = /\bhydrate|hydration|soreness|sleep|journal|note|check[- ]?in|survey|plan tomorrow|pack bag|vault/;
 
@@ -129,7 +130,7 @@ export function measureTypeFor(input: MeasureInput): MeasureType {
   if (slot === "speed" || SPRINT_RE.test(text)) return "sprint_time";
 
   // Holds and longer efforts.
-  if (HOLD_RE.test(text)) return "hold_seconds";
+  if (HOLD_RE.test(text) && !/explode|release/.test(text)) return "hold_seconds";
   if (DURATION_RE.test(text)) return "duration";
 
   // Lifts.
