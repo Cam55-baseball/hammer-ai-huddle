@@ -14,6 +14,7 @@ Found by checking every library exercise's category against how it is logged. No
 The other 13 flagged rows (wall sits, iso squats, iso split squats, Copenhagen plank, pull-up hold, etc.) are true holds filed under Strength; they stay timed and need no decision.
 
 - [ ] Oct 23 cleanup run 9, 21:55: owner decisions table written (5 exercises). Phone proofs for items 2, 5, 8–12, 14 not run this turn; status table below unchanged. No deploy/migration/publish/cron/iOS.
+- [ ] Oct 23 cleanup run 10, 21:58: BLOCKED — the phone-check browser can sign in only as the owner; signing in as a TEST player needs owner approval, which this session can't request. Owner proofs don't count (owner skips gates). No changes.
 
 ## Oct 23 Hammers Today clean-up — status (end of run 8, 20:30 UTC)
 
