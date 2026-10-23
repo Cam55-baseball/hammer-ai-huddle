@@ -121,7 +121,7 @@ export function LegacyDrillInlineLog({
   const stopwatchTap = () => {
     if (!running) { timerStart.current = Date.now(); setElapsed(0); setRunning(true); return; }
     setRunning(false);
-    const next = rounds.findIndex(row => !row.time || row[TOUCHED] !== "1");
+    const next = focus.active ? focus.row : rounds.findIndex(row => !row.time || row[TOUCHED] !== "1");
     if (next >= 0) edit(next, "time", String(Math.round((Date.now() - (timerStart.current ?? Date.now())) / 10) / 100), 0);
   };
 
@@ -138,7 +138,8 @@ export function LegacyDrillInlineLog({
     save: async () => { if (!(await autosave.flush())) throw new Error("Save pending"); },
   });
   const entries = <section data-exercise-entry-grid className="space-y-2">
-    <div hidden={!focus.visible || (focus.active && focus.resting)} className="space-y-2">
+    <div hidden={!focus.visible} className="space-y-2">
+    <div hidden={focus.active && focus.resting} className="space-y-2">
     {logHost && <h4 className="text-sm font-semibold">{name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>}
     {focus.active && !stopwatch && spec.fields.some(f => f.key === "time" && (f.prefill ?? 0) > 0) && <FocusDurationTimer key={focus.row} target={spec.fields.find(f => f.key === "time")?.prefill ?? 0} onDone={value => edit(focus.row, "time", String(value), 0)} />}
     {stopwatch && <div data-rep-timer className="flex items-center gap-2"><Button type="button" size="sm" variant="outline" onClick={stopwatchTap}>{running ? "Stop stopwatch" : "Start stopwatch"}</Button><span className="font-mono text-xs">{elapsed.toFixed(2)} s</span><span className="text-[11px] text-muted-foreground">Stop fills the next time.</span></div>}
@@ -162,9 +163,10 @@ export function LegacyDrillInlineLog({
     </div>
     {logged.length > 0 && primary && <p data-prescribed-vs-done className="text-[11px] text-muted-foreground">Prescribed: {spec.rows} {spec.rows === 1 ? "set" : "sets"}{primary.prefill ? ` × ${primary.key === "time" ? formatTime(kindFor(primary.prefill), primary.prefill) : `${primary.prefill} ${primary.label.toLowerCase()}`}` : ""} · Done: {logged.length} {logged.length === 1 ? "set" : "sets"}</p>}
     <SavedIndicator state={autosave.state} />
+    {focus.active && <ActivityBasics name={name} dosage={dosage} setup={setup} cue={cue} stopIf={stopIf} />}
+    </div>
     <ExerciseTools module={modality} exerciseId={storageKey} planDate={taskSync?.planDate ?? new Date().toLocaleDateString("en-CA")} />
     {focus.active && ["throwing", "pitching", "hitting", "baserunning"].includes(modality) && user && <ToolSessionWindow label="Practice session log" route={`/practice?module=${modality}&drill_type=${encodeURIComponent(name)}`} kind="practice" />}
-    {focus.active && <ActivityBasics name={name} dosage={dosage} setup={setup} cue={cue} stopIf={stopIf} />}
     </div>
   </section>;
   return (

@@ -5,8 +5,8 @@ import { useConditioningRest } from "./ConditioningRestContext";
 import type { BaseRep } from "../../../../supabase/functions/_shared/wic/runRest";
 
 type Exercise = { id: string; name: string; rows: number; ready: boolean[]; restSeconds: number | null; bases?: BaseRep | null; enabled?: boolean; save: (row: number) => Promise<void> };
-type Cursor = { exercise: number; row: number; restingUntil: number | null; restStartedAt: number | null; restSeconds: number | null };
-const INITIAL: Cursor = { exercise: 0, row: 0, restingUntil: null, restStartedAt: null, restSeconds: null };
+type Cursor = { exercise: number; exerciseId: string | null; row: number; restingUntil: number | null; restStartedAt: number | null; restSeconds: number | null };
+const INITIAL: Cursor = { exercise: 0, exerciseId: null, row: 0, restingUntil: null, restStartedAt: null, restSeconds: null };
 const Context = createContext<{
   active: boolean; cursor: Cursor; currentId?: string; register: (entry: Exercise) => () => void; refresh: () => void;
 } | null>(null);
@@ -24,10 +24,18 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
   const [error, setError] = useState<string | null>(null);
   const conditioning = useConditioningRest();
   const all = [...entries.current.values()];
-  const current = all[cursor.exercise];
+  const current = cursor.exerciseId ? all.find(entry => entry.id === cursor.exerciseId) : all[cursor.exercise];
+  useEffect(() => {
+    if (current && cursor.exerciseId == null) setCursor(prior => ({ ...prior, exerciseId: current.id }));
+  }, [current?.id, cursor.exerciseId]);
   const advance = useCallback(() => setCursor(prior => {
-    const exercise = [...entries.current.values()][prior.exercise];
-    return { ...INITIAL, exercise: prior.row + 1 < (exercise?.rows ?? 0) ? prior.exercise : prior.exercise + 1, row: prior.row + 1 < (exercise?.rows ?? 0) ? prior.row + 1 : 0 };
+    const all = [...entries.current.values()];
+    const index = prior.exerciseId ? all.findIndex(entry => entry.id === prior.exerciseId) : prior.exercise;
+    const exercise = all[index];
+    if (!exercise) return prior;
+    const moreRows = prior.row + 1 < exercise.rows;
+    const nextIndex = moreRows ? index : index + 1;
+    return { ...INITIAL, exercise: nextIndex, exerciseId: all[nextIndex]?.id ?? null, row: moreRows ? prior.row + 1 : 0 };
   }), []);
   useEffect(() => { sessionStorage.setItem(storageKey, JSON.stringify(cursor)); }, [cursor, storageKey]);
   useEffect(() => {
@@ -66,13 +74,13 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
   return <Context.Provider value={{ active, cursor, currentId: current?.id, register, refresh }}>
     {active && <section data-focus-session className="mb-3 space-y-2 border-b border-border pb-3">
       <h3 className="text-base font-semibold">{current ? `${current.name} · Set ${cursor.row + 1} of ${current.rows}` : "End of guided sets"}</h3>
-      {cursor.restingUntil != null && <RestTimer key={cursor.restStartedAt} label="Rest before the next set" seconds={cursor.restSeconds} initialStartedAt={cursor.restStartedAt} />}
+      {cursor.restingUntil != null && <RestTimer key={cursor.restStartedAt} label="Rest before the next set" seconds={cursor.restSeconds} initialStartedAt={cursor.restStartedAt} managed />}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <div className="flex flex-wrap gap-2">
         {current && cursor.restingUntil == null && <>
           <Button size="sm" disabled={busy || !current.ready[cursor.row]} onClick={() => void save(false)}>Next</Button>
           <Button size="sm" variant="outline" disabled={busy} onClick={() => void skip()}>Skip</Button>
-          {error && current.restSeconds == null && <Button size="sm" variant="outline" onClick={advance}>Rest finished</Button>}
+          {error && current.restSeconds == null && <Button size="sm" variant="outline" onClick={() => { setError(null); advance(); }}>Rest finished</Button>}
         </>}
         <Button size="sm" variant="outline" disabled={busy} onClick={() => void save(true)}>Save &amp; exit</Button>
       </div>
