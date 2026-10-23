@@ -19,8 +19,11 @@ The other 13 flagged rows (wall sits, iso squats, iso split squats, Copenhagen p
 - [ ] Oct 23 cleanup run 12, 21:58: still BLOCKED on TEST-player sign-in approval. No changes.
 - [ ] Oct 23 cleanup run 13, 21:59: still BLOCKED on TEST-player sign-in approval. No changes.
 - [ ] Oct 23 cleanup run 14, 21:59: still BLOCKED on TEST-player sign-in approval. No changes.
+- [ ] Oct 23 cleanup run 15, 22:08: fresh full suite 513 files / 4,025 tests PASS; status, decisions and publish answer refreshed. Proofs still BLOCKED on TEST-player sign-in approval.
 
-## Oct 23 Hammers Today clean-up — status (end of run 8, 20:30 UTC)
+## Oct 23 Hammers Today clean-up — status (end of batch, 22:08 UTC): 6 Done, 8 Partly, 0 Not started
+
+Fresh full suite 22:01–22:08 UTC: 513 files / 4,025 tests PASS (/tmp/suite9/all.log). Table below unchanged since run 8; no phone proofs ran (TEST-player sign-in approval unavailable).
 
 Items 1–14 are the owner's sections A–E split into steps. Proof paths are sandbox screenshots/logs.
 
@@ -51,7 +54,7 @@ Items 1–14 are the owner's sections A–E split into steps. Proof paths are sa
 - Not changed: category mismatches with no defensible dose conversion (owner decision needed per item).
 
 ### Ready to publish: NO
-Items 2, 5, 8–12 and 14 are not fully phone-proven. No publish, deploy, migration, cron or iOS change was made.
+Exact reason: items 2, 5, 8, 9, 10, 11, 12 and 14 lack phone proof as an affected TEST player; signing the phone check in as a TEST player needs owner approval that these runs could not request. Owner decisions table (5 exercises) also awaits A/B choices. No publish, deploy, migration, cron or iOS change was made.
 
 - [ ] Oct 23 cleanup run 7, 20:25–20:28: Today card log boxes now match the library rule — moving planks and pause-then-explode work show Reps with the planned count; still planks stay timed. 688 Today/logging tests PASS. Not phone-proven. Other OPEN items unchanged. No deploy/migration/publish/cron/iOS.
 - [ ] Oct 23 cleanup run 6, 20:24–20:26: hold audit — moving plank variations (shoulder taps, drag-throughs, reaches, leg lifts, rotation reaches) now count reps in the library measure rule; still planks stay timed holds. 570 tests PASS. Not phone-proven. Other OPEN items unchanged. No deploy/migration/publish/cron/iOS.
