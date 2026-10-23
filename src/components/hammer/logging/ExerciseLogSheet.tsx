@@ -350,6 +350,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
     return merged;
   }); };
   const focus = useFocusExercise({ id: `special:${rx.id}`, name: rx.movement_name, rows: rounds.length || initialRoundsCount,
+    enabled: activity,
     ready: rounds.map(round => entryFields.some(f => f.kind !== "side" && Number(round[f.key]) > 0)), restSeconds: liftRestBand(rx).min,
     save: async () => { await autosave.flush(); if (pendingFor(`exercise_log:${rx.id}`)) throw new Error("Save pending"); },
   });

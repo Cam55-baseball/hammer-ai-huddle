@@ -4,7 +4,7 @@ import { RestTimer } from "./RestTimer";
 import { useConditioningRest } from "./ConditioningRestContext";
 import type { BaseRep } from "../../../../supabase/functions/_shared/wic/runRest";
 
-type Exercise = { id: string; name: string; rows: number; ready: boolean[]; restSeconds: number | null; bases?: BaseRep | null; save: (row: number) => Promise<void> };
+type Exercise = { id: string; name: string; rows: number; ready: boolean[]; restSeconds: number | null; bases?: BaseRep | null; enabled?: boolean; save: (row: number) => Promise<void> };
 type Cursor = { exercise: number; row: number; restingUntil: number | null; restStartedAt: number | null; restSeconds: number | null };
 const INITIAL: Cursor = { exercise: 0, row: 0, restingUntil: null, restStartedAt: null, restSeconds: null };
 const Context = createContext<{
@@ -79,10 +79,10 @@ export function useFocusExercise(entry: Exercise) {
   const latest = useRef(entry); latest.current = entry;
   const register = context?.register;
   useEffect(() => {
-    if (!register) return;
+    if (!register || entry.enabled === false) return;
     const proxy = { ...entry, get ready() { return latest.current.ready; }, save: (row: number) => latest.current.save(row) };
     return register(proxy);
-  }, [register, entry.id, entry.rows, entry.restSeconds, entry.bases, entry.name]);
+  }, [register, entry.id, entry.rows, entry.restSeconds, entry.bases, entry.name, entry.enabled]);
   const signature = entry.ready.join(",");
   const refresh = context?.refresh;
   useEffect(() => { refresh?.(); }, [signature, refresh]);

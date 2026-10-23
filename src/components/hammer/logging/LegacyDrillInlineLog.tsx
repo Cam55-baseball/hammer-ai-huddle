@@ -20,6 +20,7 @@ import { ActivityBasics } from "../cards/ActivityBasics";
 import { prescribedBases } from "../../../../supabase/functions/_shared/wic/runRest";
 import { ExerciseTools } from "../cards/ExerciseTools";
 import { pendingFor } from "@/lib/logging/logOutbox";
+import { DistanceField } from "./DistanceField";
 
 type Draft = Record<string, string>[];
 const TOUCHED = "_t";
@@ -55,7 +56,7 @@ export function LegacyDrillInlineLog({
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const timerStart = useRef<number | null>(null);
-  const stopwatch = (modality === "speed" || modality === "conditioning" || modality === "baserunning") && spec.fields.some(f => f.key === "distance");
+  const stopwatch = (modality === "speed" || modality === "conditioning" || modality === "baserunning") && spec.fields.some(f => f.key === "distance") && spec.fields.some(f => f.key === "time");
   const onSynced = useCallback(() => { qc?.invalidateQueries({ queryKey: ["hammer-daily-tasks"] }); }, [qc]);
   const autosave = useAutosave(`task:${storageKey}`, onSynced);
 
@@ -150,6 +151,7 @@ export function LegacyDrillInlineLog({
         <span className="text-center text-[11px] text-muted-foreground">{index + 1}{index >= spec.rows ? "+" : ""}</span>
         {spec.fields.map((f) => f.key === "time"
           ? <TimeField key={f.key} kind={kindFor(f.prefill)} label={`${f.label} ${index + 1}`} value={round[f.key] ?? ""} target={f.prefill} onChange={(v) => edit(index, f.key, v)} onBlur={() => touch(index)} />
+          : f.unit === "ft + in" ? <DistanceField key={f.key} label={`${f.label} ${index + 1}`} value={round[f.key] ?? ""} onChange={v => edit(index, f.key, v)} onBlur={() => touch(index)} />
           : <Input key={f.key} aria-label={`${f.label} ${index + 1}`} inputMode={f.key === "distance" ? "decimal" : "numeric"} value={round[f.key] ?? ""} placeholder={f.prefill != null ? String(f.prefill) : undefined} onFocus={() => touch(index)} onChange={(e) => edit(index, f.key, e.target.value)} onBlur={() => touch(index)} className="h-9 px-2 text-sm" />)}
       </div>
     ))}

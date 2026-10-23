@@ -2,6 +2,7 @@ import { jumpMeasure, timedMobilityMeasure } from "@/lib/logging/measureType";
 import { useFocusExercise, FocusDurationTimer } from "../cards/FocusSession";
 import { ActivityBasics } from "../cards/ActivityBasics";
 import { ExerciseTools } from "../cards/ExerciseTools";
+import { DistanceField } from "./DistanceField";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RestTimer, sprintRestSeconds, liftRestBand } from "../cards/RestTimer";
@@ -282,6 +283,7 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
       <span className="text-center text-[11px] text-muted-foreground">{i + 1}{i >= spec.rows ? "+" : ""}</span>
       {spec.fields.map((f) => f.key === "time"
         ? <TimeField key={f.key} kind={timeKindFor({ stopwatch, targetSeconds: f.prefill })} label={`${f.label} ${i + 1}`} value={round[f.key] ?? ""} target={f.prefill} onChange={(v) => edit(i, f.key, v)} onBlur={() => touch(i)} />
+        : f.unit === "ft + in" ? <DistanceField key={f.key} label={`${f.label} ${i + 1}`} value={round[f.key] ?? ""} onChange={v => edit(i, f.key, v)} onBlur={() => touch(i)} />
         : <Input key={f.key} aria-label={`${f.label} ${i + 1}`} inputMode={f.key === "weight" || f.key === "distance" ? "decimal" : "numeric"} value={round[f.key] ?? ""} placeholder={f.prefill != null ? String(f.prefill) : undefined} onFocus={() => touch(i)} onChange={(e) => edit(i, f.key, e.target.value)} onBlur={() => touch(i)} className="h-9 px-2 text-sm" />)}
     </div>)}
     <ExerciseTools module={rx.slot} exerciseId={rx.id} planDate={rx.plan_date} />
