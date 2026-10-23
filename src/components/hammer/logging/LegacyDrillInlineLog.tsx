@@ -57,7 +57,7 @@ export function LegacyDrillInlineLog({
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const timerStart = useRef<number | null>(null);
-  const stopwatch = (modality === "speed" || modality === "conditioning" || modality === "baserunning") && spec.fields.some(f => f.key === "distance") && spec.fields.some(f => f.key === "time");
+  const stopwatch = spec.fields.some(f => f.unit === "ss.hh") || ((modality === "speed" || modality === "conditioning" || modality === "baserunning") && spec.fields.some(f => f.key === "distance") && spec.fields.some(f => f.key === "time"));
   const onSynced = useCallback(() => { qc?.invalidateQueries({ queryKey: ["hammer-daily-tasks"] }); }, [qc]);
   const autosave = useAutosave(`task:${storageKey}`, onSynced);
 

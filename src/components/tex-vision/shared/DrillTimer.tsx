@@ -49,11 +49,11 @@ export function DrillTimer({
 
   // Sync autoStart prop changes to internal state (e.g., after countdown completes)
   useEffect(() => {
-    if (autoStart && !isRunning) {
+    if (autoStart && !hasStarted) {
       setIsRunning(true);
       setHasStarted(true);
     }
-  }, [autoStart, isRunning]);
+  }, [autoStart, hasStarted]);
 
   // Sync external pause state - NEW
   useEffect(() => {

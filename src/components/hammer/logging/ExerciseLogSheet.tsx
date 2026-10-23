@@ -100,10 +100,16 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
   const [readback, setReadback] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const touchedRows = useRef(new Set<number>());
+  const draftIdentity = useRef("");
 
   // Hydrate defaults every time the sheet opens.
   useEffect(() => {
     if (!open) return;
+    const identity = `${rx.id}:${rx.movement_slug}`;
+    if (draftIdentity.current === identity && edited.current) return;
+    if (draftIdentity.current !== identity) touchedRows.current.clear();
+    draftIdentity.current = identity;
     const prevRounds: Round[] | null = (latest as any)?.metrics?.rounds ?? (previous as any)?.metrics?.rounds ?? null;
     if (prevRounds && Array.isArray(prevRounds) && prevRounds.length) {
       // Coerce to string map for inputs.
@@ -341,19 +347,23 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
   const changeFields = (fields: typeof template.fields, next: Round[]) => { edited.current = true; setRounds((prev) => {
     const merged = prev.map((round, i) => {
       const result = { ...round };
+      if (fields.some(field => (next[i]?.[field.key] ?? "") !== (round[field.key] ?? ""))) touchedRows.current.add(i);
       for (const field of fields) result[field.key] = next[i]?.[field.key] ?? "";
       return result;
     });
     // An added or removed row comes through only this grid's fields — keep the
     // other grids' values by merging lengths instead of replacing the state.
-    if (next.length > prev.length) merged.push(...next.slice(prev.length));
+    if (next.length > prev.length) { merged.push(...next.slice(prev.length)); next.slice(prev.length).forEach((_, index) => touchedRows.current.add(prev.length + index)); }
     else if (next.length < prev.length) merged.length = next.length;
     return merged;
   }); };
   const focus = useFocusExercise({ id: `special:${rx.id}`, name: rx.movement_name, rows: rounds.length || initialRoundsCount,
     enabled: activity,
-    ready: rounds.map(round => entryFields.some(f => f.kind !== "side" && Number(round[f.key]) > 0)), restSeconds: liftRestBand(rx).min,
-    save: async () => { if (!(await autosave.flush())) throw new Error("Save pending"); },
+    ready: rounds.map((round, index) => touchedRows.current.has(index) && entryFields.some(f => f.kind !== "side" && Number(round[f.key]) > 0)), restSeconds: liftRestBand(rx).min,
+    save: async () => {
+      if (edited.current && user) autosave.queue({ kind: "exercise_log", id: `exercise_log:${rx.id}`, userId: user.id, at: Date.now(), payload: buildPayload(), credit: null }, 0);
+      if (!(await autosave.flush())) throw new Error("Save pending");
+    },
   });
   const topEntries = <section data-pitching-entry-grid hidden={!focus.visible} className="space-y-2">
     <div hidden={focus.active && focus.resting} className="space-y-2">
@@ -371,6 +381,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
     <ExerciseTools module={isPitching ? "pitching" : rx.slot} exerciseId={rx.id} planDate={rx.plan_date} />
     {focus.active && isPitching && <ToolSessionWindow label="Practice session log" route={`/practice?module=pitching&drill_type=${encodeURIComponent(rx.movement_slug)}`} kind="practice" onPracticeSaved={count => {
       edited.current = true;
+      touchedRows.current.add(focus.row);
       setRounds(prior => prior.map((round, index) => index === focus.row ? { ...round, pitches: String(count) } : round));
     }} />}
   </section>;
