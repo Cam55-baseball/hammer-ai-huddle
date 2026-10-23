@@ -26,6 +26,13 @@ describe("guided canonical set progression", () => {
     expect(screen.getByRole("alert")).toBeTruthy();
     expect(screen.getByRole("heading").textContent).toContain("Set 1 of 2");
   });
+  it("flushes existing entries before skipping and blocks a failed skip", async () => {
+    const save = vi.fn(async () => { throw new Error("offline"); });
+    render(<FocusSession active storageKey="focus-proof" onExit={() => {}}><Entry save={save} rest={60} /></FocusSession>);
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Skip" })));
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(sessionStorage.getItem("focus-proof") ?? "{}").row).toBe(0);
+  });
   it("two declared doubles use 30 seconds then 300 seconds", async () => {
     vi.useFakeTimers(); const save = vi.fn(async () => {});
     render(<ConditioningRestProvider><FocusSession active storageKey="focus-proof" onExit={() => {}}><Entry save={save} rest={1} bases={2} /></FocusSession></ConditioningRestProvider>);

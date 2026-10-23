@@ -56,15 +56,22 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
     } catch { setError("Couldn't save this set. Your entries are still here; try again."); }
     finally { setBusy(false); }
   };
+  const skip = async () => {
+    if (!current || busy) return;
+    setBusy(true); setError(null);
+    try { await current.save(cursor.row); advance(); }
+    catch { setError("Couldn't save your entries. Try again before skipping."); }
+    finally { setBusy(false); }
+  };
   return <Context.Provider value={{ active, cursor, currentId: current?.id, register, refresh }}>
     {active && <section data-focus-session className="mb-3 space-y-2 border-b border-border pb-3">
-      <h3 className="text-base font-semibold">{current ? `${current.name} · Set ${cursor.row + 1} of ${current.rows}` : "Card complete"}</h3>
+      <h3 className="text-base font-semibold">{current ? `${current.name} · Set ${cursor.row + 1} of ${current.rows}` : "End of guided sets"}</h3>
       {cursor.restingUntil != null && <RestTimer key={cursor.restStartedAt} label="Rest before the next set" seconds={cursor.restSeconds} initialStartedAt={cursor.restStartedAt} />}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <div className="flex flex-wrap gap-2">
         {current && cursor.restingUntil == null && <>
           <Button size="sm" disabled={busy || !current.ready[cursor.row]} onClick={() => void save(false)}>Next</Button>
-          <Button size="sm" variant="outline" disabled={busy} onClick={advance}>Skip</Button>
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => void skip()}>Skip</Button>
           {error && current.restSeconds == null && <Button size="sm" variant="outline" onClick={advance}>Rest finished</Button>}
         </>}
         <Button size="sm" variant="outline" disabled={busy} onClick={() => void save(true)}>Save &amp; exit</Button>
