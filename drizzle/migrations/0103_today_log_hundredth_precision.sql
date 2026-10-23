@@ -1,0 +1,4 @@
+ALTER TABLE public.wk_session_logs ADD COLUMN IF NOT EXISTS duration_seconds_precise numeric(14,2);
+UPDATE public.wk_session_logs SET duration_seconds_precise = duration_seconds_completed::numeric WHERE duration_seconds_precise IS NULL AND duration_seconds_completed IS NOT NULL;
+COMMENT ON COLUMN public.wk_session_logs.duration_seconds_precise IS 'Canonical exercise duration in seconds to hundredths; per-set precision remains in metrics.rounds.';
+COMMENT ON COLUMN public.wk_session_logs.duration_seconds_completed IS 'Legacy whole-second compatibility projection; precise duration is duration_seconds_precise and metrics.rounds.';
