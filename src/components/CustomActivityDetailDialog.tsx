@@ -24,6 +24,7 @@ import { getActivityIcon } from '@/components/custom-activities';
 import { CustomField, Exercise, MealData, RunningInterval, EmbeddedRunningSession, CustomActivityTemplate } from '@/types/customActivity';
 import { ActivityFolderItem } from '@/types/activityFolder';
 import { FolderItemPerformanceLogger } from '@/components/folders/FolderItemPerformanceLogger';
+import { GuidedCustomExercises } from '@/components/folders/GuidedCustomExercises';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useScoutAccess } from '@/hooks/useScoutAccess';
 import { SendToPlayerDialog } from '@/components/custom-activities/SendToPlayerDialog';
@@ -1027,7 +1028,7 @@ export function CustomActivityDetailDialog({
                     <Dumbbell className="h-4 w-4" />
                     Log Sets
                   </h4>
-                  {allExercises.map((exercise) => (
+                  {isCoachSent ? <GuidedCustomExercises key={`${task.id}:${log?.entry_date ?? 'today'}`} storageKey={`hm-focus-coach:${task.id}:${log?.entry_date ?? 'today'}`} exercises={allExercises} item={folderItem} performanceData={(log?.performance_data as any) || undefined} onSave={onSavePerformanceData} /> : allExercises.map((exercise) => (
                     <Collapsible key={exercise.id}>
                       <CollapsibleTrigger className="flex items-center justify-between w-full rounded-lg bg-muted px-3 py-2 text-sm font-medium hover:bg-muted/80 transition-colors">
                         <span>{exercise.name}</span>
@@ -1038,6 +1039,7 @@ export function CustomActivityDetailDialog({
                           item={folderItem}
                           exerciseId={exercise.id}
                           exerciseName={exercise.name}
+                          prescription={exercise}
                           performanceData={(log?.performance_data as any) || undefined}
                           onSave={onSavePerformanceData}
                           compact
