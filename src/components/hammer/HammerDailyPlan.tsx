@@ -943,6 +943,7 @@ function HammerDailyPlanBody({
       </ErrorBoundary>
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
+        <WeeklyBodyLoadBar />
         <FinishProfileCard />
         <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
         {splitBaserunning(plan.blocks).mental.map(b => <BlockCard key={`mental-${b.modality}-${b.side ?? "x"}`} block={b} onNavigate={navigate} />)}
@@ -985,7 +986,6 @@ function HammerDailyPlanBody({
           })}
         {/* Quarter / phase + weekly rhythm context */}
         <WeeklyRoadmapStrip plan={plan} />
-        <RampLines />
       </BeforeYouStartSection>
     <Card id="hammer-plan" className="scroll-mt-24">
       <CardHeader className="pb-2" data-tour="today-plan-heading" data-tour-context>
@@ -1087,7 +1087,6 @@ function HammerDailyPlanBody({
 
         <GpInGameAdvisoryStrip />
 
-        <WeeklyBodyLoadBar />
 
         {/* Step 21E3 — the day's reason lives in the header, not on movements. */}
         <WkSeasonReplanNote />
@@ -1128,8 +1127,6 @@ function HammerDailyPlanBody({
              <TodayRhythmProvider planDate={pocketDate}>
               <WkSafePlanNotice />
               <TrendDeloadNotice />
-              <ReleaseCountdown />
-              <PlanStreakStrip />
               <DayCommandCenter />
               <WkRestDayBanner />
               <WkSomethingOffRow />

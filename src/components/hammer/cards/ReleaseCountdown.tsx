@@ -70,17 +70,11 @@ export function releaseState(nowMs: number, tz: string, tomorrowBuilt: boolean):
 }
 
 export function ReleaseCountdown({ timeZone }: { readonly timeZone?: string }) {
-  // This fixed delivery notice deliberately reveals no internal build status.
-  return (
-    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground" data-release-countdown>
-      <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-      <span>{RELEASE_LINE}</span>
-    </div>
-  );
+  return null;
 }
 
 /** The only plan-time wording players see. */
-export const RELEASE_LINE = "Tomorrow's plan becomes visible at midnight";
+export const RELEASE_LINE = "";
 
 function localToday(nowMs: number, tz: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(nowMs));

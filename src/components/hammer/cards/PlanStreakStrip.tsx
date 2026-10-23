@@ -106,12 +106,10 @@ export function PlanStreakStrip() {
             flame.glow ? "drop-shadow-[0_0_6px_currentColor] motion-safe:animate-pulse" : "",
           ].join(" ")}
         />
-        Streak: {streak} day{streak === 1 ? "" : "s"}
-        {!flame.lit ? ` · flame lights at ${FLAME_LIT_AT}` : ""}
+        {streak} training-standard day{streak === 1 ? "" : "s"}
       </span>
       <span className="flex items-center gap-1 text-muted-foreground">
-        <Trophy className="h-3.5 w-3.5" aria-hidden />Workouts done: {workouts.toLocaleString()}
-        {next ? ` · next milestone: ${next.toLocaleString()}` : ""}
+        <Trophy className="h-3.5 w-3.5" aria-hidden />{workouts.toLocaleString()} workouts completed
       </span>
     </div>
   );

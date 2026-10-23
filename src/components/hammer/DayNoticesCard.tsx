@@ -55,16 +55,14 @@ export function DayNoticesCard({
 
   if (!notices || notices.length === 0) return null;
 
+  const unique = notices.filter((notice, index) => notices.findIndex(other => surfaceForNotice(other) === surfaceForNotice(notice) && athleteNoticeCopy(other).trim().toLowerCase() === athleteNoticeCopy(notice).trim().toLowerCase()) === index);
   return (
-    <Card className="border-amber-500/30">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-sm">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
+    <details className="border-b border-border py-3">
+      <summary className="min-h-11 cursor-pointer text-sm font-semibold">
           Why today's plan changed
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {notices.map((notice) => {
+      </summary>
+      <div className="space-y-2">
+        {unique.map((notice) => {
           const key = noticeKey(planDate, notice);
           const isRead = read.includes(key);
           return (
@@ -90,7 +88,7 @@ export function DayNoticesCard({
             </div>
           );
         })}
-      </CardContent>
-    </Card>
+      </div>
+    </details>
   );
 }

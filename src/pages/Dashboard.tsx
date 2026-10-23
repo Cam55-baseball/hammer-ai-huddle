@@ -103,7 +103,7 @@ function DashboardTodayPlan({
             <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
           </button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
+        <CollapsibleContent forceMount hidden={!open} className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
           <div className="p-3 sm:p-4 border-t border-border/60 space-y-3">
             <TodaysHammerPick />
             <HammerDailyPlan beforeStartPortalTarget={beforeStartPortalTarget} />
@@ -613,8 +613,6 @@ export default function Dashboard() {
         {/* Module cards above Game Plan when user has no tier (players only) */}
         {!purchaseRoleLoading && !isStaffAccount && !hasAnyTier && moduleCardsSection}
 
-        {/* Coach Hammer Next Best Step — surfaced above the Identity card. */}
-        {hasPlayerAccess && <CommunicationAI />}
         {hasPlayerAccess && <IdentityCommandCard />}
 
         {/* Exact athlete order: Identity → standalone Before You Start →
