@@ -18,6 +18,7 @@ import { SavedIndicator, useAutosave } from "./useAutosave";
 import { useFocusExercise, FocusDurationTimer } from "../cards/FocusSession";
 import { ActivityBasics } from "../cards/ActivityBasics";
 import { prescribedBases } from "../../../../supabase/functions/_shared/wic/runRest";
+import { ExerciseTools } from "../cards/ExerciseTools";
 
 type Draft = Record<string, string>[];
 const TOUCHED = "_t";
@@ -157,6 +158,7 @@ export function LegacyDrillInlineLog({
     </div>
     {logged.length > 0 && primary && <p data-prescribed-vs-done className="text-[11px] text-muted-foreground">Prescribed: {spec.rows} {spec.rows === 1 ? "set" : "sets"}{primary.prefill ? ` × ${primary.key === "time" ? formatTime(kindFor(primary.prefill), primary.prefill) : `${primary.prefill} ${primary.label.toLowerCase()}`}` : ""} · Done: {logged.length} {logged.length === 1 ? "set" : "sets"}</p>}
     <SavedIndicator state={autosave.state} />
+    <ExerciseTools module={modality} exerciseId={storageKey} planDate={taskSync?.planDate ?? new Date().toLocaleDateString("en-CA")} />
     {focus.active && <ActivityBasics name={name} dosage={dosage} setup={setup} cue={cue} stopIf={stopIf} />}
     </div>
   </section>;

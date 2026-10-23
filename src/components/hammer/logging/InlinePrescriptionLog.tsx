@@ -1,6 +1,7 @@
 import { jumpMeasure, timedMobilityMeasure } from "@/lib/logging/measureType";
 import { useFocusExercise, FocusDurationTimer } from "../cards/FocusSession";
 import { ActivityBasics } from "../cards/ActivityBasics";
+import { ExerciseTools } from "../cards/ExerciseTools";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RestTimer, sprintRestSeconds, liftRestBand } from "../cards/RestTimer";
@@ -282,7 +283,8 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
         ? <TimeField key={f.key} kind={timeKindFor({ stopwatch, targetSeconds: f.prefill })} label={`${f.label} ${i + 1}`} value={round[f.key] ?? ""} target={f.prefill} onChange={(v) => edit(i, f.key, v)} onBlur={() => touch(i)} />
         : <Input key={f.key} aria-label={`${f.label} ${i + 1}`} inputMode={f.key === "weight" || f.key === "distance" ? "decimal" : "numeric"} value={round[f.key] ?? ""} placeholder={f.prefill != null ? String(f.prefill) : undefined} onFocus={() => touch(i)} onChange={(e) => edit(i, f.key, e.target.value)} onBlur={() => touch(i)} className="h-9 px-2 text-sm" />)}
     </div>)}
-    {focus.active && <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} setup={rx.why_payload?.setup as string | undefined} cue={rx.why_payload?.cue} />}
+    <ExerciseTools module={rx.slot} exerciseId={rx.id} planDate={rx.plan_date} />
+    {focus.active && <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} cue={rx.why_payload?.cue} />}
     <div className="flex flex-wrap items-center justify-between gap-2">
       <Button type="button" size="sm" variant="outline" className="h-9" onClick={addSet}><Plus className="mr-1 h-3.5 w-3.5" />Add set</Button>
       {status && <span data-auto-status={status} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status === "cut_short" || status === "missed" ? "bg-muted text-foreground" : "bg-primary/15 text-primary"}`}>{AUTO_STATUS_LABEL[status]}</span>}
