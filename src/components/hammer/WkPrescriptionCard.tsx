@@ -313,7 +313,7 @@ export function WkPrescriptionCard({
   </PocketCard>;
   return (
     <div className={`border-b border-border py-2 ${checked ? "opacity-60" : ""}`}>
-      {logHost && createPortal(<section data-exercise-entry-grid className="space-y-2"><h4 className="text-sm font-semibold break-words">{rx.movement_name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4><InlinePrescriptionLog rx={rx} /></section>, logHost)}
+      {logHost && createPortal(<section data-exercise-entry-grid className="space-y-2"><InlinePrescriptionLog rx={rx} /></section>, logHost)}
       <ExerciseDisclosure name={rx.movement_name}>
         <div className="mt-2 space-y-2 text-xs">
           <div className="font-medium text-foreground" data-prescribed-dose>{dosage}</div>

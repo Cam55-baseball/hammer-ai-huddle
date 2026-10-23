@@ -267,6 +267,7 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
   const fmt = (v: number) => primary.key === "time" ? formatTime(timeKindFor({ stopwatch, targetSeconds: primary.prefill }), v) : String(v);
   const showDone = !(primary.key === "time" && stopwatch);
   return <div className="space-y-2" data-inline-prescription-log hidden={!focus.visible || (focus.active && focus.resting)}>
+    <h4 className="text-sm font-semibold break-words">{rx.movement_name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>
     {focus.active && !stopwatch && spec.fields.some(f => f.key === "time" && (f.prefill ?? 0) > 0) && <FocusDurationTimer key={focus.row} target={spec.fields.find(f => f.key === "time")?.prefill ?? 0} onDone={value => edit(focus.row, "time", String(value), 0)} />}
     {hasTime && <div className="flex items-center gap-2" data-rep-timer>
       <Button type="button" size="sm" variant={running ? "default" : "outline"} className="h-9 min-w-[96px]" onClick={toggleTimer}>{running ? "Stop timer" : "Start timer"}</Button>
