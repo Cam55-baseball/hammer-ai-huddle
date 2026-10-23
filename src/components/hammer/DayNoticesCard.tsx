@@ -27,9 +27,11 @@ const storeKey = (planDate: string) => `hammer.today.noticesRead.${planDate}`;
 export function DayNoticesCard({
   notices,
   planDate,
+  extraLines = [],
 }: {
   notices: ReadonlyArray<Notice>;
   planDate: string;
+  extraLines?: readonly string[];
 }) {
   const [read, setRead] = useState<string[]>([]);
 
@@ -53,15 +55,18 @@ export function DayNoticesCard({
     });
   };
 
-  if (!notices || notices.length === 0) return null;
+  if (notices.length === 0 && extraLines.length === 0) return null;
 
   const unique = notices.filter((notice, index) => notices.findIndex(other => surfaceForNotice(other) === surfaceForNotice(notice) && athleteNoticeCopy(other).trim().toLowerCase() === athleteNoticeCopy(notice).trim().toLowerCase()) === index);
+  const seen = new Set(unique.map(notice => athleteNoticeCopy(notice).trim().toLowerCase()));
+  const changes = extraLines.filter(line => { const key = line.trim().toLowerCase(); if (seen.has(key)) return false; seen.add(key); return true; });
   return (
     <details className="border-b border-border py-3">
       <summary className="min-h-11 cursor-pointer text-sm font-semibold">
           Why today's plan changed
       </summary>
       <div className="space-y-2">
+        {changes.map(line => <p key={line} className="border-l-2 border-primary pl-3 text-xs leading-relaxed">{line}</p>)}
         {unique.map((notice) => {
           const key = noticeKey(planDate, notice);
           const isRead = read.includes(key);
