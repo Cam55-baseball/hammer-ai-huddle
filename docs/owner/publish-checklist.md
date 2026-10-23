@@ -38,6 +38,17 @@ No publishing, schedule changes or iOS changes. Necessary `create-test-athlete` 
 
 **Run 2 remains incomplete:** coach-sent and remaining card/practice progression, Tex/Pick-off phone completion, five populated player/study proofs, remaining catalog/time targets and full identity placement proof.
 
+### Run 3 — 19:50–20:18 continuation
+
+- **Coach-sent guided work built, not phone-certified:** accepted activity exercises reuse the existing performance logger, declared set count, duration and rest. Next saves before rest; failures and zero-row writes cannot report success. Skip does not check completion boxes. Sibling exercise logs and checkbox/field state survive individual exercise saves. Duration inputs retain hundredths and explicit legacy-minute rows display seconds. Three guided tests and one sibling-save test pass. No existing TEST custom exercise templates were found, so no populated coach-card phone proof is claimed; continuous coach-entry autosave remains unfinished.
+- **Real multi-set phone proof PASS:** college TEST player, 390×844, existing Arm-Care Band — Full Chart prescription, two sets of 11. First save starts the unchanged 90-second rest; waiting the real interval advances to set 2. Second save starts rest; page reload retains set 2 and the remaining 80 seconds. Canonical readback has exactly rounds `{set:1,reps:11}` and `{set:2,reps:11}`. No clock shortcut, new plan or prescription changes. This proves this lift flow, not every card type.
+- **Identity phone check:** softball TEST player shows standard/active-day rewards in the identity card and Coach Hammer Next Best Step immediately above Ask Hammer. This is not proof of populated return-to-training/block-progress data.
+- **Audit:** remaining source review identified staging category mismatches, not an evidence-backed rep-to-time correction. No source dose or movement category changed. Catalog-wide audit and missing declared hold targets remain open.
+- **Final validation:** 513 app files / 4,014 tests PASS after all source edits, eight bounded batches. Existing six server files / 33 tests PASS. Preview build OK 20:03:58 UTC. Phone checks: no page errors. Evidence `/tmp/browser/today-cleanup/run3`; suite `/tmp/today-cleanup-suite/run3/final-batch-*`.
+- **Exact cleanup PASS:** TEST lift log `f006725d-238a-4472-a585-5bf4ceca3237` and completion `535a60db-f2ff-42e1-9614-02e317843a07` snapshotted in the existing protected store under `today_cleanup_run3_20261023:*`, removed only by exact ID/user with snapshot existence guards. Readback: zero rows, two snapshots. Original plan, safeguards and owner media unchanged. No deployment, migration, publish, cron or iOS action.
+
+**Ready to publish: NO.** Still open: populated coach-card phone proof/continuous autosave, remaining all-card practice/video progression, Tex/Pick-off saved completion, five populated player/study proofs, populated identity phase/progress and full catalog/time-target coverage. Prior successful proofs remain valid; absent evidence is not completion.
+
 ## Controlling verdict criteria — owner update October 22, 00:59 UTC
 
 **Ready to publish: YES — October 22, 15:50 UTC.** Cleanup COMPLETE under the owner's history-retention decision (below). US-only website link proven at phone size. Full suite passes and preview build OK. This verdict does not publish anything; publishing, cron and iOS remain the owner's call.

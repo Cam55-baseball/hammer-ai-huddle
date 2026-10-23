@@ -19,6 +19,7 @@ import { getTodayDate } from '@/utils/dateUtils';
 import { format } from 'date-fns';
 import { repairRecentCustomActivityLogDatesOncePerDay } from '@/utils/customActivityLogDateRepair';
 import { calculateCustomActivityLoad } from '@/utils/customActivityLoadCalculation';
+import { mergeActivityPerformance } from '@/utils/mergeActivityPerformance';
 
 import { TAB_ID } from '@/utils/tabId';
 
@@ -649,7 +650,7 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
 
         // Per-key merge for known race-prone subobjects; everything else is a
         // shallow override (matches prior behaviour for nn_gate, etc.).
-        const merged: Record<string, any> = { ...serverPd, ...incoming };
+        const merged = mergeActivityPerformance(serverPd, incoming);
         if (serverPd.checkboxStates || incoming.checkboxStates) {
           merged.checkboxStates = {
             ...((serverPd.checkboxStates as Record<string, boolean>) || {}),
@@ -663,13 +664,13 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
           };
         }
 
-        const { error } = await supabase
+        const { data: saved, error } = await supabase
           .from('custom_activity_logs')
           .update({ performance_data: merged })
           .eq('id', logId)
-          .eq('user_id', user.id);
+          .eq('user_id', user.id).select('id').maybeSingle();
 
-        if (error) {
+        if (error || !saved) {
           console.error('[useCustomActivities] Error updating performance data:', error);
           return false;
         }

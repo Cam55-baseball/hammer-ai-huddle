@@ -2964,15 +2964,16 @@ export function GamePlanCard({ selectedSport, defaultOpen = false }: GamePlanCar
           }
         }}
         onSavePerformanceData={async (data) => {
-          if (!selectedCustomTask?.customActivityData) return;
+          if (!selectedCustomTask?.customActivityData) throw new Error('Activity is no longer available');
           const template = selectedCustomTask.customActivityData.template;
           let log = selectedCustomTask.customActivityData.log;
           if (!log) {
             log = await ensureLogExists(template.id);
-            if (!log) return;
+            if (!log) throw new Error('Could not create activity log');
           }
           const currentPd = (log.performance_data as Record<string, any>) || {};
-          await updateLogPerformanceData(log.id, { ...currentPd, ...data });
+          const saved = await updateLogPerformanceData(log.id, { ...currentPd, ...data });
+          if (!saved) throw new Error('Could not save activity sets');
           setSelectedCustomTask(prev => {
             if (!prev?.customActivityData) return prev;
             return {
