@@ -20,28 +20,34 @@ export type TimeSegments = string[];
 export function toSegments(kind: TimeKind, seconds: number | null | undefined): TimeSegments {
   const blank = kind === "seconds" ? [""] : kind === "hmmss" ? ["", "", ""] : ["", ""];
   if (seconds == null || !Number.isFinite(seconds) || seconds < 0) return blank;
-  if (kind === "seconds") return [String(Math.round(seconds))];
+  if (kind === "seconds") return [String(Math.round(seconds * 100) / 100)];
   if (kind === "sshh") {
     const cs = Math.round(seconds * 100);
     return [String(Math.floor(cs / 100)), String(cs % 100).padStart(2, "0")];
   }
-  const whole = Math.round(seconds);
-  if (kind === "mmss") return [String(Math.floor(whole / 60)), String(whole % 60).padStart(2, "0")];
-  return [String(Math.floor(whole / 3600)), String(Math.floor((whole % 3600) / 60)).padStart(2, "0"), String(whole % 60).padStart(2, "0")];
+  const cs = Math.round(seconds * 100);
+  const whole = Math.floor(cs / 100);
+  const tail = `${String(whole % 60).padStart(2, "0")}${cs % 100 ? `.${String(cs % 100).padStart(2, "0")}` : ""}`;
+  if (kind === "mmss") return [String(Math.floor(whole / 60)), tail];
+  return [String(Math.floor(whole / 3600)), String(Math.floor((whole % 3600) / 60)).padStart(2, "0"), tail];
 }
 
 /** Segments → seconds, or null when every segment is empty. */
 export function fromSegments(kind: TimeKind, segs: TimeSegments): number | null {
   if (segs.every((s) => s.trim() === "")) return null;
   const n = (s: string | undefined) => { const v = Number((s ?? "").replace(/\D/g, "")); return Number.isFinite(v) ? v : 0; };
-  if (kind === "seconds") return n(segs[0]);
+  const seconds = (s: string | undefined) => {
+    const v = Number(s ?? "");
+    return Number.isFinite(v) && v >= 0 ? Math.round(v * 100) / 100 : 0;
+  };
+  if (kind === "seconds") return seconds(segs[0]);
   if (kind === "sshh") {
     const hh = (segs[1] ?? "").replace(/\D/g, "");
     const cs = hh === "" ? 0 : hh.length === 1 ? Number(hh) * 10 : Number(hh.slice(0, 2));
     return Math.round((n(segs[0]) * 100 + cs)) / 100;
   }
-  if (kind === "mmss") return n(segs[0]) * 60 + Math.min(59, n(segs[1]));
-  return n(segs[0]) * 3600 + Math.min(59, n(segs[1])) * 60 + Math.min(59, n(segs[2]));
+  if (kind === "mmss") return n(segs[0]) * 60 + Math.min(59.99, seconds(segs[1]));
+  return n(segs[0]) * 3600 + Math.min(59, n(segs[1])) * 60 + Math.min(59.99, seconds(segs[2]));
 }
 
 /** Plain label for a target, e.g. "45 s", "2:30", "1:05:00", "4.50 s". */
