@@ -16,6 +16,7 @@ The other 13 flagged rows (wall sits, iso squats, iso split squats, Copenhagen p
 - [ ] Oct 23 cleanup run 9, 21:55: owner decisions table written (5 exercises). Phone proofs for items 2, 5, 8–12, 14 not run this turn; status table below unchanged. No deploy/migration/publish/cron/iOS.
 - [ ] Oct 23 cleanup run 10, 21:58: BLOCKED — the phone-check browser can sign in only as the owner; signing in as a TEST player needs owner approval, which this session can't request. Owner proofs don't count (owner skips gates). No changes.
 - [ ] Oct 23 cleanup run 11, 21:59: still BLOCKED on the same TEST-player sign-in approval. No changes.
+- [ ] Oct 23 cleanup run 12, 21:58: still BLOCKED on TEST-player sign-in approval. No changes.
 
 ## Oct 23 Hammers Today clean-up — status (end of run 8, 20:30 UTC)
 
