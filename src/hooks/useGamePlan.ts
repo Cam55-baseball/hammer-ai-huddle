@@ -9,6 +9,7 @@ import { startOfWeek, differenceInDays, format, getDay } from 'date-fns';
 import { CustomActivityWithLog, CustomActivityTemplate, CustomActivityLog } from '@/types/customActivity';
 import { getTodayDate } from '@/utils/dateUtils';
 import { ActivityFolder, ActivityFolderItem, getCurrentCycleWeek } from '@/types/activityFolder';
+import { mergeActivityPerformance } from '@/utils/mergeActivityPerformance';
 
 import { TAB_ID } from '@/utils/tabId';
 
@@ -1126,15 +1127,16 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
 
       if (existing) {
         const currentPd = (existing.performance_data as Record<string, any>) || {};
-        const { error } = await supabase
+        const { data: saved, error } = await supabase
           .from('folder_item_completions')
           .update({
-            performance_data: { ...currentPd, ...data },
+            performance_data: mergeActivityPerformance(currentPd, data),
           })
-          .eq('id', existing.id).eq('user_id', user.id);
+          .eq('id', existing.id).eq('user_id', user.id).select('id').maybeSingle();
         if (error) throw error;
+        if (!saved) throw new Error('Activity save was not recorded');
       } else {
-        const { error } = await supabase
+        const { data: saved, error } = await supabase
           .from('folder_item_completions')
           .insert({
             folder_item_id: itemId,
@@ -1142,8 +1144,9 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
             entry_date: today,
             completed: false,
             performance_data: data,
-          });
+          }).select('id').maybeSingle();
         if (error) throw error;
+        if (!saved) throw new Error('Activity save was not recorded');
       }
     } catch (error) {
       console.error('Error saving folder performance data:', error);

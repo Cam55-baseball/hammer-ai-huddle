@@ -31,6 +31,7 @@ import { SendToPlayerDialog } from '@/components/custom-activities/SendToPlayerD
 import { SendCardToCoachDialog } from '@/components/custom-activities/SendCardToCoachDialog';
 import { Json } from '@/integrations/supabase/types';
 import { NNResetTimer } from '@/components/identity/NNResetTimer';
+import { getTodayDate } from '@/utils/dateUtils';
 
 // Helper to get all checkable item IDs from a template
 export const getAllCheckableIds = (template: CustomActivityTemplate): string[] => {
@@ -1028,7 +1029,7 @@ export function CustomActivityDetailDialog({
                     <Dumbbell className="h-4 w-4" />
                     Log Sets
                   </h4>
-                  {isCoachSent ? <GuidedCustomExercises key={`${task.id}:${log?.entry_date ?? 'today'}`} storageKey={`hm-focus-coach:${task.id}:${log?.entry_date ?? 'today'}`} exercises={allExercises} item={folderItem} performanceData={(log?.performance_data as any) || undefined} onSave={onSavePerformanceData} /> : allExercises.map((exercise) => (
+                  {isCoachSent ? <GuidedCustomExercises key={`${task.id}:${log?.entry_date ?? getTodayDate()}`} storageKey={`hm-focus-coach:${template.user_id}:${task.id}:${log?.entry_date ?? getTodayDate()}`} exercises={allExercises} item={folderItem} performanceData={(log?.performance_data as any) || undefined} onSave={onSavePerformanceData} /> : allExercises.map((exercise) => (
                     <Collapsible key={exercise.id}>
                       <CollapsibleTrigger className="flex items-center justify-between w-full rounded-lg bg-muted px-3 py-2 text-sm font-medium hover:bg-muted/80 transition-colors">
                         <span>{exercise.name}</span>
