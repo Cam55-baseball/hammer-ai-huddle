@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -63,59 +63,107 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const prescribedRows = Math.max(1, prescription?.sets ?? 1);
+  const rowsRef = useRef<SetRow[]>([]);
+  const dirty = useRef(false);
+  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const writeChain = useRef<Promise<void>>(Promise.resolve());
+  const saveRef = useRef(onSave);
+  const dataRef = useRef(performanceData);
+  saveRef.current = onSave;
+  dataRef.current = performanceData;
 
   useEffect(() => {
+    if (dirty.current) return;
     // If scoped to a specific exercise, load from exerciseSets map
     const scopedData = exerciseId
       ? (performanceData as any)?.exerciseSets?.[exerciseId]
       : performanceData;
     
     if (scopedData?.sets && scopedData.sets.length > 0) {
+      rowsRef.current = scopedData.sets;
       setSets(scopedData.sets);
     } else {
-      setSets(Array.from({ length: prescribedRows }, (_, index) => getDefaultSet(mode, index + 1)));
+      const initial = Array.from({ length: prescribedRows }, (_, index) => getDefaultSet(mode, index + 1));
+      rowsRef.current = initial;
+      setSets(initial);
     }
   }, [performanceData, mode, exerciseId, prescribedRows]);
 
   const addSet = () => {
     const lastSet = sets[sets.length - 1];
-    setSets(prev => [...prev, {
-      ...getDefaultSet(mode, prev.length + 1),
+    const next = [...rowsRef.current, {
+      ...getDefaultSet(mode, rowsRef.current.length + 1),
       unit: lastSet?.unit || 'lbs',
       weight: lastSet?.weight,
-    }]);
+    }];
+    rowsRef.current = next;
+    dirty.current = true;
+    setSets(next);
   };
 
   const removeSet = (index: number) => {
     if (sets.length <= 1) return;
-    setSets(prev => prev.filter((_, i) => i !== index).map((s, i) => ({ ...s, set: i + 1 })));
-  };
-
-  const updateSet = (index: number, field: keyof SetRow, value: any) => {
-    setSets(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
+    const next = rowsRef.current.filter((_, i) => i !== index).map((s, i) => ({ ...s, set: i + 1 }));
+    rowsRef.current = next;
+    dirty.current = true;
+    setSets(next);
   };
 
   const persist = async () => {
-    setSaving(true);
-    try {
+    if (debounce.current) { clearTimeout(debounce.current); debounce.current = null; }
+    const snapshot = rowsRef.current;
+    const write = writeChain.current.catch(() => {}).then(async () => {
+      setSaving(true);
+      try {
       if (exerciseId) {
         // Merge into exerciseSets map
-        const existing = (performanceData as any) || {};
+        const existing = (dataRef.current as any) || {};
         const existingSets = existing.exerciseSets || {};
-        await onSave({
+        await saveRef.current({
           ...existing,
           exerciseSets: {
             ...existingSets,
-            [exerciseId]: { sets },
+            [exerciseId]: { sets: snapshot },
           },
         } as any);
       } else {
-        await onSave({ ...(performanceData || {}), sets });
+        await saveRef.current({ ...(dataRef.current || {}), sets: snapshot });
       }
+      if (rowsRef.current === snapshot) dirty.current = false;
+      setError(null);
     } finally {
       setSaving(false);
     }
+    });
+    writeChain.current = write;
+    await write;
   };
+
+  const updateSet = (index: number, field: keyof SetRow, value: any) => {
+    const next = rowsRef.current.map((s, i) => i === index ? { ...s, [field]: value, ...(field === 'time' ? { time_unit: 'sec' as const } : {}) } : s);
+    rowsRef.current = next;
+    dirty.current = true;
+    setSets(next);
+    if (prescription) {
+      if (debounce.current) clearTimeout(debounce.current);
+      debounce.current = setTimeout(() => { void persist().catch(() => setError("Couldn't save your sets. Your entries are still here; try again.")); }, 600);
+    }
+  };
+
+  const flushRef = useRef(persist);
+  flushRef.current = persist;
+  useEffect(() => {
+    const flush = () => { if (dirty.current && prescription) void flushRef.current().catch(() => setError("Couldn't save your sets. Your entries are still here; try again.")); };
+    const hidden = () => { if (document.visibilityState === 'hidden') flush(); };
+    document.addEventListener('visibilitychange', hidden);
+    window.addEventListener('pagehide', flush);
+    return () => {
+      document.removeEventListener('visibilitychange', hidden);
+      window.removeEventListener('pagehide', flush);
+      if (debounce.current) clearTimeout(debounce.current);
+      flush();
+    };
+  }, [prescription]);
 
   const handleSave = async () => {
     setError(null);
@@ -198,7 +246,7 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
                     inputMode="decimal"
                     placeholder="Sec"
                     value={set.time != null && set.time_unit !== 'sec' ? Number((set.time * 60).toFixed(2)) : set.time ?? ''}
-                    onChange={e => setSets(prev => prev.map((row, i) => i === index ? { ...row, time: e.target.value ? parseFloat(e.target.value) : undefined, time_unit: 'sec' } : row))}
+                    onChange={e => updateSet(index, 'time', e.target.value ? parseFloat(e.target.value) : undefined)}
                     className="h-7 w-16 text-xs px-1.5 min-w-0"
                   />
                   <span className="text-[10px] text-muted-foreground">sec</span>

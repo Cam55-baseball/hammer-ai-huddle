@@ -8,6 +8,7 @@ const VALID: MeasureType[] = [
   "weight_reps", "reps", "hold_seconds", "duration", "sprint_time",
   "jump_distance", "jump_height", "throws", "velocity", "bat_speed",
   "exit_velocity", "swing_count", "checkoff",
+  "reps_per_leg", "press_reps", "steps_each_way", "steps", "carry_distance",
 ];
 
 describe("measureTypeFor — every library exercise resolves", () => {

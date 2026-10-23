@@ -4,6 +4,13 @@
 
 **Ready to publish: NO.** The cleanup is partially implemented, not fully proven. Earlier release verdicts below are historical and do not certify these changes.
 
+### Owner-present run — October 23, 22:43–23:07 UTC
+- **All B decisions applied in preview:** Walking Lunge → reps per leg; Rear-Foot-Raised Resist-Turning Press → press reps; Banded Lateral Squat Walk → steps each way; Elephant Walk → steps; Farmer Carry on Toes → yards. Both log paths use the shared exact measurement rule; yards remain feet in saved canonical records. Existing timed prescriptions are not converted to invented counts/distances.
+- **Coach continuous saving implemented:** entered coach sets save after a short pause; Next flushes the current entries before the declared rest starts. Writes stay ordered; failed autosaves retain entries and retry on Next. No completion boxes are manufactured.
+- **Fresh application suite PASS:** 514 files / 4,033 tests, including the unchanged 200-season safety sweep. `/tmp/today-cleanup-owner-decisions/full-suite/result.json` and adjacent logs; interrupted aggregate batch results completed with the isolated safety test. Preview build OK 22:46:16 UTC. No server suite rerun or server changes.
+- **Phone verification still blocked:** normal college TEST sign-in request was refused by the tool with approval unavailable in this context, despite the owner's presence. No approval card appeared. No TEST-player/coach phone success, populated fixtures or five-exercise phone proof claimed. Items 2, 5, 8–12 and 14 remain Partly; earlier Done proofs retained.
+- **Cleanup:** no new TEST database records created this run; prior exact cleanup evidence remains. No publish/deploy/migration/cron/iOS changes.
+
 | Owner request | Current result |
 |---|---|
 | Before you start / identity relocation | Implemented; 390×844 phone checks show Before you start openable with the plan closed. Load and deduplicated closed changes drawer moved; identity hosts rewards, phase/ramp information and Coach Hammer. Full identity placement proof still incomplete. |

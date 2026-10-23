@@ -1,15 +1,15 @@
 # Current publish gate — Oct 23 Hammers Today cleanup
 
-## OWNER DECISIONS — exercises whose log type and category disagree (Oct 23, 21:55 run)
-Found by checking every library exercise's category against how it is logged. Nothing changed; pick A or B per row.
+## OWNER DECISIONS — all B approved and implemented (Oct 23, 22:43 owner request)
+Both existing logging paths and the library measurement rule now share these choices. Prescribed sets, time, rest and training remain unchanged; no time-to-count or time-to-distance conversion. TEST-player phone proofs remain unverified.
 
 | Exercise | What it is now | Option A | Option B |
 |---|---|---|---|
-| Walking Lunge (`walking_lunge`) | Strength, logged as time | Keep time | Log reps per leg |
-| Rear-Foot-Raised Resist-Turning Press (`lift_rfess_pallof`) | Strength, logged as a hold (seconds) | Keep hold seconds | Log press reps |
-| Banded Lateral Squat Walk (`lift_banded_lateral_squat_walk`) | Strength, logged as time | Keep time | Log steps each way |
-| Elephant Walk (`lift_elephant_walk`) | Strength, logged as time | Keep time | Log steps |
-| Farmer Carry on Toes (`lift_farmer_toe_walk`) | Strength, logged as time | Keep time | Log distance (yards) |
+| Walking Lunge (`walking_lunge`) | Reps per leg; phone proof pending | Not selected | B applied |
+| Rear-Foot-Raised Resist-Turning Press (`lift_rfess_pallof`) | Press reps; phone proof pending | Not selected | B applied |
+| Banded Lateral Squat Walk (`lift_banded_lateral_squat_walk`) | Steps each way; phone proof pending | Not selected | B applied |
+| Elephant Walk (`lift_elephant_walk`) | Steps; phone proof pending | Not selected | B applied |
+| Farmer Carry on Toes (`lift_farmer_toe_walk`) | Distance in yards; canonical storage remains feet; phone proof pending | Not selected | B applied |
 
 The other 13 flagged rows (wall sits, iso squats, iso split squats, Copenhagen plank, pull-up hold, etc.) are true holds filed under Strength; they stay timed and need no decision.
 
@@ -21,9 +21,11 @@ The other 13 flagged rows (wall sits, iso squats, iso split squats, Copenhagen p
 - [ ] Oct 23 cleanup run 14, 21:59: still BLOCKED on TEST-player sign-in approval. No changes.
 - [ ] Oct 23 cleanup run 15, 22:08: fresh full suite 513 files / 4,025 tests PASS; status, decisions and publish answer refreshed. Proofs still BLOCKED on TEST-player sign-in approval.
 
-## Oct 23 Hammers Today clean-up — status (end of batch, 22:08 UTC): 6 Done, 8 Partly, 0 Not started
+## Oct 23 Hammers Today clean-up — status (23:07 UTC): 6 Done, 8 Partly, 0 Not started
 
-Fresh full suite 22:01–22:08 UTC: 513 files / 4,025 tests PASS (/tmp/suite9/all.log). Table below unchanged since run 8; no phone proofs ran (TEST-player sign-in approval unavailable).
+Fresh application suite after these changes: 514 files / 4,033 tests PASS, including the unchanged 200-season safety test. Evidence: `/tmp/today-cleanup-owner-decisions/full-suite/result.json`, `batch-1.log`–`batch-7.log`, individual PASS records in `batch-8-retry.log`, and completed `invariants-final.log`. Aggregate runs timed out; only the missing safety test was completed separately. Preview build OK 22:46:16. Server suite not rerun; no server changes. No phone proofs ran: the exact college TEST sign-in command was refused with “approval unavailable in this context,” without an approval card. Owner presence/authorization is not in question; the tool restriction remains.
+
+- [ ] Oct 23 cleanup run 16, 22:43–23:07: requested college TEST sign-in normally; tool refused without approval card. All five B measurements implemented across existing log paths with canonical-foot yard entry and no dose conversion; continuous coach autosave implemented with ordered saves, failure retry and save-before-rest tests. Fresh application suite 514 files / 4,033 tests PASS; no new phone proof, no TEST data created to clean up. No publish/deploy/migration/cron/iOS.
 
 Items 1–14 are the owner's sections A–E split into steps. Proof paths are sandbox screenshots/logs.
 
@@ -39,10 +41,10 @@ Items 1–14 are the owner's sections A–E split into steps. Proof paths are sa
 | 8 | C. "(instructions below)" on each "Log this work" | Partly — built; not separately phone-proven | — |
 | 9 | C. Focus mode for timer and rep items (Next saves, rest, advance, autosave) | Partly — real 2-set lift proof with rest and reload; not every card type | /tmp/browser/today-cleanup/run3/college-set1-rest.png, college-set2-rest.png, college-reload-rest.png; continue/focus-*.png |
 | 10 | C. Practice-type cards (with video and without), rest while logging | Partly — standard + video practice return PASS; Tex Vision and Pick-off phone completion unproven | /tmp/browser/today-cleanup/run2 |
-| 11 | C. Coach-sent exercises in focus mode | Partly — built + tests; no TEST coach templates exist, so no phone proof; continuous autosave unfinished | src/components/folders/GuidedCustomExercises.test.tsx |
-| 12 | D. Units: broad jump ft + in, holds get a time target, every exercise's measure type | Partly — rules + audit fixed (see below); latest fixes not phone-proven | src/lib/logging/measureType.test.ts, src/components/hammer/logging/entryPrescriptionCheck.test.tsx |
+| 11 | C. Coach-sent exercises in focus mode | Partly — continuous autosave now implemented/tested; populated TEST coach phone proof remains missing | src/components/folders/GuidedCustomExercises.test.tsx; /tmp/today-cleanup-owner-decisions/final-focused.log |
+| 12 | D. Units: broad jump ft + in, holds get a time target, every exercise's measure type | Partly — all five B decisions implemented/tested; latest fixes and five exercises not phone-proven | src/lib/logging/ownerExerciseDecisions.test.ts, measureType.test.ts; /tmp/today-cleanup-owner-decisions/tests.log |
 | 13 | D. Times to the hundredth (1.47 saved and shown) | Done | /tmp/browser/today-cleanup/hold-147.png, hold-147-reload.png, precision-result.log |
-| 14 | E. Royal timing examples for five positions, five player types, owner guide, full suite | Partly — Royal timer save/reload PASS; five populated players and full position set unproven; last full suite PASS in run 3 (4,014 app + 33 server) | /tmp/browser/today-cleanup/run2, /tmp/today-cleanup-suite/run3 |
+| 14 | E. Royal timing examples for five positions, five player types, owner guide, full suite | Partly — fresh 4,033-test application suite PASS and guide updated; five populated players/full position set still unproven | /tmp/browser/today-cleanup/run2; /tmp/today-cleanup-owner-decisions/full-suite/result.json; docs/owner/publish-checklist.md |
 
 ### Units audit results (runs 4–7)
 - Library of 964 exercises: every one resolves to one measure type (build-failing test).
@@ -51,10 +53,10 @@ Items 1–14 are the owner's sections A–E split into steps. Proof paths are sa
 - Fixed: moving planks (shoulder taps, drag-throughs, reaches, leg lifts, rotation reaches) log reps, in the library rule and on Today card log boxes.
 - Fixed: a hold never turns a rep count into a seconds target; target only from a declared time.
 - Kept as is: broad/long jumps log ft + in; vertical jumps log inches; still planks, wall sits, dead hangs and iso holds stay timed.
-- Not changed: category mismatches with no defensible dose conversion (owner decision needed per item).
+- Owner all-B choices applied: lunge reps per leg, resisted press reps, lateral squat walk steps each way, Elephant Walk steps, toe carry yards. Exact measurement exceptions shared by both logging paths. Yard inputs/readback convert at display only (15 yd = canonical 45 ft); time doses never seed counts or distance. Six concrete rule tests added. Categories and generator dose unchanged.
 
 ### Ready to publish: NO
-Exact reason: items 2, 5, 8, 9, 10, 11, 12 and 14 lack phone proof as an affected TEST player; signing the phone check in as a TEST player needs owner approval that these runs could not request. Owner decisions table (5 exercises) also awaits A/B choices. No publish, deploy, migration, cron or iOS change was made.
+Exact reason: items 2, 5, 8, 9, 10, 11, 12 and 14 still lack their remaining affected TEST-player/coach phone proofs, including the five approved exercise measurements. College sign-in was explicitly attempted this run but the tool refused without presenting approval; no owner screenshots or mocked data substitute for player proof. Owner decisions are resolved, coach continuous autosave is implemented/tested, and the fresh application suite passes. No new TEST records exist from this run; earlier cleanup evidence is retained. No publish, deploy, migration, cron or iOS change was made.
 
 - [ ] Oct 23 cleanup run 7, 20:25–20:28: Today card log boxes now match the library rule — moving planks and pause-then-explode work show Reps with the planned count; still planks stay timed. 688 Today/logging tests PASS. Not phone-proven. Other OPEN items unchanged. No deploy/migration/publish/cron/iOS.
 - [ ] Oct 23 cleanup run 6, 20:24–20:26: hold audit — moving plank variations (shoulder taps, drag-throughs, reaches, leg lifts, rotation reaches) now count reps in the library measure rule; still planks stay timed holds. 570 tests PASS. Not phone-proven. Other OPEN items unchanged. No deploy/migration/publish/cron/iOS.
