@@ -50,8 +50,16 @@ describe("resolveTemplate — skill position logging (Round 3 F)", () => {
     expect(resolveTemplate(rx({ slot: "speed", movement_slug: "60_yd_sprint" })).id).toBe("sprint_timed");
   });
 
-  it.each(["isometric_hold", "farmer_carry", "sled_push", "60_yd_sprint", "home_to_first", "catcher_pop_time", "breathwork"])("%s accepts hundredths for every timed field", movement_slug => {
-    const template = resolveTemplate(rx({ movement_slug }));
+  it.each([
+    { movement_slug: "isometric_hold", slot: "lift", dosage_unit: "seconds" },
+    { movement_slug: "farmer_carry", slot: "lift" },
+    { movement_slug: "sled_push", slot: "speed" },
+    { movement_slug: "60_yd_sprint", slot: "speed" },
+    { movement_slug: "home_to_first", slot: "baserunning" },
+    { movement_slug: "catcher_pop_time", slot: "skill" },
+    { movement_slug: "breathwork", slot: "cross_sport" },
+  ])("$movement_slug accepts hundredths for every timed field", prescription => {
+    const template = resolveTemplate(rx(prescription));
     const times = template.fields.filter(field => field.kind === "time");
     expect(times.length).toBeGreaterThan(0);
     for (const field of times) expect(field.step).toBe(0.01);
