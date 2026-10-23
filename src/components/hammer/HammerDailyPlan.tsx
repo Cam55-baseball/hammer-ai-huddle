@@ -946,6 +946,7 @@ function HammerDailyPlanBody({
       {/* Before you start — standalone section ABOVE the plan card. */}
       <BeforeYouStartSection portalTarget={beforeStartPortalTarget}>
         <WeeklyBodyLoadBar />
+        <WkRestDayBanner />
         <FinishProfileCard />
         <CompetitionLevelPrompt sport={sportIsBaseball ? "baseball" : "softball"} />
         {splitBaserunning(plan.blocks).mental.map(b => <BlockCard key={`mental-${b.modality}-${b.side ?? "x"}`} block={b} onNavigate={navigate} />)}
@@ -959,7 +960,6 @@ function HammerDailyPlanBody({
         <ErrorBoundary>
           <DayNoticesDrawerItem />
         </ErrorBoundary>
-        <TexVisionWork />
         <ErrorBoundary><TestingDayNotice /></ErrorBoundary>
         {faultContext.isError && <p role="alert" className="text-sm text-destructive">Couldn't check your analysis history. No analysis drill changes were applied.</p>}
         {drillCirculation.error && <p role="alert" className="text-sm text-destructive">Couldn't check your drill choices. No analysis drill changes were applied.</p>}
@@ -1132,7 +1132,6 @@ function HammerDailyPlanBody({
               <WkSafePlanNotice />
               <TrendDeloadNotice />
               <DayCommandCenter />
-              <WkRestDayBanner />
               <WkSomethingOffRow />
               <HammerCheckInCard
                 quizType="morning"

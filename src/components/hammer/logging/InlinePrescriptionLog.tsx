@@ -273,9 +273,9 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
       <span className="font-mono text-sm tabular-nums text-foreground" aria-live="polite">{elapsed.toFixed(2)} s</span>
       <span className="text-[11px] text-muted-foreground">Stop fills the next rep's time.</span>
     </div>}
-    {!isSprint && (rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank/.test(rx.movement_slug)) && <RestTimer label="Rest between sets" seconds={restBand.min} maxSeconds={restBand.max} />}
-    {isSprint && <><RestTimer label="Rest after each run set" seconds={sprintSeconds} /><p className="text-xs text-muted-foreground">{sprintRestWhy(rx.distance_feet) ?? "Run distance not entered — rest time is not yet set."}</p></>}
-    {basesPerRep && <ConditioningBaseRest basesPerRep={basesPerRep} />}
+    {!focus.active && !isSprint && (rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank/.test(rx.movement_slug)) && <RestTimer label="Rest between sets" seconds={restBand.min} maxSeconds={restBand.max} />}
+    {isSprint && <>{!focus.active && <RestTimer label="Rest after each run set" seconds={sprintSeconds} />}<p className="text-xs text-muted-foreground">{sprintRestWhy(rx.distance_feet) ?? "Run distance not entered — rest time is not yet set."}</p></>}
+    {!focus.active && basesPerRep && <ConditioningBaseRest basesPerRep={basesPerRep} />}
     <div className="grid gap-1.5 px-1 text-[10px] uppercase tracking-wide text-muted-foreground" style={{ gridTemplateColumns: `28px repeat(${spec.fields.length}, minmax(0, 1fr))` }}>
       <span>Set</span>{spec.fields.map((f) => <span key={f.key}>{f.label}{f.unit && f.key !== "time" ? ` (${f.unit})` : ""}{f.key === "time" && f.prefill ? ` · target ${formatTime(timeKindFor({ stopwatch, targetSeconds: f.prefill }), f.prefill)}` : ""}</span>)}
     </div>

@@ -141,7 +141,7 @@ export function LegacyDrillInlineLog({
     {logHost && <h4 className="text-sm font-semibold">{name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>}
     {focus.active && !stopwatch && spec.fields.some(f => f.key === "time" && (f.prefill ?? 0) > 0) && <FocusDurationTimer key={focus.row} target={spec.fields.find(f => f.key === "time")?.prefill ?? 0} onDone={value => edit(focus.row, "time", String(value), 0)} />}
     {stopwatch && <div data-rep-timer className="flex items-center gap-2"><Button type="button" size="sm" variant="outline" onClick={stopwatchTap}>{running ? "Stop stopwatch" : "Start stopwatch"}</Button><span className="font-mono text-xs">{elapsed.toFixed(2)} s</span><span className="text-[11px] text-muted-foreground">Stop fills the next time.</span></div>}
-    {(modality === "speed" || modality === "conditioning") && <RestTimer label="Rest between repeats" seconds={modality === "speed" ? sprintRestSeconds(spec.fields.find(f => f.key === "distance")?.prefill) : null} />}
+    {!focus.active && (modality === "speed" || modality === "conditioning") && <RestTimer label="Rest between repeats" seconds={modality === "speed" ? sprintRestSeconds(spec.fields.find(f => f.key === "distance")?.prefill) : null} />}
     <div className="grid gap-1.5 px-1 text-[10px] uppercase text-muted-foreground" style={{ gridTemplateColumns: cols }}>
       <span>Set</span>
       {spec.fields.map((f) => <span key={f.key}>{f.label}{f.unit && f.key !== "time" ? ` (${f.unit})` : ""}{f.key === "time" && f.prefill ? ` · target ${formatTime(kindFor(f.prefill), f.prefill)}` : ""}</span>)}
