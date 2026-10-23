@@ -49,4 +49,11 @@ describe("resolveTemplate — skill position logging (Round 3 F)", () => {
     expect(resolveTemplate(rx({ slot: "lift", movement_slug: "bb_back_squat" })).id).toBe("barbell_lift");
     expect(resolveTemplate(rx({ slot: "speed", movement_slug: "60_yd_sprint" })).id).toBe("sprint_timed");
   });
+
+  it.each(["isometric_hold", "farmer_carry", "sled_push", "60_yd_sprint", "home_to_first", "catcher_pop_time", "breathwork"])("%s accepts hundredths for every timed field", movement_slug => {
+    const template = resolveTemplate(rx({ movement_slug }));
+    const times = template.fields.filter(field => field.kind === "time");
+    expect(times.length).toBeGreaterThan(0);
+    for (const field of times) expect(field.step).toBe(0.01);
+  });
 });
