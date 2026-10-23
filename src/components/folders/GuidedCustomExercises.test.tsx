@@ -5,6 +5,28 @@ import type { ActivityFolderItem } from '@/types/activityFolder';
 const item = { id: 'accepted-card', title: 'Coach work', item_type: 'workout' } as ActivityFolderItem;
 afterEach(() => { cleanup(); sessionStorage.clear(); vi.useRealTimers(); });
 describe('coach-sent canonical guided logging', () => {
+  it('autosaves entered coach reps without Next and preserves the declared rows', async () => {
+    vi.useFakeTimers(); const save = vi.fn(async (_data: unknown) => {});
+    render(<GuidedCustomExercises storageKey="coach-autosave" exercises={[{ id: 'rep', name: 'Coach drill', type: 'baseball', sets: 2, reps: 8, rest: 45 }]} item={item} performanceData={undefined} onSave={save} />);
+    fireEvent.click(screen.getByRole('button', { name: /^Start$/ }));
+    fireEvent.change(screen.getAllByPlaceholderText('Reps')[0], { target: { value: '7' } });
+    await act(async () => vi.advanceTimersByTime(600));
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0]?.[0]).toMatchObject({ exerciseSets: { rep: { sets: [{ set: 1, reps: 7 }, { set: 2 }] } } });
+    expect(JSON.parse(sessionStorage.getItem('coach-autosave') ?? '{}')).toMatchObject({ row: 0, restingUntil: null });
+  });
+  it('keeps failed coach autosave entries and retries them before starting rest', async () => {
+    vi.useFakeTimers(); const save = vi.fn(async (_data: unknown) => {}).mockRejectedValueOnce(new Error('offline'));
+    render(<GuidedCustomExercises storageKey="coach-retry" exercises={[{ id: 'rep', name: 'Coach drill', type: 'baseball', sets: 2, reps: 8, rest: 45 }]} item={item} performanceData={undefined} onSave={save} />);
+    fireEvent.click(screen.getByRole('button', { name: /^Start$/ }));
+    fireEvent.change(screen.getAllByPlaceholderText('Reps')[0], { target: { value: '8' } });
+    await act(async () => vi.advanceTimersByTime(600));
+    expect(screen.getByRole('alert')).toBeTruthy();
+    expect(JSON.parse(sessionStorage.getItem('coach-retry') ?? '{}').restingUntil).toBeNull();
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: /^Next$/ })));
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(sessionStorage.getItem('coach-retry') ?? '{}')).toMatchObject({ row: 0, restSeconds: 45 });
+  });
   it('saves entered reps with the declared two sets and waits the declared 45 seconds', async () => {
     vi.useFakeTimers(); const save = vi.fn(async (_data: unknown) => {});
     render(<GuidedCustomExercises storageKey="coach-proof" exercises={[{ id: 'rep', name: 'Coach drill', type: 'baseball', sets: 2, reps: 8, rest: 45 }]} item={item} performanceData={undefined} onSave={save} />);
