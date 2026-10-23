@@ -1,5 +1,38 @@
 # Current publish gate — Oct 23 Hammers Today cleanup
 
+## Oct 23 Hammers Today clean-up — status (end of run 8, 20:30 UTC)
+
+Items 1–14 are the owner's sections A–E split into steps. Proof paths are sandbox screenshots/logs.
+
+| # | Item | Status | Proof |
+|---|------|--------|-------|
+| 1 | A. "Use Delaycam" in each card, window on top, return to same exercise, check-off counts toward the week | Done | /tmp/browser/today-cleanup/continue/delaycam-window.png, delaycam-return.png, delaycam-used-reload.png, delaycam-usage.log |
+| 2 | A. Open-ended tool note removed; study moments in Before you start, specific to the player (flags/games/goals) | Partly — built; five populated players not proven | /tmp/browser/today-cleanup/five-players.log |
+| 3 | B. "Tomorrow's plan becomes visible at midnight" deleted | Done | /tmp/browser/today-cleanup/before-plan-closed.png |
+| 4 | B. "Why today's plan changed" drawer: closed by default, deduplicated, holds Training Load, opens with plan closed | Done | /tmp/browser/today-cleanup/before-plan-closed.png, continue/before-closed.png |
+| 5 | B. Block-progress lines merged into identity card with "return to full training" | Partly — built; no dedicated phone screenshot | /tmp/browser/today-cleanup/identity-open.png |
+| 6 | B. Streak/workouts moved to identity card rewards | Done | /tmp/browser/today-cleanup/run3 (identity phone check), identity-open.png |
+| 7 | B. Coach Hammer next best step above Ask Hammer | Done | /tmp/browser/today-cleanup/run3 (identity phone check) |
+| 8 | C. "(instructions below)" on each "Log this work" | Partly — built; not separately phone-proven | — |
+| 9 | C. Focus mode for timer and rep items (Next saves, rest, advance, autosave) | Partly — real 2-set lift proof with rest and reload; not every card type | /tmp/browser/today-cleanup/run3/college-set1-rest.png, college-set2-rest.png, college-reload-rest.png; continue/focus-*.png |
+| 10 | C. Practice-type cards (with video and without), rest while logging | Partly — standard + video practice return PASS; Tex Vision and Pick-off phone completion unproven | /tmp/browser/today-cleanup/run2 |
+| 11 | C. Coach-sent exercises in focus mode | Partly — built + tests; no TEST coach templates exist, so no phone proof; continuous autosave unfinished | src/components/folders/GuidedCustomExercises.test.tsx |
+| 12 | D. Units: broad jump ft + in, holds get a time target, every exercise's measure type | Partly — rules + audit fixed (see below); latest fixes not phone-proven | src/lib/logging/measureType.test.ts, src/components/hammer/logging/entryPrescriptionCheck.test.tsx |
+| 13 | D. Times to the hundredth (1.47 saved and shown) | Done | /tmp/browser/today-cleanup/hold-147.png, hold-147-reload.png, precision-result.log |
+| 14 | E. Royal timing examples for five positions, five player types, owner guide, full suite | Partly — Royal timer save/reload PASS; five populated players and full position set unproven; last full suite PASS in run 3 (4,014 app + 33 server) | /tmp/browser/today-cleanup/run2, /tmp/today-cleanup-suite/run3 |
+
+### Units audit results (runs 4–7)
+- Library of 964 exercises: every one resolves to one measure type (build-failing test).
+- Fixed: ~15 upper-body power exercises (ubp_) were logging "Swings" — "bp" matched inside "ubp". Now reps or throws.
+- Fixed: pause-then-explode/release moves log reps, not seconds.
+- Fixed: moving planks (shoulder taps, drag-throughs, reaches, leg lifts, rotation reaches) log reps, in the library rule and on Today card log boxes.
+- Fixed: a hold never turns a rep count into a seconds target; target only from a declared time.
+- Kept as is: broad/long jumps log ft + in; vertical jumps log inches; still planks, wall sits, dead hangs and iso holds stay timed.
+- Not changed: category mismatches with no defensible dose conversion (owner decision needed per item).
+
+### Ready to publish: NO
+Items 2, 5, 8–12 and 14 are not fully phone-proven. No publish, deploy, migration, cron or iOS change was made.
+
 - [ ] Oct 23 cleanup run 7, 20:25–20:28: Today card log boxes now match the library rule — moving planks and pause-then-explode work show Reps with the planned count; still planks stay timed. 688 Today/logging tests PASS. Not phone-proven. Other OPEN items unchanged. No deploy/migration/publish/cron/iOS.
 - [ ] Oct 23 cleanup run 6, 20:24–20:26: hold audit — moving plank variations (shoulder taps, drag-throughs, reaches, leg lifts, rotation reaches) now count reps in the library measure rule; still planks stay timed holds. 570 tests PASS. Not phone-proven. Other OPEN items unchanged. No deploy/migration/publish/cron/iOS.
 - [ ] Oct 23 cleanup run 5, 20:22–20:25: catalog audit found every upper-body power (ubp_) exercise mislabeled as Swings ("bp" matched inside "ubp"); fixed to whole-word batting practice. Pause-then-explode/release holds log reps, not seconds. Rule tests added; 561 logging/prescription tests PASS. Not phone-proven. Other OPEN items unchanged. No deploy/migration/publish/cron/iOS.
