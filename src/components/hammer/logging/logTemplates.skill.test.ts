@@ -55,8 +55,8 @@ describe("resolveTemplate — skill position logging (Round 3 F)", () => {
     { movement_slug: "farmer_carry", slot: "lift" },
     { movement_slug: "sled_push", slot: "speed" },
     { movement_slug: "60_yd_sprint", slot: "speed" },
-    { movement_slug: "home_to_first", slot: "baserunning" },
-    { movement_slug: "catcher_pop_time", slot: "skill" },
+    { movement_slug: "home_to_first", slot: "speed" },
+    { movement_slug: "catcher_pop_time", slot: "cross_sport" },
     { movement_slug: "breathwork", slot: "cross_sport" },
   ] satisfies Partial<WkRx>[])("$movement_slug accepts hundredths for every timed field", prescription => {
     const template = resolveTemplate(rx(prescription));

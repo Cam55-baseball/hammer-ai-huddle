@@ -14,7 +14,7 @@ const Context = createContext<{
 /** Focus is a cursor over mounted canonical log rows; it never creates a prescription or another log. */
 export function FocusSession({ active, storageKey, children, onExit }: { active: boolean; storageKey: string; children: ReactNode; onExit: () => void }) {
   const entries = useRef(new Map<string, Exercise>());
-  const [, update] = useState(0);
+  const [revision, update] = useState(0);
   const refresh = useCallback(() => update(n => n + 1), []);
   const register = useCallback((entry: Exercise) => { entries.current.set(entry.id, entry); refresh(); return () => { entries.current.delete(entry.id); refresh(); }; }, [refresh]);
   const [cursor, setCursor] = useState<Cursor>(() => {
@@ -29,6 +29,12 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
   useEffect(() => {
     if (current && cursor.exerciseId == null) setCursor(prior => ({ ...prior, exerciseId: current.id }));
   }, [current?.id, cursor.exerciseId]);
+  useEffect(() => {
+    if (!cursor.exerciseId || current || all.length === 0 || cursor.restingUntil != null) return;
+    // An obsolete saved activity is not completion. Reconcile only after mounted rows have registered.
+    const index = Math.min(cursor.exercise, all.length - 1);
+    setCursor({ ...INITIAL, exercise: index, exerciseId: all[index]?.id ?? null });
+  }, [revision, cursor.exerciseId, current?.id, cursor.restingUntil]);
   const advance = useCallback(() => setCursor(prior => {
     const all = [...entries.current.values()];
     const index = prior.exerciseId ? all.findIndex(entry => entry.id === prior.exerciseId) : prior.exercise;
