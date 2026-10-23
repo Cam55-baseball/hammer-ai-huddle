@@ -5,6 +5,7 @@
  * mobility drill. Resolver order matters; first match wins.
  */
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
+import { ownerExerciseMeasure, fieldsForMeasure, declaredCount } from "@/lib/logging/measureType";
 
 export type FieldKind = "number" | "time" | "quality" | "side";
 
@@ -352,6 +353,14 @@ export function resolveTemplate(rx: WkRx): LogTemplate {
   const slot = rx.slot as string;
   const role = (rx.sequence_role ?? "").toLowerCase();
   const sets = rx.sets ?? 0;
+  const decided = ownerExerciseMeasure(slug);
+  if (decided) return {
+    id: decided === "carry_distance" ? "carry" : "accessory_lift",
+    fields: fieldsForMeasure(decided).map(field => ({ ...field, kind: "number", step: field.key === "distance" ? 0.01 : 1, min: 0,
+      prefillFromRx: r => field.key === "distance" ? r.distance_feet : declaredCount(r),
+    })),
+    meta: { rpe: true }, defaultRounds: Math.max(1, sets),
+  };
 
   // 0. Skill positions: catcher pop time, fielding, baserunning.
   if (has(slug, /pop_time|catcher_pop|pop_to_second|catcher_throw/)) return CATCHER_POP;

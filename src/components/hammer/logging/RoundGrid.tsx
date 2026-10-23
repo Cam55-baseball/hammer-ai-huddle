@@ -2,6 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus, FlipHorizontal } from "lucide-react";
 import type { RoundField } from "./logTemplates";
+import { displayDistance, storeDistance } from "@/lib/logging/measureType";
 
 export type Round = Record<string, string>;
 
@@ -143,9 +144,9 @@ export function RoundGrid({
                 inputMode="decimal"
                 type="text"
                 aria-label={`${f.label}${f.unit ? ` (${f.unit})` : ""}, row ${idx + 1}`}
-                value={value}
+                value={displayDistance(value, f.unit)}
                 placeholder="—"
-                onChange={(e) => setCell(idx, f.key, e.target.value.replace(/[^\d.]/g, ""))}
+                onChange={(e) => setCell(idx, f.key, storeDistance(e.target.value.replace(/[^\d.]/g, ""), f.unit))}
                 className="h-9 text-sm px-2"
               />
             );

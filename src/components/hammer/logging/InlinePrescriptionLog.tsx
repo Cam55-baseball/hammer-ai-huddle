@@ -1,4 +1,4 @@
-import { jumpMeasure, timedMobilityMeasure } from "@/lib/logging/measureType";
+import { jumpMeasure, timedMobilityMeasure, ownerExerciseMeasure, fieldsForMeasure, declaredCount, displayDistance, storeDistance } from "@/lib/logging/measureType";
 import { useFocusExercise, FocusDurationTimer } from "../cards/FocusSession";
 import { ActivityBasics } from "../cards/ActivityBasics";
 import { ExerciseTools } from "../cards/ExerciseTools";
@@ -37,6 +37,10 @@ type Draft = Record<string, string>[];
 export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   const slug = `${rx.movement_slug} ${rx.movement_name}`.toLowerCase();
   const rows = Math.max(1, rx.sets ?? rx.total_reps ?? 1);
+  const decided = ownerExerciseMeasure(rx.movement_slug ?? "");
+  if (decided) return { rows: Math.max(1, rx.sets ?? 1), fields: fieldsForMeasure(decided).map(field => ({ ...field,
+    prefill: field.key === "distance" ? rx.distance_feet : declaredCount(rx),
+  })) };
   if ((rx.dosage_unit ?? "").toLowerCase() === "throws" || /throw|pitch|bullpen|catch play/.test(slug)) {
     const split = rx.sets && rx.reps && (!rx.total_reps || rx.sets * rx.reps === rx.total_reps);
     return { rows: split ? rx.sets ?? 1 : 1, fields: [{ key: "throws", label: "Throws", prefill: split ? rx.reps : rx.total_reps ?? rx.reps }] };
@@ -269,7 +273,7 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
   const primary = spec.fields.find(f => f.key !== "weight" && f.key !== "time" && f.key !== "distance") ?? spec.fields.find(f => f.key === "time") ?? spec.fields[0];
   const doneTotal = entered.reduce((s, r) => s + (typeof r[primary.key] === "number" ? (r[primary.key] as number) : 0), 0);
   const unitWord = primary.key === "time" ? "" : ` ${primary.label.toLowerCase()}`;
-  const fmt = (v: number) => primary.key === "time" ? formatTime(timeKindFor({ stopwatch, targetSeconds: primary.prefill }), v) : String(v);
+  const fmt = (v: number) => primary.key === "time" ? formatTime(timeKindFor({ stopwatch, targetSeconds: primary.prefill }), v) : displayDistance(String(v), primary.unit);
   const showDone = !(primary.key === "time" && stopwatch);
   return <div className="space-y-2" data-inline-prescription-log hidden={!focus.visible}>
     <div className="space-y-2" hidden={focus.active && focus.resting}>
@@ -291,7 +295,7 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
       {spec.fields.map((f) => f.key === "time"
         ? <TimeField key={f.key} kind={timeKindFor({ stopwatch, targetSeconds: f.prefill })} label={`${f.label} ${i + 1}`} value={round[f.key] ?? ""} target={f.prefill} onChange={(v) => edit(i, f.key, v)} onBlur={() => touch(i)} />
         : f.unit === "ft + in" ? <DistanceField key={f.key} label={`${f.label} ${i + 1}`} value={round[f.key] ?? ""} onChange={v => edit(i, f.key, v)} onBlur={() => touch(i)} />
-        : <Input key={f.key} aria-label={`${f.label} ${i + 1}`} inputMode={f.key === "weight" || f.key === "distance" ? "decimal" : "numeric"} value={round[f.key] ?? ""} placeholder={f.prefill != null ? String(f.prefill) : undefined} onFocus={() => touch(i)} onChange={(e) => edit(i, f.key, e.target.value)} onBlur={() => touch(i)} className="h-9 px-2 text-sm" />)}
+        : <Input key={f.key} aria-label={`${f.label} ${i + 1}`} inputMode={f.key === "weight" || f.key === "distance" ? "decimal" : "numeric"} value={displayDistance(round[f.key] ?? "", f.unit)} placeholder={f.prefill != null ? displayDistance(String(f.prefill), f.unit) : undefined} onFocus={() => touch(i)} onChange={(e) => edit(i, f.key, storeDistance(e.target.value.replace(/[^\d.]/g, ""), f.unit))} onBlur={() => touch(i)} className="h-9 px-2 text-sm" />)}
     </div>)}
     {focus.active && <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} cue={rx.why_payload?.cue} />}
     <div className="flex flex-wrap items-center justify-between gap-2">

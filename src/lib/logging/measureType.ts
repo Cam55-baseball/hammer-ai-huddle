@@ -19,6 +19,11 @@
 export type MeasureType =
   | "weight_reps" // weight × reps (barbell / dumbbell / kettlebell / sled / med-ball load)
   | "reps" // reps only (body weight, bands, dry throws, jumps by count)
+  | "reps_per_leg"
+  | "press_reps"
+  | "steps_each_way"
+  | "steps"
+  | "carry_distance" // canonical feet, displayed/entered in yards
   | "hold_seconds" // static holds, planks, iso
   | "duration" // mm:ss / h:mm:ss efforts (mobility flows, recovery, conditioning by time)
   | "sprint_time" // ss.hh at a fixed distance
@@ -42,6 +47,32 @@ export type MeasureInput = {
 };
 
 const norm = (s: string) => s.toLowerCase().replace(/[_-]+/g, " ");
+
+/** Exact owner decisions take precedence over ambiguous walk/hold name patterns. */
+export function ownerExerciseMeasure(slug: string): MeasureType | null {
+  switch (norm(slug).trim()) {
+    case "walking lunge": return "reps_per_leg";
+    case "lift rfess pallof": return "press_reps";
+    case "lift banded lateral squat walk": return "steps_each_way";
+    case "lift elephant walk": return "steps";
+    case "lift farmer toe walk": return "carry_distance";
+    default: return null;
+  }
+}
+
+/** Distance fields continue to store feet, including when entered as yards. */
+export function displayDistance(value: string, unit?: string): string {
+  return unit === "yd" && value !== "" ? String(Number(value) / 3) : value;
+}
+export function storeDistance(value: string, unit?: string): string {
+  return unit === "yd" && value !== "" ? String(Number(value) * 3) : value;
+}
+
+/** A declared time is never repurposed as a count. */
+export function declaredCount(input: { reps?: number | null; dosage_unit?: string | null; duration_seconds?: number | null }): number | null {
+  const unit = (input.dosage_unit ?? "").toLowerCase();
+  return /seconds|minutes|feet|yards/.test(unit) || (!unit && input.duration_seconds != null) ? null : input.reps ?? null;
+}
 
 /** Dry throws and every arm-ledger throw type log a throw count (reps), never seconds. */
 const THROW_RE =
@@ -93,6 +124,8 @@ const NO_WEIGHT_RE =
  * patterns alone must resolve every library exercise (the test proves it).
  */
 export function measureTypeFor(input: MeasureInput): MeasureType {
+  const decided = ownerExerciseMeasure(input.slug);
+  if (decided) return decided;
   const slug = norm(input.slug);
   const text = norm(`${input.slug} ${input.name ?? ""}`);
   const unit = (input.dosage_unit ?? "").toLowerCase();
@@ -154,6 +187,16 @@ export function fieldsForMeasure(type: MeasureType): MeasureField[] {
       ];
     case "reps":
       return [{ key: "reps", label: "Reps" }];
+    case "reps_per_leg":
+      return [{ key: "reps", label: "Reps per leg" }];
+    case "press_reps":
+      return [{ key: "reps", label: "Press reps" }];
+    case "steps_each_way":
+      return [{ key: "steps", label: "Steps each way" }];
+    case "steps":
+      return [{ key: "steps", label: "Steps" }];
+    case "carry_distance":
+      return [{ key: "distance", label: "Distance", unit: "yd" }];
     case "hold_seconds":
       return [{ key: "time", label: "Seconds", unit: "s" }];
     case "duration":
