@@ -97,3 +97,14 @@ describe("hold time target", () => {
     expect(holdSpec({ movement_slug: "plank_hold", sets: 3, reps: 10, duration_seconds: 30 } as never).fields[0].prefill).toBe(30);
   });
 });
+
+describe("moving plank on a Today card", () => {
+  it("shoulder taps log reps, not seconds", () => {
+    const s = holdSpec({ movement_slug: "tall_plank_shoulder_tap", sets: 3, reps: 10, dosage_unit: "reps" } as never);
+    expect(s.fields.map(f => f.key)).toEqual(["reps"]);
+    expect(s.fields[0].prefill).toBe(10);
+  });
+  it("a declared-seconds still plank stays timed", () => {
+    expect(holdSpec({ movement_slug: "plank_hold", sets: 3, duration_seconds: 30 } as never).fields[0].key).toBe("time");
+  });
+});
