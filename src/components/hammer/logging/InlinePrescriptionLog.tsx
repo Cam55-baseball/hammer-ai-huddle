@@ -85,7 +85,9 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
     return { rows: split ? rx.sets ?? 1 : 1, fields: [{ key: "reps", label: "Reps", prefill: split ? rx.reps : rx.total_reps }] };
   }
   if ((rx.dosage_unit ?? "").toLowerCase() === "seconds" || /hold|iso|plank/.test(slug)) {
-    return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: "Seconds", unit: "s", prefill: rx.duration_seconds ?? rx.reps }] };
+    // A time target comes only from a declared duration (or reps declared in seconds) — never a rep count.
+    const declared = rx.duration_seconds ?? ((rx.dosage_unit ?? "").toLowerCase() === "seconds" ? rx.reps : null);
+    return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: "Seconds", unit: "s", prefill: declared }] };
   }
   if (rx.slot === "conditioning") {
     return { rows, fields: [
