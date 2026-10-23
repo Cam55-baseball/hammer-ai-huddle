@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useOptionalAuth } from "@/hooks/useAuth";
+import { useContext } from "react";
+import { AuthContext } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +14,7 @@ const DelayCam = lazy(() => import("@/components/analyze/DelayCam").then(m => ({
 
 /** Physical tools overlay the existing exercise, preserving its mounted entries and rest. */
 export function ExerciseTools({ module, exerciseId, planDate }: { module: string; exerciseId: string; planDate: string }) {
-  const { user } = useOptionalAuth();
+  const user = useContext(AuthContext)?.user;
   if (!user) return null;
   return <SignedInExerciseTools module={module} exerciseId={exerciseId} planDate={planDate} userId={user.id} />;
 }
