@@ -401,6 +401,9 @@ export default function PracticeHub() {
         },
         link_code: sessionConfig.link_code,
         micro_layer_data: reps.length > 0 ? reps : undefined,
+        onRecorded: todayWindow.current && window.parent !== window ? sessionId => {
+          window.parent.postMessage({ type: PRACTICE_WINDOW_SAVED, token: todayWindow.current, sessionId }, window.location.origin);
+        } : undefined,
         pie_v2_micro_input:
           sportKey === 'baseball' && activeModule === 'pitching'
             ? pieV2MicroInput
@@ -436,9 +439,6 @@ export default function PracticeHub() {
       // Transition to summary instead of resetting
       setSavedSessionId(result.id);
       setStep('session_summary');
-      if (todayWindow.current && window.parent !== window) {
-        window.parent.postMessage({ type: PRACTICE_WINDOW_SAVED, token: todayWindow.current, sessionId: result.id }, window.location.origin);
-      }
       // Mark scheduled session as completed
       if (scheduledId) {
         await updateStatus(scheduledId, 'completed');

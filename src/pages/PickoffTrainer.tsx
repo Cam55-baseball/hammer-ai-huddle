@@ -9,6 +9,7 @@ import { PickoffSetup, type SignalType } from '@/components/pickoff-trainer/Pick
 import { PickoffRepRunner, type PickoffRep } from '@/components/pickoff-trainer/PickoffRepRunner';
 import { PickoffSummary } from '@/components/pickoff-trainer/PickoffSummary';
 import { PickoffAnalysis } from '@/components/pickoff-trainer/PickoffAnalysis';
+import { notifyToolSaved, toolWindowContext } from '@/lib/hammer/toolWindow';
 
 type Phase = 'setup' | 'live' | 'summary' | 'analysis';
 
@@ -65,6 +66,8 @@ const PickoffTrainer = () => {
       session_date: new Date().toISOString().split('T')[0],
       season_context: 'in_season',
       module: 'pitching',
+      fatigue_state: toolWindowContext(window.location.search) ? { today_exercise: toolWindowContext(window.location.search) } : undefined,
+      onRecorded: notifyToolSaved,
       drill_blocks: [{
         id: crypto.randomUUID(),
         drill_type: 'pickoff_training',

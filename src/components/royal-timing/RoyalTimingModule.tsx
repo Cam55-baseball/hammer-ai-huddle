@@ -26,6 +26,7 @@ import { RoyalTimingLibrary } from './RoyalTimingLibrary';
 import { ShareSessionDialog } from './ShareSessionDialog';
 import { SessionMessages } from './SessionMessages';
 import type { RoyalTimingSession } from '@/hooks/useRoyalTimingSessions';
+import { notifyToolSaved, toolWindowContext } from '@/lib/hammer/toolWindow';
 
 type VideoMode = 'single' | 'comparison';
 
@@ -160,6 +161,7 @@ export function RoyalTimingModule() {
 
     try {
       const timerData = {
+        ...(toolWindowContext(window.location.search) ? { today_exercise: toolWindowContext(window.location.search) } : {}),
         timer1: { elapsed: timer1.elapsed, wasSynced: timer1.isSynced },
         timer2: mode === 'comparison' ? { elapsed: timer2.elapsed, wasSynced: timer2.isSynced } : null,
         master: mode === 'comparison' ? { elapsed: masterTimer.elapsed, wasSynced: masterTimer.isSynced } : null,
@@ -254,6 +256,7 @@ export function RoyalTimingModule() {
         setCurrentSessionId(sessionId);
       }
 
+      notifyToolSaved(sessionId);
       toast({ title: 'Session saved', description: 'Your timing study has been recorded.' });
     } catch (err) {
       console.error('Submit error:', err);
@@ -272,6 +275,7 @@ export function RoyalTimingModule() {
     setSubmitting(true);
     try {
       const timerData = {
+        ...(toolWindowContext(window.location.search) ? { today_exercise: toolWindowContext(window.location.search) } : {}),
         timer1: { elapsed: timer1.elapsed, wasSynced: timer1.isSynced },
         timer2: mode === 'comparison' ? { elapsed: timer2.elapsed, wasSynced: timer2.isSynced } : null,
         master: mode === 'comparison' ? { elapsed: masterTimer.elapsed, wasSynced: masterTimer.isSynced } : null,
@@ -308,6 +312,7 @@ export function RoyalTimingModule() {
         if (error) throw error;
         setCurrentSessionId(sessionId);
       }
+      notifyToolSaved(sessionId);
       toast({ title: 'Session saved', description: 'Your session has been saved to My Sessions.' });
       queryClient.invalidateQueries({ queryKey: ['royal-timing-sessions'] });
     } catch (err) {

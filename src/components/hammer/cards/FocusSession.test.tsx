@@ -8,6 +8,12 @@ function Entry({ save, rest, bases }: { save: () => Promise<void>; rest: number 
   return null;
 }
 describe("guided canonical set progression", () => {
+  it("does not mistake an obsolete stored exercise for a completed card", () => {
+    sessionStorage.setItem("focus-proof", JSON.stringify({ exercise: 0, exerciseId: "removed", row: 9 }));
+    render(<FocusSession active storageKey="focus-proof" onExit={() => {}}><Entry save={async () => {}} rest={60} /></FocusSession>);
+    expect(JSON.parse(sessionStorage.getItem("focus-proof") ?? "{}")).toMatchObject({ exerciseId: "exercise", row: 0 });
+    expect(screen.getByRole("heading").textContent).toContain("Set 1 of 2");
+  });
   it("never offers a manual rest bypass after an unsuccessful save", async () => {
     render(<FocusSession active storageKey="focus-proof" onExit={() => {}}><Entry save={async () => { throw new Error("offline"); }} rest={null} /></FocusSession>);
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Next" })));

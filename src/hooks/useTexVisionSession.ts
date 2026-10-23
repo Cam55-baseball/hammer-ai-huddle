@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { notifyToolSaved, toolWindowContext } from '@/lib/hammer/toolWindow';
 
 export interface DrillResult {
   drillType: string;
@@ -83,7 +84,7 @@ export function useTexVisionSession(sport: string) {
           difficulty_level: result.difficultyLevel,
           false_positives: result.falsePositives,
           fatigue_score: result.fatigueScore,
-          drill_metrics: result.drillMetrics ? JSON.parse(JSON.stringify(result.drillMetrics)) : null,
+          drill_metrics: JSON.parse(JSON.stringify({ ...result.drillMetrics, ...(toolWindowContext(window.location.search) ? { today_exercise: toolWindowContext(window.location.search) } : {}) })),
           completed_at: new Date().toISOString(),
         }]);
 
@@ -106,6 +107,7 @@ export function useTexVisionSession(sport: string) {
           .eq('id', currentSessionId);
       }
 
+      notifyToolSaved(currentSessionId);
       return true;
     } catch (err) {
       console.error('Error in saveDrillResult:', err);

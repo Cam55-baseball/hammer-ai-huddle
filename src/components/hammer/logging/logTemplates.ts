@@ -77,7 +77,7 @@ const ISOMETRIC_HOLD: LogTemplate = {
   id: "isometric_hold",
   intro: "Hold time under tension.",
   fields: [
-    { key: "time", label: "Hold", unit: "s", kind: "time", step: 5, prefillFromRx: (r) => r.duration_seconds ?? undefined },
+    { key: "time", label: "Hold", unit: "s", kind: "time", step: 0.01, prefillFromRx: (r) => r.duration_seconds ?? undefined },
     { key: "weight", label: "Load", unit: "lb", kind: "number", step: 5, optional: true },
   ],
   meta: { rpe: true },
@@ -90,7 +90,7 @@ const CARRY: LogTemplate = {
   fields: [
     { key: "weight", label: "Load", unit: "lb", kind: "number", step: 5 },
     { key: "distance", label: "Distance", unit: "ft", kind: "number", step: 5, prefillFromRx: (r) => r.distance_feet ?? undefined },
-    { key: "time", label: "Time", unit: "s", kind: "time", step: 1, optional: true },
+    { key: "time", label: "Time", unit: "s", kind: "time", step: 0.01, optional: true },
   ],
   meta: { rpe: true },
   defaultRounds: 3,
@@ -137,7 +137,7 @@ const SLED: LogTemplate = {
   fields: [
     { key: "weight", label: "Load", unit: "lb", kind: "number", step: 5 },
     { key: "distance", label: "Distance", unit: "ft", kind: "number", step: 5, prefillFromRx: (r) => r.distance_feet ?? undefined },
-    { key: "time", label: "Time", unit: "s", kind: "time", step: 0.1, optional: true },
+    { key: "time", label: "Time", unit: "s", kind: "time", step: 0.01, optional: true },
   ],
   meta: { rpe: true, surface: true },
   defaultRounds: 4,
@@ -259,8 +259,8 @@ const CONDITIONING_INTERVALS: LogTemplate = {
   id: "conditioning_intervals",
   intro: "Log each interval.",
   fields: [
-    { key: "work", label: "Work", unit: "s", kind: "time", step: 5, prefillFromRx: (r) => r.duration_seconds ?? undefined },
-    { key: "rest", label: "Rest", unit: "s", kind: "time", step: 5, optional: true },
+    { key: "work", label: "Work", unit: "s", kind: "time", step: 0.01, prefillFromRx: (r) => r.duration_seconds ?? undefined },
+    { key: "rest", label: "Rest", unit: "s", kind: "time", step: 0.01, optional: true },
     { key: "avg_hr", label: "Avg HR", unit: "bpm", kind: "number", step: 1, optional: true },
   ],
   meta: { rpe: true },
@@ -271,7 +271,7 @@ const CONDITIONING_STEADY: LogTemplate = {
   id: "conditioning_steady",
   intro: "Steady-state — one round.",
   fields: [
-    { key: "duration", label: "Duration", unit: "s", kind: "time", step: 30, prefillFromRx: (r) => r.duration_seconds ?? undefined },
+    { key: "duration", label: "Duration", unit: "s", kind: "time", step: 0.01, prefillFromRx: (r) => r.duration_seconds ?? undefined },
     { key: "avg_hr", label: "Avg HR", unit: "bpm", kind: "number", step: 1, optional: true },
   ],
   meta: { rpe: true },
@@ -293,7 +293,7 @@ const BREATHWORK: LogTemplate = {
   intro: "Breath rounds.",
   fields: [
     { key: "rounds", label: "Rounds", kind: "number", step: 1 },
-    { key: "hold", label: "Hold", unit: "s", kind: "time", step: 5, optional: true },
+    { key: "hold", label: "Hold", unit: "s", kind: "time", step: 0.01, optional: true },
   ],
   meta: {},
   defaultRounds: 1,

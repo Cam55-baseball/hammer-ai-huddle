@@ -137,7 +137,7 @@ export function VideoRepReview({ module, sessionConfig, onComplete }: VideoRepRe
                   {playbackRate}x
                 </Button>
                 <span className="text-xs text-muted-foreground ml-auto">
-                  {currentTime.toFixed(1)}s / {duration.toFixed(1)}s
+                  {currentTime.toFixed(2)}s / {duration.toFixed(2)}s
                 </span>
               </div>
 
