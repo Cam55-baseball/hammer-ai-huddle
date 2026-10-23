@@ -30,6 +30,10 @@ import { toast } from "sonner";
 import { createPortal } from "react-dom";
 import { usePocketLogHost } from "@/components/hammer/cards/PocketCard";
 import { ExerciseDisclosure } from "@/components/hammer/cards/ExerciseDisclosure";
+import { useFocusExercise } from "@/components/hammer/cards/FocusSession";
+import { liftRestBand } from "@/components/hammer/cards/RestTimer";
+import { ActivityBasics } from "@/components/hammer/cards/ActivityBasics";
+import { ExerciseTools } from "@/components/hammer/cards/ExerciseTools";
 
 interface Props {
   /** Existing specialized log, split visually without switching to survey-only saving. */
@@ -344,10 +348,16 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
     else if (next.length < prev.length) merged.length = next.length;
     return merged;
   }); };
-  const topEntries = <section data-pitching-entry-grid className="space-y-2">
-    <h4 className="break-words text-sm font-semibold">{rx.movement_name}</h4>
+  const focus = useFocusExercise({ id: `special:${rx.id}`, name: rx.movement_name, rows: rounds.length || initialRoundsCount,
+    ready: rounds.map(round => entryFields.some(f => f.kind !== "side" && Number(round[f.key]) > 0)), restSeconds: liftRestBand(rx).min,
+    save: async () => { await autosave.flush(); },
+  });
+  const topEntries = <section data-pitching-entry-grid hidden={!focus.visible || (focus.active && focus.resting)} className="space-y-2">
+    <h4 className="break-words text-sm font-semibold">{rx.movement_name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>
     <p className="text-xs text-muted-foreground">{dosageText}</p>
-    <RoundGrid fixedRounds={!isPitching} fields={entryFields} rounds={rounds} onChange={(next) => changeFields(entryFields, next)} minRounds={initialRoundsCount} maxRounds={isPitching ? 24 : initialRoundsCount} />
+    <RoundGrid fixedRounds={!isPitching} fields={entryFields} rounds={rounds} activeRow={focus.active ? focus.row : undefined} onChange={(next) => changeFields(entryFields, next)} minRounds={initialRoundsCount} maxRounds={isPitching ? 24 : initialRoundsCount} />
+    <ExerciseTools module={isPitching ? "pitching" : rx.slot} exerciseId={rx.id} planDate={rx.plan_date} />
+    {focus.active && <ActivityBasics name={rx.movement_name} slug={rx.movement_slug} cue={rx.why_payload?.cue} />}
     {pitchCap != null && pitchTotal > pitchCap && (
       <p className="text-xs font-medium text-destructive" data-testid="pitch-cap-warning">
         That's over today's pitch cap ({pitchTotal} of {pitchCap} pitches). Everything you entered is saved as you really did it — stop throwing for today and your coming days will be adjusted.

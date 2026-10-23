@@ -14,6 +14,7 @@ interface Props {
   fixedRounds?: boolean;
   /** Flag rounds missing a side (unilateral movements). */
   highlightMissingSide?: boolean;
+  activeRow?: number;
 }
 
 const QUALITY_SCALE = [1, 2, 3, 4, 5] as const;
@@ -27,6 +28,7 @@ export function RoundGrid({
   maxRounds = 24,
   fixedRounds = false,
   highlightMissingSide = false,
+  activeRow,
 }: Props) {
   const hasSide = fields.some((f) => f.kind === "side");
 
@@ -79,7 +81,7 @@ export function RoundGrid({
       {rounds.map((round, idx) => (
         <div
           key={idx}
-          className="grid gap-1.5 items-center"
+          className={`${activeRow != null && idx !== activeRow ? "hidden" : "grid"} gap-1.5 items-center`}
           style={{ gridTemplateColumns: `28px repeat(${fields.length}, minmax(0, 1fr))` }}
         >
           <div className="text-[11px] font-medium text-muted-foreground text-center">{idx + 1}</div>
