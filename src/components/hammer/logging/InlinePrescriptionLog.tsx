@@ -74,7 +74,7 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "height", label: "Jump height", unit: "in" }] };
   }
   if (timedMobilityMeasure(slug) && !/throw|pitch|sprint|sled/.test(slug)) {
-    return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: "Time target", unit: "s", prefill: rx.duration_seconds ?? ((rx.dosage_unit ?? "").toLowerCase() === "seconds" ? rx.reps : null) }] };
+    return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: "Seconds", unit: "s", prefill: rx.duration_seconds ?? ((rx.dosage_unit ?? "").toLowerCase() === "seconds" ? rx.reps : null) }] };
   }
   if (rx.total_reps && !rx.distance_feet && !rx.duration_seconds && rx.slot !== "lift" && rx.slot !== "supplemental" && !/hold|iso|plank/.test(slug)) {
     // Rows must add up to the total shown on the card: sets × reps only when that equals the total.

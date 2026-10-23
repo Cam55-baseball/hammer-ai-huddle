@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useAuth } from "@/hooks/useAuth";
+import { useOptionalAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +13,11 @@ const DelayCam = lazy(() => import("@/components/analyze/DelayCam").then(m => ({
 
 /** Physical tools overlay the existing exercise, preserving its mounted entries and rest. */
 export function ExerciseTools({ module, exerciseId, planDate }: { module: string; exerciseId: string; planDate: string }) {
-  const { user } = useAuth();
+  const { user } = useOptionalAuth();
+  if (!user) return null;
+  return <SignedInExerciseTools module={module} exerciseId={exerciseId} planDate={planDate} userId={user.id} />;
+}
+function SignedInExerciseTools({ module, exerciseId, planDate, userId }: { module: string; exerciseId: string; planDate: string; userId: string }) {
   const { sport } = useSportTheme();
   const { modules, loading } = useSubscription();
   const qc = useQueryClient();
@@ -25,9 +29,9 @@ export function ExerciseTools({ module, exerciseId, planDate }: { module: string
   const clipModule = module === "hitting" || module === "bat_speed" ? "hitting" : module === "pitching" ? "pitching" : module === "throwing" ? "throwing" : null;
   const access = priorityAccess(modules, sport);
   const eligible = clipModule === "hitting" ? access.hasHitting : clipModule === "pitching" ? access.hasPitching : clipModule === "throwing" ? access.hasThrowing : false;
-  const key = `hm-tool:${user?.id}:${sport}:${planDate}:${exerciseId}`;
+  const key = `hm-tool:${userId}:${sport}:${planDate}:${exerciseId}`;
   useEffect(() => { setUsed(localStorage.getItem(key) === "1"); setStarted(null); setError(null); }, [key]);
-  if (!clipModule || !eligible || loading || !user) return null;
+  if (!clipModule || !eligible || loading) return null;
   const checkOff = async () => {
     if (!started || saving) return;
     setSaving(true); setError(null);
@@ -36,14 +40,14 @@ export function ExerciseTools({ module, exerciseId, planDate }: { module: string
     localStorage.setItem(idKey, id);
     const ended = new Date().toISOString();
     // Self-report of mirror use, not a clip, measurement, analysis result or new training dose.
-    const result = await supabase.from("delaycam_sessions").upsert({ id, user_id: user.id, sport, module: clipModule,
+    const result = await supabase.from("delaycam_sessions").upsert({ id, user_id: userId, sport, module: clipModule,
       started_at: started, ended_at: ended, duration_sec: null, processing_state: "recorded",
       summary: { usage: "athlete_checked", exercise_id: exerciseId, plan_date: planDate },
     });
     setSaving(false);
     if (result.error) { setError("Couldn't save Delaycam usage. Try checking it off again."); return; }
     localStorage.setItem(key, "1"); setUsed(true);
-    await qc.invalidateQueries({ queryKey: ["delaycam-reminder", user.id, sport, clipModule] });
+    await qc.invalidateQueries({ queryKey: ["delaycam-reminder", userId, sport, clipModule] });
   };
   return <div className="space-y-2" data-exercise-tools>
     <div className="flex flex-wrap gap-2">

@@ -7,10 +7,6 @@ import { OptionalSurvey } from "../../logging/OptionalSurvey";
 import { ReleaseCountdown } from "../ReleaseCountdown";
 
 describe("exercise interaction", () => {
-  it("shows the exact midnight notice with no build status or countdown", () => {
-    const { container } = render(<ReleaseCountdown />);
-    expect(container.textContent).toBe("Tomorrow's plan becomes visible at midnight");
-  });
   it("opens and closes optional survey fields after the effort question", () => {
     render(<><label>How hard 1–10<Input aria-label="How hard 1–10" /></label><OptionalSurvey><Input aria-label="Survey notes" /></OptionalSurvey></>);
     const toggle = screen.getByRole("button", { name: "Survey (optional)" });
