@@ -19,6 +19,7 @@ import { useFocusExercise, FocusDurationTimer } from "../cards/FocusSession";
 import { ActivityBasics } from "../cards/ActivityBasics";
 import { prescribedBases } from "../../../../supabase/functions/_shared/wic/runRest";
 import { ExerciseTools } from "../cards/ExerciseTools";
+import { pendingFor } from "@/lib/logging/logOutbox";
 
 type Draft = Record<string, string>[];
 const TOUCHED = "_t";
@@ -132,7 +133,7 @@ export function LegacyDrillInlineLog({
   const focus = useFocusExercise({ id: storageKey, name, rows: spec.rows, ready: rounds.map(row => entered([row]).length > 0),
     restSeconds: modality === "speed" && stopwatch ? sprintRestSeconds(distance) : rest,
     bases: modality === "conditioning" ? prescribedBases(name, distance) : null,
-    save: async () => { await autosave.flush(); },
+    save: async () => { await autosave.flush(); if (pendingFor(`task:${storageKey}`)) throw new Error("Save pending"); },
   });
   const entries = <section data-exercise-entry-grid className="space-y-2">
     <div hidden={!focus.visible || (focus.active && focus.resting)} className="space-y-2">

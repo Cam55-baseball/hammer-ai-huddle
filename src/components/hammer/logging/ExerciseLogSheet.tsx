@@ -34,6 +34,7 @@ import { useFocusExercise } from "@/components/hammer/cards/FocusSession";
 import { liftRestBand } from "@/components/hammer/cards/RestTimer";
 import { ActivityBasics } from "@/components/hammer/cards/ActivityBasics";
 import { ExerciseTools } from "@/components/hammer/cards/ExerciseTools";
+import { pendingFor } from "@/lib/logging/logOutbox";
 
 interface Props {
   /** Existing specialized log, split visually without switching to survey-only saving. */
@@ -350,7 +351,7 @@ export function ExerciseLogSheet({ open, onOpenChange, rx, dosageText, embedded 
   }); };
   const focus = useFocusExercise({ id: `special:${rx.id}`, name: rx.movement_name, rows: rounds.length || initialRoundsCount,
     ready: rounds.map(round => entryFields.some(f => f.kind !== "side" && Number(round[f.key]) > 0)), restSeconds: liftRestBand(rx).min,
-    save: async () => { await autosave.flush(); },
+    save: async () => { await autosave.flush(); if (pendingFor(`exercise_log:${rx.id}`)) throw new Error("Save pending"); },
   });
   const topEntries = <section data-pitching-entry-grid hidden={!focus.visible || (focus.active && focus.resting)} className="space-y-2">
     <h4 className="break-words text-sm font-semibold">{rx.movement_name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>
