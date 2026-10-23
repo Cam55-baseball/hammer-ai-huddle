@@ -334,6 +334,12 @@ Deno.serve(async (req) => {
       const { data: prof } = await admin.from("profiles").select("is_system_account").eq("id", id).maybeSingle();
       if (prof?.is_system_account !== true) return json({ error: "Refusing: existing non-system account" }, 409);
     }
+    // Read-only proof access to an existing TEST account must not reseed its
+    // settings, subscription, games, equipment or training history.
+    if (body?.session_only === true && !created) {
+      const s = await oneTimeSession(admin, url, email);
+      return json({ user_id: id, email, access_token: s.access_token, refresh_token: s.refresh_token, expires_at: s.expires_at, token_type: s.token_type, user: s.user });
+    }
     if (p) await seed(admin, id!, p, u.user.id);
     if (sp) await seedStaff(admin, id!, sp);
 
