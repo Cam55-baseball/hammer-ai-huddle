@@ -1,4 +1,6 @@
-# Current publish gate — Oct 22 finish line
+# Current publish gate — Oct 23 Hammers Today cleanup
+
+- [ ] Oct 23 owner cleanup: A embedded tools + specific study; B independent Before you start + identity relocation; C all-card guided focus/practice logging; D catalog measure/time precision; E phone/five-player proofs, full suite, guide and scoped cleanup. In progress; no publish, cron or iOS changes.
 
 - Oct 22 23:05 UTC owner Apple scope COMPLETE: iOS Debug/Release build 6, marketing 1.0 unchanged (repo previously had 1, not 5); app-purchase-handoff redeployed, live same-account token lands on preview /staff-plans at 390×844 with no storefront, no page errors. Full suite: 500 app files / 3,965 tests plus 33 server and 10 outside-folder tests PASS (4,008 total); preview build OK 23:09:02 UTC. Ready to publish: YES. No publish or cron changes; physical Safari/Xcode archive not tested, published website awaits owner's publish.
 
