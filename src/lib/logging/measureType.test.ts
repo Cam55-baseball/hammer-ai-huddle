@@ -83,3 +83,12 @@ describe("inlineLogSpec — entry rows match the measure type", () => {
     expect(spec.rows).toBe(2);
   });
 });
+
+describe("upper-body power codes are not swings", () => {
+  it("ubp holds/pushups never log swings", () => {
+    for (const slug of ["ubp_f15_base_pushup_bottom_hold_explode", "ubp_f15_a_inverted_row_hold_release", "ubp_f03_b_pullup_mid_hang_pause", "ubp_f15_c_landmine_press_hold_explode"]) {
+      expect(measureTypeFor({ slug })).not.toBe("swing_count");
+    }
+    expect(measureTypeFor({ slug: "bp_rounds" })).toBe("swing_count");
+  });
+});

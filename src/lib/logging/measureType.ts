@@ -80,7 +80,7 @@ export function timedMobilityMeasure(text: string): "hold_seconds" | "duration" 
 const VELOCITY_RE = /\bvelo\b|velocity|radar|mph/;
 const BAT_SPEED_RE = /bat speed/;
 const EXIT_VELO_RE = /exit velo|exit velocity|\bev\b/;
-const SWING_RE = /\bswing|tee work|front toss|soft toss|bp\b|batting practice|dry hack|hitting/;
+const SWING_RE = /\bswing|tee work|front toss|soft toss|\bbp\b|batting practice|dry hack|hitting/;
 
 const CHECKOFF_RE = /\bhydrate|hydration|soreness|sleep|journal|note|check[- ]?in|survey|plan tomorrow|pack bag|vault/;
 
