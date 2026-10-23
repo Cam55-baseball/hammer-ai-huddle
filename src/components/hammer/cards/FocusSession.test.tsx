@@ -32,6 +32,7 @@ describe("guided canonical set progression", () => {
     const view = render(<FocusSession active storageKey="focus-proof" onExit={() => {}}><Other key="second" id="second" /><Other key="first" id="first" /></FocusSession>);
     view.rerender(<FocusSession active storageKey="focus-proof" onExit={() => {}}><Other key="first" id="first" /><Other key="second" id="second" /></FocusSession>);
     expect(JSON.parse(sessionStorage.getItem("focus-proof") ?? "{}")).toMatchObject({ exerciseId: "second", row: 1 });
+    expect(screen.getByRole("heading").textContent).toContain("second");
   });
   it("saves before rest and advances only after the prescribed 60 seconds", async () => {
     vi.useFakeTimers(); const save = vi.fn(async () => {});
