@@ -245,7 +245,7 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     ready: rounds.map((round, i) => enteredPrescriptionRounds([round], spec, { requireTouch: true }).length > 0 && i < spec.rows),
     restSeconds: isSprint ? sprintSeconds : (rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank|throw|pitch/.test(rx.movement_slug)) ? restBand.min : null,
     bases: basesPerRep,
-    save: async () => { await autosave.flush(); if (pendingFor(`exercise_log:${rx.id}`)) throw new Error("Save pending"); },
+    save: async () => { if (!(await autosave.flush())) throw new Error("Save pending"); },
   });
   const startedAt = useRef<number | null>(null);
   const [running, setRunning] = useState(false);

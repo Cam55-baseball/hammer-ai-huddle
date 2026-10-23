@@ -141,7 +141,7 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets }: { p
     </li>);
   }
 
-  const entries = <section data-power-primer-entries hidden={focus.active && !focus.currentId?.includes(base.primer.slug ?? "__primer_unmatched__")} className="space-y-2">
+  const entries = <section data-power-primer-entries className="space-y-2">
     <h4 className="flex items-center gap-2 text-sm font-semibold"><Zap className="h-4 w-4 text-primary" />{liftName ?? pp.primer.name}: heavy set + all-out effort</h4>
     {locked ? (
       <p className="flex items-center gap-1 text-xs text-muted-foreground"><Lock className="h-3 w-3" /> All-out throws unlock after your throwing warm-up (in the drop-down below). Your lift sets go ahead now.</p>
