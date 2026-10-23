@@ -73,7 +73,8 @@ const DURATION_RE =
 /** Static/mobility work cannot become a race merely because it is in a speed slot. */
 export function timedMobilityMeasure(text: string): "hold_seconds" | "duration" | null {
   const normalized = norm(text);
-  if (HOLD_RE.test(normalized)) return "hold_seconds";
+  // "Hold then explode/release" is an explosive rep with a pause — counted, not timed.
+  if (HOLD_RE.test(normalized) && !/explode|release/.test(normalized)) return "hold_seconds";
   return DURATION_RE.test(normalized) ? "duration" : null;
 }
 
@@ -129,7 +130,7 @@ export function measureTypeFor(input: MeasureInput): MeasureType {
   if (slot === "speed" || SPRINT_RE.test(text)) return "sprint_time";
 
   // Holds and longer efforts.
-  if (HOLD_RE.test(text)) return "hold_seconds";
+  if (HOLD_RE.test(text) && !/explode|release/.test(text)) return "hold_seconds";
   if (DURATION_RE.test(text)) return "duration";
 
   // Lifts.
