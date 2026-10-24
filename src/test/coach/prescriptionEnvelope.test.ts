@@ -18,6 +18,12 @@ describe("coach calls existing WIC and Swap judges", () => {
     expect(judgeCoachEnvelope({ ...input(), pendingReview: [] }).allowed).toBe(true);
   });
   it("never certifies an invented name without catalog evidence", () => { const i = input(); i.catalog.clear(); expect(judgeCoachEnvelope(i).allowed).toBe(false); });
+  it("keeps TEST-only items restricted to the declared recipient", () => {
+    const i = input(); i.catalog.set("warmup", { ...movement, visible_to: ["test-player"] } as any);
+    expect(judgeCoachEnvelope({ ...i, userId: "real-player" }).allowed).toBe(false);
+    expect(judgeCoachEnvelope({ ...i, userId: "test-player" }).allowed).toBe(true);
+    expect(judgeCoachEnvelope(i).allowed).toBe(false);
+  });
   it("never routes a throwing item into a hitting card", () => {
     const i = input(); i.rows = [{ ...row, slot: "hitting" }]; i.resultingDay = i.rows;
     i.catalog.set("warmup", { ...movement, category: "throwing_plyo" });

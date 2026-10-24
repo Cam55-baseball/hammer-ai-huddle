@@ -89,7 +89,7 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   for (const kind of dayKinds(previous.filter(row => row.plan_date === shift(date, -1)), catalog)) priorKinds[kind] = [shift(date, -1)];
   const merged = mergeExternal(external ?? [], date, [...new Set(previous.filter(row => row.slot === "lift").map(row => row.plan_date))], priorKinds);
   const history = buildLedger(raw, Object.fromEntries(catalog) as any);
-  const result = judgeCoachEnvelope({ rows: proposed, resultingDay, catalog, pendingReview: pendingEquipmentReviews(reviewEvents ?? []).map(row => row.slug), owned: [...owned], missing: [...rememberedMissingGear(answers ?? [])], age,
+  const result = judgeCoachEnvelope({ userId, rows: proposed, resultingDay, catalog, pendingReview: pendingEquipmentReviews(reviewEvents ?? []).map(row => row.slug), owned: [...owned], missing: [...rememberedMissingGear(answers ?? [])], age,
     trainingAge: classifyTrainingAge({ yearsLifting: context.lifting_age_years, isProProspect: false, competitiveLevel: context.competition_level }), trainingYears: context.lifting_age_years,
     sport: context.sport_primary, positions: profile.positions ?? [], blockedIntensityClasses: recovery.blockedIntensityClasses, isGameDay,
     final: { planDate: date, phase: phase.sub_block, age, growthMode: phase.growth, ...merged, restDaysBetweenLifts: 2, weeklyLiftMax: phase.sub_block === "in_season" ? 2 : null, liftRemoved: recovery.removeLift,
