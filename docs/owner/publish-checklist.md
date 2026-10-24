@@ -4,6 +4,38 @@ Updated October 24, 2026, final batch. **Ready to publish: NO.** Coach safety/da
 
 ## Final batch result
 
+### Owner continuation — October 24, 23:22 run
+
+**Ready to publish: NO.** Coach activation now calls the existing WIC domain
+judge as well as the age/sport/season checks: a throwing item cannot masquerade
+as hitting or mobility. Own-item names no longer manufacture a catalog slug;
+workload starts unset until canonical certification. Superseded/inactive catalog
+items are filtered from authoring. Corrected gear awaiting owner review blocks
+activation through the existing Vault review lifecycle. Authorized change 0112
+adds catalog/review fingerprints checked at the existing day-lock commit;
+only coach-rx-safety was redeployed.
+
+Sent workouts now joins actual logs by recipient, row, activated day and movement,
+not the original scheduled date. Each entered round's time and distance is shown,
+with hundredths preserved. Behavioral component save/remount proof covers the
+coach result reader; it is mocked persistence, not hosted choice/focus proof.
+Phone screenshot at 390×844 proves exact round display without overflow, fixture
+only. Refreshed kept TEST sessions returned 200 for player/coach/org management
+reads after expired sessions returned 401; no password proof is claimed.
+
+The real snapshot serializer has no per-drill canonical prescription ID. Merely
+accepting its structure would omit skill dose from workload checking, so that
+gate remains closed. Complete arm/skill-block/own-item certification, existing
+block replacement, positive team/org/player choice→focus→landing, remaining row-3
+behavioral cells, five human checks and historical cleanup remain open. Retained
+personas were untouched; this run authored no hosted TEST training records.
+
+**By-role guide:** players retain Save for later when gear review/category safety
+blocks a workout. Coaches choose active catalog items, see actual round times and
+distances in Sent workouts, and cannot bypass review by naming an own item after
+a catalog exercise. Organizations retain the same assignment and consent gates.
+Evidence and final test counts: `.lovable/proofs/coach-run3/`.
+
 ### Owner continuation — October 24, 23:03 run
 
 **Ready to publish: NO.** Corrected canonical total-reps/distance authoring and
