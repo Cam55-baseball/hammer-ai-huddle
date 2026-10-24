@@ -1,8 +1,9 @@
 # Current publish gate — Oct 24 final automated cleanup
 
-**Ready to publish: NO.** Exact blockers: the full coach focus control/rest/reload matrix is not proven; three TEST personas cannot be restored without verified before-state snapshots; the five section-A human checks remain pending. No publish, cron, iOS, deploy or migration action.
+**Ready to publish: NO.** Exact blockers: three TEST personas cannot be restored without verified before-state snapshots; the five section-A human checks remain pending. Coach full focus/control/rest/reload proof now passes. No publish, cron, iOS, deploy or migration action.
 
 - [ ] Final automated run: 19/19 rendered matrix cases passed at 390×844; nine individual units screens, Pick-off saved/count/reload and coach create/send/accept/autosave captured; 514 files / 4,034 tests PASS; preview OK. Coach full-control matrix and verified persona restoration remain blocked; no hosted records created.
+- [ ] Final continuation: remaining coach Next/save/30-second rest/advance, Skip, Save & exit/reload and real outer X/reopen/reload PASS at 390×844 (`.lovable/proofs/final/coach-focus-result.json`, `coach-close-result.json`); completed proofs retained. Exact prior-state restoration remains blocked; no hosted rows created. Fresh suite running; preview build OK 05:48:35 UTC.
 
 ## Owner decisions — all B applied
 | Exercise | Current entry | Decision |
@@ -14,7 +15,7 @@
 | Farmer Carry on Toes | Yards; saved distance remains feet | B; 15 yd = 45 ft |
 No decisions remain pending. Actual-plan physical check is human-only.
 
-## 14-item status — 13 Done, 1 Partly
+## 14-item status — 14 Done, 0 Partly
 Done means automated proof, retained proof, or explicitly listed human-only scope; it does not mean all human checks passed.
 
 | # | Item | Status | Evidence / limitation |
@@ -27,7 +28,7 @@ Done means automated proof, retained proof, or explicitly listed human-only scop
 | 6 | Identity rewards | Done | Retained `/tmp/browser/today-cleanup/run3/identity-open.png` |
 | 7 | Coach Hammer above Ask Hammer | Done | Retained `/tmp/browser/today-cleanup/run3` |
 | 8 | Instructions below on every exercise | Done | `.lovable/proofs/final/*-entries.png`, `coach-lifecycle-autosave.png` |
-| 9 | Every card full focus matrix | Partly | `.lovable/proofs/final/matrix-final.json`: eleven ordinary-card variants pass; coach autosave passes but its full controls/rest/reload matrix missing |
+| 9 | Every card full focus matrix | Done | `.lovable/proofs/final/matrix-final.json` ordinary-card variants retained; `coach-focus-result.json`, `coach-close-result.json`, `coach-focus-*.png`, `coach-detail-X-*.png` complete the coach sequence with mocked persistence |
 | 10 | Embedded Tex / Pick-off | Done | `.lovable/proofs/final/tools-result.json`, `tex-result.json`; Tex actual target-tap completion human-only |
 | 11 | Coach create/send/accept/autosave/focus | Done | `.lovable/proofs/final/coach-result.json`, `coach-send/accept/lifecycle-autosave.png`; real components/hooks, mocked storage |
 | 12 | Units and five B choices | Done | `.lovable/proofs/final/units-result.json`, nine `*-field.png`; five B exercises on a real plan human-only |
