@@ -101,7 +101,7 @@ describe("scheduleSummary", () => {
     expect(scheduleSummary({ type: "any_day", startDate: TODAY })).toContain("player picks when");
     expect(scheduleSummary({ type: "date", startDate: "2026-10-27" })).toContain("2026-10-27");
     expect(scheduleSummary({ type: "recurring", startDate: TODAY, weekdays: [1, 3, 5], count: 12 })).toBe("Mon/Wed/Fri · 12 times");
-    expect(scheduleSummary({ type: "recurring", startDate: TODAY, monthlyOrdinal: 1, monthlyWeekday: 2, count: 6 })).toBe("First Tue monthly · 6 times");
+    expect(scheduleSummary({ type: "recurring", startDate: TODAY, monthlyOrdinal: 1, monthlyWeekday: 2, count: 6 })).toBe("first Tue monthly · 6 times");
     expect(scheduleSummary({ type: "recurring", startDate: TODAY, weekdays: [2], everyWeeks: 3 })).toBe("Tue · every 3 weeks");
   });
 });
