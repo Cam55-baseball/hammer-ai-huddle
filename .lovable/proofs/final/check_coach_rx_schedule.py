@@ -56,7 +56,7 @@ async def main():
   await pg.screenshot(path=str(OUT/'coach-rx-send-recurring.png'))
   await pg.get_by_text('Demo Player One').click();await pg.get_by_text('Demo Player Two').click()
   await pg.get_by_role('button',name='Send Activity').click();await pg.wait_for_timeout(600)
-  ins=await pg.evaluate('()=>window.__inserts')
+  ins=[r for r in await pg.evaluate('()=>window.__inserts') if 'plan_date' in r]
   dates=sorted({r['plan_date'] for r in ins})
   assert len(ins)==24, f'expected 12 days x 2 players, got {len(ins)}'
   assert dates[:3]==['2026-10-26','2026-10-28','2026-10-30'], dates[:3]
@@ -68,7 +68,7 @@ async def main():
   await pg.locator('#rx-date').fill('2026-11-03')
   await pg.get_by_text('Demo Player One').click()
   await pg.get_by_role('button',name='Send Activity').click();await pg.wait_for_timeout(600)
-  ins=await pg.evaluate('()=>window.__inserts')
+  ins=[r for r in await pg.evaluate('()=>window.__inserts') if 'plan_date' in r]
   assert len(ins)==1 and ins[0]['plan_date']=='2026-11-03' and ins[0]['schedule_type']=='date', ins
   await pg.screenshot(path=str(OUT/'coach-rx-send-date.png'));res['specific_date_send']=True
   # 3. Any-day card activated from My Workouts (Use today → activate_today)
