@@ -36,6 +36,7 @@ import { CoachPlayerCard } from '@/components/hie/CoachPlayerCard';
 import { TeamWeaknessEngine } from '@/components/hie/TeamWeaknessEngine';
 import { CoachAlertPanel } from '@/components/hie/CoachAlertPanel';
 import { PlayerComparisonTool } from '@/components/hie/PlayerComparisonTool';
+import { CoachPrescriptionStatus } from '@/components/coach/CoachPrescriptionStatus';
 import { useHIETeamSnapshot } from '@/hooks/useHIETeamSnapshot';
 import { 
   Command,
