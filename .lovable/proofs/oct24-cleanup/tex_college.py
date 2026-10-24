@@ -10,5 +10,5 @@ async def main():
   buttons=d.get_by_role('button',name='Tex Vision session',exact=True)
   if await buttons.count():
    await buttons.first.click();await pg.wait_for_timeout(15000);fr=pg.frames[-1];print('TEX', (await fr.locator('body').inner_text())[:14000]);print('TEXBUTTONS',await fr.get_by_role('button').all_text_contents());await pg.screenshot(path='/tmp/browser/oct24-cleanup/tex-in-card.png')
-    await b.close()
+   await b.close()
 asyncio.run(main())
