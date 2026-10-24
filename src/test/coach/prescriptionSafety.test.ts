@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   checkPrescriptionReplace,
   categorySlots,
+  coachRxToWkRows,
   type RxReplaceFacts,
 } from "../../../supabase/functions/_shared/coach/prescriptionSafety";
 
