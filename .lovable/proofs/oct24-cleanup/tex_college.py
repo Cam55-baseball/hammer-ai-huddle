@@ -10,6 +10,6 @@ async def main():
   print('BUTTONS',await d.get_by_role('button').all_text_contents())
   buttons=d.get_by_role('button',name='Tex Vision session',exact=True)
   if await buttons.count():
-   await buttons.first.click();await pg.wait_for_timeout(15000);fr=pg.frames[-1];print('TEX', (await fr.locator('body').inner_text())[:14000]);print('TEXBUTTONS',await fr.get_by_role('button').all_text_contents());await pg.screenshot(path='/tmp/browser/oct24-cleanup/tex-in-card.png')
+   await buttons.first.click();await pg.wait_for_timeout(15000);fr=pg.frames[-1];print('TEX', (await fr.locator('body').inner_text())[:14000]);print('TEXBUTTONS',await fr.get_by_role('button').all_text_contents());await fr.get_by_text('Soft Focus',exact=True).first.click();await pg.wait_for_timeout(1000);print('DRILL',await fr.locator('body').inner_text());print('DRILLBUTTONS',await fr.get_by_role('button').all_text_contents());await pg.screenshot(path='/tmp/browser/oct24-cleanup/tex-in-card.png')
    await b.close()
 asyncio.run(main())
