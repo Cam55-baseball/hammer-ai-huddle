@@ -20,7 +20,7 @@ All paths below are project-relative. New screenshots are 390×844, rendered pro
 |---|---|---|
 | Lift, sprint, capped sprint, conditioning, warm-up, hitting, pitching, throwing, fielding, baserunning, recovery | Done: entry → Next → save → prescribed rest → Set 2; rest survives reload; Skip, Save & exit and X. Sprint 30 yd = 180 s, 60 yd capped at 300 s. Conditioning 30 s, fourth base resets at 300 s. | `.lovable/proofs/final/matrix-final.json`, `<type>-entries/focus/next/advance.png`, `conditioning-base-4.png` |
 | Every listed card's instructions label | Done: rendered labels; coach uses its existing equivalent instructions-below heading. | Same entry screenshots; `coach-lifecycle-autosave.png` |
-| Coach create → send → accept → focus → continuous autosave | Done with real editor, send/accept hooks and logger; mocked storage only. Full coach control/rest/reload matrix still outstanding. | `.lovable/proofs/final/coach-result.json`, `coach-send.png`, `coach-accept.png`, `coach-lifecycle-autosave.png`, `check_coach.py` |
+| Coach create → send → accept → focus → continuous autosave and controls | Done with real editor, send/accept hooks and logger; mocked storage only. Coach Next/save/30-second rest/advance, Skip, Save & exit/reload and real dialog X/reopen/reload pass. | `.lovable/proofs/final/coach-result.json`, `coach-focus-result.json`, `coach-close-result.json`, `coach-send.png`, `coach-accept.png`, `coach-lifecycle-autosave.png`, `coach-focus-*.png`, `coach-detail-X-*.png` |
 | Five study roles plus populated hitter games/flags | Done with explicit synthetic inputs; no engine outputs fabricated. | `.lovable/proofs/final/study-*.png`, `matrix-final.json` |
 | Pick-off launch, recorded fixture rep, save/return, counted usage, reload | Done with production page and parent readback; session recording intercepted. Does not certify a physical throw or decision. | `.lovable/proofs/final/tools-result.json`, `pickoff-launch.png`, `pickoff-summary.png`, `pickoff-return-counted.png` |
 | Tex launch and exact-card return | Done; target taps/completion remain human-only. Automated check establishes launch destination and return, not full module rendering. | `.lovable/proofs/final/tex-result.json`, `tex-launch.png`, `tex-return.png`; prior real launch `.lovable/proofs/oct24-cleanup/tex-in-card.png` |
@@ -28,14 +28,14 @@ All paths below are project-relative. New screenshots are 390×844, rendered pro
 | Identity progress/return-to-training placement | Done, retained real-player proof. | `.lovable/proofs/oct24-cleanup/pitcher-identity-merged.png` |
 | Earlier Delaycam, drawer, identity rewards/Coach Hammer, midnight-line removal, hundredths | Done, retained; not re-proven. | `roadmap.md` rows 1, 3–7, 13 retain exact paths |
 | Fresh full application suite | Done: 514 files, 4,034 passed, zero failed. Server suite not rerun; server code unchanged. | `.lovable/proofs/final/full-suite.json` |
-| Preview | Done: latest preview log reports build OK, 05:40:38 UTC. | `/tmp/observability/build-errors.log` |
+| Preview | Done: latest preview log reports build OK, 05:48:35 UTC. | `/tmp/observability/build-errors.log` |
 
 ### Cleanup and exact remaining blockers
 - This run created no hosted TEST records; all new fixtures are browser-local.
 - Fresh exact-ID readback of protected Oct24 snapshots: zero remaining coach templates/logs and Tex results/sessions. Earlier cleanup is retained.
 - The three existing TEST personas remain system accounts. Their Oct24 assessment/start changes have **no verified before-state snapshot** in the located files or protected snapshot tags. They were not reset to guessed nulls or deleted.
 - Therefore restoration and a global “no TEST rows outside kept hidden accounts” claim remain unverified. An actual before-state backup is required for exact restoration.
-- Remaining automated work: full coach focus Next/rest/advance/Skip/Save & exit/X/reload matrix. The create/send/accept/autosave proof does not replace this.
+- Coach full focus controls now pass in the rendered fixture harness. The separate real outer-dialog X proof preserves already-saved work and running rest; it does not claim X flushes an unfinished write.
 
 ## B. After publishing: live checks
 Only after the owner explicitly publishes; these do not replace section A or authorize publication.

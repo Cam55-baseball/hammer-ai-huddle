@@ -8,5 +8,7 @@
   },
   "persona_restoration": "blocked: verified before-state snapshots not found",
   "global_test_row_absence": "not certified",
-  "hidden_personas_confirmed_system_accounts": true
+  "hidden_personas_confirmed_system_accounts": true,
+  "continuation_readback": "exact named coach/Tex rows remain zero; no restoration performed",
+  "snapshot_search": "all matching protected snapshot tags have games/pitches/coach/catalog records, no assessment/start before-state"
 }
