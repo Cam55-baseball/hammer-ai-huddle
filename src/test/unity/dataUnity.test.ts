@@ -63,7 +63,7 @@ describe("data-unity matrix", () => {
     touches("src/hooks/useSentActivities.ts", "series_id");
     touches("supabase/functions/coach-rx-safety/index.ts", "activate_today");
     touches("supabase/functions/coach-rx-safety/index.ts", "cancel_series");
-    touches("src/components/custom-activities/CoachWorkoutsPanel.tsx", "coach_prescriptions");
+    touches("src/components/custom-activities/CoachWorkoutsPanel.tsx", "useMyCoachWorkouts");
     touches("src/lib/calendar/buildCalendarEvents.ts", "coach_prescription");
   });
 
