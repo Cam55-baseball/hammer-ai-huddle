@@ -14,6 +14,9 @@ import { ExerciseTools } from '@/components/hammer/cards/ExerciseTools';
 import PickoffTrainer from '@/pages/PickoffTrainer';
 import { CoachLifecycle } from './CoachLifecycle';
 import { CoachDetail } from './CoachDetail';
+import { CoachPrescriptionInbox } from '@/components/hammer/CoachPrescriptionInbox';
+import { CoachPrescriptionStatus } from '@/components/coach/CoachPrescriptionStatus';
+import { WkPrescriptionCard } from '@/components/hammer/WkPrescriptionCard';
 import '@/index.css';
 import type { WkRx } from '@/hooks/useWkDailyPrescriptions';
 import type { ActivityFolderItem } from '@/types/activityFolder';
@@ -33,6 +36,9 @@ function App() {
   if (kind === 'coach-detail') return <CoachDetail />;
   if (kind === 'coach-lifecycle') return <CoachLifecycle />;
   if (kind === 'pickoff-tool') return <PickoffTrainer />;
+  if (kind === 'coach-rx-inbox') return <main className="p-4"><CoachPrescriptionInbox planDate="2026-10-24" /></main>;
+  if (kind === 'coach-rx-status') return <main className="p-4"><CoachPrescriptionStatus /></main>;
+  if (kind === 'replaced-card') return <main className="p-4"><WkPrescriptionCard rx={{ ...rx, id: 'fixture-replaced', status: 'skipped', replaced_by_coach_rx: 'rx-hit' } as unknown as WkRx} /></main>;
   if (kind.startsWith('study-')) {
     const role = kind.slice(6);
     return <main className="p-4"><TimingStudyMoments sport={role === 'softball-pitcher' ? 'softball' : 'baseball'} position={role.includes('pitcher') ? 'P' : role === 'defender' ? 'SS' : null} roles={role === 'populated' ? ['hitter','baserunner','defender'] : [role.includes('pitcher') ? 'pitcher' : role as 'hitter']} flags={role === 'populated' ? ['swing timing','first step range'] : []} goals={role === 'populated' ? ['steal jump'] : []} /></main>;
