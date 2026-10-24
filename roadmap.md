@@ -11,6 +11,7 @@
 - [x] B1 docs/owner/data-unity-matrix.md — 14 entry kinds × 8 surfaces, verified writer/reader evidence, 3 known gaps listed honestly (coach-logged games → no gp_games; combine results unread by coach/scout/org test RPCs; coach readiness reads focus quizzes not daily log)
 - [x] B2 src/test/unity/dataUnity.test.ts — 14 contract tests (one per row) assert writer writes the table and every direct reader reads it; gap rows assert current gapped behavior so a future fix flips the test; 14/14 PASS
 - [x] C Full suite 517 files / 4,060 tests PASS (07:01 UTC); checklist section D added (coach prescriptions + data unity); roadmap ticked; Ready to publish report delivered
+- [x] Oct 24 run 2 — A4 data-landing completed: use-instead/add-alongside now insert real wk_prescriptions rows (coachRxToWkRows, pure, 4 tests) so the coach workout runs in focus mode/Swap/autosave and completion lands in wk_session_logs → Discipline, load, learning, coach plan; coach-rx-safety redeployed (SHA 6c44b35b); unity contract test row 3 extended; 35 unity+coach tests PASS; 6/6 screen proofs re-pass
 
 **Ready to publish: NO.** Exact blockers: five human-only checks remain pending; three TEST personas lack verified before-state snapshots for assessment/start restoration; global TEST cleanup is unverified. All automated focus proofs are complete. No publish, cron, iOS, deploy or migration action.
 

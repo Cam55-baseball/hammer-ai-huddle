@@ -46,9 +46,13 @@ describe("data-unity matrix", () => {
     touches("drizzle/migrations/0086_at5_coach_training_access.sql", "athlete_plan_snapshots");
   });
 
-  it("3. coach prescriptions → coach_prescriptions + custom_activity_logs → inbox, analytics, vault, compliance, engine, nightly", () => {
+  it("3. coach prescriptions → coach_prescriptions + custom_activity_logs + wk_prescriptions rows → inbox, analytics, vault, compliance, discipline, engine, nightly", () => {
     touches("src/hooks/useSentActivities.ts", "coach_prescriptions");
     touches("src/hooks/useCustomActivities.ts", "custom_activity_logs");
+    // Use instead / Add alongside turn the coach workout into real plan rows,
+    // so completion logs to wk_session_logs like any Hammers card.
+    touches("supabase/functions/coach-rx-safety/index.ts", "wk_prescriptions");
+    touches("supabase/functions/_shared/coach/prescriptionSafety.ts", "user_id");
     // readers
     touches("src/hooks/useCoachPrescriptions.ts", "coach_prescriptions");
     touches("src/components/custom-activities/ActivityAnalytics.tsx", "custom_activity_logs"); // General / Growth
