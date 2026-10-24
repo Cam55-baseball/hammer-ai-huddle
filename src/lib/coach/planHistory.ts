@@ -8,6 +8,7 @@ export interface SavedPlanDrill {
 export interface SavedPlanBlock {
   modality: string; title: string; status: string; durationMin: number | null;
   because: string[]; roadmapReason: string; drills: SavedPlanDrill[];
+  replacedByCoachRx?: string;
 }
 export interface SavedCoachPlan {
   state: 'ok' | 'denied' | 'unavailable'; sport?: string; plan_date?: string;

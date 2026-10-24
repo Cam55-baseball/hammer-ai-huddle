@@ -1,0 +1,21 @@
+{
+  "tests": 4098,
+  "passed": 4098,
+  "failed": 0,
+  "success": true,
+  "exit_codes": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "unique_test_files": 523,
+  "changed_tests_after_batch_start": "21/21 passed",
+  "deno_check": "passed",
+  "preview_build": "OK",
+  "live_proof": "received card and blocked choice only; no positive data landing"
+}

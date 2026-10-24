@@ -23,6 +23,7 @@ import {
   type RxReplaceFacts,
 } from "../_shared/coach/prescriptionSafety.ts";
 import { prescriptionMode, prescriptionChoiceDate } from "../_shared/coach/prescriptionActions.ts";
+import { loadPrescriptionEnvelope } from "../_shared/coach/loadPrescriptionEnvelope.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -80,7 +81,7 @@ async function gatherFacts(
   for (const e of (cal ?? []) as any[]) (e.event_type === "rest" ? rest : games).add(String(e.event_date));
   for (const g of (gp ?? []) as any[]) games.add(String(g.game_date));
   const age = ageFromDob((prof as any)?.date_of_birth ?? null, today);
-  const ntd = nextThrowDate(age, (ac as any)?.competition_level ?? null, (arm ?? []) as any[], today);
+  const ntd = nextThrowDate(age, (ac as any)?.competition_level ?? null, (arm ?? []).filter((r: any) => r.entry_date < date), shift(date, -1));
   return {
     category,
     date,
@@ -167,16 +168,30 @@ Deno.serve(async (req) => {
         // Completion: count plan rows each prescription created that the player finished.
         const rxIds = list.map((r) => r.id);
         const doneByRx: Record<string, { done: number; total: number }> = {};
+        const actualsByRx: Record<string, any[]> = {};
         if (rxIds.length > 0) {
-          const { data: wk } = await admin.from("wk_prescriptions").select("status, why_payload")
+          const { data: wk, error: wkError } = await admin.from("wk_prescriptions").select("id,user_id,movement_name,dosage_unit,slot,status,why_payload")
             .in("user_id", [...new Set(list.map((r) => r.recipient_id))])
             .not("why_payload", "is", null).limit(5000);
+          if (wkError) throw wkError;
           for (const w of (wk ?? []) as any[]) {
             const rid = w.why_payload?.coach_rx;
             if (!rid || !rxIds.includes(rid)) continue;
             const b = (doneByRx[rid] ||= { done: 0, total: 0 });
             b.total++;
             if (w.status === "completed") b.done++;
+          }
+          const ownedRows = (wk ?? []).filter((w: any) => rxIds.includes(w.why_payload?.coach_rx));
+          if (ownedRows.length) {
+            const { data: logs, error: logsError } = await admin.from("wk_session_logs")
+              .select("id,user_id,prescription_id,plan_date,movement_slug,sets_completed,reps_completed,total_reps_completed,duration_seconds_precise,duration_seconds_completed,distance_feet_completed")
+              .in("prescription_id", ownedRows.map((w: any) => w.id)).limit(5000);
+            if (logsError) throw logsError;
+            for (const log of logs ?? []) {
+              const row = ownedRows.find((w: any) => w.id === log.prescription_id && w.user_id === log.user_id);
+              if (!row) continue;
+              (actualsByRx[row.why_payload.coach_rx] ??= []).push({ ...log, prescription: { movement_name: row.movement_name, dosage_unit: row.dosage_unit, slot: row.slot } });
+            }
           }
         }
         const names: Record<string, string> = {};
@@ -197,6 +212,7 @@ Deno.serve(async (req) => {
               recur_end: r.recur_end, recur_count: r.recur_count,
             },
             completion: doneByRx[r.id] ?? { done: 0, total: 0 },
+            results: actualsByRx[r.id] ?? [],
           })),
         });
       }
@@ -288,6 +304,16 @@ Deno.serve(async (req) => {
     if (choice === "use_instead" || choice === "add_alongside") {
       if (date !== today) return json({ error: "Use today to activate this workout on today's plan" }, 409);
       const facts = await gatherFacts(admin, me, category, date, intensity, false, today);
+      const { data: savedSnapshot, error: snapshotError } = await admin.from("athlete_plan_snapshots").select("payload,sport")
+        .eq("user_id", me).eq("plan_date", date);
+      if (snapshotError) throw snapshotError;
+      const { data: sportContext, error: sportError } = await admin.from("athlete_context").select("sport_primary").eq("user_id", me).maybeSingle();
+      if (sportError) throw sportError;
+      const modality = category === "fielding" ? "defense" : category;
+      const snapshot = savedSnapshot?.find((s: any) => s.sport === sportContext?.sport_primary);
+      const block = snapshot?.payload?.blocks?.find((b: any) => b.modality === modality && b.status === "ready" && !b.replacedByCoachRx && !b.coachRx);
+      if (choice === "use_instead" && block) return json({ applied: false, verdict: "blocked", reasons: ["Replacing this skill block hasn't passed its complete safety check yet. Your saved card is unchanged."], safeOption: "Safe option: save for later and ask your coach to review it." });
+      facts.hasCard = facts.hasCard || !!block;
       const result = choice === "use_instead" ? checkPrescriptionReplace(facts) : checkPrescriptionAlongside(facts);
       if (result.verdict !== "allow") return json({ applied: false, verdict: result.verdict, reasons: result.reasons, safeOption: result.safeOption });
       const { data: senderProfile, error: senderError } = await admin.from("profiles").select("full_name").eq("id", rx.sender_id).maybeSingle();
@@ -299,7 +325,10 @@ Deno.serve(async (req) => {
         usedInstead: choice === "use_instead",
       });
       if (!rows.length) return json({ error: "This workout has no usable exercises. Ask your coach to review it." }, 409);
-      safety = { verdict: result.verdict, intensity, checked_at: new Date().toISOString() };
+      const envelope = await loadPrescriptionEnvelope(admin, me, date, category, rows, choice === "use_instead");
+      if (!envelope.allowed) return json({ applied: false, verdict: "blocked", reasons: envelope.reasons, safeOption: envelope.safeOption });
+      rows = envelope.rows;
+      safety = { verdict: result.verdict, intensity, checked_at: new Date().toISOString(), envelope: "wic-swap", block_expected: block ?? null, cns_result: "cnsResult" in envelope ? envelope.cnsResult : null };
     }
     const { data: committed, error: commitError } = await admin.rpc("coach_rx_commit_choice", {
       p_user: me, p_rx: rxId, p_date: date, p_choice: choice,

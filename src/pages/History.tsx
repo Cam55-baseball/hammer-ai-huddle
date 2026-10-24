@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { PracticeSessionDetailDialog } from '@/components/PracticeSessionDetailDialog';
 import { InjuryContinuityCard } from '@/components/injury/InjuryContinuityCard';
+import { WorkoutActuals } from '@/components/hammer/WorkoutActuals';
 import { HistoryDatePicker } from '@/lib/history/historyDatePicker';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ReportView } from '@/components/games/reports/ReportView';
@@ -174,6 +175,7 @@ export default function History() {
 
         <div className="space-y-3">
           <InjuryContinuityCard userId={userId} />
+          <WorkoutActuals from={from} to={to} search={query} />
 
 
 

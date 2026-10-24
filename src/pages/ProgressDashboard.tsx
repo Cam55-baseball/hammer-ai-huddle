@@ -44,6 +44,7 @@ import { useReadinessState } from '@/hooks/useReadinessState';
 import { PerformanceAreaRows } from '@/components/intelligence/PerformanceAreaRows';
 import { LearningLoopList } from '@/components/intelligence/LearningLoopList';
 import { HealthFlagsCard } from '@/components/intelligence/HealthFlagsCard';
+import { WorkoutActuals } from '@/components/hammer/WorkoutActuals';
 
 function PracticeIntelligenceCard() {
   const { data: mpi } = useMPIScores();
@@ -213,6 +214,7 @@ Confidence: ${snapshot.development_confidence}%
 
           <TabsContent value="performance" className="space-y-6">
             <PerformanceAreaRows />
+            <WorkoutActuals />
             {performance}
             <section id="performance-context" className="scroll-mt-20"><HumanPerformanceCard /></section>
             <Card className="p-4 flex items-center justify-between gap-3">

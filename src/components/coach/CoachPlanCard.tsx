@@ -23,7 +23,7 @@ function SavedWork({ blocks }: { blocks: SavedPlanBlock[] }) {
       <p className="text-sm font-medium">{block.title}{block.durationMin != null ? ` · ${block.durationMin} min` : ''}</p>
       {savedPlanReasons(block).map((line, i) => <p key={i} className="text-xs text-muted-foreground">{line.trim().toLowerCase().startsWith('because') ? line : `Because: ${line}`}</p>)}
       <ul className="list-disc pl-5">
-        {block.drills.map((drill, i) => <li key={`${drill.name}-${i}`} className="text-sm break-words">
+        {block.replacedByCoachRx ? <li className="text-sm">Replaced by coach workout — not missed</li> : block.drills.map((drill, i) => <li key={`${drill.name}-${i}`} className="text-sm break-words">
           {drill.name} — {drill.dosage}{drill.stage === 'full_go' ? ' (game speed)' : drill.stage === 'prep' ? ' (prep)' : drill.stage === 'log' ? ' (log)' : ''}
           {drill.cue && <p className="text-xs text-muted-foreground">{drill.cue}</p>}
         </li>)}

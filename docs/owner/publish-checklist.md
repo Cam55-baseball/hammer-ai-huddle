@@ -4,6 +4,37 @@ Updated October 24, 2026, final batch. **Ready to publish: NO.** Coach safety/da
 
 ## Final batch result
 
+### Owner finish continuation — October 24, 22:28 UTC
+
+**Ready to publish: NO.** Added Vault/common-gear authoring and shared canonical
+actual results in History, Vault, The General and Sent workouts. Integrated existing
+WIC/Swap judges and an authorized atomic snapshot transaction. These changes do
+not constitute a complete safety or behavioral data-unity certification.
+
+Live phone evidence: democollege received the exact TEST workout and saw a safe
+missing-training-details block; democoach's Sent workouts mounted; demoorg's
+Organization plan gate blocked access. No successful activation/focus logging or
+org/team write/readback was proved. Sessions used the existing session-only TEST
+flow, not password sign-in. The exact temporary pending prescription was removed
+and verified absent; retained accounts and three personas were not reset/reseeded.
+
+**Remaining implementation/proof gates:** complete arm-load/saved-block safety
+adapter, fresh-fact atomic certification, own-item certification, existing block-swap
+path integration and positive player/coach/org/team canonical write/readback.
+Arm-bearing workouts and skill-block replacement stay blocked rather than guessed.
+Row 3's added readers are UNVERIFIED behavioral cells, not PASS. Existing five
+human checks and the owner-held persona restoration/global cleanup gates remain.
+
+Full application suite: **523 unique files / 4,098 tests PASS**, all eight groups
+exit 0. Changed tests repeated after later edits: **21/21 PASS**; coach function
+Deno check PASS; preview build OK. Evidence: `.lovable/proofs/coach-finish/suite-result.json`.
+
+**By-role additions:** players find actual saved entries under Logged workouts in
+History, The General and Vault My Drill Work; coaches select declared Vault items
+or map own-item gear in the send editor and see actual entries in Sent workouts.
+Organizations use the same existing plan/assignment gates. These instructions
+describe the implemented readers/editor, not a certified successful workout flow.
+
 - Fixed duplicate legacy invitations on prescription sends and invalid-schedule
   orphan invitations; kept the one existing My Workouts destination.
 - All three main shelves fit on the 390×844 phone without horizontal searching.

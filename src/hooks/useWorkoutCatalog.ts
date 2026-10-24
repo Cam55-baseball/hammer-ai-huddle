@@ -29,6 +29,10 @@ export interface CatalogMovement {
   is_eccentric_dominant: boolean | null;
   eccentric_overload: boolean | null;
   governance_version: string | null;
+  dosage_unit: string | null;
+  equipment_requirements: string[] | null;
+  equipment_alternatives: string[][] | null;
+  default_duration_seconds: number | null;
 }
 
 export function useWorkoutCatalog() {
@@ -39,7 +43,7 @@ export function useWorkoutCatalog() {
       const { data, error } = await supabase
         .from("wk_movement_catalog")
         .select(
-          "id,slug,name,category,movement_category,source_philosophy,cue,why_prescribed,primary_adaptation,equipment,phase_allow,season_eligibility,season_legality,training_age_legality,cns_cost,recovery_window_hours,pap_classification,movement_velocity,game_day_legal,practice_day_legal,min_age_years,default_sets,default_reps,is_eccentric_dominant,eccentric_overload,governance_version",
+          "id,slug,name,category,movement_category,source_philosophy,cue,why_prescribed,primary_adaptation,equipment,equipment_requirements,equipment_alternatives,dosage_unit,default_duration_seconds,phase_allow,season_eligibility,season_legality,training_age_legality,cns_cost,recovery_window_hours,pap_classification,movement_velocity,game_day_legal,practice_day_legal,min_age_years,default_sets,default_reps,is_eccentric_dominant,eccentric_overload,governance_version",
         )
         .or(catalogVisibilityFilter(auth.user?.id))
         .order("category", { ascending: true })
