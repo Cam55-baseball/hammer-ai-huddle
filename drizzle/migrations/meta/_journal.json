@@ -778,6 +778,13 @@
       "when": 1792880288418,
       "tag": "0110_coach_canonical_block_choice",
       "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1792882320291,
+      "tag": "0111_coach_choice_freshness_guard",
+      "breakpoints": true
     }
   ]
 }
