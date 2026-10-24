@@ -38,12 +38,14 @@ export function CoachPrescriptionInbox({ planDate }: { planDate: string }) {
   if (isLoading || pending.length === 0) return null;
 
   const pick = async (rx: CoachPrescription, choice: CoachRxChoice) => {
+    try {
     const r = await choose(rx.id, choice);
     if (!r.applied && r.reasons?.length) {
       setBlocked((b) => ({ ...b, [rx.id]: { reasons: r.reasons ?? [], safeOption: r.safeOption ?? null } }));
     } else {
       setBlocked((b) => { const n = { ...b }; delete n[rx.id]; return n; });
     }
+    } catch { /* Mutation reports failure; retain the pending card and entries. */ }
   };
 
   return (
@@ -77,7 +79,7 @@ export function CoachPrescriptionInbox({ planDate }: { planDate: string }) {
                 </div>
               )}
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" disabled={choosing} onClick={() => void pick(rx, "use_instead")}>
+                <Button size="sm" className="h-auto whitespace-normal text-left" disabled={choosing} onClick={() => void pick(rx, "use_instead")}>
                   {choosing && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
                   Use instead of my {label} card
                 </Button>

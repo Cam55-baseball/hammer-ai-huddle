@@ -28,12 +28,13 @@ import type { TrainingAgeContext } from "@/lib/wic/trainingAge";
 import { WIC_VERSION } from "../../supabase/functions/_shared/wic/constitution";
 import { usePhaseState } from "@/hooks/usePhaseState";
 import { useTellHammersEnabled, SCHEDULE_CHANGED_EVENT } from "@/hooks/useScheduleTimeline";
+import { partitionCoachRows } from "@/lib/coachRx/planRows";
 
 // Must equal the version the generator stamps on every row. A mismatch made
 // every visit look "stale" and rebuild today's plan, wiping check-offs.
 const WK_GENERATOR_VERSION = WIC_VERSION;
 
-export type WkSlot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental" | "ub_primer" | "windmill";
+export type WkSlot = "lift" | "speed" | "bat_speed" | "conditioning" | "cross_sport" | "supplemental" | "ub_primer" | "windmill" | "hitting" | "pitching" | "throwing" | "fielding" | "baserunning" | "warmup" | "mobility" | "recovery" | "vision";
 
 export type WkSequenceRole =
   | "arm_care"
@@ -642,13 +643,15 @@ export function useWkDailyPrescriptions(planDate: string = todayStr()) {
   }, [generate]);
 
   const grouped = useMemo(() => {
-    const rxs = query.data ?? [];
+    const partition = partitionCoachRows(query.data ?? []);
+    const rxs = partition.hammers;
     // Persisted order wins. The server orders lifts once, and a coach pin
     // moves a movement by rewriting `sequence_order` — a client-side re-sort
     // by `sequence_role` silently undid the pin, which is why a pinned lift
     // snapped back on the athlete's screen. Never re-sort here.
     const byRoleOrder = (a: WkRx, b: WkRx) => a.sequence_order - b.sequence_order;
     return {
+      coach: partition.coach,
       // Legacy buckets (kept for anything still importing them)
       lift: rxs.filter((r) => r.slot === "lift").sort(byRoleOrder),
       supplemental: rxs.filter((r) => r.slot === "supplemental"),

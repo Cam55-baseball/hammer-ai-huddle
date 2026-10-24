@@ -1137,6 +1137,10 @@ function HammerDailyPlanBody({
               <TrendDeloadNotice />
               <DayCommandCenter />
               <WkSomethingOffRow />
+              {Object.entries(Object.groupBy ? {} : {}).length > 0 && null}
+              {(wkRx.grouped.coach ?? []).map(rx => (
+                <WkPrescriptionCard key={`coach-${rx.id}`} rx={rx} />
+              ))}
               <HammerCheckInCard
                 quizType="morning"
                 completed={vaultQuizzes.hasCompleted("morning")}
