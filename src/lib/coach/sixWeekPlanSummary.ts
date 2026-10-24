@@ -30,6 +30,7 @@ export function sixWeekPlanSummary(plans: readonly SavedCoachPlan[], sport: stri
   for (const plan of ordered) {
     if (plan.state !== 'ok' || plan.sport !== sport || !plan.plan_date || !dates.has(plan.plan_date)) continue;
     for (const block of visibleCoachPlanBlocks(plan.blocks ?? [])) {
+      if (block.replacedByCoachRx) continue;
       const key = `${block.modality}:${plan.plan_date}`;
       if (seen.has(key) || !block.drills.length) continue;
       seen.add(key);
