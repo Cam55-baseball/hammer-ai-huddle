@@ -1,5 +1,6 @@
 # Current publish gate — Oct 24 final automated cleanup
 
+**Ready to publish: NO.** Exact blockers: five human-only checks remain pending; three TEST personas lack verified before-state snapshots for assessment/start restoration; global TEST cleanup is unverified. All automated focus proofs are complete. No publish, cron, iOS, deploy or migration action.
 
 - [x] Final automated proofs complete: 19/19 rendered cases, nine units screens, Pick-off save/count/reload, coach lifecycle/autosave and remaining coach focus/outer-X controls at 390×844; 514 files / 4,034 tests PASS; preview OK 05:48:35 UTC. Exact persona restoration remains blocked separately; no hosted fixture rows created.
 - [x] Oct 24 FINAL FINISH continuation (2): finalized one consolidated publish sheet and retained all completed evidence without rerunning proofs; removed stale coach-blocker wording. All 14 items Done under the owner's automated/human-only definition; Ready to publish NO: five human checks pending, three persona before-state snapshots missing, global TEST cleanup unverified. Documentation only; no hosted data or release/schedule/iOS changes.
@@ -38,7 +39,7 @@ Done means automated proof, retained proof, or explicitly listed human-only scop
 964 catalog exercises resolve through the shared measure rules. Upper-body power no longer matches batting “swings”; moving planks count reps; still holds retain time targets only when declared. Broad jump uses feet/inches. All B choices share exact entry semantics across logging paths. No rep/time/distance equivalence invented. Declared non-sprint rest now reaches focus; conditioning bases persist across reload and reset after four. Twenty targeted regression tests passed, including the fourth-base 300-second reset.
 
 ### Cleanup
-Fresh protected-snapshot readback: zero named Oct24 coach templates/logs and Tex result/session rows. This run created no hosted data. Three system TEST personas still have Oct24 assessment/start changes; no verified pre-change snapshot located, so exact restoration is not safely possible. Global TEST exclusion/absence is not certified. Do not guess prior nulls or delete accounts/consents. Full provenance and pending human checks are consolidated in the publish checklist.
+Retained prior protected-snapshot readback: zero named Oct24 coach templates/logs and Tex result/session rows (`.lovable/proofs/final/cleanup-result.json`); not newly queried in this documentation-only continuation. This run created no hosted data. Three system TEST personas still have Oct24 assessment/start changes; no verified pre-change snapshot located, so exact restoration is not safely possible. Global TEST exclusion/absence is not certified. Do not guess prior nulls or delete accounts/consents. Full provenance and pending human checks are consolidated in the publish checklist.
 
 ## Historical roadmap (prior verdicts do not override the current gate)
 
