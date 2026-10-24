@@ -15,6 +15,7 @@ import { Send, Lock, Users, MessageSquare, Loader2 } from 'lucide-react';
 import { CustomActivityTemplate } from '@/types/customActivity';
 import { LockableField, LockPreset, LOCKABLE_FIELDS, LOCK_PRESETS, FollowedPlayer } from '@/types/sentActivity';
 import { useSentActivities } from '@/hooks/useSentActivities';
+import { scheduleSummary, type ScheduleInput } from '@/lib/coachRx/schedule';
 import { getActivityIcon } from './IconPicker';
 import { hexToRgba } from '@/hooks/useUserColors';
 
@@ -63,6 +64,17 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
   const [message, setMessage] = useState('');
   const [rxCategory, setRxCategory] = useState<string>('lift');
   const [rxDate, setRxDate] = useState<string>('');
+  // Scheduling (owner request Oct 24, run 6): any day / specific date(s) / recurring.
+  const [schedType, setSchedType] = useState<'any_day' | 'date' | 'dates' | 'recurring'>('date');
+  const [extraDates, setExtraDates] = useState<string[]>([]);
+  const [weekdays, setWeekdays] = useState<number[]>([]);
+  const [everyWeeks, setEveryWeeks] = useState<number>(1);
+  const [monthly, setMonthly] = useState<boolean>(false);
+  const [monthlyOrdinal, setMonthlyOrdinal] = useState<number>(1);
+  const [monthlyWeekday, setMonthlyWeekday] = useState<number>(2);
+  const [endMode, setEndMode] = useState<'count' | 'end'>('count');
+  const [recurCount, setRecurCount] = useState<number>(4);
+  const [recurEnd, setRecurEnd] = useState<string>('');
 
   useEffect(() => {
     if (open) {
@@ -73,8 +85,36 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
       setMessage('');
       setRxCategory(template ? defaultRxCategory(template.activity_type) : 'lift');
       setRxDate(new Date().toLocaleDateString('en-CA'));
+      setSchedType('date');
+      setExtraDates([]);
+      setWeekdays([]);
+      setEveryWeeks(1);
+      setMonthly(false);
+      setMonthlyOrdinal(1);
+      setMonthlyWeekday(2);
+      setEndMode('count');
+      setRecurCount(4);
+      setRecurEnd('');
     }
   }, [open, fetchFollowedPlayers, template]);
+
+  const buildSchedule = (): ScheduleInput => ({
+    type: schedType,
+    startDate: rxDate,
+    dates: schedType === 'dates' ? extraDates : undefined,
+    weekdays: schedType === 'recurring' && !monthly ? weekdays : undefined,
+    everyWeeks: schedType === 'recurring' && !monthly ? everyWeeks : undefined,
+    monthlyOrdinal: schedType === 'recurring' && monthly ? monthlyOrdinal : undefined,
+    monthlyWeekday: schedType === 'recurring' && monthly ? monthlyWeekday : undefined,
+    endDate: schedType === 'recurring' && endMode === 'end' && recurEnd ? recurEnd : undefined,
+    count: schedType === 'recurring' && endMode === 'count' ? recurCount : undefined,
+  });
+
+  const scheduleValid =
+    schedType === 'any_day' ||
+    schedType === 'date' ||
+    (schedType === 'dates') ||
+    (schedType === 'recurring' && (monthly ? true : weekdays.length > 0) && (endMode === 'count' ? recurCount > 0 : !!recurEnd));
 
   const handlePlayerToggle = (playerId: string) => {
     setSelectedPlayers(prev => 
