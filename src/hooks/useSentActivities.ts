@@ -27,8 +27,20 @@ export function useSentActivities() {
 
       if (followsError) throw followsError;
 
-      if (follows && follows.length > 0) {
-        const playerIds = follows.map(f => f.player_id);
+      // Org admins/coaches can also send to their assigned athletes
+      // (owner request Oct 24, run 6) — same send path, same per-player safety.
+      const { data: assignments } = await supabase
+        .from('org_athlete_assignments' as any)
+        .select('athlete_user_id')
+        .eq('coach_user_id', userData.user.id)
+        .is('revoked_at', null);
+
+      const assignedIds = ((assignments ?? []) as any[]).map((a) => a.athlete_user_id as string);
+      const followIds = (follows ?? []).map((f) => f.player_id);
+      const allIds = [...new Set([...followIds, ...assignedIds])];
+
+      if (allIds.length > 0) {
+        const playerIds = allIds;
         
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
