@@ -63,11 +63,12 @@ export function useSaveExerciseLog() {
 
       // Upsert-style: delete the previous log for this prescription, then insert.
       // Keeps history clean and avoids surface-level duplicate logs per card.
-      await (supabase as any)
+      const { error: deleteError } = await (supabase as any)
         .from("wk_session_logs")
         .delete()
         .eq("user_id", user.id)
         .eq("prescription_id", p.prescription_id);
+      if (deleteError) throw deleteError;
 
       const { data, error } = await (supabase as any)
         .from("wk_session_logs")
