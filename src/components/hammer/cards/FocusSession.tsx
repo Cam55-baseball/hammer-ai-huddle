@@ -5,8 +5,8 @@ import { useConditioningRest } from "./ConditioningRestContext";
 import type { BaseRep } from "../../../../supabase/functions/_shared/wic/runRest";
 
 type Exercise = { id: string; name: string; rows: number; ready: boolean[]; restSeconds: number | null; bases?: BaseRep | null; enabled?: boolean; save: (row: number) => Promise<void> };
-type Cursor = { exercise: number; exerciseId: string | null; row: number; restingUntil: number | null; restStartedAt: number | null; restSeconds: number | null };
-const INITIAL: Cursor = { exercise: 0, exerciseId: null, row: 0, restingUntil: null, restStartedAt: null, restSeconds: null };
+type Cursor = { exercise: number; exerciseId: string | null; row: number; restingUntil: number | null; restStartedAt: number | null; restSeconds: number | null; conditioningBases: number | null };
+const INITIAL: Cursor = { exercise: 0, exerciseId: null, row: 0, restingUntil: null, restStartedAt: null, restSeconds: null, conditioningBases: null };
 const Context = createContext<{
   active: boolean; cursor: Cursor; currentId?: string; register: (entry: Exercise) => () => void; refresh: () => void;
 } | null>(null);
@@ -42,7 +42,7 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
     if (!exercise) return prior;
     const moreRows = prior.row + 1 < exercise.rows;
     const nextIndex = moreRows ? index : index + 1;
-    return { ...INITIAL, exercise: nextIndex, exerciseId: all[nextIndex]?.id ?? null, row: moreRows ? prior.row + 1 : 0 };
+    return { ...INITIAL, conditioningBases: prior.conditioningBases, exercise: nextIndex, exerciseId: all[nextIndex]?.id ?? null, row: moreRows ? prior.row + 1 : 0 };
   }), []);
   useEffect(() => { sessionStorage.setItem(storageKey, JSON.stringify(cursor)); }, [cursor, storageKey]);
   useEffect(() => {
@@ -60,7 +60,9 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
       let seconds = current.restSeconds;
       if (current.bases) {
         const { conditioningRestAfterRep } = await import("../../../../supabase/functions/_shared/wic/runRest");
-        seconds = conditioningRestAfterRep(conditioning.state.bases, current.bases).seconds;
+        const next = conditioningRestAfterRep(cursor.conditioningBases ?? conditioning.state.bases, current.bases);
+        seconds = next.seconds;
+        setCursor(prior => ({ ...prior, conditioningBases: next.bases }));
         conditioning.finishRep(current.bases);
       }
       if (seconds != null && seconds > 0) {
@@ -81,6 +83,7 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
   return <Context.Provider value={{ active, cursor, currentId: current?.id, register, refresh }}>
     {active && <section data-focus-session className="mb-3 space-y-2 border-b border-border pb-3">
       <h3 className="text-base font-semibold">{current ? `${current.name} · Set ${cursor.row + 1} of ${current.rows}` : "End of guided sets"}</h3>
+      {current?.bases && <p className="text-xs text-muted-foreground">Base count: {cursor.conditioningBases ?? conditioning.state.bases} of 4</p>}
       {cursor.restingUntil != null && <RestTimer key={cursor.restStartedAt} label="Rest before the next set" seconds={cursor.restSeconds} initialStartedAt={cursor.restStartedAt} managed />}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <div className="flex flex-wrap gap-2">
