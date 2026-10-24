@@ -13,52 +13,62 @@
     {
       "case": "speed",
       "passed": false,
-      "error": ""
+      "error": "",
+      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
     },
     {
       "case": "speed-cap",
       "passed": false,
-      "error": ""
+      "error": "",
+      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
     },
     {
       "case": "conditioning",
       "passed": false,
-      "error": ""
+      "error": "",
+      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
     },
     {
       "case": "warmup",
       "passed": false,
-      "error": ""
+      "error": "",
+      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
     },
     {
       "case": "hitting",
       "passed": false,
-      "error": ""
+      "error": "",
+      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
     },
     {
       "case": "pitching",
       "passed": false,
-      "error": ""
+      "error": "",
+      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
     },
     {
       "case": "throwing",
       "passed": false,
-      "error": ""
+      "error": "",
+      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
     },
     {
       "case": "fielding",
       "passed": false,
-      "error": ""
+      "error": "",
+      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
     },
     {
       "case": "baserunning",
       "passed": false,
-      "error": ""
+      "error": "",
+      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
     },
     {
       "case": "recovery",
       "passed": false,
-      "error": ""
+      "error": "",
+      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
     },
     {
       "case": "coach",
@@ -68,7 +78,8 @@
     {
       "case": "units",
       "passed": false,
-      "error": ""
+      "error": "",
+      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 30, in main\n    assert 'target' in text; await page.get_by_label('Distance 1',exact=True).fill('15'); assert await page.get_by_label('Distance 1',exact=True).input_value()=='15'; await page.get_by_label('Distance 1',exact=True).screenshot(path=str(OUT/'units-yards.png')); await page.get_by_label('Jump distance 1 feet',exact=True).screenshot(path=str(OUT/'units-jump.png'))\n           ^^^^^^^^^^^^^^^^\nAssertionError\n"
     },
     {
       "case": "study-defender",
