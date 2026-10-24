@@ -271,6 +271,7 @@ export default function CoachDashboard() {
         <SendAthleteRequest />
         <CoachProgramCard />
         <CoachWeeklySummary />
+        <CoachPrescriptionStatus />
         <TeamDisciplineSummary />
         <Link to="/coach/lineup" className="text-sm underline underline-offset-2">Lineup mode — log a game for several players</Link>
         <Link to="/coach/guest" className="text-sm underline underline-offset-2">Guest analysis — a player without an account (nothing saved)</Link>
