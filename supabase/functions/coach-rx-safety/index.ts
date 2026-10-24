@@ -268,64 +268,30 @@ Deno.serve(async (req) => {
       ? (rx as any).safety_result.intensity
       : "standard") as RxReplaceFacts["intensity"];
 
-    if (choice === "use_instead") {
+    let safety: Record<string, unknown> | null = null;
+    let rows: Record<string, unknown>[] = [];
+    if (choice === "use_instead" || choice === "add_alongside") {
+      if (date !== today) return json({ error: "Use today to activate this workout on today's plan" }, 409);
       const facts = await gatherFacts(admin, me, category, date, intensity, false, today);
-      const r = checkPrescriptionReplace(facts);
-      if (r.verdict !== "allow") {
-        return json({ applied: false, verdict: r.verdict, reasons: r.reasons, safeOption: r.safeOption });
-      }
-      const slots = categorySlots(category);
-      // Replaced rows are marked skipped (zero CNS, never "missed") and carry
-      // the coach-prescription link so the card reads "replaced by coach workout".
-      const { data: replaced } = await admin.from("wk_prescriptions")
-        .update({ replaced_by_coach_rx: rxId, status: "skipped" })
-        .eq("user_id", me).eq("plan_date", date).in("slot", slots)
-        .is("replaced_by_coach_rx", null).not("status", "in", "(completed,skipped)")
-        .select("id");
-      // The coach workout becomes real plan rows so it runs exactly like a
-      // Hammers card: focus mode, Swap, autosave and logging all land in the
-      // same tables (wk_session_logs → Discipline, load, learning, coach plan).
-      const { data: senderProfile } = await admin.from("profiles").select("full_name").eq("id", (rx as any).sender_id).maybeSingle();
-      const rows = coachRxToWkRows({
+      const result = choice === "use_instead" ? checkPrescriptionReplace(facts) : checkPrescriptionAlongside(facts);
+      if (result.verdict !== "allow") return json({ applied: false, verdict: result.verdict, reasons: result.reasons, safeOption: result.safeOption });
+      const { data: senderProfile } = await admin.from("profiles").select("full_name").eq("id", rx.sender_id).maybeSingle();
+      rows = coachRxToWkRows({
         userId: me, planDate: date, category, prescriptionId: rxId,
-        coachName: (senderProfile as any)?.full_name ?? null,
-        exercises: Array.isArray((rx as any).exercises) ? (rx as any).exercises : [],
-        usedInstead: true,
+        coachName: senderProfile?.full_name ?? null,
+        exercises: Array.isArray(rx.exercises) ? rx.exercises : [],
+        usedInstead: choice === "use_instead",
       });
-      if (rows.length > 0) await admin.from("wk_prescriptions").insert(rows);
-      await admin.from("coach_prescriptions").update({
-        status: STATUS[choice], plan_date: date,
-        safety_result: { verdict: r.verdict, intensity, replaced_count: (replaced ?? []).length, inserted_count: rows.length, checked_at: new Date().toISOString() },
-        updated_at: new Date().toISOString(),
-      }).eq("id", rxId);
-      return json({ applied: true, verdict: r.verdict, replaced: (replaced ?? []).length, inserted: rows.length });
+      if (!rows.length) return json({ error: "This workout has no usable exercises. Ask your coach to review it." }, 409);
+      safety = { verdict: result.verdict, intensity, checked_at: new Date().toISOString() };
     }
-
-    // Add alongside: the coach workout also becomes real plan rows (same
-    // logging path); save-for-later and declined insert nothing.
-    if (choice === "add_alongside") {
-      const facts = await gatherFacts(admin, me, category, date, intensity, false, today);
-      const safe = checkPrescriptionAlongside(facts);
-      if (safe.verdict !== "allow") return json({ applied: false, verdict: safe.verdict, reasons: safe.reasons, safeOption: safe.safeOption });
-      const { data: senderProfile } = await admin.from("profiles").select("full_name").eq("id", (rx as any).sender_id).maybeSingle();
-      const rows = coachRxToWkRows({
-        userId: me, planDate: date, category, prescriptionId: rxId,
-        coachName: (senderProfile as any)?.full_name ?? null,
-        exercises: Array.isArray((rx as any).exercises) ? (rx as any).exercises : [],
-        usedInstead: false,
-      });
-      if (rows.length > 0) await admin.from("wk_prescriptions").insert(rows);
-      await admin.from("coach_prescriptions").update({
-        status: STATUS[choice], plan_date: date, updated_at: new Date().toISOString(),
-      }).eq("id", rxId);
-      return json({ applied: true, verdict: null, inserted: rows.length });
-    }
-
-    await admin.from("coach_prescriptions").update({
-      status: STATUS[choice],
-      updated_at: new Date().toISOString(),
-    }).eq("id", rxId);
-    return json({ applied: true, verdict: null });
+    const { data: committed, error: commitError } = await admin.rpc("coach_rx_commit_choice", {
+      p_user: me, p_rx: rxId, p_date: date, p_choice: choice,
+      p_rows: rows, p_slots: categorySlots(category), p_safety: safety,
+      p_expected_updated_at: rx.updated_at,
+    });
+    if (commitError) return json({ error: "Could not save this workout. Refresh and try again." }, 409);
+    return json(committed);
   } catch (_e) {
     return json({ error: "Something went wrong" }, 500);
   }
