@@ -23,6 +23,7 @@ import {
   type RxReplaceFacts,
 } from "../_shared/coach/prescriptionSafety.ts";
 import { prescriptionMode, prescriptionChoiceDate } from "../_shared/coach/prescriptionActions.ts";
+import { loadPrescriptionEnvelope } from "../_shared/coach/loadPrescriptionEnvelope.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -80,7 +81,7 @@ async function gatherFacts(
   for (const e of (cal ?? []) as any[]) (e.event_type === "rest" ? rest : games).add(String(e.event_date));
   for (const g of (gp ?? []) as any[]) games.add(String(g.game_date));
   const age = ageFromDob((prof as any)?.date_of_birth ?? null, today);
-  const ntd = nextThrowDate(age, (ac as any)?.competition_level ?? null, (arm ?? []) as any[], today);
+  const ntd = nextThrowDate(age, (ac as any)?.competition_level ?? null, (arm ?? []).filter((r: any) => r.entry_date < date), shift(date, -1));
   return {
     category,
     date,
@@ -314,7 +315,10 @@ Deno.serve(async (req) => {
         usedInstead: choice === "use_instead",
       });
       if (!rows.length) return json({ error: "This workout has no usable exercises. Ask your coach to review it." }, 409);
-      safety = { verdict: result.verdict, intensity, checked_at: new Date().toISOString() };
+      const envelope = await loadPrescriptionEnvelope(admin, me, date, category, rows, choice === "use_instead");
+      if (!envelope.allowed) return json({ applied: false, verdict: "blocked", reasons: envelope.reasons, safeOption: envelope.safeOption });
+      rows = envelope.rows;
+      safety = { verdict: result.verdict, intensity, checked_at: new Date().toISOString(), envelope: "wic-swap" };
     }
     const { data: committed, error: commitError } = await admin.rpc("coach_rx_commit_choice", {
       p_user: me, p_rx: rxId, p_date: date, p_choice: choice,
