@@ -21,7 +21,8 @@ export type CalendarEventSource =
   | 'game_plan'
   | 'custom_activity'
   | 'custom_activity_template'
-  | 'training_block';
+  | 'training_block'
+  | 'coach_prescription';
 
 export interface DerivedCalendarEvent {
   /** Deterministic: `${source}:${sourceId}:${date}` */
@@ -82,12 +83,23 @@ export interface BlockWorkoutRow {
   week_number: number;
 }
 
+/** Coach-sent prescription scheduled for a day (owner request Oct 24, run 6). */
+export interface CoachPrescriptionRow {
+  id: string;
+  plan_date: string;
+  title: string;
+  category: string;
+  status: string;
+  cancelled_at?: string | null;
+}
+
 export interface BuildCalendarEventsInput {
   gamePlanDays: GamePlanDayRow[];
   logs: CustomActivityLogRow[];
   templates: CustomActivityTemplateRow[];
   blocks: TrainingBlockRow[];
   blockWorkouts: BlockWorkoutRow[];
+  coachPrescriptions?: CoachPrescriptionRow[];
   /** Optional date range to project recurring templates onto (YYYY-MM-DD). */
   rangeStart?: string;
   rangeEnd?: string;
@@ -97,7 +109,8 @@ const SOURCE_ORDER: Record<CalendarEventSource, number> = {
   training_block: 0,
   custom_activity: 1,
   custom_activity_template: 2,
-  game_plan: 3,
+  coach_prescription: 3,
+  game_plan: 4,
 };
 
 const eventId = (source: CalendarEventSource, sourceId: string, date: string) =>
@@ -134,6 +147,7 @@ export function buildCalendarEvents(input: BuildCalendarEventsInput): DerivedCal
     templates = [],
     blocks = [],
     blockWorkouts = [],
+    coachPrescriptions = [],
     rangeStart,
     rangeEnd,
   } = input;
@@ -270,6 +284,23 @@ export function buildCalendarEvents(input: BuildCalendarEventsInput): DerivedCal
         workoutType: w.workout_type,
         status: w.status,
       },
+    });
+  }
+
+  // 3b. COACH PRESCRIPTIONS — each scheduled, unanswered, non-cancelled send
+  //     appears on its day so the player sees coach work on the calendar.
+  for (const rx of coachPrescriptions) {
+    if (rx.cancelled_at) continue;
+    if (rx.status !== 'pending' && rx.status !== 'saved_for_later') continue;
+    const id = eventId('coach_prescription', rx.id, rx.plan_date);
+    out.set(id, {
+      id,
+      date: rx.plan_date,
+      title: `Coach workout: ${rx.title}`,
+      source: 'coach_prescription',
+      sourceId: rx.id,
+      completed: false,
+      meta: { category: rx.category, rxStatus: rx.status },
     });
   }
 
