@@ -42,7 +42,7 @@ describe("data-unity matrix", () => {
     touches("drizzle/migrations/0086_at5_coach_training_access.sql", "athlete_plan_snapshots");
   });
 
-  it("3. coach prescriptions → coach_prescriptions + custom_activity_logs + wk_prescriptions rows → inbox, analytics, vault, compliance, discipline, engine, nightly", () => {
+  it("3. coach sends and canonical rows have declared readers; legacy activity landing remains a separate unconnected path", () => {
     touches("src/hooks/useSentActivities.ts", "coach_prescriptions");
     touches("src/hooks/useCustomActivities.ts", "custom_activity_logs");
     // Use instead / Add alongside turn the coach workout into real plan rows,
@@ -67,6 +67,10 @@ describe("data-unity matrix", () => {
     touches("src/lib/calendar/buildCalendarEvents.ts", "coach_prescription");
     touches("supabase/functions/coach-rx-safety/index.ts", "coach_rx_commit_choice");
     touches("drizzle/migrations/0108_coach_prescription_atomic_choice.sql", "wk_lock_plan_day");
+    // Known gap, not a successful data-landing assertion: choice cannot claim
+    // a legacy custom activity log exists simply because a separate hook uses it.
+    expect(src("drizzle/migrations/0108_coach_prescription_atomic_choice.sql").includes("custom_activity_logs")).toBe(false);
+    touches("src/lib/coachRx/planRows.ts", "coach_rx");
   });
 
   it("4. practice logs → performance_sessions → History, load, engine, nightly", () => {
