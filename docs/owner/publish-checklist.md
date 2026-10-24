@@ -25,8 +25,9 @@ Arm-bearing workouts and skill-block replacement stay blocked rather than guesse
 Row 3's added readers are UNVERIFIED behavioral cells, not PASS. Existing five
 human checks and the owner-held persona restoration/global cleanup gates remain.
 
-Changed tests: 21/21 PASS; coach function Deno check PASS; preview build OK.
-Full-suite result is recorded with the saved evidence after all bounded groups finish.
+Full application suite: **523 unique files / 4,098 tests PASS**, all eight groups
+exit 0. Changed tests repeated after later edits: **21/21 PASS**; coach function
+Deno check PASS; preview build OK. Evidence: `.lovable/proofs/coach-finish/suite-result.json`.
 
 **By-role additions:** players find actual saved entries under Logged workouts in
 History, The General and Vault My Drill Work; coaches select declared Vault items

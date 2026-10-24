@@ -70,6 +70,9 @@ live data landing in every surface; unverified cells remain unverified.
   sign-in. No account reset/reseed or retained-persona restoration was performed.
 - The one temporary pending coach prescription was snapshotted, removed by exact
   ID and verified absent. No workout logs were authored by the blocked choice.
+- Full application suite: 523 unique files / 4,098 tests PASS, all eight exits 0;
+  changed tests repeated 21/21 PASS; Deno check PASS; preview build OK. Evidence
+  `.lovable/proofs/coach-finish/suite-result.json`; passing tests do not certify row 3.
 
 
 The three previously identified gaps were fixed the same day
