@@ -1,1 +1,1 @@
-{"test_player_inbox_status": 400, "scope": "session-only TEST token; read only; not choice/focus proof"}
+{"test_player_management_read_status": 200, "scope": "session-only TEST token; read only; not choice/focus proof"}
