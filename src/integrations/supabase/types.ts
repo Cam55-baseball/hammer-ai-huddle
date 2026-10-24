@@ -4824,6 +4824,7 @@ export type Database = {
           entry_date: string
           flag_note: string | null
           flag_reason: string | null
+          gp_game_id: string | null
           id: string
           jersey: string | null
           kind: string
@@ -4843,6 +4844,7 @@ export type Database = {
           entry_date: string
           flag_note?: string | null
           flag_reason?: string | null
+          gp_game_id?: string | null
           id?: string
           jersey?: string | null
           kind: string
@@ -4862,6 +4864,7 @@ export type Database = {
           entry_date?: string
           flag_note?: string | null
           flag_reason?: string | null
+          gp_game_id?: string | null
           id?: string
           jersey?: string | null
           kind?: string
@@ -4873,7 +4876,15 @@ export type Database = {
           stats?: Json
           status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "coach_logged_entries_gp_game_id_fkey"
+            columns: ["gp_game_id"]
+            isOneToOne: false
+            referencedRelation: "gp_games"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       coach_messages: {
         Row: {
