@@ -10,9 +10,6 @@ import { CHANNELS } from "../wic/exposure/types.ts";
 import { dayKinds } from "../wic/schedule/finalCheck.ts";
 import { mergeExternal } from "../wic/schedule/externalTraining.ts";
 import { loadU13ThrowBlock } from "../wic/phases/u13ThrowGate.ts";
-import { equivalentsByDay } from "../wic/phases/nextThrowDate.ts";
-import { growthAdjustment, checkCaps, pitchSmartApplies } from "../wic/phases/youthThrowing.ts";
-import { armBudget, windmillCheck } from "../wic/phases/armLedger.ts";
 import { categorySlots, type RxCategory } from "./prescriptionSafety.ts";
 
 type Row = Record<string, any>;
@@ -65,28 +62,9 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   if (injuries.length || raw.dailyLogs.some(d => d.entry_date === date && d.injury_mode) || raw.quizzes.some(q => q.entry_date === date && Number(q.pain_scale) > 0)) return refused("Pain or injury is recorded. Keep your current recovery plan and ask your coach before changing work.");
   const throwing = proposed.filter(row => row.dosage_unit === "throws" || catalog.get(row.movement_slug)?.exposure_channel?.toLowerCase() === "throwing");
   if (throwing.some(row => row.reps == null || row.sets == null)) return refused("Throwing items need an exact throw count before your arm limit can be checked.");
-  const throws = throwing.reduce((n, row) => n + row.reps * row.sets, 0);
-  if (throws > 0) {
-    const byDay = equivalentsByDay(arm ?? []);
-    const daily = byDay.get(date) ?? 0;
-    if (context.sport_primary === "baseball" && pitchSmartApplies(age, context.competition_level)) {
-      const growth = growthAdjustment(age, raw.heights ?? [], date);
-      if (daily + throws > growth.band.dailyMax) return refused("This workout would pass today's pitch-count limit. Save it for later.");
-      const sum = (start: string) => [...byDay].filter(([day]) => day >= start).reduce((n, [, amount]) => n + amount, 0);
-      const caps = checkCaps(age, context.competition_level, { week: sum(shift(date, -6)), season: sum(String(settings.in_season_start_date ?? from)), year: sum(from), inningsYear: 0 }, throws);
-      if (caps.blocked) return refused(caps.blocks[0] ?? "Your arm needs rest before more throws.");
-    } else {
-      const positions = profile.positions ?? [];
-      const role = positions.some((p: string) => /pitch|^p$/i.test(p)) ? "pitcher" : positions.some((p: string) => /catch|^c$/i.test(p)) ? "catcher" : "position";
-      const budget = armBudget({ sport: context.sport_primary, role, age });
-      const weekly = [...byDay].filter(([day]) => day >= shift(date, -6)).reduce((n, [, amount]) => n + amount, 0);
-      if (daily + throws > budget.daily || weekly + throws > budget.weekly) return refused("This workout would pass your arm's daily or weekly limit. Save it for later.");
-      if (context.sport_primary === "softball" && category === "pitching") {
-        const problems = windmillCheck(age, [...byDay].map(([day, count]) => ({ date: day, pitches: count, innings: 0 })), date, { pitches: daily + throws, innings: 0 });
-        if (problems.length) return refused(problems[0]);
-      }
-    }
-  }
+  // Never substitute guessed innings, role or unweighted reps for canonical
+  // arm exposure. Until that adapter is certified, preserve the saved plan.
+  if (throwing.length || ["pitching", "throwing", "fielding"].includes(category)) return refused("This workout's full arm-load check isn't available yet. Save it for later; your current plan is unchanged.");
   const previous = raw.prescriptions.filter(row => row.plan_date < date);
   const priorKinds: any = {};
   for (const kind of dayKinds(previous.filter(row => row.plan_date === shift(date, -1)), catalog)) priorKinds[kind] = [shift(date, -1)];

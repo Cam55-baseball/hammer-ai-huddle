@@ -312,6 +312,7 @@ Deno.serve(async (req) => {
       const modality = category === "fielding" ? "defense" : category;
       const snapshot = savedSnapshot?.find((s: any) => s.sport === sportContext?.sport_primary);
       const block = snapshot?.payload?.blocks?.find((b: any) => b.modality === modality && b.status === "ready" && !b.replacedByCoachRx && !b.coachRx);
+      if (choice === "use_instead" && block) return json({ applied: false, verdict: "blocked", reasons: ["Replacing this skill block hasn't passed its complete safety check yet. Your saved card is unchanged."], safeOption: "Safe option: save for later and ask your coach to review it." });
       facts.hasCard = facts.hasCard || !!block;
       const result = choice === "use_instead" ? checkPrescriptionReplace(facts) : checkPrescriptionAlongside(facts);
       if (result.verdict !== "allow") return json({ applied: false, verdict: result.verdict, reasons: result.reasons, safeOption: result.safeOption });
