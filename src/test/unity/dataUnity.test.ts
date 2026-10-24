@@ -83,14 +83,19 @@ describe("data-unity matrix", () => {
     touches("supabase/functions/nightly-mpi-process/index.ts", "gp_games"); // nightly
   });
 
-  it("6. GAP documented: coach-entered game logs → coach_logged_entries, never gp_games", () => {
+  it("6. coach-entered game logs → coach_logged_entries + gp_games → History and Coach Games", () => {
     touches("src/components/coach/CoachLogForPlayer.tsx", "coach_log_entry");
     touches("drizzle/migrations/0063_coach_logging.sql", "coach_logged_entries");
     touches("drizzle/migrations/0063_coach_logging.sql", "arm_ledger_entries");
-    // The known gap: coach entries do not create gp_games rows, so they never
-    // reach History's game list or the Coach Games tab. If this is fixed,
-    // this assertion flips and the matrix doc must be updated.
-    avoids("drizzle/migrations/0063_coach_logging.sql", "gp_games");
+    // Fixed in 0105: coach_log_entry mirrors game entries into gp_games
+    // (entry_source='coach', ignored_for_training=true — the arm ledger already
+    // carries the throw load), and undo / not-me flag soft-delete the row.
+    touches("drizzle/migrations/0105_data_unity_coach_games_combine_readiness.sql", "gp_games");
+    touches("drizzle/migrations/0105_data_unity_coach_games_combine_readiness.sql", "ignored_for_training");
+    touches("drizzle/migrations/0105_data_unity_coach_games_combine_readiness.sql", "gp_game_id");
+    // readers: History game list and Coach Games both read gp_games
+    touches("src/hooks/useHistoryRecords.ts", "gp_games");
+    touches("drizzle/migrations/0037_coach_athlete_games.sql", "gp_games");
   });
 
   it("7. video analyses → videos → coach development, scout profile, history aggregate", () => {
@@ -107,13 +112,15 @@ describe("data-unity matrix", () => {
     touches("drizzle/migrations/0047_scout_athlete_profile_type_fix.sql", "vault_performance_tests"); // Scout
   });
 
-  it("9. GAP documented: combine results → combine_results, not read by coach/scout/org test RPCs", () => {
+  it("9. combine results → combine_results → coach tests, org ranking, scout profile", () => {
     touches("src/hooks/useEvaluatorCombine.ts", "combine_results");
     touches("src/hooks/useMyCombineResults.ts", "combine_results"); // player's own view
-    // The known gap: the coach/scout/org test RPCs read vault_performance_tests only.
-    avoids("drizzle/migrations/0033_coach_tests_and_private_notes.sql", "combine_results");
-    avoids("drizzle/migrations/0042_org_test_ranking.sql", "combine_results");
-    avoids("drizzle/migrations/0047_scout_athlete_profile_type_fix.sql", "combine_results");
+    // Fixed in 0105: the coach/scout/org test RPCs now UNION combine_results
+    // with vault_performance_tests.
+    touches("drizzle/migrations/0105_data_unity_coach_games_combine_readiness.sql", "combine_results");
+    touches("drizzle/migrations/0105_data_unity_coach_games_combine_readiness.sql", "coach_athlete_tests");
+    touches("drizzle/migrations/0105_data_unity_coach_games_combine_readiness.sql", "org_test_ranking");
+    touches("drizzle/migrations/0105_data_unity_coach_games_combine_readiness.sql", "scout_athlete_profile");
   });
 
   it("10. daily check-ins → athlete_daily_log → streaks, engine, nightly; coach readiness uses focus quizzes", () => {
@@ -121,8 +128,11 @@ describe("data-unity matrix", () => {
     touches("src/components/dashboard/DualStreakDisplay.tsx", "athlete_daily_log"); // General / Growth
     touches("supabase/functions/evaluate-behavioral-state/index.ts", "athlete_daily_log"); // learning
     touches("supabase/functions/nightly-mpi-process/index.ts", "athlete_daily_log"); // nightly
-    // Design split: coach readiness/org attendance read vault_focus_quizzes instead.
+    // Fixed in 0105: coach readiness and org facility-board attendance now
+    // count both check-in systems (focus quizzes + daily log).
     touches("drizzle/migrations/0053_coach_readiness_attendance_always.sql", "vault_focus_quizzes");
+    touches("drizzle/migrations/0105_data_unity_coach_games_combine_readiness.sql", "athlete_daily_log");
+    touches("drizzle/migrations/0105_data_unity_coach_games_combine_readiness.sql", "org_facility_board");
   });
 
   it("11. daily-standard checks → daily_standard_checks → vault check-in and identity widget", () => {
