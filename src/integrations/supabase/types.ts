@@ -4941,6 +4941,57 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_prescriptions: {
+        Row: {
+          category: string
+          created_at: string
+          exercises: Json
+          gear_labels: Json
+          id: string
+          plan_date: string
+          recipient_id: string
+          safety_result: Json | null
+          sender_id: string
+          source_template_id: string | null
+          status: string
+          team_send_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          exercises?: Json
+          gear_labels?: Json
+          id?: string
+          plan_date: string
+          recipient_id: string
+          safety_result?: Json | null
+          sender_id: string
+          source_template_id?: string | null
+          status?: string
+          team_send_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          exercises?: Json
+          gear_labels?: Json
+          id?: string
+          plan_date?: string
+          recipient_id?: string
+          safety_result?: Json | null
+          sender_id?: string
+          source_template_id?: string | null
+          status?: string
+          team_send_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coach_private_notes: {
         Row: {
           athlete_id: string
@@ -21728,6 +21779,7 @@ export type Database = {
           phase: string
           plan_date: string
           rationale: string | null
+          replaced_by_coach_rx: string | null
           reps: number | null
           rir_high: number | null
           rir_low: number | null
@@ -21773,6 +21825,7 @@ export type Database = {
           phase: string
           plan_date: string
           rationale?: string | null
+          replaced_by_coach_rx?: string | null
           reps?: number | null
           rir_high?: number | null
           rir_low?: number | null
@@ -21818,6 +21871,7 @@ export type Database = {
           phase?: string
           plan_date?: string
           rationale?: string | null
+          replaced_by_coach_rx?: string | null
           reps?: number | null
           rir_high?: number | null
           rir_low?: number | null
