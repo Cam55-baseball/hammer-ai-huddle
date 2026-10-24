@@ -18,5 +18,6 @@
   "deno": "PASS",
   "proof_scope": "full suite with final changed files refreshed; behavioral component fixtures separate from live role reads",
   "hosted_test_writes": 0,
-  "retained_persona_changes": 0
+  "retained_persona_changes": 0,
+  "preview": "build OK"
 }
