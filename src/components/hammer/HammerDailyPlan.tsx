@@ -938,7 +938,7 @@ function HammerDailyPlanBody({
         <div data-tour="update-hammer"><TellHammersInbox /></div>
       </ErrorBoundary>
       <ErrorBoundary>
-        <CoachPrescriptionInbox planDate={planDate} />
+        <CoachPrescriptionInbox planDate={pocketDate} />
       </ErrorBoundary>
       <ErrorBoundary>
         <HeightReminderCard />
