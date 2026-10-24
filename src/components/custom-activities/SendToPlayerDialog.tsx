@@ -18,6 +18,35 @@ import { useSentActivities } from '@/hooks/useSentActivities';
 import { getActivityIcon } from './IconPicker';
 import { hexToRgba } from '@/hooks/useUserColors';
 
+/** Coach prescription categories (owner request Oct 24) — every category a plan can contain. */
+const RX_CATEGORIES = [
+  { value: 'hitting', label: 'Hitting' },
+  { value: 'pitching', label: 'Pitching' },
+  { value: 'throwing', label: 'Throwing' },
+  { value: 'fielding', label: 'Fielding' },
+  { value: 'baserunning', label: 'Baserunning' },
+  { value: 'lift', label: 'Lifting' },
+  { value: 'speed', label: 'Speed' },
+  { value: 'conditioning', label: 'Conditioning' },
+  { value: 'warmup', label: 'Warm-up' },
+  { value: 'mobility', label: 'Mobility' },
+  { value: 'recovery', label: 'Recovery' },
+  { value: 'vision', label: 'Vision / timing tools' },
+] as const;
+
+function defaultRxCategory(activityType: string): string {
+  switch (activityType) {
+    case 'workout': return 'lift';
+    case 'running': return 'speed';
+    case 'warmup': return 'warmup';
+    case 'recovery': return 'recovery';
+    case 'practice':
+    case 'short_practice': return 'hitting';
+    case 'free_session': return 'conditioning';
+    default: return 'lift';
+  }
+}
+
 interface SendToPlayerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -32,6 +61,8 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
   const [lockPreset, setLockPreset] = useState<LockPreset>('none');
   const [customLocks, setCustomLocks] = useState<LockableField[]>([]);
   const [message, setMessage] = useState('');
+  const [rxCategory, setRxCategory] = useState<string>('lift');
+  const [rxDate, setRxDate] = useState<string>('');
 
   useEffect(() => {
     if (open) {
@@ -40,8 +71,10 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
       setLockPreset('none');
       setCustomLocks([]);
       setMessage('');
+      setRxCategory(template ? defaultRxCategory(template.activity_type) : 'lift');
+      setRxDate(new Date().toLocaleDateString('en-CA'));
     }
-  }, [open, fetchFollowedPlayers]);
+  }, [open, fetchFollowedPlayers, template]);
 
   const handlePlayerToggle = (playerId: string) => {
     setSelectedPlayers(prev => 
@@ -68,12 +101,13 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
 
   const handleSend = async () => {
     if (!template) return;
-    
+
     const success = await sendActivityToPlayers(
       template,
       selectedPlayers,
       getLockedFields(),
-      message.trim() || undefined
+      message.trim() || undefined,
+      { category: rxCategory, planDate: rxDate }
     );
 
     if (success) {
@@ -179,6 +213,44 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
                   ))}
                 </div>
               )}
+            </div>
+
+            <Separator />
+
+            {/* Coach prescription: category + day (owner request Oct 24) */}
+            <div className="space-y-3">
+              <Label className="text-sm font-bold">
+                {t('sentActivity.rxTitle', 'Plan card it can replace')}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t('sentActivity.rxHint', 'The player chooses: use it instead of their card for this category, add it alongside, or save it for later.')}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="rx-category" className="text-xs">Category</Label>
+                  <select
+                    id="rx-category"
+                    value={rxCategory}
+                    onChange={(e) => setRxCategory(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                  >
+                    {RX_CATEGORIES.map(c => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="rx-date" className="text-xs">Day</Label>
+                  <input
+                    id="rx-date"
+                    type="date"
+                    value={rxDate}
+                    min={new Date().toLocaleDateString('en-CA')}
+                    onChange={(e) => setRxDate(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                  />
+                </div>
+              </div>
             </div>
 
             <Separator />

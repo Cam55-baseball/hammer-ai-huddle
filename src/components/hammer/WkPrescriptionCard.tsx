@@ -135,6 +135,8 @@ export function WkPrescriptionCard({
 
   const isMissed = (rx.status as string) === "missed";
   const missedLocked = isMissed && !missedStillEditable(rx.plan_date);
+  // Coach prescription "Use instead": the card stays visible, marked replaced — never missed.
+  const isReplaced = !!rx.replaced_by_coach_rx;
 
   const mark = async (status: "completed" | "skipped") => {
     if (!user?.id) return;
@@ -313,6 +315,11 @@ export function WkPrescriptionCard({
   </PocketCard>;
   return (
     <div className={`border-b border-border py-2 ${checked ? "opacity-60" : ""}`}>
+      {isReplaced && (
+        <p className="mb-1 text-xs font-medium text-muted-foreground" data-replaced-by-coach>
+          Replaced by coach workout — your coach's version is on today's plan. This card was not missed.
+        </p>
+      )}
       {logHost && createPortal(<section data-exercise-entry-grid className="space-y-2"><InlinePrescriptionLog rx={rx} /></section>, logHost)}
       <ExerciseDisclosure name={rx.movement_name}>
         <div className="mt-2 space-y-2 text-xs">

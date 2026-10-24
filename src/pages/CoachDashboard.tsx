@@ -36,6 +36,7 @@ import { CoachPlayerCard } from '@/components/hie/CoachPlayerCard';
 import { TeamWeaknessEngine } from '@/components/hie/TeamWeaknessEngine';
 import { CoachAlertPanel } from '@/components/hie/CoachAlertPanel';
 import { PlayerComparisonTool } from '@/components/hie/PlayerComparisonTool';
+import { CoachPrescriptionStatus } from '@/components/coach/CoachPrescriptionStatus';
 import { useHIETeamSnapshot } from '@/hooks/useHIETeamSnapshot';
 import { 
   Command,
@@ -271,6 +272,7 @@ export default function CoachDashboard() {
         <SendAthleteRequest />
         <CoachProgramCard />
         <CoachWeeklySummary />
+        <CoachPrescriptionStatus />
         <TeamDisciplineSummary />
         <Link to="/coach/lineup" className="text-sm underline underline-offset-2">Lineup mode — log a game for several players</Link>
         <Link to="/coach/guest" className="text-sm underline underline-offset-2">Guest analysis — a player without an account (nothing saved)</Link>

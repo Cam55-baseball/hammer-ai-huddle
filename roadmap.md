@@ -1,5 +1,17 @@
 # Current publish gate — Oct 24 final automated cleanup
 
+## Active: Coach prescriptions "Use instead" + data-unity proof (owner Oct 24, approved plan)
+- [x] A1 Migration applied: coach_prescriptions table (GRANTs+RLS) + wk_prescriptions.replaced_by_coach_rx
+- [x] A2 Send flow: category (12) + day pickers in SendToPlayerDialog; one coach_prescriptions row per player, shared team_send_id (teamSend.test.tsx, 2 tests)
+- [x] A3 Player choice card on Today: CoachPrescriptionInbox mounted in HammerDailyPlan with Use instead / Add alongside / Save for later
+- [x] A4 Server safety check: _shared/coach/prescriptionSafety.ts (pure, 10 tests) + coach-rx-safety edge function (check/choose, is_linked_coach + recruitingGate, arm ledger/rest/game/injury facts) — deployed
+- [x] A5 Replace execution: same-category slots only (categorySlots, no spill-over), rows marked skipped + replaced_by_coach_rx, never "missed"; card label added
+- [x] A6 Coach status view: CoachPrescriptionStatus on CoachDashboard (used instead / added / saved / declined)
+- [~] A7 Proofs: 5/6 screen cases pass at 390×844 (.lovable/proofs/final/coach-rx-*.png, coach-rx-result.json pending final case): inbox three choices, hitting replace allowed, pitching blocked by throw counts with safe option, lift alongside, coach status view. OPEN: replaced-card label screen proof (label code in place; PocketCard open interaction in harness still not rendering the inner card)
+- [ ] B1 docs/owner/data-unity-matrix.md
+- [ ] B2 Automated test per matrix row; fix gaps
+- [ ] C Full suite, checklist + by-role guide, cleanup, Ready to publish report
+
 **Ready to publish: NO.** Exact blockers: five human-only checks remain pending; three TEST personas lack verified before-state snapshots for assessment/start restoration; global TEST cleanup is unverified. All automated focus proofs are complete. No publish, cron, iOS, deploy or migration action.
 
 - [x] Final automated proofs complete: 19/19 rendered cases, nine units screens, Pick-off save/count/reload, coach lifecycle/autosave and remaining coach focus/outer-X controls at 390×844; 514 files / 4,034 tests PASS; preview OK 05:48:35 UTC. Exact persona restoration remains blocked separately; no hosted fixture rows created.

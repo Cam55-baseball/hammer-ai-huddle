@@ -729,6 +729,13 @@
       "when": 1792781176730,
       "tag": "0103_today_log_hundredth_precision",
       "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1792823240302,
+      "tag": "0104_coach_prescriptions_use_instead",
+      "breakpoints": true
     }
   ]
 }
