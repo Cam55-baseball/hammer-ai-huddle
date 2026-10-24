@@ -61,16 +61,18 @@ export function useCoachPrescriptions(planDate: string) {
     queryKey,
     enabled: !!user?.id,
     queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from("coach_prescriptions" as any)
         .select("*")
-        .eq("recipient_id", user!.id)
+        .eq("recipient_id", user.id)
         .eq("plan_date", planDate)
         .order("created_at", { ascending: true });
       if (error) throw error;
       return (data ?? []) as unknown as CoachPrescription[];
     },
     staleTime: 30_000,
+    refetchInterval: 30_000,
   });
 
   const chooseMut = useMutation({
@@ -126,16 +128,18 @@ export function useMyCoachWorkouts() {
     queryKey,
     enabled: !!user?.id,
     queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from("coach_prescriptions" as any)
         .select("*")
-        .eq("recipient_id", user!.id)
+        .eq("recipient_id", user.id)
         .order("plan_date", { ascending: true })
         .limit(200);
       if (error) throw error;
       return (data ?? []) as unknown as CoachPrescription[];
     },
     staleTime: 30_000,
+    refetchInterval: 30_000,
   });
 
   const activateMut = useMutation({
@@ -152,6 +156,7 @@ export function useMyCoachWorkouts() {
       qc.invalidateQueries({ queryKey });
       qc.invalidateQueries({ queryKey: ["coach-rx-inbox"] });
       qc.invalidateQueries({ queryKey: ["wk-rx"] });
+      qc.invalidateQueries({ queryKey: ["calendar-projection"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save your choice"),
   });
@@ -160,6 +165,7 @@ export function useMyCoachWorkouts() {
   const today = new Date().toLocaleDateString("en-CA");
   return {
     isLoading: query.isLoading,
+    error: query.error,
     /** Unanswered cards: any-day, today, and future scheduled days. */
     fromCoaches: all.filter((p) => p.status === "pending" && !p.cancelled_at),
     /** The Saved for later shelf. */
@@ -190,6 +196,7 @@ export function useManageSentWorkouts() {
     enabled: !!user?.id,
     queryFn: () => call({ action: "list" }),
     staleTime: 30_000,
+    refetchInterval: 30_000,
   });
 
   const act = useMutation({
@@ -204,6 +211,7 @@ export function useManageSentWorkouts() {
   return {
     rows: (listQ.data?.rows ?? []) as Array<Record<string, any>>,
     isLoading: listQ.isLoading,
+    error: listQ.error,
     reschedule: (id: string, newDate: string) => act.mutateAsync({ action: "reschedule", prescription_id: id, new_date: newDate }),
     cancel: (id: string) => act.mutateAsync({ action: "cancel", prescription_id: id }),
     cancelSeries: (seriesId: string) => act.mutateAsync({ action: "cancel_series", series_id: seriesId }),
@@ -219,10 +227,11 @@ export function useSentCoachPrescriptions() {
     queryKey: ["coach-rx-sent", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from("coach_prescriptions" as any)
         .select("*")
-        .eq("sender_id", user!.id)
+        .eq("sender_id", user.id)
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;

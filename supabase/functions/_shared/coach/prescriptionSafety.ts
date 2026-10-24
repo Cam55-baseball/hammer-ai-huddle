@@ -93,6 +93,11 @@ export function checkPrescriptionReplace(f: RxReplaceFacts): RxReplaceResult {
   return { verdict: "alongside_only", reasons, safeOption: `Safe option: ${[...new Set(safe)].join(", or ")}.` };
 }
 
+/** Adding work is not a way around rest, injury, game or throwing restrictions. */
+export function checkPrescriptionAlongside(f: RxReplaceFacts): RxReplaceResult {
+  return checkPrescriptionReplace({ ...f, category: f.category === "vision" ? "mobility" : f.category, hasCard: true });
+}
+
 /** One coach-sent exercise item as stored in coach_prescriptions.exercises. */
 export interface CoachRxExercise {
   name?: string;
@@ -129,7 +134,8 @@ export function coachRxToWkRows(args: {
   return args.exercises
     .filter((e) => e && typeof e.name === "string" && e.name.trim().length > 0)
     .map((e, i) => {
-      const name = e.name!.trim();
+      const name = e.name?.trim();
+      if (!name) return null;
       const duration = typeof e.duration === "number" && e.duration > 0 ? Math.round(e.duration) : null;
       return {
         user_id: args.userId,
@@ -157,5 +163,5 @@ export function coachRxToWkRows(args: {
         status: "pending",
         why_payload: { why: because, coach_rx: args.prescriptionId, generator_version: "coach-rx" },
       };
-    });
+    }).filter((row): row is NonNullable<typeof row> => row !== null);
 }

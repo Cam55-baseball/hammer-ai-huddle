@@ -65,6 +65,8 @@ describe("data-unity matrix", () => {
     touches("supabase/functions/coach-rx-safety/index.ts", "cancel_series");
     touches("src/components/custom-activities/CoachWorkoutsPanel.tsx", "useMyCoachWorkouts");
     touches("src/lib/calendar/buildCalendarEvents.ts", "coach_prescription");
+    touches("supabase/functions/coach-rx-safety/index.ts", "coach_rx_commit_choice");
+    touches("drizzle/migrations/0108_coach_prescription_atomic_choice.sql", "wk_lock_plan_day");
   });
 
   it("4. practice logs → performance_sessions → History, load, engine, nightly", () => {

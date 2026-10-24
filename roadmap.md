@@ -1,5 +1,14 @@
 # Current publish gate — Oct 24 final automated cleanup
 
+## Oct 24 21:30 continuation — scheduling closeout
+- [x] Review remaining scheduling, My Workouts, coach/org Sent workouts and data-unity paths; retain prior fixture proofs without claiming live verification. Fixed manage dispatch, org mount, date-on-block mutation, alongside rest bypass, atomic choice commit, missing rest column, calendar memo/refetch, Any day calendar exclusion and weekday ordering. Owner-authorized 0108 applied and coach-rx-safety deployed; live owner empty management read and home tabs verified at 390×844.
+- [x] Complete consolidated player/coach/org scheduling checks and by-role guide; distinguish fixture/static evidence from affected-role data landing.
+- [x] Targeted checks: 71/71 PASS; deployed function validation PASS; preview build OK. Live owner phone home tabs and empty management read PASS, no writes. Full suite attempted with two workers, stopped after ten minutes without a summary; NOT claimed passed.
+- [ ] Complete bounded full-suite run — prior whole-suite attempt did not finish; prior 4,064-test pass predates these changes.
+- [ ] Full readiness/pain/volume/phase/equipment safety envelope; canonical History/Vault/General/coach-snapshot/arm/body-load landing and real player/coach/org team proofs. Not certified by current static contracts or retained fixture screenshots.
+
+71 focused checks pass (8 files); safety function Deno check passes, preview build OK. No hosted TEST rows created. Same five human-only and three persona/global-cleanup blockers remain. Ready to publish: NO.
+
 ## Active: Coach prescriptions "Use instead" + data-unity proof (owner Oct 24, approved plan)
 - [x] A1 Migration applied: coach_prescriptions table (GRANTs+RLS) + wk_prescriptions.replaced_by_coach_rx
 - [x] A2 Send flow: category (12) + day pickers in SendToPlayerDialog; one coach_prescriptions row per player, shared team_send_id (teamSend.test.tsx, 2 tests)

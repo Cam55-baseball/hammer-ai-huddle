@@ -100,7 +100,7 @@ export function computeScheduleDates(input: ScheduleInput, today: string): strin
       }
     } else {
       // weekly: chosen weekdays, every X weeks
-      const wds = [...new Set((input.weekdays ?? []).map((w) => ((w % 7) + 7) % 7))];
+      const wds = [...new Set((input.weekdays ?? []).map((w) => ((w % 7) + 7) % 7))].sort((a, b) => a - b);
       if (wds.length === 0) return [];
       const every = Math.max(input.everyWeeks ?? 1, 1);
       // Week anchor: the Sunday of the start week.

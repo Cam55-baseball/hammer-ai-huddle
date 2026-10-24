@@ -1,6 +1,9 @@
 import { SponsorshipsCard } from "@/components/organization/SponsorshipsCard";
 import { SendAthleteRequest } from "@/components/connections/SendAthleteRequest";
 import { TeamDisciplineSummary } from "@/components/coach/TeamDisciplineSummary";
+import { CoachPrescriptionStatus } from '@/components/coach/CoachPrescriptionStatus';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useOrganization } from '@/hooks/useOrganization';
@@ -56,6 +59,7 @@ export default function OrganizationDashboard() {
               <TabsTrigger value="compare">Compare</TabsTrigger>
               <TabsTrigger value="trends">Trends</TabsTrigger>
               <TabsTrigger value="testing">Testing</TabsTrigger>
+              <TabsTrigger value="sent-workouts">Sent workouts</TabsTrigger>
               <TabsTrigger value="announcements">Announcements</TabsTrigger>
               <TabsTrigger value="roster">Roster</TabsTrigger>
               <TabsTrigger value="members">Members</TabsTrigger>
@@ -95,6 +99,10 @@ export default function OrganizationDashboard() {
             </TabsContent>
             <TabsContent value="testing">
               <TestingDays orgId={activeOrg.id} />
+            </TabsContent>
+            <TabsContent value="sent-workouts" className="space-y-4">
+              <Button asChild variant="outline"><Link to="/my-custom-activities">My Workouts</Link></Button>
+              <CoachPrescriptionStatus />
             </TabsContent>
 
             <TabsContent value="announcements">

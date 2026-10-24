@@ -757,6 +757,13 @@
       "when": 1792827949253,
       "tag": "0107_coach_prescription_scheduling",
       "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1792877595626,
+      "tag": "0108_coach_prescription_atomic_choice",
+      "breakpoints": true
     }
   ]
 }

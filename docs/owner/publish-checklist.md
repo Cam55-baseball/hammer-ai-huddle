@@ -54,6 +54,26 @@ The three personas are retained system accounts; their Oct24 assessment/start ch
 
 ## B. After publishing: live checks
 
+### Coach scheduling — required before release
+
+| Role | Check | Status |
+|---|---|---|
+| Player | My Workouts: From my coaches / Saved for later / My own; activate Any day, keep category and safety; reload the saved result; edited/cancelled dates update Today and calendar. | Pending affected-player live proof; fixture screenshots retained |
+| Coach | Send Mon/Wed/Fri for four weeks, specific dates, every-X-week and first-Tuesday monthly; review each response/results; move/cancel future dates and resend. | Pending live send/readback; date-math tests pass |
+| Organization | Send only to assigned players/team; Sent workouts shows permitted responses/completion and removes revoked access. | View now mounted; assigned-role live proof pending |
+| Data unity | Write each entry and read back each expected surface; confirm coach plan, History/Vault/General, load/arm ledger and learning. | Static contracts pass; full live matrix not established |
+
+October 24 continuation: activation date/status/replacement/new rows now commit
+together; Add alongside cannot bypass checked safety restrictions. The authorized
+`coach-rx-safety` update is deployed, and the atomic choice function/rest field
+are confirmed present. Fresh 390×844 live owner home tabs and empty management
+read passed. This is not an affected-player/team/org proof. Previous scheduling
+screenshots/results remain fixture-only and were not rerun.
+Final focused checks: 8 files / 71 tests PASS; final function validation PASS;
+preview build OK. The new full-suite attempt was stopped after ten minutes
+without a final summary and is not a pass. The earlier 4,064-test result predates
+the scheduling changes.
+
 Only after explicit owner publication. These do not replace A or resolve the cleanup blockers.
 
 | Role / area | Live check |
@@ -78,6 +98,28 @@ Only after explicit owner publication. These do not replace A or resolve the cle
 | Owner/admin | Internal review and release control | Use this sheet to review evidence and outstanding gates before separately authorizing publication. | Internal Report Card/Game IQ labels; neither is advertised or exposed to ordinary players. |
 
 ## D. Coach prescriptions "Use instead" + data unity (Oct 24)
+
+### Scheduling and homes — by-role addition
+
+- **Player:** open My Workouts at the existing activities destination. From my
+  coaches holds unanswered workouts; Saved for later holds shelved ones; My own
+  keeps the existing template editor. Use today instead / Add alongside today
+  performs the safety check; saving for later does not move the scheduled date.
+- **Coach:** from My own, share a workout with category and Any day, date(s),
+  weekly or monthly schedule. Sent workouts shows your sends and current
+  permitted completion counts; move/cancel future unanswered dates or resend.
+- **Organization:** open Sent workouts on the organization dashboard; My Workouts
+  opens the existing editor/send path. Current implementation lists your own
+  sends, not every staff member's sends. Assigned-athlete role proof remains open.
+
+**Evidence correction:** the data-unity tests below check source references,
+not actual writes and reads in all surfaces. Coach prescription canonical rows
+now save atomically, but custom activity History/Vault landing, coach snapshot
+refresh, load/arm-ledger effects and full affected-role matrix proof remain open.
+The full readiness/pain, equipment and per-exercise volume/phase safety envelope
+is also not implemented by the current replacement judge; do not declare this
+feature ready for release on the narrower rest/game/injury/throwing checks alone.
+Do not interpret the historical "all gaps" wording as complete live certification.
 
 **Coach prescriptions.** A coach (or org admin for assigned athletes) can send a prescription for any of the 12 plan categories, naming category and day, from the Vault or their own items. The player sees it on Today with three choices: **Use instead of my [category] card**, **Add alongside**, **Save for later**. "Use instead" passes the server safety check (rest days, game days, arm-rest dates, injury mode, season rules) and replaces only the same-category card — marked "Replaced by coach workout … not missed", never missed. Blocked players see why plus the safe option. Team sends write one prescription per player with a shared group id. The coach dashboard shows each player's choice.
 

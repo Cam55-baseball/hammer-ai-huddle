@@ -21819,6 +21819,7 @@ export type Database = {
           rationale: string | null
           replaced_by_coach_rx: string | null
           reps: number | null
+          rest_seconds: number | null
           rir_high: number | null
           rir_low: number | null
           sequence_order: number
@@ -21865,6 +21866,7 @@ export type Database = {
           rationale?: string | null
           replaced_by_coach_rx?: string | null
           reps?: number | null
+          rest_seconds?: number | null
           rir_high?: number | null
           rir_low?: number | null
           sequence_order?: number
@@ -21911,6 +21913,7 @@ export type Database = {
           rationale?: string | null
           replaced_by_coach_rx?: string | null
           reps?: number | null
+          rest_seconds?: number | null
           rir_high?: number | null
           rir_low?: number | null
           sequence_order?: number
@@ -23244,6 +23247,19 @@ export type Database = {
           _pain: boolean
           _parent_present?: boolean
           _screen: Json
+        }
+        Returns: Json
+      }
+      coach_rx_commit_choice: {
+        Args: {
+          p_choice: string
+          p_date: string
+          p_expected_updated_at: string
+          p_rows: Json
+          p_rx: string
+          p_safety: Json
+          p_slots: string[]
+          p_user: string
         }
         Returns: Json
       }
