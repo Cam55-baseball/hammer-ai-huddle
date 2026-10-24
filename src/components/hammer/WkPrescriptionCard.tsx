@@ -135,6 +135,8 @@ export function WkPrescriptionCard({
 
   const isMissed = (rx.status as string) === "missed";
   const missedLocked = isMissed && !missedStillEditable(rx.plan_date);
+  // Coach prescription "Use instead": the card stays visible, marked replaced — never missed.
+  const isReplaced = !!rx.replaced_by_coach_rx;
 
   const mark = async (status: "completed" | "skipped") => {
     if (!user?.id) return;

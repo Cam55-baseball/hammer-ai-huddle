@@ -154,6 +154,8 @@ export interface WkRx {
     why_recovery?: string;
   } | null;
   status: "planned" | "pending" | "completed" | "skipped" | "missed";
+  /** Set when the player used a coach prescription "Use instead"; never counts as missed. */
+  replaced_by_coach_rx?: string | null;
 }
 
 /**
