@@ -6,9 +6,7 @@
   "results": [
     {
       "case": "units",
-      "passed": false,
-      "error": "Locator.screenshot: Timeout 30000ms exceeded.\nCall log:\n  - waiting for get_by_text(\"walking_lunge\", exact=True).locator(\"..\").locator(\"..\")\n",
-      "trace": "andle = await self._frame.wait_for_selector(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n        self._selector, strict=True, state=\"attached\", **params\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"/nix/store/a3czxrfpqrw5zrcbl7lw573qyaygxv0s-sandbox-python-env/lib/python3.13/site-packages/playwright/_impl/_frame.py\", line 369, in wait_for_selector\n    await self._channel.send(\n        \"waitForSelector\", self._timeout, locals_to_params(locals())\n    )\n  File \"/nix/store/a3czxrfpqrw5zrcbl7lw573qyaygxv0s-sandbox-python-env/lib/python3.13/site-packages/playwright/_impl/_connection.py\", line 69, in send\n    return await self._connection.wrap_api_call(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<3 lines>...\n    )\n    ^\n  File \"/nix/store/a3czxrfpqrw5zrcbl7lw573qyaygxv0s-sandbox-python-env/lib/python3.13/site-packages/playwright/_impl/_connection.py\", line 559, in wrap_api_call\n    raise rewrite_error(error, f\"{parsed_st['apiName']}: {error}\") from None\nplaywright._impl._errors.TimeoutError: Locator.screenshot: Timeout 30000ms exceeded.\nCall log:\n  - waiting for get_by_text(\"walking_lunge\", exact=True).locator(\"..\").locator(\"..\")\n\n"
+      "passed": true
     }
   ],
   "page_errors": []

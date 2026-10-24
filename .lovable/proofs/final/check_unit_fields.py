@@ -28,7 +28,7 @@ async def main():
     if kind=='units':
      for label in ['Reps per leg 1','Press reps 1','Steps each way 1','Steps 1','Distance 1']:assert await page.get_by_label(label,exact=True).count()>0
      for slug in ['walking_lunge','lift_rfess_pallof','lift_banded_lateral_squat_walk','lift_elephant_walk','lift_farmer_toe_walk','broad_jump','plank_hold','ubp_f15_base_pushup_bottom_hold_explode','tall_plank_shoulder_tap']:
-      await page.get_by_text(slug,exact=True).locator('..').locator('..').screenshot(path=str(OUT/(slug+'-field.png')))
+      await page.locator('h4').filter(has_text=slug).locator('..').screenshot(path=str(OUT/(slug+'-field.png')))
      assert await page.get_by_label('Seconds 1 seconds',exact=True).input_value()=='30'; await page.get_by_label('Distance 1',exact=True).fill('15'); assert await page.get_by_label('Distance 1',exact=True).input_value()=='15'; await page.get_by_label('Distance 1',exact=True).screenshot(path=str(OUT/'units-yards.png')); await page.get_by_role('group',name='Jump distance 1',exact=True).screenshot(path=str(OUT/'units-jump.png'))
      results.append({'case':kind,'passed':True});await page.get_by_role('button',name='Close',exact=True).first.click();continue
     await page.clock.install();await page.get_by_role('button',name='Start',exact=True).click();await page.wait_for_timeout(200)
