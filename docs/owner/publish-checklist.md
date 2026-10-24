@@ -4,6 +4,39 @@ Updated October 24, 2026, final batch. **Ready to publish: NO.** Coach safety/da
 
 ## Final batch result
 
+### Owner continuation — October 24, 22:33 run
+
+**Ready to publish: NO.** Substantial steps completed: reviewed catalog authoring
+metadata protected; failed canonical log deletion stops replacement; actual
+throws/swings displayed; real player History/General/Vault 1.47-second read/reload
+screenshots saved; check-in rules extracted from the existing generator; invalid
+dose/CNS inputs rejected; game-day passed to existing certifiers; replacement
+summaries exclude replaced blocks. Applied 0111 freshness wrapper and deployed
+only `coach-rx-safety`. Authenticated direct commit denied 403; live management
+read 200. No publish, cron or iOS changes.
+
+The real reader proof used an authenticated-API log, not choice/focus logging.
+All three temporary rows removed with exact-ID absence verified; no retained
+persona changed. Focused coach suite 152/152; unity contracts 14/14.
+
+**Still required:** complete arm and full-day saved-block accounting, phase/deload
+fidelity, complete safety-source freshness, reviewed own-item certification,
+existing skill-block-swap integration, positive player/coach/org/team
+send→choice→focus→reload and staff-plan/learning/job readback. Five human checks
+remain. Retained-persona restoration is owner-held, not permission to modify them;
+global historical TEST cleanup is not certified. Nothing is relabeled complete.
+
+**By-role guide update:** players see exact saved time, reps, throws and swings in
+Logged workouts (General: Performance tab; Vault: My Drill Work). Coaches use
+reviewed catalog declarations unchanged; own-item gear maps to the common
+vocabulary but cannot bypass review. Sent workouts reads actual round throws and
+swings separately from generic reps. Organizations retain assigned-player and
+plan gates; this run does not certify a successful organization/team send.
+
+Evidence: `.lovable/proofs/coach-continue/`. Current full-suite result is recorded
+in `suite-result.json` after bounded groups finish; historical counts below are
+retained evidence, not this run's count.
+
 ### Owner finish continuation — October 24, 22:28 UTC
 
 **Ready to publish: NO.** Added Vault/common-gear authoring and shared canonical

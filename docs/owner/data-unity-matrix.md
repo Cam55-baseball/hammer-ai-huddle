@@ -31,7 +31,7 @@ live data landing in every surface; unverified cells remain unverified.
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | Plan cards & focus-mode logs | `wk_session_logs` | direct (StandardsBoard, Performance) | by design (practices/games/reports only) | by design | direct (Discipline joins wk_prescriptions→wk_session_logs); plan via derived `athlete_plan_snapshots` | derived (status counts) | by design | direct (wk-generate-daily, trendDeload) | derived (wk-daily-plan-job reads prescriptions) |
 | 2 | Swaps | `swap_log` + `athlete_equipment_memory` (server RPCs `wk_swap_*_atomic`) | via saved plan | by design | by design | derived (coach_athlete_plan reads saved plan) | by design | by design | direct (plan-swap, wk-generate-daily read equipment memory) | by design |
-| 3 | Coach prescriptions and actual performed work | `coach_prescriptions` → checked `wk_prescriptions` → normal `wk_session_logs`; NOT `custom_activity_logs` | Canonical Logged workouts reader added; behavioral readback UNVERIFIED | Same canonical reader added; behavioral readback UNVERIFIED | My Drill Work canonical reader added; behavioral readback UNVERIFIED | Sent workouts actual sets/reps/time/distance source-connected; snapshot transaction added, activation/readback UNVERIFIED | Current-sender view mounted; demoorg is plan-gated, assigned-role proof UNVERIFIED | Unverified consent-scoped projection | Some canonical readers connected; full readback UNVERIFIED | Canonical job effects UNVERIFIED; no legacy-log write |
+| 3 | Coach prescriptions and actual performed work | `coach_prescriptions` → checked `wk_prescriptions` → normal `wk_session_logs`; NOT `custom_activity_logs` | PASS canonical authenticated-API TEST log read/reload; choice→focus flow UNVERIFIED | PASS same TEST log read/reload; choice→focus flow UNVERIFIED | PASS same TEST log read/reload; choice→focus flow UNVERIFIED | Sent workouts now includes canonical round throws/swings; snapshot/freshness transaction connected, activation/readback UNVERIFIED | Current-sender view mounted; demoorg is plan-gated, assigned-role proof UNVERIFIED | Unverified consent-scoped projection | Some canonical readers connected; full readback UNVERIFIED | Canonical job effects UNVERIFIED; no legacy-log write |
 | 3b | Coach prescription days on the player calendar | read-only projection of `coach_prescriptions` (buildCalendarEvents source `coach_prescription`) | by design | by design | by design | by design | by design | by design | by design | by design |
 | 4 | Practice logs | `performance_sessions` (+ optional `athlete_daily_log`, `governance_flags`) | by design | direct (usePracticeHistory) | by design | derived (load/coach views) | by design | by design | direct (compute-hammer-state) | direct (nightly-mpi-process) |
 | 5 | Game logs (player scorekeeping) | `gp_games`, `gp_at_bats`, `gp_pitches`, `gp_defense_plays`, `gp_baserun_events` | direct (Game IQ tab, not Today/Performance/Growth) | direct (useGameHistory, gp_reports) | by design | direct (coach_athlete_games, CoachTeamReport) | by design | by design | by design | direct (nightly-mpi-process finalized games) |
@@ -46,6 +46,29 @@ live data landing in every surface; unverified cells remain unverified.
 | 14 | Equipment memory | `athlete_equipment_memory` | by design | by design | by design | derived (via saved plan) | by design | by design | direct (plan-swap, wk-generate-daily) | by design |
 
 ## Known gaps (honest, not hidden)
+
+### Owner continuation — October 24, 22:33 run
+
+- Behavioral mocked-client tests now write through `useSaveExerciseLog`, render
+  the shared actual reader after remount, reject failed deletion, and isolate users.
+  These shared-component tests do not mount all actual page components.
+- Real 390×844 player-page screenshots show the exact 1.47-second TEST entry
+  in History, The General Performance and Vault My Drill Work after reload.
+  The entry was written using authenticated Data API, NOT focus-mode acceptance;
+  no service-role proof or manufactured training output is claimed. Three exact
+  temporary records were removed and absence verified; personas untouched.
+- Catalog authoring preserves reviewed measure/dose/gear; own-item common-gear
+  mapping is tested. Own-item safety certification remains blocked/incomplete.
+- Shared WIC check-in extraction, finite dose/CNS guards, actual game-day
+  certification context and throw-channel recognition added. Existing generator
+  day-intent order is retained. Full phase/arm/saved-block certification is OPEN.
+- Applied 0111 and deployed only `coach-rx-safety`: an existing day-lock wrapper
+  rejects changed saved rows/logs/snapshot/CNS/context/check-in/gear/intent before
+  the original commit. This is freshness protection, not full safety completion.
+  Real TEST authenticated direct RPC call denied (403); deployed management read
+  returned 200. Positive choice/focus/team/organization proof remains OPEN.
+- Evidence: `.lovable/proofs/coach-continue/`; focused coach checks 152/152,
+  unity source contracts 14/14. Full-suite outcome recorded in the checklist.
 
 ### Owner finish run — October 24, 22:28 UTC
 
