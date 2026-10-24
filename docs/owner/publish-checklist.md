@@ -4,6 +4,26 @@ Updated October 24, 2026, final batch. **Ready to publish: NO.** Coach safety/da
 
 ## Final batch result
 
+### Owner continuation — October 24, 23:03 run
+
+**Ready to publish: NO.** Corrected canonical total-reps/distance authoring and
+total-reps exposure accounting; fractional sets/reps are no longer silently
+rounded; exact time targets remain precise. Coach activation now requires every
+ready snapshot drill to reference a current canonical row. Unrepresented skill
+blocks fail closed, including Add alongside; no dose is parsed from display text.
+Existing saved phase/deload/growth is checked against current canonical phase
+resolution and stamped on accepted coach rows. This preserves saved lighter-week
+state; it is not a new deload calculator or complete arm/block certification.
+
+Players/coaches: Total reps means the whole exercise total, not reps per set;
+catalog distance uses the saved feet declaration. A blocked full-day check leaves
+the plan unchanged and offers Save for later. Organization/team behavior retains
+existing access gates. Positive acceptance/focus/staff-plan/learning proofs, own
+item certification and complete arm/block safety remain open; personas untouched.
+
+Current verification is saved under `.lovable/proofs/coach-run2/` when finished.
+No publish, cron or iOS changes; this run creates no hosted TEST training records.
+
 ### Owner continuation — October 24, 22:33 run
 
 **Ready to publish: NO.** Substantial steps completed: reviewed catalog authoring

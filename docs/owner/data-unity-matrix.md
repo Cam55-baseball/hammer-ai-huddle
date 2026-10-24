@@ -47,6 +47,20 @@ live data landing in every surface; unverified cells remain unverified.
 
 ## Known gaps (honest, not hidden)
 
+### Owner continuation — October 24, 23:03 run
+
+- Corrected total-reps canonical field/exposure accounting, catalog total/distance
+  defaults and non-rounded fractional counts. New regression tests are behavioral
+  pure/component tests, not live training outputs.
+- All ready saved blocks must be represented by existing current prescription
+  IDs before the envelope can certify the full day; missing coverage fails closed
+  even for Add alongside. This closes silent omission, not skill replacement.
+- Existing saved phase/deload/growth is retained and checked against live phase
+  resolution; accepted coach rows inherit phase_state. Complete fresh deload/arm/
+  skill-block integration and positive role-flow row-3 cells remain UNVERIFIED.
+- No hosted TEST rows authored and no retained personas changed. Earlier three
+  player-reader phone proofs remain retained, not re-proved or relabeled end-to-end.
+
 ### Owner continuation — October 24, 22:33 run
 
 - Behavioral mocked-client tests now write through `useSaveExerciseLog`, render
