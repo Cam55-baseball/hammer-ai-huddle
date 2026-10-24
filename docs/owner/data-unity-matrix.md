@@ -6,9 +6,9 @@ a saved summary/state built from the table), **by design** (intentionally not sh
 there), or **GAP** (expected but not connected — listed honestly, not hidden).
 
 Automated contract tests live in `src/test/unity/dataUnity.test.ts`: one test per
-row asserts the writer source writes the declared table and every direct reader
-source reads it. A FAIL cell below means the contract test fails until the gap is
-fixed or re-classified.
+row checks source references to the declared writer and reader. These are static
+contracts, not entry-write/readback tests. A passing contract does not establish
+live data landing in every surface; unverified cells remain unverified.
 
 ## Surfaces key
 
@@ -43,7 +43,7 @@ fixed or re-classified.
 
 ## Known gaps (honest, not hidden)
 
-None remaining. The three gaps found on Oct 24 were fixed the same day
+The three previously identified gaps were fixed the same day
 (migration `0105_data_unity_coach_games_combine_readiness`):
 
 1. **Coach-entered game logs (row 6)** now mirror into `gp_games` with
@@ -58,6 +58,29 @@ None remaining. The three gaps found on Oct 24 were fixed the same day
    systems: `coach_athlete_readiness` attendance and shared contents include
    `athlete_daily_log` rows, and `org_facility_board` `checkins_7d` counts
    distinct days across focus quizzes and the daily log.
+
+### Scheduling continuation — October 24, 21:30 UTC
+
+- Scheduled sends use the existing activity home, now labeled **My Workouts**,
+  with From my coaches / Saved for later / My own. No duplicate storage or page.
+- The organization dashboard now mounts Sent workouts for the current sender;
+  service reads recheck current connection and recruiting permission before
+  returning athlete names or completion counts. This is not all-organization
+  cross-sender visibility.
+- `coach_rx_commit_choice` commits plan rows, replacement markers, response and
+  activation date atomically under the existing day lock. Failed safety checks
+  and Save for later leave the scheduled date unchanged. Add alongside also
+  checks rest, throwing-rest, injury and game-day restrictions.
+- Calendar move/cancel tests exercise real projection logic; Any day has no fixed
+  calendar occurrence. Player reads refresh every 30 seconds and after activation.
+- **Open proof/data gaps:** row 3's `custom_activity_logs` landing is not produced
+  by the prescription choice handler, which writes `wk_prescriptions`; downstream
+  History/Vault/General/learning cells must not be marked live PASS on the basis of
+  table-name contracts. Coach plan snapshots are also not refreshed by this commit.
+  Full row-by-row affected-role write/readback proof remains open.
+- Retained scheduling screenshots are fixture-only. The fresh live check uses
+  the owner's account and reads an empty Sent workouts list; it does not prove
+  team sending or athlete activation. No hosted TEST rows created this run.
 
 ## Rules this matrix must keep satisfying
 

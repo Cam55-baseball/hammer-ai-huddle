@@ -48,6 +48,9 @@ describe("computeScheduleDates", () => {
     );
     expect(days).toEqual(["2026-10-26", "2026-11-09", "2026-11-23"]);
   });
+  it("picked weekday order cannot skip the earliest occurrence when count is one", () => {
+    expect(computeScheduleDates({ type: "recurring", startDate: "2026-10-26", weekdays: [5, 1, 3], count: 1 }, TODAY)).toEqual(["2026-10-26"]);
+  });
 
   it("weekly recurrence respects an end date", () => {
     const days = computeScheduleDates(
