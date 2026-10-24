@@ -9,11 +9,11 @@ async def main():
   async def mock(r):
    url=r.request.url
    if '/src/integrations/supabase/client.ts' in url:await r.fulfill(content_type='application/javascript',body=CLIENT)
-   elif '/src/hooks/useSubscription.ts' in url:await r.fulfill(content_type='application/javascript',body="export const useSubscription=()=>({modules:['hitting','pitching','throwing'],loading:false});")
+   elif '/src/hooks/useSubscription.ts' in url:await r.fulfill(content_type='application/javascript',body="export const useSubscription=()=>({modules:['baseball_hitting','baseball_pitching','baseball_throwing'],loading:false});")
    elif 'supabase.co' in url:await r.abort()
    else:await r.continue_()
   await c.route('**/*',mock)
-  for kind in ['units']: 
+  for kind in ['lift','speed','speed-cap','conditioning','warmup','hitting','pitching','throwing','fielding','baserunning','recovery','coach','units','study-defender','study-baserunner','study-hitter','study-pitcher','study-softball-pitcher','study-populated']: 
    try:
     await page.goto('http://localhost:8080/.lovable/proofs/final/harness.html?kind='+kind);await page.wait_for_timeout(1700)
     if kind.startswith('study-'):

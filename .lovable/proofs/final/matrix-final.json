@@ -3,7 +3,6 @@
     390,
     844
   ],
-  "fixture_only": true,
   "results": [
     {
       "case": "lift",
@@ -77,6 +76,10 @@
       "scope": "focus entry and continuous autosave; lifecycle not covered"
     },
     {
+      "case": "units",
+      "passed": true
+    },
+    {
       "case": "study-defender",
       "passed": true
     },
@@ -99,10 +102,7 @@
     {
       "case": "study-populated",
       "passed": true
-    },
-    {
-      "case": "units",
-      "passed": true
     }
-  ]
+  ],
+  "page_errors": []
 }
