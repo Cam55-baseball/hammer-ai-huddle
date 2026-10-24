@@ -1,0 +1,3 @@
+CREATE POLICY "Prescription sends require connected staff" ON public.coach_prescriptions AS RESTRICTIVE FOR INSERT TO authenticated WITH CHECK (sender_id = auth.uid() AND public.coach_connected_to(auth.uid(), recipient_id));
+CREATE POLICY "Prescription changes use checked service" ON public.coach_prescriptions AS RESTRICTIVE FOR UPDATE TO authenticated USING (false) WITH CHECK (false);
+COMMENT ON TABLE public.coach_prescriptions IS 'Coach workout occurrences. Authenticated sends require connected staff; recipient choices and future management must use the safety-checked service and atomic day-lock commit. Direct recipient updates cannot alter dose, schedule or claim completion.';
