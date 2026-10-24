@@ -16,6 +16,7 @@ export function judgeCoachEnvelope(input: {
   rows: Row[]; resultingDay: Row[]; catalog: Map<string, Row>; owned: string[]; missing: string[];
   age: number | null; trainingAge: string; trainingYears: number; sport: string; positions: string[];
   final: FinalCheckContext; rm28: Rm28; governor: GovernorContext; blockedIntensityClasses: string[];
+  isGameDay?: boolean;
 }) {
   const reasons: string[] = [];
   for (const row of input.rows) {
@@ -23,6 +24,8 @@ export function judgeCoachEnvelope(input: {
     if (!movement || movement.is_active !== true || movement.superseded_by != null) {
       reasons.push(`${row.movement_name}: ask your coach to choose a reviewed Exercise Vault item.`); continue;
     }
+    const dose = row.dosage_unit === "seconds" ? row.duration_seconds : row.dosage_unit === "feet" ? row.distance_feet : row.dosage_unit === "total_reps" ? row.total_reps : row.reps;
+    if (typeof dose !== "number" || !Number.isFinite(dose) || dose <= 0 || (row.sets != null && (!Number.isInteger(row.sets) || row.sets <= 0))) reasons.push(`${row.movement_name}: enter an exact positive dose before using this workout.`);
     if (!ownsAllGear(movement, input.owned) || !avoidsMissingGear(movement, input.missing)) reasons.push(`${row.movement_name}: required gear is missing from your saved answers.`);
     const scope = checkAthleteScope(movement as any, { sport: input.sport, positions: input.positions, ageYears: input.age, trainingAgeClass: input.trainingAge, seasonPhase: input.final.phase });
     if (!scope.allowed) reasons.push(`${row.movement_name}: this item isn't allowed for your age, position or training phase (${scope.reason}).`);
@@ -36,7 +39,7 @@ export function judgeCoachEnvelope(input: {
   }
   const final = finalRuleCheck(input.resultingDay, input.final);
   const sessionInput = { prescriptions: input.resultingDay as any, catalog: [...input.catalog.values()] as any,
-    template: { seasonPhase: input.final.phase, trainingAge: input.trainingAge, isGameDay: false, isRecoveryDay: input.final.liftRemoved },
+    template: { seasonPhase: input.final.phase, trainingAge: input.trainingAge, isGameDay: input.isGameDay === true, isRecoveryDay: input.final.liftRemoved },
     availableEquipment: input.owned, trainingAgeClass: input.trainingAge };
   const affected = new Set(input.rows.map(row => row.slot));
   if (affected.has("lift")) reasons.push(...certifyLift(sessionInput).fatal.map(issue => issue.message));

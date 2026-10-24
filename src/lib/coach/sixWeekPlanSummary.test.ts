@@ -7,6 +7,10 @@ const block: SavedPlanBlock = { modality: 'hitting', title: 'Hitting', status: '
 const plan = (date: string, overrides: Partial<SavedCoachPlan> = {}): SavedCoachPlan => ({ state: 'ok', sport: 'baseball',
   plan_date: date, health_shared: false, blocks: [block], ...overrides });
 describe('six-week saved-plan projection', () => {
+  it('never counts replaced coach blocks as active prescribed work', () => {
+    const rows = sixWeekPlanSummary([plan('2026-10-20', { blocks: [{ ...block, replacedByCoachRx: 'coach-replacement' }] })], 'baseball', '2026-10-21');
+    expect(rows).toEqual([]);
+  });
   it('keeps each issue-selected prescription dose and dated reason instead of spreading the latest dose across history', () => {
     const olderDrill = { ...block.drills[0], slug: 'old_flips', dosage: '12 swings' };
     const rows = sixWeekPlanSummary([plan('2026-10-19', { blocks: [{ ...block, because: ['Older saved issue'], drills: [olderDrill] }] }),

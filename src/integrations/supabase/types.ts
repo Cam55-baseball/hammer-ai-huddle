@@ -23250,6 +23250,19 @@ export type Database = {
         }
         Returns: Json
       }
+      coach_rx_commit_certified: {
+        Args: {
+          p_choice: string
+          p_date: string
+          p_expected_updated_at: string
+          p_rows: Json
+          p_rx: string
+          p_safety: Json
+          p_slots: string[]
+          p_user: string
+        }
+        Returns: Json
+      }
       coach_rx_commit_choice: {
         Args: {
           p_choice: string
@@ -23261,6 +23274,10 @@ export type Database = {
           p_slots: string[]
           p_user: string
         }
+        Returns: Json
+      }
+      coach_rx_safety_revision: {
+        Args: { p_date: string; p_user: string }
         Returns: Json
       }
       coach_save_lineup: {

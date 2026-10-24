@@ -1,0 +1,22 @@
+{
+  "unique_files": 526,
+  "passed_tests": 4114,
+  "failed_tests": 0,
+  "batch_exits": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "corrected_batch_zero_rerun": true,
+  "focused_coach_passes": 152,
+  "unity_contract_passes": 14,
+  "preview_latest": "build OK 2026-10-24T22:57:00Z",
+  "deno_checks": "coach-rx-safety and wk-generate-daily pass with nodeModulesDir none",
+  "cleanup": "three exact TEST IDs verified absent",
+  "scope": "not complete safety or positive choice/focus/team/org proof"
+}

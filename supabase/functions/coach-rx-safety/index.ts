@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
           const ownedRows = (wk ?? []).filter((w: any) => rxIds.includes(w.why_payload?.coach_rx));
           if (ownedRows.length) {
             const { data: logs, error: logsError } = await admin.from("wk_session_logs")
-              .select("id,user_id,prescription_id,plan_date,movement_slug,sets_completed,reps_completed,total_reps_completed,duration_seconds_precise,duration_seconds_completed,distance_feet_completed")
+              .select("id,user_id,prescription_id,plan_date,movement_slug,sets_completed,reps_completed,total_reps_completed,duration_seconds_precise,duration_seconds_completed,distance_feet_completed,metrics")
               .in("prescription_id", ownedRows.map((w: any) => w.id)).limit(5000);
             if (logsError) throw logsError;
             for (const log of logs ?? []) {
@@ -303,6 +303,8 @@ Deno.serve(async (req) => {
     let rows: Record<string, unknown>[] = [];
     if (choice === "use_instead" || choice === "add_alongside") {
       if (date !== today) return json({ error: "Use today to activate this workout on today's plan" }, 409);
+      const { data: expectedRevision, error: revisionError } = await admin.rpc("coach_rx_safety_revision", { p_user: me, p_date: date });
+      if (revisionError || !expectedRevision) return json({ error: "Could not check the latest workout details. Your saved plan is unchanged." }, 409);
       const facts = await gatherFacts(admin, me, category, date, intensity, false, today);
       const { data: savedSnapshot, error: snapshotError } = await admin.from("athlete_plan_snapshots").select("payload,sport")
         .eq("user_id", me).eq("plan_date", date);
@@ -328,9 +330,9 @@ Deno.serve(async (req) => {
       const envelope = await loadPrescriptionEnvelope(admin, me, date, category, rows, choice === "use_instead");
       if (!envelope.allowed) return json({ applied: false, verdict: "blocked", reasons: envelope.reasons, safeOption: envelope.safeOption });
       rows = envelope.rows;
-      safety = { verdict: result.verdict, intensity, checked_at: new Date().toISOString(), envelope: "wic-swap", block_expected: block ?? null, cns_result: "cnsResult" in envelope ? envelope.cnsResult : null };
+      safety = { verdict: result.verdict, intensity, checked_at: new Date().toISOString(), envelope: "wic-swap", block_expected: block ?? null, cns_result: "cnsResult" in envelope ? envelope.cnsResult : null, expected_revision: expectedRevision };
     }
-    const { data: committed, error: commitError } = await admin.rpc("coach_rx_commit_choice", {
+    const { data: committed, error: commitError } = await admin.rpc("coach_rx_commit_certified", {
       p_user: me, p_rx: rxId, p_date: date, p_choice: choice,
       p_rows: rows, p_slots: categorySlots(category), p_safety: safety,
       p_expected_updated_at: rx.updated_at,

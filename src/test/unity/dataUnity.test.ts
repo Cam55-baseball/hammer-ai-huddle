@@ -65,7 +65,8 @@ describe("data-unity matrix", () => {
     touches("supabase/functions/coach-rx-safety/index.ts", "cancel_series");
     touches("src/components/custom-activities/CoachWorkoutsPanel.tsx", "useMyCoachWorkouts");
     touches("src/lib/calendar/buildCalendarEvents.ts", "coach_prescription");
-    touches("supabase/functions/coach-rx-safety/index.ts", "coach_rx_commit_choice");
+    touches("supabase/functions/coach-rx-safety/index.ts", "coach_rx_commit_certified");
+    touches("drizzle/migrations/0111_coach_choice_freshness_guard.sql", "coach_rx_commit_choice");
     touches("drizzle/migrations/0108_coach_prescription_atomic_choice.sql", "wk_lock_plan_day");
     // Known gap, not a successful data-landing assertion: choice cannot claim
     // a legacy custom activity log exists simply because a separate hook uses it.

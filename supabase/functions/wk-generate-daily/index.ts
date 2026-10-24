@@ -13,6 +13,7 @@
 //
 // Idempotent for (user_id, plan_date, sequence_field).
 import { checkPrescription } from "../_shared/wic/integrity/doseIntegrity.ts";
+import { checkInReductions, latestCheckInValues } from "../_shared/wic/checkInReductions.ts";
 import { BASE_REST_TEXT, prescribedBases, sprintRestSeconds, sprintRestWhy, type DeclaredBaseRoute } from "../_shared/wic/runRest.ts";
 import { gameFlushFor } from "../_shared/wic/conditioning/gameFlush.ts";
 import { proportionProfile, proportionBonus, proportionWhy } from "../_shared/wic/lift/proportionEmphasis.ts";
@@ -770,15 +771,7 @@ const handler = async (req: Request): Promise<Response> => {
         .order("occurred_at", { ascending: false })
         .limit(20)
         .then((r: any) => {
-          const out: Record<string, number> = {};
-          for (const e of r.data ?? []) {
-            const p = e.payload ?? {};
-            if (e.topic_id === "behavioral.readiness" && out.cns_readiness == null && p.score != null) out.cns_readiness = Number(p.score);
-            if (e.topic_id === "behavioral.soreness" && out.soreness == null && p.score != null) out.soreness = Number(p.score);
-            if (e.topic_id === "behavioral.fatigue" && out.fatigue == null && p.score != null) out.fatigue = Number(p.score);
-            if (e.topic_id === "behavioral.sleep" && out.sleep_hours == null && p.hours != null) out.sleep_hours = Number(p.hours);
-          }
-          return { data: Object.keys(out).length ? out : null };
+          return { data: latestCheckInValues(r.data ?? []) };
         }),
       // Window, not a single day: the 48-hour rule needs the next two days,
       // a doubleheader needs every row for a date, and the density model needs
@@ -1270,23 +1263,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // -------- Determine reductions --------
-    const reductions: { reason: string; detail: string }[] = [];
-    let cnsCap = block.cns_unit_cap;
     const dl: any = dailyLog ?? {};
-    const sleep = Number(dl.sleep_hours ?? dl.sleep ?? 7);
-    const cnsReadiness = Number(dl.cns_readiness ?? dl.readiness ?? 7);
-    const soreness = Number(dl.soreness ?? 3);
-    if (sleep < 6) {
-      reductions.push({ reason: "sleep", detail: `Only ${sleep}h sleep — high-CNS work reduced.` });
-      cnsCap = Math.max(1, cnsCap - 1);
-    }
-    if (cnsReadiness <= 4) {
-      reductions.push({ reason: "cns", detail: `Self-reported CNS readiness ${cnsReadiness}/10 — capping CNS units.` });
-      cnsCap = Math.max(1, cnsCap - 1);
-    }
-    if (soreness >= 8) {
-      reductions.push({ reason: "soreness", detail: `Reported soreness ${soreness}/10 — substituting regressions where possible.` });
-    }
+    const checkIn = checkInReductions(block.cns_unit_cap, { ...dl, sleep_hours: dl.sleep_hours ?? dl.sleep, cns_readiness: dl.cns_readiness ?? dl.readiness });
+    const { reductions, sleep, cnsReadiness, soreness } = checkIn;
+    let cnsCap = checkIn.cnsCap;
     // Stage 3 (owner-authorised 2026-10-05) — the morning Day intent answer.
     // Read from the athlete's own dated row for this plan date. It can only
     // moderate downward inside what is already allowed: an easier day takes the

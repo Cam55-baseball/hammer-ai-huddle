@@ -15,4 +15,5 @@ describe("coach calls existing WIC and Swap judges", () => {
   it("uses the existing age gate", () => { const i = input(); i.age = 12; i.final.age = 12; expect(judgeCoachEnvelope(i).allowed).toBe(false); });
   it("never certifies an invented name without catalog evidence", () => { const i = input(); i.catalog.clear(); expect(judgeCoachEnvelope(i).allowed).toBe(false); });
   it("uses the existing off-season-only eccentric rule", () => { const i = input(); i.final.phase = "in_season"; i.catalog.set("warmup", { ...movement, eccentric_overload: true, season_legality: { in_season: true } } as any); expect(judgeCoachEnvelope(i).allowed).toBe(false); });
+  it("does not certify an unknown or non-finite dose", () => { const i = input(); i.rows = [{ ...row, duration_seconds: Number.NaN }]; expect(judgeCoachEnvelope(i).allowed).toBe(false); });
 });
