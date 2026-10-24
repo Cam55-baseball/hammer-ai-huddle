@@ -1,0 +1,12 @@
+{
+  "new_hosted_rows_this_run": 0,
+  "exact_oct24_readback": {
+    "custom_activity_logs": 0,
+    "custom_activity_templates": 0,
+    "tex_vision_drill_results": 0,
+    "tex_vision_sessions": 0
+  },
+  "persona_restoration": "blocked: verified before-state snapshots not found",
+  "global_test_row_absence": "not certified",
+  "hidden_personas_confirmed_system_accounts": true
+}
