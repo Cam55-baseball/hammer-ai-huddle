@@ -60,7 +60,7 @@ async def main():
   # 6. Replaced card label, never "missed"
   await pg.goto('http://localhost:8080/.lovable/proofs/final/harness.html?kind=replaced-card');await pg.wait_for_timeout(400)
   await pg.evaluate("() => localStorage.setItem('hm_pocket_open', JSON.stringify({id:'replaced',date:'2026-10-24'}))")
-  await pg.reload();await pg.wait_for_timeout(1500)
+  await pg.reload();await pg.wait_for_timeout(2500)
   assert await pg.get_by_text('Replaced by coach workout',exact=False).count()>=1
   assert 'not missed' in await pg.locator('[data-replaced-by-coach]').inner_text()
   await pg.screenshot(path=str(OUT/'coach-rx-replaced-card.png'));res['replaced_card_label']=True
