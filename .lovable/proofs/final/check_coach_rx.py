@@ -15,7 +15,10 @@ const sent=[
 {...base,id:'s4',category:'speed',title:'Speed D',status:'declined'}];
 const rows=kind==='coach-rx-status'?sent:inbox;
 export const supabase={
-auth:{getUser:async()=>({data:{user:{id:'fixture-player'}}})},
+auth:{getUser:async()=>({data:{user:{id:'fixture-player'}}}),getSession:async()=>({data:{session:null},error:null}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}})},
+rpc:async()=>({data:null,error:null}),
+channel:()=>({on(){return this;},subscribe(){return this;},unsubscribe(){}}),
+removeChannel:async()=>{},
 functions:{invoke:async(n,o)=>{const id=o&&o.body&&o.body.prescription_id;
 if(id==='rx-pitch')return{data:{applied:false,verdict:'alongside_only',reasons:['Your arm needs rest from throwing until 2026-10-26 (pitch-count rest rule).'],safeOption:'Safe option: save it for 2026-10-26 or later.'},error:null};
 return{data:{applied:true,verdict:'allow',replaced:2},error:null};}},
@@ -58,8 +61,9 @@ async def main():
    assert await pg.get_by_text(label).count()>=1, label
   await pg.screenshot(path=str(OUT/'coach-rx-status.png'));res['coach_status_view']=True
   # 6. Replaced card label, never "missed"
-  await pg.goto('http://localhost:8080/.lovable/proofs/final/harness.html?kind=replaced-card');await pg.wait_for_timeout(1200)
-  await pg.get_by_text('LIFT').first.click();await pg.wait_for_timeout(500)
+  await pg.goto('http://localhost:8080/.lovable/proofs/final/harness.html?kind=replaced-card');await pg.wait_for_timeout(400)
+  await pg.evaluate("() => localStorage.setItem('hm_pocket_open', JSON.stringify({id:'replaced',date:'2026-10-24'}))")
+  await pg.reload();await pg.wait_for_timeout(2500)
   assert await pg.get_by_text('Replaced by coach workout',exact=False).count()>=1
   assert 'not missed' in await pg.locator('[data-replaced-by-coach]').inner_text()
   await pg.screenshot(path=str(OUT/'coach-rx-replaced-card.png'));res['replaced_card_label']=True

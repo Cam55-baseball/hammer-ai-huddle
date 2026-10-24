@@ -7,10 +7,10 @@
 - [x] A4 Server safety check: _shared/coach/prescriptionSafety.ts (pure, 10 tests) + coach-rx-safety edge function (check/choose, is_linked_coach + recruitingGate, arm ledger/rest/game/injury facts) — deployed
 - [x] A5 Replace execution: same-category slots only (categorySlots, no spill-over), rows marked skipped + replaced_by_coach_rx, never "missed"; card label added
 - [x] A6 Coach status view: CoachPrescriptionStatus on CoachDashboard (used instead / added / saved / declined)
-- [~] A7 Proofs: 5/6 screen cases pass at 390×844 (.lovable/proofs/final/coach-rx-*.png, coach-rx-result.json pending final case): inbox three choices, hitting replace allowed, pitching blocked by throw counts with safe option, lift alongside, coach status view. OPEN: replaced-card label screen proof (label code in place; PocketCard open interaction in harness still not rendering the inner card)
-- [ ] B1 docs/owner/data-unity-matrix.md
-- [ ] B2 Automated test per matrix row; fix gaps
-- [ ] C Full suite, checklist + by-role guide, cleanup, Ready to publish report
+- [x] A7 Proofs: 6/6 screen cases pass at 390×844 (.lovable/proofs/final/coach-rx-*.png, coach-rx-result.json): inbox three choices, hitting replace allowed, pitching blocked by throw counts with safe option, lift alongside, coach status view, replaced-card label ("Replaced by coach workout … not missed")
+- [x] B1 docs/owner/data-unity-matrix.md — 14 entry kinds × 8 surfaces, verified writer/reader evidence, 3 known gaps listed honestly (coach-logged games → no gp_games; combine results unread by coach/scout/org test RPCs; coach readiness reads focus quizzes not daily log)
+- [x] B2 src/test/unity/dataUnity.test.ts — 14 contract tests (one per row) assert writer writes the table and every direct reader reads it; gap rows assert current gapped behavior so a future fix flips the test; 14/14 PASS
+- [x] C Full suite 517 files / 4,060 tests PASS (07:01 UTC); checklist section D added (coach prescriptions + data unity); roadmap ticked; Ready to publish report delivered
 
 **Ready to publish: NO.** Exact blockers: five human-only checks remain pending; three TEST personas lack verified before-state snapshots for assessment/start restoration; global TEST cleanup is unverified. All automated focus proofs are complete. No publish, cron, iOS, deploy or migration action.
 
