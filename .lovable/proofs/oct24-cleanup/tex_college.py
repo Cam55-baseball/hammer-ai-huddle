@@ -6,8 +6,7 @@ async def main():
   with open(os.path.expanduser('~/.cache/lovable-auth/session.json')) as f:m=json.load(f)
   await pg.goto('http://localhost:8080');await pg.evaluate('([k,v])=>localStorage.setItem(k,v)',[m['storage_key'],json.dumps(m['session'])]);await pg.goto('http://localhost:8080/dashboard');await pg.wait_for_timeout(25000)
   await pg.locator('[data-pocket-tile="block_hitting_x"]').click();d=pg.locator('[data-pocket-page]');await d.get_by_role('button',name='Start',exact=True).click()
-  await d.get_by_role('button',name='Dry swings — barrel path',exact=True).click()
-  await pg.wait_for_timeout(1000)
+  await pg.wait_for_timeout(20000)
   print('BUTTONS',await d.get_by_role('button').all_text_contents())
   buttons=d.get_by_role('button',name='Tex Vision session',exact=True)
   if await buttons.count():
