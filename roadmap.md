@@ -1,9 +1,8 @@
 # Current publish gate — Oct 24 final automated cleanup
 
-**Ready to publish: NO.** Exact blockers: three TEST personas cannot be restored without verified before-state snapshots; the five section-A human checks remain pending. Coach full focus/control/rest/reload proof now passes. No publish, cron, iOS, deploy or migration action.
 
-- [ ] Final automated run: 19/19 rendered matrix cases passed at 390×844; nine individual units screens, Pick-off saved/count/reload and coach create/send/accept/autosave captured; 514 files / 4,034 tests PASS; preview OK. Coach full-control matrix and verified persona restoration remain blocked; no hosted records created.
-- [ ] Final continuation: remaining coach Next/save/30-second rest/advance, Skip, Save & exit/reload and real outer X/reopen/reload PASS at 390×844 (`.lovable/proofs/final/coach-focus-result.json`, `coach-close-result.json`); completed proofs retained. Exact prior-state restoration remains blocked; no hosted rows created. Fresh full application suite PASS: 514 files / 4,034 tests, zero failures; preview build OK 05:48:35 UTC.
+- [x] Final automated proofs complete: 19/19 rendered cases, nine units screens, Pick-off save/count/reload, coach lifecycle/autosave and remaining coach focus/outer-X controls at 390×844; 514 files / 4,034 tests PASS; preview OK 05:48:35 UTC. Exact persona restoration remains blocked separately; no hosted fixture rows created.
+- [x] Oct 24 FINAL FINISH continuation (2): finalized one consolidated publish sheet and retained all completed evidence without rerunning proofs; removed stale coach-blocker wording. All 14 items Done under the owner's automated/human-only definition; Ready to publish NO: five human checks pending, three persona before-state snapshots missing, global TEST cleanup unverified. Documentation only; no hosted data or release/schedule/iOS changes.
 
 ## Owner decisions — all B applied
 | Exercise | Current entry | Decision |
