@@ -743,6 +743,13 @@
       "when": 1792826499383,
       "tag": "0105_data_unity_coach_games_combine_readiness",
       "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1792827164754,
+      "tag": "0106_fix_player_resolve_coach_entry_parent_check",
+      "breakpoints": true
     }
   ]
 }
