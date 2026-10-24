@@ -1,5 +1,11 @@
 # Current publish gate — Oct 24 final automated cleanup
 
+## Oct 24 21:48 final batch — coach scheduling and data unity
+- [ ] Close remaining coach scheduling/My Workouts/Sent workouts/team/org implementation gaps, preserving canonical safety and logging.
+- [ ] Verify affected changes at 390×844 with saved evidence; distinguish fixture checks from authenticated role readback.
+- [ ] Complete the full suite in bounded groups; finalize matrix, consolidated checklist and by-role guide with exact remaining blockers.
+- [ ] Report Ready to publish: yes/no; no publish, cron or iOS changes.
+
 ## Oct 24 21:30 continuation — scheduling closeout
 - [x] Review remaining scheduling, My Workouts, coach/org Sent workouts and data-unity paths; retain prior fixture proofs without claiming live verification. Fixed manage dispatch, org mount, date-on-block mutation, alongside rest bypass, atomic choice commit, missing rest column, calendar memo/refetch, Any day calendar exclusion and weekday ordering. Owner-authorized 0108 applied and coach-rx-safety deployed; live owner empty management read and home tabs verified at 390×844.
 - [x] Complete consolidated player/coach/org scheduling checks and by-role guide; distinguish fixture/static evidence from affected-role data landing.
