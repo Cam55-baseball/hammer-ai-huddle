@@ -17,6 +17,7 @@ export function judgeCoachEnvelope(input: {
   age: number | null; trainingAge: string; trainingYears: number; sport: string; positions: string[];
   final: FinalCheckContext; rm28: Rm28; governor: GovernorContext; blockedIntensityClasses: string[];
   isGameDay?: boolean;
+  pendingReview?: readonly string[];
 }) {
   const reasons: string[] = [];
   for (const row of input.rows) {
@@ -24,6 +25,7 @@ export function judgeCoachEnvelope(input: {
     if (!movement || movement.is_active !== true || movement.superseded_by != null) {
       reasons.push(`${row.movement_name}: ask your coach to choose a reviewed Exercise Vault item.`); continue;
     }
+    if (input.pendingReview?.includes(row.movement_slug)) reasons.push(`${row.movement_name}: its changed gear is waiting for owner review. Save this workout for later.`);
     const dose = row.dosage_unit === "seconds" ? row.duration_seconds : row.dosage_unit === "feet" ? row.distance_feet : row.dosage_unit === "total_reps" ? row.total_reps : row.reps;
     if (typeof dose !== "number" || !Number.isFinite(dose) || dose <= 0 || (row.sets != null && (!Number.isInteger(row.sets) || row.sets <= 0))) reasons.push(`${row.movement_name}: enter an exact positive dose before using this workout.`);
     if (!["seconds", "feet"].includes(row.dosage_unit) && typeof dose === "number" && !Number.isInteger(dose)) reasons.push(`${row.movement_name}: reps and throws must be whole counts.`);

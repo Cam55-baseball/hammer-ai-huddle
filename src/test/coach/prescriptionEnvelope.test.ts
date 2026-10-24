@@ -13,6 +13,10 @@ describe("coach calls existing WIC and Swap judges", () => {
     i.missing = ["barbell"]; expect(judgeCoachEnvelope(i).allowed).toBe(false);
   });
   it("uses the existing age gate", () => { const i = input(); i.age = 12; i.final.age = 12; expect(judgeCoachEnvelope(i).allowed).toBe(false); });
+  it("does not inherit an old approval after a gear correction reopens review", () => {
+    expect(judgeCoachEnvelope({ ...input(), pendingReview: ["warmup"] }).allowed).toBe(false);
+    expect(judgeCoachEnvelope({ ...input(), pendingReview: [] }).allowed).toBe(true);
+  });
   it("never certifies an invented name without catalog evidence", () => { const i = input(); i.catalog.clear(); expect(judgeCoachEnvelope(i).allowed).toBe(false); });
   it("never routes a throwing item into a hitting card", () => {
     const i = input(); i.rows = [{ ...row, slot: "hitting" }]; i.resultingDay = i.rows;
