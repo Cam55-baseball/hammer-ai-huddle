@@ -1,0 +1,15 @@
+import asyncio,json,os
+from playwright.async_api import async_playwright
+async def main():
+ async with async_playwright() as p:
+  b=await p.chromium.launch(headless=True);c=await b.new_context(viewport={'width':390,'height':844});pg=await c.new_page()
+  with open(os.path.expanduser('~/.cache/lovable-auth/session.json')) as f:m=json.load(f)
+  await pg.goto('http://localhost:8080');await pg.evaluate('([k,v])=>localStorage.setItem(k,v)',[m['storage_key'],json.dumps(m['session'])]);await pg.goto('http://localhost:8080/dashboard');await pg.wait_for_timeout(25000)
+  await pg.locator('[data-pocket-tile="block_hitting_x"]').click();d=pg.locator('[data-pocket-page]');await d.get_by_role('button',name='Start',exact=True).click()
+  await pg.wait_for_timeout(20000)
+  print('BUTTONS',await d.get_by_role('button').all_text_contents())
+  buttons=d.get_by_role('button',name='Tex Vision session',exact=True)
+  if await buttons.count():
+   await buttons.first.click();await pg.wait_for_timeout(15000);fr=pg.frames[-1];print('TEX', (await fr.locator('body').inner_text())[:14000]);print('TEXBUTTONS',await fr.get_by_role('button').all_text_contents());await fr.get_by_text('Soft Focus',exact=True).first.click();await pg.wait_for_timeout(1000);print('DRILL',await fr.locator('body').inner_text());print('DRILLBUTTONS',await fr.get_by_role('button').all_text_contents());await fr.get_by_role('button',name="I'm Ready!",exact=True).click();await pg.wait_for_timeout(3000);print('RUNNING',await fr.locator('body').inner_text());print('RUNBUTTONS',await fr.get_by_role('button').evaluate_all('(els)=>els.map(e=>({text:e.textContent,aria:e.getAttribute("aria-label")}))'));await pg.screenshot(path='/tmp/browser/oct24-cleanup/tex-in-card.png');await pg.wait_for_timeout(195000);print('RESULT',await fr.locator('body').inner_text());print('RESULTBUTTONS',await fr.get_by_role('button').all_text_contents());await pg.screenshot(path='/tmp/browser/oct24-cleanup/tex-result.png');await fr.get_by_role('button',name='Skip',exact=True).click();await pg.wait_for_timeout(2000);print('AFTERSKIP',await fr.locator('body').inner_text());await pg.screenshot(path='/tmp/browser/oct24-cleanup/tex-saved.png');await fr.get_by_role('button',name='Done',exact=True).click();await pg.wait_for_timeout(7000);print('SAVEDREADBACK',await fr.locator('body').inner_text());print('PARENT',await pg.locator('[data-pocket-page]').inner_text());await pg.screenshot(path='/tmp/browser/oct24-cleanup/tex-return.png')
+   await b.close()
+asyncio.run(main())
