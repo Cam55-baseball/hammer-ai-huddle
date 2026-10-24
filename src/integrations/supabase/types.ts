@@ -4954,6 +4954,7 @@ export type Database = {
       }
       coach_prescriptions: {
         Row: {
+          cancelled_at: string | null
           category: string
           created_at: string
           exercises: Json
@@ -4961,8 +4962,16 @@ export type Database = {
           id: string
           plan_date: string
           recipient_id: string
+          recur_count: number | null
+          recur_end: string | null
+          recur_every_weeks: number | null
+          recur_monthly_ordinal: number | null
+          recur_monthly_weekday: number | null
+          recur_weekdays: number[] | null
           safety_result: Json | null
+          schedule_type: string
           sender_id: string
+          series_id: string | null
           source_template_id: string | null
           status: string
           team_send_id: string | null
@@ -4970,6 +4979,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cancelled_at?: string | null
           category: string
           created_at?: string
           exercises?: Json
@@ -4977,8 +4987,16 @@ export type Database = {
           id?: string
           plan_date: string
           recipient_id: string
+          recur_count?: number | null
+          recur_end?: string | null
+          recur_every_weeks?: number | null
+          recur_monthly_ordinal?: number | null
+          recur_monthly_weekday?: number | null
+          recur_weekdays?: number[] | null
           safety_result?: Json | null
+          schedule_type?: string
           sender_id: string
+          series_id?: string | null
           source_template_id?: string | null
           status?: string
           team_send_id?: string | null
@@ -4986,6 +5004,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cancelled_at?: string | null
           category?: string
           created_at?: string
           exercises?: Json
@@ -4993,8 +5012,16 @@ export type Database = {
           id?: string
           plan_date?: string
           recipient_id?: string
+          recur_count?: number | null
+          recur_end?: string | null
+          recur_every_weeks?: number | null
+          recur_monthly_ordinal?: number | null
+          recur_monthly_weekday?: number | null
+          recur_weekdays?: number[] | null
           safety_result?: Json | null
+          schedule_type?: string
           sender_id?: string
+          series_id?: string | null
           source_template_id?: string | null
           status?: string
           team_send_id?: string | null

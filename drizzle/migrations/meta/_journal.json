@@ -750,6 +750,13 @@
       "when": 1792827164754,
       "tag": "0106_fix_player_resolve_coach_entry_parent_check",
       "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1792827949253,
+      "tag": "0107_coach_prescription_scheduling",
+      "breakpoints": true
     }
   ]
 }
