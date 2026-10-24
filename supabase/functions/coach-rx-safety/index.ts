@@ -167,16 +167,30 @@ Deno.serve(async (req) => {
         // Completion: count plan rows each prescription created that the player finished.
         const rxIds = list.map((r) => r.id);
         const doneByRx: Record<string, { done: number; total: number }> = {};
+        const actualsByRx: Record<string, any[]> = {};
         if (rxIds.length > 0) {
-          const { data: wk } = await admin.from("wk_prescriptions").select("status, why_payload")
+          const { data: wk, error: wkError } = await admin.from("wk_prescriptions").select("id,user_id,movement_name,dosage_unit,slot,status,why_payload")
             .in("user_id", [...new Set(list.map((r) => r.recipient_id))])
             .not("why_payload", "is", null).limit(5000);
+          if (wkError) throw wkError;
           for (const w of (wk ?? []) as any[]) {
             const rid = w.why_payload?.coach_rx;
             if (!rid || !rxIds.includes(rid)) continue;
             const b = (doneByRx[rid] ||= { done: 0, total: 0 });
             b.total++;
             if (w.status === "completed") b.done++;
+          }
+          const ownedRows = (wk ?? []).filter((w: any) => rxIds.includes(w.why_payload?.coach_rx));
+          if (ownedRows.length) {
+            const { data: logs, error: logsError } = await admin.from("wk_session_logs")
+              .select("id,user_id,prescription_id,plan_date,movement_slug,sets_completed,reps_completed,total_reps_completed,duration_seconds_precise,duration_seconds_completed,distance_feet_completed")
+              .in("prescription_id", ownedRows.map((w: any) => w.id)).limit(5000);
+            if (logsError) throw logsError;
+            for (const log of logs ?? []) {
+              const row = ownedRows.find((w: any) => w.id === log.prescription_id && w.user_id === log.user_id);
+              if (!row) continue;
+              (actualsByRx[row.why_payload.coach_rx] ??= []).push({ ...log, prescription: { movement_name: row.movement_name, dosage_unit: row.dosage_unit, slot: row.slot } });
+            }
           }
         }
         const names: Record<string, string> = {};
@@ -197,6 +211,7 @@ Deno.serve(async (req) => {
               recur_end: r.recur_end, recur_count: r.recur_count,
             },
             completion: doneByRx[r.id] ?? { done: 0, total: 0 },
+            results: actualsByRx[r.id] ?? [],
           })),
         });
       }

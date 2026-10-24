@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ClipboardList, Loader2, CalendarDays } from "lucide-react";
 import { useManageSentWorkouts } from "@/hooks/useCoachPrescriptions";
 import { scheduleSummary, type ScheduleInput } from "@/lib/coachRx/schedule";
+import { actualResultText, type WorkoutActual } from "@/lib/coachRx/results";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "Not yet answered",
@@ -80,6 +81,7 @@ export function CoachPrescriptionStatus() {
                 </p>
               )}
               <div className="flex flex-wrap items-center gap-2">
+                {(rx.results ?? []).map((log: WorkoutActual) => <div key={log.id} className="w-full border-t border-border pt-2" data-rx-result={log.id}><p className="font-medium">{log.prescription?.movement_name ?? log.movement_slug}</p><p className="text-xs">{actualResultText(log)}</p></div>)}
                 {future && (
                   <>
                     <input
