@@ -51,7 +51,7 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   const slugs = [...new Set([...rows, ...current, ...raw.prescriptions].map((r: Row) => r.movement_slug).filter(Boolean))];
   const catalogRows = await checked(admin.from("wk_movement_catalog").select("*").in("slug", slugs));
   const catalog = new Map<string, Row>((catalogRows ?? []).map((row: Row) => [row.slug, row]));
-  const proposed = rows.map(row => ({ ...row, phase: phase.sub_block, cns_cost: catalog.get(row.movement_slug)?.cns_cost ?? null }));
+  const proposed: Row[] = rows.map(row => ({ ...row, phase: phase.sub_block, cns_cost: catalog.get(row.movement_slug)?.cns_cost ?? null }));
   if (proposed.some(row => row.cns_cost == null)) return refused("An exercise's workload isn't declared in Exercise Vault. Ask your coach to choose a reviewed item.");
   const resultingDay = [...current.filter((r: Row) => !(replace && categorySlots(category).includes(r.slot) && r.status !== "completed")), ...proposed];
   const decision = decideFromRaw(raw).decision;
