@@ -4,6 +4,51 @@ Updated October 24, 2026, final batch. **Ready to publish: NO.** Coach safety/da
 
 ## Final batch result
 
+### Owner final-batch continuation — October 24, 23:37 run 4
+
+**Ready to publish: NO. The requested coach finish list is not complete.**
+
+- Existing bat-speed certification now runs for hitting (adapting the category
+  name only), and the existing recovery certifier runs for mobility/recovery.
+  Unknown saved catalog work and missing governed counts/distances block rather
+  than silently disappearing or becoming a default one-rep exposure. TEST-only
+  catalog work is checked against the recipient, not merely the sender.
+- Snapshot coverage now checks the actual movement and category, rejects reused
+  canonical IDs, and maps defense only to fielding. This hardens coverage; it
+  does **not** supply missing skill doses or enable skill replacement.
+- Hammers' plan for this player now shows actual logged coach-workout results
+  using the existing server-gated sender reader. Behavioral save/remount tests
+  read 1.47 seconds and reject other players/dates. Phone component screenshots
+  at 390×844 pass after reload; these are explicitly fixtures, not hosted logs.
+- Full suite: **528 files / 4,146 tests PASS**, eight groups exit 0, final four
+  changed files refreshed (**36 tests PASS**); focused coach/unity run 120 PASS
+  before the final visibility assertion, final Deno check PASS, preview build OK.
+  Only authorized coach-rx-safety was redeployed; no migration was needed.
+- Live session-refresh management reads return 200 for kept TEST player, coach
+  and org. Actual phone checks show My Workouts, the coach dashboard and the
+  organization purchase gate. They are read-only, **not password sign-in or
+  send → choice → focus logging proof**. No hosted TEST rows were written and
+  no retained persona was changed. Evidence `.lovable/proofs/coach-run4/`.
+
+**Exact unfinished implementation/proof:** complete arm-load/ramp/throw safety;
+source-authored skill-dose/canonical lineage and existing block-Swap replacement;
+own-item reviewed certification; positive player/coach/org/team choice → focus
+logging → reload; row-3 coach-plan/org/scout/learning/nightly behavioral readback.
+The kept org remains purchase-gated. Existing skills store display doses without
+canonical row links; inventing links or parsing text is not a safety fix. These
+are unfinished build/proof tasks, not a new owner-authorization request.
+
+**Other release gates:** the five section-A human checks remain pending; global
+historical TEST cleanup remains uncertified. The three retained personas are
+untouched and their restoration decision stays with the owner, not this run.
+
+**Final by-role correction:** players can view their entered canonical results in
+Logged workouts; blocked activation leaves the plan unchanged and offers Save
+for later. Coaches see actual sets/reps/times/throws in Sent workouts and their
+current player's plan through the same permitted sender read. Organizations use
+the existing assigned-athlete/subscription gates; no successful org/team send is
+claimed. Own items can be authored but cannot bypass catalog certification.
+
 ### Owner continuation — October 24, 23:22 run
 
 **Ready to publish: NO.** Coach activation now calls the existing WIC domain
@@ -297,7 +342,7 @@ blocks remain. No fabricated measurements, consent bypass or new training dose.
 | Role | What it is | How to use | What you'll see / release limit |
 |---|---|---|---|
 | Player | One home for received, shelved and personal workouts | Open My Workouts → From my coaches / Saved for later / My own. Use today instead, Add alongside today, or Save for later. | Scheduled cards and explanations; activation is not completion. Full safety and downstream readback are not yet release-certified. |
-| Coach | Per-player dated or recurring sends | Share from My own; choose category, players and Any day/date(s)/weekly/monthly. Sent workouts moves or cancels future unanswered dates and resends. | Responses and completed-activity counts; detailed actual results and live team proof remain incomplete. |
+| Coach | Per-player dated or recurring sends | Share from My own; choose category, players and Any day/date(s)/weekly/monthly. Sent workouts moves or cancels future unanswered dates and resends. | Responses, completed-activity counts and actual logged sets/reps/times/throws; current-player plan also shows permitted sender results. Live team/acceptance proof remains incomplete. |
 | Organization | The same sending path under current athlete access | Use My Workouts and dashboard Sent workouts. | Current sender's permitted sends, not all staff's sends; assigned-org live send/readback remains unverified. |
 
 The historical guide's statements that every coach use already lands in History,
