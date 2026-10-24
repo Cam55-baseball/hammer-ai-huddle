@@ -1,0 +1,14 @@
+{
+  "inbox_three_choices": true,
+  "hitting_replace_allowed": true,
+  "pitching_blocked_with_safe_option": true,
+  "lift_added_alongside": true,
+  "coach_status_view": true,
+  "replaced_card_label": true,
+  "page_errors": [],
+  "viewport": [
+    390,
+    844
+  ],
+  "fixture_only": true
+}
