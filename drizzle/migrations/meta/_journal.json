@@ -785,6 +785,13 @@
       "when": 1792882320291,
       "tag": "0111_coach_choice_freshness_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1792884402643,
+      "tag": "0112_coach_catalog_review_freshness",
+      "breakpoints": true
     }
   ]
 }
