@@ -92,6 +92,9 @@ describe("data-unity matrix", () => {
     // readers: History game list and Coach Games both read gp_games
     touches("src/hooks/useHistoryRecords.ts", "gp_games");
     touches("drizzle/migrations/0037_coach_athlete_games.sql", "gp_games");
+    // 0106 fixed a pre-existing crash: the player confirm/flag path referenced
+    // a non-existent is_parent_of; the real parent check is is_authorizing_parent.
+    touches("drizzle/migrations/0106_fix_player_resolve_coach_entry_parent_check.sql", "is_authorizing_parent");
   });
 
   it("7. video analyses → videos → coach development, scout profile, history aggregate", () => {
