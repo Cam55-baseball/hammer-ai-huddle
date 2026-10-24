@@ -42,20 +42,20 @@ describe("data-unity matrix", () => {
     touches("drizzle/migrations/0086_at5_coach_training_access.sql", "athlete_plan_snapshots");
   });
 
-  it("3. coach sends and canonical rows have declared readers; legacy activity landing remains a separate unconnected path", () => {
+  it("3. coach actuals use canonical readers rather than legacy activity logs", () => {
     touches("src/hooks/useSentActivities.ts", "coach_prescriptions");
-    touches("src/hooks/useCustomActivities.ts", "custom_activity_logs");
     // Use instead / Add alongside turn the coach workout into real plan rows,
     // so completion logs to wk_session_logs like any Hammers card.
     touches("supabase/functions/coach-rx-safety/index.ts", "wk_prescriptions");
     touches("supabase/functions/_shared/coach/prescriptionSafety.ts", "user_id");
     // readers
     touches("src/hooks/useCoachPrescriptions.ts", "coach_prescriptions");
-    touches("src/components/custom-activities/ActivityAnalytics.tsx", "custom_activity_logs"); // General / Growth
-    touches("src/hooks/useVault.ts", "custom_activity_logs"); // Vault
-    touches("src/components/coach/CoachComplianceView.tsx", "custom_activity_logs"); // Coach
-    touches("supabase/functions/compute-hammer-state/index.ts", "custom_activity_logs"); // learning
-    touches("supabase/functions/nightly-mpi-process/index.ts", "custom_activity_logs"); // nightly
+    touches("src/hooks/useWorkoutActuals.ts", "wk_session_logs");
+    touches("src/pages/History.tsx", "WorkoutActuals");
+    touches("src/components/vault/VaultDrillWork.tsx", "WorkoutActuals");
+    touches("src/pages/ProgressDashboard.tsx", "WorkoutActuals");
+    touches("supabase/functions/coach-rx-safety/index.ts", "wk_session_logs");
+    expect(src("src/hooks/useWorkoutActuals.ts")).not.toContain("custom_activity_logs");
     // Scheduling (run 6): pure date math, one row per player per scheduled day,
     // player "Use today" activation and sender edit/cancel/resend all go
     // through the same server function; scheduled days project onto the calendar.

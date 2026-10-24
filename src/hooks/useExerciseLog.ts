@@ -82,6 +82,8 @@ export function useSaveExerciseLog() {
       qc.invalidateQueries({ queryKey: ["exercise-log-prev", user?.id, vars.movement_slug] });
       // Step 30 E — a logged pitch count updates the one arm ledger immediately.
       qc.invalidateQueries({ queryKey: ["recent-pitching-load"] });
+      qc.invalidateQueries({ queryKey: ["workout-actuals", user?.id] });
+      qc.invalidateQueries({ queryKey: ["coach-rx-manage"] });
     },
   });
 }
