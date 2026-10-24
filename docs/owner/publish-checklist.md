@@ -4,6 +4,15 @@
 
 **Ready to publish: NO.** The cleanup is partially implemented, not fully proven. Earlier release verdicts below are historical and do not certify these changes.
 
+### Owner-present phone run — October 24
+- Approved college/coach/persona sign-ins worked. Identity merge is now phone-proven: `../../.lovable/proofs/oct24-cleanup/pitcher-identity-merged.png` shows the real throwing-build day inside return to full training.
+- All current college plan exercise labels and six focus entry screens were captured; entry screens are not proof of Next/save/rest/advance for every type. Full matrix remains open.
+- Pitcher and two-way studies captured. The selected new-player account is protected by its under-13 parent-signature gate; no guardian signature was invented. Five populated personas/role examples remain incomplete.
+- Tex Vision opened inside hitting and its real timer reached the result screen. Saved metrics report completionValid false, one cycle and zero interactions, so this is not a successful usage proof. Pick-off remains open.
+- Fresh application suite: 514 files / 4,033 tests PASS, `.lovable/proofs/oct24-cleanup/full-suite.json`; latest preview build OK. All-B logging rules retained; actual five-exercise phone proof still open.
+- Exact coach template/copy/log/send and Tex result/session/checklist were snapshotted and removed; prior TEST zero-session vision counts restored. Existing persona assessment/start changes need prior-state restoration; cleanup is not complete. No publish/deploy/migration/cron/iOS.
+- Current status: seven Done / seven Partly. Full item table and exact blockers are at the top of roadmap.md. Historical approval-blocked notes below no longer describe current sign-in availability.
+
 ### Owner-present run — October 23, 22:43–23:07 UTC
 - **All B decisions applied in preview:** Walking Lunge → reps per leg; Rear-Foot-Raised Resist-Turning Press → press reps; Banded Lateral Squat Walk → steps each way; Elephant Walk → steps; Farmer Carry on Toes → yards. Both log paths use the shared exact measurement rule; yards remain feet in saved canonical records. Existing timed prescriptions are not converted to invented counts/distances.
 - **Coach continuous saving implemented:** entered coach sets save after a short pause; Next flushes the current entries before the declared rest starts. Writes stay ordered; failed autosaves retain entries and retry on Next. No completion boxes are manufactured.

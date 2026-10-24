@@ -21,30 +21,28 @@ The other 13 flagged rows (wall sits, iso squats, iso split squats, Copenhagen p
 - [ ] Oct 23 cleanup run 14, 21:59: still BLOCKED on TEST-player sign-in approval. No changes.
 - [ ] Oct 23 cleanup run 15, 22:08: fresh full suite 513 files / 4,025 tests PASS; status, decisions and publish answer refreshed. Proofs still BLOCKED on TEST-player sign-in approval.
 
-## Oct 23 Hammers Today clean-up — status (23:07 UTC): 6 Done, 8 Partly, 0 Not started
+## Oct 24 Hammers Today clean-up — status: 7 Done, 7 Partly, 0 Not started
 
-Fresh application suite after these changes: 514 files / 4,033 tests PASS, including the unchanged 200-season safety test. Evidence: `/tmp/today-cleanup-owner-decisions/full-suite/result.json`, `batch-1.log`–`batch-7.log`, individual PASS records in `batch-8-retry.log`, and completed `invariants-final.log`. Aggregate runs timed out; only the missing safety test was completed separately. Preview build OK 22:46:16. Server suite not rerun; no server changes. No phone proofs ran: the exact college TEST sign-in command was refused with “approval unavailable in this context,” without an approval card. Owner presence/authorization is not in question; the tool restriction remains.
+- [ ] Oct 24 owner-present phone run: approved TEST sign-ins succeeded; actual 390×844 study, identity, all current college card labels and six focus-entry screens captured. Identity merge item 5 is Done. Coach app-create/send/accept/autosave with real work/rest was observed earlier in this run, but the named screenshots did not survive in the current evidence folder, so item 11 remains Partly. Tex Vision timer reached its result screen, but canonical readback says `completionValid:false`, one cycle and zero target interactions: NOT a successful tool proof. Fresh full app suite 514 files / 4,033 tests PASS. Exact coach/Tex records snapshotted/removed. Remaining persona assessment/start changes retained pending safe restoration. No source changes this run; no publish/deploy/migration/cron/iOS.
 
-- [ ] Oct 23 cleanup run 16, 22:43–23:07: requested college TEST sign-in normally; tool refused without approval card. All five B measurements implemented across existing log paths with canonical-foot yard entry and no dose conversion; continuous coach autosave implemented with ordered saves, failure retry and save-before-rest tests. Fresh application suite 514 files / 4,033 tests PASS; no new phone proof, no TEST data created to clean up. No publish/deploy/migration/cron/iOS.
+Evidence root: `.lovable/proofs/oct24-cleanup/`. Previously Done items retain their old proofs and were not re-proven.
 
-Items 1–14 are the owner's sections A–E split into steps. Proof paths are sandbox screenshots/logs.
-
-| # | Item | Status | Proof |
+| # | Item | Status | Proof / outstanding requirement |
 |---|------|--------|-------|
-| 1 | A. "Use Delaycam" in each card, window on top, return to same exercise, check-off counts toward the week | Done | /tmp/browser/today-cleanup/continue/delaycam-window.png, delaycam-return.png, delaycam-used-reload.png, delaycam-usage.log |
-| 2 | A. Open-ended tool note removed; study moments in Before you start, specific to the player (flags/games/goals) | Partly — built; five populated players not proven | /tmp/browser/today-cleanup/five-players.log |
-| 3 | B. "Tomorrow's plan becomes visible at midnight" deleted | Done | /tmp/browser/today-cleanup/before-plan-closed.png |
-| 4 | B. "Why today's plan changed" drawer: closed by default, deduplicated, holds Training Load, opens with plan closed | Done | /tmp/browser/today-cleanup/before-plan-closed.png, continue/before-closed.png |
-| 5 | B. Block-progress lines merged into identity card with "return to full training" | Partly — built; no dedicated phone screenshot | /tmp/browser/today-cleanup/identity-open.png |
-| 6 | B. Streak/workouts moved to identity card rewards | Done | /tmp/browser/today-cleanup/run3 (identity phone check), identity-open.png |
-| 7 | B. Coach Hammer next best step above Ask Hammer | Done | /tmp/browser/today-cleanup/run3 (identity phone check) |
-| 8 | C. "(instructions below)" on each "Log this work" | Partly — built; not separately phone-proven | — |
-| 9 | C. Focus mode for timer and rep items (Next saves, rest, advance, autosave) | Partly — real 2-set lift proof with rest and reload; not every card type | /tmp/browser/today-cleanup/run3/college-set1-rest.png, college-set2-rest.png, college-reload-rest.png; continue/focus-*.png |
-| 10 | C. Practice-type cards (with video and without), rest while logging | Partly — standard + video practice return PASS; Tex Vision and Pick-off phone completion unproven | /tmp/browser/today-cleanup/run2 |
-| 11 | C. Coach-sent exercises in focus mode | Partly — continuous autosave now implemented/tested; populated TEST coach phone proof remains missing | src/components/folders/GuidedCustomExercises.test.tsx; /tmp/today-cleanup-owner-decisions/final-focused.log |
-| 12 | D. Units: broad jump ft + in, holds get a time target, every exercise's measure type | Partly — all five B decisions implemented/tested; latest fixes and five exercises not phone-proven | src/lib/logging/ownerExerciseDecisions.test.ts, measureType.test.ts; /tmp/today-cleanup-owner-decisions/tests.log |
-| 13 | D. Times to the hundredth (1.47 saved and shown) | Done | /tmp/browser/today-cleanup/hold-147.png, hold-147-reload.png, precision-result.log |
-| 14 | E. Royal timing examples for five positions, five player types, owner guide, full suite | Partly — fresh 4,033-test application suite PASS and guide updated; five populated players/full position set still unproven | /tmp/browser/today-cleanup/run2; /tmp/today-cleanup-owner-decisions/full-suite/result.json; docs/owner/publish-checklist.md |
+| 1 | In-card Delaycam, return and weekly usage | Done | Prior `/tmp/browser/today-cleanup/continue/delaycam-usage.log`, delaycam-used-reload.png |
+| 2 | Five populated player-specific study moments | Partly | `twoway-study.png`, `pitcher-study.png`; `newplayer.png` shows protected parent gate. Hitter with games/flags and eligible new-player positive proof missing. |
+| 3 | Midnight line removed | Done | Prior `/tmp/browser/today-cleanup/before-plan-closed.png` |
+| 4 | Independent closed changes/load drawer | Done | Prior `/tmp/browser/today-cleanup/continue/before-closed.png` |
+| 5 | Identity progress merged into return to full training | Done | `pitcher-identity-merged.png`: Throwing build, day 3 of 3 under Your return to full training, above Coach Hammer/Ask Hammer |
+| 6 | Identity rewards | Done | Prior `/tmp/browser/today-cleanup/run3`, identity-open.png |
+| 7 | Coach Hammer above Ask Hammer | Done | Prior `/tmp/browser/today-cleanup/run3` |
+| 8 | Instructions label on every exercise | Partly | `college-cards.log`, `college-block_warmup_x.png`, `college-block_hitting_x.png`, `college-block_throwing_x.png`, `college-conditioning.png`, `college-lift.png`, `college-block_recovery_x.png`: all listed exercises on this actual plan checked. Remaining absent card types need coverage. |
+| 9 | Every card focus save/rest/advance plus controls/reload | Partly | `focus-*.png`, `college-focus.log` prove six current card entry screens, not completion. Prior real two-set lift rest/reload retained. Speed/base-counter, fielding and all-type full control matrix missing. |
+| 10 | Embedded Tex Vision / Pick-off completion | Partly | `tex-in-card.png`, `tex-saved.png`, `tex.log`: opened in hitting card and real timer ran; canonical validity false, so no PASS. Pick-off not completed. Prior practice/video proof retained. |
+| 11 | Coach template/send/continuous autosave/focus | Partly | Earlier live app flow observed and canonical coach rows were saved; current screenshots absent, full controls matrix not proven. `GuidedCustomExercises.test.tsx` and full suite pass. Exact records snapshotted and removed. |
+| 12 | Units fixes and all five B decisions | Partly | Shared rules and tests PASS; five approved exercises not encountered/proven on an actual TEST plan. `college-block_warmup_x.png` proves declared time targets only. |
+| 13 | Hundredths saved/reloaded | Done | Prior `/tmp/browser/today-cleanup/hold-147-reload.png`, precision-result.log |
+| 14 | Five Royal examples, fresh suite, owner guide | Partly | `pitcher-study.png`, `twoway-study.png`; complete five-role/populated-player set missing. Fresh `full-suite.json`: 514 files, 4,033 tests, zero failures. Guide updated honestly. |
 
 ### Units audit results (runs 4–7)
 - Library of 964 exercises: every one resolves to one measure type (build-failing test).
@@ -56,7 +54,7 @@ Items 1–14 are the owner's sections A–E split into steps. Proof paths are sa
 - Owner all-B choices applied: lunge reps per leg, resisted press reps, lateral squat walk steps each way, Elephant Walk steps, toe carry yards. Exact measurement exceptions shared by both logging paths. Yard inputs/readback convert at display only (15 yd = canonical 45 ft); time doses never seed counts or distance. Six concrete rule tests added. Categories and generator dose unchanged.
 
 ### Ready to publish: NO
-Exact reason: items 2, 5, 8, 9, 10, 11, 12 and 14 still lack their remaining affected TEST-player/coach phone proofs, including the five approved exercise measurements. College sign-in was explicitly attempted this run but the tool refused without presenting approval; no owner screenshots or mocked data substitute for player proof. Owner decisions are resolved, coach continuous autosave is implemented/tested, and the fresh application suite passes. No new TEST records exist from this run; earlier cleanup evidence is retained. No publish, deploy, migration, cron or iOS change was made.
+Exact reason: items 2, 8, 9, 10, 11, 12 and 14 lack remaining positive affected-role phone evidence. Sign-in approvals now work; they are NOT the blocker. The selected new-player account is under-13 and requires its real parent/guardian; no signature or safety bypass was invented. The Tex Vision result is invalid canonically despite its celebratory screen. Five B exercises remain phone-unproven. Coach/vision exact proof records are removed; assessment/start changes on the three existing TEST personas still require verified prior-state restoration before cleanup can be called complete. Fresh full suite and preview pass; no publication performed.
 
 - [ ] Oct 23 cleanup run 7, 20:25–20:28: Today card log boxes now match the library rule — moving planks and pause-then-explode work show Reps with the planned count; still planks stay timed. 688 Today/logging tests PASS. Not phone-proven. Other OPEN items unchanged. No deploy/migration/publish/cron/iOS.
 - [ ] Oct 23 cleanup run 6, 20:24–20:26: hold audit — moving plank variations (shoulder taps, drag-throughs, reaches, leg lifts, rotation reaches) now count reps in the library measure rule; still planks stay timed holds. 570 tests PASS. Not phone-proven. Other OPEN items unchanged. No deploy/migration/publish/cron/iOS.
