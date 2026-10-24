@@ -24,7 +24,7 @@ describe("coach calls existing WIC and Swap judges", () => {
   it("counts total reps once rather than falling back to one rep per set", () => {
     const i = input(); i.catalog.set("warmup", { ...movement, category: "bat_speed", dosage_unit: "total_reps" });
     i.rows = [{ ...row, dosage_unit: "total_reps", sets: 2, total_reps: 24 } as any]; i.resultingDay = i.rows;
-    i.rm28 = { ...i.rm28, byChannel: { SWING: 10 }, byTier: { SWING: { high: 10 } }, loggedDaysByChannel: { SWING: 5 } } as any;
+    i.rm28 = { ...i.rm28, byChannel: { SWING: 10 }, byTier: { "SWING:high": 10 }, loggedDaysByChannel: { SWING: 8 } };
     expect(judgeCoachEnvelope(i).allowed).toBe(false);
   });
 });
