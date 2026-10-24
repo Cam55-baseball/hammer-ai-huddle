@@ -12,63 +12,63 @@
     },
     {
       "case": "speed",
-      "passed": false,
-      "error": "",
-      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+      "passed": true,
+      "rest_seconds": 180,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
     },
     {
       "case": "speed-cap",
-      "passed": false,
-      "error": "",
-      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+      "passed": true,
+      "rest_seconds": 300,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
     },
     {
       "case": "conditioning",
-      "passed": false,
-      "error": "",
-      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+      "passed": true,
+      "rest_seconds": 30,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
     },
     {
       "case": "warmup",
-      "passed": false,
-      "error": "",
-      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+      "passed": true,
+      "rest_seconds": 30,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
     },
     {
       "case": "hitting",
-      "passed": false,
-      "error": "",
-      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+      "passed": true,
+      "rest_seconds": 45,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
     },
     {
       "case": "pitching",
-      "passed": false,
-      "error": "",
-      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+      "passed": true,
+      "rest_seconds": 45,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
     },
     {
       "case": "throwing",
-      "passed": false,
-      "error": "",
-      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+      "passed": true,
+      "rest_seconds": 45,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
     },
     {
       "case": "fielding",
-      "passed": false,
-      "error": "",
-      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+      "passed": true,
+      "rest_seconds": 45,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
     },
     {
       "case": "baserunning",
-      "passed": false,
-      "error": "",
-      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+      "passed": true,
+      "rest_seconds": 45,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
     },
     {
       "case": "recovery",
-      "passed": false,
-      "error": "",
-      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 44, in main\n    assert 'Set 2' in await page.locator('[data-focus-session]').inner_text()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+      "passed": true,
+      "rest_seconds": 30,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
     },
     {
       "case": "coach",
@@ -79,7 +79,7 @@
       "case": "units",
       "passed": false,
       "error": "",
-      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 30, in main\n    assert 'target' in text; await page.get_by_label('Distance 1',exact=True).fill('15'); assert await page.get_by_label('Distance 1',exact=True).input_value()=='15'; await page.get_by_label('Distance 1',exact=True).screenshot(path=str(OUT/'units-yards.png')); await page.get_by_label('Jump distance 1 feet',exact=True).screenshot(path=str(OUT/'units-jump.png'))\n           ^^^^^^^^^^^^^^^^\nAssertionError\n"
+      "trace": "Traceback (most recent call last):\n  File \"/tmp/browser/final/check_matrix.py\", line 30, in main\n    assert 'target' in text; await page.get_by_label('Distance 1',exact=True).fill('15'); assert await page.get_by_label('Distance 1',exact=True).input_value()=='15'; await page.get_by_label('Distance 1',exact=True).screenshot(path=str(OUT/'units-yards.png')); await page.locator('[data-distance-field]').screenshot(path=str(OUT/'units-jump.png'))\n           ^^^^^^^^^^^^^^^^\nAssertionError\n"
     },
     {
       "case": "study-defender",
