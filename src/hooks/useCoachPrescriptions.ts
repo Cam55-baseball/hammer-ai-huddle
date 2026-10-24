@@ -95,6 +95,7 @@ export function useCoachPrescriptions(planDate: string) {
       }
       qc.invalidateQueries({ queryKey });
       qc.invalidateQueries({ queryKey: ["wk-rx"] });
+      qc.invalidateQueries({ queryKey: ["saved-block-day"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save your choice"),
   });
@@ -157,6 +158,7 @@ export function useMyCoachWorkouts() {
       qc.invalidateQueries({ queryKey: ["coach-rx-inbox"] });
       qc.invalidateQueries({ queryKey: ["wk-rx"] });
       qc.invalidateQueries({ queryKey: ["calendar-projection"] });
+      qc.invalidateQueries({ queryKey: ["saved-block-day"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save your choice"),
   });

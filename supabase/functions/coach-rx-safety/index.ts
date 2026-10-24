@@ -304,6 +304,15 @@ Deno.serve(async (req) => {
     if (choice === "use_instead" || choice === "add_alongside") {
       if (date !== today) return json({ error: "Use today to activate this workout on today's plan" }, 409);
       const facts = await gatherFacts(admin, me, category, date, intensity, false, today);
+      const { data: savedSnapshot, error: snapshotError } = await admin.from("athlete_plan_snapshots").select("payload,sport")
+        .eq("user_id", me).eq("plan_date", date);
+      if (snapshotError) throw snapshotError;
+      const { data: sportContext, error: sportError } = await admin.from("athlete_context").select("sport_primary").eq("user_id", me).maybeSingle();
+      if (sportError) throw sportError;
+      const modality = category === "fielding" ? "defense" : category;
+      const snapshot = savedSnapshot?.find((s: any) => s.sport === sportContext?.sport_primary);
+      const block = snapshot?.payload?.blocks?.find((b: any) => b.modality === modality && b.status === "ready" && !b.replacedByCoachRx && !b.coachRx);
+      facts.hasCard = facts.hasCard || !!block;
       const result = choice === "use_instead" ? checkPrescriptionReplace(facts) : checkPrescriptionAlongside(facts);
       if (result.verdict !== "allow") return json({ applied: false, verdict: result.verdict, reasons: result.reasons, safeOption: result.safeOption });
       const { data: senderProfile, error: senderError } = await admin.from("profiles").select("full_name").eq("id", rx.sender_id).maybeSingle();
@@ -318,7 +327,7 @@ Deno.serve(async (req) => {
       const envelope = await loadPrescriptionEnvelope(admin, me, date, category, rows, choice === "use_instead");
       if (!envelope.allowed) return json({ applied: false, verdict: "blocked", reasons: envelope.reasons, safeOption: envelope.safeOption });
       rows = envelope.rows;
-      safety = { verdict: result.verdict, intensity, checked_at: new Date().toISOString(), envelope: "wic-swap" };
+      safety = { verdict: result.verdict, intensity, checked_at: new Date().toISOString(), envelope: "wic-swap", block_expected: block ?? null, cns_result: "cnsResult" in envelope ? envelope.cnsResult : null };
     }
     const { data: committed, error: commitError } = await admin.rpc("coach_rx_commit_choice", {
       p_user: me, p_rx: rxId, p_date: date, p_choice: choice,

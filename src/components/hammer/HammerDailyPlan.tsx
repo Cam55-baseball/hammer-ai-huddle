@@ -855,16 +855,17 @@ function HammerDailyPlanBody({
     return { ...base, blocks: withPicks };
   }, [rawPlan, cnsHigh, planAdjust.adjustments, faultContext.data, faultContext.isError, projectedAthlete.equipmentList, ctx, drillCirculation.catalog, drillCirculation.circulation, drillCirculation.ready, modules, sportKey, gpForPlan, principlePicks.data]);
 
-  const savedDay = useQuery({ queryKey: ["saved-block-day", bodyUser?.id, bodyPlanDate], enabled: swapV2.enabled && !!bodyUser,
+  const savedDay = useQuery({ queryKey: ["saved-block-day", bodyUser?.id, bodyPlanDate], enabled: !!bodyUser,
     queryFn: async () => {
       const { data, error } = await supabase.from("athlete_plan_snapshots").select("id,payload,sport").eq("user_id", bodyUser?.id ?? "").eq("plan_date", bodyPlanDate);
       if (error) throw error;
       return data;
     } });
-  const savedPayload = savedDay.data?.find(row => row.sport === sportKey)?.payload as unknown as { blocks?: Array<{ modality: string; drills: DrillStep[] }> } | undefined;
-  const plan = swapV2.enabled && savedPayload?.blocks?.some(block => block.drills.some(drill => "swapReason" in drill))
+  const savedPayload = savedDay.data?.find(row => row.sport === sportKey)?.payload as unknown as { blocks?: Array<{ modality: string; drills: DrillStep[]; replacedByCoachRx?: string; coachRx?: string }> } | undefined;
+  const plan = savedPayload?.blocks?.some(block => block.replacedByCoachRx || (swapV2.enabled && block.drills.some(drill => "swapReason" in drill)))
     ? { ...computedPlan, blocks: computedPlan.blocks.map(block => {
-      const saved = savedPayload.blocks?.find(item => item.modality === block.modality);
+      const saved = savedPayload.blocks?.find(item => item.modality === block.modality && !item.coachRx);
+      if (saved?.replacedByCoachRx) return { ...block, drills: [], steps: [], status: "off" as const, why: "Replaced by coach workout — not missed", roadmapReason: "Replaced by coach workout — not missed" };
       return saved && block.status === "ready" ? { ...block, drills: saved.drills } : block;
     }) } : computedPlan;
 

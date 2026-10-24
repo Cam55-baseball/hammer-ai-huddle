@@ -99,5 +99,5 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
       u13ThrowBlock: await loadU13ThrowBlock(strictDb(admin), userId, age, date), catalog, gameTomorrow: raw.games.some(g => g.game_date === shift(date, 1) && !g.deleted_at && !g.ignored_for_training) },
     rm28: computeRm28(history, date), governor: { block: phase.sub_block === "os_q1" ? "B1" : phase.sub_block === "os_q2" ? "B2" : phase.sub_block === "os_q3" ? "B3" : phase.sub_block === "os_q4" ? "B4" : "B5", inSeason: phase.season === "in_season", growthMode: phase.growth, buildYesterday: CHANNELS.filter(ch => wasBuildDay(history, shift(date, -1), ch)) },
   });
-  return { ...result, rows: proposed };
+  return { ...result, rows: proposed, cnsResult: Math.max(0, Number(ledger.units_spent) - removedCost) + proposedCost };
 }
