@@ -1,12 +1,22 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WorkoutActuals } from "@/components/hammer/WorkoutActuals";
 import { useSaveExerciseLog } from "@/hooks/useExerciseLog";
 import { Button } from "@/components/ui/button";
+import { CoachPrescriptionStatus } from "@/components/coach/CoachPrescriptionStatus";
+import { prescriptionResults } from "../../../supabase/functions/_shared/coach/prescriptionResults";
 
 const store = vi.hoisted(() => ({ user: "player-one", rows: [] as Record<string, any>[], deleteFailure: false, inserts: 0 }));
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: store.user } }) }));
+vi.mock("@/hooks/useCoachPrescriptions", () => ({ useManageSentWorkouts: () => {
+  const query = useQuery({ queryKey: ["coach-rx-manage"], queryFn: async () => {
+    const send = { id: "coach-rx", recipient_id: "player-one" };
+    const prescription = { id: "coach-row", user_id: "player-one", plan_date: "2026-10-24", movement_slug: "timing", movement_name: "Coach timing", dosage_unit: "seconds", slot: "warmup", why_payload: { coach_rx: "coach-rx" } };
+    return [{ ...send, title: "Coach timing", category: "warmup", recipient_name: "Player", status: "added_alongside", plan_date: "2026-10-24", results: prescriptionResults([send], [prescription], store.rows)[send.id] ?? [] }];
+  } });
+  return { rows: query.data ?? [], isLoading: query.isLoading, error: query.error, acting: false };
+} }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {
   from: (table: string) => {
     let action = "read", inserted: Record<string, any> | undefined;
@@ -50,6 +60,19 @@ function mount(child: React.ReactNode) {
 beforeEach(() => { store.user = "player-one"; store.rows = []; store.inserts = 0; store.deleteFailure = false; });
 afterEach(cleanup);
 describe("row 3 canonical write and displayed readback", () => {
+  it("Sent workouts reads the canonical saved occurrence after logging and remount", async () => {
+    const first = mount(<LogAndRead />);
+    fireEvent.click(screen.getByRole("button", { name: "Save entered work" }));
+    await waitFor(() => expect(store.inserts).toBe(1));
+    first.unmount(); first.client.clear();
+    const second = mount(<CoachPrescriptionStatus />);
+    expect(await screen.findByText(/Time: 1\.47 s/)).toBeTruthy();
+    second.unmount(); second.client.clear();
+    store.rows.push({ ...store.rows[0], id: "other-date", plan_date: "2026-10-25", duration_seconds_precise: 9.99 });
+    mount(<CoachPrescriptionStatus />);
+    expect(await screen.findByText(/Time: 1\.47 s/)).toBeTruthy();
+    expect(screen.queryByText(/Time: 9\.99 s/)).toBeNull();
+  });
   for (const surface of ["History", "Vault My Drill Work", "The General"]) {
     it(`${surface} shared reader shows entered 1.47 after save and remount`, async () => {
       const first = mount(<LogAndRead />);
