@@ -7,7 +7,7 @@
 - [x] A4 Server safety check: _shared/coach/prescriptionSafety.ts (pure, 10 tests) + coach-rx-safety edge function (check/choose, is_linked_coach + recruitingGate, arm ledger/rest/game/injury facts) — deployed
 - [x] A5 Replace execution: same-category slots only (categorySlots, no spill-over), rows marked skipped + replaced_by_coach_rx, never "missed"; card label added
 - [x] A6 Coach status view: CoachPrescriptionStatus on CoachDashboard (used instead / added / saved / declined)
-- [~] A7 Proofs: 5/6 screen cases pass at 390×844 (.lovable/proofs/final/coach-rx-*.png, coach-rx-result.json pending final case): inbox three choices, hitting replace allowed, pitching blocked by throw counts with safe option, lift alongside, coach status view. OPEN: replaced-card label screen proof (label code in place; PocketCard open interaction in harness still not rendering the inner card)
+- [x] A7 Proofs: 6/6 screen cases pass at 390×844 (.lovable/proofs/final/coach-rx-*.png, coach-rx-result.json): inbox three choices, hitting replace allowed, pitching blocked by throw counts with safe option, lift alongside, coach status view, replaced-card label ("Replaced by coach workout … not missed")
 - [ ] B1 docs/owner/data-unity-matrix.md
 - [ ] B2 Automated test per matrix row; fix gaps
 - [ ] C Full suite, checklist + by-role guide, cleanup, Ready to publish report
