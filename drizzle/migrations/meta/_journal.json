@@ -771,6 +771,13 @@
       "when": 1792878797608,
       "tag": "0109_coach_prescription_server_choices",
       "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1792880288418,
+      "tag": "0110_coach_canonical_block_choice",
+      "breakpoints": true
     }
   ]
 }
