@@ -5,6 +5,7 @@ import { WorkoutActuals } from "@/components/hammer/WorkoutActuals";
 import { useSaveExerciseLog } from "@/hooks/useExerciseLog";
 import { Button } from "@/components/ui/button";
 import { CoachPrescriptionStatus } from "@/components/coach/CoachPrescriptionStatus";
+import { CoachPlanActuals } from "@/components/coach/CoachPlanActuals";
 import { prescriptionResults } from "../../../supabase/functions/_shared/coach/prescriptionResults";
 
 const store = vi.hoisted(() => ({ user: "player-one", rows: [] as Record<string, any>[], deleteFailure: false, inserts: 0 }));
@@ -60,6 +61,20 @@ function mount(child: React.ReactNode) {
 beforeEach(() => { store.user = "player-one"; store.rows = []; store.inserts = 0; store.deleteFailure = false; });
 afterEach(cleanup);
 describe("row 3 canonical write and displayed readback", () => {
+  it("coach plan actuals reads the saved occurrence and excludes another player and date", async () => {
+    const first = mount(<LogAndRead />);
+    fireEvent.click(screen.getByRole("button", { name: "Save entered work" }));
+    await waitFor(() => expect(store.inserts).toBe(1));
+    first.unmount(); first.client.clear();
+    store.rows.push({ ...store.rows[0], id: "other-date", plan_date: "2026-10-25", duration_seconds_precise: 9.99 });
+    const second = mount(<CoachPlanActuals athleteId="player-one" planDate="2026-10-24" />);
+    expect(await screen.findByText(/Time: 1\.47 s/)).toBeTruthy();
+    expect(screen.queryByText(/9\.99/)).toBeNull();
+    second.unmount(); second.client.clear();
+    mount(<CoachPlanActuals athleteId="unrelated-player" planDate="2026-10-24" />);
+    await waitFor(() => expect(screen.queryByRole("status")).toBeNull());
+    expect(screen.queryByText(/1\.47/)).toBeNull();
+  });
   it("Sent workouts reads the canonical saved occurrence after logging and remount", async () => {
     const first = mount(<LogAndRead />);
     fireEvent.click(screen.getByRole("button", { name: "Save entered work" }));

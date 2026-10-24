@@ -16,6 +16,7 @@ import { visibleCoachPlanBlocks } from '@/lib/coach/visiblePlanBlocks';
 import { previousPlanDates, savedTrainingHistory, savedPlanReasons, type SavedCoachPlan, type SavedPlanBlock } from '@/lib/coach/planHistory';
 import { sixWeekPlanDates } from '@/lib/coach/sixWeekPlanSummary';
 import { CoachSixWeekSummary } from './CoachSixWeekSummary';
+import { CoachPlanActuals } from './CoachPlanActuals';
 
 function SavedWork({ blocks }: { blocks: SavedPlanBlock[] }) {
   return <ul className="space-y-3">
@@ -125,6 +126,7 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
       ) : (
         <SavedWork blocks={blocks} />
       )}
+      <CoachPlanActuals athleteId={athleteId} planDate={today} />
       <div className="border-t border-border pt-3 space-y-3">
         <Button variant="ghost" size="sm" aria-expanded={historyOpen} onClick={() => setHistoryFor(historyOpen ? null : historyKey)}>
           {historyOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}Saved work — last 7 days
