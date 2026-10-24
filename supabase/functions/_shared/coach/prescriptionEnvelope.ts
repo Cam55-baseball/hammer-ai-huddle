@@ -16,6 +16,7 @@ export function judgeCoachEnvelope(input: {
   rows: Row[]; resultingDay: Row[]; catalog: Map<string, Row>; owned: string[]; missing: string[];
   age: number | null; trainingAge: string; trainingYears: number; sport: string; positions: string[];
   final: FinalCheckContext; rm28: Rm28; governor: GovernorContext; blockedIntensityClasses: string[];
+  isGameDay?: boolean;
 }) {
   const reasons: string[] = [];
   for (const row of input.rows) {
@@ -36,7 +37,7 @@ export function judgeCoachEnvelope(input: {
   }
   const final = finalRuleCheck(input.resultingDay, input.final);
   const sessionInput = { prescriptions: input.resultingDay as any, catalog: [...input.catalog.values()] as any,
-    template: { seasonPhase: input.final.phase, trainingAge: input.trainingAge, isGameDay: false, isRecoveryDay: input.final.liftRemoved },
+    template: { seasonPhase: input.final.phase, trainingAge: input.trainingAge, isGameDay: input.isGameDay === true, isRecoveryDay: input.final.liftRemoved },
     availableEquipment: input.owned, trainingAgeClass: input.trainingAge };
   const affected = new Set(input.rows.map(row => row.slot));
   if (affected.has("lift")) reasons.push(...certifyLift(sessionInput).fatal.map(issue => issue.message));
