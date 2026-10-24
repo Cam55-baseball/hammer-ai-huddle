@@ -18,10 +18,6 @@ const touches = (file: string, table: string) => {
   const body = src(file);
   expect(body.includes(table), `${file} should reference ${table}`).toBe(true);
 };
-const avoids = (file: string, table: string) => {
-  const body = src(file);
-  expect(body.includes(table), `${file} should NOT reference ${table}`).toBe(false);
-};
 
 describe("data-unity matrix", () => {
   it("1. plan cards & focus logs → wk_session_logs → standards, coach discipline, plan generation", () => {
