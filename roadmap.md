@@ -1,5 +1,7 @@
 # Current publish gate — Oct 24 final automated cleanup
 
+- [ ] Oct 24 22:11 owner run: finish shared coach safety, Vault/common-gear authoring, atomic skill-block replacement, canonical results/readers and row-3 behavioral/live-role proofs; run full suite and finalize guides; no publish/cron/iOS changes; leave the three TEST personas untouched.
+
 ## Oct 24 21:48 final batch — coach scheduling and data unity
 - [x] Correct duplicate legacy invitations and invalid-schedule orphan sends; show the three My Workouts shelves on phones; partition coach rows once and render all twelve categories in grouped canonical focus/logging order; retain max-effort intensity and declared catalog unit/distance. Connected-staff INSERT and checked-service-only UPDATE policies applied in owner-authorized 0109; coach-rx-safety redeployed and authenticated management read passed.
 - [x] Affected scheduling fixture assertions PASS at 390×844; saved `.lovable/proofs/coach-final/` screenshots. Live owner home/empty management read PASS, zero hosted writes; NOT affected-player/coach/org proof. Prior finished proofs retained.
