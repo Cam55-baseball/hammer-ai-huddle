@@ -51,7 +51,7 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   if (!savedDayCoverage(snapshot?.payload, current)) return refused("Today's saved skill work couldn't be included in the full workload check. Keep your plan and save this workout for later.");
   const savedPhases = current.map((r: Row) => r.why_payload?.phase_state).filter(Boolean);
   const savedPhase = savedPhases[0];
-  if (!savedPhase || savedPhase.date !== date || savedPhases.some((p: Row) => p.sub_block !== savedPhase.sub_block || p.lighter_week !== savedPhase.lighter_week || p.growth !== savedPhase.growth)) return refused("Today's saved training phase couldn't be confirmed. Your plan is unchanged.");
+  if (!savedPhase || savedPhases.length !== current.length || savedPhase.date !== date || savedPhases.some((p: Row) => p.date !== date || p.season !== savedPhase.season || p.sub_block !== savedPhase.sub_block || p.lighter_week !== savedPhase.lighter_week || p.growth !== savedPhase.growth)) return refused("Today's saved training phase couldn't be confirmed. Your plan is unchanged.");
   const phase = resolvePhaseState({ settings, date, heights: raw.heights, plannedDeload: savedPhase.lighter_week === "planned", trendLighter: savedPhase.lighter_week === "trend" });
   if (phase.sub_block !== savedPhase.sub_block || phase.season !== savedPhase.season || phase.growth !== savedPhase.growth) return refused("Your season or growth details changed. Refresh your plan before using this workout.");
   const owned = new Set<string>((inventory ?? []).find((r: Row) => !r.valid_until || Date.parse(r.valid_until) > Date.now())?.equipment ?? []);
