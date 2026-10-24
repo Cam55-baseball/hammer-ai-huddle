@@ -52,7 +52,8 @@ export function useSentActivities() {
     template: CustomActivityTemplate,
     playerIds: string[],
     lockedFields: LockableField[],
-    message?: string
+    message?: string,
+    rxOptions?: { category: string; planDate: string }
   ): Promise<boolean> => {
     if (playerIds.length === 0) {
       toast.error(t('sentActivity.selectPlayer', 'Please select at least one player'));
