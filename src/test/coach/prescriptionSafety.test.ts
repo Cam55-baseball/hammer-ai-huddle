@@ -136,4 +136,12 @@ describe("coachRxToWkRows — coach workout becomes real plan rows", () => {
     const rows = coachRxToWkRows({ ...base, usedInstead: false, exercises: [{ name: "Catch", slug: "catch_play", dosage_unit: "throws", reps: 12, distance_feet: 45 }] });
     expect(rows[0]).toMatchObject({ movement_slug: "catch_play", dosage_unit: "throws", reps: 12, distance_feet: 45 });
   });
+  it("preserves an explicit total-reps dose in its canonical field", () => {
+    const rows = coachRxToWkRows({ ...base, usedInstead: false, exercises: [{ name: "Swings", sets: 2, reps: 24, dosage_unit: "total_reps" }] });
+    expect(rows[0]).toMatchObject({ total_reps: 24, reps: null, dosage_unit: "total_reps" });
+  });
+  it("does not round fractional set counts into legal doses", () => {
+    const rows = coachRxToWkRows({ ...base, usedInstead: false, exercises: [{ name: "Swings", sets: 1.4, reps: 8 }] });
+    expect(rows[0].sets).toBe(1.4);
+  });
 });
