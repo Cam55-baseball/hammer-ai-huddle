@@ -18,6 +18,35 @@ import { useSentActivities } from '@/hooks/useSentActivities';
 import { getActivityIcon } from './IconPicker';
 import { hexToRgba } from '@/hooks/useUserColors';
 
+/** Coach prescription categories (owner request Oct 24) — every category a plan can contain. */
+const RX_CATEGORIES = [
+  { value: 'hitting', label: 'Hitting' },
+  { value: 'pitching', label: 'Pitching' },
+  { value: 'throwing', label: 'Throwing' },
+  { value: 'fielding', label: 'Fielding' },
+  { value: 'baserunning', label: 'Baserunning' },
+  { value: 'lift', label: 'Lifting' },
+  { value: 'speed', label: 'Speed' },
+  { value: 'conditioning', label: 'Conditioning' },
+  { value: 'warmup', label: 'Warm-up' },
+  { value: 'mobility', label: 'Mobility' },
+  { value: 'recovery', label: 'Recovery' },
+  { value: 'vision', label: 'Vision / timing tools' },
+] as const;
+
+function defaultRxCategory(activityType: string): string {
+  switch (activityType) {
+    case 'workout': return 'lift';
+    case 'running': return 'speed';
+    case 'warmup': return 'warmup';
+    case 'recovery': return 'recovery';
+    case 'practice':
+    case 'short_practice': return 'hitting';
+    case 'free_session': return 'conditioning';
+    default: return 'lift';
+  }
+}
+
 interface SendToPlayerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
