@@ -1,0 +1,11 @@
+{
+  "role": "democollege",
+  "url_path": "/my-custom-activities",
+  "read_only": true,
+  "fixture": false,
+  "viewport": "390x844",
+  "page_errors": [],
+  "my_workouts_visible": true,
+  "sent_empty_visible": false,
+  "plan_gate_visible": false
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "role": "democollege",
+    "refresh_http": 200,
+    "evidence": "read-only session refresh; NOT password sign-in or positive workout flow",
+    "management_http": 200,
+    "returned_sends": 0
+  },
+  {
+    "role": "democoach",
+    "refresh_http": 200,
+    "evidence": "read-only session refresh; NOT password sign-in or positive workout flow",
+    "management_http": 200,
+    "returned_sends": 0
+  },
+  {
+    "role": "demoorg",
+    "refresh_http": 200,
+    "evidence": "read-only session refresh; NOT password sign-in or positive workout flow",
+    "management_http": 200,
+    "returned_sends": 0
+  }
+]
