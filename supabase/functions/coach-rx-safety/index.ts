@@ -15,6 +15,7 @@ import { nextThrowDate } from "../_shared/wic/phases/nextThrowDate.ts";
 import {
   checkPrescriptionReplace,
   checkPrescriptionAlongside,
+  prescriptionIntensity,
   categorySlots,
   coachRxToWkRows,
   THROWING_CATEGORIES,
@@ -117,7 +118,7 @@ Deno.serve(async (req) => {
         : [];
       const category = CATEGORIES.includes(body.category) ? (body.category as RxCategory) : null;
       const date = String(body.plan_date ?? "");
-      const intensity = (["light", "standard", "high"].includes(body.intensity) ? body.intensity : "standard") as RxReplaceFacts["intensity"];
+      const intensity = prescriptionIntensity(body.intensity);
       const throwing = body.throwing === true;
       if (!ids.length || !category || !DATE.test(date)) return json({ error: "Pick players, a category and a date" }, 400);
       if (date < today) return json({ error: "Pick today or a future date" }, 400);
@@ -280,9 +281,7 @@ Deno.serve(async (req) => {
     // the workout lands on today's plan with the full safety re-check.
     const activateToday = body.activate_today === true;
     const date = prescriptionChoiceDate(choice, activateToday, String(rx.plan_date), today);
-    const intensity = (["light", "standard", "high"].includes((rx as any).safety_result?.intensity)
-      ? (rx as any).safety_result.intensity
-      : "standard") as RxReplaceFacts["intensity"];
+    const intensity = prescriptionIntensity(rx.safety_result?.intensity);
 
     let safety: Record<string, unknown> | null = null;
     let rows: Record<string, unknown>[] = [];
@@ -291,7 +290,8 @@ Deno.serve(async (req) => {
       const facts = await gatherFacts(admin, me, category, date, intensity, false, today);
       const result = choice === "use_instead" ? checkPrescriptionReplace(facts) : checkPrescriptionAlongside(facts);
       if (result.verdict !== "allow") return json({ applied: false, verdict: result.verdict, reasons: result.reasons, safeOption: result.safeOption });
-      const { data: senderProfile } = await admin.from("profiles").select("full_name").eq("id", rx.sender_id).maybeSingle();
+      const { data: senderProfile, error: senderError } = await admin.from("profiles").select("full_name").eq("id", rx.sender_id).maybeSingle();
+      if (senderError) throw senderError;
       rows = coachRxToWkRows({
         userId: me, planDate: date, category, prescriptionId: rxId,
         coachName: senderProfile?.full_name ?? null,

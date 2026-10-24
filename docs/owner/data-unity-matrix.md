@@ -1,4 +1,8 @@
-# Data-unity matrix — where every entry lands (Oct 24)
+# Data-unity matrix — final batch verification (Oct 24)
+
+**Release verdict: FAIL / not certified.** Static source checks are not the requested
+entry-write/readback proof. The earlier three individual fixes retain their live
+evidence; the full fourteen-kind, eight-surface matrix has not passed end to end.
 
 One row per entry kind. "Writes" is the table the entry is saved to. Each surface
 column is marked: **direct** (the surface queries the table), **derived** (it reads
@@ -27,7 +31,7 @@ live data landing in every surface; unverified cells remain unverified.
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | Plan cards & focus-mode logs | `wk_session_logs` | direct (StandardsBoard, Performance) | by design (practices/games/reports only) | by design | direct (Discipline joins wk_prescriptions→wk_session_logs); plan via derived `athlete_plan_snapshots` | derived (status counts) | by design | direct (wk-generate-daily, trendDeload) | derived (wk-daily-plan-job reads prescriptions) |
 | 2 | Swaps | `swap_log` + `athlete_equipment_memory` (server RPCs `wk_swap_*_atomic`) | via saved plan | by design | by design | derived (coach_athlete_plan reads saved plan) | by design | by design | direct (plan-swap, wk-generate-daily read equipment memory) | by design |
-| 3 | Coach prescriptions (incl. scheduling: any day / dates / recurring series, player "Use today" activation, sender edit/cancel/resend) | `coach_prescriptions` (one row per player per scheduled day, shared `series_id`) + `custom_activity_logs`; on Use instead / Add alongside / Use today the workout also becomes real `wk_prescriptions` rows (coach-rx-safety), so completion logs to `wk_session_logs` like any Hammers card | direct (ActivityAnalytics, Growth) | direct (ActivityHistoryList; separate from main History page) | direct (useVault) | direct (CoachComplianceView, CoachPrescriptionStatus "Sent workouts" with schedule + per-player response + completion via coach-rx-safety manage mode; Discipline via wk_session_logs) | by design | by design | direct (compute-hammer-state, evaluate-behavioral-state, evaluate-advice-effectiveness; plan generation reads wk_session_logs) | direct (nightly-mpi-process) |
+| 3 | Coach prescriptions and actual performed work | `coach_prescriptions` → checked `wk_prescriptions` → normal `wk_session_logs`; NOT `custom_activity_logs` | GAP: legacy analytics reads a different log | GAP: legacy activity History reads a different log | GAP: legacy Vault reads a different log | Sent workouts/Discipline source-connected; snapshot GAP; role readback unverified | Current-sender view mounted; assigned-role proof unverified | Unverified consent-scoped projection | Some canonical readers connected; full readback unverified | Legacy custom-log path GAP; canonical job effects unverified |
 | 3b | Coach prescription days on the player calendar | read-only projection of `coach_prescriptions` (buildCalendarEvents source `coach_prescription`) | by design | by design | by design | by design | by design | by design | by design | by design |
 | 4 | Practice logs | `performance_sessions` (+ optional `athlete_daily_log`, `governance_flags`) | by design | direct (usePracticeHistory) | by design | derived (load/coach views) | by design | by design | direct (compute-hammer-state) | direct (nightly-mpi-process) |
 | 5 | Game logs (player scorekeeping) | `gp_games`, `gp_at_bats`, `gp_pitches`, `gp_defense_plays`, `gp_baserun_events` | direct (Game IQ tab, not Today/Performance/Growth) | direct (useGameHistory, gp_reports) | by design | direct (coach_athlete_games, CoachTeamReport) | by design | by design | by design | direct (nightly-mpi-process finalized games) |
@@ -86,6 +90,38 @@ The three previously identified gaps were fixed the same day
   team sending or athlete activation. No hosted TEST rows created this run.
 
 ## Rules this matrix must keep satisfying
+
+### Final batch evidence — October 24, 21:48 continuation
+
+- Fixed duplicate sending: prescription sends no longer also create a legacy
+  acceptance invitation, and invalid recurrence writes neither kind of card.
+- Canonical coach rows are partitioned once and rendered with the existing
+  logger/focus host in category order, grouped by send. All twelve categories
+  preserve their original row identity; no completion is recorded on activation.
+- Max-effort templates now retain the high-intensity pre-game restriction;
+  declared catalog slug, feet and dosage unit survive the row adapter.
+- Applied `0109_coach_prescription_server_choices`: direct recipient/sender
+  updates cannot rewrite prescriptions or claim a response; authenticated
+  sends additionally require the existing connected-staff server judge.
+- Redeployed only `coach-rx-safety`, source hash `63030bf330ea71d654b7cdc097b85cd28c731a961ee64beb9bb7385836530bd6`.
+- Eight scheduling phone fixture assertions passed again at 390×844, saved in
+  `.lovable/proofs/coach-final/`. Authenticated owner home tabs and an empty
+  management read passed, zero hosted writes. This is NOT player/coach/org proof.
+- Final suite: 521 unique application files / 4,091 assertions, 33 server and
+  10 extra injury tests PASS; preview build OK. Passing tests do not convert
+  GAP or UNVERIFIED live cells into behavioral passes.
+- Full safety envelope, source-Vault selection/gear editor, skill-block
+  replacement, staff result details and row-by-row live data landing remain
+  incomplete. Do not replace these missing proofs with static PASS cells.
+
+### Cell-level evidence status
+
+For rows 1, 2, 4, 5, 7, 8, 11–14, every source-connected/derived cell above is
+**UNVERIFIED live**, not PASS; every by-design cell is **N/A**, not a waived owner
+requirement. Rows 6/9/10 retain only their specifically documented live RPC
+checks, not a whole-row pass. Row 3 GAP cells are **FAIL**; remaining row 3 cells
+are **UNVERIFIED**. Row 3b calendar projection is **PASS unit/fixture only**,
+**UNVERIFIED live player**. No all-matrix pass is claimed.
 
 - Every measurement joins baselines by declaring itself through `public.ledger_record`
   (source triggers + `ledger_record_tiles`); recording must never cost a clip.

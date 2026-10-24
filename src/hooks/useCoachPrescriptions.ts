@@ -84,8 +84,8 @@ export function useCoachPrescriptions(planDate: string) {
       return data as ChooseResult;
     },
     onSuccess: (r, vars) => {
-      if (!r.applied && r.reasons?.length) {
-        toast.error(r.reasons[0]);
+      if (!r.applied) {
+        toast.error(r.reasons?.[0] ?? "Nothing was saved. Refresh and try again.");
       } else if (vars.choice === "use_instead") {
         toast.success("Coach workout is now today's plan for that card.");
       } else if (vars.choice === "add_alongside") {
@@ -151,8 +151,8 @@ export function useMyCoachWorkouts() {
       return data as ChooseResult;
     },
     onSuccess: (r) => {
-      if (!r.applied && r.reasons?.length) toast.error(r.reasons[0]);
-      else toast.success("Added to today's plan.");
+      if (!r.applied) toast.error(r.reasons?.[0] ?? "Nothing was saved. Refresh and try again.");
+      else toast.success("Your choice was saved.");
       qc.invalidateQueries({ queryKey });
       qc.invalidateQueries({ queryKey: ["coach-rx-inbox"] });
       qc.invalidateQueries({ queryKey: ["wk-rx"] });

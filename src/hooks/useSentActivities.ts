@@ -29,11 +29,13 @@ export function useSentActivities() {
 
       // Org admins/coaches can also send to their assigned athletes
       // (owner request Oct 24, run 6) — same send path, same per-player safety.
-      const { data: assignments } = await supabase
+      const { data: assignments, error: assignmentsError } = await supabase
         .from('org_athlete_assignments' as any)
         .select('athlete_user_id')
         .eq('coach_user_id', userData.user.id)
         .is('revoked_at', null);
+
+      if (assignmentsError) throw assignmentsError;
 
       const assignedIds = ((assignments ?? []) as any[]).map((a) => a.athlete_user_id as string);
       const followIds = (follows ?? []).map((f) => f.player_id);
@@ -77,13 +79,14 @@ export function useSentActivities() {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Not authenticated');
+      const senderId = userData.user.id;
 
       // Create a snapshot of the template as JSON
       const templateSnapshot = JSON.parse(JSON.stringify(template));
 
       // Insert sent activity records for each player
       const inserts = playerIds.map(playerId => ({
-        sender_id: userData.user!.id,
+        sender_id: senderId,
         template_id: template.id,
         template_snapshot: templateSnapshot,
         recipient_id: playerId,
@@ -92,16 +95,12 @@ export function useSentActivities() {
         status: 'pending'
       }));
 
-      const { error } = await supabase
-        .from('sent_activity_templates')
-        .insert(inserts);
-
       // Coach prescription (owner request Oct 24): one row per player per
       // scheduled day so each player gets their own Today choice and their own
       // safety check on every day. Schedule shapes: any day (one undated card
       // the player activates), specific date(s), or a recurring series
       // materialized day by day with a shared series id.
-      if (!error && rxOptions) {
+      if (rxOptions) {
         const teamSendId = playerIds.length > 1 ? crypto.randomUUID() : null;
         const schedule: ScheduleInput = rxOptions.schedule ?? { type: 'date', startDate: rxOptions.planDate };
         const today = new Date().toLocaleDateString('en-CA');
@@ -125,7 +124,7 @@ export function useSentActivities() {
         };
         const rxRows = playerIds.flatMap(playerId =>
           days.map(day => ({
-            sender_id: userData.user!.id,
+            sender_id: senderId,
             recipient_id: playerId,
             category: rxOptions.category,
             plan_date: day,
@@ -143,8 +142,13 @@ export function useSentActivities() {
           toast.error(t('sentActivity.sendError', 'Failed to send activity'));
           return false;
         }
+        // A prescription is the one received card. Do not also create a
+        // legacy acceptance invitation or leave one behind on a failed send.
+        toast.success(t('sentActivity.sent', `Activity sent to ${playerIds.length} player(s)!`));
+        return true;
       }
 
+      const { error } = await supabase.from('sent_activity_templates').insert(inserts);
       if (error) {
         // Check if it's a duplicate error
         if (error.code === '23505') {

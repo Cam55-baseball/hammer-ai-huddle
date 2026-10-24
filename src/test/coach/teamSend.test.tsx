@@ -64,6 +64,7 @@ describe("coach team send", () => {
     expect(rows.every((r) => r.category === "lift" && r.plan_date === "2026-10-24")).toBe(true);
     expect(rows.every((r) => r.team_send_id === rows[0].team_send_id && r.team_send_id)).toBe(true);
     expect(rows.every((r) => (r.safety_result as any).intensity === "standard")).toBe(true);
+    expect(inserts["sent_activity_templates"]).toBeUndefined();
   });
 
   it("a single-player send has no team_send_id", async () => {
@@ -72,5 +73,15 @@ describe("coach team send", () => {
     const rows = inserts["coach_prescriptions"]?.[0] as Array<Record<string, unknown>>;
     expect(rows).toHaveLength(1);
     expect(rows[0].team_send_id).toBeNull();
+  });
+
+  it("an invalid recurring schedule leaves no invitation or prescription behind", async () => {
+    const { result } = renderHook(() => useSentActivities());
+    const ok = await result.current.sendActivityToPlayers(template, ["p1"], [], undefined, {
+      category: "hitting", planDate: "2026-10-24",
+      schedule: { type: "recurring", startDate: "2026-10-24", weekdays: [], count: 12 },
+    });
+    expect(ok).toBe(false);
+    expect(Object.keys(inserts)).toEqual([]);
   });
 });

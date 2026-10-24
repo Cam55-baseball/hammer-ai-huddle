@@ -12,6 +12,13 @@ export type RxCategory =
 
 export type RxVerdict = "allow" | "alongside_only";
 
+/** Template vocabulary and prescription vocabulary share the hard-effort gate. */
+export function prescriptionIntensity(value: unknown): "light" | "standard" | "high" {
+  if (value === "light") return "light";
+  if (value === "high" || value === "max") return "high";
+  return "standard";
+}
+
 export interface RxReplaceFacts {
   category: RxCategory;
   date: string; // YYYY-MM-DD
@@ -106,6 +113,9 @@ export interface CoachRxExercise {
   duration?: number | null;   // seconds
   rest?: number | null;       // seconds
   gear?: string | null;
+  slug?: string | null;
+  distance_feet?: number | null;
+  dosage_unit?: string | null;
 }
 
 /**
@@ -143,7 +153,7 @@ export function coachRxToWkRows(args: {
         slot,
         sequence_order: 900 + i, // coach block sorts after generator rows
         sequence_role: "coach",
-        movement_slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, ""),
+        movement_slug: e.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, ""),
         movement_name: name,
         phase: "coach",
         sets: typeof e.sets === "number" && e.sets > 0 ? Math.round(e.sets) : null,
@@ -152,9 +162,9 @@ export function coachRxToWkRows(args: {
         load_pct: null,
         duration_seconds: duration,
         rest_seconds: typeof e.rest === "number" && e.rest > 0 ? Math.round(e.rest) : null,
-        distance_feet: null,
+        distance_feet: typeof e.distance_feet === "number" && e.distance_feet > 0 ? e.distance_feet : null,
         total_reps: null,
-        dosage_unit: duration ? "seconds" : "reps",
+        dosage_unit: e.dosage_unit || (duration ? "seconds" : "reps"),
         cns_cost: 0,
         cns_clamped: false,
         substituted_from_slug: null,

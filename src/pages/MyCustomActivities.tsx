@@ -125,10 +125,17 @@ export default function MyCustomActivities() {
         </div>
 
         <Tabs defaultValue="coach-workouts" className="w-full">
-          {/* Scrollable tabs on mobile */}
+          <TabsList className="grid h-auto w-full grid-cols-3 bg-muted/50 p-1 gap-1">
+            {tabs.slice(0, 3).map(({ value, label }) => (
+              <TabsTrigger key={value} value={value} aria-label={label} className="h-auto min-h-12 whitespace-normal px-2 py-2 text-xs sm:text-sm">
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {/* Preserve the existing activity tools below the three main shelves. */}
           <ScrollArea className="w-full">
-            <TabsList className="inline-flex h-14 sm:h-12 w-full sm:w-auto bg-muted/50 p-1 gap-1">
-              {tabs.map(({ value, icon: Icon, label, badge }) => (
+            <TabsList className="inline-flex h-14 sm:h-12 w-max bg-muted/50 p-1 gap-1">
+              {tabs.slice(3).map(({ value, icon: Icon, label, badge }) => (
                 <TabsTrigger 
                   key={value}
                   value={value} 

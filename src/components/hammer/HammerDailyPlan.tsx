@@ -1123,6 +1123,21 @@ function HammerDailyPlanBody({
           const RECOVERY_LAST = new Set(["recovery", "regeneration", "mobility", "sleep"]);
           const otherBlocks = allOtherBlocks.filter((b) => !RECOVERY_LAST.has(b.modality));
           const recoveryBlocks = allOtherBlocks.filter((b) => RECOVERY_LAST.has(b.modality));
+          const coachCards = (categories: string[]) => {
+            const rows = (wkRx.grouped.coach ?? []).filter(rx => categories.includes(rx.slot));
+            const ids = [...new Set(rows.map(rx => {
+              const payload = rx.why_payload as unknown as { coach_rx?: string } | null;
+              return payload?.coach_rx ?? rx.id;
+            }))];
+            return ids.map(id => {
+              const items = rows.filter(rx => (rx.why_payload as unknown as { coach_rx?: string } | null)?.coach_rx === id || rx.id === id);
+              const first = items[0];
+              if (!first) return null;
+              return <PocketCard key={`coach-${id}`} id={`coach_${id}`} category={`Coach workout · ${first.slot}`} tone="bg-primary" planDate={pocketDate} prescribed progress={progressOf(items)} countLabel={`${items.length} activities`}>
+                {() => <>{items.map(rx => <WkPrescriptionCard key={rx.id} rx={rx} />)}</>}
+              </PocketCard>;
+            });
+          };
 
           // Arm-care budget: throwing block owns arm care whenever it's rendered
           // as a real block (ready/awaiting-input). Otherwise the lift card carries it.
@@ -1171,6 +1186,7 @@ function HammerDailyPlanBody({
                 );
               })}
               <WarmupCrossoverAddons />
+              {coachCards(["warmup"])}
               <HammerCheckInCard
                 quizType="pre_lift"
                 completed={vaultQuizzes.hasCompleted("pre_lift")}
@@ -1181,6 +1197,7 @@ function HammerDailyPlanBody({
                   {() => <>{wkRx.grouped.speedCard.length > 0 && <WkSpeedCard pocket />}{baseSpeed.map(b => <div key={`speed-${b.side ?? "x"}`}><Badge variant="secondary">Speed</Badge><BlockCard block={{...b, title: "Speed — Base Stealer"}} onNavigate={navigate} onEngagementChanged={bumpEngagement} /></div>)}</>}
                 </PocketCard>
               </ErrorBoundary>
+              {coachCards(["speed"])}
               <ErrorBoundary label="wk-bat-speed">
                 <PocketCard id="bat_speed" progress={progressOf(wkRx.grouped.batSpeedCard)} intro={POCKET_INTROS.bat_speed} category="Bat speed" focus={pocketFocus(wkRx.grouped.batSpeedCard)} tone="bg-accent" planDate={pocketDate} practiceLogging={logPractice} prescribed={wkRx.grouped.batSpeedCard.length > 0} countLabel={countLabel(wkRx.grouped.batSpeedCard)}>
                   {() => isSwitchHitter ? (
@@ -1262,16 +1279,19 @@ function HammerDailyPlanBody({
                   </PocketCard>
                 );
               })}
+              {coachCards(["hitting", "pitching", "throwing", "fielding", "baserunning", "vision"])}
               <ErrorBoundary label="wk-conditioning">
                 <PocketCard id="conditioning" progress={progressOf(wkRx.grouped.conditioningCard)} intro={POCKET_INTROS.conditioning} category="Conditioning" focus={pocketFocus(wkRx.grouped.conditioningCard)} tone="bg-secondary" planDate={pocketDate} practiceLogging={logPractice} prescribed={wkRx.grouped.conditioningCard.length > 0 || baseConditioning.length > 0} countLabel={countLabel(wkRx.grouped.conditioningCard)}>
                   {() => <>{wkRx.grouped.conditioningCard.length > 0 && <WkConditioningCard pocket />}{baseConditioning.map(b => <div key={`physical-${b.side ?? "x"}`}><Badge variant="secondary">Conditioning</Badge><BlockCard block={{...b, title: "Conditioning — base-running work"}} onNavigate={navigate} onEngagementChanged={bumpEngagement} /></div>)}</>}
                 </PocketCard>
               </ErrorBoundary>
+              {coachCards(["conditioning"])}
               <ErrorBoundary label="wk-lifts">
                 <PocketCard id="lift" progress={progressOf(wkRx.grouped.lifts)} intro={POCKET_INTROS.lift} category="Lift" focus={pocketFocus(wkRx.grouped.lifts)} tone="bg-destructive" planDate={pocketDate} prescribed={wkRx.grouped.lifts.length > 0} countLabel={countLabel(wkRx.grouped.lifts)}>
                   {() => <WkLiftsCard pocket />}
                 </PocketCard>
               </ErrorBoundary>
+              {coachCards(["lift", "supplemental"])}
               {recoveryBlocks.map((b) => {
                 const adj = adaptive.find((a) => a.modality === b.modality);
                 return (
@@ -1299,6 +1319,7 @@ function HammerDailyPlanBody({
                   </PocketCard>
                 );
               })}
+              {coachCards(["mobility", "recovery"])}
               <HammerCheckInCard
                 quizType="night"
                 completed={vaultQuizzes.hasCompleted("night")}

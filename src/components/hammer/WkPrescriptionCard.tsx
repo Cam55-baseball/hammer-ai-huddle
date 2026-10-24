@@ -57,6 +57,11 @@ const SLOT_TONE: Record<WkRx["slot"], string> = {
   cross_sport: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
   ub_primer: "bg-primary/10 text-primary",
   windmill: "bg-primary/10 text-primary",
+  hitting: "bg-primary/10 text-primary", pitching: "bg-primary/10 text-primary",
+  throwing: "bg-primary/10 text-primary", fielding: "bg-primary/10 text-primary",
+  baserunning: "bg-primary/10 text-primary", warmup: "bg-primary/10 text-primary",
+  mobility: "bg-primary/10 text-primary", recovery: "bg-primary/10 text-primary",
+  vision: "bg-primary/10 text-primary",
 };
 
 const SLOT_LABEL: Record<WkRx["slot"], string> = {
@@ -68,6 +73,8 @@ const SLOT_LABEL: Record<WkRx["slot"], string> = {
   cross_sport: "Cross-Sport",
   ub_primer: "Upper-Body Primer",
   windmill: "Windmill Pitching",
+  hitting: "Hitting", pitching: "Pitching", throwing: "Throwing", fielding: "Fielding",
+  baserunning: "Baserunning", warmup: "Warm-up", mobility: "Mobility", recovery: "Recovery", vision: "Vision / timing",
 };
 
 function cleanAthleteCopy(value: string | null | undefined): string | null {

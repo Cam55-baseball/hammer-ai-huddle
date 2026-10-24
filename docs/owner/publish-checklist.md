@@ -1,6 +1,30 @@
 # Hammers Today — final consolidated publish checklist
 
-Updated October 24, 2026 (final, after coach prescriptions + data-unity completion). **Ready to publish: NO.** The five human-only checks in A are pending; exact restoration of three TEST personas lacks verified before-state snapshots, and global TEST cleanup is not certified. This sheet is final documentation, not publication approval.
+Updated October 24, 2026, final batch. **Ready to publish: NO.** Coach safety/data landing and affected-player/coach/org proofs remain incomplete, alongside the five human checks and TEST restoration/cleanup gates below. This is a final honest checklist, not a claim that the requested build is finished or publication approval.
+
+## Final batch result
+
+- Fixed duplicate legacy invitations on prescription sends and invalid-schedule
+  orphan invitations; kept the one existing My Workouts destination.
+- All three main shelves fit on the 390×844 phone without horizontal searching.
+- Coach plan rows now render once through the normal grouped focus/logging host,
+  preserving twelve categories and declared catalog identity/unit/distance.
+- Max effort keeps the high-intensity gate. Applied connected-staff send and
+  service-only update safeguards; deployed only the authorized safety function.
+- Eight scheduling fixture assertions passed, with saved phone screenshots;
+  authenticated owner home and empty management read passed, no hosted writes.
+- Full application suite: **521 unique files / 4,091 assertions PASS**, including
+  refreshed affected tests after the final edits; **33 server + 10 additional
+  injury tests PASS** (4,134 total). Preview build OK. Evidence:
+  `.lovable/proofs/coach-final/suite-result.json`. The server runner temporarily
+  changed local dependency links; locked dependencies were restored, affected
+  checks repeated, and the remaining bounded groups completed successfully.
+- **Still not finished:** full readiness/pain/equipment/volume/phase safety;
+  source-Vault item/gear editing; same-category skill-block replacement;
+  complete staff results; actual player/coach/org/team save-and-reload proofs;
+  custom-activity History/Vault/General and coach-snapshot landing; every-row,
+  every-surface behavioral data-unity tests. These are implementation/proof
+  gaps, not human-only checks and not waiting for owner authorization.
 
 ## A. Human-only checks before publishing
 
@@ -39,7 +63,9 @@ Final automated screenshots are 390×844 and render production components with i
 
 **Focus proof scope:** lift, speed, capped speed, conditioning, warm-up, hitting, throwing/pitching, fielding, baserunning, recovery and coach-sent workout cover entry/timer → Next saves → correct rest → advance, Skip, Save & exit, X and reload. Sprint 30 yards = 180 seconds; 60 yards caps at 300 seconds. Conditioning uses 30 seconds between reps and 300 seconds after four bases. Coach declared rest is 30 seconds. The separate outer-dialog X proof preserves already-saved work and running rest; it does not establish that X flushes an unfinished write.
 
-**Retained verification:** latest full application suite passed **517 files / 4,064 tests**, zero failures (run 07:34 UTC Oct 24, after the data-unity fixes). Preview reported build OK. The 14-item proofs above are retained evidence from earlier runs and were not rerun.
+**Current verification:** 521 unique application files / 4,091 assertions pass,
+plus 33 server and 10 additional injury tests; preview build OK. The 14-item
+proofs above remain retained earlier evidence, not rerun or relabeled live proof.
 
 ### TEST cleanup — blocked, not waived
 
@@ -52,7 +78,7 @@ Evidence: `.lovable/proofs/final/cleanup-result.json` retains the prior exact-ID
 
 The three personas are retained system accounts; their Oct24 assessment/start changes remain unrestored. Located files and previously checked protected snapshot tags do not establish their before-state. An actual before-state backup is needed; no destructive workaround is authorized.
 
-## B. After publishing: live checks
+## B. Coach-workout release checks
 
 ### Coach scheduling — required before release
 
@@ -69,10 +95,9 @@ together; Add alongside cannot bypass checked safety restrictions. The authorize
 are confirmed present. Fresh 390×844 live owner home tabs and empty management
 read passed. This is not an affected-player/team/org proof. Previous scheduling
 screenshots/results remain fixture-only and were not rerun.
-Final focused checks: 8 files / 71 tests PASS; final function validation PASS;
-preview build OK. The new full-suite attempt was stopped after ten minutes
-without a final summary and is not a pass. The earlier 4,064-test result predates
-the scheduling changes.
+Final batch focused checks: 10 files / 73 tests PASS; function validation PASS;
+preview build OK. The previously stopped full-suite attempt is superseded by
+the completed bounded results in the Final batch result section above.
 
 Only after explicit owner publication. These do not replace A or resolve the cleanup blockers.
 
@@ -131,11 +156,26 @@ Do not interpret the historical "all gaps" wording as complete live certificatio
 | Lift added alongside | Done — automated | `coach-rx-lift-alongside.png` |
 | Coach status view (used instead / added / saved / declined) | Done — automated | `coach-rx-status.png` |
 | Replaced-card label, never "missed" | Done — automated | `coach-rx-replaced-card.png` |
-| Safety rules | Done — 10 rule tests | `src/test/coach/prescriptionSafety.test.ts` |
+| Safety rules | Partial — rule tests pass; full envelope missing | `src/test/coach/prescriptionSafety.test.ts` |
 | Team send (one row per player, shared group) | Done — 2 tests | `src/test/coach/teamSend.test.tsx` |
 
 All result rows: `.lovable/proofs/final/coach-rx-result.json` (6/6, 390×844, fixture-only).
 
 **Data unity.** `docs/owner/data-unity-matrix.md` maps all 14 entry kinds × 8 surfaces with verified writer/reader evidence. `src/test/unity/dataUnity.test.ts` holds 14 contract tests (one per row); all pass. **All three gaps found on Oct 24 are fixed and live-proven** (migrations 0105/0106, owner-authorized): coach-entered games now mirror into the game list (marked coach-entered, kept out of training math; undo/"not me" removes the mirror and reverses throws); coach/org/scout test reads include combine results; coach readiness and org attendance count both check-in systems. Live proof ran the real functions as the demo coach and demo player: combine result returned in the coach test list, daily check-in counted in readiness attendance, coach game mirrored then removed by the player's "not me" flag with throws reversed to zero. The live proof also surfaced and fixed a pre-existing crash: the player/parent confirm-or-flag path called a non-existent parent check, so every such call failed since it shipped. All TEST rows from the proof were removed and verified gone.
 
-No publication, deployment, migration, cron or iOS action is authorized by this sheet or was performed in this continuation. No refunds/results promises, fabricated measurements, consent bypass or new training dose are introduced.
+No publication, cron or iOS changes were made. The owner-authorized prescription
+access migration and safety-function redeploy were applied this continuation.
+No hosted TEST rows were created; historical TEST restoration/global-cleanup
+blocks remain. No fabricated measurements, consent bypass or new training dose.
+
+### Final by-role instructions and limits
+
+| Role | What it is | How to use | What you'll see / release limit |
+|---|---|---|---|
+| Player | One home for received, shelved and personal workouts | Open My Workouts → From my coaches / Saved for later / My own. Use today instead, Add alongside today, or Save for later. | Scheduled cards and explanations; activation is not completion. Full safety and downstream readback are not yet release-certified. |
+| Coach | Per-player dated or recurring sends | Share from My own; choose category, players and Any day/date(s)/weekly/monthly. Sent workouts moves or cancels future unanswered dates and resends. | Responses and completed-activity counts; detailed actual results and live team proof remain incomplete. |
+| Organization | The same sending path under current athlete access | Use My Workouts and dashboard Sent workouts. | Current sender's permitted sends, not all staff's sends; assigned-org live send/readback remains unverified. |
+
+The historical guide's statements that every coach use already lands in History,
+Vault and the coach plan are superseded by the explicit GAP/UNVERIFIED cells in
+`data-unity-matrix.md`. Do not tell players these destinations are proven.

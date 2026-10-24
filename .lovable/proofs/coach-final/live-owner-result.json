@@ -1,0 +1,15 @@
+{
+  "viewport": [
+    390,
+    844
+  ],
+  "authenticated_role": "owner",
+  "home_tabs": true,
+  "live_management_read": {
+    "error": false,
+    "rows": 0,
+    "hasRows": true
+  },
+  "hosted_writes": 0,
+  "page_errors": []
+}

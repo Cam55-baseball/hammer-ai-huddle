@@ -1,5 +1,17 @@
 # Current publish gate — Oct 24 final automated cleanup
 
+## Oct 24 21:48 final batch — coach scheduling and data unity
+- [x] Correct duplicate legacy invitations and invalid-schedule orphan sends; show the three My Workouts shelves on phones; partition coach rows once and render all twelve categories in grouped canonical focus/logging order; retain max-effort intensity and declared catalog unit/distance. Connected-staff INSERT and checked-service-only UPDATE policies applied in owner-authorized 0109; coach-rx-safety redeployed and authenticated management read passed.
+- [x] Affected scheduling fixture assertions PASS at 390×844; saved `.lovable/proofs/coach-final/` screenshots. Live owner home/empty management read PASS, zero hosted writes; NOT affected-player/coach/org proof. Prior finished proofs retained.
+- [ ] Finish full safety envelope, Vault/gear authoring, same-category skill-block replacement, staff actual-results details and canonical custom-activity/snapshot landing. These are unfinished implementation, not owner-authorization blockers.
+- [ ] Real player/coach/org/team saved readback and every-row/every-surface data-unity behavioral proof; current fixtures/contracts do not supply this evidence.
+- [x] Full suite completed in eight bounded groups with refreshed final affected files: 521 unique app files / 4,091 assertions PASS; 33 server and 10 additional injury tests PASS (4,134 total), preview build OK. Matrix, consolidated checklist and by-role guide finalized with explicit GAP/UNVERIFIED evidence, not false completion. `.lovable/proofs/coach-final/suite-result.json`.
+- [x] Ready to publish: NO. Exact reasons: incomplete full safety, Vault/gear authoring, skill-block replacement, staff results and canonical legacy-activity/snapshot landing; missing real player/coach/org/team and full matrix write/readback proofs; five human checks; three persona snapshots/global cleanup uncertified. No publish, cron or iOS changes. Only authorized 0109 and coach-rx-safety redeploy; no new hosted TEST rows.
+
+Final documentation explicitly corrects row 3 History/Vault/General/snapshot
+gaps and supersedes prior whole-matrix PASS wording. Five human checks, three
+persona before-state snapshots and global TEST cleanup remain separate blockers.
+
 ## Oct 24 21:30 continuation — scheduling closeout
 - [x] Review remaining scheduling, My Workouts, coach/org Sent workouts and data-unity paths; retain prior fixture proofs without claiming live verification. Fixed manage dispatch, org mount, date-on-block mutation, alongside rest bypass, atomic choice commit, missing rest column, calendar memo/refetch, Any day calendar exclusion and weekday ordering. Owner-authorized 0108 applied and coach-rx-safety deployed; live owner empty management read and home tabs verified at 390×844.
 - [x] Complete consolidated player/coach/org scheduling checks and by-role guide; distinguish fixture/static evidence from affected-role data landing.

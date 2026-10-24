@@ -3,6 +3,7 @@ import {
   checkPrescriptionReplace,
   categorySlots,
   coachRxToWkRows,
+  prescriptionIntensity,
   type RxReplaceFacts,
 } from "../../../supabase/functions/_shared/coach/prescriptionSafety";
 
@@ -21,6 +22,10 @@ const base: RxReplaceFacts = {
 };
 
 describe("coach prescription replace safety", () => {
+  it("max-effort templates remain high intensity before an in-season game", () => {
+    expect(prescriptionIntensity("max")).toBe("high");
+    expect(checkPrescriptionReplace({ ...base, inSeason: true, gameNextDay: true, intensity: prescriptionIntensity("max") }).verdict).toBe("alongside_only");
+  });
   it("allows a normal same-category replace", () => {
     const r = checkPrescriptionReplace(base);
     expect(r.verdict).toBe("allow");
@@ -126,5 +131,9 @@ describe("coachRxToWkRows — coach workout becomes real plan rows", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].sets).toBeNull();
     expect(rows[0].reps).toBeNull();
+  });
+  it("preserves declared catalog identity, feet and throws rather than guessing reps", () => {
+    const rows = coachRxToWkRows({ ...base, usedInstead: false, exercises: [{ name: "Catch", slug: "catch_play", dosage_unit: "throws", reps: 12, distance_feet: 45 }] });
+    expect(rows[0]).toMatchObject({ movement_slug: "catch_play", dosage_unit: "throws", reps: 12, distance_feet: 45 });
   });
 });
