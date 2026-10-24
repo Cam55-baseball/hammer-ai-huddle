@@ -83,6 +83,29 @@ export function useSentActivities() {
         .from('sent_activity_templates')
         .insert(inserts);
 
+      // Coach prescription (owner request Oct 24): one row per player so each
+      // player gets their own Today choice and their own safety check.
+      if (!error && rxOptions) {
+        const teamSendId = playerIds.length > 1 ? crypto.randomUUID() : null;
+        const rxRows = playerIds.map(playerId => ({
+          sender_id: userData.user!.id,
+          recipient_id: playerId,
+          category: rxOptions.category,
+          plan_date: rxOptions.planDate,
+          title: template.title,
+          exercises: templateSnapshot.exercises ?? [],
+          gear_labels: (templateSnapshot.exercises ?? []).flatMap((e: any) => e?.gear ? [String(e.gear)] : []),
+          source_template_id: template.id,
+          team_send_id: teamSendId,
+          safety_result: { intensity: template.intensity ?? 'standard' },
+        }));
+        const { error: rxError } = await supabase.from('coach_prescriptions' as any).insert(rxRows);
+        if (rxError) {
+          toast.error(t('sentActivity.sendError', 'Failed to send activity'));
+          return false;
+        }
+      }
+
       if (error) {
         // Check if it's a duplicate error
         if (error.code === '23505') {
