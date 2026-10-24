@@ -9,6 +9,8 @@ import { HydrationTrackerWidget } from '@/components/custom-activities/Hydration
 import { RunningPresetLibrary } from '@/components/custom-activities/RunningPresetLibrary';
 import { WorkoutTemplatesLibrary } from '@/components/custom-activities/WorkoutTemplatesLibrary';
 import { ReceivedActivitiesList } from '@/components/custom-activities/ReceivedActivitiesList';
+import { CoachWorkoutsPanel } from '@/components/custom-activities/CoachWorkoutsPanel';
+import { useMyCoachWorkouts } from '@/hooks/useCoachPrescriptions';
 import { RecentlyDeletedList } from '@/components/custom-activities/RecentlyDeletedList';
 import { PresetLibrary } from '@/components/elite-workout/presets/PresetLibrary';
 import { WorkoutPlanCTA } from '@/components/WorkoutPlanCTA';
@@ -20,7 +22,7 @@ import { useReceivedActivities } from '@/hooks/useReceivedActivities';
 import { useDeletedActivities } from '@/hooks/useDeletedActivities';
 import { useReceivedFolders } from '@/hooks/useReceivedFolders';
 import { WorkoutBlock } from '@/types/eliteWorkout';
-import { LayoutGrid, History, Droplets, Footprints, BookOpen, Inbox, Sparkles, Trash2, Dumbbell, FolderOpen } from 'lucide-react';
+import { LayoutGrid, History, Droplets, Footprints, BookOpen, Inbox, Sparkles, Trash2, Dumbbell, FolderOpen, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,6 +49,7 @@ export default function MyCustomActivities() {
   const { pendingCount } = useReceivedActivities();
   const { deletedCount, refetch: refetchDeleted } = useDeletedActivities(selectedSport);
   const { pendingCount: folderPendingCount } = useReceivedFolders();
+  const { fromCoaches: coachWorkoutsWaiting } = useMyCoachWorkouts();
 
   // Check if user is a coach
   useEffect(() => {
@@ -90,6 +93,7 @@ export default function MyCustomActivities() {
     { value: 'folders', icon: FolderOpen, label: t('myCustomActivities.tabs.folders', 'Folders'), badge: folderPendingCount },
     { value: 'elite-presets', icon: Dumbbell, label: t('myCustomActivities.tabs.elitePresets', 'Elite Presets') },
     { value: 'received', icon: Inbox, label: t('myCustomActivities.tabs.received', 'Received'), badge: pendingCount },
+    { value: 'coach-workouts', icon: ClipboardList, label: t('myCustomActivities.tabs.coachWorkouts', 'Coach workouts'), badge: coachWorkoutsWaiting.length },
     { value: 'deleted', icon: Trash2, label: t('myCustomActivities.tabs.deleted', 'Recently Deleted'), badge: deletedCount },
     { value: 'library', icon: BookOpen, label: t('myCustomActivities.tabs.library', 'Library') },
     { value: 'history', icon: History, label: t('myCustomActivities.tabs.history', 'History') },
@@ -196,6 +200,10 @@ export default function MyCustomActivities() {
 
             <TabsContent value="received" className="mt-0 animate-fade-in">
               <ReceivedActivitiesList selectedSport={selectedSport} />
+            </TabsContent>
+
+            <TabsContent value="coach-workouts" className="mt-0 animate-fade-in">
+              <CoachWorkoutsPanel />
             </TabsContent>
 
             <TabsContent value="elite-presets" className="mt-0 animate-fade-in">

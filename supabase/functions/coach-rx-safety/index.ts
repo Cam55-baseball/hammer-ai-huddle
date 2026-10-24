@@ -117,8 +117,10 @@ Deno.serve(async (req) => {
       if (!ids.length || !category || !DATE.test(date)) return json({ error: "Pick players, a category and a date" }, 400);
       if (date < today) return json({ error: "Pick today or a future date" }, 400);
 
+      // Coaches AND org admins (for their assigned athletes) may send —
+      // coach_connected_to covers both paths server-side.
       const linked = await Promise.all(ids.map(async (id) => {
-        const { data, error } = await admin.rpc("is_linked_coach", { p_coach_id: me, p_player_id: id });
+        const { data, error } = await admin.rpc("coach_connected_to", { _me: me, _athlete: id });
         return !error && data === true ? id : null;
       }));
       const allowedLinked = linked.filter(Boolean) as string[];
@@ -135,6 +137,98 @@ Deno.serve(async (req) => {
       return json({ results, refused });
     }
 
+    // mode "manage" — the sender edits or cancels future, still-unanswered
+    // dates, or resends a finished one. Never touches anything the player
+    // already answered or that already happened.
+    if (body.mode === "manage") {
+      const action = String(body.action ?? "");
+      const rxId = String(body.prescription_id ?? "");
+      const newDate = String(body.new_date ?? "");
+      const seriesId = String(body.series_id ?? "");
+
+      if (action === "list") {
+        const { data: rows } = await admin.from("coach_prescriptions").select("*")
+          .eq("sender_id", me).order("plan_date", { ascending: false }).limit(200);
+        const list = (rows ?? []) as any[];
+        // Completion: count plan rows each prescription created that the player finished.
+        const rxIds = list.map((r) => r.id);
+        const doneByRx: Record<string, { done: number; total: number }> = {};
+        if (rxIds.length > 0) {
+          const { data: wk } = await admin.from("wk_prescriptions").select("status, why_payload")
+            .in("user_id", [...new Set(list.map((r) => r.recipient_id))])
+            .not("why_payload", "is", null).limit(5000);
+          for (const w of (wk ?? []) as any[]) {
+            const rid = w.why_payload?.coach_rx;
+            if (!rid || !rxIds.includes(rid)) continue;
+            const b = (doneByRx[rid] ||= { done: 0, total: 0 });
+            b.total++;
+            if (w.status === "completed") b.done++;
+          }
+        }
+        const names: Record<string, string> = {};
+        const recipientIds = [...new Set(list.map((r) => r.recipient_id))];
+        if (recipientIds.length > 0) {
+          const { data: profs } = await admin.from("profiles").select("id, full_name").in("id", recipientIds);
+          for (const p of (profs ?? []) as any[]) names[p.id] = p.full_name ?? "Player";
+        }
+        return json({
+          rows: list.map((r) => ({
+            id: r.id, title: r.title, category: r.category, plan_date: r.plan_date,
+            status: r.status, schedule_type: r.schedule_type, series_id: r.series_id,
+            team_send_id: r.team_send_id, cancelled_at: r.cancelled_at,
+            recipient_id: r.recipient_id, recipient_name: names[r.recipient_id] ?? "Player",
+            schedule: {
+              recur_weekdays: r.recur_weekdays, recur_every_weeks: r.recur_every_weeks,
+              recur_monthly_ordinal: r.recur_monthly_ordinal, recur_monthly_weekday: r.recur_monthly_weekday,
+              recur_end: r.recur_end, recur_count: r.recur_count,
+            },
+            completion: doneByRx[r.id] ?? { done: 0, total: 0 },
+          })),
+        });
+      }
+
+      if (action === "reschedule" || action === "cancel") {
+        if (!rxId) return json({ error: "Pick a prescription" }, 400);
+        if (action === "reschedule" && !DATE.test(newDate)) return json({ error: "Pick a valid date" }, 400);
+        if (action === "reschedule" && newDate < today) return json({ error: "Pick today or a future date" }, 400);
+        const { data: rx } = await admin.from("coach_prescriptions").select("*").eq("id", rxId).maybeSingle();
+        if (!rx || (rx as any).sender_id !== me) return json({ error: "Not your send" }, 403);
+        if ((rx as any).status !== "pending") return json({ error: "The player already answered — it can't be changed" }, 409);
+        if ((rx as any).plan_date < today) return json({ error: "Past dates can't be changed" }, 409);
+        if ((rx as any).cancelled_at) return json({ error: "Already cancelled" }, 409);
+        await admin.from("coach_prescriptions").update(
+          action === "cancel"
+            ? { cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+            : { plan_date: newDate, updated_at: new Date().toISOString() },
+        ).eq("id", rxId);
+        return json({ applied: true });
+      }
+
+      if (action === "cancel_series") {
+        if (!seriesId) return json({ error: "Pick a series" }, 400);
+        const { data: updated } = await admin.from("coach_prescriptions")
+          .update({ cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+          .eq("sender_id", me).eq("series_id", seriesId).eq("status", "pending")
+          .gte("plan_date", today).is("cancelled_at", null).select("id");
+        return json({ applied: true, cancelled: (updated ?? []).length });
+      }
+
+      if (action === "resend") {
+        if (!rxId || !DATE.test(newDate) || newDate < today) return json({ error: "Pick a prescription and a future date" }, 400);
+        const { data: rx } = await admin.from("coach_prescriptions").select("*").eq("id", rxId).maybeSingle();
+        if (!rx || (rx as any).sender_id !== me) return json({ error: "Not your send" }, 403);
+        const { data: created } = await admin.from("coach_prescriptions").insert({
+          sender_id: me, recipient_id: (rx as any).recipient_id, category: (rx as any).category,
+          plan_date: newDate, title: (rx as any).title, exercises: (rx as any).exercises,
+          gear_labels: (rx as any).gear_labels, source_template_id: (rx as any).source_template_id,
+          schedule_type: "date", safety_result: (rx as any).safety_result,
+        }).select("id").maybeSingle();
+        return json({ applied: true, id: (created as any)?.id ?? null });
+      }
+
+      return json({ error: "Unknown action" }, 400);
+    }
+
     // mode "choose" — the player applies their choice to their own prescription.
     const rxId = String(body.prescription_id ?? "");
     const choice = CHOICES.includes(body.choice) ? body.choice : null;
@@ -142,10 +236,20 @@ Deno.serve(async (req) => {
 
     const { data: rx } = await admin.from("coach_prescriptions").select("*").eq("id", rxId).maybeSingle();
     if (!rx || (rx as any).recipient_id !== me) return json({ error: "Not your prescription" }, 403);
-    if ((rx as any).status !== "pending") return json({ error: "Already answered" }, 409);
+    if ((rx as any).cancelled_at) return json({ error: "The coach cancelled this one" }, 409);
+    // Saved-for-later cards can be activated later; everything else is one answer only.
+    if ((rx as any).status !== "pending" && (rx as any).status !== "saved_for_later") {
+      return json({ error: "Already answered" }, 409);
+    }
 
     const category = (rx as any).category as RxCategory;
-    const date = String((rx as any).plan_date);
+    // "Use today" activation (any-day cards, future dates, saved-for-later):
+    // the workout lands on today's plan with the full safety re-check.
+    const activateToday = body.activate_today === true;
+    const date = activateToday ? today : String((rx as any).plan_date);
+    if (activateToday) {
+      await admin.from("coach_prescriptions").update({ plan_date: today, updated_at: new Date().toISOString() }).eq("id", rxId);
+    }
     const intensity = (["light", "standard", "high"].includes((rx as any).safety_result?.intensity)
       ? (rx as any).safety_result.intensity
       : "standard") as RxReplaceFacts["intensity"];

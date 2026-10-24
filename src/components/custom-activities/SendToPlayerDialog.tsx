@@ -15,6 +15,7 @@ import { Send, Lock, Users, MessageSquare, Loader2 } from 'lucide-react';
 import { CustomActivityTemplate } from '@/types/customActivity';
 import { LockableField, LockPreset, LOCKABLE_FIELDS, LOCK_PRESETS, FollowedPlayer } from '@/types/sentActivity';
 import { useSentActivities } from '@/hooks/useSentActivities';
+import { scheduleSummary, type ScheduleInput } from '@/lib/coachRx/schedule';
 import { getActivityIcon } from './IconPicker';
 import { hexToRgba } from '@/hooks/useUserColors';
 
@@ -63,6 +64,17 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
   const [message, setMessage] = useState('');
   const [rxCategory, setRxCategory] = useState<string>('lift');
   const [rxDate, setRxDate] = useState<string>('');
+  // Scheduling (owner request Oct 24, run 6): any day / specific date(s) / recurring.
+  const [schedType, setSchedType] = useState<'any_day' | 'date' | 'dates' | 'recurring'>('date');
+  const [extraDates, setExtraDates] = useState<string[]>([]);
+  const [weekdays, setWeekdays] = useState<number[]>([]);
+  const [everyWeeks, setEveryWeeks] = useState<number>(1);
+  const [monthly, setMonthly] = useState<boolean>(false);
+  const [monthlyOrdinal, setMonthlyOrdinal] = useState<number>(1);
+  const [monthlyWeekday, setMonthlyWeekday] = useState<number>(2);
+  const [endMode, setEndMode] = useState<'count' | 'end'>('count');
+  const [recurCount, setRecurCount] = useState<number>(4);
+  const [recurEnd, setRecurEnd] = useState<string>('');
 
   useEffect(() => {
     if (open) {
@@ -73,8 +85,36 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
       setMessage('');
       setRxCategory(template ? defaultRxCategory(template.activity_type) : 'lift');
       setRxDate(new Date().toLocaleDateString('en-CA'));
+      setSchedType('date');
+      setExtraDates([]);
+      setWeekdays([]);
+      setEveryWeeks(1);
+      setMonthly(false);
+      setMonthlyOrdinal(1);
+      setMonthlyWeekday(2);
+      setEndMode('count');
+      setRecurCount(4);
+      setRecurEnd('');
     }
   }, [open, fetchFollowedPlayers, template]);
+
+  const buildSchedule = (): ScheduleInput => ({
+    type: schedType,
+    startDate: rxDate,
+    dates: schedType === 'dates' ? extraDates : undefined,
+    weekdays: schedType === 'recurring' && !monthly ? weekdays : undefined,
+    everyWeeks: schedType === 'recurring' && !monthly ? everyWeeks : undefined,
+    monthlyOrdinal: schedType === 'recurring' && monthly ? monthlyOrdinal : undefined,
+    monthlyWeekday: schedType === 'recurring' && monthly ? monthlyWeekday : undefined,
+    endDate: schedType === 'recurring' && endMode === 'end' && recurEnd ? recurEnd : undefined,
+    count: schedType === 'recurring' && endMode === 'count' ? recurCount : undefined,
+  });
+
+  const scheduleValid =
+    schedType === 'any_day' ||
+    schedType === 'date' ||
+    (schedType === 'dates') ||
+    (schedType === 'recurring' && (monthly ? true : weekdays.length > 0) && (endMode === 'count' ? recurCount > 0 : !!recurEnd));
 
   const handlePlayerToggle = (playerId: string) => {
     setSelectedPlayers(prev => 
@@ -107,7 +147,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
       selectedPlayers,
       getLockedFields(),
       message.trim() || undefined,
-      { category: rxCategory, planDate: rxDate }
+      { category: rxCategory, planDate: rxDate, schedule: buildSchedule() }
     );
 
     if (success) {
@@ -240,7 +280,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="rx-date" className="text-xs">Day</Label>
+                  <Label htmlFor="rx-date" className="text-xs">{schedType === 'recurring' ? 'Starts on/after' : schedType === 'any_day' ? 'Sent on' : 'Day'}</Label>
                   <input
                     id="rx-date"
                     type="date"
@@ -250,6 +290,116 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
                     className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
                   />
                 </div>
+              </div>
+
+              {/* Schedule shape */}
+              <div className="space-y-2" data-rx-schedule>
+                <Label className="text-xs font-bold">When</Label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {([
+                    ['date', 'One day'],
+                    ['dates', 'Picked dates'],
+                    ['recurring', 'Repeating'],
+                    ['any_day', 'Any day — player picks'],
+                  ] as const).map(([v, l]) => (
+                    <button
+                      key={v}
+                      type="button"
+                      data-sched-type={v}
+                      onClick={() => setSchedType(v)}
+                      className={`rounded-md border px-2 py-1.5 text-xs ${schedType === v ? 'border-primary bg-primary/10 font-semibold' : 'border-input'}`}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </div>
+
+                {schedType === 'dates' && (
+                  <div className="space-y-1">
+                    {extraDates.map((d, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <input
+                          type="date"
+                          value={d}
+                          min={new Date().toLocaleDateString('en-CA')}
+                          onChange={(e) => setExtraDates((prev) => prev.map((x, j) => (j === i ? e.target.value : x)))}
+                          className="flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                        />
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setExtraDates((prev) => prev.filter((_, j) => j !== i))}>Remove</Button>
+                      </div>
+                    ))}
+                    <Button type="button" variant="outline" size="sm" data-add-date onClick={() => setExtraDates((prev) => [...prev, rxDate])}>
+                      + Add another date
+                    </Button>
+                  </div>
+                )}
+
+                {schedType === 'recurring' && (
+                  <div className="space-y-2 rounded-md border border-border p-2">
+                    <div className="flex items-center gap-2 text-xs">
+                      <button type="button" data-recur-kind="weekly" onClick={() => setMonthly(false)} className={`rounded px-2 py-1 ${!monthly ? 'bg-primary/10 font-semibold' : ''}`}>Weekly</button>
+                      <button type="button" data-recur-kind="monthly" onClick={() => setMonthly(true)} className={`rounded px-2 py-1 ${monthly ? 'bg-primary/10 font-semibold' : ''}`}>Monthly</button>
+                    </div>
+                    {!monthly ? (
+                      <>
+                        <div className="flex flex-wrap gap-1">
+                          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
+                            <button
+                              key={d}
+                              type="button"
+                              data-weekday={i}
+                              onClick={() => setWeekdays((prev) => prev.includes(i) ? prev.filter((w) => w !== i) : [...prev, i])}
+                              className={`rounded-md border px-2 py-1 text-xs ${weekdays.includes(i) ? 'border-primary bg-primary/10 font-semibold' : 'border-input'}`}
+                            >
+                              {d}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <Label htmlFor="rx-every" className="text-xs">Every</Label>
+                          <input
+                            id="rx-every"
+                            type="number" min={1} max={8} value={everyWeeks}
+                            onChange={(e) => setEveryWeeks(Math.max(1, Math.min(8, Number(e.target.value) || 1)))}
+                            className="w-14 rounded-md border border-input bg-background px-2 py-1 text-sm"
+                          />
+                          <span>week(s)</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-2 text-xs">
+                        <select value={monthlyOrdinal} onChange={(e) => setMonthlyOrdinal(Number(e.target.value))} className="rounded-md border border-input bg-background px-2 py-1 text-sm" data-monthly-ordinal>
+                          <option value={1}>First</option><option value={2}>Second</option><option value={3}>Third</option><option value={4}>Fourth</option><option value={5}>Last</option>
+                        </select>
+                        <select value={monthlyWeekday} onChange={(e) => setMonthlyWeekday(Number(e.target.value))} className="rounded-md border border-input bg-background px-2 py-1 text-sm" data-monthly-weekday>
+                          {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((d, i) => <option key={d} value={i}>{d}</option>)}
+                        </select>
+                        <span>of the month</span>
+                      </div>
+                    )}
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <button type="button" data-end-mode="count" onClick={() => setEndMode('count')} className={`rounded px-2 py-1 ${endMode === 'count' ? 'bg-primary/10 font-semibold' : ''}`}>Number of times</button>
+                      <button type="button" data-end-mode="end" onClick={() => setEndMode('end')} className={`rounded px-2 py-1 ${endMode === 'end' ? 'bg-primary/10 font-semibold' : ''}`}>End date</button>
+                      {endMode === 'count' ? (
+                        <input
+                          type="number" min={1} max={60} value={recurCount}
+                          onChange={(e) => setRecurCount(Math.max(1, Math.min(60, Number(e.target.value) || 1)))}
+                          className="w-16 rounded-md border border-input bg-background px-2 py-1 text-sm"
+                          data-recur-count
+                        />
+                      ) : (
+                        <input
+                          type="date" value={recurEnd} min={rxDate}
+                          onChange={(e) => setRecurEnd(e.target.value)}
+                          className="rounded-md border border-input bg-background px-2 py-1 text-sm"
+                          data-recur-end
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-xs text-muted-foreground" data-sched-summary>{scheduleSummary(buildSchedule())}</p>
               </div>
             </div>
 
@@ -334,9 +484,9 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('common.cancel')}
           </Button>
-          <Button 
-            onClick={handleSend} 
-            disabled={loading || selectedPlayers.length === 0}
+          <Button
+            onClick={handleSend}
+            disabled={loading || selectedPlayers.length === 0 || !scheduleValid}
             className="gap-2"
           >
             {loading ? (

@@ -16,6 +16,8 @@ import { CoachLifecycle } from './CoachLifecycle';
 import { CoachDetail } from './CoachDetail';
 import { CoachPrescriptionInbox } from '@/components/hammer/CoachPrescriptionInbox';
 import { CoachPrescriptionStatus } from '@/components/coach/CoachPrescriptionStatus';
+import { CoachWorkoutsPanel } from '@/components/custom-activities/CoachWorkoutsPanel';
+import { SendToPlayerDialog } from '@/components/custom-activities/SendToPlayerDialog';
 import { WkPrescriptionCard } from '@/components/hammer/WkPrescriptionCard';
 import '@/index.css';
 import type { WkRx } from '@/hooks/useWkDailyPrescriptions';
@@ -38,6 +40,8 @@ function App() {
   if (kind === 'pickoff-tool') return <PickoffTrainer />;
   if (kind === 'coach-rx-inbox') return <main className="p-4"><CoachPrescriptionInbox planDate="2026-10-24" /></main>;
   if (kind === 'coach-rx-status') return <main className="p-4"><CoachPrescriptionStatus /></main>;
+  if (kind === 'coach-workouts') return <main className="p-4"><CoachWorkoutsPanel /></main>;
+  if (kind === 'coach-rx-send') return <SendToPlayerDialog open onOpenChange={() => {}} template={{ id: 'tpl-1', title: 'Infield footwork circuit', activity_type: 'practice', icon: 'clipboard', color: '#888888', exercises: [{ name: 'Short-hop drill', gear: 'Glove' }], intensity: 'standard' } as any} />;
   if (kind === 'replaced-card') return <main className="p-4"><ConditioningRestProvider><PocketCard id="replaced" category="lift" tone="text-primary" prescribed planDate="2026-10-24">{() => <WkPrescriptionCard rx={{ ...rx, id: 'fixture-replaced', status: 'skipped', replaced_by_coach_rx: 'rx-hit' } as unknown as WkRx} />}</PocketCard></ConditioningRestProvider></main>;
   if (kind.startsWith('study-')) {
     const role = kind.slice(6);

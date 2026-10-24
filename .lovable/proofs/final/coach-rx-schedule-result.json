@@ -1,0 +1,16 @@
+{
+  "org_admin_assigned_athlete_listed": true,
+  "recurring_mwf_send_materializes_days": true,
+  "team_send_shared_ids": true,
+  "specific_date_send": true,
+  "any_day_activated_from_my_workouts": true,
+  "coach_status_view_with_schedule_completion": true,
+  "coach_edits_future_date": true,
+  "coach_cancels_future_date": true,
+  "page_errors": [],
+  "viewport": [
+    390,
+    844
+  ],
+  "fixture_only": true
+}

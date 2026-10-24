@@ -56,6 +56,15 @@ describe("data-unity matrix", () => {
     touches("src/components/coach/CoachComplianceView.tsx", "custom_activity_logs"); // Coach
     touches("supabase/functions/compute-hammer-state/index.ts", "custom_activity_logs"); // learning
     touches("supabase/functions/nightly-mpi-process/index.ts", "custom_activity_logs"); // nightly
+    // Scheduling (run 6): pure date math, one row per player per scheduled day,
+    // player "Use today" activation and sender edit/cancel/resend all go
+    // through the same server function; scheduled days project onto the calendar.
+    touches("src/lib/coachRx/schedule.ts", "computeScheduleDates");
+    touches("src/hooks/useSentActivities.ts", "series_id");
+    touches("supabase/functions/coach-rx-safety/index.ts", "activate_today");
+    touches("supabase/functions/coach-rx-safety/index.ts", "cancel_series");
+    touches("src/components/custom-activities/CoachWorkoutsPanel.tsx", "useMyCoachWorkouts");
+    touches("src/lib/calendar/buildCalendarEvents.ts", "coach_prescription");
   });
 
   it("4. practice logs → performance_sessions → History, load, engine, nightly", () => {
