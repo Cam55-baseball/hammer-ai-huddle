@@ -11,6 +11,7 @@ import { TimingStudyMoments } from '@/components/hammer/TimingStudyMoments';
 import { ConditioningRestProvider } from '@/components/hammer/cards/ConditioningRestContext';
 import { AuthContext } from '@/contexts/AuthContext';
 import { ExerciseTools } from '@/components/hammer/cards/ExerciseTools';
+import PickoffTrainer from '@/pages/PickoffTrainer';
 import '@/index.css';
 import type { WkRx } from '@/hooks/useWkDailyPrescriptions';
 import type { ActivityFolderItem } from '@/types/activityFolder';
@@ -27,6 +28,7 @@ const timed = kind === 'warmup' || kind === 'recovery';
 const unitSlugs = ['walking_lunge','lift_rfess_pallof','lift_banded_lateral_squat_walk','lift_elephant_walk','lift_farmer_toe_walk','broad_jump','plank_hold','ubp_f15_base_pushup_bottom_hold_explode','tall_plank_shoulder_tap'];
 const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 function App() {
+  if (kind === 'pickoff-tool') return <PickoffTrainer />;
   if (kind.startsWith('study-')) {
     const role = kind.slice(6);
     return <main className="p-4"><TimingStudyMoments sport={role === 'softball-pitcher' ? 'softball' : 'baseball'} position={role.includes('pitcher') ? 'P' : role === 'defender' ? 'SS' : null} roles={role === 'populated' ? ['hitter','baserunner','defender'] : [role.includes('pitcher') ? 'pitcher' : role as 'hitter']} flags={role === 'populated' ? ['swing timing','first step range'] : []} goals={role === 'populated' ? ['steal jump'] : []} /></main>;
