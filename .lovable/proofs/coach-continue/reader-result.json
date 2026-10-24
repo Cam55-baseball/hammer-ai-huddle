@@ -1,0 +1,20 @@
+{
+  "scope": "real TEST log via authenticated Data API; not focus logging or safety acceptance",
+  "results": [
+    {
+      "surface": "history",
+      "write_read_reload": true,
+      "url": "http://localhost:8080/history"
+    },
+    {
+      "surface": "general",
+      "write_read_reload": true,
+      "url": "http://localhost:8080/progress"
+    },
+    {
+      "surface": "vault",
+      "write_read_reload": true,
+      "url": "http://localhost:8080/vault"
+    }
+  ]
+}
