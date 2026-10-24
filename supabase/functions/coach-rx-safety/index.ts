@@ -14,12 +14,14 @@ import { ageFromDob } from "../_shared/age/ageFromDob.ts";
 import { nextThrowDate } from "../_shared/wic/phases/nextThrowDate.ts";
 import {
   checkPrescriptionReplace,
+  checkPrescriptionAlongside,
   categorySlots,
   coachRxToWkRows,
   THROWING_CATEGORIES,
   type RxCategory,
   type RxReplaceFacts,
 } from "../_shared/coach/prescriptionSafety.ts";
+import { prescriptionMode, prescriptionChoiceDate } from "../_shared/coach/prescriptionActions.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -103,7 +105,8 @@ Deno.serve(async (req) => {
     const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     const body = await req.json().catch(() => ({}));
-    const mode = body.mode === "choose" ? "choose" : "check";
+    const mode = prescriptionMode(body.mode);
+    if (!mode) return json({ error: "Unknown action" }, 400);
     const today = new Date().toISOString().slice(0, 10);
 
     if (mode === "check") {
@@ -140,16 +143,24 @@ Deno.serve(async (req) => {
     // mode "manage" — the sender edits or cancels future, still-unanswered
     // dates, or resends a finished one. Never touches anything the player
     // already answered or that already happened.
-    if (body.mode === "manage") {
+    if (mode === "manage") {
       const action = String(body.action ?? "");
       const rxId = String(body.prescription_id ?? "");
       const newDate = String(body.new_date ?? "");
       const seriesId = String(body.series_id ?? "");
 
       if (action === "list") {
-        const { data: rows } = await admin.from("coach_prescriptions").select("*")
+        const { data: rows, error: listError } = await admin.from("coach_prescriptions").select("*")
           .eq("sender_id", me).order("plan_date", { ascending: false }).limit(200);
-        const list = (rows ?? []) as any[];
+        if (listError) throw listError;
+        const candidates = (rows ?? []) as any[];
+        const recipients = [...new Set(candidates.map((r) => String(r.recipient_id)))];
+        const linked = await Promise.all(recipients.map(async (id) => {
+          const { data, error } = await admin.rpc("coach_connected_to", { _me: me, _athlete: id });
+          return !error && data === true ? id : null;
+        }));
+        const gate = await recruitingGate(admin, me, linked.filter((id): id is string => id !== null), "metrics");
+        const list = candidates.filter((r) => gate.get(r.recipient_id) === "visible");
         // Completion: count plan rows each prescription created that the player finished.
         const rxIds = list.map((r) => r.id);
         const doneByRx: Record<string, { done: number; total: number }> = {};
@@ -196,20 +207,22 @@ Deno.serve(async (req) => {
         if ((rx as any).status !== "pending") return json({ error: "The player already answered — it can't be changed" }, 409);
         if ((rx as any).plan_date < today) return json({ error: "Past dates can't be changed" }, 409);
         if ((rx as any).cancelled_at) return json({ error: "Already cancelled" }, 409);
-        await admin.from("coach_prescriptions").update(
+        const { error: updateError } = await admin.from("coach_prescriptions").update(
           action === "cancel"
             ? { cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() }
             : { plan_date: newDate, updated_at: new Date().toISOString() },
         ).eq("id", rxId);
+        if (updateError) throw updateError;
         return json({ applied: true });
       }
 
       if (action === "cancel_series") {
         if (!seriesId) return json({ error: "Pick a series" }, 400);
-        const { data: updated } = await admin.from("coach_prescriptions")
+        const { data: updated, error: cancelError } = await admin.from("coach_prescriptions")
           .update({ cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
           .eq("sender_id", me).eq("series_id", seriesId).eq("status", "pending")
           .gte("plan_date", today).is("cancelled_at", null).select("id");
+        if (cancelError) throw cancelError;
         return json({ applied: true, cancelled: (updated ?? []).length });
       }
 
@@ -217,12 +230,16 @@ Deno.serve(async (req) => {
         if (!rxId || !DATE.test(newDate) || newDate < today) return json({ error: "Pick a prescription and a future date" }, 400);
         const { data: rx } = await admin.from("coach_prescriptions").select("*").eq("id", rxId).maybeSingle();
         if (!rx || (rx as any).sender_id !== me) return json({ error: "Not your send" }, 403);
-        const { data: created } = await admin.from("coach_prescriptions").insert({
+        const { data: connected, error: connectionError } = await admin.rpc("coach_connected_to", { _me: me, _athlete: rx.recipient_id });
+        const gate = await recruitingGate(admin, me, connectionError || connected !== true ? [] : [rx.recipient_id], "metrics");
+        if (gate.get(rx.recipient_id) !== "visible") return json({ error: "You can't send to this player." }, 403);
+        const { data: created, error: resendError } = await admin.from("coach_prescriptions").insert({
           sender_id: me, recipient_id: (rx as any).recipient_id, category: (rx as any).category,
           plan_date: newDate, title: (rx as any).title, exercises: (rx as any).exercises,
           gear_labels: (rx as any).gear_labels, source_template_id: (rx as any).source_template_id,
           schedule_type: "date", safety_result: (rx as any).safety_result,
         }).select("id").maybeSingle();
+        if (resendError || !created) throw resendError ?? new Error("Workout was not sent");
         return json({ applied: true, id: (created as any)?.id ?? null });
       }
 
@@ -246,10 +263,7 @@ Deno.serve(async (req) => {
     // "Use today" activation (any-day cards, future dates, saved-for-later):
     // the workout lands on today's plan with the full safety re-check.
     const activateToday = body.activate_today === true;
-    const date = activateToday ? today : String((rx as any).plan_date);
-    if (activateToday) {
-      await admin.from("coach_prescriptions").update({ plan_date: today, updated_at: new Date().toISOString() }).eq("id", rxId);
-    }
+    const date = prescriptionChoiceDate(choice, activateToday, String(rx.plan_date), today);
     const intensity = (["light", "standard", "high"].includes((rx as any).safety_result?.intensity)
       ? (rx as any).safety_result.intensity
       : "standard") as RxReplaceFacts["intensity"];
@@ -280,7 +294,7 @@ Deno.serve(async (req) => {
       });
       if (rows.length > 0) await admin.from("wk_prescriptions").insert(rows);
       await admin.from("coach_prescriptions").update({
-        status: STATUS[choice],
+        status: STATUS[choice], plan_date: date,
         safety_result: { verdict: r.verdict, intensity, replaced_count: (replaced ?? []).length, inserted_count: rows.length, checked_at: new Date().toISOString() },
         updated_at: new Date().toISOString(),
       }).eq("id", rxId);
@@ -290,6 +304,9 @@ Deno.serve(async (req) => {
     // Add alongside: the coach workout also becomes real plan rows (same
     // logging path); save-for-later and declined insert nothing.
     if (choice === "add_alongside") {
+      const facts = await gatherFacts(admin, me, category, date, intensity, false, today);
+      const safe = checkPrescriptionAlongside(facts);
+      if (safe.verdict !== "allow") return json({ applied: false, verdict: safe.verdict, reasons: safe.reasons, safeOption: safe.safeOption });
       const { data: senderProfile } = await admin.from("profiles").select("full_name").eq("id", (rx as any).sender_id).maybeSingle();
       const rows = coachRxToWkRows({
         userId: me, planDate: date, category, prescriptionId: rxId,
@@ -299,7 +316,7 @@ Deno.serve(async (req) => {
       });
       if (rows.length > 0) await admin.from("wk_prescriptions").insert(rows);
       await admin.from("coach_prescriptions").update({
-        status: STATUS[choice], updated_at: new Date().toISOString(),
+        status: STATUS[choice], plan_date: date, updated_at: new Date().toISOString(),
       }).eq("id", rxId);
       return json({ applied: true, verdict: null, inserted: rows.length });
     }
