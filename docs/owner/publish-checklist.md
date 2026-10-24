@@ -21,8 +21,12 @@ the plan unchanged and offers Save for later. Organization/team behavior retains
 existing access gates. Positive acceptance/focus/staff-plan/learning proofs, own
 item certification and complete arm/block safety remain open; personas untouched.
 
-Current verification is saved under `.lovable/proofs/coach-run2/` when finished.
-No publish, cron or iOS changes; this run creates no hosted TEST training records.
+Verification: **527 files / 4,123 tests PASS**, eight exits 0; Deno handler check
+PASS, preview build OK. Deployed only `coach-rx-safety`; retained TEST player,
+coach and org management reads returned 200. Coach phone shows the genuine empty
+Sent workouts state. These are session-only-token reads, not password sign-in or
+positive send/choice/focus proof. Evidence `.lovable/proofs/coach-run2/`.
+No publish, cron or iOS changes; no hosted TEST records or persona changes.
 
 ### Owner continuation — October 24, 22:33 run
 
