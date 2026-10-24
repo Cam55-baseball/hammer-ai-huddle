@@ -91,6 +91,7 @@ export interface CoachPrescriptionRow {
   category: string;
   status: string;
   cancelled_at?: string | null;
+  schedule_type?: string;
 }
 
 export interface BuildCalendarEventsInput {
@@ -291,6 +292,7 @@ export function buildCalendarEvents(input: BuildCalendarEventsInput): DerivedCal
   //     appears on its day so the player sees coach work on the calendar.
   for (const rx of coachPrescriptions) {
     if (rx.cancelled_at) continue;
+    if (rx.schedule_type === 'any_day') continue;
     if (rx.status !== 'pending' && rx.status !== 'saved_for_later') continue;
     const id = eventId('coach_prescription', rx.id, rx.plan_date);
     out.set(id, {

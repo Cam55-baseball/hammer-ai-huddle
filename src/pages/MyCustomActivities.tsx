@@ -88,12 +88,13 @@ export default function MyCustomActivities() {
   };
 
   const tabs = [
-    { value: 'templates', icon: LayoutGrid, label: t('myCustomActivities.tabs.templates', 'Templates') },
+    { value: 'coach-workouts', icon: ClipboardList, label: 'From my coaches', badge: coachWorkoutsWaiting.length },
+    { value: 'saved-coach-workouts', icon: Inbox, label: 'Saved for later' },
+    { value: 'templates', icon: LayoutGrid, label: 'My own' },
     { value: 'workout-plan', icon: Dumbbell, label: t('myCustomActivities.tabs.workoutPlan', 'Workout Plan') },
     { value: 'folders', icon: FolderOpen, label: t('myCustomActivities.tabs.folders', 'Folders'), badge: folderPendingCount },
     { value: 'elite-presets', icon: Dumbbell, label: t('myCustomActivities.tabs.elitePresets', 'Elite Presets') },
     { value: 'received', icon: Inbox, label: t('myCustomActivities.tabs.received', 'Received'), badge: pendingCount },
-    { value: 'coach-workouts', icon: ClipboardList, label: t('myCustomActivities.tabs.coachWorkouts', 'Coach workouts'), badge: coachWorkoutsWaiting.length },
     { value: 'deleted', icon: Trash2, label: t('myCustomActivities.tabs.deleted', 'Recently Deleted'), badge: deletedCount },
     { value: 'library', icon: BookOpen, label: t('myCustomActivities.tabs.library', 'Library') },
     { value: 'history', icon: History, label: t('myCustomActivities.tabs.history', 'History') },
@@ -112,7 +113,7 @@ export default function MyCustomActivities() {
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-black text-foreground">
-                  {t('myCustomActivities.title', 'My Custom Activities')}
+                  My Workouts
                 </h1>
                 <p className="text-muted-foreground text-sm sm:text-base">
                   {t('myCustomActivities.subtitle', 'Manage templates, view history, and track your progress')}
@@ -123,7 +124,7 @@ export default function MyCustomActivities() {
           <HydrationTrackerWidget />
         </div>
 
-        <Tabs defaultValue="templates" className="w-full">
+        <Tabs defaultValue="coach-workouts" className="w-full">
           {/* Scrollable tabs on mobile */}
           <ScrollArea className="w-full">
             <TabsList className="inline-flex h-14 sm:h-12 w-full sm:w-auto bg-muted/50 p-1 gap-1">
@@ -131,10 +132,11 @@ export default function MyCustomActivities() {
                 <TabsTrigger 
                   key={value}
                   value={value} 
+                  aria-label={label}
                   className="flex items-center gap-2 px-4 sm:px-4 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-md whitespace-nowrap transition-all"
                 >
                   <Icon className="h-6 w-6 sm:h-4 sm:w-4 flex-shrink-0" />
-                  <span className="hidden sm:inline font-medium">{label}</span>
+                  <span className="font-medium">{label}</span>
                   {badge !== undefined && badge > 0 && (
                     <Badge 
                       variant="destructive" 
@@ -203,7 +205,10 @@ export default function MyCustomActivities() {
             </TabsContent>
 
             <TabsContent value="coach-workouts" className="mt-0 animate-fade-in">
-              <CoachWorkoutsPanel />
+              <CoachWorkoutsPanel shelf="from-coaches" />
+            </TabsContent>
+            <TabsContent value="saved-coach-workouts" className="mt-0 animate-fade-in">
+              <CoachWorkoutsPanel shelf="saved" />
             </TabsContent>
 
             <TabsContent value="elite-presets" className="mt-0 animate-fade-in">

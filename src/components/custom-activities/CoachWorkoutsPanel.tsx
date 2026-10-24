@@ -9,7 +9,6 @@
  * Interpretive UI — it never authors training by itself.
  */
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ClipboardList, Loader2, CalendarDays, Bookmark } from "lucide-react";
@@ -41,19 +40,22 @@ function dayLabel(rx: CoachPrescription, today: string): string {
   return new Date(`${rx.plan_date}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
 
-export function CoachWorkoutsPanel() {
-  const { fromCoaches, savedForLater, isLoading, today, activate, activating } = useMyCoachWorkouts();
+export function CoachWorkoutsPanel({ shelf }: { shelf?: "from-coaches" | "saved" }) {
+  const { fromCoaches, savedForLater, isLoading, error, today, activate, activating } = useMyCoachWorkouts();
   const [blocked, setBlocked] = useState<Record<string, { reasons: string[]; safeOption: string | null }>>({});
 
-  if (isLoading) return null;
+  if (isLoading) return <p role="status" className="text-sm text-muted-foreground">Loading workouts…</p>;
+  if (error) return <p role="alert" className="text-sm text-destructive">Couldn't load your coach workouts. Try again.</p>;
 
   const pick = async (rx: CoachPrescription, choice: CoachRxChoice) => {
+    try {
     const r = await activate(rx.id, choice);
     if (!r.applied && r.reasons?.length) {
       setBlocked((b) => ({ ...b, [rx.id]: { reasons: r.reasons ?? [], safeOption: r.safeOption ?? null } }));
     } else {
       setBlocked((b) => { const n = { ...b }; delete n[rx.id]; return n; });
     }
+    } catch { /* The mutation displays the save failure; leave this card unchanged. */ }
   };
 
   const renderCard = (rx: CoachPrescription) => {
@@ -84,7 +86,7 @@ export function CoachWorkoutsPanel() {
           </div>
         )}
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" disabled={activating} data-use-today onClick={() => void pick(rx, "use_instead")}>
+          <Button size="sm" className="h-auto whitespace-normal text-left" disabled={activating} data-use-today onClick={() => void pick(rx, "use_instead")}>
             {activating && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
             Use today instead of my {label} card
           </Button>
@@ -103,8 +105,7 @@ export function CoachWorkoutsPanel() {
 
   return (
     <div className="space-y-6" data-coach-workouts-panel>
-      <Card>
-        <CardContent className="space-y-3 p-4">
+      {shelf !== "saved" && <section className="space-y-3">
           <p className="flex items-center gap-2 text-sm font-bold">
             <ClipboardList className="h-4 w-4" />
             From my coaches
@@ -114,11 +115,9 @@ export function CoachWorkoutsPanel() {
           ) : (
             fromCoaches.map(renderCard)
           )}
-        </CardContent>
-      </Card>
+      </section>}
 
-      <Card>
-        <CardContent className="space-y-3 p-4">
+      {shelf !== "from-coaches" && <section className="space-y-3">
           <p className="flex items-center gap-2 text-sm font-bold">
             <Bookmark className="h-4 w-4" />
             Saved for later
@@ -128,8 +127,7 @@ export function CoachWorkoutsPanel() {
           ) : (
             savedForLater.map(renderCard)
           )}
-        </CardContent>
-      </Card>
+      </section>}
     </div>
   );
 }

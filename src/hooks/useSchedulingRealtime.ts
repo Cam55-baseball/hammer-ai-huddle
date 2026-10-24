@@ -165,6 +165,16 @@ export function useSchedulingRealtime(enabled: boolean = true) {
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
+        table: 'coach_prescriptions',
+        filter: `recipient_id=eq.${user.id}`,
+      }, () => {
+        invalidateProjection();
+        queryClient.invalidateQueries({ queryKey: ['coach-rx-inbox'] });
+        queryClient.invalidateQueries({ queryKey: ['coach-rx-mine'] });
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
         table: 'game_plan_days',
         filter: `user_id=eq.${user.id}`,
       }, invalidateProjection)

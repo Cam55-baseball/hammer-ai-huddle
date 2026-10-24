@@ -144,14 +144,15 @@ export function useCalendarProjection({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('coach_prescriptions' as any)
-        .select('id, plan_date, title, category, status, cancelled_at')
-        .eq('recipient_id', userId!)
+        .select('id, plan_date, title, category, status, schedule_type, cancelled_at')
+        .eq('recipient_id', userId ?? '')
         .gte('plan_date', startDate)
         .lte('plan_date', endDate);
       if (error) throw error;
       return (data ?? []) as unknown as import('@/lib/calendar/buildCalendarEvents').CoachPrescriptionRow[];
     },
     enabled,
+    refetchInterval: 30_000,
   });
 
   const isLoading =
@@ -189,6 +190,7 @@ export function useCalendarProjection({
     templatesQ.data,
     blocksQ.data,
     blockWorkoutsQ.data,
+    coachRxQ.data,
     startDate,
     endDate,
   ]);

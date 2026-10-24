@@ -23,11 +23,14 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export function CoachPrescriptionStatus() {
-  const { rows, isLoading, reschedule, cancel, cancelSeries, resend, acting } = useManageSentWorkouts();
+  const { rows, isLoading, error, reschedule, cancel, cancelSeries, resend, acting } = useManageSentWorkouts();
   const [editDate, setEditDate] = useState<Record<string, string>>({});
   const today = new Date().toLocaleDateString("en-CA");
 
-  if (isLoading || rows.length === 0) return null;
+  if (isLoading) return <p role="status" className="text-sm text-muted-foreground">Loading sent workouts…</p>;
+  if (error) return <p role="alert" className="text-sm text-destructive">Couldn't load sent workouts. Try again.</p>;
+  if (rows.length === 0) return <p className="text-sm text-muted-foreground">No sent workouts yet.</p>;
+  const perform = async (action: Promise<unknown>) => { try { await action; } catch { /* Mutation reports the error. */ } };
 
   const fmtDay = (iso: string) =>
     new Date(`${iso}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -41,7 +44,7 @@ export function CoachPrescriptionStatus() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {rows.slice(0, 30).map((rx) => {
+        {rows.map((rx) => {
           const future = rx.status === "pending" && !rx.cancelled_at && rx.plan_date >= today;
           const sched = scheduleSummary({
             type: rx.schedule_type ?? "date",
@@ -55,7 +58,7 @@ export function CoachPrescriptionStatus() {
           } as ScheduleInput);
           return (
             <div key={rx.id} className="space-y-1.5 rounded-md border border-border px-3 py-2 text-sm" data-sent-rx={rx.id}>
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{rx.title}</p>
                   <p className="text-xs text-muted-foreground capitalize">
@@ -81,6 +84,7 @@ export function CoachPrescriptionStatus() {
                   <>
                     <input
                       type="date"
+                      aria-label={`New date for ${rx.title}`}
                       value={editDate[rx.id] ?? rx.plan_date}
                       min={today}
                       onChange={(e) => setEditDate((p) => ({ ...p, [rx.id]: e.target.value }))}
@@ -89,15 +93,15 @@ export function CoachPrescriptionStatus() {
                     />
                     <Button
                       size="sm" variant="outline" disabled={acting} data-edit-save
-                      onClick={() => void reschedule(rx.id, editDate[rx.id] ?? rx.plan_date)}
+                      onClick={() => void perform(reschedule(rx.id, editDate[rx.id] ?? rx.plan_date))}
                     >
                       {acting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Move"}
                     </Button>
-                    <Button size="sm" variant="ghost" disabled={acting} data-cancel-rx onClick={() => void cancel(rx.id)}>
+                    <Button size="sm" variant="ghost" disabled={acting} data-cancel-rx onClick={() => void perform(cancel(rx.id))}>
                       Cancel this date
                     </Button>
                     {rx.series_id && (
-                      <Button size="sm" variant="ghost" disabled={acting} data-cancel-series onClick={() => void cancelSeries(rx.series_id)}>
+                      <Button size="sm" variant="ghost" disabled={acting} data-cancel-series onClick={() => void perform(cancelSeries(rx.series_id))}>
                         Cancel future dates
                       </Button>
                     )}
@@ -107,12 +111,13 @@ export function CoachPrescriptionStatus() {
                   <>
                     <input
                       type="date"
+                      aria-label={`Resend date for ${rx.title}`}
                       value={editDate[rx.id] ?? today}
                       min={today}
                       onChange={(e) => setEditDate((p) => ({ ...p, [rx.id]: e.target.value }))}
                       className="rounded-md border border-input bg-background px-2 py-1 text-xs"
                     />
-                    <Button size="sm" variant="outline" disabled={acting} data-resend onClick={() => void resend(rx.id, editDate[rx.id] ?? today)}>
+                    <Button size="sm" variant="outline" disabled={acting} data-resend onClick={() => void perform(resend(rx.id, editDate[rx.id] ?? today))}>
                       Send again
                     </Button>
                   </>
