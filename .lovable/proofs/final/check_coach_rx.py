@@ -59,7 +59,7 @@ async def main():
   await pg.screenshot(path=str(OUT/'coach-rx-status.png'));res['coach_status_view']=True
   # 6. Replaced card label, never "missed"
   await pg.goto('http://localhost:8080/.lovable/proofs/final/harness.html?kind=replaced-card');await pg.wait_for_timeout(1200)
-  await pg.get_by_text('Band push-up').first.click();await pg.wait_for_timeout(500)
+  await pg.locator('[id="replaced"]').first.click();await pg.wait_for_timeout(500)
   assert await pg.get_by_text('Replaced by coach workout',exact=False).count()>=1
   assert 'not missed' in await pg.locator('[data-replaced-by-coach]').inner_text()
   await pg.screenshot(path=str(OUT/'coach-rx-replaced-card.png'));res['replaced_card_label']=True
