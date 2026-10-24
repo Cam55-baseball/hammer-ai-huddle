@@ -13,6 +13,7 @@ import { mergeExternal } from "../wic/schedule/externalTraining.ts";
 import { loadU13ThrowBlock } from "../wic/phases/u13ThrowGate.ts";
 import { categorySlots, type RxCategory } from "./prescriptionSafety.ts";
 import { savedDayCoverage } from "./savedDayCoverage.ts";
+import { pendingEquipmentReviews } from "../vault/equipmentReview.ts";
 
 type Row = Record<string, any>;
 const shift = (date: string, n: number) => new Date(Date.parse(`${date}T12:00:00Z`) + n * 86400000).toISOString().slice(0, 10);
@@ -58,6 +59,7 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   for (const answer of answers ?? []) { for (const gear of answer.confirmed_have ?? []) owned.add(gear); for (const gear of answer.confirmed_lacks ?? []) owned.delete(gear); }
   const slugs = [...new Set([...rows, ...current, ...raw.prescriptions].map((r: Row) => r.movement_slug).filter(Boolean))];
   const catalogRows = await checked(admin.from("wk_movement_catalog").select("*").in("slug", slugs));
+  const reviewEvents = await checked(admin.from("exercise_vault_audit").select("slug,action,at").in("slug", slugs).in("action", ["equipment_corrected", "review_approved", "make_live"]).order("at", { ascending: false }));
   const catalog = new Map<string, Row>((catalogRows ?? []).map((row: Row) => [row.slug, row]));
   const proposed: Row[] = rows.map(row => ({ ...row, phase: phase.sub_block, cns_cost: catalog.get(row.movement_slug)?.cns_cost ?? null, why_payload: { ...row.why_payload, phase_state: phase } }));
   if (proposed.some(row => typeof row.cns_cost !== "number" || !Number.isFinite(row.cns_cost) || row.cns_cost < 0)) return refused("An exercise's workload isn't declared in Exercise Vault. Ask your coach to choose a reviewed item.");
@@ -87,7 +89,7 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   for (const kind of dayKinds(previous.filter(row => row.plan_date === shift(date, -1)), catalog)) priorKinds[kind] = [shift(date, -1)];
   const merged = mergeExternal(external ?? [], date, [...new Set(previous.filter(row => row.slot === "lift").map(row => row.plan_date))], priorKinds);
   const history = buildLedger(raw, Object.fromEntries(catalog) as any);
-  const result = judgeCoachEnvelope({ rows: proposed, resultingDay, catalog, owned: [...owned], missing: [...rememberedMissingGear(answers ?? [])], age,
+  const result = judgeCoachEnvelope({ rows: proposed, resultingDay, catalog, pendingReview: pendingEquipmentReviews(reviewEvents ?? []).map(row => row.slug), owned: [...owned], missing: [...rememberedMissingGear(answers ?? [])], age,
     trainingAge: classifyTrainingAge({ yearsLifting: context.lifting_age_years, isProProspect: false, competitiveLevel: context.competition_level }), trainingYears: context.lifting_age_years,
     sport: context.sport_primary, positions: profile.positions ?? [], blockedIntensityClasses: recovery.blockedIntensityClasses, isGameDay,
     final: { planDate: date, phase: phase.sub_block, age, growthMode: phase.growth, ...merged, restDaysBetweenLifts: 2, weeklyLiftMax: phase.sub_block === "in_season" ? 2 : null, liftRemoved: recovery.removeLift,

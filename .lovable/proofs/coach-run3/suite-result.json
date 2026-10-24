@@ -1,0 +1,26 @@
+{
+  "files": 528,
+  "passed_tests": 4137,
+  "failed_tests": 0,
+  "batch_exits": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "final_focused_tests": 107,
+  "deno": "PASS",
+  "preview": "build OK 23:29:34 UTC",
+  "deployed": [
+    "coach-rx-safety"
+  ],
+  "migration": "0112_coach_catalog_review_freshness",
+  "live": "TEST player/coach/org read-only management HTTP 200 after session refresh; not password or acceptance/focus proof",
+  "phone": "390x844 exact round times/distances, fixture only",
+  "cleanup": "No hosted TEST training writes; retained personas untouched",
+  "ready_to_publish": false
+}

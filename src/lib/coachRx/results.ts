@@ -26,6 +26,10 @@ export function actualResultText(log: WorkoutActual): string {
   if (swings.length) values.push(`Swings: ${swings.join(" / ")}`);
   const seconds = log.duration_seconds_precise ?? log.duration_seconds_completed;
   if (seconds != null) values.push(`Time: ${seconds.toFixed(2)} s`);
+  const times = rounds.map(round => round.time ?? round.duration).filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  if (times.length > 1) values.push(`Round times: ${times.map(time => time.toFixed(2)).join(" / ")} s`);
+  const distances = entered("distance");
+  if (distances.length > 1) values.push(`Round distances: ${distances.join(" / ")} ft`);
   if (log.distance_feet_completed != null) values.push(`Distance: ${log.distance_feet_completed} ft`);
   return values.join(" · ") || "No entered results";
 }

@@ -47,6 +47,27 @@ live data landing in every surface; unverified cells remain unverified.
 
 ## Known gaps (honest, not hidden)
 
+### Owner continuation — October 24, 23:22 run
+
+- Row 3 Sent workouts now attributes canonical logs only by exact authorized
+  recipient/row/activated date/movement. Use today is not confused with the
+  original scheduled day. Seven behavioral projection tests reject wrong-date,
+  wrong-user, wrong-row and wrong-movement records; a canonical mocked save →
+  remounted CoachPrescriptionStatus test reads back 1.47 and excludes 9.99 from
+  another date. These are behavioral component tests, not hosted team acceptance.
+- All shared actual readers display per-round times/distances, not just aggregate
+  time/maximum distance; 390×844 fixture screenshot confirms readable results.
+- Existing WIC domain judge now prevents category spill-over; Vault pending gear
+  review blocks activation. Catalog/owner-review freshness is checked under the
+  existing day lock (authorized 0112); handler redeployed, TEST management reads
+  200 after session refresh. No hosted training writes or persona edits.
+- Actual planSnapshotPayload lacks per-drill prescriptionId. Structural acceptance
+  alone cannot prove exposure coverage: skill gate remains fail-closed, and
+  complete arm/block/own-item and positive role/team row-3 cells stay UNVERIFIED.
+- Full suite **528 files / 4,137 tests PASS**, final changed files refreshed;
+  focused **107/107**, Deno/preview PASS. Evidence `.lovable/proofs/coach-run3/`;
+  other matrix rows remain unchanged.
+
 ### Owner continuation — October 24, 23:03 run
 
 - Corrected total-reps canonical field/exposure accounting, catalog total/distance

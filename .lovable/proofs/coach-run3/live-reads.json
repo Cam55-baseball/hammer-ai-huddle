@@ -1,0 +1,17 @@
+[
+  {
+    "role": "democollege",
+    "management_read_http": 401,
+    "proof": "read only; retained session-only token; not password or send/choice/log proof"
+  },
+  {
+    "role": "democoach",
+    "management_read_http": 401,
+    "proof": "read only; retained session-only token; not password or send/choice/log proof"
+  },
+  {
+    "role": "demoorg",
+    "management_read_http": 401,
+    "proof": "read only; retained session-only token; not password or send/choice/log proof"
+  }
+]

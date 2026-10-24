@@ -23250,6 +23250,7 @@ export type Database = {
         }
         Returns: Json
       }
+      coach_rx_catalog_revision: { Args: never; Returns: Json }
       coach_rx_commit_certified: {
         Args: {
           p_choice: string

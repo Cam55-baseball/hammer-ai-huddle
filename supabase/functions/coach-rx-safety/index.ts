@@ -24,6 +24,7 @@ import {
 } from "../_shared/coach/prescriptionSafety.ts";
 import { prescriptionMode, prescriptionChoiceDate } from "../_shared/coach/prescriptionActions.ts";
 import { loadPrescriptionEnvelope } from "../_shared/coach/loadPrescriptionEnvelope.ts";
+import { prescriptionResults } from "../_shared/coach/prescriptionResults.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -168,9 +169,9 @@ Deno.serve(async (req) => {
         // Completion: count plan rows each prescription created that the player finished.
         const rxIds = list.map((r) => r.id);
         const doneByRx: Record<string, { done: number; total: number }> = {};
-        const actualsByRx: Record<string, any[]> = {};
+        let actualsByRx: Record<string, any[]> = {};
         if (rxIds.length > 0) {
-          const { data: wk, error: wkError } = await admin.from("wk_prescriptions").select("id,user_id,movement_name,dosage_unit,slot,status,why_payload")
+          const { data: wk, error: wkError } = await admin.from("wk_prescriptions").select("id,user_id,plan_date,movement_slug,movement_name,dosage_unit,slot,status,why_payload")
             .in("user_id", [...new Set(list.map((r) => r.recipient_id))])
             .not("why_payload", "is", null).limit(5000);
           if (wkError) throw wkError;
@@ -187,11 +188,7 @@ Deno.serve(async (req) => {
               .select("id,user_id,prescription_id,plan_date,movement_slug,sets_completed,reps_completed,total_reps_completed,duration_seconds_precise,duration_seconds_completed,distance_feet_completed,metrics")
               .in("prescription_id", ownedRows.map((w: any) => w.id)).limit(5000);
             if (logsError) throw logsError;
-            for (const log of logs ?? []) {
-              const row = ownedRows.find((w: any) => w.id === log.prescription_id && w.user_id === log.user_id);
-              if (!row) continue;
-              (actualsByRx[row.why_payload.coach_rx] ??= []).push({ ...log, prescription: { movement_name: row.movement_name, dosage_unit: row.dosage_unit, slot: row.slot } });
-            }
+            actualsByRx = prescriptionResults(list, ownedRows, logs ?? []);
           }
         }
         const names: Record<string, string> = {};
@@ -305,6 +302,8 @@ Deno.serve(async (req) => {
       if (date !== today) return json({ error: "Use today to activate this workout on today's plan" }, 409);
       const { data: expectedRevision, error: revisionError } = await admin.rpc("coach_rx_safety_revision", { p_user: me, p_date: date });
       if (revisionError || !expectedRevision) return json({ error: "Could not check the latest workout details. Your saved plan is unchanged." }, 409);
+      const { data: expectedCatalogRevision, error: catalogRevisionError } = await admin.rpc("coach_rx_catalog_revision");
+      if (catalogRevisionError || !expectedCatalogRevision) return json({ error: "Could not check the latest Exercise Vault review. Your saved plan is unchanged." }, 409);
       const facts = await gatherFacts(admin, me, category, date, intensity, false, today);
       const { data: savedSnapshot, error: snapshotError } = await admin.from("athlete_plan_snapshots").select("payload,sport")
         .eq("user_id", me).eq("plan_date", date);
@@ -330,7 +329,7 @@ Deno.serve(async (req) => {
       const envelope = await loadPrescriptionEnvelope(admin, me, date, category, rows, choice === "use_instead");
       if (!envelope.allowed) return json({ applied: false, verdict: "blocked", reasons: envelope.reasons, safeOption: envelope.safeOption });
       rows = envelope.rows;
-      safety = { verdict: result.verdict, intensity, checked_at: new Date().toISOString(), envelope: "wic-swap", block_expected: block ?? null, cns_result: "cnsResult" in envelope ? envelope.cnsResult : null, expected_revision: expectedRevision };
+      safety = { verdict: result.verdict, intensity, checked_at: new Date().toISOString(), envelope: "wic-swap", block_expected: block ?? null, cns_result: "cnsResult" in envelope ? envelope.cnsResult : null, expected_revision: expectedRevision, expected_catalog_revision: expectedCatalogRevision };
     }
     const { data: committed, error: commitError } = await admin.rpc("coach_rx_commit_certified", {
       p_user: me, p_rx: rxId, p_date: date, p_choice: choice,
