@@ -1,0 +1,108 @@
+{
+  "viewport": [
+    390,
+    844
+  ],
+  "results": [
+    {
+      "case": "lift",
+      "passed": true,
+      "rest_seconds": 45,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
+    },
+    {
+      "case": "speed",
+      "passed": true,
+      "rest_seconds": 180,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
+    },
+    {
+      "case": "speed-cap",
+      "passed": true,
+      "rest_seconds": 300,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
+    },
+    {
+      "case": "conditioning",
+      "passed": true,
+      "rest_seconds": 30,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
+    },
+    {
+      "case": "warmup",
+      "passed": true,
+      "rest_seconds": 30,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
+    },
+    {
+      "case": "hitting",
+      "passed": true,
+      "rest_seconds": 45,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
+    },
+    {
+      "case": "pitching",
+      "passed": true,
+      "rest_seconds": 45,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
+    },
+    {
+      "case": "throwing",
+      "passed": true,
+      "rest_seconds": 45,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
+    },
+    {
+      "case": "fielding",
+      "passed": true,
+      "rest_seconds": 45,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
+    },
+    {
+      "case": "baserunning",
+      "passed": true,
+      "rest_seconds": 45,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
+    },
+    {
+      "case": "recovery",
+      "passed": true,
+      "rest_seconds": 30,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
+    },
+    {
+      "case": "coach",
+      "passed": true,
+      "scope": "focus entry and continuous autosave; lifecycle not covered"
+    },
+    {
+      "case": "units",
+      "passed": true
+    },
+    {
+      "case": "study-defender",
+      "passed": true
+    },
+    {
+      "case": "study-baserunner",
+      "passed": true
+    },
+    {
+      "case": "study-hitter",
+      "passed": true
+    },
+    {
+      "case": "study-pitcher",
+      "passed": true
+    },
+    {
+      "case": "study-softball-pitcher",
+      "passed": true
+    },
+    {
+      "case": "study-populated",
+      "passed": true
+    }
+  ],
+  "page_errors": []
+}

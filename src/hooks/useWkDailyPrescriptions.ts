@@ -64,6 +64,8 @@ export interface WkRx {
   tempo: string | null;
   load_pct: number | null;
   duration_seconds: number | null;
+  /** Optional declared rest carried by saved-plan adapters; never inferred from reps. */
+  rest_seconds?: number | null;
   distance_feet: number | null;
   total_reps: number | null;
   dosage_unit: string | null;
