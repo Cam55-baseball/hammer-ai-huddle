@@ -1,0 +1,18 @@
+[
+  {
+    "role": "democollege",
+    "received_card": true,
+    "safety_blocked": true,
+    "url": "http://localhost:8080/my-custom-activities"
+  },
+  {
+    "role": "democoach",
+    "url": "http://localhost:8080/coach-dashboard",
+    "sent_workouts_visible": true
+  },
+  {
+    "role": "demoorg",
+    "url": "http://localhost:8080/organization",
+    "sent_workouts_visible": false
+  }
+]
