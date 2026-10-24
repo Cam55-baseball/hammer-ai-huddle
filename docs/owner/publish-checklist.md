@@ -77,4 +77,23 @@ Only after explicit owner publication. These do not replace A or resolve the cle
 | Scout | Consented recruiting information | Request/connect through the existing inbox; deliberately open shared profiles. | Authorized source/date-labeled information; revoked or unshared data stays closed. |
 | Owner/admin | Internal review and release control | Use this sheet to review evidence and outstanding gates before separately authorizing publication. | Internal Report Card/Game IQ labels; neither is advertised or exposed to ordinary players. |
 
+## D. Coach prescriptions "Use instead" + data unity (Oct 24)
+
+**Coach prescriptions.** A coach (or org admin for assigned athletes) can send a prescription for any of the 12 plan categories, naming category and day, from the Vault or their own items. The player sees it on Today with three choices: **Use instead of my [category] card**, **Add alongside**, **Save for later**. "Use instead" passes the server safety check (rest days, game days, arm-rest dates, injury mode, season rules) and replaces only the same-category card — marked "Replaced by coach workout … not missed", never missed. Blocked players see why plus the safe option. Team sends write one prescription per player with a shared group id. The coach dashboard shows each player's choice.
+
+| Proof | Status | Evidence |
+|---|---|---|
+| Inbox with three choices | Done — automated | `.lovable/proofs/final/coach-rx-inbox.png` |
+| Hitting replace allowed | Done — automated | `coach-rx-hitting-replace.png` |
+| Pitching blocked by throw counts, safe option shown | Done — automated | `coach-rx-pitching-blocked.png` |
+| Lift added alongside | Done — automated | `coach-rx-lift-alongside.png` |
+| Coach status view (used instead / added / saved / declined) | Done — automated | `coach-rx-status.png` |
+| Replaced-card label, never "missed" | Done — automated | `coach-rx-replaced-card.png` |
+| Safety rules | Done — 10 rule tests | `src/test/coach/prescriptionSafety.test.ts` |
+| Team send (one row per player, shared group) | Done — 2 tests | `src/test/coach/teamSend.test.tsx` |
+
+All result rows: `.lovable/proofs/final/coach-rx-result.json` (6/6, 390×844, fixture-only).
+
+**Data unity.** `docs/owner/data-unity-matrix.md` maps all 14 entry kinds × 8 surfaces with verified writer/reader evidence. `src/test/unity/dataUnity.test.ts` holds 14 contract tests (one per row); all pass. Three known gaps are documented honestly, not hidden: coach-entered game logs never create `gp_games` (absent from History's game list and Coach Games); combine results are unread by the coach/scout/org test RPCs; coach readiness reads focus quizzes, not daily-log check-ins. Gap fixes need RPC migrations and were not done this run.
+
 No publication, deployment, migration, cron or iOS action is authorized by this sheet or was performed in this continuation. No refunds/results promises, fabricated measurements, consent bypass or new training dose are introduced.
