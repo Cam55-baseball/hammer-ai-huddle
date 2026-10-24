@@ -7,6 +7,9 @@ import { isWithinEnvelope, isRepDosed } from "../wic/dosage/doctrine.ts";
 import { classify, amountPerSet, type CatalogFact } from "../wic/exposure/ledger.ts";
 import { runGovernor, type GovernorContext } from "../wic/exposure/governor.ts";
 import type { GovItem, Rm28 } from "../wic/exposure/types.ts";
+import { certifyLift } from "../wic/lift/sessionBuilder.ts";
+import { certifySpeed } from "../wic/speed/sessionBuilder.ts";
+import { certifyConditioning } from "../wic/conditioning/sessionBuilder.ts";
 
 type Row = Record<string, any>;
 export function judgeCoachEnvelope(input: {
@@ -32,6 +35,13 @@ export function judgeCoachEnvelope(input: {
     }
   }
   const final = finalRuleCheck(input.resultingDay, input.final);
+  const sessionInput = { prescriptions: input.resultingDay as any, catalog: [...input.catalog.values()] as any,
+    template: { seasonPhase: input.final.phase, trainingAge: input.trainingAge, isGameDay: false, isRecoveryDay: input.final.liftRemoved },
+    availableEquipment: input.owned, trainingAgeClass: input.trainingAge };
+  const affected = new Set(input.rows.map(row => row.slot));
+  if (affected.has("lift")) reasons.push(...certifyLift(sessionInput).fatal.map(issue => issue.message));
+  if (affected.has("speed")) reasons.push(...certifySpeed(sessionInput).fatal.map(issue => issue.message));
+  if (affected.has("conditioning")) reasons.push(...certifyConditioning(sessionInput).fatal.map(issue => issue.message));
   for (const dropped of final.swaps) reasons.push(`Today's ${dropped.slot ?? "work"} would break a plan rule (${dropped.rule}). Keep the saved plan and ask your coach to review it.`);
   const items: GovItem[] = [];
   for (const row of input.resultingDay) {
