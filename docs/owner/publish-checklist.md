@@ -33,9 +33,11 @@ vocabulary but cannot bypass review. Sent workouts reads actual round throws and
 swings separately from generic reps. Organizations retain assigned-player and
 plan gates; this run does not certify a successful organization/team send.
 
-Evidence: `.lovable/proofs/coach-continue/`. Current full-suite result is recorded
-in `suite-result.json` after bounded groups finish; historical counts below are
-retained evidence, not this run's count.
+Evidence: `.lovable/proofs/coach-continue/suite-result.json`. Current full suite:
+**526 unique files / 4,114 tests PASS**, all eight exits 0 (corrected unity-contract
+batch rerun). Deno checks for the handler and generator PASS with isolated module
+resolution; locked app dependency links restored; preview latest **build OK** at
+22:57 UTC. Historical counts below are retained evidence, not this run's count.
 
 ### Owner finish continuation — October 24, 22:28 UTC
 
