@@ -28,7 +28,7 @@ All paths below are project-relative. New screenshots are 390×844, rendered pro
 | Identity progress/return-to-training placement | Done, retained real-player proof. | `.lovable/proofs/oct24-cleanup/pitcher-identity-merged.png` |
 | Earlier Delaycam, drawer, identity rewards/Coach Hammer, midnight-line removal, hundredths | Done, retained; not re-proven. | `roadmap.md` rows 1, 3–7, 13 retain exact paths |
 | Fresh full application suite | Done: 514 files, 4,034 passed, zero failed. Server suite not rerun; server code unchanged. | `.lovable/proofs/final/full-suite.json` |
-| Preview | Done: latest preview log reports build OK, 05:40:38 UTC. | `/tmp/observability/build-errors.log` |
+| Preview | Done: latest preview log reports build OK, 05:48:35 UTC. | `/tmp/observability/build-errors.log` |
 
 ### Cleanup and exact remaining blockers
 - This run created no hosted TEST records; all new fixtures are browser-local.
