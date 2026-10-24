@@ -202,6 +202,10 @@ export default function MyCustomActivities() {
               <ReceivedActivitiesList selectedSport={selectedSport} />
             </TabsContent>
 
+            <TabsContent value="coach-workouts" className="mt-0 animate-fade-in">
+              <CoachWorkoutsPanel />
+            </TabsContent>
+
             <TabsContent value="elite-presets" className="mt-0 animate-fade-in">
               <PresetLibrary 
                 selectedSport={selectedSport}
