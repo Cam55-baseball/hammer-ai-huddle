@@ -16,6 +16,7 @@ const sent=[
 const rows=kind==='coach-rx-status'?sent:inbox;
 export const supabase={
 auth:{getUser:async()=>({data:{user:{id:'fixture-player'}}})},
+rpc:async()=>({data:null,error:null}),
 functions:{invoke:async(n,o)=>{const id=o&&o.body&&o.body.prescription_id;
 if(id==='rx-pitch')return{data:{applied:false,verdict:'alongside_only',reasons:['Your arm needs rest from throwing until 2026-10-26 (pitch-count rest rule).'],safeOption:'Safe option: save it for 2026-10-26 or later.'},error:null};
 return{data:{applied:true,verdict:'allow',replaced:2},error:null};}},
