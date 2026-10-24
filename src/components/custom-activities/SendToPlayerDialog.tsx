@@ -217,6 +217,44 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
 
             <Separator />
 
+            {/* Coach prescription: category + day (owner request Oct 24) */}
+            <div className="space-y-3">
+              <Label className="text-sm font-bold">
+                {t('sentActivity.rxTitle', 'Plan card it can replace')}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t('sentActivity.rxHint', 'The player chooses: use it instead of their card for this category, add it alongside, or save it for later.')}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="rx-category" className="text-xs">Category</Label>
+                  <select
+                    id="rx-category"
+                    value={rxCategory}
+                    onChange={(e) => setRxCategory(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                  >
+                    {RX_CATEGORIES.map(c => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="rx-date" className="text-xs">Day</Label>
+                  <input
+                    id="rx-date"
+                    type="date"
+                    value={rxDate}
+                    min={new Date().toLocaleDateString('en-CA')}
+                    onChange={(e) => setRxDate(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
             {/* Player Selection */}
             <div className="space-y-4">
               <Label className="text-sm font-bold flex items-center gap-2">
