@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomActivityTemplate } from '@/types/customActivity';
 import { LockableField, FollowedPlayer } from '@/types/sentActivity';
+import { computeScheduleDates, type ScheduleInput } from '@/lib/coachRx/schedule';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
@@ -53,7 +54,7 @@ export function useSentActivities() {
     playerIds: string[],
     lockedFields: LockableField[],
     message?: string,
-    rxOptions?: { category: string; planDate: string }
+    rxOptions?: { category: string; planDate: string; schedule?: ScheduleInput }
   ): Promise<boolean> => {
     if (playerIds.length === 0) {
       toast.error(t('sentActivity.selectPlayer', 'Please select at least one player'));
@@ -83,22 +84,48 @@ export function useSentActivities() {
         .from('sent_activity_templates')
         .insert(inserts);
 
-      // Coach prescription (owner request Oct 24): one row per player so each
-      // player gets their own Today choice and their own safety check.
+      // Coach prescription (owner request Oct 24): one row per player per
+      // scheduled day so each player gets their own Today choice and their own
+      // safety check on every day. Schedule shapes: any day (one undated card
+      // the player activates), specific date(s), or a recurring series
+      // materialized day by day with a shared series id.
       if (!error && rxOptions) {
         const teamSendId = playerIds.length > 1 ? crypto.randomUUID() : null;
-        const rxRows = playerIds.map(playerId => ({
-          sender_id: userData.user!.id,
-          recipient_id: playerId,
-          category: rxOptions.category,
-          plan_date: rxOptions.planDate,
-          title: template.title,
-          exercises: templateSnapshot.exercises ?? [],
-          gear_labels: (templateSnapshot.exercises ?? []).flatMap((e: any) => e?.gear ? [String(e.gear)] : []),
-          source_template_id: template.id,
-          team_send_id: teamSendId,
-          safety_result: { intensity: template.intensity ?? 'standard' },
-        }));
+        const schedule: ScheduleInput = rxOptions.schedule ?? { type: 'date', startDate: rxOptions.planDate };
+        const today = new Date().toLocaleDateString('en-CA');
+        const days = schedule.type === 'any_day'
+          ? [rxOptions.planDate] // anchor only; the player picks the real day
+          : computeScheduleDates(schedule, today);
+        if (days.length === 0) {
+          toast.error(t('sentActivity.sendError', 'Failed to send activity'));
+          return false;
+        }
+        const seriesId = (days.length > 1 || schedule.type === 'recurring') ? crypto.randomUUID() : null;
+        const scheduleMeta = {
+          schedule_type: schedule.type,
+          series_id: seriesId,
+          recur_weekdays: schedule.weekdays ?? null,
+          recur_every_weeks: schedule.everyWeeks ?? null,
+          recur_monthly_ordinal: schedule.monthlyOrdinal ?? null,
+          recur_monthly_weekday: schedule.monthlyWeekday ?? null,
+          recur_end: schedule.endDate ?? null,
+          recur_count: schedule.count ?? null,
+        };
+        const rxRows = playerIds.flatMap(playerId =>
+          days.map(day => ({
+            sender_id: userData.user!.id,
+            recipient_id: playerId,
+            category: rxOptions.category,
+            plan_date: day,
+            title: template.title,
+            exercises: templateSnapshot.exercises ?? [],
+            gear_labels: (templateSnapshot.exercises ?? []).flatMap((e: any) => e?.gear ? [String(e.gear)] : []),
+            source_template_id: template.id,
+            team_send_id: teamSendId,
+            safety_result: { intensity: template.intensity ?? 'standard' },
+            ...scheduleMeta,
+          }))
+        );
         const { error: rxError } = await supabase.from('coach_prescriptions' as any).insert(rxRows);
         if (rxError) {
           toast.error(t('sentActivity.sendError', 'Failed to send activity'));
