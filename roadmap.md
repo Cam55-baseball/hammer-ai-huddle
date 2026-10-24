@@ -8,8 +8,8 @@
 - [x] A5 Replace execution: same-category slots only (categorySlots, no spill-over), rows marked skipped + replaced_by_coach_rx, never "missed"; card label added
 - [x] A6 Coach status view: CoachPrescriptionStatus on CoachDashboard (used instead / added / saved / declined)
 - [x] A7 Proofs: 6/6 screen cases pass at 390×844 (.lovable/proofs/final/coach-rx-*.png, coach-rx-result.json): inbox three choices, hitting replace allowed, pitching blocked by throw counts with safe option, lift alongside, coach status view, replaced-card label ("Replaced by coach workout … not missed")
-- [ ] B1 docs/owner/data-unity-matrix.md
-- [ ] B2 Automated test per matrix row; fix gaps
+- [x] B1 docs/owner/data-unity-matrix.md — 14 entry kinds × 8 surfaces, verified writer/reader evidence, 3 known gaps listed honestly (coach-logged games → no gp_games; combine results unread by coach/scout/org test RPCs; coach readiness reads focus quizzes not daily log)
+- [x] B2 src/test/unity/dataUnity.test.ts — 14 contract tests (one per row) assert writer writes the table and every direct reader reads it; gap rows assert current gapped behavior so a future fix flips the test; 14/14 PASS
 - [ ] C Full suite, checklist + by-role guide, cleanup, Ready to publish report
 
 **Ready to publish: NO.** Exact blockers: five human-only checks remain pending; three TEST personas lack verified before-state snapshots for assessment/start restoration; global TEST cleanup is unverified. All automated focus proofs are complete. No publish, cron, iOS, deploy or migration action.
