@@ -54,6 +54,7 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   const proposed: Row[] = rows.map(row => ({ ...row, phase: phase.sub_block, cns_cost: catalog.get(row.movement_slug)?.cns_cost ?? null }));
   if (proposed.some(row => typeof row.cns_cost !== "number" || !Number.isFinite(row.cns_cost) || row.cns_cost < 0)) return refused("An exercise's workload isn't declared in Exercise Vault. Ask your coach to choose a reviewed item.");
   const resultingDay = [...current.filter((r: Row) => !(replace && categorySlots(category).includes(r.slot) && r.status !== "completed")), ...proposed];
+  if (current.some((row: Row) => typeof row.cns_cost !== "number" || !Number.isFinite(row.cns_cost) || row.cns_cost < 0)) return refused("Today's saved workload couldn't be checked. Nothing was changed.");
   const decision = decideFromRaw(raw).decision;
   const ledger = await checked(admin.from("wk_cns_ledger").select("units_spent,units_cap").eq("user_id", userId).eq("ledger_date", date).maybeSingle());
   if (!ledger || !Number.isFinite(ledger.units_cap) || !Number.isFinite(ledger.units_spent) || ledger.units_cap < 0 || ledger.units_spent < 0) return refused("Today's saved workload limit is missing. Open your plan and finish your check-in first.");
