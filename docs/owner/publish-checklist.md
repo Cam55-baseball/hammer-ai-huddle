@@ -1,6 +1,6 @@
 # Hammers Today — final consolidated publish checklist
 
-Updated October 24, 2026. **Ready to publish: NO.** The five human-only checks in A are pending; exact restoration of three TEST personas lacks verified before-state snapshots, and global TEST cleanup is not certified. This sheet is final documentation, not publication approval.
+Updated October 24, 2026 (final, after coach prescriptions + data-unity completion). **Ready to publish: NO.** The five human-only checks in A are pending; exact restoration of three TEST personas lacks verified before-state snapshots, and global TEST cleanup is not certified. This sheet is final documentation, not publication approval.
 
 ## A. Human-only checks before publishing
 
@@ -39,7 +39,7 @@ Final automated screenshots are 390×844 and render production components with i
 
 **Focus proof scope:** lift, speed, capped speed, conditioning, warm-up, hitting, throwing/pitching, fielding, baserunning, recovery and coach-sent workout cover entry/timer → Next saves → correct rest → advance, Skip, Save & exit, X and reload. Sprint 30 yards = 180 seconds; 60 yards caps at 300 seconds. Conditioning uses 30 seconds between reps and 300 seconds after four bases. Coach declared rest is 30 seconds. The separate outer-dialog X proof preserves already-saved work and running rest; it does not establish that X flushes an unfinished write.
 
-**Retained verification:** latest full application suite passed 514 files / 4,034 tests, zero failures (`full-suite.json`). Server tests were not rerun; server code was unchanged. Preview reported build OK at 05:48:35 UTC (`preview-result.json`). No app code changed afterward in this continuation; these are retained results, not newly run tests.
+**Retained verification:** latest full application suite passed **517 files / 4,064 tests**, zero failures (run 07:34 UTC Oct 24, after the data-unity fixes). Preview reported build OK. The 14-item proofs above are retained evidence from earlier runs and were not rerun.
 
 ### TEST cleanup — blocked, not waived
 
