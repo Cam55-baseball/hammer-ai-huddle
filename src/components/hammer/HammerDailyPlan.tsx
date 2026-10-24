@@ -865,7 +865,7 @@ function HammerDailyPlanBody({
   const plan = savedPayload?.blocks?.some(block => block.replacedByCoachRx || (swapV2.enabled && block.drills.some(drill => "swapReason" in drill)))
     ? { ...computedPlan, blocks: computedPlan.blocks.map(block => {
       const saved = savedPayload.blocks?.find(item => item.modality === block.modality && !item.coachRx);
-      if (saved?.replacedByCoachRx) return { ...block, drills: [], steps: [], status: "off" as const, why: "Replaced by coach workout — not missed", roadmapReason: "Replaced by coach workout — not missed" };
+      if (saved?.replacedByCoachRx) return { ...block, drills: [], steps: [], status: "suppressed" as const, why: "Replaced by coach workout — not missed", roadmapReason: "Replaced by coach workout — not missed" };
       return saved && block.status === "ready" ? { ...block, drills: saved.drills } : block;
     }) } : computedPlan;
 
