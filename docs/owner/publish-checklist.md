@@ -69,6 +69,10 @@ together; Add alongside cannot bypass checked safety restrictions. The authorize
 are confirmed present. Fresh 390×844 live owner home tabs and empty management
 read passed. This is not an affected-player/team/org proof. Previous scheduling
 screenshots/results remain fixture-only and were not rerun.
+Final focused checks: 8 files / 71 tests PASS; final function validation PASS;
+preview build OK. The new full-suite attempt was stopped after ten minutes
+without a final summary and is not a pass. The earlier 4,064-test result predates
+the scheduling changes.
 
 Only after explicit owner publication. These do not replace A or resolve the cleanup blockers.
 
