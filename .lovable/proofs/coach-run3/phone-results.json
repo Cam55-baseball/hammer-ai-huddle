@@ -1,0 +1,8 @@
+{
+  "fixture_only": true,
+  "phone_390x844": true,
+  "round_times": true,
+  "round_distances": true,
+  "no_overflow": true,
+  "page_errors": []
+}
