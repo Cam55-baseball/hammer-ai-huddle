@@ -6,6 +6,6 @@
   "viewport": "390x844",
   "page_errors": [],
   "my_workouts_visible": false,
-  "sent_empty_visible": false,
+  "sent_empty_visible": true,
   "plan_gate_visible": false
 }

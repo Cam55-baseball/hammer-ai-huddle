@@ -1,6 +1,6 @@
 {
   "role": "demoorg",
-  "url_path": "/organization-dashboard",
+  "url_path": "/organization",
   "read_only": true,
   "fixture": false,
   "viewport": "390x844",
