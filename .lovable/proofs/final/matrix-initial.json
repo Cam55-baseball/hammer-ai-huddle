@@ -1,0 +1,186 @@
+{
+  "viewport": [
+    390,
+    844
+  ],
+  "results": [
+    {
+      "case": "lift",
+      "passed": true,
+      "next_cursor": {
+        "exercise": 0,
+        "exerciseId": "rx:fixture-lift",
+        "row": 0,
+        "restingUntil": 1792818717982,
+        "restStartedAt": 1792818672982,
+        "restSeconds": 45
+      },
+      "scope": "entry/Next; complete progression pending"
+    },
+    {
+      "case": "speed",
+      "passed": true,
+      "next_cursor": {
+        "exercise": 0,
+        "exerciseId": "rx:fixture-speed",
+        "row": 0,
+        "restingUntil": 1792818856729,
+        "restStartedAt": 1792818676729,
+        "restSeconds": 180
+      },
+      "scope": "entry/Next; complete progression pending"
+    },
+    {
+      "case": "speed-cap",
+      "passed": true,
+      "next_cursor": {
+        "exercise": 0,
+        "exerciseId": "rx:fixture-speed-cap",
+        "row": 0,
+        "restingUntil": 1792818980411,
+        "restStartedAt": 1792818680411,
+        "restSeconds": 300
+      },
+      "scope": "entry/Next; complete progression pending"
+    },
+    {
+      "case": "conditioning",
+      "passed": true,
+      "next_cursor": {
+        "exercise": 0,
+        "exerciseId": "rx:fixture-conditioning",
+        "row": 0,
+        "restingUntil": 1792818714054,
+        "restStartedAt": 1792818684054,
+        "restSeconds": 30
+      },
+      "scope": "entry/Next; complete progression pending"
+    },
+    {
+      "case": "warmup",
+      "passed": true,
+      "next_cursor": {
+        "exercise": 0,
+        "exerciseId": "fixture-warmup",
+        "row": 0,
+        "restingUntil": 1792818717710,
+        "restStartedAt": 1792818687710,
+        "restSeconds": 30
+      },
+      "scope": "entry/Next; complete progression pending"
+    },
+    {
+      "case": "hitting",
+      "passed": true,
+      "next_cursor": {
+        "exercise": 0,
+        "exerciseId": "rx:fixture-hitting",
+        "row": 0,
+        "restingUntil": null,
+        "restStartedAt": null,
+        "restSeconds": null
+      },
+      "scope": "entry/Next; complete progression pending"
+    },
+    {
+      "case": "pitching",
+      "passed": true,
+      "next_cursor": {
+        "exercise": 0,
+        "exerciseId": "rx:fixture-pitching",
+        "row": 0,
+        "restingUntil": null,
+        "restStartedAt": null,
+        "restSeconds": null
+      },
+      "scope": "entry/Next; complete progression pending"
+    },
+    {
+      "case": "throwing",
+      "passed": true,
+      "next_cursor": {
+        "exercise": 0,
+        "exerciseId": "rx:fixture-throwing",
+        "row": 0,
+        "restingUntil": null,
+        "restStartedAt": null,
+        "restSeconds": null
+      },
+      "scope": "entry/Next; complete progression pending"
+    },
+    {
+      "case": "fielding",
+      "passed": true,
+      "next_cursor": {
+        "exercise": 0,
+        "exerciseId": "rx:fixture-fielding",
+        "row": 0,
+        "restingUntil": null,
+        "restStartedAt": null,
+        "restSeconds": null
+      },
+      "scope": "entry/Next; complete progression pending"
+    },
+    {
+      "case": "baserunning",
+      "passed": true,
+      "next_cursor": {
+        "exercise": 0,
+        "exerciseId": "rx:fixture-baserunning",
+        "row": 0,
+        "restingUntil": null,
+        "restStartedAt": null,
+        "restSeconds": null
+      },
+      "scope": "entry/Next; complete progression pending"
+    },
+    {
+      "case": "recovery",
+      "passed": true,
+      "next_cursor": {
+        "exercise": 0,
+        "exerciseId": "fixture-recovery",
+        "row": 0,
+        "restingUntil": 1792818740650,
+        "restStartedAt": 1792818710650,
+        "restSeconds": 30
+      },
+      "scope": "entry/Next; complete progression pending"
+    },
+    {
+      "case": "coach",
+      "passed": true,
+      "scope": "focus entry and continuous autosave; lifecycle not covered"
+    },
+    {
+      "case": "units",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "case": "study-defender",
+      "passed": true
+    },
+    {
+      "case": "study-baserunner",
+      "passed": true
+    },
+    {
+      "case": "study-hitter",
+      "passed": true
+    },
+    {
+      "case": "study-pitcher",
+      "passed": true
+    },
+    {
+      "case": "study-softball-pitcher",
+      "passed": true
+    },
+    {
+      "case": "study-populated",
+      "passed": true
+    }
+  ],
+  "page_errors": []
+}
