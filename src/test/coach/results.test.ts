@@ -9,4 +9,10 @@ describe("canonical workout actuals", () => {
     expect(actualResultText({ ...base, reps_completed: [12, 8], prescription: { movement_name: "Catch", dosage_unit: "throws", slot: "throwing" } })).toContain("Throws: 12 / 8");
     expect(actualResultText(base)).toBe("No entered results");
   });
+  it("keeps entered fielding throws separate from fielding reps", () => {
+    expect(actualResultText({ ...base, reps_completed: [6], metrics: { rounds: [{ reps: 6, throws: 2 }] } })).toContain("Throws: 2");
+  });
+  it("reads actual hitting swings from the existing canonical rounds", () => {
+    expect(actualResultText({ ...base, metrics: { rounds: [{ swings: 12 }, { swings: 8 }] } })).toContain("Swings: 12 / 8");
+  });
 });

@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
           const ownedRows = (wk ?? []).filter((w: any) => rxIds.includes(w.why_payload?.coach_rx));
           if (ownedRows.length) {
             const { data: logs, error: logsError } = await admin.from("wk_session_logs")
-              .select("id,user_id,prescription_id,plan_date,movement_slug,sets_completed,reps_completed,total_reps_completed,duration_seconds_precise,duration_seconds_completed,distance_feet_completed")
+              .select("id,user_id,prescription_id,plan_date,movement_slug,sets_completed,reps_completed,total_reps_completed,duration_seconds_precise,duration_seconds_completed,distance_feet_completed,metrics")
               .in("prescription_id", ownedRows.map((w: any) => w.id)).limit(5000);
             if (logsError) throw logsError;
             for (const log of logs ?? []) {
