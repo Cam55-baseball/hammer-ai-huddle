@@ -214,6 +214,7 @@ Confidence: ${snapshot.development_confidence}%
 
           <TabsContent value="performance" className="space-y-6">
             <PerformanceAreaRows />
+            <WorkoutActuals />
             {performance}
             <section id="performance-context" className="scroll-mt-20"><HumanPerformanceCard /></section>
             <Card className="p-4 flex items-center justify-between gap-3">

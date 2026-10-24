@@ -22,6 +22,13 @@ export interface Exercise {
   weight?: number;
   weightUnit?: 'lbs' | 'kg';
   notes?: string;
+  /** Canonical identity and declared measurement/equipment for coach sends. */
+  slug?: string;
+  gear?: string;
+  equipment_requirements?: string[];
+  equipment_alternatives?: string[][];
+  dosage_unit?: string;
+  distance_feet?: number;
   // Superset support
   supersetGroupId?: string; // Groups exercises into supersets
   supersetOrder?: number;   // Order within superset (1, 2, 3)

@@ -18,6 +18,8 @@ import { useSentActivities } from '@/hooks/useSentActivities';
 import { scheduleSummary, type ScheduleInput } from '@/lib/coachRx/schedule';
 import { getActivityIcon } from './IconPicker';
 import { hexToRgba } from '@/hooks/useUserColors';
+import { CoachExerciseAuthoring } from './CoachExerciseAuthoring';
+import type { Exercise } from '@/types/customActivity';
 
 /** Coach prescription categories (owner request Oct 24) — every category a plan can contain. */
 const RX_CATEGORIES = [
@@ -75,6 +77,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
   const [endMode, setEndMode] = useState<'count' | 'end'>('count');
   const [recurCount, setRecurCount] = useState<number>(4);
   const [recurEnd, setRecurEnd] = useState<string>('');
+  const [exercises, setExercises] = useState<Exercise[]>([]);
 
   useEffect(() => {
     if (open) {
@@ -83,6 +86,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
       setLockPreset('none');
       setCustomLocks([]);
       setMessage('');
+      setExercises(template?.exercises ?? []);
       setRxCategory(template ? defaultRxCategory(template.activity_type) : 'lift');
       setRxDate(new Date().toLocaleDateString('en-CA'));
       setSchedType('date');
@@ -143,7 +147,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
     if (!template) return;
 
     const success = await sendActivityToPlayers(
-      template,
+      { ...template, exercises },
       selectedPlayers,
       getLockedFields(),
       message.trim() || undefined,
@@ -204,6 +208,8 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
             <Separator />
 
             {/* Lock Settings */}
+            <CoachExerciseAuthoring exercises={exercises} onChange={setExercises} />
+            <Separator />
             <div className="space-y-4">
               <Label className="text-sm font-bold flex items-center gap-2">
                 <Lock className="h-4 w-4" />
@@ -486,7 +492,7 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
           </Button>
           <Button
             onClick={handleSend}
-            disabled={loading || selectedPlayers.length === 0 || !scheduleValid}
+            disabled={loading || selectedPlayers.length === 0 || !scheduleValid || !exercises.length || exercises.some(e => !e.name.trim() || !e.dosage_unit)}
             className="gap-2"
           >
             {loading ? (
