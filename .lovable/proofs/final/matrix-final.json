@@ -1,0 +1,99 @@
+{
+  "viewport": [
+    390,
+    844
+  ],
+  "results": [
+    {
+      "case": "lift",
+      "passed": true,
+      "rest_seconds": 45,
+      "scope": "Next/save/rest/advance/reload/Skip/save-exit/X"
+    },
+    {
+      "case": "speed",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "case": "speed-cap",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "case": "conditioning",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "case": "warmup",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "case": "hitting",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "case": "pitching",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "case": "throwing",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "case": "fielding",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "case": "baserunning",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "case": "recovery",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "case": "coach",
+      "passed": true,
+      "scope": "focus entry and continuous autosave; lifecycle not covered"
+    },
+    {
+      "case": "units",
+      "passed": false,
+      "error": ""
+    },
+    {
+      "case": "study-defender",
+      "passed": true
+    },
+    {
+      "case": "study-baserunner",
+      "passed": true
+    },
+    {
+      "case": "study-hitter",
+      "passed": true
+    },
+    {
+      "case": "study-pitcher",
+      "passed": true
+    },
+    {
+      "case": "study-softball-pitcher",
+      "passed": true
+    },
+    {
+      "case": "study-populated",
+      "passed": true
+    }
+  ],
+  "page_errors": []
+}
