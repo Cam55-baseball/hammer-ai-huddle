@@ -34,7 +34,9 @@ personas were untouched; this run authored no hosted TEST training records.
 blocks a workout. Coaches choose active catalog items, see actual round times and
 distances in Sent workouts, and cannot bypass review by naming an own item after
 a catalog exercise. Organizations retain the same assignment and consent gates.
-Evidence and final test counts: `.lovable/proofs/coach-run3/`.
+Verification: **528 files / 4,137 tests PASS**, all eight full-suite groups exit 0,
+final changed files refreshed; focused **107/107**, Deno handler check PASS,
+preview build OK. Evidence `.lovable/proofs/coach-run3/`.
 
 ### Owner continuation — October 24, 23:03 run
 

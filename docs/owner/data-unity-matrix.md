@@ -64,7 +64,9 @@ live data landing in every surface; unverified cells remain unverified.
 - Actual planSnapshotPayload lacks per-drill prescriptionId. Structural acceptance
   alone cannot prove exposure coverage: skill gate remains fail-closed, and
   complete arm/block/own-item and positive role/team row-3 cells stay UNVERIFIED.
-- Evidence `.lovable/proofs/coach-run3/`; other matrix rows remain unchanged.
+- Full suite **528 files / 4,137 tests PASS**, final changed files refreshed;
+  focused **107/107**, Deno/preview PASS. Evidence `.lovable/proofs/coach-run3/`;
+  other matrix rows remain unchanged.
 
 ### Owner continuation — October 24, 23:03 run
 
