@@ -302,6 +302,8 @@ Deno.serve(async (req) => {
       if (date !== today) return json({ error: "Use today to activate this workout on today's plan" }, 409);
       const { data: expectedRevision, error: revisionError } = await admin.rpc("coach_rx_safety_revision", { p_user: me, p_date: date });
       if (revisionError || !expectedRevision) return json({ error: "Could not check the latest workout details. Your saved plan is unchanged." }, 409);
+      const { data: expectedCatalogRevision, error: catalogRevisionError } = await admin.rpc("coach_rx_catalog_revision");
+      if (catalogRevisionError || !expectedCatalogRevision) return json({ error: "Could not check the latest Exercise Vault review. Your saved plan is unchanged." }, 409);
       const facts = await gatherFacts(admin, me, category, date, intensity, false, today);
       const { data: savedSnapshot, error: snapshotError } = await admin.from("athlete_plan_snapshots").select("payload,sport")
         .eq("user_id", me).eq("plan_date", date);
@@ -327,7 +329,7 @@ Deno.serve(async (req) => {
       const envelope = await loadPrescriptionEnvelope(admin, me, date, category, rows, choice === "use_instead");
       if (!envelope.allowed) return json({ applied: false, verdict: "blocked", reasons: envelope.reasons, safeOption: envelope.safeOption });
       rows = envelope.rows;
-      safety = { verdict: result.verdict, intensity, checked_at: new Date().toISOString(), envelope: "wic-swap", block_expected: block ?? null, cns_result: "cnsResult" in envelope ? envelope.cnsResult : null, expected_revision: expectedRevision };
+      safety = { verdict: result.verdict, intensity, checked_at: new Date().toISOString(), envelope: "wic-swap", block_expected: block ?? null, cns_result: "cnsResult" in envelope ? envelope.cnsResult : null, expected_revision: expectedRevision, expected_catalog_revision: expectedCatalogRevision };
     }
     const { data: committed, error: commitError } = await admin.rpc("coach_rx_commit_certified", {
       p_user: me, p_rx: rxId, p_date: date, p_choice: choice,
