@@ -13,6 +13,7 @@ import { AuthContext } from '@/contexts/AuthContext';
 import { ExerciseTools } from '@/components/hammer/cards/ExerciseTools';
 import PickoffTrainer from '@/pages/PickoffTrainer';
 import { CoachLifecycle } from './CoachLifecycle';
+import { CoachDetail } from './CoachDetail';
 import '@/index.css';
 import type { WkRx } from '@/hooks/useWkDailyPrescriptions';
 import type { ActivityFolderItem } from '@/types/activityFolder';
@@ -29,6 +30,7 @@ const timed = kind === 'warmup' || kind === 'recovery';
 const unitSlugs = ['walking_lunge','lift_rfess_pallof','lift_banded_lateral_squat_walk','lift_elephant_walk','lift_farmer_toe_walk','broad_jump','plank_hold','ubp_f15_base_pushup_bottom_hold_explode','tall_plank_shoulder_tap'];
 const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 function App() {
+  if (kind === 'coach-detail') return <CoachDetail />;
   if (kind === 'coach-lifecycle') return <CoachLifecycle />;
   if (kind === 'pickoff-tool') return <PickoffTrainer />;
   if (kind.startsWith('study-')) {
