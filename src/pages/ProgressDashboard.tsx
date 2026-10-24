@@ -44,6 +44,7 @@ import { useReadinessState } from '@/hooks/useReadinessState';
 import { PerformanceAreaRows } from '@/components/intelligence/PerformanceAreaRows';
 import { LearningLoopList } from '@/components/intelligence/LearningLoopList';
 import { HealthFlagsCard } from '@/components/intelligence/HealthFlagsCard';
+import { WorkoutActuals } from '@/components/hammer/WorkoutActuals';
 
 function PracticeIntelligenceCard() {
   const { data: mpi } = useMPIScores();

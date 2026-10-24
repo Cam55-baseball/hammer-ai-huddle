@@ -1,0 +1,12 @@
+import { describe, expect, it } from "vitest";
+import { actualResultText, type WorkoutActual } from "@/lib/coachRx/results";
+const base: WorkoutActual = { id: "log", plan_date: "2026-10-24", movement_slug: "catch", sets_completed: null, reps_completed: null, total_reps_completed: null, duration_seconds_precise: null, duration_seconds_completed: null, distance_feet_completed: null };
+describe("canonical workout actuals", () => {
+  it("keeps an entered 1.47 seconds instead of its whole-second projection", () => {
+    expect(actualResultText({ ...base, duration_seconds_precise: 1.47, duration_seconds_completed: 1 })).toContain("1.47");
+  });
+  it("reports actual throws without manufacturing target reps", () => {
+    expect(actualResultText({ ...base, reps_completed: [12, 8], prescription: { movement_name: "Catch", dosage_unit: "throws", slot: "throwing" } })).toContain("Throws: 12 / 8");
+    expect(actualResultText(base)).toBe("No entered results");
+  });
+});

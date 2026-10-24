@@ -10,6 +10,7 @@ import { SideViewTabs, type SideViewMode } from '@/components/shared/SideViewTab
 import { SideBadge } from '@/components/shared/SideBadge';
 import { useSideContext } from '@/contexts/SideContext';
 import type { ScoredDrill } from '@/utils/drillRecommendationEngine';
+import { WorkoutActuals } from '@/components/hammer/WorkoutActuals';
 
 interface VaultDrillWorkProps {
   savedDrills: any[];
@@ -47,6 +48,7 @@ export function VaultDrillWork({ savedDrills, onDeleteDrill, sport }: VaultDrill
         </CardTitle>
       </CardHeader>
       <CardContent>
+        <WorkoutActuals />
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="saved" className="gap-1.5 text-xs">
