@@ -1,0 +1,15 @@
+import asyncio,json
+from pathlib import Path
+from playwright.async_api import async_playwright
+OUT=Path('/dev-server/.lovable/proofs/final')
+CLIENT='''export const supabase={auth:{getUser:async()=>({data:{user:{id:'fixture-coach'}}})},channel(){const q={on:()=>q,subscribe:()=>q};return q;},removeChannel(){},from(t){let op='read',body,single=false;const q=new Proxy({}, {get(_,k){if(k==='then')return resolve=>{let rows=JSON.parse(localStorage.getItem('fixture-'+t)||'[]');if(t==='scout_follows')rows=[{player_id:'fixture-player'}];if(t==='profiles')rows=[{id:'fixture-player',full_name:'Fixture Player',position:'C'},{id:'fixture-coach',full_name:'Fixture Coach'}];if(t==='user_roles')rows=[{user_id:'fixture-coach',role:'coach',status:'active'}];if(op==='insert'){rows=(Array.isArray(body)?body:[body]).map((r,i)=>({...r,id:'fixture-sent',sent_at:new Date().toISOString()}));localStorage.setItem('fixture-'+t,JSON.stringify(rows));}if(op==='update'){rows=rows.map(r=>({...r,...body}));localStorage.setItem('fixture-'+t,JSON.stringify(rows));}resolve({data:single?rows[0]:rows,error:null});};return (...a)=>{if(k==='single')single=true;if(['insert','update'].includes(k)){op=k;body=a[0];}return q;};}});return q;}};'''
+async def main():
+ async with async_playwright() as p:
+  b=await p.chromium.launch(headless=True);c=await b.new_context(viewport={'width':390,'height':844});pg=await c.new_page()
+  async def mock(r):
+   u=r.request.url
+   if '/src/integrations/supabase/client.ts' in u:await r.fulfill(content_type='application/javascript',body=CLIENT)
+   elif 'supabase.co' in u:await r.abort()
+   else:await r.continue_()
+  await c.route('**/*',mock);await pg.goto('http://localhost:8080/.lovable/proofs/final/harness.html?kind=coach-lifecycle');await pg.wait_for_timeout(1800);await pg.get_by_placeholder('Enter activity name...').fill('Fixture coach workout');await pg.get_by_role('button',name='Add',exact=True).click();await pg.get_by_role('button',name='Save',exact=True).click();await pg.wait_for_timeout(500);await pg.screenshot(path=str(OUT/'coach-send.png'));await pg.get_by_text('Fixture Player',exact=True).click();await pg.get_by_role('button',name='Send Activity',exact=True).click();await pg.wait_for_timeout(500);await pg.screenshot(path=str(OUT/'coach-accept.png'));await pg.get_by_role('button',name='Accept',exact=True).click();await pg.wait_for_timeout(500);await pg.get_by_role('button',name='Start',exact=True).click();await pg.get_by_placeholder('Reps').first.fill('10');await pg.wait_for_timeout(900);saved=json.loads(await pg.evaluate("localStorage.getItem('fixture-coach-lifecycle')"));assert len(saved['exerciseSets'])==1;await pg.screenshot(path=str(OUT/'coach-lifecycle-autosave.png'));sent=json.loads(await pg.evaluate("localStorage.getItem('fixture-sent_activity_templates')"));assert sent[0]['status']=='accepted';(OUT/'coach-result.json').write_text(json.dumps({'create_send_accept_focus_autosave':True,'mock_storage_only':True}));await b.close()
+asyncio.run(main())
