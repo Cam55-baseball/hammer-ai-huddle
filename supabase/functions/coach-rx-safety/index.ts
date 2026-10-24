@@ -164,12 +164,40 @@ Deno.serve(async (req) => {
         .eq("user_id", me).eq("plan_date", date).in("slot", slots)
         .is("replaced_by_coach_rx", null).not("status", "in", "(completed,skipped)")
         .select("id");
+      // The coach workout becomes real plan rows so it runs exactly like a
+      // Hammers card: focus mode, Swap, autosave and logging all land in the
+      // same tables (wk_session_logs → Discipline, load, learning, coach plan).
+      const { data: senderProfile } = await admin.from("profiles").select("full_name").eq("id", (rx as any).sender_id).maybeSingle();
+      const rows = coachRxToWkRows({
+        userId: me, planDate: date, category, prescriptionId: rxId,
+        coachName: (senderProfile as any)?.full_name ?? null,
+        exercises: Array.isArray((rx as any).exercises) ? (rx as any).exercises : [],
+        usedInstead: true,
+      });
+      if (rows.length > 0) await admin.from("wk_prescriptions").insert(rows);
       await admin.from("coach_prescriptions").update({
         status: STATUS[choice],
-        safety_result: { verdict: r.verdict, intensity, replaced_count: (replaced ?? []).length, checked_at: new Date().toISOString() },
+        safety_result: { verdict: r.verdict, intensity, replaced_count: (replaced ?? []).length, inserted_count: rows.length, checked_at: new Date().toISOString() },
         updated_at: new Date().toISOString(),
       }).eq("id", rxId);
-      return json({ applied: true, verdict: r.verdict, replaced: (replaced ?? []).length });
+      return json({ applied: true, verdict: r.verdict, replaced: (replaced ?? []).length, inserted: rows.length });
+    }
+
+    // Add alongside: the coach workout also becomes real plan rows (same
+    // logging path); save-for-later and declined insert nothing.
+    if (choice === "add_alongside") {
+      const { data: senderProfile } = await admin.from("profiles").select("full_name").eq("id", (rx as any).sender_id).maybeSingle();
+      const rows = coachRxToWkRows({
+        userId: me, planDate: date, category, prescriptionId: rxId,
+        coachName: (senderProfile as any)?.full_name ?? null,
+        exercises: Array.isArray((rx as any).exercises) ? (rx as any).exercises : [],
+        usedInstead: false,
+      });
+      if (rows.length > 0) await admin.from("wk_prescriptions").insert(rows);
+      await admin.from("coach_prescriptions").update({
+        status: STATUS[choice], updated_at: new Date().toISOString(),
+      }).eq("id", rxId);
+      return json({ applied: true, verdict: null, inserted: rows.length });
     }
 
     await admin.from("coach_prescriptions").update({
