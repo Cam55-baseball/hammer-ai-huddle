@@ -1,6 +1,24 @@
 # Hammers Today — final consolidated publish checklist
 
-Updated October 24, 2026 (final, after coach prescriptions + data-unity completion). **Ready to publish: NO.** The five human-only checks in A are pending; exact restoration of three TEST personas lacks verified before-state snapshots, and global TEST cleanup is not certified. This sheet is final documentation, not publication approval.
+Updated October 24, 2026, final batch. **Ready to publish: NO.** Coach safety/data landing and affected-player/coach/org proofs remain incomplete, alongside the five human checks and TEST restoration/cleanup gates below. This is a final honest checklist, not a claim that the requested build is finished or publication approval.
+
+## Final batch result
+
+- Fixed duplicate legacy invitations on prescription sends and invalid-schedule
+  orphan invitations; kept the one existing My Workouts destination.
+- All three main shelves fit on the 390×844 phone without horizontal searching.
+- Coach plan rows now render once through the normal grouped focus/logging host,
+  preserving twelve categories and declared catalog identity/unit/distance.
+- Max effort keeps the high-intensity gate. Applied connected-staff send and
+  service-only update safeguards; deployed only the authorized safety function.
+- Eight scheduling fixture assertions passed, with saved phone screenshots;
+  authenticated owner home and empty management read passed, no hosted writes.
+- **Still not finished:** full readiness/pain/equipment/volume/phase safety;
+  source-Vault item/gear editing; same-category skill-block replacement;
+  complete staff results; actual player/coach/org/team save-and-reload proofs;
+  custom-activity History/Vault/General and coach-snapshot landing; every-row,
+  every-surface behavioral data-unity tests. These are implementation/proof
+  gaps, not human-only checks and not waiting for owner authorization.
 
 ## A. Human-only checks before publishing
 
@@ -52,7 +70,7 @@ Evidence: `.lovable/proofs/final/cleanup-result.json` retains the prior exact-ID
 
 The three personas are retained system accounts; their Oct24 assessment/start changes remain unrestored. Located files and previously checked protected snapshot tags do not establish their before-state. An actual before-state backup is needed; no destructive workaround is authorized.
 
-## B. After publishing: live checks
+## B. Coach-workout release checks
 
 ### Coach scheduling — required before release
 
@@ -131,11 +149,26 @@ Do not interpret the historical "all gaps" wording as complete live certificatio
 | Lift added alongside | Done — automated | `coach-rx-lift-alongside.png` |
 | Coach status view (used instead / added / saved / declined) | Done — automated | `coach-rx-status.png` |
 | Replaced-card label, never "missed" | Done — automated | `coach-rx-replaced-card.png` |
-| Safety rules | Done — 10 rule tests | `src/test/coach/prescriptionSafety.test.ts` |
+| Safety rules | Partial — rule tests pass; full envelope missing | `src/test/coach/prescriptionSafety.test.ts` |
 | Team send (one row per player, shared group) | Done — 2 tests | `src/test/coach/teamSend.test.tsx` |
 
 All result rows: `.lovable/proofs/final/coach-rx-result.json` (6/6, 390×844, fixture-only).
 
 **Data unity.** `docs/owner/data-unity-matrix.md` maps all 14 entry kinds × 8 surfaces with verified writer/reader evidence. `src/test/unity/dataUnity.test.ts` holds 14 contract tests (one per row); all pass. **All three gaps found on Oct 24 are fixed and live-proven** (migrations 0105/0106, owner-authorized): coach-entered games now mirror into the game list (marked coach-entered, kept out of training math; undo/"not me" removes the mirror and reverses throws); coach/org/scout test reads include combine results; coach readiness and org attendance count both check-in systems. Live proof ran the real functions as the demo coach and demo player: combine result returned in the coach test list, daily check-in counted in readiness attendance, coach game mirrored then removed by the player's "not me" flag with throws reversed to zero. The live proof also surfaced and fixed a pre-existing crash: the player/parent confirm-or-flag path called a non-existent parent check, so every such call failed since it shipped. All TEST rows from the proof were removed and verified gone.
 
-No publication, deployment, migration, cron or iOS action is authorized by this sheet or was performed in this continuation. No refunds/results promises, fabricated measurements, consent bypass or new training dose are introduced.
+No publication, cron or iOS changes were made. The owner-authorized prescription
+access migration and safety-function redeploy were applied this continuation.
+No hosted TEST rows were created; historical TEST restoration/global-cleanup
+blocks remain. No fabricated measurements, consent bypass or new training dose.
+
+### Final by-role instructions and limits
+
+| Role | What it is | How to use | What you'll see / release limit |
+|---|---|---|---|
+| Player | One home for received, shelved and personal workouts | Open My Workouts → From my coaches / Saved for later / My own. Use today instead, Add alongside today, or Save for later. | Scheduled cards and explanations; activation is not completion. Full safety and downstream readback are not yet release-certified. |
+| Coach | Per-player dated or recurring sends | Share from My own; choose category, players and Any day/date(s)/weekly/monthly. Sent workouts moves or cancels future unanswered dates and resends. | Responses and completed-activity counts; detailed actual results and live team proof remain incomplete. |
+| Organization | The same sending path under current athlete access | Use My Workouts and dashboard Sent workouts. | Current sender's permitted sends, not all staff's sends; assigned-org live send/readback remains unverified. |
+
+The historical guide's statements that every coach use already lands in History,
+Vault and the coach plan are superseded by the explicit GAP/UNVERIFIED cells in
+`data-unity-matrix.md`. Do not tell players these destinations are proven.
