@@ -315,6 +315,11 @@ export function WkPrescriptionCard({
   </PocketCard>;
   return (
     <div className={`border-b border-border py-2 ${checked ? "opacity-60" : ""}`}>
+      {isReplaced && (
+        <p className="mb-1 text-xs font-medium text-muted-foreground" data-replaced-by-coach>
+          Replaced by coach workout — your coach's version is on today's plan. This card was not missed.
+        </p>
+      )}
       {logHost && createPortal(<section data-exercise-entry-grid className="space-y-2"><InlinePrescriptionLog rx={rx} /></section>, logHost)}
       <ExerciseDisclosure name={rx.movement_name}>
         <div className="mt-2 space-y-2 text-xs">
