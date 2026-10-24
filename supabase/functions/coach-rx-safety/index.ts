@@ -156,8 +156,10 @@ Deno.serve(async (req) => {
         return json({ applied: false, verdict: r.verdict, reasons: r.reasons, safeOption: r.safeOption });
       }
       const slots = categorySlots(category);
+      // Replaced rows are marked skipped (zero CNS, never "missed") and carry
+      // the coach-prescription link so the card reads "replaced by coach workout".
       const { data: replaced } = await admin.from("wk_prescriptions")
-        .update({ replaced_by_coach_rx: rxId })
+        .update({ replaced_by_coach_rx: rxId, status: "skipped" })
         .eq("user_id", me).eq("plan_date", date).in("slot", slots)
         .is("replaced_by_coach_rx", null).not("status", "in", "(completed,skipped)")
         .select("id");
