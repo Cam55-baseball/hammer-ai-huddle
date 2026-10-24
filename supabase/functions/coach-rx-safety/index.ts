@@ -57,8 +57,7 @@ async function gatherFacts(
   today: string,
 ): Promise<RxReplaceFacts> {
   const from = shift(date, -14), to = shift(date, 14);
-  const [{ data: prof }, { data: ac }, { data: mpi }, { data: cal }, { data: gp }, { data: arm }, { data: log }, { data: cards }] =
-    await Promise.all([
+  const results = await Promise.all([
       admin.from("profiles").select("full_name, date_of_birth").eq("id", pid).maybeSingle(),
       admin.from("athlete_context").select("competition_level").eq("user_id", pid).maybeSingle(),
       admin.from("athlete_mpi_settings").select("season_status").eq("user_id", pid).maybeSingle(),
@@ -73,6 +72,9 @@ async function gatherFacts(
         .in("slot", categorySlots(category)).is("replaced_by_coach_rx", null)
         .not("status", "in", "(completed,skipped)").limit(1),
     ]);
+  const failure = results.find((result) => result.error)?.error;
+  if (failure) throw failure;
+  const [{ data: prof }, { data: ac }, { data: mpi }, { data: cal }, { data: gp }, { data: arm }, { data: log }, { data: cards }] = results;
   const rest = new Set<string>(), games = new Set<string>();
   for (const e of (cal ?? []) as any[]) (e.event_type === "rest" ? rest : games).add(String(e.event_date));
   for (const g of (gp ?? []) as any[]) games.add(String(g.game_date));
@@ -207,20 +209,34 @@ Deno.serve(async (req) => {
         if ((rx as any).status !== "pending") return json({ error: "The player already answered — it can't be changed" }, 409);
         if ((rx as any).plan_date < today) return json({ error: "Past dates can't be changed" }, 409);
         if ((rx as any).cancelled_at) return json({ error: "Already cancelled" }, 409);
+        const { data: connected, error: connectionError } = await admin.rpc("coach_connected_to", { _me: me, _athlete: rx.recipient_id });
+        const gate = await recruitingGate(admin, me, connectionError || connected !== true ? [] : [rx.recipient_id], "metrics");
+        if (gate.get(rx.recipient_id) !== "visible") return json({ error: "You can't manage this player's workout." }, 403);
         const { error: updateError } = await admin.from("coach_prescriptions").update(
           action === "cancel"
             ? { cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() }
             : { plan_date: newDate, updated_at: new Date().toISOString() },
-        ).eq("id", rxId);
+        ).eq("id", rxId).eq("status", "pending").is("cancelled_at", null).eq("updated_at", rx.updated_at).select("id").single();
         if (updateError) throw updateError;
         return json({ applied: true });
       }
 
       if (action === "cancel_series") {
         if (!seriesId) return json({ error: "Pick a series" }, 400);
+        const { data: candidates, error: seriesError } = await admin.from("coach_prescriptions").select("id, recipient_id")
+          .eq("sender_id", me).eq("series_id", seriesId).eq("status", "pending").gte("plan_date", today).is("cancelled_at", null);
+        if (seriesError) throw seriesError;
+        const recipients = [...new Set((candidates ?? []).map((r: any) => String(r.recipient_id)))];
+        const linked = await Promise.all(recipients.map(async (id) => {
+          const { data, error } = await admin.rpc("coach_connected_to", { _me: me, _athlete: id });
+          return !error && data === true ? id : null;
+        }));
+        const gate = await recruitingGate(admin, me, linked.filter((id): id is string => id !== null), "metrics");
+        const allowedIds = (candidates ?? []).filter((r: any) => gate.get(r.recipient_id) === "visible").map((r: any) => r.id);
+        if (!allowedIds.length) return json({ error: "No permitted future dates to cancel." }, 403);
         const { data: updated, error: cancelError } = await admin.from("coach_prescriptions")
           .update({ cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-          .eq("sender_id", me).eq("series_id", seriesId).eq("status", "pending")
+          .in("id", allowedIds).eq("sender_id", me).eq("series_id", seriesId).eq("status", "pending")
           .gte("plan_date", today).is("cancelled_at", null).select("id");
         if (cancelError) throw cancelError;
         return json({ applied: true, cancelled: (updated ?? []).length });
