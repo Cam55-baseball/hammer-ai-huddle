@@ -1,5 +1,10 @@
 # Current publish gate — Oct 24 final automated cleanup
 
+## Oct 24 21:30 continuation — scheduling closeout
+- [ ] Review remaining scheduling, My Workouts, coach/org Sent workouts and data-unity paths; retain prior fixture proofs without claiming live verification.
+- [ ] Complete consolidated player/coach/org scheduling checks and by-role guide.
+- [ ] Run remaining targeted checks and full suite; report actual proof limits and unchanged cleanup blockers. No publish, cron or iOS changes.
+
 ## Active: Coach prescriptions "Use instead" + data-unity proof (owner Oct 24, approved plan)
 - [x] A1 Migration applied: coach_prescriptions table (GRANTs+RLS) + wk_prescriptions.replaced_by_coach_rx
 - [x] A2 Send flow: category (12) + day pickers in SendToPlayerDialog; one coach_prescriptions row per player, shared team_send_id (teamSend.test.tsx, 2 tests)
