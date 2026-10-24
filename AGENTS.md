@@ -57,5 +57,5 @@
 - Exercise duration keeps hundredths in `wk_session_logs.duration_seconds_precise` and `metrics.rounds`, with a whole-second legacy projection for existing readers. Why: additive precision must not break the published app's integer fields.
 - Practice windows return counts only after canonical self/sport/module/token readback and retain readiness/setup; canonical tool records carry exact exercise/date occurrence metadata, and practice recording notifies before independent report calculation. Why: iframe messages cannot author completion and reporting delay must not strand saved exercise work.
 - Coach sends use one invitation; WIC/Swap certify items; coach_rx_commit_certified checks saved facts under the day lock; results read wk_session_logs. Why: no stale choices or parallel logs.
-- Coach safety and generator share WIC check-in reductions; generator day-intent ordering stays fixed. Why: one readiness policy.
+- Coach safety shares WIC check-ins, preserves saved phase/deload and requires canonical snapshot-row coverage. Why: no omitted work or parallel phase policy.
 - Exact exercise measurement decisions are shared by the library, inline logger and log-sheet resolver; yard entry converts only at the display boundary, keeping canonical distance in feet. Why: ambiguous names must not diverge between logging paths or change existing distance readers.

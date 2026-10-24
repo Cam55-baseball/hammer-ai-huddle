@@ -12,6 +12,7 @@ import { dayKinds } from "../wic/schedule/finalCheck.ts";
 import { mergeExternal } from "../wic/schedule/externalTraining.ts";
 import { loadU13ThrowBlock } from "../wic/phases/u13ThrowGate.ts";
 import { categorySlots, type RxCategory } from "./prescriptionSafety.ts";
+import { savedDayCoverage } from "./savedDayCoverage.ts";
 
 type Row = Record<string, any>;
 const shift = (date: string, n: number) => new Date(Date.parse(`${date}T12:00:00Z`) + n * 86400000).toISOString().slice(0, 10);
@@ -28,7 +29,7 @@ function strictDb(admin: any) {
 
 export async function loadPrescriptionEnvelope(admin: any, userId: string, date: string, category: RxCategory, rows: Row[], replace: boolean) {
   const from = shift(date, -365);
-  const [profile, context, settings, inventory, answers, current, arm, external, raw, events, intent] = await Promise.all([
+  const [profile, context, settings, inventory, answers, current, arm, external, raw, events, intent, snapshots] = await Promise.all([
     checked(admin.from("profiles").select("date_of_birth,positions").eq("id", userId).maybeSingle()),
     checked(admin.from("athlete_context").select("*").eq("user_id", userId).maybeSingle()),
     checked(admin.from("athlete_mpi_settings").select("*").eq("user_id", userId).maybeSingle()),
@@ -40,18 +41,25 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
     fetchShadowData(strictDb(admin), userId, date, "UTC"),
     checked(admin.from("asb_events").select("topic_id,payload,occurred_at").eq("athlete_id", userId).in("topic_id", ["behavioral.readiness", "behavioral.soreness", "behavioral.fatigue", "behavioral.sleep"]).gte("occurred_at", `${shift(date, -1)}T12:00:00Z`).lt("occurred_at", `${shift(date, 1)}T00:00:00Z`).order("occurred_at", { ascending: false }).limit(20)),
     checked(admin.from("user_day_state_overrides").select("type").eq("user_id", userId).eq("date", date).maybeSingle()),
+    checked(admin.from("athlete_plan_snapshots").select("sport,payload").eq("user_id", userId).eq("plan_date", date)),
   ]);
   const refused = (reason: string) => ({ allowed: false, reasons: [reason], safeOption: "Safe option: save for later and finish your check-in or ask your coach to review it.", rows: [] as Row[] });
   if (!profile || !context || !settings || !["baseball", "softball"].includes(context.sport_primary)) return refused("Your current player and season details couldn't be checked. Nothing was changed.");
   const age = ageFromDob(profile.date_of_birth, date);
   if (age == null || context.lifting_age_years == null) return refused("Confirm your age and training experience before using this workout.");
-  const phase = resolvePhaseState({ settings, date, heights: raw.heights });
+  const snapshot = snapshots?.find((s: Row) => s.sport === context.sport_primary);
+  if (!savedDayCoverage(snapshot?.payload, current)) return refused("Today's saved skill work couldn't be included in the full workload check. Keep your plan and save this workout for later.");
+  const savedPhases = current.map((r: Row) => r.why_payload?.phase_state).filter(Boolean);
+  const savedPhase = savedPhases[0];
+  if (!savedPhase || savedPhases.length !== current.length || savedPhase.date !== date || savedPhases.some((p: Row) => p.date !== date || p.season !== savedPhase.season || p.sub_block !== savedPhase.sub_block || p.lighter_week !== savedPhase.lighter_week || p.growth !== savedPhase.growth)) return refused("Today's saved training phase couldn't be confirmed. Your plan is unchanged.");
+  const phase = resolvePhaseState({ settings, date, heights: raw.heights, plannedDeload: savedPhase.lighter_week === "planned", trendLighter: savedPhase.lighter_week === "trend" });
+  if (phase.sub_block !== savedPhase.sub_block || phase.season !== savedPhase.season || phase.growth !== savedPhase.growth) return refused("Your season or growth details changed. Refresh your plan before using this workout.");
   const owned = new Set<string>((inventory ?? []).find((r: Row) => !r.valid_until || Date.parse(r.valid_until) > Date.now())?.equipment ?? []);
   for (const answer of answers ?? []) { for (const gear of answer.confirmed_have ?? []) owned.add(gear); for (const gear of answer.confirmed_lacks ?? []) owned.delete(gear); }
   const slugs = [...new Set([...rows, ...current, ...raw.prescriptions].map((r: Row) => r.movement_slug).filter(Boolean))];
   const catalogRows = await checked(admin.from("wk_movement_catalog").select("*").in("slug", slugs));
   const catalog = new Map<string, Row>((catalogRows ?? []).map((row: Row) => [row.slug, row]));
-  const proposed: Row[] = rows.map(row => ({ ...row, phase: phase.sub_block, cns_cost: catalog.get(row.movement_slug)?.cns_cost ?? null }));
+  const proposed: Row[] = rows.map(row => ({ ...row, phase: phase.sub_block, cns_cost: catalog.get(row.movement_slug)?.cns_cost ?? null, why_payload: { ...row.why_payload, phase_state: phase } }));
   if (proposed.some(row => typeof row.cns_cost !== "number" || !Number.isFinite(row.cns_cost) || row.cns_cost < 0)) return refused("An exercise's workload isn't declared in Exercise Vault. Ask your coach to choose a reviewed item.");
   const resultingDay = [...current.filter((r: Row) => !(replace && categorySlots(category).includes(r.slot) && r.status !== "completed")), ...proposed];
   if (current.some((row: Row) => typeof row.cns_cost !== "number" || !Number.isFinite(row.cns_cost) || row.cns_cost < 0)) return refused("Today's saved workload couldn't be checked. Nothing was changed.");

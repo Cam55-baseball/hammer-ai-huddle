@@ -116,6 +116,7 @@ export interface CoachRxExercise {
   slug?: string | null;
   distance_feet?: number | null;
   dosage_unit?: string | null;
+  total_reps?: number | null;
 }
 
 /**
@@ -146,7 +147,7 @@ export function coachRxToWkRows(args: {
     .map((e, i) => {
       const name = e.name?.trim();
       if (!name) return null;
-      const duration = typeof e.duration === "number" && e.duration > 0 ? Math.round(e.duration) : null;
+      const duration = typeof e.duration === "number" ? e.duration : null;
       return {
         user_id: args.userId,
         plan_date: args.planDate,
@@ -156,14 +157,14 @@ export function coachRxToWkRows(args: {
         movement_slug: e.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, ""),
         movement_name: name,
         phase: "coach",
-        sets: typeof e.sets === "number" && e.sets > 0 ? Math.round(e.sets) : null,
-        reps: typeof e.reps === "number" && e.reps > 0 ? Math.round(e.reps) : null,
+        sets: typeof e.sets === "number" ? e.sets : null,
+        reps: e.dosage_unit === "total_reps" ? null : typeof e.reps === "number" ? e.reps : null,
         tempo: null,
         load_pct: null,
         duration_seconds: duration,
         rest_seconds: typeof e.rest === "number" && e.rest > 0 ? Math.round(e.rest) : null,
         distance_feet: typeof e.distance_feet === "number" && e.distance_feet > 0 ? e.distance_feet : null,
-        total_reps: null,
+        total_reps: e.dosage_unit === "total_reps" ? e.total_reps ?? e.reps ?? null : null,
         dosage_unit: e.dosage_unit || (duration ? "seconds" : "reps"),
         cns_cost: 0,
         cns_clamped: false,

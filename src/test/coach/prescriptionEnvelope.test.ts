@@ -16,4 +16,15 @@ describe("coach calls existing WIC and Swap judges", () => {
   it("never certifies an invented name without catalog evidence", () => { const i = input(); i.catalog.clear(); expect(judgeCoachEnvelope(i).allowed).toBe(false); });
   it("uses the existing off-season-only eccentric rule", () => { const i = input(); i.final.phase = "in_season"; i.catalog.set("warmup", { ...movement, eccentric_overload: true, season_legality: { in_season: true } } as any); expect(judgeCoachEnvelope(i).allowed).toBe(false); });
   it("does not certify an unknown or non-finite dose", () => { const i = input(); i.rows = [{ ...row, duration_seconds: Number.NaN }]; expect(judgeCoachEnvelope(i).allowed).toBe(false); });
+  it("rejects fractional rep counts instead of rounding them", () => {
+    const i = input(); i.catalog.set("warmup", { ...movement, dosage_unit: "reps" });
+    i.rows = [{ ...row, dosage_unit: "reps", reps: 1.4 } as any];
+    expect(judgeCoachEnvelope(i).allowed).toBe(false);
+  });
+  it("counts total reps once rather than falling back to one rep per set", () => {
+    const i = input(); i.catalog.set("warmup", { ...movement, category: "bat_speed", dosage_unit: "total_reps" });
+    i.rows = [{ ...row, dosage_unit: "total_reps", sets: 2, total_reps: 24 } as any]; i.resultingDay = i.rows;
+    i.rm28 = { ...i.rm28, byChannel: { SWING: 10 }, byTier: { "SWING:high": 10 }, loggedDaysByChannel: { SWING: 8 } };
+    expect(judgeCoachEnvelope(i).allowed).toBe(false);
+  });
 });
