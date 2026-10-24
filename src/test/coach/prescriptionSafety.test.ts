@@ -112,7 +112,7 @@ describe("coachRxToWkRows — coach workout becomes real plan rows", () => {
     expect(rows[0]).toMatchObject({
       user_id: "p1", plan_date: "2026-10-24", slot: "hitting", status: "pending",
       movement_name: "Tee work", sets: 3, reps: 10, rest_seconds: 60,
-      dosage_unit: "reps", cns_cost: 0, sequence_role: "coach",
+      dosage_unit: "reps", cns_cost: null, sequence_role: "coach",
     });
     expect((rows[0].why_payload as any).coach_rx).toBe("rx-1");
   });
@@ -131,6 +131,8 @@ describe("coachRxToWkRows — coach workout becomes real plan rows", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].sets).toBeNull();
     expect(rows[0].reps).toBeNull();
+    expect(rows[0].movement_slug).toBe("");
+    expect(rows[0].cns_cost).toBeNull();
   });
   it("preserves declared catalog identity, feet and throws rather than guessing reps", () => {
     const rows = coachRxToWkRows({ ...base, usedInstead: false, exercises: [{ name: "Catch", slug: "catch_play", dosage_unit: "throws", reps: 12, distance_feet: 45 }] });

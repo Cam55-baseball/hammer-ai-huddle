@@ -1,6 +1,6 @@
 // Input adapter over existing WIC/Swap judges; no coach-specific training rules.
 import { ownsAllGear, avoidsMissingGear } from "../planSwap/simpleSwap.ts";
-import { checkAthleteScope } from "../wic/domainGate.ts";
+import { checkDomainGate } from "../wic/domainGate.ts";
 import { isMovementSeasonLegal, seasonContextFromPhase } from "../wic/season.ts";
 import { finalRuleCheck, type FinalCheckContext } from "../wic/schedule/finalCheck.ts";
 import { isWithinEnvelope, isRepDosed } from "../wic/dosage/doctrine.ts";
@@ -28,7 +28,8 @@ export function judgeCoachEnvelope(input: {
     if (typeof dose !== "number" || !Number.isFinite(dose) || dose <= 0 || (row.sets != null && (!Number.isInteger(row.sets) || row.sets <= 0))) reasons.push(`${row.movement_name}: enter an exact positive dose before using this workout.`);
     if (!["seconds", "feet"].includes(row.dosage_unit) && typeof dose === "number" && !Number.isInteger(dose)) reasons.push(`${row.movement_name}: reps and throws must be whole counts.`);
     if (!ownsAllGear(movement, input.owned) || !avoidsMissingGear(movement, input.missing)) reasons.push(`${row.movement_name}: required gear is missing from your saved answers.`);
-    const scope = checkAthleteScope(movement as any, { sport: input.sport, positions: input.positions, ageYears: input.age, trainingAgeClass: input.trainingAge, seasonPhase: input.final.phase });
+    const scope = checkDomainGate(movement as any, { engine: row.slot === "hitting" ? "bat_speed" : row.slot === "mobility" ? "recovery" : row.slot,
+      sport: input.sport, positions: input.positions, ageYears: input.age, trainingAgeClass: input.trainingAge, seasonPhase: input.final.phase });
     if (!scope.allowed) reasons.push(`${row.movement_name}: this item isn't allowed for your age, position or training phase (${scope.reason}).`);
     const season = isMovementSeasonLegal(seasonContextFromPhase(input.final.phase as any), movement as any);
     if (!season.legal) reasons.push(`${row.movement_name}: this item isn't allowed in your current season.`);

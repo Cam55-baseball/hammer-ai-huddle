@@ -124,8 +124,8 @@ export interface CoachRxExercise {
  * coach workout runs exactly like a Hammers card: focus mode, Swap, autosave
  * and logging all read/write the same tables, and completed work lands in
  * wk_session_logs → Discipline, load, the learning loop and the coach's plan
- * view. Pure: the caller inserts. Coach rows carry cns_cost 0 (the coach's
- * dose is already what it is) and a why_payload linking the prescription so
+ * view. Pure: the caller certifies workload before inserting. Rows carry an
+ * unset workload and a why_payload linking the prescription so
  * the "Because" line notes it was coach-sent.
  */
 export function coachRxToWkRows(args: {
@@ -154,7 +154,7 @@ export function coachRxToWkRows(args: {
         slot,
         sequence_order: 900 + i, // coach block sorts after generator rows
         sequence_role: "coach",
-        movement_slug: e.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, ""),
+        movement_slug: e.slug || "",
         movement_name: name,
         phase: "coach",
         sets: typeof e.sets === "number" ? e.sets : null,
@@ -166,7 +166,7 @@ export function coachRxToWkRows(args: {
         distance_feet: typeof e.distance_feet === "number" && e.distance_feet > 0 ? e.distance_feet : null,
         total_reps: e.dosage_unit === "total_reps" ? e.total_reps ?? e.reps ?? null : null,
         dosage_unit: e.dosage_unit || (duration ? "seconds" : "reps"),
-        cns_cost: 0,
+        cns_cost: null,
         cns_clamped: false,
         substituted_from_slug: null,
         substitution_reason: null,
