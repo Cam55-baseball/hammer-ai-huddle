@@ -10,6 +10,8 @@ import type { GovItem, Rm28 } from "../wic/exposure/types.ts";
 import { certifyLift } from "../wic/lift/sessionBuilder.ts";
 import { certifySpeed } from "../wic/speed/sessionBuilder.ts";
 import { certifyConditioning } from "../wic/conditioning/sessionBuilder.ts";
+import { certifyBatSpeed } from "../wic/batSpeed/sessionBuilder.ts";
+import { certifyRecovery } from "../wic/recovery/sessionBuilder.ts";
 
 type Row = Record<string, any>;
 export function judgeCoachEnvelope(input: {
@@ -49,14 +51,30 @@ export function judgeCoachEnvelope(input: {
   if (affected.has("lift")) reasons.push(...certifyLift(sessionInput).fatal.map(issue => issue.message));
   if (affected.has("speed")) reasons.push(...certifySpeed(sessionInput).fatal.map(issue => issue.message));
   if (affected.has("conditioning")) reasons.push(...certifyConditioning(sessionInput).fatal.map(issue => issue.message));
+  if (affected.has("hitting")) reasons.push(...certifyBatSpeed({ ...sessionInput,
+    prescriptions: input.resultingDay.map(row => ({ ...row, slot: row.slot === "hitting" ? "bat_speed" : row.slot })) as any,
+  }).fatal.map(issue => issue.message));
+  if (affected.has("recovery") || affected.has("mobility")) reasons.push(...certifyRecovery(sessionInput).fatal.map(issue => issue.message));
   for (const dropped of final.swaps) reasons.push(`Today's ${dropped.slot ?? "work"} would break a plan rule (${dropped.rule}). Keep the saved plan and ask your coach to review it.`);
   const items: GovItem[] = [];
   for (const row of input.resultingDay) {
     const fact = input.catalog.get(row.movement_slug) as CatalogFact | undefined;
     const channel = classify(fact);
-    if (!fact || !channel) continue;
+    if (!fact) {
+      reasons.push(`${row.movement_name}: today's saved exercise is missing its Exercise Vault workload details.`);
+      continue;
+    }
+    if (!channel) continue;
     const sets = row.sets ?? 1;
     const reps = row.dosage_unit === "total_reps" ? row.total_reps / sets : row.reps;
+    // amountPerSet has builder defaults. A coach acceptance must not promote
+    // missing counts/distances into a certified one-rep exposure.
+    if (!Number.isInteger(sets) || sets <= 0 ||
+        (channel.channel !== "LIFT" && (typeof reps !== "number" || !Number.isFinite(reps) || reps <= 0)) ||
+        (channel.channel === "SPRINT" && (typeof row.distance_feet !== "number" || !Number.isFinite(row.distance_feet) || row.distance_feet <= 0))) {
+      reasons.push(`${row.movement_name}: today's saved workload needs exact counts and distance. Keep your plan and save this workout for later.`);
+      continue;
+    }
     items.push({ slug: row.movement_slug, name: row.movement_name, ...channel, sets,
       amountPerSet: amountPerSet(fact, channel.channel, reps, row.distance_feet), floorSets: 1, substitutionFamily: fact.substitution_family ?? null });
   }
