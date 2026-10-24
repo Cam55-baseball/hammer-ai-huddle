@@ -1,0 +1,22 @@
+{
+  "unique_files": 528,
+  "tests": 4146,
+  "failed": 0,
+  "all_group_exits": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "final_changed_files": 4,
+  "final_changed_tests": 36,
+  "focused_tests": 120,
+  "deno": "PASS",
+  "proof_scope": "full suite with final changed files refreshed; behavioral component fixtures separate from live role reads",
+  "hosted_test_writes": 0,
+  "retained_persona_changes": 0
+}
