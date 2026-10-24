@@ -15,4 +15,12 @@ describe("canonical workout actuals", () => {
   it("reads actual hitting swings from the existing canonical rounds", () => {
     expect(actualResultText({ ...base, metrics: { rounds: [{ swings: 12 }, { swings: 8 }] } })).toContain("Swings: 12 / 8");
   });
+  it("preserves each entered hundredth-second round instead of showing only their sum", () => {
+    const result = actualResultText({ ...base, duration_seconds_precise: 3.05, metrics: { rounds: [{ time: 1.47 }, { duration: 1.58 }] } });
+    expect(result).toContain("Round times: 1.47 / 1.58 s");
+    expect(result).toContain("Time: 3.05 s");
+  });
+  it("shows each actual distance rather than presenting the maximum as every round", () => {
+    expect(actualResultText({ ...base, distance_feet_completed: 45, metrics: { rounds: [{ distance: 30 }, { distance: 45 }] } })).toContain("Round distances: 30 / 45 ft");
+  });
 });

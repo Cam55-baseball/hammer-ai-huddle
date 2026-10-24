@@ -47,6 +47,8 @@ export function useWorkoutCatalog() {
         .select(
           "id,slug,name,category,movement_category,source_philosophy,cue,why_prescribed,primary_adaptation,equipment,equipment_requirements,equipment_alternatives,dosage_unit,default_duration_seconds,default_total_reps,default_distance_feet,phase_allow,season_eligibility,season_legality,training_age_legality,cns_cost,recovery_window_hours,pap_classification,movement_velocity,game_day_legal,practice_day_legal,min_age_years,default_sets,default_reps,is_eccentric_dominant,eccentric_overload,governance_version",
         )
+        .eq("is_active", true)
+        .is("superseded_by", null)
         .or(catalogVisibilityFilter(auth.user?.id))
         .order("category", { ascending: true })
         .order("name", { ascending: true });
