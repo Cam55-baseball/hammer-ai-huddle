@@ -1,5 +1,7 @@
 # Current publish gate — Oct 24 final automated cleanup
 
+- [ ] Oct 24 22:33 continuation — finish items 1–8 through shared safety/block integration and behavioral canonical-reader/authoring proofs in parallel; retain passed proofs, leave personas unchanged, no publish/cron/iOS changes.
+
 - [ ] Oct 24 22:11 owner run — PARTIAL: Vault/common-gear authoring and canonical History/Vault/General/Sent-results readers added; existing WIC/Swap integration + authorized 0110 day-lock snapshot transaction; full app suite 523 unique files / 4,098 tests PASS, 21 changed tests repeated PASS, Deno check PASS, preview OK. Live 390×844 TEST player received workout but missing training details blocked activation; coach view mounted; org plan gate blocked. Exact temporary prescription removed/verified absent; personas untouched. Complete arm/fresh-fact safety, existing block-swap integration, own-item certification and positive player/coach/org/team row-3 behavioral proof remain OPEN; guides/matrix corrected; evidence under `.lovable/proofs/coach-finish/`. Ready to publish NO; no publish/cron/iOS changes.
 
 ## Oct 24 21:48 final batch — coach scheduling and data unity
