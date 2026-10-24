@@ -12,6 +12,7 @@ import { ConditioningRestProvider } from '@/components/hammer/cards/Conditioning
 import { AuthContext } from '@/contexts/AuthContext';
 import { ExerciseTools } from '@/components/hammer/cards/ExerciseTools';
 import PickoffTrainer from '@/pages/PickoffTrainer';
+import { CoachLifecycle } from './CoachLifecycle';
 import '@/index.css';
 import type { WkRx } from '@/hooks/useWkDailyPrescriptions';
 import type { ActivityFolderItem } from '@/types/activityFolder';
@@ -28,6 +29,7 @@ const timed = kind === 'warmup' || kind === 'recovery';
 const unitSlugs = ['walking_lunge','lift_rfess_pallof','lift_banded_lateral_squat_walk','lift_elephant_walk','lift_farmer_toe_walk','broad_jump','plank_hold','ubp_f15_base_pushup_bottom_hold_explode','tall_plank_shoulder_tap'];
 const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 function App() {
+  if (kind === 'coach-lifecycle') return <CoachLifecycle />;
   if (kind === 'pickoff-tool') return <PickoffTrainer />;
   if (kind.startsWith('study-')) {
     const role = kind.slice(6);
@@ -36,8 +38,6 @@ function App() {
   if (kind === 'coach') return <main className="p-4"><GuidedCustomExercises storageKey="final-coach" item={{ id: 'fixture-accepted', title: 'Coach workout', item_type: 'workout' } as ActivityFolderItem} exercises={[{ id: 'rep', name: 'Coach reps', type: 'baseball', sets: 3, reps: 8, rest: 30 }]} performanceData={JSON.parse(localStorage.getItem('fixture-coach') ?? 'null')} onSave={async data => { localStorage.setItem('fixture-coach', JSON.stringify(data)); }} /></main>;
   return <main className="p-4"><ConditioningRestProvider><PocketCard id={kind} category={kind} tone="text-primary" prescribed planDate="2026-10-24">{() => <>
     {kind === 'units' ? unitSlugs.map(slug => <InlinePrescriptionLog key={slug} rx={{ ...rx, id: slug, movement_slug: slug, movement_name: slug, slot: 'lift', sets: 1, distance_feet: slug === 'lift_farmer_toe_walk' ? 45 : null, duration_seconds: slug === 'plank_hold' ? 30 : null, dosage_unit: slug === 'plank_hold' ? 'seconds' : 'reps' }} />) : timed ? <LegacyDrillInlineLog modality={kind} name="Declared timed work" dosage="3 sets of 1.47 seconds; rest 30 seconds" storageKey={`fixture-${kind}`} completed={false} onSave={log => localStorage.setItem(`fixture-saved-${kind}`, JSON.stringify(log))} /> : <InlinePrescriptionLog rx={rx} />}
-    {kind === 'pitching' && <ExerciseTools module="pitching" exerciseId={rx.id} planDate={rx.plan_date} />}
-    {kind === 'hitting' && <ExerciseTools module="hitting" exerciseId={rx.id} planDate={rx.plan_date} />}
   </>}</PocketCard></ConditioningRestProvider></main>;
 }
 const root = document.getElementById('root');
