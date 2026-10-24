@@ -15,6 +15,7 @@ import { nextThrowDate } from "../_shared/wic/phases/nextThrowDate.ts";
 import {
   checkPrescriptionReplace,
   categorySlots,
+  coachRxToWkRows,
   THROWING_CATEGORIES,
   type RxCategory,
   type RxReplaceFacts,
