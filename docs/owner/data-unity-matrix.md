@@ -31,7 +31,7 @@ live data landing in every surface; unverified cells remain unverified.
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | Plan cards & focus-mode logs | `wk_session_logs` | direct (StandardsBoard, Performance) | by design (practices/games/reports only) | by design | direct (Discipline joins wk_prescriptions→wk_session_logs); plan via derived `athlete_plan_snapshots` | derived (status counts) | by design | direct (wk-generate-daily, trendDeload) | derived (wk-daily-plan-job reads prescriptions) |
 | 2 | Swaps | `swap_log` + `athlete_equipment_memory` (server RPCs `wk_swap_*_atomic`) | via saved plan | by design | by design | derived (coach_athlete_plan reads saved plan) | by design | by design | direct (plan-swap, wk-generate-daily read equipment memory) | by design |
-| 3 | Coach prescriptions and actual performed work | `coach_prescriptions` → checked `wk_prescriptions` → normal `wk_session_logs`; NOT `custom_activity_logs` | GAP: legacy analytics reads a different log | GAP: legacy activity History reads a different log | GAP: legacy Vault reads a different log | Sent workouts/Discipline source-connected; snapshot GAP; role readback unverified | Current-sender view mounted; assigned-role proof unverified | Unverified consent-scoped projection | Some canonical readers connected; full readback unverified | Legacy custom-log path GAP; canonical job effects unverified |
+| 3 | Coach prescriptions and actual performed work | `coach_prescriptions` → checked `wk_prescriptions` → normal `wk_session_logs`; NOT `custom_activity_logs` | Canonical Logged workouts reader added; behavioral readback UNVERIFIED | Same canonical reader added; behavioral readback UNVERIFIED | My Drill Work canonical reader added; behavioral readback UNVERIFIED | Sent workouts actual sets/reps/time/distance source-connected; snapshot transaction added, activation/readback UNVERIFIED | Current-sender view mounted; demoorg is plan-gated, assigned-role proof UNVERIFIED | Unverified consent-scoped projection | Some canonical readers connected; full readback UNVERIFIED | Canonical job effects UNVERIFIED; no legacy-log write |
 | 3b | Coach prescription days on the player calendar | read-only projection of `coach_prescriptions` (buildCalendarEvents source `coach_prescription`) | by design | by design | by design | by design | by design | by design | by design | by design |
 | 4 | Practice logs | `performance_sessions` (+ optional `athlete_daily_log`, `governance_flags`) | by design | direct (usePracticeHistory) | by design | derived (load/coach views) | by design | by design | direct (compute-hammer-state) | direct (nightly-mpi-process) |
 | 5 | Game logs (player scorekeeping) | `gp_games`, `gp_at_bats`, `gp_pitches`, `gp_defense_plays`, `gp_baserun_events` | direct (Game IQ tab, not Today/Performance/Growth) | direct (useGameHistory, gp_reports) | by design | direct (coach_athlete_games, CoachTeamReport) | by design | by design | by design | direct (nightly-mpi-process finalized games) |
@@ -46,6 +46,31 @@ live data landing in every surface; unverified cells remain unverified.
 | 14 | Equipment memory | `athlete_equipment_memory` | by design | by design | by design | derived (via saved plan) | by design | by design | direct (plan-swap, wk-generate-daily) | by design |
 
 ## Known gaps (honest, not hidden)
+
+### Owner finish run — October 24, 22:28 UTC
+
+- Shared actual-result reader now connects History, Vault My Drill Work and The
+  General to `wk_session_logs`; Sent workouts reads actual canonical entries.
+  Precise 1.47 seconds is preserved. This is source/unit evidence, not live landing.
+- Send editor now offers Exercise Vault items with declared gear/measure/dose,
+  and own-item common-gear mapping. Unreviewed own items fail closed at activation;
+  their full certification path and phone authoring proof remain incomplete.
+- Existing WIC/Swap modules are integrated for gear, age, season, dose, recovery,
+  final-day checks and exposure. Complete arm exposure and skill-block replacement
+  remain uncertified and are explicitly blocked, never filled with guessed innings.
+  Full safety, atomic fresh-fact certification and positive logging proof remain open.
+- Authorized 0110 adds same-category snapshot markers/canonical row references
+  under the existing day lock; this is NOT proof of `wk_swap_block_atomic` reuse.
+  Skill replacement is withheld pending the complete existing block-path adapter.
+- Live 390×844 democollege My Workouts received one clearly labeled TEST warm-up;
+  Add alongside was blocked for missing training experience, with a safe option.
+  democoach's Sent workouts view mounted; demoorg was correctly plan-gated.
+  No positive choice/focus-log/reload, org/team send or row-3 write/readback pass.
+- Sessions came from the existing owner-only session-only TEST flow, not password
+  sign-in. No account reset/reseed or retained-persona restoration was performed.
+- The one temporary pending coach prescription was snapshotted, removed by exact
+  ID and verified absent. No workout logs were authored by the blocked choice.
+
 
 The three previously identified gaps were fixed the same day
 (migration `0105_data_unity_coach_games_combine_readiness`):
