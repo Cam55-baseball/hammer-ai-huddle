@@ -78,6 +78,9 @@ The three previously identified gaps were fixed the same day
   History/Vault/General/learning cells must not be marked live PASS on the basis of
   table-name contracts. Coach plan snapshots are also not refreshed by this commit.
   Full row-by-row affected-role write/readback proof remains open.
+- The current judge does not yet implement the requested full readiness/pain,
+  declared equipment and per-exercise volume/phase envelope checks. Existing
+  rest/game/injury/throwing restrictions are necessary, not full safety proof.
 - Retained scheduling screenshots are fixture-only. The fresh live check uses
   the owner's account and reads an empty Sent workouts list; it does not prove
   team sending or athlete activation. No hosted TEST rows created this run.

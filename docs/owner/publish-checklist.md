@@ -112,6 +112,9 @@ Only after explicit owner publication. These do not replace A or resolve the cle
 not actual writes and reads in all surfaces. Coach prescription canonical rows
 now save atomically, but custom activity History/Vault landing, coach snapshot
 refresh, load/arm-ledger effects and full affected-role matrix proof remain open.
+The full readiness/pain, equipment and per-exercise volume/phase safety envelope
+is also not implemented by the current replacement judge; do not declare this
+feature ready for release on the narrower rest/game/injury/throwing checks alone.
 Do not interpret the historical "all gaps" wording as complete live certification.
 
 **Coach prescriptions.** A coach (or org admin for assigned athletes) can send a prescription for any of the 12 plan categories, naming category and day, from the Vault or their own items. The player sees it on Today with three choices: **Use instead of my [category] card**, **Add alongside**, **Save for later**. "Use instead" passes the server safety check (rest days, game days, arm-rest dates, injury mode, season rules) and replaces only the same-category card — marked "Replaced by coach workout … not missed", never missed. Blocked players see why plus the safe option. Team sends write one prescription per player with a shared group id. The coach dashboard shows each player's choice.
