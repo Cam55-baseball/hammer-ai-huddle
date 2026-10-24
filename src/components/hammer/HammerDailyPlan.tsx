@@ -89,6 +89,7 @@ import { DailyPlanVideoChips } from "@/components/hammer/DailyPlanVideoChips";
 import { MovementGuideSheet } from "@/components/hammer/MovementGuideSheet";
 import { BookOpen } from "lucide-react";
 import { WkPrescriptionCard } from "@/components/hammer/WkPrescriptionCard";
+import { CoachPrescriptionInbox } from "@/components/hammer/CoachPrescriptionInbox";
 import { WkRestDayBanner } from "@/components/hammer/WkRestDayBanner";
 import { WkSomethingOffRow } from "@/components/hammer/WkSomethingOff";
 import {
@@ -935,6 +936,9 @@ function HammerDailyPlanBody({
       {/* Always visible — never inside a collapsed box: Update Hammer must not be missed. */}
       <ErrorBoundary>
         <div data-tour="update-hammer"><TellHammersInbox /></div>
+      </ErrorBoundary>
+      <ErrorBoundary>
+        <CoachPrescriptionInbox planDate={planDate} />
       </ErrorBoundary>
       <ErrorBoundary>
         <HeightReminderCard />
