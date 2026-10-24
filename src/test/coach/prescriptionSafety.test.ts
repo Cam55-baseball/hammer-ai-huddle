@@ -144,4 +144,8 @@ describe("coachRxToWkRows — coach workout becomes real plan rows", () => {
     const rows = coachRxToWkRows({ ...base, usedInstead: false, exercises: [{ name: "Swings", sets: 1.4, reps: 8 }] });
     expect(rows[0].sets).toBe(1.4);
   });
+  it("keeps the entered hundredth-second time target", () => {
+    const rows = coachRxToWkRows({ ...base, usedInstead: false, exercises: [{ name: "Hold", duration: 1.47, dosage_unit: "seconds" }] });
+    expect(rows[0].duration_seconds).toBe(1.47);
+  });
 });

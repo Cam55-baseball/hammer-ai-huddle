@@ -147,7 +147,7 @@ export function coachRxToWkRows(args: {
     .map((e, i) => {
       const name = e.name?.trim();
       if (!name) return null;
-      const duration = typeof e.duration === "number" && e.duration > 0 ? Math.round(e.duration) : null;
+      const duration = typeof e.duration === "number" ? e.duration : null;
       return {
         user_id: args.userId,
         plan_date: args.planDate,
