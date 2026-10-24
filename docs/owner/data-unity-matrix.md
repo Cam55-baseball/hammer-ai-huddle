@@ -30,11 +30,11 @@ fixed or re-classified.
 | 3 | Coach prescriptions | `coach_prescriptions` + `custom_activity_logs`; on Use instead / Add alongside the workout also becomes real `wk_prescriptions` rows (coach-rx-safety), so completion logs to `wk_session_logs` like any Hammers card | direct (ActivityAnalytics, Growth) | direct (ActivityHistoryList; separate from main History page) | direct (useVault) | direct (CoachComplianceView, CoachPrescriptionStatus, useCoachPrescriptions; Discipline via wk_session_logs) | by design | by design | direct (compute-hammer-state, evaluate-behavioral-state, evaluate-advice-effectiveness; plan generation reads wk_session_logs) | direct (nightly-mpi-process) |
 | 4 | Practice logs | `performance_sessions` (+ optional `athlete_daily_log`, `governance_flags`) | by design | direct (usePracticeHistory) | by design | derived (load/coach views) | by design | by design | direct (compute-hammer-state) | direct (nightly-mpi-process) |
 | 5 | Game logs (player scorekeeping) | `gp_games`, `gp_at_bats`, `gp_pitches`, `gp_defense_plays`, `gp_baserun_events` | direct (Game IQ tab, not Today/Performance/Growth) | direct (useGameHistory, gp_reports) | by design | direct (coach_athlete_games, CoachTeamReport) | by design | by design | by design | direct (nightly-mpi-process finalized games) |
-| 6 | Game logs (coach-entered) | `coach_logged_entries` (+ `arm_ledger_entries`) | by design | **GAP** — coach entries never create `gp_games`, so they do not appear in History's game list | by design | direct (CoachLogForPlayer history panel) | by design | by design | by design | by design |
+| 6 | Game logs (coach-entered) | `coach_logged_entries` (+ `arm_ledger_entries`, + `gp_games` mirror with `entry_source='coach'`, `ignored_for_training=true`) | by design | direct (useGameHistory reads the gp_games mirror) | by design | direct (CoachLogForPlayer panel + coach_athlete_games) | by design | by design | by design | by design |
 | 7 | Video analyses | `videos` | by design | derived (aggregate count only; History is the non-video home) | **partial** — `useVaultVideos` reads `session_videos`, not `videos` (Players Club is the video vault) | direct (coach_athlete_development reads videos + analysis_fault_findings) | by design | direct (scout_athlete_profile, within consent) | by design | by design (nightly-foundation-health reads `library_videos`, not athlete videos) |
 | 8 | Tests (Vault) | `vault_performance_tests` | derived (Performance links to Vault tests) | by design | direct (useVault) | direct (coach_athlete_tests, glance) | direct (org_test_ranking, board attendance) | direct (scout_athlete_profile) | by design | by design |
-| 9 | Tests (combine) | `combine_sessions`, `combine_results` | by design | by design | by design | **GAP** — coach/scout/org test RPCs read `vault_performance_tests`, not combine tables | **GAP** (same) | **GAP** (same) | by design | by design |
-| 10 | Check-ins (daily status) | `athlete_daily_log` | direct (DualStreakDisplay, Growth) | by design | by design | **note** — coach readiness/org attendance read `vault_focus_quizzes`, not this table | direct (via focus quizzes, see note) | by design | direct (evaluate-behavioral-state, detect-behavior-patterns, hie-analyze) | direct (nightly-mpi-process) |
+| 9 | Tests (combine) | `combine_sessions`, `combine_results` | by design | by design | by design | direct (coach_athlete_tests UNIONs combine results) | direct (org_test_ranking includes combine events) | direct (scout_athlete_profile metrics includes combine results) | by design | by design |
+| 10 | Check-ins (daily status) | `athlete_daily_log` | direct (DualStreakDisplay, Growth) | by design | by design | direct (coach_athlete_readiness counts both check-in systems; contents behind health sharing) | direct (org_facility_board checkins_7d counts both) | by design | direct (evaluate-behavioral-state, detect-behavior-patterns, hie-analyze) | direct (nightly-mpi-process) |
 | 11 | Check-ins (daily standard) | `daily_standard_checks` | by design | by design | direct (MorningCheckInSuccess, DailyStandardCheck identity widget) | by design | by design | by design | by design | by design |
 | 12 | Assessment / movement screen | `initial_assessments`, `movement_screen` | by design | by design | by design | direct (CoachOnSpotAssessment) | by design | by design | by design | by design |
 | 13 | Goals | `athlete_body_goals` | by design | by design | by design | by design | by design | by design | direct (wk-generate-daily, generate-training-block, calculate-regulation) | by design |
@@ -42,16 +42,21 @@ fixed or re-classified.
 
 ## Known gaps (honest, not hidden)
 
-1. **Coach-entered game logs (row 6)** never create `gp_games` rows, so a coach-logged
-   game does not appear in the player's History game list or Coach Games tab. The
-   coach entry is visible in the coach's own logging panel and feeds the arm ledger.
-   Fix requires extending the `coach_log_entry` RPC (migration) — not done this run.
-2. **Combine results (row 9)** are not read by the coach/scout/org test RPCs, which
-   read `vault_performance_tests` only. Combine results show in the player's own
-   combine results page. Fix requires extending those RPCs — not done this run.
-3. **Coach readiness / org attendance (row 10 note)** read `vault_focus_quizzes`,
-   not `athlete_daily_log`. Two check-in systems exist; this is a design split, but
-   a coach looking at "readiness" sees quiz answers, not daily-log check-ins.
+None remaining. The three gaps found on Oct 24 were fixed the same day
+(migration `0105_data_unity_coach_games_combine_readiness`):
+
+1. **Coach-entered game logs (row 6)** now mirror into `gp_games` with
+   `entry_source='coach'` and `ignored_for_training=true` (the arm ledger already
+   carries the throw load, so training math is unchanged). Undo and a player's
+   "not me" flag soft-delete the mirrored game. The game now appears in the
+   player's History game list and the Coach Games tab.
+2. **Combine results (row 9)** are now read by `coach_athlete_tests`,
+   `org_test_ranking` (events list + per-athlete latest value), and
+   `scout_athlete_profile` (metrics scope), each UNIONed with vault tests.
+3. **Coach readiness / org attendance (row 10)** now count both check-in
+   systems: `coach_athlete_readiness` attendance and shared contents include
+   `athlete_daily_log` rows, and `org_facility_board` `checkins_7d` counts
+   distinct days across focus quizzes and the daily log.
 
 ## Rules this matrix must keep satisfying
 
