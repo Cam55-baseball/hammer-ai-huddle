@@ -1,0 +1,21 @@
+{
+  "unique_files": 527,
+  "passed_tests": 4123,
+  "failed_tests": 0,
+  "batch_exits": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "live_reads": "TEST player/coach/org management HTTP 200; coach phone empty state verified",
+  "limits": "read only, retained session-only tokens, not positive send/choice/focus or password proof",
+  "cleanup": "no hosted rows created; retained personas unchanged",
+  "deployed": "coach-rx-safety only",
+  "preview": "build OK 23:13:21 UTC",
+  "deno_check": "coach-rx-safety PASS nodeModulesDir none"
+}
