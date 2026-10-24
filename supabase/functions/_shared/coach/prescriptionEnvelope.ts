@@ -3,7 +3,7 @@ import { ownsAllGear, avoidsMissingGear } from "../planSwap/simpleSwap.ts";
 import { checkAthleteScope } from "../wic/domainGate.ts";
 import { isMovementSeasonLegal, seasonContextFromPhase } from "../wic/season.ts";
 import { finalRuleCheck, type FinalCheckContext } from "../wic/schedule/finalCheck.ts";
-import { resolveDose, isWithinEnvelope, isRepDosed } from "../wic/dosage/doctrine.ts";
+import { isWithinEnvelope, isRepDosed } from "../wic/dosage/doctrine.ts";
 import { classify, amountPerSet, type CatalogFact } from "../wic/exposure/ledger.ts";
 import { runGovernor, type GovernorContext } from "../wic/exposure/governor.ts";
 import type { GovItem, Rm28 } from "../wic/exposure/types.ts";
@@ -28,8 +28,7 @@ export function judgeCoachEnvelope(input: {
     if (input.blockedIntensityClasses.includes(movement.intensity_class)) reasons.push(`${row.movement_name}: today's recovery check allows lighter work only.`);
     if (!movement.dosage_unit || movement.dosage_unit !== row.dosage_unit) reasons.push(`${row.movement_name}: the measure must match its Exercise Vault entry.`);
     if (row.slot === "lift" && isRepDosed(row.dosage_unit)) {
-      const dose = resolveDose({ phase: input.final.phase, role: movement.movement_category, category: movement.category, trainingAgeYears: input.trainingYears });
-      if (!isWithinEnvelope(row.sets, row.reps, dose.envelope)) reasons.push(`${row.movement_name}: the coach's sets and reps are outside your current lifting range.`);
+      if (!isWithinEnvelope(input.final.phase, movement.movement_category, movement.category, row.sets, row.reps)) reasons.push(`${row.movement_name}: the coach's sets and reps are outside your current lifting range.`);
     }
   }
   const final = finalRuleCheck(input.resultingDay, input.final);
