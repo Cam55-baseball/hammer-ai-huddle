@@ -22,7 +22,7 @@ describe("coach calls existing WIC and Swap judges", () => {
     const i = input(); i.rows = [{ ...row, slot: "hitting" }]; i.resultingDay = i.rows;
     i.catalog.set("warmup", { ...movement, category: "throwing_plyo" });
     expect(judgeCoachEnvelope(i).allowed).toBe(false);
-    i.catalog.set("warmup", { ...movement, category: "bat_speed", bat_speed_category: "coordination", dosage_unit: "reps" } as any);
+    i.catalog.set("warmup", { ...movement, category: "bat_speed", bat_speed_category: "elastic_rotation", dosage_unit: "reps" } as any);
     i.rows = [{ ...row, slot: "hitting", dosage_unit: "reps", reps: 1 } as any]; i.resultingDay = i.rows;
     expect(judgeCoachEnvelope(i).allowed).toBe(true);
   });
