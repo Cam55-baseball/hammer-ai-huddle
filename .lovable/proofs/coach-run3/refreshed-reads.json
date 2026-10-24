@@ -1,0 +1,20 @@
+[
+  {
+    "role": "democollege",
+    "refresh_http": 200,
+    "proof": "session refresh + read only, not password sign-in or send/choice/focus",
+    "management_http": 200
+  },
+  {
+    "role": "democoach",
+    "refresh_http": 200,
+    "proof": "session refresh + read only, not password sign-in or send/choice/focus",
+    "management_http": 200
+  },
+  {
+    "role": "demoorg",
+    "refresh_http": 200,
+    "proof": "session refresh + read only, not password sign-in or send/choice/focus",
+    "management_http": 200
+  }
+]
