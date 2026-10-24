@@ -484,9 +484,9 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('common.cancel')}
           </Button>
-          <Button 
-            onClick={handleSend} 
-            disabled={loading || selectedPlayers.length === 0}
+          <Button
+            onClick={handleSend}
+            disabled={loading || selectedPlayers.length === 0 || !scheduleValid}
             className="gap-2"
           >
             {loading ? (
