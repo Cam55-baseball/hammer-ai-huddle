@@ -13,6 +13,12 @@ Updated October 24, 2026, final batch. **Ready to publish: NO.** Coach safety/da
   service-only update safeguards; deployed only the authorized safety function.
 - Eight scheduling fixture assertions passed, with saved phone screenshots;
   authenticated owner home and empty management read passed, no hosted writes.
+- Full application suite: **521 unique files / 4,091 assertions PASS**, including
+  refreshed affected tests after the final edits; **33 server + 10 additional
+  injury tests PASS** (4,134 total). Preview build OK. Evidence:
+  `.lovable/proofs/coach-final/suite-result.json`. The server runner temporarily
+  changed local dependency links; locked dependencies were restored, affected
+  checks repeated, and the remaining bounded groups completed successfully.
 - **Still not finished:** full readiness/pain/equipment/volume/phase safety;
   source-Vault item/gear editing; same-category skill-block replacement;
   complete staff results; actual player/coach/org/team save-and-reload proofs;
@@ -57,7 +63,9 @@ Final automated screenshots are 390×844 and render production components with i
 
 **Focus proof scope:** lift, speed, capped speed, conditioning, warm-up, hitting, throwing/pitching, fielding, baserunning, recovery and coach-sent workout cover entry/timer → Next saves → correct rest → advance, Skip, Save & exit, X and reload. Sprint 30 yards = 180 seconds; 60 yards caps at 300 seconds. Conditioning uses 30 seconds between reps and 300 seconds after four bases. Coach declared rest is 30 seconds. The separate outer-dialog X proof preserves already-saved work and running rest; it does not establish that X flushes an unfinished write.
 
-**Retained verification:** latest full application suite passed **517 files / 4,064 tests**, zero failures (run 07:34 UTC Oct 24, after the data-unity fixes). Preview reported build OK. The 14-item proofs above are retained evidence from earlier runs and were not rerun.
+**Current verification:** 521 unique application files / 4,091 assertions pass,
+plus 33 server and 10 additional injury tests; preview build OK. The 14-item
+proofs above remain retained earlier evidence, not rerun or relabeled live proof.
 
 ### TEST cleanup — blocked, not waived
 
@@ -87,10 +95,9 @@ together; Add alongside cannot bypass checked safety restrictions. The authorize
 are confirmed present. Fresh 390×844 live owner home tabs and empty management
 read passed. This is not an affected-player/team/org proof. Previous scheduling
 screenshots/results remain fixture-only and were not rerun.
-Final focused checks: 8 files / 71 tests PASS; final function validation PASS;
-preview build OK. The new full-suite attempt was stopped after ten minutes
-without a final summary and is not a pass. The earlier 4,064-test result predates
-the scheduling changes.
+Final batch focused checks: 10 files / 73 tests PASS; function validation PASS;
+preview build OK. The previously stopped full-suite attempt is superseded by
+the completed bounded results in the Final batch result section above.
 
 Only after explicit owner publication. These do not replace A or resolve the cleanup blockers.
 

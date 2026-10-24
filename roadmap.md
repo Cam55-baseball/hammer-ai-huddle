@@ -5,8 +5,8 @@
 - [x] Affected scheduling fixture assertions PASS at 390×844; saved `.lovable/proofs/coach-final/` screenshots. Live owner home/empty management read PASS, zero hosted writes; NOT affected-player/coach/org proof. Prior finished proofs retained.
 - [ ] Finish full safety envelope, Vault/gear authoring, same-category skill-block replacement, staff actual-results details and canonical custom-activity/snapshot landing. These are unfinished implementation, not owner-authorization blockers.
 - [ ] Real player/coach/org/team saved readback and every-row/every-surface data-unity behavioral proof; current fixtures/contracts do not supply this evidence.
-- [ ] Complete the full suite in bounded groups; finalize matrix, consolidated checklist and by-role guide with exact remaining blockers.
-- [ ] Report Ready to publish: yes/no; no publish, cron or iOS changes.
+- [x] Full suite completed in eight bounded groups with refreshed final affected files: 521 unique app files / 4,091 assertions PASS; 33 server and 10 additional injury tests PASS (4,134 total), preview build OK. Matrix, consolidated checklist and by-role guide finalized with explicit GAP/UNVERIFIED evidence, not false completion. `.lovable/proofs/coach-final/suite-result.json`.
+- [x] Ready to publish: NO. Exact reasons: incomplete full safety, Vault/gear authoring, skill-block replacement, staff results and canonical legacy-activity/snapshot landing; missing real player/coach/org/team and full matrix write/readback proofs; five human checks; three persona snapshots/global cleanup uncertified. No publish, cron or iOS changes. Only authorized 0109 and coach-rx-safety redeploy; no new hosted TEST rows.
 
 Final documentation explicitly corrects row 3 History/Vault/General/snapshot
 gaps and supersedes prior whole-matrix PASS wording. Five human checks, three

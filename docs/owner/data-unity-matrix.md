@@ -107,6 +107,9 @@ The three previously identified gaps were fixed the same day
 - Eight scheduling phone fixture assertions passed again at 390×844, saved in
   `.lovable/proofs/coach-final/`. Authenticated owner home tabs and an empty
   management read passed, zero hosted writes. This is NOT player/coach/org proof.
+- Final suite: 521 unique application files / 4,091 assertions, 33 server and
+  10 extra injury tests PASS; preview build OK. Passing tests do not convert
+  GAP or UNVERIFIED live cells into behavioral passes.
 - Full safety envelope, source-Vault selection/gear editor, skill-block
   replacement, staff result details and row-by-row live data landing remain
   incomplete. Do not replace these missing proofs with static PASS cells.
