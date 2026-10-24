@@ -32,6 +32,8 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
   const [lockPreset, setLockPreset] = useState<LockPreset>('none');
   const [customLocks, setCustomLocks] = useState<LockableField[]>([]);
   const [message, setMessage] = useState('');
+  const [rxCategory, setRxCategory] = useState<string>('lift');
+  const [rxDate, setRxDate] = useState<string>('');
 
   useEffect(() => {
     if (open) {
@@ -40,8 +42,10 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
       setLockPreset('none');
       setCustomLocks([]);
       setMessage('');
+      setRxCategory(template ? defaultRxCategory(template.activity_type) : 'lift');
+      setRxDate(new Date().toLocaleDateString('en-CA'));
     }
-  }, [open, fetchFollowedPlayers]);
+  }, [open, fetchFollowedPlayers, template]);
 
   const handlePlayerToggle = (playerId: string) => {
     setSelectedPlayers(prev => 
@@ -68,12 +72,13 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
 
   const handleSend = async () => {
     if (!template) return;
-    
+
     const success = await sendActivityToPlayers(
       template,
       selectedPlayers,
       getLockedFields(),
-      message.trim() || undefined
+      message.trim() || undefined,
+      { category: rxCategory, planDate: rxDate }
     );
 
     if (success) {
