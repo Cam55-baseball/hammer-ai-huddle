@@ -87,7 +87,10 @@ export function TeamRosterView({ orgId }: { orgId: string }) {
         }
       }
 
-      return memberIds.map(uid => {
+      // profiles_public already hides system/parked accounts (global TEST
+      // cleanup law); drop members with no visible profile instead of
+      // rendering an "Unknown" row.
+      return memberIds.filter(uid => profiles.has(uid)).map(uid => {
         const profile = profiles.get(uid);
         const mpi = mpiSettings.get(uid);
         const follow = followMap.get(uid);
