@@ -24,7 +24,7 @@ describe("coach calls existing WIC and Swap judges", () => {
     const i = input(); i.catalog.set("warmup", { ...movement, visible_to: ["test-player"] } as any);
     expect(judgeCoachEnvelope({ ...i, userId: "real-player" }).allowed).toBe(false);
     expect(judgeCoachEnvelope({ ...i, userId: "test-player" }).allowed).toBe(true);
-    expect(judgeCoachEnvelope(i).warnings.some(w => w.code === "workload_cap")).toBe(true);
+    expect(judgeCoachEnvelope(i).allowed).toBe(false);
   });
   it("never routes a throwing item into a hitting card", () => {
     const i = input(); i.rows = [{ ...row, slot: "hitting" }]; i.resultingDay = i.rows;
@@ -49,10 +49,12 @@ describe("coach calls existing WIC and Swap judges", () => {
     expect(judgeCoachEnvelope(i).allowed).toBe(false);
   });
   it("counts total reps once rather than falling back to one rep per set", () => {
-    const i = input(); i.catalog.set("warmup", { ...movement, category: "bat_speed", dosage_unit: "total_reps" });
+    i.catalog.set("warmup", { ...movement, category: "bat_speed", bat_speed_category: "elastic_rotation", dosage_unit: "total_reps" } as any);
     i.rows = [{ ...row, dosage_unit: "total_reps", sets: 2, total_reps: 24 } as any]; i.resultingDay = i.rows;
     i.rm28 = { ...i.rm28, byChannel: { SWING: 10 }, byTier: { "SWING:high": 10 }, loggedDaysByChannel: { SWING: 8 } };
-    expect(judgeCoachEnvelope(i).allowed).toBe(false);
+    const result = judgeCoachEnvelope(i);
+    expect(result.allowed).toBe(true);
+    expect(result.warnings.some(w => w.code === "workload_cap")).toBe(true);
   });
   it("runs the existing bat-speed certifier for hitting rather than skipping its slot", () => {
     const i = input(); i.rows = [{ ...row, slot: "hitting", dosage_unit: "reps", reps: 1 } as any]; i.resultingDay = i.rows;

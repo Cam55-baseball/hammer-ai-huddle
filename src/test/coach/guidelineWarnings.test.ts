@@ -1,10 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
-import { factGuidelineWarnings, factsWithoutAdvisories, factsWithoutWarnings, medicalFactWarnings, overrideReasonOk, warningsAcknowledged, warningKeys, ADVISORY_PLAN_RULES, MIN_OVERRIDE_REASON, isCoachPrescriptionDate } from "../../../supabase/functions/_shared/coach/guidelineWarnings";
+import { factGuidelineWarnings, factsWithoutAdvisories, factsWithoutWarnings, medicalFactWarnings, overrideReasonOk, warningsAcknowledged, warningKeys, workloadWarning, ADVISORY_PLAN_RULES, MIN_OVERRIDE_REASON, isCoachPrescriptionDate } from "../../../supabase/functions/_shared/coach/guidelineWarnings";
 import { checkPrescriptionReplace, type RxReplaceFacts } from "../../../supabase/functions/_shared/coach/prescriptionSafety";
 import { runCoachWarningAction } from "@/lib/coachRx/warningAction";
 
 const facts: RxReplaceFacts = { category: "hitting", date: "2026-10-27", intensity: "high", throwing: false, isRestDay: false, gameOnDate: false, gameNextDay: true, inSeason: true, nextThrowDate: null, injuryMode: false, hasCard: true };
 describe("dated coaching warnings", () => {
+  it("binds the 118-percent workload result to its actual daily cap and date", () => {
+    const warning = workloadWarning("2026-10-25", 118, 100);
+    expect(warning.date).toBe("2026-10-25");
+    expect(warning.rule).toContain("118%");
+    expect(warningsAcknowledged([warning], warningKeys([workloadWarning("2026-10-25", 119, 100)]))).toBe(false);
+  });
+  it("does not invent a percentage when the measured cap is zero", () => {
+    expect(workloadWarning("2026-10-25", 2, 0).rule).toContain("2 units — above the 0-unit");
+  });
   it("rejects February 30 and invalid months rather than silently moving the prescription", () => {
     expect(isCoachPrescriptionDate("2026-02-30")).toBe(false);
     expect(isCoachPrescriptionDate("2026-13-27")).toBe(false);
