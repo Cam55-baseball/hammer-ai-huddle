@@ -42,7 +42,7 @@
 - Coach summaries: gated reads; see coach AGENTS.md. Why: no wider access.
 - TEST admin exclusion uses one exact shared ID, never all system accounts. Why: demo connections stay usable.
 - Scout profile reads preflight the existing server-owned scope judge and key caches by viewer; the profile RPC still rechecks access. Why: unshared visits avoid denied data requests without weakening consent or hiding failures.
-- Cross-athlete view-audit events require a server-authored, topic-restricted append RPC; keep generic event inserts self-only. Why: client roster checks cannot authorize canonical ledger writes. The pending RPC must be authorized, applied and role-tested before wiring producers.
+- Cross-athlete audits use topic-restricted record_view_audit_event; generic inserts stay self-only. Why: client roster checks cannot authorize ledger writes.
 - Catalog equipment corrections retain before/after values in the existing Vault audit and reopen its review queue until a later owner approval. Why: historical text approvals cannot silently approve newly corrected gear.
 - Built-in drill equipment corrections use the same Vault audit and approval lifecycle, with review links to Drill Builder. Why: static review badges cannot track a later owner approval or reopen after another correction.
 - Catalog alternative gear uses complete groups in equipment_alternatives; all mandatory gear plus one complete group must be available. Why: dumbbell-or-kettlebell must not require both or silently accept neither.
@@ -59,3 +59,4 @@
 - Coach sends/choices share WIC/Swap and day-lock freshness. Missing check-in/load facts and coach season findings warn explicitly; generator season legality stays unchanged. Access/category and invalid entries block; audit/behavioral writes stay atomic. Why: no invented facts, spill-over, partial saves or Cancel writes.
 - Stray TEST cleanup snapshots exact identities privately; fixed-ID readback and job/list/stat exclusions certify parking, never a shrinking name query. Why: hidden flags alone cannot prove zero stray data.
 - Exact exercise measurement decisions are shared by the library, inline logger and log-sheet resolver; yard entry converts only at the display boundary, keeping canonical distance in feet. Why: ambiguous names must not diverge between logging paths or change existing distance readers.
+- Bunting groups explicit side/type/success in canonical performance-session reps and blocks. Why: unknown results cannot scale work or create a parallel ledger.

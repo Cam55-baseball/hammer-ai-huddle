@@ -141,6 +141,10 @@ export function measureTypeFor(input: MeasureInput): MeasureType {
   if (unit === "throws" || unit === "pitches") return "throws";
   if (unit === "seconds" && HOLD_RE.test(text)) return "hold_seconds";
   if (unit === "seconds" || unit === "minutes") return "duration";
+  if (["reps", "contacts", "steps", "swings"].includes(unit) && timed) {
+    if (unit === "swings") return "swing_count";
+    return slot === "lift" || slot === "supplemental" ? NO_WEIGHT_RE.test(text) ? "reps" : "weight_reps" : "reps";
+  }
 
   // Check-offs and self-report tasks.
   if (CHECKOFF_RE.test(text)) return "checkoff";
