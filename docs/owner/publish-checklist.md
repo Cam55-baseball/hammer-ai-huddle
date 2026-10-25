@@ -1,6 +1,6 @@
 # Hammers Today — final consolidated publish checklist
 
-Updated October 24, 2026, final batch. **Ready to publish: NO.** Coach safety/data landing and affected-player/coach/org proofs remain incomplete, alongside the five human checks and TEST restoration/cleanup gates below. This is a final honest checklist, not a claim that the requested build is finished or publication approval.
+Updated October 24, 2026, owner closeout decisions at 23:55 UTC. **Ready to publish: NO.** Publishing waits until coach prescriptions are fully finished. Coach safety/data landing and affected-player/coach/org proofs remain incomplete, alongside the five human checks and global TEST cleanup below. **Persona restoration is CLOSED by owner decision:** keep all three exactly as they are; no restoration is required. This current decision supersedes historical restoration blockers below.
 
 ## Final batch result
 
@@ -236,16 +236,16 @@ Final automated screenshots are 390×844 and render production components with i
 plus 33 server and 10 additional injury tests; preview build OK. The 14-item
 proofs above remain retained earlier evidence, not rerun or relabeled live proof.
 
-### TEST cleanup — blocked, not waived
+### TEST cleanup — persona restoration closed; global certification pending
 
 Evidence: `.lovable/proofs/final/cleanup-result.json` retains the prior exact-ID readback: zero named Oct24 coach templates/logs and Tex results/sessions. No hosted TEST records were created by the final automated fixtures or this documentation continuation. This is scoped cleanup evidence, not a database-wide absence check.
 
 | Remaining scope | Status | Required next step |
 |---|---|---|
-| Softball pitcher, two-way and returning pitcher: prior assessment/start state | Blocked | Locate a verified pre-Oct24 snapshot for each persona, then restore only the recorded changed fields and verify readback. Do not guess nulls or delete accounts/consents. |
+| Softball pitcher, two-way and returning pitcher: prior assessment/start state | CLOSED — owner decision October 24, 23:55 UTC | KEEP exactly as they are; no restoration or before-state snapshot is required. Hidden system accounts remain excluded from stats, lists and nightly jobs; comprehensive exclusion proof is still required. |
 | No TEST rows outside kept hidden accounts | Unverified | Complete a scoped inventory/readback against the owner-approved kept-account and retained-event exceptions; snapshot before any authorized exact-row removal. |
 
-The three personas are retained system accounts; their Oct24 assessment/start changes remain unrestored. Located files and previously checked protected snapshot tags do not establish their before-state. An actual before-state backup is needed; no destructive workaround is authorized.
+The three personas are retained exactly as they are. The owner explicitly closed restoration; do not restore, reset, reseed or otherwise change them. Global cleanup must independently scan outside the previously kept accounts, snapshot exact stray rows before hiding/deleting, and prove a zero re-scan. A system-account flag alone does not certify exclusion from every reader or nightly job.
 
 ## B. Coach-workout release checks
 
