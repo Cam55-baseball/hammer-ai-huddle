@@ -7,8 +7,16 @@ const NON_AB = new Set(['BB','walk','HBP','hbp','SF','sac_fly','SAC','sac_bunt',
 export interface BuntingEvidence { battingGames: {hits:number;atBats:number}[]; outcomes: BuntOutcome[]; sourceIds: string[] }
 /** Caller supplies complete self/sport/date-scoped records. Unknown results never become outs. */
 export function projectBuntingEvidence(sessions: readonly {id:string;module:string|null;drill_blocks:unknown;micro_layer_data:unknown}[],
-  atBats: readonly {id:string;game_id:string;result:string|null}[], pitches: readonly {id:string;bunt_side:string|null;bunt_type:string|null;bunt_success:boolean|null}[]): BuntingEvidence {
+  atBats: readonly {id:string;game_id:string;result:string|null}[], pitches: readonly {id:string;bunt_side:string|null;bunt_type:string|null;bunt_success:boolean|null}[], tasks: readonly {id:string;payload:unknown}[] = [], sport?:string): BuntingEvidence {
  const outcomes:BuntOutcome[]=[]; const sourceIds:string[]=[];
+ for(const task of tasks){
+  const payload=object(task.payload),bunt=object(payload.bunt),log=object(payload.log);
+  if(!sport||payload.sport!==sport||payload.module!=='hitting')continue;
+  const rounds=Array.isArray(log.rounds)?log.rounds:[];
+  const rows=rounds.map(value=>{const row=object(value);return {side:bunt.side,type:bunt.type,attempts:row.attempts,successes:row.successes};});
+  const valid=rows.filter((v):v is BuntOutcome=>validBuntOutcome(v as BuntOutcome));
+  if(valid.length){outcomes.push(...valid);sourceIds.push(`task:${task.id}`);}
+ }
  for(const session of sessions){
   if(!['bunting','hitting'].includes(session.module ?? ''))continue;
   // Blocks are the canonical aggregation; reps are a legacy fallback, never counted twice.

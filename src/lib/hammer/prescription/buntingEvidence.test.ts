@@ -1,6 +1,11 @@
 import {describe,it,expect} from 'vitest';
 import {projectBuntingEvidence} from './buntingEvidence';
 describe('canonical bunting evidence',()=>{
+ it('reads actual Today attempts/successes only for the saved sport, never prescribed or unknown successes',()=>{
+  const payload={sport:'baseball',module:'hitting',bunt:{side:'L',type:'drag',attempts:20},log:{rounds:[{attempts:7,successes:0},{attempts:10,successes:null}]}};
+  expect(projectBuntingEvidence([],[],[],[{id:'t',payload}],'baseball').outcomes).toEqual([{side:'L',type:'drag',attempts:7,successes:0}]);
+  expect(projectBuntingEvidence([],[],[],[{id:'t',payload}],'softball').outcomes).toEqual([]);
+ });
  it('does not double-count block outcomes and saved reps',()=>{
   const result=projectBuntingEvidence([{id:'s',module:'bunting',drill_blocks:[{bunt_outcomes:[{side:'R',type:'drag',attempts:7,successes:3}]}],micro_layer_data:[{batter_side:'R',bunt_type:'drag',bunt_success:true}]}],[],[]);
   expect(result.outcomes).toEqual([{side:'R',type:'drag',attempts:7,successes:3}]);

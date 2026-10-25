@@ -301,7 +301,7 @@ function DrillRow({
     source: "block_drill" as const,
     sourceRef: modality,
     side,
-    payload: { name: d.name, dosage: displayDose, slug: d.slug ?? null, side, ...(d.bunt?{bunt:d.bunt}:{} ) },
+    payload: { name: d.name, dosage: displayDose, slug: d.slug ?? null, side, ...(d.bunt?{bunt:d.bunt,sport:drillSport,module:'hitting'}:{} ) },
   };
   return (
     <li data-task-id={taskId} data-task-side={side ?? ""} className={`text-xs rounded-lg border p-3 ${checked ? "opacity-60 border-border/40 bg-muted/20" : "border-border/70 bg-card"}`}>
