@@ -80,13 +80,17 @@ export function useCoachRoster() {
         .eq("relationship_type", "linked");
       follows?.forEach((f) => addAthlete(f.player_id, "scout_follow"));
 
-      // Hydrate display names (best-effort; missing -> "Athlete")
+      // Hydrate display names (best-effort; missing -> "Athlete").
+      // profiles_public excludes parked/system accounts, so anyone missing
+      // from it leaves the roster entirely — never a hidden "Athlete" row.
       const ids = Array.from(map.keys());
       if (ids.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles_public")
           .select("id, full_name, avatar_url")
           .in("id", ids);
+        const visible = new Set((profiles ?? []).map((p: any) => String(p.id)));
+        for (const id of ids) if (!visible.has(id)) map.delete(id);
         profiles?.forEach((p: any) => {
           const a = map.get(p.id);
           if (a) {
