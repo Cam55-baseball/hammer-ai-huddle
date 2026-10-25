@@ -388,10 +388,11 @@ Deno.serve(async (req) => {
         const gate = await recruitingGate(admin, me, connectionError || connected !== true ? [] : [rx.recipient_id], "metrics");
         if (gate.get(rx.recipient_id) !== "visible") return json({ error: "You can't send to this player." }, 403);
         const facts = await gatherFacts(admin, rx.recipient_id, rx.category, newDate, prescriptionIntensity(rx.safety_result?.intensity), false, today);
-        const hard = checkPrescriptionAlongside(factsWithoutAdvisories(facts));
+        const hard = checkPrescriptionAlongside(factsWithoutWarnings(facts));
         if (hard.verdict !== "allow") return json({ applied: false, reasons: hard.reasons, safeOption: hard.safeOption });
-        const warnings = factGuidelineWarnings(facts).map(w => ({ ...w, player_id: rx.recipient_id }));
-        if (warnings.length && !warningsAcknowledged(warnings, acknowledgement)) return json({ applied: false, warning_required: true, warnings });
+        const warnings = collectWarnings(facts, rx.recipient_id);
+        const resendAckError = ackError(warnings);
+        if (resendAckError) return resendAckError;
         const { data: created, error: resendError } = await admin.from("coach_prescriptions").insert({
           sender_id: me, recipient_id: (rx as any).recipient_id, category: (rx as any).category,
           plan_date: newDate, title: (rx as any).title, exercises: (rx as any).exercises,
@@ -399,6 +400,8 @@ Deno.serve(async (req) => {
           schedule_type: "date", safety_result: { intensity: rx.safety_result?.intensity, overrides: warnings.length ? [overrideRecord(warnings, action)] : [] },
         }).select("id").maybeSingle();
         if (resendError || !created) throw resendError ?? new Error("Workout was not sent");
+        const resendMedical = warnings.filter(w => w.requires_reason);
+        if (resendMedical.length) await notifyParentsOfMedicalOverride(admin, rx.recipient_id, action, resendMedical, overrideReason, testInbox);
         return json({ applied: true, id: (created as any)?.id ?? null });
       }
 
