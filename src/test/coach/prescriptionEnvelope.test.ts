@@ -70,4 +70,20 @@ describe("coach calls existing WIC and Swap judges", () => {
     i.resultingDay = [row, { ...row, movement_slug: "swing", movement_name: "Saved swing", slot: "hitting" }];
     expect(judgeCoachEnvelope(i).allowed).toBe(false);
   });
+  it("does not turn missing jump contacts into the shared one-contact fallback", () => {
+    const i = input();
+    i.catalog.set("jump", { ...movement, slug: "jump", exposure_channel: "elastic", contacts_per_rep: null } as any);
+    i.resultingDay = [row, { ...row, movement_slug: "jump", movement_name: "Saved jump", reps: 4 } as any];
+    expect(judgeCoachEnvelope(i).reasons).toContain("Saved jump: its contacts per rep aren't declared in Exercise Vault. Keep your plan and save this workout for later.");
+    i.catalog.set("jump", { ...movement, slug: "jump", exposure_channel: "elastic", contacts_per_rep: 2 } as any);
+    expect(judgeCoachEnvelope(i).allowed).toBe(true);
+  });
+  it("does not certify fractional upper-body plyometric contact declarations", () => {
+    const i = input();
+    i.catalog.set("plyo", { ...movement, slug: "plyo", exposure_channel: "ub_plyo", contacts_per_rep: 0.5 } as any);
+    i.resultingDay = [row, { ...row, movement_slug: "plyo", movement_name: "Saved plyo", reps: 4 } as any];
+    expect(judgeCoachEnvelope(i).allowed).toBe(false);
+    i.catalog.set("plyo", { ...movement, slug: "plyo", exposure_channel: "ub_plyo", contacts_per_rep: 2 } as any);
+    expect(judgeCoachEnvelope(i).allowed).toBe(true);
+  });
 });
