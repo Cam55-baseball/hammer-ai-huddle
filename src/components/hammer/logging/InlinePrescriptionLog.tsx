@@ -46,7 +46,7 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   if (jump === "jump_distance") return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "distance", label: "Jump distance", unit: "ft + in" }] };
   if (jump === "jump_height") return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "height", label: "Jump height", unit: "in" }] };
   const explicitUnit = (rx.dosage_unit ?? "").toLowerCase();
-  if (["seconds", "minutes"].includes(explicitUnit)) return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: "Time", unit: "s", prefill: rx.duration_seconds ?? (rx.reps == null ? null : rx.reps * (explicitUnit === "minutes" ? 60 : 1)) }] };
+  if (["seconds", "minutes"].includes(explicitUnit)) return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: /hold|iso|plank/.test(slug) ? "Seconds" : "Time", unit: "s", prefill: rx.duration_seconds ?? (rx.reps == null ? null : rx.reps * (explicitUnit === "minutes" ? 60 : 1)) }] };
   if (["reps", "contacts", "steps", "swings"].includes(explicitUnit) && ["warmup", "mobility", "recovery", "arm_care"].includes(rx.slot as string) && rx.duration_seconds == null) return {
     rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "reps", label: explicitUnit === "contacts" ? "Contacts" : explicitUnit === "steps" ? "Steps" : explicitUnit === "swings" ? "Swings" : "Reps", prefill: rx.reps ?? rx.total_reps }],
   };

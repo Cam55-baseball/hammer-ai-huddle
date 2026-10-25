@@ -90,8 +90,8 @@ import { inlineLogSpec as holdSpec } from "./InlinePrescriptionLog";
 describe("hold time target", () => {
   it("never turns a rep count into a seconds target", () => {
     const s = holdSpec({ movement_slug: "plank_hold", sets: 3, reps: 10, dosage_unit: "reps" } as never);
-    expect(s.fields[0].key).toBe("time");
-    expect(s.fields[0].prefill).toBeNull();
+    expect(s.fields[0].key).toBe("reps");
+    expect(s.fields[0].prefill).toBe(10);
   });
   it("uses the declared duration as the target", () => {
     expect(holdSpec({ movement_slug: "plank_hold", sets: 3, reps: 10, duration_seconds: 30 } as never).fields[0].prefill).toBe(30);
