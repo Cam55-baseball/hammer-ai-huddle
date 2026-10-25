@@ -31,7 +31,7 @@ var whoami_default = defineTool({
 // src/lib/mcp/tools/list-recent-events.ts
 import { createClient } from "npm:@supabase/supabase-js@^2.76.0";
 import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.22.2";
-import { z } from "npm:zod@^4.4.3";
+import { z } from "npm:zod@^4.4.3/v3";
 function supabaseForUser(ctx) {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
@@ -53,7 +53,7 @@ var list_recent_events_default = defineTool2({
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     }
     const sb = supabaseForUser(ctx);
-    const { data, error } = await sb.from("asb_events").select("id, topic, occurred_at, payload").order("occurred_at", { ascending: false }).limit(limit ?? 20);
+    const { data, error } = await sb.from("asb_events").select("id, topic, occurred_at, payload").order("occurred_at", { ascending: false }).limit(typeof limit === "number" ? limit : 20);
     if (error) {
       return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
     }
@@ -67,7 +67,7 @@ var list_recent_events_default = defineTool2({
 // src/lib/mcp/tools/list-games.ts
 import { createClient as createClient2 } from "npm:@supabase/supabase-js@^2.76.0";
 import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.22.2";
-import { z as z2 } from "npm:zod@^4.4.3";
+import { z as z2 } from "npm:zod@^4.4.3/v3";
 function supabaseForUser2(ctx) {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
@@ -89,7 +89,7 @@ var list_games_default = defineTool3({
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     }
     const sb = supabaseForUser2(ctx);
-    const { data, error } = await sb.from("games").select("*").order("game_date", { ascending: false }).limit(limit ?? 30);
+    const { data, error } = await sb.from("games").select("*").order("game_date", { ascending: false }).limit(typeof limit === "number" ? limit : 30);
     if (error) {
       return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
     }
