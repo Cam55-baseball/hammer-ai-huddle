@@ -4384,6 +4384,6 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - [x] Full suite in four bounded batches: 529 files / 4,188 tests, all passing; preview build OK.
 - [x] Checklist updated with the Oct 25 run section (coverage-gate fix, live proof attempt, honest blocks, cleanup, verdicts).
 - [ ] Positive send→choice→log→readback proof: BLOCKED by real plan state — no TEST player has a skill card with workload headroom today (recovery Sunday; the two speed/conditioning plans are at/over cap). Needs a normal training day; do not fabricate.
-- [ ] Nightly fixed-ID re-check for the 37 parked accounts: PENDING until after 06:15 UTC (window not elapsed at 03:45).
-- [ ] Global TEST cleanup certification: NOT CERTIFIED (nightly re-check pending).
-- [ ] Ready to publish: NO — positive choose-path proof, nightly re-check, five human checks open.
+- [x] Nightly fixed-ID re-check for the parked accounts: DONE Oct 25 13:45 UTC — 131 pre-filter leftover rows snapshotted and removed, both state jobs redeployed with the exclusion filter, live batch run wrote zero parked rows, foundation rows all predate parking.
+- [x] Global TEST cleanup certification: CERTIFIED Oct 25 — (a) zero non-system TEST markers, (b) exclusions in readers/jobs, (c) zero new rows post-filter.
+- [ ] Ready to publish: NO — one open item: Monday Oct 26 positive coach-prescription Use-instead → focus log → readback proof on a real training day. Full suite 532 files / 4,226 tests PASS; five human checks listed in docs/owner/publish-checklist.md (not blockers).
