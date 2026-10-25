@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { RestTimer } from "./RestTimer";
+import { ExerciseTimer } from "./ExerciseTimer";
 import { useConditioningRest } from "./ConditioningRestContext";
 import type { BaseRep } from "../../../../supabase/functions/_shared/wic/runRest";
 
@@ -120,20 +121,5 @@ export function useFocusState() {
 }
 
 export function FocusDurationTimer({ target, onDone }: { target: number; onDone: (seconds: number) => void }) {
-  const [start, setStart] = useState<number | null>(null);
-  const [now, setNow] = useState(Date.now());
-  const [finished, setFinished] = useState(false);
-  const done = useRef(false);
-  useEffect(() => {
-    if (start == null) return;
-    const tick = () => {
-      const at = Date.now(); setNow(at);
-      if (!done.current && (at - start) / 1000 >= target) { done.current = true; setFinished(true); setStart(null); onDone(target); }
-    };
-    const timer = window.setInterval(tick, 10); return () => window.clearInterval(timer);
-  }, [start, target, onDone]);
-  return <div className="flex items-center gap-3" data-focus-duration>
-    <Button size="sm" variant="outline" disabled={start != null || finished} onClick={() => { done.current = false; const at = Date.now(); setNow(at); setStart(at); }}>{finished ? "Timer done" : "Start timer"}</Button>
-    <span className="font-mono tabular-nums">{(finished ? 0 : Math.max(0, target - (start == null ? 0 : (now - start) / 1000))).toFixed(2)} s</span>
-  </div>;
+  return <div data-focus-duration><ExerciseTimer target={target} onRecord={onDone} /></div>;
 }
