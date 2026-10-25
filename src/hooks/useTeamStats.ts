@@ -26,7 +26,14 @@ export function useTeamStats(orgId: string | undefined) {
         .eq('status', 'active');
       if (mErr) throw mErr;
 
-      const memberIds = (members ?? []).map(m => m.user_id);
+      // profiles_public hides system/parked accounts (global TEST cleanup
+      // law); keep only visible members so stats never count them.
+      const rawIds = (members ?? []).map(m => m.user_id);
+      const { data: visibleProfiles } = rawIds.length
+        ? await supabase.from('profiles_public').select('id').in('id', rawIds)
+        : { data: [] as { id: string }[] };
+      const visibleIds = new Set((visibleProfiles ?? []).map(p => p.id));
+      const memberIds = rawIds.filter(id => visibleIds.has(id));
       const activeMemberCount = memberIds.length;
 
       if (activeMemberCount === 0) {

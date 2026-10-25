@@ -1,0 +1,280 @@
+[map[?column?:org_compare_athletes
+CREATE OR REPLACE FUNCTION public.org_compare_athletes(_org uuid, _athletes uuid[])
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+declare
+  _uid uuid := auth.uid();
+  _count int;
+begin
+  if _uid is null then raise exception 'not authenticated'; end if;
+  if not public.is_org_staff(_uid, _org) then
+    raise exception 'not allowed' using errcode = '42501';
+  end if;
+  if _athletes is null or array_length(_athletes, 1) is null
+     or array_length(_athletes, 1) < 2 or array_length(_athletes, 1) > 6 then
+    raise exception 'compare 2 to 6 players';
+  end if;
+  select count(*) into _count
+  from organization_members m
+  where m.organization_id = _org and m.role_in_org = 'player' and m.status = 'active'
+    and m.user_id = any(_athletes);
+  if _count <> array_length(_athletes, 1) then
+    raise exception 'not allowed' using errcode = '42501';
+  end if;
+  return (
+    select coalesce(jsonb_agg(row_to_json(x) order by x.name), '[]'::jsonb)
+    from (
+      select
+        m.user_id as athlete_id,
+        coalesce(
+          nullif(trim(p.first_name || ' ' || p.last_name), ''),
+          nullif(trim(p.full_name), ''),
+          'Player'
+        ) as name,
+        ms.primary_position,
+        ms.league_tier,
+        coalesce(ms.date_of_birth, p.date_of_birth) as date_of_birth,
+        (
+          select jsonb_build_object('test_type', t.test_type, 'test_date', t.test_date)
+          from vault_performance_tests t
+          where t.user_id = m.user_id
+          order by t.test_date desc nulls last, t.created_at desc
+          limit 1
+        ) as latest_test,
+        (
+          select count(*) from vault_performance_tests t where t.user_id = m.user_id
+        ) as test_count,
+        (
+          select jsonb_build_object(
+            'overall_grade', g.overall_grade,
+            'graded_at', g.graded_at,
+            'grade_source', g.grade_source
+          )
+          from vault_scout_grades g
+          where g.user_id = m.user_id
+          order by g.graded_at desc nulls last
+          limit 1
+        ) as latest_grade,
+        (
+          select round(count(*) filter (where w.status = 'completed') * 100.0 / nullif(count(*), 0))
+          from wk_prescriptions w
+          where w.user_id = m.user_id and w.plan_date >= current_date - 7
+        ) as week_completion_pct,
+        (
+          select jsonb_build_object('games', count(*), 'last_game', max(g2.game_date))
+          from gp_games g2
+          where g2.user_id = m.user_id and g2.deleted_at is null
+        ) as game_summary
+      from organization_members m
+      left join profiles p on p.id = m.user_id
+      left join athlete_mpi_settings ms on ms.user_id = m.user_id
+      where m.organization_id = _org and m.role_in_org = 'player' and m.status = 'active'
+        and m.user_id = any(_athletes)
+        and exists (select 1 from profiles sp where sp.id = m.user_id and coalesce(sp.is_system_account,false) = false and sp.suspended_at is null and sp.account_paused_at is null)
+    ) x
+  );
+end;
+$function$
+] map[?column?:org_facility_board
+CREATE OR REPLACE FUNCTION public.org_facility_board(_org uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE today date := (now() at time zone 'utc')::date;
+BEGIN
+  IF auth.uid() IS NULL OR NOT public.is_org_staff(auth.uid(), _org) THEN
+    RAISE EXCEPTION 'not_allowed' USING ERRCODE = '42501';
+  END IF;
+  RETURN COALESCE((
+    SELECT jsonb_agg(jsonb_build_object(
+      'athlete_id', m.user_id,
+      'name', p.full_name,
+      'team_id', tm.team_id,
+      'team_name', t.name,
+      'coach_id', a.coach_user_id,
+      'coach_name', cp.full_name,
+      'today_planned', (SELECT count(*) FROM wk_prescriptions w WHERE w.user_id=m.user_id AND w.plan_date=today),
+      'today_done', (SELECT count(*) FROM wk_prescriptions w WHERE w.user_id=m.user_id AND w.plan_date=today AND w.status='completed'),
+      'week_planned', (SELECT count(*) FROM wk_prescriptions w WHERE w.user_id=m.user_id AND w.plan_date BETWEEN today-6 AND today),
+      'week_done', (SELECT count(*) FROM wk_prescriptions w WHERE w.user_id=m.user_id AND w.plan_date BETWEEN today-6 AND today AND w.status='completed'),
+      'missed_days', (SELECT count(DISTINCT w.plan_date) FROM wk_prescriptions w WHERE w.user_id=m.user_id AND w.plan_date BETWEEN today-6 AND today-1 AND w.status<>'completed'),
+      'latest_test', (SELECT jsonb_build_object('test_type',v.test_type,'test_date',v.test_date,'next_entry_date',v.next_entry_date) FROM vault_performance_tests v WHERE v.user_id=m.user_id ORDER BY v.test_date DESC, v.created_at DESC LIMIT 1),
+      'top_alert', (SELECT jsonb_build_object('metric_key',al.metric_key,'kind',al.kind,'at',al.created_at) FROM athlete_baseline_alerts al WHERE al.user_id=m.user_id AND al.dismissed_at IS NULL ORDER BY al.created_at DESC LIMIT 1),
+      'checkins_7d', (SELECT count(DISTINCT c.entry_date) FROM (
+                        SELECT q.entry_date FROM vault_focus_quizzes q WHERE q.user_id=m.user_id AND q.entry_date BETWEEN today-6 AND today
+                        UNION
+                        SELECT d.entry_date FROM athlete_daily_log d WHERE d.user_id=m.user_id AND d.entry_date BETWEEN today-6 AND today
+                      ) c),
+      'last_active', (SELECT max(d) FROM (SELECT max(w.updated_at)::date AS d FROM wk_prescriptions w WHERE w.user_id=m.user_id AND w.status='completed' UNION ALL SELECT max(v.test_date) FROM vault_performance_tests v WHERE v.user_id=m.user_id) s)
+    ) ORDER BY p.full_name)
+    FROM organization_members m
+    JOIN profiles p ON p.id = m.user_id
+    LEFT JOIN org_team_members tm ON tm.user_id = m.user_id AND tm.removed_at IS NULL
+    LEFT JOIN org_teams t ON t.id = tm.team_id
+    LEFT JOIN LATERAL (SELECT coach_user_id FROM org_athlete_assignments x WHERE x.organization_id=_org AND x.athlete_user_id=m.user_id AND x.revoked_at IS NULL LIMIT 1) a ON true
+    LEFT JOIN profiles cp ON cp.id = a.coach_user_id
+    WHERE m.organization_id = _org AND m.status = 'active' AND m.role_in_org = 'player'
+      AND coalesce(p.is_system_account,false) = false AND p.suspended_at IS NULL AND p.account_paused_at IS NULL
+  ), '[]'::jsonb);
+END $function$
+] map[?column?:org_test_ranking
+CREATE OR REPLACE FUNCTION public.org_test_ranking(_org uuid, _test text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE _uid uuid := auth.uid(); _staff boolean;
+BEGIN
+  IF _uid IS NULL THEN RAISE EXCEPTION 'not authenticated' USING errcode = '42501'; END IF;
+  _staff := public.is_org_staff(_uid, _org);
+  IF NOT _staff AND NOT EXISTS (SELECT 1 FROM org_athlete_assignments a WHERE a.organization_id = _org AND a.coach_user_id = _uid AND a.revoked_at IS NULL) THEN
+    RAISE EXCEPTION 'not allowed' USING errcode = '42501';
+  END IF;
+  RETURN jsonb_build_object(
+    'tests', coalesce((
+      SELECT jsonb_agg(DISTINCT k.key ORDER BY k.key)
+      FROM organization_members m
+      CROSS JOIN LATERAL (
+        SELECT j.key FROM vault_performance_tests t CROSS JOIN LATERAL jsonb_each(coalesce(t.results,'{}'::jsonb)) j
+        WHERE t.user_id = m.user_id AND left(j.key,1) <> '_' AND jsonb_typeof(j.value) = 'number'
+        UNION
+        SELECT r.event FROM combine_results r WHERE r.user_id = m.user_id AND r.value IS NOT NULL
+      ) k
+      WHERE m.organization_id = _org AND m.role_in_org = 'player' AND m.status = 'active'
+        AND EXISTS (SELECT 1 FROM profiles sp WHERE sp.id = m.user_id AND coalesce(sp.is_system_account,false) = false AND sp.suspended_at IS NULL AND sp.account_paused_at IS NULL)
+        AND (_staff OR EXISTS (SELECT 1 FROM org_athlete_assignments a WHERE a.organization_id = _org AND a.coach_user_id = _uid AND a.athlete_user_id = m.user_id AND a.revoked_at IS NULL))
+    ), '[]'::jsonb),
+    'rows', coalesce((
+      SELECT jsonb_agg(row_to_json(x))
+      FROM (
+        SELECT m.user_id AS athlete_id,
+          coalesce(nullif(trim(p.first_name || ' ' || p.last_name), ''), nullif(trim(p.full_name), ''), 'Player') AS name,
+          ms.primary_position, ms.league_tier,
+          coalesce(ms.date_of_birth, p.date_of_birth) AS date_of_birth,
+          lt.value, lt.test_date, lt.verified
+        FROM organization_members m
+        LEFT JOIN profiles p ON p.id = m.user_id
+        LEFT JOIN athlete_mpi_settings ms ON ms.user_id = m.user_id
+        CROSS JOIN LATERAL (
+          SELECT u.value, u.test_date, u.verified FROM (
+            SELECT (t.results ->> _test)::numeric AS value, coalesce(t.test_date, t.created_at::date) AS test_date,
+                   (t.results ->> '_verified') = 'in_person' AS verified, t.created_at
+            FROM vault_performance_tests t
+            WHERE t.user_id = m.user_id AND jsonb_typeof(t.results -> _test) = 'number'
+            UNION ALL
+            SELECT r.value, COALESCE(s.completed_at, r.created_at)::date, true, r.created_at
+            FROM combine_results r JOIN combine_sessions s ON s.id = r.session_id
+            WHERE r.user_id = m.user_id AND r.event = _test AND r.value IS NOT NULL
+          ) u ORDER BY u.test_date DESC, u.created_at DESC LIMIT 1
+        ) lt
+        WHERE m.organization_id = _org AND m.role_in_org = 'player' AND m.status = 'active' AND _test IS NOT NULL
+          AND EXISTS (SELECT 1 FROM profiles sp WHERE sp.id = m.user_id AND coalesce(sp.is_system_account,false) = false AND sp.suspended_at IS NULL AND sp.account_paused_at IS NULL)
+          AND (_staff OR EXISTS (SELECT 1 FROM org_athlete_assignments a WHERE a.organization_id = _org AND a.coach_user_id = _uid AND a.athlete_user_id = m.user_id AND a.revoked_at IS NULL))
+      ) x
+    ), '[]'::jsonb)
+  );
+END $function$
+] map[?column?:search_athletes_to_connect
+CREATE OR REPLACE FUNCTION public.search_athletes_to_connect(_q text, _organization_id uuid DEFAULT NULL::uuid)
+ RETURNS TABLE(id uuid, full_name text, grad_year integer, state text, under_18 boolean, request_status text)
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE v_uid uuid := auth.uid(); v_q text := lower(btrim(coalesce(_q,''))); v_year int; v_kind text;
+BEGIN
+  IF v_uid IS NULL THEN RAISE EXCEPTION 'Sign in first'; END IF;
+  IF _organization_id IS NOT NULL THEN
+    IF NOT public.is_org_admin(v_uid, _organization_id) THEN RAISE EXCEPTION 'Only organization admins can add athletes'; END IF;
+    v_kind := 'org_player';
+  ELSE
+    IF NOT public.user_has_role(v_uid,'coach'::app_role) THEN RAISE EXCEPTION 'Only coach accounts can send this request'; END IF;
+    v_kind := 'coach_player';
+  END IF;
+  IF length(v_q) < 2 THEN RETURN; END IF;
+  IF v_q ~ '^\d{4}$' THEN v_year := v_q::int; END IF;
+  RETURN QUERY
+  WITH m AS (
+    SELECT p.id, p.full_name, coalesce(p.high_school_grad_year, p.graduation_year, p.college_grad_year) AS gy, p.state
+    FROM public.profiles p LEFT JOIN auth.users u ON u.id = p.id
+    WHERE p.id <> 'a3574d4f-0296-4093-9607-c47b7323dd35'::uuid AND p.id <> v_uid AND p.account_paused_at IS NULL
+      AND p.suspended_at IS NULL
+      AND coalesce(p.is_system_account,false) = false
+      AND (lower(u.email) = v_q OR lower(p.contact_email) = v_q
+           OR p.full_name ILIKE '%' || replace(replace(v_q,'%',''),'_','') || '%'
+           OR (v_year IS NOT NULL AND v_year IN (p.high_school_grad_year, p.graduation_year, p.college_grad_year)))
+      AND NOT public.user_has_role(p.id,'coach'::app_role)
+      AND NOT public.user_has_role(p.id,'scout'::app_role)
+      AND NOT public.is_blocked_pair(v_uid, p.id)
+      AND (public.is_minor(p.id) = false OR public.is_coach_of(v_uid, p.id) OR public.resolve_recruiting_scope(p.id,'profile'))
+    LIMIT 20
+  ), s AS (
+    SELECT m.*,
+      CASE WHEN _organization_id IS NULL THEN EXISTS (SELECT 1 FROM public.scout_follows f WHERE f.scout_id=v_uid AND f.player_id=m.id AND f.status='accepted')
+           ELSE EXISTS (SELECT 1 FROM public.organization_members om WHERE om.organization_id=_organization_id AND om.user_id=m.id AND om.status='active') END AS connected,
+      (SELECT cr.status FROM public.connection_requests cr
+         WHERE cr.from_user = v_uid AND cr.subject_user = m.id AND cr.kind = v_kind
+           AND (_organization_id IS NULL OR cr.organization_id = _organization_id)
+         ORDER BY cr.created_at DESC LIMIT 1) AS last_status
+    FROM m
+  )
+  SELECT s.id, s.full_name, s.gy, s.state, public.is_minor(s.id),
+    CASE WHEN s.connected THEN 'accepted' WHEN s.last_status = 'pending' THEN 'pending'
+         WHEN s.last_status = 'denied' THEN 'denied' ELSE NULL END
+  FROM s;
+END $function$
+] map[?column?:team_discipline_summary
+CREATE OR REPLACE FUNCTION public.team_discipline_summary(_org uuid DEFAULT NULL::uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE _me uuid := auth.uid(); _ids uuid[];
+BEGIN
+  IF _me IS NULL THEN RAISE EXCEPTION 'not authorized' USING ERRCODE='42501'; END IF;
+  IF _org IS NOT NULL THEN
+    IF NOT public.is_org_admin(_me, _org) THEN RAISE EXCEPTION 'not authorized' USING ERRCODE='42501'; END IF;
+    SELECT array_agg(DISTINCT user_id) INTO _ids FROM organization_members
+      WHERE organization_id = _org AND status='active' AND role_in_org='player' AND removed_at IS NULL;
+  ELSE
+    SELECT array_agg(DISTINCT c) INTO _ids FROM (
+      SELECT user_id c FROM athlete_mpi_settings WHERE primary_coach_id = _me OR _me = ANY(coalesce(secondary_coach_ids,'{}'))
+      UNION SELECT player_id FROM scout_follows WHERE scout_id = _me AND status='accepted'
+      UNION SELECT athlete_user_id FROM org_athlete_assignments WHERE coach_user_id = _me AND revoked_at IS NULL
+      UNION SELECT om.user_id FROM organization_members om WHERE om.status='active' AND om.role_in_org='player' AND public.is_org_admin(_me, om.organization_id)
+    ) s WHERE public.is_coach_of(_me, c) OR public.is_linked_coach(_me, c);
+  END IF;
+  _ids := array_remove(_ids, 'a3574d4f-0296-4093-9607-c47b7323dd35'::uuid);
+  SELECT array_agg(u) INTO _ids
+    FROM unnest(coalesce(_ids,'{}')) u
+    JOIN public.profiles sp ON sp.id = u
+   WHERE coalesce(sp.is_system_account,false) = false
+     AND sp.suspended_at IS NULL
+     AND sp.account_paused_at IS NULL;
+  RETURN coalesce((
+    WITH rx AS (
+      SELECT p.user_id, p.plan_date, EXISTS (SELECT 1 FROM wk_session_logs l WHERE l.prescription_id = p.id) done
+      FROM wk_prescriptions p
+      WHERE p.user_id = ANY(coalesce(_ids,'{}')) AND p.plan_date BETWEEN current_date - 28 AND current_date - 1
+    ), d AS (
+      SELECT user_id, plan_date, count(*) n, count(*) FILTER (WHERE done) k FROM rx GROUP BY 1,2
+    )
+    SELECT jsonb_agg(jsonb_build_object(
+      'athlete_id', u, 'name', coalesce(pr.full_name,'Player'),
+      'set_7', (SELECT sum(n) FROM d WHERE user_id=u AND plan_date >= current_date-7),
+      'done_7', (SELECT sum(k) FROM d WHERE user_id=u AND plan_date >= current_date-7),
+      'set_28', (SELECT sum(n) FROM d WHERE user_id=u), 'done_28', (SELECT sum(k) FROM d WHERE user_id=u),
+      'days_set_28', (SELECT count(*) FROM d WHERE user_id=u),
+      'days_logged_28', (SELECT count(*) FROM d WHERE user_id=u AND k>0),
+      'missed_28', (SELECT count(*) FROM d WHERE user_id=u AND k=0)) ORDER BY pr.full_name)
+    FROM unnest(coalesce(_ids,'{}')) u LEFT JOIN profiles pr ON pr.id = u
+  ), '[]'::jsonb);
+END $function$
+]]

@@ -63,6 +63,31 @@ describe("system/parked account exclusion", () => {
     expect(read("src/hooks/coach/useCoachRoster.ts")).toContain("map.delete(id)");
   });
 
+  it("org team roster drops members with no visible profile", () => {
+    expect(read("src/components/organization/TeamRosterView.tsx")).toContain("memberIds.filter(uid => profiles.has(uid))");
+  });
+
+  it("org team stats count only members visible in the public view", () => {
+    const src = read("src/hooks/useTeamStats.ts");
+    expect(src).toContain("profiles_public");
+    expect(src).toContain("visibleIds.has(id)");
+  });
+
+  it("population RPCs exclude system/parked accounts (live definitions evidence)", () => {
+    const defs = read(".lovable/proofs/global-test-closeout/0115-live-definitions.txt");
+    for (const fn of ["search_athletes_to_connect", "team_discipline_summary", "org_test_ranking", "org_compare_athletes", "org_facility_board"]) {
+      expect(defs).toContain(`public.${fn}(`);
+    }
+    // Every redefined population function carries the exclusion predicate.
+    const bodies = defs.split("CREATE OR REPLACE FUNCTION").slice(1);
+    expect(bodies.length).toBe(5);
+    for (const body of bodies) {
+      expect(body.toLowerCase()).toContain("is_system_account");
+      expect(body.toLowerCase()).toContain("suspended_at is null");
+      expect(body.toLowerCase()).toContain("account_paused_at is null");
+    }
+  });
+
   it("coach prescription arm check uses the shared arm ledger and ramp judges", () => {
     const src = read("supabase/functions/_shared/coach/armLoadCheck.ts");
     expect(src).toContain("ledgerDay");
@@ -75,5 +100,13 @@ describe("system/parked account exclusion", () => {
     const client = read("src/lib/throwing/armLedgerEntry.ts");
     expect(client).toContain("export * from");
     expect(client).toContain("_shared/wic/phases/armLedgerEntry");
+  });
+
+  it("coach use_instead reaches the certified day-lock commit for skill blocks", () => {
+    const edge = read("supabase/functions/coach-rx-safety/index.ts");
+    // The blanket refusal is gone; replacement flows through the commit path.
+    expect(edge).not.toContain("hasn't passed its complete safety check yet");
+    expect(edge).toContain("block_expected");
+    expect(edge).toContain("coach_rx_commit_certified");
   });
 });

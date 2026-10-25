@@ -1,0 +1,17 @@
+{
+  "run": "2026-10-25 01:10-01:25 UTC",
+  "track_b_remainder": {
+    "population_rpcs_redefined_live": ["search_athletes_to_connect", "team_discipline_summary", "org_test_ranking", "org_compare_athletes", "org_facility_board"],
+    "evidence": "0115-live-definitions.txt (pg_get_functiondef dump of the live bodies)",
+    "client_lists_fixed": ["src/components/organization/TeamRosterView.tsx (drops members hidden from profiles_public)", "src/hooks/useTeamStats.ts (counts only visible members)"],
+    "already_covered": ["useCoachPlayerPool (reads via profiles_public)", "foundation ops-metric jobs (nightly-foundation-health, foundation-health-alerts, recompute-foundation-effectiveness, hourly-trigger-decay) write keyed ops alerts/heartbeats only, no per-user rows"],
+    "single_athlete_reads": "zero live accepted follows, active assignments, primary-coach links or pending requests exist for any parked account, and search can no longer create them; coach_athlete_* single-athlete reads are unreachable for parked accounts",
+    "live_impact": "2 parked accounts were active members of org c63763fd-cc37-471f-8c7d-b2d78248390c and are now excluded from every org board/ranking/compare/discipline view"
+  },
+  "track_c_fixed_id_check": {
+    "window": "after parking (00:45-00:50) through 01:25, including the 01:00 hourly trigger-decay run",
+    "new_rows_for_parked_accounts": { "hie_snapshots": 0, "adaptive_phase_shadow": 0, "wk_prescriptions": 0, "follower_reports": 0, "foundation_trigger_events": 0 },
+    "status": "PASS for the elapsed window; nightly HIE/plan jobs have not run since parking — re-check after tonight's window before final certification"
+  },
+  "guard_tests": "src/test/systemAccountExclusion.test.ts extended to 18 tests; 18/18 PASS with coach suite (133/133)"
+}
