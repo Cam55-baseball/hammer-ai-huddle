@@ -185,9 +185,8 @@ describe("defense is present on every day type, including an off day", () => {
   it("a defense override cannot turn a rest day into training", () => {
     for (let i = 0; i < 7; i++) {
       const day = new Date(2026, 5, 1 + i);
-      const resting = buildHammerDailyPlan(CONTEXTS[1][1], NORMAL_SIGNAL, null, null, undefined, day)
-        .blocks.find((b) => b.modality === "defense")!;
-      if (resting.status !== "off-day") continue;
+      const restingPlan = buildHammerDailyPlan(CONTEXTS[1][1], NORMAL_SIGNAL, null, null, undefined, day);
+      if (!restingPlan.weeklyRoadmap.find(row => row.isToday)?.restDay) continue;
       const overridden = buildHammerDailyPlan(
         CONTEXTS[1][1], NORMAL_SIGNAL, null, null, undefined, day, { defenseFullOverride: true },
       ).blocks.find((b) => b.modality === "defense")!;
@@ -195,6 +194,7 @@ describe("defense is present on every day type, including an off day", () => {
       expect(overridden.drills).toEqual([]);
       return;
     }
+    throw new Error("No whole rest day was exercised");
   });
 });
 

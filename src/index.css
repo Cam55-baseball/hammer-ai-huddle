@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 .hm-focus-theme {
+  color: hsl(var(--focus-ink));
+  background-color: hsl(var(--focus-surface));
   --background: var(--focus-surface);
   --foreground: var(--focus-ink);
   --card: var(--focus-surface);
@@ -14,6 +16,8 @@
   --border: var(--focus-border);
   --input: var(--focus-muted);
 }
+.hm-focus-theme :is(h3, p, label, output, input, textarea) { color: hsl(var(--focus-ink)); }
+.hm-focus-theme :is(input, textarea) { background-color: hsl(var(--focus-muted)); }
 
 /* IQ 101 — Game IQ design tokens (semantic, theme-safe) */
 @layer base {

@@ -41,7 +41,7 @@ describe("prescription double-check", () => {
 });
 
 describe("rendered card text", () => {
-  it("how-to drawer shows the repaired distance, cue once and why-changed once", () => {
+  it("how-to drawer shows repaired distance and cue without duplicating day changes", () => {
     const rx = { slot: "speed", distance_feet: 60 };
     render(<ExerciseInstructions name="Sport-Stance Reactive Start" slug="sp_sport_stance_start" cue="Sprint 10y on the signal." why="Builds first-step speed." changes={[]} repair={(t) => repairInstruction(t, rx, "cue") ?? t} />);
     fireEvent.click(screen.getByRole("button", { name: /how to do it/i }));
@@ -49,7 +49,7 @@ describe("rendered card text", () => {
     expect(text).not.toMatch(/10y|10 yards/);
     expect(text).toContain("20 yards");
     expect(text.match(/Cue:/g)?.length).toBe(1);
-    expect(text.match(/Why today's work changed/g)?.length).toBe(1);
+    expect(text).not.toContain("Why today's work changed");
     expect(text).not.toMatch(/Your progression/);
   });
   it("basic how-to is shown first and is specific (resisted sled)", () => {
