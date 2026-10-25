@@ -1,0 +1,14 @@
+{
+  "status": "partial",
+  "ready_to_publish": false,
+  "source_suite": {"files": 539, "tests": 4429, "affected_batches_rerun": [5,9]},
+  "screenshots": {"width":390,"height":844,"fixture_only":true,"focus_pause_resume_stop":true,"exit_card_open_device_saved":true},
+  "live_rest_source_read": {"date":"2026-10-25","rest_verdict":"none","unexpected_work":["jband_full_chart","paloff_press","med_ball_shot_put"],"trimmed_readback_verified":false},
+  "backend_redeployed":["wk-generate-daily"],
+  "bunting":{"pure_policy_tested":true,"player_integration":false,"vault_entries":false,"canonical_outcomes":false,"video_tags":false},
+  "all_source_measure_render_audit":false,
+  "authenticated_purchase_flow":false,
+  "monday_coach_proof":false,
+  "hosted_test_records_added":0,
+  "publish":false,"cron_changed":false,"ios_changed":false
+}
