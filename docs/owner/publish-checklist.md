@@ -6,6 +6,13 @@ Updated October 25, 2026, coach-warning run. **Ready to publish: NO.** Publishin
 
 ### October 25 coach-warning implementation
 
+- 05:32 final batch: full suite rerun in four bounded batches: **532 files /
+  4,219 tests PASS** (1,015 + 1,026 + 1,087 + 1,091). Sixteen 390×844 warning
+  fixture decisions rerun PASS with no page errors. Live democoach management
+  reader returned 200 with no rows and no writes; live audit trigger is enabled.
+  These are not hosted override-save/audit/readback proofs. At 05:37 UTC the
+  cleanup window and Monday plan window had not arrived. No added TEST data.
+
 - 05:27 continuation: all existing prescription action paths audited; no bypass
   found. Content editing is not an existing action (Move edits the date). Rest,
   game-day and next-game warnings now accumulate instead of hiding one another.
@@ -27,7 +34,7 @@ Updated October 25, 2026, coach-warning run. **Ready to publish: NO.** Publishin
 - Each acknowledgement carries who/when/action/rules/date/player/prescription;
   audit and behavioral input append atomically through the prescription trigger.
   Sent workouts displays the trail; activation adds “Coach override: …” to Because.
-- **Full suite: 532 files / 4,215 tests PASS**, four bounded shards (1,011 +
+- **Earlier full suite: 532 files / 4,215 tests PASS**, four bounded shards (1,011 +
   1,026 + 1,087 + 1,091). Server type validation PASS. Sixteen 390×844 Okay/Cancel
   fixture screens PASS; these exercise the shared dialog, not every hosted flow.
   Live TEST coach Sent workouts read 200, zero hosted writes/identity changes.
