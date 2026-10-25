@@ -95,9 +95,6 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   if (["reps", "contacts", "steps", "swings"].includes(explicitUnit) && rx.duration_seconds == null && (rx.slot !== "lift" && rx.slot !== "supplemental" || timedMobilityMeasure(slug))) {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "reps", label: explicitUnit === "contacts" ? "Contacts" : explicitUnit === "steps" ? "Steps" : explicitUnit === "swings" ? "Swings" : "Reps", prefill: rx.reps ?? rx.total_reps }] };
   }
-  if (rx.slot === 'lift' || rx.slot === 'supplemental') {
-    if (['reps','contacts','steps','swings'].includes(explicitUnit) && rx.duration_seconds == null && timedMobilityMeasure(slug)) return { rows:Math.max(1,rx.sets ?? 1),fields:[{key:'reps',label:'Reps',prefill:rx.reps}] };
-  }
   if (timedMobilityMeasure(slug) && !/throw|pitch|sprint|sled/.test(slug)) {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: "Seconds", unit: "s", prefill: rx.duration_seconds ?? ((rx.dosage_unit ?? "").toLowerCase() === "seconds" ? rx.reps : null) }] };
   }
