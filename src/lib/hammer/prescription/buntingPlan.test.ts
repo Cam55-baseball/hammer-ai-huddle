@@ -33,6 +33,11 @@ describe('bounded bunting in actual hitting slots',()=>{
   expect(applyBuntingPlan([{...block,drills:block.drills.map(d=>({...d,prescriptionOrigin:'owner'}))}],facts,options)[0].drills).toEqual(block.drills.map(d=>({...d,prescriptionOrigin:'owner'})));
   expect(applyBuntingPlan([block],facts,{...options,catalog:catalog.map(c=>({...c,visible_to:['other']})),userId:'self'})).toEqual([block]);
  });
+ it('matches Vault common field/ball labels without borrowing opposite-sport ball gear',()=>{
+  const rows=catalog.map(c=>({...c,equipment_requirements:['gamer_bat','open_field'],equipment_alternatives:[['baseballs']]}));
+  expect(applyBuntingPlan([block],facts,{...options,catalog:rows})[0].drills.some(d=>d.bunt)).toBe(true);
+  expect(applyBuntingPlan([block],facts,{...options,catalog:rows,owned:['bat','softballs','field']})).toEqual([block]);
+ });
  for(const sport of ['baseball','softball'] as const)for(const tier of ['5tool','golden2way'])for(const bats of ['R','L','S'] as const)it(`actual builder eight weeks: ${sport}/${tier}/${bats}`,()=>{
   const vars=Object.entries({sport_primary:sport,position_primary:'SS',bats_hand:bats,lifecycle_band:'adult',season_phase:'off',lifting_age_years:2,weekly_availability_days:6,injury_history:[],equipment_effective:['bat','ball','field','tee','glove']}).map(([key,value])=>({key,value,missing:false,confidence:'high'}) as ContextVariable);
   const ctx={variables:vars,missing:[],missingCount:0,isLoading:false,envelope:null,get:(key:string)=>vars.find(v=>v.key===key)} as HammerAthleteContext;

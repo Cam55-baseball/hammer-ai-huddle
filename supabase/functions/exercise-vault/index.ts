@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
       // Brand-new exercises enter the planner's catalog so the next plan build
       // can prescribe them. The slug is new, so no plan built today references
       // it — today's plans are never changed.
-      if (draft.is_new) {
+      if (draft.is_new || livePayload.measure_type === 'bunt_attempts') {
         const p = (draft.payload ?? {}) as Record<string, unknown>;
         const sports = Array.isArray(p.sports) ? (p.sports as string[]) : [];
         const equipment = (Array.isArray(p.equipment) ? (p.equipment as string[]) : []).filter((x) => x && x !== "none");
