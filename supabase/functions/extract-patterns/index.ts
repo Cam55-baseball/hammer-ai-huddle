@@ -2,6 +2,7 @@
 // Schedule: daily at 04:53 UTC. Stores zero user_ids.
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { systemAccountIds } from "../_shared/systemAccounts.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -70,9 +71,13 @@ serve(async (req) => {
     type Bucket = { pattern_type: string; feature_vector: any; outcome_state: string; count: number; transitions: number[] };
     const buckets = new Map<string, Bucket>();
 
+    // Parked/system accounts never feed the pattern library (global TEST cleanup law).
+    const system = await systemAccountIds(supabase);
+    const activeSnaps = (snaps ?? []).filter((s: any) => !system.has(String(s.user_id)));
+
     // Build per-user time-ordered series for outcome scoring
     const byUser = new Map<string, any[]>();
-    for (const s of snaps ?? []) {
+    for (const s of activeSnaps) {
       if (!byUser.has(s.user_id)) byUser.set(s.user_id, []);
       byUser.get(s.user_id)!.push(s);
     }

@@ -205,6 +205,7 @@ Deno.serve(async (req) => {
   for (let from = 0; players.length < limit; from += 1000) {
     const { data, error } = await admin.from("profiles").select("id, timezone")
       .not("hammers_today_started_at", "is", null).is("account_paused_at", null)
+      .eq("is_system_account", false).is("suspended_at", null)
       .order("id").range(from, from + 999);
     if (error) return json({ error: error.message }, 500);
     players.push(...((data ?? []) as any[]));

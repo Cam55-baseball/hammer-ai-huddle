@@ -7,6 +7,7 @@
 // Runs under service role via pg_cron http_post; no user JWT needed.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { systemAccountIds } from "../_shared/systemAccounts.ts";
 
 const DECAY_PCT_PER_WEEK = 5;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -37,6 +38,9 @@ Deno.serve(async (req) => {
       .select("user_id, situation_id, mastery_score, last_seen_at");
     if (pErr) throw pErr;
 
+    // Parked/system accounts never get new mastery rows (global TEST cleanup law).
+    const system = await systemAccountIds(supabase);
+
     // user_id -> situation_id -> { mastery, lastSeen }
     const perUser = new Map<string, Map<string, { s: number; last: string | null }>>();
     (progress ?? []).forEach((p) => {
@@ -52,6 +56,7 @@ Deno.serve(async (req) => {
       updated_at: string;
     }[] = [];
     for (const [user_id, sitMap] of perUser.entries()) {
+      if (system.has(user_id)) continue;
       for (const [concept_id, mappings] of byConcept.entries()) {
         let num = 0; let den = 0; let lastMs = 0;
         for (const m of mappings) {
