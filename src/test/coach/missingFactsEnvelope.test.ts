@@ -42,12 +42,14 @@ describe("real coach loader preserves missing facts as warnings", () => {
   it("a missing October 25 check-in permits the warning decision, not a readiness claim", async () => {
     const result = await loadPrescriptionEnvelope(database({ units_cap: 100, units_spent: 2 }), "player", "2026-10-25", "lift", [], false);
     expect(result.allowed).toBe(true);
+    if (!("warnings" in result) || !("cnsResult" in result)) throw new Error("Missing facts must return an overridable envelope");
     expect(result.warnings).toContainEqual(expect.objectContaining({ code: "missing_facts", date: "2026-10-25", requires_reason: false }));
     expect(result.cnsResult).toBe(2);
   });
   it("a missing workload limit permits acknowledgement without inventing a ledger total", async () => {
     const result = await loadPrescriptionEnvelope(database(null), "player", "2026-10-25", "lift", [], false);
     expect(result.allowed).toBe(true);
+    if (!("warnings" in result) || !("cnsResult" in result)) throw new Error("Missing workload must return an overridable envelope");
     expect(result.warnings?.filter(w => w.code === "missing_facts")).toHaveLength(2);
     expect(result.cnsResult).toBeNull();
     expect(result.warnings?.some(w => w.code === "workload_cap")).toBe(false);
