@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { defineTool, type ToolContext } from "@lovable.dev/mcp-js";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 function supabaseForUser(ctx: ToolContext) {
   const url = process.env.SUPABASE_URL!;
