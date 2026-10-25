@@ -1,6 +1,6 @@
 # Hammers Today — final consolidated publish checklist
 
-Updated October 24, 2026, owner closeout decisions at 23:55 UTC. **Ready to publish: NO.** Publishing waits until coach prescriptions are fully finished. Coach safety/data landing and affected-player/coach/org proofs remain incomplete, alongside the five human checks and global TEST cleanup below. **Persona restoration is CLOSED by owner decision:** keep all three exactly as they are; no restoration is required. This current decision supersedes historical restoration blockers below.
+Updated October 25, 2026, 03:45 UTC run. **Ready to publish: NO.** Publishing waits until coach prescriptions are fully finished. The positive send→choice→log→readback proof remains open (no TEST player has a real skill card with workload headroom today — see the Oct 25 section), alongside the nightly re-check, the five human checks and global TEST cleanup below. **Persona restoration is CLOSED by owner decision:** keep all three exactly as they are; no restoration is required. This current decision supersedes historical restoration blockers below.
 
 ## Final batch result
 
