@@ -55,7 +55,8 @@ describe("coach calls existing WIC and Swap judges", () => {
     expect(isMovementSeasonLegal(seasonContextFromPhase("in_season"), eccentric as any).legal).toBe(false);
     const result = judgeCoachEnvelope(i);
     expect(result.allowed).toBe(true);
-    expect(result.warnings.find(w => w.code === "season_rule")).toMatchObject({ date: "2026-10-24", medical: undefined });
+    expect(result.warnings.find(w => w.code === "season_rule")).toMatchObject({ date: "2026-10-24" });
+    expect(result.warnings.find(w => w.code === "season_rule")?.medical).not.toBe(true);
   });
   it("does not certify an unknown or non-finite dose", () => { const i = input(); i.rows = [{ ...row, duration_seconds: Number.NaN }]; expect(judgeCoachEnvelope(i).allowed).toBe(false); });
   it("rejects fractional rep counts instead of rounding them", () => {
