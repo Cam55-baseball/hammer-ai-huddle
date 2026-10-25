@@ -4349,3 +4349,10 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - [ ] Certification (b): verify/add parked+system exclusion in every stat, ranking, list, search, coach/org/scout reader and nightly job.
 - [ ] Certification (c): fixed-ID no-new-rows check after next scheduled runs.
 - [ ] Coach prescriptions finish: arm/throw + skill-dose safety via existing judges; same-category skill-block replacement via block-swap path; own-item certification; positive player/coach/org/team send→choice→focus→readback proofs.
+
+## Run 2026-10-25 01:02 UTC — exclusion certification (b) progress + coach arm safety
+- [x] Coach arm/throw + ramp safety: checkCoachArmLoad uses the existing arm-ledger budgets, Pitch Smart daily max, weekly budget and Ramp Law build ladder; shared adapter moved to _shared (client re-exports, one source); 10 tests.
+- [x] Certification (b) first pass: shared systemAccounts helper; 8 jobs patched (nightly-hie, hie-refresh-worker, adaptive-phases-shadow, tcs-shadow-run, iq-decay, extract-patterns, wk-daily-plan-job, generate-follower-reports); search-players + profiles_public view + Rankings + coach roster exclude parked/system; guard test added; 10 functions redeployed.
+- [ ] Certification (b) remainder: foundation ops-metric jobs, remaining client ID-level lists, unverified RPC bodies, historical aggregate remediation decision.
+- [ ] Certification (c): fixed-ID no-new-rows check after next scheduled runs.
+- [ ] Coach finish: skill-block replacement via block-swap path; own-item certification; positive live role proofs.

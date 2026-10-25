@@ -1,0 +1,14 @@
+{
+  "run": "2026-10-25T01:02Z",
+  "certification_b_progress": {
+    "shared_helper": "supabase/functions/_shared/systemAccounts.ts",
+    "jobs_patched": ["nightly-hie-process", "hie-refresh-worker", "adaptive-phases-shadow", "tcs-shadow-run", "iq-decay", "extract-patterns", "wk-daily-plan-job", "generate-follower-reports"],
+    "readers_patched": ["search-players", "profiles_public view (migration 0114)", "Rankings.tsx", "useCoachRoster.ts"],
+    "already_excluding": ["nightly-mpi-process (admin_ranking_excluded)", "CoachSearchConnect", "useStandardMatchPreview"],
+    "still_open": ["foundation health/alert/ops metrics jobs", "useCoachPlayerPool/TeamRosterView/useTeamStats and other client lists (profiles_public now hides names; ID-level filtering partial)", "unverified RPC bodies (coach_athlete_*, org_*, search_athletes_to_connect, team_discipline_summary)", "historical aggregates already computed"]
+  },
+  "coach_arm_safety": "checkCoachArmLoad: armBudget+ledgerDay+throwUnits+activeRamps via shared armLedgerEntry; 10 tests",
+  "suite": {"files": 530, "tests": 4173, "failed": 0},
+  "functions_redeployed": 10,
+  "migration": "0114_profiles_public_exclude_system_accounts"
+}
