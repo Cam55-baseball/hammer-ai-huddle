@@ -15,7 +15,7 @@ data-integrity protections remain fail-closed; this is not the requested
 
 - Current app suite: **532 files / 4,228 tests PASS**, four bounded groups;
   the interrupted fourth group was rerun to completion. Coach tests: 164 PASS.
-  Final preview status is recorded after the documentation edits.
+  Preview build: OK at 15:11:40 UTC after the correction and documentation edits.
 - October 25 correction: measured daily workload/CNS, exposure-governor dose
   trims, lifting dose-range and missing-equipment findings warn through the
   existing dialog. Keys include exact date, recipient and numeric rule text.
