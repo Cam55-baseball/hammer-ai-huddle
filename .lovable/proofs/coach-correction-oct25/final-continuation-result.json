@@ -28,8 +28,8 @@
     "page_errors": [],
     "vite_error_overlay": 0,
     "authenticated_flow_verified": false,
-    "fresh_production_build_verified": false,
-    "reason": "Observability build logs unavailable; previous compilation result retained."
+    "fresh_harness_build_verified": true,
+    "build_log": "build 2026-10-25T15:33:05Z: build OK"
   },
   "hosted_positive_choice_focus_all_surface_proof": false,
   "global_test_cleanup": "prior YES certification retained; not rescanned this run",

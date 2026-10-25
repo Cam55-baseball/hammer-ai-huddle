@@ -21,8 +21,8 @@ bounded groups. Combined workload/equipment Okay/Cancel proof passed again at
 390×844, fixture-only. Read-only hosted aggregates found zero October 25 hitting
 rows and zero saved snapshots for system/suspended/paused accounts; no source
 was fabricated. Row 3 positive choice → focus → all-surface readback remains
-UNVERIFIED. Public preview startup passed; fresh production build logs were
-unavailable. No hosted writes, migrations, redeploys, publish, cron or iOS changes.
+UNVERIFIED. Public preview startup passed; fresh harness preview build OK at
+15:33:05 UTC. No hosted writes, migrations, redeploys, publish, cron or iOS changes.
 
 October 25 14:46 correction: measured workload-cap, lifting dose-range and
 missing-equipment warnings share the exact recipient/date/rule acknowledgement

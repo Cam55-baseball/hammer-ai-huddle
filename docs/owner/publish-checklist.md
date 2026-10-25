@@ -15,9 +15,8 @@ data-integrity protections remain fail-closed; this is not the requested
 
 - Current app suite: **532 files / 4,228 tests PASS**, four bounded groups;
   all four groups rerun to completion in this continuation (1,176 / 995 /
-  1,073 / 984 assertions). Current source is unchanged. Preview compilation:
-  retained OK at 15:11:40 UTC; observability build logs are unavailable this run,
-  so a fresh production build is not claimed. Running preview `/auth`: HTTP 200,
+  1,073 / 984 assertions). Current app source is unchanged. Fresh harness preview
+  compilation: **build OK at 15:33:05 UTC**. Running preview `/auth`: HTTP 200,
   nonempty page, zero page errors and no Vite error overlay. This public startup
   check is not an authenticated prescription-flow proof.
 - October 25 correction: measured daily workload/CNS, exposure-governor dose
