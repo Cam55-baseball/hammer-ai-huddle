@@ -88,10 +88,11 @@ describe("own-item certification wiring", () => {
     expect(edge.indexOf("certifyCoachOwnItems(")).toBeLessThan(edge.indexOf("coachRxToWkRows({"));
   });
 
-  it("the envelope names the own-item workload boundary honestly", () => {
-    const envelope = read("supabase/functions/_shared/coach/loadPrescriptionEnvelope.ts");
-    expect(envelope).toContain("coach-written items have no reviewed workload");
-    expect(envelope).toContain("its workload isn't declared in Exercise Vault");
+  it("certifying own gear and dose never fabricates a reviewed CNS value", () => {
+    const item = certifyCoachOwnItem({ name: "Coach drill", dosage_unit: "reps", reps: 10, sets: 2, gear: "bands" });
+    expect(item.certified).toBe(true);
+    expect(item).not.toHaveProperty("cns_cost");
+    expect(item).not.toHaveProperty("workload");
   });
 
   it("certification never prices workload (no invented training logic)", () => {

@@ -4,44 +4,44 @@
   "changes": {
     "missing_check_in": "warning; no readiness value invented",
     "missing_workload_limit": "warning; null CNS result preserves existing ledger",
-    "coach_only_in_season_eccentric": "existing season finding becomes warning; generator unchanged"
+    "coach_only_in_season_eccentric": "existing season finding becomes warning; generator unchanged",
+    "training_experience": "warning; classifier unknown, not fabricated beginner",
+    "exercise_cns_price": "warning; unknown cns_result preserves ledger"
   },
   "deployment": {
     "function": "coach-rx-safety",
     "status": "deployed",
-    "missing_fact_persistence_migration": "0121 applied"
+    "missing_fact_persistence_migration": "0121 applied",
+    "source_sha256": "cba4ee9389f2488003d6d1a1ebb8ab844aa0a645038624ea2d5afe63ef737efc"
   },
   "tests": {
     "bounded_groups": [
       {
         "files": 134,
-        "tests": 1241
+        "tests": 1279
+      },
+      {
+        "files": 134,
+        "tests": 1128
       },
       {
         "files": 133,
-        "tests": 1065
+        "tests": 1066
       },
       {
         "files": 133,
-        "tests": 996
-      },
-      {
-        "files": 133,
-        "tests": 1022
+        "tests": 856
       }
     ],
-    "additional_new_loader_file": {
-      "files": 1,
-      "tests": 2
-    },
     "total_files": 534,
-    "total_tests": 4326,
-    "focused_final_rerun": 116,
+    "total_tests": 4329,
+    "initial_failure": "obsolete own-item source-text hard-block assertion",
+    "resolution": "behavioral test verifies certification does not fabricate CNS; entire failed 134-file group rerun PASS",
     "status": "passed"
   },
   "preview": {
-    "status": "build OK",
-    "checked_log_entry": "2026-10-25T18:23:31Z"
+    "status": "build OK; public startup HTTP 200, nonempty, 0 page errors, 0 Vite overlays",
+    "latest_observed_compilation": "2026-10-25T18:27:31Z"
   },
   "live_proof": {
     "status": "UNVERIFIED",
@@ -56,15 +56,16 @@
     "focus_log": false,
     "all_surface_readback": false,
     "missing_check_in_live_warning": "not exercised; loader/action tests only",
-    "swap_test_access": "paused accounts remained gated"
+    "swap_test_access": "paused accounts remained gated",
+    "continuation_inspection": "college TEST dashboard re-opened 390x844; no hitting card; Changes cannot be saved right now message"
   },
   "remaining_scope_gaps": [
-    "unreadable player/profile/settings and age/training experience still refused",
-    "saved-phase/revision and undeclared workload still refused",
-    "positive hitting replacement/focus/reload/all-surface proof not performed"
+    "positive hitting replacement/focus/reload/all-surface proof unavailable through existing Sunday settings",
+    "unknown legal age and player/access state still refuse",
+    "saved-phase/revision and required contacts/count/distance integrity still refuse"
   ],
   "cleanup": {
-    "new_hosted_test_work_rows": 0,
+    "new_hosted_test_work_rows": "No explicit schedule, prescription or log writes; read-only app mounts may run existing verify_saved behavior, not audited as zero generator writes",
     "restoration": "none required; no schedules/snapshots/prescriptions/logs changed",
     "global_certification": "prior YES retained, no new scan"
   },
