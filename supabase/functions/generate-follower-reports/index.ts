@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
 import { chatCompletion } from '../_shared/googleAi.ts';
+import { systemAccountIds } from '../_shared/systemAccounts.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -68,6 +69,11 @@ async function getActiveFollowers(supabase: any): Promise<FollowerInfo[]> {
     .select('scout_id, player_id, status')
     .eq('status', 'accepted');
   if (!follows?.length) return [];
+
+  // Parked/system accounts never get reports generated (global TEST cleanup law).
+  const system = await systemAccountIds(supabase);
+  const activeFollows = follows.filter((f: any) => !system.has(String(f.player_id)) && !system.has(String(f.scout_id)));
+  if (!activeFollows.length) return [];
 
   const followerIds = [...new Set(follows.map((f: any) => f.scout_id as string))];
   const { data: roles } = await supabase
