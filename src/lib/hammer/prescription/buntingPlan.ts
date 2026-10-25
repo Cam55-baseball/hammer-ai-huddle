@@ -24,7 +24,8 @@ export function applyBuntingPlan(blocks:readonly PrescribedBlock[], facts:Buntin
    const identity=buntIdentity(row.slug);
    return identity?.side===side&&program.typesFor(side).includes(identity.type)&&row.is_active&&row.dosage_unit==='attempts'&&
     (row.sport_scope===facts.sport||row.sport_scope==='both')&&(!row.visible_to?.length||Boolean(options.userId&&row.visible_to.includes(options.userId)))&&
-    options.age!==null&&row.min_age_years!==null&&options.age>=row.min_age_years&&row.season_eligibility?.includes(options.phase)&&ownsAllGear(row,owned);
+    options.age!==null&&row.min_age_years!==null&&options.age>=row.min_age_years&&
+    (row.season_eligibility?.includes(options.phase)||options.phase==='off_season'&&['os_q1','os_q2','os_q3','os_q4'].every(p=>row.season_eligibility?.includes(p)))&&ownsAllGear(row,owned);
   }).sort((a,b)=>BUNT_TYPES.indexOf(buntIdentity(a.slug)?.type??'hit')-BUNT_TYPES.indexOf(buntIdentity(b.slug)?.type??'hit'));
   if(!eligible.length)return block;
   const index=((options.weekIndex*program.scheduled.length+program.scheduled.indexOf(options.weekday))%eligible.length+eligible.length)%eligible.length;

@@ -38,6 +38,11 @@ describe('bounded bunting in actual hitting slots',()=>{
   expect(applyBuntingPlan([block],facts,{...options,catalog:rows})[0].drills.some(d=>d.bunt)).toBe(true);
   expect(applyBuntingPlan([block],facts,{...options,catalog:rows,owned:['bat','softballs','field']})).toEqual([block]);
  });
+ it('accepts whole off-season only when all four Vault quarters are allowed',()=>{
+  const rows=catalog.map(c=>({...c,season_eligibility:['os_q1','os_q2','os_q3','os_q4']}));
+  expect(applyBuntingPlan([block],facts,{...options,catalog:rows})[0].drills.some(d=>d.bunt)).toBe(true);
+  expect(applyBuntingPlan([block],facts,{...options,catalog:rows.map(c=>({...c,season_eligibility:['os_q1']}))})).toEqual([block]);
+ });
  for(const sport of ['baseball','softball'] as const)for(const tier of ['5tool','golden2way'])for(const bats of ['R','L','S'] as const)for(const cohort of ['baseline','under300','powerGoal','speedy','lacksPower'] as const)it(`actual builder eight weeks: ${sport}/${tier}/${bats}/${cohort}`,()=>{
   const vars=Object.entries({sport_primary:sport,position_primary:'SS',bats_hand:bats,lifecycle_band:'adult',season_phase:'off',lifting_age_years:2,weekly_availability_days:6,injury_history:[],equipment_effective:['bat','ball','field','tee','glove']}).map(([key,value])=>({key,value,missing:false,confidence:'high'}) as ContextVariable);
   const ctx={variables:vars,missing:[],missingCount:0,isLoading:false,envelope:null,get:(key:string)=>vars.find(v=>v.key===key)} as HammerAthleteContext;
