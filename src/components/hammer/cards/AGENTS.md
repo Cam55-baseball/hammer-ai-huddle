@@ -1,4 +1,5 @@
 # Hammers Today cards
+- Work timers share ExerciseTimer; pause/reset/restart do not author results, and stop/completion reports active elapsed hundredths through existing logs. Why: targets and paused time are not performed work.
 - Run rest uses `_shared/wic/runRest.ts`; PAP keeps lift-to-action rest separate from after-sprint rest, and conditioning counters accept declared base-route reps only, sharing session state through `ConditioningRestProvider` across log portals. Why: changing exercise pop-ups must not reset bases or rest, change lifting or grant new running work.
 
 - Today card grouping is a presentation-only partition preserving original drill objects and completion keys; popup details use a shared context. Why: grouping must not author training or duplicate logging.

@@ -725,7 +725,8 @@ export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
       equipmentFor(d).every(e => available.has(e)) &&
       !(d.regions ?? []).some(r => (input.injuryRegions ?? []).includes(r)))
       .slice(0, 3).map(d => toBuilt(d, input.lifecycle));
-    return { context: input.context, drills, estMinutes: drills.length ? 5 : 0, singleLegShare: null,
+    const ordered = input.orderByStage === false ? drills : sortByWarmupStage(drills, d => d.slug, d => d.role);
+    return { context: input.context, drills: ordered, estMinutes: drills.length ? 5 : 0, singleLegShare: null,
       diagnostics: [{ code: "twitch_suppressed", detail: "Full rest day — gentle recovery only; training warm-up withheld." }] };
   }
   const injuryRegions = (input.injuryRegions ?? []).map((r) => r.toLowerCase());

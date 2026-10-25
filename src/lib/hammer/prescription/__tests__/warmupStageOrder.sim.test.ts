@@ -32,7 +32,7 @@ describe("warm-up stage order — 8-week simulation", () => {
         expect([...after.drills.map((d) => d.slug)].sort(), id).toEqual([...before.drills.map((d) => d.slug)].sort());
         expect(after.drills.map((d) => d.dosage).sort(), id).toEqual(before.drills.map((d) => d.dosage).sort());
         // tissue prep first, rolling then rhythm
-        if (after.drills[0]?.slug !== "wu_tissue_prep_roll_and_rhythm" || after.drills[1]?.slug !== "wu_tissue_prep_rhythmic_shake") breaks.push(`${id}: tissue prep not first`);
+        if (context !== "recovery_day" && (after.drills[0]?.slug !== "wu_tissue_prep_roll_and_rhythm" || after.drills[1]?.slug !== "wu_tissue_prep_rhythmic_shake")) breaks.push(`${id}: tissue prep not first`);
         const stages = after.drills.map((d) => stageFor(d.slug, d.role)!);
         for (let i = 1; i < stages.length; i++) if (stages[i] < stages[i - 1]) breaks.push(`${id}: stage ${stages[i]} after ${stages[i - 1]}`);
         // build-ups before any max-intent effort
