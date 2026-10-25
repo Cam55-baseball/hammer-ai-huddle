@@ -16,15 +16,16 @@ live data landing in every surface; unverified cells remain unverified.
 
 ## Surfaces key
 
-October 25 final run: 534 app test files / 4,326 tests passed (four bounded
-full-suite groups plus two new real-loader tests). Missing-check-in and missing
+October 25 final run: 534 app test files / 4,329 tests passed (four bounded
+full-suite groups, the corrected 134-file group rerun to completion). Missing-check-in and missing
 workload-limit findings use the existing recorded Okay/Cancel path. Coach-only
 in-season eccentric work warns; the Hammers generator season judge stays closed.
 No hosted TEST work was added. Phone inspection of the unpaused college player
 found no Today hitting card; Available Days belongs to the separate six-week
 workout and does not move Today’s hitting weekday. Positive replacement → focus
-→ reload → all-surface readback remains UNVERIFIED. Other unreadable player,
-experience, saved-phase and catalog-workload refusals remain in the loader;
+→ reload → all-surface readback remains UNVERIFIED. Missing training experience and CNS workload values now warn without inventing
+a beginner classification or overwriting an unknown ledger total. Other player,
+saved-phase and runnable catalog-measure refusals remain in the loader;
 missing-fact warning coverage is not universal. One result file records this run.
 
 - **General** = The General tabs (Today / Performance / Growth), `src/pages/ProgressDashboard.tsx`
@@ -75,8 +76,8 @@ age/season, workload, dose-range, equipment and recovery findings now warn.
 Under-18 pain/arm/age warnings require a 10-character reason and parent notice.
 Missing check-in and workload limits also warn without fabricated values; an
 unknown CNS ledger total is not overwritten. Coach-only eccentric season warnings
-leave the Hammers generator prohibition unchanged. Remaining player-record,
-training-experience, saved-phase and declared-workload failures still refuse;
+leave the Hammers generator prohibition unchanged. Remaining player-record, unknown legal age, saved-phase and required
+contact/count/distance declaration failures still refuse;
 access/legal/category and unrunnable entries remain hard gates. Prior hosted
 Cancel/Okay and parent-notice evidence is retained, not repeated this run.
 Positive replacement/focus/all-surface readback remains OPEN. Monday’s no-warning
