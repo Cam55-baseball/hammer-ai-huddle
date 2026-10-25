@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent, act, within } from "@testing-library/react";
 vi.mock("@/hooks/useExerciseLog", () => ({ useLatestExerciseLog: () => ({ data: null }), useSaveExerciseLog: () => ({ mutateAsync: vi.fn(), isPending: false }) }));
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: null }) }));
 vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: vi.fn() }) }));
@@ -16,9 +16,12 @@ describe("speed card rep timer", () => {
   it("sits with the rep rows and stopping fills the next rep's time", () => {
     vi.useFakeTimers();
     render(<InlinePrescriptionLog rx={{ id: "t1", plan_date: "2026-10-09", movement_slug: "sp_fly_20", movement_name: "Fly 20", slot: "speed", sets: 3, reps: 1, distance_feet: 60 } as any} />);
-    fireEvent.click(screen.getByRole("button", { name: "Start timer" }));
+    const start = screen.getByRole("button", { name: "Start timer" });
+    const workTimer = start.parentElement;
+    if (!workTimer) throw new Error("Work timer controls missing");
+    fireEvent.click(start);
     act(() => vi.advanceTimersByTime(3200));
-    fireEvent.click(screen.getByRole("button", { name: "Stop timer" }));
+    fireEvent.click(within(workTimer).getByRole("button", { name: "Stop timer" }));
     // ss.hh entry filled by the stopwatch
     expect((screen.getByLabelText("Time 1 seconds") as HTMLInputElement).value).toBe("3");
     expect((screen.getByLabelText("Time 1 hundredths") as HTMLInputElement).value).toBe("20");
