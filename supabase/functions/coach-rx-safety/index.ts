@@ -451,7 +451,7 @@ Deno.serve(async (req) => {
       // drills are already completed, marks it "Replaced by coach workout —
       // not missed" and appends the coach block in the same transaction.
       facts.hasCard = facts.hasCard || !!block;
-      const result = choice === "use_instead" ? checkPrescriptionReplace(factsWithoutAdvisories(facts)) : checkPrescriptionAlongside(factsWithoutAdvisories(facts));
+      const result = choice === "use_instead" ? checkPrescriptionReplace(factsWithoutWarnings(facts)) : checkPrescriptionAlongside(factsWithoutWarnings(facts));
       if (result.verdict !== "allow") return json({ applied: false, verdict: result.verdict, reasons: result.reasons, safeOption: result.safeOption });
       const { data: senderProfile, error: senderError } = await admin.from("profiles").select("full_name").eq("id", rx.sender_id).maybeSingle();
       if (senderError) throw senderError;
@@ -478,8 +478,9 @@ Deno.serve(async (req) => {
       }
       const envelope = await loadPrescriptionEnvelope(admin, me, date, category, rows, choice === "use_instead");
       if (!envelope.allowed) return json({ applied: false, verdict: "blocked", reasons: envelope.reasons, safeOption: envelope.safeOption });
-      const warnings = [...factGuidelineWarnings(facts), ...("warnings" in envelope ? envelope.warnings ?? [] : [])].map(w => ({ ...w, player_id: me }));
-      if (warnings.length && !warningsAcknowledged(warnings, acknowledgement)) return json({ applied: false, warning_required: true, warnings });
+      const warnings = [...collectWarnings(facts, me), ...("warnings" in envelope ? (envelope.warnings ?? []).map(w => ({ ...w, player_id: me })) : [])];
+      const chooseAckError = ackError(warnings);
+      if (chooseAckError) return chooseAckError;
       const overrides = [...(rx.safety_result?.overrides ?? []), ...(warnings.length ? [overrideRecord(warnings, choice)] : [])];
       rows = envelope.rows;
       const because = overrides.flatMap((o: any) => (o.warnings ?? []).map((w: any) => `${w.date}: ${w.rule}`)).join("; ");
