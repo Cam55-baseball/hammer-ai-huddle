@@ -5,7 +5,7 @@
  * Uses wall-clock deltas so a backgrounded phone stays accurate.
  */
 import { useEffect, useRef, useState } from "react";
-import { Play, RotateCcw, Square, Timer } from "lucide-react";
+import { Pause, Play, RotateCcw, Square, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export { sprintRestSeconds } from "../../../../supabase/functions/_shared/wic/runRest";
@@ -53,6 +53,7 @@ export function RestTimer({ seconds: base, maxSeconds, label = "Rest", initialSt
   const seconds = typeof base === "number" ? base + extra : base;
   const canAdd = typeof base === "number" && maxSeconds != null && base + extra + 30 <= maxSeconds;
   const [startedAt, setStartedAt] = useState<number | null>(initialStartedAt);
+  const [pausedSeconds, setPausedSeconds] = useState(0);
   const [now, setNow] = useState(Date.now());
   const buzzed = useRef(false);
 
@@ -62,11 +63,11 @@ export function RestTimer({ seconds: base, maxSeconds, label = "Rest", initialSt
     return () => clearInterval(id);
   }, [startedAt]);
 
-  const elapsed = startedAt == null ? 0 : (now - startedAt) / 1000;
+  const elapsed = pausedSeconds + (startedAt == null ? 0 : (now - startedAt) / 1000);
   const countdown = typeof seconds === "number" && seconds > 0;
   const target = typeof seconds === "number" ? seconds : 0;
   const left = countdown ? target - elapsed : 0;
-  const finished = countdown && startedAt != null && left <= 0;
+  const finished = countdown && left <= 0;
 
   useEffect(() => {
     if (finished && !buzzed.current) {
@@ -75,8 +76,9 @@ export function RestTimer({ seconds: base, maxSeconds, label = "Rest", initialSt
     }
   }, [finished]);
 
-  const start = () => { buzzed.current = false; setNow(Date.now()); setStartedAt(Date.now()); };
-  const stop = () => setStartedAt(null);
+  const start = (restart = false) => { buzzed.current = false; if (restart) setPausedSeconds(0); setNow(Date.now()); setStartedAt(Date.now()); };
+  const pause = () => { setPausedSeconds(elapsed); setStartedAt(null); };
+  const stop = () => { setStartedAt(null); setPausedSeconds(0); };
 
   return (
     <div data-rest-timer className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/40 px-2 py-1.5 text-xs">
@@ -85,22 +87,23 @@ export function RestTimer({ seconds: base, maxSeconds, label = "Rest", initialSt
         {countdown ? `${label} time (${fmtClock(target)}):` : `${label} so far:`}
       </span>
       <span className="font-mono font-semibold text-foreground" aria-live="polite">
-        {finished ? "Go — rest done" : fmtClock(countdown ? (startedAt == null ? target : left) : elapsed)}
+        {finished ? "Go — rest done" : fmtClock(countdown ? left : elapsed)}
       </span>
       {!managed && <div className="ml-auto flex gap-1">
         {canAdd && (
           <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() => setExtra((e) => e + 30)} aria-label="Add 30 seconds">+30 s</Button>
         )}
         {startedAt == null ? (
-          <Button size="sm" variant="outline" className="h-7 px-2" onClick={start} aria-label={`Start ${label.toLowerCase()} timer`}>
+          <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => start()} aria-label={`${pausedSeconds > 0 ? "Resume" : "Start"} ${label.toLowerCase()} timer`} title={`${pausedSeconds > 0 ? "Resume" : "Start"} ${label.toLowerCase()} timer`}>
             <Play className="h-3 w-3" />
           </Button>
         ) : (
           <>
-            <Button size="sm" variant="outline" className="h-7 px-2" onClick={start} aria-label="Restart timer"><RotateCcw className="h-3 w-3" /></Button>
-            <Button size="sm" variant="outline" className="h-7 px-2" onClick={stop} aria-label="Stop timer"><Square className="h-3 w-3" /></Button>
+            <Button size="sm" variant="outline" className="h-7 px-2" onClick={pause} aria-label="Pause rest timer" title="Pause rest timer"><Pause className="h-3 w-3" /></Button>
           </>
         )}
+        <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => start(true)} aria-label="Restart timer" title="Restart timer"><RotateCcw className="h-3 w-3" /></Button>
+        <Button size="sm" variant="outline" className="h-7 px-2" onClick={stop} aria-label="Stop timer" title="Stop and reset timer"><Square className="h-3 w-3" /></Button>
       </div>}
     </div>
   );
