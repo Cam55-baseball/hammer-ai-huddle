@@ -16,35 +16,16 @@ live data landing in every surface; unverified cells remain unverified.
 
 ## Surfaces key
 
-October 25 final continuation: all 532 files / 4,228 tests passed again in four
-bounded groups. Combined workload/equipment Okay/Cancel proof passed again at
-390×844, fixture-only. Read-only hosted aggregates found zero October 25 hitting
-rows and zero saved snapshots for system/suspended/paused accounts; no source
-was fabricated. Row 3 positive choice → focus → all-surface readback remains
-UNVERIFIED. Public preview startup passed; fresh harness preview build OK at
-15:33:05 UTC. No hosted writes, migrations, redeploys, publish, cron or iOS changes.
-
-October 25 14:46 correction: measured workload-cap, lifting dose-range and
-missing-equipment warnings share the exact recipient/date/rule acknowledgement
-and atomic override trail (migration 0119). Coach actions dated today and player
-activation read the same envelope; unknown future-day workload is not invented.
-Combined 390×844 Okay/Cancel proof is fixture-only. No October 25 saved hitting
-source was found for kept system TEST players, so positive hitting replacement,
-focus logging and all-surface readback remain UNVERIFIED. Critical medical,
-age/season, access and data-integrity checks remain fail-closed. Older blocker
-wording below is historical, not a claim that equipment/caps still hard-block.
-
-October 25 05:32 final batch: full suite 532 files / 4,219 tests PASS;
-16 phone warning decisions PASS (fixture only). Live coach management reader
-returns 200; live override audit trigger enabled. No hosted override was saved:
-audit display, canonical Because readback and learning consumption remain
-UNVERIFIED. Stored behavioral input is not evidence of a learning effect.
-
-October 25 05:27 continuation: no warning-action bypass found in existing
-prescription hooks. Multiple date rules accumulate; exact calendar-date validation
-and repeated-acknowledgement refusal tested. Override event storage remains distinct
-from learning interpretation: no new dose-changing learning behavior is claimed.
-Sent workouts resolves the confirmer as the recipient or the viewing sender.
+October 25 final run: 534 app test files / 4,326 tests passed (four bounded
+full-suite groups plus two new real-loader tests). Missing-check-in and missing
+workload-limit findings use the existing recorded Okay/Cancel path. Coach-only
+in-season eccentric work warns; the Hammers generator season judge stays closed.
+No hosted TEST work was added. Phone inspection of the unpaused college player
+found no Today hitting card; Available Days belongs to the separate six-week
+workout and does not move Today’s hitting weekday. Positive replacement → focus
+→ reload → all-surface readback remains UNVERIFIED. Other unreadable player,
+experience, saved-phase and catalog-workload refusals remain in the loader;
+missing-fact warning coverage is not universal. One result file records this run.
 
 - **General** = The General tabs (Today / Performance / Growth), `src/pages/ProgressDashboard.tsx`
 - **History** = `src/pages/History.tsx` via `src/hooks/useHistoryRecords.ts`
@@ -89,17 +70,17 @@ line, so the saved block and permitted coach-plan read retain it.
 
 Learning input reaches `behavioral_events`; actual learning interpretation is
 UNVERIFIED, not claimed as an insight or training change. General/History/Vault
-keep their canonical workout-log readers, not a second override log. No health
-clearance is supplied by an acknowledgement: critical active pain/injury and
-arm-limit/ramp protections remain fail-closed in the activation envelope.
-The earlier hosted arm-rest send acknowledgement with reason and parent notice
-is retained evidence, not proof of medically safe activation. Measured workload,
-dose-range, missing-equipment and schedule findings warn; unknown/invalid data,
-age/season, consent/access and same-category validation remain blocking.
-Evidence: 16 390×844 fixture decision screens plus the combined warning rerun;
-prior hosted Cancel → Okay and audit/behavioral input writes are retained.
-Positive replacement/focus/all-surface readback remains OPEN. Monday no-warning
-proof is an extra post-publish check, not a separate readiness blocker.
+keep their canonical workout-log readers, not a second override log. Pain/arm,
+age/season, workload, dose-range, equipment and recovery findings now warn.
+Under-18 pain/arm/age warnings require a 10-character reason and parent notice.
+Missing check-in and workload limits also warn without fabricated values; an
+unknown CNS ledger total is not overwritten. Coach-only eccentric season warnings
+leave the Hammers generator prohibition unchanged. Remaining player-record,
+training-experience, saved-phase and declared-workload failures still refuse;
+access/legal/category and unrunnable entries remain hard gates. Prior hosted
+Cancel/Okay and parent-notice evidence is retained, not repeated this run.
+Positive replacement/focus/all-surface readback remains OPEN. Monday’s no-warning
+check is post-publish follow-up, not a substitute for that proof.
 
 ### Owner final-batch continuation — October 24, 23:37 run 4
 
