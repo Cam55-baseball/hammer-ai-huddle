@@ -27,9 +27,14 @@ export async function runCoachWarningAction<T extends WarningActionResult>(
   confirm: (warnings: readonly CoachGuidelineWarning[]) => Promise<boolean> = confirmCoachGuidelines,
 ): Promise<T | WarningActionResult> {
   let result = await call();
+  const acknowledgedFindings = new Set<string>();
   while (result.warning_required && result.warnings?.length) {
+    const keys = warningKeys(result.warnings);
+    const fingerprint = JSON.stringify(keys);
+    if (acknowledgedFindings.has(fingerprint)) return { applied: false, error: "The warning could not be confirmed. Nothing was saved. Try again." };
     if (!await confirm(result.warnings)) return { applied: false, cancelled: true };
-    result = await call(warningKeys(result.warnings));
+    acknowledgedFindings.add(fingerprint);
+    result = await call(keys);
   }
   return result;
 }
