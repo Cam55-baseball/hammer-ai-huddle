@@ -123,6 +123,7 @@ import { usePrinciplePicks } from "@/hooks/usePrinciplePicks";
 import { principleDrillBoosts } from "@/lib/intelligence/principlePicks";
 import { useCategoryPracticeLoad } from '@/hooks/useCategoryPracticeLoad';
 import {useBuntingEvidence} from '@/hooks/useBuntingEvidence';
+import {BuntStudyVideo} from '@/components/hammer/cards/BuntStudyVideo';
 import {getV2} from '@/lib/hammer/goals/categoryGoals';
 import { RoyalTimingReminder } from "@/components/hammer/RoyalTimingReminder";
 import { DelaycamReminder } from "@/components/hammer/DelaycamReminder";
@@ -277,6 +278,7 @@ function DrillRow({
   const adjustApi = usePlanAdjustApi();
   const swapV2 = useSwapV2();
   const { user: swapUser } = useAuth();
+  const drillSport = useSportTheme().sport === 'softball' ? 'softball' : 'baseball';
   const savedBlock = useQuery({ queryKey: ["saved-block-day", swapUser?.id, planDate], enabled: swapV2.enabled && !!swapUser,
     queryFn: async () => {
       const { data, error } = await supabase.from("athlete_plan_snapshots").select("id,sport,payload").eq("user_id", swapUser?.id ?? "").eq("plan_date", planDate);
@@ -311,6 +313,7 @@ function DrillRow({
           <p className="text-muted-foreground">{item.cue}</p>
         </div>)}
         <ActivityBasics name={d.name} slug={d.slug} setup={d.setup} cue={d.cue} stopIf={d.stopIf} dosage={displayDose} repair={d.speedMix?.length ? undefined : legacyRepair(d.dosage, modality)} />
+        {d.bunt && <BuntStudyVideo bunt={d.bunt} sport={drillSport}/>}
         <LegacyDrillInlineLog
           modality={modality} name={d.name} dosage={displayDose}
           setup={d.setup} cue={d.cue} stopIf={d.stopIf}
