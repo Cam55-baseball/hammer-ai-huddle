@@ -1,0 +1,206 @@
+{
+  "steps": {
+    "signins": {
+      "democollege": true,
+      "demo16ss": true,
+      "democoach": true,
+      "demoorg": true,
+      "method": "owner-only one-time session (no reseed, no password change)"
+    },
+    "today_before": [
+      {
+        "id": "decfc33e-65d3-48cf-af1e-88264a9564bf",
+        "slot": "lift",
+        "name": "Arm-Care Band — Full Chart",
+        "status": "planned",
+        "cns": 0
+      },
+      {
+        "id": "493e0ee1-57cb-4563-80ce-c38ee7b03869",
+        "slot": "lift",
+        "name": "Med Ball Rotational Shot-Put",
+        "status": "planned",
+        "cns": 2
+      },
+      {
+        "id": "4db4a7d1-a3ae-450b-90af-842b05ab3751",
+        "slot": "lift",
+        "name": "Resist-Turning Press",
+        "status": "planned",
+        "cns": 1
+      },
+      {
+        "id": "25b38498-67bf-4e9d-bdb2-7f112aac86b5",
+        "slot": "lift",
+        "name": "Easy Flush (Bike or Walk)",
+        "status": "planned",
+        "cns": 0
+      }
+    ],
+    "snapshot_save": {
+      "status": 204,
+      "data": null
+    },
+    "checkin": "ready (8/8 sleep, 2 soreness, 2 fatigue) via the app's own event shape",
+    "connection": {
+      "reused": "existing accepted coach_player link"
+    },
+    "pre_send_check_lift": {
+      "results": [
+        {
+          "player_id": "db9cc8ef-5b00-48f1-b113-24b7790e4660",
+          "name": "Demo — College Outfielder",
+          "verdict": "allow",
+          "reasons": [],
+          "safeOption": null
+        }
+      ],
+      "refused": []
+    },
+    "use_instead_lift": {
+      "applied": false,
+      "verdict": "blocked",
+      "reasons": [
+        "Bodyweight Cossack Squat: today's recovery check allows lighter work only.",
+        "Missing required categories for template full_body_recovery: core, mobility.",
+        "Template full_body_recovery requires core.",
+        "Today's lift would break a plan rule (rest_day). Keep the saved plan and ask your coach to review it.",
+        "Lifting restart easy — nothing logged in the last 4 weeks, so today starts at the lightest legal version."
+      ],
+      "safeOption": "Safe option: save this workout for later and ask your coach to review the listed items."
+    },
+    "use_instead_lift_verdict": "blocked_honest",
+    "add_alongside_lift": {
+      "applied": false,
+      "verdict": "blocked",
+      "reasons": [
+        "This workout would pass today's saved workload limit. Ask your coach for a lighter version."
+      ],
+      "safeOption": "Safe option: save for later and finish your check-in or ask your coach to review it."
+    },
+    "add_alongside_over_budget": {
+      "applied": false,
+      "verdict": "blocked",
+      "reasons": [
+        "This workout would pass today's saved workload limit. Ask your coach for a lighter version."
+      ],
+      "safeOption": "Safe option: save for later and finish your check-in or ask your coach to review it."
+    },
+    "declined_after_block": {
+      "applied": true,
+      "inserted": 0,
+      "replaced": 0
+    },
+    "org_accept_democollege": {
+      "status": 200,
+      "data": {
+        "ok": true,
+        "status": "accepted"
+      }
+    },
+    "org_accept_demo16ss": {
+      "status": 200,
+      "data": {
+        "ok": true,
+        "status": "accepted"
+      }
+    },
+    "org_roster": [
+      {
+        "id": "8929ee58-ea2b-4ca4-9c10-c7423db20c38",
+        "user_id": "13131cc3-62f4-40fc-b9f0-a188ac93594c",
+        "role_in_org": "player",
+        "status": "active"
+      },
+      {
+        "id": "e055ccc7-f5e3-4d30-8b30-dac6cadeb7b6",
+        "user_id": "db9cc8ef-5b00-48f1-b113-24b7790e4660",
+        "role_in_org": "player",
+        "status": "active"
+      }
+    ],
+    "org_pre_send_check": {
+      "results": [
+        {
+          "player_id": "db9cc8ef-5b00-48f1-b113-24b7790e4660",
+          "name": "Demo — College Outfielder",
+          "verdict": "alongside_only",
+          "reasons": [
+            "There is no recovery card on your plan that day."
+          ],
+          "safeOption": "Safe option: add it alongside your plan."
+        },
+        {
+          "player_id": "13131cc3-62f4-40fc-b9f0-a188ac93594c",
+          "name": "Demo — HS Shortstop",
+          "verdict": "alongside_only",
+          "reasons": [
+            "There is no recovery card on your plan that day."
+          ],
+          "safeOption": "Safe option: add it alongside your plan."
+        }
+      ],
+      "refused": []
+    },
+    "org_send_player_choice": {
+      "applied": false,
+      "verdict": "blocked",
+      "reasons": [
+        "This workout would pass today's saved workload limit. Ask your coach for a lighter version."
+      ],
+      "safeOption": "Safe option: save for later and finish your check-in or ask your coach to review it."
+    },
+    "org_send_second_player": {
+      "applied": true,
+      "inserted": 0,
+      "replaced": 0
+    },
+    "org_sent_view": [
+      {
+        "title": "PROOF Org Recovery",
+        "recipient": "Demo — College Outfielder",
+        "status": "pending",
+        "completion": {
+          "done": 0,
+          "total": 0
+        }
+      },
+      {
+        "title": "PROOF Org Recovery",
+        "recipient": "Demo — HS Shortstop",
+        "status": "declined",
+        "completion": {
+          "done": 0,
+          "total": 0
+        }
+      }
+    ],
+    "player_history_readback": []
+  },
+  "cleanup": {},
+  "created": {
+    "rx": [
+      "46e48b95-e6c0-4849-b5e4-34213c1b1fd9",
+      "fc8fb989-8c5a-4add-a0da-027463583b5b",
+      "a9e6add5-9258-421c-a8d8-7a78a82869e6",
+      "0fad6ad0-f640-46fd-b272-8c41ebeb7b54",
+      "256c7f4b-87dc-47b4-9238-d8e22be819ce"
+    ],
+    "logs": [],
+    "events": [
+      "bb3a3a94-7671-4cad-bfe4-a44b156d0457",
+      "cf27dd4e-3f92-4a5c-9605-29f2e8d5eec6",
+      "47517805-f74c-44f5-a95d-36984c6d3395",
+      "8a33397b-0cc3-48f2-8538-5cc37fd8b7c4"
+    ],
+    "wkRows": [],
+    "connections": [
+      "e7d2e57a-7e4e-4dbd-9bd6-ae3d2783a2c6",
+      "dc10afa0-c8af-45bd-a474-96a6741df542"
+    ],
+    "members": [
+      "8929ee58-ea2b-4ca4-9c10-c7423db20c38",
+      "e055ccc7-f5e3-4d30-8b30-dac6cadeb7b6"
+    ]
+  }
+}
