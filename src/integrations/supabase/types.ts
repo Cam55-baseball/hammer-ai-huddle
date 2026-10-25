@@ -1286,6 +1286,24 @@ export type Database = {
         }
         Relationships: []
       }
+      _snapshot_stray_test_closeout_20261024: {
+        Row: {
+          captured_at: string
+          row_data: Json
+          source_table: string
+        }
+        Insert: {
+          captured_at?: string
+          row_data: Json
+          source_table: string
+        }
+        Update: {
+          captured_at?: string
+          row_data?: Json
+          source_table?: string
+        }
+        Relationships: []
+      }
       _snapshot_test_plan_20261007b: {
         Row: {
           adaptation: string | null

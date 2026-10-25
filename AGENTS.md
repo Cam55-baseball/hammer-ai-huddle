@@ -1,10 +1,10 @@
-- Service-role functions returning athlete data to a non-self viewer must pass `_shared/recruitingGate.ts`. Why: service role skips RLS.
+- Non-self service-role data must pass `_shared/recruitingGate.ts`; RLS is bypassed.
 - Item and block Swap saves use plan-swap and the existing wk day lock to commit saved work, log and memory together; block display reads the saved day JSON. Why: reloads must preserve the exact chosen item without partial saves.
 - Server block Swap uses packaged copies of existing sport drills and declared warm-up equipment siblings; regenerate them when source declarations change. Why: edge deployments cannot import browser project paths and must not invent a second catalog.
 - No-field acceleration mixes use the explicit speed Swap catalog and save child reps/distance/rest within the existing block item via the same day-lock transaction; fresh canonical readiness/CNS and player-confirmed space constrain selection. Why: no new save path or disguised max-velocity/tempo substitution may alter the day's dose.
 - Owner creation identity/defaults and common gear mapping live in `_shared/vault/ownerDefaults.ts`, imported by the Vault editor; unknown equipment remains visible for review. Why: automatic fields must use Swap vocabulary without silently discarding owner words or claiming safety certification.
 - `create-test-athlete` is owner-only and the only way to run the real generator as the demo test pitcher. Why: no approval-free session mint exists for other users.
-- Every measurement goes through `public.ledger_record` (source triggers + `ledger_record_tiles`); triggers swallow their own errors. Why: new measurements join baselines by declaring themselves; recording must never cost a clip.
+- Measurements use `public.ledger_record` (source triggers + tiles); trigger errors never cost a clip.
 - Read scoped AGENTS.md before edits; assessment uses canonical forms/refreshes. Practice reports share `_shared/practiceReport.ts`, never AI cache or inferred faults. Why: one source, no invented evidence.
 <!-- LOVABLE:BEGIN -->
 - Throwing uses a separate conservative overhand gate and one pose runner for both sports, never mound or AI-vision values. Why: field throws lack a windup and batting clips can mimic a throw.
@@ -58,4 +58,5 @@
 - Practice windows return counts only after canonical self/sport/module/token readback and retain readiness/setup; canonical tool records carry exact exercise/date occurrence metadata, and practice recording notifies before independent report calculation. Why: iframe messages cannot author completion and reporting delay must not strand saved exercise work.
 - Coach sends use WIC/Swap judges and day-lock freshness; results join user/date/row/slug, including coach plan through gated sender reads. Why: no spill-over, stale choices or parallel logs.
 - Coach safety shares WIC check-ins, preserves saved phase/deload and requires canonical snapshot-row coverage. Why: no omitted work or parallel phase policy.
+- Stray TEST cleanup snapshots exact identities privately; fixed-ID readback and job/list/stat exclusions certify parking, never a shrinking name query. Why: hidden flags alone cannot prove zero stray data.
 - Exact exercise measurement decisions are shared by the library, inline logger and log-sheet resolver; yard entry converts only at the display boundary, keeping canonical distance in feet. Why: ambiguous names must not diverge between logging paths or change existing distance readers.

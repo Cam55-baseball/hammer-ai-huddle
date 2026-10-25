@@ -67,6 +67,13 @@ export function judgeCoachEnvelope(input: {
       continue;
     }
     if (!channel) continue;
+    // Shared amountPerSet defaults a missing contact declaration to one.
+    // Acceptance cannot certify that fallback as the athlete's exact load.
+    if ((channel.channel === "JUMP" || channel.channel === "UB_PLYO") &&
+        (typeof fact.contacts_per_rep !== "number" || !Number.isInteger(fact.contacts_per_rep) || fact.contacts_per_rep <= 0)) {
+      reasons.push(`${row.movement_name}: its contacts per rep aren't declared in Exercise Vault. Keep your plan and save this workout for later.`);
+      continue;
+    }
     const sets = row.sets ?? 1;
     const reps = row.dosage_unit === "total_reps" ? row.total_reps / sets : row.reps;
     // amountPerSet has builder defaults. A coach acceptance must not promote

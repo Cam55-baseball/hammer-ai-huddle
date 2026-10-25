@@ -1,8 +1,16 @@
 # Hammers Today — final consolidated publish checklist
 
-Updated October 24, 2026, final batch. **Ready to publish: NO.** Coach safety/data landing and affected-player/coach/org proofs remain incomplete, alongside the five human checks and TEST restoration/cleanup gates below. This is a final honest checklist, not a claim that the requested build is finished or publication approval.
+Updated October 24, 2026, owner closeout decisions at 23:55 UTC. **Ready to publish: NO.** Publishing waits until coach prescriptions are fully finished. Coach safety/data landing and affected-player/coach/org proofs remain incomplete, alongside the five human checks and global TEST cleanup below. **Persona restoration is CLOSED by owner decision:** keep all three exactly as they are; no restoration is required. This current decision supersedes historical restoration blockers below.
 
 ## Final batch result
+
+### Owner closeout — October 24, 23:55 UTC
+
+- **Persona restoration CLOSED:** all 25 previously kept profiles, including the three personas, have an identical before/after fingerprint. No kept account was changed.
+- Read-only first-pass scan covered all 454 public base tables, including serialized JSON/arrays and direct identity columns. **13 stray TEST-name profiles / 10,842 rows / 21 tables** were fully snapshotted in private archive `_snapshot_stray_test_closeout_20261024` before parking. Only those 13 profiles were paused/suspended/system-hidden/learning-opted-out, and their MPI settings ranking-excluded. No rows or consent/history were deleted.
+- Fixed-ID re-scan confirms **10,842 parked rows remain**; zero unhidden TEST-name profiles is not a zero-data certification. A broader auth-alias discovery found **24 additional candidate accounts (16 profiles, eight without profiles), 143,511 directly linked rows across 23 tables**. Those candidates are not changed: provenance/kept-account membership and non-name/indirect/HMAC coverage remain unresolved. All stat/list/nightly exclusion paths still require proof. **Global TEST cleanup: NOT CERTIFIED.** Counts and evidence: `.lovable/proofs/global-test-closeout/scan-report.md`, `scan-before.json`, `fixed-id-rescan.json`, `additional-candidates.json`.
+- Coach acceptance now refuses missing/fractional jump and upper-body plyometric contact declarations instead of certifying the shared one-contact fallback. Existing training judges and doses remain unchanged; full arm/ramp and skill replacement remain unfinished. This code change is local/pending redeploy, not claimed live. Focused coach/unity checks: **15 files / 118 tests PASS**, including refreshed date-pinned team-send tests; preview build OK. Full suite not rerun this closeout; historical full-suite results below are not this run's results.
+- No publish, cron schedule or iOS changes. Publishing remains blocked until coach finish items 1–8, the five human checks and global cleanup certification pass.
 
 ### Owner final-batch continuation — October 24, 23:37 run 4
 
@@ -236,16 +244,16 @@ Final automated screenshots are 390×844 and render production components with i
 plus 33 server and 10 additional injury tests; preview build OK. The 14-item
 proofs above remain retained earlier evidence, not rerun or relabeled live proof.
 
-### TEST cleanup — blocked, not waived
+### TEST cleanup — persona restoration closed; global certification pending
 
 Evidence: `.lovable/proofs/final/cleanup-result.json` retains the prior exact-ID readback: zero named Oct24 coach templates/logs and Tex results/sessions. No hosted TEST records were created by the final automated fixtures or this documentation continuation. This is scoped cleanup evidence, not a database-wide absence check.
 
 | Remaining scope | Status | Required next step |
 |---|---|---|
-| Softball pitcher, two-way and returning pitcher: prior assessment/start state | Blocked | Locate a verified pre-Oct24 snapshot for each persona, then restore only the recorded changed fields and verify readback. Do not guess nulls or delete accounts/consents. |
-| No TEST rows outside kept hidden accounts | Unverified | Complete a scoped inventory/readback against the owner-approved kept-account and retained-event exceptions; snapshot before any authorized exact-row removal. |
+| Softball pitcher, two-way and returning pitcher: prior assessment/start state | CLOSED — owner decision October 24, 23:55 UTC | KEEP exactly as they are; no restoration or before-state snapshot is required. Hidden system accounts remain excluded from stats, lists and nightly jobs; comprehensive exclusion proof is still required. |
+| No TEST rows outside kept hidden accounts | NOT CERTIFIED — first-pass scan and exact parking complete | Resolve additional auth-alias candidates and indirect/anonymized ownership; verify every stat/list/nightly exclusion and fixed-ID zero visible re-scan. Private snapshot and full per-table counts saved. |
 
-The three personas are retained system accounts; their Oct24 assessment/start changes remain unrestored. Located files and previously checked protected snapshot tags do not establish their before-state. An actual before-state backup is needed; no destructive workaround is authorized.
+The three personas are retained exactly as they are. The owner explicitly closed restoration; do not restore, reset, reseed or otherwise change them. Global cleanup must independently scan outside the previously kept accounts, snapshot exact stray rows before hiding/deleting, and prove a zero re-scan. A system-account flag alone does not certify exclusion from every reader or nightly job.
 
 ## B. Coach-workout release checks
 
