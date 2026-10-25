@@ -45,9 +45,8 @@ export function judgeCoachEnvelope(input: {
       sport: input.sport, positions: input.positions, ageYears: input.age, trainingAgeClass: input.trainingAge, seasonPhase: input.final.phase });
     if (!scope.allowed) warnings.push({ code: "age_gate", date, medical: true, rule: `${row.movement_name}: normally held for age ${input.age ?? "unknown"}, this position or the ${input.final.phase} phase (${scope.reason}).` });
     const season = isMovementSeasonLegal(seasonContextFromPhase(input.final.phase as any), movement as any);
-    // Owner law L0.3: in-season eccentric overload is never legal on any path.
-    if (!season.legal && movement.eccentric_overload === true && /in_season|post_season/.test(String(input.final.phase))) reasons.push(`${row.movement_name}: eccentric-overload work is never allowed in season. Fix this entry.`);
-    else if (!season.legal) warnings.push({ code: "season_rule", date, rule: `${row.movement_name}: normally held during the ${input.final.phase} phase.` });
+    // Coach-only presentation exception; the canonical season judge and generator stay unchanged.
+    if (!season.legal) warnings.push({ code: "season_rule", date, rule: `${row.movement_name}: ${movement.eccentric_overload === true ? "eccentric-overload work is" : "work is"} normally held during the ${input.final.phase} phase.` });
     if (input.blockedIntensityClasses.includes(movement.intensity_class)) warnings.push({ code: "recovery_intensity", date, rule: `${row.movement_name}: today's recovery check normally allows lighter work only (${movement.intensity_class} intensity).` });
     if (!movement.dosage_unit || movement.dosage_unit !== row.dosage_unit) reasons.push(`${row.movement_name}: the measure must match its Exercise Vault entry. Fix this entry.`);
     if (row.slot === "lift" && isRepDosed(row.dosage_unit)) {
@@ -62,6 +61,7 @@ export function judgeCoachEnvelope(input: {
   const addIssues = (issues: Array<{ code: string; message: string }>) => {
     for (const issue of issues) {
       if (issue.code.endsWith("_illegal_equipment")) warnings.push({ code: "missing_equipment", date: input.final.planDate, rule: issue.message });
+      else if (issue.code.endsWith("_illegal_season")) warnings.push({ code: "season_rule", date, rule: issue.message });
       else reasons.push(issue.message);
     }
   };

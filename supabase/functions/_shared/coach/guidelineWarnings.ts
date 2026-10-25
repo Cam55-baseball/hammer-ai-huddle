@@ -47,6 +47,12 @@ export function medicalFactWarnings(facts: RxReplaceFacts): CoachGuidelineWarnin
 }
 
 export const MIN_OVERRIDE_REASON = 10;
+/** Missing facts stay missing: no readiness score or workload limit is invented. */
+export function missingCoachFactWarning(date: string, fact: "check_in" | "workload_limit"): CoachGuidelineWarning {
+  return { code: "missing_facts", date, rule: fact === "check_in"
+    ? "Today's check-in is missing, so readiness wasn't checked. Proceed?"
+    : "Today's workload limit is missing or invalid, so the workload cap wasn't checked. Proceed?" };
+}
 /** Format an existing judge's numeric result; never infer a weekly cap from a daily cap. */
 export function workloadWarning(date: string, planned: number, cap: number): CoachGuidelineWarning {
   const percentage = cap > 0 ? `${Math.round(planned / cap * 100)}% of` : "above";

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { judgeCoachEnvelope } from "../../../supabase/functions/_shared/coach/prescriptionEnvelope";
+import { isMovementSeasonLegal, seasonContextFromPhase } from "../../../supabase/functions/_shared/wic/season";
 const movement = { slug: "warmup", name: "Warmup", is_active: true, superseded_by: null, category: "warmup", sport_scope: "both", dosage_unit: "seconds", equipment: [], equipment_requirements: [], season_legality: { os_q1: true }, min_age_years: 13, cns_cost: 0, exposure_channel: "low_load" };
 const row = { movement_slug: "warmup", movement_name: "Warmup", slot: "warmup", sets: 1, duration_seconds: 30, dosage_unit: "seconds" };
 function input() { const catalog = new Map([[movement.slug, movement]]); return { rows: [row], resultingDay: [row], catalog, owned: [] as string[], missing: [] as string[], age: 16, trainingAge: "advanced", trainingYears: 3, sport: "baseball", positions: ["ss"], blockedIntensityClasses: [], final: { planDate: "2026-10-24", phase: "os_q1", age: 16, priorLiftDates: [], restDaysBetweenLifts: 2, weeklyLiftMax: null, liftRemoved: false, catalog }, rm28: { byChannel: {}, byTier: {}, onDate: {}, daysObserved: 0, loggedDaysByChannel: {} }, governor: { block: "B1" as const, inSeason: false, growthMode: false } }; }
@@ -47,7 +48,16 @@ describe("coach calls existing WIC and Swap judges", () => {
     i.catalog.set("warmup", { ...movement, category: "throwing_plyo" });
     expect(judgeCoachEnvelope(i).allowed).toBe(false);
   });
-  it("uses the existing off-season-only eccentric rule", () => { const i = input(); i.final.phase = "in_season"; i.catalog.set("warmup", { ...movement, eccentric_overload: true, season_legality: { in_season: true } } as any); expect(judgeCoachEnvelope(i).allowed).toBe(false); });
+  it("warns for coach-only in-season eccentric work while the generator judge still refuses it", () => {
+    const i = input(); i.final.phase = "in_season";
+    const eccentric = { ...movement, eccentric_overload: true, season_legality: { in_season: true } };
+    i.catalog.set("warmup", eccentric as any);
+    expect(isMovementSeasonLegal(seasonContextFromPhase("in_season"), eccentric as any).legal).toBe(false);
+    const result = judgeCoachEnvelope(i);
+    expect(result.allowed).toBe(true);
+    expect(result.warnings.find(w => w.code === "season_rule")).toMatchObject({ date: "2026-10-24" });
+    expect(result.warnings.find(w => w.code === "season_rule")?.medical).not.toBe(true);
+  });
   it("does not certify an unknown or non-finite dose", () => { const i = input(); i.rows = [{ ...row, duration_seconds: Number.NaN }]; expect(judgeCoachEnvelope(i).allowed).toBe(false); });
   it("rejects fractional rep counts instead of rounding them", () => {
     const i = input(); i.catalog.set("warmup", { ...movement, dosage_unit: "reps" });

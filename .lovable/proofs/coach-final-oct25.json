@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-25",
+  "ready_to_publish": false,
+  "changes": {
+    "missing_check_in": "warning; no readiness value invented",
+    "missing_workload_limit": "warning; null CNS result preserves existing ledger",
+    "coach_only_in_season_eccentric": "existing season finding becomes warning; generator unchanged"
+  },
+  "deployment": {
+    "function": "coach-rx-safety",
+    "status": "deployed",
+    "missing_fact_persistence_migration": "0121 applied"
+  },
+  "tests": {
+    "bounded_groups": [
+      {
+        "files": 134,
+        "tests": 1241
+      },
+      {
+        "files": 133,
+        "tests": 1065
+      },
+      {
+        "files": 133,
+        "tests": 996
+      },
+      {
+        "files": 133,
+        "tests": 1022
+      }
+    ],
+    "additional_new_loader_file": {
+      "files": 1,
+      "tests": 2
+    },
+    "total_files": 534,
+    "total_tests": 4326,
+    "focused_final_rerun": 116,
+    "status": "passed"
+  },
+  "preview": {
+    "status": "build OK",
+    "checked_log_entry": "2026-10-25T18:23:31Z"
+  },
+  "live_proof": {
+    "status": "UNVERIFIED",
+    "authentication": "owner-authorized TEST session only, not API password sign-in",
+    "viewport": "390x844",
+    "college_player_dashboard": "opened; warm-up/lift-mobility/recovery; no hitting card",
+    "training_preferences": "Available Days is a separate six-week workout setting; not Today hitting-day selection",
+    "schedule_changed": false,
+    "today_rebuilt": false,
+    "coach_send": false,
+    "player_replace": false,
+    "focus_log": false,
+    "all_surface_readback": false,
+    "missing_check_in_live_warning": "not exercised; loader/action tests only",
+    "swap_test_access": "paused accounts remained gated"
+  },
+  "remaining_scope_gaps": [
+    "unreadable player/profile/settings and age/training experience still refused",
+    "saved-phase/revision and undeclared workload still refused",
+    "positive hitting replacement/focus/reload/all-surface proof not performed"
+  ],
+  "cleanup": {
+    "new_hosted_test_work_rows": 0,
+    "restoration": "none required; no schedules/snapshots/prescriptions/logs changed",
+    "global_certification": "prior YES retained, no new scan"
+  },
+  "constraints": {
+    "published": false,
+    "cron_changed": false,
+    "ios_changed": false,
+    "engine_output_fabricated": false
+  }
+}
