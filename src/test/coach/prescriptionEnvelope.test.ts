@@ -8,9 +8,11 @@ describe("coach calls existing WIC and Swap judges", () => {
   it("uses all mandatory gear and one complete alternative group", () => {
     const i = input(); i.catalog.set("warmup", { ...movement, equipment_requirements: ["barbell"], equipment_alternatives: [["bands", "net"], ["dumbbell"]] } as any);
     i.owned = ["barbell", "bands"];
-    expect(judgeCoachEnvelope(i).allowed).toBe(false);
+    expect(judgeCoachEnvelope(i).warnings.some(w => w.code === "missing_equipment")).toBe(true);
     i.owned.push("net"); expect(judgeCoachEnvelope(i).allowed).toBe(true);
-    i.missing = ["barbell"]; expect(judgeCoachEnvelope(i).allowed).toBe(false);
+    i.missing = ["barbell"]; const result = judgeCoachEnvelope(i);
+    expect(result.allowed).toBe(true);
+    expect(result.warnings).toContainEqual({ code: "missing_equipment", date: "2026-10-24", rule: "Warmup: Player reported no barbell." });
   });
   it("uses the existing age gate", () => { const i = input(); i.age = 12; i.final.age = 12; expect(judgeCoachEnvelope(i).allowed).toBe(false); });
   it("does not inherit an old approval after a gear correction reopens review", () => {
@@ -22,7 +24,7 @@ describe("coach calls existing WIC and Swap judges", () => {
     const i = input(); i.catalog.set("warmup", { ...movement, visible_to: ["test-player"] } as any);
     expect(judgeCoachEnvelope({ ...i, userId: "real-player" }).allowed).toBe(false);
     expect(judgeCoachEnvelope({ ...i, userId: "test-player" }).allowed).toBe(true);
-    expect(judgeCoachEnvelope(i).allowed).toBe(false);
+    expect(judgeCoachEnvelope(i).warnings.some(w => w.code === "workload_cap")).toBe(true);
   });
   it("never routes a throwing item into a hitting card", () => {
     const i = input(); i.rows = [{ ...row, slot: "hitting" }]; i.resultingDay = i.rows;

@@ -1,5 +1,5 @@
 // Input adapter over existing WIC/Swap judges; no coach-specific training rules.
-import { ownsAllGear, avoidsMissingGear } from "../planSwap/simpleSwap.ts";
+import { ownsAllGear, avoidsMissingGear, requiredGear } from "../planSwap/simpleSwap.ts";
 import { checkDomainGate } from "../wic/domainGate.ts";
 import { isMovementSeasonLegal, seasonContextFromPhase } from "../wic/season.ts";
 import { finalRuleCheck, type FinalCheckContext } from "../wic/schedule/finalCheck.ts";
@@ -35,7 +35,11 @@ export function judgeCoachEnvelope(input: {
     const dose = row.dosage_unit === "seconds" ? row.duration_seconds : row.dosage_unit === "feet" ? row.distance_feet : row.dosage_unit === "total_reps" ? row.total_reps : row.reps;
     if (typeof dose !== "number" || !Number.isFinite(dose) || dose <= 0 || (row.sets != null && (!Number.isInteger(row.sets) || row.sets <= 0))) reasons.push(`${row.movement_name}: enter an exact positive dose before using this workout.`);
     if (!["seconds", "feet"].includes(row.dosage_unit) && typeof dose === "number" && !Number.isInteger(dose)) reasons.push(`${row.movement_name}: reps and throws must be whole counts.`);
-    if (!ownsAllGear(movement, input.owned) || !avoidsMissingGear(movement, input.missing)) reasons.push(`${row.movement_name}: required gear is missing from your saved answers.`);
+    if (!ownsAllGear(movement, input.owned) || !avoidsMissingGear(movement, input.missing)) {
+      const reported = requiredGear(movement).filter(gear => input.missing.includes(gear));
+      const detail = reported.length ? `Player reported no ${reported.map(gear => gear.replace(/_/g, " ")).join(" or ")}.` : `Required equipment is not confirmed in the player's saved answers: ${requiredGear(movement).map(gear => gear.replace(/_/g, " ")).join(", ")}.`;
+      warnings.push({ code: "missing_equipment", date: input.final.planDate, rule: `${row.movement_name}: ${detail}` });
+    }
     const scope = checkDomainGate(movement as any, { engine: row.slot === "hitting" ? "bat_speed" : row.slot === "mobility" ? "recovery" : row.slot,
       sport: input.sport, positions: input.positions, ageYears: input.age, trainingAgeClass: input.trainingAge, seasonPhase: input.final.phase });
     if (!scope.allowed) reasons.push(`${row.movement_name}: this item isn't allowed for your age, position or training phase (${scope.reason}).`);
@@ -44,7 +48,7 @@ export function judgeCoachEnvelope(input: {
     if (input.blockedIntensityClasses.includes(movement.intensity_class)) reasons.push(`${row.movement_name}: today's recovery check allows lighter work only.`);
     if (!movement.dosage_unit || movement.dosage_unit !== row.dosage_unit) reasons.push(`${row.movement_name}: the measure must match its Exercise Vault entry.`);
     if (row.slot === "lift" && isRepDosed(row.dosage_unit)) {
-      if (!isWithinEnvelope(input.final.phase, movement.movement_category, movement.category, row.sets, row.reps)) reasons.push(`${row.movement_name}: the coach's sets and reps are outside your current lifting range.`);
+      if (!isWithinEnvelope(input.final.phase, movement.movement_category, movement.category, row.sets, row.reps)) warnings.push({ code: "dose_range", date: input.final.planDate, rule: `${row.movement_name}: prescribed ${row.sets} sets × ${row.reps} reps is outside the lifting range for ${input.final.phase}.` });
     }
   }
   const final = finalRuleCheck(input.resultingDay, input.final);
@@ -52,13 +56,19 @@ export function judgeCoachEnvelope(input: {
     template: { seasonPhase: input.final.phase, trainingAge: input.trainingAge, isGameDay: input.isGameDay === true, isRecoveryDay: input.final.liftRemoved },
     availableEquipment: input.owned, trainingAgeClass: input.trainingAge };
   const affected = new Set(input.rows.map(row => row.slot));
-  if (affected.has("lift")) reasons.push(...certifyLift(sessionInput).fatal.map(issue => issue.message));
-  if (affected.has("speed")) reasons.push(...certifySpeed(sessionInput).fatal.map(issue => issue.message));
-  if (affected.has("conditioning")) reasons.push(...certifyConditioning(sessionInput).fatal.map(issue => issue.message));
-  if (affected.has("hitting")) reasons.push(...certifyBatSpeed({ ...sessionInput,
+  const addIssues = (issues: Array<{ code: string; message: string }>) => {
+    for (const issue of issues) {
+      if (issue.code.endsWith("_illegal_equipment")) warnings.push({ code: "missing_equipment", date: input.final.planDate, rule: issue.message });
+      else reasons.push(issue.message);
+    }
+  };
+  if (affected.has("lift")) addIssues(certifyLift(sessionInput).fatal);
+  if (affected.has("speed")) addIssues(certifySpeed(sessionInput).fatal);
+  if (affected.has("conditioning")) addIssues(certifyConditioning(sessionInput).fatal);
+  if (affected.has("hitting")) addIssues(certifyBatSpeed({ ...sessionInput,
     prescriptions: input.resultingDay.map(row => ({ ...row, slot: row.slot === "hitting" ? "bat_speed" : row.slot })) as any,
-  }).fatal.map(issue => issue.message));
-  if (affected.has("recovery") || affected.has("mobility")) reasons.push(...certifyRecovery(sessionInput).fatal.map(issue => issue.message));
+  }).fatal);
+  if (affected.has("recovery") || affected.has("mobility")) addIssues(certifyRecovery(sessionInput).fatal);
   for (const dropped of final.swaps) {
     if (ADVISORY_PLAN_RULES.has(dropped.rule)) warnings.push({ code: dropped.rule, date: input.final.planDate, rule: `${dropped.slot ?? "Work"}: ${dropped.detail} (${dropped.rule}).` });
     else reasons.push(`Today's ${dropped.slot ?? "work"} would break a plan rule (${dropped.rule}). Keep the saved plan and ask your coach to review it.`);
@@ -93,6 +103,12 @@ export function judgeCoachEnvelope(input: {
       amountPerSet: amountPerSet(fact, channel.channel, reps, row.distance_feet), floorSets: 1, substitutionFamily: fact.substitution_family ?? null });
   }
   const governed = runGovernor({ items, rm28: input.rm28, ctx: input.governor });
-  reasons.push(...governed.trims.map(trim => trim.reason));
+  for (const trim of governed.trims) {
+    if (trim.channel === "THROW") reasons.push(trim.reason);
+    else {
+      const diagnostic = governed.diagnostics[trim.channel];
+      warnings.push({ code: "workload_cap", date: input.final.planDate, rule: `${trim.reason}${diagnostic ? ` Planned ${diagnostic.planned_before ?? trim.from.amount}; cap ${diagnostic.cap ?? "not established"}.` : ""}` });
+    }
+  }
   return { allowed: reasons.length === 0, reasons: [...new Set(reasons)], warnings, safeOption: reasons.length ? "Safe option: save this workout for later and ask your coach to review the listed items." : null };
 }

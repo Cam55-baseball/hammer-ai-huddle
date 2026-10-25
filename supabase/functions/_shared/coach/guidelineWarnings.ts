@@ -47,6 +47,11 @@ export function medicalFactWarnings(facts: RxReplaceFacts): CoachGuidelineWarnin
 }
 
 export const MIN_OVERRIDE_REASON = 10;
+/** Format an existing judge's numeric result; never infer a weekly cap from a daily cap. */
+export function workloadWarning(date: string, planned: number, cap: number): CoachGuidelineWarning {
+  const percentage = cap > 0 ? `${Math.round(planned / cap * 100)}% of` : "above";
+  return { code: "workload_cap", date, rule: `This puts today's workload at ${planned} units — ${percentage} the ${cap}-unit daily workload cap.` };
+}
 export function overrideReasonOk(reason: unknown): reason is string {
   return typeof reason === "string" && reason.trim().length >= MIN_OVERRIDE_REASON;
 }
