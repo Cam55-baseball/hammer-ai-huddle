@@ -1,0 +1,2 @@
+ALTER TABLE public.behavioral_events DROP CONSTRAINT behavioral_events_event_type_check;
+ALTER TABLE public.behavioral_events ADD CONSTRAINT behavioral_events_event_type_check CHECK (event_type = ANY (ARRAY['completion','skip','delay','recovery_after_miss','nn_miss','nn_streak_break','identity_tier_change','consistency_drop','consistency_recover','coach_guideline_override']));
