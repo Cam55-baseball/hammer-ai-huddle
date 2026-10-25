@@ -43,7 +43,8 @@ describe("data-unity matrix", () => {
   });
 
   it("3. coach actuals use canonical readers rather than legacy activity logs", () => {
-    touches("src/hooks/useSentActivities.ts", "coach_prescriptions");
+    touches("src/hooks/useSentActivities.ts", "coach-rx-safety");
+    touches("supabase/functions/coach-rx-safety/index.ts", 'from("coach_prescriptions").insert');
     // Use instead / Add alongside turn the coach workout into real plan rows,
     // so completion logs to wk_session_logs like any Hammers card.
     touches("supabase/functions/coach-rx-safety/index.ts", "wk_prescriptions");
