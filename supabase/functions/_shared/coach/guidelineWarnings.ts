@@ -7,12 +7,18 @@ export interface CoachGuidelineWarning {
   player_id?: string;
 }
 
+export function isCoachPrescriptionDate(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T12:00:00Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
 /** Presentation of findings from existing judges, never a new training judge. */
 export function factGuidelineWarnings(facts: RxReplaceFacts): CoachGuidelineWarning[] {
   const warnings: CoachGuidelineWarning[] = [];
   if (facts.isRestDay) warnings.push({ code: "rest_day", date: facts.date, rule: "This is a scheduled rest day. Training is normally held that day." });
-  if (!facts.isRestDay && facts.gameOnDate && facts.intensity !== "light") warnings.push({ code: "game_day", date: facts.date, rule: "A game is scheduled on this date. Only light work is normally planned." });
-  if (!facts.isRestDay && !facts.gameOnDate && facts.inSeason && facts.gameNextDay && facts.intensity === "high") {
+  if (facts.gameOnDate && facts.intensity !== "light") warnings.push({ code: "game_day", date: facts.date, rule: "A game is scheduled on this date. Only light work is normally planned." });
+  if (facts.inSeason && facts.gameNextDay && facts.intensity === "high") {
     const next = new Date(`${facts.date}T12:00:00Z`); next.setUTCDate(next.getUTCDate() + 1);
     warnings.push({ code: "before_game", date: facts.date, rule: `This is the day before the game on ${next.toISOString().slice(0, 10)}. Max-effort work is normally held that day.` });
   }

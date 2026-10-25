@@ -6,6 +6,15 @@ Updated October 25, 2026, coach-warning run. **Ready to publish: NO.** Publishin
 
 ### October 25 coach-warning implementation
 
+- 05:27 continuation: all existing prescription action paths audited; no bypass
+  found. Content editing is not an existing action (Move edits the date). Rest,
+  game-day and next-game warnings now accumulate instead of hiding one another.
+  Impossible calendar dates are rejected; repeated identical unconfirmed warnings
+  stop without saving. Long warning lists scroll on phones; Sent workouts identifies
+  the confirming player/coach without showing account IDs. Only coach-rx-safety
+  redeployed. Focused coach/unity: 18 files / 169 tests PASS; sixteen phone fixture
+  decisions PASS, no page errors. Hosted record/readback remains unverified.
+
 - Applied `0115_coach_guideline_warning_audit`; deployed only `coach-rx-safety`.
   Send/scheduled team occurrences now use the checked server, not direct inserts.
   Move/resend and player Use instead/Add alongside/Use today use one exact-rule

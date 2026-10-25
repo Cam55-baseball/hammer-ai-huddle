@@ -5,7 +5,7 @@ export function CoachGuidelineWarningDialog({ warnings, onOkay, onCancel }: {
   warnings: readonly CoachGuidelineWarning[]; onOkay: () => void; onCancel: () => void;
 }) {
   return <AlertDialog open onOpenChange={open => { if (!open) onCancel(); }}>
-    <AlertDialogContent className="w-[calc(100%-2rem)] rounded-lg" onEscapeKeyDown={onCancel}>
+    <AlertDialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto rounded-lg" onEscapeKeyDown={onCancel}>
       <AlertDialogHeader>
         <AlertDialogTitle>Warning: check this workout</AlertDialogTitle>
         <AlertDialogDescription asChild>

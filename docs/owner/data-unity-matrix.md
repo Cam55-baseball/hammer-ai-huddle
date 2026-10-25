@@ -16,6 +16,12 @@ live data landing in every surface; unverified cells remain unverified.
 
 ## Surfaces key
 
+October 25 05:27 continuation: no warning-action bypass found in existing
+prescription hooks. Multiple date rules accumulate; exact calendar-date validation
+and repeated-acknowledgement refusal tested. Override event storage remains distinct
+from learning interpretation: no new dose-changing learning behavior is claimed.
+Sent workouts resolves the confirmer as the recipient or the viewing sender.
+
 - **General** = The General tabs (Today / Performance / Growth), `src/pages/ProgressDashboard.tsx`
 - **History** = `src/pages/History.tsx` via `src/hooks/useHistoryRecords.ts`
 - **Vault** = `src/hooks/useVault.ts` / `useVaultVideos.ts`
