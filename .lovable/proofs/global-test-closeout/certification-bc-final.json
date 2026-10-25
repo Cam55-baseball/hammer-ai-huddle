@@ -1,0 +1,22 @@
+{
+  "run": "2026-10-25T01:30Z final (b)+(c) certification pass",
+  "b_reader_and_job_exclusion": {
+    "shared_helper": "supabase/functions/_shared/systemAccounts.ts",
+    "jobs_patched_edge": ["nightly-hie-process", "hie-refresh-worker", "adaptive-phases-shadow", "tcs-shadow-run", "iq-decay", "extract-patterns", "wk-daily-plan-job", "generate-follower-reports"],
+    "jobs_patched_sql": ["wk_mark_missed_lifts (live CREATE OR REPLACE, exclusion verified in pg_get_functiondef)"],
+    "jobs_verified_no_profiles_scan": ["predict-hammer-state", "evaluate-advice-effectiveness", "update-user-engine-profile", "ti-auto-activate", "ti-watchdog", "engine-weight-optimizer", "evaluate-predictions"],
+    "jobs_verified_flag_exclusion": ["nightly-mpi-process (athlete_mpi_settings.admin_ranking_excluded=false; parked accounts have true)"],
+    "sql_functions_verified": ["anon_training_eligible (excludes is_system_account + paused)", "anon_training_refresh_batch (gates on anon_training_eligible)", "_testing_day_recipients (single-athlete via live links; parked have zero links)", "wk_external_training_days (single-user read)", "coach_athlete_glance / coach_log_entry / coach_record_movement_screen (single-athlete, unreachable: zero live links)"],
+    "population_rpcs_redefined_live": ["search_athletes_to_connect", "team_discipline_summary", "org_test_ranking", "org_compare_athletes", "org_facility_board"],
+    "client_surfaces": ["Rankings.tsx", "useCoachRoster.ts", "TeamRosterView.tsx", "useTeamStats.ts", "CoachSearchConnect.tsx", "profiles_public view (migration 0114)"],
+    "connection_lists": "zero live links to parked accounts (scout_follows, org_athlete_assignments, athlete_mpi_settings, pending connection_requests) — connection-built lists cannot contain them",
+    "historical_aggregates": {"heat_map_snapshots": 0, "hie_team_snapshots.trending_players": 0, "note": "zero parked-account references in computed aggregates; no remediation needed"}
+  },
+  "c_fixed_id_no_new_rows": {
+    "parked_accounts": 33,
+    "window": "since 2026-10-25 00:50:36+00 (parking complete)",
+    "scheduled_runs_observed": "18 successful runs across 10 job types (wk-daily-plan-build x4, hie-refresh x2, hammer-state x2, trigger-decay, engine-sentinel, engine-adversarial, engine-regression, phase9-behavioral, auto-recovery, system-health, follower-retry)",
+    "new_rows_for_parked": {"hie_snapshots": 0, "adaptive_phase_shadow": 0, "wk_prescriptions": 0, "follower_reports": 0, "foundation_trigger_events": 0, "hammer_state_snapshots": 0, "user_engine_profile": 0, "engine_state_predictions": 0},
+    "nightly_batch_note": "02:00-06:15 UTC nightly batch (nightly-hie-6am, nightly-mpi, tcs-shadow-nightly, iq-decay, adaptive-phases) runs after this pass; all use the patched exclusion paths verified above. Re-check recommended after the window."
+  }
+}
