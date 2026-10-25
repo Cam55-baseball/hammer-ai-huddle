@@ -122,6 +122,8 @@ import { crossReference } from "@/lib/hammer/prescription/mixedSignals";
 import { usePrinciplePicks } from "@/hooks/usePrinciplePicks";
 import { principleDrillBoosts } from "@/lib/intelligence/principlePicks";
 import { useCategoryPracticeLoad } from '@/hooks/useCategoryPracticeLoad';
+import {useBuntingEvidence} from '@/hooks/useBuntingEvidence';
+import {getV2} from '@/lib/hammer/goals/categoryGoals';
 import { RoyalTimingReminder } from "@/components/hammer/RoyalTimingReminder";
 import { DelaycamReminder } from "@/components/hammer/DelaycamReminder";
 import { RankGoalsPromptCard } from "@/components/hammer/RankGoalsPromptCard";
@@ -296,7 +298,7 @@ function DrillRow({
     source: "block_drill" as const,
     sourceRef: modality,
     side,
-    payload: { name: d.name, dosage: displayDose, slug: d.slug ?? null, side },
+    payload: { name: d.name, dosage: displayDose, slug: d.slug ?? null, side, ...(d.bunt?{bunt:d.bunt}:{}),sport:ctxSportForDrill(d) },
   };
   return (
     <li data-task-id={taskId} data-task-side={side ?? ""} className={`text-xs rounded-lg border p-3 ${checked ? "opacity-60 border-border/40 bg-muted/20" : "border-border/70 bg-card"}`}>
@@ -732,6 +734,15 @@ function HammerDailyPlanBody({
 
   const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
   const practiceLoadHistory = useCategoryPracticeLoad(sportKey, bodyPlanDate);
+  const buntHistory = useBuntingEvidence(sportKey, bodyPlanDate, has5Tool || hasG2W);
+  const dob = ctx.get<string>('date_of_birth')?.value;
+  const ageDate = typeof dob === 'string' ? new Date(`${dob.slice(0,10)}T12:00:00Z`) : null;
+  const planDateForAge = new Date(`${bodyPlanDate}T12:00:00Z`);
+  const buntAge = ageDate && Number.isFinite(ageDate.getTime()) && ageDate <= planDateForAge
+    ? planDateForAge.getUTCFullYear()-ageDate.getUTCFullYear()-(planDateForAge.getUTCMonth()<ageDate.getUTCMonth() || planDateForAge.getUTCMonth()===ageDate.getUTCMonth() && planDateForAge.getUTCDate()<ageDate.getUTCDate()?1:0) : null;
+  const savedGoals = getV2(ctx.get('category_goals')?.value);
+  const hittingPowerGoal = savedGoals?.[sportKey]?.position?.hitting?.some(p=>p.id==='oppo_power') === true ||
+    projectedAthlete.categoryGoals?.goals.some(g=>g.category==='hitting'&&g.intent==='power_hitting') === true;
   const pitcherSchedule = usePitcherSchedule(bodyPlanDate);
   // Golden 2Way: position days only — not a start day, the primer day before, or the flush day after.
   const g2wPitchingDay = !!pitcherSchedule.facts &&
@@ -782,10 +793,11 @@ function HammerDailyPlanBody({
           pitcherOutings: pitcherSchedule.facts,
           practiceRecords: practiceLoadHistory.data,
           subscriptionModules: modules,
+          bunting: buntHistory.data && !buntHistory.isError ? { ...buntHistory.data, age:buntAge, phase:resolvedPhase ?? '',userId:bodyUser?.id,traits:{powerGoal:hittingPowerGoal} } : undefined,
           fullRestDay: wkRx.data?.some(row => (row.why_payload as any)?.rest_day?.allowed_class === "none" || ["recovery", "recovery_day", "off_day"].includes((row.why_payload as any)?.training_context?.day_type)) === true,
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
@@ -862,12 +874,12 @@ function HammerDailyPlanBody({
       if (error) throw error;
       return data;
     } });
-  const savedPayload = savedDay.data?.find(row => row.sport === sportKey)?.payload as unknown as { blocks?: Array<{ modality: string; drills: DrillStep[]; replacedByCoachRx?: string; coachRx?: string }> } | undefined;
-  const plan = savedPayload?.blocks?.some(block => block.replacedByCoachRx || (swapV2.enabled && block.drills.some(drill => "swapReason" in drill)))
+  const savedPayload = savedDay.data?.find(row => row.sport === sportKey)?.payload as unknown as { blocks?: Array<{ modality: string; side?:'R'|'L'|null; drills: DrillStep[]; because?:string[]; replacedByCoachRx?: string; coachRx?: string }> } | undefined;
+  const plan = savedPayload?.blocks?.some(block => block.replacedByCoachRx || block.drills.some(drill=>!!drill.bunt) || (swapV2.enabled && block.drills.some(drill => "swapReason" in drill)))
     ? { ...computedPlan, blocks: computedPlan.blocks.map(block => {
-      const saved = savedPayload.blocks?.find(item => item.modality === block.modality && !item.coachRx);
+      const saved = savedPayload.blocks?.find(item => item.modality === block.modality && (item.side??null)===(block.side??null) && !item.coachRx);
       if (saved?.replacedByCoachRx) return { ...block, drills: [], steps: [], status: "suppressed" as const, why: "Replaced by coach workout — not missed", roadmapReason: "Replaced by coach workout — not missed" };
-      return saved && block.status === "ready" ? { ...block, drills: saved.drills } : block;
+      return saved && block.status === "ready" ? { ...block, drills: saved.drills,because:saved.because??block.because } : block;
     }) } : computedPlan;
 
   const influencedDrillIds = useMemo(
@@ -885,12 +897,12 @@ function HammerDailyPlanBody({
   const snapshotKey = useMemo(() => JSON.stringify(planSnapshotPayload(plan, sportKey, snapshotDate)), [plan, sportKey, snapshotDate]);
   const snapshotSaved = useRef("");
   useEffect(() => {
-    if (!snapshotUser?.id || !snapshotKey || snapshotSaved.current === snapshotKey) return;
+    if (!snapshotUser?.id || !snapshotKey || snapshotSaved.current === snapshotKey || ((has5Tool || hasG2W) && buntHistory.isPending)) return;
     snapshotSaved.current = snapshotKey;
     void savePlanSnapshot(snapshotUser.id, plan, sportKey, snapshotDate).then(() => {
       void queryClient.invalidateQueries({ queryKey: ["saved-block-day", snapshotUser.id, snapshotDate] });
     });
-  }, [snapshotUser?.id, snapshotKey, plan, sportKey, snapshotDate]);
+  }, [snapshotUser?.id, snapshotKey, plan, sportKey, snapshotDate,has5Tool,hasG2W,buntHistory.isPending]);
   useEffect(() => {
     if (!influencedServeKey || influencedLoggedServe.current === influencedServeKey) return;
     influencedLoggedServe.current = influencedServeKey;
@@ -935,6 +947,7 @@ function HammerDailyPlanBody({
   return (
     <PlanAdjustContext.Provider value={adjustApi}>
     <div className="space-y-6">
+      {buntHistory.isError && (has5Tool||hasG2W) && <p role="alert" className="text-sm text-destructive">Your bunting history could not be checked. No new bunting work was added.</p>}
       {/* Always visible — never inside a collapsed box: Update Hammer must not be missed. */}
       <ErrorBoundary>
         <div data-tour="update-hammer"><TellHammersInbox /></div>

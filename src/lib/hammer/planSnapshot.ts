@@ -16,6 +16,7 @@ export function planSnapshotPayload(plan: HammerDailyPlanResult, sport: string, 
     engine_version: ENGINE_CONTRACT.version,
     blocks: plan.blocks.map((b) => ({
       modality: b.modality,
+      side: b.side ?? null,
       title: b.title,
       status: b.status,
       phase: b.phase,
