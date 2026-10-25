@@ -16,6 +16,8 @@ import { CoachLifecycle } from './CoachLifecycle';
 import { CoachDetail } from './CoachDetail';
 import { CoachPrescriptionInbox } from '@/components/hammer/CoachPrescriptionInbox';
 import { CoachPrescriptionStatus } from '@/components/coach/CoachPrescriptionStatus';
+import { runCoachWarningAction } from '@/lib/coachRx/warningAction';
+import { Button } from '@/components/ui/button';
 import { CoachWorkoutsPanel } from '@/components/custom-activities/CoachWorkoutsPanel';
 import { SendToPlayerDialog } from '@/components/custom-activities/SendToPlayerDialog';
 import { WkPrescriptionCard } from '@/components/hammer/WkPrescriptionCard';
@@ -35,6 +37,7 @@ const timed = kind === 'warmup' || kind === 'recovery';
 const unitSlugs = ['walking_lunge','lift_rfess_pallof','lift_banded_lateral_squat_walk','lift_elephant_walk','lift_farmer_toe_walk','broad_jump','plank_hold','ubp_f15_base_pushup_bottom_hold_explode','tall_plank_shoulder_tap'];
 const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 function App() {
+  if (kind === 'coach-warning') return <WarningProof />;
   if (kind === 'coach-detail') return <CoachDetail />;
   if (kind === 'coach-lifecycle') return <CoachLifecycle />;
   if (kind === 'pickoff-tool') return <PickoffTrainer />;
@@ -51,6 +54,21 @@ function App() {
   return <main className="p-4"><ConditioningRestProvider><PocketCard id={kind} category={kind} tone="text-primary" prescribed planDate="2026-10-24">{() => <>
     {kind === 'units' ? unitSlugs.map(slug => <InlinePrescriptionLog key={slug} rx={{ ...rx, id: slug, movement_slug: slug, movement_name: slug, slot: 'lift', sets: 1, distance_feet: slug === 'lift_farmer_toe_walk' ? 45 : null, duration_seconds: slug === 'plank_hold' ? 30 : null, dosage_unit: slug === 'plank_hold' ? 'seconds' : 'reps' }} />) : timed ? <LegacyDrillInlineLog modality={kind} name="Declared timed work" dosage="3 sets of 1.47 seconds; rest 30 seconds" storageKey={`fixture-${kind}`} completed={false} onSave={log => localStorage.setItem(`fixture-saved-${kind}`, JSON.stringify(log))} /> : <InlinePrescriptionLog rx={rx} />}
   </>}</PocketCard></ConditioningRestProvider></main>;
+}
+function WarningProof() {
+  const [outcome, setOutcome] = React.useState('');
+  const [writes, setWrites] = React.useState(0);
+  const action = params.get('action') ?? 'send';
+  return <main className="space-y-4 p-4"><Button onClick={async () => {
+    const result = await runCoachWarningAction(async acknowledgement => {
+      if (!acknowledgement) return { applied: false, warning_required: true, warnings: [
+        { code: 'before_game', date: '2026-10-27', rule: 'This is the day before the game on 2026-10-28. Max-effort work is normally held that day.', player_id: 'fixture-player' },
+        { code: 'lift_spacing', date: '2026-10-27', rule: 'Lift spacing: the previous lift was on 2026-10-26.', player_id: 'fixture-player' },
+      ] };
+      setWrites(n => n + 1); return { applied: true };
+    });
+    setOutcome(result.cancelled ? 'Cancelled' : result.applied ? 'Saved' : 'Not saved');
+  }}>{action}</Button><p role="status">{outcome}</p><p data-proof-writes>{writes}</p></main>;
 }
 const root = document.getElementById('root');
 if (root) createRoot(root).render(<BrowserRouter><QueryClientProvider client={client}><AuthContext.Provider value={{ user: { id: 'fixture-player' }, loading: false, isAuthStable: true } as React.ContextType<typeof AuthContext>}><App /></AuthContext.Provider></QueryClientProvider></BrowserRouter>);
