@@ -63,7 +63,10 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   const reviewEvents = await checked(admin.from("exercise_vault_audit").select("slug,action,at").in("slug", slugs).in("action", ["equipment_corrected", "review_approved", "make_live"]).order("at", { ascending: false }));
   const catalog = new Map<string, Row>((catalogRows ?? []).map((row: Row) => [row.slug, row]));
   const proposed: Row[] = rows.map(row => ({ ...row, phase: phase.sub_block, cns_cost: catalog.get(row.movement_slug)?.cns_cost ?? null, why_payload: { ...row.why_payload, phase_state: phase } }));
-  if (proposed.some(row => typeof row.cns_cost !== "number" || !Number.isFinite(row.cns_cost) || row.cns_cost < 0)) return refused("An exercise's workload isn't declared in Exercise Vault. Ask your coach to choose a reviewed item.");
+  const undeclared = proposed.find(row => typeof row.cns_cost !== "number" || !Number.isFinite(row.cns_cost) || row.cns_cost < 0);
+  if (undeclared) return refused(undeclared.movement_slug
+    ? `${undeclared.movement_name}: its workload isn't declared in Exercise Vault. Ask your coach to choose a reviewed item.`
+    : `${undeclared.movement_name}: coach-written items have no reviewed workload, so today's load limit can't be checked exactly. Ask your coach to build it from Exercise Vault items.`);
   const resultingDay = [...current.filter((r: Row) => !(replace && categorySlots(category).includes(r.slot) && r.status !== "completed")), ...proposed];
   if (current.some((row: Row) => typeof row.cns_cost !== "number" || !Number.isFinite(row.cns_cost) || row.cns_cost < 0)) return refused("Today's saved workload couldn't be checked. Nothing was changed.");
   const decision = decideFromRaw(raw).decision;
