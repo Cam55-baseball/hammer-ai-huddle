@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
-import { defineTool, type ToolContext } from "@lovable.dev/mcp-js";
-import { z } from "zod";
+import { defineTool, type ToolContext, type ZodRawShape } from "@lovable.dev/mcp-js";
+import { z } from "zod/v3";
 
 function supabaseForUser(ctx: ToolContext) {
   const url = process.env.SUPABASE_URL!;
@@ -24,7 +24,7 @@ export default defineTool({
       .max(50)
       .optional()
       .describe("How many events to return (default 20, max 50)."),
-  },
+  } as unknown as ZodRawShape,
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ limit }, ctx) => {
     if (!ctx.isAuthenticated()) {
@@ -35,7 +35,7 @@ export default defineTool({
       .from("asb_events")
       .select("id, topic, occurred_at, payload")
       .order("occurred_at", { ascending: false })
-      .limit(limit ?? 20);
+      .limit(typeof limit === "number" ? limit : 20);
     if (error) {
       return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
     }

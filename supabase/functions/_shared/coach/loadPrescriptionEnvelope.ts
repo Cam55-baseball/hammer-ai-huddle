@@ -15,6 +15,7 @@ import { categorySlots, type RxCategory } from "./prescriptionSafety.ts";
 import { savedDayCoverage } from "./savedDayCoverage.ts";
 import { pendingEquipmentReviews } from "../vault/equipmentReview.ts";
 import { checkCoachArmLoad } from "./armLoadCheck.ts";
+import { workloadWarning, type CoachGuidelineWarning } from "./guidelineWarnings.ts";
 
 type Row = Record<string, any>;
 const shift = (date: string, n: number) => new Date(Date.parse(`${date}T12:00:00Z`) + n * 86400000).toISOString().slice(0, 10);
@@ -30,6 +31,7 @@ function strictDb(admin: any) {
 }
 
 export async function loadPrescriptionEnvelope(admin: any, userId: string, date: string, category: RxCategory, rows: Row[], replace: boolean) {
+  const warnings: CoachGuidelineWarning[] = [];
   const from = shift(date, -365);
   const [profile, context, settings, inventory, answers, current, arm, external, raw, events, intent, snapshots] = await Promise.all([
     checked(admin.from("profiles").select("date_of_birth,positions").eq("id", userId).maybeSingle()),
@@ -80,7 +82,8 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   const recovery = applyDecision({ ...decision, blockCnsCap: Math.min(ledger.units_cap, freshCap), isGameDay, planDate: date });
   const removedCost = replace ? current.filter((r: Row) => categorySlots(category).includes(r.slot) && r.status !== "completed").reduce((n: number, r: Row) => n + Number(r.cns_cost ?? 0), 0) : 0;
   const proposedCost = proposed.reduce((n, row) => n + Number(row.cns_cost), 0);
-  if (Math.max(0, Number(ledger.units_spent) - removedCost) + proposedCost > recovery.cnsCap) return refused("This workout would pass today's saved workload limit. Ask your coach for a lighter version.");
+  const resultingCost = Math.max(0, Number(ledger.units_spent) - removedCost) + proposedCost;
+  if (resultingCost > recovery.cnsCap) warnings.push(workloadWarning(date, resultingCost, recovery.cnsCap));
   const injuries = injuryWords(context.injury_history);
   if (injuries.length || raw.dailyLogs.some(d => d.entry_date === date && d.injury_mode) || raw.quizzes.some(q => q.entry_date === date && Number(q.pain_scale) > 0)) return refused("Pain or injury is recorded. Keep your current recovery plan and ask your coach before changing work.");
   const throwing = proposed.filter(row => ["throws", "pitches", "innings"].includes(row.dosage_unit) || classify(catalog.get(row.movement_slug) as any)?.channel === "THROW");
@@ -101,7 +104,7 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
       })),
       gameDates: raw.games.filter((g: Row) => !g.deleted_at && !g.ignored_for_training).map((g: Row) => g.game_date),
     });
-    if (!armCheck.allowed) return refused(armCheck.reason!);
+    if (!armCheck.allowed) return refused(armCheck.reason ?? "Your arm-health limit requires review before changing work.");
   }
   const previous = raw.prescriptions.filter(row => row.plan_date < date);
   const priorKinds: any = {};
@@ -115,5 +118,5 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
       u13ThrowBlock: await loadU13ThrowBlock(strictDb(admin), userId, age, date), catalog, gameTomorrow: raw.games.some(g => g.game_date === shift(date, 1) && !g.deleted_at && !g.ignored_for_training) },
     rm28: computeRm28(history, date), governor: { block: phase.sub_block === "os_q1" ? "B1" : phase.sub_block === "os_q2" ? "B2" : phase.sub_block === "os_q3" ? "B3" : phase.sub_block === "os_q4" ? "B4" : "B5", inSeason: phase.season === "in_season", growthMode: phase.growth, buildYesterday: CHANNELS.filter(ch => wasBuildDay(history, shift(date, -1), ch)) },
   });
-  return { ...result, rows: proposed, cnsResult: Math.max(0, Number(ledger.units_spent) - removedCost) + proposedCost };
+  return { ...result, warnings: [...warnings, ...result.warnings], rows: proposed, cnsResult: resultingCost };
 }

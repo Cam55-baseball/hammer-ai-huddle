@@ -17,6 +17,7 @@ import { CoachDetail } from './CoachDetail';
 import { CoachPrescriptionInbox } from '@/components/hammer/CoachPrescriptionInbox';
 import { CoachPrescriptionStatus } from '@/components/coach/CoachPrescriptionStatus';
 import { runCoachWarningAction } from '@/lib/coachRx/warningAction';
+import { workloadWarning } from '../../../supabase/functions/_shared/coach/guidelineWarnings';
 import { Button } from '@/components/ui/button';
 import { CoachWorkoutsPanel } from '@/components/custom-activities/CoachWorkoutsPanel';
 import { SendToPlayerDialog } from '@/components/custom-activities/SendToPlayerDialog';
@@ -65,6 +66,9 @@ function WarningProof() {
       const warnings = medical ? [
         { code: 'arm_rest', date: '2026-10-25', medical: true, requires_reason: true, rule: 'Arm-health rest: throwing is normally held until 2026-10-27 based on recent pitch counts.', player_id: 'fixture-player' },
         { code: 'injury_flag', date: '2026-10-25', medical: true, requires_reason: true, rule: 'An active pain or injury flag is recorded for this player. Training is normally held until it clears.', player_id: 'fixture-player' },
+      ] : action === 'workload-gear' ? [
+        { ...workloadWarning('2026-10-25', 118, 100), player_id: 'fixture-player' },
+        { code: 'missing_equipment', date: '2026-10-25', rule: 'Player reported no barbell.', player_id: 'fixture-player' },
       ] : [
         { code: 'before_game', date: '2026-10-27', rule: 'This is the day before the game on 2026-10-28. Max-effort work is normally held that day.', player_id: 'fixture-player' },
         { code: 'lift_spacing', date: '2026-10-27', rule: 'Lift spacing: the previous lift was on 2026-10-26.', player_id: 'fixture-player' },

@@ -122,6 +122,18 @@ function collectWarnings(facts: RxReplaceFacts & { age: number | null }, playerI
     .map(w => ({ ...w, player_id: playerId, requires_reason: w.medical === true && minor }));
 }
 
+/** Use the same measured envelope for coach actions and recipient activation.
+ * Future dates have no measured saved-day cap; do not invent one. */
+async function prescriptionWorkWarnings(admin: any, rx: any, date: string, today: string) {
+  if (date !== today) return { allowed: true, warnings: [] as CoachGuidelineWarning[], reasons: [] as string[] };
+  const ownItems = certifyCoachOwnItems(Array.isArray(rx.exercises) ? rx.exercises : []);
+  if (!ownItems.ok) return { allowed: false, warnings: [] as CoachGuidelineWarning[], reasons: ownItems.reasons };
+  const rows = coachRxToWkRows({ userId: rx.recipient_id, planDate: date, category: rx.category,
+    prescriptionId: rx.id ?? crypto.randomUUID(), coachName: null, exercises: rx.exercises, usedInstead: false });
+  const envelope = await loadPrescriptionEnvelope(admin, rx.recipient_id, date, rx.category, rows as any, false);
+  return { ...envelope, warnings: ("warnings" in envelope ? envelope.warnings : []).map(w => ({ ...w, player_id: rx.recipient_id })) };
+}
+
 /** Email every accepted linked parent about a minor's medical override.
  *  TEST origins (preview/local) route to the owner inbox, matching the
  *  teen-waiver pattern. The outcome is recorded honestly in the audit log. */
@@ -210,6 +222,9 @@ Deno.serve(async (req) => {
         const hard = checkPrescriptionAlongside(factsWithoutWarnings(facts));
         if (hard.verdict !== "allow") return json({ applied: false, reasons: hard.reasons, safeOption: hard.safeOption });
         warnings.push(...collectWarnings(facts, send.recipient_id));
+        const work = await prescriptionWorkWarnings(admin, send, send.plan_date, today);
+        if (!work.allowed) return json({ applied: false, reasons: work.reasons });
+        warnings.push(...work.warnings);
       }
       const sendAckError = ackError(warnings);
       if (sendAckError) return sendAckError;
@@ -344,6 +359,9 @@ Deno.serve(async (req) => {
           const hard = checkPrescriptionAlongside(factsWithoutWarnings(facts));
           if (hard.verdict !== "allow") return json({ applied: false, reasons: hard.reasons, safeOption: hard.safeOption });
           reschedWarnings = collectWarnings(facts, rx.recipient_id);
+          const work = await prescriptionWorkWarnings(admin, rx, newDate, today);
+          if (!work.allowed) return json({ applied: false, reasons: work.reasons });
+          reschedWarnings.push(...work.warnings);
           const reschedAckError = ackError(reschedWarnings);
           if (reschedAckError) return reschedAckError;
           nextSafety = { ...nextSafety, overrides: [...(nextSafety.overrides ?? []), ...(reschedWarnings.length ? [overrideRecord(reschedWarnings, action)] : [])] };
@@ -391,6 +409,9 @@ Deno.serve(async (req) => {
         const hard = checkPrescriptionAlongside(factsWithoutWarnings(facts));
         if (hard.verdict !== "allow") return json({ applied: false, reasons: hard.reasons, safeOption: hard.safeOption });
         const warnings = collectWarnings(facts, rx.recipient_id);
+        const work = await prescriptionWorkWarnings(admin, rx, newDate, today);
+        if (!work.allowed) return json({ applied: false, reasons: work.reasons });
+        warnings.push(...work.warnings);
         const resendAckError = ackError(warnings);
         if (resendAckError) return resendAckError;
         const { data: created, error: resendError } = await admin.from("coach_prescriptions").insert({

@@ -1,0 +1,23 @@
+{
+  "fixture_only": true,
+  "viewport": [
+    390,
+    844
+  ],
+  "cancel_writes": 0,
+  "okay_writes": 1,
+  "page_errors": [],
+  "suite": {
+    "files": 532,
+    "tests": 4228,
+    "batches": [
+      1176,
+      995,
+      1073,
+      984
+    ]
+  },
+  "hosted_positive_proof": false,
+  "source_check": "No kept system TEST hitting prescription or saved block on 2026-10-25",
+  "new_hosted_test_records": 0
+}
