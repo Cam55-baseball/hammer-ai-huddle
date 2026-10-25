@@ -231,6 +231,7 @@ import {
 } from "../_shared/wic/dosage/doctrine.ts";
 import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
 import { finalRuleCheck, nextEligibleDates, dayKinds, rowKinds, FINAL_CHECK_CATALOG_COLUMNS, type DayKind } from "../_shared/wic/schedule/finalCheck.ts";
+import { isSoftRecovery } from "../_shared/wic/schedule/softRecovery.ts";
 import { loadU13ThrowBlock, loadU13ThrowState } from "../_shared/wic/phases/u13ThrowGate.ts";
 import { nextThrowDate, nextPickoffDate } from "../_shared/wic/phases/nextThrowDate.ts";
 import { trendDeload, loadTrendInput, lighterSets, TREND_DELOAD_VERSION } from "../_shared/wic/lift/trendDeload.ts";
@@ -662,17 +663,21 @@ const handler = async (req: Request): Promise<Response> => {
         const vPhase = String(savedRows.find((r) => r.phase)?.phase ?? "in_season");
         const vSpacing = resolveFeatures((vSw ?? []) as any, user.id).rest_day_calculator === true;
         // Marked cards are never touched, so only unmarked rows are checked.
-        const vCheck = finalRuleCheck(savedRows.filter((r) => !isMarkedRow(r)), {
+        const coachRows = savedRows.filter(r => typeof r.why_payload?.coach_rx === "string");
+        const vCheck = finalRuleCheck(savedRows.filter((r) => !isMarkedRow(r) && typeof r.why_payload?.coach_rx !== "string"), {
           planDate, phase: vPhase, age: vAge, growthMode: vGrowth, priorLiftDates: vMerged.priorLiftDates,
           u13ThrowBlock: await loadU13ThrowBlock(admin, user.id, vAge, planDate),
           restDaysBetweenLifts: vSpacing ? 2 : null,
           weeklyLiftMax: vSpacing && vPhase === "in_season" ? 2 : null,
           liftRemoved: false,
+          fullRestDay: savedRows.some(r => r.why_payload?.rest_day?.allowed_class === "none" || ["recovery_day", "off_day"].includes(r.why_payload?.training_context?.day_type)),
           priorKindDates: vMerged.priorKindDates as any,
           gameTomorrow: ((vGp ?? []) as any[]).length > 0 || ((vCal ?? []) as any[]).length > 0,
           sameDayExternal: vMerged.sameDayExternal,
           catalog: vCatMap,
         });
+        // Coach work was committed through its warning/acknowledgement path, not authored by this generator.
+        vCheck.rows.push(...coachRows.filter(r => !isMarkedRow(r)));
         // Round 8 Step 1: next allowed date per spaced card type, same rules.
         // Every scheduled game/tournament in the next 60 days feeds the day-before-game rule.
         const vTo = new Date(Date.parse(`${planDate}T00:00:00Z`) + 60 * 86_400_000).toISOString().slice(0, 10);
@@ -1610,7 +1615,7 @@ const handler = async (req: Request): Promise<Response> => {
         // compound categories the day must not contain), and the engines that
         // already read `day_type` behave as they do on any recovery day.
         if (tcsAdjust.removeLift) {
-          (trainingContext as unknown as { day_type: string }).day_type = "recovery";
+          trainingContext.day_type = "recovery_day";
         }
         // Step 21D4 — "Why reduced today" is for real trims only. When the
         // calculator left the day at full class and kept the lift, its reasons
@@ -1641,7 +1646,7 @@ const handler = async (req: Request): Promise<Response> => {
     // session template becomes the recovery template and never demands
     // compound lifts the day must not contain. Only ever makes the day lighter.
     if (timelineToday.hold) {
-      (trainingContext as unknown as { day_type: string }).day_type = "recovery";
+      trainingContext.day_type = "recovery_day";
     }
 
 
@@ -2731,7 +2736,7 @@ const handler = async (req: Request): Promise<Response> => {
       // 2) Trunk primer — every session, rest day included. On a rest day the
       // class filter has already removed everything loaded, so what lands here
       // is the light trunk/mobility work the recovery template asks for.
-      const trunkPrimer = pickBestLift(StrengthEngine.TRUNK_PRIMER_SLUGS, "trunk_primer") ??
+      const trunkPrimer = restDayToday ? undefined : pickBestLift(StrengthEngine.TRUNK_PRIMER_SLUGS, "trunk_primer") ??
         pickFirstLift(StrengthEngine.TRUNK_PRIMER_SLUGS);
       if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, {}, `Loaded rotation primer — wakes obliques + preps swing plane.${goalWhy(trunkPrimer)}`);
 
@@ -2740,8 +2745,8 @@ const handler = async (req: Request): Promise<Response> => {
       // real recovery session rather than a template failure.
       if (restDayToday) {
         const mobility = lib.find(
-          (m) => eligibleLift(m) && coerceCanonicalCategory(m as any) === "mobility",
-        ) ?? lib.find((m) => eligible(m) && coerceCanonicalCategory(m as any) === "mobility");
+          (m) => eligibleLift(m) && isSoftRecovery(m.slug),
+        ) ?? lib.find((m) => eligible(m) && isSoftRecovery(m.slug));
         if (mobility) {
           push("lift", "mobility", mobility, {}, "Full rest day — easy movement and tissue work only. Nothing loaded today.");
         }
@@ -4908,6 +4913,7 @@ const handler = async (req: Request): Promise<Response> => {
         restDaysBetweenLifts: enforceSpacing ? 2 : null,
         weeklyLiftMax: enforceSpacing && fcPhase === "in_season" ? 2 : null,
         liftRemoved: tcsAdjust?.removeLift === true,
+        fullRestDay: trainingContext.day_type === "recovery_day" || trainingContext.day_type === "off_day",
         priorKindDates: fcMerged.priorKindDates as any,
         gameTomorrow: fcTomorrowGame,
         catalog: fcCatMap,

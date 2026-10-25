@@ -173,25 +173,28 @@ describe("defense is present on every day type, including an off day", () => {
           const d = plan.blocks.find((b) => b.modality === "defense")!;
           expect(d, `defense missing on ${dayName}`).toBeTruthy();
           expect(d.drills.length + d.steps.length, `defense empty on ${dayName}`).toBeGreaterThan(0);
-          if (d.status === "off-day") expect(d.offDayOverridable).toBe(true);
+          if (plan.weeklyRoadmap.find(day => day.isToday)?.restDay && signal.postureToday === "normal") {
+            expect(d.drills).toEqual([]);
+            expect(d.offDayOverridable).toBe(false);
+          }
         }
       }
     }
   });
 
-  it("override turns a rest-day defense card into a light block", () => {
+  it("a defense override cannot turn a rest day into training", () => {
     for (let i = 0; i < 7; i++) {
       const day = new Date(2026, 5, 1 + i);
-      const resting = buildHammerDailyPlan(CONTEXTS[1][1], NORMAL_SIGNAL, null, null, undefined, day)
-        .blocks.find((b) => b.modality === "defense")!;
-      if (resting.status !== "off-day") continue;
+      const restingPlan = buildHammerDailyPlan(CONTEXTS[1][1], NORMAL_SIGNAL, null, null, undefined, day);
+      if (!restingPlan.weeklyRoadmap.find(row => row.isToday)?.restDay) continue;
       const overridden = buildHammerDailyPlan(
         CONTEXTS[1][1], NORMAL_SIGNAL, null, null, undefined, day, { defenseFullOverride: true },
       ).blocks.find((b) => b.modality === "defense")!;
-      expect(overridden.status).toBe("ready");
-      expect(overridden.drills.length).toBeGreaterThan(0);
+      expect(overridden.status).toBe("off-day");
+      expect(overridden.drills).toEqual([]);
       return;
     }
+    throw new Error("No whole rest day was exercised");
   });
 });
 

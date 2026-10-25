@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
+import { PlanStreakStrip } from "./cards/PlanStreakStrip";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
@@ -50,7 +51,7 @@ export function AdaptivePhaseStrip() {
   const [open, setOpen] = useState(false);
   const p = useAdaptivePlan();
   if (!p) return null;
-  return <PhaseStripView plan={p} open={open} onToggle={() => setOpen((o) => !o)} />;
+  return <PhaseStripView plan={p} open={open} onToggle={() => setOpen((o) => !o)} counters={<PlanStreakStrip />} />;
 }
 
 /** Ramp Law §5 — the weekly card's ramp lines. Nothing when no ramp is running. */
@@ -66,7 +67,7 @@ export function RampLines() {
 
 /** Pure view: heading (what kind of thing) · name (which phase) · one plain line (what it means).
  *  No day counts or timelines here (owner 2026-10-05) — Ask Hammer carries the detail. */
-export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePlan; open: boolean; onToggle: () => void }) {
+export function PhaseStripView({ plan, open, onToggle, counters }: { plan: AthletePhasePlan; open: boolean; onToggle: () => void; counters?: ReactNode }) {
   const phaseLabels = { P1: "Build your strength base", P2: "Lift heavier and move faster", P3: "Turn strength into game speed", P4: "Game-ready training" } as const;
   const where = plan.ramp?.activeToday ? "getting ready for games"
     : plan.mode === "in_season" ? "in season"
@@ -88,6 +89,7 @@ export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePla
   return (
     <div className="rounded-md border border-border/80 bg-background/65 px-4 py-3 text-sm text-foreground" data-testid="phase-strip">
       <h3 className="text-xs font-bold uppercase text-muted-foreground" data-testid="phase-heading">Your training phase</h3>
+      {counters}
       <p className="mt-2 text-base font-semibold leading-snug" data-testid="phase-name">{displayLine}</p>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{meaning}</p>
       {ramping && <div className="mt-3"><h4 className="text-xs font-bold text-muted-foreground">Your return to full training</h4>

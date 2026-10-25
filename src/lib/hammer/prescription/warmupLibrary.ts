@@ -16,6 +16,7 @@
  */
 import { guideFor, type MovementGuide } from "@/lib/hammer/prescription/movementGuide";
 import { sortByWarmupStage, registerWarmupRoles } from "./warmupStages";
+import { isSoftRecovery } from "../../../../supabase/functions/_shared/wic/schedule/softRecovery";
 
 export type WarmupRole =
   | "breathwork"
@@ -718,6 +719,16 @@ function toBuilt(d: WarmupDrill, lifecycle: LifecycleClass): BuiltWarmupDrill {
 
 export function buildWarmup(input: BuildWarmupInput): BuiltWarmup {
   const diagnostics: WarmupDiagnostic[] = [];
+  if (input.context === "recovery_day") {
+    const available = expandEquipment(input.equipment, input.venue);
+    const drills = WARMUP_LIBRARY.filter(d => isSoftRecovery(d.slug) &&
+      equipmentFor(d).every(e => available.has(e)) &&
+      !(d.regions ?? []).some(r => (input.injuryRegions ?? []).includes(r)))
+      .slice(0, 3).map(d => toBuilt(d, input.lifecycle));
+    const ordered = input.orderByStage === false ? drills : sortByWarmupStage(drills, d => d.slug, d => d.role);
+    return { context: input.context, drills: ordered, estMinutes: drills.length ? 5 : 0, singleLegShare: null,
+      diagnostics: [{ code: "twitch_suppressed", detail: "Full rest day — gentle recovery only; training warm-up withheld." }] };
+  }
   const injuryRegions = (input.injuryRegions ?? []).map((r) => r.toLowerCase());
   const filtersBase: PickFilters = {
     lifecycle: input.lifecycle,

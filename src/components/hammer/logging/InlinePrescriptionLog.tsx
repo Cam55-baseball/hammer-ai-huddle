@@ -1,5 +1,6 @@
 import { jumpMeasure, timedMobilityMeasure, ownerExerciseMeasure, fieldsForMeasure, declaredCount, displayDistance, storeDistance } from "@/lib/logging/measureType";
-import { useFocusExercise, FocusDurationTimer } from "../cards/FocusSession";
+import { useFocusExercise } from "../cards/FocusSession";
+import { ExerciseTimer } from "../cards/ExerciseTimer";
 import { ActivityBasics } from "../cards/ActivityBasics";
 import { ExerciseTools } from "../cards/ExerciseTools";
 import { DistanceField } from "./DistanceField";
@@ -41,6 +42,14 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   if (decided) return { rows: Math.max(1, rx.sets ?? 1), fields: fieldsForMeasure(decided).map(field => ({ ...field,
     prefill: field.key === "distance" ? rx.distance_feet : declaredCount(rx),
   })) };
+  const jump = jumpMeasure(`${rx.movement_slug ?? ""} ${rx.movement_name ?? ""}`);
+  if (jump === "jump_distance") return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "distance", label: "Jump distance", unit: "ft + in" }] };
+  if (jump === "jump_height") return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "height", label: "Jump height", unit: "in" }] };
+  const explicitUnit = (rx.dosage_unit ?? "").toLowerCase();
+  if (["seconds", "minutes"].includes(explicitUnit)) return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: "Time", unit: "s", prefill: rx.duration_seconds ?? (rx.reps == null ? null : rx.reps * (explicitUnit === "minutes" ? 60 : 1)) }] };
+  if (["reps", "contacts", "steps", "swings"].includes(explicitUnit) && ["warmup", "mobility", "recovery", "arm_care"].includes(rx.slot as string) && rx.duration_seconds == null) return {
+    rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "reps", label: explicitUnit === "contacts" ? "Contacts" : explicitUnit === "steps" ? "Steps" : "Reps", prefill: rx.reps ?? rx.total_reps }],
+  };
   if ((rx.dosage_unit ?? "").toLowerCase() === "throws" || /throw|pitch|bullpen|catch play/.test(slug)) {
     const split = rx.sets && rx.reps && (!rx.total_reps || rx.sets * rx.reps === rx.total_reps);
     return { rows: split ? rx.sets ?? 1 : 1, fields: [{ key: "throws", label: "Throws", prefill: split ? rx.reps : rx.total_reps ?? rx.reps }] };
@@ -75,7 +84,6 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
       { key: "exit_velo", label: "Exit velo", unit: "mph" },
     ] };
   }
-  const jump = jumpMeasure(`${rx.movement_slug ?? ""} ${rx.movement_name ?? ""}`);
   if (jump === "jump_distance") {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "distance", label: "Jump distance", unit: "ft + in" }] };
   }
@@ -255,21 +263,6 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     bases: basesPerRep,
     save: async () => { if (!(await autosave.flush())) throw new Error("Save pending"); },
   });
-  const startedAt = useRef<number | null>(null);
-  const [running, setRunning] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-  useEffect(() => {
-    if (!running) return;
-    const id = window.setInterval(() => setElapsed((Date.now() - (startedAt.current ?? Date.now())) / 1000), 100);
-    return () => window.clearInterval(id);
-  }, [running]);
-  const toggleTimer = () => {
-    if (!running) { startedAt.current = Date.now(); setElapsed(0); setRunning(true); return; }
-    setRunning(false);
-    const secs = String(Math.round((Date.now() - (startedAt.current ?? Date.now())) / 10) / 100);
-    const i = focus.active ? focus.row : rounds.findIndex((r) => !r.time);
-    if (i >= 0) edit(i, "time", secs, 0);
-  };
   const primary = spec.fields.find(f => f.key !== "weight" && f.key !== "time" && f.key !== "distance") ?? spec.fields.find(f => f.key === "time") ?? spec.fields[0];
   const doneTotal = entered.reduce((s, r) => s + (typeof r[primary.key] === "number" ? (r[primary.key] as number) : 0), 0);
   const unitWord = primary.key === "time" ? "" : ` ${primary.label.toLowerCase()}`;
@@ -278,12 +271,9 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
   return <div className="space-y-2" data-inline-prescription-log hidden={!focus.visible}>
     <div className="space-y-2" hidden={focus.active && focus.resting}>
     <h4 className="text-sm font-semibold break-words">{rx.movement_name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>
-    {focus.active && !stopwatch && spec.fields.some(f => f.key === "time" && (f.prefill ?? 0) > 0) && <FocusDurationTimer key={focus.row} target={spec.fields.find(f => f.key === "time")?.prefill ?? 0} onDone={value => edit(focus.row, "time", String(value), 0)} />}
-    {hasTime && <div className="flex items-center gap-2" data-rep-timer>
-      <Button type="button" size="sm" variant={running ? "default" : "outline"} className="h-9 min-w-[96px]" onClick={toggleTimer}>{running ? "Stop timer" : "Start timer"}</Button>
-      <span className="font-mono text-sm tabular-nums text-foreground" aria-live="polite">{elapsed.toFixed(2)} s</span>
-      <span className="text-[11px] text-muted-foreground">Stop fills the next rep's time.</span>
-    </div>}
+    {spec.fields.some(f => f.key === "time") && <ExerciseTimer key={focus.active ? focus.row : "regular"}
+      target={stopwatch ? undefined : spec.fields.find(f => f.key === "time")?.prefill ?? undefined}
+      onRecord={value => { const i = focus.active ? focus.row : rounds.findIndex(r => r._t !== "1" || !r.time); if (i >= 0) edit(i, "time", String(value), 0); }} />}
     {!focus.active && !isSprint && (rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank/.test(rx.movement_slug)) && <RestTimer label="Rest between sets" seconds={restBand.min} maxSeconds={restBand.max} />}
     {isSprint && <>{!focus.active && <RestTimer label="Rest after each run set" seconds={sprintSeconds} />}<p className="text-xs text-muted-foreground">{sprintRestWhy(rx.distance_feet) ?? "Run distance not entered — rest time is not yet set."}</p></>}
     {!focus.active && basesPerRep && <ConditioningBaseRest basesPerRep={basesPerRep} />}

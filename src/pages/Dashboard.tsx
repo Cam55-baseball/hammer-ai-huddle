@@ -504,6 +504,10 @@ export default function Dashboard() {
                   </Button>
                 ) : (
                   <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate("/pricing", { state: { sport: selectedSport, tier } });
+                    }}
                     className="w-full h-12 font-bold uppercase tracking-wide text-primary-foreground border-0
                                bg-[linear-gradient(110deg,hsl(var(--primary)),hsl(45_100%_55%),hsl(var(--primary)))]
                                bg-[length:200%_100%] animate-gradient-shift

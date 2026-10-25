@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 import { legacyDrillLogSpec } from "./legacyDrillLog";
 
 describe("legacy drill visible log rows", () => {
+  it("preserves declared warm-up repetitions, contacts and per-leg counts", () => {
+    expect(legacyDrillLogSpec("warmup", "Hip switches", "8 per side").fields).toEqual([{ key: "reps", label: "Reps per leg", prefill: 8 }]);
+    expect(legacyDrillLogSpec("warmup", "Pogo", "3 x 12 contacts").fields).toEqual([{ key: "reps", label: "Contacts", prefill: 12 }]);
+    expect(legacyDrillLogSpec("warmup", "Lateral walk", "2 x 10 steps each way").fields).toEqual([{ key: "reps", label: "Steps each way", prefill: 10 }]);
+  });
   it("never uses rest duration as a hitting activity target", () => {
     expect(legacyDrillLogSpec("hitting", "Tee swings", "2 x 12 swings; rest 45 seconds")).toMatchObject({ rows: 2, fields: [{ key: "reps", prefill: 12 }] });
   });

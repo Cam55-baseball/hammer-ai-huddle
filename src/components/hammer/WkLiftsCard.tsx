@@ -178,35 +178,6 @@ export function WkLiftsCard({ pocket = false }: { pocket?: boolean } = {}) {
                 Arm care today is handled by your throwing block — kept off the lift card so it's not doubled up.
               </div>
             )}
-            {reductions.length > 0 && !acked && (
-              <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-2 text-xs">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-amber-800 dark:text-amber-200">Why today's work changed</div>
-                    <ul className="mt-1 space-y-0.5 text-amber-900/80 dark:text-amber-100/80">
-                      {reductions.map((r, i) => <li key={i}>• {athleteNoticeCopy(r)}</li>)}
-                    </ul>
-                    <Button size="sm" className="mt-2 h-7" onClick={() => setAckOpen((v) => !v)}>
-                      Got it
-                    </Button>
-                    {ackOpen && (
-                      <div className="mt-2 space-y-2">
-                        <p className="text-amber-900/80 dark:text-amber-100/80">
-                          This tells us you've read the reason above and you're taking the lighter day.
-                          Tomorrow's session stays a little conservative too, and it goes back to normal
-                          on its own once the reason no longer applies.
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          <Button size="sm" onClick={submitAck}>Take the lighter day</Button>
-                          <Button size="sm" variant="ghost" onClick={() => setAckOpen(false)}>Cancel</Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
             {failed ? (
               <WkCardFailureNotice engine="lift" failure={failureReason} retry={retry} retrying={generating} />
             ) : isLoading ? (

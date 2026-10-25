@@ -84,6 +84,30 @@ function sortByWarmupStage(items, slugOf, roleOf) {
   return keyed.map((k) => k.it);
 }
 
+// supabase/functions/_shared/wic/schedule/softRecovery.ts
+var SOFT_RECOVERY_SLUGS = /* @__PURE__ */ new Set([
+  "rc_breathing_reset",
+  "ac_recovery_belly_breathing",
+  "wu_crocodile_breathing",
+  "wu_9020_reset",
+  "wu_foam_roll_tspine",
+  "thoracic_foam_roll",
+  "plantar_fascia_release",
+  "wu_lacrosse_ball_pec",
+  "wu_lacrosse_ball_glute",
+  "wu_calf_softball_pin",
+  "wu_tspine_open_book",
+  "wu_thoracic_windmill",
+  "wu_thread_the_needle_slow",
+  "wu_lateral_line_reach",
+  "wu_ankle_cars",
+  "wu_wrist_cars",
+  "wu_90_90_switch"
+]);
+function isSoftRecovery(slug) {
+  return typeof slug === "string" && SOFT_RECOVERY_SLUGS.has(slug);
+}
+
 // src/lib/hammer/goals/subGoalCatalog.ts
 var SPEED = [
   { id: "first_step", label: "Quicker first step", helpText: "Explode out of your stance \u2014 the first 10 feet decide most plays.", weightHints: { speed_acceleration: 0.7, strength_lower: 0.3 } },
@@ -2635,6 +2659,18 @@ function toBuilt(d2, lifecycle) {
 }
 function buildWarmup(input) {
   const diagnostics = [];
+  if (input.context === "recovery_day") {
+    const available = expandEquipment(input.equipment, input.venue);
+    const drills2 = WARMUP_LIBRARY.filter((d2) => isSoftRecovery(d2.slug) && equipmentFor(d2).every((e) => available.has(e)) && !(d2.regions ?? []).some((r) => (input.injuryRegions ?? []).includes(r))).slice(0, 3).map((d2) => toBuilt(d2, input.lifecycle));
+    const ordered2 = input.orderByStage === false ? drills2 : sortByWarmupStage(drills2, (d2) => d2.slug, (d2) => d2.role);
+    return {
+      context: input.context,
+      drills: ordered2,
+      estMinutes: drills2.length ? 5 : 0,
+      singleLegShare: null,
+      diagnostics: [{ code: "twitch_suppressed", detail: "Full rest day \u2014 gentle recovery only; training warm-up withheld." }]
+    };
+  }
   const injuryRegions = (input.injuryRegions ?? []).map((r) => r.toLowerCase());
   const filtersBase = {
     lifecycle: input.lifecycle,
@@ -7188,11 +7224,27 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       roadmapInputs.defenseFullOverride === true
     )
   ), practiceLoad);
-  const blocks = secondGoalFirst(practiced.map((b) => {
+  const goalOrdered = secondGoalFirst(practiced.map((b) => {
     if (!goalWeek.reason || (goalWeek.modality ? b.modality !== goalWeek.modality : modalityToCategory(b.modality) !== proj.categoryGoals?.goals.find((g) => g.rank === 1)?.category)) return b;
     const reason = scheduleSignal.postureToday !== "normal" || b.status !== "ready" ? `${goalWeek.reason} Today's safety and schedule rules still decide whether you train.` : goalWeek.reason;
     return { ...b, because: [...b.because ?? [], reason] };
   }), proj);
+  const fullRestDay = roadmapInputs.fullRestDay === true || scheduleSignal.postureToday === "normal" && weeklyRoadmap.find((day) => day.isToday)?.restDay === true;
+  const blocks = fullRestDay ? goalOrdered.map((b) => {
+    if (["fueling", "game_iq"].includes(b.modality)) return b;
+    const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter((d2) => isSoftRecovery(d2.slug)) : [];
+    return {
+      ...b,
+      drills,
+      steps: drills.length ? drillsToSteps(drills) : ["Rest today. No physical training is scheduled."],
+      status: b.status === "awaiting-input" ? "awaiting-input" : drills.length ? "ready" : "off-day",
+      offDayOverridable: false,
+      gamePlanTemplate: null,
+      why: "Rest today \u2014 gentle recovery only. Save real training for your next training day.",
+      roadmapReason: "Full rest day \u2014 soft recovery only.",
+      durationMin: drills.length ? b.durationMin : null
+    };
+  }) : goalOrdered;
   if (proj.categoryGoals && typeof console !== "undefined" && false) {
     console.debug("[dailyPlan] ordered by ranked goals \u2192", summarizeGoals(proj.categoryGoals));
   }

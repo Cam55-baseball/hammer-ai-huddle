@@ -9,6 +9,7 @@ import {
   type LifecycleClass,
   type WarmupContext,
 } from "../warmupLibrary";
+import { isSoftRecovery } from "../../../../../supabase/functions/_shared/wic/schedule/softRecovery";
 
 const CONTEXTS: WarmupContext[] = [
   "game_day", "in_season_practice", "in_season_default", "speed_day", "lift_day",
@@ -26,6 +27,12 @@ describe("fast-twitch warm-up primer", () => {
           for (const isThrower of [false, true]) {
             for (let day = 0; day < 56; day++) {
               const built = buildWarmup({ context, lifecycle, gameDay: context === "game_day", daySeed: day, equipment: day % 2 ? GYM : [], sport, isThrower });
+              if (context === "recovery_day") {
+                expect(built.drills.length).toBeGreaterThan(0);
+                expect(built.drills.every(d => isSoftRecovery(d.slug))).toBe(true);
+                expect(built.drills.some(d => d.role === "activation" || TWITCH_ROLES.includes(d.role))).toBe(false);
+                continue;
+              }
               expect(built.drills[0]?.role, `${context}/${lifecycle}/${sport}/${isThrower}/day-${day}`).toBe("tissue_prep");
               expect(built.drills[0]?.slug).toBe("wu_tissue_prep_roll_and_rhythm");
               expect(built.drills[0]?.cue).toMatch(/30 seconds/);

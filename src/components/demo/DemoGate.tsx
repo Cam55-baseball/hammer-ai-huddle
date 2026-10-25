@@ -6,7 +6,8 @@ import { usePurchaseAvailability } from '@/hooks/usePurchaseAvailability';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-const GATED_PREFIXES = ['/select-modules', '/pricing', '/checkout', '/training', '/nutrition', '/vault'];
+// Purchase is a deliberate choice, never an enrollment-demo prerequisite.
+const GATED_PREFIXES = ['/training', '/nutrition', '/vault'];
 
 // '/dashboard' is deliberately NOT gated: new athletes go straight from
 // onboarding to the dashboard, where the spotlight tour auto-starts.

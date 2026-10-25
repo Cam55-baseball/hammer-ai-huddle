@@ -782,9 +782,10 @@ function HammerDailyPlanBody({
           pitcherOutings: pitcherSchedule.facts,
           practiceRecords: practiceLoadHistory.data,
           subscriptionModules: modules,
+          fullRestDay: wkRx.data?.some(row => (row.why_payload as any)?.rest_day?.allowed_class === "none" || (row.why_payload as any)?.training_context?.day_type === "recovery_day") === true,
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a

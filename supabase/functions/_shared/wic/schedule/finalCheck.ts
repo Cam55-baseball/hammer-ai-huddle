@@ -9,6 +9,7 @@ import { MAX_BALL_OZ, OVERLOAD_MIN_AGE, ozFromSlug } from "../content/programCon
  * recovery option. PURE: no database, no clock.
  */
 import { loadedLiftRows } from "./tissueCost/shadow/adapter.ts";
+import { isSoftRecovery } from "./softRecovery.ts";
 
 export interface FinalCheckRow {
   slot?: string | null;
@@ -81,6 +82,8 @@ export interface FinalCheckContext {
   weeklyLiftMax: number | null;
   /** The rest-day calculator removed today's lift. */
   liftRemoved: boolean;
+  /** Whole-day rest, unlike spacing that only removes lifting. */
+  fullRestDay?: boolean;
   /** Days before planDate (planned, whether done or not) carrying each spaced kind. */
   priorKindDates?: Partial<Record<DayKind, readonly string[]>>;
   /** A game or tournament is on the day after planDate. */
@@ -132,6 +135,16 @@ export function finalRuleCheck<T extends FinalCheckRow>(
 ): { rows: T[]; swaps: FinalCheckSwap[] } {
   const swaps: FinalCheckSwap[] = [];
   const drop = new Set<T>();
+
+  if (ctx.fullRestDay === true) {
+    for (const row of rows) {
+      if (["nutrition", "mental", "fueling", "game_iq"].includes(row.slot ?? "")) continue;
+      if (isSoftRecovery(row.movement_slug)) continue;
+      drop.add(row);
+      swaps.push({ rule: "rest_day", movement_slug: row.movement_slug ?? null, slot: row.slot ?? null,
+        detail: `${ctx.planDate}: full rest day — soft recovery only.` });
+    }
+  }
 
   // 1. Per-movement rules: age, season, eccentric overload in season.
   for (const r of rows) {

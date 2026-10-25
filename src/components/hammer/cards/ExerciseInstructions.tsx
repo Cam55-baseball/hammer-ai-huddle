@@ -50,7 +50,6 @@ export function ExerciseInstructions({ name, slug, guideOverride, setup, cue, st
       {(cue || guide?.feel || live?.cue) && <p className="text-muted-foreground"><span className="font-medium text-foreground">Cue: </span>{R(cue ?? guide?.feel ?? live?.cue)}</p>}
       <p className="text-muted-foreground"><span className="font-medium text-foreground">Stop if: </span>{stopIf ?? guide?.stopIf ?? fallback?.stopIf ?? live?.stop_if ?? "You feel pain."}</p>
       {(why || guide?.whyToday || live?.why) && <p data-why-movement className="text-muted-foreground"><span className="font-medium text-foreground">Why this movement: </span>{R(why || guide?.whyToday || live?.why)}</p>}
-      <p data-why-changed className="text-muted-foreground"><span className="font-medium text-foreground">Why today's work changed: </span>{changes && changes.length ? changes.join(" ") : "Nothing changed today."}</p>
   </>;
   if (expanded) return <section data-exercise-instructions className="space-y-2 text-xs"><h4 className="font-semibold">How to do it</h4>{content}</section>;
   return <Collapsible open={open} onOpenChange={setOpen} data-exercise-instructions>

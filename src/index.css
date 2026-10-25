@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+.hm-focus-theme {
+  color: hsl(var(--focus-ink));
+  background-color: hsl(var(--focus-surface));
+  --background: var(--focus-surface);
+  --foreground: var(--focus-ink);
+  --card: var(--focus-surface);
+  --card-foreground: var(--focus-ink);
+  --primary: var(--focus-accent);
+  --primary-foreground: var(--focus-surface);
+  --muted: var(--focus-muted);
+  --muted-foreground: var(--focus-ink);
+  --border: var(--focus-border);
+  --input: var(--focus-muted);
+}
+.hm-focus-theme :is(h3, p, label, output, input, textarea) { color: hsl(var(--focus-ink)); }
+.hm-focus-theme :is(input, textarea) { background-color: hsl(var(--focus-muted)); }
+
 /* IQ 101 — Game IQ design tokens (semantic, theme-safe) */
 @layer base {
   :root {
@@ -43,6 +60,11 @@ All colors MUST be HSL.
     --primary: 0 100% 50%;
     --primary-foreground: 0 0% 100%;
     --primary-glow: 0 100% 60%;
+    --focus-surface: 160 35% 10%;
+    --focus-ink: 160 15% 96%;
+    --focus-accent: 158 70% 55%;
+    --focus-muted: 160 20% 19%;
+    --focus-border: 160 22% 30%;
     --launch-backdrop: radial-gradient(ellipse at 52% 44%, hsl(var(--primary) / .9), hsl(var(--primary) / .37) 40%, hsl(var(--secondary)) 78%);
     --launch-beam: linear-gradient(90deg, transparent 31%, hsl(var(--rc-glass) / .22) 49%, transparent 65%);
     --launch-ball-fallback: radial-gradient(circle at 35% 27%, hsl(var(--primary-foreground)), hsl(var(--muted)) 68%, hsl(var(--secondary)) 100%);
