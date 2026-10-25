@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 /**
  * Global TEST cleanup law (owner 2026-10-25): parked/system accounts are
@@ -7,7 +8,7 @@ import { readFileSync } from "node:fs";
  * nightly job. These guards fail if the exclusion is removed from a reader
  * or job that generates rows or lists athletes.
  */
-const read = (p: string) => readFileSync(new URL(`../../${p}`, import.meta.url), "utf8");
+const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
 const JOBS_WITH_SHARED_EXCLUSION = [
   "supabase/functions/nightly-hie-process/index.ts",
