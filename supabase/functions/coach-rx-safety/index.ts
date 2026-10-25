@@ -338,13 +338,15 @@ Deno.serve(async (req) => {
         const gate = await recruitingGate(admin, me, connectionError || connected !== true ? [] : [rx.recipient_id], "metrics");
         if (gate.get(rx.recipient_id) !== "visible") return json({ error: "You can't manage this player's workout." }, 403);
         let nextSafety = rx.safety_result ?? {};
+        let reschedWarnings: CoachGuidelineWarning[] = [];
         if (action === "reschedule") {
           const facts = await gatherFacts(admin, rx.recipient_id, rx.category, newDate, prescriptionIntensity(rx.safety_result?.intensity), false, today);
-          const hard = checkPrescriptionAlongside(factsWithoutAdvisories(facts));
+          const hard = checkPrescriptionAlongside(factsWithoutWarnings(facts));
           if (hard.verdict !== "allow") return json({ applied: false, reasons: hard.reasons, safeOption: hard.safeOption });
-          const warnings = factGuidelineWarnings(facts).map(w => ({ ...w, player_id: rx.recipient_id }));
-          if (warnings.length && !warningsAcknowledged(warnings, acknowledgement)) return json({ applied: false, warning_required: true, warnings });
-          nextSafety = { ...nextSafety, overrides: [...(nextSafety.overrides ?? []), ...(warnings.length ? [overrideRecord(warnings, action)] : [])] };
+          reschedWarnings = collectWarnings(facts, rx.recipient_id);
+          const reschedAckError = ackError(reschedWarnings);
+          if (reschedAckError) return reschedAckError;
+          nextSafety = { ...nextSafety, overrides: [...(nextSafety.overrides ?? []), ...(reschedWarnings.length ? [overrideRecord(reschedWarnings, action)] : [])] };
         }
         const { error: updateError } = await admin.from("coach_prescriptions").update(
           action === "cancel"
@@ -352,6 +354,8 @@ Deno.serve(async (req) => {
             : { plan_date: newDate, safety_result: nextSafety, updated_at: new Date().toISOString() },
         ).eq("id", rxId).eq("status", "pending").is("cancelled_at", null).eq("updated_at", rx.updated_at).select("id").single();
         if (updateError) throw updateError;
+        const reschedMedical = reschedWarnings.filter(w => w.requires_reason);
+        if (reschedMedical.length) await notifyParentsOfMedicalOverride(admin, rx.recipient_id, action, reschedMedical, overrideReason, testInbox);
         return json({ applied: true });
       }
 
