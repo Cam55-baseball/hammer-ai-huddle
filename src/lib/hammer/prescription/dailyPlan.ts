@@ -1,4 +1,5 @@
 import { sortByWarmupStage } from "./warmupStages";
+import { isSoftRecovery } from "../../../../supabase/functions/_shared/wic/schedule/softRecovery";
 import { weeklyGoalBlocks, secondGoalFirst } from './weeklyGoalBlocks';
 import { priorityAccess } from '../priorityAccess';
 import { structureSkillSession } from './skillSessionStructure';
@@ -2225,6 +2226,8 @@ function scaleDosageLabel(dosage: string, scale: number): string {
 
 
 export interface RoadmapInputs {
+  /** Current server's whole-day rest verdict; never inferred from lift spacing alone. */
+  readonly fullRestDay?: boolean;
   readonly practiceRecords?: ReadonlyArray<PracticeLoadRecord>;
   readonly pitcherOutings?: OutingFacts | null;
   readonly recentCompletions?: RecentCompletions;
@@ -2378,12 +2381,24 @@ export function buildHammerDailyPlan(
       roadmapInputs.defenseFullOverride === true,
     ),
   ), practiceLoad);
-  const blocks = secondGoalFirst(practiced.map(b => {
+  const goalOrdered = secondGoalFirst(practiced.map(b => {
     if (!goalWeek.reason || (goalWeek.modality ? b.modality !== goalWeek.modality : modalityToCategory(b.modality) !== proj.categoryGoals?.goals.find(g => g.rank === 1)?.category)) return b;
     const reason = scheduleSignal.postureToday !== 'normal' || b.status !== 'ready'
       ? `${goalWeek.reason} Today's safety and schedule rules still decide whether you train.` : goalWeek.reason;
     return { ...b, because: [...(b.because ?? []), reason] };
   }), proj);
+  const fullRestDay = roadmapInputs.fullRestDay === true ||
+    (scheduleSignal.postureToday === "normal" && weeklyRoadmap.find(day => day.isToday)?.restDay === true);
+  // Last composition boundary: laterality, owner slots, overrides and warm-up anchors cannot reopen rest.
+  const blocks = fullRestDay ? goalOrdered.map(b => {
+    if (["fueling", "game_iq"].includes(b.modality)) return b;
+    const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter(d => isSoftRecovery(d.slug)) : [];
+    return { ...b, drills, steps: drills.length ? drillsToSteps(drills) : ["Rest today. No physical training is scheduled."],
+      status: drills.length ? "ready" as const : "off-day" as const,
+      offDayOverridable: false, gamePlanTemplate: null,
+      why: "Rest today — gentle recovery only. Save real training for your next training day.",
+      roadmapReason: "Full rest day — soft recovery only.", durationMin: drills.length ? b.durationMin : null };
+  }) : goalOrdered;
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
     // eslint-disable-next-line no-console
