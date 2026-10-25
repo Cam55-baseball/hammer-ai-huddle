@@ -1,0 +1,103 @@
+{
+  "fixture_only": true,
+  "viewport": "390x844",
+  "results": [
+    {
+      "action": "send",
+      "choice": "Cancel action",
+      "fixture_writes": 0,
+      "pass": true
+    },
+    {
+      "action": "send",
+      "choice": "Okay",
+      "fixture_writes": 1,
+      "pass": true
+    },
+    {
+      "action": "team send",
+      "choice": "Cancel action",
+      "fixture_writes": 0,
+      "pass": true
+    },
+    {
+      "action": "team send",
+      "choice": "Okay",
+      "fixture_writes": 1,
+      "pass": true
+    },
+    {
+      "action": "schedule",
+      "choice": "Cancel action",
+      "fixture_writes": 0,
+      "pass": true
+    },
+    {
+      "action": "schedule",
+      "choice": "Okay",
+      "fixture_writes": 1,
+      "pass": true
+    },
+    {
+      "action": "edit",
+      "choice": "Cancel action",
+      "fixture_writes": 0,
+      "pass": true
+    },
+    {
+      "action": "edit",
+      "choice": "Okay",
+      "fixture_writes": 1,
+      "pass": true
+    },
+    {
+      "action": "resend",
+      "choice": "Cancel action",
+      "fixture_writes": 0,
+      "pass": true
+    },
+    {
+      "action": "resend",
+      "choice": "Okay",
+      "fixture_writes": 1,
+      "pass": true
+    },
+    {
+      "action": "use_instead",
+      "choice": "Cancel action",
+      "fixture_writes": 0,
+      "pass": true
+    },
+    {
+      "action": "use_instead",
+      "choice": "Okay",
+      "fixture_writes": 1,
+      "pass": true
+    },
+    {
+      "action": "add_alongside",
+      "choice": "Cancel action",
+      "fixture_writes": 0,
+      "pass": true
+    },
+    {
+      "action": "add_alongside",
+      "choice": "Okay",
+      "fixture_writes": 1,
+      "pass": true
+    },
+    {
+      "action": "use_today",
+      "choice": "Cancel action",
+      "fixture_writes": 0,
+      "pass": true
+    },
+    {
+      "action": "use_today",
+      "choice": "Okay",
+      "fixture_writes": 1,
+      "pass": true
+    }
+  ],
+  "errors": []
+}
