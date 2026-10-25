@@ -101,4 +101,12 @@ describe("system/parked account exclusion", () => {
     expect(client).toContain("export * from");
     expect(client).toContain("_shared/wic/phases/armLedgerEntry");
   });
+
+  it("coach use_instead reaches the certified day-lock commit for skill blocks", () => {
+    const edge = read("supabase/functions/coach-rx-safety/index.ts");
+    // The blanket refusal is gone; replacement flows through the commit path.
+    expect(edge).not.toContain("hasn't passed its complete safety check yet");
+    expect(edge).toContain("block_expected");
+    expect(edge).toContain("coach_rx_commit_certified");
+  });
 });
