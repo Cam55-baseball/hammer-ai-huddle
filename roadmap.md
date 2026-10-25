@@ -4371,3 +4371,13 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - [x] Honest negative proofs (safety working on a recovery Sunday, democollege 5 straight lift days, ledger 2/2): lift Use instead blocked — "recovery check allows lighter work only", "template full_body_recovery requires core/mobility", "rest_day plan rule", "lifting restart easy"; 0-cost lift and recovery Add alongside blocked — spent 2 > recovery-day cap 1; over-budget add blocked — "would pass today's saved workload limit"; decline path applied.
 - [ ] Positive choose-path proof still open: needs a training day whose real plan has headroom/skill cards (today is a recovery day for every TEST player). Nightly 02:00–06:15 re-check pending (window not elapsed at report time). Full suite not re-run this run (focused coach tests green).
 - Cleanup: all fixtures deleted and verified zero (rx/links/members/snapshot/coach rows; lifting_age_years restored NULL). 12 append-only check-in events retained on hidden system account democollege (ledger is append-only by design; same class as the 8 owner-retained TEST events; excluded from stats/lists/jobs). Evidence: .lovable/proofs/global-test-closeout/live-role-proof-run4.json.
+
+## Run 2026-10-25 03:45 UTC — closeout run 5: confirmations, full suite, checklist
+- [x] Owner confirmation 1: arm/throw/ramp safety on coach prescriptions runs through the existing shared judges only (armLoadCheck → ledgerDay/armBudget/activeRamps; 10 behavior tests + live recovery-day blocks).
+- [x] Owner confirmation 2: same-category skill-block replacement confirmed for hitting/pitching/throwing/fielding/baserunning — each maps to exactly its own slot, no shared slot, coach rows land in that slot (new test); atomic day-lock commit live-proven for hitting, shared by all five.
+- [x] Full suite in four bounded batches: 529 files / 4,188 tests, all passing; preview build OK.
+- [x] Checklist updated with the Oct 25 run section (coverage-gate fix, live proof attempt, honest blocks, cleanup, verdicts).
+- [ ] Positive send→choice→log→readback proof: BLOCKED by real plan state — no TEST player has a skill card with workload headroom today (recovery Sunday; the two speed/conditioning plans are at/over cap). Needs a normal training day; do not fabricate.
+- [ ] Nightly fixed-ID re-check for the 37 parked accounts: PENDING until after 06:15 UTC (window not elapsed at 03:45).
+- [ ] Global TEST cleanup certification: NOT CERTIFIED (nightly re-check pending).
+- [ ] Ready to publish: NO — positive choose-path proof, nightly re-check, five human checks open.
