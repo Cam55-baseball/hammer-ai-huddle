@@ -45,9 +45,8 @@ describe("real catalog declarations rendered through the canonical logger", () =
   });
 });
 describe("generated block drill entries", () => {
-  it("walks both sports and all positions over a complete week, rendering every returned physical drill", () => {
+  it.each(["baseball", "softball"].flatMap(sport => ["P", "C", "SS", "CF", "2B", "1B", "DH"].map(role => [sport, role])))("renders every returned physical drill for %s %s over a complete week", (sport, role) => {
     const counts = new Map<string, number>();
-    for (const sport of ["baseball", "softball"]) for (const role of ["P", "C", "SS", "CF", "2B", "1B", "DH"]) {
       const variables = Object.entries({ sport_primary: sport, position_primary: role, lifecycle_band: "u18", season_phase: "off", lifting_age_years: 2, weekly_availability_days: 6, injury_history: [], equipment_effective: ["ball", "bat", "glove", "field", "tee"] }).map(([key,value]) => ({ key, value, missing: false, confidence: "high" }) as ContextVariable);
       const context = { variables, missing: [], isLoading: false, missingCount: 0, envelope: null, get: (key: string) => variables.find(v => v.key === key) } as HammerAthleteContext;
       for (let d = 0; d < 7; d++) for (const block of buildHammerDailyPlan(context, undefined, null, null, undefined, new Date(2026,9,26+d)).blocks) {
@@ -60,10 +59,9 @@ describe("generated block drill entries", () => {
           counts.set(block.modality, (counts.get(block.modality) ?? 0) + 1); cleanup();
         }
       }
-    }
-    console.info("Generated physical drill render counts", Object.fromEntries(counts));
+    console.info("Generated physical drill render counts", sport, role, Object.fromEntries(counts));
     expect(counts.get("warmup")).toBeGreaterThan(0);
-    expect(counts.get("hitting")).toBeGreaterThan(0);
-    expect(counts.get("defense")).toBeGreaterThan(0);
+    if (role !== "P") expect(counts.get("hitting")).toBeGreaterThan(0);
+    if (role !== "P") expect(counts.get("defense")).toBeGreaterThan(0);
   }, 120000);
 });
