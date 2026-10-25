@@ -841,6 +841,13 @@
       "when": 1792939935145,
       "tag": "0119_coach_workload_equipment_warning_codes",
       "breakpoints": true
+    },
+    {
+      "idx": 120,
+      "version": "7",
+      "when": 1792947183587,
+      "tag": "0120_coach_safety_warning_codes_all",
+      "breakpoints": true
     }
   ]
 }

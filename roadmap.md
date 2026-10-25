@@ -4391,3 +4391,5 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - [x] Nightly fixed-ID re-check for the parked accounts: DONE Oct 25 13:45 UTC — 131 pre-filter leftover rows snapshotted and removed, both state jobs redeployed with the exclusion filter, live batch run wrote zero parked rows, foundation rows all predate parking.
 - [x] Global TEST cleanup certification: CERTIFIED Oct 25 — (a) zero non-system TEST markers, (b) exclusions in readers/jobs, (c) zero new rows post-filter.
 - [ ] Ready to publish: NO — one open item: Monday Oct 26 positive coach-prescription Use-instead → focus log → readback proof on a real training day. Full suite 532 files / 4,226 tests PASS; five human checks listed in docs/owner/publish-checklist.md (not blockers).
+
+- [x] Oct 25 Option B: all coach safety stops are Okay/Cancel warnings (minor reason + parent notice for pain/arm/age); hosted proof after Monday plans.
