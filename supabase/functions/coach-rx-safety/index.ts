@@ -207,15 +207,20 @@ Deno.serve(async (req) => {
       const warnings: CoachGuidelineWarning[] = [];
       for (const send of sends) {
         const facts = await gatherFacts(admin, send.recipient_id, send.category, send.plan_date, prescriptionIntensity(send.safety_result.intensity), false, today);
-        const hard = checkPrescriptionAlongside(factsWithoutAdvisories(facts));
+        const hard = checkPrescriptionAlongside(factsWithoutWarnings(facts));
         if (hard.verdict !== "allow") return json({ applied: false, reasons: hard.reasons, safeOption: hard.safeOption });
-        warnings.push(...factGuidelineWarnings(facts).map(w => ({ ...w, player_id: send.recipient_id })));
+        warnings.push(...collectWarnings(facts, send.recipient_id));
       }
-      if (warnings.length && !warningsAcknowledged(warnings, acknowledgement)) return json({ applied: false, warning_required: true, warnings });
+      const sendAckError = ackError(warnings);
+      if (sendAckError) return sendAckError;
       const { data: inserted, error } = await admin.from("coach_prescriptions").insert(sends.map(send => ({ ...send, sender_id: me,
         safety_result: { ...send.safety_result, overrides: warnings.filter(w => w.player_id === send.recipient_id && w.date === send.plan_date).length ? [overrideRecord(warnings.filter(w => w.player_id === send.recipient_id && w.date === send.plan_date), "send")] : [] },
       }))).select("id");
       if (error) throw error;
+      for (const send of sends) {
+        const medical = warnings.filter(w => w.player_id === send.recipient_id && w.date === send.plan_date && w.requires_reason);
+        if (medical.length) await notifyParentsOfMedicalOverride(admin, send.recipient_id, "send", medical, overrideReason, testInbox);
+      }
       return json({ applied: true, ids: inserted?.map((r: any) => r.id) });
     }
 
