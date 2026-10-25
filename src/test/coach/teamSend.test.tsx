@@ -3,7 +3,7 @@
  * writes one coach_prescriptions row per player, all sharing one
  * team_send_id, so each player gets their own Today choice and safety check.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useSentActivities } from "@/hooks/useSentActivities";
 import type { CustomActivityTemplate } from "@/types/customActivity";
@@ -45,8 +45,11 @@ const template = {
 
 describe("coach team send", () => {
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-24T12:00:00Z"));
     for (const k of Object.keys(inserts)) delete inserts[k];
   });
+  afterEach(() => vi.useRealTimers());
 
   it("writes one coach_prescriptions row per player with a shared team_send_id", async () => {
     const { result } = renderHook(() => useSentActivities());

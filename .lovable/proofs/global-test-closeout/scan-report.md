@@ -8,6 +8,8 @@ All 10,842 rows were copied into the private service-only `_snapshot_stray_test_
 
 **Zero name-search result is NOT zero stray data:** it only confirms no remaining unhidden TEST-named profiles. Fixed-identity rows remain parked; full stat/list/nightly exclusion is not yet proven. `nightly-mpi-process` uses ranking exclusion, but other jobs and SQL readers have narrower or exact-admin-only filters. Kept profiles must not be changed. Discovery beyond names/aliases, orphaned ownership, indirect child links and anonymized HMAC records still require explicit coverage; do not certify from this scan alone.
 
+Broader auth-alias discovery subsequently found **24 additional candidate accounts**, including 16 non-system profiles and eight accounts without profiles. Their direct UUID scan covers 345 tables and found **143,511 rows across 23 tables** (`additional-candidates.json`), not yet confirmed as unkept synthetic accounts. They remain unchanged pending provenance/kept-registry reconciliation. Fixed-ID re-scan of the first 13 confirms the same **10,842 parked rows** (`fixed-id-rescan.json`); no post-hide name-query zero is used as certification.
+
 No publish, cron schedule or iOS changes. Migration 0113 creates the private snapshot; snapshot and exact parking applied. First all-table snapshot attempt timed out and rolled back; indexed per-table copies then succeeded.
 
 ## Counts per table before parking
