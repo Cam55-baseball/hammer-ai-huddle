@@ -25,6 +25,7 @@ import {
 import { prescriptionMode, prescriptionChoiceDate } from "../_shared/coach/prescriptionActions.ts";
 import { loadPrescriptionEnvelope } from "../_shared/coach/loadPrescriptionEnvelope.ts";
 import { prescriptionResults } from "../_shared/coach/prescriptionResults.ts";
+import { certifyCoachOwnItems } from "../_shared/coach/ownItemCertification.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -323,6 +324,12 @@ Deno.serve(async (req) => {
       if (result.verdict !== "allow") return json({ applied: false, verdict: result.verdict, reasons: result.reasons, safeOption: result.safeOption });
       const { data: senderProfile, error: senderError } = await admin.from("profiles").select("full_name").eq("id", rx.sender_id).maybeSingle();
       if (senderError) throw senderError;
+      // Coach-authored (non-Vault) items must pass the shared certification:
+      // common gear vocabulary and a governed measure type, with unknown gear
+      // named instead of silently dropped. Certification never prices workload
+      // — the envelope's existing workload-declaration check still applies.
+      const ownItems = certifyCoachOwnItems(Array.isArray(rx.exercises) ? rx.exercises : []);
+      if (!ownItems.ok) return json({ applied: false, verdict: "blocked", reasons: ownItems.reasons, safeOption: "Safe option: save this workout for later and ask your coach to fix the listed items." });
       rows = coachRxToWkRows({
         userId: me, planDate: date, category, prescriptionId: rxId,
         coachName: senderProfile?.full_name ?? null,
@@ -330,6 +337,14 @@ Deno.serve(async (req) => {
         usedInstead: choice === "use_instead",
       });
       if (!rows.length) return json({ error: "This workout has no usable exercises. Ask your coach to review it." }, 409);
+      // Record the certified common-gear tokens on each own item so the
+      // vocabulary survives server-side even though wk rows carry no gear.
+      for (const row of rows) {
+        if (!row.movement_slug) {
+          const gear = ownItems.gearByName.get(String(row.movement_name));
+          row.why_payload = { ...(row.why_payload as Record<string, unknown>), own_item_certified: true, certified_gear: gear ?? [] };
+        }
+      }
       const envelope = await loadPrescriptionEnvelope(admin, me, date, category, rows, choice === "use_instead");
       if (!envelope.allowed) return json({ applied: false, verdict: "blocked", reasons: envelope.reasons, safeOption: envelope.safeOption });
       rows = envelope.rows;
