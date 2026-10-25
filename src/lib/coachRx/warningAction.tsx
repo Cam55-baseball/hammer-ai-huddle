@@ -30,6 +30,7 @@ export async function runCoachWarningAction<T extends WarningActionResult>(
   let result = await call();
   const acknowledgedFindings = new Set<string>();
   let reason: string | undefined;
+  let reasonPrompts = 0;
   while ((result.warning_required || result.reason_required) && result.warnings?.length) {
     const keys = warningKeys(result.warnings);
     const fingerprint = JSON.stringify(keys);
@@ -39,7 +40,13 @@ export async function runCoachWarningAction<T extends WarningActionResult>(
       if (answer === null) return { applied: false, cancelled: true };
       acknowledgedFindings.add(fingerprint);
       reason = answer;
-    } else return { applied: false, reason_required: true, error: "Type a reason of at least 10 characters. Nothing was saved." };
+    } else {
+      // Server wants a longer typed reason: ask again, at most three times.
+      if (++reasonPrompts > 3) return { applied: false, reason_required: true, error: "Type a reason of at least 10 characters. Nothing was saved." };
+      const answer = await confirm(result.warnings);
+      if (answer === null) return { applied: false, cancelled: true };
+      reason = answer;
+    }
     result = await call(keys, reason);
   }
   return result;
