@@ -14,7 +14,13 @@ describe("coach calls existing WIC and Swap judges", () => {
     expect(result.allowed).toBe(true);
     expect(result.warnings).toContainEqual({ code: "missing_equipment", date: "2026-10-24", rule: "Warmup: Player reported no barbell." });
   });
-  it("uses the existing age gate", () => { const i = input(); i.age = 12; i.final.age = 12; expect(judgeCoachEnvelope(i).allowed).toBe(false); });
+  it("turns the existing age gate into a reason-class warning", () => { const i = input(); i.age = 12; i.final.age = 12; const r = judgeCoachEnvelope(i); expect(r.allowed).toBe(true); expect(r.warnings.find(w => w.code === "age_gate")).toMatchObject({ medical: true, date: "2026-10-24" }); });
+  it("turns season and recovery-intensity stops into warnings", () => {
+    const i = input(); i.catalog.set("warmup", { ...movement, season_legality: { in_season: false }, intensity_class: "high" } as any); i.final.phase = "in_season"; i.blockedIntensityClasses = ["high"];
+    const r = judgeCoachEnvelope(i); expect(r.warnings.map(w => w.code)).toEqual(expect.arrayContaining(["season_rule", "recovery_intensity"]));
+    expect(r.reasons.some(x => /season|lighter/.test(x))).toBe(false);
+  });
+  it("labels impossible dose data Fix this entry", () => { const i = input(); i.rows = [{ ...row, duration_seconds: 0 }]; expect(judgeCoachEnvelope(i).reasons.join(" ")).toContain("Fix this entry"); });
   it("does not inherit an old approval after a gear correction reopens review", () => {
     expect(judgeCoachEnvelope({ ...input(), pendingReview: ["warmup"] }).allowed).toBe(false);
     expect(judgeCoachEnvelope({ ...input(), pendingReview: [] }).allowed).toBe(true);
