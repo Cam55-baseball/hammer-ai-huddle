@@ -14,6 +14,7 @@ import { loadU13ThrowBlock } from "../wic/phases/u13ThrowGate.ts";
 import { categorySlots, type RxCategory } from "./prescriptionSafety.ts";
 import { savedDayCoverage } from "./savedDayCoverage.ts";
 import { pendingEquipmentReviews } from "../vault/equipmentReview.ts";
+import { checkCoachArmLoad } from "./armLoadCheck.ts";
 
 type Row = Record<string, any>;
 const shift = (date: string, n: number) => new Date(Date.parse(`${date}T12:00:00Z`) + n * 86400000).toISOString().slice(0, 10);
@@ -81,9 +82,24 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   if (injuries.length || raw.dailyLogs.some(d => d.entry_date === date && d.injury_mode) || raw.quizzes.some(q => q.entry_date === date && Number(q.pain_scale) > 0)) return refused("Pain or injury is recorded. Keep your current recovery plan and ask your coach before changing work.");
   const throwing = proposed.filter(row => ["throws", "pitches", "innings"].includes(row.dosage_unit) || classify(catalog.get(row.movement_slug) as any)?.channel === "THROW");
   if (throwing.some(row => row.reps == null || row.sets == null)) return refused("Throwing items need an exact throw count before your arm limit can be checked.");
-  // Never substitute guessed innings, role or unweighted reps for canonical
-  // arm exposure. Until that adapter is certified, preserve the saved plan.
-  if (throwing.length || ["pitching", "throwing", "fielding"].includes(category)) return refused("This workout's full arm-load check isn't available yet. Save it for later; your current plan is unchanged.");
+  // Innings have no exact throw count; never guess one into the arm ledger.
+  if (throwing.some(row => row.dosage_unit === "innings")) return refused("Innings can't be checked against your arm limit. Ask your coach for an exact throw or pitch count.");
+  if (throwing.length) {
+    // Same judges the plan's arm ledger and Ramp Law use — one budget, logged
+    // plus planned throws added together, stricter role rule wins. No
+    // coach-specific rules (see _shared/coach/armLoadCheck.ts).
+    const armCheck = checkCoachArmLoad({
+      sport: context.sport_primary, positions: profile.positions ?? [], age, growthMode: phase.growth, date,
+      entries: (arm ?? []) as any,
+      planned: throwing.map(row => ({
+        count: row.dosage_unit === "total_reps" ? row.total_reps : row.sets * row.reps,
+        kind: row.dosage_unit === "pitches" ? "pitch" as const : "practice" as const,
+        intensityClass: catalog.get(row.movement_slug)?.intensity_class ?? null,
+      })),
+      gameDates: raw.games.filter((g: Row) => !g.deleted_at && !g.ignored_for_training).map((g: Row) => g.game_date),
+    });
+    if (!armCheck.allowed) return refused(armCheck.reason!);
+  }
   const previous = raw.prescriptions.filter(row => row.plan_date < date);
   const priorKinds: any = {};
   for (const kind of dayKinds(previous.filter(row => row.plan_date === shift(date, -1)), catalog)) priorKinds[kind] = [shift(date, -1)];

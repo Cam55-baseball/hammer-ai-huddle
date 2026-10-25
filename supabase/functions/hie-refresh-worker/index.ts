@@ -5,6 +5,7 @@
 // never ran — never proof that it ran and did nothing.
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { systemAccountIds } from "../_shared/systemAccounts.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -51,6 +52,11 @@ serve(async (req) => {
     const { data: dirty, error } = await query;
     if (error) throw error;
 
+    // Parked/system accounts are never refreshed (global TEST cleanup law).
+    const system = await systemAccountIds(supabase);
+    const activeDirty = (dirty ?? []).filter((d: any) => !system.has(String(d.user_id)));
+    if (system.size) await supabase.from("hie_dirty_users").delete().in("user_id", [...system]);
+
     // Visibility on rows the normal query refuses to touch — the exact condition
     // that stranded the queue silently for months.
     const { count: exhaustedCount } = await supabase
@@ -66,7 +72,7 @@ serve(async (req) => {
       );
     }
 
-    if (!dirty || dirty.length === 0) {
+    if (!activeDirty || activeDirty.length === 0) {
       console.log(`[hie-refresh] idle — nothing eligible (parked=${exhaustedCount ?? 0})`);
       return new Response(
         JSON.stringify({ status: "idle", processed: 0, parked: exhaustedCount ?? 0 }),
@@ -74,14 +80,14 @@ serve(async (req) => {
       );
     }
 
-    console.log(`[hie-refresh] claimed ${dirty.length} user(s) (parked=${exhaustedCount ?? 0})`);
+    console.log(`[hie-refresh] claimed ${activeDirty.length} user(s) (parked=${exhaustedCount ?? 0})`);
 
     let processed = 0;
     let failed = 0;
     let skippedLocked = 0;
     const errors: string[] = [];
 
-    for (const row of dirty) {
+    for (const row of activeDirty) {
       const acquired = await supabase.rpc("try_acquire_hie_lock", {
         p_user_id: row.user_id, p_stale_seconds: 120,
       });
@@ -136,7 +142,7 @@ serve(async (req) => {
       processed,
       failed,
       skipped_locked: skippedLocked,
-      queue_size: dirty.length,
+      queue_size: activeDirty.length,
       parked: exhaustedCount ?? 0,
       errors: errors.slice(0, 10),
       duration_ms: Date.now() - startedAt,

@@ -19,6 +19,7 @@ import {
   ledgerRows,
 } from "../_shared/wic/exposure/ledger.ts";
 import { fetchShadowData } from "../_shared/wic/schedule/tissueCost/shadow/run.ts";
+import { systemAccountIds } from "../_shared/systemAccounts.ts";
 import {
   decideFromSnapshot,
   decisionsMatch,
@@ -48,6 +49,9 @@ async function activeAthletes(admin: ReturnType<typeof createClient>, since: str
   for (const r of rx ?? []) ids.add((r as { user_id: string }).user_id);
   const { data: mpi } = await admin.from("athlete_mpi_settings").select("user_id").limit(50000);
   for (const r of mpi ?? []) ids.add((r as { user_id: string }).user_id);
+  // Parked/system accounts never get new shadow decisions (global TEST cleanup law).
+  const system = await systemAccountIds(admin);
+  for (const id of system) ids.delete(id);
   return [...ids];
 }
 

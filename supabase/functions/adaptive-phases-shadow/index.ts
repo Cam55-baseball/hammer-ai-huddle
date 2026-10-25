@@ -10,6 +10,7 @@ import {
 import { resolveSeasonPhase } from "../_shared/seasonPhase.ts";
 import { RAMP_DISCIPLINES, type RampDiscipline } from "../_shared/wic/phases/rampLaw.ts";
 import { throwingProfile } from "../_shared/wic/phases/armLedger.ts";
+import { systemAccountIds } from "../_shared/systemAccounts.ts";
 import { isSwitchOnFor } from "../_shared/wic/flags/featureSwitches.ts";
 import {
   OUTCOMES_VERSION, METRIC_KEYS, LOWER_IS_BETTER, OUTCOME_METRICS, outcomeLinks, stepFeedback, defaultFeedback, painPatterns,
@@ -274,6 +275,9 @@ Deno.serve(async (req) => {
       const { data: lastOwner } = await admin.from("phase_insights").select("report").eq("scope", "owner").order("computed_on", { ascending: false }).limit(1).maybeSingle();
       const fb = lastOwner?.report?.feedback;
       const out: any[] = [];
+      // Parked/system accounts are never planned (global TEST cleanup law).
+      const system = await systemAccountIds(admin);
+      for (const id of system) ids.delete(id);
       // Six athletes at a time so the whole roster finishes well inside the time limit.
       const list = [...ids];
       for (let i = 0; i < list.length; i += 6) {

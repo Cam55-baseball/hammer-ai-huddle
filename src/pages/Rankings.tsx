@@ -105,7 +105,10 @@ export default function Rankings() {
         }
       }
 
-      const ranked: MPIRankingData[] = (mpiData || []).map((d) => ({
+      // profiles_public already excludes parked/system accounts; drop any
+      // ranked row whose profile is hidden so they never appear on the board.
+      const visible = (mpiData || []).filter((d) => profilesMap[d.user_id]);
+      const ranked: MPIRankingData[] = visible.map((d) => ({
         ...d,
         full_name: profilesMap[d.user_id] || "Anonymous",
       }));

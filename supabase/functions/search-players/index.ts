@@ -117,7 +117,11 @@ serve(async (req) => {
       .select('id, full_name, avatar_url, position, throwing_hand, batting_side, height, weight, state, high_school_grad_year, college_grad_year, commitment_status, enrolled_in_college, is_professional, is_free_agent, mlb_affiliate, independent_league, is_foreign_player')
       .neq('id', user.id)
       // Hide only the proof administrator; consent gates still govern demo athletes.
-      .neq('id', TEST_ADMIN_PROOF_ID);
+      .neq('id', TEST_ADMIN_PROOF_ID)
+      // Parked/system accounts never appear in search (global TEST cleanup law).
+      .eq('is_system_account', false)
+      .is('suspended_at', null)
+      .is('account_paused_at', null);
 
     // Apply name search if provided
     if (query && query.trim().length >= 2) {

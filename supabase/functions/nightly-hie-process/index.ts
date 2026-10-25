@@ -2,6 +2,7 @@
 // Mirrors continuation-token pattern from nightly-mpi-process.
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { systemAccountIds } from "../_shared/systemAccounts.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -60,11 +61,15 @@ serve(async (req) => {
       });
     }
 
+    // Parked/system accounts never get new snapshots (global TEST cleanup law).
+    const system = await systemAccountIds(supabase);
+    const activeAthletes = athletes.filter((a: any) => !system.has(String(a.user_id)));
+
     let processed = 0;
     let failed = 0;
     let lastUserId: string | null = null;
 
-    for (const athlete of athletes) {
+    for (const athlete of activeAthletes) {
       if (Date.now() - startedAt > TIMEOUT_MS) break;
       lastUserId = athlete.user_id;
       try {
