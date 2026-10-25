@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildHammerDailyPlan } from "@/lib/hammer/prescription/dailyPlan";
 import { NORMAL_SIGNAL } from "@/lib/hammer/prescription/scheduleContext";
 import type { HammerAthleteContext, ContextVariable } from "@/lib/hammer/context/athleteContext";
-import { isSoftRecovery } from "../../../supabase/functions/_shared/wic/schedule/softRecovery";
+import { isSoftRecovery, isWholeRestDayType } from "../../../supabase/functions/_shared/wic/schedule/softRecovery";
 import { finalRuleCheck } from "../../../supabase/functions/_shared/wic/schedule/finalCheck";
 function context(sport: string, role: string): HammerAthleteContext {
   const values = { sport_primary: sport, position_primary: role, lifecycle_band: "u18", season_phase: "off", lifting_age_years: 2, weekly_availability_days: 6, injury_history: [], equipment_effective: ["ball", "bat", "glove", "field", "tee"] };
@@ -10,6 +10,10 @@ function context(sport: string, role: string): HammerAthleteContext {
   return { variables, missing: [], isLoading: false, missingCount: 0, envelope: null, get: key => variables.find(v => v.key === key) as any };
 }
 describe("eight-week soft-recovery-only rest law", () => {
+  it("recognizes current and legacy saved rest identities without treating lift spacing as full rest", () => {
+    expect(["recovery", "recovery_day", "off_day"].map(isWholeRestDayType)).toEqual([true,true,true]);
+    expect(["lift_day", "training", "game_day", null].map(isWholeRestDayType)).toEqual([false,false,false,false]);
+  });
   for (const sport of ["baseball", "softball"]) for (const role of ["P", "C", "SS", "CF", "2B", "1B", "DH"]) {
     it(`${sport} ${role} has no physical training on any rest day`, () => {
       let restDays = 0;

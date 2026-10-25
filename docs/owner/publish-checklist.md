@@ -4,6 +4,19 @@ Updated October 25, 2026, final continuation.
 
 ## October 25 evening owner request — partial, not release-ready
 
+### Continuation at 23:30 UTC, Sunday
+
+- Retained finished purchase/layout proofs; no repeated implementation. No publish, cron or iOS changes.
+- Shared rest identity now recognizes `recovery`, `recovery_day` and `off_day` in the generator's final certifiers and Today readback. The authorized generator redeploy succeeded; affected-player trimmed readback remains unverified.
+- Actual rendered-entry audit passed all **989 live catalog declarations** and **2,474 generated physical drill appearances**: warmup 910, strength 224, hitting 168, throwing 452, recovery 280, speed 140, defense 216, baserunning 84. Additional rendered checks cover recovery/mobility/conditioning/speed/coach/Swap/assessment/test entry paths. Counted anti-rotation presses now remain counted rather than becoming timed because of their name. This does not prove every future owner-authored item or catalog dose is valid.
+- Focus Save & exit starts the saved set's canonical rest before returning to the open card; reopening preserves rest and avoids duplicate saves. A failed in-flight save cannot exit as though it succeeded. Standalone rest now supports pause/resume/restart/stop-reset; guided rest exposes none of these editable controls. Actual work timers retain active elapsed hundredths. Automated tests and inspected 390×844 fixture screenshots passed; actual athlete save/reload remains unverified.
+- Twelve exact side/type bunt definitions now open in the authenticated owner Vault, initially off. The right-handed squeeze editor was inspected at 390×844 without saving. Canonical practice blocks and game pitches support explicit side/type/success; unknown success remains unknown. Nullable game columns were applied and read back; `exercise-vault` and `session-insights` redeployed under the named authorization. Game/practice hosted write/readback remains unverified.
+- Client hitting video taxonomy includes all side/type labels and fundamentals. Server taxonomy/owner video assignment and struggling-player matching remain unfinished. The bunting program is **still not wired to Today**: current entitlement, legal hitting weekdays, per-game batting samples and explicit speed/power facts must reach the existing hitting block without invented work or traits. Existing eight-week policy simulations are not live integration proof.
+- Full suite completed in ten bounded groups, all exits zero: **542 files / 4,470 tests**, plus the newly added RestTimer file's **2 passing tests** (543 files / 4,472 tests total). The all-source render audit was split into bounded sport/position cases after a timeout; its final independent run passed. Preview's latest entry is build OK.
+- No hosted TEST training records were added. Three kept personas unchanged; prior global cleanup certification retained, not rescanned. Monday coach proof remains time-gated: the clock is still October 25, not October 26; no waiting work will run after this turn.
+
+**Continuation verdict: Ready to publish NO — Today bunting integration/video matching and real purchase/rest/coach/log readbacks remain open.**
+
 - Unlock Now explicitly opens plan choice; pending enrollment no longer intercepts pricing/checkout. The regular Demo remains unchanged; the enrollment walkthrough still serves training onboarding (see archived-features.md).
 - Training-standard days/workout counts moved immediately below the phase heading. Day changes, row reductions and substitutions are collected in Before you start; duplicate exercise/lift explanations removed. Lighter-day acknowledgement now writes from that drawer.
 - Rest defect confirmed from real October 25 saved rows: `allowed_class=none`, day type `recovery`, but Arm-Care Band Full Chart, Resist-Turning Press and Med Ball Rotational Shot-Put remained. The trunk primer ran outside the rest guard, generic mobility selection admitted loaded work, the final check removed loaded lifting only, and the local block builder could reopen defense. New final-save/final-block soft-recovery identity checks, canonical recovery_day spelling and rest-only warmup selection address these sources. **wk-generate-daily redeployed under the named authorization; existing affected player plans were not invoked or modified in this run, so live trimmed readback remains unverified.** Coach warning-accepted rows remain outside generator trimming.
@@ -50,9 +63,13 @@ These five owner checks are not blockers for the readiness verdict:
 
 ### Player
 
+When bunting is logged in practice or a game, enter the actual batting side, exact bunt type and Yes/No only if success was observed; Not entered stays unknown. New bunting Today sessions are not active yet. Exiting focus after a successful set preserves its required rest; Start resumes that rest rather than saving the set again.
+
 Coach workouts offer Use instead, Add alongside, Save for later and Use today where applicable. Use instead requires real saved work of the same category and never spills into another category. Replaced work is marked “Replaced by coach workout”, not missed. Read every warning and its exact date and measured numbers; Okay acknowledges, Cancel action saves nothing. Missing-fact warnings explicitly say what was not checked, without making up a score or cap. Accepted warnings appear in the card’s “Coach override: …” Because line. You can still decline the workout.
 
 ### Coach
+
+Owner Vault now exposes twelve initially-off side-specific bunt entries with attempts/successes measure and the owner's exact instructions. These editable definitions do not yet activate an athlete bunting program; do not treat the off entries or policy simulation as prescribed sessions.
 
 Send, schedule, edit, reschedule and resend share the warning acknowledgement flow. Pain/injury, arm limits, age, phase/season, recovery, workload, dose-range and equipment guidelines warn rather than silently changing your prescribed dose. For coach prescriptions only, in-season eccentric-overload findings also warn; Hammers’ own generator remains prohibited from prescribing them in season. Under-18 pain/injury, arm-limit and age findings require a reason of at least 10 characters and the existing linked-parent notification; adults use plain Okay. Acknowledgement is not medical clearance. Sent workouts shows the override trail and canonical performed work when logged.
 

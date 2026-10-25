@@ -53,11 +53,13 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
     return () => window.clearInterval(timer);
   }, [active, cursor.restingUntil, advance]);
   const save = async (exit: boolean) => {
-    if (!current || busy) { if (exit) onExit(); return; }
+    if (busy) return;
+    // Leaving an already-saved rest interval must not save the set twice or shorten rest.
+    if (exit && cursor.restingUntil != null) { onExit(); return; }
+    if (!current) { if (exit) onExit(); return; }
     setBusy(true); setError(null); setAwaitingManualRest(false);
     try {
       await current.save(cursor.row);
-      if (exit) { onExit(); return; }
       let seconds = current.restSeconds;
       if (current.bases) {
         const { conditioningRestAfterRep } = await import("../../../../supabase/functions/_shared/wic/runRest");
@@ -71,6 +73,7 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
         setCursor(prior => ({ ...prior, restStartedAt: now, restSeconds: seconds, restingUntil: now + seconds * 1000 }));
       } else if (seconds === 0) advance();
       else { setAwaitingManualRest(true); setError("Rest time is not specified for this activity. Finish your rest, then continue."); }
+      if (exit) onExit();
     } catch { setError("Couldn't save this set. Your entries are still here; try again."); }
     finally { setBusy(false); }
   };

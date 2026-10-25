@@ -26,6 +26,10 @@ export function pitchEntryPayload(
   payload.spray_bucket = inPlay && ["pull_air", "pull_ground", "center_air", "center_ground", "oppo_air", "oppo_ground"].includes(String(fields.spray)) ? fields.spray : null;
   payload.hard_hit = inPlay && typeof fields.hard_hit === "boolean" ? fields.hard_hit : null;
   payload.intent_location = perspective === "pitcher" && intent && (intent.zone != null || intent.outZone) ? intent : null;
+  const bunt = perspective === 'hitter' && ['bunt_foul','bunt_in_play'].includes(String(fields.result));
+  payload.bunt_type = bunt && ['squeeze','sac_3b','sac_1b','drag','push','hit'].includes(String(fields.bunt_type)) ? fields.bunt_type : null;
+  payload.bunt_side = bunt && ['R','L'].includes(String(fields.bunt_side)) ? fields.bunt_side : null;
+  payload.bunt_success = bunt && typeof fields.bunt_success === 'boolean' ? fields.bunt_success : null;
   delete payload.contact;
   delete payload.spray;
   return payload;

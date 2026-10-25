@@ -29,6 +29,9 @@ export interface GpPitchRow {
   contact_quality?: string | null;
   spray_bucket?: string | null;
   hard_hit?: boolean | null;
+  bunt_type?: import('../../supabase/functions/_shared/wic/buntingProgram').BuntType | null;
+  bunt_side?: 'R' | 'L' | null;
+  bunt_success?: boolean | null;
   intent_location?: { zone?: number | null; outZone?: string | null } | null;
   created_at: string;
 }

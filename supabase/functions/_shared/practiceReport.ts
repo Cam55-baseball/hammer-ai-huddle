@@ -16,6 +16,10 @@ export function loggedPracticeReport(session: LoggedPracticeSession) {
     if (typeof block.volume === 'number' && Number.isInteger(block.volume) && block.volume > 0) {
       situationalSplits.push({ category: name, metric: 'Logged reps', value: String(block.volume), context });
     }
+    if (Array.isArray(block.bunt_outcomes)) for (const outcome of block.bunt_outcomes) {
+      if (!outcome || !['R','L'].includes(outcome.side) || !['squeeze','sac_3b','sac_1b','drag','push','hit'].includes(outcome.type) || !Number.isInteger(outcome.attempts) || outcome.attempts <= 0 || !Number.isInteger(outcome.successes) || outcome.successes < 0 || outcome.successes > outcome.attempts) continue;
+      situationalSplits.push({ category: `${outcome.side === 'R' ? 'Right-handed' : 'Left-handed'} ${outcome.type.replace(/_/g,' ')} bunt`, metric: 'Successful bunts / entered attempts', value: `${outcome.successes} / ${outcome.attempts}`, context });
+    }
     if (typeof block.execution_grade === 'number' && Number.isFinite(block.execution_grade) && block.execution_grade >= 0 && block.execution_grade <= 80) {
       situationalSplits.push({ category: name, metric: 'Entered execution grade', value: String(block.execution_grade), context });
     }

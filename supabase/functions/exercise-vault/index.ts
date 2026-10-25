@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
           weight_reps: "reps", reps: "reps", hold_seconds: "seconds", duration: "seconds",
           sprint_time: "seconds", jump_distance: "feet", jump_height: "inches",
           throw_count: "throws", velocity: "mph", bat_speed: "mph", exit_velocity: "mph",
-          swing_count: "swings", check_off: "checkoff",
+          swing_count: "swings", check_off: "checkoff", bunt_attempts: "attempts",
         };
         const row: Record<string, any> = {
           slug,
@@ -200,11 +200,11 @@ Deno.serve(async (req) => {
 
     if (action === "list") {
       let vq = admin.from("exercise_vault_versions")
-        .select("slug,version,apply_today,effective_from,undone_at,made_live_by,made_live_at")
+        .select("slug,version,apply_today,effective_from,undone_at,made_live_by,made_live_at,payload")
         .order("made_live_at", { ascending: false }).limit(200);
       if (slug) vq = vq.eq("slug", slug);
       let dq = admin.from("exercise_vault_drafts")
-        .select("slug,is_new,status,validation,updated_at")
+        .select("slug,is_new,status,validation,updated_at,payload")
         .order("updated_at", { ascending: false }).limit(200);
       if (slug) dq = dq.eq("slug", slug);
       const [{ data: versions, error: ve }, { data: drafts, error: de }] = await Promise.all([vq, dq]);

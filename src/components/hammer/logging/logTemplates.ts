@@ -6,6 +6,7 @@
  */
 import type { WkRx } from "@/hooks/useWkDailyPrescriptions";
 import { ownerExerciseMeasure, fieldsForMeasure, declaredCount } from "@/lib/logging/measureType";
+import { inlineLogSpec } from "./InlinePrescriptionLog";
 
 export type FieldKind = "number" | "time" | "quality" | "side";
 
@@ -361,6 +362,15 @@ export function resolveTemplate(rx: WkRx): LogTemplate {
     })),
     meta: { rpe: true }, defaultRounds: Math.max(1, sets),
   };
+  // These declared doses share exactly the entry grid used inside Today, including
+  // catalog warmups/holds, coach rows and a swapped-in prescription.
+  if (["warmup", "mobility", "recovery", "arm_care"].includes(slot) || ["seconds", "minutes"].includes(unit)) {
+    const spec = inlineLogSpec(rx);
+    return { id: `declared_${slot}`, defaultRounds: spec.rows, meta: {}, fields: spec.fields.map(field => ({ ...field,
+      kind: field.key === "time" ? "time" : "number", step: field.key === "time" || field.key === "distance" ? 0.01 : 1,
+      prefillFromRx: () => field.prefill,
+    })) };
+  }
 
   // 0. Skill positions: catcher pop time, fielding, baserunning.
   if (has(slug, /pop_time|catcher_pop|pop_to_second|catcher_throw/)) return CATCHER_POP;

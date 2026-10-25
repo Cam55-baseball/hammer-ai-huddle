@@ -2,6 +2,14 @@ import { describe, expect, it } from "vitest";
 import { pitchEntryPayload, quickAtBatPayload } from "../pitchEntry";
 
 describe("game pitch facts", () => {
+  it("stores exact entered bunt side/type/false and leaves unknown results unknown", () => {
+    expect(pitchEntryPayload({result:'bunt_in_play',bunt_type:'drag',bunt_side:'L',bunt_success:false},'hitter',{zone:null})).toMatchObject({bunt_type:'drag',bunt_side:'L',bunt_success:false});
+    expect(pitchEntryPayload({result:'bunt_foul',bunt_type:'sacrifice',bunt_side:'S'},'hitter',{zone:null})).toMatchObject({bunt_type:null,bunt_side:null,bunt_success:null});
+  });
+  it("does not retain hidden bunt observations on another pitch result or pitcher perspective", () => {
+    expect(pitchEntryPayload({result:'ball',bunt_type:'drag',bunt_side:'R',bunt_success:true},'hitter',{zone:null}).bunt_success).toBeNull();
+    expect(pitchEntryPayload({result:'bunt_in_play',bunt_type:'drag',bunt_side:'R',bunt_success:true},'pitcher',{zone:null}).bunt_success).toBeNull();
+  });
   it("stores pitcher observations and intent separately from actual location", () => {
     expect(pitchEntryPayload({ result: "in_play", contact: "hard", spray: "pull_ground", hard_hit: true, notes: "My observation" }, "pitcher", { zone: 7 }, { zone: 3 })).toMatchObject({ contact_quality: "hard", spray_bucket: "pull_ground", hard_hit: true, intent_location: { zone: 3 }, location: { zone: 7 }, notes: "My observation" });
   });

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { validateExercise, type VaultExercise } from "../validateExercise";
+import { buntingVaultContent } from '../../../../supabase/functions/_shared/vault/buntingContent';
 
 const ok: VaultExercise = {
   slug: "db_press_neutral", name: "DB press, neutral grip",
@@ -10,6 +11,16 @@ const ok: VaultExercise = {
 };
 
 describe("vault validator", () => {
+  it("all twelve owner bunt definitions validate with exact type/side and five attempts", () => {
+    const content = buntingVaultContent();
+    expect(content).toHaveLength(12);
+    for (const item of content) {
+      expect(validateExercise(item, {isNew:true})).toEqual([]);
+      expect(item.default_reps).toBe(5);
+      expect(item.measure_type).toBe('bunt_attempts');
+    }
+    expect(validateExercise({...content[0], bunt_side:undefined}).join()).toContain('exact batting side');
+  });
   it("passes a complete exercise", () => expect(validateExercise(ok)).toEqual([]));
   it("retains complete either-or gear without requiring both implements", () => {
     expect(validateExercise({ ...ok, equipment: [], equipment_alternatives: [["dumbbell"], ["kettlebell"]] })).toEqual([]);

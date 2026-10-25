@@ -3,6 +3,21 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ExerciseTimer } from "./ExerciseTimer";
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 describe("actual exercise time", () => {
+  it("stopping a paused timer records 1.47 only once; reset and restart do not author time", () => {
+    vi.useFakeTimers(); const record = vi.fn();
+    render(<ExerciseTimer target={30} onRecord={record} />);
+    fireEvent.click(screen.getByRole("button", { name: "Start timer" }));
+    act(() => vi.advanceTimersByTime(1470));
+    fireEvent.click(screen.getByRole("button", { name: "Pause timer" }));
+    act(() => vi.advanceTimersByTime(5000));
+    fireEvent.click(screen.getByRole("button", { name: "Stop timer" }));
+    fireEvent.click(screen.getByRole("button", { name: "Stop timer" }));
+    expect(record).toHaveBeenCalledTimes(1);
+    expect(record).toHaveBeenCalledWith(1.47);
+    fireEvent.click(screen.getByRole("button", { name: "Reset timer" }));
+    fireEvent.click(screen.getByRole("button", { name: "Restart timer" }));
+    expect(record).toHaveBeenCalledTimes(1);
+  });
   it("records 1.47 seconds, excludes paused time and resumes", () => {
     vi.useFakeTimers(); const record = vi.fn();
     render(<ExerciseTimer target={30} onRecord={record} />);

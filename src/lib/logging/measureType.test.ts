@@ -12,6 +12,10 @@ const VALID: MeasureType[] = [
 ];
 
 describe("measureTypeFor — every library exercise resolves", () => {
+  it("declared counted mobility/press work does not become a timed hold", () => {
+    expect(measureTypeFor({ slug: "anti_rot_press", name: "Anti-Rotation Isometric Press", slot: "lift", dosage_unit: "reps" })).toBe("weight_reps");
+    expect(measureTypeFor({ slug: "hip_mobility", slot: "warmup", dosage_unit: "reps" })).toBe("reps");
+  });
   it.each(["frog_stretch", "glute_bridge_walkout", "seated_ankle_circles"])("%s is a duration even inside speed", slug => {
     expect(measureTypeFor({ slug, slot: "speed" })).toBe("duration");
     const spec = inlineLogSpec({ movement_slug: slug, movement_name: slug, slot: "speed", sets: 1, duration_seconds: 30 } as unknown as WkRx);
