@@ -126,6 +126,8 @@ function collectWarnings(facts: RxReplaceFacts & { age: number | null }, playerI
  * Future dates have no measured saved-day cap; do not invent one. */
 async function prescriptionWorkWarnings(admin: any, rx: any, date: string, today: string) {
   if (date !== today) return { allowed: true, warnings: [] as CoachGuidelineWarning[], reasons: [] as string[] };
+  const ownItems = certifyCoachOwnItems(Array.isArray(rx.exercises) ? rx.exercises : []);
+  if (!ownItems.ok) return { allowed: false, warnings: [] as CoachGuidelineWarning[], reasons: ownItems.reasons };
   const rows = coachRxToWkRows({ userId: rx.recipient_id, planDate: date, category: rx.category,
     prescriptionId: rx.id ?? crypto.randomUUID(), coachName: null, exercises: rx.exercises, usedInstead: false });
   const envelope = await loadPrescriptionEnvelope(admin, rx.recipient_id, date, rx.category, rows as any, false);
