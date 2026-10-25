@@ -78,9 +78,9 @@ export function useCoachPrescriptions(planDate: string) {
 
   const chooseMut = useMutation({
     mutationFn: async ({ id, choice, activateToday }: { id: string; choice: CoachRxChoice; activateToday?: boolean }): Promise<ChooseResult> => {
-      return await runCoachWarningAction(async acknowledgement => {
+      return await runCoachWarningAction(async (acknowledgement, reason) => {
         const { data, error } = await supabase.functions.invoke("coach-rx-safety", {
-          body: { mode: "choose", prescription_id: id, choice, activate_today: activateToday === true, warning_acknowledgement: acknowledgement },
+          body: { mode: "choose", prescription_id: id, choice, activate_today: activateToday === true, warning_acknowledgement: acknowledgement, override_reason: reason },
         });
         if (error) throw new Error(error.message || "Could not save your choice");
         return data;
@@ -149,9 +149,9 @@ export function useMyCoachWorkouts() {
 
   const activateMut = useMutation({
     mutationFn: async ({ id, choice }: { id: string; choice: CoachRxChoice }): Promise<ChooseResult> => {
-      return await runCoachWarningAction(async acknowledgement => {
+      return await runCoachWarningAction(async (acknowledgement, reason) => {
         const { data, error } = await supabase.functions.invoke("coach-rx-safety", {
-          body: { mode: "choose", prescription_id: id, choice, activate_today: true, warning_acknowledgement: acknowledgement },
+          body: { mode: "choose", prescription_id: id, choice, activate_today: true, warning_acknowledgement: acknowledgement, override_reason: reason },
         });
         if (error) throw new Error(error.message || "Could not save your choice");
         return data;
@@ -209,7 +209,7 @@ export function useManageSentWorkouts() {
   });
 
   const act = useMutation({
-    mutationFn: (body: Record<string, unknown>) => runCoachWarningAction(acknowledgement => call({ ...body, warning_acknowledgement: acknowledgement })),
+    mutationFn: (body: Record<string, unknown>) => runCoachWarningAction((acknowledgement, reason) => call({ ...body, warning_acknowledgement: acknowledgement, override_reason: reason })),
     onSuccess: (result) => {
       if (result.cancelled) return;
       if (!result.applied) { toast.error(result.reasons?.[0] ?? result.error ?? "Nothing was saved."); return; }

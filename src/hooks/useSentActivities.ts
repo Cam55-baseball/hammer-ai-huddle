@@ -138,9 +138,9 @@ export function useSentActivities() {
             ...scheduleMeta,
           }))
         );
-        const sent = await runCoachWarningAction(async acknowledgement => {
+        const sent = await runCoachWarningAction(async (acknowledgement, reason) => {
           const { data, error } = await supabase.functions.invoke('coach-rx-safety', {
-            body: { mode: 'send', rows: rxRows, warning_acknowledgement: acknowledgement },
+            body: { mode: 'send', rows: rxRows, warning_acknowledgement: acknowledgement, override_reason: reason },
           });
           if (error) throw error;
           return data;

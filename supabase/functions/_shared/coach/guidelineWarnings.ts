@@ -5,6 +5,10 @@ export interface CoachGuidelineWarning {
   date: string;
   rule: string;
   player_id?: string;
+  /** Arm-health or active pain/injury finding from the existing judges. */
+  medical?: boolean;
+  /** Under-18 athletes: Okay requires a typed reason and a parent notice. */
+  requires_reason?: boolean;
 }
 
 export function isCoachPrescriptionDate(value: unknown): value is string {
@@ -29,6 +33,30 @@ export const ADVISORY_PLAN_RULES: ReadonlySet<string> = new Set([
   "rest_day", "lift_spacing", "weekly_lift_max", "trained_elsewhere_today",
   "run_before_game", "run_spacing", "jump_spacing", "bat_consecutive",
 ]);
+
+/** Arm-health and active pain/injury findings. Presentation of the existing
+ *  judges (arm ledger / pitch-count rest and the daily injury flag), never a
+ *  new training judge. Overridable with a recorded acknowledgement; for
+ *  under-18 athletes the acknowledgement requires a typed reason and the
+ *  linked parent is notified. */
+export function medicalFactWarnings(facts: RxReplaceFacts): CoachGuidelineWarning[] {
+  const warnings: CoachGuidelineWarning[] = [];
+  if (facts.injuryMode) warnings.push({ code: "injury_flag", date: facts.date, medical: true, rule: "An active pain or injury flag is recorded for this player. Training is normally held until it clears." });
+  if (facts.nextThrowDate && facts.nextThrowDate > facts.date) warnings.push({ code: "arm_rest", date: facts.date, medical: true, rule: `Arm-health rest: throwing is normally held until ${facts.nextThrowDate} based on recent pitch counts.` });
+  return warnings;
+}
+
+export const MIN_OVERRIDE_REASON = 10;
+export function overrideReasonOk(reason: unknown): reason is string {
+  return typeof reason === "string" && reason.trim().length >= MIN_OVERRIDE_REASON;
+}
+
+/** Clears advisory and medical findings so the remaining checks are the
+ *  hard gates: connection/consent/legal, same-category, workload, age and
+ *  growth rules. */
+export function factsWithoutWarnings(facts: RxReplaceFacts): RxReplaceFacts {
+  return { ...factsWithoutAdvisories(facts), injuryMode: false, nextThrowDate: null };
+}
 
 export function warningKeys(warnings: readonly CoachGuidelineWarning[]): string[] {
   return [...new Set(warnings.map(w => JSON.stringify([w.player_id ?? null, w.date, w.code, w.rule])))].sort();

@@ -59,12 +59,18 @@ function WarningProof() {
   const [outcome, setOutcome] = React.useState('');
   const [writes, setWrites] = React.useState(0);
   const action = params.get('action') ?? 'send';
+  const medical = action === 'medical';
   return <main className="space-y-4 p-4"><Button onClick={async () => {
-    const result = await runCoachWarningAction(async acknowledgement => {
-      if (!acknowledgement) return { applied: false, warning_required: true, warnings: [
+    const result = await runCoachWarningAction(async (acknowledgement, reason) => {
+      const warnings = medical ? [
+        { code: 'arm_rest', date: '2026-10-25', medical: true, requires_reason: true, rule: 'Arm-health rest: throwing is normally held until 2026-10-27 based on recent pitch counts.', player_id: 'fixture-player' },
+        { code: 'injury_flag', date: '2026-10-25', medical: true, requires_reason: true, rule: 'An active pain or injury flag is recorded for this player. Training is normally held until it clears.', player_id: 'fixture-player' },
+      ] : [
         { code: 'before_game', date: '2026-10-27', rule: 'This is the day before the game on 2026-10-28. Max-effort work is normally held that day.', player_id: 'fixture-player' },
         { code: 'lift_spacing', date: '2026-10-27', rule: 'Lift spacing: the previous lift was on 2026-10-26.', player_id: 'fixture-player' },
-      ] };
+      ];
+      if (!acknowledgement) return { applied: false, warning_required: true, warnings };
+      if (medical && (reason ?? '').trim().length < 10) return { applied: false, reason_required: true, warnings };
       setWrites(n => n + 1); return { applied: true };
     });
     setOutcome(result.cancelled ? 'Cancelled' : result.applied ? 'Saved' : 'Not saved');

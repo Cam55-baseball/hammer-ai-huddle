@@ -26,7 +26,8 @@ import { prescriptionMode, prescriptionChoiceDate } from "../_shared/coach/presc
 import { loadPrescriptionEnvelope } from "../_shared/coach/loadPrescriptionEnvelope.ts";
 import { prescriptionResults } from "../_shared/coach/prescriptionResults.ts";
 import { certifyCoachOwnItems } from "../_shared/coach/ownItemCertification.ts";
-import { factGuidelineWarnings, factsWithoutAdvisories, warningsAcknowledged, isCoachPrescriptionDate, type CoachGuidelineWarning } from "../_shared/coach/guidelineWarnings.ts";
+import { factGuidelineWarnings, medicalFactWarnings, factsWithoutAdvisories, factsWithoutWarnings, warningsAcknowledged, overrideReasonOk, isCoachPrescriptionDate, type CoachGuidelineWarning } from "../_shared/coach/guidelineWarnings.ts";
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "../_shared/email.ts";
 import { z } from "npm:zod@3";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
@@ -70,7 +71,7 @@ async function gatherFacts(
   intensity: RxReplaceFacts["intensity"],
   throwing: boolean,
   today: string,
-): Promise<RxReplaceFacts> {
+): Promise<RxReplaceFacts & { age: number | null }> {
   const from = shift(date, -14), to = shift(date, 14);
   const results = await Promise.all([
       admin.from("profiles").select("full_name, date_of_birth").eq("id", pid).maybeSingle(),
@@ -107,7 +108,60 @@ async function gatherFacts(
     nextThrowDate: ntd,
     injuryMode: (log as any)?.injury_mode === true,
     hasCard: (cards ?? []).length > 0,
+    age,
   };
+}
+
+const OWNER_INBOX = "hammersmodality@hammersmodality.org";
+
+/** Advisory + medical findings from the existing judges. Medical findings on
+ *  minors (or unknown age) require a typed reason and a parent notice. */
+function collectWarnings(facts: RxReplaceFacts & { age: number | null }, playerId: string): CoachGuidelineWarning[] {
+  const minor = facts.age === null || facts.age < 18;
+  return [...factGuidelineWarnings(facts), ...medicalFactWarnings(facts)]
+    .map(w => ({ ...w, player_id: playerId, requires_reason: w.medical === true && minor }));
+}
+
+/** Email every accepted linked parent about a minor's medical override.
+ *  TEST origins (preview/local) route to the owner inbox, matching the
+ *  teen-waiver pattern. The outcome is recorded honestly in the audit log. */
+async function notifyParentsOfMedicalOverride(
+  admin: any, athleteId: string, action: string, warnings: CoachGuidelineWarning[], reason: string, testInbox: boolean,
+): Promise<void> {
+  try {
+    const { data: links } = await admin.from("parent_athlete_links").select("parent_user_id")
+      .eq("athlete_user_id", athleteId).eq("status", "active").is("revoked_at", null);
+    const parentIds = [...new Set((links ?? []).map((l: any) => String(l.parent_user_id)))];
+    const medical = warnings.filter(w => w.medical);
+    const rules = medical.map(w => `${w.date}: ${w.rule}`).join(" ");
+    const { data: athleteProf } = await admin.from("profiles").select("full_name").eq("id", athleteId).maybeSingle();
+    const who = (athleteProf as any)?.full_name ?? "Your athlete";
+    const key = Deno.env.get("RESEND_API_KEY");
+    let sent = 0, failed = 0;
+    for (const pid of parentIds) {
+      const { data: pu } = await admin.auth.admin.getUserById(pid);
+      const to = testInbox ? OWNER_INBOX : (pu?.user?.email ?? null);
+      if (!to || !key) { failed++; continue; }
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: EMAIL_FROM, reply_to: EMAIL_REPLY_TO, to: [to],
+          subject: `Coach overrode a health guideline for ${who}`,
+          html: `<p>Hi,</p><p>A coach chose to proceed with a workout for ${who} even though a health guideline applies: ${rules}</p><p>The coach's recorded reason: “${reason.replace(/[<>&]/g, "")}”</p><p>You can talk to the coach or have ${who} decline the workout in the app. Hammers Modality LLC · 15985 Preserve Marketplace #1154, Odessa, FL 33556</p>`,
+        }),
+      });
+      res.ok ? sent++ : failed++;
+    }
+    await admin.from("audit_log").insert({
+      user_id: athleteId, action: "coach_medical_override_parent_notice", table_name: "coach_prescriptions",
+      record_id: null,
+      metadata: { action, warnings: medical, parents: parentIds.length, sent, failed, notice: sent > 0 ? "sent" : parentIds.length === 0 ? "no_linked_parent" : "failed" },
+      created_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.error("parent notice failed", e);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -126,7 +180,19 @@ Deno.serve(async (req) => {
     if (!mode) return json({ error: "Unknown action" }, 400);
     const today = new Date().toISOString().slice(0, 10);
     const acknowledgement = body.warning_acknowledgement;
-    const overrideRecord = (warnings: CoachGuidelineWarning[], action: string) => ({ actor_id: me, occurred_at: new Date().toISOString(), action, warnings });
+    const overrideReason = typeof body.override_reason === "string" ? body.override_reason.trim() : "";
+    const testInbox = !(req.headers.get("origin") ?? "").includes("hammersmodality.org");
+    const overrideRecord = (warnings: CoachGuidelineWarning[], action: string) => ({
+      actor_id: me, occurred_at: new Date().toISOString(), action, warnings,
+      ...(warnings.some(w => w.requires_reason) ? { reason: overrideReason, parent_notice: true } : {}),
+    });
+    /** Exact acknowledgement for every current finding; a typed reason when a minor's medical finding is overridden. */
+    const ackError = (warnings: CoachGuidelineWarning[]) => {
+      if (!warnings.length) return null;
+      if (!warningsAcknowledged(warnings, acknowledgement)) return json({ applied: false, warning_required: true, warnings });
+      if (warnings.some(w => w.requires_reason) && !overrideReasonOk(overrideReason)) return json({ applied: false, reason_required: true, warnings });
+      return null;
+    };
 
     if (mode === "send") {
       const parsed = SendRows.safeParse(body.rows);
@@ -141,15 +207,20 @@ Deno.serve(async (req) => {
       const warnings: CoachGuidelineWarning[] = [];
       for (const send of sends) {
         const facts = await gatherFacts(admin, send.recipient_id, send.category, send.plan_date, prescriptionIntensity(send.safety_result.intensity), false, today);
-        const hard = checkPrescriptionAlongside(factsWithoutAdvisories(facts));
+        const hard = checkPrescriptionAlongside(factsWithoutWarnings(facts));
         if (hard.verdict !== "allow") return json({ applied: false, reasons: hard.reasons, safeOption: hard.safeOption });
-        warnings.push(...factGuidelineWarnings(facts).map(w => ({ ...w, player_id: send.recipient_id })));
+        warnings.push(...collectWarnings(facts, send.recipient_id));
       }
-      if (warnings.length && !warningsAcknowledged(warnings, acknowledgement)) return json({ applied: false, warning_required: true, warnings });
+      const sendAckError = ackError(warnings);
+      if (sendAckError) return sendAckError;
       const { data: inserted, error } = await admin.from("coach_prescriptions").insert(sends.map(send => ({ ...send, sender_id: me,
         safety_result: { ...send.safety_result, overrides: warnings.filter(w => w.player_id === send.recipient_id && w.date === send.plan_date).length ? [overrideRecord(warnings.filter(w => w.player_id === send.recipient_id && w.date === send.plan_date), "send")] : [] },
       }))).select("id");
       if (error) throw error;
+      for (const send of sends) {
+        const medical = warnings.filter(w => w.player_id === send.recipient_id && w.date === send.plan_date && w.requires_reason);
+        if (medical.length) await notifyParentsOfMedicalOverride(admin, send.recipient_id, "send", medical, overrideReason, testInbox);
+      }
       return json({ applied: true, ids: inserted?.map((r: any) => r.id) });
     }
 
@@ -267,13 +338,15 @@ Deno.serve(async (req) => {
         const gate = await recruitingGate(admin, me, connectionError || connected !== true ? [] : [rx.recipient_id], "metrics");
         if (gate.get(rx.recipient_id) !== "visible") return json({ error: "You can't manage this player's workout." }, 403);
         let nextSafety = rx.safety_result ?? {};
+        let reschedWarnings: CoachGuidelineWarning[] = [];
         if (action === "reschedule") {
           const facts = await gatherFacts(admin, rx.recipient_id, rx.category, newDate, prescriptionIntensity(rx.safety_result?.intensity), false, today);
-          const hard = checkPrescriptionAlongside(factsWithoutAdvisories(facts));
+          const hard = checkPrescriptionAlongside(factsWithoutWarnings(facts));
           if (hard.verdict !== "allow") return json({ applied: false, reasons: hard.reasons, safeOption: hard.safeOption });
-          const warnings = factGuidelineWarnings(facts).map(w => ({ ...w, player_id: rx.recipient_id }));
-          if (warnings.length && !warningsAcknowledged(warnings, acknowledgement)) return json({ applied: false, warning_required: true, warnings });
-          nextSafety = { ...nextSafety, overrides: [...(nextSafety.overrides ?? []), ...(warnings.length ? [overrideRecord(warnings, action)] : [])] };
+          reschedWarnings = collectWarnings(facts, rx.recipient_id);
+          const reschedAckError = ackError(reschedWarnings);
+          if (reschedAckError) return reschedAckError;
+          nextSafety = { ...nextSafety, overrides: [...(nextSafety.overrides ?? []), ...(reschedWarnings.length ? [overrideRecord(reschedWarnings, action)] : [])] };
         }
         const { error: updateError } = await admin.from("coach_prescriptions").update(
           action === "cancel"
@@ -281,6 +354,8 @@ Deno.serve(async (req) => {
             : { plan_date: newDate, safety_result: nextSafety, updated_at: new Date().toISOString() },
         ).eq("id", rxId).eq("status", "pending").is("cancelled_at", null).eq("updated_at", rx.updated_at).select("id").single();
         if (updateError) throw updateError;
+        const reschedMedical = reschedWarnings.filter(w => w.requires_reason);
+        if (reschedMedical.length) await notifyParentsOfMedicalOverride(admin, rx.recipient_id, action, reschedMedical, overrideReason, testInbox);
         return json({ applied: true });
       }
 
@@ -313,10 +388,11 @@ Deno.serve(async (req) => {
         const gate = await recruitingGate(admin, me, connectionError || connected !== true ? [] : [rx.recipient_id], "metrics");
         if (gate.get(rx.recipient_id) !== "visible") return json({ error: "You can't send to this player." }, 403);
         const facts = await gatherFacts(admin, rx.recipient_id, rx.category, newDate, prescriptionIntensity(rx.safety_result?.intensity), false, today);
-        const hard = checkPrescriptionAlongside(factsWithoutAdvisories(facts));
+        const hard = checkPrescriptionAlongside(factsWithoutWarnings(facts));
         if (hard.verdict !== "allow") return json({ applied: false, reasons: hard.reasons, safeOption: hard.safeOption });
-        const warnings = factGuidelineWarnings(facts).map(w => ({ ...w, player_id: rx.recipient_id }));
-        if (warnings.length && !warningsAcknowledged(warnings, acknowledgement)) return json({ applied: false, warning_required: true, warnings });
+        const warnings = collectWarnings(facts, rx.recipient_id);
+        const resendAckError = ackError(warnings);
+        if (resendAckError) return resendAckError;
         const { data: created, error: resendError } = await admin.from("coach_prescriptions").insert({
           sender_id: me, recipient_id: (rx as any).recipient_id, category: (rx as any).category,
           plan_date: newDate, title: (rx as any).title, exercises: (rx as any).exercises,
@@ -324,6 +400,8 @@ Deno.serve(async (req) => {
           schedule_type: "date", safety_result: { intensity: rx.safety_result?.intensity, overrides: warnings.length ? [overrideRecord(warnings, action)] : [] },
         }).select("id").maybeSingle();
         if (resendError || !created) throw resendError ?? new Error("Workout was not sent");
+        const resendMedical = warnings.filter(w => w.requires_reason);
+        if (resendMedical.length) await notifyParentsOfMedicalOverride(admin, rx.recipient_id, action, resendMedical, overrideReason, testInbox);
         return json({ applied: true, id: (created as any)?.id ?? null });
       }
 
@@ -352,6 +430,7 @@ Deno.serve(async (req) => {
 
     let safety: Record<string, unknown> | null = null;
     let rows: Record<string, unknown>[] = [];
+    let choiceMedical: CoachGuidelineWarning[] = [];
     if (choice === "use_instead" || choice === "add_alongside") {
       if (date !== today) return json({ error: "Use today to activate this workout on today's plan" }, 409);
       const { data: expectedRevision, error: revisionError } = await admin.rpc("coach_rx_safety_revision", { p_user: me, p_date: date });
@@ -373,7 +452,7 @@ Deno.serve(async (req) => {
       // drills are already completed, marks it "Replaced by coach workout —
       // not missed" and appends the coach block in the same transaction.
       facts.hasCard = facts.hasCard || !!block;
-      const result = choice === "use_instead" ? checkPrescriptionReplace(factsWithoutAdvisories(facts)) : checkPrescriptionAlongside(factsWithoutAdvisories(facts));
+      const result = choice === "use_instead" ? checkPrescriptionReplace(factsWithoutWarnings(facts)) : checkPrescriptionAlongside(factsWithoutWarnings(facts));
       if (result.verdict !== "allow") return json({ applied: false, verdict: result.verdict, reasons: result.reasons, safeOption: result.safeOption });
       const { data: senderProfile, error: senderError } = await admin.from("profiles").select("full_name").eq("id", rx.sender_id).maybeSingle();
       if (senderError) throw senderError;
@@ -400,8 +479,10 @@ Deno.serve(async (req) => {
       }
       const envelope = await loadPrescriptionEnvelope(admin, me, date, category, rows, choice === "use_instead");
       if (!envelope.allowed) return json({ applied: false, verdict: "blocked", reasons: envelope.reasons, safeOption: envelope.safeOption });
-      const warnings = [...factGuidelineWarnings(facts), ...("warnings" in envelope ? envelope.warnings ?? [] : [])].map(w => ({ ...w, player_id: me }));
-      if (warnings.length && !warningsAcknowledged(warnings, acknowledgement)) return json({ applied: false, warning_required: true, warnings });
+      const warnings = [...collectWarnings(facts, me), ...("warnings" in envelope ? (envelope.warnings ?? []).map(w => ({ ...w, player_id: me })) : [])];
+      const chooseAckError = ackError(warnings);
+      if (chooseAckError) return chooseAckError;
+      choiceMedical = warnings.filter(w => w.requires_reason);
       const overrides = [...(rx.safety_result?.overrides ?? []), ...(warnings.length ? [overrideRecord(warnings, choice)] : [])];
       rows = envelope.rows;
       const because = overrides.flatMap((o: any) => (o.warnings ?? []).map((w: any) => `${w.date}: ${w.rule}`)).join("; ");
@@ -414,6 +495,7 @@ Deno.serve(async (req) => {
       p_expected_updated_at: rx.updated_at,
     });
     if (commitError) return json({ error: "Could not save this workout. Refresh and try again." }, 409);
+    if (choiceMedical.length) await notifyParentsOfMedicalOverride(admin, me, String(choice), choiceMedical, overrideReason, testInbox);
     return json(committed);
   } catch (_e) {
     return json({ error: "Something went wrong" }, 500);
