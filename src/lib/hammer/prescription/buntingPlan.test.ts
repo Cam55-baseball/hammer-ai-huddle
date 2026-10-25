@@ -38,17 +38,17 @@ describe('bounded bunting in actual hitting slots',()=>{
   expect(applyBuntingPlan([block],facts,{...options,catalog:rows})[0].drills.some(d=>d.bunt)).toBe(true);
   expect(applyBuntingPlan([block],facts,{...options,catalog:rows,owned:['bat','softballs','field']})).toEqual([block]);
  });
- for(const sport of ['baseball','softball'] as const)for(const tier of ['5tool','golden2way'])for(const bats of ['R','L','S'] as const)it(`actual builder eight weeks: ${sport}/${tier}/${bats}`,()=>{
+ for(const sport of ['baseball','softball'] as const)for(const tier of ['5tool','golden2way'])for(const bats of ['R','L','S'] as const)for(const cohort of ['baseline','under300','powerGoal','speedy','lacksPower'] as const)it(`actual builder eight weeks: ${sport}/${tier}/${bats}/${cohort}`,()=>{
   const vars=Object.entries({sport_primary:sport,position_primary:'SS',bats_hand:bats,lifecycle_band:'adult',season_phase:'off',lifting_age_years:2,weekly_availability_days:6,injury_history:[],equipment_effective:['bat','ball','field','tee','glove']}).map(([key,value])=>({key,value,missing:false,confidence:'high'}) as ContextVariable);
   const ctx={variables:vars,missing:[],missingCount:0,isLoading:false,envelope:null,get:(key:string)=>vars.find(v=>v.key===key)} as HammerAthleteContext;
   let sessions=0;
   for(let week=0;week<8;week++)for(let day=0;day<7;day++){
-   const date=new Date(2026,9,26+week*7+day);const plan=buildHammerDailyPlan(ctx,undefined,null,null,undefined,date,{subscriptionModules:[`${sport}_${tier}`],bunting:{evidence:{outcomes:[],battingGames:[],sourceIds:[]},catalog,phase:'off_season',age:18}});
+   const date=new Date(2026,9,26+week*7+day);const plan=buildHammerDailyPlan(ctx,undefined,null,null,undefined,date,{subscriptionModules:[`${sport}_${tier}`],bunting:{evidence:{outcomes:[],battingGames:cohort==='under300'?[{hits:1,atBats:10},{hits:2,atBats:10}]:[],sourceIds:[]},catalog,phase:'off_season',age:18,traits:{powerGoal:cohort==='powerGoal',speedy:cohort==='speedy',lacksPower:cohort==='lacksPower'}}});
    const bunts=plan.blocks.flatMap(b=>b.drills.filter(d=>d.bunt));
    if(plan.weeklyRoadmap.find(d=>d.isToday)?.restDay)expect(bunts).toEqual([]);
    if(bunts.length)sessions++;
-   for(const d of bunts){expect(d.bunt?.attempts).toBeGreaterThanOrEqual(5);expect(d.bunt?.attempts).toBeLessThanOrEqual(20);if(bats==='S'&&d.bunt?.side==='L')expect(d.bunt.type).not.toBe('push');}
+   for(const d of bunts){expect(d.bunt?.attempts).toBeGreaterThanOrEqual(cohort==='under300'||cohort==='powerGoal'&&d.bunt?.side==='L'?7:5);expect(d.bunt?.attempts).toBeLessThanOrEqual(20);if(bats==='S'&&d.bunt?.side==='L')expect(d.bunt.type).not.toBe('push');}
   }
-  expect(sessions).toBe(16);
+  expect(sessions).toBe(['speedy','lacksPower'].includes(cohort)?24:16);
  });
 });

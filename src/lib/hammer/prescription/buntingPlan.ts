@@ -13,12 +13,14 @@ export function applyBuntingPlan(blocks:readonly PrescribedBlock[], facts:Buntin
  // Expand only the existing common-gear vocabulary's declared identical labels.
  const owned=new Set(options.owned);
  for(const token of COMMON_SWAP_GEAR)if(missingGearAnswer([token],undefined,options.owned).some(g=>options.owned.includes(g)))owned.add(token);
+ const sportBall=facts.sport==='softball'?'softballs':'baseballs';
+ if(!owned.has(sportBall))return blocks;
  if(!program.canTrainToday||!program.scheduled.includes(options.weekday))return blocks;
  return blocks.map(block=>{
   if(block.modality!=='hitting'||block.status!=='ready'||block.phase==='recover'||block.phase==='deload')return block;
   const side=block.side??(facts.bats==='R'||facts.bats==='L'?facts.bats:null);
   if(!side||!program.sides.includes(side))return block;
-  const eligible=options.catalog.filter(row=>{
+ const eligible=options.catalog.filter(row=>{
    const identity=buntIdentity(row.slug);
    return identity?.side===side&&program.typesFor(side).includes(identity.type)&&row.is_active&&row.dosage_unit==='attempts'&&
     (row.sport_scope===facts.sport||row.sport_scope==='both')&&(!row.visible_to?.length||Boolean(options.userId&&row.visible_to.includes(options.userId)))&&
