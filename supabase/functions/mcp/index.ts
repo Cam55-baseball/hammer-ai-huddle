@@ -31,7 +31,7 @@ var whoami_default = defineTool({
 // src/lib/mcp/tools/list-recent-events.ts
 import { createClient } from "npm:@supabase/supabase-js@^2.76.0";
 import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.22.2";
-import { z } from "npm:zod@^4.4.3/v3";
+import { z } from "npm:zod@^4.4.3";
 function supabaseForUser(ctx) {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
@@ -67,7 +67,7 @@ var list_recent_events_default = defineTool2({
 // src/lib/mcp/tools/list-games.ts
 import { createClient as createClient2 } from "npm:@supabase/supabase-js@^2.76.0";
 import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.22.2";
-import { z as z2 } from "npm:zod@^4.4.3/v3";
+import { z as z2 } from "npm:zod@^4.4.3";
 function supabaseForUser2(ctx) {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
