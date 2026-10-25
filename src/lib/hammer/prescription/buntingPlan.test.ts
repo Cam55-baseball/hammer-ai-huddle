@@ -52,6 +52,7 @@ describe('bounded bunting in actual hitting slots',()=>{
    const bunts=plan.blocks.flatMap(b=>b.drills.filter(d=>d.bunt));
    if(plan.weeklyRoadmap.find(d=>d.isToday)?.restDay)expect(bunts).toEqual([]);
    if(bunts.length)sessions++;
+   if(bunts.length&&bats==='S')expect(bunts.map(d=>d.bunt?.side).sort()).toEqual(['L','R']);
    for(const d of bunts){expect(d.bunt?.attempts).toBeGreaterThanOrEqual(cohort==='under300'||cohort==='powerGoal'&&d.bunt?.side==='L'?7:5);expect(d.bunt?.attempts).toBeLessThanOrEqual(20);if(bats==='S'&&d.bunt?.side==='L')expect(d.bunt.type).not.toBe('push');}
   }
   expect(sessions).toBe(['speedy','lacksPower'].includes(cohort)?24:16);
