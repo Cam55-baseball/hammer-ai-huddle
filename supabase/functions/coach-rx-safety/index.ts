@@ -26,7 +26,8 @@ import { prescriptionMode, prescriptionChoiceDate } from "../_shared/coach/presc
 import { loadPrescriptionEnvelope } from "../_shared/coach/loadPrescriptionEnvelope.ts";
 import { prescriptionResults } from "../_shared/coach/prescriptionResults.ts";
 import { certifyCoachOwnItems } from "../_shared/coach/ownItemCertification.ts";
-import { factGuidelineWarnings, factsWithoutAdvisories, warningsAcknowledged, isCoachPrescriptionDate, type CoachGuidelineWarning } from "../_shared/coach/guidelineWarnings.ts";
+import { factGuidelineWarnings, medicalFactWarnings, factsWithoutAdvisories, factsWithoutWarnings, warningsAcknowledged, overrideReasonOk, isCoachPrescriptionDate, type CoachGuidelineWarning } from "../_shared/coach/guidelineWarnings.ts";
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "../_shared/email.ts";
 import { z } from "npm:zod@3";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
@@ -70,7 +71,7 @@ async function gatherFacts(
   intensity: RxReplaceFacts["intensity"],
   throwing: boolean,
   today: string,
-): Promise<RxReplaceFacts> {
+): Promise<RxReplaceFacts & { age: number | null }> {
   const from = shift(date, -14), to = shift(date, 14);
   const results = await Promise.all([
       admin.from("profiles").select("full_name, date_of_birth").eq("id", pid).maybeSingle(),
@@ -107,7 +108,60 @@ async function gatherFacts(
     nextThrowDate: ntd,
     injuryMode: (log as any)?.injury_mode === true,
     hasCard: (cards ?? []).length > 0,
+    age,
   };
+}
+
+const OWNER_INBOX = "hammersmodality@hammersmodality.org";
+
+/** Advisory + medical findings from the existing judges. Medical findings on
+ *  minors (or unknown age) require a typed reason and a parent notice. */
+function collectWarnings(facts: RxReplaceFacts & { age: number | null }, playerId: string): CoachGuidelineWarning[] {
+  const minor = facts.age === null || facts.age < 18;
+  return [...factGuidelineWarnings(facts), ...medicalFactWarnings(facts)]
+    .map(w => ({ ...w, player_id: playerId, requires_reason: w.medical === true && minor }));
+}
+
+/** Email every accepted linked parent about a minor's medical override.
+ *  TEST origins (preview/local) route to the owner inbox, matching the
+ *  teen-waiver pattern. The outcome is recorded honestly in the audit log. */
+async function notifyParentsOfMedicalOverride(
+  admin: any, athleteId: string, action: string, warnings: CoachGuidelineWarning[], reason: string, testInbox: boolean,
+): Promise<void> {
+  try {
+    const { data: links } = await admin.from("parent_athlete_links").select("parent_user_id")
+      .eq("athlete_user_id", athleteId).eq("status", "accepted").is("revoked_at", null);
+    const parentIds = [...new Set((links ?? []).map((l: any) => String(l.parent_user_id)))];
+    const medical = warnings.filter(w => w.medical);
+    const rules = medical.map(w => `${w.date}: ${w.rule}`).join(" ");
+    const { data: athleteProf } = await admin.from("profiles").select("full_name").eq("id", athleteId).maybeSingle();
+    const who = (athleteProf as any)?.full_name ?? "Your athlete";
+    const key = Deno.env.get("RESEND_API_KEY");
+    let sent = 0, failed = 0;
+    for (const pid of parentIds) {
+      const { data: pu } = await admin.auth.admin.getUserById(pid);
+      const to = testInbox ? OWNER_INBOX : (pu?.user?.email ?? null);
+      if (!to || !key) { failed++; continue; }
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: EMAIL_FROM, reply_to: EMAIL_REPLY_TO, to: [to],
+          subject: `Coach overrode a health guideline for ${who}`,
+          html: `<p>Hi,</p><p>A coach chose to proceed with a workout for ${who} even though a health guideline applies: ${rules}</p><p>The coach's recorded reason: “${reason.replace(/[<>&]/g, "")}”</p><p>You can talk to the coach or have ${who} decline the workout in the app. Hammers Modality LLC · 15985 Preserve Marketplace #1154, Odessa, FL 33556</p>`,
+        }),
+      });
+      res.ok ? sent++ : failed++;
+    }
+    await admin.from("audit_log").insert({
+      user_id: athleteId, action: "coach_medical_override_parent_notice", table_name: "coach_prescriptions",
+      record_id: null,
+      metadata: { action, warnings: medical, parents: parentIds.length, sent, failed, notice: sent > 0 ? "sent" : parentIds.length === 0 ? "no_linked_parent" : "failed" },
+      created_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.error("parent notice failed", e);
+  }
 }
 
 Deno.serve(async (req) => {
