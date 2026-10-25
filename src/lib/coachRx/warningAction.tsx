@@ -39,7 +39,7 @@ export async function runCoachWarningAction<T extends WarningActionResult>(
       if (answer === null) return { applied: false, cancelled: true };
       acknowledgedFindings.add(fingerprint);
       reason = answer;
-    }
+    } else return { applied: false, reason_required: true, error: "Type a reason of at least 10 characters. Nothing was saved." };
     result = await call(keys, reason);
   }
   return result;
