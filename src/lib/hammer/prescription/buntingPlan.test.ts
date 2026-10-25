@@ -10,11 +10,11 @@ const options={weekday:1,weekIndex:0,owned:['bat','ball','field'],age:18,phase:'
 describe('bounded bunting in actual hitting slots',()=>{
  it('replaces five swings with five attempts, preserves prep/execution and total work',()=>{
   const next=applyBuntingPlan([block],facts,options)[0];
-  expect(next.drills[0]).toEqual(block.drills[0]);expect(next.drills.at(-1)).toEqual(block.drills.at(-1));
+  expect(next.drills[0]).toEqual(block.drills[0]);expect(next.drills[next.drills.length-1]).toEqual(block.drills[block.drills.length-1]);
   expect(next.drills.find(d=>d.bunt)?.bunt?.attempts).toBe(5);
   expect(next.drills.reduce((n,d)=>n+Number(d.dosage.split(' ')[0]),0)).toBe(45);
  });
- it.each([{...facts,restDay:true},{...facts,gameDay:true},{...facts,modules:['softball_5tool']}])('does not add bunts when safety or sport access disallows it',f=>expect(applyBuntingPlan([block],f,options)).toBeTruthy()&&expect(applyBuntingPlan([block],f,options)).toEqual([block]));
+ it.each([{...facts,restDay:true},{...facts,gameDay:true},{...facts,modules:['softball_5tool']}])('does not add bunts when safety or sport access disallows it',f=>{expect(applyBuntingPlan([block],f,options)).toEqual([block]);});
  it('requires active catalog, known age, saved gear and a sufficient existing dose',()=>{
   for(const override of [{age:null},{owned:['bat']},{catalog:catalog.map(c=>({...c,is_active:false}))},{phase:'post_season'}])expect(applyBuntingPlan([block],facts,{...options,...override})).toEqual([block]);
   expect(applyBuntingPlan([{...block,drills:[{name:'Low dose',stage:'drills',dosage:'4 swings'}]}],facts,options)[0].drills).toHaveLength(1);
