@@ -130,7 +130,7 @@ async function notifyParentsOfMedicalOverride(
 ): Promise<void> {
   try {
     const { data: links } = await admin.from("parent_athlete_links").select("parent_user_id")
-      .eq("athlete_user_id", athleteId).eq("status", "accepted").is("revoked_at", null);
+      .eq("athlete_user_id", athleteId).eq("status", "active").is("revoked_at", null);
     const parentIds = [...new Set((links ?? []).map((l: any) => String(l.parent_user_id)))];
     const medical = warnings.filter(w => w.medical);
     const rules = medical.map(w => `${w.date}: ${w.rule}`).join(" ");
