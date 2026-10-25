@@ -88,6 +88,14 @@ describe("system/parked account exclusion", () => {
     }
   });
 
+  it("the scheduled missed-work marker excludes parked accounts (live definition evidence)", () => {
+    const def = read(".lovable/proofs/global-test-closeout/0116-wk-mark-missed-lifts-live.txt");
+    expect(def).toContain("public.wk_mark_missed_lifts()");
+    expect(def).toContain("COALESCE(p.is_system_account, false) = false");
+    expect(def).toContain("p.suspended_at IS NULL");
+    expect(def).toContain("p.account_paused_at IS NULL");
+  });
+
   it("coach prescription arm check uses the shared arm ledger and ramp judges", () => {
     const src = read("supabase/functions/_shared/coach/armLoadCheck.ts");
     expect(src).toContain("ledgerDay");
