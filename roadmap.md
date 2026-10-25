@@ -4342,3 +4342,10 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - [ ] 7. Execution blocks for pitching, fielding (all positions), baserunning; live throwing within arm ledger; phone proof.
 - [ ] 8. Hosted proofs: day-84 re-ask, testing-day details, six-cohort plan changes, coach section on TEST accounts (aging TEST ranking timestamp is test data).
 - [ ] Fresh full suite + status table with Ready to publish: yes/no.
+
+## Owner decisions 2026-10-25 (00:32 UTC) — TEST closeout + coach finish
+- [x] Persona restoration blocker CLOSED by owner: three TEST personas kept exactly as-is, hidden system accounts, excluded from stats/lists/jobs.
+- [x] Parked 20 owner-confirmed synthetic accounts (16 @example.com verification scripts + 4 stray @audit.test); 162,046 rows archived to the private closeout snapshot first; zero live deletions; kept/owner/Apple-review accounts untouched. Certification (a) zero non-system test markers: PASS. Evidence: .lovable/proofs/global-test-closeout/park24-result.json.
+- [ ] Certification (b): verify/add parked+system exclusion in every stat, ranking, list, search, coach/org/scout reader and nightly job.
+- [ ] Certification (c): fixed-ID no-new-rows check after next scheduled runs.
+- [ ] Coach prescriptions finish: arm/throw + skill-dose safety via existing judges; same-category skill-block replacement via block-swap path; own-item certification; positive player/coach/org/team send→choice→focus→readback proofs.
