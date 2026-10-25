@@ -26,7 +26,7 @@ import { prescriptionMode, prescriptionChoiceDate } from "../_shared/coach/presc
 import { loadPrescriptionEnvelope } from "../_shared/coach/loadPrescriptionEnvelope.ts";
 import { prescriptionResults } from "../_shared/coach/prescriptionResults.ts";
 import { certifyCoachOwnItems } from "../_shared/coach/ownItemCertification.ts";
-import { factGuidelineWarnings, factsWithoutAdvisories, warningsAcknowledged, type CoachGuidelineWarning } from "../_shared/coach/guidelineWarnings.ts";
+import { factGuidelineWarnings, factsWithoutAdvisories, warningsAcknowledged, isCoachPrescriptionDate, type CoachGuidelineWarning } from "../_shared/coach/guidelineWarnings.ts";
 import { z } from "npm:zod@3";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
       const parsed = SendRows.safeParse(body.rows);
       if (!parsed.success) return json({ error: "Review the players, dates and workout details before sending." }, 400);
       const sends = parsed.data;
-      if (sends.some(r => r.plan_date < today || new Date(`${r.plan_date}T12:00:00Z`).toISOString().slice(0, 10) !== r.plan_date)) return json({ error: "Pick valid dates today or later." }, 400);
+      if (sends.some(r => !isCoachPrescriptionDate(r.plan_date) || r.plan_date < today || (r.recur_end !== null && !isCoachPrescriptionDate(r.recur_end)))) return json({ error: "Pick valid dates today or later." }, 400);
       const ids = [...new Set(sends.map(r => r.recipient_id))];
       if (ids.length > 60) return json({ error: "Send to no more than 60 players at once." }, 400);
       const linked = await Promise.all(ids.map(async id => { const r = await admin.rpc("coach_connected_to", { _me: me, _athlete: id }); return !r.error && r.data === true ? id : null; }));
@@ -161,7 +161,7 @@ Deno.serve(async (req) => {
       const date = String(body.plan_date ?? "");
       const intensity = prescriptionIntensity(body.intensity);
       const throwing = body.throwing === true;
-      if (!ids.length || !category || !DATE.test(date)) return json({ error: "Pick players, a category and a date" }, 400);
+      if (!ids.length || !category || !isCoachPrescriptionDate(date)) return json({ error: "Pick players, a category and a date" }, 400);
       if (date < today) return json({ error: "Pick today or a future date" }, 400);
 
       // Coaches AND org admins (for their assigned athletes) may send —
@@ -256,7 +256,7 @@ Deno.serve(async (req) => {
 
       if (action === "reschedule" || action === "cancel") {
         if (!rxId) return json({ error: "Pick a prescription" }, 400);
-        if (action === "reschedule" && !DATE.test(newDate)) return json({ error: "Pick a valid date" }, 400);
+        if (action === "reschedule" && !isCoachPrescriptionDate(newDate)) return json({ error: "Pick a valid date" }, 400);
         if (action === "reschedule" && newDate < today) return json({ error: "Pick today or a future date" }, 400);
         const { data: rx } = await admin.from("coach_prescriptions").select("*").eq("id", rxId).maybeSingle();
         if (!rx || (rx as any).sender_id !== me) return json({ error: "Not your send" }, 403);
@@ -306,7 +306,7 @@ Deno.serve(async (req) => {
       }
 
       if (action === "resend") {
-        if (!rxId || !DATE.test(newDate) || newDate < today) return json({ error: "Pick a prescription and a future date" }, 400);
+        if (!rxId || !isCoachPrescriptionDate(newDate) || newDate < today) return json({ error: "Pick a prescription and a future date" }, 400);
         const { data: rx } = await admin.from("coach_prescriptions").select("*").eq("id", rxId).maybeSingle();
         if (!rx || (rx as any).sender_id !== me) return json({ error: "Not your send" }, 403);
         const { data: connected, error: connectionError } = await admin.rpc("coach_connected_to", { _me: me, _athlete: rx.recipient_id });

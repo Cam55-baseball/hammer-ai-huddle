@@ -84,7 +84,7 @@ export function CoachPrescriptionStatus() {
                 <div key={`${override.occurred_at}:${i}`} className="border-l-2 border-primary pl-2 text-xs" data-coach-override>
                   <p className="font-semibold">Coach override · {override.action} · {new Date(override.occurred_at).toLocaleString()}</p>
                   {override.warnings.map((warning, j) => <p key={`${warning.code}:${j}`}>{warning.date}: {warning.rule}</p>)}
-                  <p className="text-muted-foreground">Recorded by {override.actor_id}</p>
+                  <p className="text-muted-foreground">Confirmed by {override.actor_id === rx.recipient_id ? rx.recipient_name : "you"}</p>
                 </div>
               ))}
               <div className="flex flex-wrap items-center gap-2">
