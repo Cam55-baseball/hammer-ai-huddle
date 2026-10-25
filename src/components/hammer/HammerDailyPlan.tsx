@@ -123,6 +123,7 @@ import { usePrinciplePicks } from "@/hooks/usePrinciplePicks";
 import { principleDrillBoosts } from "@/lib/intelligence/principlePicks";
 import { useCategoryPracticeLoad } from '@/hooks/useCategoryPracticeLoad';
 import {useBuntingEvidence} from '@/hooks/useBuntingEvidence';
+import {useSportTheme} from '@/contexts/SportThemeContext';
 import {BuntStudyVideo} from '@/components/hammer/cards/BuntStudyVideo';
 import {getV2} from '@/lib/hammer/goals/categoryGoals';
 import { RoyalTimingReminder } from "@/components/hammer/RoyalTimingReminder";
