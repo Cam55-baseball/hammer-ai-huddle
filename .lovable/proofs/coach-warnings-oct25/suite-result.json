@@ -1,0 +1,32 @@
+{
+  "batches": [
+    {
+      "shard": 1,
+      "files": 133,
+      "tests": 1011,
+      "passed": true
+    },
+    {
+      "shard": 2,
+      "files": 133,
+      "tests": 1026,
+      "passed": true
+    },
+    {
+      "shard": 3,
+      "files": 133,
+      "tests": 1087,
+      "passed": true
+    },
+    {
+      "shard": 4,
+      "files": 133,
+      "tests": 1091,
+      "passed": true
+    }
+  ],
+  "files": 532,
+  "tests": 4215,
+  "deno_check": "pass",
+  "preview_build": "pass at 05:24:34 UTC"
+}
