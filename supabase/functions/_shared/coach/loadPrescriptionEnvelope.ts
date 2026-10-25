@@ -15,7 +15,7 @@ import { categorySlots, type RxCategory } from "./prescriptionSafety.ts";
 import { savedDayCoverage } from "./savedDayCoverage.ts";
 import { pendingEquipmentReviews } from "../vault/equipmentReview.ts";
 import { checkCoachArmLoad } from "./armLoadCheck.ts";
-import { workloadWarning, type CoachGuidelineWarning } from "./guidelineWarnings.ts";
+import { workloadWarning, missingCoachFactWarning, type CoachGuidelineWarning } from "./guidelineWarnings.ts";
 
 type Row = Record<string, any>;
 const shift = (date: string, n: number) => new Date(Date.parse(`${date}T12:00:00Z`) + n * 86400000).toISOString().slice(0, 10);
@@ -73,17 +73,19 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   if (current.some((row: Row) => typeof row.cns_cost !== "number" || !Number.isFinite(row.cns_cost) || row.cns_cost < 0)) return refused("Today's saved workload couldn't be checked. Nothing was changed.");
   const decision = decideFromRaw(raw).decision;
   const ledger = await checked(admin.from("wk_cns_ledger").select("units_spent,units_cap").eq("user_id", userId).eq("ledger_date", date).maybeSingle());
-  if (!ledger || !Number.isFinite(ledger.units_cap) || !Number.isFinite(ledger.units_spent) || ledger.units_cap < 0 || ledger.units_spent < 0) return refused("Today's saved workload limit is missing. Open your plan and finish your check-in first.");
+  const knownLedger = ledger && Number.isFinite(ledger.units_cap) && Number.isFinite(ledger.units_spent) && ledger.units_cap >= 0 && ledger.units_spent >= 0;
+  if (!knownLedger) warnings.push(missingCoachFactWarning(date, "workload_limit"));
   const freshCheckIn = latestCheckInValues(events ?? []);
-  if (!freshCheckIn) return refused("Finish today's check-in before using this workout. Your saved plan is unchanged.");
+  if (!freshCheckIn) warnings.push(missingCoachFactWarning(date, "check_in"));
   const dayIntent = ["rest", "skip", "push"].includes(intent?.type) ? intent.type : null;
-  const freshCap = checkInReductions(ledger.units_cap, freshCheckIn, dayIntent).cnsCap;
+  const baseCap = knownLedger ? ledger.units_cap : 0;
+  const freshCap = freshCheckIn ? checkInReductions(baseCap, freshCheckIn, dayIntent).cnsCap : baseCap;
   const isGameDay = raw.games.some(g => g.game_date === date && !g.deleted_at && !g.ignored_for_training);
-  const recovery = applyDecision({ ...decision, blockCnsCap: Math.min(ledger.units_cap, freshCap), isGameDay, planDate: date });
+  const recovery = applyDecision({ ...decision, blockCnsCap: Math.min(baseCap, freshCap), isGameDay, planDate: date });
   const removedCost = replace ? current.filter((r: Row) => categorySlots(category).includes(r.slot) && r.status !== "completed").reduce((n: number, r: Row) => n + Number(r.cns_cost ?? 0), 0) : 0;
   const proposedCost = proposed.reduce((n, row) => n + Number(row.cns_cost), 0);
-  const resultingCost = Math.max(0, Number(ledger.units_spent) - removedCost) + proposedCost;
-  if (resultingCost > recovery.cnsCap) warnings.push(workloadWarning(date, resultingCost, recovery.cnsCap));
+  const resultingCost = knownLedger ? Math.max(0, Number(ledger.units_spent) - removedCost) + proposedCost : null;
+  if (resultingCost !== null && resultingCost > recovery.cnsCap) warnings.push(workloadWarning(date, resultingCost, recovery.cnsCap));
   const injuries = injuryWords(context.injury_history);
   const painToday = raw.quizzes.find(q => q.entry_date === date && Number(q.pain_scale) > 0);
   if (injuries.length || raw.dailyLogs.some(d => d.entry_date === date && d.injury_mode) || painToday) warnings.push({ code: "injury_flag", date, medical: true,
