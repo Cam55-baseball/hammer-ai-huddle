@@ -19,6 +19,20 @@ describe('bounded bunting in actual hitting slots',()=>{
   for(const override of [{age:null},{owned:['bat']},{catalog:catalog.map(c=>({...c,is_active:false}))},{phase:'post_season'}])expect(applyBuntingPlan([block],facts,{...options,...override})).toEqual([block]);
   expect(applyBuntingPlan([{...block,drills:[{name:'Low dose',stage:'drills',dosage:'4 swings'}]}],facts,options)[0].drills).toHaveLength(1);
  });
+ it('uses seven attempts for repeated low batting and left-handed power goals, within the same budget',()=>{
+  for(const modified of [{...facts,battingGames:[{hits:2,atBats:10},{hits:1,atBats:10}]},{...facts,bats:'L' as const,powerGoal:true}]){
+   const next=applyBuntingPlan([block],modified,options)[0];expect(next.drills.find(d=>d.bunt)?.bunt?.attempts).toBe(7);
+   expect(next.drills.reduce((n,d)=>n+Number(d.dosage.split(' ')[0]),0)).toBe(45);
+  }
+ });
+ it('scales only exact-side/type outcomes and never exceeds twenty attempts or the displaced work',()=>{
+  const next=applyBuntingPlan([block],{...facts,outcomes:[{side:'R',type:'squeeze',attempts:10,successes:0}]},options)[0];
+  expect(next.drills.find(d=>d.bunt)?.bunt?.attempts).toBe(20);expect(next.drills).toHaveLength(3);
+ });
+ it('protects owner slots and requires matching athlete visibility',()=>{
+  expect(applyBuntingPlan([{...block,drills:block.drills.map(d=>({...d,prescriptionOrigin:'owner'}))}],facts,options)[0].drills).toEqual(block.drills.map(d=>({...d,prescriptionOrigin:'owner'})));
+  expect(applyBuntingPlan([block],facts,{...options,catalog:catalog.map(c=>({...c,visible_to:['other']})),userId:'self'})).toEqual([block]);
+ });
  for(const sport of ['baseball','softball'] as const)for(const tier of ['5tool','golden2way'])for(const bats of ['R','L','S'] as const)it(`actual builder eight weeks: ${sport}/${tier}/${bats}`,()=>{
   const vars=Object.entries({sport_primary:sport,position_primary:'SS',bats_hand:bats,lifecycle_band:'adult',season_phase:'off',lifting_age_years:2,weekly_availability_days:6,injury_history:[],equipment_effective:['bat','ball','field','tee','glove']}).map(([key,value])=>({key,value,missing:false,confidence:'high'}) as ContextVariable);
   const ctx={variables:vars,missing:[],missingCount:0,isLoading:false,envelope:null,get:(key:string)=>vars.find(v=>v.key===key)} as HammerAthleteContext;
