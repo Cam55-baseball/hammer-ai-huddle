@@ -1610,7 +1610,7 @@ const handler = async (req: Request): Promise<Response> => {
         // compound categories the day must not contain), and the engines that
         // already read `day_type` behave as they do on any recovery day.
         if (tcsAdjust.removeLift) {
-          (trainingContext as unknown as { day_type: string }).day_type = "recovery";
+          trainingContext.day_type = "recovery_day";
         }
         // Step 21D4 — "Why reduced today" is for real trims only. When the
         // calculator left the day at full class and kept the lift, its reasons
@@ -1641,7 +1641,7 @@ const handler = async (req: Request): Promise<Response> => {
     // session template becomes the recovery template and never demands
     // compound lifts the day must not contain. Only ever makes the day lighter.
     if (timelineToday.hold) {
-      (trainingContext as unknown as { day_type: string }).day_type = "recovery";
+      trainingContext.day_type = "recovery_day";
     }
 
 
@@ -4908,6 +4908,7 @@ const handler = async (req: Request): Promise<Response> => {
         restDaysBetweenLifts: enforceSpacing ? 2 : null,
         weeklyLiftMax: enforceSpacing && fcPhase === "in_season" ? 2 : null,
         liftRemoved: tcsAdjust?.removeLift === true,
+        fullRestDay: trainingContext.day_type === "recovery_day" || trainingContext.day_type === "off_day",
         priorKindDates: fcMerged.priorKindDates as any,
         gameTomorrow: fcTomorrowGame,
         catalog: fcCatMap,

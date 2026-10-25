@@ -24,7 +24,7 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
   const activity = `${name} ${dosage}`.toLowerCase();
   const sets = firstNumber(text, /\b(\d+)\s*(?:sets?\s*)?x\s*\d+/) ?? firstNumber(text, /\b(\d+)\s*(?:rounds?|sets?)\s+(?:of|at)\b/) ?? 1;
   const multiplied = firstNumber(text, /\b\d+\s*(?:sets?\s*)?x\s*(\d+(?:\.\d+)?)/);
-  const reps = firstNumber(text, /\b(\d+)\s*(?:reps?|contacts?|catches?|swings?|steps?|runs?|trips?|bursts?|rounds?|ladders?|breaths?|rocks?)\b/) ?? multiplied ?? firstNumber(text, /\b(\d+)\s*(?:slow\s*)?(?:per|each)\b/) ?? firstNumber(text, /\b(\d+)\s+slow\s+(?:reps?|breaths?|rocks?)/);
+  const reps = firstNumber(text, /\b(\d+)\s*(?:reps?|contacts?|catches?|swings?|steps?|runs?|trips?|bursts?|ladders?|breaths?|rocks?)\b/) ?? multiplied ?? firstNumber(text, /\b(\d+)\s*(?:slow\s*)?(?:per|each)\b/) ?? firstNumber(text, /\b(\d+)\s+slow\s+(?:reps?|breaths?|rocks?)/);
   const targetText = text.replace(/rest\s*:?\s*\d+(?:\.\d+)?\s*(?:seconds?|secs?|s|minutes?|mins?)\b/g, "");
   const seconds = firstNumber(targetText, /\b(\d+(?:\.\d+)?)\s*(?:seconds?|secs?|s)\b/);
   const minutes = firstNumber(targetText, /\b(\d+(?:\.\d+)?)\s*(?:minutes?|mins?)\b/);

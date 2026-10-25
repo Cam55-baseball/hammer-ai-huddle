@@ -173,7 +173,10 @@ describe("defense is present on every day type, including an off day", () => {
           const d = plan.blocks.find((b) => b.modality === "defense")!;
           expect(d, `defense missing on ${dayName}`).toBeTruthy();
           expect(d.drills.length + d.steps.length, `defense empty on ${dayName}`).toBeGreaterThan(0);
-          if (d.status === "off-day") expect(d.offDayOverridable).toBe(true);
+          if (plan.weeklyRoadmap.find(day => day.isToday)?.restDay && signal.postureToday === "normal") {
+            expect(d.drills).toEqual([]);
+            expect(d.offDayOverridable).toBe(false);
+          }
         }
       }
     }
