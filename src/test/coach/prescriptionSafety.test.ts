@@ -96,6 +96,29 @@ describe("coach prescription replace safety", () => {
     expect(categorySlots("vision")).toEqual([]);
     expect(categorySlots("warmup")).toEqual(["warmup", "ub_primer"]);
   });
+
+  it("every skill category replaces only its own slot (owner confirmation: hitting, pitching, throwing, fielding, baserunning)", () => {
+    expect(categorySlots("hitting")).toEqual(["hitting"]);
+    expect(categorySlots("pitching")).toEqual(["pitching"]);
+    expect(categorySlots("throwing")).toEqual(["throwing"]);
+    expect(categorySlots("fielding")).toEqual(["fielding"]);
+    expect(categorySlots("baserunning")).toEqual(["baserunning"]);
+    // No two skill categories share a slot — a replacement can never spill over.
+    const skill = ["hitting", "pitching", "throwing", "fielding", "baserunning"] as const;
+    const all = skill.flatMap((c) => categorySlots(c));
+    expect(new Set(all).size).toBe(all.length);
+    // And each category's rows land in that same slot.
+    for (const c of skill) {
+      const rows = coachRxToWkRows({
+        userId: "p1", planDate: "2026-10-24", category: c,
+        prescriptionId: "rx-1", coachName: "Coach Lee", usedInstead: true,
+        exercises: [{ name: "Drill", sets: 2, reps: 8 }],
+      });
+      expect(rows).toHaveLength(1);
+      expect(rows[0].slot).toBe(c);
+      expect(rows[0].sequence_role).toBe("coach");
+    }
+  });
 });
 
 describe("coachRxToWkRows — coach workout becomes real plan rows", () => {
