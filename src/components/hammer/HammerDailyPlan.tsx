@@ -737,6 +737,13 @@ function HammerDailyPlanBody({
   const hasG2W = modules.includes(`${sportKey}_golden2way`);
 
   const bodyPlanDate = wkRx.snapshotIdentity.plan_date ?? new Date().toISOString().slice(0, 10);
+  const savedDay = useQuery({ queryKey: ["saved-block-day", bodyUser?.id, bodyPlanDate], enabled: !!bodyUser,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("athlete_plan_snapshots").select("id,payload,sport").eq("user_id", bodyUser?.id ?? "").eq("plan_date", bodyPlanDate);
+      if (error) throw error;
+      return data;
+    } });
+  const hasSavedSportDay = savedDay.data?.some(row=>row.sport===sportKey) === true;
   const practiceLoadHistory = useCategoryPracticeLoad(sportKey, bodyPlanDate);
   const buntHistory = useBuntingEvidence(sportKey, bodyPlanDate, has5Tool || hasG2W);
   const dob = ctx.get<string>('date_of_birth')?.value;
@@ -797,11 +804,11 @@ function HammerDailyPlanBody({
           pitcherOutings: pitcherSchedule.facts,
           practiceRecords: practiceLoadHistory.data,
           subscriptionModules: modules,
-          bunting: buntHistory.data && !buntHistory.isError ? { ...buntHistory.data, age:buntAge, phase:resolvedPhase ?? '',userId:bodyUser?.id,traits:{powerGoal:hittingPowerGoal} } : undefined,
+          bunting: !hasSavedSportDay && buntHistory.data && !buntHistory.isError ? { ...buntHistory.data, age:buntAge, phase:resolvedPhase ?? '',userId:bodyUser?.id,traits:{powerGoal:hittingPowerGoal} } : undefined,
           fullRestDay: wkRx.data?.some(row => (row.why_payload as any)?.rest_day?.allowed_class === "none" || ["recovery", "recovery_day", "off_day"].includes((row.why_payload as any)?.training_context?.day_type)) === true,
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a
@@ -872,12 +879,6 @@ function HammerDailyPlanBody({
     return { ...base, blocks: withPicks };
   }, [rawPlan, cnsHigh, planAdjust.adjustments, faultContext.data, faultContext.isError, projectedAthlete.equipmentList, ctx, drillCirculation.catalog, drillCirculation.circulation, drillCirculation.ready, modules, sportKey, gpForPlan, principlePicks.data]);
 
-  const savedDay = useQuery({ queryKey: ["saved-block-day", bodyUser?.id, bodyPlanDate], enabled: !!bodyUser,
-    queryFn: async () => {
-      const { data, error } = await supabase.from("athlete_plan_snapshots").select("id,payload,sport").eq("user_id", bodyUser?.id ?? "").eq("plan_date", bodyPlanDate);
-      if (error) throw error;
-      return data;
-    } });
   const savedPayload = savedDay.data?.find(row => row.sport === sportKey)?.payload as unknown as { blocks?: Array<{ modality: string; side?:'R'|'L'|null; drills: DrillStep[]; because?:string[]; replacedByCoachRx?: string; coachRx?: string }> } | undefined;
   const plan = savedPayload?.blocks?.some(block => block.replacedByCoachRx || block.drills.some(drill=>!!drill.bunt) || (swapV2.enabled && block.drills.some(drill => "swapReason" in drill)))
     ? { ...computedPlan, blocks: computedPlan.blocks.map(block => {
@@ -901,12 +902,12 @@ function HammerDailyPlanBody({
   const snapshotKey = useMemo(() => JSON.stringify(planSnapshotPayload(plan, sportKey, snapshotDate)), [plan, sportKey, snapshotDate]);
   const snapshotSaved = useRef("");
   useEffect(() => {
-    if (!snapshotUser?.id || !snapshotKey || snapshotSaved.current === snapshotKey || ((has5Tool || hasG2W) && buntHistory.isPending)) return;
+    if (!snapshotUser?.id || !snapshotKey || snapshotSaved.current === snapshotKey || savedDay.isPending || savedDay.isError || ((has5Tool || hasG2W) && buntHistory.isPending)) return;
     snapshotSaved.current = snapshotKey;
     void savePlanSnapshot(snapshotUser.id, plan, sportKey, snapshotDate).then(() => {
       void queryClient.invalidateQueries({ queryKey: ["saved-block-day", snapshotUser.id, snapshotDate] });
     });
-  }, [snapshotUser?.id, snapshotKey, plan, sportKey, snapshotDate,has5Tool,hasG2W,buntHistory.isPending]);
+  }, [snapshotUser?.id, snapshotKey, plan, sportKey, snapshotDate,has5Tool,hasG2W,buntHistory.isPending,savedDay.isPending,savedDay.isError]);
   useEffect(() => {
     if (!influencedServeKey || influencedLoggedServe.current === influencedServeKey) return;
     influencedLoggedServe.current = influencedServeKey;
