@@ -8,7 +8,7 @@ export function ExerciseDisclosure({ name, children }: { name: string; children:
   const [open, setOpen] = useState(false);
   const bodyId = useId();
   const focus = useFocusState();
-  return <div data-exercise-disclosure data-state={open ? "open" : "closed"} className="[overflow-anchor:none]">
+  return <div hidden={focus.active} data-exercise-disclosure data-state={open ? "open" : "closed"} className="[overflow-anchor:none]">
     <Button type="button" variant="ghost" data-exercise-toggle aria-expanded={open} aria-controls={bodyId}
       onClick={() => setOpen((value) => !value)}
       className="h-auto min-h-11 w-full justify-between gap-2 whitespace-normal px-0 text-left text-sm font-semibold">

@@ -10,7 +10,6 @@ import { useIdentityState } from '@/hooks/useIdentityState';
 import { useDayState } from '@/hooks/useDayState';
 import { AdaptivePhaseStrip } from '@/components/hammer/AdaptivePhaseStrip';
 import { CommunicationAI } from '@/components/dashboard/CommunicationAI';
-import { PlanStreakStrip } from '@/components/hammer/cards/PlanStreakStrip';
 import { ScheduleDropdownWrapper } from '@/components/hammer/ScheduleDropdownWrapper';
 import { useBehavioralEvents, type BehavioralEvent } from '@/hooks/useBehavioralEvents';
 import { useHIESnapshot } from '@/hooks/useHIESnapshot';
@@ -308,7 +307,6 @@ export function IdentityCommandCard({ className }: Props) {
             )}
           </div>
         </button>
-        <div className="px-4 pb-3"><PlanStreakStrip /></div>
 
 
 

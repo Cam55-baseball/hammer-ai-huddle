@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
+import { PlanStreakStrip } from "./cards/PlanStreakStrip";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOptionalAuth } from "@/hooks/useAuth";
@@ -88,6 +89,7 @@ export function PhaseStripView({ plan, open, onToggle }: { plan: AthletePhasePla
   return (
     <div className="rounded-md border border-border/80 bg-background/65 px-4 py-3 text-sm text-foreground" data-testid="phase-strip">
       <h3 className="text-xs font-bold uppercase text-muted-foreground" data-testid="phase-heading">Your training phase</h3>
+      <PlanStreakStrip />
       <p className="mt-2 text-base font-semibold leading-snug" data-testid="phase-name">{displayLine}</p>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{meaning}</p>
       {ramping && <div className="mt-3"><h4 className="text-xs font-bold text-muted-foreground">Your return to full training</h4>
