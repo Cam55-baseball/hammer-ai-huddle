@@ -1,0 +1,42 @@
+{
+  "steps": {
+    "signins": {
+      "player": true,
+      "coach": true
+    },
+    "connection": "created+accepted via canonical RPCs",
+    "phase": {
+      "season": "off_season",
+      "sub_block": "os_q1",
+      "growth": false
+    },
+    "before": {
+      "dob": "2005-03-01",
+      "lifting_years": null
+    },
+    "fixtures": "day fixtures inserted (snapshot, plan row, ledger, readiness, equipment)",
+    "team_send": {
+      "rows": 3,
+      "per_player": [
+        "c00809eb:pending",
+        "db9cc8ef:pending",
+        "8a50098b:pending"
+      ]
+    },
+    "choose": {
+      "applied": false,
+      "verdict": "blocked",
+      "reasons": [
+        "Sprints restart easy — nothing logged in the last 4 weeks, so today starts at the lightest legal version."
+      ],
+      "safeOption": "Safe option: save this workout for later and ask your coach to review the listed items."
+    },
+    "fatal": "choose not applied: {\"applied\":false,\"verdict\":\"blocked\",\"reasons\":[\"Sprints restart easy — nothing logged in the last 4 weeks, so today starts at the lightest legal version.\"],\"safeOption\":\"Safe option: save this workout for later and ask your coach to review the listed items.\"}"
+  },
+  "cleanup": {
+    "prescriptions_left": 0,
+    "wk_rows_left": 0,
+    "passwords": "scrambled",
+    "settings": "restored"
+  }
+}
