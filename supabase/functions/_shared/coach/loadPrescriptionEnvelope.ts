@@ -50,7 +50,11 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   const refused = (reason: string) => ({ allowed: false, reasons: [reason], safeOption: "Safe option: save for later and finish your check-in or ask your coach to review it.", rows: [] as Row[] });
   if (!profile || !context || !settings || !["baseball", "softball"].includes(context.sport_primary)) return refused("Your current player and season details couldn't be checked. Nothing was changed.");
   const age = ageFromDob(profile.date_of_birth, date);
-  if (age == null || context.lifting_age_years == null) return refused("Confirm your age and training experience before using this workout.");
+  // Unknown age cannot establish legal/minor handling; training experience can
+  // remain explicitly unknown without preventing the coach's acknowledgement.
+  if (age == null) return refused("Confirm your age before using this workout so legal and parent requirements can be checked.");
+  const trainingYearsKnown = typeof context.lifting_age_years === "number" && Number.isFinite(context.lifting_age_years) && context.lifting_age_years >= 0;
+  if (!trainingYearsKnown) warnings.push({ code: "missing_facts", date, rule: "Training experience is missing, so experience-based guidelines weren't checked. Proceed?" });
   const snapshot = snapshots?.find((s: Row) => s.sport === context.sport_primary);
   if (!savedDayCoverage(snapshot?.payload, current)) return refused("Today's saved skill work couldn't be included in the full workload check. Keep your plan and save this workout for later.");
   const savedPhases = current.map((r: Row) => r.why_payload?.phase_state).filter(Boolean);
@@ -65,12 +69,9 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   const reviewEvents = await checked(admin.from("exercise_vault_audit").select("slug,action,at").in("slug", slugs).in("action", ["equipment_corrected", "review_approved", "make_live"]).order("at", { ascending: false }));
   const catalog = new Map<string, Row>((catalogRows ?? []).map((row: Row) => [row.slug, row]));
   const proposed: Row[] = rows.map(row => ({ ...row, phase: phase.sub_block, cns_cost: catalog.get(row.movement_slug)?.cns_cost ?? null, why_payload: { ...row.why_payload, phase_state: phase } }));
-  const undeclared = proposed.find(row => typeof row.cns_cost !== "number" || !Number.isFinite(row.cns_cost) || row.cns_cost < 0);
-  if (undeclared) return refused(undeclared.movement_slug
-    ? `${undeclared.movement_name}: its workload isn't declared in Exercise Vault. Ask your coach to choose a reviewed item.`
-    : `${undeclared.movement_name}: coach-written items have no reviewed workload, so today's load limit can't be checked exactly. Ask your coach to build it from Exercise Vault items.`);
+  const missingCosts = [...proposed, ...current].filter(row => typeof row.cns_cost !== "number" || !Number.isFinite(row.cns_cost) || row.cns_cost < 0);
+  for (const row of missingCosts) warnings.push({ code: "missing_facts", date, rule: `${row.movement_name}: its workload value is missing or invalid, so the full daily workload wasn't checked. Proceed?` });
   const resultingDay = [...current.filter((r: Row) => !(replace && categorySlots(category).includes(r.slot) && r.status !== "completed")), ...proposed];
-  if (current.some((row: Row) => typeof row.cns_cost !== "number" || !Number.isFinite(row.cns_cost) || row.cns_cost < 0)) return refused("Today's saved workload couldn't be checked. Nothing was changed.");
   const decision = decideFromRaw(raw).decision;
   const ledger = await checked(admin.from("wk_cns_ledger").select("units_spent,units_cap").eq("user_id", userId).eq("ledger_date", date).maybeSingle());
   const knownLedger = ledger && Number.isFinite(ledger.units_cap) && Number.isFinite(ledger.units_spent) && ledger.units_cap >= 0 && ledger.units_spent >= 0;
@@ -84,7 +85,7 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   const recovery = applyDecision({ ...decision, blockCnsCap: Math.min(baseCap, freshCap), isGameDay, planDate: date });
   const removedCost = replace ? current.filter((r: Row) => categorySlots(category).includes(r.slot) && r.status !== "completed").reduce((n: number, r: Row) => n + Number(r.cns_cost ?? 0), 0) : 0;
   const proposedCost = proposed.reduce((n, row) => n + Number(row.cns_cost), 0);
-  const resultingCost = knownLedger ? Math.max(0, Number(ledger.units_spent) - removedCost) + proposedCost : null;
+  const resultingCost = knownLedger && missingCosts.length === 0 ? Math.max(0, Number(ledger.units_spent) - removedCost) + proposedCost : null;
   if (resultingCost !== null && resultingCost > recovery.cnsCap) warnings.push(workloadWarning(date, resultingCost, recovery.cnsCap));
   const injuries = injuryWords(context.injury_history);
   const painToday = raw.quizzes.find(q => q.entry_date === date && Number(q.pain_scale) > 0);
@@ -116,7 +117,7 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   const merged = mergeExternal(external ?? [], date, [...new Set(previous.filter(row => row.slot === "lift").map(row => row.plan_date))], priorKinds);
   const history = buildLedger(raw, Object.fromEntries(catalog) as any);
   const result = judgeCoachEnvelope({ userId, rows: proposed, resultingDay, catalog, pendingReview: pendingEquipmentReviews(reviewEvents ?? []).map(row => row.slug), owned: [...owned], missing: [...rememberedMissingGear(answers ?? [])], age,
-    trainingAge: classifyTrainingAge({ yearsLifting: context.lifting_age_years, isProProspect: false, competitiveLevel: context.competition_level }), trainingYears: context.lifting_age_years,
+    trainingAge: trainingYearsKnown ? classifyTrainingAge({ yearsLifting: context.lifting_age_years, isProProspect: false, competitiveLevel: context.competition_level }) : "unknown", trainingYears: context.lifting_age_years,
     sport: context.sport_primary, positions: profile.positions ?? [], blockedIntensityClasses: recovery.blockedIntensityClasses, isGameDay,
     final: { planDate: date, phase: phase.sub_block, age, growthMode: phase.growth, ...merged, restDaysBetweenLifts: 2, weeklyLiftMax: phase.sub_block === "in_season" ? 2 : null, liftRemoved: recovery.removeLift,
       u13ThrowBlock: await loadU13ThrowBlock(strictDb(admin), userId, age, date), catalog, gameTomorrow: raw.games.some(g => g.game_date === shift(date, 1) && !g.deleted_at && !g.ignored_for_training) },

@@ -20,7 +20,7 @@ vi.mock("../../../supabase/functions/_shared/coach/prescriptionEnvelope.ts", () 
   judgeCoachEnvelope: () => ({ allowed: true, reasons: [], warnings: [] }),
 }));
 
-function database(ledger: unknown) {
+function database(ledger: unknown, overrides: Record<string, unknown> = {}) {
   const tables: Record<string, unknown> = {
     profiles: { date_of_birth: "2005-08-01", positions: ["OF"] },
     athlete_context: { sport_primary: "baseball", lifting_age_years: 2, injury_history: [] },
@@ -28,6 +28,7 @@ function database(ledger: unknown) {
     wk_prescriptions: [{ slot: "lift", movement_slug: "test_lift", movement_name: "Test lift", cns_cost: 2, why_payload: { phase_state: phase } }],
     wk_movement_catalog: [{ slug: "test_lift", cns_cost: 2 }],
     wk_cns_ledger: ledger,
+    ...overrides,
   };
   function query(data: unknown): any {
     const q: any = new Proxy({}, { get: (_target, key) => key === "then"
@@ -39,6 +40,27 @@ function database(ledger: unknown) {
 }
 
 describe("real coach loader preserves missing facts as warnings", () => {
+  it("missing training experience warns without fabricating a beginner classification", async () => {
+    const result = await loadPrescriptionEnvelope(database({ units_cap: 100, units_spent: 2 }, {
+      athlete_context: { sport_primary: "baseball", lifting_age_years: null, injury_history: [] },
+    }), "player", "2026-10-25", "lift", [], false);
+    expect(result.allowed).toBe(true);
+    if (!("warnings" in result)) throw new Error("Experience must warn");
+    expect(result.warnings.filter(w => w.code === "missing_facts")).toHaveLength(2);
+  });
+  it("missing catalog CNS cost warns and leaves the ledger result unknown", async () => {
+    const result = await loadPrescriptionEnvelope(database({ units_cap: 100, units_spent: 2 }, {
+      wk_movement_catalog: [{ slug: "test_lift", cns_cost: null }],
+    }), "player", "2026-10-25", "lift", [{ slot: "lift", movement_slug: "test_lift", movement_name: "Test lift" }], false);
+    expect(result.allowed).toBe(true);
+    if (!("cnsResult" in result) || !("warnings" in result)) throw new Error("Workload must warn");
+    expect(result.cnsResult).toBeNull();
+    expect(result.warnings.filter(w => w.code === "missing_facts")).toHaveLength(2);
+  });
+  it("unknown age still refuses because legal and parent handling cannot be established", async () => {
+    const result = await loadPrescriptionEnvelope(database(null, { profiles: { date_of_birth: null } }), "player", "2026-10-25", "lift", [], false);
+    expect(result.allowed).toBe(false);
+  });
   it("a missing October 25 check-in permits the warning decision, not a readiness claim", async () => {
     const result = await loadPrescriptionEnvelope(database({ units_cap: 100, units_spent: 2 }), "player", "2026-10-25", "lift", [], false);
     expect(result.allowed).toBe(true);
