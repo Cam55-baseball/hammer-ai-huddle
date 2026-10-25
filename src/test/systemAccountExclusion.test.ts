@@ -1,0 +1,78 @@
+import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+
+/**
+ * Global TEST cleanup law (owner 2026-10-25): parked/system accounts are
+ * excluded from every stat, ranking, list, search, coach/org/scout view and
+ * nightly job. These guards fail if the exclusion is removed from a reader
+ * or job that generates rows or lists athletes.
+ */
+const read = (p: string) => readFileSync(new URL(`../../${p}`, import.meta.url), "utf8");
+
+const JOBS_WITH_SHARED_EXCLUSION = [
+  "supabase/functions/nightly-hie-process/index.ts",
+  "supabase/functions/hie-refresh-worker/index.ts",
+  "supabase/functions/adaptive-phases-shadow/index.ts",
+  "supabase/functions/tcs-shadow-run/index.ts",
+  "supabase/functions/iq-decay/index.ts",
+  "supabase/functions/extract-patterns/index.ts",
+  "supabase/functions/generate-follower-reports/index.ts",
+];
+
+describe("system/parked account exclusion", () => {
+  it("shared helper excludes system, suspended and paused accounts", () => {
+    const helper = read("supabase/functions/_shared/systemAccounts.ts");
+    expect(helper).toContain("is_system_account.eq.true");
+    expect(helper).toContain("suspended_at.not.is.null");
+    expect(helper).toContain("account_paused_at.not.is.null");
+  });
+
+  for (const job of JOBS_WITH_SHARED_EXCLUSION) {
+    it(`${job} filters system accounts before processing`, () => {
+      expect(read(job)).toContain("systemAccountIds");
+    });
+  }
+
+  it("daily plan job only builds for non-system, unsuspended, unpaused players", () => {
+    const src = read("supabase/functions/wk-daily-plan-job/index.ts");
+    expect(src).toContain('.eq("is_system_account", false)');
+    expect(src).toContain('.is("suspended_at", null)');
+    expect(src).toContain('.is("account_paused_at", null)');
+  });
+
+  it("player search hides system, suspended and paused accounts", () => {
+    const src = read("supabase/functions/search-players/index.ts");
+    expect(src).toContain(".eq('is_system_account', false)");
+    expect(src).toContain(".is('suspended_at', null)");
+    expect(src).toContain(".is('account_paused_at', null)");
+  });
+
+  it("the public profile view migration excludes parked accounts", () => {
+    const sql = read("drizzle/migrations/0114_profiles_public_exclude_system_accounts.sql");
+    expect(sql).toContain("is_system_account = false");
+    expect(sql).toContain("suspended_at IS NULL");
+    expect(sql).toContain("account_paused_at IS NULL");
+  });
+
+  it("rankings drop rows whose profile is hidden", () => {
+    expect(read("src/pages/Rankings.tsx")).toContain("profilesMap[d.user_id]");
+  });
+
+  it("coach roster removes athletes missing from the public view", () => {
+    expect(read("src/hooks/coach/useCoachRoster.ts")).toContain("map.delete(id)");
+  });
+
+  it("coach prescription arm check uses the shared arm ledger and ramp judges", () => {
+    const src = read("supabase/functions/_shared/coach/armLoadCheck.ts");
+    expect(src).toContain("ledgerDay");
+    expect(src).toContain("armBudget");
+    expect(src).toContain("activeRamps");
+    expect(read("supabase/functions/_shared/coach/loadPrescriptionEnvelope.ts")).toContain("checkCoachArmLoad");
+  });
+
+  it("the client arm-ledger adapter re-exports the shared module (one source)", () => {
+    const client = read("src/lib/throwing/armLedgerEntry.ts");
+    expect(client).toContain("export * from");
+    expect(client).toContain("_shared/wic/phases/armLedgerEntry");
+  });
+});
