@@ -5,6 +5,7 @@
 // never ran — never proof that it ran and did nothing.
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { systemAccountIds } from "../_shared/systemAccounts.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,6 +51,10 @@ serve(async (req) => {
 
     const { data: dirty, error } = await query;
     if (error) throw error;
+
+    // Parked/system accounts are never refreshed (global TEST cleanup law).
+    const system = await systemAccountIds(supabase);
+    const activeDirty = (dirty ?? []).filter((d: any) => !system.has(String(d.user_id)));
 
     // Visibility on rows the normal query refuses to touch — the exact condition
     // that stranded the queue silently for months.
