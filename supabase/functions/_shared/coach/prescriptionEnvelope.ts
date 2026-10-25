@@ -12,6 +12,7 @@ import { certifySpeed } from "../wic/speed/sessionBuilder.ts";
 import { certifyConditioning } from "../wic/conditioning/sessionBuilder.ts";
 import { certifyBatSpeed } from "../wic/batSpeed/sessionBuilder.ts";
 import { certifyRecovery } from "../wic/recovery/sessionBuilder.ts";
+import { ADVISORY_PLAN_RULES, type CoachGuidelineWarning } from "./guidelineWarnings.ts";
 
 type Row = Record<string, any>;
 export function judgeCoachEnvelope(input: {
@@ -23,6 +24,7 @@ export function judgeCoachEnvelope(input: {
   userId?: string;
 }) {
   const reasons: string[] = [];
+  const warnings: CoachGuidelineWarning[] = [];
   for (const row of input.rows) {
     const movement = input.catalog.get(row.movement_slug);
     if (!movement || movement.is_active !== true || movement.superseded_by != null) {
@@ -57,7 +59,10 @@ export function judgeCoachEnvelope(input: {
     prescriptions: input.resultingDay.map(row => ({ ...row, slot: row.slot === "hitting" ? "bat_speed" : row.slot })) as any,
   }).fatal.map(issue => issue.message));
   if (affected.has("recovery") || affected.has("mobility")) reasons.push(...certifyRecovery(sessionInput).fatal.map(issue => issue.message));
-  for (const dropped of final.swaps) reasons.push(`Today's ${dropped.slot ?? "work"} would break a plan rule (${dropped.rule}). Keep the saved plan and ask your coach to review it.`);
+  for (const dropped of final.swaps) {
+    if (ADVISORY_PLAN_RULES.has(dropped.rule)) warnings.push({ code: dropped.rule, date: input.final.planDate, rule: `${dropped.slot ?? "Work"}: ${dropped.detail} (${dropped.rule}).` });
+    else reasons.push(`Today's ${dropped.slot ?? "work"} would break a plan rule (${dropped.rule}). Keep the saved plan and ask your coach to review it.`);
+  }
   const items: GovItem[] = [];
   for (const row of input.resultingDay) {
     const fact = input.catalog.get(row.movement_slug) as CatalogFact | undefined;
@@ -89,5 +94,5 @@ export function judgeCoachEnvelope(input: {
   }
   const governed = runGovernor({ items, rm28: input.rm28, ctx: input.governor });
   reasons.push(...governed.trims.map(trim => trim.reason));
-  return { allowed: reasons.length === 0, reasons: [...new Set(reasons)], safeOption: reasons.length ? "Safe option: save this workout for later and ask your coach to review the listed items." : null };
+  return { allowed: reasons.length === 0, reasons: [...new Set(reasons)], warnings, safeOption: reasons.length ? "Safe option: save this workout for later and ask your coach to review the listed items." : null };
 }
