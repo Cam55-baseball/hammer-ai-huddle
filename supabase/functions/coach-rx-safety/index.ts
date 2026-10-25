@@ -493,6 +493,8 @@ Deno.serve(async (req) => {
       p_expected_updated_at: rx.updated_at,
     });
     if (commitError) return json({ error: "Could not save this workout. Refresh and try again." }, 409);
+    const chooseMedical = (safety?.overrides as any[] ?? []).flatMap((o: any) => (o.warnings ?? []).filter((w: any) => w.requires_reason));
+    if (chooseMedical.length) await notifyParentsOfMedicalOverride(admin, me, String(choice), chooseMedical, overrideReason, testInbox);
     return json(committed);
   } catch (_e) {
     return json({ error: "Something went wrong" }, 500);
