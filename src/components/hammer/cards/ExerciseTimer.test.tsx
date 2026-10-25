@@ -9,12 +9,13 @@ describe("actual exercise time", () => {
     fireEvent.click(screen.getByRole("button", { name: "Start timer" }));
     act(() => vi.advanceTimersByTime(1470));
     fireEvent.click(screen.getByRole("button", { name: "Pause timer" }));
-    expect(record).toHaveBeenLastCalledWith(1.47);
+    expect(record).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(5000));
     fireEvent.click(screen.getByRole("button", { name: "Resume timer" }));
     act(() => vi.advanceTimersByTime(530));
     fireEvent.click(screen.getByRole("button", { name: "Stop timer" }));
     expect(record).toHaveBeenLastCalledWith(2);
+    expect(record).toHaveBeenCalledTimes(1);
   });
   it("restart resets the clock and countdown records actual completion", () => {
     vi.useFakeTimers(); const record = vi.fn();

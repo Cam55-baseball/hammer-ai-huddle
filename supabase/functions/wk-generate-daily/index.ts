@@ -668,6 +668,7 @@ const handler = async (req: Request): Promise<Response> => {
           restDaysBetweenLifts: vSpacing ? 2 : null,
           weeklyLiftMax: vSpacing && vPhase === "in_season" ? 2 : null,
           liftRemoved: false,
+          fullRestDay: savedRows.some(r => r.why_payload?.rest_day?.allowed_class === "none" || ["recovery_day", "off_day"].includes(r.why_payload?.training_context?.day_type)),
           priorKindDates: vMerged.priorKindDates as any,
           gameTomorrow: ((vGp ?? []) as any[]).length > 0 || ((vCal ?? []) as any[]).length > 0,
           sameDayExternal: vMerged.sameDayExternal,

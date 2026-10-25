@@ -182,7 +182,7 @@ describe("defense is present on every day type, including an off day", () => {
     }
   });
 
-  it("override turns a rest-day defense card into a light block", () => {
+  it("a defense override cannot turn a rest day into training", () => {
     for (let i = 0; i < 7; i++) {
       const day = new Date(2026, 5, 1 + i);
       const resting = buildHammerDailyPlan(CONTEXTS[1][1], NORMAL_SIGNAL, null, null, undefined, day)
@@ -191,8 +191,8 @@ describe("defense is present on every day type, including an off day", () => {
       const overridden = buildHammerDailyPlan(
         CONTEXTS[1][1], NORMAL_SIGNAL, null, null, undefined, day, { defenseFullOverride: true },
       ).blocks.find((b) => b.modality === "defense")!;
-      expect(overridden.status).toBe("ready");
-      expect(overridden.drills.length).toBeGreaterThan(0);
+      expect(overridden.status).toBe("off-day");
+      expect(overridden.drills).toEqual([]);
       return;
     }
   });

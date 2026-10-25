@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type Notice, noticeKey, surfaceForNotice } from "@/lib/hammer/notices/noticeRouting";
 import { athleteNoticeCopy } from "@/lib/hammer/notices/athleteNoticeCopy";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const SURFACE_LABEL: Record<string, string> = {
   lift: "Lift",
@@ -34,6 +37,19 @@ export function DayNoticesCard({
   extraLines?: readonly string[];
 }) {
   const [read, setRead] = useState<string[]>([]);
+  const { user } = useAuth();
+  const [recoveryAcked, setRecoveryAcked] = useState(false);
+  const [acking, setAcking] = useState(false);
+  const acknowledgeRecovery = async () => {
+    if (!user || acking) return;
+    setAcking(true);
+    const reason = notices.length === 1 ? notices[0].reason : "mixed";
+    const { error } = await supabase.from("wk_recovery_acks" as any).upsert({ user_id: user.id, ack_date: planDate,
+      reduction_reason: reason, reduction_payload: { reductions: notices } }, { onConflict: "user_id,ack_date,reduction_reason" });
+    setAcking(false);
+    if (error) { toast.error("Could not record acknowledgment"); return; }
+    setRecoveryAcked(true);
+  };
 
   useEffect(() => {
     try {
@@ -66,6 +82,7 @@ export function DayNoticesCard({
           Why today's plan changed
       </summary>
       <div className="space-y-2">
+        {notices.length > 0 && user && <Button size="sm" variant="outline" disabled={acking || recoveryAcked} onClick={acknowledgeRecovery}>{recoveryAcked ? "Lighter day acknowledged" : "Take the lighter day"}</Button>}
         {changes.map(line => <p key={line} className="border-l-2 border-primary pl-3 text-xs leading-relaxed">{line}</p>)}
         {unique.map((notice) => {
           const key = noticeKey(planDate, notice);
