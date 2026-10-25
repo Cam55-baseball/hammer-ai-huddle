@@ -14,9 +14,7 @@ import { loadU13ThrowBlock } from "../wic/phases/u13ThrowGate.ts";
 import { categorySlots, type RxCategory } from "./prescriptionSafety.ts";
 import { savedDayCoverage } from "./savedDayCoverage.ts";
 import { pendingEquipmentReviews } from "../vault/equipmentReview.ts";
-import { armBudget, ledgerDay, throwUnits, type ThrowAthlete, type ThrowEvent } from "../wic/phases/armLedger.ts";
-import { dayEvents, throwRoleFrom, THROW_TYPES, type ArmEntry } from "../wic/phases/armLedgerEntry.ts";
-import { activeRamps } from "../wic/phases/rampLaw.ts";
+import { checkCoachArmLoad } from "./armLoadCheck.ts";
 
 type Row = Record<string, any>;
 const shift = (date: string, n: number) => new Date(Date.parse(`${date}T12:00:00Z`) + n * 86400000).toISOString().slice(0, 10);
@@ -87,49 +85,20 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   // Innings have no exact throw count; never guess one into the arm ledger.
   if (throwing.some(row => row.dosage_unit === "innings")) return refused("Innings can't be checked against your arm limit. Ask your coach for an exact throw or pitch count.");
   if (throwing.length) {
-    // Same judges the plan's arm ledger uses: one budget, logged + planned
-    // throws added together, stricter role rule wins. No coach-specific rules.
-    const role = throwRoleFrom(profile.positions?.[0], profile.positions?.[1]);
-    const athlete: ThrowAthlete = { sport: context.sport_primary, role, age };
-    const entries: ArmEntry[] = (arm ?? []).filter((e: Row) => e.status !== "skipped" && THROW_TYPES[e.throw_type as keyof typeof THROW_TYPES]);
-    const planned: ThrowEvent[] = throwing.map(row => ({
-      kind: row.dosage_unit === "pitches" ? "pitch" : "practice",
-      count: row.dosage_unit === "total_reps" ? row.total_reps : row.sets * row.reps,
-      intent: catalog.get(row.movement_slug)?.intensity_class === "high" ? "high" : "moderate",
-      estimated: false,
-    }));
-    const todayEvents = [...dayEvents(date, null, entries, []), ...planned];
-    const day = ledgerDay(athlete, todayEvents);
-    if (day.overDaily || day.warnings.length) return refused(`This workout would pass today's arm limit (${day.warnings[0] ?? "over budget"}). Ask your coach for a lighter version.`);
-    const budget = armBudget(athlete);
-    let usedWeek = throwUnits(todayEvents);
-    for (let i = 1; i < 7; i++) usedWeek += throwUnits(dayEvents(shift(date, -i), null, entries, []));
-    if (usedWeek > budget.weekly) return refused("This workout would pass this week's arm limit. Ask your coach for a lighter version.");
-    // Ramp Law: after a no-throw gap, intent builds back step by step. While a
-    // throwing ramp is running, high-intent throws and pitches wait for a
-    // full-intent step (the existing rampSteps ladder, never a new rule).
-    const throwDays = [...new Set(entries.map((e: ArmEntry) => e.entry_date))].sort() as string[];
-    const before = throwDays.filter(d => d < date);
-    let daysOff = 365, returnedOn: string | null = null;
-    if (before.length) {
-      const last = before[before.length - 1];
-      let streakStart = last;
-      while (before.includes(shift(streakStart, -1))) streakStart = shift(streakStart, -1);
-      returnedOn = streakStart;
-      const prior = before.filter(d => d < streakStart);
-      daysOff = prior.length ? Math.round((Date.parse(`${streakStart}T12:00:00Z`) - Date.parse(`${prior[prior.length - 1]}T12:00:00Z`)) / 86400000) - 1 : 365;
-    }
-    const ramps = activeRamps({ today: date, gap: { throwing: { daysOff, returnedOn: returnedOn ?? shift(date, -1) } },
-      profile: { age, isPitcher: role === "pitcher" || role === "two_way" || role === "pitcher_catcher", growthMode: phase.growth, painLast90: {}, firstTime: {}, eliteClean: false },
-      gameDates: raw.games.filter(g => !g.deleted_at && !g.ignored_for_training).map(g => g.game_date) });
-    const throwingRamp = ramps.find(r => r.discipline === "throwing");
-    if (throwingRamp) {
-      const step = throwingRamp.steps[throwingRamp.dayIndex];
-      const topIntent = step?.intentPct ?? 50;
-      if (planned.some(e => e.intent === "high" || e.kind === "pitch") && topIntent < 100) {
-        return refused(`Your arm is still building back after time off (${throwingRamp.line}). Hard throwing and pitches wait until the build finishes — ask your coach for a lighter version.`);
-      }
-    }
+    // Same judges the plan's arm ledger and Ramp Law use — one budget, logged
+    // plus planned throws added together, stricter role rule wins. No
+    // coach-specific rules (see _shared/coach/armLoadCheck.ts).
+    const armCheck = checkCoachArmLoad({
+      sport: context.sport_primary, positions: profile.positions ?? [], age, growthMode: phase.growth, date,
+      entries: (arm ?? []) as any,
+      planned: throwing.map(row => ({
+        count: row.dosage_unit === "total_reps" ? row.total_reps : row.sets * row.reps,
+        kind: row.dosage_unit === "pitches" ? "pitch" as const : "practice" as const,
+        intensityClass: catalog.get(row.movement_slug)?.intensity_class ?? null,
+      })),
+      gameDates: raw.games.filter((g: Row) => !g.deleted_at && !g.ignored_for_training).map((g: Row) => g.game_date),
+    });
+    if (!armCheck.allowed) return refused(armCheck.reason!);
   }
   const previous = raw.prescriptions.filter(row => row.plan_date < date);
   const priorKinds: any = {};
