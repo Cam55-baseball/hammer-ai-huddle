@@ -9,6 +9,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { runCoachWarningAction } from "@/lib/coachRx/warningAction";
 
 export type CoachRxCategory =
   | "hitting" | "pitching" | "throwing" | "fielding" | "baserunning"
@@ -77,13 +78,16 @@ export function useCoachPrescriptions(planDate: string) {
 
   const chooseMut = useMutation({
     mutationFn: async ({ id, choice, activateToday }: { id: string; choice: CoachRxChoice; activateToday?: boolean }): Promise<ChooseResult> => {
-      const { data, error } = await supabase.functions.invoke("coach-rx-safety", {
-        body: { mode: "choose", prescription_id: id, choice, activate_today: activateToday === true },
-      });
-      if (error) throw new Error(error.message || "Could not save your choice");
-      return data as ChooseResult;
+      return await runCoachWarningAction(async acknowledgement => {
+        const { data, error } = await supabase.functions.invoke("coach-rx-safety", {
+          body: { mode: "choose", prescription_id: id, choice, activate_today: activateToday === true, warning_acknowledgement: acknowledgement },
+        });
+        if (error) throw new Error(error.message || "Could not save your choice");
+        return data;
+      }) as ChooseResult;
     },
     onSuccess: (r, vars) => {
+      if ((r as ChooseResult & { cancelled?: boolean }).cancelled) return;
       if (!r.applied) {
         toast.error(r.reasons?.[0] ?? "Nothing was saved. Refresh and try again.");
       } else if (vars.choice === "use_instead") {
@@ -145,13 +149,16 @@ export function useMyCoachWorkouts() {
 
   const activateMut = useMutation({
     mutationFn: async ({ id, choice }: { id: string; choice: CoachRxChoice }): Promise<ChooseResult> => {
-      const { data, error } = await supabase.functions.invoke("coach-rx-safety", {
-        body: { mode: "choose", prescription_id: id, choice, activate_today: true },
-      });
-      if (error) throw new Error(error.message || "Could not save your choice");
-      return data as ChooseResult;
+      return await runCoachWarningAction(async acknowledgement => {
+        const { data, error } = await supabase.functions.invoke("coach-rx-safety", {
+          body: { mode: "choose", prescription_id: id, choice, activate_today: true, warning_acknowledgement: acknowledgement },
+        });
+        if (error) throw new Error(error.message || "Could not save your choice");
+        return data;
+      }) as ChooseResult;
     },
     onSuccess: (r) => {
+      if ((r as ChooseResult & { cancelled?: boolean }).cancelled) return;
       if (!r.applied) toast.error(r.reasons?.[0] ?? "Nothing was saved. Refresh and try again.");
       else toast.success("Your choice was saved.");
       qc.invalidateQueries({ queryKey });
@@ -202,8 +209,10 @@ export function useManageSentWorkouts() {
   });
 
   const act = useMutation({
-    mutationFn: (body: Record<string, unknown>) => call(body),
-    onSuccess: () => {
+    mutationFn: (body: Record<string, unknown>) => runCoachWarningAction(acknowledgement => call({ ...body, warning_acknowledgement: acknowledgement })),
+    onSuccess: (result) => {
+      if (result.cancelled) return;
+      if (!result.applied) { toast.error(result.reasons?.[0] ?? result.error ?? "Nothing was saved."); return; }
       qc.invalidateQueries({ queryKey: ["coach-rx-manage"] });
       qc.invalidateQueries({ queryKey: ["coach-rx-sent"] });
     },

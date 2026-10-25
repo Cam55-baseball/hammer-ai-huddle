@@ -18,6 +18,10 @@ vi.mock("@/integrations/supabase/client", () => ({
         return { error: null };
       },
     }),
+    functions: { invoke: async (_name: string, options: { body: { rows: unknown[] } }) => {
+      (inserts["coach_prescriptions"] ??= []).push(options.body.rows);
+      return { data: { applied: true }, error: null };
+    } },
   },
 }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (_k: string, d?: string) => d ?? _k }) }));

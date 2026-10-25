@@ -47,6 +47,26 @@ live data landing in every surface; unverified cells remain unverified.
 
 ## Known gaps (honest, not hidden)
 
+### October 25 coach guideline acknowledgements
+
+New entry kind **3c — coach guideline override**: the server appends actor, UTC
+timestamp, action, exact warning code/text, recipient, date and prescription in
+`coach_prescriptions.safety_result.overrides`. A database trigger appends each
+new acknowledgement to existing `audit_log` and `behavioral_events` in the same
+transaction. Cancel returns before any write. Sent workouts exposes the stored
+trail; activated rows carry it in `why_payload.coach_overrides` and their Because
+line, so the saved block and permitted coach-plan read retain it.
+
+Learning input reaches `behavioral_events`; actual learning interpretation is
+UNVERIFIED, not claimed as an insight or training change. General/History/Vault
+keep their canonical workout-log readers, not a second override log. No health
+or arm-limit exception is enabled: active pain/injury, arm limits/rest/ramp,
+age/growth, workload limits, unknown gear/dose, consent/access and same-category
+checks remain blocking. Only explicit nonmedical schedule advisories warn.
+Evidence: 16 390×844 fixture decision screens and 22 behavioral tests under
+`.lovable/proofs/coach-warnings-oct25/`; hosted coach reader returned 200 without
+writes. Hosted override commit/audit readback and Monday focus proof remain OPEN.
+
 ### Owner final-batch continuation — October 24, 23:37 run 4
 
 - Row 3 coach-plan actual results now use the existing server-gated sender

@@ -1,8 +1,46 @@
 # Hammers Today — final consolidated publish checklist
 
-Updated October 25, 2026, 03:45 UTC run. **Ready to publish: NO.** Publishing waits until coach prescriptions are fully finished. The positive send→choice→log→readback proof remains open (no TEST player has a real skill card with workload headroom today — see the Oct 25 section), alongside the nightly re-check, the five human checks and global TEST cleanup below. **Persona restoration is CLOSED by owner decision:** keep all three exactly as they are; no restoration is required. This current decision supersedes historical restoration blockers below.
+Updated October 25, 2026, coach-warning run. **Ready to publish: NO.** Publishing waits until coach prescriptions and hosted positive/override proofs are finished. The post-06:15 UTC fixed-ID cleanup check and the Oct 26 real-plan proof remain time-gated. The five human checks are expected, **not publish blockers**, per the owner. **Persona restoration is CLOSED:** keep all three exactly as-is. This current summary supersedes historical blocker wording below.
 
 ## Final batch result
+
+### October 25 coach-warning implementation
+
+- Applied `0115_coach_guideline_warning_audit`; deployed only `coach-rx-safety`.
+  Send/scheduled team occurrences now use the checked server, not direct inserts.
+  Move/resend and player Use instead/Add alongside/Use today use one exact-rule
+  acknowledgement flow: Okay rechecks then proceeds; Cancel performs no write.
+- **Safety limitation, explicitly disclosed:** no override for minors' arm-health
+  or active pain/injury, nor medical workload/age/growth/season protections or
+  missing evidence. No reason field/parent notice claims to authorize unsafe
+  training. Only explicit nonmedical date/spacing advisories become warnings;
+  consent, connection, legal, equipment/dose and category checks remain blocking.
+- Each acknowledgement carries who/when/action/rules/date/player/prescription;
+  audit and behavioral input append atomically through the prescription trigger.
+  Sent workouts displays the trail; activation adds “Coach override: …” to Because.
+- **Full suite: 532 files / 4,215 tests PASS**, four bounded shards (1,011 +
+  1,026 + 1,087 + 1,091). Server type validation PASS. Sixteen 390×844 Okay/Cancel
+  fixture screens PASS; these exercise the shared dialog, not every hosted flow.
+  Live TEST coach Sent workouts read 200, zero hosted writes/identity changes.
+  Hosted override audit/readback and Monday real-plan focus proofs are OPEN.
+- **Global TEST cleanup: certified NO** — the post-06:15 Oct 25 check has not
+  occurred. Do not certify before the window. Monday proof waits until Oct 26
+  00:00 UTC; no scheduled work or publication was started.
+
+#### Current by-role warning guide (supersedes earlier safety wording)
+
+- **Coach/organization:** send or schedule from My Workouts. When a nonmedical
+  guideline warning appears, read every exact date and rule. Okay confirms the
+  unchanged prescription; Cancel action stops with nothing saved. Move and Send
+  again use the same check. Sent workouts shows recorded acknowledgements and
+  the player's independent response. Medical/access/integrity refusals stay closed.
+- **Player:** Use instead, Add alongside and Use today recheck current facts.
+  Nonmedical warnings require your own Okay or Cancel; neither is completion.
+  Save for later remains available. An accepted override is labeled in Because.
+  You keep the choice not to do the workout; parent/consent protections stay intact.
+- **Audit/learning:** the existing audit stores each new acknowledgement and
+  the existing behavioral input receives the same dated metadata. No fabricated
+  learning result, parent notification or hosted end-to-end success is claimed.
 
 ### Owner closeout — October 25, 03:45 UTC run
 

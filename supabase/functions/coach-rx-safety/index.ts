@@ -26,11 +26,22 @@ import { prescriptionMode, prescriptionChoiceDate } from "../_shared/coach/presc
 import { loadPrescriptionEnvelope } from "../_shared/coach/loadPrescriptionEnvelope.ts";
 import { prescriptionResults } from "../_shared/coach/prescriptionResults.ts";
 import { certifyCoachOwnItems } from "../_shared/coach/ownItemCertification.ts";
+import { factGuidelineWarnings, factsWithoutAdvisories, warningsAcknowledged, type CoachGuidelineWarning } from "../_shared/coach/guidelineWarnings.ts";
+import { z } from "npm:zod@3";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const cors = corsHeaders;
+const SendRows = z.array(z.object({
+  recipient_id: z.string().uuid(), category: z.enum(["hitting", "pitching", "throwing", "fielding", "baserunning", "lift", "speed", "conditioning", "warmup", "mobility", "recovery", "vision"]),
+  plan_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), title: z.string().trim().min(1).max(255),
+  exercises: z.array(z.record(z.unknown())).min(1).max(100), gear_labels: z.array(z.string()).max(500),
+  source_template_id: z.string().uuid().nullable(), team_send_id: z.string().uuid().nullable(),
+  schedule_type: z.enum(["any_day", "date", "dates", "recurring"]), series_id: z.string().uuid().nullable(),
+  recur_weekdays: z.array(z.number().int().min(0).max(6)).nullable(), recur_every_weeks: z.number().int().min(1).max(8).nullable(),
+  recur_monthly_ordinal: z.number().int().min(1).max(5).nullable(), recur_monthly_weekday: z.number().int().min(0).max(6).nullable(),
+  recur_end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(), recur_count: z.number().int().min(1).max(60).nullable(),
+  safety_result: z.object({ intensity: z.enum(["light", "standard", "high", "max"]).optional() }),
+})).min(1).max(3600);
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 const shift = (iso: string, n: number) => {
@@ -114,6 +125,33 @@ Deno.serve(async (req) => {
     const mode = prescriptionMode(body.mode);
     if (!mode) return json({ error: "Unknown action" }, 400);
     const today = new Date().toISOString().slice(0, 10);
+    const acknowledgement = body.warning_acknowledgement;
+    const overrideRecord = (warnings: CoachGuidelineWarning[], action: string) => ({ actor_id: me, occurred_at: new Date().toISOString(), action, warnings });
+
+    if (mode === "send") {
+      const parsed = SendRows.safeParse(body.rows);
+      if (!parsed.success) return json({ error: "Review the players, dates and workout details before sending." }, 400);
+      const sends = parsed.data;
+      if (sends.some(r => r.plan_date < today || new Date(`${r.plan_date}T12:00:00Z`).toISOString().slice(0, 10) !== r.plan_date)) return json({ error: "Pick valid dates today or later." }, 400);
+      const ids = [...new Set(sends.map(r => r.recipient_id))];
+      if (ids.length > 60) return json({ error: "Send to no more than 60 players at once." }, 400);
+      const linked = await Promise.all(ids.map(async id => { const r = await admin.rpc("coach_connected_to", { _me: me, _athlete: id }); return !r.error && r.data === true ? id : null; }));
+      const gate = await recruitingGate(admin, me, linked.filter((id): id is string => id !== null), "metrics");
+      if (ids.some(id => gate.get(id) !== "visible")) return json({ error: "You can't send to one or more selected players." }, 403);
+      const warnings: CoachGuidelineWarning[] = [];
+      for (const send of sends) {
+        const facts = await gatherFacts(admin, send.recipient_id, send.category, send.plan_date, prescriptionIntensity(send.safety_result.intensity), false, today);
+        const hard = checkPrescriptionAlongside(factsWithoutAdvisories(facts));
+        if (hard.verdict !== "allow") return json({ applied: false, reasons: hard.reasons, safeOption: hard.safeOption });
+        warnings.push(...factGuidelineWarnings(facts).map(w => ({ ...w, player_id: send.recipient_id })));
+      }
+      if (warnings.length && !warningsAcknowledged(warnings, acknowledgement)) return json({ applied: false, warning_required: true, warnings });
+      const { data: inserted, error } = await admin.from("coach_prescriptions").insert(sends.map(send => ({ ...send, sender_id: me,
+        safety_result: { ...send.safety_result, overrides: warnings.filter(w => w.player_id === send.recipient_id && w.date === send.plan_date).length ? [overrideRecord(warnings.filter(w => w.player_id === send.recipient_id && w.date === send.plan_date), "send")] : [] },
+      }))).select("id");
+      if (error) throw error;
+      return json({ applied: true, ids: inserted?.map((r: any) => r.id) });
+    }
 
     if (mode === "check") {
       const ids: string[] = Array.isArray(body.player_ids)
@@ -211,6 +249,7 @@ Deno.serve(async (req) => {
             },
             completion: doneByRx[r.id] ?? { done: 0, total: 0 },
             results: actualsByRx[r.id] ?? [],
+            overrides: r.safety_result?.overrides ?? [],
           })),
         });
       }
@@ -227,10 +266,19 @@ Deno.serve(async (req) => {
         const { data: connected, error: connectionError } = await admin.rpc("coach_connected_to", { _me: me, _athlete: rx.recipient_id });
         const gate = await recruitingGate(admin, me, connectionError || connected !== true ? [] : [rx.recipient_id], "metrics");
         if (gate.get(rx.recipient_id) !== "visible") return json({ error: "You can't manage this player's workout." }, 403);
+        let nextSafety = rx.safety_result ?? {};
+        if (action === "reschedule") {
+          const facts = await gatherFacts(admin, rx.recipient_id, rx.category, newDate, prescriptionIntensity(rx.safety_result?.intensity), false, today);
+          const hard = checkPrescriptionAlongside(factsWithoutAdvisories(facts));
+          if (hard.verdict !== "allow") return json({ applied: false, reasons: hard.reasons, safeOption: hard.safeOption });
+          const warnings = factGuidelineWarnings(facts).map(w => ({ ...w, player_id: rx.recipient_id }));
+          if (warnings.length && !warningsAcknowledged(warnings, acknowledgement)) return json({ applied: false, warning_required: true, warnings });
+          nextSafety = { ...nextSafety, overrides: [...(nextSafety.overrides ?? []), ...(warnings.length ? [overrideRecord(warnings, action)] : [])] };
+        }
         const { error: updateError } = await admin.from("coach_prescriptions").update(
           action === "cancel"
             ? { cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() }
-            : { plan_date: newDate, updated_at: new Date().toISOString() },
+            : { plan_date: newDate, safety_result: nextSafety, updated_at: new Date().toISOString() },
         ).eq("id", rxId).eq("status", "pending").is("cancelled_at", null).eq("updated_at", rx.updated_at).select("id").single();
         if (updateError) throw updateError;
         return json({ applied: true });
@@ -264,11 +312,16 @@ Deno.serve(async (req) => {
         const { data: connected, error: connectionError } = await admin.rpc("coach_connected_to", { _me: me, _athlete: rx.recipient_id });
         const gate = await recruitingGate(admin, me, connectionError || connected !== true ? [] : [rx.recipient_id], "metrics");
         if (gate.get(rx.recipient_id) !== "visible") return json({ error: "You can't send to this player." }, 403);
+        const facts = await gatherFacts(admin, rx.recipient_id, rx.category, newDate, prescriptionIntensity(rx.safety_result?.intensity), false, today);
+        const hard = checkPrescriptionAlongside(factsWithoutAdvisories(facts));
+        if (hard.verdict !== "allow") return json({ applied: false, reasons: hard.reasons, safeOption: hard.safeOption });
+        const warnings = factGuidelineWarnings(facts).map(w => ({ ...w, player_id: rx.recipient_id }));
+        if (warnings.length && !warningsAcknowledged(warnings, acknowledgement)) return json({ applied: false, warning_required: true, warnings });
         const { data: created, error: resendError } = await admin.from("coach_prescriptions").insert({
           sender_id: me, recipient_id: (rx as any).recipient_id, category: (rx as any).category,
           plan_date: newDate, title: (rx as any).title, exercises: (rx as any).exercises,
           gear_labels: (rx as any).gear_labels, source_template_id: (rx as any).source_template_id,
-          schedule_type: "date", safety_result: (rx as any).safety_result,
+          schedule_type: "date", safety_result: { intensity: rx.safety_result?.intensity, overrides: warnings.length ? [overrideRecord(warnings, action)] : [] },
         }).select("id").maybeSingle();
         if (resendError || !created) throw resendError ?? new Error("Workout was not sent");
         return json({ applied: true, id: (created as any)?.id ?? null });
@@ -320,7 +373,7 @@ Deno.serve(async (req) => {
       // drills are already completed, marks it "Replaced by coach workout —
       // not missed" and appends the coach block in the same transaction.
       facts.hasCard = facts.hasCard || !!block;
-      const result = choice === "use_instead" ? checkPrescriptionReplace(facts) : checkPrescriptionAlongside(facts);
+      const result = choice === "use_instead" ? checkPrescriptionReplace(factsWithoutAdvisories(facts)) : checkPrescriptionAlongside(factsWithoutAdvisories(facts));
       if (result.verdict !== "allow") return json({ applied: false, verdict: result.verdict, reasons: result.reasons, safeOption: result.safeOption });
       const { data: senderProfile, error: senderError } = await admin.from("profiles").select("full_name").eq("id", rx.sender_id).maybeSingle();
       if (senderError) throw senderError;
@@ -347,8 +400,13 @@ Deno.serve(async (req) => {
       }
       const envelope = await loadPrescriptionEnvelope(admin, me, date, category, rows, choice === "use_instead");
       if (!envelope.allowed) return json({ applied: false, verdict: "blocked", reasons: envelope.reasons, safeOption: envelope.safeOption });
+      const warnings = [...factGuidelineWarnings(facts), ...("warnings" in envelope ? envelope.warnings ?? [] : [])].map(w => ({ ...w, player_id: me }));
+      if (warnings.length && !warningsAcknowledged(warnings, acknowledgement)) return json({ applied: false, warning_required: true, warnings });
+      const overrides = [...(rx.safety_result?.overrides ?? []), ...(warnings.length ? [overrideRecord(warnings, choice)] : [])];
       rows = envelope.rows;
-      safety = { verdict: result.verdict, intensity, checked_at: new Date().toISOString(), envelope: "wic-swap", block_expected: block ?? null, cns_result: "cnsResult" in envelope ? envelope.cnsResult : null, expected_revision: expectedRevision, expected_catalog_revision: expectedCatalogRevision };
+      const because = overrides.flatMap((o: any) => (o.warnings ?? []).map((w: any) => `${w.date}: ${w.rule}`)).join("; ");
+      if (because) for (const row of rows) { row.rationale = `${row.rationale} Coach override: ${because}`; row.why_payload = { ...(row.why_payload as Record<string, unknown>), coach_overrides: overrides, why: row.rationale }; }
+      safety = { verdict: result.verdict, overrides, intensity, checked_at: new Date().toISOString(), envelope: "wic-swap", block_expected: block ?? null, cns_result: "cnsResult" in envelope ? envelope.cnsResult : null, expected_revision: expectedRevision, expected_catalog_revision: expectedCatalogRevision };
     }
     const { data: committed, error: commitError } = await admin.rpc("coach_rx_commit_certified", {
       p_user: me, p_rx: rxId, p_date: date, p_choice: choice,

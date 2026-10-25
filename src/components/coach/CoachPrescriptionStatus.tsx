@@ -80,6 +80,13 @@ export function CoachPrescriptionStatus() {
                   Done: {rx.completion.done} of {rx.completion.total} activities
                 </p>
               )}
+              {(rx.overrides ?? []).map((override: { actor_id: string; occurred_at: string; action: string; warnings: Array<{ code: string; date: string; rule: string }> }, i: number) => (
+                <div key={`${override.occurred_at}:${i}`} className="border-l-2 border-primary pl-2 text-xs" data-coach-override>
+                  <p className="font-semibold">Coach override · {override.action} · {new Date(override.occurred_at).toLocaleString()}</p>
+                  {override.warnings.map((warning, j) => <p key={`${warning.code}:${j}`}>{warning.date}: {warning.rule}</p>)}
+                  <p className="text-muted-foreground">Recorded by {override.actor_id}</p>
+                </div>
+              ))}
               <div className="flex flex-wrap items-center gap-2">
                 {(rx.results ?? []).map((log: WorkoutActual) => <div key={log.id} className="w-full border-t border-border pt-2" data-rx-result={log.id}><p className="font-medium">{log.prescription?.movement_name ?? log.movement_slug}</p><p className="text-xs">{actualResultText(log)}</p></div>)}
                 {future && (
