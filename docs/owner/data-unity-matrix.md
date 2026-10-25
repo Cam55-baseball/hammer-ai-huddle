@@ -16,6 +16,16 @@ live data landing in every surface; unverified cells remain unverified.
 
 ## Surfaces key
 
+October 25 14:46 correction: measured workload-cap, lifting dose-range and
+missing-equipment warnings share the exact recipient/date/rule acknowledgement
+and atomic override trail (migration 0119). Coach actions dated today and player
+activation read the same envelope; unknown future-day workload is not invented.
+Combined 390×844 Okay/Cancel proof is fixture-only. No October 25 saved hitting
+source was found for kept system TEST players, so positive hitting replacement,
+focus logging and all-surface readback remain UNVERIFIED. Critical medical,
+age/season, access and data-integrity checks remain fail-closed. Older blocker
+wording below is historical, not a claim that equipment/caps still hard-block.
+
 October 25 05:32 final batch: full suite 532 files / 4,219 tests PASS;
 16 phone warning decisions PASS (fixture only). Live coach management reader
 returns 200; live override audit trigger enabled. No hosted override was saved:

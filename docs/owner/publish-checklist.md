@@ -1,17 +1,28 @@
 # Hammers — final publish checklist
 
-Updated October 25, 2026, 13:45 UTC (final run of the batch). This one sheet
+Updated October 25, 2026, 15:12 UTC. This one sheet
 supersedes every earlier checklist section; history lives in git.
 
 **Global TEST cleanup: certified YES.**
-**Ready to publish: NO** — one open item: the positive coach-prescription
-"Use instead → focus log → readback" live proof needs a real training day
-(Monday Oct 26 plans). Everything else is proven.
+**Ready to publish: NO** — today's positive hitting replacement/focus/readback
+is unverified: the read-only live check found no October 25 hitting prescription
+or saved hitting block for a kept system TEST player. A warning cannot create
+a missing same-category source. Additional medical, age/season, catalog and
+data-integrity protections remain fail-closed; this is not the requested
+"only four hard blocks" implementation.
 
-## Evidence summary (all verified this batch)
+## Evidence summary (dated evidence; retained results identified)
 
-- Full suite: **532 files / 4,226 tests PASS** (single bounded run, 13:39 UTC).
-- Preview build: OK (no build errors after all edits).
+- Current app suite: **532 files / 4,228 tests PASS**, four bounded groups;
+  the interrupted fourth group was rerun to completion. Coach tests: 164 PASS.
+  Final preview status is recorded after the documentation edits.
+- October 25 correction: measured daily workload/CNS, exposure-governor dose
+  trims, lifting dose-range and missing-equipment findings warn through the
+  existing dialog. Keys include exact date, recipient and numeric rule text.
+  Today's send/reschedule/resend and activation use the same measured envelope.
+  Future days have no measured saved-day cap; no weekly percentage is invented.
+  Migration 0119 applied; coach-rx-safety redeployed. Combined workload/equipment
+  390×844 Okay/Cancel screen proof is fixture-only, not a hosted saved choice.
 - Coach override warnings: hosted Cancel path saved nothing (verified 0 rows);
   Okay landed with the full override record (who/when/rule/date/prescription)
   in the prescription, the coach audit trail and the learning-loop input,
@@ -22,9 +33,10 @@ supersedes every earlier checklist section; history lives in git.
 - Phone proofs (390×844, screenshots saved in `.lovable/proofs/coach-warnings-oct25/`):
   16 nonmedical action decisions plus the medical dialog — Okay disabled until
   a 10+ character reason, saves once on Okay, Cancel saves nothing.
-- Hard gates stayed hard: consent, connection, legal, same-category, equipment,
-  dose and workload caps still block with exact reasons (verified live: the
-  workload cap stopped a Use-instead on a recovery Sunday, plan untouched).
+- Consent, connection, legal and same-category checks remain blocking. Unknown
+  doses/workload, unavailable catalog access, age/season and critical arm/pain
+  protections also remain fail-closed; the requested removal of every other
+  safeguard is not claimed. No new hosted TEST records were added this run.
 - Global TEST cleanup certification:
   (a) zero non-system accounts with test markers — PASS;
   (b) parked/system accounts excluded from stats, rankings, lists, search,
@@ -48,7 +60,7 @@ supersedes every earlier checklist section; history lives in git.
 
 ## B. After publishing (follow-up live checks)
 
-1. Monday Oct 26 positive coach-prescription proof on a real training day:
+1. Monday Oct 26 extra no-warning coach-prescription check on a real training day:
    send → Use instead (no warning expected on a normal day) → focus log →
    readback in Sent workouts, History, the Vault, The General, Discipline,
    the learning loop and "Hammers' plan for this player".
@@ -61,11 +73,13 @@ supersedes every earlier checklist section; history lives in git.
 - Coach workouts arrive in Today with Use instead / Add alongside /
   Save for later. Use instead replaces only the same-category card; the old
   work is marked "Replaced by coach workout", never missed.
-- If a guideline warning appears, read the exact rule and date, then choose
+- If a workload, dose-range, equipment or schedule warning appears, read its
+  exact date and numbers, then choose
   Okay or Cancel action. Cancel saves nothing. You can always decline.
 - An accepted override shows "Coach override: …" in the card's Because line.
-- Under 18: arm-health and pain warnings need a typed reason, and your parent
-  is notified. Consent and safety protections always stay in place.
+- The existing under-18 warning dialog requires a 10-character reason for
+  arm-health/pain findings and records parent notification outcomes; critical
+  medical checks may still refuse activation. A typed reason is not medical clearance.
 
 ### Coach
 - Send or schedule from My Workouts; team sends check every player.
@@ -74,8 +88,10 @@ supersedes every earlier checklist section; history lives in git.
   use the same check.
 - Sent workouts shows each prescription's status, overrides and the player's
   independent response. Every override is in your audit trail.
-- Blocks that remain blocks: no consent, no connection, legal gates,
-  wrong category, missing equipment, dose and workload caps.
+- Workload caps, declared lifting dose-range and missing gear produce warnings,
+  not an automatic dose change. Missing/invalid measurements and protected
+  catalog, medical, age/season, consent, connection and category checks can still
+  refuse an action. No replacement is possible without same-category saved work.
 
 ### Organization
 - Org admins send like coaches; rosters come from accepted connections only.
