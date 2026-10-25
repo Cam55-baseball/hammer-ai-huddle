@@ -1,4 +1,6 @@
 export const VIDEO_SPORTS = ['baseball', 'softball'] as const;
+import { BUNT_TYPES, BUNT_WORDING } from '../../supabase/functions/_shared/wic/buntingProgram';
+const BUNT_SUB_SKILLS = ['Bunting fundamentals', ...(['R', 'L'] as const).flatMap(side => BUNT_TYPES.map(type => `${side === 'R' ? 'Right-handed' : 'Left-handed'}: ${BUNT_WORDING[side][type]}`))];
 export type VideoSport = (typeof VIDEO_SPORTS)[number];
 
 export const VIDEO_CATEGORIES = [
@@ -22,7 +24,7 @@ type Taxonomy = Record<VideoSport, Record<VideoCategory, readonly string[]>>;
  */
 export const VIDEO_SUB_SKILLS: Taxonomy = {
   baseball: {
-    hitting: ['Bat speed', 'Contact quality', 'Swing decisions', 'Plate discipline', 'Timing', 'Pitch recognition', 'Barrel path', 'Lower-half sequencing', 'Adjustability', 'Bunting'],
+    hitting: ['Bat speed', 'Contact quality', 'Swing decisions', 'Plate discipline', 'Timing', 'Pitch recognition', 'Barrel path', 'Lower-half sequencing', 'Adjustability', 'Bunting', ...BUNT_SUB_SKILLS],
     pitching: ['Fastball', 'Changeup', 'Curveball', 'Slider', 'Cutter', 'Sinker', 'Splitter', 'Command', 'Velocity', 'Tempo', 'Shoulder tilt', 'Lower-half sequencing', 'Arm action', 'Pickoffs and holds', 'Pitch design'],
     throwing: ['Arm strength', 'Throw accuracy', 'Transfer', 'Footwork', 'Long toss', 'Relays and cuts', 'Double-play feeds', 'Position-specific arm action'],
     fielding: ['First step', 'Range', 'Glove work', 'Footwork', 'Approach angle', 'Backhand', 'Forehand', 'Slow roller', 'Double plays', 'Outfield routes', 'Wall play', 'Pitcher fielding'],
@@ -32,7 +34,7 @@ export const VIDEO_SUB_SKILLS: Taxonomy = {
     mental: ['Approach and routine', 'Confidence', 'Focus', 'Emotional regulation', 'Failure response', 'Game awareness', 'Visualization', 'Communication'],
   },
   softball: {
-    hitting: ['Bat speed', 'Contact quality', 'Swing decisions', 'Plate discipline', 'Timing', 'Pitch recognition', 'Barrel path', 'Lower-half sequencing', 'Adjustability', 'Slap hitting', 'Bunting'],
+    hitting: ['Bat speed', 'Contact quality', 'Swing decisions', 'Plate discipline', 'Timing', 'Pitch recognition', 'Barrel path', 'Lower-half sequencing', 'Adjustability', 'Slap hitting', 'Bunting', ...BUNT_SUB_SKILLS],
     pitching: ['Fastball', 'Changeup', 'Rise ball', 'Drop ball', 'Curveball', 'Screwball', 'Off-speed', 'Command', 'Velocity', 'Arm circle', 'Stride direction', 'Hip-shoulder separation', 'Release consistency', 'Drive-leg force', 'Pitch design'],
     throwing: ['Arm strength', 'Throw accuracy', 'Transfer', 'Footwork', 'Long toss', 'Relays and cuts', 'Double-play feeds', 'Position-specific arm action'],
     fielding: ['First step', 'Range', 'Glove work', 'Footwork', 'Approach angle', 'Backhand', 'Forehand', 'Short-game defense', 'Double plays', 'Outfield routes', 'Wall play', 'Pitcher fielding'],

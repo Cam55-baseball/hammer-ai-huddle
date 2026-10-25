@@ -37,6 +37,7 @@ import { useSwitchHitterProfile } from '@/hooks/useSwitchHitterProfile';
 import { useLiveRepBroadcast } from '@/hooks/useLiveRepBroadcast';
 import { PartnerRepsFeed } from '@/components/practice/PartnerRepsFeed';
 import { PRACTICE_WINDOW_SAVED, PRACTICE_MODULES, PRACTICE_TYPES } from '@/lib/hammer/practiceWindow';
+import { recordedBuntOutcomes } from '../../supabase/functions/_shared/wic/buntingOutcomes';
 
 const modules = [
   { id: 'hitting', icon: Target, label: 'Hitting' },
@@ -320,11 +321,12 @@ export default function PracticeHub() {
 
       return [{
         id: crypto.randomUUID(),
-        drill_type: activeModule === 'pitching' ? 'pitch_session' : 'hitting_session',
+        drill_type: activeModule === 'bunting' ? 'bunting_session' : activeModule === 'pitching' ? 'pitch_session' : 'hitting_session',
         intent: 'mechanics',
         volume: reps.length,
         execution_grade: Math.round(totalGrade / reps.length),
         outcome_tags: outcomeTags,
+        ...(activeModule === 'bunting' ? { bunt_outcomes: recordedBuntOutcomes(reps) } : {}),
       }];
     }
 

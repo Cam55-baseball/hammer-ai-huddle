@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import { PitchLocationGrid } from '@/components/micro-layer/PitchLocationGrid';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import type { ScoredRep } from './RepScorer';
+import { Button } from '@/components/ui/button';
+import { BUNT_TYPES, BUNT_WORDING } from '../../../supabase/functions/_shared/wic/buntingProgram';
 
 interface BuntRepFieldsProps {
   value: Partial<ScoredRep>;
@@ -12,6 +14,7 @@ interface BuntRepFieldsProps {
   sport?: string;
   batterSide?: 'L' | 'R';
   mode?: 'quick' | 'advanced';
+  switchHitter?: boolean;
 }
 
 const SelectGrid = ({ options, value, onChange, cols = 3 }: {
@@ -22,7 +25,7 @@ const SelectGrid = ({ options, value, onChange, cols = 3 }: {
 }) => (
   <div className={cn('grid gap-1.5', `grid-cols-${cols}`)}>
     {options.map(opt => (
-      <button
+      <Button
         key={opt.value}
         type="button"
         onClick={() => onChange(opt.value)}
@@ -35,7 +38,7 @@ const SelectGrid = ({ options, value, onChange, cols = 3 }: {
         title={opt.hint}
       >
         {opt.label}
-      </button>
+      </Button>
     ))}
   </div>
 );
@@ -95,12 +98,20 @@ const spinTypes = [
 ];
 
 
-export function BuntRepFields({ value, onChange, sport, batterSide, mode = 'advanced' }: BuntRepFieldsProps) {
+export function BuntRepFields({ value, onChange, sport, batterSide, mode = 'advanced', switchHitter = false }: BuntRepFieldsProps) {
   const { pitchTypes } = useSportConfig();
   const v = value as any;
 
   return (
     <div className="space-y-3">
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Bunt type</Label>
+        {batterSide ? <div className="grid gap-2">{BUNT_TYPES.filter(type => type !== 'push' || !(switchHitter && batterSide === 'L')).map(type =>
+          <Button key={type} variant={v.bunt_type === type ? 'default' : 'outline'} className="h-auto min-h-9 whitespace-normal text-left justify-start text-xs" onClick={() => onChange('bunt_type', type)}>{BUNT_WORDING[batterSide][type]}</Button>
+        )}</div> : <p className="text-xs text-muted-foreground">Batting side not entered.</p>}
+      </div>
+      {v.bunt_type === 'push' && <div><Label className="text-xs text-muted-foreground mb-1 block">Pitcher throws</Label><SelectGrid options={[{value:'L',label:'Left-handed'},{value:'R',label:'Right-handed'}]} value={v.thrower_hand} onChange={val => onChange('thrower_hand',val)} cols={2} /></div>}
+      <div><Label className="text-xs text-muted-foreground mb-1 block">Successful bunt</Label><SelectGrid options={[{value:'unknown',label:'Not entered'},{value:'true',label:'Yes'},{value:'false',label:'No'}]} value={typeof v.bunt_success === 'boolean' ? String(v.bunt_success) : 'unknown'} onChange={val => onChange('bunt_success',val === 'unknown' ? undefined : val === 'true')} /></div>
       {/* Ball State — mandatory */}
       <div>
         <Label className="text-xs text-muted-foreground mb-1 block">Ball State <span className="text-destructive">*</span></Label>
@@ -209,12 +220,6 @@ export function BuntRepFields({ value, onChange, sport, batterSide, mode = 'adva
       <div>
         <Label className="text-xs text-muted-foreground mb-1 block">Hit or Out</Label>
         <SelectGrid options={hitOrOut} value={v.bunt_hit_or_out} onChange={val => onChange('bunt_hit_or_out', val)} cols={2} />
-      </div>
-
-      {/* Bunt Type */}
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Bunt Type</Label>
-        <SelectGrid options={buntTypes} value={v.bunt_type} onChange={val => onChange('bunt_type', val)} />
       </div>
 
       {/* Runner Location */}

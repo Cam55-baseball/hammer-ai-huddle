@@ -16,6 +16,7 @@ import { REQUIRES_THROWER_HAND, REQUIRES_VELOCITY, HIDES_VELOCITY, REQUIRES_PITC
 // CatchingRepFields removed — catcher defense now handled within fielding module
 import { BaserunningRepFields } from './BaserunningRepFields';
 import { BuntRepFields } from './BuntRepFields';
+import { BUNT_TYPES, type BuntType } from '../../../supabase/functions/_shared/wic/buntingProgram';
 import { ThrowingRepFields } from './ThrowingRepFields';
 import { FieldingPositionSelector } from './FieldingPositionSelector';
 import { FieldingThrowFields } from './FieldingThrowFields';
@@ -110,6 +111,7 @@ export interface ScoredRep {
   bunt_defense_result?: string;
   bunt_hit_or_out?: string;
   bunt_type?: string;
+  bunt_success?: boolean;
   bunt_runner_location?: string;
   bunt_spin_type?: string;
   // Baserunning
@@ -380,7 +382,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const contactQualityValid = !isHitting || current.contact_quality != null;
 
   // Module-specific mandatory validations
-  const buntMandatoryValid = !isBunting || (!!current.bunt_ball_state && !!current.bunt_direction && !!current.bunt_contact_quality);
+  const buntMandatoryValid = !isBunting || (!!current.bunt_ball_state && !!current.bunt_direction && !!current.bunt_contact_quality &&
+    BUNT_TYPES.includes(current.bunt_type as BuntType) && (effectiveBatterSide === 'R' || effectiveBatterSide === 'L') &&
+    !(current.bunt_type === 'push' && (current.thrower_hand !== 'L' || sideMode === 'BOTH' && effectiveBatterSide === 'L')));
   const pitchLocationValid = !isPitching || !!current.pitch_location;
   const fieldingMandatoryValid = !isFielding || (!!current.play_type && !!current.catch_type && !!current.fielding_result);
   const needsExecScore = !isFielding;
@@ -2069,7 +2073,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
            {/* ===== BUNTING FIELDS ===== */}
            {isBunting && (
-             <BuntRepFields value={current} onChange={updateField} sport={sport} batterSide={effectiveBatterSide} mode={mode} />
+             <BuntRepFields value={current} onChange={updateField} sport={sport} batterSide={effectiveBatterSide} mode={mode} switchHitter={sideMode === 'BOTH'} />
            )}
 
           {/* Goal of Rep & Actual Outcome (per-rep) */}
@@ -2135,7 +2139,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 !throwingRequiredValid ? 'Self-Catch Quality and Effort Level are required' :
                 !baserunningDrillValid ? 'Select drill type' :
                 !contactQualityValid ? 'Select contact quality' :
-                !buntMandatoryValid ? 'Select ball state, direction, and contact quality' :
+                !buntMandatoryValid ? 'Choose the batting side, bunt type, ball state, direction, and contact quality; push bunts require a left-handed pitcher' :
                 !fieldingMandatoryValid ? 'Select batted ball type, catch type, and fielding result' :
                   needsExecScore ? 'Set execution score (1-10) to confirm rep' : ''}
             </p>

@@ -45,6 +45,7 @@ export interface DrillBlock {
   zone_pct?: number;
   pitch_whiff_pct?: number;
   pitch_chase_pct?: number;
+  bunt_outcomes?: import('../../supabase/functions/_shared/wic/buntingProgram').BuntOutcome[];
 }
 
 const SESSION_KEYS = [
