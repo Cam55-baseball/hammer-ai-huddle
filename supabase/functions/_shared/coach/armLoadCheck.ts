@@ -52,21 +52,25 @@ export function checkCoachArmLoad(input: CoachArmInput): { allowed: boolean; rea
   // throwing ramp runs, hard throwing and pitches wait for a full-intent step.
   const throwDays = [...new Set(entries.map(e => e.entry_date))].sort();
   const before = throwDays.filter(d => d < input.date);
-  let daysOff = 365;
-  let returnedOn = shift(input.date, -1);
+  // A gap is only real when a throw day exists BEFORE the current streak.
+  // No earlier history means the gap is unknown — never fabricate a year-long
+  // break for a new account; the budgets above still guard the day.
+  let gap: { daysOff: number; returnedOn: string } | null = null;
   if (before.length) {
     const last = before[before.length - 1];
     let streakStart = last;
     while (before.includes(shift(streakStart, -1))) streakStart = shift(streakStart, -1);
-    returnedOn = streakStart;
     const prior = before.filter(d => d < streakStart);
-    daysOff = prior.length
-      ? Math.round((Date.parse(`${streakStart}T12:00:00Z`) - Date.parse(`${prior[prior.length - 1]}T12:00:00Z`)) / 86400000) - 1
-      : 365;
+    if (prior.length) {
+      gap = {
+        daysOff: Math.round((Date.parse(`${streakStart}T12:00:00Z`) - Date.parse(`${prior[prior.length - 1]}T12:00:00Z`)) / 86400000) - 1,
+        returnedOn: streakStart,
+      };
+    }
   }
   const ramps = activeRamps({
     today: input.date,
-    gap: { throwing: { daysOff, returnedOn } },
+    gap: { throwing: gap },
     profile: {
       age: input.age,
       isPitcher: role === "pitcher" || role === "two_way" || role === "pitcher_catcher",

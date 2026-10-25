@@ -36,9 +36,10 @@ describe("coach prescription arm-load check", () => {
 
   it("blocks when the weekly arm budget would be passed", () => {
     // Age 16 position player: daily 70 units, weekly 280. Six logged days of
-    // 60 moderate throws (36 units each = 216) plus 120 planned (72) = 288 > 280.
+    // 60 moderate throws (36 units each = 216) plus 110 planned (66) = 282 > 280,
+    // while 66 stays under the daily 70.
     const entries = Array.from({ length: 6 }, (_, i) => ({ entry_date: shift(DATE, -(i + 1)), throw_type: "position_throws" as const, count: 60, status: "done" as const }));
-    const r = checkCoachArmLoad({ ...base, age: 16, entries, planned: [{ count: 120, kind: "practice", intensityClass: "moderate" }] });
+    const r = checkCoachArmLoad({ ...base, age: 16, entries, planned: [{ count: 110, kind: "practice", intensityClass: "moderate" }] });
     expect(r.allowed).toBe(false);
     expect(r.reason).toMatch(/week's arm limit/);
   });
@@ -55,10 +56,19 @@ describe("coach prescription arm-load check", () => {
   });
 
   it("blocks pitches during a ramp even when the count is small", () => {
-    const entries = [{ entry_date: shift(DATE, -1), throw_type: "catch_play" as const, count: 20, status: "done" as const }];
+    // 10 days off (doubling band, 20-day pitcher ramp), returned yesterday.
+    const old = Array.from({ length: 4 }, (_, i) => ({ entry_date: shift(DATE, -(12 + i)), throw_type: "position_throws" as const, count: 30, status: "done" as const }));
+    const entries = [...old, { entry_date: shift(DATE, -1), throw_type: "catch_play" as const, count: 20, status: "done" as const }];
     const r = checkCoachArmLoad({ ...base, positions: ["p"], entries, planned: [{ count: 15, kind: "pitch", intensityClass: "high" }] });
     expect(r.allowed).toBe(false);
     expect(r.reason).toMatch(/building back/);
+  });
+
+  it("never fabricates a year-long break for a new account with no earlier history", () => {
+    // Only 3 recent days on record: no prior throw day before the streak, so no
+    // ramp gap is invented; budgets still apply.
+    const r = checkCoachArmLoad({ ...base, entries: recentEntries(3), planned: [{ count: 30, kind: "practice", intensityClass: "high" }] });
+    expect(r.allowed).toBe(true);
   });
 
   it("rejects non-integer or zero throw counts instead of guessing", () => {
