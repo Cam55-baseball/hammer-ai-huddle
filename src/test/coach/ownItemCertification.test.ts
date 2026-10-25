@@ -41,7 +41,7 @@ describe("coach own-item certification (gear vocabulary + measure type)", () => 
   it("requires an exact positive dose, whole counts for reps/throws, hundredths allowed for seconds", () => {
     expect(certifyCoachOwnItem({ name: "X", dosage_unit: "reps", reps: 0 }).certified).toBe(false);
     expect(certifyCoachOwnItem({ name: "X", dosage_unit: "reps", reps: 2.5 }).certified).toBe(false);
-    expect(certifyCoachOwnItem({ name: "X", dosage_unit: "throws", throws: undefined, reps: 10 }).certified).toBe(true);
+    expect(certifyCoachOwnItem({ name: "X", dosage_unit: "throws", reps: 10 }).certified).toBe(true);
     expect(certifyCoachOwnItem({ name: "X", dosage_unit: "seconds", duration: 1.47 }).certified).toBe(true);
     expect(certifyCoachOwnItem({ name: "X", dosage_unit: "feet", distance_feet: 7.5 }).certified).toBe(true);
   });
