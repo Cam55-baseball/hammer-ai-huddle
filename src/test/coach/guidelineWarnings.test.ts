@@ -18,7 +18,7 @@ describe("dated coaching warnings", () => {
     ]);
   });
   it("does not repeat Okay indefinitely when the same findings remain unacknowledged", async () => {
-    const call = vi.fn(async () => ({ warning_required: true, warnings: factGuidelineWarnings(facts) }));
+    const call = vi.fn(async () => ({ applied: false, warning_required: true, warnings: factGuidelineWarnings(facts) }));
     const confirm = vi.fn(async () => true);
     expect((await runCoachWarningAction(call, confirm)).applied).toBe(false);
     expect(call).toHaveBeenCalledTimes(2);
