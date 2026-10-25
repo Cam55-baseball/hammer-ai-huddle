@@ -19,6 +19,8 @@ export type CoachOwnMeasure = (typeof COACH_OWN_MEASURE_UNITS)[number];
 
 export interface OwnItemInput {
   name?: string | null;
+  /** Exercise Vault slug. Items with a slug are Vault-reviewed and skipped. */
+  slug?: string | null;
   sets?: number | null;
   reps?: number | null;
   total_reps?: number | null;
@@ -79,6 +81,7 @@ export function certifyCoachOwnItems(exercises: readonly OwnItemInput[]): { ok: 
   const gearByName = new Map<string, string[]>();
   for (const item of exercises ?? []) {
     if (!item || typeof item !== "object") continue;
+    if (item.slug) continue; // Vault-reviewed items certify through the catalog.
     const name = (item.name ?? "").trim();
     if (!name) { reasons.push("Every exercise needs a name."); continue; }
     const result = certifyCoachOwnItem(item);
