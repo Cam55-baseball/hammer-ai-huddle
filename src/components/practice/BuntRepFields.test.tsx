@@ -7,9 +7,9 @@ describe('side-specific entered bunt outcomes', () => {
   it('records false and unknown distinctly, without inventing a success from contact quality', () => {
     const change=vi.fn();
     render(<BuntRepFields value={{}} onChange={change} batterSide="R" mode="quick" />);
-    fireEvent.click(screen.getByRole('button',{name:'No',exact:true}));
+    fireEvent.click(screen.getByRole('button',{name:'No'}));
     expect(change).toHaveBeenLastCalledWith('bunt_success',false);
-    fireEvent.click(screen.getByRole('button',{name:'Not entered',exact:true}));
+    fireEvent.click(screen.getByRole('button',{name:'Not entered'}));
     expect(change).toHaveBeenLastCalledWith('bunt_success',undefined);
   });
   it('switch left-side choices exclude push while right-side records its own type', () => {

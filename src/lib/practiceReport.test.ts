@@ -3,6 +3,11 @@ import { loggedPracticeReport } from '../../supabase/functions/_shared/practiceR
 import { generateInsights, getTotalReps } from './sessionInsights';
 
 describe('practice evidence honesty', () => {
+  it('shows exact-side bunt successes from entered outcomes, never an inferred grade', () => {
+    const report=loggedPracticeReport({session_date:'2026-10-25',drill_blocks:[{bunt_outcomes:[{side:'R',type:'drag',attempts:7,successes:3},{side:'L',type:'drag',attempts:2,successes:3}]}]});
+    expect(report.performanceBreakdown.situationalSplits.map(row=>row.value)).toEqual(['3 / 7']);
+    expect(report.rootCauseAnalysis).toEqual([]);
+  });
   it('one entered tee rep never becomes a visual or cognitive fault or dose', () => {
     const report = loggedPracticeReport({ session_date: '2026-10-20', drill_blocks: [{ drill_type: 'tee', volume: 1, execution_grade: 60 }] });
     expect(report.rootCauseAnalysis).toEqual([]);

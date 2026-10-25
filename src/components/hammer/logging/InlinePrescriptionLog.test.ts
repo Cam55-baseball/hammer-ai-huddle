@@ -6,6 +6,9 @@ const rx = (o: Partial<WkRx>) => ({ movement_slug: "", movement_name: "", sets: 
 const keys = (r: WkRx) => inlineLogSpec(r).fields.map((f) => f.key);
 
 describe("inline lift log fields", () => {
+  it("bunt prescriptions count attempts and successes, never swings or seconds", () => {
+    expect(keys(rx({movement_slug:'bunt_r_drag',slot:'hitting' as any,dosage_unit:'attempts',reps:7}))).toEqual(['attempts','successes']);
+  });
   it("band work shows reps only, never weight", () => {
     expect(keys(rx({ movement_slug: "arm_care_band_full_chart", movement_name: "Arm-Care Band — Full Chart" }))).toEqual(["reps"]);
   });

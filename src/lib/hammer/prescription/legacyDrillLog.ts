@@ -1,6 +1,6 @@
 import { jumpMeasure } from "@/lib/logging/measureType";
 export type LegacyLogField = {
-  key: "reps" | "throws" | "distance" | "time";
+  key: "reps" | "throws" | "distance" | "time" | "attempts" | "successes";
   label: string;
   unit?: string;
   prefill: number | null;
@@ -32,6 +32,7 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
   const yards = firstNumber(targetText, /\b(\d+(?:\.\d+)?)\s*(?:yards?|yds?)\b/);
   const distance = feet ?? (yards == null ? null : yards * 3);
   const jump = jumpMeasure(name);
+  if (modality === 'bunting' || /\b(?:squeeze|sac|sacrifice|drag|push|hit) bunt\b|\bbunt for a hit\b/i.test(name)) return { rows:Math.max(1,sets),completion:false,fields:[{key:'attempts',label:'Attempts',prefill:firstNumber(text,/\b(\d+)\s*attempts?\b/) ?? reps},{key:'successes',label:'Successful bunts',prefill:null}] };
   if (jump) return { rows: Math.max(1, sets), completion: false, fields: [{ key: "distance", label: jump === "jump_distance" ? "Jump distance" : "Jump height", unit: jump === "jump_distance" ? "ft + in" : "in", prefill: null }] };
 
   if (["warmup", "mobility", "recovery", "arm_care"].includes(modality)) {
