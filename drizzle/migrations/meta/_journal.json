@@ -834,6 +834,13 @@
       "when": 1792934077261,
       "tag": "0118_allow_coach_guideline_override_event_type",
       "breakpoints": true
+    },
+    {
+      "idx": 119,
+      "version": "7",
+      "when": 1792939935145,
+      "tag": "0119_coach_workload_equipment_warning_codes",
+      "breakpoints": true
     }
   ]
 }
