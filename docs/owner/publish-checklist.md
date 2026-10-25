@@ -1,9 +1,9 @@
 # Hammers — final publish checklist
 
-Updated October 25, 2026, 15:12 UTC. This one sheet
+Updated October 25, 2026, final continuation after 15:30 UTC. This one sheet
 supersedes every earlier checklist section; history lives in git.
 
-**Global TEST cleanup: certified YES.**
+**Global TEST cleanup: certified YES — retained prior certification, not a new scan this run.**
 **Ready to publish: NO** — today's positive hitting replacement/focus/readback
 is unverified: the read-only live check found no October 25 hitting prescription
 or saved hitting block for a kept system TEST player. A warning cannot create
@@ -14,8 +14,11 @@ data-integrity protections remain fail-closed; this is not the requested
 ## Evidence summary (dated evidence; retained results identified)
 
 - Current app suite: **532 files / 4,228 tests PASS**, four bounded groups;
-  the interrupted fourth group was rerun to completion. Coach tests: 164 PASS.
-  Preview build: OK at 15:11:40 UTC after the correction and documentation edits.
+  all four groups rerun to completion in this continuation (1,176 / 995 /
+  1,073 / 984 assertions). Current app source is unchanged. Fresh harness preview
+  compilation: **build OK at 15:33:05 UTC**. Running preview `/auth`: HTTP 200,
+  nonempty page, zero page errors and no Vite error overlay. This public startup
+  check is not an authenticated prescription-flow proof.
 - October 25 correction: measured daily workload/CNS, exposure-governor dose
   trims, lifting dose-range and missing-equipment findings warn through the
   existing dialog. Keys include exact date, recipient and numeric rule text.
@@ -23,6 +26,16 @@ data-integrity protections remain fail-closed; this is not the requested
   Future days have no measured saved-day cap; no weekly percentage is invented.
   Migration 0119 applied; coach-rx-safety redeployed. Combined workload/equipment
   390×844 Okay/Cancel screen proof is fixture-only, not a hosted saved choice.
+- Final continuation: fresh read-only hosted aggregate check returned **zero
+  October 25 hitting rows and zero saved plan snapshots** across system,
+  suspended and paused accounts. Therefore there is no saved hitting card for
+  the requested Use instead proof. No fake source card, test logs or coach send
+  was created. A recovery-day warning can acknowledge a guideline; it cannot
+  supply the missing same-category work.
+- Combined workload/equipment dialog rerun at 390×844: exact October 25 date,
+  118/100 daily units and reported missing barbell; Cancel left the fixture at
+  zero writes, Okay produced one fixture write, no page errors. Screenshots
+  inspected. The numbers belong to the fixture, not a measured athlete workload.
 - Coach override warnings: hosted Cancel path saved nothing (verified 0 rows);
   Okay landed with the full override record (who/when/rule/date/prescription)
   in the prescription, the coach audit trail and the learning-loop input,
@@ -36,7 +49,8 @@ data-integrity protections remain fail-closed; this is not the requested
 - Consent, connection, legal and same-category checks remain blocking. Unknown
   doses/workload, unavailable catalog access, age/season and critical arm/pain
   protections also remain fail-closed; the requested removal of every other
-  safeguard is not claimed. No new hosted TEST records were added this run.
+  safeguard is not claimed. Critical medical safeguards were not weakened to
+  recommend unsafe activity. No new hosted TEST records were added this run.
 - Global TEST cleanup certification:
   (a) zero non-system accounts with test markers — PASS;
   (b) parked/system accounts excluded from stats, rankings, lists, search,
