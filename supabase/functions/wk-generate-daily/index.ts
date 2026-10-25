@@ -663,7 +663,8 @@ const handler = async (req: Request): Promise<Response> => {
         const vPhase = String(savedRows.find((r) => r.phase)?.phase ?? "in_season");
         const vSpacing = resolveFeatures((vSw ?? []) as any, user.id).rest_day_calculator === true;
         // Marked cards are never touched, so only unmarked rows are checked.
-        const vCheck = finalRuleCheck(savedRows.filter((r) => !isMarkedRow(r)), {
+        const coachRows = savedRows.filter(r => typeof r.why_payload?.coach_rx === "string");
+        const vCheck = finalRuleCheck(savedRows.filter((r) => !isMarkedRow(r) && typeof r.why_payload?.coach_rx !== "string"), {
           planDate, phase: vPhase, age: vAge, growthMode: vGrowth, priorLiftDates: vMerged.priorLiftDates,
           u13ThrowBlock: await loadU13ThrowBlock(admin, user.id, vAge, planDate),
           restDaysBetweenLifts: vSpacing ? 2 : null,
@@ -675,6 +676,8 @@ const handler = async (req: Request): Promise<Response> => {
           sameDayExternal: vMerged.sameDayExternal,
           catalog: vCatMap,
         });
+        // Coach work was committed through its warning/acknowledgement path, not authored by this generator.
+        vCheck.rows.push(...coachRows.filter(r => !isMarkedRow(r)));
         // Round 8 Step 1: next allowed date per spaced card type, same rules.
         // Every scheduled game/tournament in the next 60 days feeds the day-before-game rule.
         const vTo = new Date(Date.parse(`${planDate}T00:00:00Z`) + 60 * 86_400_000).toISOString().slice(0, 10);
