@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-25",
+  "suite": {
+    "files": 532,
+    "tests": 4228,
+    "batch_tests": [1176, 995, 1073, 984],
+    "batch_exit_codes": [0, 0, 0, 0],
+    "logs": "/tmp/coach-last/batch-*.log"
+  },
+  "phone_warning": {
+    "fixture_only": true,
+    "viewport": [390, 844],
+    "cancel_writes": 0,
+    "okay_writes": 1,
+    "page_errors": [],
+    "screenshots_inspected": true
+  },
+  "hosted_read_only_source_check": {
+    "scope": "system, suspended or paused accounts",
+    "hidden_hitting_rows_today": 0,
+    "hidden_saved_snapshots_today": 0,
+    "source_fabricated": false
+  },
+  "preview": {
+    "route": "/auth",
+    "http_status": 200,
+    "body_nonempty": true,
+    "page_errors": [],
+    "vite_error_overlay": 0,
+    "authenticated_flow_verified": false,
+    "fresh_production_build_verified": false,
+    "reason": "Observability build logs unavailable; previous compilation result retained."
+  },
+  "hosted_positive_choice_focus_all_surface_proof": false,
+  "global_test_cleanup": "prior YES certification retained; not rescanned this run",
+  "new_hosted_test_records": 0,
+  "ready_to_publish": false,
+  "reasons": [
+    "No saved same-category hitting source for today's requested live replacement proof.",
+    "Critical medical and data-validity safeguards retained; requested only-four-blocks scope not fully applied."
+  ],
+  "publish_cron_ios_changes": false
+}

@@ -16,6 +16,14 @@ live data landing in every surface; unverified cells remain unverified.
 
 ## Surfaces key
 
+October 25 final continuation: all 532 files / 4,228 tests passed again in four
+bounded groups. Combined workload/equipment Okay/Cancel proof passed again at
+390×844, fixture-only. Read-only hosted aggregates found zero October 25 hitting
+rows and zero saved snapshots for system/suspended/paused accounts; no source
+was fabricated. Row 3 positive choice → focus → all-surface readback remains
+UNVERIFIED. Public preview startup passed; fresh production build logs were
+unavailable. No hosted writes, migrations, redeploys, publish, cron or iOS changes.
+
 October 25 14:46 correction: measured workload-cap, lifting dose-range and
 missing-equipment warnings share the exact recipient/date/rule acknowledgement
 and atomic override trail (migration 0119). Coach actions dated today and player
@@ -82,12 +90,16 @@ line, so the saved block and permitted coach-plan read retain it.
 Learning input reaches `behavioral_events`; actual learning interpretation is
 UNVERIFIED, not claimed as an insight or training change. General/History/Vault
 keep their canonical workout-log readers, not a second override log. No health
-or arm-limit exception is enabled: active pain/injury, arm limits/rest/ramp,
-age/growth, workload limits, unknown gear/dose, consent/access and same-category
-checks remain blocking. Only explicit nonmedical schedule advisories warn.
-Evidence: 16 390×844 fixture decision screens and 22 behavioral tests under
-`.lovable/proofs/coach-warnings-oct25/`; hosted coach reader returned 200 without
-writes. Hosted override commit/audit readback and Monday focus proof remain OPEN.
+clearance is supplied by an acknowledgement: critical active pain/injury and
+arm-limit/ramp protections remain fail-closed in the activation envelope.
+The earlier hosted arm-rest send acknowledgement with reason and parent notice
+is retained evidence, not proof of medically safe activation. Measured workload,
+dose-range, missing-equipment and schedule findings warn; unknown/invalid data,
+age/season, consent/access and same-category validation remain blocking.
+Evidence: 16 390×844 fixture decision screens plus the combined warning rerun;
+prior hosted Cancel → Okay and audit/behavioral input writes are retained.
+Positive replacement/focus/all-surface readback remains OPEN. Monday no-warning
+proof is an extra post-publish check, not a separate readiness blocker.
 
 ### Owner final-batch continuation — October 24, 23:37 run 4
 
