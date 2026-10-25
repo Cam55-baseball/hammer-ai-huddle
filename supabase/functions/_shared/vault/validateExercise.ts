@@ -42,6 +42,8 @@ export interface VaultExercise {
   intensity_class?: string | null;
   /** Injury areas this item must not be prescribed around (e.g. elbow, hamstring). */
   injury_flags?: string[];
+  bunt_side?: "R" | "L";
+  bunt_type?: import('../wic/buntingProgram.ts').BuntType;
 }
 
 /** Canonical wk_movement_catalog categories the plan builder files exercises under. */
@@ -50,7 +52,7 @@ export const CATALOG_CATEGORIES = [
   "kot", "max_effort_strength", "movement_capacity", "movement_patterning", "pap_bridge",
   "posterior_chain", "rotational_strength", "shoulder_prep", "speed_lab", "speed_mechanics",
   "sprint_mechanics", "strength", "supplemental", "throwing_plyo", "trunk", "unilateral_lower",
-  "unilateral_pull", "unilateral_push", "upper_body_plyo", "warmup", "windmill_pitching",
+  "unilateral_pull", "unilateral_push", "upper_body_plyo", "warmup", "windmill_pitching", "hitting",
 ] as const;
 
 const FILLER = [/full, controlled movement from start to finish/i, /smooth, controlled form/i];
@@ -68,7 +70,7 @@ const EQUIP: Array<[RegExp, RegExp]> = [
 
 export const MEASURE_TYPES = [
   "weight_reps", "reps", "hold_seconds", "duration", "sprint_time", "jump_distance", "jump_height",
-  "throw_count", "velocity", "bat_speed", "exit_velocity", "swing_count", "check_off",
+  "throw_count", "velocity", "bat_speed", "exit_velocity", "swing_count", "check_off", "bunt_attempts",
 ] as const;
 
 const DOSE_NEEDS: Record<string, Array<keyof VaultExercise>> = {
@@ -81,6 +83,7 @@ const DOSE_NEEDS: Record<string, Array<keyof VaultExercise>> = {
   jump_height: ["default_sets", "default_reps"],
   throw_count: ["default_sets", "default_reps"],
   swing_count: ["default_sets", "default_reps"],
+  bunt_attempts: ["default_sets", "default_reps"],
 };
 
 export function validateExercise(e: VaultExercise, opts?: { isNew?: boolean }): string[] {
@@ -99,6 +102,7 @@ export function validateExercise(e: VaultExercise, opts?: { isNew?: boolean }): 
   if (!t(e.cue)) out.push("Add the key cue.");
   if (!t(e.stop_if)) out.push('Add "Stop if".');
   if (!(MEASURE_TYPES as readonly string[]).includes(e.measure_type)) out.push("Pick a measure type.");
+  if (e.measure_type === "bunt_attempts" && (!['R','L'].includes(e.bunt_side ?? '') || !['squeeze','sac_3b','sac_1b','drag','push','hit'].includes(e.bunt_type ?? ''))) out.push("Bunting needs an exact batting side and bunt type.");
   for (const k of DOSE_NEEDS[e.measure_type] ?? []) {
     const v = e[k] as number | null | undefined;
     if (!(typeof v === "number" && v > 0)) out.push(`The measure type needs a default ${String(k).replace("default_", "").replace("_ft", " (ft)")}.`);

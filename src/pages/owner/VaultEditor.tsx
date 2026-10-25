@@ -19,7 +19,7 @@ import { COMMON_SWAP_GEAR } from "../../../supabase/functions/_shared/planSwap/c
 import { ownerGear, ownerIdentity, OWNER_DEFAULTS } from "../../../supabase/functions/_shared/vault/ownerDefaults";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const CARD_TYPES = ["lift", "primer", "conditioning", "recovery", "speed", "warmup", "bat_speed", "throwing", "pitching", "windmill", "defense", "baserunning", "cross_sport", "mobility", "arm_care"];
+const CARD_TYPES = ["lift", "primer", "conditioning", "recovery", "speed", "warmup", "bat_speed", "hitting", "throwing", "pitching", "windmill", "defense", "baserunning", "cross_sport", "mobility", "arm_care"];
 const SPORTS = ["baseball", "softball"];
 // Canonical catalog phase codes — the planner matches these exactly.
 const PHASES = ["os_q1", "os_q2", "os_q3", "os_q4", "pre_season", "in_season", "post_season"];
@@ -195,6 +195,10 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
             {MEASURE_TYPES.map((m) => <option key={m} value={m}>{m.replace(/_/g, " ")}</option>)}
           </select>
         </Field>
+        {e.measure_type === 'bunt_attempts' && <>
+          <Field label="Batting side"><select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={e.bunt_side ?? ''} onChange={ev => set('bunt_side', ev.target.value === 'R' ? 'R' : ev.target.value === 'L' ? 'L' : undefined)}><option value="">Pick…</option><option value="R">Right-handed</option><option value="L">Left-handed</option></select></Field>
+          <Field label="Bunt type"><select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={e.bunt_type ?? ''} onChange={ev => set('bunt_type', ev.target.value as VaultExercise['bunt_type'])}><option value="">Pick…</option>{['squeeze','sac_3b','sac_1b','drag','push','hit'].map(type => <option key={type} value={type}>{type.replace(/_/g,' ')}</option>)}</select></Field>
+        </>}
         <fieldset className="space-y-2"><legend className="text-xs text-muted-foreground">Equipment</legend>
           <div className="grid grid-cols-2 gap-2">{COMMON_SWAP_GEAR.map(gear => <label key={gear} className="flex items-center gap-2 text-xs"><Checkbox checked={e.equipment.includes(gear)} onCheckedChange={checked => set("equipment", checked ? [...e.equipment.filter(item => item !== "none"), gear] : e.equipment.filter(item => item !== gear))} />{gear.replace(/_/g, " ")}</label>)}</div>
           <Field label="Other equipment (comma-separated, or none)"><Input value={e.equipment.join(", ")} onChange={(ev) => set("equipment", toList(ev.target.value))} onBlur={() => set("equipment", mappedGear.equipment)} /></Field>
