@@ -470,3 +470,11 @@ No publish, cron schedule or iOS changes. Migration 0113 creates the private sna
 | `wk_ti0a1_backup` | 0 |
 | `workout_blocks` | 0 |
 | `workout_presets` | 0 |
+
+## Update — October 25, 00:32 UTC run (owner-confirmed)
+
+Owner confirmed the 24 additional candidates synthetic. Reconciled: 16 unparked @example.com accounts (ve55-* ×5, pv-cost-test-* ×2, audit-athlete, prerelease.audit.athlete, audit.player/coach/scout.0924, ve-onb-opta-* ×4) + 6 ve-onb-full/exit already parked in the first 13 + 2 no longer present. Their 143,511 rows across 23 tables were archived into the same private snapshot (per-account batches after one timeout), then parked exactly like the first 13. A broader marker scan found 4 more stray synthetic accounts (athlete/coach/scout/owner @audit.test, created 2026-09-09 by an audit script); their 18,535 rows across 13 tables were archived and the accounts parked the same way. Archive total: 172,888 rows. One self-caused duplicate batch (58,210 rows) was removed and counts re-verified exact. Zero rows deleted from live tables; zero kept/system/owner/Apple-review accounts touched (system accounts 38 → 58, exactly +20).
+
+**Certification (a) PASS:** zero non-system accounts with test markers remain (verified across email domains and name markers).
+**Certification (b) OPEN:** reader/job exclusion audit (stats, rankings, lists, search, coach/org/scout views, nightly jobs) not yet complete.
+**Certification (c) OPEN:** fixed-ID no-new-rows check pending the next scheduled runs.

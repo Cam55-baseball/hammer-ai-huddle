@@ -1,0 +1,16 @@
+{
+  "run": "2026-10-25T00:32Z owner-confirmed parking",
+  "accounts_parked_this_run": 20,
+  "breakdown": {"owner_confirmed_example_com": 16, "additional_stray_audit_test": 4},
+  "already_parked_ve_onb_in_first_13": 6,
+  "rows_archived_this_run": 162046,
+  "archive_table": "_snapshot_stray_test_closeout_20261024",
+  "archive_total_rows": 172888,
+  "parking": "is_system_account=true, suspended_at, account_paused_at, paused_reason, anon_training_opt_out=true; athlete_mpi_settings ranking_eligible=false, admin_ranking_excluded=true",
+  "duplicate_incident": "engine_snapshot_versions first insert timed out but completed server-side; retry duplicated 58,210 rows; exact duplicate copies removed, archive verified 63,086 = 4,876 + 58,210",
+  "certification_a_zero_non_system_test_markers": 0,
+  "system_accounts_before": 38,
+  "system_accounts_after": 58,
+  "kept_accounts_touched": 0,
+  "deletions_from_live_tables": 0
+}
