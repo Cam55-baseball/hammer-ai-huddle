@@ -3,6 +3,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { resolveSeasonPhase, getSeasonProfile, type SeasonPhase } from "../_shared/seasonPhase.ts";
+import { systemAccountIds } from "../_shared/systemAccounts.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -430,15 +431,17 @@ serve(async (req) => {
       });
     }
 
-    // Batch mode: all users with activity in last 24h
+    // Batch mode: all users with activity in last 24h, excluding parked/system accounts
     const since = new Date(Date.now() - DAY_MS).toISOString();
     const { data: activeUsers } = await supabase
       .from("athlete_mpi_settings")
       .select("user_id")
       .limit(500);
 
+    const systemIds = await systemAccountIds(supabase);
     let processed = 0, failed = 0;
     for (const u of activeUsers ?? []) {
+      if (systemIds.has(String(u.user_id))) continue;
       try {
         await computeForUser(supabase, u.user_id);
         processed++;

@@ -2,6 +2,7 @@
 // Schedule: every 2h at :17. Reads snapshots + activity logs, writes one row per user.
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { systemAccountIds } from "../_shared/systemAccounts.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -72,7 +73,8 @@ serve(async (req) => {
 
     const userCounts: Record<string, number> = {};
     for (const r of recentSnaps ?? []) userCounts[r.user_id] = (userCounts[r.user_id] ?? 0) + 1;
-    const eligibleUsers = Object.entries(userCounts).filter(([, c]) => c >= 3).map(([u]) => u);
+    const systemIds = await systemAccountIds(supabase);
+    const eligibleUsers = Object.entries(userCounts).filter(([u, c]) => c >= 3 && !systemIds.has(u)).map(([u]) => u);
 
     let processed = 0;
     for (const userId of eligibleUsers) {
