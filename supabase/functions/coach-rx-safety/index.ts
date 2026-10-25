@@ -405,7 +405,7 @@ Deno.serve(async (req) => {
       const overrides = [...(rx.safety_result?.overrides ?? []), ...(warnings.length ? [overrideRecord(warnings, choice)] : [])];
       rows = envelope.rows;
       const because = overrides.flatMap((o: any) => (o.warnings ?? []).map((w: any) => `${w.date}: ${w.rule}`)).join("; ");
-      if (because) for (const row of rows) { row.rationale = `${row.rationale} Coach override: ${because}`; row.why_payload = { ...row.why_payload, coach_overrides: overrides, why: row.rationale }; }
+      if (because) for (const row of rows) { row.rationale = `${row.rationale} Coach override: ${because}`; row.why_payload = { ...(row.why_payload as Record<string, unknown>), coach_overrides: overrides, why: row.rationale }; }
       safety = { verdict: result.verdict, overrides, intensity, checked_at: new Date().toISOString(), envelope: "wic-swap", block_expected: block ?? null, cns_result: "cnsResult" in envelope ? envelope.cnsResult : null, expected_revision: expectedRevision, expected_catalog_revision: expectedCatalogRevision };
     }
     const { data: committed, error: commitError } = await admin.rpc("coach_rx_commit_certified", {
