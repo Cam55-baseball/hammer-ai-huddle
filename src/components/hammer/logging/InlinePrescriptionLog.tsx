@@ -1,5 +1,6 @@
 import { jumpMeasure, timedMobilityMeasure, ownerExerciseMeasure, fieldsForMeasure, declaredCount, displayDistance, storeDistance } from "@/lib/logging/measureType";
 import { useFocusExercise, FocusDurationTimer } from "../cards/FocusSession";
+import { ExerciseTimer } from "../cards/ExerciseTimer";
 import { ActivityBasics } from "../cards/ActivityBasics";
 import { ExerciseTools } from "../cards/ExerciseTools";
 import { DistanceField } from "./DistanceField";
@@ -278,12 +279,9 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
   return <div className="space-y-2" data-inline-prescription-log hidden={!focus.visible}>
     <div className="space-y-2" hidden={focus.active && focus.resting}>
     <h4 className="text-sm font-semibold break-words">{rx.movement_name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>
-    {focus.active && !stopwatch && spec.fields.some(f => f.key === "time" && (f.prefill ?? 0) > 0) && <FocusDurationTimer key={focus.row} target={spec.fields.find(f => f.key === "time")?.prefill ?? 0} onDone={value => edit(focus.row, "time", String(value), 0)} />}
-    {hasTime && <div className="flex items-center gap-2" data-rep-timer>
-      <Button type="button" size="sm" variant={running ? "default" : "outline"} className="h-9 min-w-[96px]" onClick={toggleTimer}>{running ? "Stop timer" : "Start timer"}</Button>
-      <span className="font-mono text-sm tabular-nums text-foreground" aria-live="polite">{elapsed.toFixed(2)} s</span>
-      <span className="text-[11px] text-muted-foreground">Stop fills the next rep's time.</span>
-    </div>}
+    {spec.fields.some(f => f.key === "time") && <ExerciseTimer key={focus.active ? focus.row : "regular"}
+      target={stopwatch ? undefined : spec.fields.find(f => f.key === "time")?.prefill ?? undefined}
+      onRecord={value => { const i = focus.active ? focus.row : rounds.findIndex(r => r._t !== "1" || !r.time); if (i >= 0) edit(i, "time", String(value), 0); }} />}
     {!focus.active && !isSprint && (rx.slot === "lift" || rx.slot === "supplemental" || /hold|iso|plank/.test(rx.movement_slug)) && <RestTimer label="Rest between sets" seconds={restBand.min} maxSeconds={restBand.max} />}
     {isSprint && <>{!focus.active && <RestTimer label="Rest after each run set" seconds={sprintSeconds} />}<p className="text-xs text-muted-foreground">{sprintRestWhy(rx.distance_feet) ?? "Run distance not entered — rest time is not yet set."}</p></>}
     {!focus.active && basesPerRep && <ConditioningBaseRest basesPerRep={basesPerRep} />}

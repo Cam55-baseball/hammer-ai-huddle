@@ -22,6 +22,8 @@ import { ExerciseTools } from "../cards/ExerciseTools";
 import { pendingFor } from "@/lib/logging/logOutbox";
 import { DistanceField } from "./DistanceField";
 import { ToolSessionWindow } from "../cards/ToolSessionWindow";
+import { ExerciseTimer } from "../cards/ExerciseTimer";
+import { displayDistance, storeDistance } from "@/lib/logging/measureType";
 
 type Draft = Record<string, string>[];
 const TOUCHED = "_t";
@@ -141,8 +143,8 @@ export function LegacyDrillInlineLog({
     <div hidden={!focus.visible} className="space-y-2">
     <div hidden={focus.active && focus.resting} className="space-y-2">
     {logHost && <h4 className="text-sm font-semibold">{name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>}
-    {focus.active && !stopwatch && spec.fields.some(f => f.key === "time" && (f.prefill ?? 0) > 0) && <FocusDurationTimer key={focus.row} target={spec.fields.find(f => f.key === "time")?.prefill ?? 0} onDone={value => edit(focus.row, "time", String(value), 0)} />}
-    {stopwatch && <div data-rep-timer className="flex items-center gap-2"><Button type="button" size="sm" variant="outline" onClick={stopwatchTap}>{running ? "Stop stopwatch" : "Start stopwatch"}</Button><span className="font-mono text-xs">{elapsed.toFixed(2)} s</span><span className="text-[11px] text-muted-foreground">Stop fills the next time.</span></div>}
+    {spec.fields.some(f => f.key === "time") && <ExerciseTimer key={focus.active ? focus.row : "regular"} target={stopwatch ? undefined : spec.fields.find(f => f.key === "time")?.prefill ?? undefined}
+      onRecord={value => { const next = focus.active ? focus.row : rounds.findIndex(r => r._t !== "1" || !r.time); if (next >= 0) edit(next, "time", String(value), 0); }} />}
     {!focus.active && (modality === "speed" || modality === "conditioning") && <RestTimer label="Rest between repeats" seconds={modality === "speed" ? sprintRestSeconds(spec.fields.find(f => f.key === "distance")?.prefill) : null} />}
     <div className="grid gap-1.5 px-1 text-[10px] uppercase text-muted-foreground" style={{ gridTemplateColumns: cols }}>
       <span>Set</span>
@@ -154,7 +156,7 @@ export function LegacyDrillInlineLog({
         {spec.fields.map((f) => f.key === "time"
           ? <TimeField key={f.key} kind={kindFor(f.prefill)} label={`${f.label} ${index + 1}`} value={round[f.key] ?? ""} target={f.prefill} onChange={(v) => edit(index, f.key, v)} onBlur={() => touch(index)} />
           : f.unit === "ft + in" ? <DistanceField key={f.key} label={`${f.label} ${index + 1}`} value={round[f.key] ?? ""} onChange={v => edit(index, f.key, v)} onBlur={() => touch(index)} />
-          : <Input key={f.key} aria-label={`${f.label} ${index + 1}`} inputMode={f.key === "distance" ? "decimal" : "numeric"} value={round[f.key] ?? ""} placeholder={f.prefill != null ? String(f.prefill) : undefined} onFocus={() => touch(index)} onChange={(e) => edit(index, f.key, e.target.value)} onBlur={() => touch(index)} className="h-9 px-2 text-sm" />)}
+          : <Input key={f.key} aria-label={`${f.label} ${index + 1}`} inputMode={f.key === "distance" ? "decimal" : "numeric"} value={displayDistance(round[f.key] ?? "", f.unit)} placeholder={f.prefill != null ? displayDistance(String(f.prefill), f.unit) : undefined} onFocus={() => touch(index)} onChange={(e) => edit(index, f.key, storeDistance(e.target.value, f.unit))} onBlur={() => touch(index)} className="h-9 px-2 text-sm" />)}
       </div>
     ))}
     <div className="flex flex-wrap items-center justify-between gap-2">
