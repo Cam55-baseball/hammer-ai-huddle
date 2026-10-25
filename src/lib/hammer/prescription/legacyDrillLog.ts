@@ -28,8 +28,8 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
   const targetText = text.replace(/rest\s*:?\s*\d+(?:\.\d+)?\s*(?:seconds?|secs?|s|minutes?|mins?)\b/g, "");
   const seconds = firstNumber(targetText, /\b(\d+(?:\.\d+)?)\s*(?:seconds?|secs?|s)\b/);
   const minutes = firstNumber(targetText, /\b(\d+(?:\.\d+)?)\s*(?:minutes?|mins?)\b/);
-  const feet = firstNumber(text, /\b(\d+(?:\.\d+)?)\s*(?:feet|foot|ft)\b/);
-  const yards = firstNumber(text, /\b(\d+(?:\.\d+)?)\s*(?:yards?|yds?)\b/);
+  const feet = firstNumber(targetText, /\b(\d+(?:\.\d+)?)\s*(?:feet|foot|ft)\b/);
+  const yards = firstNumber(targetText, /\b(\d+(?:\.\d+)?)\s*(?:yards?|yds?)\b/);
   const distance = feet ?? (yards == null ? null : yards * 3);
   const jump = jumpMeasure(name);
   if (jump) return { rows: Math.max(1, sets), completion: false, fields: [{ key: "distance", label: jump === "jump_distance" ? "Jump distance" : "Jump height", unit: jump === "jump_distance" ? "ft + in" : "in", prefill: null }] };
@@ -50,14 +50,14 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
   if (modality === "throwing" || modality === "pitching" || /throw|pitch|bullpen|catch play|plyo ball/.test(activity)) {
     return { rows: sets, completion: false, fields: [{ key: "throws", label: "Throws", prefill: reps }] };
   }
-  if (modality === "conditioning" || modality === "baserunning") {
+  if (modality === "conditioning" || modality === "baserunning" || modality === "speed" && distance != null) {
     return { rows: Math.max(1, sets > 1 ? sets : reps ?? 1), completion: false, fields: [
       ...(distance == null ? [] : [{ key: "distance" as const, label: "Distance", unit: "ft", prefill: distance }]),
-      { key: "time", label: "Time", unit: "s", prefill: seconds },
+      { key: "time", label: "Time", unit: "s", prefill: seconds ?? (minutes == null ? null : minutes * 60) },
     ] };
   }
-  if (seconds != null) {
-    return { rows: sets, completion: false, fields: [{ key: "time", label: "Seconds", unit: "s", prefill: seconds }] };
+  if (seconds != null || minutes != null) {
+    return { rows: sets, completion: false, fields: [{ key: "time", label: "Seconds", unit: "s", prefill: seconds ?? (minutes == null ? null : minutes * 60) }] };
   }
   return { rows: sets, completion: false, fields: [{ key: "reps", label: /swing|contact|hit/.test(activity) ? "Swings" : "Reps", prefill: reps }] };
 }

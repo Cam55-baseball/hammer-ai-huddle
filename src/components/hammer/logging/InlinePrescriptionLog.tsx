@@ -48,7 +48,7 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   const explicitUnit = (rx.dosage_unit ?? "").toLowerCase();
   if (["seconds", "minutes"].includes(explicitUnit)) return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: "Time", unit: "s", prefill: rx.duration_seconds ?? (rx.reps == null ? null : rx.reps * (explicitUnit === "minutes" ? 60 : 1)) }] };
   if (["reps", "contacts", "steps", "swings"].includes(explicitUnit) && ["warmup", "mobility", "recovery", "arm_care"].includes(rx.slot as string) && rx.duration_seconds == null) return {
-    rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "reps", label: explicitUnit === "contacts" ? "Contacts" : explicitUnit === "steps" ? "Steps" : "Reps", prefill: rx.reps ?? rx.total_reps }],
+    rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "reps", label: explicitUnit === "contacts" ? "Contacts" : explicitUnit === "steps" ? "Steps" : explicitUnit === "swings" ? "Swings" : "Reps", prefill: rx.reps ?? rx.total_reps }],
   };
   if ((rx.dosage_unit ?? "").toLowerCase() === "throws" || /throw|pitch|bullpen|catch play/.test(slug)) {
     const split = rx.sets && rx.reps && (!rx.total_reps || rx.sets * rx.reps === rx.total_reps);
@@ -89,6 +89,10 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   }
   if (jump === "jump_height") {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "height", label: "Jump height", unit: "in" }] };
+  }
+  // A counted catalog/coach/Swap dose outranks a mobility or hold word in its name.
+  if (["reps", "contacts", "steps", "swings"].includes(explicitUnit) && rx.duration_seconds == null && rx.slot !== "lift" && rx.slot !== "supplemental") {
+    return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "reps", label: explicitUnit === "contacts" ? "Contacts" : explicitUnit === "steps" ? "Steps" : explicitUnit === "swings" ? "Swings" : "Reps", prefill: rx.reps ?? rx.total_reps }] };
   }
   if (timedMobilityMeasure(slug) && !/throw|pitch|sprint|sled/.test(slug)) {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: "Seconds", unit: "s", prefill: rx.duration_seconds ?? ((rx.dosage_unit ?? "").toLowerCase() === "seconds" ? rx.reps : null) }] };

@@ -8,6 +8,34 @@ function Entry({ save, rest, bases }: { save: () => Promise<void>; rest: number 
   return null;
 }
 describe("guided canonical set progression", () => {
+  it("save and exit starts the same 60-second rest before leaving and resumes without a second save", async () => {
+    vi.useFakeTimers(); const save = vi.fn(async () => {}); const exit = vi.fn();
+    const view = render(<FocusSession active storageKey="focus-exit" onExit={exit}><Entry save={save} rest={60} /></FocusSession>);
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Save & exit" })));
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(exit).toHaveBeenCalledTimes(1);
+    const saved = JSON.parse(sessionStorage.getItem("focus-exit") ?? "{}");
+    expect(saved.restSeconds).toBe(60);
+    expect(saved.restingUntil - saved.restStartedAt).toBe(60000);
+    view.unmount();
+    render(<FocusSession active storageKey="focus-exit" onExit={exit}><Entry save={save} rest={60} /></FocusSession>);
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Save & exit" })));
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(sessionStorage.getItem("focus-exit") ?? "{}").restingUntil).toBe(saved.restingUntil);
+    await act(async () => vi.advanceTimersByTime(60000));
+    expect(JSON.parse(sessionStorage.getItem("focus-exit") ?? "{}").row).toBe(1);
+  });
+  it("does not close during an in-flight failed save", async () => {
+    let rejectSave: ((error: Error) => void) | undefined;
+    const exit = vi.fn();
+    render(<FocusSession active storageKey="busy-exit" onExit={exit}><Entry save={() => new Promise<void>((_, reject) => { rejectSave = reject; })} rest={60} /></FocusSession>);
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    act(() => window.dispatchEvent(new Event("hm:focus-exit:busy-exit")));
+    expect(exit).not.toHaveBeenCalled();
+    await act(async () => rejectSave?.(new Error("offline")));
+    expect(exit).not.toHaveBeenCalled();
+    expect(JSON.parse(sessionStorage.getItem("busy-exit") ?? "{}").restingUntil).toBeNull();
+  });
   it("retains three completed bases across a reload and resets after the fourth", async () => {
     sessionStorage.setItem("focus-proof", JSON.stringify({ exerciseId: "exercise", row: 1, conditioningBases: 3 }));
     render(<ConditioningRestProvider><FocusSession active storageKey="focus-proof" onExit={() => {}}><Entry save={async () => {}} rest={1} bases={1} /></FocusSession></ConditioningRestProvider>);
