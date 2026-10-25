@@ -195,20 +195,20 @@ function PocketCardShell({ id, category, focus, tone, planDate, prescribed, coun
           aria-label={heading}
           data-pocket-page={id}
           data-locked={locked ? "1" : "0"}
-          className={`fixed inset-0 z-50 flex h-[100dvh] flex-col animate-in fade-in zoom-in-95 duration-200 motion-reduce:animate-none bg-background`}
+          className={`fixed inset-0 z-50 flex h-[100dvh] flex-col animate-in fade-in zoom-in-95 duration-200 motion-reduce:animate-none bg-background ${locked ? "hm-focus-theme" : ""}`}
         >
           <header data-pocket-header className="sticky top-0 z-10 flex shrink-0 items-center gap-2 border-b border-border bg-background pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground" aria-hidden><DomainGlyph domain={domain} className="h-5 w-5" /></span>
             <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{category}{progress && progress.total > 0 ? <span className="tabular-nums"> · {progress.done}/{progress.total} done</span> : null}</p><h2 className="break-words text-base font-bold leading-tight text-foreground">{heading}</h2></div>
             <Button size="sm" aria-pressed={locked} className="h-10 shrink-0 px-3" onClick={() => setLocked(true)}>Start</Button>
-            <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" aria-label="Close" onClick={() => close(true)}><X className="h-4 w-4" /></Button>
+            <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" aria-label={locked ? "Exit focus" : "Close"} onClick={() => locked ? window.dispatchEvent(new Event(`hm:focus-exit:hm-focus:${planDate}:${id}`)) : close(true)}><X className="h-4 w-4" /></Button>
           </header>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">
-            <FocusSession active={locked} storageKey={`hm-focus:${planDate}:${id}`} onExit={() => close(true)}>
+            <FocusSession active={locked} storageKey={`hm-focus:${planDate}:${id}`} onExit={() => { setLocked(false); toast.success("Saved. Your logged work is kept."); }}>
             {!link && <section data-workout-log className="space-y-3">
               <h3 className="text-base font-semibold">Log this work</h3>
               <div ref={setLogHost} className="space-y-4" />
-              <p className="text-xs text-muted-foreground">More information for each exercise is below ↓</p>
+              {!locked && <p className="text-xs text-muted-foreground">More information for each exercise is below ↓</p>}
             </section>}
             {!link && !locked && <h3 className="mt-3 border-t border-border pt-3 text-sm font-semibold">EXERCISES</h3>}
             {showIntro && intro && !locked && (
@@ -250,8 +250,8 @@ function PocketCardShell({ id, category, focus, tone, planDate, prescribed, coun
             <Button variant="ghost" size="sm" className="h-11" onClick={() => setConfirmDiscard(true)}>
               Exit without saving
             </Button>
-            <Button size="sm" className="h-11 px-5 font-semibold active:scale-95 transition-transform motion-reduce:transition-none" onClick={() => close(true)}>
-              <LogOut className="mr-1.5 h-3.5 w-3.5" />Save &amp; Exit
+            <Button size="sm" className="h-11 px-5 font-semibold active:scale-95 transition-transform motion-reduce:transition-none" onClick={() => locked ? window.dispatchEvent(new Event(`hm:focus-exit:hm-focus:${planDate}:${id}`)) : close(true)}>
+              <LogOut className="mr-1.5 h-3.5 w-3.5" />{locked ? "Exit focus" : "Save & Exit"}
             </Button>
           </footer>
           <AlertDialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>

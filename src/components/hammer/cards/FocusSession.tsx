@@ -81,6 +81,12 @@ export function FocusSession({ active, storageKey, children, onExit }: { active:
     catch { setError("Couldn't save your entries. Try again before skipping."); }
     finally { setBusy(false); }
   };
+  useEffect(() => {
+    if (!active) return;
+    const exit = () => { void save(true); };
+    window.addEventListener(`hm:focus-exit:${storageKey}`, exit);
+    return () => window.removeEventListener(`hm:focus-exit:${storageKey}`, exit);
+  });
   return <Context.Provider value={{ active, cursor, currentId: current?.id, register, refresh }}>
     {active && <section data-focus-session className="mb-3 space-y-2 border-b border-border pb-3">
       <h3 className="text-base font-semibold">{current ? `${current.name} · Set ${cursor.row + 1} of ${current.rows}` : "End of guided sets"}</h3>
