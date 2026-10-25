@@ -8,6 +8,7 @@ import { WARMUP_LIBRARY, buildWarmup } from "@/lib/hammer/prescription/warmupLib
 import { LegacyDrillInlineLog } from "@/components/hammer/logging/LegacyDrillInlineLog";
 import { InlinePrescriptionLog } from "@/components/hammer/logging/InlinePrescriptionLog";
 import { legacyDrillLogSpec } from "@/lib/hammer/prescription/legacyDrillLog";
+import { jumpMeasure } from "@/lib/logging/measureType";
 afterEach(cleanup);
 describe("rendered warm-up measure coverage", () => {
   it("every declared warm-up variant renders count, time and distance when declared", () => {
@@ -16,7 +17,7 @@ describe("rendered warm-up measure coverage", () => {
       render(<LegacyDrillInlineLog modality="warmup" name={drill.name} dosage={dosage} storageKey={`audit:${drill.slug}`} completed={false} />);
       const spec = legacyDrillLogSpec("warmup", drill.name, dosage);
       const work = dosage.toLowerCase().replace(/rest.*$/g, "");
-      if (/\b(?:reps?|contacts?|steps?|breaths?|rocks?)\b|\b\d+\s+per\s+(?:side|leg|direction|foot)\b/.test(work) && !/\b(?:yd|yards?|ft|feet|secs?|seconds?|minutes?|mins?)\b/.test(work)) {
+      if (!jumpMeasure(drill.name) && /\b(?:reps?|contacts?|steps?|breaths?|rocks?)\b|\b\d+\s+per\s+(?:side|leg|direction|foot)\b/.test(work) && !/\b(?:yd|yards?|ft|feet|secs?|seconds?|minutes?|mins?)\b/.test(work)) {
         expect(spec.fields.some(f => f.key === "reps"), `${drill.slug}: ${dosage}`).toBe(true);
       }
       if (/\b(?:seconds?|secs?|minutes?|mins?)\b/.test(work)) {

@@ -231,6 +231,7 @@ import {
 } from "../_shared/wic/dosage/doctrine.ts";
 import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
 import { finalRuleCheck, nextEligibleDates, dayKinds, rowKinds, FINAL_CHECK_CATALOG_COLUMNS, type DayKind } from "../_shared/wic/schedule/finalCheck.ts";
+import { isSoftRecovery } from "../_shared/wic/schedule/softRecovery.ts";
 import { loadU13ThrowBlock, loadU13ThrowState } from "../_shared/wic/phases/u13ThrowGate.ts";
 import { nextThrowDate, nextPickoffDate } from "../_shared/wic/phases/nextThrowDate.ts";
 import { trendDeload, loadTrendInput, lighterSets, TREND_DELOAD_VERSION } from "../_shared/wic/lift/trendDeload.ts";
@@ -2732,7 +2733,7 @@ const handler = async (req: Request): Promise<Response> => {
       // 2) Trunk primer — every session, rest day included. On a rest day the
       // class filter has already removed everything loaded, so what lands here
       // is the light trunk/mobility work the recovery template asks for.
-      const trunkPrimer = pickBestLift(StrengthEngine.TRUNK_PRIMER_SLUGS, "trunk_primer") ??
+      const trunkPrimer = restDayToday ? undefined : pickBestLift(StrengthEngine.TRUNK_PRIMER_SLUGS, "trunk_primer") ??
         pickFirstLift(StrengthEngine.TRUNK_PRIMER_SLUGS);
       if (trunkPrimer) push("lift", "trunk_primer", trunkPrimer, {}, `Loaded rotation primer — wakes obliques + preps swing plane.${goalWhy(trunkPrimer)}`);
 
@@ -2741,8 +2742,8 @@ const handler = async (req: Request): Promise<Response> => {
       // real recovery session rather than a template failure.
       if (restDayToday) {
         const mobility = lib.find(
-          (m) => eligibleLift(m) && coerceCanonicalCategory(m as any) === "mobility",
-        ) ?? lib.find((m) => eligible(m) && coerceCanonicalCategory(m as any) === "mobility");
+          (m) => eligibleLift(m) && isSoftRecovery(m.slug),
+        ) ?? lib.find((m) => eligible(m) && isSoftRecovery(m.slug));
         if (mobility) {
           push("lift", "mobility", mobility, {}, "Full rest day — easy movement and tissue work only. Nothing loaded today.");
         }
