@@ -85,7 +85,9 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
   const resultingCost = Math.max(0, Number(ledger.units_spent) - removedCost) + proposedCost;
   if (resultingCost > recovery.cnsCap) warnings.push(workloadWarning(date, resultingCost, recovery.cnsCap));
   const injuries = injuryWords(context.injury_history);
-  if (injuries.length || raw.dailyLogs.some(d => d.entry_date === date && d.injury_mode) || raw.quizzes.some(q => q.entry_date === date && Number(q.pain_scale) > 0)) return refused("Pain or injury is recorded. Keep your current recovery plan and ask your coach before changing work.");
+  const painToday = raw.quizzes.find(q => q.entry_date === date && Number(q.pain_scale) > 0);
+  if (injuries.length || raw.dailyLogs.some(d => d.entry_date === date && d.injury_mode) || painToday) warnings.push({ code: "injury_flag", date, medical: true,
+    rule: `An active pain or injury flag is recorded on ${date}${painToday ? ` (pain ${painToday.pain_scale}/10)` : ""}${injuries.length ? ` (${injuries.join(", ")})` : ""}. Training is normally held until it clears.` });
   const throwing = proposed.filter(row => ["throws", "pitches", "innings"].includes(row.dosage_unit) || classify(catalog.get(row.movement_slug) as any)?.channel === "THROW");
   if (throwing.some(row => row.reps == null || row.sets == null)) return refused("Throwing items need an exact throw count before your arm limit can be checked.");
   // Innings have no exact throw count; never guess one into the arm ledger.
@@ -104,7 +106,7 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
       })),
       gameDates: raw.games.filter((g: Row) => !g.deleted_at && !g.ignored_for_training).map((g: Row) => g.game_date),
     });
-    if (!armCheck.allowed) return refused(armCheck.reason ?? "Your arm-health limit requires review before changing work.");
+    if (!armCheck.allowed) warnings.push({ code: "arm_limit", date, medical: true, rule: armCheck.reason ?? `Arm-health limit reached on ${date}.` });
   }
   const previous = raw.prescriptions.filter(row => row.plan_date < date);
   const priorKinds: any = {};
@@ -118,5 +120,7 @@ export async function loadPrescriptionEnvelope(admin: any, userId: string, date:
       u13ThrowBlock: await loadU13ThrowBlock(strictDb(admin), userId, age, date), catalog, gameTomorrow: raw.games.some(g => g.game_date === shift(date, 1) && !g.deleted_at && !g.ignored_for_training) },
     rm28: computeRm28(history, date), governor: { block: phase.sub_block === "os_q1" ? "B1" : phase.sub_block === "os_q2" ? "B2" : phase.sub_block === "os_q3" ? "B3" : phase.sub_block === "os_q4" ? "B4" : "B5", inSeason: phase.season === "in_season", growthMode: phase.growth, buildYesterday: CHANNELS.filter(ch => wasBuildDay(history, shift(date, -1), ch)) },
   });
-  return { ...result, warnings: [...warnings, ...result.warnings], rows: proposed, cnsResult: resultingCost };
+  const minor = age < 18;
+  const all = [...warnings, ...result.warnings].map(w => ({ ...w, requires_reason: w.medical === true && minor }));
+  return { ...result, warnings: all, rows: proposed, cnsResult: resultingCost };
 }
