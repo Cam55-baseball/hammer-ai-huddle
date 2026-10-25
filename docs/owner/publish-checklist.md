@@ -114,3 +114,7 @@ data-integrity protections remain fail-closed; this is not the requested
 ### Audit and learning loop
 - Every override appends who/when/rule/date/prescription to the audit trail
   and the behavioral learning input atomically. No override is silent.
+
+
+### Oct 25 Option B (coach safety = warnings)
+Every safety guideline (pain/injury, arm limits incl. pitch count/rest/ramp/arm ledger, age gates, season/phase, recovery intensity, workload, dose, equipment) is a warning with Okay / Cancel action on coach send/schedule/edit/resend and player Use instead / Add alongside / Use today. Under 18: pain/injury, arm-limit and age-gate warnings need a typed reason (10+ characters) and notify the linked parent; adults press Okay. Hard blocks only: no consent, no connection, legal gates, same-category rule, unrunnable data ("Fix this entry"), facts the server cannot read, and the owner's never-in-season eccentric-overload law.

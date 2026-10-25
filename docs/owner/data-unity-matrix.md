@@ -291,3 +291,6 @@ are **UNVERIFIED**. Row 3b calendar projection is **PASS unit/fixture only**,
 - TEST-only catalog rows (`visible_to`) are filtered out of every non-owner list.
 - Service-role functions returning athlete data to a non-self viewer pass
   `_shared/recruitingGate.ts`.
+
+
+- Oct 25 Option B: override codes now include arm_limit, age_gate, season_rule, recovery_intensity, plan_rule; each lands in the prescription, audit trail, learning-loop events, Sent workouts and the card's Because line.
