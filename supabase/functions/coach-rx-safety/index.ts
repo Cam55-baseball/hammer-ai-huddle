@@ -430,6 +430,7 @@ Deno.serve(async (req) => {
 
     let safety: Record<string, unknown> | null = null;
     let rows: Record<string, unknown>[] = [];
+    let choiceMedical: CoachGuidelineWarning[] = [];
     if (choice === "use_instead" || choice === "add_alongside") {
       if (date !== today) return json({ error: "Use today to activate this workout on today's plan" }, 409);
       const { data: expectedRevision, error: revisionError } = await admin.rpc("coach_rx_safety_revision", { p_user: me, p_date: date });
@@ -481,6 +482,7 @@ Deno.serve(async (req) => {
       const warnings = [...collectWarnings(facts, me), ...("warnings" in envelope ? (envelope.warnings ?? []).map(w => ({ ...w, player_id: me })) : [])];
       const chooseAckError = ackError(warnings);
       if (chooseAckError) return chooseAckError;
+      choiceMedical = warnings.filter(w => w.requires_reason);
       const overrides = [...(rx.safety_result?.overrides ?? []), ...(warnings.length ? [overrideRecord(warnings, choice)] : [])];
       rows = envelope.rows;
       const because = overrides.flatMap((o: any) => (o.warnings ?? []).map((w: any) => `${w.date}: ${w.rule}`)).join("; ");
@@ -493,8 +495,7 @@ Deno.serve(async (req) => {
       p_expected_updated_at: rx.updated_at,
     });
     if (commitError) return json({ error: "Could not save this workout. Refresh and try again." }, 409);
-    const chooseMedical = (safety?.overrides as any[] ?? []).flatMap((o: any) => (o.warnings ?? []).filter((w: any) => w.requires_reason));
-    if (chooseMedical.length) await notifyParentsOfMedicalOverride(admin, me, String(choice), chooseMedical, overrideReason, testInbox);
+    if (choiceMedical.length) await notifyParentsOfMedicalOverride(admin, me, String(choice), choiceMedical, overrideReason, testInbox);
     return json(committed);
   } catch (_e) {
     return json({ error: "Something went wrong" }, 500);
