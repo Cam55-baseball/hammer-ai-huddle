@@ -1,5 +1,5 @@
 import { jumpMeasure, timedMobilityMeasure, ownerExerciseMeasure, fieldsForMeasure, declaredCount, displayDistance, storeDistance } from "@/lib/logging/measureType";
-import { useFocusExercise, FocusDurationTimer } from "../cards/FocusSession";
+import { useFocusExercise } from "../cards/FocusSession";
 import { ExerciseTimer } from "../cards/ExerciseTimer";
 import { ActivityBasics } from "../cards/ActivityBasics";
 import { ExerciseTools } from "../cards/ExerciseTools";
@@ -263,21 +263,6 @@ export function InlinePrescriptionLog({ rx }: { rx: WkRx }) {
     bases: basesPerRep,
     save: async () => { if (!(await autosave.flush())) throw new Error("Save pending"); },
   });
-  const startedAt = useRef<number | null>(null);
-  const [running, setRunning] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-  useEffect(() => {
-    if (!running) return;
-    const id = window.setInterval(() => setElapsed((Date.now() - (startedAt.current ?? Date.now())) / 1000), 100);
-    return () => window.clearInterval(id);
-  }, [running]);
-  const toggleTimer = () => {
-    if (!running) { startedAt.current = Date.now(); setElapsed(0); setRunning(true); return; }
-    setRunning(false);
-    const secs = String(Math.round((Date.now() - (startedAt.current ?? Date.now())) / 10) / 100);
-    const i = focus.active ? focus.row : rounds.findIndex((r) => !r.time);
-    if (i >= 0) edit(i, "time", secs, 0);
-  };
   const primary = spec.fields.find(f => f.key !== "weight" && f.key !== "time" && f.key !== "distance") ?? spec.fields.find(f => f.key === "time") ?? spec.fields[0];
   const doneTotal = entered.reduce((s, r) => s + (typeof r[primary.key] === "number" ? (r[primary.key] as number) : 0), 0);
   const unitWord = primary.key === "time" ? "" : ` ${primary.label.toLowerCase()}`;

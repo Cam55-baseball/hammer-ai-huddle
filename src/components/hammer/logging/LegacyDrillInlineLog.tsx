@@ -15,7 +15,7 @@ import { AUTO_STATUS_LABEL, autoStatus } from "@/lib/logging/autoCompletion";
 import { formatTime, timeKindFor } from "@/lib/logging/timeEntry";
 import { TimeField } from "./TimeField";
 import { SavedIndicator, useAutosave } from "./useAutosave";
-import { useFocusExercise, FocusDurationTimer } from "../cards/FocusSession";
+import { useFocusExercise } from "../cards/FocusSession";
 import { ActivityBasics } from "../cards/ActivityBasics";
 import { prescribedBases } from "../../../../supabase/functions/_shared/wic/runRest";
 import { ExerciseTools } from "../cards/ExerciseTools";
@@ -56,18 +56,10 @@ export function LegacyDrillInlineLog({
   const [skipped, setSkipped] = useState(false);
   const [hard, setHard] = useState("");
   const [notes, setNotes] = useState("");
-  const [running, setRunning] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-  const timerStart = useRef<number | null>(null);
   const stopwatch = spec.fields.some(f => f.unit === "ss.hh") || ((modality === "speed" || modality === "conditioning" || modality === "baserunning") && spec.fields.some(f => f.key === "distance") && spec.fields.some(f => f.key === "time"));
   const onSynced = useCallback(() => { qc?.invalidateQueries({ queryKey: ["hammer-daily-tasks"] }); }, [qc]);
   const autosave = useAutosave(`task:${storageKey}`, onSynced);
 
-  useEffect(() => {
-    if (!running) return;
-    const id = window.setInterval(() => setElapsed((Date.now() - (timerStart.current ?? Date.now())) / 1000), 100);
-    return () => window.clearInterval(id);
-  }, [running]);
 
   useEffect(() => {
     try {
@@ -120,12 +112,6 @@ export function LegacyDrillInlineLog({
     persist(rounds.map((r, i) => i === row ? { ...r, [TOUCHED]: "1" } : r), { delay: 0 });
   };
   const addSet = () => persist([...rounds, Object.fromEntries(spec.fields.map(f => [f.key, ""]))]);
-  const stopwatchTap = () => {
-    if (!running) { timerStart.current = Date.now(); setElapsed(0); setRunning(true); return; }
-    setRunning(false);
-    const next = focus.active ? focus.row : rounds.findIndex(row => !row.time || row[TOUCHED] !== "1");
-    if (next >= 0) edit(next, "time", String(Math.round((Date.now() - (timerStart.current ?? Date.now())) / 10) / 100), 0);
-  };
 
   const cols = `28px repeat(${spec.fields.length}, minmax(0, 1fr))`;
   const logged = entered(rounds);
