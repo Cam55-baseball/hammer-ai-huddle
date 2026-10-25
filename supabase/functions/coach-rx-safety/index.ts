@@ -180,7 +180,19 @@ Deno.serve(async (req) => {
     if (!mode) return json({ error: "Unknown action" }, 400);
     const today = new Date().toISOString().slice(0, 10);
     const acknowledgement = body.warning_acknowledgement;
-    const overrideRecord = (warnings: CoachGuidelineWarning[], action: string) => ({ actor_id: me, occurred_at: new Date().toISOString(), action, warnings });
+    const overrideReason = typeof body.override_reason === "string" ? body.override_reason.trim() : "";
+    const testInbox = !(req.headers.get("origin") ?? "").includes("hammersmodality.org");
+    const overrideRecord = (warnings: CoachGuidelineWarning[], action: string) => ({
+      actor_id: me, occurred_at: new Date().toISOString(), action, warnings,
+      ...(warnings.some(w => w.requires_reason) ? { reason: overrideReason, parent_notice: true } : {}),
+    });
+    /** Exact acknowledgement for every current finding; a typed reason when a minor's medical finding is overridden. */
+    const ackError = (warnings: CoachGuidelineWarning[]) => {
+      if (!warnings.length) return null;
+      if (!warningsAcknowledged(warnings, acknowledgement)) return json({ applied: false, warning_required: true, warnings });
+      if (warnings.some(w => w.requires_reason) && !overrideReasonOk(overrideReason)) return json({ applied: false, reason_required: true, warnings });
+      return null;
+    };
 
     if (mode === "send") {
       const parsed = SendRows.safeParse(body.rows);
