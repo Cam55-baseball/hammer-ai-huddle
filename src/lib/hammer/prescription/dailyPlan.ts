@@ -1,4 +1,7 @@
 import { sortByWarmupStage } from "./warmupStages";
+import { applyBuntingPlan, type BuntCatalogItem } from './buntingPlan';
+import type { BuntingEvidence } from './buntingEvidence';
+import type { BuntingFacts } from '../../../../supabase/functions/_shared/wic/buntingProgram';
 import { isSoftRecovery } from "../../../../supabase/functions/_shared/wic/schedule/softRecovery";
 import { weeklyGoalBlocks, secondGoalFirst } from './weeklyGoalBlocks';
 import { priorityAccess } from '../priorityAccess';
@@ -109,6 +112,7 @@ export type BlockStatus = "ready" | "awaiting-input" | "suppressed" | "off-day";
 export type BlockPhase = "build" | "sharpen" | "maintain" | "deload" | "recover" | "skill";
 
 export interface DrillStep {
+  readonly bunt?: {side:'R'|'L';type:import('../../../../supabase/functions/_shared/wic/buntingProgram').BuntType;attempts:number;sourceAttempts:number;sourceSuccesses:number};
   readonly name: string;
   readonly slug?: string;
   readonly setup?: string;
@@ -2242,6 +2246,7 @@ export interface RoadmapInputs {
   readonly defenseFullOverride?: boolean;
   /** Current subscription modules; an explicit empty list permits no purchased skill boost. */
   readonly subscriptionModules?: readonly string[];
+  readonly bunting?: {evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'>};
 }
 
 export function buildHammerDailyPlan(
@@ -2390,7 +2395,16 @@ export function buildHammerDailyPlan(
   const fullRestDay = roadmapInputs.fullRestDay === true ||
     (scheduleSignal.postureToday === "normal" && weeklyRoadmap.find(day => day.isToday)?.restDay === true);
   // Last composition boundary: laterality, owner slots, overrides and warm-up anchors cannot reopen rest.
-  const blocks = fullRestDay ? goalOrdered.map(b => {
+  const bunting = roadmapInputs.bunting;
+  const bunted = bunting ? applyBuntingPlan(goalOrdered, {
+    sport:normalizeSport(sportRaw)==='softball'?'softball':'baseball',modules:roadmapInputs.subscriptionModules??[],
+    bats:identityOverride?.isSwitchHitter?'S':(['R','L','S'].includes(String(ctx.get('bats_hand')?.value))?ctx.get('bats_hand')?.value as 'R'|'L'|'S':null),
+    ...bunting.traits,battingGames:bunting.evidence.battingGames,outcomes:bunting.evidence.outcomes,
+    legalWeekdays:weeklyRoadmap.filter(d=>!d.restDay&&d.modalities.some(m=>m.key==='hitting'&&m.intensity!=='activation')).map(d=>d.dow),
+    restDay:fullRestDay,gameDay:scheduleSignal.postureToday!=='normal',
+  },{weekday:today.getDay(),weekIndex:Math.floor(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate()-((today.getDay()+6)%7))/604800000),
+    owned:proj.equipmentList,age:bunting.age,phase:bunting.phase,catalog:bunting.catalog,userId:bunting.userId}) : goalOrdered;
+  const blocks = fullRestDay ? bunted.map(b => {
     if (["fueling", "game_iq"].includes(b.modality)) return b;
     const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter(d => isSoftRecovery(d.slug)) : [];
     return { ...b, drills, steps: drills.length ? drillsToSteps(drills) : ["Rest today. No physical training is scheduled."],
@@ -2398,7 +2412,7 @@ export function buildHammerDailyPlan(
       offDayOverridable: false, gamePlanTemplate: null,
       why: "Rest today — gentle recovery only. Save real training for your next training day.",
       roadmapReason: "Full rest day — soft recovery only.", durationMin: drills.length ? b.durationMin : null };
-  }) : goalOrdered;
+  }) : bunted;
 
   if (proj.categoryGoals && typeof console !== "undefined" && import.meta.env?.DEV) {
     // eslint-disable-next-line no-console

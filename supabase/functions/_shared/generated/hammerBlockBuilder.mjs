@@ -84,6 +84,163 @@ function sortByWarmupStage(items, slugOf, roleOf) {
   return keyed.map((k) => k.it);
 }
 
+// supabase/functions/_shared/wic/buntingProgram.ts
+var BUNT_TYPES = ["squeeze", "sac_3b", "sac_1b", "drag", "push", "hit"];
+function validBuntOutcome(outcome) {
+  return ["R", "L"].includes(outcome.side) && BUNT_TYPES.includes(outcome.type) && Number.isInteger(outcome.attempts) && outcome.attempts > 0 && Number.isInteger(outcome.successes) && outcome.successes >= 0 && outcome.successes <= outcome.attempts;
+}
+function buntingProgram(facts) {
+  const included = facts.modules.some((module) => [`${facts.sport}_5tool`, `${facts.sport}_golden2way`].includes(module));
+  const games = (facts.battingGames ?? []).filter((game) => Number.isInteger(game.hits) && Number.isInteger(game.atBats) && game.atBats > 0 && game.hits >= 0 && game.hits <= game.atBats);
+  const atBats = games.reduce((sum, game) => sum + game.atBats, 0);
+  const hits = games.reduce((sum, game) => sum + game.hits, 0);
+  const under300 = games.length >= 2 && games.every((game) => game.hits / game.atBats < 0.3);
+  const sides = facts.bats === "S" ? ["R", "L"] : facts.bats ? [facts.bats] : [];
+  const wantedSessions = facts.speedy === true || facts.lacksPower === true ? 3 : 2;
+  const weekdays = [...new Set(facts.legalWeekdays)].filter((day) => Number.isInteger(day) && day >= 0 && day <= 6).sort((a, b) => a - b).slice(0, 6);
+  const scheduled = included && sides.length ? weekdays.slice(0, wantedSessions) : [];
+  const dose = (side, type) => {
+    const floor = under300 || side === "L" && (facts.leftPower === true || facts.powerGoal === true) ? 7 : 5;
+    const logs = (facts.outcomes ?? []).filter((outcome) => outcome.side === side && outcome.type === type && validBuntOutcome(outcome));
+    const attempts = logs.reduce((sum, log) => sum + log.attempts, 0);
+    const successes = logs.reduce((sum, log) => sum + log.successes, 0);
+    return {
+      reps: attempts ? Math.min(20, floor + Math.round((20 - floor) * (1 - successes / attempts))) : floor,
+      floor,
+      attempts,
+      successes,
+      successRate: attempts ? successes / attempts : null
+    };
+  };
+  const typesFor = (side) => BUNT_TYPES.filter((type) => type !== "push" || facts.opponentThrows === "L" && !(side === "L" && facts.bats === "S"));
+  return {
+    included,
+    sides,
+    scheduled,
+    wantedSessions,
+    constrained: scheduled.length < wantedSessions,
+    canTrainToday: included && sides.length > 0 && !facts.restDay && !facts.gameDay,
+    battingSample: { games: games.length, atBats, hits, average: atBats ? hits / atBats : null, under300 },
+    dose,
+    typesFor
+  };
+}
+
+// supabase/functions/_shared/wic/season.ts
+var OS_ONLY_ECCENTRIC_SLUGS = /* @__PURE__ */ new Set([
+  "back_squat_double_ecc",
+  "front_squat_double_ecc",
+  "bench_press_double_ecc",
+  "incline_bench_double_ecc",
+  "hip_thrust_double_ecc",
+  "rdl_double_ecc",
+  "trap_bar_dl_double_ecc",
+  "weighted_pullup_double_ecc",
+  "nordic_curl",
+  "reverse_nordic",
+  "copenhagen_adduction_ecc",
+  "plyo_depth_jump"
+]);
+var IN_SEASON_BLOCKED_SLUGS = /* @__PURE__ */ new Set([
+  ...OS_ONLY_ECCENTRIC_SLUGS,
+  "atg_split_squat",
+  "sissy_squat",
+  "slide_lunge"
+]);
+
+// supabase/functions/_shared/planSwap/simpleSwap.ts
+var key = (v) => v.trim().toLowerCase().replace(/[\s-]+/g, "_");
+var IGNORED = /* @__PURE__ */ new Set(["none", "bodyweight", ""]);
+var ALIASES = { bat: "gamer_bat", cable: "cable_stack", band: "bands", dumbbells: "dumbbell", db: "dumbbell", kb: "kettlebell", medicine_ball: "med_ball", plate: "plates", rack: "squat_rack", pins: "safety_pins", smith: "smith_machine", light_bat: "underload_bat", pullup_bar: "pull_up_bar" };
+var gearKey = (value) => ALIASES[key(value)] ?? key(value);
+function equipmentGroups(row) {
+  const value = row.equipment_alternatives;
+  if (value == null) return [];
+  if (!Array.isArray(value)) return null;
+  if (value.some((group) => !Array.isArray(group) || !group.length || group.some((g) => typeof g !== "string" || !g.trim()))) return null;
+  return value.map((group) => group.map(gearKey));
+}
+function mandatoryGear(row) {
+  const arrays = [row.equipment_requirements ?? [], row.equipment ?? []];
+  if (arrays.some((value) => !Array.isArray(value) || value.some((g) => typeof g !== "string" || !g.trim()))) return null;
+  return [...new Set(arrays.flat().map(gearKey))].filter((g) => !IGNORED.has(g));
+}
+function ownsAllGear(row, owned, universal = []) {
+  const have = new Set([...owned, ...universal].map(gearKey));
+  const groups = equipmentGroups(row);
+  const mandatory = mandatoryGear(row);
+  return groups !== null && mandatory !== null && mandatory.every((g) => have.has(g)) && (groups.length === 0 || groups.some((group) => group.every((g) => IGNORED.has(g) || have.has(g))));
+}
+
+// supabase/functions/_shared/planSwap/commonGear.ts
+var COMMON_SWAP_GEAR = ["barbell", "dumbbell", "bands", "pitching_machine", "net", "tee", "open_field", "hill", "sled", "foam_roller", "baseballs", "softballs"];
+var SAME_GEAR = {
+  bands: ["band", "resistance_band", "mini_band", "light_band", "sprint_band"],
+  dumbbell: ["dumbbells", "db"],
+  open_field: ["field", "open_space", "space"],
+  baseballs: ["baseball", "ball"],
+  softballs: ["softball", "ball"],
+  pitching_machine: ["machine"]
+};
+function swapGearList(known) {
+  return [.../* @__PURE__ */ new Set([...known, ...COMMON_SWAP_GEAR])];
+}
+function missingGearAnswer(checked, note, known) {
+  const allowed = new Set(swapGearList(known));
+  const selected = checked.filter((item) => allowed.has(item));
+  for (const item of [...selected]) for (const k of known) if (SAME_GEAR[item]?.includes(k)) selected.push(k);
+  const other = note?.trim();
+  return [.../* @__PURE__ */ new Set([...selected, ...other ? [other] : []])];
+}
+
+// src/lib/hammer/prescription/buntingPlan.ts
+function buntIdentity(slug) {
+  const match = /^bunt_([rl])_(squeeze|sac_3b|sac_1b|drag|push|hit)$/.exec(slug);
+  return match ? { side: match[1] === "r" ? "R" : "L", type: match[2] } : null;
+}
+function applyBuntingPlan(blocks, facts, options) {
+  const program = buntingProgram(facts);
+  const owned = new Set(options.owned);
+  for (const token of COMMON_SWAP_GEAR) if (missingGearAnswer([token], void 0, options.owned).some((g) => options.owned.includes(g))) owned.add(token);
+  const sportBall = facts.sport === "softball" ? "softballs" : "baseballs";
+  if (!owned.has(sportBall)) return blocks;
+  if (!program.canTrainToday || !program.scheduled.includes(options.weekday)) return blocks;
+  return blocks.map((block) => {
+    if (block.modality !== "hitting" || block.status !== "ready" || block.phase === "recover" || block.phase === "deload") return block;
+    const side = block.side ?? (facts.bats === "R" || facts.bats === "L" ? facts.bats : null);
+    if (!side || !program.sides.includes(side)) return block;
+    const eligible = options.catalog.filter((row) => {
+      const identity2 = buntIdentity(row.slug);
+      return identity2?.side === side && program.typesFor(side).includes(identity2.type) && row.is_active && row.dosage_unit === "attempts" && (row.sport_scope === facts.sport || row.sport_scope === "both") && (!row.visible_to?.length || Boolean(options.userId && row.visible_to.includes(options.userId))) && options.age !== null && row.min_age_years !== null && options.age >= row.min_age_years && (row.season_eligibility?.includes(options.phase) || options.phase === "off_season" && ["os_q1", "os_q2", "os_q3", "os_q4"].every((p) => row.season_eligibility?.includes(p))) && ownsAllGear(row, owned);
+    }).sort((a, b) => BUNT_TYPES.indexOf(buntIdentity(a.slug)?.type ?? "hit") - BUNT_TYPES.indexOf(buntIdentity(b.slug)?.type ?? "hit"));
+    if (!eligible.length) return block;
+    const index = ((options.weekIndex * program.scheduled.length + program.scheduled.indexOf(options.weekday)) % eligible.length + eligible.length) % eligible.length;
+    const pick = eligible[index];
+    const identity = pick ? buntIdentity(pick.slug) : null;
+    if (!pick || !identity) return block;
+    const dose = program.dose(side, identity.type);
+    const slot = block.drills.findIndex((d2) => d2.stage === "drills" && d2.prescriptionOrigin !== "owner" && /^\d+ swings(?:\s|$)/i.test(d2.dosage));
+    const original = block.drills[slot];
+    const budget = original ? Number(/^(\d+) swings/i.exec(original.dosage)?.[1]) : 0;
+    if (!original || budget < dose.floor) return block;
+    const attempts = Math.min(dose.reps, budget, 20);
+    const drill = {
+      name: pick.name,
+      slug: pick.slug,
+      stage: "drills",
+      dosage: `${attempts} attempts`,
+      cue: pick.cue,
+      setup: "Use your saved bat, ball and safe space. Record attempts and successful bunts for this side and type only.",
+      stopIf: "Pain, dizziness, fatigue or unsafe space \u2014 stop.",
+      bunt: { side, type: identity.type, attempts, sourceAttempts: dose.attempts, sourceSuccesses: dose.successes }
+    };
+    const drills = [...block.drills.slice(0, slot), drill, ...budget > attempts ? [{ ...original, dosage: `${budget - attempts} swings` }] : [], ...block.drills.slice(slot + 1)];
+    const sample = program.battingSample;
+    const because = `${attempts} ${side === "R" ? "right" : "left"}-handed bunt attempts replace ${attempts} swings from today's skill work.${sample.under300 ? ` Entered batting sample: ${sample.hits} hits in ${sample.atBats} at-bats across ${sample.games} games; each entered game was below .300.` : ""}${dose.attempts ? ` This bunt: ${dose.successes} successful out of ${dose.attempts} entered attempts.` : ""}`;
+    return { ...block, drills, steps: drills.map((d2) => `${d2.name} \u2014 ${d2.dosage}`), because: [...block.because ?? [], because], gamePlanTemplate: block.gamePlanTemplate ? { ...block.gamePlanTemplate, checklist: drills.map((d2) => `${d2.name} \u2014 ${d2.dosage}`) } : null };
+  });
+}
+
 // supabase/functions/_shared/wic/schedule/softRecovery.ts
 var SOFT_RECOVERY_SLUGS = /* @__PURE__ */ new Set([
   "rc_breathing_reset",
@@ -425,9 +582,9 @@ var OBJECT_POSITION_KEYS = [
 function pushToken(tokens, seen, raw) {
   const cleaned = raw.trim();
   if (!cleaned) return;
-  const key = cleaned.toUpperCase();
-  if (seen.has(key)) return;
-  seen.add(key);
+  const key2 = cleaned.toUpperCase();
+  if (seen.has(key2)) return;
+  seen.add(key2);
   tokens.push(cleaned);
 }
 function coercePositionTokens(value) {
@@ -449,8 +606,8 @@ function coercePositionTokens(value) {
     }
     if (typeof input === "object") {
       const record = input;
-      for (const key of OBJECT_POSITION_KEYS) {
-        if (key in record) visit(record[key], depth + 1);
+      for (const key2 of OBJECT_POSITION_KEYS) {
+        if (key2 in record) visit(record[key2], depth + 1);
       }
     }
   };
@@ -4914,8 +5071,8 @@ var CATALOG = {
   ]
 };
 function catalogFor(pos, sport, phase) {
-  const key = `${pos}:${sport}:${phase}`;
-  if (CATALOG[key]) return [...CATALOG[key]];
+  const key2 = `${pos}:${sport}:${phase}`;
+  if (CATALOG[key2]) return [...CATALOG[key2]];
   if (pos === "LF" || pos === "RF" || pos === "CF") {
     const of = CATALOG[`OF:${sport}:${phase}`];
     if (of) return [...of];
@@ -7230,7 +7387,27 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     return { ...b, because: [...b.because ?? [], reason] };
   }), proj);
   const fullRestDay = roadmapInputs.fullRestDay === true || scheduleSignal.postureToday === "normal" && weeklyRoadmap.find((day) => day.isToday)?.restDay === true;
-  const blocks = fullRestDay ? goalOrdered.map((b) => {
+  const bunting = roadmapInputs.bunting;
+  const bunted = bunting ? applyBuntingPlan(goalOrdered, {
+    sport: normalizeSport(sportRaw) === "softball" ? "softball" : "baseball",
+    modules: roadmapInputs.subscriptionModules ?? [],
+    bats: identityOverride?.isSwitchHitter ? "S" : ["R", "L", "S"].includes(String(ctx.get("bats_hand")?.value)) ? ctx.get("bats_hand")?.value : null,
+    ...bunting.traits,
+    battingGames: bunting.evidence.battingGames,
+    outcomes: bunting.evidence.outcomes,
+    legalWeekdays: weeklyRoadmap.filter((d2) => !d2.restDay && d2.modalities.some((m) => m.key === "hitting" && m.intensity !== "activation")).map((d2) => d2.dow),
+    restDay: fullRestDay,
+    gameDay: scheduleSignal.postureToday !== "normal"
+  }, {
+    weekday: today.getDay(),
+    weekIndex: Math.floor(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate() - (today.getDay() + 6) % 7) / 6048e5),
+    owned: proj.equipmentList,
+    age: bunting.age,
+    phase: bunting.phase,
+    catalog: bunting.catalog,
+    userId: bunting.userId
+  }) : goalOrdered;
+  const blocks = fullRestDay ? bunted.map((b) => {
     if (["fueling", "game_iq"].includes(b.modality)) return b;
     const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter((d2) => isSoftRecovery(d2.slug)) : [];
     return {
@@ -7244,7 +7421,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       roadmapReason: "Full rest day \u2014 soft recovery only.",
       durationMin: drills.length ? b.durationMin : null
     };
-  }) : goalOrdered;
+  }) : bunted;
   if (proj.categoryGoals && typeof console !== "undefined" && false) {
     console.debug("[dailyPlan] ordered by ranked goals \u2192", summarizeGoals(proj.categoryGoals));
   }
@@ -7324,22 +7501,22 @@ function normalizeConfidence(raw) {
       return raw === "missing" ? "missing" : "low";
   }
 }
-function fromEnvelope(envelope, key, label2, domain) {
-  const e = envelope?.[key];
+function fromEnvelope(envelope, key2, label2, domain) {
+  const e = envelope?.[key2];
   const value = e?.value ?? null;
   const missing = e?.missing ?? (value === null || value === void 0);
   return {
-    key,
+    key: key2,
     label: label2,
     domain,
     value: missing ? null : value,
-    source: e?.source ?? `envelope.${key}`,
+    source: e?.source ?? `envelope.${key2}`,
     confidence: normalizeConfidence(e?.confidence),
     missing,
     lastUpdated: e?.last_updated ?? null,
     lineage: {
       owner: e?.owner ?? "unknown",
-      source: e?.source ?? `envelope.${key}`,
+      source: e?.source ?? `envelope.${key2}`,
       rawConfidence: e?.confidence ?? "missing"
     }
   };
@@ -7387,8 +7564,8 @@ function contextFromEnvelope(env, extra = []) {
     missingCount: missing.length,
     isLoading: false,
     envelope: env,
-    get(key) {
-      return vars.find((v) => v.key === key);
+    get(key2) {
+      return vars.find((v) => v.key === key2);
     }
   };
 }

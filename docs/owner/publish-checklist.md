@@ -4,6 +4,19 @@ Updated October 25, 2026, final continuation.
 
 ## October 25 evening owner request — partial, not release-ready
 
+### Run (2), closed at 23:53 UTC Sunday
+
+- Finished proofs were retained. Bunting now composes through the existing Today builder, replaces swings one-for-one inside a legal hitting skill slot and never replaces owner/prep/game-speed work. Existing saved days are not retrofitted; saved side-specific bunt JSON is restored on reload. Whole off-season catalog eligibility requires all four permitted quarters.
+- Actual entered Today task attempts/successes now join canonical practice/game evidence, explicitly scoped to sport; unknown successes and prescribed attempts do not become outcomes. No new ledger or training write path was introduced. Power-goal and honest per-game hit/AB samples reach the builder. **Explicit speedy/lacks-power/left-power fact capture is still missing**; no thresholds or traits were invented. Push work remains excluded without a sourced LHP fact.
+- **60 actual-builder eight-week scenarios** cover both sports, both tiers, R/L/switch and baseline/under-.300/power-goal/speedy/lacks-power fixture cohorts: two weekly sessions normally, three for the named affirmative traits, minimum 5/7 attempts, maximum 20, both switch sides, rest protection and unchanged hitting-volume budget. These do not prove every game/phase schedule supports the target frequency. The final focused tests passed **81 assertions**, with **70 builder assertions** refreshed after the switch-side check.
+- Inspected 390×844 actual-builder fixture screenshots: distinct readable focus, attempts/successes entry, Save & exit leaves the card open, Start resumes, reload restores **7 attempts / 3 successful bunts**. This is local fixture persistence, not authenticated athlete/server save proof. Evidence is in `.lovable/proofs/oct25-evening/bunting-generated.*`; screenshots were captured under `/tmp/browser/bunting-run2/`.
+- Thirteen additive side/type/fundamentals video taxonomy rows were applied under Camryn Williams' named authorization and read back through the authenticated owner app. Exact tagged-video matching for entered unsuccessful work is implemented/tested. Existing videos were not assigned new tags. Matching-video player playback remains unverified. SQL record: `docs/owner/applied-bunting-video-tags-oct25.sql`.
+- **Live vs pending:** `exercise-vault` and the regenerated shared-builder `plan-swap` were redeployed successfully. Twelve owner Vault definitions remain **Off**; live `wk_movement_catalog` has **zero bunt rows**. The player program therefore remains inactive, not complete. Vault activation/edit/undo/catalog lifecycle and next-plan availability still need full implementation/proof; no switch was silently changed.
+- Complete suite **546 files / 4,550 tests PASS** in ten bounded groups. A timer test's ambiguous Stop selector matched work and rest controls; the selector was scoped to the work clock, and its entire 60-file/741-test group reran successfully. Latest preview: build OK.
+- No hosted TEST training rows were added and no personas changed. Prior global cleanup certification is retained, **not rescanned**. No publish, cron or iOS changes. Monday coach proof was not attempted: actual UTC is still October 25 and canonical Monday plans are required.
+
+**Run (2) verdict: Ready to publish NO — pending activation/fact capture and real athlete/purchase/rest/video/game/practice/coach readbacks.**
+
 ### Continuation at 23:30 UTC, Sunday
 
 - Retained finished purchase/layout proofs; no repeated implementation. No publish, cron or iOS changes.

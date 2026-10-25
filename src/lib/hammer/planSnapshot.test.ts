@@ -13,6 +13,13 @@ const ctx: HammerAthleteContext = { variables, missing: [], missingCount: 0, isL
   get<T>(key: string) { return variables.find(row => row.key === key) as ContextVariable<T> | undefined; } };
 
 describe('final athlete plan snapshot', () => {
+  it('keeps switch sides and exact bunt dose/evidence separate in saved block JSON',()=>{
+    const plan=buildHammerDailyPlan(ctx,NORMAL_SIGNAL,null,null,undefined,new Date(2026,9,26));const b=plan.blocks[0];
+    if(!b)throw new Error('Expected block');
+    const bunt={side:'L' as const,type:'drag' as const,attempts:7,sourceAttempts:10,sourceSuccesses:3};
+    const saved=planSnapshotPayload({...plan,blocks:[{...b,modality:'hitting',side:'L',drills:[{name:'Drag bunt',dosage:'7 attempts',bunt}]},{...b,modality:'hitting',side:'R',drills:[]}]},'softball','2026-10-26');
+    expect(saved.blocks.map(b=>b.side)).toEqual(['L','R']);expect(saved.blocks[0].drills[0].bunt).toEqual(bunt);
+  });
   it('preserves final skill stages, dose, cue and exact Because after overlays without reconstructing a plan', () => {
     const plan = buildHammerDailyPlan(ctx, NORMAL_SIGNAL, null, null, undefined, new Date(2026, 9, 19));
     const hitting = plan.blocks.find(block => block.modality === 'hitting');
