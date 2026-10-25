@@ -14,19 +14,21 @@ afterEach(() => { cleanup(); localStorage.clear(); sessionStorage.clear(); });
 const slotFor = (category: string) => ["warmup", "arm_care", "conditioning", "mobility", "recovery"].includes(category) ? category : /speed|sprint/.test(category) ? "speed" : category === "bat_speed" ? "hitting" : /throw|pitch/.test(category) ? "throwing" : "lift";
 describe("real catalog declarations rendered through the canonical logger", () => {
   it("all 989 catalog items preserve declared time/count/distance rather than inferring seconds from a name", () => {
+    const mismatches: string[] = [];
     for (const row of catalog) {
       const rx = { id: `audit:${row.slug}`, plan_date: "2026-10-25", movement_slug: row.slug, movement_name: row.name, slot: slotFor(row.category), sets: row.default_sets, reps: row.default_reps, dosage_unit: row.dosage_unit, duration_seconds: row.default_duration_seconds, distance_feet: row.default_distance_feet };
       render(<InlinePrescriptionLog rx={rx as any} />);
       if (!jumpMeasure(`${row.slug} ${row.name}`) && !ownerExerciseMeasure(row.slug)) {
-        if (["seconds", "minutes"].includes(row.dosage_unit)) expect(screen.queryByRole("button", { name: "Start timer" }), row.slug).not.toBeNull();
+        if (["seconds", "minutes"].includes(row.dosage_unit) && !screen.queryByRole("button", { name: "Start timer" })) mismatches.push(`${row.slug}: missing time`);
         if (["reps", "contacts", "steps", "swings", "throws"].includes(row.dosage_unit) && row.default_duration_seconds == null) {
-          expect(screen.queryByRole("button", { name: "Start timer" }), row.slug).toBeNull();
+          if (screen.queryByRole("button", { name: "Start timer" })) mismatches.push(`${row.slug}: count became time`);
         }
       }
       expect(screen.getAllByRole("textbox").length, row.slug).toBeGreaterThan(0);
       cleanup();
     }
     expect(catalog).toHaveLength(989);
+    expect(mismatches).toEqual([]);
   }, 120000);
   it.each(["warmup", "recovery", "mobility", "conditioning", "speed", "coach", "swap", "assessment", "test"])("%s count, contacts and duration stay their declared work", source => {
     for (const dosage of ["2 x 8 reps", "2 x 12 contacts", "2 x 1.47 seconds", "2 x 3 minutes"]) {

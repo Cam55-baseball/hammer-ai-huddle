@@ -91,7 +91,7 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "height", label: "Jump height", unit: "in" }] };
   }
   // A counted catalog/coach/Swap dose outranks a mobility or hold word in its name.
-  if (["reps", "contacts", "steps", "swings"].includes(explicitUnit) && rx.duration_seconds == null && rx.slot !== "lift" && rx.slot !== "supplemental") {
+  if (["reps", "contacts", "steps", "swings"].includes(explicitUnit) && rx.duration_seconds == null && (rx.slot !== "lift" && rx.slot !== "supplemental" || timedMobilityMeasure(slug))) {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "reps", label: explicitUnit === "contacts" ? "Contacts" : explicitUnit === "steps" ? "Steps" : explicitUnit === "swings" ? "Swings" : "Reps", prefill: rx.reps ?? rx.total_reps }] };
   }
   if (timedMobilityMeasure(slug) && !/throw|pitch|sprint|sled/.test(slug)) {
