@@ -782,7 +782,7 @@ function HammerDailyPlanBody({
           pitcherOutings: pitcherSchedule.facts,
           practiceRecords: practiceLoadHistory.data,
           subscriptionModules: modules,
-          fullRestDay: wkRx.data?.some(row => (row.why_payload as any)?.rest_day?.allowed_class === "none" || (row.why_payload as any)?.training_context?.day_type === "recovery_day") === true,
+          fullRestDay: wkRx.data?.some(row => (row.why_payload as any)?.rest_day?.allowed_class === "none" || ["recovery", "recovery_day", "off_day"].includes((row.why_payload as any)?.training_context?.day_type)) === true,
         },
       ),
     [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data],

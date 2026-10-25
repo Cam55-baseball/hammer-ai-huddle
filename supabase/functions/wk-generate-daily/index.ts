@@ -231,7 +231,7 @@ import {
 } from "../_shared/wic/dosage/doctrine.ts";
 import { resolveWaveDose, WAVE_VERSION } from "../_shared/wic/dosage/wave.ts";
 import { finalRuleCheck, nextEligibleDates, dayKinds, rowKinds, FINAL_CHECK_CATALOG_COLUMNS, type DayKind } from "../_shared/wic/schedule/finalCheck.ts";
-import { isSoftRecovery } from "../_shared/wic/schedule/softRecovery.ts";
+import { isSoftRecovery, isWholeRestDayType } from "../_shared/wic/schedule/softRecovery.ts";
 import { loadU13ThrowBlock, loadU13ThrowState } from "../_shared/wic/phases/u13ThrowGate.ts";
 import { nextThrowDate, nextPickoffDate } from "../_shared/wic/phases/nextThrowDate.ts";
 import { trendDeload, loadTrendInput, lighterSets, TREND_DELOAD_VERSION } from "../_shared/wic/lift/trendDeload.ts";
@@ -670,7 +670,7 @@ const handler = async (req: Request): Promise<Response> => {
           restDaysBetweenLifts: vSpacing ? 2 : null,
           weeklyLiftMax: vSpacing && vPhase === "in_season" ? 2 : null,
           liftRemoved: false,
-          fullRestDay: savedRows.some(r => r.why_payload?.rest_day?.allowed_class === "none" || ["recovery_day", "off_day"].includes(r.why_payload?.training_context?.day_type)),
+          fullRestDay: savedRows.some(r => r.why_payload?.rest_day?.allowed_class === "none" || isWholeRestDayType(r.why_payload?.training_context?.day_type)),
           priorKindDates: vMerged.priorKindDates as any,
           gameTomorrow: ((vGp ?? []) as any[]).length > 0 || ((vCal ?? []) as any[]).length > 0,
           sameDayExternal: vMerged.sameDayExternal,
@@ -2601,7 +2601,7 @@ const handler = async (req: Request): Promise<Response> => {
       trainingAge: (trainingAgeContext as any)?.classification,
       primaryAdaptation: adaptationDecision.primary,
       isGameDay,
-      isRecoveryDay: (trainingContext as any)?.day_type === "recovery",
+      isRecoveryDay: isWholeRestDayType(trainingContext.day_type),
     });
     const xsRequired = xsTemplate.requiredCategories as readonly string[];
 
@@ -2899,7 +2899,7 @@ const handler = async (req: Request): Promise<Response> => {
     const dayOfYearSeed = Math.floor(
       (new Date(planDate + "T00:00:00").getTime() - new Date(new Date(planDate).getFullYear(), 0, 0).getTime()) / 86400000,
     );
-    const isRecoveryDayCtx = (trainingContext as any)?.day_type === "recovery";
+    const isRecoveryDayCtx = isWholeRestDayType(trainingContext.day_type);
 
     // -------- Bat-speed program gate (Round 8 step 6b) --------
     // Hitting programs unchanged; Complete Pitcher = velocity caps/spacing.
@@ -3220,7 +3220,7 @@ const handler = async (req: Request): Promise<Response> => {
       const bySlot = new Map<string, number>();
       for (const rx of rxs) bySlot.set(rx.slot, (bySlot.get(rx.slot) ?? 0) + 1);
 
-      const fullTrainingDay = !isGameDay && (trainingContext as any)?.day_type !== "recovery";
+      const fullTrainingDay = !isGameDay && !isWholeRestDayType(trainingContext.day_type);
       const dayOrchestration = {
         cns_cap: cnsCap,
         cns_used: cnsUsed,
@@ -3674,7 +3674,7 @@ const handler = async (req: Request): Promise<Response> => {
         trainingAge: (trainingAgeContext as any)?.classification,
         primaryAdaptation: adaptationDecision.primary,
         isGameDay,
-        isRecoveryDay: (trainingContext as any)?.day_type === "recovery",
+        isRecoveryDay: isWholeRestDayType(trainingContext.day_type),
         isReturnToPlay: false,
       },
       availableEquipment: equipmentUnknown ? undefined : declaredEquipment,
@@ -3742,7 +3742,7 @@ const handler = async (req: Request): Promise<Response> => {
         primaryAdaptation: adaptationDecision.primary,
         isGameDay,
         isPracticeDay: isPracticeDayCtx,
-        isRecoveryDay: (trainingContext as any)?.day_type === "recovery",
+        isRecoveryDay: isWholeRestDayType(trainingContext.day_type),
         isReturnToPlay: false,
       },
       availableEquipment: availableEquipmentCtx,
@@ -3761,7 +3761,7 @@ const handler = async (req: Request): Promise<Response> => {
         trainingAge: (trainingAgeContext as any)?.classification,
         primaryAdaptation: adaptationDecision.primary,
         isGameDay,
-        isRecoveryDay: (trainingContext as any)?.day_type === "recovery",
+        isRecoveryDay: isWholeRestDayType(trainingContext.day_type),
         isReturnToPlay: false,
       },
       availableEquipment: availableEquipmentCtx,
@@ -4171,7 +4171,7 @@ const handler = async (req: Request): Promise<Response> => {
       isTravelDay: String((trainingContext as any)?.day_type ?? "").includes("travel"),
       isHeavyPracticeDay: isPracticeDayCtx && !isGameDay &&
         String((trainingContext as any)?.practice_intensity ?? "").toLowerCase() === "high",
-      isRecoveryDay: String((trainingContext as any)?.day_type ?? "") === "recovery",
+      isRecoveryDay: isWholeRestDayType(trainingContext.day_type),
       isReturnToPlay: false,
     };
     const methodAthleteCtx = {
@@ -4913,7 +4913,7 @@ const handler = async (req: Request): Promise<Response> => {
         restDaysBetweenLifts: enforceSpacing ? 2 : null,
         weeklyLiftMax: enforceSpacing && fcPhase === "in_season" ? 2 : null,
         liftRemoved: tcsAdjust?.removeLift === true,
-        fullRestDay: trainingContext.day_type === "recovery_day" || trainingContext.day_type === "off_day",
+        fullRestDay: isWholeRestDayType(trainingContext.day_type),
         priorKindDates: fcMerged.priorKindDates as any,
         gameTomorrow: fcTomorrowGame,
         catalog: fcCatMap,

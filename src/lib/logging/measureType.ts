@@ -135,7 +135,7 @@ export function measureTypeFor(input: MeasureInput): MeasureType {
   const jm = jumpMeasure(text);
   if (jm) return jm;
   const timed = timedMobilityMeasure(text);
-  if (timed && !THROW_RE.test(text) && !SWING_RE.test(text) && !/sprint|dash|shuttle|sled/.test(text)) return timed;
+  if (timed && !["reps", "contacts", "steps", "swings", "throws", "pitches"].includes(unit) && !THROW_RE.test(text) && !SWING_RE.test(text) && !/sprint|dash|shuttle|sled/.test(text)) return timed;
 
   // Explicit dosage units win.
   if (unit === "throws" || unit === "pitches") return "throws";
