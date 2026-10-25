@@ -64,7 +64,7 @@ export function certifyCoachOwnItem(item: OwnItemInput): OwnItemCertification {
     reasons.push(`${label}: sets must be a whole number of 1 or more.`);
   }
 
-  const mapped = ownerGear((item.gear ?? "").split(","));
+  const mapped = ownerGear((item.gear ?? "").split(",").map(token => token.trim()).filter(Boolean));
   const equipment = mapped.equipment.filter(gear => gear !== "none");
   if (mapped.unknown.length) {
     reasons.push(`${label}: "${mapped.unknown.join('", "')}" isn't in the common gear list. Ask your coach to pick the closest common gear so your saved equipment answers can be checked.`);
