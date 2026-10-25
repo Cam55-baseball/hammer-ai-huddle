@@ -5,6 +5,7 @@ import { LockableField, FollowedPlayer } from '@/types/sentActivity';
 import { computeScheduleDates, type ScheduleInput } from '@/lib/coachRx/schedule';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { runCoachWarningAction } from '@/lib/coachRx/warningAction';
 
 export function useSentActivities() {
   const { t } = useTranslation();
@@ -137,9 +138,15 @@ export function useSentActivities() {
             ...scheduleMeta,
           }))
         );
-        const { error: rxError } = await supabase.from('coach_prescriptions' as any).insert(rxRows);
-        if (rxError) {
-          toast.error(t('sentActivity.sendError', 'Failed to send activity'));
+        const sent = await runCoachWarningAction(async acknowledgement => {
+          const { data, error } = await supabase.functions.invoke('coach-rx-safety', {
+            body: { mode: 'send', rows: rxRows, warning_acknowledgement: acknowledgement },
+          });
+          if (error) throw error;
+          return data;
+        });
+        if (!sent.applied) {
+          if (!sent.cancelled) toast.error(sent.reasons?.[0] ?? sent.error ?? t('sentActivity.sendError', 'Failed to send activity'));
           return false;
         }
         // A prescription is the one received card. Do not also create a
