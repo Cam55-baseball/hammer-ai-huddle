@@ -1,0 +1,27 @@
+{
+  "batches": [
+    {
+      "batch": 1,
+      "files": 133,
+      "tests": 1015
+    },
+    {
+      "batch": 2,
+      "files": 133,
+      "tests": 1026
+    },
+    {
+      "batch": 3,
+      "files": 133,
+      "tests": 1087
+    },
+    {
+      "batch": 4,
+      "files": 133,
+      "tests": 1091
+    }
+  ],
+  "files": 532,
+  "tests": 4219,
+  "hosted_override_proof": false
+}

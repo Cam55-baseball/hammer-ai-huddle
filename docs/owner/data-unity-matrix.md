@@ -16,6 +16,12 @@ live data landing in every surface; unverified cells remain unverified.
 
 ## Surfaces key
 
+October 25 05:32 final batch: full suite 532 files / 4,219 tests PASS;
+16 phone warning decisions PASS (fixture only). Live coach management reader
+returns 200; live override audit trigger enabled. No hosted override was saved:
+audit display, canonical Because readback and learning consumption remain
+UNVERIFIED. Stored behavioral input is not evidence of a learning effect.
+
 October 25 05:27 continuation: no warning-action bypass found in existing
 prescription hooks. Multiple date rules accumulate; exact calendar-date validation
 and repeated-acknowledgement refusal tested. Override event storage remains distinct
