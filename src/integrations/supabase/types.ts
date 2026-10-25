@@ -9169,6 +9169,9 @@ export type Database = {
         Row: {
           at_bat_id: string | null
           batter_handedness: string | null
+          bunt_side: string | null
+          bunt_success: boolean | null
+          bunt_type: string | null
           contact_quality: string | null
           count_balls: number | null
           count_strikes: number | null
@@ -9196,6 +9199,9 @@ export type Database = {
         Insert: {
           at_bat_id?: string | null
           batter_handedness?: string | null
+          bunt_side?: string | null
+          bunt_success?: boolean | null
+          bunt_type?: string | null
           contact_quality?: string | null
           count_balls?: number | null
           count_strikes?: number | null
@@ -9223,6 +9229,9 @@ export type Database = {
         Update: {
           at_bat_id?: string | null
           batter_handedness?: string | null
+          bunt_side?: string | null
+          bunt_success?: boolean | null
+          bunt_type?: string | null
           contact_quality?: string | null
           count_balls?: number | null
           count_strikes?: number | null
