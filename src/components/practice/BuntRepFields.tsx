@@ -78,12 +78,6 @@ const hitOrOut = [
   { value: 'out', label: 'Out' },
 ];
 
-const buntTypes = [
-  { value: 'base_hit', label: 'Base Hit' },
-  { value: 'sacrifice', label: 'Sacrifice' },
-  { value: 'squeeze', label: 'Squeeze' },
-];
-
 const runnerLocations = [
   { value: '1b', label: '1B', hint: 'Best bunt result toward 1B' },
   { value: '2b', label: '2B', hint: 'Best bunt result toward 3B' },

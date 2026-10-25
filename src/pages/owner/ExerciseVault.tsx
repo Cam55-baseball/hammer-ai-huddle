@@ -22,6 +22,8 @@ import { baseballDrills } from '@/data/baseball/drillDefinitions';
 import { softballDrills } from '@/data/softball/drillDefinitions';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { buntingVaultContent } from '../../../supabase/functions/_shared/vault/buntingContent';
+const BUNT_CONTENT = buntingVaultContent();
 
 type Row = {
   slug: string; name: string; category: string | null; sport_scope: string | null;
@@ -64,7 +66,8 @@ export default function ExerciseVault() {
       const rows = (data ?? []) as unknown as Row[];
       // Every warm-up builder movement is taggable, even ones the catalog doesn't list.
       const extra = libraryOnlyRows(new Set(rows.map((r) => r.slug))) as Row[];
-      return [...rows, ...extra].sort((a, b) => a.name.localeCompare(b.name));
+      const bunts = BUNT_CONTENT.filter(item => !rows.some(row => row.slug === item.slug)).map(item => ({ slug:item.slug, name:item.name, category:'hitting', sport_scope:'both', position_scope:null, min_age_years:item.min_age ?? null, season_eligibility:item.season_phases, equipment:item.equipment, equipment_alternatives:item.equipment_alternatives, is_active:false, dosage_unit:'attempts', default_sets:item.default_sets ?? null, default_reps:item.default_reps ?? null }));
+      return [...rows, ...extra, ...bunts].sort((a, b) => a.name.localeCompare(b.name));
     },
   });
   const [q, setQ] = useState("");
@@ -181,9 +184,11 @@ export default function ExerciseVault() {
           const r = data.find((x) => x.slug === selected);
           return r ? (
             <VaultEditor
+              key={r.slug}
               slug={r.slug}
               base={r}
-              baseHowTo={BASIC_HOW_TO[r.slug] ?? ""}
+              baseHowTo={BUNT_CONTENT.find(item => item.slug === r.slug)?.how_to_one_rep ?? BASIC_HOW_TO[r.slug] ?? ""}
+              initialContent={BUNT_CONTENT.find(item => item.slug === r.slug)}
               onClose={() => setSelected(null)}
             />
           ) : null;
@@ -204,7 +209,7 @@ export default function ExerciseVault() {
                   <button type="button" className="h-7 rounded-md border border-border px-2 font-semibold" onClick={(e) => { e.stopPropagation(); setSelected(r.slug); }}>Edit</button>
                 </div>
               )}
-              <p className="text-sm text-muted-foreground mt-1">How to do one rep: {BASIC_HOW_TO[r.slug] ?? "— not written yet"}</p>
+              <p className="text-sm text-muted-foreground mt-1">How to do one rep: {BUNT_CONTENT.find(item => item.slug === r.slug)?.how_to_one_rep ?? BASIC_HOW_TO[r.slug] ?? "— not written yet"}</p>
               <p className="text-xs text-muted-foreground mt-1">
                 Default dose: {r.default_sets ?? "–"} × {r.default_reps ?? "–"} {r.dosage_unit ?? ""} · Minimum age: {r.min_age_years ?? "–"} · Equipment: {(r.equipment ?? []).join(", ") || (Array.isArray(r.equipment_alternatives) && r.equipment_alternatives.length ? "choose one below" : "none")}
               </p>

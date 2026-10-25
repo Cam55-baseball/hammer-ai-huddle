@@ -33,6 +33,7 @@ type Props = {
   onClose: () => void;
   /** Brand-new exercise: the slug is editable and make_live enters it into the planner's catalog. */
   isNew?: boolean;
+  initialContent?: VaultExercise;
 };
 
 const toList = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
@@ -47,7 +48,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, isNew = false }: Props) {
+export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, isNew = false, initialContent }: Props) {
   const qc = useQueryClient();
   const [identity] = useState(() => ownerIdentity(crypto.randomUUID()));
   const [e, setE] = useState<VaultExercise>({
@@ -74,6 +75,7 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
     warmup_stage: isNew ? OWNER_DEFAULTS.warmup_stage : base.category === "warmup" ? defaultWarmupStage(baseSlug, base.name) : null,
     warmup_stage_order: null,
     ...(isNew ? { cue: OWNER_DEFAULTS.cue, stop_if: OWNER_DEFAULTS.stop_if } : {}),
+    ...(initialContent ?? {}),
   });
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -95,7 +97,7 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("exercise-vault", { body: { action: "list", slug } });
       if (error) throw error;
-      return data as { versions: Array<{ version: number; apply_today: boolean; effective_from: string; undone_at: string | null; made_live_at: string }>; drafts: Array<{ status: string; validation: string[]; updated_at: string }> };
+      return data as { versions: Array<{ version: number; apply_today: boolean; effective_from: string; undone_at: string | null; made_live_at: string; payload?: VaultExercise }>; drafts: Array<{ status: string; validation: string[]; updated_at: string; payload?: VaultExercise }> };
     },
   });
 
@@ -116,6 +118,10 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
 
   const set = <K extends keyof VaultExercise>(k: K, v: VaultExercise[K]) => setE((p) => ({ ...p, [k]: v }));
   const live = history?.versions.find((v) => !v.undone_at);
+  useEffect(() => {
+    const saved = history?.drafts.find(draft => draft.status === 'draft')?.payload ?? live?.payload;
+    if (saved) setE(saved);
+  }, [history, live]);
 
   const uploadVideo = async (file: File) => {
     setMsg(null);
