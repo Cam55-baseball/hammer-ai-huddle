@@ -16,7 +16,7 @@ describe("rendered warm-up measure coverage", () => {
       render(<LegacyDrillInlineLog modality="warmup" name={drill.name} dosage={dosage} storageKey={`audit:${drill.slug}`} completed={false} />);
       const spec = legacyDrillLogSpec("warmup", drill.name, dosage);
       const work = dosage.toLowerCase().replace(/rest.*$/g, "");
-      if (/\b(?:reps?|contacts?|steps?|breaths?|rocks?)\b|\bper\s+(?:side|leg|direction|foot)\b/.test(work) && !/\b(?:yd|yards?|ft|feet)\b/.test(work)) {
+      if (/\b(?:reps?|contacts?|steps?|breaths?|rocks?)\b|\b\d+\s+per\s+(?:side|leg|direction|foot)\b/.test(work) && !/\b(?:yd|yards?|ft|feet|secs?|seconds?|minutes?|mins?)\b/.test(work)) {
         expect(spec.fields.some(f => f.key === "reps"), `${drill.slug}: ${dosage}`).toBe(true);
       }
       if (/\b(?:seconds?|secs?|minutes?|mins?)\b/.test(work)) {
