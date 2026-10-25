@@ -42,6 +42,14 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   if (decided) return { rows: Math.max(1, rx.sets ?? 1), fields: fieldsForMeasure(decided).map(field => ({ ...field,
     prefill: field.key === "distance" ? rx.distance_feet : declaredCount(rx),
   })) };
+  const jump = jumpMeasure(`${rx.movement_slug ?? ""} ${rx.movement_name ?? ""}`);
+  if (jump === "jump_distance") return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "distance", label: "Jump distance", unit: "ft + in" }] };
+  if (jump === "jump_height") return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "height", label: "Jump height", unit: "in" }] };
+  const explicitUnit = (rx.dosage_unit ?? "").toLowerCase();
+  if (["seconds", "minutes"].includes(explicitUnit)) return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: "Time", unit: "s", prefill: rx.duration_seconds ?? (rx.reps == null ? null : rx.reps * (explicitUnit === "minutes" ? 60 : 1)) }] };
+  if (["reps", "contacts", "steps", "swings"].includes(explicitUnit) && ["warmup", "mobility", "recovery", "arm_care"].includes(rx.slot as string) && rx.duration_seconds == null) return {
+    rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "reps", label: explicitUnit === "contacts" ? "Contacts" : explicitUnit === "steps" ? "Steps" : "Reps", prefill: rx.reps ?? rx.total_reps }],
+  };
   if ((rx.dosage_unit ?? "").toLowerCase() === "throws" || /throw|pitch|bullpen|catch play/.test(slug)) {
     const split = rx.sets && rx.reps && (!rx.total_reps || rx.sets * rx.reps === rx.total_reps);
     return { rows: split ? rx.sets ?? 1 : 1, fields: [{ key: "throws", label: "Throws", prefill: split ? rx.reps : rx.total_reps ?? rx.reps }] };
@@ -76,7 +84,6 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
       { key: "exit_velo", label: "Exit velo", unit: "mph" },
     ] };
   }
-  const jump = jumpMeasure(`${rx.movement_slug ?? ""} ${rx.movement_name ?? ""}`);
   if (jump === "jump_distance") {
     return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "distance", label: "Jump distance", unit: "ft + in" }] };
   }
