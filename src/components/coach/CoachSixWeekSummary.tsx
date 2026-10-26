@@ -17,7 +17,7 @@ export function CoachSixWeekSummary({ plans, sport, today, state, athleteId }: P
   const summaries = sixWeekPlanSummary(plans, sport, today);
   return <section aria-label="Six-week saved plans" className="space-y-4 border-t border-border pt-4">
     <h4 className="text-sm font-semibold">Six-week saved plans</h4>
-    {(sport==='baseball'||sport==='softball')&&<StrategyLine sport={sport} today={today} athleteId={athleteId}/>}
+    {athleteId&&(sport==='baseball'||sport==='softball')&&<StrategyLine sport={sport} today={today} athleteId={athleteId}/>}
     {!summaries.length ? <p className="text-sm text-muted-foreground">No saved training plans in the last six weeks.</p> :
       <ul className="space-y-5">
         {summaries.map(summary => <li key={summary.category} className="space-y-2">
