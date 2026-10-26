@@ -5,6 +5,7 @@ const aliases: Record<string, string> = {
   machine: "pitching_machine", "pitching machine": "pitching_machine",
   "field space": "open_field", "open field": "open_field", "foam roller": "foam_roller",
   baseball: "baseballs", softball: "softballs", "none": "none", bodyweight: "none",
+  bat: "gamer_bat", "game bat": "gamer_bat",
 };
 export function ownerGear(items: readonly string[]) {
   const unknown: string[] = [];
