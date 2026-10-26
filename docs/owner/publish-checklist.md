@@ -177,7 +177,7 @@ These five owner checks are not blockers for the readiness verdict:
 
 ### Player
 
-Your first new plan waits for its identity evidence before saving a focus. A saved focus keeps its recorded sources and matching skill order when you reload; newer safety reductions still win. If identity evidence cannot be checked, the page does not claim a new focus was saved.
+Your first new plan waits for its identity evidence before saving a focus. A saved focus keeps its recorded sources and matching skill order when you reload; newer safety reductions still win. If identity evidence cannot be checked, the page does not claim a new focus was saved. A failed connection is not counted as a successful save; a later successful request can save normally.
 
 Judged identity now chooses the existing weekly priority opportunity, only when your phase, equipment, available days and access permit it. It cannot add a second boost or change a saved day. New self-built plans can retain their sourced day-focus explanation in exercise details; that explanation does not add reps or authorize an unavailable exercise. Current-day arm throws that require rest prevent an elite-arm label.
 
@@ -193,7 +193,7 @@ Coach workouts offer Use instead, Add alongside, Save for later and Use today wh
 
 New evaluations save the selected sport. Throwing and catching rep entry requires choosing Baseball or Softball before Log rep opens. Earlier records without a saved sport are preserved but cannot certify a sport-specific identity; changing the player's current sport never relabels them. Canonical training/health sharing still applies.
 
-Identity priority uses the same guarded weekly opportunity as player goals; no invented extra day or dose. A dated missing arm check-in stays Need more data, and current-day ledger rest is included. Background-job focus and full affected-player saved readback are not yet certified.
+Identity priority uses the same guarded weekly opportunity as player goals; no invented extra day or dose. A dated missing arm check-in stays Need more data, and current-day ledger rest is included. Background-job focus and full affected-player saved readback are not yet certified. The server's existing ranked movement selector controls lifting, not skill work; identity does not change that ranking or lifting doses. Server skill-selection steering is not implemented and is not claimed complete.
 
 Coaching Console has editable per-level contact ratios, HR power/lefty/lacking-power ratios, low-average and elite-grade standards, the HR/K chase and optional pitching K/BF, BB/BF and HR/BF cutoffs. All ratios use 0–1 inputs. The player/coach mastery panel names evidence, sample/window, date and owner standards. Human fielding/arm grades must match the position; self-reported grades never certify them. Health facts remain behind existing health consent. Chat reads the same caller-scoped identity judge, not an inferred grade from partial recall.
 
