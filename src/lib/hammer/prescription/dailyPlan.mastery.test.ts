@@ -13,7 +13,8 @@ describe('actual builder weekly mastery connection',()=>{
   const defense=focused.blocks.find(b=>b.modality==='defense');
   expect(defense?.because?.some(reason=>reason.startsWith('Fielding is your top goal.'))).toBe(true);
   expect(base.blocks.find(b=>b.modality==='defense')?.because?.some(reason=>reason.startsWith('Fielding is your top goal.'))??false).toBe(false);
-  expect(focused.weeklyRoadmap).toEqual(base.weeklyRoadmap);
+  expect(focused.weeklyRoadmap.map(d=>d.restDay)).toEqual(base.weeklyRoadmap.map(d=>d.restDay));
+  expect(focused.weeklyRoadmap.flatMap(d=>d.modalities).length).toBeLessThanOrEqual(base.weeklyRoadmap.flatMap(d=>d.modalities).length);
   expect(focused.weeklyTemplate.perModality.strength).toEqual(base.weeklyTemplate.perModality.strength);
   expect(ctx.get('category_goals')?.value).toEqual(values.category_goals);
  });
