@@ -23966,6 +23966,10 @@ export type Database = {
           deleted_count: number
         }[]
       }
+      mastery_identity_evidence: {
+        Args: { p_athlete?: string; p_date: string; p_sport: string }
+        Returns: Json
+      }
       mastery_identity_sources: {
         Args: { p_athlete?: string; p_date: string; p_sport: string }
         Returns: Json
