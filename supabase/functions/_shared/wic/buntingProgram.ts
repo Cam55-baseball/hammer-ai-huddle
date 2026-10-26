@@ -13,6 +13,7 @@ export interface BuntingFacts {
   bats: "R" | "L" | "S" | null;
   /** Explicit current player evidence, not an inferred speed/power threshold. */
   speedy?: boolean; lacksPower?: boolean; leftPower?: boolean; powerGoal?: boolean;
+  lowAverage?:number;
   /** Canonical game counts. Missing or invalid counts never mean a low average. */
   battingGames?: readonly { hits: number; atBats: number }[];
   /** Latest completed data window; presence supersedes legacy game samples, including unknown. */
@@ -33,7 +34,8 @@ export function buntingProgram(facts: BuntingFacts) {
   const validWindow = window != null && Number.isInteger(window.start) && window.start >= 1 &&
     Number.isInteger(window.end) && window.end >= window.start && Number.isInteger(window.atBats) &&
     window.atBats === window.end-window.start+1 && Number.isInteger(window.hits) && window.hits >= 0 && window.hits <= window.atBats;
-  const under300 = facts.battingWindow !== undefined ? validWindow && window.hits / window.atBats < .300 : games.length >= 2 && games.every(game => game.hits / game.atBats < .300);
+  const lowAverage=facts.lowAverage??.300;
+  const under300 = facts.battingWindow !== undefined ? validWindow && window.hits / window.atBats < lowAverage : games.length >= 2 && games.every(game => game.hits / game.atBats < lowAverage);
   const sides: BuntSide[] = facts.bats === "S" ? ["R", "L"] : facts.bats ? [facts.bats] : [];
   const wantedSessions = facts.speedy === true || facts.lacksPower === true ? 3 : 2;
   const weekdays = [...new Set(facts.legalWeekdays)].filter(day => Number.isInteger(day) && day >= 0 && day <= 6).sort((a,b) => a-b).slice(0, 6);

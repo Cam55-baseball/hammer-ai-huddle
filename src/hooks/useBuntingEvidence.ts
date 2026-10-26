@@ -27,5 +27,5 @@ export function useBuntingEvidence(sport:string,date:string,enabled:boolean){
   return {evidence:projectBuntingEvidence(sessions.data??[],abs.data??[],pitches.data??[],tasks.data??[],sport),catalog:(catalog.data??[]) as BuntCatalogItem[]};
  }});
  return {...query,isPending:query.isPending||identity.isPending,isError:query.isError||identity.isError,
-  data:query.data&&identity.data?{...query.data,evidence:{...query.data.evidence,battingWindow:identity.data.batting.latest},traits:identity.data.traits}:undefined};
+   data:query.data&&identity.data?{...query.data,evidence:{...query.data.evidence,battingWindow:identity.data.batting.latest},traits:identity.data.traits,guidance:identity.data.guidance}:undefined};
 }
