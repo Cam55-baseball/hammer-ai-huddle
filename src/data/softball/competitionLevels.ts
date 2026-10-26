@@ -35,6 +35,8 @@ export const softballCompetitionLevels: CompetitionLevel[] = [
   { key: 'summer_generic', label: 'Summer League', category: 'summer', competition_weight_multiplier: 0.90, league_difficulty_index: 0.72, pre_collegiate: false },
 
   // Professional
+  { key: 'academy_pro', label: 'Pro team academy', category: 'professional', competition_weight_multiplier: 1.05, league_difficulty_index: 0.84, pre_collegiate: false },
+  { key: 'academy_youth', label: 'Youth academy', category: 'youth', competition_weight_multiplier: 0.75, league_difficulty_index: 0.60, pre_collegiate: true },
   { key: 'indie_pro', label: 'Independent Pro', category: 'professional', competition_weight_multiplier: 1.12, league_difficulty_index: 0.90, pre_collegiate: false },
   { key: 'foreign_league', label: 'International Pro', category: 'professional', competition_weight_multiplier: 1.15, league_difficulty_index: 0.90, pre_collegiate: false },
   { key: 'wpf', label: 'WPF', category: 'professional', competition_weight_multiplier: 1.30, league_difficulty_index: 0.94, pre_collegiate: false },

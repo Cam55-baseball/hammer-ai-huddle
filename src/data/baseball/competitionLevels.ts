@@ -36,6 +36,8 @@ export const baseballCompetitionLevels: CompetitionLevel[] = [
   { key: 'cape_cod', label: 'Cape Cod League', category: 'summer', competition_weight_multiplier: 1.15, league_difficulty_index: 0.92, pre_collegiate: false },
 
   // Professional
+  { key: 'academy_pro', label: 'Pro team academy', category: 'professional', competition_weight_multiplier: 1.05, league_difficulty_index: 0.84, pre_collegiate: false },
+  { key: 'academy_youth', label: 'Youth academy', category: 'youth', competition_weight_multiplier: 0.75, league_difficulty_index: 0.60, pre_collegiate: true },
   { key: 'academy', label: 'Academy', category: 'professional', competition_weight_multiplier: 1.05, league_difficulty_index: 0.84, pre_collegiate: false },
   { key: 'foreign_league', label: 'Foreign League', category: 'professional', competition_weight_multiplier: 1.10, league_difficulty_index: 0.88, pre_collegiate: false },
   { key: 'winter_ball', label: 'Winter Ball', category: 'professional', competition_weight_multiplier: 1.10, league_difficulty_index: 0.88, pre_collegiate: false },
