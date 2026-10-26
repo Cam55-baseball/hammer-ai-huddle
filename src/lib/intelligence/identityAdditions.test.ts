@@ -2,7 +2,7 @@ import {describe,expect,it} from 'vitest';
 import {judgePitching,startingStandards,type PitchingCounts} from '../../../supabase/functions/_shared/wic/masteryPitchingStandards';
 import {reactionEquivalentMph,weightedPracticeWhiff,whiffWeight} from '../../../supabase/functions/_shared/wic/practiceDifficulty';
 import {naturalFirstStrategy,nutritionFocus,isSafeForMinor} from '../../../supabase/functions/_shared/wic/goals/naturalFirst';
-const elite:PitchingCounts={battersFaced:100,strikeouts:36,walks:4,hits:15,homeRuns:1,atBatsAgainst:90,outs:81,runs:5,earnedRuns:2,pitches:360,firstPitchStrikes:70,
+const elite:PitchingCounts={battersFaced:100,strikeouts:34,walks:4,hits:15,homeRuns:1,atBatsAgainst:90,outs:81,runs:5,earnedRuns:2,pitches:360,firstPitchStrikes:70,
  twoBallBatters:25,innings:27,scoringPosInnings:5,runnersInScoringPos:6,runnersOn:19,runnersStranded:16,ballsInPlay:60,softContact:20,swings:200,whiffs:60,
  stolenBases:0,stealAttempts:1,pickoffs:1,pickoffAttempts:3,timeToPlateS:[1.25,1.28],pfpChances:10,pfpErrors:0};
 describe('pitching starting standards',()=>{
