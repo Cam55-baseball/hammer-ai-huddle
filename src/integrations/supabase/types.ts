@@ -23870,6 +23870,10 @@ export type Database = {
           deleted_count: number
         }[]
       }
+      mastery_identity_sources: {
+        Args: { p_athlete?: string; p_date: string; p_sport: string }
+        Returns: Json
+      }
       org_can_add_athletes: { Args: { _org: string }; Returns: boolean }
       org_compare_athletes: {
         Args: { _athletes: string[]; _org: string }

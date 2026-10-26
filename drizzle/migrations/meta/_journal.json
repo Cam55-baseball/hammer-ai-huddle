@@ -869,6 +869,13 @@
       "when": 1792991945410,
       "tag": "0123_mastery_identity_owner_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 124,
+      "version": "7",
+      "when": 1792992319276,
+      "tag": "0124_mastery_identity_scoped_evidence",
+      "breakpoints": true
     }
   ]
 }
