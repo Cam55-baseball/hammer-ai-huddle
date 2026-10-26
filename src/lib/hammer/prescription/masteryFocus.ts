@@ -2,7 +2,7 @@ import type {PrescribedBlock} from './dailyPlan';
 import type {CategoryGoalsPayload,CategoryKey} from '../goals/categoryGoals';
 export interface MasteryPlanFocus {observedFocus:string|null;sourceIds:readonly string[];reason:string;leftPowerStealEmphasis:boolean}
 export const masteryModality=(pillar:string|null)=>pillar==='contact'||pillar==='power'?'hitting':pillar==='arm'?'throwing':pillar==='defense'?'defense':pillar==='speed'?'speed':null;
-/** Transient priority overlay, never writes over athlete goals or changes legal weekly targets. */
+/** Transient rank overlay; weekly callers retain the existing guarded opportunity, never a second boost. */
 export function masteryGoalWeights(goals:CategoryGoalsPayload|null,focus:MasteryPlanFocus|undefined):CategoryGoalsPayload|null{
  if(!goals||!focus?.observedFocus||!focus.sourceIds.length)return goals;
  const category:CategoryKey|null=focus.observedFocus==='contact'||focus.observedFocus==='power'?'hitting':focus.observedFocus==='arm'?'throwing':focus.observedFocus==='defense'?'fielding':focus.observedFocus==='speed'?'speed':null;
