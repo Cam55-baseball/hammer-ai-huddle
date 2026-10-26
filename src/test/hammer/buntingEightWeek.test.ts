@@ -45,6 +45,6 @@ describe("owner bunting bounds over eight weeks", () => {
   it("missing statistics stay unknown and invalid successes cannot scale dose", () => {
     expect(validBuntOutcome({ side: "R", type: "drag", attempts: 2, successes: 3 })).toBe(false);
     const result = buntingProgram({ sport: "baseball", modules: ["baseball_5tool"], bats: "R", legalWeekdays: [1,2], restDay: false, gameDay: false });
-    expect(result.battingSample).toEqual({ games: 0, hits: 0, atBats: 0, average: null, under300: false });
+    expect(result.battingSample).toEqual({ games: 0, hits: 0, atBats: 0, average: null, under300: false, window: null });
   });
 });
