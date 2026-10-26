@@ -1,3 +1,4 @@
+import {PitchingLineFields} from '@/components/games/PitchingLineFields';
 /**
  * GameSheet — full-screen drawer for one game. Wraps every logger.
  *
@@ -627,7 +628,7 @@ function OverviewPanel({
         </div>
       )}
 
-      {positions.includes('P') && <div className="space-y-2"><Label htmlFor="batters-faced">Batters faced (optional)</Label><Input id="batters-faced" type="number" min={0} step={1} inputMode="numeric" defaultValue={game.batters_faced??''} onBlur={e=>{const raw=e.target.value.trim();if(raw==='')return onPatch({batters_faced:null});const n=Number(raw);if(Number.isSafeInteger(n)&&n>=0)onPatch({batters_faced:n});}} /><div className="flex items-center gap-2"><input id="pitching-history-complete" type="checkbox" checked={game.pitching_history_complete===true} onChange={e=>onPatch({pitching_history_complete:e.target.checked})}/><Label htmlFor="pitching-history-complete">Every batter and final result is logged pitch by pitch</Label></div></div>}
+      {positions.includes('P') && <div className="space-y-2"><Label htmlFor="batters-faced">Batters faced (optional)</Label><Input id="batters-faced" type="number" min={0} step={1} inputMode="numeric" defaultValue={game.batters_faced??''} onBlur={e=>{const raw=e.target.value.trim();if(raw==='')return onPatch({batters_faced:null});const n=Number(raw);if(Number.isSafeInteger(n)&&n>=0)onPatch({batters_faced:n});}} /><div className="flex items-center gap-2"><input id="pitching-history-complete" type="checkbox" checked={game.pitching_history_complete===true} onChange={e=>onPatch({pitching_history_complete:e.target.checked})}/><Label htmlFor="pitching-history-complete">Every batter and final result is logged pitch by pitch</Label></div><PitchingLineFields game={game as never} onPatch={onPatch as never}/></div>}
       {oneTapLogging && positions.includes("C") && (
         <div className="space-y-1.5">
           <Label htmlFor="innings-caught">Innings caught (optional)</Label>
