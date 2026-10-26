@@ -38,7 +38,7 @@ export function battingIdentity(events:readonly BattingEvent[],p:WindowPolicy=OW
  const abs=ordered.filter(e=>HITS.has(e.result??'')||OUTS.has(e.result??''));
  const windows=opportunityWindows(abs.length,p);
  const completed:BattingWindow[]=invalid?[]:windows.filter(w=>w.complete).map(w=>{const rows=abs.slice(w.start-1,w.end);
-  const previous=w.start>1?abs[w.start-2]:null;const firstIndex=previous?ordered.indexOf(previous)+1:0;
+  const firstRow=rows[0];const firstIndex=w.start===1?0:firstRow?ordered.indexOf(firstRow):0;
   const lastRow=rows[rows.length-1];const nextAB=abs[w.end];
   const pas=ordered.slice(firstIndex,nextAB?ordered.indexOf(nextAB):ordered.length);
   return {start:w.start,end:w.end,hits:rows.filter(e=>HITS.has(e.result??'')).length,atBats:rows.length,
@@ -75,7 +75,7 @@ export const DEFAULT_MASTERY_CUTOFFS:MasteryCutoffs={eliteHomeRuns:null,lackingP
 export interface SpeedEvidence {id:string;source:string;date:string;measure:string;unit:string;value:number;grade:number|null;kind:'measured'|'self_report';sample:number;minimum:number|null}
 export function speedIdentity(evidence:readonly SpeedEvidence[],eliteGrade=65){
  const valid=evidence.filter(e=>e.kind==='measured'&&e.id&&e.source&&Number.isFinite(Date.parse(e.date))&&Number.isFinite(e.value)&&e.value>0&&e.minimum!==null&&e.minimum>0&&e.sample>=e.minimum);
- const usable=valid.filter(e=>typeof e.grade==='number'&&Number.isFinite(e.grade)&&e.grade>=20&&e.grade<=80&&e.grade%5===0);
+ const usable=valid.filter(e=>typeof e.grade==='number'&&Number.isFinite(e.grade)&&e.grade>=0&&e.grade<=80&&(e.grade<20||e.grade%5===0));
  const ambiguous=new Set<string>();const unique=new Map<string,SpeedEvidence>();
  for(const e of usable){const old=unique.get(e.id);if(old&&JSON.stringify(old)!==JSON.stringify(e))ambiguous.add(e.id);else unique.set(e.id,e);}
  const rows=[...unique.values()].filter(e=>!ambiguous.has(e.id));

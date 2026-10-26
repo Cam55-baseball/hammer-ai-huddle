@@ -30,6 +30,8 @@ import { pitchTypes, pitchTypeLabel } from "@/lib/games/sportRules";
 import { describePitch, pitchResultPlain } from "@/lib/games/glossary";
 import { FieldHelp } from "./TabIntro";
 import { entrySourceLabel } from "@/lib/intelligence/entrySource";
+import {supabase} from '@/integrations/supabase/client';
+import {useQueryClient} from '@tanstack/react-query';
 
 interface Props {
   gameId: string;
@@ -63,6 +65,7 @@ function StepLabel({ n, children }: { n: number; children: React.ReactNode }) {
 
 export function AtBatPitchPanel({ gameId, atBatId, inning, sport, onTerminal, onTally }: Props) {
   const { list, add, del, tally } = useAtBatPitches(gameId, atBatId);
+  const qc=useQueryClient();
   const firedRef = useRef(false);
   const PITCH_TYPES = pitchTypes(sport);
 
@@ -159,6 +162,13 @@ export function AtBatPitchPanel({ gameId, atBatId, inning, sport, onTerminal, on
   };
 
   const missingLocation = rows.filter((p) => p.location?.zone == null && !p.location?.outZone).length;
+
+  const markComplete=async()=>{
+    if(!rows.length||!tally.terminated)return;
+    const {data,error}=await supabase.from('gp_at_bats').update({pitch_count:rows.length}).eq('id',atBatId).eq('game_id',gameId).select('id').single();
+    if(error||!data){toast.error('Could not confirm the complete pitch history.');return;}
+    await qc.invalidateQueries({queryKey:['mastery-identity']});toast.success('Complete pitch total saved.');
+  };
 
   const zoneAndType = (
     <div className="flex flex-wrap gap-4">
