@@ -41,6 +41,7 @@ import {
 } from '@/utils/vaultNavigation';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 import { VaultStreakRecapCard } from '@/components/vault/VaultStreakRecapCard';
+import { StrategyLine } from '@/components/intelligence/StrategyLine';
 
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
 import { VaultNutritionLogCard } from '@/components/vault/VaultNutritionLogCard';
@@ -471,6 +472,7 @@ export default function Vault() {
                   missedCycleEnd={missedCycleEnd}
                   waitingForProgressReports={waitingForProgressReports}
                 />
+                <div className="mt-3"><StrategyLine sport={userSport} today={new Date().toLocaleDateString('en-CA')} /></div>
               </div>
 
               {/* Weekly Trend Cards */}

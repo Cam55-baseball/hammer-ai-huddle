@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CoachPlanCard } from './CoachPlanCard';
 vi.mock('./CoachPlanActuals', () => ({ CoachPlanActuals: () => null }));
+vi.mock('@/components/intelligence/StrategyLine', () => ({ StrategyLine: () => null }));
 
 const state = vi.hoisted(() => ({ calls: [] as Array<{ name: string; args: Record<string, string> }>, revoked: false }));
 vi.mock('@/hooks/usePitcherSchedule', () => ({ localIso: (date?: Date) => date
