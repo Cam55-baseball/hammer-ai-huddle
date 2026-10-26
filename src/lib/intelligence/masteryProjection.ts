@@ -48,8 +48,8 @@ export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',se
  const fieldGrade=human.find(g=>validHumanGrade(g.defense));
  const defenseGrade=fieldGrade?Number(fieldGrade.defense):null;
  const defensePillar={status:judgeGrade(defenseGrade),grade:defenseGrade,source:fieldGrade?`${fieldGrade.source} · ${fieldGrade.date} · ${position}`:null,sourceIds:fieldGrade?[String(fieldGrade.id)]:[],threshold:eliteGrade};
- const velocity=list(source.throwing).filter(r=>r.position===normalizedPosition&&r.metric==='throw_velo_mph'&&r.unit==='mph').map(r=>({...r,grade:computeThrowVeloGrade(String(r.metric),String(r.position),typeof r.value==='number'?r.value:null,scales)})).find(r=>r.grade&&!r.grade.missing);
- const pop=normalizedPosition==='catcher'?list(source.catching).filter(r=>['pop_time','catcher_pop_time','pop_time_sec'].includes(String(r.metric))&&['s','seconds','sec'].includes(String(r.unit))).map(r=>({...r,grade:computePopTimeGrade(typeof r.value==='number'?r.value:null,scales,{sport})})).find(r=>!r.grade.missing):null;
+ const velocity=list(source.throwing).filter(r=>r.position===normalizedPosition&&r.metric==='throw_velo_mph'&&r.unit==='mph').map(r=>({id:r.id,source:r.source,date:r.date,grade:computeThrowVeloGrade(String(r.metric),String(r.position),typeof r.value==='number'?r.value:null,scales)})).find(r=>r.grade&&!r.grade.missing);
+ const pop=normalizedPosition==='catcher'?list(source.catching).filter(r=>['pop_time','catcher_pop_time','pop_time_sec'].includes(String(r.metric))&&['s','seconds','sec'].includes(String(r.unit))).map(r=>({id:r.id,source:r.source,date:r.date,grade:computePopTimeGrade(typeof r.value==='number'?r.value:null,scales,{sport})})).find(r=>!r.grade.missing):null;
  const measurement=velocity??pop;const measurementGrade=measurement?.grade&&!measurement.grade.missing?measurement.grade.grade:null;
  const accuracy=human.find(g=>validHumanGrade(g.arm));const accuracyGrade=accuracy?Number(accuracy.arm):null;
  const health=record(source.health);const pain=list(health.pain);const injury=list(health.injury);
