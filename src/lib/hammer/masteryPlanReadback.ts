@@ -22,7 +22,7 @@ export function masteryPlanReadback(plan:HammerDailyPlanResult,payload:unknown,s
   return {...b,drills:prior.drills as typeof b.drills,steps:prior.drills.map(d=>`${d.name} — ${d.dosage}`),
    because:Array.isArray(prior.because)&&prior.because.every(v=>typeof v==='string')?prior.because:b.because,
    roadmapReason:typeof prior.roadmapReason==='string'?prior.roadmapReason:b.roadmapReason,
-   durationMin:typeof prior.durationMin==='number'||prior.durationMin===null?prior.durationMin:b.durationMin};
+   durationMin:typeof prior.durationMin==='number'?prior.durationMin:prior.durationMin===null?null:b.durationMin};
  });
  const slots=blocks.map((b,i)=>skills.has(b.modality)?i:-1).filter(i=>i>=0);
  const ordered=slots.map(i=>blocks[i]).sort((a,b)=>(order.get(key(a))??Number.MAX_SAFE_INTEGER)-(order.get(key(b))??Number.MAX_SAFE_INTEGER));
