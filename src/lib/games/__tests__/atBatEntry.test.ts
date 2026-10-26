@@ -23,4 +23,9 @@ describe("explicit at-bat facts", () => {
   it("requires a selected outcome", () => {
     expect(() => atBatEntryPayload({ inning: 1, result: "" })).toThrow("Choose how");
   });
+  it('preserves explicit complete pitch totals and rejects invalid totals',()=>{
+    expect(atBatEntryPayload({inning:1,result:'GO',pitch_count:5}).pitch_count).toBe(5);
+    expect(atBatEntryPayload({inning:1,result:'GO'}).pitch_count).toBeNull();
+    for(const pitch_count of [0,1.5,-1])expect(()=>atBatEntryPayload({inning:1,result:'GO',pitch_count})).toThrow();
+  });
 });
