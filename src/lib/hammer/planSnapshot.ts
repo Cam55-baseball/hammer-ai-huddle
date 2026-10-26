@@ -41,10 +41,15 @@ export function planSnapshotPayload(plan: HammerDailyPlanResult, sport: string, 
 }
 
 export async function savePlanSnapshot(userId: string, plan: HammerDailyPlanResult, sport: string, planDate: string, masteryFocus?: MasteryGuidance): Promise<boolean> {
-  const { error } = await supabase.rpc("wk_save_block_day", {
-    p_date: planDate, p_sport: sport, p_engine: ENGINE_CONTRACT.version,
-    p_payload: JSON.parse(JSON.stringify(planSnapshotPayload(plan, sport, planDate, masteryFocus))) as Json,
-  });
-  if (error) console.debug("[plan-snapshot] save failed", error.message);
-  return !error;
+  try {
+    const { error } = await supabase.rpc("wk_save_block_day", {
+      p_date: planDate, p_sport: sport, p_engine: ENGINE_CONTRACT.version,
+      p_payload: JSON.parse(JSON.stringify(planSnapshotPayload(plan, sport, planDate, masteryFocus))) as Json,
+    });
+    if (error) console.debug("[plan-snapshot] save failed", error.message);
+    return !error;
+  } catch {
+    console.debug("[plan-snapshot] request failed; no save confirmed");
+    return false;
+  }
 }
