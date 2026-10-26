@@ -3,10 +3,12 @@ import {supabase} from '@/integrations/supabase/client';
 import {useAuth} from '@/hooks/useAuth';
 import {projectBuntingEvidence} from '@/lib/hammer/prescription/buntingEvidence';
 import type {BuntCatalogItem} from '@/lib/hammer/prescription/buntingPlan';
+import {useMasteryIdentity} from '@/hooks/useMasteryIdentity';
 /** Complete, self/sport-scoped source reads. An unavailable history never means no failures. */
 export function useBuntingEvidence(sport:string,date:string,enabled:boolean){
  const {user}=useAuth();
- return useQuery({queryKey:['bunting-evidence',user?.id,sport,date],enabled:enabled&&!!user,staleTime:60_000,queryFn:async()=>{
+ const identity=useMasteryIdentity(sport==='softball'?'softball':'baseball',date,enabled);
+ const query=useQuery({queryKey:['bunting-evidence',user?.id,sport,date],enabled:enabled&&!!user,staleTime:60_000,queryFn:async()=>{
   if(!user)throw new Error('Sign in first');
   const from=new Date(`${date}T12:00:00Z`);from.setUTCDate(from.getUTCDate()-56);const since=from.toISOString().slice(0,10);
   const [sessions,games,catalog,tasks]=await Promise.all([
@@ -24,4 +26,6 @@ export function useBuntingEvidence(sport:string,date:string,enabled:boolean){
   for(const result of [abs,pitches]){if(result.error)throw result.error;if(!result.data||result.data.length>=1000)throw new Error('Could not read complete game bunting history. Try again.');}
   return {evidence:projectBuntingEvidence(sessions.data??[],abs.data??[],pitches.data??[],tasks.data??[],sport),catalog:(catalog.data??[]) as BuntCatalogItem[]};
  }});
+ return {...query,isPending:query.isPending||identity.isPending,isError:query.isError||identity.isError,
+  data:query.data&&identity.data?{...query.data,evidence:{...query.data.evidence,battingWindow:identity.data.batting.latest},traits:identity.data.traits}:undefined};
 }

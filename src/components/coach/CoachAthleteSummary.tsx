@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { type Glance, todayStatus, weekCompletion, topAlert, latestTest, headCoach } from "@/lib/coach/glance";
+import {MasteryIdentityPanel} from '@/components/intelligence/MasteryIdentityPanel';
 
 // Plan v3.1 Phase 5 — coach summary card. Every value is labeled and every
 // missing value says so plainly ("Not shared" / "Not started"); nothing is
@@ -64,7 +65,7 @@ export function CoachAthleteSummary({
   const lastActivity = fmtDate(lastActivityAt);
 
   return (
-    <Card data-tour="coach-summary">
+    <div className="space-y-4"><Card data-tour="coach-summary">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between text-base">
           <span>{profile?.full_name?.trim() || "Athlete"}</span>
@@ -94,6 +95,6 @@ export function CoachAthleteSummary({
           value={lastActivity ? lastActivity : "No activity in the last 30 days"}
         />
       </CardContent>
-    </Card>
+    </Card>{(ctx?.sport_primary==='baseball'||ctx?.sport_primary==='softball')&&<MasteryIdentityPanel sport={ctx.sport_primary} athleteId={athleteId}/>}</div>
   );
 }

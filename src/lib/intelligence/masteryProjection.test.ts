@@ -1,0 +1,6 @@
+import {describe,expect,it} from 'vitest';
+import {projectMasterySources} from './masteryProjection';
+describe('mastery canonical source projection',()=>{
+ it('retains test, sprint, home-first, steal and Royal measures without inventing a grade',()=>{const row={id:'x',date:'2026-10-25'};const projected=projectMasterySources({atBats:[],tests:[{...row,type:'speed',results:{ten_yard_dash:1.5}}],sprints:[{...row,distance:45,metrics:{time:2.5}}],homeFirst:[{...row,seconds:4.2,source:'player'}],runs:[{...row,type:'steal',seconds:3.1,lead_steps:2,source:'player'}],royal:[{...row,timers:{jump:0.3}}]},'baseball',null);expect(projected.recordedSpeedEvidence).toHaveLength(6);expect(projected.speed.status).toBe('Need more data');expect(projected.recordedSpeedEvidence.filter(e=>e.source!=='Entered performance test · speed').every(e=>e.grade===null)).toBe(true);});
+ it('uses registry units and does not grade opposite-sport tests',()=>{const result=projectMasterySources({tests:[{id:'t',date:'2026-10-25',type:'speed',results:{ten_yard_dash:1.5,seven_yard_dash:1.2}}]},'softball',null);expect(result.recordedSpeedEvidence.map(e=>e.measure)).toEqual(['seven_yard_dash']);expect(result.recordedSpeedEvidence[0].unit).toBe('s');});
+});

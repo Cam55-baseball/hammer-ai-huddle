@@ -3,6 +3,7 @@ import { ownerGear, ownerIdentity, OWNER_DEFAULTS } from "../../../../supabase/f
 import { validateExercise } from "../validateExercise";
 
 describe("owner creation defaults", () => {
+  it('accepts the approved bunting bat without removing its requirement',()=>expect(ownerGear(['bat','gamer_bat','open_field'])).toEqual({equipment:['gamer_bat','open_field'],unknown:[]}));
   it("creates a stable unique code without asking the owner", () => {
     expect(ownerIdentity("11111111-1111-4111-8111-111111111111").slug).toBe("owner_11111111_1111_4111_8111_111111111111");
     expect(ownerIdentity("a").slug).not.toBe(ownerIdentity("b").slug);

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import {MasterySettings} from '@/components/intelligence/MasterySettings';
 import { OWNER_QUESTIONS, questionSituation, currentQuestionAnswer, type OwnerQuestion } from '@/lib/intelligence/ownerQuestions';
 import {
   EVIDENCE_LABEL, badgeFor, declaredPrincipleVersion, SMALL_GROUP_NOTE,
@@ -105,6 +106,7 @@ export default function CoachingConsole() {
     <div className="mx-auto max-w-2xl space-y-4 p-4 pt-16">
       <h1 className="text-2xl font-bold">Coaching Console</h1>
       <p className="text-sm text-muted-foreground">Teach Hammers what you believe. Edits make a new version; old versions are kept.</p>
+      <MasterySettings />
 
       <section className="space-y-3 border-b border-border pb-4" aria-label="Questions for the owner">
         <h2 className="text-lg font-semibold">Questions for the owner</h2>

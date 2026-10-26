@@ -1,4 +1,5 @@
 import { guardSignedInNotPaused } from "../_shared/accountPause.ts";
+import { buntingKnowledgeText, MASTERY_MINIMUM } from '../_shared/wic/buntingMastery.ts';
 /**
  * Hammer Chat — unified conversational coaching surface.
  *
@@ -72,6 +73,11 @@ qualitative, plain-language guidance.
 You may interpret, guide, suggest, and ask — you may not author organism truth.
 
 Be specific. Be brief. Use short sentences. No emojis.
+
+APPROVED OWNER KNOWLEDGE (teaching, not a measurement of this athlete):
+${buntingKnowledgeText()}
+${MASTERY_MINIMUM}
+Self-reported speed or power is starting-plan guidance only, never a measured identity. Do not classify speed, home-run power or a weakest pillar without sourced data and approved cutoffs. Say Need more data when absent.
 
 ATHLETE_CONTEXT = ${ctxJson}
 

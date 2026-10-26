@@ -1,6 +1,19 @@
 # Hammers — final publish checklist
 
-Updated October 25, 2026, final continuation.
+Updated October 26, 2026, academy continuation.
+
+## October 26 05:16 academy continuation — partial
+
+- Twelve exact owner bunt drills activated through authenticated Vault save-draft/make-live and read back active, effective October 26. Existing saved plans untouched. The original gamer_bat requirement was missing from common owner gear; fixed its shared mapping without removing the bat requirement.
+- Approved Bunting Mastery now supplies shared wording, drag-bunt early-count/two-strike guidance, card how-to, video vocabulary and both chat paths. Game form and saved pitch display flag an entered two-strike bunt without changing its result. No new unapproved teaching was added.
+- Shared opportunity windows implement 100 AB through 500, then 500 AB forever; latest complete window and exact HR/hit/AB evidence drive live bunting input. Null completed window supersedes the old two-game heuristic. Owner settings have blank HR/contact/speed-minimum cutoffs rather than fabricated values, with server owner-only writes and audit.
+- The General and coach summary mount the same identity projection; server evidence reads recheck narrow training access and sport, return no private analysis/health, and include tests, sport-tagged sprints, game home-to-first/runs/leads and Royal timer data. Unknown or ungraded methods remain record-only. Account-only baserunning splits lack sport provenance and are not borrowed; full all-source speed certification is still OPEN.
+- OPEN: actual pitching BF/defense-chance identity, full arm/contact judges and weakest-pillar goal integration, source-complete speed/steal timing certification, owner HR/contact/minimum cutoffs, athlete positive bunting/game/coach/chat readbacks and Monday Use-instead proof. No claim of complete A/B/C.
+- Applied additive settings and scoped evidence changes; exercise-vault, hammer-recall, hammer-chat and regenerated plan-swap redeployed under named authorization. No publish, cron or iOS changes. No TEST training data added; owner content/settings are real authorized changes, not cleanup targets.
+- Full suite: **549 files / 4,580 tests PASS**, ten bounded groups plus the newly added source-projection file; refreshed settings/source tests **4 PASS** after an observed save-confirmation/readback race was corrected. Latest preview build **OK at 05:44:45 UTC**. Inspected 390×844 loaded drag-drill, saved owner settings and The General screenshots. Owner settings save/readback preserves 100/500/500 and unknown cutoffs; own evidence returns Need more data; unrelated TEST-player evidence is denied; no browser page errors. Approved MLB/AUSL owner principle saved once, then read back without duplication.
+- Affected-player end-to-end proof remains **UNVERIFIED**: explicit TEST-user session approval was unavailable in this run. Owner empty-history screenshots are not a player-positive or coach-role proof. No TEST prescription/log additions were made, so no training cleanup was needed. Evidence: `/tmp/browser/mastery/readback.json`, screenshots and `/tmp/mastery-suite/summary.json`.
+
+**Ready to publish: NO — the remaining identity/source integration and affected-player proofs above are unfinished; Monday coach proof remains separately open.**
 
 ## October 25 evening owner request — partial, not release-ready
 
@@ -76,13 +89,13 @@ These five owner checks are not blockers for the readiness verdict:
 
 ### Player
 
-When bunting is logged in practice or a game, enter the actual batting side, exact bunt type and Yes/No only if success was observed; Not entered stays unknown. New bunting Today sessions are not active yet. Exiting focus after a successful set preserves its required rest; Start resumes that rest rather than saving the set again.
+When bunting is logged in practice or a game, enter the actual batting side, exact bunt type and Yes/No only if success was observed; Not entered stays unknown. The twelve bunt drills are active for future legal unsaved hitting work; saved days do not change. Drag bunts target the 3B line early in the count, never with two strikes; game logging flags two-strike attempts. Your mastery panel shows the last complete batting window, home runs and source-labelled speed evidence; missing thresholds/evidence say Need more data. Exiting focus after a successful set preserves its required rest; Start resumes that rest rather than saving the set again.
 
 Coach workouts offer Use instead, Add alongside, Save for later and Use today where applicable. Use instead requires real saved work of the same category and never spills into another category. Replaced work is marked “Replaced by coach workout”, not missed. Read every warning and its exact date and measured numbers; Okay acknowledges, Cancel action saves nothing. Missing-fact warnings explicitly say what was not checked, without making up a score or cap. Accepted warnings appear in the card’s “Coach override: …” Because line. You can still decline the workout.
 
 ### Coach
 
-Owner Vault now exposes twelve initially-off side-specific bunt entries with attempts/successes measure and the owner's exact instructions. These editable definitions do not yet activate an athlete bunting program; do not treat the off entries or policy simulation as prescribed sessions.
+Owner Vault now exposes twelve active side-specific bunt entries with attempts/successes measure and the owner's exact instructions. Existing saved work stays unchanged. Coaching Console has sport-specific opportunity-window and HR/contact/speed-minimum settings; leave blank until you choose the cutoff. Coach summary reads the same source-labelled mastery projection through the server's training gate; missing pillars are not certified.
 
 Send, schedule, edit, reschedule and resend share the warning acknowledgement flow. Pain/injury, arm limits, age, phase/season, recovery, workload, dose-range and equipment guidelines warn rather than silently changing your prescribed dose. For coach prescriptions only, in-season eccentric-overload findings also warn; Hammers’ own generator remains prohibited from prescribing them in season. Under-18 pain/injury, arm-limit and age findings require a reason of at least 10 characters and the existing linked-parent notification; adults use plain Okay. Acknowledgement is not medical clearance. Sent workouts shows the override trail and canonical performed work when logged.
 
