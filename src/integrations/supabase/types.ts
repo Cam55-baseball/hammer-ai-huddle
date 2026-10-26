@@ -11594,6 +11594,93 @@ export type Database = {
           },
         ]
       }
+      mastery_identity_settings: {
+        Row: {
+          defense_unit: string
+          elite_balls_in_play_rate: number | null
+          elite_home_runs: number | null
+          initial_window: number
+          lacking_power_home_runs: number | null
+          later_window: number
+          pitching_unit: string
+          speed_minimum_samples: number | null
+          sport: string
+          transition_at: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          defense_unit?: string
+          elite_balls_in_play_rate?: number | null
+          elite_home_runs?: number | null
+          initial_window?: number
+          lacking_power_home_runs?: number | null
+          later_window?: number
+          pitching_unit?: string
+          speed_minimum_samples?: number | null
+          sport: string
+          transition_at?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          defense_unit?: string
+          elite_balls_in_play_rate?: number | null
+          elite_home_runs?: number | null
+          initial_window?: number
+          lacking_power_home_runs?: number | null
+          later_window?: number
+          pitching_unit?: string
+          speed_minimum_samples?: number | null
+          sport?: string
+          transition_at?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mastery_identity_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mastery_identity_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mastery_identity_settings_audit: {
+        Row: {
+          actor: string | null
+          changed_at: string
+          current: Json
+          id: string
+          previous: Json | null
+          sport: string
+        }
+        Insert: {
+          actor?: string | null
+          changed_at?: string
+          current: Json
+          id?: string
+          previous?: Json | null
+          sport: string
+        }
+        Update: {
+          actor?: string | null
+          changed_at?: string
+          current?: Json
+          id?: string
+          previous?: Json | null
+          sport?: string
+        }
+        Relationships: []
+      }
       meal_templates: {
         Row: {
           created_at: string | null
