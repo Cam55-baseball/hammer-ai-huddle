@@ -4423,3 +4423,4 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - Oct 26 run (3): practice log save→reload proven at 390x844 (owner session), proof row removed.
 - Oct 26 run (4): suite 560/4,695 PASS; checklist updated. Ready to publish: NO.
 - Oct 26 20:30 run: shared development strategy → plan focus/chat/General+coach panel, goal card, versioned owner principle; pitching entry screens + TEST/democoach proofs open. Ready to publish: NO.
+- Oct 26 20:30 run (2): pitching line entry on game sheet + gated reader (0132), pitching judgments on identity panel, strategy in coach six-week summary; TEST session mint unavailable. Ready to publish: NO.
