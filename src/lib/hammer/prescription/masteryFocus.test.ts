@@ -1,0 +1,8 @@
+import {describe,it,expect} from 'vitest';
+import {applyMasteryFocus} from './masteryFocus';
+import type {PrescribedBlock} from './dailyPlan';
+const blocks=[{modality:'warmup',status:'ready',drills:[]},{modality:'hitting',status:'ready',drills:[{dosage:'10 swings'}]},{modality:'strength',status:'ready',drills:[{dosage:'3 × 5'}]},{modality:'defense',status:'ready',drills:[{dosage:'8 reps'}]},{modality:'speed',status:'off-day',drills:[]}] as unknown as PrescribedBlock[];
+describe('judged-only identity plan focus',()=>{
+ it('moves only existing ready skill slots, preserves doses and anchors',()=>{const out=applyMasteryFocus(blocks,{observedFocus:'defense',sourceIds:['human'],reason:'Defense is below the owner standard.',leftPowerStealEmphasis:false});expect(out.map(b=>b.modality)).toEqual(['warmup','defense','strength','hitting','speed']);expect(out[2]).toBe(blocks[2]);expect(out.find(b=>b.modality==='defense')?.drills).toEqual(blocks[3].drills);});
+ it('unknown, inaccessible and unsourced pillars author no work',()=>{for(const focus of [null,'speed','pitching'])expect(applyMasteryFocus(blocks,{observedFocus:focus,sourceIds:['x'],reason:'',leftPowerStealEmphasis:false})).toBe(blocks);expect(applyMasteryFocus(blocks,{observedFocus:'defense',sourceIds:[],reason:'',leftPowerStealEmphasis:false})).toBe(blocks);});
+});
