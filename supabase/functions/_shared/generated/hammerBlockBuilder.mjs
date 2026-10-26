@@ -752,14 +752,14 @@ function buildRationale(m, target, earned, nextTarget) {
   if (target === 0) {
     return `${label(m)} is fully suppressed today \u2014 safety-first floors are protecting you.`;
   }
-  const base = `${label(m)}: aim for ${target}/wk \u2014 you've hit ${earned}/7 in the last week.`;
+  const base2 = `${label(m)}: aim for ${target}/wk \u2014 you've hit ${earned}/7 in the last week.`;
   if (nextTarget !== null && nextTarget > target) {
-    return `${base} Next rung targets ${nextTarget}/wk \u2014 stack the days first, intensity follows.`;
+    return `${base2} Next rung targets ${nextTarget}/wk \u2014 stack the days first, intensity follows.`;
   }
   if (target === SKILL_DAYS_CEILING) {
-    return `${base} You're at the pro daily cadence \u2014 hold this rhythm and self-regulate intensity.`;
+    return `${base2} You're at the pro daily cadence \u2014 hold this rhythm and self-regulate intensity.`;
   }
-  return base;
+  return base2;
 }
 function label(m) {
   return m === "baserunning" ? "Baserunning" : m.charAt(0).toUpperCase() + m.slice(1);
@@ -2744,10 +2744,10 @@ var TWITCH_ROLES = [
 ];
 var SINGLE_LEG_MIN_SHARE = 0.6;
 function templateFor(context, lifecycle) {
-  const base = TEMPLATES[context] ?? TEMPLATES.default;
+  const base2 = TEMPLATES[context] ?? TEMPLATES.default;
   const rank = { youth: 0, beginner: 1, intermediate: 2, advanced: 3, elite: 4 };
-  if (rank[lifecycle] > 1) return base;
-  const out = [...base];
+  if (rank[lifecycle] > 1) return base2;
+  const out = [...base2];
   const idx = out.indexOf("weightless_coordination");
   if (idx !== -1) out.splice(idx + 1, 0, "weightless_coordination", "weightless_coordination");
   else if (context !== "recovery_day") {
@@ -5170,17 +5170,17 @@ function blendSecondary(primary, secondary, sport, phase) {
   ];
 }
 function cuesFor(pos, sport) {
-  const base = ["Footwork before glove.", "Field through the ball, don't stab."];
-  if (pos === "C") base.push("Chin down on blocks. Quiet glove on receiving.");
-  if (pos === "P") base.push("Chest square, glove up after every pitch.");
-  if (pos === "1B") base.push("Secure the catch before the stretch.");
-  if (pos === "2B" || pos === "SS") base.push("Feet over the bag, throw over the runner.");
-  if (pos === "3B") base.push("Attack the slow-roller. Keep the backhand fair.");
+  const base2 = ["Footwork before glove.", "Field through the ball, don't stab."];
+  if (pos === "C") base2.push("Chin down on blocks. Quiet glove on receiving.");
+  if (pos === "P") base2.push("Chest square, glove up after every pitch.");
+  if (pos === "1B") base2.push("Secure the catch before the stretch.");
+  if (pos === "2B" || pos === "SS") base2.push("Feet over the bag, throw over the runner.");
+  if (pos === "3B") base2.push("Attack the slow-roller. Keep the backhand fair.");
   if (pos === "LF" || pos === "CF" || pos === "RF" || pos === "OF") {
-    base.push("One crossover, then sprint. Call the ball loud.");
-    if (sport === "softball") base.push("Read rise-balls off the bat \u2014 no drifting in.");
+    base2.push("One crossover, then sprint. Call the ball loud.");
+    if (sport === "softball") base2.push("Read rise-balls off the bat \u2014 no drifting in.");
   }
-  return base;
+  return base2;
 }
 var STOP_RULES = [
   "Knee, ankle, or hip pain \u2014 stop and update Hammer.",
@@ -5195,15 +5195,15 @@ function durationFor(phase, position) {
 }
 function resolveDefenseTier(trainingAgeYears, phase) {
   const age = typeof trainingAgeYears === "number" && trainingAgeYears >= 0 ? trainingAgeYears : 1;
-  let base = age < 1 ? "beginner" : age < 3 ? "developing" : age < 6 ? "advanced" : "elite";
+  let base2 = age < 1 ? "beginner" : age < 3 ? "developing" : age < 6 ? "advanced" : "elite";
   const p = (phase ?? "").toString().toLowerCase();
   if (p === "in" || p === "in_season" || p === "inseason") {
-    base = base === "elite" ? "advanced" : base === "advanced" ? "developing" : base === "developing" ? "beginner" : "beginner";
+    base2 = base2 === "elite" ? "advanced" : base2 === "advanced" ? "developing" : base2 === "developing" ? "beginner" : "beginner";
   }
   if (p === "tournament") {
-    base = base === "elite" || base === "advanced" ? "developing" : "beginner";
+    base2 = base2 === "elite" || base2 === "advanced" ? "developing" : "beginner";
   }
-  return base;
+  return base2;
 }
 var TIER_SCALE = {
   beginner: 0.5,
@@ -5698,8 +5698,8 @@ function recoveryModalityFor(m) {
   }
 }
 function evaluateRecoveryWindow(mod, side, rung, quarter, recent, today) {
-  const base = BASE_HOURS[mod][rung];
-  const windowHours = Math.max(12, Math.round(base * quarter.recoveryWindowMultiplier));
+  const base2 = BASE_HOURS[mod][rung];
+  const windowHours = Math.max(12, Math.round(base2 * quarter.recoveryWindowMultiplier));
   const relevant = recent.filter((r) => r.modality === mod && (side == null || r.side == null || r.side === side));
   if (relevant.length === 0) {
     return {
@@ -6843,9 +6843,9 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
         modality,
         title: recoverDay ? "Recovery \u2014 priority" : workloadHigh ? "Recovery \u2014 workload-elevated" : injuryRegions.length > 0 ? "Recovery \u2014 injury-aware" : seasonPhase === "in" ? "Recovery \u2014 in-season" : "Recovery",
         why: (() => {
-          const base = recoverDay ? "Readiness is low. Recovery outranks training today." : workloadHigh ? "Workload is elevated \u2014 recovery is today's priority." : injuryRegions.length > 0 ? `Injury-aware recovery (${injuryRegions.join(", ")}).` : seasonPhase === "in" ? "In-season \u2014 parasympathetic downshift between games." : "Lock in sleep, mobility, and parasympathetic downshift.";
+          const base2 = recoverDay ? "Readiness is low. Recovery outranks training today." : workloadHigh ? "Workload is elevated \u2014 recovery is today's priority." : injuryRegions.length > 0 ? `Injury-aware recovery (${injuryRegions.join(", ")}).` : seasonPhase === "in" ? "In-season \u2014 parasympathetic downshift between games." : "Lock in sleep, mobility, and parasympathetic downshift.";
           const hpi = getSeasonHPI(seasonPhase);
-          return `${base} ${hpi.qiDirective} Breath primer: ${hpi.breathPrimer}`;
+          return `${base2} ${hpi.qiDirective} Breath primer: ${hpi.breathPrimer}`;
         })(),
         roadmapReason: `${recoverDay ? "Readiness below threshold \u2014 recovery first." : workloadHigh ? "Recent 7-day workload elevated." : "Default recovery block."} (${getSeasonHPI(seasonPhase).element} phase \u2014 ${getSeasonHPI(seasonPhase).yinYangEmphasis})`,
         phase: "recover",
@@ -9528,8 +9528,51 @@ function developmentStrategy(i) {
   };
 }
 
+// supabase/functions/_shared/wic/masteryPitchingStandards.ts
+var base = [
+  { key: "k_bb", dir: "min", value: 5 },
+  { key: "first_pitch_strike_pct", dir: "min", value: 0.67 },
+  { key: "two_ball_pct", dir: "max", value: 0.3 },
+  { key: "whip", dir: "max", value: 1 },
+  { key: "opp_avg", dir: "max", value: 0.2 },
+  { key: "soft_contact_pct", dir: "min", value: 0.25 },
+  { key: "scoring_pos_inning_pct", dir: "max", value: 0.25 },
+  { key: "sb_per_game", dir: "max", value: 0.2 },
+  { key: "opp_sb_success_pct", dir: "max", value: 0.6 },
+  { key: "time_to_plate_s", dir: "max", value: 1.3 },
+  { key: "pfp_clean_pct", dir: "min", value: 0.98 }
+];
+var bbKB = { pro: [0.3, 0.06], college: [0.32, 0.055], high_school: [0.35, 0.05], youth: [0.35, 0.05] };
+var sbBase = [
+  { key: "k_bb", dir: "min", value: 6 },
+  { key: "whip", dir: "max", value: 0.85 },
+  { key: "opp_avg", dir: "max", value: 0.17 },
+  { key: "era", dir: "max", value: 1.25 },
+  { key: "two_ball_pct", dir: "max", value: 0.3 },
+  { key: "scoring_pos_inning_pct", dir: "max", value: 0.2 },
+  { key: "sb_per_game", dir: "max", value: 0.3 },
+  { key: "pfp_clean_pct", dir: "min", value: 0.98 }
+];
+function startingStandards(sport, level, overrides2 = {}) {
+  let list2;
+  if (sport === "baseball") {
+    const [k, bb] = bbKB[level];
+    list2 = [{ key: "k_pct", dir: "min", value: k }, { key: "bb_pct", dir: "max", value: bb }, ...base];
+  } else {
+    const hs = level === "high_school" || level === "youth";
+    list2 = [{ key: "k_per_7", dir: "min", value: hs ? 12 : 10 }, { key: "bb_per_7", dir: "max", value: hs ? 1.2 : 1.5 }, ...sbBase];
+  }
+  return list2.map((s) => {
+    const o = overrides2[`${sport}_${level}_${s.key}`];
+    return typeof o === "number" && Number.isFinite(o) ? { ...s, value: o } : s;
+  });
+}
+
 // supabase/functions/_shared/wic/masteryPitching.ts
-function pitchingIdentity(games, settings, policy = OWNER_WINDOW_POLICY) {
+function pitchingIdentity(games, settings, policy = OWNER_WINDOW_POLICY, sport = "baseball", level = null) {
+  const std = level ? startingStandards(sport, level, settings) : [];
+  const kMin = std.find((s) => s.key === "k_pct")?.value ?? null;
+  const bbMax = std.find((s) => s.key === "bb_pct")?.value ?? null;
   const opportunities = [];
   let invalid = false;
   for (const g of [...games].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id))) {
@@ -9563,13 +9606,13 @@ function pitchingIdentity(games, settings, policy = OWNER_WINDOW_POLICY) {
     const k = outcomesKnown ? rows2.filter((r) => r.outcome === "K").length / rows2.length : null;
     const bb = outcomesKnown ? rows2.filter((r) => r.outcome === "BB").length / rows2.length : null;
     const hr = outcomesKnown ? rows2.filter((r) => r.outcome === "HR").length / rows2.length : null;
-    const set = settings.pitching_k_min != null && settings.pitching_bb_max != null && settings.pitching_hr_max != null;
-    const status = !outcomesKnown || !set ? "Need more data" : Number(k) >= Number(settings.pitching_k_min) && Number(bb) <= Number(settings.pitching_bb_max) && Number(hr) <= Number(settings.pitching_hr_max) ? "Elite" : "Building";
+    const set = kMin != null && bbMax != null;
+    const status = !outcomesKnown || !set ? "Need more data" : Number(k) >= Number(kMin) && Number(bb) <= Number(bbMax) ? "Elite" : "Building";
     return { ...w, status, k, bb, hr, outcomesKnown, sourceIds: rows2.map((r) => r.id), from: rows2[0]?.date, through: rows2[rows2.length - 1]?.date };
   });
   const latest = completed[completed.length - 1] ?? null;
   const size = opportunities.length < policy.transitionAt ? policy.initialSize : policy.laterSize;
-  return { status: latest?.status ?? "Need more data", latest, completed, policy, totalBattersFaced: opportunities.length, completeHistory: !invalid, current: windows.find((w) => !w.complete) ?? { start: opportunities.length + 1, end: opportunities.length + size, size, sample: 0, complete: false }, reason: settings.pitching_k_min == null || settings.pitching_bb_max == null || settings.pitching_hr_max == null ? "Owner pitching elite cutoffs are not set." : !latest?.outcomesKnown ? "Complete BF outcomes are needed." : "Source: completed pitching game opportunities." };
+  return { status: latest?.status ?? "Need more data", latest, completed, policy, totalBattersFaced: opportunities.length, completeHistory: !invalid, current: windows.find((w) => !w.complete) ?? { start: opportunities.length + 1, end: opportunities.length + size, size, sample: 0, complete: false }, reason: !level ? "Competition level is unknown." : sport === "softball" ? "Softball is judged stat by stat (per 7 innings) in the pitching section." : !latest?.outcomesKnown ? "Complete BF outcomes are needed." : "Source: completed pitching game opportunities." };
 }
 
 // src/lib/baserunning/homeToFirstGrade.ts
@@ -9718,6 +9761,14 @@ function nextThrowDate(age, level, rows2, today) {
 var record = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
 var list = (v) => Array.isArray(v) ? v.map(record) : [];
 var sportRows = (v, sport) => list(v).filter((row) => row.sport === sport);
+var PRO_LEVELS = ["pro", "professional", "mlb", "milb", "ausl", "indie_pro", "rookie", "low_a", "high_a", "aa", "aaa", "winter_ball", "foreign_league", "free_agent", "wpf", "npf", "academy_pro"];
+var COLLEGE_LEVELS = ["college", "ncaa", "d1", "d2", "d3", "juco", "naia", "cape_cod", "summer_generic", "summer_ball"];
+var HS_LEVELS = ["high_school", "high school", "hs", "hs_varsity", "hs_jv"];
+var YOUTH_LEVELS = ["youth", "youth_rec", "youth_travel", "middle_school", "little_league", "travel", "rec", "academy_youth"];
+function masteryLevelFor(raw) {
+  const r = String(raw ?? "").toLowerCase();
+  return PRO_LEVELS.includes(r) ? "pro" : COLLEGE_LEVELS.includes(r) ? "college" : HS_LEVELS.includes(r) ? "high_school" : YOUTH_LEVELS.includes(r) ? "youth" : null;
+}
 function projectMasterySources(raw, sport, settings) {
   const source = record(raw);
   const policy = areaWindowPolicy(settings, "batting");
@@ -9746,7 +9797,7 @@ function projectMasterySources(raw, sport, settings) {
   const context = record(source.context);
   const scales = list(source.scales);
   const rawLevel = String(context.level || context.leagueTier || "").toLowerCase();
-  const level = ["pro", "professional", "mlb", "milb", "ausl"].includes(rawLevel) ? "pro" : ["college", "ncaa", "d1", "d2", "d3", "juco", "naia"].includes(rawLevel) ? "college" : ["high_school", "high school", "hs"].includes(rawLevel) ? "high_school" : ["youth", "youth_rec", "youth_travel"].includes(rawLevel) ? "youth" : null;
+  const level = masteryLevelFor(rawLevel);
   for (const row of list(source.homeFirst)) {
     const hand = row.side;
     const g = hand === "L" || hand === "R" ? computeHomeToFirstGrade(typeof row.seconds === "number" ? row.seconds : null, hand, scales) : null;
@@ -9824,7 +9875,7 @@ function projectMasterySources(raw, sport, settings) {
   const steering = steerIdentity(pillarFacts);
   const strategy = developmentStrategy({ chosen: chosenGoalPillar(list(goals.goals)), age, pillars: pillarFacts.map((p) => ({ pillar: p.pillar, status: p.status, grade: p.pillar === "defense" ? defenseGrade : p.pillar === "arm" ? armGrade : p.pillar === "speed" ? speedGrade : null, progress: p.progress, sourceIds: p.sourceIds })) });
   const guidance = { ...masteryGuidance({ contactStatus: contact.status, contactSourceIds: contact.sourceIds, speedStatus: speed.status, powerStatus: power.status, leftPower: traits.leftPower, leftPowerGoal: traits.powerGoal }), observedFocus: strategy.mode === "secure_natural" && strategy.sourceIds.length ? strategy.primary : steering.focus, sourceIds: strategy.mode === "secure_natural" && strategy.sourceIds.length ? strategy.sourceIds : steering.sourceIds, reason: strategy.mode === "secure_natural" && strategy.sourceIds.length ? strategy.reason : steering.reason, alternativeReason: steering.speedOrPower === "Need more data" ? "Need more data for speed-or-power focus." : `Speed-or-power requirement: ${steering.speedOrPower}. ${steering.comparison}.` };
-  const pitching = pitchingIdentity(list(source.pitcherGames).map((g) => ({ id: String(g.id), date: String(g.date), battersFaced: typeof g.battersFaced === "number" ? g.battersFaced : null, complete: g.complete === true, pitches: list(g.pitches).map((p) => ({ id: String(p.id), opportunity: typeof p.opportunity === "number" ? p.opportunity : null, outcome: typeof p.outcome === "string" ? p.outcome : null })) })), standards, areaWindowPolicy(settings, "pitching"));
+  const pitching = pitchingIdentity(list(source.pitcherGames).map((g) => ({ id: String(g.id), date: String(g.date), battersFaced: typeof g.battersFaced === "number" ? g.battersFaced : null, complete: g.complete === true, pitches: list(g.pitches).map((p) => ({ id: String(p.id), opportunity: typeof p.opportunity === "number" ? p.opportunity : null, outcome: typeof p.outcome === "string" ? p.outcome : null })) })), standards, areaWindowPolicy(settings, "pitching"), sport === "softball" ? "softball" : "baseball", level);
   return { batting, speed, traits, policy, settings, sport, recordedSpeedEvidence: speedEvidence, defense, defensePillar, contact, power, arm, guidance, steering, strategy, pitching, level, standardsSource: IDENTITY_SOURCE };
 }
 export {
