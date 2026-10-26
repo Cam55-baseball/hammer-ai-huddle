@@ -4421,3 +4421,4 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 - Oct 26 00:10 UTC run (4): full suite 562 files / 4,866 tests PASS in bounded batches; Monday coach Use-instead proof not run (plans only just eligible); bunting activation + trait source await owner. Ready to publish: NO.
 - Oct 26 16:30 run (2): practice swing-and-miss logging card on The General (self-only, owner weights, 30 tests). Ready to publish: NO.
 - Oct 26 run (3): practice log save→reload proven at 390x844 (owner session), proof row removed.
+- Oct 26 run (4): suite 560/4,695 PASS; checklist updated. Ready to publish: NO.
