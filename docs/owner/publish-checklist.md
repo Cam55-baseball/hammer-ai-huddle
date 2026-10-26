@@ -2,6 +2,27 @@
 
 Updated October 26, 2026, academy continuation.
 
+## October 26 run (3) — final batch verdict: NOT COMPLETE
+
+- Added one evidence-bounded guidance projection shared by mastery presentation: below-standard contact requires complete-window source IDs, speed OR power can satisfy the stated requirement, and missing arm/defense/attainability evidence never becomes an overall weakest-pillar claim. This is observational guidance only; **not** the requested completed plan/goal/chat integration.
+- Corrected Royal timing readback to its actual saved timer1/timer2/master objects: elapsed milliseconds convert to seconds, video-sync/manual provenance stays visible, unknown scalar fields are not graded or treated as events. All retained raw speed evidence can be expanded on the mastery panel; grades and qualifying sample counts remain separate.
+- Complete current suite **551 files / 4,603 tests PASS**, all 16 bounded groups, zero failed tests. Preview build **OK at 05:58:42 UTC** after the final source edits. Inspected 390×844 development-focus screenshot; real owner evidence correctly says Need more data, reload retains guidance, no page errors. This is not a player-positive proof. No TEST rows added; no cleanup targets; no publish, backend redeploy, cron or iOS changes in this run. Frontend/source changes remain pending publication; prior authorized backend activation remains live.
+
+| Area | Final batch status |
+|---|---|
+| Twelve exact bunt drills | Active; prior activation proof retained |
+| Approved drag/count teaching | Shared cards/game/chat; prior proof retained |
+| Knowledge/video suggestions | Shared approved teaching/tags; actual matched-video player playback unverified |
+| AB/HR identity | Complete-window arithmetic and rollover tests pass |
+| Fielding identity/settings | Scored chance windows implemented; elite defense standard absent |
+| Pitching identity | Incomplete: no completed-BF recording source; never substituted pitch count |
+| Speed identity | Partial: registered tests grade; other timings recorded only; all-source sport/method certification incomplete |
+| Arm/weakest-pillar steering | Incomplete: no combined accuracy/health/position judge or complete plan/goal/chat integration |
+| Bunting identity rules | Policy/tests and live client input built; unset HR/speed cutoffs and affected-player proof remain |
+| Suite/preview/checklist/guide | Full suite and preview pass; updated; positive player/coach/Monday proofs remain open |
+
+**Ready to publish: NO.** The build is not finished: BF recording, full speed/arm/defense judging and weakest-pillar plan/goal/chat integration remain unimplemented. Owner HR/contact/speed-minimum thresholds remain unset, and authenticated affected-player/coach/bunting/video/chat readbacks plus Monday Use-instead proof are unverified. No invented thresholds, BF, elite status, attainability or successful proof substituted for these gaps.
+
 ## October 26 run (2) — fielding and area windows
 
 - Added independent owner-adjustable pitching BF and defensive fielding-chance windows. Blank triplets inherit the existing 100/500/500 opportunity cadence. Partial, nonpositive, fractional or incomplete-transition triplets are rejected; overlapping HR cutoffs are rejected before saving. Additive settings/evidence changes applied and read back; no schedules, saved plans or athlete rows changed.
@@ -100,6 +121,8 @@ These five owner checks are not blockers for the readiness verdict:
 ### Player
 
 When bunting is logged in practice or a game, enter the actual batting side, exact bunt type and Yes/No only if success was observed; Not entered stays unknown. The twelve bunt drills are active for future legal unsaved hitting work; saved days do not change. Drag bunts target the 3B line early in the count, never with two strikes; game logging flags two-strike attempts. Your mastery panel shows the last complete batting window, home runs, balls in play, scored defensive chances and source-labelled speed evidence; missing thresholds/evidence say Need more data. Pitch counts are never shown as batters faced. Exiting focus after a successful set preserves its required rest; Start resumes that rest rather than saving the set again.
+
+Recorded speed evidence expands separately from qualified grades. Royal timer values are seconds converted from saved milliseconds and remain recorded-only, with manual/video-sync labels. Development focus never calls contact the overall weakest pillar when other required pillars are unknown.
 
 Coach workouts offer Use instead, Add alongside, Save for later and Use today where applicable. Use instead requires real saved work of the same category and never spills into another category. Replaced work is marked “Replaced by coach workout”, not missed. Read every warning and its exact date and measured numbers; Okay acknowledges, Cancel action saves nothing. Missing-fact warnings explicitly say what was not checked, without making up a score or cap. Accepted warnings appear in the card’s “Coach override: …” Because line. You can still decline the workout.
 

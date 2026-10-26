@@ -1,6 +1,7 @@
 import {battingIdentity,areaWindowPolicy,fieldingIdentity,speedIdentity,masteryBuntingTraits,type BattingEvent,type SpeedEvidence,type AreaWindowSettings} from '../../../supabase/functions/_shared/wic/masteryIdentity';
 import {rawToGrade} from '@/lib/gradeEngine';
 import {PERFORMANCE_METRICS} from '@/data/performanceTestRegistry';
+import {masteryGuidance} from '../../../supabase/functions/_shared/wic/masteryGuidance';
 type RecordValue=Record<string,unknown>;
 const record=(v:unknown):RecordValue=>v&&typeof v==='object'&&!Array.isArray(v)?v as RecordValue:{};
 const list=(v:unknown):RecordValue[]=>Array.isArray(v)?v.map(record):[];
@@ -16,8 +17,8 @@ export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',se
  for(const row of list(source.sprints)){const m=record(row.metrics);const value=m.time??m.seconds;add(row,`sprint:${row.id}`,'Logged sprint',`sprint ${row.distance??'unknown distance'} feet`,'seconds',value,null);}
  for(const row of list(source.homeFirst))add(row,`home-first:${row.id}`,`Game home-to-first · ${row.source}`,'home_to_first','seconds',row.seconds,null);
  for(const row of list(source.runs)){add(row,`run:${row.id}`,`Game baserunning · ${row.source}`,String(row.type??'unknown run'),'seconds',row.seconds,null);add(row,`lead:${row.id}`,`Game baserunning · ${row.source}`,'steal lead','steps',row.lead_steps,null);}
- // Timer field names vary; retain explicit numeric timings as record-only, never parse findings/AI.
- for(const row of list(source.royal))for(const [key,value] of Object.entries(record(row.timers)))add(row,`royal:${row.id}:${key}`,'Royal timing',key,'seconds',value,null);
+ // Royal writes elapsed milliseconds in named timer objects; generic scalar fields are not speed measurements.
+ for(const row of list(source.royal))for(const key of ['timer1','timer2','master']){const timer=record(record(row.timers)[key]);const elapsed=timer.elapsed;if(typeof elapsed==='number')add(row,`royal:${row.id}:${key}`,`Royal timing · ${timer.wasSynced===true?'video synced':'manual timer'}`,key,'seconds',elapsed/1000,null);}
  const counts=new Map<string,Set<string>>();for(const e of speedEvidence){const key=`${e.source}:${e.measure}:${e.unit}`;const set=counts.get(key)??new Set<string>();set.add(e.id);counts.set(key,set);}
  const speed=speedIdentity(speedEvidence.map(e=>({...e,sample:counts.get(`${e.source}:${e.measure}:${e.unit}`)?.size??0})));
  const traits=masteryBuntingTraits(batting.latest,speed,{eliteHomeRuns:settings?.elite_home_runs??null,lackingPowerHomeRuns:settings?.lacking_power_home_runs??null,eliteGrade:65});
@@ -25,5 +26,6 @@ export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',se
  const contactRate=batting.latest?.ballsInPlay!==undefined?batting.latest.ballsInPlay/batting.latest.atBats:null;
  const cutoff=settings?.elite_balls_in_play_rate;
  const contact={rate:contactRate,status:contactRate===null||cutoff==null?'Need more data':contactRate>=cutoff?'Elite':'Building'};
- return {batting,speed,traits,policy,settings,sport,recordedSpeedEvidence:speedEvidence,defense,contact,pitching:{status:'Need more data',policy:areaWindowPolicy(settings,'pitching'),reason:'Completed batters faced are not recorded. Pitch counts are not batters faced.'}};
+ const guidance=masteryGuidance({contactStatus:contact.status,contactSourceIds:batting.latest?.sourceIds??[],speedStatus:speed.status,powerStatus:traits.powerStatus,leftPower:traits.leftPower,leftPowerGoal:false});
+ return {batting,speed,traits,policy,settings,sport,recordedSpeedEvidence:speedEvidence,defense,contact,guidance,pitching:{status:'Need more data',policy:areaWindowPolicy(settings,'pitching'),reason:'Completed batters faced are not recorded. Pitch counts are not batters faced.'}};
 }
