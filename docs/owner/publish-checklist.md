@@ -2,6 +2,18 @@
 
 Updated October 26, 2026, academy continuation.
 
+## October 26 07:28 continuation (3) — current verdict
+
+- Fixed a concrete first-save race in the actual Today caller: the saved-day lookup and identity read ran independently, so an early baseline snapshot could prevent later judged focus. First unsaved snapshots now wait for successful settled identity evidence; failed reads do not certify a new focus. Existing sport days need no fresh identity and source failures are shown honestly.
+- New focus snapshots retain structured canonical source IDs. Reload restores saved skill order and Because/steps/duration only for matching sport/date, valid sourced guidance and unchanged current legal drill-dose signatures. Suppressed blocks and newer reduced doses win; lifting is never restored or altered by mastery. Historical snapshots without structured focus remain unchanged.
+- Failed snapshot calls now return false; the Today save effect does not treat failure as a confirmed save. All writes still use the existing self-owned `wk_save_block_day` path/day lock; no new storage or server authorization path.
+- **14 affected tests / three files PASS**, including delayed first-save, both-sport exact snapshot readback, failed saves, suppressed/reduced-dose precedence, eight weekly saved-source identities and hook-order regression. Prior completed suites retained, not rerun. Preview build OK at 07:32:44 UTC.
+- Inspected 390×844 dashboard screenshot: current available player session is assessment-gated, zero snapshot attempts and zero page errors. Browser executes readiness helper with pending/failed/resolved/saved cases correctly. This is **not** a populated Today save/reload or coach-role end-to-end proof; no gate was bypassed and no hosted TEST data/personas changed.
+
+**Ready to publish: NO.** First-save/reload defects are locally built and unit-proven, but populated affected-player/coach Today → focus → saved reload remains unverified without the required TEST-session authorization. Canonical server selection/unattended identity authorization, positive identity chat, matched-video playback and Monday coach Use-instead proof remain open. Pitching elite cutoffs intentionally remain unset. No migration, backend redeploy, publish, cron or iOS changes this run; frontend is preview-only.
+
+Evidence: `/tmp/browser/identity-0728/` (final-tests.log, phone.log and inspected phone screenshot). Earlier dated sections are retained history.
+
 ## October 26 07:16 continuation (2) — current verdict
 
 - Closed unsafe sport attribution: new human evaluations save their selected sport; throwing/catching entry requires an explicit sport. Canonical identity reads and the shared projection admit only matching record-level sport. Legacy rows stay stored with null sport, never backfilled from current account settings. Catcher pop, evaluator/position validity, health and ledger gates remain unchanged.
@@ -164,6 +176,8 @@ These five owner checks are not blockers for the readiness verdict:
 ## C. By-role guide
 
 ### Player
+
+Your first new plan waits for its identity evidence before saving a focus. A saved focus keeps its recorded sources and matching skill order when you reload; newer safety reductions still win. If identity evidence cannot be checked, the page does not claim a new focus was saved.
 
 Judged identity now chooses the existing weekly priority opportunity, only when your phase, equipment, available days and access permit it. It cannot add a second boost or change a saved day. New self-built plans can retain their sourced day-focus explanation in exercise details; that explanation does not add reps or authorize an unavailable exercise. Current-day arm throws that require rest prevent an elite-arm label.
 
