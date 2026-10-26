@@ -45,6 +45,7 @@ import { PerformanceAreaRows } from '@/components/intelligence/PerformanceAreaRo
 import { LearningLoopList } from '@/components/intelligence/LearningLoopList';
 import { HealthFlagsCard } from '@/components/intelligence/HealthFlagsCard';
 import { WorkoutActuals } from '@/components/hammer/WorkoutActuals';
+import {MasteryIdentityPanel} from '@/components/intelligence/MasteryIdentityPanel';
 
 function PracticeIntelligenceCard() {
   const { data: mpi } = useMPIScores();
@@ -160,6 +161,7 @@ Confidence: ${snapshot.development_confidence}%
           <p className="text-muted-foreground">Where you are, what to do next, and how you'll know it worked.</p>
         </div>
         {header}
+        <MasteryIdentityPanel sport={selectedSport==='softball'?'softball':'baseball'} />
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as GeneralTab)} className="space-y-6">
           <TabsList className={`grid w-full ${gameIqOk ? "grid-cols-4" : "grid-cols-3"} h-auto`}>

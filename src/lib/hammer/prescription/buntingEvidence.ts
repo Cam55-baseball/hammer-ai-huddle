@@ -4,7 +4,7 @@ const object = (v: unknown): Record<string, unknown> => v && typeof v === 'objec
 const HITS = new Set(['1B','2B','3B','HR','single','double','triple','home_run']);
 const OUTS = new Set(['K','SO','strikeout','groundout','flyout','lineout','popout','out','GO','FO','LO','PO','FC','fielders_choice','ROE','error']);
 const NON_AB = new Set(['BB','walk','HBP','hbp','SF','sac_fly','SAC','sac_bunt','catchers_interference']);
-export interface BuntingEvidence { battingGames: {hits:number;atBats:number}[]; outcomes: BuntOutcome[]; sourceIds: string[] }
+export interface BuntingEvidence { battingGames: {hits:number;atBats:number}[]; outcomes: BuntOutcome[]; sourceIds: string[]; battingWindow?:import('../../../../supabase/functions/_shared/wic/masteryIdentity').BattingWindow|null }
 /** Caller supplies complete self/sport/date-scoped records. Unknown results never become outs. */
 export function projectBuntingEvidence(sessions: readonly {id:string;module:string|null;drill_blocks:unknown;micro_layer_data:unknown}[],
   atBats: readonly {id:string;game_id:string;result:string|null}[], pitches: readonly {id:string;bunt_side:string|null;bunt_type:string|null;bunt_success:boolean|null}[], tasks: readonly {id:string;payload:unknown}[] = [], sport?:string): BuntingEvidence {
