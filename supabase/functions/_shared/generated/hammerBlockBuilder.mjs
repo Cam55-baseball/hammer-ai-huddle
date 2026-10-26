@@ -7338,6 +7338,7 @@ function scaleDosageLabel2(dosage, scale) {
 }
 function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = null, gpSignal = null, identityOverride, today = /* @__PURE__ */ new Date(), roadmapInputs = {}) {
   const proj = projectEnvelope(ctx);
+  const focusProjection = { ...proj, categoryGoals: masteryGoalWeights(proj.categoryGoals, roadmapInputs.masteryFocus) };
   const speed = selectSpeedFocus(proj);
   const rung = resolveRoadmapRung(proj);
   const quarter = resolveSeasonQuarter(
@@ -7383,7 +7384,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
   const goalWeek = weeklyGoalBlocks(
     resolveWeeklyTemplate(proj),
     skillTargets,
-    proj,
+    focusProjection,
     positionRaw,
     new Set(firstPass.filter((b) => b.status === "ready" && goalEligible(b.modality)).map((b) => b.modality))
   );
@@ -7438,9 +7439,8 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       roadmapInputs.defenseFullOverride === true
     )
   ), practiceLoad);
-  const focusProjection = { ...proj, categoryGoals: masteryGoalWeights(proj.categoryGoals, roadmapInputs.masteryFocus) };
   const goalOrdered = secondGoalFirst(practiced.map((b) => {
-    if (!goalWeek.reason || (goalWeek.modality ? b.modality !== goalWeek.modality : modalityToCategory(b.modality) !== proj.categoryGoals?.goals.find((g) => g.rank === 1)?.category)) return b;
+    if (!goalWeek.reason || (goalWeek.modality ? b.modality !== goalWeek.modality : modalityToCategory(b.modality) !== focusProjection.categoryGoals?.goals.find((g) => g.rank === 1)?.category)) return b;
     const reason = scheduleSignal.postureToday !== "normal" || b.status !== "ready" ? `${goalWeek.reason} Today's safety and schedule rules still decide whether you train.` : goalWeek.reason;
     return { ...b, because: [...b.because ?? [], reason] };
   }), focusProjection);
@@ -9721,17 +9721,22 @@ function projectMasterySources(raw, sport, settings) {
   const measurementGrade = measurement?.grade && !measurement.grade.missing ? measurement.grade.grade : null;
   const accuracy = human.find((g) => validHumanGrade(g.arm));
   const accuracyGrade = accuracy ? Number(accuracy.arm) : null;
+  const suppliedDate = typeof source.date === "string" ? source.date : null;
+  const today = suppliedDate && /^\d{4}-\d{2}-\d{2}$/.test(suppliedDate) && Number.isFinite(Date.parse(`${suppliedDate}T00:00:00Z`)) ? suppliedDate : (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
   const health = record(source.health);
-  const pain = list(health.pain);
-  const injury = list(health.injury);
+  const pain = list(health.pain).filter((p) => !p.date || String(p.date).slice(0, 10) === today);
+  const injury = list(health.injury).filter((p) => !p.date || String(p.date).slice(0, 10) === today);
   const armWords = /arm|shoulder|elbow|forearm|wrist|hand/i;
   const activePain = pain.some((p) => Number(p.scale) > 0 && armWords.test(String(p.location))) || pain.some((p) => Object.entries(record(p.scales)).some(([k, v]) => armWords.test(k) && typeof v === "number" && v > 0)) || injury.some((p) => p.active === true && armWords.test(String(p.region)));
-  const today = String(source.date ?? (/* @__PURE__ */ new Date()).toLocaleDateString("en-CA"));
   const dob = typeof context.dateOfBirth === "string" ? new Date(context.dateOfBirth) : null;
   const now = new Date(today);
   const age = dob && Number.isFinite(dob.getTime()) ? now.getUTCFullYear() - dob.getUTCFullYear() - (now.getUTCMonth() < dob.getUTCMonth() || now.getUTCMonth() === dob.getUTCMonth() && now.getUTCDate() < dob.getUTCDate() ? 1 : 0) : null;
-  const next = nextThrowDate(age, typeof context.level === "string" ? context.level : null, list(health.ledger).map((r) => ({ entry_date: String(r.entry_date), source: String(r.source), throw_type: String(r.throw_type), count: typeof r.count === "number" ? r.count : null, status: typeof r.status === "string" ? r.status : null })), new Date(Date.parse(today) - 864e5).toISOString().slice(0, 10));
-  const ledgerFlag = next !== null && next > today;
+  const ledger = list(health.ledger).map((r) => ({ entry_date: String(r.entry_date), source: String(r.source), throw_type: String(r.throw_type), count: typeof r.count === "number" ? r.count : null, status: typeof r.status === "string" ? r.status : null }));
+  const yesterday = new Date(Date.parse(today) - 864e5).toISOString().slice(0, 10);
+  const tomorrow = new Date(Date.parse(today) + 864e5).toISOString().slice(0, 10);
+  const historicalNext = nextThrowDate(age, typeof context.level === "string" ? context.level : null, ledger.filter((r) => r.entry_date < today), yesterday);
+  const todayNext = nextThrowDate(age, typeof context.level === "string" ? context.level : null, ledger.filter((r) => r.entry_date === today), today);
+  const ledgerFlag = historicalNext !== null && historicalNext > today || todayNext !== null && todayNext > tomorrow;
   const healthKnown = health.shared === true && (pain.length > 0 || injury.length > 0) && age !== null;
   const armGrade = measurementGrade !== null && accuracyGrade !== null ? Math.min(measurementGrade, accuracyGrade) : null;
   const arm = { status: activePain || ledgerFlag ? "Building" : !healthKnown ? "Need more data" : judgeGrade(armGrade), grade: armGrade, accuracyGrade, measurementGrade, activePain, ledgerFlag, healthKnown, sourceIds: [...measurement ? [String(measurement.id)] : [], ...accuracy ? [String(accuracy.id)] : []], source: measurement ? `${measurement.source} \xB7 ${measurement.date} \xB7 ${normalizedPosition}` : null, threshold: eliteGrade };
