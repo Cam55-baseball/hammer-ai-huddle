@@ -84,6 +84,24 @@ function sortByWarmupStage(items, slugOf, roleOf) {
   return keyed.map((k) => k.it);
 }
 
+// src/lib/hammer/prescription/masteryFocus.ts
+var masteryModality = (pillar) => pillar === "contact" || pillar === "power" ? "hitting" : pillar === "arm" ? "throwing" : pillar === "defense" ? "defense" : pillar === "speed" ? "speed" : null;
+function applyMasteryFocus(blocks, focus) {
+  if (!focus || !focus.sourceIds.length || !focus.observedFocus) return blocks;
+  const target = masteryModality(focus.observedFocus);
+  if (!target) return blocks;
+  const slots = blocks.map((b, i) => ["hitting", "defense", "throwing", "speed", "baserunning"].includes(b.modality) && b.status === "ready" ? i : -1).filter((i) => i >= 0);
+  const skill = slots.map((i) => blocks[i]);
+  if (!skill.some((b) => b.modality === target)) return blocks;
+  skill.sort((a, b) => Number(b.modality === target) - Number(a.modality === target));
+  const out = [...blocks];
+  slots.forEach((i, n) => {
+    const b = skill[n];
+    out[i] = b.modality === target ? { ...b, because: [...b.because ?? [], `${focus.reason} Source: Coaching Console standards and ${focus.sourceIds.length} canonical evidence records.`] } : b;
+  });
+  return out;
+}
+
 // supabase/functions/_shared/wic/buntingMastery.ts
 var BUNT_TYPES = ["squeeze", "sac_3b", "sac_1b", "drag", "push", "hit"];
 var BUNT_WORDING = {
@@ -121,7 +139,8 @@ function buntingProgram(facts) {
   const hits = games.reduce((sum, game) => sum + game.hits, 0);
   const window2 = facts.battingWindow;
   const validWindow = window2 != null && Number.isInteger(window2.start) && window2.start >= 1 && Number.isInteger(window2.end) && window2.end >= window2.start && Number.isInteger(window2.atBats) && window2.atBats === window2.end - window2.start + 1 && Number.isInteger(window2.hits) && window2.hits >= 0 && window2.hits <= window2.atBats;
-  const under300 = facts.battingWindow !== void 0 ? validWindow && window2.hits / window2.atBats < 0.3 : games.length >= 2 && games.every((game) => game.hits / game.atBats < 0.3);
+  const lowAverage = facts.lowAverage ?? 0.3;
+  const under300 = facts.battingWindow !== void 0 ? validWindow && window2.hits / window2.atBats < lowAverage : games.length >= 2 && games.every((game) => game.hits / game.atBats < lowAverage);
   const sides = facts.bats === "S" ? ["R", "L"] : facts.bats ? [facts.bats] : [];
   const wantedSessions = facts.speedy === true || facts.lacksPower === true ? 3 : 2;
   const weekdays = [...new Set(facts.legalWeekdays)].filter((day) => Number.isInteger(day) && day >= 0 && day <= 6).sort((a, b) => a - b).slice(0, 6);
@@ -264,7 +283,7 @@ function applyBuntingPlan(blocks, facts, options) {
     };
     const drills = [...block.drills.slice(0, slot), drill, ...budget > attempts ? [{ ...original, dosage: `${budget - attempts} swings` }] : [], ...block.drills.slice(slot + 1)];
     const sample = program.battingSample;
-    const because = `${attempts} ${side === "R" ? "right" : "left"}-handed bunt attempts replace ${attempts} swings from today's skill work.${sample.under300 ? sample.window ? ` Completed batting window ${sample.window.start}\u2013${sample.window.end}: ${sample.hits} hits in ${sample.atBats} at-bats, below .300; source: entered game at-bats.` : ` Entered batting sample: ${sample.hits} hits in ${sample.atBats} at-bats across ${sample.games} games; each entered game was below .300.` : ""}${dose.attempts ? ` This bunt: ${dose.successes} successful out of ${dose.attempts} entered attempts.` : ""}`;
+    const because = `${attempts} ${side === "R" ? "right" : "left"}-handed bunt attempts replace ${attempts} swings from today's skill work.${sample.under300 ? sample.window ? ` Completed batting window ${sample.window.start}\u2013${sample.window.end}: ${sample.hits} hits in ${sample.atBats} at-bats, below ${(facts.lowAverage ?? 0.3).toFixed(3)}; source: entered game at-bats.` : ` Entered batting sample: ${sample.hits} hits in ${sample.atBats} at-bats across ${sample.games} games; each entered game was below ${(facts.lowAverage ?? 0.3).toFixed(3)}.` : ""}${dose.attempts ? ` This bunt: ${dose.successes} successful out of ${dose.attempts} entered attempts.` : ""}`;
     return { ...block, drills, steps: drills.map((d2) => `${d2.name} \u2014 ${d2.dosage}`), because: [...block.because ?? [], because], gamePlanTemplate: block.gamePlanTemplate ? { ...block.gamePlanTemplate, checklist: drills.map((d2) => `${d2.name} \u2014 ${d2.dosage}`) } : null };
   });
 }
@@ -486,11 +505,11 @@ function normalizeCategoryOrder(raw) {
 function normalizeV1Raw(raw) {
   if (!raw || typeof raw !== "object") return null;
   const obj = raw;
-  const list = Array.isArray(obj.goals) ? obj.goals : Array.isArray(raw) ? raw : null;
-  if (!list) return null;
+  const list2 = Array.isArray(obj.goals) ? obj.goals : Array.isArray(raw) ? raw : null;
+  if (!list2) return null;
   const seen = /* @__PURE__ */ new Set();
   const goals = [];
-  for (const item of list) {
+  for (const item of list2) {
     if (!item || typeof item !== "object") continue;
     const r = item;
     if (typeof r.category !== "string") continue;
@@ -633,9 +652,9 @@ function coercePositionTokens(value) {
       return;
     }
     if (typeof input === "object") {
-      const record = input;
+      const record2 = input;
       for (const key2 of OBJECT_POSITION_KEYS) {
-        if (key2 in record) visit(record[key2], depth + 1);
+        if (key2 in record2) visit(record2[key2], depth + 1);
       }
     }
   };
@@ -1349,17 +1368,17 @@ function categoryPracticeLoads(records, today, sport) {
   if (!Number.isFinite(now)) return [];
   const unique = /* @__PURE__ */ new Map();
   const conflicts = /* @__PURE__ */ new Set();
-  for (const record of records) {
-    if (!record.id.trim()) continue;
-    const previous = unique.get(record.id);
-    if (previous && (previous.date !== record.date || previous.sport !== record.sport || previous.category !== record.category || previous.minutes !== record.minutes || previous.intensity !== record.intensity || Boolean(previous.deleted) !== Boolean(record.deleted))) {
-      conflicts.add(record.id);
+  for (const record2 of records) {
+    if (!record2.id.trim()) continue;
+    const previous = unique.get(record2.id);
+    if (previous && (previous.date !== record2.date || previous.sport !== record2.sport || previous.category !== record2.category || previous.minutes !== record2.minutes || previous.intensity !== record2.intensity || Boolean(previous.deleted) !== Boolean(record2.deleted))) {
+      conflicts.add(record2.id);
     }
-    unique.set(record.id, record);
+    unique.set(record2.id, record2);
   }
-  for (const [id, record] of unique) {
-    const age = now - dayNumber(record.date);
-    if (conflicts.has(id) || record.deleted || record.sport !== sport || !record.category || !CATEGORIES.includes(record.category) || !(age >= 1 && age <= 7)) unique.delete(id);
+  for (const [id, record2] of unique) {
+    const age = now - dayNumber(record2.date);
+    if (conflicts.has(id) || record2.deleted || record2.sport !== sport || !record2.category || !CATEGORIES.includes(record2.category) || !(age >= 1 && age <= 7)) unique.delete(id);
   }
   return CATEGORIES.flatMap((category) => {
     const rows2 = [...unique.values()].filter((row) => row.category === category);
@@ -1487,7 +1506,7 @@ function projectEnvelope(ctx) {
   const workloadHigh = typeof workloadVal === "object" && workloadVal?.status === "high" || typeof workloadVal === "number" && workloadVal > 0.75;
   const asymVal = ctx.get("asymmetry_pct")?.value;
   const freshnessVal = ctx.get("speed_freshness")?.value;
-  const missing = ctx.missing.map((v) => v.key);
+  const missing2 = ctx.missing.map((v) => v.key);
   const lifecycleBand = ctx.get("lifecycle_band")?.value ?? null;
   const dob = ctx.get("date_of_birth")?.value;
   let isMinor = null;
@@ -1523,7 +1542,7 @@ function projectEnvelope(ctx) {
     isMinor,
     parentSupremacyActive: !!parentSupremacyActive,
     parentConcerns,
-    missing
+    missing: missing2
   };
 }
 function selectSpeedFocus(proj) {
@@ -1627,15 +1646,15 @@ function buildAnthroProfile(raw) {
   const armTotal = num(a.arm_total_in);
   const torso = num(a.torso_in);
   const foot = num(a.foot_length_in);
-  const missing = [];
-  if (height == null) missing.push("height_in");
-  if (wingspan == null) missing.push("wingspan_in");
-  if (femur == null) missing.push("femur_in");
-  if (tibia == null) missing.push("tibia_in");
-  if (forearm == null) missing.push("forearm_in");
-  if (armTotal == null) missing.push("arm_total_in");
-  if (torso == null) missing.push("torso_in");
-  if (foot == null) missing.push("foot_length_in");
+  const missing2 = [];
+  if (height == null) missing2.push("height_in");
+  if (wingspan == null) missing2.push("wingspan_in");
+  if (femur == null) missing2.push("femur_in");
+  if (tibia == null) missing2.push("tibia_in");
+  if (forearm == null) missing2.push("forearm_in");
+  if (armTotal == null) missing2.push("arm_total_in");
+  if (torso == null) missing2.push("torso_in");
+  if (foot == null) missing2.push("foot_length_in");
   const flags = [];
   const apeIndex = height && wingspan ? wingspan / height : null;
   if (apeIndex != null) {
@@ -1690,7 +1709,7 @@ function buildAnthroProfile(raw) {
     footFlag,
     archetype,
     flags,
-    missing
+    missing: missing2
   };
 }
 function hasAnyAnthroSignal(p) {
@@ -2804,20 +2823,20 @@ function tissuePrepBlock(input, available) {
       stopIf: "Sharp pain, numbness, tingling, or bruising pressure."
     }
   };
-  const swings = thrower ? "10 easy arm swings across the chest and 10 big arm circles each way" : "10 easy arm swings across the chest";
+  const swings2 = thrower ? "10 easy arm swings across the chest and 10 big arm circles each way" : "10 easy arm swings across the chest";
   const rhythm = {
     slug: "wu_tissue_prep_rhythmic_shake",
     name: "Tissue prep 2 \u2014 bounces, swings and shake-outs",
     role: "tissue_prep",
     setup: "Stand tall in open space with room to swing your arms and legs. Hold a wall or fence for the leg swings.",
     dosage: "2 minutes total",
-    cue: `Do 20 quick, small ankle bounces (heels barely leave the ground), then 10 front-to-back leg swings and 10 side-to-side leg swings on each leg, then ${swings}, then shake out your arms and legs loosely for 15 seconds.${softball && thrower ? " Pitchers add 10 slow windmill circles each way." : ""}`,
+    cue: `Do 20 quick, small ankle bounces (heels barely leave the ground), then 10 front-to-back leg swings and 10 side-to-side leg swings on each leg, then ${swings2}, then shake out your arms and legs loosely for 15 seconds.${softball && thrower ? " Pitchers add 10 slow windmill circles each way." : ""}`,
     stopIf: "You feel sharp pain or a joint pinches.",
     source: "owner_tissue_prep_law",
     guide: {
       what: "Quick ankle bounces, then loose leg and arm swings and a shake-out. The rhythm breaks up stiffness so the body moves freely before faster work.",
       setup: "Open space; a wall or fence for balance on leg swings.",
-      goodRep: ["20 small, springy ankle bounces.", "10 front-to-back and 10 side-to-side leg swings per leg.", `${swings[0].toUpperCase()}${swings.slice(1)}.`, "Shake out arms and legs for 15 seconds."],
+      goodRep: ["20 small, springy ankle bounces.", "10 front-to-back and 10 side-to-side leg swings per leg.", `${swings2[0].toUpperCase()}${swings2.slice(1)}.`, "Shake out arms and legs for 15 seconds."],
       badRep: ["Forcing the swings to the end of your range.", "Bouncing high and heavy instead of small and quick."],
       feel: "Loose and springy.",
       whyToday: "Rhythmic movement right after rolling turns the loosened tissue into easy, springy motion.",
@@ -5593,9 +5612,9 @@ function weeksBetween(startIso, today) {
   if (!startIso) return -1;
   const start = new Date(startIso);
   if (Number.isNaN(start.getTime())) return -1;
-  const ms = today.getTime() - start.getTime();
-  if (ms < 0) return 0;
-  return Math.floor(ms / (7 * 24 * 60 * 60 * 1e3));
+  const ms2 = today.getTime() - start.getTime();
+  if (ms2 < 0) return 0;
+  return Math.floor(ms2 / (7 * 24 * 60 * 60 * 1e3));
 }
 function quartersFromWeeks(weeks) {
   if (weeks < 0) return 2;
@@ -6856,9 +6875,9 @@ function applyMinorParentSupremacy(blocks, proj) {
   const affected = /* @__PURE__ */ new Map();
   for (const concern of proj.parentConcerns) {
     for (const m of MINOR_CONCERN_AFFECTED[concern] ?? []) {
-      const list = affected.get(m) ?? [];
-      list.push(concern);
-      affected.set(m, list);
+      const list2 = affected.get(m) ?? [];
+      list2.push(concern);
+      affected.set(m, list2);
     }
   }
   if (affected.size === 0) return blocks;
@@ -7416,7 +7435,8 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
   }), proj);
   const fullRestDay = roadmapInputs.fullRestDay === true || scheduleSignal.postureToday === "normal" && weeklyRoadmap.find((day) => day.isToday)?.restDay === true;
   const bunting = roadmapInputs.bunting;
-  const bunted = bunting ? applyBuntingPlan(goalOrdered, {
+  const masteryOrdered = applyMasteryFocus(goalOrdered, roadmapInputs.masteryFocus);
+  const bunted = bunting ? applyBuntingPlan(masteryOrdered, {
     sport: normalizeSport(sportRaw) === "softball" ? "softball" : "baseball",
     modules: roadmapInputs.subscriptionModules ?? [],
     bats: identityOverride?.isSwitchHitter ? "S" : ["R", "L", "S"].includes(String(ctx.get("bats_hand")?.value)) ? ctx.get("bats_hand")?.value : null,
@@ -7435,7 +7455,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     phase: bunting.phase,
     catalog: bunting.catalog,
     userId: bunting.userId
-  }) : goalOrdered;
+  }) : masteryOrdered;
   const blocks = fullRestDay ? bunted.map((b) => {
     if (["fueling", "game_iq"].includes(b.modality)) return b;
     const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter((d2) => isSoftRecovery(d2.slug)) : [];
@@ -7533,15 +7553,15 @@ function normalizeConfidence(raw) {
 function fromEnvelope(envelope, key2, label2, domain) {
   const e = envelope?.[key2];
   const value = e?.value ?? null;
-  const missing = e?.missing ?? (value === null || value === void 0);
+  const missing2 = e?.missing ?? (value === null || value === void 0);
   return {
     key: key2,
     label: label2,
     domain,
-    value: missing ? null : value,
+    value: missing2 ? null : value,
     source: e?.source ?? `envelope.${key2}`,
     confidence: normalizeConfidence(e?.confidence),
-    missing,
+    missing: missing2,
     lastUpdated: e?.last_updated ?? null,
     lineage: {
       owner: e?.owner ?? "unknown",
@@ -7586,11 +7606,11 @@ function spineVariables(env) {
 }
 function contextFromEnvelope(env, extra = []) {
   const vars = [...spineVariables(env), ...extra];
-  const missing = vars.filter((v) => v.missing);
+  const missing2 = vars.filter((v) => v.missing);
   return {
     variables: vars,
-    missing,
-    missingCount: missing.length,
+    missing: missing2,
+    missingCount: missing2.length,
     isLoading: false,
     envelope: env,
     get(key2) {
@@ -7598,9 +7618,2124 @@ function contextFromEnvelope(env, extra = []) {
     }
   };
 }
+
+// supabase/functions/_shared/wic/masteryIdentity.ts
+function areaWindowPolicy(settings, area) {
+  const inherited = settings ? { initialSize: settings.initial_window, transitionAt: settings.transition_at, laterSize: settings.later_window } : OWNER_WINDOW_POLICY;
+  if (!settings || area === "batting") return inherited;
+  const values = [settings[`${area}_initial_window`], settings[`${area}_transition_at`], settings[`${area}_later_window`]];
+  if (values.every((v) => v == null)) return inherited;
+  const [initialSize, transitionAt, laterSize] = values;
+  if (initialSize == null || transitionAt == null || laterSize == null) throw new Error("Incomplete area window policy");
+  const policy = { initialSize, transitionAt, laterSize };
+  if (!validWindowPolicy(policy)) throw new Error("Invalid area window policy");
+  return policy;
+}
+var OWNER_WINDOW_POLICY = { initialSize: 100, transitionAt: 500, laterSize: 500 };
+function validWindowPolicy(p) {
+  return [p.initialSize, p.transitionAt, p.laterSize].every((n) => Number.isSafeInteger(n) && n > 0) && p.transitionAt % p.initialSize === 0;
+}
+function opportunityWindows(count, p = OWNER_WINDOW_POLICY) {
+  if (!Number.isSafeInteger(count) || count < 0 || !validWindowPolicy(p)) throw new Error("Invalid opportunity window");
+  const windows = [];
+  let start = 1;
+  while (start <= count) {
+    const size = start <= p.transitionAt ? p.initialSize : p.laterSize;
+    const end = start + size - 1;
+    windows.push({ start, end, size, sample: Math.min(size, count - start + 1), complete: end <= count });
+    start = end + 1;
+  }
+  return windows;
+}
+var HITS = /* @__PURE__ */ new Set(["1B", "2B", "3B", "HR", "single", "double", "triple", "home_run"]);
+var OUTS = /* @__PURE__ */ new Set(["K", "SO", "K_swinging", "K_looking", "strikeout", "GO", "FO", "LO", "PO", "FC", "ROE", "E", "groundout", "flyout", "lineout", "popout", "out", "fielders_choice", "error"]);
+var NON_AB = /* @__PURE__ */ new Set(["BB", "IBB", "walk", "HBP", "hbp", "SF", "sac_fly", "SAC", "sac_bunt", "CI", "catchers_interference"]);
+function battingIdentity(events, p = OWNER_WINDOW_POLICY) {
+  const unique = /* @__PURE__ */ new Map();
+  let invalid = false;
+  for (const e of events) {
+    const old = unique.get(e.id);
+    if (!e.id || !e.source || !Number.isFinite(Date.parse(e.date)) || !Number.isFinite(e.order) || old && JSON.stringify(old) !== JSON.stringify(e)) {
+      invalid = true;
+      continue;
+    }
+    unique.set(e.id, e);
+  }
+  const ordered = [...unique.values()].sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order || a.id.localeCompare(b.id));
+  if (ordered.some((e) => !HITS.has(e.result ?? "") && !OUTS.has(e.result ?? "") && !NON_AB.has(e.result ?? ""))) invalid = true;
+  const abs = ordered.filter((e) => HITS.has(e.result ?? "") || OUTS.has(e.result ?? ""));
+  const windows = opportunityWindows(abs.length, p);
+  const completed = invalid ? [] : windows.filter((w) => w.complete).map((w) => {
+    const rows2 = abs.slice(w.start - 1, w.end);
+    const previous = w.start > 1 ? abs[w.start - 2] : null;
+    const firstIndex = previous ? ordered.indexOf(previous) + 1 : 0;
+    const lastRow = rows2[rows2.length - 1];
+    const nextAB = abs[w.end];
+    const pas = ordered.slice(firstIndex, nextAB ? ordered.indexOf(nextAB) : ordered.length);
+    return {
+      start: w.start,
+      end: w.end,
+      hits: rows2.filter((e) => HITS.has(e.result ?? "")).length,
+      atBats: rows2.length,
+      plateAppearances: pas.length,
+      paIds: pas.map((e) => e.id),
+      pitchCounts: Object.fromEntries(pas.map((e) => [e.id, e.pitchCount ?? null])),
+      homeRuns: rows2.filter((e) => e.result === "HR" || e.result === "home_run").length,
+      strikeouts: rows2.filter((e) => ["K", "SO", "K_swinging", "K_looking", "strikeout"].includes(e.result ?? "")).length,
+      ballsInPlay: rows2.filter((e) => !["HR", "home_run", "K", "SO", "K_swinging", "K_looking", "strikeout"].includes(e.result ?? "")).length,
+      sourceIds: pas.map((e) => e.id),
+      from: rows2[0]?.date ?? "",
+      through: lastRow?.date ?? ""
+    };
+  });
+  const latest = completed[completed.length - 1] ?? null;
+  const last = windows[windows.length - 1];
+  const current = last && !last.complete ? last : { start: abs.length + 1, end: abs.length + (abs.length < p.transitionAt ? p.initialSize : p.laterSize), size: abs.length < p.transitionAt ? p.initialSize : p.laterSize, sample: 0, complete: false };
+  return { status: latest ? "Measured" : "Need more data", completeHistory: !invalid, latest, completed, current, totalAtBats: abs.length, average: latest ? latest.hits / latest.atBats : null };
+}
+function fieldingIdentity(events, p = OWNER_WINDOW_POLICY) {
+  const unique = /* @__PURE__ */ new Map();
+  let invalid = false;
+  let unclassified = 0;
+  for (const e of events) {
+    const old = unique.get(e.id);
+    if (!e.id || !e.source || !Number.isFinite(Date.parse(e.date)) || !Number.isFinite(e.order) || old && JSON.stringify(old) !== JSON.stringify(e)) {
+      invalid = true;
+      unclassified++;
+      continue;
+    }
+    unique.set(e.id, e);
+  }
+  const ordered = [...unique.values()].sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order || a.id.localeCompare(b.id));
+  const chances = ordered.filter((e) => {
+    const scored = e.error === true || e.assist === true || e.putout === true;
+    if (!scored || e.error === null) {
+      invalid = true;
+      unclassified++;
+      return false;
+    }
+    return true;
+  });
+  const windows = opportunityWindows(chances.length, p);
+  const completed = invalid ? [] : windows.filter((w) => w.complete).map((w) => {
+    const rows2 = chances.slice(w.start - 1, w.end);
+    const errors = rows2.filter((e) => e.error === true).length;
+    return { ...w, chances: rows2.length, errors, successful: rows2.length - errors, rate: (rows2.length - errors) / rows2.length, sourceIds: rows2.map((e) => e.id), from: rows2[0]?.date ?? "", through: rows2[rows2.length - 1]?.date ?? "" };
+  });
+  const latest = completed[completed.length - 1] ?? null;
+  const last = windows[windows.length - 1];
+  const size = chances.length < p.transitionAt ? p.initialSize : p.laterSize;
+  const current = last && !last.complete ? last : { start: chances.length + 1, end: chances.length + size, size, sample: 0, complete: false };
+  return { status: latest ? "Measured" : "Need more data", completeHistory: !invalid, latest, completed, current, totalChances: chances.length, unclassified };
+}
+function speedIdentity(evidence, eliteGrade = 65) {
+  const valid = evidence.filter((e) => e.kind === "measured" && e.id && e.source && Number.isFinite(Date.parse(e.date)) && Number.isFinite(e.value) && e.value > 0 && e.minimum !== null && e.minimum > 0 && e.sample >= e.minimum);
+  const usable = valid.filter((e) => typeof e.grade === "number" && Number.isFinite(e.grade) && e.grade >= 20 && e.grade <= 80 && e.grade % 5 === 0);
+  const ambiguous = /* @__PURE__ */ new Set();
+  const unique = /* @__PURE__ */ new Map();
+  for (const e of usable) {
+    const old = unique.get(e.id);
+    if (old && JSON.stringify(old) !== JSON.stringify(e)) ambiguous.add(e.id);
+    else unique.set(e.id, e);
+  }
+  const rows2 = [...unique.values()].filter((e) => !ambiguous.has(e.id));
+  const latest = /* @__PURE__ */ new Map();
+  for (const row of rows2) {
+    const key2 = `${row.source}:${row.measure}:${row.unit}`;
+    const old = latest.get(key2);
+    if (!old || row.date > old.date) latest.set(key2, row);
+  }
+  const current = [...latest.values()];
+  const elite = current.length ? current.some((e) => (e.grade ?? 0) >= eliteGrade) : null;
+  return { status: elite === null ? "Need more data" : elite ? "Elite" : "Building", elite, evidence: current };
+}
+
+// src/data/gradeBenchmarks.ts
+var GRADE_BENCHMARKS = {
+  ten_yard_dash: {
+    source: "PG/PBR event timing data, MLB Combine \u2014 baseball only",
+    as_of: null,
+    estimate: true,
+    baseball: [
+      { raw: 1.85, grade: 20 },
+      { raw: 1.75, grade: 30 },
+      { raw: 1.65, grade: 40 },
+      { raw: 1.55, grade: 50 },
+      { raw: 1.467, grade: 60 },
+      { raw: 1.383, grade: 70 },
+      { raw: 1.3, grade: 80 }
+    ],
+    softball: []
+  },
+  seven_yard_dash: {
+    source: "PG/PBR softball event timing \u2014 softball acceleration test",
+    as_of: null,
+    estimate: true,
+    baseball: [],
+    softball: [
+      { raw: 1.55, grade: 20 },
+      { raw: 1.473, grade: 30 },
+      { raw: 1.397, grade: 40 },
+      { raw: 1.32, grade: 50 },
+      { raw: 1.247, grade: 60 },
+      { raw: 1.173, grade: 70 },
+      { raw: 1.1, grade: 80 }
+    ]
+  },
+  thirty_yard_dash: {
+    source: "estimate",
+    as_of: null,
+    baseball: [
+      { raw: 4.3, grade: 20 },
+      { raw: 4.117, grade: 30 },
+      { raw: 3.933, grade: 40 },
+      { raw: 3.75, grade: 50 },
+      { raw: 3.567, grade: 60 },
+      { raw: 3.383, grade: 70 },
+      { raw: 3.2, grade: 80 }
+    ],
+    softball: [
+      { raw: 4.6, grade: 20 },
+      { raw: 4.4, grade: 30 },
+      { raw: 4.2, grade: 40 },
+      { raw: 4, grade: 50 },
+      { raw: 3.817, grade: 60 },
+      { raw: 3.633, grade: 70 },
+      { raw: 3.45, grade: 80 }
+    ]
+  },
+  sixty_yard_dash: {
+    source: "owner",
+    as_of: "2026-09-08",
+    baseball: [
+      { raw: 7.5, grade: 20 },
+      { raw: 7.267, grade: 30 },
+      { raw: 7.033, grade: 40 },
+      { raw: 6.8, grade: 50 },
+      { raw: 6.533, grade: 60 },
+      { raw: 6.267, grade: 70 },
+      { raw: 6, grade: 80 }
+    ],
+    softball: []
+  },
+  forty_yard_dash: {
+    source: "PG/PBR softball event timing \u2014 softball top-end speed test",
+    as_of: null,
+    estimate: true,
+    baseball: [],
+    softball: [
+      { raw: 5.75, grade: 20 },
+      { raw: 5.517, grade: 30 },
+      { raw: 5.283, grade: 40 },
+      { raw: 5.05, grade: 50 },
+      { raw: 4.833, grade: 60 },
+      { raw: 4.617, grade: 70 },
+      { raw: 4.4, grade: 80 }
+    ]
+  },
+  ten_thirty_split: {
+    source: "estimate",
+    as_of: null,
+    baseball: [
+      { raw: 3, grade: 20 },
+      { raw: 2.8, grade: 30 },
+      { raw: 2.6, grade: 40 },
+      { raw: 2.4, grade: 50 },
+      { raw: 2.233, grade: 60 },
+      { raw: 2.067, grade: 70 },
+      { raw: 1.9, grade: 80 }
+    ],
+    softball: [
+      { raw: 3.3, grade: 20 },
+      { raw: 3.067, grade: 30 },
+      { raw: 2.833, grade: 40 },
+      { raw: 2.6, grade: 50 },
+      { raw: 2.433, grade: 60 },
+      { raw: 2.267, grade: 70 },
+      { raw: 2.1, grade: 80 }
+    ]
+  },
+  thirty_sixty_split: {
+    source: "estimate",
+    as_of: null,
+    baseball: [
+      { raw: 3.4, grade: 20 },
+      { raw: 3.2, grade: 30 },
+      { raw: 3, grade: 40 },
+      { raw: 2.8, grade: 50 },
+      { raw: 2.633, grade: 60 },
+      { raw: 2.467, grade: 70 },
+      { raw: 2.3, grade: 80 }
+    ],
+    softball: [
+      { raw: 3.7, grade: 20 },
+      { raw: 3.467, grade: 30 },
+      { raw: 3.233, grade: 40 },
+      { raw: 3, grade: 50 },
+      { raw: 2.817, grade: 60 },
+      { raw: 2.633, grade: 70 },
+      { raw: 2.45, grade: 80 }
+    ]
+  },
+  pro_agility: {
+    source: "NFL/MLB Combine cross-reference, PG data",
+    as_of: null,
+    estimate: true,
+    baseball: [
+      { raw: 4.9, grade: 20 },
+      { raw: 4.7, grade: 30 },
+      { raw: 4.5, grade: 40 },
+      { raw: 4.3, grade: 50 },
+      { raw: 4.1, grade: 60 },
+      { raw: 3.9, grade: 70 },
+      { raw: 3.7, grade: 80 }
+    ],
+    softball: [
+      { raw: 5.1, grade: 20 },
+      { raw: 4.9, grade: 30 },
+      { raw: 4.7, grade: 40 },
+      { raw: 4.5, grade: 50 },
+      { raw: 4.283, grade: 60 },
+      { raw: 4.067, grade: 70 },
+      { raw: 3.85, grade: 80 }
+    ]
+  },
+  lateral_shuffle: {
+    source: "estimate",
+    as_of: null,
+    baseball: [
+      { raw: 3.6, grade: 20 },
+      { raw: 3.367, grade: 30 },
+      { raw: 3.133, grade: 40 },
+      { raw: 2.9, grade: 50 },
+      { raw: 2.717, grade: 60 },
+      { raw: 2.533, grade: 70 },
+      { raw: 2.35, grade: 80 }
+    ],
+    softball: [
+      { raw: 3.8, grade: 20 },
+      { raw: 3.567, grade: 30 },
+      { raw: 3.333, grade: 40 },
+      { raw: 3.1, grade: 50 },
+      { raw: 2.9, grade: 60 },
+      { raw: 2.7, grade: 70 },
+      { raw: 2.5, grade: 80 }
+    ]
+  },
+  first_step_5yd: {
+    source: "estimate",
+    as_of: null,
+    baseball: [
+      { raw: 1.4, grade: 20 },
+      { raw: 1.3, grade: 30 },
+      { raw: 1.2, grade: 40 },
+      { raw: 1.1, grade: 50 },
+      { raw: 1, grade: 60 },
+      { raw: 0.9, grade: 70 },
+      { raw: 0.8, grade: 80 }
+    ],
+    softball: [
+      { raw: 1.5, grade: 20 },
+      { raw: 1.4, grade: 30 },
+      { raw: 1.3, grade: 40 },
+      { raw: 1.2, grade: 50 },
+      { raw: 1.09, grade: 60 },
+      { raw: 0.98, grade: 70 },
+      { raw: 0.87, grade: 80 }
+    ]
+  },
+  sl_broad_jump: {
+    source: "NSCA normative tables, PG data",
+    as_of: null,
+    estimate: true,
+    baseball: [
+      { raw: 55, grade: 20 },
+      { raw: 62, grade: 30 },
+      { raw: 69, grade: 40 },
+      { raw: 76, grade: 50 },
+      { raw: 85.667, grade: 60 },
+      { raw: 95.333, grade: 70 },
+      { raw: 105, grade: 80 }
+    ],
+    softball: [
+      { raw: 48, grade: 20 },
+      { raw: 55.333, grade: 30 },
+      { raw: 62.667, grade: 40 },
+      { raw: 70, grade: 50 },
+      { raw: 79.333, grade: 60 },
+      { raw: 88.667, grade: 70 },
+      { raw: 98, grade: 80 }
+    ]
+  },
+  sl_lateral_broad_jump: {
+    source: "estimate",
+    as_of: null,
+    baseball: [
+      { raw: 45, grade: 20 },
+      { raw: 51.667, grade: 30 },
+      { raw: 58.333, grade: 40 },
+      { raw: 65, grade: 50 },
+      { raw: 74.333, grade: 60 },
+      { raw: 83.667, grade: 70 },
+      { raw: 93, grade: 80 }
+    ],
+    softball: [
+      { raw: 42, grade: 20 },
+      { raw: 48.333, grade: 30 },
+      { raw: 54.667, grade: 40 },
+      { raw: 61, grade: 50 },
+      { raw: 69.667, grade: 60 },
+      { raw: 78.333, grade: 70 },
+      { raw: 87, grade: 80 }
+    ]
+  },
+  sl_vert_jump: {
+    source: "NSCA, PG event data",
+    as_of: null,
+    estimate: true,
+    baseball: [
+      { raw: 18, grade: 20 },
+      { raw: 21, grade: 30 },
+      { raw: 24, grade: 40 },
+      { raw: 27, grade: 50 },
+      { raw: 30.667, grade: 60 },
+      { raw: 34.333, grade: 70 },
+      { raw: 38, grade: 80 }
+    ],
+    softball: [
+      { raw: 16, grade: 20 },
+      { raw: 19, grade: 30 },
+      { raw: 22, grade: 40 },
+      { raw: 25, grade: 50 },
+      { raw: 28.333, grade: 60 },
+      { raw: 31.667, grade: 70 },
+      { raw: 35, grade: 80 }
+    ]
+  },
+  vertical_jump: {
+    source: "NSCA normative tables",
+    as_of: null,
+    estimate: true,
+    baseball: [
+      { raw: 22, grade: 20 },
+      { raw: 25, grade: 30 },
+      { raw: 28, grade: 40 },
+      { raw: 31, grade: 50 },
+      { raw: 34.667, grade: 60 },
+      { raw: 38.333, grade: 70 },
+      { raw: 42, grade: 80 }
+    ],
+    softball: [
+      { raw: 19, grade: 20 },
+      { raw: 21.667, grade: 30 },
+      { raw: 24.333, grade: 40 },
+      { raw: 27, grade: 50 },
+      { raw: 30.667, grade: 60 },
+      { raw: 34.333, grade: 70 },
+      { raw: 38, grade: 80 }
+    ]
+  },
+  standing_broad_jump: {
+    source: "NSCA normative tables",
+    as_of: null,
+    estimate: true,
+    baseball: [
+      { raw: 70, grade: 20 },
+      { raw: 78.333, grade: 30 },
+      { raw: 86.667, grade: 40 },
+      { raw: 95, grade: 50 },
+      { raw: 105, grade: 60 },
+      { raw: 115, grade: 70 },
+      { raw: 125, grade: 80 }
+    ],
+    softball: [
+      { raw: 62, grade: 20 },
+      { raw: 70.333, grade: 30 },
+      { raw: 78.667, grade: 40 },
+      { raw: 87, grade: 50 },
+      { raw: 96.667, grade: 60 },
+      { raw: 106.333, grade: 70 },
+      { raw: 116, grade: 80 }
+    ]
+  },
+  mb_situp_throw: {
+    source: "estimate",
+    as_of: null,
+    baseball: [
+      { raw: 20, grade: 20 },
+      { raw: 25, grade: 30 },
+      { raw: 30, grade: 40 },
+      { raw: 35, grade: 50 },
+      { raw: 41.667, grade: 60 },
+      { raw: 48.333, grade: 70 },
+      { raw: 55, grade: 80 }
+    ],
+    softball: [
+      { raw: 17, grade: 20 },
+      { raw: 21.333, grade: 30 },
+      { raw: 25.667, grade: 40 },
+      { raw: 30, grade: 50 },
+      { raw: 36, grade: 60 },
+      { raw: 42, grade: 70 },
+      { raw: 48, grade: 80 }
+    ]
+  },
+  seated_chest_pass: {
+    source: "estimate",
+    as_of: null,
+    baseball: [
+      { raw: 16, grade: 20 },
+      { raw: 20, grade: 30 },
+      { raw: 24, grade: 40 },
+      { raw: 28, grade: 50 },
+      { raw: 33, grade: 60 },
+      { raw: 38, grade: 70 },
+      { raw: 43, grade: 80 }
+    ],
+    softball: [
+      { raw: 13, grade: 20 },
+      { raw: 16.333, grade: 30 },
+      { raw: 19.667, grade: 40 },
+      { raw: 23, grade: 50 },
+      { raw: 27.667, grade: 60 },
+      { raw: 32.333, grade: 70 },
+      { raw: 37, grade: 80 }
+    ]
+  },
+  mb_rotational_throw: {
+    source: "estimate",
+    as_of: null,
+    baseball: [
+      { raw: 22, grade: 20 },
+      { raw: 26.333, grade: 30 },
+      { raw: 30.667, grade: 40 },
+      { raw: 35, grade: 50 },
+      { raw: 40, grade: 60 },
+      { raw: 45, grade: 70 },
+      { raw: 50, grade: 80 }
+    ],
+    softball: [
+      { raw: 19, grade: 20 },
+      { raw: 23, grade: 30 },
+      { raw: 27, grade: 40 },
+      { raw: 31, grade: 50 },
+      { raw: 36, grade: 60 },
+      { raw: 41, grade: 70 },
+      { raw: 46, grade: 80 }
+    ]
+  },
+  mb_overhead_throw: {
+    source: "estimate",
+    as_of: null,
+    baseball: [
+      { raw: 22, grade: 20 },
+      { raw: 27.333, grade: 30 },
+      { raw: 32.667, grade: 40 },
+      { raw: 38, grade: 50 },
+      { raw: 44.333, grade: 60 },
+      { raw: 50.667, grade: 70 },
+      { raw: 57, grade: 80 }
+    ],
+    softball: [
+      { raw: 18, grade: 20 },
+      { raw: 23, grade: 30 },
+      { raw: 28, grade: 40 },
+      { raw: 33, grade: 50 },
+      { raw: 39, grade: 60 },
+      { raw: 45, grade: 70 },
+      { raw: 51, grade: 80 }
+    ]
+  },
+  tee_exit_velocity: {
+    source: "owner",
+    as_of: "2026-09-08",
+    baseball: [
+      { raw: 70, grade: 20 },
+      { raw: 77.667, grade: 30 },
+      { raw: 85.333, grade: 40 },
+      { raw: 93, grade: 50 },
+      { raw: 97.667, grade: 60 },
+      { raw: 102.333, grade: 70 },
+      { raw: 107, grade: 80 }
+    ],
+    softball: [
+      { raw: 50, grade: 20 },
+      { raw: 56, grade: 30 },
+      { raw: 62, grade: 40 },
+      { raw: 68, grade: 50 },
+      { raw: 74, grade: 60 },
+      { raw: 80, grade: 70 },
+      { raw: 86, grade: 80 }
+    ]
+  },
+  max_tee_distance: {
+    source: "estimate",
+    as_of: null,
+    baseball: [
+      { raw: 200, grade: 20 },
+      { raw: 243.333, grade: 30 },
+      { raw: 286.667, grade: 40 },
+      { raw: 330, grade: 50 },
+      { raw: 370, grade: 60 },
+      { raw: 410, grade: 70 },
+      { raw: 450, grade: 80 }
+    ],
+    softball: [
+      { raw: 130, grade: 20 },
+      { raw: 163.333, grade: 30 },
+      { raw: 196.667, grade: 40 },
+      { raw: 230, grade: 50 },
+      { raw: 263.333, grade: 60 },
+      { raw: 296.667, grade: 70 },
+      { raw: 330, grade: 80 }
+    ]
+  },
+  bat_speed: {
+    source: "Statcast bat tracking, league-wide (MLB avg 71.5 mph, elite 78-80+)",
+    as_of: "2026-01-01",
+    baseball: [
+      { raw: 55, grade: 20 },
+      { raw: 60.333, grade: 30 },
+      { raw: 65.667, grade: 40 },
+      { raw: 71, grade: 50 },
+      { raw: 77, grade: 60 },
+      { raw: 83, grade: 70 },
+      { raw: 89, grade: 80 }
+    ],
+    softball: [
+      { raw: 48, grade: 20 },
+      { raw: 53, grade: 30 },
+      { raw: 58, grade: 40 },
+      { raw: 63, grade: 50 },
+      { raw: 69, grade: 60 },
+      { raw: 75, grade: 70 },
+      { raw: 81, grade: 80 }
+    ]
+  },
+  avg_exit_velo_bp: {
+    source: "Driveline, MLB Combine avg",
+    as_of: null,
+    estimate: true,
+    baseball: [
+      { raw: 65, grade: 20 },
+      { raw: 71.667, grade: 30 },
+      { raw: 78.333, grade: 40 },
+      { raw: 85, grade: 50 },
+      { raw: 91, grade: 60 },
+      { raw: 97, grade: 70 },
+      { raw: 103, grade: 80 }
+    ],
+    softball: [
+      { raw: 46, grade: 20 },
+      { raw: 51.667, grade: 30 },
+      { raw: 57.333, grade: 40 },
+      { raw: 63, grade: 50 },
+      { raw: 69, grade: 60 },
+      { raw: 75, grade: 70 },
+      { raw: 81, grade: 80 }
+    ]
+  },
+  long_toss_distance: {
+    source: "Driveline, PG event data",
+    as_of: null,
+    estimate: true,
+    baseball: [
+      { raw: 170, grade: 20 },
+      { raw: 206.667, grade: 30 },
+      { raw: 243.333, grade: 40 },
+      { raw: 280, grade: 50 },
+      { raw: 326.667, grade: 60 },
+      { raw: 373.333, grade: 70 },
+      { raw: 420, grade: 80 }
+    ],
+    softball: [
+      { raw: 125, grade: 20 },
+      { raw: 153.333, grade: 30 },
+      { raw: 181.667, grade: 40 },
+      { raw: 210, grade: 50 },
+      { raw: 243.333, grade: 60 },
+      { raw: 276.667, grade: 70 },
+      { raw: 310, grade: 80 }
+    ]
+  },
+  pitching_velocity: {
+    source: "MLB Combine avg 2019-2023, PG/PBR event data",
+    as_of: "2023-12-31",
+    baseball: [
+      { raw: 84, grade: 20 },
+      { raw: 87.5, grade: 30 },
+      { raw: 91, grade: 40 },
+      { raw: 94.5, grade: 50 },
+      { raw: 97.733, grade: 60 },
+      { raw: 100.967, grade: 70 },
+      { raw: 104.2, grade: 80 }
+    ],
+    softball: [
+      { raw: 52, grade: 20 },
+      { raw: 56.667, grade: 30 },
+      { raw: 61.333, grade: 40 },
+      { raw: 66, grade: 50 },
+      { raw: 70, grade: 60 },
+      { raw: 74, grade: 70 },
+      { raw: 78, grade: 80 }
+    ]
+  },
+  position_throw_velo: {
+    source: "owner",
+    as_of: "2026-09-08",
+    baseball: [
+      { raw: 75, grade: 20 },
+      { raw: 79.333, grade: 30 },
+      { raw: 83.667, grade: 40 },
+      { raw: 88, grade: 50 },
+      { raw: 90.333, grade: 60 },
+      { raw: 92.667, grade: 70 },
+      { raw: 95, grade: 80 }
+    ],
+    softball: [
+      { raw: 52, grade: 20 },
+      { raw: 58, grade: 30 },
+      { raw: 64, grade: 40 },
+      { raw: 70, grade: 50 },
+      { raw: 76, grade: 60 },
+      { raw: 82, grade: 70 },
+      { raw: 88, grade: 80 }
+    ]
+  },
+  pulldown_velocity: {
+    source: "owner",
+    as_of: "2026-09-08",
+    baseball: [
+      { raw: 78, grade: 20 },
+      { raw: 83, grade: 30 },
+      { raw: 88, grade: 40 },
+      { raw: 93, grade: 50 },
+      { raw: 99, grade: 60 },
+      { raw: 105, grade: 70 },
+      { raw: 111, grade: 80 }
+    ],
+    softball: [
+      { raw: 55, grade: 20 },
+      { raw: 60, grade: 30 },
+      { raw: 65, grade: 40 },
+      { raw: 70, grade: 50 },
+      { raw: 74.667, grade: 60 },
+      { raw: 79.333, grade: 70 },
+      { raw: 84, grade: 80 }
+    ]
+  },
+  fielding_exchange_time: {
+    source: "estimate",
+    as_of: null,
+    baseball: [
+      { raw: 0.85, grade: 20 },
+      { raw: 0.8, grade: 30 },
+      { raw: 0.75, grade: 40 },
+      { raw: 0.7, grade: 50 },
+      { raw: 0.633, grade: 60 },
+      { raw: 0.567, grade: 70 },
+      { raw: 0.5, grade: 80 }
+    ],
+    softball: [
+      { raw: 2, grade: 20 },
+      { raw: 1.783, grade: 30 },
+      { raw: 1.567, grade: 40 },
+      { raw: 1.35, grade: 50 },
+      { raw: 1.183, grade: 60 },
+      { raw: 1.017, grade: 70 },
+      { raw: 0.85, grade: 80 }
+    ]
+  },
+  pop_time: {
+    source: "Baseball Savant pop time leaderboard (MLB avg 2.00s to 2B)",
+    as_of: "2026-01-01",
+    baseball: [
+      { raw: 2.5, grade: 20 },
+      { raw: 2.333, grade: 30 },
+      { raw: 2.167, grade: 40 },
+      { raw: 2, grade: 50 },
+      { raw: 1.867, grade: 60 },
+      { raw: 1.733, grade: 70 },
+      { raw: 1.6, grade: 80 }
+    ],
+    softball: [
+      { raw: 2.2, grade: 20 },
+      { raw: 2.12, grade: 30 },
+      { raw: 2.04, grade: 40 },
+      { raw: 1.96, grade: 50 },
+      { raw: 1.89, grade: 60 },
+      { raw: 1.82, grade: 70 },
+      { raw: 1.75, grade: 80 }
+    ]
+  },
+  sixty_yard_shuttle: {
+    source: "estimate",
+    as_of: null,
+    baseball: [
+      { raw: 15.5, grade: 20 },
+      { raw: 14.667, grade: 30 },
+      { raw: 13.833, grade: 40 },
+      { raw: 13, grade: 50 },
+      { raw: 12.267, grade: 60 },
+      { raw: 11.533, grade: 70 },
+      { raw: 10.8, grade: 80 }
+    ],
+    softball: [
+      { raw: 16.5, grade: 20 },
+      { raw: 15.667, grade: 30 },
+      { raw: 14.833, grade: 40 },
+      { raw: 14, grade: 50 },
+      { raw: 13.267, grade: 60 },
+      { raw: 12.533, grade: 70 },
+      { raw: 11.8, grade: 80 }
+    ]
+  },
+  sl_balance_eyes_closed: {
+    source: "Research - balance norms for athletes",
+    as_of: null,
+    estimate: true,
+    baseball: [
+      { raw: 10, grade: 20 },
+      { raw: 18.333, grade: 30 },
+      { raw: 26.667, grade: 40 },
+      { raw: 35, grade: 50 },
+      { raw: 53.333, grade: 60 },
+      { raw: 71.667, grade: 70 },
+      { raw: 90, grade: 80 }
+    ],
+    softball: [
+      { raw: 10, grade: 20 },
+      { raw: 18.333, grade: 30 },
+      { raw: 26.667, grade: 40 },
+      { raw: 35, grade: 50 },
+      { raw: 53.333, grade: 60 },
+      { raw: 71.667, grade: 70 },
+      { raw: 90, grade: 80 }
+    ]
+  },
+  deceleration_10yd: {
+    source: "estimate",
+    as_of: null,
+    baseball: [
+      { raw: 2.8, grade: 20 },
+      { raw: 2.533, grade: 30 },
+      { raw: 2.267, grade: 40 },
+      { raw: 2, grade: 50 },
+      { raw: 1.8, grade: 60 },
+      { raw: 1.6, grade: 70 },
+      { raw: 1.4, grade: 80 }
+    ],
+    softball: [
+      { raw: 3, grade: 20 },
+      { raw: 2.733, grade: 30 },
+      { raw: 2.467, grade: 40 },
+      { raw: 2.2, grade: 50 },
+      { raw: 1.983, grade: 60 },
+      { raw: 1.767, grade: 70 },
+      { raw: 1.55, grade: 80 }
+    ]
+  },
+  three_hundred_yd_shuttle: {
+    source: "NSCA normative tables",
+    as_of: null,
+    estimate: true,
+    baseball: [
+      { raw: 68, grade: 20 },
+      { raw: 63.667, grade: 30 },
+      { raw: 59.333, grade: 40 },
+      { raw: 55, grade: 50 },
+      { raw: 51.333, grade: 60 },
+      { raw: 47.667, grade: 70 },
+      { raw: 44, grade: 80 }
+    ],
+    softball: [
+      { raw: 73, grade: 20 },
+      { raw: 68.667, grade: 30 },
+      { raw: 64.333, grade: 40 },
+      { raw: 60, grade: 50 },
+      { raw: 56, grade: 60 },
+      { raw: 52, grade: 70 },
+      { raw: 48, grade: 80 }
+    ]
+  },
+  sprint_repeat_avg: {
+    source: "estimate",
+    as_of: null,
+    baseball: [
+      { raw: 4.8, grade: 20 },
+      { raw: 4.533, grade: 30 },
+      { raw: 4.267, grade: 40 },
+      { raw: 4, grade: 50 },
+      { raw: 3.8, grade: 60 },
+      { raw: 3.6, grade: 70 },
+      { raw: 3.4, grade: 80 }
+    ],
+    softball: [
+      { raw: 5.1, grade: 20 },
+      { raw: 4.833, grade: 30 },
+      { raw: 4.567, grade: 40 },
+      { raw: 4.3, grade: 50 },
+      { raw: 4.083, grade: 60 },
+      { raw: 3.867, grade: 70 },
+      { raw: 3.65, grade: 80 }
+    ]
+  },
+  sl_3x_bound: {
+    source: "NSCA bound norms + sport-specific elastic output research",
+    as_of: null,
+    estimate: true,
+    baseball: [
+      { raw: 23, grade: 20 },
+      { raw: 26.333, grade: 30 },
+      { raw: 29.667, grade: 40 },
+      { raw: 33, grade: 50 },
+      { raw: 37.667, grade: 60 },
+      { raw: 42.333, grade: 70 },
+      { raw: 47, grade: 80 }
+    ],
+    softball: [
+      { raw: 21, grade: 20 },
+      { raw: 24, grade: 30 },
+      { raw: 27, grade: 40 },
+      { raw: 30, grade: 50 },
+      { raw: 34.333, grade: 60 },
+      { raw: 38.667, grade: 70 },
+      { raw: 43, grade: 80 }
+    ]
+  },
+  shoulder_rom_internal: {
+    source: "Research - GIRD norms, throwing athlete ROM studies",
+    as_of: null,
+    estimate: true,
+    baseball: [
+      { raw: 28, grade: 20 },
+      { raw: 33.667, grade: 30 },
+      { raw: 39.333, grade: 40 },
+      { raw: 45, grade: 50 },
+      { raw: 52.667, grade: 60 },
+      { raw: 60.333, grade: 70 },
+      { raw: 68, grade: 80 }
+    ],
+    softball: [
+      { raw: 30, grade: 20 },
+      { raw: 35.667, grade: 30 },
+      { raw: 41.333, grade: 40 },
+      { raw: 47, grade: 50 },
+      { raw: 54.667, grade: 60 },
+      { raw: 62.333, grade: 70 },
+      { raw: 70, grade: 80 }
+    ]
+  },
+  shoulder_rom_external: {
+    source: "Research - throwing athlete ROM studies",
+    as_of: null,
+    estimate: true,
+    baseball: [
+      { raw: 65, grade: 20 },
+      { raw: 72.333, grade: 30 },
+      { raw: 79.667, grade: 40 },
+      { raw: 87, grade: 50 },
+      { raw: 94.667, grade: 60 },
+      { raw: 102.333, grade: 70 },
+      { raw: 110, grade: 80 }
+    ],
+    softball: [
+      { raw: 66, grade: 20 },
+      { raw: 73.333, grade: 30 },
+      { raw: 80.667, grade: 40 },
+      { raw: 88, grade: 50 },
+      { raw: 95.667, grade: 60 },
+      { raw: 103.333, grade: 70 },
+      { raw: 111, grade: 80 }
+    ]
+  },
+  hip_internal_rotation: {
+    source: "Research - hip mobility norms for rotational athletes",
+    as_of: null,
+    estimate: true,
+    baseball: [
+      { raw: 20, grade: 20 },
+      { raw: 24.667, grade: 30 },
+      { raw: 29.333, grade: 40 },
+      { raw: 34, grade: 50 },
+      { raw: 40, grade: 60 },
+      { raw: 46, grade: 70 },
+      { raw: 52, grade: 80 }
+    ],
+    softball: [
+      { raw: 22, grade: 20 },
+      { raw: 26.667, grade: 30 },
+      { raw: 31.333, grade: 40 },
+      { raw: 36, grade: 50 },
+      { raw: 42, grade: 60 },
+      { raw: 48, grade: 70 },
+      { raw: 54, grade: 80 }
+    ]
+  },
+  ankle_dorsiflexion: {
+    source: "Research - knee-to-wall test norms",
+    as_of: null,
+    estimate: true,
+    baseball: [
+      { raw: 2.2, grade: 20 },
+      { raw: 2.8, grade: 30 },
+      { raw: 3.4, grade: 40 },
+      { raw: 4, grade: 50 },
+      { raw: 4.667, grade: 60 },
+      { raw: 5.333, grade: 70 },
+      { raw: 6, grade: 80 }
+    ],
+    softball: [
+      { raw: 2.5, grade: 20 },
+      { raw: 3.067, grade: 30 },
+      { raw: 3.633, grade: 40 },
+      { raw: 4.2, grade: 50 },
+      { raw: 4.867, grade: 60 },
+      { raw: 5.533, grade: 70 },
+      { raw: 6.2, grade: 80 }
+    ]
+  }
+};
+var SOFTBALL_GRADED_METRICS = /* @__PURE__ */ new Set([
+  "seven_yard_dash",
+  "forty_yard_dash",
+  "shoulder_rom_internal",
+  "shoulder_rom_external",
+  "hip_internal_rotation",
+  "ankle_dorsiflexion",
+  "sl_balance_eyes_closed"
+]);
+function isSoftballGradable(metricKey) {
+  return SOFTBALL_GRADED_METRICS.has(metricKey);
+}
+var SOFTBALL_UNGRADED_METRICS = Object.entries(GRADE_BENCHMARKS).filter(([key2, entry]) => (entry.softball?.length ?? 0) > 0 && !SOFTBALL_GRADED_METRICS.has(key2)).map(([key2]) => key2);
+
+// src/data/performanceTestRegistry.ts
+var PERFORMANCE_METRICS = [
+  // ── SPEED ──────────────────────────────────────────────
+  {
+    key: "ten_yard_dash",
+    category: "speed",
+    label: "10-Yard Dash",
+    unit: "s",
+    min: 1,
+    max: 3,
+    step: 0.01,
+    higherIsBetter: false,
+    tier: "free",
+    sports: ["baseball"],
+    modules: ["hitting", "pitching", "throwing", "general"],
+    instructions: "From a standing start, sprint 10 yards. Time with stopwatch or laser."
+  },
+  {
+    key: "seven_yard_dash",
+    category: "speed",
+    label: "7-Yard Dash",
+    unit: "s",
+    min: 0.8,
+    max: 2.5,
+    step: 0.01,
+    higherIsBetter: false,
+    tier: "free",
+    sports: ["softball"],
+    modules: ["hitting", "pitching", "throwing", "general"],
+    instructions: "From a standing start, sprint 7 yards (home-to-first-step distance for softball acceleration). Time with stopwatch or laser."
+  },
+  {
+    key: "thirty_yard_dash",
+    category: "speed",
+    label: "30-Yard Dash",
+    unit: "s",
+    min: 3,
+    max: 6,
+    step: 0.01,
+    higherIsBetter: false,
+    tier: "paid",
+    sports: ["baseball", "softball"],
+    modules: ["hitting", "throwing", "general"],
+    instructions: "From a standing start, sprint 30 yards. Use electronic timing if available."
+  },
+  {
+    key: "forty_yard_dash",
+    category: "speed",
+    label: "40-Yard Dash",
+    unit: "s",
+    min: 4,
+    max: 8,
+    step: 0.01,
+    higherIsBetter: false,
+    tier: "paid",
+    sports: ["softball"],
+    modules: ["hitting", "throwing", "general"],
+    instructions: "From a standing start, sprint 40 yards. Standard softball top-end speed test."
+  },
+  {
+    key: "sixty_yard_dash",
+    category: "speed",
+    label: "60-Yard Dash",
+    unit: "s",
+    min: 5.5,
+    max: 10,
+    step: 0.01,
+    higherIsBetter: false,
+    tier: "paid",
+    sports: ["baseball"],
+    modules: ["hitting", "throwing", "general"],
+    instructions: "From a standing start, sprint 60 yards. Standard MLB combine distance."
+  },
+  {
+    key: "ten_thirty_split",
+    category: "speed",
+    label: "10-30 Split",
+    unit: "s",
+    min: 2,
+    max: 5,
+    step: 0.01,
+    higherIsBetter: false,
+    tier: "elite",
+    sports: ["baseball", "softball"],
+    modules: ["general"],
+    instructions: "Time between 10-yard and 30-yard marks during a 60-yard sprint."
+  },
+  {
+    key: "thirty_sixty_split",
+    category: "speed",
+    label: "30-60 Split",
+    unit: "s",
+    min: 2,
+    max: 5,
+    step: 0.01,
+    higherIsBetter: false,
+    tier: "elite",
+    sports: ["baseball", "softball"],
+    modules: ["general"],
+    instructions: "Time between 30-yard and 60-yard marks during a 60-yard sprint."
+  },
+  // ── QUICKNESS ──────────────────────────────────────────
+  {
+    key: "pro_agility",
+    category: "quickness",
+    label: "5-10-5 Pro Agility",
+    unit: "s",
+    min: 3.5,
+    max: 6.5,
+    step: 0.01,
+    higherIsBetter: false,
+    tier: "free",
+    sports: ["baseball", "softball"],
+    modules: ["hitting", "throwing", "general"],
+    instructions: "Start at center cone, sprint 5 yards right, 10 yards left, 5 yards back to center."
+  },
+  {
+    key: "lateral_shuffle",
+    category: "quickness",
+    label: "Lateral Shuffle (10yd)",
+    unit: "s",
+    min: 2,
+    max: 5,
+    step: 0.01,
+    higherIsBetter: false,
+    tier: "paid",
+    sports: ["baseball", "softball"],
+    modules: ["throwing", "general"],
+    instructions: "Shuffle laterally for 10 yards. Stay low, no crossover steps."
+  },
+  {
+    key: "first_step_5yd",
+    category: "quickness",
+    label: "First Step (5yd)",
+    unit: "s",
+    min: 0.5,
+    max: 2,
+    step: 0.01,
+    higherIsBetter: false,
+    tier: "elite",
+    sports: ["baseball", "softball"],
+    modules: ["general"],
+    instructions: "React to stimulus and sprint 5 yards. Measures reaction + first step explosiveness."
+  },
+  // ── POWER — LOWER BODY ─────────────────────────────────
+  {
+    key: "sl_broad_jump",
+    category: "power_lower",
+    label: "SL Broad Jump",
+    unit: "in",
+    min: 20,
+    max: 120,
+    step: 0.5,
+    higherIsBetter: true,
+    tier: "free",
+    sports: ["baseball", "softball"],
+    modules: ["hitting", "pitching", "throwing", "general"],
+    instructions: "Single-leg standing broad jump. Measure from take-off line to nearest heel contact.",
+    bilateral: true,
+    bilateralType: "leg"
+  },
+  {
+    key: "sl_lateral_broad_jump",
+    category: "power_lower",
+    label: "SL Lateral Broad Jump",
+    unit: "in",
+    min: 20,
+    max: 100,
+    step: 0.5,
+    higherIsBetter: true,
+    tier: "free",
+    sports: ["baseball", "softball"],
+    modules: ["hitting", "throwing", "general"],
+    instructions: "Single-leg lateral jump. Land and stick on opposite leg.",
+    bilateral: true,
+    bilateralType: "leg"
+  },
+  {
+    key: "sl_vert_jump",
+    category: "power_lower",
+    label: "SL Vertical Jump",
+    unit: "in",
+    min: 10,
+    max: 45,
+    step: 0.5,
+    higherIsBetter: true,
+    tier: "paid",
+    sports: ["baseball", "softball"],
+    modules: ["pitching", "throwing", "general"],
+    instructions: "Single-leg vertical jump. Reach as high as possible. Measure difference from standing reach.",
+    bilateral: true,
+    bilateralType: "leg"
+  },
+  {
+    key: "vertical_jump",
+    category: "power_lower",
+    label: "Vertical Jump",
+    unit: "in",
+    min: 12,
+    max: 48,
+    step: 0.5,
+    higherIsBetter: true,
+    tier: "free",
+    sports: ["baseball", "softball"],
+    modules: ["hitting", "throwing", "general"],
+    instructions: "Two-leg vertical jump. Measure difference between standing reach and peak reach."
+  },
+  {
+    key: "standing_broad_jump",
+    category: "power_lower",
+    label: "Standing Broad Jump",
+    unit: "in",
+    min: 40,
+    max: 130,
+    step: 0.5,
+    higherIsBetter: true,
+    tier: "paid",
+    sports: ["baseball", "softball"],
+    modules: ["general"],
+    instructions: "Two-leg standing broad jump. Measure from take-off line to nearest heel contact."
+  },
+  // ── POWER — UPPER BODY / ROTATIONAL ────────────────────
+  {
+    key: "mb_situp_throw",
+    category: "power_upper",
+    label: "MB Situp Throw (5lb)",
+    unit: "ft",
+    min: 5,
+    max: 60,
+    step: 0.5,
+    higherIsBetter: true,
+    tier: "free",
+    sports: ["baseball", "softball"],
+    modules: ["hitting", "pitching", "throwing", "general"],
+    instructions: "Lie on back, 5lb medicine ball overhead. Sit up and throw for distance."
+  },
+  {
+    key: "seated_chest_pass",
+    category: "power_upper",
+    label: "Seated Chest Pass (5lb)",
+    unit: "ft",
+    min: 5,
+    max: 45,
+    step: 0.5,
+    higherIsBetter: true,
+    tier: "free",
+    sports: ["baseball", "softball"],
+    modules: ["hitting", "pitching", "throwing", "general"],
+    instructions: "Seated with legs extended, 5lb medicine ball at chest. Push-pass for distance."
+  },
+  {
+    key: "mb_rotational_throw",
+    category: "power_upper",
+    label: "MB Rotational Throw (5lb)",
+    unit: "ft",
+    min: 10,
+    max: 50,
+    step: 0.5,
+    higherIsBetter: true,
+    tier: "paid",
+    sports: ["baseball", "softball"],
+    modules: ["hitting", "general"],
+    instructions: "Standing perpendicular to wall, 5lb ball. Rotate trunk and throw for distance.",
+    bilateral: true,
+    bilateralType: "side"
+  },
+  {
+    key: "mb_overhead_throw",
+    category: "power_upper",
+    label: "MB Overhead Throw (5lb)",
+    unit: "ft",
+    min: 10,
+    max: 60,
+    step: 0.5,
+    higherIsBetter: true,
+    tier: "elite",
+    sports: ["baseball", "softball"],
+    modules: ["general"],
+    instructions: "Standing, 5lb ball overhead. Throw forward for distance using full body extension."
+  },
+  // ── EXIT VELOCITY & BAT SPEED ──────────────────────────
+  {
+    key: "tee_exit_velocity",
+    category: "exit_velocity",
+    label: "Tee Exit Velocity",
+    unit: "mph",
+    min: 30,
+    max: 120,
+    step: 0.1,
+    higherIsBetter: true,
+    tier: "free",
+    sports: ["baseball", "softball"],
+    modules: ["hitting"],
+    instructions: "Hit off tee. Measure exit velocity with radar gun or HitTrax."
+  },
+  {
+    key: "max_tee_distance",
+    category: "exit_velocity",
+    label: "Max Tee Distance",
+    unit: "ft",
+    min: 50,
+    max: 500,
+    step: 1,
+    higherIsBetter: true,
+    tier: "free",
+    sports: ["baseball", "softball"],
+    modules: ["hitting"],
+    instructions: "Hit off tee for maximum distance. Measure carry + roll."
+  },
+  {
+    key: "bat_speed",
+    category: "exit_velocity",
+    label: "Bat Speed",
+    unit: "mph",
+    min: 30,
+    max: 100,
+    step: 0.1,
+    higherIsBetter: true,
+    tier: "paid",
+    sports: ["baseball", "softball"],
+    modules: ["hitting"],
+    instructions: "Measure bat speed with Blast Motion, Diamond Kinetics, or equivalent sensor."
+  },
+  {
+    key: "avg_exit_velo_bp",
+    category: "exit_velocity",
+    label: "Avg Exit Velo (BP, 10 swings)",
+    unit: "mph",
+    min: 30,
+    max: 115,
+    step: 0.1,
+    higherIsBetter: true,
+    tier: "elite",
+    sports: ["baseball", "softball"],
+    modules: ["hitting"],
+    instructions: "Take 10 swings in BP. Record average exit velocity."
+  },
+  // ── THROWING VELOCITY & ARM STRENGTH ───────────────────
+  {
+    key: "long_toss_distance",
+    category: "throwing_velocity",
+    label: "Long Toss Distance",
+    unit: "ft",
+    min: 50,
+    max: 450,
+    step: 1,
+    higherIsBetter: true,
+    tier: "free",
+    sports: ["baseball", "softball"],
+    modules: ["pitching", "throwing", "general"],
+    instructions: "Max long toss on a line. Measure total carry distance."
+  },
+  {
+    key: "pitching_velocity",
+    category: "throwing_velocity",
+    label: "Pitching Velocity",
+    unit: "mph",
+    min: 30,
+    max: 105,
+    step: 0.1,
+    higherIsBetter: true,
+    tier: "free",
+    sports: ["baseball", "softball"],
+    modules: ["pitching"],
+    instructions: "Fastball velocity from the mound. Use radar gun, average of 3 pitches."
+  },
+  {
+    key: "position_throw_velo",
+    category: "throwing_velocity",
+    label: "Position Player Throw Velo",
+    unit: "mph",
+    min: 30,
+    max: 105,
+    step: 0.1,
+    higherIsBetter: true,
+    tier: "free",
+    sports: ["baseball", "softball"],
+    modules: ["throwing", "hitting", "general"],
+    instructions: "Max effort throw from position (e.g., SS to 1B). Radar gun."
+  },
+  {
+    key: "pulldown_velocity",
+    category: "throwing_velocity",
+    label: "Pulldown Velocity",
+    unit: "mph",
+    min: 40,
+    max: 110,
+    step: 0.1,
+    higherIsBetter: true,
+    tier: "elite",
+    sports: ["baseball", "softball"],
+    modules: ["pitching"],
+    instructions: "Crow-hop throw at max effort into net or wall. Radar gun."
+  },
+  // ── FIELDING ───────────────────────────────────────────
+  {
+    key: "fielding_exchange_time",
+    category: "fielding",
+    label: "Fielding Exchange Time",
+    unit: "s",
+    min: 0.5,
+    max: 3,
+    step: 0.01,
+    higherIsBetter: false,
+    tier: "paid",
+    sports: ["baseball", "softball"],
+    modules: ["throwing", "general"],
+    instructions: "Time from ball entering glove to release on throw. Use video analysis."
+  },
+  {
+    key: "pop_time",
+    category: "fielding",
+    label: "Pop Time (Catchers)",
+    unit: "s",
+    min: 1.5,
+    max: 2.5,
+    step: 0.01,
+    higherIsBetter: false,
+    tier: "paid",
+    sports: ["baseball", "softball"],
+    modules: ["throwing"],
+    instructions: "Time from pitch hitting mitt to ball reaching 2nd base (catchers only)."
+  },
+  {
+    key: "sixty_yard_shuttle",
+    category: "fielding",
+    label: "60yd Shuttle",
+    unit: "s",
+    min: 10,
+    max: 20,
+    step: 0.01,
+    higherIsBetter: false,
+    tier: "elite",
+    sports: ["baseball", "softball"],
+    modules: ["general"],
+    instructions: "Sprint 20 yards and back 3 times (60 total yards). Touch line each rep."
+  },
+  // ── BODY CONTROL ───────────────────────────────────────
+  {
+    key: "sl_balance_eyes_closed",
+    category: "body_control",
+    label: "SL Balance (Eyes Closed)",
+    unit: "s",
+    min: 0,
+    max: 120,
+    step: 1,
+    higherIsBetter: true,
+    tier: "paid",
+    sports: ["baseball", "softball"],
+    modules: ["general"],
+    instructions: "Stand on one leg, eyes closed. Time until loss of balance. Max 120s.",
+    bilateral: true,
+    bilateralType: "leg"
+  },
+  {
+    key: "deceleration_10yd",
+    category: "body_control",
+    label: "Deceleration (10yd stop)",
+    unit: "s",
+    min: 1,
+    max: 4,
+    step: 0.01,
+    higherIsBetter: false,
+    tier: "elite",
+    sports: ["baseball", "softball"],
+    modules: ["general"],
+    instructions: "Sprint 20 yards, decelerate to full stop by 10-yard mark. Time the stop zone."
+  },
+  // ── ENERGY SYSTEM ──────────────────────────────────────
+  {
+    key: "three_hundred_yd_shuttle",
+    category: "energy_system",
+    label: "300yd Shuttle",
+    unit: "s",
+    min: 45,
+    max: 90,
+    step: 0.1,
+    higherIsBetter: false,
+    tier: "paid",
+    sports: ["baseball", "softball"],
+    modules: ["general"],
+    instructions: "Sprint 25 yards and back, 6 times (300 total). Full effort."
+  },
+  {
+    key: "sprint_repeat_avg",
+    category: "energy_system",
+    label: "Sprint Repeatability (6\xD730yd avg)",
+    unit: "s",
+    min: 3.5,
+    max: 6,
+    step: 0.01,
+    higherIsBetter: false,
+    tier: "elite",
+    sports: ["baseball", "softball"],
+    modules: ["general"],
+    instructions: "Sprint 30 yards \xD7 6 reps, 30s rest between. Record average time."
+  },
+  // ── FASCIAL ELASTICITY ─────────────────────────────────
+  {
+    key: "sl_3x_bound",
+    category: "mobility",
+    label: "Single Leg 3x Bound",
+    unit: "ft",
+    min: 10,
+    max: 80,
+    step: 0.5,
+    higherIsBetter: true,
+    tier: "free",
+    sports: ["baseball", "softball"],
+    modules: ["hitting", "pitching", "throwing", "general"],
+    instructions: "Three consecutive single-leg bounds for distance. Measure total distance from start line to final landing. Test each leg.",
+    bilateral: true,
+    bilateralType: "leg"
+  },
+  {
+    key: "shoulder_rom_internal",
+    category: "mobility",
+    label: "Shoulder ROM Internal",
+    unit: "deg",
+    min: 20,
+    max: 90,
+    step: 1,
+    higherIsBetter: true,
+    tier: "paid",
+    sports: ["baseball", "softball"],
+    modules: ["pitching", "throwing", "general"],
+    instructions: "Supine, 90\xB0 abduction. Rotate arm inward. Measure angle with goniometer.",
+    bilateral: true,
+    bilateralType: "side"
+  },
+  {
+    key: "shoulder_rom_external",
+    category: "mobility",
+    label: "Shoulder ROM External",
+    unit: "deg",
+    min: 50,
+    max: 120,
+    step: 1,
+    higherIsBetter: true,
+    tier: "paid",
+    sports: ["baseball", "softball"],
+    modules: ["pitching", "throwing", "general"],
+    instructions: "Supine, 90\xB0 abduction. Rotate arm outward. Measure angle with goniometer.",
+    bilateral: true,
+    bilateralType: "side"
+  },
+  {
+    key: "hip_internal_rotation",
+    category: "mobility",
+    label: "Hip Internal Rotation",
+    unit: "deg",
+    min: 15,
+    max: 60,
+    step: 1,
+    higherIsBetter: true,
+    tier: "paid",
+    sports: ["baseball", "softball"],
+    modules: ["hitting", "pitching", "general"],
+    instructions: "Seated, knee at 90\xB0. Rotate foot outward (hip internally). Measure angle.",
+    bilateral: true,
+    bilateralType: "side"
+  },
+  {
+    key: "ankle_dorsiflexion",
+    category: "mobility",
+    label: "Ankle Dorsiflexion",
+    unit: "in",
+    min: 1,
+    max: 8,
+    step: 0.25,
+    higherIsBetter: true,
+    tier: "elite",
+    sports: ["baseball", "softball"],
+    modules: ["general"],
+    instructions: 'Half-kneeling, toe 5" from wall. Knee-to-wall test. Measure max distance.',
+    bilateral: true,
+    bilateralType: "leg"
+  }
+];
+var METRIC_BY_KEY = {};
+PERFORMANCE_METRICS.forEach((m) => {
+  METRIC_BY_KEY[m.key] = m;
+});
+
+// src/lib/benchmarks/canonical.ts
+var DUPLICATE_RESOLUTIONS = {
+  // GRADE_BENCHMARKS records "MLB Statcast pop time data"; the scale row
+  // carries only the generic research boilerplate. Specific source wins.
+  pop_time: {
+    canonical: "pop_time",
+    winner: "grade_benchmarks",
+    reason: "GRADE_BENCHMARKS cites MLB Statcast; the scale_reference row carries only generic research boilerplate."
+  },
+  catcher_pop_time: {
+    canonical: "pop_time",
+    winner: "grade_benchmarks",
+    reason: "Reads the pop_time anchors so both surfaces agree."
+  },
+  // GRADE_BENCHMARKS says "Estimate" outright — an estimate is not a source.
+  // The scale row documents the Realmuto transfer breakdown and is dated.
+  fielding_exchange_time: {
+    canonical: "exchange_time_sec",
+    winner: "scale_reference",
+    reason: "GRADE_BENCHMARKS is an admitted estimate; the scale_reference row is documented and dated."
+  },
+  // Both sides are sourced, so the dated side wins — and the scale rows are
+  // position-specific, which the single generic key cannot express.
+  position_throw_velo: {
+    canonical: "throw_velo_mph_infield",
+    winner: "scale_reference",
+    reason: "Both sourced; scale_reference is dated and position-specific. Infield is the position-neutral default."
+  }
+};
+var SCALE_ANCHOR_SNAPSHOT = [
+  {
+    metric: "exchange_time_sec",
+    direction: "lower_better",
+    floor_value: 0.85,
+    avg_value: 0.7,
+    record_value: 0.5,
+    source: "Documented elite pop-time breakdowns (Realmuto 1.80s pop = 0.54s transfer).",
+    as_of: "2026-08-29"
+  },
+  {
+    metric: "throw_velo_mph_infield",
+    direction: "higher_better",
+    floor_value: 75,
+    avg_value: 88,
+    record_value: 95,
+    source: "owner",
+    as_of: "2026-09-08"
+  },
+  {
+    metric: "throw_velo_mph_outfield",
+    direction: "higher_better",
+    floor_value: 78,
+    avg_value: 92,
+    record_value: 98,
+    source: "owner",
+    as_of: "2026-09-08"
+  }
+];
+function resolutionFor(metricKey) {
+  return DUPLICATE_RESOLUTIONS[metricKey];
+}
+function isScaleOwned(metricKey) {
+  return DUPLICATE_RESOLUTIONS[metricKey]?.winner === "scale_reference";
+}
+
+// src/lib/benchmarks/gradeScale.ts
+var MLB_FLOOR_GRADE = 20;
+var GRADE_MIN = 0;
+var GRADE_MAX = 80;
+var SUB_FLOOR_SLOPE_FRACTION = 0.25;
+function roundGrade(value) {
+  const clamped = Math.max(GRADE_MIN, Math.min(GRADE_MAX, value));
+  if (clamped < MLB_FLOOR_GRADE) return Math.round(clamped * 10) / 10;
+  return Math.round(clamped / 5) * 5;
+}
+function extendBelowFloor(value, floorRaw, averageRaw) {
+  const span = averageRaw - floorRaw;
+  if (!Number.isFinite(span) || span === 0) return MLB_FLOOR_GRADE;
+  const perUnit = 30 / span * SUB_FLOOR_SLOPE_FRACTION;
+  const raw = MLB_FLOOR_GRADE + (value - floorRaw) * perUnit;
+  return Math.max(GRADE_MIN, Math.min(MLB_FLOOR_GRADE, raw));
+}
+
+// src/lib/defense/beatenRunnerGrade.ts
+function metricForHandedness(hand) {
+  return hand === "L" ? "home_to_first_lhh" : "home_to_first_rhh";
+}
+function missing(reason) {
+  return { grade: null, missing: true, missing_reason: reason };
+}
+function toScoutingGrade(raw) {
+  const clamped = Math.max(GRADE_MIN, Math.min(GRADE_MAX, raw));
+  if (clamped < MLB_FLOOR_GRADE) return Math.round(clamped * 10) / 10;
+  return Math.round(clamped / 5) * 5;
+}
+function gradeFromScaleRow(value, metric, scaleRows, noValueReason = "no_play_time") {
+  if (value == null || !Number.isFinite(value) || value <= 0) {
+    return missing(noValueReason);
+  }
+  const row = scaleRows.find((r) => r.metric === metric);
+  if (!row) return missing("no_scale_reference");
+  if (row.direction !== "lower_better" && row.direction !== "higher_better") {
+    return missing("unsupported_direction");
+  }
+  const floor = row.floor_value;
+  const avg = row.avg_value;
+  const record2 = row.record_value;
+  const ordered = row.direction === "lower_better" ? record2 < avg && avg < floor : floor < avg && avg < record2;
+  if (floor == null || !Number.isFinite(floor) || !Number.isFinite(avg) || !Number.isFinite(record2) || !ordered) {
+    return missing("incomplete_scale_reference");
+  }
+  const sign = row.direction === "lower_better" ? 1 : -1;
+  const t = sign * value;
+  const rec = sign * record2;
+  const av = sign * avg;
+  const flo = sign * floor;
+  let raw;
+  if (t <= rec) {
+    raw = 80;
+  } else if (t <= av) {
+    raw = 50 + (av - t) / (av - rec) * 30;
+  } else if (t <= flo) {
+    raw = 20 + (flo - t) / (flo - av) * 30;
+  } else {
+    raw = extendBelowFloor(-t, -flo, -av);
+  }
+  return { grade: toScoutingGrade(raw), missing: false };
+}
+function computeBeatenRunnerGrade(totalPlayTimeSec, hand, scaleRows) {
+  return gradeFromScaleRow(
+    totalPlayTimeSec,
+    metricForHandedness(hand),
+    scaleRows,
+    "no_play_time"
+  );
+}
+
+// src/lib/gradeEngine.ts
+function interpolate(raw, points, higherIsBetter) {
+  if (points.length === 0) return 50;
+  if (points.length === 1) return points[0].grade;
+  const sorted = [...points].sort((a, b) => a.raw - b.raw);
+  const floorPoint = higherIsBetter ? sorted[0] : sorted[sorted.length - 1];
+  const bestPoint = higherIsBetter ? sorted[sorted.length - 1] : sorted[0];
+  const averagePoint = sorted.find((p) => p.grade === 50) ?? (higherIsBetter ? sorted[1] : sorted[sorted.length - 2]);
+  const worseThanFloor = higherIsBetter ? raw < floorPoint.raw : raw > floorPoint.raw;
+  if (worseThanFloor) {
+    return extendBelowFloor(raw, floorPoint.raw, averagePoint.raw);
+  }
+  const betterThanBest = higherIsBetter ? raw >= bestPoint.raw : raw <= bestPoint.raw;
+  if (betterThanBest) return bestPoint.grade;
+  for (let i = 0; i < sorted.length - 1; i++) {
+    if (raw >= sorted[i].raw && raw <= sorted[i + 1].raw) {
+      const t = (raw - sorted[i].raw) / (sorted[i + 1].raw - sorted[i].raw);
+      return sorted[i].grade + t * (sorted[i + 1].grade - sorted[i].grade);
+    }
+  }
+  return 50;
+}
+function rawToGrade(metricKey, rawValue, sport, age) {
+  if (sport === "baseball" && isScaleOwned(metricKey)) {
+    const canonical = resolutionFor(metricKey).canonical;
+    const result = gradeFromScaleRow(rawValue, canonical, SCALE_ANCHOR_SNAPSHOT);
+    return result.missing ? null : result.grade;
+  }
+  if (sport === "softball" && !isSoftballGradable(metricKey)) return null;
+  const benchmarkEntry = GRADE_BENCHMARKS[metricKey];
+  if (!benchmarkEntry) return null;
+  const points = benchmarkEntry[sport];
+  if (!points || points.length === 0) return null;
+  const metricDef = METRIC_BY_KEY[metricKey];
+  const higherIsBetter = metricDef?.higherIsBetter ?? true;
+  const grade = interpolate(rawValue, points, higherIsBetter);
+  return roundGrade(grade);
+}
+
+// supabase/functions/_shared/wic/masteryGuidance.ts
+function masteryGuidance(facts) {
+  const contactNeedsWork = facts.contactStatus === "Building" && facts.contactSourceIds.length > 0;
+  const speedOrPower = facts.speedStatus === "Elite" || facts.powerStatus === "Elite" ? "Satisfied" : "Need more data";
+  return {
+    observedFocus: contactNeedsWork ? "contact" : null,
+    sourceIds: contactNeedsWork ? [...facts.contactSourceIds] : [],
+    speedOrPower,
+    fullWeakestPillarKnown: false,
+    leftPowerStealEmphasis: facts.leftPower || facts.leftPowerGoal,
+    reason: contactNeedsWork ? "Your completed batting window is below the owner\u2019s balls-in-play standard. Contact needs work; the overall weakest pillar is not yet known." : "The overall weakest required pillar needs more evidence.",
+    alternativeReason: speedOrPower === "Satisfied" ? "The elite speed-or-power requirement has supporting evidence." : "No data-backed comparison yet identifies whether elite speed or home-run power is more attainable."
+  };
+}
+
+// supabase/functions/_shared/wic/masteryStandards.ts
+var IDENTITY_SOURCE = "Camryn Williams \xB7 October 26, 2026 \xB7 Coaching Console settings";
+var swings = /* @__PURE__ */ new Set(["swinging_strike", "foul", "in_play", "bunt_foul", "bunt_in_play"]);
+var misses = /* @__PURE__ */ new Set(["swinging_strike"]);
+var takes = /* @__PURE__ */ new Set(["ball", "called_strike", "hbp"]);
+function contactIdentity(window2, pitches, level, settings) {
+  const cutoff = level ? { k: settings[`contact_${level}_k`], whiff: settings[`contact_${level}_whiff`], zone: settings[`contact_${level}_zone`] } : null;
+  const ids = new Set(window2?.paIds ?? window2?.sourceIds ?? []);
+  const rows2 = pitches.filter((p) => p.atBatId && ids.has(p.atBatId));
+  const unique = /* @__PURE__ */ new Map();
+  let conflict = false;
+  for (const p of rows2) {
+    const old = unique.get(p.id);
+    if (!p.id || old && JSON.stringify(old) !== JSON.stringify(p)) conflict = true;
+    unique.set(p.id, p);
+  }
+  const actual = [...unique.values()];
+  const full = !!window2 && !conflict && ids.size > 0 && [...ids].every((id) => {
+    const expected = window2.pitchCounts?.[id];
+    return typeof expected === "number" && Number.isInteger(expected) && expected > 0 && actual.filter((p) => p.atBatId === id).length === expected;
+  }) && actual.every((p) => swings.has(p.result ?? "") || takes.has(p.result ?? ""));
+  const swung = actual.filter((p) => swings.has(p.result ?? ""));
+  const whiffs = swung.filter((p) => misses.has(p.result ?? ""));
+  const located = full && swung.every((p) => Number.isInteger(p.zone) && Number(p.zone) >= 1 && Number(p.zone) <= 9 || !!p.outZone);
+  const zoneSwings = swung.filter((p) => Number.isInteger(p.zone) && Number(p.zone) >= 1 && Number(p.zone) <= 9);
+  const pa = window2?.plateAppearances;
+  const k = window2 && typeof pa === "number" && pa > 0 && window2.strikeouts !== void 0 ? window2.strikeouts / pa : null;
+  const whiff = full && swung.length ? whiffs.length / swung.length : null;
+  const zone = located && zoneSwings.length ? zoneSwings.filter((p) => !misses.has(p.result ?? "")).length / zoneSwings.length : null;
+  const judge = (v, c, lower) => v === null || c == null ? "Need more data" : (lower ? v < c : v >= c) ? "Elite" : "Building";
+  const parts = { k: { value: k, status: judge(k, cutoff?.k, true), numerator: window2?.strikeouts ?? null, denominator: pa ?? null, cutoff: cutoff?.k ?? null }, whiff: { value: whiff, status: judge(whiff, cutoff?.whiff, true), numerator: full ? whiffs.length : null, denominator: full ? swung.length : null, cutoff: cutoff?.whiff ?? null }, zone: { value: zone, status: judge(zone, cutoff?.zone, false), numerator: located ? zoneSwings.filter((p) => !misses.has(p.result ?? "")).length : null, denominator: located ? zoneSwings.length : null, cutoff: cutoff?.zone ?? null } };
+  const statuses = Object.values(parts).map((p) => p.status);
+  const status = statuses.includes("Building") ? "Building" : statuses.every((s) => s === "Elite") ? "Elite" : "Need more data";
+  return { status, parts, earlyWhiffs: full && actual.every((p) => p.strikes !== null) ? whiffs.filter((p) => Number(p.strikes) < 2).length : null, earlySwings: full && actual.every((p) => p.strikes !== null) ? swung.filter((p) => Number(p.strikes) < 2).length : null, sourceIds: window2 ? [...window2.sourceIds, ...full ? actual.map((p) => p.id) : []] : [], source: IDENTITY_SOURCE, definition: "Whiff% = swings and misses \xF7 swings \xB7 Baseball Savant", level };
+}
+function powerIdentity(window2, settings) {
+  const rate = window2 ? window2.homeRuns / window2.atBats : null;
+  const threshold = settings.elite_hr_rate;
+  const status = rate === null || threshold == null ? "Need more data" : rate >= threshold ? "Elite" : "Building";
+  const k = window2?.strikeouts;
+  const ratio = window2 && k !== void 0 && k > 0 ? window2.homeRuns / k : null;
+  return { status, rate, threshold: threshold ?? null, sourceIds: window2?.sourceIds ?? [], source: IDENTITY_SOURCE, chase: { homeRuns: window2?.homeRuns ?? null, strikeouts: k ?? null, ratio, target: settings.power_chase_ratio ?? null, met: window2 && k !== void 0 && settings.power_chase_ratio != null ? window2.homeRuns > 0 && window2.homeRuns >= k * settings.power_chase_ratio : null } };
+}
+function steerIdentity(pillars) {
+  const judged = pillars.filter((p) => p.status !== "Need more data" && p.sourceIds.length && p.progress !== null && Number.isFinite(p.progress));
+  const alternatives = judged.filter((p) => p.pillar === "speed" || p.pillar === "power");
+  const satisfied = alternatives.some((p) => p.status === "Elite");
+  const chosen = !satisfied && alternatives.length === 2 ? [...alternatives].sort((a, b) => Number(b.progress) - Number(a.progress))[0] : null;
+  const required = judged.filter((p) => ["contact", "defense", "arm"].includes(p.pillar) || p === chosen);
+  const weak = required.filter((p) => p.status === "Building").sort((a, b) => Number(a.progress) - Number(b.progress))[0] ?? null;
+  return { focus: weak?.pillar ?? null, sourceIds: weak?.sourceIds ?? [], speedOrPower: satisfied ? "Satisfied" : chosen?.pillar ?? "Need more data", missing: pillars.filter((p) => p.status === "Need more data").map((p) => p.pillar), comparison: "Progress toward owner standards, not a prediction of attainability", reason: weak ? `Your judged ${weak.pillar} pillar is furthest below its owner standard. Work on it inside your existing safe plan.` : "Need more data to choose a development focus." };
+}
+function validHumanGrade(value) {
+  return typeof value === "number" && Number.isFinite(value) && value >= 20 && value <= 80 && value % 5 === 0;
+}
+
+// supabase/functions/_shared/wic/masteryPitching.ts
+function pitchingIdentity(games, settings, policy = OWNER_WINDOW_POLICY) {
+  const opportunities = [];
+  let invalid = false;
+  for (const g of [...games].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id))) {
+    const groups = /* @__PURE__ */ new Map();
+    for (const p of g.pitches) if (p.opportunity !== null && p.outcome) {
+      const old = groups.get(p.opportunity) ?? [];
+      old.push(p.outcome);
+      groups.set(p.opportunity, old);
+    }
+    const numbered = [...groups.keys()].sort((a, b) => a - b);
+    const derived = g.complete && numbered.length > 0 && numbered.every((n, i) => n === i + 1) && [...groups.values()].every((v) => v.length === 1) && g.pitches.every((p) => p.opportunity !== null);
+    const count = derived ? numbered.length : g.battersFaced;
+    if (count === null) {
+      invalid = true;
+      continue;
+    }
+    if (!Number.isSafeInteger(count) || count < 0) {
+      invalid = true;
+      continue;
+    }
+    if (derived && g.battersFaced !== null && g.battersFaced !== count) {
+      invalid = true;
+      continue;
+    }
+    for (let i = 1; i <= count; i++) opportunities.push({ id: `${g.id}:bf:${i}`, date: g.date, outcome: derived ? groups.get(i)?.[0] ?? null : null });
+  }
+  const windows = opportunityWindows(opportunities.length, policy);
+  const completed = invalid ? [] : windows.filter((w) => w.complete).map((w) => {
+    const rows2 = opportunities.slice(w.start - 1, w.end);
+    const outcomesKnown = rows2.every((r) => r.outcome !== null);
+    const k = outcomesKnown ? rows2.filter((r) => r.outcome === "K").length / rows2.length : null;
+    const bb = outcomesKnown ? rows2.filter((r) => r.outcome === "BB").length / rows2.length : null;
+    const hr = outcomesKnown ? rows2.filter((r) => r.outcome === "HR").length / rows2.length : null;
+    const set = settings.pitching_k_min != null && settings.pitching_bb_max != null && settings.pitching_hr_max != null;
+    const status = !outcomesKnown || !set ? "Need more data" : Number(k) >= Number(settings.pitching_k_min) && Number(bb) <= Number(settings.pitching_bb_max) && Number(hr) <= Number(settings.pitching_hr_max) ? "Elite" : "Building";
+    return { ...w, status, k, bb, hr, outcomesKnown, sourceIds: rows2.map((r) => r.id), from: rows2[0]?.date, through: rows2[rows2.length - 1]?.date };
+  });
+  const latest = completed[completed.length - 1] ?? null;
+  const size = opportunities.length < policy.transitionAt ? policy.initialSize : policy.laterSize;
+  return { status: latest?.status ?? "Need more data", latest, completed, policy, totalBattersFaced: opportunities.length, completeHistory: !invalid, current: windows.find((w) => !w.complete) ?? { start: opportunities.length + 1, end: opportunities.length + size, size, sample: 0, complete: false }, reason: settings.pitching_k_min == null || settings.pitching_bb_max == null || settings.pitching_hr_max == null ? "Owner pitching elite cutoffs are not set." : !latest?.outcomesKnown ? "Complete BF outcomes are needed." : "Source: completed pitching game opportunities." };
+}
+
+// src/lib/baserunning/homeToFirstGrade.ts
+function computeHomeToFirstGrade(splitSec, hand, scaleRows) {
+  return computeBeatenRunnerGrade(splitSec, hand, scaleRows);
+}
+
+// src/lib/throwing/throwVeloGrade.ts
+var THROW_VELO_METRICS = {
+  infield: "throw_velo_mph_infield",
+  outfield: "throw_velo_mph_outfield",
+  catcher: "throw_velo_mph_catcher"
+};
+var THROWING_SCALE_METRICS = Object.values(
+  THROW_VELO_METRICS
+);
+function throwVeloMetric(context) {
+  return THROW_VELO_METRICS[context];
+}
+function computeThrowVeloGrade(metric, context, value, scaleRows) {
+  if (metric !== "throw_velo_mph") return null;
+  const scaleMetric = throwVeloMetric(context);
+  if (!scaleMetric) return null;
+  return gradeFromScaleRow(value, scaleMetric, scaleRows, "no_play_time");
+}
+
+// src/lib/catching/popTimeGrade.ts
+var CATCHER_POP_TIME_METRIC = "catcher_pop_time";
+function computePopTimeGrade(popTimeSec, scaleRows, opts) {
+  if (popTimeSec == null || !Number.isFinite(popTimeSec) || popTimeSec <= 0) {
+    return { grade: null, missing: true, missing_reason: "no_play_time" };
+  }
+  if (!scaleRows.some((r) => r.metric === CATCHER_POP_TIME_METRIC)) {
+    return { grade: null, missing: true, missing_reason: "no_scale_reference" };
+  }
+  const grade = rawToGrade(
+    "pop_time",
+    popTimeSec,
+    opts?.sport ?? "baseball",
+    opts?.age ?? 25
+  );
+  if (grade == null) {
+    return { grade: null, missing: true, missing_reason: "no_scale_reference" };
+  }
+  return { grade, missing: false };
+}
+
+// supabase/functions/_shared/wic/growth/growthMode.ts
+var GROWTH_MODE_RULE = {
+  /** 2 cm ≈ 0.787 in; the doc states ¾ in. The ¾ in figure is the trigger. */
+  inchTrigger: 0.75,
+  /** "about 3 months" */
+  windowDays: 92,
+  /** "Growth Mode for 8 weeks" */
+  activeDays: 56,
+  version: "growth_mode_v2_height_only"
+};
+
+// supabase/functions/_shared/wic/phases/youthThrowing.ts
+var PITCH_SMART_BANDS = [
+  { label: "7\u20138", minAge: 0, maxAge: 8, dailyMax: 50, rest: [[1, 0], [21, 1], [36, 2]] },
+  { label: "9\u201310", minAge: 9, maxAge: 10, dailyMax: 75, rest: [[1, 0], [21, 1], [36, 2], [51, 3], [66, 4]] },
+  { label: "11\u201312", minAge: 11, maxAge: 12, dailyMax: 85, rest: [[1, 0], [21, 1], [36, 2], [51, 3], [66, 4]] },
+  { label: "13\u201314", minAge: 13, maxAge: 14, dailyMax: 95, rest: [[1, 0], [21, 1], [36, 2], [51, 3], [66, 4]] },
+  { label: "15\u201316", minAge: 15, maxAge: 16, dailyMax: 95, rest: [[1, 0], [31, 1], [46, 2], [61, 3], [76, 4]] },
+  { label: "17\u201318", minAge: 17, maxAge: 18, dailyMax: 105, rest: [[1, 0], [31, 1], [46, 2], [61, 3], [81, 4]] },
+  { label: "19\u201322", minAge: 19, maxAge: 22, dailyMax: 120, rest: [[1, 0], [31, 1], [46, 2], [61, 3], [81, 4], [106, 5]] }
+];
+function bandIndex(age) {
+  const i = PITCH_SMART_BANDS.findIndex((b) => age >= b.minAge && age <= b.maxAge);
+  return i < 0 ? PITCH_SMART_BANDS.length - 1 : i;
+}
+var PITCH_SMART_MAX_AGE = 22;
+function isProLevel(level) {
+  return /\b(pro|professional|free[_ ]?agent|mlb|milb|ausl)\b/i.test(level ?? "");
+}
+function pitchSmartApplies(age, level) {
+  return age != null && age <= PITCH_SMART_MAX_AGE && !isProLevel(level);
+}
+function restDaysFor(band, pitches) {
+  let d2 = 0;
+  for (const [min, days] of band.rest) if (pitches >= min) d2 = days;
+  return d2;
+}
+var GROWTH_RULE = {
+  inchTrigger: GROWTH_MODE_RULE.inchTrigger,
+  windowDays: GROWTH_MODE_RULE.windowDays,
+  weeksPerInch: 8,
+  evidence: "E3",
+  staffLabel: "growth-adjusted pitching age",
+  athleteLine: "You've grown fast, so we're keeping your arm's workload where a slightly younger arm would sit for a few weeks.",
+  grounding: "Hammers rule. Published youth work names velocity, height and weight as possible injury predictors among young pitchers, and growth plates as the vulnerable tissue; the advice is to watch the pitcher who grows before his ligament catches up. The eight-week window is our own rule, not a published figure."
+};
+
+// supabase/functions/_shared/wic/phases/throwCount.ts
+var THROW_WEIGHTS = {
+  mound_pitch: 1,
+  off_mound_high: 0.75,
+  off_mound_low: 0.6,
+  off_mound_other_pitch: 0.85,
+  pickoff_high: 0.75,
+  pickoff_low: 0.6,
+  pickoff_no_throw: 0,
+  warmup_catch: 0.25,
+  pap_max_throw: 1.5,
+  med_ball_throw: 0
+};
+
+// supabase/functions/_shared/wic/phases/nextThrowDate.ts
+var dayMs = 864e5;
+var ms = (d2) => Date.parse(`${d2}T00:00:00Z`);
+var iso = (n) => new Date(n).toISOString().slice(0, 10);
+function kindOfRow(r) {
+  const t = String(r.throw_type ?? "").toLowerCase();
+  if (/pick/.test(t)) return /no_?throw|footwork/.test(t) ? "pickoff_no_throw" : /low/.test(t) ? "pickoff_low" : "pickoff_high";
+  if (/warm|catch_play/.test(t)) return "warmup_catch";
+  if (String(r.source) === "pitching") return /off_?mound|flat/.test(t) ? "off_mound_high" : "mound_pitch";
+  if (/quick_release|throwdown|crow_hop|pull_?down|velo/.test(t)) return "off_mound_high";
+  return "off_mound_low";
+}
+function equivalentsByDay(rows2) {
+  const by = /* @__PURE__ */ new Map();
+  for (const r of rows2) {
+    if (r.status && /skip|missed|cancel/i.test(String(r.status))) continue;
+    const n = Number(r.count ?? 0);
+    if (!(n > 0)) continue;
+    const d2 = String(r.entry_date);
+    by.set(d2, (by.get(d2) ?? 0) + THROW_WEIGHTS[kindOfRow(r)] * n);
+  }
+  for (const [d2, v] of by) by.set(d2, Math.round(v * 10) / 10);
+  return by;
+}
+function nextThrowDate(age, level, rows2, today) {
+  if (!pitchSmartApplies(age, level)) return null;
+  const band = PITCH_SMART_BANDS[bandIndex(age)];
+  let next = ms(today) + dayMs;
+  for (const [d2, eq] of equivalentsByDay(rows2)) {
+    if (d2 > today) continue;
+    const rest = restDaysFor(band, Math.ceil(eq));
+    next = Math.max(next, ms(d2) + (rest + 1) * dayMs);
+  }
+  return iso(next);
+}
+
+// src/lib/intelligence/masteryProjection.ts
+var record = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+var list = (v) => Array.isArray(v) ? v.map(record) : [];
+function projectMasterySources(raw, sport, settings) {
+  const source = record(raw);
+  const policy = areaWindowPolicy(settings, "batting");
+  const events = list(source.atBats).map((e, i) => ({ id: String(e.id ?? ""), date: String(e.date ?? ""), order: i, result: typeof e.result === "string" ? e.result : null, source: typeof e.source === "string" ? e.source : "", pitchCount: typeof e.pitchCount === "number" ? e.pitchCount : null }));
+  const batting = battingIdentity(events, policy);
+  const speedEvidence = [];
+  const add = (row, id, label2, measure, unit, value, grade) => {
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) speedEvidence.push({ id, source: label2, date: String(row.date ?? ""), measure, unit, value, grade, kind: "measured", sample: 1, minimum: settings ? settings.speed_minimum_samples ?? 1 : null });
+  };
+  const metrics = PERFORMANCE_METRICS.filter((m) => m.category === "speed" && m.sports.includes(sport));
+  for (const test of list(source.tests)) {
+    const results = record(test.results);
+    for (const metric of metrics) {
+      const keys = metric.bilateral ? [`${metric.key}_left`, `${metric.key}_right`] : [metric.key];
+      for (const key2 of keys) {
+        const value = results[key2];
+        add(test, `test:${test.id}:${key2}`, `Entered performance test \xB7 ${test.type}`, key2, metric.unit, value, typeof value === "number" ? rawToGrade(metric.key, value, sport) : null);
+      }
+    }
+  }
+  for (const row of list(source.sprints)) {
+    const m = record(row.metrics);
+    const value = m.time ?? m.seconds;
+    add(row, `sprint:${row.id}`, "Logged sprint", `sprint ${row.distance ?? "unknown distance"} feet`, "seconds", value, null);
+  }
+  const context = record(source.context);
+  const scales = list(source.scales);
+  const rawLevel = String(context.level ?? context.leagueTier ?? "").toLowerCase();
+  const level = ["pro", "professional", "mlb", "milb", "ausl"].includes(rawLevel) ? "pro" : ["college", "ncaa", "d1", "d2", "d3", "juco", "naia"].includes(rawLevel) ? "college" : ["high_school", "high school", "hs"].includes(rawLevel) ? "high_school" : ["youth", "youth_rec", "youth_travel"].includes(rawLevel) ? "youth" : null;
+  for (const row of list(source.homeFirst)) {
+    const hand = row.side;
+    const g = hand === "L" || hand === "R" ? computeHomeToFirstGrade(typeof row.seconds === "number" ? row.seconds : null, hand, scales) : null;
+    add(row, `home-first:${row.id}`, `Game home-to-first \xB7 ${row.source}`, "home_to_first", "seconds", row.seconds, g && !g.missing ? g.grade : null);
+  }
+  const speedKeys = sport === "baseball" ? { "10y": "ten_yard_dash", "30y": "thirty_yard_dash", "60y": "sixty_yard_dash" } : { "7y": "seven_yard_dash", "20y": null, "40y": "forty_yard_dash" };
+  for (const row of list(source.speedLab)) for (const [key2, metric] of Object.entries(speedKeys)) {
+    const raw2 = record(row.distances)[key2];
+    const values = Array.isArray(raw2) ? raw2 : [raw2];
+    values.forEach((value, i) => add(row, `speed-lab:${row.id}:${key2}:${i}`, "Speed Lab test", key2, "seconds", value, metric && typeof value === "number" ? rawToGrade(metric, value, sport) : null));
+  }
+  for (const row of list(source.runs)) {
+    add(row, `run:${row.id}`, `Game baserunning \xB7 ${row.source}`, String(row.type ?? "unknown run"), "seconds", row.seconds, null);
+    add(row, `lead:${row.id}`, `Game baserunning \xB7 ${row.source}`, "steal lead", "steps", row.lead_steps, null);
+  }
+  for (const row of list(source.royal)) for (const key2 of ["timer1", "timer2", "master"]) {
+    const timer = record(record(row.timers)[key2]);
+    const elapsed = timer.elapsed;
+    if (typeof elapsed === "number") add(row, `royal:${row.id}:${key2}`, `Royal timing \xB7 ${timer.wasSynced === true ? "video synced" : "manual timer"}`, key2, "seconds", elapsed / 1e3, null);
+  }
+  const counts = /* @__PURE__ */ new Map();
+  for (const e of speedEvidence) {
+    const key2 = `${e.source}:${e.measure}:${e.unit}`;
+    const set = counts.get(key2) ?? /* @__PURE__ */ new Set();
+    set.add(e.id);
+    counts.set(key2, set);
+  }
+  const speed = speedIdentity(speedEvidence.map((e) => ({ ...e, sample: counts.get(`${e.source}:${e.measure}:${e.unit}`)?.size ?? 0 })), settings?.elite_grade ?? 65);
+  const standards = settings ?? {};
+  const eliteGrade = settings?.elite_grade ?? 65;
+  const power = powerIdentity(batting.latest, standards);
+  const hrRate = power.rate;
+  const goals = record(context.goals);
+  const sportGoals = record(goals[sport]);
+  const hittingRows = list(record(sportGoals.position).hitting);
+  const powerGoal = hittingRows.some((g) => g.id === "oppo_power" || g.intent === "power_hitting") || list(goals.goals).some((g) => g.category === "hitting" && g.intent === "power_hitting");
+  const traits = { speedy: speed.elite === true, lacksPower: hrRate !== null && standards.lacking_power_hr_rate != null && hrRate < standards.lacking_power_hr_rate, leftPower: context.bats === "L" && hrRate !== null && standards.left_power_hr_rate != null && hrRate >= standards.left_power_hr_rate, powerGoal: context.bats === "L" && powerGoal, powerStatus: power.status, power: power.status === "Need more data" ? null : power.status === "Elite", battingWindow: batting.latest, lowAverage: standards.bunt_low_average ?? 0.3 };
+  const defense = fieldingIdentity(list(source.defense).map((e, i) => ({ id: String(e.id ?? ""), date: String(e.date ?? ""), order: i, source: typeof e.source === "string" ? e.source : null, position: typeof e.position === "string" ? e.position : null, error: typeof e.error === "boolean" ? e.error : null, assist: typeof e.assist === "boolean" ? e.assist : null, putout: typeof e.putout === "boolean" ? e.putout : null })), areaWindowPolicy(settings, "defense"));
+  const contact = contactIdentity(batting.latest, list(source.contactPitches).map((p) => ({ id: String(p.id ?? ""), atBatId: typeof p.atBatId === "string" ? p.atBatId : null, result: typeof p.result === "string" ? p.result : null, strikes: typeof p.strikes === "number" ? p.strikes : null, zone: typeof p.zone === "number" ? p.zone : null, outZone: typeof p.outZone === "string" ? p.outZone : null })), level, standards);
+  const position = String(context.position ?? "").toUpperCase();
+  const normalizedPosition = ["P", "PITCHER"].includes(position) ? "pitcher" : ["C", "CATCHER"].includes(position) ? "catcher" : ["LF", "CF", "RF", "OF", "OUTFIELD"].includes(position) ? "outfield" : ["1B", "2B", "3B", "SS", "IF", "INFIELD"].includes(position) ? "infield" : null;
+  const human = list(source.humanGrades).filter((g) => g.evaluator && ["coach_evaluated", "scout_evaluated"].includes(String(g.source)) && String(g.position ?? "").toUpperCase() === position);
+  const judgeGrade = (grade) => grade === null ? "Need more data" : grade >= eliteGrade ? "Elite" : "Building";
+  const fieldGrade = human.find((g) => validHumanGrade(g.defense));
+  const defenseGrade = fieldGrade ? Number(fieldGrade.defense) : null;
+  const defensePillar = { status: judgeGrade(defenseGrade), grade: defenseGrade, source: fieldGrade ? `${fieldGrade.source} \xB7 ${fieldGrade.date} \xB7 ${position}` : null, sourceIds: fieldGrade ? [String(fieldGrade.id)] : [], threshold: eliteGrade };
+  const velocity = list(source.throwing).filter((r) => r.position === normalizedPosition && r.metric === "throw_velo_mph" && r.unit === "mph").map((r) => ({ id: r.id, source: r.source, date: r.date, grade: computeThrowVeloGrade(String(r.metric), String(r.position), typeof r.value === "number" ? r.value : null, scales) })).find((r) => r.grade && !r.grade.missing);
+  const pop = normalizedPosition === "catcher" ? list(source.catching).filter((r) => ["pop_time", "catcher_pop_time", "pop_time_sec"].includes(String(r.metric)) && ["s", "seconds", "sec"].includes(String(r.unit))).map((r) => ({ id: r.id, source: r.source, date: r.date, grade: computePopTimeGrade(typeof r.value === "number" ? r.value : null, scales, { sport }) })).find((r) => !r.grade.missing) : null;
+  const measurement = velocity ?? pop;
+  const measurementGrade = measurement?.grade && !measurement.grade.missing ? measurement.grade.grade : null;
+  const accuracy = human.find((g) => validHumanGrade(g.arm));
+  const accuracyGrade = accuracy ? Number(accuracy.arm) : null;
+  const health = record(source.health);
+  const pain = list(health.pain);
+  const injury = list(health.injury);
+  const armWords = /arm|shoulder|elbow|forearm|wrist|hand/i;
+  const activePain = pain.some((p) => Number(p.scale) > 0 && armWords.test(String(p.location))) || pain.some((p) => Object.entries(record(p.scales)).some(([k, v]) => armWords.test(k) && typeof v === "number" && v > 0)) || injury.some((p) => p.active === true && armWords.test(String(p.region)));
+  const today = String(source.date ?? (/* @__PURE__ */ new Date()).toLocaleDateString("en-CA"));
+  const dob = typeof context.dateOfBirth === "string" ? new Date(context.dateOfBirth) : null;
+  const now = new Date(today);
+  const age = dob && Number.isFinite(dob.getTime()) ? now.getUTCFullYear() - dob.getUTCFullYear() - (now.getUTCMonth() < dob.getUTCMonth() || now.getUTCMonth() === dob.getUTCMonth() && now.getUTCDate() < dob.getUTCDate() ? 1 : 0) : null;
+  const next = nextThrowDate(age, typeof context.level === "string" ? context.level : null, list(health.ledger).map((r) => ({ entry_date: String(r.entry_date), source: String(r.source), throw_type: String(r.throw_type), count: typeof r.count === "number" ? r.count : null, status: typeof r.status === "string" ? r.status : null })), new Date(Date.parse(today) - 864e5).toISOString().slice(0, 10));
+  const ledgerFlag = next !== null && next > today;
+  const healthKnown = health.shared === true && (pain.length > 0 || injury.length > 0) && age !== null;
+  const armGrade = measurementGrade !== null && accuracyGrade !== null ? Math.min(measurementGrade, accuracyGrade) : null;
+  const arm = { status: activePain || ledgerFlag ? "Building" : !healthKnown ? "Need more data" : judgeGrade(armGrade), grade: armGrade, accuracyGrade, measurementGrade, activePain, ledgerFlag, healthKnown, sourceIds: [...measurement ? [String(measurement.id)] : [], ...accuracy ? [String(accuracy.id)] : []], source: measurement ? `${measurement.source} \xB7 ${measurement.date} \xB7 ${normalizedPosition}` : null, threshold: eliteGrade };
+  const contactProgress = Object.values(contact.parts).filter((p) => p.value !== null && p.cutoff !== null).map((p) => p === contact.parts.zone ? Number(p.value) / Number(p.cutoff) : Number(p.value) === 0 ? 1 : Number(p.cutoff) / Number(p.value));
+  const speedGrade = speed.evidence.length ? Math.max(...speed.evidence.map((e) => Number(e.grade))) : null;
+  const steering = steerIdentity([{ pillar: "contact", status: contact.status, sourceIds: contact.sourceIds, progress: contactProgress.length ? Math.min(...contactProgress) : null }, { pillar: "defense", status: defensePillar.status, sourceIds: defensePillar.sourceIds, progress: defenseGrade !== null ? defenseGrade / eliteGrade : null }, { pillar: "arm", status: arm.status, sourceIds: arm.sourceIds, progress: armGrade !== null ? armGrade / eliteGrade : null }, { pillar: "speed", status: speed.status, sourceIds: speed.evidence.map((e) => e.id), progress: speedGrade !== null ? speedGrade / eliteGrade : null }, { pillar: "power", status: power.status, sourceIds: power.sourceIds, progress: hrRate !== null && standards.elite_hr_rate ? hrRate / standards.elite_hr_rate : null }]);
+  const guidance = { ...masteryGuidance({ contactStatus: contact.status, contactSourceIds: contact.sourceIds, speedStatus: speed.status, powerStatus: power.status, leftPower: traits.leftPower, leftPowerGoal: traits.powerGoal }), observedFocus: steering.focus, sourceIds: steering.sourceIds, reason: steering.reason, alternativeReason: steering.speedOrPower === "Need more data" ? "Need more data for speed-or-power focus." : `Speed-or-power requirement: ${steering.speedOrPower}. ${steering.comparison}.` };
+  const pitching = pitchingIdentity(list(source.pitcherGames).map((g) => ({ id: String(g.id), date: String(g.date), battersFaced: typeof g.battersFaced === "number" ? g.battersFaced : null, complete: g.complete === true, pitches: list(g.pitches).map((p) => ({ id: String(p.id), opportunity: typeof p.opportunity === "number" ? p.opportunity : null, outcome: typeof p.outcome === "string" ? p.outcome : null })) })), standards, areaWindowPolicy(settings, "pitching"));
+  return { batting, speed, traits, policy, settings, sport, recordedSpeedEvidence: speedEvidence, defense, defensePillar, contact, power, arm, guidance, steering, pitching, level, standardsSource: IDENTITY_SOURCE };
+}
 export {
   buildHammerDailyPlan,
   contextFromEnvelope,
+  projectMasterySources,
   setOwnerPlanDrills,
   setWarmupStageOverrides
 };
