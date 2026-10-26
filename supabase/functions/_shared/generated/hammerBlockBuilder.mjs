@@ -86,6 +86,14 @@ function sortByWarmupStage(items, slugOf, roleOf) {
 
 // src/lib/hammer/prescription/masteryFocus.ts
 var masteryModality = (pillar) => pillar === "contact" || pillar === "power" ? "hitting" : pillar === "arm" ? "throwing" : pillar === "defense" ? "defense" : pillar === "speed" ? "speed" : null;
+function masteryGoalWeights(goals, focus) {
+  if (!goals || !focus?.observedFocus || !focus.sourceIds.length) return goals;
+  const category = focus.observedFocus === "contact" || focus.observedFocus === "power" ? "hitting" : focus.observedFocus === "arm" ? "throwing" : focus.observedFocus === "defense" ? "fielding" : focus.observedFocus === "speed" ? "speed" : null;
+  if (!category) return goals;
+  const ordered = [...goals.goals].sort((a, b) => a.rank - b.rank);
+  ordered.sort((a, b) => Number(b.category === category) - Number(a.category === category));
+  return { ...goals, goals: ordered.map((g, i) => ({ ...g, rank: i + 1 })) };
+}
 function applyMasteryFocus(blocks, focus) {
   if (!focus) return blocks;
   const withSteal = focus.leftPowerStealEmphasis ? blocks.map((b) => b.modality === "baserunning" && b.status === "ready" ? { ...b, because: [...b.because ?? [], "Left-handed power guidance: focus on steal jumps, reads, Royal timing and baserunning inside this existing work. Source: owner Bunting Mastery. No added reps or days."] } : b) : blocks;
@@ -7430,11 +7438,12 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
       roadmapInputs.defenseFullOverride === true
     )
   ), practiceLoad);
+  const focusProjection = { ...proj, categoryGoals: masteryGoalWeights(proj.categoryGoals, roadmapInputs.masteryFocus) };
   const goalOrdered = secondGoalFirst(practiced.map((b) => {
     if (!goalWeek.reason || (goalWeek.modality ? b.modality !== goalWeek.modality : modalityToCategory(b.modality) !== proj.categoryGoals?.goals.find((g) => g.rank === 1)?.category)) return b;
     const reason = scheduleSignal.postureToday !== "normal" || b.status !== "ready" ? `${goalWeek.reason} Today's safety and schedule rules still decide whether you train.` : goalWeek.reason;
     return { ...b, because: [...b.because ?? [], reason] };
-  }), proj);
+  }), focusProjection);
   const fullRestDay = roadmapInputs.fullRestDay === true || scheduleSignal.postureToday === "normal" && weeklyRoadmap.find((day) => day.isToday)?.restDay === true;
   const bunting = roadmapInputs.bunting;
   const masteryOrdered = applyMasteryFocus(goalOrdered, roadmapInputs.masteryFocus);
@@ -9658,7 +9667,7 @@ function projectMasterySources(raw, sport, settings) {
   }
   const context = record(source.context);
   const scales = list(source.scales);
-  const rawLevel = String(context.level ?? context.leagueTier ?? "").toLowerCase();
+  const rawLevel = String(context.level || context.leagueTier || "").toLowerCase();
   const level = ["pro", "professional", "mlb", "milb", "ausl"].includes(rawLevel) ? "pro" : ["college", "ncaa", "d1", "d2", "d3", "juco", "naia"].includes(rawLevel) ? "college" : ["high_school", "high school", "hs"].includes(rawLevel) ? "high_school" : ["youth", "youth_rec", "youth_travel"].includes(rawLevel) ? "youth" : null;
   for (const row of list(source.homeFirst)) {
     const hand = row.side;
@@ -9696,7 +9705,7 @@ function projectMasterySources(raw, sport, settings) {
   const sportGoals = record(goals[sport]);
   const hittingRows = list(record(sportGoals.position).hitting);
   const powerGoal = hittingRows.some((g) => g.id === "oppo_power" || g.intent === "power_hitting") || list(goals.goals).some((g) => g.category === "hitting" && g.intent === "power_hitting");
-  const traits = { speedy: speed.elite === true, lacksPower: hrRate !== null && standards.lacking_power_hr_rate != null && hrRate < standards.lacking_power_hr_rate, leftPower: context.bats === "L" && hrRate !== null && standards.left_power_hr_rate != null && hrRate >= standards.left_power_hr_rate, powerGoal: context.bats === "L" && powerGoal, powerStatus: power.status, power: power.status === "Need more data" ? null : power.status === "Elite", battingWindow: batting.latest, lowAverage: standards.bunt_low_average ?? 0.3 };
+  const traits = { speedy: speed.elite === true, lacksPower: hrRate !== null && standards.lacking_power_hr_rate != null && hrRate < standards.lacking_power_hr_rate, leftPower: context.bats === "L" && hrRate !== null && standards.left_power_hr_rate != null && hrRate >= standards.left_power_hr_rate, powerGoal: ["L", "S"].includes(String(context.bats)) && powerGoal, powerStatus: power.status, power: power.status === "Need more data" ? null : power.status === "Elite", battingWindow: batting.latest, lowAverage: standards.bunt_low_average ?? 0.3 };
   const defense = fieldingIdentity(list(source.defense).map((e, i) => ({ id: String(e.id ?? ""), date: String(e.date ?? ""), order: i, source: typeof e.source === "string" ? e.source : null, position: typeof e.position === "string" ? e.position : null, error: typeof e.error === "boolean" ? e.error : null, assist: typeof e.assist === "boolean" ? e.assist : null, putout: typeof e.putout === "boolean" ? e.putout : null })), areaWindowPolicy(settings, "defense"));
   const contact = contactIdentity(batting.latest, list(source.contactPitches).map((p) => ({ id: String(p.id ?? ""), atBatId: typeof p.atBatId === "string" ? p.atBatId : null, result: typeof p.result === "string" ? p.result : null, strikes: typeof p.strikes === "number" ? p.strikes : null, zone: typeof p.zone === "number" ? p.zone : null, outZone: typeof p.outZone === "string" ? p.outZone : null })), level, standards);
   const position = String(context.position ?? "").toUpperCase();
