@@ -249,3 +249,11 @@ Every accepted override records who, when, action, rule, player, date and prescr
 - Full suite: 564 files / 4,716 tests passed; preview build OK.
 - Pending: the server plan bundle is regenerated in code but not redeployed (no redeploy authorized this run).
 - Ready to publish: YES (player/coach role views are owner human checks).
+
+## Oct 26 (23:45 UTC) — plan builder redeploy + cross-sport audit
+- Redeployed (owner-named): wk-generate-daily, hammer-chat, hammer-recall, wk-daily-plan-job, plan-swap with the regenerated block bundle (new level map + pitching starting standards). Plan builder ran clean for the TEST pitcher (phase 200).
+- Cross-sport audit: central surfaces already branch on sport (geometry 90/60 ft, mound/circle, pitch types, arm slots, grade curves with real softball anchors, video sport gate, chat knowledge, catalog sport_scope). Catalog: 0 untagged of 1,001 active items.
+- Bleed fixed (1): repeat_90ft_bb no longer prescribes a base for softball (runRest.ts).
+- Owner-decision table (softball uses baseball-set numbers, kept working): contact K%/whiff%/zone contact cutoffs; power HR/AB ≥ .100; bunting identity cutoffs (.300 AVG, HR/AB .050/.025).
+- New cross-sport matrix test: 17 tests incl. 8-week plans per program (Complete Pitcher, 5Tool, Golden 2Way) × both sports asserting zero cross-sport words/items.
+- Full suite: 4,716 app tests + 28 backend tests passed; preview build OK.
