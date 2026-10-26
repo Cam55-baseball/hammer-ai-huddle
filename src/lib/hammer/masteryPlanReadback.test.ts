@@ -56,4 +56,10 @@ describe('first plan identity readiness and canonical snapshot replay',()=>{
   mock.rpc.mockResolvedValue({error:{message:'write failed'}});
   expect(await savePlanSnapshot('athlete',build('baseball'),'baseball','2026-10-26',focus)).toBe(false);
  });
+ it('a current reduced ready-block dose is never overwritten by the older saved dose',()=>{
+  const plan=build('baseball',true);const payload=planSnapshotPayload(plan,'baseball','2026-10-26',focus);
+  const reduced={...plan,blocks:plan.blocks.map(b=>b.modality==='hitting'?{...b,drills:b.drills.map(d=>({...d,dosage:'1 actual safe rep'})),because:['Current safety reduction']}:b)};
+  const replay=masteryPlanReadback(reduced,payload,'baseball','2026-10-26');
+  expect(replay.blocks.find(b=>b.modality==='hitting')).toEqual(reduced.blocks.find(b=>b.modality==='hitting'));
+ });
 });

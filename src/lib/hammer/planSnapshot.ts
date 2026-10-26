@@ -26,6 +26,7 @@ export function planSnapshotPayload(plan: HammerDailyPlanResult, sport: string, 
       route: b.route,
       because: [...(b.because ?? [])],
       roadmapReason: b.roadmapReason,
+      steps: [...b.steps],
       drills: b.drills.map((d) => ({
         ...d,
         name: d.name,

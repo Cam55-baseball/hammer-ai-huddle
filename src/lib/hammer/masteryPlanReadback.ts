@@ -6,7 +6,7 @@ export function masterySnapshotReady(saved:{isPending:boolean;isError:boolean;ha
  return !saved.isPending&&!saved.isError&&(saved.hasSportDay||(!identity.isPending&&!identity.isError&&!identity.isFetching));
 }
 const skills=new Set(['hitting','throwing','defense','speed','baserunning']);
-type SavedBlock={modality:string;side?:'L'|'R'|null;status?:string;drills?:unknown;because?:unknown;roadmapReason?:unknown;durationMin?:unknown};
+type SavedBlock={modality:string;side?:'L'|'R'|null;status?:string;drills?:unknown;steps?:unknown;because?:unknown;roadmapReason?:unknown;durationMin?:unknown};
 /** Retain the saved skill order/content, but never reopen a current safety-suppressed block. */
 export function masteryPlanReadback(plan:HammerDailyPlanResult,payload:unknown,sport:string,date:string):HammerDailyPlanResult{
  if(!payload||typeof payload!=='object')return plan;
@@ -19,7 +19,10 @@ export function masteryPlanReadback(plan:HammerDailyPlanResult,payload:unknown,s
   const prior=rows.find(r=>key(r)===key(b));
   if(!skills.has(b.modality)||b.status!=='ready'||!prior||prior.status!=='ready'||!Array.isArray(prior.drills))return b;
   if(!prior.drills.every(d=>d&&typeof d==='object'&&typeof d.name==='string'&&typeof d.dosage==='string'))return b;
-  return {...b,drills:prior.drills as typeof b.drills,steps:prior.drills.map(d=>`${d.name} — ${d.dosage}`),
+  // A current reduced/changed dose is a safety decision, not permission to restore older work.
+  const signature=(drills:readonly {name:string;slug?:string|null;dosage:string}[])=>JSON.stringify(drills.map(d=>[d.slug??d.name,d.dosage]));
+  if(signature(b.drills)!==signature(prior.drills))return b;
+  return {...b,drills:prior.drills as typeof b.drills,steps:Array.isArray(prior.steps)&&prior.steps.every(v=>typeof v==='string')?prior.steps:b.steps,
    because:Array.isArray(prior.because)&&prior.because.every(v=>typeof v==='string')?prior.because:b.because,
    roadmapReason:typeof prior.roadmapReason==='string'?prior.roadmapReason:b.roadmapReason,
    durationMin:typeof prior.durationMin==='number'?prior.durationMin:prior.durationMin===null?null:b.durationMin};
