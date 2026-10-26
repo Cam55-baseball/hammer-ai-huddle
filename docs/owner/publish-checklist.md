@@ -2,6 +2,27 @@
 
 Updated October 26, 2026, academy continuation.
 
+## October 26 06:36 owner standards — current verdict
+
+| Requirement | Result |
+|---|---|
+| Editable standards | PASS: baseball and softball defaults saved/read back; owner-only existing settings writes/audit retained |
+| Contact | Built: K/PA in AB windows; strict level thresholds, linked complete-pitch whiff/zone rates and early-whiff counts; missing parts stay unknown |
+| Power | Built: HR/AB ≥ .100; HR-only; HR/K ≥ 1 chase, zero K never an infinite ratio |
+| Speed | Built: existing registered speed test/Speed Lab and handed home-to-first grade adapters; sprint/steal/Royal timings remain record-only |
+| Arm | Built: position velocity or catcher pop plus human arm accuracy, dated pain and canonical ledger rest; missing health sharing/check-in cannot certify elite |
+| Defense | Built: position-matching coach/scout human fielding grade; scored-chance windows supporting, never substitute for human grade |
+| Pitching | Built: explicit BF game total, numbered final batter outcomes and complete-history confirmation; BF windows; elite K/BF, BB/BF, HR/BF settings remain intentionally unset |
+| Bunting identity | Built: owner AVG/.050 lefty/.025 lacking-power/65-speed defaults; lefty power goal remains starting guidance; legal volume/rest/side limits retained |
+| Steering | Built: judged-only existing ready-slot priority and transient goal-rank overlay, General/coach panel and caller-scoped chat context; no dose/day/saved-plan mutation |
+| Verification | 553 files / 4,638 tests PASS in 16 bounded groups; changed groups 0/5/6/7 refreshed; preview OK 06:55:17 UTC |
+
+Inspected loaded 390×844 owner settings/General screenshots and reload. Actual source RPC succeeded; unconnected read denied 42501 with no data. Authenticated deployed chat rejects empty messages (400); **this is not positive chat guidance proof**. Exact owner softball settings save/readback succeeded. Four authorized additive changes and affected hammer-recall/hammer-chat/plan-swap deployments completed; frontend remains preview-only. Zero hosted TEST athlete/prescription/game/log records created, so no TEST cleanup targets. Kept personas unchanged; no publish, cron or iOS changes.
+
+**Ready to publish: NO.** Affected player/coach populated identity → future unsaved plan → canonical saved reload, positive chat response and matched-video playback remain unverified: specific TEST-user session approval is unavailable. The separately required Monday coach Use-instead proof still has no proven same-category source/flow. Source-complete health flag coverage and account-only multi-sport human/throw/catch provenance need affected-role verification; no invented elite status or test records replace these proofs. Speed-versus-power steering compares progress toward owner standards, **not a forecast of attainability**. Pitching cutoffs are intentionally unset until the owner supplies them; that alone does not prevent showing BF progress.
+
+Evidence: `/tmp/browser/identity-standards/` (loaded screenshots, source denial/readback, bounded suite and final-summary.json). Owner-empty evidence is explicitly not an affected-player positive proof. Earlier dated sections below remain history, not the current status.
+
 ## October 26 run (3) — final batch verdict: NOT COMPLETE
 
 - Added one evidence-bounded guidance projection shared by mastery presentation: below-standard contact requires complete-window source IDs, speed OR power can satisfy the stated requirement, and missing arm/defense/attainability evidence never becomes an overall weakest-pillar claim. This is observational guidance only; **not** the requested completed plan/goal/chat integration.
@@ -120,6 +141,8 @@ These five owner checks are not blockers for the readiness verdict:
 
 ### Player
 
+Your academy now separates K / plate appearances, misses / swings and in-zone contact / in-zone swings. Missing pitch totals or locations say Need more data while K can still be judged. Record every pitch and confirm the complete pitch total for each finished plate appearance. Power counts only HR in the last complete AB window, with the HR/K chase. Speed uses existing speed-test/home-to-first grades; other timings stay recorded-only. Arm requires position measurement, human accuracy and no active dated pain/ledger flag; defense uses a human fielding grade. Pitching game logs accept batters faced and numbered final batter results; confirm a complete outing only when every batter is logged. Unknown pitching cutoffs stay Need more data. Judged focus can prioritize existing future safe work, never rewrite today's saved plan.
+
 When bunting is logged in practice or a game, enter the actual batting side, exact bunt type and Yes/No only if success was observed; Not entered stays unknown. The twelve bunt drills are active for future legal unsaved hitting work; saved days do not change. Drag bunts target the 3B line early in the count, never with two strikes; game logging flags two-strike attempts. Your mastery panel shows the last complete batting window, home runs, balls in play, scored defensive chances and source-labelled speed evidence; missing thresholds/evidence say Need more data. Pitch counts are never shown as batters faced. Exiting focus after a successful set preserves its required rest; Start resumes that rest rather than saving the set again.
 
 Recorded speed evidence expands separately from qualified grades. Royal timer values are seconds converted from saved milliseconds and remain recorded-only, with manual/video-sync labels. Development focus never calls contact the overall weakest pillar when other required pillars are unknown.
@@ -127,6 +150,8 @@ Recorded speed evidence expands separately from qualified grades. Royal timer va
 Coach workouts offer Use instead, Add alongside, Save for later and Use today where applicable. Use instead requires real saved work of the same category and never spills into another category. Replaced work is marked “Replaced by coach workout”, not missed. Read every warning and its exact date and measured numbers; Okay acknowledges, Cancel action saves nothing. Missing-fact warnings explicitly say what was not checked, without making up a score or cap. Accepted warnings appear in the card’s “Coach override: …” Because line. You can still decline the workout.
 
 ### Coach
+
+Coaching Console has editable per-level contact ratios, HR power/lefty/lacking-power ratios, low-average and elite-grade standards, the HR/K chase and optional pitching K/BF, BB/BF and HR/BF cutoffs. All ratios use 0–1 inputs. The player/coach mastery panel names evidence, sample/window, date and owner standards. Human fielding/arm grades must match the position; self-reported grades never certify them. Health facts remain behind existing health consent. Chat reads the same caller-scoped identity judge, not an inferred grade from partial recall.
 
 Owner Vault now exposes twelve active side-specific bunt entries with attempts/successes measure and the owner's exact instructions. Existing saved work stays unchanged. Coaching Console has sport-specific batting windows plus separate BF and fielding-chance windows, and HR/contact/speed-minimum settings. Leave all three area-window fields blank to inherit batting cadence; choose all three for an independent cadence. Leave unknown cutoffs blank. Coach summary reads the same source-labelled mastery projection through the server's training gate; missing pillars are not certified. Scored defense is measured evidence, not an automatic elite claim.
 
