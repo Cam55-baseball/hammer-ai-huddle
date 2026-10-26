@@ -1,6 +1,6 @@
 # Hammers — final publish checklist
 
-Updated October 25, 2026, final continuation.
+Updated October 26, 2026, academy continuation.
 
 ## October 26 05:16 academy continuation — partial
 
@@ -10,6 +10,8 @@ Updated October 25, 2026, final continuation.
 - The General and coach summary mount the same identity projection; server evidence reads recheck narrow training access and sport, return no private analysis/health, and include tests, sport-tagged sprints, game home-to-first/runs/leads and Royal timer data. Unknown or ungraded methods remain record-only. Account-only baserunning splits lack sport provenance and are not borrowed; full all-source speed certification is still OPEN.
 - OPEN: actual pitching BF/defense-chance identity, full arm/contact judges and weakest-pillar goal integration, source-complete speed/steal timing certification, owner HR/contact/minimum cutoffs, athlete positive bunting/game/coach/chat readbacks and Monday Use-instead proof. No claim of complete A/B/C.
 - Applied additive settings and scoped evidence changes; exercise-vault, hammer-recall, hammer-chat and regenerated plan-swap redeployed under named authorization. No publish, cron or iOS changes. No TEST training data added; owner content/settings are real authorized changes, not cleanup targets.
+- Full suite: **549 files / 4,580 tests PASS**, ten bounded groups plus the newly added source-projection file; refreshed settings/source tests **4 PASS** after an observed save-confirmation/readback race was corrected. Latest preview build **OK at 05:44:45 UTC**. Inspected 390×844 loaded drag-drill, saved owner settings and The General screenshots. Owner settings save/readback preserves 100/500/500 and unknown cutoffs; own evidence returns Need more data; unrelated TEST-player evidence is denied; no browser page errors. Approved MLB/AUSL owner principle saved once, then read back without duplication.
+- Affected-player end-to-end proof remains **UNVERIFIED**: explicit TEST-user session approval was unavailable in this run. Owner empty-history screenshots are not a player-positive or coach-role proof. No TEST prescription/log additions were made, so no training cleanup was needed. Evidence: `/tmp/browser/mastery/readback.json`, screenshots and `/tmp/mastery-suite/summary.json`.
 
 **Ready to publish: NO — the remaining identity/source integration and affected-player proofs above are unfinished; Monday coach proof remains separately open.**
 
