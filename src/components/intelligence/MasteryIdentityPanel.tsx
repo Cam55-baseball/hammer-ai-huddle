@@ -1,4 +1,5 @@
 import {useMasteryIdentity} from '@/hooks/useMasteryIdentity';
+import {PracticeSwingLog} from '@/components/intelligence/PracticeSwingLog';
 export function MasteryIdentityPanel({sport,athleteId}:{sport:'baseball'|'softball';athleteId?:string}){
  const query=useMasteryIdentity(sport,new Date().toLocaleDateString('en-CA'),true,athleteId);
  const data=query.data;const window=data?.batting.latest;
