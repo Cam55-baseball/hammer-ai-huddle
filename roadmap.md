@@ -4419,3 +4419,4 @@ X1 (2026-10-11): throws entered on catch-play/throw rows in other cards now feed
 
 - [x] Oct 25 Option B: all coach safety stops are Okay/Cancel warnings (minor reason + parent notice for pain/arm/age); hosted proof after Monday plans.
 - Oct 26 00:10 UTC run (4): full suite 562 files / 4,866 tests PASS in bounded batches; Monday coach Use-instead proof not run (plans only just eligible); bunting activation + trait source await owner. Ready to publish: NO.
+- Oct 26 16:30 run (2): practice swing-and-miss logging card on The General (self-only, owner weights, 30 tests). Ready to publish: NO.
