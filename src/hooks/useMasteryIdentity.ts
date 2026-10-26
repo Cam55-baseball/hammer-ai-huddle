@@ -7,7 +7,7 @@ export function useMasteryIdentity(sport:'baseball'|'softball',date:string,enabl
  return useQuery({queryKey:['mastery-identity',user?.id,athleteId??user?.id,sport,date],enabled:enabled&&!!user,staleTime:60_000,queryFn:async()=>{
   if(!user)throw new Error('Sign in first');
   const settings=await supabase.from('mastery_identity_settings').select('*').eq('sport',sport).maybeSingle();if(settings.error)throw settings.error;
-  const sources=await supabase.rpc('mastery_identity_sources',{p_sport:sport,p_date:date,p_athlete:athleteId??user.id});if(sources.error)throw sources.error;
-  return projectMasterySources(sources.data,sport,settings.data);
+   const sources=await supabase.rpc('mastery_identity_evidence',{p_sport:sport,p_date:date,p_athlete:athleteId??user.id});if(sources.error)throw sources.error;
+   return projectMasterySources({...sources.data as object,date},sport,settings.data);
  }});
 }

@@ -1,5 +1,7 @@
 import { guardSignedInNotPaused } from "../_shared/accountPause.ts";
 import { buntingKnowledgeText, MASTERY_MINIMUM } from '../_shared/wic/buntingMastery.ts';
+import {CONTACT_PRINCIPLE} from '../_shared/wic/masteryStandards.ts';
+import {masteryContext} from '../_shared/masteryContext.ts';
 /**
  * Hammer Chat — unified conversational coaching surface.
  *
@@ -77,6 +79,7 @@ Be specific. Be brief. Use short sentences. No emojis.
 APPROVED OWNER KNOWLEDGE (teaching, not a measurement of this athlete):
 ${buntingKnowledgeText()}
 ${MASTERY_MINIMUM}
+${CONTACT_PRINCIPLE}
 Self-reported speed or power is starting-plan guidance only, never a measured identity. Do not classify speed, home-run power or a weakest pillar without sourced data and approved cutoffs. Say Need more data when absent.
 
 ATHLETE_CONTEXT = ${ctxJson}
@@ -100,6 +103,7 @@ serve(async (req) => {
       });
     }
 
+    const identity=await masteryContext(req.headers.get('Authorization')??'',new Date().toISOString().slice(0,10)).catch(()=>({status:'Need more data'}));
     const result = await chatCompletion({
       model: "google/gemini-3.6-flash",
       messages: [
@@ -109,7 +113,7 @@ serve(async (req) => {
             body.context ?? null,
             body.nextStep ?? null,
             body.categoryFocus ?? null,
-          ),
+          )+`\nCANONICAL MASTERY IDENTITY: ${JSON.stringify(identity)}. Use only judged focus and cite source/settings. Missing evidence never means a weak pillar.`,
         },
         ...messages,
       ],

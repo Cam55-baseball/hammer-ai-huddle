@@ -11,6 +11,8 @@ export interface GpPitchRow {
   id: string;
   game_id: string;
   at_bat_id: string | null;
+  batter_opportunity?:number|null;
+  batter_result?:string|null;
   perspective: "pitcher" | "hitter";
   inning: number | null;
   pitch_no: number | null;

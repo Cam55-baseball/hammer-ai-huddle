@@ -59,4 +59,4 @@
 - Coach sends/choices share WIC/Swap and day-lock freshness. Missing check-in/load facts and coach season findings warn explicitly; generator season legality stays unchanged. Access/category and invalid entries block; audit/behavioral writes stay atomic. Why: no invented facts, spill-over, partial saves or Cancel writes.
 - Stray TEST cleanup snapshots exact identities privately; fixed-ID readback and job/list/stat exclusions certify parking, never a shrinking name query. Why: hidden flags alone cannot prove zero stray data.
 - Exact exercise measurement decisions are shared by the library, inline logger and log-sheet resolver; yard entry converts only at the display boundary, keeping canonical distance in feet. Why: ambiguous names must not diverge between logging paths or change existing distance readers.
-- Mastery uses shared knowledge/windows/guidance and gated sources; Royal ms convert, no scalar grades or pitch-count BF. Saved days win. Why: no invented facts.
+- Mastery: shared ratio settings/judges, gated health/evidence, existing grades, explicit BF; ready-slot focus only, saved days win. Why: no invented facts.

@@ -212,6 +212,7 @@ function PitchForm({
             onValueChange={(v) => set("inning", v ?? "")} /></F>
           <F label="Pitch #"><NumberField value={f.pitch_no}
             onValueChange={(v) => set("pitch_no", v ?? "")} /></F>
+          {isPitcher && <><F label="Batter opportunity #"><NumberField min={1} value={f.batter_opportunity??''} onValueChange={v=>set('batter_opportunity',v??'')} /></F><F label="Final batter result"><Select value={f.batter_result??'unknown'} onValueChange={v=>set('batter_result',v)}><SelectTrigger aria-label="Final batter result"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unknown">Still batting / not entered</SelectItem>{['K','BB','HBP','HR','out','hit','error','sacrifice','interference'].map(r=><SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent></Select></F></>}
           <F label="Type">
             <Select value={f.pitch_type} onValueChange={(v) => set("pitch_type", v)}>
               <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>

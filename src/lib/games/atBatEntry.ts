@@ -17,5 +17,8 @@ export function atBatEntryPayload(fields: Record<string, unknown>): Record<strin
   }
   for (const key of ["batting_side", "position_played", "contact_quality", "exit_direction", "runners_on", "opponent_pitcher_id"]) payload[key] = fields[key] || null;
   payload.is_pinch_hit = optionalFlag(fields.is_pinch_hit);
+  const count=fields.pitch_count==null||fields.pitch_count===''?null:Number(fields.pitch_count);
+  if(count!==null&&(!Number.isSafeInteger(count)||count<1))throw new Error('Total pitches must be a positive whole number.');
+  payload.pitch_count=count;
   return payload;
 }

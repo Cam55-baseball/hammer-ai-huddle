@@ -890,6 +890,27 @@
       "when": 1792993875029,
       "tag": "0126_mastery_fielding_evidence",
       "breakpoints": true
+    },
+    {
+      "idx": 127,
+      "version": "7",
+      "when": 1792996759574,
+      "tag": "0127_mastery_owner_ratio_standards",
+      "breakpoints": true
+    },
+    {
+      "idx": 128,
+      "version": "7",
+      "when": 1792996850090,
+      "tag": "0128_mastery_complete_evidence_reader",
+      "breakpoints": true
+    },
+    {
+      "idx": 129,
+      "version": "7",
+      "when": 1792997239303,
+      "tag": "0129_mastery_at_bat_pitch_total",
+      "breakpoints": true
     }
   ]
 }

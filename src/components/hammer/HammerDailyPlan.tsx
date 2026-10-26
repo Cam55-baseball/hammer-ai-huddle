@@ -123,6 +123,7 @@ import { usePrinciplePicks } from "@/hooks/usePrinciplePicks";
 import { principleDrillBoosts } from "@/lib/intelligence/principlePicks";
 import { useCategoryPracticeLoad } from '@/hooks/useCategoryPracticeLoad';
 import {useBuntingEvidence} from '@/hooks/useBuntingEvidence';
+import {useMasteryIdentity} from '@/hooks/useMasteryIdentity';
 import {useSportTheme} from '@/contexts/SportThemeContext';
 import {BuntStudyVideo} from '@/components/hammer/cards/BuntStudyVideo';
 import {getV2} from '@/lib/hammer/goals/categoryGoals';
@@ -746,6 +747,7 @@ function HammerDailyPlanBody({
   const hasSavedSportDay = savedDay.data?.some(row=>row.sport===sportKey) === true;
   const practiceLoadHistory = useCategoryPracticeLoad(sportKey, bodyPlanDate);
   const buntHistory = useBuntingEvidence(sportKey, bodyPlanDate, has5Tool || hasG2W);
+  const masteryIdentity=useMasteryIdentity(sportKey,bodyPlanDate);
   const dob = ctx.get<string>('date_of_birth')?.value;
   const ageDate = typeof dob === 'string' ? new Date(`${dob.slice(0,10)}T12:00:00Z`) : null;
   const planDateForAge = new Date(`${bodyPlanDate}T12:00:00Z`);
@@ -804,11 +806,12 @@ function HammerDailyPlanBody({
           pitcherOutings: pitcherSchedule.facts,
           practiceRecords: practiceLoadHistory.data,
           subscriptionModules: modules,
+          masteryFocus:!hasSavedSportDay&&!masteryIdentity.isError?masteryIdentity.data?.guidance:undefined,
           bunting: !hasSavedSportDay && buntHistory.data && !buntHistory.isError ? { ...buntHistory.data, age:buntAge, phase:resolvedPhase ?? '',userId:bodyUser?.id,traits:{...buntHistory.data.traits,powerGoal:hittingPowerGoal} } : undefined,
           fullRestDay: wkRx.data?.some(row => (row.why_payload as any)?.rest_day?.allowed_class === "none" || ["recovery", "recovery_day", "off_day"].includes((row.why_payload as any)?.training_context?.day_type)) === true,
         },
       ),
-    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay],
+    [ctx, scheduleSignal, sideBias, gpForPlan, identityOverride, recentCompletions, phaseStartedAt, resolvedPhase, phaseSource, planAdjust.positionWorked, defenseFullOverride, pitcherSchedule.facts, practiceLoadHistory.data, modules, wkRx.data,buntHistory.data,buntHistory.isError,buntAge,bodyUser?.id,hittingPowerGoal,hasSavedSportDay,masteryIdentity.data,masteryIdentity.isError],
   );
 
   // CNS→Hammer Clamp: when today's elite Lifts/Speed prescriptions sum to a

@@ -1,5 +1,7 @@
 import { HONEST_EDGES_PROMPT } from "../_shared/honestEdges.ts";
 import {buntingKnowledgeText,MASTERY_MINIMUM} from '../_shared/wic/buntingMastery.ts';
+import {CONTACT_PRINCIPLE} from '../_shared/wic/masteryStandards.ts';
+import {masteryContext} from '../_shared/masteryContext.ts';
 // Hammer Recall & Clarity chat — grounded recall + mental-clarity dialogue over
 // the athlete's own history, plus a live "right now" snapshot of today.
 //
@@ -33,6 +35,7 @@ Your job:
 APPROVED OWNER TEACHING (not a claim about this athlete):
 ${buntingKnowledgeText()}
 ${MASTERY_MINIMUM}
+${CONTACT_PRINCIPLE}
 Batting identity uses complete 100-AB windows through 500 AB, then complete 500-AB windows forever. Power means home runs in that window, never extra-base hits. Self-reported traits never override measured identity. Do not infer a window, elite status or attainable pillar from a partial retrieved corpus; missing source-backed evaluation means Need more data.
 If the athlete gives a date range, ONLY reason about entries inside that range.${HONEST_EDGES_PROMPT}`;
 
@@ -188,12 +191,13 @@ Deno.serve(async (req) => {
 
     // Live state + retrieval, in parallel
     const range = parseDateRange(message, now);
-    const [nowBlock, retrieved] = await Promise.all([
+    const [nowBlock, retrieved,identity] = await Promise.all([
       buildNowBlock(admin, userId, now).catch((e) => {
         console.error("[hammer-recall] nowBlock", e instanceof Error ? e.message : String(e));
         return `RIGHT NOW: today is ${now.toISOString().slice(0, 10)} (live state unavailable).`;
       }),
       retrieveContext(admin, userId, message, range),
+      masteryContext(authHeader,now.toISOString().slice(0,10)).catch(()=>({status:'Need more data'})),
     ]);
 
     const { sources, coverage } = retrieved;
@@ -207,7 +211,7 @@ Deno.serve(async (req) => {
         : "RECALL CORPUS (cite these when relevant, quote short snippets):\n" +
           sources.map((s, i) => `[${i + 1}] ${s.source} · ${s.date}: ${s.text}`).join("\n");
 
-    const blocks = [nowBlock, rangeLine, corpusBlock].filter(Boolean);
+    const blocks = [nowBlock, rangeLine, corpusBlock,`CANONICAL MASTERY IDENTITY: ${JSON.stringify(identity)}. Use only these judged pillars for focus; unknown is never a weakness. Cite settings and record sources. Never author a dose, new day or inaccessible tool.`].filter(Boolean);
     const answer = await askLLM(history, blocks);
 
     await admin.from("recall_messages").insert([

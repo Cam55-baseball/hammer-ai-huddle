@@ -1,0 +1,1 @@
+ALTER TABLE public.gp_at_bats ADD COLUMN pitch_count integer CHECK (pitch_count>0); COMMENT ON COLUMN public.gp_at_bats.pitch_count IS 'Explicit total pitches for a completed plate appearance; nullable when completeness is unknown. Identity whiff/zone rates require this total to equal linked hitter pitches.';

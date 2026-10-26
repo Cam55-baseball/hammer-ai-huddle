@@ -1,4 +1,5 @@
 import { sortByWarmupStage } from "./warmupStages";
+import {applyMasteryFocus,masteryGoalWeights,type MasteryPlanFocus} from './masteryFocus';
 import { applyBuntingPlan, type BuntCatalogItem } from './buntingPlan';
 import type { BuntingEvidence } from './buntingEvidence';
 import type { BuntingFacts } from '../../../../supabase/functions/_shared/wic/buntingProgram';
@@ -2230,6 +2231,7 @@ function scaleDosageLabel(dosage: string, scale: number): string {
 
 
 export interface RoadmapInputs {
+  readonly masteryFocus?:MasteryPlanFocus;
   /** Current server's whole-day rest verdict; never inferred from lift spacing alone. */
   readonly fullRestDay?: boolean;
   readonly practiceRecords?: ReadonlyArray<PracticeLoadRecord>;
@@ -2246,7 +2248,7 @@ export interface RoadmapInputs {
   readonly defenseFullOverride?: boolean;
   /** Current subscription modules; an explicit empty list permits no purchased skill boost. */
   readonly subscriptionModules?: readonly string[];
-  readonly bunting?: {evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'>};
+  readonly bunting?: {evidence:BuntingEvidence;catalog:readonly BuntCatalogItem[];age:number|null;userId?:string;phase:string;traits?:Pick<BuntingFacts,'speedy'|'lacksPower'|'leftPower'|'powerGoal'|'lowAverage'>};
 }
 
 export function buildHammerDailyPlan(
@@ -2386,24 +2388,26 @@ export function buildHammerDailyPlan(
       roadmapInputs.defenseFullOverride === true,
     ),
   ), practiceLoad);
+  const focusProjection={...proj,categoryGoals:masteryGoalWeights(proj.categoryGoals,roadmapInputs.masteryFocus)};
   const goalOrdered = secondGoalFirst(practiced.map(b => {
     if (!goalWeek.reason || (goalWeek.modality ? b.modality !== goalWeek.modality : modalityToCategory(b.modality) !== proj.categoryGoals?.goals.find(g => g.rank === 1)?.category)) return b;
     const reason = scheduleSignal.postureToday !== 'normal' || b.status !== 'ready'
       ? `${goalWeek.reason} Today's safety and schedule rules still decide whether you train.` : goalWeek.reason;
     return { ...b, because: [...(b.because ?? []), reason] };
-  }), proj);
+  }), focusProjection);
   const fullRestDay = roadmapInputs.fullRestDay === true ||
     (scheduleSignal.postureToday === "normal" && weeklyRoadmap.find(day => day.isToday)?.restDay === true);
   // Last composition boundary: laterality, owner slots, overrides and warm-up anchors cannot reopen rest.
   const bunting = roadmapInputs.bunting;
-  const bunted = bunting ? applyBuntingPlan(goalOrdered, {
+  const masteryOrdered=applyMasteryFocus(goalOrdered,roadmapInputs.masteryFocus);
+  const bunted = bunting ? applyBuntingPlan(masteryOrdered, {
     sport:normalizeSport(sportRaw)==='softball'?'softball':'baseball',modules:roadmapInputs.subscriptionModules??[],
     bats:identityOverride?.isSwitchHitter?'S':(['R','L','S'].includes(String(ctx.get('bats_hand')?.value))?ctx.get('bats_hand')?.value as 'R'|'L'|'S':null),
     ...bunting.traits,battingGames:bunting.evidence.battingGames,battingWindow:bunting.evidence.battingWindow,outcomes:bunting.evidence.outcomes,
     legalWeekdays:weeklyRoadmap.filter(d=>!d.restDay&&d.modalities.some(m=>m.key==='hitting'&&m.intensity!=='activation')).map(d=>d.dow),
     restDay:fullRestDay,gameDay:scheduleSignal.postureToday!=='normal',
   },{weekday:today.getDay(),weekIndex:Math.floor(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate()-((today.getDay()+6)%7))/604800000),
-    owned:proj.equipmentList,age:bunting.age,phase:bunting.phase,catalog:bunting.catalog,userId:bunting.userId}) : goalOrdered;
+    owned:proj.equipmentList,age:bunting.age,phase:bunting.phase,catalog:bunting.catalog,userId:bunting.userId}) : masteryOrdered;
   const blocks = fullRestDay ? bunted.map(b => {
     if (["fueling", "game_iq"].includes(b.modality)) return b;
     const drills = ["warmup", "recovery"].includes(b.modality) ? b.drills.filter(d => isSoftRecovery(d.slug)) : [];
