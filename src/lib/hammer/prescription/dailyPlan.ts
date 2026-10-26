@@ -1,5 +1,5 @@
 import { sortByWarmupStage } from "./warmupStages";
-import {applyMasteryFocus,type MasteryPlanFocus} from './masteryFocus';
+import {applyMasteryFocus,masteryGoalWeights,type MasteryPlanFocus} from './masteryFocus';
 import { applyBuntingPlan, type BuntCatalogItem } from './buntingPlan';
 import type { BuntingEvidence } from './buntingEvidence';
 import type { BuntingFacts } from '../../../../supabase/functions/_shared/wic/buntingProgram';
@@ -2388,12 +2388,13 @@ export function buildHammerDailyPlan(
       roadmapInputs.defenseFullOverride === true,
     ),
   ), practiceLoad);
+  const focusProjection={...proj,categoryGoals:masteryGoalWeights(proj.categoryGoals,roadmapInputs.masteryFocus)};
   const goalOrdered = secondGoalFirst(practiced.map(b => {
     if (!goalWeek.reason || (goalWeek.modality ? b.modality !== goalWeek.modality : modalityToCategory(b.modality) !== proj.categoryGoals?.goals.find(g => g.rank === 1)?.category)) return b;
     const reason = scheduleSignal.postureToday !== 'normal' || b.status !== 'ready'
       ? `${goalWeek.reason} Today's safety and schedule rules still decide whether you train.` : goalWeek.reason;
     return { ...b, because: [...(b.because ?? []), reason] };
-  }), proj);
+  }), focusProjection);
   const fullRestDay = roadmapInputs.fullRestDay === true ||
     (scheduleSignal.postureToday === "normal" && weeklyRoadmap.find(day => day.isToday)?.restDay === true);
   // Last composition boundary: laterality, owner slots, overrides and warm-up anchors cannot reopen rest.

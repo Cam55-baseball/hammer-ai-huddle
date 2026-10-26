@@ -22,7 +22,7 @@ export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',se
  }
  for(const row of list(source.sprints)){const m=record(row.metrics);const value=m.time??m.seconds;add(row,`sprint:${row.id}`,'Logged sprint',`sprint ${row.distance??'unknown distance'} feet`,'seconds',value,null);}
  const context=record(source.context);const scales=list(source.scales) as unknown as ScaleReferenceRow[];
- const rawLevel=String(context.level??context.leagueTier??'').toLowerCase();
+ const rawLevel=String(context.level||context.leagueTier||'').toLowerCase();
  const level:MasteryLevel|null=['pro','professional','mlb','milb','ausl'].includes(rawLevel)?'pro':['college','ncaa','d1','d2','d3','juco','naia'].includes(rawLevel)?'college':['high_school','high school','hs'].includes(rawLevel)?'high_school':['youth','youth_rec','youth_travel'].includes(rawLevel)?'youth':null;
  for(const row of list(source.homeFirst)){const hand=row.side;const g=hand==='L'||hand==='R'?computeHomeToFirstGrade(typeof row.seconds==='number'?row.seconds:null,hand,scales):null;add(row,`home-first:${row.id}`,`Game home-to-first · ${row.source}`,'home_to_first','seconds',row.seconds,g&&!g.missing?g.grade:null);}
  const speedKeys=sport==='baseball'?{'10y':'ten_yard_dash','30y':'thirty_yard_dash','60y':'sixty_yard_dash'}:{'7y':'seven_yard_dash','20y':null,'40y':'forty_yard_dash'};
@@ -38,7 +38,7 @@ export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',se
  const goals=record(context.goals);const sportGoals=record(goals[sport]);
  const hittingRows=list(record(sportGoals.position).hitting);
  const powerGoal=hittingRows.some(g=>g.id==='oppo_power'||g.intent==='power_hitting')||list(goals.goals).some(g=>g.category==='hitting'&&g.intent==='power_hitting');
- const traits={speedy:speed.elite===true,lacksPower:hrRate!==null&&standards.lacking_power_hr_rate!=null&&hrRate<standards.lacking_power_hr_rate,leftPower:context.bats==='L'&&hrRate!==null&&standards.left_power_hr_rate!=null&&hrRate>=standards.left_power_hr_rate,powerGoal:context.bats==='L'&&powerGoal,powerStatus:power.status,power:power.status==='Need more data'?null:power.status==='Elite',battingWindow:batting.latest,lowAverage:standards.bunt_low_average??.300};
+ const traits={speedy:speed.elite===true,lacksPower:hrRate!==null&&standards.lacking_power_hr_rate!=null&&hrRate<standards.lacking_power_hr_rate,leftPower:context.bats==='L'&&hrRate!==null&&standards.left_power_hr_rate!=null&&hrRate>=standards.left_power_hr_rate,powerGoal:['L','S'].includes(String(context.bats))&&powerGoal,powerStatus:power.status,power:power.status==='Need more data'?null:power.status==='Elite',battingWindow:batting.latest,lowAverage:standards.bunt_low_average??.300};
  const defense=fieldingIdentity(list(source.defense).map((e,i)=>({id:String(e.id??''),date:String(e.date??''),order:i,source:typeof e.source==='string'?e.source:null,position:typeof e.position==='string'?e.position:null,error:typeof e.error==='boolean'?e.error:null,assist:typeof e.assist==='boolean'?e.assist:null,putout:typeof e.putout==='boolean'?e.putout:null})),areaWindowPolicy(settings,'defense'));
  const contact=contactIdentity(batting.latest,list(source.contactPitches).map(p=>({id:String(p.id??''),atBatId:typeof p.atBatId==='string'?p.atBatId:null,result:typeof p.result==='string'?p.result:null,strikes:typeof p.strikes==='number'?p.strikes:null,zone:typeof p.zone==='number'?p.zone:null,outZone:typeof p.outZone==='string'?p.outZone:null})),level,standards);
  const position=String(context.position??'').toUpperCase();
