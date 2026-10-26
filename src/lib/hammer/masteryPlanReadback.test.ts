@@ -38,7 +38,7 @@ describe('first plan identity readiness and canonical snapshot replay',()=>{
   const skills=(p:typeof plan)=>p.blocks.filter(b=>['hitting','defense','throwing','speed','baserunning'].includes(b.modality));
   expect(skills(reloaded).map(b=>b.modality)).toEqual(skills(plan).map(b=>b.modality));
   for(const b of skills(reloaded).filter(b=>b.status==='ready')){
-   const original=plan.blocks.find(o=>o.modality===b.modality&&o.side===b.side);
+   const original=payload.blocks.find(o=>o.modality===b.modality&&(o.side??null)===(b.side??null));
    expect(b.drills).toEqual(original?.drills);expect(b.because).toEqual(original?.because);expect(b.durationMin).toBe(original?.durationMin);
   }
   expect(reloaded.blocks.find(b=>b.modality==='strength')).toEqual(build(sport).blocks.find(b=>b.modality==='strength'));
