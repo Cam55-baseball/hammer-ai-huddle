@@ -62,4 +62,14 @@ describe('first plan identity readiness and canonical snapshot replay',()=>{
   const replay=masteryPlanReadback(reduced,payload,'baseball','2026-10-26');
   expect(replay.blocks.find(b=>b.modality==='hitting')).toEqual(reduced.blocks.find(b=>b.modality==='hitting'));
  });
+ it('eight weekly saved windows keep their own focus lineage across later identity changes',()=>{
+  for(let week=0;week<8;week++){
+   const date=`2026-10-${String(week+1).padStart(2,'0')}`;const plan=build('baseball',true);
+   const datedFocus={...focus,sourceIds:[`window-${week}`]};const payload=planSnapshotPayload(plan,'baseball',date,datedFocus);
+   const replay=masteryPlanReadback(plan,JSON.parse(JSON.stringify(payload)),'baseball',date);
+   expect(replay.blocks.map(b=>[b.modality,b.drills.map(d=>d.dosage)])).toEqual(plan.blocks.map(b=>[b.modality,b.drills.map(d=>d.dosage)]));
+   expect(payload.masteryFocus?.sourceIds).toEqual([`window-${week}`]);
+   expect(masteryPlanReadback(plan,payload,'baseball','2026-11-01')).toBe(plan);
+  }
+ });
 });
