@@ -13,6 +13,8 @@
 //
 // Idempotent for (user_id, plan_date, sequence_field).
 import { checkPrescription } from "../_shared/wic/integrity/doseIntegrity.ts";
+import { masteryContext } from "../_shared/masteryContext.ts";
+import { masteryPlanGuidance, masterySavedGuidance } from "../_shared/wic/masteryPlanContext.ts";
 import { checkInReductions, latestCheckInValues } from "../_shared/wic/checkInReductions.ts";
 import { BASE_REST_TEXT, prescribedBases, sprintRestSeconds, sprintRestWhy, type DeclaredBaseRoute } from "../_shared/wic/runRest.ts";
 import { gameFlushFor } from "../_shared/wic/conditioning/gameFlush.ts";
@@ -5094,6 +5096,17 @@ const handler = async (req: Request): Promise<Response> => {
       }
     } catch (ppErr) {
       console.warn("[wk-generate-daily] power primer skipped", ppErr);
+    }
+
+    // Caller JWT only: a service job cannot impersonate the athlete to read health/identity.
+    // Newly built days retain sourced focus, while lifting choices, doses and saved days stay unchanged.
+    if (!isServiceCaller && existingDay.length === 0) {
+      try {
+        const identity = await masteryContext(authHeader, planDate);
+        masterySavedGuidance(rows as any[], masteryPlanGuidance(identity), false);
+      } catch {
+        console.debug("[wk-generate-daily] identity unavailable; no new focus certified");
+      }
     }
 
     // -------- Stated change to a day already built: adjust unmarked cards only --------

@@ -6,6 +6,7 @@ import { SKILL_MODALITIES, resolveSkillDaysTarget } from '../roadmap/skillFreque
 import type { HammerAthleteContext, ContextVariable } from '../context/athleteContext';
 import { priorityAccess } from '../priorityAccess';
 import { entitlementsFor } from '@/constants/entitlements';
+import { masteryGoalWeights } from './masteryFocus';
 
 function projection(sport: string, order: string[], extra: Record<string, unknown> = {}) {
   const values = { sport_primary: sport, season_phase: 'off', lifecycle_band: 'adult', lifting_age_years: 2,
@@ -17,6 +18,29 @@ function projection(sport: string, order: string[], extra: Record<string, unknow
 }
 const order = ['fielding', 'hitting', 'throwing', 'speed', 'power'];
 const included = new Set(SKILL_MODALITIES);
+describe('judged identity selects the existing weekly goal opportunity', () => {
+  for (const sport of ['baseball','softball']) it(`${sport}: eight weeks of sourced defense focus keep baseline, phase and training-day limits`, () => {
+    const p=projection(sport,['hitting','fielding','throwing','speed','power']);
+    const focus={observedFocus:'defense',sourceIds:['human-fielding'],reason:'Defense below standard',leftPowerStealEmphasis:false};
+    const weighted={...p,categoryGoals:masteryGoalWeights(p.categoryGoals,focus)};
+    const template=resolveWeeklyTemplate(p);const baseline={defense:2,hitting:3,throwing:3,baserunning:1};
+    for(let week=0;week<8;week++){
+      const next=weeklyGoalBlocks(template,baseline,weighted,'SS',included);
+      expect(next.targets.defense).toBe(3);expect(next.targets.hitting).toBe(3);
+      const original=weeklyGoalBlocks(template,baseline,p,'SS',included);
+      expect(Object.values(next.targets).reduce((a,b)=>a+b,0)).toBe(Object.values(original.targets).reduce((a,b)=>a+b,0));
+      for(let day=0;day<7;day++){
+        const date=new Date(2026,5,7+week*7+day);
+        const before=applyMicrocycle(template,date,baseline);const after=applyMicrocycle(next.template,date,next.targets);
+        expect(after.perModality.strength).toEqual(before.perModality.strength);
+        if(after.perModality.defense.scheduled&&!before.perModality.defense.scheduled)expect(after.perModality.defense.intensity).toBe('activation');
+      }
+      expect(weeklyGoalBlocks(template,baseline,weighted,'SS',new Set(['hitting'])).targets).toEqual(baseline);
+    }
+    expect(p.categoryGoals?.goals[0].category).toBe('hitting');
+    expect(masteryGoalWeights(p.categoryGoals,{...focus,sourceIds:[]})).toBe(p.categoryGoals);
+  });
+});
 describe('weekly goal blocks — owner replacement, both sports and six cohorts over eight weeks', () => {
   for (const sport of ['baseball', 'softball']) for (const tier of ['pitcher', '5tool', 'golden2way']) {
     it(`${sport}/${tier}: one extra top block, baseline never reduced, second first, no rest-day or lifting change`, () => {

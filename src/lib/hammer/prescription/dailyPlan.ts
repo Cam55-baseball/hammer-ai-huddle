@@ -2261,6 +2261,7 @@ export function buildHammerDailyPlan(
   roadmapInputs: RoadmapInputs = {},
 ): HammerDailyPlanResult {
   const proj = projectEnvelope(ctx);
+  const focusProjection = { ...proj, categoryGoals: masteryGoalWeights(proj.categoryGoals, roadmapInputs.masteryFocus) };
   const speed = selectSpeedFocus(proj);
 
   // Roadmap primitives — rung + season quarter + elite target + throwing ladder.
@@ -2309,7 +2310,7 @@ export function buildHammerDailyPlan(
     (modality === 'hitting' ? goalAccess.hasHitting
       : modality === 'throwing' ? goalAccess.hasThrowing || goalAccess.hasPitching
         : modality === 'defense' || modality === 'baserunning' ? goalAccess.hasThrowing : true);
-  const goalWeek = weeklyGoalBlocks(resolveWeeklyTemplate(proj), skillTargets, proj, positionRaw,
+  const goalWeek = weeklyGoalBlocks(resolveWeeklyTemplate(proj), skillTargets, focusProjection, positionRaw,
     new Set(firstPass.filter(b => b.status === 'ready' && goalEligible(b.modality)).map(b => b.modality)));
   const weeklyTemplate = goalWeek.template;
   const microcycle = applyMicrocycle(weeklyTemplate, today, goalWeek.targets);
@@ -2388,9 +2389,8 @@ export function buildHammerDailyPlan(
       roadmapInputs.defenseFullOverride === true,
     ),
   ), practiceLoad);
-  const focusProjection={...proj,categoryGoals:masteryGoalWeights(proj.categoryGoals,roadmapInputs.masteryFocus)};
   const goalOrdered = secondGoalFirst(practiced.map(b => {
-    if (!goalWeek.reason || (goalWeek.modality ? b.modality !== goalWeek.modality : modalityToCategory(b.modality) !== proj.categoryGoals?.goals.find(g => g.rank === 1)?.category)) return b;
+    if (!goalWeek.reason || (goalWeek.modality ? b.modality !== goalWeek.modality : modalityToCategory(b.modality) !== focusProjection.categoryGoals?.goals.find(g => g.rank === 1)?.category)) return b;
     const reason = scheduleSignal.postureToday !== 'normal' || b.status !== 'ready'
       ? `${goalWeek.reason} Today's safety and schedule rules still decide whether you train.` : goalWeek.reason;
     return { ...b, because: [...(b.because ?? []), reason] };

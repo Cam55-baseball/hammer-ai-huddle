@@ -10,6 +10,17 @@ describe('mastery canonical source projection',()=>{
  const source={date:'2026-10-26',context:{level:'college',position:'SS',bats:'L',dateOfBirth:'2005-01-01'},scales:[scale],throwing:[{id:'v',date:'2026-10-25',position:'infield',metric:'throw_velo_mph',value:95,unit:'mph',source:'Radar'}],humanGrades:[{id:'h',date:'2026-10-25',position:'SS',source:'coach_evaluated',evaluator:'coach',defense:65,arm:65}],health:{shared:true,pain:[{id:'q',scale:0,location:null}],injury:[],ledger:[]}};
  it('arm needs human accuracy and no active pain or ledger rest flag',()=>{expect(projectMasterySources(source,'baseball',settings).arm.status).toBe('Elite');expect(projectMasterySources({...source,health:{...source.health,pain:[{id:'q',scale:1,location:'elbow'}]}},'baseball',settings).arm).toMatchObject({status:'Building',activePain:true});expect(projectMasterySources({...source,humanGrades:[]},'baseball',settings).arm.status).toBe('Need more data');expect(projectMasterySources({...source,health:{shared:false}},'baseball',settings).arm.status).toBe('Need more data');});
  it('self-reported human fielding never overrides a measured/human judge',()=>{const p=projectMasterySources({...source,humanGrades:[{...source.humanGrades[0],source:'self_reported',defense:80}]},'baseball',settings);expect(p.defensePillar.status).toBe('Need more data');});
+ it('current-day arm ledger requiring rest prevents elite; expired and no-rest rows do not',()=>{
+  const arm=(date:string,count:number)=>projectMasterySources({...source,health:{...source.health,ledger:[{entry_date:date,source:'pitching',throw_type:'mound_pitch',count,status:'completed'}]}},'baseball',settings).arm;
+  expect(arm('2026-10-26',50)).toMatchObject({ledgerFlag:true,status:'Building'});
+  expect(arm('2026-10-26',1).ledgerFlag).toBe(false);
+  expect(arm('2026-10-01',50).ledgerFlag).toBe(false);
+ });
+ it('dated stale pain is not current; invalid date does not crash or certify current assessment',()=>{
+  const p=projectMasterySources({...source,health:{...source.health,pain:[{id:'q',date:'2026-10-25',location:'elbow',scale:5}]}},'baseball',settings);
+  expect(p.arm.activePain).toBe(false);expect(p.arm.healthKnown).toBe(false);expect(p.arm.status).toBe('Need more data');
+  expect(()=>projectMasterySources({...source,date:'invalid'},'baseball',settings)).not.toThrow();
+ });
  it('home-first uses the existing sport/side table; unanchored timings remain record-only',()=>{const p=projectMasterySources({...source,homeFirst:[{id:'r',date:'2026-10-25',seconds:3.5,side:'L',source:'game'}],scales:[{metric:'home_to_first_lhh',direction:'lower_better',floor_value:4.4,avg_value:4.1,record_value:3.8}]},'baseball',settings);expect(p.speed.elite).toBe(true);expect(projectMasterySources({...source,homeFirst:[{id:'r',date:'2026-10-25',seconds:3.5,side:'S'}]},'baseball',settings).speed.status).toBe('Need more data');});
  it('left power .050 inclusive, lacking .025 exclusive, latest data beats self report',()=>{const abs=Array.from({length:100},(_,i)=>({id:`a${i}`,date:'2026-10-25',source:'game',result:i<5?'HR':'GO'}));expect(projectMasterySources({...source,atBats:abs},'baseball',settings).traits.leftPower).toBe(true);const p=projectMasterySources({...source,atBats:abs.map((r,i)=>({...r,result:i<2?'HR':'GO'})),selfReported:{power:true,speedy:true}},'baseball',settings);expect(p.traits).toMatchObject({leftPower:false,lacksPower:true,speedy:false});});
  for(const level of ['pro','college','high_school','youth'] as const)it(`eight-week ${level} all five pillars, BF windows and evidence`,()=>{

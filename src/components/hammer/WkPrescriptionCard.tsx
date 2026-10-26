@@ -47,6 +47,7 @@ import { ExerciseDisclosure } from "./cards/ExerciseDisclosure";
 import { InlinePrescriptionLog } from "@/components/hammer/logging/InlinePrescriptionLog";
 import { BASE_REST_TEXT, prescribedBases, sprintRestWhy } from "../../../supabase/functions/_shared/wic/runRest";
 import { SPEED_SWAP_CATALOG } from "../../../supabase/functions/_shared/planSwap/speedSwapCatalog";
+import { masteryPlanGuidance } from "../../../supabase/functions/_shared/wic/masteryPlanContext";
 
 const SLOT_TONE: Record<WkRx["slot"], string> = {
   lift: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
@@ -227,6 +228,7 @@ export function WkPrescriptionCard({
   const todayLine = phaseMismatch || (generating && rawMismatch)
     ? null
     : cleanAthleteCopy(rx.why_v2?.why_today ?? null);
+  const mastery = masteryPlanGuidance({guidance:(rx.why_payload as any)?.mastery_focus});
   // Step 21D4 — "Why reduced today" belongs to real trims only. A scheduling
   // statement ("You're rested — heavy day is on", "Next heavy day: Monday")
   // describes the day, not a reduction, and belongs in the day header.
@@ -346,7 +348,7 @@ export function WkPrescriptionCard({
             return (
               <ExerciseInstructions name={rx.movement_name} slug={rx.movement_slug} dosage={dosage}
                 setup={(why as any)?.setup} cue={why.cue}
-                why={[whyText, today].filter(Boolean).join(" ") || null}
+                why={[whyText, today, mastery ? `${mastery.reason} Source: Coaching Console standards and ${mastery.sourceIds.length} recorded evidence items. This is your day’s focus, not extra exercise work.` : null].filter(Boolean).join(" ") || null}
                 changes={changes} repair={repair} expanded />
             );
           })()}
