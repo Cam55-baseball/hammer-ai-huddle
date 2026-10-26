@@ -23,11 +23,12 @@ export function pitchingCounts(games:readonly PitcherGameRow[]):PitchingCounts{
  }
  const ok=byPitch;
  const ttp=games.every(g=>Array.isArray(g.pitcher_time_to_plate_sec))?games.flatMap(g=>(g.pitcher_time_to_plate_sec as number[]).map(Number)):null;
- return {battersFaced:ok?bf:(sum(games,'batters_faced')??0),strikeouts:ok?k:null,walks:ok?bb:null,homeRuns:ok?hr:null,hits:ok?hits:sum(games,'pitcher_hits'),atBatsAgainst:ok?bf-nonAb:null,
+ return {battersFaced:ok?bf:(sum(games,'batters_faced')??0),strikeouts:ok?k:sum(games,'pitcher_strikeouts'),walks:ok?bb:sum(games,'pitcher_walks'),homeRuns:ok?hr:sum(games,'pitcher_home_runs'),hits:ok?hits:sum(games,'pitcher_hits'),atBatsAgainst:ok?bf-nonAb:sum(games,'pitcher_at_bats_against'),
   outs:sum(games,'pitcher_outs'),runs:sum(games,'pitcher_runs'),earnedRuns:sum(games,'pitcher_earned_runs'),pitches:sum(games,'pitch_count'),
-  firstPitchStrikes:ok?fps:null,twoBallBatters:ok?two:null,innings:sum(games,'pitcher_innings'),scoringPosInnings:sum(games,'pitcher_scoring_pos_innings'),
+  firstPitchStrikes:ok?fps:sum(games,'pitcher_first_pitch_strikes'),twoBallBatters:ok?two:sum(games,'pitcher_two_ball_batters'),innings:sum(games,'pitcher_innings'),scoringPosInnings:sum(games,'pitcher_scoring_pos_innings'),
   runnersInScoringPos:sum(games,'pitcher_risp_runners'),runnersOn:sum(games,'pitcher_runners_on'),runnersStranded:sum(games,'pitcher_runners_stranded'),
-  ballsInPlay:ok?bip:null,softContact:ok&&contactKnown?soft:null,swings:ok?sw:null,whiffs:ok?wh:null,
+  ballsInPlay:ok?bip:contactTotal(games),softContact:ok?(contactKnown?soft:null):sum(games,'pitcher_soft_contact'),swings:ok?sw:null,whiffs:ok?wh:null,
   stolenBases:sum(games,'pitcher_sb_allowed'),stealAttempts:sum(games,'pitcher_steal_attempts'),pickoffs:sum(games,'pitcher_pickoffs'),pickoffAttempts:sum(games,'pitcher_pickoff_attempts'),
   timeToPlateS:ttp&&ttp.length?ttp:null,pfpChances:sum(games,'pitcher_pfp_chances'),pfpErrors:sum(games,'pitcher_pfp_errors')};
 }
+function contactTotal(games:readonly PitcherGameRow[]){const a=sum(games,'pitcher_soft_contact'),b=sum(games,'pitcher_medium_contact'),c=sum(games,'pitcher_hard_contact');return a==null||b==null||c==null?null:a+b+c;}

@@ -8892,9 +8892,14 @@ export type Database = {
           philosophy_pre: string | null
           philosophy_verdict: string | null
           pitch_count: number | null
+          pitcher_at_bats_against: number | null
           pitcher_earned_runs: number | null
+          pitcher_first_pitch_strikes: number | null
+          pitcher_hard_contact: number | null
           pitcher_hits: number | null
+          pitcher_home_runs: number | null
           pitcher_innings: number | null
+          pitcher_medium_contact: number | null
           pitcher_outs: number | null
           pitcher_pfp_chances: number | null
           pitcher_pfp_errors: number | null
@@ -8905,9 +8910,14 @@ export type Database = {
           pitcher_runners_stranded: number | null
           pitcher_runs: number | null
           pitcher_sb_allowed: number | null
+          pitcher_scoring_pos_by_inning: boolean[] | null
           pitcher_scoring_pos_innings: number | null
+          pitcher_soft_contact: number | null
           pitcher_steal_attempts: number | null
+          pitcher_strikeouts: number | null
           pitcher_time_to_plate_sec: number[] | null
+          pitcher_two_ball_batters: number | null
+          pitcher_walks: number | null
           pitching_history_complete: boolean
           probable_pitcher_dossier_id: string | null
           scheduled_time: string | null
@@ -8948,9 +8958,14 @@ export type Database = {
           philosophy_pre?: string | null
           philosophy_verdict?: string | null
           pitch_count?: number | null
+          pitcher_at_bats_against?: number | null
           pitcher_earned_runs?: number | null
+          pitcher_first_pitch_strikes?: number | null
+          pitcher_hard_contact?: number | null
           pitcher_hits?: number | null
+          pitcher_home_runs?: number | null
           pitcher_innings?: number | null
+          pitcher_medium_contact?: number | null
           pitcher_outs?: number | null
           pitcher_pfp_chances?: number | null
           pitcher_pfp_errors?: number | null
@@ -8961,9 +8976,14 @@ export type Database = {
           pitcher_runners_stranded?: number | null
           pitcher_runs?: number | null
           pitcher_sb_allowed?: number | null
+          pitcher_scoring_pos_by_inning?: boolean[] | null
           pitcher_scoring_pos_innings?: number | null
+          pitcher_soft_contact?: number | null
           pitcher_steal_attempts?: number | null
+          pitcher_strikeouts?: number | null
           pitcher_time_to_plate_sec?: number[] | null
+          pitcher_two_ball_batters?: number | null
+          pitcher_walks?: number | null
           pitching_history_complete?: boolean
           probable_pitcher_dossier_id?: string | null
           scheduled_time?: string | null
@@ -9004,9 +9024,14 @@ export type Database = {
           philosophy_pre?: string | null
           philosophy_verdict?: string | null
           pitch_count?: number | null
+          pitcher_at_bats_against?: number | null
           pitcher_earned_runs?: number | null
+          pitcher_first_pitch_strikes?: number | null
+          pitcher_hard_contact?: number | null
           pitcher_hits?: number | null
+          pitcher_home_runs?: number | null
           pitcher_innings?: number | null
+          pitcher_medium_contact?: number | null
           pitcher_outs?: number | null
           pitcher_pfp_chances?: number | null
           pitcher_pfp_errors?: number | null
@@ -9017,9 +9042,14 @@ export type Database = {
           pitcher_runners_stranded?: number | null
           pitcher_runs?: number | null
           pitcher_sb_allowed?: number | null
+          pitcher_scoring_pos_by_inning?: boolean[] | null
           pitcher_scoring_pos_innings?: number | null
+          pitcher_soft_contact?: number | null
           pitcher_steal_attempts?: number | null
+          pitcher_strikeouts?: number | null
           pitcher_time_to_plate_sec?: number[] | null
+          pitcher_two_ball_batters?: number | null
+          pitcher_walks?: number | null
           pitching_history_complete?: boolean
           probable_pitcher_dossier_id?: string | null
           scheduled_time?: string | null
@@ -24079,6 +24109,10 @@ export type Database = {
         Returns: Json
       }
       mastery_identity_sources: {
+        Args: { p_athlete?: string; p_date: string; p_sport: string }
+        Returns: Json
+      }
+      mastery_pitching_lines: {
         Args: { p_athlete?: string; p_date: string; p_sport: string }
         Returns: Json
       }

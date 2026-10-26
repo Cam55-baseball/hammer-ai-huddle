@@ -1,3 +1,4 @@
+import {StrategyLine} from '@/components/intelligence/StrategyLine';
 import { sixWeekPlanSummary } from '@/lib/coach/sixWeekPlanSummary';
 import type { SavedCoachPlan } from '@/lib/coach/planHistory';
 
@@ -6,15 +7,17 @@ interface Props {
   sport: string;
   today: string;
   state: 'ready' | 'loading' | 'error';
+  athleteId?: string;
 }
 
 /** Callers supply freshly authorized, redacted snapshots from the coaching RPC. */
-export function CoachSixWeekSummary({ plans, sport, today, state }: Props) {
+export function CoachSixWeekSummary({ plans, sport, today, state, athleteId }: Props) {
   if (state === 'loading') return <p role="status" className="text-sm text-muted-foreground">Loading saved plans…</p>;
   if (state === 'error') return <p role="alert" className="text-sm text-destructive">Couldn't load the six-week summary.</p>;
   const summaries = sixWeekPlanSummary(plans, sport, today);
   return <section aria-label="Six-week saved plans" className="space-y-4 border-t border-border pt-4">
     <h4 className="text-sm font-semibold">Six-week saved plans</h4>
+    {athleteId&&(sport==='baseball'||sport==='softball')&&<StrategyLine sport={sport} today={today} athleteId={athleteId}/>}
     {!summaries.length ? <p className="text-sm text-muted-foreground">No saved training plans in the last six weeks.</p> :
       <ul className="space-y-5">
         {summaries.map(summary => <li key={summary.category} className="space-y-2">
