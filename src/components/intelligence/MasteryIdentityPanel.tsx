@@ -14,9 +14,40 @@ export function MasteryIdentityPanel({sport,athleteId}:{sport:'baseball'|'softba
     <div><h3 className="font-medium">Defense · {data?.defensePillar.status??'Need more data'}</h3><p className="text-muted-foreground">Human fielding grade: {data?.defensePillar.grade??'Need more data'}. Source: {data?.defensePillar.source??'No position-matching coach/scout grade'}. Elite: {data?.defensePillar.threshold}+ · {data?.standardsSource}.</p>{data?.defense.latest?<p className="text-muted-foreground">Supporting chances: {data.defense.latest.successful} / {data.defense.latest.chances}; errors: {data.defense.latest.errors}. Window: chances {data.defense.latest.start}–{data.defense.latest.end}. Source: scored game plays, {data.defense.latest.from}–{data.defense.latest.through}.</p>:<p className="text-muted-foreground">No complete scored-chance window; {data?.defense.current.sample??0} / {data?.defense.current.size??100} current chances. Source: game defense logs.</p>}</div>
     <div><h3 className="font-medium">Pitching · {data?.pitching.status??'Need more data'}</h3><p className="text-muted-foreground">{data?.pitching.reason} Current BF window: {data?.pitching.current.start}–{data?.pitching.current.end}; {data?.pitching.current.sample} / {data?.pitching.current.size} completed BF. Source: pitching game logs; owner BF settings.</p></div>
     <div><h3 className="font-medium">Position-specific arm · {data?.arm.status??'Need more data'}</h3><p className="text-muted-foreground">Velocity/pop grade: {data?.arm.measurementGrade??'Need more data'} · {data?.arm.source??'No position-matching measurement'}. Human accuracy grade: {data?.arm.accuracyGrade??'Need more data'} · coach/scout arm evaluation. Elite: {data?.arm.threshold}+ for both, no active flag · {data?.standardsSource}.</p><p className="text-muted-foreground">Arm pain: {data?.arm.activePain?'Active':data?.arm.healthKnown?'None recorded today':'Need more data'}. Arm-ledger rest flag: {data?.arm.ledgerFlag?'Active':data?.arm.healthKnown?'None active':'Need more data'}. Source: shared dated check-ins and canonical arm ledger.</p></div>
+    {data?.strategy&&<div aria-label="Goal progress" className="rounded-md border border-border p-3 space-y-1">
+     <h3 className="font-medium">Your goal: {data.strategy.chosenGoal??'Not chosen yet'}</h3>
+     <p className="text-muted-foreground">{goalProgress(data)}</p>
+     <p className="text-muted-foreground">Next milestone: {goalMilestone(data)}</p>
+     <h3 className="font-medium pt-2">Development strategy</h3>
+     <p className="text-muted-foreground">{data.strategy.reason}</p>
+     {data.strategy.mode==='secure_natural'&&<p className="text-muted-foreground">Primary: {data.strategy.primary} · goal share: at least {Math.round(data.strategy.goalShare*100)}% of goal work.</p>}
+     {!!data.strategy.maintain.length&&<p className="text-muted-foreground">Maintenance: {data.strategy.maintain.join(', ')}.</p>}
+     <p className="text-muted-foreground">Food: {data.strategy.nutrition.join(' ')}</p>
+     <p className="text-muted-foreground">Sleep and recovery: {data.strategy.sleep}</p>
+     <p className="text-xs text-muted-foreground">Source: judged pillars and your top saved goal · owner principle "Secure what's natural first".</p>
+    </div>}
     {!athleteId&&<PracticeSwingLog sport={sport}/>}
     <div><h3 className="font-medium">Next development focus</h3><p className="text-muted-foreground">{data?.guidance.reason}</p><p className="text-muted-foreground">{data?.guidance.alternativeReason}</p></div>
    </div>
   </>}
  </section>;
+}
+type Identity=NonNullable<ReturnType<typeof useMasteryIdentity>['data']>;
+/** This week's progress for the chosen goal, always with its source; never a number without one. */
+export function goalProgress(d:Identity){
+ const g=d.strategy.chosenGoal;
+ if(g==='contact'||g==='power')return `Current batting window: ${d.batting.current.sample} / ${d.batting.current.size} at-bats recorded. Source: completed game logs.`;
+ if(g==='pitching')return `Current pitching window: ${d.pitching.current.sample} / ${d.pitching.current.size} batters faced. Source: pitching game logs.`;
+ if(g==='defense')return `Current fielding window: ${d.defense.current.sample} / ${d.defense.current.size} chances. Source: game defense logs.`;
+ if(g==='speed')return d.speed.evidence.length?`Best graded speed: ${Math.max(...d.speed.evidence.map(e=>Number(e.grade)))}. Source: ${d.speed.evidence[0].source}, ${d.speed.evidence[0].date}.`:'Need more data. Log a Speed Lab test.';
+ if(g==='arm')return d.arm.grade!=null?`Arm grade: ${d.arm.grade}. Source: ${d.arm.source??'coach/scout evaluation'}.`:'Need more data.';
+ return 'Pick a goal to track progress.';
+}
+export function goalMilestone(d:Identity){
+ const g=d.strategy.chosenGoal;
+ if(g==='contact'||g==='power')return `finish at-bat window ${d.batting.current.start}–${d.batting.current.end}.`;
+ if(g==='pitching')return `finish batters-faced window ${d.pitching.current.start}–${d.pitching.current.end}.`;
+ if(g==='defense')return `finish chance window ${d.defense.current.start}–${d.defense.current.end}.`;
+ if(g==='speed'||g==='arm')return `reach a ${d.settings?.elite_grade??65} grade (elite starting standard).`;
+ return 'choose a goal.';
 }

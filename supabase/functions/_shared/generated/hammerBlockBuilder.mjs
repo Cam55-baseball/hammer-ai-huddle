@@ -9451,6 +9451,83 @@ function validHumanGrade(value) {
   return typeof value === "number" && Number.isFinite(value) && value >= 20 && value <= 80 && value % 5 === 0;
 }
 
+// supabase/functions/_shared/wic/goals/naturalFirst.ts
+var NEAR_GRADE = [55, 60];
+var NEAR_STAT_PCT = 0.2;
+var GOAL_SHARE_MIN = 0.3;
+var ELITE_GRADE = 65;
+function distanceToElite(p) {
+  if (p.elite) return 0;
+  if (typeof p.grade === "number") return Math.max(0, ELITE_GRADE - p.grade) / ELITE_GRADE;
+  return typeof p.statDistancePct === "number" ? p.statDistancePct : null;
+}
+function isNear(p) {
+  if (p.elite) return false;
+  if (typeof p.grade === "number") return p.grade >= NEAR_GRADE[0] && p.grade <= NEAR_GRADE[1];
+  return typeof p.statDistancePct === "number" && p.statDistancePct <= NEAR_STAT_PCT;
+}
+function naturalFirstStrategy(i) {
+  const goal = i.pillars.find((p) => p.pillar === i.chosen);
+  const goalFar = !goal || !goal.elite && !isNear(goal);
+  let near = i.pillars.filter((p) => p.pillar !== i.chosen && isNear(p));
+  if (i.bodyMassTrend === "heavier") near = [...near].sort((a, b) => (b.pillar === "power" ? 1 : 0) - (a.pillar === "power" ? 1 : 0));
+  near = near.length > 1 && i.bodyMassTrend !== "heavier" ? [...near].sort((a, b) => (distanceToElite(a) ?? 1) - (distanceToElite(b) ?? 1)) : near;
+  const maintain = i.pillars.filter((p) => p.elite).map((p) => p.pillar);
+  if (goalFar && near.length) {
+    const primary = near[0].pillar;
+    return {
+      mode: "secure_natural",
+      primary,
+      goalShare: GOAL_SHARE_MIN,
+      maintain,
+      message: `We're securing your ${primary} first; you're close to elite. Your ${i.chosen} work continues every week.`
+    };
+  }
+  return { mode: "goal_first", primary: i.chosen, goalShare: 1, maintain, message: `Your ${i.chosen} goal leads your plan.` };
+}
+var restrict = /\b(lose weight|weight loss|cut(ting)? calories|calorie (deficit|restriction)|diet down|drop (pounds|weight))\b/i;
+function nutritionFocus(primary, age) {
+  const minor = age == null || age < 18;
+  const lines = primary === "power" ? ["Eat enough protein at every meal to support lean muscle.", "Fuel training days fully."] : primary === "speed" ? minor ? ["Eat balanced meals that fuel growth and sprint work."] : ["Keep a lean body composition with balanced meals."] : ["Fuel training with balanced meals."];
+  if (minor) lines.push("Talk with a parent or professional before changing how you eat.");
+  return lines.filter((l) => !(minor && restrict.test(l)));
+}
+
+// supabase/functions/_shared/wic/goals/developmentStrategy.ts
+var LABEL = { contact: "contact", power: "home-run power", speed: "speed", arm: "arm", defense: "defense", pitching: "pitching" };
+function chosenGoalPillar(goals) {
+  const top = [...goals].sort((a, b) => Number(a.rank ?? 99) - Number(b.rank ?? 99))[0];
+  if (!top) return null;
+  const c = String(top.category);
+  return c === "hitting" ? top.intent === "power_hitting" ? "power" : "contact" : c === "speed" || c === "baserunning" ? "speed" : c === "fielding" ? "defense" : c === "throwing" ? "arm" : c === "pitching" ? "pitching" : null;
+}
+function developmentStrategy(i) {
+  const judged = i.pillars.filter((p) => p.status !== "Need more data" && p.sourceIds.length > 0);
+  const maintain = judged.filter((p) => p.status === "Elite").map((p) => p.pillar);
+  const minor = i.age == null || i.age < 18;
+  const sleep = `Sleep ${minor ? "9\u201310" : "8\u20139"} hours; recovery days stay soft so your work lands.`;
+  if (!i.chosen) {
+    return { mode: "no_goal", primary: null, chosenGoal: null, goalShare: 0, maintain, reason: "Pick a goal so your plan can lead with it.", nutrition: nutritionFocus("contact", i.age), sleep, sixWeekLine: "No goal chosen yet.", sourceIds: [] };
+  }
+  const states = judged.map((p) => ({ pillar: p.pillar, grade: p.grade, statDistancePct: p.grade == null && p.progress != null ? Math.max(0, 1 - p.progress) : null, elite: p.status === "Elite" }));
+  const s = naturalFirstStrategy({ chosen: i.chosen, pillars: states, age: i.age, bodyMassTrend: i.bodyMassTrend ?? null });
+  const primaryFact = judged.find((p) => p.pillar === s.primary);
+  const keep = maintain.length ? ` Your elite ${maintain.map((p) => LABEL[p]).join(", ")} gets a maintenance dose.` : "";
+  const reason = s.mode === "secure_natural" ? `We're securing your ${LABEL[s.primary]} first; you're close to elite. Your ${LABEL[i.chosen]} goal keeps at least ${Math.round(GOAL_SHARE_MIN * 100)}% of the goal work every week.${keep}` : `Your ${LABEL[i.chosen]} goal leads your plan.${keep}`;
+  return {
+    mode: s.mode,
+    primary: s.primary,
+    chosenGoal: i.chosen,
+    goalShare: s.goalShare,
+    maintain,
+    reason,
+    nutrition: nutritionFocus(s.primary, i.age),
+    sleep,
+    sixWeekLine: reason,
+    sourceIds: s.mode === "secure_natural" && primaryFact ? [...primaryFact.sourceIds] : []
+  };
+}
+
 // supabase/functions/_shared/wic/masteryPitching.ts
 function pitchingIdentity(games, settings, policy = OWNER_WINDOW_POLICY) {
   const opportunities = [];
@@ -9743,10 +9820,12 @@ function projectMasterySources(raw, sport, settings) {
   const arm = { status: activePain || ledgerFlag ? "Building" : !healthKnown ? "Need more data" : judgeGrade(armGrade), grade: armGrade, accuracyGrade, measurementGrade, activePain, ledgerFlag, healthKnown, sourceIds: [...measurement ? [String(measurement.id)] : [], ...accuracy ? [String(accuracy.id)] : []], source: measurement ? `${measurement.source} \xB7 ${measurement.date} \xB7 ${normalizedPosition}` : null, threshold: eliteGrade };
   const contactProgress = Object.values(contact.parts).filter((p) => p.value !== null && p.cutoff !== null).map((p) => p === contact.parts.zone ? Number(p.value) / Number(p.cutoff) : Number(p.value) === 0 ? 1 : Number(p.cutoff) / Number(p.value));
   const speedGrade = speed.evidence.length ? Math.max(...speed.evidence.map((e) => Number(e.grade))) : null;
-  const steering = steerIdentity([{ pillar: "contact", status: contact.status, sourceIds: contact.sourceIds, progress: contactProgress.length ? Math.min(...contactProgress) : null }, { pillar: "defense", status: defensePillar.status, sourceIds: defensePillar.sourceIds, progress: defenseGrade !== null ? defenseGrade / eliteGrade : null }, { pillar: "arm", status: arm.status, sourceIds: arm.sourceIds, progress: armGrade !== null ? armGrade / eliteGrade : null }, { pillar: "speed", status: speed.status, sourceIds: speed.evidence.map((e) => e.id), progress: speedGrade !== null ? speedGrade / eliteGrade : null }, { pillar: "power", status: power.status, sourceIds: power.sourceIds, progress: hrRate !== null && standards.elite_hr_rate ? hrRate / standards.elite_hr_rate : null }]);
-  const guidance = { ...masteryGuidance({ contactStatus: contact.status, contactSourceIds: contact.sourceIds, speedStatus: speed.status, powerStatus: power.status, leftPower: traits.leftPower, leftPowerGoal: traits.powerGoal }), observedFocus: steering.focus, sourceIds: steering.sourceIds, reason: steering.reason, alternativeReason: steering.speedOrPower === "Need more data" ? "Need more data for speed-or-power focus." : `Speed-or-power requirement: ${steering.speedOrPower}. ${steering.comparison}.` };
+  const pillarFacts = [{ pillar: "contact", status: contact.status, sourceIds: contact.sourceIds, progress: contactProgress.length ? Math.min(...contactProgress) : null }, { pillar: "defense", status: defensePillar.status, sourceIds: defensePillar.sourceIds, progress: defenseGrade !== null ? defenseGrade / eliteGrade : null }, { pillar: "arm", status: arm.status, sourceIds: arm.sourceIds, progress: armGrade !== null ? armGrade / eliteGrade : null }, { pillar: "speed", status: speed.status, sourceIds: speed.evidence.map((e) => e.id), progress: speedGrade !== null ? speedGrade / eliteGrade : null }, { pillar: "power", status: power.status, sourceIds: power.sourceIds, progress: hrRate !== null && standards.elite_hr_rate ? hrRate / standards.elite_hr_rate : null }];
+  const steering = steerIdentity(pillarFacts);
+  const strategy = developmentStrategy({ chosen: chosenGoalPillar(list(goals.goals)), age, pillars: pillarFacts.map((p) => ({ pillar: p.pillar, status: p.status, grade: p.pillar === "defense" ? defenseGrade : p.pillar === "arm" ? armGrade : p.pillar === "speed" ? speedGrade : null, progress: p.progress, sourceIds: p.sourceIds })) });
+  const guidance = { ...masteryGuidance({ contactStatus: contact.status, contactSourceIds: contact.sourceIds, speedStatus: speed.status, powerStatus: power.status, leftPower: traits.leftPower, leftPowerGoal: traits.powerGoal }), observedFocus: strategy.mode === "secure_natural" && strategy.sourceIds.length ? strategy.primary : steering.focus, sourceIds: strategy.mode === "secure_natural" && strategy.sourceIds.length ? strategy.sourceIds : steering.sourceIds, reason: strategy.mode === "secure_natural" && strategy.sourceIds.length ? strategy.reason : steering.reason, alternativeReason: steering.speedOrPower === "Need more data" ? "Need more data for speed-or-power focus." : `Speed-or-power requirement: ${steering.speedOrPower}. ${steering.comparison}.` };
   const pitching = pitchingIdentity(list(source.pitcherGames).map((g) => ({ id: String(g.id), date: String(g.date), battersFaced: typeof g.battersFaced === "number" ? g.battersFaced : null, complete: g.complete === true, pitches: list(g.pitches).map((p) => ({ id: String(p.id), opportunity: typeof p.opportunity === "number" ? p.opportunity : null, outcome: typeof p.outcome === "string" ? p.outcome : null })) })), standards, areaWindowPolicy(settings, "pitching"));
-  return { batting, speed, traits, policy, settings, sport, recordedSpeedEvidence: speedEvidence, defense, defensePillar, contact, power, arm, guidance, steering, pitching, level, standardsSource: IDENTITY_SOURCE };
+  return { batting, speed, traits, policy, settings, sport, recordedSpeedEvidence: speedEvidence, defense, defensePillar, contact, power, arm, guidance, steering, strategy, pitching, level, standardsSource: IDENTITY_SOURCE };
 }
 export {
   buildHammerDailyPlan,
