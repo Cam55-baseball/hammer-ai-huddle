@@ -145,7 +145,7 @@ export function CoachPlanCard({ athleteId }: { athleteId: string }) {
         </Button>
         {summaryOpen && plan.sport && <CoachSixWeekSummary
           plans={summaryQuery.isFetching || summaryQuery.error ? [] : summaryQuery.data ?? []}
-          sport={plan.sport} today={today}
+          sport={plan.sport} today={today} athleteId={athleteId}
           state={summaryQuery.error ? 'error' : summaryQuery.isFetching || !summaryQuery.data ? 'loading' : 'ready'}
         />}
       </div>
