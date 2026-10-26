@@ -1,23 +1,6 @@
 /** Owner-authored program policy. Inputs must be sourced; this module never creates a training day. */
-export type BuntSide = "R" | "L";
-export type BuntType = "squeeze" | "sac_3b" | "sac_1b" | "drag" | "push" | "hit";
-export const BUNT_TYPES: readonly BuntType[] = ["squeeze", "sac_3b", "sac_1b", "drag", "push", "hit"];
-export const BUNT_WORDING: Record<BuntSide, Record<BuntType, string>> = {
-  R: {
-    squeeze: "Squeeze bunt (softly on 1B side of pitcher angled so pitcher grabs it instead of 1B)",
-    sac_3b: "Sac bunt toward 3B (man on second)", sac_1b: "Sac bunt toward 1B (man on 1B)",
-    drag: "Drag bunt (toward 3B)",
-    push: "Push bunt (LHP only: beyond pitcher to the position of second baseman)",
-    hit: "Bunt for a hit (Softly down 1B line)",
-  },
-  L: {
-    squeeze: "Squeeze bunt (softly on 1B side of pitcher angled so pitcher grabs it instead of 1B)",
-    sac_3b: "Sac bunt toward 3B (man on second)", sac_1b: "Sac bunt toward 1B (man on 1B)",
-    drag: "Drag bunt (toward 3B)",
-    push: "Push bunt (LHP only/ not for Switch hitters: Beyond pitcher to the position of second baseman)",
-    hit: "Bunt for a hit (Softly down 1B line)",
-  },
-};
+import { BUNT_TYPES, type BuntSide, type BuntType } from './buntingMastery.ts';
+export { BUNT_TYPES, BUNT_WORDING, type BuntSide, type BuntType } from './buntingMastery.ts';
 export type BuntOutcome = { side: BuntSide; type: BuntType; attempts: number; successes: number };
 export function validBuntOutcome(outcome: BuntOutcome): boolean {
   return ["R", "L"].includes(outcome.side) && BUNT_TYPES.includes(outcome.type) &&
@@ -32,6 +15,8 @@ export interface BuntingFacts {
   speedy?: boolean; lacksPower?: boolean; leftPower?: boolean; powerGoal?: boolean;
   /** Canonical game counts. Missing or invalid counts never mean a low average. */
   battingGames?: readonly { hits: number; atBats: number }[];
+  /** Latest completed data window; presence supersedes legacy game samples, including unknown. */
+  battingWindow?: {start:number;end:number;hits:number;atBats:number;homeRuns:number;sourceIds:readonly string[]}|null;
   outcomes?: readonly BuntOutcome[];
   /** Existing legal training weekdays only, 0=Sunday. Rest and game days excluded by caller. */
   legalWeekdays: readonly number[];
@@ -44,7 +29,11 @@ export function buntingProgram(facts: BuntingFacts) {
   const atBats = games.reduce((sum, game) => sum + game.atBats, 0);
   const hits = games.reduce((sum, game) => sum + game.hits, 0);
   // Repeated below-.300 observations, always exposed with game/AB sample size. No universal sample sufficiency claim.
-  const under300 = games.length >= 2 && games.every(game => game.hits / game.atBats < .300);
+  const window = facts.battingWindow;
+  const validWindow = window != null && Number.isInteger(window.start) && window.start >= 1 &&
+    Number.isInteger(window.end) && window.end >= window.start && Number.isInteger(window.atBats) &&
+    window.atBats === window.end-window.start+1 && Number.isInteger(window.hits) && window.hits >= 0 && window.hits <= window.atBats;
+  const under300 = facts.battingWindow !== undefined ? validWindow && window.hits / window.atBats < .300 : games.length >= 2 && games.every(game => game.hits / game.atBats < .300);
   const sides: BuntSide[] = facts.bats === "S" ? ["R", "L"] : facts.bats ? [facts.bats] : [];
   const wantedSessions = facts.speedy === true || facts.lacksPower === true ? 3 : 2;
   const weekdays = [...new Set(facts.legalWeekdays)].filter(day => Number.isInteger(day) && day >= 0 && day <= 6).sort((a,b) => a-b).slice(0, 6);
@@ -60,5 +49,5 @@ export function buntingProgram(facts: BuntingFacts) {
   const typesFor = (side: BuntSide) => BUNT_TYPES.filter(type => type !== "push" || facts.opponentThrows === "L" && !(side === "L" && facts.bats === "S"));
   return { included, sides, scheduled, wantedSessions, constrained: scheduled.length < wantedSessions,
     canTrainToday: included && sides.length > 0 && !facts.restDay && !facts.gameDay,
-    battingSample: { games: games.length, atBats, hits, average: atBats ? hits / atBats : null, under300 }, dose, typesFor };
+    battingSample: { games: games.length, atBats:validWindow?window.atBats:atBats, hits:validWindow?window.hits:hits, average:validWindow?window.hits/window.atBats:atBats?hits/atBats:null, under300, window:validWindow?window:null }, dose, typesFor };
 }

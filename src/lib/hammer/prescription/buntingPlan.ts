@@ -2,6 +2,7 @@ import { buntingProgram, BUNT_TYPES, type BuntingFacts, type BuntSide, type Bunt
 import { ownsAllGear } from '../../../../supabase/functions/_shared/planSwap/simpleSwap';
 import { missingGearAnswer, COMMON_SWAP_GEAR } from '../../../../supabase/functions/_shared/planSwap/commonGear';
 import type { PrescribedBlock, DrillStep } from './dailyPlan';
+import { buntGuidance, LEFT_POWER_GUIDANCE } from '../../../../supabase/functions/_shared/wic/buntingMastery';
 export interface BuntCatalogItem { slug:string; name:string; cue:string; is_active:boolean; dosage_unit:string|null; equipment_requirements:string[]|null; equipment:string[]|null; equipment_alternatives:unknown; sport_scope:string; min_age_years:number|null; season_eligibility:string[]|null; visible_to:string[]|null; }
 export function buntIdentity(slug:string):{side:BuntSide;type:BuntType}|null {
  const match=/^bunt_([rl])_(squeeze|sac_3b|sac_1b|drag|push|hit)$/.exec(slug);
@@ -36,11 +37,11 @@ export function applyBuntingPlan(blocks:readonly PrescribedBlock[], facts:Buntin
   if(!original||budget<dose.floor)return block;
   const attempts=Math.min(dose.reps,budget,20);
   const drill:DrillStep={name:pick.name,slug:pick.slug,stage:'drills',dosage:`${attempts} attempts`,cue:pick.cue,
-   setup:'Use your saved bat, ball and safe space. Record attempts and successful bunts for this side and type only.',
+   setup:`Use your saved bat, ball and safe space. Record attempts and successful bunts for this side and type only. ${buntGuidance(side,identity.type)}${side==='L'&&(facts.leftPower===true||facts.powerGoal===true)?` ${LEFT_POWER_GUIDANCE}`:''}`,
    stopIf:'Pain, dizziness, fatigue or unsafe space — stop.',bunt:{side,type:identity.type,attempts,sourceAttempts:dose.attempts,sourceSuccesses:dose.successes}};
   const drills=[...block.drills.slice(0,slot),drill,...(budget>attempts?[{...original,dosage:`${budget-attempts} swings`}]:[]),...block.drills.slice(slot+1)];
   const sample=program.battingSample;
-  const because=`${attempts} ${side==='R'?'right':'left'}-handed bunt attempts replace ${attempts} swings from today's skill work.${sample.under300?` Entered batting sample: ${sample.hits} hits in ${sample.atBats} at-bats across ${sample.games} games; each entered game was below .300.`:''}${dose.attempts?` This bunt: ${dose.successes} successful out of ${dose.attempts} entered attempts.`:''}`;
+  const because=`${attempts} ${side==='R'?'right':'left'}-handed bunt attempts replace ${attempts} swings from today's skill work.${sample.under300?sample.window?` Completed batting window ${sample.window.start}–${sample.window.end}: ${sample.hits} hits in ${sample.atBats} at-bats, below .300; source: entered game at-bats.`:` Entered batting sample: ${sample.hits} hits in ${sample.atBats} at-bats across ${sample.games} games; each entered game was below .300.`:''}${dose.attempts?` This bunt: ${dose.successes} successful out of ${dose.attempts} entered attempts.`:''}`;
   return {...block,drills,steps:drills.map(d=>`${d.name} — ${d.dosage}`),because:[...(block.because??[]),because],gamePlanTemplate:block.gamePlanTemplate?{...block.gamePlanTemplate,checklist:drills.map(d=>`${d.name} — ${d.dosage}`)}:null};
  });
 }

@@ -1,10 +1,11 @@
 import { BUNT_TYPES, BUNT_WORDING } from '../wic/buntingProgram.ts';
+import { buntGuidance } from '../wic/buntingMastery.ts';
 import type { VaultExercise } from './validateExercise.ts';
 /** Owner wording is canonical content; drafts do not grant planner eligibility. */
 export function buntingVaultContent(): VaultExercise[] {
   return (['R','L'] as const).flatMap(side => BUNT_TYPES.map(type => ({
     slug: `bunt_${side.toLowerCase()}_${type}`, name: BUNT_WORDING[side][type],
-    how_to_one_rep: `One rep is one ${side === 'R' ? 'right-handed' : 'left-handed'} bunt attempt. ${BUNT_WORDING[side][type]}. Record whether that attempt succeeded; do not guess an unentered result.`,
+    how_to_one_rep: `One rep is one ${side === 'R' ? 'right-handed' : 'left-handed'} bunt attempt. ${buntGuidance(side,type)}. Record whether that attempt succeeded; do not guess an unentered result.`,
     setup: 'Use a bat, ball and safe hitting space. Keep other people clear of the bat and ball.',
     cue: BUNT_WORDING[side][type], stop_if: 'Stop for pain, dizziness, fatigue or unsafe space.',
     why: 'Situational offense — practice this exact bunt type on this batting side.',

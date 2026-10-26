@@ -28,6 +28,7 @@ import { pitchEntryPayload } from "@/lib/games/pitchEntry";
 import { entrySourceLabel } from "@/lib/intelligence/entrySource";
 import { pitchResultPlain } from "@/lib/games/glossary";
 import { BUNT_TYPES, BUNT_WORDING } from '../../../supabase/functions/_shared/wic/buntingProgram';
+import { DRAG_BUNT_GUIDANCE, twoStrikeBunt } from '../../../supabase/functions/_shared/wic/buntingMastery';
 
 const CONTACTS = ["weak","medium","hard","barrel","mishit"];
 const SPRAY = ["pull_air","pull_ground","center_air","center_ground","oppo_air","oppo_ground"];
@@ -128,6 +129,7 @@ function PitchCard({ p, idx, onDelete }: { p: GpPitchRow; idx: number; onDelete:
           {p.result && <span>Result: {pitchResultPlain(p.result) ?? p.result}</span>}
           {p.bunt_type && p.bunt_side && <span>{p.bunt_side === 'R' ? 'Right-handed' : 'Left-handed'}: {BUNT_WORDING[p.bunt_side][p.bunt_type]}</span>}
           {p.bunt_success != null && <span>Successful bunt: {p.bunt_success ? 'Yes' : 'No'}</span>}
+          {twoStrikeBunt(p.result,p.count_strikes) && <span className="text-destructive">Two-strike bunt attempt — a foul bunt is a strikeout.</span>}
           {p.contact_quality && <span>Contact observed: {p.contact_quality}</span>}
           {p.spray_bucket && <span>Ball direction: {p.spray_bucket.replace(/_/g, " ")}</span>}
           {p.hard_hit != null && <span>Hard contact observed: {p.hard_hit ? "Yes" : "No"}</span>}
@@ -293,6 +295,8 @@ function PitchForm({
             </>
           )}
           {!isPitcher && ['bunt_foul','bunt_in_play'].includes(f.result) && <>
+            {f.bunt_type === 'drag' && <p className="col-span-2 sm:col-span-3 text-sm text-muted-foreground">{DRAG_BUNT_GUIDANCE}</p>}
+            {twoStrikeBunt(f.result,f.count_strikes) && <p role="alert" className="col-span-2 sm:col-span-3 text-sm text-destructive">Two-strike bunt attempt — a foul bunt is a strikeout. The recorded result will stay as entered.</p>}
             <F label="Bunt batting side"><Select value={f.bunt_side ?? 'unknown'} onValueChange={v => set('bunt_side',v)}><SelectTrigger aria-label="Bunt batting side"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unknown">Not entered</SelectItem><SelectItem value="R">Right-handed</SelectItem><SelectItem value="L">Left-handed</SelectItem></SelectContent></Select></F>
             <F label="Bunt type"><Select value={f.bunt_type ?? 'unknown'} onValueChange={v=>set('bunt_type',v)}><SelectTrigger aria-label="Bunt type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unknown">Not entered</SelectItem>{BUNT_TYPES.map(type=><SelectItem key={type} value={type}>{BUNT_WORDING[f.bunt_side === 'L' ? 'L' : 'R'][type]}</SelectItem>)}</SelectContent></Select></F>
             <F label="Successful bunt"><Select value={typeof f.bunt_success === 'boolean' ? String(f.bunt_success) : 'unknown'} onValueChange={v=>set('bunt_success',v === 'unknown' ? null : v === 'true')}><SelectTrigger aria-label="Successful bunt"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unknown">Not entered</SelectItem><SelectItem value="true">Yes</SelectItem><SelectItem value="false">No</SelectItem></SelectContent></Select></F>
