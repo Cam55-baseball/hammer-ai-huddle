@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { ENGINE_CONTRACT } from "@/data/ENGINE_CONTRACT";
 import type { HammerDailyPlanResult } from "@/lib/hammer/prescription/dailyPlan";
+import type { MasteryGuidance } from './masteryPlanReadback';
 
 /**
  * The athlete's own app saves the final daily plan — after every overlay and
@@ -9,8 +10,9 @@ import type { HammerDailyPlanResult } from "@/lib/hammer/prescription/dailyPlan"
  * coach-side reconstruction. Self-scoped write only; failures are diagnostics,
  * never shown to the athlete and never block the plan.
  */
-export function planSnapshotPayload(plan: HammerDailyPlanResult, sport: string, planDate: string) {
+export function planSnapshotPayload(plan: HammerDailyPlanResult, sport: string, planDate: string, masteryFocus?: MasteryGuidance) {
   return {
+    ...(masteryFocus ? { masteryFocus } : {}),
     sport,
     plan_date: planDate,
     engine_version: ENGINE_CONTRACT.version,
@@ -37,10 +39,11 @@ export function planSnapshotPayload(plan: HammerDailyPlanResult, sport: string, 
   };
 }
 
-export async function savePlanSnapshot(userId: string, plan: HammerDailyPlanResult, sport: string, planDate: string): Promise<void> {
+export async function savePlanSnapshot(userId: string, plan: HammerDailyPlanResult, sport: string, planDate: string, masteryFocus?: MasteryGuidance): Promise<boolean> {
   const { error } = await supabase.rpc("wk_save_block_day", {
     p_date: planDate, p_sport: sport, p_engine: ENGINE_CONTRACT.version,
-    p_payload: JSON.parse(JSON.stringify(planSnapshotPayload(plan, sport, planDate))) as Json,
+    p_payload: JSON.parse(JSON.stringify(planSnapshotPayload(plan, sport, planDate, masteryFocus))) as Json,
   });
   if (error) console.debug("[plan-snapshot] save failed", error.message);
+  return !error;
 }
