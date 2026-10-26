@@ -38,9 +38,9 @@ export function battingIdentity(events:readonly BattingEvent[],p:WindowPolicy=OW
  const abs=ordered.filter(e=>HITS.has(e.result??'')||OUTS.has(e.result??''));
  const windows=opportunityWindows(abs.length,p);
  const completed:BattingWindow[]=invalid?[]:windows.filter(w=>w.complete).map(w=>{const rows=abs.slice(w.start-1,w.end);
-  const firstRow=rows[0];const firstIndex=w.start===1?0:firstRow?ordered.indexOf(firstRow):0;
-  const lastRow=rows[rows.length-1];const nextAB=abs[w.end];
-  const pas=ordered.slice(firstIndex,nextAB?ordered.indexOf(nextAB):ordered.length);
+  const previous=w.start>1?abs[w.start-2]:null;const firstIndex=previous?ordered.indexOf(previous)+1:0;
+  const lastRow=rows[rows.length-1];
+  const pas=ordered.slice(firstIndex,lastRow?ordered.indexOf(lastRow)+1:firstIndex);
   return {start:w.start,end:w.end,hits:rows.filter(e=>HITS.has(e.result??'')).length,atBats:rows.length,
    plateAppearances:pas.length,paIds:pas.map(e=>e.id),pitchCounts:Object.fromEntries(pas.map(e=>[e.id,e.pitchCount??null])),
    homeRuns:rows.filter(e=>e.result==='HR'||e.result==='home_run').length,
