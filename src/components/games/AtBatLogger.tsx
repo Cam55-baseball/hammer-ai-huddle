@@ -583,6 +583,7 @@ function AtBatForm({
             onValueChange={(v) => set("count_strikes", v ?? "")} />
         </Field>
 
+        <Field label="Total pitches in this plate appearance"><NumberField min={1} value={f.pitch_count??''} onValueChange={v=>set('pitch_count',v??'')} /></Field>
         <Field label="How well you hit it" help="Contact quality — how cleanly the ball came off the bat.">
           <Select value={f.contact_quality} onValueChange={(v) => set("contact_quality", v)}>
             <SelectTrigger><SelectValue placeholder="Pick" /></SelectTrigger>
