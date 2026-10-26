@@ -7,7 +7,22 @@ describe('mastery canonical source projection',()=>{
  it('uses registry units and does not grade opposite-sport tests',()=>{const result=projectMasterySources({tests:[{id:'t',date:'2026-10-25',type:'speed',results:{ten_yard_dash:1.5,seven_yard_dash:1.2}}]},'softball',null);expect(result.recordedSpeedEvidence.map(e=>e.measure)).toEqual(['seven_yard_dash']);expect(result.recordedSpeedEvidence[0].unit).toBe('s');});
  const settings={initial_window:100,transition_at:500,later_window:500,elite_home_runs:null,lacking_power_home_runs:null,speed_minimum_samples:1,elite_hr_rate:.1,left_power_hr_rate:.05,lacking_power_hr_rate:.025,elite_grade:65};
  const scale={metric:'throw_velo_mph_infield',direction:'higher_better',floor_value:75,avg_value:88,record_value:95};
- const source={date:'2026-10-26',context:{level:'college',position:'SS',bats:'L',dateOfBirth:'2005-01-01'},scales:[scale],throwing:[{id:'v',date:'2026-10-25',position:'infield',metric:'throw_velo_mph',value:95,unit:'mph',source:'Radar'}],humanGrades:[{id:'h',date:'2026-10-25',position:'SS',source:'coach_evaluated',evaluator:'coach',defense:65,arm:65}],health:{shared:true,pain:[{id:'q',scale:0,location:null}],injury:[],ledger:[]}};
+ const source={date:'2026-10-26',context:{level:'college',position:'SS',bats:'L',dateOfBirth:'2005-01-01'},scales:[scale],throwing:[{id:'v',sport:'baseball',date:'2026-10-25',position:'infield',metric:'throw_velo_mph',value:95,unit:'mph',source:'Radar'}],humanGrades:[{id:'h',sport:'baseball',date:'2026-10-25',position:'SS',source:'coach_evaluated',evaluator:'coach',defense:65,arm:65}],health:{shared:true,pain:[{id:'q',scale:0,location:null}],injury:[],ledger:[]}};
+ it.each(['softball',null,undefined,'unknown'])('record sport %s cannot be reassigned from current account sport',(sport)=>{
+  const p=projectMasterySources({...source,context:{...source.context,sport:'baseball'},throwing:source.throwing.map(r=>({...r,sport})),humanGrades:source.humanGrades.map(r=>({...r,sport}))},'baseball',settings);
+  expect(p.arm.grade).toBeNull();expect(p.arm.sourceIds).toEqual([]);
+  expect(p.defensePillar.grade).toBeNull();expect(p.defensePillar.sourceIds).toEqual([]);
+  expect(p.steering.sourceIds).not.toContain('h');expect(p.guidance.sourceIds).not.toContain('v');
+ });
+ it.each(['baseball','softball'] as const)('matching %s human evidence retains its own provenance',(sport)=>{
+  const p=projectMasterySources({...source,humanGrades:source.humanGrades.map(r=>({...r,sport}))},sport,settings);
+  expect(p.defensePillar).toMatchObject({grade:65,status:'Elite',sourceIds:['h']});
+ });
+ it.each(['baseball','softball',null,undefined])('catcher pop only judges explicit same-sport records: %s',(sport)=>{
+  const p=projectMasterySources({...source,context:{...source.context,position:'C'},throwing:[],humanGrades:[{...source.humanGrades[0],position:'C'}],scales:[{metric:'catcher_pop_time',direction:'lower_better',floor_value:2.15,avg_value:2.02,record_value:1.9}],catching:[{id:'pop',sport,date:'2026-10-25',metric:'pop_time_sec',value:1.8,unit:'sec',source:'manual_entry'}]},'baseball',settings);
+  expect(p.arm.measurementGrade!==null).toBe(sport==='baseball');
+  expect(p.arm.sourceIds.includes('pop')).toBe(sport==='baseball');
+ });
  it('arm needs human accuracy and no active pain or ledger rest flag',()=>{expect(projectMasterySources(source,'baseball',settings).arm.status).toBe('Elite');expect(projectMasterySources({...source,health:{...source.health,pain:[{id:'q',scale:1,location:'elbow'}]}},'baseball',settings).arm).toMatchObject({status:'Building',activePain:true});expect(projectMasterySources({...source,humanGrades:[]},'baseball',settings).arm.status).toBe('Need more data');expect(projectMasterySources({...source,health:{shared:false}},'baseball',settings).arm.status).toBe('Need more data');});
  it('self-reported human fielding never overrides a measured/human judge',()=>{const p=projectMasterySources({...source,humanGrades:[{...source.humanGrades[0],source:'self_reported',defense:80}]},'baseball',settings);expect(p.defensePillar.status).toBe('Need more data');});
  it('current-day arm ledger requiring rest prevents elite; expired and no-rest rows do not',()=>{
