@@ -1,5 +1,15 @@
 /** Hook-free, evidence-only identity. Cutoffs are owner settings, never invented here. */
 export interface WindowPolicy { initialSize:number; transitionAt:number; laterSize:number }
+export interface AreaWindowSettings {initial_window:number;transition_at:number;later_window:number;pitching_initial_window?:number|null;pitching_transition_at?:number|null;pitching_later_window?:number|null;defense_initial_window?:number|null;defense_transition_at?:number|null;defense_later_window?:number|null}
+export function areaWindowPolicy(settings:AreaWindowSettings|null,area:'batting'|'pitching'|'defense'):WindowPolicy {
+ const inherited=settings?{initialSize:settings.initial_window,transitionAt:settings.transition_at,laterSize:settings.later_window}:OWNER_WINDOW_POLICY;
+ if(!settings||area==='batting')return inherited;
+ const values=[settings[`${area}_initial_window`],settings[`${area}_transition_at`],settings[`${area}_later_window`]];
+ if(values.every(v=>v==null))return inherited;
+ const [initialSize,transitionAt,laterSize]=values;
+ if(initialSize==null||transitionAt==null||laterSize==null)throw new Error('Incomplete area window policy');
+ const policy={initialSize,transitionAt,laterSize};if(!validWindowPolicy(policy))throw new Error('Invalid area window policy');return policy;
+}
 export const OWNER_WINDOW_POLICY:WindowPolicy = {initialSize:100,transitionAt:500,laterSize:500};
 export function validWindowPolicy(p:WindowPolicy):boolean {
  return [p.initialSize,p.transitionAt,p.laterSize].every(n=>Number.isSafeInteger(n)&&n>0) && p.transitionAt%p.initialSize===0;
@@ -16,7 +26,7 @@ export interface BattingEvent {id:string;result:string|null;date:string;order:nu
 const HITS=new Set(['1B','2B','3B','HR','single','double','triple','home_run']);
 const OUTS=new Set(['K','SO','K_swinging','K_looking','strikeout','GO','FO','LO','PO','FC','ROE','E','groundout','flyout','lineout','popout','out','fielders_choice','error']);
 const NON_AB=new Set(['BB','IBB','walk','HBP','hbp','SF','sac_fly','SAC','sac_bunt','CI','catchers_interference']);
-export interface BattingWindow {start:number;end:number;hits:number;atBats:number;homeRuns:number;sourceIds:string[];from:string;through:string}
+export interface BattingWindow {start:number;end:number;hits:number;atBats:number;homeRuns:number;ballsInPlay?:number;strikeouts?:number;sourceIds:string[];from:string;through:string}
 export function battingIdentity(events:readonly BattingEvent[],p:WindowPolicy=OWNER_WINDOW_POLICY){
  const unique=new Map<string,BattingEvent>();let invalid=false;
  for(const e of events){const old=unique.get(e.id);
@@ -29,11 +39,32 @@ export function battingIdentity(events:readonly BattingEvent[],p:WindowPolicy=OW
  const windows=opportunityWindows(abs.length,p);
  const completed:BattingWindow[]=invalid?[]:windows.filter(w=>w.complete).map(w=>{const rows=abs.slice(w.start-1,w.end);
   return {start:w.start,end:w.end,hits:rows.filter(e=>HITS.has(e.result??'')).length,atBats:rows.length,
-   homeRuns:rows.filter(e=>e.result==='HR'||e.result==='home_run').length,sourceIds:rows.map(e=>e.id),from:rows[0]?.date??'',through:rows[rows.length-1]?.date??''};});
+   homeRuns:rows.filter(e=>e.result==='HR'||e.result==='home_run').length,
+   strikeouts:rows.filter(e=>['K','SO','K_swinging','K_looking','strikeout'].includes(e.result??'')).length,
+   ballsInPlay:rows.filter(e=>!['HR','home_run','K','SO','K_swinging','K_looking','strikeout'].includes(e.result??'')).length,
+   sourceIds:rows.map(e=>e.id),from:rows[0]?.date??'',through:rows[rows.length-1]?.date??''};});
  const latest=completed[completed.length-1]??null;
  const last=windows[windows.length-1];
  const current=last&&!last.complete?last:{start:abs.length+1,end:abs.length+(abs.length<p.transitionAt?p.initialSize:p.laterSize),size:abs.length<p.transitionAt?p.initialSize:p.laterSize,sample:0,complete:false};
  return {status:latest?'Measured':'Need more data',completeHistory:!invalid,latest,completed,current,totalAtBats:abs.length,average:latest?latest.hits/latest.atBats:null};
+}
+export interface FieldingEvent {id:string;date:string;order:number;source:string|null;error:boolean|null;assist:boolean|null;putout:boolean|null;position:string|null}
+/** Only explicitly scored errors, assists or putouts advance fielding chances; unknown rows break certification. */
+export function fieldingIdentity(events:readonly FieldingEvent[],p:WindowPolicy=OWNER_WINDOW_POLICY){
+ const unique=new Map<string,FieldingEvent>();let invalid=false;let unclassified=0;
+ for(const e of events){const old=unique.get(e.id);
+  if(!e.id||!e.source||!Number.isFinite(Date.parse(e.date))||!Number.isFinite(e.order)||old&&JSON.stringify(old)!==JSON.stringify(e)){invalid=true;unclassified++;continue;}
+  unique.set(e.id,e);
+ }
+ const ordered=[...unique.values()].sort((a,b)=>a.date.localeCompare(b.date)||a.order-b.order||a.id.localeCompare(b.id));
+ const chances=ordered.filter(e=>{const scored=e.error===true||e.assist===true||e.putout===true;
+  if(!scored||e.error===null){invalid=true;unclassified++;return false;}return true;});
+ const windows=opportunityWindows(chances.length,p);
+ const completed=invalid?[]:windows.filter(w=>w.complete).map(w=>{const rows=chances.slice(w.start-1,w.end);const errors=rows.filter(e=>e.error===true).length;
+  return {...w,chances:rows.length,errors,successful:rows.length-errors,rate:(rows.length-errors)/rows.length,sourceIds:rows.map(e=>e.id),from:rows[0]?.date??'',through:rows[rows.length-1]?.date??''};});
+ const latest=completed[completed.length-1]??null;const last=windows[windows.length-1];const size=chances.length<p.transitionAt?p.initialSize:p.laterSize;
+ const current=last&&!last.complete?last:{start:chances.length+1,end:chances.length+size,size,sample:0,complete:false};
+ return {status:latest?'Measured':'Need more data',completeHistory:!invalid,latest,completed,current,totalChances:chances.length,unclassified};
 }
 export interface MasteryCutoffs {eliteHomeRuns:number|null;lackingPowerHomeRuns:number|null;eliteGrade:number}
 export const DEFAULT_MASTERY_CUTOFFS:MasteryCutoffs={eliteHomeRuns:null,lackingPowerHomeRuns:null,eliteGrade:65};

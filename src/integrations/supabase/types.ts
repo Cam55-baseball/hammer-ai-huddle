@@ -11596,12 +11596,18 @@ export type Database = {
       }
       mastery_identity_settings: {
         Row: {
+          defense_initial_window: number | null
+          defense_later_window: number | null
+          defense_transition_at: number | null
           defense_unit: string
           elite_balls_in_play_rate: number | null
           elite_home_runs: number | null
           initial_window: number
           lacking_power_home_runs: number | null
           later_window: number
+          pitching_initial_window: number | null
+          pitching_later_window: number | null
+          pitching_transition_at: number | null
           pitching_unit: string
           speed_minimum_samples: number | null
           sport: string
@@ -11610,12 +11616,18 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          defense_initial_window?: number | null
+          defense_later_window?: number | null
+          defense_transition_at?: number | null
           defense_unit?: string
           elite_balls_in_play_rate?: number | null
           elite_home_runs?: number | null
           initial_window?: number
           lacking_power_home_runs?: number | null
           later_window?: number
+          pitching_initial_window?: number | null
+          pitching_later_window?: number | null
+          pitching_transition_at?: number | null
           pitching_unit?: string
           speed_minimum_samples?: number | null
           sport: string
@@ -11624,12 +11636,18 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          defense_initial_window?: number | null
+          defense_later_window?: number | null
+          defense_transition_at?: number | null
           defense_unit?: string
           elite_balls_in_play_rate?: number | null
           elite_home_runs?: number | null
           initial_window?: number
           lacking_power_home_runs?: number | null
           later_window?: number
+          pitching_initial_window?: number | null
+          pitching_later_window?: number | null
+          pitching_transition_at?: number | null
           pitching_unit?: string
           speed_minimum_samples?: number | null
           sport?: string
