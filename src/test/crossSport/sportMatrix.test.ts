@@ -97,9 +97,10 @@ describe("pitching standards stay sport-separate", () => {
       expect(bbKeys).toContain("time_to_plate_s");
       expect(sbKeys).not.toContain("time_to_plate_s");
       expect(sbKeys).toContain("k_per_7");
+      expect(sbKeys).toContain("era");
       expect(bbKeys).not.toContain("k_per_7");
+      expect(bbKeys).not.toContain("era");
       expect(sbKeys).not.toContain("hr_per_9");
-      expect(bbKeys).toContain("hr_per_9");
     }
   });
 });
