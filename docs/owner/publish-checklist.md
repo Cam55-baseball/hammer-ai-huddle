@@ -2,6 +2,27 @@
 
 Updated October 26, 2026, academy continuation.
 
+## October 26 07:33 final batch (4) — authoritative status
+
+| Owner item | Implementation status | Proof status |
+|---|---|---|
+| 1. Level-specific contact, pitch whiffs/location, early-count principle | Built: editable exact K/PA, whiff and zone-contact standards; missing components remain unknown | Unit/simulation suite PASS; populated affected-player entry/readback not certified |
+| 2. HR-only power and HR/K chase | Built: complete AB windows, HR/AB and chase; no XBH substitution | Unit/window-rollover suite PASS |
+| 3. Speed, position arm/health, human defense | Built: existing grades only, matching saved sport/position and source labels; legacy unknown sport remains ungraded | Unit/provenance/health suite PASS; populated coach/athlete proof open |
+| 4. Batters faced and pitching settings | Built: BF logging, completed pitch-by-pitch BF and windows | Tests PASS; elite pitching intentionally unknown until owner supplies cutoffs |
+| 5. Bunting defaults and safeguards | Built: active 12 owner-worded drills, editable evidence defaults, side/count/rest/volume safeguards | Existing policy/eight-week simulations PASS; affected-player matched-video playback open |
+| 6. Weakest judged required pillar | Built in General, shared coach/chat projection, browser ready-skill order and existing weekly opportunity; saved focus/source readback | Builder/save/safety tests PASS; server skill-selection and unattended focus NOT implemented; populated player/coach/chat proof open |
+| 7. Full suite, preview, checklist and guide | Completed this batch | **558 test files / 4,673 tests PASS**, 16 bounded groups, zero failed groups; fresh preview build OK; 390×844 General/Today inspected, zero page errors or horizontal overflow |
+
+- Additional final fix: rejected snapshot network requests now return failure instead of producing an unhandled rejection or claiming a save; later successful retries remain possible. Two affected files / 13 tests PASS separately, also included in the full suite.
+- Final server audit: the existing ranked movement picker is used only by lift wrappers; arm care uses its first-legal picker and speed/conditioning their own canonical engines. Overlaying identity on the shared goal rank would affect lifting and goal doses. No new selector, fabricated mapping, athlete impersonation or job-authority bypass was introduced. The JWT-only new-day server explanation is sourced guidance, **not** server skill selection. That remaining implementation is not marked finished.
+- Fresh phone evidence shows sourced identity values/unknowns in The General; Today is still Initial assessment · 1 of 6 done for the available session. This is not populated Today focus → save → reload or coach proof. Previously finished proofs were not individually rerun beyond the explicitly requested full regression suite.
+- No hosted TEST inputs, persona changes or training writes were made; no new cleanup targets. No migration, function redeploy, publish, cron or iOS changes this batch. Final frontend changes remain preview-only. Pitching cutoffs remain intentionally unset, not invented.
+
+**Ready to publish: NO.** Exact blockers: server skill-selection/unattended identity focus is unimplemented; populated affected-player/coach identity → new focus → saved reload and positive chat/matched-video playback remain unverified without the required TEST-user session authorization; the separate Monday coach send → warning → Okay → Use instead → focus log → reload/all-surface proof remains open. Full tests and a passing preview do not substitute for those proofs. No attainability prediction is claimed from relative speed/power progress.
+
+Evidence: `/tmp/browser/identity-final/suite/summary.json` and 16 group reports, `save-tests.log`, `phone.log`, inspected `screenshots/general.png` and `screenshots/today.png`. Automatic preview build OK at 07:36:34 UTC after final code/guide edits; later dated sections below are retained history. The by-role guide is maintained in section C of this checklist.
+
 ## October 26 07:28 continuation (3) — current verdict
 
 - Fixed a concrete first-save race in the actual Today caller: the saved-day lookup and identity read ran independently, so an early baseline snapshot could prevent later judged focus. First unsaved snapshots now wait for successful settled identity evidence; failed reads do not certify a new focus. Existing sport days need no fresh identity and source failures are shown honestly.
@@ -177,7 +198,7 @@ These five owner checks are not blockers for the readiness verdict:
 
 ### Player
 
-Your first new plan waits for its identity evidence before saving a focus. A saved focus keeps its recorded sources and matching skill order when you reload; newer safety reductions still win. If identity evidence cannot be checked, the page does not claim a new focus was saved.
+Your first new plan waits for its identity evidence before saving a focus. A saved focus keeps its recorded sources and matching skill order when you reload; newer safety reductions still win. If identity evidence cannot be checked, the page does not claim a new focus was saved. A failed connection is not counted as a successful save; a later successful request can save normally.
 
 Judged identity now chooses the existing weekly priority opportunity, only when your phase, equipment, available days and access permit it. It cannot add a second boost or change a saved day. New self-built plans can retain their sourced day-focus explanation in exercise details; that explanation does not add reps or authorize an unavailable exercise. Current-day arm throws that require rest prevent an elite-arm label.
 
@@ -193,7 +214,7 @@ Coach workouts offer Use instead, Add alongside, Save for later and Use today wh
 
 New evaluations save the selected sport. Throwing and catching rep entry requires choosing Baseball or Softball before Log rep opens. Earlier records without a saved sport are preserved but cannot certify a sport-specific identity; changing the player's current sport never relabels them. Canonical training/health sharing still applies.
 
-Identity priority uses the same guarded weekly opportunity as player goals; no invented extra day or dose. A dated missing arm check-in stays Need more data, and current-day ledger rest is included. Background-job focus and full affected-player saved readback are not yet certified.
+Identity priority uses the same guarded weekly opportunity as player goals; no invented extra day or dose. A dated missing arm check-in stays Need more data, and current-day ledger rest is included. Background-job focus and full affected-player saved readback are not yet certified. The server's existing ranked movement selector controls lifting, not skill work; identity does not change that ranking or lifting doses. Server skill-selection steering is not implemented and is not claimed complete.
 
 Coaching Console has editable per-level contact ratios, HR power/lefty/lacking-power ratios, low-average and elite-grade standards, the HR/K chase and optional pitching K/BF, BB/BF and HR/BF cutoffs. All ratios use 0–1 inputs. The player/coach mastery panel names evidence, sample/window, date and owner standards. Human fielding/arm grades must match the position; self-reported grades never certify them. Health facts remain behind existing health consent. Chat reads the same caller-scoped identity judge, not an inferred grade from partial recall.
 
