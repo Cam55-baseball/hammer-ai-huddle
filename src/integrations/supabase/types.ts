@@ -8861,6 +8861,7 @@ export type Database = {
       gp_games: {
         Row: {
           ai_summary: string | null
+          batters_faced: number | null
           created_at: string
           deleted_at: string | null
           entry_source: string | null
@@ -8885,6 +8886,7 @@ export type Database = {
           philosophy_pre: string | null
           philosophy_verdict: string | null
           pitch_count: number | null
+          pitching_history_complete: boolean
           probable_pitcher_dossier_id: string | null
           scheduled_time: string | null
           sport: string
@@ -8899,6 +8901,7 @@ export type Database = {
         }
         Insert: {
           ai_summary?: string | null
+          batters_faced?: number | null
           created_at?: string
           deleted_at?: string | null
           entry_source?: string | null
@@ -8923,6 +8926,7 @@ export type Database = {
           philosophy_pre?: string | null
           philosophy_verdict?: string | null
           pitch_count?: number | null
+          pitching_history_complete?: boolean
           probable_pitcher_dossier_id?: string | null
           scheduled_time?: string | null
           sport: string
@@ -8937,6 +8941,7 @@ export type Database = {
         }
         Update: {
           ai_summary?: string | null
+          batters_faced?: number | null
           created_at?: string
           deleted_at?: string | null
           entry_source?: string | null
@@ -8961,6 +8966,7 @@ export type Database = {
           philosophy_pre?: string | null
           philosophy_verdict?: string | null
           pitch_count?: number | null
+          pitching_history_complete?: boolean
           probable_pitcher_dossier_id?: string | null
           scheduled_time?: string | null
           sport?: string
@@ -9169,6 +9175,8 @@ export type Database = {
         Row: {
           at_bat_id: string | null
           batter_handedness: string | null
+          batter_opportunity: number | null
+          batter_result: string | null
           bunt_side: string | null
           bunt_success: boolean | null
           bunt_type: string | null
@@ -9199,6 +9207,8 @@ export type Database = {
         Insert: {
           at_bat_id?: string | null
           batter_handedness?: string | null
+          batter_opportunity?: number | null
+          batter_result?: string | null
           bunt_side?: string | null
           bunt_success?: boolean | null
           bunt_type?: string | null
@@ -9229,6 +9239,8 @@ export type Database = {
         Update: {
           at_bat_id?: string | null
           batter_handedness?: string | null
+          batter_opportunity?: number | null
+          batter_result?: string | null
           bunt_side?: string | null
           bunt_success?: boolean | null
           bunt_type?: string | null
@@ -11596,61 +11608,127 @@ export type Database = {
       }
       mastery_identity_settings: {
         Row: {
+          bunt_low_average: number
+          contact_college_k: number
+          contact_college_whiff: number
+          contact_college_zone: number
+          contact_high_school_k: number
+          contact_high_school_whiff: number
+          contact_high_school_zone: number
+          contact_pro_k: number
+          contact_pro_whiff: number
+          contact_pro_zone: number
+          contact_youth_k: number
+          contact_youth_whiff: number
+          contact_youth_zone: number
           defense_initial_window: number | null
           defense_later_window: number | null
           defense_transition_at: number | null
           defense_unit: string
           elite_balls_in_play_rate: number | null
+          elite_grade: number
           elite_home_runs: number | null
+          elite_hr_rate: number
           initial_window: number
           lacking_power_home_runs: number | null
+          lacking_power_hr_rate: number
           later_window: number
+          left_power_hr_rate: number
+          pitching_bb_max: number | null
+          pitching_hr_max: number | null
           pitching_initial_window: number | null
+          pitching_k_min: number | null
           pitching_later_window: number | null
           pitching_transition_at: number | null
           pitching_unit: string
+          power_chase_ratio: number
           speed_minimum_samples: number | null
           sport: string
+          standards_source: string
           transition_at: number
           updated_at: string
           updated_by: string | null
         }
         Insert: {
+          bunt_low_average?: number
+          contact_college_k?: number
+          contact_college_whiff?: number
+          contact_college_zone?: number
+          contact_high_school_k?: number
+          contact_high_school_whiff?: number
+          contact_high_school_zone?: number
+          contact_pro_k?: number
+          contact_pro_whiff?: number
+          contact_pro_zone?: number
+          contact_youth_k?: number
+          contact_youth_whiff?: number
+          contact_youth_zone?: number
           defense_initial_window?: number | null
           defense_later_window?: number | null
           defense_transition_at?: number | null
           defense_unit?: string
           elite_balls_in_play_rate?: number | null
+          elite_grade?: number
           elite_home_runs?: number | null
+          elite_hr_rate?: number
           initial_window?: number
           lacking_power_home_runs?: number | null
+          lacking_power_hr_rate?: number
           later_window?: number
+          left_power_hr_rate?: number
+          pitching_bb_max?: number | null
+          pitching_hr_max?: number | null
           pitching_initial_window?: number | null
+          pitching_k_min?: number | null
           pitching_later_window?: number | null
           pitching_transition_at?: number | null
           pitching_unit?: string
+          power_chase_ratio?: number
           speed_minimum_samples?: number | null
           sport: string
+          standards_source?: string
           transition_at?: number
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
+          bunt_low_average?: number
+          contact_college_k?: number
+          contact_college_whiff?: number
+          contact_college_zone?: number
+          contact_high_school_k?: number
+          contact_high_school_whiff?: number
+          contact_high_school_zone?: number
+          contact_pro_k?: number
+          contact_pro_whiff?: number
+          contact_pro_zone?: number
+          contact_youth_k?: number
+          contact_youth_whiff?: number
+          contact_youth_zone?: number
           defense_initial_window?: number | null
           defense_later_window?: number | null
           defense_transition_at?: number | null
           defense_unit?: string
           elite_balls_in_play_rate?: number | null
+          elite_grade?: number
           elite_home_runs?: number | null
+          elite_hr_rate?: number
           initial_window?: number
           lacking_power_home_runs?: number | null
+          lacking_power_hr_rate?: number
           later_window?: number
+          left_power_hr_rate?: number
+          pitching_bb_max?: number | null
+          pitching_hr_max?: number | null
           pitching_initial_window?: number | null
+          pitching_k_min?: number | null
           pitching_later_window?: number | null
           pitching_transition_at?: number | null
           pitching_unit?: string
+          power_chase_ratio?: number
           speed_minimum_samples?: number | null
           sport?: string
+          standards_source?: string
           transition_at?: number
           updated_at?: string
           updated_by?: string | null
