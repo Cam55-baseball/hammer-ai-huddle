@@ -2,6 +2,18 @@
 
 Updated October 26, 2026, academy continuation.
 
+## October 26 07:16 continuation (2) — current verdict
+
+- Closed unsafe sport attribution: new human evaluations save their selected sport; throwing/catching entry requires an explicit sport. Canonical identity reads and the shared projection admit only matching record-level sport. Legacy rows stay stored with null sport, never backfilled from current account settings. Catcher pop, evaluator/position validity, health and ledger gates remain unchanged.
+- Authorized additive migration **0130 applied/read back**: three nullable constrained sport columns, no defaults/backfill or changed table permissions; canonical evidence function retains its training and health access gates. Shared server judge regenerated; wk-generate-daily, hammer-chat, hammer-recall and plan-swap redeployed successfully.
+- **35 affected assertions / five files PASS**: opposite/missing/invalid sport exclusion from grades and steering lineage, matching baseball/softball human grades, catcher pop, exact rep sport/value/unit saves, failed saves, human report submission and saved-day focus rejection. Retained prior full suite (553 files / 4,638 tests), not rerun. Preview build OK at 07:21:59 UTC.
+- 390×844 authenticated reader/identity screenshot inspected; evidence RPC succeeds, zero page errors. Available session is not an active coach/scout: measurement-entry screen correctly refuses evaluator access. This is **not** a populated affected-player/coach/save proof. No TEST training writes or persona changes; no cleanup targets.
+- Canonical server selection integration remains unfinished: maintained server sources expose the pure block builder but do not invoke it. Existing generator mastery annotation is not movement selection. Service-job JWT cannot impersonate athletes; no schedule/job/auth gate weakened to claim completion.
+
+**Ready to publish: NO.** Remaining: canonical server focus integration and unattended identity authorization path; populated affected-player/coach → unsaved focus → saved reload, positive identity chat, matched-video playback and Monday coach Use-instead proof. Specific TEST session authorization remains unavailable. Pitching elite cutoffs intentionally remain unset pending owner values. No publish, cron or iOS changes.
+
+Evidence: `/tmp/browser/identity-0716/` (targeted test logs, phone access/identity screenshots and canonical reader readback). Earlier dated sections retain their historical results.
+
 ## October 26 07:04 continuation — current verdict
 
 - Connected judged identity ranks to the **existing** weekly goal opportunity before microcycle resolution. No second boost: baseline, subscriptions, phase, gear, rest and availability still win. Actual-builder tests verify priority changes and unchanged lifting/rest-day pattern; two-sport eight-week tests verify the allowed existing opportunity.
@@ -164,6 +176,8 @@ Recorded speed evidence expands separately from qualified grades. Royal timer va
 Coach workouts offer Use instead, Add alongside, Save for later and Use today where applicable. Use instead requires real saved work of the same category and never spills into another category. Replaced work is marked “Replaced by coach workout”, not missed. Read every warning and its exact date and measured numbers; Okay acknowledges, Cancel action saves nothing. Missing-fact warnings explicitly say what was not checked, without making up a score or cap. Accepted warnings appear in the card’s “Coach override: …” Because line. You can still decline the workout.
 
 ### Coach
+
+New evaluations save the selected sport. Throwing and catching rep entry requires choosing Baseball or Softball before Log rep opens. Earlier records without a saved sport are preserved but cannot certify a sport-specific identity; changing the player's current sport never relabels them. Canonical training/health sharing still applies.
 
 Identity priority uses the same guarded weekly opportunity as player goals; no invented extra day or dose. A dated missing arm check-in stays Need more data, and current-day ledger rest is included. Background-job focus and full affected-player saved readback are not yet certified.
 
