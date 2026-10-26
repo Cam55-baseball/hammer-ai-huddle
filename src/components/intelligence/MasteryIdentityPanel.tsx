@@ -1,6 +1,6 @@
 import {useMasteryIdentity} from '@/hooks/useMasteryIdentity';
-export function MasteryIdentityPanel({sport}:{sport:'baseball'|'softball'}){
- const query=useMasteryIdentity(sport,new Date().toLocaleDateString('en-CA'));
+export function MasteryIdentityPanel({sport,athleteId}:{sport:'baseball'|'softball';athleteId?:string}){
+ const query=useMasteryIdentity(sport,new Date().toLocaleDateString('en-CA'),true,athleteId);
  const data=query.data;const window=data?.batting.latest;
  return <section aria-label="Player mastery identity" className="space-y-3 border-y border-border py-4">
   <h2 className="text-lg font-semibold">Your academy of mastery</h2>
