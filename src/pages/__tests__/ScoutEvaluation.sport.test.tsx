@@ -17,13 +17,11 @@ describe('human evaluation explicit sport provenance',()=>{
  beforeEach(()=>vi.clearAllMocks());
  it('saves the evaluator-selected softball sport, not account baseball default',async()=>{
   render(<MemoryRouter initialEntries={['/scout-evaluation?mode=prospect']}><ScoutEvaluation /></MemoryRouter>);
-  const inputs=screen.getAllByRole('textbox');
-  console.log('input labels',inputs.map(e=>e.getAttribute('placeholder')));
-  const sport=screen.getByRole('combobox',{name:'Sport'});
+  const sport=screen.getAllByRole('combobox')[0];
   fireEvent.pointerDown(sport,{button:0,ctrlKey:false});
   fireEvent.click(await screen.findByRole('option',{name:'Softball'}));
   fireEvent.change(screen.getByLabelText('Player name'),{target:{value:'TEST provenance fixture'}});
-  fireEvent.click(screen.getByRole('button',{name:/Save evaluation/i}));
+  fireEvent.click(screen.getByRole('button',{name:/File scouting report/i}));
   await waitFor(()=>expect(mock.insert).toHaveBeenCalledWith(expect.objectContaining({sport:'softball',evaluator_id:'evaluator'})));
  },20000);
 });
