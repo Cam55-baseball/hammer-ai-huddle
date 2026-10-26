@@ -4571,6 +4571,7 @@ export type Database = {
           missing_reason: string | null
           recorded_by: string | null
           source: string
+          sport: string | null
           unit: string | null
           updated_at: string
           user_id: string
@@ -4584,6 +4585,7 @@ export type Database = {
           missing_reason?: string | null
           recorded_by?: string | null
           source: string
+          sport?: string | null
           unit?: string | null
           updated_at?: string
           user_id: string
@@ -4597,6 +4599,7 @@ export type Database = {
           missing_reason?: string | null
           recorded_by?: string | null
           source?: string
+          sport?: string | null
           unit?: string | null
           updated_at?: string
           user_id?: string
@@ -17066,6 +17069,7 @@ export type Database = {
           position_context: string
           recorded_by: string | null
           source: string
+          sport: string | null
           unit: string | null
           updated_at: string
           user_id: string
@@ -17080,6 +17084,7 @@ export type Database = {
           position_context: string
           recorded_by?: string | null
           source: string
+          sport?: string | null
           unit?: string | null
           updated_at?: string
           user_id: string
@@ -17094,6 +17099,7 @@ export type Database = {
           position_context?: string
           recorded_by?: string | null
           source?: string
+          sport?: string | null
           unit?: string | null
           updated_at?: string
           user_id?: string
@@ -19040,6 +19046,7 @@ export type Database = {
           self_efficacy_grade_future: number | null
           speed_grade: number | null
           speed_grade_future: number | null
+          sport: string | null
           throwing_grade: number | null
           throwing_grade_future: number | null
           user_id: string | null
@@ -19123,6 +19130,7 @@ export type Database = {
           self_efficacy_grade_future?: number | null
           speed_grade?: number | null
           speed_grade_future?: number | null
+          sport?: string | null
           throwing_grade?: number | null
           throwing_grade_future?: number | null
           user_id?: string | null
@@ -19206,6 +19214,7 @@ export type Database = {
           self_efficacy_grade_future?: number | null
           speed_grade?: number | null
           speed_grade_future?: number | null
+          sport?: string | null
           throwing_grade?: number | null
           throwing_grade_future?: number | null
           user_id?: string | null
