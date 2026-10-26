@@ -11,5 +11,5 @@ export async function masteryContext(authHeader:string,date:string){
  const [settings,evidence]=await Promise.all([db.from('mastery_identity_settings').select('*').eq('sport',sport).maybeSingle(),db.rpc('mastery_identity_evidence',{p_sport:sport,p_date:date,p_athlete:auth.user.id})]);
  if(settings.error||evidence.error)return {status:'Need more data',reason:'Identity source read failed; do not judge from partial recall.'};
  const p=projectMasterySources({...evidence.data,date},sport,settings.data);
- return {sport,level:p.level,window:p.batting.latest,contact:p.contact,power:p.power,speed:p.speed,arm:p.arm,defense:p.defensePillar,pitching:p.pitching,steering:p.steering,guidance:p.guidance,standardsSource:p.standardsSource};
+ return {sport,level:p.level,window:p.batting.latest,contact:p.contact,power:p.power,speed:p.speed,arm:p.arm,defense:p.defensePillar,pitching:p.pitching,steering:p.steering,strategy:p.strategy,guidance:p.guidance,standardsSource:p.standardsSource};
 }
