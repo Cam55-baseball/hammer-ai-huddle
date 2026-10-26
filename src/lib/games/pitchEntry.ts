@@ -21,6 +21,9 @@ export function pitchEntryPayload(
     payload[key] = fields[key] || null;
   }
   payload.location = location.zone != null || location.outZone ? location : null;
+  const opportunity=Number(fields.batter_opportunity);
+  payload.batter_opportunity=perspective==='pitcher'&&Number.isSafeInteger(opportunity)&&opportunity>0?opportunity:null;
+  payload.batter_result=perspective==='pitcher'&&['K','BB','HBP','HR','out','hit','error','sacrifice','interference'].includes(String(fields.batter_result))?fields.batter_result:null;
   const inPlay = perspective === "pitcher" && ["in_play", "bunt_in_play"].includes(String(fields.result));
   payload.contact_quality = inPlay && ["weak", "medium", "hard", "barrel", "mishit"].includes(String(fields.contact)) ? fields.contact : null;
   payload.spray_bucket = inPlay && ["pull_air", "pull_ground", "center_air", "center_ground", "oppo_air", "oppo_ground"].includes(String(fields.spray)) ? fields.spray : null;
