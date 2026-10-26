@@ -1,11 +1,11 @@
-import {battingIdentity,OWNER_WINDOW_POLICY,speedIdentity,masteryBuntingTraits,type BattingEvent,type SpeedEvidence,type WindowPolicy} from '../../../supabase/functions/_shared/wic/masteryIdentity';
+import {battingIdentity,areaWindowPolicy,fieldingIdentity,speedIdentity,masteryBuntingTraits,type BattingEvent,type SpeedEvidence,type AreaWindowSettings} from '../../../supabase/functions/_shared/wic/masteryIdentity';
 import {rawToGrade} from '@/lib/gradeEngine';
 import {PERFORMANCE_METRICS} from '@/data/performanceTestRegistry';
 type RecordValue=Record<string,unknown>;
 const record=(v:unknown):RecordValue=>v&&typeof v==='object'&&!Array.isArray(v)?v as RecordValue:{};
 const list=(v:unknown):RecordValue[]=>Array.isArray(v)?v.map(record):[];
-export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',settings:{initial_window:number;transition_at:number;later_window:number;elite_home_runs:number|null;lacking_power_home_runs:number|null;speed_minimum_samples:number|null}|null){
- const source=record(raw);const policy:WindowPolicy=settings?{initialSize:settings.initial_window,transitionAt:settings.transition_at,laterSize:settings.later_window}:OWNER_WINDOW_POLICY;
+export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',settings:(AreaWindowSettings&{elite_home_runs:number|null;lacking_power_home_runs:number|null;speed_minimum_samples:number|null;elite_balls_in_play_rate?:number|null})|null){
+ const source=record(raw);const policy=areaWindowPolicy(settings,'batting');
  const events:BattingEvent[]=list(source.atBats).map((e,i)=>({id:String(e.id??''),date:String(e.date??''),order:i,result:typeof e.result==='string'?e.result:null,source:String(e.source??'Source not recorded')}));
  const batting=battingIdentity(events,policy);const speedEvidence:SpeedEvidence[]=[];
  const add=(row:RecordValue,id:string,label:string,measure:string,unit:string,value:unknown,grade:number|null)=>{if(typeof value==='number'&&Number.isFinite(value)&&value>0)speedEvidence.push({id,source:label,date:String(row.date??''),measure,unit,value,grade,kind:'measured',sample:1,minimum:settings?.speed_minimum_samples??null});};
@@ -21,5 +21,9 @@ export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',se
  const counts=new Map<string,Set<string>>();for(const e of speedEvidence){const key=`${e.source}:${e.measure}:${e.unit}`;const set=counts.get(key)??new Set<string>();set.add(e.id);counts.set(key,set);}
  const speed=speedIdentity(speedEvidence.map(e=>({...e,sample:counts.get(`${e.source}:${e.measure}:${e.unit}`)?.size??0})));
  const traits=masteryBuntingTraits(batting.latest,speed,{eliteHomeRuns:settings?.elite_home_runs??null,lackingPowerHomeRuns:settings?.lacking_power_home_runs??null,eliteGrade:65});
- return {batting,speed,traits,policy,settings,sport,recordedSpeedEvidence:speedEvidence};
+ const defense=fieldingIdentity(list(source.defense).map((e,i)=>({id:String(e.id??''),date:String(e.date??''),order:i,source:typeof e.source==='string'?e.source:null,position:typeof e.position==='string'?e.position:null,error:typeof e.error==='boolean'?e.error:null,assist:typeof e.assist==='boolean'?e.assist:null,putout:typeof e.putout==='boolean'?e.putout:null})),areaWindowPolicy(settings,'defense'));
+ const contactRate=batting.latest?.ballsInPlay!==undefined?batting.latest.ballsInPlay/batting.latest.atBats:null;
+ const cutoff=settings?.elite_balls_in_play_rate;
+ const contact={rate:contactRate,status:contactRate===null||cutoff==null?'Need more data':contactRate>=cutoff?'Elite':'Building'};
+ return {batting,speed,traits,policy,settings,sport,recordedSpeedEvidence:speedEvidence,defense,contact,pitching:{status:'Need more data',policy:areaWindowPolicy(settings,'pitching'),reason:'Completed batters faced are not recorded. Pitch counts are not batters faced.'}};
 }
