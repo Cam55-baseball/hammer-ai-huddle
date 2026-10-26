@@ -15,6 +15,7 @@ describe('canonical identity-to-saved-plan guidance',()=>{
   expect(rows[0].why_payload).toMatchObject({phase:'in_season',mastery_focus:{sourceIds:['ab-100','pitch-100'],observedFocus:'contact'}});
  });
  it('saved days are byte-identical, even when the identity changed',()=>{
+  expect(masteryPlanGuidance(context,true)).toBeUndefined();
   const rows=[{sets:3,reps:5,why_payload:{phase:'in_season'}}];const before=JSON.stringify(rows);
   masterySavedGuidance(rows,masteryPlanGuidance(context),true);expect(JSON.stringify(rows)).toBe(before);
  });
