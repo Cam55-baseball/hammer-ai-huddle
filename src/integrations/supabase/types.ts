@@ -8544,6 +8544,7 @@ export type Database = {
           notes: string | null
           opponent_pitcher_id: string | null
           outs: number | null
+          pitch_count: number | null
           pitch_location: Json | null
           pitch_movement: Json | null
           pitch_type: string | null
@@ -8580,6 +8581,7 @@ export type Database = {
           notes?: string | null
           opponent_pitcher_id?: string | null
           outs?: number | null
+          pitch_count?: number | null
           pitch_location?: Json | null
           pitch_movement?: Json | null
           pitch_type?: string | null
@@ -8616,6 +8618,7 @@ export type Database = {
           notes?: string | null
           opponent_pitcher_id?: string | null
           outs?: number | null
+          pitch_count?: number | null
           pitch_location?: Json | null
           pitch_movement?: Json | null
           pitch_type?: string | null

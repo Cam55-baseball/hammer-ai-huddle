@@ -904,6 +904,13 @@
       "when": 1792996850090,
       "tag": "0128_mastery_complete_evidence_reader",
       "breakpoints": true
+    },
+    {
+      "idx": 129,
+      "version": "7",
+      "when": 1792997239303,
+      "tag": "0129_mastery_at_bat_pitch_total",
+      "breakpoints": true
     }
   ]
 }
