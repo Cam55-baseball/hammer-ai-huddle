@@ -14,6 +14,12 @@ const record=(v:unknown):RecordValue=>v&&typeof v==='object'&&!Array.isArray(v)?
 const list=(v:unknown):RecordValue[]=>Array.isArray(v)?v.map(record):[];
 // Current account sport cannot establish the sport of historical evidence.
 const sportRows=(v:unknown,sport:'baseball'|'softball')=>list(v).filter(row=>row.sport===sport);
+/** Owner-approved level → standards map (both sports). Unanswered 'academy' stays null ("Need more data"). */
+const PRO_LEVELS=['pro','professional','mlb','milb','ausl','indie_pro','rookie','low_a','high_a','aa','aaa','winter_ball','foreign_league','free_agent','wpf','npf','academy_pro'];
+const COLLEGE_LEVELS=['college','ncaa','d1','d2','d3','juco','naia','cape_cod','summer_generic','summer_ball'];
+const HS_LEVELS=['high_school','high school','hs','hs_varsity','hs_jv'];
+const YOUTH_LEVELS=['youth','youth_rec','youth_travel','middle_school','little_league','travel','rec','academy_youth'];
+export function masteryLevelFor(raw:string|null|undefined):MasteryLevel|null{const r=String(raw??'').toLowerCase();return PRO_LEVELS.includes(r)?'pro':COLLEGE_LEVELS.includes(r)?'college':HS_LEVELS.includes(r)?'high_school':YOUTH_LEVELS.includes(r)?'youth':null;}
 export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',settings:(AreaWindowSettings&{elite_home_runs:number|null;lacking_power_home_runs:number|null;speed_minimum_samples:number|null;elite_balls_in_play_rate?:number|null}&IdentitySettings)|null){
  const source=record(raw);const policy=areaWindowPolicy(settings,'batting');
  const events:BattingEvent[]=list(source.atBats).map((e,i)=>({id:String(e.id??''),date:String(e.date??''),order:i,result:typeof e.result==='string'?e.result:null,source:typeof e.source==='string'?e.source:'',pitchCount:typeof e.pitchCount==='number'?e.pitchCount:null}));
@@ -26,7 +32,7 @@ export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',se
  for(const row of list(source.sprints)){const m=record(row.metrics);const value=m.time??m.seconds;add(row,`sprint:${row.id}`,'Logged sprint',`sprint ${row.distance??'unknown distance'} feet`,'seconds',value,null);}
  const context=record(source.context);const scales=list(source.scales) as unknown as ScaleReferenceRow[];
  const rawLevel=String(context.level||context.leagueTier||'').toLowerCase();
- const level:MasteryLevel|null=['pro','professional','mlb','milb','ausl','indie_pro'].includes(rawLevel)?'pro':['college','ncaa','d1','d2','d3','juco','naia'].includes(rawLevel)?'college':['high_school','high school','hs'].includes(rawLevel)?'high_school':['youth','youth_rec','youth_travel'].includes(rawLevel)?'youth':null;
+ const level:MasteryLevel|null=masteryLevelFor(rawLevel);
  for(const row of list(source.homeFirst)){const hand=row.side;const g=hand==='L'||hand==='R'?computeHomeToFirstGrade(typeof row.seconds==='number'?row.seconds:null,hand,scales):null;add(row,`home-first:${row.id}`,`Game home-to-first · ${row.source}`,'home_to_first','seconds',row.seconds,g&&!g.missing?g.grade:null);}
  const speedKeys=sport==='baseball'?{'10y':'ten_yard_dash','30y':'thirty_yard_dash','60y':'sixty_yard_dash'}:{'7y':'seven_yard_dash','20y':null,'40y':'forty_yard_dash'};
  for(const row of list(source.speedLab))for(const [key,metric] of Object.entries(speedKeys)){const raw=record(row.distances)[key];const values=Array.isArray(raw)?raw:[raw];values.forEach((value,i)=>add(row,`speed-lab:${row.id}:${key}:${i}`,'Speed Lab test',key,'seconds',value,metric&&typeof value==='number'?rawToGrade(metric,value,sport):null));}
@@ -76,6 +82,6 @@ export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',se
  const steering=steerIdentity(pillarFacts);
  const strategy=developmentStrategy({chosen:chosenGoalPillar(list(goals.goals)),age,pillars:pillarFacts.map(p=>({pillar:p.pillar as 'contact',status:p.status,grade:p.pillar==='defense'?defenseGrade:p.pillar==='arm'?armGrade:p.pillar==='speed'?speedGrade:null,progress:p.progress,sourceIds:p.sourceIds}))});
  const guidance={...masteryGuidance({contactStatus:contact.status,contactSourceIds:contact.sourceIds,speedStatus:speed.status,powerStatus:power.status,leftPower:traits.leftPower,leftPowerGoal:traits.powerGoal}),observedFocus:strategy.mode==='secure_natural'&&strategy.sourceIds.length?strategy.primary:steering.focus,sourceIds:strategy.mode==='secure_natural'&&strategy.sourceIds.length?strategy.sourceIds:steering.sourceIds,reason:strategy.mode==='secure_natural'&&strategy.sourceIds.length?strategy.reason:steering.reason,alternativeReason:steering.speedOrPower==='Need more data'?'Need more data for speed-or-power focus.':`Speed-or-power requirement: ${steering.speedOrPower}. ${steering.comparison}.`};
- const pitching=pitchingIdentity(list(source.pitcherGames).map(g=>({id:String(g.id),date:String(g.date),battersFaced:typeof g.battersFaced==='number'?g.battersFaced:null,complete:g.complete===true,pitches:list(g.pitches).map(p=>({id:String(p.id),opportunity:typeof p.opportunity==='number'?p.opportunity:null,outcome:typeof p.outcome==='string'?p.outcome:null}))})),standards,areaWindowPolicy(settings,'pitching'));
+ const pitching=pitchingIdentity(list(source.pitcherGames).map(g=>({id:String(g.id),date:String(g.date),battersFaced:typeof g.battersFaced==='number'?g.battersFaced:null,complete:g.complete===true,pitches:list(g.pitches).map(p=>({id:String(p.id),opportunity:typeof p.opportunity==='number'?p.opportunity:null,outcome:typeof p.outcome==='string'?p.outcome:null}))})),standards,areaWindowPolicy(settings,'pitching'),sport==='softball'?'softball':'baseball',level);
  return {batting,speed,traits,policy,settings,sport,recordedSpeedEvidence:speedEvidence,defense,defensePillar,contact,power,arm,guidance,steering,strategy,pitching,level,standardsSource:IDENTITY_SOURCE};
 }

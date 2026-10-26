@@ -242,3 +242,10 @@ Every accepted override records who, when, action, rule, player, date and prescr
 - Proof: full suite 562 files / 4,705 tests passed; preview /auth 200; 390×844 owner checks (practice log save/reload, goal card, pitching section, recap strategy line) with no page errors.
 - Open: TEST player and democoach sign-in proofs (approval unavailable, no TEST password secret); owner decision on whether "indie pro" uses pro standards.
 - By-role: Player — The General shows identity pillars, goal card, practice log, strategy; games where they pitched have a pitching line. Coach — same identity, goal card and strategy line in the athlete view and six-week summary, no practice form. Owner — edits starting standards and the versioned philosophy in the Coaching Console.
+
+## Oct 26 (22:00 UTC) — level map + single pitching cutoffs
+- Level → standards: every saved level in both sports maps (pro incl. rookie/low_a/high_a/aa/aaa/winter_ball/foreign_league/free_agent/wpf/npf; college incl. cape_cod/summer_generic; HS/youth incl. hs_varsity/hs_jv/middle_school/little_league/travel/rec). New level choices "Pro team academy" (pro) and "Youth academy" (youth); a saved plain "academy" stays "Need more data" until re-answered.
+- Removed "Owner pitching elite cutoffs are not set" and the three empty K/BB/HR cutoff fields; the pitching pillar reads the starting standards.
+- Full suite: 564 files / 4,716 tests passed; preview build OK.
+- Pending: the server plan bundle is regenerated in code but not redeployed (no redeploy authorized this run).
+- Ready to publish: YES (player/coach role views are owner human checks).
