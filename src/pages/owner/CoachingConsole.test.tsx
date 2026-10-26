@@ -75,7 +75,7 @@ describe('owner question actual form save and declared version readback', () => 
     fireEvent.click(screen.getAllByRole('button', { name: 'Write my answer' })[0]);
     fireEvent.change(screen.getByLabelText('Principle'), { target: { value: 'My saved review' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save principle' }));
-    await screen.findByRole('alert');
+    await screen.findAllByRole('alert');
     expect(state.versions).toHaveLength(0);
     expect((screen.getByLabelText('Principle') as HTMLTextAreaElement).value).toBe('My saved review');
     state.fail = false; fireEvent.click(screen.getByRole('button', { name: 'Save principle' }));

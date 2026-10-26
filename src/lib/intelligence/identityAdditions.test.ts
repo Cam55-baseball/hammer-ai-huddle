@@ -56,3 +56,13 @@ describe('secure what is natural first',()=>{
   expect(nutritionFocus('speed',null).join(' ')).toMatch(/parent/);expect(isSafeForMinor('try a calorie deficit')).toBe(false);
  });
 });
+import {pitchingCounts} from '../../../supabase/functions/_shared/wic/pitchingCounts';
+describe('pitching counts from game logs',()=>{
+ const p=(o:number,b:number,s:number,result:string,br:string|null=null,cq:string|null=null)=>({batter_opportunity:o,count_balls:b,count_strikes:s,result,batter_result:br,contact_quality:cq});
+ const game={batters_faced:2,pitch_count:5,pitcher_outs:3,pitcher_pfp_chances:1,pitcher_pfp_errors:0,pitcher_time_to_plate_sec:[1.2],
+  pitches:[p(1,0,0,'called_strike'),p(1,0,1,'swinging_strike'),p(1,0,2,'swinging_strike','K'),p(2,0,0,'ball'),p(2,1,0,'in_play','1B','soft')]};
+ it('derives K, first-pitch strikes, two-ball, soft contact, whiffs',()=>{const c=pitchingCounts([game]);
+  expect(c).toMatchObject({battersFaced:2,strikeouts:1,hits:1,firstPitchStrikes:1,twoBallBatters:0,softContact:1,ballsInPlay:1,whiffs:2,outs:3,pfpChances:1});});
+ it('a game without a recorded field nulls that field for the whole set',()=>{const c=pitchingCounts([game,{...game,pitcher_outs:null}]);expect(c.outs).toBeNull();expect(c.stolenBases).toBeNull();});
+ it('BF mismatch with pitch log refuses pitch-derived stats',()=>{expect(pitchingCounts([{...game,batters_faced:3}]).strikeouts).toBeNull();});
+});
