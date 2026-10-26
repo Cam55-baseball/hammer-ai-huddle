@@ -1,6 +1,7 @@
 import {battingIdentity,areaWindowPolicy,fieldingIdentity,speedIdentity,masteryBuntingTraits,type BattingEvent,type SpeedEvidence,type AreaWindowSettings} from '../../../supabase/functions/_shared/wic/masteryIdentity';
 import {rawToGrade} from '@/lib/gradeEngine';
 import {PERFORMANCE_METRICS} from '@/data/performanceTestRegistry';
+import {masteryGuidance} from '../../../supabase/functions/_shared/wic/masteryGuidance';
 type RecordValue=Record<string,unknown>;
 const record=(v:unknown):RecordValue=>v&&typeof v==='object'&&!Array.isArray(v)?v as RecordValue:{};
 const list=(v:unknown):RecordValue[]=>Array.isArray(v)?v.map(record):[];
@@ -25,5 +26,6 @@ export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',se
  const contactRate=batting.latest?.ballsInPlay!==undefined?batting.latest.ballsInPlay/batting.latest.atBats:null;
  const cutoff=settings?.elite_balls_in_play_rate;
  const contact={rate:contactRate,status:contactRate===null||cutoff==null?'Need more data':contactRate>=cutoff?'Elite':'Building'};
- return {batting,speed,traits,policy,settings,sport,recordedSpeedEvidence:speedEvidence,defense,contact,pitching:{status:'Need more data',policy:areaWindowPolicy(settings,'pitching'),reason:'Completed batters faced are not recorded. Pitch counts are not batters faced.'}};
+ const guidance=masteryGuidance({contactStatus:contact.status,contactSourceIds:batting.latest?.sourceIds??[],speedStatus:speed.status,powerStatus:traits.powerStatus,leftPower:traits.leftPower,leftPowerGoal:false});
+ return {batting,speed,traits,policy,settings,sport,recordedSpeedEvidence:speedEvidence,defense,contact,guidance,pitching:{status:'Need more data',policy:areaWindowPolicy(settings,'pitching'),reason:'Completed batters faced are not recorded. Pitch counts are not batters faced.'}};
 }
