@@ -282,6 +282,7 @@ export function AtBatPitchPanel({ gameId, atBatId, inning, sport, onTerminal, on
       </div>
 
       <div className="flex items-center gap-2 text-xs flex-wrap">
+        {tally.terminated&&rows.length>0&&effectiveMode==='all'&&<Button size="sm" variant="outline" onClick={markComplete}>Confirm every pitch is logged</Button>}
         <Badge variant="outline" className="font-mono text-sm">
           {tally.balls}-{tally.strikes}
         </Badge>
