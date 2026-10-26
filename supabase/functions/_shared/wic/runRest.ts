@@ -43,6 +43,6 @@ export function conditioningRestAfterRep(basesSoFar: number, bases: BaseRep): { 
 export function prescribedBases(slug: string, distanceFeet: number | null | undefined, route?: unknown, sport?: "baseball" | "softball"): BaseRep | null {
   if (route != null) return sport ? declaredRouteBases(route, sport, distanceFeet) : null;
   if (slug === "bases_home_2nd" || slug === "bases_1st_3rd") return sport === "softball" ? null : 2;
-  if (slug === "repeat_90ft_bb" && distanceFeet === 90) return 1;
+  if (slug === "repeat_90ft_bb" && distanceFeet === 90) return sport === "softball" ? null : 1;
   return null;
 }
