@@ -14,7 +14,7 @@ vi.mock('@/integrations/supabase/client',()=>({supabase:{from:()=>{
 }}}));
 import ScoutEvaluation from '../ScoutEvaluation';
 describe('human evaluation explicit sport provenance',()=>{
- beforeEach(()=>vi.clearAllMocks());
+ beforeEach(()=>{vi.clearAllMocks();HTMLElement.prototype.hasPointerCapture=()=>false;HTMLElement.prototype.setPointerCapture=()=>{};HTMLElement.prototype.releasePointerCapture=()=>{};HTMLElement.prototype.scrollIntoView=()=>{};});
  it('saves the evaluator-selected softball sport, not account baseball default',async()=>{
   render(<MemoryRouter initialEntries={['/scout-evaluation?mode=prospect']}><ScoutEvaluation /></MemoryRouter>);
   const sport=screen.getAllByRole('combobox')[0];
