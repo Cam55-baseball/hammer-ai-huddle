@@ -8892,6 +8892,22 @@ export type Database = {
           philosophy_pre: string | null
           philosophy_verdict: string | null
           pitch_count: number | null
+          pitcher_earned_runs: number | null
+          pitcher_hits: number | null
+          pitcher_innings: number | null
+          pitcher_outs: number | null
+          pitcher_pfp_chances: number | null
+          pitcher_pfp_errors: number | null
+          pitcher_pickoff_attempts: number | null
+          pitcher_pickoffs: number | null
+          pitcher_risp_runners: number | null
+          pitcher_runners_on: number | null
+          pitcher_runners_stranded: number | null
+          pitcher_runs: number | null
+          pitcher_sb_allowed: number | null
+          pitcher_scoring_pos_innings: number | null
+          pitcher_steal_attempts: number | null
+          pitcher_time_to_plate_sec: number[] | null
           pitching_history_complete: boolean
           probable_pitcher_dossier_id: string | null
           scheduled_time: string | null
@@ -8932,6 +8948,22 @@ export type Database = {
           philosophy_pre?: string | null
           philosophy_verdict?: string | null
           pitch_count?: number | null
+          pitcher_earned_runs?: number | null
+          pitcher_hits?: number | null
+          pitcher_innings?: number | null
+          pitcher_outs?: number | null
+          pitcher_pfp_chances?: number | null
+          pitcher_pfp_errors?: number | null
+          pitcher_pickoff_attempts?: number | null
+          pitcher_pickoffs?: number | null
+          pitcher_risp_runners?: number | null
+          pitcher_runners_on?: number | null
+          pitcher_runners_stranded?: number | null
+          pitcher_runs?: number | null
+          pitcher_sb_allowed?: number | null
+          pitcher_scoring_pos_innings?: number | null
+          pitcher_steal_attempts?: number | null
+          pitcher_time_to_plate_sec?: number[] | null
           pitching_history_complete?: boolean
           probable_pitcher_dossier_id?: string | null
           scheduled_time?: string | null
@@ -8972,6 +9004,22 @@ export type Database = {
           philosophy_pre?: string | null
           philosophy_verdict?: string | null
           pitch_count?: number | null
+          pitcher_earned_runs?: number | null
+          pitcher_hits?: number | null
+          pitcher_innings?: number | null
+          pitcher_outs?: number | null
+          pitcher_pfp_chances?: number | null
+          pitcher_pfp_errors?: number | null
+          pitcher_pickoff_attempts?: number | null
+          pitcher_pickoffs?: number | null
+          pitcher_risp_runners?: number | null
+          pitcher_runners_on?: number | null
+          pitcher_runners_stranded?: number | null
+          pitcher_runs?: number | null
+          pitcher_sb_allowed?: number | null
+          pitcher_scoring_pos_innings?: number | null
+          pitcher_steal_attempts?: number | null
+          pitcher_time_to_plate_sec?: number[] | null
           pitching_history_complete?: boolean
           probable_pitcher_dossier_id?: string | null
           scheduled_time?: string | null
@@ -9191,6 +9239,7 @@ export type Database = {
           count_strikes: number | null
           created_at: string
           entry_source: string | null
+          exit_velo: number | null
           game_id: string
           hard_hit: boolean | null
           id: string
@@ -9223,6 +9272,7 @@ export type Database = {
           count_strikes?: number | null
           created_at?: string
           entry_source?: string | null
+          exit_velo?: number | null
           game_id: string
           hard_hit?: boolean | null
           id?: string
@@ -9255,6 +9305,7 @@ export type Database = {
           count_strikes?: number | null
           created_at?: string
           entry_source?: string | null
+          exit_velo?: number | null
           game_id?: string
           hard_hit?: boolean | null
           id?: string
@@ -11645,6 +11696,7 @@ export type Database = {
           pitching_initial_window: number | null
           pitching_k_min: number | null
           pitching_later_window: number | null
+          pitching_standards: Json
           pitching_transition_at: number | null
           pitching_unit: string
           power_chase_ratio: number
@@ -11687,6 +11739,7 @@ export type Database = {
           pitching_initial_window?: number | null
           pitching_k_min?: number | null
           pitching_later_window?: number | null
+          pitching_standards?: Json
           pitching_transition_at?: number | null
           pitching_unit?: string
           power_chase_ratio?: number
@@ -11729,6 +11782,7 @@ export type Database = {
           pitching_initial_window?: number | null
           pitching_k_min?: number | null
           pitching_later_window?: number | null
+          pitching_standards?: Json
           pitching_transition_at?: number | null
           pitching_unit?: string
           power_chase_ratio?: number
@@ -14073,6 +14127,48 @@ export type Database = {
           id?: string
           player_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      practice_swing_logs: {
+        Row: {
+          created_at: string
+          id: string
+          pitch_mix: string | null
+          pitch_mph: number | null
+          practice_date: string
+          practice_type: string
+          release_ft: number | null
+          sport: string
+          swings: number
+          user_id: string
+          whiffs: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pitch_mix?: string | null
+          pitch_mph?: number | null
+          practice_date?: string
+          practice_type: string
+          release_ft?: number | null
+          sport: string
+          swings: number
+          user_id: string
+          whiffs: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pitch_mix?: string | null
+          pitch_mph?: number | null
+          practice_date?: string
+          practice_type?: string
+          release_ft?: number | null
+          sport?: string
+          swings?: number
+          user_id?: string
+          whiffs?: number
         }
         Relationships: []
       }
