@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {MasterySettings} from '@/components/intelligence/MasterySettings';
+import {PitchingStandardsSettings} from '@/components/intelligence/PitchingStandardsSettings';
+import {NATURAL_FIRST_PRINCIPLE} from '../../../supabase/functions/_shared/wic/goals/naturalFirst';
 import { OWNER_QUESTIONS, questionSituation, currentQuestionAnswer, type OwnerQuestion } from '@/lib/intelligence/ownerQuestions';
 import {
   EVIDENCE_LABEL, badgeFor, declaredPrincipleVersion, SMALL_GROUP_NOTE,
@@ -107,6 +109,8 @@ export default function CoachingConsole() {
       <h1 className="text-2xl font-bold">Coaching Console</h1>
       <p className="text-sm text-muted-foreground">Teach Hammers what you believe. Edits make a new version; old versions are kept.</p>
       <MasterySettings />
+      <PitchingStandardsSettings />
+      <section aria-label="Development philosophy" className="space-y-1 py-2"><h2 className="text-lg font-semibold">Secure what's natural first</h2><p className="text-sm text-muted-foreground">{NATURAL_FIRST_PRINCIPLE}</p></section>
 
       <section className="space-y-3 border-b border-border pb-4" aria-label="Questions for the owner">
         <h2 className="text-lg font-semibold">Questions for the owner</h2>

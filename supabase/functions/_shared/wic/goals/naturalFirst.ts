@@ -36,3 +36,4 @@ export function nutritionFocus(primary:Pillar,age:number|null){
  return lines.filter(l=>!(minor&&restrict.test(l)));
 }
 export function isSafeForMinor(text:string){return !restrict.test(text);}
+export const NATURAL_FIRST_PRINCIPLE="Owner principle: if a pillar you didn't choose is close to elite while your goal is far, we secure that pillar first. Your goal always keeps at least 30% of the goal work with weekly progress shown. Once the close pillar is elite, your goal leads and the elite pillar gets a maintenance dose. If nothing is close, your goal leads. Players under 18 never get weight-loss or calorie-cutting advice.";
