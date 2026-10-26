@@ -87,14 +87,16 @@ function sortByWarmupStage(items, slugOf, roleOf) {
 // src/lib/hammer/prescription/masteryFocus.ts
 var masteryModality = (pillar) => pillar === "contact" || pillar === "power" ? "hitting" : pillar === "arm" ? "throwing" : pillar === "defense" ? "defense" : pillar === "speed" ? "speed" : null;
 function applyMasteryFocus(blocks, focus) {
-  if (!focus || !focus.sourceIds.length || !focus.observedFocus) return blocks;
+  if (!focus) return blocks;
+  const withSteal = focus.leftPowerStealEmphasis ? blocks.map((b) => b.modality === "baserunning" && b.status === "ready" ? { ...b, because: [...b.because ?? [], "Left-handed power guidance: focus on steal jumps, reads, Royal timing and baserunning inside this existing work. Source: owner Bunting Mastery. No added reps or days."] } : b) : blocks;
+  if (!focus.sourceIds.length || !focus.observedFocus) return withSteal;
   const target = masteryModality(focus.observedFocus);
   if (!target) return blocks;
-  const slots = blocks.map((b, i) => ["hitting", "defense", "throwing", "speed", "baserunning"].includes(b.modality) && b.status === "ready" ? i : -1).filter((i) => i >= 0);
-  const skill = slots.map((i) => blocks[i]);
-  if (!skill.some((b) => b.modality === target)) return blocks;
+  const slots = withSteal.map((b, i) => ["hitting", "defense", "throwing", "speed", "baserunning"].includes(b.modality) && b.status === "ready" ? i : -1).filter((i) => i >= 0);
+  const skill = slots.map((i) => withSteal[i]);
+  if (!skill.some((b) => b.modality === target)) return withSteal;
   skill.sort((a, b) => Number(b.modality === target) - Number(a.modality === target));
-  const out = [...blocks];
+  const out = [...withSteal];
   slots.forEach((i, n) => {
     const b = skill[n];
     out[i] = b.modality === target ? { ...b, because: [...b.because ?? [], `${focus.reason} Source: Coaching Console standards and ${focus.sourceIds.length} canonical evidence records.`] } : b;
@@ -7670,8 +7672,7 @@ function battingIdentity(events, p = OWNER_WINDOW_POLICY) {
     const previous = w.start > 1 ? abs[w.start - 2] : null;
     const firstIndex = previous ? ordered.indexOf(previous) + 1 : 0;
     const lastRow = rows2[rows2.length - 1];
-    const nextAB = abs[w.end];
-    const pas = ordered.slice(firstIndex, nextAB ? ordered.indexOf(nextAB) : ordered.length);
+    const pas = ordered.slice(firstIndex, lastRow ? ordered.indexOf(lastRow) + 1 : firstIndex);
     return {
       start: w.start,
       end: w.end,
@@ -7730,7 +7731,7 @@ function fieldingIdentity(events, p = OWNER_WINDOW_POLICY) {
 }
 function speedIdentity(evidence, eliteGrade = 65) {
   const valid = evidence.filter((e) => e.kind === "measured" && e.id && e.source && Number.isFinite(Date.parse(e.date)) && Number.isFinite(e.value) && e.value > 0 && e.minimum !== null && e.minimum > 0 && e.sample >= e.minimum);
-  const usable = valid.filter((e) => typeof e.grade === "number" && Number.isFinite(e.grade) && e.grade >= 20 && e.grade <= 80 && e.grade % 5 === 0);
+  const usable = valid.filter((e) => typeof e.grade === "number" && Number.isFinite(e.grade) && e.grade >= 0 && e.grade <= 80 && (e.grade < 20 || e.grade % 5 === 0));
   const ambiguous = /* @__PURE__ */ new Set();
   const unique = /* @__PURE__ */ new Map();
   for (const e of usable) {
