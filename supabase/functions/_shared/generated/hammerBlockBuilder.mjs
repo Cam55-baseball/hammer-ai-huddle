@@ -84,8 +84,33 @@ function sortByWarmupStage(items, slugOf, roleOf) {
   return keyed.map((k) => k.it);
 }
 
-// supabase/functions/_shared/wic/buntingProgram.ts
+// supabase/functions/_shared/wic/buntingMastery.ts
 var BUNT_TYPES = ["squeeze", "sac_3b", "sac_1b", "drag", "push", "hit"];
+var BUNT_WORDING = {
+  R: {
+    squeeze: "Squeeze bunt (softly on 1B side of pitcher angled so pitcher grabs it instead of 1B)",
+    sac_3b: "Sac bunt toward 3B (man on second)",
+    sac_1b: "Sac bunt toward 1B (man on 1B)",
+    drag: "Drag bunt (toward 3B)",
+    push: "Push bunt (LHP only: beyond pitcher to the position of second baseman)",
+    hit: "Bunt for a hit (Softly down 1B line)"
+  },
+  L: {
+    squeeze: "Squeeze bunt (softly on 1B side of pitcher angled so pitcher grabs it instead of 1B)",
+    sac_3b: "Sac bunt toward 3B (man on second)",
+    sac_1b: "Sac bunt toward 1B (man on 1B)",
+    drag: "Drag bunt (toward 3B)",
+    push: "Push bunt (LHP only/ not for Switch hitters: Beyond pitcher to the position of second baseman)",
+    hit: "Bunt for a hit (Softly down 1B line)"
+  }
+};
+var DRAG_BUNT_GUIDANCE = "The drag bunt is a bunt for a hit toward the 3B line, as close to the line as possible. The acceptable miss is a foul ball. Use it early in the count, never with two strikes: a foul bunt with two strikes is a strikeout.";
+var LEFT_POWER_GUIDANCE = "Bunting for hits against the shift and base-stealing mastery: steal jumps, reads, Royal timing on jumps and baserunning sessions. Your existing plan and safety rules decide the work; this guidance adds no reps or days.";
+function buntGuidance(side, type) {
+  return type === "drag" ? DRAG_BUNT_GUIDANCE : BUNT_WORDING[side][type];
+}
+
+// supabase/functions/_shared/wic/buntingProgram.ts
 function validBuntOutcome(outcome) {
   return ["R", "L"].includes(outcome.side) && BUNT_TYPES.includes(outcome.type) && Number.isInteger(outcome.attempts) && outcome.attempts > 0 && Number.isInteger(outcome.successes) && outcome.successes >= 0 && outcome.successes <= outcome.attempts;
 }
@@ -94,7 +119,9 @@ function buntingProgram(facts) {
   const games = (facts.battingGames ?? []).filter((game) => Number.isInteger(game.hits) && Number.isInteger(game.atBats) && game.atBats > 0 && game.hits >= 0 && game.hits <= game.atBats);
   const atBats = games.reduce((sum, game) => sum + game.atBats, 0);
   const hits = games.reduce((sum, game) => sum + game.hits, 0);
-  const under300 = games.length >= 2 && games.every((game) => game.hits / game.atBats < 0.3);
+  const window2 = facts.battingWindow;
+  const validWindow = window2 != null && Number.isInteger(window2.start) && window2.start >= 1 && Number.isInteger(window2.end) && window2.end >= window2.start && Number.isInteger(window2.atBats) && window2.atBats === window2.end - window2.start + 1 && Number.isInteger(window2.hits) && window2.hits >= 0 && window2.hits <= window2.atBats;
+  const under300 = facts.battingWindow !== void 0 ? validWindow && window2.hits / window2.atBats < 0.3 : games.length >= 2 && games.every((game) => game.hits / game.atBats < 0.3);
   const sides = facts.bats === "S" ? ["R", "L"] : facts.bats ? [facts.bats] : [];
   const wantedSessions = facts.speedy === true || facts.lacksPower === true ? 3 : 2;
   const weekdays = [...new Set(facts.legalWeekdays)].filter((day) => Number.isInteger(day) && day >= 0 && day <= 6).sort((a, b) => a - b).slice(0, 6);
@@ -120,7 +147,7 @@ function buntingProgram(facts) {
     wantedSessions,
     constrained: scheduled.length < wantedSessions,
     canTrainToday: included && sides.length > 0 && !facts.restDay && !facts.gameDay,
-    battingSample: { games: games.length, atBats, hits, average: atBats ? hits / atBats : null, under300 },
+    battingSample: { games: games.length, atBats: validWindow ? window2.atBats : atBats, hits: validWindow ? window2.hits : hits, average: validWindow ? window2.hits / window2.atBats : atBats ? hits / atBats : null, under300, window: validWindow ? window2 : null },
     dose,
     typesFor
   };
@@ -173,14 +200,15 @@ function ownsAllGear(row, owned, universal = []) {
 }
 
 // supabase/functions/_shared/planSwap/commonGear.ts
-var COMMON_SWAP_GEAR = ["barbell", "dumbbell", "bands", "pitching_machine", "net", "tee", "open_field", "hill", "sled", "foam_roller", "baseballs", "softballs"];
+var COMMON_SWAP_GEAR = ["barbell", "dumbbell", "bands", "pitching_machine", "net", "tee", "open_field", "hill", "sled", "foam_roller", "baseballs", "softballs", "gamer_bat"];
 var SAME_GEAR = {
   bands: ["band", "resistance_band", "mini_band", "light_band", "sprint_band"],
   dumbbell: ["dumbbells", "db"],
   open_field: ["field", "open_space", "space"],
   baseballs: ["baseball", "ball"],
   softballs: ["softball", "ball"],
-  pitching_machine: ["machine"]
+  pitching_machine: ["machine"],
+  gamer_bat: ["bat", "game_bat"]
 };
 function swapGearList(known) {
   return [.../* @__PURE__ */ new Set([...known, ...COMMON_SWAP_GEAR])];
@@ -230,13 +258,13 @@ function applyBuntingPlan(blocks, facts, options) {
       stage: "drills",
       dosage: `${attempts} attempts`,
       cue: pick.cue,
-      setup: "Use your saved bat, ball and safe space. Record attempts and successful bunts for this side and type only.",
+      setup: `Use your saved bat, ball and safe space. Record attempts and successful bunts for this side and type only. ${buntGuidance(side, identity.type)}${side === "L" && (facts.leftPower === true || facts.powerGoal === true) ? ` ${LEFT_POWER_GUIDANCE}` : ""}`,
       stopIf: "Pain, dizziness, fatigue or unsafe space \u2014 stop.",
       bunt: { side, type: identity.type, attempts, sourceAttempts: dose.attempts, sourceSuccesses: dose.successes }
     };
     const drills = [...block.drills.slice(0, slot), drill, ...budget > attempts ? [{ ...original, dosage: `${budget - attempts} swings` }] : [], ...block.drills.slice(slot + 1)];
     const sample = program.battingSample;
-    const because = `${attempts} ${side === "R" ? "right" : "left"}-handed bunt attempts replace ${attempts} swings from today's skill work.${sample.under300 ? ` Entered batting sample: ${sample.hits} hits in ${sample.atBats} at-bats across ${sample.games} games; each entered game was below .300.` : ""}${dose.attempts ? ` This bunt: ${dose.successes} successful out of ${dose.attempts} entered attempts.` : ""}`;
+    const because = `${attempts} ${side === "R" ? "right" : "left"}-handed bunt attempts replace ${attempts} swings from today's skill work.${sample.under300 ? sample.window ? ` Completed batting window ${sample.window.start}\u2013${sample.window.end}: ${sample.hits} hits in ${sample.atBats} at-bats, below .300; source: entered game at-bats.` : ` Entered batting sample: ${sample.hits} hits in ${sample.atBats} at-bats across ${sample.games} games; each entered game was below .300.` : ""}${dose.attempts ? ` This bunt: ${dose.successes} successful out of ${dose.attempts} entered attempts.` : ""}`;
     return { ...block, drills, steps: drills.map((d2) => `${d2.name} \u2014 ${d2.dosage}`), because: [...block.because ?? [], because], gamePlanTemplate: block.gamePlanTemplate ? { ...block.gamePlanTemplate, checklist: drills.map((d2) => `${d2.name} \u2014 ${d2.dosage}`) } : null };
   });
 }
@@ -7394,6 +7422,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     bats: identityOverride?.isSwitchHitter ? "S" : ["R", "L", "S"].includes(String(ctx.get("bats_hand")?.value)) ? ctx.get("bats_hand")?.value : null,
     ...bunting.traits,
     battingGames: bunting.evidence.battingGames,
+    battingWindow: bunting.evidence.battingWindow,
     outcomes: bunting.evidence.outcomes,
     legalWeekdays: weeklyRoadmap.filter((d2) => !d2.restDay && d2.modalities.some((m) => m.key === "hitting" && m.intensity !== "activation")).map((d2) => d2.dow),
     restDay: fullRestDay,
