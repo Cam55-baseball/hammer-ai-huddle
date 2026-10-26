@@ -2,6 +2,18 @@
 
 Updated October 26, 2026, academy continuation.
 
+## October 26 07:04 continuation — current verdict
+
+- Connected judged identity ranks to the **existing** weekly goal opportunity before microcycle resolution. No second boost: baseline, subscriptions, phase, gear, rest and availability still win. Actual-builder tests verify priority changes and unchanged lifting/rest-day pattern; two-sport eight-week tests verify the allowed existing opportunity.
+- New athlete-JWT daily builds retain sourced identity focus in their saved explanation; exercise details display it as the day's focus, not extra exercise work. Saved-day/adjustment paths are untouched. Service-job calls deliberately do not impersonate athletes: **job identity hydration and server movement-selection steering remain incomplete**; current server change retains guidance only and never changes lifting or goal doses.
+- Corrected current-day arm-ledger rest evaluation: a 50-pitch current outing prevents elite, a one-pitch no-rest outing does not, expired outings do not. Dated prior-day pain cannot count as today's assessment; absent assessment remains unknown. No new health source or sport attribution was invented.
+- New/affected checks: six files / **76 tests PASS** (actual builder, weekly goal eight-week simulation, saved-day immutability, current arm flags, input integrity and rendered blocks); earlier separate six-file **138-test PASS** included retained bunting/context simulations. Prior full-suite **553 files / 4,638 tests** remains the previous run's proof, not a fresh full-suite claim.
+- Inspected a new 390×844 arm evidence screenshot (`/tmp/browser/identity-0704/arm-evidence.png`): actual owner evidence remains Need more data, zero page errors. Deployed generator refused the attempted invalid input with 409, no positive generation claimed. Authorized wk-generate-daily/hammer-chat/hammer-recall/plan-swap deployments completed; no migration, publish, cron or iOS changes, no TEST training additions or cleanup targets.
+
+**Ready to publish: NO.** Remaining implementation: service-job/canonical server selection focus and proven sport attribution for account-only human/throw/catch evidence. Remaining affected-role proof: populated player/coach identity → unsaved focus → saved reload, positive chat and matched-video playback, plus the separately required Monday coach Use-instead flow. Specific TEST-user session approval remains unavailable; owner-empty screens and safe refusals do not replace those proofs. Pitching thresholds stay intentionally unset until supplied. Speed/power relative progress is not an attainability prediction.
+
+Earlier sections below are dated history, not the current verdict.
+
 ## October 26 06:36 owner standards — current verdict
 
 | Requirement | Result |
@@ -141,6 +153,8 @@ These five owner checks are not blockers for the readiness verdict:
 
 ### Player
 
+Judged identity now chooses the existing weekly priority opportunity, only when your phase, equipment, available days and access permit it. It cannot add a second boost or change a saved day. New self-built plans can retain their sourced day-focus explanation in exercise details; that explanation does not add reps or authorize an unavailable exercise. Current-day arm throws that require rest prevent an elite-arm label.
+
 Your academy now separates K / plate appearances, misses / swings and in-zone contact / in-zone swings. Missing pitch totals or locations say Need more data while K can still be judged. Record every pitch and confirm the complete pitch total for each finished plate appearance. Power counts only HR in the last complete AB window, with the HR/K chase. Speed uses existing speed-test/home-to-first grades; other timings stay recorded-only. Arm requires position measurement, human accuracy and no active dated pain/ledger flag; defense uses a human fielding grade. Pitching game logs accept batters faced and numbered final batter results; confirm a complete outing only when every batter is logged. Unknown pitching cutoffs stay Need more data. Judged focus can prioritize existing future safe work, never rewrite today's saved plan.
 
 When bunting is logged in practice or a game, enter the actual batting side, exact bunt type and Yes/No only if success was observed; Not entered stays unknown. The twelve bunt drills are active for future legal unsaved hitting work; saved days do not change. Drag bunts target the 3B line early in the count, never with two strikes; game logging flags two-strike attempts. Your mastery panel shows the last complete batting window, home runs, balls in play, scored defensive chances and source-labelled speed evidence; missing thresholds/evidence say Need more data. Pitch counts are never shown as batters faced. Exiting focus after a successful set preserves its required rest; Start resumes that rest rather than saving the set again.
@@ -150,6 +164,8 @@ Recorded speed evidence expands separately from qualified grades. Royal timer va
 Coach workouts offer Use instead, Add alongside, Save for later and Use today where applicable. Use instead requires real saved work of the same category and never spills into another category. Replaced work is marked “Replaced by coach workout”, not missed. Read every warning and its exact date and measured numbers; Okay acknowledges, Cancel action saves nothing. Missing-fact warnings explicitly say what was not checked, without making up a score or cap. Accepted warnings appear in the card’s “Coach override: …” Because line. You can still decline the workout.
 
 ### Coach
+
+Identity priority uses the same guarded weekly opportunity as player goals; no invented extra day or dose. A dated missing arm check-in stays Need more data, and current-day ledger rest is included. Background-job focus and full affected-player saved readback are not yet certified.
 
 Coaching Console has editable per-level contact ratios, HR power/lefty/lacking-power ratios, low-average and elite-grade standards, the HR/K chase and optional pitching K/BF, BB/BF and HR/BF cutoffs. All ratios use 0–1 inputs. The player/coach mastery panel names evidence, sample/window, date and owner standards. Human fielding/arm grades must match the position; self-reported grades never certify them. Health facts remain behind existing health consent. Chat reads the same caller-scoped identity judge, not an inferred grade from partial recall.
 
