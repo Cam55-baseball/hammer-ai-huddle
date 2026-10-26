@@ -18,7 +18,7 @@ describe('human evaluation explicit sport provenance',()=>{
  it('saves the evaluator-selected softball sport, not account baseball default',async()=>{
   render(<MemoryRouter initialEntries={['/scout-evaluation?mode=prospect']}><ScoutEvaluation /></MemoryRouter>);
   const sport=screen.getAllByRole('combobox')[0];
-  fireEvent.pointerDown(sport,{button:0,ctrlKey:false});
+  fireEvent.keyDown(sport,{key:'ArrowDown'});
   fireEvent.click(await screen.findByRole('option',{name:'Softball'}));
   fireEvent.change(screen.getByLabelText('Player name'),{target:{value:'TEST provenance fixture'}});
   fireEvent.click(screen.getByRole('button',{name:/File scouting report/i}));
