@@ -22,6 +22,7 @@ export type { CatchingRepRow };
 
 export interface CatchingRepInput {
   athleteId: string;
+  sport: 'baseball' | 'softball';
   metric: CatchingMetric;
   value: number | null;
 }
@@ -89,12 +90,14 @@ export function useRecordCatchingRep() {
     async (input: CatchingRepInput) => {
       if (!user) throw new Error('Not signed in.');
       if (!input.athleteId) throw new Error('Select the athlete this rep belongs to.');
+      if (!['baseball', 'softball'].includes(input.sport)) throw new Error('Select the sport for this rep.');
       setSaving(true);
       try {
         const { data, error } = await (supabase as any)
           .from('catching_reps')
           .insert({
             user_id: input.athleteId,
+            sport: input.sport,
             metric: input.metric,
             value: input.value,
             unit: defaultUnitFor(input.metric),

@@ -11,6 +11,8 @@ import {nextThrowDate} from '../../../supabase/functions/_shared/wic/phases/next
 type RecordValue=Record<string,unknown>;
 const record=(v:unknown):RecordValue=>v&&typeof v==='object'&&!Array.isArray(v)?v as RecordValue:{};
 const list=(v:unknown):RecordValue[]=>Array.isArray(v)?v.map(record):[];
+// Current account sport cannot establish the sport of historical evidence.
+const sportRows=(v:unknown,sport:'baseball'|'softball')=>list(v).filter(row=>row.sport===sport);
 export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',settings:(AreaWindowSettings&{elite_home_runs:number|null;lacking_power_home_runs:number|null;speed_minimum_samples:number|null;elite_balls_in_play_rate?:number|null}&IdentitySettings)|null){
  const source=record(raw);const policy=areaWindowPolicy(settings,'batting');
  const events:BattingEvent[]=list(source.atBats).map((e,i)=>({id:String(e.id??''),date:String(e.date??''),order:i,result:typeof e.result==='string'?e.result:null,source:typeof e.source==='string'?e.source:'',pitchCount:typeof e.pitchCount==='number'?e.pitchCount:null}));
@@ -43,13 +45,13 @@ export function projectMasterySources(raw:unknown,sport:'baseball'|'softball',se
  const contact=contactIdentity(batting.latest,list(source.contactPitches).map(p=>({id:String(p.id??''),atBatId:typeof p.atBatId==='string'?p.atBatId:null,result:typeof p.result==='string'?p.result:null,strikes:typeof p.strikes==='number'?p.strikes:null,zone:typeof p.zone==='number'?p.zone:null,outZone:typeof p.outZone==='string'?p.outZone:null})),level,standards);
  const position=String(context.position??'').toUpperCase();
  const normalizedPosition=['P','PITCHER'].includes(position)?'pitcher':['C','CATCHER'].includes(position)?'catcher':['LF','CF','RF','OF','OUTFIELD'].includes(position)?'outfield':['1B','2B','3B','SS','IF','INFIELD'].includes(position)?'infield':null;
- const human=list(source.humanGrades).filter(g=>g.evaluator&&['coach_evaluated','scout_evaluated'].includes(String(g.source))&&(String(g.position??'').toUpperCase()===position));
+ const human=sportRows(source.humanGrades,sport).filter(g=>g.evaluator&&['coach_evaluated','scout_evaluated'].includes(String(g.source))&&(String(g.position??'').toUpperCase()===position));
  const judgeGrade=(grade:number|null):MasteryStatus=>grade===null?'Need more data':grade>=eliteGrade?'Elite':'Building';
  const fieldGrade=human.find(g=>validHumanGrade(g.defense));
  const defenseGrade=fieldGrade?Number(fieldGrade.defense):null;
  const defensePillar={status:judgeGrade(defenseGrade),grade:defenseGrade,source:fieldGrade?`${fieldGrade.source} · ${fieldGrade.date} · ${position}`:null,sourceIds:fieldGrade?[String(fieldGrade.id)]:[],threshold:eliteGrade};
- const velocity=list(source.throwing).filter(r=>r.position===normalizedPosition&&r.metric==='throw_velo_mph'&&r.unit==='mph').map(r=>({id:r.id,source:r.source,date:r.date,grade:computeThrowVeloGrade(String(r.metric),String(r.position),typeof r.value==='number'?r.value:null,scales)})).find(r=>r.grade&&!r.grade.missing);
- const pop=normalizedPosition==='catcher'?list(source.catching).filter(r=>['pop_time','catcher_pop_time','pop_time_sec'].includes(String(r.metric))&&['s','seconds','sec'].includes(String(r.unit))).map(r=>({id:r.id,source:r.source,date:r.date,grade:computePopTimeGrade(typeof r.value==='number'?r.value:null,scales,{sport})})).find(r=>!r.grade.missing):null;
+ const velocity=sportRows(source.throwing,sport).filter(r=>r.position===normalizedPosition&&r.metric==='throw_velo_mph'&&r.unit==='mph').map(r=>({id:r.id,source:r.source,date:r.date,grade:computeThrowVeloGrade(String(r.metric),String(r.position),typeof r.value==='number'?r.value:null,scales)})).find(r=>r.grade&&!r.grade.missing);
+ const pop=normalizedPosition==='catcher'?sportRows(source.catching,sport).filter(r=>['pop_time','catcher_pop_time','pop_time_sec'].includes(String(r.metric))&&['s','seconds','sec'].includes(String(r.unit))).map(r=>({id:r.id,source:r.source,date:r.date,grade:computePopTimeGrade(typeof r.value==='number'?r.value:null,scales,{sport})})).find(r=>!r.grade.missing):null;
  const measurement=velocity??pop;const measurementGrade=measurement?.grade&&!measurement.grade.missing?measurement.grade.grade:null;
  const accuracy=human.find(g=>validHumanGrade(g.arm));const accuracyGrade=accuracy?Number(accuracy.arm):null;
  const suppliedDate=typeof source.date==='string'?source.date:null;

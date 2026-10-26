@@ -911,6 +911,13 @@
       "when": 1792997239303,
       "tag": "0129_mastery_at_bat_pitch_total",
       "breakpoints": true
+    },
+    {
+      "idx": 130,
+      "version": "7",
+      "when": 1792999218635,
+      "tag": "0130_mastery_explicit_evidence_sport",
+      "breakpoints": true
     }
   ]
 }

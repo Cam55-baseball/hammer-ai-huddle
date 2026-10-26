@@ -9640,6 +9640,7 @@ function nextThrowDate(age, level, rows2, today) {
 // src/lib/intelligence/masteryProjection.ts
 var record = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
 var list = (v) => Array.isArray(v) ? v.map(record) : [];
+var sportRows = (v, sport) => list(v).filter((row) => row.sport === sport);
 function projectMasterySources(raw, sport, settings) {
   const source = record(raw);
   const policy = areaWindowPolicy(settings, "batting");
@@ -9710,13 +9711,13 @@ function projectMasterySources(raw, sport, settings) {
   const contact = contactIdentity(batting.latest, list(source.contactPitches).map((p) => ({ id: String(p.id ?? ""), atBatId: typeof p.atBatId === "string" ? p.atBatId : null, result: typeof p.result === "string" ? p.result : null, strikes: typeof p.strikes === "number" ? p.strikes : null, zone: typeof p.zone === "number" ? p.zone : null, outZone: typeof p.outZone === "string" ? p.outZone : null })), level, standards);
   const position = String(context.position ?? "").toUpperCase();
   const normalizedPosition = ["P", "PITCHER"].includes(position) ? "pitcher" : ["C", "CATCHER"].includes(position) ? "catcher" : ["LF", "CF", "RF", "OF", "OUTFIELD"].includes(position) ? "outfield" : ["1B", "2B", "3B", "SS", "IF", "INFIELD"].includes(position) ? "infield" : null;
-  const human = list(source.humanGrades).filter((g) => g.evaluator && ["coach_evaluated", "scout_evaluated"].includes(String(g.source)) && String(g.position ?? "").toUpperCase() === position);
+  const human = sportRows(source.humanGrades, sport).filter((g) => g.evaluator && ["coach_evaluated", "scout_evaluated"].includes(String(g.source)) && String(g.position ?? "").toUpperCase() === position);
   const judgeGrade = (grade) => grade === null ? "Need more data" : grade >= eliteGrade ? "Elite" : "Building";
   const fieldGrade = human.find((g) => validHumanGrade(g.defense));
   const defenseGrade = fieldGrade ? Number(fieldGrade.defense) : null;
   const defensePillar = { status: judgeGrade(defenseGrade), grade: defenseGrade, source: fieldGrade ? `${fieldGrade.source} \xB7 ${fieldGrade.date} \xB7 ${position}` : null, sourceIds: fieldGrade ? [String(fieldGrade.id)] : [], threshold: eliteGrade };
-  const velocity = list(source.throwing).filter((r) => r.position === normalizedPosition && r.metric === "throw_velo_mph" && r.unit === "mph").map((r) => ({ id: r.id, source: r.source, date: r.date, grade: computeThrowVeloGrade(String(r.metric), String(r.position), typeof r.value === "number" ? r.value : null, scales) })).find((r) => r.grade && !r.grade.missing);
-  const pop = normalizedPosition === "catcher" ? list(source.catching).filter((r) => ["pop_time", "catcher_pop_time", "pop_time_sec"].includes(String(r.metric)) && ["s", "seconds", "sec"].includes(String(r.unit))).map((r) => ({ id: r.id, source: r.source, date: r.date, grade: computePopTimeGrade(typeof r.value === "number" ? r.value : null, scales, { sport }) })).find((r) => !r.grade.missing) : null;
+  const velocity = sportRows(source.throwing, sport).filter((r) => r.position === normalizedPosition && r.metric === "throw_velo_mph" && r.unit === "mph").map((r) => ({ id: r.id, source: r.source, date: r.date, grade: computeThrowVeloGrade(String(r.metric), String(r.position), typeof r.value === "number" ? r.value : null, scales) })).find((r) => r.grade && !r.grade.missing);
+  const pop = normalizedPosition === "catcher" ? sportRows(source.catching, sport).filter((r) => ["pop_time", "catcher_pop_time", "pop_time_sec"].includes(String(r.metric)) && ["s", "seconds", "sec"].includes(String(r.unit))).map((r) => ({ id: r.id, source: r.source, date: r.date, grade: computePopTimeGrade(typeof r.value === "number" ? r.value : null, scales, { sport }) })).find((r) => !r.grade.missing) : null;
   const measurement = velocity ?? pop;
   const measurementGrade = measurement?.grade && !measurement.grade.missing ? measurement.grade.grade : null;
   const accuracy = human.find((g) => validHumanGrade(g.arm));

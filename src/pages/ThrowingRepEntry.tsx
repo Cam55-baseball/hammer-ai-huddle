@@ -50,6 +50,7 @@ export default function ThrowingRepEntry() {
     useState<ThrowingPositionContext>('infield');
   const [metric, setMetric] = useState<ThrowingMetric>('throw_velo_mph');
   const [value, setValue] = useState('');
+  const [sport, setSport] = useState<'baseball' | 'softball' | ''>('');
 
   const { rows, loading: rowsLoading, reload } = useAthleteThrowingReps(athleteId);
   const { record, saving } = useRecordThrowingRep();
@@ -58,9 +59,11 @@ export default function ThrowingRepEntry() {
   const parsed = value.trim() === '' ? null : Number(value);
 
   const handleSave = async () => {
+    if (!sport) return;
     try {
       await record({
         athleteId,
+        sport,
         positionContext,
         metric,
         value: parsed != null && Number.isFinite(parsed) ? parsed : null,
@@ -145,6 +148,13 @@ export default function ThrowingRepEntry() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label>Sport</Label>
+                  <Select value={sport} onValueChange={(v) => { if (v === 'baseball' || v === 'softball') setSport(v); }}>
+                    <SelectTrigger aria-label="Rep sport"><SelectValue placeholder="Select sport" /></SelectTrigger>
+                    <SelectContent><SelectItem value="baseball">Baseball</SelectItem><SelectItem value="softball">Softball</SelectItem></SelectContent>
+                  </Select>
+                </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label>Position context</Label>
@@ -193,7 +203,7 @@ export default function ThrowingRepEntry() {
                   </div>
                 </div>
 
-                <Button onClick={handleSave} disabled={saving}>
+                <Button onClick={handleSave} disabled={saving || !sport}>
                   {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Log rep
                 </Button>

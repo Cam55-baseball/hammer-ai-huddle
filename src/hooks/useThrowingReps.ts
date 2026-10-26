@@ -15,6 +15,7 @@ export type { ThrowingRepRow };
 
 export interface ThrowingRepInput {
   athleteId: string;
+  sport: 'baseball' | 'softball';
   positionContext: ThrowingPositionContext;
   metric: ThrowingMetric;
   value: number | null;
@@ -28,12 +29,14 @@ export function useRecordThrowingRep() {
     async (input: ThrowingRepInput) => {
       if (!user) throw new Error('Not signed in.');
       if (!input.athleteId) throw new Error('Select the athlete this rep belongs to.');
+      if (!['baseball', 'softball'].includes(input.sport)) throw new Error('Select the sport for this rep.');
       setSaving(true);
       try {
         const { data, error } = await (supabase as any)
           .from('throwing_reps')
           .insert({
             user_id: input.athleteId,
+            sport: input.sport,
             position_context: input.positionContext,
             metric: input.metric,
             value: input.value,

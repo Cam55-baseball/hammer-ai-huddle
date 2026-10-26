@@ -283,6 +283,7 @@ export default function ScoutEvaluation() {
 
       const row: Record<string, unknown> = {
         user_id: prospectMode ? null : athleteId,
+        sport,
         prospect_name: prospectMode ? prospectName.trim() : null,
         prospect_team: prospectMode ? prospectTeam.trim() || null : null,
         prospect_grad_year:

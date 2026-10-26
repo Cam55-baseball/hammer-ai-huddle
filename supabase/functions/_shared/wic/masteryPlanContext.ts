@@ -1,6 +1,7 @@
 /** Identity contributes sourced guidance only; it cannot author movement doses or bypass day locks. */
 export interface MasteryGuidance {observedFocus:string|null;sourceIds:readonly string[];reason:string;leftPowerStealEmphasis:boolean}
-export function masteryPlanGuidance(value:unknown):MasteryGuidance|undefined {
+export function masteryPlanGuidance(value:unknown,existingDay=false):MasteryGuidance|undefined {
+ if(existingDay)return undefined;
  if(!value||typeof value!=='object')return undefined;
  const row=value as Record<string,unknown>;const g=row.guidance;
  if(!g||typeof g!=='object')return undefined;

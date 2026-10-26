@@ -45,6 +45,7 @@ export default function CatchingRepEntry() {
   const [athleteInput, setAthleteInput] = useState(athleteId);
   const [metric, setMetric] = useState<CatchingMetric>('pop_time_sec');
   const [value, setValue] = useState('');
+  const [sport, setSport] = useState<'baseball' | 'softball' | ''>('');
 
   const { rows, loading: rowsLoading, reload } = useAthleteCatchingReps(athleteId);
   const { record, saving, scaleRows } = useRecordCatchingRep();
@@ -52,9 +53,11 @@ export default function CatchingRepEntry() {
   const parsed = value.trim() === '' ? null : Number(value);
 
   const handleSave = async () => {
+    if (!sport) return;
     try {
       await record({
         athleteId,
+        sport,
         metric,
         value: parsed != null && Number.isFinite(parsed) ? parsed : null,
       });
@@ -138,6 +141,13 @@ export default function CatchingRepEntry() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label>Sport</Label>
+                  <Select value={sport} onValueChange={(v) => { if (v === 'baseball' || v === 'softball') setSport(v); }}>
+                    <SelectTrigger aria-label="Rep sport"><SelectValue placeholder="Select sport" /></SelectTrigger>
+                    <SelectContent><SelectItem value="baseball">Baseball</SelectItem><SelectItem value="softball">Softball</SelectItem></SelectContent>
+                  </Select>
+                </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label>Metric</Label>
@@ -167,7 +177,7 @@ export default function CatchingRepEntry() {
                   </div>
                 </div>
 
-                <Button onClick={handleSave} disabled={saving}>
+                <Button onClick={handleSave} disabled={saving || !sport}>
                   {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Log rep
                 </Button>
