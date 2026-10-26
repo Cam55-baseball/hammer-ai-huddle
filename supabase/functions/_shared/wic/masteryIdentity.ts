@@ -22,11 +22,11 @@ export function opportunityWindows(count:number,p:WindowPolicy=OWNER_WINDOW_POLI
   windows.push({start,end,size,sample:Math.min(size,count-start+1),complete:end<=count});start=end+1;}
  return windows;
 }
-export interface BattingEvent {id:string;result:string|null;date:string;order:number;source:string}
+export interface BattingEvent {id:string;result:string|null;date:string;order:number;source:string;pitchCount?:number|null}
 const HITS=new Set(['1B','2B','3B','HR','single','double','triple','home_run']);
 const OUTS=new Set(['K','SO','K_swinging','K_looking','strikeout','GO','FO','LO','PO','FC','ROE','E','groundout','flyout','lineout','popout','out','fielders_choice','error']);
 const NON_AB=new Set(['BB','IBB','walk','HBP','hbp','SF','sac_fly','SAC','sac_bunt','CI','catchers_interference']);
-export interface BattingWindow {start:number;end:number;hits:number;atBats:number;homeRuns:number;ballsInPlay?:number;strikeouts?:number;sourceIds:string[];from:string;through:string}
+export interface BattingWindow {start:number;end:number;hits:number;atBats:number;homeRuns:number;ballsInPlay?:number;strikeouts?:number;plateAppearances?:number;paIds?:string[];pitchCounts?:Record<string,number|null>;sourceIds:string[];from:string;through:string}
 export function battingIdentity(events:readonly BattingEvent[],p:WindowPolicy=OWNER_WINDOW_POLICY){
  const unique=new Map<string,BattingEvent>();let invalid=false;
  for(const e of events){const old=unique.get(e.id);
@@ -38,11 +38,15 @@ export function battingIdentity(events:readonly BattingEvent[],p:WindowPolicy=OW
  const abs=ordered.filter(e=>HITS.has(e.result??'')||OUTS.has(e.result??''));
  const windows=opportunityWindows(abs.length,p);
  const completed:BattingWindow[]=invalid?[]:windows.filter(w=>w.complete).map(w=>{const rows=abs.slice(w.start-1,w.end);
+  const previous=w.start>1?abs[w.start-2]:null;const firstIndex=previous?ordered.indexOf(previous)+1:0;
+  const lastRow=rows[rows.length-1];const nextAB=abs[w.end];
+  const pas=ordered.slice(firstIndex,nextAB?ordered.indexOf(nextAB):ordered.length);
   return {start:w.start,end:w.end,hits:rows.filter(e=>HITS.has(e.result??'')).length,atBats:rows.length,
+   plateAppearances:pas.length,paIds:pas.map(e=>e.id),pitchCounts:Object.fromEntries(pas.map(e=>[e.id,e.pitchCount??null])),
    homeRuns:rows.filter(e=>e.result==='HR'||e.result==='home_run').length,
    strikeouts:rows.filter(e=>['K','SO','K_swinging','K_looking','strikeout'].includes(e.result??'')).length,
    ballsInPlay:rows.filter(e=>!['HR','home_run','K','SO','K_swinging','K_looking','strikeout'].includes(e.result??'')).length,
-   sourceIds:rows.map(e=>e.id),from:rows[0]?.date??'',through:rows[rows.length-1]?.date??''};});
+   sourceIds:pas.map(e=>e.id),from:rows[0]?.date??'',through:lastRow?.date??''};});
  const latest=completed[completed.length-1]??null;
  const last=windows[windows.length-1];
  const current=last&&!last.complete?last:{start:abs.length+1,end:abs.length+(abs.length<p.transitionAt?p.initialSize:p.laterSize),size:abs.length<p.transitionAt?p.initialSize:p.laterSize,sample:0,complete:false};
