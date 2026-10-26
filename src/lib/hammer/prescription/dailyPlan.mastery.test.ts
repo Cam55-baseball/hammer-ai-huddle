@@ -10,9 +10,10 @@ describe('actual builder weekly mastery connection',()=>{
   const today=new Date(2026,9,26);const base=buildHammerDailyPlan(ctx,NORMAL_SIGNAL,null,null,undefined,today);
   const focused=buildHammerDailyPlan(ctx,NORMAL_SIGNAL,null,null,undefined,today,{masteryFocus:{observedFocus:'defense',sourceIds:['coach-grade'],reason:'Defense is the weakest judged pillar',leftPowerStealEmphasis:false}});
   expect(focused.blocks.find(b=>b.modality==='strength')).toEqual(base.blocks.find(b=>b.modality==='strength'));
-  console.log('focus proof',focused.blocks.map(b=>[b.modality,b.status,b.because]),focused.weeklyRoadmap);
-  expect(focused.weeklyTemplate.priorityDayOrder?.defense).toHaveLength(3);
-  expect(base.weeklyTemplate.priorityDayOrder?.defense).not.toEqual(focused.weeklyTemplate.priorityDayOrder?.defense);
+  const defense=focused.blocks.find(b=>b.modality==='defense');
+  expect(defense?.because?.some(reason=>reason.startsWith('Fielding is your top goal.'))).toBe(true);
+  expect(base.blocks.find(b=>b.modality==='defense')?.because?.some(reason=>reason.startsWith('Fielding is your top goal.'))??false).toBe(false);
+  expect(focused.weeklyRoadmap).toEqual(base.weeklyRoadmap);
   expect(focused.weeklyTemplate.perModality.strength).toEqual(base.weeklyTemplate.perModality.strength);
   expect(ctx.get('category_goals')?.value).toEqual(values.category_goals);
  });
