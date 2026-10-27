@@ -28,6 +28,7 @@ import { runStoredThrowPitchCards, runAndWritePoseTileFindings } from "../_share
 import { saveAnalysisReport } from "../_shared/saveAnalysisReport.ts";
 import { analysisPositionContext } from "../_shared/analysisPosition.ts";
 import { validAnalysisJobToken, canaryDelegationAllowed } from "../_shared/analysisCanaryAuth.ts";
+import { ANALYSIS_TYPES, dispatchAnalysisType } from "../_shared/analysisTypes.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,7 +45,7 @@ const frameExtractionSchema = z.object({
 
 const requestSchema = z.object({
   videoId: z.string().uuid("Invalid video ID format"),
-  module: z.enum(["hitting", "pitching", "throwing"], { errorMap: () => ({ message: "Invalid module" }) }),
+  module: z.enum(ANALYSIS_TYPES, { errorMap: () => ({ message: "This analysis is coming soon" }) }),
   sport: z.enum(["baseball", "softball"], { errorMap: () => ({ message: "Invalid sport" }) }),
   userId: z.string().uuid("Invalid user ID format"),
   language: z.string().optional(),
