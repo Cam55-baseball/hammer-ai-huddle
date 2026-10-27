@@ -37,6 +37,16 @@ describe("guided canonical set progression", () => {
     expect(cursor.restingUntil - cursor.restStartedAt).toBe(30000);
     expect(cursor.row).toBe(0);
   });
+  it("a locked or stopped continuation never changes the lift rest or row count", async () => {
+    vi.useFakeTimers(); const actionSave = vi.fn(async () => {});
+    function Action() { useFocusExercise({ id: "pap:exercise", afterExerciseId: "exercise", name: "Power Primer", rows: 2, ready: [false, false], restSeconds: 60, beforeSeconds: 120, available: () => false, save: actionSave }); return null; }
+    render(<FocusSession active storageKey="locked-primer" onExit={() => {}}><Entry save={async () => {}} rest={180} /><Action /></FocusSession>);
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Finished" })));
+    expect(JSON.parse(sessionStorage.getItem("locked-primer") ?? "{}").restSeconds).toBe(180);
+    await act(async () => vi.advanceTimersByTime(180000));
+    expect(JSON.parse(sessionStorage.getItem("locked-primer") ?? "{}")).toMatchObject({ phase: "work", row: 1 });
+    expect(actionSave).not.toHaveBeenCalled();
+  });
   it("mounted work survives the entire declared rest and resumes without another save", async () => {
     vi.useFakeTimers(); const save = vi.fn(async () => {});
     function Work() { useFocusExercise({ id: "preserved", name: "Warm-up", rows: 2, ready: [true, true], restSeconds: 30, save }); return null; }

@@ -92,7 +92,7 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
       found[index] = { rating: item.metrics.rating, value: item.metrics.value };
       recordedRatings.current.add(index); saves.current.set(index, Promise.resolve());
     }
-    if (!found.length || found.some(round => !round)) return;
+    if (!found.length || Array.from(found).some(round => !round)) return;
     const state = primerState(rules, found);
     setRounds(state.next ? [...found, { rating: null, value: null }] : found);
   }, [savedRounds.data]);
@@ -189,6 +189,7 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
     {savedRounds.error && <p role="alert" className="text-xs text-destructive">Couldn't load your saved primer rounds. Your lift stays available.</p>}
     {saveFailed && <p role="alert" className="text-xs text-destructive">Couldn't save your rating. Rate this set again to retry.</p>}
     {saveFailed && <div className="flex flex-wrap gap-1">{QUALITY.map(q => <Button key={q.value} size="sm" variant="outline" onClick={() => rate(focus.active ? focus.row : Math.max(0, ratedCount - 1), q.value)}>{q.value}/5 {q.label}</Button>)}</div>}
+    {focus.active && !locked && !stopReason && <div className="flex flex-wrap gap-1">{pp.stop_buttons.map(button => <Button key={button} size="sm" variant="outline" onClick={() => setManualStop(`${button} — no more all-out sets today. Finish your lift.`)}>{button}</Button>)}</div>}
   </section>;
 
   return (
