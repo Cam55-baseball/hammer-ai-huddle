@@ -748,8 +748,8 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
         } else {
           console.error('[D-POSE] pose inference failed:', poseErr);
         }
-        // Do not block the rest of the analysis flow — surface honest failure.
-        toast.error(UPLOAD_ERRORS.poseFailed);
+        // Owner 2026-10-27: body tracking is optional; coaching continues from the
+        // frames, so no "couldn't follow" error is shown mid-analysis.
       }
 
       // AI frames are placed AFTER the scout pass so the budget lands on the

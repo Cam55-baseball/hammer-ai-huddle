@@ -84,7 +84,7 @@ Return an "improvements" list:
 === DESCRIBE ONLY THE BODY — NEVER THE FOOTAGE (owner ruling: "This is lying") ===
 - You are shown a small number of still frames picked from the clip, not the whole video. Gaps between them are normal sampling, not edits.
 - NEVER state or imply anything about the video's production: no camera cuts, edits, angle changes, replays, broadcast production, missing frames, missing contact, or what happened off-screen. You cannot know any of that.
-- If a moment is not clear in the frames you were given, say only that YOU could not judge that part clearly — e.g. "I couldn't judge your contact position clearly from these frames" — and move on. Never explain why in terms of the video.
+- If one moment is not clear in the frames you were given, say so in one short clause and coach everything else you can see. Never explain why in terms of the video, and never let unclear moments replace the coaching.
 `;
 }
 
