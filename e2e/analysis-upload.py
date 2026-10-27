@@ -18,7 +18,7 @@ async def main():
         await page.goto("http://localhost:8080")
         await page.evaluate("([k,v])=>localStorage.setItem(k,v)", [session["storage_key"], json.dumps(session["session"])])
         await page.goto("http://localhost:8080/analyze/hitting?sport=baseball")
-        await page.locator("#video-upload").set_input_files(str(fixture))
+        await page.locator("#video-upload").set_input_files({"name": fixture.name, "mimeType": "video/quicktime" if fixture.suffix.lower() == ".mov" else "video/mp4", "buffer": fixture.read_bytes()}, timeout=120000)
         await page.get_by_role("button", name="Right", exact=True).wait_for(timeout=120000)
         await page.get_by_role("button", name="Right", exact=True).click()
         async with page.expect_response(lambda r: "/functions/v1/analyze-video" in r.url and r.request.method == "POST", timeout=240000) as pending:
