@@ -1,0 +1,1 @@
+- Step counts project into existing canonical count totals; original round units and hundredth-second time remain intact. Why: progress must not lose declared steps or convert them into another measure.
