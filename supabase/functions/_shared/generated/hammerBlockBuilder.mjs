@@ -84,6 +84,55 @@ function sortByWarmupStage(items, slugOf, roleOf) {
   return keyed.map((k) => k.it);
 }
 
+// src/lib/hammer/prescription/planSanity.ts
+var ORDER = { prep: 0, drills: 1, full_go: 2, log: 3 };
+function enforceSkillStageOrder(blocks) {
+  return blocks.map((block) => {
+    if (block.status !== "ready" || !["hitting", "throwing", "defense", "baserunning"].includes(block.modality) || block.drills.some((drill) => !drill.stage || drill.ownerDrillId || drill.prescriptionOrigin === "owner")) return block;
+    const drills = [...block.drills].sort((a, b) => (a.stage ? ORDER[a.stage] : 0) - (b.stage ? ORDER[b.stage] : 0));
+    if (drills.every((drill, index) => drill === block.drills[index])) return block;
+    return { ...block, drills };
+  });
+}
+
+// src/lib/hammer/prescription/recoveryDrills.ts
+function recoveryDrills(elevated) {
+  return [
+    {
+      name: "Mobility + foam roll",
+      dosage: elevated ? "15 min full body" : "10 min focus areas",
+      setup: "Use gentle mobility in a comfortable range. Foam roll only if you have a roller.",
+      cue: "Use light pressure and breathe slowly.",
+      stopIf: "Stop if movement causes sharp pain. Follow your professional\u2019s injury instructions.",
+      guide: {
+        what: "Gentle mobility and optional foam rolling.",
+        setup: "Choose a comfortable space. A roller is optional.",
+        goodRep: ["Move slowly through a comfortable range.", "If using a roller, use light pressure rather than forcing a sore spot."],
+        badRep: ["Forcing a painful range or pressing hard into an injured area."],
+        feel: "Comfortable movement, not a hard workout.",
+        whyToday: "Easy movement after your session.",
+        nextLink: "Continue with your evening breathing."
+      }
+    },
+    {
+      name: "Evening down-regulation breath (post-session)",
+      dosage: elevated ? "10 min" : "5 min",
+      setup: "Sit or lie comfortably after your session.",
+      cue: "Breathe gently, with a relaxed exhale longer than your inhale. Do not hold your breath.",
+      stopIf: "Return to normal breathing if you feel dizzy or uncomfortable.",
+      guide: {
+        what: "Gentle evening breathing.",
+        setup: "Sit or lie comfortably.",
+        goodRep: ["Let your shoulders relax.", "Breathe gently in, then exhale a little longer without forcing it.", "Keep breathing normally between breaths; do not hold your breath."],
+        badRep: ["Straining, holding your breath or breathing so deeply that you feel dizzy."],
+        feel: "Easy and relaxed.",
+        whyToday: "A quiet finish to your session.",
+        nextLink: "Finish your evening check-in."
+      }
+    }
+  ];
+}
+
 // src/lib/hammer/prescription/masteryFocus.ts
 var masteryModality = (pillar) => pillar === "contact" || pillar === "power" ? "hitting" : pillar === "arm" ? "throwing" : pillar === "defense" ? "defense" : pillar === "speed" ? "speed" : null;
 function masteryGoalWeights(goals, focus) {
@@ -354,18 +403,22 @@ var THROWING_POSITION = [
 var HITTING = [
   { id: "barrel_control", label: "Barrel control", helpText: "Square up more pitches \u2014 get the barrel to the ball more often.", weightHints: { hitting_contact: 0.7, hitting_bat_speed: 0.3 } },
   { id: "plate_discipline", label: "Plate discipline", helpText: "Swing at strikes, take balls \u2014 own the zone.", weightHints: { hitting_plate_discipline: 0.9 } },
-  { id: "two_strike_approach", label: "Two-strike approach", helpText: "Survive and damage with two strikes \u2014 no easy at-bats given up.", weightHints: { hitting_two_strike: 0.8, hitting_contact: 0.2 } },
-  { id: "oppo_power", label: "Oppo / all-fields power", helpText: "Drive the ball to all fields, not just pull side.", weightHints: { hitting_oppo_power: 0.7, hitting_bat_speed: 0.3 } },
-  { id: "launch_consistency", label: "Consistent launch", helpText: "Quit hitting the top of the ball \u2014 line drives and lift, not chops.", weightHints: { hitting_contact: 0.5, hitting_bat_speed: 0.5 } }
+  { id: "two_strike_approach", label: "Contact Rate", helpText: "Put the ball in play more often \u2014 fewer swings and misses.", weightHints: { hitting_two_strike: 0.8, hitting_contact: 0.2 } },
+  { id: "oppo_power", label: "Oppo / all-fields power", helpText: "Drive the ball to all fields, not just pull side.", weightHints: { hitting_oppo_power: 0.7, hitting_bat_speed: 0.3 }, retired: true },
+  { id: "launch_consistency", label: "Consistent launch", helpText: "Quit hitting the top of the ball \u2014 line drives and lift, not chops.", weightHints: { hitting_contact: 0.5, hitting_bat_speed: 0.5 }, retired: true },
+  { id: "in_game_power", label: "In-game power hitting", helpText: "Hit the ball hard in real games, not just in practice.", weightHints: { hitting_bat_speed: 0.6, hitting_contact: 0.4 } },
+  { id: "all_fields", label: "Hitting to all fields", helpText: "Hit the ball where it's pitched \u2014 pull, middle and the other way.", weightHints: { hitting_oppo_power: 0.6, hitting_contact: 0.4 } },
+  { id: "situational_hitting", label: "Situational hitting", helpText: "Do the job the moment needs \u2014 move runners, get them in.", weightHints: { hitting_contact: 0.6, hitting_plate_discipline: 0.4 } },
+  { id: "plate_confidence", label: "Confidence at the plate", helpText: "Step in calm and ready to compete every at-bat.", weightHints: { hitting_plate_discipline: 0.5, hitting_contact: 0.5 } }
 ];
 var FIELDING = [
   { id: "range", label: "Expand range", helpText: "Get to more balls \u2014 lateral and back-pedal coverage.", weightHints: { fielding_range: 0.7, fielding_first_step: 0.3 } },
   { id: "hands", label: "Clean hands (incl. glove-to-hand transfer)", helpText: "Receive the ball cleanly and move it smoothly from glove to hand.", weightHints: { fielding_hands: 0.8, throwing_transfer: 0.2 } },
-  { id: "first_step", label: "First-step read", helpText: "Read the ball off the bat one step faster.", weightHints: { fielding_first_step: 0.8, fielding_pre_pitch: 0.2 } },
+  { id: "first_step", label: "First-step read", helpText: "Read the ball off the bat one step faster.", weightHints: { fielding_first_step: 0.8, fielding_pre_pitch: 0.2 }, retired: true },
   { id: "double_play", label: "Double-play turn", helpText: "Cleaner pivot, faster feed \u2014 middle-infield specialty.", weightHints: { fielding_double_play: 0.8, throwing_transfer: 0.2 }, retired: true },
   { id: "footwork", label: "Improve footwork", helpText: "Arrive balanced and put your feet in position for the play.", weightHints: { fielding_first_step: 0.6, fielding_range: 0.4 } },
   { id: "routine_plays", label: "Routine plays", helpText: "Make the everyday plays cleanly and consistently.", weightHints: { fielding_hands: 0.6, fielding_pre_pitch: 0.4 } },
-  { id: "pre_pitch_routine", label: "Pre-pitch routine", helpText: "Set up early so the play is half-won before contact.", weightHints: { fielding_pre_pitch: 0.9 } }
+  { id: "pre_pitch_routine", label: "Pre-pitch routine", helpText: "Set up early so the play is half-won before contact.", weightHints: { fielding_pre_pitch: 0.9 }, retired: true }
 ];
 var PITCHING_BASEBALL = [
   { id: "command", label: "Command / zone %", helpText: "Hit your spots \u2014 strike one, edges, no give-up pitches.", weightHints: { pitching_command: 0.9 } },
@@ -5201,7 +5254,7 @@ function durationFor(phase, position) {
   return position === "C" || position === "P" ? 28 : 25;
 }
 function resolveDefenseTier(trainingAgeYears, phase) {
-  const age = typeof trainingAgeYears === "number" && trainingAgeYears >= 0 ? trainingAgeYears : 1;
+  const age = typeof trainingAgeYears === "number" && Number.isFinite(trainingAgeYears) && trainingAgeYears >= 0 ? trainingAgeYears : 1;
   let base2 = age < 1 ? "beginner" : age < 3 ? "developing" : age < 6 ? "advanced" : "elite";
   const p = (phase ?? "").toString().toLowerCase();
   if (p === "in" || p === "in_season" || p === "inseason") {
@@ -5332,6 +5385,12 @@ function mergeOwnerSlotDrills(drills, slots, ctxOrSport, day = /* @__PURE__ */ n
     dosage: pick.dosage ?? "",
     cue: pick.cue ?? "",
     prescriptionOrigin: "owner",
+    ownerDrillId: pick.id,
+    routineRole: pick.routine_role ?? null,
+    skillArea: pick.skill_area ?? null,
+    batSpeedKind: pick.bat_speed_kind ?? null,
+    videoUrl: pick.video_url ?? null,
+    libraryVideoId: pick.library_video_id ?? null,
     ...clean(pick.setup) ? { setup: pick.setup } : {},
     ...pick.equipment.length ? { equipmentNote: pick.equipment.join(", ") } : {}
   };
@@ -6840,12 +6899,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
     }
     case "recovery": {
       const elevated = recoverDay || workloadHigh || seasonPhase === "in" || injuryRegions.length > 0;
-      const drills = [
-        { name: elevated ? "Mobility + foam roll" : "Mobility + foam roll", dosage: elevated ? "15 min full body" : "10 min focus areas", cue: "slow pressure, breathe" },
-        { name: "Evening down-regulation breath (post-session)", dosage: elevated ? "10 min" : "5 min", cue: "long exhales, longer than inhales \u2014 this is the closing breath of the day, distinct from the morning HPI primer" },
-        { name: "Hydrate + plan tomorrow's wake time", dosage: "now" },
-        ...injury ? [{ name: "Mind your injury note", dosage: injury }] : [{ name: "Note any new soreness in Vault", dosage: "1 entry" }]
-      ];
+      const drills = recoveryDrills(elevated);
       return {
         modality,
         title: recoverDay ? "Recovery \u2014 priority" : workloadHigh ? "Recovery \u2014 workload-elevated" : injuryRegions.length > 0 ? "Recovery \u2014 injury-aware" : seasonPhase === "in" ? "Recovery \u2014 in-season" : "Recovery",
@@ -7506,7 +7560,7 @@ function buildHammerDailyPlan(ctx, scheduleSignal = NORMAL_SIGNAL, sideBias = nu
     console.debug("[dailyPlan] gp-signal bias \u2192", gpBiasTags);
   }
   return {
-    blocks,
+    blocks: enforceSkillStageOrder(blocks),
     practiceLoad,
     seasonPhase: proj.seasonPhase,
     missingnessCount: blocks.filter((b) => b.status === "awaiting-input").length,
