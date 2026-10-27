@@ -12,6 +12,8 @@ import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useSportTheme } from '@/contexts/SportThemeContext';
+import { drillTaskPayload, type DrillLineage } from '@/lib/hammer/drillTaskPayload';
 import {
   loadEngagement,
   recordCompletion,
@@ -25,11 +27,7 @@ import {
   type TaskSeed,
 } from "@/hooks/useHammerDailyTasks";
 
-interface DrillLike {
-  readonly name: string;
-  readonly slug?: string | null;
-  readonly dosage?: string;
-}
+type DrillLike = DrillLineage;
 
 interface Props {
   readonly modality: EngagementKey;
@@ -49,6 +47,7 @@ export function BlockCompletionControls({
   side = null,
 }: Props) {
   const { user } = useAuth();
+  const { sport } = useSportTheme();
   const [current, setCurrent] = useState<CompletionState | null>(() =>
     todayCompletion(loadEngagement(user?.id), modality, side),
   );
@@ -83,7 +82,7 @@ export function BlockCompletionControls({
         source: "block_drill",
         sourceRef: String(modality),
         side,
-        payload: { name: d.name, dosage: d.dosage ?? null, slug: d.slug ?? null, side },
+        payload: drillTaskPayload(d, sport === 'softball' ? 'softball' : 'baseball', String(modality), side),
       }));
       void tasks.bulkSet(seeds, status === "done");
     }

@@ -128,6 +128,7 @@ import { useCategoryPracticeLoad } from '@/hooks/useCategoryPracticeLoad';
 import {useBuntingEvidence} from '@/hooks/useBuntingEvidence';
 import {useMasteryIdentity} from '@/hooks/useMasteryIdentity';
 import {useSportTheme} from '@/contexts/SportThemeContext';
+import { drillTaskPayload } from '@/lib/hammer/drillTaskPayload';
 import {BuntStudyVideo} from '@/components/hammer/cards/BuntStudyVideo';
 import {getV2} from '@/lib/hammer/goals/categoryGoals';
 import { RoyalTimingReminder } from "@/components/hammer/RoyalTimingReminder";
@@ -306,7 +307,7 @@ function DrillRow({
     source: "block_drill" as const,
     sourceRef: modality,
     side,
-    payload: { name: d.name, dosage: displayDose, slug: d.slug ?? null, side, ...(d.bunt?{bunt:d.bunt,sport:drillSport,module:'hitting'}:{} ) },
+    payload: drillTaskPayload({ ...d, dosage: displayDose }, drillSport, modality, side),
   };
   return (
     <li data-task-id={taskId} data-task-side={side ?? ""} className={`text-xs rounded-lg border p-3 ${checked ? "opacity-60 border-border/40 bg-muted/20" : "border-border/70 bg-card"}`}>

@@ -23,6 +23,8 @@ import { validateVideoFile } from "@/data/videoLimits";
 import { VideoPlayer } from "@/components/video-library/VideoPlayer";
 import { useVideoLibrary } from '@/hooks/useVideoLibrary';
 import { BuilderLibraryLink } from '@/components/owner/BuilderLibraryLink';
+import { DrillCmsManager } from '@/components/owner/DrillCmsManager';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { SKILL_AREAS, ROUTINE_ROLES, BAT_SPEED_KINDS, validDrillRoleTags } from '@/lib/prescription/drillRoleTags';
 
 const SLOT_LABEL: Record<PlanSlot, string> = {
@@ -105,7 +107,7 @@ function availableFaultKeys(placements: string[]): string[] {
 }
 
 export default function DrillBuilder() {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const [rows, setRows] = useState<OwnerDrillRow[]>([]);
   const [usage, setUsage] = useState<Record<string, { completed: number; returned: number }>>({});
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -244,6 +246,13 @@ export default function DrillBuilder() {
           </div>
         </div>
 
+        <Tabs value={params.get('library') === 'legacy' ? 'legacy' : 'skills'} onValueChange={value => { const next = new URLSearchParams(params); next.set('library', value); setParams(next); }}>
+          <TabsList className="h-auto flex-wrap">
+            <TabsTrigger value="skills">Skill drills</TabsTrigger>
+            <TabsTrigger value="legacy">Legacy library & review</TabsTrigger>
+          </TabsList>
+          <TabsContent value="legacy"><DrillCmsManager /></TabsContent>
+          <TabsContent value="skills" className="space-y-6">
         <div className="flex flex-wrap gap-2" aria-label="Search and filter drills">
           <Input aria-label="Search drills" placeholder="Search drills by name" value={search} onChange={(e) => setSearch(e.target.value)} className="min-w-44 flex-1" />
           <Select value={filter} onValueChange={setFilter}>
@@ -327,6 +336,8 @@ export default function DrillBuilder() {
             </details>
           ))}
         </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <Dialog open={!!preview} onOpenChange={(open) => !open && setPreview(null)}>

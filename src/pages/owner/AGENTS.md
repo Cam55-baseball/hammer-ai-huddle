@@ -1,1 +1,2 @@
 - Video-manager shortcuts use the existing shared library from builder headers, outside exercise drafts. Why: opening a new signed-in tab may remount access wrappers; drafts must not be put at risk or catalogs duplicated.
+- Skill drill builder hosts the existing legacy drill editor/review in a distinct URL-backed tab, without moving rows between catalogs. Why: consolidation must preserve each catalog's fields and save authority.
