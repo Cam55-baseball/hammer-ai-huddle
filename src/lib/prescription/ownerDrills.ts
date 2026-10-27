@@ -30,6 +30,10 @@ export interface OwnerDrillRow {
   common_mistake: string | null;
   equipment: string[];
   video_url: string | null;
+  library_video_id?: string | null;
+  skill_area?: string | null;
+  routine_role?: string | null;
+  bat_speed_kind?: string | null;
   active: boolean;
   pinned: boolean;
   created_at: string;

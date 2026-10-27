@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -42,7 +43,7 @@ export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
           .maybeSingle(),
         supabase
           .from('performance_sessions')
-          .select('module, session_type, drill_blocks, detected_issues, throwing_hand_used, batting_side_used')
+          .select('sport, module, session_type, drill_blocks, detected_issues, throwing_hand_used, batting_side_used')
           .eq('user_id', user.id)
           .gte('session_date', since)
           .order('session_date', { ascending: false })
