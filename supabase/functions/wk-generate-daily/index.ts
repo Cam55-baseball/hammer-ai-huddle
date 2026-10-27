@@ -1164,7 +1164,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (catErr) throw catErr;
     // TEST-only Vault items reach only their listed accounts; Swap-only sprints are never built in.
     const { data: trackingVersions, error: trackingReadError } = await admin.from("exercise_vault_versions")
-      .select("slug,version,effective_from,payload,undone_at").is("undone_at", null).lte("effective_from", planDate);
+      .select("slug,version,effective_from,payload,undone_at");
     if (trackingReadError) throw trackingReadError;
     const catalog = applyLiveTracking(catalogRaw ?? [], trackingVersions ?? [], planDate).filter((m: any) => !String(m.slug ?? "").startsWith("swap_")
       && (!Array.isArray(m.visible_to) || m.visible_to.includes(user.id)));
