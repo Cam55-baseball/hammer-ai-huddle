@@ -11,4 +11,8 @@ describe('saved weekly work', () => {
   it('does not invent unsaved days or volume', () => {
     expect(savedWeek([], 'softball', '2026-10-27').days).toEqual([]);
   });
+  it('suppresses unreleased Game IQ even when it exists in a historic saved day', () => {
+    const rows = [{ plan_date: '2026-10-27', sport: 'baseball', payload: { blocks: [{ modality: 'game_iq', status: 'ready', title: 'Game IQ', drills: [{ name: 'Study', dosage: '2 scenarios' }] }] } }];
+    expect(savedWeek(rows, 'baseball', '2026-10-27').days[0].activities).toEqual([]);
+  });
 });

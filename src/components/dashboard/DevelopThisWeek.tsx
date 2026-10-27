@@ -4,17 +4,19 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { Button } from '@/components/ui/button';
 import { savedWeek } from './savedWeek';
+import { GAME_IQ_AVAILABLE_TO_ATHLETES } from '@/lib/hammer/athleteFeatureAvailability';
 
 export function DevelopThisWeek() {
   const { user } = useAuth();
   const { sport } = useSportTheme();
-  const today = new Date().toLocaleDateString('en-CA');
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   const { start, end } = savedWeek([], sport, today);
   const query = useQuery({ queryKey: ['saved-development-week', user?.id, sport, start], enabled: !!user, queryFn: async () => {
     if (!user) return null;
     const { data, error } = await supabase.from('athlete_plan_snapshots').select('plan_date,sport,payload').eq('user_id', user.id).eq('sport', sport).gte('plan_date', start).lte('plan_date', end).order('plan_date');
     if (error) throw error;
-    return savedWeek(data ?? [], sport, today);
+    return savedWeek(data ?? [], sport, today, GAME_IQ_AVAILABLE_TO_ATHLETES);
   } });
   if (query.isPending) return null;
   return <section aria-label="Develop This Week" className="space-y-3 border-t border-border pt-4">
