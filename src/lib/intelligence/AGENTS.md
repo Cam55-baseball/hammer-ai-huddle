@@ -1,4 +1,4 @@
-- Learning-loop outcomes are set only by `intel-recheck` (server); players read labels, never stored scores. Why: analysis scores are locked from players.
+- Mounted and nightly learning-loop rechecks share recheckComparablePlayer; players read labels, never stored scores, and failed source reads remain visible without delaying saved advice. Why: one comparable judge must preserve evidence and missingness across both paths.
 - Nightly rechecks use the shared comparableOutcome judge and job-local provenance adapter with the plan Vault token; schedules remain owner-applied. Why: matching records, measurement dates and missingness must survive unattended checks.
 - Existing title-case advice categories normalize only to lowercase canonical video modules in the nightly query and provenance check; sport and evidence requirements remain exact. Why: writer capitalization must not discard valid evidence or grant category aliases.
 - At-bat video tags use `tag_at_bat_video` with an owned saved clip and bounded timestamp; the database validates the evidence on every source write. Why: a source label must have evidence without inventing game details or AI verification.
