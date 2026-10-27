@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { SavedMovementSummary } from '@/components/assessment/SavedMovementSummary';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +12,7 @@ import { movementHasPain, movementScreenComplete, type MovementScreen } from "@/
 /** Plan 4 B — on-the-spot movement and safety check, run in person by a connected coach.
  *  Saves to the PLAYER's profile through the server, labeled coach-verified with name and date. */
 export function CoachOnSpotAssessment({ athleteId }: { athleteId: string }) {
+  const queryClient = useQueryClient();
   const [vals, setVals] = useState<MovementScreen>({});
   const [pain, setPain] = useState<boolean | null>(null);
   const [parent, setParent] = useState(false);
@@ -23,6 +26,7 @@ export function CoachOnSpotAssessment({ athleteId }: { athleteId: string }) {
       _athlete: athleteId, _screen: JSON.parse(JSON.stringify(vals)), _pain: !!pain || movementHasPain(vals), _parent_present: parent,
     });
     setBusy(false);
+    if (!error) void queryClient.invalidateQueries({queryKey:['saved-movement-summary']});
     if (error) setMsg(error.message);
     else setMsg(`Saved to the player's profile — ${(data as { label?: string })?.label ?? "Coach-verified"}${pain || movementHasPain(vals) ? ". Pain reported: talk to a professional before painful activity." : ""}`);
   }
@@ -31,6 +35,7 @@ export function CoachOnSpotAssessment({ athleteId }: { athleteId: string }) {
     <Card>
       <CardHeader><CardTitle className="text-base">On-the-spot movement & safety check</CardTitle></CardHeader>
       <CardContent className="space-y-3 text-sm">
+        <SavedMovementSummary athleteId={athleteId} />
         <p className="text-muted-foreground">Do this with the player in person. It saves to their profile as coach-verified.</p>
         <MovementScreenForm value={vals} onChange={setVals} source="Coach-observed" onPain={() => setPain(true)} />
         <div className="flex items-center justify-between gap-2">
