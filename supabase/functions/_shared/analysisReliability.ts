@@ -24,7 +24,10 @@ export function hasFullCoachingReport(data: unknown): boolean {
   const r = data as Record<string, unknown>;
   if (r.report_status === "not_measured") return false;
   const filled = (v: unknown) => Array.isArray(v) && v.length > 0;
-  return filled(r.drills) && (filled(r.improvements) || filled(r.positives));
+  const lead = Array.isArray(r.summary) ? String(r.summary[0] ?? "") : "";
+  if (/\bcould(?:n'?t| not) (?:judge|see|tell)\b/i.test(lead)) return false;
+  const verifiedClean = typeof r.clean_reason === "string" && r.clean_reason.trim().length > 0 && filled(r.positives);
+  return filled(r.drills) && (filled(r.improvements) || verifiedClean);
 }
 
 /** Parsed coaching arguments from a tool-call response, or null. */

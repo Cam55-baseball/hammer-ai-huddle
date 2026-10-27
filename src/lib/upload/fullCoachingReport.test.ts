@@ -11,6 +11,8 @@ describe("owner rule: every analysable upload gets a full coaching report", () =
     expect(hasFullCoachingReport(thin)).toBe(false);
     expect(hasFullCoachingReport(unavailableAnalysis("hitting", "analysis"))).toBe(false);
     expect(hasFullCoachingReport(full)).toBe(true);
+    expect(hasFullCoachingReport({ ...full, improvements: [], clean_reason: "" })).toBe(false);
+    expect(hasFullCoachingReport({ ...full, summary: ["I couldn't judge your foot plant from these frames."] })).toBe(false);
   });
   it("a thin first answer is retried until a full report arrives", async () => {
     let n = 0;
