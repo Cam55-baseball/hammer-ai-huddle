@@ -50,6 +50,10 @@ describe("legacy drill visible log rows", () => {
       rows: 1, completion: true, fields: [{ key: "time", label: "Time", unit: "s", prefill: 300 }],
     });
   });
+  it('logs the actual abbreviated recovery targets in seconds', () => {
+    expect(legacyDrillLogSpec('recovery', 'Evening breathing', '10 min').fields).toEqual([{ key: 'time', label: 'Time', unit: 's', prefill: 600 }]);
+    expect(legacyDrillLogSpec('recovery', 'Mobility + foam roll', '15 min full body').fields).toEqual([{ key: 'time', label: 'Time', unit: 's', prefill: 900 }]);
+  });
 
   it("keeps a one-by-one drill visible", () => {
     expect(legacyDrillLogSpec("defense", "Bunt read", "1 x 1 rep")).toEqual({
