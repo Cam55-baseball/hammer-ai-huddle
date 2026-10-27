@@ -1,6 +1,8 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, within, cleanup } from "@testing-library/react";
 import { PowerPrimerBlock, type PowerPrimerPayload } from "./PowerPrimerBlock";
+import { act } from "@testing-library/react";
+import { FocusSession, useFocusExercise } from "./cards/FocusSession";
 
 const state = vi.hoisted(() => ({ host: null as HTMLElement | null }));
 vi.mock("@/components/hammer/cards/PocketCard", () => ({ usePocketLogHost: () => state.host }));
@@ -13,11 +15,29 @@ const pp: PowerPrimerPayload = {
   stop_buttons: ["Pain"], requires_throwing_warmup: false,
 };
 beforeEach(() => { localStorage.clear(); state.host = document.createElement("div"); document.body.append(state.host); });
-afterEach(() => { cleanup(); state.host?.remove(); state.host = null; localStorage.clear(); });
+afterEach(() => { cleanup(); state.host?.remove(); state.host = null; localStorage.clear(); sessionStorage.clear(); vi.useRealTimers(); });
 
 vi.mock("@/lib/logging/logOutbox", () => ({ enqueue: vi.fn(), sendJob: vi.fn(async () => true) }));
 
 describe("power primer built into the lift", () => {
+  it("guided primer rates one existing sprint, waits its 60s rest and returns to the unchanged lift", async () => {
+    vi.useFakeTimers(); const save = vi.fn(async () => {});
+    function Lift() { useFocusExercise({ id: 'rx:lift-1', name: 'Lift', rows: 2, ready: [true, true], restSeconds: 180, save }); return null; }
+    const view = render(<FocusSession active storageKey="real-primer" onExit={() => {}}><Lift /><PowerPrimerBlock prescriptionId="lift-1" pp={{ ...pp, action: { ...pp.action, distance_feet: 30 } }} liftSets={2} /></FocusSession>);
+    await act(async () => fireEvent.click(view.getByRole('button', { name: 'Finished' })));
+    expect(JSON.parse(sessionStorage.getItem('real-primer') ?? '{}').restSeconds).toBe(120);
+    await act(async () => vi.advanceTimersByTime(120000));
+    const host = state.host;
+    if (!host) throw new Error('Missing host');
+    await act(async () => fireEvent.click(within(host).getByRole('button', { name: '3/5 Lost snap' })));
+    await act(async () => fireEvent.click(view.getByRole('button', { name: 'Finished' })));
+    expect(JSON.parse(sessionStorage.getItem('real-primer') ?? '{}').restSeconds).toBe(60);
+    await act(async () => vi.advanceTimersByTime(60000));
+    expect(JSON.parse(sessionStorage.getItem('real-primer') ?? '{}')).toMatchObject({ phase: 'work', row: 1 });
+    expect(save).toHaveBeenCalledTimes(1);
+    await act(async () => fireEvent.click(view.getByRole('button', { name: 'Finished' })));
+    expect(JSON.parse(sessionStorage.getItem('real-primer') ?? '{}').restSeconds).toBe(180);
+  });
   it("keeps lift rest at 120s and rests 60s after a prescribed 10-yard run set", () => {
     render(<PowerPrimerBlock pp={{ ...pp, action: { ...pp.action, distance_feet: 30 } }} liftSets={2} />);
     const host = state.host;
