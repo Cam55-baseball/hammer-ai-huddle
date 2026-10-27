@@ -396,7 +396,8 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp, onAnalysi
           landingTime: null,
         });
         mark("extract_ms", tExtract);
-        if (extraction.frames.length < 3) throw new Error("not_enough_frames");
+        // Only "no readable picture at all" stops a report (owner, Oct 27).
+        if (extraction.frames.length < 1) throw new Error("not_enough_frames");
         toast.loading("Uploading your clip…", { id: toastId });
       }
 

@@ -57,14 +57,8 @@ export const UPLOAD_ERRORS = {
 /** Maps the analyze-video edge function's structured reject reason to copy. */
 export function friendlyRejectReason(reason: string | null): string | null {
   switch (reason) {
-    case "reject_low_resolution":
-      return UPLOAD_ERRORS.tooSmall;
-    case "reject_low_fps":
-      return UPLOAD_ERRORS.lowFps;
-    case "reject_duration_out_of_bounds":
-      return UPLOAD_ERRORS.tooLong;
-    case "reject_excessive_dropped_frames":
-      return UPLOAD_ERRORS.droppedFrames;
+    // Size, frame-rate, length and damaged-frame refusals no longer exist:
+    // small, soft or shrunk clips are coached from what is visible.
     case "missing_video_sha256":
     case "missing_probe_metadata":
       return UPLOAD_ERRORS.notReady;
