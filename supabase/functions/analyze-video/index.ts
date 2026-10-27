@@ -16,7 +16,15 @@ import {
   METRIC_ENGINE_VERSION,
 } from "../_shared/biomechFingerprint.ts";
 import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalysisRun.ts";
-import { chatCompletion } from "../_shared/googleAi.ts";
+import { chatCompletion, type ChatCompletionRequest } from "../_shared/googleAi.ts";
+import { classicGatewayCompletion, isClassicRoute } from "../_shared/classicAnalysis.ts";
+
+/** Classic engine first (no artificial cut-off); today's direct route and backup keep their limits. */
+function routeAnalysis(route: string, req: ChatCompletionRequest) {
+  return isClassicRoute(route)
+    ? classicGatewayCompletion(req, { timeoutMs: 120_000 })
+    : chatCompletion(req, { timeoutMs: 40_000, allowFallback: false });
+}
 import { analysisRefused, hasFullCoachingReport, hasReadableReport, hasStructuredAnalysis, reliableAnalysis, unavailableAnalysis } from "../_shared/analysisReliability.ts";
 import { canSeeScoredGrading, stripScoredGrading } from "../_shared/scoredGradingGate.ts";
 import { buildFaultFindings } from "../_shared/faultFindings.ts";
@@ -2106,8 +2114,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       await supabase.from("videos").update({ status: "uploading" }).eq("id", videoId);
       return new Response(JSON.stringify({ error: HOURLY_LIMIT_MESSAGE, code: "hourly_limit", resume_at: await hourlyResumeAt(supabase, userId), video_id: videoId }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const aiResult = await reliableAnalysis((model) => chatCompletion({
-      model,
+    const aiResult = await reliableAnalysis((route) => routeAnalysis(route, {
+      model: route,
       // Determinism lock: same video → same scores. Do not relax.
       temperature: 0,
       messages: [
@@ -2263,7 +2271,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         }
       ],
       tool_choice: { type: "function", function: { name: "return_analysis" } }
-    }, { timeoutMs: 40_000, allowFallback: false }), (result) => logAiUsage(supabase, { userId, functionName: "analyze-video", analysisType: `${sport}_${module}`, result }));
+    }), (result) => logAiUsage(supabase, { userId, functionName: "analyze-video", analysisType: `${sport}_${module}`, result }));
     if (!aiResult.ok) {
       const errorText = aiResult.errorBody || "";
       console.error("AI provider error:", aiResult.provider, aiResult.status, errorText);
