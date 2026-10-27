@@ -17,6 +17,6 @@ export function applyLiveTracking<T extends { slug: string }>(catalog: readonly 
   }
   return catalog.map(row => {
     const payload = live.get(row.slug)?.payload;
-    return payload && typeof payload === 'object' ? { ...row, ...trackingProjection(payload as Record<string, unknown>) } : row;
+    return payload && typeof payload === 'object' ? { ...row, tracking_measure_type: trackingProjection(payload as Record<string, unknown>).tracking_measure_type } : row;
   });
 }

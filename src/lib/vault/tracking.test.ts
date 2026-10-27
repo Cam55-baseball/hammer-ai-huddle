@@ -4,7 +4,7 @@ import { certifyCoachOwnItem } from '../../../supabase/functions/_shared/coach/o
 it('applies effective existing non-bunt tracking, not future or undone versions', () => {
   const catalog = [{slug:'test_band',dosage_unit:'reps',default_reps:12,visible_to:['test']}];
   const version = {slug:'test_band',version:1,effective_from:'2026-10-27',payload:{measure_type:'hold_seconds'}};
-  expect(applyLiveTracking(catalog,[version], '2026-10-27')[0]).toMatchObject({dosage_unit:'seconds',tracking_measure_type:'hold_seconds',default_reps:12,visible_to:['test']});
+  expect(applyLiveTracking(catalog,[version], '2026-10-27')[0]).toMatchObject({dosage_unit:'reps',tracking_measure_type:'hold_seconds',default_reps:12,visible_to:['test']});
   expect(applyLiveTracking(catalog,[version], '2026-10-26')).toEqual(catalog);
   expect(applyLiveTracking(catalog,[{...version,undone_at:'2026-10-27'}], '2026-10-27')).toEqual(catalog);
 });
