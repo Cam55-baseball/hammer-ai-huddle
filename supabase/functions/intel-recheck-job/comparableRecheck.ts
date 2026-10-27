@@ -7,7 +7,7 @@ export function comparableClipPair(rec: Advice, clips: readonly ClipMeasure[]) {
   const followed = Date.parse(rec.followed_at ?? '');
   const created = Date.parse(rec.created_at);
   if (!Number.isFinite(followed) || !Number.isFinite(created) || rec.baseline_value === null) return null;
-  const own = clips.filter(c => c.user_id === rec.user_id && c.module === rec.area
+  const own = clips.filter(c => c.user_id === rec.user_id && c.module === rec.area.toLowerCase()
     && ['baseball', 'softball'].includes(c.sport) && Number.isFinite(c.efficiency_score) && Number.isFinite(Date.parse(c.created_at)));
   const before = own.filter(c => Date.parse(c.created_at) <= created && c.efficiency_score === rec.baseline_value);
   // Existing advice has no sport/source ID: ambiguity means missing evidence, never choose a sport.
@@ -33,7 +33,7 @@ export async function recheckComparablePlayer(sb: any, userId: string) {
   for (const rec of recs ?? []) {
     // bounded query; a capped result is incomplete and cannot prove provenance.
     const { data: clips, error: clipError } = await sb.from('videos')
-      .select('id,user_id,sport,module,created_at,efficiency_score').eq('user_id', userId).eq('module', rec.area)
+      .select('id,user_id,sport,module,created_at,efficiency_score').eq('user_id', userId).eq('module', rec.area.toLowerCase())
       .eq('status', 'completed').not('efficiency_score', 'is', null).order('created_at').limit(1000);
     if (clipError) throw clipError;
     const pair = clips?.length < 1000 ? comparableClipPair(rec, clips ?? []) : null;

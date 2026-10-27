@@ -2,3 +2,4 @@
 - Video save failures go through `saveFailure.ts`: true message, reference code, structured `[video-save-failure]` log. Why: a refused save was once shown as "signed out".
 
 - Analysis files pass through `prepareAnalysisVideo` before preview/probe/extraction; private single-thread FFmpeg preserves frame timing without interpolation or forced FPS. Why: phone codecs must not cause invented measurements or a pre-upload decode failure.
+- Library uploads/replacements use prepareLibraryVideo before storage, preserving optional audio and frame timing in MP4 (WebM when required by the browser); existing URLs are never silently replaced. Why: teaching playback needs sound and browser-compatible assets without mutating published media.

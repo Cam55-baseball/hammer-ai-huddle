@@ -1,0 +1,1 @@
+- Actual-result labels read steps and mixed reps separately from canonical round measurements, preserving precise time and feet. Why: canonical count projections cannot distinguish steps from repetitions on their own.

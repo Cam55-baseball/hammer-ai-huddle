@@ -148,7 +148,7 @@ const CATALOG: Partial<Record<CatalogKey, DrillStep[]>> = {
   // ================================================================ CATCHER
   "C:baseball:off": [
     d("Driveline one-knee receiving", "3×15 reps", "quiet glove, thumb up, catch the ball into the strike zone"),
-    d("Framing ladder — 4 corners", "4 zones × 8", "load the glove early, freeze on the catch"),
+    d("Framing ladder — 4 corners", "4×8 reps (one set per zone)", "load the glove early, freeze on the catch"),
     d("Short-hop blocking angles", "3×10 (L/M/R)", "chin to chest, block ball down, keep it in front", "kneel on turf, coach short-hops from 20 ft"),
     d("Pop-time footwork — jab-replace to 2B", "3×8 dry, 2×5 with ball", "replace back foot, throw over front hip"),
     d("Foul-pop turn-and-find", "20 reps", "flip mask off away from ball, find it late"),
@@ -171,7 +171,7 @@ const CATALOG: Partial<Record<CatalogKey, DrillStep[]>> = {
     d("Short-hop blocking angles", "3×10 (L/M/R)", "chin down, block down, redirect in front"),
     d("Pop-time to 2B — slapper timing", "3×8 dry + 2×5 live", "quick exchange, four-seam grip"),
     d("Slap-bunt read + barehand", "10 reps", "read runner speed, throw on the run"),
-    d("Framing ladder — 4 corners", "4 zones × 8", "quiet glove, freeze on catch"),
+    d("Framing ladder — 4 corners", "4×8 reps (one set per zone)", "quiet glove, freeze on catch"),
   ],
   "C:softball:pre": [
     d("Receiving vs rise-ball", "3×10", "get on top of the ball — glove stays above the hand"),
