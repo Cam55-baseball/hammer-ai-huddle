@@ -41,7 +41,7 @@ export function SavedMovementSummary({ athleteId }: { athleteId?: string } = {})
     try {
       const at = new Date().toISOString();
       const result = await supabase.from('initial_assessments').update({ movement_screen: draft, movement_done_at: at, updated_at: at, ...(movementHasPain(draft) ? { pain_flag: true } : {}) }).eq('user_id', user.id).select('movement_done_at').single();
-      if (result.error || result.data?.movement_done_at !== at) throw new Error('Unconfirmed screen');
+      if (result.error || !result.data?.movement_done_at || Date.parse(result.data.movement_done_at) !== Date.parse(at)) throw new Error('Unconfirmed screen');
       await qc.invalidateQueries({ queryKey: ['saved-movement-summary', user.id] });
       await qc.invalidateQueries({ queryKey: ['initial-assessment', user.id] });
       setDraft(null);
