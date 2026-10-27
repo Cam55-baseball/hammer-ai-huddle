@@ -1672,6 +1672,8 @@ Deno.serve(async (req) => {
     return result;
   };
   let reportModule = "video";
+  // deno-lint-ignore no-explicit-any
+  let savedClassicReport: Record<string, any> | null = null;
   let auditCtx: {
     videoId?: string;
     userId?: string;
@@ -2625,6 +2627,10 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       });
     }
 
+    // The classic report is saved. Anything after this point is optional
+    // enrichment; a failure there returns this report, never "Not measured".
+    savedClassicReport = { ...ai_analysis, efficiency_score, mocap_data, saved: true };
+
     // Phase 0 audit row — successful analysis.
     const okAudit = await recordRun(supabase, {
       video_id: videoId,
@@ -2900,6 +2906,13 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       } catch (auditErr) {
         console.error("[analyze-video] audit-row write failed:", auditErr);
       }
+    }
+
+    // Optional enrichment failed after the classic report was saved: return it.
+    if (savedClassicReport && auditSupabase && auditCtx.userId) {
+      const allowed = await canSeeScoredGrading(auditSupabase, auditCtx.userId).catch(() => false);
+      return new Response(JSON.stringify(allowed ? savedClassicReport : stripScoredGrading(savedClassicReport)),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // A missingness report belongs only to the verified owner of this clip.
