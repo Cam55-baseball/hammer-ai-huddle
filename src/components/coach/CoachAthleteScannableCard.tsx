@@ -56,7 +56,7 @@ export function CoachAthleteScannableCard({ athleteId, name, summary }: Props) {
               </p>
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
-              <Button size="sm" variant="outline" onClick={() => navigate(`/coach/athlete/${athleteId}`)}>
+              <Button size="sm" variant="outline" aria-label={`Open ${name}`} onClick={() => navigate(`/coach/athlete/${athleteId}`)}>
                 <span className="hidden sm:inline mr-1">Open</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>

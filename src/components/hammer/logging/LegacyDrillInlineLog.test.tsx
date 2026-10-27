@@ -1,9 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LegacyDrillInlineLog } from "./LegacyDrillInlineLog";
+import { LegacyDrillInlineLog, focusTimedRow } from "./LegacyDrillInlineLog";
 import { FocusSession } from "../cards/FocusSession";
 
 describe("LegacyDrillInlineLog return from background", () => {
+  it('a mixed circuit timer records only its timed component, never an earlier rep row',()=>{
+    const fieldsAt=(row:number)=>[{key:row===2?'time':'reps'}];
+    expect(focusTimedRow([{reps:'12'},{reps:''},{time:''},{reps:''}],fieldsAt)).toBe(2);
+    expect(focusTimedRow([{reps:'12'},{reps:''},{time:'30',_t:'1'},{reps:''}],fieldsAt)).toBe(-1);
+  });
   beforeEach(() => {
     sessionStorage.clear(); localStorage.clear();
     vi.useFakeTimers();
@@ -19,6 +24,17 @@ describe("LegacyDrillInlineLog return from background", () => {
     fireEvent.change(screen.getByLabelText("ir reps 1"), { target: { value: "12" } });
     fireEvent.blur(screen.getByLabelText("ir reps 1"));
     expect(saved.mock.lastCall?.[0].rounds).toEqual([{ set: 1, reps_0: 11, reps_1: 12, reps_2: null }]);
+  });
+  it("mixed components keep separate declared sets and never record an untouched target", () => {
+    const saved = vi.fn();
+    render(<LegacyDrillInlineLog modality="throwing" name="Band prep" dosage="ER 2x12 per arm, opener 1x30 seconds, scap pulls 3x10" storageKey="mixed-rows-proof" completed={false} onSave={saved} />);
+    expect(screen.getByLabelText("Reps per arm 1")).toHaveValue("");
+    fireEvent.focus(screen.getByLabelText("Reps per arm 1"));
+    expect(saved.mock.lastCall?.[0].rounds).toEqual([]);
+    fireEvent.change(screen.getByLabelText("Reps per arm 1"), { target: { value: "12" } });
+    expect(saved.mock.lastCall?.[0].rounds).toEqual([{set:1,reps:12}]);
+    expect(screen.queryByRole("button", {name:"Add set"})).not.toBeInTheDocument();
+    expect(saved.mock.lastCall?.[0].components).toHaveLength(6);
   });
   it("guided circuits require every component entered before Next can save the existing set", () => {
     render(<FocusSession active storageKey="compound-focus" onExit={() => {}}><LegacyDrillInlineLog modality="throwing" name="Band series" dosage="ER 1x12, IR 1x12, retractions 1x10" storageKey="compound-focused" completed={false} onSave={vi.fn()} /></FocusSession>);
