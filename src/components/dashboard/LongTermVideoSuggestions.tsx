@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useSportTheme } from '@/contexts/SportThemeContext';
 import {
   aggregateWeaknessClustersToTaxonomy,
   moduleToSkillDomain,
@@ -22,31 +24,41 @@ interface Props {
  */
 export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
   const { user } = useAuth();
+  const { sport } = useSportTheme();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['long-term-video-signals', user?.id, domainProp],
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['long-term-video-signals', user?.id, sport, domainProp],
     enabled: !!user,
     staleTime: 60_000,
     queryFn: async () => {
       if (!user) return null;
       const since = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
 
-      const [{ data: snap }, { data: sessions }] = await Promise.all([
+      const [snapshotResult, sessionResult] = await Promise.all([
         (supabase as any)
           .from('hie_snapshots')
           .select('weakness_clusters, sport')
           .eq('user_id', user.id)
+          .eq('sport', sport)
           .order('computed_at', { ascending: false })
           .limit(1)
           .maybeSingle(),
         supabase
           .from('performance_sessions')
-          .select('module, session_type, drill_blocks, detected_issues, throwing_hand_used, batting_side_used')
+          .select('sport, module, session_type, drill_blocks, detected_issues, throwing_hand_used, batting_side_used')
           .eq('user_id', user.id)
+          .eq('sport', sport)
+          .is('deleted_at', null)
           .gte('session_date', since)
           .order('session_date', { ascending: false })
           .limit(20),
       ]);
+
+      if (snapshotResult.error) throw snapshotResult.error;
+      if (sessionResult.error) throw sessionResult.error;
+      const snap = snapshotResult.data;
+      // A different sport's practice must not drive this sport's picks.
+      const sessions = (sessionResult.data ?? []).filter(session => session.sport === sport);
 
       // Infer skill domain from most recent session module if not provided
       const inferred =
@@ -62,6 +74,7 @@ export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
     },
   });
 
+  if (isError) return <div role="alert" className="space-y-2 text-sm text-destructive">Recent development picks couldn’t be loaded.<Button variant="outline" size="sm" onClick={() => void refetch()}>Try again</Button></div>;
   if (isLoading || !data) return null;
 
   const agg = aggregateWeaknessClustersToTaxonomy(
@@ -75,7 +88,7 @@ export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
       <Card className="border-dashed">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" /> Develop This Week
+            <Sparkles className="h-4 w-4 text-primary" /> Recent development picks
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
@@ -92,7 +105,7 @@ export function LongTermVideoSuggestions({ skillDomain: domainProp }: Props) {
       movementPatterns={agg.movementPatterns}
       resultTags={agg.resultTags}
       contextTags={agg.contextTags}
-      title="Develop This Week"
+      title="Recent development picks"
     />
   );
 }

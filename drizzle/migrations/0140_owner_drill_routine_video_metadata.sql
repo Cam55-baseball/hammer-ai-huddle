@@ -1,0 +1,6 @@
+ALTER TABLE public.owner_drills ADD COLUMN IF NOT EXISTS routine_role text, ADD COLUMN IF NOT EXISTS skill_area text, ADD COLUMN IF NOT EXISTS bat_speed_kind text, ADD COLUMN IF NOT EXISTS library_video_id uuid REFERENCES public.library_videos(id);
+ALTER TABLE public.owner_drills ADD CONSTRAINT owner_drills_routine_role_valid CHECK (routine_role IS NULL OR routine_role IN ('routine','fix_it','prep'));
+ALTER TABLE public.owner_drills ADD CONSTRAINT owner_drills_skill_area_valid CHECK (skill_area IS NULL OR skill_area IN ('hitting','bat_speed','bunting','pitching','throwing','defense','baserunning','conditioning'));
+ALTER TABLE public.owner_drills ADD CONSTRAINT owner_drills_bat_speed_kind_valid CHECK (bat_speed_kind IS NULL OR bat_speed_kind IN ('weighted','overspeed','standard'));
+COMMENT ON COLUMN public.owner_drills.routine_role IS 'Owner-declared drill role only; never proves efficacy or authorizes a dose or lock-in.';
+COMMENT ON COLUMN public.owner_drills.library_video_id IS 'Canonical video library reference; video_url remains the compatible playback projection.';

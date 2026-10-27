@@ -1,4 +1,5 @@
 import { sortByWarmupStage } from "./warmupStages";
+import { recoveryDrills } from './recoveryDrills';
 import {applyMasteryFocus,masteryGoalWeights,type MasteryPlanFocus} from './masteryFocus';
 import { applyBuntingPlan, type BuntCatalogItem } from './buntingPlan';
 import type { BuntingEvidence } from './buntingEvidence';
@@ -1399,14 +1400,7 @@ function builder({ modality, ctx, proj, speed, positionOverride, modalityBiasOve
     case "recovery": {
       const elevated =
         recoverDay || workloadHigh || seasonPhase === "in" || injuryRegions.length > 0;
-      const drills: DrillStep[] = [
-        { name: elevated ? "Mobility + foam roll" : "Mobility + foam roll", dosage: elevated ? "15 min full body" : "10 min focus areas", cue: "slow pressure, breathe" },
-        { name: "Evening down-regulation breath (post-session)", dosage: elevated ? "10 min" : "5 min", cue: "long exhales, longer than inhales — this is the closing breath of the day, distinct from the morning HPI primer" },
-        { name: "Hydrate + plan tomorrow's wake time", dosage: "now" },
-        ...(injury
-          ? [{ name: "Mind your injury note", dosage: injury } as DrillStep]
-          : [{ name: "Note any new soreness in Vault", dosage: "1 entry" } as DrillStep]),
-      ];
+      const drills = recoveryDrills(elevated);
       return {
         modality,
         title: recoverDay

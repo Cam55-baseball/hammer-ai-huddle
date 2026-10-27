@@ -280,17 +280,17 @@ export function IdentityCommandCard({ className }: Props) {
              <span className="inline-flex items-center gap-1.5 font-medium text-primary-foreground">
               <Flame className="h-3 w-3 text-orange-500" />
               <span className="tabular-nums">{perfStreak}</span>
-               <span className="text-primary-foreground/70">days meeting your standard</span>
+               <span className="text-primary-foreground/70">standard-meeting streak (days)</span>
             </span>
              <span className="inline-flex items-center gap-1.5 font-medium text-primary-foreground">
               <ShieldCheck className="h-3 w-3 text-emerald-500" />
               <span className="tabular-nums">{discStreak}</span>
-               <span className="text-primary-foreground/70">active days</span>
+               <span className="text-primary-foreground/70">active streak (days)</span>
             </span>
             {nnMiss > 0 && (
               <span className="inline-flex items-center gap-1.5 font-medium text-red-300">
                 <span className="tabular-nums">{nnMiss}</span>
-                <span>missed days this week</span>
+                <span>required items missed (7 days)</span>
               </span>
             )}
             {typeof hieSnapshot?.readiness_score === 'number' && (

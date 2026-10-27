@@ -21,6 +21,8 @@ import { toast } from "@/hooks/use-toast";
 import { planReadiness, type PlanSlot } from "@/lib/prescription/ownerPlanDrills";
 import { validateVideoFile } from "@/data/videoLimits";
 import { VideoPlayer } from "@/components/video-library/VideoPlayer";
+import { useVideoLibrary } from '@/hooks/useVideoLibrary';
+import { SKILL_AREAS, ROUTINE_ROLES, BAT_SPEED_KINDS, validDrillRoleTags } from '@/lib/prescription/drillRoleTags';
 
 const SLOT_LABEL: Record<PlanSlot, string> = {
   "hammers_today:skill": "Skill block",
@@ -114,6 +116,8 @@ export default function DrillBuilder() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [videoSearch, setVideoSearch] = useState('');
+  const { videos: libraryVideos, loading: videosLoading, hasMore: moreVideos, loadMore: loadMoreVideos } = useVideoLibrary({ search: videoSearch, limit: 20 });
 
   useEffect(() => {
     const id = params.get('drill');
@@ -157,6 +161,7 @@ export default function DrillBuilder() {
 
   const save = async () => {
     if (!draft || saving) return;
+    if (!validDrillRoleTags(draft)) { toast({ title: 'Check the drill role tags' }); return; }
     if (!draft.name.trim() || draft.placements.length === 0) {
       toast({ title: "Name and at least one place to land are required" });
       return;
@@ -182,6 +187,7 @@ export default function DrillBuilder() {
       equipment: body.equipment.map((s) => s.trim()).filter(Boolean),
       level: body.level || null,
       video_url: videoUrl || null,
+      library_video_id: videoFile ? null : body.library_video_id ?? null,
     };
     const { data: u } = await supabase.auth.getUser();
     const db = supabase as any;
@@ -226,7 +232,7 @@ export default function DrillBuilder() {
       <div className="mx-auto max-w-5xl space-y-6 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h1 className="text-2xl font-bold">Drill Builder</h1>
+            <h1 className="text-2xl font-bold">Skill drill builder</h1>
             <p className="text-sm text-muted-foreground">Activity types: baseball and softball hitting, pitching, throwing, fielding and baserunning; Hammers Today skill, warm-up and defense; defensive library.</p>
             <p className="text-sm text-muted-foreground">Create and edit drills for every place they appear. Usage counts show how often drills are used, not whether they work.</p>
           </div>
@@ -423,7 +429,13 @@ export default function DrillBuilder() {
               <div><Label>What it feels like when it's wrong</Label><Textarea value={draft.feel_wrong ?? ""} onChange={(e) => set("feel_wrong", e.target.value)} /></div>
               <div><Label>The common mistake (and how to tell)</Label><Textarea value={draft.common_mistake ?? ""} onChange={(e) => set("common_mistake", e.target.value)} /></div>
               <div><Label>Equipment (comma separated)</Label><Input value={draft.equipment.join(", ")} onChange={(e) => set("equipment", e.target.value.split(","))} /></div>
-              <div><Label>Video link</Label><Input value={draft.video_url ?? ""} onChange={(e) => set("video_url", e.target.value)} placeholder="Paste your drill video link" /></div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div><Label>Skill area</Label><Select value={draft.skill_area ?? 'none'} onValueChange={value => setDraft(d => d && ({ ...d, skill_area: value === 'none' ? null : value, bat_speed_kind: value === 'bat_speed' ? d.bat_speed_kind : null }))}><SelectTrigger aria-label="Skill area"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not tagged</SelectItem>{SKILL_AREAS.map(value => <SelectItem key={value} value={value}>{value.replace(/_/g, ' ')}</SelectItem>)}</SelectContent></Select></div>
+                <div><Label>Drill role</Label><Select value={draft.routine_role ?? 'none'} onValueChange={value => set('routine_role', value === 'none' ? null : value)}><SelectTrigger aria-label="Drill role"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not tagged</SelectItem>{ROUTINE_ROLES.map(value => <SelectItem key={value} value={value}>{value === 'prep' ? 'Collective preparation' : value.replace(/_/g, ' ')}</SelectItem>)}</SelectContent></Select></div>
+                {draft.skill_area === 'bat_speed' && <div><Label>Bat-speed kind</Label><Select value={draft.bat_speed_kind ?? 'none'} onValueChange={value => set('bat_speed_kind', value === 'none' ? null : value)}><SelectTrigger aria-label="Bat-speed kind"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not tagged</SelectItem>{BAT_SPEED_KINDS.map(value => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select></div>}
+              </div>
+              <div className="space-y-2"><Label htmlFor="drill-library-search">Video library</Label><Input id="drill-library-search" placeholder="Search library videos" value={videoSearch} onChange={e => setVideoSearch(e.target.value)} /><div className="max-h-48 space-y-1 overflow-y-auto">{libraryVideos.filter(video => video.video_url).map(video => <Button key={video.id} type="button" variant={draft.library_video_id === video.id ? 'default' : 'outline'} className="h-auto w-full justify-start whitespace-normal break-words text-left" onClick={() => { setDraft(d => d && ({ ...d, library_video_id: video.id, video_url: video.video_url })); setVideoFile(null); }}>{video.title}</Button>)}</div>{videosLoading && <p role="status" className="text-xs text-muted-foreground">Loading videos…</p>}{moreVideos && <Button type="button" variant="ghost" disabled={videosLoading} onClick={loadMoreVideos}>More videos</Button>}</div>
+              <div><Label>Video link</Label><Input value={draft.video_url ?? ""} onChange={(e) => setDraft(d => d && ({ ...d, video_url: e.target.value, library_video_id: null }))} placeholder="Paste your drill video link" /></div>
               <div><Label htmlFor="drill-video-file">Or upload a video</Label><Input id="drill-video-file" type="file" accept="video/mp4,video/quicktime,video/webm,video/x-msvideo,video/x-m4v" onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)} />{videoFile && <p className="text-xs text-muted-foreground">{videoFile.name} will be attached when you save.</p>}</div>
               {(draft.video_url || localVideoUrl) && <VideoPlayer videoUrl={localVideoUrl || draft.video_url} videoType={localVideoUrl || /\.(mp4|mov|webm|avi|m4v)(\?|$)/i.test(draft.video_url ?? "") ? "upload" : "external"} title={draft.name || "Drill preview"} />}
               <PlanReadiness row={draft} />

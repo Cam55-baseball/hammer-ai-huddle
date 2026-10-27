@@ -29,7 +29,7 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
   const reps = firstNumber(text, /\b(\d+)\s*(?:reps?|contacts?|catches?|swings?|steps?|runs?|trips?|bursts?|ladders?|breaths?|rocks?)\b/) ?? multiplied ?? firstNumber(text, /\b(\d+)\s*(?:slow\s*)?(?:per|each)\b/) ?? firstNumber(text, /\b(\d+)\s+slow\s+(?:reps?|breaths?|rocks?)/);
   const targetText = text.replace(/rest\s*:?\s*\d+(?:\.\d+)?\s*(?:seconds?|secs?|s|minutes?|mins?)\b/g, "");
   const seconds = firstNumber(targetText, /\b(\d+(?:\.\d+)?)\s*(?:seconds?|secs?|s)\b/);
-  const minutes = firstNumber(targetText, /\b(\d+(?:\.\d+)?)\s*(?:minutes?|mins?)\b/);
+  const minutes = firstNumber(targetText, /\b(\d+(?:\.\d+)?)\s*(?:minutes?|mins?|min)\b/);
   const feet = firstNumber(targetText, /\b(\d+(?:\.\d+)?)\s*(?:feet|foot|ft)\b/);
   const yards = firstNumber(targetText, /\b(\d+(?:\.\d+)?)\s*(?:yards?|yds?)\b/);
   const distance = feet ?? (yards == null ? null : yards * 3);

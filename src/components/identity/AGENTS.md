@@ -1,0 +1,1 @@
+- Identity counters display canonical snapshot streaks and missed required items by their actual kind, never recalculate them from sessions. Why: rest/injury neutrality and item counts are not day totals.

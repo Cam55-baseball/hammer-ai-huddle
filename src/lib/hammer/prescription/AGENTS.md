@@ -1,4 +1,5 @@
 # Prescription rules
+- Recovery exercise rows contain only timed mobility and breathing with their own setup/stop guidance; hydration, wake-time and injury-note reminders never become exercise results. Why: untracked advice must not create fake performed work or unrelated how-to text.
 - Whole-day rest uses shared explicit softRecovery identities at final-block and final-save boundaries, distinct from lift-spacing removals; recovery warmups bypass training anchors. Why: mobility labels and defense overrides cannot certify training as rest.
 - Bunting uses sourced evidence and active Vault catalog identities inside existing legal hitting slots; attempts replace swings one-for-one, owner/prep/full-go slots remain protected, whole off-season eligibility requires all four permitted quarters. Why: bunting may not create days, borrow unknown traits, bypass phase eligibility or add volume.
 - Catalog alternative equipment requires every mandatory item and one complete alternative group; normalize ownership and missing answers identically, and reject malformed gear arrays. Why: OR setups must neither require both options nor silently drop required gear.
