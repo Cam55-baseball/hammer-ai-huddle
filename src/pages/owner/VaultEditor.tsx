@@ -18,6 +18,7 @@ import { defaultWarmupStage, sampleWarmupWith, stageLabel } from "@/lib/vault/wa
 import { COMMON_SWAP_GEAR } from "../../../supabase/functions/_shared/planSwap/commonGear";
 import { ownerGear, ownerIdentity, OWNER_DEFAULTS } from "../../../supabase/functions/_shared/vault/ownerDefaults";
 import { Checkbox } from "@/components/ui/checkbox";
+import { catalogMeasure } from "@/lib/vault/catalogMeasure";
 
 const CARD_TYPES = ["lift", "primer", "conditioning", "recovery", "speed", "warmup", "bat_speed", "hitting", "throwing", "pitching", "windmill", "defense", "baserunning", "cross_sport", "mobility", "arm_care"];
 const SPORTS = ["baseball", "softball"];
@@ -59,7 +60,7 @@ export default function VaultEditor({ slug: baseSlug, base, baseHowTo, onClose, 
     movements: [],
     default_sets: base.default_sets ?? (isNew ? OWNER_DEFAULTS.default_sets : null), default_reps: base.default_reps ?? (isNew ? OWNER_DEFAULTS.default_reps : null),
     default_seconds: null, default_distance_ft: null, default_load_pct: null,
-    measure_type: "reps",
+    measure_type: isNew ? "reps" : catalogMeasure({ ...base, slug: baseSlug }),
     equipment: base.equipment?.length ? base.equipment : isNew ? ["none"] : [],
     equipment_alternatives: base.equipment_alternatives ?? [],
     card_type: base.category ?? (isNew ? OWNER_DEFAULTS.card_type : ""),
