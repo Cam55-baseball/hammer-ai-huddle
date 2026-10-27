@@ -1,5 +1,6 @@
 import { HMLoadingFallback } from "@/components/loading/HMLoadingScreen";
 import { SavedMovementSummary } from "@/components/assessment/SavedMovementSummary";
+import { isAnalysisType } from "../../supabase/functions/_shared/analysisTypes";
 import { Fragment, useEffect, useState, useRef } from "react";
 import { runClipPreflight, type PreflightVerdict } from "@/lib/biomech/pose/clipPreflight";
 import { ClipPreflightCard } from "@/components/analyze/ClipPreflightCard";
@@ -171,7 +172,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
   });
   const videoRef = useRef<HTMLVideoElement>(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-  const [analysisEnabled, setAnalysisEnabled] = useState(true);
+  const analysisEnabled = true;
   const [showScorecard, setShowScorecard] = useState<boolean>(() => {
     return localStorage.getItem('showProgressReport') !== 'false';
   });
@@ -319,6 +320,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       navigate("/dashboard", { replace: true });
       return;
     }
+    if (!isAnalysisType(module)) return;
 
     // 3. Owner/Admin short-circuit — never gate them on subscription data.
     if (isOwnerOrAdmin) return;
@@ -353,7 +355,6 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
     setClipTiles(null);
     setAnalysisError(null);
     setCurrentVideoId(null);
-    setAnalysisEnabled(true);
     setLandingTime(null);
     if (module && sport && !assessment) {
       toast.info(t('videoAnalysis.switchedContext', { sport, module, defaultValue: 'Switched to {{sport}} - {{module}}. Upload space cleared.' }));
@@ -499,7 +500,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
   };
 
   const handleUploadAndAnalyze = async () => {
-    if (!videoFile || !user) return;
+    if (!videoFile || !user || !isAnalysisType(module)) return;
 
     // Side gate: analysis refuses honestly when the side is not established.
     // It picks the front foot, so a guessed side invalidates the plant anchor
@@ -1233,7 +1234,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
   };
 
   const handleRetryAnalysis = async () => {
-    if (!currentVideoId || !user) return;
+    if (!currentVideoId || !user || !isAnalysisType(module)) return;
     
     // Guard: Need video file to re-extract frames
     if (!videoFile) {
@@ -1349,6 +1350,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
   if (authLoading || subLoading || !initialized)  return <HMLoadingFallback />;
   const Layout = assessment ? Fragment : DashboardLayout;
+  if (!isAnalysisType(module)) return <Layout><p className="py-8 text-lg">This analysis is coming soon</p></Layout>;
 
   return (
     <Layout>
@@ -1378,7 +1380,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
         {/* Analysis is upload-only: one clip, deeply analysed. Live recording
             lives in DelayCam. */}
         <SavedMovementSummary />
-        {!videoPreview && (
+        {!videoPreview && !analysis && (
           <div className="space-y-4">
             {assessment && <HighFpsCapture module={assessment.module} sport={assessment.sport} onAnalysis={(report, videoId) => { const normalized = normalizeAnalysisResponse(report); setCurrentVideoId(videoId); setAnalysis(normalized); setAnalysisError(null); assessment.onSaved?.(normalized); }} />}
             <PitchingFilmingGuide />
@@ -1425,9 +1427,9 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
         )}
 
         {/* Video Preview & Analysis */}
-        {videoPreview && (
+        {(videoPreview || analysis) && (
           <div className="space-y-6">
-            <Card className="p-6">
+            {videoPreview && <Card className="p-6">
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
                   <h3 className="text-base sm:text-lg font-semibold">{t('videoAnalysis.videoPreview')}</h3>
@@ -1463,24 +1465,6 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
                   </div>
                 </div>
 
-                {/* Analysis Toggle */}
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="enable-analysis" className="text-sm font-medium">
-                      {t('videoAnalysis.enableAIAnalysis')}
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      {analysisEnabled 
-                        ? t('videoAnalysis.analysisEnabledDescription')
-                        : t('videoAnalysis.analysisDisabledDescription')}
-                    </p>
-                  </div>
-                  <Switch
-                    id="enable-analysis"
-                    checked={analysisEnabled}
-                    onCheckedChange={setAnalysisEnabled}
-                  />
-                </div>
 
                 {/* Side is asked exactly once, in the confirmation card below.
                     Do not add a second side control on this screen. */}
@@ -1522,7 +1506,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
                   landingTime={landingTime}
                 />
               </div>
-            </Card>
+            </Card>}
 
             {analysisEnabled && videoFile && !analysis && !analyzing && !sideLoading && (
               <Card className={cn(
@@ -1677,7 +1661,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
             {analysis && (
               <div className="space-y-4">
-                {analysis.saved === false && <p role="alert" className="text-sm text-destructive">{analysis.save_error ?? "This report is shown here but hasn't been saved. Try the clip again."}</p>}
+                {analysis.saved === false && <p role="alert" className="text-sm text-destructive">{analysis.save_error ?? "Your report is shown here, but its saved copy could not be confirmed. Saving to Players Club will check it again."}</p>}
                 {analysis.report_status === "not_measured" && <Button variant="outline" disabled={uploading || analyzing} onClick={currentVideoId ? handleRetryAnalysis : handleUploadAndAnalyze}>{t('videoAnalysis.retryAnalysis')}</Button>}
                 {showReportCard ? (
                   <div className="space-y-1">{!videoGradesShown() && <InternalLabel />}<AnalysisToggle value={analysisView} onChange={setAnalysisView} /></div>
@@ -1760,6 +1744,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
           videoId={currentVideoId}
           sport={sport}
           module={module || ''}
+          requireAnalysis
         />
       )}
     </Layout>

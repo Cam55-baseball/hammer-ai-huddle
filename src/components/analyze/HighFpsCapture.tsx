@@ -31,6 +31,8 @@ import fixWebmDuration from "fix-webm-duration";
 import { describeVideoSaveFailure } from "@/lib/upload/saveFailure";
 import { UPLOAD_ERRORS } from "@/lib/upload/uploadErrorCopy";
 import { analysisErrorDetails, normalizeAnalysisResponse } from "@/lib/upload/analysisResponse";
+import { isAnalysisType } from "../../../supabase/functions/_shared/analysisTypes";
+import { UNKNOWN_FPS_SAMPLING_GRID_HZ } from "@/lib/biomech/pose/denseLandmarkCapture";
 import {
   analysisScopeForFps,
   describeCaptureFps,
@@ -383,17 +385,12 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp, onAnalysi
       // analyzed is rejected in seconds instead of after a full upload.
       let extraction: Awaited<ReturnType<typeof extractKeyFramesDeterministic>> | null = null;
       const fpsForFrames = probed.fps_true;
-      if (opts.analyze && fpsForFrames == null) {
-        toast.error("We couldn't read this recording's frame rate, so it can't be analysed frame by frame. Save it without analysis, or record again.", { id: toastId });
-        setSaving(null);
-        return;
-      }
-      if (opts.analyze && fpsForFrames != null) {
+      if (opts.analyze) {
         toast.loading("Extracting frames…", { id: toastId });
         const tExtract = performance.now();
         extraction = await extractKeyFramesDeterministic({
           videoFile: file,
-          fps_true: fpsForFrames,
+          fps_true: fpsForFrames ?? UNKNOWN_FPS_SAMPLING_GRID_HZ,
           duration_sec: probed.duration_sec,
           landingTime: null,
         });
@@ -435,7 +432,7 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp, onAnalysi
           thumbnail_url: thumbnailUrl,
           status: opts.analyze ? "processing" : "completed",
           library_title: `In-app capture — ${new Date().toLocaleString()}`,
-          saved_to_library: true,
+          saved_to_library: !opts.analyze,
           sha256_hex: probed.sha256_hex,
           fps_true: probed.fps_true,
           duration_sec: probed.duration_sec,
@@ -526,6 +523,7 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp, onAnalysi
     return <Badge variant="outline" className={cls}><Gauge className="h-3 w-3 mr-1" />{label}</Badge>;
   })();
 
+  if (!isAnalysisType(resolvedModule)) return <p>This analysis is coming soon</p>;
   return (
     <Card className="p-4 space-y-4">
       <div className="flex items-start justify-between gap-2 flex-wrap">
@@ -635,19 +633,19 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp, onAnalysi
             <Button size="sm" variant="outline" onClick={downloadClip} className="gap-1.5">
               <Download className="h-4 w-4" /> Save to device
             </Button>
-            <Button
+            {!onAnalysis && <Button
               size="sm" variant="outline" disabled={!user || saving !== null}
               onClick={() => void save({ analyze: false })} className="gap-1.5"
             >
               {saving === "club" ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookMarked className="h-4 w-4" />}
               Save to Players Club
-            </Button>
+            </Button>}
             <Button
               size="sm" disabled={!user || saving !== null}
               onClick={() => void save({ analyze: true })} className="gap-1.5"
             >
               {saving === "analyze" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              Save & Analyze
+              Upload & Analyze
             </Button>
           </div>
         </div>
