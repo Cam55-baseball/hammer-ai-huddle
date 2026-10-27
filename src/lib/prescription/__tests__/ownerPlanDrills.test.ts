@@ -52,4 +52,16 @@ describe("owner plan drills", () => {
     const names = [0, 1].map((d) => mergeOwnerSlotDrills(base, ["hammers_today:skill"], { sport: "baseball", skill: "hitting", day: new Date(d * 86_400_000) })[2].name);
     expect(new Set(names).size).toBe(2);
   });
+  it("owner tags never displace preparation, full-go, log or existing owner slots", () => {
+    setOwnerPlanDrills([row({ routine_role: 'routine' })]);
+    const protectedRows = [{ name: 'Prep', stage: 'prep' }, { name: 'Owner', stage: 'drills', prescriptionOrigin: 'owner' },
+      { name: 'Live', stage: 'full_go' }, { name: 'Record', stage: 'log' }];
+    expect(mergeOwnerSlotDrills(protectedRows, ['hammers_today:skill'], { sport: 'baseball', skill: 'hitting' })).toBe(protectedRows);
+    const ordinary = { name: 'Ordinary', stage: 'drills' };
+    const mixed = [protectedRows[0], ordinary, ...protectedRows.slice(1)];
+    const next = mergeOwnerSlotDrills(mixed, ['hammers_today:skill'], { sport: 'baseball', skill: 'hitting' });
+    expect(next).toHaveLength(mixed.length);
+    expect(next[1].name).toBe('Owner tee drill');
+    for (const index of [0, 2, 3, 4]) expect(next[index]).toBe(mixed[index]);
+  });
 });
