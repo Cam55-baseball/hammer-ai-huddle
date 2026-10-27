@@ -2,6 +2,16 @@
 
 ## October 27 urgent run — current status
 
+### October 27 run (2), 04:10 UTC
+- BUILT: normal upload, retry and embedded camera notify assessment only through the saved-report contract; confirmed readable reports trigger canonical evidence refresh, not invented completion of other required modules. Multiple active subscriptions are unioned in assessment entry and module selection rather than failing a single-row read.
+- BUILT: nested body, equipment and goal forms expose their existing save actions; assessment Back/Skip/Next and nested Back wait for these saves. Body save failures no longer advance. Unanswered equipment is not declared empty; empty goals do not invent picks.
+- PHONE PROOF: real body form at 390×844 retained the owner's existing entered height, Next saved and advanced to step 2; zero page errors. Screenshots inspected. Embedded upload could not begin: owner's saved active baseball subscription supplies no analysis modules. No role bypass, entitlement change or fabricated softball footage used.
+- CLEANUP: previous two duplicate proof video rows snapshotted privately, removed through self-owned exact-ID requests and read back absent. The earlier 403 was the cleanup script requesting restricted whole-row video columns, not failed upload permissions. This run's two temporary assessment rows snapshotted to `_snapshot_urgent_run2_assessment_20261027` and removed by exact owner/creation timestamp; original assessment was absent. Registered canary fixture retained.
+- TESTS: 8 focused files / 48 tests PASS including real body form writer/failure behavior and save-before-Back/Skip/Next ordering. Preview build OK. Prior full-suite 572 files/4,770 tests remains the prior run's result, not a new full-suite claim.
+- OPEN: original softball and position-player throwing clips needed for four remaining sport/module proofs; embedded proof requires an actually subscribed player; deep movement screen and remaining P1 workout work still unfinished.
+
+**Ready to publish: NO.** Remaining P0 evidence and P1 implementation are incomplete. No publish, schedule or iOS changes.
+
 ### October 27 continuation, 04:00 UTC
 - LIVE: analyze-video, analysis-canary and analysis-canary-configure deployed. Terminal provider errors/refusals stop without model switching; transient attempts wait; upload/camera display the server's saved Not measured report instead of hiding it. Cache replay confirms saved:true.
 - REAL UI: owner original hitting and pitching MOV clips converted/uploaded/analyzed/saved/displayed/replayed at 390×844. Saved feedback matched replay. Screenshots inspected; transient toasts partly obscure result cards, so report visibility is also asserted from the rendered page.
@@ -23,7 +33,7 @@
 | Verification | Full suite: 569 files / 4,759 tests passed across eight bounded groups after correcting obsolete per-side expectation; final affected run 27 files / 151 tests PASS. Automatic preview build OK. Final original fixture upload PASS after tracking edits. | Tracking failure-path UI proof and complete cross-sport/role flows remain open. |
 
 ### By-role guide — urgent changes
-- Players: use Next to save each optional assessment step; Skip retains entered answers. Last step offers Save & exit. Existing test submissions remain canonical; navigation never invents test results.
+- Players: use Back, Skip or Next to save entered body, equipment and goal answers before leaving their assessment form; a save failure keeps the form open. Last step offers Save & exit. Existing test submissions remain canonical; navigation never invents test results.
 - Players: Finished records entered exercise work then starts declared rest automatically; an unspecified rest stays pending across reload. Practice-session links now include fielding and bunting.
 - Coaches: saved legacy goal choices remain readable; new pickers offer Clean hands, Improve footwork, Routine plays, Arm health and Improve throw carry.
 - Owner: original upload fixture test is `e2e/analysis-upload.py`; provide an original clip through ANALYSIS_FIXTURE and mint your own session. ANALYSIS_MODULE/ANALYSIS_SPORT choose the real clip's activity/sport; REGISTER_ANALYSIS_CANARY=1 explicitly registers a TEST fixture. Real provider calls incur usage. Daily canary is deployed and manually passed; apply `docs/owner/analysis-canary-cron.sql` yourself to schedule it.
