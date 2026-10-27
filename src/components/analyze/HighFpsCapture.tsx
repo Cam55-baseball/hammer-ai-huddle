@@ -494,6 +494,7 @@ export function HighFpsCapture({ module: moduleProp, sport: sportProp, onAnalysi
       });
       if (fnError) {
         const failure = await analysisErrorDetails(fnError);
+        if (failure.report) onAnalysis?.(failure.report, (videoRow as { id: string }).id);
         toast.error(failure.message, { id: toastId });
         return;
       }

@@ -1176,6 +1176,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
       if (analysisError) {
         const safeError = await analysisErrorDetails(analysisError);
+        if (safeError.report) setAnalysis(safeError.report);
         setAnalysisError({ ...safeError, terminal: safeError.status !== 429 && safeError.status < 500 });
         setAnalyzing(false);
         toast.error(safeError.message);
@@ -1316,6 +1317,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       if (analysisError) {
         console.error("Retry analysis error:", analysisError);
         const safeError = await analysisErrorDetails(analysisError);
+        if (safeError.report) setAnalysis(safeError.report);
         setAnalysisError({ ...safeError, terminal: safeError.status !== 429 && safeError.status < 500 });
         toast.error(safeError.message);
         return;
