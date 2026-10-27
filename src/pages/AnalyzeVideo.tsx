@@ -493,7 +493,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
   const showUnavailableReport = (stage: string, reason?: string) => {
     const report = unavailableAnalysis(module ?? "video", stage);
     // Local-only: nothing was analysed or saved, so no save-confirmation claim.
-    setAnalysis({ ...report, ...(reason ? { feedback: reason } : {}), local_only: true });
+    setAnalysis({ ...report, ...(reason ? { feedback: reason } : {}) });
     setAnalysisError(null);
     setUploading(false);
     setAnalyzing(false);
