@@ -158,6 +158,13 @@ Deno.serve(async (req) => {
         const { error: ce } = await admin.from("wk_movement_catalog").upsert(row, { onConflict: "slug" });
         if (ce) return json({ error: `Catalog entry failed: ${ce.message}` }, 500);
       }
+      // Existing non-bunt items retain safety identity and TEST visibility.
+      // Dated live versions supply tracking; this invalidates catalog copies.
+      if (!draft.is_new && livePayload.measure_type !== 'bunt_attempts') {
+        const { error: trackingError } = await admin.from("wk_movement_catalog")
+          .update({ tracking_measure_type: livePayload.measure_type, updated_at: new Date().toISOString() }).eq("slug", slug);
+        if (trackingError) return json({ error: "Tracking saved, but catalog refresh failed. Try again." }, 500);
+      }
       await audit("make_live", { version: (cur?.[0]?.version ?? 0) + 1, apply_today: applyToday, is_new: Boolean(draft.is_new), test_only: body?.test_only === true });
       return json({ ok: true });
     }

@@ -56,7 +56,7 @@ describe("Today presentation — no prescription bleed", () => {
       expect(all).toHaveLength(original.drills.length);
       original.drills.forEach(d => expect(all.filter(item => item === d)).toHaveLength(1));
       expect(JSON.stringify(original)).toBe(before);
-      expect(split.mental[0].route).toBe("/baserunning-iq");
+      expect(split.mental[0].route).toBe("/practice?module=baserunning");
       expect(split.mental[0].drills.every(d => !/footwork/i.test(d.name))).toBe(true);
     }
   });

@@ -21799,6 +21799,7 @@ export type Database = {
           surface_hint: string | null
           throw_compatible: boolean | null
           throwing_phase: string | null
+          tracking_measure_type: string | null
           training_age_legality: Json | null
           transfer_group: string | null
           travel_friendly: boolean | null
@@ -21909,6 +21910,7 @@ export type Database = {
           surface_hint?: string | null
           throw_compatible?: boolean | null
           throwing_phase?: string | null
+          tracking_measure_type?: string | null
           training_age_legality?: Json | null
           transfer_group?: string | null
           travel_friendly?: boolean | null
@@ -22019,6 +22021,7 @@ export type Database = {
           surface_hint?: string | null
           throw_compatible?: boolean | null
           throwing_phase?: string | null
+          tracking_measure_type?: string | null
           training_age_legality?: Json | null
           transfer_group?: string | null
           travel_friendly?: boolean | null
@@ -23615,6 +23618,10 @@ export type Database = {
       coach_athlete_games: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_glance: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_load: { Args: { _athlete: string }; Returns: Json }
+      coach_athlete_movement_observations: {
+        Args: { _athlete: string }
+        Returns: Json
+      }
       coach_athlete_outcomes: { Args: { _athlete: string }; Returns: Json }
       coach_athlete_plan: {
         Args: { _athlete: string; _date: string }

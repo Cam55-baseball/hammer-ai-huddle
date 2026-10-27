@@ -52,7 +52,8 @@ export function LegacyDrillInlineLog({
   const { user } = useOptionalAuth();
   const qc = useContext(QueryClientContext) ?? null;
   const spec = useMemo(() => legacyDrillLogSpec(modality, name, dosage), [dosage, modality, name]);
-  const initial = useMemo<Draft>(() => Array.from({ length: spec.rows }, () => Object.fromEntries(spec.fields.map((f) => [f.key, f.prefill == null ? "" : String(f.prefill)]))), [spec]);
+  const fieldsAt = (row: number) => spec.rowFields?.[row] ?? spec.fields;
+  const initial = useMemo<Draft>(() => Array.from({ length: spec.rows }, (_, row) => Object.fromEntries((spec.rowFields?.[row] ?? spec.fields).map((f) => [f.key, f.prefill == null ? "" : String(f.prefill)]))), [spec]);
   const [rounds, setRounds] = useState<Draft>(initial);
   const [skipped, setSkipped] = useState(false);
   const [hard, setHard] = useState("");
@@ -75,7 +76,7 @@ export function LegacyDrillInlineLog({
 
   const entered = (rs: Draft) => rs.filter(r => r[TOUCHED] === "1").map((r) => ({ set: rs.indexOf(r) + 1, ...Object.fromEntries(Object.entries(r).filter(([k]) => !k.startsWith("_")).map(([k, v]) => [k, v === "" || k.startsWith("reps_") && r[`_entered_${k}`] !== "1" ? null : Number(v)])) }) as Record<string, number | null>)
     .filter(r => stopwatch ? typeof r.time === "number" && r.time > 0 : Object.entries(r).some(([k, v]) => k !== "set" && typeof v === "number" && v > 0));
-  const statusOf = (rs: Draft, skip: boolean) => autoStatus({
+  const statusOf = (rs: Draft, skip: boolean) => spec.rowFields ? (skip ? 'skipped' : !entered(rs).length ? null : rs.every((row, index) => row[TOUCHED] === '1' && fieldsAt(index).every(f => Number(row[f.key]) >= (f.prefill ?? 0) && Number(row[f.key]) > 0)) ? 'done' : 'cut_short') : autoStatus({
     prescribedRows: spec.rows,
     targets: Object.fromEntries(spec.fields.map(f => [f.key, f.prefill])),
     rows: entered(rs), lowerIsBetter: stopwatch ? ["time"] : [], skipped: skip,
@@ -92,6 +93,7 @@ export function LegacyDrillInlineLog({
     const how_hard = effort >= 1 && effort <= 10 ? effort : null;
     const outcome = st === "skipped" ? "skipped" : st === "cut_short" ? "cut_short" : st ? "completed" : null;
     const log = {
+      ...(spec.rowFields ? { components: spec.rowFields.map((fields, i) => ({ label: spec.rowLabels?.[i], fields })) } : {}),
       dosage, notes: n.trim() || null, rounds: logged, did_more: st === "did_more",
       fields: spec.fields.map(({ key, label, unit }) => ({ key, label, unit: unit ?? null })),
     };
@@ -120,8 +122,8 @@ export function LegacyDrillInlineLog({
   const kindFor = (target: number | null) => timeKindFor({ stopwatch, targetSeconds: target });
   const distance = spec.fields.find(f => f.key === "distance")?.prefill;
   const explicitRest = dosage.match(/rest\s*:?\s*(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?)/i);
-  const rest = explicitRest ? Number(explicitRest[1]) * (/min/i.test(explicitRest[2]) ? 60 : 1) : modality === "warmup" || spec.fields.some(f => f.key.startsWith("reps_")) ? 30 : null;
-  const focus = useFocusExercise({ id: storageKey, name, rows: spec.rows, ready: rounds.map(row => entered([row]).length > 0 && spec.fields.filter(f => f.key.startsWith("reps_")).every(f => row[`_entered_${f.key}`] === "1" && Number(row[f.key]) > 0)),
+  const rest = explicitRest ? Number(explicitRest[1]) * (/min/i.test(explicitRest[2]) ? 60 : 1) : modality === "warmup" || spec.rowFields || spec.fields.some(f => f.key.startsWith("reps_")) ? 30 : null;
+  const focus = useFocusExercise({ id: storageKey, name, rows: spec.rows, ready: rounds.map((row, i) => entered([row]).length > 0 && fieldsAt(i).every(f => f.key.startsWith("reps_") ? row[`_entered_${f.key}`] === "1" && Number(row[f.key]) > 0 : Number(row[f.key]) > 0)),
     restSeconds: modality === "speed" && stopwatch ? sprintRestSeconds(distance) : rest,
     bases: modality === "conditioning" ? prescribedBases(name, distance) : null,
     save: async () => { if (!(await autosave.flush())) throw new Error("Save pending"); },
@@ -130,7 +132,7 @@ export function LegacyDrillInlineLog({
     <div hidden={!focus.visible} className="space-y-2">
     <div hidden={focus.active && focus.resting} className="space-y-2">
     {logHost && <h4 className="text-sm font-semibold">{name} <span className="text-xs font-normal text-muted-foreground">(instructions below)</span></h4>}
-    {spec.fields.some(f => f.key === "time") && <ExerciseTimer key={focus.active ? focus.row : "regular"} target={stopwatch ? undefined : spec.fields.find(f => f.key === "time")?.prefill ?? undefined} hasEnteredValue={rounds.some(r => Number(r._manual_time) > 0)}
+    {(focus.active ? fieldsAt(focus.row) : spec.fields).some(f => f.key === "time") && <ExerciseTimer key={focus.active ? focus.row : "regular"} target={stopwatch ? undefined : fieldsAt(focus.row).find(f => f.key === "time")?.prefill ?? undefined} hasEnteredValue={rounds.some(r => Number(r._manual_time) > 0)}
       onRecord={value => { const next = focus.active ? focus.row : rounds.findIndex(r => r._t !== "1" || !r.time); if (next >= 0 && !(Number(rounds[next]?._manual_time) > 0)) edit(next, "time", String(value), 0, true); }} />}
     {!focus.active && (modality === "speed" || modality === "conditioning") && <RestTimer label="Rest between repeats" seconds={modality === "speed" ? sprintRestSeconds(spec.fields.find(f => f.key === "distance")?.prefill) : null} />}
     <div className={spec.fields.length > 2 ? "hidden" : "grid gap-1.5 px-1 text-[10px] uppercase text-muted-foreground"} style={{ gridTemplateColumns: cols }}>
@@ -138,9 +140,9 @@ export function LegacyDrillInlineLog({
       {spec.fields.map((f) => <span key={f.key}>{f.label}{f.unit && f.key !== "time" ? ` (${f.unit})` : ""}{f.key === "time" && f.prefill ? ` · target ${formatTime(kindFor(f.prefill), f.prefill)}` : ""}</span>)}
     </div>
     {rounds.map((round, index) => (
-      <div key={index} data-entry-row={index < spec.rows ? "prescribed" : "added"} className={`${focus.active && index !== focus.row ? "hidden" : "grid"} items-center gap-1.5`} style={{ gridTemplateColumns: spec.fields.length > 2 ? "minmax(0, 1fr)" : cols }}>
-        <span className="text-center text-[11px] text-muted-foreground">{index + 1}{index >= spec.rows ? "+" : ""}</span>
-        {spec.fields.map((f) => f.key.startsWith("reps_") ? <label key={f.key} className="grid grid-cols-[minmax(0,1fr)_5rem] items-center gap-3 text-sm"><span className="break-words">{f.label} · target {f.prefill}</span><Input aria-label={`${f.label} ${index + 1}`} inputMode="numeric" value={round[f.key] ?? ""} onChange={e => edit(index, f.key, e.target.value)} onBlur={e => edit(index, f.key, e.target.value)} className="h-9 px-2 text-sm" /></label> : f.key === "time"
+      <div key={index} data-entry-row={index < spec.rows ? "prescribed" : "added"} className={`${focus.active && index !== focus.row ? "hidden" : "grid"} items-center gap-1.5`} style={{ gridTemplateColumns: spec.rowFields ? "minmax(0, 1fr)" : spec.fields.length > 2 ? "minmax(0, 1fr)" : cols }}>
+        <span className="text-center text-[11px] text-muted-foreground">{spec.rowLabels?.[index] ?? `${index + 1}${index >= spec.rows ? '+' : ''}`}</span>
+        {fieldsAt(index).map((f) => f.key.startsWith("reps_") ? <label key={f.key} className="grid grid-cols-[minmax(0,1fr)_5rem] items-center gap-3 text-sm"><span className="break-words">{f.label} · target {f.prefill}</span><Input aria-label={`${f.label} ${index + 1}`} inputMode="numeric" value={round[f.key] ?? ""} onChange={e => edit(index, f.key, e.target.value)} onBlur={e => edit(index, f.key, e.target.value)} className="h-9 px-2 text-sm" /></label> : f.key === "time"
           ? <TimeField key={f.key} kind={kindFor(f.prefill)} label={`${f.label} ${index + 1}`} value={round[f.key] ?? ""} target={f.prefill} onChange={(v) => edit(index, f.key, v)} onBlur={() => touch(index)} />
           : f.unit === "ft + in" ? <DistanceField key={f.key} label={`${f.label} ${index + 1}`} value={round[f.key] ?? ""} onChange={v => edit(index, f.key, v)} onBlur={() => touch(index)} />
           : <Input key={f.key} aria-label={`${f.label} ${index + 1}`} inputMode={f.key === "distance" ? "decimal" : "numeric"} value={displayDistance(round[f.key] ?? "", f.unit)} placeholder={f.prefill != null ? displayDistance(String(f.prefill), f.unit) : undefined} onFocus={() => touch(index)} onChange={(e) => edit(index, f.key, storeDistance(e.target.value, f.unit))} onBlur={() => touch(index)} className="h-9 px-2 text-sm" />)}

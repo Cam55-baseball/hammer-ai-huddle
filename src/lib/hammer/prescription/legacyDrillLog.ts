@@ -10,6 +10,8 @@ export type LegacyDrillLogSpec = {
   rows: number;
   fields: LegacyLogField[];
   completion: boolean;
+  rowFields?: LegacyLogField[][];
+  rowLabels?: string[];
 };
 
 function firstNumber(text: string, pattern: RegExp): number | null {
@@ -52,6 +54,19 @@ export function legacyDrillLogSpec(modality: string, name: string, dosage: strin
   if ((modality === "throwing" || modality === "pitching") && /band series|band activation|band prep|neural prep|mobility flush|lat \+ hip opener|wrist snap \+ forearm/.test(name.toLowerCase()) && !/\bthrows?\b/.test(targetText)) {
     const parts = targetText.split(",").map(part => part.trim().replace(/^full activation set:\s*/, ""));
     const components = parts.map(part => part.match(/^(.+?)\s+(\d+)\s*x\s*(\d+(?:\.\d+)?)(.*)$/));
+    if (components.length > 1 && components.every(part => part) && components.some(part => part && (Number(part[2]) !== Number(components[0]?.[2]) || /seconds?|secs?|\bs\b|minutes?|mins?/.test(part[4])))) {
+      const rowFields: LegacyLogField[][] = [], rowLabels: string[] = [];
+      for (const part of components) {
+        if (!part) continue;
+        const timed = /seconds?|secs?|\bs\b|minutes?|mins?/.test(part[4]);
+        const target = Number(part[3]) * (/minutes?|mins?/.test(part[4]) ? 60 : 1);
+        for (let set = 1; set <= Number(part[2]); set++) {
+          rowFields.push([{ key: timed ? 'time' : 'reps', label: timed ? 'Time' : /per arm|each arm/.test(part[4]) ? 'Reps per arm' : /per leg|each leg/.test(part[4]) ? 'Reps per leg' : /per side|each side/.test(part[4]) ? 'Reps each side' : 'Reps', ...(timed ? { unit: 's' } : {}), prefill: target }]);
+          rowLabels.push(`${part[1]} · Set ${set} of ${part[2]}`);
+        }
+      }
+      return { rows: rowFields.length, completion: false, fields: [], rowFields, rowLabels };
+    }
     // Only expand fully declared, equal-set circuits; mixed time/rep sequences need explicit row metadata.
     if (components.length > 1 && components.every(part => part && Number(part[2]) === Number(components[0]?.[2]))) {
       return { rows: Number(components[0]?.[2]), completion: false, fields: components.flatMap((part, index) => part ? [{ key: `reps_${index}` as const, label: `${part[1]}${/each direction/.test(part[4]) ? " · each direction" : /per side/.test(part[4]) ? " · per side" : ""} reps`, prefill: Number(part[3]) }] : []) };

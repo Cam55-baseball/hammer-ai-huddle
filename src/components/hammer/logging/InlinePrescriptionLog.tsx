@@ -39,6 +39,17 @@ type Draft = Record<string, string>[];
 export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   const slug = `${rx.movement_slug} ${rx.movement_name}`.toLowerCase();
   const rows = Math.max(1, rx.sets ?? rx.total_reps ?? 1);
+  const liveMeasure = rx.why_payload?.tracking_measure_type;
+  if (liveMeasure && ['reps per arm','reps per leg','reps each side'].includes(liveMeasure)) return {
+    rows: Math.max(1,rx.sets ?? 1), fields:[{key:'reps',label:liveMeasure[0].toUpperCase()+liveMeasure.slice(1),prefill:rx.reps}],
+  };
+  if (liveMeasure && !['bunt_attempts'].includes(liveMeasure)) {
+    const aliases: Record<string, string> = { throw_count: 'throws', check_off: 'checkoff' };
+    const fields = fieldsForMeasure((aliases[liveMeasure] ?? liveMeasure) as Parameters<typeof fieldsForMeasure>[0]);
+    if (fields) return { rows: Math.max(1, rx.sets ?? 1), fields: fields.map(field => ({ ...field,
+      prefill: field.key === 'time' ? rx.duration_seconds : field.key === 'distance' ? rx.distance_feet : field.key === 'weight' ? null : declaredCount(rx),
+    })) };
+  }
   const decided = ownerExerciseMeasure(rx.movement_slug ?? "");
   if (decided) return { rows: Math.max(1, rx.sets ?? 1), fields: fieldsForMeasure(decided).map(field => ({ ...field,
     prefill: field.key === "distance" ? rx.distance_feet : declaredCount(rx),
@@ -47,6 +58,9 @@ export function inlineLogSpec(rx: WkRx): { fields: Field[]; rows: number } {
   if (jump === "jump_distance") return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "distance", label: "Jump distance", unit: "ft + in" }] };
   if (jump === "jump_height") return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "height", label: "Jump height", unit: "in" }] };
   const explicitUnit = (rx.dosage_unit ?? "").toLowerCase();
+  if (['reps per arm', 'reps per leg', 'reps each side'].includes(explicitUnit)) return {
+    rows: Math.max(1, rx.sets ?? 1), fields: [{ key: 'reps', label: explicitUnit[0].toUpperCase() + explicitUnit.slice(1), prefill: rx.reps }],
+  };
   if (explicitUnit === 'attempts' && /^bunt_/.test(rx.movement_slug ?? '')) return { rows: Math.max(1,rx.sets ?? 1), fields:[{key:'attempts',label:'Attempts',prefill:rx.reps},{key:'successes',label:'Successful bunts'}] };
   if (["seconds", "minutes"].includes(explicitUnit)) return { rows: Math.max(1, rx.sets ?? 1), fields: [{ key: "time", label: /hold|iso|plank/.test(slug) ? "Seconds" : "Time", unit: "s", prefill: rx.duration_seconds ?? (rx.reps == null ? null : rx.reps * (explicitUnit === "minutes" ? 60 : 1)) }] };
   if (["reps", "contacts", "steps", "swings"].includes(explicitUnit) && ["warmup", "mobility", "recovery", "arm_care"].includes(rx.slot as string) && rx.duration_seconds == null) return {

@@ -165,14 +165,16 @@ export function coachRxToWkRows(args: {
         rest_seconds: typeof e.rest === "number" && e.rest > 0 ? Math.round(e.rest) : null,
         distance_feet: typeof e.distance_feet === "number" && e.distance_feet > 0 ? e.distance_feet : null,
         total_reps: e.dosage_unit === "total_reps" ? e.total_reps ?? e.reps ?? null : null,
-        dosage_unit: e.dosage_unit || (duration ? "seconds" : "reps"),
+        dosage_unit: ['reps per arm','reps per leg','reps each side'].includes(e.dosage_unit ?? '') ? 'reps' : e.dosage_unit || (duration ? "seconds" : "reps"),
         cns_cost: null,
         cns_clamped: false,
         substituted_from_slug: null,
         substitution_reason: null,
         rationale: because,
         status: "pending",
-        why_payload: { why: because, coach_rx: args.prescriptionId, generator_version: "coach-rx" },
+        why_payload: { why: because, coach_rx: args.prescriptionId, generator_version: "coach-rx",
+          ...(['reps per arm','reps per leg','reps each side'].includes(e.dosage_unit ?? '') ? { tracking_measure_type: e.dosage_unit } : {}),
+        },
       };
     }).filter((row): row is NonNullable<typeof row> => row !== null);
 }

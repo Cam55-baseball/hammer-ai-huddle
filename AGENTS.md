@@ -5,7 +5,7 @@
 - Owner creation identity/defaults and common gear mapping live in `_shared/vault/ownerDefaults.ts`, imported by the Vault editor; unknown equipment remains visible for review. Why: automatic fields must use Swap vocabulary without silently discarding owner words or claiming safety certification.
 - `create-test-athlete` is owner-only and the only way to run the real generator as the demo test pitcher. Why: no approval-free session mint exists for other users.
 - Measurements use `public.ledger_record` (source triggers + tiles); trigger errors never cost a clip.
-- Read scoped AGENTS.md. Assessment capture/coach RPC and self-only saved summaries never diagnose or dose. Reports use `_shared/practiceReport.ts`. Why: one source, safe access.
+- Read scoped AGENTS.md. Movement: training + health consent, never dose. Vault dated tracking shares card/sheet rules, no dose conversion. Reports: `_shared/practiceReport.ts`. Why: scoped sources.
 <!-- LOVABLE:BEGIN -->
 - Throwing uses a separate conservative overhand gate and one pose runner for both sports, never mound or AI-vision values. Why: field throws lack a windup and batting clips can mimic a throw.
 <!-- LOVABLE:END -->

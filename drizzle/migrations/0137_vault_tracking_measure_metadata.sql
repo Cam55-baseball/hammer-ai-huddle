@@ -1,0 +1,1 @@
+ALTER TABLE public.wk_movement_catalog ADD COLUMN IF NOT EXISTS tracking_measure_type text; COMMENT ON COLUMN public.wk_movement_catalog.tracking_measure_type IS 'Vault tracking metadata only; generator applies effective dated live version, never changes governed dosage units or doses.';

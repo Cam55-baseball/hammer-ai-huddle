@@ -76,6 +76,7 @@ export interface WkRx {
   substitution_reason: string | null;
   rationale: string | null;
   why_payload: {
+    tracking_measure_type?: string | null;
     phase?: string;
     phase_display?: string;
     why?: string;

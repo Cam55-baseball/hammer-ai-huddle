@@ -1,5 +1,63 @@
 # Hammers — final publish checklist
 
+## October 27 owner-authorized urgent closeout — latest result
+
+**Ready to publish: NO.** The four missing original sport/clip combinations are owner human checks and are explicitly **not blockers**. Remaining blockers are the required generated TEST plan/card tracking proof, positive consent-shared connected-coach movement readback, mixed/unequal circuit card/focus phone proof, and entitled embedded analysis proof. No positive result is claimed from an empty or unavailable view.
+
+- **Canary ready:** original owner baseball hitting fixture registered, ACTIVE, manual owner invocation passed; canonical readback shows enabled, passed, no pause. The earlier idle response was the once-per-day guard, not an absent fixture. Schedule unchanged; owner applies the prepared daily schedule.
+- **Tracking:** fixed existing non-bunt live-version branch and effective-date generator projection. Tracking metadata reaches card/log-sheet resolution without converting prescribed reps into seconds. Coach custom per-arm/per-leg/each-side choices preserve canonical reps dosing with tracking metadata. Phone Vault proof created one TEST-only item, published reps version, changed the existing item to hold-seconds, and read back live versions plus catalog metadata. This is NOT a generated-plan/card proof. Exact item privately snapshotted and parked; readback confirms inactive; its versions/audit retained.
+- **Movement:** applied consent-scoped server reader: current connected training access plus health-sharing consent, returning observations only. Coach assessment uses the reader; Today/analysis summaries use saved observations in plain words, never diagnosis or dose changes. TEST coach dashboard loaded with connected players, but positive saved-observation detail proof did not complete. No observations or consent fabricated.
+- **Mixed circuits:** separate component/set rows, each with its authored time or reps target; focus follows those rows and saves before rest. Unit checks passed; affected-card phone proof still outstanding.
+- **Owner real flow at 390×844:** owner `--self`, real plan, typed 181 seconds for the 3-minute tissue-prep item, Finished, canonical save, automatic 30-second rest, next work item, reload shows 1/12 done. Exact saved completion read back with rounds `[{set:1,time:181}]`. This is the owner-requested real workout record, retained; no additional exercise performance or measurement invented. Optional assessment steps were skipped to open the owner's real plan; start state retained rather than resetting the real account.
+- **Baserunning:** actual-builder four-week matrix passed for all six sport/program combinations; existing base-route conditioning unchanged. Injury-protected and mental-only buttons no longer point to unreleased Baserunning IQ; they open the available practice log. No new IQ content claimed.
+- **Latest full suite:** **585 files / 4,829 tests PASS**, twelve bounded batches, zero failures. Additional changed logging/coach tests 26 files/141 tests passed. Automatic preview build **OK 05:43:16 UTC** after source changes. Existing shared block-builder bundle regenerated and its six parity cases passed. No manual duplicate build.
+- **Live changes:** authorized consent reader and tracking-column migrations applied; authorized canary/analyze-video, exercise-vault, wk-generate-daily, coach-rx-safety and plan-swap redeploys submitted successfully. Positive canary live result and Vault readback verified; blanket end-to-end certification of all changed functions is not claimed. Frontend remains preview-only. No publish, cron, schedule or iOS changes.
+
+### Four-week baserunning generation matrix
+
+Counts are ready baserunning days from the existing builder's tested cohort, not fabricated hosted athlete history. Weekly work includes read/footwork/scenario stages. Pitcher running remains the existing pitcher rule.
+
+| Program | Sport | Week 1 | Week 2 | Week 3 | Week 4 | Existing conditioning routes |
+|---|---|---:|---:|---:|---:|---|
+| Complete Pitcher | Baseball | 2 | 2 | 2 | 2 | repeat_90ft_bb; bases_home_2nd |
+| 5Tool Player | Baseball | 2 | 2 | 2 | 2 | repeat_90ft_bb; bases_home_2nd |
+| Golden 2Way | Baseball | 2 | 2 | 2 | 2 | repeat_90ft_bb; bases_home_2nd |
+| Complete Pitcher | Softball | 2 | 2 | 2 | 2 | repeat_43ft_sb; bases_double_sb |
+| 5Tool Player | Softball | 2 | 2 | 2 | 2 | repeat_43ft_sb; bases_double_sb |
+| Golden 2Way | Softball | 2 | 2 | 2 | 2 | repeat_43ft_sb; bases_double_sb |
+
+### Latest 21-item status
+
+| # | Item | Status |
+|---|---|---|
+| 1 | Both-sport original clips, normal/embedded | Baseball hitting/pitching previously passed; four combinations owner human-only, nonblocking; entitled embedded proof open. |
+| 2 | Upload, access, conversion, routing, display | Previously repaired/tested; retain completed evidence. |
+| 3 | Immediate full report, optional paired Club save/reload | Built; original baseball hitting/pitching complete phone flow passed previously. Persistent storage failures remain honest failures. |
+| 4 | Existing-type sport/position context | Built/tested; only hitting/pitching/throwing supported; no new analyses. |
+| 5 | Fixture, active canary, prepared schedule | ACTIVE/manual PASS; daily schedule owner applies. |
+| 6 | Embedded rich results | Built; entitled phone proof open. |
+| 7 | Optional assessment navigation/autosave | Built/tested; owner skipped optional steps this run; complete populated six-step proof not claimed. |
+| 8 | Subscription test/category/order | Built/tested previously; entitled screen proof outstanding. |
+| 9 | Sport/subscription season stats | Built/tested previously; populated cross-sport reload proof outstanding. |
+| 10 | Fielding/throwing goal corrections | Built/tested previously; historical choices remain readable. |
+| 11 | Saved movement coach/Today/analysis view | Consent-scoped reader built/applied; positive connected-coach saved-observation proof open. |
+| 12 | Effective Vault edits and coach per-side tracking | Built/tested; existing TEST-only Vault edit/readback passed; generated TEST plan/card proof open. |
+| 13 | Three timer controls | Previously built/tested/phone-checked. |
+| 14 | Empty warm-up Drills area | Previously removed/phone-checked. |
+| 15 | Inactive top Start | Previously removed/phone-checked. |
+| 16 | Type → Finished → save → rest → next → reload | Real owner flow PASS; canonical 181-second save/readback and 30-second rest. |
+| 17 | Efficient recovery, default prep rest | Built/tested; real automatic 30-second rest observed; declared safety recovery preserved. |
+| 18 | Royal/Tex only when prescribed | Previously built/tested. |
+| 19 | Mixed/unequal preparation components | Built/tested; real affected-card and focus phone proof open. |
+| 20 | Practice logging across categories/sports | Previously built; full affected-player save/return proof remains outstanding. |
+| 21 | Program/sport baserunning and dead IQ link | Six combinations × four weeks builder tests PASS; available practice destination replaces unreleased link. |
+
+### Current guide additions
+
+- **Owner:** canary is active and manually passing; apply the daily schedule yourself. Vault tracking edits apply from the saved live effective date, not retroactively to a saved day's dose. TEST-only items stay TEST-only; the isolated proof item is parked.
+- **Coach:** per-arm, per-leg and each-side choices describe how reps are recorded, not permission to change a player's dose. Saved movement observations require both connected training access and current health consent; unshared data remains unavailable.
+- **Player:** read the full report immediately after a supported analysis upload, optionally save the clip with its report to Players Club, then use View to reopen it. Finished saves your entered work before automatic recovery starts; reload retains saved completion. Baserunning mental-work buttons open the available practice log, not unreleased IQ content.
+
 ## October 27 urgent run — current status
 
 ### October 27 04:44 owner P0 clarification — supersedes conflicting earlier video requirements
