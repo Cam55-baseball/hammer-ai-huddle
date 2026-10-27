@@ -1,6 +1,6 @@
 # Publish checklist — consolidated (Oct 27, 2026)
 
-Latest run: targeted primer, game-credit, owner-tag and exercise-video regressions pass; preview **passed**, observed October 27, 21:28:22 UTC. Full current suite is being closed in bounded batches below; prior full result remains 596 files / 4,876 tests passed.
+Latest run: **597 unique files / 4,883 tests passed**, with no missing test files. Twenty bounded groups; slow groups split and full-week rendering plus 200-season safety invariants run individually to clean exit 0. Changed primer/video files refreshed last. Preview **passed**, observed October 27, 21:40:12 UTC. Prior finished proofs preserved.
 Nothing published; no cron or iOS changes. No new hosted athlete/test records were created. One existing parked TEST drill's tag/video fields were privately snapshotted, edited through the real owner UI, restored and read back equal (automatic audit timestamp retained). Prior canary proof preserved, not repeated.
 
 | # | Item | Status |
@@ -44,4 +44,4 @@ Nothing published; no cron or iOS changes. No new hosted athlete/test records we
 - Owner overview and organization registration loaded with no overflow or page errors. Both selected without submitting or creating data.
 - Start-gate and assessment changed-flow proofs remain open; owner screenshots do not certify a gated athlete flow.
 
-**Ready to publish: no** — requested validator/completeness, separate primer, beginner scaling, positive identity arithmetic proof, separate bunting/upcoming cards, wider recovery audit, saved weekly-development integration, routine/fix-it selection/evidence lifecycle and full library merge remain incomplete. Conditioning/unity/re-screen/offseason/coach paths and start/assessment/stale-chunk behavior still need positive affected-role phone proof. Supported lift-frequency warnings still require full safety-context review. Missing owner clips are not blockers.
+**Ready to publish: no** — requested validator/completeness, beginner scaling, positive identity arithmetic proof, separate bunting/upcoming cards, wider recovery audit, saved weekly-development integration, routine/fix-it selection/evidence lifecycle and full library merge remain incomplete. Primer is now built/tested but its real athlete phone proof remains open: the current owner plan contains no primer. Conditioning/unity/re-screen/offseason/coach paths and start/assessment/stale-chunk behavior still need positive affected-role phone proof; Exercise video save/reload remains unproven through the UI. Supported lift-frequency warnings still require full safety-context review. Missing owner clips are not blockers.
