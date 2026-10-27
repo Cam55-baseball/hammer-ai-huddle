@@ -1918,6 +1918,7 @@ Deno.serve(async (req) => {
         console.log(`[ANALYZE-VIDEO] cache HIT for ${videoId}`);
         const cachedPayload: Record<string, unknown> = {
           success: true,
+          saved: true,
           replay_cache: true,
           audit_persistence: auditPersistence,
           cache_fingerprint_hex: cacheFingerprintHex,
@@ -2270,28 +2271,11 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         provider: aiResult.provider,
       };
 
-      await supabase
-        .from("videos")
-        .update({
-          status: "failed",
-          ai_analysis: { error: errorData }
-        })
-        .eq("id", videoId);
-
-      const truncatedBody = errorText.slice(0, 500);
-      if (aiResult.status === 429) {
-        throw new Error(
-          `ai_gateway_rate_limited: provider=${aiResult.provider} upstream_status=429 body=${truncatedBody}`
-        );
-      }
-      if (aiResult.status === 402) {
-        throw new Error(
-          `ai_gateway_payment_required: provider=${aiResult.provider} upstream_status=402 body=${truncatedBody}`
-        );
-      }
-      throw new Error(
-        `ai_gateway_error: provider=${aiResult.provider} upstream_status=${aiResult.status} body=${truncatedBody}`
-      );
+      const safeMessage = aiResult.status === 403 ? "Analysis provider access is denied. The owner must restore access before a fresh analysis." : aiResult.status === 402 ? "Analysis credits are unavailable. The owner must restore credits before a fresh analysis." : aiResult.status === 401 ? "Analysis credentials need the owner's attention." : aiResult.status === 404 ? "The configured analysis model is unavailable." : aiResult.status === 429 ? "Analysis is busy. Your clip is saved; wait before starting a fresh request." : "The analysis service did not finish. Your clip is saved.";
+      const failedReport = { ...unavailableAnalysis(module, "provider"), feedback: safeMessage, failure_status: aiResult.status, retry_allowed: aiResult.status === 429 || aiResult.status >= 500 };
+      const savedFailure = await saveAnalysisReport(() => supabase.from("videos").update({ status: "failed", ai_analysis: failedReport }).eq("id", videoId).eq("user_id", userId));
+      await recordRun(supabase, { video_id: videoId, requested_by: userId, cache_fingerprint_hex: cacheFingerprintHex, cache_hit: false, outcome: "failed", outcome_reason: `provider_status:${aiResult.status}` });
+      return new Response(JSON.stringify({ error: safeMessage, message: safeMessage, report: failedReport, saved: savedFailure.saved }), { status: aiResult.status >= 400 && aiResult.status <= 599 ? aiResult.status : 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const data = aiResult.data;
