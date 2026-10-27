@@ -67,8 +67,6 @@ function SignedInExerciseTools({ module, exerciseId, planDate, userId }: { modul
   return <div className="space-y-2" data-exercise-tools>
     <div className="flex flex-wrap gap-2">
       <Button size="sm" variant="outline" onClick={() => { setStarted(new Date().toISOString()); setOpen(true); }}><Video className="mr-1 h-4 w-4" />Use Delaycam</Button>
-      <ToolSessionWindow label="Record Royal timing" route="/royal-timing" kind="timing" occurrence={{ exerciseId, planDate }} />
-      {clipModule === "hitting" && sport === "baseball" && <ToolSessionWindow label="Tex Vision session" route="/tex-vision" kind="vision" occurrence={{ exerciseId, planDate }} />}
       {clipModule === "pitching" && sport === "baseball" && <ToolSessionWindow label="Pick-off Trainer" route="/pickoff-trainer" kind="practice" occurrence={{ exerciseId, planDate }} />}
       {started && !used && <Button size="sm" variant="outline" disabled={saving || usage.isPending} onClick={() => void checkOff()}>I used Delaycam</Button>}
       {used && <span className="flex items-center gap-1 text-xs text-primary"><Check className="h-4 w-4" />Delaycam used</span>}
