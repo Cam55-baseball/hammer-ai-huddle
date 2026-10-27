@@ -12,3 +12,8 @@ it("retains the saved Not measured report on a terminal provider failure", async
   expect(result.status).toBe(403);
   expect(result.report).toMatchObject({ saved: true, feedback: "Not measured" });
 });
+it("displays a saved refusal report without offering another provider attempt", async () => {
+  const result = await analysisErrorDetails({ context: new Response(JSON.stringify({ saved: true, message: "No findings were generated", report: { feedback: "No findings were generated", report_status: "not_measured", retry_allowed: false } }), { status: 422 }) });
+  expect(result.status).toBe(422);
+  expect(result.report).toMatchObject({ saved: true, report_status: "not_measured", retry_allowed: false });
+});
