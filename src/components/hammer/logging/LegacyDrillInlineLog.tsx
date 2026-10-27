@@ -53,7 +53,7 @@ export function LegacyDrillInlineLog({
   const qc = useContext(QueryClientContext) ?? null;
   const spec = useMemo(() => legacyDrillLogSpec(modality, name, dosage), [dosage, modality, name]);
   const fieldsAt = (row: number) => spec.rowFields?.[row] ?? spec.fields;
-  const initial = useMemo<Draft>(() => Array.from({ length: spec.rows }, (_, row) => Object.fromEntries((spec.rowFields?.[row] ?? spec.fields).map((f) => [f.key, f.prefill == null ? "" : String(f.prefill)]))), [spec]);
+  const initial = useMemo<Draft>(() => Array.from({ length: spec.rows }, (_, row) => Object.fromEntries((spec.rowFields?.[row] ?? spec.fields).map((f) => [f.key, spec.rowFields || f.prefill == null ? "" : String(f.prefill)]))), [spec]);
   const [rounds, setRounds] = useState<Draft>(initial);
   const [skipped, setSkipped] = useState(false);
   const [hard, setHard] = useState("");
@@ -114,7 +114,7 @@ export function LegacyDrillInlineLog({
     if (rounds[row]?.[TOUCHED] === "1") { void autosave.flush(); return; }
     persist(rounds.map((r, i) => i === row ? { ...r, [TOUCHED]: "1" } : r), { delay: 0 });
   };
-  const addSet = () => persist([...rounds, Object.fromEntries(spec.fields.map(f => [f.key, ""]))]);
+  const addSet = () => { if (!spec.rowFields) persist([...rounds, Object.fromEntries(spec.fields.map(f => [f.key, ""]))]); };
 
   const cols = `28px repeat(${spec.fields.length}, minmax(0, 1fr))`;
   const logged = entered(rounds);
@@ -149,7 +149,7 @@ export function LegacyDrillInlineLog({
       </div>
     ))}
     <div className="flex flex-wrap items-center justify-between gap-2">
-      {!focus.active && <Button type="button" size="sm" variant="outline" className="h-9" onClick={addSet}><Plus className="mr-1 h-3.5 w-3.5" />Add set</Button>}
+      {!focus.active && !spec.rowFields && <Button type="button" size="sm" variant="outline" className="h-9" onClick={addSet}><Plus className="mr-1 h-3.5 w-3.5" />Add set</Button>}
       {status && <span data-auto-status={status} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status === "cut_short" ? "bg-muted text-foreground" : "bg-primary/15 text-primary"}`}>{status === "cut_short" ? "Work recorded" : AUTO_STATUS_LABEL[status]}</span>}
     </div>
     {logged.length > 0 && primary && <p data-prescribed-vs-done className="text-[11px] text-muted-foreground">Prescribed: {spec.rows} {spec.rows === 1 ? "set" : "sets"}{primary.prefill ? ` × ${primary.key === "time" ? formatTime(kindFor(primary.prefill), primary.prefill) : `${primary.prefill} ${primary.label.toLowerCase()}`}` : ""} · Done: {logged.length} {logged.length === 1 ? "set" : "sets"}</p>}
