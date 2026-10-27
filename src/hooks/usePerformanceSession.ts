@@ -237,7 +237,7 @@ export function usePerformanceSession() {
       // never hold up the canonical session save or claim standard completion.
       void supabase.functions.invoke('evaluate-behavioral-state', { body: { user_id: user.id } }).then(({ error }) => {
         if (error) console.warn('[practice] activity credit refresh unavailable');
-        else queryClient.invalidateQueries({ queryKey: ['consistency-snapshot'] });
+        else queryClient.invalidateQueries({ queryKey: ['identity-state', user.id] });
       }).catch(() => console.warn('[practice] activity credit refresh unavailable'));
 
       // Latest-wins: tag this calculation
