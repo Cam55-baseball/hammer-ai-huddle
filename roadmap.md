@@ -1,5 +1,7 @@
 # Current publish gate — Oct 24 final automated cleanup
 
+- [ ] Oct 27 03:25 urgent continuation — P0 first: close upload error/retry and saved-report readback gaps, run real sport/module/assessment proofs, build protected daily canary and owner-only schedule SQL. P1 waits for P0 verification. No publish/cron/iOS; exact TEST cleanup required.
+
 - [ ] Oct 27 urgent fixes — owner original MOV real UI fixture PASS (conversion/upload/AI/saved/displayed); analyze-video persistence retry + saved-position context deployed; tracking diagnostics, softball duplicate tile, assessment Next/draft saving/season fields/test list, goal choices and focus controls built. Eight bounded groups: 569 files/4,759 tests PASS; preview OK. OPEN: cross-sport/embedded/player proof, canary+owner cron SQL, deep movement/consumer integration, tracking editor, full timers/cut-short/primer/baserunning fixes. No publish/cron/iOS; Ready NO. Checklist/by-role guide updated.
 
 - [ ] Oct 26 16:24 identity additions (2) — BUILT/APPLIED 0131 (nullable pitching-line game fields, exit velo, owner pitching_standards, self-only practice_swing_logs); game-log→pitching counts adapter (missing fields stay null); Coaching Console pitching starting standards (both sports, all levels) + philosophy principle shown; 151 affected tests PASS; 390×844 owner console inspected, zero page errors. OPEN: logging screens for new fields/practice, wiring into identity/plan/nutrition/6-week/General/coach/chat, goal-progress card, full suite. Ready NO.
