@@ -257,3 +257,4 @@ Every accepted override records who, when, action, rule, player, date and prescr
 - Owner-decision table (softball uses baseball-set numbers, kept working): contact K%/whiff%/zone contact cutoffs; power HR/AB ≥ .100; bunting identity cutoffs (.300 AVG, HR/AB .050/.025).
 - New cross-sport matrix test: 17 tests incl. 8-week plans per program (Complete Pitcher, 5Tool, Golden 2Way) × both sports asserting zero cross-sport words/items.
 - Full suite: 4,716 app tests + 28 backend tests passed; preview build OK.
+- Oct 27: softball hitting starting standards (contact by level, power HR/AB pro .067/college .125/HS-youth .100, bunting half/quarter) live in identity; baseball unchanged; wk-generate-daily, hammer-chat, hammer-recall redeployed.
