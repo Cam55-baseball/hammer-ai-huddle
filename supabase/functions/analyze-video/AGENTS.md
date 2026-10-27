@@ -3,3 +3,4 @@
 - Replay only stored reports with readable feedback, at least one meaningful summary entry and a drills array; do not require a score. Why: empty legacy objects must rerun while missing measurements never erase readable coaching.
 - Computed report persistence uses saveAnalysisReport; exhausted writes return the actual report with saved:false. Why: database failure must never erase already-generated coaching or bill another inference.
 - Canary delegation requires the owner-registered exact clip and an unpaused live database lease plus existing job token; it bypasses cache only for that fixture. Why: daily health checks need real inference without forging athlete sessions or opening general service-role analysis.
+- Coaching follows `visibleCoaching.ts`: only undecodable clips refuse; thin reports retry and canary requires `hasFullCoachingReport`. Why: owner ruled refusals and "couldn't judge" reports unacceptable.
