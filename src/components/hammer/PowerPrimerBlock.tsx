@@ -6,7 +6,7 @@
  * (src/lib/prescription/primerRounds.ts). The lift always continues. Gates and
  * caps come from the builder payload; sets, reps and % of the lift never change.
  */
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,11 +67,35 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
   const recordedRatings = useRef(new Set<number>());
   const { user } = useOptionalAuth();
   const qc = useQueryClient();
+  const savedRounds = useQuery({
+    queryKey: ["pap-rounds", user?.id, date, liftName, pp.action.slug, pp.target], enabled: !!user && !!prescriptionId,
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase.from("wk_session_logs" as any).select("metrics")
+        .eq("user_id", user.id).eq("plan_date", date).eq("movement_slug", pp.action.slug ?? `pap_${pp.target}`)
+        .eq("metrics->>kind", "pap_speed").eq("metrics->>lift", liftName ?? "").order("created_at");
+      if (error) throw error;
+      return (data ?? []) as unknown as Array<{ metrics: { round: number; rating: number; value: number | null } }>;
+    },
+  });
   const lowerIsBetter = pp.target === "first_step";
   const sets = Math.max(liftSets ?? 0, 1);
   const rules = { max_sets: Math.min(pp.max_sets, sets), max_total_reps: pp.max_total_reps, stop: pp.stop, actionReps: pp.action.reps[1], realThrow: !!pp.action.real_throw };
   const st = primerState(rules, rounds);
   const stopReason = manualStop ?? st.stopReason;
+  useEffect(() => {
+    if (!savedRounds.data?.length) return;
+    const found: PrimerRound[] = [];
+    for (const item of savedRounds.data) {
+      const index = item.metrics.round - 1;
+      if (!Number.isInteger(index) || index < 0 || index >= rules.max_sets || !QUALITY.some(q => q.value === item.metrics.rating)) continue;
+      found[index] = { rating: item.metrics.rating, value: item.metrics.value };
+      recordedRatings.current.add(index); saves.current.set(index, Promise.resolve());
+    }
+    if (!found.length || found.some(round => !round)) return;
+    const state = primerState(rules, found);
+    setRounds(state.next ? [...found, { rating: null, value: null }] : found);
+  }, [savedRounds.data]);
 
   const { data: accountBest } = useQuery({
     queryKey: ["pap-best", user?.id, pp.target],
@@ -97,7 +121,7 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
     enabled: !!prescriptionId, name: `Power Primer: ${pp.action.name} — ${pp.action.reps[1]} reps`, rows: rules.max_sets,
     ready: rounds.map(round => round.rating != null), beforeSeconds: pp.rest_s[0],
     restSeconds: pp.stop.kind === "sprint" ? sprintRestSeconds(sprintFeet) : 0,
-    available: row => !locked && !stopReason && row < rules.max_sets && rounds[row]?.rating === null,
+    available: row => !savedRounds.error && !savedRounds.isLoading && !locked && !stopReason && row < rules.max_sets && rounds[row]?.rating === null,
     save: async row => { const pending = saves.current.get(row); if (!pending || rounds[row]?.rating == null) throw new Error("Rating not saved"); await pending; },
   });
 
@@ -162,6 +186,7 @@ export function PowerPrimerBlock({ pp: base, planDate, liftName, liftSets, presc
     ) : <ol className="space-y-1">{rows}</ol>}
     {stopReason && !locked && <p data-pap-stopped className="text-xs font-medium">{stopReason}</p>}
     {pp.action.real_throw && <p data-primer-arm className="text-[11px] text-muted-foreground">Arm count: {st.realThrows} real throws = {st.armUnits} arm units (each counts 1.5).</p>}
+    {savedRounds.error && <p role="alert" className="text-xs text-destructive">Couldn't load your saved primer rounds. Your lift stays available.</p>}
     {saveFailed && <p role="alert" className="text-xs text-destructive">Couldn't save your rating. Rate this set again to retry.</p>}
     {saveFailed && <div className="flex flex-wrap gap-1">{QUALITY.map(q => <Button key={q.value} size="sm" variant="outline" onClick={() => rate(focus.active ? focus.row : Math.max(0, ratedCount - 1), q.value)}>{q.value}/5 {q.label}</Button>)}</div>}
   </section>;
