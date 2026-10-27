@@ -492,7 +492,8 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
   const showUnavailableReport = (stage: string, reason?: string) => {
     const report = unavailableAnalysis(module ?? "video", stage);
-    setAnalysis({ ...report, ...(reason ? { feedback: `Not measured: ${reason}` } : {}), saved: false });
+    // Local-only: nothing was analysed or saved, so no save-confirmation claim.
+    setAnalysis({ ...report, ...(reason ? { feedback: reason } : {}) });
     setAnalysisError(null);
     setUploading(false);
     setAnalyzing(false);
@@ -580,33 +581,8 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
       return;
     }
 
-    // Client-side preflight: short-circuit obviously unanalyzable clips so
-    // users get a clear message instead of an opaque server rejection.
-    // Mirrors thresholds in src/lib/biomech/videoAcceptance.ts.
-    {
-      const { MIN_WIDTH, MIN_HEIGHT, MIN_FPS, MIN_DURATION_SEC, MAX_DURATION_SEC, fpsFloorVerdict } = await import("@/lib/biomech/videoAcceptance");
-      if (probed.width < MIN_WIDTH || probed.height < MIN_HEIGHT) {
-        toast.error(UPLOAD_ERRORS.tooSmall);
-        missingReport("resolution", UPLOAD_ERRORS.tooSmall);
-        return;
-      }
-      if (fpsFloorVerdict(probed).reject) {
-        toast.error(UPLOAD_ERRORS.lowFps);
-        missingReport("frame_rate", UPLOAD_ERRORS.lowFps);
-        return;
-      }
-      if (probed.duration_sec < MIN_DURATION_SEC) {
-        toast.error(UPLOAD_ERRORS.tooShort);
-        missingReport("duration", UPLOAD_ERRORS.tooShort);
-        return;
-      }
-      if (probed.duration_sec > MAX_DURATION_SEC) {
-        toast.error(UPLOAD_ERRORS.tooLong);
-        missingReport("duration", UPLOAD_ERRORS.tooLong);
-        return;
-      }
-    }
-
+    // Owner ruling 2026-10-27: a small, soft, slow, short or long clip is still
+    // coached from what is visible. Only a clip with no readable frame refuses.
 
     // ===== PHASE 1 — Deterministic frame extraction =====
     let frames: string[] = [];
@@ -772,8 +748,8 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
         } else {
           console.error('[D-POSE] pose inference failed:', poseErr);
         }
-        // Do not block the rest of the analysis flow — surface honest failure.
-        toast.error(UPLOAD_ERRORS.poseFailed);
+        // Owner 2026-10-27: body tracking is optional; coaching continues from the
+        // frames, so no "couldn't follow" error is shown mid-analysis.
       }
 
       // AI frames are placed AFTER the scout pass so the budget lands on the
@@ -801,7 +777,7 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
           height: f.height,
         }));
 
-        if (frames.length < 3) {
+        if (frames.length < 1) {
           throw new Error(UPLOAD_ERRORS.notEnoughFrames);
         }
 
@@ -1200,8 +1176,10 @@ export default function AnalyzeVideo({ assessment }: { assessment?: { module: "h
 
     } catch (error: any) {
       console.error("Error:", error);
-      missingReport("upload_or_save");
-      if (!error?.userNotified) toast.error(friendlyThrownError(error));
+      // An upload/network failure is not an analysis: show the problem and a retry, never a blanket report.
+      const message = friendlyThrownError(error);
+      setAnalysisError({ status: 0, message, terminal: false });
+      if (!error?.userNotified) toast.error(message);
       setAnalyzing(false);
     } finally {
       setUploading(false);

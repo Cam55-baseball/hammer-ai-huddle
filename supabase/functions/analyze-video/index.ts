@@ -17,12 +17,14 @@ import {
 } from "../_shared/biomechFingerprint.ts";
 import { recordAnalysisRun, type AnalysisOutcome } from "../_shared/recordAnalysisRun.ts";
 import { chatCompletion } from "../_shared/googleAi.ts";
-import { analysisRefused, hasReadableReport, hasStructuredAnalysis, reliableAnalysis, unavailableAnalysis } from "../_shared/analysisReliability.ts";
+import { analysisRefused, hasFullCoachingReport, hasReadableReport, hasStructuredAnalysis, reliableAnalysis, unavailableAnalysis } from "../_shared/analysisReliability.ts";
 import { canSeeScoredGrading, stripScoredGrading } from "../_shared/scoredGradingGate.ts";
 import { buildFaultFindings } from "../_shared/faultFindings.ts";
 import { constructiveCriticismBlock, improvementsSchema } from "./constructiveCriticism.ts";
 import { doctrineContextBlock } from "./doctrineContext.ts";
 import { scrubFootageClaims } from "./honestyCheck.ts";
+
+import { VISIBLE_COACHING_CONTRACT } from "./visibleCoaching.ts";
 import { analysesLastHour, overHourlyLimit, logAiUsage, HOURLY_LIMIT_MESSAGE, hourlyResumeAt } from "../_shared/aiUsage.ts";
 import { runStoredThrowPitchCards, runAndWritePoseTileFindings } from "../_shared/poseTileFindingsServer.ts";
 import { saveAnalysisReport } from "../_shared/saveAnalysisReport.ts";
@@ -1860,23 +1862,10 @@ Deno.serve(async (req) => {
       throw new Error(`${reason}:${detail}`);
     };
 
-    if (fpsTrue != null && Number.isFinite(fpsTrue) && fpsTrue < PHASE1_MIN_FPS - 0.5) {
-      return await writeReject("reject_low_fps", `fps_true=${fpsTrue} < ${PHASE1_MIN_FPS}`);
-    }
-    if (videoWidth == null || videoHeight == null || videoWidth < PHASE1_MIN_WIDTH || videoHeight < PHASE1_MIN_HEIGHT) {
-      return await writeReject("reject_low_resolution", `${videoWidth}x${videoHeight} below ${PHASE1_MIN_WIDTH}x${PHASE1_MIN_HEIGHT}`);
-    }
-    if (durationSec == null || !Number.isFinite(durationSec) || durationSec < PHASE1_MIN_DURATION_SEC || durationSec > PHASE1_MAX_DURATION_SEC) {
-      return await writeReject("reject_duration_out_of_bounds", `duration_sec=${durationSec} outside [${PHASE1_MIN_DURATION_SEC}, ${PHASE1_MAX_DURATION_SEC}]`);
-    }
-    if (frameExtractions && frameExtractions.length > 0) {
-      const requestedCount = frameExtractions.length;
-      const droppedRatio = (requestedCount - frames.length) / requestedCount;
-      if (droppedRatio > PHASE1_MAX_DROPPED_RATIO) {
-        return await writeReject("reject_excessive_dropped_frames", `dropped=${requestedCount - frames.length}/${requestedCount} (${droppedRatio.toFixed(3)} > ${PHASE1_MAX_DROPPED_RATIO})`);
-      }
-    }
-    if (frames.length < 3) {
+    // Owner ruling 2026-10-27: resolution, frame rate, length and dropped
+    // frames never refuse coaching. Only clips with no decodable frame do.
+    void PHASE1_MIN_FPS; void PHASE1_MIN_WIDTH; void PHASE1_MIN_HEIGHT; void PHASE1_MIN_DURATION_SEC; void PHASE1_MAX_DURATION_SEC; void PHASE1_MAX_DROPPED_RATIO;
+    if (frames.length < 1) {
       return await writeReject(
         "reject_unreadable_frames",
         `usable_frames=${frames.length} of ${rawFrames.length} (malformed=${malformedCount})`,
@@ -1911,7 +1900,7 @@ Deno.serve(async (req) => {
         .limit(1)
         .maybeSingle();
       const cachedAi = (videoRow?.ai_analysis ?? null) as Record<string, unknown> | null;
-      if (!canaryAuthorized && prior && hasReadableReport(cachedAi) && videoRow?.status === "completed") {
+      if (!canaryAuthorized && prior && hasFullCoachingReport(cachedAi) && videoRow?.status === "completed") {
         await recordRun(supabase, {
           video_id: videoId,
           requested_by: userId,
@@ -1999,7 +1988,7 @@ Every fault you surface in feedback/drill recommendations MUST be expressed as a
       hitting: () => getSystemPrompt("hitting", sport),
       pitching: () => getSystemPrompt("pitching", sport),
       throwing: () => getSystemPrompt("throwing", sport),
-    }) + getScorecardInstructions(hasHistory) + languageInstruction + causalSuffix + metricsPromptBlock + constructiveCriticismBlock(module, sport) + doctrineContextBlock(module, sport);
+    }) + getScorecardInstructions(hasHistory) + languageInstruction + causalSuffix + metricsPromptBlock + constructiveCriticismBlock(module, sport) + doctrineContextBlock(module, sport) + VISIBLE_COACHING_CONTRACT;
 
     // ===== BUILD MULTIMODAL USER CONTENT WITH FRAMES =====
     const userContent: Array<{type: string; text?: string; image_url?: {url: string}}> = [];
@@ -2182,7 +2171,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                 },
                 positives: {
                   type: "array",
-                  description: "0-3 positives, only what the clip clearly shows. Optional — never pad with praise.",
+                  description: "1-3 real strengths the frames show (what went well). Never invented.",
                   items: { type: "string" }
                 },
                 improvements: improvementsSchema(module, sport),
@@ -2348,7 +2337,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     if (toolCalls && toolCalls.length > 0) {
       try {
         const analysisArgs = JSON.parse(toolCalls[0].function.arguments);
-        efficiency_score = Math.round(analysisArgs.efficiency_score);
+        if (Number.isFinite(Number(analysisArgs.efficiency_score))) efficiency_score = Math.round(Number(analysisArgs.efficiency_score));
         originalAiScore = efficiency_score;
         summary = analysisArgs.summary || [];
         feedback = analysisArgs.feedback || "No feedback available";

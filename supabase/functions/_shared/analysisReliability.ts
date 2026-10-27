@@ -18,14 +18,35 @@ export function hasReadableReport(data: unknown): boolean {
     Array.isArray(report.drills);
 }
 
-export function hasStructuredAnalysis(data: unknown): boolean {
+/** A full coaching report: visible strengths, things to work on and drills. Never a refusal. */
+export function hasFullCoachingReport(data: unknown): boolean {
+  if (!hasReadableReport(data)) return false;
+  const r = data as Record<string, unknown>;
+  if (r.report_status === "not_measured") return false;
+  const filled = (v: unknown) => Array.isArray(v) && v.length > 0;
+  const lead = Array.isArray(r.summary) ? String(r.summary[0] ?? "") : "";
+  if (/\bcould(?:n'?t| not) (?:judge|see|tell)\b/i.test(lead)) return false;
+  const verifiedClean = typeof r.clean_reason === "string" && r.clean_reason.trim().length > 0 && filled(r.positives);
+  return filled(r.drills) && (filled(r.improvements) || verifiedClean);
+}
+
+/** Parsed coaching arguments from a tool-call response, or null. */
+export function coachingArgs(data: unknown): Record<string, unknown> | null {
   try {
     const d = data as { choices?: Array<{ message?: { tool_calls?: Array<{ function?: { arguments?: string } }> } }> };
     const args = d?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-    if (!args) return false;
-    const report = JSON.parse(args);
-    return hasReadableReport(report) && typeof report.efficiency_score === "number" && Number.isFinite(report.efficiency_score);
-  } catch { return false; }
+    return args ? JSON.parse(args) : null;
+  } catch { return null; }
+}
+
+/** Readable coaching output. A score is optional: coaching never depends on a number. */
+export function hasStructuredAnalysis(data: unknown): boolean {
+  return hasReadableReport(coachingArgs(data));
+}
+
+/** The provider returned a complete coaching report (strengths/work-ons and drills). */
+export function hasFullCoaching(data: unknown): boolean {
+  return hasFullCoachingReport(coachingArgs(data));
 }
 
 export function analysisRefused(data: unknown): boolean {
@@ -42,15 +63,19 @@ export async function reliableAnalysis<T extends { ok: boolean; status: number; 
     try { await record(attempt); } catch { console.warn("[analysis] usage logging failed; report retry continues"); }
   };
   await recordSafely(result);
-  if (result.ok && hasStructuredAnalysis(result.data)) return result;
-  if (analysisRefused(result.data) || (!result.ok && result.status !== 429 && result.status < 500)) return result;
+  // Keep the best readable attempt: a thin report is retried, never thrown away.
+  let best: T | null = result.ok && hasStructuredAnalysis(result.data) ? result : null;
+  if (result.ok && hasFullCoaching(result.data)) return result;
+  if (analysisRefused(result.data) || (!result.ok && result.status !== 429 && result.status < 500)) return best ?? result;
   await wait();
   result = await call("google/gemini-2.5-flash");
   await recordSafely(result);
-  if (result.ok && hasStructuredAnalysis(result.data)) return result;
-  if (analysisRefused(result.data) || (!result.ok && result.status !== 429 && result.status < 500)) return result;
+  if (result.ok && hasFullCoaching(result.data)) return result;
+  if (!best && result.ok && hasStructuredAnalysis(result.data)) best = result;
+  if (analysisRefused(result.data) || (!result.ok && result.status !== 429 && result.status < 500)) return best ?? result;
   await wait();
   result = await call("openai/gpt-4o-mini");
   await recordSafely(result);
-  return result;
+  if (result.ok && hasFullCoaching(result.data)) return result;
+  return best ?? result;
 }
