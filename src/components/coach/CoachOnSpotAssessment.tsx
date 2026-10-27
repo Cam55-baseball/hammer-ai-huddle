@@ -4,33 +4,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-
-const CHECKS = [
-  { key: "hip", label: "Hip rotation" },
-  { key: "shoulder", label: "Shoulder rotation" },
-  { key: "ankle", label: "Ankle mobility" },
-  { key: "balance", label: "Single-leg balance" },
-] as const;
-type Result = "ok" | "limited";
+import { MovementScreenForm } from "@/components/assessment/MovementScreenForm";
+import { movementHasPain, movementScreenComplete, type MovementScreen } from "@/lib/assessment/movementScreen";
 
 /** Plan 4 B — on-the-spot movement and safety check, run in person by a connected coach.
  *  Saves to the PLAYER's profile through the server, labeled coach-verified with name and date. */
 export function CoachOnSpotAssessment({ athleteId }: { athleteId: string }) {
-  const [vals, setVals] = useState<Record<string, Result | undefined>>({});
+  const [vals, setVals] = useState<MovementScreen>({});
   const [pain, setPain] = useState<boolean | null>(null);
   const [parent, setParent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const ready = CHECKS.every((c) => vals[c.key]) && pain !== null;
+  const ready = movementScreenComplete(vals) && pain !== null;
 
   async function save() {
     setBusy(true); setMsg(null);
     const { data, error } = await supabase.rpc("coach_record_movement_screen", {
-      _athlete: athleteId, _screen: vals as Record<string, string>, _pain: !!pain, _parent_present: parent,
+      _athlete: athleteId, _screen: JSON.parse(JSON.stringify(vals)), _pain: !!pain || movementHasPain(vals), _parent_present: parent,
     });
     setBusy(false);
     if (error) setMsg(error.message);
-    else setMsg(`Saved to the player's profile — ${(data as { label?: string })?.label ?? "Coach-verified"}${pain ? ". Pain reported: their plan adjusts under the safety rules." : ""}`);
+    else setMsg(`Saved to the player's profile — ${(data as { label?: string })?.label ?? "Coach-verified"}${pain || movementHasPain(vals) ? ". Pain reported: talk to a professional before painful activity." : ""}`);
   }
 
   return (
@@ -38,17 +32,7 @@ export function CoachOnSpotAssessment({ athleteId }: { athleteId: string }) {
       <CardHeader><CardTitle className="text-base">On-the-spot movement & safety check</CardTitle></CardHeader>
       <CardContent className="space-y-3 text-sm">
         <p className="text-muted-foreground">Do this with the player in person. It saves to their profile as coach-verified.</p>
-        {CHECKS.map((c) => (
-          <div key={c.key} className="flex items-center justify-between gap-2">
-            <span>{c.label}</span>
-            <div className="flex gap-1">
-              {(["ok", "limited"] as Result[]).map((r) => (
-                <Button key={r} size="sm" variant={vals[c.key] === r ? "default" : "outline"}
-                  onClick={() => setVals({ ...vals, [c.key]: r })}>{r === "ok" ? "Moves well" : "Limited"}</Button>
-              ))}
-            </div>
-          </div>
-        ))}
+        <MovementScreenForm value={vals} onChange={setVals} source="Coach-observed" onPain={() => setPain(true)} />
         <div className="flex items-center justify-between gap-2">
           <span>Pain check: any pain right now?</span>
           <div className="flex gap-1">
