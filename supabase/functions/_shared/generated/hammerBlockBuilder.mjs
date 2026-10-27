@@ -3869,7 +3869,7 @@ var G = {
     nextLink: "You'll feed the same quiet-glove pattern into pop-time work and into live bullpens later this week.",
     stopIf: "Knee, hip, or lower-back pain \u2014 come off the knee and switch to a squat receiving primer.",
     tierNotes: {
-      beginner: "Start with a partner tossing tennis balls from 20 ft. Both knees down is OK for the first 20 catches while you learn the freeze.",
+      beginner: "Focus on a quiet glove and a steady catch. Use only the equipment and setup confirmed for this drill. Follow the dose shown on this card; do not add catches.",
       developing: "Coach short-tosses from 30 ft with a real baseball/softball. Add a 1-second freeze count on every catch.",
       advanced: "Machine or bullpen distance. Add corner targets and score yourself: 20/25 quiet catches or you repeat the round.",
       elite: "Live bullpen or high-velo machine. Camera behind you \u2014 audit the freeze on every catch. Any glove drift is a failed rep."
@@ -3919,7 +3919,7 @@ var G = {
     nextLink: "Pairs with block-and-recover so you learn to pop up, locate the ball, and stop the runner.",
     stopIf: "Sharp chest, sternum, or throat pain \u2014 stop, re-check gear fit before continuing.",
     tierNotes: {
-      beginner: "Tennis balls, no gear needed. Just learn to drop the chest and tuck the chin.",
+      beginner: "Keep the required protective gear on. Learn to drop the chest and tuck the chin at a controlled pace. Follow the dose shown on this card.",
       developing: "Full gear, real ball, coach at 25 ft. 3\xD710 (middle-right-left) with a 3-second recover between reps.",
       advanced: "Full gear, machine short-hops, 3\xD710 to each direction with a live runner cue after every block.",
       elite: "Live bullpen breaking balls in the dirt. Camera on chest angle. Any deflection past 8 ft = failed rep."
