@@ -1,5 +1,7 @@
 # Current publish gate — Oct 24 final automated cleanup
 
+- [ ] Oct 27 urgent fixes — P0 real iPhone upload → saved/displayed report + position mapping/canary first; then assessment 7–11 and Today/focus 12–21; phone proofs, scoped cleanup, full bounded suite/checklist/guide. No publish/cron/iOS; migrations/redeploys authorized. Root cause pending reproduction.
+
 - [ ] Oct 26 16:24 identity additions (2) — BUILT/APPLIED 0131 (nullable pitching-line game fields, exit velo, owner pitching_standards, self-only practice_swing_logs); game-log→pitching counts adapter (missing fields stay null); Coaching Console pitching starting standards (both sports, all levels) + philosophy principle shown; 151 affected tests PASS; 390×844 owner console inspected, zero page errors. OPEN: logging screens for new fields/practice, wiring into identity/plan/nutrition/6-week/General/coach/chat, goal-progress card, full suite. Ready NO.
 - [ ] Oct 26 16:15 owner identity additions — BUILT pure judges: separate baseball/softball pitching starting standards by level (missing inputs = Need more data, owner overrides), practice whiff weights + labeled reaction-equivalent estimate, secure-natural-first strategy + minor nutrition guard; 17 tests PASS. OPEN: new game/practice logging fields (migration), Coaching Console fields, wiring into plan/nutrition/6-week/General/coach/chat, goal-progress card, owner principle, full suite, 390×844 proof. Ready NO.
 
