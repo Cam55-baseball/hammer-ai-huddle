@@ -55,13 +55,13 @@ export function useVideoLibraryAdmin() {
         }
 
         const playable = await prepareLibraryVideo(payload.videoFile);
-        const ext = 'mp4';
+        const ext = playable.type === 'video/webm' ? 'webm' : 'mp4';
         const id = crypto.randomUUID();
         const path = `${user.id}/library/${id}.${ext}`;
 
         const { error: uploadError } = await supabase.storage
           .from('videos')
-          .upload(path, playable, { upsert: false, contentType: 'video/mp4' });
+          .upload(path, playable, { upsert: false, contentType: playable.type });
 
         if (uploadError) throw uploadError;
 
@@ -173,13 +173,13 @@ export function useVideoLibraryAdmin() {
       }
 
       const playable = await prepareLibraryVideo(file);
-      const ext = 'mp4';
+      const ext = playable.type === 'video/webm' ? 'webm' : 'mp4';
       const ts = Date.now();
       const path = `${user.id}/library/${videoId}_v${ts}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from('videos')
-        .upload(path, playable, { upsert: false, contentType: 'video/mp4' });
+        .upload(path, playable, { upsert: false, contentType: playable.type });
 
       if (uploadError) throw uploadError;
 
