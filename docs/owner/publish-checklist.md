@@ -2,6 +2,16 @@
 
 ## October 27 urgent run — current status
 
+### October 27 run (3), 04:19 UTC
+- P0 FIX: provider refusal now returns the actual persisted Not measured report and saved flag, rather than dropping it from the response. Only analyze-video redeployed successfully; fresh empty request returns expected 400 validation, not a startup error. Refusal response parser test passes; no deliberate provider refusal or paid repeat of completed upload proofs.
+- P1 BUILT: shared athlete/coach movement capture covers 15 bilateral observations across range, stability, patterns, rotation and strength; includes arm/injury history, how-to text, observational 0/1/2 scoring and measured shoulder total arc. Missing sides remain unknown; legacy pain cannot be erased by a new controlled observation. No normative-angle cutoffs, diagnosis or invented safe result.
+- COACH: shared capture still saves through existing connection/parent/provenance RPC; removed the unverified claim that saved pain already adjusts a plan. Plan and analysis explanation consumers are NOT connected yet; this remains open rather than claiming those effects.
+- PROOF: 390×844 owner movement screen and expanded control section inspected, zero page errors/overflow; no fabricated measurements entered. Blank optional steps used only for navigation. Exact temporary assessment snapshotted privately and removed; fixed-owner readback confirms zero rows, matching pre-test state. Populated measurement save/reload and connected-coach proof remain open.
+- TESTS: 12 targeted files / 81 tests PASS, including form events, bilateral pain preservation, missing-side semantics, total-arc arithmetic, failure-report parsing and existing data unity. Automatic preview build OK. No new full-suite claim this continuation.
+- GUIDE: players can leave unmeasured ranges blank, compare left/right and stop painful checks; coaches record the same observations in person using the existing parent requirement. Observation scores are not medical grades.
+
+**Ready to publish: NO.** Original remaining sport/throw clips and entitled embedded-player proof are unavailable; movement-to-plan/analysis integration, role save/reload and remaining workout requirements are unfinished. No publish, schedule or iOS changes.
+
 ### October 27 run (2), 04:10 UTC
 - BUILT: normal upload, retry and embedded camera notify assessment only through the saved-report contract; confirmed readable reports trigger canonical evidence refresh, not invented completion of other required modules. Multiple active subscriptions are unioned in assessment entry and module selection rather than failing a single-row read.
 - BUILT: nested body, equipment and goal forms expose their existing save actions; assessment Back/Skip/Next and nested Back wait for these saves. Body save failures no longer advance. Unanswered equipment is not declared empty; empty goals do not invent picks.
